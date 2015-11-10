@@ -82,6 +82,63 @@ double InitalValueHTorus(const std::vector < double >& x) {
 }
 
 
+bool SetBoundaryConditionSphere(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  bool dirichlet = true; //dirichlet
+
+  double u = x[0];
+  double v = x[1];
+
+  if (!strcmp("X", SolName)) {
+    value = a*sin(v)*cos(u);
+  }
+  else if (!strcmp("Y", SolName)) {
+    value = a*sin(v)*sin(u);
+  }
+  else if (!strcmp("Z", SolName)) {
+    value = a*cos(v);
+  }
+  else if (!strcmp("H", SolName)) {
+    value = 1./a;
+  }
+
+  return dirichlet;
+}
+
+double InitalValueXSphere(const std::vector < double >& x) {
+  double u = x[0];
+  double v = x[1];
+
+  return a*sin(v)*cos(u);
+
+}
+
+double InitalValueYSphere(const std::vector < double >& x) {
+  double u = x[0];
+  double v = x[1];
+
+  return  a*sin(v)*sin(u);
+
+}
+
+double InitalValueZSphere(const std::vector < double >& x) {
+  double u = x[0];
+  double v = x[1];
+
+  return a*cos(v);
+
+}
+
+double InitalValueHSphere(const std::vector < double >& x) {
+  double u = x[0];
+  double v = x[1];
+
+  return 1./a;
+
+}
+
+
+
+
 double SetVariableTimeStep(const double time) {
   double dt = 1.;
   return dt;
@@ -114,7 +171,7 @@ int main(int argc, char** args) {
 
     std::ostringstream filename;
 
-    filename << "./input/square.neu";
+    filename << "./input/sphere.neu";
 
     MultiLevelMesh mlMsh;
     // read coarse level mesh and generate finers level meshes
@@ -148,12 +205,21 @@ int main(int argc, char** args) {
     mlSol.AddSolution("Z", LAGRANGE, feOrder,2);
     mlSol.AddSolution("H", LAGRANGE, feOrder,2);
 
-    mlSol.Initialize("X", InitalValueXTorus);
-    mlSol.Initialize("Y", InitalValueYTorus);
-    mlSol.Initialize("Z", InitalValueZTorus);
-    mlSol.Initialize("H", InitalValueHTorus);
+//     mlSol.Initialize("X", InitalValueXTorus);
+//     mlSol.Initialize("Y", InitalValueYTorus);
+//     mlSol.Initialize("Z", InitalValueZTorus);
+//     mlSol.Initialize("H", InitalValueHTorus);
+//         // attach the boundary condition function and generate boundary data
+//     mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTorus);
+    
+    mlSol.Initialize("X", InitalValueXSphere);
+    mlSol.Initialize("Y", InitalValueYSphere);
+    mlSol.Initialize("Z", InitalValueZSphere);
+    mlSol.Initialize("H", InitalValueHSphere);
         // attach the boundary condition function and generate boundary data
-    mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTorus);
+    mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionSphere);
+    
+    
     mlSol.GenerateBdc("X","Steady");
     mlSol.GenerateBdc("Y","Steady");
     mlSol.GenerateBdc("Z","Steady");
@@ -172,7 +238,7 @@ int main(int argc, char** args) {
     system.AddSolutionToSystemPDE("H");
 
     
-    system.SetMaxNumberOfNonLinearIterations(6);
+    system.SetMaxNumberOfNonLinearIterations(10);
     
 
     // attach the assembling function to system
@@ -216,7 +282,7 @@ int main(int argc, char** args) {
   
     
       vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step+1);
-      gmvIO.Pwrite(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step+1);
+      gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step+1);
     }
     
     
@@ -655,8 +721,8 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	      }
 	      aResR[k][i] += AgIgradRgradPhi * phi_x[i * dim + u] * weight;
 	    }
-	    aResR[k][i] += 2.* A * solHGauss.value() * N[k] * phi[i] * weight;
-	        
+	    //aResR[k][i] += 2.* A * solHGauss.value() * N[k] * phi[i] * weight;
+	    aResR[k][i] += 2.* A * (1./a) * N[k] * phi[i] * weight;    
 	  }
 	  
 	  
@@ -667,10 +733,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	    }
 	    aResH[i] -= AgIgradHgradPhi * phi_x[i * dim + u] * weight;
 	  }
-	   aResH[i] += A * ( -0*(solRGauss[0]-solRGaussOld[0])*N[0].value()
-		             -0*(solRGauss[1]-solRGaussOld[1])*N[1].value()
-		             -0*(solRGauss[2]-solRGaussOld[2])*N[2].value()
-	               + 2. * solHGauss * ( solHGauss * solHGauss  - K.value() ) )* phi[i] * weight; 
+	   aResH[i] += A * ( 2. * solHGauss * ( solHGauss * solHGauss  - K.value() ) )* phi[i] * weight; 
 	} // end phi_i loop
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
