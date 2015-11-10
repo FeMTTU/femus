@@ -96,7 +96,7 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("T", LAGRANGE, FIRST);
+  mlSol.AddSolution("T", LAGRANGE, SERENDIPITY);//FIRST);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
 

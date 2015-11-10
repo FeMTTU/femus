@@ -445,12 +445,14 @@ void Mesh::FillISvector(vector < int > &epart) {
 
 
   //BEGIN completing k = 0, 1
+  
   for(unsigned k = 0; k < 2; k++){
 
     IS_Gmt2Mts_dof[k].assign(GetNumberOfNodes(), GetNumberOfNodes());
     std::vector < unsigned > ownedGhostCounter( _nprocs , 0);
     unsigned counter = 0;
 
+    
     for(int isdom = 0; isdom < _nprocs; isdom++){
 
       //owned nodes
@@ -462,8 +464,7 @@ void Mesh::FillISvector(vector < int > &epart) {
       //ghost nodes
       ghost_nd_mts[k][isdom].reserve(ghost_nd[k][isdom].size());
       ghost_nd_mts[k][isdom].resize(0);
-      //ownedGhostNodes[k][isdom].reserve(ghost_nd[k][isdom].size());
-      //ownedGhostNodes[k][isdom].resize(0);
+      
       for (unsigned inode = 0; inode < ghost_nd[k][isdom].size(); inode++){
 	unsigned ghostNode = ghost_nd[k][isdom][inode];
 
@@ -484,9 +485,8 @@ void Mesh::FillISvector(vector < int > &epart) {
 	}
 	else { // owned ghost nodes
 	  IS_Gmt2Mts_dof[k][ ghostNode ] = counter;
+	  _ownedGhostMap[k][ ghostNode ] = counter;
 	  counter++;
-	  //ownedGhostNodes[k][isdom].resize(ownedGhostCounter[isdom]+1);
-	  //ownedGhostNodes[k][isdom][ownedGhostCounter[isdom]] = ghostNode;
 	  ownedGhostCounter[isdom]++;
 
           for(unsigned jnode = inode; jnode < ghost_nd[k][isdom].size()-1; jnode++ ){
@@ -499,7 +499,10 @@ void Mesh::FillISvector(vector < int > &epart) {
       }
     }
 
+    _originalOwnSize[k].resize(_nprocs);
+    
     for(int isdom = 0; isdom < _nprocs; isdom++){
+      _originalOwnSize[k][isdom] = own_size[k][isdom];
       own_size[k][isdom] += ownedGhostCounter[isdom];
     }
   }
@@ -527,41 +530,51 @@ void Mesh::FillISvector(vector < int > &epart) {
     unsigned dof;
     switch(solType){
       case 0: // linear Lagrange
-        dof = IS_Gmt2Mts_dof[solType][ el->GetMeshDof(iel, i, solType) ];
+      {
+        unsigned iNode = el->GetMeshDof(iel, i, solType);
+	//BEGIN bisection search
+	unsigned isdom0 = 0;
+	unsigned isdom1 = _nprocs ;
+	unsigned isdom = _iproc;
+	while( iNode < MetisOffset[2][isdom] || iNode >= MetisOffset[2][isdom + 1] ){
+	  if( iNode < MetisOffset[2][isdom] ) isdom1 = isdom;
+	  else isdom0 = isdom + 1;
+	  isdom = ( isdom0 + isdom1 ) / 2;
+	}
+	//END bisection search
+	if(iNode < MetisOffset[2][isdom]+_originalOwnSize[0][isdom]){
+ 	  dof = (iNode - MetisOffset[2][isdom]) + MetisOffset[0][isdom];
+	}
+	else{
+	  dof = _ownedGhostMap[0].find(iNode)->second;
+	}
+      }
+	break;
+      case 1: // quadratic Lagrange
+        //dof = IS_Gmt2Mts_dof[solType][ el->GetMeshDof(iel, i, solType) ];
+        //break;
+	
+	{
+        unsigned iNode = el->GetMeshDof(iel, i, solType);
+	//BEGIN bisection search
+	unsigned isdom0 = 0;
+	unsigned isdom1 = _nprocs ;
+	unsigned isdom = _iproc;
+	while( iNode < MetisOffset[2][isdom] || iNode >= MetisOffset[2][isdom + 1] ){
+	  if( iNode < MetisOffset[2][isdom] ) isdom1 = isdom;
+	  else isdom0 = isdom + 1;
+	  isdom = ( isdom0 + isdom1 ) / 2;
+	}
+	//END bisection search
+	if(iNode < MetisOffset[2][isdom]+_originalOwnSize[1][isdom]){
+ 	  dof = (iNode - MetisOffset[2][isdom]) + MetisOffset[1][isdom];
+	}
+	else{
+	  dof = _ownedGhostMap[1].find(iNode)->second;
+	}
+      }
 	break;
 	
-// 	unsigned iNode = el->GetMeshDof(iel, i, solType);
-// 	//BEGIN bisection search
-// 	unsigned isdom0 = 0;
-// 	unsigned isdom1 = _nprocs ;
-//      unsigned isdom = _iproc;
-// 	while( iNode < MetisOffset[2][isdom] || iNode >= MetisOffset[2][isdom + 1] ){
-// 	  if( iNode < MetisOffset[2][isdom] ) isdom1 = isdom;
-// 	  else isdom0 = isdom + 1;
-// 	  isdom = ( isdom0 + isdom1 ) / 2;
-// 	}
-//      //END bisection search
-//      if(iNode < MetisOffset[2][isdom]+ownedGhostNodes[0][isdom].size()){
-// 	  dof = (iNode - MetisOffset[2][isdom]) + MetisOffset[0][isdom];
-// 	  break;
-// 	}
-// 	else{
-// 	  isdom0 = isdom;
-// 	  isdom1 = _nprocs ;
-//        unsigned ksdom = (isdom + _nprocs)/2;
-//	  while( iNode < MetisOffset[2][ksdom] || iNode >= MetisOffset[2][ksdom + 1] ){
-// 	    if( iNode < MetisOffset[2][ksdom] ) isdom1 = ksdom;
-// 	    else isdom0 = ksdom + 1;
-// 	    ksdom = ( isdom0 + isdom1 ) / 2;
-// 	  }
-	
-//	??????????????
-	
-// 	}
-	
-      case 1: // quadratic Lagrange
-        dof = IS_Gmt2Mts_dof[solType][ el->GetMeshDof(iel, i, solType) ];
-        break;
       case 2: // bi-quadratic Lagrange
         dof = el->GetMeshDof(iel, i, solType);
         break;
