@@ -461,6 +461,51 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   fout  << "        </DataArray>" << std::endl;
 
   //-----------------------------------------------------------------------------------------------------
+  
+  
+  // Print Materials
+  fout  << "        <DataArray type=\"UInt16\" Name=\"Material\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"UInt16\" Name=\"Material\" format=\"binary\"/>" << std::endl;
+
+  icount=0;
+  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+    for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
+      unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
+      if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
+  	var_reg[icount]= _ml_mesh->GetLevel(ig)->el->GetElementMaterial(kel);
+	icount++;
+      }
+    }
+  }
+
+  //print regions dimension
+  cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);
+  b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
+  pt_char=&enc[0];
+  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+
+
+  //print regions array
+  cch = b64::b64_encode(&var_reg[0], dim_array_reg[0] , NULL, 0);
+  b64::b64_encode(&var_reg[0], dim_array_reg[0], &enc[0], cch);
+  pt_char=&enc[0];
+  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+
+  fout  << std::endl;
+  fout  << "        </DataArray>" << std::endl;
+
+  //-----------------------------------------------------------------------------------------------------
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   // Print Metis Partitioning
   fout  << "        <DataArray type=\"UInt16\" Name=\"Domain_partition\" format=\"binary\">" << std::endl;
   Pfout << "      <PDataArray type=\"UInt16\" Name=\"Domain_partition\" format=\"binary\"/>" << std::endl;

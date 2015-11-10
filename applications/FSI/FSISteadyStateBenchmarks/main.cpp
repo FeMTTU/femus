@@ -198,8 +198,11 @@ int main(int argc,char **args) {
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes, numberOfUniformRefinedMeshes + numberOfAMRLevels,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
 
+  //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
+  
   // mark Solid nodes
   ml_msh.MarkStructureNode();
+  
 
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
@@ -335,7 +338,7 @@ int main(int argc,char **args) {
   system.MGsolve();
 
   // ******* Print solution *******
-  ml_sol.SetWriter(GMV);
+  ml_sol.SetWriter(VTK);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -346,7 +349,7 @@ int main(int argc,char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
-  ml_sol.GetWriter()->SetDebugOutput( true );
+  //ml_sol.GetWriter()->SetDebugOutput( true );
   //ml_sol.GetWriter()->ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
   ml_sol.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 

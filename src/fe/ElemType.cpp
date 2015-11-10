@@ -273,13 +273,13 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
         int j=_prol_ind[i][k];
         int jadd=lspdec._msh->el->GetMeshDof(ielc,j,_SolType);
         bool jsolidmark=lspdef._msh->el->GetNodeRegion(jadd);
-        if(isolidmark == jsolidmark){
+        if( isolidmark == jsolidmark){
 	  int jcolumn=lspdec.GetKKDof(index_sol,kkindex_sol,jadd);
 	  cols[k]=jcolumn;
 	  copy_prol_val[k]=_prol_val[i][k];
         }
         else {
-	  int jcolumn=lspdec.GetKKDof(index_pair_sol,kkindex_pair_sol,jadd);
+	  int jcolumn = lspdec.GetKKDof(index_pair_sol,kkindex_pair_sol,jadd);
 	  cols[k]=jcolumn;
 	  copy_prol_val[k]=(index_sol != index_pair_sol) ? _prol_val[i][k]:0.;
         }
@@ -288,6 +288,8 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
     }
   }
   else{
+    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::endl;
+    
     int ielf = lspdec._msh->el->GetChildElement(ielc,0);
     vector <int> jcol(1);
     double value;
