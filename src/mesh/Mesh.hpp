@@ -160,6 +160,8 @@ public:
     vector <vector < unsigned > > MetisOffset;
     vector< vector < unsigned > > ghost_nd[5];
     vector< vector < int > > ghost_nd_mts[5];
+    //vector< vector < int > > ownedGhostNodes[2];
+    //std::map < unsigned, bool > ownedGhostMap;
 
     elem *el;  // topology object
     static bool (* _SetRefinementFlag)(const std::vector < double >& x,
