@@ -248,7 +248,7 @@ namespace femus {
       }
       dofsAll.insert( dofsAll.end(), dofsVAR[2*dim].begin(), dofsVAR[2*dim].end() );
  
-      if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {  
+      if (1==1 || igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {  
 	
 	s.new_recording();
 	
