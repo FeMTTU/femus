@@ -175,7 +175,7 @@ int main(int argc, char** args) {
 
     MultiLevelMesh mlMsh;
     // read coarse level mesh and generate finers level meshes
-    double scalingFactor = 1.;
+    double scalingFactor = 2.;
     //mlMsh.ReadCoarseMesh("./input/circle_quad.neu","seventh", scalingFactor);
     mlMsh.ReadCoarseMesh(filename.str().c_str(), "seventh", scalingFactor);
     /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -205,19 +205,19 @@ int main(int argc, char** args) {
     mlSol.AddSolution("Z", LAGRANGE, feOrder,2);
     mlSol.AddSolution("H", LAGRANGE, feOrder,2);
 
-//     mlSol.Initialize("X", InitalValueXTorus);
-//     mlSol.Initialize("Y", InitalValueYTorus);
-//     mlSol.Initialize("Z", InitalValueZTorus);
-//     mlSol.Initialize("H", InitalValueHTorus);
-//         // attach the boundary condition function and generate boundary data
-//     mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTorus);
-    
-    mlSol.Initialize("X", InitalValueXSphere);
-    mlSol.Initialize("Y", InitalValueYSphere);
-    mlSol.Initialize("Z", InitalValueZSphere);
-    mlSol.Initialize("H", InitalValueHSphere);
+    mlSol.Initialize("X", InitalValueXTorus);
+    mlSol.Initialize("Y", InitalValueYTorus);
+    mlSol.Initialize("Z", InitalValueZTorus);
+    mlSol.Initialize("H", InitalValueHTorus);
         // attach the boundary condition function and generate boundary data
-    mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionSphere);
+    mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTorus);
+    
+//     mlSol.Initialize("X", InitalValueXSphere);
+//     mlSol.Initialize("Y", InitalValueYSphere);
+//     mlSol.Initialize("Z", InitalValueZSphere);
+//     mlSol.Initialize("H", InitalValueHSphere);
+//         // attach the boundary condition function and generate boundary data
+//     mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionSphere);
     
     
     mlSol.GenerateBdc("X","Steady");
@@ -664,7 +664,10 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	
         adept::adouble g[2][2];
 		
-        g[0][0] = g[0][1] = g[1][0] = g[1][1] = 0.;
+        g[0][0] = 0.;
+	g[0][1] = 0.;
+	g[1][0] = 0.;
+	g[1][1] = 0.;
 	
 	for(int k = 0; k < 3; k++){
 	  for(int u = 0; u < dim; u++){
@@ -721,8 +724,8 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	      }
 	      aResR[k][i] += AgIgradRgradPhi * phi_x[i * dim + u] * weight;
 	    }
-	    //aResR[k][i] += 2.* A * solHGauss.value() * N[k] * phi[i] * weight;
-	    aResR[k][i] += 2.* A * (1./a) * N[k] * phi[i] * weight;    
+	    aResR[k][i] += 2.* A * solHGauss * N[k] * phi[i] * weight;
+	    //aResR[k][i] += 2.* A * (1./a) * N[k] * phi[i] * weight;    
 	  }
 	  
 	  
@@ -733,7 +736,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	    }
 	    aResH[i] -= AgIgradHgradPhi * phi_x[i * dim + u] * weight;
 	  }
-	   aResH[i] += A * ( 2. * solHGauss * ( solHGauss * solHGauss  - K.value() ) )* phi[i] * weight; 
+	   aResH[i] += A * ( 2. * solHGauss * ( solHGauss * solHGauss  - K ) )* phi[i] * weight; 
 	} // end phi_i loop
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
