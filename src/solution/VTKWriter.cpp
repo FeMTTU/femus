@@ -201,12 +201,12 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
     for (int i = 0; i < 3; i++) {
       if( !_surface ){
 	mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
-			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );    
+			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
 	if( _graph && i == 2 ){
 	  unsigned indGraph=_ml_sol->GetIndex(_graphVariable.c_str());
 	  mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indGraph],
                                  *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indGraph)) );
-	}	
+	}
       }
       else {
         unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariables[i].c_str());
@@ -243,7 +243,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
         mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
 			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
       }
-      
+
     }
     gridOffset = 0;
     unsigned ig = _gridr-1u;
@@ -473,7 +473,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
     for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
       unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
       if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
-  	var_proc[icount]=(unsigned short)(_ml_mesh->GetLevel(ig)->epart[kel]);
+        var_proc[icount]=_iproc;
 	icount++;
       }
     }

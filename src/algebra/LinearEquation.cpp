@@ -127,7 +127,7 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   for(int i=0; i<_nprocs; i++) {
     for(int j=0; j<_SolPdeIndex.size(); j++) {
       unsigned indexSol=_SolPdeIndex[j];
-      KKghostsize[i] += _msh->ghost_size[_SolType[indexSol]][i];
+      KKghostsize[i] += _msh->ghost_nd[_SolType[indexSol]][i].size();
     }
   }
 
@@ -143,7 +143,7 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
     unsigned counter=0;
     for(int j=0; j<_SolPdeIndex.size(); j++) {
        unsigned indexSol=_SolPdeIndex[j];
-       for(int k=0; k<_msh->ghost_size[_SolType[indexSol]][i];k++) {
+       for(int k=0; k<_msh->ghost_nd[_SolType[indexSol]][i].size();k++) {
 	 //gambit ghost node
 	 unsigned gmt_ghost_nd = _msh->ghost_nd[_SolType[indexSol]][i][k];
 	 KKghost_nd[i][counter] =  GetKKDof(indexSol,j,gmt_ghost_nd);

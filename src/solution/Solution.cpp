@@ -139,7 +139,7 @@ void Solution::ResizeSolutionVector(const char name[]) {
   }
   else { // IF PARALLEL
     if(_SolType[i]<3) {
-      if(_msh->ghost_size[_SolType[i]][processor_id()]!=0) {
+      if(_msh->ghost_nd[_SolType[i]][processor_id()].size()!=0) {
 	_Sol[i]->init(_msh->MetisOffset[_SolType[i]][n_processors()],_msh->own_size[_SolType[i]][processor_id()],
 		      _msh->ghost_nd_mts[_SolType[i]][processor_id()],false,GHOSTED);
       }
