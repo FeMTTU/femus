@@ -114,8 +114,7 @@ public:
     unsigned GetMetisDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
     
     /** Performs a bisection search to find the processor of the given dof */
-    unsigned IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType, unsigned isdom0,
-                                   unsigned isdom1, unsigned isdom) const;
+    unsigned IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const;
 
     /** To be added */
     const unsigned GetFaceIndex() const {

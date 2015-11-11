@@ -477,7 +477,7 @@ void Mesh::FillISvector(vector < int > &epart) {
 // 	  ksdom = ( isdom0 + isdom1 ) / 2;
 // 	}
 
-	unsigned ksdom = IsdomBisectionSearch(ghostNode,k,0,isdom,isdom*0.5);
+	unsigned ksdom = IsdomBisectionSearch(ghostNode, 2);
 	
 	int upperBound = MetisOffset[2][ksdom] + own_size[k][ksdom];
 	if( ghostNode < upperBound || IS_Gmt2Mts_dof[k][ ghostNode ] != GetNumberOfNodes()){ // real ghost nodes
@@ -526,31 +526,18 @@ void Mesh::FillISvector(vector < int > &epart) {
 
 
   // *******************************************************
-  unsigned Mesh::IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType, unsigned isdom0,
-                                      unsigned isdom1, unsigned isdom) const{
+  unsigned Mesh::IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const{
 
-//     unsigned isdom0 = 0;
-//     unsigned isdom1 = _nprocs ;
-//     unsigned isdom = _iproc;
+    unsigned isdom0 = 0;
+    unsigned isdom1 = _nprocs ;
+    unsigned isdom = _iproc;
 
-    if( solType < 3){
-      while( dof < MetisOffset[2][isdom] || dof >= MetisOffset[2][isdom + 1] ){
-        if( dof < MetisOffset[2][isdom] ) isdom1 = isdom;
-        else isdom0 = isdom + 1;
+    while( dof < MetisOffset[solType][isdom] || dof >= MetisOffset[solType][isdom + 1] ){
+      if( dof < MetisOffset[solType][isdom] ) isdom1 = isdom;
+      else isdom0 = isdom + 1;
       isdom = ( isdom0 + isdom1 ) / 2;
-      }
     }
-   else{
-     unsigned offset = IS_Mts2Gmt_elem_offset[isdom];
-     unsigned offsetp1 = IS_Mts2Gmt_elem_offset[isdom + 1];
-     while( dof < offset || dof >= offsetp1 ){
-       if( dof < offset ) isdom1 = isdom;
-       else isdom0 = isdom + 1;
-       isdom = ( isdom0 + isdom1 ) / 2;
-       unsigned offset = IS_Mts2Gmt_elem_offset[isdom];
-       unsigned offsetp1 = IS_Mts2Gmt_elem_offset[isdom + 1];
-     }  
-   }
+  
     return isdom;
   }
   // *******************************************************
@@ -562,19 +549,7 @@ void Mesh::FillISvector(vector < int > &epart) {
       case 0: // linear Lagrange
       {
         unsigned iNode = el->GetMeshDof(iel, i, solType);
-// 	//BEGIN bisection search
-// 	unsigned isdom0 = 0;
-// 	unsigned isdom1 = _nprocs ;
-// 	unsigned isdom = _iproc;
-// 	while( iNode < MetisOffset[2][isdom] || iNode >= MetisOffset[2][isdom + 1] ){
-// 	  if( iNode < MetisOffset[2][isdom] ) isdom1 = isdom;
-// 	  else isdom0 = isdom + 1;
-// 	  isdom = ( isdom0 + isdom1 ) / 2;
-// 	}
-// 	//END bisection search
-	
-	unsigned isdom = IsdomBisectionSearch(iNode,0,0,_nprocs,_iproc);
-	
+	unsigned isdom = IsdomBisectionSearch(iNode, 2);
 	if(iNode < MetisOffset[2][isdom]+_originalOwnSize[0][isdom]){
  	  dof = (iNode - MetisOffset[2][isdom]) + MetisOffset[0][isdom];
 	}
@@ -584,24 +559,9 @@ void Mesh::FillISvector(vector < int > &epart) {
       }
 	break;
       case 1: // quadratic Lagrange
-        //dof = IS_Gmt2Mts_dof[solType][ el->GetMeshDof(iel, i, solType) ];
-        //break;
-	
-	{
+       	{
         unsigned iNode = el->GetMeshDof(iel, i, solType);
-// 	//BEGIN bisection search
-// 	unsigned isdom0 = 0;
-// 	unsigned isdom1 = _nprocs ;
-// 	unsigned isdom = _iproc;
-// 	while( iNode < MetisOffset[2][isdom] || iNode >= MetisOffset[2][isdom + 1] ){
-// 	  if( iNode < MetisOffset[2][isdom] ) isdom1 = isdom;
-// 	  else isdom0 = isdom + 1;
-// 	  isdom = ( isdom0 + isdom1 ) / 2;
-// 	}
-// 	//END bisection search
-	
-	unsigned isdom = IsdomBisectionSearch(iNode,1,0,_nprocs, _iproc);
-	
+	unsigned isdom = IsdomBisectionSearch(iNode, 2);
 	if(iNode < MetisOffset[2][isdom]+_originalOwnSize[1][isdom]){
  	  dof = (iNode - MetisOffset[2][isdom]) + MetisOffset[1][isdom];
 	}
@@ -618,23 +578,7 @@ void Mesh::FillISvector(vector < int > &epart) {
         dof = iel;
         break;
       case 4: // piecewise linear discontinuous
-//         //BEGIN bisection search
-//         unsigned sdm0 = 0;
-//         unsigned sdm1 = _nprocs ;
-//         unsigned isdm = _iproc;
-//         unsigned offset = IS_Mts2Gmt_elem_offset[isdm];
-//         unsigned offsetp1 = IS_Mts2Gmt_elem_offset[isdm + 1];
-//         while( iel < offset || iel >= offsetp1 ){
-//           if( iel < offset ) sdm1 = isdm;
-//           else sdm0 = isdm + 1;
-//           isdm = ( sdm0 + sdm1 ) / 2;
-//           unsigned offset = IS_Mts2Gmt_elem_offset[isdm];
-//           unsigned offsetp1 = IS_Mts2Gmt_elem_offset[isdm + 1];
-//         }
-//         //END bisection search
-	
-	unsigned isdom = IsdomBisectionSearch(iel,4,0,_nprocs, _iproc);
-	
+	unsigned isdom = IsdomBisectionSearch(iel, 3);
 	unsigned offset = IS_Mts2Gmt_elem_offset[isdom];
         unsigned offsetp1 = IS_Mts2Gmt_elem_offset[isdom + 1];
         unsigned ownSize = offsetp1 - offset;

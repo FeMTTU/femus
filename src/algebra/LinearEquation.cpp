@@ -71,14 +71,7 @@ unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kki
   //unsigned isubdom = (soltype<3)?_msh->npart[idof_gmt]:(_msh->epart[idof_gmt % _msh->GetNumberOfElements()]);
   unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);
 
-  unsigned isubdom0 = 0;
-  unsigned isubdom1 = _nprocs;
-  unsigned isubdom  = _iproc;
-  while( idof_metis < _msh->MetisOffset[soltype][isubdom] || idof_metis >= _msh->MetisOffset[soltype][isubdom+1] ){
-    if( idof_metis < _msh->MetisOffset[soltype][isubdom] ) isubdom1 = isubdom;
-    else isubdom0 = isubdom+1;
-    isubdom = ( isubdom0 + isubdom1 ) / 2;
-  }
+  unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype); 
   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
 }
 
@@ -341,6 +334,7 @@ void LinearEquation::DeletePde() {
 		  // identify the process the i-row belogns to
 		  int iproc=0;
 		  while (dofsVAR[i][inode] >= KKoffset[KKIndex.size()-1][iproc]) iproc++;
+		  
 		  // identify the process the j-column belogns to
 		  int jproc=0;
 		  while (dofsVAR[j][jnode] >= KKoffset[KKIndex.size()-1][jproc]) jproc++;

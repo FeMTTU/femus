@@ -329,9 +329,9 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
       int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
       int iadd = meshf.el->GetMeshDof(ielf,i1,_SolType);
       int irow = meshf.GetMetisDof(iadd,_SolType);  //  local-id to dof
-      int iproc = 0;
-      while ( irow >= meshf.MetisOffset[_SolType][iproc+1] ) iproc++;
-      //while (irow < meshf.MetisOffset[_SolType][iproc] || irow >= meshf.MetisOffset[_SolType][iproc+1] ) iproc++;
+      
+      int iproc = meshf.IsdomBisectionSearch(irow, _SolType); 
+      
       int ncols = _prol_ind[i+1] - _prol_ind[i];
       unsigned counter_o=0;
       for (int k=0; k<ncols; k++) {
@@ -350,9 +350,9 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
     for (int i=0; i<_nc; i++) {
       int iadd=meshf.el->GetMeshDof(ielf,i,_SolType);
       int irow=meshf.GetMetisDof(iadd,_SolType);  //  local-id to dof
-      int iproc=0;
-      while (irow < meshf.MetisOffset[_SolType][iproc] || irow >= meshf.MetisOffset[_SolType][iproc+1] ) iproc++;
-
+     
+      int iproc = meshf.IsdomBisectionSearch(irow, _SolType); 
+      
       int jadd=meshc.el->GetMeshDof(ielc,i,_SolType);
       int jcolumn=meshc.GetMetisDof(jadd,_SolType);
       if(jcolumn < meshc.MetisOffset[_SolType][iproc] || jcolumn >= meshc.MetisOffset[_SolType][iproc+1] ) {
@@ -412,9 +412,7 @@ void elem_type::GetSparsityPatternSize(const Mesh& mesh,const int& iel, NumericV
   for (int i=0; i<_nlag[itype]; i++) {
     int inode=mesh.el->GetMeshDof(iel,i,_SolType);
     int irow=mesh.GetMetisDof(inode,itype);
-    int iproc=0;
-    //while (irow < mesh.MetisOffset[itype][iproc] || irow >= mesh.MetisOffset[itype][iproc+1] ) iproc++;
-    while (irow >= mesh.MetisOffset[itype][iproc+1] ) iproc++;
+    int iproc = mesh.IsdomBisectionSearch(irow, itype); 
     int ncols=_prol_ind[i+1]-_prol_ind[i];
     unsigned counter_o=0;
     for (int k=0; k<ncols; k++) {
