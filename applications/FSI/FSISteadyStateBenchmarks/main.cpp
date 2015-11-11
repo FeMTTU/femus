@@ -276,18 +276,18 @@ int main(int argc,char **args) {
   system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD);
 
   // ******* set MG-Solver *******
-  system.SetMgType(F_CYCLE);
+  system.SetMgType(V_CYCLE);
   system.SetLinearConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-9);
   if( simulation == 7 )
     system.SetNonLinearConvergenceTolerance(1.e-5);
 
-  system.SetNumberPreSmoothingStep(15);
-  system.SetNumberPostSmoothingStep(15);
+  system.SetNumberPreSmoothingStep(0);
+  system.SetNumberPostSmoothingStep(0);
 
   if( simulation < 3 || simulation == 7 ) {
-    system.SetMaxNumberOfLinearIterations(2);
-    system.SetMaxNumberOfNonLinearIterations(15);
+    system.SetMaxNumberOfLinearIterations(1);
+    system.SetMaxNumberOfNonLinearIterations(1);
   }
   else {
     system.SetMaxNumberOfLinearIterations(2);
