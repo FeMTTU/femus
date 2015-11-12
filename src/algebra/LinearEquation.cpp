@@ -64,15 +64,15 @@ unsigned LinearEquation::GetIndex(const char name[]) {
 }
 
 
-unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,
-				  const unsigned &idof_gmt) const {
-
-  unsigned soltype =  _SolType[index_sol];
-  unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);
-
-  unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype); 
-  return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
-}
+// unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,
+// 				  const unsigned &idof_gmt) const {
+// 
+//   unsigned soltype =  _SolType[index_sol];
+//   unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);
+// 
+//   unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype); 
+//   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
+// }
 
 unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,
 				  const unsigned &i, const unsigned &iel) const {
@@ -148,8 +148,15 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
        unsigned indexSol=_SolPdeIndex[j];
        for(int k=0; k<_msh->ghost_nd[_SolType[indexSol]][i].size();k++) {
 	 //gambit ghost node
-	 unsigned gmt_ghost_nd = _msh->ghost_nd[_SolType[indexSol]][i][k];
-	 KKghost_nd[i][counter] =  GetKKDof(indexSol,j,gmt_ghost_nd);
+// 	 unsigned gmt_ghost_nd = _msh->ghost_nd[_SolType[indexSol]][i][k];
+// 	 KKghost_nd[i][counter] =  GetKKDof(indexSol,j,gmt_ghost_nd);
+	 
+	 
+	 unsigned idof_metis = _msh->ghost_nd_mts[_SolType[indexSol]][i][k];
+	 unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, _SolType[indexSol]); 
+         KKghost_nd[i][counter] = KKoffset[j][isubdom] + idof_metis - _msh->MetisOffset[_SolType[indexSol]][isubdom];
+	 
+	 
 	 counter++;
        }
      }
@@ -321,7 +328,8 @@ void LinearEquation::DeletePde() {
 	int ThisSolType=_SolType[_SolPdeIndex[i]];
 	for (int j=0;j<nve[i];j++) {
 	  int inode=(ThisSolType<3)?(_msh->el->GetElementVertexIndex(kel,j)-1u):(kel+j*nel);
-	  dofsVAR[i][j]= GetKKDof(_SolPdeIndex[i],i,inode);
+	  //dofsVAR[i][j]= GetKKDof(_SolPdeIndex[i],i,inode);
+	  dofsVAR[i][j]= GetKKDof(_SolPdeIndex[i],i,j,kel);
 	}
       }
       for(int i=0;i<_SolPdeIndex.size();i++){

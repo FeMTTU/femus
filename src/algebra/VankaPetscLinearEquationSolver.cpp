@@ -144,7 +144,8 @@ namespace femus {
 		    unsigned jnode_Metis = _msh->GetMetisDof(jj,jel,SolType);
 		    if(jnode_Metis >= _msh->MetisOffset[SolType][processor_id()] &&
 		       jnode_Metis <  _msh->MetisOffset[SolType][processor_id()+1]){
-		      unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
+		      //unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
+		      unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jj, jel);
 		      if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1 <(*(*_Bdc)[SolPdeIndex])(jnode_Metis) ) {
 			_indexai[vanka_block_index][Asize]=kkdof;
 			indexa[kkdof-IndexaOffset]=Asize++;
@@ -174,12 +175,13 @@ namespace femus {
 			unsigned SolType = _SolType[SolPdeIndex];
 			unsigned nvek=_msh->el->GetElementDofNumber(kel,SolType);
 			for (unsigned kk=0; kk<nvek; kk++) {
-			  unsigned knode=(SolType<3)?(*(pt_un++)-1u):(kel+kk*nel);
+			  //unsigned knode=(SolType<3)?(*(pt_un++)-1u):(kel+kk*nel);
 
 			  unsigned knode_Metis = _msh->GetMetisDof(kk,kel,SolType);
 			  if(knode_Metis >= _msh->MetisOffset[SolType][processor_id()] &&
 			     knode_Metis <  _msh->MetisOffset[SolType][processor_id()+1]){
-			    unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, knode);
+			    //unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, knode);
+			    unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, kk, kel);
 			    if(indexb[kkdof- IndexbOffset]==IndexbSize && 0.1<(*(*_Bdc)[SolPdeIndex])(knode_Metis)) {
 			      indexbi[counterb]=kkdof;
 			      indexb[kkdof-IndexbOffset]=counterb++;
@@ -203,11 +205,12 @@ namespace femus {
 	      const unsigned *pt_un=_msh->el->GetElementVertexAddress(iel,0);
 	      unsigned nvei=_msh->el->GetElementDofNumber(iel,SolType);
 	      for (unsigned ii=0; ii<nvei; ii++) {
-		unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
+		//unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
 		unsigned inode_Metis = _msh->GetMetisDof(ii,iel,SolType);
 		if(inode_Metis >= _msh->MetisOffset[SolType][processor_id()] &&
 		   inode_Metis <  _msh->MetisOffset[SolType][processor_id()+1]){
-		  unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
+		  //unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
+		  unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, ii, iel);
 		  if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1<(*(*_Bdc)[SolPdeIndex])(inode_Metis) ) {
 		    _indexai[vanka_block_index][Asize]=kkdof;
 		    indexa[kkdof - IndexaOffset]=Asize++;
