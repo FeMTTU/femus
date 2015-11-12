@@ -243,16 +243,16 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsU; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, solUType);    // local to global solution node
-      unsigned solUDof = msh->GetMetisDof(iNode, solUType);    // global to global mapping between solution node and solution dof
+      //unsigned iNode = el->GetMeshDof(kel, i, solUType);    // local to global solution node
+      unsigned solUDof = msh->GetMetisDof(i, iel, solUType);    // global to global mapping between solution node and solution dof
       solU[i] = (*sol->_Sol[solUIndex])(solUDof);      // global extraction and local storage for the solution
-      KKDof[i] = pdeSys->GetKKDof(solUIndex, solUPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dofs
+      KKDof[i] = pdeSys->GetKKDof(solUIndex, solUPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dofs
     }
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofsX; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, crdXType);    // local to global coordinates node
-      unsigned coordXDof  = msh->GetMetisDof(iNode, crdXType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned coordXDof  = msh->GetMetisDof(i, iel, crdXType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned k = 0; k < dim; k++) {
         crdX[k][i] = (*msh->_coordinate->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
