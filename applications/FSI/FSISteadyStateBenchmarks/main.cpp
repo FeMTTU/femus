@@ -187,7 +187,7 @@ int main(int argc,char **args) {
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
   if(simulation < 3)
-    numberOfUniformRefinedMeshes = 2;
+    numberOfUniformRefinedMeshes = 3;
   else if(simulation == 3 || simulation == 7)
     numberOfUniformRefinedMeshes = 4;
   else if(simulation < 7)
@@ -199,12 +199,12 @@ int main(int argc,char **args) {
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
 
   //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
-  
+
   ml_msh.PrintInfo();
-  
+
   // mark Solid nodes
   ml_msh.MarkStructureNode();
-  
+
 
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
@@ -276,18 +276,18 @@ int main(int argc,char **args) {
   system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD);
 
   // ******* set MG-Solver *******
-  system.SetMgType(V_CYCLE);
+  system.SetMgType(F_CYCLE);
   system.SetLinearConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-9);
   if( simulation == 7 )
     system.SetNonLinearConvergenceTolerance(1.e-5);
 
-  system.SetNumberPreSmoothingStep(0);
-  system.SetNumberPostSmoothingStep(0);
+  system.SetNumberPreSmoothingStep(15);
+  system.SetNumberPostSmoothingStep(15);
 
   if( simulation < 3 || simulation == 7 ) {
-    system.SetMaxNumberOfLinearIterations(1);
-    system.SetMaxNumberOfNonLinearIterations(1);
+    system.SetMaxNumberOfLinearIterations(15);
+    system.SetMaxNumberOfNonLinearIterations(10);
   }
   else {
     system.SetMaxNumberOfLinearIterations(2);
