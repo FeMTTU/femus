@@ -68,12 +68,22 @@ unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kki
 				  const unsigned &idof_gmt) const {
 
   unsigned soltype =  _SolType[index_sol];
-  //unsigned isubdom = (soltype<3)?_msh->npart[idof_gmt]:(_msh->epart[idof_gmt % _msh->GetNumberOfElements()]);
   unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);
 
   unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype); 
   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
 }
+
+unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,
+				  const unsigned &i, const unsigned &iel) const {
+
+  unsigned soltype =  _SolType[index_sol];
+  unsigned idof_metis = _msh->GetMetisDof(i, iel, soltype);
+
+  unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype); 
+  return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
+}
+
 
 //--------------------------------------------------------------------------------
 void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  vector <int> &SolType_other,

@@ -187,15 +187,15 @@ int main(int argc,char **args) {
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
   if(simulation < 3)
-    numberOfUniformRefinedMeshes = 3;
+    numberOfUniformRefinedMeshes = 1;
   else if(simulation == 3 || simulation == 7)
     numberOfUniformRefinedMeshes = 4;
   else if(simulation < 7)
     numberOfUniformRefinedMeshes = 2;
 
-  numberOfAMRLevels = 0;
+  numberOfAMRLevels = 2;
 
-  MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes, numberOfUniformRefinedMeshes + numberOfAMRLevels,
+  MultiLevelMesh ml_msh( numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
 
   //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
@@ -282,11 +282,11 @@ int main(int argc,char **args) {
   if( simulation == 7 )
     system.SetNonLinearConvergenceTolerance(1.e-5);
 
-  system.SetNumberPreSmoothingStep(15);
-  system.SetNumberPostSmoothingStep(15);
+  system.SetNumberPreSmoothingStep(5);
+  system.SetNumberPostSmoothingStep(5);
 
   if( simulation < 3 || simulation == 7 ) {
-    system.SetMaxNumberOfLinearIterations(15);
+    system.SetMaxNumberOfLinearIterations(5);
     system.SetMaxNumberOfNonLinearIterations(10);
   }
   else {
@@ -340,7 +340,7 @@ int main(int argc,char **args) {
   system.MGsolve();
 
   // ******* Print solution *******
-  ml_sol.SetWriter(VTK);
+  ml_sol.SetWriter(GMV);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -351,7 +351,7 @@ int main(int argc,char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
-  //ml_sol.GetWriter()->SetDebugOutput( true );
+  ml_sol.GetWriter()->SetDebugOutput( true );
   //ml_sol.GetWriter()->ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
   ml_sol.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 

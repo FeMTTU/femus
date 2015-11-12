@@ -363,7 +363,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 	for (unsigned ii=0; ii<nel_ig; ii++) {
 	  if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
 	    _ml_sol->GetSolutionLevel(ig)->_Sol[indx]->localize_to_one(mysol_ser, 0);
-	    unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,_ml_sol->GetSolutionType(indx));
+	    unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(0,ii,_ml_sol->GetSolutionType(indx));
 	    var_el_f[icount]=mysol_ser[iel_Metis];
 	    icount++;
 	  }
