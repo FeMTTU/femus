@@ -188,7 +188,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
     else{ // IF PARALLEL
       mysol[ig]->init(_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs],
 		      _ml_mesh->GetLevel(ig)->own_size[index][_iproc],
-		      _ml_mesh->GetLevel(ig)->ghost_nd_mts[index][_iproc],false,GHOSTED );
+		      _ml_mesh->GetLevel(ig)->_ghostNodes[index][_iproc],false,GHOSTED );
     }
   }
 

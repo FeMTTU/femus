@@ -347,13 +347,11 @@ void Mesh::FillISvector(vector < int > &epart) {
     own_size[3][isdom] = IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom];
     own_size[4][isdom] = (IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom])*(_dimension+1);
   }
-
+  
   for(int k = 3; k < 5; k++) {
-    ghost_nd[k].resize(_nprocs);
-    ghost_nd_mts[k].resize(_nprocs);
+    _ghostNodes[k].resize(_nprocs);
     for(int isdom = 0; isdom < _nprocs; isdom++) {
-      ghost_nd[k][isdom].resize( 0 );
-      ghost_nd_mts[k][isdom].resize( 0 );
+      _ghostNodes[k][isdom].resize( 0 );
     }
   }
   //END building the  metis2Gambit_elem and  k = 3,4
@@ -419,8 +417,7 @@ void Mesh::FillISvector(vector < int > &epart) {
 
   //BEGIN ghost nodes search k = 0, 1, 2
   for(int k = 0; k < 3; k++){
-    ghost_nd[k].resize(_nprocs);
-    ghost_nd_mts[k].resize(_nprocs);
+    _ghostNodes[k].resize(_nprocs);
     for(int isdom = 0; isdom < _nprocs; isdom++){
       std::map < unsigned, bool > ghostMap;
       for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
@@ -431,12 +428,10 @@ void Mesh::FillISvector(vector < int > &epart) {
 	  }
 	}
       }
-      ghost_nd[k][isdom].resize( ghostMap.size() );
-      ghost_nd_mts[k][isdom].resize( ghostMap.size() );
+      _ghostNodes[k][isdom].resize( ghostMap.size() );
       unsigned counter = 0;
       for( std::map < unsigned, bool >::iterator it = ghostMap.begin(); it != ghostMap.end(); it++ ){
-	ghost_nd[k][isdom][counter] = it->first;
-	ghost_nd_mts[k][isdom][counter] = it->first;
+	_ghostNodes[k][isdom][counter] = it->first;
 	counter++;
       }
     }
@@ -460,21 +455,26 @@ void Mesh::FillISvector(vector < int > &epart) {
 	IS_Gmt2Mts_dof[k][inode] = counter;
 	counter++;
       }
-
-      //ghost nodes
-      ghost_nd_mts[k][isdom].reserve(ghost_nd[k][isdom].size());
-      ghost_nd_mts[k][isdom].resize(0);
       
-      for (unsigned inode = 0; inode < ghost_nd[k][isdom].size(); inode++){
-	unsigned ghostNode = ghost_nd[k][isdom][inode];
+      for (unsigned inode = 0; inode < _ghostNodes[k][isdom].size(); inode++){
+	unsigned ghostNode = _ghostNodes[k][isdom][inode];
 
 	unsigned ksdom = IsdomBisectionSearch(ghostNode, 2);
 	
 	int upperBound = MetisOffset[2][ksdom] + own_size[k][ksdom];
-	if( ghostNode < upperBound || IS_Gmt2Mts_dof[k][ ghostNode ] != GetNumberOfNodes()){ // real ghost nodes
-	  unsigned ghostSize = ghost_nd_mts[k][isdom].size();
-	  ghost_nd_mts[k][isdom].resize(ghostSize + 1);
-	  ghost_nd_mts[k][isdom][ghostSize] = IS_Gmt2Mts_dof[k][ ghostNode ];
+// 	if( ghostNode < upperBound || IS_Gmt2Mts_dof[k][ ghostNode ] != GetNumberOfNodes()){ // real ghost nodes
+// 	  _ghostNodes[k][isdom][inode] = IS_Gmt2Mts_dof[k][ ghostNode ];
+// 	}
+	
+	if( ghostNode < upperBound ){
+	  _ghostNodes[k][isdom][inode] = IS_Gmt2Mts_dof[k][ ghostNode ];
+	  //_ghostNodes[k][isdom][inode] =  ghostNode  + MetisOffset[k][ksdom] - MetisOffset[2][ksdom];
+	  // std::cout << IS_Gmt2Mts_dof[k][ ghostNode ] <<" "<<ghostNode  + MetisOffset[k][ksdom] - MetisOffset[2][ksdom]<<std::endl;
+	  
+	}
+	else if( _ownedGhostMap[k].find(ghostNode) != _ownedGhostMap[k].end() ){
+	  _ghostNodes[k][isdom][inode] = IS_Gmt2Mts_dof[k][ ghostNode ];
+	  //_ghostNodes[k][isdom][inode] =  _ownedGhostMap[k][ghostNode];  
 	}
 	else { // owned ghost nodes
 	  IS_Gmt2Mts_dof[k][ ghostNode ] = counter;
@@ -482,11 +482,11 @@ void Mesh::FillISvector(vector < int > &epart) {
 	  counter++;
 	  ownedGhostCounter[isdom]++;
 
-          for(unsigned jnode = inode; jnode < ghost_nd[k][isdom].size()-1; jnode++ ){
-	    ghost_nd[k][isdom][jnode] = ghost_nd[k][isdom][jnode + 1];
+          for(unsigned jnode = inode; jnode < _ghostNodes[k][isdom].size()-1; jnode++ ){
+	    _ghostNodes[k][isdom][jnode] = _ghostNodes[k][isdom][jnode + 1];
 	  }
 
-          ghost_nd[k][isdom].resize(ghost_nd[k][isdom].size()-1);
+          _ghostNodes[k][isdom].resize(_ghostNodes[k][isdom].size()-1);
 	  inode--;
 	}
       }
@@ -611,7 +611,7 @@ void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
     NNZ_d->init(ni, ni_loc, false, SERIAL);
   }
   else{
-    NNZ_d->init(ni, ni_loc, ghost_nd_mts[itype][processor_id()], false, GHOSTED);
+    NNZ_d->init(ni, ni_loc, _ghostNodes[itype][processor_id()], false, GHOSTED);
   }
   NNZ_d->zero();
 
@@ -693,7 +693,7 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
     }
     else { // IF PARALLEL
       if(solType<3) { // GHOST nodes only for Lagrange FE families
-	NNZ_d->init(nf, nf_loc, ghost_nd_mts[solType][processor_id()], false, GHOSTED);
+	NNZ_d->init(nf, nf_loc, _ghostNodes[solType][processor_id()], false, GHOSTED);
       }
       else { //piecewise discontinuous variables have no ghost nodes
 	NNZ_d->init(nf, nf_loc, false, PARALLEL);

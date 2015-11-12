@@ -161,8 +161,8 @@ public:
     vector < unsigned > IS_Mts2Gmt_elem;
     vector < unsigned > own_size[5];
     vector <vector < unsigned > > MetisOffset;
-    vector< vector < unsigned > > ghost_nd[5];
-    vector< vector < int > > ghost_nd_mts[5];
+    //vector< vector < unsigned > > ghost_nd[5];
+    vector< vector < int > > _ghostNodes[5];
     std::map < unsigned, unsigned > _ownedGhostMap[2];
     vector < unsigned > _originalOwnSize[2];
 
