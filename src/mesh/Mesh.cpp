@@ -575,6 +575,7 @@ void Mesh::FillISvector(vector < int > &epart) {
         dof = el->GetMeshDof(iel, i, solType);
         break;
       case 3: // piecewise constant
+	// in this case use i=0
         dof = iel;
         break;
       case 4: // piecewise linear discontinuous

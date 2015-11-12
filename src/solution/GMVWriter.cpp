@@ -183,8 +183,8 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
         fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
 	for(unsigned j=0;j<NVE[ielt][index];j++){
 
-	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(ii,j)-1u;
-	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index);
+	  //unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(ii,j)-1u;
+	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(j,ii,index);
 
 	  topology[j]=jnode_Metis+offset;
 	}
@@ -407,8 +407,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 	nel++;
 	short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(kel);
         for(unsigned j=0; j<NVE[ielt][index]; j++){
-	  unsigned jnode =_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, j, index);
-	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
+	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(j,kel, index);
 	  if( jnodeMetis < offset_iprc ){ //Is this a ghost node?
 	    if( ghostMap.find( gridOffset + jnodeMetis) == ghostMap.end()){
 	      ghostMap[ gridOffset + jnodeMetis] = ghostMapCounter;
@@ -563,8 +562,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
         fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
 	for(unsigned j=0;j<NVE[ielt][index];j++){
 
-	  unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, j, index);
-	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index);
+	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(j,kel,index);
 	  topology[j]=(jnodeMetis >= offset_iprc )? jnodeMetis - offset_iprc + offset :
 						     nvt0 + ghostMap[gridOffset+jnodeMetis] + 1u;
 	}

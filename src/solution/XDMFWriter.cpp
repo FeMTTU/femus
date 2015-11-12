@@ -275,8 +275,8 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 	int ndofs = _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index_nd);
         for (unsigned j = 0; j < ndofs; j++) {
 	  unsigned vtk_loc_conn = FemusToVTKorToXDMFConn[j];
-	  unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
-	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode,index_nd);
+	  //unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
+	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(vtk_loc_conn,iel,index_nd);
 	  var_conn[icount] = offset_conn + jnode_Metis;
 	  icount++;
 	}
@@ -304,7 +304,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 
     for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
       if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(ii,3);
+	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(0,ii,3);
 	var_conn[icount] = _ml_mesh->GetLevel(ig)->el->GetElementGroup(ii);
 	icount++;
       }
