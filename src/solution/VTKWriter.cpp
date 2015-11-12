@@ -131,8 +131,8 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 	for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
           counter++;
 	  unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
-	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
-	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
+	  //unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
+	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(loc_vtk_conn, kel, index);
 	  if( jnodeMetis < offset_iprc ){ // check if jnodeMetis is a ghost node
 	    if( ghostMap.find( gridOffset + jnodeMetis) == ghostMap.end()){
 	      ghostMap[ gridOffset + jnodeMetis] = ghostMapCounter;
@@ -314,8 +314,8 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
       if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
         for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(kel,index); j++) {
 	  unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
-	  unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
-	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(jnode, index);
+	  //unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(kel, loc_vtk_conn, index);
+	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(loc_vtk_conn, kel, index);
 	  var_conn[icount] = (jnodeMetis >= offset_iprc )? offset_nvt + jnodeMetis - offset_iprc :
 							   nvtOwned + ghostMap[gridOffset+jnodeMetis];
 	  icount++;
@@ -561,7 +561,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 	  for (unsigned iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
 	    unsigned kel = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem[iel];
 	    if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(kel)) {
-	      unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(kel,_ml_sol->GetSolutionType(i));
+	      unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(0, kel, _ml_sol->GetSolutionType(i));
 	      var_el[icount] = (*_ml_sol->GetSolutionLevel(ig)->_Sol[i])(iel_Metis);
 	      icount++;
 	    }

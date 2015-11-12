@@ -262,8 +262,8 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
       }
       else {
 	MeshRefinement meshcoarser(*_level0[i-1u]);
-        meshcoarser.FlagElementsToBeRefined();
-	//meshcoarser.FlagOnlyEvenElementsToBeRefined();
+        //meshcoarser.FlagElementsToBeRefined();
+	meshcoarser.FlagOnlyEvenElementsToBeRefined();
       }
       _level0[i] = new Mesh();
       MeshRefinement meshfiner(*_level0[i]);

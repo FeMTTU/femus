@@ -106,12 +106,15 @@ public:
       return Mesh::_ref_index;
     }
 
-    /** Get the metis dof from the gambit dof */
-    unsigned GetMetisDof(const unsigned &inode, const short unsigned &solType) const {
-      return IS_Gmt2Mts_dof[solType][inode];
-    }
+//     /** Get the metis dof from the gambit dof */
+//     unsigned GetMetisDof(const unsigned &inode, const short unsigned &solType) const {
+//       return IS_Gmt2Mts_dof[solType][inode];
+//     }
 
     unsigned GetMetisDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
+    
+    /** Performs a bisection search to find the processor of the given dof */
+    unsigned IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const;
 
     /** To be added */
     const unsigned GetFaceIndex() const {

@@ -248,7 +248,7 @@ namespace femus {
       }
       dofsAll.insert( dofsAll.end(), dofsVAR[2*dim].begin(), dofsVAR[2*dim].end() );
  
-      if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {  
+ //     if (1==1 || igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {  
 	
 	s.new_recording();
 	
@@ -353,7 +353,7 @@ namespace femus {
 	  for (unsigned inode=0; inode<nve1; inode++) {
 	    adept::adouble soli = Soli[indexVAR[2*dim]][inode];
 	    SolVAR[2*dim]+=phi1[inode]*soli;
-	  }
+	 // }
 	  // ---------------------------------------------------------------------------
 	  //BEGIN FLUID ASSEMBLY ============
 	  if(flag_mat==2){
@@ -408,7 +408,7 @@ namespace femus {
 		div_vel+=GradSolVAR[dim+i][i];
 	      }
 	      for (unsigned i=0; i<nve1; i++) {
-		aRhs[indexVAR[2*dim]][i] += -(-phi1[i]*div_vel)*Weight;
+		aRhs[indexVAR[2*dim]][i] += -(-phi1[i]*div_vel*(1.-SolVAR[2*dim]))*Weight;
 	      }
 	    }
 	    //END continuity block ===========================

@@ -197,7 +197,7 @@ namespace femus {
             unsigned jel = (!FastVankaBlock) ? *(pt_jel++) - 1u : iel;
             //add elements for velocity to be solved
 
-            unsigned jel_Metis = _msh->GetMetisDof(jel, 3);
+            unsigned jel_Metis = _msh->GetMetisDof(0, jel, 3);
 
             if (jel_Metis >= ElemOffset && jel_Metis < ElemOffsetp1) {
               if (indexc[jel_Metis - ElemOffset] == ElemOffsetSize) {
@@ -211,12 +211,13 @@ namespace femus {
                     unsigned SolType = _SolType[SolPdeIndex];
                     unsigned nvej = _msh->el->GetElementDofNumber(jel, SolType);
                     for (unsigned jj = 0; jj < nvej; jj++) {
-                      unsigned jnode = _msh->el->GetMeshDof(jel, jj, SolType);
+		      unsigned jnode_Metis = _msh->GetMetisDof(jj, jel, SolType);
+                      //unsigned jnode = _msh->el->GetMeshDof(jel, jj, SolType);
 
 // 		      bool solidmark = _msh->el->GetNodeRegion(jnode);
 // 		      if( vb_index < _block_type_range[0] || !solidmark ){
-                      unsigned jnode_Metis = _msh->GetMetisDof(jnode, SolType);
-                      unsigned kkdof = GetKKDof(SolPdeIndex, indexSol, jnode);
+                      //unsigned kkdof = GetKKDof(SolPdeIndex, indexSol, jnode);
+		      unsigned kkdof = GetKKDof(SolPdeIndex, indexSol, jj, jel);
                       if (jnode_Metis >= _msh->MetisOffset[SolType][iproc] &&
                           jnode_Metis <  _msh->MetisOffset[SolType][iproc + 1]) {
                         if (indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
@@ -248,9 +249,10 @@ namespace femus {
               unsigned SolType = _SolType[SolPdeIndex];
               unsigned nvei = _msh->el->GetElementDofNumber(iel, SolType);
               for (unsigned ii = 0; ii < nvei; ii++) {
-                unsigned inode = _msh->el->GetMeshDof(iel, ii, SolType);
-                unsigned inode_Metis = _msh->GetMetisDof(inode, SolType);
-                unsigned kkdof = GetKKDof(SolPdeIndex, indexSol, inode);
+		unsigned inode_Metis = _msh->GetMetisDof(ii, iel, SolType);
+                //unsigned inode = _msh->el->GetMeshDof(iel, ii, SolType);
+                //unsigned kkdof = GetKKDof(SolPdeIndex, indexSol, inode);
+		unsigned kkdof = GetKKDof(SolPdeIndex, indexSol, ii, iel);
                 if (inode_Metis >= _msh->MetisOffset[SolType][iproc] &&
                     inode_Metis <  _msh->MetisOffset[SolType][iproc + 1]) {
                   if (indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
