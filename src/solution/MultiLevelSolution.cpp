@@ -639,10 +639,15 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 		  _ml_msh->GetLevel(igridn)->el->GetElementFaceDofNumber(kel_gmt,jface,_SolType[k]):
 		  _ml_msh->GetLevel(igridn)->el->GetElementDofNumber(iel,_SolType[k]);
 		for (unsigned iv=0; iv<nv1; iv++) {
-		  unsigned inode=(!_TestIfPressure[k])?
-		    _ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
-		    _ml_msh->GetLevel(igridn)->el->GetElementVertexIndex(kel_gmt,iv)-1u;
-		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+// 		  unsigned inode=(!_TestIfPressure[k])?
+// 		    _ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(kel_gmt,jface,iv)-1u:
+// 		    _ml_msh->GetLevel(igridn)->el->GetElementVertexIndex(kel_gmt,iv)-1u;
+// 		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+		  
+		  unsigned i = (!_TestIfPressure[k])?
+		  _ml_msh->GetLevel(igridn)->el->GetLocalFaceVertexIndex(kel_gmt,jface,iv):iv;
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,kel_gmt,_SolType[k]);		  
+		  
 		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
 		}
 	      }
@@ -677,7 +682,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 	  }
 	}
       }
-      else if(_TestIfPressure[k]){
+      else if(_TestIfPressure[k] && 1==0){
 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
 	  unsigned nel=_ml_msh->GetLevel(igridn)->GetNumberOfElements();
 	  for (int iel=_ml_msh->GetLevel(igridn)->IS_Mts2Gmt_elem_offset[isdom];
