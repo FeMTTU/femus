@@ -52,7 +52,7 @@ int main(int argc,char **args) {
   /// INIT MESH =================================  
   
   unsigned short nm,nr;
-  nm=2;
+  nm=4;
   std::cout<<"MULTIGRID levels: "<< nm << endl;
 
   nr=2;
@@ -154,7 +154,8 @@ int main(int argc,char **args) {
   system1.SetDirichletBCsHandling(PENALTY); 
    
   // Solve Navier-Stokes system
-  ml_prob.get_system("Navier-Stokes").solve();
+  //ml_prob.get_system("Navier-Stokes"). 
+  system1.MGsolve();
   //END Navier-Stokes Multilevel Problem
   
   
@@ -193,12 +194,13 @@ int main(int argc,char **args) {
   system2.SetDirichletBCsHandling(PENALTY); 
   
   // Solve Temperature system
-  ml_prob.get_system("Temperature").solve();
+  //ml_prob.get_system("Temperature")
+  system2.MGsolve();
   //END Temperature Multilevel Problem
   
   double l2normvarU = ml_sol.GetSolutionLevel(3)->GetSolutionName("U").l2_norm(); 
   
-  double l2normvarUStored = 16.313927822836003;
+  double l2normvarUStored = 35.681793;
   
   std::cout << "Solution U l2norm: " << l2normvarU << std::endl; 
   
@@ -209,7 +211,7 @@ int main(int argc,char **args) {
   
   double l2normvarV = ml_sol.GetSolutionLevel(3)->GetSolutionName("V").l2_norm(); 
   
-  double l2normvarVStored = 6.0644257018060355;
+  double l2normvarVStored = 6.867494;
   
   std::cout << "Solution V l2norm: " << l2normvarV << std::endl; 
   
@@ -220,7 +222,7 @@ int main(int argc,char **args) {
   
   double l2normvarP = ml_sol.GetSolutionLevel(3)->GetSolutionName("P").l2_norm(); 
   
-  double l2normvarPStored = 1.8202105018866834;
+  double l2normvarPStored = 3.102228;
   
   std::cout << "Solution P l2norm: " << l2normvarP << std::endl; 
   
@@ -231,7 +233,7 @@ int main(int argc,char **args) {
   
   double l2normvarT = ml_sol.GetSolutionLevel(3)->GetSolutionName("T").l2_norm(); 
   
-  double l2normvarTStored = 219.68194612060503;
+  double l2normvarTStored = 57.697487;
   
   std::cout << "Solution T l2norm: " << l2normvarT <<std::endl; 
   
@@ -240,14 +242,12 @@ int main(int argc,char **args) {
     exit(1);
   }
   
-//   std::vector<std::string> print_vars;
-//   print_vars.push_back("U");
-//   print_vars.push_back("V");
-//   print_vars.push_back("P");
-//   print_vars.push_back("T");
-  
-//   GMVWriter gmvio(ml_sol);
-//   gmvio.write("biquadratic",print_vars);
+  // print solutions
+  std::vector < std::string > variablesToBePrinted;
+  variablesToBePrinted.push_back("All");
+
+  VTKWriter vtkIO(&ml_sol);
+  vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
   
   
   
@@ -447,7 +447,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
   
   // declare 
   vector < int > metis_node2; 
-  vector < int > node1;
+  vector < int > metis_node1;
   vector< vector< int > > KK_dof(dim+1); 
   vector <double> phi2;
   vector <double> gradphi2;
@@ -461,7 +461,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
   // reserve
   const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
   metis_node2.reserve(max_size);
-  node1.reserve( static_cast< unsigned > (ceil(pow(2,dim))));
+  metis_node1.reserve( static_cast< unsigned > (ceil(pow(2,dim))));
   for(int i=0;i<dim;i++) {
     coordinates[i].reserve(max_size);
   }
@@ -497,14 +497,14 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
  
   for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
-    unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
+    unsigned kel = iel;
     short unsigned kelt=myel->GetElementType(kel);
     unsigned nve2=myel->GetElementDofNumber(kel,order_ind2);
     unsigned nve1=myel->GetElementDofNumber(kel,order_ind1);
     
     //set to zero all the entries of the FE matrices
     metis_node2.resize(nve2);
-    node1.resize(nve1);
+    metis_node1.resize(nve1);
     phi2.resize(nve2);
     gradphi2.resize(nve2*dim);
     nablaphi2.resize(nve2*(3*(dim-1)) );
@@ -544,19 +544,19 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
     }
     
     for( unsigned i=0;i<nve2;i++){
-      unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
-      unsigned inode_metis=mymsh->GetMetisDof(inode,2);
+      //unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
+      unsigned inode_metis=mymsh->GetMetisDof(i,kel,2);
       metis_node2[i]=inode_metis;
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_metis);
-	KK_dof[ivar][i]=mylsyspde->GetKKDof(SolIndex[ivar],SolPdeIndex[ivar],inode);
+	coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_metis);
+	KK_dof[ivar][i]=mylsyspde->GetKKDof(SolIndex[ivar],SolPdeIndex[ivar],i,kel);
       }
     }
     
     for(unsigned i=0;i<nve1;i++) {
-      unsigned inode=(order_ind1<3)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
-      node1[i]=inode;
-      KK_dof[dim][i]=mylsyspde->GetKKDof(SolIndex[dim],SolPdeIndex[dim],inode);
+      unsigned inode_metis=mymsh->GetMetisDof(i, kel, order_ind1);
+      metis_node1[i]=inode_metis;
+      KK_dof[dim][i]=mylsyspde->GetKKDof(SolIndex[dim],SolPdeIndex[dim], i, kel);
     }
    
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
@@ -587,8 +587,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 	unsigned SolIndex=ml_sol->GetIndex(&Solname[3][0]);
 	unsigned SolType=ml_sol->GetSolutionType(&Solname[3][0]);
 	for(unsigned i=0; i<nve1; i++){
-	  unsigned sol_dof = mymsh->GetMetisDof(node1[i],SolType);
-	  double soli = (*mysolution->_Sol[SolIndex])(sol_dof);
+	  double soli = (*mysolution->_Sol[SolIndex])(metis_node1[i]);
 	  SolVAR[dim]+=phi1[i]*soli;
 	}
 
@@ -788,7 +787,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
  
   for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
-    unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
+    unsigned kel = iel;
     short unsigned kelt=myel->GetElementType(kel);
     unsigned nve=myel->GetElementDofNumber(kel,order_ind);
     
@@ -813,13 +812,13 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
     
     // get local to global mappings
     for( unsigned i=0;i<nve;i++){
-      unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;	
-      unsigned inode_metis=mymsh->GetMetisDof(inode,2);
+      //unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;	
+      unsigned inode_metis=mymsh->GetMetisDof(i, kel, 2);
       metis_node[i]=inode_metis;
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_metis);
+	coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_metis);
       }
-      KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,inode);
+      KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,i, kel);
     }
         
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {

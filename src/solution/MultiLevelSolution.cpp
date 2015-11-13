@@ -201,9 +201,9 @@ void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
 		unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j,iel,sol_type);
 		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j, iel, 2);
 		std::vector < double > xx(3);
-		xx[0]=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);
-		xx[1]=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
-		xx[2]=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+		xx[0]=(*_ml_msh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
+		xx[1]=(*_ml_msh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
+		xx[2]=(*_ml_msh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
 
 		value = func(xx);
 
@@ -223,9 +223,9 @@ void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
 	      std::vector < double > xx(3,0.);
 	      for(int j=0; j<nloc_dof; j++) {
 		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j,iel,2);
-		xx[0]+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);
-		xx[1]+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
-		xx[2]+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+		xx[0]+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
+		xx[1]+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
+		xx[2]+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
 	      }
 	      xx[0] /= nloc_dof;
 	      xx[1] /= nloc_dof;
@@ -283,9 +283,9 @@ void MultiLevelSolution::InitializeMLProb(const MultiLevelProblem * ml_prob, con
 	      for(int j=0; j<nloc_dof; j++) {
 		unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j, iel, sol_type);
 		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j, iel, 2);
-		double xx=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);
-		double yy=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
-		double zz=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+		double xx=(*_ml_msh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
+		double yy=(*_ml_msh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
+		double zz=(*_ml_msh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
 
 		value = func(ml_prob,xx,yy,zz,name);
 
@@ -306,9 +306,9 @@ void MultiLevelSolution::InitializeMLProb(const MultiLevelProblem * ml_prob, con
 	      double xx=0.,yy=0.,zz=0.;
 	      for(int j=0; j<nloc_dof; j++) {
 		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j, iel, 2);
-		xx+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[0])(icoord_Metis);
-		yy+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[1])(icoord_Metis);
-		zz+=(*_ml_msh->GetLevel(ig)->_coordinate->_Sol[2])(icoord_Metis);
+		xx+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
+		yy+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
+		zz+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
 	      }
 	      xx /= nloc_dof;
 	      yy /= nloc_dof;
@@ -488,9 +488,9 @@ void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0,
 		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,2);
 
 		  double value = 0.;
-		  double xx=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[0])(inode_coord_Metis);
-		  double yy=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[1])(inode_coord_Metis);
-		  double zz=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[2])(inode_coord_Metis);
+		  double xx=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[0])(inode_coord_Metis);
+		  double yy=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[1])(inode_coord_Metis);
+		  double zz=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[2])(inode_coord_Metis);
 		  unsigned int face = -(_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(iel,jface)+1)-1 ;
 		  if(GetBoundaryCondition(k,face) == DIRICHLET) {
 		     //unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
@@ -668,9 +668,9 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,2);
 		  double value;
 		  vector < double > xx(3);
-		  xx[0]=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[0])(inode_coord_Metis);
-		  xx[1]=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[1])(inode_coord_Metis);
-		  xx[2]=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[2])(inode_coord_Metis);
+		  xx[0]=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[0])(inode_coord_Metis);
+		  xx[1]=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[1])(inode_coord_Metis);
+		  xx[2]=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[2])(inode_coord_Metis);
 		  bool test=_SetBoundaryConditionFunction(xx,_SolName[k],value,-(_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(iel,jface)+1),time);
 		  if (test) {
 		    unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,_SolType[k]);
@@ -787,9 +787,9 @@ void MultiLevelSolution::GenerateBdcMLProb(const MultiLevelProblem * ml_prob, co
 		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,2);
 
 		  double value;
-		  double xx=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[0])(inode_coord_Metis);
-		  double yy=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[1])(inode_coord_Metis);
-		  double zz=(*_ml_msh->GetLevel(igridn)->_coordinate->_Sol[2])(inode_coord_Metis);
+		  double xx=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[0])(inode_coord_Metis);
+		  double yy=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[1])(inode_coord_Metis);
+		  double zz=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[2])(inode_coord_Metis);
 		  bool test=_SetBoundaryConditionFunctionMLProb(ml_prob,xx,yy,zz,_SolName[k],value,-(_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(iel,jface)+1),time);
 		  if (test) {
 		    //unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);

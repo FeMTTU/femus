@@ -258,7 +258,7 @@ namespace femus {
 	  aRhs[indexVAR[j+dim]][i] = 0.;
 	   
 	  //Fixed coordinates (Reference frame)
-	  vx_hat[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis);  
+	  vx_hat[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis);  
 	  // displacement dofs
 	  dofsVAR[j][i]= myLinEqSolver->GetKKDof(indVAR[j],indexVAR[j],inode); 
 	  // velocity dofs
@@ -314,8 +314,8 @@ namespace femus {
 		  unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
 		  unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
 		  for(unsigned idim=0; idim<dim; idim++) {
-		    vx_face[idim][i]    =(*mymsh->_coordinate->_Sol[idim])(inode_Metis) + Soli[indexVAR[idim]][ilocal];
-		    vx_face_old[idim][i]=(*mymsh->_coordinate->_Sol[idim])(inode_Metis) + Soli_old[indexVAR[idim]][ilocal];
+		    vx_face[idim][i]    =(*mymsh->_topology->_Sol[idim])(inode_Metis) + Soli[indexVAR[idim]][ilocal];
+		    vx_face_old[idim][i]=(*mymsh->_topology->_Sol[idim])(inode_Metis) + Soli_old[indexVAR[idim]][ilocal];
 		  }
 		}
 		for(unsigned igs=0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {

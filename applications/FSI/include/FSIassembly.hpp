@@ -297,11 +297,11 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob) {
       solidmark[i]=myel->GetNodeRegion(inode); // to check
       for(int j=0; j<dim; j++) {
 	//Updated coordinates (Moving frame)
-        vx[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
+        vx[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
 	//Old coordinates (Moving frame)
-        vx_old[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_SolOld[indVAR[j]])(inode_Metis);
+        vx_old[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis) + (*mysolution->_SolOld[indVAR[j]])(inode_Metis);
 	//Fixed coordinates (Reference frame)
-	vx_hat[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis);  
+	vx_hat[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis);  
 	// displacement dofs
 	dofsVAR[j][i]= mylsyspde->GetKKDof(indVAR[j],indexVAR[j],inode); 
 	// velocity dofs

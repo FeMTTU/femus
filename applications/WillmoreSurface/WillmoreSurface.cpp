@@ -434,7 +434,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
       unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned idim = 0; idim < dim; idim++) {
-        x[idim][i] = (*msh->_coordinate->_Sol[idim])(xDof);      // global extraction and local storage for the element coordinates
+        x[idim][i] = (*msh->_topology->_Sol[idim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -709,7 +709,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
       unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned idim = 0; idim < dim; idim++) {
-        x[idim][i] = (*msh->_coordinate->_Sol[idim])(xDof);      // global extraction and local storage for the element coordinates
+        x[idim][i] = (*msh->_topology->_Sol[idim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 

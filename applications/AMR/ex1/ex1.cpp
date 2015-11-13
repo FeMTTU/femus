@@ -259,7 +259,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofsX; i++) { 
       unsigned coordXDof  = msh->GetMetisDof(i, iel, crdXType);   // local to global mapping of the coordinate X[dim]
       for (unsigned k = 0; k < dim; k++) {
-        crdX[k][i] = (*msh->_coordinate->_Sol[k])(coordXDof);      // value of the solution X[dim]
+        crdX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // value of the solution X[dim]
       }
     }
 

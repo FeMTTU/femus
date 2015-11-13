@@ -369,7 +369,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob){
       unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
      
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+	coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
       }
       if(i<nve){
 	metis_node[i]=mymsh->GetMetisDof(inode,order_ind);
@@ -499,7 +499,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob){
 		unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
 
 		for(unsigned ivar=0; ivar<dim; ivar++) {
-		  coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+		  coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
 		}
 	      }
 
@@ -555,7 +555,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob){
 		unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
 		unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
 		for(unsigned idim=0; idim<dim; idim++) {
-		  coordinates[idim][i]=(*mymsh->_coordinate->_Sol[idim])(inode_Metis);
+		  coordinates[idim][i]=(*mymsh->_topology->_Sol[idim])(inode_Metis);
 		}
 	      }
 	      for(unsigned igs=0; igs < mymsh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {

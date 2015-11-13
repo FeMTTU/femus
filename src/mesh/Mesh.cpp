@@ -65,8 +65,8 @@ unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 
   Mesh::~Mesh(){
     delete el;
-    _coordinate->FreeSolutionVectors();
-    delete _coordinate;
+    _topology->FreeSolutionVectors();
+    delete _topology;
 
     for (int itype=0; itype<3; itype++) {
       for (int jtype=0; jtype<3; jtype++) {
@@ -132,23 +132,32 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   BuildAdjVtx();
   Buildkel();
 
-  _coordinate = new Solution(this);
+  _topology = new Solution(this);
 
-  _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0);
-  _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0);
-  _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("X",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("Y",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("Z",LAGRANGE,SECOND,1,0);
 
-  _coordinate->ResizeSolutionVector("X");
-  _coordinate->ResizeSolutionVector("Y");
-  _coordinate->ResizeSolutionVector("Z");
+  _topology->ResizeSolutionVector("X");
+  _topology->ResizeSolutionVector("Y");
+  _topology->ResizeSolutionVector("Z");
 
-  _coordinate->GetSolutionName("X") = _coords[0];
-  _coordinate->GetSolutionName("Y") = _coords[1];
-  _coordinate->GetSolutionName("Z") = _coords[2];
+  _topology->GetSolutionName("X") = _coords[0];
+  _topology->GetSolutionName("Y") = _coords[1];
+  _topology->GetSolutionName("Z") = _coords[2];
 
-  _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
+  _topology->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
 
-  _coordinate->ResizeSolutionVector("AMR");
+  _topology->ResizeSolutionVector("AMR");
+  
+  _topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _topology->ResizeSolutionVector("Material");
+  NumericVector &material =  _topology->GetSolutionName("Material");
+  
+  for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
+    material.set(iel,el->GetElementMaterial(iel)+iel);
+  }
+  material.close();
 
 };
 
@@ -183,23 +192,33 @@ void Mesh::GenerateCoarseBoxMesh(
 
   Buildkel();
 
-  _coordinate = new Solution(this);
+  _topology = new Solution(this);
 
-  _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0);
-  _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0);
-  _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("X",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("Y",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("Z",LAGRANGE,SECOND,1,0);
 
-  _coordinate->ResizeSolutionVector("X");
-  _coordinate->ResizeSolutionVector("Y");
-  _coordinate->ResizeSolutionVector("Z");
+  _topology->ResizeSolutionVector("X");
+  _topology->ResizeSolutionVector("Y");
+  _topology->ResizeSolutionVector("Z");
 
-  _coordinate->GetSolutionName("X") = _coords[0];
-  _coordinate->GetSolutionName("Y") = _coords[1];
-  _coordinate->GetSolutionName("Z") = _coords[2];
+  _topology->GetSolutionName("X") = _coords[0];
+  _topology->GetSolutionName("Y") = _coords[1];
+  _topology->GetSolutionName("Z") = _coords[2];
 
-  _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
+  _topology->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
 
-  _coordinate->ResizeSolutionVector("AMR");
+  _topology->ResizeSolutionVector("AMR");
+  
+  _topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _topology->ResizeSolutionVector("Material");
+  NumericVector &material =  _topology->GetSolutionName("Material");
+  
+  for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
+    material.set(iel, el->GetElementMaterial(iel) );
+  }
+  material.close();
+  
 
 }
 

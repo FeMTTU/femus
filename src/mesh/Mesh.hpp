@@ -154,7 +154,7 @@ public:
 
 
     // member data
-    Solution* _coordinate;
+    Solution* _topology;
     const elem_type *_finiteElement[6][5];
 
     vector < unsigned > _elementOffset;

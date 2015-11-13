@@ -563,7 +563,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 	unsigned inode_Metis=mymsh->GetMetisDof(inode,SolTypeVx);	
 	for(int j=0; j<dim; j++) {
 	  //coordinates
-	  vx[j][i]=  (*mymsh->_coordinate->_Sol[j])(inode_Metis); 
+	  vx[j][i]=  (*mymsh->_topology->_Sol[j])(inode_Metis); 
 	}
       }
       
@@ -1053,7 +1053,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 	unsigned inodeVx_Metis=mymsh->GetMetisDof(inode,SolTypeVx);	
 	for(int j=0; j<geoDim; j++) {
 	  //coordinates
-	  vx[j][i]=  (*mymsh->_coordinate->_Sol[j])(inodeVx_Metis); 
+	  vx[j][i]=  (*mymsh->_topology->_Sol[j])(inodeVx_Metis); 
 	}
       }
       // ------------------------------------
@@ -1371,7 +1371,7 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
       unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
       metis_node[i]=mymsh->GetMetisDof(inode,order_ind);
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+	coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
       }
       KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,inode);
     }

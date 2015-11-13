@@ -377,7 +377,7 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
     SolEndInd[k]   = END_IND[SolType[k]];
   }
 
-  Solution* AMR = _msh->_coordinate;
+  Solution* AMR = _msh->_topology;
   unsigned  AMRIndex= AMR->GetIndex("AMR");
   AMR->_Sol[AMRIndex]->zero();
 
@@ -467,7 +467,7 @@ bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,co
     }
   }
 
-  Solution* AMR = _msh->_coordinate;
+  Solution* AMR = _msh->_topology;
   unsigned  AMRIndex= AMR->GetIndex("AMR");
 
   AMR->_Sol[AMRIndex]->zero();
@@ -588,7 +588,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
 	unsigned inode_coord_metis=_msh->GetMetisDof(i,iel,2);
 	column_dofs[i]=_msh->GetMetisDof(i,iel,SolType);
         for(unsigned ivar=0; ivar<dim; ivar++) {
-          coordinates[ivar][i]=(*_msh->_coordinate->_Sol[ivar])(inode_coord_metis);
+          coordinates[ivar][i]=(*_msh->_topology->_Sol[ivar])(inode_coord_metis);
         }
       }
       _msh->_finiteElement[ielt][SolType]->Jacobian(coordinates,0,weight,phi,gradphi, nablaphi );

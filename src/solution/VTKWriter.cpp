@@ -199,7 +199,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
     unsigned nvt_ig = _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
     for (int i = 0; i < 3; i++) {
       if( !_surface ){
-	mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
+	mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_topology->_Sol[i],
 			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
 	if( _graph && i == 2 ){
 	  unsigned indGraph=_ml_sol->GetIndex(_graphVariable.c_str());
@@ -229,7 +229,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   for (int i=0; i<3; i++) {
     for (unsigned ig = _gridr-1u; ig<_gridn; ig++) {
       if( !_surface ){
-	mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)-> _coordinate->_Sol[i],
+	mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)-> _topology->_Sol[i],
 			       *_ml_mesh->GetLevel(ig)-> GetQitoQjProjection(index,2) );
 	if( _graph && i == 2){
 	  unsigned indGraphVar = _ml_sol->GetIndex(_graphVariable.c_str());
@@ -577,6 +577,49 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
       }
     } //end _ml_sol != NULL
   }
+  
+  
+  
+  
+  
+  
+  
+  
+  // ???????????????????????????????????????????? TODO
+  
+  NumericVector &material =  _ml_mesh->GetLevel(_gridn-1)->_topology->GetSolutionName("Material");
+  
+  fout  << "        <DataArray type=\"Float32\" Name=\"" << "MATERIAL" <<"\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "MATERIAL" <<"\" format=\"binary\"/>" << std::endl;
+  // point pointer to common memory area buffer of void type;
+  float *var_el = static_cast< float*> (buffer_void);
+  icount=0;
+  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+    for (unsigned iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
+      if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(0, iel, 3);
+	var_el[icount] = (material)(iel_Metis);
+	icount++;
+      }
+    }  
+  }
+  //print solution on element dimension
+  cch = b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), NULL, 0);
+  b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), &enc[0], cch);
+  pt_char=&enc[0];
+  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+  //print solution on element array
+  cch = b64::b64_encode(&var_el[0], dim_array_elvar[0] , NULL, 0);
+  b64::b64_encode(&var_el[0], dim_array_elvar[0], &enc[0], cch);
+  pt_char=&enc[0];
+  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+  fout << std::endl;
+  fout << "        </DataArray>" << std::endl;
+
+  // ???????????????????????????????????????????? TODO
+  
+  
+    
   fout  << "      </CellData>" << std::endl;
   Pfout << "    </PCellData>" << std::endl;
   //   //------------------------------------------------------------------------------------------------
@@ -802,7 +845,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 //     std::vector<double> v_local;
 //     unsigned nvt_ig=_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
 //     for(int kk=0;kk<3;kk++) {
-//       mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[kk],
+//       mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_topology->_Sol[kk],
 // 			     *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2));
 //       mysol[ig]->localize_to_one(v_local,0);
 //       if(_iproc==0) {

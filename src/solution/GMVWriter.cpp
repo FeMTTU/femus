@@ -111,7 +111,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
   for (int i=0; i<3; i++) {
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
       if(!_surface){
-	Mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
+	Mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_topology->_Sol[i],
 			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
         if(_graph && i == 2){
 	  unsigned indGraphVar = _ml_sol->GetIndex(_graphVariable.c_str());
@@ -457,7 +457,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
   for (int i=0; i<3; i++) {
     for (unsigned ig=igridr-1u; ig<gridn; ig++) {
       if(!_surface){
-	Mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
+	Mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_topology->_Sol[i],
 			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
 	if( _graph && i == 2){
 	  unsigned indGraphVar = _ml_sol->GetIndex(_graphVariable.c_str());
@@ -497,7 +497,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
     if (_ml_sol != NULL && _moving_mesh  && _ml_mesh->GetLevel(0)->GetDimension() > i) { // if moving mesh
       for (unsigned ig=igridr-1u; ig<gridn; ig++) {
 	if(!_surface){
-	  Mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
+	  Mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_topology->_Sol[i],
 			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
 	  if( _graph && i == 2){
 	    unsigned indGraphVar = _ml_sol->GetIndex(_graphVariable.c_str());

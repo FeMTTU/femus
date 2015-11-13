@@ -229,7 +229,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
       NumericVector* mysol = NumericVector::build().release();
 
       mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->_ownSize[index_nd][_iproc],true,AUTOMATIC);
-      mysol->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
+      mysol->matrix_mult(*_ml_mesh->GetLevel(ig)->_topology->_Sol[i],
 			 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,2) );
 
       vector<double> mysol_ser;

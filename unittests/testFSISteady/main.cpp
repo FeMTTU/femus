@@ -499,7 +499,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob) {
   /// *** element loop ***
   for(int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
-    unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
+    unsigned kel        = iel;
     short unsigned kelt = myel->GetElementType(kel);
     unsigned nve        = myel->GetElementDofNumber(kel,order_ind2);
     unsigned nve1       = myel->GetElementDofNumber(kel,order_ind1);
@@ -600,7 +600,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob) {
       // gambit nodes
       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
       // dof metis
-      unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+      unsigned inode_Metis=mymsh->GetMetisDof(i, kel, 2);
       metis_node2[i]=inode_Metis;
       
       //unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
@@ -608,21 +608,20 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob) {
       solidmark[i]=myel->GetNodeRegion(inode); // to check
       for(int j=0; j<dim; j++) {
 	//Updated coordinates (Moving frame)
-        vx[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
+        vx[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
 	//Fixed coordinates (Reference frame)
-	vx_hat[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis);  
+	vx_hat[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis);  
 	// displacement dofs
-	dofsVAR[j][i]= myLinEqSolver->GetKKDof(indVAR[j],indexVAR[j],inode); 
+	dofsVAR[j][i]= myLinEqSolver->GetKKDof(indVAR[j],indexVAR[j], i, kel); 
 	// velocity dofs
-	dofsVAR[j+dim][i]= myLinEqSolver->GetKKDof(indVAR[j+dim],indexVAR[j+dim],inode);   
+	dofsVAR[j+dim][i]= myLinEqSolver->GetKKDof(indVAR[j+dim],indexVAR[j+dim], i, kel);   
       }
     }
 
     // pressure dofs
     for (unsigned i=0;i<nve1;i++) {
-      unsigned inode=(order_ind1<3)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
-      metis_node1[i]=mymsh->GetMetisDof(inode,SolType[2*dim]);
-      dofsVAR[2*dim][i]=myLinEqSolver->GetKKDof(indVAR[2*dim],indexVAR[2*dim],inode);
+      metis_node1[i]=mymsh->GetMetisDof(i, kel, SolType[2*dim]);
+      dofsVAR[2*dim][i]=myLinEqSolver->GetKKDof(indVAR[2*dim],indexVAR[2*dim],i, kel);
     }
     // ----------------------------------------------------------------------------------------
        
