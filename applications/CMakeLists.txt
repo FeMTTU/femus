@@ -35,7 +35,12 @@ IF(BUILD_FSIAPPS)
 
 # FSI SteadyState in porous media
   ADD_SUBDIRECTORY(${FSI_FOLDER}/fsi_porous/)
+
+# FSI SteadyState in porous media
+  ADD_SUBDIRECTORY(${FSI_FOLDER}/frac/)
+  
   unset(FSI_FOLDER)
+  
 ENDIF(BUILD_FSIAPPS)
 
 
