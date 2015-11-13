@@ -8,15 +8,15 @@
 using namespace femus;
 
 double InitialValueThom(const std::vector < double >& x) {
-  return x[0] + x[1];
+  return 0.;
 }
 
 double InitialValueThomAdj(const std::vector < double >& x) {
-  return x[0];
+  return 0.;
 }
 
 double InitialValueTcont(const std::vector < double >& x) {
-  return x[1];
+  return 0.;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
@@ -174,7 +174,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
  //*************************** 
   unsigned solIndexThomAdj;
-  solIndexThom = mlSol->GetIndex("ThomAdj");    // get the position of "Thom" in the ml_sol object
+  solIndexThomAdj = mlSol->GetIndex("ThomAdj");    // get the position of "Thom" in the ml_sol object
   unsigned solTypeThomAdj = mlSol->GetSolutionType(solIndexThomAdj);    // get the finite element type for "Thom"
 
   unsigned solPdeIndexThomAdj;
@@ -224,7 +224,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     solThomAdj    .resize(nDofThomAdj);
     l2GMap_ThomAdj.resize(nDofThomAdj);
 
-    l2GMap_AllVars.resize(nDof_AllVars);
+    l2GMap_AllVars.resize(0);
 
  //*************************** 
     for (int i = 0; i < dim; i++) {
@@ -239,12 +239,20 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //*************************** 
 
     // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofThom; i++) {
+    for (unsigned i = 0; i < solThom.size(); i++) {
       unsigned iNode = el->GetMeshDof(kel, i, solTypeThom);    // local to global solution node
       unsigned solDofThom = msh->GetMetisDof(iNode, solTypeThom);    // global to global mapping between solution node and solution dof
       solThom[i] = (*sol->_Sol[solIndexThom])(solDofThom);      // global extraction and local storage for the solution
-      l2GMap_AllVars[i]/*_Thom*/ = pdeSys->GetKKDof(solIndexThom, solPdeIndexThom, iNode);    // global to global mapping between solution node and pdeSys dof
+      l2GMap_Thom[i] = pdeSys->GetKKDof(solIndexThom, solPdeIndexThom, iNode);    // global to global mapping between solution node and pdeSys dof
     }
+
+    for (unsigned i = 0; i < solThomAdj.size(); i++) {
+      unsigned iNode = el->GetMeshDof(kel, i, solTypeThomAdj);    // local to global solution node
+      unsigned solDofThomAdj = msh->GetMetisDof(iNode, solTypeThomAdj);    // global to global mapping between solution node and solution dof
+      solThomAdj[i] = (*sol->_Sol[solIndexThomAdj])(solDofThomAdj);      // global extraction and local storage for the solution
+      l2GMap_ThomAdj[i] = pdeSys->GetKKDof(solIndexThomAdj, solPdeIndexThomAdj, iNode);    // global to global mapping between solution node and pdeSys dof
+    }
+    
     
 //**** dof composition all vars *********************** 
 //           for(int i=0; i < n_vars;i++){
@@ -290,25 +298,27 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
         // *** phi_i loop ***
         for (unsigned i = 0; i < nDofThom; i++) {
 
-          double laplace = 0.;
+          double laplace_rhs = 0.;
 
           for (unsigned jdim = 0; jdim < dim; jdim++) {
-            laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+            laplace_rhs   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
           }
 
-          double srcTerm = 0.;
-          Res[i] += (srcTerm * phi[i] - laplace) * weight;
+          double srcTerm = 10.;
+          Res[i]            += (srcTerm * phi[i] - laplace_rhs) * weight;
+          Res[nDofThom + i] += (srcTerm * phi[i] - laplace_rhs) * weight;
 
           if (assembleMatrix) {
             // *** phi_j loop ***
             for (unsigned j = 0; j < nDofThom; j++) {
-              laplace = 0.;
+              double laplace_mat = 0.;
 
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-                laplace += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
+                laplace_mat += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
               }
 
-              Jac[i * nDofThom + j] += laplace;
+              Jac[i * (2*nDofThom) + j] += laplace_mat;
+              Jac[(2*nDofThom)*(nDofThom) + i * (2* nDofThom) +(nDofThom + j)] += laplace_mat;
             } // end phi_j loop
           } // endif assemble_matrix
 
