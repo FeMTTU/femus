@@ -66,11 +66,11 @@ unsigned LinearEquation::GetIndex(const char name[]) {
 
 // unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,
 // 				  const unsigned &idof_gmt) const {
-// 
+//
 //   unsigned soltype =  _SolType[index_sol];
 //   unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);
-// 
-//   unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype); 
+//
+//   unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype);
 //   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
 // }
 
@@ -80,7 +80,7 @@ unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kki
   unsigned soltype =  _SolType[index_sol];
   unsigned idof_metis = _msh->GetMetisDof(i, iel, soltype);
 
-  unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype); 
+  unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype);
   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
 }
 
@@ -150,13 +150,13 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
 	 //gambit ghost node
 // 	 unsigned gmt_ghost_nd = _msh->ghost_nd[_SolType[indexSol]][i][k];
 // 	 KKghost_nd[i][counter] =  GetKKDof(indexSol,j,gmt_ghost_nd);
-	 
-	 
+
+
 	 unsigned idof_metis = _msh->_ghostNodes[_SolType[indexSol]][i][k];
-	 unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, _SolType[indexSol]); 
+	 unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, _SolType[indexSol]);
          KKghost_nd[i][counter] = KKoffset[j][isubdom] + idof_metis - _msh->MetisOffset[_SolType[indexSol]][isubdom];
-	 
-	 
+
+
 	 counter++;
        }
      }
@@ -312,9 +312,8 @@ void LinearEquation::DeletePde() {
     std::map < int, std::map <int, bool > > DnBlgToMe_o;
     std::map < int, std::map <int, bool > > DnBlgToMe_d;
 
-    for(int iel=_msh->IS_Mts2Gmt_elem_offset[this_proc]; iel < _msh->IS_Mts2Gmt_elem_offset[this_proc+1]; iel++) {
+    for(int kel=_msh->IS_Mts2Gmt_elem_offset[this_proc]; kel < _msh->IS_Mts2Gmt_elem_offset[this_proc+1]; kel++) {
 
-      int kel        = _msh->IS_Mts2Gmt_elem[iel];
       short int kelt = _msh->el->GetElementType(kel);
       vector < int > nve(_SolPdeIndex.size());
       for(int i=0;i<_SolPdeIndex.size();i++){
@@ -352,7 +351,7 @@ void LinearEquation::DeletePde() {
 		  // identify the process the i-row belogns to
 		  int iproc=0;
 		  while (dofsVAR[i][inode] >= KKoffset[KKIndex.size()-1][iproc]) iproc++;
-		  
+
 		  // identify the process the j-column belogns to
 		  int jproc=0;
 		  while (dofsVAR[j][jnode] >= KKoffset[KKIndex.size()-1][jproc]) jproc++;

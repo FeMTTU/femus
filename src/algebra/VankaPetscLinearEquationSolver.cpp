@@ -112,9 +112,8 @@ namespace femus {
 	int gel=_msh->IS_Mts2Gmt_elem_offset[isdom] + vanka_block_index*_block_element_number;
 	// ***************** NODE/ELEMENT SERCH *******************
 
-	for (int iel_mts=gel; iel_mts<gel+_block_element_number && iel_mts< _msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	  unsigned iel = _msh->IS_Mts2Gmt_elem[iel_mts];
-
+	for (int iel=gel; iel<gel+_block_element_number && iel< _msh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+	  
 	  for (unsigned i=0; i<_msh->el->GetElementDofNumber(iel,0); i++) {
 	    unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
 	    unsigned nvei=_msh->el->GetVertexElementNumber(inode);

@@ -186,9 +186,8 @@ namespace femus {
 
       // ***************** NODE/ELEMENT SERCH *******************
       for (int kel = 0; kel < block_elements[vb_index].size(); kel++) {
-        unsigned iel_mts = block_elements[vb_index][kel];
-        unsigned iel = _msh->IS_Mts2Gmt_elem[iel_mts];
-
+        unsigned iel = block_elements[vb_index][kel];
+        
         for (unsigned i = 0; i < _msh->el->GetElementDofNumber(iel, 0); i++) {
           unsigned inode = _msh->el->GetElementVertexIndex(iel, i) - 1u;
           unsigned nvei = _msh->el->GetVertexElementNumber(inode);

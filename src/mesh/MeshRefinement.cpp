@@ -56,8 +56,7 @@ void MeshRefinement::FlagAllElementsToBeRefined() {
 void MeshRefinement::FlagElementsToBeRefined() {
 
     if(_mesh._IsUserRefinementFunctionDefined){
-      for (int iel_metis=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
-	unsigned kel = _mesh.IS_Mts2Gmt_elem[iel_metis];
+      for (int kel=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; kel < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; kel++) {
 	if( _mesh.GetLevel() == 0 || _mesh.el->IsFatherRefined(kel)  ){
 	  short unsigned kelt=_mesh.el->GetElementType(kel);
 	  unsigned nve=_mesh.el->GetElementDofNumber(kel,0);
@@ -72,9 +71,9 @@ void MeshRefinement::FlagElementsToBeRefined() {
 	  vtx[0]/=nve;
 	  vtx[1]/=nve;
 	  vtx[2]/=nve;
-	  if( (*_mesh._coordinate->_Sol[3])(iel_metis) < 0.5 &&
+	  if( (*_mesh._coordinate->_Sol[3])(kel) < 0.5 &&
 	      _mesh._SetRefinementFlag(vtx,_mesh.el->GetElementGroup(kel),_mesh.GetLevel()) ) {
-	      _mesh._coordinate->_Sol[3]->set(iel_metis,1.);
+	      _mesh._coordinate->_Sol[3]->set(kel,1.);
 	  }
 	}
       }
@@ -86,9 +85,8 @@ void MeshRefinement::FlagElementsToBeRefined() {
 
     _mesh.el->InitRefinedToZero();
 
-    for (unsigned iel_metis=0; iel_metis<_mesh.GetNumberOfElements(); iel_metis++) {
-      if(AMR_local[iel_metis]>0.5){
-	unsigned iel=_mesh.IS_Mts2Gmt_elem[iel_metis];
+    for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++) {
+      if(AMR_local[iel]>0.5){
 	_mesh.el->SetRefinedElementIndex(iel,1);
 	_mesh.el->AddToRefinedElementNumber(1);
 	short unsigned elt=_mesh.el->GetElementType(iel);
@@ -102,11 +100,10 @@ void MeshRefinement::FlagElementsToBeRefined() {
 //-------------------------------------------------------------------
 void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
 
-  for (int iel_metis=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
-    unsigned kel = _mesh.IS_Mts2Gmt_elem[iel_metis];
-    if( _mesh.GetLevel() == 0 || _mesh.el->IsFatherRefined(kel)){
-      if( (*_mesh._coordinate->_Sol[3])(iel_metis) < 0.5 && kel%2 == 0) {
-	_mesh._coordinate->_Sol[3]->set(iel_metis,1.);
+  for (int iel=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; iel < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
+    if( _mesh.GetLevel() == 0 || _mesh.el->IsFatherRefined(iel)){
+      if( (*_mesh._coordinate->_Sol[3])(iel) < 0.5 && iel%2 == 0) {
+	_mesh._coordinate->_Sol[3]->set(iel,1.);
       }
     }
   }
@@ -116,9 +113,8 @@ void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
 
   _mesh.el->InitRefinedToZero();
 
-  for (unsigned iel_metis=0; iel_metis<_mesh.GetNumberOfElements(); iel_metis++) {
-    if(AMR_local[iel_metis]>0.5){
-      unsigned iel=_mesh.IS_Mts2Gmt_elem[iel_metis];
+  for (unsigned iel = 0; iel < _mesh.GetNumberOfElements(); iel++) {
+    if(AMR_local[iel]>0.5){
       _mesh.el->SetRefinedElementIndex(iel,1);
       _mesh.el->AddToRefinedElementNumber(1);
       short unsigned elt=_mesh.el->GetElementType(iel);

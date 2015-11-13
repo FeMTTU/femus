@@ -394,15 +394,10 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
   }
   counter_vec->zero();
 
-  for (int iel_metis=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
-
-    unsigned kel = _msh->IS_Mts2Gmt_elem[iel_metis];
+  for (int kel = _msh->IS_Mts2Gmt_elem_offset[_iproc]; kel < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; kel++) {
     short unsigned kelt=_msh->el->GetElementType(kel);
-
     for (unsigned k=0; k<SolIndex.size(); k++) {
-
       if(SolType[k]<3){
-
       unsigned nve=_msh->el->GetElementDofNumber(kel,SolEndInd[k]);
       for(unsigned i=0; i<nve; i++) {
 	//unsigned inode=(SolType[k]<3)?(_msh->el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
@@ -410,7 +405,7 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
 	double value = (*_AMREps[SolIndex[k]])(inode_metis);
 	if(fabs(value)>SolMax[k]){
 	  counter_vec->add(_iproc,1.);
-	  AMR->_Sol[AMRIndex]->set(iel_metis,1.);
+	  AMR->_Sol[AMRIndex]->set(kel, 1.);
 	  k=SolIndex.size();
 	  i=nve;
 	}
@@ -569,10 +564,9 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       row_dof.resize(1);
       row_dof[0]=iel;
 
-      unsigned kel = _msh->IS_Mts2Gmt_elem[iel];
-      short unsigned kelt=_msh->el->GetElementType(kel);
+      short unsigned ielt=_msh->el->GetElementType(iel);
 
-      unsigned nve=_msh->el->GetElementDofNumber(kel,SolType);
+      unsigned nve=_msh->el->GetElementDofNumber(iel,SolType);
 
       // resize
       column_dofs.resize(nve);
@@ -590,14 +584,14 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       }
 
       for( unsigned i=0; i<nve; i++) {
-	//unsigned inode=_msh->el->GetElementVertexIndex(kel,i)-1u;
-	unsigned inode_coord_metis=_msh->GetMetisDof(i,kel,2);
-	column_dofs[i]=_msh->GetMetisDof(i,kel,SolType);
+	//unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
+	unsigned inode_coord_metis=_msh->GetMetisDof(i,iel,2);
+	column_dofs[i]=_msh->GetMetisDof(i,iel,SolType);
         for(unsigned ivar=0; ivar<dim; ivar++) {
           coordinates[ivar][i]=(*_msh->_coordinate->_Sol[ivar])(inode_coord_metis);
         }
       }
-      _msh->_finiteElement[kelt][SolType]->Jacobian(coordinates,0,weight,phi,gradphi, nablaphi );
+      _msh->_finiteElement[ielt][SolType]->Jacobian(coordinates,0,weight,phi,gradphi, nablaphi );
 
 
       for(int i=0;i<nve;i++){

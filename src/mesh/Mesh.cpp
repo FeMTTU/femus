@@ -292,7 +292,9 @@ void Mesh::FillISvector(vector < int > &epart) {
   for(int k=0;k<5;k++) {
     IS_Gmt2Mts_dof_offset[k].resize(_nprocs+1);
   }
-  IS_Mts2Gmt_elem.resize(GetNumberOfElements());
+  std::vector < unsigned> IS_Mts2Gmt_elem(GetNumberOfElements());
+  vector <unsigned> IS_Gmt2Mts_dof[5];
+
   IS_Mts2Gmt_elem_offset.resize(_nprocs+1);
   IS_Mts2Gmt_elem_offset[0] = 0;
 
@@ -321,21 +323,21 @@ void Mesh::FillISvector(vector < int > &epart) {
     el->ReorderMeshElements(IS_Mts2Gmt_elem, _coarseMsh->el);
   }
 
-  IS_Gmt2Mts_dof[3].assign(GetNumberOfElements(), 0);
-  IS_Gmt2Mts_dof[4].assign(GetNumberOfElements() * (_dimension + 1), 0);
+  //IS_Gmt2Mts_dof[3].assign(GetNumberOfElements(), 0);
+  //IS_Gmt2Mts_dof[4].assign(GetNumberOfElements() * (_dimension + 1), 0);
 
   for(int isdom = 0; isdom < _nprocs; isdom++){
     unsigned localSize = IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom];
     unsigned offsetPWLD = IS_Mts2Gmt_elem_offset[isdom] * (_dimension + 1);
     for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
       IS_Mts2Gmt_elem[iel] = iel;
-      IS_Gmt2Mts_dof[3][iel] = iel;
+      //IS_Gmt2Mts_dof[3][iel] = iel;
       //piecewise linear discontinuous
       unsigned locIel = iel - IS_Mts2Gmt_elem_offset[isdom];
       for(unsigned k = 0; k < _dimension + 1; k++){
         unsigned locKel = ( k * localSize ) + locIel;
         unsigned kel = offsetPWLD + locKel;
-        IS_Gmt2Mts_dof[4][iel + k * GetNumberOfElements()] =  kel;
+        //IS_Gmt2Mts_dof[4][iel + k * GetNumberOfElements()] =  kel;
       }
     }
   }
@@ -449,7 +451,7 @@ void Mesh::FillISvector(vector < int > &epart) {
     MetisOffset[k].resize(_nprocs+1);
     MetisOffset[k][0]=0;
 
-    IS_Gmt2Mts_dof[k].assign(GetNumberOfNodes(), GetNumberOfNodes());
+    //IS_Gmt2Mts_dof[k].assign(GetNumberOfNodes(), GetNumberOfNodes());
     std::vector < unsigned > ownedGhostCounter( _nprocs , 0);
     unsigned counter = 0;
 
@@ -458,7 +460,7 @@ void Mesh::FillISvector(vector < int > &epart) {
 
       //owned nodes
       for(unsigned inode = MetisOffset[2][isdom]; inode < own_size[k][isdom] + MetisOffset[2][isdom]; inode++) {
-	IS_Gmt2Mts_dof[k][inode] = counter;
+	//IS_Gmt2Mts_dof[k][inode] = counter;
 	counter++;
       }
 
@@ -606,8 +608,7 @@ void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
   NNZ_o->zero();
 
   for(unsigned isdom = _iproc; isdom < _iproc+1; isdom++) {
-    for (unsigned iel_mts = IS_Mts2Gmt_elem_offset[isdom]; iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
-      unsigned iel = IS_Mts2Gmt_elem[iel_mts];
+    for (unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
       short unsigned ielt = el->GetElementType(iel);
       _finiteElement[ielt][jtype]->GetSparsityPatternSize(*this, iel, NNZ_d, NNZ_o, itype);
     }
@@ -628,8 +629,7 @@ void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
   _ProjQitoQj[itype][jtype] = SparseMatrix::build().release();
   _ProjQitoQj[itype][jtype]->init(ni, nj, own_size[itype][_iproc], own_size[jtype][_iproc], nnz_d, nnz_o);
   for(unsigned isdom = _iproc; isdom < _iproc+1; isdom++) {
-    for (unsigned iel_mts = IS_Mts2Gmt_elem_offset[isdom]; iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
-      unsigned iel = IS_Mts2Gmt_elem[iel_mts];
+    for (unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
       short unsigned ielt = el->GetElementType(iel);
       _finiteElement[ielt][jtype]->BuildProlongation(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o,itype);
     }
@@ -692,8 +692,7 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
     NNZ_o->zero();
 
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom];iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
+      for (int iel = _coarseMsh->IS_Mts2Gmt_elem_offset[isdom];iel < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
 	short unsigned ielt=_coarseMsh->el->GetElementType(iel);
 	_finiteElement[ielt][solType]->GetSparsityPatternSize( *this, *_coarseMsh, iel, NNZ_d, NNZ_o);
       }
@@ -717,10 +716,8 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
 
     // loop on the coarse grid
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom];
-	   iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
-	short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+      for (int iel=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom]; iel < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+       short unsigned ielt=_coarseMsh->el->GetElementType(iel);
 	_finiteElement[ielt][solType]->BuildProlongation(*this, *_coarseMsh,iel, _ProjCoarseToFine[solType]);
       }
     }

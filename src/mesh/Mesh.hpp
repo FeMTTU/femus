@@ -158,7 +158,7 @@ public:
     const elem_type *_finiteElement[6][5];
 
     vector < unsigned > IS_Mts2Gmt_elem_offset;
-    vector < unsigned > IS_Mts2Gmt_elem;
+    //vector < unsigned > IS_Mts2Gmt_elem;
     vector < unsigned > own_size[5];
     vector <vector < unsigned > > MetisOffset;
     //vector< vector < unsigned > > ghost_nd[5];
@@ -207,7 +207,7 @@ private:
     static unsigned _dimension;                //< dimension of the problem
     static unsigned _ref_index;
     static unsigned _face_index;
-    vector <unsigned> IS_Gmt2Mts_dof[5];        //< dof map
+    /*vector <unsigned> IS_Gmt2Mts_dof[5];  */      //< dof map
     vector <unsigned> IS_Gmt2Mts_dof_offset[5]; //< map offset
     static const unsigned _END_IND[5];
     vector < vector < double > > _coords;
