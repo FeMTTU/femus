@@ -296,6 +296,8 @@ void Mesh::FillISvector(vector < int > &epart) {
   IS_Mts2Gmt_elem_offset.resize(_nprocs+1);
   IS_Mts2Gmt_elem_offset[0] = 0;
 
+  MetisOffset.resize(5);
+
   //END Initialization for k = 0,1,2,3,4
 
   //BEGIN building the  metis2Gambit_elem and  k = 3,4
@@ -347,10 +349,13 @@ void Mesh::FillISvector(vector < int > &epart) {
     own_size[3][isdom] = IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom];
     own_size[4][isdom] = (IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom])*(_dimension+1);
   }
-  
+
   for(int k = 3; k < 5; k++) {
+    MetisOffset[k].resize( _nprocs + 1 );
+    MetisOffset[k][0] = 0;
     _ghostNodes[k].resize(_nprocs);
     for(int isdom = 0; isdom < _nprocs; isdom++) {
+      MetisOffset[k][isdom+1] = MetisOffset[k][isdom] + own_size[k][isdom];
       _ghostNodes[k][isdom].resize( 0 );
     }
   }
@@ -359,8 +364,6 @@ void Mesh::FillISvector(vector < int > &epart) {
   //BEGIN building for k = 0,1,2
   vector < unsigned > npart;
   npart.reserve(GetNumberOfNodes());
-
-  MetisOffset.resize(5);
 
   // Initialization for k = 0,1,2
   npart.assign(GetNumberOfNodes(),_nprocs);
@@ -440,14 +443,17 @@ void Mesh::FillISvector(vector < int > &epart) {
 
 
   //BEGIN completing k = 0, 1
-  
+
   for(unsigned k = 0; k < 2; k++){
+
+    MetisOffset[k].resize(_nprocs+1);
+    MetisOffset[k][0]=0;
 
     IS_Gmt2Mts_dof[k].assign(GetNumberOfNodes(), GetNumberOfNodes());
     std::vector < unsigned > ownedGhostCounter( _nprocs , 0);
     unsigned counter = 0;
 
-    
+    _originalOwnSize[k].resize(_nprocs);
     for(int isdom = 0; isdom < _nprocs; isdom++){
 
       //owned nodes
@@ -455,29 +461,21 @@ void Mesh::FillISvector(vector < int > &epart) {
 	IS_Gmt2Mts_dof[k][inode] = counter;
 	counter++;
       }
-      
+
       for (unsigned inode = 0; inode < _ghostNodes[k][isdom].size(); inode++){
 	unsigned ghostNode = _ghostNodes[k][isdom][inode];
 
 	unsigned ksdom = IsdomBisectionSearch(ghostNode, 2);
-	
+
 	int upperBound = MetisOffset[2][ksdom] + own_size[k][ksdom];
-// 	if( ghostNode < upperBound || IS_Gmt2Mts_dof[k][ ghostNode ] != GetNumberOfNodes()){ // real ghost nodes
-// 	  _ghostNodes[k][isdom][inode] = IS_Gmt2Mts_dof[k][ ghostNode ];
-// 	}
-	
+
 	if( ghostNode < upperBound ){
-	  _ghostNodes[k][isdom][inode] = IS_Gmt2Mts_dof[k][ ghostNode ];
-	  //_ghostNodes[k][isdom][inode] =  ghostNode  + MetisOffset[k][ksdom] - MetisOffset[2][ksdom];
-	  // std::cout << IS_Gmt2Mts_dof[k][ ghostNode ] <<" "<<ghostNode  + MetisOffset[k][ksdom] - MetisOffset[2][ksdom]<<std::endl;
-	  
+	  _ghostNodes[k][isdom][inode] =  ghostNode  - MetisOffset[2][ksdom] + MetisOffset[k][ksdom];
 	}
 	else if( _ownedGhostMap[k].find(ghostNode) != _ownedGhostMap[k].end() ){
-	  _ghostNodes[k][isdom][inode] = IS_Gmt2Mts_dof[k][ ghostNode ];
-	  //_ghostNodes[k][isdom][inode] =  _ownedGhostMap[k][ghostNode];  
+	  _ghostNodes[k][isdom][inode] =  _ownedGhostMap[k][ghostNode];
 	}
 	else { // owned ghost nodes
-	  IS_Gmt2Mts_dof[k][ ghostNode ] = counter;
 	  _ownedGhostMap[k][ ghostNode ] = counter;
 	  counter++;
 	  ownedGhostCounter[isdom]++;
@@ -490,28 +488,16 @@ void Mesh::FillISvector(vector < int > &epart) {
 	  inode--;
 	}
       }
-    }
-
-    _originalOwnSize[k].resize(_nprocs);
-    
-    for(int isdom = 0; isdom < _nprocs; isdom++){
       _originalOwnSize[k][isdom] = own_size[k][isdom];
       own_size[k][isdom] += ownedGhostCounter[isdom];
+      MetisOffset[k][isdom+1]= MetisOffset[k][isdom] + own_size[k][isdom];
     }
   }
   //END completing for k = 0, 1
 
-
-  //BEGIN Initilize and set all the Offsets
-  MetisOffset.resize(5);
-  for(int k=0;k<5;k++) {
-    MetisOffset[k].resize(_nprocs+1);
-    MetisOffset[k][0]=0;
-    for(int i = 1 ;i <= _nprocs; i++){
-      MetisOffset[k][i]= MetisOffset[k][i-1] + own_size[k][i-1];
-    }
+  for(int k=0; k<5; k++) {
+    IS_Gmt2Mts_dof[k].resize(0);
   }
-  //END Initilize and set all the Offsets
 
 }
 
@@ -528,7 +514,7 @@ void Mesh::FillISvector(vector < int > &epart) {
       else isdom0 = isdom + 1;
       isdom = ( isdom0 + isdom1 ) / 2;
     }
-  
+
     return isdom;
   }
   // *******************************************************
@@ -561,7 +547,7 @@ void Mesh::FillISvector(vector < int > &epart) {
 	  }
 	}
 	break;
-	
+
       case 2: // bi-quadratic Lagrange
         dof = el->GetMeshDof(iel, i, solType);
         break;
