@@ -71,7 +71,7 @@ unsigned LinearEquation::GetIndex(const char name[]) {
 //   unsigned idof_metis = _msh->GetMetisDof(idof_gmt,soltype);
 //
 //   unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype);
-//   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
+//   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->_dofOffset[soltype][isubdom];
 // }
 
 unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,
@@ -81,7 +81,7 @@ unsigned LinearEquation::GetKKDof(const unsigned &index_sol, const unsigned &kki
   unsigned idof_metis = _msh->GetMetisDof(i, iel, soltype);
 
   unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype);
-  return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->MetisOffset[soltype][isubdom];
+  return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->_dofOffset[soltype][isubdom];
 }
 
 
@@ -103,7 +103,7 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   KKIndex.resize(_SolPdeIndex.size()+1u);
   KKIndex[0]=0;
   for (unsigned i=1; i<KKIndex.size(); i++)
-  KKIndex[i]=KKIndex[i-1]+_msh->MetisOffset[_SolType[_SolPdeIndex[i-1]]][n_processors()];
+  KKIndex[i]=KKIndex[i-1]+_msh->_dofOffset[_SolType[_SolPdeIndex[i-1]]][n_processors()];
 
   //-----------------------------------------------------------------------------------------------
   KKoffset.resize(_SolPdeIndex.size()+1);
@@ -114,14 +114,14 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   KKoffset[0][0]=0;
   for(int j=1; j<_SolPdeIndex.size()+1; j++) {
     unsigned indexSol=_SolPdeIndex[j-1];
-    KKoffset[j][0] = KKoffset[j-1][0]+(_msh->MetisOffset[_SolType[indexSol]][1] - _msh->MetisOffset[_SolType[indexSol]][0]);
+    KKoffset[j][0] = KKoffset[j-1][0]+(_msh->_dofOffset[_SolType[indexSol]][1] - _msh->_dofOffset[_SolType[indexSol]][0]);
   }
 
   for(int i=1; i<_nprocs; i++) {
     KKoffset[0][i] = KKoffset[_SolPdeIndex.size()][i-1];
     for(int j=1; j<_SolPdeIndex.size()+1; j++) {
       unsigned indexSol=_SolPdeIndex[j-1];
-      KKoffset[j][i] = KKoffset[j-1][i]+(_msh->MetisOffset[_SolType[indexSol]][i+1] - _msh->MetisOffset[_SolType[indexSol]][i]);
+      KKoffset[j][i] = KKoffset[j-1][i]+(_msh->_dofOffset[_SolType[indexSol]][i+1] - _msh->_dofOffset[_SolType[indexSol]][i]);
     }
   }
 
@@ -130,7 +130,7 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   for(int i=0; i<_nprocs; i++) {
     for(int j=0; j<_SolPdeIndex.size(); j++) {
       unsigned indexSol=_SolPdeIndex[j];
-      KKghostsize[i] += _msh->_ghostNodes[_SolType[indexSol]][i].size();
+      KKghostsize[i] += _msh->_ghostDofs[_SolType[indexSol]][i].size();
     }
   }
 
@@ -146,15 +146,15 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
     unsigned counter=0;
     for(int j=0; j<_SolPdeIndex.size(); j++) {
        unsigned indexSol=_SolPdeIndex[j];
-       for(int k=0; k<_msh->_ghostNodes[_SolType[indexSol]][i].size();k++) {
+       for(int k=0; k<_msh->_ghostDofs[_SolType[indexSol]][i].size();k++) {
 	 //gambit ghost node
 // 	 unsigned gmt_ghost_nd = _msh->ghost_nd[_SolType[indexSol]][i][k];
 // 	 KKghost_nd[i][counter] =  GetKKDof(indexSol,j,gmt_ghost_nd);
 
 
-	 unsigned idof_metis = _msh->_ghostNodes[_SolType[indexSol]][i][k];
+	 unsigned idof_metis = _msh->_ghostDofs[_SolType[indexSol]][i][k];
 	 unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, _SolType[indexSol]);
-         KKghost_nd[i][counter] = KKoffset[j][isubdom] + idof_metis - _msh->MetisOffset[_SolType[indexSol]][isubdom];
+         KKghost_nd[i][counter] = KKoffset[j][isubdom] + idof_metis - _msh->_dofOffset[_SolType[indexSol]][isubdom];
 
 
 	 counter++;
@@ -312,7 +312,7 @@ void LinearEquation::DeletePde() {
     std::map < int, std::map <int, bool > > DnBlgToMe_o;
     std::map < int, std::map <int, bool > > DnBlgToMe_d;
 
-    for(int kel=_msh->IS_Mts2Gmt_elem_offset[this_proc]; kel < _msh->IS_Mts2Gmt_elem_offset[this_proc+1]; kel++) {
+    for(int kel=_msh->_elementOffset[this_proc]; kel < _msh->_elementOffset[this_proc+1]; kel++) {
 
       short int kelt = _msh->el->GetElementType(kel);
       vector < int > nve(_SolPdeIndex.size());

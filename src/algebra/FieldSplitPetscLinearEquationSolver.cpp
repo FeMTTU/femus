@@ -105,8 +105,8 @@ namespace femus {
     for (int k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype = _SolType[indexSol];
-      for (unsigned inode_mts = _msh->MetisOffset[soltype][processor_id()]; inode_mts < _msh->MetisOffset[soltype][processor_id() + 1]; inode_mts++) {
-        int local_mts = inode_mts - _msh->MetisOffset[soltype][processor_id()];
+      for (unsigned inode_mts = _msh->_dofOffset[soltype][processor_id()]; inode_mts < _msh->_dofOffset[soltype][processor_id() + 1]; inode_mts++) {
+        int local_mts = inode_mts - _msh->_dofOffset[soltype][processor_id()];
         int idof_kk = KKoffset[k][processor_id()] + local_mts;
         if (!ThisSolutionIsIncluded[k] || (*(*_Bdc)[indexSol])(inode_mts) < 1.9) {
           _indexai[0][count0] = idof_kk;

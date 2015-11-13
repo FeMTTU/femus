@@ -511,7 +511,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
       myKK->zero();
 
     // *** element loop ***
-    for (int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+    for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
         unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
         short unsigned kelt=myel->GetElementType(kel);
@@ -739,7 +739,7 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
     unsigned SolOrder = ml_sol.GetSolutionType(SolIndex);
     
         
-    for (int iel_metis=msh->IS_Mts2Gmt_elem_offset[iproc]; iel_metis < msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel_metis++) {
+    for (int iel_metis=msh->_elementOffset[iproc]; iel_metis < msh->_elementOffset[iproc+1]; iel_metis++) {
       unsigned kel = msh->IS_Mts2Gmt_elem[iel_metis];
       if(ilevel==gridn-1 || !msh->el->GetRefinedElementIndex(kel)) {
         short unsigned kelt= msh->el->GetElementType(kel);

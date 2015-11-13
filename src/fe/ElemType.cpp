@@ -197,7 +197,7 @@ void elem_type::GetSparsityPatternSize(const LinearEquation &lspdef,const Linear
       //int irow=lspdef.GetKKDof(index_sol,kkindex_sol,iadd);  //  local-id to dof
       int irow=lspdef.GetKKDof(index_sol,kkindex_sol,i,ielf);  //  local-id to dof
       int iproc=0;
-      //while (irow < meshf.MetisOffset[_SolType][iproc] || irow >= meshf.MetisOffset[_SolType][iproc+1] ) iproc++;
+      //while (irow < meshf.>_dofOffset[_SolType][iproc] || irow >= meshf.>_dofOffset[_SolType][iproc+1] ) iproc++;
       while ( irow >= lspdef.KKoffset[lspdef.KKIndex.size()-1][iproc] ) iproc++;
 
       //int jadd = lspdec._msh->el->GetMeshDof(ielc,i,_SolType);
@@ -348,7 +348,7 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
       for (int k=0; k<ncols; k++) {
 	int j= _prol_ind[i][k];
 	int jcolumn = meshc.GetMetisDof(j,ielc,_SolType);
-	if(jcolumn < meshc.MetisOffset[_SolType][iproc] || jcolumn >= meshc.MetisOffset[_SolType][iproc+1] ) counter_o++;
+	if(jcolumn < meshc._dofOffset[_SolType][iproc] || jcolumn >= meshc._dofOffset[_SolType][iproc+1] ) counter_o++;
       }
       NNZ_d->set(irow,ncols-counter_o);
       NNZ_o->set(irow,counter_o);
@@ -363,7 +363,7 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
       int iproc = meshf.IsdomBisectionSearch(irow, _SolType);
 
       int jcolumn=meshc.GetMetisDof(i,ielc,_SolType);
-      if(jcolumn < meshc.MetisOffset[_SolType][iproc] || jcolumn >= meshc.MetisOffset[_SolType][iproc+1] ) {
+      if(jcolumn < meshc._dofOffset[_SolType][iproc] || jcolumn >= meshc._dofOffset[_SolType][iproc+1] ) {
 	NNZ_o->set(irow,1);
       }
       else {
@@ -421,7 +421,7 @@ void elem_type::GetSparsityPatternSize(const Mesh& mesh,const int& iel, NumericV
     for (int k=0; k<ncols; k++) {
       int jj=_prol_ind[i][k];
       int jcolumn = mesh.GetMetisDof(jj,iel,_SolType);
-      if(jcolumn < mesh.MetisOffset[_SolType][iproc] || jcolumn >= mesh.MetisOffset[_SolType][iproc+1] ) counter_o++;
+      if(jcolumn < mesh._dofOffset[_SolType][iproc] || jcolumn >= mesh._dofOffset[_SolType][iproc+1] ) counter_o++;
     }
     NNZ_d->set(irow,ncols-counter_o);
     NNZ_o->set(irow,counter_o);

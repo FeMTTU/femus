@@ -137,7 +137,7 @@ void MeshMetisPartitioning::DoPartition(std::vector <int> &epart, const Mesh& me
   epart.resize( _mesh.GetNumberOfElements() );
   unsigned refIndex = _mesh.GetRefIndex();
   for(int isdom = 0; isdom < _nprocs; isdom++){
-    for( unsigned iel =meshc.IS_Mts2Gmt_elem_offset[isdom]; iel < meshc.IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+    for( unsigned iel =meshc._elementOffset[isdom]; iel < meshc._elementOffset[isdom+1]; iel++){
       for (unsigned j=0; j < refIndex; j++) {
         epart[ iel * refIndex + j ] = isdom;
       }

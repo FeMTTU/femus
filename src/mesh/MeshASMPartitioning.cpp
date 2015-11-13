@@ -35,8 +35,8 @@ void MeshASMPartitioning::DoPartition( const unsigned *block_size, vector < vect
 					 vector <unsigned> &block_type_range){
 
   unsigned iproc=processor_id();
-  unsigned ElemOffset    = _mesh.IS_Mts2Gmt_elem_offset[iproc];
-  unsigned ElemOffsetp1  = _mesh.IS_Mts2Gmt_elem_offset[iproc+1];
+  unsigned ElemOffset    = _mesh._elementOffset[iproc];
+  unsigned ElemOffsetp1  = _mesh._elementOffset[iproc+1];
   unsigned OwnedElements = ElemOffsetp1 - ElemOffset;
 
   unsigned counter[2]={0,0};

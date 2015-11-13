@@ -173,7 +173,7 @@ namespace femus {
     myKK->zero();
     
     // *** element loop ***
-    for(int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+    for(int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
       unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
       short unsigned kelt = myel->GetElementType(kel);
@@ -312,11 +312,11 @@ namespace femus {
 	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx_hat,ig,Weight_hat,phi_hat,gradphi_hat,nablaphi_hat);
 	  phi1=mymsh->_finiteElement[kelt][SolType1]->GetPhi(ig);
 	  
-	  if (flag_mat==2 || iel == mymsh->IS_Mts2Gmt_elem_offset[iproc]) {
+	  if (flag_mat==2 || iel == mymsh->_elementOffset[iproc]) {
 	    if(ig==0){
 	      double GaussWeight = mymsh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
 	      area=Weight_hat/GaussWeight;
-	      if(iel==mymsh->IS_Mts2Gmt_elem_offset[iproc]){
+	      if(iel==mymsh->_elementOffset[iproc]){
 		area_elem_first->add(mymsh->processor_id(),area);
 		area_elem_first->close();
 		rapresentative_area=area_elem_first->l1_norm()/nprocs;
@@ -786,7 +786,7 @@ namespace femus {
     myKK->zero();
     
     // *** element loop ***
-    for(int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+    for(int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
       unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
       short unsigned kelt = myel->GetElementType(kel);
@@ -939,11 +939,11 @@ namespace femus {
 	  //phi =ml_prob._ml_msh->_finiteElement[kelt][SolType2]->GetPhi(ig);
 	  phi1=ml_prob._ml_msh->_finiteElement[kelt][SolType1]->GetPhi(ig);
 	  
-	  if (flag_mat==2 || iel == mymsh->IS_Mts2Gmt_elem_offset[iproc]) {
+	  if (flag_mat==2 || iel == mymsh->_elementOffset[iproc]) {
 	    if(ig==0){
 	      double GaussWeight = ml_prob._ml_msh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
 	      area=Weight_hat/GaussWeight;
-	      if(iel==mymsh->IS_Mts2Gmt_elem_offset[iproc]){
+	      if(iel==mymsh->_elementOffset[iproc]){
 		area_elem_first->add(mymsh->processor_id(),area);
 		area_elem_first->close();
 		rapresentative_area=area_elem_first->l1_norm()/nprocs;
@@ -1318,7 +1318,7 @@ namespace femus {
     myKK->zero();
     
     // *** element loop ***
-    for(int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+    for(int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
       unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
       short unsigned kelt = myel->GetElementType(kel);
@@ -1471,11 +1471,11 @@ namespace femus {
 	  //phi =ml_prob._ml_msh->_finiteElement[kelt][SolType2]->GetPhi(ig);
 	  phi1=ml_prob._ml_msh->_finiteElement[kelt][SolType1]->GetPhi(ig);
 	  
-	  if (flag_mat==2 || iel == mymsh->IS_Mts2Gmt_elem_offset[iproc]) {
+	  if (flag_mat==2 || iel == mymsh->_elementOffset[iproc]) {
 	    if(ig==0){
 	      double GaussWeight = ml_prob._ml_msh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
 	      area=Weight_hat/GaussWeight;
-	      if(iel==mymsh->IS_Mts2Gmt_elem_offset[iproc]){
+	      if(iel==mymsh->_elementOffset[iproc]){
 		area_elem_first->add(mymsh->processor_id(),area);
 		area_elem_first->close();
 		rapresentative_area=area_elem_first->l1_norm()/nprocs;
@@ -2234,7 +2234,7 @@ namespace femus {
     myKK->zero();
     
     
-    for(int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+    for(int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
       unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
       short unsigned kelt = myel->GetElementType(kel);
@@ -2420,7 +2420,7 @@ namespace femus {
 	    if(ig==0){
 	      double GaussWeight = ml_prob._ml_msh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
 	      area=Weight_hat/GaussWeight;
-	      if(iel==mymsh->IS_Mts2Gmt_elem_offset[iproc]){
+	      if(iel==mymsh->_elementOffset[iproc]){
 		area_elem_first->add(mymsh->processor_id(),area);
 		area_elem_first->close();
 		rapresentative_area=area_elem_first->l1_norm()/nprocs;

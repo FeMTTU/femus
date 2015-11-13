@@ -225,10 +225,10 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 
   for (int i=0; i<3; i++) {
     for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-      unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+      unsigned nvt_ig=_ml_mesh->GetLevel(ig)->_dofOffset[index_nd][_nprocs];
       NumericVector* mysol = NumericVector::build().release();
 
-      mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
+      mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->_ownSize[index_nd][_iproc],true,AUTOMATIC);
       mysol->matrix_mult(*_ml_mesh->GetLevel(ig)->_coordinate->_Sol[i],
 			 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd,2) );
 
@@ -282,7 +282,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 	}
       }
     }
-    offset_conn += _ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+    offset_conn += _ml_mesh->GetLevel(ig)->_dofOffset[index_nd][_nprocs];
   }
    if(_iproc == 0){
     dimsf[0] = nel*el_dof_number ;  dimsf[1] = 1;
@@ -328,8 +328,8 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   icount=0;
   for (unsigned ig=_gridr-1u; ig < _gridn; ig++) {
     for(int isdom = 0; isdom < _nprocs; isdom++){
-      for( unsigned ii = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom];
-        ii < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; ii++){
+      for( unsigned ii = _ml_mesh->GetLevel(ig)->_elementOffset[isdom];
+        ii < _ml_mesh->GetLevel(ig)->_elementOffset[isdom+1]; ii++){
         if ( ig == _gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
           var_proc[icount] = isdom;
           icount++;
@@ -387,9 +387,9 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
     unsigned indx=(print_all==0)?_ml_sol->GetIndex(vars[i].c_str()):i;
     if (_ml_sol->GetSolutionType(indx) < 3) {
       for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-        unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index_nd][_nprocs];
+        unsigned nvt_ig=_ml_mesh->GetLevel(ig)->_dofOffset[index_nd][_nprocs];
         NumericVector* mysol = NumericVector::build().release();
-	mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->own_size[index_nd][_iproc],true,AUTOMATIC);
+	mysol->init(nvt_ig,_ml_mesh->GetLevel(ig)->_ownSize[index_nd][_iproc],true,AUTOMATIC);
 	mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indx],
 			   *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index_nd, _ml_sol->GetSolutionType(indx)) );
         vector < double > mysol_ser;

@@ -93,7 +93,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
   vector <NumericVector*> Mysol(igridn);
   for(unsigned ig=igridr-1u; ig<_gridn; ig++) {
     Mysol[ig] = NumericVector::build().release();
-    Mysol[ig]->init(_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs],_ml_mesh->GetLevel(ig)->own_size[index][_iproc],true,AUTOMATIC);
+    Mysol[ig]->init(_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs],_ml_mesh->GetLevel(ig)->_ownSize[index][_iproc],true,AUTOMATIC);
   }
 
   // ********** Header **********
@@ -127,7 +127,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 
       vector <double> v_local;
       Mysol[ig]->localize_to_one(v_local,0);
-      unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
+      unsigned nvt_ig=_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
       if(_iproc==0){
 	for (unsigned ii=0; ii<nvt_ig; ii++)
 	  var_nd[ii]= v_local[ii];
@@ -137,7 +137,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 	Mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indDXDYDZ],
 			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index, _ml_sol->GetSolutionType(indDXDYDZ)) );
 	Mysol[ig]->localize_to_one(v_local,0);
-	unsigned nvt_ig=_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
+	unsigned nvt_ig=_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
 	if(_iproc==0){
 	  for (unsigned ii=0; ii<nvt_ig; ii++)
 	    var_nd[ii]+= v_local[ii];
@@ -191,7 +191,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 	fout.write((char *)topology,sizeof(unsigned)*NVE[ielt][index]);
       }
     }
-    offset+=_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
+    offset+=_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
   }
   // ********** End printing cell connectivity  **********
 
@@ -227,8 +227,8 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
     int icount=0;
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
       for(int isdom = 0; isdom < _nprocs; isdom++){
-        for( unsigned ii = _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom];
-             ii < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[isdom+1]; ii++){
+        for( unsigned ii = _ml_mesh->GetLevel(ig)->_elementOffset[isdom];
+             ii < _ml_mesh->GetLevel(ig)->_elementOffset[isdom+1]; ii++){
           if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
             var_el[icount]=isdom;
             icount++;
@@ -385,7 +385,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
   unsigned nvt = 0;
   unsigned nvt_max = 0;
   for (unsigned ig=igridr-1u; ig<gridn; ig++) {
-    unsigned nvt_ig = _ml_mesh->GetLevel(ig)->own_size[index][_iproc];
+    unsigned nvt_ig = _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
     nvt_max=( nvt_max > nvt_ig ) ? nvt_max : nvt_ig;
     nvt += nvt_ig;
   }
@@ -400,8 +400,8 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
   //unsigned ghost_counter = 0;
   unsigned nel=0;
   for (unsigned ig = igridr-1u; ig<gridn; ig++) {
-    unsigned offset_iprc = _ml_mesh->GetLevel(ig)->MetisOffset[index][_iproc];
-    for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
+    unsigned offset_iprc = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
+    for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
       if ( ig == gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
 	nel++;
 	short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(iel);
@@ -416,7 +416,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 	}
       }
     }
-    gridOffset += _ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
+    gridOffset += _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
   }
 
   nvt_max= ( nvt_max > ghostMap.size() )? nvt_max : ghostMap.size();
@@ -432,13 +432,13 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
     Mysol[ig] = NumericVector::build().release();
 
     if(n_processors()==1) { // IF SERIAL
-      Mysol[ig]->init(_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs],
-		      _ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs],false,SERIAL);
+      Mysol[ig]->init(_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs],
+		      _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs],false,SERIAL);
     }
     else{ // IF PARALLEL
-      Mysol[ig]->init(_ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs],
-		      _ml_mesh->GetLevel(ig)->own_size[index][_iproc],
-		      _ml_mesh->GetLevel(ig)->_ghostNodes[index][_iproc],false,GHOSTED );
+      Mysol[ig]->init(_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs],
+		      _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc],
+		      _ml_mesh->GetLevel(ig)->_ghostDofs[index][_iproc],false,GHOSTED );
     }
   }
 
@@ -470,8 +470,8 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
         Mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
 			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
       }
-      unsigned offset_iprc = _ml_mesh->GetLevel(ig)->MetisOffset[index][_iproc];
-      unsigned nvt_ig= _ml_mesh->GetLevel(ig)->own_size[index][_iproc];
+      unsigned offset_iprc = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
+      unsigned nvt_ig= _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
       for (unsigned ii=0; ii<nvt_ig; ii++)
 	var_nd[ii]= (*Mysol[ig])(ii + offset_iprc);
       if (_ml_sol != NULL && _moving_mesh  && _ml_mesh->GetLevel(0)->GetDimension() > i)  { // if moving mesh
@@ -488,8 +488,8 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
     gridOffset = 0;
     unsigned ig = igridr-1u;
     for (std::map <unsigned, unsigned>::iterator it=ghostMap.begin(); it!=ghostMap.end(); ++it){
-      while( it->first >= gridOffset + _ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs] ) {
-	gridOffset += _ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
+      while( it->first >= gridOffset + _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs] ) {
+	gridOffset += _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
 	ig++;
       }
       var_nd[ it->second ] = (*Mysol[ig])( it->first - gridOffset);
@@ -514,8 +514,8 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
       gridOffset = 0;
       unsigned ig = igridr-1u;
       for (std::map <unsigned, unsigned>::iterator it=ghostMap.begin(); it!=ghostMap.end(); ++it){
-	while( it->first >= gridOffset + _ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs] ) {
-	  gridOffset += _ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
+	while( it->first >= gridOffset + _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs] ) {
+	  gridOffset += _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
 	  ig++;
 	}
 	var_nd[ it->second ] += (*Mysol[ig])( it->first - gridOffset);
@@ -536,9 +536,9 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 
   gridOffset = 0;
   for (unsigned ig=igridr-1u; ig<gridn; ig++) {
-    unsigned offset_iprc = _ml_mesh->GetLevel(ig)->MetisOffset[index][_iproc];
-    unsigned nvt_ig= _ml_mesh->GetLevel(ig)->own_size[index][_iproc];
-    for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
+    unsigned offset_iprc = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
+    unsigned nvt_ig= _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
+    for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
       if ( ig == gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
         short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(iel);
         if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
@@ -568,7 +568,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
       }
     }
     offset += nvt_ig;
-    gridOffset += _ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
+    gridOffset += _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
   }
   // ********** End printing cell connectivity  **********
 
@@ -585,7 +585,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 
   int icount=0;
   for (unsigned ig=igridr-1u; ig<gridn; ig++) {
-    for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
+    for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
       if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
 	var_el[icount]=_ml_mesh->GetLevel(ig)->el->GetElementGroup(iel);
         icount++;
@@ -601,7 +601,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 
     int icount=0;
     for (unsigned ig=igridr-1u; ig<gridn; ig++) {
-      for (int iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
+      for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
         if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
 	  var_el[icount]=_iproc;
 	  icount++;
@@ -658,8 +658,8 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 	      Mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Eps[i],
 				     *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index, _ml_sol->GetSolutionType(i)) );
 	    }
-	    unsigned offset_iprc = _ml_mesh->GetLevel(ig)->MetisOffset[index][_iproc];
-	    unsigned nvt_ig = _ml_mesh->GetLevel(ig)->own_size[index][_iproc];
+	    unsigned offset_iprc = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
+	    unsigned nvt_ig = _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
 	    for (unsigned ii=0; ii<nvt_ig; ii++)
 	      var_nd[ii]= (*Mysol[ig])(ii + offset_iprc);
 	    fout.write((char *)&var_nd[0],nvt_ig*sizeof(double));
@@ -668,8 +668,8 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 	  gridOffset = 0;
 	  unsigned ig = igridr-1u;
 	  for (std::map <unsigned, unsigned>::iterator it=ghostMap.begin(); it!=ghostMap.end(); ++it){
-	    while( it->first >= gridOffset + _ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs] ) {
-	      gridOffset += _ml_mesh->GetLevel(ig)->MetisOffset[index][_nprocs];
+	    while( it->first >= gridOffset + _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs] ) {
+	      gridOffset += _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
 	      ig++;
 	    }
 	    var_nd[ it->second ] = (*Mysol[ig])( it->first - gridOffset);
@@ -681,7 +681,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 	  fout.write((char *)&zero,sizeof(unsigned));
 	  int icount=0;
 	  for (unsigned ig=igridr-1u; ig<gridn; ig++) {
-	    for (unsigned iel=_ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc]; iel < _ml_mesh->GetLevel(ig)->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
+	    for (unsigned iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
 	      if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
 		unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(0, iel,_ml_sol->GetSolutionType(i));
 		if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {

@@ -492,7 +492,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
     unsigned  SolType = _ml_sol->GetSolutionType(SolIndex);
     // loop on the coarse grid
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
-      for (int iel=mshc->IS_Mts2Gmt_elem_offset[isdom]; iel < mshc->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+      for (int iel=mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom+1]; iel++) {
 	short unsigned ielt=mshc->el->GetElementType(iel);
 	mshc->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
       }
@@ -521,7 +521,7 @@ void LinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf) {
     unsigned  SolType = _ml_sol->GetSolutionType(SolIndex);
     // loop on the coarse grid
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
-      for (int iel=mshc->IS_Mts2Gmt_elem_offset[isdom]; iel < mshc->IS_Mts2Gmt_elem_offset[isdom+1]; iel++) {
+      for (int iel=mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom+1]; iel++) {
         short unsigned ielt=mshc->el->GetElementType(iel);
 	mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel,_PP[gridf],SolIndex,k);
       }

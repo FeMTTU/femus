@@ -341,7 +341,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob){
 
   
   // *** element loop ***
-  for (int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+  for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     short unsigned kelt=myel->GetElementType(kel);

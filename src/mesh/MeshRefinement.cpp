@@ -56,7 +56,7 @@ void MeshRefinement::FlagAllElementsToBeRefined() {
 void MeshRefinement::FlagElementsToBeRefined() {
 
     if(_mesh._IsUserRefinementFunctionDefined){
-      for (int kel=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; kel < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; kel++) {
+      for (int kel=_mesh._elementOffset[_iproc]; kel < _mesh._elementOffset[_iproc+1]; kel++) {
 	if( _mesh.GetLevel() == 0 || _mesh.el->IsFatherRefined(kel)  ){
 	  short unsigned kelt=_mesh.el->GetElementType(kel);
 	  unsigned nve=_mesh.el->GetElementDofNumber(kel,0);
@@ -100,7 +100,7 @@ void MeshRefinement::FlagElementsToBeRefined() {
 //-------------------------------------------------------------------
 void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
 
-  for (int iel=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; iel < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
+  for (int iel=_mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc+1]; iel++) {
     if( _mesh.GetLevel() == 0 || _mesh.el->IsFatherRefined(iel)){
       if( (*_mesh._coordinate->_Sol[3])(iel) < 0.5 && iel%2 == 0) {
 	_mesh._coordinate->_Sol[3]->set(iel,1.);
@@ -283,16 +283,19 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 
   Buildkmid();
 
-  vector < int > epart(_mesh.GetNumberOfElements());
-  MeshMetisPartitioning meshmetispartitioning(_mesh);
+  std::vector < int > partition;
+  partition.reserve(_mesh.GetNumberOfNodes());
+  partition.resize(_mesh.GetNumberOfElements());
+   
+  MeshMetisPartitioning meshMetisPartitioning(_mesh);
   if( AMR == true ){
-    meshmetispartitioning.DoPartition(epart, AMR);
+    meshMetisPartitioning.DoPartition(partition, AMR);
   }
   else{
-    meshmetispartitioning.DoPartition(epart, *mshc);
+    meshMetisPartitioning.DoPartition(partition, *mshc);
   }
-  _mesh.FillISvector(epart);
-  epart.resize(0);
+  _mesh.FillISvector(partition);
+  partition.resize(0);
 
   _mesh.BuildAdjVtx(); //TODO
 
