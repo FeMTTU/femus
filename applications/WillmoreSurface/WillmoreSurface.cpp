@@ -16,6 +16,7 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
+#include "TransientSystem.hpp"
 #include "adept.h"
 #include <cstdlib>
 
@@ -81,6 +82,12 @@ double InitalValueHTorus(const std::vector < double >& x) {
 }
 
 
+double SetVariableTimeStep(const double time) {
+  double dt = 1.;
+  return dt;
+}
+
+
 void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob);
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol);
@@ -136,10 +143,10 @@ int main(int argc, char** args) {
     MultiLevelSolution mlSol(&mlMsh);
 
     // add variables to mlSol
-    mlSol.AddSolution("X", LAGRANGE, feOrder);
-    mlSol.AddSolution("Y", LAGRANGE, feOrder);
-    mlSol.AddSolution("Z", LAGRANGE, feOrder);
-    mlSol.AddSolution("H", LAGRANGE, feOrder);
+    mlSol.AddSolution("X", LAGRANGE, feOrder,2);
+    mlSol.AddSolution("Y", LAGRANGE, feOrder,2);
+    mlSol.AddSolution("Z", LAGRANGE, feOrder,2);
+    mlSol.AddSolution("H", LAGRANGE, feOrder,2);
 
     mlSol.Initialize("X", InitalValueXTorus);
     mlSol.Initialize("Y", InitalValueYTorus);
@@ -147,16 +154,16 @@ int main(int argc, char** args) {
     mlSol.Initialize("H", InitalValueHTorus);
         // attach the boundary condition function and generate boundary data
     mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTorus);
-    mlSol.GenerateBdc("X");
-    mlSol.GenerateBdc("Y");
-    mlSol.GenerateBdc("Z");
-    mlSol.GenerateBdc("H");
+    mlSol.GenerateBdc("X","Steady");
+    mlSol.GenerateBdc("Y","Steady");
+    mlSol.GenerateBdc("Z","Steady");
+    mlSol.GenerateBdc("H","Steady");
 
     // define the multilevel problem attach the mlSol object to it
     MultiLevelProblem mlProb(&mlSol);
 
     // add system Wilmore in mlProb as a Linear Implicit System
-    NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Willmore");
+    TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("Willmore");
 
     // add solution "X", "Y", "Z" and "H" to the system
     system.AddSolutionToSystemPDE("X");
@@ -173,7 +180,49 @@ int main(int argc, char** args) {
 
     // initilaize and solve the system
     system.init();
-    system.MGsolve();
+    
+    std::vector < std::string > variablesToBePrinted;
+    variablesToBePrinted.push_back("All");
+
+    std::vector < std::string > surfaceVariables;
+    surfaceVariables.push_back("X");
+    surfaceVariables.push_back("Y");
+    surfaceVariables.push_back("Z");
+
+    VTKWriter vtkIO(&mlSol);
+    vtkIO.SetSurfaceVariables(surfaceVariables);
+
+    GMVWriter gmvIO(&mlSol);
+    gmvIO.SetSurfaceVariables(surfaceVariables);
+    gmvIO.SetDebugOutput(true);
+      
+    // time loop parameter
+    system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
+    const unsigned int n_timesteps = 1;
+    
+    vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+    gmvIO.Pwrite(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+  
+    system.SetMgType(V_CYCLE);
+    
+    for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+    
+      if( time_step > 0 )
+        system.SetMgType(V_CYCLE);
+    
+      system.MGsolve();
+   
+      system.UpdateSolution();
+  
+    
+      vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step+1);
+      gmvIO.Pwrite(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step+1);
+    }
+    
+    
+    
+    
+  /*  system.MGsolve();
 
 //       std::pair< double , double > norm = GetErrorNorm(&mlSol);
 //       l2Norm[i][j]  = norm.first;
@@ -195,9 +244,49 @@ int main(int argc, char** args) {
     gmvIO.SetSurfaceVariables(surfaceVariables);
     gmvIO.SetDebugOutput(true);
     gmvIO.Pwrite(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
-    
+  */  
 
   }
+  
+  
+//     std::vector < std::string > variablesToBePrinted;
+//     variablesToBePrinted.push_back("All");
+// 
+//     std::vector < std::string > surfaceVariables;
+//     surfaceVariables.push_back("X");
+//     surfaceVariables.push_back("Y");
+//     surfaceVariables.push_back("Z");
+// 
+//     VTKWriter vtkIO(&mlSol);
+//     vtkIO.SetSurfaceVariables(surfaceVariables);
+// 
+//     GMVWriter gmvIO(&mlSol);
+//     gmvIO.SetSurfaceVariables(surfaceVariables);
+//     gmvIO.SetDebugOutput(true);
+//       
+//     // time loop parameter
+//     //system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
+//     const unsigned int n_timesteps = 500;
+//     
+//     vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+//     gmvIO.Pwrite(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+//   
+//     //system.SetMgType(F_CYCLE);
+//     
+//     for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+//     
+//       //if( time_step > 0 )
+//         //system.SetMgType(V_CYCLE);
+//     
+//       system.MGsolve();
+//    
+//       //system.UpdateSolution();
+//   
+//     
+//       vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step+1);
+//       gmvIO.Pwrite(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step+1);
+//     }
+  
 
 //   // print the seminorm of the error and the order of convergence between different levels
 //   std::cout << std::endl;
@@ -296,13 +385,13 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
   adept::Stack& s = FemusInit::_adeptStack;
 
   //  extract pointers to the several objects that we are going to use
-  NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("Willmore");   // pointer to the linear implicit system named "Poisson"
+  TransientNonlinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<TransientNonlinearImplicitSystem> ("Willmore");   // pointer to the linear implicit system named "Poisson"
 
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const unsigned levelMax = mlPdeSys->GetLevelMax();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
-  Mesh*          msh          = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh*          msh        = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*          el         = msh->el;  // pointer to the elem object in msh (level)
 
   MultiLevelSolution*  mlSol        = ml_prob._ml_sol;  // pointer to the multilevel solution object
@@ -331,7 +420,9 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
   solRPdeIndex[2] = mlPdeSys->GetSolPdeIndex("Z");    // get the position of "Z" in the pdeSys object
 
   vector < adept::adouble >  solR[3]; // local solution
-
+  vector < double > solR_old[3];
+  
+  
   unsigned solHIndex;
   solHIndex = mlSol->GetIndex("H");    // get the position of "H" in the ml_sol object
   unsigned solHType = mlSol->GetSolutionType(solHIndex);    // get the finite element type for "H"
@@ -359,6 +450,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
   for(int i=0;i<3;i++){
     solR[i].reserve(maxSize);
+    solR_old[i].reserve(maxSize);
   }
   solH.reserve(maxSize);
 
@@ -396,6 +488,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
     sysDof.resize(4 * nDofs);
     for(int i = 0; i < 3; i++){
       solR[i].resize(nDofs);
+      solR_old[i].resize(nDofs);
     }
     solH.resize(nDofs);
 
@@ -420,6 +513,8 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
       unsigned solDof = msh->GetSolutionDof(iNode, solHType);    // global to global mapping between solution node and solution dof
       for(int k = 0; k < 3; k++){      
 	solR[k][i] = (*sol->_Sol[solRIndex[k]])(solDof);      // global extraction and local storage for the solution
+	solR_old[k][i] = (*sol->_SolOld[solRIndex[k]])(solDof);      // global extraction and local storage for the solution
+	
       }
       solH[i] = (*sol->_Sol[solHIndex])(solDof);      // global extraction and local storage for the solution
       for(int k = 0; k < 3; k++){      
@@ -450,6 +545,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 
 	// evaluate the solution, the solution derivatives and the coordinates in the gauss point
         adept::adouble solRGauss[3]; 
+	double solRGaussOld[3]; 
         adept::adouble solRGauss_x[3][2];
 	adept::adouble solRGauss_xx[3][2][2];
 	
@@ -458,6 +554,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	
 	for(int k=0; k<3; k++){
 	  solRGauss[k]=0.;
+	  solRGaussOld[k]=0.;
 	  for(int i=0; i<dim; i++){
 	    solRGauss_x[k][i]=0.;
 	    for(int j=0; j<dim; j++){
@@ -472,6 +569,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
         for (unsigned i = 0; i < nDofs; i++) {
 	  for(int k = 0; k < 3; k++){
 	    solRGauss[k] += phi[i] * solR[k][i];
+	    solRGaussOld[k] += phi[i] * solR_old[k][i];
 	  }
           solHGauss += phi[i] * solH[i];
 	  
@@ -569,7 +667,10 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 	    }
 	    aResH[i] -= AgIgradHgradPhi * phi_x[i * dim + u] * weight;
 	  }
-	   aResH[i] += 2. * A * solHGauss * ( solHGauss * solHGauss  - K.value() ) * phi[i] * weight; 
+	   aResH[i] += A * ( -0*(solRGauss[0]-solRGaussOld[0])*N[0].value()
+		             -0*(solRGauss[1]-solRGaussOld[1])*N[1].value()
+		             -0*(solRGauss[2]-solRGaussOld[2])*N[2].value()
+	               + 2. * solHGauss * ( solHGauss * solHGauss  - K.value() ) )* phi[i] * weight; 
 	} // end phi_i loop
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
