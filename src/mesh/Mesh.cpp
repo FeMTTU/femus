@@ -149,11 +149,11 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _topology->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
 
   _topology->ResizeSolutionVector("AMR");
-  
+
   _topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
   _topology->ResizeSolutionVector("Material");
   NumericVector &material =  _topology->GetSolutionName("Material");
-  
+
   for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
     material.set(iel,el->GetElementMaterial(iel)+iel);
   }
@@ -179,7 +179,7 @@ void Mesh::GenerateCoarseBoxMesh(
 
   el->SetNodeNumber(_nnodes);
 
-  
+
   std::vector < int > partition;
   partition.reserve(GetNumberOfNodes());
   partition.resize(GetNumberOfElements());
@@ -209,16 +209,16 @@ void Mesh::GenerateCoarseBoxMesh(
   _topology->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
 
   _topology->ResizeSolutionVector("AMR");
-  
+
   _topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
   _topology->ResizeSolutionVector("Material");
   NumericVector &material =  _topology->GetSolutionName("Material");
-  
+
   for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
     material.set(iel, el->GetElementMaterial(iel) );
   }
   material.close();
-  
+
 
 }
 
@@ -312,7 +312,7 @@ void Mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
 void Mesh::FillISvector(vector < int > &partition) {
 
   //BEGIN Initialization for k = 0,1,2,3,4
-    
+
   std::vector < unsigned > mapping;
   mapping.reserve(GetNumberOfNodes());
 
@@ -326,7 +326,7 @@ void Mesh::FillISvector(vector < int > &partition) {
   //END Initialization for k = 0,1,2,3,4
 
   mapping.resize(GetNumberOfElements());
-  
+
   //BEGIN building the  metis2Gambit_elem and  k = 3,4
   unsigned counter = 0;
   for(int isdom = 0; isdom < _nprocs; isdom++) { // isdom = iprocess
@@ -339,7 +339,7 @@ void Mesh::FillISvector(vector < int > &partition) {
       }
     }
   }
- 
+
 
   if( GetLevel() == 0 ){
     el->ReorderMeshElements(mapping, NULL);
@@ -347,7 +347,7 @@ void Mesh::FillISvector(vector < int > &partition) {
   else{
     el->ReorderMeshElements(mapping, _coarseMsh->el);
   }
-  
+
   for(int isdom = 0; isdom < _nprocs; isdom++){
     unsigned localSize = _elementOffset[isdom+1] - _elementOffset[isdom];
     unsigned offsetPWLD = _elementOffset[isdom] * (_dimension + 1);
@@ -381,7 +381,7 @@ void Mesh::FillISvector(vector < int > &partition) {
   //END building the  metis2Gambit_elem and  k = 3,4
 
   //BEGIN building for k = 0,1,2
-  
+
   // Initialization for k = 0,1,2
   partition.assign( GetNumberOfNodes(), _nprocs );
   mapping.resize( GetNumberOfNodes() );
@@ -501,7 +501,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     }
   }
   //END completing for k = 0, 1
-  
+
   //delete ghost dof list all but _iproc
   for(int isdom = 0; isdom < _nprocs; isdom++){
     if( isdom != _iproc )
@@ -509,8 +509,8 @@ void Mesh::FillISvector(vector < int > &partition) {
       _ghostDofs[k][isdom].resize(0);
     }
   }
-   
-   
+
+
 }
 
 
