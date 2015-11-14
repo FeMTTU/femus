@@ -59,9 +59,9 @@ public:
   void DeletePde();
   
   /** To be Added */
- // unsigned GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,const unsigned &idof_gmt) const;
+ // unsigned GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,const unsigned &idof_gmt) const;
   
-  unsigned GetKKDof(const unsigned &index_sol, const unsigned &kkindex_sol,
+  unsigned GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
 				  const unsigned &i, const unsigned &iel) const;
   
   /** To be Added */

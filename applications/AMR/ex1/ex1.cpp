@@ -217,8 +217,8 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
 
   double weight; // gauss point weight
 
-  vector< int > KKDof; // local to global pdeSys dofs
-  KKDof.reserve( maxSize );
+  vector< int > sysDof; // local to global pdeSys dofs
+  sysDof.reserve( maxSize );
 
   vector< double > ResU; // local redidual vector
   ResU.reserve( maxSize );
@@ -238,7 +238,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
     unsigned nDofsX = el->GetElementDofNumber( kel, crdXType );    // number of solution element dofs
 
     // resize local arrays
-    KKDof.resize( nDofsU );
+    sysDof.resize( nDofsU );
 
     solU.resize( nDofsU );
 
@@ -250,14 +250,14 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsU; i++) {
-      unsigned solUDof = msh->GetMetisDof(i, iel, solUType);    // local to global mapping of the solution U
+      unsigned solUDof = msh->GetSolutionDof(i, iel, solUType);    // local to global mapping of the solution U
       solU[i] = (*sol->_Sol[solUIndex])(solUDof);      // value of the solution U in the dofs
-      KKDof[i] = pdeSys->GetKKDof(solUIndex, solUPdeIndex, i, iel);    // local to global mapping between solution U and system
+      sysDof[i] = pdeSys->GetSystemDof(solUIndex, solUPdeIndex, i, iel);    // local to global mapping between solution U and system
     }
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofsX; i++) { 
-      unsigned coordXDof  = msh->GetMetisDof(i, iel, crdXType);   // local to global mapping of the coordinate X[dim]
+      unsigned coordXDof  = msh->GetSolutionDof(i, iel, crdXType);   // local to global mapping of the coordinate X[dim]
       for (unsigned k = 0; k < dim; k++) {
         crdX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // value of the solution X[dim]
       }
@@ -305,7 +305,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
       ResU[i] = -aResU[i].value();
     }
 
-    RES->add_vector_blocked(ResU, KKDof);
+    RES->add_vector_blocked(ResU, sysDof);
 
     //Extarct and store the Jacobian
     if (assembleMatrix) {
@@ -318,7 +318,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
 
       // get the and store jacobian matrix (row-major)
       s.jacobian(&Jac[0] , true);
-      KK->add_matrix_blocked(Jac, KKDof, KKDof);
+      KK->add_matrix_blocked(Jac, sysDof, sysDof);
 
       s.clear_independents();
       s.clear_dependents();

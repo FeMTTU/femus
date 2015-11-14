@@ -543,18 +543,18 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 
     for( unsigned i=0;i<nve2;i++){
       //unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
-      unsigned inode_metis=mymsh->GetMetisDof(i,kel,2);
+      unsigned inode_metis=mymsh->GetSolutionDof(i,kel,2);
       metis_node2[i]=inode_metis;
       for(unsigned ivar=0; ivar<dim; ivar++) {
 	coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_metis);
-	KK_dof[ivar][i]=mylsyspde->GetKKDof(SolIndex[ivar],SolPdeIndex[ivar],i,kel);
+	KK_dof[ivar][i]=mylsyspde->GetSystemDof(SolIndex[ivar],SolPdeIndex[ivar],i,kel);
       }
     }
 
     for(unsigned i=0;i<nve1;i++) {
-      unsigned inode_metis=mymsh->GetMetisDof(i, kel, order_ind1);
+      unsigned inode_metis=mymsh->GetSolutionDof(i, kel, order_ind1);
       metis_node1[i]=inode_metis;
-      KK_dof[dim][i]=mylsyspde->GetKKDof(SolIndex[dim],SolPdeIndex[dim], i, kel);
+      KK_dof[dim][i]=mylsyspde->GetSystemDof(SolIndex[dim],SolPdeIndex[dim], i, kel);
     }
 
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
@@ -811,12 +811,12 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
     // get local to global mappings
     for( unsigned i=0;i<nve;i++){
       //unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
-      unsigned inode_metis=mymsh->GetMetisDof(i, kel, 2);
+      unsigned inode_metis=mymsh->GetSolutionDof(i, kel, 2);
       metis_node[i]=inode_metis;
       for(unsigned ivar=0; ivar<dim; ivar++) {
 	coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_metis);
       }
-      KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,i, kel);
+      KK_dof[i]=mylsyspde->GetSystemDof(SolIndex,SolPdeIndex,i, kel);
     }
 
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {

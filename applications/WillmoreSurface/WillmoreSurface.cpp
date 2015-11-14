@@ -344,7 +344,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
     
-  vector< int > KKDof; // local to global pdeSys dofs
+  vector< int > sysDof; // local to global pdeSys dofs
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
   vector <double> phi_xx; // local test function second order partial derivatives
@@ -365,7 +365,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
   for (unsigned i = 0; i < dim; i++)
     x[i].reserve(maxSize);
 
-  KKDof.reserve(4 * maxSize);
+  sysDof.reserve(4 * maxSize);
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
@@ -393,7 +393,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
     unsigned nDofs2 = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
 
     // resize local arrays
-    KKDof.resize(4 * nDofs);
+    sysDof.resize(4 * nDofs);
     for(int i = 0; i < 3; i++){
       solR[i].resize(nDofs);
     }
@@ -417,21 +417,21 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, solHType);    // local to global solution node
-      unsigned solDof = msh->GetMetisDof(iNode, solHType);    // global to global mapping between solution node and solution dof
+      unsigned solDof = msh->GetSolutionDof(iNode, solHType);    // global to global mapping between solution node and solution dof
       for(int k = 0; k < 3; k++){      
 	solR[k][i] = (*sol->_Sol[solRIndex[k]])(solDof);      // global extraction and local storage for the solution
       }
       solH[i] = (*sol->_Sol[solHIndex])(solDof);      // global extraction and local storage for the solution
       for(int k = 0; k < 3; k++){      
-	KKDof[k*nDofs + i] = pdeSys->GetKKDof(solRIndex[k], solRPdeIndex[k], iNode);    // global to global mapping between solution node and pdeSys dof
+	sysDof[k*nDofs + i] = pdeSys->GetSystemDof(solRIndex[k], solRPdeIndex[k], iNode);    // global to global mapping between solution node and pdeSys dof
       }
-      KKDof[3*nDofs + i] = pdeSys->GetKKDof(solHIndex, solHPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
+      sysDof[3*nDofs + i] = pdeSys->GetSystemDof(solHIndex, solHPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
     }
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofs2; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
-      unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned xDof  = msh->GetSolutionDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned idim = 0; idim < dim; idim++) {
         x[idim][i] = (*msh->_topology->_Sol[idim])(xDof);      // global extraction and local storage for the element coordinates
@@ -585,7 +585,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
       Res[ 3 * nDofs + i] = -aResH[i].value();
     }
 
-    RES->add_vector_blocked(Res, KKDof);
+    RES->add_vector_blocked(Res, sysDof);
 
     if (assembleMatrix) {
       Jac.resize((4 * nDofs) *(4 * nDofs));
@@ -603,7 +603,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
       // get the jacobian matrix (ordered by row)
       s.jacobian(&Jac[0], true);
 
-      KK->add_matrix_blocked(Jac, KKDof, KKDof);
+      KK->add_matrix_blocked(Jac, sysDof, sysDof);
 
       s.clear_independents();
       s.clear_dependents();
@@ -699,14 +699,14 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, soluType);    // local to global solution node
-      unsigned solDof = msh->GetMetisDof(iNode, soluType);    // global to global mapping between solution node and solution dof
+      unsigned solDof = msh->GetSolutionDof(iNode, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
     }
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofs2; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
-      unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned xDof  = msh->GetSolutionDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned idim = 0; idim < dim; idim++) {
         x[idim][i] = (*msh->_topology->_Sol[idim])(xDof);      // global extraction and local storage for the element coordinates

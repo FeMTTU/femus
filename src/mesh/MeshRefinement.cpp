@@ -63,7 +63,7 @@ void MeshRefinement::FlagElementsToBeRefined() {
 	  std::vector < double > vtx(3,0.);
 	  for(unsigned i=0; i<nve; i++) {
 	    //unsigned inode=_mesh.el->GetElementVertexIndex(kel,i)-1u;
-	    unsigned inode_metis=_mesh.GetMetisDof(i,kel,2);
+	    unsigned inode_metis=_mesh.GetSolutionDof(i,kel,2);
 	    vtx[0]+= (*_mesh._topology->_Sol[0])(inode_metis);
 	    vtx[1]+= (*_mesh._topology->_Sol[1])(inode_metis);
 	    vtx[2]+= (*_mesh._topology->_Sol[2])(inode_metis);

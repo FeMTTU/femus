@@ -122,7 +122,7 @@ namespace femus {
 	      unsigned jel=(!FastVankaBlock)?*(pt_jel++)-1u:iel;
 	      //add elements for velocity to be solved
 
-	      unsigned jel_Metis = _msh->GetMetisDof(0,jel,3);
+	      unsigned jel_Metis = _msh->GetSolutionDof(0,jel,3);
 
 	      if(jel_Metis >= IndexcOffsetp1 || jel_Metis < IndexcOffset ||
 		 indexc[jel_Metis-IndexcOffset] == IndexcSize){
@@ -139,12 +139,12 @@ namespace femus {
 		  unsigned nvej=_msh->el->GetElementDofNumber(jel,SolType);
 		  for (unsigned jj=0; jj<nvej; jj++) {
 		    unsigned jnode=(SolType<3)?(*(pt_un++)-1u):(jel+jj*nel);
-                  //unsigned jnode_Metis = _msh->GetMetisDof(jnode,SolType);
-		    unsigned jnode_Metis = _msh->GetMetisDof(jj,jel,SolType);
+                  //unsigned jnode_Metis = _msh->GetSolutionDof(jnode,SolType);
+		    unsigned jnode_Metis = _msh->GetSolutionDof(jj,jel,SolType);
 		    if(jnode_Metis >= _msh->_dofOffset[SolType][processor_id()] &&
 		       jnode_Metis <  _msh->_dofOffset[SolType][processor_id()+1]){
-		      //unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jnode);
-		      unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, jj, jel);
+		      //unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, jnode);
+		      unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, jj, jel);
 		      if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1 <(*(*_Bdc)[SolPdeIndex])(jnode_Metis) ) {
 			_indexai[vanka_block_index][Asize]=kkdof;
 			indexa[kkdof-IndexaOffset]=Asize++;
@@ -159,7 +159,7 @@ namespace femus {
 		  for (unsigned k=0; k<nvej; k++) {
 		    unsigned kel=*(pt_kel++)-1u;
 		    //add all variables to be updated
-		    unsigned kel_Metis = _msh->GetMetisDof(0,kel,3);
+		    unsigned kel_Metis = _msh->GetSolutionDof(0,kel,3);
 		    if(kel_Metis >= IndexdOffsetp1 ||
 		       (kel_Metis >= IndexdOffset && indexd[kel_Metis-IndexdOffset] == IndexdSize)){
 
@@ -176,11 +176,11 @@ namespace femus {
 			for (unsigned kk=0; kk<nvek; kk++) {
 			  //unsigned knode=(SolType<3)?(*(pt_un++)-1u):(kel+kk*nel);
 
-			  unsigned knode_Metis = _msh->GetMetisDof(kk,kel,SolType);
+			  unsigned knode_Metis = _msh->GetSolutionDof(kk,kel,SolType);
 			  if(knode_Metis >= _msh->_dofOffset[SolType][processor_id()] &&
 			     knode_Metis <  _msh->_dofOffset[SolType][processor_id()+1]){
-			    //unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, knode);
-			    unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, kk, kel);
+			    //unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, knode);
+			    unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, kk, kel);
 			    if(indexb[kkdof- IndexbOffset]==IndexbSize && 0.1<(*(*_Bdc)[SolPdeIndex])(knode_Metis)) {
 			      indexbi[counterb]=kkdof;
 			      indexb[kkdof-IndexbOffset]=counterb++;
@@ -205,11 +205,11 @@ namespace femus {
 	      unsigned nvei=_msh->el->GetElementDofNumber(iel,SolType);
 	      for (unsigned ii=0; ii<nvei; ii++) {
 		//unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
-		unsigned inode_Metis = _msh->GetMetisDof(ii,iel,SolType);
+		unsigned inode_Metis = _msh->GetSolutionDof(ii,iel,SolType);
 		if(inode_Metis >= _msh->_dofOffset[SolType][processor_id()] &&
 		   inode_Metis <  _msh->_dofOffset[SolType][processor_id()+1]){
-		  //unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, inode);
-		  unsigned kkdof=GetKKDof(SolPdeIndex, indexSol, ii, iel);
+		  //unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, inode);
+		  unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, ii, iel);
 		  if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1<(*(*_Bdc)[SolPdeIndex])(inode_Metis) ) {
 		    _indexai[vanka_block_index][Asize]=kkdof;
 		    indexa[kkdof - IndexaOffset]=Asize++;

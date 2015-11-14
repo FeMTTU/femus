@@ -184,7 +184,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 	for(unsigned j=0;j<NVE[ielt][index];j++){
 
 	  //unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(ii,j)-1u;
-	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(j,ii,index);
+	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(j,ii,index);
 
 	  topology[j]=jnode_Metis+offset;
 	}
@@ -311,7 +311,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 	    }
 	    for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
 	      if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-		unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(0,ii,_ml_sol->GetSolutionType(i));
+		unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0,ii,_ml_sol->GetSolutionType(i));
 		var_el[icount]=v_local[iel_Metis];
 		icount++;
 	      }
@@ -406,7 +406,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 	nel++;
 	short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(iel);
         for(unsigned j=0; j<NVE[ielt][index]; j++){
-	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(j, iel, index);
+	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetSolutionDof(j, iel, index);
 	  if( jnodeMetis < offset_iprc ){ //Is this a ghost node?
 	    if( ghostMap.find( gridOffset + jnodeMetis) == ghostMap.end()){
 	      ghostMap[ gridOffset + jnodeMetis] = ghostMapCounter;
@@ -560,7 +560,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
         fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
 	for(unsigned j=0;j<NVE[ielt][index];j++){
 
-	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetMetisDof(j, iel, index);
+	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetSolutionDof(j, iel, index);
 	  topology[j]=(jnodeMetis >= offset_iprc )? jnodeMetis - offset_iprc + offset :
 						     nvt0 + ghostMap[gridOffset+jnodeMetis] + 1u;
 	}
@@ -683,7 +683,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 	  for (unsigned ig=igridr-1u; ig<gridn; ig++) {
 	    for (unsigned iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
 	      if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
-		unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetMetisDof(0, iel,_ml_sol->GetSolutionType(i));
+		unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel,_ml_sol->GetSolutionType(i));
 		if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
 		  if (name==0){
 		    var_el[icount] = (*_ml_sol->GetSolutionLevel(ig)->_Sol[i])(iel_Metis);

@@ -198,8 +198,8 @@ void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
 	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,sol_type);
 
 	      for(int j=0; j<nloc_dof; j++) {
-		unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j,iel,sol_type);
-		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j, iel, 2);
+		unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetSolutionDof(j,iel,sol_type);
+		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
 		std::vector < double > xx(3);
 		xx[0]=(*_ml_msh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
 		xx[1]=(*_ml_msh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
@@ -222,7 +222,7 @@ void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
 	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,0);
 	      std::vector < double > xx(3,0.);
 	      for(int j=0; j<nloc_dof; j++) {
-		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j,iel,2);
+		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetSolutionDof(j,iel,2);
 		xx[0]+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
 		xx[1]+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
 		xx[2]+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
@@ -281,8 +281,8 @@ void MultiLevelSolution::InitializeMLProb(const MultiLevelProblem * ml_prob, con
 	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,sol_type);
 
 	      for(int j=0; j<nloc_dof; j++) {
-		unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j, iel, sol_type);
-		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j, iel, 2);
+		unsigned inode_Metis=_ml_msh->GetLevel(ig)->GetSolutionDof(j, iel, sol_type);
+		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
 		double xx=(*_ml_msh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
 		double yy=(*_ml_msh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
 		double zz=(*_ml_msh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
@@ -305,7 +305,7 @@ void MultiLevelSolution::InitializeMLProb(const MultiLevelProblem * ml_prob, con
 	      unsigned nloc_dof= _ml_msh->GetLevel(ig)->el->GetElementDofNumber(iel,0);
 	      double xx=0.,yy=0.,zz=0.;
 	      for(int j=0; j<nloc_dof; j++) {
-		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetMetisDof(j, iel, 2);
+		unsigned icoord_Metis=_ml_msh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
 		xx+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
 		yy+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
 		zz+=(*_ml_msh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
@@ -460,11 +460,11 @@ void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0,
 		 // unsigned inode=(!_TestIfPressure[k])?
 		 // _ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(iel,jface,iv)-1u:
 		 // _ml_msh->GetLevel(igridn)->el->GetElementVertexIndex(iel,iv)-1u;
-		 //unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+		 //unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(inode,_SolType[k]);
 
 		  unsigned i=(!_TestIfPressure[k])?
 		    _ml_msh->GetLevel(igridn)->el->GetLocalFaceVertexIndex(iel,jface,iv) : iv;
-		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i, iel, _SolType[k]);
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i, iel, _SolType[k]);
 
 
 		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
@@ -482,10 +482,10 @@ void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0,
 		unsigned nv1 = _ml_msh->GetLevel(igridn)->el->GetElementFaceDofNumber(iel,jface,_SolType[k]);
 		for (unsigned iv=0; iv<nv1; iv++) {
 		  //unsigned inode=_ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(iel,jface,iv)-1u;
-		  //unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,2);
+		  //unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(inode,2);
 
 		  unsigned i=_ml_msh->GetLevel(igridn)->el->GetLocalFaceVertexIndex(iel,jface,iv);
-		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,2);
+		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i,iel,2);
 
 		  double value = 0.;
 		  double xx=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[0])(inode_coord_Metis);
@@ -493,8 +493,8 @@ void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0,
 		  double zz=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[2])(inode_coord_Metis);
 		  unsigned int face = -(_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(iel,jface)+1)-1 ;
 		  if(GetBoundaryCondition(k,face) == DIRICHLET) {
-		     //unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
-		     unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,_SolType[k]);
+		     //unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(inode,_SolType[k]);
+		     unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i,iel,_SolType[k]);
 		    _solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
 		    if(!Ishomogeneous(k,face)) {
 		      ParsedFunction* bdcfunc = (ParsedFunction*)(GetBdcFunction(k,face));
@@ -527,7 +527,7 @@ void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0,
 		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(iel,_SolType[k]);
 		for (unsigned i=0; i<nv1; i++) {
 		  //unsigned inode=(iel+i*nel);
-		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i, iel, _SolType[k]);
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i, iel, _SolType[k]);
 		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
 		}
 	      }
@@ -642,11 +642,11 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 // 		  unsigned inode=(!_TestIfPressure[k])?
 // 		    _ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(iel,jface,iv)-1u:
 // 		    _ml_msh->GetLevel(igridn)->el->GetElementVertexIndex(iel,iv)-1u;
-// 		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+// 		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(inode,_SolType[k]);
 
 		  unsigned i=(!_TestIfPressure[k])?
 		    _ml_msh->GetLevel(igridn)->el->GetLocalFaceVertexIndex(iel,jface,iv) : iv;
-		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i, iel, _SolType[k]);
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i, iel, _SolType[k]);
 
 		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
 		}
@@ -663,9 +663,9 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 		unsigned nv1 = _ml_msh->GetLevel(igridn)->el->GetElementFaceDofNumber(iel,jface,_SolType[k]);
 		for (unsigned iv=0; iv<nv1; iv++) {
 		  //unsigned inode=_ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(iel,jface,iv)-1u;
-		  //unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,2);
+		  //unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(inode,2);
 		  unsigned i=_ml_msh->GetLevel(igridn)->el->GetLocalFaceVertexIndex(iel,jface,iv);
-		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,2);
+		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i,iel,2);
 		  double value;
 		  vector < double > xx(3);
 		  xx[0]=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[0])(inode_coord_Metis);
@@ -673,7 +673,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 		  xx[2]=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[2])(inode_coord_Metis);
 		  bool test=_SetBoundaryConditionFunction(xx,_SolName[k],value,-(_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(iel,jface)+1),time);
 		  if (test) {
-		    unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,_SolType[k]);
+		    unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i,iel,_SolType[k]);
 		    _solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
 		    _solution[igridn]->_Sol[k]->set(inode_Metis,value);
 		  }
@@ -695,7 +695,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 // 	    for (unsigned kface=0; kface<_ml_msh->GetLevel(igridn)->el->GetElementFaceNumber(iel); kface++) {
 // 	      if (_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(iel,kface) > 0){
 // 		int kel = _ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(iel,kface)-1;
-// 		unsigned kel_Metis = _ml_msh->GetLevel(igridn)->GetMetisDof(kel,_SolType[k]);
+// 		unsigned kel_Metis = _ml_msh->GetLevel(igridn)->GetSolutionDof(kel,_SolType[k]);
 // 		if( // kel_Metis >=  _ml_msh->GetLevel(igridn)->_dofOffset[3][isdom]&&
 // 		  //kel_Metis < _ml_msh->GetLevel(igridn)->_dofOffset[3][isdom+1]
 // 		1){
@@ -712,7 +712,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(iel,_SolType[k]);
 		for (unsigned i=0; i<1; i++) {
 		  //unsigned inode=(iel+i*nel);
-		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,_SolType[k]);
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i,iel,_SolType[k]);
 		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
 		}
 	      }
@@ -761,11 +761,11 @@ void MultiLevelSolution::GenerateBdcMLProb(const MultiLevelProblem * ml_prob, co
 // 		  unsigned inode=(!_TestIfPressure[k])?
 // 		    _ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(iel,jface,iv)-1u:
 // 		    _ml_msh->GetLevel(igridn)->el->GetElementVertexIndex(iel,iv)-1u;
-// 		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
+// 		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(inode,_SolType[k]);
 
 		  unsigned i=(!_TestIfPressure[k])?
 		    _ml_msh->GetLevel(igridn)->el->GetLocalFaceVertexIndex(iel,jface,iv) : iv;
-		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i, iel, _SolType[k]);
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i, iel, _SolType[k]);
 
 		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
 		}
@@ -782,9 +782,9 @@ void MultiLevelSolution::GenerateBdcMLProb(const MultiLevelProblem * ml_prob, co
 		unsigned nv1 = _ml_msh->GetLevel(igridn)->el->GetElementFaceDofNumber(iel,jface,_SolType[k]);
 		for (unsigned iv=0; iv<nv1; iv++) {
 		  //unsigned inode=_ml_msh->GetLevel(igridn)->el->GetFaceVertexIndex(iel,jface,iv)-1u;
-		  //unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,2);
+		  //unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(inode,2);
 		  unsigned i=_ml_msh->GetLevel(igridn)->el->GetLocalFaceVertexIndex(iel,jface,iv);
-		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,2);
+		  unsigned inode_coord_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i,iel,2);
 
 		  double value;
 		  double xx=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[0])(inode_coord_Metis);
@@ -792,8 +792,8 @@ void MultiLevelSolution::GenerateBdcMLProb(const MultiLevelProblem * ml_prob, co
 		  double zz=(*_ml_msh->GetLevel(igridn)->_topology->_Sol[2])(inode_coord_Metis);
 		  bool test=_SetBoundaryConditionFunctionMLProb(ml_prob,xx,yy,zz,_SolName[k],value,-(_ml_msh->GetLevel(igridn)->el->GetFaceElementIndex(iel,jface)+1),time);
 		  if (test) {
-		    //unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(inode,_SolType[k]);
-		    unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,_SolType[k]);
+		    //unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(inode,_SolType[k]);
+		    unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i,iel,_SolType[k]);
 		    _solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
 		    _solution[igridn]->_Sol[k]->set(inode_Metis,value);
 		  }
@@ -814,7 +814,7 @@ void MultiLevelSolution::GenerateBdcMLProb(const MultiLevelProblem * ml_prob, co
 		unsigned nv1=_ml_msh->GetLevel(igridn)->el->GetElementDofNumber(iel,_SolType[k]);
 		for (unsigned i=0; i<nv1; i++) {
 		  //unsigned inode=(iel+i*nel);
-		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetMetisDof(i,iel,_SolType[k]);
+		  unsigned inode_Metis=_ml_msh->GetLevel(igridn)->GetSolutionDof(i,iel,_SolType[k]);
 		  _solution[igridn]->_Bdc[k]->set(inode_Metis,1.);
 		}
 	      }

@@ -531,7 +531,7 @@ void Mesh::FillISvector(vector < int > &partition) {
   }
   // *******************************************************
 
-  unsigned Mesh::GetMetisDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const {
+  unsigned Mesh::GetSolutionDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const {
 
     unsigned dof;
     switch(solType){

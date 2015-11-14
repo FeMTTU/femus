@@ -538,12 +538,12 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
         // get local to global mappings
         for( unsigned i=0; i<nve; i++) {
             unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
-            unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
-            metis_node[i]=mymsh->GetMetisDof(inode,order_ind);
+            unsigned inode_coord_metis=mymsh->GetSolutionDof(inode,2);
+            metis_node[i]=mymsh->GetSolutionDof(inode,order_ind);
             for(unsigned ivar=0; ivar<dim; ivar++) {
                 coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
             }
-            KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,inode);
+            KK_dof[i]=mylsyspde->GetSystemDof(SolIndex,SolPdeIndex,inode);
         }
 
         if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
@@ -622,7 +622,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
 			const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);
                         for(unsigned i=0; i<nve; i++) {
                             unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-                            unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
+                            unsigned inode_coord_metis=mymsh->GetSolutionDof(inode,2);
 
 			    for(unsigned ivar=0; ivar<dim; ivar++) {
                               coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
@@ -757,8 +757,8 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
 	// get local to global mappings
 	for( unsigned i=0; i<nve; i++) {
 	  unsigned inode=msh->el->GetElementVertexIndex(kel,i)-1u;
-	  unsigned inode_coord_metis=msh->GetMetisDof(inode,2);
-	  metis_node[i]=msh->GetMetisDof(inode,SolOrder);
+	  unsigned inode_coord_metis=msh->GetSolutionDof(inode,2);
+	  metis_node[i]=msh->GetSolutionDof(inode,SolOrder);
 	  for(unsigned idim=0; idim<dim; idim++) {
 	    coordinates[idim][i]=(*msh->_topology->_Sol[idim])(inode_coord_metis);
 	  }

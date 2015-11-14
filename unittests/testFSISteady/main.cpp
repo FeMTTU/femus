@@ -609,10 +609,10 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob) {
       // gambit nodes
       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
       // dof metis
-      unsigned inode_Metis=mymsh->GetMetisDof(i, kel, 2);
+      unsigned inode_Metis=mymsh->GetSolutionDof(i, kel, 2);
       metis_node2[i]=inode_Metis;
 
-      //unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+      //unsigned inode_Metis=mymsh->GetSolutionDof(inode,2);
       // flag to know if the node "inode" lays on the fluid-solid interface
       solidmark[i]=myel->GetNodeRegion(inode); // to check
       for(int j=0; j<dim; j++) {
@@ -621,16 +621,16 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob) {
 	//Fixed coordinates (Reference frame)
 	vx_hat[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis);
 	// displacement dofs
-	dofsVAR[j][i]= myLinEqSolver->GetKKDof(indVAR[j],indexVAR[j], i, kel);
+	dofsVAR[j][i]= myLinEqSolver->GetSystemDof(indVAR[j],indexVAR[j], i, kel);
 	// velocity dofs
-	dofsVAR[j+dim][i]= myLinEqSolver->GetKKDof(indVAR[j+dim],indexVAR[j+dim], i, kel);
+	dofsVAR[j+dim][i]= myLinEqSolver->GetSystemDof(indVAR[j+dim],indexVAR[j+dim], i, kel);
       }
     }
 
     // pressure dofs
     for (unsigned i=0;i<nve1;i++) {
-      metis_node1[i]=mymsh->GetMetisDof(i, kel, SolType[2*dim]);
-      dofsVAR[2*dim][i]=myLinEqSolver->GetKKDof(indVAR[2*dim],indexVAR[2*dim],i, kel);
+      metis_node1[i]=mymsh->GetSolutionDof(i, kel, SolType[2*dim]);
+      dofsVAR[2*dim][i]=myLinEqSolver->GetSystemDof(indVAR[2*dim],indexVAR[2*dim],i, kel);
     }
     // ----------------------------------------------------------------------------------------
 
