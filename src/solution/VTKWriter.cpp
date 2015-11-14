@@ -577,18 +577,18 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
       }
     } //end _ml_sol != NULL
   }
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
   // ???????????????????????????????????????????? TODO
-  
+
   NumericVector &material =  _ml_mesh->GetLevel(_gridn-1)->_topology->GetSolutionName("Material");
-  
+
   fout  << "        <DataArray type=\"Float32\" Name=\"" << "MATERIAL" <<"\" format=\"binary\">" << std::endl;
   Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "MATERIAL" <<"\" format=\"binary\"/>" << std::endl;
   // point pointer to common memory area buffer of void type;
@@ -601,7 +601,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 	var_el[icount] = (material)(iel_Metis);
 	icount++;
       }
-    }  
+    }
   }
   //print solution on element dimension
   cch = b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), NULL, 0);
@@ -617,9 +617,9 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   fout << "        </DataArray>" << std::endl;
 
   // ???????????????????????????????????????????? TODO
-  
-  
-    
+
+
+
   fout  << "      </CellData>" << std::endl;
   Pfout << "    </PCellData>" << std::endl;
   //   //------------------------------------------------------------------------------------------------

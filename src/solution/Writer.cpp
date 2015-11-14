@@ -52,6 +52,8 @@ namespace femus {
     _gridn = _ml_mesh->GetNumberOfLevels();
     _gridr = _ml_mesh->GetNumberOfGridTotallyRefined();
     _moving_mesh = 0;
+    _graph = false;
+    _surface = false;
   }
 
   Writer::~Writer() { }
