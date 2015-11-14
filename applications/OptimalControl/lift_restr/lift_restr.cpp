@@ -45,7 +45,7 @@ int main(int argc, char** args) {
   mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.PrintInfo();
@@ -54,7 +54,7 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("Thom", LAGRANGE, SECOND);
+  mlSol.AddSolution("Thom", LAGRANGE, FIRST);
   mlSol.AddSolution("ThomAdj", LAGRANGE, SECOND);
   mlSol.AddSolution("Tcont", LAGRANGE, SECOND);
 
@@ -146,16 +146,26 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //*************************** 
 
  //*************************** 
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
-
-  phi.reserve(maxSize);
-  phi_x.reserve(maxSize * dim);
-  phi_xx.reserve(maxSize * dim2);
  //*************************** 
+  vector <double> phi_Thom;  // local test function
+  vector <double> phi_x_Thom; // local test function first order partial derivatives
+  vector <double> phi_xx_Thom; // local test function second order partial derivatives
+
+  phi_Thom.reserve(maxSize);
+  phi_x_Thom.reserve(maxSize * dim);
+  phi_xx_Thom.reserve(maxSize * dim2);
+
+  vector <double> phi_ThomAdj;  // local test function
+  vector <double> phi_x_ThomAdj; // local test function first order partial derivatives
+  vector <double> phi_xx_ThomAdj; // local test function second order partial derivatives
+
+  phi_ThomAdj.reserve(maxSize);
+  phi_x_ThomAdj.reserve(maxSize * dim);
+  phi_xx_ThomAdj.reserve(maxSize * dim2);
+  //*************************** 
   
+  const int solType_max = 2;  //biquadratic
   
  //*************************** 
   unsigned solIndexThom;
@@ -187,7 +197,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   //*************************** 
   
   const int n_vars = 2;
-  
+
 
 
  //*************************** 
@@ -216,7 +226,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     unsigned nDofThomAdj  = el->GetElementDofNumber(kel, solTypeThomAdj);    // number of solution element dofs
 
     unsigned nDof_AllVars = nDofThom + nDofThomAdj; 
-    
+    const int nDof_max    = (nDofThom > nDofThomAdj)?nDofThom:nDofThomAdj;  //maximum number of element dofs for one scalar variable
+      
     // resize local arrays
     solThom    .resize(nDofThom);
     l2GMap_Thom.resize(nDofThom);
@@ -276,53 +287,39 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
     if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
 
+      
+      
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solTypeThom]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
         // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[kelGeom][solTypeThom]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
-
-        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        double solThom_gss = 0;
-        vector < double > gradSolu_gss(dim, 0.);
-        vector < double > x_gss(dim, 0.);
-
-        for (unsigned i = 0; i < nDofThom; i++) {
-          solThom_gss += phi[i] * solThom[i];
-
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
-            gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solThom[i];
-            x_gss[jdim] += x[jdim][i] * phi[i];
-          }
-        }
-
+        msh->_finiteElement[kelGeom][solTypeThom]   ->Jacobian(x, ig, weight, phi_Thom, phi_x_Thom, phi_xx_Thom);
+        msh->_finiteElement[kelGeom][solTypeThomAdj]->Jacobian(x, ig, weight, phi_ThomAdj, phi_x_ThomAdj, phi_xx_ThomAdj);
+	
         // *** phi_i loop ***
-        for (unsigned i = 0; i < nDofThom; i++) {
-
-          double laplace_rhs = 0.;
-
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
-            laplace_rhs   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
-          }
+        for (unsigned i = 0; i < nDof_max; i++) {
 
           double srcTerm = 10.;
-          Res[i]            += (srcTerm * phi[i] - laplace_rhs) * weight;
-          Res[nDofThom + i] += (srcTerm * phi[i] - laplace_rhs) * weight;
+          if (i < nDofThom)    Res[i]            += (srcTerm * phi_Thom   [i] ) * weight;
+          if (i < nDofThomAdj) Res[nDofThom + i] += (srcTerm * phi_ThomAdj[i]) * weight;
 
           if (assembleMatrix) {
             // *** phi_j loop ***
-            for (unsigned j = 0; j < nDofThom; j++) {
-              double laplace_mat = 0.;
+            for (unsigned j = 0; j < nDof_max; j++) {
+              double laplace_mat_Thom = 0.;
+              double laplace_mat_ThomAdj = 0.;
 
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-                laplace_mat += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
+              if ( i < nDofThom && j < nDofThom )         laplace_mat_Thom    += (phi_x_Thom   [i * dim + kdim] * phi_x_Thom   [j * dim + kdim]) * weight;
+              if ( i < nDofThomAdj && j < nDofThomAdj )   laplace_mat_ThomAdj += (phi_x_ThomAdj[i * dim + kdim] * phi_x_ThomAdj[j * dim + kdim]) * weight;
               }
 
-              Jac[i * (2*nDofThom) + j] += laplace_mat;
-              Jac[(2*nDofThom)*(nDofThom) + i * (2* nDofThom) +(nDofThom + j)] += laplace_mat;
+              if ( i < nDofThom && j < nDofThom )       Jac[i * (nDofThom + nDofThomAdj) + j] += laplace_mat_Thom;
+              if ( i < nDofThomAdj && j < nDofThomAdj ) Jac[(nDofThom + nDofThomAdj)*(nDofThom) + i * (nDofThom + nDofThomAdj) +(nDofThom + j)] += laplace_mat_ThomAdj;
             } // end phi_j loop
           } // endif assemble_matrix
 
         } // end phi_i loop
+        
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
 
