@@ -39,10 +39,10 @@ void optimization_loop( MultiLevelProblem & e_map_in );
 
  void TempDesired(CurrentQuantity& myvect, const CurrentElem & currelem);
 
- 
- bool  SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time);
- 
-double  SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char * name);
+
+ bool  SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <double> &xp, const char name[], double &value, const int facename, const double time);
+
+double  SetInitialCondition(const MultiLevelProblem * ml_prob, const std::vector <double> &xp, const char name[]);
 
 } //end namespace femus
 

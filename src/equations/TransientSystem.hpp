@@ -80,6 +80,9 @@ public:
 
     /** calling the parent solve */
     virtual void solve();
+    
+    /** calling the parent solve */
+    virtual void MGsolve();
 
 
     /** update the Newmark variables */

@@ -105,8 +105,8 @@ namespace femus {
     for (int k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype = _SolType[indexSol];
-      for (unsigned inode_mts = _msh->MetisOffset[soltype][processor_id()]; inode_mts < _msh->MetisOffset[soltype][processor_id() + 1]; inode_mts++) {
-        int local_mts = inode_mts - _msh->MetisOffset[soltype][processor_id()];
+      for (unsigned inode_mts = _msh->_dofOffset[soltype][processor_id()]; inode_mts < _msh->_dofOffset[soltype][processor_id() + 1]; inode_mts++) {
+        int local_mts = inode_mts - _msh->_dofOffset[soltype][processor_id()];
         int idof_kk = KKoffset[k][processor_id()] + local_mts;
         if (!ThisSolutionIsIncluded[k] || (*(*_Bdc)[indexSol])(inode_mts) < 1.9) {
           _indexai[0][count0] = idof_kk;
@@ -345,49 +345,24 @@ namespace femus {
     }
     
     KSPSetUp(subksp);
-
-    
-    
-//     KSP* subksps;
-//     PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULL, &subksps);
+       
+    KSP* subksps;
+    PCFieldSplitGetSubKSP(subpc, &_nlocal, &subksps);
 // 
-//     PetscReal epsilon = 1.e-16;
-//     if (!_standard_ASM) {
-//       for (int i = 0; i < _block_type_range[0]; i++) {
-//         PC subpcs;
-//         KSPGetPC(subksps[i], &subpcs);
-//         KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
-//         KSPSetFromOptions(subksps[i]);
-//         PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
-//         PCFactorSetZeroPivot(subpcs, epsilon);
-//         PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-//       }
-//       for (int i = _block_type_range[0]; i < _block_type_range[1]; i++) {
-//         PC subpcs;
-//         KSPGetPC(subksps[i], &subpcs);
-//         KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
-//         KSPSetFromOptions(subksps[i]);
-//         if (this->_preconditioner_type == ILU_PRECOND)
-//           PCSetType(subpcs, (char*) PCILU);
-//         else
-//           PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
-//         PCFactorSetZeroPivot(subpcs, epsilon);
-//         PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-//       }
-//     } else {
-//       for (int i = 0; i < _nlocal; i++) {
-//         PC subpcs;
-//         KSPGetPC(subksps[i], &subpcs);
-//         KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
-//         KSPSetFromOptions(subksps[i]);
-//         if (this->_preconditioner_type == ILU_PRECOND)
-//           PCSetType(subpcs, (char*) PCILU);
-//         else
-//           PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
-//         PCFactorSetZeroPivot(subpcs, epsilon);
-//         PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-//       }
-//     }
+    PetscReal epsilon = 1.e-16;
+    for (int i = 0; i < _is_loc.size(); i++) {
+      KSPSetType(subksps[i], (char*) KSPPREONLY);
+      PC subpcs;
+      KSPGetPC(subksps[i], &subpcs);
+      KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
+      KSPSetFromOptions(subksps[i]);
+      
+      PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+      PCFactorSetZeroPivot(subpcs, epsilon);
+      PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+              
+    }
+      
 
     //END here
     

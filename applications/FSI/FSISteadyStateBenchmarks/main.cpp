@@ -187,19 +187,24 @@ int main(int argc,char **args) {
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
   if(simulation < 3)
-    numberOfUniformRefinedMeshes = 3;
+    numberOfUniformRefinedMeshes = 1;
   else if(simulation == 3 || simulation == 7)
     numberOfUniformRefinedMeshes = 4;
   else if(simulation < 7)
     numberOfUniformRefinedMeshes = 2;
 
-  numberOfAMRLevels = 0;
+  numberOfAMRLevels = 2;
 
-  MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes, numberOfUniformRefinedMeshes + numberOfAMRLevels,
+  MultiLevelMesh ml_msh( numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
+
+  //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
+
+  ml_msh.PrintInfo();
 
   // mark Solid nodes
   ml_msh.MarkStructureNode();
+
 
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
@@ -213,7 +218,7 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
   if (!dimension2D) ml_sol.AddSolution("W",LAGRANGE,SECOND,1);
 
-  // Pair each velocity varible with the corresponding displacement variable
+  // Pair each velocity variable with the corresponding displacement variable
   ml_sol.PairSolution("U","DX"); // Add this line
   ml_sol.PairSolution("V","DY"); // Add this line
   if (!dimension2D) ml_sol.PairSolution("W","DZ"); // Add this line
@@ -277,12 +282,12 @@ int main(int argc,char **args) {
   if( simulation == 7 )
     system.SetNonLinearConvergenceTolerance(1.e-5);
 
-  system.SetNumberPreSmoothingStep(15);
-  system.SetNumberPostSmoothingStep(15);
+  system.SetNumberPreSmoothingStep(5);
+  system.SetNumberPostSmoothingStep(5);
 
   if( simulation < 3 || simulation == 7 ) {
-    system.SetMaxNumberOfLinearIterations(2);
-    system.SetMaxNumberOfNonLinearIterations(15);
+    system.SetMaxNumberOfLinearIterations(5);
+    system.SetMaxNumberOfNonLinearIterations(10);
   }
   else {
     system.SetMaxNumberOfLinearIterations(2);

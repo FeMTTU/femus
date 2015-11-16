@@ -90,6 +90,30 @@ void TransientSystem<Base>::solve() {
   
 }
 
+template <class Base>
+void TransientSystem<Base>::MGsolve() {
+ 
+  if (_is_selective_timestep) {
+    _dt = _get_time_interval_function(_time);
+  }
+
+  //update time
+  _time += _dt;
+   
+  //update time step
+  _time_step++;
+  
+  std::cout << " Time: " << _time << "   TimeStep: " << _time_step << std::endl;
+    
+   //update boundary condition
+  this->_ml_sol->UpdateBdc(_time);
+  
+  // call the parent solver
+  Base::MGsolve();
+  
+}
+
+
 
 //---------------------------------------------------------------------------------------------------------
 

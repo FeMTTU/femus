@@ -48,6 +48,9 @@ public:
 
     /** Solves the system. */
     virtual void solve () {};
+    
+     /** Solves the system. */
+    virtual void MGsolve () {};
 
     /** Clear all the data structures associated with the system. */
     virtual void clear();

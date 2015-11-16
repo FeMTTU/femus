@@ -341,7 +341,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob){
 
   
   // *** element loop ***
-  for (int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+  for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     short unsigned kelt=myel->GetElementType(kel);
@@ -366,14 +366,14 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob){
     // get local to global mappings
     for( unsigned i=0; i<nve2; i++) {
       unsigned inode=myel->GetMeshDof(kel,i,order_ind);
-      unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
+      unsigned inode_coord_metis=mymsh->GetSolutionDof(inode,2);
      
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+	coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
       }
       if(i<nve){
-	metis_node[i]=mymsh->GetMetisDof(inode,order_ind);
-	KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,inode);
+	metis_node[i]=mymsh->GetSolutionDof(inode,order_ind);
+	KK_dof[i]=mylsyspde->GetSystemDof(SolIndex,SolPdeIndex,inode);
       }
     }
     
@@ -496,10 +496,10 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob){
 	      const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);
 	      for(unsigned i=0; i<nve; i++) {
 		unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-		unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
+		unsigned inode_coord_metis=mymsh->GetSolutionDof(inode,2);
 
 		for(unsigned ivar=0; ivar<dim; ivar++) {
-		  coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+		  coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
 		}
 	      }
 
@@ -552,10 +552,10 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob){
 	      const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);
 	      for(unsigned i=0; i<nve; i++) {
 		unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-		unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+		unsigned inode_Metis=mymsh->GetSolutionDof(inode,2);
 		unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
 		for(unsigned idim=0; idim<dim; idim++) {
-		  coordinates[idim][i]=(*mymsh->_coordinate->_Sol[idim])(inode_Metis);
+		  coordinates[idim][i]=(*mymsh->_topology->_Sol[idim])(inode_Metis);
 		}
 	      }
 	      for(unsigned igs=0; igs < mymsh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {

@@ -40,17 +40,18 @@ MeshMetisPartitioning::MeshMetisPartitioning(Mesh& mesh) : MeshPartitioning(mesh
 
 
 //------------------------------------------------------------------------------------------------------
-void MeshMetisPartitioning::DoPartition(const bool &AMR) {
+void MeshMetisPartitioning::DoPartition(std::vector <int> &epart, const bool &AMR) {
 
 
   int nnodes = _mesh.GetNumberOfNodes();
   int nelem = _mesh.GetNumberOfElements();
-  _mesh.epart.resize(nelem);
+
+  epart.resize(nelem);
 
   if( _nprocs == 1) {
     //serial computation
     for(unsigned i=0;i<nelem;i++) {
-      _mesh.epart[i]=0;
+      epart[i]=0;
     }
   }
   else if( _nprocs > nelem) {
@@ -60,7 +61,7 @@ void MeshMetisPartitioning::DoPartition(const bool &AMR) {
   }
   else if(_nprocs == nelem) {
     for(unsigned i=0; i<nelem; i++) {
-      _mesh.epart[i] = i;
+      epart[i] = i;
     }
   }
   else {
@@ -111,7 +112,7 @@ void MeshMetisPartitioning::DoPartition(const bool &AMR) {
     int ncommon = ( AMR || _mesh.GetDimension() == 1 ) ? 1 : _mesh.GetDimension()+1;
 
     //I call the Mesh partioning function of Metis library (output is epart(own elem) and npart (own nodes))
-    int err = METIS_PartMeshDual(&nelem, &nnodes, &eptr[0], &eind[0], NULL, NULL, &ncommon, &_nprocs, NULL, options, &objval, &_mesh.epart[0], &npart[0]);
+    int err = METIS_PartMeshDual(&nelem, &nnodes, &eptr[0], &eind[0], NULL, NULL, &ncommon, &_nprocs, NULL, options, &objval, &epart[0], &npart[0]);
 
     if(err == METIS_OK) {
       std::cout << " METIS PARTITIONING IS OK " << std::endl;
@@ -129,20 +130,17 @@ void MeshMetisPartitioning::DoPartition(const bool &AMR) {
       exit(3);
     }
   }
-
-
   return;
-
-
-
 }
 
-void MeshMetisPartitioning::DoPartition(const Mesh& meshc){
-  _mesh.epart.resize( _mesh.GetNumberOfElements() );
+void MeshMetisPartitioning::DoPartition(std::vector <int> &epart, const Mesh& meshc){
+  epart.resize( _mesh.GetNumberOfElements() );
   unsigned refIndex = _mesh.GetRefIndex();
-  for (unsigned iel=0; iel < meshc.GetNumberOfElements(); iel++) {
-    for (unsigned j=0; j < refIndex; j++) {
-      _mesh.epart[ iel * refIndex + j ] = meshc.epart[iel];
+  for(int isdom = 0; isdom < _nprocs; isdom++){
+    for( unsigned iel =meshc._elementOffset[isdom]; iel < meshc._elementOffset[isdom+1]; iel++){
+      for (unsigned j=0; j < refIndex; j++) {
+        epart[ iel * refIndex + j ] = isdom;
+      }
     }
   }
 }

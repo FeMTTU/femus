@@ -368,11 +368,11 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 //       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
 
 //       // dof metis
-//       /*metis_node2*/_el_conn_new[i] = mymsh->GetMetisDof(inode,BIQUADR_FE);
-//                       metis_node1[i] = mymsh->GetMetisDof(inode,SolType[2*dim]);
+//       /*metis_node2*/_el_conn_new[i] = mymsh->GetSolutionDof(inode,BIQUADR_FE);
+//                       metis_node1[i] = mymsh->GetSolutionDof(inode,SolType[2*dim]);
 
 
-//  	dofsVAR[j+dim][i]= mylsyspde->GetKKDof(indVAR[j+dim],indexVAR[j+dim],inode);   
+//  	dofsVAR[j+dim][i]= mylsyspde->GetSystemDof(indVAR[j+dim],indexVAR[j+dim],inode);   
 
 //     }
 //     
@@ -389,23 +389,23 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 //       gambit nodes
 //       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
 //       dof metis
-//       unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+//       unsigned inode_Metis=mymsh->GetSolutionDof(inode,2);
 //       metis_node2[i]=inode_Metis;
 //       
-//       unsigned inode_Metis=mymsh->GetMetisDof(inode,2);
+//       unsigned inode_Metis=mymsh->GetSolutionDof(inode,2);
 //       flag to know if the node "inode" lays on the fluid-solid interface
 //       solidmark[i]=myel->GetNodeRegion(inode); // to check
 //       for(int j=0; j<dim; j++) {
 // 	Updated coordinates (Moving frame)
-//         vx[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
+//         vx[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis) + (*mysolution->_Sol[indVAR[j]])(inode_Metis);
 // 	Old coordinates (Moving frame)
-//         vx_old[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis) + (*mysolution->_SolOld[indVAR[j]])(inode_Metis);
+//         vx_old[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis) + (*mysolution->_SolOld[indVAR[j]])(inode_Metis);
 // 	Fixed coordinates (Reference frame)
-// 	vx_hat[j][i]= (*mymsh->_coordinate->_Sol[j])(inode_Metis);  
+// 	vx_hat[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis);  
 // 	displacement dofs
-// 	dofsVAR[j][i]= mylsyspde->GetKKDof(indVAR[j],indexVAR[j],inode); 
+// 	dofsVAR[j][i]= mylsyspde->GetSystemDof(indVAR[j],indexVAR[j],inode); 
 // 	velocity dofs
-// 	dofsVAR[j+dim][i]= mylsyspde->GetKKDof(indVAR[j+dim],indexVAR[j+dim],inode);   
+// 	dofsVAR[j+dim][i]= mylsyspde->GetSystemDof(indVAR[j+dim],indexVAR[j+dim],inode);   
 //       }
 //     }
 //  
