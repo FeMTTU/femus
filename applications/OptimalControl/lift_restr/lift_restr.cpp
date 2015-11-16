@@ -341,9 +341,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
         for (unsigned i = 0; i < nDof_max; i++) {
 
           double srcTerm = 10.;
-          if (i < nDofThom)    Res[i]                          += (  srcTerm * phi_Thom   [i] ) * weight;
-          if (i < nDofThomAdj) Res[nDofThom + i]               += (2*srcTerm * phi_ThomAdj[i] ) * weight;
-          if (i < nDofTcont)   Res[nDofThom + nDofThomAdj + i] += (4*srcTerm * phi_Tcont  [i] ) * weight;
+	  
+          if (i < nDofThom)    Res[i]                          += (1.*srcTerm * phi_Thom   [i] ) * weight;
+          if (i < nDofThomAdj) Res[nDofThom + i]               += (2.*srcTerm * phi_ThomAdj[i] ) * weight;
+          if (i < nDofTcont)   Res[nDofThom + nDofThomAdj + i] += (4.*srcTerm * phi_Tcont  [i] ) * weight;
 
           if (assembleMatrix) {
             // *** phi_j loop ***
@@ -351,12 +352,15 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               double laplace_mat_Thom = 0.;
               double laplace_mat_ThomAdj = 0.;
               double laplace_mat_Tcont = 0.;
+              double laplace_mat_ThomVSTcont = 0.;
 
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDofThom && j < nDofThom )         laplace_mat_Thom    += (phi_x_Thom   [i * dim + kdim] * phi_x_Thom   [j * dim + kdim]) * weight;
-              if ( i < nDofThomAdj && j < nDofThomAdj )   laplace_mat_ThomAdj += (phi_x_ThomAdj[i * dim + kdim] * phi_x_ThomAdj[j * dim + kdim]) * weight;
-              if ( i < nDofTcont   && j < nDofTcont   )   laplace_mat_Tcont   += (phi_x_Tcont  [i * dim + kdim] * phi_x_Tcont  [j * dim + kdim]) * weight;
-              }
+              if ( i < nDofThom && j < nDofThom )         laplace_mat_Thom        += (phi_x_Thom   [i * dim + kdim] * phi_x_Thom   [j * dim + kdim]) * weight;
+              if ( i < nDofThomAdj && j < nDofThomAdj )   laplace_mat_ThomAdj     += (phi_x_ThomAdj[i * dim + kdim] * phi_x_ThomAdj[j * dim + kdim]) * weight;
+              if ( i < nDofTcont   && j < nDofTcont   )   laplace_mat_Tcont       += (phi_x_Tcont  [i * dim + kdim] * phi_x_Tcont  [j * dim + kdim]) * weight;
+              if ( i < nDofThom    && j < nDofTcont )     laplace_mat_ThomVSTcont += (phi_x_Thom   [i * dim + kdim] * phi_x_Tcont  [j * dim + kdim]) * weight;
+		
+	      }
 
               if ( i < nDofThom && j < nDofThom )       Jac[    0                                              +
                                                                    i    * (nDofThom + nDofThomAdj + nDofTcont) +
@@ -367,6 +371,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               if ( i < nDofTcont   && j < nDofTcont   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
 								(nDofThom  + nDofThomAdj + j)                     ]  += laplace_mat_Tcont;
+              if ( i < nDofThom    && j < nDofTcont )   Jac[    0                                              +
+                                                                   i    * (nDofThom + nDofThomAdj + nDofTcont) +
+		                                                (nDofThom + nDofThomAdj + j)                      ]  += laplace_mat_ThomVSTcont;      
+	      
+	      
             } // end phi_j loop
           } // endif assemble_matrix
 
