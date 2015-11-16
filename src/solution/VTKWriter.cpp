@@ -579,14 +579,10 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   }
 
 
-
-
-
-
-
-
   // ???????????????????????????????????????????? TODO
 
+  //-------------------------------------------MATERIAL---------------------------------------------------------
+  
   NumericVector &material =  _ml_mesh->GetLevel(_gridn-1)->_topology->GetSolutionName("Material");
 
   fout  << "        <DataArray type=\"Float32\" Name=\"" << "MATERIAL" <<"\" format=\"binary\">" << std::endl;
@@ -599,6 +595,67 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
       if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
 	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel, 3);
 	var_el[icount] = (material)(iel_Metis);
+	icount++;
+      }
+    }
+  }
+  //print solution on element dimension
+  cch = b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), NULL, 0);
+  b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), &enc[0], cch);
+  pt_char=&enc[0];
+  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+  //print solution on element array
+  cch = b64::b64_encode(&var_el[0], dim_array_elvar[0] , NULL, 0);
+  b64::b64_encode(&var_el[0], dim_array_elvar[0], &enc[0], cch);
+  pt_char=&enc[0];
+  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+  fout << std::endl;
+  fout << "        </DataArray>" << std::endl;
+  
+  //------------------------------------------------------GROUP-----------------------------------------------------------
+  
+    NumericVector &group =  _ml_mesh->GetLevel(_gridn-1)->_topology->GetSolutionName("Group");
+
+  fout  << "        <DataArray type=\"Float32\" Name=\"" << "GROUP" <<"\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "GROUP" <<"\" format=\"binary\"/>" << std::endl;
+  // point pointer to common memory area buffer of void type;
+  var_el = static_cast< float*> (buffer_void);
+  icount=0;
+  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+    for (unsigned iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
+      if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel, 3);
+	var_el[icount] = (group)(iel_Metis);
+	icount++;
+      }
+    }
+  }
+  //print solution on element dimension
+  cch = b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), NULL, 0);
+  b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), &enc[0], cch);
+  pt_char=&enc[0];
+  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+  //print solution on element array
+  cch = b64::b64_encode(&var_el[0], dim_array_elvar[0] , NULL, 0);
+  b64::b64_encode(&var_el[0], dim_array_elvar[0], &enc[0], cch);
+  pt_char=&enc[0];
+  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+  fout << std::endl;
+  fout << "        </DataArray>" << std::endl;
+  
+  //-------------------------------------------------------TYPE--------------------------------------------------
+    NumericVector &type =  _ml_mesh->GetLevel(_gridn-1)->_topology->GetSolutionName("Type");
+
+  fout  << "        <DataArray type=\"Float32\" Name=\"" << "TYPE" <<"\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "TYPE" <<"\" format=\"binary\"/>" << std::endl;
+  // point pointer to common memory area buffer of void type;
+  var_el = static_cast< float*> (buffer_void);
+  icount=0;
+  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+    for (unsigned iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
+      if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel, 3);
+	var_el[icount] = (type)(iel_Metis);
 	icount++;
       }
     }
