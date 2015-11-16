@@ -10,7 +10,7 @@
 
 namespace femus {
 
-  
+
 // Forward class
 class Files;
 class SystemTwo;
@@ -26,8 +26,8 @@ public:
   void optimization_loop(MultiLevelProblem& e_map_in);
 
   void init_equation_data(const SystemTwo* eqn);
- 
-  //====data  
+
+  //====data
   NumericVector * _x_oldopt;  //old optimization step
 
 };
@@ -38,27 +38,27 @@ public:
   double ComputeIntegral (const uint Level, const MultiLevelMeshTwo* mesh, const SystemTwo* eqn);
 
   int ElFlagControl(const std::vector<double> el_xm, const MultiLevelMesh* mesh);
-  
+
   void VelDesired(const MultiLevelProblem * ml_prob, CurrentQuantity& myvect, const CurrentElem & currelem, const uint idim);
-  
-  double SetInitialCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z, const char * name);
 
-  bool  SetBoundaryCondition(const MultiLevelProblem * ml_prob, const double &x, const double &y, const double &z,const char * name, double &value, const int facename, const double time);
-  
+  double SetInitialCondition(const MultiLevelProblem * ml_prob, const std::vector <double> &xp, const char name[]);
 
-  
+  bool  SetBoundaryCondition(const MultiLevelProblem * ml_prob, const std::vector <double> &xp, const char * name, double &value, const int facename, const double time);
+
+
+
   //********* SPACE DIMENSION, ONLY IN APPLICATION!!! ************
 // #define DIMENSION    2
   #define DIMENSION    3
 
 //****************************************
 
-//TODO the Quantity #defines should be used to 
+//TODO the Quantity #defines should be used to
 //INCLUDE or EXCLUDE a certain PHYSICAL PHENOMENON from the system.
-// of course, this is not trivial, because not only you should 
+// of course, this is not trivial, because not only you should
 // avoid defining quantities,
 // but, if these quantities are unknowns of equations,
-// you should avoid defining the equations.autoOr, if these quantities are not unknowns 
+// you should avoid defining the equations.autoOr, if these quantities are not unknowns
 // of equations, but they participate to other equations as external quantities,
 // you should remove them from the element matrices...
 // So, that would mean removing the lines from the loop,
@@ -67,7 +67,7 @@ public:
 
 
 //===================================
-//===========PHYSICAL FRAMEWORKS FLAGS 
+//===========PHYSICAL FRAMEWORKS FLAGS
 //====================================
 
 //**********************************
