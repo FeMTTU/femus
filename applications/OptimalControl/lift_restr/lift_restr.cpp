@@ -54,8 +54,8 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("Thom", LAGRANGE, FIRST);
-  mlSol.AddSolution("ThomAdj", LAGRANGE, SECOND);
+  mlSol.AddSolution("Thom", LAGRANGE, SECOND);
+  mlSol.AddSolution("ThomAdj", LAGRANGE, FIRST);
   mlSol.AddSolution("Tcont", LAGRANGE, SECOND);
 
   mlSol.Initialize("All");    // initialize all varaibles to zero
@@ -159,7 +159,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   phi_x_Thom.reserve(maxSize * dim);
   phi_xx_Thom.reserve(maxSize * dim2);
   
- //*************************** 
+ 
   unsigned solIndexThom;
   solIndexThom = mlSol->GetIndex("Thom");    // get the position of "Thom" in the ml_sol object
   unsigned solTypeThom = mlSol->GetSolutionType(solIndexThom);    // get the finite element type for "Thom"
@@ -187,7 +187,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   phi_ThomAdj.reserve(maxSize);
   phi_x_ThomAdj.reserve(maxSize * dim);
   phi_xx_ThomAdj.reserve(maxSize * dim2);
-  //*************************** 
+ 
   
  unsigned solIndexThomAdj;
   solIndexThomAdj = mlSol->GetIndex("ThomAdj");    // get the position of "Thom" in the ml_sol object
@@ -202,14 +202,39 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   l2GMap_ThomAdj.reserve(maxSize);
   //*************************** 
  //*************************** 
+
+  
+ //************ Tcont *************** 
+ //*************************** 
+  vector <double> phi_Tcont;  // local test function
+  vector <double> phi_x_Tcont; // local test function first order partial derivatives
+  vector <double> phi_xx_Tcont; // local test function second order partial derivatives
+
+  phi_Tcont.reserve(maxSize);
+  phi_x_Tcont.reserve(maxSize * dim);
+  phi_xx_Tcont.reserve(maxSize * dim2);
+  
+  unsigned solIndexTcont;
+  solIndexTcont = mlSol->GetIndex("Tcont");
+  unsigned solTypeTcont = mlSol->GetSolutionType(solIndexTcont);
+
+  unsigned solPdeIndexTcont;
+  solPdeIndexTcont = mlPdeSys->GetSolPdeIndex("Tcont");
+
+  vector < double >  solTcont; // local solution
+  solTcont.reserve(maxSize);
+ vector< int > l2GMap_Tcont;
+  l2GMap_Tcont.reserve(maxSize);
+  //*************************** 
+ //*************************** 
   
 
  //*************************** 
   //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
 
-  const int n_vars = 2;
- //*************************** 
+  const int n_vars = 3;
+ 
   vector< int > l2GMap_AllVars; // local to global mapping
   l2GMap_AllVars.reserve(n_vars*maxSize);
   
@@ -219,10 +244,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve( n_vars*maxSize * n_vars*maxSize);
  //*************************** 
- //*************************** 
 
-  if (assembleMatrix)
-    KK->zero(); // Set to zero all the entries of the Global Matrix
+  if (assembleMatrix)  KK->zero();
 
     
   // element loop: each process loops only on the elements that owns
@@ -271,9 +294,21 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     } 
  //*********** ThomAdj **************************** 
 
+ //*********** Tcont **************************** 
+    unsigned nDofTcont  = el->GetElementDofNumber(kel, solTypeTcont);    // number of solution element dofs
+    solTcont    .resize(nDofTcont);
+    l2GMap_Tcont.resize(nDofTcont);
+    for (unsigned i = 0; i < solTcont.size(); i++) {
+      unsigned iNode = el->GetMeshDof(kel, i, solTypeTcont);    // local to global solution node
+      unsigned solDofTcont = msh->GetMetisDof(iNode, solTypeTcont);    // global to global mapping between solution node and solution dof
+      solTcont[i] = (*sol->_Sol[solIndexTcont])(solDofTcont);      // global extraction and local storage for the solution
+      l2GMap_Tcont[i] = pdeSys->GetKKDof(solIndexTcont, solPdeIndexTcont, iNode);    // global to global mapping between solution node and pdeSys dof
+    } 
+ //*********** Tcont **************************** 
+ 
  //********** ALL VARS ***************** 
-    unsigned nDof_AllVars = nDofThom + nDofThomAdj; 
-    const int nDof_max    = (nDofThom > nDofThomAdj)?nDofThom:nDofThomAdj;  //maximum number of element dofs for one scalar variable
+    unsigned nDof_AllVars = nDofThom + nDofThomAdj + nDofTcont; 
+    const int nDof_max    = nDofThom;   // AAAAAAAAAAAAAAAAAAAAAAAAAAA TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
     Res.resize(nDof_AllVars);
     std::fill(Res.begin(), Res.end(), 0.);
@@ -284,6 +319,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     l2GMap_AllVars.resize(0);
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_Thom.begin(),l2GMap_Thom.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_ThomAdj.begin(),l2GMap_ThomAdj.end());
+    l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_Tcont.begin(),l2GMap_Tcont.end());
  //*************************** 
 
 
@@ -297,28 +333,40 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	msh->_finiteElement[kelGeom][solTypeThom]   ->Jacobian(x, ig, weight, phi_Thom, phi_x_Thom, phi_xx_Thom);
         //  ==== ThomAdj 
         msh->_finiteElement[kelGeom][solTypeThomAdj]->Jacobian(x, ig, weight, phi_ThomAdj, phi_x_ThomAdj, phi_xx_ThomAdj);
+        //  ==== ThomCont 
+        msh->_finiteElement[kelGeom][solTypeTcont]  ->Jacobian(x, ig, weight, phi_Tcont, phi_x_Tcont, phi_xx_Tcont);
 	
         //FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
 
           double srcTerm = 10.;
-          if (i < nDofThom)    Res[i]            += (srcTerm * phi_Thom   [i] ) * weight;
-          if (i < nDofThomAdj) Res[nDofThom + i] += (srcTerm * phi_ThomAdj[i] ) * weight;
+          if (i < nDofThom)    Res[i]                          += (  srcTerm * phi_Thom   [i] ) * weight;
+          if (i < nDofThomAdj) Res[nDofThom + i]               += (2*srcTerm * phi_ThomAdj[i] ) * weight;
+          if (i < nDofTcont)   Res[nDofThom + nDofThomAdj + i] += (4*srcTerm * phi_Tcont  [i] ) * weight;
 
           if (assembleMatrix) {
             // *** phi_j loop ***
             for (unsigned j = 0; j < nDof_max; j++) {
               double laplace_mat_Thom = 0.;
               double laplace_mat_ThomAdj = 0.;
+              double laplace_mat_Tcont = 0.;
 
               for (unsigned kdim = 0; kdim < dim; kdim++) {
               if ( i < nDofThom && j < nDofThom )         laplace_mat_Thom    += (phi_x_Thom   [i * dim + kdim] * phi_x_Thom   [j * dim + kdim]) * weight;
               if ( i < nDofThomAdj && j < nDofThomAdj )   laplace_mat_ThomAdj += (phi_x_ThomAdj[i * dim + kdim] * phi_x_ThomAdj[j * dim + kdim]) * weight;
+              if ( i < nDofTcont   && j < nDofTcont   )   laplace_mat_Tcont   += (phi_x_Tcont  [i * dim + kdim] * phi_x_Tcont  [j * dim + kdim]) * weight;
               }
 
-              if ( i < nDofThom && j < nDofThom )       Jac[i * (nDofThom + nDofThomAdj) + j] += laplace_mat_Thom;
-              if ( i < nDofThomAdj && j < nDofThomAdj ) Jac[(nDofThom + nDofThomAdj)*(nDofThom) + i * (nDofThom + nDofThomAdj) +(nDofThom + j)] += laplace_mat_ThomAdj;
+              if ( i < nDofThom && j < nDofThom )       Jac[    0                                              +
+                                                                   i    * (nDofThom + nDofThomAdj + nDofTcont) +
+		                                                (0 + j)                                           ]  += laplace_mat_Thom;
+              if ( i < nDofThomAdj && j < nDofThomAdj ) Jac[ (nDofThom) * (nDofThom + nDofThomAdj + nDofTcont) +
+		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont) +
+								(nDofThom + j)                                    ]  += laplace_mat_ThomAdj;
+              if ( i < nDofTcont   && j < nDofTcont   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
+		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
+								(nDofThom  + nDofThomAdj + j)                     ]  += laplace_mat_Tcont;
             } // end phi_j loop
           } // endif assemble_matrix
 
