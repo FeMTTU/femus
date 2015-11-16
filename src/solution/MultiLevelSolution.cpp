@@ -553,6 +553,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 
 }
 
+} //end namespace femus
 
 // //---------------------------------------------------------------------------------------------------
 // void MultiLevelSolution::GenerateBdcMLProb(const MultiLevelProblem * ml_prob, const unsigned int k, const unsigned int grid0, const double time) {
@@ -851,6 +852,5 @@ void MultiLevelSolution::GenerateBdc_new(const unsigned k, const unsigned grid0,
 
 
 
-} //end namespace femus
 
 

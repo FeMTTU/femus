@@ -27,7 +27,7 @@ double a = sqrt(2);
 
 // Torus
 
-bool SetBoundaryConditionTorus(const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryConditionTorus(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
 
   double u = x[0];
