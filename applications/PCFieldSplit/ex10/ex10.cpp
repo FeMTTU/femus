@@ -279,7 +279,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     // resize local arrays
     KKDof.resize(nDofsTVP);
 
-    solT.resize(nDofsV);
+    solT.resize(nDofsT);//nDOfsT?
 
     for (unsigned  k = 0; k < dim; k++) {
       solV[k].resize(nDofsV);
@@ -288,7 +288,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     solP.resize(nDofsP);
 
-    aResT.resize(nDofsV);    //resize
+    aResT.resize(nDofsT);    //resize nDofsT?
     std::fill(aResT.begin(), aResT.end(), 0);    //set aRes to zero
 
     for (unsigned  k = 0; k < dim; k++) {
