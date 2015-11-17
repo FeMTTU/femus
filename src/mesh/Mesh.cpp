@@ -187,13 +187,13 @@ void Mesh::GenerateCoarseBoxMesh(
         const double xmin, const double xmax,
         const double ymin, const double ymax,
         const double zmin, const double zmax,
-        const ElemType type, std::vector<bool> &type_elem_flag) {
+        const ElemType elemType, std::vector<bool> &type_elem_flag) {
 
   _coords.resize(3);
 
   _level = 0;
 
-  MeshTools::Generation::BuildBox(*this,_coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,type_elem_flag);
+  MeshTools::Generation::BuildBox(*this,_coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,elemType,type_elem_flag);
 
   el->SetNodeNumber(_nnodes);
 
@@ -239,16 +239,16 @@ void Mesh::GenerateCoarseBoxMesh(
   
   NumericVector &material =  _topology->GetSolutionName("Material");
   NumericVector &group =  _topology->GetSolutionName("Group");
-  NumericVector &tYpe =  _topology->GetSolutionName("Type");
+  NumericVector &type =  _topology->GetSolutionName("Type");
   
   for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
     material.set(iel, el->GetElementMaterial(iel) );
     group.set(iel, el->GetElementGroup(iel) );
-    tYpe.set(iel, el->GetElementType(iel) );
+    type.set(iel, el->GetElementType(iel) );
   }
   material.close();
   group.close();
-  tYpe.close();
+  type.close();
 }
 
 
@@ -764,10 +764,9 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
   }
 }
 
-
-
-
-
+short unsigned Mesh::GetElementGroup(const unsigned int& iel) const{
+  return static_cast <short unsigned> ( (*_topology->_Sol[_groupIndex])(iel) + 0.5);
+}
 
 
 

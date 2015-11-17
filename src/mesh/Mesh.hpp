@@ -77,6 +77,12 @@ public:
     unsigned GetNumberOfElements() const {
       return _nelem;
     }
+    
+    /** Get element group*/
+    short unsigned GetElementGroup(const unsigned &iel) const;
+    
+    /** Set element group*/
+    void SetElementGroup(const unsigned &iel, const short unsigned &value);
 
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
@@ -209,6 +215,16 @@ private:
     
     static const unsigned _END_IND[5];
     vector < vector < double > > _coords;
+    
+    // indices of the topology parallel vectors
+    static const unsigned _xIndex = 0; 
+    static const unsigned _yIndex = 1; 
+    static const unsigned _zIndex = 2;
+    static const unsigned _amrIndex = 3;
+    static const unsigned _materialIndex = 4; 
+    static const unsigned _groupIndex = 5; 
+    static const unsigned _typeIndex = 6;
+    
 
 };
 
