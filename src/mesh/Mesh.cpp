@@ -154,8 +154,15 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _topology->ResizeSolutionVector("Material");
   NumericVector &material =  _topology->GetSolutionName("Material");
 
+  
+  
   for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
-    material.set(iel,el->GetElementMaterial(iel)+iel);
+    if(name.rfind(".neu") < name.size()) {
+      material.set(iel,el->GetElementMaterial(iel)+iel);  
+    }
+    else if(name.rfind(".med") < name.size()){
+      material.zero();  
+    }
   }
   material.close();
 
