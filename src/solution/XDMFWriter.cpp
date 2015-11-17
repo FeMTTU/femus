@@ -297,30 +297,30 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 
 
   //-------------------------------------------------------------------------------------------------------
-  // print regions
-
-  icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-
-    for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-      if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0,ii,3);
-	var_conn[icount] = _ml_mesh->GetLevel(ig)->el->GetElementGroup(ii);
-	icount++;
-      }
-    }
-  }
-  if(_iproc == 0){
-    dimsf[0] = nel;  dimsf[1] = 1;
-    dataspace = H5Screate_simple(2,dimsf, NULL);
-    dataset   = H5Dcreate(file_id,"/REGIONS",H5T_NATIVE_INT,
-			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_conn);
-    H5Sclose(dataspace);
-    H5Dclose(dataset);
-  }
-
-  // end print regions
+//   // print regions
+// 
+//   icount=0;
+//   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+// 
+//     for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+//       if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+// 	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0,ii,3);
+// 	var_conn[icount] = _ml_mesh->GetLevel(ig)->el->GetElementGroup(ii);
+// 	icount++;
+//       }
+//     }
+//   }
+//   if(_iproc == 0){
+//     dimsf[0] = nel;  dimsf[1] = 1;
+//     dataspace = H5Screate_simple(2,dimsf, NULL);
+//     dataset   = H5Dcreate(file_id,"/REGIONS",H5T_NATIVE_INT,
+// 			  dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+//     status   = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,H5P_DEFAULT,var_conn);
+//     H5Sclose(dataspace);
+//     H5Dclose(dataset);
+//   }
+// 
+//   // end print regions
   //-------------------------------------------------------------------------------------------------------
 
   //-------------------------------------------------------------------------------------------------------

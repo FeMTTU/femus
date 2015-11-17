@@ -81,9 +81,6 @@ public:
     /** Get element group*/
     short unsigned GetElementGroup(const unsigned &iel) const;
     
-    /** Set element group*/
-    void SetElementGroup(const unsigned &iel, const short unsigned &value);
-
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
         _level=i;

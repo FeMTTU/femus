@@ -72,7 +72,7 @@ void MeshRefinement::FlagElementsToBeRefined() {
 	  vtx[1]/=nve;
 	  vtx[2]/=nve;
 	  if( (*_mesh._topology->_Sol[3])(kel) < 0.5 &&
-	      _mesh._SetRefinementFlag(vtx,_mesh.el->GetElementGroup(kel),_mesh.GetLevel()) ) {
+	      _mesh._SetRefinementFlag(vtx,_mesh.GetElementGroup(kel),_mesh.GetLevel()) ) {
 	      _mesh._topology->_Sol[3]->set(kel,1.);
 	  }
 	}
@@ -161,11 +161,11 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 	elc->SetChildElement(iel,j,jel+j);
       }
 
-      unsigned elg=elc->GetElementGroup(iel);
+      //unsigned elg=elc->GetElementGroup(iel);
       unsigned elmat=elc->GetElementMaterial(iel);
       // project element group
       for (unsigned j=0; j<_mesh.GetRefIndex(); j++) {
-        _mesh.el->SetElementGroup(jel+j,elg);
+        //_mesh.el->SetElementGroup(jel+j,elg);
 	_mesh.el->SetElementMaterial(jel+j,elmat);
       }
 
@@ -194,11 +194,11 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
       _mesh.el-> SetIfFatherIsRefined(jel, false);
       elc->SetChildElement(iel,0,jel);
 
-      unsigned elg = elc->GetElementGroup(iel);
+      //unsigned elg = elc->GetElementGroup(iel);
       unsigned elmat = elc->GetElementMaterial(iel);
 
       // project element group
-      _mesh.el->SetElementGroup(jel,elg);
+      //_mesh.el->SetElementGroup(jel,elg);
       _mesh.el->SetElementMaterial(jel,elmat);
 
       // project nodes indeces

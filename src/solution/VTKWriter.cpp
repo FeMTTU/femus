@@ -420,80 +420,82 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   // /Print Cell Data ****************************************************************************
   fout  << "      <CellData Scalars=\"scalars\">" << std::endl;
   Pfout << "    <PCellData Scalars=\"scalars\">" << std::endl;
-  //--------------------------------------------------------------------------------------------
-  // Print Regions
-  fout  << "        <DataArray type=\"UInt16\" Name=\"Regions\" format=\"binary\">" << std::endl;
-  Pfout << "      <PDataArray type=\"UInt16\" Name=\"Regions\" format=\"binary\"/>" << std::endl;
-
-
-  // point pointer to common mamory area buffer of void type;
+  
   unsigned short* var_reg=static_cast <unsigned short*> (buffer_void);
-
-  icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
-  	var_reg[icount]= _ml_mesh->GetLevel(ig)->el->GetElementGroup(iel);
-	icount++;
-      }
-    }
-  }
-
-  //print regions dimension
-  cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);
-  b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
-
-
-  //print regions array
-  cch = b64::b64_encode(&var_reg[0], dim_array_reg[0] , NULL, 0);
-  b64::b64_encode(&var_reg[0], dim_array_reg[0], &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
-
-  fout  << std::endl;
-  fout  << "        </DataArray>" << std::endl;
-
-  //-----------------------------------------------------------------------------------------------------
-
-
-  // Print Materials
-  fout  << "        <DataArray type=\"UInt16\" Name=\"Material\" format=\"binary\">" << std::endl;
-  Pfout << "      <PDataArray type=\"UInt16\" Name=\"Material\" format=\"binary\"/>" << std::endl;
-
-  icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
-  	var_reg[icount]= _ml_mesh->GetLevel(ig)->el->GetElementMaterial(iel);
-	icount++;
-      }
-    }
-  }
-
-  //print regions dimension
-  cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);
-  b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+  //--------------------------------------------------------------------------------------------
+//   // Print Regions
+//   fout  << "        <DataArray type=\"UInt16\" Name=\"Regions\" format=\"binary\">" << std::endl;
+//   Pfout << "      <PDataArray type=\"UInt16\" Name=\"Regions\" format=\"binary\"/>" << std::endl;
+// 
+// 
+//   // point pointer to common mamory area buffer of void type;
+//   unsigned short* var_reg=static_cast <unsigned short*> (buffer_void);
+// 
+//   icount=0;
+//   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+//     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
+//       if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+//   	var_reg[icount]= _ml_mesh->GetLevel(ig)->el->GetElementGroup(iel);
+// 	icount++;
+//       }
+//     }
+//   }
+// 
+//   //print regions dimension
+//   cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);
+//   b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
+//   pt_char=&enc[0];
+//   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+// 
+// 
+//   //print regions array
+//   cch = b64::b64_encode(&var_reg[0], dim_array_reg[0] , NULL, 0);
+//   b64::b64_encode(&var_reg[0], dim_array_reg[0], &enc[0], cch);
+//   pt_char=&enc[0];
+//   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+// 
+//   fout  << std::endl;
+//   fout  << "        </DataArray>" << std::endl;
+// 
+//   //-----------------------------------------------------------------------------------------------------
 
 
-  //print regions array
-  cch = b64::b64_encode(&var_reg[0], dim_array_reg[0] , NULL, 0);
-  b64::b64_encode(&var_reg[0], dim_array_reg[0], &enc[0], cch);
-  pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
-
-  fout  << std::endl;
-  fout  << "        </DataArray>" << std::endl;
-
-  //-----------------------------------------------------------------------------------------------------
+//   // Print Materials
+//   fout  << "        <DataArray type=\"UInt16\" Name=\"Material\" format=\"binary\">" << std::endl;
+//   Pfout << "      <PDataArray type=\"UInt16\" Name=\"Material\" format=\"binary\"/>" << std::endl;
+// 
+//   icount=0;
+//   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
+//     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
+//       if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+//   	var_reg[icount]= _ml_mesh->GetLevel(ig)->el->GetElementMaterial(iel);
+// 	icount++;
+//       }
+//     }
+//   }
+// 
+//   //print regions dimension
+//   cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);
+//   b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
+//   pt_char=&enc[0];
+//   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+// 
+// 
+//   //print regions array
+//   cch = b64::b64_encode(&var_reg[0], dim_array_reg[0] , NULL, 0);
+//   b64::b64_encode(&var_reg[0], dim_array_reg[0], &enc[0], cch);
+//   pt_char=&enc[0];
+//   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+// 
+//   fout  << std::endl;
+//   fout  << "        </DataArray>" << std::endl;
+// 
+//   //-----------------------------------------------------------------------------------------------------
 
 
   // Print Metis Partitioning
-  fout  << "        <DataArray type=\"UInt16\" Name=\"Domain_partition\" format=\"binary\">" << std::endl;
-  Pfout << "      <PDataArray type=\"UInt16\" Name=\"Domain_partition\" format=\"binary\"/>" << std::endl;
+  fout  << "        <DataArray type=\"UInt16\" Name=\"Metis partition\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"UInt16\" Name=\"Metis partition\" format=\"binary\"/>" << std::endl;
 
   // point pointer to common mamory area buffer of void type;
   unsigned short* var_proc=static_cast <unsigned short*> (buffer_void);
@@ -512,7 +514,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);
   b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
   pt_char=&enc[0];
-  for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
+  for( unsigned i =0; i<cch;i++, pt_char++) fout << *pt_char;
 
 
   //print regions array
@@ -532,8 +534,8 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   
   NumericVector &material =  _ml_mesh->GetLevel(_gridn-1)->_topology->GetSolutionName("Material");
 
-  fout  << "        <DataArray type=\"Float32\" Name=\"" << "MATERIAL" <<"\" format=\"binary\">" << std::endl;
-  Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "MATERIAL" <<"\" format=\"binary\"/>" << std::endl;
+  fout  << "        <DataArray type=\"Float32\" Name=\"" << "Material" <<"\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Material" <<"\" format=\"binary\"/>" << std::endl;
   // point pointer to common memory area buffer of void type;
   float *var_el = static_cast< float*> (buffer_void);
   icount=0;
@@ -563,8 +565,8 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   
     NumericVector &group =  _ml_mesh->GetLevel(_gridn-1)->_topology->GetSolutionName("Group");
 
-  fout  << "        <DataArray type=\"Float32\" Name=\"" << "GROUP" <<"\" format=\"binary\">" << std::endl;
-  Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "GROUP" <<"\" format=\"binary\"/>" << std::endl;
+  fout  << "        <DataArray type=\"Float32\" Name=\"" << "Group" <<"\" format=\"binary\">" << std::endl;
+  Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Group" <<"\" format=\"binary\"/>" << std::endl;
   // point pointer to common memory area buffer of void type;
   var_el = static_cast< float*> (buffer_void);
   icount=0;

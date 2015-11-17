@@ -203,41 +203,41 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
   sprintf(det,"%s","variable");
   fout.write((char *)det,sizeof(char)*8);
 
-  // ********** Start printing Regions **********
-  strcpy(det,"Regions");
-  fout.write((char *)det,sizeof(char)*8);
-  fout.write((char *)&zero,sizeof(unsigned));
-
-  int icount=0;
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-      if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-	var_el[icount]=_ml_mesh->GetLevel(ig)->el->GetElementGroup(ii);
-        icount++;
-      }
-    }
-  }
-  fout.write((char *)&var_el[0],nel*sizeof(double));
-
-  if(_nprocs>=1){
-    strcpy(det,"Reg_proc");
-    fout.write((char *)det,sizeof(char)*8);
-    fout.write((char *)&zero,sizeof(unsigned));
-
-    int icount=0;
-    for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-      for(int isdom = 0; isdom < _nprocs; isdom++){
-        for( unsigned ii = _ml_mesh->GetLevel(ig)->_elementOffset[isdom];
-             ii < _ml_mesh->GetLevel(ig)->_elementOffset[isdom+1]; ii++){
-          if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-            var_el[icount]=isdom;
-            icount++;
-          }
-        }
-      }
-    }
-    fout.write((char *)&var_el[0],nel*sizeof(double));
-  }
+//   // ********** Start printing Regions **********
+//   strcpy(det,"Regions");
+//   fout.write((char *)det,sizeof(char)*8);
+//   fout.write((char *)&zero,sizeof(unsigned));
+// 
+//   int icount=0;
+//   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+//     for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+//       if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+// 	var_el[icount]=_ml_mesh->GetLevel(ig)->el->GetElementGroup(ii);
+//         icount++;
+//       }
+//     }
+//   }
+//   fout.write((char *)&var_el[0],nel*sizeof(double));
+// 
+//   if(_nprocs>=1){
+//     strcpy(det,"Reg_proc");
+//     fout.write((char *)det,sizeof(char)*8);
+//     fout.write((char *)&zero,sizeof(unsigned));
+// 
+//     int icount=0;
+//     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+//       for(int isdom = 0; isdom < _nprocs; isdom++){
+//         for( unsigned ii = _ml_mesh->GetLevel(ig)->_elementOffset[isdom];
+//              ii < _ml_mesh->GetLevel(ig)->_elementOffset[isdom+1]; ii++){
+//           if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+//             var_el[icount]=isdom;
+//             icount++;
+//           }
+//         }
+//       }
+//     }
+//     fout.write((char *)&var_el[0],nel*sizeof(double));
+//   }
 
   // ********** End printing Regions **********
 
@@ -578,40 +578,40 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
   sprintf(det,"%s","variable");
   fout.write((char *)det,sizeof(char)*8);
 
-  // ********** Start printing Regions **********
-  strcpy(det,"Regions");
-  fout.write((char *)det,sizeof(char)*8);
-  fout.write((char *)&zero,sizeof(unsigned));
-
-  int icount=0;
-  for (unsigned ig=igridr-1u; ig<gridn; ig++) {
-    for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
-	var_el[icount]=_ml_mesh->GetLevel(ig)->el->GetElementGroup(iel);
-        icount++;
-      }
-    }
-  }
-  fout.write((char *)&var_el[0],nel*sizeof(double));
-
-  if(_nprocs>=1){
-    strcpy(det,"Reg_proc");
-    fout.write((char *)det,sizeof(char)*8);
-    fout.write((char *)&zero,sizeof(unsigned));
-
-    int icount=0;
-    for (unsigned ig=igridr-1u; ig<gridn; ig++) {
-      for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-        if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
-	  var_el[icount]=_iproc;
-	  icount++;
-	}
-      }
-    }
-    fout.write((char *)&var_el[0],nel*sizeof(double));
-  }
-
-  // ********** End printing Regions **********
+//   // ********** Start printing Regions **********
+//   strcpy(det,"Regions");
+//   fout.write((char *)det,sizeof(char)*8);
+//   fout.write((char *)&zero,sizeof(unsigned));
+// 
+//   int icount=0;
+//   for (unsigned ig=igridr-1u; ig<gridn; ig++) {
+//     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
+//       if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+// 	var_el[icount]=_ml_mesh->GetLevel(ig)->el->GetElementGroup(iel);
+//         icount++;
+//       }
+//     }
+//   }
+//   fout.write((char *)&var_el[0],nel*sizeof(double));
+// 
+//   if(_nprocs>=1){
+//     strcpy(det,"Reg_proc");
+//     fout.write((char *)det,sizeof(char)*8);
+//     fout.write((char *)&zero,sizeof(unsigned));
+// 
+//     int icount=0;
+//     for (unsigned ig=igridr-1u; ig<gridn; ig++) {
+//       for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
+//         if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+// 	  var_el[icount]=_iproc;
+// 	  icount++;
+// 	}
+//       }
+//     }
+//     fout.write((char *)&var_el[0],nel*sizeof(double));
+//   }
+// 
+//   // ********** End printing Regions **********
 
   // ********** Start printing Solution **********
   if (_ml_sol != NULL)  {

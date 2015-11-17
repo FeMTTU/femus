@@ -164,8 +164,8 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   
 
   for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
-    group.set(iel,el->GetElementGroup(iel));
-    type.set(iel,el->GetElementType(iel));
+    group.set( iel, el->GetElementGroup(iel) );
+    type.set( iel, el->GetElementType(iel) );
     if(name.rfind(".neu") < name.size()) {
       material.set(iel,el->GetElementMaterial(iel)); 
     }
@@ -177,6 +177,9 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   material.close();
   group.close();
   type.close();
+  
+  el->deleteGroup();
+  
 };
 
 /**
@@ -249,6 +252,8 @@ void Mesh::GenerateCoarseBoxMesh(
   material.close();
   group.close();
   type.close();
+  
+  el->deleteGroup();
 }
 
 
