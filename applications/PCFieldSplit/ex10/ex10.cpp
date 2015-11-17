@@ -42,23 +42,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 
-bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
-
-  bool refine=0;
-  if (elemgroupnumber==6 && level<4) refine=1;
-  if (elemgroupnumber==7 && level<5) refine=1;
-  if (elemgroupnumber==8 && level<6) refine=1;
-
-//   if (elemgroupnumber==6 && level<1) refine=1;
-//   if (elemgroupnumber==7 && level<2) refine=1;
-//   if (elemgroupnumber==8 && level<3) refine=1;
-
-  return refine;
-
-}
-
-
-
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
 
@@ -72,20 +55,14 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-//   unsigned numberOfUniformLevels = 3;
-//   unsigned numberOfSelectiveLevels = 0;
-//   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-
   unsigned numberOfUniformLevels = 4;
-  unsigned numberOfSelectiveLevels = 3;
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-
+  unsigned numberOfSelectiveLevels = 0;
+  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
@@ -96,7 +73,7 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("T", LAGRANGE, SERENDIPITY);//FIRST);
+  mlSol.AddSolution("T", LAGRANGE, FIRST);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
 
@@ -120,20 +97,21 @@ int main(int argc, char** args) {
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
 
   // add solution "u" to system
-  system.AddSolutionToSystemPDE("T");
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-
+  system.AddSolutionToSystemPDE("P");
+  
   if (dim == 3) system.AddSolutionToSystemPDE("W");
 
-  system.AddSolutionToSystemPDE("P");
+  system.AddSolutionToSystemPDE("T");
 
   //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
+  //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
-  system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetMaxNumberOfNonLinearIterations(20);
   system.SetMaxNumberOfLinearIterations(3);
   system.SetLinearConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
@@ -164,12 +142,6 @@ int main(int argc, char** args) {
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-
-  GMVWriter gmvIO(&mlSol);
-  variablesToBePrinted.push_back("all");
-  gmvIO.SetDebugOutput(true);
-  gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-
 
   return 0;
 }
@@ -280,8 +252,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   double* phiP;
   double weight; // gauss point weight
 
-  vector< int > sysDof; // local to global pdeSys dofs
-  sysDof.reserve((dim + 2) *maxSize);
+  vector< int > KKDof; // local to global pdeSys dofs
+  KKDof.reserve((dim + 2) *maxSize);
 
   vector< double > Res; // local redidual vector
   Res.reserve((dim + 2) *maxSize);
@@ -304,9 +276,9 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     unsigned nDofsTVP = nDofsT + dim * nDofsV + nDofsP;
     // resize local arrays
-    sysDof.resize(nDofsTVP);
+    KKDof.resize(nDofsTVP);
 
-    solT.resize(nDofsV);
+    solT.resize(nDofsT);//nDOfsT?
 
     for (unsigned  k = 0; k < dim; k++) {
       solV[k].resize(nDofsV);
@@ -315,7 +287,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     solP.resize(nDofsP);
 
-    aResT.resize(nDofsV);    //resize
+    aResT.resize(nDofsT);    //resize nDofsT?
     std::fill(aResT.begin(), aResT.end(), 0);    //set aRes to zero
 
     for (unsigned  k = 0; k < dim; k++) {
@@ -328,28 +300,26 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsT; i++) {
-      //unsigned iNode = el->GetMeshDof(iel, i, solTType);    // local to global solution node
-      unsigned solTDof = msh->GetSolutionDof(i, iel, solTType);    // global to global mapping between solution node and solution dof
+      unsigned solTDof = msh->GetSolutionDof(i,iel, solTType);    // global to global mapping between solution node and solution dof
       solT[i] = (*sol->_Sol[solTIndex])(solTDof);      // global extraction and local storage for the solution
-      sysDof[i] = pdeSys->GetSystemDof(solTIndex, solTPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dofs
+      KKDof[i] = pdeSys->GetSystemDof(solTIndex, solTPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dofs
     }
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsV; i++) {
-      //unsigned iNode = el->GetMeshDof(iel, i, solVType);    // local to global solution node
+      unsigned iNode = el->GetMeshDof(iel, i, solVType);    // local to global solution node
       unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
-        sysDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+        KKDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i ,iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
 
     for (unsigned i = 0; i < nDofsP; i++) {
-      //unsigned iNode = el->GetMeshDof(iel, i, solPType);    // local to global solution node
       unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);    // global to global mapping between solution node and solution dof
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);      // global extraction and local storage for the solution
-      sysDof[i + nDofsT + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+      KKDof[i + nDofsT + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
     // local storage of coordinates
@@ -362,7 +332,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       }
     }
 
-   // if (level == levelMax || !el->GetRefinedElementIndex(iel)) {      // do not care about this if now (it is used for the AMR)
+    if (level == levelMax || !el->GetRefinedElementIndex(iel)) {      // do not care about this if now (it is used for the AMR)
       // start a new recording of all the operations involving adept::adouble variables
       s.new_recording();
 
@@ -458,7 +428,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         } // end phiP_i loop
 
       } // end gauss point loop
-   // } // endif single element not refined or fine grid loop
+    } // endif single element not refined or fine grid loop
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
@@ -480,7 +450,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       Res[ i + nDofsT + dim * nDofsV ] = -aResP[i].value();
     }
 
-    RES->add_vector_blocked(Res, sysDof);
+    RES->add_vector_blocked(Res, KKDof);
 
     //Extarct and store the Jacobian
     if (assembleMatrix) {
@@ -505,7 +475,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
       // get the and store jacobian matrix (row-major)
       s.jacobian(&Jac[0] , true);
-      KK->add_matrix_blocked(Jac, sysDof, sysDof);
+      KK->add_matrix_blocked(Jac, KKDof, KKDof);
 
       s.clear_independents();
       s.clear_dependents();

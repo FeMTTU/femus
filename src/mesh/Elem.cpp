@@ -434,6 +434,11 @@ int elem::GetFaceElementIndex(const unsigned &iel,const unsigned &iface) const {
   return _kel[iel][iface];
 }
 
+int elem::GetBoundaryIndex(const unsigned &iel,const unsigned &iface) const {
+  return -(_kel[iel][iface]+1)+1;
+}
+
+
 /**
  * Set the global adiacent-to-face element number
  **/

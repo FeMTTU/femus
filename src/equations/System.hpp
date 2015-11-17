@@ -78,6 +78,8 @@ public:
 
     /** Solves the system.  Should be overloaded in derived systems. */
     virtual void solve () {};
+    
+    virtual void MGsolve () {};
 
     /** Clear all the data structures associated with the system. */
     virtual void clear();

@@ -388,7 +388,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob){
   
   // *** element loop ***
  
-  for (int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+  for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     short unsigned kelt=myel->GetElementType(kel);
@@ -429,11 +429,11 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob){
     
     for( unsigned i=0;i<nve2;i++){
       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
-      unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
-      metis_node2[i]=mymsh->GetMetisDof(inode,order_ind_vel);
+      unsigned inode_coord_metis=mymsh->GetSolutionDof(inode,2);
+      metis_node2[i]=mymsh->GetSolutionDof(inode,order_ind_vel);
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
-	KK_dof[ivar][i]=mylsyspde->GetKKDof(SolIndex[ivar],SolPdeIndex[ivar],inode);
+	coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
+	KK_dof[ivar][i]=mylsyspde->GetSystemDof(SolIndex[ivar],SolPdeIndex[ivar],inode);
       }
     }
     
@@ -443,7 +443,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob){
     for(unsigned i=0;i<nve1;i++) {
       unsigned inode=(order_ind_p<dim)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
       node1[i]=inode;
-      KK_dof[dim][i]=mylsyspde->GetKKDof(SolIndex[dim],SolPdeIndex[dim],inode);
+      KK_dof[dim][i]=mylsyspde->GetSystemDof(SolIndex[dim],SolPdeIndex[dim],inode);
     }
    
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
@@ -475,7 +475,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob){
 	unsigned SolIndex=ml_sol->GetIndex(&Solname[3][0]);
 	unsigned SolType=ml_sol->GetSolutionType(&Solname[3][0]);
 	for(unsigned i=0; i<nve1; i++){
-	  unsigned sol_dof = mymsh->GetMetisDof(node1[i],SolType);
+	  unsigned sol_dof = mymsh->GetSolutionDof(node1[i],SolType);
 	  double soli = (*mysolution->_Sol[SolIndex])(sol_dof);
 	  SolVAR[dim]+=phi1[i]*soli;
 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){

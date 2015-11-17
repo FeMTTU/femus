@@ -56,39 +56,37 @@ void MeshRefinement::FlagAllElementsToBeRefined() {
 void MeshRefinement::FlagElementsToBeRefined() {
 
     if(_mesh._IsUserRefinementFunctionDefined){
-      for (int iel_metis=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
-	unsigned kel = _mesh.IS_Mts2Gmt_elem[iel_metis];
+      for (int kel=_mesh._elementOffset[_iproc]; kel < _mesh._elementOffset[_iproc+1]; kel++) {
 	if( _mesh.GetLevel() == 0 || _mesh.el->IsFatherRefined(kel)  ){
 	  short unsigned kelt=_mesh.el->GetElementType(kel);
 	  unsigned nve=_mesh.el->GetElementDofNumber(kel,0);
 	  std::vector < double > vtx(3,0.);
 	  for(unsigned i=0; i<nve; i++) {
-	    unsigned inode=_mesh.el->GetElementVertexIndex(kel,i)-1u;
-	    unsigned inode_metis=_mesh.GetMetisDof(inode,2);
-	    vtx[0]+= (*_mesh._coordinate->_Sol[0])(inode_metis);
-	    vtx[1]+= (*_mesh._coordinate->_Sol[1])(inode_metis);
-	    vtx[2]+= (*_mesh._coordinate->_Sol[2])(inode_metis);
+	    //unsigned inode=_mesh.el->GetElementVertexIndex(kel,i)-1u;
+	    unsigned inode_metis=_mesh.GetSolutionDof(i,kel,2);
+	    vtx[0]+= (*_mesh._topology->_Sol[0])(inode_metis);
+	    vtx[1]+= (*_mesh._topology->_Sol[1])(inode_metis);
+	    vtx[2]+= (*_mesh._topology->_Sol[2])(inode_metis);
 	  }
 	  vtx[0]/=nve;
 	  vtx[1]/=nve;
 	  vtx[2]/=nve;
-	  if( (*_mesh._coordinate->_Sol[3])(iel_metis) < 0.5 &&
+	  if( (*_mesh._topology->_Sol[3])(kel) < 0.5 &&
 	      _mesh._SetRefinementFlag(vtx,_mesh.el->GetElementGroup(kel),_mesh.GetLevel()) ) {
-	      _mesh._coordinate->_Sol[3]->set(iel_metis,1.);
+	      _mesh._topology->_Sol[3]->set(kel,1.);
 	  }
 	}
       }
-      _mesh._coordinate->_Sol[3]->close();
+      _mesh._topology->_Sol[3]->close();
     }
 
     std::vector<double> AMR_local;
-    _mesh._coordinate->_Sol[3]->localize_to_all(AMR_local);
+    _mesh._topology->_Sol[3]->localize_to_all(AMR_local);
 
     _mesh.el->InitRefinedToZero();
 
-    for (unsigned iel_metis=0; iel_metis<_mesh.GetNumberOfElements(); iel_metis++) {
-      if(AMR_local[iel_metis]>0.5){
-	unsigned iel=_mesh.IS_Mts2Gmt_elem[iel_metis];
+    for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++) {
+      if(AMR_local[iel]>0.5){
 	_mesh.el->SetRefinedElementIndex(iel,1);
 	_mesh.el->AddToRefinedElementNumber(1);
 	short unsigned elt=_mesh.el->GetElementType(iel);
@@ -102,23 +100,21 @@ void MeshRefinement::FlagElementsToBeRefined() {
 //-------------------------------------------------------------------
 void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
 
-  for (int iel_metis=_mesh.IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _mesh.IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
-    unsigned kel = _mesh.IS_Mts2Gmt_elem[iel_metis];
-    if( _mesh.GetLevel() == 0 || _mesh.el->IsFatherRefined(kel)){
-      if( (*_mesh._coordinate->_Sol[3])(iel_metis) < 0.5 && kel%2 == 0) {
-	_mesh._coordinate->_Sol[3]->set(iel_metis,1.);
+  for (int iel=_mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc+1]; iel++) {
+    if( _mesh.GetLevel() == 0 || _mesh.el->IsFatherRefined(iel)){
+      if( (*_mesh._topology->_Sol[3])(iel) < 0.5 && iel%2 == 0) {
+	_mesh._topology->_Sol[3]->set(iel,1.);
       }
     }
   }
 
   std::vector<double> AMR_local;
-  _mesh._coordinate->_Sol[3]->localize_to_all(AMR_local);
+  _mesh._topology->_Sol[3]->localize_to_all(AMR_local);
 
   _mesh.el->InitRefinedToZero();
 
-  for (unsigned iel_metis=0; iel_metis<_mesh.GetNumberOfElements(); iel_metis++) {
-    if(AMR_local[iel_metis]>0.5){
-      unsigned iel=_mesh.IS_Mts2Gmt_elem[iel_metis];
+  for (unsigned iel = 0; iel < _mesh.GetNumberOfElements(); iel++) {
+    if(AMR_local[iel]>0.5){
       _mesh.el->SetRefinedElementIndex(iel,1);
       _mesh.el->AddToRefinedElementNumber(1);
       short unsigned elt=_mesh.el->GetElementType(iel);
@@ -287,16 +283,19 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 
   Buildkmid();
 
-  vector < int > epart(_mesh.GetNumberOfElements());
-  MeshMetisPartitioning meshmetispartitioning(_mesh);
+  std::vector < int > partition;
+  partition.reserve(_mesh.GetNumberOfNodes());
+  partition.resize(_mesh.GetNumberOfElements());
+   
+  MeshMetisPartitioning meshMetisPartitioning(_mesh);
   if( AMR == true ){
-    meshmetispartitioning.DoPartition(epart, AMR);
+    meshMetisPartitioning.DoPartition(partition, AMR);
   }
   else{
-    meshmetispartitioning.DoPartition(epart, *mshc);
+    meshMetisPartitioning.DoPartition(partition, *mshc);
   }
-  _mesh.FillISvector(epart);
-  epart.resize(0);
+  _mesh.FillISvector(partition);
+  partition.resize(0);
 
   _mesh.BuildAdjVtx(); //TODO
 
@@ -305,27 +304,48 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 
 
   // build Mesh coordinates by projecting the coarse coordinats
-  _mesh._coordinate = new Solution(&_mesh);
-  _mesh._coordinate->AddSolution("X",LAGRANGE,SECOND,1,0);
-  _mesh._coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0);
-  _mesh._coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0);
+  _mesh._topology = new Solution(&_mesh);
+  _mesh._topology->AddSolution("X",LAGRANGE,SECOND,1,0);
+  _mesh._topology->AddSolution("Y",LAGRANGE,SECOND,1,0);
+  _mesh._topology->AddSolution("Z",LAGRANGE,SECOND,1,0);
 
-  _mesh._coordinate->ResizeSolutionVector("X");
-  _mesh._coordinate->ResizeSolutionVector("Y");
-  _mesh._coordinate->ResizeSolutionVector("Z");
+  _mesh._topology->ResizeSolutionVector("X");
+  _mesh._topology->ResizeSolutionVector("Y");
+  _mesh._topology->ResizeSolutionVector("Z");
 
-  _mesh._coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
-  _mesh._coordinate->ResizeSolutionVector("AMR");
+  _mesh._topology->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
+  _mesh._topology->ResizeSolutionVector("AMR");
 
   unsigned solType=2;
 
-  _mesh._coordinate->_Sol[0]->matrix_mult(*mshc->_coordinate->_Sol[0],*_mesh.GetCoarseToFineProjection(solType));
-  _mesh._coordinate->_Sol[1]->matrix_mult(*mshc->_coordinate->_Sol[1],*_mesh.GetCoarseToFineProjection(solType));
-  _mesh._coordinate->_Sol[2]->matrix_mult(*mshc->_coordinate->_Sol[2],*_mesh.GetCoarseToFineProjection(solType));
-  _mesh._coordinate->_Sol[0]->close();
-  _mesh._coordinate->_Sol[1]->close();
-  _mesh._coordinate->_Sol[2]->close();
-
+  _mesh._topology->_Sol[0]->matrix_mult(*mshc->_topology->_Sol[0],*_mesh.GetCoarseToFineProjection(solType));
+  _mesh._topology->_Sol[1]->matrix_mult(*mshc->_topology->_Sol[1],*_mesh.GetCoarseToFineProjection(solType));
+  _mesh._topology->_Sol[2]->matrix_mult(*mshc->_topology->_Sol[2],*_mesh.GetCoarseToFineProjection(solType));
+  _mesh._topology->_Sol[0]->close();
+  _mesh._topology->_Sol[1]->close();
+  _mesh._topology->_Sol[2]->close();
+  
+  _mesh._topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _mesh._topology->ResizeSolutionVector("Material");
+  NumericVector &materialf =  _mesh._topology->GetSolutionName("Material");
+  NumericVector &materialc =   mshc->_topology->GetSolutionName("Material");
+  materialf.matrix_mult(materialc, *_mesh.GetCoarseToFineProjection(3));
+  materialf.close(); 
+  
+  _mesh._topology->AddSolution("Group", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _mesh._topology->ResizeSolutionVector("Group");
+  NumericVector &groupf =  _mesh._topology->GetSolutionName("Group");
+  NumericVector &groupc =   mshc->_topology->GetSolutionName("Group");
+  groupf.matrix_mult(groupc, *_mesh.GetCoarseToFineProjection(3));
+  groupf.close();
+  
+  _mesh._topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _mesh._topology->ResizeSolutionVector("Type");
+  NumericVector &typef =  _mesh._topology->GetSolutionName("Type");
+  NumericVector &typec =   mshc->_topology->GetSolutionName("Type");
+  typef.matrix_mult(typec, *_mesh.GetCoarseToFineProjection(3));
+  typef.close();
+  
 }
 
 

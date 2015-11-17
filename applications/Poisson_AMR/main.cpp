@@ -511,7 +511,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
       myKK->zero();
 
     // *** element loop ***
-    for (int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+    for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
         unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
         short unsigned kelt=myel->GetElementType(kel);
@@ -538,12 +538,12 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
         // get local to global mappings
         for( unsigned i=0; i<nve; i++) {
             unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
-            unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
-            metis_node[i]=mymsh->GetMetisDof(inode,order_ind);
+            unsigned inode_coord_metis=mymsh->GetSolutionDof(inode,2);
+            metis_node[i]=mymsh->GetSolutionDof(inode,order_ind);
             for(unsigned ivar=0; ivar<dim; ivar++) {
-                coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+                coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
             }
-            KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,inode);
+            KK_dof[i]=mylsyspde->GetSystemDof(SolIndex,SolPdeIndex,inode);
         }
 
         if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
@@ -622,10 +622,10 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
 			const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);
                         for(unsigned i=0; i<nve; i++) {
                             unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-                            unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
+                            unsigned inode_coord_metis=mymsh->GetSolutionDof(inode,2);
 
 			    for(unsigned ivar=0; ivar<dim; ivar++) {
-                              coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+                              coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
                             }
                         }
 
@@ -739,7 +739,7 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
     unsigned SolOrder = ml_sol.GetSolutionType(SolIndex);
     
         
-    for (int iel_metis=msh->IS_Mts2Gmt_elem_offset[iproc]; iel_metis < msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel_metis++) {
+    for (int iel_metis=msh->_elementOffset[iproc]; iel_metis < msh->_elementOffset[iproc+1]; iel_metis++) {
       unsigned kel = msh->IS_Mts2Gmt_elem[iel_metis];
       if(ilevel==gridn-1 || !msh->el->GetRefinedElementIndex(kel)) {
         short unsigned kelt= msh->el->GetElementType(kel);
@@ -757,10 +757,10 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
 	// get local to global mappings
 	for( unsigned i=0; i<nve; i++) {
 	  unsigned inode=msh->el->GetElementVertexIndex(kel,i)-1u;
-	  unsigned inode_coord_metis=msh->GetMetisDof(inode,2);
-	  metis_node[i]=msh->GetMetisDof(inode,SolOrder);
+	  unsigned inode_coord_metis=msh->GetSolutionDof(inode,2);
+	  metis_node[i]=msh->GetSolutionDof(inode,SolOrder);
 	  for(unsigned idim=0; idim<dim; idim++) {
-	    coordinates[idim][i]=(*msh->_coordinate->_Sol[idim])(inode_coord_metis);
+	    coordinates[idim][i]=(*msh->_topology->_Sol[idim])(inode_coord_metis);
 	  }
 	}
 	

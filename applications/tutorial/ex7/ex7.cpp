@@ -279,8 +279,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   double* phiP;
   double weight; // gauss point weight
 
-  vector< int > KKDof; // local to global pdeSys dofs
-  KKDof.reserve((dim + 2) *maxSize);
+  vector< int > sysDof; // local to global pdeSys dofs
+  sysDof.reserve((dim + 2) *maxSize);
 
   vector< double > Res; // local redidual vector
   Res.reserve((dim + 2) *maxSize);
@@ -292,19 +292,18 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
-    short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
+    short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
 
-    unsigned nDofsT = el->GetElementDofNumber(kel, solTType);    // number of solution element dofs
-    unsigned nDofsV = el->GetElementDofNumber(kel, solVType);    // number of solution element dofs
-    unsigned nDofsP = el->GetElementDofNumber(kel, solPType);    // number of solution element dofs
-    unsigned nDofsX = el->GetElementDofNumber(kel, coordXType);    // number of coordinate element dofs
+    unsigned nDofsT = el->GetElementDofNumber(iel, solTType);    // number of solution element dofs
+    unsigned nDofsV = el->GetElementDofNumber(iel, solVType);    // number of solution element dofs
+    unsigned nDofsP = el->GetElementDofNumber(iel, solPType);    // number of solution element dofs
+    unsigned nDofsX = el->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
 
     unsigned nDofsTVP = nDofsT + dim * nDofsV + nDofsP;
     // resize local arrays
-    KKDof.resize(nDofsTVP);
+    sysDof.resize(nDofsTVP);
 
     solT.resize(nDofsV);
 
@@ -328,50 +327,46 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsT; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, solTType);    // local to global solution node
-      unsigned solTDof = msh->GetMetisDof(iNode, solTType);    // global to global mapping between solution node and solution dof
+      unsigned solTDof = msh->GetSolutionDof(i, iel, solTType);    // global to global mapping between solution node and solution dof
       solT[i] = (*sol->_Sol[solTIndex])(solTDof);      // global extraction and local storage for the solution
-      KKDof[i] = pdeSys->GetKKDof(solTIndex, solTPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dofs
+      sysDof[i] = pdeSys->GetSystemDof(solTIndex, solTPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dofs
     }
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsV; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, solVType);    // local to global solution node
-      unsigned solVDof = msh->GetMetisDof(iNode, solVType);    // global to global mapping between solution node and solution dof
+      unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
 
       for (unsigned  k = 0; k < dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
-        KKDof[i + nDofsT + k * nDofsV] = pdeSys->GetKKDof(solVIndex[k], solVPdeIndex[k], iNode);    // global to global mapping between solution node and pdeSys dof
+        sysDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
 
     for (unsigned i = 0; i < nDofsP; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, solPType);    // local to global solution node
-      unsigned solPDof = msh->GetMetisDof(iNode, solPType);    // global to global mapping between solution node and solution dof
+      unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);    // global to global mapping between solution node and solution dof
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);      // global extraction and local storage for the solution
-      KKDof[i + nDofsT + dim * nDofsV] = pdeSys->GetKKDof(solPIndex, solPPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
+      sysDof[i + nDofsT + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofsX; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, coordXType);    // local to global coordinates node
-      unsigned coordXDof  = msh->GetMetisDof(iNode, coordXType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_coordinate->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
 
-    // if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
+    // if (level == levelMax || !el->GetRefinedElementIndex(iel)) {      // do not care about this if now (it is used for the AMR)
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
 
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solVType]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[kelGeom][solTType]->Jacobian(coordX, ig, weight, phiT, phiT_x, phiT_xx);
-      msh->_finiteElement[kelGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
-      phiP = msh->_finiteElement[kelGeom][solPType]->GetPhi(ig);
+      msh->_finiteElement[ielGeom][solTType]->Jacobian(coordX, ig, weight, phiT, phiT_x, phiT_xx);
+      msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
+      phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       adept::adouble solT_gss = 0;
@@ -481,7 +476,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       Res[ i + nDofsT + dim * nDofsV ] = -aResP[i].value();
     }
 
-    RES->add_vector_blocked(Res, KKDof);
+    RES->add_vector_blocked(Res, sysDof);
 
     //Extarct and store the Jacobian
     if (assembleMatrix) {
@@ -506,7 +501,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
       // get the and store jacobian matrix (row-major)
       s.jacobian(&Jac[0] , true);
-      KK->add_matrix_blocked(Jac, KKDof, KKDof);
+      KK->add_matrix_blocked(Jac, sysDof, sysDof);
 
       s.clear_independents();
       s.clear_dependents();

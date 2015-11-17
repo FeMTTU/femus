@@ -65,8 +65,8 @@ unsigned Mesh::_face_index=2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 
   Mesh::~Mesh(){
     delete el;
-    _coordinate->FreeSolutionVectors();
-    delete _coordinate;
+    _topology->FreeSolutionVectors();
+    delete _topology;
 
     for (int itype=0; itype<3; itype++) {
       for (int jtype=0; jtype<3; jtype++) {
@@ -120,34 +120,63 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
 
   el->SetNodeNumber(_nnodes);
 
-  std::vector < int > epart(GetNumberOfElements());
-  MeshMetisPartitioning meshmetispartitioning(*this);
-  meshmetispartitioning.DoPartition(epart, false);
-  FillISvector(epart);
-  epart.resize(0);
+  std::vector < int > partition;
+  partition.reserve(GetNumberOfNodes());
+  partition.resize(GetNumberOfElements());
+  MeshMetisPartitioning meshMetisPartitioning(*this);
+  meshMetisPartitioning.DoPartition(partition, false);
+  FillISvector(partition);
+  partition.resize(0);
 
 
   BuildAdjVtx();
   Buildkel();
 
-  _coordinate = new Solution(this);
+  _topology = new Solution(this);
 
-  _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0);
-  _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0);
-  _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("X",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("Y",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("Z",LAGRANGE,SECOND,1,0);
 
-  _coordinate->ResizeSolutionVector("X");
-  _coordinate->ResizeSolutionVector("Y");
-  _coordinate->ResizeSolutionVector("Z");
+  _topology->ResizeSolutionVector("X");
+  _topology->ResizeSolutionVector("Y");
+  _topology->ResizeSolutionVector("Z");
 
-  _coordinate->GetSolutionName("X") = _coords[0];
-  _coordinate->GetSolutionName("Y") = _coords[1];
-  _coordinate->GetSolutionName("Z") = _coords[2];
+  _topology->GetSolutionName("X") = _coords[0];
+  _topology->GetSolutionName("Y") = _coords[1];
+  _topology->GetSolutionName("Z") = _coords[2];
 
-  _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
+  _topology->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
 
-  _coordinate->ResizeSolutionVector("AMR");
+  _topology->ResizeSolutionVector("AMR");
+  
+  _topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _topology->AddSolution("Group", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  
+  _topology->ResizeSolutionVector("Material");
+  _topology->ResizeSolutionVector("Group");
+  _topology->ResizeSolutionVector("Type");
+  
+  NumericVector &material =  _topology->GetSolutionName("Material");
+  NumericVector &group =  _topology->GetSolutionName("Group");
+  NumericVector &type =  _topology->GetSolutionName("Type");
+  
 
+  for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
+    group.set(iel,el->GetElementGroup(iel));
+    type.set(iel,el->GetElementType(iel));
+    if(name.rfind(".neu") < name.size()) {
+      material.set(iel,el->GetElementMaterial(iel)); 
+    }
+    else if(name.rfind(".med") < name.size()){
+      material.zero();  
+    }
+  }
+  
+  material.close();
+  group.close();
+  type.close();
 };
 
 /**
@@ -168,34 +197,58 @@ void Mesh::GenerateCoarseBoxMesh(
 
   el->SetNodeNumber(_nnodes);
 
-  std::vector < int > epart(GetNumberOfElements());
-  MeshMetisPartitioning meshmetispartitioning(*this);
-  meshmetispartitioning.DoPartition(epart, false);
-  FillISvector(epart);
-  epart.resize(0);
+
+  std::vector < int > partition;
+  partition.reserve(GetNumberOfNodes());
+  partition.resize(GetNumberOfElements());
+  MeshMetisPartitioning meshMetisPartitioning(*this);
+  meshMetisPartitioning.DoPartition(partition, false);
+  FillISvector(partition);
+  partition.resize(0);
 
   BuildAdjVtx();
 
   Buildkel();
 
-  _coordinate = new Solution(this);
+  _topology = new Solution(this);
 
-  _coordinate->AddSolution("X",LAGRANGE,SECOND,1,0);
-  _coordinate->AddSolution("Y",LAGRANGE,SECOND,1,0);
-  _coordinate->AddSolution("Z",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("X",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("Y",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("Z",LAGRANGE,SECOND,1,0);
 
-  _coordinate->ResizeSolutionVector("X");
-  _coordinate->ResizeSolutionVector("Y");
-  _coordinate->ResizeSolutionVector("Z");
+  _topology->ResizeSolutionVector("X");
+  _topology->ResizeSolutionVector("Y");
+  _topology->ResizeSolutionVector("Z");
 
-  _coordinate->GetSolutionName("X") = _coords[0];
-  _coordinate->GetSolutionName("Y") = _coords[1];
-  _coordinate->GetSolutionName("Z") = _coords[2];
+  _topology->GetSolutionName("X") = _coords[0];
+  _topology->GetSolutionName("Y") = _coords[1];
+  _topology->GetSolutionName("Z") = _coords[2];
 
-  _coordinate->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
+  _topology->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
 
-  _coordinate->ResizeSolutionVector("AMR");
+  _topology->ResizeSolutionVector("AMR");
 
+
+  _topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _topology->AddSolution("Group", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0); 
+  
+  _topology->ResizeSolutionVector("Material");
+  _topology->ResizeSolutionVector("Group");
+  _topology->ResizeSolutionVector("Type");
+  
+  NumericVector &material =  _topology->GetSolutionName("Material");
+  NumericVector &group =  _topology->GetSolutionName("Group");
+  NumericVector &tYpe =  _topology->GetSolutionName("Type");
+  
+  for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
+    material.set(iel, el->GetElementMaterial(iel) );
+    group.set(iel, el->GetElementGroup(iel) );
+    tYpe.set(iel, el->GetElementType(iel) );
+  }
+  material.close();
+  group.close();
+  tYpe.close();
 }
 
 
@@ -285,106 +338,100 @@ void Mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]){
 
 //dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
 
-void Mesh::FillISvector(vector < int > &epart) {
+void Mesh::FillISvector(vector < int > &partition) {
 
   //BEGIN Initialization for k = 0,1,2,3,4
-  //resize the vector IS_Gmt2Mts_dof and dof
-  for(int k=0;k<5;k++) {
-    IS_Gmt2Mts_dof_offset[k].resize(_nprocs+1);
-  }
-  IS_Mts2Gmt_elem.resize(GetNumberOfElements());
-  IS_Mts2Gmt_elem_offset.resize(_nprocs+1);
-  IS_Mts2Gmt_elem_offset[0] = 0;
 
+  std::vector < unsigned > mapping;
+  mapping.reserve(GetNumberOfNodes());
+
+  _elementOffset.resize(_nprocs+1);
+  _elementOffset[0] = 0;
+
+  for(int k = 0; k < 5; k++) {
+    _dofOffset[k].resize( _nprocs + 1 );
+    _dofOffset[k][0] = 0;
+  }
   //END Initialization for k = 0,1,2,3,4
+
+  mapping.resize(GetNumberOfElements());
 
   //BEGIN building the  metis2Gambit_elem and  k = 3,4
   unsigned counter = 0;
   for(int isdom = 0; isdom < _nprocs; isdom++) { // isdom = iprocess
     for(unsigned iel = 0; iel < GetNumberOfElements(); iel++){
-      if( epart[iel] == isdom ){
+      if( partition[iel] == isdom ){
 	//filling the Metis to Mesh element mapping
-	IS_Mts2Gmt_elem[ counter ] = iel;
+	mapping[ counter ] = iel;
         counter++;
-	IS_Mts2Gmt_elem_offset[isdom + 1] = counter;
+	_elementOffset[isdom + 1] = counter;
       }
     }
   }
-  epart.resize(0);
+
 
   if( GetLevel() == 0 ){
-    el->ReorderMeshElements(IS_Mts2Gmt_elem, NULL);
+    el->ReorderMeshElements(mapping, NULL);
   }
   else{
-    el->ReorderMeshElements(IS_Mts2Gmt_elem, _coarseMsh->el);
+    el->ReorderMeshElements(mapping, _coarseMsh->el);
   }
 
-  IS_Gmt2Mts_dof[3].assign(GetNumberOfElements(), 0);
-  IS_Gmt2Mts_dof[4].assign(GetNumberOfElements() * (_dimension + 1), 0);
-
   for(int isdom = 0; isdom < _nprocs; isdom++){
-    unsigned localSize = IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom];
-    unsigned offsetPWLD = IS_Mts2Gmt_elem_offset[isdom] * (_dimension + 1);
-    for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
-      IS_Mts2Gmt_elem[iel] = iel;
-      IS_Gmt2Mts_dof[3][iel] = iel;
+    unsigned localSize = _elementOffset[isdom+1] - _elementOffset[isdom];
+    unsigned offsetPWLD = _elementOffset[isdom] * (_dimension + 1);
+    for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
       //piecewise linear discontinuous
-      unsigned locIel = iel - IS_Mts2Gmt_elem_offset[isdom];
+      unsigned locIel = iel - _elementOffset[isdom];
       for(unsigned k = 0; k < _dimension + 1; k++){
         unsigned locKel = ( k * localSize ) + locIel;
         unsigned kel = offsetPWLD + locKel;
-        IS_Gmt2Mts_dof[4][iel + k * GetNumberOfElements()] =  kel;
       }
     }
   }
 
   // ghost vs owned nodes: 3 and 4 have no ghost nodes
   for(unsigned k = 3; k < 5; k++){
-    own_size[k].assign(_nprocs,0);
+    _ownSize[k].assign(_nprocs,0);
   }
 
   for(int isdom = 0; isdom < _nprocs; isdom++){
-    own_size[3][isdom] = IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom];
-    own_size[4][isdom] = (IS_Mts2Gmt_elem_offset[isdom+1] - IS_Mts2Gmt_elem_offset[isdom])*(_dimension+1);
+    _ownSize[3][isdom] = _elementOffset[isdom+1] - _elementOffset[isdom];
+    _ownSize[4][isdom] = (_elementOffset[isdom+1] - _elementOffset[isdom])*(_dimension+1);
   }
 
   for(int k = 3; k < 5; k++) {
-    ghost_nd[k].resize(_nprocs);
-    ghost_nd_mts[k].resize(_nprocs);
+    _ghostDofs[k].resize(_nprocs);
     for(int isdom = 0; isdom < _nprocs; isdom++) {
-      ghost_nd[k][isdom].resize( 0 );
-      ghost_nd_mts[k][isdom].resize( 0 );
+      _dofOffset[k][isdom+1] = _dofOffset[k][isdom] + _ownSize[k][isdom];
+      _ghostDofs[k][isdom].resize( 0 );
     }
   }
   //END building the  metis2Gambit_elem and  k = 3,4
 
   //BEGIN building for k = 0,1,2
-  vector < unsigned > npart;
-  npart.reserve(GetNumberOfNodes());
-
-  MetisOffset.resize(5);
 
   // Initialization for k = 0,1,2
-  npart.assign(GetNumberOfNodes(),_nprocs);
-  IS_Gmt2Mts_dof[2].assign(GetNumberOfNodes(), 0);
+  partition.assign( GetNumberOfNodes(), _nprocs );
+  mapping.resize( GetNumberOfNodes() );
 
   for( unsigned k = 0; k < 3; k++){
-    own_size[k].assign(_nprocs,0);
+    _ownSize[k].assign(_nprocs,0);
   }
   counter = 0;
   for(int isdom = 0; isdom < _nprocs; isdom++){
     for( unsigned k = 0; k < 3; k++){
-      for( unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+      for( unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
 	unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel,k-1);
 	unsigned nodeEnd = el->GetElementDofNumber(iel,k);
 	for ( unsigned inode = nodeStart; inode < nodeEnd; inode++) {
 	  unsigned ii = el->GetElementVertexIndex(iel,inode) - 1;
-	  if(npart[ii] > isdom) {
-	    npart[ii] = isdom;
-	    IS_Gmt2Mts_dof[2][ii] = counter;
+	  if(partition[ii] > isdom) {
+	    partition[ii] = isdom;
+	    mapping[ii] = counter;
 	    counter++;
 	    for( int j = k; j < 3; j++){
-	      own_size[j][isdom]++;
+	      _ownSize[j][isdom]++;
 	    }
 	  }
 	}
@@ -392,51 +439,43 @@ void Mesh::FillISvector(vector < int > &epart) {
     }
   }
 
-  npart.resize(0);
+  partition.resize(0);
 
-  MetisOffset[2].resize(_nprocs+1);
-  MetisOffset[2][0]=0;
   for(int i = 1 ;i <= _nprocs; i++){
-    MetisOffset[2][i]= MetisOffset[2][i-1] + own_size[2][i-1];
+    _dofOffset[2][i]= _dofOffset[2][i-1] + _ownSize[2][i-1];
   }
 
-  el->ReorderMeshNodes( IS_Gmt2Mts_dof[2]);
+  el->ReorderMeshNodes( mapping );
 
   if( GetLevel() == 0 ){
     vector <double> coords_temp;
     for(int i = 0;i < 3; i++){
       coords_temp = _coords[i];
         for(unsigned j = 0; j < GetNumberOfNodes(); j++) {
-	  _coords[i][IS_Gmt2Mts_dof[2][j]] = coords_temp[j];
+	  _coords[i][mapping[j]] = coords_temp[j];
       }
     }
   }
-
-  for(unsigned j=0;j<GetNumberOfNodes();j++) {
-    IS_Gmt2Mts_dof[2][j]=j;
-  }
+  mapping.resize(0);
   //END building for k = 2, but incomplete for k = 0, 1
 
   //BEGIN ghost nodes search k = 0, 1, 2
   for(int k = 0; k < 3; k++){
-    ghost_nd[k].resize(_nprocs);
-    ghost_nd_mts[k].resize(_nprocs);
+    _ghostDofs[k].resize(_nprocs);
     for(int isdom = 0; isdom < _nprocs; isdom++){
       std::map < unsigned, bool > ghostMap;
-      for(unsigned iel = IS_Mts2Gmt_elem_offset[isdom]; iel < IS_Mts2Gmt_elem_offset[isdom+1]; iel++){
+      for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
 	for (unsigned inode = 0; inode < el->GetElementDofNumber(iel,k); inode++) {
 	  unsigned ii = el->GetElementVertexIndex(iel,inode)-1;
-	  if(ii < MetisOffset[2][isdom]){
+	  if(ii < _dofOffset[2][isdom]){
 	    ghostMap[ii] = true;
 	  }
 	}
       }
-      ghost_nd[k][isdom].resize( ghostMap.size() );
-      ghost_nd_mts[k][isdom].resize( ghostMap.size() );
+      _ghostDofs[k][isdom].resize( ghostMap.size() );
       unsigned counter = 0;
       for( std::map < unsigned, bool >::iterator it = ghostMap.begin(); it != ghostMap.end(); it++ ){
-	ghost_nd[k][isdom][counter] = it->first;
-	ghost_nd_mts[k][isdom][counter] = it->first;
+	_ghostDofs[k][isdom][counter] = it->first;
 	counter++;
       }
     }
@@ -445,110 +484,122 @@ void Mesh::FillISvector(vector < int > &epart) {
 
 
   //BEGIN completing k = 0, 1
+
   for(unsigned k = 0; k < 2; k++){
 
-    IS_Gmt2Mts_dof[k].assign(GetNumberOfNodes(), GetNumberOfNodes());
     std::vector < unsigned > ownedGhostCounter( _nprocs , 0);
     unsigned counter = 0;
 
+    _originalOwnSize[k].resize(_nprocs);
     for(int isdom = 0; isdom < _nprocs; isdom++){
 
       //owned nodes
-      for(unsigned inode = MetisOffset[2][isdom]; inode < own_size[k][isdom] + MetisOffset[2][isdom]; inode++) {
-	IS_Gmt2Mts_dof[k][inode] = counter;
+      for(unsigned inode = _dofOffset[2][isdom]; inode < _ownSize[k][isdom] + _dofOffset[2][isdom]; inode++) {
 	counter++;
       }
 
-      //ghost nodes
-      ghost_nd_mts[k][isdom].reserve(ghost_nd[k][isdom].size());
-      ghost_nd_mts[k][isdom].resize(0);
-      for (unsigned inode = 0; inode < ghost_nd[k][isdom].size(); inode++){
-	unsigned ghostNode = ghost_nd[k][isdom][inode];
+      for (unsigned inode = 0; inode < _ghostDofs[k][isdom].size(); inode++){
+	unsigned ghostNode = _ghostDofs[k][isdom][inode];
 
-	unsigned isdom0 = 0;
-	unsigned isdom1 = isdom ;
-	unsigned ksdom  = isdom /2;
-	while( ghostNode < MetisOffset[2][ksdom] || ghostNode >= MetisOffset[2][ksdom + 1] ){
-	  if( ghostNode < MetisOffset[2][ksdom] ) isdom1 = ksdom;
-	  else isdom0 = ksdom + 1;
-	  ksdom = ( isdom0 + isdom1 ) / 2;
+	unsigned ksdom = IsdomBisectionSearch(ghostNode, 2);
+
+	int upperBound = _dofOffset[2][ksdom] + _ownSize[k][ksdom];
+
+	if( ghostNode < upperBound ){
+	  _ghostDofs[k][isdom][inode] =  ghostNode  - _dofOffset[2][ksdom] + _dofOffset[k][ksdom];
 	}
-
-	int upperBound = MetisOffset[2][ksdom] + own_size[k][ksdom];
-	if( ghostNode < upperBound || IS_Gmt2Mts_dof[k][ ghostNode ] != GetNumberOfNodes()){ // real ghost nodes
-	  unsigned ghostSize = ghost_nd_mts[k][isdom].size();
-	  ghost_nd_mts[k][isdom].resize(ghostSize + 1);
-	  ghost_nd_mts[k][isdom][ghostSize] = IS_Gmt2Mts_dof[k][ ghostNode ];
+	else if( _ownedGhostMap[k].find(ghostNode) != _ownedGhostMap[k].end() ){
+	  _ghostDofs[k][isdom][inode] =  _ownedGhostMap[k][ghostNode];
 	}
 	else { // owned ghost nodes
-	  IS_Gmt2Mts_dof[k][ ghostNode ] = counter;
+	  _ownedGhostMap[k][ ghostNode ] = counter;
 	  counter++;
 	  ownedGhostCounter[isdom]++;
 
-          for(unsigned jnode = inode; jnode < ghost_nd[k][isdom].size()-1; jnode++ ){
-	    ghost_nd[k][isdom][jnode] = ghost_nd[k][isdom][jnode + 1];
+          for(unsigned jnode = inode; jnode < _ghostDofs[k][isdom].size()-1; jnode++ ){
+	    _ghostDofs[k][isdom][jnode] = _ghostDofs[k][isdom][jnode + 1];
 	  }
 
-          ghost_nd[k][isdom].resize(ghost_nd[k][isdom].size()-1);
+          _ghostDofs[k][isdom].resize(_ghostDofs[k][isdom].size()-1);
 	  inode--;
 	}
       }
-    }
-
-    for(int isdom = 0; isdom < _nprocs; isdom++){
-      own_size[k][isdom] += ownedGhostCounter[isdom];
+      _originalOwnSize[k][isdom] = _ownSize[k][isdom];
+      _ownSize[k][isdom] += ownedGhostCounter[isdom];
+      _dofOffset[k][isdom+1] = _dofOffset[k][isdom] + _ownSize[k][isdom];
     }
   }
   //END completing for k = 0, 1
 
-
-  //BEGIN Initilize and set all the Offsets
-  MetisOffset.resize(5);
-  for(int k=0;k<5;k++) {
-    MetisOffset[k].resize(_nprocs+1);
-    MetisOffset[k][0]=0;
-    for(int i = 1 ;i <= _nprocs; i++){
-      MetisOffset[k][i]= MetisOffset[k][i-1] + own_size[k][i-1];
+  //delete ghost dof list all but _iproc
+  for(int isdom = 0; isdom < _nprocs; isdom++){
+    if( isdom != _iproc )
+    for(int k = 0; k < 5; k++){
+      _ghostDofs[k][isdom].resize(0);
     }
   }
-  //END Initilize and set all the Offsets
+
 
 }
 
 
   // *******************************************************
+  unsigned Mesh::IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const{
 
-  unsigned Mesh::GetMetisDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const {
+    unsigned isdom0 = 0;
+    unsigned isdom1 = _nprocs ;
+    unsigned isdom = _iproc;
+
+    while( dof < _dofOffset[solType][isdom] || dof >= _dofOffset[solType][isdom + 1] ){
+      if( dof < _dofOffset[solType][isdom] ) isdom1 = isdom;
+      else isdom0 = isdom + 1;
+      isdom = ( isdom0 + isdom1 ) / 2;
+    }
+
+    return isdom;
+  }
+  // *******************************************************
+
+  unsigned Mesh::GetSolutionDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const {
 
     unsigned dof;
     switch(solType){
       case 0: // linear Lagrange
-        dof = IS_Gmt2Mts_dof[solType][ el->GetMeshDof(iel, i, solType) ];
-        break;
+	{
+	  unsigned iNode = el->GetMeshDof(iel, i, solType);
+	  unsigned isdom = IsdomBisectionSearch(iNode, 2);
+	  if(iNode < _dofOffset[2][isdom]+_originalOwnSize[0][isdom]){
+	    dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
+	  }
+	  else{
+	    dof = _ownedGhostMap[0].find(iNode)->second;
+	  }
+	}
+	break;
       case 1: // quadratic Lagrange
-        dof = IS_Gmt2Mts_dof[solType][ el->GetMeshDof(iel, i, solType) ];
-        break;
+       	{
+	  unsigned iNode = el->GetMeshDof(iel, i, solType);
+	  unsigned isdom = IsdomBisectionSearch(iNode, 2);
+	  if(iNode < _dofOffset[2][isdom]+_originalOwnSize[1][isdom]){
+	    dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
+	  }
+	  else{
+	    dof = _ownedGhostMap[1].find(iNode)->second;
+	  }
+	}
+	break;
+
       case 2: // bi-quadratic Lagrange
         dof = el->GetMeshDof(iel, i, solType);
         break;
       case 3: // piecewise constant
+	// in this case use i=0
         dof = iel;
         break;
       case 4: // piecewise linear discontinuous
-        //BEGIN bisection search
-        unsigned sdm0 = 0;
-        unsigned sdm1 = _nprocs ;
-        unsigned isdm = _iproc;
-        unsigned offset = IS_Mts2Gmt_elem_offset[isdm];
-        unsigned offsetp1 = IS_Mts2Gmt_elem_offset[isdm + 1];
-        while( iel < offset || iel >= offsetp1 ){
-          if( iel < offset ) sdm1 = isdm;
-          else sdm0 = isdm + 1;
-          isdm = ( sdm0 + sdm1 ) / 2;
-          unsigned offset = IS_Mts2Gmt_elem_offset[isdm];
-          unsigned offsetp1 = IS_Mts2Gmt_elem_offset[isdm + 1];
-        }
-        //END bisection search
+	unsigned isdom = IsdomBisectionSearch(iel, 3);
+	unsigned offset = _elementOffset[isdom];
+        unsigned offsetp1 = _elementOffset[isdom + 1];
         unsigned ownSize = offsetp1 - offset;
         unsigned offsetPWLD = offset * (_dimension + 1);
         unsigned locIel = iel - offset;
@@ -576,18 +627,18 @@ SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& j
 
 void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
 
-  unsigned ni = MetisOffset[itype][_nprocs];
-  unsigned ni_loc = own_size[itype][_iproc];
+  unsigned ni = _dofOffset[itype][_nprocs];
+  unsigned ni_loc = _ownSize[itype][_iproc];
 
-  unsigned nj = MetisOffset[jtype][_nprocs];
-  unsigned nj_loc = own_size[itype][_iproc];
+  unsigned nj = _dofOffset[jtype][_nprocs];
+  unsigned nj_loc = _ownSize[itype][_iproc];
 
   NumericVector *NNZ_d = NumericVector::build().release();
   if(1 == _nprocs) { // IF SERIAL
     NNZ_d->init(ni, ni_loc, false, SERIAL);
   }
   else{
-    NNZ_d->init(ni, ni_loc, ghost_nd_mts[itype][processor_id()], false, GHOSTED);
+    NNZ_d->init(ni, ni_loc, _ghostDofs[itype][processor_id()], false, GHOSTED);
   }
   NNZ_d->zero();
 
@@ -596,8 +647,7 @@ void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
   NNZ_o->zero();
 
   for(unsigned isdom = _iproc; isdom < _iproc+1; isdom++) {
-    for (unsigned iel_mts = IS_Mts2Gmt_elem_offset[isdom]; iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
-      unsigned iel = IS_Mts2Gmt_elem[iel_mts];
+    for (unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
       short unsigned ielt = el->GetElementType(iel);
       _finiteElement[ielt][jtype]->GetSparsityPatternSize(*this, iel, NNZ_d, NNZ_o, itype);
     }
@@ -606,7 +656,7 @@ void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
   NNZ_d->close();
   NNZ_o->close();
 
-  unsigned offset = MetisOffset[itype][_iproc];
+  unsigned offset = _dofOffset[itype][_iproc];
 
   vector < int > nnz_d(ni_loc);
   vector < int > nnz_o(ni_loc);
@@ -616,10 +666,9 @@ void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
   }
 
   _ProjQitoQj[itype][jtype] = SparseMatrix::build().release();
-  _ProjQitoQj[itype][jtype]->init(ni, nj, own_size[itype][_iproc], own_size[jtype][_iproc], nnz_d, nnz_o);
+  _ProjQitoQj[itype][jtype]->init(ni, nj, _ownSize[itype][_iproc], _ownSize[jtype][_iproc], nnz_d, nnz_o);
   for(unsigned isdom = _iproc; isdom < _iproc+1; isdom++) {
-    for (unsigned iel_mts = IS_Mts2Gmt_elem_offset[isdom]; iel_mts < IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++){
-      unsigned iel = IS_Mts2Gmt_elem[iel_mts];
+    for (unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
       short unsigned ielt = el->GetElementType(iel);
       _finiteElement[ielt][jtype]->BuildProlongation(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o,itype);
     }
@@ -657,10 +706,10 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
 
   if( !_ProjCoarseToFine[solType] ){
 
-    int nf     = MetisOffset[solType][_nprocs];
-    int nc     = _coarseMsh->MetisOffset[solType][_nprocs];
-    int nf_loc = own_size[solType][_iproc];
-    int nc_loc = _coarseMsh->own_size[solType][_iproc];
+    int nf     = _dofOffset[solType][_nprocs];
+    int nc     = _coarseMsh->_dofOffset[solType][_nprocs];
+    int nf_loc = _ownSize[solType][_iproc];
+    int nc_loc = _coarseMsh->_ownSize[solType][_iproc];
 
     //build matrix sparsity pattern size
     NumericVector *NNZ_d = NumericVector::build().release();
@@ -669,7 +718,7 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
     }
     else { // IF PARALLEL
       if(solType<3) { // GHOST nodes only for Lagrange FE families
-	NNZ_d->init(nf, nf_loc, ghost_nd_mts[solType][processor_id()], false, GHOSTED);
+	NNZ_d->init(nf, nf_loc, _ghostDofs[solType][processor_id()], false, GHOSTED);
       }
       else { //piecewise discontinuous variables have no ghost nodes
 	NNZ_d->init(nf, nf_loc, false, PARALLEL);
@@ -682,8 +731,7 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
     NNZ_o->zero();
 
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom];iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
+      for (int iel = _coarseMsh->_elementOffset[isdom];iel < _coarseMsh->_elementOffset[isdom+1]; iel++) {
 	short unsigned ielt=_coarseMsh->el->GetElementType(iel);
 	_finiteElement[ielt][solType]->GetSparsityPatternSize( *this, *_coarseMsh, iel, NNZ_d, NNZ_o);
       }
@@ -691,7 +739,7 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
     NNZ_d->close();
     NNZ_o->close();
 
-    unsigned offset = MetisOffset[solType][_iproc];
+    unsigned offset = _dofOffset[solType][_iproc];
     vector <int> nnz_d(nf_loc);
     vector <int> nnz_o(nf_loc);
     for(int i=0; i<nf_loc;i++){
@@ -707,10 +755,8 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
 
     // loop on the coarse grid
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
-      for (int iel_mts=_coarseMsh->IS_Mts2Gmt_elem_offset[isdom];
-	   iel_mts < _coarseMsh->IS_Mts2Gmt_elem_offset[isdom+1]; iel_mts++) {
-	unsigned iel = _coarseMsh->IS_Mts2Gmt_elem[iel_mts];
-	short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+      for (int iel=_coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom+1]; iel++) {
+       short unsigned ielt=_coarseMsh->el->GetElementType(iel);
 	_finiteElement[ielt][solType]->BuildProlongation(*this, *_coarseMsh,iel, _ProjCoarseToFine[solType]);
       }
     }
