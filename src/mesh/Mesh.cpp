@@ -178,7 +178,7 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   group.close();
   type.close();
   
-  el->deleteGroup();
+  el->deleteParallelizedQuantities();
   
 };
 
@@ -253,7 +253,7 @@ void Mesh::GenerateCoarseBoxMesh(
   group.close();
   type.close();
   
-  el->deleteGroup();
+  el->deleteParallelizedQuantities();
 }
 
 
@@ -317,10 +317,15 @@ void Mesh::Buildkel() {
 
 void Mesh::AllocateAndMarkStructureNode() {
   el->AllocateNodeRegion();
+  
+  vector <double> materialLocal;
+  _topology->_Sol[_materialIndex]->localize_to_all(materialLocal);
+  
   for (unsigned iel=0; iel<_nelem; iel++) {
 
-    int flag_mat = el->GetElementMaterial(iel);
-
+    //int flag_mat = el->GetElementMaterial(iel);
+    int flag_mat = materialLocal[iel];
+    
     if (flag_mat==4) {
       unsigned nve=el->GetElementDofNumber(iel,2);
       for ( unsigned i=0; i<nve; i++) {
@@ -773,6 +778,9 @@ short unsigned Mesh::GetElementGroup(const unsigned int& iel) const{
   return static_cast <short unsigned> ( (*_topology->_Sol[_groupIndex])(iel) + 0.5);
 }
 
+short unsigned Mesh::GetElementMaterial(const unsigned int& iel) const{
+  return static_cast <short unsigned> ( (*_topology->_Sol[_materialIndex])(iel) + 0.5);
+}
 
 
 } //end namespace femus

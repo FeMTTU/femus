@@ -512,7 +512,7 @@ void AssembleMatrixResFSI(MultiLevelProblem &ml_prob) {
     short unsigned kelt = myel->GetElementType(kel);
     unsigned nve        = myel->GetElementDofNumber(kel,order_ind2);
     unsigned nve1       = myel->GetElementDofNumber(kel,order_ind1);
-    int flag_mat        = myel->GetElementMaterial(kel);
+    int flag_mat        = mymsh->GetElementMaterial(kel);
 
     //*******************************************************************************************************
 

@@ -93,7 +93,7 @@ elem::elem(const elem *elc, const unsigned refindex) {
 
   _elementType = new unsigned short [_nel];
   //_elementGroup = new unsigned short [_nel];
-  _elementMaterial = new unsigned short [_nel];
+  //_elementMaterial = new unsigned short [_nel];
   _elr = new unsigned [_nel];
 
   _isFatherElementRefined = new bool [_nel];
@@ -154,37 +154,37 @@ elem::elem(const elem *elc, const unsigned refindex) {
 void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc){
   //  REORDERING OF  ELT, ELG, ELMAT
   short unsigned *tempElt;
-  short unsigned *tempElmat;
   bool *tempElRef;
 
 
   tempElt = _elementType;
-  tempElmat = _elementMaterial;
   tempElRef = _isFatherElementRefined;
 
   _elementType = new short unsigned [_nel];
-  _elementMaterial = new short unsigned [_nel];
   _isFatherElementRefined = new bool [_nel];
 
 
   for(unsigned iel = 0; iel < _nel; iel++){
     _elementType[iel]   = tempElt[ elementMapping[iel] ];
-    _elementMaterial[iel] = tempElmat[ elementMapping[iel] ];
     _isFatherElementRefined[iel] = tempElRef[ elementMapping[iel] ];
   }
 
   delete [] tempElt;
-  delete [] tempElmat;
   delete [] tempElRef;
 
   if( _level == 0){
     short unsigned *tempElg;
+    short unsigned *tempElmat;
     tempElg = _elementGroup;
+    tempElmat = _elementMaterial;
     _elementGroup = new short unsigned [_nel];
+    _elementMaterial = new short unsigned [_nel];
     for(unsigned iel = 0; iel < _nel; iel++){
       _elementGroup[iel]   = tempElg[ elementMapping[iel] ];
+      _elementMaterial[iel] = tempElmat[ elementMapping[iel] ];
     }
     delete [] tempElg;
+    delete [] tempElmat;
   }
   
   
@@ -275,7 +275,6 @@ elem::~elem() {
     delete [] _kel;
     delete [] _elementType;
     delete [] _isFatherElementRefined;
-    delete [] _elementMaterial;
     delete [] _elr;
 
     delete [] _kvtelMemory;
@@ -292,8 +291,9 @@ elem::~elem() {
     }
   }
   
-void elem::deleteGroup(){
-  delete [] _elementGroup;    
+void elem::deleteParallelizedQuantities(){
+  delete [] _elementGroup;  
+  delete [] _elementMaterial;      
 }
 
 /**

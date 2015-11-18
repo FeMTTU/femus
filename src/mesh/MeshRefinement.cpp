@@ -162,12 +162,12 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
       }
 
       //unsigned elg=elc->GetElementGroup(iel);
-      unsigned elmat=elc->GetElementMaterial(iel);
+      //unsigned elmat=elc->GetElementMaterial(iel);
       // project element group
-      for (unsigned j=0; j<_mesh.GetRefIndex(); j++) {
+      //for (unsigned j=0; j<_mesh.GetRefIndex(); j++) {
         //_mesh.el->SetElementGroup(jel+j,elg);
-	_mesh.el->SetElementMaterial(jel+j,elmat);
-      }
+	//_mesh.el->SetElementMaterial(jel+j,elmat);
+      //}
 
       // project vertex indeces
       for (unsigned j=0; j<_mesh.GetRefIndex(); j++)
@@ -195,11 +195,11 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
       elc->SetChildElement(iel,0,jel);
 
       //unsigned elg = elc->GetElementGroup(iel);
-      unsigned elmat = elc->GetElementMaterial(iel);
+      //unsigned elmat = elc->GetElementMaterial(iel);
 
       // project element group
       //_mesh.el->SetElementGroup(jel,elg);
-      _mesh.el->SetElementMaterial(jel,elmat);
+      //_mesh.el->SetElementMaterial(jel,elmat);
 
       // project nodes indeces
       for (unsigned inode=0; inode<elc->GetElementDofNumber(iel,2); inode++)

@@ -37,7 +37,7 @@ public:
     /** destructor */
     ~elem();
     
-    void deleteGroup();
+    void deleteParallelizedQuantities();
 
     // reorder the element according to the new element mapping
     void ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc);

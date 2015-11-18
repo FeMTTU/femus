@@ -179,7 +179,7 @@ namespace femus {
       short unsigned kelt = myel->GetElementType(kel);
       unsigned nve        = myel->GetElementDofNumber(kel,SolType2);
       unsigned nve1       = myel->GetElementDofNumber(kel,SolType1);
-      int flag_mat        = myel->GetElementMaterial(kel);
+      int flag_mat        = mymsh->GetElementMaterial(kel);
 
       // *******************************************************************************************************
     
