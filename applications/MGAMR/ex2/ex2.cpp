@@ -28,6 +28,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   bool dirichlet = true; //dirichlet
   value = 0.;
 
+  std::cout<<x[0]<<" "<<x[1]<<" "<<facename<<std::endl;
+
   if (!strcmp(SolName, "T")) {
     if (facename == 2) {
       value = 1.;
