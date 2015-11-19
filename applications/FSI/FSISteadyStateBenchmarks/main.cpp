@@ -187,13 +187,13 @@ int main(int argc,char **args) {
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
   if(simulation < 3)
-    numberOfUniformRefinedMeshes = 1;
+    numberOfUniformRefinedMeshes = 3;
   else if(simulation == 3 || simulation == 7)
     numberOfUniformRefinedMeshes = 4;
   else if(simulation < 7)
     numberOfUniformRefinedMeshes = 2;
 
-  numberOfAMRLevels = 2;
+  numberOfAMRLevels = 0;
 
   MultiLevelMesh ml_msh( numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
@@ -282,8 +282,8 @@ int main(int argc,char **args) {
   if( simulation == 7 )
     system.SetNonLinearConvergenceTolerance(1.e-5);
 
-  system.SetNumberPreSmoothingStep(5);
-  system.SetNumberPostSmoothingStep(5);
+  system.SetNumberPreSmoothingStep(15);
+  system.SetNumberPostSmoothingStep(15);
 
   if( simulation < 3 || simulation == 7 ) {
     system.SetMaxNumberOfLinearIterations(5);

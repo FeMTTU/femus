@@ -190,12 +190,20 @@ public:
 
     // member data
     MultiLevelMesh* _mlMesh; //< Multilevel mesh
-
-private:
-
-    /** boundary condition function pointer */
+    
+    BoundaryFunc GetBdcFunction(){
+      return _SetBoundaryConditionFunction;      
+    }
+    
     BoundaryFunc _SetBoundaryConditionFunction;
+private:
+    /** boundary condition function pointer */
+    
     BoundaryFuncMLProb _SetBoundaryConditionFunctionMLProb;
+    /** Flag to tell whether the BC function has been set */
+    bool _bdcFuncSet;
+    bool _bdcFuncSetMLProb;
+    
     bool _useParsedBCFunction;
 
 
@@ -211,9 +219,7 @@ private:
     /** Array of solution, dimension number of levels */
     vector < Solution* >  _solution;
 
-    /** Flag to tell whether the BC function has been set */
-    bool _bdcFuncSet;
-    bool _bdcFuncSetMLProb;
+    
 
     /** This group of vectors has the size of the number of added solutions */
     vector< vector <BDCType> > _boundaryConditions;
