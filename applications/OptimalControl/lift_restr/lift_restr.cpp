@@ -19,13 +19,16 @@ double InitialValueTcont(const std::vector < double >& x) {
   return 0.;
 }
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
+
   bool dirichlet = true; //dirichlet
   value = 0;
-
-  if (faceName == 2)
+  
+  if(!strcmp(name,"Tcont")) {
+  if (faceName == 3)
     dirichlet = false;
-
+  }
+  
   return dirichlet;
 }
 
@@ -41,9 +44,9 @@ int main(int argc, char** args) {
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  // read coarse level mesh and generate finers level meshes
-  mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
-  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
+
+  mlMsh.GenerateCoarseBoxMesh(8,8,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
+ /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -247,7 +250,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   
  //********** DATA ***************** 
-  double T_des = 1.;
+  double T_des = 100.;
   double alpha = 10.e5;
   double beta  = 1.;
   double gamma = 1.;
@@ -401,7 +404,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
                                                                    i    * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                (nDofThom + nDofThomAdj + j)                      ]  += weight * alpha *  phi_ThomAdj[i] * phi_Tcont[j];      
 
-              //DIAG BLOCK Tcont
+              //BLOCK Tcont - Thom
               if ( i < nDofTcont   && j < nDofThom   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
 								(0 + j)                                           ]  += weight * ( alpha * phi_Tcont[i] * phi_Thom[j]);
