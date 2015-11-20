@@ -47,7 +47,7 @@ public:
 
     /** Solves the system. */
     virtual void solve ();
-
+    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
     /** Clear all the data structures associated with the system. */
     virtual void clear();
 
@@ -60,11 +60,6 @@ public:
     */
     virtual std::string system_type () const {
         return "NonlinearImplicit";
-    }
-
-    /** Returns  the number of iterations taken for the most recent nonlinear solve. */
-    unsigned int n_nonlinear_iterations() const {
-        return _n_nonlinear_iterations;
     }
 
     /** Returns the final residual for the nonlinear system solve. */
@@ -86,9 +81,6 @@ public:
     bool IsNonLinearConverged(const unsigned gridn);
 
 protected:
-
-    /** The number of nonlinear iterations required to solve the nonlinear system R(x)=0.  */
-    unsigned int _n_nonlinear_iterations;
 
     /** The final residual for the nonlinear system R(x) */
     double _final_nonlinear_residual;

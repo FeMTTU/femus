@@ -49,7 +49,6 @@ public:
 
     /** Destructor. */
     ~VankaPetscLinearEquationSolver ();
-
 private:
 
     /** Release all memory and clear data structures. */

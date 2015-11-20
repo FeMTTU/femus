@@ -217,7 +217,7 @@ namespace adept {
   // fastest. This is implemented using a forward pass, appropriate
   // for m>n.
   void
-  Stack::jacobian_forward(Real* jacobian_out)
+  Stack::jacobian_forward(Real* jacobian_out, const bool row_major)
   {
     if (independent_offset_.empty() || dependent_offset_.empty()) {
       throw(dependents_or_independents_not_identified());
@@ -261,10 +261,19 @@ namespace adept {
       } // End of loop over statements
       // Copy the gradients corresponding to the dependent variables
       // into the Jacobian matrix
-      for (Offset idep = 0; idep < n_dependent(); idep++) {
-	for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
-	  jacobian_out[(i_independent+i)*n_dependent()+idep] 
-	    = gradient_multipass_[dependent_offset_[idep]][i];
+      if (row_major) {
+        for (Offset idep = 0; idep < n_dependent(); idep++) {
+	  for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
+	    jacobian_out[idep*n_independent()+(i_independent+i)]
+	      = gradient_multipass_[dependent_offset_[idep]][i];
+	  }
+        }
+      } else { // column-major
+        for (Offset idep = 0; idep < n_dependent(); idep++) {
+	  for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
+	    jacobian_out[(i_independent+i)*n_dependent()+idep]
+	      = gradient_multipass_[dependent_offset_[idep]][i];
+	  }
 	}
       }
       i_independent += ADEPT_MULTIPASS_SIZE;
@@ -289,10 +298,19 @@ namespace adept {
 	  gradient_multipass_[statement.offset][i] = a[i];
 	}
       }
-      for (Offset idep = 0; idep < n_dependent(); idep++) {
-	for (Offset i = 0; i < n_extra; i++) {
-	  jacobian_out[(i_independent+i)*n_dependent()+idep] 
-	    = gradient_multipass_[dependent_offset_[idep]][i];
+      if (row_major) {
+        for (Offset idep = 0; idep < n_dependent(); idep++) {
+	  for (Offset i = 0; i < n_extra; i++) {
+	    jacobian_out[idep*n_independent()+(i_independent+i)]
+	      = gradient_multipass_[dependent_offset_[idep]][i];
+	  }
+        }
+      } else { // column-major
+        for (Offset idep = 0; idep < n_dependent(); idep++) {
+	  for (Offset i = 0; i < n_extra; i++) {
+	    jacobian_out[(i_independent+i)*n_dependent()+idep]
+	      = gradient_multipass_[dependent_offset_[idep]][i];
+	  }
 	}
       }
     }
@@ -309,7 +327,7 @@ namespace adept {
   // fastest. This is implemented using a reverse pass, appropriate
   // for m<n.
   void
-  Stack::jacobian_reverse(Real* jacobian_out)
+  Stack::jacobian_reverse(Real* jacobian_out, const bool row_major)
   {
     if (independent_offset_.empty() || dependent_offset_.empty()) {
       throw(dependents_or_independents_not_identified());
@@ -381,10 +399,19 @@ namespace adept {
       } // End of loop over statement
       // Copy the gradients corresponding to the independent variables
       // into the Jacobian matrix
-      for (Offset iindep = 0; iindep < n_independent(); iindep++) {
-	for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
-	  jacobian_out[iindep*n_dependent()+i_dependent+i] 
-	    = gradient_multipass_[independent_offset_[iindep]][i];
+      if (row_major) {
+        for (Offset iindep = 0; iindep < n_independent(); iindep++) {
+	  for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
+	    jacobian_out[(i_dependent+i)*n_independent()+iindep]
+	      = gradient_multipass_[independent_offset_[iindep]][i];
+	  }
+        }
+      } else { // column-major
+	for (Offset iindep = 0; iindep < n_independent(); iindep++) {
+	  for (Offset i = 0; i < ADEPT_MULTIPASS_SIZE; i++) {
+	    jacobian_out[iindep*n_dependent()+i_dependent+i]
+	      = gradient_multipass_[independent_offset_[iindep]][i];
+	  }
 	}
       }
       i_dependent += ADEPT_MULTIPASS_SIZE;
@@ -432,10 +459,19 @@ namespace adept {
 	  }
 	}
       }
-      for (Offset iindep = 0; iindep < n_independent(); iindep++) {
-	for (Offset i = 0; i < n_extra; i++) {
-	  jacobian_out[iindep*n_dependent()+i_dependent+i] 
-	    = gradient_multipass_[independent_offset_[iindep]][i];
+      if (row_major) {
+        for (Offset iindep = 0; iindep < n_independent(); iindep++) {
+	  for (Offset i = 0; i < n_extra; i++) {
+	    jacobian_out[(i_dependent+i)*n_independent()+iindep]
+	      = gradient_multipass_[independent_offset_[iindep]][i];
+	  }
+        }
+      } else { // column-major
+	for (Offset iindep = 0; iindep < n_independent(); iindep++) {
+	  for (Offset i = 0; i < n_extra; i++) {
+	    jacobian_out[iindep*n_dependent()+i_dependent+i]
+	      = gradient_multipass_[independent_offset_[iindep]][i];
+	  }
 	}
       }
     }
@@ -539,13 +575,13 @@ namespace adept {
   // implemented by calling one of jacobian_forward and
   // jacobian_reverse, whichever would be faster.
   void
-  Stack::jacobian(Real* jacobian_out)
+  Stack::jacobian(Real* jacobian_out, const bool row_major)
   {
     if (n_independent() < n_dependent()) {
-      jacobian_forward(jacobian_out);
+      jacobian_forward(jacobian_out, row_major);
     }
     else {
-      jacobian_reverse(jacobian_out);
+      jacobian_reverse(jacobian_out, row_major);
     }
   }
   

@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: Writer
  Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -33,15 +33,16 @@
 
 namespace femus {
 
-  
+
   const unsigned Writer::FemusToVTKorToXDMFConn[27] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,23,21,20,22,24,25,26};
-  
+
   Writer::Writer( MultiLevelSolution* ml_sol ):
     _ml_sol(ml_sol), _ml_mesh(ml_sol->_ml_msh)
   {
     _gridn = _ml_mesh->GetNumberOfLevels();
     _gridr = _ml_mesh->GetNumberOfGridTotallyRefined();
     _moving_mesh = 0;
+    _surface = false;
   }
 
   Writer::Writer( MultiLevelMesh* ml_mesh ):
@@ -50,13 +51,13 @@ namespace femus {
     _gridn = _ml_mesh->GetNumberOfLevels();
     _gridr = _ml_mesh->GetNumberOfGridTotallyRefined();
     _moving_mesh = 0;
-  }  
-  
+  }
+
   Writer::~Writer() { }
 
 
   std::auto_ptr<Writer> Writer::build(const WriterEnum format, MultiLevelSolution * ml_sol)  {
-     
+
     switch (format) {
       case VTK: {
 	std::auto_ptr<Writer>   ap(new VTKWriter(ml_sol)); return ap;
@@ -68,15 +69,15 @@ namespace femus {
 	std::auto_ptr<Writer>   ap(new XDMFWriter(ml_sol)); return ap;
       }
       default: {
-	std::cout << "Format not supported" << std::endl; 
-	abort(); 
+	std::cout << "Format not supported" << std::endl;
+	abort();
       }
     } //end switch
-    
+
   }
 
     std::auto_ptr<Writer> Writer::build(const WriterEnum format, MultiLevelMesh * ml_mesh)  {
-     
+
     switch (format) {
       case VTK: {
 	std::auto_ptr<Writer>   ap(new VTKWriter(ml_mesh)); return ap;
@@ -88,11 +89,11 @@ namespace femus {
 	std::auto_ptr<Writer>   ap(new XDMFWriter(ml_mesh)); return ap;
       }
       default: {
-	std::cout << "Format not supported" << std::endl; 
-	abort(); 
+	std::cout << "Format not supported" << std::endl;
+	abort();
       }
     } //end switch
-    
+
   }
 
   void Writer::SetMovingMesh(std::vector<std::string>& movvars_in){
@@ -100,7 +101,11 @@ namespace femus {
     _moving_vars = movvars_in;
   }
 
-  
+  void Writer::SetSurfaceVariable(const std::string &surfaceVaraible){
+    _surface = true;
+    _surfaceVariable = surfaceVaraible;
+  }
+
 } //end namespace femus
 
 

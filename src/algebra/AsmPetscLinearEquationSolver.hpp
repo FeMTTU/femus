@@ -45,6 +45,45 @@ public:
 
     /** Destructor */
     ~AsmPetscLinearEquationSolver ();
+    KSP* GetKSP(){ return &_ksp; };
+
+    void MGsetLevels ( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
+                      const vector <unsigned> &variable_to_be_solved,
+                      SparseMatrix* PP, SparseMatrix* RR ,
+                      const unsigned &npre, const unsigned &npost);
+
+    void MGsolve ( const bool ksp_clean );
+
+    void MGinit( const MgSmootherType &mg_smoother_type, const unsigned &levelMax ){
+
+      KSPCreate(PETSC_COMM_WORLD,&_ksp);
+
+      KSPGetPC(_ksp,&_pc);
+      PCSetType(_pc,PCMG);
+      PCMGSetLevels(_pc,levelMax,NULL);
+
+      if( mg_smoother_type == FULL ){
+        PCMGSetType(_pc, PC_MG_FULL);
+      }
+      else if( mg_smoother_type == MULTIPLICATIVE ){
+        PCMGSetType(_pc, PC_MG_MULTIPLICATIVE);
+      }
+      else if( mg_smoother_type == ADDITIVE ){
+        PCMGSetType(_pc, PC_MG_ADDITIVE);
+      }
+      else if( mg_smoother_type == KASKADE ){
+        PCMGSetType(_pc, PC_MG_KASKADE);
+      }
+      else{
+        std::cout <<"Wrong mg_type for PETSCsolve()"<<std::endl;
+        abort();
+      }
+    };
+
+   void MGclear(){
+     KSPDestroy(&_ksp);
+   }
+
 
 private:
 
@@ -75,7 +114,7 @@ private:
     void solve(const vector <unsigned> &variable_to_be_solved, const bool &ksp_clean);
 
     /**  Set the user-specified solver stored in \p _solver_type */
-    void set_petsc_solver_type ();
+    void set_petsc_solver_type ( KSP &ksp );
 
     /** To be Added */
     clock_t BuildBDCIndex(const vector <unsigned> &variable_to_be_solved);
@@ -89,7 +128,7 @@ private:
     KSP _ksp;    ///< Krylov subspace context
     KSP       *_ksp_asm;
     vector < PC >  _pc_asm;
-    
+
     PetscReal  _rtol;
     PetscReal  _abstol;
     PetscReal  _dtol;
@@ -99,7 +138,7 @@ private:
     bool _indexai_init;
     unsigned short _NSchurVar;
     vector< vector <PetscInt> > _is_ovl_idx;
-    
+
     vector< vector <PetscInt> > _is_loc_idx;
     vector <IS> _is_ovl;
     vector <IS> _is_loc;
@@ -110,14 +149,14 @@ private:
     bool _Pmat_is_initialized;
     vector <unsigned> _block_type_range;
 
-    
+
     //vector < KSP*> _ksp_split;
     //vector< vector < PC > >  _pc_split;
     //vector< vector <PetscInt> > _is_ovl_u_idx;
     //vector< vector <PetscInt> > _is_ovl_p_idx;
     //vector <IS> _is_ovl_u;
     //vector <IS> _is_ovl_p;
-       
+
 };
 
 // =================================================

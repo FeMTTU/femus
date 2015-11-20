@@ -15,16 +15,14 @@ using std::cout;
 using std::endl;
 using namespace femus;   
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
 
-double InitVariableU(const double &x, const double &y, const double &z);
-double InitVariableV(const double &x, const double &y, const double &z);
-double InitVariableP(const double &x, const double &y, const double &z);
+double InitVariableU(const std::vector < double >& x);
+double InitVariableV(const std::vector < double >& x);
+double InitVariableP(const std::vector < double >& x);
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time);
-
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
 int main(int argc,char **args) {
   
@@ -59,7 +57,7 @@ int main(int argc,char **args) {
   MultiLevelMesh ml_msh;
   //ml_msh.ReadCoarseMesh(infile,"seventh",Lref);
   ml_msh.GenerateCoarseBoxMesh(4,4,0,0.,2.*3.1415926535897932,0.,2.*3.1415926535897932,0.,0.,QUAD9,"seventh");
-  ml_msh.RefineMesh(nm,nr,SetRefinementFlag);
+  ml_msh.RefineMesh(nm,nr,NULL);
   
   MultiLevelSolution ml_sol(&ml_msh);
   
@@ -114,7 +112,7 @@ int main(int argc,char **args) {
   // System Navier-Stokes
   system.SetAssembleFunction(AssembleMatrixResNS);  
   system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteConvergenceTolerance(1.e-8);  
+  system.SetLinearConvergenceTolerance(1.e-8);  
   system.SetMgType(V_CYCLE);
   system.SetMaxNumberOfNonLinearIterations(15);
 
@@ -162,56 +160,46 @@ int main(int argc,char **args) {
   return 0;
 }
 
-//-----------------------------------------------------------------------------------------------------------------
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
-   bool refine=0;
-   // refinemenet based on Elemen Group Number
-   if(ElemGroupNumber==5) refine=1;
-   if(ElemGroupNumber==6) refine=1;
-// if(ElemGroupNumber==7 && level<=3) refine=1;
-//    if(x>0 && x<5) refine=1;
-   return refine;
-}
 
 //--------------------------------------------------------------------------------------------------------------
 
-double InitVariableU(const double &x, const double &y, const double &z){
-  double value = sin(x)*cos(y);
+double InitVariableU(const std::vector < double >& x){
+  double value = sin(x[0])*cos(x[1]);
   return value;
 }
 
-double InitVariableV(const double &x, const double &y, const double &z){
-  double value = -cos(x)*sin(y);
+double InitVariableV(const std::vector < double >& x){
+  double value = -cos(x[0])*sin(x[1]);
   return value;
 }
 
-double InitVariableP(const double &x, const double &y, const double &z){
-  double value = 1.*0.25*(cos(2.*x)+cos(2.*y));
+double InitVariableP(const std::vector < double >& x){
+  double value = 1.*0.25*(cos(2.*x[0])+cos(2.*x[1]));
   return value;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time){
   bool test=1; //Dirichlet
   value=0.;
 
   if(!strcmp(name,"U")) {
     test=1;
-    value=sin(x)*cos(y)*exp(-2.*0.01*time); 
+    value=sin(x[0])*cos(x[1])*exp(-2.*0.01*time);
   }  
   else if(!strcmp(name,"V")) {
     test=1;
-    value=-cos(x)*sin(y)*exp(-2.*0.01*time);
+    value=-cos(x[0])*sin(x[1])*exp(-2.*0.01*time);
   }
   else if(!strcmp(name,"P")) {
     test=0;
     value=0.;
-    if(x < 1.e-08 && y < 1.e-08) {
+    if(x[0] < 1.e-08 && x[1] < 1.e-08) {
       test=1;
-      value = 1.*0.25*(cos(2.*x)+cos(2.*y))*exp(-4.*0.01*time);
+      value = 1.*0.25*(cos(2.*x[0])+cos(2.*x[1]))*exp(-4.*0.01*time);
     }
   }
   
@@ -219,12 +207,17 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 }
 
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
      
   //pointers 
+  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes");
+  const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  const unsigned gridn = my_nnlin_impl_sys.GetLevelMax();
+  bool assemble_matrix = my_nnlin_impl_sys.GetAssembleMatrix(); 
+    
   MultiLevelSolution *ml_sol			      = ml_prob._ml_sol;
   Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
-  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes");
+   
   LinearEquationSolver*  mylsyspde	              = my_nnlin_impl_sys._LinSolver[level];   
   const char* pdename                                 = my_nnlin_impl_sys.name().c_str();
   

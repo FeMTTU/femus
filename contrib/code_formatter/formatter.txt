@@ -1,8 +1,53 @@
+
 [SourceFormatter][kdevastyle][User1]
-Caption=ABB
-Content=BlockBreak=false,BlockBreakAll=false,BlockIfElse=false,Brackets=,BracketsCloseHeaders=false,Fill=Spaces,FillCount=2,FillEmptyLines=,FillForce=false,Fill_EmptyLines=,IndentBlocks=false,IndentBrackets=false,IndentCases=false,IndentClasses=false,IndentLabels=false,IndentNamespaces=false,IndentPreprocessors=false,IndentSwitches=false,KeepBlocks=false,KeepStatements=false,MaxStatement=40,MinConditional=-1,PadOperators=false,PadParenthesesIn=false,PadParenthesesOut=false,PadParenthesesUn=false,
+Caption=New GNU
+Content=
+BlockBreak=true,
+BlockBreakAll=false,
+BlockIfElse=false,
+Brackets=Attach,
+BracketsCloseHeaders=false,
+Fill=Spaces,
+FillCount=2,
+FillEmptyLines=,
+FillForce=false,
+Fill_EmptyLines=,
+IndentBlocks=false,
+IndentBrackets=false,
+IndentCases=true,
+IndentClasses=true,
+IndentLabels=true,
+IndentNamespaces=true,
+IndentPreprocessors=true,
+IndentSwitches=true,
+KeepBlocks=false,
+KeepStatements=false,
+MaxStatement=40,
+MinConditional=-1,
+PadOperators=true,
+PadParenthesesHeader=true,
+PadParenthesesIn=false,
+PadParenthesesOut=false,
+PadParenthesesUn=true,
+PointerAlign=Type,
 
 
-
-
-for file in include/*.hpp src/*.cpp; do astyle --mode=c  --indent=spaces=2   --brackets=attach   $file; done
+for file in ./*/*.cpp ; do astyle \
+--break-blocks \
+--brackets=attach \
+--indent=spaces=2 \
+--indent-cases \
+--indent-classes \
+--indent-labels \
+--indent-namespaces \
+--indent-preprocessor \
+--indent-switches \
+--max-instatement-indent=40 \
+--min-conditional-indent=-1 \
+--pad-oper \
+--pad-header \
+--unpad-paren \
+--align-pointer=type \
+--suffix=none \
+--convert-tabs \
+$file; done

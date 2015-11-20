@@ -7,7 +7,7 @@
 
 namespace femus {
     
-  void IncompressibleFSIAssemblyAD_DD(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
+  void IncompressibleFSIAssemblyAD_DD(MultiLevelProblem &ml_prob) {
        
     clock_t AssemblyTime=0;
     clock_t start_time, end_time;
@@ -15,10 +15,16 @@ namespace femus {
     adept::Stack & s = FemusInit::_adeptStack;
     
     //pointers and references
-    MultiLevelSolution*	 ml_sol		= ml_prob._ml_sol;
-    Solution*	 mysolution		= ml_sol->GetSolutionLevel(level);
+   
     //MonolithicFSINonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<MonolithicFSINonLinearImplicitSystem>("Fluid-Structure-Interaction");    
     TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem>("Fluid-Structure-Interaction");
+    const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+    const unsigned gridn = my_nnlin_impl_sys.GetLevelMax();
+    bool assemble_matrix = my_nnlin_impl_sys.GetAssembleMatrix(); 
+    
+    MultiLevelSolution*	 ml_sol		= ml_prob._ml_sol;
+    Solution*	 mysolution		= ml_sol->GetSolutionLevel(level);
+    
     LinearEquationSolver*  myLinEqSolver= my_nnlin_impl_sys._LinSolver[level];   
     Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(level);
     elem		*myel		=  mymsh->el;
@@ -294,13 +300,13 @@ namespace femus {
 	  vector < double > normal_old(dim,0);     
 	  // loop on faces
 	  for(unsigned jface=0; jface<myel->GetElementFaceNumber(kel); jface++) {
-		
+	    std::vector< double > xx(dim,0.);
 	    // look for boundary faces
 	    if(myel->GetFaceElementIndex(kel,jface)<0) {
 	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
-	      if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau,face,time) && tau!=0.){
+	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,time) && tau!=0.){
 		double tau_old;
-		ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"U",tau_old,face,time-dt);
+		ml_sol->_SetBoundaryConditionFunction(xx,"U",tau_old,face,time-dt);
 		unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,SolType2);
 		const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);  		  		  
 		for(unsigned i=0; i<nve; i++) {
@@ -313,7 +319,7 @@ namespace femus {
 		  }
 		}
 		for(unsigned igs=0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
-		  mymsh->_finiteElement[felt][SolType2]->JacobianSur_AD(vx_face,igs,Weight,phi,gradphi,normal);
+		  mymsh->_finiteElement[felt][SolType2]->JacobianSur(vx_face,igs,Weight,phi,gradphi,normal);
 		  mymsh->_finiteElement[felt][SolType2]->JacobianSur(vx_face_old, igs, Weight_old, phi_old, gradphi_old, normal_old);
 		  //phi1 =mymsh->_finiteElement[felt][SolType2]->GetPhi(igs);
 		  // *** phi_i loop ***
@@ -341,7 +347,7 @@ namespace femus {
 	double area=1.;
 	for (unsigned ig=0;ig < mymsh->_finiteElement[kelt][SolType2]->GetGaussPointNumber(); ig++) {
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
-	  mymsh->_finiteElement[kelt][SolType2]->Jacobian_AD(vx,  ig, Weight,     phi,     gradphi,     nablaphi);
+	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx,  ig, Weight,     phi,     gradphi,     nablaphi);
 	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx_hat, ig, Weight_hat, phi_hat, gradphi_hat, nablaphi_hat);
 	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx_old, ig, Weight_old, phi_old, gradphi_old, nablaphi_old);
 	  phi1=mymsh->_finiteElement[kelt][SolType1]->GetPhi(ig);

@@ -24,17 +24,7 @@ using std::endl;
 
 using namespace femus;
 
-
-void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
-
-
-// double InitVariableU(const double &x, const double &y, const double &z);
-
-
-// bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
-//                           double &value, const int FaceName, const double time);
-
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob);
 
 double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1);
 
@@ -383,7 +373,7 @@ int main(int argc,char **argv) {
     // Set MG Options
     system2.SetAssembleFunction(AssemblePoissonMatrixandRhs);
     system2.SetMaxNumberOfLinearIterations(max_number_linear_iteration);
-    system2.SetAbsoluteConvergenceTolerance(abs_conv_tol);
+    system2.SetLinearConvergenceTolerance(abs_conv_tol);
     system2.SetMgType(mgtype);
     system2.SetNumberPreSmoothingStep(npresmoothing);
     system2.SetNumberPostSmoothingStep(npostmoothing);
@@ -454,102 +444,17 @@ int main(int argc,char **argv) {
     return 0;
 }
 
-//-----------------------------------------------------------------------------------------------------------------
-
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
-  bool refine=0;
-   
-  if(x<0.05/level){
-   // cout<<x<<" "<<y<<" "<<z<<endl;
-   refine=1; 
-  }		
-//     // refinemenet based on Elemen Group Number
-//     if(ElemGroupNumber==5 ) {
-//         refine=1;
-//     }
-//     if(ElemGroupNumber==6 && level<2) {
-//         refine=1;
-//     }
-//     if(ElemGroupNumber==7 ) {
-//         refine=0;
-//     }
-
-  return refine;
- // double dtest = static_cast<double>(rand())/RAND_MAX;
- // int itest=(dtest<0.5)?1:0;
- // return itest;
-}
-
-//--------------------------------------------------------------------------------------------------------------
-
-// double InitVariableU(const double &x, const double &y, const double &z) {
-//    double um = 0.2;
-//    double  value=1.5*um*(4.0/(0.1681))*y*(0.41-y);
-//    return value;
-// }
-
-// 2D benchmark Full Dirichlet solution = sin^2(pi*x)*sin^2(pi*y)
-// double Source(const double* xyz) {
-//     const double pi = 3.1415926535897932;
-//     double value = -2.*pi*pi*( cos(2.*pi*xyz[0])*sin(pi*xyz[1])*sin(pi*xyz[1]) + sin(pi*xyz[0])*sin(pi*xyz[0])*cos(2.*pi*xyz[1]) ) ;
-//     return value;
-// }
-
-// 3D benchmark sin^2(pi*x)*sin^2(pi*y)*sin^2(pi*z)
-//  double Source(const double* xyzt) {
-//      const double pi = 3.1415926535897932;
-//      double value = -2.*pi*pi*(  cos(2.*pi*xyzt[0])*sin(pi*xyzt[1])*sin(pi*xyzt[1])*sin(pi*xyzt[2])*sin(pi*xyzt[2]) 
-//                                + sin(pi*xyzt[0])*sin(pi*xyzt[0])*cos(2.*pi*xyzt[1])*sin(pi*xyzt[2])*sin(pi*xyzt[2]) 
-// 			       + sin(pi*xyzt[0])*sin(pi*xyzt[0])*sin(pi*xyzt[1])*sin(pi*xyzt[1])*cos(2.*pi*xyzt[2]) );
-//      return value;
-// }
-
-// 1D benchmark 
-// double Source(const double* xyz) {
-//     double value = 1. - 2.*xyz[0]*xyz[0] ;
-//     return value;
-// }
-
-//-------------------------------------------------------------------------------------------------------------------
-
-// bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[],
-//                           double &value, const int FaceName, const double time) {
-//     bool test=1; //Dirichlet
-//     value=0.;
-//     
-//     std::cout << FaceName << std:: endl;
-// 
-//     if(!strcmp(name,"Sol")) {
-//         if(1==FaceName) {       // bottom face
-//             test=1;
-//             value=0;
-//         }
-//         else if(2==FaceName ) { // right face
-//              test=0;
-//              value=0.;
-//         }
-//         else if(3==FaceName ) { // top face
-//             test=1;
-//             value=0.;
-//         }
-//         else if(4==FaceName ) { // left face
-//             test=1;
-//             value=0.;
-//         }
-//     }
-// 
-//     return test;
-// }
-
-// //------------------------------------------------------------------------------------------------------------
-
 
 //------------------------------------------------------------------------------------------------------------
-void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
 
     //pointers and references
-    Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
     LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Poisson");
+    const unsigned level = mylin_impl_sys.GetLevelToAssemble();
+    const unsigned gridn = mylin_impl_sys.GetLevelMax();
+    bool assemble_matrix = mylin_impl_sys.GetAssembleMatrix(); 
+  
+    Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
     LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];
     Mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
     elem*          myel		       = mymsh->el;

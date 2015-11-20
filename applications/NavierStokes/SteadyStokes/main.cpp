@@ -18,16 +18,15 @@ using std::endl;
 
 using namespace femus;
 
-void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob);
 
 
-double InitVariableU(const double &x, const double &y, const double &z);
+double InitVariableU(const std::vector < double >& x);
 
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time);
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
 
 int main(int argc,char **args) {
 
@@ -75,7 +74,7 @@ int main(int argc,char **args) {
   
   MultiLevelMesh ml_msh;
   ml_msh.ReadCoarseMesh(infile,"seventh",Lref);
-  ml_msh.RefineMesh(nm,nr,SetRefinementFlag);
+  ml_msh.RefineMesh(nm,nr,NULL);
   
   ml_msh.PrintInfo();
   
@@ -133,7 +132,7 @@ int main(int argc,char **args) {
   // Set MG Options
   system1.SetAssembleFunction(AssembleMatrixResSteadyStokes);  
   system1.SetMaxNumberOfLinearIterations(2);
-  system1.SetAbsoluteConvergenceTolerance(1.e-10);
+  system1.SetLinearConvergenceTolerance(1.e-10);
   system1.SetMgType(F_CYCLE);
   system1.SetNumberPreSmoothingStep(1);
   system1.SetNumberPostSmoothingStep(1);
@@ -190,35 +189,17 @@ int main(int argc,char **args) {
   return 0;
 }
 
-//-----------------------------------------------------------------------------------------------------------------
-
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
-  bool refine=0;
-  // refinemenet based on Elemen Group Number
-  if(ElemGroupNumber==5 ) {
-    refine=1;
-  }
-  if(ElemGroupNumber==6 && level<2) {
-    refine=1;
-  }
-  if(ElemGroupNumber==7 ) {
-    refine=0;
-  }
-
-  return refine;
-}
-
 //--------------------------------------------------------------------------------------------------------------
 
-double InitVariableU(const double &x, const double &y, const double &z) { 
+double InitVariableU(const std::vector < double >& x) {
    double um = 0.2;
-   double  value=1.5*um*(4.0/(0.1681))*y*(0.41-y); 
+   double  value=1.5*um*(4.0/(0.1681))*x[1]*(0.41-x[1]);
    return value;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time){
   bool test=1; //Dirichlet
   value=0.;
@@ -227,7 +208,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
     if(1==FaceName){   //inflow
       test=1;
       double um = 0.2; // U/Uref
-      value=1.5*0.2*(4.0/(0.1681))*y*(0.41-y);
+      value=1.5*0.2*(4.0/(0.1681))*x[1]*(0.41-x[1]);
     }  
     else if(2==FaceName ){  //outflow
       test=0;
@@ -305,11 +286,15 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 // //------------------------------------------------------------------------------------------------------------
 
 
-void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
+void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob){
      
-  //pointers 
-  Solution*	 mysolution  	             = ml_prob._ml_sol->GetSolutionLevel(level);
+  //pointers
   LinearImplicitSystem& my_lin_impl_sys    = ml_prob.get_system<LinearImplicitSystem>("Stokes");
+  const unsigned level = my_lin_impl_sys.GetLevelToAssemble();
+  const unsigned gridn = my_lin_impl_sys.GetLevelMax();
+  bool assemble_matrix = my_lin_impl_sys.GetAssembleMatrix(); 
+   
+  Solution*	 mysolution  	             = ml_prob._ml_sol->GetSolutionLevel(level);
   LinearEquationSolver*  mylsyspde	     = my_lin_impl_sys._LinSolver[level];   
   const char* pdename                        = my_lin_impl_sys.name().c_str();
   

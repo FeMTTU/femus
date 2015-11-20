@@ -26,10 +26,11 @@
 
 
 
- void GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix) {
+ void GenMatRhsT(MultiLevelProblem &ml_prob) {
    
   SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_T");
-
+  const unsigned Level = my_system.GetLevelToAssemble();
+  
   const double time =  0.;
 
   //======== ELEMENT MAPPING =======

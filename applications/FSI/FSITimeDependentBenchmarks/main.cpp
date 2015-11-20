@@ -16,20 +16,20 @@ double scale=1000.;
 using namespace std;
 using namespace femus;
 
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,const char name[],
 						double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_2D_FSI(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char name[],
 				      double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const std::vector < double >& x,const char name[],
 						double &value, const int facename, const double time);
 
-bool SetBoundaryConditionBathe_3D_solid(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionBathe_3D_solid(const std::vector < double >& x,const char name[],
 					double &value, const int facename, const double time);
-bool SetBoundaryConditionComsol_2D_FSI(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const char name[],
 				       double &value, const int FaceName, const double = 0.);
 
  
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
 
 double SetVariableTimeStep(const double time);
 
@@ -313,7 +313,7 @@ int main(int argc,char **args) {
   
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
-  system.SetAbsoluteConvergenceTolerance(1.e-10);
+  system.SetLinearConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-10);
   if( simulation == 7 )  
     system.SetNonLinearConvergenceTolerance(1.e-5);
@@ -433,7 +433,7 @@ double SetVariableTimeStep(const double time) {
 //---------------------------------------------------------------------------------------------------------------------
 
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &elemgroupnumber,const int &level) {
+bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
   bool refine=0;
 
   //refinemenet based on elemen group number
@@ -447,7 +447,7 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if( !strcmp(name,"U") ) {
@@ -458,10 +458,10 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y
       if( turek_FSI == 3 ) um = 2.;
             
       if(time < 2.0) {
-   	value = 1.5 * um * 4.0 / 0.1681 * y * ( 0.41 - y) * 0.5 * ( 1. - cos( 0.5 * 3.141592653589793 * time) );
+        value = 1.5 * um * 4.0 / 0.1681 * x[1] * ( 0.41 - x[1]) * 0.5 * ( 1. - cos( 0.5 * 3.141592653589793 * time) );
       }
       else {
-        value = 1.5 * um * 4.0 / 0.1681 * y * ( 0.41 - y );
+        value = 1.5 * um * 4.0 / 0.1681 * x[1] * ( 0.41 - x[1] );
       }
     }  
     else if(2==facename ){  //outflow
@@ -574,7 +574,7 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const double &x, const double &y
   return test;
 }
 
-bool SetBoundaryConditionBathe_2D_FSI(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
@@ -693,7 +693,7 @@ bool SetBoundaryConditionBathe_2D_FSI(const double &x, const double &y, const do
 
 
 
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   
@@ -830,7 +830,7 @@ bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const double &x, const double &y
   return test;
 }
 
-bool SetBoundaryConditionBathe_3D_solid(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_solid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   
@@ -940,7 +940,7 @@ bool SetBoundaryConditionBathe_3D_solid(const double &x, const double &y, const 
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionComsol_2D_FSI(const double &x, const double &y, const double &z,const char name[], double &value, const int FaceName, const double time) {
+bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const char name[], double &value, const int FaceName, const double time) {
   bool test=1; //Dirichlet
   value=0.;
   //   cout << "Time bdc : " <<  time << endl;
@@ -949,7 +949,7 @@ bool SetBoundaryConditionComsol_2D_FSI(const double &x, const double &y, const d
       test=1;
       //comsol Benchmark
       //value = (0.05*time*time)/(sqrt( (0.04 - time*time)*(0.04 - time*time) + (0.1*time)*(0.1*time) ))*y*(0.0001-y)*4.*100000000;
-      value = 0.05*y*(0.0001-y)*4.*100000000;
+      value = 0.05*x[1]*(0.0001-x[1])*4.*100000000;
     }
     else if (2==FaceName ) {  //outflow
       test=0;

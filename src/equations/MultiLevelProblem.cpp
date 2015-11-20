@@ -3,9 +3,9 @@
  Program: FEMuS
  Module: MultiLevelProblem
  Authors: Eugenio Aulisa, Simone Bnà, Giorgio Bornia
- 
+
  Copyright (c) FEMuS
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -30,7 +30,7 @@ namespace femus {
 using std::cout;
 using std::endl;
 
-bool (* Mesh::_SetRefinementFlag)(const double &x, const double &y, const double &z, 
+bool (* Mesh::_SetRefinementFlag)(const std::vector < double >& x,
 				  const int &ElemGroupNumber,const int &level) = NULL;
 
 //---------------------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ bool (* Mesh::_SetRefinementFlag)(const double &x, const double &y, const double
 // 				      _ml_msh(ml_msh),
 // 				      _ml_sol(ml_sol)
 // {
-//  
+//
 // }
 
 MultiLevelProblem::MultiLevelProblem( MultiLevelSolution *ml_sol):
@@ -49,9 +49,16 @@ MultiLevelProblem::MultiLevelProblem( MultiLevelSolution *ml_sol):
 				      _gridn(_ml_msh->GetNumberOfLevels()),
 				      _gridr(_ml_msh->GetNumberOfGridTotallyRefined())
 {
- 
+
 }
 
+
+
+MultiLevelProblem::~MultiLevelProblem(){
+  for( system_iterator iterator = _systems.begin(); iterator != _systems.end(); iterator++) {
+    delete iterator->second;
+  }
+}
 
 System & MultiLevelProblem::add_system (const std::string& sys_type,
 				      const std::string& name)
@@ -163,7 +170,7 @@ void MultiLevelProblem::clear ()
 {
   // Clear any additional parameters
   parameters.clear();
-  
+
   // clear the systems.  We must delete them
   // since we newed them!
   while (!_systems.empty())
@@ -182,36 +189,36 @@ void MultiLevelProblem::clear ()
 // void MultiLevelProblem::init()
 // {
 //   const unsigned int n_sys = this->n_systems();
-// 
+//
 //   assert(n_sys != 0);
-// 
+//
 //   for (unsigned int i=0; i != this->n_systems(); ++i)
 //     this->get_system(i).init();
 // }
 
 
  void MultiLevelProblem::SetQruleAndElemType(const std::string quadr_order_in) {
-   
-  
+
+
   _qrule.reserve(_ml_msh->GetLevel(LEV_PICK)->GetDimension());
-  for (int idim=0;idim < _ml_msh->GetLevel(LEV_PICK)->GetDimension(); idim++) { 
+  for (int idim=0;idim < _ml_msh->GetLevel(LEV_PICK)->GetDimension(); idim++) {
           Gauss qrule_temp(_mesh->_geomelem_id[idim].c_str(),quadr_order_in.c_str());
          _qrule.push_back(qrule_temp);
-           }  
+           }
 
   // =======FEElems =====  //remember to delete the FE at the end
-  const std::string  FEFamily[QL] = {"biquadratic","linear","constant"}; 
+  const std::string  FEFamily[QL] = {"biquadratic","linear","constant"};
   _elem_type.resize(_ml_msh->GetLevel(LEV_PICK)->GetDimension());
   for (int idim=0;idim < _ml_msh->GetLevel(LEV_PICK)->GetDimension(); idim++)   _elem_type[idim].resize(QL);
-  
-  for (int idim=0;idim < _ml_msh->GetLevel(LEV_PICK)->GetDimension(); idim++) { 
+
+  for (int idim=0;idim < _ml_msh->GetLevel(LEV_PICK)->GetDimension(); idim++) {
     for (int fe=0; fe<QL; fe++) {
        _elem_type[idim][fe] = _ml_msh->_finiteElement[ _mesh->_geomelem_flag[idim] ][ elem_type::_fe_old_to_new[fe] ];
      }
-    }  
-   
+    }
+
    return;
-} 
+}
 
 } //end namespace femus
 

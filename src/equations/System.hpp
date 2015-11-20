@@ -38,10 +38,10 @@ class String;
 class System {
 
 protected:
-  
+
     /** Function pointer type, easiest way to declare function pointer instantiations */
-    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
-  
+    typedef void (* AssembleFunctionType) (MultiLevelProblem &ml_prob);//, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+
 public:
 
     /** Constructor.  Optionally initializes required data structures. */
@@ -67,7 +67,7 @@ public:
 
     /** Add a vector of solution variables to the system PDE */
     void AddSolutionToSystemPDEVector(const unsigned n_components,  const std::string name);
-  
+
     /** Associate the solution variables to the system PDE */
     void AddSolutionToSystemPDE(const char solname[]);
 
@@ -86,22 +86,30 @@ public:
     virtual void init();
 
     /** @deprecated Init the system PDE structures */
-    virtual void init_two(){};     
-    
+    virtual void init_two(){};
+
     /** Get the index of the Solution "solname" for this system */
     unsigned GetSolPdeIndex(const char solname[]);
 
     /** Get MultiLevelProblem */
     const MultiLevelProblem &  GetMLProb() const { return _equation_systems; }
-    
+
     /** Get MultiLevelProblem */
     MultiLevelProblem &  GetMLProb() { return _equation_systems; }
-    
+
     /** Get Number of Levels */
     inline const unsigned GetGridn() const { return _gridn; }
-    
+
+    inline unsigned GetLevelToAssemble(){ return _levelToAssemble; }
+    inline unsigned GetLevelMax(){ return _levelMax; }
+    inline bool GetAssembleMatrix(){ return _assembleMatrix; }
+
+    inline unsigned SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
+    inline bool SetAssembleMatrix(const bool& assembleMatrix){ _assembleMatrix = assembleMatrix; }
+    inline unsigned SetLevelMax(const unsigned &levelMax){ _levelMax = levelMax; }
+
 protected:
-  
+
     /** Constant reference to the \p EquationSystems object used for the simulation. */
     MultiLevelProblem& _equation_systems;
 
@@ -125,6 +133,14 @@ protected:
 
     /** Number of Totally Refined Levels */
     unsigned _gridr;
+
+    bool _assembleMatrix;
+    unsigned _levelToAssemble;
+    unsigned _levelMax;
+
+
+
+
 
     /** Function that assembles the system. */
     AssembleFunctionType _assemble_system_function;

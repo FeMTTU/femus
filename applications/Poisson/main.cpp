@@ -20,7 +20,7 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(3 == facename){  //stress
@@ -30,7 +30,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
   return test;
 }
 
-void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob);
 
 void show_usage()
 {
@@ -209,7 +209,7 @@ int main(int argc,char **argv) {
       system2.SetMaxNumberOfLinearIterations(max_number_linear_iteration);
     
       double abs_conv_tol = inputparser->getValue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.abs_conv_tol",1.e-08);
-      system2.SetAbsoluteConvergenceTolerance(abs_conv_tol);
+      system2.SetLinearConvergenceTolerance(abs_conv_tol);
     
       MgType mgtype = inputparser->getValue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.mgtype",V_CYCLE);
       system2.SetMgType(mgtype);
@@ -274,11 +274,16 @@ int main(int argc,char **argv) {
 
 
 //------------------------------------------------------------------------------------------------------------
-void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
+void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob){
 
   //pointers and references
-  Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
+  
   LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Poisson");
+  const unsigned level = mylin_impl_sys.GetLevelToAssemble();
+  const unsigned gridn = mylin_impl_sys.GetLevelMax();
+  bool assemble_matrix = mylin_impl_sys.GetAssembleMatrix(); 
+  
+  Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
   LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];
   Mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
   elem*          myel		       = mymsh->el;
@@ -535,13 +540,14 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob, unsigned level, con
       }
       else {
 	double tau=0.;
+	std::vector< double > xx(dim,0.);
 	vector < double > normal(dim,0);   
 	// loop on faces
 	for(unsigned jface=0; jface<myel->GetElementFaceNumber(kel); jface++) {
 	  // look for boundary faces
 	  if(myel->GetFaceElementIndex(kel,jface)<0) {
 	    unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
-	    if( !ml_sol->_SetBoundaryConditionFunction(0.,0.,0.,"Sol",tau,face,0.) && tau!=0.){
+	    if( !ml_sol->_SetBoundaryConditionFunction(xx,"Sol",tau,face,0.) && tau!=0.){
 	      unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface, order_ind);
 	      const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);
 	      for(unsigned i=0; i<nve; i++) {

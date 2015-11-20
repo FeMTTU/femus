@@ -27,7 +27,6 @@
 #include "MgSmootherEnum.hpp"
 #include <vector>
 #include <map>
-
 #include "GaussPoints.hpp"
 #include "FemusInputParser.hpp"
 
@@ -39,7 +38,6 @@ using std::map;
 // Forward declarations
 //------------------------------------------------------------------------------
 class System;
-
 class MultiLevelMeshTwo;
 class elem_type;
 class QuantityMap;
@@ -59,9 +57,10 @@ public:
     //MultiLevelProblem(MultiLevelMesh *ml_msh, MultiLevelSolution *ml_sol);
 
     MultiLevelProblem(MultiLevelSolution *ml_sol);
-    
+
     /** Destructor */
-    ~MultiLevelProblem() {};
+
+    ~MultiLevelProblem();
 
     /** Multilevel solution pointer */
     MultiLevelSolution *_ml_sol;
@@ -153,12 +152,12 @@ public:
 //   void init();
 
     /** Get the total number of grid, both totally refined and partial refined for DomainDecomposition */
-    const unsigned GetNumberOfGrid() const {
+    const unsigned GetNumberOfLevels() const {
         return _gridn;
     };
 
     /** Get the number of grid totally refined; it is a subset of _gridn */
-    const unsigned GetNumberOfGridTotallyRefined() const {
+    const unsigned GetNumberOfUniformlyRefinedLevels() const {
         return _gridr;
     };
 
@@ -166,7 +165,7 @@ public:
     void AddLevel(){
         _gridn++;
     };
-    
+
     /** returns the beginning of the systems map */
   inline system_iterator       begin()       { return _systems.begin(); }
 
@@ -175,35 +174,35 @@ public:
 
     /**  */
   inline const_system_iterator begin() const { return _systems.begin(); }
-  
+
     /**  */
   inline const_system_iterator   end() const { return _systems.end(); }
-   
+
     /**  New get/set for new data */
   inline void SetMeshTwo(const MultiLevelMeshTwo * mesh_in)  {   _mesh = mesh_in; return; }
-  
+
   inline const  MultiLevelMeshTwo & GetMeshTwo() const { return  *_mesh; }
-  
+
     /** Quantity Map */
   inline void SetQtyMap(const QuantityMap * qtymap_in) { _qtymap = qtymap_in; return; }
-   
+
   inline const QuantityMap & GetQtyMap() const { return  *_qtymap; }
 
     /** ElemType and Quadrature rule */
   inline const std::vector<const elem_type*>  & GetElemType(const unsigned dim) const { return  _elem_type[dim - 1]; }
-    
+
   inline const std::vector< std::vector<const elem_type*> >  & GetElemType() const { return  _elem_type; }
 
   inline const Gauss & GetQrule(const unsigned dim) const { return _qrule[dim - 1]; }
-  
+
   void SetQruleAndElemType(const std::string quadr_order_in);
-  
+
     /** Input Parser */
   inline const FemusInputParser<double> &  GetInputParser() const { return *_phys; }
 
   void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
 
-   
+
 private:
 
     // member data
@@ -217,7 +216,7 @@ private:
     const QuantityMap                     * _qtymap;
     const MultiLevelMeshTwo               * _mesh;
 
-    
+
 };
 
 template <typename T_sys>
@@ -229,9 +228,7 @@ T_sys & MultiLevelProblem::add_system (const std::string& name,const MgSmoother 
     if (!_systems.count(name))
     {
         ptr = new T_sys(*this, name, this->n_systems(),smoother_type);
-
         _systems.insert (std::make_pair(name, ptr));
-
     }
     else
     {

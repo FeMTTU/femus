@@ -26,9 +26,10 @@
 
 
     
-  void GenMatRhsNS(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix)  {
+  void GenMatRhsNS(MultiLevelProblem &ml_prob)  {
 
-  SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_NS");
+  SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_NS"); 
+  const unsigned Level = my_system.GetLevelToAssemble();
     
     
   //====== reference values ========================

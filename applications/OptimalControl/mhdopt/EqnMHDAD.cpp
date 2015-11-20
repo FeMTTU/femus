@@ -23,9 +23,10 @@
 
 using namespace femus;
 
-  void GenMatRhsMHDAD(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix)  {
+  void GenMatRhsMHDAD(MultiLevelProblem &ml_prob){
 
   SystemTwo & my_system = ml_prob.get_system<SystemTwo>("Eqn_MHDAD");
+  const unsigned Level = my_system.GetLevelToAssemble();
   
   //========= parameters
    double IRem =  1./ml_prob.GetInputParser().get("Rem");

@@ -16,17 +16,17 @@ using std::cout;
 using std::endl;
 using namespace femus;
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
-void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob);
+void AssembleMatrixResT(MultiLevelProblem &ml_prob);
 
 
-double InitVariableU(const double &x, const double &y, const double &z);
+double InitVariableU(const std::vector < double >& x);
 
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryCondition(const std::vector < double >& x, const char name[],
 			  double &value, const int FaceName, const double time);
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
 
 int main(int argc,char **args) {
 
@@ -125,7 +125,7 @@ int main(int argc,char **args) {
   system1.SetAssembleFunction(AssembleMatrixResNS);  
   system1.SetMaxNumberOfNonLinearIterations(3);
   system1.SetMaxNumberOfLinearIterations(2);
-  system1.SetAbsoluteConvergenceTolerance(1.e-10);
+  system1.SetLinearConvergenceTolerance(1.e-10);
   system1.SetNonLinearConvergenceTolerance(1.e-04);
   system1.SetMgType(F_CYCLE);
   system1.SetNumberPreSmoothingStep(1);
@@ -169,7 +169,7 @@ int main(int argc,char **args) {
   // Set MG Options
   system2.SetAssembleFunction(AssembleMatrixResT);
   system2.SetMaxNumberOfLinearIterations(6);
-  system2.SetAbsoluteConvergenceTolerance(1.e-9);  
+  system2.SetLinearConvergenceTolerance(1.e-9);  
   system2.SetMgType(V_CYCLE);
   system2.SetNumberPreSmoothingStep(1);
   system2.SetNumberPostSmoothingStep(1);
@@ -260,7 +260,7 @@ int main(int argc,char **args) {
 
 //-----------------------------------------------------------------------------------------------------------------
 
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber, const int &level) {
+bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber, const int &level) {
   bool refine=0;
   // refinemenet based on Elemen Group Number
   if(ElemGroupNumber==5 ) {
@@ -278,15 +278,15 @@ bool SetRefinementFlag(const double &x, const double &y, const double &z, const 
 
 //--------------------------------------------------------------------------------------------------------------
 
-double InitVariableU(const double &x, const double &y, const double &z) { 
+double InitVariableU(const std::vector < double >& x) {
    double um = 0.2;
-   double  value=1.5*um*(4.0/(0.1681))*y*(0.41-y); 
+   double  value=1.5*um*(4.0/(0.1681))*x[1]*(0.41-x[1]);
    return value;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 			  double &value, const int FaceName, const double time){
   bool test=1; //Dirichlet
   value=0.;
@@ -295,7 +295,7 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
     if(1==FaceName){   //inflow
       test=1;
       double um = 0.2; // U/Uref
-      value=1.5*0.2*(4.0/(0.1681))*y*(0.41-y);
+      value=1.5*0.2*(4.0/(0.1681))*x[1]*(0.41-x[1]);
     }  
     else if(2==FaceName ){  //outflow
       test=0;
@@ -391,11 +391,16 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
 // //------------------------------------------------------------------------------------------------------------
 
 
-void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
+void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
      
   //pointers 
-  Solution*	 mysolution  	             = ml_prob._ml_sol->GetSolutionLevel(level);
   NonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<NonLinearImplicitSystem>("Navier-Stokes");
+  const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  const unsigned gridn = my_nnlin_impl_sys.GetLevelMax();
+  bool assemble_matrix = my_nnlin_impl_sys.GetAssembleMatrix(); 
+  
+  Solution*	 mysolution  	             = ml_prob._ml_sol->GetSolutionLevel(level);
+  
   LinearEquationSolver*  mylsyspde	     = my_nnlin_impl_sys._LinSolver[level];   
   const char* pdename                        = my_nnlin_impl_sys.name().c_str();
   
@@ -716,11 +721,14 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob, unsigned level, const unsig
 }
 
 //------------------------------------------------------------------------------------------------------------
-void AssembleMatrixResT(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix){
+void AssembleMatrixResT(MultiLevelProblem &ml_prob){
   
   //pointers and references
-  Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
   LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Temperature");
+  const unsigned level = mylin_impl_sys.GetLevelToAssemble();
+  const unsigned gridn = mylin_impl_sys.GetLevelMax();
+  bool assemble_matrix = mylin_impl_sys.GetAssembleMatrix(); 
+  Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
   LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];   
   Mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
   elem*          myel		       = mymsh->el;

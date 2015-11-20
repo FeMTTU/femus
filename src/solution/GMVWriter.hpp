@@ -33,7 +33,7 @@ namespace femus {
 
 
   class GMVWriter : public Writer {
-    
+
   public:
 
       /** Constructor. */
@@ -47,14 +47,14 @@ namespace femus {
 
       /** write output function */
       void write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step=0) const;
-    
+
       void Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step=0) const;
-          
+
       /** Set if to print or not to prind the debugging variables */
       void SetDebugOutput( bool value ){ _debugOutput = value;}
 
   private:
-    
+
     bool _debugOutput;
 };
 

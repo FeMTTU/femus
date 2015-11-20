@@ -55,13 +55,15 @@ void MonolithicFSINonLinearImplicitSystem::Restrictor(const unsigned &gridf, con
   LinSolc->SetEpsZero();
   LinSolc->SetResZero();
   
-  bool assemble_matrix = (linear_iteration == 0) ? true : false;  //Be carefull!!!! this is needed in the _assemble_function      
+  _assembleMatrix = (linear_iteration == 0) ? true : false;  //Be carefull!!!! this is needed in the _assemble_function      
   if (gridf>=_gridr) {   //_gridr
-    _assemble_system_function(_equation_systems, gridf-1, gridn-1u, assemble_matrix);
+    _levelToAssemble = gridf-1u;
+    _levelMax = gridn-1u;
+    _assemble_system_function( _equation_systems );
   }
   
   bool matrix_reuse=true;
-  if(assemble_matrix){
+  if(_assembleMatrix){
     if (gridf>=_gridr) {  //_gridr
       if (!LinSolc->_CC_flag) {
 	LinSolc->_CC_flag=1;

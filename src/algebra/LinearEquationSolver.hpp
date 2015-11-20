@@ -29,7 +29,9 @@
 #include "SolvertypeEnum.hpp"
 #include "LinearEquation.hpp"
 #include "MgSmootherEnum.hpp"
+#include "MgTypeEnum.hpp"
 
+#include <petscksp.h>
 
 namespace femus {
 
@@ -70,6 +72,35 @@ public:
     virtual void set_tolerances(const double &rtol, const double &atol,
                                 const double &divtol, const unsigned &maxits) = 0;
 
+    virtual KSP* GetKSP(){
+      std::cout<<"Warning GetKSP() is not available for this smoother\n";
+      abort();
+    }
+
+    virtual void MGinit( const MgSmootherType &mg_smoother_type, const unsigned &levelMax ){
+      std::cout<<"Warning InitMG(...) is not available for this smoother\n";
+      abort();
+    }
+
+    virtual void MGclear(){
+      std::cout<<"Warning ClearMG() is not available for this smoother\n";
+      abort();
+    };
+
+    virtual void MGsetLevels( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
+                               const vector <unsigned> &variable_to_be_solved,
+                               SparseMatrix* PP, SparseMatrix* RR,
+                               const unsigned &npre, const unsigned &npost
+                             ){
+      std::cout<<"Warning SetMGOptions(...) is not available for this smoother\n";
+      abort();
+    }
+
+    virtual void MGsolve( const bool ksp_clean ) {
+      std::cout<<"Warning MGsolve(...) is not available for this smoother\n";
+      abort();
+    };
+
     /** Sets the type of solver to use. */
     void set_solver_type (const SolverType st)  {
         _solver_type = st;
@@ -104,7 +135,7 @@ public:
     virtual void SetElementBlockNumberSolid(const unsigned & block_elemet_number, const unsigned &overlap) {
         std::cout<<"Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
     };
-    
+
 
     /** To be Added */
     virtual void SetElementBlockNumber(const char all[], const unsigned & overlap=1) {
@@ -123,7 +154,7 @@ public:
 
     /** Call the smoother-solver using the PetscLibrary. */
     virtual void solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) = 0;
-    
+
   /** @deprecated Old solver with algebra objects passed as arguments TODO think of removing */
   virtual std::pair<unsigned int, double> solve (SparseMatrix&,  // System Matrix
 						SparseMatrix&,  // prec
@@ -131,7 +162,7 @@ public:
 					       NumericVector&, // RHS vector
 					       const double,      // Stopping tolerance
 					       const unsigned int) { std::cout << "If I call this it's wrong" << std::endl; abort(); }
-					       
+
 
 protected:
 

@@ -13,12 +13,10 @@ using std::cout;
 using std::endl;
 using namespace femus;
 
-void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix);
+void AssembleMatrixResFSI(MultiLevelProblem &ml_prob);
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], 
-		double &value, const int FaceName, const double = 0.);
-
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &ElemGroupNumber,const int &level);
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
+			  double &value, const int FaceName, const double = 0.);
 
 //------------------------------------------------------------------------------------------------------------------
 
@@ -51,7 +49,7 @@ int main(int argc,char **args) {
   double ni = 0.4;
   double E = 1400000;
   
-  MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,SetRefinementFlag);
+  MultiLevelMesh ml_msh(nm,nr,infile,"fifth",Lref,NULL);
   
   MultiLevelSolution ml_sol(&ml_msh);
   
@@ -115,7 +113,7 @@ int main(int argc,char **args) {
   // System Fluid-Structure-Interaction
   system.SetAssembleFunction(AssembleMatrixResFSI);  
   system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteConvergenceTolerance(1.e-8);  
+  system.SetLinearConvergenceTolerance(1.e-8);  
   system.SetMgType(F_CYCLE);
   system.SetMaxNumberOfNonLinearIterations(4);
   system.SetNonLinearConvergenceTolerance(1.e-5);
@@ -201,29 +199,16 @@ int main(int argc,char **args) {
   return 0;
 }
 
-
-bool SetRefinementFlag(const double &x, const double &y, const double &z, const int &elemgroupnumber,const int &level) {
-  bool refine=0;
-
-  //refinemenet based on elemen group number
-  if (elemgroupnumber==5) refine=1;
-  if (elemgroupnumber==6) refine=1;
-  if (elemgroupnumber==7 && level<5) refine=1;
-
-  return refine;
-
-}
-
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryCondition(const double &x, const double &y, const double &z,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
     if(1==facename){   //inflow
       test=1;
       double um = 0.2;
-      value=1.5*um*4.0/0.1681*y*(0.41-y);
+      value=1.5*um*4.0/0.1681*x[1]*(0.41-x[1]);
     }  
     else if(2==facename ){  //outflow
      test=0;
@@ -352,15 +337,20 @@ bool SetBoundaryCondition(const double &x, const double &y, const double &z,cons
   return test;
 }
 
-void AssembleMatrixResFSI(MultiLevelProblem &ml_prob, unsigned level, const unsigned &gridn, const bool &assemble_matrix) {
+void AssembleMatrixResFSI(MultiLevelProblem &ml_prob) {
     
   clock_t AssemblyTime=0;
   clock_t start_time, end_time;
   
   //pointers and references
+  MonolithicFSINonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<MonolithicFSINonLinearImplicitSystem>("Fluid-Structure-Interaction");
+  const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  const unsigned gridn = my_nnlin_impl_sys.GetLevelMax();
+  bool assemble_matrix = my_nnlin_impl_sys.GetAssembleMatrix(); 
+  
   MultiLevelSolution*	 ml_sol	                      = ml_prob._ml_sol;
   Solution*	 mysolution  	                      = ml_sol->GetSolutionLevel(level);
-  MonolithicFSINonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<MonolithicFSINonLinearImplicitSystem>("Fluid-Structure-Interaction");
+    
   LinearEquationSolver*  myLinEqSolver	              = my_nnlin_impl_sys._LinSolver[level];   
   Mesh		*mymsh		=  ml_prob._ml_msh->GetLevel(level);
   elem		*myel		=  mymsh->el;

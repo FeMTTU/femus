@@ -161,7 +161,7 @@ public:
     vector < int > epart;
     vector < int > npart;
     int nsubdom;
-    static bool (* _SetRefinementFlag)(const double &x, const double &y, const double &z,
+    static bool (* _SetRefinementFlag)(const std::vector < double >& x,
                                        const int &ElemGroupNumber,const int &level);
     static bool _TestSetRefinementFlag;
     std::map<unsigned int, std::string> _boundaryinfo;

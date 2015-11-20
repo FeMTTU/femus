@@ -30,7 +30,7 @@
 #include "libmesh/libmesh.h"
 #endif 
 
- void GenMatRhsT(MultiLevelProblem &ml_prob, unsigned Level, const unsigned &gridn, const bool &assemble_matrix);
+ void GenMatRhsT(MultiLevelProblem &ml_prob);
 
 
 // =======================================

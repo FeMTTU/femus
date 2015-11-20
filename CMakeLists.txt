@@ -89,15 +89,7 @@ IF(HDF5_FOUND)
   SET(HAVE_HDF5 1)
 ENDIF(HDF5_FOUND)
 
-# Find Libmesh (optional)
-FIND_PACKAGE(LIBMESH)
-MESSAGE(STATUS "LIBMESH_FOUND = ${LIBMESH_FOUND}")
-SET (HAVE_LIBMESH 0)
-IF(LIBMESH_FOUND)
-  SET(HAVE_LIBMESH 1)
-ENDIF(LIBMESH_FOUND)
-
-# Find Libmesh (optional)
+# Find Metis (optional)
 FIND_PACKAGE(METIS)
 MESSAGE(STATUS "METIS_FOUND = ${METIS_FOUND}")
 
@@ -105,6 +97,15 @@ SET (HAVE_METIS 0)
 IF(METIS_FOUND)
   SET(HAVE_METIS 1)
 ENDIF(METIS_FOUND)
+
+
+# Find Libmesh (optional)
+FIND_PACKAGE(LIBMESH)
+MESSAGE(STATUS "LIBMESH_FOUND = ${LIBMESH_FOUND}")
+SET (HAVE_LIBMESH 0)
+IF(LIBMESH_FOUND)
+  SET(HAVE_LIBMESH 1)
+ENDIF(LIBMESH_FOUND)
 
 
 
@@ -140,7 +141,14 @@ OPTION(BUILD_POISSON "Build the Poisson problem" ON)
 OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
 
 # --
-OPTION(BUILD_NUM_PDE_CLASS "Build the Numerical PDE Class applications" ON)
+OPTION(BUILD_WILLMORE "Build the Willmore problem" ON)
+
+# --
+OPTION(BUILD_WILLMOREGEN "Build the Generalized Willmore problem" ON)
+
+# --
+OPTION(BUILD_TUTORIAL "Build the tutorial problems" ON)
+
 
 #############################################################################################
 ### Build documentation (Doxygen)

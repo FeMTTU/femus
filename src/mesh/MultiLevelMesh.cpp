@@ -113,7 +113,7 @@ MultiLevelMesh::MultiLevelMesh(): _gridn0(0),_gridr0(0) {
 //---------------------------------------------------------------------------------------------------
 MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr, 
 			       const char mesh_file[], const char GaussOrder[], const double Lref, 
-			       bool (* SetRefinementFlag)(const double &x, const double &y, const double &z, 
+			       bool (* SetRefinementFlag)(const std::vector < double > &x,
 							  const int &ElemGroupNumber,const int &level) ):
     _gridn0(igridn),
     _gridr0(igridr) {
@@ -230,7 +230,7 @@ void MultiLevelMesh::GenerateCoarseBoxMesh(
 
 
 void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned short &igridr,
-                                 bool (* SetRefinementFlag)(const double &x, const double &y, const double &z,
+                                 bool (* SetRefinementFlag)(const std::vector < double >& x,
                                          const int &ElemGroupNumber,const int &level))
 {
 
