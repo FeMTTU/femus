@@ -318,7 +318,18 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  
  //********** ALL VARS ***************** 
     unsigned nDof_AllVars = nDofThom + nDofThomAdj + nDofTcont; 
-    const int nDof_max    = nDofThom;   // AAAAAAAAAAAAAAAAAAAAAAAAAAA TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
+    int nDof_max    =  nDofThom;   // AAAAAAAAAAAAAAAAAAAAAAAAAAA TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
+    
+    if(nDofThomAdj > nDof_max) 
+    {
+      nDof_max = nDofThomAdj;
+      }
+    
+    if(nDofTcont > nDof_max)
+    {
+      nDof_max = nDofTcont;
+    }
+    
     
     Res.resize(nDof_AllVars);
     std::fill(Res.begin(), Res.end(), 0.);
