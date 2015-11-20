@@ -216,6 +216,7 @@ namespace femus {
 	unsigned inode_Metis=mymsh->GetSolutionDof(i, iel, 2);
 	// flag to know if the node "inode" lays on the fluid-solid interface
 	solidmark[i]=myel->GetNodeRegion(inode); // to check
+		
 	for(int j=0; j<dim; j++) {
 	  Soli[indexVAR[j]][i]     =  (*mysolution->_Sol[indVAR[j]])(inode_Metis);
 	  Soli[indexVAR[j+dim]][i] =  (*mysolution->_Sol[indVAR[j+dim]])(inode_Metis);
@@ -246,7 +247,7 @@ namespace femus {
       }
       dofsAll.insert( dofsAll.end(), dofsVAR[2*dim].begin(), dofsVAR[2*dim].end() );
  
- //     if (1==1 || igrid==gridn || !myel->GetRefinedElementIndex(iel) ) {  
+     // if (1==1 || igrid==gridn || !myel->GetRefinedElementIndex(iel) ) {  
 	
 	s.new_recording();
 	
@@ -268,13 +269,14 @@ namespace femus {
 	    if(myel->GetFaceElementIndex(iel,jface)<0) {
 	      unsigned int face = -(mymsh->el->GetFaceElementIndex(iel,jface)+1);	      
 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
+		
               //if( !((*ml_sol->GetBdcFunction())(xx,"U",tau,face,0.)) && tau!=0.){
 		unsigned nve = mymsh->el->GetElementFaceDofNumber(iel,jface,SolType2);
 		const unsigned felt = mymsh->el->GetElementFaceType(iel, jface);  		  		  
 		for(unsigned i=0; i<nve; i++) {
 		  //unsigned inode=mymsh->el->GetFaceVertexIndex(iel,jface,i)-1u;
-		  unsigned inode_Metis=mymsh->GetSolutionDof(i, iel, 2);
 		  unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
+		  unsigned inode_Metis=mymsh->GetSolutionDof(ilocal, iel, 2);
 		  for(unsigned idim=0; idim<dim; idim++) {
 		    vx_face[idim][i]=(*mymsh->_topology->_Sol[idim])(inode_Metis) + Soli[indexVAR[idim]][ilocal];
 		  }
@@ -284,7 +286,7 @@ namespace femus {
 		  //phi1 =mymsh->_finiteElement[felt][SolType2]->GetPhi(igs);
 		  // *** phi_i loop ***
 		  for(unsigned i=0; i<nve; i++) {
-		    adept::adouble value = - phi[i]*tau/rhof*Weight;
+		    adept::adouble value = -phi[i]*tau/rhof*Weight;
 		    unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
 		    
 		    for(unsigned idim=0; idim<dim; idim++) {
@@ -352,7 +354,7 @@ namespace femus {
 	  for (unsigned inode=0; inode<nve1; inode++) {
 	    adept::adouble soli = Soli[indexVAR[2*dim]][inode];
 	    SolVAR[2*dim]+=phi1[inode]*soli;
-	 // }
+	  }
 	  // ---------------------------------------------------------------------------
 	  //BEGIN FLUID ASSEMBLY ============
 	  if(flag_mat==2){
@@ -365,6 +367,8 @@ namespace femus {
 		for(int idim=0; idim<dim; idim++) {
 		  for(int jdim=0; jdim<dim; jdim++) {
 		    LapmapVAR[idim] += (GradSolhatVAR[idim][jdim]*gradphi_hat[i*dim+jdim]) ;
+         	    //LapmapVAR[idim] += (GradSolVAR[idim][jdim]+GradSolVAR[jdim][idim])*gradphi[i*dim+jdim];
+	
 		  }
 		}
 		for(int idim=0; idim<dim; idim++) {
@@ -378,7 +382,8 @@ namespace femus {
 		
 		for(int idim=0.; idim<dim; idim++) {
 		  for(int jdim=0.; jdim<dim; jdim++) {
-		    LapvelVAR[idim]     += GradSolVAR[dim+idim][jdim]*gradphi[i*dim+jdim];
+		    //LapvelVAR[idim]     += GradSolVAR[dim+idim][jdim]*gradphi[i*dim+jdim];
+		    LapvelVAR[idim]     += (GradSolVAR[dim+idim][jdim] + GradSolVAR[dim+jdim][idim])* gradphi[i*dim+jdim];
 		    AdvaleVAR[idim]	+= SolVAR[dim+jdim]*GradSolVAR[dim+idim][jdim]*phi[i];   
 		  }
 		}
@@ -568,7 +573,7 @@ namespace femus {
 	  }  
 	  //END SOLID ASSEMBLY ============
 	}
-      }
+      //}
 	
       //BEGIN local to global assembly 	
       //copy adouble aRhs into double Rhs

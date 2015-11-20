@@ -387,7 +387,7 @@ namespace femus {
     // **************** END RES/EPS UPDATE RES ***************
 
     // *** Computational info ***
-//#ifndef NDEBUG
+#ifndef NDEBUG
     int its;
     KSPGetIterationNumber(_ksp, &its);
 
@@ -407,7 +407,7 @@ namespace femus {
 //     cout << "ASM Grid: " << _msh->GetLevel() << "        SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
 //          static_cast<double>(SearchTime + AssemblyTime + SolveTime + UpdateTime) / CLOCKS_PER_SEC <<
 //          "  ITS: " << _maxits  << "\t ksp_clean = " << ksp_clean << endl;
-//#endif
+#endif
 
   }
 
