@@ -25,13 +25,13 @@ ENDIF(BUILD_NAVIERSTOKESAPPS)
 IF(BUILD_FSIAPPS)
   set(FSI_FOLDER FSI/)
 # FSI Time Dependent Benchmarks
- # ADD_SUBDIRECTORY(${FSI_FOLDER}/FSITimeDependentBenchmarks/)
+  ADD_SUBDIRECTORY(${FSI_FOLDER}/FSITimeDependentBenchmarks/)
 
 # FSI SteadyState Benchmarks
   ADD_SUBDIRECTORY(${FSI_FOLDER}/FSISteadyStateBenchmarks/)
 
 # FSI SteadyState Benchmark Turek3
-#  ADD_SUBDIRECTORY(${FSI_FOLDER}/FSI_TUREK_3/)
+  #ADD_SUBDIRECTORY(${FSI_FOLDER}/FSI_TUREK_3/)
 
 # FSI SteadyState in porous media
 #  ADD_SUBDIRECTORY(${FSI_FOLDER}/fsi_porous/)

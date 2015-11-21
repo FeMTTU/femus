@@ -201,11 +201,10 @@ namespace femus {
     // *** element loop ***
     for(int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
-      unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
-      short unsigned kelt = myel->GetElementType(kel);
-      unsigned nve        = myel->GetElementDofNumber(kel,SolType2);
-      unsigned nve1       = myel->GetElementDofNumber(kel,SolType1);
-      int flag_mat        = mymsh->GetElementMaterial(kel);
+      short unsigned ielt = myel->GetElementType(iel);
+      unsigned nve        = myel->GetElementDofNumber(iel,SolType2);
+      unsigned nve1       = myel->GetElementDofNumber(iel,SolType1);
+      int flag_mat        = mymsh->GetElementMaterial(iel);
 
       // *******************************************************************************************************
     
@@ -243,36 +242,34 @@ namespace femus {
       }
     
       for (unsigned i=0;i<nve;i++) {
-	unsigned inode=myel->GetMeshDof(kel,i,SolType2);
-	unsigned inode_Metis=mymsh->GetSolutionDof(inode,2);
-	// flag to know if the node "inode" lays on the fluid-solid interface
-	solidmark[i]=myel->GetNodeRegion(inode); // to check
+	unsigned idof=mymsh->GetSolutionDof(i, iel, SolType2);
+	// flag to know if the node "idof" lays on the fluid-solid interface
+	solidmark[i]=myel->GetNodeRegion(idof); // to check
 	for(int j=0; j<dim; j++) {
-	  Soli[indexVAR[j]][i]     =  (*mysolution->_Sol[indVAR[j]])(inode_Metis);
-	  Soli[indexVAR[j+dim]][i] =  (*mysolution->_Sol[indVAR[j+dim]])(inode_Metis);
+	  Soli[indexVAR[j]][i]     =  (*mysolution->_Sol[indVAR[j]])(idof);
+	  Soli[indexVAR[j+dim]][i] =  (*mysolution->_Sol[indVAR[j+dim]])(idof);
 	  
-	  Soli_old[indexVAR[j]][i]     =  (*mysolution->_SolOld[indVAR[j]])(inode_Metis);
-	  Soli_old[indexVAR[j+dim]][i] =  (*mysolution->_SolOld[indVAR[j+dim]])(inode_Metis);
+	  Soli_old[indexVAR[j]][i]     =  (*mysolution->_SolOld[indVAR[j]])(idof);
+	  Soli_old[indexVAR[j+dim]][i] =  (*mysolution->_SolOld[indVAR[j+dim]])(idof);
 	  
 	  aRhs[indexVAR[j]][i]     = 0.;
 	  aRhs[indexVAR[j+dim]][i] = 0.;
 	   
 	  //Fixed coordinates (Reference frame)
-	  vx_hat[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis);  
+	  vx_hat[j][i]= (*mymsh->_topology->_Sol[j])(idof);  
 	  // displacement dofs
-	  dofsVAR[j][i]= myLinEqSolver->GetSystemDof(indVAR[j],indexVAR[j],inode); 
+	  dofsVAR[j][i]= myLinEqSolver->GetSystemDof(indVAR[j],indexVAR[j], i, iel); 
 	  // velocity dofs
-	  dofsVAR[j+dim][i]= myLinEqSolver->GetSystemDof(indVAR[j+dim],indexVAR[j+dim],inode);   
+	  dofsVAR[j+dim][i]= myLinEqSolver->GetSystemDof(indVAR[j+dim],indexVAR[j+dim],i, iel);   
 	}
       }
 
       // pressure dofs
       for (unsigned i=0;i<nve1;i++) {
-	unsigned inode=myel->GetMeshDof(kel,i,SolType1);
-	unsigned inode_Metis =mymsh->GetSolutionDof(inode,SolType[2*dim]);
-	dofsVAR[2*dim][i]=myLinEqSolver->GetSystemDof(indVAR[2*dim],indexVAR[2*dim],inode);
-	Soli[indexVAR[2*dim]][i]     = (*mysolution->_Sol[indVAR[2*dim]])(inode_Metis);
-	Soli_old[indexVAR[2*dim]][i] = (*mysolution->_SolOld[indVAR[2*dim]])(inode_Metis);
+	unsigned idof =mymsh->GetSolutionDof(i, iel, SolType[2*dim]);
+	dofsVAR[2*dim][i]=myLinEqSolver->GetSystemDof(indVAR[2*dim],indexVAR[2*dim],i, iel);
+	Soli[indexVAR[2*dim]][i]     = (*mysolution->_Sol[indVAR[2*dim]])(idof);
+	Soli_old[indexVAR[2*dim]][i] = (*mysolution->_SolOld[indVAR[2*dim]])(idof);
 	aRhs[indexVAR[2*dim]][i] = 0.;
       }
       
@@ -282,7 +279,7 @@ namespace femus {
       }
       dofsAll.insert( dofsAll.end(), dofsVAR[2*dim].begin(), dofsVAR[2*dim].end() );
  
-      if (igrid==gridn || !myel->GetRefinedElementIndex(kel) ) {  
+      if (igrid==gridn || !myel->GetRefinedElementIndex(iel) ) {  
 	
 	s.new_recording();
 	
@@ -299,23 +296,22 @@ namespace femus {
 	  vector < adept::adouble> normal(dim,0);
 	  vector < double > normal_old(dim,0);     
 	  // loop on faces
-	  for(unsigned jface=0; jface<myel->GetElementFaceNumber(kel); jface++) {
+	  for(unsigned jface=0; jface<myel->GetElementFaceNumber(iel); jface++) {
 	    std::vector< double > xx(dim,0.);
 	    // look for boundary faces
-	    if(myel->GetFaceElementIndex(kel,jface)<0) {
-	      unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1);	      
+	    if(myel->GetFaceElementIndex(iel,jface)<0) {
+	      unsigned int face = -(mymsh->el->GetFaceElementIndex(iel,jface)+1);	      
 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,time) && tau!=0.){
 		double tau_old;
 		ml_sol->_SetBoundaryConditionFunction(xx,"U",tau_old,face,time-dt);
-		unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,SolType2);
-		const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);  		  		  
+		unsigned nve = mymsh->el->GetElementFaceDofNumber(iel,jface,SolType2);
+		const unsigned felt = mymsh->el->GetElementFaceType(iel, jface);  		  		  
 		for(unsigned i=0; i<nve; i++) {
-		  unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-		  unsigned inode_Metis=mymsh->GetSolutionDof(inode,2);
-		  unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
+		  unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
+		  unsigned idof=mymsh->GetSolutionDof(ilocal, iel, 2);
 		  for(unsigned idim=0; idim<dim; idim++) {
-		    vx_face[idim][i]    =(*mymsh->_topology->_Sol[idim])(inode_Metis) + Soli[indexVAR[idim]][ilocal];
-		    vx_face_old[idim][i]=(*mymsh->_topology->_Sol[idim])(inode_Metis) + Soli_old[indexVAR[idim]][ilocal];
+		    vx_face[idim][i]    =(*mymsh->_topology->_Sol[idim])(idof) + Soli[indexVAR[idim]][ilocal];
+		    vx_face_old[idim][i]=(*mymsh->_topology->_Sol[idim])(idof) + Soli_old[indexVAR[idim]][ilocal];
 		  }
 		}
 		for(unsigned igs=0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
@@ -326,7 +322,7 @@ namespace femus {
 		  for(unsigned i=0; i<nve; i++) {
 		    adept::adouble value = - phi[i]*tau/rhof*Weight;
 		    double value_old = - phi[i]*tau_old/rhof*Weight_old;
-		    unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
+		    unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
 		    
 		    for(unsigned idim=0; idim<dim; idim++) {
 		      if((!solidmark[ilocal])){
@@ -345,16 +341,16 @@ namespace femus {
 	  	  
 	// *** Gauss point loop ***
 	double area=1.;
-	for (unsigned ig=0;ig < mymsh->_finiteElement[kelt][SolType2]->GetGaussPointNumber(); ig++) {
+	for (unsigned ig=0;ig < mymsh->_finiteElement[ielt][SolType2]->GetGaussPointNumber(); ig++) {
 	  // *** get Jacobian and test function and test function derivatives in the moving frame***
-	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx,  ig, Weight,     phi,     gradphi,     nablaphi);
-	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx_hat, ig, Weight_hat, phi_hat, gradphi_hat, nablaphi_hat);
-	  mymsh->_finiteElement[kelt][SolType2]->Jacobian(vx_old, ig, Weight_old, phi_old, gradphi_old, nablaphi_old);
-	  phi1=mymsh->_finiteElement[kelt][SolType1]->GetPhi(ig);
+	  mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx,  ig, Weight,     phi,     gradphi,     nablaphi);
+	  mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_hat, ig, Weight_hat, phi_hat, gradphi_hat, nablaphi_hat);
+	  mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_old, ig, Weight_old, phi_old, gradphi_old, nablaphi_old);
+	  phi1=mymsh->_finiteElement[ielt][SolType1]->GetPhi(ig);
 	  
 	  if (flag_mat==2 || iel == mymsh->_elementOffset[iproc]) {
 	    if(ig==0){
-	      double GaussWeight = mymsh->_finiteElement[kelt][SolType2]->GetGaussWeight(ig);
+	      double GaussWeight = mymsh->_finiteElement[ielt][SolType2]->GetGaussWeight(ig);
 	      area=Weight_hat/GaussWeight;
 	      if(iel==mymsh->_elementOffset[iproc]){
 		area_elem_first->add(mymsh->processor_id(),area);

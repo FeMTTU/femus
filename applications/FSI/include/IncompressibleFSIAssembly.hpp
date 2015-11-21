@@ -212,20 +212,19 @@ namespace femus {
       }
     
       for (unsigned i=0;i<nve;i++) {
-	unsigned inode=myel->GetMeshDof(iel,i,SolType2);
-	unsigned inode_Metis=mymsh->GetSolutionDof(i, iel, 2);
+	unsigned iDof=mymsh->GetSolutionDof(i, iel, SolType2);
 	// flag to know if the node "inode" lays on the fluid-solid interface
-	solidmark[i]=myel->GetNodeRegion(inode); // to check
+	solidmark[i]=myel->GetNodeRegion(iDof); // to check
 		
 	for(int j=0; j<dim; j++) {
-	  Soli[indexVAR[j]][i]     =  (*mysolution->_Sol[indVAR[j]])(inode_Metis);
-	  Soli[indexVAR[j+dim]][i] =  (*mysolution->_Sol[indVAR[j+dim]])(inode_Metis);
+	  Soli[indexVAR[j]][i]     =  (*mysolution->_Sol[indVAR[j]])(iDof);
+	  Soli[indexVAR[j+dim]][i] =  (*mysolution->_Sol[indVAR[j+dim]])(iDof);
 	    	    
 	  aRhs[indexVAR[j]][i]     = 0.;
 	  aRhs[indexVAR[j+dim]][i] = 0.;
 	   
 	  //Fixed coordinates (Reference frame)
-	  vx_hat[j][i]= (*mymsh->_topology->_Sol[j])(inode_Metis);  
+	  vx_hat[j][i]= (*mymsh->_topology->_Sol[j])(iDof);  
 	  // displacement dofs
 	  dofsVAR[j][i]= myLinEqSolver->GetSystemDof(indVAR[j],indexVAR[j], i, iel); 
 	  // velocity dofs
@@ -235,9 +234,9 @@ namespace femus {
 
       // pressure dofs
       for (unsigned i=0;i<nve1;i++) {
-	unsigned inode_Metis =mymsh->GetSolutionDof(i, iel, SolType[2*dim]);
+	unsigned iDof =mymsh->GetSolutionDof(i, iel, SolType[2*dim]);
 	dofsVAR[2*dim][i]=myLinEqSolver->GetSystemDof(indVAR[2*dim],indexVAR[2*dim], i, iel);
-	Soli[indexVAR[2*dim]][i] = (*mysolution->_Sol[indVAR[2*dim]])(inode_Metis);
+	Soli[indexVAR[2*dim]][i] = (*mysolution->_Sol[indVAR[2*dim]])(iDof);
 	aRhs[indexVAR[2*dim]][i] = 0.;
       }
       
@@ -274,11 +273,10 @@ namespace femus {
 		unsigned nve = mymsh->el->GetElementFaceDofNumber(iel,jface,SolType2);
 		const unsigned felt = mymsh->el->GetElementFaceType(iel, jface);  		  		  
 		for(unsigned i=0; i<nve; i++) {
-		  //unsigned inode=mymsh->el->GetFaceVertexIndex(iel,jface,i)-1u;
 		  unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
-		  unsigned inode_Metis=mymsh->GetSolutionDof(ilocal, iel, 2);
+		  unsigned iDof = mymsh->GetSolutionDof(ilocal, iel, 2);
 		  for(unsigned idim=0; idim<dim; idim++) {
-		    vx_face[idim][i]=(*mymsh->_topology->_Sol[idim])(inode_Metis) + Soli[indexVAR[idim]][ilocal];
+		    vx_face[idim][i]=(*mymsh->_topology->_Sol[idim])(iDof) + Soli[indexVAR[idim]][ilocal];
 		  }
 		}
 		for(unsigned igs=0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
