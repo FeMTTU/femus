@@ -151,7 +151,7 @@ int main(int argc,char **argv) {
 	{
 	    elemtype = INVALID_ELEM;
 	}
-        
+
     }
 
     std::string variableName = root["variable"].get("name", "Q").asString();
@@ -175,8 +175,8 @@ int main(int argc,char **argv) {
       std::cerr << " Error: Lagrange finite element order not supported!" << std::endl;
       exit(1);
     }
-    
-    
+
+
     unsigned int nlevels 	= root["mgsolver"].get("nlevels", 1).asInt();
     unsigned int SMRlevels 	= root["mgsolver"].get("SMRlevels", 0).asInt();
     std::string  AMR       	= root["mgsolver"].get("AMR", "no").asString();
@@ -207,7 +207,7 @@ int main(int argc,char **argv) {
         cout << "The selected MG cycle does not exist!" << endl;
         exit(1);
     }
-    
+
     bool Vanka=0, Gmres=0, Asm=0;
 
     if( !strcmp("vanka",smoother_type.c_str()))          Vanka=1;
@@ -222,7 +222,7 @@ int main(int argc,char **argv) {
     // end reading input from file
     //-----------------------------------------------------------------------------------------------
 
-    
+
     // reading function
      std::string variables = "x";
      variables += ",y";
@@ -230,42 +230,42 @@ int main(int argc,char **argv) {
      variables += ",t";
      std::string function;
 
-#ifdef HAVE_FPARSER 
-      
+#ifdef HAVE_FPARSER
+
      function = root["variable"].get("func_source2", "0.").asString();
      fpsource.SetExpression(function);
      fpsource.SetIndependentVariables(variables);
      fpsource.Parse();
-     
+
      function = root["func_sol2"].get("sol", "0.").asString();
      fp_sol.SetExpression(function);
      fp_sol.SetIndependentVariables(variables);
      fp_sol.Parse();
-          
+
      function = root["func_sol2"].get("dsoldx", "0.").asString();
      fp_dsoldx.SetExpression(function);
      fp_dsoldx.SetIndependentVariables(variables);
      fp_dsoldx.Parse();
-     
+
      function = root["func_sol2"].get("dsoldy", "0.").asString();
      fp_dsoldy.SetExpression(function);
      fp_dsoldy.SetIndependentVariables(variables);
      fp_dsoldy.Parse();
-     
-     
+
+
 #endif
-       
+
        std::vector<std::string> facenamearray;
        std::vector<ParsedFunction> parsedfunctionarray;
        std::vector<BDCType> bdctypearray;
-       
+
        const Json::Value boundary_conditions = root["boundary_conditions"];
        for(unsigned int index=0; index<boundary_conditions.size(); ++index) {
-	 
+
 	 std::string facename = boundary_conditions[index].get("facename","to").asString();
          facenamearray.push_back(facename);
-	 
-	 std::string bdctypestr = boundary_conditions[index].get("bdc_type","to").asString(); 
+
+	 std::string bdctypestr = boundary_conditions[index].get("bdc_type","to").asString();
          BDCType bdctype = DIRICHLET;
 	 if (bdctypestr.compare("dirichlet") == 0) {
 	     bdctype = DIRICHLET;
@@ -282,14 +282,14 @@ int main(int argc,char **argv) {
 	 ParsedFunction pfunc(bdcfuncstr, "x,y,z,t");
 	 parsedfunctionarray.push_back(pfunc);
        }
-       
+
     //---------------------------------------------------------------------------
 
-    
+
     /// Init Petsc-MPI communicator
     FemusInit mpinit(argc,argv,MPI_COMM_WORLD);
 
-    //Files files; 
+    //Files files;
     //files.CheckIODirectories();
     //files.RedirectCout();
 
@@ -298,8 +298,8 @@ int main(int argc,char **argv) {
     unsigned short nm,nr;
     nm=nlevels;
     nr=0;//SMRlevels;
-  
-    
+
+
     int tmp=nm;
     nm+=nr;
     nr=tmp;
@@ -321,7 +321,7 @@ int main(int argc,char **argv) {
     }
     //ml_msh.RefineMesh(nm,nr, SetRefinementFlag);
     ml_msh.RefineMesh(nm,nr, NULL);
-    
+
     ml_msh.PrintInfo();
 
     MultiLevelSolution ml_sol(&ml_msh);
@@ -334,30 +334,30 @@ int main(int argc,char **argv) {
 
     //Set Boundary (update Dirichlet(...) function)
     ml_sol.InitializeBdc();
-    
+
 //     ml_sol.SetBoundaryCondition("Sol","right", NEUMANN, false, false, &bdcfunc);
 //     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
-    
+
     for(int i=0; i<boundary_conditions.size(); ++i) {
       ml_sol.SetBoundaryCondition_new("Sol",facenamearray[i],bdctypearray[i],false,&parsedfunctionarray[i]);
     }
-    
+
     ml_sol.GenerateBdc("All");
-    
-    
+
+
     //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
     //ml_sol.GenerateBdc("Sol");
-    
-    
-  
-    
+
+
+
+
    // ml_msh.AddMeshLevel(SetRefinementFlag);
    // ml_sol.AddSolutionLevel();
-    
+
 
     MultiLevelProblem ml_prob(&ml_sol);
-    
-    
+
+
 //     ml_prob.parameters.set<func>("func_source") = fpsource;
 
     // add fluid material
@@ -384,10 +384,10 @@ int main(int argc,char **argv) {
     else if(Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
 
     system2.init();
-    
+
     //system2.SetAMRSetOptions(AMR,AMRlevels,AMRnorm,AMRthreshold,SetRefinementFlag);
     system2.SetAMRSetOptions(AMR,maxAMRlevels,AMRnorm,AMRthreshold);
-    
+
     //common smoother option
     system2.SetSolverFineGrids(GMRES);
     system2.SetTolerances(1.e-12,1.e-20,1.e+50,4);
@@ -422,22 +422,22 @@ int main(int argc,char **argv) {
 
     //GMVWriter gmvio(&ml_sol);
     //gmvio.ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
-    
-  // 
+
+  //
   //     XDMFWriter xdmfio(ml_sol);
   //     xdmfio.write("biquadratic",print_vars);
-        
+
     int  iproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
     bool H1=false;
     double l2error = GetRelativeError(ml_sol,H1);
     if(iproc==0) printf("\n||Sol_h-Sol||_L2 / ||Sol||_L2  = %g \n",l2error);
-    
+
     H1=true;
     double H1error = GetRelativeError(ml_sol,H1);
     if(iproc==0) printf("\n||Sol_h-Sol||_H1 / ||Sol||_H1  = %g \n",H1error);
-    
-    
+
+
     //Destroy all the new systems
     ml_prob.clear();
 
@@ -452,8 +452,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
     LinearImplicitSystem& mylin_impl_sys = ml_prob.get_system<LinearImplicitSystem>("Poisson");
     const unsigned level = mylin_impl_sys.GetLevelToAssemble();
     const unsigned gridn = mylin_impl_sys.GetLevelMax();
-    bool assemble_matrix = mylin_impl_sys.GetAssembleMatrix(); 
-  
+    bool assemble_matrix = mylin_impl_sys.GetAssembleMatrix();
+
     Solution*      mysolution	       = ml_prob._ml_sol->GetSolutionLevel(level);
     LinearEquationSolver*  mylsyspde     = mylin_impl_sys._LinSolver[level];
     Mesh*          mymsh		       = ml_prob._ml_msh->GetLevel(level);
@@ -475,7 +475,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
     SolPdeIndex=mylin_impl_sys.GetSolPdeIndex("Sol");
     //solution order
     unsigned order_ind = ml_sol->GetSolutionType(SolIndex);
-    
+
 
     //coordinates
     vector< vector < double> > coordinates(dim);
@@ -502,27 +502,26 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
         coordinates[i].reserve(max_size);
     phi.reserve(max_size);
     gradphi.reserve(max_size*dim);
-    nablaphi.reserve(max_size*( 3*(dim-1)+!(dim-1) ) );	
+    nablaphi.reserve(max_size*( 3*(dim-1)+!(dim-1) ) );
     F.reserve(max_size);
     B.reserve(max_size*max_size);
 
     // Set to zeto all the entries of the Global Matrix
-    if(assemble_matrix) 
+    if(assemble_matrix)
       myKK->zero();
 
     // *** element loop ***
     for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
-        unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
-        short unsigned kelt=myel->GetElementType(kel);
-        unsigned nve=myel->GetElementDofNumber(kel,order_ind);
+        short unsigned ielt=myel->GetElementType(iel);
+        unsigned nve=myel->GetElementDofNumber(iel,order_ind);
 
         // resize
         metis_node.resize(nve);
         KK_dof.resize(nve);
         phi.resize(nve);
         gradphi.resize(nve*dim);
-	nablaphi.resize( nve*(3*(dim-1)+!(dim-1)) );	
+	nablaphi.resize( nve*(3*(dim-1)+!(dim-1)) );
         for(int i=0; i<dim; i++) {
             coordinates[i].resize(nve);
         }
@@ -537,20 +536,19 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
 
         // get local to global mappings
         for( unsigned i=0; i<nve; i++) {
-            unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
-            unsigned inode_coord_metis=mymsh->GetSolutionDof(inode,2);
-            metis_node[i]=mymsh->GetSolutionDof(inode,order_ind);
+            unsigned inode_coord_metis=mymsh->GetSolutionDof(i, iel, 2);
+            metis_node[i]=mymsh->GetSolutionDof(i, iel, order_ind);
             for(unsigned ivar=0; ivar<dim; ivar++) {
                 coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
             }
-            KK_dof[i]=mylsyspde->GetSystemDof(SolIndex,SolPdeIndex,inode);
+            KK_dof[i]=mylsyspde->GetSystemDof(SolIndex,SolPdeIndex,i, iel);
         }
 
-        if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {
+        if(igrid==gridn || !myel->GetRefinedElementIndex(iel)) {
             // *** Gauss poit loop ***
-            for(unsigned ig=0; ig < ml_prob._ml_msh->_finiteElement[kelt][order_ind]->GetGaussPointNumber(); ig++) {
+            for(unsigned ig=0; ig < ml_prob._ml_msh->_finiteElement[ielt][order_ind]->GetGaussPointNumber(); ig++) {
                 // *** get Jacobian and test function and test function derivatives ***
-                ml_prob._ml_msh->_finiteElement[kelt][order_ind]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
+                ml_prob._ml_msh->_finiteElement[ielt][order_ind]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
                 //current solution
                 double SolT=0;
                 vector < double > gradSolT(dim,0.);
@@ -563,12 +561,12 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
                 for(unsigned i=0; i<nve; i++) {
                     double soli = (*mysolution->_Sol[SolIndex])(metis_node[i]);
 		    for(unsigned ivar=0; ivar<dim; ivar++) {
-		      xyzt[ivar] += coordinates[ivar][i]*phi[i]; 
+		      xyzt[ivar] += coordinates[ivar][i]*phi[i];
 		    }
                     SolT+=phi[i]*soli;
                     for(unsigned ivar2=0; ivar2<dim; ivar2++) gradSolT[ivar2] += gradphi[i*dim+ivar2]*soli;
                 }
-                  
+
                 // *** phi_i loop ***
                 for(unsigned i=0; i<nve; i++) {
                     //BEGIN RESIDUALS A block ===========================
@@ -577,16 +575,16 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
                     for(unsigned ivar=0; ivar<dim; ivar++) {
                         Lap_rhs += gradphi[i*dim+ivar]*gradSolT[ivar];
                     }
-                    
-             
+
+
                    //src_term = Source(xyzt);
 #ifdef HAVE_FPARSER
                    //src_term = fpsource.Eval(xyzt);
                    src_term = fpsource(&xyzt[0]);
 #endif
-                    
+
                     F[i]+= (-Lap_rhs + src_term*phi[i] )*weight;
-		    
+
                     //END RESIDUALS A block ===========================
                     if(assemble_matrix) {
                         // *** phi_j loop ***
@@ -605,31 +603,31 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
 
             //number of faces for each type of element
             //number of faces for each type of element
-            unsigned nfaces = myel->GetElementFaceNumber(kel);
+            unsigned nfaces = myel->GetElementFaceNumber(iel);
 
             // loop on faces
             for(unsigned jface=0; jface<nfaces; jface++) {
 
                 // look for boundary faces
-                if(myel->GetFaceElementIndex(kel,jface)<0) {
-    
-		    unsigned int face = -(mymsh->el->GetFaceElementIndex(kel,jface)+1) - 1;
-		    
+                if(myel->GetFaceElementIndex(iel,jface)<0) {
+
+		    unsigned int face = -(mymsh->el->GetFaceElementIndex(iel,jface)+1) - 1;
+
 		    if(ml_sol->GetBoundaryCondition("Sol",face) == NEUMANN && !ml_sol->Ishomogeneous("Sol",face)) {
 
 		        bdcfunc = (ParsedFunction* )(ml_sol->GetBdcFunction("Sol", face));
-			unsigned nve = mymsh->el->GetElementFaceDofNumber(kel,jface,order_ind);
-			const unsigned felt = mymsh->el->GetElementFaceType(kel, jface);
+			unsigned nve = mymsh->el->GetElementFaceDofNumber(iel,jface,order_ind);
+			const unsigned felt = mymsh->el->GetElementFaceType(iel, jface);
                         for(unsigned i=0; i<nve; i++) {
-                            unsigned inode=mymsh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-                            unsigned inode_coord_metis=mymsh->GetSolutionDof(inode,2);
+                            unsigned ilocal=mymsh->el->GetLocalFaceVertexIndex(iel,jface,i);
+                            unsigned inode_coord_metis=mymsh->GetSolutionDof(ilocal, iel, 2);
 
 			    for(unsigned ivar=0; ivar<dim; ivar++) {
                               coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
                             }
                         }
 
-                        if(felt != 6) 
+                        if(felt != 6)
 			{
                           for(unsigned igs=0; igs < ml_prob._ml_msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
                             ml_prob._ml_msh->_finiteElement[felt][order_ind]->JacobianSur(coordinates,igs,weight,phi,gradphi,normal);
@@ -637,15 +635,15 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
 			    xyzt.assign(4,0.);
                             for(unsigned i=0; i<nve; i++) {
 		              for(unsigned ivar=0; ivar<dim; ivar++) {
-		               xyzt[ivar] += coordinates[ivar][i]*phi[i]; 
+		               xyzt[ivar] += coordinates[ivar][i]*phi[i];
 		              }
                             }
-			    
+
 			    // *** phi_i loop ***
                             for(unsigned i=0; i<nve; i++) {
                               double surfterm_g = (*bdcfunc)(&xyzt[0]);
                               double bdintegral = phi[i]*surfterm_g*weight;
-                              unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, i);
+                              unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
                               F[ilocalnode] += bdintegral;
                             }
                           }
@@ -659,7 +657,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
  			  xyzt[3] = 0.;
 
 			  double bdintegral = (*bdcfunc)(&xyzt[0]);
-			  unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(kel, jface, 0);
+			  unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(iel, jface, 0);
                           F[ilocalnode] += bdintegral;
 			}
                     }
@@ -684,46 +682,46 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem &ml_prob) {
 // ***********************************************
 
 double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
-  
+
   int  iproc, nprocs;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-  
-  
+
+
   NumericVector *error_vec;
   NumericVector *solution_vec;
   error_vec = NumericVector::build().release();
   solution_vec = NumericVector::build().release();
-  
-  if(nprocs==1) { 
-    error_vec->init(nprocs,1,false,SERIAL); 
-    solution_vec->init(nprocs,1,false,SERIAL); 
-  } 
-  else { 
-    error_vec->init(nprocs,1,false,PARALLEL); 	   
-    solution_vec->init(nprocs,1,false,PARALLEL); 	   
+
+  if(nprocs==1) {
+    error_vec->init(nprocs,1,false,SERIAL);
+    solution_vec->init(nprocs,1,false,SERIAL);
+  }
+  else {
+    error_vec->init(nprocs,1,false,PARALLEL);
+    solution_vec->init(nprocs,1,false,PARALLEL);
   }
   error_vec->zero();
-  solution_vec->zero();    
-  
-  unsigned gridn=ml_sol._ml_msh->GetNumberOfLevels();
+  solution_vec->zero();
+
+  unsigned gridn=ml_sol._mlMesh->GetNumberOfLevels();
   for(int ilevel=0;ilevel<gridn;ilevel++){
     Solution*      solution  = ml_sol.GetSolutionLevel(ilevel);
-    Mesh*          msh	     = ml_sol._ml_msh->GetLevel(ilevel);
+    Mesh*          msh	     = ml_sol._mlMesh->GetLevel(ilevel);
     unsigned 	   iproc     = msh->processor_id();
-    
-    
+
+
     const unsigned	dim	= msh->GetDimension();
     vector< vector < double> > coordinates(dim);
-    
+
     vector< int > metis_node;
-    
+
     vector <double> phi;
     vector <double> gradphi;
     vector <double> nablaphi;
-    
+
     double weight;
-    
+
     // reserve
     const unsigned max_size = static_cast< unsigned > (ceil(pow(3,dim)));
     metis_node.reserve(max_size);
@@ -731,42 +729,40 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
       coordinates[i].reserve(max_size);
     phi.reserve(max_size);
     gradphi.reserve(max_size*dim);
-    nablaphi.reserve(max_size*(3*(dim-1)+!(dim-1)) );	
-        
-    
+    nablaphi.reserve(max_size*(3*(dim-1)+!(dim-1)) );
+
+
     unsigned SolIndex;
     SolIndex=ml_sol.GetIndex("Sol");
     unsigned SolOrder = ml_sol.GetSolutionType(SolIndex);
-    
-        
-    for (int iel_metis=msh->_elementOffset[iproc]; iel_metis < msh->_elementOffset[iproc+1]; iel_metis++) {
-      unsigned kel = msh->IS_Mts2Gmt_elem[iel_metis];
-      if(ilevel==gridn-1 || !msh->el->GetRefinedElementIndex(kel)) {
-        short unsigned kelt= msh->el->GetElementType(kel);
-	unsigned nve= msh->el->GetElementDofNumber(kel,SolOrder);
-      
+
+
+    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc+1]; iel++) {
+      if(ilevel==gridn-1 || !msh->el->GetRefinedElementIndex(iel)) {
+        short unsigned ielt= msh->el->GetElementType(iel);
+	unsigned nve= msh->el->GetElementDofNumber(iel,SolOrder);
+
 	// resize
 	metis_node.resize(nve);
 	phi.resize(nve);
 	gradphi.resize(nve*dim);
-	nablaphi.resize( nve*(3*(dim-1)+!(dim-1)) );	
+	nablaphi.resize( nve*(3*(dim-1)+!(dim-1)) );
 	for(int i=0; i<dim; i++) {
 	  coordinates[i].resize(nve);
 	}
 
 	// get local to global mappings
 	for( unsigned i=0; i<nve; i++) {
-	  unsigned inode=msh->el->GetElementVertexIndex(kel,i)-1u;
-	  unsigned inode_coord_metis=msh->GetSolutionDof(inode,2);
-	  metis_node[i]=msh->GetSolutionDof(inode,SolOrder);
+	  unsigned inode_coord_metis=msh->GetSolutionDof(i, iel, 2);
+	  metis_node[i]=msh->GetSolutionDof(i, iel, SolOrder);
 	  for(unsigned idim=0; idim<dim; idim++) {
 	    coordinates[idim][i]=(*msh->_topology->_Sol[idim])(inode_coord_metis);
 	  }
 	}
-	
-	for(unsigned ig=0; ig < ml_sol._ml_msh->_finiteElement[kelt][SolOrder]->GetGaussPointNumber(); ig++) {
+
+	for(unsigned ig=0; ig < ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->GetGaussPointNumber(); ig++) {
           // *** get Jacobian and test function and test function derivatives ***
-          ml_sol._ml_msh->_finiteElement[kelt][SolOrder]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
+          ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->Jacobian(coordinates,ig,weight,phi,gradphi,nablaphi);
           //current solution
           double SolT=0;
           vector < double > gradSolT(dim,0.);
@@ -775,47 +771,47 @@ double GetRelativeError(MultiLevelSolution &ml_sol, const bool &H1){
           }
 	  double pi=acos(-1.);
           double x[4] = {0.,0.,0.,0.};
-          
+
 	  unsigned SolType=ml_sol.GetSolutionType("Sol");
 	  for(unsigned i=0; i<nve; i++) {
 	    double soli = (*solution->_Sol[SolIndex])(metis_node[i]);
 	    for(unsigned ivar=0; ivar<dim; ivar++) {
-	      x[ivar] += coordinates[ivar][i]*phi[i]; 
+	      x[ivar] += coordinates[ivar][i]*phi[i];
 	    }
 	    SolT+=phi[i]*soli;
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++){
 	      gradSolT[ivar2] += gradphi[i*dim+ivar2]*soli;
 	    }
 	  }
-	  
+
 	  double SolExact, dSolExactdx, dSolExactdy;
 #ifdef HAVE_FPARSER
           SolExact    = fp_sol(x);
 	  dSolExactdx = fp_dsoldx(x);
 	  dSolExactdy = fp_dsoldy(x);
-#endif	  
-	  
+#endif
+
 	  error_vec->add(iproc,((SolT-SolExact)*(SolT-SolExact)+
 				H1*((gradSolT[0]-dSolExactdx)*(gradSolT[0]-dSolExactdx)+
 				    (gradSolT[1]-dSolExactdy)*(gradSolT[1]-dSolExactdy))
 				)*weight );
-	  
+
 	  solution_vec->add(iproc,(SolExact*SolExact+
 				   H1*(dSolExactdx*dSolExactdx+dSolExactdy*dSolExactdy))*weight);
 	}
       }
     }
   }
- 
+
   error_vec->close();
   solution_vec->close();
-    
+
   double l2_error=error_vec->l1_norm();
   double l2_solution=solution_vec->l1_norm();
-  
+
   delete error_vec;
   delete solution_vec;
-  
-  return sqrt(l2_error/l2_solution); 
-  
+
+  return sqrt(l2_error/l2_solution);
+
 }

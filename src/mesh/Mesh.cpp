@@ -149,37 +149,37 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _topology->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
 
   _topology->ResizeSolutionVector("AMR");
-  
+
   _topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
   _topology->AddSolution("Group", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
   _topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-  
+
   _topology->ResizeSolutionVector("Material");
   _topology->ResizeSolutionVector("Group");
   _topology->ResizeSolutionVector("Type");
-  
+
   NumericVector &material =  _topology->GetSolutionName("Material");
   NumericVector &group =  _topology->GetSolutionName("Group");
   NumericVector &type =  _topology->GetSolutionName("Type");
-  
+
 
   for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
     group.set( iel, el->GetElementGroup(iel) );
     type.set( iel, el->GetElementType(iel) );
     if(name.rfind(".neu") < name.size()) {
-      material.set(iel,el->GetElementMaterial(iel)); 
+      material.set(iel,el->GetElementMaterial(iel));
     }
     else if(name.rfind(".med") < name.size()){
-      material.zero();  
+      material.zero();
     }
   }
-  
+
   material.close();
   group.close();
   type.close();
-  
+
   el->deleteParallelizedQuantities();
-  
+
 };
 
 /**
@@ -234,25 +234,26 @@ void Mesh::GenerateCoarseBoxMesh(
 
   _topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
   _topology->AddSolution("Group", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-  _topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0); 
-  
+  _topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+
   _topology->ResizeSolutionVector("Material");
   _topology->ResizeSolutionVector("Group");
   _topology->ResizeSolutionVector("Type");
-  
+
   NumericVector &material =  _topology->GetSolutionName("Material");
   NumericVector &group =  _topology->GetSolutionName("Group");
   NumericVector &type =  _topology->GetSolutionName("Type");
-  
+
   for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
-    material.set(iel, el->GetElementMaterial(iel) );
-    group.set(iel, el->GetElementGroup(iel) );
-    type.set(iel, el->GetElementType(iel) );
+    group.set( iel, el->GetElementGroup(iel) );
+    type.set( iel, el->GetElementType(iel) );
+    material.set(iel,el->GetElementMaterial(iel));
   }
+
   material.close();
   group.close();
   type.close();
-  
+
   el->deleteParallelizedQuantities();
 }
 
@@ -317,15 +318,15 @@ void Mesh::Buildkel() {
 
 void Mesh::AllocateAndMarkStructureNode() {
   el->AllocateNodeRegion();
-  
+
   vector <double> materialLocal;
   _topology->_Sol[_materialIndex]->localize_to_all(materialLocal);
-  
+
   for (unsigned iel=0; iel<_nelem; iel++) {
 
     //int flag_mat = el->GetElementMaterial(iel);
     int flag_mat = materialLocal[iel];
-    
+
     if (flag_mat==4) {
       unsigned nve=el->GetElementDofNumber(iel,2);
       for ( unsigned i=0; i<nve; i++) {

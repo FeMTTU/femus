@@ -25,14 +25,14 @@ bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumb
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc,char **args) {
-  
+
   /// Init Petsc-MPI communicator
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
 
-  Files files; 
+  Files files;
         files.CheckIODirectories();
         files.RedirectCout();
-	
+
   unsigned short nm,nr;
   std::cout<<"#MULTIGRID levels? (>=1) \n";
   //std::cin>>nm;
@@ -46,7 +46,7 @@ int main(int argc,char **args) {
   nr=tmp;
 
   const std::string infile = "./input/fsifirst.neu";
-  
+
   double Lref = 1.;
   double Uref = 1.;
   double rhof = 1000.;
@@ -54,22 +54,22 @@ int main(int argc,char **args) {
   double rhos = 1000;
   double ni = 0.4;
   double E = 5600000;
-  
+
   MultiLevelMesh ml_msh(nm,nr,infile.c_str(),"fifth",Lref,SetRefinementFlag);
-  
+
   MultiLevelSolution ml_sol(&ml_msh);
-  
+
   //Start System Variables
   ml_sol.AddSolution("DX",LAGRANGE,SECOND,2);
   ml_sol.AddSolution("DY",LAGRANGE,SECOND,2);
 //   ml_sol.AssociatePropertyToSolution("DX","Displacement"); // Add this line
-//   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line 
+//   ml_sol.AssociatePropertyToSolution("DY","Displacement"); // Add this line
   ml_sol.AddSolution("U",LAGRANGE,SECOND,2);
   ml_sol.AddSolution("V",LAGRANGE,SECOND,2);
-  
+
   //   ml_sol.PairSolution("U","DX"); // Add this line
-  //   ml_sol.PairSolution("V","DY"); // Add this line 
-  
+  //   ml_sol.PairSolution("V","DY"); // Add this line
+
   ml_sol.AddSolution("AX",LAGRANGE,SECOND,1,0);
   ml_sol.AddSolution("AY",LAGRANGE,SECOND,1,0);
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
@@ -89,17 +89,17 @@ int main(int argc,char **args) {
   ml_sol.GenerateBdc("AY","Steady");
   ml_sol.GenerateBdc("P","Steady");
 
-  
+
   MultiLevelProblem ml_prob(&ml_sol);
-  
+
 
   Parameter par(Lref,Uref);
-  
+
   // Generate Solid Object
   Solid solid(par,E,ni,rhos,"Neo-Hookean");
   cout << "Solid properties: " << endl;
   cout << solid << endl;
-  
+
   // Generate Fluid Object
   Fluid fluid(par,muf,rhof,"Newtonian");
   cout << "Fluid properties: " << endl;
@@ -107,12 +107,12 @@ int main(int argc,char **args) {
 
   // Add fluid object
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
-  
+
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
 
   ml_msh.MarkStructureNode();
-   
+
   //create systems
   // add the system FSI to the MultiLevel problem
   TransientMonolithicFSINonlinearImplicitSystem & system = ml_prob.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
@@ -121,66 +121,66 @@ int main(int argc,char **args) {
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
   system.AddSolutionToSystemPDE("P");
-  
+
   // init all the systems
   system.init();
-   
+
   // System Fluid-Structure-Interaction
-  system.SetAssembleFunction(AssembleMatrixResFSI);  
+  system.SetAssembleFunction(AssembleMatrixResFSI);
   system.SetMaxNumberOfLinearIterations(1);
-  system.SetLinearConvergenceTolerance(1.e-8);  
+  system.SetLinearConvergenceTolerance(1.e-8);
   system.SetMgType(V_CYCLE);
   system.SetMaxNumberOfNonLinearIterations(4);
   system.SetNonLinearConvergenceTolerance(1.e-5);
   system.SetDirichletBCsHandling(PENALTY);
-  
+
   //system.SetDirichletBCsHandling(ELIMINATION);
-  
+
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
   const unsigned int n_timesteps = 5;
   const unsigned int write_interval = 1;
-  
+
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
   VTKWriter vtkio(&ml_sol);
   vtkio.SetMovingMesh(mov_vars);
-  
+
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-   
+
     // Solving Fluid-Structure-Interaction system
     std::cout << std::endl;
     std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
     system.solve();
-   
+
     //The update of the acceleration must be done before the update of the other variables
     system.NewmarkAccUpdate();
-    
+
     //update Solution
     system.UpdateSolution();
 
     // print solution
     if ( !(time_step%write_interval) ) {
-        
-      //print solution 
+
+      //print solution
       std::vector<std::string> print_vars;
       print_vars.push_back("DX");
       print_vars.push_back("DY");
       print_vars.push_back("U");
       print_vars.push_back("V");
       print_vars.push_back("P");
-      
+
 //       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
       vtkio.write(files.GetOutputPath(),"biquadratic",print_vars,time_step);
     }
-  
+
   } //end loop timestep
-  
+
 
   // Destroy all the new systems
   ml_prob.clear();
-   
+
   return 0;
 }
 
@@ -202,9 +202,9 @@ bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumb
 double SetVariableTimeStep(const double time) {
  if(time < 4.) {
    return 0.01;
- } 
+ }
  else {
-   return 0.001; 
+   return 0.001;
  }
 }
 
@@ -223,7 +223,7 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[], dou
       else {
         value=1.5*um*4.0/0.1681*x[1]*(0.41-x[1]);
       }
-    }  
+    }
     else if(2==facename ){  //outflow
      test=0;
  //    test=1;
@@ -231,18 +231,18 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[], dou
     }
     else if(3==facename ){  // no-slip fluid wall
       test=1;
-      value=0.;	
+      value=0.;
     }
     else if(4==facename ){  // no-slip solid wall
       test=1;
       value=0.;
     }
-  }  
+  }
   else if(!strcmp(name,"V")){
     if(1==facename){            //inflow
       test=1;
       value=0.;
-    }  
+    }
     else if(2==facename ){      //outflow
      test=0;
  //    test=1;
@@ -261,16 +261,16 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[], dou
     if(1==facename){
       test=1;
       value=0.;
-    }  
-    else if(2==facename ){  
+    }
+    else if(2==facename ){
       test=1;
       value=0.;
     }
-    else if(3==facename ){  
+    else if(3==facename ){
       test=1;
       value=0.;
     }
-    else if(4==facename ){  
+    else if(4==facename ){
       test=1;
       value=0.;
     }
@@ -279,16 +279,16 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[], dou
     if(1==facename){
       test=0;
       value=0.;
-    }  
-    else if(2==facename ){  
+    }
+    else if(2==facename ){
       test=0;
       value=0.;
     }
-    else if(3==facename ){  
+    else if(3==facename ){
       test=0;
       value=0.;
     }
-    else if(4==facename ){  
+    else if(4==facename ){
       test=0;
       value=0.;
     }
@@ -297,14 +297,14 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[], dou
     if(1==facename){         //inflow
       test=1;
       value=0.;
-    }  
+    }
     else if(2==facename ){   //outflow
      test=1;
      value=0.;
     }
     else if(3==facename ){   // no-slip fluid wall
       test=0; //0
-      value=0.;	
+      value=0.;
     }
     else if(4==facename ){   // no-slip solid wall
       test=1;
@@ -315,14 +315,14 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[], dou
     if(1==facename){         //inflow
       test=0; // 0
       value=0.;
-    }  
+    }
     else if(2==facename ){   //outflow
      test=0; // 0
      value=0.;
     }
     else if(3==facename ){   // no-slip fluid wall
       test=1;
-      value=0.;	
+      value=0.;
     }
     else if(4==facename ){   // no-slip solid wall
       test=1;
@@ -333,14 +333,14 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[], dou
     if(1==facename){         //inflow
       test=1;
       value=0.;
-    }  
+    }
     else if(2==facename ){   //outflow
      test=1;
      value=0.;
     }
     else if(3==facename ){   // no-slip fluid wall
       test=1;
-      value=0.;	
+      value=0.;
     }
     else if(4==facename ){   // no-slip solid wall
       test=1;

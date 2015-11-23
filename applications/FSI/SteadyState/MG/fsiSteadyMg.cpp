@@ -8,7 +8,7 @@
 #include "FElemTypeEnum.hpp"
 #include "Files.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
-#include "../include/IncompressibleFSIAssembly.hpp"
+#include "../include/FSISteadyStateAssembly.hpp"
 
 double scale=1000.;
 
@@ -225,7 +225,7 @@ int main(int argc,char **args) {
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
-  ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
+  ml_sol.AssociatePropertyToSolution("P","Pressure",false); // Add this line
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -273,7 +273,7 @@ int main(int argc,char **args) {
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD);
+  system.SetAssembleFunction(FSISteadyStateAssembly);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
@@ -282,15 +282,15 @@ int main(int argc,char **args) {
   if( simulation == 7 )
     system.SetNonLinearConvergenceTolerance(1.e-5);
 
-  system.SetNumberPreSmoothingStep(15);
-  system.SetNumberPostSmoothingStep(15);
+  system.SetNumberPreSmoothingStep(0);
+  system.SetNumberPostSmoothingStep(2);
 
   if( simulation < 3 || simulation == 7 ) {
-    system.SetMaxNumberOfLinearIterations(5);
+    system.SetMaxNumberOfLinearIterations(3);
     system.SetMaxNumberOfNonLinearIterations(10);
   }
   else {
-    system.SetMaxNumberOfLinearIterations(8);
+    system.SetMaxNumberOfLinearIterations(3);
     system.SetMaxNumberOfNonLinearIterations(15);
   }
 
@@ -308,7 +308,7 @@ int main(int argc,char **args) {
   else
     system.SetPreconditionerFineGrids(MLU_PRECOND);
 
-  system.SetTolerances(1.e-12,1.e-20,1.e+50,1);
+  system.SetTolerances(1.e-12,1.e-20,1.e+50,5);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
@@ -322,9 +322,9 @@ int main(int argc,char **args) {
     system.SetElementBlockNumber(2);
   }
   else if(simulation < 7 ){
-    //system.SetElementBlockNumber(2);
-    system.SetElementBlockNumberFluid(2);
-    system.SetElementBlockSolidAll();
+    system.SetElementBlockNumber(2);
+    //system.SetElementBlockNumberFluid(2);
+    //system.SetElementBlockSolidAll();
     //system.SetElementBlockFluidAll();
   }
   else if(simulation == 7 ){
@@ -337,7 +337,7 @@ int main(int argc,char **args) {
   // ******* Solve *******
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-  system.solve();
+  system.MGsolve();
 
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);

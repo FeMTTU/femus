@@ -63,7 +63,7 @@ MultiLevelSolution::MultiLevelSolution( MultiLevelMesh *ml_msh):
   }
 
   _bdcFuncSet = false;
-
+  _bdcFuncSetMLProb = false;
   _useParsedBCFunction = false;
 
   _mlBCProblem = NULL;
@@ -372,7 +372,7 @@ void MultiLevelSolution::SetBoundaryCondition_new(const std::string name, const 
 //---------------------------------------------------------------------------------------------------
 void MultiLevelSolution::GenerateBdc(const char * name, const char * bdc_type, const MultiLevelProblem * ml_prob) {
 
-  if( _useParsedBCFunction == 0 && _bdcFuncSet == false && _bdcFuncSetMLProb == false ) {
+  if( _useParsedBCFunction == false && _bdcFuncSet == false && _bdcFuncSetMLProb == false ) {
      cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine"
           << endl;
 
@@ -485,7 +485,7 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 		  unsigned i=msh->el->GetLocalFaceVertexIndex(iel,jface,iv);
 		  unsigned inode_coord_Metis=msh->GetSolutionDof(i,iel,2);
                   if( _useParsedBCFunction ){
-                    unsigned int face = msh->el->GetBoundaryIndex(iel,jface);
+                    unsigned int face = msh->el->GetBoundaryIndex(iel,jface)-1u;
                     if( GetBoundaryCondition(k,face) == DIRICHLET ) {
                       unsigned inode_Metis = msh->GetSolutionDof(i,iel,_solType[k]);
                       _solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
