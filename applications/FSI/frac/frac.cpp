@@ -216,6 +216,7 @@ void AssembleFracFSI(MultiLevelProblem& ml_prob) {
 
     unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
     short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
+    int flag_mat        = myel->GetElementMaterial(kel);
 
  //********* GEOMETRY ****************** 
     unsigned nDofx = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
