@@ -46,7 +46,7 @@ fi
  FM_BASEPATH_TO_MPI=$EXTERNAL_BASEPATH    #NOW ALL THESE VARIABLES will APPEAR IN THE ENVIRONMENT... even if you don't put EXPORT... TODO see if i can improve this
  FM_MPI_FOLDER=petsc/$PETSC_ARCH
  FM_MPI_BIN=bin
- FM_MPI_LIB=lib64
+ FM_MPI_LIB=lib
 ############# END MACHINE DEPENDENT ###################
 
 
@@ -61,7 +61,7 @@ export PATH=$FM_MPI_DIR/$FM_MPI_BIN:$PATH
 #    echo "Avoid rewriting"
 # fi
 export LD_LIBRARY_PATH=$FM_MPI_DIR/$FM_MPI_LIB:$LD_LIBRARY_PATH
-   # is this one really needed?!?
+   # is this one really needed?!? yes, to override system mpi installation
 ########################
 
 }
