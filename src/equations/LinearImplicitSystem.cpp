@@ -874,37 +874,67 @@ double LinearImplicitSystem::MGStep(int Level,            // Level
 }
 
 void LinearImplicitSystem::MGsolve (const MgSmootherType& mgSmootherType){
-  
+
   clock_t start_mg_time = clock();
 
   unsigned igrid0;
-  
+
   if(_mg_type == F_CYCLE) {
     std::cout<< std::endl<<" *** Start Multigrid Full-Cycle ***" << std::endl;
-    igrid0=1;
+    igrid0 = 1;
   }
   else if(_mg_type == V_CYCLE){
     std::cout<< std::endl<<" *** Start Multigrid V-Cycle ***" << std::endl;
-    igrid0=_gridn;
+    igrid0 = _gridn;
   }
-  else {
-    std::cout<<"AMR-cycle not yet implemented in MGsolve"<<std::endl;
+  else if(_mg_type == M_CYCLE){
+    igrid0 = _gridr;
+  }
+  else{
+    std::cout << "wrong mg_type for this solver "<<std::endl;
     abort();
   }
+
+  unsigned AMR_counter=0;
 
   for ( unsigned igridn = igrid0; igridn <= _gridn; igridn++) {   //_igridn
     std::cout << std::endl << " ****** Start Level Max " << igridn << " ******" << std::endl;
     clock_t start_nl_time = clock();
-    
+
+    bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMR_counter<_maxAMRlevels && igridn==_gridn)?1:0;
+    if(ThisIsAMR) _solution[igridn-1]->InitAMREps();
+
     _MGmatrixFineReuse = false;
     _MGmatrixCoarseReuse = ( igridn - igrid0 > 0 )?  true : _MGmatrixFineReuse;
 
     MGVcycle (igridn, mgSmootherType);
 
+    //BEGIN AMR refinement
+    if(ThisIsAMR){
+      bool conv_test=0;
+      if(_AMRnorm==0){
+        conv_test=_solution[_gridn-1]->FlagAMRRegionBasedOnl2(_SolSystemPdeIndex,_AMRthreshold);
+      }
+      else if (_AMRnorm==1){
+        conv_test=_solution[_gridn-1]->FlagAMRRegionBasedOnSemiNorm(_SolSystemPdeIndex,_AMRthreshold);
+      }
+      if(conv_test==0){
+        _ml_msh->AddAMRMeshLevel();
+        _ml_sol->AddSolutionLevel();
+        AddSystemLevel();
+        AMR_counter++;
+      }
+      else{
+        _maxAMRlevels=AMR_counter;
+        std::cout<<"The AMR solver has converged after "<<AMR_counter<<" refinements.\n";
+      }
+    }
+    //END AMR refinement
+
     if (igridn < _gridn) {
       ProlongatorSol(igridn);
     }
-    
+
     std::cout << std::endl << " ****** End Level Max "<< igridn << " ******" << std::endl;
   }
   std::cout << std::endl << " *** MultiGrid TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
