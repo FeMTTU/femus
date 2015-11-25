@@ -254,7 +254,7 @@ int main(int argc, char** argv) {
   system2.SetDirichletBCsHandling(PENALTY);
 
   // Solve Temperature system
-  ml_prob.get_system("Poisson").solve();
+  system2.MGsolve();
   //END Temperature Multilevel Problem
 
   /// Print all solutions

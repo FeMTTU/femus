@@ -874,7 +874,41 @@ double LinearImplicitSystem::MGStep(int Level,            // Level
 }
 
 void LinearImplicitSystem::MGsolve (const MgSmootherType& mgSmootherType){
-  MGVcycle(_gridn, mgSmootherType);
+  
+  clock_t start_mg_time = clock();
+
+  unsigned igrid0;
+  
+  if(_mg_type == F_CYCLE) {
+    std::cout<< std::endl<<" *** Start Multigrid Full-Cycle ***" << std::endl;
+    igrid0=1;
+  }
+  else if(_mg_type == V_CYCLE){
+    std::cout<< std::endl<<" *** Start Multigrid V-Cycle ***" << std::endl;
+    igrid0=_gridn;
+  }
+  else {
+    std::cout<<"AMR-cycle not yet implemented in MGsolve"<<std::endl;
+    abort();
+  }
+
+  for ( unsigned igridn = igrid0; igridn <= _gridn; igridn++) {   //_igridn
+    std::cout << std::endl << " ****** Start Level Max " << igridn << " ******" << std::endl;
+    clock_t start_nl_time = clock();
+    
+    _MGmatrixFineReuse = false;
+    _MGmatrixCoarseReuse = ( igridn - igrid0 > 0 )?  true : _MGmatrixFineReuse;
+
+    MGVcycle (igridn, mgSmootherType);
+
+    if (igridn < _gridn) {
+      ProlongatorSol(igridn);
+    }
+    
+    std::cout << std::endl << " ****** End Level Max "<< igridn << " ******" << std::endl;
+  }
+  std::cout << std::endl << " *** MultiGrid TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
+  <<static_cast<double>((clock()-start_mg_time))/CLOCKS_PER_SEC << std::endl;
 }
 
 void LinearImplicitSystem::MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType){
