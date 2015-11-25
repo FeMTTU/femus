@@ -503,12 +503,10 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
       for (unsigned jface = 0; jface < nfaces; jface++) {
         // look for boundary faces
         if (myel->GetFaceElementIndex(iel, jface) < 0) {
+          unsigned int faceIndex =  myel->GetBoundaryIndex(iel, jface);
+          if (ml_sol->GetBoundaryCondition("Sol", faceIndex) == NEUMANN && !ml_sol->Ishomogeneous("Sol", faceIndex)) {
 
-          unsigned int face = -(mymsh->el->GetFaceElementIndex(iel, jface) + 1) - 1;
-
-          if (ml_sol->GetBoundaryCondition("Sol", face) == NEUMANN && !ml_sol->Ishomogeneous("Sol", face)) {
-
-            bdcfunc = (ParsedFunction*)(ml_sol->GetBdcFunction("Sol", face));
+            bdcfunc = (ParsedFunction*)(ml_sol->GetBdcFunction("Sol", faceIndex));
             unsigned nve = mymsh->el->GetElementFaceDofNumber(iel, jface, order_ind);
             const unsigned felt = mymsh->el->GetElementFaceType(iel, jface);
 
@@ -566,9 +564,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
       for (unsigned jface = 0; jface < myel->GetElementFaceNumber(iel); jface++) {
         // look for boundary faces
         if (myel->GetFaceElementIndex(iel, jface) < 0) {
-          unsigned int face = -(mymsh->el->GetFaceElementIndex(iel, jface) + 1);
-
-          if (!ml_sol->GetBdcFunction()(xx, "Sol", tau, face, 0.) && tau != 0.) {
+          unsigned int faceIndex =  myel->GetBoundaryIndex(iel, jface);
+          if ( !ml_sol->GetBdcFunction()(xx, "Sol", tau, faceIndex, 0.) && tau != 0.) {
             unsigned nve = mymsh->el->GetElementFaceDofNumber(iel, jface, order_ind);
             const unsigned felt = mymsh->el->GetElementFaceType(iel, jface);
 
