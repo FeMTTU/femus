@@ -175,7 +175,7 @@ void NonLinearImplicitSystem::MGsolve (const MgSmootherType& mgSmootherType){
       std::cout << std::endl << " ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
       _MGmatrixFineReuse = (0 == nonLinearIterator ) ? false : true;
-      _MGmatrixCoarseReuse = ( igridn - igrid0 > 0 )? _MGmatrixFineReuse + true : _MGmatrixFineReuse + false;
+      _MGmatrixCoarseReuse = ( igridn - igrid0 > 0 )?  true : _MGmatrixFineReuse;
 
       MGVcycle (igridn, mgSmootherType);
 

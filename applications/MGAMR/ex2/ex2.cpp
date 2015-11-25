@@ -24,16 +24,13 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int faceIndex, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
-
-  std::cout<<x[0]<<" "<<x[1]<<" "<<facename<<std::endl;
-
   if (!strcmp(SolName, "T")) {
-    if (facename == 2) {
+    if (faceIndex == 2) {
       value = 1.;
-    } else if (facename == 3) {
+    } else if (faceIndex == 3) {
       dirichlet = false; //Neumann
     }
   } else if (!strcmp(SolName, "P")) {
