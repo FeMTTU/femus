@@ -2,6 +2,27 @@
 
 #you need to install java, java-devel, cmake above 2.8.11
 
+
+
+#=====================
+if test "$1" != "--prefix"; then
+echo "The first argument must be --prefix"; exit;
+fi
+
+if test "$2" = ""; then
+echo "The second argument must be the directory (either relative or absolute) where you want to install hdfjava"; exit;
+fi
+
+
+SOFTWARE_DIR=`readlink -f $2`
+echo "=========" $SOFTWARE_DIR
+
+mkdir -p $SOFTWARE_DIR
+cd $SOFTWARE_DIR
+#=====================
+
+
+
 HDFJAVA_TAR=hdf-java-2.11.0.tar
 HDFJAVA_CMAKE=HDFJAVALinuxCMake.cmake
 
