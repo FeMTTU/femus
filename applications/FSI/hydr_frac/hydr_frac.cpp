@@ -24,21 +24,26 @@ double InitalValueU(const std::vector < double >& x) {
 
 int main(int argc, char** args) {
 
-//   // init Petsc-MPI communicator
-//   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
-// 
-//   // define multilevel mesh
-//   MultiLevelMesh mlMsh;
-//   double scalingFactor = 1.;
-//   // read coarse level mesh and generate finers level meshes
-//   mlMsh.ReadCoarseMesh("./input/hydr_frac.med", "seventh", scalingFactor);
-//   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-//       probably in the furure it is not going to be an argument of this function   */
-//   unsigned numberOfUniformLevels = 1;
-//   unsigned numberOfSelectiveLevels = 0;
-//   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-//   mlMsh.PrintInfo();
+  // init Petsc-MPI communicator
+  FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  // define multilevel mesh
+  MultiLevelMesh ml_msh;
+  double scalingFactor = 1.;
+  // read coarse level mesh and generate finers level meshes
+    ml_msh.ReadCoarseMesh("./input/hydr_frac.med", "seventh", scalingFactor);
+  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
+      probably in the furure it is not going to be an argument of this function   */
+  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels = 0;
+    ml_msh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+    ml_msh.PrintInfo();
+
+  ml_msh.SetWriter(VTK);
+  ml_msh.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic");
+
+  
+  
 //   // define the multilevel solution and attach the mlMsh object to it
 //   MultiLevelSolution mlSol(&mlMsh);
 // 
