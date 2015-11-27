@@ -1,7 +1,10 @@
 #!/bin/bash
 
-#you need to install java, java-devel, cmake above 2.8.11
+#you need to install Java Compiler Compiler, an OpenJDK development environment
 
+# In opensuse, run as root (if you have another distro, figure out the equivalent needed packages)
+# zypper in javacc
+# zypper in java-1_7_0-openjdk-devel
 
 
 #=====================
@@ -26,7 +29,7 @@ cd $SOFTWARE_DIR
 HDFJAVA_TAR=hdf-java-2.11.0.tar
 HDFJAVA_CMAKE=HDFJAVALinuxCMake.cmake
 
-mkdir hdfjava
+mkdir -p hdfjava
 cd hdfjava
 wget http://www.hdfgroup.org/ftp/HDF5/hdf-java/current/cmake/SZip.tar.gz
 wget http://www.hdfgroup.org/ftp/HDF5/hdf-java/current/cmake/ZLib.tar.gz
