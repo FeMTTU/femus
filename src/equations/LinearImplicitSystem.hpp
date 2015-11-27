@@ -48,11 +48,6 @@ public:
     /** The type of the parent. */
     typedef ImplicitSystem Parent;
 
-    /** Solves the system. */
-    virtual void solve ();
-
-    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
-
     /** Clear all the data structures associated with the system. */
     virtual void clear();
 
@@ -171,7 +166,9 @@ public:
 
 protected:
 
-    void Vcycle(const unsigned &gridn,  const bool & full_cycle,  const unsigned &nonlinear_cycle = 0);
+    void AddAMRLevel( unsigned &AMRCounter);
+
+    void MLVcycle(const unsigned &gridn);
     void MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
 
 
@@ -179,8 +176,7 @@ protected:
     void Prolongator(const unsigned &gridf);
 
     /** Create the Restrictor matrix for the Multigrid solver */
-    virtual void Restrictor(const unsigned &gridf, const unsigned &gridn,
-                            const unsigned &non_linear_iteration, const unsigned &linear_iteration, const bool &full_cycle);
+    virtual void Restrictor(const unsigned &gridf);
 
     /** Prolongate the solution to a finer level */
     void ProlongatorSol(unsigned gridf);
@@ -238,7 +234,11 @@ protected:
 
     vector <bool> _SparsityPattern;
 
- };
+    /** Solves the system. */
+    virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
+
+
+  };
 
 } //end namespace femus
 

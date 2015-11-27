@@ -323,7 +323,7 @@ int main(int argc,char **args) {
   // ******* Solve *******
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-  system.solve();
+  system.MLsolve();
 
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);

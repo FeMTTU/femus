@@ -50,7 +50,7 @@ GROUP:          1 ELEMENTS:          1 MATERIAL:          2 NFLAGS:          1
        4
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          2 ELEMENTS:          1 MATERIAL:          4 NFLAGS:          1
+GROUP:          2 ELEMENTS:          1 MATERIAL:          2 NFLAGS:          1
                                6
        0
        2
@@ -62,7 +62,7 @@ GROUP:          3 ELEMENTS:          1 MATERIAL:          2 NFLAGS:          1
        3
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          4 ELEMENTS:          1 MATERIAL:          4 NFLAGS:          1
+GROUP:          4 ELEMENTS:          1 MATERIAL:          2 NFLAGS:          1
                                8
        0
        1

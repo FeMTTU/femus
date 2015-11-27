@@ -152,7 +152,7 @@ int main(int argc,char **args) {
     // Solving Fluid-Structure-Interaction system
     std::cout << std::endl;
     std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-    system.solve();
+    system.MLsolve();
 
     //The update of the acceleration must be done before the update of the other variables
     system.NewmarkAccUpdate();
