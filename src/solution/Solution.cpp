@@ -395,7 +395,8 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
   counter_vec->zero();
 
   for (int kel = _msh->_elementOffset[_iproc]; kel < _msh->_elementOffset[_iproc+1]; kel++) {
-    short unsigned kelt=_msh->el->GetElementType(kel);
+    //short unsigned kelt=_msh->el->GetElementType(kel);
+    short unsigned kelt=_msh->GetElementType(kel);
     for (unsigned k=0; k<SolIndex.size(); k++) {
       if(SolType[k]<3){
       unsigned nve=_msh->el->GetElementDofNumber(kel,SolEndInd[k]);
@@ -564,7 +565,8 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       row_dof.resize(1);
       row_dof[0]=iel;
 
-      short unsigned ielt=_msh->el->GetElementType(iel);
+      //short unsigned ielt=_msh->el->GetElementType(iel);
+      short unsigned ielt=_msh->GetElementType(iel);
 
       unsigned nve=_msh->el->GetElementDofNumber(iel,SolType);
 

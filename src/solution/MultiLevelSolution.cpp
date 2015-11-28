@@ -460,7 +460,8 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 	       iel < msh->_elementOffset[isdom+1]; iel++) {
 	    for (unsigned jface=0; jface<msh->el->GetElementFaceNumber(iel); jface++) {
 	      if ( msh->el->GetBoundaryIndex(iel,jface) == 0 ) { //Domain Decomposition Dirichlet
-		short unsigned ielt=msh->el->GetElementType(iel);
+		//short unsigned ielt=msh->el->GetElementType(iel);
+		short unsigned ielt=msh->GetElementType(iel);
 		unsigned nv1 = ( _addAMRPressureStability[k] == true ) ?
 		  msh->el->GetElementDofNumber(iel,_solType[k]): //all the dofs in the element
 		  msh->el->GetElementFaceDofNumber(iel,jface,_solType[k]); // only the face dofs
@@ -479,7 +480,8 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 	       iel < msh->_elementOffset[isdom+1]; iel++) {
 	    for (unsigned jface=0; jface<msh->el->GetElementFaceNumber(iel); jface++) {
 	      if (msh->el->GetBoundaryIndex(iel,jface) > 0) { //Dirichlet
-		short unsigned ielt=msh->el->GetElementType(iel);
+		//short unsigned ielt=msh->el->GetElementType(iel);
+		short unsigned ielt=msh->GetElementType(iel);
 		unsigned nv1 = msh->el->GetElementFaceDofNumber(iel,jface,_solType[k]);
 		for (unsigned iv=0; iv<nv1; iv++) {
 		  unsigned i=msh->el->GetLocalFaceVertexIndex(iel,jface,iv);

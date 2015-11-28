@@ -404,7 +404,8 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
       if ( ig == gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
 	nel++;
-	short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(iel);
+	//short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(iel);
+	short unsigned ielt=_ml_mesh->GetLevel(ig)->GetElementType(iel);
         for(unsigned j=0; j<NVE[ielt][index]; j++){
 	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetSolutionDof(j, iel, index);
 	  if( jnodeMetis < offset_iprc ){ //Is this a ghost node?
@@ -540,7 +541,8 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
     unsigned nvt_ig= _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
       if ( ig == gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
-        short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(iel);
+        //short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(iel);
+	short unsigned ielt=_ml_mesh->GetLevel(ig)->GetElementType(iel);
         if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
         else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
         else if (ielt==2) sprintf(det,"pprism%d",eltp[index][2]);

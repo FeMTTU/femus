@@ -58,7 +58,8 @@ void MeshRefinement::FlagElementsToBeRefined() {
     if(_mesh._IsUserRefinementFunctionDefined){
       for (int kel=_mesh._elementOffset[_iproc]; kel < _mesh._elementOffset[_iproc+1]; kel++) {
 	if( _mesh.GetLevel() == 0 || _mesh.el->IsFatherRefined(kel)  ){
-	  short unsigned kelt=_mesh.el->GetElementType(kel);
+	  //short unsigned kelt=_mesh.el->GetElementType(kel);
+	  short unsigned kelt=_mesh.GetElementType(kel);
 	  unsigned nve=_mesh.el->GetElementDofNumber(kel,0);
 	  std::vector < double > vtx(3,0.);
 	  for(unsigned i=0; i<nve; i++) {

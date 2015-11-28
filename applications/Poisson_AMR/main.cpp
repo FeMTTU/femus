@@ -530,7 +530,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
   // *** element loop ***
   for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielt = myel->GetElementType(iel);
+    //short unsigned ielt = myel->GetElementType(iel);
+    short unsigned ielt = mymsh->GetElementType(iel);
     unsigned nve = myel->GetElementDofNumber(iel, order_ind);
 
     // resize
@@ -771,7 +772,8 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
 
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
       if (ilevel == gridn - 1 || !msh->el->GetRefinedElementIndex(iel)) {
-        short unsigned ielt = msh->el->GetElementType(iel);
+        //short unsigned ielt = msh->el->GetElementType(iel);
+	short unsigned ielt = msh->GetElementType(iel);
         unsigned nve = msh->el->GetElementDofNumber(iel, SolOrder);
 
         // resize

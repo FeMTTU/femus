@@ -84,6 +84,9 @@ public:
     /** Get element material*/
     short unsigned GetElementMaterial(const unsigned &iel) const;
     
+    /** Get element type*/
+    short unsigned GetElementType(const unsigned &iel) const;
+    
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
         _level=i;

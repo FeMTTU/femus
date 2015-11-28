@@ -126,7 +126,8 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
       if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
 	nel++;
-	short unsigned ielt = _ml_mesh->GetLevel(ig)->el->GetElementType(iel);
+	//short unsigned ielt = _ml_mesh->GetLevel(ig)->el->GetElementType(iel);
+	short unsigned ielt = _ml_mesh->GetLevel(ig)->GetElementType(iel);
 	for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
           counter++;
 	  unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
@@ -390,7 +391,8 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
       if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
-  	short unsigned ielt= _ml_mesh->GetLevel(ig)->el->GetElementType(iel);
+  	//short unsigned ielt= _ml_mesh->GetLevel(ig)->el->GetElementType(iel);
+	short unsigned ielt= _ml_mesh->GetLevel(ig)->GetElementType(iel);
 	var_type[icount] = femusToVtkCellType[index][ielt];
 	icount++;
       }

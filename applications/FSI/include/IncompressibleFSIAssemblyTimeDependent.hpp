@@ -203,7 +203,8 @@ namespace femus {
     // *** element loop ***
     for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
-      short unsigned ielt = myel->GetElementType(iel);
+      //short unsigned ielt = myel->GetElementType(iel);
+      short unsigned ielt = mymsh->GetElementType(iel);
       unsigned nve        = myel->GetElementDofNumber(iel, SolType2);
       unsigned nve1       = myel->GetElementDofNumber(iel, SolType1);
       int flag_mat        = mymsh->GetElementMaterial(iel);
