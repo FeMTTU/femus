@@ -351,7 +351,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
   // *** element loop ***
   for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielt = myel->GetElementType(iel);
+    //short unsigned ielt = myel->GetElementType(iel);
+    short unsigned ielt = mymsh->GetElementType(iel);
     unsigned nve = myel->GetElementDofNumber(iel, order_ind);
     unsigned nve2 = myel->GetElementDofNumber(iel, 2);
     // resize

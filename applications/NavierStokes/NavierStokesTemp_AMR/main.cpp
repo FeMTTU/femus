@@ -489,7 +489,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
   for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
-    short unsigned kelt=myel->GetElementType(kel);
+    //short unsigned kelt=myel->GetElementType(kel);
+    short unsigned kelt=mymsh->GetElementType(kel);
     unsigned nve2=myel->GetElementDofNumber(kel,order_ind2);
     unsigned nve1=myel->GetElementDofNumber(kel,order_ind1);
     
@@ -784,7 +785,8 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
   for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
-    short unsigned kelt=myel->GetElementType(kel);
+    //short unsigned kelt=myel->GetElementType(kel);
+    short unsigned kelt = mymsh->GetElementType(kel);
     unsigned nve=myel->GetElementDofNumber(kel,order_ind);
     
     // resize

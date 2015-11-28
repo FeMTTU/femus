@@ -277,7 +277,8 @@ void LinearEquation::DeletePde() {
 
     for(int kel=_msh->_elementOffset[this_proc]; kel < _msh->_elementOffset[this_proc+1]; kel++) {
 
-      short int kelt = _msh->el->GetElementType(kel);
+      //short int kelt = _msh->el->GetElementType(kel);
+      short int kelt = _msh->GetElementType(kel);
       vector < int > nve(_SolPdeIndex.size());
       for(int i=0;i<_SolPdeIndex.size();i++){
 	nve[i] = _msh->el->GetElementDofNumber(kel,_SolType[_SolPdeIndex[i]]);
