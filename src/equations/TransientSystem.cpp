@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: TransientSystem
  Authors: Simone Bnà
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -54,41 +54,70 @@ template <class Base>
 void TransientSystem<Base>::clear ()
 {
   // clear the parent data
-  Base::clear(); 
+  Base::clear();
 
 }
 
 template <class Base>
 void TransientSystem<Base>::UpdateSolution() {
- 
-  for (int ig=0; ig< this->_gridn; ig++) {   
+
+  for (int ig=0; ig< this->_gridn; ig++) {
     this->_solution[ig]->UpdateSolution();
   }
-  
+
 }
 
 template <class Base>
-void TransientSystem<Base>::solve() {
- 
+void TransientSystem<Base>::MLsolve() {
+
   if (_is_selective_timestep) {
     _dt = _get_time_interval_function(_time);
   }
 
   //update time
   _time += _dt;
-   
+
   //update time step
   _time_step++;
-  
+
   std::cout << " Time: " << _time << "   TimeStep: " << _time_step << std::endl;
-    
+
    //update boundary condition
   this->_ml_sol->UpdateBdc(_time);
-  
+
   // call the parent solver
+  Base::_MLsolver = true;
+  Base::_MGsolver = false;
+
   Base::solve();
-  
+
 }
+
+template <class Base>
+void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
+  if (_is_selective_timestep) {
+    _dt = _get_time_interval_function(_time);
+  }
+
+  //update time
+  _time += _dt;
+
+  //update time step
+  _time_step++;
+
+  std::cout << " Time: " << _time << "   TimeStep: " << _time_step << std::endl;
+
+   //update boundary condition
+  this->_ml_sol->UpdateBdc(_time);
+
+  // call the parent solver
+  Base::_MLsolver = false;
+  Base::_MGsolver = true;
+
+  Base::solve( mgSmootherType );
+
+}
+
 
 
 //---------------------------------------------------------------------------------------------------------
@@ -100,19 +129,19 @@ void TransientSystem<Base>::NewmarkAccUpdate() {
   const double a5    = -1.*(1. - gamma)/gamma;
   const double a1    = 1./(gamma*_dt);
   const double a2    = -1./(gamma*_dt);
-  
+
   unsigned dim = this->_msh[0]->GetDimension();
- 
+
   unsigned axyz[3];
   unsigned vxyz[3];
   const char accname[3][3] = {"AX","AY","AZ"};
   const char velname[3][2] = {"U","V","W"};
-   
+
   for(unsigned i=0; i<dim; i++) {
      axyz[i] = this->_ml_sol->GetIndex(&accname[i][0]);
      vxyz[i] = this->_ml_sol->GetIndex(&velname[i][0]);
   }
-   
+
   for (int ig=0;ig< this->_gridn;ig++) {
     for(unsigned i=0; i<dim; i++) {
       this->_solution[ig]->_Sol[axyz[i]]->scale(a5);
@@ -129,7 +158,7 @@ void TransientSystem<Base>::NewmarkAccUpdate() {
 // int TransientSystem<Base>::SaveData() const {
 //   char *filename = new char[80];
 //   PetscVector* petsc_vec_sol;
-// 
+//
 //   PetscErrorCode ierr;
 //   PetscViewer bin_viewer;
 //   for (unsigned ig=0; ig<_gridn; ig++) {
@@ -147,19 +176,19 @@ void TransientSystem<Base>::NewmarkAccUpdate() {
 //   delete [] filename;
 //   return ierr;
 // }
-// 
+//
 // //------------------------------------------------------------------------------------------------------
 
 // template <class Base>
 // int TransientSystem<Base>::InitializeFromRestart(unsigned restart_time_step) {
-// 
+//
 //   // Set the restart time step
 //   SetInitTimeStep(restart_time_step+1);
-//   
+//
 //   //Set the restart time
 //   if(_ats_flag==0) {
 //     _time = restart_time_step*_dt;
-//   } 
+//   }
 //   else {
 //     _time = 0;
 //     for(unsigned i=0; i<restart_time_step; i++) {
@@ -167,13 +196,13 @@ void TransientSystem<Base>::NewmarkAccUpdate() {
 //       _time += _dt;
 //     }
 //   }
-//    
+//
 //   //Set the restart time step
 //   _time_step = restart_time_step+1;
-//      
+//
 //   char *filename = new char[80];
 //   PetscVector* petsc_vec_sol;
-// 
+//
 //   PetscErrorCode ierr;
 //   PetscViewer bin_viewer;
 //   for(unsigned ig=0;ig<_gridn;ig++){
@@ -187,7 +216,7 @@ void TransientSystem<Base>::NewmarkAccUpdate() {
 //     }
 //     _solution[ig]->UpdateSolution();
 //   }
-//   
+//
 //   delete [] filename;
 //   return ierr;
 // }

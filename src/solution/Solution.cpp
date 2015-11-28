@@ -135,22 +135,22 @@ void Solution::ResizeSolutionVector(const char name[]) {
 
   _Sol[i] = NumericVector::build().release();
   if(n_processors()==1) { // IF SERIAL
-    _Sol[i]->init(_msh->MetisOffset[_SolType[i]][n_processors()],_msh->own_size[_SolType[i]][processor_id()],false,SERIAL);
+    _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()],_msh->_ownSize[_SolType[i]][processor_id()],false,SERIAL);
   }
   else { // IF PARALLEL
     if(_SolType[i]<3) {
-      if(_msh->ghost_nd[_SolType[i]][processor_id()].size()!=0) {
-	_Sol[i]->init(_msh->MetisOffset[_SolType[i]][n_processors()],_msh->own_size[_SolType[i]][processor_id()],
-		      _msh->ghost_nd_mts[_SolType[i]][processor_id()],false,GHOSTED);
+      if(_msh->_ghostDofs[_SolType[i]][processor_id()].size()!=0) {
+	_Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()],_msh->_ownSize[_SolType[i]][processor_id()],
+		      _msh->_ghostDofs[_SolType[i]][processor_id()],false,GHOSTED);
       }
       else {
-	std::vector <int> fake_ghost(1,_msh->own_size[_SolType[i]][processor_id()]);
-	_Sol[i]->init(_msh->MetisOffset[_SolType[i]][n_processors()],_msh->own_size[_SolType[i]][processor_id()],
+	std::vector <int> fake_ghost(1,_msh->_ownSize[_SolType[i]][processor_id()]);
+	_Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()],_msh->_ownSize[_SolType[i]][processor_id()],
 		      fake_ghost,false,GHOSTED);
       }
     }
     else { //discontinuous pressure has no ghost nodes
-      _Sol[i]->init(_msh->MetisOffset[_SolType[i]][n_processors()],_msh->own_size[_SolType[i]][processor_id()],false,PARALLEL);
+      _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()],_msh->_ownSize[_SolType[i]][processor_id()],false,PARALLEL);
     }
   }
 
@@ -244,18 +244,18 @@ void Solution::UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVe
 
     int loc_offset_EPS = KKoffset[k][processor_id()];
 
-    int glob_offset_eps = _msh->MetisOffset[soltype][processor_id()];
+    int glob_offset_eps = _msh->_dofOffset[soltype][processor_id()];
 
-    vector <int> index(_msh->own_size[soltype][processor_id()]);
-    for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
+    vector <int> index(_msh->_ownSize[soltype][processor_id()]);
+    for(int i=0; i<_msh->_ownSize[soltype][processor_id()]; i++) {
       index[i]=loc_offset_EPS+i;
     }
-    vector <double> valueEPS(_msh->own_size[soltype][processor_id()]);
+    vector <double> valueEPS(_msh->_ownSize[soltype][processor_id()]);
     _EPS->get(index,valueEPS);
-    vector <double> valueRES(_msh->own_size[soltype][processor_id()]);
+    vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
     _RES->get(index,valueRES);
 
-    for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
+    for(int i=0; i<_msh->_ownSize[soltype][processor_id()]; i++) {
       _Eps[indexSol]->set(i+glob_offset_eps,valueEPS[i]);
       if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) _Res[indexSol]->set(i+glob_offset_eps,valueRES[i]);
       else _Res[indexSol]->set(i+glob_offset_eps,zero);
@@ -290,18 +290,18 @@ void Solution::UpdateSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* 
 
     int loc_offset_EPS = KKoffset[k][processor_id()];
 
-    int glob_offset_eps = _msh->MetisOffset[soltype][processor_id()];
+    int glob_offset_eps = _msh->_dofOffset[soltype][processor_id()];
 
-    vector <int> index(_msh->own_size[soltype][processor_id()]);
-    for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
+    vector <int> index(_msh->_ownSize[soltype][processor_id()]);
+    for(int i=0; i<_msh->_ownSize[soltype][processor_id()]; i++) {
       index[i]=loc_offset_EPS+i;
     }
-    vector <double> valueEPS(_msh->own_size[soltype][processor_id()]);
+    vector <double> valueEPS(_msh->_ownSize[soltype][processor_id()]);
     _EPS->get(index,valueEPS);
-    //vector <double> valueRES(_msh->own_size[soltype][processor_id()]);
+    //vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
     //_RES->get(index,valueRES);
 
-    for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
+    for(int i=0; i<_msh->_ownSize[soltype][processor_id()]; i++) {
       _Eps[indexSol]->set(i+glob_offset_eps,valueEPS[i]);
       //if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) _Res[indexSol]->set(i+glob_offset_eps,valueRES[i]);
       //else _Res[indexSol]->set(i+glob_offset_eps,zero);
@@ -337,17 +337,17 @@ void Solution::UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _
 
     int loc_offset_RES = KKoffset[k][processor_id()];
 
-    int glob_offset_res = _msh->MetisOffset[soltype][processor_id()];
+    int glob_offset_res = _msh->_dofOffset[soltype][processor_id()];
 
-    vector <int> index(_msh->own_size[soltype][processor_id()]);
-    for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
+    vector <int> index(_msh->_ownSize[soltype][processor_id()]);
+    for(int i=0; i<_msh->_ownSize[soltype][processor_id()]; i++) {
       index[i]=loc_offset_RES+i;
     }
 
-    vector <double> valueRES(_msh->own_size[soltype][processor_id()]);
+    vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
     _RES->get(index,valueRES);
 
-    for(int i=0; i<_msh->own_size[soltype][processor_id()]; i++) {
+    for(int i=0; i<_msh->_ownSize[soltype][processor_id()]; i++) {
       if ((*_Bdc[indexSol])(i+glob_offset_res)>1.1) {
 	_Res[indexSol]->set(i+glob_offset_res,valueRES[i]);
       }
@@ -371,13 +371,13 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
   for (unsigned k=0; k<SolIndex.size(); k++) {
     double EPSMAX = _AMREps[SolIndex[k]]->linfty_norm ();
     double SOLMAX = _Sol[SolIndex[k]]->linfty_norm ();
-    cout << "Current maximum relative change = " <<EPSMAX/SOLMAX << endl << endl;
+    cout << std::endl << "Current maximum relative change = " <<EPSMAX/SOLMAX << endl << endl;
     SolMax[k] = AMRthreshold * SOLMAX;
     SolType[k] = _SolType[SolIndex[k]];
     SolEndInd[k]   = END_IND[SolType[k]];
   }
 
-  Solution* AMR = _msh->_coordinate;
+  Solution* AMR = _msh->_topology;
   unsigned  AMRIndex= AMR->GetIndex("AMR");
   AMR->_Sol[AMRIndex]->zero();
 
@@ -394,23 +394,18 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
   }
   counter_vec->zero();
 
-  for (int iel_metis=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
-
-    unsigned kel = _msh->IS_Mts2Gmt_elem[iel_metis];
+  for (int kel = _msh->_elementOffset[_iproc]; kel < _msh->_elementOffset[_iproc+1]; kel++) {
     short unsigned kelt=_msh->el->GetElementType(kel);
-
     for (unsigned k=0; k<SolIndex.size(); k++) {
-
       if(SolType[k]<3){
-
       unsigned nve=_msh->el->GetElementDofNumber(kel,SolEndInd[k]);
       for(unsigned i=0; i<nve; i++) {
 	//unsigned inode=(SolType[k]<3)?(_msh->el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
-	unsigned inode_metis=_msh->GetMetisDof(i,kel,SolType[k]);
+	unsigned inode_metis=_msh->GetSolutionDof(i,kel,SolType[k]);
 	double value = (*_AMREps[SolIndex[k]])(inode_metis);
 	if(fabs(value)>SolMax[k]){
 	  counter_vec->add(_iproc,1.);
-	  AMR->_Sol[AMRIndex]->set(iel_metis,1.);
+	  AMR->_Sol[AMRIndex]->set(kel, 1.);
 	  k=SolIndex.size();
 	  i=nve;
 	}
@@ -454,10 +449,10 @@ bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,co
 	if(_GradVec[SolIndex[k]][i]==0){
 	  _GradVec[SolIndex[k]][i] = NumericVector::build().release();
 	  if(n_processors()==1) { // IF SERIAL
-	    _GradVec[SolIndex[k]][i]->init(_msh->MetisOffset[3][n_processors()],_msh->own_size[3][processor_id()],false,SERIAL);
+	    _GradVec[SolIndex[k]][i]->init(_msh->_dofOffset[3][n_processors()],_msh->_ownSize[3][processor_id()],false,SERIAL);
 	  }
 	  else { //discontinuous pressure has no ghost nodes
-	    _GradVec[SolIndex[k]][i]->init(_msh->MetisOffset[3][n_processors()],_msh->own_size[3][processor_id()],false,PARALLEL);
+	    _GradVec[SolIndex[k]][i]->init(_msh->_dofOffset[3][n_processors()],_msh->_ownSize[3][processor_id()],false,PARALLEL);
 
 	  }
 	}
@@ -472,7 +467,7 @@ bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,co
     }
   }
 
-  Solution* AMR = _msh->_coordinate;
+  Solution* AMR = _msh->_topology;
   unsigned  AMRIndex= AMR->GetIndex("AMR");
 
   AMR->_Sol[AMRIndex]->zero();
@@ -488,7 +483,7 @@ bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,co
   }
   counter_vec->zero();
 
-  for (int iel_metis=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel_metis < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel_metis++) {
+  for (int iel_metis=_msh->_elementOffset[_iproc]; iel_metis < _msh->_elementOffset[_iproc+1]; iel_metis++) {
 
     for (unsigned k=0; k<SolIndex.size(); k++) {
 
@@ -523,10 +518,10 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
 
     unsigned dim=_msh->GetDimension();
 
-    int nr     = _msh->MetisOffset[3][_nprocs];
-    int nc     = _msh->MetisOffset[SolType][_nprocs];
-    int nr_loc = _msh->own_size[3][_iproc];
-    int nc_loc = _msh->own_size[SolType][_iproc];
+    int nr     = _msh->_dofOffset[3][_nprocs];
+    int nc     = _msh->_dofOffset[SolType][_nprocs];
+    int nr_loc = _msh->_ownSize[3][_iproc];
+    int nc_loc = _msh->_ownSize[SolType][_iproc];
 
     for(int i=0;i<dim;i++){
       _GradMat[SolType][i] = SparseMatrix::build().release();
@@ -564,15 +559,14 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
 
     unsigned nel= _msh->GetNumberOfElements();
 
-    for (int iel=_msh->IS_Mts2Gmt_elem_offset[_iproc]; iel < _msh->IS_Mts2Gmt_elem_offset[_iproc+1]; iel++) {
+    for (int iel=_msh->_elementOffset[_iproc]; iel < _msh->_elementOffset[_iproc+1]; iel++) {
 
       row_dof.resize(1);
       row_dof[0]=iel;
 
-      unsigned kel = _msh->IS_Mts2Gmt_elem[iel];
-      short unsigned kelt=_msh->el->GetElementType(kel);
+      short unsigned ielt=_msh->el->GetElementType(iel);
 
-      unsigned nve=_msh->el->GetElementDofNumber(kel,SolType);
+      unsigned nve=_msh->el->GetElementDofNumber(iel,SolType);
 
       // resize
       column_dofs.resize(nve);
@@ -590,14 +584,14 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       }
 
       for( unsigned i=0; i<nve; i++) {
-	//unsigned inode=_msh->el->GetElementVertexIndex(kel,i)-1u;
-	unsigned inode_coord_metis=_msh->GetMetisDof(i,kel,2);
-	column_dofs[i]=_msh->GetMetisDof(i,kel,SolType);
+	//unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
+	unsigned inode_coord_metis=_msh->GetSolutionDof(i,iel,2);
+	column_dofs[i]=_msh->GetSolutionDof(i,iel,SolType);
         for(unsigned ivar=0; ivar<dim; ivar++) {
-          coordinates[ivar][i]=(*_msh->_coordinate->_Sol[ivar])(inode_coord_metis);
+          coordinates[ivar][i]=(*_msh->_topology->_Sol[ivar])(inode_coord_metis);
         }
       }
-      _msh->_finiteElement[kelt][SolType]->Jacobian(coordinates,0,weight,phi,gradphi, nablaphi );
+      _msh->_finiteElement[ielt][SolType]->Jacobian(coordinates,0,weight,phi,gradphi, nablaphi );
 
 
       for(int i=0;i<nve;i++){

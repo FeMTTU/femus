@@ -36,6 +36,8 @@ public:
 
     /** destructor */
     ~elem();
+    
+    void deleteParallelizedQuantities();
 
     // reorder the element according to the new element mapping
     void ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc);
@@ -96,6 +98,7 @@ public:
 
     /** To be Added */
     int GetFaceElementIndex(const unsigned &iel,const unsigned &iface) const;
+    int GetBoundaryIndex(const unsigned &iel,const unsigned &iface) const;
 
     /** To be Added */
     void SetFaceElementIndex(const unsigned &iel,const unsigned &iface, const int &value);
@@ -225,6 +228,8 @@ private:
     bool  _nodeRegionFlag;
     bool *_isFatherElementRefined; //element
     unsigned _nelf;
+    
+    unsigned _level;
 
 };
 

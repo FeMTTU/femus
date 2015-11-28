@@ -45,8 +45,14 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-//   mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
+
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -106,7 +112,7 @@ int main(int argc, char** args) {
 
       // initilaize and solve the system
       system.init();
-      system.solve();
+      system.MLsolve();
 
       std::pair< double , double > norm = GetErrorNorm(&mlSol);
       l2Norm[i][j]  = norm.first;
@@ -232,8 +238,6 @@ void AssembleNonlinearProblem(MultiLevelProblem& ml_prob) {
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system< NonLinearImplicitSystem > ("Poisson");   // pointer to the linear implicit system named "Poisson"
 
   const unsigned level = mlPdeSys->GetLevelToAssemble();
-  const unsigned levelMax = mlPdeSys->GetLevelMax();
-  bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*          msh          = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*          el         = msh->el;  // pointer to the elem object in msh (level)
@@ -261,7 +265,7 @@ void AssembleNonlinearProblem(MultiLevelProblem& ml_prob) {
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector< int > KKDof; // local to global pdeSys dofs
+  vector< int > sysDof; // local to global pdeSys dofs
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
   vector <double> phi_xx; // local test function second order partial derivatives
@@ -277,7 +281,7 @@ void AssembleNonlinearProblem(MultiLevelProblem& ml_prob) {
   for (unsigned i = 0; i < dim; i++)
     x[i].reserve(maxSize);
 
-  KKDof.reserve(maxSize);
+  sysDof.reserve(maxSize);
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
@@ -285,19 +289,17 @@ void AssembleNonlinearProblem(MultiLevelProblem& ml_prob) {
   Res.reserve(maxSize);
   J.reserve(maxSize * maxSize);
 
-  if (assembleMatrix)
-    KK->zero(); // Set to zero all the entries of the Global Matrix
+  KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
-    short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
-    unsigned nDofs  = el->GetElementDofNumber(kel, soluType);    // number of solution element dofs
-    unsigned nDofs2 = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
+    short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
+    unsigned nDofs  = el->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+    unsigned nDofs2 = el->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
     // resize local arrays
-    KKDof.resize(nDofs);
+    sysDof.resize(nDofs);
     solu.resize(nDofs);
 
     for (int i = 0; i < dim; i++) {
@@ -307,98 +309,90 @@ void AssembleNonlinearProblem(MultiLevelProblem& ml_prob) {
     Res.resize(nDofs);    //resize
     std::fill(Res.begin(), Res.end(), 0);    //set Res to zero
 
-    if (assembleMatrix) {
-      J.resize(nDofs * nDofs);    //resize
-      std::fill(J.begin(), J.end(), 0);    //set K to zero
-    }
+    J.resize(nDofs * nDofs);    //resize
+    std::fill(J.begin(), J.end(), 0);    //set K to zero
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, soluType);    // local to global solution node
-      unsigned solDof = msh->GetMetisDof(iNode, soluType);    // global to global mapping between solution node and solution dof
+      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-      KKDof[i] = pdeSys->GetKKDof(soluIndex, soluPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
+      sysDof[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofs2; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
-      unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_coordinate->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
-    if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
-      // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][soluType]->GetGaussPointNumber(); ig++) {
-        // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[kelGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+    // *** Gauss point loop ***
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+      // *** get gauss point weight, test function and test function partial derivatives ***
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
-        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        double soluGauss = 0;
-        vector < double > soluGauss_x(dim, 0.);
-        vector < double > xGauss(dim, 0.);
+      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+      double soluGauss = 0;
+      vector < double > soluGauss_x(dim, 0.);
+      vector < double > xGauss(dim, 0.);
 
-        for (unsigned i = 0; i < nDofs; i++) {
-          soluGauss += phi[i] * solu[i];
+      for (unsigned i = 0; i < nDofs; i++) {
+        soluGauss += phi[i] * solu[i];
 
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
-            soluGauss_x[jdim] += phi_x[i * dim + jdim] * solu[i];
-            xGauss[jdim] += x[jdim][i] * phi[i];
-          }
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          soluGauss_x[jdim] += phi_x[i * dim + jdim] * solu[i];
+          xGauss[jdim] += x[jdim][i] * phi[i];
+        }
+      }
+
+      // *** phi_i loop ***
+      for (unsigned i = 0; i < nDofs; i++) {
+
+        double nonLinearTerm = 0.;
+        double mLaplace = 0.;
+
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          mLaplace   +=  phi_x[i * dim + jdim] * soluGauss_x[jdim];
+          nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
         }
 
-        // *** phi_i loop ***
-        for (unsigned i = 0; i < nDofs; i++) {
+        double exactSolValue = GetExactSolutionValue(xGauss);
+        vector < double > exactSolGrad(dim);
+        GetExactSolutionGradient(xGauss , exactSolGrad);
+        double exactSolLaplace = GetExactSolutionLaplace(xGauss);
 
-          double nonLinearTerm = 0.;
-          double mLaplace = 0.;
 
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
-            mLaplace   +=  phi_x[i * dim + jdim] * soluGauss_x[jdim];
-            nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
+        double f = (- exactSolLaplace + exactSolValue * (exactSolGrad[0] + exactSolGrad[1])) * phi[i] ;
+        Res[i] += (f - (mLaplace + nonLinearTerm)) * weight;
+
+        // *** phi_j loop ***
+        for (unsigned j = 0; j < nDofs; j++) {
+          mLaplace = 0.;
+          nonLinearTerm = 0.;
+
+          for (unsigned kdim = 0; kdim < dim; kdim++) {
+            mLaplace += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]);
+            nonLinearTerm +=   phi[i] * (phi[j] * soluGauss_x[kdim] + soluGauss * phi_x[j * dim + kdim]);
           }
 
-          double exactSolValue = GetExactSolutionValue(xGauss);
-          vector < double > exactSolGrad(dim);
-          GetExactSolutionGradient(xGauss , exactSolGrad);
-          double exactSolLaplace = GetExactSolutionLaplace(xGauss);
-
-
-          double f = (- exactSolLaplace + exactSolValue * (exactSolGrad[0] + exactSolGrad[1])) * phi[i] ;
-          Res[i] += (f - (mLaplace + nonLinearTerm)) * weight;
-
-          if (assembleMatrix) {
-            // *** phi_j loop ***
-            for (unsigned j = 0; j < nDofs; j++) {
-              mLaplace = 0.;
-              nonLinearTerm = 0.;
-
-              for (unsigned kdim = 0; kdim < dim; kdim++) {
-                mLaplace += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]);
-                nonLinearTerm +=   phi[i] * (phi[j] * soluGauss_x[kdim] + soluGauss * phi_x[j * dim + kdim]);
-              }
-
-              J[i * nDofs + j] += (mLaplace + nonLinearTerm) * weight;
-            } // end phi_j loop
-          } // endif assemble_matrix
-        } // end phi_i loop
-      } // end gauss point loop
-    } // endif single element not refined or fine grid loop
+          J[i * nDofs + j] += (mLaplace + nonLinearTerm) * weight;
+        } // end phi_j loop
+      } // end phi_i loop
+    } // end gauss point loop
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
-    RES->add_vector_blocked(Res, KKDof);
+    RES->add_vector_blocked(Res, sysDof);
 
-    if (assembleMatrix) KK->add_matrix_blocked(J, KKDof, KKDof);
+    KK->add_matrix_blocked(J, sysDof, sysDof);
   } //end element loop for each process
 
   RES->close();
 
-  if (assembleMatrix) KK->close();
+  KK->close();
 
   // ***************** END ASSEMBLY *******************
 }
@@ -437,8 +431,6 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
 
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system< NonLinearImplicitSystem > ("Poisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
-  const unsigned levelMax = mlPdeSys->GetLevelMax();
-  const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*          msh          = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*          el         = msh->el;  // pointer to the elem object in msh (level)
@@ -466,7 +458,7 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  vector< int > KKDof; // local to global pdeSys dofs
+  vector< int > sysDof; // local to global pdeSys dofs
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
   vector <double> phi_xx; // local test function second order partial derivatives
@@ -483,7 +475,7 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
   for (unsigned i = 0; i < dim; i++)
     x[i].reserve(maxSize);
 
-  KKDof.reserve(maxSize);
+  sysDof.reserve(maxSize);
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
@@ -497,19 +489,18 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
   Jact.reserve(maxSize * maxSize);
 
 
-  if (assembleMatrix)
-    KK->zero(); // Set to zero all the entries of the Global Matrix
+
+  KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
-    short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
-    unsigned nDofs  = el->GetElementDofNumber(kel, soluType);    // number of solution element dofs
-    unsigned nDofs2 = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
+    short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
+    unsigned nDofs  = el->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+    unsigned nDofs2 = el->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
     // resize local arrays
-    KKDof.resize(nDofs);
+    sysDof.resize(nDofs);
     solu.resize(nDofs);
 
     for (int i = 0; i < dim; i++) {
@@ -522,75 +513,73 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
     aRes.resize(nDofs);    //resize
     std::fill(aRes.begin(), aRes.end(), 0);    //set aRes to zero
 
-    if (assembleMatrix) {   //resize
-      Jact.resize(nDofs * nDofs);
-      Jac.resize(nDofs * nDofs);
-    }
+
+    Jact.resize(nDofs * nDofs);
+    Jac.resize(nDofs * nDofs);
+
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, soluType);    // local to global solution node
-      unsigned solDof = msh->GetMetisDof(iNode, soluType);    // global to global mapping between solution node and solution dof
+      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-      KKDof[i] = pdeSys->GetKKDof(soluIndex, soluPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
+      sysDof[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofs2; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
-      unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_coordinate->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
-    if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
-      // start a new recording of all the operations involving adept::adouble variables
-      s.new_recording();
 
-      // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][soluType]->GetGaussPointNumber(); ig++) {
-        // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[kelGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+    // start a new recording of all the operations involving adept::adouble variables
+    s.new_recording();
 
-        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        adept::adouble soluGauss = 0;
-        vector < adept::adouble > soluGauss_x(dim, 0.);
-        vector < double > xGauss(dim, 0.);
+    // *** Gauss point loop ***
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+      // *** get gauss point weight, test function and test function partial derivatives ***
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
-        for (unsigned i = 0; i < nDofs; i++) {
-          soluGauss += phi[i] * solu[i];
+      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+      adept::adouble soluGauss = 0;
+      vector < adept::adouble > soluGauss_x(dim, 0.);
+      vector < double > xGauss(dim, 0.);
 
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
-            soluGauss_x[jdim] += phi_x[i * dim + jdim] * solu[i];
-            xGauss[jdim] += x[jdim][i] * phi[i];
-          }
+      for (unsigned i = 0; i < nDofs; i++) {
+        soluGauss += phi[i] * solu[i];
+
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          soluGauss_x[jdim] += phi_x[i * dim + jdim] * solu[i];
+          xGauss[jdim] += x[jdim][i] * phi[i];
+        }
+      }
+
+      // *** phi_i loop ***
+      for (unsigned i = 0; i < nDofs; i++) {
+
+        adept::adouble nonLinearTerm = 0.;
+        adept::adouble mLaplace = 0.;
+
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          mLaplace   +=  phi_x[i * dim + jdim] * soluGauss_x[jdim];
+          nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
         }
 
-        // *** phi_i loop ***
-        for (unsigned i = 0; i < nDofs; i++) {
-
-          adept::adouble nonLinearTerm = 0.;
-          adept::adouble mLaplace = 0.;
-
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
-            mLaplace   +=  phi_x[i * dim + jdim] * soluGauss_x[jdim];
-            nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
-          }
-
-          double exactSolValue = GetExactSolutionValue(xGauss);
-          vector < double > exactSolGrad(dim);
-          GetExactSolutionGradient(xGauss , exactSolGrad);
-          double exactSolLaplace = GetExactSolutionLaplace(xGauss);
+        double exactSolValue = GetExactSolutionValue(xGauss);
+        vector < double > exactSolGrad(dim);
+        GetExactSolutionGradient(xGauss , exactSolGrad);
+        double exactSolLaplace = GetExactSolutionLaplace(xGauss);
 
 
-          double f = (- exactSolLaplace + exactSolValue * (exactSolGrad[0] + exactSolGrad[1])) * phi[i] ;
-          aRes[i] += (f - (mLaplace + nonLinearTerm)) * weight;
+        double f = (- exactSolLaplace + exactSolValue * (exactSolGrad[0] + exactSolGrad[1])) * phi[i] ;
+        aRes[i] += (f - (mLaplace + nonLinearTerm)) * weight;
 
-        } // end phi_i loop
-      } // end gauss point loop
-    } // endif single element not refined or fine grid loop
+      } // end phi_i loop
+    } // end gauss point loop
+
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
@@ -600,37 +589,37 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
       Res[i] = aRes[i].value();
     }
 
-    RES->add_vector_blocked(Res, KKDof);
+    RES->add_vector_blocked(Res, sysDof);
 
-    if (assembleMatrix) {
 
-      // define the dependent variables
-      s.dependent(&aRes[0], nDofs);
 
-      // define the independent variables
-      s.independent(&solu[0], nDofs);
+    // define the dependent variables
+    s.dependent(&aRes[0], nDofs);
 
-      // get the jacobian matrix (ordered by column)
-      s.jacobian(&Jac[0]);
+    // define the independent variables
+    s.independent(&solu[0], nDofs);
 
-      // get the jacobian matrix (ordered by raw, i.e. Jact=Jac^t)
-      for (int inode = 0; inode < nDofs; inode++) {
-        for (int jnode = 0; jnode < nDofs; jnode++) {
-          Jact[inode * nDofs + jnode] = -Jac[jnode * nDofs + inode];
-        }
+    // get the jacobian matrix (ordered by column)
+    s.jacobian(&Jac[0]);
+
+    // get the jacobian matrix (ordered by raw, i.e. Jact=Jac^t)
+    for (int inode = 0; inode < nDofs; inode++) {
+      for (int jnode = 0; jnode < nDofs; jnode++) {
+        Jact[inode * nDofs + jnode] = -Jac[jnode * nDofs + inode];
       }
-
-      //store Jact in the global matrix KK
-      KK->add_matrix_blocked(Jact, KKDof, KKDof);
-
-      s.clear_independents();
-      s.clear_dependents();
     }
+
+    //store Jact in the global matrix KK
+    KK->add_matrix_blocked(Jact, sysDof, sysDof);
+
+    s.clear_independents();
+    s.clear_dependents();
+
   } //end element loop for each process
 
   RES->close();
 
-  if (assembleMatrix) KK->close();
+  KK->close();
 
   // ***************** END ASSEMBLY *******************
 }
@@ -640,9 +629,9 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
 
 
 std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
-  unsigned level = mlSol->_ml_msh->GetNumberOfLevels() - 1u;
+  unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
-  Mesh*          msh          = mlSol->_ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh*          msh          = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
   elem*          el         = msh->el;  // pointer to the elem object in msh (level)
   Solution*    sol        = mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
@@ -680,12 +669,11 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   double l2norm = 0.;
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
-    short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
-    unsigned nDofs  = el->GetElementDofNumber(kel, soluType);    // number of solution element dofs
-    unsigned nDofs2 = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
+    short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
+    unsigned nDofs  = el->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+    unsigned nDofs2 = el->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
     // resize local arrays
     solu.resize(nDofs);
@@ -696,25 +684,23 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofs; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, soluType);    // local to global solution node
-      unsigned solDof = msh->GetMetisDof(iNode, soluType);    // global to global mapping between solution node and solution dof
+      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
     }
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofs2; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
-      unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_coordinate->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][soluType]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[kelGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       double soluGauss = 0;

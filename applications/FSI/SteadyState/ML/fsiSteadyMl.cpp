@@ -8,28 +8,27 @@
 #include "FElemTypeEnum.hpp"
 #include "Files.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
-#include "../include/IncompressibleFSIAssembly.hpp"
+#include "../include/FSISteadyStateAssembly.hpp"
 
 double scale=1000.;
 
 using namespace std;
 using namespace femus;
 
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,const char name[],
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const vector< double > &x, const char name[],
 						double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char name[],
+bool SetBoundaryConditionBathe_2D_FSI(const vector< double > &x, const char name[],
 				      double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const std::vector < double >& x,const char name[],
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const vector< double > &x, const char name[],
 						double &value, const int facename, const double time);
 
-bool SetBoundaryConditionBathe_3D_solid(const std::vector < double >& x,const char name[],
+bool SetBoundaryConditionBathe_3D_solid(const vector< double > &x, const char name[],
 					double &value, const int facename, const double time);
-bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const char name[],
+bool SetBoundaryConditionComsol_2D_FSI(const vector< double > &x, const char name[],
 				       double &value, const int FaceName, const double = 0.);
 
-double InitalValueU(const std::vector < double >& x);
 
-bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
+bool SetRefinementFlag(const vector< double > &x, const int &ElemGroupNumber,const int &level);
 
 //------------------------------------------------------------------------------------------------------------------
 
@@ -187,24 +186,19 @@ int main(int argc,char **args) {
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
   if(simulation < 3)
-    numberOfUniformRefinedMeshes = 1;
+    numberOfUniformRefinedMeshes=3;
   else if(simulation == 3 || simulation == 7)
-    numberOfUniformRefinedMeshes = 4;
+    numberOfUniformRefinedMeshes=4;
   else if(simulation < 7)
-    numberOfUniformRefinedMeshes = 2;
+    numberOfUniformRefinedMeshes=2;
 
-  numberOfAMRLevels = 2;
+  numberOfAMRLevels = 0;
 
-  MultiLevelMesh ml_msh( numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
+  MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes, numberOfUniformRefinedMeshes + numberOfAMRLevels,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
-
-  //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
-
-  ml_msh.PrintInfo();
 
   // mark Solid nodes
   ml_msh.MarkStructureNode();
-
 
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
@@ -218,20 +212,17 @@ int main(int argc,char **args) {
   ml_sol.AddSolution("V",LAGRANGE,SECOND,1);
   if (!dimension2D) ml_sol.AddSolution("W",LAGRANGE,SECOND,1);
 
-  // Pair each velocity variable with the corresponding displacement variable
+  // Pair each velocity varible with the corresponding displacement variable
   ml_sol.PairSolution("U","DX"); // Add this line
   ml_sol.PairSolution("V","DY"); // Add this line
   if (!dimension2D) ml_sol.PairSolution("W","DZ"); // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P",DISCONTINOUS_POLYNOMIAL,FIRST,1);
-  ml_sol.AssociatePropertyToSolution("P","Pressure"); // Add this line
+  ml_sol.AssociatePropertyToSolution("P","Pressure",false); // Add this line
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
-  if (1 == simulation )
-    ml_sol.Initialize("U",InitalValueU);
-
 
   // ******* Set boundary functions *******
   if(1==simulation || 2==simulation)
@@ -273,24 +264,22 @@ int main(int argc,char **args) {
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD);
+  system.SetAssembleFunction(FSISteadyStateAssembly);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
   system.SetLinearConvergenceTolerance(1.e-10);
-  system.SetNonLinearConvergenceTolerance(1.e-9);
+  system.SetNonLinearConvergenceTolerance(1.e-10);
   if( simulation == 7 )
     system.SetNonLinearConvergenceTolerance(1.e-5);
-
-  system.SetNumberPreSmoothingStep(5);
-  system.SetNumberPostSmoothingStep(5);
-
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
   if( simulation < 3 || simulation == 7 ) {
-    system.SetMaxNumberOfLinearIterations(5);
+    system.SetMaxNumberOfLinearIterations(2);
     system.SetMaxNumberOfNonLinearIterations(10);
   }
   else {
-    system.SetMaxNumberOfLinearIterations(2);
+    system.SetMaxNumberOfLinearIterations(8);
     system.SetMaxNumberOfNonLinearIterations(15);
   }
 
@@ -307,8 +296,7 @@ int main(int argc,char **args) {
     system.SetPreconditionerFineGrids(ILU_PRECOND);
   else
     system.SetPreconditionerFineGrids(MLU_PRECOND);
-
-  system.SetTolerances(1.e-12,1.e-20,1.e+50,1);
+  system.SetTolerances(1.e-12,1.e-20,1.e+50,20);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
@@ -322,25 +310,23 @@ int main(int argc,char **args) {
     system.SetElementBlockNumber(2);
   }
   else if(simulation < 7 ){
-    system.SetElementBlockNumber(2);
-    //system.SetElementBlockNumberFluid(2);
-    //system.SetElementBlockSolidAll();
-    //system.SetElementBlockFluidAll();
+    system.SetElementBlockNumberFluid(2);
+    system.SetElementBlockSolidAll();
   }
   else if(simulation == 7 ){
-    system.SetElementBlockNumber(2);
+    system.SetElementBlockNumber(3);
   }
 
   // ******* For Gmres Preconditioner only *******
-  //system.SetDirichletBCsHandling(ELIMINATION);
+  system.SetDirichletBCsHandling(ELIMINATION);
 
   // ******* Solve *******
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-  system.MGsolve();
+  system.MLsolve();
 
   // ******* Print solution *******
-  ml_sol.SetWriter(GMV);
+  ml_sol.SetWriter(VTK);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -350,6 +336,7 @@ int main(int argc,char **args) {
 
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
+
 
   ml_sol.GetWriter()->SetDebugOutput( true );
   //ml_sol.GetWriter()->ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
@@ -373,31 +360,19 @@ bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumb
 
 }
 
-double InitalValueU(const std::vector < double >& x) {
-  double xc = 0.2;
-  double yc = 0.2;
-  double r = 0.05;
-  double r2 = r*r;
-  double xMxc2 = (x[0]-xc)*(x[0]-xc);
-  double OMxc2 = (0.-xc)*(0.-xc);
-  double yMyc2 = (x[1]-yc)*(x[1]-yc);
-
-  double H = 0.41;
-  double L = 2.5;
-  double um = 0.2;
-  return (xMxc2+yMyc2-r2)/(OMxc2+yMyc2-r2)*(1.5*um*4.0/0.1681*x[1]*(H-x[1]))*exp(-L*x[0]);
-}
-
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionTurek_2D_FSI_and_solid(const vector< double > &xx,const char name[], double &value, const int facename, const double time) {
+  double x=xx[0];
+  double y=xx[1];
+  double z=xx[2];
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
     if(1==facename){   //inflow
       test=1;
       double um = 0.2;
-      value=1.5*um*4.0/0.1681*x[1]*(0.41-x[1]);
+      value=1.5*um*4.0/0.1681*y*(0.41-y);
     }
     else if(2==facename ){  //outflow
       test=0;
@@ -509,7 +484,11 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,
   return test;
 }
 
-bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_2D_FSI(const vector< double > &xx,const char name[], double &value, const int facename, const double time) {
+  double x=xx[0];
+  double y=xx[1];
+  double z=xx[2];
+
   bool test=1; //dirichlet
   value=0.;
   if(!strcmp(name,"U")) {
@@ -628,7 +607,12 @@ bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char
 
 
 
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const vector< double > &xx,const char name[], double &value, const int facename, const double time) {
+  double x=xx[0];
+  double y=xx[1];
+  double z=xx[2];
+
+
   bool test=1; //dirichlet
   value=0.;
 
@@ -765,7 +749,10 @@ bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const std::vector < double >& x,
   return test;
 }
 
-bool SetBoundaryConditionBathe_3D_solid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionBathe_3D_solid(const vector< double > &xx,const char name[], double &value, const int facename, const double time) {
+  double x=xx[0];
+  double y=xx[1];
+  double z=xx[2];
   bool test=1; //dirichlet
   value=0.;
 
@@ -875,7 +862,10 @@ bool SetBoundaryConditionBathe_3D_solid(const std::vector < double >& x,const ch
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const char name[], double &value, const int FaceName, const double time) {
+bool SetBoundaryConditionComsol_2D_FSI(const vector< double > &xx,const char name[], double &value, const int FaceName, const double time) {
+  double x=xx[0];
+  double y=xx[1];
+  double z=xx[2];
   bool test=1; //Dirichlet
   value=0.;
   //   cout << "Time bdc : " <<  time << endl;
@@ -884,7 +874,7 @@ bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const cha
       test=1;
       //comsol Benchmark
       //value = (0.05*time*time)/(sqrt( (0.04 - time*time)*(0.04 - time*time) + (0.1*time)*(0.1*time) ))*y*(0.0001-y)*4.*100000000;
-      value = 0.05*x[1]*(0.0001-x[1])*4.*100000000;
+      value = 0.05*y*(0.0001-y)*4.*100000000;
     }
     else if (2==FaceName ) {  //outflow
       test=0;

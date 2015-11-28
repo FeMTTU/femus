@@ -55,7 +55,7 @@ public:
 
     /** Get the dof number for the element -type- */
     unsigned GetTotalNumberOfDofs(const unsigned &type) const {
-      return MetisOffset[type][_nprocs];
+      return _dofOffset[type][_nprocs];
     }
 
     /** Set the number of nodes */
@@ -77,7 +77,13 @@ public:
     unsigned GetNumberOfElements() const {
       return _nelem;
     }
-
+    
+    /** Get element group*/
+    short unsigned GetElementGroup(const unsigned &iel) const;
+    
+    /** Get element material*/
+    short unsigned GetElementMaterial(const unsigned &iel) const;
+    
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
         _level=i;
@@ -107,12 +113,12 @@ public:
     }
 
 //     /** Get the metis dof from the gambit dof */
-//     unsigned GetMetisDof(const unsigned &inode, const short unsigned &solType) const {
+//     unsigned GetSolutionDof(const unsigned &inode, const short unsigned &solType) const {
 //       return IS_Gmt2Mts_dof[solType][inode];
 //     }
 
-    unsigned GetMetisDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
-    
+    unsigned GetSolutionDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
+
     /** Performs a bisection search to find the processor of the given dof */
     unsigned IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const;
 
@@ -154,17 +160,13 @@ public:
 
 
     // member data
-    Solution* _coordinate;
+    Solution* _topology;
     const elem_type *_finiteElement[6][5];
 
-    vector < unsigned > IS_Mts2Gmt_elem_offset;
-    vector < unsigned > IS_Mts2Gmt_elem;
-    vector < unsigned > own_size[5];
-    vector <vector < unsigned > > MetisOffset;
-    vector< vector < unsigned > > ghost_nd[5];
-    vector< vector < int > > ghost_nd_mts[5];
-    std::map < unsigned, unsigned > _ownedGhostMap[2];
-    vector < unsigned > _originalOwnSize[2];
+    vector < unsigned > _elementOffset;
+    vector < unsigned > _ownSize[5];
+    vector < unsigned > _dofOffset[5];
+    vector< vector < int > > _ghostDofs[5];
 
     elem *el;  // topology object
     static bool (* _SetRefinementFlag)(const std::vector < double >& x,
@@ -207,10 +209,22 @@ private:
     static unsigned _dimension;                //< dimension of the problem
     static unsigned _ref_index;
     static unsigned _face_index;
-    vector <unsigned> IS_Gmt2Mts_dof[5];        //< dof map
-    vector <unsigned> IS_Gmt2Mts_dof_offset[5]; //< map offset
+    
+    std::map < unsigned, unsigned > _ownedGhostMap[2];
+    vector < unsigned > _originalOwnSize[2];
+    
     static const unsigned _END_IND[5];
     vector < vector < double > > _coords;
+    
+    // indices of the topology parallel vectors
+    static const unsigned _xIndex = 0; 
+    static const unsigned _yIndex = 1; 
+    static const unsigned _zIndex = 2;
+    static const unsigned _amrIndex = 3;
+    static const unsigned _materialIndex = 4; 
+    static const unsigned _groupIndex = 5; 
+    static const unsigned _typeIndex = 6;
+    
 
 };
 

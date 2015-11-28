@@ -38,9 +38,9 @@ namespace femus {
 
 
  void TimeLoop::check_time_par(FemusInputParser<double>& time_in) {
-  
+
   if (time_in.get("initial_step") < 0.) {std::cout << " negative restart ;;;;;;;;;;;;;;;;;;;" << std::endl  ; abort();}
- 
+
   return;
 }
 
@@ -48,22 +48,22 @@ namespace femus {
 
 // ==================================================================
 /// Constructor
- 
+
  TimeLoop::TimeLoop(Files& files_in, const FemusInputParser<double> & map_in):
  _files(files_in),
  _timemap(map_in)   {
 
- //inizialize   
-   _t_idx_in  = 0;  
-    _time_in  = 0.;  
+ //inizialize
+   _t_idx_in  = 0;
+    _time_in  = 0.;
  _t_idx_final = 0;
-  _time_final = 0.; 
+  _time_final = 0.;
  _curr_t_idx  = 0;
   _curr_time  = 0.;
-   
+
 }
 
-    
+
 // ======================================================
 /// This function controls the time step operations:
 //first, prepare the A matrices for all levels
@@ -108,26 +108,25 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
         std::auto_ptr<NumericVector> _x_tmp = NumericVector::build();
          _x_tmp->init(eqn_in->_dofmap._Dim[eqn_in->GetGridn()-1],false, SERIAL);
 
-    
+
     ///A0) Put x_old into x_oold
     *(_x_oold) = *( eqn_in->_LinSolver[eqn_in->GetGridn()-1]->_EPSC );
 
-    /// A) Assemblying 
+    /// A) Assemblying
 #if  DEFAULT_PRINT_TIME==1
     std::clock_t start_time=std::clock();
 #endif
 
     for (uint Level = 0 ; Level < eqn_in->GetGridn(); Level++) {
-	eqn_in->SetAssembleMatrix(true);
-	eqn_in->SetLevelToAssemble(Level); 
+	eqn_in->SetLevelToAssemble(Level);
         eqn_in->GetAssembleFunction()(eqn_in->GetMLProb());
 
 #ifdef DEFAULT_PRINT_INFO
         eqn_in->_LinSolver[Level]->_KK->close();
         double ANorm = eqn_in->_LinSolver[Level]->_KK->l1_norm();
-	
+
 //	_LinSolver[Level]->_KK->print_graphic(true); TODO should pass this true or false as a parameter
-	
+
         std::cout << " ANorm l1 " << Level << " "  << ANorm  << std::endl;
 #endif
     }
@@ -147,9 +146,9 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 #ifdef DEFAULT_PRINT_TIME
         std::clock_t start_time_sol = std::clock();
 #endif
-      
+
         eqn_in->MGSolve(DEFAULT_EPS_LSOLV, DEFAULT_MAXITS_LSOLV);
-	
+
 
 #if    DEFAULT_PRINT_TIME==1
     std::clock_t end_time_sol = std::clock();
@@ -157,7 +156,7 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
               << " s "<< std::endl;
 #endif
 
-      
+
 /// std::cout << "$$$$$$$$$ Computed the x with the MG method $$$$$$$" << std::endl;
 
     /// E) Update of the old solution at the top Level
@@ -185,8 +184,8 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 
     return deltax_norm;  //TODO do we have to be based on l2norm or linfty norm???
 }
-    
-    
+
+
 // ==========================================================================================
 /// This function performes all the Physics time step routines
 void TimeLoop::OneTimestepEqnLoop(
@@ -376,7 +375,7 @@ void TimeLoop::TransientLoop(const MultiLevelProblem & eqnmap)  {
 
 #if DEFAULT_PRINT_TIME==1 // only for cpu time check --------
         std::clock_t  start_time=std::clock();
-#endif // ------------------------------------------- 
+#endif // -------------------------------------------
 
         // set up the time step
         std::cout << "\n  ** Solving time step " << curr_step
@@ -409,7 +408,7 @@ void TimeLoop::TransientLoop(const MultiLevelProblem & eqnmap)  {
     return;
 }
 
-    
-    
+
+
 } //end namespace femus
 

@@ -28,13 +28,14 @@ IF(BUILD_FSIAPPS)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/FSITimeDependentBenchmarks/)
 
 # FSI SteadyState Benchmarks
-  ADD_SUBDIRECTORY(${FSI_FOLDER}/FSISteadyStateBenchmarks/)
+  ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/ML)
+  ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/MG)
 
 # FSI SteadyState Benchmark Turek3
   ADD_SUBDIRECTORY(${FSI_FOLDER}/FSI_TUREK_3/)
 
 # FSI SteadyState in porous media
-  ADD_SUBDIRECTORY(${FSI_FOLDER}/fsi_porous/)
+ ADD_SUBDIRECTORY(${FSI_FOLDER}/fsi_porous/)
   unset(FSI_FOLDER)
 ENDIF(BUILD_FSIAPPS)
 

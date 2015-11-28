@@ -45,9 +45,6 @@ public:
     /** The type of the parent. */
     typedef LinearImplicitSystem Parent;
 
-    /** Solves the system. */
-    virtual void solve ();
-    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
     /** Clear all the data structures associated with the system. */
     virtual void clear();
 
@@ -91,6 +88,8 @@ protected:
     /** The max non linear tolerance **/
     double _max_nonlinear_convergence_tolerance;
 
+    /** Solves the system. */
+    virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 
 private:
 
