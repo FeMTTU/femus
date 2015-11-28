@@ -37,13 +37,11 @@ using std::endl;
 //--------------------------------------------------------------------------------
 LinearEquation::LinearEquation(Mesh *other_msh){
   _msh = other_msh;
-  _CC_flag=0;
   _EPS = NULL;
   _EPSC = NULL;
   _RES = NULL;
   _RESC = NULL;
   _KK = NULL;
-  _CC = NULL;
 }
 
 //--------------------------------------------------------------------------------
@@ -136,7 +134,6 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
 
   //ghost nodes
   KKghost_nd.resize(_nprocs);
-  //KKghost_nd[0].resize(1);  KKghost_nd[0][0]=1;
   for(int i=1; i<_nprocs; i++) {
     KKghost_nd[i].resize(KKghostsize[i]);
   }
@@ -148,15 +145,9 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
        unsigned indexSol=_SolPdeIndex[j];
        for(int k=0; k<_msh->_ghostDofs[_SolType[indexSol]][i].size();k++) {
 	 //gambit ghost node
-// 	 unsigned gmt_ghost_nd = _msh->ghost_nd[_SolType[indexSol]][i][k];
-// 	 KKghost_nd[i][counter] =  GetSystemDof(indexSol,j,gmt_ghost_nd);
-
-
 	 unsigned idof_metis = _msh->_ghostDofs[_SolType[indexSol]][i][k];
 	 unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, _SolType[indexSol]);
          KKghost_nd[i][counter] = KKoffset[j][isubdom] + idof_metis - _msh->_dofOffset[_SolType[indexSol]][isubdom];
-
-
 	 counter++;
        }
      }
@@ -191,33 +182,12 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
   int KK_local_size =KKoffset[KKIndex.size()-1][processor_id()] - KKoffset[0][processor_id()];
 
   _KK = SparseMatrix::build().release();
-  //_KK->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
   _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
-  unsigned igrid=_msh->GetLevel()+1;
-  if(igrid>=_gridr && igrid<_gridn){
-    _CC = SparseMatrix::build().release();
-    _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
-    //_CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
-  }
-
 }
 
 //--------------------------------------------------------------------------------
 void LinearEquation::AddLevel(){
   _gridn++;
-  if(!_CC){
-    const unsigned dim = _msh->GetDimension();
-    int KK_UNIT_SIZE_ = pow(5,dim);
-    int KK_size=KKIndex[KKIndex.size()-1u];
-    int KK_local_size =KKoffset[KKIndex.size()-1][processor_id()] - KKoffset[0][processor_id()];
-
-    unsigned igrid=_msh->GetLevel()+1;
-    if(igrid>=_gridr && igrid<_gridn){
-      _CC = SparseMatrix::build().release();
-      _CC->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
-      //_CC->init(KK_size,KK_size,KK_local_size,KK_local_size,KK_UNIT_SIZE_*KKIndex.size(),KK_UNIT_SIZE_*KKIndex.size());
-    }
-  }
 }
 
 //--------------------------------------------------------------------------------
@@ -247,12 +217,6 @@ void LinearEquation::DeletePde() {
 
   if(_KK)
     delete _KK;
-
-  unsigned igrid=_msh->GetLevel()+1;
-  if(igrid>=_gridr && igrid<_gridn){
-    if(_CC)
-      delete _CC;
-  }
 
   if(_EPS)
     delete _EPS;
@@ -289,7 +253,6 @@ void LinearEquation::DeletePde() {
     const int max_size = static_cast< int > (ceil(pow(3,dim)));
 
     vector < vector < int > > dofsVAR(_SolPdeIndex.size());
-    //vector < int > end_ind(_SolPdeIndex.size());
 
     for(int i=0;i<_SolPdeIndex.size();i++){
       dofsVAR[i].reserve(max_size);
@@ -399,24 +362,6 @@ void LinearEquation::DeletePde() {
      o_nnz[i]=static_cast <int> ((*sizeDnBM_o)(IndexStart+i))+BlgToMe_o[i].size();
      if (o_nnz[i] > o_max) o_nnz[i] = o_max;
     }
-
-//      unsigned owndprsdofs = KKoffset[KKIndex.size()-1][this_proc]-KKoffset[KKIndex.size()-2][this_proc];
-//      for(int i=0; i<owned_dofs;i++)  {
-//        d_nnz[i] += owndprsdofs;
-//        if (d_nnz[i] > d_max) d_nnz[i] = d_max;
-//        o_nnz[i] += owndprsdofs;
-//        if (o_nnz[i] > o_max) o_nnz[i] = o_max;
-//     }
-//
-//     for(int i=KKoffset[KKIndex.size()-2][this_proc]; i<KKoffset[KKIndex.size()-1][this_proc];i++)  {
-//        d_nnz[i] += owned_dofs;
-//        if (d_nnz[i] > d_max) d_nnz[i] = d_max;
-//        o_nnz[i] += owned_dofs;
-//        if (o_nnz[i] > o_max) o_nnz[i] = o_max;
-//     }
-
-
-
 
     delete sizeDnBM_o;
     delete sizeDnBM_d;
