@@ -187,8 +187,9 @@ public:
     void SetCoarseMesh( Mesh* otherCoarseMsh ){
       _coarseMsh = otherCoarseMsh;
     };
-
-
+    
+    static const unsigned _typeIndex = 6;
+     
 private:
     /** Coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
     Mesh* _coarseMsh;
@@ -226,7 +227,7 @@ private:
     static const unsigned _amrIndex = 3;
     static const unsigned _materialIndex = 4; 
     static const unsigned _groupIndex = 5; 
-    static const unsigned _typeIndex = 6;
+
     
 
 };

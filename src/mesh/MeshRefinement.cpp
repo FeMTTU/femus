@@ -41,10 +41,13 @@ void MeshRefinement::FlagAllElementsToBeRefined() {
    _mesh.el->InitRefinedToZero();
 
    //refine all next grid elements
+   vector <double> typeLocal;
+   _mesh._topology->_Sol[_mesh._typeIndex]->localize_to_all(typeLocal);
    for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++) {
      _mesh.el->SetRefinedElementIndex(iel,1);
      _mesh.el->AddToRefinedElementNumber(1);
-     short unsigned elt=_mesh.el->GetElementType(iel);
+     //short unsigned elt=_mesh.el->GetElementType(iel);
+     short unsigned elt=typeLocal[iel];
      _mesh.el->AddToRefinedElementNumber(1,elt);
    }
 
@@ -85,12 +88,16 @@ void MeshRefinement::FlagElementsToBeRefined() {
     _mesh._topology->_Sol[3]->localize_to_all(AMR_local);
 
     _mesh.el->InitRefinedToZero();
-
+    
+    vector <double> typeLocal;
+    _mesh._topology->_Sol[_mesh._typeIndex]->localize_to_all(typeLocal); 
+    
     for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++) {
       if(AMR_local[iel]>0.5){
 	_mesh.el->SetRefinedElementIndex(iel,1);
 	_mesh.el->AddToRefinedElementNumber(1);
-	short unsigned elt=_mesh.el->GetElementType(iel);
+	//short unsigned elt=_mesh.el->GetElementType(iel);
+	short unsigned elt = typeLocal[iel];
 	_mesh.el->AddToRefinedElementNumber(1,elt);
       }
     }
@@ -113,12 +120,16 @@ void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
   _mesh._topology->_Sol[3]->localize_to_all(AMR_local);
 
   _mesh.el->InitRefinedToZero();
-
+  
+  vector <double> typeLocal;
+  _mesh._topology->_Sol[_mesh._typeIndex]->localize_to_all(typeLocal);
+  
   for (unsigned iel = 0; iel < _mesh.GetNumberOfElements(); iel++) {
     if(AMR_local[iel]>0.5){
       _mesh.el->SetRefinedElementIndex(iel,1);
       _mesh.el->AddToRefinedElementNumber(1);
-      short unsigned elt=_mesh.el->GetElementType(iel);
+      //short unsigned elt=_mesh.el->GetElementType(iel);
+      short unsigned elt = typeLocal[iel];
       _mesh.el->AddToRefinedElementNumber(1,elt);
     }
   }
@@ -150,11 +161,15 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   _mesh.el->SetElementGroupNumber(elc->GetElementGroupNumber());
   _mesh.el->SetNumberElementFather(elc->GetElementNumber()); // setta il num di elementi padre per il mesh fine
 
+  vector <double> typeLocal;
+  mshc->_topology->_Sol[mshc->_typeIndex]->localize_to_all(typeLocal);
+  
   bool AMR = false;
   for (unsigned iel=0; iel<elc->GetElementNumber(); iel++) {
     if ( elc->GetRefinedElementIndex(iel) ) {
       elc->SetRefinedElementIndex(iel,jel+1u);
-      unsigned elt=elc->GetElementType(iel);
+      //unsigned elt=elc->GetElementType(iel);
+      unsigned elt =typeLocal[iel];
       // project element type
       for (unsigned j=0; j<_mesh.GetRefIndex(); j++) {
         _mesh.el->SetElementType(jel+j,elt);
@@ -188,7 +203,8 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
     else {
       AMR = true;
       //elc->SetRefinedElementIndex(iel,jel+1u); // to understand
-      unsigned elt=elc->GetElementType(iel);
+      //unsigned elt=elc->GetElementType(iel);
+      unsigned elt =typeLocal[iel];
 
       // project element type
       _mesh.el->SetElementType(jel,elt);
@@ -234,9 +250,12 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
     }
   }
   //find all the middle edge points
+  //vector <double> typeLocalFine;
+  //_mesh._topology->_Sol[_mesh._typeIndex]->localize_to_all(typeLocalFine);
   for (unsigned iel=0; iel<_mesh.GetNumberOfElements(); iel++) {
     if ( _mesh.el->IsFatherRefined(iel) ) {
       unsigned ielt=_mesh.el->GetElementType(iel);
+      //unsigned ielt = typeLocalFine[iel];
       unsigned istart=_mesh.el->GetElementDofNumber(iel,0);
       unsigned iend=_mesh.el->GetElementDofNumber(iel,1);
       for (unsigned inode=istart; inode<iend; inode++) {
@@ -251,6 +270,7 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 	    if ( _mesh.el->IsFatherRefined(jel) && jel > iel ) {  // to skip coarse elements
 	      unsigned jm=0,jp=0;
 	      unsigned jelt=_mesh.el->GetElementType(jel);
+	      //unsigned jelt =typeLocalFine[jel];
 	      for (unsigned jnode=0; jnode<_mesh.el->GetElementDofNumber(jel,0); jnode++) {
 		if (_mesh.el->GetElementVertexIndex(jel,jnode)==im) {
 		  jm=jnode+1u;
@@ -401,12 +421,14 @@ void MeshRefinement::Buildkmid() {
   }
 
   // generates element dofs for hex and quad elements
+  //vector <double> typeLocal;
+  //_mesh._topology->_Sol[_mesh._typeIndex]->localize_to_all(typeLocal);
   for (unsigned iel=0; iel<_mesh.el->GetElementNumber(); iel++) {
     if ( _mesh.el->IsFatherRefined(iel) ) {
-      if (0==_mesh.el->GetElementType(iel)) { //hex
+      if (/*0==typeLocal[iel]*/ 0==_mesh.el->GetElementType(iel)) { //hex
 	_mesh.el->SetElementVertexIndex(iel,26,++nnodes);
       }
-      if (3==_mesh.el->GetElementType(iel)) {//quad
+      if (/*3==typeLocal[iel]*/ 3==_mesh.el->GetElementType(iel)) {//quad
 	_mesh.el->SetElementVertexIndex(iel,8,++nnodes);
       }
     }

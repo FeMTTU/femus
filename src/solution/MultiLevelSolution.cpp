@@ -529,7 +529,8 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
         for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet for pressure variable only
 	  unsigned nel=msh->GetNumberOfElements();
 	  for (int iel=msh->_elementOffset[isdom]; iel < msh->_elementOffset[isdom+1]; iel++) {
-	    short unsigned ielt = msh->el->GetElementType(iel);
+	    //short unsigned ielt = msh->el->GetElementType(iel);
+	    short unsigned ielt = msh->GetElementType(iel);
 	    for (unsigned jface = 0; jface<msh->el->GetElementFaceNumber(iel); jface++) {
 	      if ( msh->el->GetBoundaryIndex(iel,jface) == 0) { //Domain Decomposition Dirichlet
 		unsigned nv1 = msh->el->GetElementDofNumber(iel, _solType[k]);
