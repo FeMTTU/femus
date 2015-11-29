@@ -161,7 +161,7 @@ if ( (!strcmp(fe_in.c_str(),"biquadratic")) && GetDim() == 3  && (!strcmp(geomel
 void elem_type::GetSparsityPatternSize(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc,
 				       NumericVector* NNZ_d, NumericVector* NNZ_o,
 				       const unsigned &index_sol, const unsigned &kkindex_sol) const {
-  if( lspdec._msh->el->GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
+  if( lspdec._msh->GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
     for (int i=0; i<_nf; i++) {
       int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
       int ielf=lspdec._msh->el->GetChildElement(ielc,i0);
@@ -169,8 +169,8 @@ void elem_type::GetSparsityPatternSize(const LinearEquation &lspdef,const Linear
       //int iadd=lspdef._msh->el->GetMeshDof(ielf,i1,_SolType);
       //int irow=lspdef.GetSystemDof(index_sol,kkindex_sol,iadd);  //  local-id to dof
       int irow=lspdef.GetSystemDof(index_sol, kkindex_sol, i1, ielf);  //  local-id to dof
-      
-      
+
+
       int iproc=0;
       //while (irow < lspdef.KKoffset[0][iproc] || irow >= lspdef.KKoffset[lspdef.KKIndex.size()-1][iproc] ) iproc++;
       while ( irow >= lspdef.KKoffset[lspdef.KKIndex.size()-1][iproc] ) iproc++;
@@ -217,7 +217,7 @@ void elem_type::GetSparsityPatternSize(const LinearEquation &lspdef,const Linear
 void elem_type::BuildProlongation(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat,
 				  const unsigned &index_sol, const unsigned &kkindex_sol) const {
 
-  if( lspdec._msh->el->GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
+  if( lspdec._msh->GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
     vector<int> cols(27);
     for (int i=0; i<_nf; i++) {
       int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
@@ -261,7 +261,7 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
 					  const unsigned &index_sol, const unsigned &kkindex_sol,
 					  const unsigned &index_pair_sol, const unsigned &kkindex_pair_sol) const{
 
-  if( lspdec._msh->el->GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
+  if( lspdec._msh->GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
     vector<int> cols(27);
     vector <double> copy_prol_val;
     copy_prol_val.reserve(27);
@@ -334,7 +334,7 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
 
 void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const {
 
-  if( meshc.el->GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
+  if( meshc.GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
     for (int i=0; i<_nf; i++) {
       int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
       int ielf=meshc.el->GetChildElement(ielc,i0);
@@ -375,7 +375,7 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
 
 void elem_type::BuildProlongation(const Mesh &meshf,const Mesh &meshc, const int& ielc,
 				  SparseMatrix* Projmat) const {
-  if( meshc.el->GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
+  if( meshc.GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
     vector<int> jcols(27);
     for (int i=0; i<_nf; i++) {
       int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element

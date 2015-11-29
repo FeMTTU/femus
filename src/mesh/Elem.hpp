@@ -32,11 +32,11 @@ public:
     /** constructors */
     elem(const unsigned & other_nel);
 
-    elem(const elem *elc, const unsigned refindex);
+    elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrLocal);
 
     /** destructor */
     ~elem();
-    
+
     void deleteParallelizedQuantities();
 
     // reorder the element according to the new element mapping
@@ -116,25 +116,16 @@ public:
     void AddToElementNumber(const unsigned &value, short unsigned ielt);
 
     /** To be Added */
-    unsigned GetRefinedElementNumber(const char name[]="All") const;
+    unsigned GetRefinedElementNumber() const {return _nelr;};
 
     /** To be Added */
-    unsigned GetRefinedElementNumber(short unsigned ielt) const;
+    unsigned GetRefinedElementTypeNumber(const unsigned &ielt) const { return _nelrt[ielt]; };
 
     /** To be Added */
-    void AddToRefinedElementNumber(const unsigned &value, const char name[]="All");
+    void SetRefinedElementNumber(const unsigned &value){ _nelr = value; };
 
     /** To be Added */
-    void AddToRefinedElementNumber(const unsigned &value, short unsigned ielt);
-
-    /** To be Added */
-    void InitRefinedToZero();
-
-    /** To be Added */
-    unsigned GetRefinedElementIndex(const unsigned &iel) const;
-
-    /** To be Added */
-    void SetRefinedElementIndex(const unsigned &iel, const unsigned &value);
+    void SetRefinedElemenTypeNumber(const unsigned &value, const unsigned &ielt){ _nelrt[ielt] = value; };
 
     /** To be Added */
     unsigned GetNodeNumber()const;
@@ -185,7 +176,7 @@ public:
     void AllocateNodeRegion();
 
     /** To be Added */
-    void AllocateChildrenElement(const unsigned &ref_index);
+    void AllocateChildrenElement(const unsigned &ref_index, const std::vector < double > &localizedAmrVector);
 
     /** To be Added */
     void SetChildElement(const unsigned &iel,const unsigned &json, const unsigned &value);
@@ -210,8 +201,6 @@ private:
     unsigned *_kvertMemory;
     unsigned _kvertSize;
 
-    unsigned *_elr;
-
     unsigned **_childElem;
     unsigned *_childElemMemory;
     unsigned _childElemSize;
@@ -228,7 +217,7 @@ private:
     bool  _nodeRegionFlag;
     bool *_isFatherElementRefined; //element
     unsigned _nelf;
-    
+
     unsigned _level;
 
 };

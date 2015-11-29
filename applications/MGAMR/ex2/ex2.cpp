@@ -109,6 +109,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure", false);
+  //mlSol.AssociatePropertyToSolution("P", "Pressure", true);
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data

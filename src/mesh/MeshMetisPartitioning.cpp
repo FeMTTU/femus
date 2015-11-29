@@ -97,14 +97,9 @@ void MeshMetisPartitioning::DoPartition(std::vector <int> &epart, const bool &AM
 
     eptr[0]=0;
     unsigned counter=0;
-    //vector <double> typeLocal;
-    //_mesh._topology->_Sol[_mesh._typeIndex]->localize_to_all(typeLocal);
     for (unsigned iel = 0; iel<nelem; iel++) {
-      unsigned ielt = _mesh.el->GetElementType(iel);
-      //unsigned ielt = typeLocal[iel];
       unsigned ndofs = _mesh.el->GetElementDofNumber(iel,2);
       eptr[iel+1] = eptr[iel] + ndofs;
-
       for (unsigned inode = 0; inode < ndofs; inode++){
         eind[counter] = _mesh.el->GetElementVertexIndex(iel,inode)-1;
         counter++;

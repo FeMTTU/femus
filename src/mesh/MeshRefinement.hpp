@@ -40,13 +40,13 @@ public:
     MeshRefinement(Mesh& mesh);
 
     /** destructor */
-    ~MeshRefinement(); 
-    
+    ~MeshRefinement();
+
     /** Refinement functions */
-    
+
     /** This function generates a finer mesh level, $l_i$, from a coarser mesh level $l_{i-1}$, $i>0$ */
     void RefineMesh(const unsigned &igrid, Mesh *mshc, const elem_type* otheFiniteElement[6][5]);
-    
+
     /** Flag all the elements to be refined */
     void FlagAllElementsToBeRefined();
 
@@ -55,15 +55,16 @@ public:
 
     /** Flag the elements to be refined in according to AMR criteria */
     void FlagElementsToBeRefined();
-    
-    
+
+
 private:
 
-    
+    void FlagElementsToRefine(const unsigned& type);
+
     /** To be added */
     void Buildkmid();
-    
-  
+
+
     Mesh& _mesh;                 //< reference to the mesh which is built by refinement
 
 };
@@ -93,7 +94,7 @@ const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse Mesh dof = f2CVM[e
       {14,17,16,5,11,10},
       {15,18,17,6,12,11},
       {16,17,18,10,11,12} },
-    { {1,5,9,8},		
+    { {1,5,9,8},
       {5,2,6,9},
       {9,6,3,7},
       {8,9,7,4} },
@@ -114,47 +115,47 @@ const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse Mesh dof = f2CVM[e
       { {0,4},{1,4},{2,4},{3,4} },
       { {4,5},{5,5},{6,5},{7,5} }
     },
-    { 
+    {
       { {0,0},{1,0},{2,0},{6,3} },
       { {0,1},{1,3},{3,1},{4,3} },
       { {1,1},{2,3},{3,2},{5,1} },
       { {2,1},{0,3},{3,3},{7,2} }
     },
-    { 
+    {
       { {0,0},{1,2},{4,0},{5,2} },
       { {1,0},{2,2},{5,0},{6,2} },
       { {2,0},{0,2},{6,0},{4,2} },
       { {0,3},{1,3},{2,3},{3,3} },
       { {4,4},{5,4},{6,4},{7,4} }
     },
-    { 
+    {
       { {0,0},{1,0} },
       { {1,1},{2,1} },
       { {2,2},{3,2} },
       { {3,3},{0,3} }
     },
-    { 
+    {
       { {0,0},{1,0} },
       { {1,1},{2,1} },
       { {2,2},{0,2} }
     },
-    { 
+    {
       { {0,0} },
       { {1,1} }
     }
   };
-  
+
   const unsigned edge2VerticesMapping[6][12][2]= { // vertex1,vertex2=e2VM[element type][edge][0,1]
     {
       {0,1},{1,2},{2,3},{3,0},
       {4,5},{5,6},{6,7},{7,4},
       {0,4},{1,5},{2,6},{3,7}
     },
-    { 
+    {
       {0,1},{1,2},{2,0},
       {0,3},{1,3},{2,3}
     },
-    { 
+    {
       {0,1},{1,2},{2,0},
       {3,4},{4,5},{5,3},
       {0,3},{1,4},{2,5}
@@ -165,8 +166,8 @@ const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse Mesh dof = f2CVM[e
     {
       {0,1},{1,2},{2,0}
     },
-    { 
-      {0,1}      
+    {
+      {0,1}
     }
   };
 
@@ -179,24 +180,24 @@ const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse Mesh dof = f2CVM[e
       {0,0,0,0,0,0,13},
       {0,0,0,0,0,0,0,14}
     },
-    { 
+    {
       {0,4,6,7},
       {0,0,5,8},
       {0,0,0,9}
     },
-    { 
+    {
       {0,6,8,12},
       {0,0,7,0,13},
       {0,0,0,0,0,14},
       {0,0,0,0,9,11},
       {0,0,0,0,0,10}
     },
-    { 
+    {
       {0,4,0,7},
       {0,0,5},
       {0,0,0,6}
     },
-    { 
+    {
       {0,3,5},
       {0,0,4}
     },
@@ -204,7 +205,7 @@ const unsigned fine2CoarseVertexMapping[6][8][8]= { // coarse Mesh dof = f2CVM[e
       {0,2}
     }
   };
-  
+
 
 }   //end namespace femus
 

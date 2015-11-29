@@ -44,7 +44,6 @@ elem::elem(const unsigned &other_nel) {
   _elementType = new unsigned short [ _nel ];
   _elementGroup = new unsigned short [ _nel ];
   _elementMaterial = new unsigned short [ _nel ];
-  _elr = new unsigned [ _nel ];
   _nelf = 0;
 
   _kvert = new unsigned * [ _nel ];
@@ -77,13 +76,15 @@ elem::elem(const unsigned &other_nel) {
   _kvtel = NULL;
   _kvtelMemory = NULL;
   _nve = NULL;
+
+  _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
 }
 
 /**
  * This constructor allocates the memory for the \textit{finer elem}
  * starting from the paramenters of the \textit{coarser elem}
  **/
-elem::elem(const elem *elc, const unsigned refindex) {
+elem::elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrVector) {
 
   _level = elc->_level + 1;
 
@@ -92,9 +93,6 @@ elem::elem(const elem *elc, const unsigned refindex) {
   _nel += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // + non-refined;
 
   _elementType = new unsigned short [_nel];
-  //_elementGroup = new unsigned short [_nel];
-  //_elementMaterial = new unsigned short [_nel];
-  _elr = new unsigned [_nel];
 
   _isFatherElementRefined = new bool [_nel];
 
@@ -108,12 +106,13 @@ elem::elem(const elem *elc, const unsigned refindex) {
   _kvertSize = 0;
   _kelSize = 0;
   for (unsigned i = 0; i < N_GEOM_ELS; i++) {
-    _kvertSize += elc->GetRefinedElementNumber(i) * refindex * NVE[i][2];
-    _kelSize += elc->GetRefinedElementNumber(i) * refindex * NFC[i][1];
+    _kvertSize += elc->GetRefinedElementTypeNumber(i) * refindex * NVE[i][2];
+    _kelSize += elc->GetRefinedElementTypeNumber(i) * refindex * NFC[i][1];
+
   }
 
   for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ){
-     if(!elc->GetRefinedElementIndex(iel) ){
+    if( static_cast < short unsigned > ( coarseAmrVector[iel] +0.5 ) == 0){
        unsigned type = elc->GetElementType(iel);
        _kvertSize += NVE[type][2];
        _kelSize += NFC[type][1];
@@ -131,7 +130,7 @@ elem::elem(const elem *elc, const unsigned refindex) {
   for (unsigned iel = 0; iel<elc->GetElementNumber(); iel++) {
     short unsigned elemt = elc->GetElementType(iel);
     int increment = 1;
-    if ( elc->GetRefinedElementIndex(iel) ) {
+    if( static_cast < short unsigned > ( coarseAmrVector[iel] +0.5 ) == 1){
       increment = NRE[elemt];
     }
     for (unsigned j = 0; j < increment; j++) {
@@ -149,6 +148,8 @@ elem::elem(const elem *elc, const unsigned refindex) {
   _kvtel = NULL;
   _kvtelMemory = NULL;
   _nve = NULL;
+
+  _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
 }
 
 void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc){
@@ -275,7 +276,6 @@ elem::~elem() {
     delete [] _kel;
     delete [] _elementType;
     delete [] _isFatherElementRefined;
-    delete [] _elr;
 
     delete [] _kvtelMemory;
     delete [] _kvtel;
@@ -365,49 +365,6 @@ unsigned elem::GetNodeNumber()const {
  **/
 void elem::SetNodeNumber(const unsigned &value) {
   _nvt=value;
-}
-
-/**
- * Return the total number of the element to refine
- **/
-unsigned elem::GetRefinedElementNumber(const char* name) const {
-  if (!strcmp(name,"All")) {
-    return _nelr;
-  }
-  unsigned i;
-  i=GetIndex(name);
-  return _nelrt[i];
-}
-unsigned  elem::GetRefinedElementNumber(short unsigned ielt)const {
-  return _nelrt[ielt];
-}
-
-/**
- * Add value to the total number of the refined element
- **/
-void elem::AddToRefinedElementNumber(const unsigned &value, const char name[]) {
-  if (!strcmp(name,"All")) {
-    _nelr+=value;
-    return;
-  }
-  unsigned i;
-  i=this->GetIndex(name);
-  _nelrt[i]+=value;
-}
-void elem::AddToRefinedElementNumber(const unsigned &value, short unsigned ielt) {
-  _nelrt[ielt]+=value;
-}
-
-
-unsigned elem::GetRefinedElementIndex(const unsigned &iel) const {
-  return _elr[iel];
-}
-void elem::SetRefinedElementIndex(const unsigned &iel, const unsigned &value) {
-  _elr[iel]=value;
-}
-void elem::InitRefinedToZero() {
-  _nelr=_nelrt[0]=_nelrt[1]=_nelrt[2]=_nelrt[3]=_nelrt[4]=_nelrt[5]=0;
-  for (unsigned i=0; i<_nel; i++) _elr[i]=0;
 }
 
 /**
@@ -647,7 +604,7 @@ void  elem::SetNodeRegion(const unsigned &jnode, const bool &value) {
   _nodeRegion[jnode]=value;
 }
 
-void elem::AllocateChildrenElement(const unsigned &refindex){
+void elem::AllocateChildrenElement(const unsigned &refindex, const std::vector < double > &localizedAmrVector){
   if(_childElemFlag){
     delete [] _childElemMemory;
     delete [] _childElem;
@@ -660,7 +617,7 @@ void elem::AllocateChildrenElement(const unsigned &refindex){
   unsigned *ptr=_childElemMemory;
   for(int i=0;i<_nel;i++){
     _childElem[i]=ptr;
-    if(_elr[i]==1) ptr+=refindex;
+    if( static_cast < short unsigned > (localizedAmrVector[i] + 0.5) == 1) ptr+=refindex;
     else ptr+=1;
   }
   _childElemFlag=true;

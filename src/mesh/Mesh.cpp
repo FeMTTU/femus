@@ -774,6 +774,11 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
   }
 }
 
+
+short unsigned Mesh::GetRefinedElementIndex(const unsigned &iel) const{
+  return static_cast <short unsigned> ( (*_topology->_Sol[_amrIndex])(iel) + 0.5);
+}
+
 short unsigned Mesh::GetElementGroup(const unsigned int& iel) const{
   return static_cast <short unsigned> ( (*_topology->_Sol[_groupIndex])(iel) + 0.5);
 }
