@@ -24,6 +24,7 @@ ENDIF(BUILD_NAVIERSTOKESAPPS)
 
 IF(BUILD_FSIAPPS)
   set(FSI_FOLDER FSI/)
+  
 # FSI Time Dependent Benchmarks
   ADD_SUBDIRECTORY(${FSI_FOLDER}/FSITimeDependentBenchmarks/)
 
@@ -35,6 +36,11 @@ IF(BUILD_FSIAPPS)
 
 # FSI SteadyState in porous media
   ADD_SUBDIRECTORY(${FSI_FOLDER}/fsi_porous/)
+
+  # FSI SteadyState in porous media
+  ADD_SUBDIRECTORY(${FSI_FOLDER}/hydr_frac/)
+
+  
   unset(FSI_FOLDER)
 ENDIF(BUILD_FSIAPPS)
 
