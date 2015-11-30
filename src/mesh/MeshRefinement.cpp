@@ -69,7 +69,6 @@ namespace femus {
 
       numberOfRefinedElementType[i]->zero();
     }
-
     //END temporary parallel vector initialization
 
     //BEGIN flag element to be refined
@@ -135,13 +134,13 @@ namespace femus {
     //BEGIN update elem
     numberOfRefinedElement->close();
     double totalNumber = numberOfRefinedElement->l1_norm();
-    _mesh.el->SetRefinedElementNumber(static_cast < unsigned >(totalNumber + 0.5));
+    _mesh.el->SetRefinedElementNumber(static_cast < unsigned >(totalNumber + 0.25));
     delete numberOfRefinedElement;
 
     for (unsigned i = 0; i < N_GEOM_ELS; i++) {
       numberOfRefinedElementType[i]->close();
       double totalNumber = numberOfRefinedElementType[i]->l1_norm();
-      _mesh.el->SetRefinedElemenTypeNumber(static_cast < unsigned >(totalNumber + 0.5), i);
+      _mesh.el->SetRefinedElemenTypeNumber(static_cast < unsigned >(totalNumber + 0.25), i);
       delete numberOfRefinedElementType[i];
     }
 
@@ -184,9 +183,9 @@ namespace femus {
 
     for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++) {
       //if ( elc->GetRefinedElementIndex(iel) ) {
-      if (static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.5) == 1) {
+      if (static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
         //unsigned elt=elc->GetElementType(iel);
-        unsigned elt = typeLocal[iel];
+        unsigned elt = static_cast < unsigned short >( typeLocal[iel] + 0.25 );
 
         // project element type
         for (unsigned j = 0; j < _mesh.GetRefIndex(); j++) {
