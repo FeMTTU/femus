@@ -151,13 +151,29 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _topology->ResizeSolutionVector("AMR");
 
   _topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _topology->AddSolution("Group", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+
   _topology->ResizeSolutionVector("Material");
+  _topology->ResizeSolutionVector("Group");
+  _topology->ResizeSolutionVector("Type");
+
   NumericVector &material =  _topology->GetSolutionName("Material");
+  NumericVector &group =  _topology->GetSolutionName("Group");
+  NumericVector &type =  _topology->GetSolutionName("Type");
+
 
   for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
-    material.set(iel,el->GetElementMaterial(iel)+iel);
+    group.set( iel, el->GetElementGroup(iel) );
+    type.set( iel, el->GetElementType(iel) );
+    material.set(iel,el->GetElementMaterial(iel));
   }
+
   material.close();
+  group.close();
+  type.close();
+
+  el->deleteParallelizedQuantities();
 
 };
 
@@ -169,13 +185,13 @@ void Mesh::GenerateCoarseBoxMesh(
         const double xmin, const double xmax,
         const double ymin, const double ymax,
         const double zmin, const double zmax,
-        const ElemType type, std::vector<bool> &type_elem_flag) {
+        const ElemType elemType, std::vector<bool> &type_elem_flag) {
 
   _coords.resize(3);
 
   _level = 0;
 
-  MeshTools::Generation::BuildBox(*this,_coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,type_elem_flag);
+  MeshTools::Generation::BuildBox(*this,_coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,elemType,type_elem_flag);
 
   el->SetNodeNumber(_nnodes);
 
@@ -210,16 +226,30 @@ void Mesh::GenerateCoarseBoxMesh(
 
   _topology->ResizeSolutionVector("AMR");
 
+
   _topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _topology->AddSolution("Group", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+
   _topology->ResizeSolutionVector("Material");
+  _topology->ResizeSolutionVector("Group");
+  _topology->ResizeSolutionVector("Type");
+
   NumericVector &material =  _topology->GetSolutionName("Material");
+  NumericVector &group =  _topology->GetSolutionName("Group");
+  NumericVector &type =  _topology->GetSolutionName("Type");
 
   for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
-    material.set(iel, el->GetElementMaterial(iel) );
+    group.set( iel, el->GetElementGroup(iel) );
+    type.set( iel, el->GetElementType(iel) );
+    material.set(iel,el->GetElementMaterial(iel));
   }
+
   material.close();
+  group.close();
+  type.close();
 
-
+  el->deleteParallelizedQuantities();
 }
 
 
@@ -283,9 +313,14 @@ void Mesh::Buildkel() {
 
 void Mesh::AllocateAndMarkStructureNode() {
   el->AllocateNodeRegion();
+
+  vector <double> materialLocal;
+  _topology->_Sol[_materialIndex]->localize_to_all(materialLocal);
+
   for (unsigned iel=0; iel<_nelem; iel++) {
 
-    int flag_mat = el->GetElementMaterial(iel);
+    //int flag_mat = el->GetElementMaterial(iel);
+    int flag_mat = materialLocal[iel];
 
     if (flag_mat==4) {
       unsigned nve=el->GetElementDofNumber(iel,2);
@@ -735,11 +770,13 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
   }
 }
 
+short unsigned Mesh::GetElementGroup(const unsigned int& iel) const{
+  return static_cast <short unsigned> ( (*_topology->_Sol[_groupIndex])(iel) + 0.5);
+}
 
-
-
-
-
+short unsigned Mesh::GetElementMaterial(const unsigned int& iel) const{
+  return static_cast <short unsigned> ( (*_topology->_Sol[_materialIndex])(iel) + 0.5);
+}
 
 
 } //end namespace femus

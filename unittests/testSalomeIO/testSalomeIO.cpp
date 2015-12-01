@@ -22,13 +22,15 @@ int main(int argc,char **args) {
 
   MultiLevelMesh ml_msh;
   ml_msh.ReadCoarseMesh(infile.c_str(),"fifth",Lref);
-
+  
+  ml_msh.PrintInfo();
+  
   ml_msh.SetWriter(XDMF);
   ml_msh.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic");
   ml_msh.SetWriter(GMV);
   ml_msh.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic");
-//   ml_msh.SetWriter(VTK);
-//   ml_msh.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic");
+  ml_msh.SetWriter(VTK);
+  ml_msh.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic");
 
   return 0;
 }

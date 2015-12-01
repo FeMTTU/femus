@@ -186,8 +186,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   //  extract pointers to the several objects that we are going to use
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
-  const unsigned levelMax = mlPdeSys->GetLevelMax();
-  const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*           msh         = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*           el          = msh->el;  // pointer to the elem object in msh (level)
@@ -288,8 +286,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
 
-  if (assembleMatrix)
-    KK->zero(); // Set to zero all the entries of the Global Matrix
+  KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -479,38 +476,37 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     RES->add_vector_blocked(Res, sysDof);
 
     //Extarct and store the Jacobian
-    if (assembleMatrix) {
-      Jac.resize(nDofsTVP * nDofsTVP);
-      // define the dependent variables
-      s.dependent(&aResT[0], nDofsT);
+    Jac.resize(nDofsTVP * nDofsTVP);
+    // define the dependent variables
+    s.dependent(&aResT[0], nDofsT);
 
-      for (unsigned  k = 0; k < dim; k++) {
-        s.dependent(&aResV[k][0], nDofsV);
-      }
-
-      s.dependent(&aResP[0], nDofsP);
-
-      // define the independent variables
-      s.independent(&solT[0], nDofsT);
-
-      for (unsigned  k = 0; k < dim; k++) {
-        s.independent(&solV[k][0], nDofsV);
-      }
-
-      s.independent(&solP[0], nDofsP);
-
-      // get the and store jacobian matrix (row-major)
-      s.jacobian(&Jac[0] , true);
-      KK->add_matrix_blocked(Jac, sysDof, sysDof);
-
-      s.clear_independents();
-      s.clear_dependents();
+    for (unsigned  k = 0; k < dim; k++) {
+      s.dependent(&aResV[k][0], nDofsV);
     }
+
+    s.dependent(&aResP[0], nDofsP);
+
+    // define the independent variables
+    s.independent(&solT[0], nDofsT);
+
+    for (unsigned  k = 0; k < dim; k++) {
+      s.independent(&solV[k][0], nDofsV);
+    }
+
+    s.independent(&solP[0], nDofsP);
+
+    // get the and store jacobian matrix (row-major)
+    s.jacobian(&Jac[0] , true);
+    KK->add_matrix_blocked(Jac, sysDof, sysDof);
+
+    s.clear_independents();
+    s.clear_dependents();
+
   } //end element loop for each process
 
   RES->close();
 
-  if (assembleMatrix) KK->close();
+  KK->close();
 
   // ***************** END ASSEMBLY *******************
 }

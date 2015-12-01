@@ -1,9 +1,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-PROJECT(FSI_TUREK_1)
+PROJECT(FSI_STEADY_ML)
 
-SET(MAIN_FILE "main")
-SET(EXEC_FILE "fsisteady")
+SET(MAIN_FILE "fsiSteadyMl")
+SET(EXEC_FILE "fsisteadyML")
 
 femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})
 

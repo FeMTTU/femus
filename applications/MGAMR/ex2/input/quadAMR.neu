@@ -2,7 +2,7 @@
 ** GAMBIT NEUTRAL FILE
 quadAMR
 PROGRAM:                Gambit     VERSION:  2.3.16
-20 Oct 2015    10:43:09 
+18 Nov 2015    09:03:57 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
         25         4         4         3         2         2
 ENDOFSECTION

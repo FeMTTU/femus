@@ -104,7 +104,7 @@ int main(int argc, char** args) {
 
       // initilaize and solve the system
       system.init();
-      system.solve();
+      system.MLsolve();
 
       std::pair< double , double > norm = GetErrorNorm(&mlSol);
       l2Norm[i][j]  = norm.first;
@@ -213,8 +213,6 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
-  const unsigned levelMax = mlPdeSys->GetLevelMax();
-  const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*                     el = msh->el;  // pointer to the elem object in msh (level)
@@ -267,8 +265,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve(maxSize * maxSize);
 
-  if (assembleMatrix)
-    KK->zero(); // Set to zero all the entries of the Global Matrix
+  KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -307,55 +304,53 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
       }
     }
 
-    if (level == levelMax || !el->GetRefinedElementIndex(iel)) {      // do not care about this if now (it is used for the AMR)
 
-      // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
-        // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
-        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        double solu_gss = 0;
-        vector < double > gradSolu_gss(dim, 0.);
-        vector < double > x_gss(dim, 0.);
+    // *** Gauss point loop ***
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+      // *** get gauss point weight, test function and test function partial derivatives ***
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
-        for (unsigned i = 0; i < nDofu; i++) {
-          solu_gss += phi[i] * solu[i];
+      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+      double solu_gss = 0;
+      vector < double > gradSolu_gss(dim, 0.);
+      vector < double > x_gss(dim, 0.);
 
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
-            gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
-            x_gss[jdim] += x[jdim][i] * phi[i];
-          }
+      for (unsigned i = 0; i < nDofu; i++) {
+        solu_gss += phi[i] * solu[i];
+
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+          x_gss[jdim] += x[jdim][i] * phi[i];
+        }
+      }
+
+      // *** phi_i loop ***
+      for (unsigned i = 0; i < nDofu; i++) {
+
+        double laplace = 0.;
+
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        // *** phi_i loop ***
-        for (unsigned i = 0; i < nDofu; i++) {
+        double srcTerm = - GetExactSolutionLaplace(x_gss);
+        Res[i] += (srcTerm * phi[i] - laplace) * weight;
 
-          double laplace = 0.;
+        // *** phi_j loop ***
+        for (unsigned j = 0; j < nDofu; j++) {
+          laplace = 0.;
 
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
-            laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+          for (unsigned kdim = 0; kdim < dim; kdim++) {
+            laplace += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
           }
 
-          double srcTerm = - GetExactSolutionLaplace(x_gss);
-          Res[i] += (srcTerm * phi[i] - laplace) * weight;
+          Jac[i * nDofu + j] += laplace;
+        } // end phi_j loop
 
-          if (assembleMatrix) {
-            // *** phi_j loop ***
-            for (unsigned j = 0; j < nDofu; j++) {
-              laplace = 0.;
+      } // end phi_i loop
+    } // end gauss point loop
 
-              for (unsigned kdim = 0; kdim < dim; kdim++) {
-                laplace += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
-              }
-
-              Jac[i * nDofu + j] += laplace;
-            } // end phi_j loop
-          } // endif assemble_matrix
-
-        } // end phi_i loop
-      } // end gauss point loop
-    } // endif single element not refined or fine grid loop
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
@@ -363,15 +358,14 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     //copy the value of the adept::adoube aRes in double Res and store
     RES->add_vector_blocked(Res, l2GMap);
 
-    if (assembleMatrix) {
-      //store K in the global matrix KK
-      KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
-    }
+    //store K in the global matrix KK
+    KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
+
   } //end element loop for each process
 
   RES->close();
 
-  if (assembleMatrix) KK->close();
+  KK->close();
 
   // ***************** END ASSEMBLY *******************
 }
@@ -402,8 +396,6 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
-  const unsigned levelMax = mlPdeSys->GetLevelMax();
-  const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*                     el = msh->el;  // pointer to the elem object in msh (level)
@@ -458,8 +450,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve(maxSize * maxSize);
 
-  if (assembleMatrix)
-    KK->zero(); // Set to zero all the entries of the Global Matrix
+  KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -494,44 +485,43 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
       }
     }
 
-    if (level == levelMax || !el->GetRefinedElementIndex(iel)) {      // do not care about this if now (it is used for the AMR)
-      // start a new recording of all the operations involving adept::adouble variables
-      s.new_recording();
 
-      // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
-        // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+    // start a new recording of all the operations involving adept::adouble variables
+    s.new_recording();
 
-        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        adept::adouble solu_gss = 0;
-        vector < adept::adouble > gradSolu_gss(dim, 0.);
-        vector < double > x_gss(dim, 0.);
+    // *** Gauss point loop ***
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+      // *** get gauss point weight, test function and test function partial derivatives ***
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
-        for (unsigned i = 0; i < nDofu; i++) {
-          solu_gss += phi[i] * solu[i];
+      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+      adept::adouble solu_gss = 0;
+      vector < adept::adouble > gradSolu_gss(dim, 0.);
+      vector < double > x_gss(dim, 0.);
 
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
-            gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
-            x_gss[jdim] += x[jdim][i] * phi[i];
-          }
+      for (unsigned i = 0; i < nDofu; i++) {
+        solu_gss += phi[i] * solu[i];
+
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
+          x_gss[jdim] += x[jdim][i] * phi[i];
+        }
+      }
+
+      // *** phi_i loop ***
+      for (unsigned i = 0; i < nDofu; i++) {
+
+        adept::adouble laplace = 0.;
+
+        for (unsigned jdim = 0; jdim < dim; jdim++) {
+          laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        // *** phi_i loop ***
-        for (unsigned i = 0; i < nDofu; i++) {
+        double srcTerm = - GetExactSolutionLaplace(x_gss);
+        aRes[i] += (srcTerm * phi[i] - laplace) * weight;
 
-          adept::adouble laplace = 0.;
-
-          for (unsigned jdim = 0; jdim < dim; jdim++) {
-            laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
-          }
-
-          double srcTerm = - GetExactSolutionLaplace(x_gss);
-          aRes[i] += (srcTerm * phi[i] - laplace) * weight;
-
-        } // end phi_i loop
-      } // end gauss point loop
-    } // endif single element not refined or fine grid loop
+      } // end phi_i loop
+    } // end gauss point loop
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
@@ -545,29 +535,29 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
     RES->add_vector_blocked(Res, l2GMap);
 
-    if (assembleMatrix) {
 
-      // define the dependent variables
-      s.dependent(&aRes[0], nDofu);
 
-      // define the independent variables
-      s.independent(&solu[0], nDofu);
+    // define the dependent variables
+    s.dependent(&aRes[0], nDofu);
 
-      // get the jacobian matrix (ordered by row major )
-      Jac.resize(nDofu * nDofu);    //resize
-      s.jacobian(&Jac[0], true);
+    // define the independent variables
+    s.independent(&solu[0], nDofu);
 
-      //store K in the global matrix KK
-      KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
+    // get the jacobian matrix (ordered by row major )
+    Jac.resize(nDofu * nDofu);    //resize
+    s.jacobian(&Jac[0], true);
 
-      s.clear_independents();
-      s.clear_dependents();
-    }
+    //store K in the global matrix KK
+    KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
+
+    s.clear_independents();
+    s.clear_dependents();
+
   } //end element loop for each process
 
   RES->close();
 
-  if (assembleMatrix) KK->close();
+  KK->close();
 
   // ***************** END ASSEMBLY *******************
 }

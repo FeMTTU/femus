@@ -36,6 +36,8 @@ public:
 
     /** destructor */
     ~elem();
+    
+    void deleteParallelizedQuantities();
 
     // reorder the element according to the new element mapping
     void ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc);
@@ -226,6 +228,8 @@ private:
     bool  _nodeRegionFlag;
     bool *_isFatherElementRefined; //element
     unsigned _nelf;
+    
+    unsigned _level;
 
 };
 

@@ -31,12 +31,15 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 
-bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
+bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
-  bool refine=0;
-  if (elemgroupnumber==6 && level<4) refine=1;
-  if (elemgroupnumber==7 && level<5) refine=1;
-  if (elemgroupnumber==8 && level<6) refine=1;
+  bool refine = 0;
+
+  if (elemgroupnumber == 6 && level < 4) refine = 1;
+
+  if (elemgroupnumber == 7 && level < 5) refine = 1;
+
+  if (elemgroupnumber == 8 && level < 6) refine = 1;
 
 //   if (elemgroupnumber==6 && level<1) refine=1;
 //   if (elemgroupnumber==7 && level<2) refine=1;
@@ -85,9 +88,9 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  
+
   mlSol.AddSolution("V", LAGRANGE, SECOND);
-  
+
   mlSol.AddSolution("U", LAGRANGE, SECOND);
 
   mlSol.Initialize("All");
@@ -104,9 +107,9 @@ int main(int argc, char** args) {
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Poisson");
 
   // add solution "u" to system
-  system.AddSolutionToSystemPDE("U"); 
+  system.AddSolutionToSystemPDE("U");
 
-   //system.SetMgSmoother(GMRES_SMOOTHER);
+  //system.SetMgSmoother(GMRES_SMOOTHER);
   system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssemblePoisson_AD);
@@ -161,7 +164,6 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
   //  extract pointers to the several objects that we are going to use
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
-  const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*           msh         = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*           el          = msh->el;  // pointer to the elem object in msh (level)
@@ -186,14 +188,14 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
   solUIndex = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object = 0
   unsigned solUType = mlSol->GetSolutionType(solUIndex);    // get the finite element type for "T"
 
- 
- 
+
+
   unsigned solUPdeIndex;
   solUPdeIndex = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object = 0
 
-  std::cout << solUIndex <<" "<<solUPdeIndex<<std::endl;
-  
-  
+  std::cout << solUIndex << " " << solUPdeIndex << std::endl;
+
+
   vector < adept::adouble >  solU; // local solution
   vector< adept::adouble > aResU; // local redidual vector
 
@@ -218,13 +220,13 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
   double weight; // gauss point weight
 
   vector< int > sysDof; // local to global pdeSys dofs
-  sysDof.reserve( maxSize );
+  sysDof.reserve(maxSize);
 
   vector< double > ResU; // local redidual vector
-  ResU.reserve( maxSize );
+  ResU.reserve(maxSize);
 
   vector < double > Jac;
-  Jac.reserve( maxSize * maxSize);
+  Jac.reserve(maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
@@ -232,21 +234,21 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     unsigned kel = iel; //msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
-    short unsigned kelGeom = el->GetElementType( kel );    // element geometry type
+    short unsigned kelGeom = el->GetElementType(kel);      // element geometry type
 
-    unsigned nDofsU = el->GetElementDofNumber( kel, solUType );    // number of solution element dofs
-    unsigned nDofsX = el->GetElementDofNumber( kel, crdXType );    // number of solution element dofs
+    unsigned nDofsU = el->GetElementDofNumber(kel, solUType);      // number of solution element dofs
+    unsigned nDofsX = el->GetElementDofNumber(kel, crdXType);      // number of solution element dofs
 
     // resize local arrays
-    sysDof.resize( nDofsU );
+    sysDof.resize(nDofsU);
 
-    solU.resize( nDofsU );
+    solU.resize(nDofsU);
 
     for (unsigned  k = 0; k < dim; k++) {
-      crdX[k].resize( nDofsX );
+      crdX[k].resize(nDofsX);
     }
 
-    aResU.assign( nDofsU, 0);
+    aResU.assign(nDofsU, 0);
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsU; i++) {
@@ -256,8 +258,9 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
     }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofsX; i++) { 
+    for (unsigned i = 0; i < nDofsX; i++) {
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, crdXType);   // local to global mapping of the coordinate X[dim]
+
       for (unsigned k = 0; k < dim; k++) {
         crdX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // value of the solution X[dim]
       }
@@ -276,24 +279,26 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofsU; i++) {
         solUig += phi[i] * solU[i];
 
-          for (unsigned j = 0; j < dim; j++) {
-            gradSolUig[j] += phi_x[i * dim + j] * solU[i];
-          }
+        for (unsigned j = 0; j < dim; j++) {
+          gradSolUig[j] += phi_x[i * dim + j] * solU[i];
+        }
+      }
+
+      double nu = 1.;
+
+      // *** phiU_i loop ***
+      for (unsigned i = 0; i < nDofsU; i++) {
+        adept::adouble LaplaceU = 0.;
+
+        for (unsigned j = 0; j < dim; j++) {
+          LaplaceU +=  nu * phi_x[i * dim + j] * gradSolUig[j];
         }
 
-        double nu = 1.;
+        aResU[i] += (phi[i] - LaplaceU) * weight;
+      } // end phiU_i loop
+    } // end gauss point loop
 
-        // *** phiU_i loop ***
-        for (unsigned i = 0; i < nDofsU; i++) {
-          adept::adouble LaplaceU = 0.;
-
-          for (unsigned j = 0; j < dim; j++) {
-            LaplaceU +=  nu* phi_x[i * dim + j] * gradSolUig[j];
-          }
-          aResU[i] += ( phi[i] - LaplaceU ) * weight;
-        } // end phiU_i loop
-      } // end gauss point loop
-   // } // endif single element not refined or fine grid loop
+    // } // endif single element not refined or fine grid loop
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
@@ -308,26 +313,26 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
     RES->add_vector_blocked(ResU, sysDof);
 
     //Extarct and store the Jacobian
-    if (assembleMatrix) {
-      Jac.resize(nDofsU * nDofsU);
-      // define the dependent variables
-      s.dependent(&aResU[0], nDofsU);
 
-      // define the independent variables
-      s.independent(&solU[0], nDofsU);
+    Jac.resize(nDofsU * nDofsU);
+    // define the dependent variables
+    s.dependent(&aResU[0], nDofsU);
 
-      // get the and store jacobian matrix (row-major)
-      s.jacobian(&Jac[0] , true);
-      KK->add_matrix_blocked(Jac, sysDof, sysDof);
+    // define the independent variables
+    s.independent(&solU[0], nDofsU);
 
-      s.clear_independents();
-      s.clear_dependents();
-    }
+    // get the and store jacobian matrix (row-major)
+    s.jacobian(&Jac[0] , true);
+    KK->add_matrix_blocked(Jac, sysDof, sysDof);
+
+    s.clear_independents();
+    s.clear_dependents();
+
   } //end element loop for each process
 
   RES->close();
 
-  if (assembleMatrix) KK->close();
+  KK->close();
 
   // ***************** END ASSEMBLY *******************
 }

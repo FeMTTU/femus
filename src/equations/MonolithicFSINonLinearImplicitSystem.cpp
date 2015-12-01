@@ -46,48 +46,6 @@ void MonolithicFSINonLinearImplicitSystem::init() {
   Parent::init();
 }
 
-void MonolithicFSINonLinearImplicitSystem::Restrictor(const unsigned &gridf, const unsigned &gridn,
-						      const unsigned &non_linear_iteration, const unsigned &linear_iteration, const bool &full_cycle){
-
-  LinearEquationSolver* LinSolf=_LinSolver[gridf];
-  LinearEquationSolver* LinSolc=_LinSolver[gridf-1];
-
-  LinSolc->SetEpsZero();
-  LinSolc->SetResZero();
-
-  _assembleMatrix = (linear_iteration == 0) ? true : false;  //Be carefull!!!! this is needed in the _assemble_function
-  if (gridf>=_gridr) {   //_gridr
-    _levelToAssemble = gridf-1u;
-    _levelMax = gridn-1u;
-    _assemble_system_function( _equation_systems );
-  }
-
-  bool matrix_reuse=true;
-  if(_assembleMatrix){
-    if (gridf>=_gridr) {  //_gridr
-      if (!LinSolc->_CC_flag) {
-	LinSolc->_CC_flag=1;
-	LinSolc->_CC->matrix_ABC(*_RR[gridf],*LinSolf->_KK,*_PP[gridf],!matrix_reuse);
-      }
-      else{
-	LinSolc->_CC->matrix_ABC(*_RR[gridf],*LinSolf->_KK,*_PP[gridf],matrix_reuse);
-      }
-      LinSolc->_KK->matrix_add(1.,*LinSolc->_CC,"different_nonzero_pattern");
-    }
-    else { //Projection of the Matrix on the lower level
-      if (non_linear_iteration==0 && ( full_cycle*(gridf==gridn-1u) || !full_cycle )) {
-	LinSolc->_KK->matrix_ABC(*_RR[gridf],*LinSolf->_KK,*_PP[gridf],!matrix_reuse);
-      }
-      else{
-	LinSolc->_KK->matrix_ABC(*_RR[gridf],*LinSolf->_KK,*_PP[gridf],matrix_reuse);
-      }
-    }
-  }
-
-  LinSolc->_RESC->matrix_mult(*LinSolf->_RES, *_RR[gridf]);
-  *LinSolc->_RES += *LinSolc->_RESC;
-
-}
 //---------------------------------------------------------------------------------------------------
 // This routine generates the matrix for the projection of the FE matrix to finer grids
 //---------------------------------------------------------------------------------------------------

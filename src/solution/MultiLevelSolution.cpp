@@ -63,7 +63,7 @@ MultiLevelSolution::MultiLevelSolution( MultiLevelMesh *ml_msh):
   }
 
   _bdcFuncSet = false;
-
+  _bdcFuncSetMLProb = false;
   _useParsedBCFunction = false;
 
   _mlBCProblem = NULL;
@@ -372,7 +372,7 @@ void MultiLevelSolution::SetBoundaryCondition_new(const std::string name, const 
 //---------------------------------------------------------------------------------------------------
 void MultiLevelSolution::GenerateBdc(const char * name, const char * bdc_type, const MultiLevelProblem * ml_prob) {
 
-  if( _useParsedBCFunction == 0 && _bdcFuncSet == false && _bdcFuncSetMLProb == false ) {
+  if( _useParsedBCFunction == false && _bdcFuncSet == false && _bdcFuncSetMLProb == false ) {
      cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine"
           << endl;
 
@@ -485,13 +485,13 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 		  unsigned i=msh->el->GetLocalFaceVertexIndex(iel,jface,iv);
 		  unsigned inode_coord_Metis=msh->GetSolutionDof(i,iel,2);
                   if( _useParsedBCFunction ){
-                    unsigned int face = msh->el->GetBoundaryIndex(iel,jface);
-                    if( GetBoundaryCondition(k,face) == DIRICHLET ) {
+                    unsigned int faceIndex = msh->el->GetBoundaryIndex(iel,jface);
+                    if( GetBoundaryCondition(k,faceIndex - 1u) == DIRICHLET ) {
                       unsigned inode_Metis = msh->GetSolutionDof(i,iel,_solType[k]);
                       _solution[igridn]->_Bdc[k]->set(inode_Metis,0.);
                       double value = 0.;
-                      if( !Ishomogeneous(k,face) ) {
-                        ParsedFunction* bdcfunc = (ParsedFunction*)(GetBdcFunction(k,face));
+                      if( !Ishomogeneous(k,faceIndex - 1u) ) {
+                        ParsedFunction* bdcfunc = (ParsedFunction*)(GetBdcFunction(k,faceIndex - 1u));
                         double xyzt[4];
                         xyzt[0] = (*msh->_topology->_Sol[0])(inode_coord_Metis);
                         xyzt[1] = (*msh->_topology->_Sol[1])(inode_coord_Metis);

@@ -35,6 +35,9 @@ using std::endl;
  * This constructor allocates the memory for the \textit{coarsest elem}
  **/
 elem::elem(const unsigned &other_nel) {
+
+  _level = 0;
+
   _nelt[0] = _nelt[1] = _nelt[2] = _nelt[3] = _nelt[4] = _nelt[5] = 0;
   _nel = other_nel;
 
@@ -81,13 +84,16 @@ elem::elem(const unsigned &other_nel) {
  * starting from the paramenters of the \textit{coarser elem}
  **/
 elem::elem(const elem *elc, const unsigned refindex) {
+
+  _level = elc->_level + 1;
+
   _nelt[0] = _nelt[1] = _nelt[2] = _nelt[3] = _nelt[4] = _nelt[5] = 0;
   _nel = elc->GetRefinedElementNumber()*refindex; //refined
   _nel += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // + non-refined;
 
   _elementType = new unsigned short [_nel];
-  _elementGroup = new unsigned short [_nel];
-  _elementMaterial = new unsigned short [_nel];
+  //_elementGroup = new unsigned short [_nel];
+  //_elementMaterial = new unsigned short [_nel];
   _elr = new unsigned [_nel];
 
   _isFatherElementRefined = new bool [_nel];
@@ -117,7 +123,7 @@ elem::elem(const elem *elc, const unsigned refindex) {
   _kvertMemory = new unsigned [ _kvertSize ];
   _kelMemory = new int [ _kelSize ];
   for (unsigned i=0; i < _kelSize; i++)
-    _kelMemory[i]=0;
+    _kelMemory[i] = -1;
 
   int *pt_i = _kelMemory;
   unsigned *pt_u = _kvertMemory;
@@ -148,33 +154,40 @@ elem::elem(const elem *elc, const unsigned refindex) {
 void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc){
   //  REORDERING OF  ELT, ELG, ELMAT
   short unsigned *tempElt;
-  short unsigned *tempElg;
-  short unsigned *tempElmat;
   bool *tempElRef;
 
 
   tempElt = _elementType;
-  tempElg = _elementGroup;
-  tempElmat = _elementMaterial;
   tempElRef = _isFatherElementRefined;
 
   _elementType = new short unsigned [_nel];
-  _elementGroup = new short unsigned [_nel];
-  _elementMaterial = new short unsigned [_nel];
   _isFatherElementRefined = new bool [_nel];
 
 
   for(unsigned iel = 0; iel < _nel; iel++){
     _elementType[iel]   = tempElt[ elementMapping[iel] ];
-    _elementGroup[iel]   = tempElg[ elementMapping[iel] ];
-    _elementMaterial[iel] = tempElmat[ elementMapping[iel] ];
     _isFatherElementRefined[iel] = tempElRef[ elementMapping[iel] ];
   }
 
   delete [] tempElt;
-  delete [] tempElg;
-  delete [] tempElmat;
   delete [] tempElRef;
+
+  if( _level == 0){
+    short unsigned *tempElg;
+    short unsigned *tempElmat;
+    tempElg = _elementGroup;
+    tempElmat = _elementMaterial;
+    _elementGroup = new short unsigned [_nel];
+    _elementMaterial = new short unsigned [_nel];
+    for(unsigned iel = 0; iel < _nel; iel++){
+      _elementGroup[iel]   = tempElg[ elementMapping[iel] ];
+      _elementMaterial[iel] = tempElmat[ elementMapping[iel] ];
+    }
+    delete [] tempElg;
+    delete [] tempElmat;
+  }
+
+
 
   //  REORDERING OF KEL
   int **tempKel;
@@ -262,8 +275,6 @@ elem::~elem() {
     delete [] _kel;
     delete [] _elementType;
     delete [] _isFatherElementRefined;
-    delete [] _elementGroup;
-    delete [] _elementMaterial;
     delete [] _elr;
 
     delete [] _kvtelMemory;
@@ -279,6 +290,11 @@ elem::~elem() {
       delete [] _childElem;
     }
   }
+
+void elem::deleteParallelizedQuantities(){
+  delete [] _elementGroup;
+  delete [] _elementMaterial;
+}
 
 /**
  * Return the number of vertices(type=0) + midpoints(type=1) + facepoints(type=2) + interiorpoits(type=2)
@@ -435,7 +451,7 @@ int elem::GetFaceElementIndex(const unsigned &iel,const unsigned &iface) const {
 }
 
 int elem::GetBoundaryIndex(const unsigned &iel,const unsigned &iface) const {
-  return -(_kel[iel][iface]+1)+1;
+  return -(_kel[iel][iface]+1);
 }
 
 

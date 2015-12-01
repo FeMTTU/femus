@@ -72,7 +72,7 @@ void MeshRefinement::FlagElementsToBeRefined() {
 	  vtx[1]/=nve;
 	  vtx[2]/=nve;
 	  if( (*_mesh._topology->_Sol[3])(kel) < 0.5 &&
-	      _mesh._SetRefinementFlag(vtx,_mesh.el->GetElementGroup(kel),_mesh.GetLevel()) ) {
+	      _mesh._SetRefinementFlag(vtx,_mesh.GetElementGroup(kel),_mesh.GetLevel()) ) {
 	      _mesh._topology->_Sol[3]->set(kel,1.);
 	  }
 	}
@@ -161,13 +161,13 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
 	elc->SetChildElement(iel,j,jel+j);
       }
 
-      unsigned elg=elc->GetElementGroup(iel);
-      unsigned elmat=elc->GetElementMaterial(iel);
+      //unsigned elg=elc->GetElementGroup(iel);
+      //unsigned elmat=elc->GetElementMaterial(iel);
       // project element group
-      for (unsigned j=0; j<_mesh.GetRefIndex(); j++) {
-        _mesh.el->SetElementGroup(jel+j,elg);
-	_mesh.el->SetElementMaterial(jel+j,elmat);
-      }
+      //for (unsigned j=0; j<_mesh.GetRefIndex(); j++) {
+        //_mesh.el->SetElementGroup(jel+j,elg);
+	//_mesh.el->SetElementMaterial(jel+j,elmat);
+      //}
 
       // project vertex indeces
       for (unsigned j=0; j<_mesh.GetRefIndex(); j++)
@@ -194,12 +194,12 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
       _mesh.el-> SetIfFatherIsRefined(jel, false);
       elc->SetChildElement(iel,0,jel);
 
-      unsigned elg = elc->GetElementGroup(iel);
-      unsigned elmat = elc->GetElementMaterial(iel);
+      //unsigned elg = elc->GetElementGroup(iel);
+      //unsigned elmat = elc->GetElementMaterial(iel);
 
       // project element group
-      _mesh.el->SetElementGroup(jel,elg);
-      _mesh.el->SetElementMaterial(jel,elmat);
+      //_mesh.el->SetElementGroup(jel,elg);
+      //_mesh.el->SetElementMaterial(jel,elmat);
 
       // project nodes indeces
       for (unsigned inode=0; inode<elc->GetElementDofNumber(iel,2); inode++)
@@ -330,7 +330,21 @@ void MeshRefinement::RefineMesh(const unsigned & igrid, Mesh *mshc, const elem_t
   NumericVector &materialf =  _mesh._topology->GetSolutionName("Material");
   NumericVector &materialc =   mshc->_topology->GetSolutionName("Material");
   materialf.matrix_mult(materialc, *_mesh.GetCoarseToFineProjection(3));
-  materialf.close();
+  materialf.close(); 
+  
+  _mesh._topology->AddSolution("Group", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _mesh._topology->ResizeSolutionVector("Group");
+  NumericVector &groupf =  _mesh._topology->GetSolutionName("Group");
+  NumericVector &groupc =   mshc->_topology->GetSolutionName("Group");
+  groupf.matrix_mult(groupc, *_mesh.GetCoarseToFineProjection(3));
+  groupf.close();
+  
+  _mesh._topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  _mesh._topology->ResizeSolutionVector("Type");
+  NumericVector &typef =  _mesh._topology->GetSolutionName("Type");
+  NumericVector &typec =   mshc->_topology->GetSolutionName("Type");
+  typef.matrix_mult(typec, *_mesh.GetCoarseToFineProjection(3));
+  typef.close();
   
 }
 

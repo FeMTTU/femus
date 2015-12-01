@@ -371,7 +371,7 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
   for (unsigned k=0; k<SolIndex.size(); k++) {
     double EPSMAX = _AMREps[SolIndex[k]]->linfty_norm ();
     double SOLMAX = _Sol[SolIndex[k]]->linfty_norm ();
-    cout << "Current maximum relative change = " <<EPSMAX/SOLMAX << endl << endl;
+    cout << std::endl << "Current maximum relative change = " <<EPSMAX/SOLMAX << endl << endl;
     SolMax[k] = AMRthreshold * SOLMAX;
     SolType[k] = _SolType[SolIndex[k]];
     SolEndInd[k]   = END_IND[SolType[k]];
