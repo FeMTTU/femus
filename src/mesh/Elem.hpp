@@ -32,7 +32,7 @@ public:
     /** constructors */
     elem(const unsigned & other_nel);
 
-    elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrLocal);
+    elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrLocal, const std::vector < double > &localizedElementType);
 
     /** destructor */
     ~elem();
@@ -185,6 +185,12 @@ public:
     unsigned GetChildElement(const unsigned &iel,const unsigned &json) const;
 
     const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
+    
+    const unsigned GetNVE(const unsigned &elementType, const unsigned &dof) const;
+    
+    const unsigned GetNFACENODES(const unsigned &elementType, const unsigned &jface, const unsigned &dof) const;
+    
+    const unsigned GetNFC(const unsigned &elementType, const unsigned &type) const;
 
 private:
 

@@ -201,8 +201,10 @@ namespace femus {
 
       //short unsigned ielt = myel->GetElementType(iel);
       short unsigned ielt = mymsh->GetElementType(iel);
-      unsigned nve        = myel->GetElementDofNumber(iel, order_ind2);
-      unsigned nve1       = myel->GetElementDofNumber(iel, order_ind1);
+//       unsigned nve        = myel->GetElementDofNumber(iel, order_ind2);
+//       unsigned nve1       = myel->GetElementDofNumber(iel, order_ind1);
+      unsigned nve        = mymsh->GetElementDofNumber(iel, order_ind2);
+      unsigned nve1       = mymsh->GetElementDofNumber(iel, order_ind1);
       int flag_mat        = mymsh->GetElementMaterial(iel);
 
       //*******************************************************************************************************

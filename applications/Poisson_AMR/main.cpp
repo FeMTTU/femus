@@ -532,7 +532,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
     //short unsigned ielt = myel->GetElementType(iel);
     short unsigned ielt = mymsh->GetElementType(iel);
-    unsigned nve = myel->GetElementDofNumber(iel, order_ind);
+//     unsigned nve = myel->GetElementDofNumber(iel, order_ind);
+    unsigned nve = mymsh->GetElementDofNumber(iel, order_ind);
 
     // resize
     metis_node.resize(nve);
@@ -774,8 +775,8 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
 
       //short unsigned ielt = msh->el->GetElementType(iel);
       short unsigned ielt = msh->GetElementType(iel);
-      unsigned nve = msh->el->GetElementDofNumber(iel, SolOrder);
-
+      //unsigned nve = msh->el->GetElementDofNumber(iel, SolOrder);
+      unsigned nve = msh->GetElementDofNumber(iel, SolOrder);
       // resize
       metis_node.resize(nve);
       phi.resize(nve);

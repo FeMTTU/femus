@@ -353,8 +353,10 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
     //short unsigned ielt = myel->GetElementType(iel);
     short unsigned ielt = mymsh->GetElementType(iel);
-    unsigned nve = myel->GetElementDofNumber(iel, order_ind);
-    unsigned nve2 = myel->GetElementDofNumber(iel, 2);
+//     unsigned nve = myel->GetElementDofNumber(iel, order_ind);
+//     unsigned nve2 = myel->GetElementDofNumber(iel, 2);
+    unsigned nve = mymsh->GetElementDofNumber(iel, order_ind);
+    unsigned nve2 = mymsh->GetElementDofNumber(iel, 2);
     // resize
     metis_node.resize(nve);
     KK_dof.resize(nve);

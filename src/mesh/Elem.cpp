@@ -84,7 +84,7 @@ elem::elem(const unsigned &other_nel) {
  * This constructor allocates the memory for the \textit{finer elem}
  * starting from the paramenters of the \textit{coarser elem}
  **/
-elem::elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrVector) {
+elem::elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrVector, const std::vector < double > &localizedElementType) {
 
   _level = elc->_level + 1;
 
@@ -112,8 +112,9 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
   }
 
   for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ){
-    if( static_cast < short unsigned > ( coarseAmrVector[iel] +0.5 ) == 0){
-       unsigned type = elc->GetElementType(iel);
+    if( static_cast < short unsigned > ( coarseAmrVector[iel] + 0.25 ) == 0){
+       //unsigned type = elc->GetElementType(iel);
+       unsigned type = static_cast < short unsigned > ( localizedElementType[iel] + 0.25 );
        _kvertSize += NVE[type][2];
        _kelSize += NFC[type][1];
     }
@@ -128,9 +129,10 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
   unsigned *pt_u = _kvertMemory;
   unsigned jel = 0;
   for (unsigned iel = 0; iel<elc->GetElementNumber(); iel++) {
-    short unsigned elemt = elc->GetElementType(iel);
+    //short unsigned elemt = elc->GetElementType(iel);
+    short unsigned elemt = static_cast < short unsigned > ( localizedElementType[iel] + 0.25 );
     int increment = 1;
-    if( static_cast < short unsigned > ( coarseAmrVector[iel] +0.5 ) == 1){
+    if( static_cast < short unsigned > ( coarseAmrVector[iel] + 0.25 ) == 1){
       increment = NRE[elemt];
     }
     for (unsigned j = 0; j < increment; j++) {
@@ -617,7 +619,7 @@ void elem::AllocateChildrenElement(const unsigned &refindex, const std::vector <
   unsigned *ptr=_childElemMemory;
   for(int i=0;i<_nel;i++){
     _childElem[i]=ptr;
-    if( static_cast < short unsigned > (localizedAmrVector[i] + 0.5) == 1) ptr+=refindex;
+    if( static_cast < short unsigned > (localizedAmrVector[i] + 0.25) == 1) ptr+=refindex;
     else ptr+=1;
   }
   _childElemFlag=true;
@@ -633,6 +635,17 @@ unsigned elem::GetChildElement(const unsigned &iel,const unsigned &json) const{
   return _childElem[iel][json];
 }
 
+const unsigned elem::GetNVE(const unsigned &elementType, const unsigned &dof) const{    
+  return NVE[elementType][dof];
+}
+
+const unsigned elem::GetNFACENODES(const unsigned &elementType, const unsigned &jface, const unsigned &dof) const{
+  return NFACENODES[elementType][jface][dof];
+}
+
+const unsigned elem::GetNFC(const unsigned &elementType, const unsigned &type) const{
+  return NFC[elementType][type];
+}
 
 } //end namespace femus
 
