@@ -167,7 +167,7 @@ cout<<i<<" "<<offset<<" "<<offsetp1<<" "<< variableSize <<endl;
 //      unsigned start = (i == 0) ? 0 : 3;
 //      unsigned end = (i == 1) ? 3:4; //
       unsigned start = (i == 0) ? 0 : 3;
-      unsigned end = (i == 1) ? 4 : 3;
+      unsigned end = (i == 0) ? 3 : 4;
       unsigned offset = KKoffset[start][iproc];
       unsigned offsetp1 = KKoffset[end][iproc];
       unsigned variableSize = offsetp1 - offset;

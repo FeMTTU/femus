@@ -13,6 +13,7 @@ algebra/DenseMatrix.cpp
 algebra/DenseSubmatrix.cpp
 algebra/DenseVectorBase.cpp
 algebra/FieldSplitPetscLinearEquationSolver.cpp
+algebra/FieldSplitTreeStructure.cpp
 algebra/Graph.cpp
 algebra/LinearEquation.cpp
 algebra/LinearEquationSolver.cpp
