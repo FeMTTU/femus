@@ -60,7 +60,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -68,7 +68,7 @@ int main(int argc, char** args) {
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
   // print mesh info
-  mlMsh.PrintInfo();
+ // mlMsh.PrintInfo();
 
   MultiLevelSolution mlSol(&mlMsh);
 

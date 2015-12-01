@@ -135,26 +135,27 @@ namespace femus {
   clock_t FieldSplitPetscLinearEquationSolver::BuildFieldSplitIndex(const vector <unsigned>& variable_to_be_solved) {
     clock_t SearchTime = 0;
     clock_t start_time = clock();
-
-//     unsigned nVariables = variable_to_be_solved.size();
-//     unsigned iproc = processor_id(); 
-//     
-//     _is_loc_idx.resize(nVariables);
-//     _is_loc.resize(nVariables);
-//     
-//     for( unsigned i = 0; i < nVariables; i++){
-//       unsigned offset = KKoffset[i][iproc];
-//       unsigned offsetp1 = KKoffset[i+1][iproc];
-//       unsigned variableSize = offsetp1 - offset;
-//       _is_loc_idx[i].resize(variableSize);
-//       for(int j = 0; j < variableSize; j++){
-// 	_is_loc_idx[i][j] = offset + j;
-//       }
-//       PetscErrorCode ierr;
-//       ierr = ISCreateGeneral(MPI_COMM_WORLD, _is_loc_idx[i].size(), &_is_loc_idx[i][0], PETSC_USE_POINTER, &_is_loc[i]);
-//       CHKERRABORT(MPI_COMM_WORLD, ierr);
-//     }
-    
+/*
+     unsigned nVariables = variable_to_be_solved.size();
+     unsigned iproc = processor_id(); 
+     
+     _is_loc_idx.resize(nVariables);
+     _is_loc.resize(nVariables);
+     
+     for( unsigned i = 0; i < nVariables; i++){
+       unsigned offset = KKoffset[i][iproc];
+       unsigned offsetp1 = KKoffset[i+1][iproc];
+       unsigned variableSize = offsetp1 - offset;
+       _is_loc_idx[i].resize(variableSize);
+       for(int j = 0; j < variableSize; j++){
+ 	_is_loc_idx[i][j] = offset + j;
+       }
+cout<<i<<" "<<offset<<" "<<offsetp1<<" "<< variableSize <<endl;
+       PetscErrorCode ierr;
+       ierr = ISCreateGeneral(MPI_COMM_WORLD, _is_loc_idx[i].size(), &_is_loc_idx[i][0], PETSC_USE_POINTER, &_is_loc[i]);
+       CHKERRABORT(MPI_COMM_WORLD, ierr);
+     }
+*/   
     
     unsigned nVariables = 2;
     unsigned iproc = processor_id(); 
@@ -163,20 +164,32 @@ namespace femus {
     _is_loc.resize(nVariables);
     
     for( unsigned i = 0; i < nVariables; i++){
+//      unsigned start = (i == 0) ? 0 : 3;
+//      unsigned end = (i == 1) ? 3:4; //
       unsigned start = (i == 0) ? 0 : 3;
-      unsigned end = (i == 1) ? 3:4;
+      unsigned end = (i == 1) ? 4 : 3;
       unsigned offset = KKoffset[start][iproc];
       unsigned offsetp1 = KKoffset[end][iproc];
       unsigned variableSize = offsetp1 - offset;
-      _is_loc_idx[i].resize(variableSize);
+       _is_loc_idx[i].resize(variableSize);
+cout<<iproc <<" "<<i <<" "<<offset<< " "<<offsetp1<<" "<<variableSize<<endl; 
       for(int j = 0; j < variableSize; j++){
 	_is_loc_idx[i][j] = offset + j;
       }
+//cout<< _is_loc_idx[i][variableSize-1]<<endl; 
       PetscErrorCode ierr;
       ierr = ISCreateGeneral(MPI_COMM_WORLD, _is_loc_idx[i].size(), &_is_loc_idx[i][0], PETSC_USE_POINTER, &_is_loc[i]);
+/*
+PetscInt n;
+const PetscInt *nindices;
+ISView(_is_loc[i],PETSC_VIEWER_STDOUT_SELF);
+ISGetLocalSize(_is_loc[i],&n);
+//cout<< n << endl;
+ISGetIndices(_is_loc[i],&nindices);
+PetscPrintf(PETSC_COMM_SELF,"First index %D\n",nindices[0]);
+*/
       CHKERRABORT(MPI_COMM_WORLD, ierr);
-    }
-    
+    }   
     clock_t end_time = clock();
     SearchTime += (end_time - start_time);
     return SearchTime;
