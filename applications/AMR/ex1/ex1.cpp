@@ -237,9 +237,12 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
     //short unsigned kelGeom = el->GetElementType(kel);      // element geometry type
     short unsigned kelGeom = msh->GetElementType(kel);
 
-    unsigned nDofsU = el->GetElementDofNumber(kel, solUType);      // number of solution element dofs
-    unsigned nDofsX = el->GetElementDofNumber(kel, crdXType);      // number of solution element dofs
+    //unsigned nDofsU = el->GetElementDofNumber(kel, solUType);      // number of solution element dofs
+    //unsigned nDofsX = el->GetElementDofNumber(kel, crdXType);      // number of solution element dofs
 
+    unsigned nDofsU = msh->GetElementDofNumber(kel, solUType);      // number of solution element dofs
+    unsigned nDofsX = msh->GetElementDofNumber(kel, crdXType);      // number of solution element dofs
+    
     // resize local arrays
     sysDof.resize(nDofsU);
 

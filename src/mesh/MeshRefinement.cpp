@@ -91,7 +91,8 @@ namespace femus {
           }
           else if (_mesh._IsUserRefinementFunctionDefined) {
             short unsigned ielt = _mesh.GetElementType(iel);
-            unsigned nve = _mesh.el->GetElementDofNumber(iel, 0);
+//             unsigned nve = _mesh.el->GetElementDofNumber(iel, 0);
+	    unsigned nve = _mesh.GetElementDofNumber(iel, 0);
             std::vector < double > x(3, 0.);
 
             for (unsigned i = 0; i < nve; i++) {
@@ -166,10 +167,13 @@ namespace femus {
 
     vector < double > coarseLocalizedAmrVector;
     mshc->_topology->_Sol[mshc->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
+    
+    vector < double > localizedElementType;
+    mshc->_topology->_Sol[mshc->GetTypeIndex()]->localize_to_all(localizedElementType);
 
     mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), coarseLocalizedAmrVector);
 
-    _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector);
+    _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector, localizedElementType);
 
     unsigned jel = 0;
     //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elements and find all the vertices
@@ -177,16 +181,13 @@ namespace femus {
     _mesh.el->SetElementGroupNumber(elc->GetElementGroupNumber());
     _mesh.el->SetNumberElementFather(elc->GetElementNumber()); // setta il num di elementi padre per il mesh fine
 
-    vector < double > typeLocal;
-    mshc->_topology->_Sol[mshc->GetTypeIndex()]->localize_to_all(typeLocal);
-
     bool AMR = false;
 
     for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++) {
       //if ( elc->GetRefinedElementIndex(iel) ) {
-      if (static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.5) == 1) {
+      if (static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
         //unsigned elt=elc->GetElementType(iel);
-        unsigned elt = typeLocal[iel];
+        unsigned elt = static_cast < short unsigned > (localizedElementType[iel]+ 0.25);
 
         // project element type
         for (unsigned j = 0; j < _mesh.GetRefIndex(); j++) {
@@ -217,7 +218,7 @@ namespace femus {
         AMR = true;
         //elc->SetRefinedElementIndex(iel,jel+1u); // to understand
         //unsigned elt=elc->GetElementType(iel);
-        unsigned elt = typeLocal[iel];
+        unsigned elt = static_cast < short unsigned > (localizedElementType[iel]+ 0.25);
 
         // project element type
         _mesh.el->SetElementType(jel, elt);
@@ -260,12 +261,9 @@ namespace femus {
     }
 
     //find all the middle edge points
-    //vector <double> typeLocalFine;
-    //_mesh._topology->_Sol[_mesh._typeIndex]->localize_to_all(typeLocalFine);
     for (unsigned iel = 0; iel < _mesh.GetNumberOfElements(); iel++) {
       if (_mesh.el->IsFatherRefined(iel)) {
         unsigned ielt = _mesh.el->GetElementType(iel);
-        //unsigned ielt = typeLocalFine[iel];
         unsigned istart = _mesh.el->GetElementDofNumber(iel, 0);
         unsigned iend = _mesh.el->GetElementDofNumber(iel, 1);
 
@@ -284,7 +282,6 @@ namespace femus {
                 unsigned jm = 0, jp = 0;
                 unsigned jelt = _mesh.el->GetElementType(jel);
 
-                //unsigned jelt =typeLocalFine[jel];
                 for (unsigned jnode = 0; jnode < _mesh.el->GetElementDofNumber(jel, 0); jnode++) {
                   if (_mesh.el->GetElementVertexIndex(jel, jnode) == im) {
                     jm = jnode + 1u;
@@ -444,15 +441,13 @@ namespace femus {
     }
 
     // generates element dofs for hex and quad elements
-    //vector <double> typeLocal;
-    //_mesh._topology->_Sol[_mesh._typeIndex]->localize_to_all(typeLocal);
     for (unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++) {
       if (_mesh.el->IsFatherRefined(iel)) {
-        if (/*0==typeLocal[iel]*/ 0 == _mesh.el->GetElementType(iel)) { //hex
+        if (0 == _mesh.el->GetElementType(iel)) { //hex
           _mesh.el->SetElementVertexIndex(iel, 26, ++nnodes);
         }
 
-        if (/*3==typeLocal[iel]*/ 3 == _mesh.el->GetElementType(iel)) { //quad
+        if (3 == _mesh.el->GetElementType(iel)) { //quad
           _mesh.el->SetElementVertexIndex(iel, 8, ++nnodes);
         }
       }

@@ -24,6 +24,7 @@
 #include "ElemType.hpp"
 #include "ElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
+#include <assert.h>
 
 #include "vector"
 #include "map"
@@ -90,6 +91,22 @@ public:
     /** Get element type*/
     short unsigned GetElementType(const unsigned &iel) const;
 
+    /** Only for parallel */
+    unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const {
+      return el->GetNVE(GetElementType(iel), type);
+    }
+    
+    /** Only for parallel */
+    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
+      assert(type<3);
+      return el->GetNFACENODES(GetElementType(iel), jface, type);
+    }
+    
+    /** Only for parallel */
+    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const {
+      return el->GetNFC(GetElementType(iel), type);
+    }
+    
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
         _level=i;

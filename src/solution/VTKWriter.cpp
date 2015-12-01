@@ -128,7 +128,8 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 	nel++;
 	//short unsigned ielt = _ml_mesh->GetLevel(ig)->el->GetElementType(iel);
 	short unsigned ielt = _ml_mesh->GetLevel(ig)->GetElementType(iel);
-	for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
+	//for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
+	for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->GetElementDofNumber(iel,index); j++) {
           counter++;
 	  unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
 	  //unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(iel, loc_vtk_conn, index);
@@ -311,7 +312,8 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
     unsigned nvt_ig= _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
       if ( ig == _gridn-1u ) {
-        for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
+        //for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index); j++) {
+	for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->GetElementDofNumber(iel,index); j++) {
 	  unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
 	  //unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(iel, loc_vtk_conn, index);
 	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetSolutionDof(loc_vtk_conn, iel, index);
@@ -356,7 +358,8 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
       if ( ig == _gridn-1u ) {
-  	offset_el += _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index);
+//   	offset_el += _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index);
+	offset_el += _ml_mesh->GetLevel(ig)->GetElementDofNumber(iel,index);
         var_off[icount] = offset_el;
 	icount++;
       }

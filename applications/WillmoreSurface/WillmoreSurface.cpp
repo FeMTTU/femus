@@ -546,9 +546,11 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
 
     //short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofs  = el->GetElementDofNumber(iel, solHType);    // number of solution element dofs
-    unsigned nDofs2 = el->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-
+//     unsigned nDofs  = el->GetElementDofNumber(iel, solHType);    // number of solution element dofs
+//     unsigned nDofs2 = el->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+    unsigned nDofs  = msh->GetElementDofNumber(iel, solHType);    // number of solution element dofs
+    unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+    
     // resize local arrays
     sysDof.resize(4 * nDofs);
 
@@ -875,8 +877,10 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
 
     //short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofs  = el->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-    unsigned nDofs2 = el->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+//     unsigned nDofs  = el->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+//     unsigned nDofs2 = el->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+    unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+    unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
     // resize local arrays
     solu.resize(nDofs);

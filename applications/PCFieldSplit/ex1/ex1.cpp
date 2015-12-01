@@ -270,10 +270,14 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     //short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
     short unsigned ielGeom = msh->GetElementType(iel);
 
-    unsigned nDofsT = el->GetElementDofNumber(iel, solTType);    // number of solution element dofs
-    unsigned nDofsV = el->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-    unsigned nDofsP = el->GetElementDofNumber(iel, solPType);    // number of solution element dofs
-    unsigned nDofsX = el->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
+//     unsigned nDofsT = el->GetElementDofNumber(iel, solTType);    // number of solution element dofs
+//     unsigned nDofsV = el->GetElementDofNumber(iel, solVType);    // number of solution element dofs
+//     unsigned nDofsP = el->GetElementDofNumber(iel, solPType);    // number of solution element dofs
+//     unsigned nDofsX = el->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
+    unsigned nDofsT = msh->GetElementDofNumber(iel, solTType);    // number of solution element dofs
+    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
+    unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);    // number of solution element dofs
+    unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
 
     unsigned nDofsTVP = nDofsT + dim * nDofsV + nDofsP;
     // resize local arrays

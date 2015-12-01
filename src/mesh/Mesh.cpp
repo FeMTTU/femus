@@ -314,13 +314,13 @@ void Mesh::Buildkel() {
 void Mesh::AllocateAndMarkStructureNode() {
   el->AllocateNodeRegion();
 
-  vector <double> materialLocal;
-  _topology->_Sol[_materialIndex]->localize_to_all(materialLocal);
+  vector <double> localizedElementMaterial;
+  _topology->_Sol[_materialIndex]->localize_to_all(localizedElementMaterial);
 
   for (unsigned iel=0; iel<_nelem; iel++) {
 
     //int flag_mat = el->GetElementMaterial(iel);
-    int flag_mat = materialLocal[iel];
+    int flag_mat = static_cast < short unsigned > (localizedElementMaterial[iel]+ 0.25);
 
     if (flag_mat==4) {
       unsigned nve=el->GetElementDofNumber(iel,2);

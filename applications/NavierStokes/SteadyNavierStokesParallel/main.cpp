@@ -530,9 +530,12 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
       unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
       //short unsigned kelt = myel->GetElementType(kel);
       short unsigned kelt = mymsh->GetElementType(kel);
-      unsigned nve2       = myel->GetElementDofNumber(kel,SolType2);
-      unsigned nve1       = myel->GetElementDofNumber(kel,SolType1);
-      unsigned nveVx      = myel->GetElementDofNumber(kel,SolTypeVx);
+//       unsigned nve2       = myel->GetElementDofNumber(kel,SolType2);
+//       unsigned nve1       = myel->GetElementDofNumber(kel,SolType1);
+//       unsigned nveVx      = myel->GetElementDofNumber(kel,SolTypeVx);
+      unsigned nve2       = mymsh->GetElementDofNumber(kel,SolType2);
+      unsigned nve1       = mymsh->GetElementDofNumber(kel,SolType1);
+      unsigned nveVx      = mymsh->GetElementDofNumber(kel,SolTypeVx);
       
       // *******************************************************************************************************
       //cout<<SolType1<<" "<<SolType2<<" "<<SolTypeVx<<" "<<nve1<<" "<<nve2<<" "<<nveVx<<endl;
@@ -1032,8 +1035,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
       unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
       //short unsigned kelt = myel->GetElementType(kel);
       short unsigned kelt = mymsh->GetElementType(kel);
-      unsigned nve        = myel->GetElementDofNumber(kel,SolType)-1;
-      unsigned nveVx      = myel->GetElementDofNumber(kel,SolTypeVx);
+//       unsigned nve        = myel->GetElementDofNumber(kel,SolType)-1;
+//       unsigned nveVx      = myel->GetElementDofNumber(kel,SolTypeVx);
+      unsigned nve        = mymsh->GetElementDofNumber(kel,SolType)-1;
+      unsigned nveVx      = mymsh->GetElementDofNumber(kel,SolTypeVx);
             
       // -------------- resize -------------- 
       for(int ivar=0; ivar<varDim; ivar++) {
@@ -1348,7 +1353,8 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
     //short unsigned kelt=myel->GetElementType(kel);
     short unsigned kelt=mymsh->GetElementType(kel);
-    unsigned nve=myel->GetElementDofNumber(kel,order_ind);
+    //unsigned nve=myel->GetElementDofNumber(kel,order_ind);
+    unsigned nve=mymsh->GetElementDofNumber(kel,order_ind);
     
     // resize
     metis_node.resize(nve);

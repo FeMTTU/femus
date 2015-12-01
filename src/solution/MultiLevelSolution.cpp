@@ -209,8 +209,9 @@ void MultiLevelSolution::Initialize(const char name[], InitFunc func, InitFuncML
 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
 	    for (int iel=_mlMesh->GetLevel(ig)->_elementOffset[isdom];
 		iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom+1]; iel++) {
-	      unsigned nloc_dof= _mlMesh->GetLevel(ig)->el->GetElementDofNumber(iel,sol_type);
-
+	        //unsigned nloc_dof= _mlMesh->GetLevel(ig)->el->GetElementDofNumber(iel,sol_type);
+                unsigned nloc_dof= _mlMesh->GetLevel(ig)->GetElementDofNumber(iel,sol_type);
+	      
 	      for(int j=0; j<nloc_dof; j++) {
 		unsigned inode_Metis=_mlMesh->GetLevel(ig)->GetSolutionDof(j,iel,sol_type);
 		unsigned icoord_Metis=_mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
@@ -233,7 +234,8 @@ void MultiLevelSolution::Initialize(const char name[], InitFunc func, InitFuncML
 	  for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
 	    for (int iel=_mlMesh->GetLevel(ig)->_elementOffset[isdom];
 		iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom+1]; iel++) {
-	      unsigned nloc_dof= _mlMesh->GetLevel(ig)->el->GetElementDofNumber(iel,0);
+// 	      unsigned nloc_dof= _mlMesh->GetLevel(ig)->el->GetElementDofNumber(iel,0);
+	      unsigned nloc_dof= _mlMesh->GetLevel(ig)->GetElementDofNumber(iel,0);
 	      std::vector < double > xx(3,0.);
 	      for(int j=0; j<nloc_dof; j++) {
 		unsigned icoord_Metis=_mlMesh->GetLevel(ig)->GetSolutionDof(j,iel,2);
@@ -458,12 +460,14 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {   // 1 DD Dirichlet
 	  for (int iel=msh->_elementOffset[isdom];
 	       iel < msh->_elementOffset[isdom+1]; iel++) {
-	    for (unsigned jface=0; jface<msh->el->GetElementFaceNumber(iel); jface++) {
+	    //for (unsigned jface=0; jface<msh->el->GetElementFaceNumber(iel); jface++) {
+	    for (unsigned jface=0; jface<msh->GetElementFaceNumber(iel); jface++) {
 	      if ( msh->el->GetBoundaryIndex(iel,jface) == 0 ) { //Domain Decomposition Dirichlet
 		//short unsigned ielt=msh->el->GetElementType(iel);
 		short unsigned ielt=msh->GetElementType(iel);
 		unsigned nv1 = ( _addAMRPressureStability[k] == true ) ?
-		  msh->el->GetElementDofNumber(iel,_solType[k]): //all the dofs in the element
+		  //msh->el->GetElementDofNumber(iel,_solType[k]): 
+                  msh->GetElementDofNumber(iel,_solType[k]): //all the dofs in the element
 		  msh->el->GetElementFaceDofNumber(iel,jface,_solType[k]); // only the face dofs
 		for (unsigned iv = 0; iv < nv1; iv++) {
 		  unsigned i = ( _addAMRPressureStability[k] == true) ?
@@ -478,11 +482,13 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 	for(int isdom=_iproc; isdom<_iproc+1; isdom++) {  // 0 Dirichlet
 	  for (int iel=msh->_elementOffset[isdom];
 	       iel < msh->_elementOffset[isdom+1]; iel++) {
-	    for (unsigned jface=0; jface<msh->el->GetElementFaceNumber(iel); jface++) {
+	    //for (unsigned jface=0; jface<msh->el->GetElementFaceNumber(iel); jface++) {
+	    for (unsigned jface=0; jface<msh->GetElementFaceNumber(iel); jface++) {
 	      if (msh->el->GetBoundaryIndex(iel,jface) > 0) { //Dirichlet
 		//short unsigned ielt=msh->el->GetElementType(iel);
 		short unsigned ielt=msh->GetElementType(iel);
-		unsigned nv1 = msh->el->GetElementFaceDofNumber(iel,jface,_solType[k]);
+// 		unsigned nv1 = msh->el->GetElementFaceDofNumber(iel,jface,_solType[k]);
+		unsigned nv1 = msh->GetElementFaceDofNumber(iel,jface,_solType[k]);
 		for (unsigned iv=0; iv<nv1; iv++) {
 		  unsigned i=msh->el->GetLocalFaceVertexIndex(iel,jface,iv);
 		  unsigned inode_coord_Metis=msh->GetSolutionDof(i,iel,2);
@@ -531,9 +537,11 @@ void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int gr
 	  for (int iel=msh->_elementOffset[isdom]; iel < msh->_elementOffset[isdom+1]; iel++) {
 	    //short unsigned ielt = msh->el->GetElementType(iel);
 	    short unsigned ielt = msh->GetElementType(iel);
-	    for (unsigned jface = 0; jface<msh->el->GetElementFaceNumber(iel); jface++) {
+	    //for (unsigned jface = 0; jface<msh->el->GetElementFaceNumber(iel); jface++) {
+	   for (unsigned jface = 0; jface<msh->GetElementFaceNumber(iel); jface++) { 
 	      if ( msh->el->GetBoundaryIndex(iel,jface) == 0) { //Domain Decomposition Dirichlet
-		unsigned nv1 = msh->el->GetElementDofNumber(iel, _solType[k]);
+// 		unsigned nv1 = msh->el->GetElementDofNumber(iel, _solType[k]);
+		unsigned nv1 = msh->GetElementDofNumber(iel, _solType[k]);
 		for (unsigned i = 0; i < 1; i++) {
 		  unsigned idof = msh->GetSolutionDof(i,iel,_solType[k]);
 		  _solution[igridn]->_Bdc[k]->set(idof,1.);
