@@ -203,9 +203,9 @@ namespace femus {
     // *** element loop ***
     for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
-      short unsigned ielt = myel->GetElementType(iel);
-      unsigned nve        = myel->GetElementDofNumber(iel, SolType2);
-      unsigned nve1       = myel->GetElementDofNumber(iel, SolType1);
+      short unsigned ielt = mymsh->GetElementType(iel);
+      unsigned nve        = mymsh->GetElementDofNumber(iel, SolType2);
+      unsigned nve1       = mymsh->GetElementDofNumber(iel, SolType1);
       int flag_mat        = mymsh->GetElementMaterial(iel);
 
       // *******************************************************************************************************
@@ -302,7 +302,7 @@ namespace femus {
         vector < double > normal_old(dim, 0);
 
         // loop on faces
-        for (unsigned jface = 0; jface < myel->GetElementFaceNumber(iel); jface++) {
+        for (unsigned jface = 0; jface < mymsh->GetElementFaceNumber(iel); jface++) {
           std::vector< double > xx(dim, 0.);
 
           // look for boundary faces
@@ -313,11 +313,11 @@ namespace femus {
             if (!ml_sol->GetBdcFunction()(xx, "U", tau, face, time) && tau != 0.) {
               double tau_old;
               ml_sol->GetBdcFunction()(xx, "U", tau_old, face, time - dt);
-              unsigned nve = mymsh->el->GetElementFaceDofNumber(iel, jface, SolType2);
-              const unsigned felt = mymsh->el->GetElementFaceType(iel, jface);
+              unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
+              const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
               for (unsigned i = 0; i < nve; i++) {
-                unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
+                unsigned int ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
                 unsigned idof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for (unsigned idim = 0; idim < dim; idim++) {
@@ -335,7 +335,7 @@ namespace femus {
                 for (unsigned i = 0; i < nve; i++) {
                   adept::adouble value = - phi[i] * tau / rhof * Weight;
                   double value_old = - phi[i] * tau_old / rhof * Weight_old;
-                  unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
+                  unsigned int ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
 
                   for (unsigned idim = 0; idim < dim; idim++) {
                     if ((!solidmark[ilocal])) {

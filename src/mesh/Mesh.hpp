@@ -24,6 +24,7 @@
 #include "ElemType.hpp"
 #include "ElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
+#include <assert.h>
 
 #include "vector"
 #include "map"
@@ -77,12 +78,48 @@ public:
     unsigned GetNumberOfElements() const {
       return _nelem;
     }
-    
+
+    /** Get if element is refined*/
+    short unsigned GetRefinedElementIndex(const unsigned &iel) const;
+
     /** Get element group*/
     short unsigned GetElementGroup(const unsigned &iel) const;
-    
+
     /** Get element material*/
     short unsigned GetElementMaterial(const unsigned &iel) const;
+
+    /** Get element type*/
+    short unsigned GetElementType(const unsigned &iel) const;
+
+    /** Only for parallel */
+    unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const {
+      return el->GetNVE(GetElementType(iel), type);
+    }
+    
+    /** Only for parallel */
+    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const{
+      unsigned kelt = GetElementType(kel);
+      const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
+      const unsigned felt = FELT[kelt][jface >= GetElementFaceNumber(kel,0)];
+      return felt;
+    }
+    
+    /** Only for parallel */
+    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const {
+      return el->GetIG(GetElementType(iel), iface, jnode);
+    }
+    
+    
+    /** Only for parallel */
+    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
+      assert( type < 3 );
+      return el->GetNFACENODES(GetElementType(iel), jface, type);
+    }
+    
+    /** Only for parallel */
+    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const {
+      return el->GetNFC(GetElementType(iel), type);
+    }
     
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
@@ -186,6 +223,15 @@ public:
     };
 
 
+
+    const unsigned GetXIndex()          const { return _xIndex; };
+    const unsigned GetYIndex()          const { return _yIndex; };
+    const unsigned GetZIndex()          const { return _zIndex; };
+    const unsigned GetAmrIndex()        const { return _amrIndex; };
+    const unsigned GetMaterialIndex()   const { return _materialIndex; };
+    const unsigned GetGroupIndex()      const { return _groupIndex; };
+    const unsigned GetTypeIndex()       const { return _typeIndex; };
+
 private:
     /** Coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
     Mesh* _coarseMsh;
@@ -209,22 +255,22 @@ private:
     static unsigned _dimension;                //< dimension of the problem
     static unsigned _ref_index;
     static unsigned _face_index;
-    
+
     std::map < unsigned, unsigned > _ownedGhostMap[2];
     vector < unsigned > _originalOwnSize[2];
-    
+
     static const unsigned _END_IND[5];
     vector < vector < double > > _coords;
-    
+
     // indices of the topology parallel vectors
-    static const unsigned _xIndex = 0; 
-    static const unsigned _yIndex = 1; 
+    static const unsigned _xIndex = 0;
+    static const unsigned _yIndex = 1;
     static const unsigned _zIndex = 2;
     static const unsigned _amrIndex = 3;
-    static const unsigned _materialIndex = 4; 
-    static const unsigned _groupIndex = 5; 
+    static const unsigned _materialIndex = 4;
+    static const unsigned _groupIndex = 5;
     static const unsigned _typeIndex = 6;
-    
+
 
 };
 

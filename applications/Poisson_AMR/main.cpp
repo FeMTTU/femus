@@ -420,7 +420,7 @@ int main(int argc, char** argv) {
   system2.SetDirichletBCsHandling(PENALTY);
 
   // Solve Temperature system
-  system2.MGsolve();
+  system2.MLsolve();
   //END Temperature Multilevel Problem
 
   /// Print all solutions
@@ -530,8 +530,8 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
   // *** element loop ***
   for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielt = myel->GetElementType(iel);
-    unsigned nve = myel->GetElementDofNumber(iel, order_ind);
+    short unsigned ielt = mymsh->GetElementType(iel);
+    unsigned nve = mymsh->GetElementDofNumber(iel, order_ind);
 
     // resize
     metis_node.resize(nve);
@@ -629,7 +629,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
     //number of faces for each type of element
     //number of faces for each type of element
-    unsigned nfaces = myel->GetElementFaceNumber(iel);
+    unsigned nfaces = mymsh->GetElementFaceNumber(iel);
 
     // loop on faces
     for (unsigned jface = 0; jface < nfaces; jface++) {
@@ -642,11 +642,11 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
         if (ml_sol->GetBoundaryCondition("Sol", faceIndex) == NEUMANN && !ml_sol->Ishomogeneous("Sol", faceIndex)) {
 
           bdcfunc = (ParsedFunction*)(ml_sol->GetBdcFunction("Sol", faceIndex));
-          unsigned nve = mymsh->el->GetElementFaceDofNumber(iel, jface, order_ind);
-          const unsigned felt = mymsh->el->GetElementFaceType(iel, jface);
+          unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, order_ind);
+          const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
           for (unsigned i = 0; i < nve; i++) {
-            unsigned ilocal = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
+            unsigned ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
             unsigned inode_coord_metis = mymsh->GetSolutionDof(ilocal, iel, 2);
 
             for (unsigned ivar = 0; ivar < dim; ivar++) {
@@ -671,7 +671,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
               for (unsigned i = 0; i < nve; i++) {
                 double surfterm_g = (*bdcfunc)(&xyzt[0]);
                 double bdintegral = phi[i] * surfterm_g * weight;
-                unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
+                unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
                 F[ilocalnode] += bdintegral;
               }
             }
@@ -685,7 +685,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
             xyzt[3] = 0.;
 
             double bdintegral = (*bdcfunc)(&xyzt[0]);
-            unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(iel, jface, 0);
+            unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, 0);
             F[ilocalnode] += bdintegral;
           }
         }
@@ -770,77 +770,76 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
 
 
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-      if (ilevel == gridn - 1 || !msh->el->GetRefinedElementIndex(iel)) {
-        short unsigned ielt = msh->el->GetElementType(iel);
-        unsigned nve = msh->el->GetElementDofNumber(iel, SolOrder);
 
-        // resize
-        metis_node.resize(nve);
-        phi.resize(nve);
-        gradphi.resize(nve * dim);
-        nablaphi.resize(nve * (3 * (dim - 1) + !(dim - 1)));
+      short unsigned ielt = msh->GetElementType(iel);
+      unsigned nve = msh->GetElementDofNumber(iel, SolOrder);
+      // resize
+      metis_node.resize(nve);
+      phi.resize(nve);
+      gradphi.resize(nve * dim);
+      nablaphi.resize(nve * (3 * (dim - 1) + !(dim - 1)));
 
-        for (int i = 0; i < dim; i++) {
-          coordinates[i].resize(nve);
-        }
+      for (int i = 0; i < dim; i++) {
+        coordinates[i].resize(nve);
+      }
 
-        // get local to global mappings
-        for (unsigned i = 0; i < nve; i++) {
-          unsigned inode_coord_metis = msh->GetSolutionDof(i, iel, 2);
-          metis_node[i] = msh->GetSolutionDof(i, iel, SolOrder);
+      // get local to global mappings
+      for (unsigned i = 0; i < nve; i++) {
+        unsigned inode_coord_metis = msh->GetSolutionDof(i, iel, 2);
+        metis_node[i] = msh->GetSolutionDof(i, iel, SolOrder);
 
-          for (unsigned idim = 0; idim < dim; idim++) {
-            coordinates[idim][i] = (*msh->_topology->_Sol[idim])(inode_coord_metis);
-          }
-        }
-
-        for (unsigned ig = 0; ig < ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->GetGaussPointNumber(); ig++) {
-          // *** get Jacobian and test function and test function derivatives ***
-          ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->Jacobian(coordinates, ig, weight, phi, gradphi, nablaphi);
-          //current solution
-          double SolT = 0;
-          vector < double > gradSolT(dim, 0.);
-
-          for (unsigned ivar = 0; ivar < dim; ivar++) {
-            gradSolT[ivar] = 0;
-          }
-
-          double pi = acos(-1.);
-          double x[4] = {0., 0., 0., 0.};
-
-          unsigned SolType = ml_sol.GetSolutionType("Sol");
-
-          for (unsigned i = 0; i < nve; i++) {
-            double soli = (*solution->_Sol[SolIndex])(metis_node[i]);
-
-            for (unsigned ivar = 0; ivar < dim; ivar++) {
-              x[ivar] += coordinates[ivar][i] * phi[i];
-            }
-
-            SolT += phi[i] * soli;
-
-            for (unsigned ivar2 = 0; ivar2 < dim; ivar2++) {
-              gradSolT[ivar2] += gradphi[i * dim + ivar2] * soli;
-            }
-          }
-
-          double SolExact, dSolExactdx, dSolExactdy;
-#ifdef HAVE_FPARSER
-          SolExact    = fp_sol(x);
-          dSolExactdx = fp_dsoldx(x);
-          dSolExactdy = fp_dsoldy(x);
-#endif
-
-          error_vec->add(iproc, ((SolT - SolExact) * (SolT - SolExact) +
-                                 H1 * ((gradSolT[0] - dSolExactdx) * (gradSolT[0] - dSolExactdx) +
-                                       (gradSolT[1] - dSolExactdy) * (gradSolT[1] - dSolExactdy))
-                                )*weight);
-
-          solution_vec->add(iproc, (SolExact * SolExact +
-                                    H1 * (dSolExactdx * dSolExactdx + dSolExactdy * dSolExactdy))*weight);
+        for (unsigned idim = 0; idim < dim; idim++) {
+          coordinates[idim][i] = (*msh->_topology->_Sol[idim])(inode_coord_metis);
         }
       }
+
+      for (unsigned ig = 0; ig < ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->GetGaussPointNumber(); ig++) {
+        // *** get Jacobian and test function and test function derivatives ***
+        ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->Jacobian(coordinates, ig, weight, phi, gradphi, nablaphi);
+        //current solution
+        double SolT = 0;
+        vector < double > gradSolT(dim, 0.);
+
+        for (unsigned ivar = 0; ivar < dim; ivar++) {
+          gradSolT[ivar] = 0;
+        }
+
+        double pi = acos(-1.);
+        double x[4] = {0., 0., 0., 0.};
+
+        unsigned SolType = ml_sol.GetSolutionType("Sol");
+
+        for (unsigned i = 0; i < nve; i++) {
+          double soli = (*solution->_Sol[SolIndex])(metis_node[i]);
+
+          for (unsigned ivar = 0; ivar < dim; ivar++) {
+            x[ivar] += coordinates[ivar][i] * phi[i];
+          }
+
+          SolT += phi[i] * soli;
+
+          for (unsigned ivar2 = 0; ivar2 < dim; ivar2++) {
+            gradSolT[ivar2] += gradphi[i * dim + ivar2] * soli;
+          }
+        }
+
+        double SolExact, dSolExactdx, dSolExactdy;
+#ifdef HAVE_FPARSER
+        SolExact    = fp_sol(x);
+        dSolExactdx = fp_dsoldx(x);
+        dSolExactdy = fp_dsoldy(x);
+#endif
+
+        error_vec->add(iproc, ((SolT - SolExact) * (SolT - SolExact) +
+                               H1 * ((gradSolT[0] - dSolExactdx) * (gradSolT[0] - dSolExactdx) +
+                                     (gradSolT[1] - dSolExactdy) * (gradSolT[1] - dSolExactdy))
+                              )*weight);
+
+        solution_vec->add(iproc, (SolExact * SolExact +
+                                  H1 * (dSolExactdx * dSolExactdx + dSolExactdy * dSolExactdy))*weight);
+      }
     }
+
   }
 
   error_vec->close();
@@ -855,3 +854,4 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
   return sqrt(l2_error / l2_solution);
 
 }
+

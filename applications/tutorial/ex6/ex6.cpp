@@ -223,12 +223,12 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
+    short unsigned ielGeom = msh->GetElementType(iel);
 
-    unsigned nDofsV = el->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-    unsigned nDofsP = el->GetElementDofNumber(iel, solPType);    // number of solution element dofs
-    unsigned nDofsX = el->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
-
+    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
+    unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);    // number of solution element dofs
+    unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
+    
     unsigned nDofsVP = dim * nDofsV + nDofsP;
     // resize local arrays
     sysDof.resize(nDofsVP);

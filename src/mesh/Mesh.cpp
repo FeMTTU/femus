@@ -314,16 +314,19 @@ void Mesh::Buildkel() {
 void Mesh::AllocateAndMarkStructureNode() {
   el->AllocateNodeRegion();
 
-  vector <double> materialLocal;
-  _topology->_Sol[_materialIndex]->localize_to_all(materialLocal);
+  vector <double> localizedElementMaterial;
+  _topology->_Sol[_materialIndex]->localize_to_all(localizedElementMaterial);
+  
+   vector <double> localizedElementType;
+  _topology->_Sol[_typeIndex]->localize_to_all(localizedElementType);
 
   for (unsigned iel=0; iel<_nelem; iel++) {
 
     //int flag_mat = el->GetElementMaterial(iel);
-    int flag_mat = materialLocal[iel];
+    int flag_mat = static_cast < short unsigned > (localizedElementMaterial[iel]+ 0.25);
 
     if (flag_mat==4) {
-      unsigned nve=el->GetElementDofNumber(iel,2);
+      unsigned nve = el->GetNVE(localizedElementType[iel],2);
       for ( unsigned i=0; i<nve; i++) {
         unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
         el->SetNodeRegion(inode, 1);
@@ -654,7 +657,7 @@ void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
 
   for(unsigned isdom = _iproc; isdom < _iproc+1; isdom++) {
     for (unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
-      short unsigned ielt = el->GetElementType(iel);
+      short unsigned ielt = GetElementType(iel);
       _finiteElement[ielt][jtype]->GetSparsityPatternSize(*this, iel, NNZ_d, NNZ_o, itype);
     }
   }
@@ -675,7 +678,7 @@ void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype){
   _ProjQitoQj[itype][jtype]->init(ni, nj, _ownSize[itype][_iproc], _ownSize[jtype][_iproc], nnz_d, nnz_o);
   for(unsigned isdom = _iproc; isdom < _iproc+1; isdom++) {
     for (unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
-      short unsigned ielt = el->GetElementType(iel);
+      short unsigned ielt = GetElementType(iel);
       _finiteElement[ielt][jtype]->BuildProlongation(*this, iel, _ProjQitoQj[itype][jtype], NNZ_d, NNZ_o,itype);
     }
   }
@@ -738,7 +741,7 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
 
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
       for (int iel = _coarseMsh->_elementOffset[isdom];iel < _coarseMsh->_elementOffset[isdom+1]; iel++) {
-	short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+	short unsigned ielt=_coarseMsh->GetElementType(iel);
 	_finiteElement[ielt][solType]->GetSparsityPatternSize( *this, *_coarseMsh, iel, NNZ_d, NNZ_o);
       }
     }
@@ -762,12 +765,17 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
     // loop on the coarse grid
     for(int isdom=_iproc; isdom<_iproc+1; isdom++) {
       for (int iel=_coarseMsh->_elementOffset[isdom]; iel < _coarseMsh->_elementOffset[isdom+1]; iel++) {
-       short unsigned ielt=_coarseMsh->el->GetElementType(iel);
+        short unsigned ielt=_coarseMsh->GetElementType(iel);
 	_finiteElement[ielt][solType]->BuildProlongation(*this, *_coarseMsh,iel, _ProjCoarseToFine[solType]);
       }
     }
     _ProjCoarseToFine[solType]->close();
   }
+}
+
+
+short unsigned Mesh::GetRefinedElementIndex(const unsigned &iel) const{
+  return static_cast <short unsigned> ( (*_topology->_Sol[_amrIndex])(iel) + 0.5);
 }
 
 short unsigned Mesh::GetElementGroup(const unsigned int& iel) const{
@@ -776,6 +784,10 @@ short unsigned Mesh::GetElementGroup(const unsigned int& iel) const{
 
 short unsigned Mesh::GetElementMaterial(const unsigned int& iel) const{
   return static_cast <short unsigned> ( (*_topology->_Sol[_materialIndex])(iel) + 0.5);
+}
+
+short unsigned Mesh::GetElementType(const unsigned int& iel) const{
+  return static_cast <short unsigned> ( (*_topology->_Sol[_typeIndex])(iel) + 0.5);
 }
 
 

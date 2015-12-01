@@ -187,8 +187,8 @@ namespace femus {
       // ***************** NODE/ELEMENT SERCH *******************
       for (int kel = 0; kel < block_elements[vb_index].size(); kel++) {
         unsigned iel = block_elements[vb_index][kel];
-        
-        for (unsigned i = 0; i < _msh->el->GetElementDofNumber(iel, 0); i++) {
+	
+        for (unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) {
           unsigned inode = _msh->el->GetElementVertexIndex(iel, i) - 1u;
           unsigned nvei = _msh->el->GetVertexElementNumber(inode);
           const unsigned* pt_jel = _msh->el->GetVertexElementAddress(inode, 0);
@@ -208,14 +208,9 @@ namespace femus {
                   if (ThisVaribaleIsNonSchur[indexSol]) {
                     unsigned SolPdeIndex = _SolPdeIndex[indexSol];
                     unsigned SolType = _SolType[SolPdeIndex];
-                    unsigned nvej = _msh->el->GetElementDofNumber(jel, SolType);
+                    unsigned nvej = _msh->GetElementDofNumber(jel, SolType); 
                     for (unsigned jj = 0; jj < nvej; jj++) {
 		      unsigned jnode_Metis = _msh->GetSolutionDof(jj, jel, SolType);
-                      //unsigned jnode = _msh->el->GetMeshDof(jel, jj, SolType);
-
-// 		      bool solidmark = _msh->el->GetNodeRegion(jnode);
-// 		      if( vb_index < _block_type_range[0] || !solidmark ){
-                      //unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, jnode);
 		      unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, jj, jel);
                       if (jnode_Metis >= _msh->_dofOffset[SolType][iproc] &&
                           jnode_Metis <  _msh->_dofOffset[SolType][iproc + 1]) {
@@ -246,7 +241,7 @@ namespace femus {
             if (!ThisVaribaleIsNonSchur[indexSol]) {
               unsigned SolPdeIndex = _SolPdeIndex[indexSol];
               unsigned SolType = _SolType[SolPdeIndex];
-              unsigned nvei = _msh->el->GetElementDofNumber(iel, SolType);
+              unsigned nvei = _msh->GetElementDofNumber(iel, SolType);
               for (unsigned ii = 0; ii < nvei; ii++) {
 		unsigned inode_Metis = _msh->GetSolutionDof(ii, iel, SolType);
                 //unsigned inode = _msh->el->GetMeshDof(iel, ii, SolType);

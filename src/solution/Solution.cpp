@@ -395,22 +395,22 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
   counter_vec->zero();
 
   for (int kel = _msh->_elementOffset[_iproc]; kel < _msh->_elementOffset[_iproc+1]; kel++) {
-    short unsigned kelt=_msh->el->GetElementType(kel);
+    short unsigned kelt=_msh->GetElementType(kel);
     for (unsigned k=0; k<SolIndex.size(); k++) {
       if(SolType[k]<3){
-      unsigned nve=_msh->el->GetElementDofNumber(kel,SolEndInd[k]);
-      for(unsigned i=0; i<nve; i++) {
-	//unsigned inode=(SolType[k]<3)?(_msh->el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
-	unsigned inode_metis=_msh->GetSolutionDof(i,kel,SolType[k]);
-	double value = (*_AMREps[SolIndex[k]])(inode_metis);
-	if(fabs(value)>SolMax[k]){
-	  counter_vec->add(_iproc,1.);
-	  AMR->_Sol[AMRIndex]->set(kel, 1.);
-	  k=SolIndex.size();
-	  i=nve;
+        unsigned nve=_msh->GetElementDofNumber(kel,SolEndInd[k]);
+	for(unsigned i=0; i<nve; i++) {
+	  //unsigned inode=(SolType[k]<3)?(_msh->el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
+	  unsigned inode_metis=_msh->GetSolutionDof(i,kel,SolType[k]);
+	  double value = (*_AMREps[SolIndex[k]])(inode_metis);
+	  if(fabs(value)>SolMax[k]){
+	    counter_vec->add(_iproc,1.);
+	    AMR->_Sol[AMRIndex]->set(kel, 1.);
+	    k=SolIndex.size();
+	    i=nve;
+	  }
 	}
       }
-    }
     }
   }
   AMR->_Sol[AMRIndex]->close();
@@ -564,9 +564,9 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       row_dof.resize(1);
       row_dof[0]=iel;
 
-      short unsigned ielt=_msh->el->GetElementType(iel);
-
-      unsigned nve=_msh->el->GetElementDofNumber(iel,SolType);
+      short unsigned ielt=_msh->GetElementType(iel);
+      
+      unsigned nve=_msh->GetElementDofNumber(iel,SolType);
 
       // resize
       column_dofs.resize(nve);

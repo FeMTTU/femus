@@ -162,37 +162,45 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
   unsigned topology[27];
   unsigned offset=1;
 
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
-    for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-      if ( ig == igridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
-        short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(ii);
-        if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
-        else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
-        else if (ielt==2) sprintf(det,"pprism%d",eltp[index][2]);
-        else if (ielt==3) {
-          if (eltp[index][3]==8) sprintf(det,"%dquad",eltp[index][3]);
-          else sprintf(det,"quad");
-        } else if (ielt==4) {
-          if (eltp[index][4]==6) sprintf(det,"%dtri",eltp[index][4]);
-          else sprintf(det,"tri");
-        } else if (ielt==5) {
-          if (eltp[index][5]==3) sprintf(det,"%dline",eltp[index][5]);
-          else sprintf(det,"line");
-        }
-        fout.write((char *)det,sizeof(char)*8);
-        fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
-	for(unsigned j=0;j<NVE[ielt][index];j++){
+  vector < double > localizedElementType;
+  _ml_mesh->GetLevel(igridn-1)->_topology->_Sol[_ml_mesh->GetLevel(igridn-1)->GetTypeIndex()]->localize_to_one(localizedElementType, 0);
+  
+  if(_iproc == 0){
+    for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+      for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
+	if ( ig == igridn-1u ) {
+	  short unsigned ielt = static_cast < short unsigned > (localizedElementType[ii]+ 0.25);
+	  //short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(ii);
+	  if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
+	  else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
+	  else if (ielt==2) sprintf(det,"pprism%d",eltp[index][2]);
+	  else if (ielt==3) {
+	    if (eltp[index][3]==8) sprintf(det,"%dquad",eltp[index][3]);
+	    else sprintf(det,"quad");
+	  } else if (ielt==4) {
+	    if (eltp[index][4]==6) sprintf(det,"%dtri",eltp[index][4]);
+	    else sprintf(det,"tri");
+	  } else if (ielt==5) {
+	    if (eltp[index][5]==3) sprintf(det,"%dline",eltp[index][5]);
+	    else sprintf(det,"line");
+	  }
+	  fout.write((char *)det,sizeof(char)*8);
+	  fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
+	  for(unsigned j=0;j<NVE[ielt][index];j++){
 
-	  //unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(ii,j)-1u;
-	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(j,ii,index);
+	    //unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(ii,j)-1u;
+	    unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(j,ii,index);
 
-	  topology[j]=jnode_Metis+offset;
+	    topology[j]=jnode_Metis+offset;
+	  }
+	  fout.write((char *)topology,sizeof(unsigned)*NVE[ielt][index]);
 	}
-	fout.write((char *)topology,sizeof(unsigned)*NVE[ielt][index]);
       }
+      offset+=_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
     }
-    offset+=_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
   }
+  
+  localizedElementType.resize(0);
   // ********** End printing cell connectivity  **********
 
   double *var_el=new double [nel+1]; //TO FIX Valgrind complaints! In reality it should be only nel
@@ -207,29 +215,29 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 //   strcpy(det,"Regions");
 //   fout.write((char *)det,sizeof(char)*8);
 //   fout.write((char *)&zero,sizeof(unsigned));
-// 
+//
 //   int icount=0;
 //   for (unsigned ig=igridr-1u; ig<igridn; ig++) {
 //     for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-//       if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+//       if ( ig==igridn-1u ) {
 // 	var_el[icount]=_ml_mesh->GetLevel(ig)->el->GetElementGroup(ii);
 //         icount++;
 //       }
 //     }
 //   }
 //   fout.write((char *)&var_el[0],nel*sizeof(double));
-// 
+//
 //   if(_nprocs>=1){
 //     strcpy(det,"Reg_proc");
 //     fout.write((char *)det,sizeof(char)*8);
 //     fout.write((char *)&zero,sizeof(unsigned));
-// 
+//
 //     int icount=0;
 //     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
 //       for(int isdom = 0; isdom < _nprocs; isdom++){
 //         for( unsigned ii = _ml_mesh->GetLevel(ig)->_elementOffset[isdom];
 //              ii < _ml_mesh->GetLevel(ig)->_elementOffset[isdom+1]; ii++){
-//           if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+//           if ( ig==igridn-1u ) {
 //             var_el[icount]=isdom;
 //             icount++;
 //           }
@@ -310,7 +318,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 	      _ml_sol->GetSolutionLevel(ig)->_Eps[i]->localize_to_one(v_local,0);
 	    }
 	    for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-	      if ( ig==igridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	      if ( ig==igridn-1u ) {
 		unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0,ii,_ml_sol->GetSolutionType(i));
 		var_el[icount]=v_local[iel_Metis];
 		icount++;
@@ -402,9 +410,9 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
   for (unsigned ig = igridr-1u; ig<gridn; ig++) {
     unsigned offset_iprc = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+      if ( ig == gridn-1u ) {
 	nel++;
-	short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(iel);
+	short unsigned ielt=_ml_mesh->GetLevel(ig)->GetElementType(iel);
         for(unsigned j=0; j<NVE[ielt][index]; j++){
 	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetSolutionDof(j, iel, index);
 	  if( jnodeMetis < offset_iprc ){ //Is this a ghost node?
@@ -539,8 +547,8 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
     unsigned offset_iprc = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
     unsigned nvt_ig= _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
-        short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(iel);
+      if ( ig == gridn-1u ) {
+	short unsigned ielt=_ml_mesh->GetLevel(ig)->GetElementType(iel);
         if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
         else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
         else if (ielt==2) sprintf(det,"pprism%d",eltp[index][2]);
@@ -582,27 +590,27 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 //   strcpy(det,"Regions");
 //   fout.write((char *)det,sizeof(char)*8);
 //   fout.write((char *)&zero,sizeof(unsigned));
-// 
+//
 //   int icount=0;
 //   for (unsigned ig=igridr-1u; ig<gridn; ig++) {
 //     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-//       if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+//       if ( ig==gridn-1u ) {
 // 	var_el[icount]=_ml_mesh->GetLevel(ig)->el->GetElementGroup(iel);
 //         icount++;
 //       }
 //     }
 //   }
 //   fout.write((char *)&var_el[0],nel*sizeof(double));
-// 
+//
 //   if(_nprocs>=1){
 //     strcpy(det,"Reg_proc");
 //     fout.write((char *)det,sizeof(char)*8);
 //     fout.write((char *)&zero,sizeof(unsigned));
-// 
+//
 //     int icount=0;
 //     for (unsigned ig=igridr-1u; ig<gridn; ig++) {
 //       for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-//         if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+//         if ( ig==gridn-1u ) {
 // 	  var_el[icount]=_iproc;
 // 	  icount++;
 // 	}
@@ -610,7 +618,7 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 //     }
 //     fout.write((char *)&var_el[0],nel*sizeof(double));
 //   }
-// 
+//
 //   // ********** End printing Regions **********
 
   // ********** Start printing Solution **********
@@ -682,9 +690,9 @@ void GMVWriter::Pwrite(const std::string output_path, const char order[], const 
 	  int icount=0;
 	  for (unsigned ig=igridr-1u; ig<gridn; ig++) {
 	    for (unsigned iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-	      if ( ig == _gridn-1u || 0 == _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+	      if ( ig == _gridn-1u ) {
 		unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel,_ml_sol->GetSolutionType(i));
-		if ( ig==gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel)) {
+		if ( ig==gridn-1u ) {
 		  if (name==0){
 		    var_el[icount] = (*_ml_sol->GetSolutionLevel(ig)->_Sol[i])(iel_Metis);
 		  }
