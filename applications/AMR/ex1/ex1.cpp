@@ -77,7 +77,7 @@ int main(int argc, char** args) {
   unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-  // Why does number Of UniformLevels add number Of Selective Levels
+  // Q01 Why does number Of UniformLevels add number Of Selective Levels
 
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
@@ -130,7 +130,7 @@ int main(int argc, char** args) {
   system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
 
   system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(4); // What's Block number?
+  system.SetElementBlockNumber(4); // Q2 What's Block number?
   //system.SetDirichletBCsHandling(ELIMINATION);
   //system.solve();
   system.MGsolve();
