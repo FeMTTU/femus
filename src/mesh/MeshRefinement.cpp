@@ -90,7 +90,6 @@ namespace femus {
           }
           else if (_mesh._IsUserRefinementFunctionDefined) {
             short unsigned ielt = _mesh.GetElementType(iel);
-//             unsigned nve = _mesh.el->GetElementDofNumber(iel, 0);
 	    unsigned nve = _mesh.GetElementDofNumber(iel, 0);
             std::vector < double > x(3, 0.);
 
@@ -198,11 +197,12 @@ namespace femus {
 
         // project vertex indeces
         for (unsigned j = 0; j < _mesh.GetRefIndex(); j++)
-          for (unsigned inode = 0; inode < elc->GetElementDofNumber(iel, 0); inode++)
+          for (unsigned inode = 0; inode < elc->GetNVE(elt, 0); inode++)
             _mesh.el->SetElementVertexIndex(jel + j, inode, elc->GetElementVertexIndex(iel, fine2CoarseVertexMapping[elt][j][inode] - 1u));
 
-        // project face indeces
-        for (unsigned iface = 0; iface < elc->GetElementFaceNumber(iel); iface++) {
+        // project face indeces 
+        //for (unsigned iface = 0; iface < elc->GetElementFaceNumber(iel); iface++) {
+	for (unsigned iface = 0; iface <  elc->GetNFC(elt, 1); iface++) {
           int value = elc->GetFaceElementIndex(iel, iface);
 
           if (0 > value)
@@ -226,11 +226,12 @@ namespace femus {
         elc->SetChildElement(iel, 0, jel);
 
         // project nodes indeces
-        for (unsigned inode = 0; inode < elc->GetElementDofNumber(iel, 2); inode++)
+        for (unsigned inode = 0; inode < elc->GetNVE(elt, 2); inode++) 
           _mesh.el->SetElementVertexIndex(jel, inode, elc->GetElementVertexIndex(iel, inode));
 
         // project face indeces
-        for (unsigned iface = 0; iface < elc->GetElementFaceNumber(iel); iface++) {
+        //for (unsigned iface = 0; iface < elc->GetElementFaceNumber(iel); iface++) {
+	for (unsigned iface = 0; iface <  elc->GetNFC(elt, 1); iface++) {
           int value = elc->GetFaceElementIndex(iel, iface);
 
           if (0 > value) {

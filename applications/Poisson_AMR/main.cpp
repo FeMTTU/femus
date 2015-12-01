@@ -530,9 +530,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
   // *** element loop ***
   for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
-    //short unsigned ielt = myel->GetElementType(iel);
     short unsigned ielt = mymsh->GetElementType(iel);
-//     unsigned nve = myel->GetElementDofNumber(iel, order_ind);
     unsigned nve = mymsh->GetElementDofNumber(iel, order_ind);
 
     // resize
@@ -631,7 +629,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
     //number of faces for each type of element
     //number of faces for each type of element
-    unsigned nfaces = myel->GetElementFaceNumber(iel);
+    unsigned nfaces = mymsh->GetElementFaceNumber(iel);
 
     // loop on faces
     for (unsigned jface = 0; jface < nfaces; jface++) {
@@ -644,11 +642,11 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
         if (ml_sol->GetBoundaryCondition("Sol", faceIndex) == NEUMANN && !ml_sol->Ishomogeneous("Sol", faceIndex)) {
 
           bdcfunc = (ParsedFunction*)(ml_sol->GetBdcFunction("Sol", faceIndex));
-          unsigned nve = mymsh->el->GetElementFaceDofNumber(iel, jface, order_ind);
-          const unsigned felt = mymsh->el->GetElementFaceType(iel, jface);
+          unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, order_ind);
+          const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
           for (unsigned i = 0; i < nve; i++) {
-            unsigned ilocal = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
+            unsigned ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
             unsigned inode_coord_metis = mymsh->GetSolutionDof(ilocal, iel, 2);
 
             for (unsigned ivar = 0; ivar < dim; ivar++) {
@@ -673,7 +671,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
               for (unsigned i = 0; i < nve; i++) {
                 double surfterm_g = (*bdcfunc)(&xyzt[0]);
                 double bdintegral = phi[i] * surfterm_g * weight;
-                unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
+                unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
                 F[ilocalnode] += bdintegral;
               }
             }
@@ -687,7 +685,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
             xyzt[3] = 0.;
 
             double bdintegral = (*bdcfunc)(&xyzt[0]);
-            unsigned int ilocalnode = mymsh->el->GetLocalFaceVertexIndex(iel, jface, 0);
+            unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, 0);
             F[ilocalnode] += bdintegral;
           }
         }
@@ -773,9 +771,7 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
 
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-      //short unsigned ielt = msh->el->GetElementType(iel);
       short unsigned ielt = msh->GetElementType(iel);
-      //unsigned nve = msh->el->GetElementDofNumber(iel, SolOrder);
       unsigned nve = msh->GetElementDofNumber(iel, SolOrder);
       // resize
       metis_node.resize(nve);

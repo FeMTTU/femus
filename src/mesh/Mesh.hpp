@@ -97,8 +97,22 @@ public:
     }
     
     /** Only for parallel */
+    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const{
+      unsigned kelt = GetElementType(kel);
+      const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
+      const unsigned felt = FELT[kelt][jface >= GetElementFaceNumber(kel,0)];
+      return felt;
+    }
+    
+    /** Only for parallel */
+    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const {
+      return el->GetIG(GetElementType(iel), iface, jnode);
+    }
+    
+    
+    /** Only for parallel */
     unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
-      assert(type<3);
+      assert( type < 3 );
       return el->GetNFACENODES(GetElementType(iel), jface, type);
     }
     

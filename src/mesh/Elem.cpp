@@ -84,7 +84,7 @@ elem::elem(const unsigned &other_nel) {
  * This constructor allocates the memory for the \textit{finer elem}
  * starting from the paramenters of the \textit{coarser elem}
  **/
-elem::elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrVector, const std::vector < double > &localizedElementType) {
+elem::elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrVector, const std::vector < double > &coarseElementType) {
 
   _level = elc->_level + 1;
 
@@ -114,7 +114,7 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
   for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ){
     if( static_cast < short unsigned > ( coarseAmrVector[iel] + 0.25 ) == 0){
        //unsigned type = elc->GetElementType(iel);
-       unsigned type = static_cast < short unsigned > ( localizedElementType[iel] + 0.25 );
+       unsigned type = static_cast < short unsigned > ( coarseElementType[iel] + 0.25 );
        _kvertSize += NVE[type][2];
        _kelSize += NFC[type][1];
     }
@@ -129,18 +129,16 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
   unsigned *pt_u = _kvertMemory;
   unsigned jel = 0;
   for (unsigned iel = 0; iel<elc->GetElementNumber(); iel++) {
-    //short unsigned elemt = elc->GetElementType(iel);
-    short unsigned elemt = static_cast < short unsigned > ( localizedElementType[iel] + 0.25 );
+    short unsigned elemt = static_cast < short unsigned > ( coarseElementType[iel] + 0.25 );
     int increment = 1;
     if( static_cast < short unsigned > ( coarseAmrVector[iel] + 0.25 ) == 1){
       increment = NRE[elemt];
     }
     for (unsigned j = 0; j < increment; j++) {
       _kvert[jel+j] = pt_u;
-      pt_u += elc->GetElementDofNumber(iel,2);
-
+      pt_u += NVE[elemt][2];
       _kel[jel+j] = pt_i;
-      pt_i += elc->GetElementFaceNumber(iel);
+      pt_i += NFC[ elemt ][1];
     }
     jel += increment;
   }
@@ -276,12 +274,12 @@ elem::~elem() {
     delete [] _kvert;
     delete [] _kelMemory;
     delete [] _kel;
-    delete [] _elementType;
     delete [] _isFatherElementRefined;
 
     delete [] _kvtelMemory;
     delete [] _kvtel;
     delete [] _nve;
+    
     _kvtel = NULL;
     _kvtelMemory = NULL;
     _nve = NULL;
@@ -296,6 +294,7 @@ elem::~elem() {
 void elem::deleteParallelizedQuantities(){
   delete [] _elementGroup;
   delete [] _elementMaterial;
+  delete [] _elementType;
 }
 
 /**
@@ -305,19 +304,6 @@ unsigned elem::GetElementDofNumber(const unsigned &iel,const unsigned &type) con
   return NVE[_elementType[iel]][type];
 }
 
-unsigned elem::GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
-  assert(type<3);
-  return NFACENODES[_elementType[iel]][jface][type];
-}
-
-const unsigned elem::GetElementFaceType(const unsigned &kel, const unsigned &jface) const{
-  unsigned kelt = GetElementType(kel);
-  const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
-  const unsigned felt = FELT[kelt][jface >= GetElementFaceNumber(kel,0)];
-  return felt;
-}
-
-
 /**
  * Return the local to global dof
  **/
@@ -325,7 +311,6 @@ unsigned elem::GetMeshDof(const unsigned iel,const unsigned &inode,const unsigne
   unsigned Dof=(SolType<3)?GetElementVertexIndex(iel,inode)-1u:(_nel*inode)+iel;
   return Dof;
 }
-
 
 /**
  * Return the local->global node address
@@ -351,9 +336,9 @@ unsigned elem::GetFaceVertexIndex(const unsigned &iel, const unsigned &iface, co
 /**
  * Return the local(edge/face)->local(surface/volume) node number
  **/
-unsigned elem::GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &iedgenode) const {
-  return ig[_elementType[iel]][iface][iedgenode];
-}
+// unsigned elem::GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &iedgenode) const {
+//   return ig[_elementType[iel]][iface][iedgenode];
+// }
 
 /**
  * Return the total node number
@@ -395,12 +380,7 @@ void elem::AddToElementNumber(const unsigned &value, short unsigned ielt) {
 unsigned elem::GetElementFaceNumber(const unsigned &iel, const unsigned &type)const {
   return NFC[ _elementType[iel] ][type];
 }
-unsigned elem::GetElementSquareFaceNumber(const unsigned &iel)const {
-  return NFC[ _elementType[iel] ][0];
-}
-unsigned elem::GetElementTriangleFaceNumber(const unsigned &iel)const {
-  return NFC[ _elementType[iel] ][1]-NFC[ _elementType[iel] ][0];
-}
+
 
 /**
  * Return the global adiacent-to-face element number
@@ -635,8 +615,8 @@ unsigned elem::GetChildElement(const unsigned &iel,const unsigned &json) const{
   return _childElem[iel][json];
 }
 
-const unsigned elem::GetNVE(const unsigned &elementType, const unsigned &dof) const{    
-  return NVE[elementType][dof];
+const unsigned elem::GetNVE(const unsigned &elementType, const unsigned &doftype) const{    
+  return NVE[elementType][doftype];
 }
 
 const unsigned elem::GetNFACENODES(const unsigned &elementType, const unsigned &jface, const unsigned &dof) const{
@@ -646,6 +626,11 @@ const unsigned elem::GetNFACENODES(const unsigned &elementType, const unsigned &
 const unsigned elem::GetNFC(const unsigned &elementType, const unsigned &type) const{
   return NFC[elementType][type];
 }
+
+const unsigned elem::GetIG(const unsigned &elementType, const unsigned &iface, const unsigned &jnode) const{
+  return ig[elementType][iface][jnode];
+}
+
 
 } //end namespace femus
 

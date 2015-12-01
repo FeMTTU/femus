@@ -82,7 +82,8 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 
   /// @todo I assume that the mesh is not mixed
   std::string type_elem;
-  unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementType(ZERO_ELEM);
+  unsigned iel0 = _ml_mesh->GetLevel(_gridn-1u)->_elementOffset[_iproc];
+  unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->GetElementType(iel0);
   type_elem = XDMFWriter::type_el[index_nd][elemtype];
 
   if (type_elem.compare("Not_implemented") == 0)
@@ -105,7 +106,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   nel+=_ml_mesh->GetLevel(_gridn-1u)->GetNumberOfElements();
 
   unsigned icount;
-  unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementDofNumber(ZERO_ELEM,index_nd);
+  unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetNVE(elemtype,index_nd);//ElementDofNumber(ZERO_ELEM,index_nd);
   int * var_conn          = new int [nel*el_dof_number];
   std::vector< int > var_proc(nel);
   float *var_el_f         = new float [nel];
@@ -272,7 +273,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   for ( unsigned ig=_gridr-1u; ig<_gridn; ig++ ) {
     for ( unsigned iel = 0; iel < _ml_mesh->GetLevel(ig)->GetNumberOfElements(); iel++ ) {
       if ( ig == _gridn-1u ) {
-	int ndofs = _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index_nd);
+	int ndofs = _ml_mesh->GetLevel(ig)->el->GetNVE(elemtype,index_nd);//GetElementDofNumber(iel,index_nd);
         for (unsigned j = 0; j < ndofs; j++) {
 	  unsigned vtk_loc_conn = FemusToVTKorToXDMFConn[j];
 	  //unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;

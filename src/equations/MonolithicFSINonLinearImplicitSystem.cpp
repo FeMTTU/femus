@@ -82,7 +82,6 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
     // loop on the coarse grid
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
       for (int iel=mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom+1]; iel++) {
-	//short unsigned ielt=mshc->el->GetElementType(iel);
 	short unsigned ielt=mshc->GetElementType(iel);
 	mshc->_finiteElement[ielt][SolType]->GetSparsityPatternSize(*LinSolf,*LinSolc,iel,NNZ_d, NNZ_o,SolIndex,k);
       }
@@ -126,7 +125,6 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
     // loop on the coarse grid
     for(int isdom=iproc; isdom<iproc+1; isdom++) {
       for (int iel=mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom+1]; iel++) {
-	//short unsigned ielt=mshc->el->GetElementType(iel);
 	short unsigned ielt=mshc->GetElementType(iel);
 	if(!testIfPressure){
 	  mshc->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,solPairIndex,solPairPdeIndex);

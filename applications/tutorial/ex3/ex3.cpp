@@ -294,10 +294,8 @@ void AssembleNonlinearProblem(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    //short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
+   
     short unsigned ielGeom = msh->GetElementType(iel);
-//     unsigned nDofs  = el->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-//     unsigned nDofs2 = el->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     // resize local arrays
@@ -497,10 +495,8 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    //short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
+    
     short unsigned ielGeom = msh->GetElementType(iel);
-//     unsigned nDofs  = el->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-//     unsigned nDofs2 = el->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     // resize local arrays
@@ -675,10 +671,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    //short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
+    
     short unsigned ielGeom = msh->GetElementType(iel);
-//     unsigned nDofs  = el->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-//     unsigned nDofs2 = el->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     

@@ -391,10 +391,7 @@ void AssembleMatrixResSteadyStokes(MultiLevelProblem &ml_prob){
   for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
-    //short unsigned kelt=myel->GetElementType(kel);
     short unsigned kelt=mymsh->GetElementType(kel);
-//     unsigned nve2=myel->GetElementDofNumber(kel,order_ind_vel);
-//     unsigned nve1=myel->GetElementDofNumber(kel,order_ind_p);
     unsigned nve2=mymsh->GetElementDofNumber(kel,order_ind_vel);
     unsigned nve1=mymsh->GetElementDofNumber(kel,order_ind_p);
     

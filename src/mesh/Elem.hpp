@@ -53,7 +53,7 @@ public:
     unsigned GetElementDofNumber(const unsigned &iel,const unsigned &type) const;
 
     /** To be Added */
-    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
+    //unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
 
     /** Return the local->global node number */
     unsigned GetElementVertexIndex(const unsigned &iel,const unsigned &inode)const {
@@ -70,7 +70,7 @@ public:
     unsigned GetFaceVertexIndex(const unsigned &iel,const unsigned &iface, const unsigned &inode) const;
 
     /** To be Added */
-    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &iedgenode) const;
+    //unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &iedgenode) const;
 
     /** To be Added */
     short unsigned GetElementType(const unsigned &iel) const;
@@ -135,13 +135,7 @@ public:
 
     /** To be Added */
     unsigned GetElementFaceNumber(const unsigned &iel,const unsigned &type=1)const;
-
-    /** To be Added */
-    unsigned GetElementSquareFaceNumber(const unsigned &iel)const;
-
-    /** To be Added */
-    unsigned GetElementTriangleFaceNumber(const unsigned &iel)const;
-
+    
     /** To be Added */
     void AllocateVertexElementMemory();
 
@@ -184,13 +178,13 @@ public:
     /** To be Added */
     unsigned GetChildElement(const unsigned &iel,const unsigned &json) const;
 
-    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
-    
-    const unsigned GetNVE(const unsigned &elementType, const unsigned &dof) const;
+    const unsigned GetNVE(const unsigned &elementType, const unsigned &doftype) const;
     
     const unsigned GetNFACENODES(const unsigned &elementType, const unsigned &jface, const unsigned &dof) const;
     
     const unsigned GetNFC(const unsigned &elementType, const unsigned &type) const;
+    
+    const unsigned GetIG(const unsigned &elementType, const unsigned &iface, const unsigned &jnode) const;
 
 private:
 
