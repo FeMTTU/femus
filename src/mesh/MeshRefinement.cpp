@@ -166,12 +166,12 @@ namespace femus {
     vector < double > coarseLocalizedAmrVector;
     mshc->_topology->_Sol[mshc->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
     
-    vector < double > localizedElementType;
-    mshc->_topology->_Sol[mshc->GetTypeIndex()]->localize_to_all(localizedElementType);
+    vector < double > coarseLocalizedElementType;
+    mshc->_topology->_Sol[mshc->GetTypeIndex()]->localize_to_all(coarseLocalizedElementType);
 
     mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), coarseLocalizedAmrVector);
 
-    _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector, localizedElementType);
+    _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector, coarseLocalizedElementType);
 
     unsigned jel = 0;
     //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elements and find all the vertices
@@ -186,7 +186,7 @@ namespace femus {
       if (static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
         //unsigned elt=elc->GetElementType(iel);
 
-        unsigned elt = static_cast < short unsigned > (localizedElementType[iel]+ 0.25);
+        unsigned elt = static_cast < short unsigned > (coarseLocalizedElementType[iel]+ 0.25);
 
         // project element type
         for (unsigned j = 0; j < _mesh.GetRefIndex(); j++) {
@@ -201,7 +201,6 @@ namespace femus {
             _mesh.el->SetElementVertexIndex(jel + j, inode, elc->GetElementVertexIndex(iel, fine2CoarseVertexMapping[elt][j][inode] - 1u));
 
         // project face indeces 
-        //for (unsigned iface = 0; iface < elc->GetElementFaceNumber(iel); iface++) {
 	for (unsigned iface = 0; iface <  elc->GetNFC(elt, 1); iface++) {
           int value = elc->GetFaceElementIndex(iel, iface);
 
@@ -216,9 +215,7 @@ namespace femus {
       }
       else {
         AMR = true;
-        //elc->SetRefinedElementIndex(iel,jel+1u); // to understand
-        //unsigned elt=elc->GetElementType(iel);
-        unsigned elt = static_cast < short unsigned > (localizedElementType[iel]+ 0.25);
+        unsigned elt = static_cast < short unsigned > (coarseLocalizedElementType[iel]+ 0.25);
 
         // project element type
         _mesh.el->SetElementType(jel, elt);
@@ -230,7 +227,6 @@ namespace femus {
           _mesh.el->SetElementVertexIndex(jel, inode, elc->GetElementVertexIndex(iel, inode));
 
         // project face indeces
-        //for (unsigned iface = 0; iface < elc->GetElementFaceNumber(iel); iface++) {
 	for (unsigned iface = 0; iface <  elc->GetNFC(elt, 1); iface++) {
           int value = elc->GetFaceElementIndex(iel, iface);
 
@@ -245,6 +241,9 @@ namespace femus {
       }
     }
 
+    coarseLocalizedAmrVector.resize(0);
+    coarseLocalizedElementType.resize(0);
+    
     int nnodes = elc->GetNodeNumber();
     _mesh.SetNumberOfNodes(nnodes);
     _mesh.el->SetNodeNumber(nnodes);
