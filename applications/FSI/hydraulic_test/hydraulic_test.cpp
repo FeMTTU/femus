@@ -1,14 +1,7 @@
-/** tutorial/Ex1
- * This example shows how to:
- * initialize a femus application;
- * define the multilevel-mesh object mlMsh;
- * read from the file ./input/square.neu the coarse-level mesh and associate it to mlMsh;
- * add in mlMsh uniform refined level-meshes;
- * define the multilevel-solution object mlSol associated to mlMsh;
- * add in mlSol different types of finite element solution variables;
- * initialize the solution varables;
- * define vtk and gmv writer objects associated to mlSol;
- * print vtk and gmv binary-format files in ./output directory.
+/** hydraulic fracturing project
+ *  In this project Navier-Stocks equation 
+ *  will be solved for a stationary hydraylic fracture and 
+ *  effect of time on the presuure in the body of rock will be studied.
  **/
 
 #include "FemusInit.hpp"
