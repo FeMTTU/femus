@@ -11,7 +11,7 @@ namespace femus {
   class FieldSpliTreeStructure{
   public:
     //single split constructor
-    FieldSpliTreeStructure( SolverType solver, PreconditionerType preconditioner, const std::vector < unsigned > fields){
+    FieldSpliTreeStructure( SolverType solver, PreconditionerType preconditioner, const std::vector < unsigned > &fields){
       _solver = solver;
       _preconditioner = preconditioner;
       _numberOfSplits = 1;
@@ -22,7 +22,7 @@ namespace femus {
      
       std::map < unsigned, bool > mymap;
       for(unsigned i = 0; i < _numberOfSplits; i++ ){
-	for(unsigned j=0; j < _fields[i].size(); i++){
+	for(unsigned j = 0; j < _fields[i].size(); i++){
 	  mymap[_fields[i][j]] = true;
 	}
       } 
@@ -75,8 +75,8 @@ namespace femus {
   PreconditionerType GetPreconditioner(){return _preconditioner;} 
   unsigned GetNumberOfSplits(){return _numberOfSplits;} 
   FieldSpliTreeStructure* GetBranch(const unsigned &i){ return _branch[i];}
-  std::vector < unsigned > & GetFields(const unsigned &i) {return _fields[i];}
-  std::vector < unsigned > & GetAllFields() {return _allFields;}
+  std::vector < unsigned > GetFields(const unsigned &i) {return _fields[i];}
+  std::vector < unsigned > GetAllFields() {return _allFields;}
   
   private:
       

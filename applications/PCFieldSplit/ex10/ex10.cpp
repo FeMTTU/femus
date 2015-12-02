@@ -18,9 +18,9 @@
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
+#include "FieldSplitTreeStructure.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
-
 
 using namespace femus;
 
@@ -50,6 +50,7 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
@@ -104,6 +105,21 @@ int main(int argc, char** args) {
   if (dim == 3) system.AddSolutionToSystemPDE("W");
 
   system.AddSolutionToSystemPDE("T");
+  
+  
+  std::vector < unsigned > field(3);
+  field[0] = system.GetSolPdeIndex("U");
+  field[1] = system.GetSolPdeIndex("V");
+  field[2] = system.GetSolPdeIndex("P");
+  FieldSpliTreeStructure FS_1( GMRES, ILU_PRECOND, field);
+  
+  //std::vector < unsigned > field2;
+  
+  //std::cout <<" solver = " << FS_1.GetSolver() << std::endl;
+  //std::cout <<" preconditioner = " << FS_1.GetPreconditioner() << std::endl; 
+  //std::cout <<" splits = " << FS_1.GetNumberOfSplits() << std::endl;
+  //field2 = FS_1.GetFields(0);
+  //field2 = FS_1.GetAllFields();
 
   //system.SetMgSmoother(GMRES_SMOOTHER);
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
