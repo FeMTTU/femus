@@ -16,6 +16,7 @@
 #ifndef __femus_mesh_Elem_hpp__
 #define __femus_mesh_Elem_hpp__
 
+#include <vector>
 
 namespace femus {
 
@@ -31,10 +32,19 @@ public:
     /** constructors */
     elem(const unsigned & other_nel);
 
-    elem(const elem *elc, const unsigned refindex);
+    elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrLocal, const std::vector < double > &localizedElementType);
 
     /** destructor */
     ~elem();
+
+    void deleteParallelizedQuantities();
+
+    // reorder the element according to the new element mapping
+    void ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc);
+
+    // reorder the nodes according to the new node mapping
+    void ReorderMeshNodes( const std::vector < unsigned > &nodeMapping);
+
 
     /** To be Added */
     unsigned GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &type)const;
@@ -43,11 +53,11 @@ public:
     unsigned GetElementDofNumber(const unsigned &iel,const unsigned &type) const;
 
     /** To be Added */
-    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
+    //unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
 
     /** Return the local->global node number */
     unsigned GetElementVertexIndex(const unsigned &iel,const unsigned &inode)const {
-        return kvert[iel][inode];
+        return _kvert[iel][inode];
     };
 
     /** To be Added */
@@ -60,7 +70,7 @@ public:
     unsigned GetFaceVertexIndex(const unsigned &iel,const unsigned &iface, const unsigned &inode) const;
 
     /** To be Added */
-    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &iedgenode) const;
+    //unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &iedgenode) const;
 
     /** To be Added */
     short unsigned GetElementType(const unsigned &iel) const;
@@ -88,6 +98,7 @@ public:
 
     /** To be Added */
     int GetFaceElementIndex(const unsigned &iel,const unsigned &iface) const;
+    int GetBoundaryIndex(const unsigned &iel,const unsigned &iface) const;
 
     /** To be Added */
     void SetFaceElementIndex(const unsigned &iel,const unsigned &iface, const int &value);
@@ -105,59 +116,26 @@ public:
     void AddToElementNumber(const unsigned &value, short unsigned ielt);
 
     /** To be Added */
-    unsigned GetRefinedElementNumber(const char name[]="All") const;
+    unsigned GetRefinedElementNumber() const {return _nelr;};
 
     /** To be Added */
-    unsigned GetRefinedElementNumber(short unsigned ielt) const;
+    unsigned GetRefinedElementTypeNumber(const unsigned &ielt) const { return _nelrt[ielt]; };
 
     /** To be Added */
-    void AddToRefinedElementNumber(const unsigned &value, const char name[]="All");
+    void SetRefinedElementNumber(const unsigned &value){ _nelr = value; };
 
     /** To be Added */
-    void AddToRefinedElementNumber(const unsigned &value, short unsigned ielt);
-
-    /** To be Added */
-    void InitRefinedToZero();
-
-    /** To be Added */
-    unsigned GetRefinedElementIndex(const unsigned &iel) const;
-
-    /** To be Added */
-    void SetRefinedElementIndex(const unsigned &iel, const unsigned &value);
+    void SetRefinedElemenTypeNumber(const unsigned &value, const unsigned &ielt){ _nelrt[ielt] = value; };
 
     /** To be Added */
     unsigned GetNodeNumber()const;
 
     /** To be Added */
-    unsigned GetVertexNodeNumber()const;
-
-    /** To be Added */
-    unsigned GetMidpointNodeNumber()const;
-
-    /** To be Added */
-    unsigned GetCentralNodeNumber()const;
-
-    /** To be Added */
     void SetNodeNumber(const unsigned &value);
 
     /** To be Added */
-    void SetVertexNodeNumber(const unsigned &value);
-
-    /** To be Added */
-    void SetMidpointNodeNumber(const unsigned &value);
-
-    /** To be Added */
-    void SetCentralNodeNumber(const unsigned &value);
-
-    /** To be Added */
     unsigned GetElementFaceNumber(const unsigned &iel,const unsigned &type=1)const;
-
-    /** To be Added */
-    unsigned GetElementSquareFaceNumber(const unsigned &iel)const;
-
-    /** To be Added */
-    unsigned GetElementTriangleFaceNumber(const unsigned &iel)const;
-
+    
     /** To be Added */
     void AllocateVertexElementMemory();
 
@@ -174,10 +152,10 @@ public:
     void SetVertexElementIndex(const unsigned &inode,const unsigned &jnode, const unsigned &value);
 
     /** To be Added */
-    unsigned GetElementFather(const unsigned &iel) const;
+    void SetIfFatherIsRefined(const unsigned &iel, const bool &refined);
 
     /** To be Added */
-    void SetElementFather(const unsigned &iel, const unsigned &value);
+    bool IsFatherRefined(const unsigned &iel) const;
 
     /** To be Added */
     void SetNumberElementFather(const unsigned &value);
@@ -192,43 +170,59 @@ public:
     void AllocateNodeRegion();
 
     /** To be Added */
-    void AllocateChildrenElement(const unsigned &ref_index);
+    void AllocateChildrenElement(const unsigned &ref_index, const std::vector < double > &localizedAmrVector);
 
     /** To be Added */
     void SetChildElement(const unsigned &iel,const unsigned &json, const unsigned &value);
 
     /** To be Added */
     unsigned GetChildElement(const unsigned &iel,const unsigned &json) const;
+
+    const unsigned GetNVE(const unsigned &elementType, const unsigned &doftype) const;
     
-    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
+    const unsigned GetNFACENODES(const unsigned &elementType, const unsigned &jface, const unsigned &dof) const;
+    
+    const unsigned GetNFC(const unsigned &elementType, const unsigned &type) const;
+    
+    const unsigned GetIG(const unsigned &elementType, const unsigned &iface, const unsigned &jnode) const;
 
 private:
 
     // member data
-    int **kel;
-    unsigned *elr;
-    unsigned *_child_elem_memory;
-    unsigned **_child_elem;
-    bool _child_elem_flag;
-    unsigned **kvtel;
-    unsigned *kvtel_memory;
-    unsigned *nve;
-    unsigned *kvert_memory;
-    int *kel_memory;
-    unsigned nvt,nv0,nv1,nv2;
-    unsigned nel,nelt[6];
-    unsigned nelr,nelrt[6];
-    unsigned ngroup;
-    short unsigned *elt,*elg,*elmat;
-    bool *_node_region;
-    bool  _node_region_flag;
-    unsigned *elf;
-    unsigned nelf;
-    unsigned **kvert;
+    int **_kel;
+    int *_kelMemory;
+    unsigned _kelSize;
+
+    unsigned **_kvtel; //node->element
+    unsigned *_kvtelMemory;
+    unsigned *_nve;
+
+    unsigned **_kvert; //element -> nodes
+    unsigned *_kvertMemory;
+    unsigned _kvertSize;
+
+    unsigned **_childElem;
+    unsigned *_childElemMemory;
+    unsigned _childElemSize;
+    bool _childElemFlag;
+
+    short unsigned *_elementType,*_elementGroup,*_elementMaterial; //element
+
+    unsigned _nvt;
+    unsigned _nel,_nelt[6];
+    unsigned _nelr,_nelrt[6];
+    unsigned _ngroup;
+
+    bool *_nodeRegion;
+    bool  _nodeRegionFlag;
+    bool *_isFatherElementRefined; //element
+    unsigned _nelf;
+
+    unsigned _level;
 
 };
 
-//vertices,edges,faces,interior,element,element+derivatives
+//linear, quadratic, biquadratic, picewise costant, picewise linear discontinuous
   const unsigned NVE[6][5]= {
     {8,20,27,1,4},  //hex
     {4,10,10,1,4},   //tet
@@ -237,7 +231,7 @@ private:
     {3, 6, 6,1,3},   //tri
     {2, 3, 3,1,2}    //line
   };
-  
+
  //number of dof objects, or "dof carriers" for every geometric element and every FE family
   const unsigned NDOFOBJS[6][5]= {
     {8,20,27,1,1},  //hex
@@ -246,7 +240,7 @@ private:
     {4, 8, 9,1,1},   //quad
     {3, 6, 6,1,1},   //tri
     {2, 3, 3,1,1}    //line
-  }; 
+  };
 
 /**
  * Number of elements obtained with one refinement
@@ -341,14 +335,14 @@ const unsigned NFACENODES[6][6][3] =
 
 
 const unsigned referenceElementDirection[6][3][2]={ //Endpoint1, Endpoint2 =rEED[elemem type][direction][0,1]
-  {	
+  {
     {23,21}, {20,22}, {24,25}
   },
   {
     {0,1}, {0,2}, {0,3}
   },
-  { 
-    {12,13}, {12,14}, {0,3}  
+  {
+    {12,13}, {12,14}, {0,3}
   },
   {
     {7,5},{4,6}

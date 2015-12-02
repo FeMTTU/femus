@@ -525,13 +525,13 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
     myKK->zero();
     
     // *** element loop ***
-    for(int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+    for(int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
       unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
-      short unsigned kelt = myel->GetElementType(kel);
-      unsigned nve2       = myel->GetElementDofNumber(kel,SolType2);
-      unsigned nve1       = myel->GetElementDofNumber(kel,SolType1);
-      unsigned nveVx      = myel->GetElementDofNumber(kel,SolTypeVx);
+      short unsigned kelt = mymsh->GetElementType(kel);
+      unsigned nve2       = mymsh->GetElementDofNumber(kel,SolType2);
+      unsigned nve1       = mymsh->GetElementDofNumber(kel,SolType1);
+      unsigned nveVx      = mymsh->GetElementDofNumber(kel,SolTypeVx);
       
       // *******************************************************************************************************
       //cout<<SolType1<<" "<<SolType2<<" "<<SolTypeVx<<" "<<nve1<<" "<<nve2<<" "<<nveVx<<endl;
@@ -560,21 +560,21 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
       }
       for (unsigned i=0;i<nveVx;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolTypeVx);
-	unsigned inode_Metis=mymsh->GetMetisDof(inode,SolTypeVx);	
+	unsigned inode_Metis=mymsh->GetSolutionDof(inode,SolTypeVx);	
 	for(int j=0; j<dim; j++) {
 	  //coordinates
-	  vx[j][i]=  (*mymsh->_coordinate->_Sol[j])(inode_Metis); 
+	  vx[j][i]=  (*mymsh->_topology->_Sol[j])(inode_Metis); 
 	}
       }
       
       // Velocity
       for (unsigned i=0;i<nve2;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolType2);
-	unsigned inode_Metis=mymsh->GetMetisDof(inode,SolType2);
+	unsigned inode_Metis=mymsh->GetSolutionDof(inode,SolType2);
 	for(int j=0; j<dim; j++) {
 	  // velocity dofs
 	  Soli[indexVAR[j]][i] =  (*mysolution->_Sol[indVAR[j]])(inode_Metis);
-	  dofsVAR[j][i] = myLinEqSolver->GetKKDof(indVAR[j],indexVAR[j],inode); 
+	  dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indVAR[j],indexVAR[j],inode); 
 	  aRhs[indexVAR[j]][i] = 0.;
 	}
       }
@@ -582,9 +582,9 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
       // Pressure dofs
       for (unsigned i=0;i<nve1;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolType1);
-	unsigned inode_Metis =mymsh->GetMetisDof(inode,SolType1);
+	unsigned inode_Metis =mymsh->GetSolutionDof(inode,SolType1);
 	Soli[indexVAR[dim]][i] = (*mysolution->_Sol[indVAR[dim]])(inode_Metis);
-	dofsVAR[dim][i]=myLinEqSolver->GetKKDof(indVAR[dim],indexVAR[dim],inode);
+	dofsVAR[dim][i]=myLinEqSolver->GetSystemDof(indVAR[dim],indexVAR[dim],inode);
 	aRhs[indexVAR[dim]][i] = 0.;
       }
       
@@ -1026,12 +1026,12 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
     unsigned iproc  = mymsh->processor_id();
    
     // *** element loop ***
-    for(int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+    for(int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
       unsigned kel        = mymsh->IS_Mts2Gmt_elem[iel]; 
-      short unsigned kelt = myel->GetElementType(kel);
-      unsigned nve        = myel->GetElementDofNumber(kel,SolType)-1;
-      unsigned nveVx      = myel->GetElementDofNumber(kel,SolTypeVx);
+      short unsigned kelt = mymsh->GetElementType(kel);
+      unsigned nve        = mymsh->GetElementDofNumber(kel,SolType)-1;
+      unsigned nveVx      = mymsh->GetElementDofNumber(kel,SolTypeVx);
             
       // -------------- resize -------------- 
       for(int ivar=0; ivar<varDim; ivar++) {
@@ -1050,10 +1050,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
       }
       for (unsigned i=0;i<nveVx;i++) {
 	unsigned inode=myel->GetMeshDof(kel,i,SolTypeVx);
-	unsigned inodeVx_Metis=mymsh->GetMetisDof(inode,SolTypeVx);	
+	unsigned inodeVx_Metis=mymsh->GetSolutionDof(inode,SolTypeVx);	
 	for(int j=0; j<geoDim; j++) {
 	  //coordinates
-	  vx[j][i]=  (*mymsh->_coordinate->_Sol[j])(inodeVx_Metis); 
+	  vx[j][i]=  (*mymsh->_topology->_Sol[j])(inodeVx_Metis); 
 	}
       }
       // ------------------------------------
@@ -1341,11 +1341,11 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
   
   // *** element loop ***
  
-  for (int iel=mymsh->IS_Mts2Gmt_elem_offset[iproc]; iel < mymsh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
+  for (int iel=mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc+1]; iel++) {
 
     unsigned kel = mymsh->IS_Mts2Gmt_elem[iel];
-    short unsigned kelt=myel->GetElementType(kel);
-    unsigned nve=myel->GetElementDofNumber(kel,order_ind);
+    short unsigned kelt=mymsh->GetElementType(kel);
+    unsigned nve=mymsh->GetElementDofNumber(kel,order_ind);
     
     // resize
     metis_node.resize(nve);
@@ -1368,12 +1368,12 @@ void AssembleMatrixResT(MultiLevelProblem &ml_prob){
     // get local to global mappings
     for( unsigned i=0;i<nve;i++){
       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;	
-      unsigned inode_coord_metis=mymsh->GetMetisDof(inode,2);
-      metis_node[i]=mymsh->GetMetisDof(inode,order_ind);
+      unsigned inode_coord_metis=mymsh->GetSolutionDof(inode,2);
+      metis_node[i]=mymsh->GetSolutionDof(inode,order_ind);
       for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordinates[ivar][i]=(*mymsh->_coordinate->_Sol[ivar])(inode_coord_metis);
+	coordinates[ivar][i]=(*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
       }
-      KK_dof[i]=mylsyspde->GetKKDof(SolIndex,SolPdeIndex,inode);
+      KK_dof[i]=mylsyspde->GetSystemDof(SolIndex,SolPdeIndex,inode);
     }
         
     if(igrid==gridn || !myel->GetRefinedElementIndex(kel)) {

@@ -105,8 +105,8 @@ namespace femus {
     for (int k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype = _SolType[indexSol];
-      for (unsigned inode_mts = _msh->MetisOffset[soltype][processor_id()]; inode_mts < _msh->MetisOffset[soltype][processor_id() + 1]; inode_mts++) {
-        int local_mts = inode_mts - _msh->MetisOffset[soltype][processor_id()];
+      for (unsigned inode_mts = _msh->_dofOffset[soltype][processor_id()]; inode_mts < _msh->_dofOffset[soltype][processor_id() + 1]; inode_mts++) {
+        int local_mts = inode_mts - _msh->_dofOffset[soltype][processor_id()];
         int idof_kk = KKoffset[k][processor_id()] + local_mts;
         if (!ThisSolutionIsIncluded[k] || (*(*_Bdc)[indexSol])(inode_mts) < 1.9) {
           _indexai[0][count0] = idof_kk;
@@ -153,8 +153,8 @@ namespace femus {
 
     map<int, bool> mymap;
 
-    unsigned ElemOffset   = _msh->MetisOffset[3][iproc];
-    unsigned ElemOffsetp1 = _msh->MetisOffset[3][iproc + 1];
+    unsigned ElemOffset   = _msh->_dofOffset[3][iproc];
+    unsigned ElemOffsetp1 = _msh->_dofOffset[3][iproc + 1];
     unsigned ElemOffsetSize = ElemOffsetp1 - ElemOffset;
     vector <PetscInt> indexci(ElemOffsetSize);
     vector < unsigned > indexc(ElemOffsetSize, ElemOffsetSize);
@@ -186,10 +186,9 @@ namespace femus {
 
       // ***************** NODE/ELEMENT SERCH *******************
       for (int kel = 0; kel < block_elements[vb_index].size(); kel++) {
-        unsigned iel_mts = block_elements[vb_index][kel];
-        unsigned iel = _msh->IS_Mts2Gmt_elem[iel_mts];
-
-        for (unsigned i = 0; i < _msh->el->GetElementDofNumber(iel, 0); i++) {
+        unsigned iel = block_elements[vb_index][kel];
+	
+        for (unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) {
           unsigned inode = _msh->el->GetElementVertexIndex(iel, i) - 1u;
           unsigned nvei = _msh->el->GetVertexElementNumber(inode);
           const unsigned* pt_jel = _msh->el->GetVertexElementAddress(inode, 0);
@@ -197,7 +196,7 @@ namespace femus {
             unsigned jel = (!FastVankaBlock) ? *(pt_jel++) - 1u : iel;
             //add elements for velocity to be solved
 
-            unsigned jel_Metis = _msh->GetMetisDof(jel, 3);
+            unsigned jel_Metis = _msh->GetSolutionDof(0, jel, 3);
 
             if (jel_Metis >= ElemOffset && jel_Metis < ElemOffsetp1) {
               if (indexc[jel_Metis - ElemOffset] == ElemOffsetSize) {
@@ -209,16 +208,12 @@ namespace femus {
                   if (ThisVaribaleIsNonSchur[indexSol]) {
                     unsigned SolPdeIndex = _SolPdeIndex[indexSol];
                     unsigned SolType = _SolType[SolPdeIndex];
-                    unsigned nvej = _msh->el->GetElementDofNumber(jel, SolType);
+                    unsigned nvej = _msh->GetElementDofNumber(jel, SolType); 
                     for (unsigned jj = 0; jj < nvej; jj++) {
-                      unsigned jnode = _msh->el->GetMeshDof(jel, jj, SolType);
-
-// 		      bool solidmark = _msh->el->GetNodeRegion(jnode);
-// 		      if( vb_index < _block_type_range[0] || !solidmark ){
-                      unsigned jnode_Metis = _msh->GetMetisDof(jnode, SolType);
-                      unsigned kkdof = GetKKDof(SolPdeIndex, indexSol, jnode);
-                      if (jnode_Metis >= _msh->MetisOffset[SolType][iproc] &&
-                          jnode_Metis <  _msh->MetisOffset[SolType][iproc + 1]) {
+		      unsigned jnode_Metis = _msh->GetSolutionDof(jj, jel, SolType);
+		      unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, jj, jel);
+                      if (jnode_Metis >= _msh->_dofOffset[SolType][iproc] &&
+                          jnode_Metis <  _msh->_dofOffset[SolType][iproc + 1]) {
                         if (indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
                           owned[kkdof - DofOffset] = true;
                           _is_loc_idx[vb_index][PAsize] = kkdof;
@@ -246,13 +241,14 @@ namespace femus {
             if (!ThisVaribaleIsNonSchur[indexSol]) {
               unsigned SolPdeIndex = _SolPdeIndex[indexSol];
               unsigned SolType = _SolType[SolPdeIndex];
-              unsigned nvei = _msh->el->GetElementDofNumber(iel, SolType);
+              unsigned nvei = _msh->GetElementDofNumber(iel, SolType);
               for (unsigned ii = 0; ii < nvei; ii++) {
-                unsigned inode = _msh->el->GetMeshDof(iel, ii, SolType);
-                unsigned inode_Metis = _msh->GetMetisDof(inode, SolType);
-                unsigned kkdof = GetKKDof(SolPdeIndex, indexSol, inode);
-                if (inode_Metis >= _msh->MetisOffset[SolType][iproc] &&
-                    inode_Metis <  _msh->MetisOffset[SolType][iproc + 1]) {
+		unsigned inode_Metis = _msh->GetSolutionDof(ii, iel, SolType);
+                //unsigned inode = _msh->el->GetMeshDof(iel, ii, SolType);
+                //unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, inode);
+		unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, ii, iel);
+                if (inode_Metis >= _msh->_dofOffset[SolType][iproc] &&
+                    inode_Metis <  _msh->_dofOffset[SolType][iproc + 1]) {
                   if (indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
                     owned[kkdof - DofOffset] = true;
                     _is_loc_idx[vb_index][PAsize] = kkdof;
@@ -386,7 +382,7 @@ namespace femus {
     // **************** END RES/EPS UPDATE RES ***************
 
     // *** Computational info ***
-//#ifndef NDEBUG
+#ifndef NDEBUG
     int its;
     KSPGetIterationNumber(_ksp, &its);
 
@@ -406,7 +402,7 @@ namespace femus {
 //     cout << "ASM Grid: " << _msh->GetLevel() << "        SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
 //          static_cast<double>(SearchTime + AssemblyTime + SolveTime + UpdateTime) / CLOCKS_PER_SEC <<
 //          "  ITS: " << _maxits  << "\t ksp_clean = " << ksp_clean << endl;
-//#endif
+#endif
 
   }
 

@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: GambitIO
  Authors: Simone Bnà
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -23,8 +23,8 @@
 
 
 namespace femus {
-  
- const unsigned GambitIO::GambitToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]= 
+
+ const unsigned GambitIO::GambitToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]=
    {
     {
       4,16,0,15,23,11,7,19,3,
@@ -45,8 +45,8 @@ namespace femus {
     {0,2,1}
   };
 
-  
-const unsigned GambitIO::GambitToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES]= 
+
+const unsigned GambitIO::GambitToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES]=
   {
     {0,4,2,5,3,1},
     {0,1,2,3},
@@ -56,9 +56,9 @@ const unsigned GambitIO::GambitToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES]=
     {0,1}
   };
 
-  
+
 void GambitIO::read(const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag) {
-  
+
   Mesh& mesh = GetMesh();
 
   std::ifstream inf;
@@ -252,7 +252,7 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &coords
   }
   inf.close();
   // end read boundary **************** D
- 
+
 };
 
 }

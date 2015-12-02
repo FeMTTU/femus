@@ -144,11 +144,18 @@ OPTION(BUILD_POISSON_AMR "Build the Poisson_AMR problem" ON)
 OPTION(BUILD_WILLMORE "Build the Willmore problem" ON)
 
 # --
-OPTION(BUILD_WILLMOREGEN "Build the Generalized Willmore problem" ON)
+OPTION(BUILD_WILLMORE_SURFACE "Build the Generalized Willmore problem" ON)
 
 # --
 OPTION(BUILD_TUTORIAL "Build the tutorial problems" ON)
 
+# --
+OPTION(BUILD_MGAMR "Build the MGAMR" ON)
+
+# --
+OPTION(BUILD_PCFIELDSPLIT "Build the PCFIELDSPLIT apps" ON)
+
+OPTION(BUILD_AMR "Build the AMR apps" ON)
 
 #############################################################################################
 ### Build documentation (Doxygen)
