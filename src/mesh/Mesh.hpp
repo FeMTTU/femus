@@ -92,6 +92,9 @@ public:
     short unsigned GetElementType(const unsigned &iel) const;
 
     /** Only for parallel */
+    bool GetSolidMark(const unsigned &inode) const;
+    
+    /** Only for parallel */
     unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const {
       return el->GetNVE(GetElementType(iel), type);
     }
@@ -120,6 +123,8 @@ public:
     unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const {
       return el->GetNFC(GetElementType(iel), type);
     }
+    
+    
     
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
@@ -231,6 +236,7 @@ public:
     const unsigned GetMaterialIndex()   const { return _materialIndex; };
     const unsigned GetGroupIndex()      const { return _groupIndex; };
     const unsigned GetTypeIndex()       const { return _typeIndex; };
+    const unsigned GetSolidMarkIndex()       const { return _solidMarkIndex; };
 
 private:
     /** Coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
@@ -270,6 +276,7 @@ private:
     static const unsigned _materialIndex = 4;
     static const unsigned _groupIndex = 5;
     static const unsigned _typeIndex = 6;
+    static const unsigned _solidMarkIndex = 7;
 
 
 };

@@ -37,7 +37,9 @@ public:
     /** destructor */
     ~elem();
 
-    void deleteParallelizedQuantities();
+    void DeleteGroupAndMaterial();
+    
+    void DeleteElementType();
 
     // reorder the element according to the new element mapping
     void ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc);
@@ -161,15 +163,6 @@ public:
     void SetNumberElementFather(const unsigned &value);
 
     /** To be Added */
-    bool GetNodeRegion(const unsigned &jnode) const;
-
-    /** To be Added */
-    void SetNodeRegion(const unsigned &jnode, const bool &value);
-
-    /** To be Added */
-    void AllocateNodeRegion();
-
-    /** To be Added */
     void AllocateChildrenElement(const unsigned &ref_index, const std::vector < double > &localizedAmrVector);
 
     /** To be Added */
@@ -185,7 +178,7 @@ public:
     const unsigned GetNFC(const unsigned &elementType, const unsigned &type) const;
     
     const unsigned GetIG(const unsigned &elementType, const unsigned &iface, const unsigned &jnode) const;
-
+    
 private:
 
     // member data
@@ -213,8 +206,6 @@ private:
     unsigned _nelr,_nelrt[6];
     unsigned _ngroup;
 
-    bool *_nodeRegion;
-    bool  _nodeRegionFlag;
     bool *_isFatherElementRefined; //element
     unsigned _nelf;
 

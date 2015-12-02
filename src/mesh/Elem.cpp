@@ -67,7 +67,7 @@ elem::elem(const unsigned &other_nel) {
     _kel[i] = pt_i;
     pt_i += NFC[0][1];
   }
-  _nodeRegionFlag = false;
+  
   _childElemFlag = false;
 
   _isFatherElementRefined = new bool [_nel];
@@ -142,7 +142,7 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
     }
     jel += increment;
   }
-  _nodeRegionFlag = false;
+  
   _childElemFlag = false;
 
   _kvtel = NULL;
@@ -283,20 +283,21 @@ elem::~elem() {
     _kvtel = NULL;
     _kvtelMemory = NULL;
     _nve = NULL;
-
-    if(_nodeRegionFlag) delete [] _nodeRegion;
+    
     if(_childElemFlag){
       delete [] _childElemMemory;
       delete [] _childElem;
     }
   }
 
-void elem::deleteParallelizedQuantities(){
+void elem::DeleteGroupAndMaterial(){
   delete [] _elementGroup;
   delete [] _elementMaterial;
-  delete [] _elementType;
 }
 
+void elem::DeleteElementType(){
+  delete [] _elementType;
+}
 /**
  * Return the number of vertices(type=0) + midpoints(type=1) + facepoints(type=2) + interiorpoits(type=2)
  **/
@@ -570,21 +571,6 @@ unsigned elem::GetIndex(const char name[]) const {
   return index;
 }
 
-
-void elem::AllocateNodeRegion() {
-  _nodeRegionFlag=1;
-  _nodeRegion=new bool [_nvt];
-  for (int i=0; i<_nvt; i++) _nodeRegion[i]=0;
-  // 0 means Fluid - 1 means Solid  ==> Solid wins on Fluid on Interface nodes
-}
-
-bool elem::GetNodeRegion(const unsigned &jnode) const {
-  return _nodeRegion[jnode];
-}
-
-void  elem::SetNodeRegion(const unsigned &jnode, const bool &value) {
-  _nodeRegion[jnode]=value;
-}
 
 void elem::AllocateChildrenElement(const unsigned &refindex, const std::vector < double > &localizedAmrVector){
   if(_childElemFlag){
