@@ -268,7 +268,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
 
     s.new_recording();
 
-    // *** Gauss point loop *** // I don't understand clearly What variable ig mean and the principle in the Gauss point
+    // *** Gauss point loop *** // Q I don't clearly understand this loop. Is it sol the qestionn U=\sum \nu_i *\phi_i.
     for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solUType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[kelGeom][solUType]->Jacobian(crdX, ig, weight, phi, phi_x, phi_xx);
