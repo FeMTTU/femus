@@ -44,8 +44,7 @@ elem::elem(const unsigned &other_nel) {
   _elementType = new unsigned short [ _nel ];
   _elementGroup = new unsigned short [ _nel ];
   _elementMaterial = new unsigned short [ _nel ];
-  _nelf = 0;
-
+  
   _kvert = new unsigned * [ _nel ];
   _kel = new int *[ _nel ];
 
@@ -97,9 +96,7 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
   _isFatherElementRefined = new bool [_nel];
 
   memset( _isFatherElementRefined, 0, _nel*sizeof(bool) );
-  _nelf = 0;
-
-
+  
   _kvert = new unsigned * [_nel];
   _kel = new int * [_nel];
 
@@ -441,15 +438,6 @@ void elem::SetIfFatherElementIsRefined(const unsigned &iel, const bool &refined)
   _isFatherElementRefined[iel] = refined;
 }
 
-
-/**
- * Set the coarse element father
- **/
-
-void elem::SetNumberElementFather(const unsigned &value) {
-  _nelf=value;
-}
-
 /**
  * Return element group
  **/
@@ -579,33 +567,48 @@ unsigned elem::GetIndex(const char name[]) const {
 }
 
 
-void elem::AllocateChildrenElement(const unsigned &refindex, const std::vector < double > &localizedAmrVector){
+void elem::AllocateChildrenElement(const unsigned &refindex, const std::vector < double > &localizedAmrVector, 
+				   const unsigned &offsetStart, const unsigned &offsetEnd){
   if(_childElemFlag){
     delete [] _childElemMemory;
     delete [] _childElem;
   }
+  
+  _offsetElementStart = offsetStart;
+  
+  unsigned localNel = offsetEnd - offsetStart;
+  unsigned localNelr = 0;
+  
+  for(unsigned iel = offsetStart; iel < offsetEnd; iel++){
+    if ( static_cast < short unsigned > (localizedAmrVector[iel] + 0.25) == 1 ){
+      localNelr++;
+    }
+  }
 
-  _childElemSize = _nelr*refindex+(_nel-_nelr);
+  _childElemSize = localNelr*refindex + (localNel - localNelr);
   _childElemMemory=new unsigned [_childElemSize];
-  _childElem = new unsigned* [_nel];
+  
+  memset( _childElemMemory, 0, _childElemSize * sizeof(unsigned) );
+  
+  _childElem = new unsigned* [localNel];
 
   unsigned *ptr=_childElemMemory;
-  for(int i=0;i<_nel;i++){
+  for(int i=0; i<localNel; i++){
     _childElem[i]=ptr;
-    if( static_cast < short unsigned > (localizedAmrVector[i] + 0.25) == 1) ptr+=refindex;
+    if( static_cast < short unsigned > ( localizedAmrVector[offsetStart + i] + 0.25) == 1 ) ptr+=refindex;
     else ptr+=1;
   }
-  _childElemFlag=true;
+  _childElemFlag = true;
   return;
 }
 
 void elem::SetChildElement(const unsigned &iel,const unsigned &json, const unsigned &value){
-  _childElem[iel][json]=value;
+  _childElem[ iel - _offsetElementStart][json]=value;
   return;
 }
 
 unsigned elem::GetChildElement(const unsigned &iel,const unsigned &json) const{
-  return _childElem[iel][json];
+  return _childElem[iel - _offsetElementStart ][json];
 }
 
 const unsigned elem::GetNVE(const unsigned &elementType, const unsigned &doftype) const{    

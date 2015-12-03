@@ -161,6 +161,9 @@ namespace femus {
     int nelem = elc->GetRefinedElementNumber() * _mesh.GetRefIndex(); // refined
     nelem += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // not-refined
 
+    unsigned elementOffsetCoarse   = mshc->_elementOffset[_iproc];
+    unsigned elementOffsetCoarseP1 = mshc->_elementOffset[_iproc+1];
+    
     _mesh.SetNumberOfElements(nelem);
 
     vector < double > coarseLocalizedAmrVector;
@@ -169,7 +172,7 @@ namespace femus {
     vector < double > coarseLocalizedElementType;
     mshc->_topology->_Sol[mshc->GetTypeIndex()]->localize_to_all(coarseLocalizedElementType);
 
-    mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), coarseLocalizedAmrVector);
+    mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), coarseLocalizedAmrVector, elementOffsetCoarse, elementOffsetCoarseP1);
 
     _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector, coarseLocalizedElementType);
 
@@ -177,10 +180,11 @@ namespace femus {
     //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elements and find all the vertices
 
     _mesh.el->SetElementGroupNumber(elc->GetElementGroupNumber());
-    _mesh.el->SetNumberElementFather(elc->GetElementNumber()); // setta il num di elementi padre per il mesh fine
-
+   
     bool AMR = false;
 
+   
+    
     for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++) {
       //if ( elc->GetRefinedElementIndex(iel) ) {
       if (static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
@@ -192,7 +196,9 @@ namespace femus {
         for (unsigned j = 0; j < _mesh.GetRefIndex(); j++) {
           _mesh.el->SetElementType(jel + j, elt);
           _mesh.el-> SetIfFatherElementIsRefined(jel + j, true);
-          elc->SetChildElement(iel, j, jel + j);
+	  if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1){
+	    elc->SetChildElement(iel, j, jel + j);
+	  }
         }
 
         // project vertex indeces
@@ -220,7 +226,9 @@ namespace femus {
         // project element type
         _mesh.el->SetElementType(jel, elt);
         _mesh.el-> SetIfFatherElementIsRefined(jel, false);
-        elc->SetChildElement(iel, 0, jel);
+	if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1){
+	  elc->SetChildElement(iel, 0, jel);
+	}
 
         // project nodes indeces
         for (unsigned inode = 0; inode < elc->GetNVE(elt, 2); inode++) 

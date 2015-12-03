@@ -17,7 +17,7 @@
 #define __femus_mesh_Elem_hpp__
 
 #include <vector>
-
+#include <map>
 namespace femus {
 
 /**
@@ -162,10 +162,8 @@ public:
     bool GetIfFatherElementIsRefined(const unsigned &iel) const;
 
     /** To be Added */
-    void SetNumberElementFather(const unsigned &value);
-
-    /** To be Added */
-    void AllocateChildrenElement(const unsigned &ref_index, const std::vector < double > &localizedAmrVector);
+    void AllocateChildrenElement(const unsigned &ref_index, const std::vector < double > &localizedAmrVector,
+				 const unsigned &offsetStart, const unsigned &offsetEnd );
 
     /** To be Added */
     void SetChildElement(const unsigned &iel,const unsigned &json, const unsigned &value);
@@ -188,6 +186,7 @@ private:
     int *_kelMemory;
     unsigned _kelSize;
 
+    std::map< unsigned, std::vector< unsigned > > _kvtelMap;
     unsigned **_kvtel; //node->element
     unsigned *_kvtelMemory;
     unsigned *_nve;
@@ -200,6 +199,7 @@ private:
     unsigned *_childElemMemory;
     unsigned _childElemSize;
     bool _childElemFlag;
+    unsigned _offsetElementStart;
 
     short unsigned *_elementType,*_elementGroup,*_elementMaterial; //element
 
@@ -209,8 +209,7 @@ private:
     unsigned _ngroup;
 
     bool *_isFatherElementRefined; //element
-    unsigned _nelf;
-
+   
     unsigned _level;
 
 };
