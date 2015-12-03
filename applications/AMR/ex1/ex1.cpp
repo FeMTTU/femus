@@ -77,7 +77,7 @@ int main(int argc, char** args) {
   unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-
+  // Q01 Why does number Of UniformLevels add number Of Selective Levels
 
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
@@ -120,7 +120,7 @@ int main(int argc, char** args) {
   system.SetNonLinearConvergenceTolerance(1.e-8);
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(0);
+  system.SetNumberPreSmoothingStep(0);  // What's Pre (post) smoothing step? Is related to smoothstep?
   system.SetNumberPostSmoothingStep(2);
   // initilaize and solve the system
   system.init();
@@ -130,7 +130,7 @@ int main(int argc, char** args) {
   system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
 
   system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(4);
+  system.SetElementBlockNumber(4); // Q2 What's Block number?
   //system.SetDirichletBCsHandling(ELIMINATION);
   //system.solve();
   system.MGsolve();
@@ -270,13 +270,13 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
 
     s.new_recording();
 
-    // *** Gauss point loop ***
+    // *** Gauss point loop *** // Q I don't clearly understand this loop. Is it sol the qestionn U=\sum \nu_i *\phi_i.
     for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solUType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[kelGeom][solUType]->Jacobian(crdX, ig, weight, phi, phi_x, phi_xx);
 
       adept::adouble solUig = 0; // solution U in the gauss point
-      vector < adept::adouble > gradSolUig(dim, 0.); // graadient of solution U in the gauss point
+      vector < adept::adouble > gradSolUig(dim, 0.); // gradient of solution U in the gauss point
 
       for (unsigned i = 0; i < nDofsU; i++) {
         solUig += phi[i] * solU[i];
