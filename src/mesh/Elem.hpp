@@ -40,6 +40,8 @@ public:
     void DeleteGroupAndMaterial();
     
     void DeleteElementType();
+    
+    void DeleteElementFather();
 
     // reorder the element according to the new element mapping
     void ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc);
@@ -154,10 +156,10 @@ public:
     void SetVertexElementIndex(const unsigned &inode,const unsigned &jnode, const unsigned &value);
 
     /** To be Added */
-    void SetIfFatherIsRefined(const unsigned &iel, const bool &refined);
+    void SetIfFatherElementIsRefined(const unsigned &iel, const bool &refined);
 
     /** To be Added */
-    bool IsFatherRefined(const unsigned &iel) const;
+    bool GetIfFatherElementIsRefined(const unsigned &iel) const;
 
     /** To be Added */
     void SetNumberElementFather(const unsigned &value);

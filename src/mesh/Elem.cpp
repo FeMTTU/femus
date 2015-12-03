@@ -70,8 +70,8 @@ elem::elem(const unsigned &other_nel) {
   
   _childElemFlag = false;
 
-  _isFatherElementRefined = new bool [_nel];
-  memset( _isFatherElementRefined, 0, _nel*sizeof(bool) );
+//   _isFatherElementRefined = new bool [_nel];
+//   memset( _isFatherElementRefined, 0, _nel*sizeof(bool) );
 
   _kvtel = NULL;
   _kvtelMemory = NULL;
@@ -154,24 +154,26 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
 
 void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc){
   //  REORDERING OF  ELT, ELG, ELMAT
+
   short unsigned *tempElt;
-  bool *tempElRef;
-
-
   tempElt = _elementType;
-  tempElRef = _isFatherElementRefined;
-
   _elementType = new short unsigned [_nel];
-  _isFatherElementRefined = new bool [_nel];
-
-
   for(unsigned iel = 0; iel < _nel; iel++){
     _elementType[iel]   = tempElt[ elementMapping[iel] ];
-    _isFatherElementRefined[iel] = tempElRef[ elementMapping[iel] ];
   }
-
   delete [] tempElt;
-  delete [] tempElRef;
+  
+
+  if(_level !=0 ){
+    bool *tempElRef;
+    tempElRef = _isFatherElementRefined;
+    _isFatherElementRefined = new bool [_nel];
+    for(unsigned iel = 0; iel < _nel; iel++){
+      _isFatherElementRefined[iel] = tempElRef[ elementMapping[iel] ];
+    } 
+    delete [] tempElRef; 
+  }
+  
 
   if( _level == 0){
     short unsigned *tempElg;
@@ -274,7 +276,7 @@ elem::~elem() {
     delete [] _kvert;
     delete [] _kelMemory;
     delete [] _kel;
-    delete [] _isFatherElementRefined;
+    //delete [] _isFatherElementRefined;
 
     delete [] _kvtelMemory;
     delete [] _kvtel;
@@ -298,6 +300,11 @@ void elem::DeleteGroupAndMaterial(){
 void elem::DeleteElementType(){
   delete [] _elementType;
 }
+
+void elem::DeleteElementFather(){
+  delete [] _isFatherElementRefined;
+}
+
 /**
  * Return the number of vertices(type=0) + midpoints(type=1) + facepoints(type=2) + interiorpoits(type=2)
  **/
@@ -423,14 +430,14 @@ void elem::SetElementType(const unsigned &iel, const short unsigned &value) {
 /**
  * Return if the coarse element father has been refined
  **/
-bool elem::IsFatherRefined(const unsigned &iel) const {
+bool elem::GetIfFatherElementIsRefined(const unsigned &iel) const {
   return _isFatherElementRefined[iel];
 }
 
 /**
  * Set the coarse element father
  **/
-void elem::SetIfFatherIsRefined(const unsigned &iel, const bool &refined) {
+void elem::SetIfFatherElementIsRefined(const unsigned &iel, const bool &refined) {
   _isFatherElementRefined[iel] = refined;
 }
 

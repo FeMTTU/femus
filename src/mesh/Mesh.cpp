@@ -174,7 +174,8 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   type.close();
 
   _topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
-    
+  _topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+  
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
 
@@ -253,7 +254,8 @@ void Mesh::GenerateCoarseBoxMesh(
   type.close();
 
   _topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
-  
+  _topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+   
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
 
@@ -823,6 +825,10 @@ short unsigned Mesh::GetElementType(const unsigned int& iel) const{
 
 bool Mesh::GetSolidMark(const unsigned int& inode) const{
   return static_cast <short unsigned> ( (*_topology->_Sol[_solidMarkIndex])(inode) + 0.25);
+}
+
+bool Mesh::GetIfElementFatherIsRefined(const unsigned &iel) const{
+  return static_cast <short unsigned> ( (*_topology->_Sol[_elementFatherIndex])(iel) + 0.25);
 }
 
 } //end namespace femus
