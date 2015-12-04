@@ -190,18 +190,15 @@ namespace femus {
 	
         for (unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) {
           unsigned inode = _msh->el->GetElementVertexIndex(iel, i) - 1u;
-          unsigned nvei = _msh->el->GetVertexElementNumber(inode);
-          const unsigned* pt_jel = _msh->el->GetVertexElementAddress(inode, 0);
+          unsigned nvei = _msh->el->GetElementNearVertexNumber(inode);
+          const unsigned* pt_jel = _msh->el->GetElementNearVertexPointer(inode, 0);
           for (unsigned j = 0; j < nvei * (!FastVankaBlock) + FastVankaBlock; j++) {
-            unsigned jel = (!FastVankaBlock) ? *(pt_jel++) - 1u : iel;
+            unsigned jel = (!FastVankaBlock) ? *(pt_jel++) : iel;
             //add elements for velocity to be solved
-
-            unsigned jel_Metis = _msh->GetSolutionDof(0, jel, 3);
-
-            if (jel_Metis >= ElemOffset && jel_Metis < ElemOffsetp1) {
-              if (indexc[jel_Metis - ElemOffset] == ElemOffsetSize) {
-                indexci[Csize] = jel_Metis - ElemOffset;
-                indexc[jel_Metis - ElemOffset] = Csize++;
+            if (jel >= ElemOffset && jel < ElemOffsetp1) {
+              if (indexc[jel - ElemOffset] == ElemOffsetSize) {
+                indexci[Csize] = jel - ElemOffset;
+                indexc[jel - ElemOffset] = Csize++;
                 //----------------------------------------------------------------------------------
                 //add non-schur node to be solved
                 for (int indexSol = 0; indexSol < _SolPdeIndex.size(); indexSol++) {
@@ -210,10 +207,10 @@ namespace femus {
                     unsigned SolType = _SolType[SolPdeIndex];
                     unsigned nvej = _msh->GetElementDofNumber(jel, SolType); 
                     for (unsigned jj = 0; jj < nvej; jj++) {
-		      unsigned jnode_Metis = _msh->GetSolutionDof(jj, jel, SolType);
+		      unsigned jdof = _msh->GetSolutionDof(jj, jel, SolType);
 		      unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, jj, jel);
-                      if (jnode_Metis >= _msh->_dofOffset[SolType][iproc] &&
-                          jnode_Metis <  _msh->_dofOffset[SolType][iproc + 1]) {
+                      if (jdof >= _msh->_dofOffset[SolType][iproc] &&
+                          jdof <  _msh->_dofOffset[SolType][iproc + 1]) {
                         if (indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
                           owned[kkdof - DofOffset] = true;
                           _is_loc_idx[vb_index][PAsize] = kkdof;

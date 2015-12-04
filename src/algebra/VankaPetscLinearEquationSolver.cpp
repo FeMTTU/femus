@@ -116,10 +116,10 @@ namespace femus {
 	  
 	  for (unsigned i=0; i<_msh->GetElementDofNumber(iel,0); i++) {
 	    unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
-	    unsigned nvei=_msh->el->GetVertexElementNumber(inode);
-	    const unsigned *pt_jel=_msh->el->GetVertexElementAddress(inode,0);
+	    unsigned nvei=_msh->el->GetElementNearVertexNumber(inode);
+	    const unsigned *pt_jel=_msh->el->GetElementNearVertexPointer(inode,0);
 	    for (unsigned j=0; j<nvei*(!FastVankaBlock)+FastVankaBlock; j++) {
-	      unsigned jel=(!FastVankaBlock)?*(pt_jel++)-1u:iel;
+	      unsigned jel=(!FastVankaBlock)?*(pt_jel++) : iel;
 	      //add elements for velocity to be solved
 
 	      unsigned jel_Metis = _msh->GetSolutionDof(0,jel,3);
@@ -154,10 +154,10 @@ namespace femus {
 		}
                 for (unsigned jj=0; jj<_msh->GetElementDofNumber(jel,0); jj++) {
 		  unsigned jnode=_msh->el->GetElementVertexIndex(jel,jj)-1u;
-		  unsigned nvej=_msh->el->GetVertexElementNumber(jnode);
-		  const unsigned *pt_kel=_msh->el->GetVertexElementAddress(jnode,0);
+		  unsigned nvej=_msh->el->GetElementNearVertexNumber(jnode);
+		  const unsigned *pt_kel=_msh->el->GetElementNearVertexPointer(jnode,0);
 		  for (unsigned k=0; k<nvej; k++) {
-		    unsigned kel=*(pt_kel++)-1u;
+		    unsigned kel=*(pt_kel++);
 		    //add all variables to be updated
 		    unsigned kel_Metis = _msh->GetSolutionDof(0,kel,3);
 		    if(kel_Metis >= IndexdOffsetp1 ||

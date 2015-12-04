@@ -72,9 +72,9 @@ elem::elem(const unsigned &other_nel) {
 //   _isFatherElementRefined = new bool [_nel];
 //   memset( _isFatherElementRefined, 0, _nel*sizeof(bool) );
 
-  _kvtel = NULL;
-  _kvtelMemory = NULL;
-  _nve = NULL;
+  _elementNearVertex = NULL;
+  _elementNearVertexMemory = NULL;
+  _elementNearVertexNumber = NULL;
 
   _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
 }
@@ -93,9 +93,9 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
 
   _elementType = new unsigned short [_nel];
 
-  _isFatherElementRefined = new bool [_nel];
+  _fatherElementIsRefined = new bool [_nel];
 
-  memset( _isFatherElementRefined, 0, _nel*sizeof(bool) );
+  memset( _fatherElementIsRefined, 0, _nel*sizeof(bool) );
   
   _kvert = new unsigned * [_nel];
   _kel = new int * [_nel];
@@ -142,9 +142,9 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
   
   _childElemFlag = false;
 
-  _kvtel = NULL;
-  _kvtelMemory = NULL;
-  _nve = NULL;
+  _elementNearVertex = NULL;
+  _elementNearVertexMemory = NULL;
+  _elementNearVertexNumber = NULL;
 
   _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
 }
@@ -163,10 +163,10 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
 
   if(_level !=0 ){
     bool *tempElRef;
-    tempElRef = _isFatherElementRefined;
-    _isFatherElementRefined = new bool [_nel];
+    tempElRef = _fatherElementIsRefined;
+    _fatherElementIsRefined = new bool [_nel];
     for(unsigned iel = 0; iel < _nel; iel++){
-      _isFatherElementRefined[iel] = tempElRef[ elementMapping[iel] ];
+      _fatherElementIsRefined[iel] = tempElRef[ elementMapping[iel] ];
     } 
     delete [] tempElRef; 
   }
@@ -275,13 +275,13 @@ elem::~elem() {
     delete [] _kel;
     //delete [] _isFatherElementRefined;
 
-    delete [] _kvtelMemory;
-    delete [] _kvtel;
-    delete [] _nve;
+    delete [] _elementNearVertexMemory;
+    delete [] _elementNearVertex;
+    delete [] _elementNearVertexNumber;
     
-    _kvtel = NULL;
-    _kvtelMemory = NULL;
-    _nve = NULL;
+    _elementNearVertex = NULL;
+    _elementNearVertexMemory = NULL;
+    _elementNearVertexNumber = NULL;
     
     if(_childElemFlag){
       delete [] _childElemMemory;
@@ -299,7 +299,7 @@ void elem::DeleteElementType(){
 }
 
 void elem::DeleteElementFather(){
-  delete [] _isFatherElementRefined;
+  delete [] _fatherElementIsRefined;
 }
 
 /**
@@ -428,14 +428,14 @@ void elem::SetElementType(const unsigned &iel, const short unsigned &value) {
  * Return if the coarse element father has been refined
  **/
 bool elem::GetIfFatherElementIsRefined(const unsigned &iel) const {
-  return _isFatherElementRefined[iel];
+  return _fatherElementIsRefined[iel];
 }
 
 /**
  * Set the coarse element father
  **/
 void elem::SetIfFatherElementIsRefined(const unsigned &iel, const bool &refined) {
-  _isFatherElementRefined[iel] = refined;
+  _fatherElementIsRefined[iel] = refined;
 }
 
 /**
@@ -484,63 +484,99 @@ void elem::SetElementGroupNumber(const unsigned &value) {
 /**
  * Set the memory storage and initialize nve and kvtel (node->element vectors)
  **/
-void elem::AllocateVertexElementMemory() {
+
+void elem::BuildLocalElementNearVertex(const unsigned &elementOffset, const unsigned &elementOffsetP1 ){
+  
+  
+//   for (unsigned iel = 0; iel < _nel; iel++) {
+//     if(iel >= elementOffset && iel < elementOffsetP1){
+//       for (unsigned inode = 0; inode < GetElementDofNumber(iel,0); inode++) {
+// 	unsigned irow = GetElementVertexIndex(iel,inode) - 1u;
+//   
+// 	unsigned inodesize = 0;
+// 	if( _elementNearVertexMap.find(irow) != _elementNearVertexMap.end() ){
+// 	  inodesize = _elementNearVertexMap[irow].size();
+// 	  inodesize++;
+// 	}
+// 	_elementNearVertexMap[irow].resize(inodesize+1);
+// 	_elementNearVertexMap[irow][inodesize] = iel;
+// 	
+// 	//std::cout<<_elementNearVertexMap[irow][inodesize]<<std::endl;
+//       }
+//     }
+//   }
+}
+
+void elem::BuildElementNearVertex() {
   unsigned counter=(_nelt[0]*NVE[0][0]+_nelt[1]*NVE[1][0]+_nelt[2]*NVE[2][0]+
                     _nelt[3]*NVE[3][0]+_nelt[4]*NVE[4][0]+_nelt[5]*NVE[5][0]);
 
 
-  if( _kvtel != NULL) delete [] _kvtel;
-  if( _kvtelMemory != NULL) delete [] _kvtelMemory;
-  if( _nve != NULL ) delete [] _nve;
+  if( _elementNearVertex != NULL) delete [] _elementNearVertex;
+  if( _elementNearVertexMemory != NULL) delete [] _elementNearVertexMemory;
+  if( _elementNearVertexNumber != NULL ) delete [] _elementNearVertexNumber;
 
-  _kvtel=new unsigned * [_nvt];
-  _nve= new unsigned[_nvt];
+  _elementNearVertex=new unsigned * [_nvt];
+  _elementNearVertexNumber= new unsigned[_nvt];
 
   for (unsigned inode=0; inode<_nvt; inode++) {
-    _nve[inode]=0;
+    _elementNearVertexNumber[inode]=0;
   }
   for (unsigned iel=0; iel<_nel; iel++) {
     for (unsigned inode=0; inode < GetElementDofNumber(iel,0); inode++) {
-      _nve[ GetElementVertexIndex(iel,inode)-1u ]++;
+      _elementNearVertexNumber[ GetElementVertexIndex(iel,inode)-1u ]++;
     }
   }
 
-  _kvtelMemory=new unsigned[counter];
-  unsigned *pt= _kvtelMemory;
+  _elementNearVertexMemory=new unsigned[counter];
+  unsigned *pt= _elementNearVertexMemory;
   for (unsigned inode=0; inode<_nvt; inode++) {
-    _kvtel[inode]=pt;
-    pt+=_nve[inode];
+    _elementNearVertex[inode]=pt;
+    pt+=_elementNearVertexNumber[inode];
+    for(unsigned j = 0;j<_elementNearVertexNumber[inode];j++){
+      _elementNearVertex[inode][j] = _nel;
+    }
   }
-  memset(_kvtelMemory, 0, counter*sizeof(unsigned));
+  
+  for (unsigned iel = 0; iel < _nel; iel++) {
+    for (unsigned inode = 0; inode < GetElementDofNumber(iel,0); inode++) {
+      unsigned irow = GetElementVertexIndex(iel,inode) - 1u;
+      unsigned j = 0;
+      while ( _nel != _elementNearVertex[irow][j] ) j++;
+       _elementNearVertex[irow][j]=iel;
+    }
+  }
+  
+  
 }
 
 /**
  * Return the number of elements which have given node
  **/
-unsigned elem::GetVertexElementNumber(const unsigned &inode)const {
-  return _nve[inode];
+unsigned elem::GetElementNearVertexNumber(const unsigned &inode)const {
+  return _elementNearVertexNumber[inode];
 }
 
 /**
  * Return the element index for the given i-node in the j-position with 0<=j<nve(i)
  **/
-unsigned elem::GetVertexElementIndex(const unsigned &inode,const unsigned &jnode)const {
-  return _kvtel[inode][jnode];
+unsigned elem::GetElementNearVertex(const unsigned &inode,const unsigned &j)const {
+  return _elementNearVertex[inode][j];
 }
 
 /**
  * Return the element address for the given i-node in the j-position with 0<=j<nve(i)
  **/
-const unsigned * elem::GetVertexElementAddress(const unsigned &inode,const unsigned &jnode)const {
-  return &_kvtel[inode][jnode];
+const unsigned * elem::GetElementNearVertexPointer(const unsigned &inode,const unsigned &j)const {
+  return &_elementNearVertex[inode][j];
 }
 
-/**
- * Set the element index for the given i-node in the j-position with 0<=j<nve(i)
- **/
-void elem::SetVertexElementIndex(const unsigned &inode,const unsigned &jnode, const unsigned &value) {
-  _kvtel[inode][jnode]=value;
-}
+// /**
+//  * Set the element index for the given i-node in the j-position with 0<=j<nve(i)
+//  **/
+// void elem::SetElementNearVertex(const unsigned &inode,const unsigned &j, const unsigned &value) {
+//   _elementNearVertex[inode][j]=value;
+// }
 
 /**
  * return the index 0=hex, 1=Tet, 2=Wedge, 3=Quad, 4=Triangle and 5=Line

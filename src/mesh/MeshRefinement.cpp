@@ -283,8 +283,8 @@ namespace femus {
             unsigned ip = _mesh.el->GetElementVertexIndex(iel, edge2VerticesMapping[ielt][inode - istart][1]);
 
             //find all the near elements which share the same middle edge point
-            for (unsigned j = 0; j < _mesh.el->GetVertexElementNumber(im - 1u); j++) {
-              unsigned jel = _mesh.el->GetVertexElementIndex(im - 1u, j) - 1u;
+            for (unsigned j = 0; j < _mesh.el->GetElementNearVertexNumber(im - 1u); j++) {
+              unsigned jel = _mesh.el->GetElementNearVertex(im - 1u, j);
 
               if (_mesh.el->GetIfFatherElementIsRefined(jel) && jel > iel) {    // to skip coarse elements
                 unsigned jm = 0, jp = 0;
@@ -403,7 +403,7 @@ namespace femus {
     elementFather.close();
     _mesh.el->DeleteElementFather();
     
-   
+    //_mesh.el->BuildLocalElementNearVertex( _mesh._elementOffset[_iproc], _mesh._elementOffset[_iproc + 1] );
   }
 
 
@@ -435,8 +435,8 @@ namespace femus {
             unsigned i2 = _mesh.el->GetFaceVertexIndex(iel, iface, 1);
             unsigned i3 = _mesh.el->GetFaceVertexIndex(iel, iface, 2);
 
-            for (unsigned j = 0; j < _mesh.el->GetVertexElementNumber(i1 - 1u); j++) {
-              unsigned jel = _mesh.el->GetVertexElementIndex(i1 - 1u, j) - 1u;
+            for (unsigned j = 0; j < _mesh.el->GetElementNearVertexNumber(i1 - 1u); j++) {
+              unsigned jel = _mesh.el->GetElementNearVertex(i1 - 1u, j);
 
               if ( _mesh.el->GetIfFatherElementIsRefined(jel) && jel > iel) {
                 for (unsigned jface = 0; jface < _mesh.el->GetElementFaceNumber(jel, 0); jface++) {

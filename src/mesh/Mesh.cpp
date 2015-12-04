@@ -178,6 +178,8 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
+  
+  el->BuildLocalElementNearVertex( _elementOffset[_iproc], _elementOffset[_iproc + 1] );
 
 };
 
@@ -259,6 +261,7 @@ void Mesh::GenerateCoarseBoxMesh(
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
 
+  el->BuildLocalElementNearVertex( _elementOffset[_iproc], _elementOffset[_iproc + 1] );
 }
 
 
@@ -266,15 +269,15 @@ void Mesh::GenerateCoarseBoxMesh(
  * This function searches all the elements around all the vertices
  **/
 void Mesh::BuildAdjVtx() {
-  el->AllocateVertexElementMemory();
-  for (unsigned iel=0; iel<_nelem; iel++) {
-    for (unsigned inode=0; inode < el->GetElementDofNumber(iel,0); inode++) {
-      unsigned irow=el->GetElementVertexIndex(iel,inode)-1u;
-      unsigned jcol=0;
-      while ( 0 != el->GetVertexElementIndex(irow,jcol) ) jcol++;
-      el->SetVertexElementIndex(irow,jcol,iel+1u);
-    }
-  }
+  el->BuildElementNearVertex();
+//   for (unsigned iel=0; iel<_nelem; iel++) {
+//     for (unsigned inode=0; inode < el->GetElementDofNumber(iel,0); inode++) {
+//       unsigned irow=el->GetElementVertexIndex(iel,inode)-1u;
+//       unsigned jcol=0;
+//       while ( _nelem != el->GetElementNearVertex(irow,jcol) ) jcol++;
+//       el->SetElementNearVertex(irow,jcol,iel);
+//     }
+//   }
 }
 
 /**
@@ -288,8 +291,8 @@ void Mesh::Buildkel() {
         unsigned i1=el->GetFaceVertexIndex(iel,iface,0);
         unsigned i2=el->GetFaceVertexIndex(iel,iface,1);
         unsigned i3=el->GetFaceVertexIndex(iel,iface,2);
-        for (unsigned j=0; j< el->GetVertexElementNumber(i1-1u); j++) {
-          unsigned jel= el->GetVertexElementIndex(i1-1u,j)-1u;
+        for (unsigned j=0; j< el->GetElementNearVertexNumber(i1-1u); j++) {
+          unsigned jel = el->GetElementNearVertex(i1-1u,j);
           if (jel > iel) {
             for (unsigned jface=0; jface<el->GetElementFaceNumber(jel); jface++) {
               if ( el->GetFaceElementIndex(jel,jface) <= 0) {
@@ -343,29 +346,7 @@ void Mesh::AllocateAndMarkStructureNode() {
     }
   }
   NodeMaterial.close();
-  
-  
-//   el->AllocateNodeRegion();
-// 
-//   vector <double> localizedElementMaterial;
-//   _topology->_Sol[_materialIndex]->localize_to_all(localizedElementMaterial);
-//   
-//    vector <double> localizedElementType;
-//   _topology->_Sol[_typeIndex]->localize_to_all(localizedElementType);
-// 
-//   for (unsigned iel=0; iel<_nelem; iel++) {
-// 
-//     //int flag_mat = el->GetElementMaterial(iel);
-//     int flag_mat = static_cast < short unsigned > (localizedElementMaterial[iel]+ 0.25);
-// 
-//     if (flag_mat==4) {
-//       unsigned nve = el->GetNVE(localizedElementType[iel],2);
-//       for ( unsigned i=0; i<nve; i++) {
-//         unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
-//         el->SetNodeRegion(inode, 1);
-//       }
-//     }
-//   }
+
 }
 
 

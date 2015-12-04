@@ -55,10 +55,7 @@ public:
 
     /** To be Added */
     unsigned GetElementDofNumber(const unsigned &iel,const unsigned &type) const;
-
-    /** To be Added */
-    //unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
-
+    
     /** Return the local->global node number */
     unsigned GetElementVertexIndex(const unsigned &iel,const unsigned &inode)const {
         return _kvert[iel][inode];
@@ -141,19 +138,21 @@ public:
     unsigned GetElementFaceNumber(const unsigned &iel,const unsigned &type=1)const;
     
     /** To be Added */
-    void AllocateVertexElementMemory();
+    void BuildElementNearVertex();
+
+    void BuildLocalElementNearVertex(const unsigned &elementOffset, const unsigned &elementOffsetP1 );
+    
+    /** To be Added */
+    unsigned GetElementNearVertexNumber(const unsigned &inode)const;
 
     /** To be Added */
-    unsigned GetVertexElementNumber(const unsigned &inode)const;
+    unsigned GetElementNearVertex(const unsigned &inode,const unsigned &jnode)const;
 
     /** To be Added */
-    unsigned GetVertexElementIndex(const unsigned &inode,const unsigned &jnode)const;
+    const unsigned *GetElementNearVertexPointer(const unsigned &inode,const unsigned &jnode)const;
 
     /** To be Added */
-    const unsigned *GetVertexElementAddress(const unsigned &inode,const unsigned &jnode)const;
-
-    /** To be Added */
-    void SetVertexElementIndex(const unsigned &inode,const unsigned &jnode, const unsigned &value);
+    //void SetElementNearVertex(const unsigned &inode,const unsigned &jnode, const unsigned &value);
 
     /** To be Added */
     void SetIfFatherElementIsRefined(const unsigned &iel, const bool &refined);
@@ -186,10 +185,10 @@ private:
     int *_kelMemory;
     unsigned _kelSize;
 
-    std::map< unsigned, std::vector< unsigned > > _kvtelMap;
-    unsigned **_kvtel; //node->element
-    unsigned *_kvtelMemory;
-    unsigned *_nve;
+    std::map< unsigned, std::vector< unsigned > > _elementNearVertexMap;
+    unsigned **_elementNearVertex; //node->element
+    unsigned *_elementNearVertexMemory;
+    unsigned *_elementNearVertexNumber;
 
     unsigned **_kvert; //element -> nodes
     unsigned *_kvertMemory;
@@ -208,7 +207,7 @@ private:
     unsigned _nelr,_nelrt[6];
     unsigned _ngroup;
 
-    bool *_isFatherElementRefined; //element
+    bool *_fatherElementIsRefined; //element
    
     unsigned _level;
 
