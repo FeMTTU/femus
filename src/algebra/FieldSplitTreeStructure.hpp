@@ -23,12 +23,12 @@ namespace femus {
      
       std::map < unsigned, bool > mymap;
       for(unsigned i = 0; i < _numberOfSplits; i++ ){
-	for(unsigned j=0; j < _fields[i].size(); i++){
+	for(unsigned j=0; j < _fields[i].size(); j++){ //I change "i++" to j++
 	  mymap[_fields[i][j]] = true;
 	}
       } 
      
-      _allFields.resize( mymap.size() );
+      _allFields.resize(mymap.size() );
       
       unsigned j = 0;
       for (std::map<unsigned, bool>::iterator it = mymap.begin(); it != mymap.end(); ++it){
@@ -56,7 +56,7 @@ namespace femus {
       
       std::map < unsigned, bool > mymap;
       for(unsigned i = 0; i < _numberOfSplits; i++ ){
-	for(unsigned j=0; j < _fields[i].size(); i++){
+	for(unsigned j=0; j < _fields[i].size(); j++){ // I change the "i++" to "j++"
 	  mymap[_fields[i][j]] = true;
 	}
       } 
