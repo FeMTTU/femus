@@ -486,25 +486,24 @@ void elem::SetElementGroupNumber(const unsigned &value) {
  **/
 
 void elem::BuildLocalElementNearVertex(const unsigned &elementOffset, const unsigned &elementOffsetP1 ){
+  std::cout<<elementOffset<<" "<<elementOffsetP1<<std::endl;
   
-  
-//   for (unsigned iel = 0; iel < _nel; iel++) {
-//     if(iel >= elementOffset && iel < elementOffsetP1){
-//       for (unsigned inode = 0; inode < GetElementDofNumber(iel,0); inode++) {
-// 	unsigned irow = GetElementVertexIndex(iel,inode) - 1u;
-//   
-// 	unsigned inodesize = 0;
-// 	if( _elementNearVertexMap.find(irow) != _elementNearVertexMap.end() ){
-// 	  inodesize = _elementNearVertexMap[irow].size();
-// 	  inodesize++;
-// 	}
-// 	_elementNearVertexMap[irow].resize(inodesize+1);
-// 	_elementNearVertexMap[irow][inodesize] = iel;
-// 	
-// 	//std::cout<<_elementNearVertexMap[irow][inodesize]<<std::endl;
-//       }
-//     }
-//   }
+for (unsigned iel = 0; iel < _nel; iel++) {
+  if(iel >= elementOffset && iel < elementOffsetP1){
+    for (unsigned inode = 0; inode < GetElementDofNumber(iel, 0); inode++) {
+      unsigned irow = GetElementVertexIndex(iel,inode) - 1u;
+      unsigned inodesize = 0;
+      if( _elementNearVertexMap.find(irow) != _elementNearVertexMap.end() ){
+	 inodesize = _elementNearVertexMap[irow].size();
+	  inodesize++;
+	}
+	_elementNearVertexMap[irow].resize(inodesize+1);
+	_elementNearVertexMap[irow][inodesize] = iel;
+	
+	std::cout<<_elementNearVertexMap[irow][inodesize]<<std::endl;
+      }
+    }
+  }
 }
 
 void elem::BuildElementNearVertex() {

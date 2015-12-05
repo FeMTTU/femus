@@ -389,6 +389,10 @@ namespace femus {
     NumericVector& typec =   mshc->_topology->GetSolutionName("Type");
     typef.matrix_mult(typec, *_mesh.GetCoarseToFineProjection(3));
     typef.close();
+    
+    
+    _mesh.el->BuildLocalElementNearVertex( _mesh._elementOffset[_iproc], _mesh._elementOffset[_iproc + 1] );
+    
     _mesh.el->DeleteElementType();
    
     
@@ -402,8 +406,6 @@ namespace femus {
     }
     elementFather.close();
     _mesh.el->DeleteElementFather();
-    
-    //_mesh.el->BuildLocalElementNearVertex( _mesh._elementOffset[_iproc], _mesh._elementOffset[_iproc + 1] );
   }
 
 

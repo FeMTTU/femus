@@ -176,10 +176,12 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
   _topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
   
+  el->BuildLocalElementNearVertex( _elementOffset[_iproc], _elementOffset[_iproc + 1] );
+  
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
   
-  el->BuildLocalElementNearVertex( _elementOffset[_iproc], _elementOffset[_iproc + 1] );
+  
 
 };
 
