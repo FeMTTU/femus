@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 #include <cassert>
+#include <cstdlib>
 
 
 namespace femus {
