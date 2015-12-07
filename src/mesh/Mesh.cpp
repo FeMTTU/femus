@@ -128,8 +128,8 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   FillISvector(partition);
   partition.resize(0);
 
+  el->BuildElementNearVertex();
 
-  BuildAdjVtx();
   Buildkel();
 
   _topology = new Solution(this);
@@ -175,13 +175,15 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
 
   _topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
   _topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-  
-  el->BuildLocalElementNearVertex( _elementOffset[_iproc], _elementOffset[_iproc + 1] );
-  
+
+
+  el->BuildLocalElementNearVertex();
+  el->DeleteElementNearVertex();
+
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
-  
-  
+
+
 
 };
 
@@ -212,7 +214,7 @@ void Mesh::GenerateCoarseBoxMesh(
   FillISvector(partition);
   partition.resize(0);
 
-  BuildAdjVtx();
+  el->BuildElementNearVertex();
 
   Buildkel();
 
@@ -257,33 +259,19 @@ void Mesh::GenerateCoarseBoxMesh(
   group.close();
   type.close();
 
-  _topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("solidMrk",LAGRANGE, SECOND,1 , 0);
   _topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-   
+
+  el->BuildLocalElementNearVertex();
+  el->DeleteElementNearVertex();
+
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
 
-  el->BuildLocalElementNearVertex( _elementOffset[_iproc], _elementOffset[_iproc + 1] );
+
 }
 
-
-/**
- * This function searches all the elements around all the vertices
- **/
-void Mesh::BuildAdjVtx() {
-  el->BuildElementNearVertex();
-//   for (unsigned iel=0; iel<_nelem; iel++) {
-//     for (unsigned inode=0; inode < el->GetElementDofNumber(iel,0); inode++) {
-//       unsigned irow=el->GetElementVertexIndex(iel,inode)-1u;
-//       unsigned jcol=0;
-//       while ( _nelem != el->GetElementNearVertex(irow,jcol) ) jcol++;
-//       el->SetElementNearVertex(irow,jcol,iel);
-//     }
-//   }
-}
-
-/**
- * This function stores the element adiacent to the element face (iel,iface)
+/** This function stores the element adiacent to the element face (iel,iface)
  * and stores it in kel[iel][iface]
  **/
 void Mesh::Buildkel() {
@@ -326,18 +314,18 @@ void Mesh::Buildkel() {
 
 
 void Mesh::AllocateAndMarkStructureNode() {
-  
-  
-  
+
+
+
   _topology->ResizeSolutionVector("solidMrk");
-  
+
   NumericVector &NodeMaterial =  _topology->GetSolutionName("solidMrk");
-  
+
   NodeMaterial.zero();
-    
+
   for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
     int flag_mat = GetElementMaterial(iel);
-    
+
     if (flag_mat==4) {
       unsigned elementType = GetElementType(iel);
       unsigned nve = el->GetNVE(elementType,2);
@@ -564,6 +552,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     }
   }
 
+  el->SetElementOffsets(_elementOffset[_iproc], _elementOffset[_iproc+1]);
 
 }
 

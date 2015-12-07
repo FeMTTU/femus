@@ -93,15 +93,15 @@ public:
 
     /** Only for parallel */
     bool GetSolidMark(const unsigned &inode) const;
-    
+
     /** Only for parallel */
     bool GetIfElementFatherIsRefined(const unsigned &iel) const;
-    
+
     /** Only for parallel */
     unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const {
       return el->GetNVE(GetElementType(iel), type);
     }
-    
+
     /** Only for parallel */
     const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const{
       unsigned kelt = GetElementType(kel);
@@ -109,26 +109,26 @@ public:
       const unsigned felt = FELT[kelt][jface >= GetElementFaceNumber(kel,0)];
       return felt;
     }
-    
+
     /** Only for parallel */
     unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const {
       return el->GetIG(GetElementType(iel), iface, jnode);
     }
-    
-    
+
+
     /** Only for parallel */
     unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
       assert( type < 3 );
       return el->GetNFACENODES(GetElementType(iel), jface, type);
     }
-    
+
     /** Only for parallel */
     unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const {
       return el->GetNFC(GetElementType(iel), type);
     }
-    
-    
-    
+
+
+
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
         _level=i;
@@ -156,11 +156,6 @@ public:
     const unsigned GetRefIndex() const {
       return Mesh::_ref_index;
     }
-
-//     /** Get the metis dof from the gambit dof */
-//     unsigned GetSolutionDof(const unsigned &inode, const short unsigned &solType) const {
-//       return IS_Gmt2Mts_dof[solType][inode];
-//     }
 
     unsigned GetSolutionDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
 
@@ -193,15 +188,11 @@ public:
                                const double zmin, const double zmax,
                                const ElemType type, std::vector<bool> &type_elem_flag);
 
-
     /** To be added */
     void FillISvector(vector < int > &epart);
 
     /** To be added */
     void Buildkel();
-
-    /** To be added */
-    void BuildAdjVtx();
 
 
     // member data

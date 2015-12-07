@@ -46,11 +46,11 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = 0;
 
-  if (elemgroupnumber == 6 && level < 4) refine = 1;
+  if (elemgroupnumber == 6 && level < 3) refine = 1;
 
-  if (elemgroupnumber == 7 && level < 5) refine = 1;
+  if (elemgroupnumber == 7 && level < 4) refine = 1;
 
-  if (elemgroupnumber == 8 && level < 6) refine = 1;
+  if (elemgroupnumber == 8 && level < 5) refine = 1;
 
 //   if (elemgroupnumber==6 && level<1) refine=1;
 //   if (elemgroupnumber==7 && level<2) refine=1;
@@ -85,8 +85,8 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 0;
+  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
@@ -105,8 +105,8 @@ int main(int argc, char** args) {
 
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
-  mlSol.AddSolution("P", LAGRANGE, FIRST);
-  //mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  //mlSol.AddSolution("P", LAGRANGE, FIRST);
+  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure", false);
   //mlSol.AssociatePropertyToSolution("P", "Pressure", true);

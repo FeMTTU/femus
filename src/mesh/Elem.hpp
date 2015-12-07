@@ -38,9 +38,9 @@ public:
     ~elem();
 
     void DeleteGroupAndMaterial();
-    
+
     void DeleteElementType();
-    
+
     void DeleteElementFather();
 
     // reorder the element according to the new element mapping
@@ -55,7 +55,7 @@ public:
 
     /** To be Added */
     unsigned GetElementDofNumber(const unsigned &iel,const unsigned &type) const;
-    
+
     /** Return the local->global node number */
     unsigned GetElementVertexIndex(const unsigned &iel,const unsigned &inode)const {
         return _kvert[iel][inode];
@@ -136,23 +136,25 @@ public:
 
     /** To be Added */
     unsigned GetElementFaceNumber(const unsigned &iel,const unsigned &type=1)const;
-    
+
     /** To be Added */
     void BuildElementNearVertex();
 
-    void BuildLocalElementNearVertex(const unsigned &elementOffset, const unsigned &elementOffsetP1 );
-    
-    /** To be Added */
+    void DeleteElementNearVertex();
+
+     /** To be Added */
     unsigned GetElementNearVertexNumber(const unsigned &inode)const;
 
     /** To be Added */
     unsigned GetElementNearVertex(const unsigned &inode,const unsigned &jnode)const;
 
-    /** To be Added */
-    const unsigned *GetElementNearVertexPointer(const unsigned &inode,const unsigned &jnode)const;
+    void BuildLocalElementNearVertex();
 
-    /** To be Added */
-    //void SetElementNearVertex(const unsigned &inode,const unsigned &jnode, const unsigned &value);
+    const std::vector<unsigned> & GetLocalElementNearVertex(const unsigned &inode)  {
+      return _localElementNearVertexMap[inode];
+    };
+
+
 
     /** To be Added */
     void SetIfFatherElementIsRefined(const unsigned &iel, const bool &refined);
@@ -161,8 +163,7 @@ public:
     bool GetIfFatherElementIsRefined(const unsigned &iel) const;
 
     /** To be Added */
-    void AllocateChildrenElement(const unsigned &ref_index, const std::vector < double > &localizedAmrVector,
-				 const unsigned &offsetStart, const unsigned &offsetEnd );
+    void AllocateChildrenElement(const unsigned &ref_index, const std::vector < double > &localizedAmrVector);
 
     /** To be Added */
     void SetChildElement(const unsigned &iel,const unsigned &json, const unsigned &value);
@@ -171,21 +172,26 @@ public:
     unsigned GetChildElement(const unsigned &iel,const unsigned &json) const;
 
     const unsigned GetNVE(const unsigned &elementType, const unsigned &doftype) const;
-    
+
     const unsigned GetNFACENODES(const unsigned &elementType, const unsigned &jface, const unsigned &dof) const;
-    
+
     const unsigned GetNFC(const unsigned &elementType, const unsigned &type) const;
-    
+
     const unsigned GetIG(const unsigned &elementType, const unsigned &iface, const unsigned &jnode) const;
-    
+
+    void SetElementOffsets(const unsigned &elementOffset, const unsigned &elementOffsetP1){
+      _elementOffset = elementOffset;
+      _elementOffsetP1 = elementOffsetP1;
+    }
+
 private:
 
     // member data
-    int **_kel;
-    int *_kelMemory;
-    unsigned _kelSize;
+    int **_elementNearFace;
+    int *_elementNearFaceMemory;
+    unsigned _elementNearFaceSize;
 
-    std::map< unsigned, std::vector< unsigned > > _elementNearVertexMap;
+    std::map< unsigned, std::vector< unsigned > > _localElementNearVertexMap;
     unsigned **_elementNearVertex; //node->element
     unsigned *_elementNearVertexMemory;
     unsigned *_elementNearVertexNumber;
@@ -198,7 +204,9 @@ private:
     unsigned *_childElemMemory;
     unsigned _childElemSize;
     bool _childElemFlag;
-    unsigned _offsetElementStart;
+    
+    unsigned _elementOffset;
+    unsigned _elementOffsetP1;
 
     short unsigned *_elementType,*_elementGroup,*_elementMaterial; //element
 
@@ -208,7 +216,7 @@ private:
     unsigned _ngroup;
 
     bool *_fatherElementIsRefined; //element
-   
+
     unsigned _level;
 
 };

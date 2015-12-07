@@ -163,16 +163,16 @@ namespace femus {
 
     unsigned elementOffsetCoarse   = mshc->_elementOffset[_iproc];
     unsigned elementOffsetCoarseP1 = mshc->_elementOffset[_iproc+1];
-    
+
     _mesh.SetNumberOfElements(nelem);
 
     vector < double > coarseLocalizedAmrVector;
     mshc->_topology->_Sol[mshc->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
-    
+
     vector < double > coarseLocalizedElementType;
     mshc->_topology->_Sol[mshc->GetTypeIndex()]->localize_to_all(coarseLocalizedElementType);
 
-    mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), coarseLocalizedAmrVector, elementOffsetCoarse, elementOffsetCoarseP1);
+    mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), coarseLocalizedAmrVector);
 
     _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector, coarseLocalizedElementType);
 
@@ -180,11 +180,11 @@ namespace femus {
     //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elements and find all the vertices
 
     _mesh.el->SetElementGroupNumber(elc->GetElementGroupNumber());
-   
+
     bool AMR = false;
 
-   
-    
+
+
     for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++) {
       //if ( elc->GetRefinedElementIndex(iel) ) {
       if (static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
@@ -206,11 +206,11 @@ namespace femus {
           for (unsigned inode = 0; inode < elc->GetNVE(elt, 0); inode++)
             _mesh.el->SetElementVertexIndex(jel + j, inode, elc->GetElementVertexIndex(iel, fine2CoarseVertexMapping[elt][j][inode] - 1u));
 
-        // project face indeces 
+        // project face indeces
 	for (unsigned iface = 0; iface <  elc->GetNFC(elt, 1); iface++) {
           int value = elc->GetFaceElementIndex(iel, iface);
 
-          if (0 > value)
+          if (value < -1)
             for (unsigned jface = 0; jface < _mesh.GetFaceIndex(); jface++)
               _mesh.el->SetFaceElementIndex(jel + coarse2FineFaceMapping[elt][iface][jface][0], coarse2FineFaceMapping[elt][iface][jface][1], value);
         }
@@ -231,14 +231,14 @@ namespace femus {
 	}
 
         // project nodes indeces
-        for (unsigned inode = 0; inode < elc->GetNVE(elt, 2); inode++) 
+        for (unsigned inode = 0; inode < elc->GetNVE(elt, 2); inode++)
           _mesh.el->SetElementVertexIndex(jel, inode, elc->GetElementVertexIndex(iel, inode));
 
         // project face indeces
 	for (unsigned iface = 0; iface <  elc->GetNFC(elt, 1); iface++) {
           int value = elc->GetFaceElementIndex(iel, iface);
 
-          if (0 > value) {
+          if (value < -1) {
             _mesh.el->SetFaceElementIndex(jel, iface, value);
           }
         }
@@ -251,13 +251,13 @@ namespace femus {
 
     coarseLocalizedAmrVector.resize(0);
     coarseLocalizedElementType.resize(0);
-    
+
     int nnodes = elc->GetNodeNumber();
     _mesh.SetNumberOfNodes(nnodes);
     _mesh.el->SetNodeNumber(nnodes);
 
     //find all the elements near each vertex
-    _mesh.BuildAdjVtx(); //TODO
+    _mesh.el->BuildElementNearVertex();
 
     //initialize to zero all the middle edge points
     for (unsigned iel = 0; iel < _mesh.GetNumberOfElements(); iel++) {
@@ -343,7 +343,8 @@ namespace femus {
     _mesh.FillISvector(partition);
     partition.resize(0);
 
-    _mesh.BuildAdjVtx(); //TODO
+    _mesh.el->DeleteElementNearVertex();
+    _mesh.el->BuildElementNearVertex();
 
     _mesh.Buildkel();
 
@@ -389,13 +390,13 @@ namespace femus {
     NumericVector& typec =   mshc->_topology->GetSolutionName("Type");
     typef.matrix_mult(typec, *_mesh.GetCoarseToFineProjection(3));
     typef.close();
-    
-    
-    _mesh.el->BuildLocalElementNearVertex( _mesh._elementOffset[_iproc], _mesh._elementOffset[_iproc + 1] );
-    
+
+
+    _mesh.el->BuildLocalElementNearVertex();
+    _mesh.el->DeleteElementNearVertex();
+
     _mesh.el->DeleteElementType();
-   
-    
+
     _mesh._topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
     _mesh._topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
     _mesh._topology->ResizeSolutionVector("elFather");

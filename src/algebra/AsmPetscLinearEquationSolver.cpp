@@ -187,44 +187,40 @@ namespace femus {
       // ***************** NODE/ELEMENT SERCH *******************
       for (int kel = 0; kel < block_elements[vb_index].size(); kel++) {
         unsigned iel = block_elements[vb_index][kel];
-	
+
         for (unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) {
           unsigned inode = _msh->el->GetElementVertexIndex(iel, i) - 1u;
-          unsigned nvei = _msh->el->GetElementNearVertexNumber(inode);
-          const unsigned* pt_jel = _msh->el->GetElementNearVertexPointer(inode, 0);
-          for (unsigned j = 0; j < nvei * (!FastVankaBlock) + FastVankaBlock; j++) {
-            unsigned jel = (!FastVankaBlock) ? *(pt_jel++) : iel;
+          const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
+          unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
+          for (unsigned j = 0; j < nve; j++) {
+            unsigned jel = (!FastVankaBlock) ? localElementNearVertexNumber[j] : iel;
             //add elements for velocity to be solved
-            if (jel >= ElemOffset && jel < ElemOffsetp1) {
-              if (indexc[jel - ElemOffset] == ElemOffsetSize) {
-                indexci[Csize] = jel - ElemOffset;
-                indexc[jel - ElemOffset] = Csize++;
-                //----------------------------------------------------------------------------------
-                //add non-schur node to be solved
-                for (int indexSol = 0; indexSol < _SolPdeIndex.size(); indexSol++) {
-                  if (ThisVaribaleIsNonSchur[indexSol]) {
-                    unsigned SolPdeIndex = _SolPdeIndex[indexSol];
-                    unsigned SolType = _SolType[SolPdeIndex];
-                    unsigned nvej = _msh->GetElementDofNumber(jel, SolType); 
-                    for (unsigned jj = 0; jj < nvej; jj++) {
-		      unsigned jdof = _msh->GetSolutionDof(jj, jel, SolType);
-		      unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, jj, jel);
-                      if (jdof >= _msh->_dofOffset[SolType][iproc] &&
-                          jdof <  _msh->_dofOffset[SolType][iproc + 1]) {
-                        if (indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
-                          owned[kkdof - DofOffset] = true;
-                          _is_loc_idx[vb_index][PAsize] = kkdof;
-                          indexa[kkdof - DofOffset] = PAsize++;
-                        }
-                        if (indexb[kkdof - DofOffset] == DofOffsetSize) {
-                          _is_ovl_idx[vb_index][PBsize] = kkdof;
-                          indexb[kkdof - DofOffset] = PBsize++;
-                        }
-                      } else {
-                        mymap[kkdof] = true;
+            if (indexc[jel - ElemOffset] == ElemOffsetSize) {
+              indexci[Csize] = jel - ElemOffset;
+              indexc[jel - ElemOffset] = Csize++;
+              //add non-schur node to be solved
+              for (int indexSol = 0; indexSol < _SolPdeIndex.size(); indexSol++) {
+                if (ThisVaribaleIsNonSchur[indexSol]) {
+                  unsigned SolPdeIndex = _SolPdeIndex[indexSol];
+                  unsigned SolType = _SolType[SolPdeIndex];
+                  unsigned nvej = _msh->GetElementDofNumber(jel, SolType);
+                  for (unsigned jj = 0; jj < nvej; jj++) {
+		    unsigned jdof = _msh->GetSolutionDof(jj, jel, SolType);
+		    unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, jj, jel);
+                    if (jdof >= _msh->_dofOffset[SolType][iproc] &&
+                        jdof <  _msh->_dofOffset[SolType][iproc + 1]) {
+                      if (indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
+                        owned[kkdof - DofOffset] = true;
+                        _is_loc_idx[vb_index][PAsize] = kkdof;
+                        indexa[kkdof - DofOffset] = PAsize++;
                       }
+                      if (indexb[kkdof - DofOffset] == DofOffsetSize) {
+                        _is_ovl_idx[vb_index][PBsize] = kkdof;
+                        indexb[kkdof - DofOffset] = PBsize++;
+                      }
+                    } else {
+                      mymap[kkdof] = true;
                     }
-// 		    }
                   }
                 }
               }
@@ -241,8 +237,6 @@ namespace femus {
               unsigned nvei = _msh->GetElementDofNumber(iel, SolType);
               for (unsigned ii = 0; ii < nvei; ii++) {
 		unsigned inode_Metis = _msh->GetSolutionDof(ii, iel, SolType);
-                //unsigned inode = _msh->el->GetMeshDof(iel, ii, SolType);
-                //unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, inode);
 		unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, ii, iel);
                 if (inode_Metis >= _msh->_dofOffset[SolType][iproc] &&
                     inode_Metis <  _msh->_dofOffset[SolType][iproc + 1]) {
