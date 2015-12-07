@@ -30,10 +30,7 @@
 #include <vector>
 #include <cassert>
 #include <cstdlib>
-<<<<<<< HEAD
-=======
 
->>>>>>> b71aca6a10c0915e5e42b224e34423bcf508c682
 
 namespace femus {
 
