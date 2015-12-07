@@ -57,7 +57,7 @@ public:
   /** To be Added */
   void BuildRestrictionTranspose(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat,
                                  const unsigned &index_sol, const unsigned &kkindex_sol,
-				 const unsigned &index_pair_sol, const unsigned &kkindex_pair_sol) const;
+				 const unsigned &index_pair_sol, const unsigned &kkindex_pair_sol, const std::vector <double> &localizedNodeMaterial ) const;
 
   /** To be Added */
   void BuildProlongation(const Mesh &meshf, const Mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;

@@ -259,43 +259,40 @@ void elem_type::BuildProlongation(const LinearEquation &lspdef,const LinearEquat
 //TODO Set identyty projection for AMR
 void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat,
 					  const unsigned &index_sol, const unsigned &kkindex_sol,
-					  const unsigned &index_pair_sol, const unsigned &kkindex_pair_sol) const{
+					  const unsigned &index_pair_sol, const unsigned &kkindex_pair_sol, const std::vector <double> &localizedNodeMaterial) const{
 
   if( lspdec._msh->GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
-    vector<int> cols(27);
+    vector <int> cols(27);
     vector <double> copy_prol_val;
     copy_prol_val.reserve(27);
-    for (int i=0; i<_nf; i++) {
-      int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
-      int ielf=lspdec._msh->el->GetChildElement(ielc,i0);
-      int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-      int iadd=lspdef._msh->el->GetMeshDof(ielf,i1,_SolType);
-      // int irow=lspdef.GetSystemDof(index_sol,kkindex_sol,iadd);  //  local-id to dof
-      int irow=lspdef.GetSystemDof(index_sol,kkindex_sol,i1,ielf);  //  local-id to dof
-      int ncols=_prol_ind[i+1]-_prol_ind[i];
+    for (int i = 0; i < _nf; i++) {
+      int i0 =_KVERT_IND[i][0]; //id of the subdivision of the fine element
+      int ielf = lspdec._msh->el->GetChildElement(ielc, i0);
+      int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
+      int iadd = lspdef._msh->el->GetMeshDof(ielf, i1, _SolType);
+      int irow = lspdef.GetSystemDof(index_sol,kkindex_sol, i1, ielf);  //  local-id to dof
+      int ncols = _prol_ind[i+1] - _prol_ind[i];
 
-      bool isolidmark=lspdef._msh->el->GetNodeRegion(iadd);
+      bool isolidmark = static_cast < short unsigned > (localizedNodeMaterial[iadd] + 0.25);
 
-      cols.assign(ncols,0);
-      copy_prol_val.assign(ncols,0);
+      cols.assign(ncols, 0);
+      copy_prol_val.assign(ncols, 0);
       for (int k=0; k<ncols; k++) {
         int j=_prol_ind[i][k];
-        int jadd=lspdec._msh->el->GetMeshDof(ielc,j,_SolType);
-        bool jsolidmark=lspdec._msh->el->GetNodeRegion(jadd);
+        int jadd = lspdec._msh->el->GetMeshDof(ielc,j,_SolType);
+        bool jsolidmark = lspdec._msh->GetSolidMark(jadd);
         if( isolidmark == jsolidmark){
-	  //int jcolumn=lspdec.GetSystemDof(index_sol,kkindex_sol,jadd);
-	  int jcolumn=lspdec.GetSystemDof(index_sol,kkindex_sol,j,ielc);
-	  cols[k]=jcolumn;
+	  int jcolumn = lspdec.GetSystemDof(index_sol,kkindex_sol, j, ielc);
+	  cols[k] = jcolumn;
 	  copy_prol_val[k]=_prol_val[i][k];
         }
         else {
-          //int jcolumn = lspdec.GetSystemDof(index_pair_sol,kkindex_pair_sol,jadd);
-	  int jcolumn = lspdec.GetSystemDof(index_pair_sol,kkindex_pair_sol,j,ielc);
+          int jcolumn = lspdec.GetSystemDof(index_pair_sol,kkindex_pair_sol,j,ielc);
 	  cols[k]=jcolumn;
-	  copy_prol_val[k]=(index_sol != index_pair_sol) ? _prol_val[i][k]:0.;
+	  copy_prol_val[k]=(index_sol != index_pair_sol) ? _prol_val[i][k] : 0.;
         }
       }
-      Projmat->insert_row(irow,ncols,cols,&copy_prol_val[0]);
+      Projmat->insert_row(irow, ncols, cols, &copy_prol_val[0]);
     }
   }
   else{
@@ -304,18 +301,15 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
     double value;
     for (int i = 0; i < _nc; i++) {
       int iadd = lspdef._msh->el->GetMeshDof(ielf, i, _SolType);
-      bool isolidmark = lspdef._msh->el->GetNodeRegion(iadd);
-      //int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, iadd);  //  local-id to dof
+      bool isolidmark = static_cast < short unsigned > (localizedNodeMaterial[iadd] + 0.25); //lspdef._msh->el->GetNodeRegion(iadd);
       int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, i, ielf);  //  local-id to dof
       int jadd = lspdec._msh->el->GetMeshDof(ielc, i, _SolType);
-      bool jsolidmark = lspdec._msh->el->GetNodeRegion(jadd);
+      bool jsolidmark = lspdec._msh->GetSolidMark(jadd);
       if(isolidmark == jsolidmark){
-// 	jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, jadd);
 	jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
 	value = 1.;
       }
       else {
-	//jcol[0] = lspdec.GetSystemDof(index_pair_sol, kkindex_pair_sol, jadd);
 	jcol[0] = lspdec.GetSystemDof(index_pair_sol, kkindex_pair_sol, i, ielc);
 	value = (index_sol != index_pair_sol) ? 1. : 0.;
       }

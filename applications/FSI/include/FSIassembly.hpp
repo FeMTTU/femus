@@ -299,7 +299,7 @@ namespace femus {
         metis_node2[i] = inode;
 
         // flag to know if the node "inode" lays on the fluid-solid interface
-        solidmark[i] = myel->GetNodeRegion(inode); // to check
+        solidmark[i] = mymsh->GetSolidMark(inode); // to check
 
         for (int j = 0; j < dim; j++) {
           //Updated coordinates (Moving frame)
