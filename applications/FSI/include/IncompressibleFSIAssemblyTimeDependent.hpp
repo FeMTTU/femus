@@ -247,7 +247,7 @@ namespace femus {
       for (unsigned i = 0; i < nve; i++) {
         unsigned idof = mymsh->GetSolutionDof(i, iel, SolType2);
         // flag to know if the node "idof" lays on the fluid-solid interface
-        solidmark[i] = myel->GetNodeRegion(idof); // to check
+        solidmark[i] = mymsh->GetSolidMark(idof); // to check
 
         for (int j = 0; j < dim; j++) {
           Soli[indexVAR[j]][i]     = (*mysolution->_Sol[indVAR[j]])(idof);

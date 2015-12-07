@@ -104,45 +104,34 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   }
   // ****************************************
 
-  _gridr=_gridn;
+  unsigned ig = _gridn - 1u;
   //count the own node dofs on all levels
-  unsigned nvt = 0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned nvt_ig = _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
-    nvt += nvt_ig;
-  }
-
-  map < unsigned, unsigned > ghostMap;
+  unsigned nvt = _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
 
   // count the ghost node dofs and the own element dofs element on all levels
-  unsigned ghostMapCounter = 0;
   unsigned gridOffset = 0;
 
-  //unsigned ghost_counter = 0;
+  unsigned ghostMapCounter = 0;
+  map < unsigned, unsigned > ghostMap;
   unsigned counter=0;
-  unsigned nel=0;
-  for (unsigned ig = _gridr-1u; ig<_gridn; ig++) {
-    unsigned offset_iprc = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
-    for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == _gridn-1u ) {
-	nel++;
-	short unsigned ielt = _ml_mesh->GetLevel(ig)->GetElementType(iel);
-	for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->GetElementDofNumber(iel,index); j++) {
-          counter++;
-	  unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
-	  //unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(iel, loc_vtk_conn, index);
-	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetSolutionDof(loc_vtk_conn, iel, index);
-	  if( jnodeMetis < offset_iprc ){ // check if jnodeMetis is a ghost node
-	    if( ghostMap.find( gridOffset + jnodeMetis) == ghostMap.end()){
-	      ghostMap[ gridOffset + jnodeMetis] = ghostMapCounter;
-	      ghostMapCounter++;
-	    }
-	  }
-	}
+  unsigned elemetOffset = _ml_mesh->GetLevel(ig)->_elementOffset[_iproc];
+  unsigned elemetOffsetp1 = _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1];
+  unsigned nel= elemetOffsetp1 - elemetOffset;
+  unsigned dofOffset = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
+  for (int iel=elemetOffset; iel < elemetOffsetp1; iel++) {
+    short unsigned ielt = _ml_mesh->GetLevel(ig)->GetElementType(iel);
+    for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->GetElementDofNumber(iel,index); j++) {
+      counter++;
+      unsigned jdof = _ml_mesh->GetLevel(ig)->GetSolutionDof(j, iel, index);
+      if( jdof < dofOffset ){ // check if jnodeMetis is a ghost node
+        if( ghostMap.find(jdof) == ghostMap.end()){
+          ghostMap[jdof] = ghostMapCounter;
+          ghostMapCounter++;
+        }
       }
     }
-    gridOffset += _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
   }
+
 
   unsigned nvtOwned = nvt;
   nvt += ghostMap.size(); // total node dofs (own + ghost)
@@ -176,99 +165,79 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   Pfout << "    <PPoints>" << std::endl;
   Pfout << "      <PDataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\"/>" << std::endl;
 
-  vector < NumericVector* > mysol(_gridn);
-  for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    mysol[ig] = NumericVector::build().release();
+  NumericVector* mysol;
+  mysol = NumericVector::build().release();
 
-    if(n_processors()==1) { // IF SERIAL
-      mysol[ig]->init(_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs],
+  if(n_processors()==1) { // IF SERIAL
+    mysol->init(_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs],
 		      _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs],false,SERIAL);
-    }
-    else{ // IF PARALLEL
-      mysol[ig]->init(_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs],
-		      _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc],
-		      _ml_mesh->GetLevel(ig)->_ghostDofs[index][_iproc],false,GHOSTED );
-    }
+  }
+  else{ // IF PARALLEL
+    mysol->init(_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs],
+	        _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc],
+	        _ml_mesh->GetLevel(ig)->_ghostDofs[index][_iproc],false,GHOSTED );
   }
 
   // point pointer to common mamory area buffer of void type;
   float *var_coord= static_cast<float*>(buffer_void);
-  unsigned offset_ig = 0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned offset_iprc = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
-    unsigned nvt_ig = _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
-    for (int i = 0; i < 3; i++) {
-      if( !_surface ){
-	mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_topology->_Sol[i],
-			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
-	if( _graph && i == 2 ){
-	  unsigned indGraph=_ml_sol->GetIndex(_graphVariable.c_str());
-	  mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indGraph],
-                                 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indGraph)) );
-	}
-      }
-      else {
-        unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariables[i].c_str());
-        mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
-                               *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
-      }
-      for (unsigned ii = 0; ii < nvt_ig; ii++) {
-	var_coord[ offset_ig + ii*3 + i] = (*mysol[ig])(ii + offset_iprc);
-      }
-      if (_ml_sol != NULL && _moving_mesh  && _ml_mesh->GetLevel(0)->GetDimension() > i)  { // if moving mesh
-	unsigned indDXDYDZ=_ml_sol->GetIndex(_moving_vars[i].c_str());
-	mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indDXDYDZ],
-			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indDXDYDZ)) );
-	for (unsigned ii=0; ii<nvt_ig; ii++)
- 	  var_coord[ offset_ig + ii*3 + i] += (*mysol[ig])(ii + offset_iprc);
+
+  for (int i = 0; i < 3; i++) {
+    if( !_surface ){
+      mysol->matrix_mult(*_ml_mesh->GetLevel(ig)->_topology->_Sol[i],
+	                 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
+      if( _graph && i == 2 ){
+	unsigned indGraph=_ml_sol->GetIndex(_graphVariable.c_str());
+	mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indGraph],
+                           *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indGraph)) );
       }
     }
-    offset_ig += 3 * nvt_ig;
+    else {
+      unsigned indSurfVar=_ml_sol->GetIndex(_surfaceVariables[i].c_str());
+      mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
+                         *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
+    }
+    for (unsigned ii = 0; ii < nvtOwned; ii++) {
+      var_coord[ ii*3 + i] = (*mysol)(ii +  dofOffset);
+    }
+    if (_ml_sol != NULL && _moving_mesh  && _ml_mesh->GetLevel(0)->GetDimension() > i)  { // if moving mesh
+      unsigned indDXDYDZ=_ml_sol->GetIndex(_moving_vars[i].c_str());
+      mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indDXDYDZ],
+	                 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indDXDYDZ)) );
+      for (unsigned ii=0; ii<nvtOwned; ii++){
+ 	var_coord[ii*3 + i] += (*mysol)(ii +  dofOffset);
+      }
+    }
   }
+  unsigned offset_ig = 3 * nvtOwned;
+
   //print ghost nodes
   for (int i=0; i<3; i++) {
-    for (unsigned ig = _gridr-1u; ig<_gridn; ig++) {
-      if( !_surface ){
-	mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)-> _topology->_Sol[i],
-			       *_ml_mesh->GetLevel(ig)-> GetQitoQjProjection(index,2) );
-	if( _graph && i == 2){
-	  unsigned indGraphVar = _ml_sol->GetIndex(_graphVariable.c_str());
-	  mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indGraphVar],
-				 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indGraphVar)) );
-	}
+    if( !_surface ){
+      mysol->matrix_mult(*_ml_mesh->GetLevel(ig)-> _topology->_Sol[i],
+	                 *_ml_mesh->GetLevel(ig)-> GetQitoQjProjection(index,2) );
+      if( _graph && i == 2){
+	unsigned indGraphVar = _ml_sol->GetIndex(_graphVariable.c_str());
+	mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indGraphVar],
+	                   *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indGraphVar)) );
       }
-      else {
-        unsigned indSurfVar = _ml_sol->GetIndex(_surfaceVariables[i].c_str());
-        mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
-			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
-      }
-
     }
-    gridOffset = 0;
-    unsigned ig = _gridr-1u;
+    else {
+      unsigned indSurfVar = _ml_sol->GetIndex(_surfaceVariables[i].c_str());
+      mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indSurfVar],
+			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indSurfVar)) );
+    }
     for (std::map <unsigned, unsigned>::iterator it=ghostMap.begin(); it!=ghostMap.end(); ++it){
-      while( it->first >= gridOffset + _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs] ) {
-	gridOffset += _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
-	ig++;
-      }
-      var_coord[ offset_ig + 3*it->second + i ] = (*mysol[ig])( it->first - gridOffset);
+      var_coord[ offset_ig + 3*it->second + i ] = (*mysol)( it->first);
     }
   }
+
   for (int i=0; i<3; i++) {  // if moving mesh
     if (_ml_sol != NULL && _moving_mesh  && _ml_mesh->GetLevel(0)->GetDimension() > i)  {
       unsigned indDXDYDZ=_ml_sol->GetIndex(_moving_vars[i].c_str());
-      for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indDXDYDZ],
-			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indDXDYDZ)) );
-      }
-      gridOffset = 0;
-      unsigned ig = _gridr-1u;
+      mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[indDXDYDZ],
+	                 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(indDXDYDZ)) );
       for (std::map <unsigned, unsigned>::iterator it=ghostMap.begin(); it!=ghostMap.end(); ++it){
-	while( it->first >= gridOffset + _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs] ) {
-	  gridOffset += _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
-	  ig++;
-	}
-	var_coord[ offset_ig + 3*it->second + i ] += (*mysol[ig])( it->first - gridOffset);
+	var_coord[ offset_ig + 3*it->second + i ] += (*mysol)( it->first);
       }
     }
   }
@@ -302,26 +271,13 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   // point pointer to common mamory area buffer of void type;
   int *var_conn = static_cast <int*> (buffer_void);
   icount = 0;
-  //ghost_counter = 0;
-  gridOffset = 0;
-  unsigned offset_nvt=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    unsigned offset_iprc = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
-    unsigned nvt_ig= _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
-    for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == _gridn-1u ) {
-	for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->GetElementDofNumber(iel,index); j++) {
-	  unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
-	  //unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetMeshDof(iel, loc_vtk_conn, index);
-	  unsigned jnodeMetis = _ml_mesh->GetLevel(ig)->GetSolutionDof(loc_vtk_conn, iel, index);
-	  var_conn[icount] = (jnodeMetis >= offset_iprc )? offset_nvt + jnodeMetis - offset_iprc :
-							   nvtOwned + ghostMap[gridOffset+jnodeMetis];
-	  icount++;
-	}
-      }
+  for (int iel = elemetOffset; iel < elemetOffsetp1; iel++) {
+    for (unsigned j=0; j<_ml_mesh->GetLevel(ig)->GetElementDofNumber(iel,index); j++) {
+      unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
+      unsigned jdof = _ml_mesh->GetLevel(ig)->GetSolutionDof(loc_vtk_conn, iel, index);
+      var_conn[icount] = (jdof >= dofOffset )? jdof - dofOffset : nvtOwned + ghostMap[jdof];
+      icount++;
     }
-    offset_nvt+= nvt_ig;
-    gridOffset += _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
   }
 
   //print connectivity dimension
@@ -344,22 +300,15 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   fout  << "        <DataArray type=\"Int32\" Name=\"offsets\" format=\"binary\">" << std::endl;
   Pfout << "      <PDataArray type=\"Int32\" Name=\"offsets\" format=\"binary\"/>" << std::endl;
 
-
-
-  // point pointer to common mamory area buffer of void type;
+  // point pointer to common memory area buffer of void type;
   int *var_off=static_cast <int*>(buffer_void);
   icount = 0;
   int offset_el=0;
-  //print offset array
-
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == _gridn-1u ) {
-	offset_el += _ml_mesh->GetLevel(ig)->GetElementDofNumber(iel,index);
-        var_off[icount] = offset_el;
-	icount++;
-      }
-    }
+  // print offset array
+  for (int iel = elemetOffset; iel < elemetOffsetp1; iel++) {
+    offset_el += _ml_mesh->GetLevel(ig)->GetElementDofNumber(iel,index);
+    var_off[icount] = offset_el;
+    icount++;
   }
 
   //print offset dimension
@@ -377,9 +326,11 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   fout  << std::endl;
 
   fout  << "        </DataArray>" << std::endl;
+
   //--------------------------------------------------------------------------------------------------
 
   //--------------------------------------------------------------------------------------------------
+
   //Element format type : 23:Serendipity(8-nodes)  28:Quad9-Biquadratic
   fout  << "        <DataArray type=\"UInt16\" Name=\"types\" format=\"binary\">" << std::endl;
   Pfout << "      <PDataArray type=\"UInt16\" Name=\"types\" format=\"binary\"/>" << std::endl;
@@ -387,14 +338,10 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   // point pointer to common mamory area buffer of void type;
   unsigned short *var_type = static_cast <unsigned short*> (buffer_void);
   icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == _gridn-1u ) {
-	short unsigned ielt= _ml_mesh->GetLevel(ig)->GetElementType(iel);
-	var_type[icount] = femusToVtkCellType[index][ielt];
-	icount++;
-      }
-    }
+  for (int iel = elemetOffset; iel < elemetOffsetp1; iel++) {
+    short unsigned ielt= _ml_mesh->GetLevel(ig)->GetElementType(iel);
+    var_type[icount] = femusToVtkCellType[index][ielt];
+    icount++;
   }
 
   //print element format dimension
@@ -422,76 +369,6 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   Pfout << "    <PCellData Scalars=\"scalars\">" << std::endl;
 
   unsigned short* var_reg=static_cast <unsigned short*> (buffer_void);
-  //--------------------------------------------------------------------------------------------
-//   // Print Regions
-//   fout  << "        <DataArray type=\"UInt16\" Name=\"Regions\" format=\"binary\">" << std::endl;
-//   Pfout << "      <PDataArray type=\"UInt16\" Name=\"Regions\" format=\"binary\"/>" << std::endl;
-//
-//
-//   // point pointer to common mamory area buffer of void type;
-//   unsigned short* var_reg=static_cast <unsigned short*> (buffer_void);
-//
-//   icount=0;
-//   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-//     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-//       if ( ig == _gridn-1u ) {
-//   	var_reg[icount]= _ml_mesh->GetLevel(ig)->el->GetElementGroup(iel);
-// 	icount++;
-//       }
-//     }
-//   }
-//
-//   //print regions dimension
-//   cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);
-//   b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
-//   pt_char=&enc[0];
-//   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
-//
-//
-//   //print regions array
-//   cch = b64::b64_encode(&var_reg[0], dim_array_reg[0] , NULL, 0);
-//   b64::b64_encode(&var_reg[0], dim_array_reg[0], &enc[0], cch);
-//   pt_char=&enc[0];
-//   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
-//
-//   fout  << std::endl;
-//   fout  << "        </DataArray>" << std::endl;
-//
-//   //-----------------------------------------------------------------------------------------------------
-
-
-//   // Print Materials
-//   fout  << "        <DataArray type=\"UInt16\" Name=\"Material\" format=\"binary\">" << std::endl;
-//   Pfout << "      <PDataArray type=\"UInt16\" Name=\"Material\" format=\"binary\"/>" << std::endl;
-//
-//   icount=0;
-//   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-//     for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-//       if ( ig == _gridn-1u ) {
-//   	var_reg[icount]= _ml_mesh->GetLevel(ig)->el->GetElementMaterial(iel);
-// 	icount++;
-//       }
-//     }
-//   }
-//
-//   //print regions dimension
-//   cch = b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), NULL, 0);
-//   b64::b64_encode(&dim_array_reg[0], sizeof(dim_array_reg), &enc[0], cch);
-//   pt_char=&enc[0];
-//   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
-//
-//
-//   //print regions array
-//   cch = b64::b64_encode(&var_reg[0], dim_array_reg[0] , NULL, 0);
-//   b64::b64_encode(&var_reg[0], dim_array_reg[0], &enc[0], cch);
-//   pt_char=&enc[0];
-//   for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
-//
-//   fout  << std::endl;
-//   fout  << "        </DataArray>" << std::endl;
-//
-//   //-----------------------------------------------------------------------------------------------------
-
 
   // Print Metis Partitioning
   fout  << "        <DataArray type=\"UInt16\" Name=\"Metis partition\" format=\"binary\">" << std::endl;
@@ -501,13 +378,9 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   unsigned short* var_proc=static_cast <unsigned short*> (buffer_void);
 
   icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (int iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == _gridn-1u ) {
-        var_proc[icount]=_iproc;
-	icount++;
-      }
-    }
+  for (int iel = elemetOffset; iel < elemetOffsetp1; iel++) {
+    var_proc[icount]=_iproc;
+    icount++;
   }
 
   //print regions dimension
@@ -532,22 +405,19 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 
   //-------------------------------------------MATERIAL---------------------------------------------------------
 
-  NumericVector &material =  _ml_mesh->GetLevel(_gridn-1)->_topology->GetSolutionName("Material");
+  NumericVector &material =  _ml_mesh->GetLevel(ig)->_topology->GetSolutionName("Material");
 
   fout  << "        <DataArray type=\"Float32\" Name=\"" << "Material" <<"\" format=\"binary\">" << std::endl;
   Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Material" <<"\" format=\"binary\"/>" << std::endl;
   // point pointer to common memory area buffer of void type;
   float *var_el = static_cast< float*> (buffer_void);
   icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == _gridn-1u ) {
-	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel, 3);
-	var_el[icount] = (material)(iel_Metis);
-	icount++;
-      }
-    }
+  for (int iel = elemetOffset; iel < elemetOffsetp1; iel++) {
+    unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel, 3);
+    var_el[icount] = (material)(iel_Metis);
+    icount++;
   }
+
   //print solution on element dimension
   cch = b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), NULL, 0);
   b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), &enc[0], cch);
@@ -563,21 +433,17 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 
   //------------------------------------------------------GROUP-----------------------------------------------------------
 
-    NumericVector &group =  _ml_mesh->GetLevel(_gridn-1)->_topology->GetSolutionName("Group");
+  NumericVector &group =  _ml_mesh->GetLevel(ig)->_topology->GetSolutionName("Group");
 
   fout  << "        <DataArray type=\"Float32\" Name=\"" << "Group" <<"\" format=\"binary\">" << std::endl;
   Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Group" <<"\" format=\"binary\"/>" << std::endl;
   // point pointer to common memory area buffer of void type;
   var_el = static_cast< float*> (buffer_void);
   icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == _gridn-1u ) {
-	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel, 3);
-	var_el[icount] = (group)(iel_Metis);
-	icount++;
-      }
-    }
+  for (int iel = elemetOffset; iel < elemetOffsetp1; iel++) {
+    unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel, 3);
+    var_el[icount] = (group)(iel_Metis);
+    icount++;
   }
   //print solution on element dimension
   cch = b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), NULL, 0);
@@ -593,21 +459,17 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
   fout << "        </DataArray>" << std::endl;
 
   //-------------------------------------------------------TYPE--------------------------------------------------
-    NumericVector &type =  _ml_mesh->GetLevel(_gridn-1)->_topology->GetSolutionName("Type");
+  NumericVector &type =  _ml_mesh->GetLevel(ig)->_topology->GetSolutionName("Type");
 
   fout  << "        <DataArray type=\"Float32\" Name=\"" << "TYPE" <<"\" format=\"binary\">" << std::endl;
   Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "TYPE" <<"\" format=\"binary\"/>" << std::endl;
   // point pointer to common memory area buffer of void type;
   var_el = static_cast< float*> (buffer_void);
   icount=0;
-  for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    for (unsigned iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-      if ( ig == _gridn-1u ) {
-	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel, 3);
-	var_el[icount] = (type)(iel_Metis);
-	icount++;
-      }
-    }
+  for (int iel = elemetOffset; iel < elemetOffsetp1; iel++) {
+    unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel, 3);
+    var_el[icount] = (type)(iel_Metis);
+    icount++;
   }
   //print solution on element dimension
   cch = b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), NULL, 0);
@@ -624,9 +486,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 
   //END SARA&GIACOMO
 
-
-
-    if (_ml_sol == NULL) {
+  if (_ml_sol == NULL) {
     delete [] var_proc;
   }
 
@@ -644,15 +504,11 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 	// point pointer to common memory area buffer of void type;
 	float *var_el = static_cast< float*> (buffer_void);
 	icount=0;
-	for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	  for (unsigned iel=_ml_mesh->GetLevel(ig)->_elementOffset[_iproc]; iel < _ml_mesh->GetLevel(ig)->_elementOffset[_iproc+1]; iel++) {
-	    if ( ig == _gridn-1u ) {
-	      unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel, _ml_sol->GetSolutionType(i));
-	      var_el[icount] = (*_ml_sol->GetSolutionLevel(ig)->_Sol[i])(iel_Metis);
-	      icount++;
-	    }
-	  }
-	}
+	for (int iel = elemetOffset; iel < elemetOffsetp1; iel++) {
+          unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0, iel, _ml_sol->GetSolutionType(i));
+	  var_el[icount] = (*_ml_sol->GetSolutionLevel(ig)->_Sol[i])(iel_Metis);
+	  icount++;
+        }
 
 	//print solution on element dimension
 	cch = b64::b64_encode(&dim_array_elvar[0], sizeof(dim_array_elvar), NULL, 0);
@@ -671,12 +527,6 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
       }
     } //end _ml_sol != NULL
   }
-
-
-
-
-
-
 
   fout  << "      </CellData>" << std::endl;
   Pfout << "    </PCellData>" << std::endl;
@@ -703,29 +553,19 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
       pt_char=&enc[0];
       for( unsigned i =0; i<cch;i++,pt_char++) fout << *pt_char;
 
-      unsigned offset_ig = 0;
-      for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-	unsigned offset_iprc = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
-	unsigned nvt_ig = _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
+      unsigned offset_iprc = _ml_mesh->GetLevel(ig)->_dofOffset[index][_iproc];
+      unsigned nvt_ig = _ml_mesh->GetLevel(ig)->_ownSize[index][_iproc];
 
-	mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[solIndex],
-			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(solIndex)) );
+      mysol->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[solIndex],
+	                 *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,_ml_sol->GetSolutionType(solIndex)) );
 
-	for (unsigned ii = 0; ii < nvt_ig; ii++) {
-	  var_nd[ offset_ig + ii ] = (*mysol[ig])(ii + offset_iprc);
-	}
-	offset_ig += nvt_ig;
+      for (unsigned ii = 0; ii < nvt_ig; ii++) {
+	var_nd[ ii ] = (*mysol)(ii + offset_iprc);
       }
+      unsigned offset_ig = nvtOwned;
 
-
-      gridOffset = 0;
-      unsigned ig = _gridr-1u;
       for (std::map <unsigned, unsigned>::iterator it=ghostMap.begin(); it!=ghostMap.end(); ++it){
-	while( it->first >= gridOffset + _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs] ) {
-	  gridOffset += _ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
-	  ig++;
-	}
-	var_nd[ offset_ig + it->second ] = (*mysol[ig])( it->first - gridOffset);
+	var_nd[ offset_ig + it->second ] = (*mysol)( it->first - gridOffset);
       }
 
       cch = b64::b64_encode(&var_nd[0], dim_array_ndvar [0], NULL, 0);
@@ -756,9 +596,7 @@ void VTKWriter::Pwrite(const std::string output_path, const char order[], const 
 
   //-----------------------------------------------------------------------------------------------------
   //free memory
-  for(unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-    delete mysol[ig];
-  }
+  delete mysol;
 
   //--------------------------------------------------------------------------------------------------------
   return;

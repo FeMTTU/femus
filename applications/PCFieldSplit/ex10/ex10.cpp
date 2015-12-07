@@ -100,27 +100,59 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
+  system.AddSolutionToSystemPDE("T");
+  
   system.AddSolutionToSystemPDE("P");
 
   if (dim == 3) system.AddSolutionToSystemPDE("W");
 
-  system.AddSolutionToSystemPDE("T");
   
   
-  std::vector < unsigned > field(3);
-  field[0] = system.GetSolPdeIndex("U");
-  field[1] = system.GetSolPdeIndex("V");
-  field[2] = system.GetSolPdeIndex("P");
-  FieldSpliTreeStructure FS_1( GMRES, ILU_PRECOND, field);
   
-  //std::vector < unsigned > field2;
+  std::vector < unsigned > fieldNS(3);
+  fieldNS[0] = system.GetSolPdeIndex("U");
+  fieldNS[1] = system.GetSolPdeIndex("V");
+  fieldNS[2] = system.GetSolPdeIndex("P");
+  FieldSpliTreeStructure FS_NS( GMRES, ILU_PRECOND, fieldNS);
   
-  //std::cout <<" solver = " << FS_1.GetSolver() << std::endl;
-  //std::cout <<" preconditioner = " << FS_1.GetPreconditioner() << std::endl; 
-  //std::cout <<" splits = " << FS_1.GetNumberOfSplits() << std::endl;
-  //field2 = FS_1.GetFields(0);
-  //field2 = FS_1.GetAllFields();
-
+  for(unsigned i = 0; i<FS_NS.GetNumberOfSplits(); i++){
+    const std::vector < unsigned > field =  FS_NS.GetFieldsInSplit(i);
+    for(int j = 0; j < field.size(); j++) std::cout << field[j] <<std::endl;
+  }
+  
+  const std::vector < unsigned >& allfieldNS =  FS_NS.GetAllFields();
+  for(int j = 0; j < allfieldNS.size(); j++) std::cout << allfieldNS[j] << " ";
+  std::cout<<std::endl;
+  
+  
+  std::vector < unsigned > fieldT(1);
+  fieldT[0] = system.GetSolPdeIndex("T");
+  FieldSpliTreeStructure FS_T( GMRES, ILU_PRECOND, fieldT);
+  
+  for(unsigned i = 0; i<FS_T.GetNumberOfSplits(); i++){
+    const std::vector < unsigned > field =  FS_T.GetFieldsInSplit(i);
+    for(int j = 0; j < field.size(); j++) std::cout << field[j] <<std::endl;
+  }
+  const std::vector < unsigned > & allfieldT =  FS_T.GetAllFields();
+  for(int j = 0; j < allfieldT.size(); j++) std::cout << allfieldT[j] << " ";
+  std::cout<<std::endl;
+  
+  std::vector < FieldSpliTreeStructure > FS;
+  
+  FS.reserve(2);
+  FS.push_back(FS_NS);
+  FS.push_back(FS_T);
+  FieldSpliTreeStructure FS_NST( GMRES, ILU_PRECOND, FS);
+ 
+  for(unsigned i = 0; i<FS_NST.GetNumberOfSplits(); i++){
+    const std::vector < unsigned > field =  FS_NST.GetFieldsInSplit(i);
+    for(int j = 0; j < field.size(); j++) std::cout << field[j] <<std::endl;
+  }
+  const std::vector < unsigned > & allfieldNST =  FS_NST.GetAllFields();
+  for(int j = 0; j < allfieldNST.size(); j++) std::cout << allfieldNST[j] << " ";
+  std::cout<<std::endl;
+  
+  
   //system.SetMgSmoother(GMRES_SMOOTHER);
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
   //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
@@ -150,7 +182,7 @@ int main(int argc, char** args) {
   system.SetElementBlockNumber(4);
   //system.SetDirichletBCsHandling(ELIMINATION);
   //system.solve();
-  system.MGsolve();
+  //system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

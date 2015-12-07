@@ -128,8 +128,8 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   FillISvector(partition);
   partition.resize(0);
 
+  el->BuildElementNearVertex();
 
-  BuildAdjVtx();
   Buildkel();
 
   _topology = new Solution(this);
@@ -173,7 +173,17 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   group.close();
   type.close();
 
-  el->deleteParallelizedQuantities();
+  _topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
+  _topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+
+
+  el->BuildLocalElementNearVertex();
+  el->DeleteElementNearVertex();
+
+  el->DeleteGroupAndMaterial();
+  el->DeleteElementType();
+
+
 
 };
 
@@ -204,7 +214,7 @@ void Mesh::GenerateCoarseBoxMesh(
   FillISvector(partition);
   partition.resize(0);
 
-  BuildAdjVtx();
+  el->BuildElementNearVertex();
 
   Buildkel();
 
@@ -249,27 +259,19 @@ void Mesh::GenerateCoarseBoxMesh(
   group.close();
   type.close();
 
-  el->deleteParallelizedQuantities();
+  _topology->AddSolution("solidMrk",LAGRANGE, SECOND,1 , 0);
+  _topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+
+  el->BuildLocalElementNearVertex();
+  el->DeleteElementNearVertex();
+
+  el->DeleteGroupAndMaterial();
+  el->DeleteElementType();
+
+
 }
 
-
-/**
- * This function searches all the elements around all the vertices
- **/
-void Mesh::BuildAdjVtx() {
-  el->AllocateVertexElementMemory();
-  for (unsigned iel=0; iel<_nelem; iel++) {
-    for (unsigned inode=0; inode < el->GetElementDofNumber(iel,0); inode++) {
-      unsigned irow=el->GetElementVertexIndex(iel,inode)-1u;
-      unsigned jcol=0;
-      while ( 0 != el->GetVertexElementIndex(irow,jcol) ) jcol++;
-      el->SetVertexElementIndex(irow,jcol,iel+1u);
-    }
-  }
-}
-
-/**
- * This function stores the element adiacent to the element face (iel,iface)
+/** This function stores the element adiacent to the element face (iel,iface)
  * and stores it in kel[iel][iface]
  **/
 void Mesh::Buildkel() {
@@ -279,8 +281,8 @@ void Mesh::Buildkel() {
         unsigned i1=el->GetFaceVertexIndex(iel,iface,0);
         unsigned i2=el->GetFaceVertexIndex(iel,iface,1);
         unsigned i3=el->GetFaceVertexIndex(iel,iface,2);
-        for (unsigned j=0; j< el->GetVertexElementNumber(i1-1u); j++) {
-          unsigned jel= el->GetVertexElementIndex(i1-1u,j)-1u;
+        for (unsigned j=0; j< el->GetElementNearVertexNumber(i1-1u); j++) {
+          unsigned jel = el->GetElementNearVertex(i1-1u,j);
           if (jel > iel) {
             for (unsigned jface=0; jface<el->GetElementFaceNumber(jel); jface++) {
               if ( el->GetFaceElementIndex(jel,jface) <= 0) {
@@ -312,27 +314,29 @@ void Mesh::Buildkel() {
 
 
 void Mesh::AllocateAndMarkStructureNode() {
-  el->AllocateNodeRegion();
 
-  vector <double> localizedElementMaterial;
-  _topology->_Sol[_materialIndex]->localize_to_all(localizedElementMaterial);
-  
-   vector <double> localizedElementType;
-  _topology->_Sol[_typeIndex]->localize_to_all(localizedElementType);
 
-  for (unsigned iel=0; iel<_nelem; iel++) {
 
-    //int flag_mat = el->GetElementMaterial(iel);
-    int flag_mat = static_cast < short unsigned > (localizedElementMaterial[iel]+ 0.25);
+  _topology->ResizeSolutionVector("solidMrk");
+
+  NumericVector &NodeMaterial =  _topology->GetSolutionName("solidMrk");
+
+  NodeMaterial.zero();
+
+  for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
+    int flag_mat = GetElementMaterial(iel);
 
     if (flag_mat==4) {
-      unsigned nve = el->GetNVE(localizedElementType[iel],2);
+      unsigned elementType = GetElementType(iel);
+      unsigned nve = el->GetNVE(elementType,2);
       for ( unsigned i=0; i<nve; i++) {
-        unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
-        el->SetNodeRegion(inode, 1);
+        unsigned inode = GetSolutionDof(i, iel, 2);
+	NodeMaterial.set( inode, 1 );
       }
     }
   }
+  NodeMaterial.close();
+
 }
 
 
@@ -548,6 +552,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     }
   }
 
+  el->SetElementOffsets(_elementOffset[_iproc], _elementOffset[_iproc+1]);
 
 }
 
@@ -775,21 +780,28 @@ void Mesh::BuildCoarseToFineProjection(const unsigned& solType){
 
 
 short unsigned Mesh::GetRefinedElementIndex(const unsigned &iel) const{
-  return static_cast <short unsigned> ( (*_topology->_Sol[_amrIndex])(iel) + 0.5);
+  return static_cast <short unsigned> ( (*_topology->_Sol[_amrIndex])(iel) + 0.25);
 }
 
 short unsigned Mesh::GetElementGroup(const unsigned int& iel) const{
-  return static_cast <short unsigned> ( (*_topology->_Sol[_groupIndex])(iel) + 0.5);
+  return static_cast <short unsigned> ( (*_topology->_Sol[_groupIndex])(iel) + 0.25);
 }
 
 short unsigned Mesh::GetElementMaterial(const unsigned int& iel) const{
-  return static_cast <short unsigned> ( (*_topology->_Sol[_materialIndex])(iel) + 0.5);
+  return static_cast <short unsigned> ( (*_topology->_Sol[_materialIndex])(iel) + 0.25);
 }
 
 short unsigned Mesh::GetElementType(const unsigned int& iel) const{
-  return static_cast <short unsigned> ( (*_topology->_Sol[_typeIndex])(iel) + 0.5);
+  return static_cast <short unsigned> ( (*_topology->_Sol[_typeIndex])(iel) + 0.25);
 }
 
+bool Mesh::GetSolidMark(const unsigned int& inode) const{
+  return static_cast <short unsigned> ( (*_topology->_Sol[_solidMarkIndex])(inode) + 0.25);
+}
+
+bool Mesh::GetIfElementFatherIsRefined(const unsigned &iel) const{
+  return static_cast <short unsigned> ( (*_topology->_Sol[_elementFatherIndex])(iel) + 0.25);
+}
 
 } //end namespace femus
 
