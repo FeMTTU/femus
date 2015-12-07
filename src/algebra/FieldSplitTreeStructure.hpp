@@ -11,30 +11,30 @@ namespace femus {
   class FieldSpliTreeStructure{
   public:
     //single split constructor
-    FieldSpliTreeStructure( SolverType solver, PreconditionerType preconditioner, const std::vector < unsigned > &fields){
+    FieldSpliTreeStructure( SolverType solver, PreconditionerType preconditioner, const std::vector < unsigned > fields){
       _solver = solver;
       _preconditioner = preconditioner;
       _numberOfSplits = 1;
-      _branch.resize(0);
+      _branch.resize(0); 
+      // _branch.resize(1);
       
       _fields.resize(1);
       _fields[0] = fields;
      
       std::map < unsigned, bool > mymap;
       for(unsigned i = 0; i < _numberOfSplits; i++ ){
-	for(unsigned j = 0; j < _fields[i].size(); i++){
+	for(unsigned j=0; j < _fields[i].size(); j++){ //I change "i++" to j++
 	  mymap[_fields[i][j]] = true;
 	}
       } 
-      
-      _allFields.resize( mymap.size() );
+     
+      _allFields.resize(mymap.size() );
       
       unsigned j = 0;
       for (std::map<unsigned, bool>::iterator it = mymap.begin(); it != mymap.end(); ++it){
 	_allFields[j] = it->first;
 	j++;
       }
-      
     };
     
     //multiple split constructor
@@ -42,14 +42,13 @@ namespace femus {
       
       _solver = solver;
       _preconditioner = preconditioner;
-      
       _numberOfSplits = _branch.size();
       
       _branch.resize(_numberOfSplits);
       _fields.resize(_numberOfSplits);
       for(unsigned i = 0; i < _numberOfSplits; i++ ){
 	_branch[i] = branch[i];
-	for ( unsigned j = 0; _branch[i]->_allFields.size(); j++){
+	for ( unsigned j = 0; _branch[i]->_allFields.size(); j++){ // we do not specify the size of _allFields.size()
 	  _fields[i][j] = _branch[i]->_allFields[j];
 	}
       }
@@ -57,7 +56,7 @@ namespace femus {
       
       std::map < unsigned, bool > mymap;
       for(unsigned i = 0; i < _numberOfSplits; i++ ){
-	for(unsigned j=0; j < _fields[i].size(); i++){
+	for(unsigned j=0; j < _fields[i].size(); j++){ // I change the "i++" to "j++"
 	  mymap[_fields[i][j]] = true;
 	}
       } 
@@ -74,16 +73,24 @@ namespace femus {
   SolverType GetSolver(){return _solver;} 
   PreconditionerType GetPreconditioner(){return _preconditioner;} 
   unsigned GetNumberOfSplits(){return _numberOfSplits;} 
-  FieldSpliTreeStructure* GetBranch(const unsigned &i){ return _branch[i];}
-  std::vector < unsigned > GetFields(const unsigned &i) {return _fields[i];}
-  std::vector < unsigned > GetAllFields() {return _allFields;}
+  
+  FieldSpliTreeStructure* GetBranch(const unsigned &i){return _branch[i];}
+  std::vector < unsigned > & GetFields(const unsigned &i) {return _fields[i];} 
+  // _fields[i][j] is a vector
+  // std::vector < unsigned > GetFields(const unsigned &i) {return _fields[i];} 
+  std::vector < unsigned > & GetAllFields() {return _allFields;} 
+  // Vector <unsigned> GetAllFields() {return _allFields}
   
   private:
       
     SolverType _solver;
     PreconditionerType _preconditioner; 
     unsigned _numberOfSplits;
+<<<<<<< HEAD
     std::vector < FieldSpliTreeStructure* > _branch; // I do not know this part
+=======
+    std::vector < FieldSpliTreeStructure* > _branch; // I do not understand this part?
+>>>>>>> 0f7de64759cfadee1098dfaefa642a9cf8eb0fa9
     std::vector < std::vector < unsigned > > _fields;
     std::vector < unsigned > _allFields;
   };
