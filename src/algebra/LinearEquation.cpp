@@ -76,10 +76,10 @@ unsigned LinearEquation::GetSystemDof(const unsigned &index_sol, const unsigned 
 				  const unsigned &i, const unsigned &iel) const {
 
   unsigned soltype =  _SolType[index_sol];
-  unsigned idof_metis = _msh->GetSolutionDof(i, iel, soltype);
+  unsigned idof= _msh->GetSolutionDof(i, iel, soltype);
 
-  unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype);
-  return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->_dofOffset[soltype][isubdom];
+  unsigned isubdom = _msh->IsdomBisectionSearch(idof, soltype);
+  return KKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
 }
 
 

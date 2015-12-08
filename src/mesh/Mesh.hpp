@@ -36,6 +36,8 @@ namespace femus {
 using std::vector;
 class Solution;
 
+class elem;
+
 /**
  * The mesh class
 */
@@ -98,35 +100,20 @@ public:
     bool GetIfElementFatherIsRefined(const unsigned &iel) const;
 
     /** Only for parallel */
-    unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const {
-      return el->GetNVE(GetElementType(iel), type);
-    }
+    unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const;
 
     /** Only for parallel */
-    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const{
-      unsigned kelt = GetElementType(kel);
-      const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
-      const unsigned felt = FELT[kelt][jface >= GetElementFaceNumber(kel,0)];
-      return felt;
-    }
+    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
 
     /** Only for parallel */
-    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const {
-      return el->GetIG(GetElementType(iel), iface, jnode);
-    }
+    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const;
 
 
     /** Only for parallel */
-    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
-      assert( type < 3 );
-      return el->GetNFACENODES(GetElementType(iel), jface, type);
-    }
+    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
 
     /** Only for parallel */
-    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const {
-      return el->GetNFC(GetElementType(iel), type);
-    }
-
+    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const;
 
 
     /** Set the grid number */

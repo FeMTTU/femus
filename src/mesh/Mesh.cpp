@@ -438,7 +438,7 @@ void Mesh::FillISvector(vector < int > &partition) {
 	unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel,k-1);
 	unsigned nodeEnd = el->GetElementDofNumber(iel,k);
 	for ( unsigned inode = nodeStart; inode < nodeEnd; inode++) {
-	  unsigned ii = el->GetElementVertexIndex(iel,inode);
+	  unsigned ii = el->GetElementDofIndex(iel,inode);
 	  if(partition[ii] > isdom) {
 	    partition[ii] = isdom;
 	    mapping[ii] = counter;
@@ -479,7 +479,7 @@ void Mesh::FillISvector(vector < int > &partition) {
       std::map < unsigned, bool > ghostMap;
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
 	for (unsigned inode = 0; inode < el->GetElementDofNumber(iel,k); inode++) {
-	  unsigned ii = el->GetElementVertexIndex(iel,inode);
+	  unsigned ii = el->GetElementDofIndex(iel,inode);
 	  if(ii < _dofOffset[2][isdom]){
 	    ghostMap[ii] = true;
 	  }
@@ -802,6 +802,42 @@ bool Mesh::GetSolidMark(const unsigned int& inode) const{
 bool Mesh::GetIfElementFatherIsRefined(const unsigned &iel) const{
   return static_cast <short unsigned> ( (*_topology->_Sol[_elementFatherIndex])(iel) + 0.25);
 }
+
+
+
+ /** Only for parallel */
+    unsigned Mesh::GetElementDofNumber(const unsigned &iel, const unsigned &type) const {
+      return el->GetNVE(GetElementType(iel), type);
+    }
+
+    /** Only for parallel */
+    const unsigned Mesh::GetElementFaceType(const unsigned &kel, const unsigned &jface) const{
+      unsigned kelt = GetElementType(kel);
+      const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
+      const unsigned felt = FELT[kelt][jface >= GetElementFaceNumber(kel,0)];
+      return felt;
+    }
+
+    /** Only for parallel */
+    unsigned Mesh::GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const {
+      return el->GetIG(GetElementType(iel), iface, jnode);
+    }
+
+
+    /** Only for parallel */
+    unsigned Mesh::GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
+      assert( type < 3 );
+      return el->GetNFACENODES(GetElementType(iel), jface, type);
+    }
+
+    /** Only for parallel */
+    unsigned Mesh::GetElementFaceNumber(const unsigned &iel, const unsigned &type) const {
+      return el->GetNFC(GetElementType(iel), type);
+    }
+
+
+
+
 
 } //end namespace femus
 

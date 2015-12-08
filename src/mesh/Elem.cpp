@@ -45,23 +45,23 @@ elem::elem(const unsigned &other_nel) {
   _elementGroup = new unsigned short [ _nel ];
   _elementMaterial = new unsigned short [ _nel ];
 
-  _kvert = new unsigned * [ _nel ];
+  _elementDof = new unsigned * [ _nel ];
   _elementNearFace = new int *[ _nel ];
 
-  _kvertSize = _nel*NVE[0][2];
+  _elementDofSize = _nel*NVE[0][2];
   _elementNearFaceSize = _nel*NFC[0][1];
 
-  _kvertMemory=new unsigned [_kvertSize];
+  _elementDofMemory=new unsigned [_elementDofSize];
 
   _elementNearFaceMemory=new int [_elementNearFaceSize];
   for (unsigned i=0; i<_elementNearFaceSize; i++)
     _elementNearFaceMemory[i]=-1;
 
-  unsigned *pt_u = _kvertMemory;
+  unsigned *pt_u = _elementDofMemory;
   int *pt_i = _elementNearFaceMemory;
 
   for (unsigned i=0; i<_nel; i++) {
-    _kvert[i] = pt_u;
+    _elementDof[i] = pt_u;
     pt_u += NVE[0][2];
     _elementNearFace[i] = pt_i;
     pt_i += NFC[0][1];
@@ -90,13 +90,13 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
 
   memset( _fatherElementIsRefined, 0, _nel*sizeof(bool) );
 
-  _kvert = new unsigned * [_nel];
+  _elementDof = new unsigned * [_nel];
   _elementNearFace = new int * [_nel];
 
-  _kvertSize = 0;
+  _elementDofSize = 0;
   _elementNearFaceSize = 0;
   for (unsigned i = 0; i < N_GEOM_ELS; i++) {
-    _kvertSize += elc->GetRefinedElementTypeNumber(i) * refindex * NVE[i][2];
+    _elementDofSize += elc->GetRefinedElementTypeNumber(i) * refindex * NVE[i][2];
     _elementNearFaceSize += elc->GetRefinedElementTypeNumber(i) * refindex * NFC[i][1];
 
   }
@@ -105,18 +105,18 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
     if( static_cast < short unsigned > ( coarseAmrVector[iel] + 0.25 ) == 0){
        //unsigned type = elc->GetElementType(iel);
        unsigned type = static_cast < short unsigned > ( coarseElementType[iel] + 0.25 );
-       _kvertSize += NVE[type][2];
+       _elementDofSize += NVE[type][2];
        _elementNearFaceSize += NFC[type][1];
     }
   }
 
-  _kvertMemory = new unsigned [ _kvertSize ];
+  _elementDofMemory = new unsigned [ _elementDofSize ];
   _elementNearFaceMemory = new int [ _elementNearFaceSize ];
   for (unsigned i=0; i < _elementNearFaceSize; i++)
     _elementNearFaceMemory[i] = -1;
 
   int *pt_i = _elementNearFaceMemory;
-  unsigned *pt_u = _kvertMemory;
+  unsigned *pt_u = _elementDofMemory;
   unsigned jel = 0;
   for (unsigned iel = 0; iel<elc->GetElementNumber(); iel++) {
     short unsigned elemt = static_cast < short unsigned > ( coarseElementType[iel] + 0.25 );
@@ -125,7 +125,7 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
       increment = NRE[elemt];
     }
     for (unsigned j = 0; j < increment; j++) {
-      _kvert[jel+j] = pt_u;
+      _elementDof[jel+j] = pt_u;
       pt_u += NVE[elemt][2];
       _elementNearFace[jel+j] = pt_i;
       pt_i += NFC[ elemt ][1];
@@ -209,22 +209,22 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
   unsigned **tempKvert;
   unsigned *tempKvertMemory;
 
-  tempKvert = _kvert;
-  tempKvertMemory = _kvertMemory;
+  tempKvert = _elementDof;
+  tempKvertMemory = _elementDofMemory;
 
-  _kvert = new unsigned * [_nel];
-  _kvertMemory = new unsigned [ _kvertSize ];
+  _elementDof = new unsigned * [_nel];
+  _elementDofMemory = new unsigned [ _elementDofSize ];
 
-  unsigned *ptKvert= _kvertMemory;
+  unsigned *ptKvert= _elementDofMemory;
 
   for(unsigned iel=0; iel<_nel; iel++){
-    _kvert[iel] = ptKvert;
+    _elementDof[iel] = ptKvert;
     ptKvert +=  NVE[_elementType[iel]][2];
   }
 
   for(unsigned iel=0; iel<_nel; iel++){
     for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
-      _kvert[iel][inode] = tempKvert[elementMapping[iel]][inode];
+      _elementDof[iel][inode] = tempKvert[elementMapping[iel]][inode];
     }
   }
 
@@ -251,26 +251,30 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
 void elem::ReorderMeshNodes( const std::vector < unsigned > &nodeMapping){
   for(unsigned iel=0; iel<_nel; iel++){
     for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
-      _kvert[iel][inode] =  nodeMapping[ _kvert[iel][inode] ];
+      _elementDof[iel][inode] =  nodeMapping[ _elementDof[iel][inode] ];
     }
   }
   
-//   for(unsigned i = 0; i < _kvertSize; i++){
-//     _kvertMemory[i] =  nodeMapping[ _kvertMemory[i] ];
+//   for(unsigned i = 0; i < _elementDofSize; i++){
+//     _elementDofMemory[i] =  nodeMapping[ _elementDofMemory[i] ];
 //   }
   
 }
 
 
 elem::~elem() {
-    delete [] _kvertMemory;
-    delete [] _kvert;
+    delete [] _elementDofMemory;
+    delete [] _elementDof;
     delete [] _elementNearFaceMemory;
     delete [] _elementNearFace;
 
     if(_childElemFlag){
       delete [] _childElemMemory;
       delete [] _childElem;
+      
+      delete [] _childElemDofMemory;
+      delete [] _childElemDofMemoryPointer;
+      delete [] _childElemDof;
     }
   }
 
@@ -304,7 +308,7 @@ unsigned elem::GetElementDofNumber(const unsigned &iel,const unsigned &type) con
  * Return the local to global dof
  **/
 unsigned elem::GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &SolType)const {
-  unsigned Dof=(SolType<3)?GetElementVertexIndex(iel,inode):(_nel*inode)+iel;
+  unsigned Dof=( SolType < 3 ) ? GetElementDofIndex(iel,inode):(_nel*inode)+iel;
   return Dof;
 }
 
@@ -312,15 +316,15 @@ unsigned elem::GetMeshDof(const unsigned iel,const unsigned &inode,const unsigne
 /**
  * Set the local->global node number
  **/
-void elem::SetElementVertexIndex(const unsigned &iel,const unsigned &inode, const unsigned &value) {
-  _kvert[iel][inode]=value;
+void elem::SetElementDofIndex(const unsigned &iel,const unsigned &inode, const unsigned &value) {
+  _elementDof[iel][inode]=value;
 }
 
 /**
  * Return the local->global face node number
  **/
 unsigned elem::GetFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &inode)const {
-  return _kvert[iel][ig[_elementType[iel]][iface][inode]];
+  return _elementDof[iel][ig[_elementType[iel]][iface][inode]];
 }
 
 /**
@@ -466,7 +470,7 @@ void elem::SetElementGroupNumber(const unsigned &value) {
 void elem::BuildLocalElementNearVertex(){
   for (unsigned iel = _elementOffset; iel < _elementOffsetP1; iel++) {
     for (unsigned i = 0; i < GetElementDofNumber(iel, 0); i++) {
-      unsigned inode = GetElementVertexIndex(iel,i);
+      unsigned inode = GetElementDofIndex(iel,i);
       unsigned inodesize = 1;
       if( _localElementNearVertexMap.find(inode) != _localElementNearVertexMap.end() ){
         inodesize = _localElementNearVertexMap[inode].size();
@@ -495,7 +499,7 @@ void elem::BuildElementNearVertex() {
   }
   for (unsigned iel=0; iel<_nel; iel++) {
     for (unsigned inode=0; inode < GetElementDofNumber(iel,0); inode++) {
-      _elementNearVertexNumber[ GetElementVertexIndex(iel,inode)]++;
+      _elementNearVertexNumber[ GetElementDofIndex(iel,inode)]++;
     }
   }
 
@@ -511,7 +515,7 @@ void elem::BuildElementNearVertex() {
 
   for (unsigned iel = 0; iel < _nel; iel++) {
     for (unsigned inode = 0; inode < GetElementDofNumber(iel,0); inode++) {
-      unsigned irow = GetElementVertexIndex(iel,inode);
+      unsigned irow = GetElementDofIndex(iel,inode);
       unsigned j = 0;
       while ( _nel != _elementNearVertex[irow][j] ) j++;
        _elementNearVertex[irow][j]=iel;
@@ -562,34 +566,76 @@ unsigned elem::GetIndex(const char name[]) const {
 }
 
 
-void elem::AllocateChildrenElement(const unsigned &refindex, const std::vector < double > &localizedAmrVector){
+void elem::AllocateChildrenElement(const unsigned &refindex, Mesh* msh){
   if(_childElemFlag){
     delete [] _childElemMemory;
     delete [] _childElem;
+    
+    delete [] _childElemDofMemory;
+    delete [] _childElemDofMemoryPointer;
+    delete [] _childElemDof;
   }
 
   unsigned localNel = _elementOffsetP1 - _elementOffset;
   unsigned localNelr = 0;
 
+  
+  _childElemDofMemorySize = 0;
   for(unsigned iel = _elementOffset; iel < _elementOffsetP1; iel++){
-    if ( static_cast < short unsigned > (localizedAmrVector[iel] + 0.25) == 1 ){
+    unsigned elementType = msh->GetElementType(iel);
+    if ( msh->GetRefinedElementIndex(iel) == 1){
       localNelr++;
+      _childElemDofMemorySize += refindex * NVE[elementType][2];
+    }
+    else{
+      _childElemDofMemorySize += NVE[elementType][2];
     }
   }
 
   _childElemSize = localNelr*refindex + (localNel - localNelr);
-  _childElemMemory=new unsigned [_childElemSize];
 
+  _childElemMemory = new unsigned [_childElemSize];
   memset( _childElemMemory, 0, _childElemSize * sizeof(unsigned) );
-
   _childElem = new unsigned* [localNel];
+  
+  _childElemDofMemory = new unsigned [_childElemDofMemorySize];
+  _childElemDofMemoryPointer = new unsigned *[_childElemSize];
+  _childElemDof = new unsigned **[localNel];
 
-  unsigned *ptr=_childElemMemory;
-  for(int i=0; i<localNel; i++){
-    _childElem[i]=ptr;
-    if( static_cast < short unsigned > ( localizedAmrVector[_elementOffset + i] + 0.25) == 1 ) ptr+=refindex;
-    else ptr+=1;
+  
+  unsigned *ptr = _childElemMemory;
+  
+  unsigned *ptr1  = _childElemDofMemory;
+  unsigned **pptr = _childElemDofMemoryPointer;
+  unsigned counter = 0;
+  
+  for(unsigned i=0; i < localNel; i++){
+    _childElem[i] = ptr;
+    
+    unsigned elementType = msh->GetElementType(_elementOffset + i);
+    
+    _childElemDof[i] = pptr; 
+    if ( msh->GetRefinedElementIndex(_elementOffset + i) == 1){
+      ptr += refindex;
+      
+      pptr += refindex;
+      for(unsigned j=0; j<refindex; j++){
+	_childElemDofMemoryPointer[counter] = ptr1;
+	counter++;
+	ptr1 += NVE[elementType][2];
+      }
+    }
+    else {
+      ptr += 1;
+      
+      pptr += 1;
+      _childElemDofMemoryPointer[counter] = ptr1;
+      counter++;
+      ptr1 += NVE[elementType][2];
+       
+    }
   }
+    
   _childElemFlag = true;
   return;
 }

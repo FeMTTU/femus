@@ -18,8 +18,12 @@
 
 #include <vector>
 #include <map>
+
+#include "Mesh.hpp"
+
 namespace femus {
 
+class Mesh;
 /**
  * The elem class
 */
@@ -57,12 +61,12 @@ public:
     unsigned GetElementDofNumber(const unsigned &iel,const unsigned &type) const;
 
     /** Return the local->global node number */
-    unsigned GetElementVertexIndex(const unsigned &iel,const unsigned &inode)const {
-        return _kvert[iel][inode];
+    unsigned GetElementDofIndex(const unsigned &iel,const unsigned &inode)const {
+        return _elementDof[iel][inode];
     };
 
     /** To be Added */
-    void SetElementVertexIndex(const unsigned &iel,const unsigned &inode, const unsigned &value);
+    void SetElementDofIndex(const unsigned &iel,const unsigned &inode, const unsigned &value);
 
     /** To be Added */
     unsigned GetFaceVertexIndex(const unsigned &iel,const unsigned &iface, const unsigned &inode) const;
@@ -158,14 +162,14 @@ public:
     bool GetIfFatherElementIsRefined(const unsigned &iel) const;
 
     /** To be Added */
-    void AllocateChildrenElement(const unsigned &ref_index, const std::vector < double > &localizedAmrVector);
+    void AllocateChildrenElement(const unsigned &ref_index, Mesh *msh);
 
     /** To be Added */
     void SetChildElement(const unsigned &iel,const unsigned &json, const unsigned &value);
 
     /** To be Added */
     unsigned GetChildElement(const unsigned &iel,const unsigned &json) const;
-
+    
     const unsigned GetNVE(const unsigned &elementType, const unsigned &doftype) const;
 
     const unsigned GetNFACENODES(const unsigned &elementType, const unsigned &jface, const unsigned &dof) const;
@@ -191,14 +195,20 @@ private:
     unsigned *_elementNearVertexMemory;
     unsigned *_elementNearVertexNumber;
 
-    unsigned **_kvert; //element -> nodes
-    unsigned *_kvertMemory;
-    unsigned _kvertSize;
+    unsigned **_elementDof; //element -> nodes
+    unsigned *_elementDofMemory;
+    unsigned _elementDofSize;
 
     unsigned **_childElem;
     unsigned *_childElemMemory;
     unsigned _childElemSize;
     bool _childElemFlag;
+    
+    unsigned ***_childElemDof; //element -> nodes
+    unsigned **_childElemDofMemoryPointer; //element -> nodes
+    unsigned *_childElemDofMemory;
+    unsigned _childElemDofMemorySize;
+    
 
     unsigned _elementOffset;
     unsigned _elementOffsetP1;
