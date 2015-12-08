@@ -251,9 +251,14 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
 void elem::ReorderMeshNodes( const std::vector < unsigned > &nodeMapping){
   for(unsigned iel=0; iel<_nel; iel++){
     for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
-      _kvert[iel][inode] =  nodeMapping[ _kvert[iel][inode] -1u] + 1u;
+      _kvert[iel][inode] =  nodeMapping[ _kvert[iel][inode] ];
     }
   }
+  
+//   for(unsigned i = 0; i < _kvertSize; i++){
+//     _kvertMemory[i] =  nodeMapping[ _kvertMemory[i] ];
+//   }
+  
 }
 
 
@@ -308,14 +313,14 @@ unsigned elem::GetMeshDof(const unsigned iel,const unsigned &inode,const unsigne
  * Set the local->global node number
  **/
 void elem::SetElementVertexIndex(const unsigned &iel,const unsigned &inode, const unsigned &value) {
-  _kvert[iel][inode]=value;
+  _kvert[iel][inode]=value-1u;
 }
 
 /**
  * Return the local->global face node number
  **/
 unsigned elem::GetFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &inode)const {
-  return _kvert[iel][ig[_elementType[iel]][iface][inode]];
+  return _kvert[iel][ig[_elementType[iel]][iface][inode]] + 1u;
 }
 
 /**

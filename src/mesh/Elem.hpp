@@ -58,7 +58,7 @@ public:
 
     /** Return the local->global node number */
     unsigned GetElementVertexIndex(const unsigned &iel,const unsigned &inode)const {
-        return _kvert[iel][inode];
+        return _kvert[iel][inode]+1u;
     };
 
     /** To be Added */
