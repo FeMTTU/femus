@@ -640,6 +640,19 @@ void elem::AllocateChildrenElement(const unsigned &refindex, Mesh* msh){
   return;
 }
 
+void elem::SetChildElementDof(const unsigned &refIndex, Mesh *msh, const elem* elf){
+  for(unsigned iel = _elementOffset; iel < _elementOffsetP1; iel++){
+    unsigned elementType = msh->GetElementType(iel);
+    unsigned endIndex = ( msh->GetRefinedElementIndex(iel) == 1)?refIndex : 1u; 
+    for(unsigned j=0; j<endIndex; j++){
+      unsigned ielf = GetChildElement(iel,j);
+      for(unsigned k=0; k<elf->GetElementDofNumber(ielf,2); k++){
+	_childElemDof[iel-_elementOffset][j][k] = elf->GetElementDofIndex(ielf,k);  
+      }
+    }
+  }
+}
+
 void elem::SetChildElement(const unsigned &iel,const unsigned &json, const unsigned &value){
   _childElem[ iel - _elementOffset][json]=value;
   return;

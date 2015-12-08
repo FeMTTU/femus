@@ -146,6 +146,8 @@ public:
 
     unsigned GetSolutionDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
 
+    unsigned GetSolutionDof(const unsigned &i0,const unsigned &i1, const unsigned &ielc, const short unsigned &solType, const Mesh* mshc) const ;
+    
     /** Performs a bisection search to find the processor of the given dof */
     unsigned IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const;
 

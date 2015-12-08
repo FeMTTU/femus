@@ -331,10 +331,13 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
   if( meshc.GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
     for (int i=0; i<_nf; i++) {
       int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
-      int ielf=meshc.el->GetChildElement(ielc,i0);
+      //int ielf=meshc.el->GetChildElement(ielc,i0);
       int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-      int irow = meshf.GetSolutionDof(i1,ielf,_SolType);  //  local-id to dof
-
+      //int irow1 = meshf.GetSolutionDof(i1,ielf,_SolType);  //  local-id to dof
+      int irow = meshf.GetSolutionDof( ielc, i0, i1, _SolType, &meshc);
+      
+      //std::cout<< irow << " " << irow1 <<std::endl;
+      
       int iproc = meshf.IsdomBisectionSearch(irow, _SolType);
 
       int ncols = _prol_ind[i+1] - _prol_ind[i];
@@ -350,9 +353,11 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
 
   }
   else{ // coarse2coarse prolongation
-    int ielf=meshc.el->GetChildElement(ielc,0);
+    //int ielf=meshc.el->GetChildElement(ielc,0);
     for (int i=0; i<_nc; i++) {
-      int irow=meshf.GetSolutionDof(i,ielf,_SolType);  //  local-id to dof
+      //int irow=meshf.GetSolutionDof(i,ielf,_SolType);  //  local-id to dof
+      
+      int irow = meshf.GetSolutionDof( ielc, 0, i , _SolType, &meshc);
 
       int iproc = meshf.IsdomBisectionSearch(irow, _SolType);
 
@@ -373,9 +378,11 @@ void elem_type::BuildProlongation(const Mesh &meshf,const Mesh &meshc, const int
     vector<int> jcols(27);
     for (int i=0; i<_nf; i++) {
       int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
-      int ielf=meshc.el->GetChildElement(ielc,i0);
+      //int ielf=meshc.el->GetChildElement(ielc,i0);
       int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-      int irow=meshf.GetSolutionDof(i1,ielf,_SolType);  //  local-id to dof
+      //int irow=meshf.GetSolutionDof(i1,ielf,_SolType);  //  local-id to dof
+      
+      int irow = meshf.GetSolutionDof( ielc, i0, i1, _SolType, &meshc);
       int ncols=_prol_ind[i+1]-_prol_ind[i];
       jcols.assign(ncols,0);
       for (int k=0; k<ncols; k++) {
@@ -387,11 +394,12 @@ void elem_type::BuildProlongation(const Mesh &meshf,const Mesh &meshc, const int
     }
   }
   else{ // coarse2coarse prolongation
-    int ielf=meshc.el->GetChildElement(ielc,0);
+    //int ielf=meshc.el->GetChildElement(ielc,0);
     vector <int> jcol(1);
     double one = 1.;
     for (int i=0; i<_nc; i++) {
-      int irow=meshf.GetSolutionDof(i,ielf,_SolType);  //  local-id to dof
+      //int irow=meshf.GetSolutionDof(i,ielf,_SolType);  //  local-id to dof
+      int irow = meshf.GetSolutionDof( ielc, 0, i , _SolType, &meshc);
       jcol[0]=meshc.GetSolutionDof(i,ielc,_SolType);
       Projmat->insert_row(irow,1,jcol,&one);
     }

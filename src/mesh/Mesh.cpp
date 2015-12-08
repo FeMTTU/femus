@@ -553,7 +553,7 @@ void Mesh::FillISvector(vector < int > &partition) {
   }
 
   el->SetElementOffsets(_elementOffset[_iproc], _elementOffset[_iproc+1]);
-
+ 
 }
 
 
@@ -625,6 +625,58 @@ void Mesh::FillISvector(vector < int > &partition) {
 
   // *******************************************************
 
+  unsigned Mesh::GetSolutionDof(const unsigned &ielc, const unsigned &i0,const unsigned &i1, const short unsigned &solType, const Mesh* mshc) const {
+
+    unsigned dof;
+    switch(solType){
+      case 0: // linear Lagrange
+	{
+	  unsigned iNode = mshc->el->GetChildElementDof(ielc,i0,i1);	  	  
+	  unsigned isdom = IsdomBisectionSearch(iNode, 2);
+	  if(iNode < _dofOffset[2][isdom]+_originalOwnSize[0][isdom]){
+	    dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
+	  }
+	  else{
+	    dof = _ownedGhostMap[0].find(iNode)->second;
+	  }
+	}
+	break;
+      case 1: // quadratic Lagrange
+       	{
+	  unsigned iNode = mshc->el->GetChildElementDof(ielc,i0,i1);
+	  unsigned isdom = IsdomBisectionSearch(iNode, 2);
+	  if(iNode < _dofOffset[2][isdom]+_originalOwnSize[1][isdom]){
+	    dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
+	  }
+	  else{
+	    dof = _ownedGhostMap[1].find(iNode)->second;
+	  }
+	}
+	break;
+      case 2: // bi-quadratic Lagrange
+        dof = mshc->el->GetChildElementDof(ielc,i0,i1);
+        break;
+      case 3: // piecewise constant
+	// in this case use i=0
+        dof = mshc->el->GetChildElement(ielc,i0);
+        break;
+      case 4: // piecewise linear discontinuous
+	unsigned iel = mshc->el->GetChildElement(ielc,i0);
+	unsigned isdom = IsdomBisectionSearch(iel, 3);
+	unsigned offset = _elementOffset[isdom];
+        unsigned offsetp1 = _elementOffset[isdom + 1];
+        unsigned ownSize = offsetp1 - offset;
+        unsigned offsetPWLD = offset * (_dimension + 1);
+        unsigned locIel = iel - offset;
+        dof = offsetPWLD + ( i1 * ownSize ) + locIel;
+        break;
+     }
+     return dof;
+  }
+
+  // *******************************************************
+  
+  
 SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
   if(itype < 3 && jtype < 3){
     if(!_ProjQitoQj[itype][jtype]){

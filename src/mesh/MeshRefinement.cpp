@@ -342,7 +342,9 @@ namespace femus {
 
     _mesh.FillISvector(partition);
     partition.resize(0);
-
+    
+    elc->SetChildElementDof(_mesh.GetRefIndex(), mshc, _mesh.el);
+    
     _mesh.el->DeleteElementNearVertex();
     _mesh.el->BuildElementNearVertex();
 

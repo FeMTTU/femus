@@ -140,6 +140,13 @@ public:
 
     /** To be Added */
     void BuildElementNearVertex();
+    
+    /** To be Added */
+    void SetChildElementDof(const unsigned &ref_index, Mesh *msh, const elem* elf);
+    
+    unsigned GetChildElementDof(const unsigned &iel, const unsigned &i0, const unsigned i1) const{
+      return _childElemDof[iel-_elementOffset][i0][i1];   
+    }
 
     void DeleteElementNearVertex();
 
