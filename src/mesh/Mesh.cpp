@@ -281,8 +281,8 @@ void Mesh::Buildkel() {
         unsigned i1=el->GetFaceVertexIndex(iel,iface,0);
         unsigned i2=el->GetFaceVertexIndex(iel,iface,1);
         unsigned i3=el->GetFaceVertexIndex(iel,iface,2);
-        for (unsigned j=0; j< el->GetElementNearVertexNumber(i1-1u); j++) {
-          unsigned jel = el->GetElementNearVertex(i1-1u,j);
+        for (unsigned j=0; j< el->GetElementNearVertexNumber(i1); j++) {
+          unsigned jel = el->GetElementNearVertex(i1,j);
           if (jel > iel) {
             for (unsigned jface=0; jface<el->GetElementFaceNumber(jel); jface++) {
               if ( el->GetFaceElementIndex(jel,jface) <= 0) {

@@ -204,7 +204,7 @@ namespace femus {
         // project vertex indeces
         for (unsigned j = 0; j < _mesh.GetRefIndex(); j++)
           for (unsigned inode = 0; inode < elc->GetNVE(elt, 0); inode++)
-            _mesh.el->SetElementVertexIndex(jel + j, inode, elc->GetElementVertexIndex(iel, fine2CoarseVertexMapping[elt][j][inode] - 1u)+1);
+            _mesh.el->SetElementVertexIndex(jel + j, inode, elc->GetElementVertexIndex(iel, fine2CoarseVertexMapping[elt][j][inode] - 1u) );
 
         // project face indeces
 	for (unsigned iface = 0; iface <  elc->GetNFC(elt, 1); iface++) {
@@ -232,7 +232,7 @@ namespace femus {
 
         // project nodes indeces
         for (unsigned inode = 0; inode < elc->GetNVE(elt, 2); inode++)
-          _mesh.el->SetElementVertexIndex(jel, inode, elc->GetElementVertexIndex(iel, inode)+1);
+          _mesh.el->SetElementVertexIndex(jel, inode, elc->GetElementVertexIndex(iel, inode) );
 
         // project face indeces
 	for (unsigned iface = 0; iface <  elc->GetNFC(elt, 1); iface++) {
@@ -276,22 +276,22 @@ namespace femus {
         unsigned iend = _mesh.el->GetElementDofNumber(iel, 1);
 
         for (unsigned inode = istart; inode < iend; inode++) {
-          if (UINT_MAX == _mesh.el->GetElementVertexIndex(iel, inode) + 1u) {
+          if (UINT_MAX == _mesh.el->GetElementVertexIndex(iel, inode)) {
             nnodes++;
-            _mesh.el->SetElementVertexIndex(iel, inode, nnodes);
-            unsigned im = _mesh.el->GetElementVertexIndex(iel, edge2VerticesMapping[ielt][inode - istart][0]) + 1u;
-            unsigned ip = _mesh.el->GetElementVertexIndex(iel, edge2VerticesMapping[ielt][inode - istart][1]) + 1u;
+            _mesh.el->SetElementVertexIndex(iel, inode, nnodes  - 1u);
+            unsigned im = _mesh.el->GetElementVertexIndex(iel, edge2VerticesMapping[ielt][inode - istart][0]);
+            unsigned ip = _mesh.el->GetElementVertexIndex(iel, edge2VerticesMapping[ielt][inode - istart][1]);
 
             //find all the near elements which share the same middle edge point
-            for (unsigned j = 0; j < _mesh.el->GetElementNearVertexNumber(im - 1u); j++) {
-              unsigned jel = _mesh.el->GetElementNearVertex(im - 1u, j);
+            for (unsigned j = 0; j < _mesh.el->GetElementNearVertexNumber(im); j++) {
+              unsigned jel = _mesh.el->GetElementNearVertex(im, j);
 
               if (_mesh.el->GetIfFatherElementIsRefined(jel) && jel > iel) {    // to skip coarse elements
                 unsigned jm = 0, jp = 0;
                 unsigned jelt = _mesh.el->GetElementType(jel);
 
                 for (unsigned jnode = 0; jnode < _mesh.el->GetElementDofNumber(jel, 0); jnode++) {
-                  if (_mesh.el->GetElementVertexIndex(jel, jnode) + 1u == im) {
+                  if (_mesh.el->GetElementVertexIndex(jel, jnode) == im) {
                     jm = jnode + 1u;
                     break;
                   }
@@ -299,7 +299,7 @@ namespace femus {
 
                 if (jm != 0) { //TODO this can be changed and put inside (by Sara)
                   for (unsigned jnode = 0; jnode < _mesh.el->GetElementDofNumber(jel, 0); jnode++) {
-                    if (_mesh.el->GetElementVertexIndex(jel, jnode) + 1u == ip) {
+                    if (_mesh.el->GetElementVertexIndex(jel, jnode) == ip) {
                       jp = jnode + 1u;
                       break;
                     }
@@ -312,7 +312,7 @@ namespace femus {
                       jm = tp;
                     }
 
-                    _mesh.el->SetElementVertexIndex(jel, vertices2EdgeMapping[jelt][--jm][--jp], nnodes);
+                    _mesh.el->SetElementVertexIndex(jel, vertices2EdgeMapping[jelt][--jm][--jp], nnodes  - 1u);
                   }
                 }
               }
@@ -432,20 +432,20 @@ namespace femus {
         for (unsigned iface = 0; iface < _mesh.el->GetElementFaceNumber(iel, 0); iface++) { // I think is on all the faces that are quads
           unsigned inode = _mesh.el->GetElementDofNumber(iel, 1) + iface;
 
-          if ( UINT_MAX == _mesh.el->GetElementVertexIndex(iel, inode) + 1u) {
-            _mesh.el->SetElementVertexIndex(iel, inode, ++nnodes);
+          if ( UINT_MAX == _mesh.el->GetElementVertexIndex(iel, inode) ) {
+            _mesh.el->SetElementVertexIndex(iel, inode, ++nnodes  - 1u );
             unsigned i1 = _mesh.el->GetFaceVertexIndex(iel, iface, 0);
             unsigned i2 = _mesh.el->GetFaceVertexIndex(iel, iface, 1);
             unsigned i3 = _mesh.el->GetFaceVertexIndex(iel, iface, 2);
 
-            for (unsigned j = 0; j < _mesh.el->GetElementNearVertexNumber(i1 - 1u); j++) {
-              unsigned jel = _mesh.el->GetElementNearVertex(i1 - 1u, j);
+            for (unsigned j = 0; j < _mesh.el->GetElementNearVertexNumber(i1); j++) {
+              unsigned jel = _mesh.el->GetElementNearVertex(i1, j);
 
               if ( _mesh.el->GetIfFatherElementIsRefined(jel) && jel > iel) {
                 for (unsigned jface = 0; jface < _mesh.el->GetElementFaceNumber(jel, 0); jface++) {
                   unsigned jnode = _mesh.el->GetElementDofNumber(jel, 1) + jface;
 
-                  if (UINT_MAX == _mesh.el->GetElementVertexIndex(jel, jnode) + 1u) {
+                  if (UINT_MAX == _mesh.el->GetElementVertexIndex(jel, jnode) ) {
                     unsigned j1 = _mesh.el->GetFaceVertexIndex(jel, jface, 0);
                     unsigned j2 = _mesh.el->GetFaceVertexIndex(jel, jface, 1);
                     unsigned j3 = _mesh.el->GetFaceVertexIndex(jel, jface, 2);
@@ -454,7 +454,7 @@ namespace femus {
                     if ((i1 == j1 || i1 == j2 || i1 == j3 ||  i1 == j4) &&
                         (i2 == j1 || i2 == j2 || i2 == j3 ||  i2 == j4) &&
                         (i3 == j1 || i3 == j2 || i3 == j3 ||  i3 == j4)) {
-                      _mesh.el->SetElementVertexIndex(jel, jnode, nnodes);
+                      _mesh.el->SetElementVertexIndex(jel, jnode, nnodes  - 1u);
                     }
                   }
                 }
@@ -469,11 +469,11 @@ namespace femus {
     for (unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++) {
       if ( _mesh.el->GetIfFatherElementIsRefined(iel) ) {
         if (0 == _mesh.el->GetElementType(iel)) { //hex
-          _mesh.el->SetElementVertexIndex(iel, 26, ++nnodes);
+          _mesh.el->SetElementVertexIndex(iel, 26, ++nnodes - 1u);
         }
 
         if (3 == _mesh.el->GetElementType(iel)) { //quad
-          _mesh.el->SetElementVertexIndex(iel, 8, ++nnodes);
+          _mesh.el->SetElementVertexIndex(iel, 8, ++nnodes - 1u);
         }
       }
     }

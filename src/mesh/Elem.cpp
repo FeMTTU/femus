@@ -313,14 +313,14 @@ unsigned elem::GetMeshDof(const unsigned iel,const unsigned &inode,const unsigne
  * Set the local->global node number
  **/
 void elem::SetElementVertexIndex(const unsigned &iel,const unsigned &inode, const unsigned &value) {
-  _kvert[iel][inode]=value-1u;
+  _kvert[iel][inode]=value;
 }
 
 /**
  * Return the local->global face node number
  **/
 unsigned elem::GetFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &inode)const {
-  return _kvert[iel][ig[_elementType[iel]][iface][inode]] + 1u;
+  return _kvert[iel][ig[_elementType[iel]][iface][inode]];
 }
 
 /**
@@ -464,21 +464,19 @@ void elem::SetElementGroupNumber(const unsigned &value) {
  **/
 
 void elem::BuildLocalElementNearVertex(){
-  for (unsigned iel = 0; iel < _nel; iel++) {
-    if(iel >= _elementOffset && iel < _elementOffsetP1){
-      for (unsigned i = 0; i < GetElementDofNumber(iel, 0); i++) {
-        unsigned inode = GetElementVertexIndex(iel,i);
-        unsigned inodesize = 1;
-        if( _localElementNearVertexMap.find(inode) != _localElementNearVertexMap.end() ){
-          inodesize = _localElementNearVertexMap[inode].size();
-	  inodesize++;
-	}
-	else{
-          _localElementNearVertexMap[inode].reserve(_elementNearVertexNumber[inode]);
-        }
-	_localElementNearVertexMap[inode].resize(inodesize);
-	_localElementNearVertexMap[inode][inodesize-1] = iel;
+  for (unsigned iel = _elementOffset; iel < _elementOffsetP1; iel++) {
+    for (unsigned i = 0; i < GetElementDofNumber(iel, 0); i++) {
+      unsigned inode = GetElementVertexIndex(iel,i);
+      unsigned inodesize = 1;
+      if( _localElementNearVertexMap.find(inode) != _localElementNearVertexMap.end() ){
+        inodesize = _localElementNearVertexMap[inode].size();
+	inodesize++;
       }
+      else{
+        _localElementNearVertexMap[inode].reserve(_elementNearVertexNumber[inode]);
+      }
+      _localElementNearVertexMap[inode].resize(inodesize);
+      _localElementNearVertexMap[inode][inodesize-1] = iel;
     }
   }
 }

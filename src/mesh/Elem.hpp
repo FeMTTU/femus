@@ -151,8 +151,6 @@ public:
       return _localElementNearVertexMap[inode];
     };
 
-
-
     /** To be Added */
     void SetIfFatherElementIsRefined(const unsigned &iel, const bool &refined);
 

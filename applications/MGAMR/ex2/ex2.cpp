@@ -93,9 +93,7 @@ int main(int argc, char** args) {
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
-  // print mesh info
-  mlMsh.PrintInfo();
-
+  
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
@@ -159,7 +157,6 @@ int main(int argc, char** args) {
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
   //system.SetDirichletBCsHandling(ELIMINATION);
-  //system.solve();
   system.MGsolve();
 
   // print solutions
@@ -173,6 +170,9 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("all");
   gmvIO.SetDebugOutput(true);
   gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+
+  // print mesh info
+  mlMsh.PrintInfo();
 
 
   return 0;
