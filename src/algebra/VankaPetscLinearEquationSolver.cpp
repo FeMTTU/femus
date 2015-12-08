@@ -115,7 +115,7 @@ namespace femus {
 	for (int iel=gel; iel<gel+_block_element_number && iel< _msh->_elementOffset[isdom+1]; iel++) {
 
 	  for (unsigned i=0; i<_msh->GetElementDofNumber(iel,0); i++) {
-	    unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
+	    unsigned inode=_msh->el->GetElementVertexIndex(iel,i);
 
             const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
             unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
@@ -155,7 +155,7 @@ namespace femus {
 		  }
 		}
                 for (unsigned jj=0; jj<_msh->GetElementDofNumber(jel,0); jj++) {
-		  unsigned jnode=_msh->el->GetElementVertexIndex(jel,jj)-1u;
+		  unsigned jnode=_msh->el->GetElementVertexIndex(jel,jj);
 
                   const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(jnode);
                   unsigned nvej = localElementNearVertexNumber.size();

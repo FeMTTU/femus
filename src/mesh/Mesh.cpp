@@ -438,7 +438,7 @@ void Mesh::FillISvector(vector < int > &partition) {
 	unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel,k-1);
 	unsigned nodeEnd = el->GetElementDofNumber(iel,k);
 	for ( unsigned inode = nodeStart; inode < nodeEnd; inode++) {
-	  unsigned ii = el->GetElementVertexIndex(iel,inode) - 1;
+	  unsigned ii = el->GetElementVertexIndex(iel,inode);
 	  if(partition[ii] > isdom) {
 	    partition[ii] = isdom;
 	    mapping[ii] = counter;
@@ -479,7 +479,7 @@ void Mesh::FillISvector(vector < int > &partition) {
       std::map < unsigned, bool > ghostMap;
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
 	for (unsigned inode = 0; inode < el->GetElementDofNumber(iel,k); inode++) {
-	  unsigned ii = el->GetElementVertexIndex(iel,inode)-1;
+	  unsigned ii = el->GetElementVertexIndex(iel,inode);
 	  if(ii < _dofOffset[2][isdom]){
 	    ghostMap[ii] = true;
 	  }
