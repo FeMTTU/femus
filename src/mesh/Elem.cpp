@@ -303,12 +303,6 @@ unsigned elem::GetMeshDof(const unsigned iel,const unsigned &inode,const unsigne
   return Dof;
 }
 
-/**
- * Return the local->global node address
- **/
-const unsigned*  elem::GetElementVertexAddress(const unsigned &iel,const unsigned &inode)const {
-  return &_kvert[iel][inode];
-}
 
 /**
  * Set the local->global node number
