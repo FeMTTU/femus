@@ -281,8 +281,8 @@ void Mesh::Buildkel() {
         unsigned i1=el->GetFaceVertexIndex(iel,iface,0);
         unsigned i2=el->GetFaceVertexIndex(iel,iface,1);
         unsigned i3=el->GetFaceVertexIndex(iel,iface,2);
-        for (unsigned j=0; j< el->GetElementNearVertexNumber(i1-1u); j++) {
-          unsigned jel = el->GetElementNearVertex(i1-1u,j);
+        for (unsigned j=0; j< el->GetElementNearVertexNumber(i1); j++) {
+          unsigned jel = el->GetElementNearVertex(i1,j);
           if (jel > iel) {
             for (unsigned jface=0; jface<el->GetElementFaceNumber(jel); jface++) {
               if ( el->GetFaceElementIndex(jel,jface) <= 0) {
@@ -438,7 +438,7 @@ void Mesh::FillISvector(vector < int > &partition) {
 	unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel,k-1);
 	unsigned nodeEnd = el->GetElementDofNumber(iel,k);
 	for ( unsigned inode = nodeStart; inode < nodeEnd; inode++) {
-	  unsigned ii = el->GetElementVertexIndex(iel,inode) - 1;
+	  unsigned ii = el->GetElementVertexIndex(iel,inode);
 	  if(partition[ii] > isdom) {
 	    partition[ii] = isdom;
 	    mapping[ii] = counter;
@@ -479,7 +479,7 @@ void Mesh::FillISvector(vector < int > &partition) {
       std::map < unsigned, bool > ghostMap;
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
 	for (unsigned inode = 0; inode < el->GetElementDofNumber(iel,k); inode++) {
-	  unsigned ii = el->GetElementVertexIndex(iel,inode)-1;
+	  unsigned ii = el->GetElementVertexIndex(iel,inode);
 	  if(ii < _dofOffset[2][isdom]){
 	    ghostMap[ii] = true;
 	  }

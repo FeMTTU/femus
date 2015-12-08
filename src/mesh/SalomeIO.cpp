@@ -301,7 +301,7 @@ void SalomeIO::read(const std::string& name, vector < vector < double> > &coords
     }
     for (unsigned i=0; i<nve; i++) {
       unsigned inode = SalomeToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
-      mesh.el->SetElementVertexIndex(iel,inode,conn_map[iel+i*n_elements]);
+      mesh.el->SetElementVertexIndex(iel,inode,conn_map[iel+i*n_elements] - 1u);
     }
   }
 

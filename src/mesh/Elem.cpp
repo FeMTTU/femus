@@ -251,9 +251,14 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
 void elem::ReorderMeshNodes( const std::vector < unsigned > &nodeMapping){
   for(unsigned iel=0; iel<_nel; iel++){
     for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
-      _kvert[iel][inode] =  nodeMapping[ _kvert[iel][inode] -1u] + 1u;
+      _kvert[iel][inode] =  nodeMapping[ _kvert[iel][inode] ];
     }
   }
+  
+//   for(unsigned i = 0; i < _kvertSize; i++){
+//     _kvertMemory[i] =  nodeMapping[ _kvertMemory[i] ];
+//   }
+  
 }
 
 
@@ -299,16 +304,10 @@ unsigned elem::GetElementDofNumber(const unsigned &iel,const unsigned &type) con
  * Return the local to global dof
  **/
 unsigned elem::GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &SolType)const {
-  unsigned Dof=(SolType<3)?GetElementVertexIndex(iel,inode)-1u:(_nel*inode)+iel;
+  unsigned Dof=(SolType<3)?GetElementVertexIndex(iel,inode):(_nel*inode)+iel;
   return Dof;
 }
 
-/**
- * Return the local->global node address
- **/
-const unsigned*  elem::GetElementVertexAddress(const unsigned &iel,const unsigned &inode)const {
-  return &_kvert[iel][inode];
-}
 
 /**
  * Set the local->global node number
@@ -465,21 +464,19 @@ void elem::SetElementGroupNumber(const unsigned &value) {
  **/
 
 void elem::BuildLocalElementNearVertex(){
-  for (unsigned iel = 0; iel < _nel; iel++) {
-    if(iel >= _elementOffset && iel < _elementOffsetP1){
-      for (unsigned i = 0; i < GetElementDofNumber(iel, 0); i++) {
-        unsigned inode = GetElementVertexIndex(iel,i) - 1u;
-        unsigned inodesize = 1;
-        if( _localElementNearVertexMap.find(inode) != _localElementNearVertexMap.end() ){
-          inodesize = _localElementNearVertexMap[inode].size();
-	  inodesize++;
-	}
-	else{
-          _localElementNearVertexMap[inode].reserve(_elementNearVertexNumber[inode]);
-        }
-	_localElementNearVertexMap[inode].resize(inodesize);
-	_localElementNearVertexMap[inode][inodesize-1] = iel;
+  for (unsigned iel = _elementOffset; iel < _elementOffsetP1; iel++) {
+    for (unsigned i = 0; i < GetElementDofNumber(iel, 0); i++) {
+      unsigned inode = GetElementVertexIndex(iel,i);
+      unsigned inodesize = 1;
+      if( _localElementNearVertexMap.find(inode) != _localElementNearVertexMap.end() ){
+        inodesize = _localElementNearVertexMap[inode].size();
+	inodesize++;
       }
+      else{
+        _localElementNearVertexMap[inode].reserve(_elementNearVertexNumber[inode]);
+      }
+      _localElementNearVertexMap[inode].resize(inodesize);
+      _localElementNearVertexMap[inode][inodesize-1] = iel;
     }
   }
 }
@@ -498,7 +495,7 @@ void elem::BuildElementNearVertex() {
   }
   for (unsigned iel=0; iel<_nel; iel++) {
     for (unsigned inode=0; inode < GetElementDofNumber(iel,0); inode++) {
-      _elementNearVertexNumber[ GetElementVertexIndex(iel,inode)-1u ]++;
+      _elementNearVertexNumber[ GetElementVertexIndex(iel,inode)]++;
     }
   }
 
@@ -514,7 +511,7 @@ void elem::BuildElementNearVertex() {
 
   for (unsigned iel = 0; iel < _nel; iel++) {
     for (unsigned inode = 0; inode < GetElementDofNumber(iel,0); inode++) {
-      unsigned irow = GetElementVertexIndex(iel,inode) - 1u;
+      unsigned irow = GetElementVertexIndex(iel,inode);
       unsigned j = 0;
       while ( _nel != _elementNearVertex[irow][j] ) j++;
        _elementNearVertex[irow][j]=iel;

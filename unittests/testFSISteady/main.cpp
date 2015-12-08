@@ -616,14 +616,14 @@ void AssembleMatrixResFSI(MultiLevelProblem& ml_prob) {
 
     for (unsigned i = 0; i < nve; i++) {
       // gambit nodes
-      unsigned inode = myel->GetElementVertexIndex(kel, i) - 1u;
+     
       // dof metis
       unsigned inode_Metis = mymsh->GetSolutionDof(i, kel, 2);
       metis_node2[i] = inode_Metis;
 
       //unsigned inode_Metis=mymsh->GetSolutionDof(inode,2);
       // flag to know if the node "inode" lays on the fluid-solid interface
-      solidmark[i] = mymsh->GetSolidMark(inode); // to check
+      solidmark[i] = mymsh->GetSolidMark(inode_Metis); // to check
 
       for (int j = 0; j < dim; j++) {
         //Updated coordinates (Moving frame)

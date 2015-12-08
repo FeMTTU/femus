@@ -292,9 +292,6 @@ namespace femus {
       }
 
       for (unsigned i = 0; i < nve; i++) {
-        // gambit nodes
-        //unsigned inode=myel->GetElementVertexIndex(iel,i)-1u;
-        // dof metis
         unsigned inode = mymsh->GetSolutionDof(i, iel, 2);
         metis_node2[i] = inode;
 
