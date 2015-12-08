@@ -136,9 +136,9 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &coords
     }
     for (unsigned i=0; i<nve; i++) {
       unsigned inode=GambitIO::GambitToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
-      double value;
+      unsigned value;
       inf>>value;
-      mesh.el->SetElementVertexIndex(iel,inode,value);
+      mesh.el->SetElementVertexIndex(iel,inode,value - 1u);
     }
   }
   inf >> str2;

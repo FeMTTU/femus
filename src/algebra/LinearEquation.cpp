@@ -289,8 +289,7 @@ void LinearEquation::DeletePde() {
       for(int i=0; i<_SolPdeIndex.size(); i++) {
 	int ThisSolType=_SolType[_SolPdeIndex[i]];
 	for (int j=0;j<nve[i];j++) {
-	  int inode=(ThisSolType<3)?(_msh->el->GetElementVertexIndex(kel,j)-1u):(kel+j*nel);
-	  //dofsVAR[i][j]= GetSystemDof(_SolPdeIndex[i],i,inode);
+          int inode=_msh->GetSolutionDof(j, kel, ThisSolType);
 	  dofsVAR[i][j]= GetSystemDof(_SolPdeIndex[i],i,j,kel);
 	}
       }

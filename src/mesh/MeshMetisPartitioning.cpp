@@ -101,7 +101,7 @@ void MeshMetisPartitioning::DoPartition(std::vector <int> &epart, const bool &AM
       unsigned ndofs = _mesh.el->GetElementDofNumber(iel,2);
       eptr[iel+1] = eptr[iel] + ndofs;
       for (unsigned inode = 0; inode < ndofs; inode++){
-        eind[counter] = _mesh.el->GetElementVertexIndex(iel,inode)-1;
+        eind[counter] = _mesh.el->GetElementVertexIndex(iel,inode);
         counter++;
       }
     }

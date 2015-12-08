@@ -62,9 +62,6 @@ public:
     };
 
     /** To be Added */
-    const unsigned* GetElementVertexAddress(const unsigned &iel,const unsigned &inode)const;
-
-    /** To be Added */
     void SetElementVertexIndex(const unsigned &iel,const unsigned &inode, const unsigned &value);
 
     /** To be Added */
@@ -154,8 +151,6 @@ public:
       return _localElementNearVertexMap[inode];
     };
 
-
-
     /** To be Added */
     void SetIfFatherElementIsRefined(const unsigned &iel, const bool &refined);
 
@@ -204,7 +199,7 @@ private:
     unsigned *_childElemMemory;
     unsigned _childElemSize;
     bool _childElemFlag;
-    
+
     unsigned _elementOffset;
     unsigned _elementOffsetP1;
 
