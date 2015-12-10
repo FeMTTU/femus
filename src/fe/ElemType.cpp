@@ -164,23 +164,16 @@ void elem_type::GetSparsityPatternSize(const LinearEquation &lspdef,const Linear
   if( lspdec._msh->GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
     for (int i=0; i<_nf; i++) {
       int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
-      int ielf=lspdec._msh->el->GetChildElement(ielc,i0);
       int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-      //int iadd=lspdef._msh->el->GetMeshDof(ielf,i1,_SolType);
-      //int irow=lspdef.GetSystemDof(index_sol,kkindex_sol,iadd);  //  local-id to dof
-      int irow=lspdef.GetSystemDof(index_sol, kkindex_sol, i1, ielf);  //  local-id to dof
-
+      int irow=lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, i0, i1, lspdec._msh);  //  local-id to dof
 
       int iproc=0;
-      //while (irow < lspdef.KKoffset[0][iproc] || irow >= lspdef.KKoffset[lspdef.KKIndex.size()-1][iproc] ) iproc++;
       while ( irow >= lspdef.KKoffset[lspdef.KKIndex.size()-1][iproc] ) iproc++;
-      int ncols=_prol_ind[i+1]-_prol_ind[i];
 
+      int ncols=_prol_ind[i+1]-_prol_ind[i];
       int counter_o=0;
       for (int k=0; k<ncols; k++) {
 	int j=_prol_ind[i][k];
-	//int jadd=lspdec._msh->el->GetMeshDof(ielc,j,_SolType);
-	//int jcolumn=lspdec.GetSystemDof(index_sol,kkindex_sol,jadd);
 	int jcolumn=lspdec.GetSystemDof(index_sol, kkindex_sol, j, ielc);
 	if(jcolumn < lspdec.KKoffset[0][iproc] || jcolumn >= lspdec.KKoffset[lspdef.KKIndex.size()-1][iproc] ) counter_o++;
       }
@@ -190,18 +183,12 @@ void elem_type::GetSparsityPatternSize(const LinearEquation &lspdef,const Linear
     }
   }
   else{ // coarse2coarse prolongation
-    int ielf=lspdec._msh->el->GetChildElement(ielc,0);
     for (int i=0; i<_nc; i++) {
-      //int iadd=lspdef._msh->el->GetMeshDof(ielf,i,_SolType);
-      //int irow=meshf.GetSolutionDof(iadd,_SolType);  //  local-id to dof
-      //int irow=lspdef.GetSystemDof(index_sol,kkindex_sol,iadd);  //  local-id to dof
-      int irow=lspdef.GetSystemDof(index_sol,kkindex_sol,i,ielf);  //  local-id to dof
+      int irow=lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);  
+
       int iproc=0;
-      //while (irow < meshf.>_dofOffset[_SolType][iproc] || irow >= meshf.>_dofOffset[_SolType][iproc+1] ) iproc++;
       while ( irow >= lspdef.KKoffset[lspdef.KKIndex.size()-1][iproc] ) iproc++;
 
-      //int jadd = lspdec._msh->el->GetMeshDof(ielc,i,_SolType);
-      //int jcolumn = lspdec.GetSystemDof(index_sol,kkindex_sol,jadd);
       int jcolumn = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
       if(jcolumn < lspdec.KKoffset[0][iproc] || jcolumn >= lspdec.KKoffset[lspdef.KKIndex.size()-1][iproc] ) {
 	NNZ_o->set(irow,1);
@@ -221,17 +208,13 @@ void elem_type::BuildProlongation(const LinearEquation &lspdef,const LinearEquat
     vector<int> cols(27);
     for (int i=0; i<_nf; i++) {
       int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
-      int ielf=lspdec._msh->el->GetChildElement(ielc,i0);
       int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-      //int iadd=lspdef._msh->el->GetMeshDof(ielf,i1,_SolType);
-      //int irow=lspdef.GetSystemDof(index_sol,kkindex_sol,iadd);  //  local-id to dof
-      int irow=lspdef.GetSystemDof(index_sol,kkindex_sol,i1, ielf);  //  local-id to dof
+      int irow=lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, i0, i1, lspdec._msh);
+
       int ncols=_prol_ind[i+1]-_prol_ind[i];
       cols.assign(ncols,0);
       for (int k=0; k<ncols; k++) {
 	int j=_prol_ind[i][k];
-	//int jadd=lspdec._msh->el->GetMeshDof(ielc,j,_SolType);
-	//int jj=lspdec.GetSystemDof(index_sol,kkindex_sol,jadd);
 	int jj=lspdec.GetSystemDof(index_sol,kkindex_sol,j, ielc);
 	cols[k]=jj;
       }
@@ -239,15 +222,10 @@ void elem_type::BuildProlongation(const LinearEquation &lspdef,const LinearEquat
     }
   }
   else{
-    int ielf=lspdec._msh->el->GetChildElement(ielc,0);
     vector <int> jcol(1);
     double one = 1.;
     for (int i=0; i<_nc; i++) {
-      //int iadd=lspdef._msh->el->GetMeshDof(ielf,i,_SolType);
-      //int irow=lspdef.GetSystemDof(index_sol,kkindex_sol,iadd);  //  local-id to dof
-      int irow=lspdef.GetSystemDof(index_sol,kkindex_sol,i,ielf);  //  local-id to dof
-      //int jadd=lspdec._msh->el->GetMeshDof(ielc,i,_SolType);
-      //jcol[0]=lspdec.GetSystemDof(index_sol,kkindex_sol,jadd);
+      int irow=lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
       jcol[0]=lspdec.GetSystemDof(index_sol,kkindex_sol,i,ielc);
       Projmat->insert_row(irow,1,jcol,&one);
     }
@@ -266,20 +244,18 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
     vector <double> copy_prol_val;
     copy_prol_val.reserve(27);
     for (int i = 0; i < _nf; i++) {
-      int i0 =_KVERT_IND[i][0]; //id of the subdivision of the fine element
-      int ielf = lspdec._msh->el->GetChildElement(ielc, i0);
-      int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-      int iadd = lspdef._msh->el->GetMeshDof(ielf, i1, _SolType);
-      int irow = lspdef.GetSystemDof(index_sol,kkindex_sol, i1, ielf);  //  local-id to dof
-      int ncols = _prol_ind[i+1] - _prol_ind[i];
-
+      int i0 =_KVERT_IND[i][0]; // id of the subdivision of the fine element
+      int i1 = _KVERT_IND[i][1]; // local id node on the subdivision of the fine element
+      int iadd = lspdef._msh->GetSolutionDof( ielc, i0, i1, _SolType, lspdec._msh);
+      int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, i0, i1, lspdec._msh);
       bool isolidmark = static_cast < short unsigned > (localizedNodeMaterial[iadd] + 0.25);
-
+      
+      int ncols = _prol_ind[i+1] - _prol_ind[i];
       cols.assign(ncols, 0);
       copy_prol_val.assign(ncols, 0);
       for (int k=0; k<ncols; k++) {
         int j=_prol_ind[i][k];
-        int jadd = lspdec._msh->el->GetMeshDof(ielc,j,_SolType);
+        int jadd = lspdec._msh->GetSolutionDof(j, ielc, _SolType);
         bool jsolidmark = lspdec._msh->GetSolidMark(jadd);
         if( isolidmark == jsolidmark){
 	  int jcolumn = lspdec.GetSystemDof(index_sol,kkindex_sol, j, ielc);
@@ -296,14 +272,15 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
     }
   }
   else{
-    int ielf = lspdec._msh->el->GetChildElement(ielc,0);
     vector <int> jcol(1);
     double value;
     for (int i = 0; i < _nc; i++) {
-      int iadd = lspdef._msh->el->GetMeshDof(ielf, i, _SolType);
-      bool isolidmark = static_cast < short unsigned > (localizedNodeMaterial[iadd] + 0.25); //lspdef._msh->el->GetNodeRegion(iadd);
-      int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, i, ielf);  //  local-id to dof
-      int jadd = lspdec._msh->el->GetMeshDof(ielc, i, _SolType);
+      
+      int iadd = lspdef._msh->GetSolutionDof( ielc, 0, i, _SolType, lspdec._msh);
+      int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
+      bool isolidmark = static_cast < short unsigned > (localizedNodeMaterial[iadd] + 0.25); 
+      
+      int jadd = lspdec._msh->GetSolutionDof(i, ielc, _SolType);
       bool jsolidmark = lspdec._msh->GetSolidMark(jadd);
       if(isolidmark == jsolidmark){
 	jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
@@ -331,12 +308,8 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
   if( meshc.GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
     for (int i=0; i<_nf; i++) {
       int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
-      //int ielf=meshc.el->GetChildElement(ielc,i0);
       int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-      //int irow1 = meshf.GetSolutionDof(i1,ielf,_SolType);  //  local-id to dof
       int irow = meshf.GetSolutionDof( ielc, i0, i1, _SolType, &meshc);
-      
-      //std::cout<< irow << " " << irow1 <<std::endl;
       
       int iproc = meshf.IsdomBisectionSearch(irow, _SolType);
 
@@ -350,17 +323,12 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
       NNZ_d->set(irow,ncols-counter_o);
       NNZ_o->set(irow,counter_o);
     }
-
   }
   else{ // coarse2coarse prolongation
-    //int ielf=meshc.el->GetChildElement(ielc,0);
     for (int i=0; i<_nc; i++) {
-      //int irow=meshf.GetSolutionDof(i,ielf,_SolType);  //  local-id to dof
-      
       int irow = meshf.GetSolutionDof( ielc, 0, i , _SolType, &meshc);
 
       int iproc = meshf.IsdomBisectionSearch(irow, _SolType);
-
       int jcolumn=meshc.GetSolutionDof(i,ielc,_SolType);
       if(jcolumn < meshc._dofOffset[_SolType][iproc] || jcolumn >= meshc._dofOffset[_SolType][iproc+1] ) {
 	NNZ_o->set(irow,1);
@@ -378,10 +346,7 @@ void elem_type::BuildProlongation(const Mesh &meshf,const Mesh &meshc, const int
     vector<int> jcols(27);
     for (int i=0; i<_nf; i++) {
       int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
-      //int ielf=meshc.el->GetChildElement(ielc,i0);
       int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
-      //int irow=meshf.GetSolutionDof(i1,ielf,_SolType);  //  local-id to dof
-      
       int irow = meshf.GetSolutionDof( ielc, i0, i1, _SolType, &meshc);
       int ncols=_prol_ind[i+1]-_prol_ind[i];
       jcols.assign(ncols,0);
@@ -394,11 +359,9 @@ void elem_type::BuildProlongation(const Mesh &meshf,const Mesh &meshc, const int
     }
   }
   else{ // coarse2coarse prolongation
-    //int ielf=meshc.el->GetChildElement(ielc,0);
     vector <int> jcol(1);
     double one = 1.;
     for (int i=0; i<_nc; i++) {
-      //int irow=meshf.GetSolutionDof(i,ielf,_SolType);  //  local-id to dof
       int irow = meshf.GetSolutionDof( ielc, 0, i , _SolType, &meshc);
       jcol[0]=meshc.GetSolutionDof(i,ielc,_SolType);
       Projmat->insert_row(irow,1,jcol,&one);

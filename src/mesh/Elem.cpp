@@ -71,7 +71,34 @@ elem::elem(const unsigned &other_nel) {
 
   _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
 }
-
+	     
+		     
+void elem::ElementDofSharpAllocation( ){
+  
+  _elementDofSize = _nelt[0]*NVE[0][2]+_nelt[1]*NVE[1][2]+
+               	    _nelt[2]*NVE[2][2]+_nelt[3]*NVE[3][2]+
+		    _nelt[4]*NVE[4][2]+_nelt[5]*NVE[5][2];
+  
+  unsigned **tempElementDof = _elementDof;
+  unsigned *tempElementDofMemory = _elementDofMemory;
+     
+  _elementDof = new unsigned* [_nel+1];
+  _elementDofMemory = new unsigned [_elementDofSize];
+     
+  unsigned *ptElemDofMem = _elementDofMemory;
+  for(unsigned iel = 0; iel<_nel; iel++){
+    _elementDof[iel] = ptElemDofMem;
+    unsigned ielType = GetElementType(iel);
+    for(unsigned j = 0; j<NVE[ielType][2];j++ ){
+      _elementDof[iel][j] = tempElementDof[iel][j];
+    }
+    ptElemDofMem += NVE[ielType][2];
+  }
+  _elementDof[_nel] = tempElementDofMemory;
+     
+  delete [] tempElementDofMemory;
+  delete [] tempElementDof;     
+}
 /**
  * This constructor allocates the memory for the \textit{finer elem}
  * starting from the paramenters of the \textit{coarser elem}
@@ -90,7 +117,7 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
 
   memset( _fatherElementIsRefined, 0, _nel*sizeof(bool) );
 
-  _elementDof = new unsigned * [_nel];
+  _elementDof = new unsigned * [_nel+1];
   _elementNearFace = new int * [_nel];
 
   _elementDofSize = 0;
@@ -176,8 +203,6 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
     delete [] tempElmat;
   }
 
-
-
   //  REORDERING OF KEL
   int **tempKel;
   int *tempKelMemory;
@@ -205,17 +230,16 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
 
   //  REORDERING OF KVERT (ROWS)
 
+  unsigned **tempElementDof = _elementDof;
+  unsigned *tempElementDofMemory = _elementDofMemory;
 
-  unsigned **tempKvert;
-  unsigned *tempKvertMemory;
-
-  tempKvert = _elementDof;
-  tempKvertMemory = _elementDofMemory;
+  tempElementDof = _elementDof;
+  tempElementDofMemory = _elementDofMemory;
 
   _elementDof = new unsigned * [_nel];
   _elementDofMemory = new unsigned [ _elementDofSize ];
 
-  unsigned *ptKvert= _elementDofMemory;
+  unsigned *ptKvert = _elementDofMemory;
 
   for(unsigned iel=0; iel<_nel; iel++){
     _elementDof[iel] = ptKvert;
@@ -224,14 +248,12 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
 
   for(unsigned iel=0; iel<_nel; iel++){
     for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
-      _elementDof[iel][inode] = tempKvert[elementMapping[iel]][inode];
+      _elementDof[iel][inode] = tempElementDof[elementMapping[iel]][inode];
     }
   }
 
-
-  delete [] tempKvert;
-  delete [] tempKvertMemory;
-
+  delete [] tempElementDof;
+  delete [] tempElementDofMemory;
 
   if(elc){
     std::vector < unsigned > InverseElementMapping(_nel);
@@ -245,20 +267,13 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
       pt++;
     }
   }
-
 }
 
+
 void elem::ReorderMeshNodes( const std::vector < unsigned > &nodeMapping){
-  for(unsigned iel=0; iel<_nel; iel++){
-    for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
-      _elementDof[iel][inode] =  nodeMapping[ _elementDof[iel][inode] ];
-    }
+  for(unsigned i = 0; i < _elementDofSize; i++){
+    _elementDofMemory[i] =  nodeMapping[ _elementDofMemory[i] ];
   }
-  
-//   for(unsigned i = 0; i < _elementDofSize; i++){
-//     _elementDofMemory[i] =  nodeMapping[ _elementDofMemory[i] ];
-//   }
-  
 }
 
 
@@ -302,14 +317,6 @@ void elem::DeleteElementNearVertex(){
  **/
 unsigned elem::GetElementDofNumber(const unsigned &iel,const unsigned &type) const {
   return NVE[_elementType[iel]][type];
-}
-
-/**
- * Return the local to global dof
- **/
-unsigned elem::GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &SolType)const {
-  unsigned Dof=( SolType < 3 ) ? GetElementDofIndex(iel,inode):(_nel*inode)+iel;
-  return Dof;
 }
 
 

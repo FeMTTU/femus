@@ -118,6 +118,8 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
               << std::endl;
   }
 
+  el->ElementDofSharpAllocation();
+  
   el->SetNodeNumber(_nnodes);
 
   std::vector < int > partition;
@@ -203,6 +205,8 @@ void Mesh::GenerateCoarseBoxMesh(
 
   MeshTools::Generation::BuildBox(*this,_coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,elemType,type_elem_flag);
 
+  el->ElementDofSharpAllocation();
+  
   el->SetNodeNumber(_nnodes);
 
 
@@ -580,7 +584,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     switch(solType){
       case 0: // linear Lagrange
 	{
-	  unsigned iNode = el->GetMeshDof(iel, i, solType);
+	  unsigned iNode = el->GetElementDofIndex(iel,i);//GetMeshDof(iel, i, solType);
 	  unsigned isdom = IsdomBisectionSearch(iNode, 2);
 	  if(iNode < _dofOffset[2][isdom]+_originalOwnSize[0][isdom]){
 	    dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
@@ -592,7 +596,7 @@ void Mesh::FillISvector(vector < int > &partition) {
 	break;
       case 1: // quadratic Lagrange
        	{
-	  unsigned iNode = el->GetMeshDof(iel, i, solType);
+	  unsigned iNode = el->GetElementDofIndex(iel,i);//GetMeshDof(iel, i, solType);
 	  unsigned isdom = IsdomBisectionSearch(iNode, 2);
 	  if(iNode < _dofOffset[2][isdom]+_originalOwnSize[1][isdom]){
 	    dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
@@ -604,7 +608,7 @@ void Mesh::FillISvector(vector < int > &partition) {
 	break;
 
       case 2: // bi-quadratic Lagrange
-        dof = el->GetMeshDof(iel, i, solType);
+        dof = el->GetElementDofIndex(iel,i);//GetMeshDof(iel, i, solType);
         break;
       case 3: // piecewise constant
 	// in this case use i=0

@@ -38,6 +38,8 @@ public:
 
     elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrLocal, const std::vector < double > &localizedElementType);
 
+    void ElementDofSharpAllocation();
+    
     /** destructor */
     ~elem();
 
@@ -52,10 +54,6 @@ public:
 
     // reorder the nodes according to the new node mapping
     void ReorderMeshNodes( const std::vector < unsigned > &nodeMapping);
-
-
-    /** To be Added */
-    unsigned GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &type)const;
 
     /** To be Added */
     unsigned GetElementDofNumber(const unsigned &iel,const unsigned &type) const;
