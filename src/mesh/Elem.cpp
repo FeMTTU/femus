@@ -45,8 +45,8 @@ elem::elem(const unsigned &other_nel) {
   _elementGroup = new unsigned short [ _nel ];
   _elementMaterial = new unsigned short [ _nel ];
 
-  _elementDof = new unsigned * [ _nel ];
-  _elementNearFace = new int *[ _nel ];
+  _elementDof = new unsigned * [_nel + 1];
+  _elementNearFace = new int *[_nel];
 
   _elementDofSize = _nel*NVE[0][2];
   _elementNearFaceSize = _nel*NFC[0][1];
@@ -66,25 +66,26 @@ elem::elem(const unsigned &other_nel) {
     _elementNearFace[i] = pt_i;
     pt_i += NFC[0][1];
   }
+  _elementDof[_nel] = pt_u;
 
   _childElemFlag = false;
 
   _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
 }
-	     
-		     
+
+
 void elem::ElementDofSharpAllocation( ){
-  
+
   _elementDofSize = _nelt[0]*NVE[0][2]+_nelt[1]*NVE[1][2]+
                	    _nelt[2]*NVE[2][2]+_nelt[3]*NVE[3][2]+
 		    _nelt[4]*NVE[4][2]+_nelt[5]*NVE[5][2];
-  
+
   unsigned **tempElementDof = _elementDof;
   unsigned *tempElementDofMemory = _elementDofMemory;
-     
+
   _elementDof = new unsigned* [_nel+1];
   _elementDofMemory = new unsigned [_elementDofSize];
-     
+
   unsigned *ptElemDofMem = _elementDofMemory;
   for(unsigned iel = 0; iel<_nel; iel++){
     _elementDof[iel] = ptElemDofMem;
@@ -95,9 +96,9 @@ void elem::ElementDofSharpAllocation( ){
     ptElemDofMem += NVE[ielType][2];
   }
   _elementDof[_nel] = tempElementDofMemory;
-     
+
   delete [] tempElementDofMemory;
-  delete [] tempElementDof;     
+  delete [] tempElementDof;
 }
 /**
  * This constructor allocates the memory for the \textit{finer elem}
@@ -159,6 +160,8 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
     }
     jel += increment;
   }
+  _elementDof[_nel] = pt_u;
+
 
   _childElemFlag = false;
 
@@ -236,7 +239,7 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
   tempElementDof = _elementDof;
   tempElementDofMemory = _elementDofMemory;
 
-  _elementDof = new unsigned * [_nel];
+  _elementDof = new unsigned* [_nel + 1];
   _elementDofMemory = new unsigned [ _elementDofSize ];
 
   unsigned *ptKvert = _elementDofMemory;
@@ -245,6 +248,7 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
     _elementDof[iel] = ptKvert;
     ptKvert +=  NVE[_elementType[iel]][2];
   }
+  _elementDof[_nel] = ptKvert;
 
   for(unsigned iel=0; iel<_nel; iel++){
     for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
@@ -286,7 +290,7 @@ elem::~elem() {
     if(_childElemFlag){
       delete [] _childElemMemory;
       delete [] _childElem;
-      
+
       delete [] _childElemDofMemory;
       delete [] _childElemDofMemoryPointer;
       delete [] _childElemDof;
@@ -577,7 +581,7 @@ void elem::AllocateChildrenElement(const unsigned &refindex, Mesh* msh){
   if(_childElemFlag){
     delete [] _childElemMemory;
     delete [] _childElem;
-    
+
     delete [] _childElemDofMemory;
     delete [] _childElemDofMemoryPointer;
     delete [] _childElemDof;
@@ -586,7 +590,7 @@ void elem::AllocateChildrenElement(const unsigned &refindex, Mesh* msh){
   unsigned localNel = _elementOffsetP1 - _elementOffset;
   unsigned localNelr = 0;
 
-  
+
   _childElemDofMemorySize = 0;
   for(unsigned iel = _elementOffset; iel < _elementOffsetP1; iel++){
     unsigned elementType = msh->GetElementType(iel);
@@ -604,27 +608,27 @@ void elem::AllocateChildrenElement(const unsigned &refindex, Mesh* msh){
   _childElemMemory = new unsigned [_childElemSize];
   memset( _childElemMemory, 0, _childElemSize * sizeof(unsigned) );
   _childElem = new unsigned* [localNel];
-  
+
   _childElemDofMemory = new unsigned [_childElemDofMemorySize];
   _childElemDofMemoryPointer = new unsigned *[_childElemSize];
   _childElemDof = new unsigned **[localNel];
 
-  
+
   unsigned *ptr = _childElemMemory;
-  
+
   unsigned *ptr1  = _childElemDofMemory;
   unsigned **pptr = _childElemDofMemoryPointer;
   unsigned counter = 0;
-  
+
   for(unsigned i=0; i < localNel; i++){
     _childElem[i] = ptr;
-    
+
     unsigned elementType = msh->GetElementType(_elementOffset + i);
-    
-    _childElemDof[i] = pptr; 
+
+    _childElemDof[i] = pptr;
     if ( msh->GetRefinedElementIndex(_elementOffset + i) == 1){
       ptr += refindex;
-      
+
       pptr += refindex;
       for(unsigned j=0; j<refindex; j++){
 	_childElemDofMemoryPointer[counter] = ptr1;
@@ -634,15 +638,15 @@ void elem::AllocateChildrenElement(const unsigned &refindex, Mesh* msh){
     }
     else {
       ptr += 1;
-      
+
       pptr += 1;
       _childElemDofMemoryPointer[counter] = ptr1;
       counter++;
       ptr1 += NVE[elementType][2];
-       
+
     }
   }
-    
+
   _childElemFlag = true;
   return;
 }
@@ -650,11 +654,11 @@ void elem::AllocateChildrenElement(const unsigned &refindex, Mesh* msh){
 void elem::SetChildElementDof(const unsigned &refIndex, Mesh *msh, const elem* elf){
   for(unsigned iel = _elementOffset; iel < _elementOffsetP1; iel++){
     unsigned elementType = msh->GetElementType(iel);
-    unsigned endIndex = ( msh->GetRefinedElementIndex(iel) == 1)?refIndex : 1u; 
+    unsigned endIndex = ( msh->GetRefinedElementIndex(iel) == 1)?refIndex : 1u;
     for(unsigned j=0; j<endIndex; j++){
       unsigned ielf = GetChildElement(iel,j);
       for(unsigned k=0; k<elf->GetElementDofNumber(ielf,2); k++){
-	_childElemDof[iel-_elementOffset][j][k] = elf->GetElementDofIndex(ielf,k);  
+	_childElemDof[iel-_elementOffset][j][k] = elf->GetElementDofIndex(ielf,k);
       }
     }
   }
