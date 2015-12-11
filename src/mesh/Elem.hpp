@@ -36,7 +36,7 @@ public:
     /** constructors */
     elem(const unsigned & other_nel);
 
-    elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrLocal, const std::vector < double > &localizedElementType);
+    elem(elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrLocal, const std::vector < double > &localizedElementType);
 
     void ElementDofSharpAllocation();
 
@@ -47,10 +47,10 @@ public:
 
     void DeleteElementType();
 
-    void DeleteElementFather();
+    void ParallelizeElementFather();
 
     // reorder the element according to the new element mapping
-    void ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc);
+    void ReorderMeshElements( const std::vector < unsigned > &elementMapping );
 
     // reorder the nodes according to the new node mapping
     void ReorderMeshNodes( const std::vector < unsigned > &nodeMapping);
@@ -98,6 +98,7 @@ public:
 
     /** To be Added */
     int GetFaceElementIndex(const unsigned &iel,const unsigned &iface) const;
+    
     int GetBoundaryIndex(const unsigned &iel,const unsigned &iface) const;
 
     /** To be Added */
@@ -193,7 +194,7 @@ private:
     // member data
     int **_elementNearFace;
     int *_elementNearFaceMemory;
-    unsigned _elementNearFaceSize;
+    unsigned _elementNearFaceMemorySize;
 
     std::map< unsigned, std::vector< unsigned > > _localElementNearVertexMap;
     unsigned **_elementNearVertex; //node->element
@@ -202,7 +203,7 @@ private:
 
     unsigned **_elementDof; //element -> nodes
     unsigned *_elementDofMemory;
-    unsigned _elementDofSize;
+    unsigned _elementDofMemorySize;
 
     unsigned **_childElem;
     unsigned *_childElemMemory;
@@ -213,7 +214,6 @@ private:
     unsigned **_childElemDofMemoryPointer; //element -> nodes
     unsigned *_childElemDofMemory;
     unsigned _childElemDofMemorySize;
-
 
     unsigned _elementOffset;
     unsigned _elementOffsetP1;
@@ -226,8 +226,11 @@ private:
     unsigned _ngroup;
 
     bool *_fatherElementIsRefined; //element
-
+    bool _fatherElementIsRefinedParallel;
+    
     unsigned _level;
+    
+    elem *_coarseElem;
 
 };
 

@@ -74,7 +74,7 @@ namespace femus {
     //BEGIN flag element to be refined
     if (type == 0) { // Flag all element
       for (int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
-        if (_mesh.GetLevel() == 0 || _mesh.GetIfElementFatherIsRefined(iel)) {
+        if (_mesh.GetLevel() == 0 || _mesh.el->GetIfFatherElementIsRefined(iel)) {
           _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
           numberOfRefinedElement->add(_iproc, 1.);
           numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
@@ -83,7 +83,7 @@ namespace femus {
     }
     else if (type == 1) { // Flag AMR elements
       for (int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
-        if (_mesh.GetLevel() == 0 || _mesh.GetIfElementFatherIsRefined(iel)) {
+        if (_mesh.GetLevel() == 0 || _mesh.el->GetIfFatherElementIsRefined(iel)) {
           if ((*_mesh._topology->_Sol[ _mesh.GetAmrIndex() ])(iel) > 0.5) {
             numberOfRefinedElement->add(_iproc, 1.);
             numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
@@ -118,7 +118,7 @@ namespace femus {
     }
     else if (type == 2) { // Flag only even elements (for debugging purposes)
       for (int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
-        if (_mesh.GetLevel() == 0 || _mesh.GetIfElementFatherIsRefined(iel)) {
+        if (_mesh.GetLevel() == 0 || _mesh.el->GetIfFatherElementIsRefined(iel)) {
           if ((*_mesh._topology->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && iel % 2 == 0) {
             _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
             numberOfRefinedElement->add(_iproc, 1.);
@@ -400,15 +400,8 @@ namespace femus {
     _mesh.el->DeleteElementType();
 
     _mesh._topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
-    _mesh._topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-    _mesh._topology->ResizeSolutionVector("elFather");
-    NumericVector& elementFather =  _mesh._topology->GetSolutionName("elFather");
-    elementFather.zero();
-    for (int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
-      elementFather.set(iel, 1.);
-    }
-    elementFather.close();
-    _mesh.el->DeleteElementFather();
+    
+    _mesh.el->ParallelizeElementFather();
   }
 
 

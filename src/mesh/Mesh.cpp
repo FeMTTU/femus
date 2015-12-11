@@ -176,7 +176,6 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   type.close();
 
   _topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
-  _topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
 
 
   el->BuildLocalElementNearVertex();
@@ -264,7 +263,6 @@ void Mesh::GenerateCoarseBoxMesh(
   type.close();
 
   _topology->AddSolution("solidMrk",LAGRANGE, SECOND,1 , 0);
-  _topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
 
   el->BuildLocalElementNearVertex();
   el->DeleteElementNearVertex();
@@ -385,27 +383,7 @@ void Mesh::FillISvector(vector < int > &partition) {
       }
     }
   }
-
-
-  if( GetLevel() == 0 ){
-    el->ReorderMeshElements(mapping, NULL);
-  }
-  else{
-    el->ReorderMeshElements(mapping, _coarseMsh->el);
-  }
-
-  for(int isdom = 0; isdom < _nprocs; isdom++){
-    unsigned localSize = _elementOffset[isdom+1] - _elementOffset[isdom];
-    unsigned offsetPWLD = _elementOffset[isdom] * (_dimension + 1);
-    for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
-      //piecewise linear discontinuous
-      unsigned locIel = iel - _elementOffset[isdom];
-      for(unsigned k = 0; k < _dimension + 1; k++){
-        unsigned locKel = ( k * localSize ) + locIel;
-        unsigned kel = offsetPWLD + locKel;
-      }
-    }
-  }
+  el->ReorderMeshElements(mapping);
 
   // ghost vs owned nodes: 3 and 4 have no ghost nodes
   for(unsigned k = 3; k < 5; k++){
@@ -854,11 +832,6 @@ short unsigned Mesh::GetElementType(const unsigned int& iel) const{
 bool Mesh::GetSolidMark(const unsigned int& inode) const{
   return static_cast <short unsigned> ( (*_topology->_Sol[_solidMarkIndex])(inode) + 0.25);
 }
-
-bool Mesh::GetIfElementFatherIsRefined(const unsigned &iel) const{
-  return static_cast <short unsigned> ( (*_topology->_Sol[_elementFatherIndex])(iel) + 0.25);
-}
-
 
 
  /** Only for parallel */

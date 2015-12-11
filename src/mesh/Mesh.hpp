@@ -97,9 +97,6 @@ public:
     bool GetSolidMark(const unsigned &inode) const;
 
     /** Only for parallel */
-    bool GetIfElementFatherIsRefined(const unsigned &iel) const;
-
-    /** Only for parallel */
     unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const;
 
     /** Only for parallel */
@@ -220,8 +217,7 @@ public:
     const unsigned GetGroupIndex()      const { return _groupIndex; };
     const unsigned GetTypeIndex()       const { return _typeIndex; };
     const unsigned GetSolidMarkIndex()       const { return _solidMarkIndex; };
-    const unsigned GetElementFatherIndex()       const { return _elementFatherIndex; };
-
+   
 private:
     /** Coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
     Mesh* _coarseMsh;
@@ -261,7 +257,6 @@ private:
     static const unsigned _groupIndex = 5;
     static const unsigned _typeIndex = 6;
     static const unsigned _solidMarkIndex = 7;
-    static const unsigned _elementFatherIndex = 8;
 
 
 };
