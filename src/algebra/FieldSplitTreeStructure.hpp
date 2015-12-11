@@ -131,7 +131,10 @@ namespace femus {
     SolverType _solver;
     PreconditionerType _preconditioner; 
     unsigned _numberOfSplits;
-    std::vector < FieldSpliTreeStructure * > _childrenBranches; // I do not understand this part?
+
+    std::vector < FieldSpliTreeStructure * > _childrenBranches; 
+    std::vector < FieldSpliTreeStructure* > _branch; 
+    std::vector < std::vector < unsigned > > _fields;
     std::vector < std::vector < unsigned > > _fieldsInSplit;
     std::vector < unsigned > _allFields;
     std::string _name;
