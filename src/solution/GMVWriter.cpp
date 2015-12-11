@@ -188,7 +188,6 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 	  fout.write((char *)&NVE[ielt][index],sizeof(unsigned));
 	  for(unsigned j=0;j<NVE[ielt][index];j++){
 
-	    //unsigned jnode=_ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(ii,j)-1u;
 	    unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(j,ii,index);
 
 	    topology[j]=jnode_Metis+offset;

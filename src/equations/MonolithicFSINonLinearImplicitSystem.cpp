@@ -75,7 +75,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   NumericVector *NNZ_o = NumericVector::build().release();
   NNZ_o->init(*LinSolf->_EPS);
   NNZ_o->zero();
-  
+
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex = _SolSystemPdeIndex[k];
     unsigned  SolType = _ml_sol->GetSolutionType(SolIndex);
@@ -109,18 +109,12 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
   RRt = SparseMatrix::build().release();
   RRt->init(nf,nc,nf_loc,nc_loc,nnz_d,nnz_o);
 
-  vector <double> localizedNodeMaterial;
-  LinSolf->_msh->_topology->_Sol[LinSolf->_msh->GetSolidMarkIndex()]->localize_to_all(localizedNodeMaterial); 
-    
   for (unsigned k=0; k<_SolSystemPdeIndex.size(); k++) {
     unsigned SolIndex=_SolSystemPdeIndex[k];
     unsigned solPairIndex=_ml_sol->GetSolutionPairIndex(k);
     unsigned SolType = _ml_sol->GetSolutionType(SolIndex);
     unsigned solPairPdeIndex = GetSolPdeIndex( _ml_sol->GetSolutionName(solPairIndex) );
 
-
-    //bool TestDisp=0;
-    //if(_ml_sol->TestIfSolutionIsDisplacemenet(SolIndex) )   TestDisp=1;
     bool testIfPressure=0;
     if(_ml_sol->TestIfSolutionIsPressure(SolIndex) )   testIfPressure=1;
 
@@ -129,8 +123,7 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
       for (int iel=mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom+1]; iel++) {
 	short unsigned ielt=mshc->GetElementType(iel);
 	if(!testIfPressure){
-	  //mshc->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,solPairIndex,solPairPdeIndex);
-	  mshc->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,solPairIndex,solPairPdeIndex,localizedNodeMaterial);
+	  mshc->_finiteElement[ielt][SolType]->BuildRestrictionTranspose(*LinSolf,*LinSolc,iel,RRt,SolIndex,k,solPairIndex,solPairPdeIndex);
 	}
 	else{
 	  mshc->_finiteElement[ielt][SolType]->BuildProlongation(*LinSolf,*LinSolc,iel, RRt,SolIndex,k);

@@ -189,7 +189,7 @@ namespace femus {
         unsigned iel = block_elements[vb_index][kel];
 
         for (unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) {
-          unsigned inode = _msh->el->GetElementVertexIndex(iel, i) - 1u;
+          unsigned inode = _msh->el->GetElementDofIndex(iel, i);
           const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
           unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
           for (unsigned j = 0; j < nve; j++) {
