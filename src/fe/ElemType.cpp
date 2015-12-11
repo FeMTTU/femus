@@ -184,7 +184,7 @@ void elem_type::GetSparsityPatternSize(const LinearEquation &lspdef,const Linear
   }
   else{ // coarse2coarse prolongation
     for (int i=0; i<_nc; i++) {
-      int irow=lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);  
+      int irow=lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
 
       int iproc=0;
       while ( irow >= lspdef.KKoffset[lspdef.KKIndex.size()-1][iproc] ) iproc++;
@@ -233,32 +233,47 @@ void elem_type::BuildProlongation(const LinearEquation &lspdef,const LinearEquat
 }
 
 
-
-//TODO Set identyty projection for AMR
 void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc, SparseMatrix* Projmat,
 					  const unsigned &index_sol, const unsigned &kkindex_sol,
-					  const unsigned &index_pair_sol, const unsigned &kkindex_pair_sol, const std::vector <double> &localizedNodeMaterial) const{
+					  const unsigned &index_pair_sol, const unsigned &kkindex_pair_sol) const{
 
   if( lspdec._msh->GetRefinedElementIndex(ielc) ){ // coarse2fine prolongation
+
+  //BEGIN project nodeSolidMark
+  vector < double > fineNodeSolidMark(_nf,0);
+  vector < bool > coarseNodeSolidMark(_nc,0);
+  if( _SolType == 2 ){
+    for(unsigned j = 0; j<_nc; j++){
+      int jadd = lspdec._msh->GetSolutionDof(j, ielc, _SolType);
+      coarseNodeSolidMark[j] = lspdec._msh->GetSolidMark(jadd);
+    }
+    for(unsigned i = 0; i < _nf; i++){
+      int ncols = _prol_ind[i+1] - _prol_ind[i];
+      for (int k=0; k<ncols; k++) {
+        int j=_prol_ind[i][k];
+        fineNodeSolidMark[i] += _prol_val[i][k] * coarseNodeSolidMark[j];
+      }
+    }
+  }
+  //END project nodeSolidMark
+
     vector <int> cols(27);
     vector <double> copy_prol_val;
     copy_prol_val.reserve(27);
     for (int i = 0; i < _nf; i++) {
       int i0 =_KVERT_IND[i][0]; // id of the subdivision of the fine element
       int i1 = _KVERT_IND[i][1]; // local id node on the subdivision of the fine element
-      int iadd = lspdef._msh->GetSolutionDof( ielc, i0, i1, _SolType, lspdec._msh);
       int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, i0, i1, lspdec._msh);
-      bool isolidmark = static_cast < short unsigned > (localizedNodeMaterial[iadd] + 0.25);
-      
+      bool isolidmark = ( fineNodeSolidMark[i] > 0.99 && fineNodeSolidMark[i] < 1.01 ) ? true : false;
+
       int ncols = _prol_ind[i+1] - _prol_ind[i];
       cols.assign(ncols, 0);
       copy_prol_val.assign(ncols, 0);
       for (int k=0; k<ncols; k++) {
         int j=_prol_ind[i][k];
-        int jadd = lspdec._msh->GetSolutionDof(j, ielc, _SolType);
-        bool jsolidmark = lspdec._msh->GetSolidMark(jadd);
+        bool jsolidmark = coarseNodeSolidMark[j];
         if( isolidmark == jsolidmark){
-	  int jcolumn = lspdec.GetSystemDof(index_sol,kkindex_sol, j, ielc);
+	  int jcolumn = lspdec.GetSystemDof(index_sol, kkindex_sol, j, ielc);
 	  cols[k] = jcolumn;
 	  copy_prol_val[k]=_prol_val[i][k];
         }
@@ -273,24 +288,11 @@ void elem_type::BuildRestrictionTranspose(const LinearEquation &lspdef,const Lin
   }
   else{
     vector <int> jcol(1);
-    double value;
+    double one = 1.;
     for (int i = 0; i < _nc; i++) {
-      
-      int iadd = lspdef._msh->GetSolutionDof( ielc, 0, i, _SolType, lspdec._msh);
       int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
-      bool isolidmark = static_cast < short unsigned > (localizedNodeMaterial[iadd] + 0.25); 
-      
-      int jadd = lspdec._msh->GetSolutionDof(i, ielc, _SolType);
-      bool jsolidmark = lspdec._msh->GetSolidMark(jadd);
-      if(isolidmark == jsolidmark){
-	jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
-	value = 1.;
-      }
-      else {
-	jcol[0] = lspdec.GetSystemDof(index_pair_sol, kkindex_pair_sol, i, ielc);
-	value = (index_sol != index_pair_sol) ? 1. : 0.;
-      }
-      Projmat->insert_row(irow, 1, jcol, &value);
+      jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
+      Projmat->insert_row(irow, 1, jcol, &one);
     }
   }
 }
@@ -310,9 +312,8 @@ void elem_type::GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, cons
       int i0=_KVERT_IND[i][0]; //id of the subdivision of the fine element
       int i1=_KVERT_IND[i][1]; //local id node on the subdivision of the fine element
       int irow = meshf.GetSolutionDof( ielc, i0, i1, _SolType, &meshc);
-      
-      int iproc = meshf.IsdomBisectionSearch(irow, _SolType);
 
+      int iproc = meshf.IsdomBisectionSearch(irow, _SolType);
       int ncols = _prol_ind[i+1] - _prol_ind[i];
       unsigned counter_o=0;
       for (int k=0; k<ncols; k++) {
