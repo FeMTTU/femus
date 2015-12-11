@@ -148,7 +148,7 @@
 // // // // // //               unsigned face_element_type = FELT[kelt][is_face_type_zero_or_one];
 // // // // // // 
 // // // // // //     for (unsigned i=0;i<nve;i++) {
-// // // // // //       unsigned inode = lsyspde_lev->el->GetFaceVertexIndex(iel,jface,i)-1u; //WAS VOLUME: myel->GetElementVertexIndex(kel,i)-1u;
+// // // // // //       unsigned inode = lsyspde_lev->el->GetFaceVertexIndex(iel,jface,i)-1u; //WAS VOLUME: myel->GetElementDofIndex(kel,i)-1u;
 // // // // // //       node_geom[i] = inode;
 // // // // // //     for (unsigned j=0; j<SPACEDIM; j++)    {  vx[j][i]=vt[j][inode] + moving_dom_ints*vec_sol[ indexSolD[j] ][inode]; }
 // // // // // //     }
@@ -272,7 +272,7 @@
 // // // // // //     unsigned         nve = myel->GetElementDofNumber(iel,end_ind2);
 // // // // // // 
 // // // // // //     for (unsigned i=0;i<nve;i++) {
-// // // // // //       unsigned inode = myel->GetElementVertexIndex(iel,i)-1u;
+// // // // // //       unsigned inode = myel->GetElementDofIndex(iel,i)-1u;
 // // // // // //       node_geom[i] = inode;
 // // // // // //     for (unsigned j=0; j<SPACEDIM; j++)    {  vx[j][i]=vt[j][inode] + moving_dom_ints*vec_sol[ indexSolD[j] ][inode]; }
 // // // // // //     }
@@ -352,7 +352,7 @@
 // // // // // //         unsigned nve2=Lin_Solver_[ig]->el->GetElementDofNumber(iel,end_ind2);
 // // // // // //         double xe=0.,ye=0.,ze=0.;
 // // // // // //         for (unsigned i=0;i<nve2;i++) {
-// // // // // //           unsigned inode=Lin_Solver_[ig]->el->GetElementVertexIndex(iel,i)-1u;
+// // // // // //           unsigned inode=Lin_Solver_[ig]->el->GetElementDofIndex(iel,i)-1u;
 // // // // // //           node2[i]=inode;
 // // // // // //           vx[0][i]=vt[0][inode];
 // // // // // //           vx[1][i]=vt[1][inode];
@@ -402,7 +402,7 @@
 // // // // // //     CHKERRQ(ierr);
 // // // // // //   }
 // // // // // // // 	for(unsigned j=0;j<Lin_Solver_[ig]->el->GetElementDofNumber(iel,index);j++) {
-// // // // // // // 	  iconn = Lin_Solver_[ig]->el->GetElementVertexIndex(iel,j)-1u;
+// // // // // // // 	  iconn = Lin_Solver_[ig]->el->GetElementDofIndex(iel,j)-1u;
 // // // // // // //
 // // // // // // 
 // // // // // //   return Error;
@@ -548,7 +548,7 @@
 // // // // // //     }
 // // // // // // 
 // // // // // //     for (unsigned i=0;i<nve_qty;i++) {
-// // // // // //       unsigned inode = myel->GetElementVertexIndex(kel,i)-1u;
+// // // // // //       unsigned inode = myel->GetElementDofIndex(kel,i)-1u;
 // // // // // //       node_geom_el[i] = inode;
 // // // // // //       for (unsigned j=0; j<ncomps; j++)       node_qty[ index_qty_localBlocks[j] ][i] = node_geom_el[i] + myKKIndex[index_qty_glob[j]];   //global
 // // // // // //     }

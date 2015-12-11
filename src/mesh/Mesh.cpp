@@ -118,6 +118,8 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
               << std::endl;
   }
 
+  el->ElementDofSharpAllocation();
+
   el->SetNodeNumber(_nnodes);
 
   std::vector < int > partition;
@@ -128,8 +130,8 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   FillISvector(partition);
   partition.resize(0);
 
+  el->BuildElementNearVertex();
 
-  BuildAdjVtx();
   Buildkel();
 
   _topology = new Solution(this);
@@ -174,10 +176,15 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   type.close();
 
   _topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
-  _topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-  
+
+
+  el->BuildLocalElementNearVertex();
+  el->DeleteElementNearVertex();
+
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
+
+
 
 };
 
@@ -197,6 +204,8 @@ void Mesh::GenerateCoarseBoxMesh(
 
   MeshTools::Generation::BuildBox(*this,_coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,elemType,type_elem_flag);
 
+  el->ElementDofSharpAllocation();
+
   el->SetNodeNumber(_nnodes);
 
 
@@ -208,7 +217,7 @@ void Mesh::GenerateCoarseBoxMesh(
   FillISvector(partition);
   partition.resize(0);
 
-  BuildAdjVtx();
+  el->BuildElementNearVertex();
 
   Buildkel();
 
@@ -253,32 +262,18 @@ void Mesh::GenerateCoarseBoxMesh(
   group.close();
   type.close();
 
-  _topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
-  _topology->AddSolution("elFather", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-   
+  _topology->AddSolution("solidMrk",LAGRANGE, SECOND,1 , 0);
+
+  el->BuildLocalElementNearVertex();
+  el->DeleteElementNearVertex();
+
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
 
+
 }
 
-
-/**
- * This function searches all the elements around all the vertices
- **/
-void Mesh::BuildAdjVtx() {
-  el->AllocateVertexElementMemory();
-  for (unsigned iel=0; iel<_nelem; iel++) {
-    for (unsigned inode=0; inode < el->GetElementDofNumber(iel,0); inode++) {
-      unsigned irow=el->GetElementVertexIndex(iel,inode)-1u;
-      unsigned jcol=0;
-      while ( 0 != el->GetVertexElementIndex(irow,jcol) ) jcol++;
-      el->SetVertexElementIndex(irow,jcol,iel+1u);
-    }
-  }
-}
-
-/**
- * This function stores the element adiacent to the element face (iel,iface)
+/** This function stores the element adiacent to the element face (iel,iface)
  * and stores it in kel[iel][iface]
  **/
 void Mesh::Buildkel() {
@@ -288,8 +283,8 @@ void Mesh::Buildkel() {
         unsigned i1=el->GetFaceVertexIndex(iel,iface,0);
         unsigned i2=el->GetFaceVertexIndex(iel,iface,1);
         unsigned i3=el->GetFaceVertexIndex(iel,iface,2);
-        for (unsigned j=0; j< el->GetVertexElementNumber(i1-1u); j++) {
-          unsigned jel= el->GetVertexElementIndex(i1-1u,j)-1u;
+        for (unsigned j=0; j< el->GetElementNearVertexNumber(i1); j++) {
+          unsigned jel = el->GetElementNearVertex(i1,j);
           if (jel > iel) {
             for (unsigned jface=0; jface<el->GetElementFaceNumber(jel); jface++) {
               if ( el->GetFaceElementIndex(jel,jface) <= 0) {
@@ -321,18 +316,18 @@ void Mesh::Buildkel() {
 
 
 void Mesh::AllocateAndMarkStructureNode() {
-  
-  
-  
+
+
+
   _topology->ResizeSolutionVector("solidMrk");
-  
+
   NumericVector &NodeMaterial =  _topology->GetSolutionName("solidMrk");
-  
+
   NodeMaterial.zero();
-    
+
   for (int iel = _elementOffset[_iproc]; iel < _elementOffset[_iproc + 1]; iel++) {
     int flag_mat = GetElementMaterial(iel);
-    
+
     if (flag_mat==4) {
       unsigned elementType = GetElementType(iel);
       unsigned nve = el->GetNVE(elementType,2);
@@ -343,29 +338,7 @@ void Mesh::AllocateAndMarkStructureNode() {
     }
   }
   NodeMaterial.close();
-  
-  
-//   el->AllocateNodeRegion();
-// 
-//   vector <double> localizedElementMaterial;
-//   _topology->_Sol[_materialIndex]->localize_to_all(localizedElementMaterial);
-//   
-//    vector <double> localizedElementType;
-//   _topology->_Sol[_typeIndex]->localize_to_all(localizedElementType);
-// 
-//   for (unsigned iel=0; iel<_nelem; iel++) {
-// 
-//     //int flag_mat = el->GetElementMaterial(iel);
-//     int flag_mat = static_cast < short unsigned > (localizedElementMaterial[iel]+ 0.25);
-// 
-//     if (flag_mat==4) {
-//       unsigned nve = el->GetNVE(localizedElementType[iel],2);
-//       for ( unsigned i=0; i<nve; i++) {
-//         unsigned inode=el->GetElementVertexIndex(iel,i)-1u;
-//         el->SetNodeRegion(inode, 1);
-//       }
-//     }
-//   }
+
 }
 
 
@@ -404,33 +377,13 @@ void Mesh::FillISvector(vector < int > &partition) {
     for(unsigned iel = 0; iel < GetNumberOfElements(); iel++){
       if( partition[iel] == isdom ){
 	//filling the Metis to Mesh element mapping
-	mapping[ counter ] = iel;
+        mapping[ iel ] = counter;
         counter++;
 	_elementOffset[isdom + 1] = counter;
       }
     }
   }
-
-
-  if( GetLevel() == 0 ){
-    el->ReorderMeshElements(mapping, NULL);
-  }
-  else{
-    el->ReorderMeshElements(mapping, _coarseMsh->el);
-  }
-
-  for(int isdom = 0; isdom < _nprocs; isdom++){
-    unsigned localSize = _elementOffset[isdom+1] - _elementOffset[isdom];
-    unsigned offsetPWLD = _elementOffset[isdom] * (_dimension + 1);
-    for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
-      //piecewise linear discontinuous
-      unsigned locIel = iel - _elementOffset[isdom];
-      for(unsigned k = 0; k < _dimension + 1; k++){
-        unsigned locKel = ( k * localSize ) + locIel;
-        unsigned kel = offsetPWLD + locKel;
-      }
-    }
-  }
+  el->ReorderMeshElements(mapping);
 
   // ghost vs owned nodes: 3 and 4 have no ghost nodes
   for(unsigned k = 3; k < 5; k++){
@@ -467,7 +420,7 @@ void Mesh::FillISvector(vector < int > &partition) {
 	unsigned nodeStart = (k == 0) ? 0 : el->GetElementDofNumber(iel,k-1);
 	unsigned nodeEnd = el->GetElementDofNumber(iel,k);
 	for ( unsigned inode = nodeStart; inode < nodeEnd; inode++) {
-	  unsigned ii = el->GetElementVertexIndex(iel,inode) - 1;
+	  unsigned ii = el->GetElementDofIndex(iel,inode);
 	  if(partition[ii] > isdom) {
 	    partition[ii] = isdom;
 	    mapping[ii] = counter;
@@ -508,7 +461,7 @@ void Mesh::FillISvector(vector < int > &partition) {
       std::map < unsigned, bool > ghostMap;
       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom+1]; iel++){
 	for (unsigned inode = 0; inode < el->GetElementDofNumber(iel,k); inode++) {
-	  unsigned ii = el->GetElementVertexIndex(iel,inode)-1;
+	  unsigned ii = el->GetElementDofIndex(iel,inode);
 	  if(ii < _dofOffset[2][isdom]){
 	    ghostMap[ii] = true;
 	  }
@@ -581,6 +534,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     }
   }
 
+  el->SetElementOffsets(_elementOffset[_iproc], _elementOffset[_iproc+1]);
 
 }
 
@@ -608,7 +562,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     switch(solType){
       case 0: // linear Lagrange
 	{
-	  unsigned iNode = el->GetMeshDof(iel, i, solType);
+	  unsigned iNode = el->GetElementDofIndex(iel,i);//GetMeshDof(iel, i, solType);
 	  unsigned isdom = IsdomBisectionSearch(iNode, 2);
 	  if(iNode < _dofOffset[2][isdom]+_originalOwnSize[0][isdom]){
 	    dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
@@ -620,7 +574,7 @@ void Mesh::FillISvector(vector < int > &partition) {
 	break;
       case 1: // quadratic Lagrange
        	{
-	  unsigned iNode = el->GetMeshDof(iel, i, solType);
+	  unsigned iNode = el->GetElementDofIndex(iel,i);//GetMeshDof(iel, i, solType);
 	  unsigned isdom = IsdomBisectionSearch(iNode, 2);
 	  if(iNode < _dofOffset[2][isdom]+_originalOwnSize[1][isdom]){
 	    dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
@@ -632,7 +586,7 @@ void Mesh::FillISvector(vector < int > &partition) {
 	break;
 
       case 2: // bi-quadratic Lagrange
-        dof = el->GetMeshDof(iel, i, solType);
+        dof = el->GetElementDofIndex(iel,i);//GetMeshDof(iel, i, solType);
         break;
       case 3: // piecewise constant
 	// in this case use i=0
@@ -652,6 +606,58 @@ void Mesh::FillISvector(vector < int > &partition) {
   }
 
   // *******************************************************
+
+  unsigned Mesh::GetSolutionDof(const unsigned &ielc, const unsigned &i0,const unsigned &i1, const short unsigned &solType, const Mesh* mshc) const {
+
+    unsigned dof;
+    switch(solType){
+      case 0: // linear Lagrange
+	{
+	  unsigned iNode = mshc->el->GetChildElementDof(ielc,i0,i1);
+	  unsigned isdom = IsdomBisectionSearch(iNode, 2);
+	  if(iNode < _dofOffset[2][isdom]+_originalOwnSize[0][isdom]){
+	    dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
+	  }
+	  else{
+	    dof = _ownedGhostMap[0].find(iNode)->second;
+	  }
+	}
+	break;
+      case 1: // quadratic Lagrange
+       	{
+	  unsigned iNode = mshc->el->GetChildElementDof(ielc,i0,i1);
+	  unsigned isdom = IsdomBisectionSearch(iNode, 2);
+	  if(iNode < _dofOffset[2][isdom]+_originalOwnSize[1][isdom]){
+	    dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
+	  }
+	  else{
+	    dof = _ownedGhostMap[1].find(iNode)->second;
+	  }
+	}
+	break;
+      case 2: // bi-quadratic Lagrange
+        dof = mshc->el->GetChildElementDof(ielc,i0,i1);
+        break;
+      case 3: // piecewise constant
+	// in this case use i=0
+        dof = mshc->el->GetChildElement(ielc,i0);
+        break;
+      case 4: // piecewise linear discontinuous
+	unsigned iel = mshc->el->GetChildElement(ielc,i0);
+	unsigned isdom = IsdomBisectionSearch(iel, 3);
+	unsigned offset = _elementOffset[isdom];
+        unsigned offsetp1 = _elementOffset[isdom + 1];
+        unsigned ownSize = offsetp1 - offset;
+        unsigned offsetPWLD = offset * (_dimension + 1);
+        unsigned locIel = iel - offset;
+        dof = offsetPWLD + ( i1 * ownSize ) + locIel;
+        break;
+     }
+     return dof;
+  }
+
+  // *******************************************************
+
 
 SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
   if(itype < 3 && jtype < 3){
@@ -827,9 +833,40 @@ bool Mesh::GetSolidMark(const unsigned int& inode) const{
   return static_cast <short unsigned> ( (*_topology->_Sol[_solidMarkIndex])(inode) + 0.25);
 }
 
-bool Mesh::GetIfElementFatherIsRefined(const unsigned &iel) const{
-  return static_cast <short unsigned> ( (*_topology->_Sol[_elementFatherIndex])(iel) + 0.25);
-}
+
+ /** Only for parallel */
+    unsigned Mesh::GetElementDofNumber(const unsigned &iel, const unsigned &type) const {
+      return el->GetNVE(GetElementType(iel), type);
+    }
+
+    /** Only for parallel */
+    const unsigned Mesh::GetElementFaceType(const unsigned &kel, const unsigned &jface) const{
+      unsigned kelt = GetElementType(kel);
+      const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
+      const unsigned felt = FELT[kelt][jface >= GetElementFaceNumber(kel,0)];
+      return felt;
+    }
+
+    /** Only for parallel */
+    unsigned Mesh::GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const {
+      return el->GetIG(GetElementType(iel), iface, jnode);
+    }
+
+
+    /** Only for parallel */
+    unsigned Mesh::GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
+      assert( type < 3 );
+      return el->GetNFACENODES(GetElementType(iel), jface, type);
+    }
+
+    /** Only for parallel */
+    unsigned Mesh::GetElementFaceNumber(const unsigned &iel, const unsigned &type) const {
+      return el->GetNFC(GetElementType(iel), type);
+    }
+
+
+
+
 
 } //end namespace femus
 

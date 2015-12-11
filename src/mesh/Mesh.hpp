@@ -36,6 +36,8 @@ namespace femus {
 using std::vector;
 class Solution;
 
+class elem;
+
 /**
  * The mesh class
 */
@@ -93,42 +95,24 @@ public:
 
     /** Only for parallel */
     bool GetSolidMark(const unsigned &inode) const;
-    
+
     /** Only for parallel */
-    bool GetIfElementFatherIsRefined(const unsigned &iel) const;
-    
+    unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const;
+
     /** Only for parallel */
-    unsigned GetElementDofNumber(const unsigned &iel, const unsigned &type) const {
-      return el->GetNVE(GetElementType(iel), type);
-    }
-    
+    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
+
     /** Only for parallel */
-    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const{
-      unsigned kelt = GetElementType(kel);
-      const unsigned FELT[6][2]= {{3,3},{4,4},{3,4},{5,5},{5,5},{6,6}};
-      const unsigned felt = FELT[kelt][jface >= GetElementFaceNumber(kel,0)];
-      return felt;
-    }
-    
+    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const;
+
+
     /** Only for parallel */
-    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const {
-      return el->GetIG(GetElementType(iel), iface, jnode);
-    }
-    
-    
+    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
+
     /** Only for parallel */
-    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
-      assert( type < 3 );
-      return el->GetNFACENODES(GetElementType(iel), jface, type);
-    }
-    
-    /** Only for parallel */
-    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const {
-      return el->GetNFC(GetElementType(iel), type);
-    }
-    
-    
-    
+    unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const;
+
+
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
         _level=i;
@@ -157,13 +141,10 @@ public:
       return Mesh::_ref_index;
     }
 
-//     /** Get the metis dof from the gambit dof */
-//     unsigned GetSolutionDof(const unsigned &inode, const short unsigned &solType) const {
-//       return IS_Gmt2Mts_dof[solType][inode];
-//     }
-
     unsigned GetSolutionDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
 
+    unsigned GetSolutionDof(const unsigned &i0,const unsigned &i1, const unsigned &ielc, const short unsigned &solType, const Mesh* mshc) const ;
+    
     /** Performs a bisection search to find the processor of the given dof */
     unsigned IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const;
 
@@ -193,15 +174,11 @@ public:
                                const double zmin, const double zmax,
                                const ElemType type, std::vector<bool> &type_elem_flag);
 
-
     /** To be added */
     void FillISvector(vector < int > &epart);
 
     /** To be added */
     void Buildkel();
-
-    /** To be added */
-    void BuildAdjVtx();
 
 
     // member data
@@ -240,8 +217,7 @@ public:
     const unsigned GetGroupIndex()      const { return _groupIndex; };
     const unsigned GetTypeIndex()       const { return _typeIndex; };
     const unsigned GetSolidMarkIndex()       const { return _solidMarkIndex; };
-    const unsigned GetElementFatherIndex()       const { return _elementFatherIndex; };
-
+   
 private:
     /** Coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
     Mesh* _coarseMsh;
@@ -281,7 +257,6 @@ private:
     static const unsigned _groupIndex = 5;
     static const unsigned _typeIndex = 6;
     static const unsigned _solidMarkIndex = 7;
-    static const unsigned _elementFatherIndex = 8;
 
 
 };

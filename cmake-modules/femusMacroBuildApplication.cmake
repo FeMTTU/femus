@@ -33,6 +33,7 @@ ENDIF(HDF5_FOUND)
 FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/output/)
 FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/input/)
 FILE(COPY           ${PROJECT_SOURCE_DIR}/input/ DESTINATION ${PROJECT_BINARY_DIR}/input/)
-
+# TODO this file copy does not generate a dependency rule in the makefiles, maybe we should think of how to obtain that,
+# to avoid re-running cmake when new input files are added in the applications
 
 ENDMACRO(femusMacroBuildApplication)

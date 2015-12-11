@@ -400,7 +400,6 @@ bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const do
       if(SolType[k]<3){
         unsigned nve=_msh->GetElementDofNumber(kel,SolEndInd[k]);
 	for(unsigned i=0; i<nve; i++) {
-	  //unsigned inode=(SolType[k]<3)?(_msh->el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
 	  unsigned inode_metis=_msh->GetSolutionDof(i,kel,SolType[k]);
 	  double value = (*_AMREps[SolIndex[k]])(inode_metis);
 	  if(fabs(value)>SolMax[k]){
@@ -565,7 +564,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       row_dof[0]=iel;
 
       short unsigned ielt=_msh->GetElementType(iel);
-      
+
       unsigned nve=_msh->GetElementDofNumber(iel,SolType);
 
       // resize
@@ -584,7 +583,6 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
       }
 
       for( unsigned i=0; i<nve; i++) {
-	//unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
 	unsigned inode_coord_metis=_msh->GetSolutionDof(i,iel,2);
 	column_dofs[i]=_msh->GetSolutionDof(i,iel,SolType);
         for(unsigned ivar=0; ivar<dim; ivar++) {

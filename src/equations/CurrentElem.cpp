@@ -364,8 +364,8 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 //     
 //     for (unsigned i=0;i<nve;i++) {
 //       // gambit nodes
-//            unsigned inode=(order_ind<3)?(myel->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
-//       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
+//            unsigned inode=(order_ind<3)?(myel->GetElementDofIndex(kel,i)-1u):(kel+i*nel);
+//       unsigned inode=myel->GetElementDofIndex(kel,i)-1u;
 
 //       // dof metis
 //       /*metis_node2*/_el_conn_new[i] = mymsh->GetSolutionDof(inode,BIQUADR_FE);
@@ -387,7 +387,7 @@ void CurrentElem::ConvertElemCoordsToMappingOrd(CurrentQuantity& myvect) const {
 // 
 //      for (unsigned i=0;i<nve;i++) {
 //       gambit nodes
-//       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
+//       unsigned inode=myel->GetElementDofIndex(kel,i)-1u;
 //       dof metis
 //       unsigned inode_Metis=mymsh->GetSolutionDof(inode,2);
 //       metis_node2[i]=inode_Metis;

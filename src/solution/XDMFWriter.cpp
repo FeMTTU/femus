@@ -276,7 +276,6 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 	int ndofs = _ml_mesh->GetLevel(ig)->el->GetNVE(elemtype,index_nd);//GetElementDofNumber(iel,index_nd);
         for (unsigned j = 0; j < ndofs; j++) {
 	  unsigned vtk_loc_conn = FemusToVTKorToXDMFConn[j];
-	  //unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
 	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(vtk_loc_conn,iel,index_nd);
 	  var_conn[icount] = offset_conn + jnode_Metis;
 	  icount++;

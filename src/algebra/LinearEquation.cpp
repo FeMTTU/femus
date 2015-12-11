@@ -62,24 +62,25 @@ unsigned LinearEquation::GetIndex(const char name[]) {
 }
 
 
-// unsigned LinearEquation::GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
-// 				  const unsigned &idof_gmt) const {
-//
-//   unsigned soltype =  _SolType[index_sol];
-//   unsigned idof_metis = _msh->GetSolutionDof(idof_gmt,soltype);
-//
-//   unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype);
-//   return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->_dofOffset[soltype][isubdom];
-// }
-
 unsigned LinearEquation::GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
-				  const unsigned &i, const unsigned &iel) const {
+				      const unsigned &i, const unsigned &iel) const {
 
   unsigned soltype =  _SolType[index_sol];
-  unsigned idof_metis = _msh->GetSolutionDof(i, iel, soltype);
+  unsigned idof= _msh->GetSolutionDof(i, iel, soltype);
 
-  unsigned isubdom = _msh->IsdomBisectionSearch(idof_metis, soltype);
-  return KKoffset[kkindex_sol][isubdom] + idof_metis - _msh->_dofOffset[soltype][isubdom];
+  unsigned isubdom = _msh->IsdomBisectionSearch(idof, soltype);
+  return KKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
+}
+
+
+unsigned LinearEquation::GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
+				      const unsigned &ielc, const unsigned &i0,const unsigned &i1,  
+				      const Mesh* mshc) const {
+  unsigned soltype =  _SolType[index_sol];
+  unsigned idof = _msh->GetSolutionDof(ielc, i0, i1, soltype, mshc);
+
+  unsigned isubdom = _msh->IsdomBisectionSearch(idof, soltype);
+  return KKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
 }
 
 
@@ -289,8 +290,7 @@ void LinearEquation::DeletePde() {
       for(int i=0; i<_SolPdeIndex.size(); i++) {
 	int ThisSolType=_SolType[_SolPdeIndex[i]];
 	for (int j=0;j<nve[i];j++) {
-	  int inode=(ThisSolType<3)?(_msh->el->GetElementVertexIndex(kel,j)-1u):(kel+j*nel);
-	  //dofsVAR[i][j]= GetSystemDof(_SolPdeIndex[i],i,inode);
+          int inode=_msh->GetSolutionDof(j, kel, ThisSolType);
 	  dofsVAR[i][j]= GetSystemDof(_SolPdeIndex[i],i,j,kel);
 	}
       }

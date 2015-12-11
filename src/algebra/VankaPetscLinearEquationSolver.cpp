@@ -113,13 +113,19 @@ namespace femus {
 	// ***************** NODE/ELEMENT SERCH *******************
 
 	for (int iel=gel; iel<gel+_block_element_number && iel< _msh->_elementOffset[isdom+1]; iel++) {
-	  
+
 	  for (unsigned i=0; i<_msh->GetElementDofNumber(iel,0); i++) {
-	    unsigned inode=_msh->el->GetElementVertexIndex(iel,i)-1u;
-	    unsigned nvei=_msh->el->GetVertexElementNumber(inode);
-	    const unsigned *pt_jel=_msh->el->GetVertexElementAddress(inode,0);
-	    for (unsigned j=0; j<nvei*(!FastVankaBlock)+FastVankaBlock; j++) {
-	      unsigned jel=(!FastVankaBlock)?*(pt_jel++)-1u:iel;
+	    unsigned inode=_msh->el->GetElementDofIndex(iel,i);
+
+            const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
+            unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
+            for (unsigned j = 0; j < nve; j++) {
+              unsigned jel = (!FastVankaBlock) ? localElementNearVertexNumber[j] : iel;
+
+// 	    unsigned nvei=_msh->el->GetElementNearVertexNumber(inode);
+// 	    const unsigned *pt_jel=_msh->el->GetElementNearVertexPointer(inode,0);
+// 	    for (unsigned j=0; j<nvei*(!FastVankaBlock)+FastVankaBlock; j++) {
+// 	      unsigned jel=(!FastVankaBlock)?*(pt_jel++) : iel;
 	      //add elements for velocity to be solved
 
 	      unsigned jel_Metis = _msh->GetSolutionDof(0,jel,3);
@@ -135,15 +141,11 @@ namespace femus {
 		  unsigned indexSol=VankaIndex[iind];
 		  unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 		  unsigned SolType = _SolType[SolPdeIndex];
-		  const unsigned *pt_un=_msh->el->GetElementVertexAddress(jel,0);
 		  unsigned nvej=_msh->GetElementDofNumber(jel,SolType);
 		  for (unsigned jj=0; jj<nvej; jj++) {
-		    unsigned jnode=(SolType<3)?(*(pt_un++)-1u):(jel+jj*nel);
-                  //unsigned jnode_Metis = _msh->GetSolutionDof(jnode,SolType);
 		    unsigned jnode_Metis = _msh->GetSolutionDof(jj,jel,SolType);
 		    if(jnode_Metis >= _msh->_dofOffset[SolType][processor_id()] &&
 		       jnode_Metis <  _msh->_dofOffset[SolType][processor_id()+1]){
-		      //unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, jnode);
 		      unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, jj, jel);
 		      if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1 <(*(*_Bdc)[SolPdeIndex])(jnode_Metis) ) {
 			_indexai[vanka_block_index][Asize]=kkdof;
@@ -153,11 +155,16 @@ namespace femus {
 		  }
 		}
                 for (unsigned jj=0; jj<_msh->GetElementDofNumber(jel,0); jj++) {
-		  unsigned jnode=_msh->el->GetElementVertexIndex(jel,jj)-1u;
-		  unsigned nvej=_msh->el->GetVertexElementNumber(jnode);
-		  const unsigned *pt_kel=_msh->el->GetVertexElementAddress(jnode,0);
+		  unsigned jnode=_msh->el->GetElementDofIndex(jel,jj);
+
+                  const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(jnode);
+                  unsigned nvej = localElementNearVertexNumber.size();
+
+		  //unsigned nvej=_msh->el->GetElementNearVertexNumber(jnode);
+		  //const unsigned *pt_kel=_msh->el->GetElementNearVertexPointer(jnode,0);
 		  for (unsigned k=0; k<nvej; k++) {
-		    unsigned kel=*(pt_kel++)-1u;
+                    unsigned kel = localElementNearVertexNumber[k];
+		    //unsigned kel=*(pt_kel++);
 		    //add all variables to be updated
 		    unsigned kel_Metis = _msh->GetSolutionDof(0,kel,3);
 		    if(kel_Metis >= IndexdOffsetp1 ||
@@ -169,17 +176,13 @@ namespace femus {
 		      }
 
 		      for (unsigned int indexSol=0; indexSol<KKIndex.size()-1u; indexSol++) {
-			const unsigned *pt_un=_msh->el->GetElementVertexAddress(kel,0);
 			unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 			unsigned SolType = _SolType[SolPdeIndex];
 			unsigned nvek=_msh->GetElementDofNumber(kel,SolType);
 			for (unsigned kk=0; kk<nvek; kk++) {
-			  //unsigned knode=(SolType<3)?(*(pt_un++)-1u):(kel+kk*nel);
-
 			  unsigned knode_Metis = _msh->GetSolutionDof(kk,kel,SolType);
 			  if(knode_Metis >= _msh->_dofOffset[SolType][processor_id()] &&
 			     knode_Metis <  _msh->_dofOffset[SolType][processor_id()+1]){
-			    //unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, knode);
 			    unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, kk, kel);
 			    if(indexb[kkdof- IndexbOffset]==IndexbSize && 0.1<(*(*_Bdc)[SolPdeIndex])(knode_Metis)) {
 			      indexbi[counterb]=kkdof;
@@ -201,14 +204,11 @@ namespace femus {
 	      unsigned indexSol=VankaIndex[iind];
 	      unsigned SolPdeIndex = _SolPdeIndex[indexSol];
 	      unsigned SolType = _SolType[SolPdeIndex];
-	      const unsigned *pt_un=_msh->el->GetElementVertexAddress(iel,0);
 	      unsigned nvei=_msh->GetElementDofNumber(iel,SolType);
 	      for (unsigned ii=0; ii<nvei; ii++) {
-		//unsigned inode=(SolType<3)?(*(pt_un++)-1u):(iel+ii*nel);
 		unsigned inode_Metis = _msh->GetSolutionDof(ii,iel,SolType);
 		if(inode_Metis >= _msh->_dofOffset[SolType][processor_id()] &&
 		   inode_Metis <  _msh->_dofOffset[SolType][processor_id()+1]){
-		  //unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, inode);
 		  unsigned kkdof=GetSystemDof(SolPdeIndex, indexSol, ii, iel);
 		  if (indexa[kkdof- IndexaOffset]==IndexaSize && 1.1<(*(*_Bdc)[SolPdeIndex])(inode_Metis) ) {
 		    _indexai[vanka_block_index][Asize]=kkdof;

@@ -62,7 +62,11 @@ public:
  // unsigned GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,const unsigned &idof_gmt) const;
 
   unsigned GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
-				  const unsigned &i, const unsigned &iel) const;
+			const unsigned &i, const unsigned &iel) const;
+				  
+  unsigned GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
+	                const unsigned &ielc, const unsigned &i0,const unsigned &i1,  
+		        const Mesh* mshc) const;
 
   /** To be Added */
   void SetResZero();

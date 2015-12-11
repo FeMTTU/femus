@@ -554,7 +554,7 @@ void AssembleMatrixResNS(MultiLevelProblem& ml_prob) {
     }
 
     for (unsigned i = 0; i < nve2; i++) {
-      //unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
+      //unsigned inode=myel->GetElementDofIndex(kel,i)-1u;
       unsigned inode_metis = mymsh->GetSolutionDof(i, kel, 2);
       metis_node2[i] = inode_metis;
 
@@ -840,7 +840,6 @@ void AssembleMatrixResT(MultiLevelProblem& ml_prob) {
 
     // get local to global mappings
     for (unsigned i = 0; i < nve; i++) {
-      //unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
       unsigned inode_metis = mymsh->GetSolutionDof(i, kel, 2);
       metis_node[i] = inode_metis;
 
