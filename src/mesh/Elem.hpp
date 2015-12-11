@@ -39,7 +39,7 @@ public:
     elem(const elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrLocal, const std::vector < double > &localizedElementType);
 
     void ElementDofSharpAllocation();
-    
+
     /** destructor */
     ~elem();
 
@@ -138,12 +138,12 @@ public:
 
     /** To be Added */
     void BuildElementNearVertex();
-    
+
     /** To be Added */
     void SetChildElementDof(const unsigned &ref_index, Mesh *msh, const elem* elf);
-    
+
     unsigned GetChildElementDof(const unsigned &iel, const unsigned &i0, const unsigned i1) const{
-      return _childElemDof[iel-_elementOffset][i0][i1];   
+      return _childElemDof[iel-_elementOffset][i0][i1];
     }
 
     void DeleteElementNearVertex();
@@ -174,7 +174,7 @@ public:
 
     /** To be Added */
     unsigned GetChildElement(const unsigned &iel,const unsigned &json) const;
-    
+
     const unsigned GetNVE(const unsigned &elementType, const unsigned &doftype) const;
 
     const unsigned GetNFACENODES(const unsigned &elementType, const unsigned &jface, const unsigned &dof) const;
@@ -206,14 +206,14 @@ private:
 
     unsigned **_childElem;
     unsigned *_childElemMemory;
-    unsigned _childElemSize;
+    unsigned _childElemMemorySize;
     bool _childElemFlag;
-    
+
     unsigned ***_childElemDof; //element -> nodes
     unsigned **_childElemDofMemoryPointer; //element -> nodes
     unsigned *_childElemDofMemory;
     unsigned _childElemDofMemorySize;
-    
+
 
     unsigned _elementOffset;
     unsigned _elementOffsetP1;

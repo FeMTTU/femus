@@ -131,7 +131,6 @@ elem::elem(const elem *elc, const unsigned refindex, const std::vector < double 
 
   for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ){
     if( static_cast < short unsigned > ( coarseAmrVector[iel] + 0.25 ) == 0){
-       //unsigned type = elc->GetElementType(iel);
        unsigned type = static_cast < short unsigned > ( coarseElementType[iel] + 0.25 );
        _elementDofSize += NVE[type][2];
        _elementNearFaceSize += NFC[type][1];
@@ -175,7 +174,7 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
   tempElt = _elementType;
   _elementType = new short unsigned [_nel];
   for(unsigned iel = 0; iel < _nel; iel++){
-    _elementType[iel]   = tempElt[ elementMapping[iel] ];
+    _elementType[ elementMapping [iel] ]  = tempElt[iel] ;
   }
   delete [] tempElt;
 
@@ -185,7 +184,7 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
     tempElRef = _fatherElementIsRefined;
     _fatherElementIsRefined = new bool [_nel];
     for(unsigned iel = 0; iel < _nel; iel++){
-      _fatherElementIsRefined[iel] = tempElRef[ elementMapping[iel] ];
+      _fatherElementIsRefined[elementMapping [iel]] = tempElRef[iel];
     }
     delete [] tempElRef;
   }
@@ -199,8 +198,8 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
     _elementGroup = new short unsigned [_nel];
     _elementMaterial = new short unsigned [_nel];
     for(unsigned iel = 0; iel < _nel; iel++){
-      _elementGroup[iel]   = tempElg[ elementMapping[iel] ];
-      _elementMaterial[iel] = tempElmat[ elementMapping[iel] ];
+      _elementGroup[elementMapping [iel]]   = tempElg[ iel ];
+      _elementMaterial[elementMapping [iel]] = tempElmat[ iel] ;
     }
     delete [] tempElg;
     delete [] tempElmat;
@@ -225,7 +224,7 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
 
   for(unsigned iel=0; iel<_nel; iel++){
     for(unsigned iface=0; iface<NFC[_elementType[iel]][1]; iface++){
-      _elementNearFace[iel][iface] = tempKel[elementMapping[iel]][iface];
+      _elementNearFace[elementMapping [iel]][iface] = tempKel[iel][iface];
     }
   }
   delete [] tempKelMemory;
@@ -252,7 +251,7 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
 
   for(unsigned iel=0; iel<_nel; iel++){
     for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){
-      _elementDof[iel][inode] = tempElementDof[elementMapping[iel]][inode];
+      _elementDof[elementMapping [iel]][inode] = tempElementDof[iel][inode];
     }
   }
 
@@ -260,15 +259,8 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
   delete [] tempElementDofMemory;
 
   if(elc){
-    std::vector < unsigned > InverseElementMapping(_nel);
-    for(unsigned iel=0; iel<_nel; iel++){
-      InverseElementMapping[ elementMapping[ iel ] ] = iel;
-    }
-    unsigned *pt = elc->_childElemMemory;
-    for(int i=0; i < elc->_childElemSize; i++){
-      unsigned iel = InverseElementMapping[*pt];
-      *pt = iel;
-      pt++;
+    for(unsigned i = 0; i < elc->_childElemMemorySize; i++){
+      elc->_childElemMemory[i] =  elementMapping[ elc->_childElemMemory[i]];
     }
   }
 }
@@ -603,14 +595,14 @@ void elem::AllocateChildrenElement(const unsigned &refindex, Mesh* msh){
     }
   }
 
-  _childElemSize = localNelr*refindex + (localNel - localNelr);
+  _childElemMemorySize = localNelr*refindex + (localNel - localNelr);
 
-  _childElemMemory = new unsigned [_childElemSize];
-  memset( _childElemMemory, 0, _childElemSize * sizeof(unsigned) );
+  _childElemMemory = new unsigned [_childElemMemorySize];
+  memset( _childElemMemory, 0, _childElemMemorySize * sizeof(unsigned) );
   _childElem = new unsigned* [localNel];
 
   _childElemDofMemory = new unsigned [_childElemDofMemorySize];
-  _childElemDofMemoryPointer = new unsigned *[_childElemSize];
+  _childElemDofMemoryPointer = new unsigned *[_childElemMemorySize];
   _childElemDof = new unsigned **[localNel];
 
 

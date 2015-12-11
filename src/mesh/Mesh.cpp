@@ -119,7 +119,7 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   }
 
   el->ElementDofSharpAllocation();
-  
+
   el->SetNodeNumber(_nnodes);
 
   std::vector < int > partition;
@@ -206,7 +206,7 @@ void Mesh::GenerateCoarseBoxMesh(
   MeshTools::Generation::BuildBox(*this,_coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,elemType,type_elem_flag);
 
   el->ElementDofSharpAllocation();
-  
+
   el->SetNodeNumber(_nnodes);
 
 
@@ -379,7 +379,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     for(unsigned iel = 0; iel < GetNumberOfElements(); iel++){
       if( partition[iel] == isdom ){
 	//filling the Metis to Mesh element mapping
-	mapping[ counter ] = iel;
+        mapping[ iel ] = counter;
         counter++;
 	_elementOffset[isdom + 1] = counter;
       }
@@ -557,7 +557,7 @@ void Mesh::FillISvector(vector < int > &partition) {
   }
 
   el->SetElementOffsets(_elementOffset[_iproc], _elementOffset[_iproc+1]);
- 
+
 }
 
 
@@ -635,7 +635,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     switch(solType){
       case 0: // linear Lagrange
 	{
-	  unsigned iNode = mshc->el->GetChildElementDof(ielc,i0,i1);	  	  
+	  unsigned iNode = mshc->el->GetChildElementDof(ielc,i0,i1);
 	  unsigned isdom = IsdomBisectionSearch(iNode, 2);
 	  if(iNode < _dofOffset[2][isdom]+_originalOwnSize[0][isdom]){
 	    dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
@@ -679,8 +679,8 @@ void Mesh::FillISvector(vector < int > &partition) {
   }
 
   // *******************************************************
-  
-  
+
+
 SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
   if(itype < 3 && jtype < 3){
     if(!_ProjQitoQj[itype][jtype]){
