@@ -9,12 +9,15 @@
 
 #include <vector>
 #include <map>
+#include <string>
 
 namespace femus {
   class FieldSpliTreeStructure{
   public:
     //single split constructor
-    FieldSpliTreeStructure( const SolverType &solver, const PreconditionerType &preconditioner, const std::vector < unsigned > &fields){
+    FieldSpliTreeStructure( const SolverType &solver, const PreconditionerType &preconditioner, const std::vector < unsigned > &fields, std::string name){
+      
+      _name=name;
       
       _solver = solver;
       _preconditioner = preconditioner;
@@ -44,8 +47,9 @@ namespace femus {
     };
     
     //multiple split constructor
-    FieldSpliTreeStructure( const SolverType &solver, const PreconditionerType &preconditioner, const std::vector < FieldSpliTreeStructure> &childrenBranches){
+    FieldSpliTreeStructure( const SolverType &solver, const PreconditionerType &preconditioner, std::vector < FieldSpliTreeStructure> &childrenBranches, std::string name){
       
+      _name=name;
       _solver = solver;
       _preconditioner = preconditioner;
       _numberOfSplits = childrenBranches.size();
@@ -79,11 +83,11 @@ namespace femus {
       //END ALL FIELD COLLECTION
     }
     
-  SolverType GetSolver(){return _solver;} 
-  PreconditionerType GetPreconditioner(){return _preconditioner;} 
-  unsigned GetNumberOfSplits(){return _numberOfSplits;} 
+  const SolverType  & GetSolver(){return _solver;} 
+  const PreconditionerType & GetPreconditioner(){return _preconditioner;}
+  const unsigned & GetNumberOfSplits(){return _numberOfSplits;}
   
-  const FieldSpliTreeStructure * GetChildrenBranch(const unsigned &i){
+  FieldSpliTreeStructure * GetChildranch(const unsigned &i){
     if(i < _numberOfSplits){
       return _childrenBranches[i];
     }
@@ -94,6 +98,28 @@ namespace femus {
     }
     
   }
+  
+  void PrintNestedFields(const unsigned &counter = 0){
+
+    std::string sub=" ";
+    for(int i=0; i < counter; i++){
+      sub+="sub-";
+    }  
+    std::cout<< "Fields in the " << _name << sub <<"system:\n"; 
+    for(int j = 0; j < _allFields.size(); j++) std::cout << _allFields[j] << " ";
+    std::cout<<std::endl;   
+    
+    if( GetNumberOfSplits() > 1){
+      for(unsigned i = 0; i< GetNumberOfSplits(); i++){
+	_childrenBranches[i]->PrintNestedFields(counter+1);
+      }
+    }
+    
+  }
+  
+  
+  
+  
   const std::vector < unsigned > & GetFieldsInSplit(const unsigned &i) {return _fieldsInSplit[i];} 
   // _fields[i][j] is a vector
   // std::vector < unsigned > GetFields(const unsigned &i) {return _fields[i];} 
@@ -105,9 +131,10 @@ namespace femus {
     SolverType _solver;
     PreconditionerType _preconditioner; 
     unsigned _numberOfSplits;
-    std::vector < const FieldSpliTreeStructure * > _childrenBranches; // I do not understand this part?
+    std::vector < FieldSpliTreeStructure * > _childrenBranches; // I do not understand this part?
     std::vector < std::vector < unsigned > > _fieldsInSplit;
     std::vector < unsigned > _allFields;
+    std::string _name;
   };
   
   
