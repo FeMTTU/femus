@@ -231,7 +231,7 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
   delete [] tempKelMemory;
   delete [] tempKel;
 
-  //  REORDERING OF KVERT (ROWS)
+  //  REORDERING OF ElementDof (ROWS)
 
   unsigned **tempElementDof = _elementDof;
   unsigned *tempElementDofMemory = _elementDofMemory;
@@ -242,13 +242,13 @@ void elem::ReorderMeshElements( const std::vector < unsigned > &elementMapping ,
   _elementDof = new unsigned* [_nel + 1];
   _elementDofMemory = new unsigned [ _elementDofSize ];
 
-  unsigned *ptKvert = _elementDofMemory;
+  unsigned *ptElementDof = _elementDofMemory;
 
   for(unsigned iel=0; iel<_nel; iel++){
-    _elementDof[iel] = ptKvert;
-    ptKvert +=  NVE[_elementType[iel]][2];
+    _elementDof[iel] = ptElementDof;
+    ptElementDof +=  NVE[_elementType[iel]][2];
   }
-  _elementDof[_nel] = ptKvert;
+  _elementDof[_nel] = ptElementDof;
 
   for(unsigned iel=0; iel<_nel; iel++){
     for(unsigned inode=0; inode<NVE[_elementType[iel]][2]; inode++){

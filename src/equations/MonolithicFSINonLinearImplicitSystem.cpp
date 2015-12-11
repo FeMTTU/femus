@@ -115,8 +115,6 @@ void MonolithicFSINonLinearImplicitSystem::BuildProlongatorMatrix(unsigned gridf
     unsigned SolType = _ml_sol->GetSolutionType(SolIndex);
     unsigned solPairPdeIndex = GetSolPdeIndex( _ml_sol->GetSolutionName(solPairIndex) );
 
-    std::cout << SolIndex <<" "<< solPairIndex <<" "<< k <<" "<< solPairPdeIndex <<std::endl;
-
     bool testIfPressure=0;
     if(_ml_sol->TestIfSolutionIsPressure(SolIndex) )   testIfPressure=1;
 
