@@ -173,6 +173,7 @@ namespace femus {
     mshc->_topology->_Sol[mshc->GetTypeIndex()]->localize_to_all(coarseLocalizedElementType);
 
     elc->LocalizeElementDofToAll();
+    elc->LocalizeElementNearFaceToAll();
 
     mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), mshc);
 
@@ -246,6 +247,7 @@ namespace femus {
     }
 
     elc->FreeLocalizedElementDof();
+    elc->FreeLocalizedElementNearFace();
 
     coarseLocalizedAmrVector.resize(0);
     coarseLocalizedElementType.resize(0);
@@ -401,6 +403,7 @@ namespace femus {
 
     _mesh.el->ScatterElementCanBeRefinedVector();
     _mesh.el->ScatterElementDof();
+    _mesh.el->ScatterElementNearFace();
   }
 
 

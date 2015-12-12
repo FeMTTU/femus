@@ -2,7 +2,7 @@
 
  Program: FEMUS
  Module: Elem
- Authors: Eugenio Aulisa
+ Authors: Eugenio Aulisa, Sara Calandrini, Giacomo Capodaglio
 
  Copyright (c) FEMTTU
  All rights reserved.
@@ -48,7 +48,7 @@ namespace femus {
     _elementMaterial = new unsigned short [ _nel ];
 
     _elementDof = new unsigned * [_nel + 1];
-    _elementNearFace = new int *[_nel];
+    _elementNearFace = new int *[_nel + 1];
 
     _elementDofMemorySize = _nel * NVE[0][2];
     _elementNearFaceMemorySize = _nel * NFC[0][1];
@@ -69,6 +69,7 @@ namespace femus {
       pt_i += NFC[0][1];
     }
     _elementDof[_nel] = pt_u;
+    _elementNearFace[_nel] = pt_i;
 
     _elementCanBeRefined = new bool [_nel];
     for (unsigned i = 0; i < _nel; i++) {
@@ -81,10 +82,13 @@ namespace femus {
 
     _elementDofIsScattered = false;
     _localElementDofMemorySize = 0;
+
+    _elementNearFaceIsScattered = false;
+    _localElementNearFaceMemorySize = 0;
   }
 
 
-  void elem::ElementDofSharpAllocation() {
+  void elem::SharpMemoryAllocation() {
 
     _elementDofMemorySize = _nelt[0] * NVE[0][2] + _nelt[1] * NVE[1][2] +
                             _nelt[2] * NVE[2][2] + _nelt[3] * NVE[3][2] +
@@ -108,10 +112,38 @@ namespace femus {
 
     delete [] tempElementDof[0];
     delete [] tempElementDof;
+
+
+    // *****************************************************************
+
+
+    _elementNearFaceMemorySize = _nelt[0] * NFC[0][1] + _nelt[1] * NFC[1][1] +
+                                 _nelt[2] * NFC[2][1] + _nelt[3] * NFC[3][1] +
+                                 _nelt[4] * NFC[4][1] + _nelt[5] * NFC[5][1];
+
+    int** tempElementNearFace = _elementNearFace;
+
+    _elementNearFace = new int* [_nel + 1];
+    _elementNearFaceMemory = new int [_elementNearFaceMemorySize];
+
+    int* ptElemNearFaceMem = _elementNearFaceMemory;
+    for (unsigned iel = 0; iel < _nel; iel++) {
+      _elementNearFace[iel] = ptElemNearFaceMem;
+      unsigned ielType = GetElementType(iel);
+      for (unsigned j = 0; j < NFC[ielType][1]; j++) {
+        _elementNearFace[iel][j] = tempElementNearFace[iel][j];
+      }
+      ptElemNearFaceMem += NFC[ielType][1];
+    }
+    _elementNearFace[_nel] = ptElemNearFaceMem;
+
+    delete [] tempElementNearFace[0];
+    delete [] tempElementNearFace;
+
   }
   /**
    * This constructor allocates the memory for the \textit{finer elem}
-   * starting from the paramenters of the \textit{coarser elem}
+   * starting from the parameters of the \textit{coarser elem}
    **/
   elem::elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrVector, const std::vector < double >& coarseElementType) {
 
@@ -131,14 +163,13 @@ namespace femus {
     memset(_elementCanBeRefined, 0, _nel * sizeof(bool));
 
     _elementDof = new unsigned * [_nel + 1];
-    _elementNearFace = new int * [_nel];
+    _elementNearFace = new int * [_nel + 1];
 
     _elementDofMemorySize = 0;
     _elementNearFaceMemorySize = 0;
     for (unsigned i = 0; i < N_GEOM_ELS; i++) {
       _elementDofMemorySize += elc->GetRefinedElementTypeNumber(i) * refindex * NVE[i][2];
       _elementNearFaceMemorySize += elc->GetRefinedElementTypeNumber(i) * refindex * NFC[i][1];
-
     }
 
     for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++) {
@@ -172,7 +203,7 @@ namespace femus {
       jel += increment;
     }
     _elementDof[_nel] = ptElementDofMemory;
-
+    _elementNearFace[_nel] = ptElementNearFaceMemory;
 
     _childElemFlag = false;
 
@@ -180,6 +211,9 @@ namespace femus {
 
     _elementDofIsScattered = false;
     _localElementDofMemorySize = 0;
+
+    _elementNearFaceIsScattered = false;
+    _localElementNearFaceMemorySize = 0;
   }
 
   void elem::ReorderMeshElements(const std::vector < unsigned >& elementMapping) {
@@ -227,7 +261,7 @@ namespace femus {
     int** tempElementNearFace;
     tempElementNearFace = _elementNearFace;
 
-    _elementNearFace = new int * [_nel];
+    _elementNearFace = new int * [_nel + 1];
     _elementNearFaceMemory = new int [ _elementNearFaceMemorySize ];
 
     int* ptKel = _elementNearFaceMemory;
@@ -236,6 +270,7 @@ namespace femus {
       _elementNearFace[iel] = ptKel;
       ptKel +=  NFC[_elementType[iel]][1];
     }
+    _elementNearFace[_nel] = ptKel;
 
     for (unsigned iel = 0; iel < _nel; iel++) {
       for (unsigned iface = 0; iface < NFC[ _elementType[ elementMapping [iel] ]][1]; iface++) {
@@ -289,15 +324,24 @@ namespace femus {
   }
 
   elem::~elem() {
-    delete [] _elementNearFaceMemory;
-    delete [] _elementNearFace;
+
 
     delete [] _localElementDof;
     delete [] _localElementDofMemory;
+
     if (_elementDof != NULL) {
-      delete [] _elementDofMemory;
       delete [] _elementDof;
+      delete [] _elementDofMemory;
       _elementDof = NULL;
+    }
+
+    delete [] _localElementNearFace;
+    delete [] _localElementNearFaceMemory;
+
+    if (_elementNearFace != NULL) {
+     delete [] _elementNearFace;
+     delete [] _elementNearFaceMemory;
+     _elementNearFace == NULL;
     }
 
     if (_childElemFlag) {
@@ -407,11 +451,13 @@ namespace femus {
    * Return the global adiacent-to-face element number
    **/
   int elem::GetFaceElementIndex(const unsigned& iel, const unsigned& iface) const {
-    return _elementNearFace[iel][iface];
+    return (_elementNearFaceIsScattered)?
+      _localElementNearFace[iel - _elementOffset][iface] : _elementNearFace[iel][iface];
   }
 
   int elem::GetBoundaryIndex(const unsigned& iel, const unsigned& iface) const {
-    return -(_elementNearFace[iel][iface] + 1);
+    return (_elementNearFaceIsScattered)?
+      -(_localElementNearFace[iel - _elementOffset][iface] + 1):-(_elementNearFace[iel][iface] + 1);
   }
 
 
@@ -821,6 +867,83 @@ namespace femus {
       delete [] _elementDofMemory;
       delete [] _elementDof;
       _elementDof = NULL;
+    }
+  }
+
+
+  void elem::ScatterElementNearFace() {
+
+    if (_localElementNearFaceMemorySize == 0) {
+      _localElementNearFaceMemorySize = _elementNearFace[_elementOffsetP1] - _elementNearFace[_elementOffset];
+
+      _elementNearFaceOffset = _elementNearFace[_elementOffset] - _elementNearFace[0];
+
+      _localElementNearFaceMemory = new int [_localElementNearFaceMemorySize];
+
+      for (unsigned i = 0; i < _localElementNearFaceMemorySize; i++) {
+        _localElementNearFaceMemory[i] =  *(_elementNearFace[_elementOffset] + i);
+      }
+
+      _localElementNearFace = new int *[_elementOwned + 1];
+      int* pt_i = _localElementNearFaceMemory;
+      for (unsigned i = 0; i < _elementOwned; i++) {
+        _localElementNearFace[i] = pt_i;
+        pt_i += _elementNearFace[_elementOffset + (i + 1)] - _elementNearFace[_elementOffset + i];
+      }
+      _localElementNearFace[_elementOwned] = pt_i;
+    }
+    _elementNearFaceIsScattered = true;
+
+    if (_elementNearFace != NULL) {
+      delete [] _elementNearFaceMemory;
+      delete [] _elementNearFace;
+      _elementNearFace = NULL;
+    }
+
+  };
+
+
+  void elem::LocalizeElementNearFaceToAll() {
+
+    int* sendBuffer = new int [_elementNearFaceMemorySize];
+    memset(sendBuffer, 0, _elementNearFaceMemorySize * sizeof(int));
+    for (unsigned i = 0; i < _localElementNearFaceMemorySize; i++) {
+      sendBuffer [_elementNearFaceOffset + i] = _localElementNearFaceMemory[i];
+    }
+    _elementNearFaceMemory = new int [_elementNearFaceMemorySize];
+    MPI_Allreduce(sendBuffer, _elementNearFaceMemory, _elementNearFaceMemorySize, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
+    delete [] sendBuffer;
+
+    sendBuffer = new int [_nel];
+    memset(sendBuffer, 0, _nel * sizeof(int));
+    for (int i = 0; i < _elementOwned; i++) {
+      sendBuffer[_elementOffset + i] = _localElementNearFace[i + 1] - _localElementNearFace[i];
+    }
+
+    int* elSize = new int [_nel];
+    MPI_Allreduce(sendBuffer, elSize, _nel, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD);
+    delete [] sendBuffer;
+
+    _elementNearFace = new int * [_nel + 1];
+    int* pt_i = _elementNearFaceMemory;
+    for (unsigned iel = 0; iel < _nel; iel++) {
+      _elementNearFace[iel] = pt_i;
+      pt_i += elSize[iel];
+    }
+    _elementNearFace[_nel] = pt_i;
+
+    delete [] elSize;
+    _elementNearFaceIsScattered = false;
+  }
+
+  void elem::FreeLocalizedElementNearFace() {
+
+    _elementNearFaceIsScattered = true;
+
+    if (_elementNearFace != NULL) {
+      delete [] _elementNearFaceMemory;
+      delete [] _elementNearFace;
+      _elementNearFace = NULL;
     }
   }
 

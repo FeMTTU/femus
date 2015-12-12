@@ -38,7 +38,7 @@ namespace femus {
 
       elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal, const std::vector < double >& localizedElementType);
 
-      void ElementDofSharpAllocation();
+      void SharpMemoryAllocation();
 
       /** destructor */
       ~elem();
@@ -48,6 +48,10 @@ namespace femus {
       void DeleteElementType();
 
       void ScatterElementCanBeRefinedVector();
+
+      void ScatterElementNearFace();
+      void LocalizeElementNearFaceToAll();
+      void FreeLocalizedElementNearFace();
 
       void ScatterElementDof();
       void LocalizeElementDofToAll();
@@ -217,6 +221,14 @@ namespace femus {
       int** _elementNearFace;
       int* _elementNearFaceMemory;
       unsigned _elementNearFaceMemorySize;
+
+      unsigned _elementNearFaceOffset;
+      bool _elementNearFaceIsScattered;
+
+      int** _localElementNearFace; //element -> nodes
+      int* _localElementNearFaceMemory;
+      unsigned _localElementNearFaceMemorySize;
+
 
       std::map< unsigned, std::vector< unsigned > > _localElementNearVertexMap;
       unsigned** _elementNearVertex; //node->element
