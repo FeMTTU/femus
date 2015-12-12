@@ -232,15 +232,13 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    unsigned kel = iel; //msh->IS_Mts2Gmt_elem[iel]; // mapping between parallel dof and mesh dof
-    short unsigned kelGeom = el->GetElementType(kel);      // element geometry type
+    short unsigned ielGeom = msh->GetElementType(iel);      // element geometry type
 
-    unsigned nDofsU = el->GetElementDofNumber(kel, solUType);      // number of solution element dofs
-    unsigned nDofsX = el->GetElementDofNumber(kel, crdXType);      // number of solution element dofs
+    unsigned nDofsU = msh->GetElementDofNumber(iel, solUType);      // number of solution element dofs
+    unsigned nDofsX = msh->GetElementDofNumber(iel, crdXType);      // number of solution element dofs
 
     // resize local arrays
     sysDof.resize(nDofsU);
-
     solU.resize(nDofsU);
 
     for (unsigned  k = 0; k < dim; k++) {
@@ -268,9 +266,9 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
     s.new_recording();
 
     // *** Gauss point loop *** // 
-    for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solUType]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solUType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[kelGeom][solUType]->Jacobian(crdX, ig, weight, phi, phi_x, phi_xx);
+      msh->_finiteElement[ielGeom][solUType]->Jacobian(crdX, ig, weight, phi, phi_x, phi_xx);
 
       adept::adouble solUig = 0; // solution U in the gauss point
       vector < adept::adouble > gradSolUig(dim, 0.); // gradient of solution U in the gauss point
@@ -294,6 +292,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
         }
 
         aResU[i] += (phi[i] - LaplaceU) * weight;
+		
       } // end phiU_i loop
     } // end gauss point loop
 

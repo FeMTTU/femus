@@ -82,7 +82,8 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 
   /// @todo I assume that the mesh is not mixed
   std::string type_elem;
-  unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementType(ZERO_ELEM);
+  unsigned iel0 = _ml_mesh->GetLevel(_gridn-1u)->_elementOffset[_iproc];
+  unsigned elemtype = _ml_mesh->GetLevel(_gridn-1u)->GetElementType(iel0);
   type_elem = XDMFWriter::type_el[index_nd][elemtype];
 
   if (type_elem.compare("Not_implemented") == 0)
@@ -105,7 +106,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   nel+=_ml_mesh->GetLevel(_gridn-1u)->GetNumberOfElements();
 
   unsigned icount;
-  unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetElementDofNumber(ZERO_ELEM,index_nd);
+  unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn-1u)->el->GetNVE(elemtype,index_nd);//ElementDofNumber(ZERO_ELEM,index_nd);
   int * var_conn          = new int [nel*el_dof_number];
   std::vector< int > var_proc(nel);
   float *var_el_f         = new float [nel];
@@ -271,11 +272,10 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
   unsigned offset_conn=0;
   for ( unsigned ig=_gridr-1u; ig<_gridn; ig++ ) {
     for ( unsigned iel = 0; iel < _ml_mesh->GetLevel(ig)->GetNumberOfElements(); iel++ ) {
-      if ( ig == _gridn-1u || _ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(iel) == 0) {
-	int ndofs = _ml_mesh->GetLevel(ig)->el->GetElementDofNumber(iel,index_nd);
+      if ( ig == _gridn-1u ) {
+	int ndofs = _ml_mesh->GetLevel(ig)->el->GetNVE(elemtype,index_nd);//GetElementDofNumber(iel,index_nd);
         for (unsigned j = 0; j < ndofs; j++) {
 	  unsigned vtk_loc_conn = FemusToVTKorToXDMFConn[j];
-	  //unsigned jnode = _ml_mesh->GetLevel(ig)->el->GetElementVertexIndex(iel,vtk_loc_conn)-1u;
 	  unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(vtk_loc_conn,iel,index_nd);
 	  var_conn[icount] = offset_conn + jnode_Metis;
 	  icount++;
@@ -298,12 +298,12 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 
   //-------------------------------------------------------------------------------------------------------
 //   // print regions
-// 
+//
 //   icount=0;
 //   for (unsigned ig=_gridr-1u; ig<_gridn; ig++) {
-// 
+//
 //     for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
-//       if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+//       if (ig==_gridn-1u ) {
 // 	unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0,ii,3);
 // 	var_conn[icount] = _ml_mesh->GetLevel(ig)->el->GetElementGroup(ii);
 // 	icount++;
@@ -319,7 +319,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 //     H5Sclose(dataspace);
 //     H5Dclose(dataset);
 //   }
-// 
+//
 //   // end print regions
   //-------------------------------------------------------------------------------------------------------
 
@@ -330,7 +330,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
     for(int isdom = 0; isdom < _nprocs; isdom++){
       for( unsigned ii = _ml_mesh->GetLevel(ig)->_elementOffset[isdom];
         ii < _ml_mesh->GetLevel(ig)->_elementOffset[isdom+1]; ii++){
-        if ( ig == _gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+        if ( ig == _gridn-1u) {
           var_proc[icount] = isdom;
           icount++;
         }
@@ -361,7 +361,7 @@ void XDMFWriter::write(const std::string output_path, const char order[], const 
 	unsigned sol_size = _ml_sol->GetSolutionLevel(ig)->_Sol[indx]->size();
 	vector < double > mysol_ser;
 	for (unsigned ii=0; ii<nel_ig; ii++) {
-	  if (ig==_gridn-1u || 0==_ml_mesh->GetLevel(ig)->el->GetRefinedElementIndex(ii)) {
+	  if (ig==_gridn-1u ) {
 	    _ml_sol->GetSolutionLevel(ig)->_Sol[indx]->localize_to_one(mysol_ser, 0);
 	    unsigned iel_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(0,ii,_ml_sol->GetSolutionType(indx));
 	    var_el_f[icount]=mysol_ser[iel_Metis];

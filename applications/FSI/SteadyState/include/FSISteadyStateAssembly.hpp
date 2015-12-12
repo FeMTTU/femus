@@ -169,9 +169,9 @@ namespace femus {
     // *** element loop ***
     for (int iel = mymsh->_elementOffset[iproc]; iel  <  mymsh->_elementOffset[iproc + 1]; iel++) {
 
-      short unsigned ielt = myel->GetElementType(iel);
-      unsigned nve        = myel->GetElementDofNumber(iel, SolType2);
-      unsigned nve1       = myel->GetElementDofNumber(iel, SolType1);
+      short unsigned ielt = mymsh->GetElementType(iel);
+      unsigned nve        = mymsh->GetElementDofNumber(iel, SolType2);
+      unsigned nve1       = mymsh->GetElementDofNumber(iel, SolType1);
       int flag_mat        = mymsh->GetElementMaterial(iel);
 
       // *******************************************************************************************************
@@ -205,7 +205,7 @@ namespace femus {
         unsigned iDof = mymsh->GetSolutionDof(i, iel, SolType2);
 
         // flag nodes on the fluid-solid interface
-        solidmark[i] = myel->GetNodeRegion(iDof);
+        solidmark[i] = mymsh->GetSolidMark(iDof);
 
         for (int j = 0; j < dim; j++) {
           Soli[indexVAR[j]][i] = (*mysolution->_Sol[indVAR[j]])(iDof);
@@ -253,7 +253,7 @@ namespace femus {
         vector < adept::adouble> normal(dim, 0);
 
         // loop on faces
-        for (unsigned jface = 0; jface < myel->GetElementFaceNumber(iel); jface++) {
+        for (unsigned jface = 0; jface < mymsh->GetElementFaceNumber(iel); jface++) {
           std::vector  <  double > xx(3, 0.);
 
           // look for boundary faces
@@ -261,11 +261,11 @@ namespace femus {
             unsigned int face = -(mymsh->el->GetFaceElementIndex(iel, jface) + 1);
 
             if ( !ml_sol->GetBdcFunction()(xx, "U", tau, face, 0.) && tau != 0.) {
-              unsigned nve = mymsh->el->GetElementFaceDofNumber(iel, jface, SolType2);
-              const unsigned felt = mymsh->el->GetElementFaceType(iel, jface);
+              unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
+              const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
               for (unsigned i = 0; i < nve; i++) {
-                unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
+                unsigned int ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
                 unsigned iDof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for (unsigned idim = 0; idim < dim; idim++) {
@@ -279,7 +279,7 @@ namespace femus {
                 // *** phi_i loop ***
                 for (unsigned i = 0; i < nve; i++) {
                   adept::adouble value = -phi[i] * tau / rhof * jacobian;
-                  unsigned int ilocal = mymsh->el->GetLocalFaceVertexIndex(iel, jface, i);
+                  unsigned int ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
 
                   for (unsigned idim = 0; idim < dim; idim++) {
                     if ((!solidmark[ilocal])) { //if fluid node it goes to U, V, W

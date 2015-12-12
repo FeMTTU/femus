@@ -450,7 +450,7 @@ int AssembleMatrixResP(MultiLevelProblem &mg2, unsigned level, /*const elem_type
 // // // 
 // // // // geometry and dof indices
 // // //     for (unsigned i=0;i<nve2;i++) {
-// // //       unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
+// // //       unsigned inode=myel->GetElementDofIndex(kel,i)-1u;
 // // //       node_geom_el[i]=inode;
 // // //     for (unsigned j=0; j<SPACEDIM; j++)    {  geom_el_coords[j][i] = vt[j][inode] + moving_dom_p*vec_sol[ indexSolD[j] ][inode]; }
 // // //       nodeP[i] = node_geom_el[i] + myKKIndex[indexP];
@@ -751,7 +751,7 @@ int AssembleMatrixResD(MultiLevelProblem &mg2, unsigned level, /*const elem_type
 // // //     }
 // // // 
 // // //     for (unsigned i=0;i<nve;i++) {
-// // //       unsigned inode = myel->GetElementVertexIndex(kel,i)-1u;
+// // //       unsigned inode = myel->GetElementDofIndex(kel,i)-1u;
 // // //       for (unsigned j=0; j<SPACEDIM; j++)    elem_coords[j][i] = vt[j][inode] + moving_dom_disp*vec_sol[ indexSolD[j] ][inode];
 // // //       node_geom_el[i] = inode;
 // // //       for (unsigned j=0; j<NVAR_D; j++)       nodeD[ indexD_LocBlocks[j] ][i] = node_geom_el[i] + myKKIndex[indexD[j]];   //global
@@ -1119,7 +1119,7 @@ int AssembleMatrixResVel(MultiLevelProblem &mg2, unsigned level, /*const elem_ty
 // // //     }    
 // // // 
 // // //     for (unsigned i=0;i<nve2;i++) {
-// // //       unsigned inode = myel->GetElementVertexIndex(kel,i)-1u;
+// // //       unsigned inode = myel->GetElementDofIndex(kel,i)-1u;
 // // //       for (unsigned j=0; j<SPACEDIM; j++)    vx[j][i] = vt[j][inode] + moving_dom_vel*vec_sol[ indexSolD[j] ][inode];
 // // //       node_geom[i] = inode;
 // // //       for (unsigned j=0; j<NVAR_VEL; j++)       nodeU[ indexU_localBlocks[j] ][i] = node_geom[i] + myKKIndex[indexU[j]];   //global

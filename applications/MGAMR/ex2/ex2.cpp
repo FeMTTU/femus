@@ -46,11 +46,11 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = 0;
 
-  if (elemgroupnumber == 6 && level < 4) refine = 1;
+  if (elemgroupnumber == 6 && level < 3) refine = 1;
 
-  if (elemgroupnumber == 7 && level < 5) refine = 1;
+  if (elemgroupnumber == 7 && level < 4) refine = 1;
 
-  if (elemgroupnumber == 8 && level < 6) refine = 1;
+  if (elemgroupnumber == 8 && level < 5) refine = 1;
 
 //   if (elemgroupnumber==6 && level<1) refine=1;
 //   if (elemgroupnumber==7 && level<2) refine=1;
@@ -85,7 +85,7 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
@@ -93,9 +93,7 @@ int main(int argc, char** args) {
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
-  // print mesh info
-  mlMsh.PrintInfo();
-
+  
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
@@ -108,7 +106,8 @@ int main(int argc, char** args) {
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
   mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
 
-  mlSol.AssociatePropertyToSolution("P", "Pressure");
+  mlSol.AssociatePropertyToSolution("P", "Pressure", false);
+  //mlSol.AssociatePropertyToSolution("P", "Pressure", true);
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
@@ -158,7 +157,6 @@ int main(int argc, char** args) {
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
   //system.SetDirichletBCsHandling(ELIMINATION);
-  //system.solve();
   system.MGsolve();
 
   // print solutions
@@ -172,6 +170,9 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("all");
   gmvIO.SetDebugOutput(true);
   gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+
+  // print mesh info
+  mlMsh.PrintInfo();
 
 
   return 0;
@@ -296,12 +297,12 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielGeom = el->GetElementType(iel);    // element geometry type
+    short unsigned ielGeom = msh->GetElementType(iel);
 
-    unsigned nDofsT = el->GetElementDofNumber(iel, solTType);    // number of solution element dofs
-    unsigned nDofsV = el->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-    unsigned nDofsP = el->GetElementDofNumber(iel, solPType);    // number of solution element dofs
-    unsigned nDofsX = el->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
+    unsigned nDofsT = msh->GetElementDofNumber(iel, solTType);    // number of solution element dofs
+    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
+    unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);    // number of solution element dofs
+    unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
 
     unsigned nDofsTVP = nDofsT + dim * nDofsV + nDofsP;
     // resize local arrays
@@ -329,7 +330,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsT; i++) {
-      //unsigned iNode = el->GetMeshDof(iel, i, solTType);    // local to global solution node
       unsigned solTDof = msh->GetSolutionDof(i, iel, solTType);    // global to global mapping between solution node and solution dof
       solT[i] = (*sol->_Sol[solTIndex])(solTDof);      // global extraction and local storage for the solution
       sysDof[i] = pdeSys->GetSystemDof(solTIndex, solTPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dofs
@@ -337,9 +337,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsV; i++) {
-      //unsigned iNode = el->GetMeshDof(iel, i, solVType);    // local to global solution node
       unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
-
       for (unsigned  k = 0; k < dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
         sysDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
@@ -347,7 +345,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     }
 
     for (unsigned i = 0; i < nDofsP; i++) {
-      //unsigned iNode = el->GetMeshDof(iel, i, solPType);    // local to global solution node
       unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);    // global to global mapping between solution node and solution dof
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);      // global extraction and local storage for the solution
       sysDof[i + nDofsT + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
@@ -355,9 +352,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofsX; i++) {
-      unsigned iNode = el->GetMeshDof(iel, i, coordXType);    // local to global coordinates node
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
-
       for (unsigned k = 0; k < dim; k++) {
         coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }

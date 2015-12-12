@@ -17,9 +17,13 @@
 #define __femus_mesh_Elem_hpp__
 
 #include <vector>
+#include <map>
+
+#include "Mesh.hpp"
 
 namespace femus {
 
+class Mesh;
 /**
  * The elem class
 */
@@ -32,45 +36,41 @@ public:
     /** constructors */
     elem(const unsigned & other_nel);
 
-    elem(const elem *elc, const unsigned refindex);
+    elem(elem *elc, const unsigned refindex, const std::vector < double > &coarseAmrLocal, const std::vector < double > &localizedElementType);
+
+    void ElementDofSharpAllocation();
 
     /** destructor */
     ~elem();
-    
-    void deleteParallelizedQuantities();
+
+    void DeleteGroupAndMaterial();
+
+    void DeleteElementType();
+
+    void ParallelizeElementFather();
 
     // reorder the element according to the new element mapping
-    void ReorderMeshElements( const std::vector < unsigned > &elementMapping , elem *elc);
+    void ReorderMeshElements( const std::vector < unsigned > &elementMapping );
 
     // reorder the nodes according to the new node mapping
     void ReorderMeshNodes( const std::vector < unsigned > &nodeMapping);
 
-
-    /** To be Added */
-    unsigned GetMeshDof(const unsigned iel,const unsigned &inode,const unsigned &type)const;
-
     /** To be Added */
     unsigned GetElementDofNumber(const unsigned &iel,const unsigned &type) const;
 
-    /** To be Added */
-    unsigned GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const;
-
     /** Return the local->global node number */
-    unsigned GetElementVertexIndex(const unsigned &iel,const unsigned &inode)const {
-        return _kvert[iel][inode];
+    unsigned GetElementDofIndex(const unsigned &iel,const unsigned &inode)const {
+        return _elementDof[iel][inode];
     };
 
     /** To be Added */
-    const unsigned* GetElementVertexAddress(const unsigned &iel,const unsigned &inode)const;
-
-    /** To be Added */
-    void SetElementVertexIndex(const unsigned &iel,const unsigned &inode, const unsigned &value);
+    void SetElementDofIndex(const unsigned &iel,const unsigned &inode, const unsigned &value);
 
     /** To be Added */
     unsigned GetFaceVertexIndex(const unsigned &iel,const unsigned &iface, const unsigned &inode) const;
 
     /** To be Added */
-    unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &iedgenode) const;
+    //unsigned GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &iedgenode) const;
 
     /** To be Added */
     short unsigned GetElementType(const unsigned &iel) const;
@@ -98,6 +98,7 @@ public:
 
     /** To be Added */
     int GetFaceElementIndex(const unsigned &iel,const unsigned &iface) const;
+    
     int GetBoundaryIndex(const unsigned &iel,const unsigned &iface) const;
 
     /** To be Added */
@@ -116,25 +117,16 @@ public:
     void AddToElementNumber(const unsigned &value, short unsigned ielt);
 
     /** To be Added */
-    unsigned GetRefinedElementNumber(const char name[]="All") const;
+    unsigned GetRefinedElementNumber() const {return _nelr;};
 
     /** To be Added */
-    unsigned GetRefinedElementNumber(short unsigned ielt) const;
+    unsigned GetRefinedElementTypeNumber(const unsigned &ielt) const { return _nelrt[ielt]; };
 
     /** To be Added */
-    void AddToRefinedElementNumber(const unsigned &value, const char name[]="All");
+    void SetRefinedElementNumber(const unsigned &value){ _nelr = value; };
 
     /** To be Added */
-    void AddToRefinedElementNumber(const unsigned &value, short unsigned ielt);
-
-    /** To be Added */
-    void InitRefinedToZero();
-
-    /** To be Added */
-    unsigned GetRefinedElementIndex(const unsigned &iel) const;
-
-    /** To be Added */
-    void SetRefinedElementIndex(const unsigned &iel, const unsigned &value);
+    void SetRefinedElemenTypeNumber(const unsigned &value, const unsigned &ielt){ _nelrt[ielt] = value; };
 
     /** To be Added */
     unsigned GetNodeNumber()const;
@@ -146,46 +138,37 @@ public:
     unsigned GetElementFaceNumber(const unsigned &iel,const unsigned &type=1)const;
 
     /** To be Added */
-    unsigned GetElementSquareFaceNumber(const unsigned &iel)const;
+    void BuildElementNearVertex();
 
     /** To be Added */
-    unsigned GetElementTriangleFaceNumber(const unsigned &iel)const;
+    void SetChildElementDof(const unsigned &ref_index, Mesh *msh, const elem* elf);
+
+    unsigned GetChildElementDof(const unsigned &iel, const unsigned &i0, const unsigned i1) const{
+      return _childElemDof[iel-_elementOffset][i0][i1];
+    }
+
+    void DeleteElementNearVertex();
+
+     /** To be Added */
+    unsigned GetElementNearVertexNumber(const unsigned &inode)const;
 
     /** To be Added */
-    void AllocateVertexElementMemory();
+    unsigned GetElementNearVertex(const unsigned &inode,const unsigned &jnode)const;
+
+    void BuildLocalElementNearVertex();
+
+    const std::vector<unsigned> & GetLocalElementNearVertex(const unsigned &inode)  {
+      return _localElementNearVertexMap[inode];
+    };
 
     /** To be Added */
-    unsigned GetVertexElementNumber(const unsigned &inode)const;
+    void SetIfFatherElementIsRefined(const unsigned &iel, const bool &refined);
 
     /** To be Added */
-    unsigned GetVertexElementIndex(const unsigned &inode,const unsigned &jnode)const;
+    bool GetIfFatherElementIsRefined(const unsigned &iel) const;
 
     /** To be Added */
-    const unsigned *GetVertexElementAddress(const unsigned &inode,const unsigned &jnode)const;
-
-    /** To be Added */
-    void SetVertexElementIndex(const unsigned &inode,const unsigned &jnode, const unsigned &value);
-
-    /** To be Added */
-    void SetIfFatherIsRefined(const unsigned &iel, const bool &refined);
-
-    /** To be Added */
-    bool IsFatherRefined(const unsigned &iel) const;
-
-    /** To be Added */
-    void SetNumberElementFather(const unsigned &value);
-
-    /** To be Added */
-    bool GetNodeRegion(const unsigned &jnode) const;
-
-    /** To be Added */
-    void SetNodeRegion(const unsigned &jnode, const bool &value);
-
-    /** To be Added */
-    void AllocateNodeRegion();
-
-    /** To be Added */
-    void AllocateChildrenElement(const unsigned &ref_index);
+    void AllocateChildrenElement(const unsigned &ref_index, Mesh *msh);
 
     /** To be Added */
     void SetChildElement(const unsigned &iel,const unsigned &json, const unsigned &value);
@@ -193,29 +176,47 @@ public:
     /** To be Added */
     unsigned GetChildElement(const unsigned &iel,const unsigned &json) const;
 
-    const unsigned GetElementFaceType(const unsigned &kel, const unsigned &jface) const;
+    const unsigned GetNVE(const unsigned &elementType, const unsigned &doftype) const;
+
+    const unsigned GetNFACENODES(const unsigned &elementType, const unsigned &jface, const unsigned &dof) const;
+
+    const unsigned GetNFC(const unsigned &elementType, const unsigned &type) const;
+
+    const unsigned GetIG(const unsigned &elementType, const unsigned &iface, const unsigned &jnode) const;
+
+    void SetElementOffsets(const unsigned &elementOffset, const unsigned &elementOffsetP1){
+      _elementOffset = elementOffset;
+      _elementOffsetP1 = elementOffsetP1;
+    }
 
 private:
 
     // member data
-    int **_kel;
-    int *_kelMemory;
-    unsigned _kelSize;
+    int **_elementNearFace;
+    int *_elementNearFaceMemory;
+    unsigned _elementNearFaceMemorySize;
 
-    unsigned **_kvtel; //node->element
-    unsigned *_kvtelMemory;
-    unsigned *_nve;
+    std::map< unsigned, std::vector< unsigned > > _localElementNearVertexMap;
+    unsigned **_elementNearVertex; //node->element
+    unsigned *_elementNearVertexMemory;
+    unsigned *_elementNearVertexNumber;
 
-    unsigned **_kvert; //element -> nodes
-    unsigned *_kvertMemory;
-    unsigned _kvertSize;
-
-    unsigned *_elr;
+    unsigned **_elementDof; //element -> nodes
+    unsigned *_elementDofMemory;
+    unsigned _elementDofMemorySize;
 
     unsigned **_childElem;
     unsigned *_childElemMemory;
-    unsigned _childElemSize;
+    unsigned _childElemMemorySize;
     bool _childElemFlag;
+
+    unsigned ***_childElemDof; //element -> nodes
+    unsigned **_childElemDofMemoryPointer; //element -> nodes
+    unsigned *_childElemDofMemory;
+    unsigned _childElemDofMemorySize;
+
+    unsigned _elementOffset;
+    unsigned _elementOffsetP1;
 
     short unsigned *_elementType,*_elementGroup,*_elementMaterial; //element
 
@@ -224,12 +225,12 @@ private:
     unsigned _nelr,_nelrt[6];
     unsigned _ngroup;
 
-    bool *_nodeRegion;
-    bool  _nodeRegionFlag;
-    bool *_isFatherElementRefined; //element
-    unsigned _nelf;
+    bool *_fatherElementIsRefined; //element
+    bool _fatherElementIsRefinedParallel;
     
     unsigned _level;
+    
+    elem *_coarseElem;
 
 };
 

@@ -148,7 +148,7 @@ public:
 			      const unsigned &index_sol, const unsigned &kkindex_sol) const;
 
   void GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const;
- 
+
   void GetSparsityPatternSize(const Mesh& Mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const;
 
   static const unsigned _fe_old_to_new[QL];

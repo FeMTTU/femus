@@ -199,9 +199,9 @@ namespace femus {
     /// *** element loop ***
     for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
-      short unsigned ielt = myel->GetElementType(iel);
-      unsigned nve        = myel->GetElementDofNumber(iel, order_ind2);
-      unsigned nve1       = myel->GetElementDofNumber(iel, order_ind1);
+      short unsigned ielt = mymsh->GetElementType(iel);
+      unsigned nve        = mymsh->GetElementDofNumber(iel, order_ind2);
+      unsigned nve1       = mymsh->GetElementDofNumber(iel, order_ind1);
       int flag_mat        = mymsh->GetElementMaterial(iel);
 
       //*******************************************************************************************************
@@ -292,14 +292,11 @@ namespace femus {
       }
 
       for (unsigned i = 0; i < nve; i++) {
-        // gambit nodes
-        //unsigned inode=myel->GetElementVertexIndex(iel,i)-1u;
-        // dof metis
         unsigned inode = mymsh->GetSolutionDof(i, iel, 2);
         metis_node2[i] = inode;
 
         // flag to know if the node "inode" lays on the fluid-solid interface
-        solidmark[i] = myel->GetNodeRegion(inode); // to check
+        solidmark[i] = mymsh->GetSolidMark(inode); // to check
 
         for (int j = 0; j < dim; j++) {
           //Updated coordinates (Moving frame)

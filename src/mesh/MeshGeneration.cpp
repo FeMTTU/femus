@@ -334,7 +334,7 @@ void BuildBox(      Mesh& mesh,
 
                   // connectivity
                   for (unsigned iloc=0; iloc<3; iloc++) {
-                    mesh.el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
+                    mesh.el->SetElementDofIndex(iel,iloc,LocalToGlobalNodePerElement[iloc] - 1u);
                   }
 
                   if (i == 0) {
@@ -646,7 +646,7 @@ void BuildBox(      Mesh& mesh,
 
                   // connectivity
                   for (unsigned iloc=0; iloc<9; iloc++) {
-                    mesh.el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
+                    mesh.el->SetElementDofIndex(iel,iloc,LocalToGlobalNodePerElement[iloc] - 1u);
                   }
 
                   if (j == 0) {
@@ -701,7 +701,7 @@ void BuildBox(      Mesh& mesh,
 
                   // connectivity
                   for (unsigned iloc=0; iloc<6; iloc++) {
-                    mesh.el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
+                    mesh.el->SetElementDofIndex(iel,iloc,LocalToGlobalNodePerElement[iloc] - 1u);
                   }
 
                   if (j == 0) {
@@ -733,7 +733,7 @@ void BuildBox(      Mesh& mesh,
 
 		    // connectivity
                     for (unsigned iloc=0; iloc<6; iloc++) {
-                      mesh.el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
+                      mesh.el->SetElementDofIndex(iel,iloc,LocalToGlobalNodePerElement[iloc] - 1u);
                     }
 
 		    if (j == 2*(ny-1)) {
@@ -1155,7 +1155,7 @@ void BuildBox(      Mesh& mesh,
 
                       // connectivity
                       for (unsigned iloc=0; iloc<27; iloc++) {
-                        mesh.el->SetElementVertexIndex(iel,iloc,LocalToGlobalNodePerElement[iloc]);
+                        mesh.el->SetElementDofIndex(iel,iloc,LocalToGlobalNodePerElement[iloc] - 1u);
                       }
 
                       if (k == 0) {

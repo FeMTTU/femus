@@ -506,9 +506,9 @@ void AssembleMatrixResNS(MultiLevelProblem& ml_prob) {
   for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
     unsigned kel = iel;
-    short unsigned kelt = myel->GetElementType(kel);
-    unsigned nve2 = myel->GetElementDofNumber(kel, order_ind2);
-    unsigned nve1 = myel->GetElementDofNumber(kel, order_ind1);
+    short unsigned kelt = mymsh->GetElementType(kel);
+    unsigned nve2 = mymsh->GetElementDofNumber(kel, order_ind2);
+    unsigned nve1 = mymsh->GetElementDofNumber(kel, order_ind1);
 
     //set to zero all the entries of the FE matrices
     metis_node2.resize(nve2);
@@ -554,7 +554,7 @@ void AssembleMatrixResNS(MultiLevelProblem& ml_prob) {
     }
 
     for (unsigned i = 0; i < nve2; i++) {
-      //unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
+      //unsigned inode=myel->GetElementDofIndex(kel,i)-1u;
       unsigned inode_metis = mymsh->GetSolutionDof(i, kel, 2);
       metis_node2[i] = inode_metis;
 
@@ -815,8 +815,8 @@ void AssembleMatrixResT(MultiLevelProblem& ml_prob) {
   for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
     unsigned kel = iel;
-    short unsigned kelt = myel->GetElementType(kel);
-    unsigned nve = myel->GetElementDofNumber(kel, order_ind);
+    short unsigned kelt = mymsh->GetElementType(kel);
+    unsigned nve = mymsh->GetElementDofNumber(kel, order_ind);
 
     // resize
     metis_node.resize(nve);
@@ -840,7 +840,6 @@ void AssembleMatrixResT(MultiLevelProblem& ml_prob) {
 
     // get local to global mappings
     for (unsigned i = 0; i < nve; i++) {
-      //unsigned inode=myel->GetElementVertexIndex(kel,i)-1u;
       unsigned inode_metis = mymsh->GetSolutionDof(i, kel, 2);
       metis_node[i] = inode_metis;
 
