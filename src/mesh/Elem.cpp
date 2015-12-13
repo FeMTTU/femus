@@ -325,7 +325,6 @@ namespace femus {
 
   elem::~elem() {
 
-
     delete [] _localElementDof;
     delete [] _localElementDofMemory;
 
