@@ -53,7 +53,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 
   if (igridn==0) igridn=_gridn;
 
-  unsigned igridr=igridn;//(_gridr <= igridn)?_gridr:igridn;
+ 
 
   // ********** linear -> index==0 *** quadratic -> index==1 **********
   unsigned index=(strcmp(order,"linear"))?1:0;
@@ -83,7 +83,8 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 
   unsigned nvt=0;
   unsigned nvt_max=0;
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+  unsigned ig = igridn-1;
+  {
     unsigned nvt_ig=_ml_mesh->GetLevel(ig)->GetTotalNumberOfDofs(index);
     nvt_max=(nvt_max>nvt_ig)?nvt_max:nvt_ig;
     nvt+=nvt_ig;
@@ -91,7 +92,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 
   double *var_nd=new double [nvt_max+1]; //TO FIX Valgrind complaints! In reality it should be only nvt
   vector <NumericVector*> Mysol(igridn);
-  for(unsigned ig=igridr-1u; ig<_gridn; ig++) {
+  {
     Mysol[ig] = NumericVector::build().release();
     Mysol[ig]->init(_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs],_ml_mesh->GetLevel(ig)->_ownSize[index][_iproc],true,AUTOMATIC);
   }
@@ -109,7 +110,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
   fout.write((char *)&nvt,sizeof(unsigned));
 
   for (int i=0; i<3; i++) {
-    for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+    {
       if(!_surface){
 	Mysol[ig]->matrix_mult(*_ml_mesh->GetLevel(ig)->_topology->_Sol[i],
 			       *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index,2) );
@@ -153,10 +154,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
   sprintf(det,"%s","cells");
   fout.write((char *)det,sizeof(char)*8);
 
-  unsigned nel=0;
-  for (unsigned ig=igridr-1u; ig<igridn-1u; ig++)
-    nel+=( _ml_mesh->GetLevel(ig)->GetNumberOfElements() - _ml_mesh->GetLevel(ig)->el->GetRefinedElementNumber());
-  nel+=_ml_mesh->GetLevel(igridn-1u)->GetNumberOfElements();
+  unsigned nel = _ml_mesh->GetLevel(igridn-1u)->GetNumberOfElements();
   fout.write((char *)&nel,sizeof(unsigned));
 
   unsigned topology[27];
@@ -168,7 +166,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
   _ml_mesh->GetLevel(igridn-1)->el->LocalizeElementDofToOne(0);
 
   if(_iproc == 0){
-    for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+    {
       for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
 	if ( ig == igridn-1u ) {
 	  short unsigned ielt = static_cast < short unsigned > (localizedElementType[ii]+ 0.25);
@@ -278,7 +276,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 	if (_ml_sol->GetSolutionType(i)<3) {  // **********  on the nodes **********
 	  fout.write((char *)det,sizeof(char)*8);
 	  fout.write((char *)&one,sizeof(unsigned));
-	  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+	  {
 	    if (name==0){
 	      Mysol[ig]->matrix_mult(*_ml_sol->GetSolutionLevel(ig)->_Sol[i],
 				     *_ml_mesh->GetLevel(ig)->GetQitoQjProjection(index, _ml_sol->GetSolutionType(i)) );
@@ -304,7 +302,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 	  fout.write((char *)det,sizeof(char)*8);
 	  fout.write((char *)&zero,sizeof(unsigned));
 	  int icount=0;
-	  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+	  {
 	    std::vector<double> v_local;
 	    if (name==0){
 	      _ml_sol->GetSolutionLevel(ig)->_Sol[i]->localize_to_one(v_local,0);
@@ -346,7 +344,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
   // Free memory
   delete [] var_el;
   delete [] var_nd;
-  for (unsigned ig=igridr-1u; ig<igridn; ig++) {
+  {
     delete Mysol[ig];
   }
   delete [] det;
