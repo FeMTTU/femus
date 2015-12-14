@@ -62,7 +62,7 @@ namespace femus {
 
   XDMFWriter::~XDMFWriter() {}
 
-  void XDMFWriter::write(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) {
+  void XDMFWriter::Write(const std::string output_path, const char order[], const std::vector<std::string>& vars, const unsigned time_step) {
 #ifdef HAVE_HDF5
 
     bool print_all = 0;
@@ -81,10 +81,13 @@ namespace femus {
       index_nd = 2;
     }
 
+    Mesh *mesh = _ml_mesh->GetLevel(_gridn - 1);
+    Solution *solution = _ml_sol->GetSolutionLevel(_gridn - 1);
+    
     /// @todo I assume that the mesh is not mixed
     std::string type_elem;
-    unsigned iel0 = _ml_mesh->GetLevel(_gridn - 1u)->_elementOffset[_iproc];
-    unsigned elemtype = _ml_mesh->GetLevel(_gridn - 1u)->GetElementType(iel0);
+    unsigned iel0 = mesh->_elementOffset[_iproc];
+    unsigned elemtype = mesh->GetElementType(iel0);
 
     type_elem = XDMFWriter::type_el[index_nd][elemtype];
 
@@ -94,10 +97,12 @@ namespace femus {
       abort();
     }
 
-    unsigned nvt =  _ml_mesh->GetLevel(_gridn - 1)->_dofOffset[index_nd][_nprocs];
-    unsigned nel = _ml_mesh->GetLevel(_gridn - 1u)->GetNumberOfElements();
+   
+    
+    unsigned nvt = mesh->_dofOffset[index_nd][_nprocs];
+    unsigned nel = mesh->GetNumberOfElements();
 
-    unsigned el_dof_number  = _ml_mesh->GetLevel(_gridn - 1u)->el->GetNVE(elemtype, index_nd);
+    unsigned el_dof_number  = mesh->el->GetNVE(elemtype, index_nd);
     int* var_conn           = new int [nel * el_dof_number];
     std::vector< int > var_proc(nel);
     float* var_el_f         = new float [nel];
@@ -212,9 +217,8 @@ namespace femus {
 
       NumericVector* mysol = NumericVector::build().release();
 
-      mysol->init(nvt, _ml_mesh->GetLevel(_gridn - 1)->_ownSize[index_nd][_iproc], true, AUTOMATIC);
-      mysol->matrix_mult(*_ml_mesh->GetLevel(_gridn - 1)->_topology->_Sol[i],
-                         *_ml_mesh->GetLevel(_gridn - 1)->GetQitoQjProjection(index_nd, 2));
+      mysol->init(nvt, mesh->_ownSize[index_nd][_iproc], true, AUTOMATIC);
+      mysol->matrix_mult(*mesh->_topology->_Sol[i],*mesh->GetQitoQjProjection(index_nd, 2));
 
       vector<double> mysol_ser;
       mysol->localize_to_one(mysol_ser, 0);
@@ -225,8 +229,8 @@ namespace femus {
 
       if (_ml_sol != NULL && _moving_mesh && _ml_mesh->GetLevel(0)->GetDimension() > i) {
         unsigned varind_DXDYDZ = _ml_sol->GetIndex(_moving_vars[i].c_str());
-        mysol->matrix_mult(*_ml_sol->GetSolutionLevel(_gridn - 1)->_Sol[varind_DXDYDZ],
-                           *_ml_mesh->GetLevel(_gridn - 1)->GetQitoQjProjection(index_nd, _ml_sol->GetSolutionType(varind_DXDYDZ)));
+        mysol->matrix_mult(*solution->_Sol[varind_DXDYDZ],
+                           *mesh->GetQitoQjProjection(index_nd, _ml_sol->GetSolutionType(varind_DXDYDZ)));
         mysol->localize_to_one(mysol_ser, 0);
         if (_iproc == 0) {
           for (unsigned ii = 0; ii < nvt; ii++) var_nd_f[ii] += mysol_ser[ii];
@@ -250,14 +254,14 @@ namespace femus {
     //END COORDINATES
 
     //BEGIN CONNETTIVITY
-    _ml_mesh->GetLevel(_gridn - 1)->el->LocalizeElementDofToOne(0);
+    mesh->el->LocalizeElementDofToOne(0);
     if (_iproc == 0) {
       unsigned icount = 0;
-      for (unsigned iel = 0; iel < _ml_mesh->GetLevel(_gridn - 1)->GetNumberOfElements(); iel++) {
-        int ndofs = _ml_mesh->GetLevel(_gridn - 1)->el->GetNVE(elemtype, index_nd);
+      for (unsigned iel = 0; iel < mesh->GetNumberOfElements(); iel++) {
+        int ndofs = mesh->el->GetNVE(elemtype, index_nd);
         for (unsigned j = 0; j < ndofs; j++) {
           unsigned vtk_loc_conn = FemusToVTKorToXDMFConn[j];
-          var_conn[icount] = _ml_mesh->GetLevel(_gridn - 1)->GetSolutionDof(vtk_loc_conn, iel, index_nd);
+          var_conn[icount] = mesh->GetSolutionDof(vtk_loc_conn, iel, index_nd);
           icount++;
         }
       }
@@ -270,7 +274,7 @@ namespace femus {
       H5Sclose(dataspace);
       H5Dclose(dataset);
     }
-    _ml_mesh->GetLevel(_gridn - 1)->el->FreeLocalizedElementDof();
+    mesh->el->FreeLocalizedElementDof();
     //END CONNETTIVITY
 
     //BEGIN METIS PARTITIONING
@@ -278,8 +282,8 @@ namespace femus {
 
       unsigned icount = 0;
       for (int isdom = 0; isdom < _nprocs; isdom++) {
-        for (unsigned ii = _ml_mesh->GetLevel(_gridn - 1)->_elementOffset[isdom];
-             ii < _ml_mesh->GetLevel(_gridn - 1)->_elementOffset[isdom + 1]; ii++) {
+        for (unsigned ii = mesh->_elementOffset[isdom];
+             ii < mesh->_elementOffset[isdom + 1]; ii++) {
           var_proc[icount] = isdom;
           icount++;
         }
@@ -303,9 +307,9 @@ namespace femus {
         unsigned indx = (print_all == 0) ? _ml_sol->GetIndex(vars[i].c_str()) : i;
         if (_ml_sol->GetSolutionType(indx) >= 3) {
           vector < double > mysol_ser;
-          _ml_sol->GetSolutionLevel(_gridn - 1)->_Sol[indx]->localize_to_one(mysol_ser, 0);
+          solution->_Sol[indx]->localize_to_one(mysol_ser, 0);
           for (unsigned ii = 0; ii < nel; ii++) {
-            var_el_f[ii] = mysol_ser[ _ml_mesh->GetLevel(_gridn - 1)->GetSolutionDof(0, ii, _ml_sol->GetSolutionType(indx)) ];
+            var_el_f[ii] = mysol_ser[ mesh->GetSolutionDof(0, ii, _ml_sol->GetSolutionType(indx)) ];
           }
           if (_iproc == 0) {
             dimsf[0] = nel;
@@ -327,9 +331,9 @@ namespace femus {
         if (_ml_sol->GetSolutionType(indx) < 3) {
 
           NumericVector* mysol = NumericVector::build().release();
-          mysol->init(nvt, _ml_mesh->GetLevel(_gridn - 1)->_ownSize[index_nd][_iproc], true, AUTOMATIC);
-          mysol->matrix_mult(*_ml_sol->GetSolutionLevel(_gridn - 1)->_Sol[indx],
-                             *_ml_mesh->GetLevel(_gridn - 1)->GetQitoQjProjection(index_nd, _ml_sol->GetSolutionType(indx)));
+          mysol->init(nvt, mesh->_ownSize[index_nd][_iproc], true, AUTOMATIC);
+          mysol->matrix_mult(*solution->_Sol[indx],
+                             *mesh->GetQitoQjProjection(index_nd, _ml_sol->GetSolutionType(indx)));
 
           vector<double> mysol_ser;
           mysol->localize_to_one(mysol_ser, 0);

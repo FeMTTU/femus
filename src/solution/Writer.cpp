@@ -40,7 +40,6 @@ namespace femus {
     _ml_sol(ml_sol), _ml_mesh(ml_sol->_mlMesh)
   {
     _gridn = _ml_mesh->GetNumberOfLevels();
-    _gridr = _ml_mesh->GetNumberOfLevels();
     _moving_mesh = 0;
     _graph = false;
     _surface = false;
@@ -50,7 +49,6 @@ namespace femus {
     _ml_sol(NULL), _ml_mesh(ml_mesh)
   {
     _gridn = _ml_mesh->GetNumberOfLevels();
-    _gridr = _ml_mesh->GetNumberOfLevels();
     _moving_mesh = 0;
     _graph = false;
     _surface = false;

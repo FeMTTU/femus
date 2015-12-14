@@ -45,13 +45,8 @@ public:
     virtual ~XDMFWriter();
 
     /** write output function */
-    void write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) ;
-    
-    void Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) {
-      std::cout<<"the paralell writing function has not been yet implemente for XDMF format \n switched to serial write\n";
-      write(output_path, order, vars, time_step);
-    };
-    
+    void Write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) ;
+        
     /** write a wrapper file for paraview to open all the files of an history together */
     void write_solution_wrapper(const std::string output_path, const char type[]) const;
 
