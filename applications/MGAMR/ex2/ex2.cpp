@@ -18,6 +18,7 @@
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
+#include "XDMFWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 
@@ -93,7 +94,7 @@ int main(int argc, char** args) {
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
-  
+
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
@@ -170,6 +171,9 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("all");
   gmvIO.SetDebugOutput(true);
   gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+
+  XDMFWriter xdmfIO(&mlSol);
+  xdmfIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   // print mesh info
   mlMsh.PrintInfo();
