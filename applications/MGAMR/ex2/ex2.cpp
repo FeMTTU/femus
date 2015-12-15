@@ -165,14 +165,15 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
+  vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   GMVWriter gmvIO(&mlSol);
-  variablesToBePrinted.push_back("all");
   gmvIO.SetDebugOutput(true);
   gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   XDMFWriter xdmfIO(&mlSol);
+  xdmfIO.SetDebugOutput(true);
   xdmfIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   // print mesh info

@@ -75,13 +75,18 @@ namespace femus {
     Mesh *mesh = _ml_mesh->GetLevel (_gridn - 1);
     Solution *solution = _ml_sol->GetSolutionLevel (_gridn - 1);
     unsigned nvt = mesh->GetTotalNumberOfDofs (index);
+    unsigned nel = mesh->GetNumberOfElements();
+    unsigned dim = mesh->GetDimension();
 
     std::vector < double > vector1;
-    std::vector < double > vector2;
-    
     vector1.reserve(nvt);
-    vector2.reserve(nvt);
-    
+
+    std::vector < double > vector2;
+    if( nvt > ( dim + 1 ) *nel )
+      vector2.reserve( nvt );
+    else
+      vector2.reserve( ( dim + 1 ) *nel );
+
     NumericVector* numVector;
     numVector = NumericVector::build().release();
     numVector->init (mesh->_dofOffset[index][_nprocs], mesh->_ownSize[index][_iproc], true, AUTOMATIC);
@@ -116,10 +121,8 @@ namespace femus {
                             *mesh->GetQitoQjProjection (index, _ml_sol->GetSolutionType (indSurfVar)));
       }
 
-      vector1.resize(nvt);
       numVector->localize_to_one (vector1, 0);
-      if (_ml_sol != NULL && _moving_mesh  && _ml_mesh->GetLevel (0)->GetDimension() > i)  {
-	vector2.resize(nvt);
+      if (_ml_sol != NULL && _moving_mesh  && dim > i)  {
         unsigned indDXDYDZ = _ml_sol->GetIndex (_moving_vars[i].c_str());
         numVector->matrix_mult (*solution->_Sol[indDXDYDZ],
                             *mesh->GetQitoQjProjection (index, _ml_sol->GetSolutionType (indDXDYDZ)));
@@ -139,20 +142,18 @@ namespace femus {
     sprintf (buffer, "%s", "cells");
     fout.write ( (char *) buffer, sizeof (char) * 8);
 
-    unsigned nel = mesh->GetNumberOfElements();
     fout.write ( (char *) &nel, sizeof (unsigned));
 
     unsigned topology[27];
     unsigned offset = 1;
 
-    vector < double > localizedElementType;
-    mesh->_topology->_Sol[mesh->GetTypeIndex()]->localize_to_one (localizedElementType, 0);
+    mesh->_topology->_Sol[mesh->GetTypeIndex()]->localize_to_one (vector1, 0);
 
     mesh->el->LocalizeElementDofToOne (0);
 
     if (_iproc == 0) {
       for (unsigned ii = 0; ii < mesh->GetNumberOfElements(); ii++) {
-        short unsigned ielt = static_cast < short unsigned > (localizedElementType[ii] + 0.25);
+        short unsigned ielt = static_cast < short unsigned > (vector1[ii] + 0.25);
         if (ielt == 0)
           sprintf (buffer, "phex%d", eltp[index][0]);
         else if (ielt == 1)
@@ -190,7 +191,6 @@ namespace femus {
       offset += mesh->_dofOffset[index][_nprocs];
     }
 
-    localizedElementType.resize (0);
     mesh->el->FreeLocalizedElementDof();
     //END CONNETTIVITY
 
@@ -243,8 +243,7 @@ namespace femus {
             if (_ml_sol->GetSolutionType (i) < 3) { // **********  on the nodes **********
               fout.write ( (char *) buffer, sizeof (char) * 8);
               fout.write ( (char *) &one, sizeof (unsigned));
-	      vector1.resize(nvt);
-              if (name == 0) {
+	      if (name == 0) {
                 numVector->matrix_mult (*solution->_Sol[i], *mesh->GetQitoQjProjection (index, _ml_sol->GetSolutionType (i)));
               }
               else if (name == 1) {
@@ -264,19 +263,24 @@ namespace femus {
               //BEGIN DISCONTINUOUS Fem SOLUTION
               fout.write ( (char *) buffer, sizeof (char) * 8);
               fout.write ( (char *) &zero, sizeof (unsigned));
-	      vector1.resize(nel);
+
               if (name == 0) {
-                solution->_Sol[i]->localize_to_one (vector1, 0);
+                solution->_Sol[i]->localize_to_one (vector2, 0);
               }
               else if (name == 1) {
-                solution->_Bdc[i]->localize_to_one (vector1, 0);
+                solution->_Bdc[i]->localize_to_one (vector2, 0);
               }
               else if (name == 2) {
-                solution->_Res[i]->localize_to_one (vector1, 0);
+                solution->_Res[i]->localize_to_one (vector2, 0);
               }
               else {
-                solution->_Eps[i]->localize_to_one (vector1, 0);
+                solution->_Eps[i]->localize_to_one (vector2, 0);
               }
+              vector1.resize( nel );
+              for( unsigned ii = 0; ii < nel; ii++ ) {
+                vector1[ii] = vector2[ mesh->GetSolutionDof( 0, ii, _ml_sol->GetSolutionType( i ) ) ];
+              }
+
               fout.write ( (char *) &vector1[0], nel * sizeof (double));
               //END DISCONTINUOUS Fem SOLUTION
             }
