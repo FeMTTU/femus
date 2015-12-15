@@ -107,39 +107,41 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("T");
 
   
-  std::vector < unsigned > fieldUV(2);
-  fieldUV[0] = system.GetSolPdeIndex("U");
-  fieldUV[1] = system.GetSolPdeIndex("V");
-  FieldSpliTreeStructure FS_UV( GMRES, ILU_PRECOND, fieldUV , "Velocity");
+  std::vector < unsigned > fieldUVP(3);
+  fieldUVP[0] = system.GetSolPdeIndex("U");
+  fieldUVP[1] = system.GetSolPdeIndex("V");
+  //FieldSpliTreeStructure FS_UV( GMRES, ILU_PRECOND, fieldUV , "Velocity");
   
-  std::vector < unsigned > fieldP(1);
-  fieldP[0] = system.GetSolPdeIndex("P");
-  FieldSpliTreeStructure FS_P( GMRES, ILU_PRECOND, fieldP, "Pressure");
+  //std::vector < unsigned > fieldP(1);
+  fieldUVP[2] = system.GetSolPdeIndex("P");
+  //FieldSpliTreeStructure FS_P( GMRES, ILU_PRECOND, fieldP, "Pressure");
   
-  std::vector < FieldSpliTreeStructure > FS1;
+  //std::vector < FieldSpliTreeStructure *> FS1;
   
-  FS1.reserve(2);
-  FS1.push_back(FS_UV);
-  FS1.push_back(FS_P);
+  //FS1.reserve(3);
+  //FS1.push_back(&FS_UV);
+  //FS1.push_back(&FS_P);
   
-  FieldSpliTreeStructure FS_NS( GMRES, ILU_PRECOND, FS1, "Navier-Stokes");
+  FieldSpliTreeStructure FS_NS( PREONLY, ILU_PRECOND, fieldUVP, "Navier-Stokes");
     
+  //FieldSpliTreeStructure FS_NS( GMRES, ILU_PRECOND, FS1, "Navier-Stokes");
+  
   std::vector < unsigned > fieldT(1);
   fieldT[0] = system.GetSolPdeIndex("T");
-  FieldSpliTreeStructure FS_T( GMRES, ILU_PRECOND, fieldT, "Temperature");
+  FieldSpliTreeStructure FS_T( PREONLY, ILU_PRECOND, fieldT, "Temperature");
     
-  std::vector < FieldSpliTreeStructure > FS2;
+  std::vector < FieldSpliTreeStructure *> FS2;
   
   FS2.reserve(2);
-  FS2.push_back(FS_NS);
-  FS2.push_back(FS_T);
-  FieldSpliTreeStructure FS_NST( GMRES, ILU_PRECOND, FS2, "Benard");
+  FS2.push_back(&FS_NS);
+  FS2.push_back(&FS_T);
+  FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
   
-  FS_NST.PrintNestedFields();
- 
   
+     
   //system.SetMgSmoother(GMRES_SMOOTHER);
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
+ 
   //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
@@ -152,11 +154,15 @@ int main(int argc, char** args) {
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
+  
   // initilaize and solve the system
   system.init();
 
   system.SetSolverFineGrids(GMRES);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
+  
+  system.SetFieldSplitTree(&FS_NST);
+  
   //system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40);
   system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
 
@@ -167,7 +173,7 @@ int main(int argc, char** args) {
   system.SetElementBlockNumber(4);
   //system.SetDirichletBCsHandling(ELIMINATION);
   //system.solve();
-  //system.MGsolve();
+  system.MGsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

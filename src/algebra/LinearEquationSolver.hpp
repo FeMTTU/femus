@@ -30,6 +30,7 @@
 #include "LinearEquation.hpp"
 #include "MgSmootherEnum.hpp"
 #include "MgTypeEnum.hpp"
+#include "FieldSplitTreeStructure.hpp"
 
 #include <petscksp.h>
 
@@ -134,6 +135,10 @@ public:
     };
     virtual void SetElementBlockNumberSolid(const unsigned & block_elemet_number, const unsigned &overlap) {
         std::cout<<"Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
+    };
+    
+    virtual void SetFieldSplitTree(FieldSpliTreeStructure * fieldSplitTree) {
+        std::cout<<"SetFieldSplitTree(const FieldSpliTreeStructure & fieldSplitTree) is not available for this smoother\n";
     };
 
 

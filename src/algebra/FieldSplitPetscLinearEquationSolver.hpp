@@ -29,6 +29,7 @@
 //----------------------------------------------------------------------------
 #include "LinearEquationSolver.hpp"
 #include "PetscVector.hpp"
+#include "FieldSplitTreeStructure.hpp"
 
 namespace femus {
 
@@ -84,7 +85,9 @@ public:
      KSPDestroy(&_ksp);
    }
 
-
+   void SetFieldSplitTree(FieldSpliTreeStructure * fieldSplitTree) {
+    _fieldSpliTree = fieldSplitTree; 
+   }
 private:
 
     /** Release all memory and clear data structures. */
@@ -148,7 +151,8 @@ private:
     Mat _Pmat;
     bool _Pmat_is_initialized;
     vector <unsigned> _block_type_range;
-
+    
+    FieldSpliTreeStructure * _fieldSpliTree;
 
     //vector < KSP*> _ksp_split;
     //vector< vector < PC > >  _pc_split;

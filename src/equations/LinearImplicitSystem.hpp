@@ -122,6 +122,10 @@ public:
     /** Set the multigrid smoother, gmres or Vanka (in future AMS (additive schwartz preconditioner))*/
     void SetMgSmoother(const MgSmoother mgsmoother);
 
+    /** Set the PCFIELDSPLIT structure in linear solver */ 
+    void SetFieldSplitTree(FieldSpliTreeStructure *fieldSplitTree);
+  
+    
     /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
     void SetElementBlockNumber(unsigned const &dim_vanka_block);
 

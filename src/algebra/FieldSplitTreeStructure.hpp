@@ -16,7 +16,7 @@ namespace femus {
   public:
     //single split constructor
     FieldSpliTreeStructure( const SolverType &solver, const PreconditionerType &preconditioner, const std::vector < unsigned > &fields, std::string name){
-      
+      _father = NULL;
       _name=name;
       
       _solver = solver;
@@ -47,7 +47,9 @@ namespace femus {
     };
     
     //multiple split constructor
-    FieldSpliTreeStructure( const SolverType &solver, const PreconditionerType &preconditioner, std::vector < FieldSpliTreeStructure> &childrenBranches, std::string name){
+    FieldSpliTreeStructure( const SolverType &solver, const PreconditionerType &preconditioner, std::vector < FieldSpliTreeStructure*> childrenBranches, std::string name){
+      
+      _father = NULL;
       
       _name=name;
       _solver = solver;
@@ -58,10 +60,11 @@ namespace femus {
       _childrenBranches.resize(_numberOfSplits);
       
       for(unsigned i = 0; i < _numberOfSplits; i++ ){
-	_childrenBranches[i] = &childrenBranches[i];
-	_fieldsInSplit[i].resize( childrenBranches[i]._allFields.size() );
-	for ( unsigned j = 0; j < childrenBranches[i]._allFields.size(); j++){ 
- 	  _fieldsInSplit[i][j] = childrenBranches[i]._allFields[j];
+	childrenBranches[i]->_father = this;
+	_childrenBranches[i] = childrenBranches[i];
+	_fieldsInSplit[i].resize( childrenBranches[i]->_allFields.size() );
+	for ( unsigned j = 0; j < childrenBranches[i]->_allFields.size(); j++){ 
+ 	  _fieldsInSplit[i][j] = childrenBranches[i]->_allFields[j];
 	}
       }
       
@@ -105,9 +108,14 @@ namespace femus {
     for(int i=0; i < counter; i++){
       sub+="sub-";
     }  
+    
     std::cout<< "Fields in the " << _name << sub <<"system:\n"; 
     for(int j = 0; j < _allFields.size(); j++) std::cout << _allFields[j] << " ";
     std::cout<<std::endl;   
+    
+    if(_father != NULL){
+      std::cout<< "My father is " << _father->GetName() << std::endl;
+    }
     
     if( GetNumberOfSplits() > 1){
       for(unsigned i = 0; i< GetNumberOfSplits(); i++){
@@ -117,9 +125,19 @@ namespace femus {
     
   }
   
+  FieldSpliTreeStructure *GetFather() const {
+    if(_father != NULL){
+      return _father;
+    }
+    else{
+      std::cout << "Warning this split has no father"<<std::endl;
+      abort();
+    }
+  }
   
+  std::string GetName() const{ return _name;}
   
-  
+    
   const std::vector < unsigned > & GetFieldsInSplit(const unsigned &i) {return _fieldsInSplit[i];} 
   // _fields[i][j] is a vector
   // std::vector < unsigned > GetFields(const unsigned &i) {return _fields[i];} 
@@ -131,7 +149,7 @@ namespace femus {
     SolverType _solver;
     PreconditionerType _preconditioner; 
     unsigned _numberOfSplits;
-
+    FieldSpliTreeStructure *_father;
     std::vector < FieldSpliTreeStructure * > _childrenBranches; 
     std::vector < FieldSpliTreeStructure* > _branch; 
     std::vector < std::vector < unsigned > > _fields;

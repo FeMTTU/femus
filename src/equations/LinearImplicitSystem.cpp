@@ -690,6 +690,13 @@ namespace femus {
 
   // ********************************************
 
+  void LinearImplicitSystem::SetFieldSplitTree(FieldSpliTreeStructure *fieldSplitTree){
+    for (unsigned i = 1; i < _gridn; i++) {
+      _LinSolver[i]->SetFieldSplitTree(fieldSplitTree);
+    }
+  };
+  
+  
   /// @deprecated
 // this function is like init but it doesn't call InitPDE
   void LinearImplicitSystem::init_two() {
