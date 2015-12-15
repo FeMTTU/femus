@@ -74,7 +74,7 @@ namespace femus {
     //BEGIN flag element to be refined
     if (type == 0) { // Flag all element
       for (int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
-        if (_mesh.GetLevel() == 0 || _mesh.el->GetIfFatherElementIsRefined(iel)) {
+        if (_mesh.el->GetIfElementCanBeRefined(iel)) {
           _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
           numberOfRefinedElement->add(_iproc, 1.);
           numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
@@ -83,7 +83,7 @@ namespace femus {
     }
     else if (type == 1) { // Flag AMR elements
       for (int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
-        if (_mesh.GetLevel() == 0 || _mesh.el->GetIfFatherElementIsRefined(iel)) {
+        if (_mesh.el->GetIfElementCanBeRefined(iel)) {
           if ((*_mesh._topology->_Sol[ _mesh.GetAmrIndex() ])(iel) > 0.5) {
             numberOfRefinedElement->add(_iproc, 1.);
             numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
@@ -118,7 +118,7 @@ namespace femus {
     }
     else if (type == 2) { // Flag only even elements (for debugging purposes)
       for (int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
-        if (_mesh.GetLevel() == 0 || _mesh.el->GetIfFatherElementIsRefined(iel)) {
+        if (_mesh.el->GetIfElementCanBeRefined(iel)) {
           if ((*_mesh._topology->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && iel % 2 == 0) {
             _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
             numberOfRefinedElement->add(_iproc, 1.);
@@ -172,6 +172,9 @@ namespace femus {
     vector < double > coarseLocalizedElementType;
     mshc->_topology->_Sol[mshc->GetTypeIndex()]->localize_to_all(coarseLocalizedElementType);
 
+    elc->LocalizeElementDofToAll();
+    elc->LocalizeElementNearFaceToAll();
+
     mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), mshc);
 
     _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector, coarseLocalizedElementType);
@@ -183,19 +186,13 @@ namespace femus {
 
     bool AMR = false;
 
-
-
     for (unsigned iel = 0; iel < elc->GetElementNumber(); iel++) {
-      //if ( elc->GetRefinedElementIndex(iel) ) {
       if (static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
-        //unsigned elt=elc->GetElementType(iel);
-
         unsigned elt = static_cast < short unsigned > (coarseLocalizedElementType[iel]+ 0.25);
-
         // project element type
         for (unsigned j = 0; j < _mesh.GetRefIndex(); j++) {
           _mesh.el->SetElementType(jel + j, elt);
-          _mesh.el-> SetIfFatherElementIsRefined(jel + j, true);
+          _mesh.el-> SetIfElementCanBeRefined(jel + j, true);
 	  if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1){
 	    elc->SetChildElement(iel, j, jel + j);
 	  }
@@ -225,7 +222,7 @@ namespace femus {
 
         // project element type
         _mesh.el->SetElementType(jel, elt);
-        _mesh.el-> SetIfFatherElementIsRefined(jel, false);
+        _mesh.el-> SetIfElementCanBeRefined(jel, false);
 	if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1){
 	  elc->SetChildElement(iel, 0, jel);
 	}
@@ -249,6 +246,9 @@ namespace femus {
       }
     }
 
+    elc->FreeLocalizedElementDof();
+    elc->FreeLocalizedElementNearFace();
+
     coarseLocalizedAmrVector.resize(0);
     coarseLocalizedElementType.resize(0);
 
@@ -261,7 +261,7 @@ namespace femus {
 
     //initialize to UINT_MAX all the middle edge points
     for (unsigned iel = 0; iel < _mesh.GetNumberOfElements(); iel++) {
-      if ( _mesh.el->GetIfFatherElementIsRefined(iel) ) {
+      if ( _mesh.el->GetIfFatherHasBeenRefined(iel) ) {
         for (unsigned inode = _mesh.el->GetElementDofNumber(iel, 0); inode < _mesh.el->GetElementDofNumber(iel, 1); inode++) {
           _mesh.el->SetElementDofIndex(iel, inode, UINT_MAX);
         }
@@ -270,7 +270,7 @@ namespace femus {
 
     //find all the middle edge points
     for (unsigned iel = 0; iel < _mesh.GetNumberOfElements(); iel++) {
-      if ( _mesh.el->GetIfFatherElementIsRefined(iel) ) {
+      if ( _mesh.el->GetIfFatherHasBeenRefined(iel) ) {
         unsigned ielt = _mesh.el->GetElementType(iel);
         unsigned istart = _mesh.el->GetElementDofNumber(iel, 0);
         unsigned iend = _mesh.el->GetElementDofNumber(iel, 1);
@@ -286,7 +286,7 @@ namespace femus {
             for (unsigned j = 0; j < _mesh.el->GetElementNearVertexNumber(im); j++) {
               unsigned jel = _mesh.el->GetElementNearVertex(im, j);
 
-              if (_mesh.el->GetIfFatherElementIsRefined(jel) && jel > iel) {    // to skip coarse elements
+              if (_mesh.el->GetIfFatherHasBeenRefined(jel) && jel > iel) {    // to skip coarse elements
                 unsigned jm = 0, jp = 0;
                 unsigned jelt = _mesh.el->GetElementType(jel);
 
@@ -342,9 +342,9 @@ namespace femus {
 
     _mesh.FillISvector(partition);
     partition.resize(0);
-    
+
     elc->SetChildElementDof(_mesh.GetRefIndex(), mshc, _mesh.el);
-    
+
     _mesh.el->DeleteElementNearVertex();
     _mesh.el->BuildElementNearVertex();
 
@@ -400,8 +400,10 @@ namespace femus {
     _mesh.el->DeleteElementType();
 
     _mesh._topology->AddSolution("solidMrk",LAGRANGE,SECOND,1,0);
-    
-    _mesh.el->ParallelizeElementFather();
+
+    _mesh.el->ScatterElementCanBeRefinedVector();
+    _mesh.el->ScatterElementDof();
+    _mesh.el->ScatterElementNearFace();
   }
 
 
@@ -414,7 +416,7 @@ namespace femus {
 
     //intialize to UINT_MAX
     for (unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++) {
-      if ( _mesh.el->GetIfFatherElementIsRefined(iel) ) {
+      if ( _mesh.el->GetIfFatherHasBeenRefined(iel) ) {
         for (unsigned inode = _mesh.el->GetElementDofNumber(iel, 1); inode < _mesh.el->GetElementDofNumber(iel, 2); inode++) {
           _mesh.el->SetElementDofIndex(iel, inode, UINT_MAX);
         }
@@ -423,7 +425,7 @@ namespace femus {
 
     // generate face dofs for hex and wedge elements
     for (unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++) {
-      if ( _mesh.el->GetIfFatherElementIsRefined(iel) ) {
+      if ( _mesh.el->GetIfFatherHasBeenRefined(iel) ) {
         for (unsigned iface = 0; iface < _mesh.el->GetElementFaceNumber(iel, 0); iface++) { // I think is on all the faces that are quads
           unsigned inode = _mesh.el->GetElementDofNumber(iel, 1) + iface;
 
@@ -436,7 +438,7 @@ namespace femus {
             for (unsigned j = 0; j < _mesh.el->GetElementNearVertexNumber(i1); j++) {
               unsigned jel = _mesh.el->GetElementNearVertex(i1, j);
 
-              if ( _mesh.el->GetIfFatherElementIsRefined(jel) && jel > iel) {
+              if ( _mesh.el->GetIfFatherHasBeenRefined(jel) && jel > iel) {
                 for (unsigned jface = 0; jface < _mesh.el->GetElementFaceNumber(jel, 0); jface++) {
                   unsigned jnode = _mesh.el->GetElementDofNumber(jel, 1) + jface;
 
@@ -462,7 +464,7 @@ namespace femus {
 
     // generates element dofs for hex and quad elements
     for (unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++) {
-      if ( _mesh.el->GetIfFatherElementIsRefined(iel) ) {
+      if ( _mesh.el->GetIfFatherHasBeenRefined(iel) ) {
         if (0 == _mesh.el->GetElementType(iel)) { //hex
           _mesh.el->SetElementDofIndex(iel, 26, ++nnodes - 1u);
         }

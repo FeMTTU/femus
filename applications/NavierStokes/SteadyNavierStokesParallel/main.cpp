@@ -230,11 +230,11 @@ int main(int argc,char **args) {
   print_vars.push_back("T");
 
   VTKWriter vtkio(&ml_sol);
-  vtkio.write(files.GetOutputPath(),"biquadratic",print_vars);
+  vtkio.Write(files.GetOutputPath(),"biquadratic",print_vars);
   //vtkio.write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
   GMVWriter gmvio(&ml_sol);
-  gmvio.write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+  gmvio.Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
   // gmvio.write(files.GetOutputPath(),"biquadratic",print_vars);
 
   //   XDMFWriter xdmfio(ml_sol);

@@ -264,8 +264,8 @@ int main(int argc, char** args) {
     system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
     const unsigned int n_timesteps = 1;
 
-    vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
-    gmvIO.Pwrite(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+    vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+    gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
     system.SetMgType(V_CYCLE);
 
@@ -279,8 +279,8 @@ int main(int argc, char** args) {
       system.UpdateSolution();
 
 
-      vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
-      gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+      gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
     }
 
 

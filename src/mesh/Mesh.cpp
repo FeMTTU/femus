@@ -118,7 +118,7 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
               << std::endl;
   }
 
-  el->ElementDofSharpAllocation();
+  el->SharpMemoryAllocation();
 
   el->SetNodeNumber(_nnodes);
 
@@ -184,7 +184,9 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
 
-
+  el->ScatterElementCanBeRefinedVector();
+  el->ScatterElementDof();
+  el->ScatterElementNearFace();
 
 };
 
@@ -204,7 +206,7 @@ void Mesh::GenerateCoarseBoxMesh(
 
   MeshTools::Generation::BuildBox(*this,_coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,elemType,type_elem_flag);
 
-  el->ElementDofSharpAllocation();
+  el->SharpMemoryAllocation();
 
   el->SetNodeNumber(_nnodes);
 
@@ -270,6 +272,9 @@ void Mesh::GenerateCoarseBoxMesh(
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
 
+  el->ScatterElementCanBeRefinedVector();
+  el->ScatterElementDof();
+  el->ScatterElementNearFace();
 
 }
 
@@ -534,7 +539,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     }
   }
 
-  el->SetElementOffsets(_elementOffset[_iproc], _elementOffset[_iproc+1]);
+  el->SetElementOffsets(_elementOffset[_iproc], _elementOffset[_iproc+1], _iproc, _nprocs );
 
 }
 

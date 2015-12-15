@@ -50,8 +50,7 @@ namespace femus {
     virtual ~Writer();
 
     /** write output function */
-    virtual void write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0)  = 0;
-    virtual void Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) = 0;
+    virtual void Write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0)  = 0;
     /** set moving mesh */
     void SetMovingMesh(std::vector<std::string>& movvars_in);
 
@@ -93,8 +92,6 @@ namespace femus {
     MultiLevelMesh* _ml_mesh;
 
     int _gridn;
-
-    int _gridr;
 
     /** map from femus connectivity to vtk-connectivity for paraview visualization */
     static const unsigned FemusToVTKorToXDMFConn[27];

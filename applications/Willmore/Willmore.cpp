@@ -220,7 +220,7 @@ int main(int argc, char** args) {
 
       VTKWriter vtkIO(&mlSol);
       vtkIO.SetGraphVariable("u");
-      vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
 
     }
   }
