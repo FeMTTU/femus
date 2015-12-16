@@ -184,6 +184,8 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
 
+  el->ScatterElementCanBeRefinedVector();
+  el->ScatterElementDof();
 
 
 };
@@ -270,6 +272,8 @@ void Mesh::GenerateCoarseBoxMesh(
   el->DeleteGroupAndMaterial();
   el->DeleteElementType();
 
+  el->ScatterElementCanBeRefinedVector();
+  el->ScatterElementDof();
 
 }
 
@@ -534,7 +538,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     }
   }
 
-  el->SetElementOffsets(_elementOffset[_iproc], _elementOffset[_iproc+1]);
+  el->SetElementOffsets(_elementOffset[_iproc], _elementOffset[_iproc+1], _iproc, _nprocs );
 
 }
 

@@ -164,13 +164,14 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 
   vector < double > localizedElementType;
   _ml_mesh->GetLevel(igridn-1)->_topology->_Sol[_ml_mesh->GetLevel(igridn-1)->GetTypeIndex()]->localize_to_one(localizedElementType, 0);
-  
+
+  _ml_mesh->GetLevel(igridn-1)->el->LocalizeElementDofToOne(0);
+
   if(_iproc == 0){
     for (unsigned ig=igridr-1u; ig<igridn; ig++) {
       for (unsigned ii=0; ii<_ml_mesh->GetLevel(ig)->GetNumberOfElements(); ii++) {
 	if ( ig == igridn-1u ) {
 	  short unsigned ielt = static_cast < short unsigned > (localizedElementType[ii]+ 0.25);
-	  //short unsigned ielt=_ml_mesh->GetLevel(ig)->el->GetElementType(ii);
 	  if (ielt==0) sprintf(det,"phex%d",eltp[index][0]);
 	  else if (ielt==1) sprintf(det,"ptet%d",eltp[index][1]);
 	  else if (ielt==2) sprintf(det,"pprism%d",eltp[index][2]);
@@ -190,7 +191,7 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
 
 	    unsigned jnode_Metis = _ml_mesh->GetLevel(ig)->GetSolutionDof(j,ii,index);
 
-	    topology[j]=jnode_Metis+offset;
+	    topology[j]=jnode_Metis + offset;
 	  }
 	  fout.write((char *)topology,sizeof(unsigned)*NVE[ielt][index]);
 	}
@@ -198,8 +199,9 @@ void GMVWriter::write(const std::string output_path, const char order[], const s
       offset+=_ml_mesh->GetLevel(ig)->_dofOffset[index][_nprocs];
     }
   }
-  
+
   localizedElementType.resize(0);
+  _ml_mesh->GetLevel(igridn-1)->el->FreeLocalizedElementDof();
   // ********** End printing cell connectivity  **********
 
   double *var_el=new double [nel+1]; //TO FIX Valgrind complaints! In reality it should be only nel
