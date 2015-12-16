@@ -134,22 +134,25 @@ namespace femus {
 
   clock_t FieldSplitPetscLinearEquationSolver::BuildFieldSplitIndex(const vector <unsigned>& variable_to_be_solved) {
     
-    _fieldSpliTree->PrintNestedFields();
+    
     
     clock_t SearchTime = 0;
     clock_t start_time = clock();
     
     unsigned nSplits = _fieldSpliTree->GetNumberOfSplits();
     unsigned iproc = processor_id(); 
+    unsigned nprocs = n_processors(); 
     
     _is_loc_idx.resize(nSplits);
     _is_loc.resize(nSplits);
     
+    _fieldSpliTree->ReorderFields(KKoffset, iproc, nprocs);
+    _fieldSpliTree->PrintNestedFields();
+    
     for( unsigned i = 0; i < nSplits; i++){
       const std::vector < unsigned > & fieldsInTheSplit = _fieldSpliTree->GetFieldsInSplit(i); 
-      
       unsigned size = 0;
-      for (int k = 0; k < fieldsInTheSplit.size(); k++){
+      for (unsigned k = 0; k < fieldsInTheSplit.size(); k++){
         unsigned solPdeindex = fieldsInTheSplit[k];
 	unsigned offset = KKoffset[solPdeindex][iproc];
 	unsigned offsetp1 = KKoffset[solPdeindex + 1][iproc];

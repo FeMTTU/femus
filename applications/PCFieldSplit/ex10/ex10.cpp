@@ -61,7 +61,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 7;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -110,22 +110,10 @@ int main(int argc, char** args) {
   std::vector < unsigned > fieldUVP(3);
   fieldUVP[0] = system.GetSolPdeIndex("U");
   fieldUVP[1] = system.GetSolPdeIndex("V");
-  //FieldSpliTreeStructure FS_UV( GMRES, ILU_PRECOND, fieldUV , "Velocity");
-  
-  //std::vector < unsigned > fieldP(1);
   fieldUVP[2] = system.GetSolPdeIndex("P");
-  //FieldSpliTreeStructure FS_P( GMRES, ILU_PRECOND, fieldP, "Pressure");
-  
-  //std::vector < FieldSpliTreeStructure *> FS1;
-  
-  //FS1.reserve(3);
-  //FS1.push_back(&FS_UV);
-  //FS1.push_back(&FS_P);
   
   FieldSpliTreeStructure FS_NS( PREONLY, ILU_PRECOND, fieldUVP, "Navier-Stokes");
-    
-  //FieldSpliTreeStructure FS_NS( GMRES, ILU_PRECOND, FS1, "Navier-Stokes");
-  
+      
   std::vector < unsigned > fieldT(1);
   fieldT[0] = system.GetSolPdeIndex("T");
   FieldSpliTreeStructure FS_T( PREONLY, ILU_PRECOND, fieldT, "Temperature");
@@ -137,6 +125,36 @@ int main(int argc, char** args) {
   FS2.push_back(&FS_T);
   FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
   
+   
+//   std::vector < unsigned > fieldUV(2);
+//   fieldUV[0] = system.GetSolPdeIndex("U");
+//   fieldUV[1] = system.GetSolPdeIndex("V");
+//   FieldSpliTreeStructure FS_UV( GMRES, ILU_PRECOND, fieldUV , "Velocity");
+//   
+//   std::vector < unsigned > fieldP(1);
+//   fieldP[0] = system.GetSolPdeIndex("P");
+//   FieldSpliTreeStructure FS_P( GMRES, ILU_PRECOND, fieldP, "Pressure");
+//   
+//   std::vector < FieldSpliTreeStructure *> FS1;
+//   
+//   FS1.reserve(2);
+//   FS1.push_back(&FS_UV);
+//   FS1.push_back(&FS_P);
+//         
+//   FieldSpliTreeStructure FS_NS( GMRES, ILU_PRECOND, FS1, "Navier-Stokes");
+//   
+//   std::vector < unsigned > fieldT(1);
+//   fieldT[0] = system.GetSolPdeIndex("T");
+//   FieldSpliTreeStructure FS_T( PREONLY, ILU_PRECOND, fieldT, "Temperature");
+//     
+//   std::vector < FieldSpliTreeStructure *> FS2;
+//   
+//   FS2.reserve(2);
+//   FS2.push_back(&FS_NS);
+//   FS2.push_back(&FS_T);
+//   FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
+  
+     
   
      
   //system.SetMgSmoother(GMRES_SMOOTHER);
