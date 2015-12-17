@@ -220,25 +220,23 @@ int main(int argc, char** args) {
     
   }
   
-  
-
 return 0;
 }
 
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
+  return sin(pi * x[0]) * sin(pi * x[1]);
 };
 
 void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
   double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+  solGrad[0]  = pi * cos(pi * x[0]) * sin(pi * x[1]);
+  solGrad[1]  = pi * sin(pi * x[0]) * cos(pi * x[1]);
 };
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+  return -pi * pi * sin(pi * x[0]) * sin(pi * x[1]) - pi * pi * sin(pi * x[0]) * sin(pi * x[1]);
 };
 
 
@@ -437,8 +435,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*          msh          = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*          el         = msh->el;  // pointer to the elem object in msh (level)
-  Solution*    sol        = mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  elem*          el           = msh->el;  // pointer to the elem object in msh (level)
+  Solution*      sol          = mlSol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
@@ -479,7 +477,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
     
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofsU  = msh->GetElementDofNumber(iel, solUType);    // number of solution element dofs
-    unsigned nDofsX = msh->GetElementDofNumber(iel, crdXType);    // number of coordinate element dofs
+    unsigned nDofsX  = msh->GetElementDofNumber(iel, crdXType);    // number of coordinate element dofs
 
     // resize local arrays
     solU.resize(nDofsU);
