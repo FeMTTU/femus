@@ -123,8 +123,7 @@ int main(int argc, char** args) {
   FS2.reserve(2);
   FS2.push_back(&FS_NS);
   FS2.push_back(&FS_T);
-  FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
-  
+  FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard"); 
    
 //   std::vector < unsigned > fieldUV(2);
 //   fieldUV[0] = system.GetSolPdeIndex("U");
