@@ -335,35 +335,39 @@ namespace femus {
     KSPSetFromOptions(subksp);
     KSPSetOperators(subksp, KK, _Pmat);
 
+    
+    
+    _fieldSpliTree->SetPC(subksp);
+    
     PC subpc;
     KSPGetPC(subksp, &subpc);
 
     //BEGIN from here
     
-    PCSetType(subpc, (char*) PCFIELDSPLIT);
-    PCFieldSplitSetType(subpc, PC_COMPOSITE_ADDITIVE);
-    for(int i=0; i<_is_loc.size(); i++ ){
-      PCFieldSplitSetIS( subpc, NULL, _is_loc[i]);
-    }
-    
-    KSPSetUp(subksp);
-       
-    KSP* subksps;
-    PCFieldSplitGetSubKSP(subpc, &_nlocal, &subksps);
-// 
-    PetscReal epsilon = 1.e-16;
-    for (int i = 0; i < _is_loc.size(); i++) {
-      KSPSetType(subksps[i], (char*) KSPPREONLY);
-      PC subpcs;
-      KSPGetPC(subksps[i], &subpcs);
-      KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
-      KSPSetFromOptions(subksps[i]);
-      
-      PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
-      PCFactorSetZeroPivot(subpcs, epsilon);
-      PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-              
-    }
+//     PCSetType(subpc, (char*) PCFIELDSPLIT);
+//     PCFieldSplitSetType(subpc, PC_COMPOSITE_ADDITIVE);
+//     for(int i=0; i<_is_loc.size(); i++ ){
+//       PCFieldSplitSetIS( subpc, NULL, _is_loc[i]);
+//     }
+//     
+//     KSPSetUp(subksp);
+//        
+//     KSP* subksps;
+//     PCFieldSplitGetSubKSP(subpc, &_nlocal, &subksps);
+// // 
+//     PetscReal epsilon = 1.e-16;
+//     for (int i = 0; i < _is_loc.size(); i++) {
+//       KSPSetType(subksps[i], (char*) KSPPREONLY);
+//       PC subpcs;
+//       KSPGetPC(subksps[i], &subpcs);
+//       KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
+//       KSPSetFromOptions(subksps[i]);
+//       
+//       PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+//       PCFactorSetZeroPivot(subpcs, epsilon);
+//       PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+//               
+//     }
       
 
     //END here
