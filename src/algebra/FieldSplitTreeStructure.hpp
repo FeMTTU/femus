@@ -249,7 +249,7 @@ namespace femus {
       unsigned _numberOfSplits;
       FieldSpliTreeStructure *_father;
       std::vector < FieldSpliTreeStructure * > _childBranch;
-      std::vector < FieldSpliTreeStructure* > _branch;
+     // std::vector < FieldSpliTreeStructure* > _branch; // I comment out this line, since we do not use the _branch in this code
       std::vector < std::vector < unsigned > > _fieldsInSplit;
       std::vector < unsigned > _allFields;
       std::string _name;
