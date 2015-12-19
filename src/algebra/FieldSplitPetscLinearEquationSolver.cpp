@@ -133,52 +133,45 @@ namespace femus {
   // ==============================================
 
   clock_t FieldSplitPetscLinearEquationSolver::BuildFieldSplitIndex(const vector <unsigned>& variable_to_be_solved) {
-    
-    
-    
+
     clock_t SearchTime = 0;
     clock_t start_time = clock();
-    
-    unsigned nSplits = _fieldSpliTree->GetNumberOfSplits();
-    unsigned iproc = processor_id(); 
-    unsigned nprocs = n_processors(); 
-    
+
+    unsigned nSplits = _fieldSplitTree->GetNumberOfSplits();
+
     _is_loc_idx.resize(nSplits);
     _is_loc.resize(nSplits);
-    
-    _fieldSpliTree->ReorderFields(KKoffset, iproc, nprocs);
-    _fieldSpliTree->PrintNestedFields();
-    
+
     for( unsigned i = 0; i < nSplits; i++){
-      const std::vector < unsigned > & fieldsInTheSplit = _fieldSpliTree->GetFieldsInSplit(i); 
+      const std::vector < unsigned > & fieldsInTheSplit = _fieldSplitTree->GetFieldsInSplit(i);
       unsigned size = 0;
       for (unsigned k = 0; k < fieldsInTheSplit.size(); k++){
         unsigned solPdeindex = fieldsInTheSplit[k];
-	unsigned offset = KKoffset[solPdeindex][iproc];
-	unsigned offsetp1 = KKoffset[solPdeindex + 1][iproc];
+	unsigned offset = KKoffset[solPdeindex][_iproc];
+	unsigned offsetp1 = KKoffset[solPdeindex + 1][_iproc];
 	size += offsetp1 - offset;
       }
-      
+
       _is_loc_idx[i].resize(size);
-      
+
       unsigned counter = 0;
       for (int k = 0; k < fieldsInTheSplit.size(); k++){
         unsigned solPdeindex = fieldsInTheSplit[k];
-	unsigned offset = KKoffset[solPdeindex][iproc];
-	unsigned offsetp1 = KKoffset[solPdeindex + 1][iproc];
+	unsigned offset = KKoffset[solPdeindex][_iproc];
+	unsigned offsetp1 = KKoffset[solPdeindex + 1][_iproc];
 	for(int j = offset; j < offsetp1; j++){
 	  _is_loc_idx[i][counter] = j;
 	  counter++;
 	}
       }
-    
+
       PetscErrorCode ierr;
       ierr = ISCreateGeneral(MPI_COMM_WORLD, _is_loc_idx[i].size(), &_is_loc_idx[i][0], PETSC_USE_POINTER, &_is_loc[i]);
       CHKERRABORT(MPI_COMM_WORLD, ierr);
-    }   
+    }
 
-    
-    
+
+
     clock_t end_time = clock();
     SearchTime += (end_time - start_time);
     return SearchTime;
@@ -290,10 +283,7 @@ namespace femus {
     // ***************** NODE/ELEMENT SEARCH *******************
     if (_indexai_init == 0) {
       _indexai_init = 1;
-      if (!_standard_ASM)
-	//BEGIN here
-        BuildFieldSplitIndex(variable_to_be_solved);
-        //END here
+      _fieldSplitTree->BuildIndexSet(KKoffset, _iproc, _nprocs, level);
       BuildBDCIndex(variable_to_be_solved);
     }
 
@@ -311,20 +301,12 @@ namespace femus {
     MatZeroRows(_Pmat, _indexai[0].size(), &_indexai[0][0], 1.e100, 0, 0);
     _Pmat_is_initialized = true;
 
-
     KSP subksp;
-    KSP subkspUp;
     if (level == 0)
       PCMGGetCoarseSolve(pcMG, &subksp);
     else {
       PCMGGetSmoother(pcMG, level , &subksp);
-      //KSPSetInitialGuessKnoll(subksp, PETSC_TRUE);
       KSPSetTolerances(subksp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npre);
-      if (npre != npost) {
-        PCMGGetSmootherUp(pcMG, level , &subkspUp);
-        KSPSetTolerances(subkspUp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npost);
-        this->set_petsc_solver_type(subkspUp);
-      }
     }
     this->set_petsc_solver_type(subksp);
 
@@ -335,43 +317,8 @@ namespace femus {
     KSPSetFromOptions(subksp);
     KSPSetOperators(subksp, KK, _Pmat);
 
-    
-    
-    _fieldSpliTree->SetPC(subksp);
-    
-    PC subpc;
-    KSPGetPC(subksp, &subpc);
+    _fieldSplitTree->SetPC(subksp, level);
 
-    //BEGIN from here
-    
-//     PCSetType(subpc, (char*) PCFIELDSPLIT);
-//     PCFieldSplitSetType(subpc, PC_COMPOSITE_ADDITIVE);
-//     for(int i=0; i<_is_loc.size(); i++ ){
-//       PCFieldSplitSetIS( subpc, NULL, _is_loc[i]);
-//     }
-//     
-//     KSPSetUp(subksp);
-//        
-//     KSP* subksps;
-//     PCFieldSplitGetSubKSP(subpc, &_nlocal, &subksps);
-// // 
-//     PetscReal epsilon = 1.e-16;
-//     for (int i = 0; i < _is_loc.size(); i++) {
-//       KSPSetType(subksps[i], (char*) KSPPREONLY);
-//       PC subpcs;
-//       KSPGetPC(subksps[i], &subpcs);
-//       KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
-//       KSPSetFromOptions(subksps[i]);
-//       
-//       PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
-//       PCFactorSetZeroPivot(subpcs, epsilon);
-//       PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-//               
-//     }
-      
-
-    //END here
-    
     if (level < levelMax) {   //all but finest
       PetscVector* EPSp = static_cast< PetscVector* >(_EPS);
       Vec EPS = EPSp->vec();
@@ -394,6 +341,12 @@ namespace femus {
       PCMGSetRestriction(pcMG, level, R);
 
       if (npre != npost) {
+        KSP subkspUp;
+        PCMGGetSmootherUp(pcMG, level , &subkspUp);
+        KSPSetTolerances(subkspUp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npost);
+        this->set_petsc_solver_type(subkspUp);
+        PC subpc;
+        KSPGetPC(subksp, &subpc);
         KSPSetPC(subkspUp, subpc);
       }
     }
