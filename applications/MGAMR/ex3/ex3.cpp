@@ -53,7 +53,8 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
       //double um = 0.2; // U/Uref
       //value=1.5*0.2*(4.0/(0.1681))*x[1]*(0.41-x[1]);
       double um = 0.45;
-      value=(16*um*x[1]*x[2]*(0.41-x[1])*(0.41-x[2]))/(0.02825761);
+      //value=(16*um*x[1]*x[2]*(0.41-x[1])*(0.41-x[2]))/(0.02825761);
+      value=1.6*0.45*x[1]*(0.41-x[1])/(0.068921);
     }
     else if(3==FaceName ){  //outflow
       test=0;
@@ -88,24 +89,25 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
       value=0.;
     }
   }
-  else if(!strcmp(name,"W")){
-    if(1==FaceName){           //inflow  
-      test=1;
-      value=0.;
-    }
-    else if(3==FaceName ){     //outflow 
-      test=1;
-      value=0.;
-    }
-    else if(2==FaceName ){     // no-slip fluid wall 
-      test=1;
-      value=0.;
-    }
-    else if(4==FaceName ){     // no-slip fluid wall 
-      test=1;
-      value=0.;
-    }
-  }
+//   else if(!strcmp(name,"W")){
+//     if(1==FaceName){           //inflow  
+//       test=1;
+//       value=0.;
+//     }
+//     else if(3==FaceName ){     //outflow 
+//       //test=1;
+//       test=0.;
+//       value=0.;
+//     }
+//     else if(2==FaceName ){     // no-slip fluid wall 
+//       test=1;
+//       value=0.;
+//     }
+//     else if(4==FaceName ){     // no-slip fluid wall 
+//       test=1;
+//       value=0.;
+//     }
+//   }
   else if(!strcmp(name,"P")){
     if(1==FaceName){
       test=0;
@@ -165,7 +167,7 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/cylinder3D.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cylinder2D.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -506,7 +508,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 //       double nu = 1.;
       double nu = 0.001;
 //       double alpha = 1.;
-      double beta = 2000.;
+//       double beta = 2000.;
 
       // *** phiT_i loop ***
      /* for (unsigned i = 0; i < nDofsT; i++) {
