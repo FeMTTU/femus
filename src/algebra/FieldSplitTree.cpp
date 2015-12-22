@@ -201,13 +201,14 @@ namespace femus {
       for( int i = 0; i < _numberOfSplits; i++ ) {
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
       }
-      KSPSetUp( ksp );
+      PCSetUp(pc);
       KSP* subksp;
       PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
       PCFieldSplitGetSubKSP( pc, &nlocal, &subksp );
       for( unsigned i = 0; i < _numberOfSplits; i++ ) {
         _child[i]->SetPC( subksp[i], level );
       }
+      PetscFree(subksp);
     }
     else {
       _rtol = 1.e-3;
