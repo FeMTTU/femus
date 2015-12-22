@@ -539,7 +539,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     }
   }
 
-  el->SetElementOffsets(_elementOffset[_iproc], _elementOffset[_iproc+1], _iproc, _nprocs );
+  el->SetElementOffsets(_elementOffset, _iproc, _nprocs );
 
 }
 
