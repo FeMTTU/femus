@@ -20,7 +20,7 @@ namespace femus {
     //BEGIN ALL FIELD COLLECTION
     std::map < unsigned, bool > mymap;
     for( unsigned i = 0; i < _numberOfSplits; i++ ) {
-      for( unsigned j = 0; j < _fieldsSplit[i].size(); j++ ) { //I change "i++" to j++
+      for( unsigned j = 0; j < _fieldsSplit[i].size(); j++ ) {
         mymap[_fieldsSplit[i][j]] = true;
       }
     }
@@ -45,7 +45,6 @@ namespace femus {
     _preconditioner = preconditioner;
     _numberOfSplits = childBranch.size();
     _fieldsSplit.resize( _numberOfSplits );
-
     _child.resize( _numberOfSplits );
 
     for( unsigned i = 0; i < _numberOfSplits; i++ ) {
@@ -198,16 +197,17 @@ namespace femus {
     if( _preconditioner == FIELDSPLIT_PRECOND ) {
       PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
       PCFieldSplitSetType( pc, PC_COMPOSITE_ADDITIVE );
-      for( int i = 0; i < _numberOfSplits; i++ ) {
+      for( unsigned i = 0; i < _numberOfSplits; i++ ) { // change the "int i" to "unsigned i" 
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
       }
-      KSPSetUp( ksp );
+      KSPSetUp( ksp ); // why not use PCSetUp(PC)
       KSP* subksp;
       PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
       PCFieldSplitGetSubKSP( pc, &nlocal, &subksp );
       for( unsigned i = 0; i < _numberOfSplits; i++ ) {
         _child[i]->SetPC( subksp[i], level );
       }
+		// why not use PetscFree(subksp);
     }
     else {
       _rtol = 1.e-3;
