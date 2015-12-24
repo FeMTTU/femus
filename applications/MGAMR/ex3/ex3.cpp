@@ -53,9 +53,9 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
       //double um = 0.2; // U/Uref
       //value=1.5*0.2*(4.0/(0.1681))*x[1]*(0.41-x[1]);
       double um2D = 0.3;
-      value=um2D*(4.0/(0.1681))*x[1]*(0.41-x[1]);
+      //value=um2D*(4.0/(0.1681))*x[1]*(0.41-x[1]);
       double um3D = 0.45;
-      //value=(um3D*(16.0/(0.02825761))*x[1]*x[2]*(0.41-x[1])*(0.41-x[2]));
+      value=(um3D*(16.0/(0.02825761))*x[1]*x[2]*(0.41-x[1])*(0.41-x[2]));
     }
     else if(2==FaceName ){  //outflow
       test=0;
@@ -137,11 +137,11 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = 0;
 
-  if (elemgroupnumber == 7 && level < 2) refine = 1;
+  //if (elemgroupnumber == 7 && level < 2) refine = 1;
 
-  if (elemgroupnumber == 6 && level < 3) refine = 1;
+  //if (elemgroupnumber == 6 && level < 3) refine = 1;
 
-  if (elemgroupnumber == 5 && level < 4) refine = 1;
+  //if (elemgroupnumber == 5 && level < 4) refine = 1;
 
 //   if (elemgroupnumber==6 && level<1) refine=1;
 //   if (elemgroupnumber==7 && level<2) refine=1;
@@ -168,7 +168,7 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/cylinder2Dnew.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cylinder3Dnew.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -178,8 +178,8 @@ int main(int argc, char** args) {
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   unsigned numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 3;
-  //unsigned numberOfSelectiveLevels = 0;
+  //unsigned numberOfSelectiveLevels = 3;
+  unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
