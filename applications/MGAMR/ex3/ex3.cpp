@@ -52,16 +52,17 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
       test=1;
       //double um = 0.2; // U/Uref
       //value=1.5*0.2*(4.0/(0.1681))*x[1]*(0.41-x[1]);
-      double um = 0.45;
-      //value=(16*um*x[1]*x[2]*(0.41-x[1])*(0.41-x[2]))/(0.02825761);
-      value=1.6*0.45*x[1]*(0.41-x[1])/(0.068921);
+      double um2D = 0.3;
+      value=um2D*(4.0/(0.1681))*x[1]*(0.41-x[1]);
+      double um3D = 0.45;
+      //value=(um3D*(16.0/(0.02825761))*x[1]*x[2]*(0.41-x[1])*(0.41-x[2]));
     }
-    else if(3==FaceName ){  //outflow
+    else if(2==FaceName ){  //outflow
       test=0;
       //    test=1;
       value=0.;
     }
-    else if(2==FaceName ){  // no-slip fluid wall
+    else if(3==FaceName ){  // no-slip fluid wall
       test=1;
       value=0.;
     }
@@ -75,49 +76,49 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
       test=1;
       value=0.;
     }
-    else if(3==FaceName ){      //outflow
+    else if(2==FaceName ){      //outflow
       test=0;
       //    test=1;
       value=0.;
     }
-    else if(2==FaceName ){      // no-slip fluid wall
+    else if(3==FaceName ){      // no-slip fluid wall
       test=1;
-      value=0;
+      value=0.;
     }
     else if(4==FaceName ){      // no-slip solid wall
       test=1;
       value=0.;
     }
   }
-//   else if(!strcmp(name,"W")){
-//     if(1==FaceName){           //inflow  
-//       test=1;
-//       value=0.;
-//     }
-//     else if(3==FaceName ){     //outflow 
-//       //test=1;
-//       test=0.;
-//       value=0.;
-//     }
-//     else if(2==FaceName ){     // no-slip fluid wall 
-//       test=1;
-//       value=0.;
-//     }
-//     else if(4==FaceName ){     // no-slip fluid wall 
-//       test=1;
-//       value=0.;
-//     }
-//   }
+  else if(!strcmp(name,"W")){
+    if(1==FaceName){           //inflow  
+      test=1;
+      value=0.;
+    }
+    else if(2==FaceName ){     //outflow 
+      //test=1;
+      test=0;
+      value=0.;
+    }
+    else if(3==FaceName ){     // no-slip fluid wall 
+      test=1;
+      value=0.;
+    }
+    else if(4==FaceName ){     // no-slip fluid wall 
+      test=1;
+      value=0.;
+    }
+  }
   else if(!strcmp(name,"P")){
     if(1==FaceName){
       test=0;
       value=0.;
     }
-    else if(3==FaceName ){
+    else if(2==FaceName ){
       test=0;
       value=0.;
     }
-    else if(2==FaceName ){
+    else if(3==FaceName ){
       test=0;
       value=0.;
     }
@@ -136,11 +137,11 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = 0;
 
-//   if (elemgroupnumber == 6 && level < 3) refine = 1;
-// 
-//   if (elemgroupnumber == 7 && level < 4) refine = 1;
-// 
-//   if (elemgroupnumber == 8 && level < 5) refine = 1;
+  if (elemgroupnumber == 7 && level < 2) refine = 1;
+
+  if (elemgroupnumber == 6 && level < 3) refine = 1;
+
+  if (elemgroupnumber == 5 && level < 4) refine = 1;
 
 //   if (elemgroupnumber==6 && level<1) refine=1;
 //   if (elemgroupnumber==7 && level<2) refine=1;
@@ -167,7 +168,7 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/cylinder2D.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cylinder2Dnew.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -176,9 +177,9 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 3;
-  //unsigned numberOfSelectiveLevels = 3;
-  unsigned numberOfSelectiveLevels = 0;
+  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfSelectiveLevels = 3;
+  //unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
