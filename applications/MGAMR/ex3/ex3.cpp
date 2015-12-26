@@ -136,7 +136,15 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = 0;
+  
+  //------------------ 3D --------------------------//
+  //if (elemgroupnumber == 6 && level < 2) refine = 1;
 
+  if (elemgroupnumber == 7 && level < 1) refine = 1;
+  
+  if (elemgroupnumber == 8 && level < 2) refine = 1;
+  
+  //------------------ 2D --------------------------// 
   //if (elemgroupnumber == 7 && level < 2) refine = 1;
 
   //if (elemgroupnumber == 6 && level < 3) refine = 1;
@@ -177,9 +185,9 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 2;
-  //unsigned numberOfSelectiveLevels = 3;
-  unsigned numberOfSelectiveLevels = 0;
+  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels = 2;
+  //unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
