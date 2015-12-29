@@ -302,7 +302,7 @@ int main(int argc,char **args) {
   system.init();
 
   // ******* Set Smoother *******
-  system.SetSolverFineGrids(GMRES);
+  system.SetSolverFineGrids(RICHARDSON);
   if( simulation < 3 || simulation > 5 )
     system.SetPreconditionerFineGrids(ILU_PRECOND);
   else
