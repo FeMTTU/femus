@@ -268,7 +268,7 @@ int main(int argc,char **args) {
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
-  system.SetLinearConvergenceTolerance(1.e-10);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-10);
   system.SetNonLinearConvergenceTolerance(1.e-10);
   if( simulation == 7 )
     system.SetNonLinearConvergenceTolerance(1.e-5);

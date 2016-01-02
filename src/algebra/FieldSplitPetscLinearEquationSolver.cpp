@@ -39,12 +39,13 @@ namespace femus {
   // ====================================================
 
   void FieldSplitPetscLinearEquationSolver::set_tolerances(const double& rtol, const double& atol,
-      const double& divtol, const unsigned& maxits) {
+      const double& divtol, const unsigned& maxits, const unsigned& restart) {
 
-    _rtol   = static_cast<PetscReal>(rtol);
-    _abstol = static_cast<PetscReal>(atol);
-    _dtol   = static_cast<PetscReal>(divtol);
-    _maxits = static_cast<PetscInt>(maxits);
+    _rtol    = static_cast<PetscReal>(rtol);
+    _abstol  = static_cast<PetscReal>(atol);
+    _dtol    = static_cast<PetscReal>(divtol);
+    _maxits  = static_cast<PetscInt>(maxits);
+    _restart = static_cast<PetscInt>(restart);
 
   }
 
@@ -362,6 +363,8 @@ namespace femus {
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
       KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
       KSPSetFromOptions(_ksp);
+      KSPGMRESSetRestart(_ksp, _restart);
+      KSPSetUp(_ksp);
     }
 
     PetscVector* EPSCp = static_cast< PetscVector* >(_EPSC);
@@ -444,6 +447,8 @@ namespace femus {
 
       ierr = KSPSetFromOptions(_ksp);
       CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+      KSPGMRESSetRestart(_ksp, _restart);
 
       PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, _pc);
       if (!_standard_ASM) {

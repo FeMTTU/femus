@@ -39,12 +39,13 @@ namespace femus {
   // ====================================================
 
   void AsmPetscLinearEquationSolver::set_tolerances(const double& rtol, const double& atol,
-      const double& divtol, const unsigned& maxits) {
+      const double& divtol, const unsigned& maxits, const unsigned& restart) {
 
-    _rtol   = static_cast<PetscReal>(rtol);
-    _abstol = static_cast<PetscReal>(atol);
-    _dtol   = static_cast<PetscReal>(divtol);
-    _maxits = static_cast<PetscInt>(maxits);
+    _rtol    = static_cast<PetscReal>(rtol);
+    _abstol  = static_cast<PetscReal>(atol);
+    _dtol    = static_cast<PetscReal>(divtol);
+    _maxits  = static_cast<PetscInt>(maxits);
+    _restart = static_cast<PetscInt>(restart);
 
   }
 
@@ -425,20 +426,13 @@ namespace femus {
     MatZeroRows(_Pmat, _indexai[0].size(), &_indexai[0][0], 1.e100, 0, 0);
     _Pmat_is_initialized = true;
 
-
     KSP subksp;
     KSP subkspUp;
     if (level == 0)
       PCMGGetCoarseSolve(pcMG, &subksp);
     else {
       PCMGGetSmoother(pcMG, level , &subksp);
-      //KSPSetInitialGuessKnoll(subksp, PETSC_TRUE);
       KSPSetTolerances(subksp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npre);
-      if (npre != npost) {
-        PCMGGetSmootherUp(pcMG, level , &subkspUp);
-        KSPSetTolerances(subkspUp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npost);
-        this->set_petsc_solver_type(subkspUp);
-      }
     }
     this->set_petsc_solver_type(subksp);
 
@@ -457,6 +451,7 @@ namespace femus {
       PCASMSetLocalSubdomains(subpc, _is_loc_idx.size(), &_is_ovl[0], &_is_loc[0]);
     }
     PCASMSetOverlap(subpc, _overlap);
+
     //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
 
     KSPSetUp(subksp);
@@ -469,7 +464,7 @@ namespace femus {
       for (int i = 0; i < _block_type_range[0]; i++) {
         PC subpcs;
         KSPGetPC(subksps[i], &subpcs);
-        KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
+        KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
         KSPSetFromOptions(subksps[i]);
         PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
         PCFactorSetZeroPivot(subpcs, epsilon);
@@ -478,7 +473,7 @@ namespace femus {
       for (int i = _block_type_range[0]; i < _block_type_range[1]; i++) {
         PC subpcs;
         KSPGetPC(subksps[i], &subpcs);
-        KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
+        KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
         KSPSetFromOptions(subksps[i]);
         if (this->_preconditioner_type == ILU_PRECOND)
           PCSetType(subpcs, (char*) PCILU);
@@ -487,11 +482,12 @@ namespace femus {
         PCFactorSetZeroPivot(subpcs, epsilon);
         PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
       }
-    } else {
+    }
+    else {
       for (int i = 0; i < _nlocal; i++) {
         PC subpcs;
         KSPGetPC(subksps[i], &subpcs);
-        KSPSetTolerances(subksps[i], _rtol, _abstol, _dtol, 1);
+        KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
         KSPSetFromOptions(subksps[i]);
         if (this->_preconditioner_type == ILU_PRECOND)
           PCSetType(subpcs, (char*) PCILU);
@@ -524,6 +520,9 @@ namespace femus {
       PCMGSetRestriction(pcMG, level, R);
 
       if (npre != npost) {
+        PCMGGetSmootherUp(pcMG, level , &subkspUp);
+        KSPSetTolerances(subkspUp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npost);
+        this->set_petsc_solver_type(subkspUp);
         KSPSetPC(subkspUp, subpc);
       }
     }
@@ -539,6 +538,8 @@ namespace femus {
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
       KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
       KSPSetFromOptions(_ksp);
+      KSPGMRESSetRestart(_ksp, _restart);
+      KSPSetUp(_ksp);
     }
 
     PetscVector* EPSCp = static_cast< PetscVector* >(_EPSC);
@@ -610,8 +611,7 @@ namespace femus {
 
       // Set the tolerances for the iterative solver.  Use the user-supplied
       // tolerance for the relative residual & leave the others at default values.
-      ierr = KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
-      CHKERRABORT(MPI_COMM_WORLD, ierr);
+      ierr = KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits); CHKERRABORT(MPI_COMM_WORLD, ierr);
 
       if ( _msh->GetLevel() != 0)
         KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
@@ -621,6 +621,9 @@ namespace femus {
 
       ierr = KSPSetFromOptions(_ksp);
       CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+      ierr = KSPGMRESSetRestart(_ksp, _restart); CHKERRABORT(MPI_COMM_WORLD, ierr);
+
 
       PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, _pc);
       if (!_standard_ASM) {
@@ -734,6 +737,7 @@ namespace femus {
       case RICHARDSON:
         ierr = KSPSetType(ksp, (char*) KSPRICHARDSON);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
+        KSPRichardsonSetScale(ksp, 0.7);
         return;
       case CHEBYSHEV:
         ierr = KSPSetType(ksp, (char*) KSPCHEBYSHEV);

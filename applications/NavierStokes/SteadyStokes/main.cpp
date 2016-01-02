@@ -132,7 +132,7 @@ int main(int argc,char **args) {
   // Set MG Options
   system1.SetAssembleFunction(AssembleMatrixResSteadyStokes);
   system1.SetMaxNumberOfLinearIterations(2);
-  system1.SetLinearConvergenceTolerance(1.e-10);
+  system1.SetAbsoluteLinearConvergenceTolerance(1.e-10);
   system1.SetMgType(F_CYCLE);
   system1.SetNumberPreSmoothingStep(1);
   system1.SetNumberPostSmoothingStep(1);

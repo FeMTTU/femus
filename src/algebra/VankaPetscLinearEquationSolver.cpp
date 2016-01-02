@@ -37,15 +37,16 @@ namespace femus {
   // ----------------------- functions ------
   // ==============================================
 
-  void VankaPetscLinearEquationSolver::set_tolerances(const double &rtol, const double &atol,
-						      const double &divtol, const unsigned &maxits) {
+  void VankaPetscLinearEquationSolver::set_tolerances(const double& rtol, const double& atol,
+      const double& divtol, const unsigned& maxits, const unsigned& restart) {
 
-    _rtol = static_cast<PetscReal>(rtol);
-    _abstol = static_cast<PetscReal>(atol);
-    _dtol = static_cast<PetscReal>(divtol);
-    _maxits = static_cast<PetscInt>(maxits);
+    _rtol    = static_cast<PetscReal>(rtol);
+    _abstol  = static_cast<PetscReal>(atol);
+    _dtol    = static_cast<PetscReal>(divtol);
+    _maxits  = static_cast<PetscInt>(maxits);
+    _restart = static_cast<PetscInt>(restart);
 
-  };
+  }
 
   // ========================================================
 

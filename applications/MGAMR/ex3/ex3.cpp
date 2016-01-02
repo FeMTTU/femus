@@ -28,7 +28,7 @@ using namespace femus;
 // bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int faceIndex, const double time) {
 //   bool dirichlet = true; //dirichlet
 //   value = 0.;
-// 
+//
 //   if (!strcmp(SolName, "T")) {
 //     if (faceIndex == 2) {
 //       value = 1.;
@@ -38,7 +38,7 @@ using namespace femus;
 //   } else if (!strcmp(SolName, "P")) {
 //     dirichlet = false;
 //   }
-// 
+//
 //   return dirichlet;
 // }
 
@@ -91,20 +91,20 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
     }
   }
   else if(!strcmp(name,"W")){
-    if(1==FaceName){           //inflow  
+    if(1==FaceName){           //inflow
       test=1;
       value=0.;
     }
-    else if(2==FaceName ){     //outflow 
+    else if(2==FaceName ){     //outflow
       //test=1;
       test=0;
       value=0.;
     }
-    else if(3==FaceName ){     // no-slip fluid wall 
+    else if(3==FaceName ){     // no-slip fluid wall
       test=1;
       value=0.;
     }
-    else if(4==FaceName ){     // no-slip fluid wall 
+    else if(4==FaceName ){     // no-slip fluid wall
       test=1;
       value=0.;
     }
@@ -136,15 +136,15 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = 0;
-  
+
   //------------------ 3D --------------------------//
   //if (elemgroupnumber == 6 && level < 2) refine = 1;
 
   if (elemgroupnumber == 7 && level < 1) refine = 1;
-  
+
   if (elemgroupnumber == 8 && level < 2) refine = 1;
-  
-  //------------------ 2D --------------------------// 
+
+  //------------------ 2D --------------------------//
   //if (elemgroupnumber == 7 && level < 2) refine = 1;
 
   //if (elemgroupnumber == 6 && level < 3) refine = 1;
@@ -185,12 +185,12 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 2;
+  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfSelectiveLevels = 0;
   //unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
-  mlMsh.MarkStructureNode();
+  //mlMsh.MarkStructureNode();
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
@@ -213,7 +213,7 @@ int main(int argc, char** args) {
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.FixSolutionAtOnePoint("P");
+  //mlSol.FixSolutionAtOnePoint("P");
   mlSol.GenerateBdc("All");
 
   // define the multilevel problem attach the mlSol object to it
@@ -237,8 +237,9 @@ int main(int argc, char** args) {
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
   system.SetMaxNumberOfNonLinearIterations(10);
-  system.SetMaxNumberOfLinearIterations(3);
-  system.SetLinearConvergenceTolerance(1.e-12);
+  system.SetMaxNumberOfLinearIterations(10);
+  system.UpdateResidualAtEachLinearIteration();
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
   system.SetNonLinearConvergenceTolerance(1.e-8);
   system.SetMgType(F_CYCLE);
 
@@ -248,17 +249,18 @@ int main(int argc, char** args) {
   system.init();
 
   system.SetSolverFineGrids(GMRES);
+  //system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  //system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40);
-  system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
+  //system.SetTolerances(1.e-10, 1.e-12, 1.e+50, 500, 10);
+  system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 50, 10);
 
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(4);
+  system.SetElementBlockNumber(2);
   //system.SetDirichletBCsHandling(ELIMINATION);
-  system.MGsolve();
+  system.MLsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -288,7 +290,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
-  //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
   // call the adept stack object
   adept::Stack& s = FemusInit::_adeptStack;
@@ -303,8 +304,10 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   MultiLevelSolution*   mlSol         = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*   sol         = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
-
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
+
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
+
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
@@ -397,9 +400,9 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   vector < double > Jac;
 //   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
-  Jac.reserve((dim + 1) *maxSize * (dim + 1) *maxSize);  
+  Jac.reserve((dim + 1) *maxSize * (dim + 1) *maxSize);
 
-  KK->zero(); // Set to zero all the entries of the Global Matrix
+  if(assembleMatrix) KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -415,7 +418,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     // resize local arrays
     sysDof.resize(nDofsTVP);
 
-//     
+//
 
     for (unsigned  k = 0; k < dim; k++) {
       solV[k].resize(nDofsV);
@@ -482,7 +485,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
 //       for (unsigned i = 0; i < nDofsT; i++) {
 //         solT_gss += phiT[i] * solT[i];
-// 
+//
 //         for (unsigned j = 0; j < dim; j++) {
 //           gradSolT_gss[j] += phiT_x[i * dim + j] * solT[i];
 //         }
@@ -589,37 +592,34 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     //Extarct and store the Jacobian
 
-    Jac.resize(nDofsTVP * nDofsTVP);
-    // define the dependent variables
-//     s.dependent(&aResT[0], nDofsT);
+    if(assembleMatrix){
+      Jac.resize(nDofsTVP * nDofsTVP);
 
-    for (unsigned  k = 0; k < dim; k++) {
-      s.dependent(&aResV[k][0], nDofsV);
+      for (unsigned  k = 0; k < dim; k++) {
+        s.dependent(&aResV[k][0], nDofsV);
+      }
+
+      s.dependent(&aResP[0], nDofsP);
+
+      // define the independent variables
+      for (unsigned  k = 0; k < dim; k++) {
+        s.independent(&solV[k][0], nDofsV);
+      }
+
+      s.independent(&solP[0], nDofsP);
+
+      // get the and store jacobian matrix (row-major)
+      s.jacobian(&Jac[0] , true);
+      KK->add_matrix_blocked(Jac, sysDof, sysDof);
+
+      s.clear_independents();
+      s.clear_dependents();
     }
-
-    s.dependent(&aResP[0], nDofsP);
-
-    // define the independent variables
-//     s.independent(&solT[0], nDofsT);
-
-    for (unsigned  k = 0; k < dim; k++) {
-      s.independent(&solV[k][0], nDofsV);
-    }
-
-    s.independent(&solP[0], nDofsP);
-
-    // get the and store jacobian matrix (row-major)
-    s.jacobian(&Jac[0] , true);
-    KK->add_matrix_blocked(Jac, sysDof, sysDof);
-
-    s.clear_independents();
-    s.clear_dependents();
-
   } //end element loop for each process
 
   RES->close();
 
-  KK->close();
+  if(assembleMatrix) KK->close();
 
   // ***************** END ASSEMBLY *******************
 }

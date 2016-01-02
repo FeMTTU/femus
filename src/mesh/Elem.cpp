@@ -846,7 +846,7 @@ namespace femus {
 
   void elem::LocalizeElementDofFromOneToOne( const unsigned& jproc, const unsigned& kproc ) {
 
-    if( _iproc == jproc || _iproc == kproc ) {
+    if( (_iproc == jproc || _iproc == kproc ) && jproc != kproc) {
       if( _iproc == kproc && _elementDof != NULL ) {
         delete [] _elementDofMemory;
         delete [] _elementDof;

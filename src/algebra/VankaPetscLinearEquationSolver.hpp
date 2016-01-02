@@ -59,7 +59,8 @@ private:
 
     /** To be Added */
     void set_tolerances(const double &rtol, const double &atol,
-                        const double &divtol, const unsigned &maxits);
+                        const double &divtol, const unsigned &maxits,
+                        const unsigned &restart );
 
     /** To be Added */
     void SetElementBlockNumber(const unsigned & block_elemet_number);
@@ -93,6 +94,7 @@ private:
     PetscReal _abstol;
     PetscReal _dtol;
     PetscInt  _maxits;
+    PetscInt  _restart;
     unsigned _block_element_number;
     short unsigned _NSchurVar;
     vector< vector <PetscInt> > _indexai;
@@ -128,6 +130,7 @@ inline VankaPetscLinearEquationSolver::VankaPetscLinearEquationSolver (const uns
     _abstol = 1.e-40;
     _dtol = 1.e+50;
     _maxits = 10;
+    _restart = 30;
     _indexai_init=0;
     _NSchurVar=1;
 

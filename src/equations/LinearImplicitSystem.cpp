@@ -30,7 +30,7 @@ namespace femus {
     ImplicitSystem(ml_probl, name_in, number_in, smoother_type),
     _n_max_linear_iterations(3),
     _final_linear_residual(1.e20),
-    _absolute_convergence_tolerance(1.e-08),
+    _linearAbsoluteConvergenceTolerance(1.e-08),
     _mg_type(F_CYCLE),
     _npre(1),
     _npost(1),
@@ -38,11 +38,12 @@ namespace femus {
     _maxAMRlevels(0),
     _AMRnorm(0),
     _AMRthreshold(0.01),
-    _SmootherType(smoother_type)
+    _SmootherType(smoother_type),
+    _updateResidualAtEachLinearIteration(false),
+    _MGmatrixFineReuse (false),
+    _MGmatrixCoarseReuse (false)
   {
     _SparsityPattern.resize(0);
-    _MGmatrixFineReuse = false;
-    _MGmatrixCoarseReuse = false;
   }
 
   // ********************************************
@@ -185,7 +186,7 @@ namespace femus {
       L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
       std::cout << " ************ Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normRes    << std::endl;
 
-      if (L2normRes < _absolute_convergence_tolerance && conv == true) {
+      if (L2normRes < _linearAbsoluteConvergenceTolerance && conv == true) {
         conv = true;
       }
       else {
@@ -224,6 +225,7 @@ namespace femus {
     _LinSolver[gridn - 1u]->SetResZero();
 
     _levelToAssemble = gridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
+    _assembleMatrix = true;
     _assemble_system_function(_equation_systems);
 
     for (unsigned i = gridn - 1u; i > 0; i--) {
@@ -241,6 +243,8 @@ namespace femus {
       }
     }
 
+    std::cout << "Level " << gridn << "\t        ASSEMBLY TIME:\t" << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+
     for (unsigned i = 0; i < gridn; i++) {
       if (_RR[i])
         _LinSolver[i]->MGsetLevels(_LinSolver[gridn - 1u], i, gridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost);
@@ -257,6 +261,16 @@ namespace femus {
 
       if (islinearconverged)
         break;
+
+      if ( _updateResidualAtEachLinearIteration && linearIterator < _n_max_linear_iterations - 1){
+        _solution[gridn - 1u]->UpdateSol(_SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset);
+        _LinSolver[gridn - 1u]->SetEpsZero();
+        _LinSolver[gridn - 1u]->SetResZero();
+        _levelToAssemble = gridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
+        _assembleMatrix = false;
+        _assemble_system_function(_equation_systems);
+      }
+
     }
 
     _solution[gridn - 1u]->UpdateSol(_SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset);
@@ -277,6 +291,7 @@ namespace femus {
     _LinSolver[gridn - 1u]->SetEpsZero();
 
     _levelToAssemble = gridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
+    _assembleMatrix = true;
     _assemble_system_function(_equation_systems);
 
     for (unsigned i = gridn - 1u; i > 0; i--) {
@@ -294,7 +309,7 @@ namespace femus {
       }
     }
 
-    std::cout << "Grid: " << gridn - 1 << "\t        ASSEMBLY TIME:\t" << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+    std::cout << "\n ********* Assembly TIME:\t" << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
 
     for (unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++) { //linear cycle
 
@@ -333,6 +348,15 @@ namespace femus {
       bool linearIsConverged = IsLinearConverged(gridn - 1);
 
       if ( linearIsConverged ) break;
+
+      if ( _updateResidualAtEachLinearIteration && linearIterator < _n_max_linear_iterations - 1){
+        _solution[gridn - 1u]->UpdateSol(_SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset);
+        _LinSolver[gridn - 1u]->SetEpsZero();
+        _LinSolver[gridn - 1u]->SetResZero();
+        _levelToAssemble = gridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
+        _assembleMatrix = false;
+        _assemble_system_function(_equation_systems);
+      }
 
     }
 
@@ -424,7 +448,7 @@ namespace femus {
 
 
     _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
-    _LinSolver[_gridn]->set_tolerances(_rtol, _atol, _divtol, _maxits);
+    _LinSolver[_gridn]->set_tolerances(_rtol, _atol, _divtol, _maxits, _restart);
     _LinSolver[_gridn]->set_preconditioner_type(_finegridpreconditioner);
     _LinSolver[_gridn]->SetDirichletBCsHandling(_DirichletBCsHandlingMode);
 
@@ -665,15 +689,16 @@ namespace femus {
 
   // ********************************************
 
-  void LinearImplicitSystem::SetTolerances(const double rtol, const double atol,
-      const double divtol, const unsigned maxits) {
+  void LinearImplicitSystem::SetTolerances(const double &rtol, const double &atol,
+      const double &divtol, const unsigned &maxits, const unsigned &restart) {
     _rtol = rtol;
     _atol = atol;
     _divtol = divtol;
     _maxits = maxits;
+    _restart = restart;
 
     for (unsigned i = 0; i < _gridn; i++) {
-      _LinSolver[i]->set_tolerances(_rtol, _atol, _divtol, _maxits);
+      _LinSolver[i]->set_tolerances(_rtol, _atol, _divtol, _maxits, _restart);
     }
   }
 

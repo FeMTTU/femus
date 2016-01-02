@@ -30,9 +30,10 @@ namespace femus {
     LinearImplicitSystem(ml_probl, name_in, number_in, smoother_type),
     _n_max_nonlinear_iterations(15),
     _final_nonlinear_residual(1.e20),
-    _max_nonlinear_convergence_tolerance(1.e-6)
+    _max_nonlinear_convergence_tolerance(1.e-6),
+    _linearConvergenceIsRelative(false)
   {
-    
+
   }
 
   NonLinearImplicitSystem::~NonLinearImplicitSystem() {
@@ -50,17 +51,18 @@ namespace femus {
 
   // ********************************************
 
-  bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn) {
+  bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn, double &nonLinearEps) {
     bool conv = true;
-    double ResMax;
     double L2normEps;
     std::cout << std::endl;
+
+    nonLinearEps = 0.;
 
     for (unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
       unsigned indexSol = _SolSystemPdeIndex[k];
       L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
       std::cout << " ********* Level Max " << igridn + 1 << " Nonlinear Eps L2norm" << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normEps << std::endl;
-
+      nonLinearEps = (nonLinearEps > L2normEps) ? nonLinearEps : L2normEps;
       if (L2normEps < _max_nonlinear_convergence_tolerance && conv == true) {
         conv = true;
       }
@@ -107,7 +109,11 @@ namespace femus {
 
       if (ThisIsAMR) _solution[igridn - 1]->InitAMREps();
 
+      if (_linearConvergenceIsRelative)
+        _linearAbsoluteConvergenceTolerance =  _linearRelativeConvergenceScalingFactor;
+
       for (unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++) {
+
         std::cout << std::endl << " ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
         _MGmatrixFineReuse = (0 == nonLinearIterator) ? false : true;
@@ -116,9 +122,14 @@ namespace femus {
         if (_MGsolver) MGVcycle(igridn, mgSmootherType);
         else MLVcycle(igridn);
 
-        bool nonLinearIsConverged = IsNonLinearConverged(igridn - 1);
+        double nonLinearEps;
+        bool nonLinearIsConverged = IsNonLinearConverged(igridn - 1, nonLinearEps);
 
         if (nonLinearIsConverged) break;
+
+        if (_linearConvergenceIsRelative)
+          _linearAbsoluteConvergenceTolerance = nonLinearEps * _linearRelativeConvergenceScalingFactor;
+
       }
 
       if (ThisIsAMR) AddAMRLevel(AMRCounter);

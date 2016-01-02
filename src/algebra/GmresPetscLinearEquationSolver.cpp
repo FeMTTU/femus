@@ -38,14 +38,15 @@ namespace femus {
 // ==============================================
 
   void GmresPetscLinearEquationSolver::set_tolerances(const double& rtol, const double& atol,
-      const double& divtol, const unsigned& maxits) {
+      const double& divtol, const unsigned& maxits, const unsigned& restart) {
 
-    _rtol   = static_cast<PetscReal>(rtol);
-    _abstol = static_cast<PetscReal>(atol);
-    _dtol   = static_cast<PetscReal>(divtol);
-    _maxits = static_cast<PetscInt>(maxits);
+    _rtol    = static_cast<PetscReal>(rtol);
+    _abstol  = static_cast<PetscReal>(atol);
+    _dtol    = static_cast<PetscReal>(divtol);
+    _maxits  = static_cast<PetscInt>(maxits);
+    _restart = static_cast<PetscInt>(restart);
 
-  };
+  }
 
 // ================================================
 
@@ -346,11 +347,11 @@ namespace femus {
       PetscMatrix* KKp = static_cast< PetscMatrix* >(_KK);
       Mat KK = KKp->mat();
       KSPSetOperators(_ksp, KK, _Pmat);
-
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
       KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
-
       KSPSetFromOptions(_ksp);
+      KSPGMRESSetRestart(_ksp, _restart);
+      KSPSetUp(_ksp);
     }
 
     PetscVector* EPSCp = static_cast< PetscVector* >(_EPSC);
@@ -372,7 +373,11 @@ namespace femus {
     KSPConvergedReason reason;
     KSPGetConvergedReason(_ksp, &reason);
 
+    PetscReal rnorm;
+    KSPGetResidualNorm(_ksp, &rnorm);
+
     std::cout << "Number of iterations = " << its << "\t convergence reason = " << reason << std::endl;
+    std::cout << "Residual Norm ="<< rnorm <<std::endl;
     std::cout << _rtol << " " << _abstol << " " << _dtol << " " << _maxits << std::endl;
 #endif
 
@@ -448,6 +453,8 @@ namespace femus {
       //  KSPSetFromOptions() is called _after_ any other customization  routines.
       ierr = KSPSetFromOptions(_ksp);
       CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+      KSPGMRESSetRestart(_ksp, _restart);
 
       // Notify PETSc of location to store residual history.
       // This needs to be called before any solves, since
@@ -681,6 +688,7 @@ namespace femus {
       //  These options will override those specified above as long as
       //  KSPSetFromOptions() is called _after_ any other customization  routines.
       ierr = KSPSetFromOptions(_ksp);
+      KSPGMRESSetRestart(_ksp, _restart);
       CHKERRABORT(MPI_COMM_WORLD, ierr);
       // Not sure if this is necessary, or if it is already handled by KSPSetFromOptions?
       //ierr = PCSetFromOptions (_pc);CHKERRABORT(MPI_COMM_WORLD,ierr);

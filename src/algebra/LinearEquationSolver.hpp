@@ -70,8 +70,9 @@ public:
             const MgSmoother & smoother_type, const SolverPackage solver_package =LSOLVER);
 
     /** Set the tolerance for the solver */
-    virtual void set_tolerances(const double &rtol, const double &atol,
-                                const double &divtol, const unsigned &maxits) = 0;
+    virtual void set_tolerances(const double& rtol, const double& atol,
+                                const double& divtol, const unsigned& maxits,
+                                const unsigned& restart) = 0;
 
     virtual KSP* GetKSP(){
       std::cout<<"Warning GetKSP() is not available for this smoother\n";

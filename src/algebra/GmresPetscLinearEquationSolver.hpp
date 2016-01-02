@@ -52,8 +52,9 @@ public:
   void init ( Mat& Amat, Mat &Pmat );
 
 
-  void set_tolerances ( const double &rtol, const double &atol,
-                        const double &divtol, const unsigned &maxits );
+  void set_tolerances(const double &rtol, const double &atol,
+                      const double &divtol, const unsigned &maxits,
+                      const unsigned &restart);
 
 
   void SetDirichletBCsHandling ( const unsigned int &DirichletBCsHandlingMode ) {
@@ -130,6 +131,7 @@ private:
   PetscReal _abstol;
   PetscReal _dtol;
   PetscInt  _maxits;
+  PetscInt  _restart;
   vector< vector <PetscInt> > _indexai;
   bool _indexai_init;
   vector <IS> _isA;
@@ -165,6 +167,7 @@ inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver ( const un
   _abstol = 1.e-40;
   _dtol   = 1.e+50;
   _maxits = 4;
+  _restart = 30;
 
   _indexai_init = 0;
 
