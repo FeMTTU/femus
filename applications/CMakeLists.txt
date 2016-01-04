@@ -28,6 +28,7 @@ IF(BUILD_FSIAPPS)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/FSITimeDependentBenchmarks/)
 
 # FSI SteadyState Benchmarks
+  ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/Benchmarks)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/ML)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/MG)
 

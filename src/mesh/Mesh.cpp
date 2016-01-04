@@ -116,6 +116,7 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
 	      << "\n   I understand the following:\n\n"
 	      << "     *.neu -- Gambit Neutral File\n"
               << std::endl;
+	      exit(1);
   }
 
   el->SharpMemoryAllocation();
