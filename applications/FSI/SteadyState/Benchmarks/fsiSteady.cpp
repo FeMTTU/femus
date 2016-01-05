@@ -23,6 +23,7 @@ int main(int argc,char **args) {
   // process options 
   int dimension=2;
   char infile[256] = "";
+  char outer_ksp_solver[256] = "gmres";
   size_t len_infile_name = 256;
   int simulation = 1;
   double Lref=1., Uref=1., rhof=1., muf=1., rhos=1., ni=0., E=1.;
@@ -30,13 +31,16 @@ int main(int argc,char **args) {
   int numofrefinements = 1;
   std::string gauss_integration_order = "fifth";
   char bdcfilename[256] = "";
-  int numlineariter = 3;
+  int numlineariter = 1;
   int numnonlineariter = 10;
-  double lin_tol = 1.e-10;
-  double nonlin_tol = 1.e-9;
+  double lin_tol = 1.e-08;
+  double alin_tol = 1.e-20;
+  double div_tol = 1.e+10;
+  double nonlin_tol = 1.e-09;
   int asm_block = 2;
   int npre = 0;
   int npost = 2;
+  int max_outer_solver_iter = 40;
   
   // ******* reading input parameters *******
   PetscOptionsBegin(PETSC_COMM_WORLD, "", "FSI steady problem options", "Unstructured mesh");
@@ -76,8 +80,8 @@ int main(int argc,char **args) {
   PetscOptionsReal("-ni", "The Poisson coefficient of the Solid", "fsiSteady.cpp", ni, &ni, NULL);
   printf(" ni: %f\n", ni);
   
-  PetscOptionsInt("-nlin_iter", "The number of linear iteration", "fsiSteady.cpp", numlineariter , &numlineariter, NULL);
-  printf(" nlin_iter: %i\n", numlineariter);
+//   PetscOptionsInt("-nlin_iter", "The number of linear iteration", "fsiSteady.cpp", numlineariter , &numlineariter, NULL);
+//   printf(" nlin_iter: %i\n", numlineariter);
   
   PetscOptionsInt("-nnonlin_iter", "The number of non-linear iteration", "fsiSteady.cpp", numnonlineariter, &numnonlineariter, NULL);
   printf(" nnonlin_iter: %i\n", numnonlineariter);
@@ -90,6 +94,12 @@ int main(int argc,char **args) {
   
   PetscOptionsInt("-asm_block", "The asm block dimension", "fsiSteady.cpp", asm_block, &asm_block, NULL);
   printf(" asm_block: %i\n", asm_block);
+  
+  PetscOptionsString("-outer_ksp_solver", "The outer ksp solver", "fsiSteady.cpp", "gmres", outer_ksp_solver, len_infile_name, NULL);
+  printf(" outer_ksp_solver: %s\n", outer_ksp_solver);
+  
+  PetscOptionsInt("-max_outer_solver_iter", "The maximum outer solver iterations", "fsiSteady.cpp", max_outer_solver_iter, &max_outer_solver_iter, NULL);
+  printf(" max_outer_solver_iter: %i\n", max_outer_solver_iter);
   
   printf("\n");
   
@@ -140,8 +150,9 @@ int main(int argc,char **args) {
   }
   
   // ******* Init multilevel mesh from mesh.neu file *******
-  MultiLevelMesh ml_msh(numofrefinements, numofrefinements, infile, gauss_integration_order.c_str(), Lref, NULL);
 
+  MultiLevelMesh ml_msh(numofrefinements, numofrefinements, infile, gauss_integration_order.c_str(), Lref, NULL);
+  
   ml_msh.EraseCoarseLevels(numofrefinements - numofmeshlevels);
 
   ml_msh.PrintInfo();
@@ -255,7 +266,8 @@ int main(int argc,char **args) {
   system.SetSolverFineGrids(RICHARDSON);
   
   // set the tolerances for the GMRES outer solver
-  system.SetTolerances(1.e-12,1.e-20,1.e+50,5);
+  system.SetTolerances(lin_tol,alin_tol,div_tol,max_outer_solver_iter);
+  system.SetOuterKSPSolver(outer_ksp_solver);
   
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();

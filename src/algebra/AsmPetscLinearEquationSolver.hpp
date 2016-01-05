@@ -54,10 +54,12 @@ public:
 
     void MGsolve ( const bool ksp_clean );
 
-    void MGinit( const MgSmootherType &mg_smoother_type, const unsigned &levelMax ){
+    void MGinit( const MgSmootherType &mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver=KSPGMRES){
 
       KSPCreate(PETSC_COMM_WORLD,&_ksp);
 
+      KSPSetType(_ksp, outer_ksp_solver);
+      
       KSPGetPC(_ksp,&_pc);
       PCSetType(_pc,PCMG);
       PCMGSetLevels(_pc,levelMax,NULL);

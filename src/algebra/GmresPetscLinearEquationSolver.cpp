@@ -342,13 +342,20 @@ namespace femus {
 
   void GmresPetscLinearEquationSolver::MGsolve(const bool ksp_clean) {
 
+    PetscLogDouble t1; PetscLogDouble t2;
+    PetscTime(&t1);
+    
     if (ksp_clean) {
       PetscMatrix* KKp = static_cast< PetscMatrix* >(_KK);
       Mat KK = KKp->mat();
       KSPSetOperators(_ksp, KK, _Pmat);
 
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
-      KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
+      KSPType type;
+      KSPGetType(_ksp, &type);
+      if (strcmp(type, "preonly")) {
+        KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
+      }
 
       KSPSetFromOptions(_ksp);
     }
@@ -365,16 +372,24 @@ namespace femus {
 
     *_EPS += *_EPSC;
 
-#ifndef NDEBUG
+// #ifndef NDEBUG
     int its;
     KSPGetIterationNumber(_ksp, &its);
 
     KSPConvergedReason reason;
     KSPGetConvergedReason(_ksp, &reason);
 
-    std::cout << "Number of iterations = " << its << "\t convergence reason = " << reason << std::endl;
-    std::cout << _rtol << " " << _abstol << " " << _dtol << " " << _maxits << std::endl;
-#endif
+    PetscReal rnorm;
+    KSPGetResidualNorm(_ksp, &rnorm);
+    
+    PetscTime(&t2);
+    PetscPrintf(PETSC_COMM_WORLD, " MG linear solver time: %8.3f sec \n", t2 -t1);
+    PetscPrintf(PETSC_COMM_WORLD, " Number of outer ksp solver iterations = %i \n", its);
+    PetscPrintf(PETSC_COMM_WORLD, " Convergence reason = %i \n", reason);
+    PetscPrintf(PETSC_COMM_WORLD, " Residual norm = %22.18g \n", rnorm);
+//     std::cout << "Number of iterations = " << its << "\t convergence reason = " << reason << std::endl;
+//     std::cout << _rtol << " " << _abstol << " " << _dtol << " " << _maxits << std::endl;
+// #endif
 
   }
 
