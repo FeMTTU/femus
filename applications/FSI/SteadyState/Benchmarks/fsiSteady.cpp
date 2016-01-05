@@ -30,9 +30,18 @@ int main(int argc,char **args) {
   int numofrefinements = 1;
   std::string gauss_integration_order = "fifth";
   char bdcfilename[256] = "";
+  int numlineariter = 3;
+  int numnonlineariter = 10;
+  double lin_tol = 1.e-10;
+  double nonlin_tol = 1.e-9;
+  int asm_block = 2;
+  int npre = 0;
+  int npost = 2;
   
   // ******* reading input parameters *******
   PetscOptionsBegin(PETSC_COMM_WORLD, "", "FSI steady problem options", "Unstructured mesh");
+  
+  cout << " Reading flags:" << endl;
   
   PetscOptionsInt("-dim", "The dimension of the problem", "fsiSteady.cpp", dimension, &dimension, NULL);
   printf(" dim: %i\n", dimension);
@@ -66,6 +75,21 @@ int main(int argc,char **args) {
   
   PetscOptionsReal("-ni", "The Poisson coefficient of the Solid", "fsiSteady.cpp", ni, &ni, NULL);
   printf(" ni: %f\n", ni);
+  
+  PetscOptionsInt("-nlin_iter", "The number of linear iteration", "fsiSteady.cpp", numlineariter , &numlineariter, NULL);
+  printf(" nlin_iter: %i\n", numlineariter);
+  
+  PetscOptionsInt("-nnonlin_iter", "The number of non-linear iteration", "fsiSteady.cpp", numnonlineariter, &numnonlineariter, NULL);
+  printf(" nnonlin_iter: %i\n", numnonlineariter);
+  
+  PetscOptionsReal("-lin_tol", "The linear solver tolerance", "fsiSteady.cpp", lin_tol, &lin_tol, NULL);
+  printf(" lin_tol: %g\n", lin_tol);
+  
+  PetscOptionsReal("-nonlin_tol", "The nonlinear solver tolerance", "fsiSteady.cpp", nonlin_tol, &nonlin_tol, NULL);
+  printf(" nonlin_tol: %g\n", nonlin_tol);
+  
+  PetscOptionsInt("-asm_block", "The asm block dimension", "fsiSteady.cpp", asm_block, &asm_block, NULL);
+  printf(" asm_block: %i\n", asm_block);
   
   printf("\n");
   
@@ -205,16 +229,16 @@ int main(int argc,char **args) {
 
   // Solver settings
   // ******* set Non-linear MG-Solver *******
-  system.SetMaxNumberOfLinearIterations(3);
-  system.SetLinearConvergenceTolerance(1.e-10);
+  system.SetMaxNumberOfLinearIterations(numlineariter);
+  system.SetLinearConvergenceTolerance(lin_tol);
   
-  system.SetMaxNumberOfNonLinearIterations(10);
-  system.SetNonLinearConvergenceTolerance(1.e-9);
+  system.SetMaxNumberOfNonLinearIterations(numnonlineariter);
+  system.SetNonLinearConvergenceTolerance(nonlin_tol);
  
   // Set type of multigrid preconditioner (V-cycle, F-cycle)
   system.SetMgType(F_CYCLE);
-  system.SetNumberPreSmoothingStep(0);
-  system.SetNumberPostSmoothingStep(2);
+  system.SetNumberPreSmoothingStep(npre);
+  system.SetNumberPostSmoothingStep(npost);
 
   // ******* Set Smoother *******
   // Set Preconditioner of the smoother (name to be changed)
@@ -226,7 +250,7 @@ int main(int argc,char **args) {
   // Set the preconditioner for each ASM block
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   // Set block size for the ASM smoother
-  system.SetElementBlockNumber(2);
+  system.SetElementBlockNumber(asm_block);
   // Set Solver of the smoother (name to be changed)
   system.SetSolverFineGrids(RICHARDSON);
   
