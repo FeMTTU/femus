@@ -9,27 +9,11 @@
 #include "Files.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "../include/FSISteadyStateAssembly.hpp"
-
+#include <dlfcn.h>
+    
 using namespace std;
 using namespace femus;
 
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,const char name[],
-						double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char name[],
-				      double &value, const int FaceName, const double = 0.);
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const std::vector < double >& x,const char name[],
-						double &value, const int facename, const double time);
-
-bool SetBoundaryConditionBathe_3D_solid(const std::vector < double >& x,const char name[],
-					double &value, const int facename, const double time);
-bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const char name[],
-				       double &value, const int FaceName, const double = 0.);
-
-double InitalValueU(const std::vector < double >& x);
-
-bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
-
-//------------------------------------------------------------------------------------------------------------------
 
 int main(int argc,char **args) {
 
@@ -43,8 +27,9 @@ int main(int argc,char **args) {
   int simulation = 1;
   double Lref=1., Uref=1., rhof=1., muf=1., rhos=1., ni=0., E=1.;
   int numofmeshlevels = 1;
-  int numofrefinements = 0;
+  int numofrefinements = 1;
   std::string gauss_integration_order = "fifth";
+  char bdcfilename[256] = "";
   
   // ******* reading input parameters *******
   PetscOptionsBegin(PETSC_COMM_WORLD, "", "FSI steady problem options", "Unstructured mesh");
@@ -63,6 +48,9 @@ int main(int argc,char **args) {
   
   PetscOptionsString("-input", "The name of the input file", "fsiSteady.cpp", "./mesh.neu", infile, len_infile_name, NULL);
   printf(" input: %s\n", infile);
+  
+  PetscOptionsString("-ic_bdc", "The name of the file with bdc and ic functions", "fsiSteady.cpp", "", bdcfilename, len_infile_name, NULL);
+  printf(" ic_bdc: %s\n", bdcfilename);
   
   PetscOptionsReal("-rhof", "The density of the fluid", "fsiSteady.cpp", rhof, &rhof, NULL);
   printf(" rhof: %f\n", rhof);
@@ -83,10 +71,52 @@ int main(int argc,char **args) {
   
   PetscOptionsEnd();
   
+  // loading external functions
+  cout << " Loading lib bdcfilename...";
+  void *handle = dlopen (bdcfilename, RTLD_LAZY);
+  if (!handle) {
+    cerr << "Cannot open library: " << dlerror() << '\n';
+    return 1;
+  }
+  else {
+    cout << " done" << endl;
+  }
+  
+  // load the symbols
+  cout << " Loading symbol InitalValueU...";
+  typedef double (*InitalValueU_t)(const std::vector < double >& x);
+
+  // reset errors
+  dlerror();
+  InitalValueU_t InitalValueU = (InitalValueU_t) dlsym(handle, "InitalValueU");
+  const char *dlsym_error = dlerror();
+  if (dlsym_error) {
+      cerr << "Cannot load symbol 'InitalValueU': " << dlsym_error << '\n';
+      dlclose(handle);
+      return 1;
+  }
+  else {
+    cout << " done" << endl;
+  }
+  
+  cout << " Loading symbol BdcFunction...";
+  typedef bool (*BdcFunction_t)(const std::vector < double >& x,const char name[], double &value, const int facename, const double time);
+
+  // reset errors
+  dlerror();
+  BdcFunction_t BdcFunction = (BdcFunction_t) dlsym(handle, "BdcFunction");
+  dlsym_error = dlerror();
+  if (dlsym_error) {
+      cerr << "Cannot load symbol 'BdcFunction': " << dlsym_error << '\n';
+      dlclose(handle);
+      return 1;
+  }
+  else {
+    cout << " done" << endl;
+  }
   
   // ******* Init multilevel mesh from mesh.neu file *******
-  MultiLevelMesh ml_msh(numofrefinements, numofrefinements, infile, gauss_integration_order.c_str(), Lref, 
-			SetRefinementFlag);
+  MultiLevelMesh ml_msh(numofrefinements, numofrefinements, infile, gauss_integration_order.c_str(), Lref, NULL);
 
   ml_msh.EraseCoarseLevels(numofrefinements - numofmeshlevels);
 
@@ -135,20 +165,11 @@ int main(int argc,char **args) {
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
-  if (1 == simulation )
-    ml_sol.Initialize("U",InitalValueU);
+  ml_sol.Initialize("U",InitalValueU); //only for turek problem
 
   // ******* Set boundary functions *******
-  if(1==simulation || 2==simulation)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek_2D_FSI_and_solid);
-  else if( 3==simulation)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBathe_2D_FSI);
-  else if (4==simulation || 6==simulation)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBathe_3D_FSI_and_fluid);
-  else if (5==simulation)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionBathe_3D_solid);
-  else if (7 == simulation)
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionComsol_2D_FSI);
+  ml_sol.AttachSetBoundaryConditionFunction(BdcFunction);
+
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX","Steady");
@@ -244,658 +265,9 @@ int main(int argc,char **args) {
   // ******* Clear all systems *******
   ml_prob.clear();
   
+  // close the library
+  dlclose(handle);
+  
   return 0;
-}
-
-
-bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
-  bool refine=0;
-
-  //refinemenet based on elemen group number
-  if (elemgroupnumber==5) refine=1;
-  if (elemgroupnumber==6) refine=1;
-  if (elemgroupnumber==7 && level<5) refine=1;
-
-  return refine;
-
-}
-
-double InitalValueU(const std::vector < double >& x) {
-  double xc = 0.2;
-  double yc = 0.2;
-  double r = 0.05;
-  double r2 = r*r;
-  double xMxc2 = (x[0]-xc)*(x[0]-xc);
-  double OMxc2 = (0.-xc)*(0.-xc);
-  double yMyc2 = (x[1]-yc)*(x[1]-yc);
-
-  double H = 0.41;
-  double L = 2.5;
-  double um = 0.2;
-  return (xMxc2+yMyc2-r2)/(OMxc2+yMyc2-r2)*(1.5*um*4.0/0.1681*x[1]*(H-x[1]))*exp(-L*x[0]);
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
-bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
-  bool test=1; //dirichlet
-  value=0.;
-  if(!strcmp(name,"U")) {
-    if(1==facename){   //inflow
-      test=1;
-      double um = 0.2;
-      value=1.5*um*4.0/0.1681*x[1]*(0.41-x[1]);
-    }
-    else if(2==facename ){  //outflow
-      test=0;
-      //    test=1;
-      value=0.;
-    }
-    else if(3==facename ){  // no-slip fluid wall
-      test=1;
-      value=0.;
-    }
-    else if(4==facename ){  // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-    else if(6==facename ){   // beam case zero stress
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"V")){
-    if(1==facename){            //inflow
-      test=1;
-      value=0.;
-    }
-    else if(2==facename ){      //outflow
-      test=0;
-      //    test=1;
-      value=0.;
-    }
-    else if(3==facename ){      // no-slip fluid wall
-      test=1;
-      value=0;
-    }
-    else if(4==facename ){      // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-    else if(6==facename ){   // beam case zero stress
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"P")){
-    if(1==facename){
-      test=0;
-      value=0.;
-    }
-    else if(2==facename ){
-      test=0;
-      value=0.;
-    }
-    else if(3==facename ){
-      test=0;
-      value=0.;
-    }
-    else if(4==facename ){
-      test=0;
-      value=0.;
-    }
-    else if(6==facename ){   // beam case zero stress
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"DX")){
-    if(1==facename){         //inflow
-      test=1;
-      value=0.;
-    }
-    else if(2==facename ){   //outflow
-      test=1;
-      value=0.;
-    }
-    else if(3==facename ){   // no-slip fluid wall
-      test=0; //0
-      value=0.;
-    }
-    else if(4==facename ){   // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-    else if(6==facename ){   // beam case zero stress
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"DY")){
-    if(1==facename){         //inflow
-      test=0; // 0
-      value=0.;
-    }
-    else if(2==facename ){   //outflow
-      test=0; // 0
-      value=0.;
-    }
-    else if(3==facename ){   // no-slip fluid wall
-      test=1;
-      value=0.;
-    }
-    else if(4==facename ){   // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-    else if(6==facename ){   // beam case zero stress
-      test=0;
-      value=0.;
-    }
-  }
-  return test;
-}
-
-bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
-  bool test=1; //dirichlet
-  value=0.;
-  if(!strcmp(name,"U")) {
-    if(1==facename){   //top
-      test=0;
-      value=0;
-    }
-    else if(2==facename ){  //top side
-      test=0;
-      value=0.;
-    }
-    else if(3==facename ){  //top bottom
-      test=1;
-      value=0;
-    }
-    else if(4==facename ){  //solid side
-      test=1;
-      value=0;
-    }
-    else if(5==facename ){  //bottom side
-      test=1;
-      value=0;
-    }
-    else if(6==facename ){  //bottom
-      test=0;
-      value=200000;
-    }
-  }
-  else if(!strcmp(name,"V")){
-    if(1==facename){   //top
-      test=0;
-      value=0;
-    }
-    else if(2==facename ){  //top side
-      test=0;
-      value=0.;
-    }
-    else if(3==facename ){  //top bottom
-      test=1;
-      value=0;
-    }
-    else if(4==facename ){  //solid side
-      test=1;
-      value=0;
-    }
-    else if(5==facename ){  //bottom side
-      test=1;
-      value=0;
-    }
-    else if(6==facename ){  //bottom
-      test=0;
-      value=0;
-    }
-  }
-  else if(!strcmp(name,"P")){
-    if(facename==facename){
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"DX")){
-    if(1==facename){   //top
-      test=0;
-      value=0;
-    }
-    else if(2==facename ){  //top side
-      test=1;
-      value=0.;
-    }
-    else if(3==facename ){  //top bottom
-      test=0;
-      value=0;
-    }
-    else if(4==facename ){  //solid side
-      test=1;
-      value=0;
-    }
-    else if(5==facename ){  //bottom side
-      test=1;
-      value=0;
-    }
-    else if(6==facename ){  //bottom
-      test=0;
-      value=0;
-    }
-  }
-  else if(!strcmp(name,"DY")){
-    if(1==facename){   //top
-      test=1;
-      value=0;
-    }
-    else if(2==facename ){  //top side
-      test=0;
-      value=0.;
-    }
-    else if(3==facename ){  //top bottom
-      test=1;
-      value=0;
-    }
-    else if(4==facename ){  //solid side
-      test=1;
-      value=0;
-    }
-    else if(5==facename ){  //bottom side
-      test=1;
-      value=0;
-    }
-    else if(6==facename ){  //bottom
-      test=1;
-      value=0;
-    }
-  }
-
-  return test;
-}
-
-
-
-bool SetBoundaryConditionBathe_3D_FSI_and_fluid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
-  bool test=1; //dirichlet
-  value=0.;
-
-  if(!strcmp(name,"U")) {
-    if(1==facename){   //inflow
-      //test=1;
-      //double r=sqrt(y*y+z*z);
-      //value=1000*(0.05-r)*(0.05+r);
-      test=0;
-      value=15*1.5*1000;
-    }
-    else if(2==facename){  //outflow
-      test=0;
-      value=13*1.5*1000;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"V")){
-    if(1==facename){   //inflow
-      test=0;
-      value=0;
-    }
-    else if(2==facename){  //outflow
-      test=0;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"W")){
-    if(1==facename){   //inflow
-      test=0;
-      value=0;
-    }
-    else if(2==facename){  //outflow
-      test=0;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"P")){
-    if(1==facename){   //outflow
-      test=0;
-      value=0;
-    }
-    else if(2==facename){  //inflow
-      test=0;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=0;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"DX")){
-    if(1==facename){   //outflow
-      test=1;
-      value=0;
-    }
-    else if(2==facename){  //inflow
-      test=1;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"DY")){
-    if(1==facename){   //outflow
-      test=0;
-      value=0;
-    }
-    else if(2==facename){  //inflow
-      test=0;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"DZ")){
-    if(1==facename){   //outflow
-      test=0;
-      value=0;
-    }
-    else if(2==facename){  //inflow
-      test=0;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-
-  return test;
-}
-
-bool SetBoundaryConditionBathe_3D_solid(const std::vector < double >& x,const char name[], double &value, const int facename, const double time) {
-  bool test=1; //dirichlet
-  value=0.;
-
-  if(!strcmp(name,"U")) {
-    if(2==facename){  //stress
-      test=0;
-      value=15*1.5*1000;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"V")){
-    if(2==facename){  //stress
-      test=0;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"W")){
-    if(2==facename){  //stress
-      test=0;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"P")){
-    if(2==facename){  //stress
-      test=0;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=0;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"DX")){
-    if(2==facename){  //stress
-      test=0;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"DY")){
-    if(2==facename){  //stress
-      test=0;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-  else if(!strcmp(name,"DZ")){
-    if(2==facename){  //stress
-      test=0;
-      value=0;
-    }
-    else if(3==facename || 4==facename ){  // clamped solid
-      test=1;
-      value=0.;
-    }
-    else if(5==facename ){  // free solid
-      test=0;
-      value=0.;
-    }
-  }
-
-  return test;
-}
-
-
-
-//---------------------------------------------------------------------------------------------------------------------
-
-bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const char name[], double &value, const int FaceName, const double time) {
-  bool test=1; //Dirichlet
-  value=0.;
-  //   cout << "Time bdc : " <<  time << endl;
-  if (!strcmp(name,"U")) {
-    if (1==FaceName) { //inflow
-      test=1;
-      //comsol Benchmark
-      //value = (0.05*time*time)/(sqrt( (0.04 - time*time)*(0.04 - time*time) + (0.1*time)*(0.1*time) ))*y*(0.0001-y)*4.*100000000;
-      value = 0.05*x[1]*(0.0001-x[1])*4.*100000000;
-    }
-    else if (2==FaceName ) {  //outflow
-      test=0;
-      //    test=1;
-      value=0.;
-    }
-    else if (3==FaceName ) {  // no-slip fluid wall
-      test=1;
-      value=0.;
-    }
-    else if (4==FaceName ) {  // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"V")) {
-    if (1==FaceName) {          //inflow
-      test=1;
-      value=0.;
-    }
-    else if (2==FaceName ) {    //outflow
-      test=0;
-      //    test=1;
-      value=0.;
-    }
-    else if (3==FaceName ) {    // no-slip fluid wall
-      test=1;
-      value=0;
-    }
-    else if (4==FaceName ) {    // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"W")) {
-    if (1==FaceName) {
-      test=1;
-      value=0.;
-    }
-    else if (2==FaceName ) {
-      test=1;
-      value=0.;
-    }
-    else if (3==FaceName ) {
-      test=1;
-      value=0.;
-    }
-    else if (4==FaceName ) {
-      test=1;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"P")) {
-    if (1==FaceName) {
-      test=0;
-      value=0.;
-    }
-    else if (2==FaceName ) {
-      test=0;
-      value=0.;
-    }
-    else if (3==FaceName ) {
-      test=0;
-      value=0.;
-    }
-    else if (4==FaceName ) {
-      test=0;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"DX")) {
-    if (1==FaceName) {       //inflow
-      test=1;
-      value=0.;
-    }
-    else if (2==FaceName ) { //outflow
-      test=1;
-      value=0.;
-    }
-    else if (3==FaceName ) { // no-slip Top fluid wall
-      test=0;
-      value=0;
-    }
-    else if (4==FaceName ) { // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"DY")) {
-    if (1==FaceName) {       //inflow
-      test=0;
-      value=0.;
-    }
-    else if (2==FaceName ) { //outflow
-      test=0;
-      value=0.;
-    }
-    else if (3==FaceName ) { // no-slip fluid wall
-      test=1;
-      value=0.;
-    }
-    else if (4==FaceName ) { // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
-  else if (!strcmp(name,"DZ")) {
-    if (1==FaceName) {       //inflow
-      test=1;
-      value=0.;
-    }
-    else if (2==FaceName ) { //outflow
-      test=1;
-      value=0.;
-    }
-    else if (3==FaceName ) { // no-slip fluid wall
-      test=1;
-      value=0.;
-    }
-    else if (4==FaceName ) { // no-slip solid wall
-      test=1;
-      value=0.;
-    }
-  }
-  return test;
 }
 
