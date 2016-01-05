@@ -224,10 +224,11 @@ int main(int argc, char** args) {
 
   // add solution "u" to system
   //system.AddSolutionToSystemPDE("T");
+  if (dim == 3) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
 
-  if (dim == 3) system.AddSolutionToSystemPDE("W");
+
 
   system.AddSolutionToSystemPDE("P");
 

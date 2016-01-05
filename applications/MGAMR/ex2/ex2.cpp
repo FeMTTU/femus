@@ -47,11 +47,14 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = 0;
 
-  if (elemgroupnumber == 6 && level < 3) refine = 1;
+//   if (elemgroupnumber == 6 && level < 3) refine = 1;
+//   if (elemgroupnumber == 7 && level < 4) refine = 1;
+//   if (elemgroupnumber == 8 && level < 5) refine = 1;
 
-  if (elemgroupnumber == 7 && level < 4) refine = 1;
+  if (elemgroupnumber == 6 && level < 4) refine = 1;
+  if (elemgroupnumber == 7 && level < 5) refine = 1;
+  if (elemgroupnumber == 8 && level < 6) refine = 1;
 
-  if (elemgroupnumber == 8 && level < 5) refine = 1;
 
 //   if (elemgroupnumber==6 && level<1) refine=1;
 //   if (elemgroupnumber==7 && level<2) refine=1;
@@ -86,7 +89,7 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
@@ -137,7 +140,8 @@ int main(int argc, char** args) {
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
   system.SetMaxNumberOfNonLinearIterations(10);
-  system.SetMaxNumberOfLinearIterations(3);
+  system.SetMaxNumberOfLinearIterations(10);
+  system.UpdateResidualAtEachLinearIteration();
   system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
   system.SetMgType(F_CYCLE);
@@ -148,9 +152,10 @@ int main(int argc, char** args) {
   system.init();
 
   system.SetSolverFineGrids(GMRES);
+  //system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40);
-  system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
+  system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 50, 5);
 
 
   system.ClearVariablesToBeSolved();
@@ -207,6 +212,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
@@ -296,8 +303,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
 
-
-  KK->zero(); // Set to zero all the entries of the Global Matrix
+  if(assembleMatrix)
+    KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -485,38 +492,38 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     RES->add_vector_blocked(Res, sysDof);
 
     //Extarct and store the Jacobian
+    if(assembleMatrix){
+      Jac.resize(nDofsTVP * nDofsTVP);
+      // define the dependent variables
+      s.dependent(&aResT[0], nDofsT);
 
-    Jac.resize(nDofsTVP * nDofsTVP);
-    // define the dependent variables
-    s.dependent(&aResT[0], nDofsT);
+      for (unsigned  k = 0; k < dim; k++) {
+        s.dependent(&aResV[k][0], nDofsV);
+      }
 
-    for (unsigned  k = 0; k < dim; k++) {
-      s.dependent(&aResV[k][0], nDofsV);
+      s.dependent(&aResP[0], nDofsP);
+
+      // define the independent variables
+      s.independent(&solT[0], nDofsT);
+
+      for (unsigned  k = 0; k < dim; k++) {
+        s.independent(&solV[k][0], nDofsV);
+      }
+
+      s.independent(&solP[0], nDofsP);
+
+      // get the and store jacobian matrix (row-major)
+      s.jacobian(&Jac[0] , true);
+      KK->add_matrix_blocked(Jac, sysDof, sysDof);
+
+      s.clear_independents();
+      s.clear_dependents();
     }
-
-    s.dependent(&aResP[0], nDofsP);
-
-    // define the independent variables
-    s.independent(&solT[0], nDofsT);
-
-    for (unsigned  k = 0; k < dim; k++) {
-      s.independent(&solV[k][0], nDofsV);
-    }
-
-    s.independent(&solP[0], nDofsP);
-
-    // get the and store jacobian matrix (row-major)
-    s.jacobian(&Jac[0] , true);
-    KK->add_matrix_blocked(Jac, sysDof, sysDof);
-
-    s.clear_independents();
-    s.clear_dependents();
-
   } //end element loop for each process
 
   RES->close();
-
-  KK->close();
+  if(assembleMatrix)
+    KK->close();
 
   // ***************** END ASSEMBLY *******************
 }
