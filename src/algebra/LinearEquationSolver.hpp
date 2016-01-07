@@ -79,7 +79,7 @@ public:
       abort();
     }
 
-    virtual void MGinit( const MgSmootherType &mg_smoother_type, const unsigned &levelMax ){
+    virtual void MGinit( const MgSmootherType &mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver=KSPGMRES){
       std::cout<<"Warning InitMG(...) is not available for this smoother\n";
       abort();
     }

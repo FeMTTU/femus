@@ -533,6 +533,9 @@ namespace femus {
 
   void AsmPetscLinearEquationSolver::MGsolve(const bool ksp_clean) {
 
+    PetscLogDouble t1; PetscLogDouble t2;
+    PetscTime(&t1);
+
     if (ksp_clean) {
       PetscMatrix* KKp = static_cast< PetscMatrix* >(_KK);
       Mat KK = KKp->mat();
@@ -540,8 +543,13 @@ namespace femus {
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
       KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
       KSPSetFromOptions(_ksp);
+
       KSPGMRESSetRestart(_ksp, _restart);
       KSPSetUp(_ksp);
+
+//       PetscReal rnorm1;
+//       KSPGetResidualNorm(_ksp, &rnorm1);
+//       PetscPrintf(PETSC_COMM_WORLD, " Residual norm = %10.8g \n", rnorm1);
     }
 
     PetscVector* EPSCp = static_cast< PetscVector* >(_EPSC);
@@ -556,7 +564,7 @@ namespace femus {
     *_RES -= *_RESC;
     *_EPS += *_EPSC;
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
     int its;
     KSPGetIterationNumber(_ksp, &its);
 
@@ -566,10 +574,12 @@ namespace femus {
     PetscReal rnorm;
     KSPGetResidualNorm(_ksp, &rnorm);
 
-    std::cout << "Number of iterations = " << its << "\t convergence reason = " << reason << std::endl;
-    std::cout << "Residual Norm ="<< rnorm <<std::endl;
-    std::cout << _rtol << " " << _abstol << " " << _dtol << " " << _maxits << std::endl;
-#endif
+    PetscTime(&t2);
+    PetscPrintf(PETSC_COMM_WORLD, " ************ MG linear solver time: %8.3f \n", t2 -t1);
+    PetscPrintf(PETSC_COMM_WORLD, " ************ Number of outer ksp solver iterations = %i \n", its);
+    PetscPrintf(PETSC_COMM_WORLD, " ************ Convergence reason = %i \n", reason);
+    PetscPrintf(PETSC_COMM_WORLD, " ************ Residual norm = %10.8g \n", rnorm);
+//#endif
 
   }
 
@@ -738,6 +748,7 @@ namespace femus {
         return;
       case RICHARDSON:
         ierr = KSPSetType(ksp, (char*) KSPRICHARDSON);
+	ierr =  KSPRichardsonSetScale(ksp, 0.7);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
         KSPRichardsonSetScale(ksp, 0.7);
         return;

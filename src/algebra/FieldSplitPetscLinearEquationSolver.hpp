@@ -57,7 +57,7 @@ namespace femus {
 
       void MGsolve( const bool ksp_clean );
 
-      void MGinit( const MgSmootherType& mg_smoother_type, const unsigned& levelMax ) {
+      void MGinit( const MgSmootherType& mg_smoother_type, const unsigned& levelMax, const char* outer_ksp_solver=KSPGMRES) {
 
         KSPCreate( PETSC_COMM_WORLD, &_ksp );
 

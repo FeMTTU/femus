@@ -143,6 +143,9 @@ public:
                        const double &divtol, const unsigned &maxits,
                        const unsigned &restart = 30);
 
+
+    void SetOuterKSPSolver(const std::string outer_ksp_solver) {_outer_ksp_solver = outer_ksp_solver;};
+
      /** Set AMR options */
     void SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,
 			  const std::string& AMRnorm, const double &AMRthreshold,
@@ -206,6 +209,9 @@ protected:
 
     /** The max number of linear iterations */
     unsigned int _n_max_linear_iterations;
+
+    /** The ksp outer solver*/
+    std::string _outer_ksp_solver;
 
     /** The type of multigrid, F-cyle, V-cycle, M-cycle */
     MgType _mg_type;

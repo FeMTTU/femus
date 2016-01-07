@@ -49,7 +49,7 @@ namespace femus {
     Parent::init();
   }
 
-  // ********************************************
+  // ************************MG********************
 
   bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn, double &nonLinearEps) {
     bool conv = true;
@@ -61,8 +61,10 @@ namespace femus {
     for (unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
       unsigned indexSol = _SolSystemPdeIndex[k];
       L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
+
       std::cout << " ********* Level Max " << igridn + 1 << " Nonlinear Eps L2norm" << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normEps << std::endl;
       nonLinearEps = (nonLinearEps > L2normEps) ? nonLinearEps : L2normEps;
+
       if (L2normEps < _max_nonlinear_convergence_tolerance && conv == true) {
         conv = true;
       }

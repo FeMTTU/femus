@@ -44,6 +44,7 @@ namespace femus {
     _MGmatrixCoarseReuse (false)
   {
     _SparsityPattern.resize(0);
+    _outer_ksp_solver = "gmres";
   }
 
   // ********************************************
@@ -179,12 +180,12 @@ namespace femus {
 
     bool conv = true;
     double L2normRes;
-    std::cout << std::endl;
+//     std::cout << std::endl;
 
     for (unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
       unsigned indexSol = _SolSystemPdeIndex[k];
       L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
-      std::cout << " ************ Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normRes    << std::endl;
+      std::cout << " ************ Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normRes << std::endl;
 
       if (L2normRes < _linearAbsoluteConvergenceTolerance && conv == true) {
         conv = true;
@@ -219,7 +220,7 @@ namespace femus {
 
     clock_t start_mg_time = clock();
 
-    _LinSolver[gridn - 1u]->MGinit(mgSmootherType, gridn);
+    _LinSolver[gridn - 1u]->MGinit(mgSmootherType, gridn, _outer_ksp_solver.c_str());
 
     _LinSolver[gridn - 1u]->SetEpsZero();
     _LinSolver[gridn - 1u]->SetResZero();
@@ -259,8 +260,7 @@ namespace femus {
       _solution[gridn - 1u]->UpdateRes(_SolSystemPdeIndex, _LinSolver[gridn - 1u]->_RES, _LinSolver[gridn - 1u]->KKoffset);
       bool islinearconverged = IsLinearConverged(gridn - 1u);
 
-      if (islinearconverged)
-        break;
+      if (islinearconverged)  break;
 
       if ( _updateResidualAtEachLinearIteration && linearIterator < _n_max_linear_iterations - 1){
         _solution[gridn - 1u]->UpdateSol(_SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset);
@@ -277,7 +277,7 @@ namespace femus {
 
     _LinSolver[gridn - 1u]->MGclear();
 
-    std::cout << std::endl << " ********* Linear-Cycle TIME:   " << std::setw(11) << std::setprecision(6) << std::fixed
+    std::cout << " Linear-Cycle TIME:   " << std::setw(11) << std::setprecision(6) << std::fixed
               << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
   }
 
