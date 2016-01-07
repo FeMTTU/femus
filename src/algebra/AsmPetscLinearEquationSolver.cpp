@@ -451,11 +451,9 @@ namespace femus {
       PCASMSetLocalSubdomains(subpc, _is_loc_idx.size(), &_is_ovl[0], &_is_loc[0]);
     }
     PCASMSetOverlap(subpc, _overlap);
-
     //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
 
     KSPSetUp(subksp);
-
     KSP* subksps;
     PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULL, &subksps);
 
@@ -524,6 +522,10 @@ namespace femus {
         KSPSetTolerances(subkspUp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npost);
         this->set_petsc_solver_type(subkspUp);
         KSPSetPC(subkspUp, subpc);
+        PC subpcUp;
+        KSPGetPC(subkspUp, &subpcUp);
+        //PCASMSetLocalType(subpcUp, PC_COMPOSITE_MULTIPLICATIVE);
+        KSPSetUp(subkspUp);
       }
     }
   }
