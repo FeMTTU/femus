@@ -29,6 +29,7 @@ IF(BUILD_FSIAPPS)
 
 # FSI SteadyState Benchmarks
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/Benchmarks)
+  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/ML)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/MG)
 
