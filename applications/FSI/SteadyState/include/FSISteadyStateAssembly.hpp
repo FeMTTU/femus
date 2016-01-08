@@ -13,8 +13,6 @@ namespace femus {
     clock_t AssemblyTime = 0;
     clock_t start_time, end_time;
 
-    adept::Stack& s = FemusInit::_adeptStack;
-
     //pointers and references
     MonolithicFSINonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system < MonolithicFSINonLinearImplicitSystem>("Fluid-Structure-Interaction");
     const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
@@ -26,6 +24,11 @@ namespace femus {
     elem*		        myel		= mymsh->el;
     SparseMatrix*	        myKK		= myLinEqSolver->_KK;
     NumericVector*	        myRES		= myLinEqSolver->_RES;
+
+    bool assembleMatrix = my_nnlin_impl_sys.GetAssembleMatrix();
+    adept::Stack& s = FemusInit::_adeptStack;
+    if( assembleMatrix ) s.continue_recording();
+    else s.pause_recording();
 
     const unsigned dim = mymsh->GetDimension();
     const unsigned max_size = static_cast < unsigned >(ceil(pow(3, dim)));
@@ -164,7 +167,7 @@ namespace femus {
 
     start_time = clock();
 
-    myKK->zero();
+    if( assembleMatrix ) myKK->zero();
 
     // *** element loop ***
     for (int iel = mymsh->_elementOffset[iproc]; iel  <  mymsh->_elementOffset[iproc + 1]; iel++) {
@@ -238,7 +241,7 @@ namespace femus {
 
       dofsAll.insert(dofsAll.end(), dofsVAR[2 * dim].begin(), dofsVAR[2 * dim].end());
 
-      s.new_recording();
+      if( assembleMatrix ) s.new_recording();
 
       //Moving coordinates (Moving frame)
       for (unsigned idim = 0; idim < dim; idim++) {
@@ -616,28 +619,29 @@ namespace femus {
         myRES->add_vector_blocked(Rhs[indexVAR[i]], dofsVAR[i]);
       }
 
-      //Store equations
-      for (int i = 0; i < 2 * dim; i++) {
-        s.dependent(&aRhs[indexVAR[i]][0], nve);
-        s.independent(&Soli[indexVAR[i]][0], nve);
-      }
+      if( assembleMatrix ){
+        //Store equations
+        for (int i = 0; i < 2 * dim; i++) {
+          s.dependent(&aRhs[indexVAR[i]][0], nve);
+          s.independent(&Soli[indexVAR[i]][0], nve);
+        }
 
-      s.dependent(&aRhs[indexVAR[2 * dim]][0], nve1);
-      s.independent(&Soli[indexVAR[2 * dim]][0], nve1);
+        s.dependent(&aRhs[indexVAR[2 * dim]][0], nve1);
+        s.independent(&Soli[indexVAR[2 * dim]][0], nve1);
 
-      Jac.resize((2 * dim * nve + nve1) * (2 * dim * nve + nve1));
+        Jac.resize((2 * dim * nve + nve1) * (2 * dim * nve + nve1));
 
-      s.jacobian(&Jac[0], true);
+        s.jacobian(&Jac[0], true);
 
-      myKK->add_matrix_blocked(Jac, dofsAll, dofsAll);
-      s.clear_independents();
-      s.clear_dependents();
+        myKK->add_matrix_blocked(Jac, dofsAll, dofsAll);
+        s.clear_independents();
+        s.clear_dependents();
 
       //END local to global assembly
-
+      }
     } //end list of elements loop
 
-    myKK->close();
+    if( assembleMatrix ) myKK->close();
     myRES->close();
 
     delete area_elem_first;
