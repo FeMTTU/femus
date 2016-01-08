@@ -304,6 +304,10 @@ namespace femus {
   // =================================================
 
   void AsmPetscLinearEquationSolver::solve(const vector <unsigned>& variable_to_be_solved, const bool& ksp_clean) {
+
+    PetscLogDouble t1; PetscLogDouble t2;
+    PetscTime(&t1);
+
     PetscVector* EPSCp = static_cast<PetscVector*>(_EPSC);
     Vec EPSC = EPSCp->vec();
     PetscVector* RESp = static_cast<PetscVector*>(_RES);
@@ -311,22 +315,16 @@ namespace femus {
     PetscMatrix* KKp = static_cast<PetscMatrix*>(_KK);
     Mat KK = KKp->mat();
 
-    PetscErrorCode ierr;
-    clock_t SearchTime, AssemblyTime, SolveTime, UpdateTime;
-
-    // ***************** NODE/ELEMENT SEARCH *******************
-    clock_t start_time = clock();
+    //BEGIN SEARCH
     if (_indexai_init == 0) {
       _indexai_init = 1;
       if (!_standard_ASM)
         BuildAMSIndex(variable_to_be_solved);
       BuildBDCIndex(variable_to_be_solved);
     }
-    SearchTime = start_time - clock();
-    // ***************** END NODE/ELEMENT SEARCH *******************
+    //END SEARCH
 
-    // ***************** ASSEMBLE matrix to set Dirichlet BCs by penalty *******************
-    start_time = clock();
+    //BEGIN ASSEMBLE matrix with Dirichlet penalty BCs by penalty
     if (ksp_clean) {
       this->clear();
       // initialize Pmat wiwth penaly diagonal on the Dirichlet Nodes
@@ -334,47 +332,21 @@ namespace femus {
       MatSetOption(_Pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
       MatZeroRows(_Pmat, _indexai[0].size(), &_indexai[0][0], 1.e100, 0, 0);
       _Pmat_is_initialized = true;
-
-
-
-//       PetscViewer    viewer;
-//       ierr=PetscViewerDrawOpen(MPI_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);
-//       ierr= MatView(_Pmat,viewer);
-//       double ff;
-//       std::cin>>ff;
-//       PetscViewerDestroy(&viewer);
-//
       init(KK, _Pmat);
-
     }
+    //END ASSEMBLE
 
-    AssemblyTime = clock() - start_time;
 
-    // ***************** END ASSEMBLE ***********
-
-    // ***************** SOLVE ******************
-    start_time = clock();
-
-    ierr = KSPSolve(_ksp, RES, EPSC);
-    CHKERRABORT(MPI_COMM_WORLD, ierr);
-
-    SolveTime = clock() - start_time;
-    // ***************** END SOLVE ******************
-
-    // ***************** RES/EPS UPDATE RES ******************
-    start_time = clock();
-
+    //BEGIN SOLVE and UPDATE
+    KSPSolve(_ksp, RES, EPSC);
     *_EPS += *_EPSC;
-
     _RESC->matrix_mult(*_EPSC, *_KK);
     *_RES -= *_RESC;
+    //END SOLVE and UPDATE
 
-    UpdateTime = clock() - start_time;
 
-    // **************** END RES/EPS UPDATE RES ***************
-
-    // *** Computational info ***
-#ifndef NDEBUG
+    //BEGIN PRINT Computational info
+// #ifndef NDEBUG
     int its;
     KSPGetIterationNumber(_ksp, &its);
 
@@ -384,18 +356,13 @@ namespace femus {
     PetscReal rnorm;
     KSPGetResidualNorm(_ksp, &rnorm);
 
-    std::cout << "Number of iterations = " << its << "\t convergence reason = " << reason << std::endl;
-    std::cout << "Residual Norm ="<< rnorm <<std::endl;
-    std::cout << _rtol << " " << _abstol << " " << _dtol << " " << _maxits << std::endl;
-
-
-
-
-//     cout << "ASM Grid: " << _msh->GetLevel() << "        SOLVER TIME:        "  << std::setw(11) << std::setprecision(6) << std::fixed <<
-//          static_cast<double>(SearchTime + AssemblyTime + SolveTime + UpdateTime) / CLOCKS_PER_SEC <<
-//          "  ITS: " << _maxits  << "\t ksp_clean = " << ksp_clean << endl;
-#endif
-
+    PetscTime(&t2);
+    PetscPrintf(PETSC_COMM_WORLD, " ************ MG linear solver time: %8.3f \n", t2 -t1);
+    PetscPrintf(PETSC_COMM_WORLD, " ************ Number of outer ksp solver iterations = %i \n", its);
+    PetscPrintf(PETSC_COMM_WORLD, " ************ Convergence reason = %i \n", reason);
+    PetscPrintf(PETSC_COMM_WORLD, " ************ Residual norm = %10.8g \n", rnorm);
+// #endif
+    //END PRINT
   }
 
 
