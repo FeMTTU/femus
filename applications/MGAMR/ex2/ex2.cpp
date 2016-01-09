@@ -140,10 +140,11 @@ int main(int argc, char** args) {
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
   system.SetMaxNumberOfNonLinearIterations(10);
-  system.SetMaxNumberOfLinearIterations(10);
-  system.UpdateResidualAtEachLinearIteration();
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
+  system.UpdateResidualAtEachLinearIteration();
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
+  system.SetResidualUpdateConvergenceTolerance(1.e-12);
+
   system.SetMgType(F_CYCLE);
 
   system.SetNumberPreSmoothingStep(0);

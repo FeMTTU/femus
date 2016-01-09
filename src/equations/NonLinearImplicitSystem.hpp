@@ -74,17 +74,17 @@ public:
         _max_nonlinear_convergence_tolerance = nonlin_convergence_tolerance;
     };
 
-    void SetRelativeLinearConvergenceTolerance( const double & relative_convergence_scale ){
-      _linearAbsoluteConvergenceTolerance = relative_convergence_scale;
-      _linearRelativeConvergenceScalingFactor = relative_convergence_scale;
-      _linearConvergenceIsRelative = true;
-    }
-
     /** Checks for the non the linear convergence */
     bool IsNonLinearConverged(const unsigned gridn, double &nonLinearEps);
 
     void UpdateResidualAtEachLinearIteration(const bool & updateResidual = true){
       _updateResidualAtEachLinearIteration = updateResidual;
+    }
+    void SetMaxNumberOfResidualUpdatesForNonlinearIteration( const unsigned & maxNumberOfIterations){
+      _n_max_linear_iterations = maxNumberOfIterations;
+    }
+    void SetResidualUpdateConvergenceTolerance(const double & tolerance){
+      _linearAbsoluteConvergenceTolerance = tolerance;
     }
 
 protected:
@@ -97,9 +97,6 @@ protected:
 
     /** The max non linear tolerance **/
     double _max_nonlinear_convergence_tolerance;
-
-    double _linearRelativeConvergenceScalingFactor;
-    bool _linearConvergenceIsRelative;
 
     /** Solves the system. */
     virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);

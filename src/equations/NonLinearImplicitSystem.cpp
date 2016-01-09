@@ -30,8 +30,7 @@ namespace femus {
     LinearImplicitSystem(ml_probl, name_in, number_in, smoother_type),
     _n_max_nonlinear_iterations(15),
     _final_nonlinear_residual(1.e20),
-    _max_nonlinear_convergence_tolerance(1.e-6),
-    _linearConvergenceIsRelative(false)
+    _max_nonlinear_convergence_tolerance(1.e-6)
   {
 
   }
@@ -111,9 +110,6 @@ namespace femus {
 
       if (ThisIsAMR) _solution[igridn - 1]->InitAMREps();
 
-      if (_linearConvergenceIsRelative)
-        _linearAbsoluteConvergenceTolerance =  _linearRelativeConvergenceScalingFactor;
-
       for (unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++) {
 
         std::cout << std::endl << " ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
@@ -128,9 +124,6 @@ namespace femus {
         bool nonLinearIsConverged = IsNonLinearConverged(igridn - 1, nonLinearEps);
 
         if (nonLinearIsConverged) break;
-
-        if (_linearConvergenceIsRelative)
-          _linearAbsoluteConvergenceTolerance = nonLinearEps * _linearRelativeConvergenceScalingFactor;
 
       }
 

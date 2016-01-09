@@ -277,23 +277,19 @@ int main(int argc,char **args) {
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+
+  system.UpdateResidualAtEachLinearIteration();
   system.SetNonLinearConvergenceTolerance(1.e-9);
-  if( simulation == 7 )
-    system.SetNonLinearConvergenceTolerance(1.e-5);
+  system.SetResidualUpdateConvergenceTolerance(1.e-15);
+  if (simulation == 3) system.SetResidualUpdateConvergenceTolerance(1.e-10);
+  system.SetMaxNumberOfNonLinearIterations(15);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(5);
+
+
+
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
-
-  if( simulation < 3 || simulation == 7 ) {
-    system.SetMaxNumberOfLinearIterations(5);
-    system.SetMaxNumberOfNonLinearIterations(10);
-  }
-  else {
-    system.SetMaxNumberOfLinearIterations(5);
-    system.SetMaxNumberOfNonLinearIterations(15);
-  }
-  system.UpdateResidualAtEachLinearIteration();
 
   // ******* Set Preconditioner *******
   if(Gmres) 		system.SetMgSmoother(GMRES_SMOOTHER);
@@ -305,9 +301,9 @@ int main(int argc,char **args) {
   // ******* Set Smoother *******
   system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(GMRES);
-  if( simulation < 3 || simulation > 3 )
-    system.SetPreconditionerFineGrids(ILU_PRECOND);
-  else
+
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  if( simulation == 3 )
     system.SetPreconditionerFineGrids(MLU_PRECOND);
 
   system.SetTolerances(1.e-12,1.e-20,1.e+50,20,10);
@@ -320,18 +316,7 @@ int main(int argc,char **args) {
   system.SetNumberOfSchurVariables(1);
 
   // ******* Set block size for the ASM smoothers *******
-  if(simulation < 3){
-    system.SetElementBlockNumber(2);
-  }
-  else if(simulation < 7 ){
-    system.SetElementBlockNumber(2);
-    //system.SetElementBlockNumberFluid(2);
-    //system.SetElementBlockSolidAll();
-    //system.SetElementBlockFluidAll();
-  }
-  else if(simulation == 7 ){
-    system.SetElementBlockNumber(2);
-  }
+  system.SetElementBlockNumber(2);
 
   // ******* For Gmres Preconditioner only *******
   //system.SetDirichletBCsHandling(ELIMINATION);

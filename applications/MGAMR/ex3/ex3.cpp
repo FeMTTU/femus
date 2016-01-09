@@ -223,11 +223,12 @@ int main( int argc, char** args ) {
   // attach the assembling function to system
   system.SetAssembleFunction( AssembleIncompressibleNavierStokes );
 
-  system.SetMaxNumberOfNonLinearIterations( 10 );
-  system.SetMaxNumberOfLinearIterations( 10 );
+  system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetNonLinearConvergenceTolerance(1.e-8);
   system.UpdateResidualAtEachLinearIteration();
-  system.SetAbsoluteLinearConvergenceTolerance( 1.e-15 );
-  system.SetNonLinearConvergenceTolerance( 1.e-8 );
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
+  system.SetResidualUpdateConvergenceTolerance(1.e-15);
+
   system.SetMgType( F_CYCLE );
 
   system.SetNumberPreSmoothingStep( 0 );
