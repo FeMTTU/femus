@@ -244,7 +244,7 @@ namespace femus {
       }
     }
 
-    std::cout << "Level " << gridn << "\t        ASSEMBLY TIME:\t" << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+    std::cout << std::endl << " ********* Level Max " << gridn << " ASSEMBLY TIME:\t" << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
 
     for (unsigned i = 0; i < gridn; i++) {
       if (_RR[i])
@@ -254,7 +254,12 @@ namespace femus {
     }
 
     for (unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++) { //linear cycle
-      std::cout << std::endl << " ************ Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
+      if (!_updateResidualAtEachLinearIteration){
+        std::cout << std::endl << " ************ Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
+      }
+      else{
+        std::cout << std::endl << " ************ Residual Update iteration " << linearIterator + 1 << std::endl;
+      }
       bool ksp_clean = !linearIterator;
       _LinSolver[gridn - 1u]->MGsolve(ksp_clean);
       _solution[gridn - 1u]->UpdateRes(_SolSystemPdeIndex, _LinSolver[gridn - 1u]->_RES, _LinSolver[gridn - 1u]->KKoffset);
@@ -277,8 +282,14 @@ namespace femus {
 
     _LinSolver[gridn - 1u]->MGclear();
 
-    std::cout << " Linear-Cycle TIME:   " << std::setw(11) << std::setprecision(6) << std::fixed
-              << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+    if (!_updateResidualAtEachLinearIteration){
+      std::cout << "\n ********* Linear-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
+                << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+    }
+    else {
+      std::cout << "\n ********* Residual Update-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
+                << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+    }
   }
 
   // ********************************************
@@ -309,11 +320,16 @@ namespace femus {
       }
     }
 
-    std::cout << "\n ********* Assembly TIME:\t" << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+    std::cout << std::endl << " ********* Level Max " << gridn << " ASSEMBLY TIME:\t" << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
 
     for (unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++) { //linear cycle
 
-      std::cout << std::endl << " ************ Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
+      if (!_updateResidualAtEachLinearIteration){
+        std::cout << std::endl << " ************ Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
+      }
+      else{
+        std::cout << std::endl << " ************ Residual Update iteration " << linearIterator + 1 << std::endl;
+      }
 
       bool ksp_clean = !linearIterator;
 
@@ -363,8 +379,14 @@ namespace femus {
     // ============== Update Fine Solution ==============
     _solution[gridn - 1]->UpdateSol(_SolSystemPdeIndex, _LinSolver[gridn - 1]->_EPS, _LinSolver[gridn - 1]->KKoffset);
 
-    std::cout << std::endl << " ********* Linear-Cycle TIME:   " << std::setw(11) << std::setprecision(6) << std::fixed
-              << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+    if (!_updateResidualAtEachLinearIteration){
+      std::cout << "\n ********* Linear-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
+                << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+    }
+    else {
+      std::cout << "\n ********* Residual Update-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
+                << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+    }
 
   }
 
@@ -1011,6 +1033,8 @@ namespace femus {
 
 
 } //end namespace femus
+
+
 
 
 
