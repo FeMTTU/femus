@@ -88,6 +88,9 @@ int main(int argc,char **args) {
 
   PetscOptionsReal("-lin_tol", "The linear solver tolerance", "fsiSteady.cpp", lin_tol, &lin_tol, NULL);
   printf(" lin_tol: %g\n", lin_tol);
+  
+  PetscOptionsReal("-alin_tol", "The abs linear solver tolerance", "fsiSteady.cpp", alin_tol, &alin_tol, NULL);
+  printf(" alin_tol: %g\n", alin_tol);
 
   PetscOptionsReal("-nonlin_tol", "The nonlinear solver tolerance", "fsiSteady.cpp", nonlin_tol, &nonlin_tol, NULL);
   printf(" nonlin_tol: %g\n", nonlin_tol);
