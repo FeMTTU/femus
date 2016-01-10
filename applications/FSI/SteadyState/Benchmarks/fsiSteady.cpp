@@ -32,11 +32,11 @@ int main(int argc,char **args) {
   std::string gauss_integration_order = "fifth";
   char bdcfilename[256] = "";
   int numlineariter = 1;
-  int numnonlineariter = 10;
-  double lin_tol = 1.e-08;
+  int numnonlineariter = 15;
+  double lin_tol = 1.e-04;
   double alin_tol = 1.e-20;
   double div_tol = 1.e+10;
-  double nonlin_tol = 1.e-09;
+  double nonlin_tol = 1.e-08;
   int asm_block = 2;
   int npre = 0;
   int npost = 2;
@@ -284,6 +284,7 @@ int main(int argc,char **args) {
 
   system.MGsolve();
 
+  
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
 
