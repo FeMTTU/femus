@@ -39,7 +39,6 @@ namespace femus {
     _AMRnorm( 0 ),
     _AMRthreshold( 0.01 ),
     _SmootherType( smoother_type ),
-    _updateResidualAtEachLinearIteration( false ),
     _MGmatrixFineReuse( false ),
     _MGmatrixCoarseReuse( false )
   {
@@ -143,7 +142,7 @@ namespace femus {
       grid0 = _gridr;
     }
     else {
-      std::cout << "wrong mg_type for this solver " << std::endl;
+      std::cout << "wrong " << _solverType << " type for this solver " << std::endl;
       abort();
     }
 
@@ -157,7 +156,7 @@ namespace femus {
 
       if( ThisIsAMR ) _solution[igridn - 1]->InitAMREps();
 
-      _LinSolver[igridn - 1u]->MGinit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
+
 
       _levelToAssemble = igridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
       _LinSolver[igridn - 1u]->SetResZero();
@@ -166,7 +165,6 @@ namespace femus {
 
       _MGmatrixFineReuse = false;
       _MGmatrixCoarseReuse = ( igridn - grid0 > 0 ) ?  true : _MGmatrixFineReuse;
-
       for( unsigned i = igridn - 1u; i > 0; i-- ) {
         if( _RR[i] ) {
           if( i == igridn - 1u )
@@ -185,19 +183,20 @@ namespace femus {
       std::cout << std::endl << " ****** Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
 
       if( _MGsolver ) {
+        _LinSolver[igridn - 1u]->MGinit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
+
         for( unsigned i = 0; i < igridn; i++ ) {
           if( _RR[i] )
             _LinSolver[i]->MGsetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
           else
             _LinSolver[i]->MGsetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
         }
+
+        MGVcycle( igridn, mgSmootherType );
+
+        _LinSolver[igridn - 1u]->MGclear();
       }
-
-      if( _MGsolver ) MGVcycle( igridn, mgSmootherType );
       else MLVcycle( igridn );
-
-      _LinSolver[igridn - 1u]->MGclear();
-
 
       if( ThisIsAMR ) AddAMRLevel( AMRCounter );
 
@@ -284,6 +283,8 @@ namespace femus {
 
     clock_t start_mg_time = clock();
 
+    _LinSolver[gridn - 1u]->SetEpsZero();
+
     bool linearIsConverged;
 
     for( unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++ ) { //linear cycle
@@ -363,6 +364,7 @@ namespace femus {
     _LinSolver[gridf]->_EPSC->matrix_mult( *_LinSolver[gridf - 1]->_EPS, *_PP[gridf] );
     _LinSolver[gridf]->UpdateResidual();
     _LinSolver[gridf]->SumEpsCToEps();
+
   }
 
   // ********************************************
@@ -411,11 +413,9 @@ namespace femus {
     _LinSolver[_gridn]->InitPde( _SolSystemPdeIndex, _ml_sol->GetSolType(),
                                  _ml_sol->GetSolName(), &_solution[_gridn]->_Bdc, _gridr, _gridn + 1, _SparsityPattern );
 
-
     _PP.resize( _gridn + 1 );
     _RR.resize( _gridn + 1 );
     BuildProlongatorMatrix( _gridn );
-
 
     _LinSolver[_gridn]->set_solver_type( _finegridsolvertype );
     _LinSolver[_gridn]->set_tolerances( _rtol, _atol, _divtol, _maxits, _restart );

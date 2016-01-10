@@ -176,8 +176,6 @@ public:
 
 protected:
 
-    bool _updateResidualAtEachLinearIteration;
-
     bool _assembleMatrix;
     void AddAMRLevel( unsigned &AMRCounter);
 

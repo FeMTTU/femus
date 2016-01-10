@@ -97,7 +97,7 @@ namespace femus {
       grid0 = _gridr;
     }
     else {
-      std::cout << "wrong mg_type for this solver " << std::endl;
+      std::cout << "wrong " << _solverType << " type for this solver " << std::endl;
       abort();
     }
 
@@ -114,8 +114,6 @@ namespace femus {
       for( unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++ ) {
 
         std::cout << std::endl << " ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
-
-        _LinSolver[igridn - 1u]->MGinit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
 
         _levelToAssemble = igridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
         _LinSolver[igridn - 1u]->SetResZero();
@@ -139,10 +137,11 @@ namespace femus {
               _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse );
           }
         }
-
         std::cout << std::endl << " ********* Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
 
         if( _MGsolver ) {
+          _LinSolver[igridn - 1u]->MGinit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
+
           for( unsigned i = 0; i < igridn; i++ ) {
             if( _RR[i] )
               _LinSolver[i]->MGsetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
@@ -157,24 +156,23 @@ namespace femus {
 
           std::cout << std::endl << " ************ Residual Update iteration " << updateResidualIterator + 1 << std::endl;
 
-          if( updateResidualIterator != 0 ) {
-            _LinSolver[igridn - 1u]->SetResZero();
-            _assembleMatrix = false;
-            _assemble_system_function( _equation_systems );
-          }
-
           bool thisIsConverged;
 
           if( _MGsolver ) thisIsConverged = MGVcycle( igridn, mgSmootherType );
           else thisIsConverged = MLVcycle( igridn );
 
-          if( thisIsConverged ) break;
+          if( thisIsConverged || updateResidualIterator == _maxNumberOfResidualUpdateIterations - 1 ) break;
+
+          _LinSolver[igridn - 1u]->SetResZero();
+          _assembleMatrix = false;
+          _assemble_system_function( _equation_systems );
+          
         }
 
         std::cout << "\n ********* Residual Update-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
                   << static_cast<double>( ( clock() - startUpdateResidualTime ) ) / CLOCKS_PER_SEC << std::endl;
 
-        _LinSolver[igridn - 1u]->MGclear();
+        if( _MGsolver ) _LinSolver[igridn - 1u]->MGclear();
 
         double nonLinearEps;
         bool nonLinearIsConverged = IsNonLinearConverged( igridn - 1, nonLinearEps );
