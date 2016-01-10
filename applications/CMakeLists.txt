@@ -29,7 +29,14 @@ IF(BUILD_FSIAPPS)
 
 # FSI SteadyState Benchmarks
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/Benchmarks)
-  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
+  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi2.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
+  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi3.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
+  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi4.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
+  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi5.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
+  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi2_ksp_view.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
+  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi3_ksp_view.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
+  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi4_ksp_view.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
+  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi5_ksp_view.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/ML)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/MG)
 
