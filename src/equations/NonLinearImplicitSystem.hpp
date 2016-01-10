@@ -81,9 +81,11 @@ public:
       _updateResidualAtEachLinearIteration = updateResidual;
     }
     void SetMaxNumberOfResidualUpdatesForNonlinearIteration( const unsigned & maxNumberOfIterations){
-      _n_max_linear_iterations = maxNumberOfIterations;
+      _n_max_linear_iterations = 1;
+      _maxNumberOfResidualUpdateIterations = maxNumberOfIterations;
     }
     void SetResidualUpdateConvergenceTolerance(const double & tolerance){
+      _ResidualUpdateConvergenceTolerance = tolerance;
       _linearAbsoluteConvergenceTolerance = tolerance;
     }
 
@@ -97,6 +99,9 @@ protected:
 
     /** The max non linear tolerance **/
     double _max_nonlinear_convergence_tolerance;
+
+    unsigned _maxNumberOfResidualUpdateIterations;
+    double _ResidualUpdateConvergenceTolerance;
 
     /** Solves the system. */
     virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);

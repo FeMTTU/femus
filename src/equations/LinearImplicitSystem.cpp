@@ -160,8 +160,44 @@ namespace femus {
       _MGmatrixFineReuse = false;
       _MGmatrixCoarseReuse = ( igridn - grid0 > 0 ) ?  true : _MGmatrixFineReuse;
 
+      _LinSolver[igridn - 1u]->MGinit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
+
+      _levelToAssemble = igridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
+      _LinSolver[igridn - 1u]->SetResZero();
+      _assembleMatrix = true;
+      _assemble_system_function( _equation_systems );
+
+      for( unsigned i = igridn - 1u; i > 0; i-- ) {
+        if( _RR[i] ) {
+          if( i == igridn - 1u )
+            _LinSolver[i - 1u]->_KK->matrix_ABC( *_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixFineReuse );
+          else
+            _LinSolver[i - 1u]->_KK->matrix_ABC( *_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixCoarseReuse );
+        }
+        else {
+          if( i == igridn - 1u )
+            _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixFineReuse );
+          else
+            _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse );
+        }
+      }
+
+      std::cout << std::endl << " ****** Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
+
+      if( _MGsolver ) {
+        for( unsigned i = 0; i < igridn; i++ ) {
+          if( _RR[i] )
+            _LinSolver[i]->MGsetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
+          else
+            _LinSolver[i]->MGsetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
+        }
+      }
+
       if( _MGsolver ) MGVcycle( igridn, mgSmootherType );
       else MLVcycle( igridn );
+
+      _LinSolver[igridn - 1u]->MGclear();
+
 
       if( ThisIsAMR ) AddAMRLevel( AMRCounter );
 
@@ -185,7 +221,7 @@ namespace femus {
     for( unsigned k = 0; k < _SolSystemPdeIndex.size(); k++ ) {
       unsigned indexSol = _SolSystemPdeIndex[k];
       L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
-      std::cout << " ************ Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName( indexSol ) << " = " << L2normRes << std::endl;
+      std::cout << " *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName( indexSol ) << " = " << L2normRes << std::endl;
 
       if( L2normRes < _linearAbsoluteConvergenceTolerance && conv == true ) {
         conv = true;
@@ -216,123 +252,45 @@ namespace femus {
 
   // ********************************************
 
-  void LinearImplicitSystem::MGVcycle( const unsigned& gridn, const MgSmootherType& mgSmootherType ) {
+  bool LinearImplicitSystem::MGVcycle( const unsigned& gridn, const MgSmootherType& mgSmootherType ) {
 
     clock_t start_mg_time = clock();
 
-    _LinSolver[gridn - 1u]->MGinit( mgSmootherType, gridn, _outer_ksp_solver.c_str() );
-
     _LinSolver[gridn - 1u]->SetEpsZero();
-    _LinSolver[gridn - 1u]->SetResZero();
 
-    _levelToAssemble = gridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
-    _assembleMatrix = true;
-    _assemble_system_function( _equation_systems );
-
-    for( unsigned i = gridn - 1u; i > 0; i-- ) {
-      if( _RR[i] ) {
-        if( i == gridn - 1u )
-          _LinSolver[i - 1u]->_KK->matrix_ABC( *_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixFineReuse );
-        else
-          _LinSolver[i - 1u]->_KK->matrix_ABC( *_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixCoarseReuse );
-      }
-      else {
-        if( i == gridn - 1u )
-          _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixFineReuse );
-        else
-          _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse );
-      }
-    }
-
-    std::cout << std::endl << " ********* Level Max " << gridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
-
-    for( unsigned i = 0; i < gridn; i++ ) {
-      if( _RR[i] )
-        _LinSolver[i]->MGsetLevels( _LinSolver[gridn - 1u], i, gridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
-      else
-        _LinSolver[i]->MGsetLevels( _LinSolver[gridn - 1u], i, gridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
-    }
+    bool linearIsConverged;
 
     for( unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++ ) { //linear cycle
-      if( !_updateResidualAtEachLinearIteration ) {
-        std::cout << std::endl << " ************ Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
-      }
-      else {
-        std::cout << std::endl << " ************ Residual Update iteration " << linearIterator + 1 << std::endl;
-      }
 
-      bool ksp_clean = !linearIterator;
+      std::cout << std::endl << " *************** Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
+      bool ksp_clean = !linearIterator * _assembleMatrix;
       _LinSolver[gridn - 1u]->MGsolve( ksp_clean );
       _solution[gridn - 1u]->UpdateRes( _SolSystemPdeIndex, _LinSolver[gridn - 1u]->_RES, _LinSolver[gridn - 1u]->KKoffset );
-      bool islinearconverged = IsLinearConverged( gridn - 1u );
+      linearIsConverged = IsLinearConverged( gridn - 1u );
 
-      if( islinearconverged )  break;
-
-      if( _updateResidualAtEachLinearIteration && linearIterator < _n_max_linear_iterations - 1 ) {
-        _solution[gridn - 1u]->UpdateSol( _SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset );
-        _LinSolver[gridn - 1u]->SetEpsZero();
-        _LinSolver[gridn - 1u]->SetResZero();
-        _levelToAssemble = gridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
-        _assembleMatrix = false;
-        _assemble_system_function( _equation_systems );
-      }
-
+      if( linearIsConverged )  break;
     }
 
     _solution[gridn - 1u]->UpdateSol( _SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset );
 
-    _LinSolver[gridn - 1u]->MGclear();
-
-    if( !_updateResidualAtEachLinearIteration ) {
-      std::cout << "\n ********* Linear-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
-                << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
-    }
-    else {
-      std::cout << "\n ********* Residual Update-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
-                << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
-    }
+    std::cout << "\n ************ Linear-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
+              << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
+    return linearIsConverged;
   }
 
   // ********************************************
 
-  void LinearImplicitSystem::MLVcycle( const unsigned& gridn ) {
+  bool LinearImplicitSystem::MLVcycle( const unsigned& gridn ) {
 
     clock_t start_mg_time = clock();
-    // ============== Fine level Assembly ==============
-    _LinSolver[gridn - 1u]->SetResZero();
-    _LinSolver[gridn - 1u]->SetEpsZero();
 
-    _levelToAssemble = gridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
-    _assembleMatrix = true;
-    _assemble_system_function( _equation_systems );
-
-    for( unsigned i = gridn - 1u; i > 0; i-- ) {
-      if( _RR[i] ) {
-        if( i == gridn - 1u )
-          _LinSolver[i - 1u]->_KK->matrix_ABC( *_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixFineReuse );
-        else
-          _LinSolver[i - 1u]->_KK->matrix_ABC( *_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixCoarseReuse );
-      }
-      else {
-        if( i == gridn - 1u )
-          _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixFineReuse );
-        else
-          _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse );
-      }
-    }
-
-    std::cout << std::endl << " ********* Level Max " << gridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
+    bool linearIsConverged;
 
     for( unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++ ) { //linear cycle
 
-      if( !_updateResidualAtEachLinearIteration ) {
-        std::cout << std::endl << " ************ Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
-      }
-      else {
-        std::cout << std::endl << " ************ Residual Update iteration " << linearIterator + 1 << std::endl;
-      }
+      std::cout << std::endl << " *************** Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
 
-      bool ksp_clean = !linearIterator;
+      bool ksp_clean = !linearIterator * _assembleMatrix;
 
       for( unsigned ig = gridn - 1u; ig > 0; ig-- ) {
         // ============== Presmoothing ==============
@@ -364,33 +322,20 @@ namespace femus {
 
       // ============== Update Fine Residual ==============
       _solution[gridn - 1]->UpdateRes( _SolSystemPdeIndex, _LinSolver[gridn - 1]->_RES, _LinSolver[gridn - 1]->KKoffset );
-      bool linearIsConverged = IsLinearConverged( gridn - 1 );
+      linearIsConverged = IsLinearConverged( gridn - 1 );
 
       if( linearIsConverged ) break;
-
-      if( _updateResidualAtEachLinearIteration && linearIterator < _n_max_linear_iterations - 1 ) {
-        _solution[gridn - 1u]->UpdateSol( _SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset );
-        _LinSolver[gridn - 1u]->SetEpsZero();
-        _LinSolver[gridn - 1u]->SetResZero();
-        _levelToAssemble = gridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
-        _assembleMatrix = false;
-        _assemble_system_function( _equation_systems );
-      }
 
     }
 
     // ============== Update Fine Solution ==============
     _solution[gridn - 1]->UpdateSol( _SolSystemPdeIndex, _LinSolver[gridn - 1]->_EPS, _LinSolver[gridn - 1]->KKoffset );
 
-    if( !_updateResidualAtEachLinearIteration ) {
-      std::cout << "\n ********* Linear-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
-                << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
-    }
-    else {
-      std::cout << "\n ********* Residual Update-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
-                << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
-    }
 
+    std::cout << "\n ************ Linear-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
+              << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
+
+    return linearIsConverged;
   }
 
   // ********************************************
