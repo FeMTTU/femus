@@ -115,16 +115,15 @@ namespace femus {
 
         std::cout << std::endl << " ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
-        _MGmatrixFineReuse = ( 0 == nonLinearIterator ) ? false : true;
-        _MGmatrixCoarseReuse = ( igridn - grid0 > 0 ) ?  true : _MGmatrixFineReuse;
-
-
         _LinSolver[igridn - 1u]->MGinit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
 
         _levelToAssemble = igridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
         _LinSolver[igridn - 1u]->SetResZero();
         _assembleMatrix = true;
         _assemble_system_function( _equation_systems );
+
+        _MGmatrixFineReuse = ( 0 == nonLinearIterator ) ? false : true;
+        _MGmatrixCoarseReuse = ( igridn - grid0 > 0 ) ?  true : _MGmatrixFineReuse;
 
         for( unsigned i = igridn - 1u; i > 0; i-- ) {
           if( _RR[i] ) {
