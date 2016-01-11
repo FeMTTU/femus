@@ -284,9 +284,6 @@ int main(int argc,char **args) {
   system.SetMaxNumberOfNonLinearIterations(15);
   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(5);
 
-
-
-
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
 
