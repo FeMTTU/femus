@@ -37,6 +37,7 @@ IF(BUILD_FSIAPPS)
   FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi3_ksp_view.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
   FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi4_ksp_view.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
   FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi5_ksp_view.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
+  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi_5_ksp_monitor_residual.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/ML)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/MG)
 
