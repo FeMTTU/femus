@@ -88,7 +88,7 @@ int main(int argc,char **args) {
 
   PetscOptionsReal("-lin_tol", "The linear solver tolerance", "fsiSteady.cpp", lin_tol, &lin_tol, NULL);
   printf(" lin_tol: %g\n", lin_tol);
-  
+
   PetscOptionsReal("-alin_tol", "The abs linear solver tolerance", "fsiSteady.cpp", alin_tol, &alin_tol, NULL);
   printf(" alin_tol: %g\n", alin_tol);
 
@@ -238,7 +238,8 @@ int main(int argc,char **args) {
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSISteadyStateAssembly);
+  //system.SetAssembleFunction(FSISteadyStateAssembly);
+  system.SetAssembleFunction(FSISteadyStateAssemblyOld);
 
 
   // Solver settings
@@ -287,7 +288,7 @@ int main(int argc,char **args) {
 
   system.MGsolve();
 
-  
+
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
 
