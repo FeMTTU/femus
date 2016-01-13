@@ -440,7 +440,7 @@ GROUP:          1 ELEMENTS:         23 MATERIAL:          2 NFLAGS:          1
        4       1       2
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          2 ELEMENTS:          1 MATERIAL:          2 NFLAGS:          1
+GROUP:          2 ELEMENTS:          1 MATERIAL:          4 NFLAGS:          1
                                8
        0
       11

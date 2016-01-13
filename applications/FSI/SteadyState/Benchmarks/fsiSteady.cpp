@@ -25,7 +25,6 @@ int main(int argc,char **args) {
   char infile[256] = "";
   char outer_ksp_solver[256] = "gmres";
   size_t len_infile_name = 256;
-  int simulation = 1;
   double Lref=1., Uref=1., rhof=1., muf=1., rhos=1., ni=0., E=1.;
   int numofmeshlevels = 1;
   int numofrefinements = 1;
@@ -46,12 +45,6 @@ int main(int argc,char **args) {
   PetscOptionsBegin(PETSC_COMM_WORLD, "", "FSI steady problem options", "Unstructured mesh");
 
   cout << " Reading flags:" << endl;
-
-  PetscOptionsInt("-dim", "The dimension of the problem", "fsiSteady.cpp", dimension, &dimension, NULL);
-  printf(" dim: %i\n", dimension);
-
-  PetscOptionsInt("-sim", "The type of the Simulation", "fsiSteady.cpp", simulation, &simulation, NULL);
-  printf(" sim: %i\n", simulation);
 
   PetscOptionsInt("-nlevel", "The number of mesh levels", "fsiSteady.cpp", numofmeshlevels , &numofmeshlevels, NULL);
   printf(" nlevel: %i\n", numofmeshlevels);
@@ -159,6 +152,8 @@ int main(int argc,char **args) {
   ml_msh.EraseCoarseLevels(numofrefinements - numofmeshlevels);
 
   ml_msh.PrintInfo();
+  
+  dimension = ml_msh.GetLevel(0)->GetDimension();
 
   // mark Solid nodes
   ml_msh.MarkStructureNode();
@@ -175,6 +170,7 @@ int main(int argc,char **args) {
   cout << solid << endl;
 
   // Generate Fluid Object
+  
   Fluid fluid(par,muf,rhof,"Newtonian");
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
