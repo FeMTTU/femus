@@ -41,6 +41,7 @@ int main(int argc,char **args) {
   int npre = 0;
   int npost = 2;
   int max_outer_solver_iter = 40;
+  PetscBool equation_pivoting = PETSC_TRUE;
 
   // ******* reading input parameters *******
   PetscOptionsBegin(PETSC_COMM_WORLD, "", "FSI steady problem options", "Unstructured mesh");
@@ -82,6 +83,9 @@ int main(int argc,char **args) {
 
 //   PetscOptionsInt("-nlin_iter", "The number of linear iteration", "fsiSteady.cpp", numlineariter , &numlineariter, NULL);
 //   printf(" nlin_iter: %i\n", numlineariter);
+
+  PetscOptionsBool("-equation_pivoting", "Set equation pivoting during assembly", "fsiSteady.cpp", equation_pivoting , &equation_pivoting, NULL);
+  printf(" equation_pivoting: %i\n", equation_pivoting);
 
   PetscOptionsInt("-nnonlin_iter", "The number of non-linear iteration", "fsiSteady.cpp", numnonlineariter, &numnonlineariter, NULL);
   printf(" nnonlin_iter: %i\n", numnonlineariter);
@@ -238,8 +242,12 @@ int main(int argc,char **args) {
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  //system.SetAssembleFunction(FSISteadyStateAssembly);
-  system.SetAssembleFunction(FSISteadyStateAssemblyOld);
+  if ( equation_pivoting == PETSC_TRUE){
+    system.SetAssembleFunction(FSISteadyStateAssembly);
+  }
+  else {
+    system.SetAssembleFunction(FSISteadyStateAssemblyWithNoPivoting);
+  }
 
 
   // Solver settings

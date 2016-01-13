@@ -655,7 +655,7 @@ namespace femus {
 
 
 
-  void FSISteadyStateAssemblyOld(MultiLevelProblem& ml_prob) {
+  void FSISteadyStateAssemblyWithNoPivoting(MultiLevelProblem& ml_prob) {
 
     clock_t AssemblyTime = 0;
     clock_t start_time, end_time;
