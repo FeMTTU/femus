@@ -2,7 +2,7 @@
 ** GAMBIT NEUTRAL FILE
 richter3D
 PROGRAM:                Gambit     VERSION:  2.3.16
-11 Jan 2016    15:01:19 
+13 Jan 2016    18:19:43 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
        325        24         2         6         3         3
 ENDOFSECTION
@@ -446,7 +446,8 @@ GROUP:          2 ELEMENTS:          1 MATERIAL:          4 NFLAGS:          1
       11
 ENDOFSECTION
  BOUNDARY CONDITIONS 2.3.16
-                               1       1      34       0       6
+                               1       1      35       0       6
+        12    4    6
          1    4    2
          2    4    2
          8    4    5

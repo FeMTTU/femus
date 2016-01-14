@@ -1,5 +1,5 @@
 #############################################################################################
-### Build Applications 
+### Build Applications
 #############################################################################################
 
 IF(BUILD_NAVIERSTOKESAPPS)
@@ -9,10 +9,10 @@ IF(BUILD_NAVIERSTOKESAPPS)
 
   # Time-dependent BE NavierStokes
   ADD_SUBDIRECTORY(${NS_FOLDER}/BackwardEulerNavierStokesParallel/)
- 
+
   # Time-dependent Generalized-alpha NavierStokes
   ADD_SUBDIRECTORY(${NS_FOLDER}/TaylorGreenVortexFlowGeneralisedalpha/)
- 
+
   # Steady Stokes
   ADD_SUBDIRECTORY(${NS_FOLDER}/SteadyStokes/)
 
@@ -38,6 +38,7 @@ IF(BUILD_FSIAPPS)
   FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi4_ksp_view.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
   FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi5_ksp_view.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
   FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi_5_ksp_monitor_residual.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
+  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi_richter.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/ML)
   ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/MG)
 
@@ -72,7 +73,7 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/)
   FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/output/)
   FILE(COPY ${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/)
-  unset(OPT_APPLICATION)  
+  unset(OPT_APPLICATION)
 ENDIF(BUILD_OPTCONTROLAPPS)
 
 IF(BUILD_POISSON)

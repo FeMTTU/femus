@@ -156,7 +156,7 @@ int main(int argc,char **args) {
   ml_msh.EraseCoarseLevels(numofrefinements - numofmeshlevels);
 
   ml_msh.PrintInfo();
-  
+
   dimension = ml_msh.GetLevel(0)->GetDimension();
 
   // mark Solid nodes
@@ -174,7 +174,7 @@ int main(int argc,char **args) {
   cout << solid << endl;
 
   // Generate Fluid Object
-  
+
   Fluid fluid(par,muf,rhof,"Newtonian");
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
@@ -296,6 +296,7 @@ int main(int argc,char **args) {
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
 
+
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
@@ -305,6 +306,7 @@ int main(int argc,char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
+  ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
   // ******* Clear all systems *******
