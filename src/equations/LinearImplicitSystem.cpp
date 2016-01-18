@@ -150,13 +150,13 @@ namespace femus {
 
     for( unsigned igridn = grid0; igridn <= _gridn; igridn++ ) {   //_igridn
       std::cout << std::endl << " ****** Start Level Max " << igridn << " ******" << std::endl;
-      clock_t start_nl_time = clock();
+
 
       bool ThisIsAMR = ( _mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn ) ? 1 : 0;
 
       if( ThisIsAMR ) _solution[igridn - 1]->InitAMREps();
 
-
+      clock_t start_assembly_time = clock();
 
       _levelToAssemble = igridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
       _LinSolver[igridn - 1u]->SetResZero();
@@ -180,7 +180,7 @@ namespace femus {
         }
       }
 
-      std::cout << std::endl << " ****** Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
+      std::cout << std::endl << " ****** Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_assembly_time ) ) / CLOCKS_PER_SEC << std::endl;
 
       if( _MGsolver ) {
         _LinSolver[igridn - 1u]->MGInit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
