@@ -218,13 +218,11 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
-  bool Vanka = 0, Gmres = 0, Asm = 0;
-
-  if (!strcmp("vanka", smoother_type.c_str()))          Vanka = 1;
-  else if (!strcmp("gmres", smoother_type.c_str()))     Gmres = 1;
+  bool Gmres = 0, Asm = 0;
+  if (!strcmp("gmres", smoother_type.c_str()))     Gmres = 1;
   else if (!strcmp("asm", smoother_type.c_str()))       Asm = 1;
 
-  if (Vanka + Gmres + Asm == 0) {
+  if (Gmres + Asm == 0) {
     cout << "The selected MG smoother does not exist!" << endl;
     exit(1);
   }
@@ -395,7 +393,7 @@ int main(int argc, char** argv) {
   //Set Smoother Options
   if (Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
   else if (Asm) 	system2.SetMgSmoother(ASM_SMOOTHER);
-  else if (Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
+  //else if (Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
 
   system2.init();
 
@@ -410,7 +408,7 @@ int main(int argc, char** argv) {
   system2.ClearVariablesToBeSolved();
   system2.AddVariableToBeSolved("All");
 
-  if (Asm || Vanka)
+  if (Asm )
   {
     system2.SetNumberOfSchurVariables(0);
     system2.SetElementBlockNumber(4);

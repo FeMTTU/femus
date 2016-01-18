@@ -24,7 +24,7 @@ algebra/PetscPreconditioner.cpp
 algebra/PetscVector.cpp
 algebra/Preconditioner.cpp
 algebra/SparseMatrix.cpp
-algebra/VankaPetscLinearEquationSolver.cpp
+#algebra/VankaPetscLinearEquationSolver.cpp
 algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
 equations/DofMap.cpp

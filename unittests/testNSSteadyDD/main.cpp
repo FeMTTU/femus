@@ -30,14 +30,13 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& ElemGroupNumb
 
 int main(int argc, char** args) {
 
-  bool Vanka = 0, Gmres = 0, Asm = 0;
+  bool Gmres = 0, Asm = 0;
 
   if (argc >= 2) {
-    if (!strcmp("vanka", args[1])) 	Vanka = 1;
-    else if (!strcmp("gmres", args[1])) 	Gmres = 1;
+    if (!strcmp("gmres", args[1])) 	Gmres = 1;
     else if (!strcmp("asm", args[1])) 	Asm = 1;
 
-    if (Vanka + Gmres + Asm == 0) {
+    if (Gmres + Asm == 0) {
       cout << "wrong input arguments!" << endl;
       exit(0);
     }
@@ -137,7 +136,7 @@ int main(int argc, char** args) {
   //Set Smoother Options
   if (Gmres) 		system1.SetMgSmoother(GMRES_SMOOTHER);
   else if (Asm) 		system1.SetMgSmoother(ASM_SMOOTHER);
-  else if (Vanka)	system1.SetMgSmoother(VANKA_SMOOTHER);
+  //else if (Vanka)	system1.SetMgSmoother(VANKA_SMOOTHER);
 
   system1.init();
   //common smoother options
@@ -181,7 +180,6 @@ int main(int argc, char** args) {
   //Set Smoother Options
   if (Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
   else if (Asm) 		system2.SetMgSmoother(ASM_SMOOTHER);
-  else if (Vanka)	system2.SetMgSmoother(VANKA_SMOOTHER);
 
   system2.init();
   //common smoother option

@@ -231,9 +231,6 @@ int main(int argc, char** argv) {
   else if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "asm")) {
     system2.SetMgSmoother(ASM_SMOOTHER);
   }
-  else if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "vanka")) {
-    system2.SetMgSmoother(VANKA_SMOOTHER);
-  }
 
   system2.init();
   //common smoother option
@@ -244,8 +241,7 @@ int main(int argc, char** argv) {
   system2.ClearVariablesToBeSolved();
   system2.AddVariableToBeSolved("All");
 
-  if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "asm") ||
-      inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "vanka")) {
+  if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "asm")) {
     system2.SetNumberOfSchurVariables(0);
     system2.SetElementBlockNumber(4);
   }

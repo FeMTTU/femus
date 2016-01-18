@@ -107,13 +107,12 @@ int main(int argc,char **args) {
   }
 
   // ******* Extract the preconditioner type based on the inline input *******
-  bool Vanka=0, Gmres=0, Asm=0;
+  bool Gmres=0, Asm=0;
   if(argc >= 3) {
-    if( !strcmp("vanka",args[2])) 	Vanka=1;
-    else if( !strcmp("gmres",args[2])) 	Gmres=1;
+    if( !strcmp("gmres",args[2])) 	Gmres=1;
     else if( !strcmp("asm",args[2])) 	Asm=1;
 
-    if(Vanka+Gmres+Asm==0) {
+    if(Gmres+Asm==0) {
       cout << "wrong input arguments!" << endl;
       abort();
     }
@@ -331,7 +330,6 @@ int main(int argc,char **args) {
   // ******* Set Preconditioner *******
   if(Gmres) 		system.SetMgSmoother(GMRES_SMOOTHER);
   else if(Asm) 		system.SetMgSmoother(ASM_SMOOTHER);
-  else if(Vanka)	system.SetMgSmoother(VANKA_SMOOTHER);
 
   system.init();
 
