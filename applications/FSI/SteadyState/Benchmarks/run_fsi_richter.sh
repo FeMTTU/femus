@@ -6,7 +6,7 @@
 
 # Direct solver
 # modify -nrefinement to increase or decrease the number of refinement
-./fsisteady -input "./input/turek.neu" -nrefinement 2 -nlevel 1 -rhof 1000 -muf 1 -rhos 1000 -E 1400000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi_steady_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "preonly" -max_outer_solver_iter 1
+./fsisteady -input "./input/richter3d.neu" -nrefinement 1 -nlevel 1 -rhof 1000 -muf 1 -rhos 1000 -E 1500000 -ni 0.5 -nnonlin_iter 15 -ic_bdc "../../../../lib64/libfsi_steady_3d_turek_hron_richter_benchmark_bdc.so" -outer_ksp_solver "preonly" -max_outer_solver_iter 1
 
 
 # GMRES-MG-Richardson-ASM-ILU-MUMPS solver

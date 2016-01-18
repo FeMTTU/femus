@@ -176,13 +176,11 @@ public:
 
 protected:
 
-    bool _updateResidualAtEachLinearIteration;
-
     bool _assembleMatrix;
     void AddAMRLevel( unsigned &AMRCounter);
 
-    void MLVcycle(const unsigned &gridn);
-    void MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
+    bool MLVcycle(const unsigned &gridn);
+    bool MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
 
 
     /** Create the Prolongator matrix for the Multigrid solver */

@@ -77,11 +77,9 @@ public:
     /** Checks for the non the linear convergence */
     bool IsNonLinearConverged(const unsigned gridn, double &nonLinearEps);
 
-    void UpdateResidualAtEachLinearIteration(const bool & updateResidual = true){
-      _updateResidualAtEachLinearIteration = updateResidual;
-    }
     void SetMaxNumberOfResidualUpdatesForNonlinearIteration( const unsigned & maxNumberOfIterations){
-      _n_max_linear_iterations = maxNumberOfIterations;
+      _n_max_linear_iterations = 1;
+      _maxNumberOfResidualUpdateIterations = maxNumberOfIterations;
     }
     void SetResidualUpdateConvergenceTolerance(const double & tolerance){
       _linearAbsoluteConvergenceTolerance = tolerance;
@@ -97,6 +95,8 @@ protected:
 
     /** The max non linear tolerance **/
     double _max_nonlinear_convergence_tolerance;
+
+    unsigned _maxNumberOfResidualUpdateIterations;
 
     /** Solves the system. */
     virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);

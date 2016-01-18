@@ -25,33 +25,27 @@ int main(int argc,char **args) {
   char infile[256] = "";
   char outer_ksp_solver[256] = "gmres";
   size_t len_infile_name = 256;
-  int simulation = 1;
   double Lref=1., Uref=1., rhof=1., muf=1., rhos=1., ni=0., E=1.;
   int numofmeshlevels = 1;
   int numofrefinements = 1;
   std::string gauss_integration_order = "fifth";
   char bdcfilename[256] = "";
   int numlineariter = 1;
-  int numnonlineariter = 10;
-  double lin_tol = 1.e-08;
+  int numnonlineariter = 15;
+  double lin_tol = 1.e-04;
   double alin_tol = 1.e-20;
   double div_tol = 1.e+10;
-  double nonlin_tol = 1.e-09;
+  double nonlin_tol = 1.e-08;
   int asm_block = 2;
   int npre = 0;
   int npost = 2;
   int max_outer_solver_iter = 40;
+  PetscBool equation_pivoting = PETSC_TRUE;
 
   // ******* reading input parameters *******
   PetscOptionsBegin(PETSC_COMM_WORLD, "", "FSI steady problem options", "Unstructured mesh");
 
   cout << " Reading flags:" << endl;
-
-  PetscOptionsInt("-dim", "The dimension of the problem", "fsiSteady.cpp", dimension, &dimension, NULL);
-  printf(" dim: %i\n", dimension);
-
-  PetscOptionsInt("-sim", "The type of the Simulation", "fsiSteady.cpp", simulation, &simulation, NULL);
-  printf(" sim: %i\n", simulation);
 
   PetscOptionsInt("-nlevel", "The number of mesh levels", "fsiSteady.cpp", numofmeshlevels , &numofmeshlevels, NULL);
   printf(" nlevel: %i\n", numofmeshlevels);
@@ -83,11 +77,17 @@ int main(int argc,char **args) {
 //   PetscOptionsInt("-nlin_iter", "The number of linear iteration", "fsiSteady.cpp", numlineariter , &numlineariter, NULL);
 //   printf(" nlin_iter: %i\n", numlineariter);
 
+  PetscOptionsBool("-equation_pivoting", "Set equation pivoting during assembly", "fsiSteady.cpp", equation_pivoting , &equation_pivoting, NULL);
+  printf(" equation_pivoting: %i\n", equation_pivoting);
+
   PetscOptionsInt("-nnonlin_iter", "The number of non-linear iteration", "fsiSteady.cpp", numnonlineariter, &numnonlineariter, NULL);
   printf(" nnonlin_iter: %i\n", numnonlineariter);
 
   PetscOptionsReal("-lin_tol", "The linear solver tolerance", "fsiSteady.cpp", lin_tol, &lin_tol, NULL);
   printf(" lin_tol: %g\n", lin_tol);
+
+  PetscOptionsReal("-alin_tol", "The abs linear solver tolerance", "fsiSteady.cpp", alin_tol, &alin_tol, NULL);
+  printf(" alin_tol: %g\n", alin_tol);
 
   PetscOptionsReal("-nonlin_tol", "The nonlinear solver tolerance", "fsiSteady.cpp", nonlin_tol, &nonlin_tol, NULL);
   printf(" nonlin_tol: %g\n", nonlin_tol);
@@ -157,6 +157,8 @@ int main(int argc,char **args) {
 
   ml_msh.PrintInfo();
 
+  dimension = ml_msh.GetLevel(0)->GetDimension();
+
   // mark Solid nodes
   ml_msh.MarkStructureNode();
 
@@ -172,6 +174,7 @@ int main(int argc,char **args) {
   cout << solid << endl;
 
   // Generate Fluid Object
+
   Fluid fluid(par,muf,rhof,"Newtonian");
   cout << "Fluid properties: " << endl;
   cout << fluid << endl;
@@ -235,7 +238,12 @@ int main(int argc,char **args) {
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSISteadyStateAssembly);
+  if ( equation_pivoting == PETSC_TRUE){
+    system.SetAssembleFunction(FSISteadyStateAssembly);
+  }
+  else {
+    system.SetAssembleFunction(FSISteadyStateAssemblyWithNoPivoting);
+  }
 
 
   // Solver settings
@@ -284,8 +292,10 @@ int main(int argc,char **args) {
 
   system.MGsolve();
 
+
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
+
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -296,6 +306,7 @@ int main(int argc,char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
+  ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
   // ******* Clear all systems *******
