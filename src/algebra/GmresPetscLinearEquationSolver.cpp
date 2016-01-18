@@ -248,6 +248,7 @@ namespace femus {
     KSPSetOptionsPrefix(subksp, levelName.str().c_str());
     KSPSetFromOptions(subksp);
     KSPSetOperators(subksp, KK, _pmat);
+
     PC subpc;
     KSPGetPC(subksp, &subpc);
     SetPreconditioner(subksp,subpc);

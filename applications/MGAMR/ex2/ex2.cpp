@@ -154,7 +154,6 @@ int main(int argc, char** args) {
   //system.SetSolverFineGrids(GMRES);
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  //system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40);
   system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
 
 
@@ -162,7 +161,7 @@ int main(int argc, char** args) {
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
-  //system.SetDirichletBCsHandling(ELIMINATION);
+
   system.MGsolve();
 
   // print solutions
