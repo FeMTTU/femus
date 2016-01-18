@@ -37,18 +37,16 @@ namespace femus {
 // ----------------------- functions ------
 // ==============================================
 
-  void GmresPetscLinearEquationSolver::set_tolerances(const double& rtol, const double& atol,
-      const double& divtol, const unsigned& maxits, const unsigned& restart) {
-
+  void GmresPetscLinearEquationSolver::set_tolerances(const double& rtol, const double& atol, const double& divtol,
+                                                      const unsigned& maxits, const unsigned& restart) {
     _rtol    = static_cast<PetscReal>(rtol);
     _abstol  = static_cast<PetscReal>(atol);
     _dtol    = static_cast<PetscReal>(divtol);
     _maxits  = static_cast<PetscInt>(maxits);
     _restart = static_cast<PetscInt>(restart);
-
   }
 
-// ================================================
+  // ================================================
 
   void GmresPetscLinearEquationSolver::BuildBdcIndex(const vector <unsigned>& variable_to_be_solved) {
 
@@ -98,7 +96,7 @@ namespace femus {
     return;
   }
 
-// ================================================
+  // ================================================
 
   void GmresPetscLinearEquationSolver::solve(const vector <unsigned>& variable_to_be_solved, const bool& ksp_clean) {
 
@@ -123,9 +121,7 @@ namespace femus {
       _pmatIsInitialized = true;
       this->init(KK, _pmat);
     }
-
     //END ASSEMBLE
-
 
     //BEGIN SOLVE and UPDATE
     KSPSolve(_ksp, RES, EPSC);
@@ -155,7 +151,7 @@ namespace femus {
 #endif
   }
 
-// ================================================
+  // ================================================
 
   void GmresPetscLinearEquationSolver::init(Mat& Amat, Mat& Pmat) {
 
@@ -166,7 +162,7 @@ namespace femus {
       KSPCreate(MPI_COMM_WORLD, &_ksp);
       KSPGetPC(_ksp, &_pc);
 
-      this->set_petsc_solver_type(_ksp);
+      this->SetPetscSolverType(_ksp);
 
       KSPSetOperators(_ksp, Amat, Pmat);
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
@@ -179,14 +175,11 @@ namespace femus {
       KSPSetFromOptions(_ksp);
       KSPGMRESSetRestart(_ksp, _restart);
 
-      PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, _pc);
-      PetscReal zero = 1.e-16;
-      PCFactorSetZeroPivot(_pc, zero);
-      PCFactorSetShiftType(_pc, MAT_SHIFT_NONZERO);
+      SetPreconditioner(_ksp,_pc);
     }
   }
 
-// ================================================
+  // ================================================
 
   void GmresPetscLinearEquationSolver::MGinit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver) {
 
@@ -216,7 +209,7 @@ namespace femus {
     }
   };
 
-// ================================================
+  // ================================================
 
   void GmresPetscLinearEquationSolver::MGsetLevels(
     LinearEquationSolver* LinSolver, const unsigned& level, const unsigned& levelMax,
@@ -231,8 +224,17 @@ namespace femus {
     PC pcMG;
     KSPGetPC(*kspMG, &pcMG);
 
-    KSP subksp;
 
+    if(_pmatIsInitialized) MatDestroy(&_pmat);
+    PetscMatrix* KKp = static_cast<PetscMatrix*>(_KK);
+    Mat KK = KKp->mat();
+    MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
+    MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
+    MatZeroRows(_pmat, _bdcIndex[0].size(), &_bdcIndex[0][0], 1.e100, 0, 0);
+    _pmatIsInitialized = true;
+
+
+    KSP subksp;
     if(level == 0) {
       PCMGGetCoarseSolve(pcMG, &subksp);
     }
@@ -240,34 +242,16 @@ namespace femus {
       PCMGGetSmoother(pcMG, level , &subksp);
       KSPSetTolerances(subksp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npre);
     }
-
-    this->set_petsc_solver_type(subksp);
-
-    if(_pmatIsInitialized) MatDestroy(&_pmat);
-
-    PetscMatrix* KKp = static_cast<PetscMatrix*>(_KK);
-    Mat KK = KKp->mat();
-
-    MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
-    MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-    MatZeroRows(_pmat, _bdcIndex[0].size(), &_bdcIndex[0][0], 1.e100, 0, 0);
-    _pmatIsInitialized = true;
-
+    this->SetPetscSolverType(subksp);
     std::ostringstream levelName;
     levelName << "level-" << level;
-
     KSPSetOptionsPrefix(subksp, levelName.str().c_str());
     KSPSetFromOptions(subksp);
     KSPSetOperators(subksp, KK, _pmat);
-
     PC subpc;
     KSPGetPC(subksp, &subpc);
-    //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
+    SetPreconditioner(subksp,subpc);
 
-    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpc);
-    PetscReal zero = 1.e-16;
-    PCFactorSetZeroPivot(subpc, zero);
-    PCFactorSetShiftType(subpc, MAT_SHIFT_NONZERO);
 
     if(level < levelMax) {
       PetscVector* EPSp = static_cast< PetscVector* >(_EPS);
@@ -295,17 +279,16 @@ namespace femus {
         KSP subkspUp;
         PCMGGetSmootherUp(pcMG, level , &subkspUp);
         KSPSetTolerances(subkspUp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npost);
-        this->set_petsc_solver_type(subkspUp);
+        this->SetPetscSolverType(subkspUp);
         KSPSetPC(subkspUp, subpc);
         PC subpcUp;
         KSPGetPC(subkspUp, &subpcUp);
-        //PCASMSetLocalType(subpcUp, PC_COMPOSITE_MULTIPLICATIVE);
         KSPSetUp(subkspUp);
       }
     }
   }
 
-// ================================================
+  // ================================================
 
   void GmresPetscLinearEquationSolver::MGsolve(const bool ksp_clean) {
 
@@ -356,24 +339,18 @@ namespace femus {
 #endif
   }
 
-// ================================================
+  // ================================================
 
-  void GmresPetscLinearEquationSolver::clear() {
-
-    if(_pmatIsInitialized) {
-      _pmatIsInitialized = false;
-      MatDestroy(&_pmat);
-    }
-
-    if(this->initialized()) {
-      this->_is_initialized = false;
-      KSPDestroy(&_ksp);
-    }
+  void GmresPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc){
+    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpc);
+    PetscReal zero = 1.e-16;
+    PCFactorSetZeroPivot(subpc, zero);
+    PCFactorSetShiftType(subpc, MAT_SHIFT_NONZERO);
   }
 
-// ================================================
+  // ================================================
 
-  void GmresPetscLinearEquationSolver::set_petsc_solver_type(KSP& ksp) {
+  void GmresPetscLinearEquationSolver::SetPetscSolverType(KSP& ksp) {
     int ierr = 0;
 
     switch(this->_solver_type) {
@@ -451,7 +428,10 @@ namespace femus {
     }
   }
 
-// ========================================================
+
+  // ========================================================
+
+  /** @deprecated, remove soon */
 
   std::pair<unsigned int, double> GmresPetscLinearEquationSolver::solve(SparseMatrix&  matrix_in,
       SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
@@ -596,7 +576,7 @@ namespace femus {
       ierr = KSPSetInitialGuessNonzero(_ksp, PETSC_TRUE);
       CHKERRABORT(MPI_COMM_WORLD, ierr);
       // Set user-specified  solver and preconditioner types
-      this->set_petsc_solver_type(_ksp);
+      this->SetPetscSolverType(_ksp);
       // Set the options from user-input
       // Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
       //  These options will override those specified above as long as

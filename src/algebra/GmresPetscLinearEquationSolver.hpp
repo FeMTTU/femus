@@ -40,51 +40,54 @@ namespace femus {
     public:
 
       /**  Constructor. Initializes Petsc data structures */
-      GmresPetscLinearEquationSolver( const unsigned &igrid, Mesh *other_mesh );
+      GmresPetscLinearEquationSolver(const unsigned &igrid, Mesh *other_mesh);
 
       /// Destructor.
       ~GmresPetscLinearEquationSolver();
 
+    protected:
       /// Release all memory and clear data structures.
       void clear();
 
-      void set_tolerances( const double &rtol, const double &atol,
-                           const double &divtol, const unsigned &maxits,
-                           const unsigned &restart );
+      void set_tolerances(const double &rtol, const double &atol,
+                          const double &divtol, const unsigned &maxits,
+                          const unsigned &restart);
 
-      void init( Mat& Amat, Mat &Pmat );
+      void init(Mat& Amat, Mat &Pmat);
 
-      void solve( const vector <unsigned>& variable_to_be_solved, const bool &ksp_clean );
+      void solve(const vector <unsigned>& variable_to_be_solved, const bool &ksp_clean);
 
-      void BuildBdcIndex( const vector <unsigned> &variable_to_be_solved );
+      void MGinit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver = KSPGMRES);
 
-      void MGinit( const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver = KSPGMRES );
+      void MGsetLevels(LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
+                       const vector <unsigned> &variable_to_be_solved,
+                       SparseMatrix* PP, SparseMatrix* RR,
+                       const unsigned &npre, const unsigned &npost);
 
-      void MGsetLevels( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
-                        const vector <unsigned> &variable_to_be_solved,
-                        SparseMatrix* PP, SparseMatrix* RR,
-                        const unsigned &npre, const unsigned &npost );
+      virtual void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved);
 
-      void MGsolve( const bool ksp_clean );
+      virtual void SetPreconditioner(KSP& subksp, PC& subpc);
 
-      void MGclear() {
+      void MGsolve(const bool ksp_clean);
+
+      inline void MGclear() {
         KSPDestroy(&_ksp);
       }
 
-      KSP* GetKSP() {
+      inline KSP* GetKSP() {
         return &_ksp;
       };
 
       ///  Set the user-specified solver stored in \p _solver_type
-      void set_petsc_solver_type( KSP &ksp );
+      void SetPetscSolverType(KSP &ksp);
 
       /** @deprecated, remove soon */
-      std::pair<unsigned int, double> solve( SparseMatrix&  matrix_in,
-                                             SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
-                                             const double tol,   const unsigned int m_its );
+      std::pair<unsigned int, double> solve(SparseMatrix&  matrix_in,
+                                            SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
+                                            const double tol,   const unsigned int m_its);
 
       /** @deprecated, remove soon */
-      void init( SparseMatrix* matrix );
+      void init(SparseMatrix* matrix);
 
     protected:
 
@@ -106,10 +109,12 @@ namespace femus {
 
   };
 
-  inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver( const unsigned &igrid, Mesh* other_msh )
-    : LinearEquationSolver( igrid, other_msh ) {
+  // =============================================
 
-    if( igrid == 0 ) {
+  inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver(const unsigned &igrid, Mesh* other_msh)
+    : LinearEquationSolver(igrid, other_msh) {
+
+    if(igrid == 0) {
       this->_preconditioner_type = MLU_PRECOND;
       this->_solver_type         = PREONLY;
     }
@@ -129,10 +134,25 @@ namespace femus {
 
   }
 
-// =============================================
+  // =============================================
 
   inline GmresPetscLinearEquationSolver::~GmresPetscLinearEquationSolver() {
     this->clear();
+  }
+
+  // ================================================
+
+  inline void GmresPetscLinearEquationSolver::clear() {
+
+    if(_pmatIsInitialized) {
+      _pmatIsInitialized = false;
+      MatDestroy(&_pmat);
+    }
+
+    if(this->initialized()) {
+      this->_is_initialized = false;
+      KSPDestroy(&_ksp);
+    }
   }
 
 } //end namespace femus
