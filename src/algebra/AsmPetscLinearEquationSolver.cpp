@@ -305,7 +305,8 @@ namespace femus {
 
   void AsmPetscLinearEquationSolver::solve(const vector <unsigned>& variable_to_be_solved, const bool& ksp_clean) {
 
-    PetscLogDouble t1; PetscLogDouble t2;
+    PetscLogDouble t1;
+    PetscLogDouble t2;
     PetscTime(&t1);
 
     PetscVector* EPSCp = static_cast<PetscVector*>(_EPSC);
