@@ -279,7 +279,7 @@ int main(int argc,char **args) {
 
   system.SetNonLinearConvergenceTolerance(1.e-9);
   system.SetResidualUpdateConvergenceTolerance(1.e-15);
-  if (simulation == 3) system.SetResidualUpdateConvergenceTolerance(1.e-10);
+  if (simulation == 3) system.SetResidualUpdateConvergenceTolerance(1.e-8);
   system.SetMaxNumberOfNonLinearIterations(15);
   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(5);
 
@@ -499,7 +499,7 @@ bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char
       value=0;
     }
     else if(2==facename ){  //top side
-      test=0;
+      test=1;
       value=0.;
     }
     else if(3==facename ){  //top bottom
@@ -525,7 +525,7 @@ bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char
       value=0;
     }
     else if(2==facename ){  //top side
-      test=0;
+      test=1;
       value=0.;
     }
     else if(3==facename ){  //top bottom

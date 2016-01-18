@@ -140,13 +140,13 @@ namespace femus {
         std::cout << std::endl << " ********* Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
 
         if( _MGsolver ) {
-          _LinSolver[igridn - 1u]->MGinit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
+          _LinSolver[igridn - 1u]->MGInit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
 
           for( unsigned i = 0; i < igridn; i++ ) {
             if( _RR[i] )
-              _LinSolver[i]->MGsetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
+              _LinSolver[i]->MGSetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
             else
-              _LinSolver[i]->MGsetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
+              _LinSolver[i]->MGSetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
           }
         }
 
@@ -166,13 +166,13 @@ namespace femus {
           _LinSolver[igridn - 1u]->SetResZero();
           _assembleMatrix = false;
           _assemble_system_function( _equation_systems );
-          
+
         }
 
         std::cout << "\n ********* Residual Update-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
                   << static_cast<double>( ( clock() - startUpdateResidualTime ) ) / CLOCKS_PER_SEC << std::endl;
 
-        if( _MGsolver ) _LinSolver[igridn - 1u]->MGclear();
+        if( _MGsolver ) _LinSolver[igridn - 1u]->MGClear();
 
         double nonLinearEps;
         bool nonLinearIsConverged = IsNonLinearConverged( igridn - 1, nonLinearEps );

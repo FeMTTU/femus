@@ -37,7 +37,7 @@ namespace femus {
 // ----------------------- functions ------
 // ==============================================
 
-  void GmresPetscLinearEquationSolver::set_tolerances(const double& rtol, const double& atol, const double& divtol,
+  void GmresPetscLinearEquationSolver::SetTolerances(const double& rtol, const double& atol, const double& divtol,
                                                       const unsigned& maxits, const unsigned& restart) {
     _rtol    = static_cast<PetscReal>(rtol);
     _abstol  = static_cast<PetscReal>(atol);
@@ -98,7 +98,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::solve(const vector <unsigned>& variable_to_be_solved, const bool& ksp_clean) {
+  void GmresPetscLinearEquationSolver::Solve(const vector <unsigned>& variable_to_be_solved, const bool& ksp_clean) {
 
     PetscLogDouble t1;
     PetscTime(&t1);
@@ -119,7 +119,7 @@ namespace femus {
       MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
       MatZeroRows(_pmat, _bdcIndex[0].size(), &_bdcIndex[0][0], 1.e100, 0, 0);
       _pmatIsInitialized = true;
-      this->init(KK, _pmat);
+      this->Init(KK, _pmat);
     }
     //END ASSEMBLE
 
@@ -153,9 +153,8 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::init(Mat& Amat, Mat& Pmat) {
+  void GmresPetscLinearEquationSolver::Init(Mat& Amat, Mat& Pmat) {
 
-    // Initialize PETSC KSP and PC objects
     if(!this->initialized())    {
       this->_is_initialized = true;
 
@@ -181,7 +180,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::MGinit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver) {
+  void GmresPetscLinearEquationSolver::MGInit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver) {
 
     KSPCreate(PETSC_COMM_WORLD, &_ksp);
 
@@ -211,7 +210,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::MGsetLevels(
+  void GmresPetscLinearEquationSolver::MGSetLevels(
     LinearEquationSolver* LinSolver, const unsigned& level, const unsigned& levelMax,
     const vector <unsigned>& variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR,
     const unsigned& npre, const unsigned& npost) {
@@ -291,7 +290,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::MGsolve(const bool ksp_clean) {
+  void GmresPetscLinearEquationSolver::MGSolve(const bool ksp_clean) {
 
     PetscLogDouble t1;
     PetscLogDouble t2;

@@ -183,18 +183,18 @@ namespace femus {
       std::cout << std::endl << " ****** Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
 
       if( _MGsolver ) {
-        _LinSolver[igridn - 1u]->MGinit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
+        _LinSolver[igridn - 1u]->MGInit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
 
         for( unsigned i = 0; i < igridn; i++ ) {
           if( _RR[i] )
-            _LinSolver[i]->MGsetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
+            _LinSolver[i]->MGSetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
           else
-            _LinSolver[i]->MGsetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
+            _LinSolver[i]->MGSetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
         }
 
         MGVcycle( igridn, mgSmootherType );
 
-        _LinSolver[igridn - 1u]->MGclear();
+        _LinSolver[igridn - 1u]->MGClear();
       }
       else MLVcycle( igridn );
 
@@ -263,7 +263,7 @@ namespace femus {
 
       std::cout << std::endl << " *************** Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
       bool ksp_clean = !linearIterator * _assembleMatrix;
-      _LinSolver[gridn - 1u]->MGsolve( ksp_clean );
+      _LinSolver[gridn - 1u]->MGSolve( ksp_clean );
       _solution[gridn - 1u]->UpdateRes( _SolSystemPdeIndex, _LinSolver[gridn - 1u]->_RES, _LinSolver[gridn - 1u]->KKoffset );
       linearIsConverged = IsLinearConverged( gridn - 1u );
 
@@ -296,7 +296,7 @@ namespace femus {
       for( unsigned ig = gridn - 1u; ig > 0; ig-- ) {
         // ============== Presmoothing ==============
         for( unsigned k = 0; k < _npre; k++ ) {
-          _LinSolver[ig]->solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
+          _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
         }
 
         // ============== AMR Restriction ==============
@@ -304,7 +304,7 @@ namespace femus {
       }
 
       // ============== Direct Solver ==============
-      _LinSolver[0]->solve( _VariablesToBeSolvedIndex, ksp_clean );
+      _LinSolver[0]->Solve( _VariablesToBeSolvedIndex, ksp_clean );
 
       for( unsigned ig = 1; ig < gridn; ig++ ) {
         // ============== Standard Prolongation ==============
@@ -312,7 +312,7 @@ namespace femus {
 
         // ============== PostSmoothing ==============
         for( unsigned k = 0; k < _npost; k++ ) {
-          _LinSolver[ig]->solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
+          _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
         }
       }
 
@@ -418,9 +418,8 @@ namespace femus {
     BuildProlongatorMatrix( _gridn );
 
     _LinSolver[_gridn]->set_solver_type( _finegridsolvertype );
-    _LinSolver[_gridn]->set_tolerances( _rtol, _atol, _divtol, _maxits, _restart );
+    _LinSolver[_gridn]->SetTolerances( _rtol, _atol, _divtol, _maxits, _restart );
     _LinSolver[_gridn]->set_preconditioner_type( _finegridpreconditioner );
-    _LinSolver[_gridn]->SetDirichletBCsHandling( _DirichletBCsHandlingMode );
 
     if( _numblock_test ) {
       unsigned num_block2 = std::min( _num_block, _msh[_gridn]->GetNumberOfElements() );
@@ -563,10 +562,6 @@ namespace femus {
     else { // elimination
       _DirichletBCsHandlingMode = 1;
     }
-
-    for( unsigned i = 0; i < _gridn; i++ ) {
-      _LinSolver[i]->SetDirichletBCsHandling( _DirichletBCsHandlingMode );
-    }
   }
 
   // ********************************************
@@ -668,7 +663,7 @@ namespace femus {
     _restart = restart;
 
     for( unsigned i = 0; i < _gridn; i++ ) {
-      _LinSolver[i]->set_tolerances( _rtol, _atol, _divtol, _maxits, _restart );
+      _LinSolver[i]->SetTolerances( _rtol, _atol, _divtol, _maxits, _restart );
     }
   }
 

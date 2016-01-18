@@ -47,19 +47,18 @@ namespace femus {
 
     protected:
       /// Release all memory and clear data structures.
-      void clear();
+      void Clear();
 
-      void set_tolerances(const double &rtol, const double &atol,
-                          const double &divtol, const unsigned &maxits,
-                          const unsigned &restart);
+      void SetTolerances(const double &rtol, const double &atol, const double &divtol,
+                         const unsigned &maxits, const unsigned &restart);
 
-      void init(Mat& Amat, Mat &Pmat);
+      void Init(Mat& Amat, Mat &Pmat);
 
-      void solve(const vector <unsigned>& variable_to_be_solved, const bool &ksp_clean);
+      void Solve(const vector <unsigned>& variable_to_be_solved, const bool &ksp_clean);
 
-      void MGinit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver = KSPGMRES);
+      void MGInit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver = KSPGMRES);
 
-      void MGsetLevels(LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
+      void MGSetLevels(LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
                        const vector <unsigned> &variable_to_be_solved,
                        SparseMatrix* PP, SparseMatrix* RR,
                        const unsigned &npre, const unsigned &npost);
@@ -68,9 +67,9 @@ namespace femus {
 
       virtual void SetPreconditioner(KSP& subksp, PC& subpc);
 
-      void MGsolve(const bool ksp_clean);
+      void MGSolve(const bool ksp_clean);
 
-      inline void MGclear() {
+      inline void MGClear() {
         KSPDestroy(&_ksp);
       }
 
@@ -142,7 +141,7 @@ namespace femus {
 
   // ================================================
 
-  inline void GmresPetscLinearEquationSolver::clear() {
+  inline void GmresPetscLinearEquationSolver::Clear() {
 
     if(_pmatIsInitialized) {
       _pmatIsInitialized = false;
