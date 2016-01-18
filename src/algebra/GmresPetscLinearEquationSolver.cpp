@@ -321,7 +321,7 @@ namespace femus {
     *_RES -= *_RESC;
     *_EPS += *_EPSC;
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
     int its;
     KSPGetIterationNumber(_ksp, &its);
 
@@ -336,7 +336,7 @@ namespace femus {
     PetscPrintf(PETSC_COMM_WORLD, " *************** Number of outer ksp solver iterations = %i \n", its);
     PetscPrintf(PETSC_COMM_WORLD, " *************** Convergence reason = %i \n", reason);
     PetscPrintf(PETSC_COMM_WORLD, " *************** Residual norm = %10.8g \n", rnorm);
-#endif
+//#endif
   }
 
   // ================================================
