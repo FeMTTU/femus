@@ -58,10 +58,10 @@ namespace femus {
 
       void MGInit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver = KSPGMRES);
 
-      void MGSetLevels(LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
-                       const vector <unsigned> &variable_to_be_solved,
-                       SparseMatrix* PP, SparseMatrix* RR,
-                       const unsigned &npre, const unsigned &npost);
+      void MGSetLevel(LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
+                      const vector <unsigned> &variable_to_be_solved,
+                      SparseMatrix* PP, SparseMatrix* RR,
+                      const unsigned &npre, const unsigned &npost);
 
       virtual void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved);
 
@@ -131,12 +131,14 @@ namespace femus {
     _bdcIndexIsInitialized = 0;
     _pmatIsInitialized = false;
 
+    _printSolverInfo = true;
+
   }
 
   // =============================================
 
   inline GmresPetscLinearEquationSolver::~GmresPetscLinearEquationSolver() {
-    this->clear();
+    this->Clear();
   }
 
   // ================================================

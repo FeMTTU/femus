@@ -125,6 +125,8 @@ public:
     /** Set the PCFIELDSPLIT structure in linear solver */
     void SetFieldSplitTree(FieldSplitTree *fieldSplitTree);
 
+    /** Set if the solver has to output convergence information **/
+    void PrintSolverInfo(const bool & printInfo = true);
 
     /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
     void SetElementBlockNumber(unsigned const &dim_vanka_block);
@@ -176,6 +178,7 @@ public:
 
 protected:
 
+    bool _printSolverInfo;
     bool _assembleMatrix;
     void AddAMRLevel( unsigned &AMRCounter);
 

@@ -145,9 +145,9 @@ namespace femus {
 
           for( unsigned i = 0; i < igridn; i++ ) {
             if( _RR[i] )
-              _LinSolver[i]->MGSetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
+              _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
             else
-              _LinSolver[i]->MGSetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
+              _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
           }
         }
 
