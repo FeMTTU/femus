@@ -265,16 +265,22 @@ namespace femus {
     //END COORDINATES
 
     //BEGIN CONNETTIVITY
-    mesh->el->LocalizeElementDofToOne( 0 );
-    if( _iproc == 0 ) {
-      unsigned icount = 0;
-      for( unsigned iel = 0; iel < mesh->GetNumberOfElements(); iel++ ) {
-        for( unsigned j = 0; j < ndofs; j++ ) {
-          unsigned vtk_loc_conn = FemusToVTKorToXDMFConn[j];
-          var_conn[icount] = mesh->GetSolutionDof( vtk_loc_conn, iel, index_nd );
-          icount++;
+    unsigned icount = 0;
+    for( unsigned isdom = 0; isdom < _nprocs; isdom++ ) {
+      mesh->el->LocalizeElementDofFromOneToOne( isdom, 0 );
+      if( _iproc == 0 ) {
+        for( unsigned iel = mesh->_elementOffset[isdom]; iel < mesh->_elementOffset[isdom + 1]; iel++ ) {
+          for( unsigned j = 0; j < ndofs; j++ ) {
+            unsigned vtk_loc_conn = FemusToVTKorToXDMFConn[j];
+            var_conn[icount] = mesh->GetSolutionDof( vtk_loc_conn, iel, index_nd );
+            icount++;
+          }
         }
       }
+      mesh->el->FreeLocalizedElementDof();
+    }
+
+    if(_iproc == 0) {
       dimsf[0] = nel * ndofs ;
       dimsf[1] = 1;
       dataspace = H5Screate_simple( 2, dimsf, NULL );
@@ -284,7 +290,7 @@ namespace femus {
       H5Sclose( dataspace );
       H5Dclose( dataset );
     }
-    mesh->el->FreeLocalizedElementDof();
+
     //END CONNETTIVITY
 
     //BEGIN METIS PARTITIONING

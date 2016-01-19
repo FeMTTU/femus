@@ -91,13 +91,12 @@ int main(int argc,char **args) {
   }
 
   // ******* Extract the preconditioner type based on the inline input *******
-  bool Vanka=0, Gmres=0, Asm=0;
+  bool Gmres=0, Asm=0;
   if(argc >= 3) {
-    if( !strcmp("vanka",args[2])) 	Vanka=1;
-    else if( !strcmp("gmres",args[2])) 	Gmres=1;
+    if( !strcmp("gmres",args[2])) 	Gmres=1;
     else if( !strcmp("asm",args[2])) 	Asm=1;
 
-    if(Vanka+Gmres+Asm==0) {
+    if(Gmres+Asm==0) {
       cout << "wrong input arguments!" << endl;
       abort();
     }
@@ -277,38 +276,34 @@ int main(int argc,char **args) {
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
-  system.SetLinearConvergenceTolerance(1.e-10);
+
   system.SetNonLinearConvergenceTolerance(1.e-9);
-  if( simulation == 7 )
-    system.SetNonLinearConvergenceTolerance(1.e-5);
+  system.SetResidualUpdateConvergenceTolerance(1.e-15);
+  system.SetMaxNumberOfNonLinearIterations(15);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(5);
+  if (simulation == 3) {
+    system.SetResidualUpdateConvergenceTolerance(1.e-8);
+    system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
+  }
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
 
-  if( simulation < 3 || simulation == 7 ) {
-    system.SetMaxNumberOfLinearIterations(3);
-    system.SetMaxNumberOfNonLinearIterations(10);
-  }
-  else {
-    system.SetMaxNumberOfLinearIterations(3);
-    system.SetMaxNumberOfNonLinearIterations(15);
-  }
-
   // ******* Set Preconditioner *******
   if(Gmres) 		system.SetMgSmoother(GMRES_SMOOTHER);
   else if(Asm) 		system.SetMgSmoother(ASM_SMOOTHER);
-  else if(Vanka)	system.SetMgSmoother(VANKA_SMOOTHER);
 
   system.init();
 
   // ******* Set Smoother *******
-  system.SetSolverFineGrids(GMRES);
-  if( simulation < 3 || simulation > 5 )
-    system.SetPreconditionerFineGrids(ILU_PRECOND);
-  else
+  system.SetSolverFineGrids(RICHARDSON);
+  //system.SetSolverFineGrids(GMRES);
+
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  if( simulation == 3 )
     system.SetPreconditionerFineGrids(MLU_PRECOND);
 
-  system.SetTolerances(1.e-12,1.e-20,1.e+50,5);
+  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
@@ -318,18 +313,7 @@ int main(int argc,char **args) {
   system.SetNumberOfSchurVariables(1);
 
   // ******* Set block size for the ASM smoothers *******
-  if(simulation < 3){
-    system.SetElementBlockNumber(2);
-  }
-  else if(simulation < 7 ){
-    system.SetElementBlockNumber(2);
-    //system.SetElementBlockNumberFluid(2);
-    //system.SetElementBlockSolidAll();
-    //system.SetElementBlockFluidAll();
-  }
-  else if(simulation == 7 ){
-    system.SetElementBlockNumber(2);
-  }
+  system.SetElementBlockNumber(2);
 
   // ******* For Gmres Preconditioner only *******
   //system.SetDirichletBCsHandling(ELIMINATION);
@@ -514,11 +498,11 @@ bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char
   value=0.;
   if(!strcmp(name,"U")) {
     if(1==facename){   //top
-      test=0;
-      value=0;
+      test=1;
+      value=0.;
     }
     else if(2==facename ){  //top side
-      test=0;
+      test=1;
       value=0.;
     }
     else if(3==facename ){  //top bottom
@@ -544,7 +528,7 @@ bool SetBoundaryConditionBathe_2D_FSI(const std::vector < double >& x,const char
       value=0;
     }
     else if(2==facename ){  //top side
-      test=0;
+      test=1;
       value=0.;
     }
     else if(3==facename ){  //top bottom

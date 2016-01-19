@@ -1,3 +1,20 @@
+/*=========================================================================
+
+  Program: FEMUS
+  Module: FieldSplitPetscLinearEquationSolver
+  Authors: Eugenio Aulisa, Guoyi Ke
+
+  Copyright (c) FEMTTU
+  All rights reserved.
+
+  This software is distributed WITHOUT ANY WARRANTY; without even
+  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  PURPOSE.  See the above copyright notice for more information.
+
+  =========================================================================*/
+
+
+
 
 #include "FieldSplitTree.hpp"
 
@@ -203,15 +220,32 @@ namespace femus {
       for( unsigned i = 0; i < _numberOfSplits; i++ ) { 
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
       }
-//      KSPSetUp( ksp ); 
-      PCSetUp(pc);// I change KSPSetUp(ksp)to PCSetUp(PC);
+      PCSetUp(pc);
       KSP* subksp;
       PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
       PCFieldSplitGetSubKSP( pc, &nlocal, &subksp );
       for( unsigned i = 0; i < _numberOfSplits; i++ ) {
         _child[i]->SetPC( subksp[i], level );
       }
-      PetscFree(subksp);// I add PetscFree(subksp);
+      PetscFree(subksp);
+    }
+    else if( _preconditioner == FS_SCHUR_PRECOND ) {
+      PetscPreconditioner::set_petsc_preconditioner_type( FIELDSPLIT_PRECOND, pc );
+      
+      PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR );
+      PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_LOWER);
+      
+      for( int i = 0; i < _numberOfSplits; i++ ) {
+        PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
+      }
+      PCSetUp(pc);
+      KSP* subksp;
+      PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
+      PCFieldSplitGetSubKSP( pc, &nlocal, &subksp );
+      for( unsigned i = 0; i < _numberOfSplits; i++ ) {
+        _child[i]->SetPC( subksp[i], level );
+      }
+      PetscFree(subksp);
     }
     else {
       _rtol = 1.e-3;
