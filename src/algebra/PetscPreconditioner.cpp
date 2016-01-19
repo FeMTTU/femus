@@ -155,11 +155,11 @@ void PetscPreconditioner::set_petsc_preconditioner_type
     ierr = PCSetType (pc, (char*) PCASM);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
     break;
-    
+
   case FIELDSPLIT_PRECOND:
     ierr = PCSetType (pc, (char*) PCFIELDSPLIT);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
-    break;  
+    break;
 
   case JACOBI_PRECOND:
     ierr = PCSetType (pc, (char*) PCJACOBI);

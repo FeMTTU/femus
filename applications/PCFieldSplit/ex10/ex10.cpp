@@ -61,7 +61,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 7;
+  unsigned numberOfUniformLevels = 8;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -157,39 +157,36 @@ int main(int argc, char** args) {
 
 
   //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz preconditioner
+  //system.SetMgSmoother(ASM_SMOOTHER); // Field-Split preconditioned
 
-  //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
-  system.SetMaxNumberOfNonLinearIterations(20);
-  system.SetMaxNumberOfLinearIterations(3);
-  system.SetLinearConvergenceTolerance(1.e-12);
+  system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
+  system.SetResidualUpdateConvergenceTolerance(1.e-12);
+
   system.SetMgType(F_CYCLE);
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
-
   // initilaize and solve the system
   system.init();
 
-  system.SetSolverFineGrids(GMRES);
+  //system.SetSolverFineGrids(GMRES);
+  system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-
   system.SetFieldSplitTree(&FS_NST);
-
-  //system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40);
-  system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
-
+  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 10);
+  //system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
-  //system.SetDirichletBCsHandling(ELIMINATION);
-  //system.solve();
+
   system.MGsolve();
 
   // print solutions

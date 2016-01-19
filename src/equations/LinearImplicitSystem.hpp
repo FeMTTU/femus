@@ -94,12 +94,12 @@ public:
 
     /** Get the absolute convergence tolerance for the linear problem Ax=b*/
     double GetAbsoluteConvergenceTolerance() const {
-        return _absolute_convergence_tolerance;
+        return _linearAbsoluteConvergenceTolerance;
     };
 
     /** Set the absolute convergence tolerance for the linear problem Ax=b*/
-    void SetLinearConvergenceTolerance(double absolute_convergence_tolerance) {
-        _absolute_convergence_tolerance = absolute_convergence_tolerance;
+    void SetAbsoluteLinearConvergenceTolerance( const double & absolute_convergence_tolerance) {
+        _linearAbsoluteConvergenceTolerance = absolute_convergence_tolerance;
     };
 
     /** */
@@ -125,6 +125,8 @@ public:
     /** Set the PCFIELDSPLIT structure in linear solver */
     void SetFieldSplitTree(FieldSplitTree *fieldSplitTree);
 
+    /** Set if the solver has to output convergence information **/
+    void PrintSolverInfo(const bool & printInfo = true);
 
     /** Set the number of elements of a Vanka block. The formula is nelem = (2^dim)^dim_vanka_block */
     void SetElementBlockNumber(unsigned const &dim_vanka_block);
@@ -139,8 +141,12 @@ public:
     void SetPreconditionerFineGrids(const PreconditionerType preconditioner_type);
 
     /** Set the tolerances for the ksp solver on fine grids: rtol, atol, divtol, maxits */
-    void SetTolerances(const double rtol, const double atol,
-                       const double divtol, const unsigned maxits);
+    void SetTolerances(const double &rtol, const double &atol,
+                       const double &divtol, const unsigned &maxits,
+                       const unsigned &restart = 30);
+
+
+    void SetOuterKSPSolver(const std::string outer_ksp_solver) {_outer_ksp_solver = outer_ksp_solver;};
 
      /** Set AMR options */
     void SetAMRSetOptions(const std::string& AMR, const unsigned &AMRlevels,
@@ -168,12 +174,16 @@ public:
 
     vector < SparseMatrix* > _PP, _RR; /// @todo put it back to protected
 
+    bool GetAssembleMatrix(){ return _assembleMatrix;}
+
 protected:
 
+    bool _printSolverInfo;
+    bool _assembleMatrix;
     void AddAMRLevel( unsigned &AMRCounter);
 
-    void MLVcycle(const unsigned &gridn);
-    void MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
+    bool MLVcycle(const unsigned &gridn);
+    bool MGVcycle (const unsigned & gridn, const MgSmootherType& mgSmootherType);
 
 
     /** Create the Prolongator matrix for the Multigrid solver */
@@ -196,10 +206,13 @@ protected:
     double _final_linear_residual;
 
     /** The threshold residual for the linear system Ax=b. */
-    double _absolute_convergence_tolerance;
+    double _linearAbsoluteConvergenceTolerance;
 
     /** The max number of linear iterations */
     unsigned int _n_max_linear_iterations;
+
+    /** The ksp outer solver*/
+    std::string _outer_ksp_solver;
 
     /** The type of multigrid, F-cyle, V-cycle, M-cycle */
     MgType _mg_type;
@@ -220,7 +233,7 @@ protected:
 
     SolverType _finegridsolvertype;
     unsigned int _DirichletBCsHandlingMode;
-    double _rtol,_atol,_divtol,_maxits;
+    double _rtol,_atol,_divtol,_maxits, _restart;
     PreconditionerType _finegridpreconditioner;
 
     bool _numblock_test;

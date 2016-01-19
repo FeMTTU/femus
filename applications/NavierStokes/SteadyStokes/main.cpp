@@ -30,13 +30,12 @@ bool SetBoundaryCondition(const std::vector < double >& x,const char name[],
 
 int main(int argc,char **args) {
 
-  bool Vanka=0, Gmres=0, Asm=0;
+  bool Gmres=0, Asm=0;
   if(argc >= 2) {
-    if( !strcmp("vanka",args[1])) 	Vanka=1;
-    else if( !strcmp("gmres",args[1])) 	Gmres=1;
+    if( !strcmp("gmres",args[1])) 	Gmres=1;
     else if( !strcmp("asm",args[1])) 	Asm=1;
 
-    if(Vanka+Gmres+Asm==0) {
+    if(Gmres+Asm==0) {
       cout << "wrong input arguments!" << endl;
       exit(0);
     }
@@ -132,7 +131,7 @@ int main(int argc,char **args) {
   // Set MG Options
   system1.SetAssembleFunction(AssembleMatrixResSteadyStokes);
   system1.SetMaxNumberOfLinearIterations(2);
-  system1.SetLinearConvergenceTolerance(1.e-10);
+  system1.SetAbsoluteLinearConvergenceTolerance(1.e-10);
   system1.SetMgType(F_CYCLE);
   system1.SetNumberPreSmoothingStep(1);
   system1.SetNumberPostSmoothingStep(1);
@@ -140,7 +139,6 @@ int main(int argc,char **args) {
   //Set Smoother Options
   if(Gmres) 		system1.SetMgSmoother(GMRES_SMOOTHER);
   else if(Asm) 		system1.SetMgSmoother(ASM_SMOOTHER);
-  else if(Vanka)	system1.SetMgSmoother(VANKA_SMOOTHER);
 
   system1.init();
   //common smoother options

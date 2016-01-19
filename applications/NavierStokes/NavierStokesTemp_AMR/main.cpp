@@ -29,15 +29,14 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[],
 
 int main(int argc,char **args) {
 
-  bool Vanka=0, Gmres=0, Asm=0;
-  if(argc >= 2) {
-    if( !strcmp("vanka",args[1])) 	Vanka=1;
-    else if( !strcmp("gmres",args[1])) 	Gmres=1;
-    else if( !strcmp("asm",args[1])) 	Asm=1;
+  bool Gmres=0, Asm=0;
+  if(argc >= 3) {
+    if( !strcmp("gmres",args[2]))       Gmres=1;
+    else if( !strcmp("asm",args[2]))    Asm=1;
 
-    if(Vanka+Gmres+Asm==0) {
+    if(Gmres+Asm==0) {
       cout << "wrong input arguments!" << endl;
-      exit(0);
+      abort();
     }
   }
   else {
@@ -128,7 +127,7 @@ int main(int argc,char **args) {
   system1.SetAssembleFunction(AssembleMatrixResNS);
   system1.SetMaxNumberOfNonLinearIterations(3);
   system1.SetMaxNumberOfLinearIterations(2);
-  system1.SetLinearConvergenceTolerance(1.e-10);
+  system1.SetAbsoluteLinearConvergenceTolerance(1.e-10);
   system1.SetNonLinearConvergenceTolerance(1.e-04);
   system1.SetMgType(F_CYCLE);
   system1.SetNumberPreSmoothingStep(1);
@@ -137,7 +136,6 @@ int main(int argc,char **args) {
   //Set Smoother Options
   if(Gmres) 		system1.SetMgSmoother(GMRES_SMOOTHER);
   else if(Asm) 		system1.SetMgSmoother(ASM_SMOOTHER);
-  else if(Vanka)	system1.SetMgSmoother(VANKA_SMOOTHER);
 
   system1.init();
 
@@ -180,7 +178,7 @@ int main(int argc,char **args) {
 //   // Set MG Options
 //   system2.SetAssembleFunction(AssembleMatrixResT);
 //   system2.SetMaxNumberOfLinearIterations(6);
-//   system2.SetLinearConvergenceTolerance(1.e-9);
+//   system2.SetAbsoluteLinearConvergenceTolerance(1.e-9);
 //   system2.SetMgType(V_CYCLE);
 //   system2.SetNumberPreSmoothingStep(1);
 //   system2.SetNumberPostSmoothingStep(1);

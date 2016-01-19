@@ -214,7 +214,7 @@ int main(int argc, char** argv) {
   system2.SetMaxNumberOfLinearIterations(max_number_linear_iteration);
 
   double abs_conv_tol = inputparser->getValue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.abs_conv_tol", 1.e-08);
-  system2.SetLinearConvergenceTolerance(abs_conv_tol);
+  system2.SetAbsoluteLinearConvergenceTolerance(abs_conv_tol);
 
   MgType mgtype = inputparser->getValue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.mgtype", V_CYCLE);
   system2.SetMgType(mgtype);
@@ -231,9 +231,6 @@ int main(int argc, char** argv) {
   else if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "asm")) {
     system2.SetMgSmoother(ASM_SMOOTHER);
   }
-  else if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "vanka")) {
-    system2.SetMgSmoother(VANKA_SMOOTHER);
-  }
 
   system2.init();
   //common smoother option
@@ -244,8 +241,7 @@ int main(int argc, char** argv) {
   system2.ClearVariablesToBeSolved();
   system2.AddVariableToBeSolved("All");
 
-  if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "asm") ||
-      inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "vanka")) {
+  if (inputparser->isTrue("multilevel_problem.multilevel_mesh.first.system.poisson.linear_solver.type.multigrid.smoother.type", "asm")) {
     system2.SetNumberOfSchurVariables(0);
     system2.SetElementBlockNumber(4);
   }

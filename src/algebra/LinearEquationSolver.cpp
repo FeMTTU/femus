@@ -26,7 +26,7 @@
 // Local Includes
 #include "AsmPetscLinearEquationSolver.hpp"
 #include "GmresPetscLinearEquationSolver.hpp"
-#include "VankaPetscLinearEquationSolver.hpp"
+//#include "VankaPetscLinearEquationSolver.hpp"
 #include "FieldSplitPetscLinearEquationSolver.hpp"
 #include "Preconditioner.hpp"
 
@@ -46,10 +46,6 @@ namespace femus {
       }
       case GMRES_SMOOTHER:{
       	std::auto_ptr<LinearEquationSolver> ap(new GmresPetscLinearEquationSolver(igrid, other_mesh));
-	return ap;
-      }
-      case VANKA_SMOOTHER:{
-	std::auto_ptr<LinearEquationSolver> ap(new VankaPetscLinearEquationSolver(igrid, other_mesh));
 	return ap;
       }
       case FIELDSPLIT_SMOOTHER:{

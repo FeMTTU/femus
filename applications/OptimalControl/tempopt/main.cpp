@@ -222,7 +222,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
 
   // ******* set MG-Solver *******
   sys->SetMgType(F_CYCLE);
-  sys->SetLinearConvergenceTolerance(1.e-10);
+  sys->SetAbsoluteLinearConvergenceTolerance(1.e-10);
   sys->SetNonLinearConvergenceTolerance(1.e-10);//1.e-5
   sys->SetNumberPreSmoothingStep(1);
   sys->SetNumberPostSmoothingStep(1);
