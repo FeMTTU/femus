@@ -227,6 +227,24 @@ namespace femus {
       }
       PetscFree(subksp);
     }
+    else if( _preconditioner == FS_SCHUR_PRECOND ) {
+      PetscPreconditioner::set_petsc_preconditioner_type( FIELDSPLIT_PRECOND, pc );
+      
+      PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR );
+      PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_FULL);
+      
+      for( int i = 0; i < _numberOfSplits; i++ ) {
+        PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
+      }
+      PCSetUp(pc);
+      KSP* subksp;
+      PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
+      PCFieldSplitGetSubKSP( pc, &nlocal, &subksp );
+      for( unsigned i = 0; i < _numberOfSplits; i++ ) {
+        _child[i]->SetPC( subksp[i], level );
+      }
+      PetscFree(subksp);
+    }
     else {
       _rtol = 1.e-3;
       _abstol = 1.e-20;

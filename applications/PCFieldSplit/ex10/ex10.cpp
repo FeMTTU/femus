@@ -61,7 +61,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 8;
+  unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -113,7 +113,26 @@ int main(int argc, char** args) {
   fieldUVP[2] = system.GetSolPdeIndex("P");
 
   FieldSplitTree FS_NS( PREONLY, ILU_PRECOND, fieldUVP, "Navier-Stokes");
-
+  
+//   std::vector < unsigned > fieldUV(2);
+//   fieldUV[0] = system.GetSolPdeIndex("U");
+//   fieldUV[1] = system.GetSolPdeIndex("V");
+// 
+//   FieldSplitTree FS_UV( PREONLY, ILU_PRECOND, fieldUV, "Velocity");
+//   
+//   std::vector < unsigned > fieldP(1);
+//   fieldP[0] = system.GetSolPdeIndex("P");
+//   
+//   FieldSplitTree FS_P( PREONLY, ILU_PRECOND, fieldP, "pressure");
+//   
+//    std::vector < FieldSplitTree *> FS1;
+//   
+//   FS1.reserve(2);
+//   FS1.push_back(&FS_UV);
+//   FS1.push_back(&FS_P);
+//   FieldSplitTree FS_NS( GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
+  
+  
   std::vector < unsigned > fieldT(1);
   fieldT[0] = system.GetSolPdeIndex("T");
   FieldSplitTree FS_T( PREONLY, ILU_PRECOND, fieldT, "Temperature");
@@ -124,6 +143,7 @@ int main(int argc, char** args) {
   FS2.push_back(&FS_NS);
   FS2.push_back(&FS_T);
   FieldSplitTree FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
+  //FieldSplitTree FS_NST( GMRES, FS_SCHUR_PRECOND, FS2, "Benard");
 
 //   std::vector < unsigned > fieldUV(2);
 //   fieldUV[0] = system.GetSolPdeIndex("U");
@@ -180,7 +200,7 @@ int main(int argc, char** args) {
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetFieldSplitTree(&FS_NST);
   system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 10);
-  //system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
+  //ksystem.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
