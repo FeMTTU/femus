@@ -117,9 +117,9 @@ int main(int argc, char** args) {
   system.SetMaxNumberOfLinearIterations(3);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
-  system.SetMgType(F_CYCLE); // Q1 What's F cycle
+  system.SetMgType(F_CYCLE); 
 
-  system.SetNumberPreSmoothingStep(0);  // Q2 What's Pre (post) smoothing step? Is related to smoothstep?
+  system.SetNumberPreSmoothingStep(0);  
   system.SetNumberPostSmoothingStep(2);
   // initilaize and solve the system
   system.init();
@@ -130,7 +130,7 @@ int main(int argc, char** args) {
 
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4); 
-  //system.SetDirichletBCsHandling(ELIMINATION); // Q3 What's BCsHandling?
+  //system.SetDirichletBCsHandling(ELIMINATION); 
   //system.solve();
   system.MGsolve();
 
@@ -176,7 +176,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)// Q4 How to get the equation?
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   // reserve memory for the local standar vectors
@@ -229,7 +229,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
-  // element loop: each process loops only on the elements that owns // Q5 What's the loop mean(mapping between parallel dof and mesh dof)?
+  // element loop: each process loops only on the elements that owns 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);      // element geometry type
@@ -259,7 +259,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, crdXType);   // local to global mapping of the coordinate X[dim]
 
       for (unsigned k = 0; k < dim; k++) {
-        crdX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // value of the solution X[dim]  // Q6 Why does msh pointer to topology?
+        crdX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // value of the solution X[dim]  // 
       }
     }
 
@@ -277,7 +277,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
         solUig += phi[i] * solU[i];
 
         for (unsigned j = 0; j < dim; j++) {
-          gradSolUig[j] += phi_x[i * dim + j] * solU[i]; // Q7 [i * dim + j]?
+          gradSolUig[j] += phi_x[i * dim + j] * solU[i]; 
         }
       }
 
