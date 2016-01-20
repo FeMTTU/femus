@@ -30,7 +30,9 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   value = 0.;
   if (!strcmp(SolName, "V")) {
     if (facename == 2) {
-      value = 1.;
+      if(x[1]>-0.5 && x[1]<0.5){
+	value = 1.;
+      }
     }
   } else if (!strcmp(SolName, "P")) {
     dirichlet = false;
@@ -62,7 +64,7 @@ int main(int argc, char** args) {
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
+  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -115,11 +117,10 @@ int main(int argc, char** args) {
   FieldSplitTree FS_NS(GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
   
 
-
-//   system.SetMgSmoother(GMRES_SMOOTHER);
+  //system.SetMgSmoother(GMRES_SMOOTHER);
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
 
-//   system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
+  //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
@@ -155,8 +156,11 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
+  vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
+  mlMsh.PrintInfo();
+  
   return 0;
 }
 
