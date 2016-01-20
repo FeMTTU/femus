@@ -112,7 +112,7 @@ int main(int argc,char **args) {
   // System Navier-Stokes
   system.SetAssembleFunction(AssembleMatrixResNS);
   system.SetMaxNumberOfLinearIterations(1);
-  system.SetLinearConvergenceTolerance(1.e-8);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-8);
   system.SetMgType(V_CYCLE);
   system.SetMaxNumberOfNonLinearIterations(15);
 
@@ -148,7 +148,7 @@ int main(int argc,char **args) {
       print_vars.push_back("AY");
 
 //       ml_prob.printsol_vtu_inline("biquadratic",print_vars,time_step);
-      vtkio.write(files.GetOutputPath(),"biquadratic",print_vars,time_step);
+      vtkio.Write(files.GetOutputPath(),"biquadratic",print_vars,time_step);
     }
 
   } //end loop timestep

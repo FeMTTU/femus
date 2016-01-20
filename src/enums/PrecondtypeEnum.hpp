@@ -20,7 +20,8 @@ enum PreconditionerType {
     MG_PRECOND,
     SLU_PRECOND,
     MLU_PRECOND,
-    MCC_PRECOND
+    MCC_PRECOND,
+    FIELDSPLIT_PRECOND
 };
 
 

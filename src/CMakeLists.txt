@@ -13,6 +13,7 @@ algebra/DenseMatrix.cpp
 algebra/DenseSubmatrix.cpp
 algebra/DenseVectorBase.cpp
 algebra/FieldSplitPetscLinearEquationSolver.cpp
+algebra/FieldSplitTree.cpp
 algebra/Graph.cpp
 algebra/LinearEquation.cpp
 algebra/LinearEquationSolver.cpp
@@ -23,7 +24,6 @@ algebra/PetscPreconditioner.cpp
 algebra/PetscVector.cpp
 algebra/Preconditioner.cpp
 algebra/SparseMatrix.cpp
-algebra/VankaPetscLinearEquationSolver.cpp
 algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
 equations/DofMap.cpp

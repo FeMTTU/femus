@@ -115,7 +115,7 @@ int main(int argc, char** args) {
 
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetMaxNumberOfLinearIterations(3);
-  system.SetLinearConvergenceTolerance(1.e-12);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
   system.SetMgType(F_CYCLE); // Q1 What's F cycle
 

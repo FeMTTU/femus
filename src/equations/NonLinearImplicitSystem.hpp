@@ -75,7 +75,15 @@ public:
     };
 
     /** Checks for the non the linear convergence */
-    bool IsNonLinearConverged(const unsigned gridn);
+    bool IsNonLinearConverged(const unsigned gridn, double &nonLinearEps);
+
+    void SetMaxNumberOfResidualUpdatesForNonlinearIteration( const unsigned & maxNumberOfIterations){
+      _n_max_linear_iterations = 1;
+      _maxNumberOfResidualUpdateIterations = maxNumberOfIterations;
+    }
+    void SetResidualUpdateConvergenceTolerance(const double & tolerance){
+      _linearAbsoluteConvergenceTolerance = tolerance;
+    }
 
 protected:
 
@@ -87,6 +95,8 @@ protected:
 
     /** The max non linear tolerance **/
     double _max_nonlinear_convergence_tolerance;
+
+    unsigned _maxNumberOfResidualUpdateIterations;
 
     /** Solves the system. */
     virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);

@@ -30,6 +30,7 @@
 #include "LinearEquation.hpp"
 #include "MgSmootherEnum.hpp"
 #include "MgTypeEnum.hpp"
+#include "FieldSplitTree.hpp"
 
 #include <petscksp.h>
 
@@ -69,25 +70,26 @@ public:
             const MgSmoother & smoother_type, const SolverPackage solver_package =LSOLVER);
 
     /** Set the tolerance for the solver */
-    virtual void set_tolerances(const double &rtol, const double &atol,
-                                const double &divtol, const unsigned &maxits) = 0;
+    virtual void SetTolerances(const double& rtol, const double& atol,
+                               const double& divtol, const unsigned& maxits,
+                               const unsigned& restart) = 0;
 
     virtual KSP* GetKSP(){
       std::cout<<"Warning GetKSP() is not available for this smoother\n";
       abort();
     }
 
-    virtual void MGinit( const MgSmootherType &mg_smoother_type, const unsigned &levelMax ){
+    virtual void MGInit( const MgSmootherType &mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver=KSPGMRES){
       std::cout<<"Warning InitMG(...) is not available for this smoother\n";
       abort();
     }
 
-    virtual void MGclear(){
+    virtual void MGClear(){
       std::cout<<"Warning ClearMG() is not available for this smoother\n";
       abort();
     };
 
-    virtual void MGsetLevels( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
+    virtual void MGSetLevels( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
                                const vector <unsigned> &variable_to_be_solved,
                                SparseMatrix* PP, SparseMatrix* RR,
                                const unsigned &npre, const unsigned &npost
@@ -96,7 +98,7 @@ public:
       abort();
     }
 
-    virtual void MGsolve( const bool ksp_clean ) {
+    virtual void MGSolve( const bool ksp_clean ) {
       std::cout<<"Warning MGsolve(...) is not available for this smoother\n";
       abort();
     };
@@ -136,6 +138,9 @@ public:
         std::cout<<"Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
     };
 
+    virtual void SetFieldSplitTree(FieldSplitTree * fieldSplitTree) {
+        std::cout<<"SetFieldSplitTree(const FieldSpliTreeStructure & fieldSplitTree) is not available for this smoother\n";
+    };
 
     /** To be Added */
     virtual void SetElementBlockNumber(const char all[], const unsigned & overlap=1) {
@@ -147,13 +152,9 @@ public:
         std::cout<<"Warning SetNumberOfSchurVariables(const unsigned short &) is not available for this smoother\n";
     };
 
-    /** To be Added */
-    virtual void SetDirichletBCsHandling(const unsigned int &DirichletBCsHandlingMode) {
-        std::cout<<"Warning SetDirichletBCsHandling(const unsigned int &) is not available for this smoother\n";
-    };
 
     /** Call the smoother-solver using the PetscLibrary. */
-    virtual void solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) = 0;
+    virtual void Solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) = 0;
 
   /** @deprecated Old solver with algebra objects passed as arguments TODO think of removing */
   virtual std::pair<unsigned int, double> solve (SparseMatrix&,  // System Matrix

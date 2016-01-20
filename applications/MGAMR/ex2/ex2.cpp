@@ -18,6 +18,7 @@
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
+#include "XDMFWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 
@@ -46,11 +47,14 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = 0;
 
-  if (elemgroupnumber == 6 && level < 3) refine = 1;
+//   if (elemgroupnumber == 6 && level < 3) refine = 1;
+//   if (elemgroupnumber == 7 && level < 4) refine = 1;
+//   if (elemgroupnumber == 8 && level < 5) refine = 1;
 
-  if (elemgroupnumber == 7 && level < 4) refine = 1;
+  if (elemgroupnumber == 6 && level < 4) refine = 1;
+  if (elemgroupnumber == 7 && level < 5) refine = 1;
+  if (elemgroupnumber == 8 && level < 6) refine = 1;
 
-  if (elemgroupnumber == 8 && level < 5) refine = 1;
 
 //   if (elemgroupnumber==6 && level<1) refine=1;
 //   if (elemgroupnumber==7 && level<2) refine=1;
@@ -85,15 +89,15 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 3;
-  unsigned numberOfSelectiveLevels = 3;
+  unsigned numberOfUniformLevels = 8;
+  unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
-  
+
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
@@ -136,9 +140,10 @@ int main(int argc, char** args) {
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
   system.SetMaxNumberOfNonLinearIterations(10);
-  system.SetMaxNumberOfLinearIterations(3);
-  system.SetLinearConvergenceTolerance(1.e-12);
   system.SetNonLinearConvergenceTolerance(1.e-8);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
+  system.SetResidualUpdateConvergenceTolerance(1.e-12);
+
   system.SetMgType(F_CYCLE);
 
   system.SetNumberPreSmoothingStep(0);
@@ -146,17 +151,17 @@ int main(int argc, char** args) {
   // initilaize and solve the system
   system.init();
 
-  system.SetSolverFineGrids(GMRES);
+  //system.SetSolverFineGrids(GMRES);
+  system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  //system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 40);
-  system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
+  system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
 
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
-  //system.SetDirichletBCsHandling(ELIMINATION);
+
   system.MGsolve();
 
   // print solutions
@@ -164,12 +169,16 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  vtkIO.SetDebugOutput(true);
+  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   GMVWriter gmvIO(&mlSol);
-  variablesToBePrinted.push_back("all");
   gmvIO.SetDebugOutput(true);
-  gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+
+  XDMFWriter xdmfIO(&mlSol);
+  xdmfIO.SetDebugOutput(true);
+  xdmfIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -186,7 +195,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
   // call the adept stack object
-  adept::Stack& s = FemusInit::_adeptStack;
+
 
   //  extract pointers to the several objects that we are going to use
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
@@ -202,6 +211,11 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
+  adept::Stack& s = FemusInit::_adeptStack;
+  if( assembleMatrix ) s.continue_recording();
+  else s.pause_recording();
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
@@ -291,8 +305,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
 
-
-  KK->zero(); // Set to zero all the entries of the Global Matrix
+  if(assembleMatrix)
+    KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -360,7 +374,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     // if (level == levelMax || !el->GetRefinedElementIndex(iel)) {      // do not care about this if now (it is used for the AMR)
     // start a new recording of all the operations involving adept::adouble variables
-    s.new_recording();
+    if( assembleMatrix ) s.new_recording();
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
@@ -480,38 +494,38 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     RES->add_vector_blocked(Res, sysDof);
 
     //Extarct and store the Jacobian
+    if(assembleMatrix){
+      Jac.resize(nDofsTVP * nDofsTVP);
+      // define the dependent variables
+      s.dependent(&aResT[0], nDofsT);
 
-    Jac.resize(nDofsTVP * nDofsTVP);
-    // define the dependent variables
-    s.dependent(&aResT[0], nDofsT);
+      for (unsigned  k = 0; k < dim; k++) {
+        s.dependent(&aResV[k][0], nDofsV);
+      }
 
-    for (unsigned  k = 0; k < dim; k++) {
-      s.dependent(&aResV[k][0], nDofsV);
+      s.dependent(&aResP[0], nDofsP);
+
+      // define the independent variables
+      s.independent(&solT[0], nDofsT);
+
+      for (unsigned  k = 0; k < dim; k++) {
+        s.independent(&solV[k][0], nDofsV);
+      }
+
+      s.independent(&solP[0], nDofsP);
+
+      // get the and store jacobian matrix (row-major)
+      s.jacobian(&Jac[0] , true);
+      KK->add_matrix_blocked(Jac, sysDof, sysDof);
+
+      s.clear_independents();
+      s.clear_dependents();
     }
-
-    s.dependent(&aResP[0], nDofsP);
-
-    // define the independent variables
-    s.independent(&solT[0], nDofsT);
-
-    for (unsigned  k = 0; k < dim; k++) {
-      s.independent(&solV[k][0], nDofsV);
-    }
-
-    s.independent(&solP[0], nDofsP);
-
-    // get the and store jacobian matrix (row-major)
-    s.jacobian(&Jac[0] , true);
-    KK->add_matrix_blocked(Jac, sysDof, sysDof);
-
-    s.clear_independents();
-    s.clear_dependents();
-
   } //end element loop for each process
 
   RES->close();
-
-  KK->close();
+  if(assembleMatrix)
+    KK->close();
 
   // ***************** END ASSEMBLY *******************
 }

@@ -170,7 +170,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
   // ******* Debug *******
   ml_sol.SetWriter(VTK);
   std::vector<std::string> print_vars(1); print_vars[0] = "All"; // we should find a way to make this easier
-  ml_sol.GetWriter()->write(files.GetOutputPath(),"biquadratic",print_vars);
+  ml_sol.GetWriter()->Write(files.GetOutputPath(),"biquadratic",print_vars);
 
 
 //===============================================
@@ -222,7 +222,7 @@ void  GenMatRhsNS(MultiLevelProblem &ml_prob);
 
   // ******* set MG-Solver *******
   sys->SetMgType(F_CYCLE);
-  sys->SetLinearConvergenceTolerance(1.e-10);
+  sys->SetAbsoluteLinearConvergenceTolerance(1.e-10);
   sys->SetNonLinearConvergenceTolerance(1.e-10);//1.e-5
   sys->SetNumberPreSmoothingStep(1);
   sys->SetNumberPostSmoothingStep(1);

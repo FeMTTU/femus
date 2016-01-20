@@ -27,7 +27,6 @@ namespace femus {
   /**
    * The elem class
   */
-
   class elem {
 
 
@@ -38,7 +37,7 @@ namespace femus {
 
       elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal, const std::vector < double >& localizedElementType);
 
-      void ElementDofSharpAllocation();
+      void SharpMemoryAllocation();
 
       /** destructor */
       ~elem();
@@ -49,9 +48,13 @@ namespace femus {
 
       void ScatterElementCanBeRefinedVector();
 
+      void ScatterElementNearFace();
+      void LocalizeElementNearFaceFromOneToAll( const unsigned& jproc );
+      void FreeLocalizedElementNearFace();
+
       void ScatterElementDof();
-      void LocalizeElementDofToAll();
-      void LocalizeElementDofToOne(const unsigned &isdom);
+      void LocalizeElementDofFromOneToAll( const unsigned &jproc);
+      void LocalizeElementDofFromOneToOne( const unsigned &jproc, const unsigned &kproc );
       void FreeLocalizedElementDof();
 
       // reorder the element according to the new element mapping
@@ -64,10 +67,7 @@ namespace femus {
       unsigned GetElementDofNumber(const unsigned& iel, const unsigned& type) const;
 
       /** Return the local->global node number */
-      unsigned GetElementDofIndex(const unsigned& iel, const unsigned& inode)const {
-        return ( _elementDofIsScattered ) ?
-          _localElementDof[ iel - _elementOffset][inode] : _elementDof[iel][inode];
-      };
+      unsigned GetElementDofIndex(const unsigned& iel, const unsigned& inode)const;
 
       /** To be Added */
       void SetElementDofIndex(const unsigned& iel, const unsigned& inode, const unsigned& value);
@@ -155,7 +155,7 @@ namespace femus {
       void SetChildElementDof(const unsigned& ref_index, Mesh* msh, const elem* elf);
 
       unsigned GetChildElementDof(const unsigned& iel, const unsigned& i0, const unsigned i1) const {
-        return _childElemDof[iel - _elementOffset][i0][i1];
+        return _childElemDof[iel - _elementOffset[_iproc] ][i0][i1];
       }
 
       void DeleteElementNearVertex();
@@ -200,10 +200,9 @@ namespace femus {
 
       const unsigned GetIG(const unsigned& elementType, const unsigned& iface, const unsigned& jnode) const;
 
-      void SetElementOffsets(const unsigned& elementOffset, const unsigned& elementOffsetP1, const unsigned &iproc, const unsigned &nprocs) {
+      void SetElementOffsets( const std::vector < unsigned > & elementOffset, const unsigned &iproc, const unsigned &nprocs) {
         _elementOffset = elementOffset;
-        _elementOffsetP1 = elementOffsetP1;
-        _elementOwned = elementOffsetP1 - elementOffset;
+        _elementOwned = elementOffset[iproc + 1] - elementOffset[iproc];
         _iproc = iproc;
         _nprocs = nprocs;
       }
@@ -218,6 +217,17 @@ namespace femus {
       int* _elementNearFaceMemory;
       unsigned _elementNearFaceMemorySize;
 
+      unsigned _elementNearFaceOffset;
+      bool _elementNearFaceIsScattered;
+
+      bool _elementNearFaceIsLocalizedFromJproc;
+      unsigned _jprocElementNearFaceIsLocalizedFrom;
+
+      int** _localElementNearFace; //element -> nodes
+      int* _localElementNearFaceMemory;
+      unsigned _localElementNearFaceMemorySize;
+
+
       std::map< unsigned, std::vector< unsigned > > _localElementNearVertexMap;
       unsigned** _elementNearVertex; //node->element
       unsigned* _elementNearVertexMemory;
@@ -229,6 +239,9 @@ namespace femus {
 
       unsigned _elementDofOffset;
       bool _elementDofIsScattered;
+
+      bool _elementDofIsLocalizedFromJproc;
+      unsigned _jprocElementDofIsLocalizedFrom;
 
       unsigned** _localElementDof; //element -> nodes
       unsigned* _localElementDofMemory;
@@ -244,8 +257,7 @@ namespace femus {
       unsigned* _childElemDofMemory;
       unsigned _childElemDofMemorySize;
 
-      unsigned _elementOffset;
-      unsigned _elementOffsetP1;
+      std::vector < unsigned > _elementOffset;
       unsigned _elementOwned;
 
       short unsigned* _elementType, *_elementGroup, *_elementMaterial; //element

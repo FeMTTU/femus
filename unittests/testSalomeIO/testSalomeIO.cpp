@@ -26,11 +26,11 @@ int main(int argc,char **args) {
   ml_msh.PrintInfo();
   
   ml_msh.SetWriter(XDMF);
-  ml_msh.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic");
+  ml_msh.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic");
   ml_msh.SetWriter(GMV);
-  ml_msh.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic");
+  ml_msh.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic");
   ml_msh.SetWriter(VTK);
-  ml_msh.GetWriter()->write(DEFAULT_OUTPUTDIR,"biquadratic");
+  ml_msh.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic");
 
   return 0;
 }

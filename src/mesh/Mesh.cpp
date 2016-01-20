@@ -116,9 +116,10 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
 	      << "\n   I understand the following:\n\n"
 	      << "     *.neu -- Gambit Neutral File\n"
               << std::endl;
+	      exit(1);
   }
 
-  el->ElementDofSharpAllocation();
+  el->SharpMemoryAllocation();
 
   el->SetNodeNumber(_nnodes);
 
@@ -186,7 +187,7 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
 
   el->ScatterElementCanBeRefinedVector();
   el->ScatterElementDof();
-
+  el->ScatterElementNearFace();
 
 };
 
@@ -206,7 +207,7 @@ void Mesh::GenerateCoarseBoxMesh(
 
   MeshTools::Generation::BuildBox(*this,_coords,nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,elemType,type_elem_flag);
 
-  el->ElementDofSharpAllocation();
+  el->SharpMemoryAllocation();
 
   el->SetNodeNumber(_nnodes);
 
@@ -274,6 +275,7 @@ void Mesh::GenerateCoarseBoxMesh(
 
   el->ScatterElementCanBeRefinedVector();
   el->ScatterElementDof();
+  el->ScatterElementNearFace();
 
 }
 
@@ -538,7 +540,7 @@ void Mesh::FillISvector(vector < int > &partition) {
     }
   }
 
-  el->SetElementOffsets(_elementOffset[_iproc], _elementOffset[_iproc+1], _iproc, _nprocs );
+  el->SetElementOffsets(_elementOffset, _iproc, _nprocs );
 
 }
 
