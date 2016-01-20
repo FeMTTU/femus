@@ -114,7 +114,7 @@ namespace femus {
     Mat KK = KKp->mat();
 
     if(ksp_clean) {
-      this->clear();
+      this->Clear();
       MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
       MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
       MatZeroRows(_pmat, _bdcIndex[0].size(), &_bdcIndex[0][0], 1.e100, 0, 0);
@@ -130,25 +130,25 @@ namespace femus {
     *_RES -= *_RESC;
     //END SOLVE and UPDATE
 
-#ifndef NDEBUG
     //BEGIN PRINT Computational info
-    int its;
-    KSPGetIterationNumber(_ksp, &its);
+    if(_printSolverInfo){
+      int its;
+      KSPGetIterationNumber(_ksp, &its);
 
-    KSPConvergedReason reason;
-    KSPGetConvergedReason(_ksp, &reason);
+      KSPConvergedReason reason;
+      KSPGetConvergedReason(_ksp, &reason);
 
-    PetscReal rnorm;
-    KSPGetResidualNorm(_ksp, &rnorm);
+      PetscReal rnorm;
+      KSPGetResidualNorm(_ksp, &rnorm);
 
-    PetscLogDouble t2;
-    PetscTime(&t2);
-    PetscPrintf(PETSC_COMM_WORLD, " *************** MG linear solver time: %8.3f \n", t2 - t1);
-    PetscPrintf(PETSC_COMM_WORLD, " *************** Number of outer ksp solver iterations = %i \n", its);
-    PetscPrintf(PETSC_COMM_WORLD, " *************** Convergence reason = %i \n", reason);
-    PetscPrintf(PETSC_COMM_WORLD, " *************** Residual norm = %10.8g \n", rnorm);
+      PetscLogDouble t2;
+      PetscTime(&t2);
+      PetscPrintf(PETSC_COMM_WORLD, " *************** MG linear solver time: %8.3f \n", t2 - t1);
+      PetscPrintf(PETSC_COMM_WORLD, " *************** Number of outer ksp solver iterations = %i \n", its);
+      PetscPrintf(PETSC_COMM_WORLD, " *************** Convergence reason = %i \n", reason);
+      PetscPrintf(PETSC_COMM_WORLD, " *************** Residual norm = %10.8g \n", rnorm);
+    }
     //END PRINT
-#endif
   }
 
   // ================================================
@@ -210,7 +210,7 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::MGSetLevels(
+  void GmresPetscLinearEquationSolver::MGSetLevel(
     LinearEquationSolver* LinSolver, const unsigned& level, const unsigned& levelMax,
     const vector <unsigned>& variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR,
     const unsigned& npre, const unsigned& npost) {
@@ -321,22 +321,22 @@ namespace femus {
     *_RES -= *_RESC;
     *_EPS += *_EPSC;
 
-#ifndef NDEBUG
-    int its;
-    KSPGetIterationNumber(_ksp, &its);
+    if(_printSolverInfo){
+      int its;
+      KSPGetIterationNumber(_ksp, &its);
 
-    KSPConvergedReason reason;
-    KSPGetConvergedReason(_ksp, &reason);
+      KSPConvergedReason reason;
+      KSPGetConvergedReason(_ksp, &reason);
 
-    PetscReal rnorm;
-    KSPGetResidualNorm(_ksp, &rnorm);
+      PetscReal rnorm;
+      KSPGetResidualNorm(_ksp, &rnorm);
 
-    PetscTime(&t2);
-    PetscPrintf(PETSC_COMM_WORLD, " *************** MG linear solver time: %8.3f \n", t2 - t1);
-    PetscPrintf(PETSC_COMM_WORLD, " *************** Number of outer ksp solver iterations = %i \n", its);
-    PetscPrintf(PETSC_COMM_WORLD, " *************** Convergence reason = %i \n", reason);
-    PetscPrintf(PETSC_COMM_WORLD, " *************** Residual norm = %10.8g \n", rnorm);
-#endif
+      PetscTime(&t2);
+      PetscPrintf(PETSC_COMM_WORLD, " *************** MG linear solver time: %8.3f \n", t2 - t1);
+      PetscPrintf(PETSC_COMM_WORLD, " *************** Number of outer ksp solver iterations = %i \n", its);
+      PetscPrintf(PETSC_COMM_WORLD, " *************** Convergence reason = %i \n", reason);
+      PetscPrintf(PETSC_COMM_WORLD, " *************** Residual norm = %10.8g \n", rnorm);
+    }
   }
 
   // ================================================

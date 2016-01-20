@@ -115,6 +115,7 @@ namespace femus {
 
         std::cout << std::endl << " ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
+        clock_t start_assembly_time = clock();
         _levelToAssemble = igridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
         _LinSolver[igridn - 1u]->SetResZero();
         _assembleMatrix = true;
@@ -137,16 +138,16 @@ namespace femus {
               _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse );
           }
         }
-        std::cout << std::endl << " ********* Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
+        std::cout << std::endl << " ********* Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_assembly_time ) ) / CLOCKS_PER_SEC << std::endl;
 
         if( _MGsolver ) {
           _LinSolver[igridn - 1u]->MGInit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
 
           for( unsigned i = 0; i < igridn; i++ ) {
             if( _RR[i] )
-              _LinSolver[i]->MGSetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
+              _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
             else
-              _LinSolver[i]->MGSetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
+              _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
           }
         }
 
