@@ -40,7 +40,8 @@ namespace femus {
     _AMRthreshold( 0.01 ),
     _SmootherType( smoother_type ),
     _MGmatrixFineReuse( false ),
-    _MGmatrixCoarseReuse( false )
+    _MGmatrixCoarseReuse( false ),
+    _printSolverInfo( false )
   {
     _SparsityPattern.resize( 0 );
     _outer_ksp_solver = "gmres";
@@ -150,13 +151,13 @@ namespace femus {
 
     for( unsigned igridn = grid0; igridn <= _gridn; igridn++ ) {   //_igridn
       std::cout << std::endl << " ****** Start Level Max " << igridn << " ******" << std::endl;
-      clock_t start_nl_time = clock();
+
 
       bool ThisIsAMR = ( _mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn ) ? 1 : 0;
 
       if( ThisIsAMR ) _solution[igridn - 1]->InitAMREps();
 
-
+      clock_t start_assembly_time = clock();
 
       _levelToAssemble = igridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
       _LinSolver[igridn - 1u]->SetResZero();
@@ -180,16 +181,16 @@ namespace femus {
         }
       }
 
-      std::cout << std::endl << " ****** Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
+      std::cout << std::endl << " ****** Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_assembly_time ) ) / CLOCKS_PER_SEC << std::endl;
 
       if( _MGsolver ) {
         _LinSolver[igridn - 1u]->MGInit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
 
         for( unsigned i = 0; i < igridn; i++ ) {
           if( _RR[i] )
-            _LinSolver[i]->MGSetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
+            _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
           else
-            _LinSolver[i]->MGSetLevels( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
+            _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
         }
 
         MGVcycle( igridn, mgSmootherType );
@@ -420,6 +421,7 @@ namespace femus {
     _LinSolver[_gridn]->set_solver_type( _finegridsolvertype );
     _LinSolver[_gridn]->SetTolerances( _rtol, _atol, _divtol, _maxits, _restart );
     _LinSolver[_gridn]->set_preconditioner_type( _finegridpreconditioner );
+    _LinSolver[_gridn]->PrintSolverInfo( _printSolverInfo );
 
     if( _numblock_test ) {
       unsigned num_block2 = std::min( _num_block, _msh[_gridn]->GetNumberOfElements() );
@@ -606,6 +608,17 @@ namespace femus {
   void LinearImplicitSystem::SetMgSmoother( const MgSmoother mgsmoother ) {
     _SmootherType = mgsmoother;
   }
+
+
+  void LinearImplicitSystem::PrintSolverInfo(const bool & printInfo){
+
+    _printSolverInfo = printInfo;
+
+    for( unsigned i = 0; i < _gridn; i++ ) {
+      _LinSolver[i]->PrintSolverInfo( _printSolverInfo );
+    }
+  }
+
 
   // ********************************************
 
