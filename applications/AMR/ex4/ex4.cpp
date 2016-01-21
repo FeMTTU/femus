@@ -555,6 +555,7 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
    double IntRes = 0.; // internal residue
    double BdyRes = 0.; // boundary residue
    double jump = 0.;
+
    unsigned solJ = sol->_Sol[solFlagIndex]->set (iel, jump);
    
    if (SetBoundaryCondition) {
