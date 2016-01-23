@@ -37,7 +37,7 @@ namespace femus {
     //BEGIN ALL FIELD COLLECTION
     std::map < unsigned, bool > mymap;
     for( unsigned i = 0; i < _numberOfSplits; i++ ) {
-      for( unsigned j = 0; j < _fieldsSplit[i].size(); j++ ) { //I change "i++" to j++
+      for( unsigned j = 0; j < _fieldsSplit[i].size(); j++ ) {
         mymap[_fieldsSplit[i][j]] = true;
       }
     }
@@ -62,7 +62,6 @@ namespace femus {
     _preconditioner = preconditioner;
     _numberOfSplits = childBranch.size();
     _fieldsSplit.resize( _numberOfSplits );
-
     _child.resize( _numberOfSplits );
 
     for( unsigned i = 0; i < _numberOfSplits; i++ ) {
@@ -214,8 +213,11 @@ namespace femus {
     //BEGIN from here
     if( _preconditioner == FIELDSPLIT_PRECOND ) {
       PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
-      PCFieldSplitSetType( pc, PC_COMPOSITE_ADDITIVE );
-      for( int i = 0; i < _numberOfSplits; i++ ) {
+//       PCFieldSplitSetType( pc, PC_COMPOSITE_ADDITIVE );
+      PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR);
+      PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_UPPER);
+      
+      for( unsigned i = 0; i < _numberOfSplits; i++ ) { 
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
       }
       PCSetUp(pc);
@@ -231,7 +233,8 @@ namespace femus {
       PetscPreconditioner::set_petsc_preconditioner_type( FIELDSPLIT_PRECOND, pc );
       
       PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR );
-      PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_FULL);
+      PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_LOWER);
+      PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELFP,NULL);
       
       for( int i = 0; i < _numberOfSplits; i++ ) {
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );

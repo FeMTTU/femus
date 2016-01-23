@@ -4,7 +4,7 @@
 #include <iostream>
 
 // double InitalValueU(const std::vector < double >& x);
-// 
+//
 // bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,const char name[],
 // 						double &value, const int FaceName, const double = 0.);
 
@@ -22,6 +22,7 @@ extern "C" double InitalValueU(const std::vector < double >& x) {
   double yMyc2 = (x[1]-yc)*(x[1]-yc);
 
   return (xMxc2+yMyc2-r2)/(OMxc2+yMyc2-r2)*(1.5*um*4.0/0.1681*x[1]*(H-x[1]))*exp(-L*x[0]);
+
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -33,6 +34,7 @@ extern "C" bool BdcFunction(const std::vector < double >& x,const char name[], d
     if(1==facename){   //inflow
       test=1;
       value=1.5*um*4.0/0.1681*x[1]*(H-x[1]);
+
     }
     else if(2==facename ){  //outflow
       test=0;
