@@ -66,7 +66,7 @@ namespace femus {
       L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
       L2normSol    = _solution[igridn]->_Sol[indexSol]->l2_norm();
       L2normEpsDividedSol = L2normEps/(L2normSol+mindeltaNormSol);
-      
+
       std::cout << " ********* Level Max " << igridn + 1 << " Nonlinear Eps_l2norm/Sol_l2norm " << \
         std::scientific << _ml_sol->GetSolutionName( indexSol ) << "= " << L2normEpsDividedSol << \
         "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << std::endl;
@@ -125,39 +125,39 @@ namespace femus {
         clock_t start_assembly_time = clock();
         _levelToAssemble = igridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
         _LinSolver[igridn - 1u]->SetResZero();
-        _assembleMatrix = true;
+        _assembleMatrix = _buildSolver;
         _assemble_system_function( _equation_systems );
 
-        _MGmatrixFineReuse = ( 0 == nonLinearIterator ) ? false : true;
-        _MGmatrixCoarseReuse = ( igridn - grid0 > 0 ) ?  true : _MGmatrixFineReuse;
+        if( _buildSolver ){
+          _MGmatrixFineReuse = ( 0 == nonLinearIterator ) ? false : true;
+          _MGmatrixCoarseReuse = ( igridn - grid0 > 0 ) ?  true : _MGmatrixFineReuse;
 
-        for( unsigned i = igridn - 1u; i > 0; i-- ) {
-          if( _RR[i] ) {
-            if( i == igridn - 1u )
-              _LinSolver[i - 1u]->_KK->matrix_ABC( *_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixFineReuse );
-            else
-              _LinSolver[i - 1u]->_KK->matrix_ABC( *_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixCoarseReuse );
+          for( unsigned i = igridn - 1u; i > 0; i-- ) {
+            if( _RR[i] ) {
+              if( i == igridn - 1u )
+                _LinSolver[i - 1u]->_KK->matrix_ABC( *_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixFineReuse );
+              else
+                _LinSolver[i - 1u]->_KK->matrix_ABC( *_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixCoarseReuse );
+            }
+            else {
+              if( i == igridn - 1u )
+                _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixFineReuse );
+              else
+                _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse );
+            }
           }
-          else {
-            if( i == igridn - 1u )
-              _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixFineReuse );
-            else
-              _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse );
+          if( _MGsolver ) {
+            _LinSolver[igridn - 1u]->MGInit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
+
+            for( unsigned i = 0; i < igridn; i++ ) {
+              if( _RR[i] )
+                _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
+              else
+                _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
+            }
           }
         }
         std::cout << std::endl << " ********* Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_assembly_time ) ) / CLOCKS_PER_SEC << std::endl;
-
-        if( _MGsolver ) {
-          _LinSolver[igridn - 1u]->MGInit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
-
-          for( unsigned i = 0; i < igridn; i++ ) {
-            if( _RR[i] )
-              _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
-            else
-              _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
-          }
-        }
-
         clock_t startUpdateResidualTime = clock();
 
         for( unsigned updateResidualIterator = 0; updateResidualIterator < _maxNumberOfResidualUpdateIterations; updateResidualIterator++ ) {
@@ -180,7 +180,7 @@ namespace femus {
         std::cout << "\n ********* Residual Update-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
                   << static_cast<double>( ( clock() - startUpdateResidualTime ) ) / CLOCKS_PER_SEC << std::endl;
 
-        if( _MGsolver ) _LinSolver[igridn - 1u]->MGClear();
+        if( _MGsolver * _buildSolver ) _LinSolver[igridn - 1u]->MGClear();
 
         double nonLinearEps;
         bool nonLinearIsConverged = IsNonLinearConverged( igridn - 1, nonLinearEps );

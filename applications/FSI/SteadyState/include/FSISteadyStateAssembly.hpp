@@ -538,7 +538,8 @@ namespace femus {
               for (int I = 0; I < 3; ++I) {
                 for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.*(C1 * B[I][J] - C2 * invB[I][J])
-                                  - (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR[2 * dim] * Id2th[I][J];
+                                  //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR[2 * dim] * Id2th[I][J];
+                                  - SolVAR[2 * dim] * Id2th[I][J];
                 }
               }
 

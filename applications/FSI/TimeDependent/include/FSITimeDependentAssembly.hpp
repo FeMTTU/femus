@@ -7,7 +7,7 @@
 
 namespace femus {
 
-  void IncompressibleFSIAssemblyAD_DD(MultiLevelProblem& ml_prob) {
+  void FSITimeDependentAssembly(MultiLevelProblem& ml_prob) {
 
     clock_t AssemblyTime = 0;
     clock_t start_time, end_time;
@@ -676,12 +676,13 @@ namespace femus {
               for (int I = 0; I < 3; ++I) {
                 for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.*(C1 * B[I][J] - C2 * invB[I][J])
-                                  - (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR[2 * dim] * Id2th[I][J];
+                                  //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR[2 * dim] * Id2th[I][J];
+                                  - SolVAR[2 * dim] * Id2th[I][J];
 
                   Cauchy_old[I][J] =  2.* (C1 * B_old[I][J] - C2 * invB_old[I][J])
-                                      - (2. / 3.) * (C1 * I1_B_old - C2 * I2_B_old) * SolVAR[2 * dim] * Id2th[I][J];
-                  //std::cout<<C1*rhof<<" "<<C2*rhof<<" "<<std::endl;
-
+                                      //- (2. / 3.) * (C1 * I1_B_old - C2 * I2_B_old) * SolVAR[2 * dim] * Id2th[I][J];
+                                      - SolVAR[2 * dim] * Id2th[I][J];
+                  
                 }
               }
 

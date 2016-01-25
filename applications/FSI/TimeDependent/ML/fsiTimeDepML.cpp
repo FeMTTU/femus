@@ -9,7 +9,7 @@
 #include "Files.hpp"
 #include "TransientSystem.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
-#include "../include/IncompressibleFSIAssemblyTimeDependent.hpp"
+#include "../include/FSITimeDependentAssembly.hpp"
 
 double scale=1000.;
 
@@ -308,7 +308,7 @@ int main(int argc,char **args) {
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(IncompressibleFSIAssemblyAD_DD);
+  system.SetAssembleFunction(FSITimeDependentAssembly);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
@@ -326,6 +326,15 @@ int main(int argc,char **args) {
     system.SetMaxNumberOfLinearIterations(8);
     system.SetMaxNumberOfNonLinearIterations(15);
   }
+
+  system.SetNonLinearConvergenceTolerance(1.e-10);
+  system.SetResidualUpdateConvergenceTolerance(1.e-20);
+  system.SetMaxNumberOfNonLinearIterations(15);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(5);
+
+
+
+
 
   // ******* Set Preconditioner *******
   if(Gmres) 		system.SetMgSmoother(GMRES_SMOOTHER);
@@ -369,7 +378,7 @@ int main(int argc,char **args) {
 
 
   // ******* Print solution *******
-  ml_sol.SetWriter(GMV);
+  ml_sol.SetWriter(VTK);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -384,6 +393,7 @@ int main(int argc,char **args) {
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
   const unsigned int n_timesteps = 500;
 
+  ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
 
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
@@ -407,9 +417,9 @@ int main(int argc,char **args) {
 double SetVariableTimeStep(const double time) {
   double dt = 1.;
   if( turek_FSI == 2 ){
-    if	    ( time < 5. )   dt = 0.1;
-    else if ( time < 9 )    dt = 0.05;
-    else 		    dt = 0.025;
+    if	    ( time < 5 ) dt = 0.1;
+    else if ( time < 9 ) dt = 0.05;
+    else 		 dt = 0.025;
   }
   else if ( turek_FSI == 3 ){
     if	    ( time < 5. ) dt = 0.1;

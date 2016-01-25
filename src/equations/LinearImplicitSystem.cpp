@@ -41,7 +41,8 @@ namespace femus {
     _SmootherType( smoother_type ),
     _MGmatrixFineReuse( false ),
     _MGmatrixCoarseReuse( false ),
-    _printSolverInfo( false )
+    _printSolverInfo( false ),
+    _assembleMatrix( true )
   {
     _SparsityPattern.resize( 0 );
     _outer_ksp_solver = "gmres";
@@ -300,7 +301,7 @@ namespace femus {
           _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
         }
 
-        // ============== AMR Restriction ==============
+        // ============== Restriction ==============
         Restrictor( ig );
       }
 
