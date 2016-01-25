@@ -27,6 +27,7 @@
 #include "adept.h"
 
 
+
 using namespace femus;
 
 bool SetBoundaryCondition (const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -58,7 +59,7 @@ bool SetRefinementFlag (const std::vector < double >& x, const int& elemgroupnum
 
 void AssemblePoisson_AD (MultiLevelProblem& ml_prob);   //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
-std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol);
+void GetError (MultiLevelSolution* mlSol);
 
 int main (int argc, char** args) {
 
@@ -79,11 +80,7 @@ int main (int argc, char** args) {
   unsigned maxNumberOfMeshes = 5;
 
 
-  vector < vector < double > > l2Norm;
-  l2Norm.resize (maxNumberOfMeshes);
-
-  vector < vector < double > > semiNorm;
-  semiNorm.resize (maxNumberOfMeshes);
+ 
 
 //   unsigned numberOfUniformLevels = 3;
 //   unsigned numberOfSelectiveLevels = 0;
@@ -92,6 +89,9 @@ int main (int argc, char** args) {
   for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
 
     unsigned numberOfUniformLevels = i + 3;
+    
+    
+    
     unsigned numberOfSelectiveLevels = 0;
     //mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
     mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
@@ -102,10 +102,8 @@ int main (int argc, char** args) {
     mlMsh.PrintInfo();
 
     FEOrder feOrder[3] = {FIRST, SERENDIPITY, SECOND};
-    l2Norm[i].resize (3);
-    semiNorm[i].resize (3);
-
-    for (unsigned j = 0; j < 3; j++) {
+    
+    for (unsigned j = 2; j < 3; j++) {
 
       MultiLevelSolution mlSol (&mlMsh);
 
@@ -138,7 +136,7 @@ int main (int argc, char** args) {
 
       system.SetMaxNumberOfNonLinearIterations (10);
       system.SetMaxNumberOfLinearIterations (3);
-      system.SetLinearConvergenceTolerance (1.e-12);
+      system.SetAbsoluteLinearConvergenceTolerance (1.e-12);
       system.SetNonLinearConvergenceTolerance (1.e-8);
       system.SetMgType (F_CYCLE);
 
@@ -157,10 +155,8 @@ int main (int argc, char** args) {
       //system.solve();
       system.MGsolve();
 
-      std::pair< double , double > norm = GetErrorNorm (&mlSol);
-      l2Norm[i][j]  = norm.first;
-      semiNorm[i][j] = norm.second;
-
+      GetError (&mlSol);
+      
       // print solutions
       std::vector < std::string > variablesToBePrinted;
       variablesToBePrinted.push_back ("All");
@@ -176,44 +172,8 @@ int main (int argc, char** args) {
     }
 
   }
-  // print the seminorm of the error and the order of convergence between different levels
-  std::cout << std::endl;
-  std::cout << std::endl;
-  std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
+ 
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
-    std::cout << i + 1 << "\t";
-    std::cout.precision (14);
-
-    for (unsigned j = 0; j < 3; j++) {
-      std::cout << l2Norm[i][j] << "\t";
-    }
-
-    std::cout << std::endl;
-
-
-
-  }
-
-  std::cout << std::endl;
-  std::cout << std::endl;
-  std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
-    std::cout << i + 1 << "\t";
-    std::cout.precision (14);
-
-    for (unsigned j = 0; j < 3; j++) {
-      std::cout << semiNorm[i][j] << "\t";
-    }
-
-    std::cout << std::endl;
-
-
-
-  }
 
   return 0;
 }
@@ -375,11 +335,11 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
         adept::adouble LaplaceU = 0.;
 
         for (unsigned j = 0; j < dim; j++) {
-          LaplaceU +=   phi_x[i * dim + j] * gradSolUig[j];
+          LaplaceU -=   phi_x[i * dim + j] * gradSolUig[j];
         }
 
-        double srcTerm = - GetExactSolutionLaplace (x_gss);
-        aResU[i] += (srcTerm * phi[i] - LaplaceU) * weight;
+        double srcTerm = -GetExactSolutionLaplace (x_gss);
+        aResU[i] += (srcTerm * phi[i] + LaplaceU) * weight;
 
       } // end phiU_i loop
     } // end gauss point loop
@@ -424,7 +384,7 @@ void AssemblePoisson_AD (MultiLevelProblem& ml_prob) {
 }
 
 
-std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
+void GetError (MultiLevelSolution* mlSol) {
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*          msh          = mlSol->_mlMesh->GetLevel (level);   // pointer to the mesh (level) object
@@ -464,9 +424,7 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
   unsigned dim2 = (3 * (dim - 1) + ! (dim - 1));       // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   phi_xx.reserve (maxSize * dim2);
 
-  double seminorm = 0.;
-  double l2norm = 0.;
-
+  
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -499,111 +457,62 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
       }
     }
 
+    double rhoK = 0.;
+        
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solUType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][solUType]->Jacobian (crdX, ig, weight, phi, phi_x, phi_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      double solUig = 0;
-      vector < double > gradSolUig (dim, 0.);
+      
+      double laplaceU = 0.;
       vector < double > x_gss (dim, 0.);
 
       for (unsigned i = 0; i < nDofsU; i++) {
-        solUig += phi[i] * solU[i];
-
         for (unsigned j = 0; j < dim; j++) {
-          gradSolUig[j] += phi_x[i * dim + j] * solU[i];
           x_gss[j] += crdX[j][i] * phi[i];
         }
+        laplaceU += ( phi_xx[ i * dim2 + 0] + phi_xx[i * dim2 + 1] ) * solU[i];
       }
-      //< ==== Added Part  ===
-            // *** phiU_i loop ***
-      double LaplaceU = 0.;
-      for (unsigned i = 0; i < nDofsU; i++) {
-        adept::adouble LaplaceU = 0.;
-
-        for (unsigned j = 0; j < dim; j++) {
-          LaplaceU +=   phi_x[i * dim + j] * gradSolUig[j];
-        }
-
-      } // end phiU_i loop
-      //==== Added Part  === >
-
-      vector <double> solGrad (dim);
-      GetExactSolutionGradient (x_gss, solGrad);
-
-      for (unsigned j = 0; j < dim ; j++) {
-        seminorm   += ( (gradSolUig[j] - solGrad[j]) * (gradSolUig[j] - solGrad[j])) * weight;
-      }
-
-      double exactSol = GetExactSolutionValue (x_gss);
-      l2norm += (exactSol - solUig) * (exactSol - solUig) * weight;
-     // end gauss point loop
-    
-    
-    //< ==== Added Part  ===
+      double srcTerm = -GetExactSolutionLaplace (x_gss);
       
-    //if it has bo be refined set
-    //sol->_Sol[solFlagIndex]->set(iel, 1);
-    //otherwiase
-    //sol->_Sol[solFlagIndex]->set(iel, 0);
+      rhoK += ( laplaceU + srcTerm ) * ( laplaceU + srcTerm );
     
-    //for now
+                 
+    }
    
-   double LocRes = 0.; // local residue
-   double IntRes = 0.; // internal residue
-   double BdyRes = 0.; // boundary residue
-   double jump = 0.;
-
-   unsigned solJ = sol->_Sol[solFlagIndex]->set (iel, jump);
-   
-   if (SetBoundaryCondition) {
-     
-    jump = 1.;
-  } 
-  else {
+    rhoK = sqrt(rhoK);
     
-    jump = 0.;
-  }
-  
-for (unsigned i = 0; i < solJ; i++) {
-  unsigned solJDof = msh->GetSolutionDof (i, iel, jump);
-}
-
-IntRes += sqrt((exactSol + LaplaceU)*(exactSol + LaplaceU)); // internal residue
-LocRes += IntRes + BdyRes;
-
-  }
-  //==== Added Part  === >
+    sol->_Sol[solFlagIndex]->set(iel, rhoK);
   
   } //end element loop for each process
 
   
   
-  // add the norms of all processes
-  NumericVector* norm_vec;
-  norm_vec = NumericVector::build().release();
-  norm_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
-
-  norm_vec->set (iproc, l2norm);
-  norm_vec->close();
-  
-  l2norm = norm_vec->l1_norm();
-
-  norm_vec->set (iproc, seminorm);
-  norm_vec->close();
-  
-  seminorm = norm_vec->l1_norm();
-
-  delete norm_vec;
-
-  std::pair < double, double > norm;
-  norm.first  = sqrt (l2norm);
-  norm.second = sqrt (seminorm);
+//   // add the norms of all processes
+//   NumericVector* norm_vec;
+//   norm_vec = NumericVector::build().release();
+//   norm_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
+// 
+//   norm_vec->set (iproc, l2norm);
+//   norm_vec->close();
+//   
+//   l2norm = norm_vec->l1_norm();
+// 
+//   norm_vec->set (iproc, seminorm);
+//   norm_vec->close();
+//   
+//   seminorm = norm_vec->l1_norm();
+// 
+//   delete norm_vec;
+// 
+//   std::pair < double, double > norm;
+//   norm.first  = sqrt (l2norm);
+//   norm.second = sqrt (seminorm);
+// 
 
   sol->_Sol[solFlagIndex]->close();
   
-  return norm;
 
 }
