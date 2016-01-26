@@ -32,7 +32,8 @@ namespace femus {
   }
 
   void FieldSplitPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc) {
-    _fieldSplitTree->SetPC(subksp, _msh->GetLevel());
+    unsigned n_split;
+    _fieldSplitTree->SetPC(subksp, _msh->GetLevel(), n_split); // changed by guoyi by adding n_split
   }
 
 } //end namespace femus

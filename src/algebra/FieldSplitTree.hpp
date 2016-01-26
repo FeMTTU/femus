@@ -45,7 +45,7 @@ namespace femus {
 
       void BuildIndexSet( const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc, const unsigned& nprocs, const unsigned& level );
 
-      void SetPC( KSP& ksp, const unsigned& level ) ;
+      void SetPC( KSP& ksp, const unsigned& level, const unsigned& n_split) ; //changed by guoyi by adding "n_split" here
 
       const unsigned& GetNumberOfSplits() {
         return _numberOfSplits;
