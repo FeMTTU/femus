@@ -45,7 +45,8 @@ int main(int argc,char **args) {
   FemusInit init(argc,args,MPI_COMM_WORLD);
   
   std::string med_file = "RectFracWithGroup.med";
-  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << med_file;
+  std::ostringstream mystream; 
+  mystream << "./" << DEFAULT_INPUTDIR << "/" << med_file;
   const std::string infile = mystream.str();
  
   //Adimensional
@@ -216,8 +217,12 @@ void AssembleFracFSI(MultiLevelProblem& ml_prob) {
 
     unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
     short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
-    int flag_mat        = myel->GetElementMaterial(kel);
+    int flag_mat        = el->GetElementMaterial(kel);
 
+    double diffusivity = 1.;
+    if (flag_mat==2)   diffusivity = 1e-3;
+    
+    
  //********* GEOMETRY ****************** 
     unsigned nDofx = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
     for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
@@ -290,7 +295,7 @@ void AssembleFracFSI(MultiLevelProblem& ml_prob) {
 	      }
 
               //DIAG BLOCK
-	        Jac[    0    * (nDof_u)    +  i    * (nDof_u) + (0 + j) ]  += weight * laplace_mat_u;
+	        Jac[    0    * (nDof_u)    +  i    * (nDof_u) + (0 + j) ]  += weight * diffusivity * laplace_mat_u;
 	      
             } // end phi_j loop
           } // endif assemble_matrix
