@@ -205,7 +205,7 @@ namespace femus {
   }
 
 
-  void FieldSplitTree::SetPC( KSP& ksp, const unsigned& level ) {
+  void FieldSplitTree::SetPC( KSP& ksp, const unsigned& level,const unsigned& n_split) {
 
     PC pc;
     KSPGetPC( ksp, &pc );
@@ -225,7 +225,7 @@ namespace femus {
       PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
       PCFieldSplitGetSubKSP( pc, &nlocal, &subksp );
       for( unsigned i = 0; i < _numberOfSplits; i++ ) {
-        _child[i]->SetPC( subksp[i], level );
+        _child[i]->SetPC( subksp[i], level, i);//changed by guoyi by adding "i" here
       }
       PetscFree(subksp);
     }
@@ -234,7 +234,7 @@ namespace femus {
       
       PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR );
       PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_LOWER);
-      PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELFP,NULL);
+//      PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELF,NULL);
       
       for( int i = 0; i < _numberOfSplits; i++ ) {
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
@@ -244,24 +244,31 @@ namespace femus {
       PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
       PCFieldSplitGetSubKSP( pc, &nlocal, &subksp );
       for( unsigned i = 0; i < _numberOfSplits; i++ ) {
-        _child[i]->SetPC( subksp[i], level );
+        _child[i]->SetPC( subksp[i], level,i );//changed by guoyi by adding "i" here
       }
       PetscFree(subksp);
     }
     else {
+      std::cout<<n_split<<" "<<std::endl;
       _rtol = 1.e-3;
       _abstol = 1.e-20;
       _dtol = 1.e+50;
       _maxits = 1;
-      KSPSetType( ksp, ( char* ) KSPPREONLY );
+      
+      if (n_split==1){ KSPSetType( ksp, KSPGMRES);} //changed by guoyi by adding KSPSetType( ksp, KSPGMRES)
+      else {KSPSetType( ksp, ( char* ) KSPPREONLY );} 
       PC pc;
       KSPGetPC( ksp, &pc );
       KSPSetTolerances( ksp, _rtol, _abstol, _dtol, _maxits );
       KSPSetFromOptions( ksp );
       PetscReal epsilon = 1.e-16;
-      PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
-      PCFactorSetZeroPivot( pc, epsilon );
-      PCFactorSetShiftType( pc, MAT_SHIFT_NONZERO );
+      if (n_split==1) {
+	PCSetType( pc, PCLSC);//changed by guoyi by adding PCLSC;
+      }else {
+	    PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
+	    PCFactorSetZeroPivot( pc, epsilon );
+	    PCFactorSetShiftType( pc, MAT_SHIFT_NONZERO );
+      }
     }
   }
 
