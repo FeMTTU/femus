@@ -313,11 +313,17 @@ int main(int argc,char **args) {
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
 
-  system.SetMaxNumberOfLinearIterations(10);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+  //system.SetMaxNumberOfLinearIterations(10);
+  //system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
 
+  system.SetResidualUpdateConvergenceTolerance(1.e-20);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(5);
+  
   system.SetNonLinearConvergenceTolerance(1.e-9);
   system.SetMaxNumberOfNonLinearIterations(15);
+  
+  
+  
 
 //   system.SetResidualUpdateConvergenceTolerance(1.e-15);
 //   system.SetMaxNumberOfNonLinearIterations(15);
