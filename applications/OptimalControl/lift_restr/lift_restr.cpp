@@ -250,8 +250,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   
  //********** DATA ***************** 
-  double T_des = 200.;
-  double alpha = 1000000000;
+  double T_des = 10.;
+  double alpha = 10000000000;
   double beta  = 1.;
   double gamma = 1.;
   
@@ -294,8 +294,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
   //***** set target domain flag ********************************** 
   int target_flag = 1;
-   if (( elem_center[0] < 0.1 + 1.e-5  && elem_center[0] > -0.1 - 1.e-5  && 
-        elem_center[1] < 0.1 + 1.e-5  && elem_center[1] > -0.1 - 1.e-5 
+   if (( elem_center[0] < 0.05 + 1.e-5  && elem_center[0] > -0.05 - 1.e-5  && 
+        elem_center[1] < 0.05 + 1.e-5  && elem_center[1] > -0.05 - 1.e-5 
   )) target_flag = 0;
   alpha = alpha*target_flag;
   //*************************************** 
@@ -389,6 +389,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	  if (i < nDofThom)    Res[0                      + i] += weight * (0.) ;
           // SECOND ROW
           if (i < nDofThomAdj) Res[nDofThom               + i] += weight * ( alpha * T_des * phi_ThomAdj[i] );
+	  
+	  
           // THIRD ROW
           if (i < nDofTcont)   Res[nDofThom + nDofThomAdj + i] += weight * ( alpha * T_des * phi_Tcont  [i] );
 
@@ -417,10 +419,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               if ( i < nDofThomAdj && j < nDofThomAdj ) Jac[ (nDofThom + 0)           * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont) +
 								(nDofThom + j)                                    ]  += weight * laplace_mat_ThomAdj;
-              //DIAG BLOCK Tcont
-              if ( i < nDofTcont   && j < nDofTcont   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
-		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
-								(nDofThom  + nDofThomAdj + j)                     ]  += weight * ( gamma * laplace_mat_Tcont + beta * phi_Tcont[i] * phi_Tcont[j] + alpha * phi_Tcont[i] * phi_Tcont[j]);
               // BLOCK Thom - Tcont
               if ( i < nDofThom    && j < nDofTcont )   Jac[    0     * (nDofThom + nDofThomAdj + nDofTcont)   +
                                                                    i    * (nDofThom + nDofThomAdj + nDofTcont) +
@@ -434,10 +432,19 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
                                                                    i    * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                (nDofThom + nDofThomAdj + j)                      ]  += weight * alpha *  phi_ThomAdj[i] * phi_Tcont[j];      
 
+              //third row ==================
+	      //DIAG BLOCK Tcont
+              if ( i < nDofTcont   && j < nDofTcont   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
+		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
+								(nDofThom  + nDofThomAdj + j)                     ]  += weight * ( gamma * laplace_mat_Tcont + beta * phi_Tcont[i] * phi_Tcont[j] + alpha * phi_Tcont[i] * phi_Tcont[j]);
               //BLOCK Tcont - Thom
               if ( i < nDofTcont   && j < nDofThom   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
 								(0 + j)                                           ]  += weight * ( alpha * phi_Tcont[i] * phi_Thom[j]);
+	      //BLOCK Tcont - ThomAdj
+              if ( i < nDofTcont   && j < nDofThomAdj   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
+		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
+								(nDofThom + j)                                           ]  += weight *laplace_mat_ThomAdj;
 	      
 	      
             } // end phi_j loop
