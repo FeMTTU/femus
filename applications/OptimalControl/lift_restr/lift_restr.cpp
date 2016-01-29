@@ -45,7 +45,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(8,8,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
+  mlMsh.GenerateCoarseBoxMesh(32,32,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 1;
@@ -250,8 +250,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   
  //********** DATA ***************** 
-  double T_des = 100.;
-  double alpha = 10.e5;
+  double T_des = 200.;
+  double alpha = 1000000000;
   double beta  = 1.;
   double gamma = 1.;
   
@@ -279,7 +279,26 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
         x[jdim][i] = (*msh->_coordinate->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
- //*************************************** 
+
+   // elem average point 
+    vector < double > elem_center(dim);   
+    for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
+  for (unsigned j = 0; j < dim; j++) {  
+      for (unsigned i = 0; i < nDofx; i++) {
+         elem_center[j] += x[j][i];
+       }
+    }
+    
+   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
+  //*************************************** 
+  
+  //***** set target domain flag ********************************** 
+  int target_flag = 1;
+   if (( elem_center[0] < 0.1 + 1.e-5  && elem_center[0] > -0.1 - 1.e-5  && 
+        elem_center[1] < 0.1 + 1.e-5  && elem_center[1] > -0.1 - 1.e-5 
+  )) target_flag = 0;
+  alpha = alpha*target_flag;
+  //*************************************** 
     
  //*********** Thom **************************** 
     unsigned nDofThom     = el->GetElementDofNumber(kel, solTypeThom);    // number of solution element dofs
