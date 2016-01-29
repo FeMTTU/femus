@@ -120,15 +120,18 @@ void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
     _dt = _get_time_interval_function(_time);
   }
 
-  std::cout<<"assemble counter = "<<_assembleCounter<<std::endl;
-  if(_assembleCounter % 10 == 0 || _dt != dtOld){
+
+  if(_assembleCounter % 1 == 0 || _dt != dtOld){
     std::cout<<"Assemble Matrix\n";
+    Base::_buildSolver = true;
     if( _dt != dtOld )
       _assembleCounter = 0;
   }
   else{
     std::cout<<"Do not Assemble Matrix";
+    Base::_buildSolver = false;
   }
+  std::cout<<"assemble counter = "<<_assembleCounter<<std::endl;
   _assembleCounter++;
 
 

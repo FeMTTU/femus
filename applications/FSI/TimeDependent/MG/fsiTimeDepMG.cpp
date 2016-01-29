@@ -234,7 +234,7 @@ int main(int argc,char **args) {
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes, numberOfUniformRefinedMeshes + numberOfAMRLevels,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
-  ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes-1);
+  //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes-1);
   // mark Solid nodes
   ml_msh.MarkStructureNode();
 
@@ -312,15 +312,20 @@ int main(int argc,char **args) {
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
-  
+
+  system.SetMaxNumberOfLinearIterations(10);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+
   system.SetNonLinearConvergenceTolerance(1.e-9);
-  system.SetResidualUpdateConvergenceTolerance(1.e-15);
   system.SetMaxNumberOfNonLinearIterations(15);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(5);
-  if (simulation == 3) {
-    system.SetResidualUpdateConvergenceTolerance(1.e-8);
-    system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
-  }
+
+//   system.SetResidualUpdateConvergenceTolerance(1.e-15);
+//   system.SetMaxNumberOfNonLinearIterations(15);
+//   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(1);
+//   if (simulation == 3) {
+//     system.SetResidualUpdateConvergenceTolerance(1.e-8);
+//     system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
+//   }
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
@@ -334,13 +339,13 @@ int main(int argc,char **args) {
   // ******* Set Smoother *******
   system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(GMRES);
-  
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
+
+  system.SetPreconditionerFineGrids(MLU_PRECOND);
   if( simulation == 3 )
     system.SetPreconditionerFineGrids(MLU_PRECOND);
 
   system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
-    
+
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
@@ -350,8 +355,8 @@ int main(int argc,char **args) {
 
   // ******* Set block size for the ASM smoothers *******
   system.SetElementBlockNumber(2);
-  
- 
+
+
   // ******* Solve *******
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
@@ -371,7 +376,7 @@ int main(int argc,char **args) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 500;
+  const unsigned int n_timesteps = 1000;
 
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
@@ -397,14 +402,14 @@ int main(int argc,char **args) {
 double SetVariableTimeStep(const double time) {
   double dt = 1.;
   if( turek_FSI == 2 ){
-    if	    ( time < 5 ) dt = 0.1;
-    else if ( time < 9 ) dt = 0.05;
-    else 		 dt = 0.025;
+    if ( time < 9 ) dt = 0.05;
+    else dt = 0.025;
   }
   else if ( turek_FSI == 3 ){
-    if	    ( time < 5. ) dt = 0.1;
-    else if ( time < 6. ) dt = 0.05;
-    else 		  dt = 0.01;
+    //if	    ( time < 5. ) dt = 0.1;
+    //else
+    if ( time < 6. ) dt = 0.01;
+    else             dt = 0.01;
   }
   else if ( simulation == 3 ) dt=0.001;
   else if ( simulation == 4 ) dt=0.1;
