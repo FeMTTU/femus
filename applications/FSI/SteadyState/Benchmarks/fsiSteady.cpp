@@ -14,6 +14,7 @@
 using namespace std;
 using namespace femus;
 
+void PrintConditionNumber(char *stdOutfile, char*infile, const unsigned &numofrefinements);
 
 int main(int argc,char **args) {
 
@@ -23,6 +24,7 @@ int main(int argc,char **args) {
   // process options
   int dimension=2;
   char infile[256] = "";
+  char stdOutfile[256] = "";
   char outer_ksp_solver[256] = "gmres";
   size_t len_infile_name = 256;
   double Lref=1., Uref=1., rhof=1., muf=1., rhos=1., ni=0., E=1.;
@@ -56,13 +58,16 @@ int main(int argc,char **args) {
   PetscOptionsString("-input", "The name of the input file", "fsiSteady.cpp", "./mesh.neu", infile, len_infile_name, NULL);
   printf(" input: %s\n", infile);
 
+  PetscOptionsString("-std_output", "The name of the redirected standard output file", "fsiSteady.cpp", "", stdOutfile, len_infile_name, NULL);
+  printf(" redirected standard output: %s\n", stdOutfile);
+
   PetscOptionsString("-ic_bdc", "The name of the file with bdc and ic functions", "fsiSteady.cpp", "", bdcfilename, len_infile_name, NULL);
   printf(" ic_bdc: %s\n", bdcfilename);
 
   PetscOptionsReal("-rhof", "The density of the fluid", "fsiSteady.cpp", rhof, &rhof, NULL);
   printf(" rhof: %f\n", rhof);
 
-  PetscOptionsReal("-rhof", "The density of the solid", "fsiSteady.cpp", rhos, &rhos, NULL);
+  PetscOptionsReal("-rhos", "The density of the solid", "fsiSteady.cpp", rhos, &rhos, NULL);
   printf(" rhos: %f\n", rhos);
 
   PetscOptionsReal("-E", "The young module of the solid", "fsiSteady.cpp", E, &E, NULL);
@@ -316,7 +321,99 @@ int main(int argc,char **args) {
 
   // close the library
   dlclose(handle);
-
+  if(strcmp (stdOutfile,"") != 0){
+    PrintConditionNumber(stdOutfile, infile, numofrefinements);
+  }
   return 0;
 }
 
+void PrintConditionNumber(char *stdOutfile, char* infile, const unsigned &numofrefinements){
+
+  std::cout<<"END_COMPUTATION\n"<<std::flush;
+
+  std::ifstream inf;
+  inf.open(stdOutfile);
+  if (!inf) {
+    std::cout<<"Redirected standard output file not found\n";
+    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+    return;
+  }
+
+  std::ofstream outf;
+  char outFileName[100];
+  if(strcmp (infile,"./input/turek.neu") == 0){
+    sprintf(outFileName, "turek_hron_condition_number.%d.txt", numofrefinements);
+  }
+  else if(strcmp (infile,"./input/richter3d.neu") == 0){
+    sprintf(outFileName, "richter3d_condition_number.%d.txt", numofrefinements);
+  }
+  else{
+    sprintf(outFileName, "generic.%d.txt", numofrefinements);
+  }
+
+  outf.open(outFileName);
+  outf << "Number_of_refinements="<<numofrefinements<<std::endl;
+  outf << "Nonlinear_Iteration,RINFOG(7),RINFOG(8),RINFOG(9),RINFOG(10),RINFOG(11)";
+
+  std::string str1;
+  inf >> str1;
+  while (str1.compare("END_COMPUTATION") != 0) {
+    inf >> str1;
+    if (str1.compare("Nonlinear") == 0) {
+      inf >> str1;
+      if (str1.compare("iteration") == 0) {
+        inf >> str1;
+        outf << std::endl << str1;
+        inf >> str1;
+      }
+    }
+
+
+    if (str1.compare("RINFOG(7),RINFOG(8)") == 0) {
+      inf >> str1;
+      if (str1.compare("(backward") == 0) {
+        inf >> str1;
+        if (str1.compare("error") == 0) {
+          inf >> str1;
+          if (str1.compare("est):") == 0) {
+            inf >> str1;
+            outf <<","<< str1;
+            inf >> str1;
+            outf << str1;
+            inf >> str1;
+          }
+        }
+      }
+    }
+
+    if (str1.compare("RINFOG(9)") == 0) {
+      inf >> str1;
+      if (str1.compare("(error") == 0) {
+        inf >> str1;
+        if (str1.compare("estimate):") == 0) {
+          inf >> str1;
+          outf <<","<< str1;
+          inf >> str1;
+        }
+      }
+    }
+
+    if (str1.compare("RINFOG(10),RINFOG(11)(condition") == 0) {
+      inf >> str1;
+      if (str1.compare("numbers):") == 0) {
+        inf >> str1;
+        outf <<","<< str1;
+        inf >> str1;
+        outf << str1;
+        inf >> str1;
+      }
+    }
+
+  }
+
+  outf.close();
+  inf.close();
+
+
+
+};
