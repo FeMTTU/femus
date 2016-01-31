@@ -342,18 +342,19 @@ void PrintConditionNumber(char *stdOutfile, char* infile, const unsigned &numofr
   std::ofstream outf;
   char outFileName[100];
   if(strcmp (infile,"./input/turek.neu") == 0){
-    sprintf(outFileName, "turek_hron_condition_number.%d.txt", numofrefinements);
+    sprintf(outFileName, "turek_hron_condition_number.txt");
   }
   else if(strcmp (infile,"./input/richter3d.neu") == 0){
-    sprintf(outFileName, "richter3d_condition_number.%d.txt", numofrefinements);
+    sprintf(outFileName, "richter3d_condition_number.txt");
   }
   else{
-    sprintf(outFileName, "generic.%d.txt", numofrefinements);
+    sprintf(outFileName, "generic.txt");
   }
 
-  outf.open(outFileName);
+  outf.open(outFileName, std::ofstream::app);
+  outf << std::endl << std::endl;
   outf << "Number_of_refinements="<<numofrefinements<<std::endl;
-  outf << "Nonlinear_Iteration,RINFOG(7),RINFOG(8),RINFOG(9),RINFOG(10),RINFOG(11)";
+  outf << "Nonlinear_Iteration,RINFOG(7),RINFOG(8),RINFOG(9),RINFOG(10),RINFOG(11),INFOG(19),E5*B5*E5/D5+F5*C5*F5/D5";
 
   std::string str1;
   inf >> str1;
@@ -368,47 +369,34 @@ void PrintConditionNumber(char *stdOutfile, char* infile, const unsigned &numofr
       }
     }
 
-
     if (str1.compare("RINFOG(7),RINFOG(8)") == 0) {
+      inf >> str1 >> str1 >> str1 >> str1;
+      outf <<","<< str1;
       inf >> str1;
-      if (str1.compare("(backward") == 0) {
-        inf >> str1;
-        if (str1.compare("error") == 0) {
-          inf >> str1;
-          if (str1.compare("est):") == 0) {
-            inf >> str1;
-            outf <<","<< str1;
-            inf >> str1;
-            outf << str1;
-            inf >> str1;
-          }
-        }
-      }
+      outf << str1;
+      inf >> str1;
     }
 
     if (str1.compare("RINFOG(9)") == 0) {
+      inf >> str1 >> str1 >> str1;
+      outf <<","<< str1;
       inf >> str1;
-      if (str1.compare("(error") == 0) {
-        inf >> str1;
-        if (str1.compare("estimate):") == 0) {
-          inf >> str1;
-          outf <<","<< str1;
-          inf >> str1;
-        }
-      }
     }
 
     if (str1.compare("RINFOG(10),RINFOG(11)(condition") == 0) {
+      inf >> str1>> str1;
+      outf <<","<< str1;
       inf >> str1;
-      if (str1.compare("numbers):") == 0) {
-        inf >> str1;
-        outf <<","<< str1;
-        inf >> str1;
-        outf << str1;
-        inf >> str1;
-      }
+      outf << str1;
+      inf >> str1;
     }
-
+    if (str1.compare("INFOG(19)") == 0){
+      inf >> str1 >> str1 >> str1>> str1 >> str1 >> str1;
+      inf >> str1 >> str1 >> str1>> str1 >> str1 >> str1 >> str1;
+      inf >> str1;
+      outf <<","<< str1;
+      inf >> str1;
+    }
   }
 
   outf.close();
