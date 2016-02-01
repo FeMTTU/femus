@@ -335,6 +335,8 @@ public:
     return os;
   }
   
+  virtual void BinaryPrint(const char* fileName, const unsigned & k){};
+  
 protected:
 
   // member data

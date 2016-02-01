@@ -585,5 +585,17 @@ namespace femus {
 
 
   }
+  
+  void MultiLevelSolution::SaveSolution(const char* filename, const unsigned &timeStep){
+    
+    char composedFileName[100];
+    sprintf(composedFileName, "./save/%s.%d", filename, timeStep);
+      
+    for (unsigned i = 0; i < _gridn; i++) {
+      for (int k = 0; k < _solName.size(); k++) {
+	_solution[i]->_Sol[k]->BinaryPrint(composedFileName, i*k);
+      }
+    }  
+  }
 
 } //end namespace femus

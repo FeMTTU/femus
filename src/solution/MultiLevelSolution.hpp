@@ -200,6 +200,8 @@ public:
     }
 
     bool _useParsedBCFunction;
+    
+    void SaveSolution(const char* filename, const unsigned &timeStep);
 private:
     /** boundary condition function pointer */
 

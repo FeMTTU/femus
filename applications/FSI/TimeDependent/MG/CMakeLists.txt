@@ -7,3 +7,5 @@ SET(EXEC_FILE "fsitimedepMG")
 
 femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})
 
+FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/save/)
+

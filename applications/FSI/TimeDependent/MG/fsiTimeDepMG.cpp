@@ -395,6 +395,8 @@ int main(int argc,char **args) {
     system.MGsolve();
 
     system.UpdateSolution();
+    
+    if( time_step%1 == 0) ml_sol.SaveSolution("turek_FSI3",time_step + 1);
 
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }

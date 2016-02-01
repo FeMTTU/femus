@@ -867,7 +867,20 @@ void PetscVector::create_subvector(
   CHKERRABORT(MPI_COMM_WORLD,ierr);
   return;
 }
-
+  
+  void PetscVector::BinaryPrint(const char* fileName, const unsigned & k){
+    
+    PetscViewer binv;
+    if(k == 0){
+      PetscViewerBinaryOpen(MPI_COMM_WORLD,fileName, FILE_MODE_WRITE, &binv);
+    }
+    else{
+      PetscViewerBinaryOpen(MPI_COMM_WORLD,fileName, FILE_MODE_APPEND, &binv);
+    }
+    VecView(_vec, binv);
+    PetscViewerDestroy(&binv);
+    
+  }
 
 } //end namespace femus
 
