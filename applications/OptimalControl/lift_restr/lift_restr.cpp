@@ -58,7 +58,7 @@ int main(int argc, char** args) {
 
   // add variables to mlSol
   mlSol.AddSolution("Thom", LAGRANGE, SECOND);
-  mlSol.AddSolution("ThomAdj", LAGRANGE, FIRST);
+  mlSol.AddSolution("ThomAdj", LAGRANGE, SECOND);
   mlSol.AddSolution("Tcont", LAGRANGE, SECOND);
 
   mlSol.Initialize("All");    // initialize all varaibles to zero
@@ -302,6 +302,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
   }
   //*************************************** 
+  //***** set target domain flag ********************************** 
+  int control_flag = 0;
+   if ( elem_center[1] > -100 ) { control_flag = 1; }
+  //*************************************** 
     
  //*********** Thom **************************** 
     unsigned nDofThom     = el->GetElementDofNumber(kel, solTypeThom);    // number of solution element dofs
@@ -446,7 +450,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      //DIAG BLOCK Tcont
               if ( i < nDofTcont   && j < nDofTcont   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
-								(nDofThom  + nDofThomAdj + j)                     ]  += weight * ( gamma * laplace_mat_Tcont + beta * phi_Tcont[i] * phi_Tcont[j] + alpha  * target_flag  * phi_Tcont[i] * phi_Tcont[j]);
+								(nDofThom  + nDofThomAdj + j)                     ]  += weight * ( gamma * control_flag  * laplace_mat_Tcont + beta * control_flag * phi_Tcont[i] * phi_Tcont[j] + alpha  * target_flag  * phi_Tcont[i] * phi_Tcont[j]);
               //BLOCK Tcont - Thom
               if ( i < nDofTcont   && j < nDofThom   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
