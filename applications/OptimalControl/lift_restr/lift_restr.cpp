@@ -250,8 +250,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   
  //********** DATA ***************** 
-  double T_des = 10.;
-  double alpha = 10000000000;
+  double T_des = 100.;
+  double alpha = 1000000000;
   double beta  = 1.;
   double gamma = 1.;
   
@@ -402,35 +402,42 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               double laplace_mat_ThomAdj = 0.;
               double laplace_mat_Tcont = 0.;
               double laplace_mat_ThomVSTcont = 0.;
+              double laplace_mat_ThomAdjVSTcont = 0.;
 
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDofThom && j < nDofThom )         laplace_mat_Thom        += (phi_x_Thom   [i * dim + kdim] * phi_x_Thom   [j * dim + kdim]);
-              if ( i < nDofThomAdj && j < nDofThomAdj )   laplace_mat_ThomAdj     += (phi_x_ThomAdj[i * dim + kdim] * phi_x_ThomAdj[j * dim + kdim]);
-              if ( i < nDofTcont   && j < nDofTcont   )   laplace_mat_Tcont       += (phi_x_Tcont  [i * dim + kdim] * phi_x_Tcont  [j * dim + kdim]);
-              if ( i < nDofThom    && j < nDofTcont )     laplace_mat_ThomVSTcont += (phi_x_Thom   [i * dim + kdim] * phi_x_Tcont  [j * dim + kdim]);
+              if ( i < nDofThom && j < nDofThom )         laplace_mat_Thom           += (phi_x_Thom   [i * dim + kdim] * phi_x_Thom   [j * dim + kdim]);
+              if ( i < nDofThomAdj && j < nDofThomAdj )   laplace_mat_ThomAdj        += (phi_x_ThomAdj[i * dim + kdim] * phi_x_ThomAdj[j * dim + kdim]);
+              if ( i < nDofTcont   && j < nDofTcont   )   laplace_mat_Tcont          += (phi_x_Tcont  [i * dim + kdim] * phi_x_Tcont  [j * dim + kdim]);
+              if ( i < nDofThom    && j < nDofTcont )     laplace_mat_ThomVSTcont    += (phi_x_Thom   [i * dim + kdim] * phi_x_Tcont  [j * dim + kdim]);
+              if ( i < nDofTcont   && j < nDofThomAdj )   laplace_mat_ThomAdjVSTcont += (phi_x_ThomAdj[i * dim + kdim] * phi_x_Tcont  [j * dim + kdim]);
 		
 	      }
 
+              //first row ==================
               //DIAG BLOCK Thom
 	      if ( i < nDofThom && j < nDofThom )       Jac[    0    * (nDofThom + nDofThomAdj + nDofTcont)    +
                                                                    i    * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                (0 + j)                                           ]  += weight * laplace_mat_Thom;
-              //DIAG BLOCK ThomAdj
-              if ( i < nDofThomAdj && j < nDofThomAdj ) Jac[ (nDofThom + 0)           * (nDofThom + nDofThomAdj + nDofTcont) +
-		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont) +
-								(nDofThom + j)                                    ]  += weight * laplace_mat_ThomAdj;
               // BLOCK Thom - Tcont
               if ( i < nDofThom    && j < nDofTcont )   Jac[    0     * (nDofThom + nDofThomAdj + nDofTcont)   +
                                                                    i    * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                (nDofThom + nDofThomAdj + j)                      ]  += weight * laplace_mat_ThomVSTcont;      
+	      
+              //second row ==================
+              //DIAG BLOCK ThomAdj
+              if ( i < nDofThomAdj && j < nDofThomAdj ) Jac[ (nDofThom + 0)           * (nDofThom + nDofThomAdj + nDofTcont) +
+		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont) +
+								(nDofThom + j)                                    ]  += weight * laplace_mat_ThomAdj;
+	      
               // BLOCK ThomAdj - Thom	      
               if ( i < nDofThomAdj && j < nDofThom )   Jac[    (nDofThom + 0)           * (nDofThom + nDofThomAdj + nDofTcont)  +
                                                                    i    * (nDofThom + nDofThomAdj + nDofTcont) +
-		                                                (0 + j)                      ]                       += weight * alpha *  phi_ThomAdj[i] * phi_Thom[j];      
+		                                                (0 + j)                      ]                       += weight * alpha *  phi_ThomAdj[i] * phi_Thom[j];   
+	      
               // BLOCK ThomAdj - Tcont	      
               if ( i < nDofThomAdj && j < nDofTcont )   Jac[    (nDofThom + 0)           * (nDofThom + nDofThomAdj + nDofTcont)  +
                                                                    i    * (nDofThom + nDofThomAdj + nDofTcont) +
-		                                                (nDofThom + nDofThomAdj + j)                      ]  += weight * alpha *  phi_ThomAdj[i] * phi_Tcont[j];      
+		                                                (nDofThom + nDofThomAdj + j)                      ]  += weight * alpha *  phi_ThomAdj[i] * phi_Tcont[j]; 
 
               //third row ==================
 	      //DIAG BLOCK Tcont
@@ -442,9 +449,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
 								(0 + j)                                           ]  += weight * ( alpha * phi_Tcont[i] * phi_Thom[j]);
 	      //BLOCK Tcont - ThomAdj
-              if ( i < nDofTcont   && j < nDofThomAdj   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
-		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
-								(nDofThom + j)                                           ]  += weight *laplace_mat_ThomAdj;
+              if ( i < nDofTcont   && j < nDofThomAdj  ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) + 
+		                                               i * (nDofThom + nDofThomAdj + nDofTcont) +
+							        (nDofThom + j) ]  +=  weight * laplace_mat_ThomAdjVSTcont;
 	      
 	      
             } // end phi_j loop
