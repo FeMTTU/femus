@@ -14,7 +14,8 @@
 using namespace std;
 using namespace femus;
 
-void PrintConditionNumber(char *stdOutfile, char*infile, const unsigned &numofrefinements);
+void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
+void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
 
 int main(int argc,char **args) {
 
@@ -322,12 +323,13 @@ int main(int argc,char **args) {
   // close the library
   dlclose(handle);
   if(strcmp (stdOutfile,"") != 0){
-    PrintConditionNumber(stdOutfile, infile, numofrefinements);
+    PrintMumpsInfo(stdOutfile, infile, numofrefinements);
+    PrintConvergenceInfo(stdOutfile, infile, numofrefinements);
   }
   return 0;
 }
 
-void PrintConditionNumber(char *stdOutfile, char* infile, const unsigned &numofrefinements){
+void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements){
 
   std::cout<<"END_COMPUTATION\n"<<std::flush;
 
@@ -342,13 +344,13 @@ void PrintConditionNumber(char *stdOutfile, char* infile, const unsigned &numofr
   std::ofstream outf;
   char outFileName[100];
   if(strcmp (infile,"./input/turek.neu") == 0){
-    sprintf(outFileName, "turek_hron_condition_number.txt");
+    sprintf(outFileName, "turek_hron_mumps_info.txt");
   }
   else if(strcmp (infile,"./input/richter3d.neu") == 0){
-    sprintf(outFileName, "richter3d_condition_number.txt");
+    sprintf(outFileName, "richter3d_mumps_info.txt");
   }
   else{
-    sprintf(outFileName, "generic.txt");
+    sprintf(outFileName, "generic_mumps_info.txt");
   }
 
   outf.open(outFileName, std::ofstream::app);
@@ -359,49 +361,125 @@ void PrintConditionNumber(char *stdOutfile, char* infile, const unsigned &numofr
   std::string str1;
   inf >> str1;
   while (str1.compare("END_COMPUTATION") != 0) {
-    inf >> str1;
     if (str1.compare("Nonlinear") == 0) {
       inf >> str1;
       if (str1.compare("iteration") == 0) {
         inf >> str1;
         outf << std::endl << str1;
-        inf >> str1;
       }
     }
-
-    if (str1.compare("RINFOG(7),RINFOG(8)") == 0) {
+    else if (str1.compare("RINFOG(7),RINFOG(8)") == 0) {
       inf >> str1 >> str1 >> str1 >> str1;
       outf <<","<< str1;
       inf >> str1;
       outf << str1;
-      inf >> str1;
     }
-
-    if (str1.compare("RINFOG(9)") == 0) {
+    else if (str1.compare("RINFOG(9)") == 0) {
       inf >> str1 >> str1 >> str1;
       outf <<","<< str1;
-      inf >> str1;
     }
-
-    if (str1.compare("RINFOG(10),RINFOG(11)(condition") == 0) {
+    else if (str1.compare("RINFOG(10),RINFOG(11)(condition") == 0) {
       inf >> str1>> str1;
       outf <<","<< str1;
       inf >> str1;
       outf << str1;
-      inf >> str1;
     }
-    if (str1.compare("INFOG(19)") == 0){
+    else if (str1.compare("INFOG(19)") == 0){
       inf >> str1 >> str1 >> str1>> str1 >> str1 >> str1;
       inf >> str1 >> str1 >> str1>> str1 >> str1 >> str1 >> str1;
       inf >> str1;
       outf <<","<< str1;
-      inf >> str1;
     }
+    inf >> str1;
   }
 
   outf.close();
   inf.close();
 
+};
 
+
+
+void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements){
+
+  std::cout<<"END_COMPUTATION\n"<<std::flush;
+
+  std::ifstream inf;
+  inf.open(stdOutfile);
+  if (!inf) {
+    std::cout<<"Redirected standard output file not found\n";
+    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+    return;
+  }
+
+  std::ofstream outf;
+  char outFileName[100];
+  if(strcmp (infile,"./input/turek.neu") == 0){
+    sprintf(outFileName, "turek_hron_convergence_info.txt");
+  }
+  else if(strcmp (infile,"./input/richter3d.neu") == 0){
+    sprintf(outFileName, "richter3d_convergence_info.txt");
+  }
+  else{
+    sprintf(outFileName, "generic_convergence_info.txt");
+  }
+
+  outf.open(outFileName, std::ofstream::app);
+  outf << std::endl << std::endl;
+  outf << "Number_of_refinements="<<numofrefinements<<std::endl;
+  outf << "Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
+
+  std::string str1;
+  inf >> str1;
+  while (str1.compare("END_COMPUTATION") != 0) {
+
+    if (str1.compare("Nonlinear") == 0) {
+      inf >> str1;
+      if (str1.compare("iteration") == 0) {
+        inf >> str1;
+        outf << std::endl << str1;
+      }
+    }
+    else if (str1.compare("KSP") == 0){
+      inf >> str1;
+      if (str1.compare("preconditioned") == 0){
+        inf >> str1;
+        if (str1.compare("resid") == 0){
+          inf >> str1;
+          if (str1.compare("norm") == 0){
+            double norm0 = 1.;
+            double normN = 1.;
+            unsigned counter = 0;
+            inf >> norm0;
+            outf <<","<< norm0;
+            for (unsigned i = 0; i < 11; i++){
+              inf >> str1;
+            }
+            while(str1.compare("norm") == 0){
+              inf >> normN;
+              outf <<","<< normN;
+              counter++;
+              for (unsigned i = 0; i < 11; i++){
+                inf >> str1;
+              }
+            }
+            if(counter != 0){
+              outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
+            }
+            else{
+              outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
+            }
+          }
+        }
+      }
+    }
+    inf >> str1;
+  }
+
+  outf.close();
+  inf.close();
 
 };
+
+
+
