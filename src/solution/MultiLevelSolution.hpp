@@ -201,7 +201,9 @@ public:
 
     bool _useParsedBCFunction;
     
-    void SaveSolution(const char* filename, const unsigned &timeStep);
+    void SaveSolution(const char* filename, const unsigned &timeStep = UINT_MAX );
+    void LoadSolution(const char* filename, const unsigned &timeStep = UINT_MAX );
+    void LoadSolution(const unsigned &level, const char* filename, const unsigned &timeStep = UINT_MAX);
 private:
     /** boundary condition function pointer */
 
