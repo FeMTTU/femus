@@ -108,7 +108,7 @@ int main(int argc, char** args) {
 
   std::vector < unsigned > fieldP(1);
   fieldP[0] = system.GetSolPdeIndex("P");
-  FieldSplitTree FS_P(GMRES, ILU_PRECOND, fieldP, "Pressure");
+  FieldSplitTree FS_P(GMRES, ILU_PRECOND, fieldP, "Pressure");// changed by guoyiKe
   
   std::vector < FieldSplitTree *> FS1;
   FS1.reserve(2);
