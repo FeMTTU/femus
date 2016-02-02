@@ -16,6 +16,7 @@ using namespace femus;
 
 void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
 void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
+void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofrefinements);
 
 int main(int argc,char **args) {
 
@@ -325,6 +326,7 @@ int main(int argc,char **args) {
   if(strcmp (stdOutfile,"") != 0){
     PrintMumpsInfo(stdOutfile, infile, numofrefinements);
     PrintConvergenceInfo(stdOutfile, infile, numofrefinements);
+    PrintMultigridTime(stdOutfile, infile, numofrefinements);
   }
   return 0;
 }
@@ -479,7 +481,54 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
   outf.close();
   inf.close();
 
-};
+}
 
+void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofrefinements){
 
+  std::cout<<"END_COMPUTATION\n"<<std::flush;
+
+  std::ifstream inf;
+  inf.open(stdOutfile);
+  if (!inf) {
+    std::cout<<"Redirected standard output file not found\n";
+    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+    return;
+  }
+
+  std::ofstream outf;
+  char outFileName[100];
+  if(strcmp (infile,"./input/turek.neu") == 0){
+    sprintf(outFileName, "turek_hron_multigrid_time.txt");
+  }
+  else if(strcmp (infile,"./input/richter3d.neu") == 0){
+    sprintf(outFileName, "richter3d_multigrid_time.txt");
+  }
+  else{
+    sprintf(outFileName, "generic_multigrid_time.txt");
+  }
+
+  outf.open(outFileName, std::ofstream::app);
+  outf << std::endl;
+  outf << "Number_of_refinements="<<numofrefinements<<",";
+
+  std::string str1;
+  inf >> str1;
+  while (str1.compare("END_COMPUTATION") != 0) {
+    if (str1.compare("Nonlinear") == 0) {
+      inf >> str1;
+      if (str1.compare("MultiGrid") == 0) {
+        inf >> str1;
+        if (str1.compare("TIME:") == 0) {
+          inf >> str1;
+          outf << str1;
+        }
+      }
+    }
+    inf >> str1;
+  }
+
+  outf.close();
+  inf.close();
+
+}
 
