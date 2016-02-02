@@ -74,9 +74,11 @@ namespace femus {
       FieldSplitTree* GetFather() const;
 
       FieldSplitTree* GetChild( const unsigned& i );
-
+      
     private:
 
+      void SetPetscSolverType(KSP& ksp);
+      
       SolverType _solver;
       PreconditionerType _preconditioner;
       unsigned _numberOfSplits;
