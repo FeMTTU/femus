@@ -31,14 +31,14 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   bool dirichlet = true; //dirichlet
   value = 0.;
   
-      if (facename == 1) {
-       if (!strcmp(SolName, "U")) {   value = 0.;  } 
-  else if (!strcmp(SolName, "V")) {  dirichlet = false; }
+      if (facename == 2) {
+       if (!strcmp(SolName, "V")) {   value = 0.;  } 
+  else if (!strcmp(SolName, "U")) {  dirichlet = false; }
       }
       
-      if (facename == 3) {
-       if (!strcmp(SolName, "U")) {   value = 0.;  } 
-  else if (!strcmp(SolName, "V")) {  dirichlet = false; }
+      if (facename == 4) {
+       if (!strcmp(SolName, "V")) {   value = 0.;  } 
+  else if (!strcmp(SolName, "U")) {  dirichlet = false; }
       }
       
   return dirichlet;
@@ -73,9 +73,6 @@ int main(int argc, char** args) {
 //    
  mlMsh.GenerateCoarseBoxMesh( 8,8,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
     
-  
-  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
-//   mlMsh.ReadCoarseMesh ( "./input/square_quad.neu", "seventh", scalingFactor );
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -239,7 +236,6 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
   vector < double > Jac;
   Jac.reserve((dim + 1) *maxSize * (dim + 1) *maxSize);
-  
 
   if (assembleMatrix)   KK->zero(); // Set to zero all the entries of the Global Matrix
 
@@ -265,6 +261,8 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
     // resize local arrays
     KKDof.resize(nDofsVP);
     
+    Jac.resize(nDofsVP * nDofsVP);
+
     for (unsigned  k = 0; k < dim; k++) {
       aResV[k].resize(nDofsV);    //resize
       std::fill(aResV[k].begin(), aResV[k].end(), 0);    //set aRes to zero
@@ -274,7 +272,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
     std::fill(aResP.begin(), aResP.end(), 0);    //set aRes to zero
 
     
-    // local storage of coordinates
+    // geometry ************
     for (unsigned i = 0; i < nDofsX; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, coordXType);    // local to global coordinates node
       unsigned coordXDof  = msh->GetMetisDof(iNode, coordXType);    // global to global mapping between coordinates node and coordinate dof
@@ -284,7 +282,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
       }
     }
     
-    // local storage of global mapping and solution
+    // velocity ************
     for (unsigned i = 0; i < nDofsV; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, solVType);    // local to global solution node
       unsigned solVDof = msh->GetMetisDof(iNode, solVType);    // global to global mapping between solution node and solution dof
@@ -294,7 +292,8 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
         KKDof[i + k * nDofsV] = pdeSys->GetKKDof(solVIndex[k], solVPdeIndex[k], iNode);    // global to global mapping between solution node and pdeSys dof
       }
     }
-
+    
+    // pressure *************
     for (unsigned i = 0; i < nDofsP; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, solPType);    // local to global solution node
       unsigned solPDof = msh->GetMetisDof(iNode, solPType);    // global to global mapping between solution node and solution dof
@@ -340,7 +339,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
         }
 
         double nu = 1.;
-	double valg[3] = {0.,1.,0.};
+	double valg[3] = {1.,0.,0.};
 	
         // *** phiV_i loop ***
         for (unsigned i = 0; i < nDofsV; i++) {
@@ -393,7 +392,6 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
     //Extarct and store the Jacobian
     if (assembleMatrix) {
-      Jac.resize(nDofsVP * nDofsVP);
       // define the dependent variables
 
       for (unsigned  k = 0; k < dim; k++) {
