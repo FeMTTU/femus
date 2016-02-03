@@ -27,32 +27,25 @@
 using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  bool dirichlet = true; //dirichlet
   
-  if (!strcmp(SolName, "U")) {
-    value = 0.;
-  } else if (!strcmp(SolName, "V")) {
-    value = 0.;
-
-    if (facename == 1) {
-      if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
-    }
-  }
-
-  if (!strcmp(SolName, "W")) {
-    value = 0.;
-  } else if (!strcmp(SolName, "P")) {
-    value = 0.;
-    dirichlet = false;
-
-    if (x[0] < -0.5 + 1.0e-10 && x[1] < -0.5 + 1.0e-10 && x[2] < 1.0e-10 && x[2] > -1.0e-10) dirichlet = true;
-  }
-
+  bool dirichlet = true; //dirichlet
+  value = 0.;
+  
+      if (facename == 1) {
+       if (!strcmp(SolName, "U")) {   value = 0.;  } 
+  else if (!strcmp(SolName, "V")) {  dirichlet = false; }
+      }
+      
+      if (facename == 3) {
+       if (!strcmp(SolName, "U")) {   value = 0.;  } 
+  else if (!strcmp(SolName, "V")) {  dirichlet = false; }
+      }
+      
   return dirichlet;
 }
 
 
-void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
 
 int main(int argc, char** args) {
@@ -78,11 +71,11 @@ int main(int argc, char** args) {
 //   MultiLevelMesh mlMsh;
 // //   mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
 //    
-//  mlMsh.GenerateCoarseBoxMesh( 8,8,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
+ mlMsh.GenerateCoarseBoxMesh( 8,8,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
     
   
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ( "./input/square_quad.neu", "seventh", scalingFactor );
+//   mlMsh.ReadCoarseMesh ( "./input/square_quad.neu", "seventh", scalingFactor );
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -127,7 +120,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("P");
 
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
+  system.SetAssembleFunction(AssembleNavierStokes_AD);
 
   // initilaize and solve the system
   system.init();
@@ -144,7 +137,7 @@ int main(int argc, char** args) {
 }
 
 
-void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
+void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -170,14 +163,24 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   SparseMatrix*    KK         = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*   RES          = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
-  //solution variable
+  //geometry *******************************
+  vector < vector < double > > coordX(dim);    // local coordinates
+  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+  for (unsigned  k = 0; k < dim; k++) {
+    coordX[k].reserve(maxSize);
+  }
+  //geometry *******************************
+
+  //velocity *******************************
   vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
@@ -185,39 +188,21 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   if (dim == 3) solVIndex[2] = mlSol->GetIndex("W");      // get the position of "V" in the ml_sol object
 
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
-
-  unsigned solPIndex;
-  solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
-  unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
-
-  vector < unsigned > solVPdeIndex(dim);
+ vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
 
   if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
-
-  unsigned solPPdeIndex;
-  solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
-
+  
   vector < vector < adept::adouble > >  solV(dim);    // local solution
-  vector < adept::adouble >  solP; // local solution
-
-  vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
-  vector< adept::adouble > aResP; // local redidual vector
-
-  vector < vector < double > > coordX(dim);    // local coordinates
-  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-
-  for (unsigned  k = 0; k < dim; k++) {
+   vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
+   
+ for (unsigned  k = 0; k < dim; k++) {
     solV[k].reserve(maxSize);
     aResV[k].reserve(maxSize);
-    coordX[k].reserve(maxSize);
   }
 
-  solP.reserve(maxSize);
-  aResP.reserve(maxSize);
-
-
+  
   vector <double> phiV;  // local test function
   vector <double> phiV_x; // local test function first order partial derivatives
   vector <double> phiV_xx; // local test function second order partial derivatives
@@ -225,8 +210,25 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   phiV.reserve(maxSize);
   phiV_x.reserve(maxSize * dim);
   phiV_xx.reserve(maxSize * dim2);
+  //velocity *******************************
 
+  //pressure *******************************
+  unsigned solPIndex;
+  solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
+  unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
+
+  unsigned solPPdeIndex;
+  solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
+
+  vector < adept::adouble >  solP; // local solution
+  vector< adept::adouble > aResP; // local redidual vector
+  
+  solP.reserve(maxSize);
+  aResP.reserve(maxSize);
+  
   double* phiP;
+  //pressure *******************************
+
   double weight; // gauss point weight
 
   vector< int > KKDof; // local to global pdeSys dofs
@@ -237,31 +239,32 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   vector < double > Jac;
   Jac.reserve((dim + 1) *maxSize * (dim + 1) *maxSize);
+  
 
-  if (assembleMatrix)
-    KK->zero(); // Set to zero all the entries of the Global Matrix
+  if (assembleMatrix)   KK->zero(); // Set to zero all the entries of the Global Matrix
 
+  
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
 
     unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
     short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
 
+    unsigned nDofsX = el->GetElementDofNumber(kel, coordXType);    // number of coordinate element dofs
+    
     unsigned nDofsV = el->GetElementDofNumber(kel, solVType);    // number of solution element dofs
     unsigned nDofsP = el->GetElementDofNumber(kel, solPType);    // number of solution element dofs
-    unsigned nDofsX = el->GetElementDofNumber(kel, coordXType);    // number of coordinate element dofs
-
     unsigned nDofsVP = dim * nDofsV + nDofsP;
-    // resize local arrays
-    KKDof.resize(nDofsVP);
 
-    for (unsigned  k = 0; k < dim; k++) {
-      solV[k].resize(nDofsV);
-      coordX[k].resize(nDofsX);
-    }
-
+    for (unsigned  k = 0; k < dim; k++) {       coordX[k].resize(nDofsX);    }
+     
+    for (unsigned  k = 0; k < dim; k++)   solV[k].resize(nDofsV);
     solP.resize(nDofsP);
 
+//element matrices and vectors
+    // resize local arrays
+    KKDof.resize(nDofsVP);
+    
     for (unsigned  k = 0; k < dim; k++) {
       aResV[k].resize(nDofsV);    //resize
       std::fill(aResV[k].begin(), aResV[k].end(), 0);    //set aRes to zero
@@ -270,6 +273,17 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     aResP.resize(nDofsP);    //resize
     std::fill(aResP.begin(), aResP.end(), 0);    //set aRes to zero
 
+    
+    // local storage of coordinates
+    for (unsigned i = 0; i < nDofsX; i++) {
+      unsigned iNode = el->GetMeshDof(kel, i, coordXType);    // local to global coordinates node
+      unsigned coordXDof  = msh->GetMetisDof(iNode, coordXType);    // global to global mapping between coordinates node and coordinate dof
+
+      for (unsigned k = 0; k < dim; k++) {
+        coordX[k][i] = (*msh->_coordinate->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+      }
+    }
+    
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsV; i++) {
       unsigned iNode = el->GetMeshDof(kel, i, solVType);    // local to global solution node
@@ -288,16 +302,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       KKDof[i + dim * nDofsV] = pdeSys->GetKKDof(solPIndex, solPPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
     }
 
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofsX; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, coordXType);    // local to global coordinates node
-      unsigned coordXDof  = msh->GetMetisDof(iNode, coordXType);    // global to global mapping between coordinates node and coordinate dof
-
-      for (unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_coordinate->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
-      }
-    }
-
+    
     if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
       // start a new recording of all the operations involving adept::adouble variables
       s.new_recording();
@@ -335,7 +340,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         }
 
         double nu = 1.;
-	double valg = 9.81;
+	double valg[3] = {0.,1.,0.};
 	
         // *** phiV_i loop ***
         for (unsigned i = 0; i < nDofsV; i++) {
@@ -345,7 +350,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
             for (unsigned  k = 0; k < dim; k++) {
               NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
 //               NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
-	      NSV[k]   += -valg * phiV[i] ;
+	      NSV[k]   +=  valg[k] * phiV[i] ;
             }
           }
 
@@ -419,7 +424,4 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   // ***************** END ASSEMBLY *******************
 }
-
-
-
 
