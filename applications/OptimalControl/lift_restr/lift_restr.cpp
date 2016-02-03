@@ -304,7 +304,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   //*************************************** 
   //***** set target domain flag ********************************** 
   int control_flag = 0;
-   if ( elem_center[1] > -100 ) { control_flag = 1; }
+   if ( elem_center[1] > - 0.3 ) { control_flag = 1; }
   //*************************************** 
     
  //*********** Thom **************************** 
@@ -396,11 +396,17 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	  if (i < nDofThom)    Res[0                      + i] += weight * (0.) ;
           // SECOND ROW
           if (i < nDofThomAdj) Res[nDofThom               + i] += weight * ( alpha * target_flag * T_des * phi_ThomAdj[i] );
-	  
-	  
+  
           // THIRD ROW
-          if (i < nDofTcont)   Res[nDofThom + nDofThomAdj + i] += weight * ( alpha * target_flag * T_des * phi_Tcont  [i] );
-
+         if ( control_flag == 1)  {
+           if (i < nDofTcont)   Res[nDofThom + nDofThomAdj + i] += weight * ( alpha * target_flag * T_des * phi_Tcont  [i] );
+	      }
+	 else if ( control_flag == 0)  {
+           if (i < nDofTcont)   Res[nDofThom + nDofThomAdj + i] += weight * phi_Tcont  [i];
+	    }
+	      
+	      
+	      
           if (assembleMatrix) {
 	    
             // *** phi_j loop ***
@@ -448,6 +454,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
               //third row ==================
 	      //DIAG BLOCK Tcont
+	      
+	      if ( control_flag == 1)  {
+	      
+              //BLOCK Tcont - Tcont
               if ( i < nDofTcont   && j < nDofTcont   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
 								(nDofThom  + nDofThomAdj + j)                     ]  += weight * ( gamma * control_flag  * laplace_mat_Tcont + beta * control_flag * phi_Tcont[i] * phi_Tcont[j] + alpha  * target_flag  * phi_Tcont[i] * phi_Tcont[j]);
@@ -459,6 +469,17 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               if ( i < nDofTcont   && j < nDofThomAdj  ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) + 
 		                                               i * (nDofThom + nDofThomAdj + nDofTcont) +
 							        (nDofThom + j) ]  +=  weight * laplace_mat_ThomAdjVSTcont;
+	      }
+	      
+	      else if ( control_flag == 0)  {
+		
+              //BLOCK Tcont - Tcont
+	      if ( i < nDofTcont   && j < nDofTcont   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
+		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
+								(nDofThom  + nDofThomAdj + j)                     ] += weight * 1. * phi_Tcont[i] * phi_Tcont[j];
+			
+	      }
+	      
 	      
 	      
             } // end phi_j loop
