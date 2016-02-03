@@ -240,6 +240,25 @@ namespace femus {
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
       }
       PCSetUp(pc);
+      
+//       Mat A00,A01,A10,A11,L;
+//       PCFieldSplitGetSchurBlocks(pc,&A00,&A01,&A10,&A11);
+//       
+//       MatMatMult(A10,A01,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&L);
+//       
+//       PetscViewer viewer;
+//             
+//       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,600,600,&viewer);     
+//       
+//       //MatView(A11, viewer);
+//       
+//       
+//       MatDestroy(&L);
+//       
+//       int a;
+//       std::cin >> a;
+      
+      
       KSP* subksp;
       PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
       PCFieldSplitGetSubKSP( pc, &nlocal, &subksp );
