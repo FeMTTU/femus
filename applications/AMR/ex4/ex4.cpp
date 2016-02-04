@@ -517,9 +517,10 @@ std::pair < double, double > GetError (MultiLevelSolution* mlSol) {
         for (unsigned j = 0; j < dim; j++) {
           gradSolUig[j] += phi_x[i * dim + j] * solU[i];
           x_gss[j] += crdX[j][i] * phi[i];
+	  laplaceU += ( phi_xx[0 * dim2 + j] + phi_xx[1 * dim2 + j]) * solU[i];
         }
         
-        laplaceU += ( phi_xx[i * dim2 + 0] + phi_xx[i * dim2 + 1]) * solUig;
+        
       
       double srcTerm = - GetExactSolutionLaplace (x_gss);
       Rhok += (srcTerm * phi[i] + laplaceU) * weight;
