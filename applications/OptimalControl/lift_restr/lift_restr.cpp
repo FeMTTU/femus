@@ -7,6 +7,8 @@
 
 using namespace femus;
 
+
+
 double InitialValueThom(const std::vector < double >& x) {
   return 0.;
 }
@@ -32,6 +34,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   return dirichlet;
 }
 
+
+double ComputeIntegral(MultiLevelProblem& ml_prob);
 
 void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob);
 
@@ -90,7 +94,8 @@ int main(int argc, char** args) {
   system.init();
   system.solve();
   
-  
+  ComputeIntegral(mlProb);
+ 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("Thom");
@@ -507,4 +512,267 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   if (assembleMatrix) KK->close();
 
   // ***************** END ASSEMBLY *******************
+
+  return;
 }
+
+
+
+double ComputeIntegral(MultiLevelProblem& ml_prob)    {
+  
+  
+    LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
+  const unsigned levelMax = mlPdeSys->GetLevelMax();
+
+  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  elem*                     el = msh->el;  // pointer to the elem object in msh (level)
+
+  MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+
+  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
+
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+
+   //*************************** 
+  vector < vector < double > > x(dim);    // local coordinates
+  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+  for (unsigned i = 0; i < dim; i++) {
+    x[i].reserve(maxSize);
+  }
+ //*************************** 
+
+ //*************************** 
+  double weight; // gauss point weight
+  
+
+ //******** Thom ******************* 
+ //*************************** 
+  vector <double> phi_Thom;  // local test function
+  vector <double> phi_x_Thom; // local test function first order partial derivatives
+  vector <double> phi_xx_Thom; // local test function second order partial derivatives
+
+  phi_Thom.reserve(maxSize);
+  phi_x_Thom.reserve(maxSize * dim);
+  phi_xx_Thom.reserve(maxSize * dim2);
+  
+ 
+  unsigned solIndexThom;
+  solIndexThom = mlSol->GetIndex("Thom");    // get the position of "Thom" in the ml_sol object
+  unsigned solTypeThom = mlSol->GetSolutionType(solIndexThom);    // get the finite element type for "Thom"
+
+  vector < double >  solThom; // local solution
+  solThom.reserve(maxSize);
+  
+  double Thom_gss = 0.;
+ //*************************** 
+ //*************************** 
+
+  
+  
+
+  
+ //************ ThomAdj *************** 
+ //*************************** 
+   vector <double> phi_Tdes;  // local test function
+  vector <double> phi_x_Tdes; // local test function first order partial derivatives
+  vector <double> phi_xx_Tdes; // local test function second order partial derivatives
+
+    phi_Tdes.reserve(maxSize);
+    phi_x_Tdes.reserve(maxSize * dim);
+    phi_xx_Tdes.reserve(maxSize * dim2);
+ 
+  
+//  unsigned solIndexTdes;
+//   solIndexTdes = mlSol->GetIndex("Tdes");    // get the position of "Thom" in the ml_sol object
+//   unsigned solTypeTdes = mlSol->GetSolutionType(solIndexTdes);    // get the finite element type for "Thom"
+
+  vector < double >  solTdes; // local solution
+  solTdes.reserve(maxSize);
+ vector< int > l2GMap_Tdes;
+    l2GMap_Tdes.reserve(maxSize);
+  double Tdes_gss = 0.;
+  //*************************** 
+ //*************************** 
+
+  
+ //************ Tcont *************** 
+ //*************************** 
+  vector <double> phi_Tcont;  // local test function
+  vector <double> phi_x_Tcont; // local test function first order partial derivatives
+  vector <double> phi_xx_Tcont; // local test function second order partial derivatives
+
+  phi_Tcont.reserve(maxSize);
+  phi_x_Tcont.reserve(maxSize * dim);
+  phi_xx_Tcont.reserve(maxSize * dim2);
+  
+  unsigned solIndexTcont;
+  solIndexTcont = mlSol->GetIndex("Tcont");
+  unsigned solTypeTcont = mlSol->GetSolutionType(solIndexTcont);
+
+  vector < double >  solTcont; // local solution
+  solTcont.reserve(maxSize);
+ vector< int > l2GMap_Tcont;
+  l2GMap_Tcont.reserve(maxSize);
+  
+  double Tcont_gss = 0.;
+  //*************************** 
+ //*************************** 
+  
+
+ //*************************** 
+  //********* WHOLE SET OF VARIABLES ****************** 
+  const int solType_max = 2;  //biquadratic
+
+  const int n_vars = 3;
+ 
+  vector< int > l2GMap_AllVars; // local to global mapping
+  l2GMap_AllVars.reserve(n_vars*maxSize);
+  
+  vector< double > Res; // local redidual vector
+  Res.reserve(n_vars*maxSize);
+
+  vector < double > Jac;
+  Jac.reserve( n_vars*maxSize * n_vars*maxSize);
+ //*************************** 
+
+  
+ //********** DATA ***************** 
+  double T_des = 17.;
+  //*************************** 
+  
+  double integral = 0.;
+
+    
+  // element loop: each process loops only on the elements that owns
+  for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
+
+    unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
+    short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
+
+ //********* GEOMETRY ****************** 
+    unsigned nDofx = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
+    for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
+    // local storage of coordinates
+    for (unsigned i = 0; i < nDofx; i++) {
+      unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
+      unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
+
+      for (unsigned jdim = 0; jdim < dim; jdim++) {
+        x[jdim][i] = (*msh->_coordinate->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+      }
+    }
+
+   // elem average point 
+    vector < double > elem_center(dim);   
+    for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
+  for (unsigned j = 0; j < dim; j++) {  
+      for (unsigned i = 0; i < nDofx; i++) {
+         elem_center[j] += x[j][i];
+       }
+    }
+    
+   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
+  //*************************************** 
+  
+  //***** set target domain flag ********************************** 
+  int target_flag = 0;
+   if ( elem_center[0] < 0.05 + 1.e-5  && elem_center[0] > -0.05 - 1.e-5  && 
+        elem_center[1] < 0.05 + 1.e-5  && elem_center[1] > -0.05 - 1.e-5 
+  ) {
+     
+     target_flag = 1;
+    
+  }
+  //*************************************** 
+  //***** set target domain flag ********************************** 
+  int control_flag = 0;
+   if ( elem_center[1] > - 100 ) { control_flag = 1; }
+  //*************************************** 
+    
+ //*********** Thom **************************** 
+    unsigned nDofThom     = el->GetElementDofNumber(kel, solTypeThom);    // number of solution element dofs
+    solThom    .resize(nDofThom);
+   // local storage of global mapping and solution
+    for (unsigned i = 0; i < solThom.size(); i++) {
+      unsigned iNode = el->GetMeshDof(kel, i, solTypeThom);    // local to global solution node
+      unsigned solDofThom = msh->GetMetisDof(iNode, solTypeThom);    // global to global mapping between solution node and solution dof
+      solThom[i] = (*sol->_Sol[solIndexThom])(solDofThom);      // global extraction and local storage for the solution
+    }
+ //*********** Thom **************************** 
+
+
+ //*********** Tcont **************************** 
+    unsigned nDofTcont  = el->GetElementDofNumber(kel, solTypeTcont);    // number of solution element dofs
+    solTcont    .resize(nDofTcont);
+    for (unsigned i = 0; i < solTcont.size(); i++) {
+      unsigned iNode = el->GetMeshDof(kel, i, solTypeTcont);    // local to global solution node
+      unsigned solDofTcont = msh->GetMetisDof(iNode, solTypeTcont);    // global to global mapping between solution node and solution dof
+      solTcont[i] = (*sol->_Sol[solIndexTcont])(solDofTcont);      // global extraction and local storage for the solution
+    } 
+ //*********** Tcont **************************** 
+ 
+ 
+ //*********** Tdes **************************** 
+    unsigned nDofTdes  = el->GetElementDofNumber(kel, solTypeThom);    // number of solution element dofs
+    solTdes    .resize(nDofTdes);
+    for (unsigned i = 0; i < solTdes.size(); i++) {
+      solTdes[i] = T_des;  //dof value
+    } 
+ //*********** Tdes **************************** 
+
+ 
+ //********** ALL VARS ***************** 
+    int nDof_max    =  nDofThom;   // AAAAAAAAAAAAAAAAAAAAAAAAAAA TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
+    
+    if(nDofTdes > nDof_max) 
+    {
+      nDof_max = nDofTdes;
+      }
+    
+    if(nDofTcont > nDof_max)
+    {
+      nDof_max = nDofTcont;
+    }
+    
+  //*************************** 
+
+
+    if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
+   
+      // *** Gauss point loop ***
+      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
+	
+        // *** get gauss point weight, test function and test function partial derivatives ***
+        //  ==== Thom 
+	msh->_finiteElement[kelGeom][solTypeThom]   ->Jacobian(x, ig, weight, phi_Thom, phi_x_Thom, phi_xx_Thom);
+        //  ==== ThomAdj 
+        msh->_finiteElement[kelGeom][solTypeThom/*solTypeTdes*/]->Jacobian(x, ig, weight, phi_Tdes, phi_x_Tdes, phi_xx_Tdes);
+        //  ==== ThomCont 
+        msh->_finiteElement[kelGeom][solTypeTcont]  ->Jacobian(x, ig, weight, phi_Tcont, phi_x_Tcont, phi_xx_Tcont);
+
+	Thom_gss = 0.;  for (unsigned i = 0; i < nDofThom; i++) Thom_gss += solThom[i] * phi_Thom[i];		
+	Tcont_gss = 0.; for (unsigned i = 0; i < nDofTcont; i++) Tcont_gss += solTcont[i] * phi_Tcont[i];  
+	Tdes_gss  = 0.; for (unsigned i = 0; i < nDofTdes; i++)  Tdes_gss  += solTdes[i]  * phi_Tdes[i];  
+
+	
+
+               integral += target_flag * weight * (Thom_gss +  Tcont_gss - Tdes_gss) * (Thom_gss +  Tcont_gss - Tdes_gss);
+	  
+      } // end gauss point loop
+    } // endif single element not refined or fine grid loop
+  } //end element loop
+
+  std::cout << "The value of the integral is " << integral << std::endl;
+  
+return integral;
+  
+}
+  
+  
+
