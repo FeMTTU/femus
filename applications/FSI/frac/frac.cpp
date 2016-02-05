@@ -1,16 +1,3 @@
-/** \file Ex6.cpp
- *  \brief This example shows how to set and solve the weak form
- *   of the Navier-Stokes Equation
- *
- *  \f{eqnarray*}
- *  && \mathbf{V} \cdot \nabla \mathbf{V} - \nabla \cdot \nu (\nabla \mathbf{V} +(\nabla \mathbf{V})^T)
- *  +\nabla P = 0 \\
- *  && \nabla \cdot \mathbf{V} = 0
- *  \f}
- *  in a unit box domain (in 2D and 3D) with given vertical velocity 1 on
- *  the left boundary and walls elsewhere.
- *  \author Eugenio Aulisa
- */
 
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
@@ -200,13 +187,13 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
   }
 
   
-  vector <double> phiV;  // local test function
-  vector <double> phiV_x; // local test function first order partial derivatives
-  vector <double> phiV_xx; // local test function second order partial derivatives
+  vector <double> phiV_gss;  // local test function
+  vector <double> phiV_x_gss; // local test function first order partial derivatives
+  vector <double> phiV_xx_gss; // local test function second order partial derivatives
 
-  phiV.reserve(maxSize);
-  phiV_x.reserve(maxSize * dim);
-  phiV_xx.reserve(maxSize * dim2);
+  phiV_gss.reserve(maxSize);
+  phiV_x_gss.reserve(maxSize * dim);
+  phiV_xx_gss.reserve(maxSize * dim2);
   //velocity *******************************
 
   //pressure *******************************
@@ -223,7 +210,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
   solP.reserve(maxSize);
   aResP.reserve(maxSize);
   
-  double* phiP;
+  double* phiP_gss;
   //pressure *******************************
 
   double weight; // gauss point weight
@@ -309,8 +296,8 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solVType]->GetGaussPointNumber(); ig++) {
         // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[kelGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
-        phiP = msh->_finiteElement[kelGeom][solPType]->GetPhi(ig);
+        msh->_finiteElement[kelGeom][solVType]->Jacobian(coordX, ig, weight, phiV_gss, phiV_x_gss, phiV_xx_gss);
+        phiP_gss = msh->_finiteElement[kelGeom][solPType]->GetPhi(ig);
 
         vector < adept::adouble > solV_gss(dim, 0);
         vector < vector < adept::adouble > > gradSolV_gss(dim);
@@ -322,12 +309,12 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
         for (unsigned i = 0; i < nDofsV; i++) {
           for (unsigned  k = 0; k < dim; k++) {
-            solV_gss[k] += phiV[i] * solV[k][i];
+            solV_gss[k] += phiV_gss[i] * solV[k][i];
           }
 
           for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
-              gradSolV_gss[k][j] += phiV_x[i * dim + j] * solV[k][i];
+              gradSolV_gss[k][j] += phiV_x_gss[i * dim + j] * solV[k][i];
             }
           }
         }
@@ -335,41 +322,42 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
         adept::adouble solP_gss = 0;
 
         for (unsigned i = 0; i < nDofsP; i++) {
-          solP_gss += phiP[i] * solP[i];
+          solP_gss += phiP_gss[i] * solP[i];
         }
 
         double nu = 1.;
-	double valg[3] = {1.,0.,0.};
+	double force[3] = {1.,0.,0.};
 	
         // *** phiV_i loop ***
         for (unsigned i = 0; i < nDofsV; i++) {
-          vector < adept::adouble > NSV(dim, 0.);
+          vector < adept::adouble > NSV_gss(dim, 0.);
 
           for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
-              NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
-//               NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
-	      NSV[k]   +=  valg[k] * phiV[i] ;
+              NSV_gss[k]   +=  nu * phiV_x_gss[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);  //diffusion
+              NSV_gss[k]   +=  phiV_gss[i] * (solV_gss[j] * gradSolV_gss[k][j]);                                  //advection
+	      NSV_gss[k]   +=  force[k] * phiV_gss[i] ;
             }
           }
 
           for (unsigned  k = 0; k < dim; k++) {
-            NSV[k] += -solP_gss * phiV_x[i * dim + k];
+            NSV_gss[k] += - solP_gss * phiV_x_gss[i * dim + k];
           }
 
           for (unsigned  k = 0; k < dim; k++) {
-            aResV[k][i] += - NSV[k] * weight;
+            aResV[k][i] += - NSV_gss[k] * weight;
           }
         } // end phiV_i loop
 
         // *** phiP_i loop ***
         for (unsigned i = 0; i < nDofsP; i++) {
           for (int k = 0; k < dim; k++) {
-            aResP[i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
+            aResP[i] += - (gradSolV_gss[k][k]) * phiP_gss[i]  * weight;
           }
         } // end phiP_i loop
 
       } // end gauss point loop
+      
     } // endif single element not refined or fine grid loop
 
     //--------------------------------------------------------------------------------------------------------
