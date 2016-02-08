@@ -62,7 +62,7 @@ int main(int argc, char** args) {
   // add variables to mlSol
   mlSol.AddSolution("Thom", LAGRANGE, SECOND);
   mlSol.AddSolution("ThomAdj", LAGRANGE, SECOND);
-  mlSol.AddSolution("Tcont", LAGRANGE, FIRST);
+  mlSol.AddSolution("Tcont", LAGRANGE, SECOND);
 
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
@@ -112,13 +112,13 @@ int main(int argc, char** args) {
   return 0;
 }
 
-int ElementTargetFlag(std::vector<double> & elem_center) {
+int ElementTargetFlag(const std::vector<double> & elem_center) {
 
  //***** set target domain flag ********************************** 
   int target_flag = 0;
   
-   if ( elem_center[0] < (1./8. + 1./64.)  + 1.e-5  && elem_center[0] > - (1./8. + 1./64.) - 1.e-5  && 
-        elem_center[1] < (1./8. + 1./64.)  + 1.e-5  && elem_center[1] > - (1./8. + 1./64.) - 1.e-5 
+   if ( elem_center[0] < (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > - (1./16. + 1./64.) - 1.e-5  && 
+        elem_center[1] < (1./16. + 1./64.)  + 1.e-5  && elem_center[1] > - (1./16. + 1./64.) - 1.e-5 
   ) {
      
      target_flag = 1;
@@ -128,6 +128,27 @@ int ElementTargetFlag(std::vector<double> & elem_center) {
      return target_flag;
 
 }
+
+int ControlDomainFlag(const std::vector<double> & elem_center) {
+
+ //***** set target domain flag ********************************** 
+
+  int control_flag = 0;
+   if ( elem_center[1] >  0.3 ) { control_flag = 1; }
+
+     return control_flag;
+
+}
+
+
+double DesiredTarget() {
+ 
+  return 17.;
+  
+}
+
+
+
 
 
 void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
@@ -270,8 +291,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   
  //********** DATA ***************** 
-  double T_des = 17.;
-  double alpha = 1000000000000;
+  double T_des = DesiredTarget();
+  double alpha = 1000000000000000000;
   double beta  = 1.;
   double gamma = 1.;
   
@@ -313,13 +334,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   //*************************************** 
   
   //***** set target domain flag ********************************** 
-   int target_flag = 1;
+   int target_flag = 0;
    target_flag = ElementTargetFlag(elem_center);
   //*************************************** 
    
   //***** set control flag ********************************** 
   int control_flag = 0;
-   if ( elem_center[1] >  0.3 ) { control_flag = 1; }
+  control_flag = ControlDomainFlag(elem_center);
   //*************************************** 
     
  //*********** Thom **************************** 
@@ -650,7 +671,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
   
  //********** DATA ***************** 
-  double T_des = 17.;
+  double T_des = DesiredTarget();
   //*************************** 
   
   double integral = 0.;
@@ -757,8 +778,6 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 	Thom_gss = 0.;  for (unsigned i = 0; i < nDofThom; i++) Thom_gss += solThom[i] * phi_Thom[i];		
 	Tcont_gss = 0.; for (unsigned i = 0; i < nDofTcont; i++) Tcont_gss += solTcont[i] * phi_Tcont[i];  
 	Tdes_gss  = 0.; for (unsigned i = 0; i < nDofTdes; i++)  Tdes_gss  += solTdes[i]  * phi_Tdes[i];  
-
-	
 
                integral += target_flag * weight * (Thom_gss +  Tcont_gss - Tdes_gss) * (Thom_gss +  Tcont_gss - Tdes_gss);
 	  
