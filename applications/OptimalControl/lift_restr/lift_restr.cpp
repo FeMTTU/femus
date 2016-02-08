@@ -1,7 +1,6 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "GMVWriter.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
@@ -63,7 +62,7 @@ int main(int argc, char** args) {
   // add variables to mlSol
   mlSol.AddSolution("Thom", LAGRANGE, SECOND);
   mlSol.AddSolution("ThomAdj", LAGRANGE, SECOND);
-  mlSol.AddSolution("Tcont", LAGRANGE, SECOND);
+  mlSol.AddSolution("Tcont", LAGRANGE, FIRST);
 
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
@@ -105,14 +104,30 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-  GMVWriter gmvIO(&mlSol);
-  variablesToBePrinted.push_back("all");
-  gmvIO.SetDebugOutput(false);
-  gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//   GMVWriter gmvIO(&mlSol);
+//   variablesToBePrinted.push_back("all");
+//   gmvIO.SetDebugOutput(false);
+//   gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   return 0;
 }
 
+int ElementTargetFlag(std::vector<double> & elem_center) {
+
+ //***** set target domain flag ********************************** 
+  int target_flag = 0;
+  
+   if ( elem_center[0] < (1./8. + 1./64.)  + 1.e-5  && elem_center[0] > - (1./8. + 1./64.) - 1.e-5  && 
+        elem_center[1] < (1./8. + 1./64.)  + 1.e-5  && elem_center[1] > - (1./8. + 1./64.) - 1.e-5 
+  ) {
+     
+     target_flag = 1;
+     
+  }
+  
+     return target_flag;
+
+}
 
 
 void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
@@ -256,7 +271,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
  //********** DATA ***************** 
   double T_des = 17.;
-  double alpha = 1000000000;
+  double alpha = 1000000000000;
   double beta  = 1.;
   double gamma = 1.;
   
@@ -298,18 +313,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   //*************************************** 
   
   //***** set target domain flag ********************************** 
-  int target_flag = 0;
-   if ( elem_center[0] < 0.05 + 1.e-5  && elem_center[0] > -0.05 - 1.e-5  && 
-        elem_center[1] < 0.05 + 1.e-5  && elem_center[1] > -0.05 - 1.e-5 
-  ) {
-     
-     target_flag = 1;
-    
-  }
+   int target_flag = 1;
+   target_flag = ElementTargetFlag(elem_center);
   //*************************************** 
-  //***** set target domain flag ********************************** 
+   
+  //***** set control flag ********************************** 
   int control_flag = 0;
-   if ( elem_center[1] > - 0.3 ) { control_flag = 1; }
+   if ( elem_center[1] >  0.3 ) { control_flag = 1; }
   //*************************************** 
     
  //*********** Thom **************************** 
@@ -574,9 +584,6 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //*************************** 
 
   
-  
-
-  
  //************ ThomAdj *************** 
  //*************************** 
    vector <double> phi_Tdes;  // local test function
@@ -681,20 +688,11 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   //*************************************** 
   
   //***** set target domain flag ********************************** 
-  int target_flag = 0;
-   if ( elem_center[0] < 0.05 + 1.e-5  && elem_center[0] > -0.05 - 1.e-5  && 
-        elem_center[1] < 0.05 + 1.e-5  && elem_center[1] > -0.05 - 1.e-5 
-  ) {
-     
-     target_flag = 1;
-    
-  }
+   int target_flag = 0;
+   target_flag = ElementTargetFlag(elem_center);
   //*************************************** 
-  //***** set target domain flag ********************************** 
-  int control_flag = 0;
-   if ( elem_center[1] > - 100 ) { control_flag = 1; }
-  //*************************************** 
-    
+
+   
  //*********** Thom **************************** 
     unsigned nDofThom     = el->GetElementDofNumber(kel, solTypeThom);    // number of solution element dofs
     solThom    .resize(nDofThom);
@@ -768,7 +766,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
     } // endif single element not refined or fine grid loop
   } //end element loop
 
-  std::cout << "The value of the integral is " << integral << std::endl;
+  std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
   
 return integral;
   
