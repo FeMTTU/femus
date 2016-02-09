@@ -89,8 +89,8 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 8;
-  unsigned numberOfSelectiveLevels = 0;
+  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
@@ -151,8 +151,8 @@ int main(int argc, char** args) {
   // initilaize and solve the system
   system.init();
 
-  //system.SetSolverFineGrids(GMRES);
-  system.SetSolverFineGrids(RICHARDSON);
+  system.SetSolverFineGrids(GMRES);
+  //system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
 
@@ -162,7 +162,8 @@ int main(int argc, char** args) {
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
 
-  system.MGsolve();
+  system.PrintSolverInfo(false);
+  system.MLsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

@@ -298,7 +298,8 @@ namespace femus {
       for( unsigned ig = gridn - 1u; ig > 0; ig-- ) {
         // ============== Presmoothing ==============
         for( unsigned k = 0; k < _npre; k++ ) {
-          _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
+          //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
+	  Solve(ig + 1, ksp_clean * ( !k ), 0, 1);
         }
 
         // ============== Restriction ==============
@@ -315,6 +316,7 @@ namespace femus {
         // ============== PostSmoothing ==============
         for( unsigned k = 0; k < _npost; k++ ) {
           _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
+	  //Solve(ig + 1, ksp_clean * ( !_npre ) * ( !k ), 0, 1);
         }
       }
 
@@ -340,7 +342,28 @@ namespace femus {
 
     return linearIsConverged;
   }
+  
+  
+  void LinearImplicitSystem::Solve( const unsigned& gridn, const bool &kspClean, const int &npre, const int &npost ) {
+    
+    unsigned grid0 = ( gridn <= _gridr ) ? gridn : _gridr;
+    
+    for( unsigned ig = gridn - 1u; ig > grid0 - 1u; ig-- ) {
+      for( unsigned k = 0; k < npre; k++ ) {
+	_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, kspClean );
+      }
+      Restrictor( ig );
+    }
+      
+    _LinSolver[grid0 - 1u]->Solve( _VariablesToBeSolvedIndex, kspClean );
 
+    for( unsigned ig = grid0; ig < gridn; ig++ ) {
+      Prolongator( ig );
+      for( unsigned k = 0; k < npost; k++ ) {
+	_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, kspClean );
+      }
+    }
+  }
   // ********************************************
 
   void LinearImplicitSystem::Restrictor( const unsigned& gridf ) {
