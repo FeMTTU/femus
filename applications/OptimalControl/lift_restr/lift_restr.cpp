@@ -7,6 +7,47 @@
 using namespace femus;
 
 
+int ElementTargetFlag(const std::vector<double> & elem_center) {
+
+ //***** set target domain flag ********************************** 
+  int target_flag = 0;
+  
+   if ( elem_center[0] < (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > - (1./16. + 1./64.) - 1.e-5  && 
+        elem_center[1] < (1./16. + 1./64.)  + 1.e-5  && elem_center[1] > - (1./16. + 1./64.) - 1.e-5 
+  ) {
+     
+     target_flag = 1;
+     
+  }
+  
+     return target_flag;
+
+}
+
+int ControlDomainFlag(const std::vector<double> & elem_center) {
+
+ //***** set target domain flag ********************************** 
+
+  int control_flag = 0;
+   if ( elem_center[1] >  0.3 ) { control_flag = 1; }
+
+     return control_flag;
+
+}
+
+
+double DesiredTarget() {
+ 
+  return 17.;
+}
+
+double InitialValueContReg(const std::vector < double >& x) {
+  return ControlDomainFlag(x);
+}
+
+double InitialValueTargReg(const std::vector < double >& x) {
+  return ElementTargetFlag(x);
+}
 
 double InitialValueThom(const std::vector < double >& x) {
   return 0.;
@@ -63,13 +104,18 @@ int main(int argc, char** args) {
   mlSol.AddSolution("Thom", LAGRANGE, SECOND);
   mlSol.AddSolution("ThomAdj", LAGRANGE, SECOND);
   mlSol.AddSolution("Tcont", LAGRANGE, SECOND);
+  mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
+  
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
   mlSol.Initialize("Thom", InitialValueThom);
   mlSol.Initialize("ThomAdj", InitialValueThomAdj);
-  mlSol.Initialize("Tcont", InitialValueTcont);    // note that this initialization is the same as piecewise constant element
- 
+  mlSol.Initialize("Tcont", InitialValueTcont);
+  mlSol.Initialize("TargReg", InitialValueTargReg);
+  mlSol.Initialize("ContReg", InitialValueContReg);
+
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("Thom");
@@ -100,6 +146,8 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("Thom");
   variablesToBePrinted.push_back("ThomAdj");
   variablesToBePrinted.push_back("Tcont");
+  variablesToBePrinted.push_back("TargReg");
+  variablesToBePrinted.push_back("ContReg");
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
@@ -112,40 +160,6 @@ int main(int argc, char** args) {
   return 0;
 }
 
-int ElementTargetFlag(const std::vector<double> & elem_center) {
-
- //***** set target domain flag ********************************** 
-  int target_flag = 0;
-  
-   if ( elem_center[0] < (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > - (1./16. + 1./64.) - 1.e-5  && 
-        elem_center[1] < (1./16. + 1./64.)  + 1.e-5  && elem_center[1] > - (1./16. + 1./64.) - 1.e-5 
-  ) {
-     
-     target_flag = 1;
-     
-  }
-  
-     return target_flag;
-
-}
-
-int ControlDomainFlag(const std::vector<double> & elem_center) {
-
- //***** set target domain flag ********************************** 
-
-  int control_flag = 0;
-   if ( elem_center[1] >  0.3 ) { control_flag = 1; }
-
-     return control_flag;
-
-}
-
-
-double DesiredTarget() {
- 
-  return 17.;
-  
-}
 
 
 
