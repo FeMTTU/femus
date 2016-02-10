@@ -24,7 +24,7 @@
 
 using namespace femus;
 
- 	double force[3] = {0.,1.,0.};
+ 	double force[3] = {1.,0.,0.};
 
 
 
@@ -33,14 +33,14 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   bool dirichlet = true; //dirichlet
   value = 0.;
   
-      if (facename == 1) {
-       if (!strcmp(SolName, "U")) {   value = 0.;  } 
-  else if (!strcmp(SolName, "V")) {  dirichlet = false; }
+      if (facename == /*1*/2) {
+       if (!strcmp(SolName, "V")) {   value = 0.;  } 
+  else if (!strcmp(SolName, "U")) {  dirichlet = false; }
       }
       
-      if (facename == 3) {
-       if (!strcmp(SolName, "U")) {   value = 0.;  } 
-  else if (!strcmp(SolName, "V")) {  dirichlet = false; }
+      if (facename == /*3*/4) {
+       if (!strcmp(SolName, "V")) {   value = 0.;  } 
+  else if (!strcmp(SolName, "U")) {  dirichlet = false; }
       }
       
   return dirichlet;
@@ -74,7 +74,7 @@ int main(int argc, char** args) {
  
 //   MultiLevelMesh mlMsh;
 //  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
-    mlMsh.GenerateCoarseBoxMesh( 8,8,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
+    mlMsh.GenerateCoarseBoxMesh( 8,8,0,-1.,1.,-0.5,0.5,0.,0.,QUAD9,"seventh");
     
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
@@ -364,40 +364,28 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
         for (unsigned i = 0; i < nDofsV; i++) {
           vector < adept::adouble > NSV_gss(dim, 0.);
 	
-	  
-// 	  for(unsigned k=0; k<dim; k++) {
-// // 	    double Lap_rhs=0;
-// 	    for(unsigned j=0; j<dim; j++) {
-// 	      NSV_gss[k]   +=  IRe * phiV_x_gss[i * dim + j] *  (gradSolV_gss[k][j] + gradSolV_gss[j][k]);  //diffusion
-// //               NSV_gss[k]   +=  phiV_gss[i] * (solV_gss[j] * gradSolV_gss[k][j]);                                  //advection
-// 	      NSV_gss[k]   +=  - force[k] * phiV_gss[i] ;   //right hand side
-//             
-// // 	      Lap_rhs += phiV_x_gss[i*dim+j]*gradSolVAR[k][j];
-// 	    }
-// // 	    Res[SolPdeIndex[k]][i] += ( -IRe*Lap_rhs - /*Picard iteration*/SolVAR[dim]*phiV_x_gss[i*dim+k] + force[k] * phiV_gss[i])*weight;
-// 	  }
-	  
-          for (unsigned j = 0; j < dim; j++) {
-            for (unsigned  k = 0; k < dim; k++) {
-              NSV_gss[k]   +=  IRe * phiV_x_gss[i * dim + j] */* 0.5* */ (gradSolV_gss[k][j] + gradSolV_gss[j][k]);  //diffusion
-//               NSV_gss[k]   +=  phiV_gss[i] * (solV_gss[j] * gradSolV_gss[k][j]);                                  //advection
-	      NSV_gss[k]   +=  - force[k] * phiV_gss[i] ;   //right hand side
-            }
+          for (unsigned  kdim = 0; kdim < dim; kdim++) { // velocity block row
+	      NSV_gss[kdim]   +=  - force[kdim] * phiV_gss[i] ;   //right hand side
+	      
+          for (unsigned jdim = 0; jdim < dim; jdim++) { //focus on single partial derivative
+              NSV_gss[kdim]   +=  /*Laplacian*//*IRe*phiV_x_gss[i * dim + jdim]*gradSolV_gss[kdim][jdim]*/IRe * phiV_x_gss[i * dim + jdim] * (gradSolV_gss[kdim][jdim] + gradSolV_gss[jdim][kdim]);  //diffusion
+//               NSV_gss[kdim]   +=  phiV_gss[i] * (solV_gss[jdim] * gradSolV_gss[kdim][jdim]);                                  //advection
+            }  //jdim loop
+          } //kdim loop
+
+          for (unsigned  kdim = 0; kdim < dim; kdim++) {
+            NSV_gss[kdim] += - solP_gss * phiV_x_gss[i * dim + kdim];
           }
 
-          for (unsigned  k = 0; k < dim; k++) {
-            NSV_gss[k] += - solP_gss * phiV_x_gss[i * dim + k];
-          }
-
-          for (unsigned  k = 0; k < dim; k++) {
-            aResV[k][i] += - NSV_gss[k] * weight;
+          for (unsigned  kdim = 0; kdim < dim; kdim++) {
+            aResV[kdim][i] += - NSV_gss[kdim] * weight;
           }
         } // end phiV_i loop
 
         // *** phiP_i loop ***
         for (unsigned i = 0; i < nDofsP; i++) {
-          for (int k = 0; k < dim; k++) {
-            aResP[i] += - (gradSolV_gss[k][k]) * phiP_gss[i]  * weight;
+          for (int kdim = 0; kdim < dim; kdim++) {
+            aResP[i] += - (gradSolV_gss[kdim][kdim]) * phiP_gss[i]  * weight;
           }
         } // end phiP_i loop
 
@@ -412,8 +400,8 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
     Res.resize(nDofsVP);    //resize
 
     for (int i = 0; i < nDofsV; i++) {
-      for (unsigned  k = 0; k < dim; k++) {
-        Res[ i +  k * nDofsV ] = -aResV[k][i].value();
+      for (unsigned  kdim = 0; kdim < dim; kdim++) {
+        Res[ i +  kdim * nDofsV ] = -aResV[kdim][i].value();
       }
     }
 
@@ -427,21 +415,22 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
     if (assembleMatrix) {
       // define the dependent variables
 
-      for (unsigned  k = 0; k < dim; k++) {
-        s.dependent(&aResV[k][0], nDofsV);
+      for (unsigned  kdim = 0; kdim < dim; kdim++) {
+        s.dependent(&aResV[kdim][0], nDofsV);
       }
 
       s.dependent(&aResP[0], nDofsP);
 
       // define the independent variables
-      for (unsigned  k = 0; k < dim; k++) {
-        s.independent(&solV[k][0], nDofsV);
+      for (unsigned  kdim = 0; kdim < dim; kdim++) {
+        s.independent(&solV[kdim][0], nDofsV);
       }
 
       s.independent(&solP[0], nDofsP);
 
       // get the and store jacobian matrix (row-major)
       s.jacobian(&Jac[0] , true);
+      
       KK->add_matrix_blocked(Jac, KKDof, KKDof);
 
       s.clear_independents();
