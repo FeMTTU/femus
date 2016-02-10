@@ -731,6 +731,108 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
 	}   //end if penalty
       }  // end gauss point loop
       
+      
+      //***************************boundary loop ************************************************************************
+
+            if( ml_prob._ml_sol->_Use_GenerateBdc_new ){ 
+            
+	//number of faces for each type of element
+	unsigned nfaces = el->GetElementFaceNumber(kel);
+
+	// loop on faces
+	for(unsigned jface=0; jface<nfaces; jface++) {
+	  // look for boundary faces
+	  if(el->GetFaceElementIndex(kel,jface)<0) {
+    
+	    unsigned int face = -(msh->el->GetFaceElementIndex(kel,jface)+1) - 1;
+		    
+	    if(mlSol->GetBoundaryCondition("Sol",face) == NEUMANN && !mlSol->Ishomogeneous("Sol",face)) {
+		      
+	      bdcfunc = (ParsedFunction* )(mlSol->GetBdcFunction("Sol", face));
+	      unsigned nve = msh->el->GetElementFaceDofNumber(kel,jface,order_ind);
+	      const unsigned felt = msh->el->GetElementFaceType(kel, jface);
+	      for(unsigned i=0; i<nve; i++) {
+		unsigned inode=msh->el->GetFaceVertexIndex(kel,jface,i)-1u;
+		unsigned inode_coord_metis=msh->GetMetisDof(inode,2);
+
+		for(unsigned ivar=0; ivar<dim; ivar++) {
+		  coordX[ivar][i]=(*msh->_coordinate->_Sol[ivar])(inode_coord_metis);
+		}
+	      }
+
+	      if(felt != 6) {
+		for(unsigned igs=0; igs < msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
+		  msh->_finiteElement[felt][order_ind]->JacobianSur(coordX,igs,weight,phi,phiV_x_gss,normal);
+
+		  xyzt.assign(4,0.);
+		  for(unsigned i=0; i<nve; i++) {
+		    for(unsigned ivar=0; ivar<dim; ivar++) {
+		      xyzt[ivar] += coordX[ivar][i]*phiV_gss[i]; 
+		    }
+		  }
+			    
+		  // *** phi_i loop ***
+		  for(unsigned i=0; i<nve; i++) {
+		    double surfterm_g = (*bdcfunc)(&xyzt[0]);
+		    double bdintegral = phiV_gss[i]*surfterm_g*weight;
+		    unsigned int ilocalnode = msh->el->GetLocalFaceVertexIndex(kel, jface, i);
+		    F[ilocalnode] += bdintegral;
+		  }
+		}
+	      }
+	      else{ // 1D : the side elems are points and does not still exist the point elem
+		    // in 1D it is only one point
+		xyzt[0] = coordX[0][0];
+		xyzt[1] = 0.;
+		xyzt[2] = 0.;
+		xyzt[3] = 0.;
+
+		double bdintegral = (*bdcfunc)(&xyzt[0]);
+		unsigned int ilocalnode = msh->el->GetLocalFaceVertexIndex(kel, jface, 0);
+		F[ilocalnode] += bdintegral;
+	      }
+	    }
+	  }
+	}
+      }
+      else {
+	double tau=0.;
+	std::vector< double > xx(dim,0.);
+	vector < double > normal(dim,0);   
+	// loop on faces
+	for(unsigned jface=0; jface<el->GetElementFaceNumber(kel); jface++) {
+	  // look for boundary faces
+	  if(el->GetFaceElementIndex(kel,jface)<0) {
+	    unsigned int face = -(msh->el->GetFaceElementIndex(kel,jface)+1);	      
+	    if( !mlSol->_SetBoundaryConditionFunction(xx,"Sol",tau,face,0.) && tau!=0.){
+	      unsigned nve = msh->el->GetElementFaceDofNumber(kel,jface, order_ind);
+	      const unsigned felt = msh->el->GetElementFaceType(kel, jface);
+	      for(unsigned i=0; i<nve; i++) {
+		unsigned inode=msh->el->GetFaceVertexIndex(kel,jface,i)-1u;
+		unsigned inode_Metis=msh->GetMetisDof(inode,2);
+		unsigned int ilocal = msh->el->GetLocalFaceVertexIndex(kel, jface, i);
+		for(unsigned idim=0; idim<dim; idim++) {
+		  coordX[idim][i]=(*msh->_coordinate->_Sol[idim])(inode_Metis);
+		}
+	      }
+	      for(unsigned igs=0; igs < msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
+		msh->_finiteElement[felt][order_ind]->JacobianSur(coordX,igs,weight,phiV_gss,phiV_x_gss,normal);
+		// *** phi_i loop ***
+		for(unsigned i=0; i<nve; i++) {
+		  double value = phiV_gss[i]*tau*weight;
+		  unsigned int ilocal = msh->el->GetLocalFaceVertexIndex(kel, jface, i);
+		  F[ilocal]   += value;
+		}
+	      }
+	    }
+	  }
+	}    
+      }
+      
+      //***************************************************************************************************************
+      
+      
+      
       //--------------------------------------------------------------------------------------------------------
       // Boundary Integral --> to be added
       //number of faces for each type of element
@@ -749,6 +851,9 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
 // 	  }
 // 	}	
 //       }
+
+
+
       //--------------------------------------------------------------------------------------------------------
     } // endif single element not refined or fine grid loop
     //--------------------------------------------------------------------------------------------------------
