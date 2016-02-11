@@ -520,10 +520,23 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
         }
         laplaceUh += (phi_xx[i * dim2 + 0] + phi_xx[i * dim2 + 1]) * solU[i];
       }
+      
+      // find h_k
+      double hk = 0.;
+      double dij = 0.;
+      for(unsigned i = 0; i < nDofsX - 1; i++){
+	for(unsigned j = i+1; j < nDofsX; j++)
+	  for (unsigned jdim = 0; jdim < dim; jdim++){
+	    dij += (crdX[jdim][i] - crdX[jdim][j])*(crdX[jdim][i] - crdX[jdim][j]);
+	  }
+	  dij = sqrt(dij);
+	if (dij > hk)
+	  hk = dij;
+      }
 
 
       double LaplaceUexact = GetExactSolutionLaplace(x_gss);
-      Rhok += (LaplaceUexact - laplaceUh) * (LaplaceUexact - laplaceUh) * weight;
+      Rhok += hk * (LaplaceUexact - laplaceUh) * (LaplaceUexact - laplaceUh) * weight;
 
 
 
