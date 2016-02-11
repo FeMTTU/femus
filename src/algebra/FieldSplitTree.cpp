@@ -213,10 +213,7 @@ namespace femus {
     //BEGIN from here
     if( _preconditioner == FIELDSPLIT_PRECOND ) {
       PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
-//       PCFieldSplitSetType( pc, PC_COMPOSITE_ADDITIVE );
-      PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR);
-      PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_UPPER);
-      
+      PCFieldSplitSetType( pc, PC_COMPOSITE_ADDITIVE );
       for( unsigned i = 0; i < _numberOfSplits; i++ ) { 
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
       }
@@ -229,12 +226,77 @@ namespace femus {
       }
       PetscFree(subksp);
     }
+    
+    else if( _preconditioner == ASM_PRECOND ) {
+      PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
+     
+      bool _standardASM = 1;
+      PetscInt _nlocal;
+      
+      if(!_standardASM) {
+	//PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
+      }
+
+      PCASMSetOverlap(pc, 0); //PCASMSetOverlap(subpc, _overlap);
+    
+      KSPSetUp(ksp);
+
+      KSP* subksps;
+      PCASMGetSubKSP(pc, &_nlocal, PETSC_NULL, &subksps);
+      PetscReal epsilon = 1.e-16;
+
+      if(!_standardASM) {
+// 	for(int i = 0; i < _blockTypeRange[0]; i++) {
+// 	  PC subpcs;
+// 	  KSPGetPC(subksps[i], &subpcs);
+// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+// 	  KSPSetFromOptions(subksps[i]);
+// 	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
+// 	  PCFactorSetZeroPivot(subpcs, epsilon);
+// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+// 	}
+// 
+// 	for(int i = _blockTypeRange[0]; i < _blockTypeRange[1]; i++) {
+// 	  PC subpcs;
+// 	  KSPGetPC(subksps[i], &subpcs);
+// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+// 	  KSPSetFromOptions(subksps[i]);
+// 
+// 	  if(this->_preconditioner_type == ILU_PRECOND)
+// 	    PCSetType(subpcs, (char*) PCILU);
+// 	  else
+// 	    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+// 
+// 	  PCFactorSetZeroPivot(subpcs, epsilon);
+// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+// 	}
+      }
+      else {
+	for(int i = 0; i < _nlocal; i++) {
+	  PC subpcs;
+	  KSPGetPC(subksps[i], &subpcs);
+	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+	  KSPSetFromOptions(subksps[i]);
+
+	  
+	  PCSetType(subpcs, (char*) PCILU);
+	  
+// 	  if(this->_preconditioner_type == ILU_PRECOND)
+// 	    PCSetType(subpcs, (char*) PCILU);
+// 	  else
+// 	    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+
+	  PCFactorSetZeroPivot(subpcs, epsilon);
+	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+	}
+      }
+    }
     else if( _preconditioner == FS_SCHUR_PRECOND ) {
       PetscPreconditioner::set_petsc_preconditioner_type( FIELDSPLIT_PRECOND, pc );
       
       PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR );
       PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_LOWER);
-      PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELF,NULL);
+      PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELFP,NULL);
       
       for( int i = 0; i < _numberOfSplits; i++ ) {
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
