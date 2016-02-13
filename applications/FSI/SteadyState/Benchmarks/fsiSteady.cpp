@@ -459,12 +459,12 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
             }
             while(str1.compare("norm") == 0){
               inf >> normN;
-              outf <<","<< normN;
               counter++;
               for (unsigned i = 0; i < 11; i++){
                 inf >> str1;
               }
             }
+            outf <<","<< normN;
             if(counter != 0){
               outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
             }
