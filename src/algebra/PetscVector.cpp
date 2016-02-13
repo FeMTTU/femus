@@ -868,16 +868,20 @@ void PetscVector::create_subvector(
   return;
 }
   
-  void PetscVector::BinaryPrint(const char* fileName, const unsigned & k){
+  void PetscVector::BinaryPrint(const char* fileName){
     
     PetscViewer binv;
-    if(k == 0){
-      PetscViewerBinaryOpen(MPI_COMM_WORLD,fileName, FILE_MODE_WRITE, &binv);
-    }
-    else{
-      PetscViewerBinaryOpen(MPI_COMM_WORLD,fileName, FILE_MODE_APPEND, &binv);
-    }
+    PetscViewerBinaryOpen(MPI_COMM_WORLD,fileName, FILE_MODE_WRITE, &binv);
     VecView(_vec, binv);
+    PetscViewerDestroy(&binv);
+    
+  }
+  
+  void PetscVector::BinaryLoad(const char* fileName){
+    
+    PetscViewer binv;
+    PetscViewerBinaryOpen(MPI_COMM_WORLD,fileName, FILE_MODE_READ, &binv);
+    VecLoad(_vec, binv);
     PetscViewerDestroy(&binv);
     
   }

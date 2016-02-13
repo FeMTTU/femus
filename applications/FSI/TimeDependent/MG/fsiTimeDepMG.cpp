@@ -384,10 +384,14 @@ int main(int argc,char **args) {
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
   const unsigned int n_timesteps = 1000;
 
+  ml_sol.LoadSolution("turek_FSI3");
+  
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
 
-  for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+  
+  
+  for (unsigned time_step = 1; time_step < n_timesteps; time_step++) {
 
     if( time_step > 0 )
       system.SetMgType(V_CYCLE);
@@ -396,7 +400,7 @@ int main(int argc,char **args) {
 
     system.UpdateSolution();
     
-    if( time_step%1 == 0) ml_sol.SaveSolution("turek_FSI3",time_step + 1);
+    if( time_step%1 == 0) ml_sol.SaveSolution("turek_FSI3");
 
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
