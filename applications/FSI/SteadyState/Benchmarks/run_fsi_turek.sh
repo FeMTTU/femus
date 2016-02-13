@@ -27,4 +27,4 @@
 # ./fsisteady -ksp_monitor_true_residual -input "./input/turek.neu" -nlevel 1 -rhof 1000 -muf 1 -rhos 1000 -E 1500000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi_steady_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "gmres" -max_outer_solver_iter 1 -nrefinement 1 -std_output stdOutput.txt > stdOutput.txt
 
 # GMRES-MG-Richardson-ASM-ILU-MUMPS solver
-#./fsisteady -input "./input/turek.neu" -nrefinement 3 -nlevel 3 -rhof 1000 -muf 1 -rhos 1000 -E 1400000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi_steady_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "gmres" -max_outer_solver_iter 40
+./fsisteady -input "./input/turek.neu" -nrefinement 2 -nlevel 2 -rhof 1000 -muf 1 -rhos 1000 -E 1500000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi_steady_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "gmres" -max_outer_solver_iter 60 -ksp_monitor_true_residual -std_output turek_mg.txt > turek_mg.txt
