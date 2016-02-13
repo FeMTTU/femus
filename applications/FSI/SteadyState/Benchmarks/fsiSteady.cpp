@@ -497,8 +497,7 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
 
   std::ofstream outf;
   char outFileName[100];
-  int counter = 0;
-  double ave_lin_solver_time = 0.;
+
   if(strcmp (infile,"./input/turek.neu") == 0){
     sprintf(outFileName, "turek_hron_multigrid_time.txt");
   }
@@ -513,6 +512,9 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
   outf << std::endl;
   outf << "Number_of_refinements="<<numofrefinements<<",";
 
+  int counter = 0;
+  double ave_lin_solver_time = 0.;
+
   std::string str1;
   inf >> str1;
   while (str1.compare("END_COMPUTATION") != 0) {
@@ -523,9 +525,10 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
         if (str1.compare("solver") == 0) {
 	  inf >> str1;
           if (str1.compare("time:") == 0) {
-            inf >> str1;
+            double value;
+            inf >> value;
 	    ++counter;
-	    ave_lin_solver_time += atof(str1.c_str());
+	    ave_lin_solver_time += value;
 	  }
         }
       }
@@ -533,8 +536,8 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
     inf >> str1;
   }
 
-  outf << ave_lin_solver_time/double(counter);
-  
+  outf << ave_lin_solver_time / counter;
+
   outf.close();
   inf.close();
 

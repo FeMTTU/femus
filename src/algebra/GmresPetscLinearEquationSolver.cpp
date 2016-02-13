@@ -143,7 +143,7 @@ namespace femus {
 
       PetscLogDouble t2;
       PetscTime(&t2);
-      PetscPrintf(PETSC_COMM_WORLD, " *************** MG linear solver time: %8.3f \n", t2 - t1);
+      PetscPrintf(PETSC_COMM_WORLD, " *************** MG linear solver time: %e \n", t2 - t1);
       PetscPrintf(PETSC_COMM_WORLD, " *************** Number of outer ksp solver iterations = %i \n", its);
       PetscPrintf(PETSC_COMM_WORLD, " *************** Convergence reason = %i \n", reason);
       PetscPrintf(PETSC_COMM_WORLD, " *************** Residual norm = %10.8g \n", rnorm);
@@ -332,7 +332,7 @@ namespace femus {
       KSPGetResidualNorm(_ksp, &rnorm);
 
       PetscTime(&t2);
-      PetscPrintf(PETSC_COMM_WORLD, " *************** MG linear solver time: %8.3f \n", t2 - t1);
+      PetscPrintf(PETSC_COMM_WORLD, " *************** MG linear solver time: %e \n", t2 - t1);
       PetscPrintf(PETSC_COMM_WORLD, " *************** Number of outer ksp solver iterations = %i \n", its);
       PetscPrintf(PETSC_COMM_WORLD, " *************** Convergence reason = %i \n", reason);
       PetscPrintf(PETSC_COMM_WORLD, " *************** Residual norm = %10.8g \n", rnorm);
