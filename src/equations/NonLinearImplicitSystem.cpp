@@ -128,12 +128,16 @@ namespace femus {
         _assembleMatrix = _buildSolver;
         _assemble_system_function( _equation_systems );
 
+        std::cout << std::endl << " ********* Assembly is finished \n";
+
+
         if( _buildSolver ){
           _MGmatrixFineReuse = ( 0 == nonLinearIterator ) ? false : true;
           _MGmatrixCoarseReuse = ( igridn - grid0 > 0 ) ?  true : _MGmatrixFineReuse;
 
           for( unsigned i = igridn - 1u; i > 0; i-- ) {
             if( _RR[i] ) {
+              std::cout << std::endl << " ********* Building sub \n";
               if( i == igridn - 1u )
                 _LinSolver[i - 1u]->_KK->matrix_ABC( *_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixFineReuse );
               else
@@ -147,6 +151,7 @@ namespace femus {
             }
           }
           if( _MGsolver ) {
+            std::cout << std::endl << " ********* Building MG \n";
             _LinSolver[igridn - 1u]->MGInit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
 
             for( unsigned i = 0; i < igridn; i++ ) {
