@@ -109,7 +109,7 @@ namespace femus {
 
     meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange);
 
-    std::cout<<"end partitioning\n";
+
 
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(), true);
 
@@ -243,7 +243,11 @@ namespace femus {
 
       std::sort(_localIsIndex[vb_index].begin(), _localIsIndex[vb_index].end());
       std::sort(_overlappingIsIndex[vb_index].begin(), _overlappingIsIndex[vb_index].end());
+
+      mymap.clear();
     }
+
+    std::cout<<"end partitioning\n";
 
     //BEGIN Generate std::vector<IS> for ASM PC ***********
     _localIs.resize(_localIsIndex.size());
