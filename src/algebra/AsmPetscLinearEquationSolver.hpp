@@ -65,8 +65,12 @@ namespace femus {
       void BuildAMSIndex(const vector <unsigned> &variable_to_be_solved);
 
       void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved) {
-        if(!_standardASM)
+        if(!_standardASM){
           BuildAMSIndex(variable_to_be_solved);
+          std::cout<<"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\n";
+          int a;
+          std::cin>>a;
+        }
 
         GmresPetscLinearEquationSolver::BuildBdcIndex(variable_to_be_solved);
       }

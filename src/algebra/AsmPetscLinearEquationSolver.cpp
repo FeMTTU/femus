@@ -51,6 +51,7 @@ namespace femus {
     _elementBlockNumber[0] = block_elemet_number;
     _elementBlockNumber[1] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
+    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
     _standardASM = 0;
   }
 
