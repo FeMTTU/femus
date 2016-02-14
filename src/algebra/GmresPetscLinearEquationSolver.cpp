@@ -215,9 +215,12 @@ namespace femus {
     const vector <unsigned>& variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR,
     const unsigned& npre, const unsigned& npost) {
 
+    std::cout<<"start BC\n";
     // ***************** NODE/ELEMENT SEARCH *******************
     if(_bdcIndexIsInitialized == 0) BuildBdcIndex(variable_to_be_solved);
     // ***************** END NODE/ELEMENT SEARCH *******************
+    std::cout<<"end BC\n";
+
 
     KSP* kspMG = LinSolver->GetKSP();
     PC pcMG;

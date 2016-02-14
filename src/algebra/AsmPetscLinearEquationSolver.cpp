@@ -103,7 +103,12 @@ namespace femus {
     vector < vector < unsigned > > block_elements;
 
     MeshASMPartitioning meshasmpartitioning(*_msh);
+
+    std::cout<<"start partitioning\n";
+
     meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange);
+
+    std::cout<<"end partitioning\n";
 
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(), true);
 
