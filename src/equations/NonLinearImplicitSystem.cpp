@@ -155,6 +155,7 @@ namespace femus {
             _LinSolver[igridn - 1u]->MGInit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
 
             for( unsigned i = 0; i < igridn; i++ ) {
+              std::cout << std::endl << " ********* set level "<<i<<std::endl;
               if( _RR[i] )
                 _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
               else
