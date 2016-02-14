@@ -91,6 +91,11 @@ namespace femus {
     unsigned DofOffsetSize = KKoffset[KKIndex.size() - 1][iproc] - KKoffset[0][iproc];
     vector < unsigned > indexa(DofOffsetSize, DofOffsetSize);
     vector < unsigned > indexb(DofOffsetSize, DofOffsetSize);
+
+    vector < unsigned > localIndex(DofOffsetSize);
+    vector < unsigned > overlappingIndex(DofOffsetSize);
+
+
     vector <bool> owned(DofOffsetSize, false);
 
     map<int, bool> mymap;
@@ -124,8 +129,8 @@ namespace femus {
     _overlappingIsIndex.resize(block_elements.size());
 
     for(int vb_index = 0; vb_index < block_elements.size(); vb_index++) {
-      _localIsIndex[vb_index].resize(DofOffsetSize);
-      _overlappingIsIndex[vb_index].resize(DofOffsetSize);
+      //_localIsIndex[vb_index].resize(DofOffsetSize);
+      //_overlappingIsIndex[vb_index].resize(DofOffsetSize);
 
       PetscInt PAsize = 0;
       PetscInt PBsize = 0;
@@ -164,12 +169,12 @@ namespace femus {
                         jdof <  _msh->_dofOffset[SolType][iproc + 1]) {
                       if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
                         owned[kkdof - DofOffset] = true;
-                        _localIsIndex[vb_index][PAsize] = kkdof;
+                        localIndex[PAsize] = kkdof;
                         indexa[kkdof - DofOffset] = PAsize++;
                       }
 
                       if(indexb[kkdof - DofOffset] == DofOffsetSize) {
-                        _overlappingIsIndex[vb_index][PBsize] = kkdof;
+                        overlappingIndex[PBsize] = kkdof;
                         indexb[kkdof - DofOffset] = PBsize++;
                       }
                     }
@@ -200,12 +205,12 @@ namespace femus {
                     inode_Metis <  _msh->_dofOffset[SolType][iproc + 1]) {
                   if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
                     owned[kkdof - DofOffset] = true;
-                    _localIsIndex[vb_index][PAsize] = kkdof;
+                    localIndex[PAsize] = kkdof;
                     indexa[kkdof - DofOffset] = PAsize++;
                   }
 
                   if(indexb[kkdof - DofOffset] == DofOffsetSize) {
-                    _overlappingIsIndex[vb_index][PBsize] = kkdof;
+                    overlappingIndex[PBsize] = kkdof;
                     indexb[kkdof - DofOffset] = PBsize++;
                   }
                 }
@@ -221,11 +226,11 @@ namespace femus {
 
       // *** re-initialize indeces(a,c,d)
       for(PetscInt i = 0; i < PAsize; i++) {
-        indexa[_localIsIndex[vb_index][i] - DofOffset] = DofOffsetSize;
+        indexa[localIndex[i] - DofOffset] = DofOffsetSize;
       }
 
       for(PetscInt i = 0; i < PBsize; i++) {
-        indexb[_overlappingIsIndex[vb_index][i] - DofOffset] = DofOffsetSize;
+        indexb[overlappingIndex[i] - DofOffset] = DofOffsetSize;
       }
 
       for(PetscInt i = 0; i < Csize; i++) {
@@ -233,18 +238,27 @@ namespace femus {
       }
 
       _localIsIndex[vb_index].resize(PAsize);
+      for(unsigned i = 0; i < PAsize; i++){
+        _localIsIndex[vb_index][i] = localIndex[i];
+      }
 
       _overlappingIsIndex[vb_index].resize(PBsize + mymap.size());
+      for(unsigned i = 0; i < PBsize; i++){
+        _overlappingIsIndex[vb_index][i] = overlappingIndex[i];
+      }
+
       int i = 0;
 
       for(std::map<int, bool>::iterator it = mymap.begin(); it != mymap.end(); ++it, ++i) {
         _overlappingIsIndex[vb_index][PBsize + i] = it->first;
       }
+      std::cout<<PAsize<<" "<<PBsize<<" "<<mymap.size()<<"\n";
+      mymap.clear();
 
       std::sort(_localIsIndex[vb_index].begin(), _localIsIndex[vb_index].end());
       std::sort(_overlappingIsIndex[vb_index].begin(), _overlappingIsIndex[vb_index].end());
 
-      mymap.clear();
+
     }
 
     std::cout<<"end partitioning\n";
