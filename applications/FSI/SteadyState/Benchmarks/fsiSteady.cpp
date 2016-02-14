@@ -459,12 +459,12 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
             }
             while(str1.compare("norm") == 0){
               inf >> normN;
-              outf <<","<< normN;
               counter++;
               for (unsigned i = 0; i < 11; i++){
                 inf >> str1;
               }
             }
+            outf <<","<< normN;
             if(counter != 0){
               outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
             }
@@ -510,7 +510,7 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl;
-  outf << "Number_of_refinements="<<numofrefinements<<",";
+  outf << "\nLevel_Max,Average_Time";
 
   int counter = 0;
   double ave_lin_solver_time = 0.;
@@ -518,7 +518,20 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
   std::string str1;
   inf >> str1;
   while (str1.compare("END_COMPUTATION") != 0) {
-    if (str1.compare("MG") == 0) {
+
+    if (str1.compare("Start") == 0){
+      inf >> str1;
+      if (str1.compare("Level") == 0){
+        inf >> str1;
+        if (str1.compare("Max") == 0){
+          inf >> str1;
+          outf <<"\n"<< str1 <<",";
+          counter = 0;
+          ave_lin_solver_time = 0.;
+        }
+      }
+    }
+    else if (str1.compare("MG") == 0) {
       inf >> str1;
       if (str1.compare("linear") == 0) {
         inf >> str1;
@@ -533,10 +546,19 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
         }
       }
     }
+    if (str1.compare("End") == 0){
+      inf >> str1;
+      if (str1.compare("Level") == 0){
+        inf >> str1;
+        if (str1.compare("Max") == 0){
+          outf << ave_lin_solver_time / counter;
+        }
+      }
+    }
     inf >> str1;
   }
 
-  outf << ave_lin_solver_time / counter;
+//   outf << ave_lin_solver_time / counter;
 
   outf.close();
   inf.close();
