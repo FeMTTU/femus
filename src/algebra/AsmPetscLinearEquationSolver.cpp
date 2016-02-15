@@ -51,7 +51,6 @@ namespace femus {
     _elementBlockNumber[0] = block_elemet_number;
     _elementBlockNumber[1] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
-    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
     _standardASM = 0;
   }
 
@@ -110,11 +109,7 @@ namespace femus {
 
     MeshASMPartitioning meshasmpartitioning(*_msh);
 
-    std::cout<<"start partitioning\n";
-
     meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange);
-
-
 
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(), true);
 
@@ -252,7 +247,7 @@ namespace femus {
       for(std::map<int, bool>::iterator it = mymap.begin(); it != mymap.end(); ++it, ++i) {
         _overlappingIsIndex[vb_index][PBsize + i] = it->first;
       }
-      std::cout<<PAsize<<" "<<PBsize<<" "<<mymap.size()<<"\n";
+     
       mymap.clear();
 
       std::sort(_localIsIndex[vb_index].begin(), _localIsIndex[vb_index].end());
