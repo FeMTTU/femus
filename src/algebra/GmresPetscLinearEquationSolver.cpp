@@ -215,18 +215,14 @@ namespace femus {
     const vector <unsigned>& variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR,
     const unsigned& npre, const unsigned& npost) {
 
-    std::cout<<"start BC\n";
     // ***************** NODE/ELEMENT SEARCH *******************
     if(_bdcIndexIsInitialized == 0) BuildBdcIndex(variable_to_be_solved);
     // ***************** END NODE/ELEMENT SEARCH *******************
-    std::cout<<"end BC\n";
-
 
     KSP* kspMG = LinSolver->GetKSP();
     PC pcMG;
     KSPGetPC(*kspMG, &pcMG);
 
-    std::cout<<"start Pmat\n";
 
     if(_pmatIsInitialized) MatDestroy(&_pmat);
     PetscMatrix* KKp = static_cast<PetscMatrix*>(_KK);
@@ -236,9 +232,6 @@ namespace femus {
     MatZeroRows(_pmat, _bdcIndex[0].size(), &_bdcIndex[0][0], 1.e100, 0, 0);
     _pmatIsInitialized = true;
 
-    std::cout<<"end Pmat\n";
-
-    std::cout<<"start pre smoothing\n";
 
     KSP subksp;
     if(level == 0) {
@@ -258,8 +251,6 @@ namespace femus {
     PC subpc;
     KSPGetPC(subksp, &subpc);
     SetPreconditioner(subksp,subpc);
-
-    std::cout<<"end pre smoothing\n";
 
 
     if(level < levelMax) {
@@ -285,7 +276,6 @@ namespace femus {
       PCMGSetRestriction(pcMG, level, R);
 
       if(npre != npost) {
-        std::cout<<"start post smoothing\n";
         KSP subkspUp;
         PCMGGetSmootherUp(pcMG, level , &subkspUp);
         KSPSetTolerances(subkspUp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npost);
@@ -294,7 +284,6 @@ namespace femus {
         PC subpcUp;
         KSPGetPC(subkspUp, &subpcUp);
         KSPSetUp(subkspUp);
-        std::cout<<"end post smoothing\n";
       }
     }
   }

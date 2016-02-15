@@ -281,7 +281,7 @@ int main(int argc,char **args) {
   system.SetSolverFineGrids(RICHARDSON);
 
   // set the tolerances for the GMRES outer solver
-  system.SetTolerances(lin_tol,alin_tol,div_tol,max_outer_solver_iter);
+  system.SetTolerances(lin_tol,alin_tol,div_tol,max_outer_solver_iter,10);
   system.SetOuterKSPSolver(outer_ksp_solver);
 
   // ******* Add variables to be solved *******
