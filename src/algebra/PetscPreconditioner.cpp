@@ -144,6 +144,13 @@ void PetscPreconditioner::set_petsc_preconditioner_type
     ierr = MatMumpsSetIcntl(F,14,30);CHKERRABORT(MPI_COMM_WORLD,ierr);
     break;
 
+  case ULU_PRECOND: //here we set the Umfpack serial direct solver package
+    ierr = PCSetType (pc, (char*) PCLU); CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+    ierr = PCFactorSetMatSolverPackage(pc,MATSOLVERUMFPACK); CHKERRABORT(MPI_COMM_WORLD,ierr);
+    ierr = PCFactorSetUpMatSolverPackage(pc); CHKERRABORT(MPI_COMM_WORLD,ierr);
+    break; 
+    
   case MCC_PRECOND:
     ierr = PCSetType (pc, (char*) PCCHOLESKY);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
