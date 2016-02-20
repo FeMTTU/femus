@@ -143,10 +143,12 @@ namespace femus {
 
       PetscLogDouble t2;
       PetscTime(&t2);
-      PetscPrintf(PETSC_COMM_WORLD, " *************** ML linear solver time: %e \n", t2 - t1);
-      PetscPrintf(PETSC_COMM_WORLD, " *************** Number of outer ksp solver iterations = %i \n", its);
-      PetscPrintf(PETSC_COMM_WORLD, " *************** Convergence reason = %i \n", reason);
-      PetscPrintf(PETSC_COMM_WORLD, " *************** Residual norm = %10.8g \n", rnorm);
+
+      PetscPrintf(PETSC_COMM_WORLD, "        *************** ML linear solver time: %e \n", t2 - t1);
+      PetscPrintf(PETSC_COMM_WORLD, "        *************** Number of outer ksp solver iterations = %i \n", its);
+      PetscPrintf(PETSC_COMM_WORLD, "        *************** Convergence reason = %i \n", reason);
+      PetscPrintf(PETSC_COMM_WORLD, "        *************** Residual norm = %10.8g \n", rnorm);
+
     }
     //END PRINT
   }
@@ -348,10 +350,10 @@ namespace femus {
       KSPGetResidualNorm(_ksp, &rnorm);
 
       PetscTime(&t2);
-      PetscPrintf(PETSC_COMM_WORLD, " *************** MG linear solver time: %e \n", t2 - t1);
-      PetscPrintf(PETSC_COMM_WORLD, " *************** Number of outer ksp solver iterations = %i \n", its);
-      PetscPrintf(PETSC_COMM_WORLD, " *************** Convergence reason = %i \n", reason);
-      PetscPrintf(PETSC_COMM_WORLD, " *************** Residual norm = %10.8g \n", rnorm);
+      PetscPrintf(PETSC_COMM_WORLD, "       *************** MG linear solver time: %e \n", t2 - t1);
+      PetscPrintf(PETSC_COMM_WORLD, "       *************** Number of outer ksp solver iterations = %i \n", its);
+      PetscPrintf(PETSC_COMM_WORLD, "       *************** Convergence reason = %i \n", reason);
+      PetscPrintf(PETSC_COMM_WORLD, "       *************** Residual norm = %10.8g \n", rnorm);
     }
   }
 
@@ -420,11 +422,15 @@ namespace femus {
         CHKERRABORT(MPI_COMM_WORLD, ierr);
         return;
 
+      case FGMRES:
+        ierr = KSPSetType(ksp, (char*) KSPFGMRES);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
       case RICHARDSON:
         ierr = KSPSetType(ksp, (char*) KSPRICHARDSON);
-        ierr =  KSPRichardsonSetScale(ksp, 0.7);
-        CHKERRABORT(MPI_COMM_WORLD, ierr);
-        KSPRichardsonSetScale(ksp, 0.7);
+        ierr =  KSPRichardsonSetScale(ksp, 0.7); CHKERRABORT(MPI_COMM_WORLD, ierr);
+//         ierr =  KSPRichardsonSetSelfScale(ksp, PETSC_TRUE); CHKERRABORT(MPI_COMM_WORLD, ierr);
         return;
 
       case CHEBYSHEV:

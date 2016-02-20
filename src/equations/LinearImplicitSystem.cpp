@@ -222,7 +222,7 @@ namespace femus {
     for( unsigned k = 0; k < _SolSystemPdeIndex.size(); k++ ) {
       unsigned indexSol = _SolSystemPdeIndex[k];
       L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
-      std::cout << " *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName( indexSol ) << " = " << L2normRes << std::endl;
+      std::cout << "       *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName( indexSol ) << " = " << L2normRes << std::endl;
 
       if( L2normRes < _linearAbsoluteConvergenceTolerance && conv == true ) {
         conv = true;
@@ -263,7 +263,7 @@ namespace femus {
 
     for( unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++ ) { //linear cycle
 
-      std::cout << std::endl << " *************** Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
+      std::cout << "       *************** Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
       bool ksp_clean = !linearIterator * _assembleMatrix;
       _LinSolver[gridn - 1u]->MGSolve( ksp_clean );
       _solution[gridn - 1u]->UpdateRes( _SolSystemPdeIndex, _LinSolver[gridn - 1u]->_RES, _LinSolver[gridn - 1u]->KKoffset );
@@ -274,7 +274,7 @@ namespace femus {
 
     _solution[gridn - 1u]->UpdateSol( _SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset );
 
-    std::cout << "\n ************ Linear-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
+    std::cout << "       *************** Linear-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
               << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
     return linearIsConverged;
   }

@@ -44,6 +44,7 @@ int main(int argc,char **args) {
   int npre = 8;
   int npost = 8;
   int max_outer_solver_iter = 40;
+  int ksp_restart = 10;
   PetscBool equation_pivoting = PETSC_TRUE;
 
   // ******* reading input parameters *******
@@ -104,6 +105,15 @@ int main(int argc,char **args) {
 
   PetscOptionsString("-outer_ksp_solver", "The outer ksp solver", "fsiSteady.cpp", "gmres", outer_ksp_solver, len_infile_name, NULL);
   printf(" outer_ksp_solver: %s\n", outer_ksp_solver);
+  
+  PetscOptionsInt("-npre", "The number of presmoothing step", "fsiSteady.cpp", npre, &npre, NULL);
+  printf(" npre: %i\n", npre);
+  
+  PetscOptionsInt("-npost", "The number of postmoothing step", "fsiSteady.cpp", npost, &npost, NULL);
+  printf(" npost: %i\n", npost);
+  
+  PetscOptionsInt("-ksp_restart", "The number of ksp linear step before restarting", "fsiSteady.cpp", ksp_restart, &ksp_restart, NULL);
+  printf(" ksp_restart: %i\n", ksp_restart);
 
   PetscOptionsInt("-max_outer_solver_iter", "The maximum outer solver iterations", "fsiSteady.cpp", max_outer_solver_iter, &max_outer_solver_iter, NULL);
   printf(" max_outer_solver_iter: %i\n", max_outer_solver_iter);
@@ -281,7 +291,7 @@ int main(int argc,char **args) {
   system.SetSolverFineGrids(RICHARDSON);
 
   // set the tolerances for the GMRES outer solver
-  system.SetTolerances(lin_tol,alin_tol,div_tol,max_outer_solver_iter,10);
+  system.SetTolerances(lin_tol,alin_tol,div_tol,max_outer_solver_iter,ksp_restart);
   system.SetOuterKSPSolver(outer_ksp_solver);
 
   // ******* Add variables to be solved *******

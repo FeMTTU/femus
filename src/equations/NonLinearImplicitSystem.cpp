@@ -54,7 +54,6 @@ namespace femus {
   bool NonLinearImplicitSystem::IsNonLinearConverged( const unsigned igridn, double &nonLinearEps ) {
     bool conv = true;
     double L2normEps, L2normSol, L2normEpsDividedSol;
-    std::cout << std::endl;
 
     nonLinearEps = 0.;
     const double absMinNonlinearEps = 1.e-50;
@@ -67,7 +66,7 @@ namespace femus {
       L2normSol    = _solution[igridn]->_Sol[indexSol]->l2_norm();
       L2normEpsDividedSol = L2normEps/(L2normSol+mindeltaNormSol);
 
-      std::cout << " ********* Level Max " << igridn + 1 << " Nonlinear Eps_l2norm/Sol_l2norm " << \
+      std::cout << "     ********* Level Max " << igridn + 1 << " Nonlinear Eps_l2norm/Sol_l2norm " << \
         std::scientific << _ml_sol->GetSolutionName( indexSol ) << "= " << L2normEpsDividedSol << \
         "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << std::endl;
       nonLinearEps = ( nonLinearEps > L2normEpsDividedSol ) ? nonLinearEps : L2normEpsDividedSol;
@@ -111,7 +110,7 @@ namespace femus {
     unsigned AMRCounter = 0;
 
     for( unsigned igridn = grid0; igridn <= _gridn; igridn++ ) {   //_igridn
-      std::cout << std::endl << " ****** Start Level Max " << igridn << " ******" << std::endl;
+      std::cout << std::endl << "   ****** Start Level Max " << igridn << " ******" << std::endl;
       clock_t start_nl_time = clock();
 
       bool ThisIsAMR = ( _mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn ) ? 1 : 0;
@@ -120,7 +119,7 @@ namespace femus {
 
       for( unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++ ) {
 
-        std::cout << std::endl << " ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
+        std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
         clock_t start_assembly_time = clock();
         _levelToAssemble = igridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
@@ -132,6 +131,7 @@ namespace femus {
           _MGmatrixFineReuse = ( 0 == nonLinearIterator ) ? false : true;
           _MGmatrixCoarseReuse = ( igridn - grid0 > 0 ) ?  true : _MGmatrixFineReuse;
 
+	  clock_t mg_proj_mat_time = clock();
           for( unsigned i = igridn - 1u; i > 0; i-- ) {
             if( _RR[i] ) {
               if( i == igridn - 1u )
@@ -146,7 +146,11 @@ namespace femus {
                 _LinSolver[i - 1u]->_KK->matrix_PtAP( *_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse );
             }
           }
-          if( _MGsolver ) {
+            std::cout << "   ********* Level Max " << igridn << " MG PROJECTION MATRICES TIME:\t" \
+	    << static_cast<double>( ( clock() - mg_proj_mat_time ) ) / CLOCKS_PER_SEC << std::endl;
+          
+          clock_t mg_init_time = clock();  
+	  if( _MGsolver ) {
             _LinSolver[igridn - 1u]->MGInit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
 
             for( unsigned i = 0; i < igridn; i++ ) {
@@ -156,13 +160,16 @@ namespace femus {
                 _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
             }
           }
+          std::cout << "   ********* Level Max " << igridn << " MGINIT TIME:\t" \
+	    << static_cast<double>( ( clock() - mg_init_time ) ) / CLOCKS_PER_SEC << std::endl;
         }
-        std::cout << std::endl << " ********* Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>( ( clock() - start_assembly_time ) ) / CLOCKS_PER_SEC << std::endl;
+        std::cout << "   ********* Level Max " << igridn << " ASSEMBLY TIME:\t" << \
+          static_cast<double>( ( clock() - start_assembly_time ) ) / CLOCKS_PER_SEC << std::endl;
         clock_t startUpdateResidualTime = clock();
 
         for( unsigned updateResidualIterator = 0; updateResidualIterator < _maxNumberOfResidualUpdateIterations; updateResidualIterator++ ) {
 
-          std::cout << std::endl << " ************ Residual Update iteration " << updateResidualIterator + 1 << std::endl;
+          std::cout << "     ********* Linear Cycle + Residual Update iteration " << updateResidualIterator + 1 << std::endl;
 
           bool thisIsConverged;
 
@@ -177,13 +184,13 @@ namespace femus {
 
         }
 
-        std::cout << "\n ********* Residual Update-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
-                  << static_cast<double>( ( clock() - startUpdateResidualTime ) ) / CLOCKS_PER_SEC << std::endl;
-
         if( _MGsolver * _buildSolver ) _LinSolver[igridn - 1u]->MGClear();
 
         double nonLinearEps;
         bool nonLinearIsConverged = IsNonLinearConverged( igridn - 1, nonLinearEps );
+
+        std::cout << "     ********* Linear Cycle + Residual Update-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
+        << static_cast<double>( ( clock() - startUpdateResidualTime ) ) / CLOCKS_PER_SEC << std::endl;
 
         if( nonLinearIsConverged ) break;
 
@@ -193,13 +200,13 @@ namespace femus {
 
       if( igridn < _gridn ) ProlongatorSol( igridn );
 
-      std::cout << std::endl << " ****** Nonlinear-Cycle TIME: " << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
+      std::cout << std::endl << "   ****** Nonlinear-Cycle TIME: " << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
                 << static_cast<double>( ( clock() - start_nl_time ) ) / CLOCKS_PER_SEC << std::endl;
 
-      std::cout << std::endl << " ****** End Level Max " << igridn << " ******" << std::endl;
+      std::cout << std::endl << "   ****** End Level Max " << igridn << " ******" << std::endl;
     }
 
-    std::cout << std::endl << " *** Nonlinear " << _solverType << " TIME: " << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
+    std::cout << std::endl << "   *** Nonlinear " << _solverType << " TIME: " << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
               << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
 
   }
