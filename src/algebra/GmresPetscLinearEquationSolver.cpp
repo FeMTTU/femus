@@ -107,11 +107,19 @@ namespace femus {
 
     if(ksp_clean) {
       this->Clear();
-      MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
-      MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-      MatZeroRows(_pmat, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
-      _pmatIsInitialized = true;
-      this->Init(KK, _pmat);
+      if( _msh->GetIfHomogeneous() ){
+        MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
+        MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
+        MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
+        this->Init(KK, KK);
+      }
+      else{
+        MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
+        MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
+        MatZeroRows(_pmat, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
+        _pmatIsInitialized = true;
+        this->Init(KK, _pmat);
+      }
     }
     //END ASSEMBLE
 
@@ -135,7 +143,7 @@ namespace femus {
 
       PetscLogDouble t2;
       PetscTime(&t2);
-      PetscPrintf(PETSC_COMM_WORLD, " *************** MG linear solver time: %e \n", t2 - t1);
+      PetscPrintf(PETSC_COMM_WORLD, " *************** ML linear solver time: %e \n", t2 - t1);
       PetscPrintf(PETSC_COMM_WORLD, " *************** Number of outer ksp solver iterations = %i \n", its);
       PetscPrintf(PETSC_COMM_WORLD, " *************** Convergence reason = %i \n", reason);
       PetscPrintf(PETSC_COMM_WORLD, " *************** Residual norm = %10.8g \n", rnorm);

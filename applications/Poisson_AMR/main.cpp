@@ -417,7 +417,7 @@ int main(int argc, char** argv) {
   system2.SetDirichletBCsHandling(PENALTY);
 
   // Solve Temperature system
-  system2.MGsolve();
+  system2.MLsolve();
   //END Temperature Multilevel Problem
 
   /// Print all solutions

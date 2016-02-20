@@ -131,7 +131,7 @@ namespace femus {
     _bdcIndexIsInitialized = 0;
     _pmatIsInitialized = false;
 
-    _printSolverInfo = true;
+    _printSolverInfo = false;
 
   }
 
