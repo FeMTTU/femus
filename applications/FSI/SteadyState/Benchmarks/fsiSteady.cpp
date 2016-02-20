@@ -41,8 +41,8 @@ int main(int argc,char **args) {
   double div_tol = 1.e+10;
   double nonlin_tol = 1.e-08;
   int asm_block = 2;
-  int npre = 0;
-  int npost = 2;
+  int npre = 8;
+  int npost = 8;
   int max_outer_solver_iter = 40;
   PetscBool equation_pivoting = PETSC_TRUE;
 

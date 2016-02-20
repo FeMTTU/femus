@@ -89,7 +89,7 @@ namespace femus {
         abort();
       };
 
-      virtual void MGSetLevel(LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
+      virtual void MGSetLevel(LinearEquationSolver *LinSolver, const unsigned &levelMax,
                               const vector <unsigned> &variable_to_be_solved,
                               SparseMatrix* PP, SparseMatrix* RR,
                               const unsigned &npre, const unsigned &npost

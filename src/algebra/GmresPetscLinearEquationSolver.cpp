@@ -53,9 +53,7 @@ namespace femus {
     _bdcIndexIsInitialized = 1;
 
     unsigned BDCIndexSize = KKoffset[KKIndex.size() - 1][processor_id()] - KKoffset[0][processor_id()];
-    _bdcIndex.resize(2);
-    _bdcIndex[0].resize(BDCIndexSize);
-    _bdcIndex[1].resize(BDCIndexSize);
+    _bdcIndex.resize(BDCIndexSize);
 
     vector <bool> ThisSolutionIsIncluded(_SolPdeIndex.size(), false);
 
@@ -77,21 +75,15 @@ namespace femus {
         int idof_kk = KKoffset[k][processor_id()] + local_mts;
 
         if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 1.9) {
-          _bdcIndex[0][count0] = idof_kk;
+          _bdcIndex[count0] = idof_kk;
           count0++;
-        } else {
-          _bdcIndex[1][count1] = idof_kk;
-          count1++;
         }
       }
     }
 
-    _bdcIndex[0].resize(count0);
-    _bdcIndex[1].resize(count1);
-
-    std::sort(_bdcIndex[0].begin(), _bdcIndex[0].end());
-    std::sort(_bdcIndex[1].begin(), _bdcIndex[1].end());
-
+    _bdcIndex.resize(count0);
+    std::vector < PetscInt >(_bdcIndex).swap(_bdcIndex);
+    std::sort(_bdcIndex.begin(), _bdcIndex.end());
 
     return;
   }
@@ -117,7 +109,7 @@ namespace femus {
       this->Clear();
       MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
       MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-      MatZeroRows(_pmat, _bdcIndex[0].size(), &_bdcIndex[0][0], 1.e100, 0, 0);
+      MatZeroRows(_pmat, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
       _pmatIsInitialized = true;
       this->Init(KK, _pmat);
     }
@@ -211,9 +203,11 @@ namespace femus {
   // ================================================
 
   void GmresPetscLinearEquationSolver::MGSetLevel(
-    LinearEquationSolver* LinSolver, const unsigned& level, const unsigned& levelMax,
+    LinearEquationSolver* LinSolver, const unsigned& levelMax,
     const vector <unsigned>& variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR,
     const unsigned& npre, const unsigned& npost) {
+
+    unsigned level = _msh->GetLevel();
 
     // ***************** NODE/ELEMENT SEARCH *******************
     if(_bdcIndexIsInitialized == 0) BuildBdcIndex(variable_to_be_solved);
@@ -222,16 +216,6 @@ namespace femus {
     KSP* kspMG = LinSolver->GetKSP();
     PC pcMG;
     KSPGetPC(*kspMG, &pcMG);
-
-
-    if(_pmatIsInitialized) MatDestroy(&_pmat);
-    PetscMatrix* KKp = static_cast<PetscMatrix*>(_KK);
-    Mat KK = KKp->mat();
-    MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
-    MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-    MatZeroRows(_pmat, _bdcIndex[0].size(), &_bdcIndex[0][0], 1.e100, 0, 0);
-    _pmatIsInitialized = true;
-
 
     KSP subksp;
     if(level == 0) {
@@ -246,7 +230,25 @@ namespace femus {
     levelName << "level-" << level;
     KSPSetOptionsPrefix(subksp, levelName.str().c_str());
     KSPSetFromOptions(subksp);
-    KSPSetOperators(subksp, KK, _pmat);
+
+    if(_msh->GetIfHomogeneous()){
+      PetscMatrix* KKp = static_cast<PetscMatrix*>(_KK);
+      Mat KK = KKp->mat();
+      MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
+      MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
+      MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
+      KSPSetOperators(subksp, KK, KK);
+    }
+    else{
+      if(_pmatIsInitialized) MatDestroy(&_pmat);
+      PetscMatrix* KKp = static_cast<PetscMatrix*>(_KK);
+      Mat KK = KKp->mat();
+      MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
+      MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
+      MatZeroRows(_pmat, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
+      _pmatIsInitialized = true;
+      KSPSetOperators(subksp, KK, _pmat);
+    }
 
     PC subpc;
     KSPGetPC(subksp, &subpc);
@@ -299,7 +301,13 @@ namespace femus {
     if(ksp_clean) {
       PetscMatrix* KKp = static_cast< PetscMatrix* >(_KK);
       Mat KK = KKp->mat();
-      KSPSetOperators(_ksp, KK, _pmat);
+      if(_msh->GetIfHomogeneous()){
+        KSPSetOperators(_ksp, KK, KK);
+      }
+      else{
+        KSPSetOperators(_ksp, KK, _pmat);
+      }
+
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
 
       if(_solver_type != PREONLY){
