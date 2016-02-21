@@ -107,7 +107,7 @@ namespace femus {
 
     if(ksp_clean) {
       this->Clear();
-      if( _msh->GetIfHomogeneous() ){
+      if( _samePreconditioner * _msh->GetIfHomogeneous() ){
         MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
         MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
         MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
@@ -241,7 +241,7 @@ namespace femus {
     KSPSetOptionsPrefix(subksp, levelName.str().c_str());
     KSPSetFromOptions(subksp);
 
-    if(_msh->GetIfHomogeneous()){
+    if(  _samePreconditioner * _msh->GetIfHomogeneous()){
       PetscMatrix* KKp = static_cast<PetscMatrix*>(_KK);
       Mat KK = KKp->mat();
       MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
@@ -311,7 +311,7 @@ namespace femus {
     if(ksp_clean) {
       PetscMatrix* KKp = static_cast< PetscMatrix* >(_KK);
       Mat KK = KKp->mat();
-      if(_msh->GetIfHomogeneous()){
+      if( _samePreconditioner * _msh->GetIfHomogeneous()){
         KSPSetOperators(_ksp, KK, KK);
       }
       else{

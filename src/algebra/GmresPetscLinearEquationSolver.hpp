@@ -63,6 +63,10 @@ namespace femus {
                       SparseMatrix* PP, SparseMatrix* RR,
                       const unsigned &npre, const unsigned &npost);
 
+      void UseSamePreconditioner(){
+        _samePreconditioner = true;
+      }
+
       virtual void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved);
 
       virtual void SetPreconditioner(KSP& subksp, PC& subpc);
@@ -106,6 +110,8 @@ namespace femus {
       Mat _pmat;
       bool _pmatIsInitialized;
 
+      bool _samePreconditioner;
+
   };
 
   // =============================================
@@ -132,6 +138,8 @@ namespace femus {
     _pmatIsInitialized = false;
 
     _printSolverInfo = false;
+
+    _samePreconditioner = false;
 
   }
 

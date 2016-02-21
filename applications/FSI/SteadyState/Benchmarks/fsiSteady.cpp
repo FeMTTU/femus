@@ -105,13 +105,13 @@ int main(int argc,char **args) {
 
   PetscOptionsString("-outer_ksp_solver", "The outer ksp solver", "fsiSteady.cpp", "gmres", outer_ksp_solver, len_infile_name, NULL);
   printf(" outer_ksp_solver: %s\n", outer_ksp_solver);
-  
+
   PetscOptionsInt("-npre", "The number of presmoothing step", "fsiSteady.cpp", npre, &npre, NULL);
   printf(" npre: %i\n", npre);
-  
+
   PetscOptionsInt("-npost", "The number of postmoothing step", "fsiSteady.cpp", npost, &npost, NULL);
   printf(" npost: %i\n", npost);
-  
+
   PetscOptionsInt("-ksp_restart", "The number of ksp linear step before restarting", "fsiSteady.cpp", ksp_restart, &ksp_restart, NULL);
   printf(" ksp_restart: %i\n", ksp_restart);
 
@@ -307,6 +307,7 @@ int main(int argc,char **args) {
 
   std::cout << " *********** Solving... ************  " << std::endl;
 
+  system.UseSamePreconditioner();
   system.PrintSolverInfo(true);
 
   system.MGsolve();

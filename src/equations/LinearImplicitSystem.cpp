@@ -569,6 +569,14 @@ namespace femus {
 
   // ********************************************
 
+  void LinearImplicitSystem::UseSamePreconditioner(){
+    for( unsigned i = 0; i < _gridn; i++ ) {
+      _LinSolver[i]->UseSamePreconditioner();
+    }
+  }
+
+  // ********************************************
+
   void LinearImplicitSystem::AddVariableToBeSolved( const char solname[] ) {
 
     if( !strcmp( solname, "All" ) || !strcmp( solname, "ALL" ) || !strcmp( solname, "all" ) ) {

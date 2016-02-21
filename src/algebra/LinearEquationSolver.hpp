@@ -102,6 +102,9 @@ namespace femus {
         _solver_type = st;
       }
 
+      // Use the same preconditioner Amat = Pmat
+      virtual void UseSamePreconditioner() = 0;
+
       /** Sets the type of preconditioner to use. */
       void set_preconditioner_type(const PreconditionerType pct);
 
