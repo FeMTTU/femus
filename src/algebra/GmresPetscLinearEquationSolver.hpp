@@ -108,8 +108,9 @@ namespace femus {
       bool _bdcIndexIsInitialized;
 
       Mat _pmat;
-      bool _pmatIsInitialized;
+      std::vector < Vec > _nullSpaceVec;
 
+      bool _pmatIsInitialized;
       bool _samePreconditioner;
 
   };
@@ -161,6 +162,10 @@ namespace femus {
     if(this->initialized()) {
       this->_is_initialized = false;
       KSPDestroy(&_ksp);
+    }
+
+    for( unsigned i = 0; i < _nullSpaceVec.size(); i++ ){
+      VecDestroy(&_nullSpaceVec[i]);
     }
   }
 

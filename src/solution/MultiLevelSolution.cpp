@@ -575,7 +575,7 @@ namespace femus {
             }
           }
         }
-        if(_iproc == 0 && _fixSolutionAtOnePoint[k] == true  &&
+        if(_iproc == 0 && _fixSolutionAtOnePoint[k] == true  && igridn == 0 &&
             (igridn < _mlMesh->GetNumberOfGridTotallyRefined() || _addAMRPressureStability[k] == false)) {
           _solution[igridn]->_Bdc[k]->set(0, 0.);
           _solution[igridn]->_Sol[k]->set(0, 0.);
@@ -614,7 +614,7 @@ namespace femus {
       std::cout<< "the solution level = "<<level<<" is not available in this MultilevelSolution"<<std::endl;
       abort();
     }
-    
+
     char composedFileName[100];
 
     for(int i = 0; i < _solName.size(); i++) {

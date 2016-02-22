@@ -242,11 +242,53 @@ namespace femus {
     KSPSetFromOptions(subksp);
 
     if(  _samePreconditioner * _msh->GetIfHomogeneous()){
+
+      _RESC->zero();
+      PetscVector* RESCp = static_cast<PetscVector*>(_RESC);
+      Vec RESC = RESCp->vec();
+
+      PetscVector* RESp = static_cast<PetscVector*>(_RES);
+      Vec RES = RESp->vec();
+
+
       PetscMatrix* KKp = static_cast<PetscMatrix*>(_KK);
       Mat KK = KKp->mat();
       MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
       MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
-      MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
+      MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, RESC, RES);
+
+      if(level !=0 ){
+
+        PetscVector* EPSp = static_cast< PetscVector* >(_EPS);
+        Vec EPS = EPSp->vec();
+
+        _nullSpaceVec.resize(1);
+        VecDuplicate(EPS,&_nullSpaceVec[0]);
+
+
+        PetscInt size;
+        VecGetSize(_nullSpaceVec[0], &size);
+
+
+        for(int k = _SolPdeIndex.size()-1; k < _SolPdeIndex.size(); k++) {
+          unsigned indexSol = _SolPdeIndex[k];
+          unsigned soltype = _SolType[indexSol];
+          unsigned owndofs = _msh->_dofOffset[soltype][processor_id() + 1] - _msh->_dofOffset[soltype][processor_id()];
+          for(unsigned i = 0; i < owndofs; i++ ){
+            int idof_kk = KKoffset[k][processor_id()] + i;
+            VecSetValue(_nullSpaceVec[0], idof_kk, 1., INSERT_VALUES);
+          }
+        }
+        VecAssemblyBegin(_nullSpaceVec[0]);
+        VecAssemblyEnd(_nullSpaceVec[0]);
+        VecNormalize(_nullSpaceVec[0], NULL);
+
+        MatNullSpace   nullsp;
+        MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_FALSE, 1, &_nullSpaceVec[0], &nullsp);
+        MatSetNullSpace(KK, nullsp);
+        MatNullSpaceDestroy(&nullsp);
+
+      }
       KSPSetOperators(subksp, KK, KK);
     }
     else{
@@ -312,6 +354,15 @@ namespace femus {
       PetscMatrix* KKp = static_cast< PetscMatrix* >(_KK);
       Mat KK = KKp->mat();
       if( _samePreconditioner * _msh->GetIfHomogeneous()){
+
+//         if(_msh->GetLevel() !=0 ){
+//           MatNullSpace   nullsp;
+//           MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_FALSE, 1, &_nullSpaceVec[0], &nullsp);
+//           //MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_TRUE, 0, NULL, &nullsp);
+//           MatSetNullSpace(KK, nullsp);
+//           MatNullSpaceDestroy(&nullsp);
+//         }
+
         KSPSetOperators(_ksp, KK, KK);
       }
       else{
