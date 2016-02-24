@@ -22,7 +22,7 @@ int main(int argc,char **args) {
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
-
+ 
   // process options
   int dimension=2;
   char infile[256] = "";
@@ -46,12 +46,23 @@ int main(int argc,char **args) {
   int max_outer_solver_iter = 40;
   int ksp_restart = 10;
   PetscBool equation_pivoting = PETSC_TRUE;
+  PetscBool mem_infos = PETSC_FALSE;
+  PetscLogDouble memory_current_usage, memory_maximum_usage;
 
+  PetscMemorySetGetMaximumUsage();
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "0: Memory current usage at beginning: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+  }
+  
   // ******* reading input parameters *******
   PetscOptionsBegin(PETSC_COMM_WORLD, "", "FSI steady problem options", "Unstructured mesh");
 
   cout << " Reading flags:" << endl;
 
+  PetscOptionsBool("-mem_infos", "Print memory infos", "fsiSteady.cpp", mem_infos, &mem_infos, NULL);
+  printf(" mem_infos: %d\n", mem_infos);
+  
   PetscOptionsInt("-nlevel", "The number of mesh levels", "fsiSteady.cpp", numofmeshlevels , &numofmeshlevels, NULL);
   printf(" nlevel: %i\n", numofmeshlevels);
 
@@ -279,10 +290,20 @@ int main(int argc,char **args) {
   // ******* Set Smoother *******
   // Set Preconditioner of the smoother (name to be changed)
   system.SetMgSmoother(ASM_SMOOTHER);
-
+  
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "1: Memory current usage before system init: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+  }
+    
   // System init
   system.init();
 
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "2: Memory current usage after system init: %g M\n", (double)(memory_current_usage)/(1024.*1024.));  
+  }
+  
   // Set the preconditioner for each ASM block
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   // Set block size for the ASM smoother
@@ -294,6 +315,7 @@ int main(int argc,char **args) {
   system.SetTolerances(lin_tol,alin_tol,div_tol,max_outer_solver_iter,ksp_restart);
   system.SetOuterKSPSolver(outer_ksp_solver);
 
+  
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
@@ -309,10 +331,21 @@ int main(int argc,char **args) {
 
   system.SetSamePreconditioner();
   system.PrintSolverInfo(true);
-
+  
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "3: Memory current usage before solve: %g M\n", (double)(memory_current_usage)/(1024.*1024.));  
+  }
+    
   system.MGsolve();
 
-
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "4: Memory current usage after solve: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+    PetscMemoryGetMaximumUsage(&memory_maximum_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "4: Memory maximum usage after solve: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
+  }
+  
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
 
@@ -329,6 +362,13 @@ int main(int argc,char **args) {
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "5: Memory current usage before clear: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+    PetscMemoryGetMaximumUsage(&memory_maximum_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "5: Memory maximum usage before clear: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
+  }
+  
   // ******* Clear all systems *******
   ml_prob.clear();
 
@@ -339,6 +379,7 @@ int main(int argc,char **args) {
     PrintConvergenceInfo(stdOutfile, infile, numofrefinements);
     PrintMultigridTime(stdOutfile, infile, numofrefinements);
   }
+ 
   return 0;
 }
 
