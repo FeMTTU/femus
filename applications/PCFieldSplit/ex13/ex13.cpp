@@ -104,11 +104,11 @@ int main(int argc, char** args) {
   std::vector < unsigned > fieldUV(2);
   fieldUV[0] = system.GetSolPdeIndex("U");
   fieldUV[1] = system.GetSolPdeIndex("V");
-  FieldSplitTree FS_UV( GMRES, ILU_PRECOND, fieldUV , "Velocity");
+  FieldSplitTree FS_UV( PREONLY, ILU_PRECOND, fieldUV , "Velocity");
 
   std::vector < unsigned > fieldP(1);
   fieldP[0] = system.GetSolPdeIndex("P");
-  FieldSplitTree FS_P(GMRES, ILU_PRECOND, fieldP, "Pressure");
+  FieldSplitTree FS_P(PREONLY, ILU_PRECOND, fieldP, "Pressure");// changed by guoyiKe
   
   std::vector < FieldSplitTree *> FS1;
   FS1.reserve(2);
@@ -361,8 +361,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
           for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
-              NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
-              NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
+              NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j]);// + gradSolV_gss[j][k]);
+              //NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
             }
           }
 

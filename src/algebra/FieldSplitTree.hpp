@@ -45,7 +45,7 @@ namespace femus {
 
       void BuildIndexSet( const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc, const unsigned& nprocs, const unsigned& level );
 
-      void SetPC( KSP& ksp, const unsigned& level ) ;
+      void SetPC( KSP& ksp, const unsigned& level) ; 
 
       const unsigned& GetNumberOfSplits() {
         return _numberOfSplits;
@@ -74,9 +74,11 @@ namespace femus {
       FieldSplitTree* GetFather() const;
 
       FieldSplitTree* GetChild( const unsigned& i );
-
+      
     private:
 
+      void SetPetscSolverType(KSP& ksp);
+      
       SolverType _solver;
       PreconditionerType _preconditioner;
       unsigned _numberOfSplits;

@@ -61,7 +61,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 6;
+  unsigned numberOfUniformLevels = 8;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -112,7 +112,7 @@ int main(int argc, char** args) {
   fieldUVP[1] = system.GetSolPdeIndex("V");
   fieldUVP[2] = system.GetSolPdeIndex("P");
 
-  FieldSplitTree FS_NS( PREONLY, ILU_PRECOND, fieldUVP, "Navier-Stokes");
+  FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, "Navier-Stokes");
   
 //   std::vector < unsigned > fieldUV(2);
 //   fieldUV[0] = system.GetSolPdeIndex("U");
