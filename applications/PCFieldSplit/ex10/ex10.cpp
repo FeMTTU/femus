@@ -112,27 +112,27 @@ int main(int argc, char** args) {
   fieldUVP[1] = system.GetSolPdeIndex("V");
   fieldUVP[2] = system.GetSolPdeIndex("P");
 
-  FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, "Navier-Stokes");
-  
+  FieldSplitTree FS_NS( PREONLY, ILU_PRECOND, fieldUVP, "Navier-Stokes");
+
 //   std::vector < unsigned > fieldUV(2);
 //   fieldUV[0] = system.GetSolPdeIndex("U");
 //   fieldUV[1] = system.GetSolPdeIndex("V");
-// 
+//
 //   FieldSplitTree FS_UV( PREONLY, ILU_PRECOND, fieldUV, "Velocity");
-//   
+//
 //   std::vector < unsigned > fieldP(1);
 //   fieldP[0] = system.GetSolPdeIndex("P");
-//   
+//
 //   FieldSplitTree FS_P( PREONLY, ILU_PRECOND, fieldP, "pressure");
-//   
+//
 //    std::vector < FieldSplitTree *> FS1;
-//   
+//
 //   FS1.reserve(2);
 //   FS1.push_back(&FS_UV);
 //   FS1.push_back(&FS_P);
 //   FieldSplitTree FS_NS( GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
-  
-  
+
+
   std::vector < unsigned > fieldT(1);
   fieldT[0] = system.GetSolPdeIndex("T");
   FieldSplitTree FS_T( PREONLY, ILU_PRECOND, fieldT, "Temperature");
@@ -200,13 +200,14 @@ int main(int argc, char** args) {
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetFieldSplitTree(&FS_NST);
   system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 10);
-  //ksystem.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
+  //system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
 
+  system.SetSamePreconditioner();
   system.MGsolve();
 
   // print solutions
@@ -243,6 +244,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
@@ -335,7 +338,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
 
-  KK->zero(); // Set to zero all the entries of the Global Matrix
+  if(assembleMatrix)
+    KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -524,7 +528,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     RES->add_vector_blocked(Res, sysDof);
 
     //Extarct and store the Jacobian
-
+    if(assembleMatrix){
       Jac.resize(nDofsTVP * nDofsTVP);
       // define the dependent variables
       s.dependent(&aResT[0], nDofsT);
@@ -550,12 +554,14 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
       s.clear_independents();
       s.clear_dependents();
-
+    }
   } //end element loop for each process
 
   RES->close();
 
-  KK->close();
+  if(assembleMatrix){
+    KK->close();
+  }
 
   // ***************** END ASSEMBLY *******************
 }

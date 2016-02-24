@@ -111,8 +111,8 @@ namespace femus {
     Mat KK = (static_cast<PetscMatrix*>(_KK))->mat();
     if(ksp_clean) {
       this->Clear();
-      RemoveNullSpace();
       SetPenalty();
+      RemoveNullSpace();
       if( UseSamePreconditioner() ) {
         this->Init(KK, KK);
       }
@@ -245,8 +245,8 @@ namespace femus {
 
     ZerosBoundaryResiduals();
 
-    RemoveNullSpace();
     SetPenalty();
+    RemoveNullSpace();
 
     Mat KK = (static_cast< PetscMatrix* >(_KK))->mat();
     if( UseSamePreconditioner() ) {
@@ -310,9 +310,11 @@ namespace femus {
       KSPSetFromOptions(_ksp);
       KSPGMRESSetRestart(_ksp, _restart);
       KSPSetUp(_ksp);
+
     }
 
     ZerosBoundaryResiduals();
+
 
     KSPSolve(_ksp, (static_cast< PetscVector* >(_RES))->vec(), (static_cast< PetscVector* >(_EPSC))->vec());
 
@@ -348,7 +350,19 @@ namespace femus {
       if(nullspBase.size() != 0) {
         MatNullSpace   nullsp;
         MatNullSpaceCreate(PETSC_COMM_WORLD, PETSC_FALSE, nullspBase.size(), &nullspBase[0], &nullsp);
+
+        PetscBool  isNull;
+        MatNullSpaceTest(nullsp, (static_cast< PetscMatrix* >(_KK))->mat(), &isNull);
+        if (!isNull) std::cout<<"The null space created for KK is not correct!"<<std::endl;
+
         MatSetNullSpace( (static_cast< PetscMatrix* >(_KK))->mat(), nullsp);
+        MatSetTransposeNullSpace( (static_cast< PetscMatrix* >(_KK))->mat(), nullsp);
+        if( !UseSamePreconditioner() ) {
+          MatNullSpaceTest(nullsp, _pmat, &isNull);
+          if (!isNull) std::cout<<"The null space created for _pmat is not correct!"<<std::endl;
+          MatSetNullSpace( _pmat, nullsp);
+          MatSetTransposeNullSpace( _pmat, nullsp);
+        }
         MatNullSpaceDestroy(&nullsp);
 
         for(unsigned i = 0; i < nullspBase.size(); i++) {
@@ -356,7 +370,7 @@ namespace femus {
         }
       }
     }
-   
+
   }
 
   // ================================================
@@ -372,7 +386,7 @@ namespace femus {
         VecDuplicate(EPS, &nullspBase[nullspSize]);
         unsigned soltype = _SolType[indexSol];
         unsigned owndofs = _msh->_dofOffset[soltype][processor_id() + 1] - _msh->_dofOffset[soltype][processor_id()];
-
+        if ( soltype == 4 ) owndofs /= ( _msh->GetDimension() + 1 );
         for(unsigned i = 0; i < owndofs; i++) {
           int idof_kk = KKoffset[k][processor_id()] + i;
           VecSetValue(nullspBase[nullspSize], idof_kk, 1., INSERT_VALUES);
@@ -381,6 +395,7 @@ namespace femus {
         VecAssemblyBegin(nullspBase[nullspSize]);
         VecAssemblyEnd(nullspBase[nullspSize]);
         VecNormalize(nullspBase[nullspSize], NULL);
+
         nullspSize++;
       }
     }
@@ -409,8 +424,8 @@ namespace femus {
     if( !UseSamePreconditioner() ) {
       if(_pmatIsInitialized) MatDestroy(&_pmat);
       MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
-      MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
       if( _hangingNodesIndex.size() != 0){
+        MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
         MatZeroRows(_pmat, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1.e100, 0, 0);
       }
       _pmatIsInitialized = true;

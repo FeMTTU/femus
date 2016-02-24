@@ -214,7 +214,8 @@ namespace femus {
     if( _preconditioner == FIELDSPLIT_PRECOND ) {
       PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
       PCFieldSplitSetType( pc, PC_COMPOSITE_ADDITIVE );
-      for( unsigned i = 0; i < _numberOfSplits; i++ ) { 
+      //PCFieldSplitSetType( pc, PC_COMPOSITE_MULTIPLICATIVE );
+      for( unsigned i = 0; i < _numberOfSplits; i++ ) {
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
       }
       PCSetUp(pc);
@@ -226,19 +227,19 @@ namespace femus {
       }
       PetscFree(subksp);
     }
-    
+
     else if( _preconditioner == ASM_PRECOND ) {
       PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
-     
+
       bool _standardASM = 1;
       PetscInt _nlocal;
-      
+
       if(!_standardASM) {
 	//PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
       }
 
       PCASMSetOverlap(pc, 0); //PCASMSetOverlap(subpc, _overlap);
-    
+
       KSPSetUp(ksp);
 
       KSP* subksps;
@@ -255,18 +256,18 @@ namespace femus {
 // 	  PCFactorSetZeroPivot(subpcs, epsilon);
 // 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
 // 	}
-// 
+//
 // 	for(int i = _blockTypeRange[0]; i < _blockTypeRange[1]; i++) {
 // 	  PC subpcs;
 // 	  KSPGetPC(subksps[i], &subpcs);
 // 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
 // 	  KSPSetFromOptions(subksps[i]);
-// 
+//
 // 	  if(this->_preconditioner_type == ILU_PRECOND)
 // 	    PCSetType(subpcs, (char*) PCILU);
 // 	  else
 // 	    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
-// 
+//
 // 	  PCFactorSetZeroPivot(subpcs, epsilon);
 // 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
 // 	}
@@ -278,9 +279,9 @@ namespace femus {
 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
 	  KSPSetFromOptions(subksps[i]);
 
-	  
+
 	  PCSetType(subpcs, (char*) PCILU);
-	  
+
 // 	  if(this->_preconditioner_type == ILU_PRECOND)
 // 	    PCSetType(subpcs, (char*) PCILU);
 // 	  else
@@ -293,34 +294,34 @@ namespace femus {
     }
     else if( _preconditioner == FS_SCHUR_PRECOND ) {
       PetscPreconditioner::set_petsc_preconditioner_type( FIELDSPLIT_PRECOND, pc );
-      
+
       PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR );
       PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_LOWER);
       PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELFP,NULL);
-      
+
       for( int i = 0; i < _numberOfSplits; i++ ) {
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
       }
       PCSetUp(pc);
-      
+
 //       Mat A00,A01,A10,A11,L;
 //       PCFieldSplitGetSchurBlocks(pc,&A00,&A01,&A10,&A11);
-//       
+//
 //       MatMatMult(A10,A01,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&L);
-//       
+//
 //       PetscViewer viewer;
-//             
-//       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,600,600,&viewer);     
-//       
+//
+//       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,600,600,&viewer);
+//
 //       //MatView(A11, viewer);
-//       
-//       
+//
+//
 //       MatDestroy(&L);
-//       
+//
 //       int a;
 //       std::cin >> a;
-      
-      
+
+
       KSP* subksp;
       PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
       PCFieldSplitGetSubKSP( pc, &nlocal, &subksp );
@@ -334,16 +335,16 @@ namespace femus {
       _abstol = 1.e-20;
       _dtol = 1.e+50;
       _maxits = 1;
-      
-      SetPetscSolverType(ksp); 
-      //KSPSetType( ksp, ( char* ) KSPGMRES ); 
+
+      SetPetscSolverType(ksp);
+      //KSPSetType( ksp, ( char* ) KSPGMRES );
       PC pc;
       KSPGetPC( ksp, &pc );
       KSPSetTolerances( ksp, _rtol, _abstol, _dtol, _maxits );
       KSPSetFromOptions( ksp );
       //PetscReal epsilon = 1.e-16;
       PCSetType( pc, PCLSC );
-      
+
       //PCFactorSetZeroPivot( pc, epsilon );
       //PCFactorSetShiftType( pc, MAT_SHIFT_NONZERO );
     }
@@ -352,9 +353,9 @@ namespace femus {
       _abstol = 1.e-20;
       _dtol = 1.e+50;
       _maxits = 1;
-      
-      SetPetscSolverType(ksp); 
-      //KSPSetType( ksp, ( char* ) KSPPREONLY ); 
+
+      SetPetscSolverType(ksp);
+      //KSPSetType( ksp, ( char* ) KSPPREONLY );
       PC pc;
       KSPGetPC( ksp, &pc );
       KSPSetTolerances( ksp, _rtol, _abstol, _dtol, _maxits );
