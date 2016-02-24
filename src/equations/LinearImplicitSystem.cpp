@@ -92,10 +92,10 @@ namespace femus {
 
     _LinSolver.resize( _gridn );
 
-    _LinSolver[0] = LinearEquationSolver::build( 0, _msh[0], GMRES_SMOOTHER ).release();
+    _LinSolver[0] = LinearEquationSolver::build( 0, _solution[0], GMRES_SMOOTHER ).release();
 
     for( unsigned i = 1; i < _gridn; i++ ) {
-      _LinSolver[i] = LinearEquationSolver::build( i, _msh[i], _SmootherType ).release();
+      _LinSolver[i] = LinearEquationSolver::build( i, _solution[i], _SmootherType ).release();
     }
 
     for( unsigned i = 0; i < _gridn; i++ ) {
@@ -410,7 +410,7 @@ namespace femus {
 
     _LinSolver.resize( _gridn + 1 );
 
-    _LinSolver[_gridn] = LinearEquationSolver::build( _gridn, _msh[_gridn], _SmootherType ).release();
+    _LinSolver[_gridn] = LinearEquationSolver::build( _gridn, _solution[_gridn], _SmootherType ).release();
 
     _LinSolver[_gridn]->InitPde( _SolSystemPdeIndex, _ml_sol->GetSolType(),
                                  _ml_sol->GetSolName(), &_solution[_gridn]->_Bdc, _gridr, _gridn + 1, _SparsityPattern );
@@ -569,9 +569,9 @@ namespace femus {
 
   // ********************************************
 
-  void LinearImplicitSystem::UseSamePreconditioner(){
+  void LinearImplicitSystem::SetSamePreconditioner(){
     for( unsigned i = 0; i < _gridn; i++ ) {
-      _LinSolver[i]->UseSamePreconditioner();
+      _LinSolver[i]->SetSamePreconditioner();
     }
   }
 
@@ -715,10 +715,10 @@ namespace femus {
 
     _LinSolver.resize( _gridn );
 
-    _LinSolver[0] = LinearEquationSolver::build( 0, _msh[0], GMRES_SMOOTHER ).release();
+    _LinSolver[0] = LinearEquationSolver::build( 0, _solution[0], GMRES_SMOOTHER ).release();
 
     for( unsigned i = 1; i < _gridn; i++ ) {
-      _LinSolver[i] = LinearEquationSolver::build( i, _msh[i], _SmootherType ).release();
+      _LinSolver[i] = LinearEquationSolver::build( i, _solution[i], _SmootherType ).release();
     }
 
 //     for (unsigned i=0; i<_gridn; i++) {

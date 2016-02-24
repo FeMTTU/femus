@@ -137,7 +137,6 @@ namespace femus {
 
     for(unsigned ig = 0; ig < _gridn; ig++) {
       _solution[ig]->AddSolution(_solName[n], _family[n], _order[n], _solTimeOrder[n], _pdeType[n]);
-      //_solution[ig]->AddSolution(name,fefamily,order,tmorder,Pde_type);
     }
   }
 
@@ -575,8 +574,7 @@ namespace femus {
             }
           }
         }
-        if(_iproc == 0 && _fixSolutionAtOnePoint[k] == true  && igridn == 0 &&
-            (igridn < _mlMesh->GetNumberOfGridTotallyRefined() || _addAMRPressureStability[k] == false)) {
+        if( _fixSolutionAtOnePoint[k] == true  && igridn == 0 && _iproc == 0 ){
           _solution[igridn]->_Bdc[k]->set(0, 0.);
           _solution[igridn]->_Sol[k]->set(0, 0.);
         }

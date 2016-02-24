@@ -307,7 +307,7 @@ int main(int argc,char **args) {
 
   std::cout << " *********** Solving... ************  " << std::endl;
 
-  system.UseSamePreconditioner();
+  system.SetSamePreconditioner();
   system.PrintSolverInfo(true);
 
   system.MGsolve();

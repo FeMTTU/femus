@@ -154,7 +154,7 @@ public:
 			  bool (* SetRefinementFlag)(const std::vector < double > &x,
 						     const int &ElemGroupNumber,const int &level)=NULL);
 
-    void UseSamePreconditioner();
+    void SetSamePreconditioner();
 
     /** Set the options of the Schur-Vanka smoother */
     //void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);

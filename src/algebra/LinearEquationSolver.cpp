@@ -26,14 +26,13 @@
 // Local Includes
 #include "AsmPetscLinearEquationSolver.hpp"
 #include "GmresPetscLinearEquationSolver.hpp"
-//#include "VankaPetscLinearEquationSolver.hpp"
 #include "FieldSplitPetscLinearEquationSolver.hpp"
 #include "Preconditioner.hpp"
 
 namespace femus {
 
   // =============================================================
-  std::auto_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned &igrid, Mesh *other_mesh,const MgSmoother & smoother_type, const SolverPackage solver_package) {
+  std::auto_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned &igrid, Solution *other_solution,const MgSmoother & smoother_type, const SolverPackage solver_package) {
     // Build the appropriate solver
 
     switch (solver_package)  {
@@ -41,15 +40,15 @@ namespace femus {
     case PETSC_SOLVERS:  {
       switch(smoother_type){
       case ASM_SMOOTHER:{
-	std::auto_ptr<LinearEquationSolver> ap(new AsmPetscLinearEquationSolver(igrid, other_mesh));
+	std::auto_ptr<LinearEquationSolver> ap(new AsmPetscLinearEquationSolver(igrid, other_solution));
 	return ap;
       }
       case GMRES_SMOOTHER:{
-      	std::auto_ptr<LinearEquationSolver> ap(new GmresPetscLinearEquationSolver(igrid, other_mesh));
+      	std::auto_ptr<LinearEquationSolver> ap(new GmresPetscLinearEquationSolver(igrid, other_solution));
 	return ap;
       }
       case FIELDSPLIT_SMOOTHER:{
-        std::auto_ptr<LinearEquationSolver> ap(new FieldSplitPetscLinearEquationSolver(igrid, other_mesh));
+        std::auto_ptr<LinearEquationSolver> ap(new FieldSplitPetscLinearEquationSolver(igrid, other_solution));
         return ap;
       }
       }

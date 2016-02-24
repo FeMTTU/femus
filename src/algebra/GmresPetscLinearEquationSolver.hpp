@@ -40,12 +40,13 @@ namespace femus {
     public:
 
       /**  Constructor. Initializes Petsc data structures */
-      GmresPetscLinearEquationSolver(const unsigned &igrid, Mesh *other_mesh);
+      GmresPetscLinearEquationSolver(const unsigned &igrid, Solution *other_solution);
 
       /// Destructor.
       ~GmresPetscLinearEquationSolver();
 
     protected:
+
       /// Release all memory and clear data structures.
       void Clear();
 
@@ -63,12 +64,19 @@ namespace femus {
                       SparseMatrix* PP, SparseMatrix* RR,
                       const unsigned &npre, const unsigned &npost);
 
-      void UseSamePreconditioner(){
+      void SetSamePreconditioner(){
         _samePreconditioner = true;
       }
+      bool UseSamePreconditioner(){
+        return _samePreconditioner * _msh->GetIfHomogeneous();
+      }
+
+      void RemoveNullSpace();
+      void GetNullSpaceBase( std::vector < Vec > &nullspBase);
+      void ZerosBoundaryResiduals();
+      void SetPenalty();
 
       virtual void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved);
-
       virtual void SetPreconditioner(KSP& subksp, PC& subpc);
 
       void MGSolve(const bool ksp_clean);
@@ -105,10 +113,11 @@ namespace femus {
       PetscInt  _restart;
 
       vector <PetscInt> _bdcIndex;
+      vector <PetscInt> _hangingNodesIndex;
       bool _bdcIndexIsInitialized;
 
       Mat _pmat;
-      std::vector < Vec > _nullSpaceVec;
+
 
       bool _pmatIsInitialized;
       bool _samePreconditioner;
@@ -117,8 +126,8 @@ namespace femus {
 
   // =============================================
 
-  inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver(const unsigned &igrid, Mesh* other_msh)
-    : LinearEquationSolver(igrid, other_msh) {
+  inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver(const unsigned &igrid, Solution *other_solution)
+    : LinearEquationSolver(igrid, other_solution) {
 
     if(igrid == 0) {
       this->_preconditioner_type = MLU_PRECOND;
@@ -164,9 +173,7 @@ namespace femus {
       KSPDestroy(&_ksp);
     }
 
-    for( unsigned i = 0; i < _nullSpaceVec.size(); i++ ){
-      VecDestroy(&_nullSpaceVec[i]);
-    }
+
   }
 
 } //end namespace femus

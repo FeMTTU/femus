@@ -57,7 +57,7 @@ namespace femus {
     public:
 
       /**  Constructor. Initializes Solver data structure */
-      LinearEquationSolver(const unsigned &igrid, Mesh* other_msh);
+      LinearEquationSolver(const unsigned &igrid, Solution *other_solution);
 
       /** Destructor. */
       virtual ~LinearEquationSolver();
@@ -66,7 +66,7 @@ namespace femus {
       virtual void Clear() {}
 
       /** Builds a \p LinearEquationSolver using the linear solver in \p solver_package */
-      static std::auto_ptr<LinearEquationSolver> build(const unsigned &igrid, Mesh* other_msh,
+      static std::auto_ptr<LinearEquationSolver> build(const unsigned &igrid, Solution* other_solution,
           const MgSmoother & smoother_type, const SolverPackage solver_package = LSOLVER);
 
       /** Set the tolerance for the solver */
@@ -103,7 +103,7 @@ namespace femus {
       }
 
       // Use the same preconditioner Amat = Pmat
-      virtual void UseSamePreconditioner() = 0;
+      virtual void SetSamePreconditioner() = 0;
 
       /** Sets the type of preconditioner to use. */
       void set_preconditioner_type(const PreconditionerType pct);
@@ -193,8 +193,8 @@ namespace femus {
    * -------------------- inline functions ---------------------
    */
 
-  inline LinearEquationSolver::LinearEquationSolver(const unsigned &igrid, Mesh* other_msh) :
-    LinearEquation(other_msh),
+  inline LinearEquationSolver::LinearEquationSolver(const unsigned &igrid, Solution *other_solution) :
+    LinearEquation(other_solution),
     _solver_type(GMRES),
     _preconditioner(NULL),
     _is_initialized(false),

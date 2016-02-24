@@ -400,7 +400,8 @@ int main(int argc, char** argv) {
   system2.SetAMRSetOptions(AMR, maxAMRlevels, AMRnorm, AMRthreshold);
 
   //common smoother option
-  system2.SetSolverFineGrids(GMRES);
+  //system2.SetSolverFineGrids(GMRES);
+  system2.SetSolverFineGrids(RICHARDSON);
   system2.SetTolerances(1.e-12, 1.e-20, 1.e+50, 4);
   system2.SetPreconditionerFineGrids(ILU_PRECOND);
   //for Vanka and ASM smoothers
@@ -417,7 +418,8 @@ int main(int argc, char** argv) {
   system2.SetDirichletBCsHandling(PENALTY);
 
   // Solve Temperature system
-  system2.MLsolve();
+  system2.SetSamePreconditioner();
+  system2.MGsolve();
   //END Temperature Multilevel Problem
 
   /// Print all solutions

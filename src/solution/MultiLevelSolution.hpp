@@ -111,7 +111,12 @@ public:
     /** To be Added */
     void AttachSetBoundaryConditionFunction( BoundaryFunc SetBoundaryConditionFunction );
     void AttachSetBoundaryConditionFunction( BoundaryFuncMLProb SetBoundaryConditionFunction );
-    void FixSolutionAtOnePoint( const char sol[] ){ _fixSolutionAtOnePoint[GetIndex(sol)] = true ;};
+    void FixSolutionAtOnePoint( const char sol[] ){
+      _fixSolutionAtOnePoint[GetIndex(sol)] = true ;
+      for(unsigned ig = 1; ig < _gridn; ig++){
+        _solution[ig]->RemoveNullSpace(GetIndex(sol));
+      }
+    };
 
 
     /** To be Added */
@@ -200,7 +205,7 @@ public:
     }
 
     bool _useParsedBCFunction;
-    
+
     void SaveSolution(const char* filename, const unsigned &timeStep = UINT_MAX );
     void LoadSolution(const char* filename, const unsigned &timeStep = UINT_MAX );
     void LoadSolution(const unsigned &level, const char* filename, const unsigned &timeStep = UINT_MAX);

@@ -141,7 +141,7 @@ int main(int argc, char** args) {
 
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(1);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
   system.SetResidualUpdateConvergenceTolerance(1.e-12);
 
   system.SetMgType(F_CYCLE);
@@ -162,8 +162,7 @@ int main(int argc, char** args) {
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
 
-
-  system.UseSamePreconditioner();
+  system.SetSamePreconditioner();
   system.MGsolve();
 
   // print solutions
