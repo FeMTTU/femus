@@ -18,7 +18,7 @@ using namespace femus;
 void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
 void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
 void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofrefinements);
-double SetVariableTimeStep(const double time);
+
 
 int main(int argc,char **args) {
 
@@ -27,10 +27,10 @@ int main(int argc,char **args) {
  
   // process options
   int dimension=2;
+  size_t len_infile_name = 256;
   char infile[256] = "";
   char stdOutfile[256] = "";
   char outer_ksp_solver[256] = "gmres";
-  size_t len_infile_name = 256;
   double Lref=1., Uref=1., rhof=1., muf=1., rhos=1., ni=0., E=1.;
   int numofmeshlevels = 1;
   int numofrefinements = 1;
@@ -48,6 +48,9 @@ int main(int argc,char **args) {
   int max_outer_solver_iter = 40;
   int ksp_restart = 10;
   int n_timesteps = 1;
+  double time_step = 0.01;
+  char restart_file_name[256] = "";
+  int autosave_time_interval = 1; 
   PetscBool equation_pivoting = PETSC_TRUE;
   PetscBool mem_infos = PETSC_FALSE;
   PetscLogDouble memory_current_usage, memory_maximum_usage;
@@ -66,8 +69,14 @@ int main(int argc,char **args) {
   PetscOptionsBool("-mem_infos", "Print memory infos", "fsiTimeDependent.cpp", mem_infos, &mem_infos, NULL);
   printf(" mem_infos: %d\n", mem_infos);
   
-  PetscOptionsInt("-time_steps", "The number of time steps", "fsiTimeDependent.cpp", n_timesteps, &n_timesteps, NULL);
-  printf(" time_steps: %d\n", n_timesteps);
+  PetscOptionsInt("-n_timesteps", "The number of time steps", "fsiTimeDependent.cpp", n_timesteps, &n_timesteps, NULL);
+  printf(" n_timesteps: %d\n", n_timesteps);
+  
+  PetscOptionsReal("-time_step", "The time step", "fsiTimeDependent.cpp", time_step, &time_step, NULL);
+  printf(" time_step: %f\n", time_step);
+  
+  PetscOptionsString("-restart_file_name", "The name of the file for restart", "fsiTimeDependent.cpp", "", restart_file_name, len_infile_name, NULL);
+  printf(" restart_file_name: %s\n", restart_file_name);
   
   PetscOptionsInt("-nlevel", "The number of mesh levels", "fsiTimeDependent.cpp", numofmeshlevels , &numofmeshlevels, NULL);
   printf(" nlevel: %i\n", numofmeshlevels);
@@ -367,11 +376,14 @@ int main(int argc,char **args) {
   print_vars.push_back("All");
 
   // time loop parameter
-  system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
+//   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
+  system.SetIntervalTime(time_step);
   
   // TODO cannot be hardcoded
-  ml_sol.LoadSolution("turek_FSI3");
-  
+  if(strcmp (restart_file_name,"") != 0) {
+    ml_sol.LoadSolution(restart_file_name);
+  }
+    
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
@@ -391,7 +403,7 @@ int main(int argc,char **args) {
 
     system.UpdateSolution();
     
-    if( time_step%1 == 0) ml_sol.SaveSolution("turek_FSI3");
+    if( time_step%autosave_time_interval == 0) ml_sol.SaveSolution(restart_file_name);
 
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
@@ -409,20 +421,6 @@ int main(int argc,char **args) {
  
   return 0;
 }
-
-
-//---------------------------------------------------------------------------------------------------------------------
-
-double SetVariableTimeStep(const double time) {
-  double dt = 0.01;
-//   if ( time < 6. ) dt = 0.01;
-//     else           dt = 0.01;
-//   }
-  return dt;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-
 
 
 void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements){
