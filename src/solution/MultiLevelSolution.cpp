@@ -30,6 +30,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <sys/stat.h>
 
 namespace femus {
 
@@ -602,6 +603,14 @@ namespace femus {
   }
 
   void MultiLevelSolution::LoadSolution(const char* filename, const unsigned &timeStep) {
+    
+    /* check if the file exist without using fancy features of C++ */
+    struct stat buffer;   
+    if(stat (filename, &buffer) != 0) {
+      std::cerr << "Error: cannot locate file " << filename << endl;
+      exit(-1);
+    }
+    
     LoadSolution(_gridn, filename, timeStep);
   }
 
