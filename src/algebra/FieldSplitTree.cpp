@@ -297,31 +297,19 @@ namespace femus {
 
       PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR );
       PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_LOWER);
-      //PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELF,NULL);
-      PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELFP,NULL);
+
+      PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELFP,NULL); //it goes with pressure ILU
+
+      for( int i = 0; i < _numberOfSplits; i++ ) {
+        if( GetChild(i)->_preconditioner == LSC_PRECOND){
+           PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELF,NULL); //it goes with pressure LSC
+        }
+      }
 
       for( int i = 0; i < _numberOfSplits; i++ ) {
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
       }
       PCSetUp(pc);
-
-//       Mat A00,A01,A10,A11,L;
-//       PCFieldSplitGetSchurBlocks(pc,&A00,&A01,&A10,&A11);
-//
-//       MatMatMult(A10,A01,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&L);
-//
-//       PetscViewer viewer;
-//
-//       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,600,600,&viewer);
-//
-//       //MatView(A11, viewer);
-//
-//
-//       MatDestroy(&L);
-//
-//       int a;
-//       std::cin >> a;
-
 
       KSP* subksp;
       PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
@@ -331,24 +319,6 @@ namespace femus {
       }
       PetscFree(subksp);
     }
-    else if( _preconditioner == LSC_PRECOND ) {
-      _rtol = 1.e-3;
-      _abstol = 1.e-20;
-      _dtol = 1.e+50;
-      _maxits = 1;
-
-      SetPetscSolverType(ksp);
-      //KSPSetType( ksp, ( char* ) KSPGMRES );
-      PC pc;
-      KSPGetPC( ksp, &pc );
-      KSPSetTolerances( ksp, _rtol, _abstol, _dtol, _maxits );
-      KSPSetFromOptions( ksp );
-      //PetscReal epsilon = 1.e-16;
-      PCSetType( pc, PCLSC );
-
-      //PCFactorSetZeroPivot( pc, epsilon );
-      //PCFactorSetShiftType( pc, MAT_SHIFT_NONZERO );
-    }
     else {
       _rtol = 1.e-3;
       _abstol = 1.e-20;
@@ -356,7 +326,6 @@ namespace femus {
       _maxits = 1;
 
       SetPetscSolverType(ksp);
-      //KSPSetType( ksp, ( char* ) KSPPREONLY );
       PC pc;
       KSPGetPC( ksp, &pc );
       KSPSetTolerances( ksp, _rtol, _abstol, _dtol, _maxits );

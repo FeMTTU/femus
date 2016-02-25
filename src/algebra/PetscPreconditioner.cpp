@@ -149,8 +149,8 @@ void PetscPreconditioner::set_petsc_preconditioner_type
 
     ierr = PCFactorSetMatSolverPackage(pc,MATSOLVERUMFPACK); CHKERRABORT(MPI_COMM_WORLD,ierr);
     ierr = PCFactorSetUpMatSolverPackage(pc); CHKERRABORT(MPI_COMM_WORLD,ierr);
-    break; 
-    
+    break;
+
   case MCC_PRECOND:
     ierr = PCSetType (pc, (char*) PCCHOLESKY);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
@@ -195,6 +195,11 @@ void PetscPreconditioner::set_petsc_preconditioner_type
 
   case MG_PRECOND:
     ierr = PCSetType (pc, (char*) PCMG);
+    CHKERRABORT(MPI_COMM_WORLD,ierr);
+    break;
+
+  case LSC_PRECOND:
+    ierr = PCSetType (pc, (char*) PCLSC);
     CHKERRABORT(MPI_COMM_WORLD,ierr);
     break;
 

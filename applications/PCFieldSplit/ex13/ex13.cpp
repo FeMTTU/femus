@@ -108,8 +108,8 @@ int main(int argc, char** args) {
 
   std::vector < unsigned > fieldP(1);
   fieldP[0] = system.GetSolPdeIndex("P");
-  //FieldSplitTree FS_P(PREONLY, LSC_PRECOND, fieldP, "Pressure");// changed by guoyiKe
-  FieldSplitTree FS_P(PREONLY, ILU_PRECOND, fieldP, "Pressure");// changed by guoyiKe
+  //FieldSplitTree FS_P(GMRES, LSC_PRECOND, fieldP, "Pressure");// It works, but it is slower than ILU_PRECOND
+  FieldSplitTree FS_P(PREONLY, ILU_PRECOND, fieldP, "Pressure");// It works, but it is slower that Vanka-ASM
 
 
   std::vector < FieldSplitTree *> FS1;
