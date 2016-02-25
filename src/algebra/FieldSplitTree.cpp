@@ -297,6 +297,7 @@ namespace femus {
 
       PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR );
       PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_LOWER);
+      //PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELF,NULL);
       PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELFP,NULL);
 
       for( int i = 0; i < _numberOfSplits; i++ ) {
