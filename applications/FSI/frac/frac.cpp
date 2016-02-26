@@ -24,31 +24,53 @@
 
 using namespace femus;
 
- 	double force[3] = {1.,0.,0.};
+ double force[3] = {1.,0.,0.};
 
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  //1: bottom  //2: right  //3: top  //4: left
   
-  bool dirichlet = true; //dirichlet
+  bool dirichlet = true;
   value = 0.;
-  
-      if (facename == /*1*/2) {
-       if (!strcmp(SolName, "V")) {   value = 0.;  } 
-  else if (!strcmp(SolName, "U")) {  dirichlet = false; }
+
+// LEFT ==========================  
+      if (facename == 4) {
+       if (!strcmp(SolName, "U"))    { dirichlet = false; }
+  else if (!strcmp(SolName, "V"))    { value = 0.;  } 
+  else if (!strcmp(SolName, "UADJ")) { dirichlet = false;  }
+  else if (!strcmp(SolName, "VADJ")) { value = 0.;   }
+	
       }
       
-      if (facename == /*3*/4) {
-       if (!strcmp(SolName, "V")) {   value = 0.;  } 
-  else if (!strcmp(SolName, "U")) {  dirichlet = false; }
+// RIGHT ==========================  
+     if (facename == 2) {
+       if (!strcmp(SolName, "U"))    {  dirichlet = false; }
+  else if (!strcmp(SolName, "V"))    {   value = 0.;  } 
+  else if (!strcmp(SolName, "UADJ")) {  dirichlet = false; }
+  else if (!strcmp(SolName, "VADJ")) {   value = 0.;  } 
+  
       }
+      
+//       if (!strcmp(SolName, "P"))  {
+// 	 dirichlet = false;
+//            if (facename == 4)  value = 1.; 
+//            if (facename == 2)  value = 0.;
+//    
+//       }
       
   return dirichlet;
 }
 
-void AssembleNavierStokes(MultiLevelProblem &ml_prob);
 
-void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+
+
+
+
+
+void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob);
+
+void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
 
 int main(int argc, char** args) {
@@ -71,16 +93,26 @@ int main(int argc, char** args) {
    //Adimensional quantity (Lref,Uref)
   double Lref = 1.;
   double Uref = 1.;
- 
+ // *** apparently needed by non-AD assemble only **********************
+  // add fluid material
+  Parameter parameter(Lref,Uref);
+  
+  // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
+  Fluid fluid(parameter,1,1,"Newtonian");
+  std::cout << "Fluid properties: " << std::endl;
+  std::cout << fluid << std::endl;
+  
+// *************************
+
 //   MultiLevelMesh mlMsh;
 //  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
-    mlMsh.GenerateCoarseBoxMesh( 8,8,0,-1.,1.,-0.5,0.5,0.,0.,QUAD9,"seventh");
+    mlMsh.GenerateCoarseBoxMesh(2,2,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
     
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 3; 
+  unsigned numberOfUniformLevels = 1; 
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -93,52 +125,56 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
+  // state =====================  
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
-
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
-
   mlSol.AddSolution("P", LAGRANGE, FIRST);
+  // adjoint =====================  
+  mlSol.AddSolution("UADJ", LAGRANGE, SECOND);
+  mlSol.AddSolution("VADJ", LAGRANGE, SECOND);
+  if (dim == 3) mlSol.AddSolution("WADJ", LAGRANGE, SECOND);
+  mlSol.AddSolution("PADJ", LAGRANGE, FIRST);
+  // control =====================  
+
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
   mlSol.GenerateBdc("All");
+  
+//   VTKWriter vtkIO(&mlSol);
+//   // print solutions
+//   std::vector < std::string > variablesToBePrinted;
+//   variablesToBePrinted.push_back("All");
+//   vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
 
-// *** apparently needed by non-AD assemble only **********************
-  // add fluid material
-  Parameter parameter(Lref,Uref);
-  
-  // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,1,1,"Newtonian");
-  std::cout << "Fluid properties: " << std::endl;
-  std::cout << fluid << std::endl;
-  
   mlProb.parameters.set<Fluid>("Fluid") = fluid;
-// *************************
 
   // add system Poisson in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
+  NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOPT");
 
-  // add solution "u" to system
-  system.AddSolutionToSystemPDE("U");
-  system.AddSolutionToSystemPDE("V");
-
-  if (dim == 3) system.AddSolutionToSystemPDE("W");
-
-  system.AddSolutionToSystemPDE("P");
-
+  // NS ===================
+  system_opt.AddSolutionToSystemPDE("U");
+  system_opt.AddSolutionToSystemPDE("V");
+  if (dim == 3) system_opt.AddSolutionToSystemPDE("W");
+  system_opt.AddSolutionToSystemPDE("P");
+  // NSADJ ===================
+//   system_opt.AddSolutionToSystemPDE("UADJ");
+//   system_opt.AddSolutionToSystemPDE("VADJ");
+//   if (dim == 3) system_opt.AddSolutionToSystemPDE("WADJ");
+//   system_opt.AddSolutionToSystemPDE("PADJ");
+  
   // attach the assembling function to system
-//   system.SetAssembleFunction(AssembleNavierStokes_AD);
-  system.SetAssembleFunction(AssembleNavierStokes);
-  
-  
+//   system_opt.SetAssembleFunction(AssembleNavierStokes_AD);
+  system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
+    
   // initilaize and solve the system
-  system.init();
-  system.solve();
+  system_opt.init();
+  system_opt.solve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -151,7 +187,7 @@ int main(int argc, char** args) {
 }
 
 
-void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
+void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -187,10 +223,12 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
   //geometry *******************************
   vector < vector < double > > coordX(dim);    // local coordinates
-  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+  vector< vector < double> > coordX_bd(dim);	//local coordinates
+  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
 
-  for (unsigned  k = 0; k < dim; k++) {
+  for (unsigned  k = 0; k < dim; k++) { 
     coordX[k].reserve(maxSize);
+    coordX_bd[k].reserve(maxSize);
   }
   //geometry *******************************
 
@@ -224,6 +262,12 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
   phiV_gss.reserve(maxSize);
   phiV_x_gss.reserve(maxSize * dim);
   phiV_xx_gss.reserve(maxSize * dim2);
+  
+  
+  vector < double > phiV_gss_bd;
+  vector < double > phiV_x_gss_bd;
+  phiV_gss_bd.reserve(maxSize);
+  phiV_x_gss_bd.reserve(maxSize*dim);
   //velocity *******************************
 
   //pressure *******************************
@@ -248,7 +292,9 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
   //Nondimensional values ******************
   
   double weight; // gauss point weight
-
+  double weight_bd;
+  
+  
   vector< int > KKDof; // local to global pdeSys dofs
   KKDof.reserve((dim + 1) *maxSize);
 
@@ -329,6 +375,7 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solVType]->GetGaussPointNumber(); ig++) {
+
         // *** get gauss point weight, test function and test function partial derivatives ***
         msh->_finiteElement[kelGeom][solVType]->Jacobian(coordX, ig, weight, phiV_gss, phiV_x_gss, phiV_xx_gss);
         phiP_gss = msh->_finiteElement[kelGeom][solPType]->GetPhi(ig);
@@ -368,17 +415,17 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 	      NSV_gss[kdim]   +=  - force[kdim] * phiV_gss[i] ;   //right hand side
 	      
           for (unsigned jdim = 0; jdim < dim; jdim++) { //focus on single partial derivative
-              NSV_gss[kdim]   +=  /*Laplacian*//*IRe*phiV_x_gss[i * dim + jdim]*gradSolV_gss[kdim][jdim]*/IRe * phiV_x_gss[i * dim + jdim] * (gradSolV_gss[kdim][jdim] + gradSolV_gss[jdim][kdim]);  //diffusion
+              NSV_gss[kdim]   +=  /*Laplacian*/IRe*phiV_x_gss[i * dim + jdim]*gradSolV_gss[kdim][jdim]/*deformation_tensor*//*IRe * phiV_x_gss[i * dim + jdim] * (gradSolV_gss[kdim][jdim] + gradSolV_gss[jdim][kdim])*/;  //diffusion
 //               NSV_gss[kdim]   +=  phiV_gss[i] * (solV_gss[jdim] * gradSolV_gss[kdim][jdim]);                                  //advection
             }  //jdim loop
+            
+            //velocity-pressure block
+          NSV_gss[kdim] += - solP_gss * phiV_x_gss[i * dim + kdim];
+          
           } //kdim loop
 
           for (unsigned  kdim = 0; kdim < dim; kdim++) {
-            NSV_gss[kdim] += - solP_gss * phiV_x_gss[i * dim + kdim];
-          }
-
-          for (unsigned  kdim = 0; kdim < dim; kdim++) {
-            aResV[kdim][i] += - NSV_gss[kdim] * weight;
+            aResV[kdim][i] +=  NSV_gss[kdim] * weight;
           }
         } // end phiV_i loop
 
@@ -391,10 +438,52 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
       } // end gauss point loop
       
+              
     } // endif single element not refined or fine grid loop
 
-    //--------------------------------------------------------------------------------------------------------
-    // Add the local Matrix/Vector into the global Matrix/Vector
+ 
+          //*******************************boundary loop ************************************************************************
+      unsigned nfaces = el->GetElementFaceNumber(kel);
+      
+	std::vector< double > xx_bd(dim,0.);
+	vector < double > normal_bd(dim,0);   
+	//loop on faces
+
+	for(unsigned jface=0; jface < nfaces; jface++) {
+	  //look for boundary faces
+	  if(el->GetFaceElementIndex(kel,jface)<0) {
+	    unsigned int face = -(msh->el->GetFaceElementIndex(kel,jface)+1);
+             double tau=0.;
+	     
+	     bool flag_bd = mlSol->_SetBoundaryConditionFunction(xx_bd,"P",tau,face,0.);
+	    if( ! flag_bd /*&& tau!=0.*/){
+	      unsigned nDofsV_bd      = msh->el->GetElementFaceDofNumber(kel,jface, solVType);
+	      unsigned nDofsX_bd = msh->el->GetElementFaceDofNumber(kel,jface,coordXType);
+                phiV_gss_bd.resize(nDofsV_bd);
+                phiV_x_gss_bd.resize(nDofsV_bd*dim);
+	      const unsigned felt = msh->el->GetElementFaceType(kel, jface);
+	      for(unsigned i=0; i < nDofsX_bd; i++) {
+		unsigned inode = msh->el->GetFaceVertexIndex(kel,jface,i)-1u;
+		unsigned inode_Metis = msh->GetMetisDof(inode,coordXType);
+		for(unsigned idim=0; idim<dim; idim++) {
+		  coordX_bd[idim][i] = (*msh->_coordinate->_Sol[idim])(inode_Metis);
+		}
+	      }
+	      for(unsigned igs=0; igs < msh->_finiteElement[felt][solVType]->GetGaussPointNumber(); igs++) {
+		msh->_finiteElement[felt][solVType]->JacobianSur(coordX_bd,igs,weight_bd,phiV_gss_bd,phiV_x_gss_bd,normal_bd);
+		//*** phi_i loop ***
+		for(unsigned i_bd=0; i_bd< nDofsV_bd; i_bd++) {
+		  unsigned int i_vol = msh->el->GetLocalFaceVertexIndex(kel, jface, i_bd);
+		for(unsigned kdim=0; kdim<dim; kdim++) {
+		  /*Res[i_vol + kdim  * nDofsV]*/aResV[kdim][i_vol]   +=  weight_bd *  tau *phiV_gss_bd[i_bd]* normal_bd[kdim];
+		  }//velocity blocks
+		}
+	      }
+	    } //flag_bd
+	  }
+	}   //end element faces loop  
+
+      //***************************************************************************************************************
 
     //copy the value of the adept::adoube aRes in double Res and store them in RES
     Res.resize(nDofsVP);    //resize
@@ -406,8 +495,10 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
     }
 
     for (int i = 0; i < nDofsP; i++) {
-      Res[ i + dim * nDofsV ] = -aResP[i].value();
+      Res[ i + dim * nDofsV ] = aResP[i].value();
     }
+
+    
 
     RES->add_vector_blocked(Res, KKDof);
 
@@ -448,10 +539,10 @@ void AssembleNavierStokes_AD(MultiLevelProblem& ml_prob) {
 
 
 
-void AssembleNavierStokes(MultiLevelProblem &ml_prob){
+void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
      
   //pointers
-  LinearImplicitSystem& mlPdeSys  = ml_prob.get_system<LinearImplicitSystem>("NS");
+  LinearImplicitSystem& mlPdeSys  = ml_prob.get_system<LinearImplicitSystem>("NSOPT");
   const unsigned level = mlPdeSys.GetLevelToAssemble();
   const unsigned  levelMax= mlPdeSys.GetLevelMax();
   bool assembleMatrix = mlPdeSys.GetAssembleMatrix(); 
@@ -460,8 +551,7 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
   LinearEquationSolver*  pdeSys	 = mlPdeSys._LinSolver[level];   
   const char* pdename            = mlPdeSys.name().c_str();
   
-  MultiLevelSolution* mlSol=ml_prob._ml_sol;
-  
+  MultiLevelSolution* mlSol = ml_prob._ml_sol;
   
   Mesh*		 msh    = ml_prob._ml_msh->GetLevel(level);
   elem*		 el	= msh->el;
@@ -473,79 +563,108 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
   unsigned nel		= msh->GetNumberOfElements();
   unsigned igrid	= msh->GetLevel();
   unsigned iproc 	= msh->processor_id();
-  double ILambda	= 0; 
-  double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
-  bool penalty 		= true; 
-  const bool symm_mat 	= false;
-  
-  // solution and coordinate variables
-  const char Solname[4][2] = {"U","V","W","P"};
-  vector < unsigned > SolPdeIndex(dim+1);
-  vector < unsigned > SolIndex(dim+1);  
+ 
+  const unsigned maxSize = static_cast< unsigned > (ceil(pow(3,dim)));
 
+  // geometry *******************************************
   vector< vector < double> > coordX(dim);	//local coordinates
-  
-  for(unsigned ivar=0; ivar<dim; ivar++) {
-    SolPdeIndex[ivar]	=mlPdeSys.GetSolPdeIndex(&Solname[ivar][0]);
-    SolIndex[ivar]	=mlSol->GetIndex(&Solname[ivar][0]);
+  vector< vector < double> > coordX_bd(dim);	//local coordinates
+  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+  for(int i=0;i<dim;i++) {   
+       coordX[i].reserve(maxSize); 
+    coordX_bd[i].reserve(maxSize); 
+    
   }
-  SolPdeIndex[dim]	=mlPdeSys.GetSolPdeIndex(&Solname[3][0]);
-  SolIndex[dim]		=mlSol->GetIndex(&Solname[3][0]);       
-  //solution order
-  unsigned solVType 	= mlSol->GetSolutionType(SolIndex[0]);  //order_ind_veloc
-  unsigned solPType	= mlSol->GetSolutionType(SolIndex[dim]); //order_ind_p
+  double normal_bd[3] = {0.,0.,0.};
+
+  // solution variables *******************************************
+  const int n_unknowns = dim+1;
+  const int vel_type_pos = 0;
+  const int press_type_pos = dim;
+  vector < std::string > Solname(dim+1);  // const char Solname[4][8] = {"U","V","W","P"};
+  Solname[0] = "U";
+  Solname[1] = "V";
+  if (dim == 3) Solname[2] = "W";
+  Solname[press_type_pos] = "P";
   
-  double alpha = 0.;
-  if(solPType == solVType && solVType == 0) // if pressure and velocity are both linear, we need stabilization 
-  {
-    alpha = 0.013333; 
+  vector < unsigned > SolPdeIndex(n_unknowns);
+  vector < unsigned > SolIndex(n_unknowns);  
+  vector < unsigned > Sol_type(n_unknowns);  
+
+
+  for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
+    SolPdeIndex[ivar]	= mlPdeSys.GetSolPdeIndex(Solname[ivar].c_str());
+    SolIndex[ivar]	= mlSol->GetIndex        (Solname[ivar].c_str());
+    Sol_type[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
   }
-  
-  // declare 
-  vector < int > metis_node2; 
-  vector < int > node1;
-  vector < vector < int > > KKDof(dim+1); 
+
+  vector < int > node_u; 
+  vector < int > node_p;
+    // reserve
+  node_u.reserve(maxSize);
+  node_p.reserve( static_cast< unsigned > (ceil(pow(2,dim))));
+
+  // velocity ************************************
   vector < double > phiV_gss;
   vector < double > phiV_x_gss;
   vector < double > phiV_xx_gss;
-  const double* phiP_gss;
-  double weight;
-  double normal[3];
-  vector < vector < double > > Res(dim+1); /*was F*/
-  vector < vector < vector < double > > > Jac(dim+1); /*was B*/
-  
-  // reserve
-  const unsigned maxSize = static_cast< unsigned > (ceil(pow(3,dim)));
-  metis_node2.reserve(maxSize);
-  node1.reserve( static_cast< unsigned > (ceil(pow(2,dim))));
-  for(int i=0;i<dim;i++) {     coordX[i].reserve(maxSize);   }
-  
-  
   phiV_gss.reserve(maxSize);
   phiV_x_gss.reserve(maxSize*dim);
   phiV_xx_gss.reserve(maxSize*(3*(dim-1)));	
+
+  vector < double > phiV_gss_bd;
+  vector < double > phiV_x_gss_bd;
+  phiV_gss_bd.reserve(maxSize);
+  phiV_x_gss_bd.reserve(maxSize*dim);
   
-  for(int i=0;i<dim;i++) {     KKDof[i].reserve(maxSize);   }
+  // pressure ************************************
+  const double* phiP_gss;
+
+  // quadratures ********************************
+  double weight;
+  double weight_bd;
+  
+  
+  // equation ***********************************
+  vector < vector < int > > KKDof(n_unknowns); 
+  vector < vector < double > > Res(n_unknowns); /*was F*/
+  vector < vector < vector < double > > > Jac(n_unknowns); /*was B*/
+  
+  for(int i = 0; i < n_unknowns; i++) {     
+    KKDof[i].reserve(maxSize);
+      Res[i].reserve(maxSize); 
+  }
    
-  for(int i=0;i<dim+1;i++) 	Res[i].reserve(maxSize);
-    
   if(assembleMatrix){
-    for(int i=0;i<dim+1;i++){
-      Jac[i].resize(dim+1);
-      for(int j=0;j<dim+1;j++){
+    for(int i = 0; i < n_unknowns; i++) {
+      Jac[i].resize(n_unknowns);
+      for(int j = 0; j < n_unknowns; j++) {
 	Jac[i][j].reserve(maxSize*maxSize);
       }
     }
   }
     
-  vector < double > SolVAR(dim+1);
-  vector < vector < double > > gradSolVAR(dim);
+  vector < double > SolVAR(n_unknowns);
+  vector < vector < double > > gradSolVAR(dim); //MISMATCH
   for(int i=0;i<dim;i++) {     gradSolVAR[i].resize(dim);    }
   
+
+  double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
+  
+  // SUPG - not needed *****************************
+//   double ILambda	= 0; 
+//   bool penalty 		= true; 
+  
+//   double alpha = 0.;
+//   if(solPType == solVType && solVType == 0) // if pressure and velocity are both linear, we need stabilization 
+//   {
+//     alpha = 0.013333; 
+//   }
+  // SUPG - not needed *****************************
+ 
   
   // Set to zeto all the entries of the matrix
   if(assembleMatrix) KK->zero();
-  
   
   // ****************** element loop *******************
  
@@ -553,13 +672,16 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
 
     unsigned kel = msh->IS_Mts2Gmt_elem[iel];
     short unsigned kelGeom = el->GetElementType(kel);
-    unsigned nDofsV = el->GetElementDofNumber(kel,solVType);
-    unsigned nDofsP = el->GetElementDofNumber(kel,solPType);
+    unsigned nDofsV = el->GetElementDofNumber(kel,Sol_type[vel_type_pos]);
+    unsigned nDofsP = el->GetElementDofNumber(kel,Sol_type[press_type_pos]);
     
     //===========set to zero all the entries of the FE matrices
-    metis_node2.resize(nDofsV);
-    node1.resize(nDofsP);
+    node_u.resize(nDofsV);
+    node_p.resize(nDofsP);
    
+    //full length of element Res
+    unsigned n_el_dofs = dim*nDofsV + nDofsP;
+    
     phiV_gss.resize(nDofsV);
     phiV_x_gss.resize(nDofsV*dim);
     phiV_xx_gss.resize(nDofsV*(3*(dim-1)));
@@ -572,7 +694,7 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
       Res[SolPdeIndex[ivar]].resize(nDofsV);
       memset(&Res[SolPdeIndex[ivar]][0],0,nDofsV*sizeof(double));
       
-      if(assembleMatrix){
+      if(assembleMatrix){  //MISMATCH
 	Jac[SolPdeIndex[ivar]][SolPdeIndex[ivar]].resize(nDofsV*nDofsV);
 	Jac[SolPdeIndex[ivar]][SolPdeIndex[dim]].resize(nDofsV*nDofsP);
 	Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]].resize(nDofsP*nDofsV);
@@ -582,79 +704,79 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
       }
     }
     
-    KKDof[dim].resize(nDofsP);
+    KKDof[dim].resize(nDofsP);  //MISMATCH
     Res[SolPdeIndex[dim]].resize(nDofsP);
     memset(&Res[SolPdeIndex[dim]][0],0,nDofsP*sizeof(double));
       
       
-    if(assembleMatrix*penalty){
-      Jac[SolPdeIndex[dim]][SolPdeIndex[dim]].resize(nDofsP*nDofsP,0.);
-      memset(&Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][0],0,nDofsP*nDofsP*sizeof(double));
-    }
+//     if(assembleMatrix*penalty){
+//       Jac[SolPdeIndex[dim]][SolPdeIndex[dim]].resize(nDofsP*nDofsP,0.);
+//       memset(&Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][0],0,nDofsP*nDofsP*sizeof(double));
+//     }
     
     //=============================================================================
     
-   
    for( unsigned i=0;i<nDofsV;i++){
       unsigned inode=el->GetElementVertexIndex(kel,i)-1u;
       unsigned inode_coord_metis=msh->GetMetisDof(inode,2);
-      metis_node2[i]=msh->GetMetisDof(inode,solVType);
+      node_u[i]=msh->GetMetisDof(inode,Sol_type[vel_type_pos]);
       for(unsigned ivar=0; ivar<dim; ivar++) {
 	coordX[ivar][i]=(*msh->_coordinate->_Sol[ivar])(inode_coord_metis);
 	KKDof[ivar][i]=pdeSys->GetKKDof(SolIndex[ivar],SolPdeIndex[ivar],inode);
       }
     }
-    
-    double hk = sqrt( (coordX[0][2] - coordX[0][0])*(coordX[0][2] - coordX[0][0]) + 
-      (coordX[1][2] - coordX[1][0])*(coordX[1][2] - coordX[1][0]) );
-    
-    for(unsigned i=0;i<nDofsP;i++) {
-      unsigned inode=(solPType<dim)?(el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
-      node1[i]=inode;
-      KKDof[dim][i]=pdeSys->GetKKDof(SolIndex[dim],SolPdeIndex[dim],inode);
+
+    for(unsigned i = 0; i < nDofsP; i++) {
+      unsigned inode = (Sol_type[press_type_pos] < dim)?(el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
+      node_p[i] = inode;
+      KKDof[dim][i] = pdeSys->GetKKDof(SolIndex[dim],SolPdeIndex[dim],inode);
     }
    
+// SUPG - not needed
+//     double hk = sqrt( (coordX[0][2] - coordX[0][0])*(coordX[0][2] - coordX[0][0]) + 
+//       (coordX[1][2] - coordX[1][0])*(coordX[1][2] - coordX[1][0]) );
+    
    
     if(igrid==levelMax || !el->GetRefinedElementIndex(kel)) {
       
       // ********************** Gauss point loop *******************************
-      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelGeom][solVType]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelGeom][Sol_type[vel_type_pos]]->GetGaussPointNumber(); ig++) {
 	
 	// *** get Jacobian and test function and test function derivatives ***
-	ml_prob._ml_msh->_finiteElement[kelGeom][solVType]->Jacobian(coordX,ig,weight,phiV_gss,phiV_x_gss,phiV_xx_gss);
-	phiP_gss = ml_prob._ml_msh->_finiteElement[kelGeom][solPType]->GetPhi(ig);
+	ml_prob._ml_msh->_finiteElement[kelGeom][Sol_type[vel_type_pos]]->Jacobian(coordX,ig,weight,phiV_gss,phiV_x_gss,phiV_xx_gss);
+	phiP_gss = ml_prob._ml_msh->_finiteElement[kelGeom][Sol_type[press_type_pos]]->GetPhi(ig);
 
-	double GradSolP[3] = {0.,0.,0.};
+// 	double GradSolP[3] = {0.,0.,0.};
 	//velocity variable
 	for(unsigned ivar=0; ivar<dim; ivar++) {
 	  SolVAR[ivar]=0;
 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
 	    gradSolVAR[ivar][ivar2]=0; 
 	  }
-	  unsigned SolIndex=mlSol->GetIndex(&Solname[ivar][0]);
-	  unsigned SolType=mlSol->GetSolutionType(&Solname[ivar][0]);
-	  for(unsigned i=0; i<nDofsV; i++) {
-	    double soli = (*sol->_Sol[SolIndex])(metis_node2[i]);
+	  unsigned SolIndex = mlSol->GetIndex       (Solname[ivar].c_str());
+	  unsigned SolType  = mlSol->GetSolutionType(Solname[ivar].c_str());
+	  
+	  for(unsigned i = 0; i < nDofsV; i++) {
+	    double soli = (*sol->_Sol[SolIndex])(node_u[i]);
 	    SolVAR[ivar]+=phiV_gss[i]*soli;
-	    for(unsigned ivar2=0; ivar2<dim; ivar2++){
+	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
 	      gradSolVAR[ivar][ivar2] += phiV_x_gss[i*dim+ivar2]*soli; 
 	    }
 	  }
 	}
 	//pressure variable
 	SolVAR[dim]=0;
-	unsigned SolIndex=mlSol->GetIndex(&Solname[3][0]);
-	unsigned SolType=mlSol->GetSolutionType(&Solname[3][0]);
-	for(unsigned i=0; i<nDofsP; i++){
-	  unsigned sol_dof = msh->GetMetisDof(node1[i],SolType);
+	unsigned SolIndex = mlSol->GetIndex(Solname[press_type_pos].c_str());
+	unsigned SolType=mlSol->GetSolutionType(Solname[press_type_pos].c_str());
+	for(unsigned i=0; i<nDofsP; i++) {
+	  unsigned sol_dof = msh->GetMetisDof(node_p[i],SolType);
 	  double soli = (*sol->_Sol[SolIndex])(sol_dof);
 	  SolVAR[dim]+=phiP_gss[i]*soli;
-	  for(unsigned ivar2=0; ivar2<dim; ivar2++){
-	    GradSolP[ivar2] += phiV_x_gss[i*dim+ivar2]*soli;
-	  }
+// 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){
+// 	    GradSolP[ivar2] += phiV_x_gss[i*dim+ivar2]*soli;
+// 	  }
 	}
 
-// 	double force[3] = {0.,1.,0.};
 	
 	// *** phi_i loop ***
 	for(unsigned i=0; i<nDofsV; i++){
@@ -665,7 +787,7 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
 	      Lap_rhs += phiV_x_gss[i*dim+ivar2]*gradSolVAR[ivar][ivar2];
 	    }
-	    Res[SolPdeIndex[ivar]][i] += ( -IRe*Lap_rhs - /*Picard iteration*/SolVAR[dim]*phiV_x_gss[i*dim+ivar] + force[ivar] * phiV_gss[i])*weight;
+	    Res[SolPdeIndex[ivar]][i] += ( -IRe*Lap_rhs + /*Picard iteration*/SolVAR[dim]*phiV_x_gss[i*dim+ivar] + force[ivar] * phiV_gss[i])*weight;
 	  }
 	  //END RESIDUALS A block ===========================
 	  
@@ -679,7 +801,7 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
 	      }
 
 	      for(unsigned ivar=0; ivar<dim; ivar++) {    
-		Jac[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nDofsV+j] += ( IRe*Lap )*weight;
+		Jac[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nDofsV+j] += ( IRe*Lap /*+ force[j] * phiV_gss[i]*/)*weight;
 	      }
   	    } //end phij loop
 	    
@@ -700,9 +822,9 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
 	  for(unsigned ivar=0; ivar<dim; ivar++) {
 	    div += gradSolVAR[ivar][ivar];
 	  }
-// 	  Res[SolPdeIndex[dim]][i]+= (phiP_gss[i]*div + /*penalty*ILambda*phiP_gss[i]*SolVAR[dim]*/ 
+// 	  Res[SolPdeIndex[dim]][i] += (phiP_gss[i]*div + /*penalty*ILambda*phiP_gss[i]*SolVAR[dim]*/ 
 // 	                             + 0.*((hk*hk)/(4.*IRe))*alpha*(GradSolP[0]*phiV_x_gss[i*dim + 0] + GradSolP[1]*phiV_x_gss[i*dim + 1]) )*weight; //REMOVED !!
-	  Res[SolPdeIndex[dim]][i]+= phiP_gss[i]*div*weight;
+	  Res[SolPdeIndex[dim]][i] += phiP_gss[i]*div*weight;
            
 	  //END RESIDUALS  B block ===========================
 	  
@@ -710,150 +832,73 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nDofsV; j++) {
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]][i*nDofsV+j]-= phiP_gss[i]*phiV_x_gss[j*dim+ivar]*weight;
+		Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]][i*nDofsV+j] -= phiP_gss[i]*phiV_x_gss[j*dim+ivar]*weight;
 	      }
 	    }  //end phij loop
 	  } // endif assembleMatrix
 	}  //end phiP_i loop
 	
-	if(assembleMatrix * penalty){  //block nDofsP
-	  // *** phi_i loop ***
-	  for(unsigned i=0; i<nDofsP; i++){
-	    // *** phi_j loop ***
-	    for(unsigned j=0; j<nDofsP; j++){
-	      //Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j]-= ILambda*phiP_gss[i]*phiP_gss[j]*weight;
-	      for(unsigned ivar=0; ivar<dim; ivar++) {
-// 	        Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j] -= ((hk*hk)/(4.*IRe))*alpha*(phiV_x_gss[i*dim + ivar]*phiV_x_gss[j*dim + ivar])*weight; //REMOVED !!
-		Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j] -= 0.;
-	      }
-	    }
-	  }
-	}   //end if penalty
+// 	if(assembleMatrix * penalty){  //block nDofsP
+// 	  // *** phi_i loop ***
+// 	  for(unsigned i=0; i<nDofsP; i++){
+// 	    // *** phi_j loop ***
+// 	    for(unsigned j=0; j<nDofsP; j++){
+// 	      //Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j]-= ILambda*phiP_gss[i]*phiP_gss[j]*weight;
+// 	      for(unsigned ivar=0; ivar<dim; ivar++) {
+// // 	        Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j] -= ((hk*hk)/(4.*IRe))*alpha*(phiV_x_gss[i*dim + ivar]*phiV_x_gss[j*dim + ivar])*weight; //REMOVED !!
+// 		Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j] -= 0.;
+// 	      }
+// 	    }
+// 	  }
+// 	}   //end if penalty
+
       }  // end gauss point loop
       
       
       //***************************boundary loop ************************************************************************
-
-            if( ml_prob._ml_sol->_Use_GenerateBdc_new ){ 
-            
-	//number of faces for each type of element
-	unsigned nfaces = el->GetElementFaceNumber(kel);
-
+      unsigned nfaces = el->GetElementFaceNumber(kel);
+      
+	std::vector< double > xx_bd(dim,0.);
+	vector < double > normal_bd(dim,0);   
 	// loop on faces
-	for(unsigned jface=0; jface<nfaces; jface++) {
+
+	
+	for(unsigned jface=0; jface < nfaces; jface++) {
 	  // look for boundary faces
 	  if(el->GetFaceElementIndex(kel,jface)<0) {
-    
-	    unsigned int face = -(msh->el->GetFaceElementIndex(kel,jface)+1) - 1;
-		    
-	    if(mlSol->GetBoundaryCondition("Sol",face) == NEUMANN && !mlSol->Ishomogeneous("Sol",face)) {
-		      
-	      bdcfunc = (ParsedFunction* )(mlSol->GetBdcFunction("Sol", face));
-	      unsigned nve = msh->el->GetElementFaceDofNumber(kel,jface,order_ind);
+	    unsigned int face = -(msh->el->GetFaceElementIndex(kel,jface)+1);
+             double tau=0.;
+	     
+	     bool flag_bd = mlSol->_SetBoundaryConditionFunction(xx_bd,"P",tau,face,0.);
+	    if( ! flag_bd /*&& tau!=0.*/){
+	      unsigned nDofsV_bd      = msh->el->GetElementFaceDofNumber(kel,jface,Sol_type[vel_type_pos]);
+	      unsigned nDofsX_bd = msh->el->GetElementFaceDofNumber(kel,jface,coordXType);
+                phiV_gss_bd.resize(nDofsV_bd);
+                phiV_x_gss_bd.resize(nDofsV_bd*dim);
 	      const unsigned felt = msh->el->GetElementFaceType(kel, jface);
-	      for(unsigned i=0; i<nve; i++) {
-		unsigned inode=msh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-		unsigned inode_coord_metis=msh->GetMetisDof(inode,2);
-
-		for(unsigned ivar=0; ivar<dim; ivar++) {
-		  coordX[ivar][i]=(*msh->_coordinate->_Sol[ivar])(inode_coord_metis);
-		}
-	      }
-
-	      if(felt != 6) {
-		for(unsigned igs=0; igs < msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
-		  msh->_finiteElement[felt][order_ind]->JacobianSur(coordX,igs,weight,phi,phiV_x_gss,normal);
-
-		  xyzt.assign(4,0.);
-		  for(unsigned i=0; i<nve; i++) {
-		    for(unsigned ivar=0; ivar<dim; ivar++) {
-		      xyzt[ivar] += coordX[ivar][i]*phiV_gss[i]; 
-		    }
-		  }
-			    
-		  // *** phi_i loop ***
-		  for(unsigned i=0; i<nve; i++) {
-		    double surfterm_g = (*bdcfunc)(&xyzt[0]);
-		    double bdintegral = phiV_gss[i]*surfterm_g*weight;
-		    unsigned int ilocalnode = msh->el->GetLocalFaceVertexIndex(kel, jface, i);
-		    F[ilocalnode] += bdintegral;
-		  }
-		}
-	      }
-	      else{ // 1D : the side elems are points and does not still exist the point elem
-		    // in 1D it is only one point
-		xyzt[0] = coordX[0][0];
-		xyzt[1] = 0.;
-		xyzt[2] = 0.;
-		xyzt[3] = 0.;
-
-		double bdintegral = (*bdcfunc)(&xyzt[0]);
-		unsigned int ilocalnode = msh->el->GetLocalFaceVertexIndex(kel, jface, 0);
-		F[ilocalnode] += bdintegral;
-	      }
-	    }
-	  }
-	}
-      }
-      else {
-	double tau=0.;
-	std::vector< double > xx(dim,0.);
-	vector < double > normal(dim,0);   
-	// loop on faces
-	for(unsigned jface=0; jface<el->GetElementFaceNumber(kel); jface++) {
-	  // look for boundary faces
-	  if(el->GetFaceElementIndex(kel,jface)<0) {
-	    unsigned int face = -(msh->el->GetFaceElementIndex(kel,jface)+1);	      
-	    if( !mlSol->_SetBoundaryConditionFunction(xx,"Sol",tau,face,0.) && tau!=0.){
-	      unsigned nve = msh->el->GetElementFaceDofNumber(kel,jface, order_ind);
-	      const unsigned felt = msh->el->GetElementFaceType(kel, jface);
-	      for(unsigned i=0; i<nve; i++) {
-		unsigned inode=msh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-		unsigned inode_Metis=msh->GetMetisDof(inode,2);
-		unsigned int ilocal = msh->el->GetLocalFaceVertexIndex(kel, jface, i);
+	      for(unsigned i=0; i < nDofsX_bd; i++) {
+		unsigned inode = msh->el->GetFaceVertexIndex(kel,jface,i)-1u;
+		unsigned inode_Metis = msh->GetMetisDof(inode,coordXType);
 		for(unsigned idim=0; idim<dim; idim++) {
-		  coordX[idim][i]=(*msh->_coordinate->_Sol[idim])(inode_Metis);
+		  coordX_bd[idim][i] = (*msh->_coordinate->_Sol[idim])(inode_Metis);
 		}
 	      }
-	      for(unsigned igs=0; igs < msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
-		msh->_finiteElement[felt][order_ind]->JacobianSur(coordX,igs,weight,phiV_gss,phiV_x_gss,normal);
+	      for(unsigned igs=0; igs < msh->_finiteElement[felt][Sol_type[vel_type_pos]]->GetGaussPointNumber(); igs++) {
+		msh->_finiteElement[felt][Sol_type[vel_type_pos]]->JacobianSur(coordX_bd,igs,weight_bd,phiV_gss_bd,phiV_x_gss_bd,normal_bd);
 		// *** phi_i loop ***
-		for(unsigned i=0; i<nve; i++) {
-		  double value = phiV_gss[i]*tau*weight;
-		  unsigned int ilocal = msh->el->GetLocalFaceVertexIndex(kel, jface, i);
-		  F[ilocal]   += value;
+		for(unsigned i_bd=0; i_bd < nDofsV_bd; i_bd++) {
+		  unsigned int i_vol = msh->el->GetLocalFaceVertexIndex(kel, jface, i_bd);
+		for(unsigned idim=0; idim<dim; idim++) {
+		  Res[idim][i_vol]   += -1. * weight_bd *  tau *phiV_gss_bd[i_bd]* normal_bd[idim];
+ 		 }//velocity blocks
 		}
 	      }
-	    }
+	    } //flag_bd
 	  }
 	}    
-      }
-      
+
       //***************************************************************************************************************
       
-      
-      
-      //--------------------------------------------------------------------------------------------------------
-      // Boundary Integral --> to be added
-      //number of faces for each type of element
-//       if (igrid==levelMax || !el->GetRefinedElementIndex(kel) ) {
-//      
-// 	unsigned nfaces = el->GetElementFaceNumber(kel);
-// 
-// 	// loop on faces
-// 	for(unsigned jface=0;jface<nfaces;jface++){ 
-// 	  
-// 	  // look for boundary faces
-// 	  if(el->GetFaceElementIndex(kel,jface)<0){
-// 	    for(unsigned ivar=0; ivar<dim; ivar++) {
-// 	      ml_prob.ComputeBdIntegral(pdename, &Solname[ivar][0], kel, jface, level, ivar);
-// 	    }
-// 	  }
-// 	}	
-//       }
-
-
-
       //--------------------------------------------------------------------------------------------------------
     } // endif single element not refined or fine grid loop
     //--------------------------------------------------------------------------------------------------------
@@ -866,8 +911,10 @@ void AssembleNavierStokes(MultiLevelProblem &ml_prob){
 	KK->add_matrix_blocked(Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]],KKDof[dim],KKDof[ivar]);
       }
     }
-    //Penalty
-    if(assembleMatrix*penalty) KK->add_matrix_blocked(Jac[SolPdeIndex[dim]][SolPdeIndex[dim]],KKDof[dim],KKDof[dim]);
+    
+//     //Penalty
+//     if(assembleMatrix*penalty) KK->add_matrix_blocked(Jac[SolPdeIndex[dim]][SolPdeIndex[dim]],KKDof[dim],KKDof[dim]);
+
     RES->add_vector_blocked(Res[SolPdeIndex[dim]],KKDof[dim]);
     //--------------------------------------------------------------------------------------------------------  
   } //end list of elements loop for each subdomain
