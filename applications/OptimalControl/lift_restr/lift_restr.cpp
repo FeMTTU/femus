@@ -28,10 +28,10 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
 
  //***** set target domain flag ********************************** 
 
-  int control_flag = 0;
-   if ( elem_center[1] >  0.3 ) { control_flag = 1; }
+  int control_el_flag = 0;
+   if ( elem_center[1] >  0.3 ) { control_el_flag = 1; }
 
-     return control_flag;
+     return control_el_flag;
 
 }
 
@@ -306,10 +306,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
  //********** DATA ***************** 
   double T_des = DesiredTarget();
-  double alpha = 1000000000000000000;
+  double alpha = 100000000000000000;
   double beta  = 1.;
   double gamma = 1.;
-  
+  double penalty_strong = 10e+14;
  //*************************** 
   
   
@@ -353,8 +353,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   //*************************************** 
    
   //***** set control flag ********************************** 
-  int control_flag = 0;
-  control_flag = ControlDomainFlag(elem_center);
+  int control_el_flag = 0;
+        control_el_flag = ControlDomainFlag(elem_center);
+  std::vector<int> control_node_flag(nDofx,0);
+  if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
   //*************************************** 
     
  //*********** Thom **************************** 
@@ -448,12 +450,15 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
           if (i < nDofThomAdj) Res[nDofThom               + i] += weight * ( alpha * target_flag * T_des * phi_ThomAdj[i] );
   
           // THIRD ROW
-         if ( control_flag == 1)  {
+         if ( /*control_el_flag == 1*/control_node_flag[i] == 1)  {
            if (i < nDofTcont)   Res[nDofThom + nDofThomAdj + i] += weight * ( alpha * target_flag * T_des * phi_Tcont  [i] );
 	      }
-	 else if ( control_flag == 0)  {
-           if (i < nDofTcont)   Res[nDofThom + nDofThomAdj + i] += weight * phi_Tcont  [i];
-	    }
+	 else if ( /*control_el_flag == 0*/control_node_flag[i] == 0)  {  
+           if (i < nDofTcont)   {
+// 	     Res[nDofThom + nDofThomAdj + i] += weight * 0.* phi_Tcont[i]; //weak enforcement
+	     Res[nDofThom + nDofThomAdj + i] += penalty_strong * 0.; //strong enforcement 
+	  }
+	}
 	      
 	      
 	      
@@ -505,12 +510,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               //third row ==================
 	      //DIAG BLOCK Tcont
 	      
-	      if ( control_flag == 1)  {
+	      if ( control_el_flag == 1/*control_node_flag[i] == 1*/)  {
 	      
               //BLOCK Tcont - Tcont
               if ( i < nDofTcont   && j < nDofTcont   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
-								(nDofThom  + nDofThomAdj + j)                     ]  += weight * ( gamma * control_flag  * laplace_mat_Tcont + beta * control_flag * phi_Tcont[i] * phi_Tcont[j] + alpha  * target_flag  * phi_Tcont[i] * phi_Tcont[j]);
+								(nDofThom  + nDofThomAdj + j)                     ]  += weight * ( gamma * control_el_flag  * laplace_mat_Tcont + beta * control_el_flag * phi_Tcont[i] * phi_Tcont[j] + alpha  * target_flag  * phi_Tcont[i] * phi_Tcont[j]);
               //BLOCK Tcont - Thom
               if ( i < nDofTcont   && j < nDofThom   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
@@ -521,14 +526,25 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 							        (nDofThom + j) ]  +=  weight * laplace_mat_ThomAdjVSTcont;
 	      }
 	      
-	      else if ( control_flag == 0)  {
+	      else if ( control_el_flag == 0/*control_node_flag[i] == 0*/)  {  
 		
               //BLOCK Tcont - Tcont
-	      if ( i < nDofTcont   && j < nDofTcont   ) Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
+// 	      if ( i < nDofTcont   && j < nDofTcont   ) {
+// 		
+// 		Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
+// 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
+// 								(nDofThom  + nDofThomAdj + j)                     ] 
+// 								+= weight * phi_Tcont[j] * phi_Tcont[i]; //  weak enforcement
+// 	      }
+		
+		if ( i < nDofTcont   && j < nDofTcont &&  i==j ) {
+		Jac[ (nDofThom + nDofThomAdj) * (nDofThom + nDofThomAdj + nDofTcont) +
 		                                                   i    * (nDofThom + nDofThomAdj + nDofTcont)               +
-								(nDofThom  + nDofThomAdj + j)                     ] += weight * 1. * phi_Tcont[i] * phi_Tcont[j];
-			
-	      }
+								(nDofThom  + nDofThomAdj + j)                     ] += penalty_strong;
+							  
+		}
+	      
+	   }
 	      
 	      
 	      
