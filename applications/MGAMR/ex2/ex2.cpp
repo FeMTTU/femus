@@ -110,8 +110,8 @@ int main(int argc, char** args) {
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
   mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
 
-  mlSol.AssociatePropertyToSolution("P", "Pressure", false);
-  //mlSol.AssociatePropertyToSolution("P", "Pressure", true);
+  //mlSol.AssociatePropertyToSolution("P", "Pressure", false);
+  mlSol.AssociatePropertyToSolution("P", "Pressure", true);
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
@@ -146,7 +146,7 @@ int main(int argc, char** args) {
 
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(2);
+  system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
   // initilaize and solve the system
   system.init();
@@ -155,7 +155,7 @@ int main(int argc, char** args) {
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
-  
+
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);

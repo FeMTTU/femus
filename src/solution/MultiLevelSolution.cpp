@@ -561,16 +561,47 @@ namespace femus {
           }
         }
         else if(_addAMRPressureStability[k]) {  // interior boundary (AMR) for discontinuous elements u = 0
-          for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
+          unsigned offset = msh->_elementOffset[_iproc];
+          unsigned offsetp1 = msh->_elementOffset[_iproc + 1];
+          unsigned owned = offsetp1 - offset;
+          std::vector < short unsigned > markedElement(owned, 0);
+          // Add all interior boundary elements
+          for(unsigned iel = offset; iel < offsetp1; iel++) {
             short unsigned ielt = msh->GetElementType(iel);
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
               if(msh->el->GetBoundaryIndex(iel, jface) == 0) {
-                unsigned nv1 = msh->GetElementDofNumber(iel, _solType[k]);
-                for(unsigned i = 0; i < 1; i++) {
-                  unsigned idof = msh->GetSolutionDof(i, iel, _solType[k]);
-                  _solution[igridn]->_Bdc[k]->set(idof, 1.);
-                }
+                markedElement[iel - offset] = 1;
               }
+            }
+          }
+          //remove adjacent interior boundary elements
+          for(unsigned i = 0; i < owned; i++) {
+            if( markedElement[i] == 1){
+              markedElement[i] = 2;
+              std::vector < unsigned > seed(1, offset + i);
+              while(seed.size() != 0){
+                bool testSeed = true;
+                unsigned iel = seed[ seed.size() - 1u];
+                short unsigned ielt = msh->GetElementType(iel);
+                for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+                  int jel = msh->el->GetFaceElementIndex(seed[seed.size()-1], jface) - 1;
+                  if( jel >= offset && jel < offsetp1 && markedElement[jel - offset] == 1 ){
+                    markedElement[jel - offset] = 0;
+                    seed.resize(seed.size() + 1);
+                    seed[seed.size() - 1] = jel;
+                    testSeed = false;
+                  }
+                }
+                if(testSeed) seed.resize(seed.size() - 1);
+              }
+            }
+          }
+
+          for(unsigned i = 0; i < owned; i++) {
+            if( markedElement[i] > 0){
+              unsigned iel = offset + i;
+              unsigned idof = msh->GetSolutionDof(0, iel, _solType[k]);
+              _solution[igridn]->_Bdc[k]->set(idof, 1.);
             }
           }
         }
