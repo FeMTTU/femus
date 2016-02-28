@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iostream>
 
-const double um = 0.2;
+const double um = 2.0;
 const double L = 2.5;
 const double H = 0.41;
 
