@@ -78,6 +78,9 @@ int main(int argc,char **args) {
   PetscOptionsString("-restart_file_name", "The name of the file for restart", "fsiTimeDependent.cpp", "", restart_file_name, len_infile_name, NULL);
   printf(" restart_file_name: %s\n", restart_file_name);
   
+  PetscOptionsInt("-autosave_time_interval", "The autosave interval time", "fsiTimeDependent.cpp", autosave_time_interval, &autosave_time_interval, NULL);
+  printf(" autosave_time_interval: %d\n", autosave_time_interval);
+  
   PetscOptionsInt("-nlevel", "The number of mesh levels", "fsiTimeDependent.cpp", numofmeshlevels , &numofmeshlevels, NULL);
   printf(" nlevel: %i\n", numofmeshlevels);
 
@@ -339,6 +342,9 @@ int main(int argc,char **args) {
   // ******* Set the last (1) variables in system (i.e. P) to be a schur variable *******
   system.SetNumberOfSchurVariables(1);
 
+  // time loop parameter
+  // system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
+  system.SetIntervalTime(time_step);
 
   // ******* Solve *******
   std::cout << std::endl;
@@ -375,10 +381,6 @@ int main(int argc,char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
-  // time loop parameter
-//   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  system.SetIntervalTime(time_step);
-  
   // TODO cannot be hardcoded
   if(strcmp (restart_file_name,"") != 0) {
     ml_sol.LoadSolution(restart_file_name);
@@ -394,18 +396,18 @@ int main(int argc,char **args) {
     PetscPrintf(PETSC_COMM_WORLD, "5: Memory maximum usage before clear: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
   }
   
-  for (unsigned time_step = 1; time_step < n_timesteps; time_step++) {
+  for (unsigned i_time_step = 1; i_time_step < n_timesteps; i_time_step++) {
 
-    if( time_step > 0 )
+    if( i_time_step > 0 )
       system.SetMgType(V_CYCLE);
 
     system.MGsolve();
 
     system.UpdateSolution();
     
-    if( time_step%autosave_time_interval == 0) ml_sol.SaveSolution(restart_file_name);
+    if( i_time_step%autosave_time_interval == 0) ml_sol.SaveSolution(restart_file_name);
 
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
+    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, i_time_step+1);
   }
   
   // ******* Clear all systems *******
