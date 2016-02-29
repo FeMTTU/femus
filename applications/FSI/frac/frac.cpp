@@ -106,13 +106,13 @@ int main(int argc, char** args) {
 
 //   MultiLevelMesh mlMsh;
 //  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
-    mlMsh.GenerateCoarseBoxMesh(2,2,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
+    mlMsh.GenerateCoarseBoxMesh(8,8,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
     
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 1; 
+  unsigned numberOfUniformLevels = 5; 
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -734,7 +734,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
        for( unsigned i=0;i<Sol_n_el_dofs[unk]; i++) {
         unsigned inode; //TODO 
        if (SolFEType[unk] == 2)  { inode = el->GetElementVertexIndex(kel,i)-1u;}
-  else if (SolFEType[unk] == 0){   inode = (SolFEType[unk] < dim)?(el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);}
+  else if (SolFEType[unk] == 0)  { inode = (SolFEType[unk] < dim)?(el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);}
 
        JACDof[unk][i] = pdeSys->GetKKDof(SolIndex[unk],SolPdeIndex[unk],inode);
          }
@@ -768,12 +768,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
       for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelGeom][SolFEType[vel_type_pos]]->GetGaussPointNumber(); ig++) {
 	
 	// *** get Jacobian and test function and test function derivatives ***
-//       for(int fe=0; fe < NFE_FAMS; fe++) {
-	ml_prob._ml_msh->_finiteElement[kelGeom][LINEAR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[LINEAR_FE],phi_x_gss_fe[LINEAR_FE],phi_xx_gss_fe[LINEAR_FE]);
-	ml_prob._ml_msh->_finiteElement[kelGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
-//       }
-// 	double GradSolP[3] = {0.,0.,0.};
-	//velocity variable
+      for(int fe=0; fe < NFE_FAMS; fe++) {
+	ml_prob._ml_msh->_finiteElement[kelGeom][fe]->Jacobian(coordX,ig,weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
+      }
+         //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
+  	ml_prob._ml_msh->_finiteElement[kelGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+
+
+ //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk < n_unknowns; unk++) {
 	  SolVAR[unk]=0;
 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
@@ -791,68 +793,66 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	    }
 	  }
 	  
-	}
+	}  
+ //end unknowns eval at gauss points ********************************
 	
+  //begin NS block row *********************************
+     for(unsigned ivar_block=0; ivar_block<dim; ivar_block++) {
 	// *** phi_i loop ***
-	for(unsigned i=0; i< Sol_n_el_dofs[vel_type_pos]; i++) {
+	for(unsigned i_u=0; i_u < Sol_n_el_dofs[vel_type_pos]; i_u++) {
 	
-	  //BEGIN RESIDUALS A block ===========================
-	  for(unsigned ivar=0; ivar<dim; ivar++) {
-	    double Lap_rhs=0;
+	  double Lap_rhs_i=0;
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
-	      Lap_rhs += phi_x_gss_fe[SolFEType[vel_type_pos]][i*dim+ivar2]*gradSolVAR[ivar][ivar2];
+	      Lap_rhs_i += phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar2]*gradSolVAR[ivar_block][ivar2];
 	    }
-	    Res[SolPdeIndex[ivar]][i] += ( -IRe*Lap_rhs + /*Picard iteration*/SolVAR[dim]*phi_x_gss_fe[SolFEType[vel_type_pos]][i*dim+ivar] + force[ivar] * phi_gss_fe[SolFEType[vel_type_pos]][i])*weight;
-	  }
-	  //END RESIDUALS A block ===========================
-	  
-	  if(assembleMatrix){
-	    // *** phi_j loop ***
-	    for(unsigned j=0; j < Sol_n_el_dofs[vel_type_pos]; j++) {
-	      double Lap=0;
-	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		// Laplacian
-		Lap  += phi_x_gss_fe[SolFEType[vel_type_pos]][i*dim+ivar]*phi_x_gss_fe[SolFEType[vel_type_pos]][j*dim+ivar];
-	      }
-
-	      for(unsigned ivar=0; ivar<dim; ivar++) {    
-		Jac[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*Sol_n_el_dofs[vel_type_pos]+j] += ( IRe*Lap /*+ force[j] * phiV_gss[i]*/)*weight;
-	      }
-  	    } //end phij loop
 	    
-	    // *** phiP_j loop ***
-	    for(unsigned j = 0; j < Sol_n_el_dofs[press_type_pos]; j++){
-	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		Jac[SolPdeIndex[ivar]][SolPdeIndex[dim]][ i*Sol_n_el_dofs[press_type_pos]+j ]  -=  phi_x_gss_fe[SolFEType[vel_type_pos]][i*dim+ivar]*phi_gss_fe[SolFEType[press_type_pos]][j]*weight;
-	      }
-	    } //end phiP_j loop
-	  } // endif assembleMatrix
-	} //end phii loop
-  
+	    Res[SolPdeIndex[ivar_block]][i_u] += ( -IRe*Lap_rhs_i + /*Picard iteration*/SolVAR[dim]*phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_block] + force[ivar_block] * phi_gss_fe[SolFEType[vel_type_pos]][i_u])*weight;
 
-	// *** phiP_i loop ***
-	for(unsigned i=0; i<Sol_n_el_dofs[press_type_pos]; i++){
-	  //BEGIN RESIDUALS B block ===========================
+	    // *** phi_j loop ***
+	    for(unsigned j_u=0; j_u < Sol_n_el_dofs[vel_type_pos]; j_u++) {
+
+	    double Lap_ij=0;
+	      for(unsigned ivar_lap=0; ivar_lap<dim; ivar_lap++) {
+		Lap_ij  += phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_lap]*phi_x_gss_fe[SolFEType[vel_type_pos]][j_u*dim+ivar_lap];
+	      }
+
+		Jac[ SolPdeIndex[ivar_block] ][ SolPdeIndex[ivar_block] ][ i_u*Sol_n_el_dofs[vel_type_pos]+j_u ] += ( IRe*Lap_ij)*weight;
+	      }//end phij loop
+	      
+	    // *** phiP_j loop ***
+	      for(unsigned j_p = 0; j_p < Sol_n_el_dofs[press_type_pos]; j_p++){
+		Jac[ SolPdeIndex[ivar_block] ][ SolPdeIndex[press_type_pos] ][ i_u*Sol_n_el_dofs[press_type_pos]+j_p ]  -=  phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_block]*phi_gss_fe[SolFEType[press_type_pos]][j_p]*weight;
+	      }//end phiP_j loop
+	      
+  	    }  //end phii loop
+	    
+        }  //end ivar_block
+   //end NS block row *********************************
+
+   //begin div u block row *********************************
+    for(unsigned ivar_block=0; ivar_block<1; ivar_block++) {
+      
 	  double div = 0;
 	  for(unsigned ivar=0; ivar<dim; ivar++) {
 	    div += gradSolVAR[ivar][ivar];
 	  }
-// 	  Res[SolPdeIndex[dim]][i] += (phiP_gss[i]*div + /*penalty*ILambda*phiP_gss[i]*SolVAR[dim]*/ 
-// 	                             + 0.*((hk*hk)/(4.*IRe))*alpha*(GradSolP[0]*phiV_x_gss[i*dim + 0] + GradSolP[1]*phiV_x_gss[i*dim + 1]) )*weight; //REMOVED !!
-	  Res[SolPdeIndex[dim]][i] += phi_gss_fe[SolFEType[press_type_pos]][i]*div*weight;
-           
-	  //END RESIDUALS  B block ===========================
 	  
-	  if(assembleMatrix){
+	for(unsigned i_p=0; i_p < Sol_n_el_dofs[press_type_pos]; i_p++) {
+
+	  //RESIDUALS B block ===========================
+	  Res[SolPdeIndex[press_type_pos]][i_p] += phi_gss_fe[SolFEType[press_type_pos]][i_p]*div*weight;
+// 	  Res[SolPdeIndex[press_type_pos]][i_p] += (phiP_gss[i]*div + /*penalty*ILambda*phiP_gss[i]*SolVAR[dim]*/ 
+// 	                             + 0.*((hk*hk)/(4.*IRe))*alpha*(GradSolP[0]*phiV_x_gss[i*dim + 0] + GradSolP[1]*phiV_x_gss[i*dim + 1]) )*weight; //REMOVED !!
+	  	}  //end phiP_i loop
+
 	    // *** phi_j loop ***
-	    for(unsigned j=0; j < Sol_n_el_dofs[vel_type_pos]; j++) {
-	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]][i*Sol_n_el_dofs[vel_type_pos]+j] -= phi_gss_fe[SolFEType[press_type_pos]][i]*phi_x_gss_fe[SolFEType[vel_type_pos]][j*dim+ivar]*weight;
-	      }
-	    }  //end phij loop
-	  } // endif assembleMatrix
-	}  //end phiP_i loop
-	
+    for(unsigned jvar_block=0; jvar_block<dim; jvar_block++) {
+     for(unsigned i_p=0; i_p<Sol_n_el_dofs[press_type_pos]; i_p++) {
+	 for(unsigned j_u = 0; j_u < Sol_n_el_dofs[vel_type_pos]; j_u++) {
+		Jac[ SolPdeIndex[press_type_pos] ][ SolPdeIndex[jvar_block] ][ i_p*Sol_n_el_dofs[vel_type_pos]+j_u ] -= phi_gss_fe[SolFEType[press_type_pos]][i_p]*phi_x_gss_fe[SolFEType[vel_type_pos]][j_u*dim+jvar_block]*weight;
+	        }  //end phij loop
+	     }//end phiP_i loop
+	     
 // 	if(assembleMatrix * penalty){  //block nDofsP
 // 	  // *** phi_i loop ***
 // 	  for(unsigned i=0; i<nDofsP; i++){
@@ -865,11 +865,23 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 // 	      }
 // 	    }
 // 	  }
-// 	}   //end if penalty
+// 	}   //end if penalty	     
+	     
+         } //end column u jvar 
+ 
+       }  
+   //end div u block row *********************************
+ 
+   //begin NSADJ block row *********************************
 
+   //end NSADJ block row *********************************
+
+   //begin DIV LAMBDA block row *********************************
+
+   //end DIV LAMBDA block row *********************************
+
+   
       }  // end gauss point loop
-      
-      
       
       
 //       //***************************boundary loop ************************************************************************
@@ -919,25 +931,20 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
       //--------------------------------------------------------------------------------------------------------
     } // endif single element not refined or fine grid loop
     //--------------------------------------------------------------------------------------------------------
+
     //Sum the local matrices/vectors into the Global Matrix/Vector
     for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
       RES->add_vector_blocked(Res[SolPdeIndex[ivar]],JACDof[ivar]);
-      if(assembleMatrix){
         for(unsigned jvar=0; jvar < n_unknowns; jvar++) {
-	  JAC->add_matrix_blocked( Jac[ SolPdeIndex[ivar] ][ SolPdeIndex[jvar] ], JACDof[ivar], JACDof[jvar]);
+	  if(assembleMatrix) JAC->add_matrix_blocked( Jac[ SolPdeIndex[ivar] ][ SolPdeIndex[jvar] ], JACDof[ivar], JACDof[jvar]);
         }
-      }
     }
-    
-//     //Penalty
-//     if(assembleMatrix*penalty) JAC->add_matrix_blocked(Jac[SolPdeIndex[dim]][SolPdeIndex[dim]],JACDof[dim],JACDof[dim]);
-
-    RES->add_vector_blocked(Res[SolPdeIndex[dim]],JACDof[dim]);
-    //--------------------------------------------------------------------------------------------------------  
+ 
+   //--------------------------------------------------------------------------------------------------------  
   } //end list of elements loop for each subdomain
   
   
-  if(assembleMatrix) JAC->close();
+  JAC->close();
   RES->close();
   // ***************** END ASSEMBLY *******************
 }
