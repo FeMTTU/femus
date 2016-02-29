@@ -310,11 +310,13 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
 
+// geometry
     unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
     short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
 
     unsigned nDofsX = el->GetElementDofNumber(kel, coordXType);    // number of coordinate element dofs
     
+// equation
     unsigned nDofsV = el->GetElementDofNumber(kel, solVType);    // number of solution element dofs
     unsigned nDofsP = el->GetElementDofNumber(kel, solPType);    // number of solution element dofs
     unsigned nDofsVP = dim * nDofsV + nDofsP;
@@ -576,50 +578,66 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
     
   }
   double normal_bd[3] = {0.,0.,0.};
+  // geometry *******************************************
 
+  vector < vector < int > > node_pos_sol(NFE_FAMS); 
+  for(int i=0; i < NFE_FAMS; i++) { node_pos_sol[i].reserve(maxSize); }   
+
+//   vector < int > node_pos_sol_u; //2 
+//   vector < int > node_pos_sol_p; //0
+    // reserve
+//   node_pos_sol_u.reserve(maxSize);
+//   node_pos_sol_p.reserve( static_cast< unsigned > (ceil(pow(2,dim))));
+  
+  
   // solution variables *******************************************
-  const int n_unknowns = dim+1;
+  const int n_unknowns = (dim+1);
   const int vel_type_pos = 0;
   const int press_type_pos = dim;
-  vector < std::string > Solname(dim+1);  // const char Solname[4][8] = {"U","V","W","P"};
-  Solname[0] = "U";
-  Solname[1] = "V";
-  if (dim == 3) Solname[2] = "W";
-  Solname[press_type_pos] = "P";
+  const int state_pos_begin = 0;
+  const int adj_pos_begin   = dim+1;
+  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
+  Solname              [state_pos_begin+0] = "U";
+  Solname              [state_pos_begin+1] = "V";
+  if (dim == 3) Solname[state_pos_begin+2] = "W";
+  Solname              [state_pos_begin + press_type_pos] = "P";
+  
+//   Solname              [adj_pos_begin + 0] =              "UADJ";
+//   Solname              [adj_pos_begin + 1] =              "VADJ";
+//   if (dim == 3) Solname[adj_pos_begin + 2] =              "WADJ";
+//   Solname              [adj_pos_begin + press_type_pos] = "PADJ";
   
   vector < unsigned > SolPdeIndex(n_unknowns);
   vector < unsigned > SolIndex(n_unknowns);  
-  vector < unsigned > Sol_type(n_unknowns);  
+  vector < unsigned > SolFEType(n_unknowns);  
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
     SolPdeIndex[ivar]	= mlPdeSys.GetSolPdeIndex(Solname[ivar].c_str());
     SolIndex[ivar]	= mlSol->GetIndex        (Solname[ivar].c_str());
-    Sol_type[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
+    SolFEType[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
   }
 
-  vector < int > node_u; 
-  vector < int > node_p;
-    // reserve
-  node_u.reserve(maxSize);
-  node_p.reserve( static_cast< unsigned > (ceil(pow(2,dim))));
-
+  vector < double > Sol_n_el_dofs(n_unknowns);
+  
+  //==========================================================================================
   // velocity ************************************
-  vector < double > phiV_gss;
-  vector < double > phiV_x_gss;
-  vector < double > phiV_xx_gss;
-  phiV_gss.reserve(maxSize);
-  phiV_x_gss.reserve(maxSize*dim);
-  phiV_xx_gss.reserve(maxSize*(3*(dim-1)));	
-
+  vector < vector < double > > phi_gss_fe(NFE_FAMS);
+  vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
+  vector < vector < double > > phi_xx_gss_fe(NFE_FAMS);
+  for(int fe=0; fe < NFE_FAMS; fe++) {  
+        phi_gss_fe[fe].reserve(maxSize);
+      phi_x_gss_fe[fe].reserve(maxSize*dim);
+     phi_xx_gss_fe[fe].reserve(maxSize*(3*(dim-1)));	
+   }
+   
   vector < double > phiV_gss_bd;
   vector < double > phiV_x_gss_bd;
   phiV_gss_bd.reserve(maxSize);
   phiV_x_gss_bd.reserve(maxSize*dim);
   
-  // pressure ************************************
-  const double* phiP_gss;
-
+  //=================================================================================================
+  
   // quadratures ********************************
   double weight;
   double weight_bd;
@@ -645,11 +663,11 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
   }
     
   vector < double > SolVAR(n_unknowns);
-  vector < vector < double > > gradSolVAR(dim); //MISMATCH
-  for(int i=0;i<dim;i++) {     gradSolVAR[i].resize(dim);    }
+  vector < vector < double > > gradSolVAR(n_unknowns);
+  for(int i=0; i<n_unknowns; i++) {     gradSolVAR[i].resize(dim);    }
   
 
-  double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
+  double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
   
   // SUPG - not needed *****************************
 //   double ILambda	= 0; 
@@ -670,30 +688,76 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
  
   for (int iel=msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc+1]; iel++) {
 
+  // geometry *****************************
     unsigned kel = msh->IS_Mts2Gmt_elem[iel];
     short unsigned kelGeom = el->GetElementType(kel);
-    unsigned nDofsV = el->GetElementDofNumber(kel,Sol_type[vel_type_pos]);
-    unsigned nDofsP = el->GetElementDofNumber(kel,Sol_type[press_type_pos]);
-    
-    //===========set to zero all the entries of the FE matrices
-    node_u.resize(nDofsV);
-    node_p.resize(nDofsP);
-   
-    //full length of element Res
-    unsigned n_el_dofs = dim*nDofsV + nDofsP;
-    
-    phiV_gss.resize(nDofsV);
-    phiV_x_gss.resize(nDofsV*dim);
-    phiV_xx_gss.resize(nDofsV*(3*(dim-1)));
-    
-    
+     unsigned nDofsX = el->GetElementDofNumber(kel, coordXType);    // number of coordinate element dofs
+
     for(int ivar=0; ivar<dim; ivar++) {
-      coordX[ivar].resize(nDofsV);
-      KKDof[ivar].resize(nDofsV);
-      
+      coordX[ivar].resize(nDofsX);
+    }
+   for( unsigned i=0;i<nDofsX;i++) {
+      unsigned inode = el->GetElementVertexIndex(kel,i)-1u;
+      unsigned inode_coord_metis = msh->GetMetisDof(inode,coordXType);
+      for(unsigned ivar = 0; ivar < dim; ivar++) {
+	coordX[ivar][i] = (*msh->_coordinate->_Sol[ivar])(inode_coord_metis);
+      }
+    }
+  // geometry end *****************************
+
+    for(unsigned unk = 0; unk < n_unknowns; unk++) {
+      Sol_n_el_dofs[unk] = el->GetElementDofNumber(kel,SolFEType[unk]);
+       KKDof[unk].resize(Sol_n_el_dofs[unk]);
+    }
+    
+   //equation
+    unsigned nDofsV = el->GetElementDofNumber(kel,SolFEType[vel_type_pos]);
+    unsigned nDofsP = el->GetElementDofNumber(kel,SolFEType[press_type_pos]);
+
+    //full length of element Res
+    unsigned n_el_dofs = 0;
+    for(unsigned unk = 0; unk < n_unknowns; unk++)  n_el_dofs += Sol_n_el_dofs[unk]; 
+
+// fe data
+  for(int fe=0; fe < NFE_FAMS; fe++) {
+    unsigned n_el_dof_fe = el->GetElementDofNumber(kel,fe);
+    node_pos_sol[fe].resize(n_el_dof_fe); 
+    phi_gss_fe[fe].resize(n_el_dof_fe);
+    phi_x_gss_fe[fe].resize(n_el_dof_fe*dim);
+    phi_xx_gss_fe[fe].resize(n_el_dof_fe*(3*(dim-1)));
+
+       for( unsigned i=0;i< n_el_dof_fe; i++) {
+        unsigned inode; //TODO 
+       if (fe == 2) { inode = el->GetElementVertexIndex(kel,i)-1u;
+	node_pos_sol[fe][i] =  msh->GetMetisDof(inode,fe);
+          }
+  else if (fe == 0) { 
+    inode = (fe < dim)?(el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
+    node_pos_sol[fe][i] = inode;
+        }
+      }  
+  }   
+
+    
+//kkdof
+    for(unsigned unk = 0; unk < n_unknowns; unk++) {
+       for( unsigned i=0;i<Sol_n_el_dofs[unk]; i++) {
+        unsigned inode; //TODO 
+       if (SolFEType[unk] == 2)  { inode = el->GetElementVertexIndex(kel,i)-1u;}
+  else if (SolFEType[unk] == 0){   inode = (SolFEType[unk] < dim)?(el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);}
+
+       KKDof[unk][i] = pdeSys->GetKKDof(SolIndex[unk],SolPdeIndex[unk],inode);
+         }
+      }
+       
+    for(int ivar=0; ivar<dim; ivar++) {
       Res[SolPdeIndex[ivar]].resize(nDofsV);
       memset(&Res[SolPdeIndex[ivar]][0],0,nDofsV*sizeof(double));
-      
+    }
+    Res[SolPdeIndex[dim]].resize(nDofsP);
+    memset(&Res[SolPdeIndex[dim]][0],0,nDofsP*sizeof(double));
+   
+    for(int ivar=0; ivar<dim; ivar++) {
       if(assembleMatrix){  //MISMATCH
 	Jac[SolPdeIndex[ivar]][SolPdeIndex[ivar]].resize(nDofsV*nDofsV);
 	Jac[SolPdeIndex[ivar]][SolPdeIndex[dim]].resize(nDofsV*nDofsP);
@@ -703,80 +767,52 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	memset(&Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]][0],0,nDofsP*nDofsV*sizeof(double));
       }
     }
-    
-    KKDof[dim].resize(nDofsP);  //MISMATCH
-    Res[SolPdeIndex[dim]].resize(nDofsP);
-    memset(&Res[SolPdeIndex[dim]][0],0,nDofsP*sizeof(double));
-      
-      
+     
 //     if(assembleMatrix*penalty){
 //       Jac[SolPdeIndex[dim]][SolPdeIndex[dim]].resize(nDofsP*nDofsP,0.);
 //       memset(&Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][0],0,nDofsP*nDofsP*sizeof(double));
 //     }
     
     //=============================================================================
-    
-   for( unsigned i=0;i<nDofsV;i++){
-      unsigned inode=el->GetElementVertexIndex(kel,i)-1u;
-      unsigned inode_coord_metis=msh->GetMetisDof(inode,2);
-      node_u[i]=msh->GetMetisDof(inode,Sol_type[vel_type_pos]);
-      for(unsigned ivar=0; ivar<dim; ivar++) {
-	coordX[ivar][i]=(*msh->_coordinate->_Sol[ivar])(inode_coord_metis);
-	KKDof[ivar][i]=pdeSys->GetKKDof(SolIndex[ivar],SolPdeIndex[ivar],inode);
-      }
-    }
 
-    for(unsigned i = 0; i < nDofsP; i++) {
-      unsigned inode = (Sol_type[press_type_pos] < dim)?(el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);
-      node_p[i] = inode;
-      KKDof[dim][i] = pdeSys->GetKKDof(SolIndex[dim],SolPdeIndex[dim],inode);
-    }
-   
+
+
 // SUPG - not needed
 //     double hk = sqrt( (coordX[0][2] - coordX[0][0])*(coordX[0][2] - coordX[0][0]) + 
 //       (coordX[1][2] - coordX[1][0])*(coordX[1][2] - coordX[1][0]) );
     
-   
+
+       
     if(igrid==levelMax || !el->GetRefinedElementIndex(kel)) {
       
       // ********************** Gauss point loop *******************************
-      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelGeom][Sol_type[vel_type_pos]]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelGeom][SolFEType[vel_type_pos]]->GetGaussPointNumber(); ig++) {
 	
 	// *** get Jacobian and test function and test function derivatives ***
-	ml_prob._ml_msh->_finiteElement[kelGeom][Sol_type[vel_type_pos]]->Jacobian(coordX,ig,weight,phiV_gss,phiV_x_gss,phiV_xx_gss);
-	phiP_gss = ml_prob._ml_msh->_finiteElement[kelGeom][Sol_type[press_type_pos]]->GetPhi(ig);
-
+//       for(int fe=0; fe < NFE_FAMS; fe++) {
+	ml_prob._ml_msh->_finiteElement[kelGeom][LINEAR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[LINEAR_FE],phi_x_gss_fe[LINEAR_FE],phi_xx_gss_fe[LINEAR_FE]);
+	ml_prob._ml_msh->_finiteElement[kelGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+//       }
 // 	double GradSolP[3] = {0.,0.,0.};
 	//velocity variable
-	for(unsigned ivar=0; ivar<dim; ivar++) {
-	  SolVAR[ivar]=0;
+	for(unsigned unk = 0; unk < n_unknowns; unk++) {
+	  SolVAR[unk]=0;
 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
-	    gradSolVAR[ivar][ivar2]=0; 
+	    gradSolVAR[unk][ivar2]=0; 
 	  }
-	  unsigned SolIndex = mlSol->GetIndex       (Solname[ivar].c_str());
-	  unsigned SolType  = mlSol->GetSolutionType(Solname[ivar].c_str());
+	  unsigned SolIndex = mlSol->GetIndex       (Solname[unk].c_str());
+	  unsigned SolType  = mlSol->GetSolutionType(Solname[unk].c_str());
 	  
-	  for(unsigned i = 0; i < nDofsV; i++) {
-	    double soli = (*sol->_Sol[SolIndex])(node_u[i]);
-	    SolVAR[ivar]+=phiV_gss[i]*soli;
+	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
+	    double soli   = (*sol->_Sol[SolIndex])(node_pos_sol[ SolFEType[unk] ][i]);
+// 	    double soli = (*sol->_Sol[SolIndex])(msh->GetMetisDof(node_pos_sol[ SolFEType[press_type_pos] ][i],SolType));
+	    SolVAR[unk] += phi_gss_fe[ SolFEType[unk] ][i]*soli;
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
-	      gradSolVAR[ivar][ivar2] += phiV_x_gss[i*dim+ivar2]*soli; 
+	      gradSolVAR[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2]*soli; 
 	    }
 	  }
+	  
 	}
-	//pressure variable
-	SolVAR[dim]=0;
-	unsigned SolIndex = mlSol->GetIndex(Solname[press_type_pos].c_str());
-	unsigned SolType=mlSol->GetSolutionType(Solname[press_type_pos].c_str());
-	for(unsigned i=0; i<nDofsP; i++) {
-	  unsigned sol_dof = msh->GetMetisDof(node_p[i],SolType);
-	  double soli = (*sol->_Sol[SolIndex])(sol_dof);
-	  SolVAR[dim]+=phiP_gss[i]*soli;
-// 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){
-// 	    GradSolP[ivar2] += phiV_x_gss[i*dim+ivar2]*soli;
-// 	  }
-	}
-
 	
 	// *** phi_i loop ***
 	for(unsigned i=0; i<nDofsV; i++){
@@ -785,9 +821,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	  for(unsigned ivar=0; ivar<dim; ivar++) {
 	    double Lap_rhs=0;
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
-	      Lap_rhs += phiV_x_gss[i*dim+ivar2]*gradSolVAR[ivar][ivar2];
+	      Lap_rhs += phi_x_gss_fe[SolFEType[vel_type_pos]][i*dim+ivar2]*gradSolVAR[ivar][ivar2];
 	    }
-	    Res[SolPdeIndex[ivar]][i] += ( -IRe*Lap_rhs + /*Picard iteration*/SolVAR[dim]*phiV_x_gss[i*dim+ivar] + force[ivar] * phiV_gss[i])*weight;
+	    Res[SolPdeIndex[ivar]][i] += ( -IRe*Lap_rhs + /*Picard iteration*/SolVAR[dim]*phi_x_gss_fe[SolFEType[vel_type_pos]][i*dim+ivar] + force[ivar] * phi_gss_fe[SolFEType[vel_type_pos]][i])*weight;
 	  }
 	  //END RESIDUALS A block ===========================
 	  
@@ -797,7 +833,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	      double Lap=0;
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
 		// Laplacian
-		Lap  += phiV_x_gss[i*dim+ivar]*phiV_x_gss[j*dim+ivar];
+		Lap  += phi_x_gss_fe[SolFEType[vel_type_pos]][i*dim+ivar]*phi_x_gss_fe[SolFEType[vel_type_pos]][j*dim+ivar];
 	      }
 
 	      for(unsigned ivar=0; ivar<dim; ivar++) {    
@@ -808,7 +844,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	    // *** phiP_j loop ***
 	    for(unsigned j=0; j<nDofsP; j++){
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		Jac[SolPdeIndex[ivar]][SolPdeIndex[dim]][i*nDofsP+j] -= phiV_x_gss[i*dim+ivar]*phiP_gss[j]*weight;
+		Jac[SolPdeIndex[ivar]][SolPdeIndex[dim]][i*nDofsP+j] -= phi_x_gss_fe[SolFEType[vel_type_pos]][i*dim+ivar]*phi_gss_fe[SolFEType[press_type_pos]][j]*weight;
 	      }
 	    } //end phiP_j loop
 	  } // endif assembleMatrix
@@ -824,7 +860,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	  }
 // 	  Res[SolPdeIndex[dim]][i] += (phiP_gss[i]*div + /*penalty*ILambda*phiP_gss[i]*SolVAR[dim]*/ 
 // 	                             + 0.*((hk*hk)/(4.*IRe))*alpha*(GradSolP[0]*phiV_x_gss[i*dim + 0] + GradSolP[1]*phiV_x_gss[i*dim + 1]) )*weight; //REMOVED !!
-	  Res[SolPdeIndex[dim]][i] += phiP_gss[i]*div*weight;
+	  Res[SolPdeIndex[dim]][i] += phi_gss_fe[SolFEType[press_type_pos]][i]*div*weight;
            
 	  //END RESIDUALS  B block ===========================
 	  
@@ -832,7 +868,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	    // *** phi_j loop ***
 	    for(unsigned j=0; j<nDofsV; j++) {
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]][i*nDofsV+j] -= phiP_gss[i]*phiV_x_gss[j*dim+ivar]*weight;
+		Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]][i*nDofsV+j] -= phi_gss_fe[SolFEType[press_type_pos]][i]*phi_x_gss_fe[SolFEType[vel_type_pos]][j*dim+ivar]*weight;
 	      }
 	    }  //end phij loop
 	  } // endif assembleMatrix
@@ -855,47 +891,49 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
       }  // end gauss point loop
       
       
-      //***************************boundary loop ************************************************************************
-      unsigned nfaces = el->GetElementFaceNumber(kel);
       
-	std::vector< double > xx_bd(dim,0.);
-	vector < double > normal_bd(dim,0);   
-	// loop on faces
-
-	
-	for(unsigned jface=0; jface < nfaces; jface++) {
-	  // look for boundary faces
-	  if(el->GetFaceElementIndex(kel,jface)<0) {
-	    unsigned int face = -(msh->el->GetFaceElementIndex(kel,jface)+1);
-             double tau=0.;
-	     
-	     bool flag_bd = mlSol->_SetBoundaryConditionFunction(xx_bd,"P",tau,face,0.);
-	    if( ! flag_bd /*&& tau!=0.*/){
-	      unsigned nDofsV_bd      = msh->el->GetElementFaceDofNumber(kel,jface,Sol_type[vel_type_pos]);
-	      unsigned nDofsX_bd = msh->el->GetElementFaceDofNumber(kel,jface,coordXType);
-                phiV_gss_bd.resize(nDofsV_bd);
-                phiV_x_gss_bd.resize(nDofsV_bd*dim);
-	      const unsigned felt = msh->el->GetElementFaceType(kel, jface);
-	      for(unsigned i=0; i < nDofsX_bd; i++) {
-		unsigned inode = msh->el->GetFaceVertexIndex(kel,jface,i)-1u;
-		unsigned inode_Metis = msh->GetMetisDof(inode,coordXType);
-		for(unsigned idim=0; idim<dim; idim++) {
-		  coordX_bd[idim][i] = (*msh->_coordinate->_Sol[idim])(inode_Metis);
-		}
-	      }
-	      for(unsigned igs=0; igs < msh->_finiteElement[felt][Sol_type[vel_type_pos]]->GetGaussPointNumber(); igs++) {
-		msh->_finiteElement[felt][Sol_type[vel_type_pos]]->JacobianSur(coordX_bd,igs,weight_bd,phiV_gss_bd,phiV_x_gss_bd,normal_bd);
-		// *** phi_i loop ***
-		for(unsigned i_bd=0; i_bd < nDofsV_bd; i_bd++) {
-		  unsigned int i_vol = msh->el->GetLocalFaceVertexIndex(kel, jface, i_bd);
-		for(unsigned idim=0; idim<dim; idim++) {
-		  Res[idim][i_vol]   += -1. * weight_bd *  tau *phiV_gss_bd[i_bd]* normal_bd[idim];
- 		 }//velocity blocks
-		}
-	      }
-	    } //flag_bd
-	  }
-	}    
+      
+//       //***************************boundary loop ************************************************************************
+//       unsigned nfaces = el->GetElementFaceNumber(kel);
+//       
+// 	std::vector< double > xx_bd(dim,0.);
+// 	vector < double > normal_bd(dim,0);   
+// 	// loop on faces
+// 
+// 	
+// 	for(unsigned jface=0; jface < nfaces; jface++) {
+// 	  // look for boundary faces
+// 	  if(el->GetFaceElementIndex(kel,jface)<0) {
+// 	    unsigned int face = -(msh->el->GetFaceElementIndex(kel,jface)+1);
+//              double tau=0.;
+// 	     
+// 	     bool flag_bd = mlSol->_SetBoundaryConditionFunction(xx_bd,"P",tau,face,0.);
+// 	    if( ! flag_bd /*&& tau!=0.*/){
+// 	      unsigned nDofsV_bd      = msh->el->GetElementFaceDofNumber(kel,jface,SolFEType[vel_type_pos]);
+// 	      unsigned nDofsX_bd = msh->el->GetElementFaceDofNumber(kel,jface,coordXType);
+//                 phiV_gss_bd.resize(nDofsV_bd);
+//                 phiV_x_gss_bd.resize(nDofsV_bd*dim);
+// 	      const unsigned felt = msh->el->GetElementFaceType(kel, jface);
+// 	      for(unsigned i=0; i < nDofsX_bd; i++) {
+// 		unsigned inode = msh->el->GetFaceVertexIndex(kel,jface,i)-1u;
+// 		unsigned inode_Metis = msh->GetMetisDof(inode,coordXType);
+// 		for(unsigned idim=0; idim<dim; idim++) {
+// 		  coordX_bd[idim][i] = (*msh->_coordinate->_Sol[idim])(inode_Metis);
+// 		}
+// 	      }
+// 	      for(unsigned igs=0; igs < msh->_finiteElement[felt][SolFEType[vel_type_pos]]->GetGaussPointNumber(); igs++) {
+// 		msh->_finiteElement[felt][SolFEType[vel_type_pos]]->JacobianSur(coordX_bd,igs,weight_bd,phiV_gss_bd,phiV_x_gss_bd,normal_bd);
+// 		// *** phi_i loop ***
+// 		for(unsigned i_bd=0; i_bd < nDofsV_bd; i_bd++) {
+// 		  unsigned int i_vol = msh->el->GetLocalFaceVertexIndex(kel, jface, i_bd);
+// 		for(unsigned idim=0; idim<dim; idim++) {
+// 		  Res[idim][i_vol]   += -1. * weight_bd *  tau *phiV_gss_bd[i_bd]* normal_bd[idim];
+//  		 }//velocity blocks
+// 		}
+// 	      }
+// 	    } //flag_bd
+// 	  }
+// 	}    
 
       //***************************************************************************************************************
       
