@@ -285,12 +285,7 @@ int main(int argc,char **args) {
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-//   if ( equation_pivoting == PETSC_TRUE){
   system.SetAssembleFunction(FSITimeDependentAssembly);
-//   }
-//   else {
-//     system.SetAssembleFunction(FSISteadyStateAssemblyWithNoPivoting);
-//   }
 
 
   // Solver settings

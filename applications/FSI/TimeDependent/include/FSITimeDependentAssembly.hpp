@@ -31,6 +31,8 @@ namespace femus {
 
     const unsigned dim = mymsh->GetDimension();
     const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
+    
+    double theta = 0.5;
 
     // local objects
     vector<adept::adouble> SolVAR(2 * dim + 1);
@@ -339,10 +341,10 @@ namespace femus {
 
                   for (unsigned idim = 0; idim < dim; idim++) {
                     if ((!solidmark[ilocal])) {
-                      aRhs[indexVAR[dim + idim]][ilocal]   += 0.5 * dt * (value + value_old) * normal[idim];
+                      aRhs[indexVAR[dim + idim]][ilocal]   += dt*(theta*value + (1. - theta)*value_old) * normal[idim];
                     }
                     else { //if interface node it goes to solid
-                      aRhs[indexVAR[idim]][ilocal]   += 0.5 * dt * (value + value_old) * normal[idim];
+                      aRhs[indexVAR[idim]][ilocal]   += dt*(theta*value + (1. - theta)*value_old) * normal[idim];
                     }
                   }
                 }
@@ -476,13 +478,13 @@ namespace femus {
                 adept::adouble timeDerivative = -(SolVAR[dim + idim] * phi[i] * Weight
                                                   - SolVAR_old[dim + idim] * phi_old[i] * Weight_old);
 
-                adept::adouble value =  0.5 * dt * (
+                adept::adouble value =  theta * dt * (
                                           - AdvaleVAR[idim]      	             // advection term
                                           - IRe * LapvelVAR[idim]	             // viscous dissipation
                                           + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                         ) * Weight;                                // at time t
 
-                adept::adouble value_old =  0.5 * dt * (
+                adept::adouble value_old = (1. - theta) * dt * (
                                               - AdvaleVAR_old[idim]               	         // advection term
                                               - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
                                               + SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
@@ -698,7 +700,7 @@ namespace femus {
               //BEGIN redidual d_t - v = 0 in fixed domain
               for (int idim = 0; idim < dim; idim++) {
                 aRhs[indexVAR[dim + idim]][i] +=  - phi[i] * (-SolVAR[idim] + SolVAR_old[idim] +
-                                                  0.5 * dt * (SolVAR[dim + idim] + SolVAR_old[dim + idim])
+                                                        dt * (theta*SolVAR[dim + idim] + (1. - theta)*SolVAR_old[dim + idim])
                                                              ) * Weight_hat;
               }
 
@@ -720,11 +722,11 @@ namespace femus {
                 adept::adouble timeDerivative = -(rhos * SolVAR[dim + idim] * phi[i] * Weight
                                                   - rhos * SolVAR_old[dim + idim] * phi_old[i] * Weight_old);
 
-                adept::adouble value =  0.5 * dt * (rhos * phi[i] * _gravity[idim]      // body force
+                adept::adouble value =  theta * dt * (rhos * phi[i] * _gravity[idim]      // body force
                                                     - CauchyDIR[idim]			  // stress
                                                    ) * Weight;                         // at time t
 
-                adept::adouble value_old =  0.5 * dt * (rhos * phi_old[i] * _gravity[idim]     // body force
+                adept::adouble value_old =  (1. - theta) * dt * (rhos * phi_old[i] * _gravity[idim]     // body force
                                                         - CauchyDIR_old[idim]			 // stress
                                                        ) * Weight_old;                         // at time t-dt
 
