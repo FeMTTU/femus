@@ -210,7 +210,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 
 
   LinearEquationSolver* pdeSys  = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix*    KK         	= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  SparseMatrix*    JAC         	= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*   RES          = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
@@ -295,8 +295,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   double weight_bd;
   
   
-  vector< int > KKDof; // local to global pdeSys dofs
-  KKDof.reserve((dim + 1) *maxSize);
+  vector< int > JACDof; // local to global pdeSys dofs
+  JACDof.reserve((dim + 1) *maxSize);
 
   vector< double > Res; // local redidual vector
   Res.reserve((dim + 1) *maxSize);
@@ -304,7 +304,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve((dim + 1) *maxSize * (dim + 1) *maxSize);
 
-  if (assembleMatrix)   KK->zero(); // Set to zero all the entries of the Global Matrix
+  if (assembleMatrix)   JAC->zero(); // Set to zero all the entries of the Global Matrix
 
   
   // element loop: each process loops only on the elements that owns
@@ -328,7 +328,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 
 //element matrices and vectors
     // resize local arrays
-    KKDof.resize(nDofsVP);
+    JACDof.resize(nDofsVP);
     
     Jac.resize(nDofsVP * nDofsVP);
 
@@ -358,7 +358,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 
       for (unsigned  k = 0; k < dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
-        KKDof[i + k * nDofsV] = pdeSys->GetKKDof(solVIndex[k], solVPdeIndex[k], iNode);    // global to global mapping between solution node and pdeSys dof
+        JACDof[i + k * nDofsV] = pdeSys->GetKKDof(solVIndex[k], solVPdeIndex[k], iNode);    // global to global mapping between solution node and pdeSys dof
       }
     }
     
@@ -367,7 +367,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
       unsigned iNode = el->GetMeshDof(kel, i, solPType);    // local to global solution node
       unsigned solPDof = msh->GetMetisDof(iNode, solPType);    // global to global mapping between solution node and solution dof
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);      // global extraction and local storage for the solution
-      KKDof[i + dim * nDofsV] = pdeSys->GetKKDof(solPIndex, solPPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
+      JACDof[i + dim * nDofsV] = pdeSys->GetKKDof(solPIndex, solPPdeIndex, iNode);    // global to global mapping between solution node and pdeSys dof
     }
 
     
@@ -502,7 +502,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 
     
 
-    RES->add_vector_blocked(Res, KKDof);
+    RES->add_vector_blocked(Res, JACDof);
 
     //Extarct and store the Jacobian
     if (assembleMatrix) {
@@ -524,7 +524,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
       // get the and store jacobian matrix (row-major)
       s.jacobian(&Jac[0] , true);
       
-      KK->add_matrix_blocked(Jac, KKDof, KKDof);
+      JAC->add_matrix_blocked(Jac, JACDof, JACDof);
 
       s.clear_independents();
       s.clear_dependents();
@@ -533,7 +533,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 
   RES->close();
 
-  if (assembleMatrix) KK->close();
+  if (assembleMatrix) JAC->close();
 
   // ***************** END ASSEMBLY *******************
 }
@@ -557,7 +557,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
   
   Mesh*		 msh    = ml_prob._ml_msh->GetLevel(level);
   elem*		 el	= msh->el;
-  SparseMatrix*	 KK	= pdeSys->_KK;
+  SparseMatrix*	 JAC	= pdeSys->_KK;
   NumericVector* RES 	= pdeSys->_RES;
     
   //data
@@ -575,14 +575,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
   for(int i=0;i<dim;i++) {   
        coordX[i].reserve(maxSize); 
     coordX_bd[i].reserve(maxSize); 
-    
   }
   double normal_bd[3] = {0.,0.,0.};
   // geometry *******************************************
 
   vector < vector < int > > node_pos_sol(NFE_FAMS); 
   for(int i=0; i < NFE_FAMS; i++) { node_pos_sol[i].reserve(maxSize); }   
-
 //   vector < int > node_pos_sol_u; //2 
 //   vector < int > node_pos_sol_p; //0
     // reserve
@@ -644,12 +642,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
   
   
   // equation ***********************************
-  vector < vector < int > > KKDof(n_unknowns); 
+  vector < vector < int > > JACDof(n_unknowns); 
   vector < vector < double > > Res(n_unknowns); /*was F*/
   vector < vector < vector < double > > > Jac(n_unknowns); /*was B*/
   
   for(int i = 0; i < n_unknowns; i++) {     
-    KKDof[i].reserve(maxSize);
+    JACDof[i].reserve(maxSize);
       Res[i].reserve(maxSize); 
   }
    
@@ -682,7 +680,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
  
   
   // Set to zeto all the entries of the matrix
-  if(assembleMatrix) KK->zero();
+  if(assembleMatrix) JAC->zero();
   
   // ****************** element loop *******************
  
@@ -707,17 +705,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 
     for(unsigned unk = 0; unk < n_unknowns; unk++) {
       Sol_n_el_dofs[unk] = el->GetElementDofNumber(kel,SolFEType[unk]);
-       KKDof[unk].resize(Sol_n_el_dofs[unk]);
+       JACDof[unk].resize(Sol_n_el_dofs[unk]);
     }
     
-   //equation
-    unsigned nDofsV = el->GetElementDofNumber(kel,SolFEType[vel_type_pos]);
-    unsigned nDofsP = el->GetElementDofNumber(kel,SolFEType[press_type_pos]);
-
-    //full length of element Res
-    unsigned n_el_dofs = 0;
-    for(unsigned unk = 0; unk < n_unknowns; unk++)  n_el_dofs += Sol_n_el_dofs[unk]; 
-
 // fe data
   for(int fe=0; fe < NFE_FAMS; fe++) {
     unsigned n_el_dof_fe = el->GetElementDofNumber(kel,fe);
@@ -746,36 +736,25 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
        if (SolFEType[unk] == 2)  { inode = el->GetElementVertexIndex(kel,i)-1u;}
   else if (SolFEType[unk] == 0){   inode = (SolFEType[unk] < dim)?(el->GetElementVertexIndex(kel,i)-1u):(kel+i*nel);}
 
-       KKDof[unk][i] = pdeSys->GetKKDof(SolIndex[unk],SolPdeIndex[unk],inode);
+       JACDof[unk][i] = pdeSys->GetKKDof(SolIndex[unk],SolPdeIndex[unk],inode);
          }
       }
        
-    for(int ivar=0; ivar<dim; ivar++) {
-      Res[SolPdeIndex[ivar]].resize(nDofsV);
-      memset(&Res[SolPdeIndex[ivar]][0],0,nDofsV*sizeof(double));
+    for(int ivar=0; ivar<n_unknowns; ivar++) {
+      Res[SolPdeIndex[ivar]].resize(Sol_n_el_dofs[ivar]);
+      memset(&Res[SolPdeIndex[ivar]][0],0,Sol_n_el_dofs[ivar]*sizeof(double));
     }
-    Res[SolPdeIndex[dim]].resize(nDofsP);
-    memset(&Res[SolPdeIndex[dim]][0],0,nDofsP*sizeof(double));
    
-    for(int ivar=0; ivar<dim; ivar++) {
+    for(int ivar=0; ivar<n_unknowns; ivar++) {
+      for(int jvar=0; jvar<n_unknowns; jvar++) {
       if(assembleMatrix){  //MISMATCH
-	Jac[SolPdeIndex[ivar]][SolPdeIndex[ivar]].resize(nDofsV*nDofsV);
-	Jac[SolPdeIndex[ivar]][SolPdeIndex[dim]].resize(nDofsV*nDofsP);
-	Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]].resize(nDofsP*nDofsV);
-	memset(&Jac[SolPdeIndex[ivar]][SolPdeIndex[ivar]][0],0,nDofsV*nDofsV*sizeof(double));
-	memset(&Jac[SolPdeIndex[ivar]][SolPdeIndex[dim]][0],0,nDofsV*nDofsP*sizeof(double));
-	memset(&Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]][0],0,nDofsP*nDofsV*sizeof(double));
+	Jac[ SolPdeIndex[ivar] ][ SolPdeIndex[jvar] ].resize(Sol_n_el_dofs[ivar]*Sol_n_el_dofs[jvar]);
+	memset(&Jac[SolPdeIndex[ivar]][SolPdeIndex[jvar]][0],0,Sol_n_el_dofs[ivar]*Sol_n_el_dofs[jvar]*sizeof(double));
       }
     }
-     
-//     if(assembleMatrix*penalty){
-//       Jac[SolPdeIndex[dim]][SolPdeIndex[dim]].resize(nDofsP*nDofsP,0.);
-//       memset(&Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][0],0,nDofsP*nDofsP*sizeof(double));
-//     }
-    
+  }
+  
     //=============================================================================
-
-
 
 // SUPG - not needed
 //     double hk = sqrt( (coordX[0][2] - coordX[0][0])*(coordX[0][2] - coordX[0][0]) + 
@@ -815,7 +794,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	}
 	
 	// *** phi_i loop ***
-	for(unsigned i=0; i<nDofsV; i++){
+	for(unsigned i=0; i< Sol_n_el_dofs[vel_type_pos]; i++) {
 	
 	  //BEGIN RESIDUALS A block ===========================
 	  for(unsigned ivar=0; ivar<dim; ivar++) {
@@ -829,7 +808,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	  
 	  if(assembleMatrix){
 	    // *** phi_j loop ***
-	    for(unsigned j=0; j<nDofsV; j++) {
+	    for(unsigned j=0; j < Sol_n_el_dofs[vel_type_pos]; j++) {
 	      double Lap=0;
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
 		// Laplacian
@@ -837,14 +816,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	      }
 
 	      for(unsigned ivar=0; ivar<dim; ivar++) {    
-		Jac[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*nDofsV+j] += ( IRe*Lap /*+ force[j] * phiV_gss[i]*/)*weight;
+		Jac[SolPdeIndex[ivar]][SolPdeIndex[ivar]][i*Sol_n_el_dofs[vel_type_pos]+j] += ( IRe*Lap /*+ force[j] * phiV_gss[i]*/)*weight;
 	      }
   	    } //end phij loop
 	    
 	    // *** phiP_j loop ***
-	    for(unsigned j=0; j<nDofsP; j++){
+	    for(unsigned j = 0; j < Sol_n_el_dofs[press_type_pos]; j++){
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		Jac[SolPdeIndex[ivar]][SolPdeIndex[dim]][i*nDofsP+j] -= phi_x_gss_fe[SolFEType[vel_type_pos]][i*dim+ivar]*phi_gss_fe[SolFEType[press_type_pos]][j]*weight;
+		Jac[SolPdeIndex[ivar]][SolPdeIndex[dim]][ i*Sol_n_el_dofs[press_type_pos]+j ]  -=  phi_x_gss_fe[SolFEType[vel_type_pos]][i*dim+ivar]*phi_gss_fe[SolFEType[press_type_pos]][j]*weight;
 	      }
 	    } //end phiP_j loop
 	  } // endif assembleMatrix
@@ -852,7 +831,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
   
 
 	// *** phiP_i loop ***
-	for(unsigned i=0; i<nDofsP; i++){
+	for(unsigned i=0; i<Sol_n_el_dofs[press_type_pos]; i++){
 	  //BEGIN RESIDUALS B block ===========================
 	  double div = 0;
 	  for(unsigned ivar=0; ivar<dim; ivar++) {
@@ -866,9 +845,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	  
 	  if(assembleMatrix){
 	    // *** phi_j loop ***
-	    for(unsigned j=0; j<nDofsV; j++) {
+	    for(unsigned j=0; j < Sol_n_el_dofs[vel_type_pos]; j++) {
 	      for(unsigned ivar=0; ivar<dim; ivar++) {
-		Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]][i*nDofsV+j] -= phi_gss_fe[SolFEType[press_type_pos]][i]*phi_x_gss_fe[SolFEType[vel_type_pos]][j*dim+ivar]*weight;
+		Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]][i*Sol_n_el_dofs[vel_type_pos]+j] -= phi_gss_fe[SolFEType[press_type_pos]][i]*phi_x_gss_fe[SolFEType[vel_type_pos]][j*dim+ivar]*weight;
 	      }
 	    }  //end phij loop
 	  } // endif assembleMatrix
@@ -941,24 +920,24 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
     } // endif single element not refined or fine grid loop
     //--------------------------------------------------------------------------------------------------------
     //Sum the local matrices/vectors into the Global Matrix/Vector
-    for(unsigned ivar=0; ivar<dim; ivar++) {
-      RES->add_vector_blocked(Res[SolPdeIndex[ivar]],KKDof[ivar]);
+    for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
+      RES->add_vector_blocked(Res[SolPdeIndex[ivar]],JACDof[ivar]);
       if(assembleMatrix){
-	KK->add_matrix_blocked(Jac[SolPdeIndex[ivar]][SolPdeIndex[ivar]],KKDof[ivar],KKDof[ivar]);  
-	KK->add_matrix_blocked(Jac[SolPdeIndex[ivar]][SolPdeIndex[dim]],KKDof[ivar],KKDof[dim]);
-	KK->add_matrix_blocked(Jac[SolPdeIndex[dim]][SolPdeIndex[ivar]],KKDof[dim],KKDof[ivar]);
+        for(unsigned jvar=0; jvar < n_unknowns; jvar++) {
+	  JAC->add_matrix_blocked( Jac[ SolPdeIndex[ivar] ][ SolPdeIndex[jvar] ], JACDof[ivar], JACDof[jvar]);
+        }
       }
     }
     
 //     //Penalty
-//     if(assembleMatrix*penalty) KK->add_matrix_blocked(Jac[SolPdeIndex[dim]][SolPdeIndex[dim]],KKDof[dim],KKDof[dim]);
+//     if(assembleMatrix*penalty) JAC->add_matrix_blocked(Jac[SolPdeIndex[dim]][SolPdeIndex[dim]],JACDof[dim],JACDof[dim]);
 
-    RES->add_vector_blocked(Res[SolPdeIndex[dim]],KKDof[dim]);
+    RES->add_vector_blocked(Res[SolPdeIndex[dim]],JACDof[dim]);
     //--------------------------------------------------------------------------------------------------------  
   } //end list of elements loop for each subdomain
   
   
-  if(assembleMatrix) KK->close();
+  if(assembleMatrix) JAC->close();
   RES->close();
   // ***************** END ASSEMBLY *******************
 }
