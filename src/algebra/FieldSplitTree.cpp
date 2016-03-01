@@ -296,13 +296,15 @@ namespace femus {
       PetscPreconditioner::set_petsc_preconditioner_type( FIELDSPLIT_PRECOND, pc );
 
       PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR );
+      
       PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_LOWER);
-
       PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELFP,NULL); //it goes with pressure ILU
 
       for( int i = 0; i < _numberOfSplits; i++ ) {
-        if( GetChild(i)->_preconditioner == LSC_PRECOND){
-           PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELF,NULL); //it goes with pressure LSC
+        if( GetChild(i)->_preconditioner == LSC_PRECOND){ //it goes with pressure LSC
+	   PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_FULL);
+           PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELF,NULL); 
+	  
         }
       }
 
@@ -319,11 +321,28 @@ namespace femus {
       }
       PetscFree(subksp);
     }
+    else if ( _preconditioner == LSC_PRECOND) {
+      _rtol = 1.e-3;
+      _abstol = 1.e-20;
+      _dtol = 1.e+50;
+      _maxits = 2;
+
+      SetPetscSolverType(ksp);
+      PC pc;
+      KSPGetPC( ksp, &pc );
+      KSPSetTolerances( ksp, _rtol, _abstol, _dtol, _maxits );
+      KSPSetFromOptions( ksp );
+      PetscReal epsilon = 1.e-16;
+      PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
+          
+      PCFactorSetZeroPivot( pc, epsilon );
+      PCFactorSetShiftType( pc, MAT_SHIFT_NONZERO );
+    }
     else {
       _rtol = 1.e-3;
       _abstol = 1.e-20;
       _dtol = 1.e+50;
-      _maxits = 1;
+      _maxits = 2;
 
       SetPetscSolverType(ksp);
       PC pc;
