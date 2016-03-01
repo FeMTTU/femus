@@ -1,0 +1,99 @@
+/ File opened for write Tue Mar  1 16:53:37 2016.
+The /home/eaulisa/FEMuS/MyFEMuS/applications/FSI/SteadyState/Benchmarks/input/gambit/turek_mesh_coarse_done.dbs database is being opened.
+ 
+*** LISTING "turek_mesh_coarse_done" FILES IN DIRECTORY:
+    /home/eaulisa/FEMuS/MyFEMuS/applications/FSI/SteadyState/Benchmarks/input/gambit
+ 
+    turek_mesh_coarse_done.lok
+    turek_mesh_coarse_done.dbs
+Command> vertex move "vertex.136" offset -0.01 0 0
+ERROR: The entity cannot be transformed due to it being connected to another
+entity or having higher topology.
+Command> face unite faces "face.47" "face.48" "face.50" "face.51" "face.49" "face.46" \
+  real
+Uniting faces face.47, face.48, face.50, face.51, face.49 and face.46 
+Command> face create width 0.1 height 0.1 xyplane rectangle
+Created face: face.65
+Command> face create width 0.4 height 0.4 xyplane rectangle
+Created face: face.66
+Command> face create width 0.4 height 0.8 xyplane rectangle
+Created face: face.67
+Command> face create width 0.6 height 0.8 xyplane rectangle
+Created face: face.68
+Command> undo
+Undone to: face create width 0.6 height 0.8 xyplane rectangle.  
+Command> undo
+Undone to: face create width 0.4 height 0.8 xyplane rectangle.  
+Command> undo
+Undone to: face create width 0.4 height 0.4 xyplane rectangle.  
+Command> undo
+Undone to: face create width 0.1 height 0.1 xyplane rectangle.  
+Command> face create width 0.6 height 0.8 xyplane rectangle
+Created face: face.65
+Command> face create width 0.7 height 0.8 xyplane rectangle
+Created face: face.66
+Command> undo
+Undone to: face create width 0.7 height 0.8 xyplane rectangle.  
+Command> undo
+Undone to: face create width 0.6 height 0.8 xyplane rectangle.  
+Command> face create width 0.7 height 0.8 xyplane rectangle
+Created face: face.65
+Command> undo
+Undone to: face create width 0.7 height 0.8 xyplane rectangle.  
+Command> undo begingroup
+Command> edge picklink "edge.142" "edge.135"
+Command> edge mesh "edge.135" "edge.142" successive ratio1 1.5 ratio2 1.5 size 3
+Mesh generated for edge edge.135:   mesh edges = 1.
+Mesh generated for edge edge.142:   mesh edges = 1.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.135" "edge.142" keepsettings onlymesh
+Mesh removed from edge edge.142:   mesh edges = 1.
+Mesh removed from edge edge.135:   mesh edges = 1.
+Command> edge mesh "edge.135" "edge.142" successive ratio1 1.5 ratio2 1.5 intervals 3
+Mesh generated for edge edge.135:   mesh edges = 3.
+Mesh generated for edge edge.142:   mesh edges = 3.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.148" keepsettings onlymesh
+Command> edge picklink "edge.148"
+Command> edge mesh "edge.148" successive ratio1 1 intervals 2
+Mesh generated for edge edge.148:   mesh edges = 2.
+Command> undo endgroup
+Command> face mesh "face.47" map size 1
+Mesh generated for face face.47:   mesh faces = 6.
+Command> undo
+Undone to: face mesh "face.47" map size 1.  
+Command> undo
+Undone to: undo begingroup.  
+Command> undo
+Undone to: undo begingroup.  
+Command> undo
+Undone to: undo begingroup.  
+Command> undo begingroup
+Command> edge delete "edge.135" "edge.142" keepsettings onlymesh
+Command> edge picklink "edge.142" "edge.135"
+Command> edge mesh "edge.135" "edge.142" successive ratio1 2 ratio2 2 intervals 3
+Mesh generated for edge edge.135:   mesh edges = 3.
+Mesh generated for edge edge.142:   mesh edges = 3.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.148" keepsettings onlymesh
+Command> edge picklink "edge.148"
+Command> edge mesh "edge.148" successive ratio1 1 intervals 2
+Mesh generated for edge edge.148:   mesh edges = 2.
+Command> undo endgroup
+Command> face mesh "face.47" map size 1
+Mesh generated for face face.47:   mesh faces = 6.
+Command> save name \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/FSI/SteadyState/Benchmarks/input/gambit/turek_mesh_coarse_done_outflow.dbs"
+Command> save
+Command> export gambit "turek_mesh_coarse_done_outflow.neu"
+WARN:  Face face.42 is not meshed and is not exported.
+WARN:  Face face.45 is not meshed and is not exported.
+WARN:  Boundary type WALL is incompatible for solver GENERIC.
+Boundary Unspecified not exported.
+ 
+Writing 277 nodes, 60 elements, 2 groups and 4 bc sets
+to GAMBIT Neutral file turek_mesh_coarse_done_outflow.neu.
+Done writing Neutral file.

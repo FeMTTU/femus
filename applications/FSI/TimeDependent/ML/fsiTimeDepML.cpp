@@ -219,7 +219,7 @@ int main(int argc,char **args) {
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
   if(simulation < 3){
-    numberOfUniformRefinedMeshes=3;
+    numberOfUniformRefinedMeshes=4;
     if( turek_FSI ==3 )
       numberOfUniformRefinedMeshes=4;
   }
@@ -391,7 +391,7 @@ int main(int argc,char **args) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 150;
+  const unsigned int n_timesteps = 300;
 
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
