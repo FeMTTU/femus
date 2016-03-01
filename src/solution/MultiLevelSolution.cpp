@@ -30,6 +30,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <sys/stat.h>
 
 namespace femus {
 
@@ -633,6 +634,23 @@ namespace femus {
   }
 
   void MultiLevelSolution::LoadSolution(const char* filename, const unsigned &timeStep) {
+    
+    /* check if the file exist without using fancy features of C++ */
+    struct stat buffer;
+    char composedFileName[100];
+    for(int i = 0; i < _solName.size(); i++) {
+      if(timeStep != UINT_MAX) {
+        sprintf(composedFileName, "./save/%s_sol%s_level%d_time%d", filename, _solName[i], _gridn, timeStep);
+      }
+      else {
+        sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], _gridn);
+      }
+      if(stat (composedFileName, &buffer) != 0) {
+        std::cerr << "Error: cannot locate file " << filename << endl;
+        exit(-1);
+      }
+    }
+      
     LoadSolution(_gridn, filename, timeStep);
   }
 
