@@ -330,12 +330,19 @@ namespace femus {
       PetscFree(subksp);
     }
     else if( _preconditioner == LSC_PRECOND ) {
+/*
       _rtol = 1.e-3;
       _abstol = 1.e-20;
       _dtol = 1.e+50;
       _maxits = 1;
-      
-      SetPetscSolverType(ksp); 
+*/      
+/*---------adjusted by Guoyi Ke-----------*/
+      SetPetscSolverType(ksp);
+      if (_solver == PREONLY) {
+	  std::cout << "LSC donot suppot PREONLY as a smoother,so the ksp is changed to GMRES";
+	  KSPSetType( ksp, ( char* ) KSPGMRES );
+	}
+ /*--------adjusted by Guoyi Ke----------*/
       //KSPSetType( ksp, ( char* ) KSPGMRES ); 
       PC pc;
       KSPGetPC( ksp, &pc );
@@ -348,11 +355,12 @@ namespace femus {
       //PCFactorSetShiftType( pc, MAT_SHIFT_NONZERO );
     }
     else {
+/*
       _rtol = 1.e-3;
       _abstol = 1.e-20;
       _dtol = 1.e+50;
       _maxits = 1;
-      
+*/     
       SetPetscSolverType(ksp); 
       //KSPSetType( ksp, ( char* ) KSPPREONLY ); 
       PC pc;
@@ -365,6 +373,18 @@ namespace femus {
       PCFactorSetShiftType( pc, MAT_SHIFT_NONZERO );
     }
   }
+
+ /*---------adjusted by Guoyi Ke-----------*/
+  void FieldSplitTree::GetKSPTolerances(const double& rtol,const double& abstol, const double& dtol, const unsigned& maxits){
+	_rtol = rtol;
+	_abstol = abstol;
+	_dtol = dtol;
+	_maxits = maxits;
+}
+//  void FieldSplitTree::SetFieldSplitSchurFactType{const FieldSplitSchurFactType SchurFactType}{
+//	_SchurFactType = SchurFactType;
+//}
+ /*---------adjusted by Guoyi Ke-----------*/
 
   FieldSplitTree* FieldSplitTree::GetFather() const {
     if( _father != NULL ) {

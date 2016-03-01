@@ -100,16 +100,22 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("P");
 
   if (dim == 3) system.AddSolutionToSystemPDE("W");
-  
+ 
   std::vector < unsigned > fieldUV(2);
   fieldUV[0] = system.GetSolPdeIndex("U");
   fieldUV[1] = system.GetSolPdeIndex("V");
   FieldSplitTree FS_UV( PREONLY, ILU_PRECOND, fieldUV , "Velocity");
+ 
+  FS_UV.GetKSPTolerances(1.e-3,1.e-20,1.e+50, 1); // changed by Guoyi Ke 
 
   std::vector < unsigned > fieldP(1);
   fieldP[0] = system.GetSolPdeIndex("P");
-  FieldSplitTree FS_P(PREONLY, ILU_PRECOND, fieldP, "Pressure");// changed by guoyiKe
+
+ // FS_P.SetFieldSplitSchurFactType{PC_FIELDSPLIT_SCHUR_FACT_LOWER}; //changed by Guoyi Ke
+  FieldSplitTree FS_P(PREONLY, LSC_PRECOND, fieldP, "Pressure");
   
+  FS_P.GetKSPTolerances(1.e-3,1.e-20,1.e+50, 1); //changed by Guoyi Ke
+
   std::vector < FieldSplitTree *> FS1;
   FS1.reserve(2);
   FS1.push_back(&FS_UV);
