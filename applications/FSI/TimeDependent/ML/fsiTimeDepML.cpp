@@ -391,7 +391,7 @@ int main(int argc,char **args) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 500;
+  const unsigned int n_timesteps = 150;
 
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
@@ -423,7 +423,8 @@ double SetVariableTimeStep(const double time) {
   }
   else if ( turek_FSI == 3 ){
     if	    ( time < 5. ) dt = 0.1;
-    else if ( time < 6. ) dt = 0.05;
+    else if ( time < 5.5 ) dt = 0.05;
+    else  if ( time < 6. ) dt = 0.025;
     else 		  dt = 0.01;
   }
   else if ( simulation == 3 ) dt=0.001;
@@ -474,7 +475,6 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,
     }
     else if(2==facename ){  //outflow
       test=0;
-      //    test=1;
       value=0.;
     }
     else if(3==facename ){  // no-slip fluid wall
@@ -497,7 +497,6 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,
     }
     else if(2==facename ){      //outflow
       test=0;
-      //    test=1;
       value=0.;
     }
     else if(3==facename ){      // no-slip fluid wall
