@@ -341,6 +341,18 @@ int main(int argc,char **args) {
   // system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
   system.SetIntervalTime(time_step);
 
+  // TODO cannot be hardcoded
+  if(strcmp (restart_file_name,"") != 0) {
+    ml_sol.LoadSolution(restart_file_name);
+    std::string s = restart_file_name;
+    std::string delimiter = "_time";
+    size_t pos = 0;
+    pos = s.find(delimiter);
+    std::cout << "substring: " << s.substr(pos + delimiter.length(), s.length()) << std::endl;
+    double time = atof(s.substr(pos + delimiter.length(), s.length()).c_str());
+    system.SetTime(time);
+  }
+ 
   // ******* Solve *******
   std::cout << std::endl;
 
@@ -376,10 +388,7 @@ int main(int argc,char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
-  // TODO cannot be hardcoded
-  if(strcmp (restart_file_name,"") != 0) {
-    ml_sol.LoadSolution(restart_file_name);
-  }
+
     
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
@@ -400,7 +409,10 @@ int main(int argc,char **args) {
 
     system.UpdateSolution();
     
-    if( i_time_step%autosave_time_interval == 0) ml_sol.SaveSolution(restart_file_name);
+    if( (i_time_step+1)%autosave_time_interval == 0) {
+      ml_sol.SaveSolution("run", system.GetTime());
+      std::cout << " it: " << i_time_step + 1 << " store save solution for restart at time " << system.GetTime() << std::endl;
+    }
 
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, i_time_step+1);
   }
