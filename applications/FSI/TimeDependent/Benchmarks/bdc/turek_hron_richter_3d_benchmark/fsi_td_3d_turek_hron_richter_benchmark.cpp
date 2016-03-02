@@ -16,6 +16,18 @@ static const double L = 1.5;
 //   return k*(z*(H - z))*(H*H - y*y)*um*exp(-10.*L*x);
 // }
 
+extern "C" double TimeStepFunction(const double time) {
+  double dt;
+  if(time < 3.0) {
+    dt = 0.1;
+  } else 
+  {
+    dt = 0.01; 
+  }
+  return dt;
+}
+
+
 //---------------------------------------------------------------------------------------------------------------------
 
 extern "C" bool BdcFunction(const std::vector < double >& xyz,const char name[], double &value, const int facename, const double time) {

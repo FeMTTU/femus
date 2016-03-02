@@ -195,6 +195,23 @@ int main(int argc,char **args) {
   else {
     cout << " done" << endl;
   }
+  
+  cout << " Loading symbol TimeStepFunction...";
+  typedef double (*TimeStepFunction_t)(const double time);
+
+  // reset errors
+  dlerror();
+  TimeStepFunction_t TimeStepFunction = (TimeStepFunction_t) dlsym(handle, "TimeStepFunction");
+  dlsym_error = dlerror();
+  if (dlsym_error) {
+      cerr << "Cannot load symbol 'TimeStepFunction': " << dlsym_error << '\n';
+      cout << " skip" << endl;
+      TimeStepFunction = NULL;
+//       return 1;
+  }
+  else {
+    cout << " done" << endl;
+  }
 
   // ******* Init multilevel mesh from mesh.neu file *******
 
@@ -338,9 +355,13 @@ int main(int argc,char **args) {
   system.SetNumberOfSchurVariables(1);
 
   // time loop parameter
-  // system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  system.SetIntervalTime(time_step);
-
+  if(TimeStepFunction) {
+    system.AttachGetTimeIntervalFunction(TimeStepFunction);
+  } else
+  {
+    system.SetIntervalTime(time_step);
+  }
+    
   // TODO cannot be hardcoded
   if(strcmp (restart_file_name,"") != 0) {
     ml_sol.LoadSolution(restart_file_name);
