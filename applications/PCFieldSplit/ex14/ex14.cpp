@@ -106,15 +106,15 @@ int main(int argc, char** args) {
   fieldUV[1] = system.GetSolPdeIndex("V");
   FieldSplitTree FS_UV( PREONLY, ILU_PRECOND, fieldUV , "Velocity");
  
-  //FS_UV.GetKSPTolerances(1.e-3,1.e-20,1.e+50, 1); // changed by Guoyi Ke 
+  FS_UV.GetKSPTolerances(1.e-3,1.e-20,1.e+50, 1); // changed by Guoyi Ke 
 
   std::vector < unsigned > fieldP(1);
   fieldP[0] = system.GetSolPdeIndex("P");
 
- // FS_P.SetFieldSplitSchurFactType{PC_FIELDSPLIT_SCHUR_FACT_LOWER}; //changed by Guoyi Ke
+  //FS_P.SetFieldSplitSchurFactType{PC_FIELDSPLIT_SCHUR_FACT_LOWER}; //changed by Guoyi Ke
   FieldSplitTree FS_P(PREONLY, LSC_PRECOND, fieldP, "Pressure");
   
-  //FS_P.GetKSPTolerances(1.e-3,1.e-20,1.e+50, 1); //changed by Guoyi Ke
+  FS_P.GetKSPTolerances(1.e-3,1.e-20,1.e+50, 1); //changed by Guoyi Ke
 
   std::vector < FieldSplitTree *> FS1;
   FS1.reserve(2);

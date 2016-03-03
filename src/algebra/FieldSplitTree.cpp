@@ -204,6 +204,14 @@ namespace femus {
     }
   }
 
+/*---------adjusted by Guoyi Ke-----------*/
+  void FieldSplitTree::GetKSPTolerances(const double& rtol,const double& abstol, const double& dtol, const unsigned& maxits){
+	_rtol = rtol;
+	_abstol = abstol;
+	_dtol = dtol;
+	_maxits = maxits;
+}
+/*---------adjusted by Guoyi Ke-----------*/
 
   void FieldSplitTree::SetPC( KSP& ksp, const unsigned& level) {
 
@@ -320,11 +328,12 @@ namespace femus {
       PetscFree(subksp);
     }
     else {
+     /*
       _rtol = 1.e-3;
       _abstol = 1.e-20;
       _dtol = 1.e+50;
       _maxits = 1;
-
+     */
       SetPetscSolverType(ksp);
       PC pc;
       KSPGetPC( ksp, &pc );
