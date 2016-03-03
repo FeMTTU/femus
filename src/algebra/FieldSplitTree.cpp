@@ -340,6 +340,15 @@ namespace femus {
       KSPSetTolerances( ksp, _rtol, _abstol, _dtol, _maxits );
       KSPSetFromOptions( ksp );
       PetscReal epsilon = 1.e-16;
+      
+      /* adjusted by Guoyi Ke*/
+      if (_preconditioner == LSC_PRECOND) {
+	if (_solver == PREONLY){
+	 std::cout<< "LSC does not allow to use PREONLY,and LSC switches to GMRES instead!" << std::endl;
+	}
+      }
+      /* adjusted by Guoyi Ke*/
+
       PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
       PCFactorSetZeroPivot( pc, epsilon );
       PCFactorSetShiftType( pc, MAT_SHIFT_NONZERO );
