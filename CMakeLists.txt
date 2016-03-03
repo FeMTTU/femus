@@ -22,14 +22,15 @@ SET(FEMUS_VERSION "${FEMTTU_MAJOR_VERSION}.${FEMTTU_MINOR_VERSION}.${FEMTTU_BUIL
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their definition
 # and dump it in the cache along with proper documentation, otherwise set CMAKE_BUILD_TYPE
 # to Debug prior to calling PROJECT()
-IF(DEFINED CMAKE_BUILD_TYPE)
-   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of
-build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
+#SET(CMAKE_BUILD_TYPE "release")
+
+IF(CMAKE_BUILD_TYPE MATCHES "debug")
+  SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 ELSE()
-   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build,
-options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
+  SET(CMAKE_BUILD_TYPE "release")
 ENDIF()
 
+#message("CMAKE_BUILD_TYPE = " ${CMAKE_BUILD_TYPE})
 
 #   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-parameter")
 
@@ -204,10 +205,14 @@ ENDIF(BUILD_JSONCPP)
 # Build the Adept external library
 SET(HAVE_ADEPT 0)
 IF(BUILD_ADEPT)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DADEPT_RECORDING_PAUSABLE")
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DADEPT_RECORDING_PAUSABLE")
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DADEPT_RECORDING_PAUSABLE")
   SET(HAVE_ADEPT 1)
   INCLUDE(external/External_adept.cmake)
 ENDIF(BUILD_ADEPT)
+
+#message(${CMAKE_CXX_FLAGS_RELEASE})
+#message(${CMAKE_CXX_FLAGS_DEBUG})
 
 #############################################################################################
 ### Configuration project file

@@ -59,7 +59,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -100,7 +100,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("P");
 
   if (dim == 3) system.AddSolutionToSystemPDE("W");
-  
+
   std::vector < unsigned > fieldUV(2);
   fieldUV[0] = system.GetSolPdeIndex("U");
   fieldUV[1] = system.GetSolPdeIndex("V");
@@ -108,47 +108,48 @@ int main(int argc, char** args) {
 
   std::vector < unsigned > fieldP(1);
   fieldP[0] = system.GetSolPdeIndex("P");
-  FieldSplitTree FS_P(PREONLY, ILU_PRECOND, fieldP, "Pressure");// changed by guoyiKe
-  
+  FieldSplitTree FS_P(GMRES, LSC_PRECOND, fieldP, "Pressure");// It works, but it is slower than ILU_PRECOND
+  //FieldSplitTree FS_P(PREONLY, ILU_PRECOND, fieldP, "Pressure");// It works, but it is slower that Vanka-ASM
+
+
   std::vector < FieldSplitTree *> FS1;
   FS1.reserve(2);
   FS1.push_back(&FS_UV);
   FS1.push_back(&FS_P);
   FieldSplitTree FS_NS(GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
-  
+
 
   //system.SetMgSmoother(GMRES_SMOOTHER);
+  //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz Method
 
-  //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
-  system.SetMaxNumberOfNonLinearIterations(20);
-  system.SetMaxNumberOfLinearIterations(3);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
+
+  system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
+  system.SetResidualUpdateConvergenceTolerance(1.e-12);
+
   system.SetMgType(F_CYCLE);
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
-
   // initilaize and solve the system
   system.init();
 
   system.SetSolverFineGrids(GMRES);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetFieldSplitTree(&FS_NS);
-
-  system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
-
+  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 5);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
-  //system.SetDirichletBCsHandling(ELIMINATION);
-  //system.solve();
+
+  system.SetSamePreconditioner();
   system.MGsolve();
 
   // print solutions
@@ -160,7 +161,7 @@ int main(int argc, char** args) {
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   mlMsh.PrintInfo();
-  
+
   return 0;
 }
 
@@ -170,9 +171,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
-
-  // call the adept stack object
-  adept::Stack& s = FemusInit::_adeptStack;
 
   //  extract pointers to the several objects that we are going to use
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
@@ -186,6 +184,13 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
 
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
+
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
+  // call the adept stack object
+  adept::Stack& s = FemusInit::_adeptStack;
+  if( assembleMatrix ) s.continue_recording();
+  else s.pause_recording();
+
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
@@ -257,14 +262,15 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve((dim + 1) *maxSize * (dim + 1) *maxSize);
 
-  KK->zero(); // Set to zero all the entries of the Global Matrix
+  if(assembleMatrix)
+    KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     // element geometry type
     short unsigned ielGeom = msh->GetElementType(iel);
-    
+
     unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
     unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);    // number of solution element dofs
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
@@ -314,7 +320,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
 
       // start a new recording of all the operations involving adept::adouble variables
-      s.new_recording();
+      if(assembleMatrix) s.new_recording();
 
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
@@ -323,7 +329,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 
         // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        
+
         vector < adept::adouble > solV_gss(dim, 0);
         vector < vector < adept::adouble > > gradSolV_gss(dim);
 
@@ -402,7 +408,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     RES->add_vector_blocked(Res, sysDof);
 
-    //Extarct and store the Jacobian
+    if(assembleMatrix){
+      //Extarct and store the Jacobian
 
       Jac.resize(nDofsVP * nDofsVP);
       // define the dependent variables
@@ -427,12 +434,13 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
       s.clear_independents();
       s.clear_dependents();
-
+    }
   } //end element loop for each process
 
   RES->close();
 
-  KK->close();
+  if(assembleMatrix)
+    KK->close();
 
   // ***************** END ASSEMBLY *******************
 }

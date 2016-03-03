@@ -24,21 +24,7 @@ ENDIF(BUILD_NAVIERSTOKESAPPS)
 
 IF(BUILD_FSIAPPS)
   set(FSI_FOLDER FSI/)
-# FSI Time Dependent Benchmarks
-  ADD_SUBDIRECTORY(${FSI_FOLDER}/FSITimeDependentBenchmarks/)
-
-# FSI SteadyState Benchmarks
-  ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/Benchmarks)
-  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi_turek.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
-  FILE(COPY ${FSI_FOLDER}/SteadyState/Benchmarks/run_fsi_richter.sh DESTINATION ${PROJECT_BINARY_DIR}/applications/${FSI_FOLDER}/SteadyState/Benchmarks/)
-  ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/ML)
-  ADD_SUBDIRECTORY(${FSI_FOLDER}/SteadyState/MG)
-
-# FSI SteadyState Benchmark Turek3
-  ADD_SUBDIRECTORY(${FSI_FOLDER}/FSI_TUREK_3/)
-
-# FSI SteadyState in porous media
- ADD_SUBDIRECTORY(${FSI_FOLDER}/fsi_porous/)
+  ADD_SUBDIRECTORY(${FSI_FOLDER})
   unset(FSI_FOLDER)
 ENDIF(BUILD_FSIAPPS)
 

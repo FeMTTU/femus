@@ -41,7 +41,7 @@ namespace femus {
     public:
 
       /**  Constructor. Initializes Petsc data structures */
-      AsmPetscLinearEquationSolver(const unsigned &igrid, Mesh *other_mesh);
+      AsmPetscLinearEquationSolver(const unsigned &igrid, Solution *other_solution);
 
       /** Destructor */
       ~AsmPetscLinearEquationSolver();
@@ -65,8 +65,9 @@ namespace femus {
       void BuildAMSIndex(const vector <unsigned> &variable_to_be_solved);
 
       void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved) {
-        if(!_standardASM)
+        if(!_standardASM){
           BuildAMSIndex(variable_to_be_solved);
+        }
 
         GmresPetscLinearEquationSolver::BuildBdcIndex(variable_to_be_solved);
       }
@@ -92,8 +93,8 @@ namespace femus {
 
 // =================================================
 
-  inline AsmPetscLinearEquationSolver::AsmPetscLinearEquationSolver(const unsigned &igrid, Mesh* other_msh)
-    : GmresPetscLinearEquationSolver(igrid, other_msh) {
+  inline AsmPetscLinearEquationSolver::AsmPetscLinearEquationSolver(const unsigned &igrid, Solution *other_solution)
+    : GmresPetscLinearEquationSolver(igrid, other_solution) {
 
     unsigned dim = _msh->GetDimension();
     unsigned base = pow(2, dim);

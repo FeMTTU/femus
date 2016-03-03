@@ -125,6 +125,8 @@ private:
     /** pointer function to the set time step function */
     double (* _get_time_interval_function)(const double time);
 
+    unsigned _assembleCounter;
+
 };
 
 

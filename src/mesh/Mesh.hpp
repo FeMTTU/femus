@@ -144,7 +144,7 @@ public:
     unsigned GetSolutionDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const;
 
     unsigned GetSolutionDof(const unsigned &i0,const unsigned &i1, const unsigned &ielc, const short unsigned &solType, const Mesh* mshc) const ;
-    
+
     /** Performs a bisection search to find the processor of the given dof */
     unsigned IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const;
 
@@ -207,7 +207,13 @@ public:
       _coarseMsh = otherCoarseMsh;
     };
 
+    bool GetIfHomogeneous(){
+      return _meshIsHomogeneous;
+    }
 
+    void SetIfHomogeneous(const bool &value){
+      _meshIsHomogeneous = value ;
+    }
 
     const unsigned GetXIndex()          const { return _xIndex; };
     const unsigned GetYIndex()          const { return _yIndex; };
@@ -217,7 +223,7 @@ public:
     const unsigned GetGroupIndex()      const { return _groupIndex; };
     const unsigned GetTypeIndex()       const { return _typeIndex; };
     const unsigned GetSolidMarkIndex()       const { return _solidMarkIndex; };
-   
+
 private:
     /** Coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
     Mesh* _coarseMsh;
@@ -248,6 +254,7 @@ private:
     static const unsigned _END_IND[5];
     vector < vector < double > > _coords;
 
+    bool _meshIsHomogeneous;
     // indices of the topology parallel vectors
     static const unsigned _xIndex = 0;
     static const unsigned _yIndex = 1;

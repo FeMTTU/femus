@@ -160,6 +160,8 @@ protected:
     /** A name associated with this system. */
     const std::string _sys_name;
 
+    bool _buildSolver;
+
 };
 
 // System inline methods

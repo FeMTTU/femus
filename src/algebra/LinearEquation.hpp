@@ -33,6 +33,7 @@ class elem_type;
 class NumericVector;
 class SparseMatrix;
 class Mesh;
+class Solution;
 
 /**
  This class is a container that holds linear operators and other structure for solving a linear equation system
@@ -43,7 +44,7 @@ class LinearEquation : public ParallelObject {
 public:
 
   /** costructor */
-  LinearEquation(Mesh *other_msh);
+  LinearEquation(Solution *other_solution);
 
   /** destructor */
   ~LinearEquation();
@@ -63,9 +64,9 @@ public:
 
   unsigned GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
 			const unsigned &i, const unsigned &iel) const;
-				  
+
   unsigned GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
-	                const unsigned &ielc, const unsigned &i0,const unsigned &i1,  
+	                const unsigned &ielc, const unsigned &i0,const unsigned &i1,
 		        const Mesh* mshc) const;
 
   /** To be Added */
@@ -85,6 +86,7 @@ public:
 
   // member data
   Mesh *_msh;
+  Solution *_solution;
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
   SparseMatrix *_KK;
   vector < vector <unsigned> > KKoffset;

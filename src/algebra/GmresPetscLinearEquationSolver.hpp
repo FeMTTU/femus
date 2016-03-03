@@ -40,12 +40,13 @@ namespace femus {
     public:
 
       /**  Constructor. Initializes Petsc data structures */
-      GmresPetscLinearEquationSolver(const unsigned &igrid, Mesh *other_mesh);
+      GmresPetscLinearEquationSolver(const unsigned &igrid, Solution *other_solution);
 
       /// Destructor.
       ~GmresPetscLinearEquationSolver();
 
     protected:
+
       /// Release all memory and clear data structures.
       void Clear();
 
@@ -58,13 +59,24 @@ namespace femus {
 
       void MGInit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver = KSPGMRES);
 
-      void MGSetLevel(LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &maxlevel,
+      void MGSetLevel(LinearEquationSolver *LinSolver, const unsigned &maxlevel,
                       const vector <unsigned> &variable_to_be_solved,
                       SparseMatrix* PP, SparseMatrix* RR,
                       const unsigned &npre, const unsigned &npost);
 
-      virtual void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved);
+      void SetSamePreconditioner(){
+        _samePreconditioner = true;
+      }
+      bool UseSamePreconditioner(){
+        return _samePreconditioner * _msh->GetIfHomogeneous();
+      }
 
+      void RemoveNullSpace();
+      void GetNullSpaceBase( std::vector < Vec > &nullspBase);
+      void ZerosBoundaryResiduals();
+      void SetPenalty();
+
+      virtual void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved);
       virtual void SetPreconditioner(KSP& subksp, PC& subpc);
 
       void MGSolve(const bool ksp_clean);
@@ -100,18 +112,22 @@ namespace femus {
       PetscInt  _maxits;
       PetscInt  _restart;
 
-      vector< vector <PetscInt> > _bdcIndex;
+      vector <PetscInt> _bdcIndex;
+      vector <PetscInt> _hangingNodesIndex;
       bool _bdcIndexIsInitialized;
 
       Mat _pmat;
+
+
       bool _pmatIsInitialized;
+      bool _samePreconditioner;
 
   };
 
   // =============================================
 
-  inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver(const unsigned &igrid, Mesh* other_msh)
-    : LinearEquationSolver(igrid, other_msh) {
+  inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver(const unsigned &igrid, Solution *other_solution)
+    : LinearEquationSolver(igrid, other_solution) {
 
     if(igrid == 0) {
       this->_preconditioner_type = MLU_PRECOND;
@@ -131,7 +147,9 @@ namespace femus {
     _bdcIndexIsInitialized = 0;
     _pmatIsInitialized = false;
 
-    _printSolverInfo = true;
+    _printSolverInfo = false;
+
+    _samePreconditioner = false;
 
   }
 
@@ -154,6 +172,8 @@ namespace femus {
       this->_is_initialized = false;
       KSPDestroy(&_ksp);
     }
+
+
   }
 
 } //end namespace femus

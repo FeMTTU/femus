@@ -35,8 +35,9 @@ using std::cout;
 using std::endl;
 
 //--------------------------------------------------------------------------------
-LinearEquation::LinearEquation(Mesh *other_msh){
-  _msh = other_msh;
+LinearEquation::LinearEquation(Solution *other_solution){
+  _solution = other_solution;
+  _msh = _solution->GetMesh();
   _EPS = NULL;
   _EPSC = NULL;
   _RES = NULL;
@@ -74,7 +75,7 @@ unsigned LinearEquation::GetSystemDof(const unsigned &index_sol, const unsigned 
 
 
 unsigned LinearEquation::GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
-				      const unsigned &ielc, const unsigned &i0,const unsigned &i1,  
+				      const unsigned &ielc, const unsigned &i0,const unsigned &i1,
 				      const Mesh* mshc) const {
   unsigned soltype =  _SolType[index_sol];
   unsigned idof = _msh->GetSolutionDof(ielc, i0, i1, soltype, mshc);
