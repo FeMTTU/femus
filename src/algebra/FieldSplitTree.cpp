@@ -345,6 +345,7 @@ namespace femus {
       if (_preconditioner == LSC_PRECOND) {
 	if (_solver == PREONLY){
 	 std::cout<< "LSC does not allow to use PREONLY,and LSC switches to GMRES instead!" << std::endl;
+	 _solver = GMRES;  
 	}
       }
       /* adjusted by Guoyi Ke*/
