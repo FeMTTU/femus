@@ -3,9 +3,23 @@
 #include <cstring>
 #include <iostream>
 
-const double um = 2.0;
+const double um = 1.0;
 const double L = 2.5;
 const double H = 0.41;
+
+extern "C" double TimeStepFunction(const double time) {
+  double dt;
+  if( time < 5 ) {
+    dt = 0.1;
+  }
+  else if ( time < 9 ) {
+    dt = 0.05;
+  }
+  else {
+    dt = 0.025;
+  }
+  return dt;
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 

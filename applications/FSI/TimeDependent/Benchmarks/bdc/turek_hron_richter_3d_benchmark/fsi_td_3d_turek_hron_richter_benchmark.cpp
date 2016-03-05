@@ -3,18 +3,30 @@
 #include <cstring>
 #include <iostream>
 
-static const double um = 0.133333333333;
+static const double um = 1.0;
 static const double H = 0.40;
 static const double L = 1.5;
 
 // Inlet velocity
-extern "C" double InitalValueU(const std::vector < double >& xyz) {
-  const double x = xyz[0];
-  const double y = xyz[1];
-  const double z = xyz[2];
-  const double k = 9./(H*H*H*H);
-  return k*(z*(H - z))*(H*H - y*y)*um*exp(-10.*L*x);
+// extern "C" double InitalValueU(const std::vector < double >& xyz) {
+//   const double x = xyz[0];
+//   const double y = xyz[1];
+//   const double z = xyz[2];
+//   const double k = 9./(H*H*H*H);
+//   return k*(z*(H - z))*(H*H - y*y)*um*exp(-10.*L*x);
+// }
+
+extern "C" double TimeStepFunction(const double time) {
+  double dt;
+  if(time < 3.0) {
+    dt = 0.1;
+  } else 
+  {
+    dt = 0.01; 
+  }
+  return dt;
 }
+
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -29,7 +41,12 @@ extern "C" bool BdcFunction(const std::vector < double >& xyz,const char name[],
       const double x = xyz[0];
       const double y = xyz[1];
       const double z = xyz[2];
-      value=k*(z*(H - z))*(H*H - y*y)*um;
+      if(time < 2.0) {
+        value = k*(z*(H - z))*(H*H - y*y)*um* 0.5 * ( 1. - cos( 0.5 * 3.141592653589793 * time) );
+      }
+      else {
+        value = k*(z*(H - z))*(H*H - y*y)*um;
+      }
     }
     // fluid wall
     else if(1==facename){
