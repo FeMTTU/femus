@@ -127,7 +127,7 @@ int main(int argc,char **args) {
   std::string infile;
 
   if(1 == simulation){
-    infile = "./input/turek_FSI.neu";
+    infile = "./input/turek_2D_FSI.neu";
   }
   else if(2 == simulation){
     infile = "./input/beam.neu";
@@ -221,7 +221,7 @@ int main(int argc,char **args) {
   if(simulation < 3){
     numberOfUniformRefinedMeshes=4;
     if( turek_FSI ==3 )
-      numberOfUniformRefinedMeshes=4;
+      numberOfUniformRefinedMeshes=5;
   }
   else if(simulation == 3)
      numberOfUniformRefinedMeshes=4;
