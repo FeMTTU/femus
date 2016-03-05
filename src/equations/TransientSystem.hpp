@@ -109,6 +109,11 @@ public:
     double GetTime() const {
         return _time;
     };
+    
+    /** Get the time */
+    void SetTime(const double time) {
+        _time = time;
+    };
 
 protected:
 
