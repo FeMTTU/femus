@@ -318,12 +318,12 @@ int main(int argc,char **args) {
 
   system.SetResidualUpdateConvergenceTolerance(1.e-20);
   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(5);
-  
+
   system.SetNonLinearConvergenceTolerance(1.e-9);
   system.SetMaxNumberOfNonLinearIterations(15);
-  
-  
-  
+
+
+
 
 //   system.SetResidualUpdateConvergenceTolerance(1.e-15);
 //   system.SetMaxNumberOfNonLinearIterations(15);
@@ -385,21 +385,23 @@ int main(int argc,char **args) {
   const unsigned int n_timesteps = 1000;
 
   ml_sol.LoadSolution("turek_FSI3");
-  
+
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
 
-  
-  
+
+
   for (unsigned time_step = 1; time_step < n_timesteps; time_step++) {
 
     if( time_step > 0 )
       system.SetMgType(V_CYCLE);
 
+    system.CopySolutionToOldSolution();
+
     system.MGsolve();
 
-    system.UpdateSolution();
-    
+
+
     if( time_step%1 == 0) ml_sol.SaveSolution("turek_FSI3");
 
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);

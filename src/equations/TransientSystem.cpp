@@ -60,10 +60,10 @@ void TransientSystem<Base>::clear ()
 }
 
 template <class Base>
-void TransientSystem<Base>::UpdateSolution() {
+void TransientSystem<Base>::CopySolutionToOldSolution() {
 
   for (int ig=0; ig< this->_gridn; ig++) {
-    this->_solution[ig]->UpdateSolution();
+    this->_solution[ig]->CopySolutionToOldSolution();
   }
 
 }
@@ -98,7 +98,7 @@ void TransientSystem<Base>::MLsolve() {
   //update time step
   _time_step++;
 
-  std::cout << " Time: " << _time << "   TimeStep: " << _time_step << std::endl;
+  std::cout << " Simulation Time: " << _time << "   TimeStep: " << _time_step << std::endl;
 
    //update boundary condition
   this->_ml_sol->UpdateBdc(_time);
@@ -141,7 +141,7 @@ void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
   //update time step
   _time_step++;
 
-  std::cout << " Time: " << _time << "   TimeStep: " << _time_step << std::endl;
+  std::cout << " Simulation Time:  " << _time << "   TimeStep: " << _time_step << std::endl;
 
    //update boundary condition
   this->_ml_sol->UpdateBdc(_time);

@@ -76,7 +76,7 @@ public:
 
 
     /** Update the old solution with new ones. It calls the update solution function of the Solution class */
-    virtual void UpdateSolution();
+    virtual void CopySolutionToOldSolution();
 
 
     /** calling the parent solve */
@@ -109,7 +109,7 @@ public:
     double GetTime() const {
         return _time;
     };
-    
+
     /** Get the time */
     void SetTime(const double time) {
         _time = time;

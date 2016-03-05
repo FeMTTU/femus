@@ -24,7 +24,7 @@ int main(int argc,char **args) {
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc,args,MPI_COMM_WORLD);
- 
+
   // process options
   int dimension=2;
   size_t len_infile_name = 256;
@@ -50,7 +50,7 @@ int main(int argc,char **args) {
   int n_timesteps = 1;
   double time_step = 0.01;
   char restart_file_name[256] = "";
-  int autosave_time_interval = 1; 
+  int autosave_time_interval = 1;
   PetscBool equation_pivoting = PETSC_TRUE;
   PetscBool mem_infos = PETSC_FALSE;
   PetscLogDouble memory_current_usage, memory_maximum_usage;
@@ -60,7 +60,7 @@ int main(int argc,char **args) {
     PetscMemoryGetCurrentUsage(&memory_current_usage);
     PetscPrintf(PETSC_COMM_WORLD, "0: Memory current usage at beginning: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
   }
-  
+
   // ******* reading input parameters *******
   PetscOptionsBegin(PETSC_COMM_WORLD, "", "FSI steady problem options", "Unstructured mesh");
 
@@ -68,19 +68,19 @@ int main(int argc,char **args) {
 
   PetscOptionsBool("-mem_infos", "Print memory infos", "fsiTimeDependent.cpp", mem_infos, &mem_infos, NULL);
   printf(" mem_infos: %d\n", mem_infos);
-  
+
   PetscOptionsInt("-n_timesteps", "The number of time steps", "fsiTimeDependent.cpp", n_timesteps, &n_timesteps, NULL);
   printf(" n_timesteps: %d\n", n_timesteps);
-  
+
   PetscOptionsReal("-time_step", "The time step", "fsiTimeDependent.cpp", time_step, &time_step, NULL);
   printf(" time_step: %f\n", time_step);
-  
+
   PetscOptionsString("-restart_file_name", "The name of the file for restart", "fsiTimeDependent.cpp", "", restart_file_name, len_infile_name, NULL);
   printf(" restart_file_name: %s\n", restart_file_name);
-  
+
   PetscOptionsInt("-autosave_time_interval", "The autosave interval time", "fsiTimeDependent.cpp", autosave_time_interval, &autosave_time_interval, NULL);
   printf(" autosave_time_interval: %d\n", autosave_time_interval);
-  
+
   PetscOptionsInt("-nlevel", "The number of mesh levels", "fsiTimeDependent.cpp", numofmeshlevels , &numofmeshlevels, NULL);
   printf(" nlevel: %i\n", numofmeshlevels);
 
@@ -195,7 +195,7 @@ int main(int argc,char **args) {
   else {
     cout << " done" << endl;
   }
-  
+
   cout << " Loading symbol TimeStepFunction...";
   typedef double (*TimeStepFunction_t)(const double time);
 
@@ -321,20 +321,20 @@ int main(int argc,char **args) {
   // ******* Set Smoother *******
   // Set Preconditioner of the smoother (name to be changed)
   system.SetMgSmoother(ASM_SMOOTHER);
-  
+
   if(mem_infos) {
     PetscMemoryGetCurrentUsage(&memory_current_usage);
     PetscPrintf(PETSC_COMM_WORLD, "1: Memory current usage before system init: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
   }
-    
+
   // System init
   system.init();
 
   if(mem_infos) {
     PetscMemoryGetCurrentUsage(&memory_current_usage);
-    PetscPrintf(PETSC_COMM_WORLD, "2: Memory current usage after system init: %g M\n", (double)(memory_current_usage)/(1024.*1024.));  
+    PetscPrintf(PETSC_COMM_WORLD, "2: Memory current usage after system init: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
   }
-  
+
   // Set the preconditioner for each ASM block
   system.SetPreconditionerFineGrids(MLU_PRECOND);
   // Set block size for the ASM smoother
@@ -346,7 +346,7 @@ int main(int argc,char **args) {
   system.SetTolerances(lin_tol,alin_tol,div_tol,max_outer_solver_iter,ksp_restart);
   system.SetOuterKSPSolver(outer_ksp_solver);
 
-  
+
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
@@ -361,7 +361,7 @@ int main(int argc,char **args) {
   {
     system.SetIntervalTime(time_step);
   }
-    
+
   // TODO cannot be hardcoded
   if(strcmp (restart_file_name,"") != 0) {
     ml_sol.LoadSolution(restart_file_name);
@@ -373,7 +373,7 @@ int main(int argc,char **args) {
     double time = atof(s.substr(pos + delimiter.length(), s.length()).c_str());
     system.SetTime(time);
   }
- 
+
   // ******* Solve *******
   std::cout << std::endl;
 
@@ -381,24 +381,9 @@ int main(int argc,char **args) {
 
   system.SetSamePreconditioner();
   system.PrintSolverInfo(true);
-  
-  if(mem_infos) {
-    PetscMemoryGetCurrentUsage(&memory_current_usage);
-    PetscPrintf(PETSC_COMM_WORLD, "3: Memory current usage before solve: %g M\n", (double)(memory_current_usage)/(1024.*1024.));  
-  }
-    
-  system.MGsolve();
 
-  if(mem_infos) {
-    PetscMemoryGetCurrentUsage(&memory_current_usage);
-    PetscPrintf(PETSC_COMM_WORLD, "4: Memory current usage after solve: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
-    PetscMemoryGetMaximumUsage(&memory_maximum_usage);
-    PetscPrintf(PETSC_COMM_WORLD, "4: Memory maximum usage after solve: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
-  }
-  
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
-
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -409,27 +394,20 @@ int main(int argc,char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
-
-    
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
-  if(mem_infos) {
-    PetscMemoryGetCurrentUsage(&memory_current_usage);
-    PetscPrintf(PETSC_COMM_WORLD, "5: Memory current usage before clear: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
-    PetscMemoryGetMaximumUsage(&memory_maximum_usage);
-    PetscPrintf(PETSC_COMM_WORLD, "5: Memory maximum usage before clear: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
-  }
-  
-  for (unsigned i_time_step = 1; i_time_step < n_timesteps; i_time_step++) {
+  for (unsigned i_time_step = 0; i_time_step < n_timesteps; i_time_step++) {
 
-    if( i_time_step > 0 )
+    if( i_time_step > 0 || strcmp (restart_file_name,"") != 0 )
       system.SetMgType(V_CYCLE);
+
+    system.CopySolutionToOldSolution();
 
     system.MGsolve();
 
-    system.UpdateSolution();
-    
+    //system.UpdateSolution();
+
     if( (i_time_step+1)%autosave_time_interval == 0) {
       ml_sol.SaveSolution("run", system.GetTime());
       std::cout << " it: " << i_time_step + 1 << " store save solution for restart at time " << system.GetTime() << std::endl;
@@ -437,7 +415,7 @@ int main(int argc,char **args) {
 
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, i_time_step+1);
   }
-  
+
   // ******* Clear all systems *******
   ml_prob.clear();
 
@@ -448,7 +426,7 @@ int main(int argc,char **args) {
     PrintConvergenceInfo(stdOutfile, infile, numofrefinements);
     PrintMultigridTime(stdOutfile, infile, numofrefinements);
   }
- 
+
   return 0;
 }
 
@@ -470,6 +448,9 @@ void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinem
   if(strcmp (infile,"./input/turek.neu") == 0){
     sprintf(outFileName, "turek_hron_mumps_info.txt");
   }
+  else if(strcmp (infile,"./input/turek_FSI3.neu") == 0){
+    sprintf(outFileName, "turek_hron_FSI3_mumps_info.txt");
+  }
   else if(strcmp (infile,"./input/richter3d.neu") == 0){
     sprintf(outFileName, "richter3d_mumps_info.txt");
   }
@@ -480,16 +461,23 @@ void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinem
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
   outf << "Number_of_refinements="<<numofrefinements<<std::endl;
-  outf << "Nonlinear_Iteration,RINFOG(7),RINFOG(8),RINFOG(9),RINFOG(10),RINFOG(11),INFOG(19),E5*B5*E5/D5+F5*C5*F5/D5";
+  outf << "Simulation_Time,Nonlinear_Iteration,RINFOG(7),RINFOG(8),RINFOG(9),RINFOG(10),RINFOG(11),INFOG(19),F5*C5*F5/E5+G5*D5*G5/E5";
 
   std::string str1;
   inf >> str1;
+  double simulationTime=0.;
   while (str1.compare("END_COMPUTATION") != 0) {
-    if (str1.compare("Nonlinear") == 0) {
+    if (str1.compare("Simulation") == 0){
+      inf >> str1;
+      if (str1.compare("Time:") == 0){
+        inf >> simulationTime;
+      }
+    }
+    else if (str1.compare("Nonlinear") == 0) {
       inf >> str1;
       if (str1.compare("iteration") == 0) {
         inf >> str1;
-        outf << std::endl << str1;
+        outf << std::endl <<simulationTime<<","<<str1;
       }
     }
     else if (str1.compare("RINFOG(7),RINFOG(8)") == 0) {
@@ -541,6 +529,9 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
   if(strcmp (infile,"./input/turek.neu") == 0){
     sprintf(outFileName, "turek_hron_convergence_info.txt");
   }
+  else if(strcmp (infile,"./input/turek_FSI3.neu") == 0){
+    sprintf(outFileName, "turek_hron_FSI3_convergence_info.txt");
+  }
   else if(strcmp (infile,"./input/richter3d.neu") == 0){
     sprintf(outFileName, "richter3d_convergence_info.txt");
   }
@@ -551,17 +542,24 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
   outf << "Number_of_refinements="<<numofrefinements<<std::endl;
-  outf << "Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
+  outf << "Simulation_Time,Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
 
   std::string str1;
   inf >> str1;
+  double simulationTime=0.;
   while (str1.compare("END_COMPUTATION") != 0) {
 
-    if (str1.compare("Nonlinear") == 0) {
+    if (str1.compare("Simulation") == 0){
+      inf >> str1;
+      if (str1.compare("Time:") == 0){
+        inf >> simulationTime;
+      }
+    }
+    else if (str1.compare("Nonlinear") == 0) {
       inf >> str1;
       if (str1.compare("iteration") == 0) {
         inf >> str1;
-        outf << std::endl << str1;
+        outf << std::endl << simulationTime<<","<<str1;
       }
     }
     else if (str1.compare("KSP") == 0){
@@ -623,6 +621,9 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
   if(strcmp (infile,"./input/turek.neu") == 0){
     sprintf(outFileName, "turek_hron_multigrid_time.txt");
   }
+  else if(strcmp (infile,"./input/turek_FSI3.neu") == 0){
+    sprintf(outFileName, "turek_hron_FSI3_multigrid_info.txt");
+  }
   else if(strcmp (infile,"./input/richter3d.neu") == 0){
     sprintf(outFileName, "richter3d_multigrid_time.txt");
   }
@@ -632,16 +633,23 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl;
-  outf << "\nLevel_Max,Average_Time";
+  outf << "\nLevel_Max,Simulation_Time,Average_Time";
 
   int counter = 0;
   double ave_lin_solver_time = 0.;
 
   std::string str1;
   inf >> str1;
+  double simulationTime = 0.;
   while (str1.compare("END_COMPUTATION") != 0) {
 
-    if (str1.compare("Start") == 0){
+    if (str1.compare("Simulation") == 0){
+      inf >> str1;
+      if (str1.compare("Time:") == 0){
+        inf >> simulationTime;
+      }
+    }
+    else if (str1.compare("Start") == 0){
       inf >> str1;
       if (str1.compare("Level") == 0){
         inf >> str1;
@@ -673,7 +681,7 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
       if (str1.compare("Level") == 0){
         inf >> str1;
         if (str1.compare("Max") == 0){
-          outf << ave_lin_solver_time / counter;
+          outf << simulationTime <<","<<ave_lin_solver_time / counter;
         }
       }
     }

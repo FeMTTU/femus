@@ -401,9 +401,11 @@ int main(int argc,char **args) {
     if( time_step > 0 )
       system.SetMgType(V_CYCLE);
 
+
+    system.CopySolutionToOldSolution();
+
     system.MLsolve();
 
-    system.UpdateSolution();
 
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }

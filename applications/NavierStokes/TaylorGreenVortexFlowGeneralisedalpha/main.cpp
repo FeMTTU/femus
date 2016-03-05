@@ -134,7 +134,7 @@ int main(int argc,char **args) {
     ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes").NewmarkAccUpdate();
 
     //update Solution
-    ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes").UpdateSolution();
+    ml_prob.get_system<TransientNonlinearImplicitSystem>("Navier-Stokes").CopySolutionToOldSolution();
 
     // print solution
     if ( !(time_step%write_interval) ) {

@@ -274,10 +274,8 @@ int main(int argc, char** args) {
       if (time_step > 0)
         system.SetMgType(V_CYCLE);
 
+      system.CopySolutionToOldSolution();
       system.MGsolve();
-
-      system.UpdateSolution();
-
 
       vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
       gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
@@ -547,7 +545,7 @@ void AssembleWillmoreFlow_AD(MultiLevelProblem& ml_prob) {
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs  = msh->GetElementDofNumber(iel, solHType);    // number of solution element dofs
     unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-    
+
     // resize local arrays
     sysDof.resize(4 * nDofs);
 
@@ -871,7 +869,7 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    
+
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs

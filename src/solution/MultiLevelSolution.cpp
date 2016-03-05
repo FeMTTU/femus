@@ -634,7 +634,7 @@ namespace femus {
   }
 
   void MultiLevelSolution::LoadSolution(const char* filename) {
-    
+
     /* check if the file exist without using fancy features of C++ */
     struct stat buffer;
     char composedFileName[100];
@@ -645,7 +645,7 @@ namespace femus {
         exit(-1);
       }
     }
-      
+
     LoadSolution(_gridn, filename);
   }
 
@@ -660,12 +660,6 @@ namespace femus {
    char composedFileName[100];
 
     for(int i = 0; i < _solName.size(); i++) {
-//       if(timeStep != UINT_MAX) {
-//         sprintf(composedFileName, "./save/%s_sol%s_level%d_time%d", filename, _solName[i], level, timeStep);
-//       }
-//       else {
-//         sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], level);
-//       }
       sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], _gridn);
       _solution[level - 1]->_Sol[i]->BinaryLoad(composedFileName);
     }
