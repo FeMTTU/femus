@@ -623,29 +623,12 @@ namespace femus {
     char composedFileName[100];
 
     for(int i = 0; i < _solName.size(); i++) {
-//       if(timeStep != UINT_MAX) {
       sprintf(composedFileName, "./save/%s_time%f_sol%s_level%d", filename, time, _solName[i], _gridn);
-//       }
-//       else {
-//         sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], _gridn);
-//       }
       _solution[_gridn - 1]->_Sol[i]->BinaryPrint(composedFileName);
     }
   }
 
   void MultiLevelSolution::LoadSolution(const char* filename) {
-
-    /* check if the file exist without using fancy features of C++ */
-    struct stat buffer;
-    char composedFileName[100];
-    for(int i = 0; i < _solName.size(); i++) {
-      sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], _gridn);
-      if(stat (composedFileName, &buffer) != 0) {
-        std::cerr << "Error: cannot locate file " << composedFileName << endl;
-        exit(-1);
-      }
-    }
-
     LoadSolution(_gridn, filename);
   }
 
@@ -657,10 +640,21 @@ namespace femus {
       abort();
     }
 
-   char composedFileName[100];
+    char composedFileName[200];
 
     for(int i = 0; i < _solName.size(); i++) {
-      sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], _gridn);
+      if ( strncmp(filename, "http://", 7) && strncmp(filename, "ftp://", 6) ){
+        sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], level);
+        // check if the file exist without using fancy features of C++
+        struct stat buffer;
+        if(stat (composedFileName, &buffer) != 0) {
+          std::cerr << "Error: cannot locate file " << composedFileName << endl;
+          abort();
+        }
+      }
+      else{
+        sprintf(composedFileName, "%s_sol%s_level%d", filename, _solName[i], level);
+      }
       _solution[level - 1]->_Sol[i]->BinaryLoad(composedFileName);
     }
 
