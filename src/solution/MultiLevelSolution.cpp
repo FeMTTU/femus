@@ -641,19 +641,15 @@ namespace femus {
     }
 
     char composedFileName[200];
-
     for(int i = 0; i < _solName.size(); i++) {
+      sprintf(composedFileName, "%s_sol%s_level%d", filename, _solName[i], level);
+      // check if the file really exists
       if ( strncmp(filename, "http://", 7) && strncmp(filename, "ftp://", 6) ){
-        sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], level);
-        // check if the file exist without using fancy features of C++
         struct stat buffer;
         if(stat (composedFileName, &buffer) != 0) {
-          std::cerr << "Error: cannot locate file " << composedFileName << endl;
+          std::cerr << "Error: cannot locate file " << composedFileName << std::endl;
           abort();
         }
-      }
-      else{
-        sprintf(composedFileName, "%s_sol%s_level%d", filename, _solName[i], level);
       }
       _solution[level - 1]->_Sol[i]->BinaryLoad(composedFileName);
     }
