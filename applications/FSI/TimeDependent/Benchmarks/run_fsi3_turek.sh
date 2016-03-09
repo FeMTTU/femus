@@ -18,9 +18,9 @@
 
 # Load solution files directly from the server http://www.math.ttu.edu/~eaulisa/Benchmarks/FSI3/save/
 # For time info
-#./fsitimedependent -input "./input/turek_FSI3.neu" -restart_file_name http://www.math.ttu.edu/~eaulisa/Benchmarks/FSI3/save/turek_FSI3_4_time6.420000 -n_timesteps 20 -autosave_time_interval 40 -nlevel 1 -rhof 1000 -muf 1 -rhos 1000 -E 6000000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi3_td_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "preonly" -max_outer_solver_iter 1 -nrefinement 4 -std_output stdOutput.txt > stdOutput.txt
+#./fsitimedependent -input "./input/turek_FSI3.neu" -restart_file_name http://www.math.ttu.edu/~eaulisa/Benchmarks/runs/save/FSI3/turek_FSI3_4_time6.420000 -n_timesteps 20 -autosave_time_interval 40 -nlevel 1 -rhof 1000 -muf 1 -rhos 1000 -E 6000000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi3_td_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "preonly" -max_outer_solver_iter 1 -nrefinement 4 -std_output stdOutput.txt > stdOutput.txt
 # For MUMPS and convergence info
-#./fsitimedependent -input "./input/turek_FSI3.neu" -restart_file_name http://www.math.ttu.edu/~eaulisa/Benchmarks/FSI3/save/turek_FSI3_4_time6.420000 -n_timesteps 20 -autosave_time_interval 40 -nlevel 1 -rhof 1000 -muf 1 -rhos 1000 -E 6000000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi3_td_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "gmres" -max_outer_solver_iter 1 -ksp_monitor_true_residual -ksp_view -mat_mumps_icntl_11 1 -nrefinement 4 -std_output stdOutput.txt > stdOutput.txt
+#./fsitimedependent -input "./input/turek_FSI3.neu" -restart_file_name http://www.math.ttu.edu/~eaulisa/Benchmarks/runs/save/FSI3/turek_FSI3_4_time6.420000 -n_timesteps 20 -autosave_time_interval 40 -nlevel 1 -rhof 1000 -muf 1 -rhos 1000 -E 6000000 -ni 0.5 -ic_bdc "../../../../lib64/libfsi3_td_2d_turek_hron_benchmark_bdc.so" -outer_ksp_solver "gmres" -max_outer_solver_iter 1 -ksp_monitor_true_residual -ksp_view -mat_mumps_icntl_11 1 -nrefinement 4 -std_output stdOutput.txt > stdOutput.txt
 
 
 # Load solution files from the local folder ./save/
