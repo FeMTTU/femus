@@ -127,7 +127,8 @@ int main(int argc,char **args) {
   std::string infile;
 
   if(1 == simulation){
-    infile = "./input/turek_FSI3.neu";
+    //infile = "./input/turek_FSI3.neu";
+    infile = "./input/turek_FSI3_refined.neu";
   }
   else if(2 == simulation){
     infile = "./input/beam.neu";
@@ -221,7 +222,7 @@ int main(int argc,char **args) {
   if(simulation < 3){
     numberOfUniformRefinedMeshes=3;
     if( turek_FSI ==3 )
-      numberOfUniformRefinedMeshes=4;
+      numberOfUniformRefinedMeshes=3;
   }
   else if(simulation == 3)
      numberOfUniformRefinedMeshes=4;
@@ -230,8 +231,8 @@ int main(int argc,char **args) {
   else if(simulation < 7)
     numberOfUniformRefinedMeshes=2;
 
-  numberOfAMRLevels = 0;
-
+  numberOfAMRLevels = 0;  
+  
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes, numberOfUniformRefinedMeshes + numberOfAMRLevels,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
   //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes-1);
@@ -382,16 +383,16 @@ int main(int argc,char **args) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 1000;
+  const unsigned int n_timesteps = 500;
 
-  ml_sol.LoadSolution("turek_FSI3");
+  //ml_sol.LoadSolution("turek_FSI3");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
 
 
 
-  for (unsigned time_step = 1; time_step < n_timesteps; time_step++) {
+  for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
     if( time_step > 0 )
       system.SetMgType(V_CYCLE);
