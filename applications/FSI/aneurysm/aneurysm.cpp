@@ -5,16 +5,47 @@
 
 using namespace femus;
 
-double InitalValueU(const std::vector < double >& x) {
-  return x[0] + x[1];
-}
+bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
+  bool dirichlet = false; //dirichlet
+  value = 0;
 
-double InitalValueP(const std::vector < double >& x) {
-  return x[0];
-}
+  if(!strcmp(solName,"U")){
+    if (faceName == 1){
+      dirichlet = true;
+    }
+  }
+  else if(!strcmp(solName,"V")){
+    if (faceName == 2){
+      dirichlet = true;
+    }
+  }
+  else if(!strcmp(solName,"W")){
+    if (faceName == 3){
+      dirichlet = true;
+    }
+  }
+  else if(!strcmp(solName,"X")){
+    if (faceName == 4){
+      dirichlet = true;
+    }
+  }
+  else if(!strcmp(solName,"Y")){
+    if (faceName == 5){
+      dirichlet = true;
+    }
+  }
+  else if(!strcmp(solName,"Z")){
+    if (faceName == 6){
+      dirichlet = true;
+    }
+  }
+   else if(!strcmp(solName,"A")){
+    if (faceName == 7){
+      dirichlet = true;
+    }
+  }
 
-double InitalValueT(const std::vector < double >& x) {
-  return x[1];
+  return dirichlet;
 }
 
 int main(int argc, char** args) {
@@ -26,10 +57,10 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
   // read coarse level mesh and generate finers level meshes
-  mlMsh.ReadCoarseMesh("./input/an12.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/aneurysm.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.PrintInfo();
@@ -38,31 +69,40 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("U", LAGRANGE, FIRST);
-  mlSol.AddSolution("V", LAGRANGE, SERENDIPITY);
+  mlSol.AddSolution("U", LAGRANGE, SECOND);
+  mlSol.AddSolution("V", LAGRANGE, SECOND);
   mlSol.AddSolution("W", LAGRANGE, SECOND);
-  mlSol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, ZERO);
-  mlSol.AddSolution("T", DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("X", LAGRANGE, SECOND);
+  mlSol.AddSolution("Y", LAGRANGE, SECOND);
+  mlSol.AddSolution("Z", LAGRANGE, SECOND);
+  mlSol.AddSolution("A", LAGRANGE, SECOND);
 
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
-  mlSol.Initialize("U", InitalValueU);
-  mlSol.Initialize("P", InitalValueP);
-  mlSol.Initialize("T", InitalValueT);    // note that this initialization is the same as piecewise constant element
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol.GenerateBdc("U");
+  mlSol.GenerateBdc("V");
+  mlSol.GenerateBdc("W");
+  mlSol.GenerateBdc("X");
+  mlSol.GenerateBdc("Y");
+  mlSol.GenerateBdc("Z");
+  mlSol.GenerateBdc("A");
+
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("U");
-  variablesToBePrinted.push_back("P");
-  variablesToBePrinted.push_back("T");
+  variablesToBePrinted.push_back("V");
+  variablesToBePrinted.push_back("W");
+  variablesToBePrinted.push_back("X");
+  variablesToBePrinted.push_back("Y");
+  variablesToBePrinted.push_back("Z");
+  variablesToBePrinted.push_back("A");
+
 
   VTKWriter vtkIO(&mlSol);
+  vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-  GMVWriter gmvIO(&mlSol);
-  variablesToBePrinted.push_back("all");
-  gmvIO.SetDebugOutput(false);
-  gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-
-  return 0;
+    return 0;
 }
