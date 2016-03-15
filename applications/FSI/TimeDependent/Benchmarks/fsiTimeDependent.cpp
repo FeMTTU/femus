@@ -43,10 +43,10 @@ int main(int argc,char **args) {
   double div_tol = 1.e+10;
   double nonlin_tol = 1.e-08;
   int asm_block = 2;
-  int npre = 8;
-  int npost = 8;
+  int npre = 4;
+  int npost = 4;
   int max_outer_solver_iter = 40;
-  int ksp_restart = 10;
+  int ksp_restart = 30;
   int n_timesteps = 1;
   double time_step = 0.01;
   char restart_file_name[256] = "";
@@ -318,6 +318,7 @@ int main(int argc,char **args) {
   system.SetNumberPreSmoothingStep(npre);
   system.SetNumberPostSmoothingStep(npost);
 
+
   // ******* Set Smoother *******
   // Set Preconditioner of the smoother (name to be changed)
   system.SetMgSmoother(ASM_SMOOTHER);
@@ -344,6 +345,7 @@ int main(int argc,char **args) {
 
   // set the tolerances for the GMRES outer solver
   system.SetTolerances(lin_tol,alin_tol,div_tol,max_outer_solver_iter,ksp_restart);
+
   system.SetOuterKSPSolver(outer_ksp_solver);
 
 

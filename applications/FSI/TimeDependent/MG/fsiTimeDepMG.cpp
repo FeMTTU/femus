@@ -231,8 +231,8 @@ int main(int argc,char **args) {
   else if(simulation < 7)
     numberOfUniformRefinedMeshes=2;
 
-  numberOfAMRLevels = 0;  
-  
+  numberOfAMRLevels = 0;
+
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes, numberOfUniformRefinedMeshes + numberOfAMRLevels,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
   //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes-1);
