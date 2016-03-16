@@ -58,10 +58,10 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   // read coarse level mesh and generate finers level meshes
   //mlMsh.ReadCoarseMesh("./input/aneurysm.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/aneurysm.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/junction.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.PrintInfo();

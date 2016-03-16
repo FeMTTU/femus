@@ -399,6 +399,8 @@ int main(int argc,char **args) {
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
+
+
   for (unsigned i_time_step = 0; i_time_step < n_timesteps; i_time_step++) {
 
     if( i_time_step > 0 || strcmp (restart_file_name,"") != 0 )
@@ -406,7 +408,19 @@ int main(int argc,char **args) {
 
     system.CopySolutionToOldSolution();
 
+    if(mem_infos) {
+      PetscMemoryGetCurrentUsage(&memory_current_usage);
+      PetscPrintf(PETSC_COMM_WORLD, "3: Memory current usage before solve: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+    }
+
     system.MGsolve();
+
+    if(mem_infos) {
+      PetscMemoryGetCurrentUsage(&memory_current_usage);
+      PetscPrintf(PETSC_COMM_WORLD, "4: Memory current usage after solve: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+      PetscMemoryGetMaximumUsage(&memory_maximum_usage);
+      PetscPrintf(PETSC_COMM_WORLD, "4: Memory maximum usage after solve: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
+    }
 
     //system.UpdateSolution();
 
@@ -417,6 +431,14 @@ int main(int argc,char **args) {
 
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, i_time_step+1);
   }
+
+
+  if(mem_infos) {
+      PetscMemoryGetCurrentUsage(&memory_current_usage);
+      PetscPrintf(PETSC_COMM_WORLD, "5: Memory current usage before clear: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+      PetscMemoryGetMaximumUsage(&memory_maximum_usage);
+      PetscPrintf(PETSC_COMM_WORLD, "5: Memory maximum usage before clear: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
+    }
 
   // ******* Clear all systems *******
   ml_prob.clear();
