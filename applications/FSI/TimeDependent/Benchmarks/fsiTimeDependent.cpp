@@ -469,10 +469,7 @@ void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinem
 
   std::ofstream outf;
   char outFileName[100];
-  if(strcmp (infile,"./input/turek.neu") == 0){
-    sprintf(outFileName, "turek_hron_mumps_info.txt");
-  }
-  else if(strcmp (infile,"./input/turek_FSI2.neu") == 0){
+  if(strcmp (infile,"./input/turek_FSI2.neu") == 0){
     sprintf(outFileName, "turek_hron_FSI2_mumps_info.txt");
   }
   else if(strcmp (infile,"./input/turek_FSI3.neu") == 0){
@@ -553,10 +550,7 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
 
   std::ofstream outf;
   char outFileName[100];
-  if(strcmp (infile,"./input/turek.neu") == 0){
-    sprintf(outFileName, "turek_hron_convergence_info.txt");
-  }
-  else if(strcmp (infile,"./input/turek_FSI2.neu") == 0){
+  if(strcmp (infile,"./input/turek_FSI2.neu") == 0){
     sprintf(outFileName, "turek_hron_FSI2_convergence_info.txt");
   }
   else if(strcmp (infile,"./input/turek_FSI3.neu") == 0){
@@ -648,10 +642,7 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
   std::ofstream outf;
   char outFileName[100];
 
-  if(strcmp (infile,"./input/turek.neu") == 0){
-    sprintf(outFileName, "turek_hron_multigrid_time.txt");
-  }
-  else if(strcmp (infile,"./input/turek_FSI2.neu") == 0){
+  if(strcmp (infile,"./input/turek_FSI2.neu") == 0){
     sprintf(outFileName, "turek_hron_FSI2_multigrid_time.txt");
   }
   else if(strcmp (infile,"./input/turek_FSI3.neu") == 0){
