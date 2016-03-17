@@ -472,6 +472,9 @@ void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinem
   if(strcmp (infile,"./input/turek.neu") == 0){
     sprintf(outFileName, "turek_hron_mumps_info.txt");
   }
+  else if(strcmp (infile,"./input/turek_FSI2.neu") == 0){
+    sprintf(outFileName, "turek_hron_FSI2_mumps_info.txt");
+  }
   else if(strcmp (infile,"./input/turek_FSI3.neu") == 0){
     sprintf(outFileName, "turek_hron_FSI3_mumps_info.txt");
   }
@@ -552,6 +555,9 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
   char outFileName[100];
   if(strcmp (infile,"./input/turek.neu") == 0){
     sprintf(outFileName, "turek_hron_convergence_info.txt");
+  }
+  else if(strcmp (infile,"./input/turek_FSI2.neu") == 0){
+    sprintf(outFileName, "turek_hron_FSI2_mumps_info.txt");
   }
   else if(strcmp (infile,"./input/turek_FSI3.neu") == 0){
     sprintf(outFileName, "turek_hron_FSI3_convergence_info.txt");
@@ -644,6 +650,9 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
 
   if(strcmp (infile,"./input/turek.neu") == 0){
     sprintf(outFileName, "turek_hron_multigrid_time.txt");
+  }
+  else if(strcmp (infile,"./input/turek_FSI2.neu") == 0){
+    sprintf(outFileName, "turek_hron_FSI2_mumps_info.txt");
   }
   else if(strcmp (infile,"./input/turek_FSI3.neu") == 0){
     sprintf(outFileName, "turek_hron_FSI3_multigrid_info.txt");
