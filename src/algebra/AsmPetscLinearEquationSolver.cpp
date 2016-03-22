@@ -90,6 +90,7 @@ namespace femus {
     unsigned DofOffsetSize = KKoffset[KKIndex.size() - 1][iproc] - KKoffset[0][iproc];
     vector < unsigned > indexa(DofOffsetSize, DofOffsetSize);
     vector < unsigned > indexb(DofOffsetSize, DofOffsetSize);
+
     vector <bool> owned(DofOffsetSize, false);
 
     map<int, bool> mymap;
@@ -103,6 +104,7 @@ namespace femus {
     vector < vector < unsigned > > block_elements;
 
     MeshASMPartitioning meshasmpartitioning(*_msh);
+
     meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange);
 
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(), true);
@@ -227,16 +229,22 @@ namespace femus {
       }
 
       _localIsIndex[vb_index].resize(PAsize);
+      std::vector < PetscInt >(_localIsIndex[vb_index]).swap(_localIsIndex[vb_index]);
 
       _overlappingIsIndex[vb_index].resize(PBsize + mymap.size());
       int i = 0;
-
       for(std::map<int, bool>::iterator it = mymap.begin(); it != mymap.end(); ++it, ++i) {
         _overlappingIsIndex[vb_index][PBsize + i] = it->first;
       }
+      std::vector < PetscInt >(_overlappingIsIndex[vb_index]).swap(_overlappingIsIndex[vb_index]);
+      
+     
+      mymap.clear();
 
       std::sort(_localIsIndex[vb_index].begin(), _localIsIndex[vb_index].end());
       std::sort(_overlappingIsIndex[vb_index].begin(), _overlappingIsIndex[vb_index].end());
+
+
     }
 
     //BEGIN Generate std::vector<IS> for ASM PC ***********

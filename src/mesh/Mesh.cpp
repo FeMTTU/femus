@@ -99,6 +99,8 @@ void Mesh::PrintInfo() {
  **/
 void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
 
+  SetIfHomogeneous(true);
+
   _coords.resize(3);
 
   _level = 0;
@@ -200,6 +202,8 @@ void Mesh::GenerateCoarseBoxMesh(
         const double ymin, const double ymax,
         const double zmin, const double zmax,
         const ElemType elemType, std::vector<bool> &type_elem_flag) {
+
+  SetIfHomogeneous(true);
 
   _coords.resize(3);
 
@@ -322,8 +326,6 @@ void Mesh::Buildkel() {
 
 
 void Mesh::AllocateAndMarkStructureNode() {
-
-
 
   _topology->ResizeSolutionVector("solidMrk");
 

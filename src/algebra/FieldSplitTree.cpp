@@ -205,7 +205,7 @@ namespace femus {
   }
 
 
-  void FieldSplitTree::SetPC( KSP& ksp, const unsigned& level ) {
+  void FieldSplitTree::SetPC( KSP& ksp, const unsigned& level) {
 
     PC pc;
     KSPGetPC( ksp, &pc );
@@ -213,11 +213,9 @@ namespace femus {
     //BEGIN from here
     if( _preconditioner == FIELDSPLIT_PRECOND ) {
       PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
-//       PCFieldSplitSetType( pc, PC_COMPOSITE_ADDITIVE );
-      PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR);
-      PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_UPPER);
-      
-      for( unsigned i = 0; i < _numberOfSplits; i++ ) { 
+      PCFieldSplitSetType( pc, PC_COMPOSITE_ADDITIVE );
+      //PCFieldSplitSetType( pc, PC_COMPOSITE_MULTIPLICATIVE );
+      for( unsigned i = 0; i < _numberOfSplits; i++ ) {
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
       }
       PCSetUp(pc);
@@ -225,26 +223,99 @@ namespace femus {
       PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
       PCFieldSplitGetSubKSP( pc, &nlocal, &subksp );
       for( unsigned i = 0; i < _numberOfSplits; i++ ) {
-        _child[i]->SetPC( subksp[i], level );
+        _child[i]->SetPC( subksp[i], level);
       }
       PetscFree(subksp);
     }
+
+    else if( _preconditioner == ASM_PRECOND ) {
+      PetscPreconditioner::set_petsc_preconditioner_type( _preconditioner, pc );
+
+      bool _standardASM = 1;
+      PetscInt _nlocal;
+
+      if(!_standardASM) {
+	//PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
+      }
+
+      PCASMSetOverlap(pc, 0); //PCASMSetOverlap(subpc, _overlap);
+
+      KSPSetUp(ksp);
+
+      KSP* subksps;
+      PCASMGetSubKSP(pc, &_nlocal, PETSC_NULL, &subksps);
+      PetscReal epsilon = 1.e-16;
+
+      if(!_standardASM) {
+// 	for(int i = 0; i < _blockTypeRange[0]; i++) {
+// 	  PC subpcs;
+// 	  KSPGetPC(subksps[i], &subpcs);
+// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+// 	  KSPSetFromOptions(subksps[i]);
+// 	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
+// 	  PCFactorSetZeroPivot(subpcs, epsilon);
+// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+// 	}
+//
+// 	for(int i = _blockTypeRange[0]; i < _blockTypeRange[1]; i++) {
+// 	  PC subpcs;
+// 	  KSPGetPC(subksps[i], &subpcs);
+// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+// 	  KSPSetFromOptions(subksps[i]);
+//
+// 	  if(this->_preconditioner_type == ILU_PRECOND)
+// 	    PCSetType(subpcs, (char*) PCILU);
+// 	  else
+// 	    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+//
+// 	  PCFactorSetZeroPivot(subpcs, epsilon);
+// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+// 	}
+      }
+      else {
+	for(int i = 0; i < _nlocal; i++) {
+	  PC subpcs;
+	  KSPGetPC(subksps[i], &subpcs);
+	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+	  KSPSetFromOptions(subksps[i]);
+
+
+	  PCSetType(subpcs, (char*) PCILU);
+
+// 	  if(this->_preconditioner_type == ILU_PRECOND)
+// 	    PCSetType(subpcs, (char*) PCILU);
+// 	  else
+// 	    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+
+	  PCFactorSetZeroPivot(subpcs, epsilon);
+	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+	}
+      }
+    }
     else if( _preconditioner == FS_SCHUR_PRECOND ) {
       PetscPreconditioner::set_petsc_preconditioner_type( FIELDSPLIT_PRECOND, pc );
-      
+
       PCFieldSplitSetType( pc, PC_COMPOSITE_SCHUR );
       PCFieldSplitSetSchurFactType(pc, PC_FIELDSPLIT_SCHUR_FACT_LOWER);
-      PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELFP,NULL);
-      
+
+      PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELFP,NULL); //it goes with pressure ILU
+
+      for( int i = 0; i < _numberOfSplits; i++ ) {
+        if( GetChild(i)->_preconditioner == LSC_PRECOND){
+           PCFieldSplitSetSchurPre(pc,PC_FIELDSPLIT_SCHUR_PRE_SELF,NULL); //it goes with pressure LSC
+        }
+      }
+
       for( int i = 0; i < _numberOfSplits; i++ ) {
         PCFieldSplitSetIS( pc, NULL, _isSplit[level - 1][i] );
       }
       PCSetUp(pc);
+
       KSP* subksp;
       PetscInt nlocal = static_cast < PetscInt >( _numberOfSplits );
       PCFieldSplitGetSubKSP( pc, &nlocal, &subksp );
       for( unsigned i = 0; i < _numberOfSplits; i++ ) {
-        _child[i]->SetPC( subksp[i], level );
+        _child[i]->SetPC( subksp[i], level);
       }
       PetscFree(subksp);
     }
@@ -253,7 +324,8 @@ namespace femus {
       _abstol = 1.e-20;
       _dtol = 1.e+50;
       _maxits = 1;
-      KSPSetType( ksp, ( char* ) KSPPREONLY );
+
+      SetPetscSolverType(ksp);
       PC pc;
       KSPGetPC( ksp, &pc );
       KSPSetTolerances( ksp, _rtol, _abstol, _dtol, _maxits );
@@ -287,6 +359,83 @@ namespace femus {
 
   }
 
+  void FieldSplitTree::SetPetscSolverType(KSP& ksp) {
+    int ierr = 0;
+
+    switch(_solver) {
+      case CG:
+        ierr = KSPSetType(ksp, (char*) KSPCG);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      case CR:
+        ierr = KSPSetType(ksp, (char*) KSPCR);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      case CGS:
+        ierr = KSPSetType(ksp, (char*) KSPCGS);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      case BICG:
+        ierr = KSPSetType(ksp, (char*) KSPBICG);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      case TCQMR:
+        ierr = KSPSetType(ksp, (char*) KSPTCQMR);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      case TFQMR:
+        ierr = KSPSetType(ksp, (char*) KSPTFQMR);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      case LSQR:
+        ierr = KSPSetType(ksp, (char*) KSPLSQR);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      case BICGSTAB:
+        ierr = KSPSetType(ksp, (char*) KSPBCGS);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      case MINRES:
+        ierr = KSPSetType(ksp, (char*) KSPMINRES);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      case GMRES:
+        ierr = KSPSetType(ksp, (char*) KSPGMRES);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      case RICHARDSON:
+        ierr = KSPSetType(ksp, (char*) KSPRICHARDSON);
+        ierr =  KSPRichardsonSetScale(ksp, 0.7);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        KSPRichardsonSetScale(ksp, 0.7);
+        return;
+
+      case CHEBYSHEV:
+        ierr = KSPSetType(ksp, (char*) KSPCHEBYSHEV);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      case PREONLY:
+        ierr = KSPSetType(ksp, (char*) KSPPREONLY);
+        CHKERRABORT(MPI_COMM_WORLD, ierr);
+        return;
+
+      default:
+        std::cerr << "ERROR:  Unsupported PETSC Solver: "
+                  << _solver               << std::endl
+                  << "Continuing with PETSC defaults" << std::endl;
+    }
+  }
 
 
 }

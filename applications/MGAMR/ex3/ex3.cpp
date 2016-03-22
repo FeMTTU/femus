@@ -230,8 +230,8 @@ int main( int argc, char** args ) {
 
   system.SetMgType( F_CYCLE );
 
-  system.SetNumberPreSmoothingStep( 0 );
-  system.SetNumberPostSmoothingStep( 2 );
+  system.SetNumberPreSmoothingStep( 1 );
+  system.SetNumberPostSmoothingStep( 1 );
   // initialize and solve the system
   system.init();
 
@@ -245,6 +245,7 @@ int main( int argc, char** args ) {
   system.AddVariableToBeSolved( "All" );
   system.SetNumberOfSchurVariables( 1 );
   system.SetElementBlockNumber( 2 );
+  //system.UseSamePreconditioner();
   system.MLsolve();
 
   // print solutions

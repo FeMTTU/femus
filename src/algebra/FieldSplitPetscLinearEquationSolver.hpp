@@ -37,7 +37,7 @@ namespace femus {
     public:
 
       /**  Constructor. Initializes Petsc data structures */
-      FieldSplitPetscLinearEquationSolver(const unsigned& igrid, Mesh* other_mesh);
+      FieldSplitPetscLinearEquationSolver(const unsigned& igrid, Solution *other_solution);
 
       /** Destructor */
       ~FieldSplitPetscLinearEquationSolver() {};
@@ -58,8 +58,8 @@ namespace femus {
 
 // =================================================
 
-  inline FieldSplitPetscLinearEquationSolver::FieldSplitPetscLinearEquationSolver(const unsigned& igrid, Mesh* other_msh)
-    : GmresPetscLinearEquationSolver(igrid, other_msh) {
+  inline FieldSplitPetscLinearEquationSolver::FieldSplitPetscLinearEquationSolver(const unsigned& igrid, Solution *other_solution)
+    : GmresPetscLinearEquationSolver(igrid, other_solution) {
   }
 
 } //end namespace femus

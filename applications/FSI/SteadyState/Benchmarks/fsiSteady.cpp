@@ -41,15 +41,27 @@ int main(int argc,char **args) {
   double div_tol = 1.e+10;
   double nonlin_tol = 1.e-08;
   int asm_block = 2;
-  int npre = 0;
-  int npost = 2;
+  int npre = 4;
+  int npost = 4;
   int max_outer_solver_iter = 40;
+  int ksp_restart = 10;
   PetscBool equation_pivoting = PETSC_TRUE;
+  PetscBool mem_infos = PETSC_FALSE;
+  PetscLogDouble memory_current_usage, memory_maximum_usage;
+
+  PetscMemorySetGetMaximumUsage();
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "0: Memory current usage at beginning: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+  }
 
   // ******* reading input parameters *******
   PetscOptionsBegin(PETSC_COMM_WORLD, "", "FSI steady problem options", "Unstructured mesh");
 
   cout << " Reading flags:" << endl;
+
+  PetscOptionsBool("-mem_infos", "Print memory infos", "fsiSteady.cpp", mem_infos, &mem_infos, NULL);
+  printf(" mem_infos: %d\n", mem_infos);
 
   PetscOptionsInt("-nlevel", "The number of mesh levels", "fsiSteady.cpp", numofmeshlevels , &numofmeshlevels, NULL);
   printf(" nlevel: %i\n", numofmeshlevels);
@@ -104,6 +116,15 @@ int main(int argc,char **args) {
 
   PetscOptionsString("-outer_ksp_solver", "The outer ksp solver", "fsiSteady.cpp", "gmres", outer_ksp_solver, len_infile_name, NULL);
   printf(" outer_ksp_solver: %s\n", outer_ksp_solver);
+
+  PetscOptionsInt("-npre", "The number of presmoothing step", "fsiSteady.cpp", npre, &npre, NULL);
+  printf(" npre: %i\n", npre);
+
+  PetscOptionsInt("-npost", "The number of postmoothing step", "fsiSteady.cpp", npost, &npost, NULL);
+  printf(" npost: %i\n", npost);
+
+  PetscOptionsInt("-ksp_restart", "The number of ksp linear step before restarting", "fsiSteady.cpp", ksp_restart, &ksp_restart, NULL);
+  printf(" ksp_restart: %i\n", ksp_restart);
 
   PetscOptionsInt("-max_outer_solver_iter", "The maximum outer solver iterations", "fsiSteady.cpp", max_outer_solver_iter, &max_outer_solver_iter, NULL);
   printf(" max_outer_solver_iter: %i\n", max_outer_solver_iter);
@@ -270,8 +291,18 @@ int main(int argc,char **args) {
   // Set Preconditioner of the smoother (name to be changed)
   system.SetMgSmoother(ASM_SMOOTHER);
 
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "1: Memory current usage before system init: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+  }
+
   // System init
   system.init();
+
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "2: Memory current usage after system init: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+  }
 
   // Set the preconditioner for each ASM block
   system.SetPreconditionerFineGrids(ILU_PRECOND);
@@ -281,8 +312,9 @@ int main(int argc,char **args) {
   system.SetSolverFineGrids(RICHARDSON);
 
   // set the tolerances for the GMRES outer solver
-  system.SetTolerances(lin_tol,alin_tol,div_tol,max_outer_solver_iter);
+  system.SetTolerances(lin_tol,alin_tol,div_tol,max_outer_solver_iter,ksp_restart);
   system.SetOuterKSPSolver(outer_ksp_solver);
+
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
@@ -297,10 +329,22 @@ int main(int argc,char **args) {
 
   std::cout << " *********** Solving... ************  " << std::endl;
 
+  system.SetSamePreconditioner();
   system.PrintSolverInfo(true);
+
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "3: Memory current usage before solve: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+  }
 
   system.MGsolve();
 
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "4: Memory current usage after solve: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+    PetscMemoryGetMaximumUsage(&memory_maximum_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "4: Memory maximum usage after solve: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
+  }
 
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
@@ -318,6 +362,13 @@ int main(int argc,char **args) {
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
+  if(mem_infos) {
+    PetscMemoryGetCurrentUsage(&memory_current_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "5: Memory current usage before clear: %g M\n", (double)(memory_current_usage)/(1024.*1024.));
+    PetscMemoryGetMaximumUsage(&memory_maximum_usage);
+    PetscPrintf(PETSC_COMM_WORLD, "5: Memory maximum usage before clear: %g M\n", (double)(memory_maximum_usage)/(1024.*1024.));
+  }
+
   // ******* Clear all systems *******
   ml_prob.clear();
 
@@ -328,6 +379,7 @@ int main(int argc,char **args) {
     PrintConvergenceInfo(stdOutfile, infile, numofrefinements);
     PrintMultigridTime(stdOutfile, infile, numofrefinements);
   }
+
   return 0;
 }
 
@@ -345,8 +397,8 @@ void PrintMumpsInfo(char *stdOutfile, char* infile, const unsigned &numofrefinem
 
   std::ofstream outf;
   char outFileName[100];
-  if(strcmp (infile,"./input/turek.neu") == 0){
-    sprintf(outFileName, "turek_hron_mumps_info.txt");
+  if(strcmp (infile,"./input/turek_FSI1.neu") == 0){
+    sprintf(outFileName, "turek_hron_FSI1_mumps_info.txt");
   }
   else if(strcmp (infile,"./input/richter3d.neu") == 0){
     sprintf(outFileName, "richter3d_mumps_info.txt");
@@ -416,8 +468,8 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
 
   std::ofstream outf;
   char outFileName[100];
-  if(strcmp (infile,"./input/turek.neu") == 0){
-    sprintf(outFileName, "turek_hron_convergence_info.txt");
+  if(strcmp (infile,"./input/turek_FSI1.neu") == 0){
+    sprintf(outFileName, "turek_hron_FSI1_convergence_info.txt");
   }
   else if(strcmp (infile,"./input/richter3d.neu") == 0){
     sprintf(outFileName, "richter3d_convergence_info.txt");
@@ -459,12 +511,12 @@ void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofr
             }
             while(str1.compare("norm") == 0){
               inf >> normN;
-              outf <<","<< normN;
               counter++;
               for (unsigned i = 0; i < 11; i++){
                 inf >> str1;
               }
             }
+            outf <<","<< normN;
             if(counter != 0){
               outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
             }
@@ -497,8 +549,9 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
 
   std::ofstream outf;
   char outFileName[100];
-  if(strcmp (infile,"./input/turek.neu") == 0){
-    sprintf(outFileName, "turek_hron_multigrid_time.txt");
+
+  if(strcmp (infile,"./input/turek_FSI1.neu") == 0){
+    sprintf(outFileName, "turek_hron_FSI1_multigrid_time.txt");
   }
   else if(strcmp (infile,"./input/richter3d.neu") == 0){
     sprintf(outFileName, "richter3d_multigrid_time.txt");
@@ -509,23 +562,55 @@ void PrintMultigridTime(char *stdOutfile, char* infile, const unsigned &numofref
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl;
-  outf << "Number_of_refinements="<<numofrefinements<<",";
+  outf << "\nLevel_Max,Average_Time";
+
+  int counter = 0;
+  double ave_lin_solver_time = 0.;
 
   std::string str1;
   inf >> str1;
   while (str1.compare("END_COMPUTATION") != 0) {
-    if (str1.compare("Nonlinear") == 0) {
+
+    if (str1.compare("Start") == 0){
       inf >> str1;
-      if (str1.compare("MultiGrid") == 0) {
+      if (str1.compare("Level") == 0){
         inf >> str1;
-        if (str1.compare("TIME:") == 0) {
+        if (str1.compare("Max") == 0){
           inf >> str1;
-          outf << str1;
+          outf <<"\n"<< str1 <<",";
+          counter = 0;
+          ave_lin_solver_time = 0.;
+        }
+      }
+    }
+    else if (str1.compare("MG") == 0) {
+      inf >> str1;
+      if (str1.compare("linear") == 0) {
+        inf >> str1;
+        if (str1.compare("solver") == 0) {
+	  inf >> str1;
+          if (str1.compare("time:") == 0) {
+            double value;
+            inf >> value;
+	    ++counter;
+	    ave_lin_solver_time += value;
+	  }
+        }
+      }
+    }
+    if (str1.compare("End") == 0){
+      inf >> str1;
+      if (str1.compare("Level") == 0){
+        inf >> str1;
+        if (str1.compare("Max") == 0){
+          outf << ave_lin_solver_time / counter;
         }
       }
     }
     inf >> str1;
   }
+
+//   outf << ave_lin_solver_time / counter;
 
   outf.close();
   inf.close();

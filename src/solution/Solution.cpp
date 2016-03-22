@@ -95,6 +95,10 @@ void Solution::AddSolution( const char name[], const FEFamily fefamily, const FE
   _SolOld.resize(n+1u);
   _SolOld[n] = NULL;
   _SolName[n]=new char [DEFAULT_SOL_NCHARS];
+
+  _removeNullSpace.resize(n+1u);
+  _removeNullSpace[n] = false;
+
   strcpy(_SolName[n],name);
 
 }
@@ -613,7 +617,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
 
 
 // ------------------------------------------------------------------
-void Solution::UpdateSolution() {
+void Solution::CopySolutionToOldSolution() {
   for (unsigned i=0; i<_Sol.size(); i++) {
     // Copy the old vector
     if (_SolTmOrder[i]==2) {

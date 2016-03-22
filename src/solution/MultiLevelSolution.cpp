@@ -30,6 +30,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <sys/stat.h>
 
 namespace femus {
 
@@ -137,7 +138,6 @@ namespace femus {
 
     for(unsigned ig = 0; ig < _gridn; ig++) {
       _solution[ig]->AddSolution(_solName[n], _family[n], _order[n], _solTimeOrder[n], _pdeType[n]);
-      //_solution[ig]->AddSolution(name,fefamily,order,tmorder,Pde_type);
     }
   }
 
@@ -562,21 +562,51 @@ namespace femus {
           }
         }
         else if(_addAMRPressureStability[k]) {  // interior boundary (AMR) for discontinuous elements u = 0
-          for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
+          unsigned offset = msh->_elementOffset[_iproc];
+          unsigned offsetp1 = msh->_elementOffset[_iproc + 1];
+          unsigned owned = offsetp1 - offset;
+          std::vector < short unsigned > markedElement(owned, 0);
+          // Add all interior boundary elements
+          for(unsigned iel = offset; iel < offsetp1; iel++) {
             short unsigned ielt = msh->GetElementType(iel);
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
               if(msh->el->GetBoundaryIndex(iel, jface) == 0) {
-                unsigned nv1 = msh->GetElementDofNumber(iel, _solType[k]);
-                for(unsigned i = 0; i < 1; i++) {
-                  unsigned idof = msh->GetSolutionDof(i, iel, _solType[k]);
-                  _solution[igridn]->_Bdc[k]->set(idof, 1.);
-                }
+                markedElement[iel - offset] = 1;
               }
             }
           }
+          //remove adjacent interior boundary elements
+          for(unsigned i = 0; i < owned; i++) {
+            if( markedElement[i] == 1){
+              markedElement[i] = 2;
+              std::vector < unsigned > seed(1, offset + i);
+              while(seed.size() != 0){
+                bool testSeed = true;
+                unsigned iel = seed[ seed.size() - 1u];
+                short unsigned ielt = msh->GetElementType(iel);
+                for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+                  int jel = msh->el->GetFaceElementIndex(seed[seed.size()-1], jface) - 1;
+                  if( jel >= offset && jel < offsetp1 && markedElement[jel - offset] == 1 ){
+                    markedElement[jel - offset] = 0;
+                    seed.resize(seed.size() + 1);
+                    seed[seed.size() - 1] = jel;
+                    testSeed = false;
+                  }
+                }
+                if(testSeed) seed.resize(seed.size() - 1);
+              }
+            }
+          }
+
+          for(unsigned i = 0; i < owned; i++) {
+            if( markedElement[i] > 0){
+              unsigned iel = offset + i;
+              unsigned idof = msh->GetSolutionDof(0, iel, _solType[k]);
+              _solution[igridn]->_Bdc[k]->set(idof, 1.);
+            }
+          }
         }
-        if(_iproc == 0 && _fixSolutionAtOnePoint[k] == true  &&
-            (igridn < _mlMesh->GetNumberOfGridTotallyRefined() || _addAMRPressureStability[k] == false)) {
+        if( _fixSolutionAtOnePoint[k] == true  && igridn == 0 && _iproc == 0 ){
           _solution[igridn]->_Bdc[k]->set(0, 0.);
           _solution[igridn]->_Sol[k]->set(0, 0.);
         }
@@ -588,41 +618,38 @@ namespace femus {
 
   }
 
-  void MultiLevelSolution::SaveSolution(const char* filename, const unsigned &timeStep) {
+  void MultiLevelSolution::SaveSolution(const char* filename, const double time) {
 
     char composedFileName[100];
 
     for(int i = 0; i < _solName.size(); i++) {
-      if(timeStep != UINT_MAX) {
-        sprintf(composedFileName, "./save/%s_sol%s_level%d_time%d", filename, _solName[i], _gridn, timeStep);
-      }
-      else {
-        sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], _gridn);
-      }
+      sprintf(composedFileName, "./save/%s_time%f_sol%s_level%d", filename, time, _solName[i], _gridn);
       _solution[_gridn - 1]->_Sol[i]->BinaryPrint(composedFileName);
     }
   }
 
-  void MultiLevelSolution::LoadSolution(const char* filename, const unsigned &timeStep) {
-    LoadSolution(_gridn, filename, timeStep);
+  void MultiLevelSolution::LoadSolution(const char* filename) {
+    LoadSolution(_gridn, filename);
   }
 
-  void MultiLevelSolution::LoadSolution(const unsigned &level, const char* filename,  const unsigned &timeStep) {
+  void MultiLevelSolution::LoadSolution(const unsigned &level, const char* filename) {
 
     if(level > _gridn){
       std::cout<< "Error in MultiLevelSolution::LoadSolution function:"<<std::endl;
       std::cout<< "the solution level = "<<level<<" is not available in this MultilevelSolution"<<std::endl;
       abort();
     }
-    
-    char composedFileName[100];
 
+    char composedFileName[200];
     for(int i = 0; i < _solName.size(); i++) {
-      if(timeStep != UINT_MAX) {
-        sprintf(composedFileName, "./save/%s_sol%s_level%d_time%d", filename, _solName[i], level, timeStep);
-      }
-      else {
-        sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], level);
+      sprintf(composedFileName, "%s_sol%s_level%d", filename, _solName[i], level);
+      // check if the file really exists
+      if ( strncmp(filename, "http://", 7) && strncmp(filename, "ftp://", 6) ){
+        struct stat buffer;
+        if(stat (composedFileName, &buffer) != 0) {
+          std::cerr << "Error: cannot locate file " << composedFileName << std::endl;
+          abort();
+        }
       }
       _solution[level - 1]->_Sol[i]->BinaryLoad(composedFileName);
     }
