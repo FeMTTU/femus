@@ -29,6 +29,8 @@
 #include "PetscVector.hpp"
 #include "PetscPreconditioner.hpp"
 
+#include "SchurFactTypeEnum.hpp"
+
 
 namespace femus {
   class FieldSplitTree {
@@ -46,6 +48,10 @@ namespace femus {
       void BuildIndexSet( const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc, const unsigned& nprocs, const unsigned& level );
 
       void SetPC( KSP& ksp, const unsigned& level) ; 
+
+   /*---------adjusted by Guoyi Ke-----------*/
+      void GetKSPTolerances(const double& rtol,const double& abstol, const double& dtol, const unsigned& maxits);
+   /*---------adjusted by Guoyi Ke-----------*/
 
       const unsigned& GetNumberOfSplits() {
         return _numberOfSplits;
@@ -78,6 +84,7 @@ namespace femus {
     private:
 
       void SetPetscSolverType(KSP& ksp);
+      void SetSchurFactorizationType(PC &pc);
       
       SolverType _solver;
       PreconditionerType _preconditioner;
@@ -93,6 +100,8 @@ namespace femus {
       double _abstol;
       double _dtol;
       unsigned _maxits;
+      
+      SchurFactType _schurFactType;
 
   };
 
