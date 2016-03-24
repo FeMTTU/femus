@@ -158,6 +158,8 @@ OPTION(BUILD_PCFIELDSPLIT "Build the PCFIELDSPLIT apps" ON)
 
 OPTION(BUILD_AMR "Build the AMR apps" ON)
 
+OPTION(BUILD_ISM "Build the Intersection Marker apps" ON)
+
 #############################################################################################
 ### Build documentation (Doxygen)
 #############################################################################################
@@ -245,6 +247,7 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/equations)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/solution)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/enums)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/ism)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
