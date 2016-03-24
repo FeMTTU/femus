@@ -127,14 +127,42 @@ namespace femus {
     }
   
     // quadratic triangle 
-    inline double triangle2(const double& x, const double& y, const int& i,const int& j) const {
+    inline double triangle_ser(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !i     * (!j* (1.-x-y)*(1.-2.*x-2.*y) + !(j-1)* 4.*y*(1.-x-y) + !(j-2)*(-y+2.*y*y)) +
 	!(i-1) * (!j* 4.*x*(1.-x-y) + !(j-1) * 4.*x*y) +
 	!(i-2) * (!j*(-x+2.*x*x));  
     }
 
-    /*inline double triangle2(const double& x, const double& y, const int& i,const int& j) const {
+    inline double dtriangle_serdx(const double& x, const double& y, const int& i,const int& j) const {
+      return 
+        !i     * (!j* (-3.+4.*x+4.*y) + !(j-1)*y*(-4.) ) +
+	!(i-1) * (!j* 4.*(1.-2.*x-y)  + !(j-1)*y*(4.)) +
+	!(i-2) * (!j*(-1 + 4.*x));
+    }
+
+    inline double dtriangle_serdy(const double& x, const double& y, const int& i,const int& j) const {
+      return 
+        !j     * (!i* (-3.+4.*y+4.*x) + !(i-1)*x*(-4.) ) +
+	!(j-1) * (!i* 4.*(1.-2.*y-x)  + !(i-1)*x*(4.)) +
+	!(j-2) * (!i*(-1 + 4.*y));
+    }
+    
+    inline double d2triangle_serdx2(const double& x, const double& y, const int& i,const int& j) const {
+      return !j*( (!i)*4. +!(i-1)*(-8.) + !(i-2)*4. );
+    }
+    
+    inline double d2triangle_serdy2(const double& x, const double& y, const int& i,const int& j) const {
+      return !i*( (!j)*4. +!(j-1)*(-8.) + !(j-2)*4. );
+    }
+    
+    inline double d2triangle_serdxdy(const double& x, const double& y, const int& i,const int& j) const {
+      return ( (!i)*(!j) + !(i-1)*!(j-1) )*4. + ( !(i-1)*(!j) + (!i)*!(j-1) )*(-4.);
+    }
+    
+    //biquadratic triangle
+    
+    inline double triangle2(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !i     * ( !j* ((1.-x-y)*(1.-2.*x-2.*y) + 3.*x*y*(1-x-y)) +
                    !(j-1)* 4.*(y*(1.-x-y) - 3.*x*y*(1-x-y))  +
@@ -143,16 +171,9 @@ namespace femus {
 	           !(j-1)* 4.*(x*y - 3.*x*y*(1-x-y)) ) +
 	!(i-2) * ( !j* (-x+2.*x*x + 3.*x*y*(1-x-y)) ) +
 	!(i-7) * ( !(j-7)* 27.*x*y*(1-x-y) );  
-    }*/
-    
-    inline double dtriangle2dx(const double& x, const double& y, const int& i,const int& j) const {
-      return 
-        !i     * (!j* (-3.+4.*x+4.*y) + !(j-1)*y*(-4.) ) +
-	!(i-1) * (!j* 4.*(1.-2.*x-y)  + !(j-1)*y*(4.)) +
-	!(i-2) * (!j*(-1 + 4.*x));
     }
     
-    /*inline double dtriangle2dx(const double& x, const double& y, const int& i,const int& j) const {
+    inline double dtriangle2dx(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !i     * ( !j* (-3.+4.*x+4.*y + 3.*(y-2.*x*y-y*y)) +
                    !(j-1)* 4.*(-y - 3.*(y-2.*x*y-y*y))  +
@@ -161,70 +182,51 @@ namespace femus {
 	           !(j-1)* 4.*(y - 3.*(y-2.*x*y-y*y)) ) +
 	!(i-2) * ( !j* (-1+4.*x + 3.*(y-2.*x*y-y*y)) ) +
 	!(i-7) * ( !(j-7)* 27.*(y-2.*x*y-y*y) );
-    }*/
-
+    }
+    
     inline double dtriangle2dy(const double& x, const double& y, const int& i,const int& j) const {
       return 
-        !j     * (!i* (-3.+4.*y+4.*x) + !(i-1)*x*(-4.) ) +
-	!(j-1) * (!i* 4.*(1.-2.*y-x)  + !(i-1)*x*(4.)) +
-	!(j-2) * (!i*(-1 + 4.*y));
+        !j     * ( !i* (-3.+4.*y+4.*x + 3.*(x-x*x-2.*x*y)) +
+                   !(i-1)* 4.*(-x - 3.*(x-x*x-2.*x*y))  +
+                   !(i-2)* 3.*(x-x*x-2.*x*y) ) +
+	!(j-1) * ( !i* 4.*(1.-2.*y-x - 3.*(x-x*x-2.*x*y))  +
+	           !(i-1)* 4.*(x - 3.*(x-x*x-2.*x*y)) ) +
+	!(j-2) * ( !i* (-1+4.*y + 3.*(x-x*x-2.*x*y)) ) +
+	!(j-7) * ( !(i-7)* 27.*(x-x*x-2.*x*y) );
     }
-
-   /*inline double dtriangle2dy(const double& x, const double& y, const int& i,const int& j) const {
-      return 
-        !j     * ( !i* (-3.+4.*y+4.*x + 3.*(x-x*x-2.x*y)) +
-                   !(i-1)* 4.*(-x - 3.*(x-x*x-2.x*y))  +
-                   !(i-2)* 3.*(x-x*x-2.x*y) ) +
-	!(j-1) * ( !i* 4.*(1.-2.*y-x - 3.*(x-x*x-2.x*y))  +
-	           !(i-1)* 4.*(x - 3.*(x-x*x-2.x*y)) ) +
-	!(j-2) * ( !i* (-1+4.*y + 3.*(x-x*x-2.x*y)) )
-	!(j-7) * ( !(i-7)* 27.*(x-x*x-2.x*y) );
-    }*/
     
     inline double d2triangle2dx2(const double& x, const double& y, const int& i,const int& j) const {
-      return !j*( (!i)*4. +!(i-1)*(-8.) + !(i-2)*4. );
-    }
-    
-    /*inline double d2triangle2dx2(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !i     * ( !j* (4. - 6.*y) +
                    !(j-1)* 4.*(6.*y)  +
                    !(j-2)* (-6.*y) ) +
 	!(i-1) * ( !j* 4.*(-2. + 6.*y)  +
 	           !(j-1)* 4.*(6.*y) ) +
-	!(i-2) * ( !j* (4. - 6.*y ) +
+	!(i-2) * ( !j* (4. - 6.*y) ) +
 	!(i-7) * ( !(j-7)* (-54.*y) );
-    }*/
-
-    inline double d2triangle2dy2(const double& x, const double& y, const int& i,const int& j) const {
-      return !i*( (!j)*4. +!(j-1)*(-8.) + !(j-2)*4. );
     }
-
-    /*inline double d2triangle2dy2(const double& x, const double& y, const int& i,const int& j) const {
+    
+    inline double d2triangle2dy2(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !j     * ( !i* (4. - 6.*x) +
                    !(i-1)* 4.*(6.*x) +
                    !(i-2)* (-6.*x) ) +
         !(j-1) * ( !i* 4.*(-2. + 6.*x)  +
 	           !(i-1)* 4.*(6.*x) ) +
-        !(j-2) * ( !i* (4. - 6.*x) )
+        !(j-2) * ( !i* (4. - 6.*x) ) +
         !(j-7) * ( !(i-7)* (-54.*x) );
-      }*/
-    
-    inline double d2triangle2dxdy(const double& x, const double& y, const int& i,const int& j) const {
-      return ( (!i)*(!j) + !(i-1)*!(j-1) )*4. + ( !(i-1)*(!j) + (!i)*!(j-1) )*(-4.);
-    }
-    
-    /*inline double d2triangle2dxdy(const double& x, const double& y, const int& i,const int& j) const {
+      }
+      
+      inline double d2triangle2dxdy(const double& x, const double& y, const int& i,const int& j) const {
       return
         !j     * ( !i* (4. + 3.*(1-2.*x-2.*y)) +
                    !(i-1)* 4.*(-1. - 3.*(1-2.*x-2.*y))  +
                    !(i-2)* 3.*(1-2.*x-2.*y) ) +
 	!(j-1) * ( !i* 4.*(-1. - 3.*(1-2.*x-2.*y))  +
 	           !(i-1)* 4.*(1. - 3.*(1-2.*x-2.*y)) ) +
-	!(j-2) * ( !i* (3.*(1-2.*x-2.*y)) )
+	!(j-2) * ( !i* (3.*(1-2.*x-2.*y)) ) +
 	!(j-7) * ( !(i-7)* 27.*(1-2.*x-2.*y) );
-    }*/
+    }
    
   };
 
@@ -728,9 +730,12 @@ namespace femus {
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
   protected:
-    static const double X[15][2];
-    static const int IND[6][2];
-    static const int KVERT_IND[15][2];
+//     static const double X[15][2];
+//     static const int IND[6][2];
+//     static const int KVERT_IND[15][2];
+    static const double X[19][2];
+    static const int IND[7][2];
+    static const int KVERT_IND[19][2];
   };
   
   
@@ -750,9 +755,26 @@ namespace femus {
 
   //************************************************************
 
+  class tri_ser: public tri_lag {
+  public:
+    tri_ser(): tri_lag(6, 15) {}; 
+    void PrintType() const { std::cout<<" tri_ser ";};
+    
+    double eval_phi(const int *I,const double* x) const;
+    double eval_dphidx(const int *I,const double* x) const;
+    double eval_dphidy(const int *I,const double* x) const;
+  
+    double eval_d2phidx2(const int *I,const double* x) const;
+    double eval_d2phidy2(const int *I,const double* x) const;
+    double eval_d2phidxdy(const int *I,const double* x) const;
+  
+  };
+
+  //************************************************************
+  
   class tri2: public tri_lag {
   public:
-    tri2(): tri_lag(6, 15) {}; 
+    tri2(): tri_lag(7, 19) {}; 
     void PrintType() const { std::cout<<" tri2 ";};
     
     double eval_phi(const int *I,const double* x) const;
@@ -766,7 +788,7 @@ namespace femus {
   };
 
   //************************************************************
-
+  
   class tri_const : public basis{
   public:
     tri_const(const int& nc, const int& nf):

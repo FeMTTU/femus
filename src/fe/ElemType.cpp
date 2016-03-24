@@ -585,8 +585,8 @@ namespace femus {
     else if (!strcmp(geom_elem, "tri")) { //TRIANGLE
 
       if (_SolType == 0) _pt_basis = new tri1;
-      else if (_SolType == 1) _pt_basis = new tri2;
-      else if (_SolType == 2) _pt_basis = new tri2;
+      else if (_SolType == 1) _pt_basis = new tri_ser;
+      else if (_SolType == 2) _pt_basis = new tri_ser;
       else if (_SolType == 3) _pt_basis = new tri0;
       else if (_SolType == 4) _pt_basis = new tripwl;
       else {

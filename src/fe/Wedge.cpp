@@ -174,43 +174,43 @@ namespace femus {
   //************************************************************
 
   double wedge2::eval_phi(const int *I,const double* x) const {
-    return triangle2(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return triangle_ser(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
   }
 
   double wedge2::eval_dphidx(const int *I,const double* x) const {
-    return dtriangle2dx(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return dtriangle_serdx(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
   }
 
   double wedge2::eval_dphidy(const int *I,const double* x) const {
-    return dtriangle2dy(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return dtriangle_serdy(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
   }
 
   double wedge2::eval_dphidz(const int *I,const double* x) const {
-    return triangle2(x[0],x[1],I[0],I[1])*dlag2(x[2],I[2]);
+    return triangle_ser(x[0],x[1],I[0],I[1])*dlag2(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidx2(const int *I,const double* x) const {
-    return d2triangle2dx2(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return d2triangle_serdx2(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidy2(const int *I,const double* x) const {
-    return d2triangle2dy2(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return d2triangle_serdy2(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidz2(const int *I,const double* x) const {
-    return triangle2(x[0],x[1],I[0],I[1])*d2lag2(x[2],I[2]);
+    return triangle_ser(x[0],x[1],I[0],I[1])*d2lag2(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidxdy(const int *I,const double* x) const {
-    return d2triangle2dxdy(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return d2triangle_serdxdy(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidydz(const int *I,const double* x) const {
-    return dtriangle2dy(x[0],x[1],I[0],I[1])*dlag2(x[2],I[2]);
+    return dtriangle_serdy(x[0],x[1],I[0],I[1])*dlag2(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidzdx(const int *I,const double* x) const {
-    return dtriangle2dx(x[0],x[1],I[0],I[1])*dlag2(x[2],I[2]);
+    return dtriangle_serdx(x[0],x[1],I[0],I[1])*dlag2(x[2],I[2]);
   }
 
   //************************************************************

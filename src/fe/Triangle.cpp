@@ -22,39 +22,49 @@
 namespace femus {
 
   // triangle const vectors
-  const double tri_lag::X[15][2]= {
+  /*const double tri_lag::X[15][2]= {
     {0, 0},      {1, 0},      {0, 1},
     {0.5, 0},    {0.5, 0.5},  {0, 0.5},
     {0.25,0},    {0.25,0.25}, {0,0.25},
     {0.75,0},    {0.75,0.25}, {0.5,0.25},  
     {0.25,0.5},  {0.25,0.75}, {0,0.75} 
-  };
-  
-   /*const double tri_lag::X[19][2]= {
-    {0, 0},      {1, 0},      {0, 1},
-    {0.5, 0},    {0.5, 0.5},  {0, 0.5},   {0.33333, 0.33333},
-    {0.25,0},    {0.25,0.25}, {0,0.25},   {0.16666, 0.16666},
-    {0.75,0},    {0.75,0.25}, {0.5,0.25}, {0.66666, 0.16666},
-    {0.25,0.5},  {0.25,0.75}, {0,0.75},   {0.16666, 0.66666}, 
   };*/
+  
+   const double tri_lag::X[19][2]= {
+    {0, 0},             {1, 0},             {0, 1},
+    {0.5, 0},           {0.5, 0.5},         {0, 0.5},   
+    {0.25,0},           {0.25,0.25},        {0,0.25},   
+    {0.75,0},           {0.75,0.25},        {0.5,0.25}, 
+    {0.25,0.5},         {0.25,0.75},        {0,0.75},   
+    {0.33333, 0.33333}, {0.16666, 0.16666}, {0.66666, 0.16666}, {0.16666, 0.66666},
+  };
 
-  const int tri_lag::IND[6][2]= {
+  /*const int tri_lag::IND[6][2]= {
     {0, 0},{2, 0},{0, 2},
     {1, 0},{1, 1},{0, 1}
-  };
+  };*/
   
-  /*const int tri_lag::IND[7][2]= {
+  const int tri_lag::IND[7][2]= {
     {0, 0},{2, 0},{0, 2},
     {1, 0},{1, 1},{0, 1},
     {7,7}
-  };*/
+  };
 
-  const int tri_lag::KVERT_IND[15][2]= {
+  /*const int tri_lag::KVERT_IND[15][2]= {
     {0,0},{1,1},{2,2},
     {0,1},{1,2},{2,0},
     {0,3},{0,4},{0,5},
     {1,3},{1,4},{1,5},
     {2,3},{2,4},{2,5}
+  };*/
+  
+  const int tri_lag::KVERT_IND[19][2]= {
+    {0,0},{1,1},{2,2},
+    {0,1},{1,2},{2,0},
+    {0,3},{0,4},{0,5},
+    {1,3},{1,4},{1,5},
+    {2,3},{2,4},{2,5},
+    {0,6},{1,6},{2,6},{3,6}
   };
   
   const double tri_const::X[12][2]={ 
@@ -102,6 +112,32 @@ namespace femus {
 
   //************************************************************
 
+  double tri_ser::eval_phi(const int *I,const double* x) const {
+    return triangle_ser(x[0],x[1],I[0],I[1]);
+  }
+
+  double tri_ser::eval_dphidx(const int *I,const double* x) const {
+    return dtriangle_serdx(x[0],x[1],I[0],I[1]);
+  }
+
+  double tri_ser::eval_dphidy(const int *I,const double* x) const {
+    return dtriangle_serdy(x[0],x[1],I[0],I[1]);
+  }
+
+  double tri_ser::eval_d2phidx2(const int *I,const double* x) const {
+    return d2triangle_serdx2(x[0],x[1],I[0],I[1]);
+  }
+
+  double tri_ser::eval_d2phidy2(const int *I,const double* x) const {
+    return d2triangle_serdy2(x[0],x[1],I[0],I[1]);
+  }
+
+  double tri_ser::eval_d2phidxdy(const int *I,const double* x) const {
+    return d2triangle_serdxdy(x[0],x[1],I[0],I[1]);
+  }
+  
+  //****************************************************************
+  
   double tri2::eval_phi(const int *I,const double* x) const {
     return triangle2(x[0],x[1],I[0],I[1]);
   }
