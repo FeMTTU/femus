@@ -13,13 +13,13 @@ int main(int argc, char** args) {
   x[0]=1;
   x[1]=3;
   x[2]=4;
-  Marker a(x,INTERSECTION);
+  //Marker a(x,INTERSECTION);
   
   
-  std::vector < double > y = a.GetMarkerCoordinates();
+  //std::vector < double > y = a.GetMarkerCoordinates();
   
-  std::cout<<y[0] << " " << y[1] << " " <<y[2]<<std::endl;
-  std::cout << a.GetMarkerType() <<std::endl;
+  //std::cout<<y[0] << " " << y[1] << " " <<y[2]<<std::endl;
+  //std::cout << a.GetMarkerType() <<std::endl;
   
   return 0;
 }
