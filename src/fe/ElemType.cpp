@@ -586,7 +586,7 @@ namespace femus {
 
       if (_SolType == 0) _pt_basis = new tri1;
       else if (_SolType == 1) _pt_basis = new tri_ser;
-      else if (_SolType == 2) _pt_basis = new tri_ser;
+      else if (_SolType == 2) _pt_basis = new tri2;
       else if (_SolType == 3) _pt_basis = new tri0;
       else if (_SolType == 4) _pt_basis = new tripwl;
       else {
@@ -642,6 +642,9 @@ namespace femus {
     pt_d = _mem_prol_val;
     pt_i = _mem_prol_ind;
     for (int i = 0; i < _nf; i++) {
+      // std::cout << "\n" << i << std::endl;
+      // double sum = 0;
+      
       _prol_val[i] = pt_d;
       _prol_ind[i] = pt_i;
       for (int j = 0; j < _nc; j++) {
@@ -652,9 +655,13 @@ namespace femus {
         }
         if (fabs(phi) >= 1.0e-14) {
           *(pt_d++) = phi;
+	  //sum += phi;
           *(pt_i++) = j;
+	  // std::cout << j <<" " << phi<<std::endl;
+	  
         }
       }
+      // std::cout<<sum<<std::endl;
     }
 
     _prol_val[_nf] = pt_d;
@@ -700,16 +707,46 @@ namespace femus {
         x[j] = *ptx[j];
         ptx[j]++;
       }
+      
+      //double phisum=0.;
+      //double dphidxisum=0.;
+      //double dphidetasum=0.;
+      //double d2phidxi2sum=0.;
+      //double d2phideta2sum=0.;
+      //double d2phidxidetasum=0.;
+      
+      
       for (int j = 0; j < _nc; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
+	//phisum += _phi[i][j];
+	//std::cout << _phi[i][j] <<" ";
         _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j], x);
+	//dphidxisum += _dphidxi[i][j];
+	//std::cout << _dphidxi[i][j] <<" ";
         _dphideta[i][j] = _pt_basis->eval_dphidy(_IND[j], x);
+	//_dphidxi[i][j] += _dphideta[i][j];
+	//std::cout << _dphideta[i][j] <<" ";
         _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j], x);
+	//d2phidxi2sum += _d2phidxi2[i][j];
+	//std::cout << _d2phidxi2[i][j] <<" ";
         _d2phideta2[i][j] = _pt_basis->eval_d2phidy2(_IND[j], x);
+	//d2phideta2sum += _d2phideta2[i][j];
+	//std::cout << _d2phideta2[i][j] <<" ";
         _d2phidxideta[i][j] = _pt_basis->eval_d2phidxdy(_IND[j], x);
+	//d2phidxidetasum += _d2phidxideta[i][j];
+	//std::cout << _d2phidxideta[i][j] <<"\n";
       }
+//       std::cout<<std::endl;
+//       
+//       std::cout<< phisum <<" "<< 
+//       dphidxisum <<" "<<
+//       dphidetasum<<" "<<
+//       d2phidxi2sum<<" "<<
+//       d2phideta2sum<<" "<<
+//       d2phidxidetasum<<"\n\n";
+            
     }
-
+//     
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
 
