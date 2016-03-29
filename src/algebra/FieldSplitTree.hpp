@@ -51,6 +51,8 @@ namespace femus {
 
    /*---------adjusted by Guoyi Ke-----------*/
       void GetKSPTolerances(const double& rtol,const double& abstol, const double& dtol, const unsigned& maxits);
+      
+      void GetSchurFactorizationType (const SchurFactType& schurFactType);
    /*---------adjusted by Guoyi Ke-----------*/
 
       const unsigned& GetNumberOfSplits() {
