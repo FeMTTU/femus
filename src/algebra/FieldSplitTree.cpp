@@ -52,6 +52,7 @@ namespace femus {
     //END ALL FIELD COLLECTION
     
     _schurFactType = SCHUR_FACT_AUTOMATIC;
+    _schurPreType = SCHUR_PRE_AUTOMATIC;
   };
 
   //multiple split constructor
@@ -93,6 +94,7 @@ namespace femus {
     //END ALL FIELD COLLECTION
     
     _schurFactType = SCHUR_FACT_AUTOMATIC;
+    _schurPreType = SCHUR_PRE_AUTOMATIC;
   }
 
 
@@ -209,14 +211,19 @@ namespace femus {
   }
 
   /*---------adjusted by Guoyi Ke-----------*/
-  void FieldSplitTree::GetKSPTolerances(const double& rtol, const double& abstol, const double& dtol, const unsigned& maxits) {
+  void FieldSplitTree::SetupKSPTolerances(const double& rtol, const double& abstol, const double& dtol, const unsigned& maxits) {
     _rtol = rtol;
     _abstol = abstol;
     _dtol = dtol;
     _maxits = maxits;
   }
-  /*---------adjusted by Guoyi Ke-----------*/
-
+  void FieldSplitTree::SetupSchurFactorizationType (const SchurFactType& schurFactType){
+    _schurFactType = schurFactType;
+  }
+  void FieldSplitTree::SetupSchurPreType(const SchurPreType& schurPreType){
+    _schurPreType = schurPreType;    
+  }
+ /*---------adjusted by Guoyi Ke-----------*/
   void FieldSplitTree::SetPC(KSP& ksp, const unsigned& level) {
 
     PC pc;
@@ -310,14 +317,15 @@ namespace femus {
       PCFieldSplitSetType(pc, PC_COMPOSITE_SCHUR);
       
       SetSchurFactorizationType(pc);
-      PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_SELFP, NULL); //it goes with pressure ILU
-
+      SetSchurPreType(pc);
+ //     PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_SELFP, NULL); //it goes with pressure ILU
+/*
       for(int i = 0; i < _numberOfSplits; i++) {
         if(GetChild(i)->_preconditioner == LSC_PRECOND) { //it goes with pressure LSC
           PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_SELF, NULL); 
         }
       }
-
+*/
       for(int i = 0; i < _numberOfSplits; i++) {
         PCFieldSplitSetIS(pc, NULL, _isSplit[level - 1][i]);
       }
@@ -481,7 +489,40 @@ namespace femus {
 	abort();
       }
   }
-  
+
+   void FieldSplitTree::SetSchurPreType(PC &pc){
+
+    switch(_schurPreType) {
+      case  SCHUR_PRE_SELF:
+        PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_SELF, NULL);
+        return;
+      case  SCHUR_PRE_SELFP:
+        PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_SELFP, NULL);
+        return;
+      case SCHUR_PRE_USER:
+        PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_USER, NULL);
+        return;
+      case SCHUR_PRE_A11:
+        PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_A11, NULL);
+        return;
+      case SCHUR_PRE_FULL:
+        PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_FULL, NULL);
+        return;
+      case SCHUR_PRE_AUTOMATIC:
+        PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_SELFP, NULL);
+        for(int i = 0; i < _numberOfSplits; i++) {
+	  if(GetChild(i)->_preconditioner == LSC_PRECOND) { //it goes with pressure LSC
+            PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_SELF, NULL);
+          }
+        }
+        return;
+      default:
+        std::cerr << "ERROR:  Unsupported Schur Precondition Type: "
+                  << _schurPreType << std::endl;
+        abort();
+      }
+  }
+ 
   
 }
 
