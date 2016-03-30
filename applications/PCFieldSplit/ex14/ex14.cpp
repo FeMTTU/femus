@@ -59,7 +59,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 7;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -111,15 +111,16 @@ int main(int argc, char** args) {
   fieldP[0] = system.GetSolPdeIndex("P");
 
   //FS_P.SetFieldSplitSchurFactType{PC_FIELDSPLIT_SCHUR_FACT_LOWER}; //changed by Guoyi Ke
-  FieldSplitTree FS_P(PREONLY, LSC_PRECOND, fieldP, "Pressure");
+  FieldSplitTree FS_P(PREONLY, ILU_PRECOND, fieldP, "Pressure");
   FS_P.SetupKSPTolerances(1.e-3,1.e-20,1.e+50, 1); //changed by Guoyi Ke
   
   std::vector < FieldSplitTree *> FS1;
   FS1.reserve(2);
   FS1.push_back(&FS_UV);
   FS1.push_back(&FS_P);
+  
   FieldSplitTree FS_NS(GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
-  FS_NS.SetupSchurFactorizationType(SCHUR_FACT_LOWER); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL; how to use if FS_SCHUR_PRECOND? Guoyike
+  FS_NS.SetupSchurFactorizationType(SCHUR_FACT_UPPER); // SCHUR_FACT_UPPER, SCHUR_FACT_LOWER,SCHUR_FACT_FULL; how to use if FS_SCHUR_PRECOND? Guoyike
   FS_NS.SetupSchurPreType(SCHUR_PRE_SELFP);// SCHUR_PRE_SELF, SCHUR_PRE_SELFP, SCHUR_PRE_USER, SCHUR_PRE_A11,SCHUR_PRE_FULL;
 
   //system.SetMgSmoother(GMRES_SMOOTHER);
@@ -135,7 +136,7 @@ int main(int argc, char** args) {
   system.SetNonLinearConvergenceTolerance(1.e-8);
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(0);
+  system.SetNumberPreSmoothingStep(2);
   system.SetNumberPostSmoothingStep(2);
 
   // initilaize and solve the system
