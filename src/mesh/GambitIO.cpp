@@ -41,7 +41,7 @@ namespace femus {
       0, 8, 2, 6, 7, 1
     },
     {0,4,1,5,2,6,3,7,8},
-    {0,3,1,4,2,5},
+    {0,3,1,4,2,5},//{0,3,1,4,2,5,6}
     {0,2,1}
   };
 
@@ -140,6 +140,12 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &coords
       inf>>value;
       mesh.el->SetElementDofIndex(iel,inode,value - 1u);
     }
+  //if (nve==6){
+  //  unsigned inode=GambitIO::GambitToFemusVertexIndex[mesh.el->GetElementType(iel)][nve];
+  //  unsigned value;
+  //  inf>>value;
+  //  mesh.el->SetElementDofIndex(iel,inode,value - 1u);
+  //}
   }
   inf >> str2;
   if (str2.compare("ENDOFSECTION") != 0) {
@@ -178,6 +184,13 @@ void GambitIO::read(const std::string& name, vector < vector < double> > &coords
       coords[1][j] = y/Lref;
       coords[2][j] = 0.;
     }
+    //if (nve==6){
+    //  for (j=nvt, j<nvt+nel, j++)
+    //    coords[0][j] = -1./9.(coords[0][0]+coords[0][2]+coords[0][4]) + 4./9.(coords[0][1]+coords[0][3]+coords[0][5]);
+    //    coords[1][j] = -1./9.(coords[1][0]+coords[1][2]+coords[1][4]) + 4./9.(coords[1][1]+coords[1][3]+coords[1][5]);
+    //    coords[2][j] = 0.;
+    //  }
+    //}
   }
 
   else if (mesh.GetDimension()==1) {
