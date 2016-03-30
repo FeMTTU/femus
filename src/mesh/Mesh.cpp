@@ -123,6 +123,9 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
 
   el->SharpMemoryAllocation();
 
+  
+  std::cout << _nnodes<<std::endl;
+  
   el->SetNodeNumber(_nnodes);
 
   std::vector < int > partition;
@@ -137,6 +140,8 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
 
   Buildkel();
 
+  std::cout << _nnodes<<std::endl;
+  
   _topology = new Solution(this);
 
   _topology->AddSolution("X",LAGRANGE,SECOND,1,0);
@@ -147,10 +152,17 @@ void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vecto
   _topology->ResizeSolutionVector("Y");
   _topology->ResizeSolutionVector("Z");
 
+  
+   std::cout << _coords[0].size() <<" "<< _coords[1].size() << std::endl;
+    
   _topology->GetSolutionName("X") = _coords[0];
   _topology->GetSolutionName("Y") = _coords[1];
   _topology->GetSolutionName("Z") = _coords[2];
-
+  
+  
+   std::cout << "A " << (*_topology->_Sol[0])(9)  << (*_topology->_Sol[0])(9)  << std::endl; 
+   std::cout << "B " << (*_topology->_Sol[1])(10) << (*_topology->_Sol[1])(10) << std::endl; 
+   
   _topology->AddSolution("AMR",DISCONTINOUS_POLYNOMIAL,ZERO,1,0);
 
   _topology->ResizeSolutionVector("AMR");
@@ -421,6 +433,8 @@ void Mesh::FillISvector(vector < int > &partition) {
   for( unsigned k = 0; k < 3; k++){
     _ownSize[k].assign(_nprocs,0);
   }
+  
+  std::cout<<std::endl;
   counter = 0;
   for(int isdom = 0; isdom < _nprocs; isdom++){
     for( unsigned k = 0; k < 3; k++){
@@ -429,6 +443,9 @@ void Mesh::FillISvector(vector < int > &partition) {
 	unsigned nodeEnd = el->GetElementDofNumber(iel,k);
 	for ( unsigned inode = nodeStart; inode < nodeEnd; inode++) {
 	  unsigned ii = el->GetElementDofIndex(iel,inode);
+	  
+	  std::cout<<ii<<" ";
+	  
 	  if(partition[ii] > isdom) {
 	    partition[ii] = isdom;
 	    mapping[ii] = counter;
@@ -438,10 +455,14 @@ void Mesh::FillISvector(vector < int > &partition) {
 	    }
 	  }
 	}
+	std::cout<<std::endl;
       }
     }
   }
 
+  
+  std::cout<<std::endl;
+  
   partition.resize(0);
 
   for(int i = 1 ;i <= _nprocs; i++){

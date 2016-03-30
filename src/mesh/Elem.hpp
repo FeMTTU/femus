@@ -282,19 +282,9 @@ namespace femus {
     {4, 10, 10, 1, 4}, //tet
     {6, 15, 18, 1, 4}, //wedge
     {4, 8, 9, 1, 3}, //quad
-    {3, 6, 6, 1, 3}, //tri
+    {3, 6, 7, 1, 3}, //tri
     {2, 3, 3, 1, 2}  //line
   };
-
-// //number of dof objects, or "dof carriers" for every geometric element and every FE family
-//   const unsigned NDOFOBJS[6][5] = {
-//     {8, 20, 27, 1, 1}, //hex
-//     {4, 10, 10, 1, 1}, //tet
-//     {6, 15, 18, 1, 1}, //wedge
-//     {4, 8, 9, 1, 1}, //quad
-//     {3, 6, 6, 1, 1}, //tri
-//     {2, 3, 3, 1, 1}  //line
-//   };
 
   /**
    * Number of elements obtained with one refinement
