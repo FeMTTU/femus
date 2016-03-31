@@ -21,6 +21,8 @@
 //----------------------------------------------------------------------------
 #include "MarkerTypeEnum.hpp"
 #include "ParallelObject.hpp"
+#include "Mesh.hpp"
+
 #include "vector"
 #include "map"
 
@@ -28,23 +30,31 @@ namespace femus {
 
   class Marker : public ParallelObject {
   public:
-    Marker( std::vector < double > x, const MarkerType &markerType){
+    Marker( std::vector < double > x, const MarkerType &markerType, Mesh *mesh){
       _x = x;
       _markerType = markerType;
+      _mesh = mesh;
+      GetElement();
     };
   
   std::vector < double > GetMarkerCoordinates(){ 
     return _x; 
   };  
   
+  void GetElement();
+  
   MarkerType GetMarkerType(){ 
     return _markerType; 
   };  
     
   private:
+    
+    double GetWindingNumber( const std::vector< std::vector < double > > &xi);
+    
     std::vector < double > _x;
     MarkerType _markerType;
-    
+    Mesh * _mesh;
+    unsigned _elem;
   };
 } //end namespace femus
 
