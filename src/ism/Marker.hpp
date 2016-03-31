@@ -30,10 +30,9 @@ namespace femus {
 
   class Marker : public ParallelObject {
   public:
-    Marker( std::vector < double > x, const MarkerType &markerType, Mesh &mesh){
+    Marker( std::vector < double > x, const MarkerType &markerType){
       _x = x;
       _markerType = markerType;
-      _mesh = mesh;
     };
   
   std::vector < double > GetMarkerCoordinates(){ 
@@ -47,7 +46,6 @@ namespace femus {
   private:
     std::vector < double > _x;
     MarkerType _markerType;
-    Mesh _mesh;
     
   };
 } //end namespace femus
