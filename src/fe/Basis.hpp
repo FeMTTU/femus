@@ -369,16 +369,16 @@ namespace femus {
   class wedge_lag : public basis{
   public:
     wedge_lag(const int& nc, const int& nf):
-      basis(nc, nf, 6, 15, 18){ };
+      basis(nc, nf, 6, 15, 21){ };
     
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
   protected: 
-    static const double X[75][3];
-    static const int IND[18][3];
-    static const int KVERT_IND[75][2];
+    static const double X[95][3];
+    static const int IND[21][3];
+    static const int KVERT_IND[95][2];
   };
 
   class wedge1: public wedge_lag {
@@ -423,10 +423,28 @@ namespace femus {
 
   //************************************************************
 
-  class wedge2: public wedge_lag {
-  
+  /*class wedge2: public wedge_lag {
   public:
     wedge2(): wedge_lag(18, 75) {};    
+    void PrintType() const { std::cout<<" wedge2 ";};
+    
+    double eval_phi(const int *I,const double* x) const;
+    double eval_dphidx(const int *I,const double* x) const;
+    double eval_dphidy(const int *I,const double* x) const;
+    double eval_dphidz(const int *I,const double* x) const;
+  
+    double eval_d2phidx2(const int *I,const double* x) const;
+    double eval_d2phidy2(const int *I,const double* x) const;
+    double eval_d2phidz2(const int *I,const double* x) const;
+    double eval_d2phidxdy(const int *I,const double* x) const;
+    double eval_d2phidydz(const int *I,const double* x) const;
+    double eval_d2phidzdx(const int *I,const double* x) const;
+  
+  };*/
+  
+  class wedge2: public wedge_lag {
+  public:
+    wedge2(): wedge_lag(21, 95) {};    
     void PrintType() const { std::cout<<" wedge2 ";};
     
     double eval_phi(const int *I,const double* x) const;
@@ -724,7 +742,7 @@ namespace femus {
   class tri_lag : public basis{
   public: 
     tri_lag(const int& nc, const int& nf):
-      basis(nc, nf, 3, 6, 6){ };
+      basis(nc, nf, 3, 6, 7){ };
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
