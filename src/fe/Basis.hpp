@@ -724,7 +724,7 @@ namespace femus {
   class tri_lag : public basis{
   public: 
     tri_lag(const int& nc, const int& nf):
-      basis(nc, nf, 3, 6, 6){ };
+      basis(nc, nf, 3, 6, 7){ };
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
@@ -792,7 +792,7 @@ namespace femus {
   class tri_const : public basis{
   public:
     tri_const(const int& nc, const int& nf):
-      basis(nc, nf, 3, 6, 6){ };
+      basis(nc, nf, 3, 6, 7){ };
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
