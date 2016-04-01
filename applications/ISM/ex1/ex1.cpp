@@ -22,16 +22,16 @@ int main(int argc, char** args) {
 
   std::vector < double > x(3);
   
-  x[0]=0.;
-  x[1]=0.;
+  x[0]=0.13;
+  x[1]=0.1875;
   x[2]=0;
   Marker a( x, VOLUME, mlMsh.GetLevel(0) );
   
   
   std::vector < double > y = a.GetMarkerCoordinates();
   
-  std::cout<<y[0] << " " << y[1] << " " <<y[2]<<std::endl;
-  std::cout << a.GetMarkerType() <<std::endl;
+  std::cout<< " The coordinates of the marker are " << y[0] << " ," << y[1] << " ," <<y[2]<<std::endl;
+  std::cout << " The marker type is " <<  a.GetMarkerType() <<std::endl;
   
   
   // print mesh

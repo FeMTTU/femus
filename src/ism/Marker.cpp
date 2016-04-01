@@ -53,7 +53,7 @@ namespace femus {
 	        xv[k][i] = ( *_mesh->_topology->_Sol[k] )(iDof) - _x[k];  // global extraction and local storage for the element coordinates
 	}
       }
-      double w = GetWindingNumber(xv);
+      double w = GetWindingNumber(xv, iel);
       if( w > 0 ){
 	_elem = iel;
 	ElementHasBeenFound = true;
@@ -72,7 +72,7 @@ namespace femus {
     }
   }
   
-  double Marker::GetWindingNumber( const std::vector< std::vector < double > > &xv){
+  double Marker::GetWindingNumber( const std::vector< std::vector < double > > &xv, const int &iel){
     double w = 0.;
     
     for (unsigned i = 0; i < xv[0].size() - 1; i++){
@@ -95,10 +95,21 @@ namespace femus {
 	}	
       }
       else{
-	std::cout << " Delta is zero "<< std::endl;
+	if(xv[0][i]*xv[0][i+1] < 0 || xv[1][i]*xv[1][i+1] < 0 ){ //the edge crosses the origin but it does not lie on the x or y axis
+	  w = 1; // set to 1 by default
+	}
+	else if(xv[0][i] == 0 && xv[1][i] == 0 ){ // one of the vertices of the edge is the origin
+	  w = 1; // set to 1 by default
+	}
+	else if(xv[0][i+1] == 0 && xv[1][i+1] == 0 ){ // one of the vertices of the edge is the origin
+	  w = 1; // set to 1 by default
+	}
+	else {
+	  std::cout << " Delta is zero for some edge in element "<< iel <<  std::endl;
+	  std::cout << "Delta = " << Delta << std::endl;
+        }
       }
     }
-    
     return w;
   }
   
