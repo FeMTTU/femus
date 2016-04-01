@@ -17,14 +17,14 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh( "./input/square.neu", "seventh", scalingFactor );
+  mlMsh.ReadCoarseMesh( "./input/square2.neu", "seventh", scalingFactor );
   
 
   std::vector < double > x(3);
   
-  x[0]=0.13;
-  x[1]=0.1875;
-  x[2]=0;
+  x[0]=-5e-06; 
+  x[1]=9.05928e-05;
+  x[2]=0.;
   Marker a( x, VOLUME, mlMsh.GetLevel(0) );
   
   
