@@ -379,14 +379,15 @@ namespace femus {
 //----------------------------------------------------------------------------------------------------
 
   void elem_type::GetSparsityPatternSize(const Mesh& mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const {
+    bool identity = ( _nlag[itype] == _nc ) ? true : false;
     for (int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
       int iproc = mesh.IsdomBisectionSearch(irow, itype);
-      int ncols = _prol_ind[i + 1] - _prol_ind[i];
+      int ncols = (identity)? 1 : _prol_ind[i + 1] - _prol_ind[i];
       unsigned counter_o = 0;
       for (int k = 0; k < ncols; k++) {
         int jj = _prol_ind[i][k];
-        int jcolumn = mesh.GetSolutionDof(jj, iel, _SolType);
+        int jcolumn = (identity) ? irow : mesh.GetSolutionDof(jj, iel, _SolType);
         if (jcolumn < mesh._dofOffset[_SolType][iproc] || jcolumn >= mesh._dofOffset[_SolType][iproc + 1]) counter_o++;
       }
       NNZ_d->set(irow, ncols - counter_o);
@@ -396,18 +397,20 @@ namespace femus {
 
   void elem_type::BuildProlongation(const Mesh& mesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const {
     vector<int> cols(_nc);
+    vector<double> value(_nc);
+    bool identity = ( _nlag[itype] == _nc ) ? true : false;
     for (int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
-      int ncols = _prol_ind[i + 1] - _prol_ind[i];
+      int ncols = (identity) ? 1 : _prol_ind[i + 1] - _prol_ind[i];
       int ncols_stored = static_cast <int>(floor((*NNZ_d)(irow) + (*NNZ_o)(irow) + 0.5));
       if (ncols == ncols_stored) {
         cols.assign(ncols, 0);
         for (int k = 0; k < ncols; k++) {
           int jj = _prol_ind[i][k];
-          int jcolumn = mesh.GetSolutionDof(jj, iel, _SolType);
-          cols[k] = jcolumn;
+          cols[k]  = (identity) ? irow : mesh.GetSolutionDof( _prol_ind[i][k], iel, _SolType);
+          value[k] = (identity) ? 1.: _prol_val[i][k];
         }
-        Projmat->insert_row(irow, ncols, cols, _prol_val[i]);
+        Projmat->insert_row(irow, ncols, cols, &value[0]);
       }
     }
   }
