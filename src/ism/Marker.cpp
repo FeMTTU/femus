@@ -50,7 +50,7 @@ namespace femus {
       for (unsigned i = 0; i < facePointNumber[ielType]; i++){
 	unsigned iDof  = _mesh->GetSolutionDof( facePoints[ielType][i], iel, 2 );  // global to global mapping between coordinates node and coordinate dof
 	for( unsigned k = 0; k < dim; k++ ) { //1e05 is to be safe
-	        xv[k][i] = (1e05*( *_mesh->_topology->_Sol[k] )(iDof)) - (1e05*_x[k]);  // global extraction and local storage for the element coordinates
+	        xv[k][i] = (1e06*( *_mesh->_topology->_Sol[k] )(iDof)) - (1e06*_x[k]);  // global extraction and local storage for the element coordinates
 	}
       }
       double w = GetWindingNumber(xv, iel);
@@ -76,12 +76,13 @@ namespace femus {
     double w = 0.;
     for (unsigned i = 0; i < xv[0].size() - 1; i++){
       double Delta = -xv[0][i] * ( xv[1][i+1] - xv[1][i] ) - xv[1][i] * ( xv[0][i+1] - xv[0][i]);
-      if (iel == 24) {
-	std::cout << "Delta for element 24 is =" << Delta  << " , " << xv[0][i] << " , " << xv[1][i] << " , " << xv[0][i+1] << " , " << xv[1][i+1] << std::endl;
+      if (iel == 36 || iel == 37 || iel == 49 ) {
+	std::cout << "Delta for element" << iel << " is =" << Delta  << " , " << xv[0][i] << " , " << xv[1][i] << " , " << xv[0][i+1] << " , " << xv[1][i+1] << std::endl;
       }
-//       if( Delta != 0 ) {
-      if (abs(Delta) > 1e-05) { 
-	if( xv[1][i]*xv[1][i+1] < 0 ){
+      if( Delta != 0 ) {
+//       if (abs(Delta) > 1e-08) { 
+	std::cout << " xv[1][i]*xv[1][i+1] = " << xv[1][i]*xv[1][i+1] << std::endl;
+	if( xv[1][i]*xv[1][i+1] < 0 ){ // the edge crosses the x-axis but doesn't pass through the marker
 	  double r = xv[0][i] - xv[1][i] * ( xv[0][i+1] - xv[0][i]) / ( xv[1][i+1] - xv[1][i] );
 	  std::cout << " r = " << r << std::endl;
 	  if(r > 0){
@@ -89,24 +90,25 @@ namespace femus {
 	    else w -= 1; 
 	  }
 	}
-	else if( abs(xv[1][i]) < 1e-05 && xv[0][i] > 0. ){
+	else if( xv[1][i] == 0 && xv[0][i] > 0 ){
 	  if ( xv[1][i+1] > 0 ) w += .5;
 	  else w -= .5; 
 	}
-	else if( abs(xv[1][i+1]) < 1e-05 && xv[0][i+1] > 0. ){
+	else if( xv[1][i+1] == 0 && xv[0][i+1] > 0 ){
 	  if ( xv[1][i] < 0 ) w += .5;
 	  else w -= .5; 
 	}	
       }
-      else if (abs(Delta) < 0.00001) { // COME MAI ENTRA QUI CHE DELTA e' 0.5 in absolute value??????????????
+//       else if (abs(Delta) < 1e-08) { 
+     else if (Delta == 0) {
 	if(xv[0][i]*xv[0][i+1] < 0 || xv[1][i]*xv[1][i+1] < 0 ){ //the edge crosses the origin but it does not lie on the x or y axis
 	  std::cout << " fuck " << std::endl;
 	  w = 1; // set to 1 by default
 	}
-	else if(abs(xv[0][i]) < 1e-05 && abs(xv[1][i]) < 1e-05 ){ // one of the vertices of the edge is the origin
+	else if( xv[0][i] == 0 && xv[1][i] == 0 ){ // one of the vertices of the edge is the origin
 	  w = 1; // set to 1 by default
 	}
-	else if(abs(xv[0][i+1]) < 1e-05 && abs(xv[1][i+1]) < 1e-05 ){ // one of the vertices of the edge is the origin
+	else if( xv[0][i+1] == 0 && xv[1][i+1] == 0 ){ // one of the vertices of the edge is the origin
 	  w = 1; // set to 1 by default
 	}
 	else {

@@ -22,9 +22,10 @@ int main(int argc, char** args) {
 
   std::vector < double > x(3);
   
-  x[0]=-5e-06; 
-  x[1]=9.05928e-05;
+  x[0]=-3.18182e-05;  //should be on element 0 of square2.neu
+  x[1]=0.00015;
   x[2]=0.;
+  
   Marker a( x, VOLUME, mlMsh.GetLevel(0) );
   
   
