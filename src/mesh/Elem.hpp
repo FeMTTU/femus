@@ -279,8 +279,8 @@ namespace femus {
 //linear, quadratic, biquadratic, picewise costant, picewise linear discontinuous
   const unsigned NVE[6][5] = {
     {8, 20, 27, 1, 4}, //hex
-    {4, 10, 10, 1, 4}, //tet
-    {6, 15, 18, 1, 4}, //wedge
+    {4, 10, 10/*15*/, 1, 4}, //tet
+    {6, 15, 21, 1, 4}, //wedge
     {4, 8, 9, 1, 3}, //quad
     {3, 6, 7, 1, 3}, //tri
     {2, 3, 3, 1, 2}  //line
