@@ -76,12 +76,8 @@ namespace femus {
     double w = 0.;
     for (unsigned i = 0; i < xv[0].size() - 1; i++){
       double Delta = -xv[0][i] * ( xv[1][i+1] - xv[1][i] ) + xv[1][i] * ( xv[0][i+1] - xv[0][i]);
-      if (iel == 27 || iel == 28 ) {
+      if (iel == 1 ) {
 	std::cout << "Delta for element" << iel << " is =" << Delta  << " , " << xv[0][i] << " , " << xv[1][i] << " , " << xv[0][i+1] << " , " << xv[1][i+1] << std::endl;
-	bool check;
-	check = fabs(Delta) < 0.0001;
-	std::cout << "Is it true that fabs(Delta) < 1e-04? " << check << std::endl;
-	std::cout << "fabs(Delta) =" << fabs(Delta) << std::endl;
       }
 //       if( Delta != 0 ) {
       if (fabs(Delta) > 1e-04 ) { 
@@ -105,17 +101,16 @@ namespace femus {
       }
      else if (fabs(Delta) <= 1e-04 ) { 
 	 if(xv[0][i]*xv[0][i+1] < 0 || xv[1][i]*xv[1][i+1] < 0 ){ //the edge crosses the origin 
-	  std::cout << " fuck " << std::endl;
 	  w = 1; // set to 1 by default
 	  std::cout << "w set to 1 by default" << std::endl;
 	}
 	else if( xv[0][i] == 0  && xv[1][i] == 0 ){ // one of the vertices of the edge is the origin
 	  w = 1; // set to 1 by default
-	  std::cout << "w set to 1 by default" << std::endl;
+	  std::cout << "w set to 1 by default (vertex on the edge)" << std::endl;
 	}
 	else if( xv[0][i+1] == 0 && xv[1][i+1] == 0 ){ // one of the vertices of the edge is the origin
 	  w = 1; // set to 1 by default
-	  std::cout << "w set to 1 by default" << std::endl;
+	  std::cout << "w set to 1 by default (vertex on the edge)" << std::endl;
 	}
       }
       std::cout << " w = " << w << " and iel = " << iel << std::endl;

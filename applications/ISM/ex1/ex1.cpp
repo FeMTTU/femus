@@ -26,8 +26,8 @@ int main(int argc, char** args) {
 //   x[1]=7.81317e-05;
 //   x[2]=0.;
 
-  x[0]=0.249999999;  //should be on element 27 of square.neu
-  x[1]=0.21875;
+  x[0]=0.33375;  //should be on element 0 of square.neu
+  x[1]=-0.0625;
   x[2]=0.;
   
   Marker a( x, VOLUME, mlMsh.GetLevel(0) );
