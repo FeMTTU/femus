@@ -66,7 +66,7 @@ namespace femus {
       
     }
     if( ElementHasBeenFound ) 
-      std::cout << "The marker belongs to the element "<<_elem << std::endl;
+      std::cout << "The marker belongs to element "<<_elem << std::endl;
     else {
       std::cout << " The marker does not belong to this portion of the mesh" << std::endl;
     }
@@ -76,7 +76,7 @@ namespace femus {
     double w = 0.;
     for (unsigned i = 0; i < xv[0].size() - 1; i++){
       double Delta = -xv[0][i] * ( xv[1][i+1] - xv[1][i] ) + xv[1][i] * ( xv[0][i+1] - xv[0][i]);
-      if (iel == 1 ) {
+      if (iel == 0 || iel == 1 ) {
 	std::cout << "Delta for element" << iel << " is =" << Delta  << " , " << xv[0][i] << " , " << xv[1][i] << " , " << xv[0][i+1] << " , " << xv[1][i+1] << std::endl;
       }
 //       if( Delta != 0 ) {
@@ -100,9 +100,10 @@ namespace femus {
 	}	
       }
      else if (fabs(Delta) <= 1e-04 ) { 
+       std::cout << " xv[1][i]*xv[1][i+1] = " << xv[1][i]*xv[1][i+1] << std::endl;
 	 if(xv[0][i]*xv[0][i+1] < 0 || xv[1][i]*xv[1][i+1] < 0 ){ //the edge crosses the origin 
 	  w = 1; // set to 1 by default
-	  std::cout << "w set to 1 by default" << std::endl;
+	  std::cout << "w set to 1 by default (the vertex passes through the origin)" << std::endl;
 	}
 	else if( xv[0][i] == 0  && xv[1][i] == 0 ){ // one of the vertices of the edge is the origin
 	  w = 1; // set to 1 by default
