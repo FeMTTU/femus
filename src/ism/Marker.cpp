@@ -76,13 +76,23 @@ namespace femus {
     double w = 0.;
     for (unsigned i = 0; i < xv[0].size() - 1; i++){
       double Delta = -xv[0][i] * ( xv[1][i+1] - xv[1][i] ) + xv[1][i] * ( xv[0][i+1] - xv[0][i]);
-      if (iel == 0 || iel == 1 ) {
+      if (iel == 60 ) {
 	std::cout << "Delta for element" << iel << " is =" << Delta  << " , " << xv[0][i] << " , " << xv[1][i] << " , " << xv[0][i+1] << " , " << xv[1][i+1] << std::endl;
       }
 //       if( Delta != 0 ) {
       if (fabs(Delta) > 1e-04 ) { 
 	std::cout << " xv[1][i]*xv[1][i+1] = " << xv[1][i]*xv[1][i+1] << std::endl;
-	if( xv[1][i]*xv[1][i+1] < 0 ){ // the edge crosses the x-axis but doesn't pass through the marker
+        if( fabs(xv[1][i]) <= 1e-04 && xv[0][i] > 0 ){ 
+	  std::cout << "the x axis intersects an edge vertex" <<std::endl;
+	  if ( xv[1][i+1] > 0 ) w += .5;
+	  else w -= .5; 
+        }
+	else if( fabs(xv[1][i+1]) <= 1e-04 && xv[0][i+1] > 0 ){ 
+	  std::cout << "the x axis intersects an edge vertex" <<std::endl;
+	  if ( xv[1][i] < 0 ) w += .5;
+	  else w -= .5; 
+	}	
+	else if( xv[1][i]*xv[1][i+1] < 0 ){ // the edge crosses the x-axis but doesn't pass through the marker
 	  double r = xv[0][i] - xv[1][i] * ( xv[0][i+1] - xv[0][i]) / ( xv[1][i+1] - xv[1][i] );
 	  std::cout << " r = " << r << std::endl;
 	  if(r > 0){
@@ -90,28 +100,20 @@ namespace femus {
 	    else w -= 1; 
 	  }
 	}
-	else if( xv[1][i] == 0 && xv[0][i] > 0 ){ std::cout << "chiappe" <<std::endl;
-	  if ( xv[1][i+1] > 0 ) w += .5;
-	  else w -= .5; 
-	}
-	else if( xv[1][i+1] == 0 && xv[0][i+1] > 0 ){ std::cout << "chiappe" <<std::endl;
-	  if ( xv[1][i] < 0 ) w += .5;
-	  else w -= .5; 
-	}	
       }
      else if (fabs(Delta) <= 1e-04 ) { 
        std::cout << " xv[1][i]*xv[1][i+1] = " << xv[1][i]*xv[1][i+1] << std::endl;
-	 if(xv[0][i]*xv[0][i+1] < 0 || xv[1][i]*xv[1][i+1] < 0 ){ //the edge crosses the origin 
+	if( fabs(xv[0][i]) <=1e-04  && fabs(xv[1][i]) <= 1e-04 ){ // one of the vertices of the edge is the origin
+	  w = 1; // set to 1 by default
+	  std::cout << "w set to 1 by default (vertex on the origin)" << std::endl;
+	}
+	else if( fabs(xv[0][i+1]) <= 1e-04 && fabs(xv[1][i+1]) <= 1e-04 ){ // one of the vertices of the edge is the origin
+	  w = 1; // set to 1 by default
+	  std::cout << "w set to 1 by default (vertex on the origin)" << std::endl;
+	}
+	else if (xv[0][i]*xv[0][i+1] < 0 || xv[1][i]*xv[1][i+1] < 0 ){ //the edge crosses the origin 
 	  w = 1; // set to 1 by default
 	  std::cout << "w set to 1 by default (the vertex passes through the origin)" << std::endl;
-	}
-	else if( xv[0][i] == 0  && xv[1][i] == 0 ){ // one of the vertices of the edge is the origin
-	  w = 1; // set to 1 by default
-	  std::cout << "w set to 1 by default (vertex on the edge)" << std::endl;
-	}
-	else if( xv[0][i+1] == 0 && xv[1][i+1] == 0 ){ // one of the vertices of the edge is the origin
-	  w = 1; // set to 1 by default
-	  std::cout << "w set to 1 by default (vertex on the edge)" << std::endl;
 	}
       }
       std::cout << " w = " << w << " and iel = " << iel << std::endl;
