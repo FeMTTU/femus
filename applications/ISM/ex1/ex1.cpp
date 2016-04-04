@@ -17,7 +17,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh( "./input/square.neu", "seventh", scalingFactor );
+  mlMsh.ReadCoarseMesh( "./input/square2.neu", "seventh", scalingFactor );
   
 
   std::vector < double > x(3);
@@ -46,7 +46,7 @@ int main(int argc, char** args) {
   
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-// Test 3: the maker has the "same" x coordinate of a midpoint of an edge of element 60 (point 144)
+// Test 3: the maker has the "same" y coordinate of a midpoint of an edge of element 60 (point 144)
 //  x[0]=5.77298e-05;  //it is on element 60 
 //  x[1]=7.23015e-05;
 //  x[2]=0.;
@@ -58,9 +58,9 @@ int main(int argc, char** args) {
 //////////////////////////////////////////////////////////////////////////////////////////////  
   
 //Test 4: the maker is VERY close to a vertex of element 15 (point 19)
-//  x[0]=-2.72848e-05;  //it is on element 15 
-//  x[1]=2.62822e-05;
-//  x[2]=0.;
+ x[0]=-2.72848e-05;  //it is on element 15 
+ x[1]=2.62822e-05;
+ x[2]=0.;
 //WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 //NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
  // I changed the tollerance to 1-e10 because with 1e-04 it was not working with square.neu however now the code, in this limit case, gives the
@@ -71,9 +71,9 @@ int main(int argc, char** args) {
 /*  TESTS FOR THE MESH square.neu */  
   
 //Test 1: the marker is just a little bit BELOW an horizontal edge (the lower edge of element 1 in mesh square.neu)  
-/* x[0]=0.33375;  //the marker is outside of the mesh (of square.neu)
- x[1]=-0.062500000001; //if the y was -0.625 then it is on the lower edge of element 1
- x[2]=0.;  // */ 
+//  x[0]=0.33375;  //the marker is outside of the mesh (of square.neu)
+//  x[1]=-0.062500000001; //if the y was -0.625 then it is on the lower edge of element 1
+//  x[2]=0.;  //  
 // WARNING With more than 7 zeros the marker is considered to be ON the edge and so it would belong to element 1 anyways.
 // NOTE the code does what it is supposed to do, the error is 1e-12.
 
@@ -123,11 +123,11 @@ int main(int argc, char** args) {
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-//Test 7: the marker is on element 35 but the y coordinate is the same as the MIDPOINT of the RIGHT edge of element 35 
-x[0]=0.23;  //
-x[1]=0.28125; // 
-x[2]=0.; 
-// NOTE The code does what it is supposed to do.
+// //Test 7: the marker is on element 35 but the y coordinate is the same as the MIDPOINT of the RIGHT edge of element 35 
+// x[0]=0.23;  //
+// x[1]=0.28125; // 
+// x[2]=0.; 
+// // NOTE The code does what it is supposed to do.
 
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
