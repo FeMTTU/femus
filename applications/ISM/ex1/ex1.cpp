@@ -17,7 +17,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh( "./input/square2.neu", "seventh", scalingFactor );
+  mlMsh.ReadCoarseMesh( "./input/square.neu", "seventh", scalingFactor );
   
 
   std::vector < double > x(3);
@@ -30,6 +30,8 @@ int main(int argc, char** args) {
 //   x[2]=0.;
 //   // WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 //   // NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
+    // I changed the tollerance to 1-e10 because with 1e-04 it was not working with square.neu however now the code, in this limit case, gives the
+    // right answer but because it considers the edge PASSING THROUGH the marker and not anymore that the vertex is ON the marker
   
 /////////////////////////////////////////////////////////////////////////////////////////////  
 
@@ -39,6 +41,8 @@ int main(int argc, char** args) {
 //   x[2]=0.;
 //   // WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 //   // NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
+     // I changed the tollerance to 1-e10 because with 1e-04 it was not working with square.neu however now the code, in this limit case, gives the
+     // right answer but because it considers the edge PASSING THROUGH the marker and not anymore that the vertex is ON the marker
   
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -48,22 +52,28 @@ int main(int argc, char** args) {
 //  x[2]=0.;
 // WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 // NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
+// I changed the tollerance to 1-e10 because with 1e-04 it was not working with square.neu however now the code, in this limit case, gives the
+// right answer but it only considers the edge to intersect the x axis, not at the midpoint.
+  
+//////////////////////////////////////////////////////////////////////////////////////////////  
   
 //Test 4: the maker is VERY close to a vertex of element 15 (point 19)
- x[0]=-2.72848e-05;  //it is on element 15 
- x[1]=2.62822e-05;
- x[2]=0.;
+//  x[0]=-2.72848e-05;  //it is on element 15 
+//  x[1]=2.62822e-05;
+//  x[2]=0.;
 //WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 //NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
+ // I changed the tollerance to 1-e10 because with 1e-04 it was not working with square.neu however now the code, in this limit case, gives the
+ // right answer but because it considers the edge PASSING THROUGH the marker and not anymore that the vertex is ON the marker
   
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  */
 
 /*  TESTS FOR THE MESH square.neu */  
   
 //Test 1: the marker is just a little bit BELOW an horizontal edge (the lower edge of element 1 in mesh square.neu)  
-//  x[0]=0.33375;  //the marker is outside of the mesh (of square.neu)
-//  x[1]=-0.062500000001; //if the y was -0.625 then it is on the lower edge of element 1
-//  x[2]=0.;  //  
+/* x[0]=0.33375;  //the marker is outside of the mesh (of square.neu)
+ x[1]=-0.062500000001; //if the y was -0.625 then it is on the lower edge of element 1
+ x[2]=0.;  // */ 
 // WARNING With more than 7 zeros the marker is considered to be ON the edge and so it would belong to element 1 anyways.
 // NOTE the code does what it is supposed to do, the error is 1e-12.
 
@@ -79,7 +89,7 @@ int main(int argc, char** args) {
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 //Test 3: the marker is just a little bit to the LEFT of a vertical edge (the left edge of element 1 in mesh square.neu) 
-// x[0]=0.312499999999;  //the marker is on element 0
+// x[0]=0.3124999999999;  //the marker is on element 0
 // x[1]=-0.05555555; // if the x is 0.3125 then it is on the vertical edge of element 1
 // x[2]=0.; //
 // WARNING With more than 8 nines the code considers the marker to be ON the edge and so it is considered to be on element 0
@@ -90,33 +100,33 @@ int main(int argc, char** args) {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 //Test 4: the marker is just a little bit to the RIGHT of a vertical edge (the left edge of element 1 in mesh square.neu) 
-//x[0]=0.3125000000001;  //the marker is on element 1
-//x[1]=-0.05555555; // if the x is 0.3125 then it is on the vertical edge of element 1
-//x[2]=0.; 
+// x[0]=0.312500000001;  //the marker is on element 1
+// x[1]=-0.05555555; // if the x is 0.3125 then it is on the vertical edge of element 1
+// x[2]=0.; 
 // WARNING With more than 7 zeros the marker is considered to be ON the vertical edge, which belongs first to element 0
 // this is why it is considered to be on element 0 instead of on element 1.
 // NOTE With 7 zeros, the code does what it is supposed to do, the error is (1e-12).
 
 //Test 5: the marker is on the lower half of the RIGHT edge of element 0 
-//x[0]=0.3125;  //
-//x[1]=-0.05555555; // 
-//x[2]=0.; 
+// x[0]=0.3125;  //
+// x[1]=-0.05555555; // 
+// x[2]=0.; 
 // NOTE The code does what it is supposed to do.
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Test 6: the marker is the north-east vertex of element 35
-//x[0]=0.25;  //
-//x[1]=0.3125; // 
-//x[2]=0.; 
+// x[0]=0.25;  //
+// x[1]=0.3125; // 
+// x[2]=0.; 
 // NOTE The code does what it is supposed to do.
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
 //Test 7: the marker is on element 35 but the y coordinate is the same as the MIDPOINT of the RIGHT edge of element 35 
-//x[0]=0.23;  //
-//x[1]=0.28125; // 
-//x[2]=0.; 
+x[0]=0.23;  //
+x[1]=0.28125; // 
+x[2]=0.; 
 // NOTE The code does what it is supposed to do.
 
 

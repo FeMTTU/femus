@@ -82,12 +82,14 @@ namespace femus {
 //       if( Delta != 0 ) {
       if (fabs(Delta) > 1e-04 ) { 
 	std::cout << " xv[1][i]*xv[1][i+1] = " << xv[1][i]*xv[1][i+1] << std::endl;
-        if( fabs(xv[1][i]) <= 1e-04 && xv[0][i] > 0 ){ 
+        if( fabs(xv[1][i]) <= 1e-10 && xv[0][i] > 0 ){ //use this for square2.neu
+//        if( xv[1][i] == 0 && xv[0][i] > 0 ){ //use this for square.neu
 	  std::cout << "the x axis intersects an edge vertex" <<std::endl;
 	  if ( xv[1][i+1] > 0 ) w += .5;
 	  else w -= .5; 
         }
-	else if( fabs(xv[1][i+1]) <= 1e-04 && xv[0][i+1] > 0 ){ 
+        else if( fabs(xv[1][i+1]) <= 1e-10 && xv[0][i+1] > 0 ){ //use this for square2.neu
+//        else if( xv[1][i+1] == 0 && xv[0][i+1] > 0 ){ //use this for square.neu
 	  std::cout << "the x axis intersects an edge vertex" <<std::endl;
 	  if ( xv[1][i] < 0 ) w += .5;
 	  else w -= .5; 
@@ -102,18 +104,20 @@ namespace femus {
 	}
       }
      else if (fabs(Delta) <= 1e-04 ) { 
-       std::cout << " xv[1][i]*xv[1][i+1] = " << xv[1][i]*xv[1][i+1] << std::endl;
-	if( fabs(xv[0][i]) <=1e-04  && fabs(xv[1][i]) <= 1e-04 ){ // one of the vertices of the edge is the origin
-	  w = 1; // set to 1 by default
+       std::cout << " xv[0][i]*xv[0][i+1] = " << xv[0][i]*xv[0][i+1] << std::endl;
+       if( fabs(xv[0][i]) <=1e-10  && fabs(xv[1][i]) <= 1e-10 ){ // use this for square2.neu, one of the vertices of the edge is the origin
+//     if( xv[0][i] == 0  && xv[1][i] == 0 ){  //use this for square.neu
+          w = 1; // set to 1 by default
 	  std::cout << "w set to 1 by default (vertex on the origin)" << std::endl;
 	}
-	else if( fabs(xv[0][i+1]) <= 1e-04 && fabs(xv[1][i+1]) <= 1e-04 ){ // one of the vertices of the edge is the origin
+        else if( fabs(xv[0][i+1]) <= 1e-10 && fabs(xv[1][i+1]) <= 1e-10 ){ //use this for square2.neu, one of the vertices of the edge is the origin
+//       else if( xv[0][i+1] == 0 && xv[1][i+1] == 0 ){ //use this for square.neu
 	  w = 1; // set to 1 by default
 	  std::cout << "w set to 1 by default (vertex on the origin)" << std::endl;
 	}
 	else if (xv[0][i]*xv[0][i+1] < 0 || xv[1][i]*xv[1][i+1] < 0 ){ //the edge crosses the origin 
 	  w = 1; // set to 1 by default
-	  std::cout << "w set to 1 by default (the vertex passes through the origin)" << std::endl;
+	  std::cout << "w set to 1 by default (the edge passes through the origin)" << std::endl;
 	}
       }
       std::cout << " w = " << w << " and iel = " << iel << std::endl;
