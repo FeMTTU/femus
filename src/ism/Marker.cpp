@@ -88,8 +88,6 @@ namespace femus {
     }
     
     double epsilon  = 10e-10;
-    double epsilon2 = epsilon;
-
 
     double w = 0.;
     for(unsigned i = 0; i < xv[0].size() - 1; i++) {
@@ -100,7 +98,7 @@ namespace femus {
 
       std::cout << "Delta=" << Delta << " " << epsilon << std::endl;
 
-      if(fabs(Delta) > epsilon2) {   // the edge does not pass for the origin
+      if(fabs(Delta) > epsilon) {   // the edge does not pass for the origin
         std::cout << " xv[1][i]*xv[1][i+1] = " << xv[1][i]*xv[1][i + 1] << std::endl;
         if(fabs(xv[1][i]) < epsilon && xv[0][i] > 0) {  // the first vertex is on the positive x-axis
           std::cout << "the first vertex is on the positive x-axis" << std::endl;

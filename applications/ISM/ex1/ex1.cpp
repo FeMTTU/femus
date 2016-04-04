@@ -8,6 +8,21 @@
 
 using namespace femus;
 
+
+
+bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
+
+  bool refine = 0;
+
+  if (elemgroupnumber == 6 && level < 4) refine = 1;
+  if (elemgroupnumber == 7 && level < 5) refine = 1;
+  if (elemgroupnumber == 8 && level < 6) refine = 1;
+
+  return refine;
+
+}
+
+
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -19,7 +34,11 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   mlMsh.ReadCoarseMesh( "./input/square2.neu", "seventh", scalingFactor );
   
-
+//   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
+//   unsigned numberOfUniformLevels = 4;
+//   unsigned numberOfSelectiveLevels = 3;
+//   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
+//   
   std::vector < double > x(3);
   
 // /* TESTS ON THE MESH square2.neu*/  
@@ -133,6 +152,7 @@ int main(int argc, char** args) {
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
   Marker a( x, VOLUME, mlMsh.GetLevel(0) );
+  //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
   
   
   std::vector < double > y = a.GetMarkerCoordinates();
