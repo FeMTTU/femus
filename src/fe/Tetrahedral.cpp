@@ -49,8 +49,8 @@ namespace femus {
     {0, 0, 0},{2, 0, 0},{0, 2, 0},{0, 0, 2}, // 0-3 vertices
     {1, 0, 0},{1, 1, 0},{0, 1, 0}, 
     {0, 0, 1},{1, 0, 1},{0, 1, 1}, // 4-9 midpoints 
-    {7, 7, 0},{7, 0 ,7},{7, 7, 7},{0, 7, 7}, //10-13faces
-    {8, 8, 8} //14 interior
+    {7, 7, 0},{7, 0 ,7},{7, 7, 7},{0, 7, 7}, // 10-13 faces
+    {8, 8, 8} // 14 interior
   };*/
 
   
@@ -159,6 +159,21 @@ namespace femus {
 
   //************************************************************
 
+//   double  tet2::eval_phi(const int *I,const double* X) const {
+//     
+//     const double x=X[0];   const double y=X[1];   const double z=X[2];
+//     const int i=I[0];      const int j=I[1];      const int k=I[2];
+//     double t=1.-(x+y+z);
+//  
+//     return
+//       !i     *( !j     *( !k*t*(2.*t-1.) + !(k-1)*4.*z*t + !(k-2)*(-z+2.*z*z) )+
+// 		!(j-1) *( !k*4.*y*t      + !(k-1)*4.*y*z		      )+
+// 		!(j-2) *( !k*(-y+2.*y*y) 				      ) )+
+//       !(i-1) *( !j     *( !k*4.*x*t      + !(k-1)*4.*x*z		      )+
+// 		!(j-1) *( !k*4.*x*y					      ) )+
+//       !(i-2) *( !j     *( !k*(-x+2.*x*x)				      ) );
+//   }
+  
   double  tet2::eval_phi(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
@@ -166,32 +181,36 @@ namespace femus {
     double t=1.-(x+y+z);
  
     return
-      !i     *( !j     *( !k*t*(2.*t-1.) + !(k-1)*4.*z*t + !(k-2)*(-z+2.*z*z) )+
-		!(j-1) *( !k*4.*y*t      + !(k-1)*4.*y*z		      )+
-		!(j-2) *( !k*(-y+2.*y*y) 				      ) )+
-      !(i-1) *( !j     *( !k*4.*x*t      + !(k-1)*4.*x*z		      )+
-		!(j-1) *( !k*4.*x*y					      ) )+
-      !(i-2) *( !j     *( !k*(-x+2.*x*x)				      ) );
+      !i     *( !j     *( !k*(t*(2.*t-1.)+3.*x*y*t+3.*x*z*t+3.*y*z*t-4.*x*y*z*t) +               //f0
+                          !(k-1)*(4.*z*t-12.*x*y*t-12.*x*z*t+32.*x*y*z*t) +                      //f7
+                          !(k-2)*((-z+2.*z*z)+3.*x*y*z+3.*x*z*t+3.*y*z*t-4.*x*y*z*t) ) +         //f3
+		!(j-1) *( !k*(4.*y*t-12.*x*y*t-12.*y*z*t+32.*x*y*z*t) +                          //f6
+		          !(k-1)*(4.*y*z-12.*y*z*t-12.*x*y*z+32.*x*y*z*t) ) +                    //f9
+		!(j-2) *( !k*((-y+2.*y*y)+3.*x*y*t+3.*x*z*y+3.*y*z*t-4.*x*y*z*t) ) +             //f1
+		!(j-7) *( !(k-7)*(27.*z*y*t-27.*4.*x*y*z*t) ) ) +                                //f13           
+      !(i-1) *( !j     *( !k*(4.*x*t-12.*x*y*t-12.*x*z*t+32.*x*y*z*t) +                          //f4
+                          !(k-1)*(4.*x*z-12.*x*z*t-12.*x*z*y+32.*x*y*z*t) ) +                    //f8
+		!(j-1) *( !k*(4.*x*y-12.*x*y*t-12.*x*z*y+32.*x*y*z*t) ) ) +                      //f5
+      !(i-2) *( !j     *( !k*((-x+2.*x*x)+3.*x*y*t+3.*x*z*t+3.*x*y*z-4.*x*y*z*t) ) ) +           //f2
+      !(i-7) *( !j     *( !(k-7)*(27.*x*z*t-27.*4.*x*y*z*t) ) +                                  //f11
+                !(j-7) *( !(k)*(27.*x*y*t-27.*4.*x*y*z*t)  +                                     //f10
+                          !(k-7)*(27.*x*y*z-27.*4.*x*y*z*t) ) ) +                                //f12                              
+      !(i-8) *( !(j-8  *( !(k-8)*(256.*x*y*z*t) ) ) );                                           //f14
   }
-  
-  /*double  tet2::eval_phi(const int *I,const double* X) const {
-    
-    const double x=X[0];   const double y=X[1];   const double z=X[2];
-    const int i=I[0];      const int j=I[1];      const int k=I[2];
-    double t=1.-(x+y+z);
- 
-    return
-      !i     *( !j     *( !k*(t*(2.*t-1.)+3.*x*y*z*t) + !(k-1)*4.*(z*t-3.*x*y*z*t) + !(k-2)*((-z+2.*z*z)+3.*x*y*z*t) )+
-		!(j-1) *( !k*4.*(y*t-3.*x*y*z*t)      + !(k-1)*4.*(y*z-3.*x*y*z*t)		      )+
-		!(j-2) *( !k*((-y+2.*y*y)+3.*x*y*z*t) 				      ) )+
-      !(i-1) *( !j     *( !k*4.*(x*t-3.*x*y*z*t)      + !(k-1)*4.*(x*z-3.*x*y*z*t)		      )+
-		!(j-1) *( !k*4.*(x*y-3.*x*y*z*t)					      ) )+
-      !(i-2) *( !j     *( !k*((-x+2.*x*x)+3.*x*y*z*t)				      ) )+
-      !(i-7) *( !(j-7) *( !k*27.*x*y*z*t + !(k-1)*27.*x*y*z*t ) ) + 
-      !(i-8) *( !(j-8) *( !(k-1)*27.*x*y*z*t ) ) +
-      !(i-9) *( !(j-9) *( !(k-1)*27.*x*y*z*t ) ) +
-      !(i-10) *( !(j-10) *( !(k-1)*27.*x*y*z*t ) );
-  }*/
+
+//   double  tet2::eval_dphidx(const int *I,const double* X) const {
+//     
+//     const double x=X[0];   const double y=X[1];   const double z=X[2];
+//     const int i=I[0];      const int j=I[1];      const int k=I[2];
+//     double t=1.-(x+y+z);
+//   
+//     return
+//       !i    *( !j     *( !k*(-4.*t+1.) + !(k-1)*(-4.)*z )+
+// 	       !(j-1) *( !k*(-4.)*y 		      	) )+
+//       !(i-1)*( !j     *( !k*4.*(t-x)   + !(k-1)*4.*z    )+
+// 	       !(j-1) *( !k*4.*y			) )+
+//       !(i-2)*( !j     *( !k*(-1.+4.*x)		      	) );
+//   }
 
   double  tet2::eval_dphidx(const int *I,const double* X) const {
     
@@ -200,31 +219,36 @@ namespace femus {
     double t=1.-(x+y+z);
   
     return
-      !i    *( !j     *( !k*(-4.*t+1.) + !(k-1)*(-4.)*z )+
-	       !(j-1) *( !k*(-4.)*y 		      	) )+
-      !(i-1)*( !j     *( !k*4.*(t-x)   + !(k-1)*4.*z    )+
-	       !(j-1) *( !k*4.*y			) )+
-      !(i-2)*( !j     *( !k*(-1.+4.*x)		      	) );
+      !i     *( !j     *( !k*(-4.*t+1. + 3.*y*(t-x) + 3.*z*(t-x) + 3.*(-y*z) - 4.*y*z*(t-x)) +         //d(f0)/dx
+                          !(k-1)*(-4.*z - 12.*y*(t-x) - 12.*z*(t-x) + 32.*y*z*(t-x)) +                 //d(f7)/dx
+                          !(k-2)*(3.*y*z + 3.*z*(t-x) + 3.*(-y*z) - 4.*y*z*(t-x)) ) +                  //d(f3)/dx
+		!(j-1) *( !k*(-4.*y - 12.*y*(t-x) + 12.*(y*z) + 32.*y*z*(t-x)) +                       //d(f6)/dx
+		          !(k-1)*32.*y*z*(t-x) ) +                                                     //d(f9)/dx
+		!(j-2) *( !k*(3.*y*(t-x) - 4.*y*z*(t-x) ) ) +                                          //d(f1)/dx
+		!(j-7) *( !(k-7)*(-27.*y*z - 27.*4.*y*z*(t-x)) ) ) +                                   //d(f13)/dx           
+      !(i-1) *( !j     *( !k*(4.*(t-x) - 12.*y*(t-x) - 12.*z*(t-x) + 32.*y*z*(t-x)) +                  //d(f4)/dx
+                          !(k-1)*(4.*z - 12.*z*(t-x) - 12.*z*y + 32.*y*z*(t-x)) ) +                    //d(f8)/dx
+		!(j-1) *( !k*(4.*y - 12.*y*(t-x) - 12.*z*y + 32.*y*z*(t-x)) ) ) +                      //d(f5)/dx
+      !(i-2) *( !j     *( !k*(-1.+4.*x + 3.*y*(t-x) + 3.*z*(t-x) + 3.*y*z - 4.*y*z*(t-x)) ) ) +        //d(f2)/dx
+      !(i-7) *( !j     *( !(k-7)*(27.*z*(t-x) - 27.*4.*y*z*(t-x) ) ) +                                 //d(f11)/dx
+                !(j-7) *( !(k)*(27.*y*(t-x) - 27.*4.*y*z*(t-x))  +                                     //d(f10)/dx
+                          !(k-7)*(27.*y*z - 27.*4.*y*z*(t-x)) ) ) +                                    //d(f12)/dx                              
+      !(i-8) *( !(j-8  *( !(k-8)*(256.*y*z*(t-x)) ) ) );                                               //d(f14)/dx
   }
-
-  /*double  tet2::eval_dphidx(const int *I,const double* X) const {
-    
-    const double x=X[0];   const double y=X[1];   const double z=X[2];
-    const int i=I[0];      const int j=I[1];      const int k=I[2];
-    double t=1.-(x+y+z);
   
-    return
-      !i    *( !j     *( !k*(-4.*t+1.+3.*y*z*(t-x)) + !(k-1)*4.*(-z-3.*y*z*(t-x)) +!(k-2)*3.*y*z*(t-x) )+
-	       !(j-1) *( !k*4.*(-y-3.*y*z*(t-x) + !(k-1)*4.*(-3.*y*z*(t-x))) 		      	) +
-	       !(j-2) *( !k*3.*y*z*(t-x)) ) +
-      !(i-1)*( !j     *( !k*4.*(t-x-3.*y*z*(t-x))   + !(k-1)*4.*(z-3.*y*z*(t-x))    ) +
-	       !(j-1) *( !k*4.*(y-3.*y*z*(t-x))			) )+
-      !(i-2)*( !j     *( !k*(-1.+4.*x+3.*y*z*(t-x))		      	) ) +
-      !(i-7) *( !(j-7) *( !k*27.*y*z*(t-x) + !(k-1)*27.*y*z*(t-x) ) ) +
-      !(i-8) *( !(j-8) *( !(k-1)*27.*y*z*(t-x) ) ) +
-      !(i-9) *( !(j-9) *( !(k-1)*27.*y*z*(t-x) ) ) +
-      !(i-10) *( !(j-10) *( !(k-1)*27.*y*z*(t-x) ) );
-  }*/
+//   double  tet2::eval_dphidy(const int *I,const double* X) const {
+//     
+//     const double x=X[0];   const double y=X[1];   const double z=X[2];
+//     const int i=I[0];      const int j=I[1];      const int k=I[2];
+//     double t=1.-(x+y+z);
+//   
+//     return
+//       !i     *( !j     *( !k*(-4.*t+1.) + !(k-1)*(-4.)*z )+
+// 	        !(j-1) *( !k*4.*(t-y)   + !(k-1)*4.*z    )+
+// 	        !(j-2) *( !k*(-1.+4.*y)                  ) )+
+//       !(i-1) *( !j     *( !k*(-4.)*x	                 )+
+// 	        !(j-1) *( !k*4.*x		         ) );
+//   }
   
   double  tet2::eval_dphidy(const int *I,const double* X) const {
     
@@ -233,88 +257,149 @@ namespace femus {
     double t=1.-(x+y+z);
   
     return
-      !i     *( !j     *( !k*(-4.*t+1.) + !(k-1)*(-4.)*z )+
-	        !(j-1) *( !k*4.*(t-y)   + !(k-1)*4.*z    )+
-	        !(j-2) *( !k*(-1.+4.*y)                  ) )+
-      !(i-1) *( !j     *( !k*(-4.)*x	                 )+
-	        !(j-1) *( !k*4.*x		         ) );
+      !i     *( !j     *( !k*(-4.*t+1 + 3.*x*(t-y) - 3.*x*z + 3.*z*(t-y) - 4.*x*z*(t-y)) +          //d(f0)/dy
+                          !(k-1)*(-4.*z - 12.*x*(t-y) + 12.*x*z + 32.*x*z*(t-y)) +                  //d(f7)/dy
+                          !(k-2)*(3.*z*(t-y) - 4.*x*z*(t-y)) ) +                                    //d(f3)/dy
+		!(j-1) *( !k*(4.*(t-y) - 12.*x*(t-y) - 12.*z*(t-y) + 32.*x*z*(t-y)) +               //d(f6)/dy
+		          !(k-1)*(4.*z - 12.*z*(t-y) - 12.*x*z + 32.*x*z*(t-y)) ) +                 //d(f9)/dy
+		!(j-2) *( !k*(-1.+4.*y + 3.*x*(t-y) + 3.*x*z + 3.*z*(t-y) - 4.*x*z*(t-y)) ) +       //d(f1)/dy
+		!(j-7) *( !(k-7)*(27.*z*(t-y) - 27.*4.*x*z*(t-y)) ) ) +                             //d(f13)/dy           
+      !(i-1) *( !j     *( !k*(-4.*x - 12.*x*(t-y) + 12.*x*z + 32.*x*z*(t-y)) +                      //d(f4)/dy
+                          !(k-1)*(32.*x*z*(t-y)) ) +                                                //d(f8)/dy
+		!(j-1) *( !k*(4.*x - 12.*x*(t-y) - 12.*x*z + 32.*x*z*(t-y)) ) ) +                   //d(f5)/dy
+      !(i-2) *( !j     *( !k*(3.*x*(t-y) - 4.*x*z*(t-y)) ) ) +                                      //d(f2)/dy
+      !(i-7) *( !j     *( !(k-7)*(-27.*x*z - 27.*4.*x*z*(t-y)) ) +                                  //d(f11)/dy
+                !(j-7) *( !(k)*(27.*x*(t-y) - 27.*4.*x*z*(t-y))  +                                  //d(f10)/dy
+                          !(k-7)*(27.*x*z - 27.*4.*x*z*(t-y)) ) ) +                                 //d(f12)/dy                              
+      !(i-8) *( !(j-8  *( !(k-8)*(256.*x*z*(t-y)) ) ) );                                            //d(f14)/dy       
   }
-  
-  /*double  tet2::eval_dphidy(const int *I,const double* X) const {
+
+
+//   double  tet2::eval_dphidz(const int *I,const double* X) const {
+//     
+//     const double x=X[0];   const double y=X[1];   const double z=X[2];
+//     const int i=I[0];      const int j=I[1];      const int k=I[2];
+//     double t=1.-(x+y+z);
+//   
+//     return
+//       !i     *( !j     *( !k*(-4.*t+1.) + !(k-1)*4.*(t-z) + !(k-2)*(-1+4.*z) )+
+// 		!(j-1) *( !k*(-4.)*y    + !(k-1)*4.*y			     ) )+
+//       !(i-1) *( !j     *( !k*(-4.)*x    + !(k-1)*4.*x			     ) );
+//     }
+    
+  double  tet2::eval_dphidz(const int *I,const double* X) const { 
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
     double t=1.-(x+y+z);
   
     return
-      !i     *( !j     *( !k*(-4.*t+1.+3.*x*z*(t-y)) + !(k-1)*4.*(-z-3.*x*z*(t-y)) + !(k-2)*3.*x*z*(t-y) )+
-	        !(j-1) *( !k*4.*(t-y-3.*x*z*(t-y))   + !(k-1)*4.*(z-3.*x*z*(t-y))    )+
-	        !(j-2) *( !k*(-1.+4.*y+3.*x*z*(t-y))                  ) )+
-      !(i-1) *( !j     *( !k*4.*(-x-3.*x*z*(t-y)) + !(k-1)*4*(-3.*x*z*(t-y))	                 )+ 
-	        !(j-1) *( !k*4.*(x-3.*x*z*(t-y))		         ) )+
-      !(i-2) *( !j     *( !k*(3.*x*z*(t-y))				      ) )+	        
-      !(i-7) *( !(j-7) *( !k*27.*x*z*(t-y) + !(k-1)*27.*x*z*(t-y) ) ) + 
-      !(i-8) *( !(j-8) *( !(k-1)*27.*x*z*(t-y) ) ) +
-      !(i-9) *( !(j-9) *( !(k-1)*27.*x*z*(t-y) ) ) +
-      !(i-10) *( !(j-10) *( !(k-1)*27.*x*z*(t-y) ) );        
-  }*/
+      !i     *( !j     *( !k*(-4.*t+1. - 3.*x*y + 3.*x*(t-z) + 3.*y*(t-z) - 4.*x*y*(t-z)) +              //d(f0)/dz
+                          !(k-1)*(4.*(t-z) + 12.*x*y - 12.*x*(t-z) + 32.*x*y*(t-z)) +                    //d(f7)/dz
+                          !(k-2)*((-1.+4.*z + 3.*x*y + 3.*x*(t-z) + 3.*y*(t-z) - 4.*x*y*(t-z)) ) +       //d(f3)/dz
+		!(j-1) *( !k*(-4.*y + 12.*x*y - 12.*y*(t-z) + 32.*x*y*(t-z)) +                           //d(f6)/dz
+		          !(k-1)*(4.*y - 12.*y*(t-z) - 12.*x*y + 32.*x*y*(t-z)) ) +                      //d(f9)/dz
+		!(j-2) *( !k*(3.*y*(t-z) - 4.*x*y*(t-z)) ) +                                             //d(f1)/dz
+		!(j-7) *( !(k-7)*(27.*y*(t-z) - 27.*4.*x*y*(t-z)) ) ) +                                  //d(f13)/dz           
+      !(i-1) *( !j     *( !k*(-4.*x + 12.*x*y - 12.*x*(t-z) + 32.*x*y*(t-z)) +                           //d(f4)/dz
+                          !(k-1)*(4.*x - 12.*x*(t-z) - 12.*x*y + 32.*x*y*(t-z)) ) +                      //d(f8)/dz
+		!(j-1) *( !k*(32.*x*y*(t-z)) ) ) +                                                       //d(f5)/dz
+      !(i-2) *( !j     *( !k*(3.*x*(t-z) - 4.*x*y*(t-z))	) ) +                                    //d(f2)/dz
+      !(i-7) *( !j     *( !(k-7)*(27.*x*(t-z) - 27.*4.*x*y*(t-z)) ) +                                    //d(f11)/dz
+                !(j-7) *( !(k)*(-27.*x*y - 27.*4.*x*y*(t-z))  +                                          //d(f10)/dz
+                          !(k-7)*(27.*x*y - 27.*4.*x*y*(t-z)) ) ) +                                      //d(f12)/dz                      
+      !(i-8) *( !(j-8) *( !(k-8)*(256.*x*y*(t-z)) ) ) );                                                 //d(f14)/dz
+    }  
 
-
-  double  tet2::eval_dphidz(const int *I,const double* X) const {
-    
-    const double x=X[0];   const double y=X[1];   const double z=X[2];
-    const int i=I[0];      const int j=I[1];      const int k=I[2];
-    double t=1.-(x+y+z);
+//   double  tet2::eval_d2phidx2(const int *I,const double* X) const {
+//   
+//     const int i=I[0];  const int j=I[1];  const int k=I[2];
+//     return
+//       !i    *( !j *( !k*(4.)   ) )+
+//       !(i-1)*( !j *( !k*(-8.)  ) )+
+//       !(i-2)*( !j *( !k*(4.)   ) );   
+//   }
   
-    return
-      !i     *( !j     *( !k*(-4.*t+1.) + !(k-1)*4.*(t-z) + !(k-2)*(-1+4.*z) )+
-		!(j-1) *( !k*(-4.)*y    + !(k-1)*4.*y			     ) )+
-      !(i-1) *( !j     *( !k*(-4.)*x    + !(k-1)*4.*x			     ) );
-    }
-    
-  /*double  tet2::eval_dphidz(const int *I,const double* X) const { 
-    
-    const double x=X[0];   const double y=X[1];   const double z=X[2];
-    const int i=I[0];      const int j=I[1];      const int k=I[2];
-    double t=1.-(x+y+z);
-  
-    return
-      !i     *( !j     *( !k*(-4.*t+1.+3.*x*y*(t-z)) + !(k-1)*4.*(t-z-3.*x*y*(t-z)) + !(k-2)*(-1+4.*z+3.*x*y*(t-z)) ) +
-		!(j-1) *( !k*4.*(-y-3.*x*y*(t-z))    + !(k-1)*4.*(y-3.*x*y*(t-z))			     ) +
-		!(j-2) *( !k*(3.*x*y*(t-z)) 				      ) ) +
-      !(i-1) *( !j     *( !k*4.*(x-3.*x*y*(t-z))    + !(k-1)*4.*(x-3.*x*y*(t-z))			     ) +
-                !(j-1) *( !k*4.*(-3.*x*y*(t-z))					      ) ) +
-      !(i-2) *( !j     *( !k*(3.*x*y*(t-z))				      ) ) +
-      !(i-7) *( !(j-7) *( !k*27.*x*y*(t-z) + !(k-1)*27.*x*y*(t-z) ) ) + 
-      !(i-8) *( !(j-8) *( !(k-1)*27.*x*y*(t-z) ) ) +
-      !(i-9) *( !(j-9) *( !(k-1)*27.*x*y*(t-z) ) ) +
-      !(i-10) *( !(j-10) *( !(k-1)*27.*x*y*(t-z) ) );
-    }*/  
-
   double  tet2::eval_d2phidx2(const int *I,const double* X) const {
-  
+    
+    const double y=X[1];   const double z=X[2];
     const int i=I[0];  const int j=I[1];  const int k=I[2];
     return
-      !i    *( !j *( !k*(4.)   ) )+
-      !(i-1)*( !j *( !k*(-8.)  ) )+
-      !(i-2)*( !j *( !k*(4.)   ) );   
+      !i     *( !j     *( !k*(4 - 6.*y - 6.*z + 8.*y*z) +                                        //d^2(f0)/dx^2
+                          !(k-1)*(24.*y + 24.*z - 64.*y*z) +                                     //d^2(f7)/dx^2
+                          !(k-2)*(-6.*z + 8.*y*z) ) +                                            //d^2(f3)/dx^2
+		!(j-1) *( !k*(24.*y + 64.*y*z) +                                                 //d^2(f6)/dx^2
+		          !(k-1)*(-64.*y*z) ) +                                                  //d^2(f9)/dx^2
+		!(j-2) *( !k*(-6.*y + 8.*y*z) ) +                                                //d^2(f1)/dx^2
+		!(j-7) *( !(k-7)*(27.*8.*y*z) ) ) +                                              //d^2(f13)/dx^2           
+      !(i-1) *( !j     *( !k*(-8 + 24.*y + 24.*z - 64.*y*z) +                                    //d^2(f4)/dx^2
+                          !(k-1)*(24.*z - 64.*y*z) ) +                                           //d^2(f8)/dx^2
+		!(j-1) *( !k*(24.*y - 64.*y*z) ) ) +                                             //d^2(f5)/dx^2
+      !(i-2) *( !j     *( !k*(4.- 6.*y - 6.*z + 8.*y*z) ) ) +                                    //d^2(f2)/dx^2
+      !(i-7) *( !j     *( !(k-7)*(-2.*27.*z + 27.*8.*y*z) ) +                                    //d^2(f11)/dx^2
+                !(j-7) *( !(k)*(-2.*27.*y + 27.*8.*y*z)  +                                       //d^2(f10)/dx^2
+                          !(k-7)*(27.*8.*y*z) ) ) +                                              //d^2(f12)/dx^2                  
+      !(i-8) *( !(j-8  *( !(k-8)*(-2.*256.*y*z) ) ) );                                           //d^2(f14)/dx^2
   }
+
+//   double  tet2::eval_d2phidy2(const int *I,const double* X) const {
+//   
+//     const int i=I[0];  const int j=I[1];  const int k=I[2];
+//     return
+//       !i  *( !j     *( !k*(4.)  )+
+// 	     !(j-1) *( !k*(-8.) )+
+// 	     !(j-2) *( !k*(4.)  ) );
+//   }
 
   double  tet2::eval_d2phidy2(const int *I,const double* X) const {
-  
+    
+    const double x=X[0];   const double z=X[2];
     const int i=I[0];  const int j=I[1];  const int k=I[2];
     return
-      !i  *( !j     *( !k*(4.)  )+
-	     !(j-1) *( !k*(-8.) )+
-	     !(j-2) *( !k*(4.)  ) );
+      !i     *( !j     *( !k*(4. - 6.*x - 6.*z + 8.*x*z) +                                       //d^2(f0)/dy^2
+                          !(k-1)*(24.*x - 64.*x*z) +                                             //d^2(f7)/dy^2
+                          !(k-2)*(-6.*z + 8.*x*z) ) +                                            //d^2(f3)/dy^2
+		!(j-1) *( !k*(-8. + 24.*x + 24.*z - 64.*x*z) +                                   //d^2(f6)/dy^2
+		          !(k-1)*(24.*z - 64.*x*z) ) +                                           //d^2(f9)/dy^2
+		!(j-2) *( !k*(4. - 6.*x - 6.*z + 8.*x*z) ) +                                     //d^2(f1)/dy^2
+		!(j-7) *( !(k-7)*(-2.*27.*z + 27.*8.*x*z) ) ) +                                  //d^2(f13)/dy^2
+      !(i-1) *( !j     *( !k*(24.*x - 64.*x*z) +                                                 //d^2(f4)/dy^2
+                          !(k-1)*(-64.*x*z) ) +                                                  //d^2(f8)/dy^2
+		!(j-1) *( !k*(24.*x -64.*x*z) ) ) +                                              //d^2(f5)/dy^2
+      !(i-2) *( !j     *( !k*(-6.*x + 8.*x*z) ) ) +                                              //d^2(f2)/dy^2
+      !(i-7) *( !j     *( !(k-7)*(27.*8.*x*z) ) +                                                //d^2(f11)/dy^2
+                !(j-7) *( !(k)*(-2.*27.*x + 27.*8.*x*z)  +                                       //d^2(f10)/dy^2
+                          !(k-7)*(27.*8.*x*z) ) ) +                                              //d^2(f12)/dy^2                  
+      !(i-8) *( !(j-8  *( !(k-8)*(-2.*256.*x*z) ) ) );                                           //d^2(f14)/dy^2
   }
 
-
-  double  tet2::eval_d2phidz2(const int *I,const double* X) const {
+//   double  tet2::eval_d2phidz2(const int *I,const double* X) const {
+//   
+//     const int i=I[0];  const int j=I[1];  const int k=I[2];
+//     return
+//       !i *( !j *( !k*(4.) + !(k-1)*(-8.) + !(k-2)*(4.) ));
+//   }
   
+  double  tet2::eval_d2phidz2(const int *I,const double* X) const {
+    
+    const double x=X[0];   const double y=X[1];
     const int i=I[0];  const int j=I[1];  const int k=I[2];
     return
-      !i *( !j *( !k*(4.) + !(k-1)*(-8.) + !(k-2)*(4.) ));
+      !i     *( !j     *( !k*(4. - 6.*x - 6.*y + 8.*x*y) +                                       //d^2(f0)/dz^2
+                          !(k-1)*(-8. + 24.*x - 64.*x*y) +                                       //d^2(f7)/dz^2
+                          !(k-2)*(4. - 6.*x - 6.*y + 8.*x*y) ) +                                 //d^2(f3)/dz^2
+		!(j-1) *( !k*(24.*y - 64.*x*y) +                                                 //d^2(f6)/dz^2
+		          !(k-1)*(24.*y - 64.*x*y) ) +                                           //d^2(f9)/dz^2
+		!(j-2) *( !k*(-6.*y + 8.*x*y) ) +                                                //d^2(f1)/dz^2
+		!(j-7) *( !(k-7)*(-2.*27.*y* + 27.*8.*x*y) ) ) +                                 //d^2(f13)/dz^2           
+      !(i-1) *( !j     *( !k*(24.*x - 64.*x*y) +                                                 //d^2(f4)/dz^2
+                          !(k-1)*(24.*x - 64.*x*y) ) +                                           //d^2(f8)/dz^2
+		!(j-1) *( !k*(-64.*x*y) ) ) +                                                    //d^2(f5)/dz^2
+      !(i-2) *( !j     *( !k*(-6.*x + 8.*x*y) ) ) +                                              //d^2(f2)/dz^2
+      !(i-7) *( !j     *( !(k-7)*(-2.*27.*x + 27.*8.*x*y) ) +                                    //d^2(f11)/dz^2
+                !(j-7) *( !(k)*(27.*8.*x*y)  +                                                   //fd^2(f10)/dz^2
+                          !(k-7)*(27.*9.*x*y) ) ) +                                              //fd^2(f12)/dz^2                  
+      !(i-8) *( !(j-8  *( !(k-8)*(-2.*256.*x*y) ) ) );                                           //fd^2(f14)/dz^2
   }
 
   double  tet2::eval_d2phidxdy(const int *I,const double* X) const {
