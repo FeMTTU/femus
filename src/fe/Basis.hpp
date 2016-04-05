@@ -520,14 +520,14 @@ namespace femus {
   class tet_lag : public basis{
   public:
     tet_lag(const int& nc, const int& nf):
-      basis(nc, nf, 4, 10, 10){ };
+      basis(nc, nf, 4, 10, 15){ };
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
   
   protected: 
     static const double X[35][3];
-    static const int IND[10][3];
+    static const int IND[15][3];
     static const int KVERT_IND[35][2];
   };
   
@@ -550,12 +550,32 @@ namespace femus {
     double eval_d2phidydz(const int *I,const double* x) const{ return 0.; };
     double eval_d2phidzdx(const int *I,const double* x) const{ return 0.; };
   };
+  
+  //************************************************************
+
+  class tet_ser: public tet_lag {
+  public:
+    tet_ser(): tet_lag(10, 35) {};
+    void PrintType() const { std::cout<<" tet2 ";};
+    
+    double eval_phi(const int *I,const double* x) const;
+    double eval_dphidx(const int *I,const double* x) const;
+    double eval_dphidy(const int *I,const double* x) const;
+    double eval_dphidz(const int *I,const double* x) const;
+  
+    double eval_d2phidx2(const int *I,const double* x) const;
+    double eval_d2phidy2(const int *I,const double* x) const;
+    double eval_d2phidz2(const int *I,const double* x) const;
+    double eval_d2phidxdy(const int *I,const double* x) const;
+    double eval_d2phidydz(const int *I,const double* x) const;
+    double eval_d2phidzdx(const int *I,const double* x) const;
+  };
 
   //************************************************************
 
   class tet2: public tet_lag {
   public:
-    tet2(): tet_lag(10, 35) {};
+    tet2(): tet_lag(15, 35) {};
     void PrintType() const { std::cout<<" tet2 ";};
     
     double eval_phi(const int *I,const double* x) const;

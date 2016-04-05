@@ -802,7 +802,7 @@ namespace femus {
     }
     else if (!strcmp(geom_elem, "tet")) { //TETRAHEDRA
       if (_SolType == 0) _pt_basis = new tet1;
-      else if (_SolType == 1) _pt_basis = new tet2;
+      else if (_SolType == 1) _pt_basis = new tet_ser;
       else if (_SolType == 2) _pt_basis = new tet2;
       else if (_SolType == 3) _pt_basis = new tet0;
       else if (_SolType == 4) _pt_basis = new tetpwl;
@@ -934,19 +934,59 @@ namespace femus {
         x[j] = *ptx[j];
         ptx[j]++;
       }
+      
+      
+      double phisum=0.;
+      double dphidxisum=0.;
+      double dphidetasum=0.;
+      double dphidzetasum=0.;
+      double d2phidxi2sum=0.;
+      double d2phideta2sum=0.;
+      double d2phidzeta2sum=0.;
+      double d2phidxidetasum=0.;
+      double d2phidetadzetasum=0.;
+      double d2phidzetadxisum=0.;
+      
 
       for (int j = 0; j < _nc; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
         _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j], x);
         _dphideta[i][j] = _pt_basis->eval_dphidy(_IND[j], x);
-        _dphidzeta[i][j] = _pt_basis->eval_dphidz(_IND[j], x);
+	_dphidzeta[i][j] = _pt_basis->eval_dphidz(_IND[j], x);
+	
+	
+	
+	
         _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j], x);
         _d2phideta2[i][j] = _pt_basis->eval_d2phidy2(_IND[j], x);
         _d2phidzeta2[i][j] = _pt_basis->eval_d2phidz2(_IND[j], x);
+	
+	//std::cout << j <<" "<<_d2phideta2[i][j]<< " " << _d2phidzeta2[i][j] <<std::endl;
+	
         _d2phidxideta[i][j] = _pt_basis->eval_d2phidxdy(_IND[j], x);
         _d2phidetadzeta[i][j] = _pt_basis->eval_d2phidydz(_IND[j], x);
         _d2phidzetadxi[i][j] = _pt_basis->eval_d2phidzdx(_IND[j], x);
+	
+	phisum += _phi[i][j];
+	
+        dphidxisum += _dphidxi[i][j];
+        dphidetasum += _dphideta[i][j];
+	dphidzetasum += _dphidzeta[i][j];
+	
+	d2phidxi2sum += _d2phidxi2[i][j];
+        d2phideta2sum += _d2phideta2[i][j];
+	d2phidzeta2sum += _d2phidzeta2[i][j];
+	
+        d2phidxidetasum +=_d2phidxideta[i][j];
+	d2phidetadzetasum +=  _d2phidetadzeta[i][j];
+	d2phidzetadxisum += _d2phidzetadxi[i][j];
       }
+      
+      std::cout << "gauss " << i <<" "<<_nc <<" "<<x[0] <<" "<<x[1]<<" "<<x[2] << std::endl;
+      std::cout << phisum << std::endl;
+      std::cout << dphidxisum  << " " <<dphidetasum    <<" "<< dphidzetasum << std::endl;
+      std::cout << d2phidxi2sum <<" " << d2phideta2sum <<" "<< d2phidzeta2sum << std::endl;
+      std::cout << d2phidxidetasum <<" "<< d2phidetadzetasum <<" "<< d2phidzetadxisum << std::endl << std::endl;
     }
 
 
