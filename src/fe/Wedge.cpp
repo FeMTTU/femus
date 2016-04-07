@@ -158,61 +158,61 @@ namespace femus {
   //************************************************************
   
   double wedge1::eval_phi(const int *I,const double* x) const {
-    return triangle1(x[0],x[1],I[0],I[1])*lag1(x[2],I[2]);
+    return triangleLinear(x[0],x[1],I[0],I[1])*lagLinear(x[2],I[2]);
   }
 
   double wedge1::eval_dphidx(const int *I,const double* x) const {
-    return dtriangle1dx(x[0],x[1],I[0],I[1])*lag1(x[2],I[2]);
+    return dtriangleLineardx(x[0],x[1],I[0],I[1])*lagLinear(x[2],I[2]);
   }
 
   double wedge1::eval_dphidy(const int *I,const double* x) const {
-    return dtriangle1dy(x[0],x[1],I[0],I[1])*lag1(x[2],I[2]);
+    return dtriangleLineardy(x[0],x[1],I[0],I[1])*lagLinear(x[2],I[2]);
   }
 
   double wedge1::eval_dphidz(const int *I,const double* x) const {
-    return triangle1(x[0],x[1],I[0],I[1])*dlag1(x[2],I[2]);
+    return triangleLinear(x[0],x[1],I[0],I[1])*dlagLinear(x[2],I[2]);
   }
 
   //************************************************************
 
   double wedge2::eval_phi(const int *I,const double* x) const {
-    return triangle2(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return triangleBiquadratic(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double wedge2::eval_dphidx(const int *I,const double* x) const {
-    return dtriangle2dx(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return dtriangleBiquadraticdx(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double wedge2::eval_dphidy(const int *I,const double* x) const {
-    return dtriangle2dy(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return dtriangleBiquadraticdy(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double wedge2::eval_dphidz(const int *I,const double* x) const {
-    return triangle2(x[0],x[1],I[0],I[1])*dlag2(x[2],I[2]);
+    return triangleBiquadratic(x[0],x[1],I[0],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidx2(const int *I,const double* x) const {
-    return d2triangle2dx2(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return d2triangleBiquadraticdx2(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidy2(const int *I,const double* x) const {
-    return d2triangle2dy2(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return d2triangleBiquadraticdy2(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidz2(const int *I,const double* x) const {
-    return triangle2(x[0],x[1],I[0],I[1])*d2lag2(x[2],I[2]);
+    return triangleBiquadratic(x[0],x[1],I[0],I[1])*d2lagBiquadratic(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidxdy(const int *I,const double* x) const {
-    return d2triangle2dxdy(x[0],x[1],I[0],I[1])*lag2(x[2],I[2]);
+    return d2triangleBiquadraticdxdy(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidydz(const int *I,const double* x) const {
-    return dtriangle2dy(x[0],x[1],I[0],I[1])*dlag2(x[2],I[2]);
+    return dtriangleBiquadraticdy(x[0],x[1],I[0],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
   double wedge2::eval_d2phidzdx(const int *I,const double* x) const {
-    return dtriangle2dx(x[0],x[1],I[0],I[1])*dlag2(x[2],I[2]);
+    return dtriangleBiquadraticdx(x[0],x[1],I[0],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
   //************************************************************

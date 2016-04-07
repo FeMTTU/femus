@@ -79,10 +79,10 @@ namespace femus {
   protected:  
     //1D basis
     // linear lagrangian
-    inline double lag1(const double& x, const int& i) const {
+    inline double lagLinear(const double& x, const int& i) const {
       return (!i)*0.5*(1.-x)+!(i-2)*0.5*(1.+x);
     }
-    inline double dlag1(const double& x, const int& i) const {
+    inline double dlagLinear(const double& x, const int& i) const {
       return (!i)*(-0.5)+!(i-2)*0.5;
     }
   
@@ -100,69 +100,69 @@ namespace femus {
     }
    
     //bi-quadratic lagrangian  
-    inline double lag2(const double& x, const int& i) const {
+    inline double lagBiquadratic(const double& x, const int& i) const {
       return !i*0.5*x*(x-1.) + !(i-1)*(1.-x)*(1.+x) + !(i-2)*0.5*x*(1.+x);
     }
 
-    inline double dlag2(const double& x, const int& i) const {
+    inline double dlagBiquadratic(const double& x, const int& i) const {
       return !i*(x-0.5) + !(i-1)*(-2.*x) + !(i-2)*(x+0.5);
     }
 
-    inline double d2lag2(const double& x, const int& i) const{
+    inline double d2lagBiquadratic(const double& x, const int& i) const{
       return !i + !(i-1)*(-2.) + !(i-2);
     }
   
     //2D basis 
     // linear triangle 
-    inline double triangle1(const double& x, const double& y, const int& i,const int& j) const {
+    inline double triangleLinear(const double& x, const double& y, const int& i,const int& j) const {
       return (!i*!j)*(1.-x-y)+ !(i-2)*x + !(j-2)*y;
     }
 
-    inline double dtriangle1dx(const double& x, const double& y, const int& i,const int& j) const {
+    inline double dtriangleLineardx(const double& x, const double& y, const int& i,const int& j) const {
       return -(!i*!j) + !(i-2);
     }
 
-    inline double dtriangle1dy(const double& x, const double& y, const int& i,const int& j) const {
+    inline double dtriangleLineardy(const double& x, const double& y, const int& i,const int& j) const {
       return -(!i*!j) + !(j-2);
     }
   
     // quadratic triangle 
-    inline double triangle_ser(const double& x, const double& y, const int& i,const int& j) const {
+    inline double triangleQuadratic(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !i     * (!j* (1.-x-y)*(1.-2.*x-2.*y) + !(j-1)* 4.*y*(1.-x-y) + !(j-2)*(-y+2.*y*y)) +
 	!(i-1) * (!j* 4.*x*(1.-x-y) + !(j-1) * 4.*x*y) +
 	!(i-2) * (!j*(-x+2.*x*x));  
     }
 
-    inline double dtriangle_serdx(const double& x, const double& y, const int& i,const int& j) const {
+    inline double dtriangleQuadraticdx(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !i     * (!j* (-3.+4.*x+4.*y) + !(j-1)*y*(-4.) ) +
 	!(i-1) * (!j* 4.*(1.-2.*x-y)  + !(j-1)*y*(4.)) +
 	!(i-2) * (!j*(-1 + 4.*x));
     }
 
-    inline double dtriangle_serdy(const double& x, const double& y, const int& i,const int& j) const {
+    inline double dtriangleQuadraticdy(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !j     * (!i* (-3.+4.*y+4.*x) + !(i-1)*x*(-4.) ) +
 	!(j-1) * (!i* 4.*(1.-2.*y-x)  + !(i-1)*x*(4.)) +
 	!(j-2) * (!i*(-1 + 4.*y));
     }
     
-    inline double d2triangle_serdx2(const double& x, const double& y, const int& i,const int& j) const {
+    inline double d2triangleQuadraticdx2(const double& x, const double& y, const int& i,const int& j) const {
       return !j*( (!i)*4. +!(i-1)*(-8.) + !(i-2)*4. );
     }
     
-    inline double d2triangle_serdy2(const double& x, const double& y, const int& i,const int& j) const {
+    inline double d2triangleQuadraticdy2(const double& x, const double& y, const int& i,const int& j) const {
       return !i*( (!j)*4. +!(j-1)*(-8.) + !(j-2)*4. );
     }
     
-    inline double d2triangle_serdxdy(const double& x, const double& y, const int& i,const int& j) const {
+    inline double d2triangleQuadraticdxdy(const double& x, const double& y, const int& i,const int& j) const {
       return ( (!i)*(!j) + !(i-1)*!(j-1) )*4. + ( !(i-1)*(!j) + (!i)*!(j-1) )*(-4.);
     }
     
     //biquadratic triangle
     
-    inline double triangle2(const double& x, const double& y, const int& i,const int& j) const {
+    inline double triangleBiquadratic(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !i     * ( !j* ((1.-x-y)*(1.-2.*x-2.*y) + 3.*x*y*(1-x-y)) +
                    !(j-1)* 4.*(y*(1.-x-y) - 3.*x*y*(1-x-y))  +
@@ -173,7 +173,7 @@ namespace femus {
 	!(i-7) * ( !(j-7)* 27.*x*y*(1-x-y) );  
     }
     
-    inline double dtriangle2dx(const double& x, const double& y, const int& i,const int& j) const {
+    inline double dtriangleBiquadraticdx(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !i     * ( !j* (-3.+4.*x+4.*y + 3.*(y-2.*x*y-y*y)) +
                    !(j-1)* 4.*(-y - 3.*(y-2.*x*y-y*y))  +
@@ -184,7 +184,7 @@ namespace femus {
 	!(i-7) * ( !(j-7)* 27.*(y-2.*x*y-y*y) );
     }
     
-    inline double dtriangle2dy(const double& x, const double& y, const int& i,const int& j) const {
+    inline double dtriangleBiquadraticdy(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !j     * ( !i* (-3.+4.*y+4.*x + 3.*(x-x*x-2.*x*y)) +
                    !(i-1)* 4.*(-x - 3.*(x-x*x-2.*x*y))  +
@@ -195,7 +195,7 @@ namespace femus {
 	!(j-7) * ( !(i-7)* 27.*(x-x*x-2.*x*y) );
     }
     
-    inline double d2triangle2dx2(const double& x, const double& y, const int& i,const int& j) const {
+    inline double d2triangleBiquadraticdx2(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !i     * ( !j* (4. - 6.*y) +
                    !(j-1)* 4.*(6.*y)  +
@@ -206,7 +206,7 @@ namespace femus {
 	!(i-7) * ( !(j-7)* (-54.*y) );
     }
     
-    inline double d2triangle2dy2(const double& x, const double& y, const int& i,const int& j) const {
+    inline double d2triangleBiquadraticdy2(const double& x, const double& y, const int& i,const int& j) const {
       return 
         !j     * ( !i* (4. - 6.*x) +
                    !(i-1)* 4.*(6.*x) +
@@ -217,7 +217,7 @@ namespace femus {
         !(j-7) * ( !(i-7)* (-54.*x) );
       }
       
-      inline double d2triangle2dxdy(const double& x, const double& y, const int& i,const int& j) const {
+      inline double d2triangleBiquadraticdxdy(const double& x, const double& y, const int& i,const int& j) const {
       return
         !j     * ( !i* (4. + 3.*(1-2.*x-2.*y)) +
                    !(i-1)* 4.*(-1. - 3.*(1-2.*x-2.*y))  +
@@ -663,10 +663,10 @@ namespace femus {
   };
   
   
-  class quad1: public quad_lag {
+  class quadLinear: public quad_lag {
   public:
-    quad1(): quad_lag(4, 9) {};
-    void PrintType() const { std::cout<<" quad1 ";};
+    quadLinear(): quad_lag(4, 9) {};
+    void PrintType() const { std::cout<<" quadLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -679,10 +679,10 @@ namespace femus {
 
   //************************************************************
 
-  class quadth: public quad_lag {
+  class quadQuadratic: public quad_lag {
   public:
-    quadth(): quad_lag(8, 21) {};
-    void PrintType() const { std::cout<<" quadth ";};
+    quadQuadratic(): quad_lag(8, 21) {};
+    void PrintType() const { std::cout<<" quadQuadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -695,10 +695,10 @@ namespace femus {
 
   //************************************************************
 
-  class quad2: public quad_lag {
+  class quadBiquadratic: public quad_lag {
   public:
-    quad2(): quad_lag(9, 25) {};
-    void PrintType() const { std::cout<<" quad2 ";};
+    quadBiquadratic(): quad_lag(9, 25) {};
+    void PrintType() const { std::cout<<" quadBiquadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -777,10 +777,10 @@ namespace femus {
   };
   
   
-  class tri1: public tri_lag {
+  class triLinear: public tri_lag {
   public:
-    tri1(): tri_lag(3, 6) {}; 
-    void PrintType() const { std::cout<<" tri1 ";};
+    triLinear(): tri_lag(3, 6) {}; 
+    void PrintType() const { std::cout<<" triLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -793,10 +793,10 @@ namespace femus {
 
   //************************************************************
 
-  class tri_ser: public tri_lag {
+  class triQuadratic: public tri_lag {
   public:
-    tri_ser(): tri_lag(6, 15) {}; 
-    void PrintType() const { std::cout<<" tri_ser ";};
+    triQuadratic(): tri_lag(6, 15) {}; 
+    void PrintType() const { std::cout<<" triQuadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -810,10 +810,10 @@ namespace femus {
 
   //************************************************************
   
-  class tri2: public tri_lag {
+  class triBiquadratic: public tri_lag {
   public:
-    tri2(): tri_lag(7, 19) {}; 
-    void PrintType() const { std::cout<<" tri2 ";};
+    triBiquadratic(): tri_lag(7, 19) {}; 
+    void PrintType() const { std::cout<<" triBiquadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -886,10 +886,10 @@ namespace femus {
     static const int KVERT_IND[5][2];
   };
   
-  class line1: public line_lag {
+  class lineLinear: public line_lag {
   public:
-    line1(): line_lag(2, 3) {}; 
-    void PrintType() const { std::cout<<" line1 ";};
+    lineLinear(): line_lag(2, 3) {}; 
+    void PrintType() const { std::cout<<" lineLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -898,10 +898,10 @@ namespace femus {
   };
 
   //************************************************************
-  class line2: public line_lag {
+  class lineBiquadratic: public line_lag {
   public:
-    line2(): line_lag(3, 5) {}; 
-    void PrintType() const { std::cout<<" line2 ";};
+    lineBiquadratic(): line_lag(3, 5) {}; 
+    void PrintType() const { std::cout<<" lineBiquadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;

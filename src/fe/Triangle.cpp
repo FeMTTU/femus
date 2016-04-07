@@ -98,68 +98,68 @@ namespace femus {
   
    
   
-  double tri1::eval_phi(const int *I,const double* x) const {
-    return triangle1(x[0],x[1],I[0],I[1]);
+  double triLinear::eval_phi(const int *I,const double* x) const {
+    return triangleLinear(x[0],x[1],I[0],I[1]);
   }
 
-  double tri1::eval_dphidx(const int *I,const double* x) const {
-    return dtriangle1dx(x[0],x[1],I[0],I[1]);
+  double triLinear::eval_dphidx(const int *I,const double* x) const {
+    return dtriangleLineardx(x[0],x[1],I[0],I[1]);
   }
 
-  double tri1::eval_dphidy(const int *I,const double* x) const {
-    return dtriangle1dy(x[0],x[1],I[0],I[1]);
+  double triLinear::eval_dphidy(const int *I,const double* x) const {
+    return dtriangleLineardy(x[0],x[1],I[0],I[1]);
   }
 
   //************************************************************
 
-  double tri_ser::eval_phi(const int *I,const double* x) const {
-    return triangle_ser(x[0],x[1],I[0],I[1]);
+  double triQuadratic::eval_phi(const int *I,const double* x) const {
+    return triangleQuadratic(x[0],x[1],I[0],I[1]);
   }
 
-  double tri_ser::eval_dphidx(const int *I,const double* x) const {
-    return dtriangle_serdx(x[0],x[1],I[0],I[1]);
+  double triQuadratic::eval_dphidx(const int *I,const double* x) const {
+    return dtriangleQuadraticdx(x[0],x[1],I[0],I[1]);
   }
 
-  double tri_ser::eval_dphidy(const int *I,const double* x) const {
-    return dtriangle_serdy(x[0],x[1],I[0],I[1]);
+  double triQuadratic::eval_dphidy(const int *I,const double* x) const {
+    return dtriangleQuadraticdy(x[0],x[1],I[0],I[1]);
   }
 
-  double tri_ser::eval_d2phidx2(const int *I,const double* x) const {
-    return d2triangle_serdx2(x[0],x[1],I[0],I[1]);
+  double triQuadratic::eval_d2phidx2(const int *I,const double* x) const {
+    return d2triangleQuadraticdx2(x[0],x[1],I[0],I[1]);
   }
 
-  double tri_ser::eval_d2phidy2(const int *I,const double* x) const {
-    return d2triangle_serdy2(x[0],x[1],I[0],I[1]);
+  double triQuadratic::eval_d2phidy2(const int *I,const double* x) const {
+    return d2triangleQuadraticdy2(x[0],x[1],I[0],I[1]);
   }
 
-  double tri_ser::eval_d2phidxdy(const int *I,const double* x) const {
-    return d2triangle_serdxdy(x[0],x[1],I[0],I[1]);
+  double triQuadratic::eval_d2phidxdy(const int *I,const double* x) const {
+    return d2triangleQuadraticdxdy(x[0],x[1],I[0],I[1]);
   }
   
   //****************************************************************
   
-  double tri2::eval_phi(const int *I,const double* x) const {
-    return triangle2(x[0],x[1],I[0],I[1]);
+  double triBiquadratic::eval_phi(const int *I,const double* x) const {
+    return triangleBiquadratic(x[0],x[1],I[0],I[1]);
   }
 
-  double tri2::eval_dphidx(const int *I,const double* x) const {
-    return dtriangle2dx(x[0],x[1],I[0],I[1]);
+  double triBiquadratic::eval_dphidx(const int *I,const double* x) const {
+    return dtriangleBiquadraticdx(x[0],x[1],I[0],I[1]);
   }
 
-  double tri2::eval_dphidy(const int *I,const double* x) const {
-    return dtriangle2dy(x[0],x[1],I[0],I[1]);
+  double triBiquadratic::eval_dphidy(const int *I,const double* x) const {
+    return dtriangleBiquadraticdy(x[0],x[1],I[0],I[1]);
   }
 
-  double tri2::eval_d2phidx2(const int *I,const double* x) const {
-    return d2triangle2dx2(x[0],x[1],I[0],I[1]);
+  double triBiquadratic::eval_d2phidx2(const int *I,const double* x) const {
+    return d2triangleBiquadraticdx2(x[0],x[1],I[0],I[1]);
   }
 
-  double tri2::eval_d2phidy2(const int *I,const double* x) const {
-    return d2triangle2dy2(x[0],x[1],I[0],I[1]);
+  double triBiquadratic::eval_d2phidy2(const int *I,const double* x) const {
+    return d2triangleBiquadraticdy2(x[0],x[1],I[0],I[1]);
   }
 
-  double tri2::eval_d2phidxdy(const int *I,const double* x) const {
-    return d2triangle2dxdy(x[0],x[1],I[0],I[1]);
+  double triBiquadratic::eval_d2phidxdy(const int *I,const double* x) const {
+    return d2triangleBiquadraticdxdy(x[0],x[1],I[0],I[1]);
   }
   
 } //end namespace femus

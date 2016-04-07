@@ -57,26 +57,26 @@ namespace femus {
  
   //************************************************************
 
-  double line1::eval_phi(const int *I,const double* x) const {
-    return lag1(x[0],I[0]);
+  double lineLinear::eval_phi(const int *I,const double* x) const {
+    return lagLinear(x[0],I[0]);
   }
 
-  double line1::eval_dphidx(const int *I,const double* x) const {
-    return dlag1(x[0],I[0]);
+  double lineLinear::eval_dphidx(const int *I,const double* x) const {
+    return dlagLinear(x[0],I[0]);
   }
 
   //************************************************************
 
-  double line2::eval_phi(const int *I,const double* x) const {
-    return lag2(x[0],I[0]);
+  double lineBiquadratic::eval_phi(const int *I,const double* x) const {
+    return lagBiquadratic(x[0],I[0]);
   }
 
-  double line2::eval_dphidx(const int *I,const double* x) const {
-    return dlag2(x[0],I[0]);
+  double lineBiquadratic::eval_dphidx(const int *I,const double* x) const {
+    return dlagBiquadratic(x[0],I[0]);
   }
 
-  double line2::eval_d2phidx2(const int *I,const double* x) const {
-    return d2lag2(x[0],I[0]);
+  double lineBiquadratic::eval_d2phidx2(const int *I,const double* x) const {
+    return d2lagBiquadratic(x[0],I[0]);
   }
 
 } //end namespace femus

@@ -122,73 +122,73 @@ namespace femus {
   // ************************************************************
 
   double hex1::eval_phi(const int *I,const double* x) const {
-    return lag1(x[0],I[0])*lag1(x[1],I[1])*lag1(x[2],I[2]);
+    return lagLinear(x[0],I[0])*lagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
   double hex1::eval_dphidx(const int *I,const double* x) const {
-    return dlag1(x[0],I[0])*lag1(x[1],I[1])*lag1(x[2],I[2]);
+    return dlagLinear(x[0],I[0])*lagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
   double hex1::eval_dphidy(const int *I,const double* x) const {
-    return lag1(x[0],I[0])*dlag1(x[1],I[1])*lag1(x[2],I[2]);
+    return lagLinear(x[0],I[0])*dlagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
   double hex1::eval_dphidz(const int *I,const double* x) const {
-    return lag1(x[0],I[0])*lag1(x[1],I[1])*dlag1(x[2],I[2]);
+    return lagLinear(x[0],I[0])*lagLinear(x[1],I[1])*dlagLinear(x[2],I[2]);
   }
 
   double hex1::eval_d2phidxdy(const int *I,const double* x) const {
-    return dlag1(x[0],I[0])*dlag1(x[1],I[1])*lag1(x[2],I[2]);
+    return dlagLinear(x[0],I[0])*dlagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
   double hex1::eval_d2phidydz(const int *I,const double* x) const {
-    return lag1(x[0],I[0])*dlag1(x[1],I[1])*dlag1(x[2],I[2]);
+    return lagLinear(x[0],I[0])*dlagLinear(x[1],I[1])*dlagLinear(x[2],I[2]);
   }
 
   double hex1::eval_d2phidzdx(const int *I,const double* x) const {
-    return dlag1(x[0],I[0])*lag1(x[1],I[1])*dlag1(x[2],I[2]);
+    return dlagLinear(x[0],I[0])*lagLinear(x[1],I[1])*dlagLinear(x[2],I[2]);
   }
 
   // ************************************************************
 
   double hex2::eval_phi(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*lag2(x[1],I[1])*lag2(x[2],I[2]);
+    return lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double hex2::eval_dphidx(const int *I,const double* x) const {
-    return dlag2(x[0],I[0])*lag2(x[1],I[1])*lag2(x[2],I[2]);
+    return dlagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double hex2::eval_dphidy(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*dlag2(x[1],I[1])*lag2(x[2],I[2]);
+    return lagBiquadratic(x[0],I[0])*dlagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double hex2::eval_dphidz(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*lag2(x[1],I[1])*dlag2(x[2],I[2]);
+    return lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
   double hex2::eval_d2phidx2(const int *I,const double* x) const {
-    return d2lag2(x[0],I[0])*lag2(x[1],I[1])*lag2(x[2],I[2]);
+    return d2lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double hex2::eval_d2phidy2(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*d2lag2(x[1],I[1])*lag2(x[2],I[2]);
+    return lagBiquadratic(x[0],I[0])*d2lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double hex2::eval_d2phidz2(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*lag2(x[1],I[1])*d2lag2(x[2],I[2]);
+    return lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*d2lagBiquadratic(x[2],I[2]);
   }
 
   double hex2::eval_d2phidxdy(const int *I,const double* x) const {
-    return dlag2(x[0],I[0])*dlag2(x[1],I[1])*lag2(x[2],I[2]);
+    return dlagBiquadratic(x[0],I[0])*dlagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
   double hex2::eval_d2phidydz(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*dlag2(x[1],I[1])*dlag2(x[2],I[2]);
+    return lagBiquadratic(x[0],I[0])*dlagBiquadratic(x[1],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
   double hex2::eval_d2phidzdx(const int *I,const double* x) const {
-    return dlag2(x[0],I[0])*lag2(x[1],I[1])*dlag2(x[2],I[2]);
+    return dlagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
   // ************************************************************

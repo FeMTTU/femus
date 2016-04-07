@@ -440,9 +440,9 @@ namespace femus {
     }
 
     if (!strcmp(geom_elem, "line")) { //line
-      if (_SolType == 0) _pt_basis = new line1;
-      else if (_SolType == 1) _pt_basis = new line2;
-      else if (_SolType == 2) _pt_basis = new line2;
+      if (_SolType == 0) _pt_basis = new lineLinear;
+      else if (_SolType == 1) _pt_basis = new lineBiquadratic;
+      else if (_SolType == 2) _pt_basis = new lineBiquadratic;
       else if (_SolType == 3) _pt_basis = new line0;
       else if (_SolType == 4) _pt_basis = new linepwl;
       else {
@@ -575,9 +575,9 @@ namespace femus {
     }
 
     if (!strcmp(geom_elem, "quad")) { //QUAD
-      if (_SolType == 0) _pt_basis = new quad1;
-      else if (_SolType == 1) _pt_basis = new quadth;
-      else if (_SolType == 2) _pt_basis = new quad2;
+      if (_SolType == 0) _pt_basis = new quadLinear;
+      else if (_SolType == 1) _pt_basis = new quadQuadratic;
+      else if (_SolType == 2) _pt_basis = new quadBiquadratic;
       else if (_SolType == 3) _pt_basis = new quad0;
       else if (_SolType == 4) _pt_basis = new quadpwl;
       else {
@@ -587,9 +587,9 @@ namespace femus {
     }
     else if (!strcmp(geom_elem, "tri")) { //TRIANGLE
 
-      if (_SolType == 0) _pt_basis = new tri1;
-      else if (_SolType == 1) _pt_basis = new tri_ser;
-      else if (_SolType == 2) _pt_basis = new tri2;
+      if (_SolType == 0) _pt_basis = new triLinear;
+      else if (_SolType == 1) _pt_basis = new triQuadratic;
+      else if (_SolType == 2) _pt_basis = new triBiquadratic;
       else if (_SolType == 3) _pt_basis = new tri0;
       else if (_SolType == 4) _pt_basis = new tripwl;
       else {
