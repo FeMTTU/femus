@@ -23,17 +23,17 @@ const unsigned facePointNumber[6] = {0, 0, 0, 9, 7, 0};
 
 
 const unsigned facePoints[6][9] = {
-    { },
-    { },
-    { },
-    { 0, 4, 1, 5, 2, 6, 3, 7, 0},
-    { 0, 3, 1, 4, 2, 5, 0},
-    { }
+  { },
+  { },
+  { },
+  { 0, 4, 1, 5, 2, 6, 3, 7, 0},
+  { 0, 3, 1, 4, 2, 5, 0},
+  { }
 };
 
 namespace femus {
 
-void Marker::GetElement() {
+  void Marker::GetElement() {
 
     unsigned dim = _mesh->GetDimension();
 
@@ -41,236 +41,178 @@ void Marker::GetElement() {
     // let's initialize modulus and el (needed in this search)
     // modulus is the least distance from the origin of the vertices of iel and jel
 
-    int iel = _mesh->_elementOffset[_iproc];
-    int jel = iel + 1;
+    double modulus = 1.e10;
+    int iel = _mesh->_elementOffset[_iproc + 1];
 
-    std::vector< std::vector < double > > xiel(dim);    // will store the coordinates of the vertices of element iel
-    std::vector< std::vector < double > > xjel(dim);    // will store the coordinates of the vertices of element jel
-    std::vector< std::vector < double > > xkel(dim);    // will store the coordinates of the vertices of element kel
-    for(unsigned k = 0; k < dim; k++) {
-        xiel[k].reserve(9);
-        xjel[k].reserve(9);
-        xkel[k].reserve(9);
-    }
 
-    double modulusEl0 = 1e10; //modulus of element iel
-    double modulusEl1 = 1e10; //modulus of element jel
-    double modulus = 0; // least modulus among the two above
-    int el = 0; // el will be the element from which we are going to start our search of the marker
-
-    short unsigned ielType = _mesh->GetElementType(iel);
-    short unsigned jelType = _mesh->GetElementType(jel);
-    for(unsigned k = 0; k < dim; k++) {
-        xiel[k].resize(facePointNumber[ielType]); //stores the coordinates of the vertices of element 0
-        xjel[k].resize(facePointNumber[jelType]); //stores the coordinates of the vertices of element 1
-    }
-
-    // scale the coordinates of the vertices of element iel
-    for(unsigned i = 0; i < facePointNumber[ielType]; i++) {
-        unsigned iDof  = _mesh->GetSolutionDof(facePoints[ielType][i], iel, 2);    // global to global mapping between coordinates node and coordinate dof
+    for(int kel = _mesh->_elementOffset[_iproc]; kel < _mesh->_elementOffset[_iproc + 1]; kel += 25) {
+      short unsigned kelType = _mesh->GetElementType(kel);
+      double modulusKel = 0.;
+      for(unsigned i = 0; i < facePointNumber[kelType] - 1; i++) {
+        unsigned kDof  = _mesh->GetSolutionDof(facePoints[kelType][i], kel, 2);    // global to global mapping between coordinates node and coordinate dof
+        double distance2 = 0;
         for(unsigned k = 0; k < dim; k++) {
-            xiel[k][i] = (*_mesh->_topology->_Sol[k])(iDof) - _x[k];     // global extraction and local storage for the element coordinates
+          double dk = (*_mesh->_topology->_Sol[k])(kDof) - _x[k];     // global extraction and local storage for the element coordinates
+          distance2 += dk * dk;
         }
+        modulusKel += sqrt(distance2);
+      }
+      modulusKel /= (facePointNumber[kelType] - 1);
+
+      if(modulusKel < modulus) {
+        iel = kel;
+        modulus = modulusKel;
+      }
     }
 
-    //scale the coordinates of the vertices of element jel
-    for(unsigned j = 0; j < facePointNumber[jelType]; j++) {
-        unsigned jDof  = _mesh->GetSolutionDof(facePoints[jelType][j], jel, 2);    // global to global mapping between coordinates node and coordinate dof
-        for(unsigned k = 0; k < dim; k++) {
-            xjel[k][j] = (*_mesh->_topology->_Sol[k])(jDof) - _x[k];     // global extraction and local storage for the element coordinates
-        }
+    if(iel == _mesh->_elementOffset[_iproc + 1]) {
+      std::cout << "Warning the marker is located on unreasonable distance from the mesh >= 1.e10" << std::endl;
+    }
+    else{
+      std::cout << "the smart search starts from element " << iel<<std::endl; 
     }
 
-    for(unsigned i = 1; i < xiel[0].size() - 1; i++) {
-        double modulusXv = sqrt(xiel[0][i]*xiel[0][i]+xiel[1][i]*xiel[1][i]);    // absolute value of vertex i of element iel
-        std::cout << " modulusXv = " << modulusXv << " , " << " modulusEl0 = " << modulusEl0 << std::endl;
-        modulusEl0 = (modulusXv < modulusEl0) ? modulusXv : modulusEl0;
+
+
+
+    bool elementHasBeenFound = false;
+    bool pointIsOutsideThisMesh = false;
+    
+    int kel = iel;
+    while( !elementHasBeenFound && !pointIsOutsideThisMesh){
+      int jel = GetNextElement(dim, iel, kel);
+      kel = iel;
+      if( jel == iel) {
+        _elem = iel;
+        elementHasBeenFound = true;
+      }
+      else if (jel < 0){
+	pointIsOutsideThisMesh = true;
+      }
+      iel = jel;
     }
-
-    for(unsigned j = 0; j < xjel[0].size() - 1; j++) {
-        double modulusYv = sqrt(xjel[0][j]*xjel[0][j]+xjel[1][j]*xjel[1][j]);    // absolute value of vertex i of element jel = iel + 1
-        std::cout << " modulusYv = " << modulusYv << " , " << " modulusEl1 = " << modulusEl1 << std::endl;
-        modulusEl1 = (modulusYv < modulusEl1) ? modulusYv : modulusEl1;
+    
+    if(elementHasBeenFound)
+      std::cout << " The marker belongs to element " << _elem << std::endl;
+    else if ( pointIsOutsideThisMesh ) {
+      std::cout << " The marker does not belong to this mesh"<< std::endl;
     }
-    std::cout << " modulusEl0 = " << modulusEl0 << " , " << " modulusEl1 = " << modulusEl1 << std::endl;
+  }
 
-    el = (modulusEl0 <= modulusEl1) ? iel : jel;
-    modulus = (modulusEl0 <= modulusEl1) ? modulusEl0 : modulusEl1;
+  int Marker::GetNextElement(const unsigned &dim, const int &currentElem, const int &previousElem) {
 
-    std::cout << " modulus = " << modulus << std::endl;
-
-    // now let's find what element has the least distance from the origin (vertex wise)
-
-    std::cout << " jel = " << jel << std::endl;
-    std::cout << " el = " << el << std::endl;
-
-    for(int kel = jel + 1; kel < _mesh->_elementOffset[_iproc + 1]; kel++) {
-        double modulusKel = 1e10;
-        short unsigned kelType = _mesh->GetElementType(kel);
-        for(unsigned k = 0; k < dim; k++) {
-            xkel[k].resize(facePointNumber[kelType]);
-        }
-        for(unsigned i = 0; i < facePointNumber[ielType]; i++) {
-            unsigned kDof  = _mesh->GetSolutionDof(facePoints[kelType][i], kel, 2);    // global to global mapping between coordinates node and coordinate dof
-            for(unsigned k = 0; k < dim; k++) {
-                xkel[k][i] = (*_mesh->_topology->_Sol[k])(kDof) - _x[k];     // global extraction and local storage for the element coordinates
-            }
-        }
-        for(unsigned i = 1; i < xkel[0].size() - 1; i++) {
-            double modulusKel1 = sqrt(xkel[0][i]*xkel[0][i]+xkel[1][i]*xkel[1][i]);    // absolute value of vertex i of element kel
-            modulusKel = (modulusKel1 < modulusKel) ? modulusKel1 : modulusKel;
-        }
-        std::cout << " modulus = " << modulus << " modulusKel = " << modulusKel << " el =  " << el << " kel =  " << kel <<  std::endl;
-        el = (modulus <= modulusKel) ? el : kel;
-        std::cout << " el = " << el << std::endl;
-        modulus = (modulus <= modulusKel) ? modulus : modulusKel;
-        std::cout << " modulus = " << modulus << " el =  " << el << " kel =  " << kel <<  std::endl;
-        std::cout << " ----------------------------------------------------------------- " << std::endl;
-    }
-
-    std::cout << " el = " << el << std::endl;
-
-    bool ElementHasBeenFound = false;
-
-    if (modulus == 0) {
-        std::cout << " The marker is one of the vertices of element " << el << std::endl;
-        _elem = el;
-        ElementHasBeenFound = true;
-    }
-
-    else {
-        
-        double w = GetWindingNumber(dim, el);
-        if(w > 0) {
-            _elem = el;
-            ElementHasBeenFound = true;
-        }
-        else if(w < 0) {
-            std::cout << " Error negative Winding Number with counterclockwise oriented points " << std::endl;
-            abort();
-        }
-    }
-    if(ElementHasBeenFound)
-        std::cout << " The marker belongs to element " << _elem << std::endl;
-    else {
-        std::cout << " The marker does not belong to element " << el <<  std::endl;
-    }
-}
-
-//     for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
-//       short unsigned ielType = _mesh->GetElementType(iel);
-//       for(unsigned k = 0; k < dim; k++) {
-//         xv[k].resize(facePointNumber[ielType]);
-//       }
-//       for(unsigned i = 0; i < facePointNumber[ielType]; i++) {
-//         unsigned iDof  = _mesh->GetSolutionDof(facePoints[ielType][i], iel, 2);    // global to global mapping between coordinates node and coordinate dof
-//         for(unsigned k = 0; k < dim; k++) {
-//           xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof) - _x[k];     // global extraction and local storage for the element coordinates
-//         }
-//       }
-//       double w = GetWindingNumber(xv, iel);
-//       if(w > 0) {
-//         _elem = iel;
-//         ElementHasBeenFound = true;
-//         break;
-//       }
-//       else if(w < 0) {
-//         std::cout << "Error negative Winding Number with counterclockwise oriented points" << std::endl;
-//         abort();
-//       }
-//
-//     }
-//     if(ElementHasBeenFound)
-//       std::cout << "The marker belongs to element " << _elem << std::endl;
-//     else {
-//       std::cout << " The marker does not belong to this portion of the mesh" << std::endl;
-//     }
-//   }
-
-double Marker::GetWindingNumber(const unsigned &dim, const int &iel) {
-  
     std::vector< std::vector < double > > xv(dim);    // will store the coordinates of the vertices of element el
-        
+
     for(unsigned k = 0; k < dim; k++) {
-            xv[k].reserve(9);
-        }
-        short unsigned ielType = _mesh->GetElementType(iel);
-        for(unsigned k = 0; k < dim; k++) {
-            xv[k].resize(facePointNumber[ielType]);
-        }
-        for(unsigned i = 0; i < facePointNumber[ielType]; i++) {
-            unsigned ielDof  = _mesh->GetSolutionDof(facePoints[ielType][i], iel, 2);    // global to global mapping between coordinates node and coordinate dof
-            for(unsigned k = 0; k < dim; k++) {
-                xv[k][i] = (*_mesh->_topology->_Sol[k])(ielDof) - _x[k];     // global extraction and local storage for the element coordinates
-            }
-        }  
+      xv[k].reserve(9);
+    }
+    short unsigned ielType = _mesh->GetElementType(currentElem);
+    for(unsigned k = 0; k < dim; k++) {
+      xv[k].resize(facePointNumber[ielType]);
+    }
+    for(unsigned i = 0; i < facePointNumber[ielType]; i++) {
+      unsigned ielDof  = _mesh->GetSolutionDof(facePoints[ielType][i], currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
+      for(unsigned k = 0; k < dim; k++) {
+        xv[k][i] = (*_mesh->_topology->_Sol[k])(ielDof) - _x[k];     // global extraction and local storage for the element coordinates
+      }
+    }
 
     double length = 0.;
     for(unsigned i = 0; i < xv[0].size() - 1; i++) {
-        length += sqrt((xv[0][i + 1] - xv[0][i]) * (xv[0][i + 1] - xv[0][i]) +
-                       (xv[1][i + 1] - xv[1][i]) * (xv[1][i + 1] - xv[1][i]));
+      length += sqrt((xv[0][i + 1] - xv[0][i]) * (xv[0][i + 1] - xv[0][i]) +
+                     (xv[1][i + 1] - xv[1][i]) * (xv[1][i + 1] - xv[1][i]));
     }
 
     length /= xv[0].size();
 
     for(unsigned i = 0; i < xv[0].size(); i++) {
-        xv[0][i] /= length;
-        xv[1][i] /= length;
+      xv[0][i] /= length;
+      xv[1][i] /= length;
     }
 
     double epsilon  = 10e-10;
 
     double w = 0.;
     for(unsigned i = 0; i < xv[0].size() - 1; i++) {
-        double Delta = -xv[0][i] * (xv[1][i + 1] - xv[1][i]) + xv[1][i] * (xv[0][i + 1] - xv[0][i]);
-        if(iel == 60) {
-            std::cout << "Delta for element" << iel << " is =" << Delta  << " , " << xv[0][i] << " , " << xv[1][i] << " , " << xv[0][i + 1] << " , " << xv[1][i + 1] << std::endl;
-        }
+      double Delta = -xv[0][i] * (xv[1][i + 1] - xv[1][i]) + xv[1][i] * (xv[0][i + 1] - xv[0][i]);
+      if(currentElem == 60) {
+        std::cout << "Delta for element" << currentElem << " is =" << Delta  << " , " << xv[0][i] << " , " << xv[1][i] << " , " << xv[0][i + 1] << " , " << xv[1][i + 1] << std::endl;
+      }
 
-        std::cout << "Delta=" << Delta << " " << epsilon << std::endl;
+      std::cout << "Delta=" << Delta << " " << epsilon << std::endl;
 
-        if(fabs(Delta) > epsilon) {   // the edge does not pass for the origin
-            std::cout << " xv[1][i]*xv[1][i+1] = " << xv[1][i]*xv[1][i + 1] << std::endl;
-            if(fabs(xv[1][i]) < epsilon && xv[0][i] > 0) {  // the first vertex is on the positive x-axis
-                std::cout << "the first vertex is on the positive x-axis" << std::endl;
-                if(xv[1][i + 1] > 0) w += .5;
-                else w -= .5;
-            }
-            else if(fabs(xv[1][i + 1]) < epsilon && xv[0][i + 1] > 0) { // the second vertex is on the positive x-axis
-                std::cout << "the second vertex is on the positive x-axis" << std::endl;
-                if(xv[1][i] < 0) w += .5;
-                else w -= .5;
-            }
-            else if(xv[1][i]*xv[1][i + 1] < 0) { // the edge crosses the x-axis but doesn't pass through the origin
-                double r = xv[0][i] - xv[1][i] * (xv[0][i + 1] - xv[0][i]) / (xv[1][i + 1] - xv[1][i]);
-                std::cout << " r = " << r << std::endl;
-                if(r > 0) {
-                    if(xv[1][i] < 0) w += 1.;
-                    else w -= 1;
-                }
-            }
+      if(fabs(Delta) > epsilon) {   // the edge does not pass for the origin
+        std::cout << " xv[1][i]*xv[1][i+1] = " << xv[1][i]*xv[1][i + 1] << std::endl;
+        if(fabs(xv[1][i]) < epsilon && xv[0][i] > 0) {  // the first vertex is on the positive x-axis
+          std::cout << "the first vertex is on the positive x-axis" << std::endl;
+          if(xv[1][i + 1] > 0) w += .5;
+          else w -= .5;
         }
-        else { // the line trought the edge passes for the origin
-            std::cout << " xv[0][i]*xv[0][i+1] = " << xv[0][i]*xv[0][i + 1] << std::endl;
-            if(fabs(xv[0][i]) < epsilon  && fabs(xv[1][i]) < epsilon) {  // vertex 1 is the origin
-                w = 1; // set to 1 by default
-                std::cout << "w set to 1 by default (vertex 1 is in the origin)" << std::endl;
-                break;
-            }
-            else if(fabs(xv[0][i + 1]) < epsilon && fabs(xv[1][i + 1]) < epsilon) { // vertex 2 is the origin
-                w = 1; // set to 1 by default
-                std::cout << "w set to 1 by default (vertex 2 is in the origin)" << std::endl;
-                break;
-            }
-            else if(xv[0][i] * xv[0][i + 1] < 0 || xv[1][i] * xv[1][i + 1] < 0) { //the edge crosses the origin
-                w = 1; // set to 1 by default
-                std::cout << "w set to 1 by default (the edge passes through the origin)" << std::endl;
-                break;
-            }
+        else if(fabs(xv[1][i + 1]) < epsilon && xv[0][i + 1] > 0) { // the second vertex is on the positive x-axis
+          std::cout << "the second vertex is on the positive x-axis" << std::endl;
+          if(xv[1][i] < 0) w += .5;
+          else w -= .5;
         }
-        std::cout << " w = " << w << " and iel = " << iel << std::endl;
+        else if(xv[1][i]*xv[1][i + 1] < 0) { // the edge crosses the x-axis but doesn't pass through the origin
+          double r = xv[0][i] - xv[1][i] * (xv[0][i + 1] - xv[0][i]) / (xv[1][i + 1] - xv[1][i]);
+          std::cout << " r = " << r << std::endl;
+          if(r > 0) {
+            if(xv[1][i] < 0) w += 1.;
+            else w -= 1;
+          }
+        }
+      }
+      else { // the line trought the edge passes for the origin
+        std::cout << " xv[0][i]*xv[0][i+1] = " << xv[0][i]*xv[0][i + 1] << std::endl;
+        if(fabs(xv[0][i]) < epsilon  && fabs(xv[1][i]) < epsilon) {  // vertex 1 is the origin
+          w = 1; // set to 1 by default
+          std::cout << "w set to 1 by default (vertex 1 is in the origin)" << std::endl;
+          break;
+        }
+        else if(fabs(xv[0][i + 1]) < epsilon && fabs(xv[1][i + 1]) < epsilon) { // vertex 2 is the origin
+          w = 1; // set to 1 by default
+          std::cout << "w set to 1 by default (vertex 2 is in the origin)" << std::endl;
+          break;
+        }
+        else if(xv[0][i] * xv[0][i + 1] < 0 || xv[1][i] * xv[1][i + 1] < 0) { //the edge crosses the origin
+          w = 1; // set to 1 by default
+          std::cout << "w set to 1 by default (the edge passes through the origin)" << std::endl;
+          break;
+        }
+      }
+      std::cout << " w = " << w << " and currentElem = " << currentElem << std::endl;
     }
-    return w;
-}
+    
+    int nextElem = currentElem;
+    
+    if ( w == 0){
+      
+      double distance = 1.e10;
+      for(unsigned j = 1; j < xv[0].size() - 1; j += 2) {
+	double distancej = 0.;
+	for(unsigned k = 0; k < dim; k++) {
+	  distancej += xv[k][j] * xv[k][j];
+	}
+	distancej = sqrt(distancej);
+	
+        if( distancej < distance ){
+	  int jel = (_mesh->el->GetFaceElementIndex( currentElem, ( j - 1) / 2 ) - 1) ;
+	  if( jel != previousElem ){
+	    nextElem = jel;
+	    distance = distancej;
+	  }
+	}
+      }
+      
+    }
+    else if ( w < 0 ) {
+      std::cout << " Error negative Winding Number with counterclockwise oriented points " << std::endl;
+      abort();
+    }
+    
+    std::cout<<"the next element is "<< nextElem <<std::endl;
+    
+    return nextElem;
+  }
 
 }
