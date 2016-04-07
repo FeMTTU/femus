@@ -40,7 +40,11 @@ int main(int argc, char** args) {
 //   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 //   
   std::vector < double > x(3);
-  
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+// WARNING changes to the tollerances have been made after these Tests have been performed so the comments may not reflect
+// exactly what is really happening
 // /* TESTS ON THE MESH square2.neu*/  
   
 //   // Test 1: the maker is VERY close to a vertex of element 49 (point 37)
@@ -86,13 +90,15 @@ int main(int argc, char** args) {
  // right answer but because it considers the edge PASSING THROUGH the marker and not anymore that the vertex is ON the marker
   
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  */
+// WARNING changes to the tollerances have been made after these Tests have been performed so the comments may not reflect
+// exactly what is really happening
 
 /*  TESTS FOR THE MESH square.neu */  
   
 //Test 1: the marker is just a little bit BELOW an horizontal edge (the lower edge of element 1 in mesh square.neu)  
-//  x[0]=0.33375;  //the marker is outside of the mesh (of square.neu)
-//  x[1]=-0.062500000001; //if the y was -0.625 then it is on the lower edge of element 1
-//  x[2]=0.;  //  
+/* x[0]=0.33375;  //the marker is outside of the mesh (of square.neu)
+ x[1]=-0.062500000001; //if the y was -0.625 then it is on the lower edge of element 1
+ x[2]=0.;  // */ 
 // WARNING With more than 7 zeros the marker is considered to be ON the edge and so it would belong to element 1 anyways.
 // NOTE the code does what it is supposed to do, the error is 1e-12.
 

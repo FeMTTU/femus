@@ -51,7 +51,7 @@ namespace femus {
     
   private:
     
-    double GetWindingNumber( std::vector< std::vector < double > > &xi, const int &iel);
+    double GetWindingNumber(const unsigned &dim, const int &iel);
     
     std::vector < double > _x;
     MarkerType _markerType;
