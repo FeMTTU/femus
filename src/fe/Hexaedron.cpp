@@ -121,79 +121,79 @@ namespace femus {
 
   // ************************************************************
 
-  double hex1::eval_phi(const int *I,const double* x) const {
+  double hexLinear::eval_phi(const int *I,const double* x) const {
     return lagLinear(x[0],I[0])*lagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_dphidx(const int *I,const double* x) const {
+  double hexLinear::eval_dphidx(const int *I,const double* x) const {
     return dlagLinear(x[0],I[0])*lagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_dphidy(const int *I,const double* x) const {
+  double hexLinear::eval_dphidy(const int *I,const double* x) const {
     return lagLinear(x[0],I[0])*dlagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_dphidz(const int *I,const double* x) const {
+  double hexLinear::eval_dphidz(const int *I,const double* x) const {
     return lagLinear(x[0],I[0])*lagLinear(x[1],I[1])*dlagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_d2phidxdy(const int *I,const double* x) const {
+  double hexLinear::eval_d2phidxdy(const int *I,const double* x) const {
     return dlagLinear(x[0],I[0])*dlagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_d2phidydz(const int *I,const double* x) const {
+  double hexLinear::eval_d2phidydz(const int *I,const double* x) const {
     return lagLinear(x[0],I[0])*dlagLinear(x[1],I[1])*dlagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_d2phidzdx(const int *I,const double* x) const {
+  double hexLinear::eval_d2phidzdx(const int *I,const double* x) const {
     return dlagLinear(x[0],I[0])*lagLinear(x[1],I[1])*dlagLinear(x[2],I[2]);
   }
 
   // ************************************************************
 
-  double hex2::eval_phi(const int *I,const double* x) const {
+  double hexBiquadratic::eval_phi(const int *I,const double* x) const {
     return lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double hex2::eval_dphidx(const int *I,const double* x) const {
+  double hexBiquadratic::eval_dphidx(const int *I,const double* x) const {
     return dlagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double hex2::eval_dphidy(const int *I,const double* x) const {
+  double hexBiquadratic::eval_dphidy(const int *I,const double* x) const {
     return lagBiquadratic(x[0],I[0])*dlagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double hex2::eval_dphidz(const int *I,const double* x) const {
+  double hexBiquadratic::eval_dphidz(const int *I,const double* x) const {
     return lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
-  double hex2::eval_d2phidx2(const int *I,const double* x) const {
+  double hexBiquadratic::eval_d2phidx2(const int *I,const double* x) const {
     return d2lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double hex2::eval_d2phidy2(const int *I,const double* x) const {
+  double hexBiquadratic::eval_d2phidy2(const int *I,const double* x) const {
     return lagBiquadratic(x[0],I[0])*d2lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double hex2::eval_d2phidz2(const int *I,const double* x) const {
+  double hexBiquadratic::eval_d2phidz2(const int *I,const double* x) const {
     return lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*d2lagBiquadratic(x[2],I[2]);
   }
 
-  double hex2::eval_d2phidxdy(const int *I,const double* x) const {
+  double hexBiquadratic::eval_d2phidxdy(const int *I,const double* x) const {
     return dlagBiquadratic(x[0],I[0])*dlagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double hex2::eval_d2phidydz(const int *I,const double* x) const {
+  double hexBiquadratic::eval_d2phidydz(const int *I,const double* x) const {
     return lagBiquadratic(x[0],I[0])*dlagBiquadratic(x[1],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
-  double hex2::eval_d2phidzdx(const int *I,const double* x) const {
+  double hexBiquadratic::eval_d2phidzdx(const int *I,const double* x) const {
     return dlagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
   // ************************************************************
 
-  double hexth::eval_phi(const int *I,const double* x) const {
+  double hexQuadratic::eval_phi(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)? 
       th2(x[0],I[0])*th2(x[1],I[1])*th2(x[2],I[2])
@@ -201,7 +201,7 @@ namespace femus {
       (-2.+ix*x[0]+jx*x[1]+kx*x[2])*th2(x[0],I[0])*th2(x[1],I[1])*th2(x[2],I[2]);
   }
 
-  double hexth::eval_dphidx(const int *I,const double* x) const {
+  double hexQuadratic::eval_dphidx(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
       dth2(x[0],I[0])*th2(x[1],I[1])*th2(x[2],I[2]) 
@@ -209,7 +209,7 @@ namespace femus {
       th2(x[1],I[1])*th2(x[2],I[2])*(ix*th2(x[0],I[0]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dth2(x[0],I[0]));
   }
 
-  double hexth::eval_dphidy(const int *I,const double* x) const {
+  double hexQuadratic::eval_dphidy(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
       th2(x[0],I[0])*dth2(x[1],I[1])*th2(x[2],I[2]) 
@@ -217,7 +217,7 @@ namespace femus {
       th2(x[0],I[0])*th2(x[2],I[2])*(jx*th2(x[1],I[1]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dth2(x[1],I[1]));
   }
 
-  double hexth::eval_dphidz(const int *I,const double* x) const {
+  double hexQuadratic::eval_dphidz(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
       th2(x[0],I[0])*th2(x[1],I[1])*dth2(x[2],I[2]) 
@@ -225,7 +225,7 @@ namespace femus {
       th2(x[0],I[0])*th2(x[1],I[1])*(kx*th2(x[2],I[2]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dth2(x[2],I[2]));
   }
 
-  double hexth::eval_d2phidx2(const int *I,const double* x) const {
+  double hexQuadratic::eval_d2phidx2(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
       d2th2(x[0],I[0])*th2(x[1],I[1])*th2(x[2],I[2]) 
@@ -233,7 +233,7 @@ namespace femus {
       th2(x[1],I[1])*th2(x[2],I[2])*( 2.*ix*dth2(x[0],I[0]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*d2th2(x[0],I[0]) );
   }
 
-  double hexth::eval_d2phidy2(const int *I,const double* x) const {
+  double hexQuadratic::eval_d2phidy2(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
       th2(x[0],I[0])*d2th2(x[1],I[1])*th2(x[2],I[2]) 
@@ -241,7 +241,7 @@ namespace femus {
       th2(x[2],I[2])*th2(x[0],I[0])*( 2.*jx*dth2(x[1],I[1]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*d2th2(x[1],I[1]) );
   }
 
-  double hexth::eval_d2phidz2(const int *I,const double* x) const {
+  double hexQuadratic::eval_d2phidz2(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
       th2(x[0],I[0])*th2(x[1],I[1])*d2th2(x[2],I[2]) 
@@ -249,7 +249,7 @@ namespace femus {
       th2(x[0],I[0])*th2(x[1],I[1])*( 2.*kx*dth2(x[2],I[2]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*d2th2(x[2],I[2]) );
   }
 
-  double hexth::eval_d2phidxdy(const int *I,const double* x) const {
+  double hexQuadratic::eval_d2phidxdy(const int *I,const double* x) const {
     const double ix=I[0]-1., jx=I[1]-1., kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
       dth2(x[0],I[0])*dth2(x[1],I[1])*th2(x[2],I[2]) 
@@ -260,7 +260,7 @@ namespace femus {
 	      
   }
 
-  double hexth::eval_d2phidydz(const int *I,const double* x) const {
+  double hexQuadratic::eval_d2phidydz(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
       th2(x[0],I[0])*dth2(x[1],I[1])*dth2(x[2],I[2]) 
@@ -271,7 +271,7 @@ namespace femus {
 	    
   }
 
-  double hexth::eval_d2phidzdx(const int *I,const double* x) const {
+  double hexQuadratic::eval_d2phidzdx(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
       dth2(x[0],I[0])*th2(x[1],I[1])*dth2(x[2],I[2]) 

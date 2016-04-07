@@ -779,9 +779,9 @@ namespace femus {
 
     if (!strcmp(geom_elem, "hex")) { //HEX
 
-      if (_SolType == 0) _pt_basis = new hex1;
-      else if (_SolType == 1) _pt_basis = new hexth;
-      else if (_SolType == 2) _pt_basis = new hex2;
+      if (_SolType == 0) _pt_basis = new hexLinear;
+      else if (_SolType == 1) _pt_basis = new hexQuadratic;
+      else if (_SolType == 2) _pt_basis = new hexBiquadratic;
       else if (_SolType == 3) _pt_basis = new hex0;
       else if (_SolType == 4) _pt_basis = new hexpwl;
       else {
@@ -790,9 +790,9 @@ namespace femus {
       }
     }
     else if (!strcmp(geom_elem, "wedge")) { //WEDGE
-      if (_SolType == 0) _pt_basis = new wedge1;
-      else if (_SolType == 1) _pt_basis = new wedgeth;
-      else if (_SolType == 2) _pt_basis = new wedge2;
+      if (_SolType == 0) _pt_basis = new wedgeLinear;
+      else if (_SolType == 1) _pt_basis = new wedgeQuadratic;
+      else if (_SolType == 2) _pt_basis = new wedgeBiquadratic;
       else if (_SolType == 3) _pt_basis = new wedge0;
       else if (_SolType == 4) _pt_basis = new wedgepwl;
       else {
@@ -801,9 +801,9 @@ namespace femus {
       }
     }
     else if (!strcmp(geom_elem, "tet")) { //TETRAHEDRA
-      if (_SolType == 0) _pt_basis = new tet1;
-      else if (_SolType == 1) _pt_basis = new tet_ser;
-      else if (_SolType == 2) _pt_basis = new tet2;
+      if (_SolType == 0) _pt_basis = new tetLinear;
+      else if (_SolType == 1) _pt_basis = new tetQuadratic;
+      else if (_SolType == 2) _pt_basis = new tetBiquadratic;
       else if (_SolType == 3) _pt_basis = new tet0;
       else if (_SolType == 4) _pt_basis = new tetpwl;
       else {
