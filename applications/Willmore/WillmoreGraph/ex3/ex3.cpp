@@ -49,46 +49,30 @@ double InitalValueWSphere(const std::vector < double >& x) {
 
 // Torus
 
-bool SetBoundaryConditionTorus(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+double c1 = .5;
+bool SetBoundaryConditionCatenoid(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-
-  double theta = acos(-1.) / 6;
-  double z = sin(theta);
+  
+  
+  double z = c1 * acosh ( 1. / c1 * sqrt(x[0]*x[0] + x[1]*x[1] ) );
 
   if (!strcmp("u", SolName)) {
     value = z;
-  } else if (!strcmp("W", SolName)) {
-    double theta1 = theta;
-    double theta2 = acos(-1.) - theta1;
-    double A = 1. / z;
-    double H1 =  0.5 * (1. + cos(theta1) / (sqrt(2.) + cos(theta1)));
-    double H2 =  0.5 * (1. + cos(theta2) / (sqrt(2.) + cos(theta2)));
-
-    if (facename == 1) {
-      value = - A * H1;
-    } else if (facename == 2) {
-      value = - A * H2;
-    }
+  } 
+  else if (!strcmp("W", SolName)) {
+   value = 0;  
   }
 
   return dirichlet;
 }
 
-double InitalValueUTorus(const std::vector < double >& x) {
-  double r = sqrt(x[0] * x[0] + x[1] * x[1]);
-  double cosu = r - sqrt(2) ;
-  return sqrt(1 - cosu * cosu);
-  //return 0.5;
+double InitalValueUCatenoid(const std::vector < double >& x) {
+  return c1 * acosh ( 1. / c1 * sqrt(x[0]*x[0] + x[1]*x[1] ) );
 }
 
-double InitalValueWTorus(const std::vector < double >& x) {
+double InitalValueWCatenoid(const std::vector < double >& x) {
 
-  double r = sqrt(x[0] * x[0] + x[1] * x[1]);
-  double cosu = r - sqrt(2) ;
-  double sinu = sqrt(1 - cosu * cosu);
-
-  return - 0.5 / sinu * (1 + cosu / (sqrt(2.) + cosu));
-  //return 0.25;
+  return 0;
 }
 
 
@@ -185,10 +169,10 @@ int main(int argc, char** args) {
         mlSol.GenerateBdc("u");
         mlSol.GenerateBdc("W");
       } else if (simulation == 2) {
-        mlSol.Initialize("u", InitalValueUTorus);
-        mlSol.Initialize("W", InitalValueWTorus);
+        mlSol.Initialize("u", InitalValueUCatenoid);
+        mlSol.Initialize("W", InitalValueWCatenoid);
         // attach the boundary condition function and generate boundary data
-        mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTorus);
+        mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionCatenoid);
         mlSol.GenerateBdc("u");
         mlSol.GenerateBdc("W");
       }
@@ -553,22 +537,18 @@ void GetExactSolutionGradientSphere(const std::vector < double >& x, vector < do
 };
 
 
-double GetExactSolutionValueTorus(const std::vector < double >& x) {
+double GetExactSolutionValueCatenoid(const std::vector < double >& x) {
 
-  double r = sqrt(x[0] * x[0] + x[1] * x[1]);
-  double cosu =  r - sqrt(2) ;
-  return sqrt(1 - cosu * cosu);
+  return c1 * acosh ( 1. / c1 * sqrt(x[0]*x[0] + x[1]*x[1] ) );
 
 };
 
-void GetExactSolutionGradientTorus(const std::vector < double >& x, vector < double >& solGrad) {
+void GetExactSolutionGradientCatenoid(const std::vector < double >& x, vector < double >& solGrad) {
 
   double r = sqrt(x[0] * x[0] + x[1] * x[1]);
-  double cosu =  r - sqrt(2) ;
-  double z = sqrt(1 - cosu * cosu);
-
-  solGrad[0] =  - cosu / (r * z) * x[0];
-  solGrad[1] =  - cosu / (r * z) * x[1];
+  
+  solGrad[0] =  c1*x[0]/( c1*r * sqrt( ( c1 + r ) / c1 ) * sqrt( -1 + r/c1 ) );
+  solGrad[1] =  c1*x[1]/( c1*r * sqrt( ( c1 + r ) / c1 ) * sqrt( -1 + r/c1 ) );
 
 };
 
@@ -671,8 +651,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
         exactSol = GetExactSolutionValueSphere(xGauss);
         GetExactSolutionGradientSphere(xGauss, solGrad);
       } else if (simulation == 2) {
-        exactSol = GetExactSolutionValueTorus(xGauss);
-        GetExactSolutionGradientTorus(xGauss, solGrad);
+        exactSol = GetExactSolutionValueCatenoid(xGauss);
+        GetExactSolutionGradientCatenoid(xGauss, solGrad);
       }
 
       l2norm += (exactSol - soluGauss) * (exactSol - soluGauss) * weight;
