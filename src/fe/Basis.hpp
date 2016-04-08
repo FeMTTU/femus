@@ -556,7 +556,7 @@ namespace femus {
 
   class tetBiquadratic: public tet_lag {
   public:
-    tetBiquadratic(): tet_lag(15, 35) {};
+    tetBiquadratic(): tet_lag(15, 67) {};
     void PrintType() const { std::cout<<" tetBiquadratic ";};
     
     double eval_phi(const int *I,const double* x) const;

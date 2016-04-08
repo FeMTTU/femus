@@ -412,7 +412,7 @@ namespace femus {
 
 
   /**
-   * This function generates face (for hex and wedge elements) and element (for hex and quad) dofs
+   * This function generates face dof (for hex and wedge elements) and element dof (for hex and quad)
    **/
   void MeshRefinement::Buildkmid() {
 

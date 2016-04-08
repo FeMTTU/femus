@@ -54,12 +54,26 @@ namespace femus {
     {0, 1}
   };
 
-  const double GambitIO::_baricentricWeight[N_GEOM_ELS][6] = {
+ 
+  const unsigned GambitIO::_numberOfMissedBiquadraticNodes[N_GEOM_ELS] = {0,5,3,0,1,0};
+  
+  const double GambitIO::_baricentricWeight[N_GEOM_ELS][5][18] = {
     {},
+    { 
+      { -1./9., -1./ 9., -1./9.,  0    , 4./9., 4./9., 4./9., 0.   , 0.   , 0.   },
+      { -1./9., -1./ 9.,  0.   , -1./9., 4./9., 0.   , 0.   , 4./9., 4./9., 0.   },
+      {  0.   , -1./ 9., -1./9., -1./9., 0.   , 4./9., 0.   , 0.   , 4./9., 4./9.},
+      { -1./9.,  0.    , -1./9., -1./9., 0.   , 0.   , 4./9., 4./9., 0.   , 4./9.},
+      { -1./8., -1./ 8., -1./8., -1./8., 1./4., 1./4., 1./4., 1./4., 1./4., 1./4.}
+    },
+    {
+      { -1./9., -1./9., -1./9., 0.   ,  0.   ,  0.   , 4./9., 4./9., 4./9.},
+      {  0.   ,  0.   ,  0.   ,-1./9., -1./9., -1./9., 0.   , 0.   , 0.   , 4./9., 4./9., 4./9.},
+      {  0.   ,  0.   ,  0.   , 0.   ,  0.   ,  0.   , 0.   , 0.   , 0.   , 0.   , 0.   , 0.   ,
+        -1./9., -1./9., -1./9., 4./9.,  4./9.,  4./9.},
+    },
     {},
-    {},
-    {},
-    { -1. / 9., -1. / 9., -1. / 9., 4. / 9., 4. / 9., 4. / 9.}
+    {{ -1. / 9., -1. / 9., -1. / 9., 4. / 9., 4. / 9., 4. / 9.}}
   };
 
   void GambitIO::read(const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag) {
@@ -110,35 +124,42 @@ namespace femus {
     for(unsigned iel = 0; iel < nel; iel++) {
       mesh.el->SetElementGroup(iel, 1);
       unsigned nve;
+      unsigned elementType;
       inf >> str2 >> str2 >> nve;
       if(nve == 27) {
         type_elem_flag[0] = type_elem_flag[3] = true;
         mesh.el->AddToElementNumber(1, "Hex");
         mesh.el->SetElementType(iel, 0);
+	elementType = 0;
       }
       else if(nve == 10) {
         type_elem_flag[1] = type_elem_flag[4] = true;
         mesh.el->AddToElementNumber(1, "Tet");
         mesh.el->SetElementType(iel, 1);
+	elementType = 1;
       }
       else if(nve == 18) {
         type_elem_flag[2] = type_elem_flag[3] = type_elem_flag[4] = true;
         mesh.el->AddToElementNumber(1, "Wedge");
         mesh.el->SetElementType(iel, 2);
+	elementType = 2;
       }
       else if(nve == 9) {
         type_elem_flag[3] = true;
         mesh.el->AddToElementNumber(1, "Quad");
         mesh.el->SetElementType(iel, 3);
+	elementType = 3;
       }
       else if(nve == 6 && mesh.GetDimension() == 2) {
         type_elem_flag[4] = true;
         mesh.el->AddToElementNumber(1, "Triangle");
         mesh.el->SetElementType(iel, 4);
+	elementType = 4;
       }
       else if(nve == 3 && mesh.GetDimension() == 1) {
         mesh.el->AddToElementNumber(1, "Line");
         mesh.el->SetElementType(iel, 5);
+	elementType = 5;
       }
       else {
         std::cout << "Error! Invalid element type in reading Gambit File!" << std::endl;
@@ -151,10 +172,12 @@ namespace femus {
         inf >> value;
         mesh.el->SetElementDofIndex(iel, inode, value - 1u);
       }
-      if(nve == 6) {
-        unsigned inode = 6;// GambitIO::GambitToFemusVertexIndex[mesh.el->GetElementType(iel)][nve];
-        mesh.el->SetElementDofIndex(iel, inode, nvt);
-        nvt++;
+      // add biquadratic nodes not included in gambit
+      unsigned inode = nve;
+      for(unsigned j = 0; j < _numberOfMissedBiquadraticNodes[elementType]; j++){
+	  mesh.el->SetElementDofIndex(iel, inode, nvt);
+	  nvt++;
+	  inode++;
       }
     }
     inf >> str2;
@@ -206,26 +229,6 @@ namespace femus {
         coords[1][j] = y / Lref;
         coords[2][j] = 0.;
       }
-      for(int iel = 0; iel < nel; iel++) {
-	unsigned elementType = mesh.el->GetElementType(iel);
-        if( elementType == 4) {
-	  std::cout<<nvt0<<std::endl;
-	  coords[0][nvt0] = 0.;
-          coords[1][nvt0] = 0.;
-          coords[2][nvt0] = 0.;
-          for(int i = 0; i < 6; i++) {
-            unsigned inode = mesh.el->GetElementDofIndex(iel, i);
-            for(int k = 0; k < mesh.GetDimension(); k++) {
-	      coords[k][nvt0] += coords[k][inode] * _baricentricWeight[ elementType ][i];
-            }
-            
-          }
-          
-         
-          
-        }
-        nvt0++;
-      }
     }
     else if(mesh.GetDimension() == 1) {
       for(unsigned j = 0; j < nvt0; j++) {
@@ -240,6 +243,27 @@ namespace femus {
       std::cout << "error node data mesh 1" << std::endl;
       exit(0);
     }
+    
+    // add the coordinates of the biquadratic nodes not included in gambit
+    for(int iel = 0; iel < nel; iel++) {
+      unsigned elementType = mesh.el->GetElementType(iel);
+      for(unsigned j = 0; j < _numberOfMissedBiquadraticNodes[elementType]; j++){
+	std::cout << nvt0 << std::endl;
+	coords[0][nvt0] = 0.;
+        coords[1][nvt0] = 0.;
+        coords[2][nvt0] = 0.;
+        for(int i = 0; i < mesh.el->GetNVE(elementType,1); i++) {
+          unsigned inode = mesh.el->GetElementDofIndex(iel, i);
+          for(int k = 0; k < mesh.GetDimension(); k++) {
+	    coords[k][nvt0] += coords[k][inode] * _baricentricWeight[ elementType ][j][i];
+          } 
+        }     
+      }
+      nvt0++;
+    }
+    
+    
+    
     inf.close();
     // end read NODAL COORDINATES ************* C
 

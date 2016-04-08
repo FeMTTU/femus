@@ -60,7 +60,8 @@ class GambitIO : public MeshInput<Mesh>
    static const unsigned GambitToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES];
   
    /** Weights used to build the baricentric coordinate **/
-   static const double _baricentricWeight[N_GEOM_ELS][6];
+   static const double _baricentricWeight[N_GEOM_ELS][5][18];
+   static const unsigned _numberOfMissedBiquadraticNodes[N_GEOM_ELS];
    
 };
 

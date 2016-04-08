@@ -36,21 +36,21 @@ namespace femus {
     {0,0.75,0.25},    {0,0.5,0.25},    {0.25,0.5,0.25},                		//22->27
     {0.25,0,0.5},     {0.25,0.25,0.5}, {0,0.25,0.5},
     {0,0,0.75},       {0.25,0,0.75},   {0,0.25,0.75},                  		//28->33
-    {0.25,0.25,0.25},                                                  		//34  
+    {0.25,0.25,0.25},   //34  
+    {1./3.,0.,1./3.}, {1./3.,1./3.,1./3.}, {1./3.,1./3.,0.}, {0.,1./3.,1./3.},          //external faces of internal tetrahedra
     {1./6.,1./6.,0.}, {1./6.,0,1./6.}, {1./6.,1./6.,1./6.}, {0.,1./6.,1./6.},           //faces of 1st external triangle   
     {2./3.,1./6.,0.}, {2./3.,1./6.,1./6.}, {1./2.,1./6.,1./6.}, {2./3.,0.,1./6.},       //faces of 2nd external triangle
     {1./6.,2./3,0.}, {0.,2./3.,1./6.}, {1./6.,1./2.,1./6.}, {1./6.,2./3.,1./6.},        //faces of 3rd external triangle
     {1./6.,1./6.,1./2.}, {1./6.,0.,2./3.}, {1./6.,1./6.,2./3.}, {0.,1./6.,2./3.},       //faces of 4th external triangle
-    {1./3.,0.,1./3.}, {1./3.,1./3.,1./3.}, {1./3.,1./3.,0.}, {0.,1./3.,1./3.},          //external faces of internal tetrahedra
     {1./3.,1./6.,1./6.}, {1./3.,1./6.,1./3.}, {1./6.,1./3.,1./3.}, {1./6.,1./3.,1./6.}, //internal faces of internal tetrahedra
     {1./8.,1./8.,1./8.}, //baricenter of 1st external triangle
     {5./8.,1./8.,1./8.}, //baricenter of 2nd external triangle
     {1./8.,5./8.,1./8.}, //baricenter of 3rd external triangle
     {1./8.,1./8.,5./8.}, //baricenter of 4th external triangle
-    {3./8.,1./2.,1./4.}, //baricenter of 1st internal triangle
+    {3./8.,1./8.,1./4.}, //baricenter of 1st internal triangle
     {1./4.,1./4.,3./8.}, //baricenter of 2nd internal triangle
-    {1./4.,1./4.,1./2.}, //baricenter of 3rd internal triangle
-    {1./2.,3./8.,1./2.}  //baricenter of 4th internal triangle
+    {1./4.,1./4.,1./8.}, //baricenter of 3rd internal triangle
+    {1./8.,3./8.,1./4.}  //baricenter of 4th internal triangle
   };
 
 //   const int tet_lag::IND[10][3] = { 
@@ -97,11 +97,11 @@ namespace femus {
     {2,4},{2,5},{2,6},{2,7},{2,8},{2,9},
     {3,4},{3,5},{3,6},{3,7},{3,8},{3,9},
     {4,5},
+    {4,13},{5,11},{6,13},{7,12}, //external faces of internal tetrahedra
     {0,10},{0,11},{0,12},{0,13}, //faces of external tetrahedra
     {1,10},{1,11},{1,12},{1,13},
     {2,10},{2,11},{2,12},{2,13},
     {3,10},{3,11},{3,12},{3,13},
-    {4,13},{5,11},{6,13},{7,12}, //external faces of internal tetrahedra
     {4,10},{4,12},{5,10},{6,12}, //internal faces of internal tetrahedra
     {0,14},{1,14},{2,14},{3,14}, // baricenters
     {4,14},{5,14},{6,14},{7,14}
