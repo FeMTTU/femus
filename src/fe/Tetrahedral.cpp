@@ -24,7 +24,7 @@ namespace femus {
 
 // ************** TETRAHEDRA ***************
 
-  const double tet_lag::X[35/*+32*/][3] = { 
+  const double tet_lag::X[67][3] = { 
     {0, 0, 0},        {1, 0, 0},       {0, 1, 0},   {0, 0, 1},         		//0->4
     {0.5, 0, 0},      {0.5, 0.5, 0},   {0, 0.5, 0},
     {0.,  0, 0.5},    {0.5, 0., 0.5},  {0, 0.5, 0.5},                  		//5->9
@@ -37,15 +37,20 @@ namespace femus {
     {0.25,0,0.5},     {0.25,0.25,0.5}, {0,0.25,0.5},
     {0,0,0.75},       {0.25,0,0.75},   {0,0.25,0.75},                  		//28->33
     {0.25,0.25,0.25},                                                  		//34  
-    //{1./6.,1./6.,0.}, {1./6.,0,1./6.}, {1./6.,1./6.,1./6.}, {0.,1./6.,1./6.},     //faces of 1st external triangle   
-    //{2./3.,1./6.,0.}, {2./3.,1./6.,1./6.}, {1./2.,1./6.,1./6.}, {2./3.,0.,1.6.},  //faces of 2nd external triangle
-    //{1./6.,2./3,0.}, {0.,2./3.,1./6.}, {1./6.,1./2.,1./6.}, {1./6.,2./3.,1./6.},  //faces of 3rd external triangle
-    //{1./6.,1./6.,1./2.}, {1./6.,0.,2./3.}, {1./6.,1./6.,2./3.}, {0.,1./6.,2./3.}, //faces of 4th external triangle
-    //
-    //{1./8.,1./8.,1./8.}, //baricenter of 1st external triangle
-    //{5./8.,1./8.,1./8.}, //baricenter of 2nd external triangle
-    //{1./8.,5./8.,1./8.}, //baricenter of 3rd external triangle
-    //{1./8.,1./8.,5./8.}  //baricenter of 4th external triangle
+    {1./6.,1./6.,0.}, {1./6.,0,1./6.}, {1./6.,1./6.,1./6.}, {0.,1./6.,1./6.},           //faces of 1st external triangle   
+    {2./3.,1./6.,0.}, {2./3.,1./6.,1./6.}, {1./2.,1./6.,1./6.}, {2./3.,0.,1./6.},       //faces of 2nd external triangle
+    {1./6.,2./3,0.}, {0.,2./3.,1./6.}, {1./6.,1./2.,1./6.}, {1./6.,2./3.,1./6.},        //faces of 3rd external triangle
+    {1./6.,1./6.,1./2.}, {1./6.,0.,2./3.}, {1./6.,1./6.,2./3.}, {0.,1./6.,2./3.},       //faces of 4th external triangle
+    {1./3.,0.,1./3.}, {1./3.,1./3.,1./3.}, {1./3.,1./3.,0.}, {0.,1./3.,1./3.},          //external faces of internal tetrahedra
+    {1./3.,1./6.,1./6.}, {1./3.,1./6.,1./3.}, {1./6.,1./3.,1./3.}, {1./6.,1./3.,1./6.}, //internal faces of internal tetrahedra
+    {1./8.,1./8.,1./8.}, //baricenter of 1st external triangle
+    {5./8.,1./8.,1./8.}, //baricenter of 2nd external triangle
+    {1./8.,5./8.,1./8.}, //baricenter of 3rd external triangle
+    {1./8.,1./8.,5./8.}, //baricenter of 4th external triangle
+    {3./8.,1./2.,1./4.}, //baricenter of 1st internal triangle
+    {1./4.,1./4.,3./8.}, //baricenter of 2nd internal triangle
+    {1./4.,1./4.,1./2.}, //baricenter of 3rd internal triangle
+    {1./2.,3./8.,1./2.}  //baricenter of 4th internal triangle
   };
 
 //   const int tet_lag::IND[10][3] = { 

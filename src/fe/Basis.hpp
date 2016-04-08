@@ -507,7 +507,7 @@ namespace femus {
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
   
   protected: 
-    static const double X[35][3];
+    static const double X[67][3];
     static const int IND[15][3];
     static const int KVERT_IND[67][2];
   };
