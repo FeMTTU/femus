@@ -82,7 +82,7 @@ int main(int argc, char** args) {
   
 //Test 4: the maker is VERY close to a vertex of element 15 (point 19)
  x[0]=2.72848e-05;  //it is on element 15 
- x[1]=-100*2.62822e-05;
+ x[1]=-2.62822e-05;
  x[2]=0.;
 //WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 //NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
@@ -133,9 +133,9 @@ int main(int argc, char** args) {
 // NOTE With 7 zeros, the code does what it is supposed to do, the error is (1e-12).
 
 //Test 5: the marker is on the lower half of the RIGHT edge of element 0 
-// x[0]=0.3125;  //
-// x[1]=-0.05555555; // 
-// x[2]=0.; 
+/*x[0]=0.3125;  //
+x[1]=-0.05555555; // 
+x[2]=0.;*/ 
 // NOTE The code does what it is supposed to do.
 
 ////////////////////////////////////////////////////////////////////////////////////////
