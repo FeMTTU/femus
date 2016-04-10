@@ -77,8 +77,8 @@ void Marker::GetElement() {
 
     int kel = iel;
     while( !elementHasBeenFound && !pointIsOutsideThisMesh) {
-        //int jel = GetNextElement(dim, iel, kel);
-        int jel =4;
+        //int jel = GetNextElement(dim, iel, kel); c'e' questo commentato senno' non runna
+        int jel =4; // con jel =4 tutti i processori in teoria dovrebbero trovare il marker, quindi alla fine del send & receive, processorMarkerFlag dovrebbe avere entrie tutte uguali a 1 per tutti i processori ma non e' cosi...
         kel = iel;
         if( jel == iel) {
             _elem = iel;
@@ -114,27 +114,20 @@ void Marker::GetElement() {
     
     int* icall = iprocCalls[_iproc];
     std::cout << "processorMarkerFlag PRIMA DEL SEND = "<< processorMarkerFlag[_iproc] << std::endl;
-    for(unsigned i=0; i<_nprocs; i++){
-      if(i != _iproc){
-	MPI_Send( &processorMarkerFlag[_iproc], 1, MPI_UNSIGNED, i, *icall, MPI_COMM_WORLD);
+    for(unsigned jproc=0; jproc<_nprocs; jproc++){
+      if(jproc != _iproc){
+	MPI_Send( &processorMarkerFlag[_iproc], 1, MPI_UNSIGNED, jproc, *icall, MPI_COMM_WORLD);
 	//WARNING non manda quello che dovrebbe, i.e. manda 0 al posto di 1 :(
-	int z = (i < _iproc) ? _iproc -1 : _iproc;
-	int* p = iprocCalls[i]+z;
-        processorMarkerFlag[i] = MPI_Recv( &processorMarkerFlag[i], 1, MPI_UNSIGNED, i, *p, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-	std::cout << "ricevuto questo " << processorMarkerFlag[i] << std::endl;
+	int z = (jproc < _iproc) ? _iproc -1 : _iproc;
+	int* p = iprocCalls[jproc]+z;
+        processorMarkerFlag[jproc] = MPI_Recv( &processorMarkerFlag[jproc], 1, MPI_UNSIGNED, jproc, *p, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	std::cout << "ricevuto questo " << processorMarkerFlag[jproc] << std::endl;
 	icall++;
       }
     }
     
     delete[] calls;
     delete[] iprocCalls;
-
-//     for( unsigned i = 0; i < _nprocs; i++) {
-//       if(i != _iproc){
-//          MPI_Send( &processorMarkerFlag[_iproc], 1, MPI_UNSIGNED, i, i, MPI_COMM_WORLD);
-// 	 processorMarkerFlag[i] = MPI_Recv( &processorMarkerFlag[i], 1, MPI_UNSIGNED, i, _iproc, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-//       }
-//     }
 
 
     for(unsigned j =0 ; j<_nprocs; j++) {
@@ -240,16 +233,16 @@ int Marker::GetNextElement(const unsigned &dim, const int &currentElem, const in
             distancej = sqrt(distancej);
 
             if( distancej < distance ){
-                int jel = (_mesh->el->GetFaceElementIndex( currentElem, ( j - 1) / 2 ) - 1) ;
 		//if (_mesh->_elementOffset[_iproc] <= jel || jel < _mesh->_elementOffset[_iproc+1] ){
-                  if( jel != previousElem ) {
+		int jel = (_mesh->el->GetFaceElementIndex( currentElem, ( j - 1) / 2 ) - 1);
+                if( jel != previousElem ) {
                       nextElem = jel;
                       distance = distancej;
                   }
               //}
               //else{
 		//std::cout << " the next element does not belong to the current processor " << std::endl;
-		//return jel;
+	        //nextElem = jel;
 	      //}
             }
         }
