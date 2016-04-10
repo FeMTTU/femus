@@ -33,17 +33,17 @@ const unsigned facePoints[6][9] = {
 
 namespace femus {
 
-void Marker::GetElement() { 
+void Marker::GetElement() {
 
     unsigned dim = _mesh->GetDimension();
-    std::vector < unsigned > processorMarkerFlag(_nprocs,2);
+    std::vector < unsigned > processorMarkerFlag(_nprocs, 2);
     for(unsigned j =0 ; j<_nprocs; j++) {
       std::cout << " processorMarkerFlag[" <<j<< "] = " << processorMarkerFlag[j] <<std::endl;
     }
 
     double modulus = 1.e10;
     int iel = _mesh->_elementOffset[_iproc + 1];
-    
+
     for(int kel = _mesh->_elementOffset[_iproc]; kel < _mesh->_elementOffset[_iproc + 1]; kel += 25) {
         short unsigned kelType = _mesh->GetElementType(kel);
         double modulusKel = 0.;
@@ -91,49 +91,31 @@ void Marker::GetElement() {
     }
 
     if(elementHasBeenFound) {
-        processorMarkerFlag[_iproc]=1;
+        processorMarkerFlag[_iproc] = 1;
         std::cout << " The marker belongs to element " << _elem << std::endl;
     }
     else if ( pointIsOutsideThisMesh ) {
-        processorMarkerFlag[_iproc]=0;
+        processorMarkerFlag[_iproc] = 0;
         std::cout << " The marker does not belong to this mesh"<< std::endl;
     }
- 
+
     for(unsigned j =0 ; j<_nprocs; j++) {
       std::cout << " processorMarkerFlag[" <<j<< "] = " << processorMarkerFlag[j] <<std::endl;
     }
- 
-    int * calls = new int [_nprocs * (_nprocs-1)]; 
-    int ** iprocCalls = new int* [_nprocs]; 
-    for(unsigned i=0; i<_nprocs; i++){
-      iprocCalls[i] = calls + i * (_nprocs-1);
-    }
-    for(unsigned i=0; i< _nprocs * (_nprocs-1) ; i++){
-      calls[i] = i;
-    }
-    
-    int* icall = iprocCalls[_iproc];
+
     std::cout << "processorMarkerFlag PRIMA DEL SEND = "<< processorMarkerFlag[_iproc] << std::endl;
     for(unsigned jproc=0; jproc<_nprocs; jproc++){
       if(jproc != _iproc){
-	MPI_Send( &processorMarkerFlag[_iproc], 1, MPI_UNSIGNED, jproc, *icall, MPI_COMM_WORLD);
-	//WARNING non manda quello che dovrebbe, i.e. manda 0 al posto di 1 :(
-	int z = (jproc < _iproc) ? _iproc -1 : _iproc;
-	int* p = iprocCalls[jproc]+z;
-        processorMarkerFlag[jproc] = MPI_Recv( &processorMarkerFlag[jproc], 1, MPI_UNSIGNED, jproc, *p, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	MPI_Send( &processorMarkerFlag[_iproc], 1, MPI_UNSIGNED, jproc, 1, MPI_COMM_WORLD);
+	MPI_Recv( &processorMarkerFlag[jproc], 1, MPI_UNSIGNED, jproc, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	std::cout << "ricevuto questo " << processorMarkerFlag[jproc] << std::endl;
-	icall++;
       }
     }
-    
-    delete[] calls;
-    delete[] iprocCalls;
-
 
     for(unsigned j =0 ; j<_nprocs; j++) {
       std::cout << " processorMarkerFlag[" <<j<< "] = " << processorMarkerFlag[j] <<std::endl;
     }
-    
+
 }
 
 int Marker::GetNextElement(const unsigned &dim, const int &currentElem, const int &previousElem) {
@@ -219,7 +201,7 @@ int Marker::GetNextElement(const unsigned &dim, const int &currentElem, const in
         }
         std::cout << " w = " << w << " and currentElem = " << currentElem << std::endl;
     }
-    
+
     int nextElem = currentElem;
 
     if ( w == 0) {
