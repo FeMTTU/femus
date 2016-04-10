@@ -136,88 +136,88 @@ namespace femus {
   
   //************************************************************
   
-  double wedgepwl::eval_phi(const int *I,const double* x) const {
+  double wedgepwLinear::eval_phi(const int *I,const double* x) const {
     return (1.-I[0])*(1.-I[1])*(1.-I[2]) + 
 	    x[0]*eval_dphidx(I,x) + 
 	    x[1]*eval_dphidy(I,x) + 
 	    x[2]*eval_dphidz(I,x);
   }
 
-  double wedgepwl::eval_dphidx(const int *I,const double* x) const {
+  double wedgepwLinear::eval_dphidx(const int *I,const double* x) const {
     return I[0];
   }
 
-  double wedgepwl::eval_dphidy(const int *I,const double* x) const {
+  double wedgepwLinear::eval_dphidy(const int *I,const double* x) const {
     return I[1];
   }
 
-  double wedgepwl::eval_dphidz(const int *I,const double* x) const {
+  double wedgepwLinear::eval_dphidz(const int *I,const double* x) const {
     return I[2];
   }
 
   //************************************************************
   
-  double wedgeLinear::eval_phi(const int *I,const double* x) const {
+  double WedgeLinear::eval_phi(const int *I,const double* x) const {
     return triangleLinear(x[0],x[1],I[0],I[1])*lagLinear(x[2],I[2]);
   }
 
-  double wedgeLinear::eval_dphidx(const int *I,const double* x) const {
+  double WedgeLinear::eval_dphidx(const int *I,const double* x) const {
     return dtriangleLineardx(x[0],x[1],I[0],I[1])*lagLinear(x[2],I[2]);
   }
 
-  double wedgeLinear::eval_dphidy(const int *I,const double* x) const {
+  double WedgeLinear::eval_dphidy(const int *I,const double* x) const {
     return dtriangleLineardy(x[0],x[1],I[0],I[1])*lagLinear(x[2],I[2]);
   }
 
-  double wedgeLinear::eval_dphidz(const int *I,const double* x) const {
+  double WedgeLinear::eval_dphidz(const int *I,const double* x) const {
     return triangleLinear(x[0],x[1],I[0],I[1])*dlagLinear(x[2],I[2]);
   }
 
   //************************************************************
 
-  double wedgeBiquadratic::eval_phi(const int *I,const double* x) const {
+  double WedgeBiquadratic::eval_phi(const int *I,const double* x) const {
     return triangleBiquadratic(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double wedgeBiquadratic::eval_dphidx(const int *I,const double* x) const {
+  double WedgeBiquadratic::eval_dphidx(const int *I,const double* x) const {
     return dtriangleBiquadraticdx(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double wedgeBiquadratic::eval_dphidy(const int *I,const double* x) const {
+  double WedgeBiquadratic::eval_dphidy(const int *I,const double* x) const {
     return dtriangleBiquadraticdy(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double wedgeBiquadratic::eval_dphidz(const int *I,const double* x) const {
+  double WedgeBiquadratic::eval_dphidz(const int *I,const double* x) const {
     return triangleBiquadratic(x[0],x[1],I[0],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
-  double wedgeBiquadratic::eval_d2phidx2(const int *I,const double* x) const {
+  double WedgeBiquadratic::eval_d2phidx2(const int *I,const double* x) const {
     return d2triangleBiquadraticdx2(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double wedgeBiquadratic::eval_d2phidy2(const int *I,const double* x) const {
+  double WedgeBiquadratic::eval_d2phidy2(const int *I,const double* x) const {
     return d2triangleBiquadraticdy2(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double wedgeBiquadratic::eval_d2phidz2(const int *I,const double* x) const {
+  double WedgeBiquadratic::eval_d2phidz2(const int *I,const double* x) const {
     return triangleBiquadratic(x[0],x[1],I[0],I[1])*d2lagBiquadratic(x[2],I[2]);
   }
 
-  double wedgeBiquadratic::eval_d2phidxdy(const int *I,const double* x) const {
+  double WedgeBiquadratic::eval_d2phidxdy(const int *I,const double* x) const {
     return d2triangleBiquadraticdxdy(x[0],x[1],I[0],I[1])*lagBiquadratic(x[2],I[2]);
   }
 
-  double wedgeBiquadratic::eval_d2phidydz(const int *I,const double* x) const {
+  double WedgeBiquadratic::eval_d2phidydz(const int *I,const double* x) const {
     return dtriangleBiquadraticdy(x[0],x[1],I[0],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
-  double wedgeBiquadratic::eval_d2phidzdx(const int *I,const double* x) const {
+  double WedgeBiquadratic::eval_d2phidzdx(const int *I,const double* x) const {
     return dtriangleBiquadraticdx(x[0],x[1],I[0],I[1])*dlagBiquadratic(x[2],I[2]);
   }
 
   //************************************************************
   
-  double  wedgeQuadratic::eval_phi(const int *I,const double* X) const {
+  double  WedgeQuadratic::eval_phi(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -233,7 +233,7 @@ namespace femus {
     
   }
 
-  double  wedgeQuadratic::eval_dphidx(const int *I,const double* X) const {
+  double  WedgeQuadratic::eval_dphidx(const int *I,const double* X) const {
   
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -247,7 +247,7 @@ namespace femus {
       !(i-2) *(	    ( !k *(-1.+2.*x-0.5*z)*(1.-z)     + !(k-1) *(1.-z*z)	+ !(k-2) *(-1.+2.*x+0.5*z)*(1.+z)     ) );
   }
 
-  double  wedgeQuadratic::eval_dphidy(const int *I,const double* X) const {
+  double  WedgeQuadratic::eval_dphidy(const int *I,const double* X) const {
   
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -262,7 +262,7 @@ namespace femus {
   
   }
 
-  double  wedgeQuadratic::eval_dphidz(const int *I,const double* X) const {
+  double  WedgeQuadratic::eval_dphidz(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -278,7 +278,7 @@ namespace femus {
  
   }
 
-  double wedgeQuadratic::eval_d2phidx2(const int *I,const double* X) const {
+  double WedgeQuadratic::eval_d2phidx2(const int *I,const double* X) const {
   
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -290,7 +290,7 @@ namespace femus {
       !(i-2) *(	     ( !k *(2.)*(1.-z)  + !(k-2) *(2.)*(1.+z)   ) );
   }
 
-  double wedgeQuadratic::eval_d2phidy2(const int *I,const double* X) const {
+  double WedgeQuadratic::eval_d2phidy2(const int *I,const double* X) const {
   
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -303,7 +303,7 @@ namespace femus {
   
   }
 
-  double wedgeQuadratic::eval_d2phidz2(const int *I,const double* X) const {
+  double WedgeQuadratic::eval_d2phidz2(const int *I,const double* X) const {
   
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -315,7 +315,7 @@ namespace femus {
       !(i-2) *(	        ( !k *x  + !(k-1) *(-2.)*x  + !(k-2) *x  ) );
   }
 
-  double  wedgeQuadratic::eval_d2phidxdy(const int *I,const double* X) const {
+  double  WedgeQuadratic::eval_d2phidxdy(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -329,7 +329,7 @@ namespace femus {
   
   }
 
-  double  wedgeQuadratic::eval_d2phidydz(const int *I,const double* X) const {
+  double  WedgeQuadratic::eval_d2phidydz(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -343,7 +343,7 @@ namespace femus {
 		!(j-1) *( !k *(-2.)*x					+ !(k-2) *2.*x		 ) );
   }
 
-  double  wedgeQuadratic::eval_d2phidzdx(const int *I,const double* X) const {
+  double  WedgeQuadratic::eval_d2phidzdx(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];

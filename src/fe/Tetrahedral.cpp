@@ -129,22 +129,22 @@ namespace femus {
   
   // ************************************************************  
   
-  double tetpwl::eval_phi(const int *I,const double* x) const {
+  double tetpwLinear::eval_phi(const int *I,const double* x) const {
     return (1.-I[0])*(1.-I[1])*(1.-I[2]) + 
 	    x[0]*eval_dphidx(I,x) + 
 	    x[1]*eval_dphidy(I,x) + 
 	    x[2]*eval_dphidz(I,x);
   }
 
-  double tetpwl::eval_dphidx(const int *I,const double* x) const {
+  double tetpwLinear::eval_dphidx(const int *I,const double* x) const {
     return I[0];
   }
 
-  double tetpwl::eval_dphidy(const int *I,const double* x) const {
+  double tetpwLinear::eval_dphidy(const int *I,const double* x) const {
     return I[1];
   }
 
-  double tetpwl::eval_dphidz(const int *I,const double* x) const {
+  double tetpwLinear::eval_dphidz(const int *I,const double* x) const {
     return I[2];
   }
 
@@ -155,25 +155,25 @@ namespace femus {
     
   //************************************************************
 
-  double tetLinear::eval_phi(const int *I,const double* X) const {
+  double TetLinear::eval_phi(const int *I,const double* X) const {
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
     return (!i*!j*!k)*(1.-x-y-z)+ !(i-2)*x + !(j-2)*y + !(k-2)*z;
   }
 
-  double tetLinear::eval_dphidx(const int *I,const double* X) const {
+  double TetLinear::eval_dphidx(const int *I,const double* X) const {
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
     return -(!i*!j*!k) + !(i-2);
   }
 
-  double tetLinear::eval_dphidy(const int *I,const double* X) const {
+  double TetLinear::eval_dphidy(const int *I,const double* X) const {
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
     return -(!i*!j*!k) + !(j-2);
   }
 
-  double tetLinear::eval_dphidz(const int *I,const double* X) const {
+  double TetLinear::eval_dphidz(const int *I,const double* X) const {
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
     return -(!i*!j*!k) + !(k-2);
@@ -181,7 +181,7 @@ namespace femus {
 
   //************************************************************
 
-  double  tetQuadratic::eval_phi(const int *I,const double* X) const {
+  double  TetQuadratic::eval_phi(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -196,7 +196,7 @@ namespace femus {
       !(i-2) *( !j     *( !k*(-x+2.*x*x)				      ) );
   }
 
-  double  tetQuadratic::eval_dphidx(const int *I,const double* X) const {
+  double  TetQuadratic::eval_dphidx(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -210,7 +210,7 @@ namespace femus {
       !(i-2)*( !j     *( !k*(-1.+4.*x)		      	) );
   }
 
-  double  tetQuadratic::eval_dphidy(const int *I,const double* X) const {
+  double  TetQuadratic::eval_dphidy(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -224,7 +224,7 @@ namespace femus {
 	        !(j-1) *( !k*4.*x		         ) );
   }
 
-  double  tetQuadratic::eval_dphidz(const int *I,const double* X) const {
+  double  TetQuadratic::eval_dphidz(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -236,7 +236,7 @@ namespace femus {
       !(i-1) *( !j     *( !k*(-4.)*x    + !(k-1)*4.*x			     ) );
     }
 
-  double  tetQuadratic::eval_d2phidx2(const int *I,const double* X) const {
+  double  TetQuadratic::eval_d2phidx2(const int *I,const double* X) const {
   
     const int i=I[0];  const int j=I[1];  const int k=I[2];
     return
@@ -245,7 +245,7 @@ namespace femus {
       !(i-2)*( !j *( !k*(4.)   ) );   
   }
 
-  double  tetQuadratic::eval_d2phidy2(const int *I,const double* X) const {
+  double  TetQuadratic::eval_d2phidy2(const int *I,const double* X) const {
   
     const int i=I[0];  const int j=I[1];  const int k=I[2];
     return
@@ -254,14 +254,14 @@ namespace femus {
 	     !(j-2) *( !k*(4.)  ) );
   }
 
-  double  tetQuadratic::eval_d2phidz2(const int *I,const double* X) const {
+  double  TetQuadratic::eval_d2phidz2(const int *I,const double* X) const {
   
     const int i=I[0];  const int j=I[1];  const int k=I[2];
     return
       !i *( !j *( !k*(4.) + !(k-1)*(-8.) + !(k-2)*(4.) ));
   }
 
-  double  tetQuadratic::eval_d2phidxdy(const int *I,const double* X) const {
+  double  TetQuadratic::eval_d2phidxdy(const int *I,const double* X) const {
   
     const int i=I[0]; const int j=I[1];  const int k=I[2];
     return
@@ -269,7 +269,7 @@ namespace femus {
       !(i-1)*( !j     *( !k*(-4.) ) + !(j-1) *( !k*(4.)  ) );
   }
 
-  double  tetQuadratic::eval_d2phidydz(const int *I,const double* X) const {
+  double  TetQuadratic::eval_d2phidydz(const int *I,const double* X) const {
  
     const int i=I[0];  const int j=I[1];  const int k=I[2];
     return
@@ -277,7 +277,7 @@ namespace femus {
 	      !(j-1) *( !k*(-4.)  + !(k-1)*(4.)	) );
   }
 
-  double  tetQuadratic::eval_d2phidzdx(const int *I,const double* X) const {
+  double  TetQuadratic::eval_d2phidzdx(const int *I,const double* X) const {
  
     const int i=I[0];  const int j=I[1];  const int k=I[2];
     return
@@ -288,7 +288,7 @@ namespace femus {
 
 //************************************************************
 
-  double  tetBiquadratic::eval_phi(const int *I,const double* X) const {
+  double  TetBiquadratic::eval_phi(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -312,7 +312,7 @@ namespace femus {
       !(i-8) *( !(j-8) *( !(k-8)*(256.*x*y*z*t) ) );                                             //f14
   }
 
-  double  tetBiquadratic::eval_dphidx(const int *I,const double* X) const {
+  double  TetBiquadratic::eval_dphidx(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -336,7 +336,7 @@ namespace femus {
       !(i-8) *( !(j-8) *( !(k-8)*(256.*y*z*(t-x)) ) );                                                 //d(f14)/dx
   }
   
-  double  tetBiquadratic::eval_dphidy(const int *I,const double* X) const {
+  double  TetBiquadratic::eval_dphidy(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -360,7 +360,7 @@ namespace femus {
       !(i-8) *( !(j-8) *( !(k-8)*(256.*x*z*(t-y)) ) );                                              //d(f14)/dy       
   }
     
-  double  tetBiquadratic::eval_dphidz(const int *I,const double* X) const { 
+  double  TetBiquadratic::eval_dphidz(const int *I,const double* X) const { 
     
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -384,7 +384,7 @@ namespace femus {
       !(i-8) *( !(j-8) *( !(k-8)*(256.*x*y*(t-z)) ) ) ;                                                 //d(f14)/dz
     }  
   
-  double  tetBiquadratic::eval_d2phidx2(const int *I,const double* X) const {
+  double  TetBiquadratic::eval_d2phidx2(const int *I,const double* X) const {
     
     const double y=X[1];   const double z=X[2];
     const int i=I[0];  const int j=I[1];  const int k=I[2];
@@ -406,7 +406,7 @@ namespace femus {
       !(i-8) *( !(j-8) *( !(k-8)*(-2.*256.*y*z) ) );                                       //d^2(f14)/dx^2
   }
   
-  double  tetBiquadratic::eval_d2phidy2(const int *I,const double* X) const {
+  double  TetBiquadratic::eval_d2phidy2(const int *I,const double* X) const {
     
     const double x=X[0];   const double z=X[2];
     const int i=I[0];  const int j=I[1];  const int k=I[2];
@@ -428,7 +428,7 @@ namespace femus {
       !(i-8) *( !(j-8) *( !(k-8)*(-2.*256.*x*z) ) );                                  //d^2(f14)/dy^2
   }
 
-  double  tetBiquadratic::eval_d2phidz2(const int *I,const double* X) const {
+  double  TetBiquadratic::eval_d2phidz2(const int *I,const double* X) const {
     
     const double x=X[0];   const double y=X[1];
     const int i=I[0];  const int j=I[1];  const int k=I[2];
@@ -450,7 +450,7 @@ namespace femus {
       !(i-8) *( !(j-8) *( !(k-8)*(-2.*256.*x*y) ) );                                  //fd^2(f14)/dz^2
   }
 
-  double  tetBiquadratic::eval_d2phidxdy(const int *I,const double* X) const {
+  double  TetBiquadratic::eval_d2phidxdy(const int *I,const double* X) const {
   
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -473,7 +473,7 @@ namespace femus {
       !(i-8) *( !(j-8) *( !(k-8)*(256.*z*(t-x-y)) ) );                                           //d^2(f14)/dxdy
   }
   
-  double  tetBiquadratic::eval_d2phidydz(const int *I,const double* X) const {
+  double  TetBiquadratic::eval_d2phidydz(const int *I,const double* X) const {
  
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];
@@ -496,7 +496,7 @@ namespace femus {
       !(i-8) *( !(j-8)  *( !(k-8)*(256.*x*(t-y-z)) ) );                                          //d^2(14)/dydz
   }
   
-  double  tetBiquadratic::eval_d2phidzdx(const int *I,const double* X) const { 
+  double  TetBiquadratic::eval_d2phidzdx(const int *I,const double* X) const { 
  
     const double x=X[0];   const double y=X[1];   const double z=X[2];
     const int i=I[0];      const int j=I[1];      const int k=I[2];

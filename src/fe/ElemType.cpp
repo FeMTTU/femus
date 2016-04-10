@@ -440,11 +440,11 @@ namespace femus {
     }
 
     if (!strcmp(geom_elem, "line")) { //line
-      if (_SolType == 0) _pt_basis = new lineLinear;
-      else if (_SolType == 1) _pt_basis = new lineBiquadratic;
-      else if (_SolType == 2) _pt_basis = new lineBiquadratic;
+      if (_SolType == 0) _pt_basis = new LineLinear;
+      else if (_SolType == 1) _pt_basis = new LineBiquadratic;
+      else if (_SolType == 2) _pt_basis = new LineBiquadratic;
       else if (_SolType == 3) _pt_basis = new line0;
-      else if (_SolType == 4) _pt_basis = new linepwl;
+      else if (_SolType == 4) _pt_basis = new linepwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         exit(0);
@@ -575,11 +575,11 @@ namespace femus {
     }
 
     if (!strcmp(geom_elem, "quad")) { //QUAD
-      if (_SolType == 0) _pt_basis = new quadLinear;
-      else if (_SolType == 1) _pt_basis = new quadQuadratic;
-      else if (_SolType == 2) _pt_basis = new quadBiquadratic;
+      if (_SolType == 0) _pt_basis = new QuadLinear;
+      else if (_SolType == 1) _pt_basis = new QuadQuadratic;
+      else if (_SolType == 2) _pt_basis = new QuadBiquadratic;
       else if (_SolType == 3) _pt_basis = new quad0;
-      else if (_SolType == 4) _pt_basis = new quadpwl;
+      else if (_SolType == 4) _pt_basis = new quadpwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         abort();
@@ -587,11 +587,11 @@ namespace femus {
     }
     else if (!strcmp(geom_elem, "tri")) { //TRIANGLE
 
-      if (_SolType == 0) _pt_basis = new triLinear;
-      else if (_SolType == 1) _pt_basis = new triQuadratic;
-      else if (_SolType == 2) _pt_basis = new triBiquadratic;
+      if (_SolType == 0) _pt_basis = new TriLinear;
+      else if (_SolType == 1) _pt_basis = new TriQuadratic;
+      else if (_SolType == 2) _pt_basis = new TriBiquadratic;
       else if (_SolType == 3) _pt_basis = new tri0;
-      else if (_SolType == 4) _pt_basis = new tripwl;
+      else if (_SolType == 4) _pt_basis = new tripwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         abort();
@@ -779,33 +779,33 @@ namespace femus {
 
     if (!strcmp(geom_elem, "hex")) { //HEX
 
-      if (_SolType == 0) _pt_basis = new hexLinear;
-      else if (_SolType == 1) _pt_basis = new hexQuadratic;
-      else if (_SolType == 2) _pt_basis = new hexBiquadratic;
+      if (_SolType == 0) _pt_basis = new HexLinear;
+      else if (_SolType == 1) _pt_basis = new HexQuadratic;
+      else if (_SolType == 2) _pt_basis = new HexBiquadratic;
       else if (_SolType == 3) _pt_basis = new hex0;
-      else if (_SolType == 4) _pt_basis = new hexpwl;
+      else if (_SolType == 4) _pt_basis = new hexpwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         exit(0);
       }
     }
     else if (!strcmp(geom_elem, "wedge")) { //WEDGE
-      if (_SolType == 0) _pt_basis = new wedgeLinear;
-      else if (_SolType == 1) _pt_basis = new wedgeQuadratic;
-      else if (_SolType == 2) _pt_basis = new wedgeBiquadratic;
+      if (_SolType == 0) _pt_basis = new WedgeLinear;
+      else if (_SolType == 1) _pt_basis = new WedgeQuadratic;
+      else if (_SolType == 2) _pt_basis = new WedgeBiquadratic;
       else if (_SolType == 3) _pt_basis = new wedge0;
-      else if (_SolType == 4) _pt_basis = new wedgepwl;
+      else if (_SolType == 4) _pt_basis = new wedgepwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         exit(0);
       }
     }
     else if (!strcmp(geom_elem, "tet")) { //TETRAHEDRA
-      if (_SolType == 0) _pt_basis = new tetLinear;
-      else if (_SolType == 1) _pt_basis = new tetQuadratic;
-      else if (_SolType == 2) _pt_basis = new tetBiquadratic;
+      if (_SolType == 0) _pt_basis = new TetLinear;
+      else if (_SolType == 1) _pt_basis = new TetQuadratic;
+      else if (_SolType == 2) _pt_basis = new TetBiquadratic;
       else if (_SolType == 3) _pt_basis = new tet0;
-      else if (_SolType == 4) _pt_basis = new tetpwl;
+      else if (_SolType == 4) _pt_basis = new tetpwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         exit(0);

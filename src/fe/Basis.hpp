@@ -87,15 +87,15 @@ namespace femus {
     }
   
     //quadratic lagrangian  
-    inline double th2(const double& x, const int& i) const {
+    inline double lagQuadratic(const double& x, const int& i) const {
       return !i*(0.5)*(1.-x) + !(i-1)*(1.-x)*(1.+x) + !(i-2)*(0.5)*(1.+x);
     }
 
-    inline double dth2(const double& x, const int& i) const {
+    inline double dlagQuadratic(const double& x, const int& i) const {
       return (!i)*(-0.5) + !(i-1)*(-2.*x) + !(i-2)*(0.5);
     }
 
-    inline double d2th2(const double& x, const int& i) const {
+    inline double d2lagQuadratic(const double& x, const int& i) const {
       return !(i-1)*(-2.);
     }
    
@@ -247,10 +247,10 @@ namespace femus {
     static const int KVERT_IND[125][2];
   };
   
-  class hexLinear: public hex_lag {
+  class HexLinear: public hex_lag {
   public:
-    hexLinear(): hex_lag(8, 27) {}; 
-    void PrintType() const { std::cout<<" hexLinear ";};
+    HexLinear(): hex_lag(8, 27) {}; 
+    void PrintType() const { std::cout<<" HexLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -267,10 +267,10 @@ namespace femus {
 
   //************************************************************
 
-  class hexQuadratic: public hex_lag { 
+  class HexQuadratic: public hex_lag { 
   public:
-    hexQuadratic(): hex_lag(20, 81) {};    
-    void PrintType() const { std::cout<<" hexQuadratic ";};
+    HexQuadratic(): hex_lag(20, 81) {};    
+    void PrintType() const { std::cout<<" HexQuadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -288,10 +288,10 @@ namespace femus {
 
   //************************************************************
 
-  class hexBiquadratic: public hex_lag {
+  class HexBiquadratic: public hex_lag {
   public:
-     hexBiquadratic(): hex_lag(27, 125) {};    
-    void PrintType() const { std::cout<<" hexBiquadratic ";};
+     HexBiquadratic(): hex_lag(27, 125) {};    
+    void PrintType() const { std::cout<<" HexBiquadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -345,10 +345,10 @@ namespace femus {
 
   //******************************************************************************
 
-  class hexpwl: public hex_const {
+  class hexpwLinear: public hex_const {
   public:
-    hexpwl(): hex_const( 4, 32) {};     
-    void PrintType() const { std::cout<<" hexpwl ";};
+    hexpwLinear(): hex_const( 4, 32) {};     
+    void PrintType() const { std::cout<<" hexpwLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -381,10 +381,10 @@ namespace femus {
     static const int KVERT_IND[95][2];
   };
 
-  class wedgeLinear: public wedge_lag {
+  class WedgeLinear: public wedge_lag {
   public:
-    wedgeLinear(): wedge_lag( 6, 18) {};    
-    void PrintType() const { std::cout<<" wedgeLinear ";};
+    WedgeLinear(): wedge_lag( 6, 18) {};    
+    void PrintType() const { std::cout<<" WedgeLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -402,10 +402,10 @@ namespace femus {
 
   //************************************************************
 
-  class wedgeQuadratic: public wedge_lag {
+  class WedgeQuadratic: public wedge_lag {
   public:
-    wedgeQuadratic(): wedge_lag(15, 57) {};    
-    void PrintType() const { std::cout<<" wedgeQuadratic ";};
+    WedgeQuadratic(): wedge_lag(15, 57) {};    
+    void PrintType() const { std::cout<<" WedgeQuadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -423,10 +423,10 @@ namespace femus {
 
   //************************************************************
   
-  class wedgeBiquadratic: public wedge_lag {
+  class WedgeBiquadratic: public wedge_lag {
   public:
-    wedgeBiquadratic(): wedge_lag(21, 95) {};    
-    void PrintType() const { std::cout<<" wedgeBiquadratic ";};
+    WedgeBiquadratic(): wedge_lag(21, 95) {};    
+    void PrintType() const { std::cout<<" WedgeBiquadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -476,10 +476,10 @@ namespace femus {
     
   };
   
-  class wedgepwl: public wedge_const {
+  class wedgepwLinear: public wedge_const {
   public:
-    wedgepwl(): wedge_const(4, 32){ };    
-    void PrintType() const { std::cout<<" wedgepwl ";};
+    wedgepwLinear(): wedge_const(4, 32){ };    
+    void PrintType() const { std::cout<<" wedgepwLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -514,10 +514,10 @@ namespace femus {
   
   
   
-  class tetLinear: public tet_lag {
+  class TetLinear: public tet_lag {
   public:
-    tetLinear(): tet_lag(4, 10) {};    
-    void PrintType() const { std::cout<<" tetLinear ";};
+    TetLinear(): tet_lag(4, 10) {};    
+    void PrintType() const { std::cout<<" TetLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -534,10 +534,10 @@ namespace femus {
   
   //************************************************************
 
-  class tetQuadratic: public tet_lag {
+  class TetQuadratic: public tet_lag {
   public:
-    tetQuadratic(): tet_lag(10, 35) {};
-    void PrintType() const { std::cout<<" tetQuadratic ";};
+    TetQuadratic(): tet_lag(10, 35) {};
+    void PrintType() const { std::cout<<" TetQuadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -554,10 +554,10 @@ namespace femus {
 
   //************************************************************
 
-  class tetBiquadratic: public tet_lag {
+  class TetBiquadratic: public tet_lag {
   public:
-    tetBiquadratic(): tet_lag(15, 67) {};
-    void PrintType() const { std::cout<<" tetBiquadratic ";};
+    TetBiquadratic(): tet_lag(15, 67) {};
+    void PrintType() const { std::cout<<" TetBiquadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -608,10 +608,10 @@ namespace femus {
     
   };
   
-  class tetpwl: public tet_const {
+  class tetpwLinear: public tet_const {
   public:
-    tetpwl(): tet_const(4, 32){ };
-    void PrintType() const { std::cout<<" tetpwl ";};  
+    tetpwLinear(): tet_const(4, 32){ };
+    void PrintType() const { std::cout<<" tetpwLinear ";};  
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -644,10 +644,10 @@ namespace femus {
   };
   
   
-  class quadLinear: public quad_lag {
+  class QuadLinear: public quad_lag {
   public:
-    quadLinear(): quad_lag(4, 9) {};
-    void PrintType() const { std::cout<<" quadLinear ";};
+    QuadLinear(): quad_lag(4, 9) {};
+    void PrintType() const { std::cout<<" QuadLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -660,10 +660,10 @@ namespace femus {
 
   //************************************************************
 
-  class quadQuadratic: public quad_lag {
+  class QuadQuadratic: public quad_lag {
   public:
-    quadQuadratic(): quad_lag(8, 21) {};
-    void PrintType() const { std::cout<<" quadQuadratic ";};
+    QuadQuadratic(): quad_lag(8, 21) {};
+    void PrintType() const { std::cout<<" QuadQuadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -676,10 +676,10 @@ namespace femus {
 
   //************************************************************
 
-  class quadBiquadratic: public quad_lag {
+  class QuadBiquadratic: public quad_lag {
   public:
-    quadBiquadratic(): quad_lag(9, 25) {};
-    void PrintType() const { std::cout<<" quadBiquadratic ";};
+    QuadBiquadratic(): quad_lag(9, 25) {};
+    void PrintType() const { std::cout<<" QuadBiquadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -724,10 +724,10 @@ namespace femus {
 
   //******************************************************************************
 
-  class quadpwl: public quad_const {
+  class quadpwLinear: public quad_const {
   public:
-    quadpwl(): quad_const(3, 12) {};
-    void PrintType() const { std::cout<<" quadpwl ";};
+    quadpwLinear(): quad_const(3, 12) {};
+    void PrintType() const { std::cout<<" quadpwLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -758,10 +758,10 @@ namespace femus {
   };
   
   
-  class triLinear: public tri_lag {
+  class TriLinear: public tri_lag {
   public:
-    triLinear(): tri_lag(3, 6) {}; 
-    void PrintType() const { std::cout<<" triLinear ";};
+    TriLinear(): tri_lag(3, 6) {}; 
+    void PrintType() const { std::cout<<" TriLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -774,10 +774,10 @@ namespace femus {
 
   //************************************************************
 
-  class triQuadratic: public tri_lag {
+  class TriQuadratic: public tri_lag {
   public:
-    triQuadratic(): tri_lag(6, 15) {}; 
-    void PrintType() const { std::cout<<" triQuadratic ";};
+    TriQuadratic(): tri_lag(6, 15) {}; 
+    void PrintType() const { std::cout<<" TriQuadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -791,10 +791,10 @@ namespace femus {
 
   //************************************************************
   
-  class triBiquadratic: public tri_lag {
+  class TriBiquadratic: public tri_lag {
   public:
-    triBiquadratic(): tri_lag(7, 19) {}; 
-    void PrintType() const { std::cout<<" triBiquadratic ";};
+    TriBiquadratic(): tri_lag(7, 19) {}; 
+    void PrintType() const { std::cout<<" TriBiquadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -836,10 +836,10 @@ namespace femus {
     double eval_d2phidxdy(const int *I,const double* x) const{ return 0.; };
   };
   
-  class tripwl: public tri_const {
+  class tripwLinear: public tri_const {
   public:
-    tripwl(): tri_const(3, 12){ };    
-    void PrintType() const { std::cout<<" tripwl ";};
+    tripwLinear(): tri_const(3, 12){ };    
+    void PrintType() const { std::cout<<" tripwLinear ";};
         
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -867,10 +867,10 @@ namespace femus {
     static const int KVERT_IND[5][2];
   };
   
-  class lineLinear: public line_lag {
+  class LineLinear: public line_lag {
   public:
-    lineLinear(): line_lag(2, 3) {}; 
-    void PrintType() const { std::cout<<" lineLinear ";};
+    LineLinear(): line_lag(2, 3) {}; 
+    void PrintType() const { std::cout<<" LineLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -879,10 +879,10 @@ namespace femus {
   };
 
   //************************************************************
-  class lineBiquadratic: public line_lag {
+  class LineBiquadratic: public line_lag {
   public:
-    lineBiquadratic(): line_lag(3, 5) {}; 
-    void PrintType() const { std::cout<<" lineBiquadratic ";};
+    LineBiquadratic(): line_lag(3, 5) {}; 
+    void PrintType() const { std::cout<<" LineBiquadratic ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
@@ -918,10 +918,10 @@ namespace femus {
   };
   
   
-  class linepwl: public line_const {
+  class linepwLinear: public line_const {
   public:
-    linepwl(): line_const(2, 4){ };  
-    void PrintType() const { std::cout<<" linepwl ";};
+    linepwLinear(): line_const(2, 4){ };  
+    void PrintType() const { std::cout<<" linepwLinear ";};
     
     double eval_phi(const int *I,const double* x) const;
     double eval_dphidx(const int *I,const double* x) const;
