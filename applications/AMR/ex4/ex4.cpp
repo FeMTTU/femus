@@ -40,6 +40,16 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   mlMsh.ReadCoarseMesh("./input/triangle.neu", "seventh", scalingFactor);
   
+  unsigned dim = mlMsh.GetDimension();
+  unsigned maxNumberOfMeshes = 5;
+  //vector < vector < double > > l2Norm;
+  //l2Norm.resize (maxNumberOfMeshes);
+  //vector < vector < double > > semiNorm;
+  //semiNorm.resize (maxNumberOfMeshes);
+  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfSelectiveLevels = 0;
+  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  
   mlMsh.PrintInfo();
 
   MultiLevelSolution mlSol(&mlMsh);

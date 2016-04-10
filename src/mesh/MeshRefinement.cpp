@@ -476,6 +476,9 @@ namespace femus {
         if( 3 == _mesh.el->GetElementType( iel ) ) { //quad
           _mesh.el->SetElementDofIndex( iel, 8, ++nnodes - 1u );
         }
+        if( 4 == _mesh.el->GetElementType( iel ) ) { //triangle
+          _mesh.el->SetElementDofIndex( iel, 6, ++nnodes - 1u );
+        }
       }
     }
 
