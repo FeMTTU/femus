@@ -1,0 +1,289 @@
+/ File opened for write Mon Apr 11 13:20:55 2016.
+ 
+*** LISTING "default_id" FILES IN DIRECTORY:
+    .
+ 
+    default_id.lok
+Copyright(c) 1988-2016, Fluent Inc. All rights reserved.
+http://www.fluent.com
+ 
+Gambit incorporates Simulation Modeling Suite(TM) software by Simmetrix Inc.
+ 
+Portions of this software are owned by Parametric Technology Corporation.
+Copyright(c) 2002. All Rights Reserved.
+ 
+Portions of this software are owned by Unigraphics Solutions Corporation or its subsidiaries.
+Copyright(c) 2004. All Rights Reserved.
+ 
+Spatial Indexing Library version 0.81b (beta) provided under GNU Lesser General Public License
+(http://www.gnu.org/copyleft/lesser.html)
+ 
+Command> volume create height 2 sides 3 radius1 1 radius2 1 radius3 1 zaxis pyramid
+Created volume: volume.1
+Command> undo
+Undone to: volume create height 2 sides 3 radius1 1 radius2 1 radius3 1 zaxis py.  
+Command> volume create width 1 depth 1 height 2 brick
+Created volume: volume.1
+Command> volume move "volume.1" offset 0.5 0.5 0
+Transformed volume: volume.1
+Command> default set "MESH.NODES.HEX" numeric 27
+Command> face mesh "face.6" mapsplit saveblayers size 1
+Mesh generated for face face.6:   mesh faces = 1.
+Mesh removed from face face.6:   mesh faces = 1.
+Quads split on face face.6:   mesh faces = 2.
+Command> volume mesh "volume.1" cooper source "face.6" "face.1" size 1
+WARN:  The desired meshing scheme of Map could not be
+maintained by the cooper tool for face face.1
+when meshing volume volume.1.
+You may want to try meshing this face first.
+Mesh generated for volume volume.1:   mesh volumes = 4.
+Command> undo
+Undone to: volume mesh "volume.1" cooper source "face.6" "face.1" size 1.  
+Command> volume mesh "volume.1" cooper source "face.6" "face.1" intervals 1
+WARN:  The desired meshing scheme of Map could not be
+maintained by the cooper tool for face face.1
+when meshing volume volume.1.
+You may want to try meshing this face first.
+Mesh generated for volume volume.1:   mesh volumes = 2.
+Command> physics create "1" btype "WALL" face "face.2" "face.4" "face.5" "face.3" \
+  "face.6" "face.1"
+Created Boundary entity: 1
+Command> physics create "5" ctype "FLUID" volume "volume.1"
+Created Continuum entity: 5
+Command> save name \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/gambit/wedge.dbs"
+Command> solver select "Generic"
+Command> physics create "1" btype "ELEMENT_SIDE" face "face.1" "face.2" "face.3" \
+  "face.4" "face.5" "face.6"
+Created Boundary entity: 1
+Command> save
+Command> export gambit \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/wedge.neu"
+ 
+Writing 27 nodes, 2 elements, 1 group and 1 bc set
+to GAMBIT Neutral file /home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/wedge.neu.
+Done writing Neutral file.
+Command> save
+Command> save name \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/gambit/wedge1.dbs"
+Command> edge create straight "vertex.7" "vertex.6"
+Created edge: edge.13
+Command> edge create straight "vertex.2" "vertex.3"
+Created edge: edge.14
+Command> face create wireframe "edge.13" "edge.7" "edge.14" "edge.6" real
+Created face: face.7
+Command> volume split "volume.1" faces "face.7" connected
+Splitting volume volume.1 with face face.7
+Disconnected face face.7 about edge edge.6,
+creating edge edge.15
+Disconnected face face.7 about edge edge.7,
+creating edge edge.16
+Disconnected face face.7 about vertex vertex.6,
+creating vertex vertex.9
+Disconnected face face.7 about vertex vertex.2,
+creating vertex vertex.10
+Disconnected face face.7 about vertex vertex.3,
+creating vertex vertex.11
+Disconnected face face.7 about vertex vertex.7,
+creating vertex vertex.12
+Created: volume.2 
+Command> volume delete "volume.2" lowertopology
+Deleted volume: volume.2
+Command> face mesh "face.6" mapsplit saveblayers size 1
+ERROR: Face face.6 could not be converted to a submappable region.
+All vertices of face face.6 were changed back to their original types.
+Command> volume delete "volume.1" lowertopology onlymesh
+Command> undo begingroup
+Command> edge picklink "edge.18" "edge.17" "edge.10" "edge.9" "edge.7" "edge.6" \
+  "edge.5" "edge.2" "edge.1"
+Command> edge mesh "edge.1" "edge.2" "edge.5" "edge.6" "edge.7" "edge.9" "edge.10" \
+  "edge.17" "edge.18" successive ratio1 1 intervals 1
+Mesh generated for edge edge.1:   mesh edges = 1.
+Mesh generated for edge edge.2:   mesh edges = 1.
+Mesh generated for edge edge.5:   mesh edges = 1.
+Mesh generated for edge edge.6:   mesh edges = 1.
+Mesh generated for edge edge.7:   mesh edges = 1.
+Mesh generated for edge edge.9:   mesh edges = 1.
+Mesh generated for edge edge.10:   mesh edges = 1.
+Mesh generated for edge edge.17:   mesh edges = 1.
+Mesh generated for edge edge.18:   mesh edges = 1.
+Command> undo endgroup
+Command> face mesh "face.6" triangle size 1
+Mesh generated for face face.6:   mesh faces = 1.
+Command> volume mesh "volume.1" cooper source "face.6" "face.8" intervals 1
+WARN:  The desired meshing scheme of Triangle Primitive could not be
+maintained by the cooper tool for face face.8
+when meshing volume volume.1.
+You may want to try meshing this face first.
+Mesh generated for volume volume.1:   mesh volumes = 1.
+Command> physics modify "1" btype face "face.6" "face.2" "face.3" "face.8" "face.7"
+Command> physics create "5" ctype "FLUID" volume "volume.1"
+WARN:  A Physics entity labeled 5 already exists and thus the input label cannot be used.
+ERROR: volume volume.1 could not be attached to new
+Continuum entity because it is already
+attached to Continuum entity 5.
+Created Continuum entity: new_5
+Command> physics delete "new_5" ctype
+Command> save
+Command> export gambit \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/wedge1.neu"
+ 
+Writing 18 nodes, 1 element, 1 group and 1 bc set
+to GAMBIT Neutral file /home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/wedge1.neu.
+Done writing Neutral file.
+Command> save name \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/gambit/tet1.dbs"
+Command> volume delete "volume.1" lowertopology
+Mesh removed from volume volume.1:   mesh volumes = 1.
+Deleted volume: volume.1
+Command> vertex create coordinates 0 0 0
+Created vertex: vertex.1
+Command> vertex create coordinates 1 0 0
+Created vertex: vertex.2
+Command> vertex create coordinates 0 1 0
+Created vertex: vertex.3
+Command> vertex create coordinates 0 0 1
+Created vertex: vertex.4
+Command> edge create straight "vertex.4" "vertex.1"
+Created edge: edge.1
+Command> edge create straight "vertex.1" "vertex.2"
+Created edge: edge.2
+Command> edge create straight "vertex.2" "vertex.3"
+Created edge: edge.3
+Command> edge create straight "vertex.1" "vertex.3"
+Created edge: edge.4
+Command> edge create straight "vertex.4" "vertex.2"
+Created edge: edge.5
+Command> edge create straight "vertex.4" "vertex.3"
+Created edge: edge.6
+Command> face create wireframe "edge.3" "edge.2" "edge.4" real
+Created face: face.1
+Command> face create wireframe "edge.1" "edge.5" "edge.2" real
+Created face: face.2
+Command> face create wireframe "edge.5" "edge.3" "edge.6" real
+Created face: face.3
+Command> face create wireframe "edge.1" "edge.4" "edge.6" real
+Created face: face.4
+Command> volume create stitch "face.1" "face.2" "face.3" "face.4" real
+Created volume: volume.1
+Command> default set "MESH.NODES.HEX" numeric 27
+Command> undo begingroup
+Command> edge picklink "edge.6" "edge.1" "edge.5" "edge.4" "edge.3" "edge.2"
+Command> edge mesh "edge.2" "edge.3" "edge.4" "edge.5" "edge.1" "edge.6" successive \
+  ratio1 1 intervals 1
+Mesh generated for edge edge.2:   mesh edges = 1.
+Mesh generated for edge edge.3:   mesh edges = 1.
+Mesh generated for edge edge.4:   mesh edges = 1.
+Mesh generated for edge edge.5:   mesh edges = 1.
+Mesh generated for edge edge.1:   mesh edges = 1.
+Mesh generated for edge edge.6:   mesh edges = 1.
+Command> undo endgroup
+Command> face mesh "face.1" "face.2" "face.3" "face.4" triangle size 1
+Mesh generated for face face.1:   mesh faces = 1.
+Mesh generated for face face.2:   mesh faces = 1.
+Mesh generated for face face.3:   mesh faces = 1.
+Mesh generated for face face.4:   mesh faces = 1.
+Command> volume mesh "volume.1" tetrahedral intervals 1
+ 
+Mesh generated for volume volume.1:   mesh volumes = 1.
+Command> physics create "1" btype "ELEMENT_SIDE" face "face.1" "face.2" "face.3" \
+  "face.4"
+WARN:  A Physics entity labeled 1 already exists and thus the input label cannot be used.
+Created Boundary entity: new_1
+Command> physics create "5" ctype "FLUID" volume "volume.1"
+WARN:  A Physics entity labeled 5 already exists and thus the input label cannot be used.
+Created Continuum entity: new_5
+Command> physics delete ctype
+Command> physics create "5" ctype "FLUID" volume "volume.1"
+Created Continuum entity: 5
+Command> physics delete btype
+Command> physics create "1" btype "ELEMENT_SIDE" face "face.1" "face.2" "face.3" \
+  "face.4"
+Created Boundary entity: 1
+Command> solver select "Generic"
+Command> save
+Command> export gambit \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/tet1.neu"
+ 
+Writing 10 nodes, 1 element, 1 group and 1 bc set
+to GAMBIT Neutral file /home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/tet1.neu.
+Done writing Neutral file.
+Command> save
+Command> identifier name \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/gambit/wedge1.dbs" \
+  old saveprevious
+The /home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/gambit/wedge1.dbs database is being opened.
+ 
+*** LISTING "wedge1" FILES IN DIRECTORY:
+    /home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/gambit
+ 
+    wedge1.trn
+    wedge1.jou
+    wedge1.dbs
+    wedge1.lok
+Command> face create width 2 height 2 xyplane rectangle
+Created face: face.9
+Command> undo
+Undone to: face create width 2 height 2 xyplane rectangle.  
+Command> face create width 3 height 3 xyplane rectangle
+Created face: face.9
+Command> volume split "volume.1" faces "face.9" connected
+Splitting volume volume.1 with face face.9
+Created: volume.2 
+Command> undo begingroup
+Command> face delete "face.6" "face.9" "face.8" onlymesh
+Mesh removed from face face.8:   mesh faces = 1.
+Mesh removed from face face.6:   mesh faces = 1.
+Command> face mesh "face.6" "face.9" "face.8" triangle intervals 1
+Mesh generated for face face.6:   mesh faces = 1.
+Mesh generated for face face.9:   mesh faces = 2.
+Mesh generated for face face.8:   mesh faces = 1.
+Command> undo endgroup
+Command> undo
+Undone to: undo begingroup.  
+Command> volume delete "volume.1" "volume.2" lowertopology onlymesh
+Command> edge mesh "edge.5" "edge.6" "edge.7" "edge.23" "edge.24" "edge.25" "edge.1" \
+  "edge.18" "edge.17" "edge.10" "edge.9" "edge.2" "edge.26" "edge.27" \
+  "edge.28" successive ratio1 1 intervals 1
+Mesh generated for edge edge.5:   mesh edges = 1.
+Mesh generated for edge edge.6:   mesh edges = 1.
+Mesh generated for edge edge.7:   mesh edges = 1.
+Mesh generated for edge edge.23:   mesh edges = 1.
+Mesh generated for edge edge.24:   mesh edges = 1.
+Mesh generated for edge edge.25:   mesh edges = 1.
+Mesh generated for edge edge.1:   mesh edges = 1.
+Mesh generated for edge edge.18:   mesh edges = 1.
+Mesh generated for edge edge.17:   mesh edges = 1.
+Mesh generated for edge edge.10:   mesh edges = 1.
+Mesh generated for edge edge.9:   mesh edges = 1.
+Mesh generated for edge edge.2:   mesh edges = 1.
+Mesh generated for edge edge.26:   mesh edges = 1.
+Mesh generated for edge edge.27:   mesh edges = 1.
+Mesh generated for edge edge.28:   mesh edges = 1.
+Command> face mesh "face.9" "face.6" "face.8" triangle
+Mesh generated for face face.9:   mesh faces = 1.
+Mesh generated for face face.6:   mesh faces = 1.
+Mesh generated for face face.8:   mesh faces = 1.
+Command> face mesh "face.3" "face.7" "face.12" "face.2" "face.10" "face.11" map
+Mesh generated for face face.3:   mesh faces = 1.
+Mesh generated for face face.7:   mesh faces = 1.
+Mesh generated for face face.12:   mesh faces = 1.
+Mesh generated for face face.2:   mesh faces = 1.
+Mesh generated for face face.10:   mesh faces = 1.
+Mesh generated for face face.11:   mesh faces = 1.
+Command> volume mesh "volume.2" cooper source "face.9" "face.6" intervals 10
+Mesh generated for volume volume.2:   mesh volumes = 1.
+Command> volume mesh "volume.1" cooper source "face.8" "face.9" intervals 1
+Mesh generated for volume volume.1:   mesh volumes = 1.
+Command> physics modify "1" btype face "face.6" "face.2" "face.3" "face.8" "face.7" \
+  "face.9" "face.12" "face.11" "face.10"
+Command> physics modify "5" ctype volume "volume.1" "volume.2"
+Command> save name \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/gambit/wedge2.dbs"
+Command> save
+Command> export gambit \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/wedge2.neu"
+ 
+Writing 30 nodes, 2 elements, 1 group and 1 bc set
+to GAMBIT Neutral file /home/eaulisa/FEMuS/MyFEMuS/applications/AMR/ex4/input/wedge2.neu.
+Done writing Neutral file.

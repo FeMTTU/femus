@@ -980,11 +980,11 @@ namespace femus {
 	d2phidzetadxisum += _d2phidzetadxi[i][j];
       }
 
-      std::cout << "gauss " << i <<" "<<_nc <<" "<<x[0] <<" "<<x[1]<<" "<<x[2] << std::endl;
-      std::cout << phisum << std::endl;
-      std::cout << dphidxisum  << " " <<dphidetasum    <<" "<< dphidzetasum << std::endl;
-      std::cout << d2phidxi2sum <<" " << d2phideta2sum <<" "<< d2phidzeta2sum << std::endl;
-      std::cout << d2phidxidetasum <<" "<< d2phidetadzetasum <<" "<< d2phidzetadxisum << std::endl << std::endl;
+      //std::cout << "gauss " << i <<" "<<_nc <<" "<<x[0] <<" "<<x[1]<<" "<<x[2] << std::endl;
+      //std::cout << phisum << std::endl;
+      //std::cout << dphidxisum  << " " <<dphidetasum    <<" "<< dphidzetasum << std::endl;
+      //std::cout << d2phidxi2sum <<" " << d2phideta2sum <<" "<< d2phidzeta2sum << std::endl;
+      //std::cout << d2phidxidetasum <<" "<< d2phidetadzetasum <<" "<< d2phidzetadxisum << std::endl << std::endl;
     }
 
 

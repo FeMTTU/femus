@@ -252,14 +252,20 @@ namespace femus {
 	coords[0][nvt0] = 0.;
         coords[1][nvt0] = 0.;
         coords[2][nvt0] = 0.;
-        for(int i = 0; i < mesh.el->GetNVE(elementType,1); i++) {
+        for(int i = 0; i < mesh.el->GetNVE(elementType,2) - _numberOfMissedBiquadraticNodes[elementType]; i++) {
           unsigned inode = mesh.el->GetElementDofIndex(iel, i);
+	  std::cout << _baricentricWeight[ elementType ][j][i] <<" ";
           for(int k = 0; k < mesh.GetDimension(); k++) {
 	    coords[k][nvt0] += coords[k][inode] * _baricentricWeight[ elementType ][j][i];
-          } 
-        }     
-      }
-      nvt0++;
+          }          
+        }  
+        std::cout << std::endl << nvt0 << " ";
+        for(int k = 0; k < mesh.GetDimension(); k++) {
+	  std::cout << coords[k][nvt0]<<" ";
+	}
+	std::cout<< std::endl;
+	nvt0++;
+      }     
     }
     
     
@@ -326,4 +332,96 @@ namespace femus {
 
   };
 
+  
+  
+  
+  
+   void MeshRefinement::Buildkmid() {
+
+    unsigned int nnodes = _mesh.GetNumberOfNodes();
+
+    //intialize to UINT_MAX
+    for( unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++ ) {
+      unsigned elementType = _mesh.el->GetElementType(iel);
+      if( elementType == 1 || elementType == 2 ) {
+        for( unsigned inode = _mesh.el->GetElementDofNumber( iel, 2 ) - _numberOfMissedBiquadraticNodes[elementType]; 
+	    inode < _mesh.el->GetElementDofNumber( iel, 2 ); inode++ ) {
+          _mesh.el->SetElementDofIndex( iel, inode, UINT_MAX );
+        }
+      }
+    }
+
+    // generate face dofs for hex and wedge elements
+    for( unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++ ) {
+      unsigned elementType = _mesh.el->GetElementType(iel);
+      if( elementType == 1 || elementType == 2 ) {
+        for( unsigned iface = _mesh.el->GetElementFaceNumber( iel, 0 ); iface < _mesh.el->GetElementFaceNumber( iel, 1 ); iface++ ) { //on all the faces that are triangle
+          unsigned inode = _mesh.el->GetElementDofNumber( iel, 1 ) + iface; 
+	  if( UINT_MAX == _mesh.el->GetElementDofIndex( iel, inode ) ) {
+            _mesh.el->SetElementDofIndex( iel, inode, nnodes);
+	    unsigned i1 = _mesh.el->GetFaceVertexIndex( iel, iface, 0 );
+            unsigned i2 = _mesh.el->GetFaceVertexIndex( iel, iface, 1 );
+	    unsigned i3 = _mesh.el->GetFaceVertexIndex( iel, iface, 2 );
+	    bool faceHasBeenFound = false;
+	    for( unsigned jel = iel + 1; jel < _mesh.el->GetElementNumber(); jel++ ) {
+	      for( unsigned jface = _mesh.el->GetElementFaceNumber( jel, 0 ); jface < _mesh.el->GetElementFaceNumber( jel, 1 ); jface++ ) {
+                unsigned jnode = _mesh.el->GetElementDofNumber( jel, 1 ) + jface;
+		if( UINT_MAX == _mesh.el->GetElementDofIndex( jel, jnode ) ) {
+                  unsigned j1 = _mesh.el->GetFaceVertexIndex( jel, jface, 0 );
+                  unsigned j2 = _mesh.el->GetFaceVertexIndex( jel, jface, 1 );
+                  unsigned j3 = _mesh.el->GetFaceVertexIndex( jel, jface, 2 );
+		  if( ( i1 == j1 || i1 == j2 || i1 == j3 ) &&
+                      ( i2 == j1 || i2 == j2 || i2 == j3 ) &&
+                      ( i3 == j1 || i3 == j2 || i3 == j3 ) ) {
+                    _mesh.el->SetElementDofIndex( jel, jnode, nnodes);
+		    faceHasBeenFound = true;
+		    break;
+                  }
+		}
+	      }
+	      if(faceHasBeenFound){
+		break;
+	      }
+	    }
+	    ++nnodes; 
+	  }    
+	}
+      }
+    }
+
+    // generates element dofs for hex, quad and triangle elements
+    for( unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++ ) {
+      if( _mesh.el->GetIfFatherHasBeenRefined( iel ) ) {
+        if( 1 == _mesh.el->GetElementType( iel ) ) { //tet
+          _mesh.el->SetElementDofIndex( iel, 14, nnodes);
+	  ++nnodes;
+        }
+        else if( 2 == _mesh.el->GetElementType( iel ) ) { //wedge
+         _mesh.el->SetElementDofIndex( iel, 20, nnodes);
+	 ++nnodes;
+        }
+        else if( 4 == _mesh.el->GetElementType( iel ) ) { //triangle
+          _mesh.el->SetElementDofIndex( iel, 6, ++nnodes);
+	  ++nnodes;
+        }
+      }
+    }
+
+    _mesh.el->SetNodeNumber( nnodes );
+    _mesh.SetNumberOfNodes( nnodes );
+
+  }
+  
+  
+  
+  
+  
+  
+
+
+}
+  
+  
+  
+  
 }
