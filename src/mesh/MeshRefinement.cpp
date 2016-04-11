@@ -463,16 +463,46 @@ namespace femus {
             }
           }
         }
+//         for( unsigned iface = 0; iface < (_mesh.el->GetElementFaceNumber( iel, 1 ) - _mesh.el->GetElementFaceNumber( iel, 0 )); iface++ ) { //on all the faces that are triangle
+//           unsigned inode = _mesh.el->GetElementDofNumber( iel, 1 ) + _mesh.el->GetElementFaceNumber( iel, 0 ) + iface; 
+// 	  if( UINT_MAX == _mesh.el->GetElementDofIndex( iel, inode ) ) {
+//             _mesh.el->SetElementDofIndex( iel, inode, ++nnodes  - 1u );
+//             unsigned i1 = _mesh.el->GetFaceVertexIndex( iel, iface, 0 );
+//             unsigned i2 = _mesh.el->GetFaceVertexIndex( iel, iface, 1 );  
+// 	    for( unsigned j = 0; j < _mesh.el->GetElementNearVertexNumber( i1 ); j++ ) {
+//               unsigned jel = _mesh.el->GetElementNearVertex( i1, j );
+// 	      if( _mesh.el->GetIfFatherHasBeenRefined( jel ) && jel > iel ) {
+//                 for( unsigned jface = 0; jface < (_mesh.el->GetElementFaceNumber( jel, 1 ) - _mesh.el->GetElementFaceNumber( jel, 0 )); jface++ ) {
+//                   unsigned jnode = _mesh.el->GetElementDofNumber( jel, 1 ) + _mesh.el->GetElementFaceNumber( jel, 0 ) + jface;
+// 		  if( UINT_MAX == _mesh.el->GetElementDofIndex( jel, jnode ) ) {
+//                     unsigned j1 = _mesh.el->GetFaceVertexIndex( jel, jface, 0 );
+//                     unsigned j2 = _mesh.el->GetFaceVertexIndex( jel, jface, 1 );
+//                     unsigned j3 = _mesh.el->GetFaceVertexIndex( jel, jface, 2 );
+// 		    if( ( i1 == j1 || i1 == j2 || i1 == j3 ) &&
+//                         ( i2 == j1 || i2 == j2 || i2 == j3 ) ) {
+//                       _mesh.el->SetElementDofIndex( jel, jnode, nnodes  - 1u );
+//                     }
+// 		  }
+// 		}
+// 	      }
+// 	    }
+// 	  }    
+// 	}
       }
     }
 
-    // generates element dofs for hex and quad elements
+    // generates element dofs for hex, quad and triangle elements
     for( unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++ ) {
       if( _mesh.el->GetIfFatherHasBeenRefined( iel ) ) {
         if( 0 == _mesh.el->GetElementType( iel ) ) { //hex
           _mesh.el->SetElementDofIndex( iel, 26, ++nnodes - 1u );
         }
-
+//         if( 1 == _mesh.el->GetElementType( iel ) ) { //tet
+//           _mesh.el->SetElementDofIndex( iel, 14, ++nnodes - 1u );
+//         }
+//         if( 2 == _mesh.el->GetElementType( iel ) ) { //wedge
+//          _mesh.el->SetElementDofIndex( iel, 20, ++nnodes - 1u );
+//         }
         if( 3 == _mesh.el->GetElementType( iel ) ) { //quad
           _mesh.el->SetElementDofIndex( iel, 8, ++nnodes - 1u );
         }
