@@ -386,8 +386,7 @@ namespace femus {
       int ncols = (identity)? 1 : _prol_ind[i + 1] - _prol_ind[i];
       unsigned counter_o = 0;
       for (int k = 0; k < ncols; k++) {
-        int jj = _prol_ind[i][k];
-        int jcolumn = (identity) ? irow : mesh.GetSolutionDof(jj, iel, _SolType);
+        int jcolumn = (identity) ? irow : mesh.GetSolutionDof(_prol_ind[i][k], iel, _SolType);
         if (jcolumn < mesh._dofOffset[_SolType][iproc] || jcolumn >= mesh._dofOffset[_SolType][iproc + 1]) counter_o++;
       }
       NNZ_d->set(irow, ncols - counter_o);
@@ -406,7 +405,6 @@ namespace femus {
       if (ncols == ncols_stored) {
         cols.assign(ncols, 0);
         for (int k = 0; k < ncols; k++) {
-          int jj = _prol_ind[i][k];
           cols[k]  = (identity) ? irow : mesh.GetSolutionDof( _prol_ind[i][k], iel, _SolType);
           value[k] = (identity) ? 1.: _prol_val[i][k];
         }
@@ -647,7 +645,7 @@ namespace femus {
     for (int i = 0; i < _nf; i++) {
       // std::cout << "\n" << i << std::endl;
       // double sum = 0;
-      
+
       _prol_val[i] = pt_d;
       _prol_ind[i] = pt_i;
       for (int j = 0; j < _nc; j++) {
@@ -661,7 +659,7 @@ namespace femus {
 	  //sum += phi;
           *(pt_i++) = j;
 	  // std::cout << j <<" " << phi<<std::endl;
-	  
+
         }
       }
       // std::cout<<sum<<std::endl;
@@ -710,15 +708,15 @@ namespace femus {
         x[j] = *ptx[j];
         ptx[j]++;
       }
-      
+
       //double phisum=0.;
       //double dphidxisum=0.;
       //double dphidetasum=0.;
       //double d2phidxi2sum=0.;
       //double d2phideta2sum=0.;
       //double d2phidxidetasum=0.;
-      
-      
+
+
       for (int j = 0; j < _nc; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
 	//phisum += _phi[i][j];
@@ -740,16 +738,16 @@ namespace femus {
 	//std::cout << _d2phidxideta[i][j] <<"\n";
       }
 //       std::cout<<std::endl;
-//       
-//       std::cout<< phisum <<" "<< 
+//
+//       std::cout<< phisum <<" "<<
 //       dphidxisum <<" "<<
 //       dphidetasum<<" "<<
 //       d2phidxi2sum<<" "<<
 //       d2phideta2sum<<" "<<
 //       d2phidxidetasum<<"\n\n";
-            
+
     }
-//     
+//
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
 
@@ -934,8 +932,8 @@ namespace femus {
         x[j] = *ptx[j];
         ptx[j]++;
       }
-      
-      
+
+
       double phisum=0.;
       double dphidxisum=0.;
       double dphidetasum=0.;
@@ -946,42 +944,42 @@ namespace femus {
       double d2phidxidetasum=0.;
       double d2phidetadzetasum=0.;
       double d2phidzetadxisum=0.;
-      
+
 
       for (int j = 0; j < _nc; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
         _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j], x);
         _dphideta[i][j] = _pt_basis->eval_dphidy(_IND[j], x);
 	_dphidzeta[i][j] = _pt_basis->eval_dphidz(_IND[j], x);
-	
-	
-	
-	
+
+
+
+
         _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j], x);
         _d2phideta2[i][j] = _pt_basis->eval_d2phidy2(_IND[j], x);
         _d2phidzeta2[i][j] = _pt_basis->eval_d2phidz2(_IND[j], x);
-	
+
 	//std::cout << j <<" "<<_d2phideta2[i][j]<< " " << _d2phidzeta2[i][j] <<std::endl;
-	
+
         _d2phidxideta[i][j] = _pt_basis->eval_d2phidxdy(_IND[j], x);
         _d2phidetadzeta[i][j] = _pt_basis->eval_d2phidydz(_IND[j], x);
         _d2phidzetadxi[i][j] = _pt_basis->eval_d2phidzdx(_IND[j], x);
-	
+
 	phisum += _phi[i][j];
-	
+
         dphidxisum += _dphidxi[i][j];
         dphidetasum += _dphideta[i][j];
 	dphidzetasum += _dphidzeta[i][j];
-	
+
 	d2phidxi2sum += _d2phidxi2[i][j];
         d2phideta2sum += _d2phideta2[i][j];
 	d2phidzeta2sum += _d2phidzeta2[i][j];
-	
+
         d2phidxidetasum +=_d2phidxideta[i][j];
 	d2phidetadzetasum +=  _d2phidetadzeta[i][j];
 	d2phidzetadxisum += _d2phidzetadxi[i][j];
       }
-      
+
       std::cout << "gauss " << i <<" "<<_nc <<" "<<x[0] <<" "<<x[1]<<" "<<x[2] << std::endl;
       std::cout << phisum << std::endl;
       std::cout << dphidxisum  << " " <<dphidetasum    <<" "<< dphidzetasum << std::endl;
