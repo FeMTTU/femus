@@ -70,9 +70,14 @@ int main(int argc, char** args) {
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // Test 3: the maker has the "same" y coordinate of a midpoint of an edge of element 60 (point 144)
- x[0]=5.77298e-05;  //it is on element 60 
- x[1]=7.23015e-05;
- x[2]=0.;
+//  x[0]=5.77298e-05;  //it is on element 60 
+//  x[1]=7.23015e-05;
+//  x[2]=0.;
+  
+  x[0]=-4.9e-05;  //it is on element 153 proc=2
+  x[1]=2e-05;
+  x[2]=0.;
+  
 // WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 // NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
 // I changed the tollerance to 1-e10 because with 1e-04 it was not working with square.neu however now the code, in this limit case, gives the
