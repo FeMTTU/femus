@@ -38,7 +38,7 @@ void Marker::GetElement() {
     unsigned dim = _mesh->GetDimension();
     std::vector < unsigned > processorMarkerFlag(_nprocs, 2);
     for(unsigned j =0 ; j<_nprocs; j++) {
-      std::cout << " processorMarkerFlag[" <<j<< "] = " << processorMarkerFlag[j] <<std::endl;
+        std::cout << " processorMarkerFlag[" <<j<< "] = " << processorMarkerFlag[j] <<std::endl;
     }
 
     double modulus = 1.e10;
@@ -75,11 +75,11 @@ void Marker::GetElement() {
     bool elementHasBeenFound = false;
     bool pointIsOutsideThisMesh = false;
 
+
     int kel = iel;
     while( !elementHasBeenFound && !pointIsOutsideThisMesh) {
-        //int jel = GetNextElement(dim, iel, kel); c'e' questo commentato senno' non runna
-        int jel =4; // con jel =4 tutti i processori in teoria dovrebbero trovare il marker, quindi alla fine del send & receive, processorMarkerFlag dovrebbe avere entrie tutte uguali a 1 per tutti i processori ma non e' cosi...
-        kel = iel;
+      int jel = GetNextElement(dim, iel, kel); 
+      kel = iel;
         if( jel == iel) {
             _elem = iel;
             elementHasBeenFound = true;
@@ -87,7 +87,12 @@ void Marker::GetElement() {
         else if (jel < 0) {
             pointIsOutsideThisMesh = true;
         }
-        iel = jel;
+        else if ( jel < _mesh->_elementOffset[_iproc] || _mesh->_elementOffset[_iproc+1] <= jel ){
+	  pointIsOutsideThisMesh = true;
+        }
+        else{
+	  iel = jel;
+	}
     }
 
     if(elementHasBeenFound) {
@@ -99,28 +104,39 @@ void Marker::GetElement() {
         std::cout << " The marker does not belong to this mesh"<< std::endl;
     }
 
+
+//     int * calls = new int[_nprocs*(_nprocs-1)];
+//     int ** iprocCalls = new  int * [_nprocs];
+//     for(unsigned i=0; i<_nprocs; i++) {
+//         iprocCalls[i] = calls + i*(_nprocs-1);
+//     }
+//     for(unsigned i=0; i<_nprocs*(_nprocs-1); i++) {
+//         calls[i]=i;
+//     }
+
+    //int * jcall=iprocCalls[_iproc];
+    for(unsigned jproc=0; jproc<_nprocs; jproc++) {
+        if(jproc != _iproc) {
+            MPI_Send( &processorMarkerFlag[_iproc], 1, MPI_UNSIGNED, jproc, 1 , MPI_COMM_WORLD);
+//             int z = (jproc < _iproc) ? _iproc -1 : _iproc;
+//             int * p = iprocCalls[jproc]+z;
+            MPI_Recv( &processorMarkerFlag[jproc], 1, MPI_UNSIGNED, jproc, 1 , MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//             jcall++;
+        }
+    }
+
     for(unsigned j =0 ; j<_nprocs; j++) {
-      std::cout << " processorMarkerFlag[" <<j<< "] = " << processorMarkerFlag[j] <<std::endl;
+        std::cout << " processorMarkerFlag[" <<j<< "] = " << processorMarkerFlag[j] <<std::endl;
     }
-
-    std::cout << "processorMarkerFlag PRIMA DEL SEND = "<< processorMarkerFlag[_iproc] << std::endl;
-    for(unsigned jproc=0; jproc<_nprocs; jproc++){
-      if(jproc != _iproc){
-	MPI_Send( &processorMarkerFlag[_iproc], 1, MPI_UNSIGNED, jproc, 1, MPI_COMM_WORLD);
-	MPI_Recv( &processorMarkerFlag[jproc], 1, MPI_UNSIGNED, jproc, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-	std::cout << "ricevuto questo " << processorMarkerFlag[jproc] << std::endl;
-      }
-    }
-
-    for(unsigned j =0 ; j<_nprocs; j++) {
-      std::cout << " processorMarkerFlag[" <<j<< "] = " << processorMarkerFlag[j] <<std::endl;
-    }
-
+//     delete[] calls;
+//     delete[] iprocCalls;
 }
+
+// HOW DO WE DEAL WITH SITUATIONS WHERE THE POINT IS ON AN EDGE THAT IS SHARED BY TWO ELEMENTS IN 2 DIFFERENT PROCESSORS?
 
 int Marker::GetNextElement(const unsigned &dim, const int &currentElem, const int &previousElem) {
 
-    std::vector< std::vector < double > > xv(dim);    // will store the coordinates of the vertices of element el
+    std::vector< std::vector < double > > xv(dim);
 
     for(unsigned k = 0; k < dim; k++) {
         xv[k].reserve(9);
@@ -214,18 +230,12 @@ int Marker::GetNextElement(const unsigned &dim, const int &currentElem, const in
             }
             distancej = sqrt(distancej);
 
-            if( distancej < distance ){
-		//if (_mesh->_elementOffset[_iproc] <= jel || jel < _mesh->_elementOffset[_iproc+1] ){
-		int jel = (_mesh->el->GetFaceElementIndex( currentElem, ( j - 1) / 2 ) - 1);
+            if( distancej < distance ) {
+                int jel = (_mesh->el->GetFaceElementIndex( currentElem, ( j - 1) / 2 ) - 1);
                 if( jel != previousElem ) {
-                      nextElem = jel;
-                      distance = distancej;
-                  }
-              //}
-              //else{
-		//std::cout << " the next element does not belong to the current processor " << std::endl;
-	        //nextElem = jel;
-	      //}
+                    nextElem = jel;
+                    distance = distancej;
+                }
             }
         }
 

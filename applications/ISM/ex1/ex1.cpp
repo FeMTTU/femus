@@ -32,13 +32,13 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh( "./input/square2.neu", "seventh", scalingFactor );
+ mlMsh.ReadCoarseMesh( "./input/square2.neu", "seventh", scalingFactor );
   
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
 //   unsigned numberOfUniformLevels = 4;
 //   unsigned numberOfSelectiveLevels = 3;
 //   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-//   
+  
   std::vector < double > x(3);
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,9 +70,9 @@ int main(int argc, char** args) {
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 // Test 3: the maker has the "same" y coordinate of a midpoint of an edge of element 60 (point 144)
-//  x[0]=5.77298e-05;  //it is on element 60 
-//  x[1]=7.23015e-05;
-//  x[2]=0.;
+ x[0]=5.77298e-05;  //it is on element 60 
+ x[1]=7.23015e-05;
+ x[2]=0.;
 // WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 // NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
 // I changed the tollerance to 1-e10 because with 1e-04 it was not working with square.neu however now the code, in this limit case, gives the
@@ -81,9 +81,9 @@ int main(int argc, char** args) {
 //////////////////////////////////////////////////////////////////////////////////////////////  
   
 //Test 4: the maker is VERY close to a vertex of element 15 (point 19)
- x[0]=2.72848e-05;  //it is on element 15 
- x[1]=-2.62822e-05;
- x[2]=0.;
+//  x[0]=-2.72848e-05;  //it is on element 15 
+//  x[1]=2.62822e-05;
+//  x[2]=0.;
 //WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 //NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
  // I changed the tollerance to 1-e10 because with 1e-04 it was not working with square.neu however now the code, in this limit case, gives the
