@@ -174,16 +174,12 @@ namespace femus {
         inf >> value;
         mesh.el->SetElementDofIndex(iel, inode, value - 1u);
       }
-      // add biquadratic nodes not included in gambit
-      unsigned inode = nve;
-        for(unsigned j = 0; j < _numberOfMissedBiquadraticNodes[elementType]; j++){
-	  mesh.el->SetElementDofIndex(iel, inode, nvt);
-	  nvt++;
-	  inode++;
-      }      
     }
     
     GambitIO::BiquadraticNodesNotInGambit(mesh);
+    nvt = mesh.GetNumberOfNodes();
+    std::cout<<"nvt="<<nvt<<std::endl;
+    
     
     inf >> str2;
     if(str2.compare("ENDOFSECTION") != 0) {
@@ -201,12 +197,6 @@ namespace femus {
         }
         std::cout<<std::endl; 
       }
-    
-    
-    //mesh.SetNumberOfNodes(nvt);
-    nvt = mesh.GetNumberOfNodes();
-    std::cout<<"nvt="<<nvt<<std::endl;
-
     // end read  ELEMENT/CELL **************** B
 
     // read NODAL COORDINATES **************** C
@@ -254,24 +244,29 @@ namespace femus {
     // add the coordinates of the biquadratic nodes not included in gambit
     for(int iel = 0; iel < nel; iel++) {
       unsigned elementType = mesh.el->GetElementType(iel);
-      for(unsigned j = 0; j < _numberOfMissedBiquadraticNodes[elementType]; j++){
-	std::cout << nvt0 << std::endl;
-	coords[0][nvt0] = 0.;
-        coords[1][nvt0] = 0.;
-        coords[2][nvt0] = 0.;
-        for(int i = 0; i < mesh.el->GetNVE(elementType,2) - _numberOfMissedBiquadraticNodes[elementType]; i++) {
+      
+      unsigned ndof = mesh.el->GetElementDofNumber(iel,2);
+      unsigned jstart = ndof - _numberOfMissedBiquadraticNodes[elementType];
+            
+      for(unsigned j = jstart; j < ndof; j++){
+	
+	unsigned jnode = mesh.el->GetElementDofIndex(iel, j);
+	
+	coords[0][jnode] = 0.;
+        coords[1][jnode] = 0.;
+        coords[2][jnode] = 0.;
+        for(int i = 0; i < jstart; i++) {
           unsigned inode = mesh.el->GetElementDofIndex(iel, i);
-	  std::cout << _baricentricWeight[ elementType ][j][i] <<" ";
+	  std::cout << _baricentricWeight[ elementType ][j - jstart][i] <<" ";
           for(int k = 0; k < mesh.GetDimension(); k++) {
-	    coords[k][nvt0] += coords[k][inode] * _baricentricWeight[ elementType ][j][i];
+	    coords[k][jnode] += coords[k][inode] * _baricentricWeight[ elementType ][j - jstart][i];
           }          
         }  
-        std::cout << std::endl << nvt0 << " ";
+        std::cout << std::endl << jnode << " ";
         for(int k = 0; k < mesh.GetDimension(); k++) {
-	  std::cout << coords[k][nvt0]<<" ";
+	  std::cout << coords[k][jnode]<<" ";
 	}
 	std::cout<< std::endl;
-	nvt0++;
       }     
     }   
 
@@ -343,7 +338,7 @@ namespace femus {
 
     unsigned int nnodes = mesh.GetNumberOfNodes();
     std::cout << " ********************************** "<< std::endl;
-    std::cout << "nnodes = "  << nnodes << std::endl;
+    std::cout << "nnodes before = "  << nnodes << std::endl;
 
     //intialize to UINT_MAX
     for( unsigned iel = 0; iel < mesh.el->GetElementNumber(); iel++ ) {
@@ -396,8 +391,7 @@ namespace femus {
 
     // generates element dofs for tet, wedge and triangle elements
     for( unsigned iel = 0; iel < mesh.el->GetElementNumber(); iel++ ) {
-      //if( mesh.el->GetIfFatherHasBeenRefined( iel ) ) {
-        if( 1 == mesh.el->GetElementType( iel ) ) { //tet
+      if( 1 == mesh.el->GetElementType( iel ) ) { //tet
           mesh.el->SetElementDofIndex( iel, 14, nnodes);
 	  ++nnodes;
         }
@@ -409,12 +403,11 @@ namespace femus {
           mesh.el->SetElementDofIndex( iel, 6, nnodes);
 	  ++nnodes;
         }
-      //}
     }
 
     mesh.el->SetNodeNumber( nnodes );
     mesh.SetNumberOfNodes( nnodes );
-
+    std::cout <<"nnodes after="<< nnodes << std::endl;
   }
-  
+ 
 }

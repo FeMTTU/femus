@@ -38,8 +38,8 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/triangle.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/wedge2.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/triangle.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/wedge2.neu", "seventh", scalingFactor);
   
   
   unsigned dim = mlMsh.GetDimension();
@@ -48,7 +48,7 @@ int main(int argc, char** args) {
   //l2Norm.resize (maxNumberOfMeshes);
   //vector < vector < double > > semiNorm;
   //semiNorm.resize (maxNumberOfMeshes);
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   
