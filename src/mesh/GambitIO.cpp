@@ -88,6 +88,7 @@ namespace femus {
     double x, y, z;
     unsigned nvt;
     unsigned nvt0;
+    //unsigned nvt1;
     unsigned nel;
 
     mesh.SetLevel(0);
@@ -101,6 +102,7 @@ namespace femus {
     while(str2.compare("NDFVL") != 0) inf >> str2;
     inf >> nvt >> nel >>  ngroup >> nbcd >> dim >> str2 ;
     nvt0 = nvt;
+    //nvt1 = nvt;
     mesh.SetDimension(dim);
     mesh.SetNumberOfElements(nel);
     mesh.SetNumberOfNodes(nvt);
@@ -174,12 +176,15 @@ namespace femus {
       }
       // add biquadratic nodes not included in gambit
       unsigned inode = nve;
-      for(unsigned j = 0; j < _numberOfMissedBiquadraticNodes[elementType]; j++){
+        for(unsigned j = 0; j < _numberOfMissedBiquadraticNodes[elementType]; j++){
 	  mesh.el->SetElementDofIndex(iel, inode, nvt);
 	  nvt++;
 	  inode++;
-      }
+      }      
     }
+    
+    GambitIO::BiquadraticNodesNotInGambit(mesh);
+    
     inf >> str2;
     if(str2.compare("ENDOFSECTION") != 0) {
       std::cout << "error element data mesh" << std::endl;
@@ -198,7 +203,9 @@ namespace femus {
       }
     
     
-    mesh.SetNumberOfNodes(nvt);
+    //mesh.SetNumberOfNodes(nvt);
+    nvt = mesh.GetNumberOfNodes();
+    std::cout<<"nvt="<<nvt<<std::endl;
 
     // end read  ELEMENT/CELL **************** B
 
@@ -266,9 +273,8 @@ namespace femus {
 	std::cout<< std::endl;
 	nvt0++;
       }     
-    }
-    
-    
+    }   
+
     
     inf.close();
     // end read NODAL COORDINATES ************* C
@@ -331,49 +337,48 @@ namespace femus {
     // end read boundary **************** D
 
   };
+  
+  
+  void GambitIO::BiquadraticNodesNotInGambit(Mesh& mesh) {
 
-  
-  
-  
-  
-   void MeshRefinement::Buildkmid() {
-
-    unsigned int nnodes = _mesh.GetNumberOfNodes();
+    unsigned int nnodes = mesh.GetNumberOfNodes();
+    std::cout << " ********************************** "<< std::endl;
+    std::cout << "nnodes = "  << nnodes << std::endl;
 
     //intialize to UINT_MAX
-    for( unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++ ) {
-      unsigned elementType = _mesh.el->GetElementType(iel);
+    for( unsigned iel = 0; iel < mesh.el->GetElementNumber(); iel++ ) {
+      unsigned elementType = mesh.el->GetElementType(iel);
       if( elementType == 1 || elementType == 2 ) {
-        for( unsigned inode = _mesh.el->GetElementDofNumber( iel, 2 ) - _numberOfMissedBiquadraticNodes[elementType]; 
-	    inode < _mesh.el->GetElementDofNumber( iel, 2 ); inode++ ) {
-          _mesh.el->SetElementDofIndex( iel, inode, UINT_MAX );
+        for( unsigned inode = mesh.el->GetElementDofNumber( iel, 2 ) - _numberOfMissedBiquadraticNodes[elementType]; 
+	    inode < mesh.el->GetElementDofNumber( iel, 2 ); inode++ ) {
+          mesh.el->SetElementDofIndex( iel, inode, UINT_MAX );
         }
       }
     }
 
-    // generate face dofs for hex and wedge elements
-    for( unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++ ) {
-      unsigned elementType = _mesh.el->GetElementType(iel);
+    // generate face dofs for tet and wedge elements
+    for( unsigned iel = 0; iel < mesh.el->GetElementNumber(); iel++ ) {
+      unsigned elementType = mesh.el->GetElementType(iel);
       if( elementType == 1 || elementType == 2 ) {
-        for( unsigned iface = _mesh.el->GetElementFaceNumber( iel, 0 ); iface < _mesh.el->GetElementFaceNumber( iel, 1 ); iface++ ) { //on all the faces that are triangle
-          unsigned inode = _mesh.el->GetElementDofNumber( iel, 1 ) + iface; 
-	  if( UINT_MAX == _mesh.el->GetElementDofIndex( iel, inode ) ) {
-            _mesh.el->SetElementDofIndex( iel, inode, nnodes);
-	    unsigned i1 = _mesh.el->GetFaceVertexIndex( iel, iface, 0 );
-            unsigned i2 = _mesh.el->GetFaceVertexIndex( iel, iface, 1 );
-	    unsigned i3 = _mesh.el->GetFaceVertexIndex( iel, iface, 2 );
+        for( unsigned iface = mesh.el->GetElementFaceNumber( iel, 0 ); iface < mesh.el->GetElementFaceNumber( iel, 1 ); iface++ ) { //on all the faces that are triangles
+          unsigned inode = mesh.el->GetElementDofNumber( iel, 1 ) + iface; 
+	  if( UINT_MAX == mesh.el->GetElementDofIndex( iel, inode ) ) {
+            mesh.el->SetElementDofIndex( iel, inode, nnodes);
+	    unsigned i1 = mesh.el->GetFaceVertexIndex( iel, iface, 0 );
+            unsigned i2 = mesh.el->GetFaceVertexIndex( iel, iface, 1 );
+	    unsigned i3 = mesh.el->GetFaceVertexIndex( iel, iface, 2 );
 	    bool faceHasBeenFound = false;
-	    for( unsigned jel = iel + 1; jel < _mesh.el->GetElementNumber(); jel++ ) {
-	      for( unsigned jface = _mesh.el->GetElementFaceNumber( jel, 0 ); jface < _mesh.el->GetElementFaceNumber( jel, 1 ); jface++ ) {
-                unsigned jnode = _mesh.el->GetElementDofNumber( jel, 1 ) + jface;
-		if( UINT_MAX == _mesh.el->GetElementDofIndex( jel, jnode ) ) {
-                  unsigned j1 = _mesh.el->GetFaceVertexIndex( jel, jface, 0 );
-                  unsigned j2 = _mesh.el->GetFaceVertexIndex( jel, jface, 1 );
-                  unsigned j3 = _mesh.el->GetFaceVertexIndex( jel, jface, 2 );
+	    for( unsigned jel = iel + 1; jel < mesh.el->GetElementNumber(); jel++ ) {
+	      for( unsigned jface = mesh.el->GetElementFaceNumber( jel, 0 ); jface < mesh.el->GetElementFaceNumber( jel, 1 ); jface++ ) {
+                unsigned jnode = mesh.el->GetElementDofNumber( jel, 1 ) + jface;
+		if( UINT_MAX == mesh.el->GetElementDofIndex( jel, jnode ) ) {
+                  unsigned j1 = mesh.el->GetFaceVertexIndex( jel, jface, 0 );
+                  unsigned j2 = mesh.el->GetFaceVertexIndex( jel, jface, 1 );
+                  unsigned j3 = mesh.el->GetFaceVertexIndex( jel, jface, 2 );
 		  if( ( i1 == j1 || i1 == j2 || i1 == j3 ) &&
                       ( i2 == j1 || i2 == j2 || i2 == j3 ) &&
                       ( i3 == j1 || i3 == j2 || i3 == j3 ) ) {
-                    _mesh.el->SetElementDofIndex( jel, jnode, nnodes);
+                    mesh.el->SetElementDofIndex( jel, jnode, nnodes);
 		    faceHasBeenFound = true;
 		    break;
                   }
@@ -389,39 +394,27 @@ namespace femus {
       }
     }
 
-    // generates element dofs for hex, quad and triangle elements
-    for( unsigned iel = 0; iel < _mesh.el->GetElementNumber(); iel++ ) {
-      if( _mesh.el->GetIfFatherHasBeenRefined( iel ) ) {
-        if( 1 == _mesh.el->GetElementType( iel ) ) { //tet
-          _mesh.el->SetElementDofIndex( iel, 14, nnodes);
+    // generates element dofs for tet, wedge and triangle elements
+    for( unsigned iel = 0; iel < mesh.el->GetElementNumber(); iel++ ) {
+      //if( mesh.el->GetIfFatherHasBeenRefined( iel ) ) {
+        if( 1 == mesh.el->GetElementType( iel ) ) { //tet
+          mesh.el->SetElementDofIndex( iel, 14, nnodes);
 	  ++nnodes;
         }
-        else if( 2 == _mesh.el->GetElementType( iel ) ) { //wedge
-         _mesh.el->SetElementDofIndex( iel, 20, nnodes);
+        else if( 2 == mesh.el->GetElementType( iel ) ) { //wedge
+         mesh.el->SetElementDofIndex( iel, 20, nnodes);
 	 ++nnodes;
         }
-        else if( 4 == _mesh.el->GetElementType( iel ) ) { //triangle
-          _mesh.el->SetElementDofIndex( iel, 6, ++nnodes);
+        else if( 4 == mesh.el->GetElementType( iel ) ) { //triangle
+          mesh.el->SetElementDofIndex( iel, 6, nnodes);
 	  ++nnodes;
         }
-      }
+      //}
     }
 
-    _mesh.el->SetNodeNumber( nnodes );
-    _mesh.SetNumberOfNodes( nnodes );
+    mesh.el->SetNodeNumber( nnodes );
+    mesh.SetNumberOfNodes( nnodes );
 
   }
-  
-  
-  
-  
-  
-  
-
-
-}
-  
-  
-  
   
 }

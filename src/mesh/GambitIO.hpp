@@ -50,6 +50,8 @@ class GambitIO : public MeshInput<Mesh>
    *
    */
   virtual void read (const std::string& name, vector < vector < double> > &coords, const double Lref, std::vector<bool> &type_elem_flag);
+  
+  void BiquadraticNodesNotInGambit(Mesh& mesh);
 
  private:
    
