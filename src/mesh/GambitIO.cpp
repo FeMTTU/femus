@@ -178,9 +178,7 @@ namespace femus {
     
     GambitIO::BiquadraticNodesNotInGambit(mesh);
     nvt = mesh.GetNumberOfNodes();
-    std::cout<<"nvt="<<nvt<<std::endl;
-    
-    
+       
     inf >> str2;
     if(str2.compare("ENDOFSECTION") != 0) {
       std::cout << "error element data mesh" << std::endl;
@@ -188,15 +186,6 @@ namespace femus {
     }
     inf.close();
 
-    for(int iel = 0; iel < nel; iel++) {
-	unsigned elementType = mesh.el->GetElementType(iel);
-        if( elementType == 4) {
-	  for(int i = 0; i < 7; i++) {
-            std::cout << mesh.el->GetElementDofIndex(iel, i) <<" ";
-          }
-        }
-        std::cout<<std::endl; 
-      }
     // end read  ELEMENT/CELL **************** B
 
     // read NODAL COORDINATES **************** C
@@ -257,16 +246,10 @@ namespace femus {
         coords[2][jnode] = 0.;
         for(int i = 0; i < jstart; i++) {
           unsigned inode = mesh.el->GetElementDofIndex(iel, i);
-	  std::cout << _baricentricWeight[ elementType ][j - jstart][i] <<" ";
           for(int k = 0; k < mesh.GetDimension(); k++) {
 	    coords[k][jnode] += coords[k][inode] * _baricentricWeight[ elementType ][j - jstart][i];
           }          
         }  
-        std::cout << std::endl << jnode << " ";
-        for(int k = 0; k < mesh.GetDimension(); k++) {
-	  std::cout << coords[k][jnode]<<" ";
-	}
-	std::cout<< std::endl;
       }     
     }   
 
@@ -337,8 +320,8 @@ namespace femus {
   void GambitIO::BiquadraticNodesNotInGambit(Mesh& mesh) {
 
     unsigned int nnodes = mesh.GetNumberOfNodes();
-    std::cout << " ********************************** "<< std::endl;
-    std::cout << "nnodes before = "  << nnodes << std::endl;
+//     std::cout << " ********************************** "<< std::endl;
+//     std::cout << "nnodes before = "  << nnodes << std::endl;
 
     //intialize to UINT_MAX
     for( unsigned iel = 0; iel < mesh.el->GetElementNumber(); iel++ ) {
@@ -407,7 +390,7 @@ namespace femus {
 
     mesh.el->SetNodeNumber( nnodes );
     mesh.SetNumberOfNodes( nnodes );
-    std::cout <<"nnodes after="<< nnodes << std::endl;
+//     std::cout <<"nnodes after="<< nnodes << std::endl;
   }
  
 }

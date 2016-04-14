@@ -114,10 +114,7 @@ namespace femus {
 
     //count the own node dofs on all levels
     unsigned nvt = mesh->_ownSize[index][_iproc];
-
-    
-    std::cout<<nvt<<std::endl;
-    
+   
     // count the ghost node dofs and the own element dofs element on all levels
     unsigned gridOffset = 0;
 
