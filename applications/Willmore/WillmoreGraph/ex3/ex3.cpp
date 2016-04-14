@@ -49,7 +49,7 @@ double InitalValueWSphere(const std::vector < double >& x) {
 
 // Torus
 
-double c1 = .5;
+double c1 =0.5;
 bool SetBoundaryConditionCatenoid(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   
@@ -67,6 +67,7 @@ bool SetBoundaryConditionCatenoid(const std::vector < double >& x, const char So
 }
 
 double InitalValueUCatenoid(const std::vector < double >& x) {
+  
   return c1 * acosh ( 1. / c1 * sqrt(x[0]*x[0] + x[1]*x[1] ) );
 }
 
