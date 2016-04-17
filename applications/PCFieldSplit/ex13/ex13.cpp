@@ -356,7 +356,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           solP_gss += phiP[i] * solP[i];
         }
 
-        double nu = 0.01;
+        double nu = 1.0;
         double alpha = 1.;
         double beta = 2000.;
 
