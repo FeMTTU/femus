@@ -52,12 +52,7 @@ namespace femus {
     {1./4.,1./4.,1./8.}, //baricenter of 3rd internal triangle
     {1./8.,3./8.,1./4.}  //baricenter of 4th internal triangle
   };
-
-//   const int tet_lag::IND[10][3] = { 
-//     {0, 0, 0},{2, 0, 0},{0, 2, 0},{0, 0, 2},
-//     {1, 0, 0},{1, 1, 0},{0, 1, 0},
-//     {0, 0, 1},{1, 0, 1},{0, 1, 1}
-//   };
+  
   
   const int tet_lag::IND[15][3] = { 
     {0, 0, 0},{2, 0, 0},{0, 2, 0},{0, 0, 2}, // 0-3 vertices

@@ -38,8 +38,8 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/triangle.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/wedge1.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/triangle.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/wedge1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/tet2.neu", "seventh", scalingFactor);
   
   
@@ -60,6 +60,7 @@ int main(int argc, char** args) {
   // add variables to mlSol
 
   mlSol.AddSolution("V", LAGRANGE, SECOND);
+  //mlSol.AddSolution("V", DISCONTINOUS_POLYNOMIAL, FIRST);
   
   mlSol.Initialize("All");
   

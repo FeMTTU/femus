@@ -179,6 +179,8 @@ public:
 
     /** To be added */
     void Buildkel();
+    
+    void BiquadraticNodesNotInGambit();
 
 
     // member data

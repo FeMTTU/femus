@@ -88,7 +88,6 @@ namespace femus {
     double x, y, z;
     unsigned nvt;
     unsigned nvt0;
-    //unsigned nvt1;
     unsigned nel;
 
     mesh.SetLevel(0);
@@ -102,7 +101,6 @@ namespace femus {
     while(str2.compare("NDFVL") != 0) inf >> str2;
     inf >> nvt >> nel >>  ngroup >> nbcd >> dim >> str2 ;
     nvt0 = nvt;
-    //nvt1 = nvt;
     mesh.SetDimension(dim);
     mesh.SetNumberOfElements(nel);
     mesh.SetNumberOfNodes(nvt);
@@ -176,8 +174,8 @@ namespace femus {
       }
     }
     
-    GambitIO::BiquadraticNodesNotInGambit(mesh);
-    nvt = mesh.GetNumberOfNodes();
+    //GambitIO::BiquadraticNodesNotInGambit(mesh);
+    //nvt = mesh.GetNumberOfNodes();
        
     inf >> str2;
     if(str2.compare("ENDOFSECTION") != 0) {
@@ -231,7 +229,7 @@ namespace femus {
     }
     
     // add the coordinates of the biquadratic nodes not included in gambit
-    for(int iel = 0; iel < nel; iel++) {
+/*    for(int iel = 0; iel < nel; iel++) {
       unsigned elementType = mesh.el->GetElementType(iel);
       
       unsigned ndof = mesh.el->GetElementDofNumber(iel,2);
@@ -251,7 +249,7 @@ namespace femus {
           }          
         }  
       }     
-    }   
+    }*/   
 
     
     inf.close();
