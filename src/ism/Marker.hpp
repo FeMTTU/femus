@@ -55,7 +55,7 @@ namespace femus {
     
     std::vector < double > _x;
     MarkerType _markerType;
-    Mesh * _mesh;
+    const Mesh * _mesh;
     unsigned _elem;
   };
 } //end namespace femus

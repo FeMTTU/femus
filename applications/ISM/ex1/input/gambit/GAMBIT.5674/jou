@@ -1,0 +1,14 @@
+/ Journal File for GAMBIT 2.3.16, Database 2.3.14, lnamd64 SP2006033020
+/ Identifier "default_id"
+/ File opened for write Mon Apr 18 15:11:34 2016.
+volume create width 1 depth 1 height 1 brick
+default set "MESH.NODES.HEX" numeric 27
+volume mesh "volume.1" map intervals 5
+solver select "Generic"
+physics create "1" btype "ELEMENT_SIDE" face "face.1" "face.2" "face.3" \
+  "face.4" "face.5" "face.6"
+physics create "5" ctype "FLUID" volume "volume.1"
+save name \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/ISM/ex1/input/gambit/cubeHex.dbs"
+export gambit \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/ISM/ex1/input/cubeHex.neu"

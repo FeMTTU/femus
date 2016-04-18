@@ -32,12 +32,12 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
- mlMsh.ReadCoarseMesh( "./input/squareHex3D.neu", "seventh", scalingFactor );
+ mlMsh.ReadCoarseMesh( "./input/cubeHex.neu", "seventh", scalingFactor );
   
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
-//   unsigned numberOfUniformLevels = 4;
-//   unsigned numberOfSelectiveLevels = 3;
-//   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
+  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels = 0;
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
   
   std::vector < double > x(3);
 
