@@ -242,6 +242,10 @@ private:
     /** Build the coarse to the fine projection matrix */
     void BuildCoarseToFineProjection(const unsigned& solType);
 
+    /** Weights used to build the baricentric coordinate **/
+    static const double _baricentricWeight[6][5][18];
+    static const unsigned _numberOfMissedBiquadraticNodes[6];
+    
     //member-data
     int _nelem;                                //< number of elements
     unsigned _nnodes;                          //< number of nodes
@@ -249,7 +253,7 @@ private:
     static unsigned _dimension;                //< dimension of the problem
     static unsigned _ref_index;
     static unsigned _face_index;
-
+    
     std::map < unsigned, unsigned > _ownedGhostMap[2];
     vector < unsigned > _originalOwnSize[2];
 
