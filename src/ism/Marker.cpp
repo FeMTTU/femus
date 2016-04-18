@@ -31,6 +31,17 @@ const unsigned facePoints[6][9] = {
     { }
 };
 
+const unsigned facePoints3D[6][6][9] = {
+    {   {0, 8, 1, 17, 5, 12, 4, 16, 0},
+        {1, 9, 2, 18, 6, 13, 5, 17, 1},
+        {2, 10, 3, 19, 7, 14, 6, 18, 2},
+        {3, 11, 0, 16, 4, 15, 7, 19, 3},
+        {0, 8, 1, 9, 2, 10, 3, 11, 0},
+        {4, 12, 5, 13, 6, 14, 7, 15, 4},
+    },
+    {{}}, {{}}, {{}}, {{}}, {{}}
+};
+
 namespace femus {
 
 void Marker::GetElement() {
@@ -48,24 +59,47 @@ void Marker::GetElement() {
 
     double modulus = 1.e10;
     int iel = _mesh->_elementOffset[_iproc + 1];
+    if(dim == 2) {
+        for(int kel = _mesh->_elementOffset[_iproc]; kel < _mesh->_elementOffset[_iproc + 1]; kel += 25) {
 
-    for(int kel = _mesh->_elementOffset[_iproc]; kel < _mesh->_elementOffset[_iproc + 1]; kel += 25) {
-        short unsigned kelType = _mesh->GetElementType(kel);
-        double modulusKel = 0.;
-        for(unsigned i = 0; i < facePointNumber[kelType] - 1; i++) {
-            unsigned kDof  = _mesh->GetSolutionDof(facePoints[kelType][i], kel, 2);    // global to global mapping between coordinates node and coordinate dof
+            short unsigned kelType = _mesh->GetElementType(kel);
+            double modulusKel = 0.;
+            for(unsigned i = 0; i < facePointNumber[kelType] - 1; i++) {
+                unsigned kDof  = _mesh->GetSolutionDof(facePoints[kelType][i], kel, 2);    // global to global mapping between coordinates node and coordinate dof
+                double distance2 = 0;
+                for(unsigned k = 0; k < dim; k++) {
+                    double dk = (*_mesh->_topology->_Sol[k])(kDof) - _x[k];     // global extraction and local storage for the element coordinates
+                    distance2 += dk * dk;
+                }
+                modulusKel += sqrt(distance2);
+            }
+            modulusKel /= (facePointNumber[kelType] - 1);
+
+            if(modulusKel < modulus) {
+                iel = kel;
+                modulus = modulusKel;
+            }
+        }
+
+    }
+    if(dim == 3) {
+        //TODO bisogna farlo anche per tet e wedge, adesso i punti centrali ci sono solo per hex
+        for(int kel = _mesh->_elementOffset[_iproc]; kel < _mesh->_elementOffset[_iproc + 1]; kel += 25) {
+            short unsigned kelType = _mesh->GetElementType(kel);
+            unsigned interiorNode = _mesh->el->GetNVE(kelType, 2) -1;
+            double modulusKel = 0.;
+            unsigned kDof  = _mesh->GetSolutionDof(interiorNode, kel, 2);    // global to global mapping between coordinates node and coordinate dof
             double distance2 = 0;
             for(unsigned k = 0; k < dim; k++) {
                 double dk = (*_mesh->_topology->_Sol[k])(kDof) - _x[k];     // global extraction and local storage for the element coordinates
                 distance2 += dk * dk;
             }
-            modulusKel += sqrt(distance2);
-        }
-        modulusKel /= (facePointNumber[kelType] - 1);
-
-        if(modulusKel < modulus) {
-            iel = kel;
-            modulus = modulusKel;
+            modulusKel = sqrt(distance2); 
+	   
+            if(modulusKel < modulus) {
+                iel = kel;
+                modulus = modulusKel;
+            }
         }
     }
 
@@ -154,7 +188,7 @@ void Marker::GetElement() {
         }
 
 
-        //_iproc sends its nextElem (which is in jproc) to jproc
+       // _iproc sends its nextElem (which is in jproc) to jproc
 
         std::vector< int > nextElem(_nprocs, -1);
         if(!elementHasBeenFound) {
@@ -172,25 +206,50 @@ void Marker::GetElement() {
             modulus = 1.0e10;
             iel = _mesh->_elementOffset[_iproc + 1];
 
-            for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
-                if(processorMarkerFlag[jproc] == 3) {
-                    unsigned kel = nextElem[jproc];
-                    short unsigned kelType = _mesh->GetElementType(kel);
-                    double modulusKel = 0.;
-                    for(unsigned i = 0; i < facePointNumber[kelType] - 1; i++) {
-                        unsigned kDof  = _mesh->GetSolutionDof(facePoints[kelType][i], kel, 2);    // global to global mapping between coordinates node and coordinate dof
+            if(dim ==2) {
+                for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
+                    if(processorMarkerFlag[jproc] == 3) {
+                        unsigned kel = nextElem[jproc];
+                        short unsigned kelType = _mesh->GetElementType(kel);
+                        double modulusKel = 0.;
+                        for(unsigned i = 0; i < facePointNumber[kelType] - 1; i++) {
+                            unsigned kDof  = _mesh->GetSolutionDof(facePoints[kelType][i], kel, 2);    // global to global mapping between coordinates node and coordinate dof
+                            double distance2 = 0;
+                            for(unsigned k = 0; k < dim; k++) {
+                                double dk = (*_mesh->_topology->_Sol[k])(kDof) - _x[k];     // global extraction and local storage for the element coordinates
+                                distance2 += dk * dk;
+                            }
+                            modulusKel += sqrt(distance2);
+                        }
+                        modulusKel /= (facePointNumber[kelType] - 1);
+
+                        if(modulusKel < modulus) {
+                            iel = kel;
+                            modulus = modulusKel;
+                        }
+                    }
+                }
+            }
+            if(dim == 3) {
+                //TODO for tet and wedges
+                for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
+                    if(processorMarkerFlag[jproc] == 3) {
+                        unsigned kel = nextElem[jproc];
+                        short unsigned kelType = _mesh->GetElementType(kel);
+                        unsigned interiorNode = _mesh->el->GetNVE(kelType, 2) -1;
+                        double modulusKel = 0.;
+                        unsigned kDof  = _mesh->GetSolutionDof(interiorNode, kel, 2);    // global to global mapping between coordinates node and coordinate dof
                         double distance2 = 0;
                         for(unsigned k = 0; k < dim; k++) {
                             double dk = (*_mesh->_topology->_Sol[k])(kDof) - _x[k];     // global extraction and local storage for the element coordinates
                             distance2 += dk * dk;
                         }
-                        modulusKel += sqrt(distance2);
-                    }
-                    modulusKel /= (facePointNumber[kelType] - 1);
+                        modulusKel = sqrt(distance2);
 
-                    if(modulusKel < modulus) {
-                        iel = kel;
-                        modulus = modulusKel;
+                        if(modulusKel < modulus) {
+                            iel = kel;
+                            modulus = modulusKel;
+                        }
                     }
                 }
             }
@@ -204,7 +263,7 @@ void Marker::GetElement() {
 
 
         for(unsigned j = 0 ; j < _nprocs; j++) {
-            std::cout << " processorMarkerFlag[" << j << "] = " << processorMarkerFlag[j] << " " << nextElem[j] << std::endl;
+            std::cout << " processorMarkerFlag[" << j << "] = " << processorMarkerFlag[j] << "  " << nextElem[j] << std::endl;
         }
 
     }
@@ -214,6 +273,7 @@ void Marker::GetElement() {
 
 int Marker::GetNextElement(const unsigned &dim, const int &currentElem, const int &previousElem) {
 
+    int nextElem;
     if ( dim == 2) {
         std::vector< std::vector < double > > xv(dim);
 
@@ -297,7 +357,7 @@ int Marker::GetNextElement(const unsigned &dim, const int &currentElem, const in
             //std::cout << " w = " << w << " and currentElem = " << currentElem << std::endl;
         }
 
-        int nextElem = currentElem;
+        nextElem = currentElem;
 
         if(w == 0) {
 
@@ -326,26 +386,31 @@ int Marker::GetNextElement(const unsigned &dim, const int &currentElem, const in
 
         std::cout << "the next element is " << nextElem << std::endl;
 
-        return nextElem;
     }
 
     if( dim == 3) {
-        //for sulle facce dell'elemento
-
+        //for on the element faces
         int faceIntersectionCounter = 0; // if it is even, the marker is outside the element (0 is considered even)
+        bool markerIsInElement = false;
+	bool lineIntersection = false;
 
-        for (unsigned iface=0; iface<_mesh->el->GetElementFaceNumber(currentElem, 2); iface++) {
-            std::vector< std::vector < double > > xv(dim); //stores the coordinates of the nodes of the face
+        for (unsigned iface=0; iface<_mesh->el->GetElementFaceNumber(currentElem, 1); iface++) {
+
+            std::cout << "faceIntersectionCounter  = " << faceIntersectionCounter  << " , " << " markerIsInElement = " << markerIsInElement <<  std::endl;
+
+            std::vector< std::vector < double > > xv(dim); //stores the coordinates of the nodes of the face iface
 
             for(unsigned k = 0; k < dim; k++) {
                 xv[k].reserve(9);
             }
+            short unsigned currentElementType = _mesh->GetElementType(currentElem);
             short unsigned ifaceType = _mesh->GetElementFaceType(currentElem,iface);
             for(unsigned k = 0; k < dim; k++) {
                 xv[k].resize(facePointNumber[ifaceType]);
             }
             for(unsigned i = 0; i < facePointNumber[ifaceType]; i++) {
-                unsigned ifaceDof  = _mesh->GetSolutionDof(facePoints[ifaceType][i], iface, 2);    // global to global mapping between coordinates node and coordinate dof
+                unsigned ifaceDof  = _mesh->GetSolutionDof(facePoints3D[currentElementType][iface][i], currentElem, 2);
+                std::cout << "ifaceDof = " << ifaceDof << std::endl;
                 for(unsigned k = 0; k < dim; k++) {
                     xv[k][i] = (*_mesh->_topology->_Sol[k])(ifaceDof) - _x[k];     // global extraction and local storage for the element coordinates
                 }
@@ -362,100 +427,132 @@ int Marker::GetNextElement(const unsigned &dim, const int &currentElem, const in
             double By0 = B*xv[1][0];
             double Cz0 = C*xv[2][0];
 
-            if(fabs(A) < epsilon && epsilon < fabs(By0 + Cz0)) {
+            std::cout << "A = " << A << " , " << "By0 = " << By0 << " , " << " Cz0 = "<< Cz0 <<  std::endl;
+
+
+            if(fabs(A) < epsilon && epsilon < fabs(By0 + Cz0)) { // A = 0 and By0 != -Cz0
                 std::cout << "The plane of face " <<iface<< "and the x-axis don't intersect " << std::endl;
+		
             }
-            else if( fabs(A) < epsilon && fabs(By0+Cz0) < epsilon ) {
-                std::cout << "The plane of face " <<iface<< "and the x-axis intersect on a line" << std::endl;
-            }
-            else if( epsilon < fabs(A) ) {
-                std::cout << "The plane of face " <<iface<< "and the x-axis intersect at a point" << std::endl;
+            else {
 
-                double r = (A*xv[0][0] + B*xv[1][0] + C*xv[2][0]) / A;
+                std::vector < double > xTilde(dim,0);
+                double r = 0;
 
-                if( r > 0) { // if t>0 let's check if the marker is actually ON the face
-                    std::vector < double > xTilde(3,0);
+                if( fabs(A) < epsilon && fabs(By0+Cz0) < epsilon ) { // A = 0 and By0 = -Cz0
+                    std::cout << "The plane of face " <<iface<< "and the x-axis intersect on a line" << std::endl;
+                    // the marker and the face are already on the same plane so there is no need for further shifting
+		    lineIntersection = true ;
+                }
+
+                else if(epsilon < fabs(A) ) { // A != 0
+                    std::cout << "The plane of face " <<iface<< "and the x-axis intersect at a point" << std::endl;
+
+                    r = (A*xv[0][0] + B*xv[1][0] + C*xv[2][0]) / A;
                     xTilde[0] = r;
-                    xTilde[1] = 0.;
-                    xTilde[2] = 0.;
-
+		    if(r == 0){
+		      lineIntersection = true; // the intersection point is the actual marker
+		    }
+                }
+                if( r > 0 || fabs(r) < epsilon) { 
+		  
                     for(unsigned i = 0; i < facePointNumber[ifaceType]; i++) {
                         for(unsigned k = 0; k < dim; k++) {
                             xv[k][i] = xv[k][i] - xTilde[k];     //transate again the reference frame so that the origin is xTilde
                         }
                     }
+
+                    unsigned scalarCount = 0;
+
                     for(unsigned i = 0; i < xv[0].size() - 1; i++) {
                         //entries of the vector (xTilde - xi) X ( xi+1 -xi)
                         double q0 = xv[1][i]*(xv[2][i]-xv[2][i+1])+xv[2][i]*(xv[1][i+1]-xv[1][i]);
                         double q1 = xv[2][i]*(xv[0][i]-xv[0][i+1])+xv[0][i]*(xv[2][i+1]-xv[2][i]);
                         double q2 = xv[0][i]*(xv[1][i]-xv[1][i+1])+xv[1][i]*(xv[0][i+1]-xv[0][i]);
 
+                        std::cout << "q0 = " << q0 << " , " << "q1 = " << q1 << " , " << " q2 = "<< q2 <<  std::endl;
+
                         double  scalarProduct = q0*A + q1*B + q2*C;
 
-                        if( scalarProduct > 0) {
-                            std::cout << "xTilde is outside face "<< iface << "  " << std::endl;
-                            break;
+                        std::cout << "scalarProduct = " << scalarProduct<< std::endl;
+
+                        if( scalarProduct > 0) { // this can be cancelled once the code is working ok
+                            std::cout << "the marker is outside face "<< iface << " or it's on one of its edges  " << std::endl;
+
                         }
                         else if( fabs(scalarProduct) < epsilon) { //scalarProduct == 0
-                            std::cout << " xTilde and the edge are aligned " << std::endl; //check if xTilde is actually on the edge.
+                            std::cout << " the marker and the edge are aligned " << std::endl; //check if xTilde is actually on the edge.
                             if(xv[0][i]*xv[0][i+1] < 0 || xv[1][i]*xv[1][i+1] < 0 || xv[2][i]*xv[2][i+1] < 0) {
-                                std::cout << " xTilde belongs to an edge of face " << iface << std::endl;
-                                faceIntersectionCounter++ ;
+                                std::cout << " the marker belongs to an edge of face " << iface << std::endl;
+                                markerIsInElement = true;
                                 break;
                             }
                             else if(fabs(xv[0][i]) < epsilon  && fabs(xv[1][i]) < epsilon && fabs(xv[2][i]) < epsilon) { //vertex i is the origin
-                                faceIntersectionCounter++ ;
+                                std::cout << " vertex " << i << " is the marker" << std::endl;
+                                markerIsInElement = true;
                                 break;
                             }
-                            else if(fabs(xv[0][i+1]) < epsilon  && fabs(xv[1][i+1]) < epsilon && fabs(xv[2][i+1]) < epsilon) {
-                                faceIntersectionCounter++ ;
+                            else if(fabs(xv[0][i+1]) < epsilon  && fabs(xv[1][i+1]) < epsilon && fabs(xv[2][i+1]) < epsilon) { //vertex i+1 is the origin
+                                std::cout << " vertex " << i+1 << " is the marker" << std::endl;
+                                markerIsInElement = true;
                                 break;
                             }
-                        }
-                    }
-                    faceIntersectionCounter++ ;
-                }
-            }
-        }
-        int nextElem = currentElem;
-        double distance = 1.e10;
-        if (faceIntersectionCounter% 2 == 1 || faceIntersectionCounter == 0) { //it means the marker is not inside currentElem
-            for (unsigned iface=0; iface<_mesh->el->GetElementFaceNumber(currentElem, 2); iface++) {
-                std::vector< std::vector < double > > xv(dim); //stores the coordinates of the nodes of the face
-                for(unsigned k = 0; k < dim; k++) {
-                    xv[k].reserve(9);
-                }
-                short unsigned ielType = _mesh->GetElementType(currentElem);
-                for(unsigned k = 0; k < dim; k++) {
-                    xv[k].resize(facePointNumber[ielType]);
-                }
-                for(unsigned i = 0; i < facePointNumber[ielType]; i++) {
-                    unsigned ielDof  = _mesh->GetSolutionDof(facePoints[ielType][i], currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
-                    for(unsigned k = 0; k < dim; k++) {
-                        xv[k][i] = (*_mesh->_topology->_Sol[k])(ielDof) - _x[k];     // global extraction and local storage for the element coordinates
-                    }
-                }
-                for(unsigned j = 1; j < xv[0].size() - 1; j += 2) {
-                    double distancej = 0.;
-                    for(unsigned k = 0; k < dim; k++) {
-                        distancej += xv[k][j] * xv[k][j];
-                    }
-                    distancej = sqrt(distancej);
 
-                    if(distancej < distance) {
-                        int jel = (_mesh->el->GetFaceElementIndex(iface, (j - 1) / 2) - 1);
-                        if(jel != previousElem) {
-                            nextElem = jel;
-                            distance = distancej;
+                        }
+                        else if (scalarProduct < 0) {
+                            scalarCount++;
                         }
                     }
+                    if( scalarCount == facePointNumber[currentElementType] -1 && lineIntersection == true) {
+                        markerIsInElement = true ;
+			break;
+                    }
+                    else if (scalarCount == facePointNumber[currentElementType] -1 && lineIntersection == false){
+		        faceIntersectionCounter++;
+		    }
                 }
+
+            } //end of else
+            if(markerIsInElement == true ) {
+                break;
             }
-        }
-        return nextElem;
+    }// end of the loop on iface
+
+    std::cout << "markerIsInElement = " << markerIsInElement << " and faceIntersectionCounter  = " << faceIntersectionCounter  <<  std::endl;
+
+    if (markerIsInElement == true || faceIntersectionCounter % 2 != 0 ) {
+        nextElem = currentElem;
     }
+    else if (markerIsInElement == false && faceIntersectionCounter % 2 == 0) {
+        std::cout << " The marker doesn't belong to element " << currentElem << std::endl;
+        double modulus = 1.e10;
+        for (unsigned iface=0; iface<_mesh->el->GetElementFaceNumber(currentElem, 1); iface++) {
+            double ifaceModulus = 0.;
+            short unsigned elementType = _mesh->GetElementType(currentElem);
+            //WARNING  8 andra' espresso in maniera piu generale per gli altri elementi 3D
+            unsigned faceInteriorNodeDof  = _mesh->GetSolutionDof(_mesh->el->GetIG(elementType,0,8) + iface, currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
+            std::cout << "faceInteriorNodeDof =" << faceInteriorNodeDof <<std::endl;
+            double distance2 = 0;
+            for(unsigned k = 0; k < dim; k++) {
+                double dk = (*_mesh->_topology->_Sol[k])(faceInteriorNodeDof) - _x[k];     // global extraction and local storage for the element coordinates
+                distance2 += dk * dk;
+            }
+            ifaceModulus += sqrt(distance2);
 
+            if(ifaceModulus < modulus) {
+                int jel = (_mesh->el->GetFaceElementIndex(currentElem, iface)-1);
+                std::cout << "jel = " << jel << "iface = " << iface <<  std::endl;
+                if(jel != previousElem) {
+                    nextElem = jel;
+                    modulus = ifaceModulus;
+                }
+            }
+        }
+    }
+    std::cout << "nextElem = " << nextElem <<std::endl;
+}
+return nextElem;
+}
 }
 
-}
 

@@ -32,7 +32,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
- mlMsh.ReadCoarseMesh( "./input/square2.neu", "seventh", scalingFactor );
+ mlMsh.ReadCoarseMesh( "./input/squareHex3D.neu", "seventh", scalingFactor );
   
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
 //   unsigned numberOfUniformLevels = 4;
@@ -74,9 +74,9 @@ int main(int argc, char** args) {
 //  x[1]=7.23015e-05;
 //  x[2]=0.;
   
-  x[0]=-4.9e-05;  //it is on element 153 proc=2
-  x[1]=2e-05;
-  x[2]=0.;
+//   x[0]=-4.9e-05;  //it is on element 153 proc=2
+//   x[1]=2e-05;
+//   x[2]=0.;
   
 // WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 // NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
@@ -159,6 +159,15 @@ x[2]=0.;*/
 // x[2]=0.; 
 // // NOTE The code does what it is supposed to do.
 
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+// TESTS ON THE MESH squareHex3D.neu
+
+// Test 1
+x[0]=-0.4;  //  element 104
+x[1]=-0.4; // 
+x[2]=-0.4; 
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
