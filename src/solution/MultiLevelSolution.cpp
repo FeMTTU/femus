@@ -665,5 +665,20 @@ namespace femus {
 
   }
 
+  
+  void MultiLevelSolution::RefineSolution( const unsigned &gridf ) {
+
+      Mesh* msh = _mlMesh->GetLevel(gridf);
+    
+      for( unsigned k = 0; k < _solType.size(); k++ ) {
+
+	unsigned solType = _solType[k];
+	
+	_solution[gridf]->_Sol[k]->matrix_mult( *_solution[gridf - 1]->_Sol[k],
+	    *msh[gridf].GetCoarseToFineProjection( solType ) );
+	_solution[gridf]->_Sol[k]->close();
+      }
+    }
+  
 
 } //end namespace femus

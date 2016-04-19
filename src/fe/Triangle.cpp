@@ -55,9 +55,9 @@ namespace femus {
   };
   
   const double tri_const::X[12][2]={ 
-    {0.,0.},{1.,0.},{0.,1.},{0.5,0.5},
-    {0.,0.},{1.,0.},{0.,1.},{0.5,0.5},
-    {0.,0.},{1.,0.},{0.,1.},{0.5,0.5}
+    {1./6.,1./6.},{2./3.,1./6.},{1./6.,2./3.},{1./3.,1./3.},
+    {1./6.,1./6.},{2./3.,1./6.},{1./6.,2./3.},{1./3.,1./3.},
+    {1./6.,1./6.},{2./3.,1./6.},{1./6.,2./3.},{1./3.,1./3.}
   };
   
   const int tri_const::IND[3][2]= {{0, 0},{1,0},{0,1}};
@@ -71,8 +71,8 @@ namespace femus {
     
   double tripwLinear::eval_phi(const int *I,const double* x) const {
     return (1.-I[0])*(1.-I[1]) + 
-	    x[0]*eval_dphidx(I,x) + 
-	    x[1]*eval_dphidy(I,x);
+	    (x[0]-1./3.)*eval_dphidx(I,x) + 
+	    (x[1]-1./3.)*eval_dphidy(I,x);
   }
 
   double tripwLinear::eval_dphidx(const int *I,const double* x) const {

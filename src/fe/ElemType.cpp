@@ -572,7 +572,10 @@ namespace femus {
       abort();
     }
 
+    unsigned elementType;
+    
     if (!strcmp(geom_elem, "quad")) { //QUAD
+      elementType = 3;
       if (_SolType == 0) _pt_basis = new QuadLinear;
       else if (_SolType == 1) _pt_basis = new QuadQuadratic;
       else if (_SolType == 2) _pt_basis = new QuadBiquadratic;
@@ -585,6 +588,7 @@ namespace femus {
     }
     else if (!strcmp(geom_elem, "tri")) { //TRIANGLE
 
+      elementType = 4;
       if (_SolType == 0) _pt_basis = new TriLinear;
       else if (_SolType == 1) _pt_basis = new TriQuadratic;
       else if (_SolType == 2) _pt_basis = new TriBiquadratic;
@@ -651,8 +655,17 @@ namespace femus {
       for (int j = 0; j < _nc; j++) {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
         if (_SolType == 4) { //if piece_wise_linear
-          if	(i / 4 == 1)  phi = _pt_basis->eval_dphidx(_IND[j], _X[i]) / 2.;
-          else if (i / 4 == 2)  phi = _pt_basis->eval_dphidy(_IND[j], _X[i]) / 2.;
+	  
+          if	(i / 4 == 1) {
+	    phi = _pt_basis->eval_dphidx(_IND[j], _X[i]) / 2.;
+	  }
+          else if (i / 4 == 2){
+	    phi = _pt_basis->eval_dphidy(_IND[j], _X[i]) / 2.;
+	  }
+	   
+	  if( elementType == 4 && ( i == 7 || i == 11) ){
+	    phi *= -1.;
+	  }
         }
         if (fabs(phi) >= 1.0e-14) {
           *(pt_d++) = phi;

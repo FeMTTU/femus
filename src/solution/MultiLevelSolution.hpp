@@ -209,6 +209,14 @@ public:
     void SaveSolution(const char* filename, const double time=0.);
     void LoadSolution(const char* filename);
     void LoadSolution(const unsigned &level, const char* filename);
+    
+     // *******************************************************
+
+    void RefineSolution( const unsigned &gridf );
+
+  // ********************************************
+    
+    
 private:
     /** boundary condition function pointer */
 

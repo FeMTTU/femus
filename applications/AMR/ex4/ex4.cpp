@@ -6,6 +6,7 @@
 #include "VTKWriter.hpp"
 #include "adept.h"
 
+#include "MeshRefinement.hpp"
 
 
 using namespace femus;
@@ -38,9 +39,9 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/triangle.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/triangle.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/wedge1.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/tet2.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/tet2.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
   
@@ -51,7 +52,7 @@ int main(int argc, char** args) {
   //l2Norm.resize (maxNumberOfMeshes);
   //vector < vector < double > > semiNorm;
   //semiNorm.resize (maxNumberOfMeshes);
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   
@@ -71,6 +72,11 @@ int main(int argc, char** args) {
   mlSol.GenerateBdc("All");
   
   
+  MeshRefinement meshcoarser(*mlMsh.GetLevel(0));
+  meshcoarser.FlagAllElementsToBeRefined();
+  mlMsh.AddAMRMeshLevel();
+  mlSol.AddSolutionLevel();
+  //mlSol.RefineSolution(1);
   
   
   
