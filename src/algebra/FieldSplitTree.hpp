@@ -32,12 +32,17 @@
 #include "SchurFactTypeEnum.hpp"
 #include "SchurPreType.hpp"
 
+#include "Mesh.hpp"
+
 namespace femus {
   class FieldSplitTree {
     public:
       //single split constructor
       FieldSplitTree( const SolverType& solver, const PreconditionerType& preconditioner, const std::vector < unsigned >& fields, std::string name );
 
+      FieldSplitTree( const SolverType& solver, const PreconditionerType& preconditioner, const std::vector < unsigned >& fields, const std::vector < unsigned >& solutionType, std::string name );
+
+      void FieldSplitTreeBuild(const SolverType& solver, const PreconditionerType& preconditioner, const std::vector < unsigned >& fields, std::string name);  
       //multiple split constructor
       FieldSplitTree( const SolverType& solver, const PreconditionerType& preconditioner, std::vector < FieldSplitTree*> childBranch, std::string name );
 
@@ -49,11 +54,11 @@ namespace femus {
 
       void SetPC( KSP& ksp, const unsigned& level) ; 
 
-   /*---------adjusted by Guoyi Ke-----------*/
+  
       void SetupKSPTolerances(const double& rtol,const double& abstol, const double& dtol, const unsigned& maxits);
       void SetupSchurFactorizationType (const SchurFactType& schurFactType);
       void SetupSchurPreType(const SchurPreType& schurPreType);
-   /*---------adjusted by Guoyi Ke-----------*/
+   
 
       const unsigned& GetNumberOfSplits() {
         return _numberOfSplits;
@@ -82,7 +87,7 @@ namespace femus {
       FieldSplitTree* GetFather() const;
 
       FieldSplitTree* GetChild( const unsigned& i );
-      
+         
     private:
 
       void SetPetscSolverType(KSP& ksp);
@@ -96,6 +101,7 @@ namespace femus {
       std::vector < FieldSplitTree* > _child;
       std::vector < std::vector < unsigned > > _fieldsSplit;
       std::vector < unsigned > _fieldsAll;
+      std::vector < unsigned > _solutionType;
       std::string _name;
       std::vector < PetscInt* > _isSplitIndexPt;
       std::vector < std::vector < IS > > _isSplit;
@@ -106,6 +112,20 @@ namespace femus {
       
       SchurFactType _schurFactType;
       SchurPreType _schurPreType;
+      
+      std::vector< std::vector < unsigned > > _MatrixOffset;
+      
+      //for ASM pourposes
+      std::vector< std::vector < std::vector <PetscInt> > > _overlappingIsIndex;
+      std::vector< std::vector < std::vector <PetscInt> > > _localIsIndex;
+      std::vector< std::vector <IS> > _overlappingIs;
+      std::vector< std::vector <IS> > _localIs;
+      std::vector< std::vector <unsigned> > _blockTypeRange;
+                 
+      std::vector< PetscInt >  _nlocal;
+      bool _standardASM;
+      unsigned _overlap;
+      
   };
 
 

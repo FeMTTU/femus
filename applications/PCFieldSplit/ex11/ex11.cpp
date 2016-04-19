@@ -111,8 +111,13 @@ int main(int argc, char** args) {
   fieldUVP[0] = system.GetSolPdeIndex("U");
   fieldUVP[1] = system.GetSolPdeIndex("V");
   fieldUVP[2] = system.GetSolPdeIndex("P");
-
-  FieldSplitTree FS_NS( PREONLY, ILU_PRECOND, fieldUVP, "Navier-Stokes");
+  
+  std::vector < unsigned > solutionType(3);
+  solutionType[0] = mlSol.GetSolutionType("U");
+  solutionType[1] = mlSol.GetSolutionType("V");
+  solutionType[2] = mlSol.GetSolutionType("P");
+  
+  FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, solutionType, "Navier-Stokes");
 
 //   std::vector < unsigned > fieldUV(2);
 //   fieldUV[0] = system.GetSolPdeIndex("U");

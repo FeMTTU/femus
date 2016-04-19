@@ -21,7 +21,18 @@
 
 namespace femus {
 
+  FieldSplitTree::FieldSplitTree( const SolverType& solver, const PreconditionerType& preconditioner, const std::vector < unsigned >& fields, const std::vector < unsigned > & solutionType, std::string name ){
+    _solutionType = solutionType;
+           
+    FieldSplitTreeBuild(solver, preconditioner, fields, name);
+  }
+  
   FieldSplitTree::FieldSplitTree(const SolverType& solver, const PreconditionerType& preconditioner, const std::vector < unsigned >& fields, std::string name) {
+    FieldSplitTreeBuild(solver, preconditioner, fields, name);
+  }
+  
+  
+  void FieldSplitTree::FieldSplitTreeBuild(const SolverType& solver, const PreconditionerType& preconditioner, const std::vector < unsigned >& fields, std::string name) {
     _father = NULL;
     _name = name;
 
@@ -56,6 +67,12 @@ namespace femus {
     _maxits = 1;
     _schurFactType = SCHUR_FACT_AUTOMATIC;
     _schurPreType = SCHUR_PRE_AUTOMATIC;
+       
+    if( preconditioner == ASM_PRECOND && _solutionType.size() != fields.size() ){
+      std::cout << "Error! The Solution type with PCFieldSplit - ASM preconditioner has to be specified"<<std::endl;
+      abort();
+    }
+    
   };
 
   //multiple split constructor
@@ -143,6 +160,11 @@ namespace femus {
 
   void FieldSplitTree::BuildIndexSet(const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc, const unsigned& nprocs, const unsigned& level) {
 
+    _MatrixOffset = KKoffset;
+      
+    if ( GetNumberOfSplits() == 1) return;
+    
+    
     if(_isSplit.size() < level) _isSplit.resize(level);
     _isSplit[level - 1].resize(GetNumberOfSplits());
 
@@ -193,27 +215,25 @@ namespace femus {
         }
       }
 
-      if(_child[i]->GetNumberOfSplits() > 1) {
+      std::vector< std::vector < unsigned > > fieldsInSplitOffset(_fieldsSplit[i].size() + 1);
 
-        std::vector< std::vector < unsigned > > fieldsInSplitOffset(_fieldsSplit[i].size() + 1);
-
-        for(unsigned j = 0; j < _fieldsSplit[i].size() + 1; j++) {
-          fieldsInSplitOffset[j].resize(nprocs);
-        }
-        fieldsInSplitOffset[0][0] = 0;
-        for(unsigned jproc = 0; jproc < nprocs; jproc++) {
-          for(unsigned k = 0; k < _fieldsSplit[i].size(); k++) {
-            unsigned index = _fieldsSplit[i][k];
-            unsigned ownedDofs =  KKoffset[index + 1][jproc] -  KKoffset[index][jproc];
-            fieldsInSplitOffset[k + 1][jproc] = fieldsInSplitOffset[k][jproc] + ownedDofs;
-          }
-          if(jproc < nprocs - 1) {
-            fieldsInSplitOffset[0][jproc + 1] = fieldsInSplitOffset[_fieldsSplit[i].size()][jproc];
-          }
-        }
-        _child[i]->BuildIndexSet(fieldsInSplitOffset, iproc, nprocs, level);
+      for(unsigned j = 0; j < _fieldsSplit[i].size() + 1; j++) {
+        fieldsInSplitOffset[j].resize(nprocs);
       }
+      fieldsInSplitOffset[0][0] = 0;
+      for(unsigned jproc = 0; jproc < nprocs; jproc++) {
+        for(unsigned k = 0; k < _fieldsSplit[i].size(); k++) {
+          unsigned index = _fieldsSplit[i][k];
+          unsigned ownedDofs =  KKoffset[index + 1][jproc] -  KKoffset[index][jproc];
+          fieldsInSplitOffset[k + 1][jproc] = fieldsInSplitOffset[k][jproc] + ownedDofs;
+        }
+        if(jproc < nprocs - 1) {
+          fieldsInSplitOffset[0][jproc + 1] = fieldsInSplitOffset[_fieldsSplit[i].size()][jproc];
+        }
+      }
+      _child[i]->BuildIndexSet(fieldsInSplitOffset, iproc, nprocs, level);
     }
+ 
   }
 
   /*---------adjusted by Guoyi Ke-----------*/
@@ -232,6 +252,15 @@ namespace femus {
   /*---------adjusted by Guoyi Ke-----------*/
   void FieldSplitTree::SetPC(KSP& ksp, const unsigned& level) {
 
+    std::cout<<level<<std::endl;
+    for(int i = 0; i < _MatrixOffset.size(); i++){
+      for(int j = 0; j < _MatrixOffset[i].size(); j++){
+	std::cout << _MatrixOffset[i][j] << " ";
+      }
+      std::cout <<std::endl;
+    }
+    std::cout <<std::endl;
+    
     PC pc;
     KSPGetPC(ksp, &pc);
 
@@ -254,6 +283,76 @@ namespace femus {
     }
 
     else if(_preconditioner == ASM_PRECOND) {
+      
+      for(int i = 0; i < _solutionType.size(); i++){
+	std::cout<<"solution Type " << i << " = " << _solutionType[i]<<std::endl;
+      }
+      
+//       _standardASM = false;
+//       
+//       
+//       
+//       PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, pc);
+// 
+//       if(!_standardASM) {
+// 	PCASMSetLocalSubdomains(pc, _localIsIndex[level-1].size(), &_overlappingIs[level-1][0], &_localIs[level-1][0]);
+//       }
+// 
+//       PCASMSetOverlap(pc, _overlap);
+//       
+// 
+//       KSPSetUp(ksp);
+// 
+//       KSP* subksps;
+//       PCASMGetSubKSP(pc, &_nlocal[level-1], PETSC_NULL, &subksps);
+//       PetscReal epsilon = 1.e-16;
+// 
+//       if(!_standardASM) {
+// 	for(int i = 0; i < _blockTypeRange[level-1][0]; i++) {
+// 	  PC subpcs;
+// 	  KSPGetPC(subksps[i], &subpcs);
+// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+// 	  KSPSetFromOptions(subksps[i]);
+// 	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
+// 	  PCFactorSetZeroPivot(subpcs, epsilon);
+// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+// 	}
+// 
+// 	for(int i = _blockTypeRange[level-1][0]; i < _blockTypeRange[level-1][1]; i++) {
+// 	  PC subpcs;
+// 	  KSPGetPC(subksps[i], &subpcs);
+// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+// 	  KSPSetFromOptions(subksps[i]);
+// 
+// 	  //if(this->_preconditioner_type == ILU_PRECOND)
+// 	    PCSetType(subpcs, (char*) PCILU);
+// 	  //else
+// 	  //  PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+// 
+// 	  PCFactorSetZeroPivot(subpcs, epsilon);
+// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+// 	}
+//       }
+//       else {
+// 	for(int i = 0; i < _nlocal[level-1]; i++) {
+// 	  PC subpcs;
+// 	  KSPGetPC(subksps[i], &subpcs);
+// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+// 	  KSPSetFromOptions(subksps[i]);
+// 
+// 	  //if(this->_preconditioner_type == ILU_PRECOND)
+// 	    PCSetType(subpcs, (char*) PCILU);
+// 	  //else
+// 	  //  PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+// 
+// 	  PCFactorSetZeroPivot(subpcs, epsilon);
+// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+// 	}
+//       }
+//     
+      
+
+      
       PetscPreconditioner::set_petsc_preconditioner_type(_preconditioner, pc);
 
       bool _standardASM = 1;
@@ -324,14 +423,7 @@ namespace femus {
 
       SetSchurFactorizationType(pc);
       SetSchurPreType(pc);
-//     PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_SELFP, NULL); //it goes with pressure ILU
-      /*
-            for(int i = 0; i < _numberOfSplits; i++) {
-              if(GetChild(i)->_preconditioner == LSC_PRECOND) { //it goes with pressure LSC
-                PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_SELF, NULL);
-              }
-            }
-      */
+
       for(int i = 0; i < _numberOfSplits; i++) {
         PCFieldSplitSetIS(pc, NULL, _isSplit[level - 1][i]);
       }
@@ -528,7 +620,5 @@ namespace femus {
         abort();
     }
   }
-
-
 }
 
