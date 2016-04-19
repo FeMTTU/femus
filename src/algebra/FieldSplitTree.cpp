@@ -50,7 +50,10 @@ namespace femus {
       j++;
     }
     //END ALL FIELD COLLECTION
-
+    _rtol = 1.e-3;
+    _abstol = 1.e-20;
+    _dtol = 1.e+50;
+    _maxits = 1;
     _schurFactType = SCHUR_FACT_AUTOMATIC;
     _schurPreType = SCHUR_PRE_AUTOMATIC;
   };
@@ -92,7 +95,10 @@ namespace femus {
       j++;
     }
     //END ALL FIELD COLLECTION
-
+    _rtol = 1.e-3;
+    _abstol = 1.e-20;
+    _dtol = 1.e+50;
+    _maxits = 1;
     _schurFactType = SCHUR_FACT_AUTOMATIC;
     _schurPreType = SCHUR_PRE_AUTOMATIC;
   }
