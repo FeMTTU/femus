@@ -12,11 +12,19 @@
 using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  bool dirichlet = true; //dirichlet
-  value = 1.;
+  bool dirichlet = false; //dirichlet
+  value = 0.;
   return dirichlet;
 }
 
+double InitalValueW(const std::vector < double >& x) {
+  return 1+x[0]-x[1];
+}
+
+
+double InitalValueV(const std::vector < double >& x) {
+  return 1+x[0]-x[1];
+}
 
 int main(int argc, char** args) {
 
@@ -52,7 +60,7 @@ int main(int argc, char** args) {
   //l2Norm.resize (maxNumberOfMeshes);
   //vector < vector < double > > semiNorm;
   //semiNorm.resize (maxNumberOfMeshes);
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   
@@ -67,16 +75,19 @@ int main(int argc, char** args) {
   
   mlSol.Initialize("All");
   
+  mlSol.Initialize("V",InitalValueV);
+  mlSol.Initialize("W",InitalValueW);
+  
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
 
   mlSol.GenerateBdc("All");
   
   
-  MeshRefinement meshcoarser(*mlMsh.GetLevel(0));
+  MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
   meshcoarser.FlagAllElementsToBeRefined();
   mlMsh.AddAMRMeshLevel();
   mlSol.AddSolutionLevel();
-  //mlSol.RefineSolution(1);
+  mlSol.RefineSolution(numberOfUniformLevels);
   
   
   
