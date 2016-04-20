@@ -51,7 +51,8 @@ namespace femus {
     
   private:
     
-    int GetNextElement(const unsigned &dim, const int &iel,  const int &kel);
+    int GetNextElement2D(const unsigned &dim, const int &iel,  const int &kel);
+    int GetNextElement3D(const unsigned &dim, const int &iel,  const int &kel);
     
     std::vector < double > _x;
     MarkerType _markerType;

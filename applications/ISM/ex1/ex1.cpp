@@ -160,15 +160,49 @@ x[2]=0.;*/
 // // NOTE The code does what it is supposed to do.
 
 
-//////////////////////////////////////////////////////////////////////////////////////////
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
-// TESTS ON THE MESH squareHex3D.neu
+// TESTS ON THE MESH squareHex3D.neu (tests ran with 2 procs)
 
 // Test 1
-x[0]=-0.4;  //  element 104
-x[1]=-0.4; // 
-x[2]=-0.4; 
+//x[0]=-0.3;  //  point 1409 shared by element 97,112 (proc 2) and 45 and 55 (proc 1) It says the marker is on element 45, yes!
+//x[1]=0.1; // 
+//x[2]=0.5; 
 
+////////////////////////////////////////////////////////////////////////////////////////
+
+// //Test 2: the marker is on the midpoint of an edge of element 60 (the trick was that the intersection point was actually ON a midpoint of an edge) 
+// x[0]=-0.5;  //
+// x[1]=0.5; // 
+// x[2]=0.; 
+ 
+ ////////////////////////////////////////////////////////////////////////////////////////
+ 
+ // //Test 3: the marker is to the right of the midpoint of an edge of element 60 
+ //x[0]=-0.5;  //
+ //x[1]=0.5; // 
+ //x[2]=0.005; 
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+ 
+  // //Test 4: the marker is a vertex of element 60 
+//  x[0]=-0.5;  //
+//  x[1]=0.5; // 
+//  x[2]=-0.1; //
+ 
+  ////////////////////////////////////////////////////////////////////////////////////////
+ 
+   // //Test 5: the marker close to is a vertex of element 60 but it belongs to element 62
+/* x[0]=-0.5;  //
+ x[1]=0.5; // 
+ x[2]=-0.10000001;*/ // If you add one more zero then it will be in element 60.
+ 
+  ////////////////////////////////////////////////////////////////////////////////////////
+  
+     // //Test 6: the marker is a little below a vertex of element 60 (it goes outside the domain)
+ x[0]=-0.5000001;  //
+ x[1]=0.5; // 
+ x[2]=-0.05; //
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
   Marker a( x, VOLUME, mlMsh.GetLevel(0) );
