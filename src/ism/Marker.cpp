@@ -439,10 +439,6 @@ int Marker::GetNextElement3D(const unsigned &dim, const int &currentElem, const 
     bool markerIsInElement = false;
 
 
-    //TODO rescaling of the coordinates with the characteristic length like we did for the 2D case
-
-    std::cout<<"AAAAAAAAAAAAAAAAAA" <<currentElem << std::endl;
-
     for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
         std::cout << "faceIntersectionCounter  = " << faceIntersectionCounter  << " , " << " markerIsInElement = " << markerIsInElement <<  std::endl;
 
@@ -465,6 +461,23 @@ int Marker::GetNextElement3D(const unsigned &dim, const int &currentElem, const 
                 xv[k][i] = (*_mesh->_topology->_Sol[k])(ifaceDof) - _x[k];     // global extraction and local storage for the element coordinates
             }
         }
+        
+        
+            double length = 0.;
+    for(unsigned i = 0; i < xv[0].size() - 1; i++) {
+        length += sqrt((xv[0][i + 1] - xv[0][i]) * (xv[0][i + 1] - xv[0][i]) +
+                       (xv[1][i + 1] - xv[1][i]) * (xv[1][i + 1] - xv[1][i]) +
+		       (xv[2][i + 1] - xv[2][i]) * (xv[2][i + 1] - xv[2][i]));
+    }
+
+    length /= xv[0].size();
+
+    for(unsigned i = 0; i < xv[0].size(); i++) {
+        xv[0][i] /= length;
+        xv[1][i] /= length;
+	xv[2][i] /= length;
+    }
+        
         // now we have to check if the plane of the face intersects the positive x-axis
         // let's find the plane passing through xv[][0], xv[][2] and xv[][4] (they will not be aligned)
 
