@@ -57,6 +57,7 @@ public:
 
     /** femus to vtk cell type map */
     static short unsigned int femusToVtkCellType[3][6];
+    static short unsigned int elementDofNumber[3][6];
 };
 
 /**

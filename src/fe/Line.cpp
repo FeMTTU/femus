@@ -47,36 +47,36 @@ namespace femus {
   
   //************************************************************
   
-  double linepwl::eval_phi(const int *I,const double* x) const {
+  double linepwLinear::eval_phi(const int *I,const double* x) const {
     return (1.-I[0]) + x[0]*eval_dphidx(I,x);
   }
 
-  double linepwl::eval_dphidx(const int *I,const double* x) const {
+  double linepwLinear::eval_dphidx(const int *I,const double* x) const {
     return I[0];
   }
  
   //************************************************************
 
-  double line1::eval_phi(const int *I,const double* x) const {
-    return lag1(x[0],I[0]);
+  double LineLinear::eval_phi(const int *I,const double* x) const {
+    return lagLinear(x[0],I[0]);
   }
 
-  double line1::eval_dphidx(const int *I,const double* x) const {
-    return dlag1(x[0],I[0]);
+  double LineLinear::eval_dphidx(const int *I,const double* x) const {
+    return dlagLinear(x[0],I[0]);
   }
 
   //************************************************************
 
-  double line2::eval_phi(const int *I,const double* x) const {
-    return lag2(x[0],I[0]);
+  double LineBiquadratic::eval_phi(const int *I,const double* x) const {
+    return lagBiquadratic(x[0],I[0]);
   }
 
-  double line2::eval_dphidx(const int *I,const double* x) const {
-    return dlag2(x[0],I[0]);
+  double LineBiquadratic::eval_dphidx(const int *I,const double* x) const {
+    return dlagBiquadratic(x[0],I[0]);
   }
 
-  double line2::eval_d2phidx2(const int *I,const double* x) const {
-    return d2lag2(x[0],I[0]);
+  double LineBiquadratic::eval_d2phidx2(const int *I,const double* x) const {
+    return d2lagBiquadratic(x[0],I[0]);
   }
 
 } //end namespace femus
