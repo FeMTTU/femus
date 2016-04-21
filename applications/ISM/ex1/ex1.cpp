@@ -32,7 +32,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
- mlMsh.ReadCoarseMesh( "./input/square2.neu", "seventh", scalingFactor );
+ mlMsh.ReadCoarseMesh( "./input/cubeHex.neu", "seventh", scalingFactor );
   
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   unsigned numberOfUniformLevels = 1;
@@ -74,9 +74,9 @@ int main(int argc, char** args) {
 //  x[1]=7.23015e-05;
 //  x[2]=0.;
   
-  x[0]=-4.9e-05;  //it is on element 153 proc=2
-  x[1]=2e-05;
-  x[2]=0.;
+//   x[0]=-4.9e-05;  //it is on element 153 proc=2
+//   x[1]=2e-05;
+//   x[2]=0.;
   
 // WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 // NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
@@ -200,9 +200,9 @@ int main(int argc, char** args) {
   ////////////////////////////////////////////////////////////////////////////////////////
   
      // //Test 6: the marker is a little below a vertex of element 60 (it goes outside the domain)
-//  x[0]=-0.5000001;  //
-//  x[1]=0.5; // 
-//  x[2]=-0.05; //
+ x[0]=-0.5000001;  //
+ x[1]=0.5; // 
+ x[2]=-0.05; //
 
   ////////////////////////////////////////////////////////////////////////////////////////
     
@@ -213,7 +213,7 @@ int main(int argc, char** args) {
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
-  Marker a( x, VOLUME, mlMsh.GetLevel(0) );
+  Marker a( x, VOLUME, mlMsh.GetLevel(0), true );
   //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
   
   

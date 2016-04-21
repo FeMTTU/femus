@@ -44,130 +44,103 @@ const unsigned facePoints3D[6][6][9] = {
 
 namespace femus {
 
-  void Marker::GetElement() {
+  void Marker::GetElement(const bool &debug) {
 
     unsigned dim = _mesh->GetDimension();
 
-
     std::vector < unsigned > processorMarkerFlag(_nprocs, 3);
-//     for(unsigned j = 0 ; j < _nprocs; j++) {
-//       std::cout << " processorMarkerFlag[" << j << "] = " << processorMarkerFlag[j] << std::endl;
-//     }
 
-
-    // searching what element of _iproc has less distance from the marker (we search one every 25 elements)
-
+    //BEGIN SMART search
+    // look to the closest element among a restricted list
     double modulus = 1.e10;
     int iel = _mesh->_elementOffset[_iproc + 1];
-//     if(dim == 2) {
-//       for(int kel = _mesh->_elementOffset[_iproc]; kel < _mesh->_elementOffset[_iproc + 1]; kel += 25) {
-// 
-//         short unsigned kelType = _mesh->GetElementType(kel);
-//         double modulusKel = 0.;
-//         for(unsigned i = 0; i < facePointNumber[kelType] - 1; i++) {
-//           unsigned kDof  = _mesh->GetSolutionDof(facePoints[kelType][i], kel, 2);    // global to global mapping between coordinates node and coordinate dof
-//           double distance2 = 0;
-//           for(unsigned k = 0; k < dim; k++) {
-//             double dk = (*_mesh->_topology->_Sol[k])(kDof) - _x[k];     // global extraction and local storage for the element coordinates
-//             distance2 += dk * dk;
-//           }
-//           modulusKel += sqrt(distance2);
-//         }
-//         modulusKel /= (facePointNumber[kelType] - 1);
-// 
-//         if(modulusKel < modulus) {
-//           iel = kel;
-//           modulus = modulusKel;
-//         }
-//       }
-// 
-//     }
-//     if(dim == 3) {
-      //TODO bisogna farlo anche per tet e wedge, adesso i punti centrali ci sono solo per hex
-      for(int kel = _mesh->_elementOffset[_iproc]; kel < _mesh->_elementOffset[_iproc + 1]; kel += 25) {
-        short unsigned kelType = _mesh->GetElementType(kel);
-        unsigned interiorNode = _mesh->el->GetNVE(kelType, 2) - 1;
-        unsigned kDof  = _mesh->GetSolutionDof(interiorNode, kel, 2);    // global to global mapping between coordinates node and coordinate dof
-        double distance2 = 0;
-        for(unsigned k = 0; k < dim; k++) {
-          double dk = (*_mesh->_topology->_Sol[k])(kDof) - _x[k];     // global extraction and local storage for the element coordinates
-          distance2 += dk * dk;
-        }
-        double modulusKel = sqrt(distance2);
+    for(int jel = _mesh->_elementOffset[_iproc]; jel < _mesh->_elementOffset[_iproc + 1]; jel += 25) {
 
-        if(modulusKel < modulus) {
-          iel = kel;
-          modulus = modulusKel;
-        }
+      unsigned interiorNode = _mesh->GetElementDofNumber(jel, 2) - 1;
+      unsigned jDof  = _mesh->GetSolutionDof(interiorNode, jel, 2);    // global to global mapping between coordinates node and coordinate dof
+      
+      double distance2 = 0;
+      for(unsigned k = 0; k < dim; k++) {
+        double dk = (*_mesh->_topology->_Sol[k])(jDof) - _x[k];     // global extraction and local storage for the element coordinates
+        distance2 += dk * dk;
       }
-   // }
+      
+      double modulusKel = sqrt(distance2);
 
-    if(iel == _mesh->_elementOffset[_iproc + 1]) {
-      std::cout << "Warning the marker is located on unreasonable distance from the mesh >= 1.e10" << std::endl;
+      if(modulusKel < modulus) {
+        iel = jel;
+        modulus = modulusKel;
+      }
     }
-    else {
-      std::cout << "the smart search starts from element " << iel << std::endl;
+    if(debug){
+      if(iel == _mesh->_elementOffset[_iproc + 1]) {
+	std::cout << "Warning the marker is located on unreasonable distance from the mesh >= 1.e10" << std::endl;
+      }
+      else {
+	std::cout << "the smart search starts from element " << iel << std::endl;
+      }
     }
-
-
-    // smart search starts
-
+    //END SMART search:
+    
+    
     bool elementHasBeenFound = false;
-    bool pointIsOutsideThisMesh = false;
+    bool pointIsOutsideThisProcess = false;
     bool pointIsOutsideTheDomain = false;
+   
+    std::vector< int > nextElem(_nprocs, -1);
+    int previousElem = iel;
     unsigned nextProc = _iproc;
-    int kel = iel;
-    int jel;
-
+    
     while(!elementHasBeenFound) {
-
-      while(elementHasBeenFound + pointIsOutsideThisMesh + pointIsOutsideTheDomain == 0) {
+      
+      //BEGIN next element search 
+      while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
         if(dim == 2) {
-          jel = GetNextElement2D(dim, iel, kel);
+          nextElem[_iproc] = GetNextElement2D(dim, iel, previousElem);
         }
         else if(dim == 3) {
-          jel = GetNextElement3D(dim, iel, kel);
+          nextElem[_iproc] = GetNextElement3D(dim, iel, previousElem);
         }
-        kel = iel;
+        previousElem = iel;
 
-        if(jel == iel) {
+        if(nextElem[_iproc] == iel) {
           _elem = iel;
           elementHasBeenFound = true;
-          //break;
           processorMarkerFlag[_iproc] = 1;
         }
-        else if(jel < 0) {
+        else if(nextElem[_iproc] < 0) {
           pointIsOutsideTheDomain = true;
           processorMarkerFlag[_iproc] = 0;
         }
         else {
-          nextProc = _mesh->IsdomBisectionSearch(jel, 3);
+          nextProc = _mesh->IsdomBisectionSearch(nextElem[_iproc], 3);
           if(nextProc != _iproc) {
-            pointIsOutsideThisMesh = true;
+            pointIsOutsideThisProcess = true;
             processorMarkerFlag[_iproc] = 2;
           }
           else {
-            iel = jel;
+            iel = nextElem[_iproc];
           }
         }
       }
-
       std::cout << std::flush;
       MPI_Barrier(PETSC_COMM_WORLD);
 
-      if(elementHasBeenFound) {
-        std::cout << " The marker belongs to element " << _elem << std::endl;
+      if( debug ){
+	if(elementHasBeenFound) {
+	  std::cout << " The marker belongs to element " << _elem << std::endl;
+	}
+	else if(pointIsOutsideTheDomain) {
+	  std::cout << " The marker does not belong to this domain" << std::endl;
+	}
+	else if(pointIsOutsideThisProcess) {
+	  std::cout << "proc " << _iproc << " believes the marker is in proc = " << nextProc << std::endl;
+	}
       }
-      else if(pointIsOutsideTheDomain) {
-        std::cout << " The marker does not belong to this domain" << std::endl;
-      }
-      else if(pointIsOutsideThisMesh) {
-        std::cout << "proc " << _iproc << " believes the marker is in proc = " << nextProc << std::endl;
-      }
-
-
-      //exchange of information between the processors to see if anyone found the marker
-
+      //END next element search 
+      
+      //BEGIN process exchange  
+      //send/receive if any process found the element
       for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
         if(jproc != _iproc) {
           if(processorMarkerFlag[_iproc] == 2 && jproc == nextProc) {
@@ -180,33 +153,30 @@ namespace femus {
           MPI_Recv(&processorMarkerFlag[jproc], 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
         }
       }
-
-      //actual check to see if anyone found the marker
-
-      unsigned sum = 0;
-      elementHasBeenFound = false; //serve questo? in teoria se siamo arrivati fino a qui elementHasBeenFound deve essere falso credo
+      // check if any process found the element
+      unsigned sumFlag = 0;
       for(unsigned i = 0; i < _nprocs; i++) {
-        sum += processorMarkerFlag[i];
+        sumFlag += processorMarkerFlag[i];
         if(processorMarkerFlag[i] == 1) {
           elementHasBeenFound = true;
           break;
         }
       }
-
-      if(sum == 0) {
-	std::cout << "Marker is outside the domain"<<std::endl;
-	_elem = UINT_MAX;
-	break;
+      if( sumFlag == 0 ) { // all the processes beleive that the marker is outside the domain
+        std::cout << "Marker is outside the domain" << std::endl;
+        _elem = UINT_MAX;
+	if(debug){
+	  for(unsigned j = 0 ; j < _nprocs; j++) {
+	    std::cout << " processorMarkerFlag[" << j << "] = " << processorMarkerFlag[j] <<  std::endl;
+	  }	
+	}
+        break;
       }
 
       // _iproc sends its nextElem (which is in jproc) to jproc
-
-
-
-      std::vector< int > nextElem(_nprocs, -1);
       if(!elementHasBeenFound) {
         if(processorMarkerFlag[_iproc] == 2) {
-          MPI_Send(&jel, 1, MPI_INT, nextProc, 1 , PETSC_COMM_WORLD);
+          MPI_Send(&nextElem[_iproc], 1, MPI_INT, nextProc, 1 , PETSC_COMM_WORLD);
         }
         for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
           if(processorMarkerFlag[jproc] == 3) {
@@ -214,101 +184,52 @@ namespace femus {
           }
         }
 
-        //among all the elements received by _iproc and sent from jproc, we choose the one that has least distance from the marker
+        //BEGIN SMART search among all the elements received by _iproc and sent from jprocs
+        double modulus = 1.e10;
+        iel = _mesh->_elementOffset[_iproc + 1] ;
+        for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
+          if(processorMarkerFlag[jproc] == 3) {
+	    
+            unsigned jel = nextElem[jproc];	    
+	    unsigned interiorNode = _mesh->GetElementDofNumber(jel, 2) - 1;
+	    
+            unsigned jDof  = _mesh->GetSolutionDof(interiorNode, jel, 2);    // global to global mapping between coordinates node and coordinate dof
+            double distance2 = 0;
+            for(unsigned k = 0; k < dim; k++) {
+              double dk = (*_mesh->_topology->_Sol[k])(jDof) - _x[k];     // global extraction and local storage for the element coordinates
+              distance2 += dk * dk;
+            }
+            double modulusKel = sqrt(distance2);
 
-        //modulus = 1.0e10;
-        //iel = _mesh->_elementOffset[_iproc + 1]; because I think iel might actually be _elementOffset[_iproc+1]
-
-//         if(dim == 2) {
-// 
-//           double modulus = 1.e10;
-// 
-//           iel = _mesh->_elementOffset[_iproc] ;
-// 
-//           for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
-//             if(processorMarkerFlag[jproc] == 3) {
-// 	      pointIsOutsideTheDomain = false;
-//               unsigned kel = nextElem[jproc];
-//               short unsigned kelType = _mesh->GetElementType(kel);
-//               double modulusKel = 0.;
-//               for(unsigned i = 0; i < facePointNumber[kelType] - 1; i++) {
-//                 unsigned kDof  = _mesh->GetSolutionDof(facePoints[kelType][i], kel, 2);    // global to global mapping between coordinates node and coordinate dof
-//                 double distance2 = 0;
-//                 for(unsigned k = 0; k < dim; k++) {
-//                   double dk = (*_mesh->_topology->_Sol[k])(kDof) - _x[k];     // global extraction and local storage for the element coordinates
-//                   distance2 += dk * dk;
-//                 }
-//                 modulusKel += sqrt(distance2);
-//               }
-//               modulusKel /= (facePointNumber[kelType] - 1);
-// 
-//               if(modulusKel < modulus) {
-//                 iel = kel;
-//                 modulus = modulusKel;
-//               }
-//             }
-//           }
-//         }
-// 
-// 
-//         if(dim == 3) {
-          //TODO for tet and wedges
-          //initialization of modulus
-//                 short unsigned ielType = _mesh->GetElementType(iel);
-//                 unsigned ielInteriorNode = _mesh->el->GetNVE(ielType, 2) - 1;
-//                         unsigned ielDof  = _mesh->GetSolutionDof(ielInteriorNode, iel, 2);    // global to global mapping between coordinates node and coordinate dof
-//                         double distanceIel = 0;
-//                         for(unsigned k = 0; k < dim; k++) {
-//                             double dkIel = (*_mesh->_topology->_Sol[k])(ielDof) - _x[k];     // global extraction and local storage for the element coordinates
-//                             distanceIel += dkIel * dkIel;
-//                         }
-//                         double modulus = sqrt(distanceIel);
-
-          double modulus = 1.e10;
-
-          iel = _mesh->_elementOffset[_iproc + 1] ;
-
-          for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
-            if(processorMarkerFlag[jproc] == 3) {
-              pointIsOutsideTheDomain = false;
-              unsigned kel = nextElem[jproc];
-              short unsigned kelType = _mesh->GetElementType(kel);
-              unsigned interiorNode = _mesh->el->GetNVE(kelType, 2) - 1;
-              unsigned kDof  = _mesh->GetSolutionDof(interiorNode, kel, 2);    // global to global mapping between coordinates node and coordinate dof
-              double distance2 = 0;
-              for(unsigned k = 0; k < dim; k++) {
-                double dk = (*_mesh->_topology->_Sol[k])(kDof) - _x[k];     // global extraction and local storage for the element coordinates
-                distance2 += dk * dk;
-              }
-              double modulusKel = sqrt(distance2);
-
-              if(modulusKel < modulus) {
-                iel = kel;
-                modulus = modulusKel;
-              }
+            if(modulusKel < modulus) {
+              iel = jel;
+              modulus = modulusKel;
             }
           }
-       // }
+          //END SMART search
+        }
 
-        //if(iel != _mesh->_elementOffset[_iproc +1]) {
         if(iel != _mesh->_elementOffset[_iproc + 1]) {
           std::cout << "start element= " << iel << std::endl;
-          pointIsOutsideThisMesh = false;
+          pointIsOutsideTheDomain = false;
+	  pointIsOutsideThisProcess = false;
           nextProc = _iproc;
-          kel = iel;
+          previousElem = iel;
         }
         else {
+	  pointIsOutsideTheDomain = true;
+	  pointIsOutsideThisProcess = true;
           processorMarkerFlag[_iproc] = 0;
         }
       }
-
-
-      for(unsigned j = 0 ; j < _nprocs; j++) {
-        std::cout << " processorMarkerFlag[" << j << "] = " << processorMarkerFlag[j] << "  " << nextElem[j] << std::endl;
+      if(debug){
+	for(unsigned j = 0 ; j < _nprocs; j++) {
+	  std::cout << " processorMarkerFlag[" << j << "] = " << processorMarkerFlag[j] << "  " << nextElem[j] << std::endl;
+	}
       }
-
+      //END process exchange  
+  
     }
-
   }
 
 
