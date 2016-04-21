@@ -883,6 +883,14 @@ namespace femus {
           if	(i / 8 == 1) phi = _pt_basis->eval_dphidx(_IND[j], _X[i]) / 2.;
           else if (i / 8 == 2) phi = _pt_basis->eval_dphidy(_IND[j], _X[i]) / 2.;
           else if (i / 8 == 3) phi = _pt_basis->eval_dphidz(_IND[j], _X[i]) / 2.;
+	  //tet //TODO
+	  if( elementType == 1 && ( i == 14 || i==22 || i==29 ) ){ //i==29 means 6th element z derivative
+	    phi *= -1.;                                            //i==14 and i==22 mean 7th element x and y derivatives
+	  }
+	  //wedge
+	  if( elementType == 2 && ( i==11 || i == 15 || i == 19 || i == 23) ){ 
+	    phi *= -1.;
+	  }
         }
         if (fabs(phi) >= 1.0e-14) {
           *(pt_d++) = phi;
