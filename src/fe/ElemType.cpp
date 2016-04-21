@@ -787,9 +787,11 @@ namespace femus {
       cout << order << " is not a valid option for " << geom_elem << endl;
       exit(0);
     }
-
+    
+    unsigned elementType;
+    
     if (!strcmp(geom_elem, "hex")) { //HEX
-
+      elementType = 0;
       if (_SolType == 0) _pt_basis = new HexLinear;
       else if (_SolType == 1) _pt_basis = new HexQuadratic;
       else if (_SolType == 2) _pt_basis = new HexBiquadratic;
@@ -801,6 +803,7 @@ namespace femus {
       }
     }
     else if (!strcmp(geom_elem, "wedge")) { //WEDGE
+      elementType = 2;
       if (_SolType == 0) _pt_basis = new WedgeLinear;
       else if (_SolType == 1) _pt_basis = new WedgeQuadratic;
       else if (_SolType == 2) _pt_basis = new WedgeBiquadratic;
@@ -812,6 +815,7 @@ namespace femus {
       }
     }
     else if (!strcmp(geom_elem, "tet")) { //TETRAHEDRA
+      elementType = 1;
       if (_SolType == 0) _pt_basis = new TetLinear;
       else if (_SolType == 1) _pt_basis = new TetQuadratic;
       else if (_SolType == 2) _pt_basis = new TetBiquadratic;
