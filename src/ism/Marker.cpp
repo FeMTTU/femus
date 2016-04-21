@@ -53,7 +53,7 @@ namespace femus {
     //BEGIN SMART search
     // look to the closest element among a restricted list
     double modulus = 1.e10;
-    int iel = _mesh->_elementOffset[_iproc + 1];
+    unsigned iel = UINT_MAX;
     for(int jel = _mesh->_elementOffset[_iproc]; jel < _mesh->_elementOffset[_iproc + 1]; jel += 25) {
 
       unsigned interiorNode = _mesh->GetElementDofNumber(jel, 2) - 1;
@@ -73,7 +73,7 @@ namespace femus {
       }
     }
     if(debug){
-      if(iel == _mesh->_elementOffset[_iproc + 1]) {
+      if( iel == UINT_MAX ) {
 	std::cout << "Warning the marker is located on unreasonable distance from the mesh >= 1.e10" << std::endl;
       }
       else {
@@ -87,8 +87,8 @@ namespace femus {
     bool pointIsOutsideThisProcess = false;
     bool pointIsOutsideTheDomain = false;
    
-    std::vector< int > nextElem(_nprocs, -1);
-    int previousElem = iel;
+    std::vector< unsigned > nextElem(_nprocs, UINT_MAX);
+    unsigned previousElem = iel;
     unsigned nextProc = _iproc;
     
     while(!elementHasBeenFound) {
@@ -108,7 +108,7 @@ namespace femus {
           elementHasBeenFound = true;
           processorMarkerFlag[_iproc] = 1;
         }
-        else if(nextElem[_iproc] < 0) {
+        else if(nextElem[_iproc] == UINT_MAX) {
           pointIsOutsideTheDomain = true;
           processorMarkerFlag[_iproc] = 0;
         }
@@ -176,14 +176,21 @@ namespace femus {
       // _iproc sends its nextElem (which is in jproc) to jproc
       if(!elementHasBeenFound) {
         if(processorMarkerFlag[_iproc] == 2) {
-          MPI_Send(&nextElem[_iproc], 1, MPI_INT, nextProc, 1 , PETSC_COMM_WORLD);
+          MPI_Send(&nextElem[_iproc], 1, MPI_UNSIGNED, nextProc, 1 , PETSC_COMM_WORLD);
         }
         for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
           if(processorMarkerFlag[jproc] == 3) {
-            MPI_Recv(&nextElem[jproc], 1, MPI_INT, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&nextElem[jproc], 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
           }
         }
 
+        if(debug){
+	  for(unsigned j = 0 ; j < _nprocs; j++) {
+	    std::cout << " processorMarkerFlag[" << j << "] = " << processorMarkerFlag[j] << "  " << nextElem[j] << std::endl;
+	  }
+	}
+        
+        
         //BEGIN SMART search among all the elements received by _iproc and sent from jprocs
         double modulus = 1.e10;
         iel = _mesh->_elementOffset[_iproc + 1] ;
@@ -222,18 +229,14 @@ namespace femus {
           processorMarkerFlag[_iproc] = 0;
         }
       }
-      if(debug){
-	for(unsigned j = 0 ; j < _nprocs; j++) {
-	  std::cout << " processorMarkerFlag[" << j << "] = " << processorMarkerFlag[j] << "  " << nextElem[j] << std::endl;
-	}
-      }
+      
       //END process exchange  
   
     }
   }
 
 
-  int Marker::GetNextElement2D(const unsigned &dim, const int &currentElem, const int &previousElem) {
+  unsigned Marker::GetNextElement2D(const unsigned &dim, const unsigned &currentElem, const unsigned &previousElem) {
 
     int nextElem;
 
@@ -258,25 +261,19 @@ namespace femus {
       length += sqrt((xv[0][i + 1] - xv[0][i]) * (xv[0][i + 1] - xv[0][i]) +
                      (xv[1][i + 1] - xv[1][i]) * (xv[1][i + 1] - xv[1][i]));
     }
-
     length /= xv[0].size();
-
     for(unsigned i = 0; i < xv[0].size(); i++) {
       xv[0][i] /= length;
       xv[1][i] /= length;
     }
+
 
     double epsilon  = 10e-10;
 
     double w = 0.;
     for(unsigned i = 0; i < xv[0].size() - 1; i++) {
       double Delta = -xv[0][i] * (xv[1][i + 1] - xv[1][i]) + xv[1][i] * (xv[0][i + 1] - xv[0][i]);
-//       if(currentElem == 125) {
-//         std::cout << "Delta for element" << currentElem << " is =" << Delta  << " , " << xv[0][i] << " , " << xv[1][i] << " , " << xv[0][i + 1] << " , " << xv[1][i + 1] << std::endl;
-//       }
-
       //std::cout << "Delta=" << Delta << " " << epsilon << std::endl;
-
       if(fabs(Delta) > epsilon) {   // the edge does not pass for the origin
         //std::cout << " xv[1][i]*xv[1][i+1] = " << xv[1][i]*xv[1][i + 1] << std::endl;
         if(fabs(xv[1][i]) < epsilon && xv[0][i] > 0) {  // the first vertex is on the positive x-axis
@@ -342,26 +339,26 @@ namespace femus {
 
     }
     else if(w < 0) {
-      std::cout << " Error negative Winding Number with counterclockwise oriented points " << std::endl;
+      //std::cout << " Error negative Winding Number with counterclockwise oriented points " << std::endl;
       abort();
     }
 
     std::cout << "the next element is " << nextElem << std::endl;
 
 
-    return nextElem;
+    return (nextElem>=0) ? nextElem : UINT_MAX;
   }
 
-  int Marker::GetNextElement3D(const unsigned &dim, const int &currentElem, const int &previousElem) {
+  unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentElem, const unsigned &previousElem) {
 
     int nextElem;
     //for on the element faces
-    int faceIntersectionCounter = 0; // if it is even, the marker is outside the element (0 is considered even)
+    unsigned faceIntersectionCounter = 0; // if it is even, the marker is outside the element (0 is considered even)
     bool markerIsInElement = false;
 
 
     for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
-      std::cout << "faceIntersectionCounter  = " << faceIntersectionCounter  << " , " << " markerIsInElement = " << markerIsInElement <<  std::endl;
+      //std::cout << "faceIntersectionCounter  = " << faceIntersectionCounter  << " , " << " markerIsInElement = " << markerIsInElement <<  std::endl;
 
       bool lineIntersection = false;
 
@@ -416,7 +413,7 @@ namespace femus {
 
 
       if(fabs(A) < epsilon && epsilon < fabs(By0 + Cz0)) { // A = 0 and By0 != -Cz0
-        std::cout << "The plane of face " << iface << "and the x-axis don't intersect " << std::endl;
+       // std::cout << "The plane of face " << iface << "and the x-axis don't intersect " << std::endl;
 
       }
       else {
@@ -425,13 +422,13 @@ namespace femus {
         double r = 0;
 
         if(fabs(A) < epsilon && fabs(By0 + Cz0) < epsilon) { // A = 0 and By0 = -Cz0
-          std::cout << "The plane of face " << iface << "and the x-axis intersect on a line" << std::endl;
+         // std::cout << "The plane of face " << iface << "and the x-axis intersect on a line" << std::endl;
           // the marker and the face are already on the same plane so there is no need for further shifting
           lineIntersection = true ;
         }
 
         else if(epsilon < fabs(A)) {  // A != 0
-          std::cout << "The plane of face " << iface << "and the x-axis intersect at a point" << std::endl;
+          //std::cout << "The plane of face " << iface << "and the x-axis intersect at a point" << std::endl;
 
           r = (A * xv[0][0] + B * xv[1][0] + C * xv[2][0]) / A;
           xTilde[0] = r;
@@ -462,21 +459,21 @@ namespace femus {
             // std::cout << "scalarProduct = " << scalarProduct << std::endl;
 
             if(scalarProduct > 0) {  // this can be cancelled once the code is working ok
-              std::cout << "the marker is outside face " << iface <<  std::endl;
+             // std::cout << "the marker is outside face " << iface <<  std::endl;
               break;
 
             }
             else if(fabs(scalarProduct) < epsilon) {  //scalarProduct == 0
-              std::cout << " the marker and the edge are aligned " << std::endl; //check if xTilde is actually on the edge.
+              //std::cout << " the marker and the edge are aligned " << std::endl; //check if xTilde is actually on the edge.
               if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
                 if(lineIntersection == true) {
-                  std::cout << " the marker belongs to an edge of face " << iface << std::endl;
+                 // std::cout << " the marker belongs to an edge of face " << iface << std::endl;
                   markerIsInElement = true;
                   break;
                 }
                 else {
                   faceIntersectionCounter++;
-                  std::cout << " faceIntersectionCounter = " << faceIntersectionCounter << std::endl;
+                 // std::cout << " faceIntersectionCounter = " << faceIntersectionCounter << std::endl;
                   break;
                 }
 
@@ -484,13 +481,13 @@ namespace femus {
               else if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
                       (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
                 if(lineIntersection == true) {
-                  std::cout << " one of the vertexes is the marker" << std::endl;
+                 // std::cout << " one of the vertexes is the marker" << std::endl;
                   markerIsInElement = true;
                   break;
                 }
                 else {
                   faceIntersectionCounter++;
-                  std::cout << " faceIntersectionCounter " << faceIntersectionCounter << std::endl;
+                 // std::cout << " faceIntersectionCounter " << faceIntersectionCounter << std::endl;
                   break;
                 }
               }
@@ -498,10 +495,7 @@ namespace femus {
             else if(scalarProduct < 0) {
               scalarCount++;
             }
-//                     std::cout<<"BBBBBBBBBBBBBBBB "<<scalarCount<<std::endl;
           }
-
-//                 std::cout<<"BBBBBBBBBBBBBBBB "<<scalarCount<<std::endl;
 
           if(scalarCount == facePointNumber[ifaceType] - 1 && lineIntersection == true) {
             markerIsInElement = true ;
@@ -518,20 +512,20 @@ namespace femus {
       }
     }// end of the loop on iface
 
-    std::cout << "markerIsInElement = " << markerIsInElement << " and faceIntersectionCounter  = " << faceIntersectionCounter  <<  std::endl;
+   // std::cout << "markerIsInElement = " << markerIsInElement << " and faceIntersectionCounter  = " << faceIntersectionCounter  <<  std::endl;
 
     if(markerIsInElement == true || faceIntersectionCounter % 2 != 0) {
       nextElem = currentElem;
     }
     else if(markerIsInElement == false && faceIntersectionCounter % 2 == 0) {
-      std::cout << " The marker doesn't belong to element " << currentElem << std::endl;
+     // std::cout << " The marker doesn't belong to element " << currentElem << std::endl;
       double modulus = 1.e10;
 
       for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
 
         unsigned faceNodeNumber = _mesh->GetElementFaceDofNumber(currentElem, iface, 2);
         unsigned i = _mesh->GetLocalFaceVertexIndex(currentElem, iface, faceNodeNumber - 1);
-        std::cout << i << " ";
+       // std::cout << i << " ";
 
         unsigned faceCentralDof = _mesh->GetSolutionDof(i, currentElem, 2);
 
@@ -545,7 +539,7 @@ namespace femus {
 
         if(ifaceModulus < modulus) {
           int jel = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
-          std::cout << "jel = " << jel << "iface = " << iface <<  std::endl;
+         // std::cout << "jel = " << jel << "iface = " << iface <<  std::endl;
           if(jel != previousElem) {
             nextElem = jel;
             modulus = ifaceModulus;
@@ -555,7 +549,7 @@ namespace femus {
     }
     std::cout << "nextElem = " << nextElem << std::endl;
 
-    return nextElem;
+    return (nextElem >= 0) ? nextElem : UINT_MAX;
   }
 }
 
