@@ -258,13 +258,15 @@ namespace femus {
                 xx[0] /= nloc_dof;
                 xx[1] /= nloc_dof;
                 xx[2] /= nloc_dof;
+		
+		value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
 
-                value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
-
-                _solution[ig]->_Sol[i]->set(iel, value);
+		 unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(0, iel, sol_type);
+		
+                _solution[ig]->_Sol[i]->set(solDof, value);
 
                 if(_solTimeOrder[i] == 2) {
-                  _solution[ig]->_SolOld[i]->set(iel, value);
+                  _solution[ig]->_SolOld[i]->set(solDof, value);
                 }
               }
             }
@@ -668,14 +670,14 @@ namespace femus {
   
   void MultiLevelSolution::RefineSolution( const unsigned &gridf ) {
 
-      Mesh* msh = _mlMesh->GetLevel(gridf);
+      Mesh *msh = _mlMesh->GetLevel(gridf);
     
       for( unsigned k = 0; k < _solType.size(); k++ ) {
 
 	unsigned solType = _solType[k];
 	
 	_solution[gridf]->_Sol[k]->matrix_mult( *_solution[gridf - 1]->_Sol[k],
-	    *msh[gridf].GetCoarseToFineProjection( solType ) );
+	    *msh->GetCoarseToFineProjection( solType ) );
 	_solution[gridf]->_Sol[k]->close();
       }
     }
