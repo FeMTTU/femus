@@ -32,7 +32,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
- mlMsh.ReadCoarseMesh( "./input/cubeHex.neu", "seventh", scalingFactor );
+ mlMsh.ReadCoarseMesh( "./input/square2.neu", "seventh", scalingFactor );
   
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   unsigned numberOfUniformLevels = 1;
@@ -74,9 +74,9 @@ int main(int argc, char** args) {
 //  x[1]=7.23015e-05;
 //  x[2]=0.;
   
-//   x[0]=-4.9e-05;  //it is on element 153 proc=2
-//   x[1]=2e-05;
-//   x[2]=0.;
+  x[0]=-4.9e-05;  //it is on element 153 proc=2
+  x[1]=2e-05;
+  x[2]=0.;
   
 // WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 // NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
@@ -138,14 +138,14 @@ int main(int argc, char** args) {
 // NOTE With 7 zeros, the code does what it is supposed to do, the error is (1e-12).
 
 //Test 5: the marker is on the lower half of the RIGHT edge of element 0 
-/*x[0]=0.3125;  //
-x[1]=-0.05555555; // 
-x[2]=0.;*/ 
+// x[0]=0.3125;  //
+// x[1]=-0.05555555; // 
+// x[2]=0.; 
 // NOTE The code does what it is supposed to do.
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-//Test 6: the marker is the north-east vertex of element 35
+//Test 6: the marker is the north-east vertex of element 43
 // x[0]=0.25;  //
 // x[1]=0.3125; // 
 // x[2]=0.; 
@@ -207,9 +207,9 @@ x[2]=0.;*/
   ////////////////////////////////////////////////////////////////////////////////////////
     
     // //Test 7: the marker is over the lower edge of element 57 (it is not on the domain because the x is too small)
- x[0]=-0.6;  //
- x[1]=0.1; // 
- x[2]=0.2; //
+//  x[0]=-0.6;  //
+//  x[1]=0.1; // 
+//  x[2]=0.2; //
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
