@@ -31,6 +31,12 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  const elem_type * _finiteElement1 = new const elem_type_2D("quad","disc_linear","seventh");
+  std::cout<<std::endl;
+  const elem_type * _finiteElement2 = new const elem_type_2D("tri","disc_linear","seventh");
+  
+  std::cout<<std::endl;
+  const elem_type * _finiteElement3 = new const elem_type_3D("hex","disc_linear","seventh");
   
   //const elem_type * _finiteElement1 = new const elem_type_2D("tri","quadratic","seventh");
   //const elem_type * _finiteElement2 = new const elem_type_2D("tri","biquadratic","seventh");
@@ -41,7 +47,7 @@ int main(int argc, char** args) {
   //const elem_type * _finiteElement5 = new const elem_type_3D("tet","quadratic","seventh");
   //const elem_type * _finiteElement6 = new const elem_type_3D("tet","biquadratic","seventh");
   
-  
+  /*
   
   
   MultiLevelMesh mlMsh;
@@ -95,7 +101,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);*/
   
   
   return 0;

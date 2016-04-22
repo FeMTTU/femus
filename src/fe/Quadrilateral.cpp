@@ -54,6 +54,13 @@ namespace femus {
   
   //************************************************************
   
+  const unsigned quad_const::fine2CoarseVertexMapping[4][4]= { // coarse Mesh dof = f2CVM[element type][fine element][fine vertex]
+    {0,4,8,7},
+    {4,1,5,8},
+    {8,5,2,6},
+    {7,8,6,3}
+  };
+    
   const double quad_const::X[12][2]={ 
     {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5},
     {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5},

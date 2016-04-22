@@ -73,6 +73,10 @@ namespace femus {
     virtual const double* getX(const int &i) const = 0;
     virtual const int* getIND(const int &i) const = 0;
     virtual const int* getKVERT_IND(const int &i) const = 0;
+    
+    virtual const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+      std::cout<<"Warning this function in not yet implemented for this element type"<<std::cout;
+    };
    
     
     
@@ -318,10 +322,16 @@ namespace femus {
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
+    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+      return fine2CoarseVertexMapping[i];
+    };
+    
   protected: 
     static const double X[32][3];
     static const int IND[4][3];
     static const int KVERT_IND[32][2];
+    
+    static const unsigned fine2CoarseVertexMapping[8][8];
   };
   
   
@@ -699,11 +709,18 @@ namespace femus {
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
+    
+    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+      return fine2CoarseVertexMapping[i];
+    };
   
   protected: 
     static const double X[12][2];
     static const int IND[3][2];
     static const int KVERT_IND[12][2];
+    
+    static const unsigned fine2CoarseVertexMapping[4][4];
+    
   };
   
   
@@ -749,9 +766,6 @@ namespace femus {
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
   protected:
-//     static const double X[15][2];
-//     static const int IND[6][2];
-//     static const int KVERT_IND[15][2];
     static const double X[19][2];
     static const int IND[7][2];
     static const int KVERT_IND[19][2];
@@ -815,11 +829,17 @@ namespace femus {
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
-  
+      
+    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+      return fine2CoarseVertexMapping[i];
+    };
+    
   protected: 
     static const double X[12][2];
     static const int IND[3][2];
     static const int KVERT_IND[12][2];
+        
+    static const unsigned fine2CoarseVertexMapping[4][3];
   };
   
   class tri0: public tri_const {
