@@ -2,7 +2,7 @@
 ** GAMBIT NEUTRAL FILE
 triAMR
 PROGRAM:                Gambit     VERSION:  2.3.16
-19 Apr 2016    10:39:39 
+23 Apr 2016    10:11:05 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
         25         8         4         3         2         2
 ENDOFSECTION
@@ -50,19 +50,19 @@ GROUP:          1 ELEMENTS:          2 MATERIAL:          2 NFLAGS:          1
        7       8
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          2 ELEMENTS:          2 MATERIAL:          4 NFLAGS:          1
+GROUP:          2 ELEMENTS:          2 MATERIAL:          2 NFLAGS:          1
                                6
        0
        3       4
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          3 ELEMENTS:          2 MATERIAL:          3 NFLAGS:          1
+GROUP:          3 ELEMENTS:          2 MATERIAL:          2 NFLAGS:          1
                                7
        0
        5       6
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
-GROUP:          4 ELEMENTS:          2 MATERIAL:          4 NFLAGS:          1
+GROUP:          4 ELEMENTS:          2 MATERIAL:          2 NFLAGS:          1
                                8
        0
        1       2
