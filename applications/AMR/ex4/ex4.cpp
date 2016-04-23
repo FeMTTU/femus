@@ -34,9 +34,12 @@ int main(int argc, char** args) {
   const elem_type * _finiteElement1 = new const elem_type_2D("quad","disc_linear","seventh");
   std::cout<<std::endl;
   const elem_type * _finiteElement2 = new const elem_type_2D("tri","disc_linear","seventh");
-  
   std::cout<<std::endl;
   const elem_type * _finiteElement3 = new const elem_type_3D("hex","disc_linear","seventh");
+  std::cout<<std::endl;
+  const elem_type * _finiteElement4 = new const elem_type_3D("wedge","disc_linear","seventh");
+  std::cout<<std::endl;
+  const elem_type * _finiteElement5 = new const elem_type_3D("tet","disc_linear","seventh");
   
   //const elem_type * _finiteElement1 = new const elem_type_2D("tri","quadratic","seventh");
   //const elem_type * _finiteElement2 = new const elem_type_2D("tri","biquadratic","seventh");

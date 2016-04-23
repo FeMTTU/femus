@@ -461,10 +461,16 @@ namespace femus {
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
+    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+      return fine2CoarseVertexMapping[i];
+    };
+    
   protected: 
     static const double X[32][3];
     static const int IND[4][3];
     static const int KVERT_IND[32][2];
+    
+    static const unsigned fine2CoarseVertexMapping[8][8];
   };
   
   class wedge0: public wedge_const {
@@ -593,10 +599,16 @@ namespace femus {
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
+    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+      return fine2CoarseVertexMapping[i];
+    };
+    
   protected: 
     static const double X[32][3];
     static const int IND[4][3];
     static const int KVERT_IND[32][2];
+    
+    static const unsigned fine2CoarseVertexMapping[8][8];
   };
   
   class tet0: public tet_const {

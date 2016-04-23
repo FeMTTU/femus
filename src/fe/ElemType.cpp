@@ -574,11 +574,8 @@ namespace femus {
       abort();
     }
 
-    unsigned elementType;
-    
     if (!strcmp(geom_elem, "quad")) { //QUAD
       linearElement = new QuadLinear;
-      elementType = 3;
       if (_SolType == 0) _pt_basis = new QuadLinear;
       else if (_SolType == 1) _pt_basis = new QuadQuadratic;
       else if (_SolType == 2) _pt_basis = new QuadBiquadratic;
@@ -591,7 +588,6 @@ namespace femus {
     }
     else if (!strcmp(geom_elem, "tri")) { //TRIANGLE
       linearElement = new TriLinear;
-      elementType = 4;
       if (_SolType == 0) _pt_basis = new TriLinear;
       else if (_SolType == 1) _pt_basis = new TriQuadratic;
       else if (_SolType == 2) _pt_basis = new TriBiquadratic;
@@ -636,7 +632,7 @@ namespace femus {
       
       if(_SolType == 4 && i/4 >= 1 ){ //if piece_wise_linear derivatives
 	for(int k = 0; k <  _nlag[0]; k++){
-	  //cooridnates of the coarse vertices with respect the fine elements
+	  //coordinates of the coarse vertices with respect the fine elements
 	  double xv = * ( linearElement->getX(  *(_pt_basis->getFine2CoarseVertexMapping(i%4) + k) ) + i/4 -1 );
 	  jac[1] += linearElement->eval_dphidx( linearElement->getIND(k), _X[i] ) * xv; 
 	  jac[2] += linearElement->eval_dphidy( linearElement->getIND(k), _X[i] ) * xv; 
@@ -670,7 +666,7 @@ namespace femus {
       
       if(_SolType == 4 && i/4 >= 1 ) { //if piece_wise_linear derivatives
 	for(int k = 0; k <  _nlag[0]; k++){
-	  //cooridnates of the coarse vertices with respect the fine elements
+	  //coordinates of the coarse vertices with respect the fine elements
 	  double xv = * ( linearElement->getX(  *(_pt_basis->getFine2CoarseVertexMapping(i%4) + k) ) + i/4 -1 );
 	  jac[1] += linearElement->eval_dphidx( linearElement->getIND(k), _X[i] ) * xv; 
 	  jac[2] += linearElement->eval_dphidy( linearElement->getIND(k), _X[i] ) * xv; 
@@ -884,7 +880,7 @@ namespace femus {
 	  jac[2] += linearElement->eval_dphidy( linearElement->getIND(k), _X[i] ) * xv; 
 	  jac[3] += linearElement->eval_dphidz( linearElement->getIND(k), _X[i] ) * xv; 
 	}
-	std::cout << jac[0] <<" "<< jac[1]<<" "<< jac[2]<<" "<<jac[3]<< std::endl;
+	//std::cout << jac[0] <<" "<< jac[1]<<" "<< jac[2]<<" "<<jac[3]<< std::endl;
       }
       
       
@@ -930,12 +926,12 @@ namespace femus {
       _prol_ind[i] = pt_i;
       for (int j = 0; j < _nc; j++) {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-	if (_SolType == 4 && i/8 >= 1 ) { //if piece_wise_linear
+	if (_SolType == 4 && i/8 >= 1 ) { //if piece_wise_linear derivatives
 	  phi = jac[j]; 
 // 	  if	(i / 8 == 1) phi = _pt_basis->eval_dphidx(_IND[j], _X[i]) / 2.;
 //           else if (i / 8 == 2) phi = _pt_basis->eval_dphidy(_IND[j], _X[i]) / 2.;
 //           else if (i / 8 == 3) phi = _pt_basis->eval_dphidz(_IND[j], _X[i]) / 2.;
-// 	  //tet //TODO
+// 	  //tet 
 // 	  if( elementType == 1 && ( i == 14 || i==22 || i==29 ) ){ //i==29 means 6th element z derivative
 // 	    phi *= -1.;                                            //i==14 and i==22 mean 7th element x and y derivatives
 // 	  }
