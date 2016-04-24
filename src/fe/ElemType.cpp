@@ -930,7 +930,7 @@ namespace femus {
       _prol_ind[i] = pt_i;
       for (int j = 0; j < _nc; j++) {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-	if (_SolType == 4 && i/8 >= 1 ) { //if piece_wise_linear
+	if (_SolType == 4 && i/8 >= 1 ) { //if piece_wise_linear derivatives
 	  phi = jac[j];
 
 // 	  if	(i / 8 == 1) phi = _pt_basis->eval_dphidx(_IND[j], _X[i]) / 2.;
