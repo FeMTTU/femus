@@ -149,11 +149,11 @@ int main(int argc, char** args) {
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
-  // initilaize and solve the system
+  // initialize and solve the system
   system.init();
 
-  system.SetSolverFineGrids(GMRES);
-  //system.SetSolverFineGrids(RICHARDSON);
+  //system.SetSolverFineGrids(GMRES);
+  system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
 

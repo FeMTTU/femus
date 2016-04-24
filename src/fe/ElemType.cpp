@@ -382,13 +382,12 @@ namespace femus {
     bool identity = ( _nlag[itype] == _nc ) ? true : false;
     int nMax = (_nf < _nlag[itype] ) ? _nf:_nlag[itype];
     for (int i = 0; i < nMax; i++) {
-    //for (int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
       int iproc = mesh.IsdomBisectionSearch(irow, itype);
       int ncols = (identity)? 1 : _prol_ind[i + 1] - _prol_ind[i];
       unsigned counter_o = 0;
       for (int k = 0; k < ncols; k++) {
-        int jcolumn = (identity) ? irow : mesh.GetSolutionDof(_prol_ind[i][k], iel, _SolType);
+        int jcolumn = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(_prol_ind[i][k], iel, _SolType);
         if (jcolumn < mesh._dofOffset[_SolType][iproc] || jcolumn >= mesh._dofOffset[_SolType][iproc + 1]) counter_o++;
       }
       NNZ_d->set(irow, ncols - counter_o);
@@ -402,14 +401,13 @@ namespace femus {
     bool identity = ( _nlag[itype] == _nc ) ? true : false;
     int nMax = (_nf < _nlag[itype] ) ? _nf:_nlag[itype];
     for (int i = 0; i < nMax; i++) {
-    //for (int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
       int ncols = (identity) ? 1 : _prol_ind[i + 1] - _prol_ind[i];
       int ncols_stored = static_cast <int>(floor((*NNZ_d)(irow) + (*NNZ_o)(irow) + 0.5));
       if (ncols == ncols_stored) {
         cols.assign(ncols, 0);
         for (int k = 0; k < ncols; k++) {
-          cols[k]  = (identity) ? irow : mesh.GetSolutionDof( _prol_ind[i][k], iel, _SolType);
+          cols[k]  = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof( _prol_ind[i][k], iel, _SolType);
           value[k] = (identity) ? 1.: _prol_val[i][k];
         }
         Projmat->insert_row(irow, ncols, cols, &value[0]);

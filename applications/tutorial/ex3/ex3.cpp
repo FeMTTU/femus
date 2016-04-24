@@ -47,11 +47,11 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
@@ -122,7 +122,7 @@ int main(int argc, char** args) {
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+      vtkIO.Write(DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, i+j*10);
 
 //       GMVWriter gmvIO(&mlSol);
 //       gmvIO.SetDebugOutput(true);
@@ -189,8 +189,8 @@ int main(int argc, char** args) {
 
 
 
-  
- 
+
+
 }
 
 
@@ -295,7 +295,7 @@ void AssembleNonlinearProblem(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-   
+
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
@@ -496,7 +496,7 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    
+
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
@@ -672,11 +672,11 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    
+
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-    
+
     // resize local arrays
     solu.resize(nDofs);
 
