@@ -49,9 +49,9 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
@@ -72,7 +72,7 @@ int main(int argc, char** args) {
 
   for (unsigned i = 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
-    unsigned numberOfUniformLevels = i + 1;
+    unsigned numberOfUniformLevels = i ;
     unsigned numberOfSelectiveLevels = 0;
     mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -122,7 +122,8 @@ int main(int argc, char** args) {
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, i+j*10);
+      vtkIO.SetDebugOutput(true);
+      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i+j*10);
 
 //       GMVWriter gmvIO(&mlSol);
 //       gmvIO.SetDebugOutput(true);
