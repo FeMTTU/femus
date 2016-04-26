@@ -18,7 +18,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 double InitalValueW(const std::vector < double >& x) {
-  return 1+x[0]-x[1];
+  return 1;
 }
 
 
@@ -31,16 +31,16 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  const elem_type * _finiteElement1 = new const elem_type_2D("quad","disc_linear","seventh");
-  std::cout<<std::endl;
-  const elem_type * _finiteElement2 = new const elem_type_2D("tri","disc_linear","seventh");
-  std::cout<<std::endl;
-  const elem_type * _finiteElement3 = new const elem_type_3D("hex","disc_linear","seventh");
-  std::cout<<std::endl;
-  const elem_type * _finiteElement4 = new const elem_type_3D("wedge","disc_linear","seventh");
-  std::cout<<std::endl;
-  const elem_type * _finiteElement5 = new const elem_type_3D("tet","disc_linear","seventh");
-  
+//   const elem_type * _finiteElement1 = new const elem_type_2D("quad","disc_linear","seventh");
+//   std::cout<<std::endl;
+//   const elem_type * _finiteElement2 = new const elem_type_2D("tri","disc_linear","seventh");
+//   std::cout<<std::endl;
+//   const elem_type * _finiteElement3 = new const elem_type_3D("hex","disc_linear","seventh");
+//   std::cout<<std::endl;
+//   const elem_type * _finiteElement4 = new const elem_type_3D("wedge","disc_linear","seventh");
+//   std::cout<<std::endl;
+//   const elem_type * _finiteElement5 = new const elem_type_3D("tet","disc_linear","seventh");
+//   
   //const elem_type * _finiteElement1 = new const elem_type_2D("tri","quadratic","seventh");
   //const elem_type * _finiteElement2 = new const elem_type_2D("tri","biquadratic","seventh");
   
@@ -50,7 +50,7 @@ int main(int argc, char** args) {
   //const elem_type * _finiteElement5 = new const elem_type_3D("tet","quadratic","seventh");
   //const elem_type * _finiteElement6 = new const elem_type_3D("tet","biquadratic","seventh");
   
-  /*
+  
   
   
   MultiLevelMesh mlMsh;
@@ -69,7 +69,7 @@ int main(int argc, char** args) {
   //l2Norm.resize (maxNumberOfMeshes);
   //vector < vector < double > > semiNorm;
   //semiNorm.resize (maxNumberOfMeshes);
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   
@@ -98,13 +98,17 @@ int main(int argc, char** args) {
   mlSol.AddSolutionLevel();
   mlSol.RefineSolution(numberOfUniformLevels);
   
-  
+  MeshRefinement meshcoarser1(*mlMsh.GetLevel(numberOfUniformLevels));
+  meshcoarser1.FlagAllElementsToBeRefined();
+  mlMsh.AddAMRMeshLevel();
+  mlSol.AddSolutionLevel();
+  mlSol.RefineSolution(numberOfUniformLevels+1);
   
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);*/
+  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
   
   
   return 0;

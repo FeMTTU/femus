@@ -49,8 +49,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -61,7 +61,7 @@ int main(int argc, char** args) {
   if (dim == 2) {
     maxNumberOfMeshes = 7;
   } else {
-    maxNumberOfMeshes = 4;
+    maxNumberOfMeshes = 6;
   }
 
   vector < vector < double > > l2Norm;
@@ -123,7 +123,9 @@ int main(int argc, char** args) {
 
       VTKWriter vtkIO(&mlSol);
       vtkIO.SetDebugOutput(true);
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i+j*10);
+      if(j > 1){
+	vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i+j*10);
+      }
 
 //       GMVWriter gmvIO(&mlSol);
 //       gmvIO.SetDebugOutput(true);

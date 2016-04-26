@@ -876,7 +876,7 @@ namespace femus {
       double jac[4]={0,0,0,0};
       if(_SolType == 4 && i/8 >= 1 ){ //if piece_wise_linear derivatives
 	for(int k = 0; k <  _nlag[0]; k++){
-	  //cooridnates of the coarse vertices with respect the fine elements
+	  //coordinates of the coarse vertices with respect the fine elements
 	  double xv = * ( linearElement->getX(  *(_pt_basis->getFine2CoarseVertexMapping(i%8) + k) ) + i/8 -1 );
 	  jac[1] += linearElement->eval_dphidx( linearElement->getIND(k), _X[i] ) * xv;
 	  jac[2] += linearElement->eval_dphidy( linearElement->getIND(k), _X[i] ) * xv;
