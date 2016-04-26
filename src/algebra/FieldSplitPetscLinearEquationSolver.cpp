@@ -18,7 +18,10 @@
 
 #ifdef HAVE_PETSC
 
+
 #include "FieldSplitPetscLinearEquationSolver.hpp"
+
+
 
 namespace femus {
 
@@ -27,7 +30,7 @@ namespace femus {
   }
 
   void FieldSplitPetscLinearEquationSolver::BuildBdcIndex(const vector <unsigned>& variable_to_be_solved) {
-    _fieldSplitTree->BuildIndexSet(KKoffset, _iproc, _nprocs, _msh->GetLevel());
+    _fieldSplitTree->BuildIndexSet(KKoffset, _iproc, _nprocs, _msh->GetLevel(), this);
     GmresPetscLinearEquationSolver::BuildBdcIndex(variable_to_be_solved);
   }
 

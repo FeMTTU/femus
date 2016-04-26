@@ -13,11 +13,10 @@
 
   =========================================================================*/
 
-
-
+#include <map>
 
 #include "FieldSplitTree.hpp"
-
+#include "FieldSplitPetscLinearEquationSolver.hpp"
 
 namespace femus {
 
@@ -158,11 +157,20 @@ namespace femus {
   }
 
 
-  void FieldSplitTree::BuildIndexSet(const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc, const unsigned& nprocs, const unsigned& level) {
+  void FieldSplitTree::BuildIndexSet(const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc, 
+				     const unsigned& nprocs, const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver) {
 
-    _MatrixOffset = KKoffset;
+    if(_MatrixOffset.size() < level) _MatrixOffset.resize(level);
+      _MatrixOffset[level-1] = KKoffset;
       
-    if ( GetNumberOfSplits() == 1) return;
+    if ( GetNumberOfSplits() == 1) {
+      if ( _preconditioner == ASM_PRECOND ){
+	BuildASMIndexSet( level, solver );
+      }
+      return;
+    }
+      
+      
     
     
     if(_isSplit.size() < level) _isSplit.resize(level);
@@ -231,7 +239,7 @@ namespace femus {
           fieldsInSplitOffset[0][jproc + 1] = fieldsInSplitOffset[_fieldsSplit[i].size()][jproc];
         }
       }
-      _child[i]->BuildIndexSet(fieldsInSplitOffset, iproc, nprocs, level);
+      _child[i]->BuildIndexSet(fieldsInSplitOffset, iproc, nprocs, level, solver);
     }
  
   }
@@ -253,9 +261,9 @@ namespace femus {
   void FieldSplitTree::SetPC(KSP& ksp, const unsigned& level) {
 
     std::cout<<level<<std::endl;
-    for(int i = 0; i < _MatrixOffset.size(); i++){
-      for(int j = 0; j < _MatrixOffset[i].size(); j++){
-	std::cout << _MatrixOffset[i][j] << " ";
+    for(int i = 0; i < _MatrixOffset[level-1].size(); i++){
+      for(int j = 0; j < _MatrixOffset[level-1][i].size(); j++){
+	std::cout << _MatrixOffset[level-1][i][j] << " ";
       }
       std::cout <<std::endl;
     }
@@ -620,5 +628,205 @@ namespace femus {
         abort();
     }
   }
+  
+
+  void FieldSplitTree::BuildASMIndexSet( const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver){
+    
+    Mesh* msh = solver->_msh;
+    
+    unsigned nel = msh->GetNumberOfElements();
+
+    bool FastVankaBlock = true;
+
+    
+    unsigned _NSchurVar = 1;
+    
+    if(_NSchurVar != 0) {
+      FastVankaBlock = (_solutionType[ _solutionType.size() - _NSchurVar ] < 3 ) ? false : true;
+    }
+
+    unsigned iproc = solver->processor_id();
+
+    unsigned DofOffset = _MatrixOffset[level-1][0][iproc];
+    unsigned DofOffsetSize = _MatrixOffset[level-1][_solutionType.size()][iproc] - DofOffset;
+        
+    vector < unsigned > indexa(DofOffsetSize, DofOffsetSize);
+    vector < unsigned > indexb(DofOffsetSize, DofOffsetSize);
+
+    vector <bool> owned(DofOffsetSize, false);
+
+    std::map<int, bool> mymap;
+
+    unsigned ElemOffset   = msh->_dofOffset[3][iproc];
+    unsigned ElemOffsetp1 = msh->_dofOffset[3][iproc + 1];
+    unsigned ElemOffsetSize = ElemOffsetp1 - ElemOffset;
+    vector <PetscInt> indexci(ElemOffsetSize);
+    vector < unsigned > indexc(ElemOffsetSize, ElemOffsetSize);
+
+    vector < vector < unsigned > > block_elements;
+
+//     MeshASMPartitioning meshasmpartitioning(*_msh);
+// 
+//     meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange);
+// 
+//     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(), true);
+// 
+//     for(unsigned iind = variable_to_be_solved.size() - _NSchurVar; iind < variable_to_be_solved.size(); iind++) {
+//       unsigned PdeIndexSol = variable_to_be_solved[iind];
+//       ThisVaribaleIsNonSchur[PdeIndexSol] = false;
+//     }
+// 
+//     // *** Start Vanka Block ***
+// 
+//     _localIsIndex.resize(block_elements.size());
+//     _overlappingIsIndex.resize(block_elements.size());
+// 
+//     for(int vb_index = 0; vb_index < block_elements.size(); vb_index++) { //loop on the vanka-blocks
+//       _localIsIndex[vb_index].resize(DofOffsetSize);
+//       _overlappingIsIndex[vb_index].resize(DofOffsetSize);
+// 
+//       PetscInt PAsize = 0;
+//       PetscInt PBsize = 0;
+// 
+//       PetscInt Csize = 0;
+// 
+//       // ***************** NODE/ELEMENT SERCH *******************
+//       for(int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
+//         unsigned iel = block_elements[vb_index][kel];
+// 
+//         for(unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) { //loop on the element vertices
+//           unsigned inode = _msh->el->GetElementDofIndex(iel, i);
+//           const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
+//           //loop on the neighboring elemnets (!FastVankaBlock) or on iel only (FastVankaBlock) 
+// 	  unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
+//           for(unsigned j = 0; j < nve; j++) { 
+//             unsigned jel = (!FastVankaBlock) ? localElementNearVertexNumber[j] : iel;
+// 
+//             //add elements for velocity to be solved
+//             if(indexc[jel - ElemOffset] == ElemOffsetSize) {
+//               indexci[Csize] = jel - ElemOffset;
+//               indexc[jel - ElemOffset] = Csize++;
+// 
+//               //add non-schur variables to be solved
+//               for(int indexSol = 0; indexSol < _SolPdeIndex.size(); indexSol++) {
+//                 if(ThisVaribaleIsNonSchur[indexSol]) {
+//                   unsigned SolPdeIndex = _SolPdeIndex[indexSol];
+//                   unsigned SolType = _SolType[SolPdeIndex];
+//                   unsigned nvej = _msh->GetElementDofNumber(jel, SolType);
+// 
+//                   for(unsigned jj = 0; jj < nvej; jj++) {
+//                     unsigned jdof = _msh->GetSolutionDof(jj, jel, SolType);
+//                     unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, jj, jel);
+// 
+//                     if(jdof >= _msh->_dofOffset[SolType][iproc] &&
+//                         jdof <  _msh->_dofOffset[SolType][iproc + 1]) {
+//                       if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
+//                         owned[kkdof - DofOffset] = true;
+//                         _localIsIndex[vb_index][PAsize] = kkdof;
+//                         indexa[kkdof - DofOffset] = PAsize++;
+//                       }
+// 
+//                       if(indexb[kkdof - DofOffset] == DofOffsetSize) {
+//                         _overlappingIsIndex[vb_index][PBsize] = kkdof;
+//                         indexb[kkdof - DofOffset] = PBsize++;
+//                       }
+//                     }
+//                     else {
+//                       mymap[kkdof] = true;
+//                     }
+//                   }
+//                 }
+//               }
+//             }
+//           }
+//         }
+// 
+//         //-----------------------------------------------------------------------------------------
+//         //Add Schur nodes (generally pressure type variables) to be solved
+//         {
+//           for(int indexSol = 0; indexSol < _SolPdeIndex.size(); indexSol++) {
+//             if(!ThisVaribaleIsNonSchur[indexSol]) {
+//               unsigned SolPdeIndex = _SolPdeIndex[indexSol];
+//               unsigned SolType = _SolType[SolPdeIndex];
+//               unsigned nvei = _msh->GetElementDofNumber(iel, SolType);
+// 
+//               for(unsigned ii = 0; ii < nvei; ii++) {
+//                 unsigned inode_Metis = _msh->GetSolutionDof(ii, iel, SolType);
+//                 unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, ii, iel);
+// 
+//                 if(inode_Metis >= _msh->_dofOffset[SolType][iproc] &&
+//                     inode_Metis <  _msh->_dofOffset[SolType][iproc + 1]) {
+//                   if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
+//                     owned[kkdof - DofOffset] = true;
+//                     _localIsIndex[vb_index][PAsize] = kkdof;
+//                     indexa[kkdof - DofOffset] = PAsize++;
+//                   }
+// 
+//                   if(indexb[kkdof - DofOffset] == DofOffsetSize) {
+//                     _overlappingIsIndex[vb_index][PBsize] = kkdof;
+//                     indexb[kkdof - DofOffset] = PBsize++;
+//                   }
+//                 }
+//                 else {
+//                   mymap[kkdof] = true;
+//                 }
+//               }
+//             }
+//           }
+//         }
+//         //-----------------------------------------------------------------------------------------
+//       }
+// 
+//       // *** re-initialize indeces(a,c,d)
+//       for(PetscInt i = 0; i < PAsize; i++) {
+//         indexa[_localIsIndex[vb_index][i] - DofOffset] = DofOffsetSize;
+//       }
+// 
+//       for(PetscInt i = 0; i < PBsize; i++) {
+//         indexb[_overlappingIsIndex[vb_index][i] - DofOffset] = DofOffsetSize;
+//       }
+// 
+//       for(PetscInt i = 0; i < Csize; i++) {
+//         indexc[indexci[i]] = ElemOffsetSize;
+//       }
+// 
+//       _localIsIndex[vb_index].resize(PAsize);
+//       std::vector < PetscInt >(_localIsIndex[vb_index]).swap(_localIsIndex[vb_index]);
+// 
+//       _overlappingIsIndex[vb_index].resize(PBsize + mymap.size());
+//       int i = 0;
+//       for(std::map<int, bool>::iterator it = mymap.begin(); it != mymap.end(); ++it, ++i) {
+//         _overlappingIsIndex[vb_index][PBsize + i] = it->first;
+//       }
+//       std::vector < PetscInt >(_overlappingIsIndex[vb_index]).swap(_overlappingIsIndex[vb_index]);
+//       
+//      
+//       mymap.clear();
+// 
+//       std::sort(_localIsIndex[vb_index].begin(), _localIsIndex[vb_index].end());
+//       std::sort(_overlappingIsIndex[vb_index].begin(), _overlappingIsIndex[vb_index].end());
+// 
+// 
+//     }
+// 
+//     //BEGIN Generate std::vector<IS> for ASM PC ***********
+//     _localIs.resize(_localIsIndex.size());
+//     _overlappingIs.resize(_overlappingIsIndex.size());
+// 
+//     for(unsigned vb_index = 0; vb_index < _localIsIndex.size(); vb_index++) {
+//       ISCreateGeneral(MPI_COMM_SELF, _localIsIndex[vb_index].size(), &_localIsIndex[vb_index][0], PETSC_USE_POINTER, &_localIs[vb_index]);
+//       ISCreateGeneral(MPI_COMM_SELF, _overlappingIsIndex[vb_index].size(), &_overlappingIsIndex[vb_index][0], PETSC_USE_POINTER, &_overlappingIs[vb_index]);
+//     }
+// 
+//     //END Generate std::vector<IS> for ASM PC ***********
+
+    return;
+
+//    
+    
+    
+    
+  }
+  
 }
 

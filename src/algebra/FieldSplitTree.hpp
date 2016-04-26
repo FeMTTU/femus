@@ -16,7 +16,6 @@
 #ifndef __femus_enums_FieldSplitTree_hpp__
 #define __femus_enums_FieldSplitTree_hpp__
 
-
 #include <cstdlib>
 #include <iostream>
 
@@ -35,6 +34,9 @@
 #include "Mesh.hpp"
 
 namespace femus {
+  
+  class FieldSplitPetscLinearEquationSolver;
+  
   class FieldSplitTree {
     public:
       //single split constructor
@@ -50,8 +52,11 @@ namespace femus {
 
       void PrintFieldSplitTree( const unsigned& counter = 0 );
 
-      void BuildIndexSet( const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc, const unsigned& nprocs, const unsigned& level );
+      void BuildIndexSet( const std::vector< std::vector < unsigned > >& KKoffset, const unsigned& iproc, 
+			  const unsigned& nprocs, const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver);
 
+      void BuildASMIndexSet( const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver);
+      
       void SetPC( KSP& ksp, const unsigned& level) ; 
 
   
@@ -113,7 +118,7 @@ namespace femus {
       SchurFactType _schurFactType;
       SchurPreType _schurPreType;
       
-      std::vector< std::vector < unsigned > > _MatrixOffset;
+      std::vector < std::vector< std::vector < unsigned > > >_MatrixOffset;
       
       //for ASM pourposes
       std::vector< std::vector < std::vector <PetscInt> > > _overlappingIsIndex;
