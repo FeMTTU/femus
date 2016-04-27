@@ -40,19 +40,19 @@ int main(int argc, char** args) {
 //   const elem_type * _finiteElement4 = new const elem_type_3D("wedge","disc_linear","seventh");
 //   std::cout<<std::endl;
 //   const elem_type * _finiteElement5 = new const elem_type_3D("tet","disc_linear","seventh");
-//   
+//
   //const elem_type * _finiteElement1 = new const elem_type_2D("tri","quadratic","seventh");
   //const elem_type * _finiteElement2 = new const elem_type_2D("tri","biquadratic","seventh");
-  
+
   //const elem_type * _finiteElement3 = new const elem_type_3D("wedge","quadratic","seventh");
   //const elem_type * _finiteElement4 = new const elem_type_3D("wedge","biquadratic","third");
-  
+
   //const elem_type * _finiteElement5 = new const elem_type_3D("tet","quadratic","seventh");
   //const elem_type * _finiteElement6 = new const elem_type_3D("tet","biquadratic","seventh");
-  
-  
-  
-  
+
+
+
+
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
@@ -61,8 +61,8 @@ int main(int argc, char** args) {
   mlMsh.ReadCoarseMesh("./input/tet2.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  
-  
+
+
   unsigned dim = mlMsh.GetDimension();
   unsigned maxNumberOfMeshes = 5;
   //vector < vector < double > > l2Norm;
@@ -72,7 +72,7 @@ int main(int argc, char** args) {
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-  
+
   mlMsh.PrintInfo();
 
   MultiLevelSolution mlSol(&mlMsh);
@@ -81,36 +81,32 @@ int main(int argc, char** args) {
 
   mlSol.AddSolution("V", LAGRANGE, SECOND);
   mlSol.AddSolution("W", DISCONTINOUS_POLYNOMIAL, FIRST);
-  
+
   mlSol.Initialize("All");
-  
+
   mlSol.Initialize("V",InitalValueV);
   mlSol.Initialize("W",InitalValueW);
-  
+
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
 
   mlSol.GenerateBdc("All");
-  
-  
-  MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
-  meshcoarser.FlagAllElementsToBeRefined();
-  mlMsh.AddAMRMeshLevel();
-  mlSol.AddSolutionLevel();
-  mlSol.RefineSolution(numberOfUniformLevels);
-  
-  MeshRefinement meshcoarser1(*mlMsh.GetLevel(numberOfUniformLevels));
-  meshcoarser1.FlagAllElementsToBeRefined();
-  mlMsh.AddAMRMeshLevel();
-  mlSol.AddSolutionLevel();
-  mlSol.RefineSolution(numberOfUniformLevels+1);
-  
+
+  for(int k = 0; k < 3; k++){
+    MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
+    meshcoarser.FlagAllElementsToBeRefined();
+    mlMsh.AddAMRMeshLevel();
+    mlSol.AddSolutionLevel();
+    mlSol.RefineSolution(numberOfUniformLevels);
+    numberOfUniformLevels += 1;
+  }
+
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-  
-  
+
+
   return 0;
 }
 

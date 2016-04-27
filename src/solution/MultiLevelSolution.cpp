@@ -261,7 +261,7 @@ namespace femus {
 
 		value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
 
-		 unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(2, iel, sol_type);
+		 unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(3, iel, sol_type);
 
                 _solution[ig]->_Sol[i]->set(solDof, value);
 
