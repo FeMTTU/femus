@@ -61,7 +61,7 @@ int main(int argc, char** args) {
   if (dim == 2) {
     maxNumberOfMeshes = 7;
   } else {
-    maxNumberOfMeshes = 6;
+    maxNumberOfMeshes = 5;
   }
 
   vector < vector < double > > l2Norm;
