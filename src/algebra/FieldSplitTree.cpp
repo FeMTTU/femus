@@ -14,9 +14,11 @@
   =========================================================================*/
 
 #include <map>
+#include <algorithm> 
 
 #include "FieldSplitTree.hpp"
 #include "FieldSplitPetscLinearEquationSolver.hpp"
+#include "MeshASMPartitioning.hpp"   
 
 namespace femus {
 
@@ -126,8 +128,17 @@ namespace femus {
         for(unsigned j = 0; j < _isSplit[i].size(); j++) {
           ISDestroy(&_isSplit[i][j]);
         }
-      }
+      }   
     }
+    
+    for(unsigned i = 0; i < _localIs.size(); i++) {
+      for(unsigned j = 0; j < _localIs[i].size(); j++) {
+        ISDestroy(&_localIs[i][j]);
+	ISDestroy(& _overlappingIs[i][j]);
+      }
+    }   
+    
+    
     for(unsigned i = 0; i < _isSplitIndexPt.size(); i++) {
       delete [] _isSplitIndexPt[i];
     }
@@ -630,7 +641,13 @@ namespace femus {
   }
   
 
+  
+ 
+  
   void FieldSplitTree::BuildASMIndexSet( const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver){
+    
+    
+    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
     
     Mesh* msh = solver->_msh;
     
@@ -664,168 +681,173 @@ namespace femus {
     vector < unsigned > indexc(ElemOffsetSize, ElemOffsetSize);
 
     vector < vector < unsigned > > block_elements;
+    unsigned _elementBlockNumber[2];
+    vector <unsigned> _blockTypeRange;
+    
+    _elementBlockNumber[0] = 16;
+    _elementBlockNumber[1] = 16;
 
-//     MeshASMPartitioning meshasmpartitioning(*_msh);
-// 
-//     meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange);
-// 
-//     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(), true);
-// 
-//     for(unsigned iind = variable_to_be_solved.size() - _NSchurVar; iind < variable_to_be_solved.size(); iind++) {
-//       unsigned PdeIndexSol = variable_to_be_solved[iind];
-//       ThisVaribaleIsNonSchur[PdeIndexSol] = false;
-//     }
-// 
-//     // *** Start Vanka Block ***
-// 
-//     _localIsIndex.resize(block_elements.size());
-//     _overlappingIsIndex.resize(block_elements.size());
-// 
-//     for(int vb_index = 0; vb_index < block_elements.size(); vb_index++) { //loop on the vanka-blocks
-//       _localIsIndex[vb_index].resize(DofOffsetSize);
-//       _overlappingIsIndex[vb_index].resize(DofOffsetSize);
-// 
-//       PetscInt PAsize = 0;
-//       PetscInt PBsize = 0;
-// 
-//       PetscInt Csize = 0;
-// 
-//       // ***************** NODE/ELEMENT SERCH *******************
-//       for(int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
-//         unsigned iel = block_elements[vb_index][kel];
-// 
-//         for(unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) { //loop on the element vertices
-//           unsigned inode = _msh->el->GetElementDofIndex(iel, i);
-//           const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
-//           //loop on the neighboring elemnets (!FastVankaBlock) or on iel only (FastVankaBlock) 
-// 	  unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
-//           for(unsigned j = 0; j < nve; j++) { 
-//             unsigned jel = (!FastVankaBlock) ? localElementNearVertexNumber[j] : iel;
-// 
-//             //add elements for velocity to be solved
-//             if(indexc[jel - ElemOffset] == ElemOffsetSize) {
-//               indexci[Csize] = jel - ElemOffset;
-//               indexc[jel - ElemOffset] = Csize++;
-// 
-//               //add non-schur variables to be solved
-//               for(int indexSol = 0; indexSol < _SolPdeIndex.size(); indexSol++) {
-//                 if(ThisVaribaleIsNonSchur[indexSol]) {
-//                   unsigned SolPdeIndex = _SolPdeIndex[indexSol];
-//                   unsigned SolType = _SolType[SolPdeIndex];
-//                   unsigned nvej = _msh->GetElementDofNumber(jel, SolType);
-// 
-//                   for(unsigned jj = 0; jj < nvej; jj++) {
-//                     unsigned jdof = _msh->GetSolutionDof(jj, jel, SolType);
-//                     unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, jj, jel);
-// 
-//                     if(jdof >= _msh->_dofOffset[SolType][iproc] &&
-//                         jdof <  _msh->_dofOffset[SolType][iproc + 1]) {
-//                       if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
-//                         owned[kkdof - DofOffset] = true;
-//                         _localIsIndex[vb_index][PAsize] = kkdof;
-//                         indexa[kkdof - DofOffset] = PAsize++;
-//                       }
-// 
-//                       if(indexb[kkdof - DofOffset] == DofOffsetSize) {
-//                         _overlappingIsIndex[vb_index][PBsize] = kkdof;
-//                         indexb[kkdof - DofOffset] = PBsize++;
-//                       }
-//                     }
-//                     else {
-//                       mymap[kkdof] = true;
-//                     }
-//                   }
-//                 }
-//               }
-//             }
-//           }
-//         }
-// 
-//         //-----------------------------------------------------------------------------------------
-//         //Add Schur nodes (generally pressure type variables) to be solved
-//         {
-//           for(int indexSol = 0; indexSol < _SolPdeIndex.size(); indexSol++) {
-//             if(!ThisVaribaleIsNonSchur[indexSol]) {
-//               unsigned SolPdeIndex = _SolPdeIndex[indexSol];
-//               unsigned SolType = _SolType[SolPdeIndex];
-//               unsigned nvei = _msh->GetElementDofNumber(iel, SolType);
-// 
-//               for(unsigned ii = 0; ii < nvei; ii++) {
-//                 unsigned inode_Metis = _msh->GetSolutionDof(ii, iel, SolType);
-//                 unsigned kkdof = GetSystemDof(SolPdeIndex, indexSol, ii, iel);
-// 
-//                 if(inode_Metis >= _msh->_dofOffset[SolType][iproc] &&
-//                     inode_Metis <  _msh->_dofOffset[SolType][iproc + 1]) {
-//                   if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
-//                     owned[kkdof - DofOffset] = true;
-//                     _localIsIndex[vb_index][PAsize] = kkdof;
-//                     indexa[kkdof - DofOffset] = PAsize++;
-//                   }
-// 
-//                   if(indexb[kkdof - DofOffset] == DofOffsetSize) {
-//                     _overlappingIsIndex[vb_index][PBsize] = kkdof;
-//                     indexb[kkdof - DofOffset] = PBsize++;
-//                   }
-//                 }
-//                 else {
-//                   mymap[kkdof] = true;
-//                 }
-//               }
-//             }
-//           }
-//         }
-//         //-----------------------------------------------------------------------------------------
-//       }
-// 
-//       // *** re-initialize indeces(a,c,d)
-//       for(PetscInt i = 0; i < PAsize; i++) {
-//         indexa[_localIsIndex[vb_index][i] - DofOffset] = DofOffsetSize;
-//       }
-// 
-//       for(PetscInt i = 0; i < PBsize; i++) {
-//         indexb[_overlappingIsIndex[vb_index][i] - DofOffset] = DofOffsetSize;
-//       }
-// 
-//       for(PetscInt i = 0; i < Csize; i++) {
-//         indexc[indexci[i]] = ElemOffsetSize;
-//       }
-// 
-//       _localIsIndex[vb_index].resize(PAsize);
-//       std::vector < PetscInt >(_localIsIndex[vb_index]).swap(_localIsIndex[vb_index]);
-// 
-//       _overlappingIsIndex[vb_index].resize(PBsize + mymap.size());
-//       int i = 0;
-//       for(std::map<int, bool>::iterator it = mymap.begin(); it != mymap.end(); ++it, ++i) {
-//         _overlappingIsIndex[vb_index][PBsize + i] = it->first;
-//       }
-//       std::vector < PetscInt >(_overlappingIsIndex[vb_index]).swap(_overlappingIsIndex[vb_index]);
-//       
-//      
-//       mymap.clear();
-// 
-//       std::sort(_localIsIndex[vb_index].begin(), _localIsIndex[vb_index].end());
-//       std::sort(_overlappingIsIndex[vb_index].begin(), _overlappingIsIndex[vb_index].end());
-// 
-// 
-//     }
-// 
-//     //BEGIN Generate std::vector<IS> for ASM PC ***********
-//     _localIs.resize(_localIsIndex.size());
-//     _overlappingIs.resize(_overlappingIsIndex.size());
-// 
-//     for(unsigned vb_index = 0; vb_index < _localIsIndex.size(); vb_index++) {
-//       ISCreateGeneral(MPI_COMM_SELF, _localIsIndex[vb_index].size(), &_localIsIndex[vb_index][0], PETSC_USE_POINTER, &_localIs[vb_index]);
-//       ISCreateGeneral(MPI_COMM_SELF, _overlappingIsIndex[vb_index].size(), &_overlappingIsIndex[vb_index][0], PETSC_USE_POINTER, &_overlappingIs[vb_index]);
-//     }
-// 
-//     //END Generate std::vector<IS> for ASM PC ***********
+    MeshASMPartitioning meshasmpartitioning(*msh);
+ 
+    meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange);
+ 
+    vector <bool> ThisVaribaleIsNonSchur(_solutionType.size(), true);
+ 
+    for(unsigned i = _solutionType.size() - _NSchurVar; i < _solutionType.size(); i++) {
+       ThisVaribaleIsNonSchur[i] = false;
+    }
+ 
+    // *** Start Vanka Block ***
 
+    _localIsIndex.resize(level);
+    _overlappingIsIndex.resize(level);
+    
+    _localIsIndex[level-1].resize(block_elements.size());
+    _overlappingIsIndex[level-1].resize(block_elements.size());
+ 
+    for(int vb_index = 0; vb_index < block_elements.size(); vb_index++) { //loop on the vanka-blocks
+      _localIsIndex[level-1][vb_index].resize(DofOffsetSize);
+      _overlappingIsIndex[level-1][vb_index].resize(DofOffsetSize);
+ 
+      PetscInt PAsize = 0;
+      PetscInt PBsize = 0;
+ 
+      PetscInt Csize = 0;
+ 
+      // ***************** NODE/ELEMENT SERCH *******************
+      for(int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
+        unsigned iel = block_elements[vb_index][kel];
+ 
+        for(unsigned i = 0; i < msh->GetElementDofNumber(iel, 0); i++) { //loop on the element vertices
+           unsigned inode = msh->el->GetElementDofIndex(iel, i);
+           const std::vector < unsigned > & localElementNearVertexNumber = msh->el->GetLocalElementNearVertex(inode);
+           //loop on the neighboring elemnets (!FastVankaBlock) or on iel only (FastVankaBlock) 
+ 	  unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
+          for(unsigned j = 0; j < nve; j++) { 
+             unsigned jel = (!FastVankaBlock) ? localElementNearVertexNumber[j] : iel;
+ 
+             //add elements for velocity to be solved
+             if(indexc[jel - ElemOffset] == ElemOffsetSize) {
+               indexci[Csize] = jel - ElemOffset;
+               indexc[jel - ElemOffset] = Csize++;
+ 
+               //add non-schur variables to be solved
+               for(int indexSol = 0; indexSol < _solutionType.size(); indexSol++) {
+                 if(ThisVaribaleIsNonSchur[indexSol]) {
+                  unsigned SolPdeIndex = indexSol;
+                  unsigned SolType = _solutionType[SolPdeIndex];
+                  unsigned nvej = msh->GetElementDofNumber(jel, SolType);
+
+                  for(unsigned jj = 0; jj < nvej; jj++) {
+                    unsigned jdof = msh->GetSolutionDof(jj, jel, SolType);
+		    
+		    unsigned kkdof = solver->GetSystemDof(SolType, indexSol, jj, jel, _MatrixOffset[level-1]);
+
+                    if(jdof >= _MatrixOffset[level-1][SolType][iproc] &&
+                        jdof < _MatrixOffset[level-1][SolType][iproc + 1]) {
+                      if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
+                        owned[kkdof - DofOffset] = true;
+                        _localIsIndex[level-1][vb_index][PAsize] = kkdof;
+                        indexa[kkdof - DofOffset] = PAsize++;
+                      }
+
+                      if(indexb[kkdof - DofOffset] == DofOffsetSize) {
+                        _overlappingIsIndex[level-1][vb_index][PBsize] = kkdof;
+                        indexb[kkdof - DofOffset] = PBsize++;
+                      }
+                    }
+                    else {
+                      mymap[kkdof] = true;
+                    }
+                  }
+                }
+              }
+	     }
+           }
+         }
+
+        //-----------------------------------------------------------------------------------------
+        //Add Schur nodes (generally pressure type variables) to be solved
+        {
+          for(int indexSol = 0; indexSol < _solutionType.size(); indexSol++) {
+            if(!ThisVaribaleIsNonSchur[indexSol]) {
+              unsigned SolPdeIndex = indexSol;
+              unsigned SolType = _solutionType[SolPdeIndex];
+              unsigned nvei = msh->GetElementDofNumber(iel, SolType);
+
+              for(unsigned ii = 0; ii < nvei; ii++) {
+                unsigned inode_Metis = msh->GetSolutionDof(ii, iel, SolType);
+                
+                unsigned kkdof = solver->GetSystemDof(SolType, indexSol, ii, iel, _MatrixOffset[level-1]);
+                
+                if(inode_Metis >= msh->_dofOffset[SolType][iproc] &&
+                    inode_Metis <  msh->_dofOffset[SolType][iproc + 1]) {
+                  if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
+                    owned[kkdof - DofOffset] = true;
+                    _localIsIndex[level-1][vb_index][PAsize] = kkdof;
+                    indexa[kkdof - DofOffset] = PAsize++;
+                  }
+
+                  if(indexb[kkdof - DofOffset] == DofOffsetSize) {
+                    _overlappingIsIndex[level-1][vb_index][PBsize] = kkdof;
+                    indexb[kkdof - DofOffset] = PBsize++;
+                  }
+                }
+                else {
+                  mymap[kkdof] = true;
+                }
+              }
+            }
+          }
+        }
+        //-----------------------------------------------------------------------------------------
+       }
+
+      // *** re-initialize indeces(a,c,d)
+      for(PetscInt i = 0; i < PAsize; i++) {
+        indexa[_localIsIndex[level-1][vb_index][i] - DofOffset] = DofOffsetSize;
+      }
+
+      for(PetscInt i = 0; i < PBsize; i++) {
+        indexb[_overlappingIsIndex[level-1][vb_index][i] - DofOffset] = DofOffsetSize;
+      }
+
+      for(PetscInt i = 0; i < Csize; i++) {
+        indexc[indexci[i]] = ElemOffsetSize;
+      }
+
+      _localIsIndex[level-1][vb_index].resize(PAsize);
+      std::vector < PetscInt >(_localIsIndex[level-1][vb_index]).swap(_localIsIndex[level-1][vb_index]);
+
+      _overlappingIsIndex[level-1][vb_index].resize(PBsize + mymap.size());
+      int i = 0;
+      for(std::map<int, bool>::iterator it = mymap.begin(); it != mymap.end(); ++it, ++i) {
+        _overlappingIsIndex[level-1][vb_index][PBsize + i] = it->first;
+      }
+      std::vector < PetscInt >(_overlappingIsIndex[level-1][vb_index]).swap(_overlappingIsIndex[level-1][vb_index]);
+      
+     
+      mymap.clear();
+
+      std::sort(_localIsIndex[level-1][vb_index].begin(), _localIsIndex[level-1][vb_index].end());
+      std::sort(_overlappingIsIndex[level-1][vb_index].begin(), _overlappingIsIndex[level-1][vb_index].end());
+
+
+     }
+
+    //BEGIN Generate std::vector<IS> for ASM PC ***********
+    _localIs.resize(level);
+    _overlappingIs.resize(level);
+    _localIs[level-1].resize(_localIsIndex[level-1].size());
+    _overlappingIs[level-1].resize(_overlappingIsIndex[level-1].size());
+
+    for(unsigned vb_index = 0; vb_index < _localIsIndex[level-1].size(); vb_index++) {
+      ISCreateGeneral(MPI_COMM_SELF, _localIsIndex[level-1][vb_index].size(), &_localIsIndex[level-1][vb_index][0], PETSC_USE_POINTER, &_localIs[level-1][vb_index]);
+      ISCreateGeneral(MPI_COMM_SELF, _overlappingIsIndex[level-1][vb_index].size(), &_overlappingIsIndex[level-1][vb_index][0], PETSC_USE_POINTER, &_overlappingIs[level-1][vb_index]);
+    }
+    //END Generate std::vector<IS> for ASM PC ***********
     return;
-
-//    
-    
-    
-    
+ 
   }
   
 }

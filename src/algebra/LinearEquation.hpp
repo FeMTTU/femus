@@ -69,8 +69,8 @@ public:
 	                const unsigned &ielc, const unsigned &i0,const unsigned &i1,
 		        const Mesh* mshc) const;
 			
-  unsigned GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
-                        const unsigned &i, const unsigned &iel, const vector < vector <unsigned> > &otherKKoffset) const;
+  unsigned GetSystemDof(const unsigned &soltype, const unsigned &kkindex_sol,
+			const unsigned &i, const unsigned &iel, const vector < vector <unsigned> > &otherKKoffset) const;
 			
 
   /** To be Added */
