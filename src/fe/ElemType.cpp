@@ -63,6 +63,8 @@ namespace femus {
     }
 
   }
+  
+
 
 
 //----------------------------------------------------------------------------------------------------
@@ -689,12 +691,17 @@ namespace femus {
       if(_SolType == 4 && i / 4 >= 1) { //if piece_wise_linear derivatives
         for(int k = 0; k <  _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect the fine elements
-          double xv = * (linearElement->getX(*(_pt_basis->getFine2CoarseVertexMapping(i % 4) + k)) + i / 4 - 1);
-          jac[1] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * xv;
-          jac[2] += linearElement->eval_dphidy(linearElement->getIND(k), _X[i]) * xv;
+	  double xv = * (linearElement->getX(*(_pt_basis->getFine2CoarseVertexMapping(i % 4) + k)) + 0);
+          double yv = * (linearElement->getX(*(_pt_basis->getFine2CoarseVertexMapping(i % 4) + k)) + 1);
+          if(i / 4 == 1) {
+            jac[1] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * yv;
+          }
+          else if(i / 4 == 2) {
+            jac[1] += linearElement->eval_dphidy(linearElement->getIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidy(linearElement->getIND(k), _X[i]) * yv;
+          }
         }
-
-        //std::cout << jac[0] <<" "<< jac[1]<<" "<< jac[2]<<std::endl;
       }
 
       for(int j = 0; j < _nc; j++) {
@@ -728,11 +735,17 @@ namespace femus {
       if(_SolType == 4 && i / 4 >= 1) { //if piece_wise_linear derivatives
         for(int k = 0; k <  _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect the fine elements
-          double xv = * (linearElement->getX(*(_pt_basis->getFine2CoarseVertexMapping(i % 4) + k)) + i / 4 - 1);
-          jac[1] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * xv;
-          jac[2] += linearElement->eval_dphidy(linearElement->getIND(k), _X[i]) * xv;
+	  double xv = * (linearElement->getX(*(_pt_basis->getFine2CoarseVertexMapping(i % 4) + k)) + 0);
+          double yv = * (linearElement->getX(*(_pt_basis->getFine2CoarseVertexMapping(i % 4) + k)) + 1);
+          if(i / 4 == 1) {
+            jac[1] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * yv;
+          }
+          else if(i / 4 == 2) {
+            jac[1] += linearElement->eval_dphidy(linearElement->getIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidy(linearElement->getIND(k), _X[i]) * yv;
+          }
         }
-
         std::cout << jac[0] << " " << jac[1] << " " << jac[2] << std::endl;
       }
 
@@ -871,12 +884,9 @@ namespace femus {
       exit(0);
     }
 
-    unsigned elementType;
-
     if(!strcmp(geom_elem, "hex")) {  //HEX
 
       linearElement = new HexLinear;
-      elementType = 0;
 
       if(_SolType == 0) _pt_basis = new HexLinear;
       else if(_SolType == 1) _pt_basis = new HexQuadratic;
@@ -890,7 +900,6 @@ namespace femus {
     }
     else if(!strcmp(geom_elem, "wedge")) {  //WEDGE
       linearElement = new WedgeLinear;
-      elementType = 2;
 
       if(_SolType == 0) _pt_basis = new WedgeLinear;
       else if(_SolType == 1) _pt_basis = new WedgeQuadratic;
@@ -904,7 +913,6 @@ namespace femus {
     }
     else if(!strcmp(geom_elem, "tet")) {  //TETRAHEDRA
       linearElement = new TetLinear;
-      elementType = 1;
 
       if(_SolType == 0) _pt_basis = new TetLinear;
       else if(_SolType == 1) _pt_basis = new TetQuadratic;

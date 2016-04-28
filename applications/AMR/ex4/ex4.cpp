@@ -26,6 +26,7 @@ double InitalValueV(const std::vector < double >& x) {
   return 1+x[0]-x[1];
 }
 
+
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -105,7 +106,36 @@ int main(int argc, char** args) {
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-
+  
+  //********************************************************************
+  
+  // PROVA PER CREARE COORDINATE QUADRATO
+  double x[25][2]= { 
+    {-1,-1},{1,-1},{1, 1},{-1, 1}       
+  };
+  
+  for(int i=4; i<8; i++){
+    x[i][0] = (x[i%4][0]+x[(i+1)%4][0])/2; //coord x punti medi quadrato coarse
+    x[i][1] = (x[i%4][1]+x[(i+1)%4][1])/2; //coord y punti medi quadrato coarse
+    x[8][0] += x[i%4][0]/4; // coord x baricentro quadrato coarse
+    x[8][1] += x[i%4][1]/4; // coord y baricentro quadrato coarse
+    std::cout << x[i][0] << " " << x[i][1] << " " << std::endl;
+  }
+  std::cout << x[8][0] << " " << x[8][1] << " " << std::endl;
+  
+// TROVA KVERT_IND (0,4), (1,5), (2,6), (3,7)
+//   for(int i=0; i<4; i++){
+//     x[i+9][0] = (x[i][0]+x[i+4][0])/2; //coord x
+//     x[i+9][1] = (x[i][1]+x[i+4][1])/2; //coord y
+//     std::cout << x[i+9][0] << " " << x[i+9][1] << " " << std::endl;
+//   }
+// OR
+//     for(int i=8; i<12; i++){
+//     x[i+1][0] = (x[i%4][0]+x[i%4+4][0])/2; //coord x
+//     x[i+1][1] = (x[i%4][1]+x[i%4+4][1])/2; //coord y
+//     std::cout << x[i+1][0] << " " << x[i+1][1] << " " << std::endl;
+//   }
+    
 
   return 0;
 }
