@@ -32,7 +32,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
- mlMsh.ReadCoarseMesh( "./input/cubeHex.neu", "seventh", scalingFactor );
+ mlMsh.ReadCoarseMesh( "./input/prism3D.neu", "seventh", scalingFactor );
   
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   unsigned numberOfUniformLevels = 1;
@@ -162,12 +162,12 @@ int main(int argc, char** args) {
 
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
-// TESTS ON THE MESH squareHex3D.neu (tests ran with 2 procs)
+// TESTS ON THE MESH cubeHex.neu (tests run with 2 procs)
 
-// Test 1
-//x[0]=-0.3;  //  point 1409 shared by element 97,112 (proc 2) and 45 and 55 (proc 1) It says the marker is on element 45, yes!
-//x[1]=0.1; // 
-//x[2]=0.5; 
+//Test 1
+// x[0]=-0.3;  //  point 1409 shared by element 97,112 (proc 2) and 45 and 55 (proc 1) It says the marker is on element 45, yes!
+// x[1]=0.1; // 
+// x[2]=0.5; 
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -178,10 +178,10 @@ int main(int argc, char** args) {
  
  ////////////////////////////////////////////////////////////////////////////////////////
  
- // //Test 3: the marker is to the right of the midpoint of an edge of element 60 
- //x[0]=-0.5;  //
- //x[1]=0.5; // 
- //x[2]=0.005; 
+//  //Test 3: the marker is to the right of the midpoint of an edge of element 60 
+//  x[0]=-0.5;  //
+//  x[1]=0.5; // 
+//  x[2]=0.005; 
 
   ////////////////////////////////////////////////////////////////////////////////////////
  
@@ -192,17 +192,17 @@ int main(int argc, char** args) {
  
   ////////////////////////////////////////////////////////////////////////////////////////
  
-   // //Test 5: the marker close to is a vertex of element 60 but it belongs to element 62
+   // //Test 5: the marker is close to a vertex of element 60 but it belongs to element 62
 /* x[0]=-0.5;  //
  x[1]=0.5; // 
- x[2]=-0.10000001;*/ // If you add one more zero then it will be in element 60.
+ x[2]=-0.10000001; */// If you add one more zero then it will be in element 60.
  
   ////////////////////////////////////////////////////////////////////////////////////////
   
      // //Test 6: the marker is a little below a vertex of element 60 (it goes outside the domain)
- x[0]=-0.5000001;  //
- x[1]=0.5; // 
- x[2]=-0.05; //
+//  x[0]=-0.5000001;  //
+//  x[1]=0.5; // 
+//  x[2]=-0.05; //
 
   ////////////////////////////////////////////////////////////////////////////////////////
     
@@ -211,16 +211,32 @@ int main(int argc, char** args) {
 //  x[1]=0.1; // 
 //  x[2]=0.2; //
 
+
+/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
+
+// TESTS ON THE MESH prism3D.neu (tests run with 2 procs)
+
+//Test 1 :  element 20   OK
+// x[0] = -0.5;
+// x[1] = 0.;
+// x[2] = 0.;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+//Test 2 :  
+x[0] = 0.1;
+x[1] = 0.1;
+x[2] = 0.1;
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
   Marker a( x, VOLUME, mlMsh.GetLevel(0), true );
   //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
   
   
-  std::vector < double > y = a.GetMarkerCoordinates();
+ std::vector < double > y = a.GetMarkerCoordinates();
   
-  std::cout<< " The coordinates of the marker are " << y[0] << " ," << y[1] << " ," <<y[2]<<std::endl;
-  std::cout << " The marker type is " <<  a.GetMarkerType() <<std::endl;
+ std::cout<< " The coordinates of the marker are " << y[0] << " ," << y[1] << " ," <<y[2]<<std::endl;
+ std::cout << " The marker type is " <<  a.GetMarkerType() <<std::endl;
   
   
   // print mesh
