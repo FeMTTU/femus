@@ -122,7 +122,8 @@ void Marker::GetElement(const bool &debug) {
     bool pointIsOutsideTheDomain = false;
 
     std::vector< unsigned > nextElem(_nprocs, UINT_MAX);
-    unsigned previousElem = iel;
+    std::vector< unsigned > previousElem(_nprocs, UINT_MAX);
+    previousElem[_iproc] = iel;
     unsigned nextProc = _iproc;
 
     while(!elementHasBeenFound) {
@@ -130,12 +131,12 @@ void Marker::GetElement(const bool &debug) {
         //BEGIN next element search
         while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
             if(dim == 2) {
-                nextElem[_iproc] = GetNextElement2D(dim, iel, previousElem);
+                nextElem[_iproc] = GetNextElement2D(dim, iel, previousElem[_iproc]);
             }
             else if(dim == 3) {
-                nextElem[_iproc] = GetNextElement3D(dim, iel, previousElem);
+                nextElem[_iproc] = GetNextElement3D(dim, iel, previousElem[_iproc]);
             }
-            previousElem = iel;
+            previousElem[_iproc] = iel;
 
             if(nextElem[_iproc] == iel) {
                 _elem = iel;
@@ -211,10 +212,12 @@ void Marker::GetElement(const bool &debug) {
         if(!elementHasBeenFound) {
             if(processorMarkerFlag[_iproc] == 2) {
                 MPI_Send(&nextElem[_iproc], 1, MPI_UNSIGNED, nextProc, 1 , PETSC_COMM_WORLD);
+		MPI_Send(&previousElem[_iproc], 1, MPI_UNSIGNED, nextProc, 2 , PETSC_COMM_WORLD);
             }
             for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
                 if(processorMarkerFlag[jproc] == 3) {
                     MPI_Recv(&nextElem[jproc], 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+		    MPI_Recv(&previousElem[jproc], 1, MPI_UNSIGNED, jproc, 2 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                 }
             }
 
@@ -244,7 +247,9 @@ void Marker::GetElement(const bool &debug) {
 
                     if(modulusKel < modulus) {
                         iel = jel;
+			previousElem[_iproc] = previousElem[jproc];
                         modulus = modulusKel;
+			
                     }
                 }
                 //END SMART search
@@ -255,7 +260,7 @@ void Marker::GetElement(const bool &debug) {
                 pointIsOutsideTheDomain = false;
                 pointIsOutsideThisProcess = false;
                 nextProc = _iproc;
-                previousElem = iel;
+                //previousElem = iel;
             }
             else {
                 pointIsOutsideTheDomain = true;
@@ -394,13 +399,13 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
 
     for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
       
-      std::cout << " iface = " << iface << std::endl;
+     // std::cout << " iface = " << iface << std::endl;
         
         short unsigned currentElementType = _mesh->GetElementType(currentElem);
 
         for(unsigned itri = 0; itri < trianglesPerFace[currentElementType][iface]; itri ++) {
 
-	  std::cout << "faceIntersectionCounter  = " << faceIntersectionCounter  << " , " << " markerIsInElement = " << markerIsInElement <<  std::endl;
+	 // std::cout << "faceIntersectionCounter  = " << faceIntersectionCounter  << " , " << " markerIsInElement = " << markerIsInElement <<  std::endl;
 	  
             faceIntersectionCounterOld = faceIntersectionCounter ;
             bool lineIntersection = false;
@@ -527,7 +532,7 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
 
                         double  scalarProduct = q0 * A + q1 * B + q2 * C;
 
-                        std::cout << "scalarProduct = " << scalarProduct << std::endl;
+                      //  std::cout << "scalarProduct = " << scalarProduct << std::endl;
 
                         if(scalarProduct > 0) {  // this can be cancelled once the code is working ok
                         //    std::cout << "the marker is outside face " << iface <<  std::endl;
@@ -564,9 +569,9 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
                             }
                         }
                         else if(scalarProduct < 0) {
-                          std::cout << "increase scalarCount" <<std::endl; 
+                     //     std::cout << "increase scalarCount" <<std::endl; 
 			  scalarCount++;
-			  std::cout << "scalarCount = " << scalarCount << std::endl;
+			//  std::cout << "scalarCount = " << scalarCount << std::endl;
                         }
                     }
 
@@ -608,20 +613,37 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
 
         for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
 
+	    double xg[3]={0.,0.,0.};
+	    for (int i = 0;i<3;i ++){
+	       unsigned j = _mesh->GetLocalFaceVertexIndex(currentElem, iface, i);
+	       unsigned iDof = _mesh->GetSolutionDof(j, currentElem, 2);
+	       
+	        for(unsigned k = 0; k < dim; k++) {
+		  std::cout << (*_mesh->_topology->_Sol[k])(iDof)  <<" ";
+		  xg[k] += 1./3.*(*_mesh->_topology->_Sol[k])(iDof); 
+		}
+		std::cout<<std::endl;
+	    }
+	    std::cout<< "xg= "<<xg[0]<< " "<<xg[1]<<" "<<xg[2]<<std::endl;
+	  
             unsigned faceNodeNumber = _mesh->GetElementFaceDofNumber(currentElem, iface, 2);
             unsigned i = _mesh->GetLocalFaceVertexIndex(currentElem, iface, faceNodeNumber - 1);
-            // std::cout << i << " ";
+            //std::cout << faceNodeNumber-1 <<" "<<i << " ";
 
             unsigned faceCentralDof = _mesh->GetSolutionDof(i, currentElem, 2);
 
             //std::cout << "faceCentralDof =" << faceCentralDof << std::endl;
             double distance2 = 0;
             for(unsigned k = 0; k < dim; k++) {
+	        std::cout << (*_mesh->_topology->_Sol[k])(faceCentralDof)  <<" ";
                 double dk = (*_mesh->_topology->_Sol[k])(faceCentralDof) - _x[k];     // global extraction and local storage for the element coordinates
                 distance2 += dk * dk;
             }
+            std::cout<<std::endl;
             double ifaceModulus = sqrt(distance2);
 
+	    std::cout << faceCentralDof <<" "<<ifaceModulus<<std::endl;
+	    
             if(ifaceModulus < modulus) {
                 int jel = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
                 // std::cout << "jel = " << jel << "iface = " << iface <<  std::endl;
