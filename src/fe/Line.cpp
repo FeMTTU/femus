@@ -2,7 +2,7 @@
 
   Program: FEMUS
   Module: Line
-  Authors: Eugenio Aulisa
+  Authors: Eugenio Aulisa and Sara Calandrini
  
   Copyright (c) FEMTTU
   All rights reserved. 

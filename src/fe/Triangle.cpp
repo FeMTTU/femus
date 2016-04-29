@@ -2,7 +2,7 @@
 
   Program: FEMUS
   Module: Triangle
-  Authors: Eugenio Aulisa
+  Authors: Eugenio Aulisa and Sara Calandrini
  
   Copyright (c) FEMTTU
   All rights reserved. 
@@ -21,37 +21,25 @@
 
 namespace femus {
 
-  // triangle const vectors  
-   const double tri_lag::X[19][2]= {
+   const double tri_lag::Xc[7][2]= {
     {0, 0},         {1, 0},         {0, 1},
-    {0.5, 0},       {0.5, 0.5},     {0, 0.5},    {1./3., 1./3.},
-    {0.25,0},       {0.25,0.25},    {0,0.25},    
-    {0.75,0},       {0.75,0.25},    {0.5,0.25},  
-    {0.25,0.5},     {0.25,0.75},    {0,0.75},    
-    {1./6., 1./6.}, {2./3., 1./6.}, {1./6, 2./3.}
-  };
+    {0.5, 0},       {0.5, 0.5},     {0, 0.5},  
+    {1./3., 1./3.}
+   };
   
   const int tri_lag::IND[7][2]= {
     {0, 0},{2, 0},{0, 2},
     {1, 0},{1, 1},{0, 1},
     {7,7}
   };
-
-  /*const int tri_lag::KVERT_IND[15][2]= {
+  
+  const int tri_lag::KVERT_IND[19][2]= {
     {0,0},{1,1},{2,2},
     {0,1},{1,2},{2,0},
     {0,3},{0,4},{0,5},
     {1,3},{1,4},{1,5},
-    {2,3},{2,4},{2,5}
-  };*/
-  
-  const int tri_lag::KVERT_IND[19][2]= {
-    {0,0},{1,1},{2,2},
-    {0,1},{1,2},{2,0},{3,6},
-    {0,3},{0,4},{0,5},
-    {1,3},{1,4},{1,5},
     {2,3},{2,4},{2,5},
-    {0,6},{1,6},{2,6},
+    {3,6},{0,6},{1,6},{2,6},
   };
   
     const unsigned tri_lag::fine2CoarseVertexMapping[4][3]= { 
@@ -62,13 +50,6 @@ namespace femus {
   };
   
   //******************************************************************
-  
-//   const unsigned tri_const::fine2CoarseVertexMapping[4][3]= { 
-//      {0,3,5},
-//      {3,1,4},
-//      {5,4,2},
-//      {4,5,3} 
-//   };
   
   const double tri_const::X[12][2]={ 
     {1./6.,1./6.},{2./3.,1./6.},{1./6.,2./3.},{1./3.,1./3.},

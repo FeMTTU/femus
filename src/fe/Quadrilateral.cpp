@@ -2,7 +2,7 @@
 
   Program: FEMUS
   Module: Quadrilateral
-  Authors: Eugenio Aulisa
+  Authors: Eugenio Aulisa and Sara Calandrini
  
   Copyright (c) FEMTTU
   All rights reserved. 
@@ -25,14 +25,9 @@ namespace femus {
   
   //************************************************************
   
-  const double quad_lag::X[25][2]= { 
+  const double quad_lag::Xc[9][2]= { 
     {-1,-1},{1,-1},{1, 1},{-1, 1},
-    { 0,-1},{1, 0},{0, 1},{-1, 0},{0, 0},
-    {-0.5,-1},{0,-0.5},{-0.5,0},{-1,-0.5},
-    { 0.5,-1},{1,-0.5},{ 0.5,0},
-    { 1, 0.5},{0.5, 1},{0, 0.5},
-    {-0.5, 1},{-1,0.5},
-    {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5}
+    { 0,-1},{1, 0},{0, 1},{-1, 0},{0, 0}
   };
 
   const int quad_lag::IND[9][2]= { 
@@ -59,13 +54,6 @@ namespace femus {
   };
   
   //************************************************************
-  
-//   const unsigned quad_const::fine2CoarseVertexMapping[4][4]= { // coarse Mesh dof = f2CVM[element type][fine element][fine vertex]
-//     {0,4,8,7},
-//     {4,1,5,8},
-//     {8,5,2,6},
-//     {7,8,6,3}
-//   };
     
   const double quad_const::X[12][2]={ 
     {-0.5,-0.5},{0.5, -0.5},{0.5, 0.5},{-0.5, 0.5},

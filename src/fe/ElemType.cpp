@@ -618,7 +618,7 @@ namespace femus {
 
     //************ BEGIN FE and MG SETUP ******************
     if(!strcmp(order, "linear")) 	 _SolType = 0;
-    else if(!strcmp(order, "quadratic")) 	 _SolType = 1;
+    else if(!strcmp(order, "quadratic"))   _SolType = 1;
     else if(!strcmp(order, "biquadratic")) _SolType = 2;
     else if(!strcmp(order, "constant"))    _SolType = 3;
     else if(!strcmp(order, "disc_linear")) _SolType = 4;
@@ -665,6 +665,7 @@ namespace femus {
     _nlag[0] = _pt_basis->_nlag0;
     _nlag[1] = _pt_basis->_nlag1;
     _nlag[2] = _pt_basis->_nlag2;
+    _nlag[3] = _pt_basis->_nlag3;
 
     _IND = new const int * [_nc];
 
@@ -675,30 +676,34 @@ namespace femus {
     _KVERT_IND = new const int * [_nf];
     _X = new const double * [_nf];
 
+   
+
+    //***********************************************************
+       
+    if(_SolType <= 2) {
+      for(int i = 0; i < _nlag[3]; i++) {
+        double xm = 0., ym = 0.;
+        for(int k = 0; k <  _nlag[0]; k++) {
+          unsigned element = *(linearElement->getKVERT_IND(i) + 0);
+          double xv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(element) + k)) + 0);
+          double yv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(element) + k)) + 1);
+          unsigned vertex = *(linearElement->getKVERT_IND(i) + 1);
+          xm += linearElement->eval_phi(linearElement->getIND(k), linearElement->getXcoarse(vertex)) * xv;
+          ym += linearElement->eval_phi(linearElement->getIND(k), linearElement->getXcoarse(vertex)) * yv;
+        }
+        _pt_basis->setX(i, 0, xm);
+        _pt_basis->setX(i, 1, ym);
+
+        std::cout << *(_pt_basis->getX(i) + 0) << " " << *(_pt_basis->getX(i) + 1) << std::endl;
+      }
+    }
+    
+    
+    
     for(int i = 0; i < _nf; i++) {
       _KVERT_IND[i] = _pt_basis->getKVERT_IND(i);
       _X[i] = _pt_basis->getX(i);
     }
-
-    //***********************************************************
-    
-    //PROVA PER COSTRUIRE LE COORDINATE
-//     //double X[25][2]={}; //quadrato
-//     double X[19][2]={}; //triangolo
-//     //for(int i = 0; i < 25; i++) {
-//     for(int i = 0; i < 19; i++) {
-//       if(_SolType == 2 && i >= _nlag[2]) {
-//         for(int k = 0; k <  _nlag[0]; k++) {
-//           double xv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(*(linearElement->getKVERT_IND(i) + 0)) + k)) + 0);
-//           double yv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(*(linearElement->getKVERT_IND(i) + 0)) + k)) + 1);
-// 	  X[i][0] += linearElement->eval_phi(linearElement->getIND(k), linearElement->getX(*(linearElement->getKVERT_IND(i) + 1))) * xv;
-//           X[i][1] += linearElement->eval_phi(linearElement->getIND(k), linearElement->getX(*(linearElement->getKVERT_IND(i) + 1))) * yv;
-// 	  //std::cout << xv << " " << yv << std::endl;
-//         }
-//         std::cout << X[i][0] << " " << X[i][1] << std::endl;
-//       }
-//     }
-//     std::cout << std::endl;
     
     //***********************************************************
     
@@ -712,10 +717,8 @@ namespace femus {
       if(_SolType == 4 && i / 4 >= 1) { //if piece_wise_linear derivatives
         for(int k = 0; k <  _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect the fine elements
-// 	  double xv = * (linearElement->getX(*(_pt_basis->getFine2CoarseVertexMapping(i % 4) + k)) + 0);
-//        double yv = * (linearElement->getX(*(_pt_basis->getFine2CoarseVertexMapping(i % 4) + k)) + 1);
-	  double xv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(i % 4) + k)) + 0);
-          double yv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(i % 4) + k)) + 1);
+	  double xv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 4) + k)) + 0);
+          double yv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 4) + k)) + 1);
           if(i / 4 == 1) {
             jac[1] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * xv;
             jac[2] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * yv;
@@ -758,10 +761,8 @@ namespace femus {
       if(_SolType == 4 && i / 4 >= 1) { //if piece_wise_linear derivatives
         for(int k = 0; k <  _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect the fine elements
-// 	  double xv = * (linearElement->getX(*(_pt_basis->getFine2CoarseVertexMapping(i % 4) + k)) + 0);
-//        double yv = * (linearElement->getX(*(_pt_basis->getFine2CoarseVertexMapping(i % 4) + k)) + 1);
-	  double xv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(i % 4) + k)) + 0);
-          double yv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(i % 4) + k)) + 1);
+	  double xv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 4) + k)) + 0);
+          double yv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 4) + k)) + 1);
           if(i / 4 == 1) {
             jac[1] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * xv;
             jac[2] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * yv;
@@ -960,6 +961,8 @@ namespace femus {
     _nlag[0] = _pt_basis->_nlag0;
     _nlag[1] = _pt_basis->_nlag1;
     _nlag[2] = _pt_basis->_nlag2;
+    _nlag[3] = _pt_basis->_nlag3;
+
 
     _IND = new const int * [_nc];
 
@@ -970,34 +973,42 @@ namespace femus {
     _KVERT_IND = new const int * [_nf];
     _X = new const double * [_nf];
 
+    // ****************************************************
+    
+    if(_SolType <= 2) {
+      for(int i = 0; i < _nlag[3]; i++) {
+        double xm = 0., ym = 0., zm = 0.;
+        for(int k = 0; k <  _nlag[0]; k++) {
+          unsigned element = *(linearElement->getKVERT_IND(i) + 0);
+          double xv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(element) + k)) + 0);
+          double yv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(element) + k)) + 1);
+	  double zv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(element) + k)) + 2);
+         
+          unsigned vertex = *(linearElement->getKVERT_IND(i) + 1);
+          xm += linearElement->eval_phi(linearElement->getIND(k), linearElement->getXcoarse(vertex)) * xv;
+          ym += linearElement->eval_phi(linearElement->getIND(k), linearElement->getXcoarse(vertex)) * yv;
+	  zm += linearElement->eval_phi(linearElement->getIND(k), linearElement->getXcoarse(vertex)) * zv;
+        }
+        _pt_basis->setX(i, 0, xm);
+        _pt_basis->setX(i, 1, ym);
+	_pt_basis->setX(i, 2, zm);
+
+        std::cout << *(_pt_basis->getX(i) + 0) << " " << *(_pt_basis->getX(i) + 1) << " " << *(_pt_basis->getX(i) + 2) << std::endl;
+      }
+    }
+    
+    // ****************************************************
+    
     for(int i = 0; i < _nf; i++) {
       _KVERT_IND[i] = _pt_basis->getKVERT_IND(i);
       _X[i] = _pt_basis->getX(i);
     }
     
-    //***********************************************************
-    
-    //PROVA PER COSTRUIRE LE COORDINATE
-    //double X[125][3]={}; //hex
-    double X[67][3]={}; //tet
-    //for(int i = 0; i < 125; i++) {
-    for(int i = 0; i < 67; i++) {
-      if(_SolType == 2 && i >= _nlag[2]) {
-        for(int k = 0; k <  _nlag[0]; k++) {
-          double xv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(*(linearElement->getKVERT_IND(i) + 0)) + k)) + 0);
-          double yv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(*(linearElement->getKVERT_IND(i) + 0)) + k)) + 1);
-	  double zv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(*(linearElement->getKVERT_IND(i) + 0)) + k)) + 2);
-	  X[i][0] += linearElement->eval_phi(linearElement->getIND(k), linearElement->getX(*(linearElement->getKVERT_IND(i) + 1))) * xv;
-          X[i][1] += linearElement->eval_phi(linearElement->getIND(k), linearElement->getX(*(linearElement->getKVERT_IND(i) + 1))) * yv;
-	  X[i][2] += linearElement->eval_phi(linearElement->getIND(k), linearElement->getX(*(linearElement->getKVERT_IND(i) + 1))) * zv;
-        }
-        std::cout << X[i][0] << " " << X[i][1] << " " << X[i][2] << std::endl;
-      }
+    for(int i = 0; i < _nf; i++) {
+      _KVERT_IND[i] = _pt_basis->getKVERT_IND(i);
+      _X[i] = _pt_basis->getX(i);
     }
-    std::cout << std::endl;
     
-    //***********************************************************
-
     // local projection matrix evaluation
     int counter = 0;
 
@@ -1007,9 +1018,9 @@ namespace femus {
       if(_SolType == 4 && i / 8 >= 1) { //if piece_wise_linear derivatives
         for(int k = 0; k < _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect to the fine elements
-          double xv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 0);
-          double yv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 1);
-          double zv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 2);
+          double xv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 0);
+          double yv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 1);
+          double zv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 2);
           if(i / 8 == 1) {
             jac[1] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * xv;
             jac[2] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * yv;
@@ -1055,9 +1066,9 @@ namespace femus {
       if(_SolType == 4 && i / 8 >= 1) { //if piece_wise_linear derivatives
         for(int k = 0; k <  _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect to the fine elements
-          double xv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 0);
-          double yv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 1);
-          double zv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 2);
+          double xv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 0);
+          double yv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 1);
+          double zv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 8) + k)) + 2);
           if(i / 8 == 1) {
             jac[1] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * xv;
             jac[2] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * yv;

@@ -58,8 +58,8 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/triangle.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/wedge1.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/tet2.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/wedge1.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/tet2.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 

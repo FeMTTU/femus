@@ -159,7 +159,7 @@ protected:
 
   // member data
   unsigned _dim; /*Spatial dimension of the geometric element*/
-  int _nc,_nf,_nlag[3];
+  int _nc,_nf,_nlag[4];
   unsigned _SolType;   /*Finite Element Family flag*/
   const double **_X;
   const int **_IND;
