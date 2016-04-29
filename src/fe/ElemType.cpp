@@ -682,12 +682,12 @@ namespace femus {
 
     //***********************************************************
     
-    //PROVA PER COSTRUIRE LE CORDINATE
+    //PROVA PER COSTRUIRE LE COORDINATE
 //     //double X[25][2]={}; //quadrato
 //     double X[19][2]={}; //triangolo
 //     //for(int i = 0; i < 25; i++) {
 //     for(int i = 0; i < 19; i++) {
-//       if(_SolType == 4 && i >= _nlag[2]) {
+//       if(_SolType == 2 && i >= _nlag[2]) {
 //         for(int k = 0; k <  _nlag[0]; k++) {
 //           double xv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(*(linearElement->getKVERT_IND(i) + 0)) + k)) + 0);
 //           double yv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(*(linearElement->getKVERT_IND(i) + 0)) + k)) + 1);
@@ -977,12 +977,12 @@ namespace femus {
     
     //***********************************************************
     
-    //PROVA PER COSTRUIRE LE CORDINATE
-    double X[125][3]={}; //hex
-    //double X[67][2]={}; //tet
-    for(int i = 0; i < 125; i++) {
-    //for(int i = 0; i < 67; i++) {
-      if(_SolType == 4 && i >= _nlag[2]) {
+    //PROVA PER COSTRUIRE LE COORDINATE
+    //double X[125][3]={}; //hex
+    double X[67][3]={}; //tet
+    //for(int i = 0; i < 125; i++) {
+    for(int i = 0; i < 67; i++) {
+      if(_SolType == 2 && i >= _nlag[2]) {
         for(int k = 0; k <  _nlag[0]; k++) {
           double xv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(*(linearElement->getKVERT_IND(i) + 0)) + k)) + 0);
           double yv = * (linearElement->getX(*(linearElement->getFine2CoarseVertexMapping(*(linearElement->getKVERT_IND(i) + 0)) + k)) + 1);
