@@ -245,10 +245,17 @@ namespace femus {
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
+    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+      return fine2CoarseVertexMapping[i];
+    };
+    
   protected: 
     static const double X[125][3];
     static const int IND[27][3];
     static const int KVERT_IND[125][2];
+    
+    static const unsigned fine2CoarseVertexMapping[8][8];
+    
   };
   
   class HexLinear: public hex_lag {
@@ -322,16 +329,16 @@ namespace femus {
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
-    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-      return fine2CoarseVertexMapping[i];
-    };
+//     const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+//       return fine2CoarseVertexMapping[i];
+//     };
     
   protected: 
     static const double X[32][3];
     static const int IND[4][3];
     static const int KVERT_IND[32][2];
     
-    static const unsigned fine2CoarseVertexMapping[8][8];
+//     static const unsigned fine2CoarseVertexMapping[8][8];
   };
   
   
@@ -385,10 +392,17 @@ namespace femus {
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
+    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+      return fine2CoarseVertexMapping[i];
+    };
+    
   protected: 
     static const double X[95][3];
     static const int IND[21][3];
     static const int KVERT_IND[95][2];
+    
+    static const unsigned fine2CoarseVertexMapping[8][8];
+    
   };
 
   class WedgeLinear: public wedge_lag {
@@ -461,16 +475,16 @@ namespace femus {
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
-    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-      return fine2CoarseVertexMapping[i];
-    };
+//     const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+//       return fine2CoarseVertexMapping[i];
+//     };
     
   protected: 
     static const double X[32][3];
     static const int IND[4][3];
     static const int KVERT_IND[32][2];
     
-    static const unsigned fine2CoarseVertexMapping[8][8];
+//     static const unsigned fine2CoarseVertexMapping[8][8];
   };
   
   class wedge0: public wedge_const {
@@ -521,11 +535,18 @@ namespace femus {
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
+    
+    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+      return fine2CoarseVertexMapping[i];
+    };
   
   protected: 
     static const double X[67][3];
     static const int IND[15][3];
     static const int KVERT_IND[67][2];
+    
+    static const unsigned fine2CoarseVertexMapping[8][8];
+    
   };
   
   
@@ -599,16 +620,16 @@ namespace femus {
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
-    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-      return fine2CoarseVertexMapping[i];
-    };
+//     const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+//       return fine2CoarseVertexMapping[i];
+//     };
     
   protected: 
     static const double X[32][3];
     static const int IND[4][3];
     static const int KVERT_IND[32][2];
     
-    static const unsigned fine2CoarseVertexMapping[8][8];
+//     static const unsigned fine2CoarseVertexMapping[8][8];
   };
   
   class tet0: public tet_const {
@@ -658,10 +679,17 @@ namespace femus {
     const double* getX(const int &i) const{return X[i];};
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
+    
+    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+      return fine2CoarseVertexMapping[i];
+    };
+    
   protected: 
     static const double X[25][2];
     static const int IND[9][2];
     static const int KVERT_IND[25][2];
+    
+    static const unsigned fine2CoarseVertexMapping[4][4];
     
   };
   
@@ -722,16 +750,16 @@ namespace femus {
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
-    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-      return fine2CoarseVertexMapping[i];
-    };
+//     const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+//       return fine2CoarseVertexMapping[i];
+//     };
   
   protected: 
     static const double X[12][2];
     static const int IND[3][2];
     static const int KVERT_IND[12][2];
     
-    static const unsigned fine2CoarseVertexMapping[4][4];
+    //static const unsigned fine2CoarseVertexMapping[4][4];
     
   };
   
@@ -777,10 +805,16 @@ namespace femus {
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
     
+    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+      return fine2CoarseVertexMapping[i];
+    };
+    
   protected:
     static const double X[19][2];
     static const int IND[7][2];
     static const int KVERT_IND[19][2];
+    
+    static const unsigned fine2CoarseVertexMapping[4][3];
   };
   
   
@@ -842,16 +876,16 @@ namespace femus {
     const int* getIND(const int &i) const{return IND[i];};
     const int* getKVERT_IND(const int &i) const {return KVERT_IND[i];};
       
-    const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-      return fine2CoarseVertexMapping[i];
-    };
+//     const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+//       return fine2CoarseVertexMapping[i];
+//     };
     
   protected: 
     static const double X[12][2];
     static const int IND[3][2];
     static const int KVERT_IND[12][2];
         
-    static const unsigned fine2CoarseVertexMapping[4][3];
+//     static const unsigned fine2CoarseVertexMapping[4][3];
   };
   
   class tri0: public tri_const {

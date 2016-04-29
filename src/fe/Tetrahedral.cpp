@@ -119,10 +119,8 @@ namespace femus {
 //     {0,14},{1,14},{2,14},{3,14}, // baricenters
 //     {4,14},{5,14},{6,14},{7,14}
 //   };
-    
-  //************************************************************
   
-  const unsigned tet_const::fine2CoarseVertexMapping[8][8]= { //nuova numerazione
+    const unsigned tet_lag::fine2CoarseVertexMapping[8][8]= { //nuova numerazione
     {0,4,6,7},
     {4,1,5,8},
     {6,5,2,9},
@@ -132,6 +130,8 @@ namespace femus {
     {5,4,7,6}, 
     {7,9,5,6}
   };
+    
+  //************************************************************
   
 //   const unsigned tet_const::fine2CoarseVertexMapping[8][8]= { //vecchia numerazione
 //     {0,4,6,7},

@@ -79,7 +79,7 @@ namespace femus {
   
   
   
-  const unsigned hex_const::fine2CoarseVertexMapping[8][8]={
+  const unsigned hex_lag::fine2CoarseVertexMapping[8][8]={
     {0,8,24,11,16,20,26,23},
     {8,1,9,24,20,17,21,26},
     {24,9,2,10,26,21,18,22},

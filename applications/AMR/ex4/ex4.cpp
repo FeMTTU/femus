@@ -57,10 +57,10 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/triangle.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/triangle.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/wedge1.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/tet2.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
 
 
@@ -110,18 +110,18 @@ int main(int argc, char** args) {
   //********************************************************************
   
   // PROVA PER CREARE COORDINATE QUADRATO
-  double x[25][2]= { 
-    {-1,-1},{1,-1},{1, 1},{-1, 1}       
-  };
-  
-  for(int i=4; i<8; i++){
-    x[i][0] = (x[i%4][0]+x[(i+1)%4][0])/2; //coord x punti medi quadrato coarse
-    x[i][1] = (x[i%4][1]+x[(i+1)%4][1])/2; //coord y punti medi quadrato coarse
-    x[8][0] += x[i%4][0]/4; // coord x baricentro quadrato coarse
-    x[8][1] += x[i%4][1]/4; // coord y baricentro quadrato coarse
-    std::cout << x[i][0] << " " << x[i][1] << " " << std::endl;
-  }
-  std::cout << x[8][0] << " " << x[8][1] << " " << std::endl;
+//   double x[25][2]= { 
+//     {-1,-1},{1,-1},{1, 1},{-1, 1}       
+//   };
+//   
+//   for(int i=4; i<8; i++){
+//     x[i][0] = (x[i%4][0]+x[(i+1)%4][0])/2; //coord x punti medi quadrato coarse
+//     x[i][1] = (x[i%4][1]+x[(i+1)%4][1])/2; //coord y punti medi quadrato coarse
+//     x[8][0] += x[i%4][0]/4; // coord x baricentro quadrato coarse
+//     x[8][1] += x[i%4][1]/4; // coord y baricentro quadrato coarse
+//     std::cout << x[i][0] << " " << x[i][1] << " " << std::endl;
+//   }
+//   std::cout << x[8][0] << " " << x[8][1] << " " << std::endl;
   
 // TROVA KVERT_IND (0,4), (1,5), (2,6), (3,7)
 //   for(int i=0; i<4; i++){
