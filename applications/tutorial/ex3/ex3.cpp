@@ -50,8 +50,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
@@ -123,9 +123,10 @@ int main(int argc, char** args) {
 
       VTKWriter vtkIO(&mlSol);
       vtkIO.SetDebugOutput(true);
-      if(j > 1){
-	vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i+j*10);
-      }
+      vtkIO.Write(DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, i+j*10);
+      vtkIO.Write(DEFAULT_OUTPUTDIR, "quadratic", variablesToBePrinted, i+j*10);
+      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i+j*10);
+
 
 //       GMVWriter gmvIO(&mlSol);
 //       gmvIO.SetDebugOutput(true);
@@ -569,7 +570,7 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           mLaplace   +=  phi_x[i * dim + jdim] * soluGauss_x[jdim];
-          nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
+          //nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
         }
 
         double exactSolValue = GetExactSolutionValue(xGauss);
@@ -578,7 +579,7 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
         double exactSolLaplace = GetExactSolutionLaplace(xGauss);
 
 
-        double f = (- exactSolLaplace + exactSolValue * (exactSolGrad[0] + exactSolGrad[1])) * phi[i] ;
+        double f = (- exactSolLaplace + 0*exactSolValue * (exactSolGrad[0] + exactSolGrad[1])) * phi[i] ;
         aRes[i] += (f - (mLaplace + nonLinearTerm)) * weight;
 
       } // end phi_i loop

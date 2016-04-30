@@ -63,7 +63,7 @@ namespace femus {
     }
 
   }
-  
+
 
 
 
@@ -408,22 +408,22 @@ namespace femus {
 //----------------------------------------------------------------------------------------------------
 
   void elem_type::GetSparsityPatternSize(const Mesh& mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const {
-    bool identity = (_nlag[itype] == _nc) ? true : false;
-    int nMax = (_nf < _nlag[itype]) ? _nf : _nlag[itype];
-
-    for(int i = 0; i < nMax; i++) {
+    bool identity = (_nlag[itype] <= _nc) ? true : false;
+    for(int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
       int iproc = mesh.IsdomBisectionSearch(irow, itype);
-      int ncols = (identity) ? 1 : _prol_ind[i + 1] - _prol_ind[i];
+      int ncols = (identity) ? 1 : _nc;
       unsigned counter_o = 0;
-
+      unsigned counter = 0;
       for(int k = 0; k < ncols; k++) {
-        int jcolumn = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(_prol_ind[i][k], iel, _SolType);
-
-        if(jcolumn < mesh._dofOffset[_SolType][iproc] || jcolumn >= mesh._dofOffset[_SolType][iproc + 1]) counter_o++;
+        double phi = (identity)? 1. : _pt_basis->eval_phi(_pt_basis->getIND(k), _pt_basis->getXcoarse(i));
+        if( fabs(phi) > 1.0e-14){
+          counter++;
+          int kcolumn = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(k, iel, _SolType);
+          if(kcolumn < mesh._dofOffset[_SolType][iproc] || kcolumn >= mesh._dofOffset[_SolType][iproc + 1]) counter_o++;
+        }
       }
-
-      NNZ_d->set(irow, ncols - counter_o);
+      NNZ_d->set(irow, counter - counter_o);
       NNZ_o->set(irow, counter_o);
     }
   }
@@ -431,23 +431,24 @@ namespace femus {
   void elem_type::BuildProlongation(const Mesh& mesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const {
     vector<int> cols(_nc);
     vector<double> value(_nc);
-    bool identity = (_nlag[itype] == _nc) ? true : false;
-    int nMax = (_nf < _nlag[itype]) ? _nf : _nlag[itype];
-
-    for(int i = 0; i < nMax; i++) {
+    bool identity = (_nlag[itype] <= _nc) ? true : false;
+    for(int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
-      int ncols = (identity) ? 1 : _prol_ind[i + 1] - _prol_ind[i];
-      int ncols_stored = static_cast <int>(floor((*NNZ_d)(irow) + (*NNZ_o)(irow) + 0.5));
-
-      if(ncols == ncols_stored) {
-        cols.assign(ncols, 0);
-
-        for(int k = 0; k < ncols; k++) {
-          cols[k]  = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(_prol_ind[i][k], iel, _SolType);
-          value[k] = (identity) ? 1. : _prol_val[i][k];
+      int ncols = (identity) ? 1 : _nc;
+      unsigned counter = 0;
+      cols.resize(_nc);
+      for(int k = 0; k < ncols; k++) {
+        double phi = (identity)? 1. : _pt_basis->eval_phi(_pt_basis->getIND(k), _pt_basis->getXcoarse(i));
+        if( fabs(phi) > 1.0e-14){
+          cols[counter]  = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(k, iel, _SolType);
+          value[counter] = phi;
+          counter++;
         }
-
-        Projmat->insert_row(irow, ncols, cols, &value[0]);
+      }
+      cols.resize(counter);
+      int ncols_stored = static_cast <int>(floor((*NNZ_d)(irow) + (*NNZ_o)(irow) + 0.5));
+      if(counter == ncols_stored) {
+        Projmat->insert_row(irow, counter, cols, &value[0]);
       }
     }
   }
@@ -676,10 +677,10 @@ namespace femus {
     _KVERT_IND = new const int * [_nf];
     _X = new const double * [_nf];
 
-   
+
 
     //***********************************************************
-       
+
     if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
         double xm = 0., ym = 0.;
@@ -697,16 +698,16 @@ namespace femus {
         std::cout << *(_pt_basis->getX(i) + 0) << " " << *(_pt_basis->getX(i) + 1) << std::endl;
       }
     }
-    
-    
-    
+
+
+
     for(int i = 0; i < _nf; i++) {
       _KVERT_IND[i] = _pt_basis->getKVERT_IND(i);
       _X[i] = _pt_basis->getX(i);
     }
-    
+
     //***********************************************************
-    
+
     // local projection matrix evaluation
     int counter = 0;
 
@@ -974,7 +975,7 @@ namespace femus {
     _X = new const double * [_nf];
 
     // ****************************************************
-    
+
     if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
         double xm = 0., ym = 0., zm = 0.;
@@ -983,7 +984,7 @@ namespace femus {
           double xv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(element) + k)) + 0);
           double yv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(element) + k)) + 1);
 	  double zv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(element) + k)) + 2);
-         
+
           unsigned vertex = *(linearElement->getKVERT_IND(i) + 1);
           xm += linearElement->eval_phi(linearElement->getIND(k), linearElement->getXcoarse(vertex)) * xv;
           ym += linearElement->eval_phi(linearElement->getIND(k), linearElement->getXcoarse(vertex)) * yv;
@@ -996,19 +997,19 @@ namespace femus {
         std::cout << *(_pt_basis->getX(i) + 0) << " " << *(_pt_basis->getX(i) + 1) << " " << *(_pt_basis->getX(i) + 2) << std::endl;
       }
     }
-    
+
     // ****************************************************
-    
+
     for(int i = 0; i < _nf; i++) {
       _KVERT_IND[i] = _pt_basis->getKVERT_IND(i);
       _X[i] = _pt_basis->getX(i);
     }
-    
+
     for(int i = 0; i < _nf; i++) {
       _KVERT_IND[i] = _pt_basis->getKVERT_IND(i);
       _X[i] = _pt_basis->getX(i);
     }
-    
+
     // local projection matrix evaluation
     int counter = 0;
 

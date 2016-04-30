@@ -32,8 +32,7 @@
 namespace femus {
 
 
-  short unsigned int VTKWriter::femusToVtkCellType[3][6] = {{12, 10, 13, 9, 5, 3}, {25, 24, 26, 23, 22, 21}, {29, 24, 26, 28, 22, 21}};
-  //short unsigned int VTKWriter::femusToVtkCellType[3][6] = {{12, 10, 13, 9, 5, 3}, {25, 24, 26, 23, 22, 21}, {29, 24, 32, 28, 34, 21}};
+  short unsigned int VTKWriter::femusToVtkCellType[3][6] = {{12, 10, 13, 9, 5, 3}, {25, 24, 26, 23, 22, 21}, {29, 24, 32, 28, 34, 21}};
   //http://www.vtk.org/doc/nightly/html/vtkCellType_8h.html#ab1d6fd1f3177b8a2a32bb018807151f8aff535f3b1a33b5e51d1ef1e3aed69447
 
   VTKWriter::VTKWriter( MultiLevelSolution* ml_sol ): Writer( ml_sol ) {
@@ -44,7 +43,7 @@ namespace femus {
     _debugOutput = false;
   }
 
-  VTKWriter::~VTKWriter() {}
+  VTKWriter::~VTKWriter(){}
 
 
   void VTKWriter::Write( const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
@@ -114,10 +113,8 @@ namespace femus {
 
     //count the own node dofs on all levels
     unsigned nvt = mesh->_ownSize[index][_iproc];
-   
-    // count the ghost node dofs and the own element dofs element on all levels
-    unsigned gridOffset = 0;
 
+    // count the ghost node dofs and the own element dofs element on all levels
     unsigned ghostMapCounter = 0;
     map < unsigned, unsigned > ghostMap;
     unsigned counter = 0;
@@ -130,7 +127,7 @@ namespace femus {
       for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
         counter++;
         unsigned jdof = mesh->GetSolutionDof( j, iel, index );
-        if( jdof < dofOffset ) { // check if jnodeMetis is a ghost node
+        if( jdof < dofOffset ) { // check if jdof is a ghost node
           if( ghostMap.find( jdof ) == ghostMap.end() ) {
             ghostMap[jdof] = ghostMapCounter;
             ghostMapCounter++;
@@ -138,7 +135,6 @@ namespace femus {
         }
       }
     }
-
 
     unsigned nvtOwned = nvt;
     nvt += ghostMap.size(); // total node dofs (own + ghost)
@@ -280,7 +276,7 @@ namespace femus {
     icount = 0;
     for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
       for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
-        unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
+        unsigned loc_vtk_conn = (mesh->GetElementType( iel ) == 0)? FemusToVTKorToXDMFConn[j] : j;
         unsigned jdof = mesh->GetSolutionDof( loc_vtk_conn, iel, index );
         var_conn[icount] = ( jdof >= dofOffset ) ? jdof - dofOffset : nvtOwned + ghostMap[jdof];
         icount++;
@@ -611,7 +607,7 @@ namespace femus {
             unsigned offset_ig = nvtOwned;
 
             for( std::map <unsigned, unsigned>::iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
-              var_nd[ offset_ig + it->second ] = ( *mysol )( it->first - gridOffset );
+              var_nd[ offset_ig + it->second ] = ( *mysol )( it->first );
             }
 
             cch = b64::b64_encode( &var_nd[0], dim_array_ndvar [0], NULL, 0 );
