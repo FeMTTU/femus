@@ -1242,17 +1242,30 @@ namespace femus {
       const double* getX(const int &i) const {
         return X[i];
       };
+      void setX(const unsigned &i, const unsigned &j, const double &value) {
+        X[i][j] = value;
+      };
+      const double* getXcoarse(const int &i) const {
+        return Xc[i];
+      };
       const int* getIND(const int &i) const {
         return IND[i];
       };
       const int* getKVERT_IND(const int &i) const {
         return KVERT_IND[i];
       };
+      
+      const unsigned* getFine2CoarseVertexMapping(const int &i) const {
+        return fine2CoarseVertexMapping[i];
+      };
 
     protected:
-      static const double X[5][1];
+      double X[5][2];
+      static const double Xc[3][1];
       static const int IND[3][1];
       static const int KVERT_IND[5][2];
+      
+      static const unsigned fine2CoarseVertexMapping[2][2];
   };
 
   class LineLinear: public line_lag {

@@ -461,6 +461,8 @@ namespace femus {
 
   elem_type_1D::elem_type_1D(const char* geom_elem, const char* order, const char* order_gauss) :
     elem_type(geom_elem, order_gauss) {
+      
+      basis *linearElement;
 
     _dim = 1;
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -478,6 +480,8 @@ namespace femus {
     }
 
     if(!strcmp(geom_elem, "line")) {  //line
+      linearElement = new LineLinear;
+      
       if(_SolType == 0) _pt_basis = new LineLinear;
       else if(_SolType == 1) _pt_basis = new LineBiquadratic;
       else if(_SolType == 2) _pt_basis = new LineBiquadratic;
@@ -499,6 +503,7 @@ namespace femus {
     _nlag[0] = _pt_basis->_nlag0;
     _nlag[1] = _pt_basis->_nlag1;
     _nlag[2] = _pt_basis->_nlag2;
+    _nlag[3] = _pt_basis->_nlag3;
 
 
     _IND = new const int * [_nc];
@@ -510,20 +515,48 @@ namespace femus {
     _KVERT_IND = new const int * [_nf];
     _X = new const double * [_nf];
 
+    //******************************************************
+    if(_SolType == 2) {
+      for(int i = 0; i < _nlag[3]; i++) {
+        double xm = 0.;
+        for(int k = 0; k <  _nlag[0]; k++) {
+          unsigned element = *(linearElement->getKVERT_IND(i) + 0);
+          double xv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(element) + k)) + 0);
+          unsigned vertex = *(linearElement->getKVERT_IND(i) + 1);
+          xm += linearElement->eval_phi(linearElement->getIND(k), linearElement->getXcoarse(vertex)) * xv;
+        }
+        _pt_basis->setX(i, 0, xm);
+
+        std::cout << *(_pt_basis->getX(i) + 0) << std::endl;
+      }
+    }
+    
     for(int i = 0; i < _nf; i++) {
       _KVERT_IND[i] = _pt_basis->getKVERT_IND(i);
       _X[i] = _pt_basis->getX(i);
     }
-
+    //******************************************************
+    
     // local projection matrix evaluation
     int counter = 0;
 
     for(int i = 0; i < _nf; i++) {
+      
+      double jac[2] = {0, 0};
+
+      if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
+        for(int k = 0; k <  _nlag[0]; k++) {
+          //coordinates of the coarse vertices with respect the fine elements
+	  double xv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 2) + k)) + 0);
+          jac[1] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * xv;
+        }
+      }
+      
       for(int j = 0; j < _nc; j++) {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-
-        if(_SolType == 4) {    //if piece_wise_linear
-          if(i / 2 == 1)  phi = _pt_basis->eval_dphidx(_IND[j], _X[i]);
+        
+        if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
+          phi = jac[j];
         }
 
         if(fabs(phi) >= 1.0e-14) {
@@ -544,14 +577,26 @@ namespace femus {
     pt_i = _mem_prol_ind;
 
     for(int i = 0; i < _nf; i++) {
+      
+      double jac[2] = {0, 0};
+
+      if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
+        for(int k = 0; k <  _nlag[0]; k++) {
+          //coordinates of the coarse vertices with respect the fine elements
+	  double xv = * (linearElement->getXcoarse(*(linearElement->getFine2CoarseVertexMapping(i % 2) + k)) + 0);
+          jac[1] += linearElement->eval_dphidx(linearElement->getIND(k), _X[i]) * xv;
+        }
+        std::cout << jac[0] << " " << jac[1] << std::endl;
+      }
+      
       _prol_val[i] = pt_d;
       _prol_ind[i] = pt_i;
 
       for(int j = 0; j < _nc; j++) {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
 
-        if(_SolType == 4) {  //if piece_wise_linear
-          if(i / 2 == 1) phi = _pt_basis->eval_dphidx(_IND[j], _X[i]) / 2.;
+        if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
+          phi = jac[j];
         }
 
         if(fabs(phi) >= 1.0e-14) {
@@ -600,7 +645,8 @@ namespace femus {
 
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
-
+    
+    delete linearElement;
 
   }
 
@@ -610,7 +656,6 @@ namespace femus {
   {
 
     basis *linearElement;
-    unsigned elemenType;
 
     _dim = 2;
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -630,7 +675,6 @@ namespace femus {
 
     if(!strcmp(geom_elem, "quad")) {  //QUAD
       linearElement = new QuadLinear;
-      elemenType = 3;
 
       if(_SolType == 0) _pt_basis = new QuadLinear;
       else if(_SolType == 1) _pt_basis = new QuadQuadratic;
@@ -680,7 +724,7 @@ namespace femus {
 
 
     //***********************************************************
-
+    // construction of coordinates
     if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
         double xm = 0., ym = 0.;
@@ -886,7 +930,10 @@ namespace femus {
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
 
+    std::cout << std::endl;
+    
     delete linearElement;
+    
   }
 
   elem_type_3D::elem_type_3D(const char* geom_elem, const char* order, const char* order_gauss) :
@@ -975,7 +1022,7 @@ namespace femus {
     _X = new const double * [_nf];
 
     // ****************************************************
-
+    // construction of coordinates
     if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
         double xm = 0., ym = 0., zm = 0.;
@@ -1223,6 +1270,8 @@ namespace femus {
     EvaluateShapeAtQP(geom_elem, order);
 
     std::cout << std::endl;
+    
+    delete linearElement;
 
   }
 
