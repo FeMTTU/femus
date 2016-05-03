@@ -30,14 +30,21 @@ namespace femus {
     public:
 
       const int _nc, _nf, _nlag0, _nlag1, _nlag2, _nlag3;
+      int faceNumber[3];
 
-      basis(const int &nc, const int &nf, const int &nlag0, const int &nlag1, const int &nlag2, const int &nlag3):
+      basis(const int &nc, const int &nf, const int &nlag0, const int &nlag1, const int &nlag2, const int &nlag3,
+	    const int  &faceNumber0,const int  &faceNumber1, const int  &faceNumber2):
         _nc(nc),
         _nf(nf),
         _nlag0(nlag0),
         _nlag1(nlag1),
         _nlag2(nlag2),
-        _nlag3(nlag3) { };
+        _nlag3(nlag3)
+        {
+	  faceNumber[0] = faceNumber0;
+	  faceNumber[1] = faceNumber1;
+	  faceNumber[2] = faceNumber2;
+	};
 
       virtual void PrintType() const = 0 ;
       virtual double eval_phi(const int *I, const double* x) const {
@@ -95,11 +102,13 @@ namespace femus {
 
       virtual const int* getKVERT_IND(const int &i) const = 0;
 
-      virtual const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-        std::cout << "Warning this function in not yet implemented for this element type" << std::cout;
+      virtual const unsigned getFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
+        std::cout << "Warning this function in not implemented for const element type" << std::cout;
       };
 
-
+      virtual const unsigned getFaceDof(const unsigned &i, const unsigned &j) const {
+	std::cout << "Warning AAA this function in not yet implemented for this element type" << std::cout;
+      }
 
     protected:
       //1D basis
@@ -260,7 +269,7 @@ namespace femus {
   class hex_lag : public basis {
     public:
       hex_lag(const int& nc, const int& nf):
-        basis(nc, nf, 8, 20, 27, 125) { };
+        basis(nc, nf, 8, 20, 27, 125, 0, 6, 6) { };
 
       const double* getX(const int &i) const {
         return X[i];
@@ -278,8 +287,8 @@ namespace femus {
         return KVERT_IND[i];
       };
 
-      const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-        return fine2CoarseVertexMapping[i];
+      const unsigned getFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
+        return fine2CoarseVertexMapping[i][j];
       };
 
     protected:
@@ -369,7 +378,7 @@ namespace femus {
   class hex_const : public basis {
     public:
       hex_const(const int& nc, const int& nf):
-        basis(nc, nf, 8, 20, 27, 125) { };
+        basis(nc, nf, 8, 20, 27, 125, 0, 6, 6) { };
 
       const double* getX(const int &i) const {
         return X[i];
@@ -470,7 +479,7 @@ namespace femus {
   class wedge_lag : public basis {
     public:
       wedge_lag(const int& nc, const int& nf):
-        basis(nc, nf, 6, 15, 21, 95) { };
+        basis(nc, nf, 6, 15, 21, 95, 0, 3, 5) { };
 
       const double* getX(const int &i) const {
         return X[i];
@@ -488,8 +497,8 @@ namespace femus {
         return KVERT_IND[i];
       };
 
-      const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-        return fine2CoarseVertexMapping[i];
+      const unsigned getFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
+        return fine2CoarseVertexMapping[i][j];
       };
 
     protected:
@@ -584,7 +593,7 @@ namespace femus {
   class wedge_const : public basis {
     public:
       wedge_const(const int& nc, const int& nf):
-        basis(nc, nf, 6, 15, 21, 95) { };
+        basis(nc, nf, 6, 15, 21, 95, 0, 3, 5) { };
 
       const double* getX(const int &i) const {
         return X[i];
@@ -683,7 +692,7 @@ namespace femus {
   class tet_lag : public basis {
     public:
       tet_lag(const int& nc, const int& nf):
-        basis(nc, nf, 4, 10, 15, 67) { };
+        basis(nc, nf, 4, 10, 15, 67, 0, 0, 4) { };
       const double* getX(const int &i) const {
         return X[i];
       };
@@ -700,8 +709,8 @@ namespace femus {
         return KVERT_IND[i];
       };
 
-      const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-        return fine2CoarseVertexMapping[i];
+      const unsigned getFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
+        return fine2CoarseVertexMapping[i][j];
       };
 
     protected:
@@ -797,7 +806,7 @@ namespace femus {
   class tet_const : public basis {
     public:
       tet_const(const int& nc, const int& nf):
-        basis(nc, nf, 4, 10, 15, 67) { };
+        basis(nc, nf, 4, 10, 15, 67,  0, 0, 4) { };
 
       const double* getX(const int &i) const {
         return X[i];
@@ -894,7 +903,7 @@ namespace femus {
   class quad_lag : public basis {
     public:
       quad_lag(const int& nc, const int& nf):
-        basis(nc, nf, 4, 8, 9, 25) { };
+        basis(nc, nf, 4, 8, 9, 25, 0, 4, 4) { };
       const double* getX(const int &i) const {
         return X[i];
       };
@@ -911,8 +920,12 @@ namespace femus {
         return KVERT_IND[i];
       };
 
-      const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-        return fine2CoarseVertexMapping[i];
+      const unsigned getFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
+        return fine2CoarseVertexMapping[i][j];
+      };
+      
+      const unsigned getFaceDof(const unsigned &i, const unsigned &j) const {
+        return faceDofs[i][j];
       };
 
     protected:
@@ -922,6 +935,7 @@ namespace femus {
       static const int KVERT_IND[25][2];
 
       static const unsigned fine2CoarseVertexMapping[4][4];
+      static const unsigned faceDofs[4][3];
 
   };
 
@@ -987,7 +1001,7 @@ namespace femus {
   class quad_const : public basis {
     public:
       quad_const(const int& nc, const int& nf):
-        basis(nc, nf, 4, 8, 9, 25) { };
+        basis(nc, nf, 4, 8, 9, 25,  0, 4, 4) { };
       const double* getX(const int &i) const {
         return X[i];
       };
@@ -1066,7 +1080,7 @@ namespace femus {
   class tri_lag : public basis {
     public:
       tri_lag(const int& nc, const int& nf):
-        basis(nc, nf, 3, 6, 7, 19) { };
+        basis(nc, nf, 3, 6, 7, 19, 0, 3, 3) { };
       const double* getX(const int &i) const {
         return X[i];
       };
@@ -1083,10 +1097,12 @@ namespace femus {
         return KVERT_IND[i];
       };
 
-
-
-      const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-        return fine2CoarseVertexMapping[i];
+      const unsigned getFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
+        return fine2CoarseVertexMapping[i][j];
+      };
+      
+      const unsigned getFaceDof(const unsigned &i, const unsigned &j) const {
+        return faceDofs[i][j];
       };
 
     protected:
@@ -1096,6 +1112,7 @@ namespace femus {
       static const int KVERT_IND[19][2];
 
       static const unsigned fine2CoarseVertexMapping[4][3];
+      static const unsigned faceDofs[3][3];
   };
 
 
@@ -1164,7 +1181,7 @@ namespace femus {
   class tri_const : public basis {
     public:
       tri_const(const int& nc, const int& nf):
-        basis(nc, nf, 3, 6, 7, 19) { };
+        basis(nc, nf, 3, 6, 7, 19, 0, 3, 3) { };
       const double* getX(const int &i) const {
         return X[i];
       };
@@ -1238,7 +1255,7 @@ namespace femus {
   class line_lag : public basis {
     public:
       line_lag(const int& nc, const int& nf):
-        basis(nc, nf, 2, 3, 3, 5) { };
+        basis(nc, nf, 2, 3, 3, 5, 0, 2, 2) { };
       const double* getX(const int &i) const {
         return X[i];
       };
@@ -1255,8 +1272,8 @@ namespace femus {
         return KVERT_IND[i];
       };
       
-      const unsigned* getFine2CoarseVertexMapping(const int &i) const {
-        return fine2CoarseVertexMapping[i];
+      const unsigned getFine2CoarseVertexMapping(const int &i, const unsigned &j)  const {
+        return fine2CoarseVertexMapping[i][j];
       };
 
     protected:
@@ -1301,7 +1318,7 @@ namespace femus {
   class line_const : public basis {
     public:
       line_const(const int& nc, const int& nf):
-        basis(nc, nf, 2, 3, 3, 5) { };
+        basis(nc, nf, 2, 3, 3, 5, 0, 2, 2) { };
       const double* getX(const int &i) const {
         return X[i];
       };

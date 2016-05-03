@@ -155,6 +155,8 @@ public:
 
   static const unsigned _fe_new_to_old[NFE_FAMS];
 
+  basis * GetBasis() const { return _pt_basis;} 
+  
 protected:
 
   // member data

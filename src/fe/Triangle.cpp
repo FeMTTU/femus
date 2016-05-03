@@ -42,11 +42,17 @@ namespace femus {
     {3,6},{0,6},{1,6},{2,6},
   };
   
-    const unsigned tri_lag::fine2CoarseVertexMapping[4][3]= { 
-     {0,3,5},
-     {3,1,4},
-     {5,4,2},
-     {4,5,3} 
+  const unsigned tri_lag::fine2CoarseVertexMapping[4][3]= { 
+    {0,3,5},
+    {3,1,4},
+    {5,4,2},
+    {4,5,3} 
+  };
+    
+  const unsigned tri_lag::faceDofs[3][3] = { 
+    {0, 1, 3},
+    {1, 2, 4},
+    {2, 0, 5}
   };
   
   //******************************************************************

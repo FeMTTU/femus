@@ -46,12 +46,20 @@ namespace femus {
     {0,8},{1,8},{2,8},{3,8}
   };
   
-    const unsigned quad_lag::fine2CoarseVertexMapping[4][4]= { // coarse Mesh dof = f2CVM[element type][fine element][fine vertex]
+  const unsigned quad_lag::fine2CoarseVertexMapping[4][4]= { // coarse Mesh dof = f2CVM[element type][fine element][fine vertex]
     {0,4,8,7},
     {4,1,5,8},
     {8,5,2,6},
     {7,8,6,3}
   };
+  
+  const unsigned quad_lag::faceDofs[4][3]={
+    {0, 1, 4},
+    {1, 2, 5},
+    {2, 3, 6},
+    {3, 0, 7}
+  };
+  
   
   //************************************************************
     
