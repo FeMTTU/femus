@@ -74,6 +74,11 @@ namespace femus {
       abort();
     }
     
+    _localIs.reserve(10);
+    _overlappingIs.reserve(10);
+    _localIsIndex.reserve(10);
+    _overlappingIsIndex.reserve(10);
+    
   };
 
   //multiple split constructor
@@ -119,6 +124,11 @@ namespace femus {
     _maxits = 1;
     _schurFactType = SCHUR_FACT_AUTOMATIC;
     _schurPreType = SCHUR_PRE_AUTOMATIC;
+    
+    _localIs.reserve(10);
+    _overlappingIs.reserve(10);
+    _localIsIndex.reserve(10);
+    _overlappingIsIndex.reserve(10);
   }
 
 
@@ -307,133 +317,128 @@ namespace femus {
 	std::cout<<"solution Type " << i << " = " << _solutionType[i]<<std::endl;
       }
       
-//       _standardASM = false;
-//       
-//       
-//       
-//       PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, pc);
+      //TODO
+      _overlap = 0;
+      
+      _standardASM = false;
+      
+      PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, pc);
+
+      if(!_standardASM) {
+	PCASMSetLocalSubdomains(pc, _localIsIndex[level-1].size(), &_overlappingIs[level-1][0], &_localIs[level-1][0]);
+      }
+
+      
+      PCASMSetOverlap(pc, _overlap);
+      
+
+      KSPSetUp(ksp);
+          
+      KSP* subksps;
+      _nlocal.resize(level);
+      PCASMGetSubKSP(pc, &_nlocal[level-1], PETSC_NULL, &subksps);
+      
+      PetscReal epsilon = 1.e-16;
+
+      
+      
+      if(!_standardASM) {
+	for(int i = 0; i < _blockTypeRange[level-1][0]; i++) {
+	  PC subpcs;
+	  KSPGetPC(subksps[i], &subpcs);
+	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+	  KSPSetFromOptions(subksps[i]);
+	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
+	  PCFactorSetZeroPivot(subpcs, epsilon);
+	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+	}
+
+	for(int i = _blockTypeRange[level-1][0]; i < _blockTypeRange[level-1][1]; i++) {
+	  PC subpcs;
+	  KSPGetPC(subksps[i], &subpcs);
+	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+	  KSPSetFromOptions(subksps[i]);
+          PCSetType(subpcs, (char*) PCILU);
+	  PCFactorSetZeroPivot(subpcs, epsilon);
+	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+	}
+      }
+      else {
+	for(int i = 0; i < _nlocal[level-1]; i++) {
+	  PC subpcs;
+	  KSPGetPC(subksps[i], &subpcs);
+	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+	  KSPSetFromOptions(subksps[i]);
+	  PCSetType(subpcs, (char*) PCILU);
+	  PCFactorSetZeroPivot(subpcs, epsilon);
+	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+	}
+      }
+    
+       
+      
+//       PetscPreconditioner::set_petsc_preconditioner_type(_preconditioner, pc);
+// 
+//       bool _standardASM = 1;
+//       PetscInt _nlocal;
 // 
 //       if(!_standardASM) {
-// 	PCASMSetLocalSubdomains(pc, _localIsIndex[level-1].size(), &_overlappingIs[level-1][0], &_localIs[level-1][0]);
+//         //PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
 //       }
 // 
-//       PCASMSetOverlap(pc, _overlap);
-//       
+//       PCASMSetOverlap(pc, 0); //PCASMSetOverlap(subpc, _overlap);
 // 
 //       KSPSetUp(ksp);
 // 
 //       KSP* subksps;
-//       PCASMGetSubKSP(pc, &_nlocal[level-1], PETSC_NULL, &subksps);
+//       PCASMGetSubKSP(pc, &_nlocal, PETSC_NULL, &subksps);
 //       PetscReal epsilon = 1.e-16;
 // 
 //       if(!_standardASM) {
-// 	for(int i = 0; i < _blockTypeRange[level-1][0]; i++) {
-// 	  PC subpcs;
-// 	  KSPGetPC(subksps[i], &subpcs);
-// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
-// 	  KSPSetFromOptions(subksps[i]);
-// 	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
-// 	  PCFactorSetZeroPivot(subpcs, epsilon);
-// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-// 	}
-// 
-// 	for(int i = _blockTypeRange[level-1][0]; i < _blockTypeRange[level-1][1]; i++) {
-// 	  PC subpcs;
-// 	  KSPGetPC(subksps[i], &subpcs);
-// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
-// 	  KSPSetFromOptions(subksps[i]);
-// 
-// 	  //if(this->_preconditioner_type == ILU_PRECOND)
-// 	    PCSetType(subpcs, (char*) PCILU);
-// 	  //else
-// 	  //  PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
-// 
-// 	  PCFactorSetZeroPivot(subpcs, epsilon);
-// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-// 	}
+// // 	for(int i = 0; i < _blockTypeRange[0]; i++) {
+// // 	  PC subpcs;
+// // 	  KSPGetPC(subksps[i], &subpcs);
+// // 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+// // 	  KSPSetFromOptions(subksps[i]);
+// // 	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
+// // 	  PCFactorSetZeroPivot(subpcs, epsilon);
+// // 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+// // 	}
+// //
+// // 	for(int i = _blockTypeRange[0]; i < _blockTypeRange[1]; i++) {
+// // 	  PC subpcs;
+// // 	  KSPGetPC(subksps[i], &subpcs);
+// // 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+// // 	  KSPSetFromOptions(subksps[i]);
+// //
+// // 	  if(this->_preconditioner_type == ILU_PRECOND)
+// // 	    PCSetType(subpcs, (char*) PCILU);
+// // 	  else
+// // 	    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+// //
+// // 	  PCFactorSetZeroPivot(subpcs, epsilon);
+// // 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+// // 	}
 //       }
 //       else {
-// 	for(int i = 0; i < _nlocal[level-1]; i++) {
-// 	  PC subpcs;
-// 	  KSPGetPC(subksps[i], &subpcs);
-// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
-// 	  KSPSetFromOptions(subksps[i]);
+//         for(int i = 0; i < _nlocal; i++) {
+//           PC subpcs;
+//           KSPGetPC(subksps[i], &subpcs);
+//           KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+//           KSPSetFromOptions(subksps[i]);
 // 
-// 	  //if(this->_preconditioner_type == ILU_PRECOND)
-// 	    PCSetType(subpcs, (char*) PCILU);
-// 	  //else
-// 	  //  PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
 // 
-// 	  PCFactorSetZeroPivot(subpcs, epsilon);
-// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-// 	}
+//           PCSetType(subpcs, (char*) PCILU);
+// 
+// // 	  if(this->_preconditioner_type == ILU_PRECOND)
+// // 	    PCSetType(subpcs, (char*) PCILU);
+// // 	  else
+// // 	    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
+// 
+//           PCFactorSetZeroPivot(subpcs, epsilon);
+//           PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+//         }
 //       }
-//     
-      
-
-      
-      PetscPreconditioner::set_petsc_preconditioner_type(_preconditioner, pc);
-
-      bool _standardASM = 1;
-      PetscInt _nlocal;
-
-      if(!_standardASM) {
-        //PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
-      }
-
-      PCASMSetOverlap(pc, 0); //PCASMSetOverlap(subpc, _overlap);
-
-      KSPSetUp(ksp);
-
-      KSP* subksps;
-      PCASMGetSubKSP(pc, &_nlocal, PETSC_NULL, &subksps);
-      PetscReal epsilon = 1.e-16;
-
-      if(!_standardASM) {
-// 	for(int i = 0; i < _blockTypeRange[0]; i++) {
-// 	  PC subpcs;
-// 	  KSPGetPC(subksps[i], &subpcs);
-// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
-// 	  KSPSetFromOptions(subksps[i]);
-// 	  PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
-// 	  PCFactorSetZeroPivot(subpcs, epsilon);
-// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-// 	}
-//
-// 	for(int i = _blockTypeRange[0]; i < _blockTypeRange[1]; i++) {
-// 	  PC subpcs;
-// 	  KSPGetPC(subksps[i], &subpcs);
-// 	  KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
-// 	  KSPSetFromOptions(subksps[i]);
-//
-// 	  if(this->_preconditioner_type == ILU_PRECOND)
-// 	    PCSetType(subpcs, (char*) PCILU);
-// 	  else
-// 	    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
-//
-// 	  PCFactorSetZeroPivot(subpcs, epsilon);
-// 	  PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-// 	}
-      }
-      else {
-        for(int i = 0; i < _nlocal; i++) {
-          PC subpcs;
-          KSPGetPC(subksps[i], &subpcs);
-          KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
-          KSPSetFromOptions(subksps[i]);
-
-
-          PCSetType(subpcs, (char*) PCILU);
-
-// 	  if(this->_preconditioner_type == ILU_PRECOND)
-// 	    PCSetType(subpcs, (char*) PCILU);
-// 	  else
-// 	    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
-
-          PCFactorSetZeroPivot(subpcs, epsilon);
-          PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-        }
-      }
     }
     else if(_preconditioner == FS_SCHUR_PRECOND) {
       PetscPreconditioner::set_petsc_preconditioner_type(FIELDSPLIT_PRECOND, pc);
@@ -647,8 +652,6 @@ namespace femus {
   void FieldSplitTree::BuildASMIndexSet( const unsigned& level, const FieldSplitPetscLinearEquationSolver *solver){
     
     
-    std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
-    
     Mesh* msh = solver->_msh;
     
     unsigned nel = msh->GetNumberOfElements();
@@ -682,14 +685,14 @@ namespace femus {
 
     vector < vector < unsigned > > block_elements;
     unsigned _elementBlockNumber[2];
-    vector <unsigned> _blockTypeRange;
+    _blockTypeRange.resize(level);
     
     _elementBlockNumber[0] = 16;
     _elementBlockNumber[1] = 16;
 
     MeshASMPartitioning meshasmpartitioning(*msh);
  
-    meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange);
+    meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange[level-1]);
  
     vector <bool> ThisVaribaleIsNonSchur(_solutionType.size(), true);
  
@@ -716,7 +719,11 @@ namespace femus {
  
       // ***************** NODE/ELEMENT SERCH *******************
       for(int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
-        unsigned iel = block_elements[vb_index][kel];
+        
+	//std::cout<<std::endl;
+	unsigned iel = block_elements[vb_index][kel];
+	
+	//std::cout << iel <<" ";
  
         for(unsigned i = 0; i < msh->GetElementDofNumber(iel, 0); i++) { //loop on the element vertices
            unsigned inode = msh->el->GetElementDofIndex(iel, i);
@@ -726,6 +733,8 @@ namespace femus {
           for(unsigned j = 0; j < nve; j++) { 
              unsigned jel = (!FastVankaBlock) ? localElementNearVertexNumber[j] : iel;
  
+	     //std::cout << "     ";
+	     
              //add elements for velocity to be solved
              if(indexc[jel - ElemOffset] == ElemOffsetSize) {
                indexci[Csize] = jel - ElemOffset;
@@ -734,23 +743,23 @@ namespace femus {
                //add non-schur variables to be solved
                for(int indexSol = 0; indexSol < _solutionType.size(); indexSol++) {
                  if(ThisVaribaleIsNonSchur[indexSol]) {
-                  unsigned SolPdeIndex = indexSol;
-                  unsigned SolType = _solutionType[SolPdeIndex];
+                  unsigned SolType = _solutionType[indexSol];
                   unsigned nvej = msh->GetElementDofNumber(jel, SolType);
 
                   for(unsigned jj = 0; jj < nvej; jj++) {
                     unsigned jdof = msh->GetSolutionDof(jj, jel, SolType);
 		    
 		    unsigned kkdof = solver->GetSystemDof(SolType, indexSol, jj, jel, _MatrixOffset[level-1]);
-
-                    if(jdof >= _MatrixOffset[level-1][SolType][iproc] &&
-                        jdof < _MatrixOffset[level-1][SolType][iproc + 1]) {
-                      if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
-                        owned[kkdof - DofOffset] = true;
+		    
+		    //std::cout<< kkdof << " ";
+		    
+		    if(jdof >= msh->_dofOffset[SolType][iproc] &&
+                       jdof <  msh->_dofOffset[SolType][iproc + 1]) {
+		      if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {
+		        owned[kkdof - DofOffset] = true;
                         _localIsIndex[level-1][vb_index][PAsize] = kkdof;
                         indexa[kkdof - DofOffset] = PAsize++;
                       }
-
                       if(indexb[kkdof - DofOffset] == DofOffsetSize) {
                         _overlappingIsIndex[level-1][vb_index][PBsize] = kkdof;
                         indexb[kkdof - DofOffset] = PBsize++;
