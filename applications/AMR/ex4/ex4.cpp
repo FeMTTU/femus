@@ -31,9 +31,7 @@ int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
-
-  const elem_type * _finiteElement1 = new const elem_type_2D("quad","quadratic","seventh");
-  const elem_type * _finiteElement2 = new const elem_type_2D("tri","quadratic","seventh");
+  
 //   std::cout<<std::endl;
 //   const elem_type * _finiteElement2 = new const elem_type_2D("tri","disc_linear","seventh");
 //   std::cout<<std::endl;
@@ -42,15 +40,24 @@ int main(int argc, char** args) {
 //   const elem_type * _finiteElement4 = new const elem_type_3D("wedge","disc_linear","seventh");
 //   std::cout<<std::endl;
 //   const elem_type * _finiteElement5 = new const elem_type_3D("tet","disc_linear","seventh");
-//
-  //const elem_type * _finiteElement1 = new const elem_type_2D("tri","quadratic","seventh");
+
+//   std::cout<< "**QUAD**" <<std::endl;
+//   const elem_type * _finiteElement1 = new const elem_type_2D("quad","quadratic","seventh");
+  
+//   std::cout<< "**TRI**" <<std::endl;
+//   const elem_type * _finiteElement2 = new const elem_type_2D("tri","quadratic","seventh");
   //const elem_type * _finiteElement2 = new const elem_type_2D("tri","biquadratic","seventh");
+  
+  std::cout<< "**HEX**" <<std::endl;
+  const elem_type * _finiteElement3 = new const elem_type_3D("hex","quadratic","seventh");
 
-  //const elem_type * _finiteElement3 = new const elem_type_3D("wedge","quadratic","seventh");
-  //const elem_type * _finiteElement4 = new const elem_type_3D("wedge","biquadratic","third");
-
-  //const elem_type * _finiteElement5 = new const elem_type_3D("tet","quadratic","seventh");
+  std::cout<< "**TET**" <<std::endl;
+  const elem_type * _finiteElement4 = new const elem_type_3D("tet","quadratic","seventh");
   //const elem_type * _finiteElement6 = new const elem_type_3D("tet","biquadratic","seventh");
+  
+  std::cout<< "**WEDGE**" <<std::endl;
+  const elem_type * _finiteElement5 = new const elem_type_3D("wedge","quadratic","seventh");
+  //const elem_type * _finiteElement4 = new const elem_type_3D("wedge","biquadratic","third");
 
 
 
