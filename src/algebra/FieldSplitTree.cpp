@@ -191,9 +191,6 @@ namespace femus {
       return;
     }
       
-      
-    
-    
     if(_isSplit.size() < level) _isSplit.resize(level);
     _isSplit[level - 1].resize(GetNumberOfSplits());
 
