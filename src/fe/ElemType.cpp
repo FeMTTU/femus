@@ -951,6 +951,29 @@ namespace femus {
 	      yg += faceBasis[type]->eval_phi( faceBasis[type]->GetIND(j), &xi[i]) * yv[j] ;
 	    }
 	    std::cout << xi[i]<<" "<< xg <<" "<< yg << std::endl;
+	    double x[2]={xg, yg};
+	    double phi[_nc], dphidxi[_nc], dphideta[_nc], d2phidxi2, d2phideta2, d2phidxideta;
+	    double phisum = 0, dphidxisum = 0, dphidetasum =0;
+            for(int j = 0; j < _nc; j++) {
+              phi[j] = _pt_basis->eval_phi(_IND[j], x);
+              phisum += phi[j];
+              std::cout << phi[j] <<" ";
+              dphidxi[j] = _pt_basis->eval_dphidx(_IND[j], x);
+              dphidxisum += dphidxi[j];
+              std::cout << dphidxi[j] <<" ";
+              dphideta[j] = _pt_basis->eval_dphidy(_IND[j], x);
+              dphidetasum += dphideta[j];
+              std::cout << dphideta[j] <<" ";
+	      
+              d2phidxi2 = _pt_basis->eval_d2phidx2(_IND[j], x);
+              std::cout << d2phidxi2 <<" ";
+              d2phideta2 = _pt_basis->eval_d2phidy2(_IND[j], x);
+              std::cout << d2phideta2 <<" ";
+              d2phidxideta = _pt_basis->eval_d2phidxdy(_IND[j], x);
+              std::cout << d2phidxideta <<"\n";
+            }  
+            std::cout << _nc << " " << phisum << " " << dphidxisum << " " << dphidetasum << std::endl;
+            std::cout << std::endl;
 	  }
 	}
       }
@@ -1310,12 +1333,11 @@ namespace femus {
       faceGauss[0] = &quadGaussPoint;
       faceGauss[1] = &triGaussPoint;
       
-      const double* xi[2];
-      xi[0] = {faceGauss[0]->GetGaussWeightsPointer() + faceGauss[0]->GetGaussPointsNumber()};
-      xi[1] = {faceGauss[1]->GetGaussWeightsPointer() + faceGauss[1]->GetGaussPointsNumber()};
-      const double* yi[2];
-      yi[0] = {faceGauss[0]->GetGaussWeightsPointer() + faceGauss[0]->GetGaussPointsNumber() + faceGauss[0]->GetGaussPointsNumber()};
-      yi[1] = {faceGauss[1]->GetGaussWeightsPointer() + faceGauss[1]->GetGaussPointsNumber() + faceGauss[1]->GetGaussPointsNumber()};
+      const double* xi[2]={ faceGauss[0]->GetGaussWeightsPointer() + faceGauss[0]->GetGaussPointsNumber(),
+	                    faceGauss[1]->GetGaussWeightsPointer() + faceGauss[1]->GetGaussPointsNumber() };
+
+      const double* yi[2]={ faceGauss[0]->GetGaussWeightsPointer() + 2*(faceGauss[0]->GetGaussPointsNumber()),
+	                    faceGauss[1]->GetGaussWeightsPointer() + 2*(faceGauss[1]->GetGaussPointsNumber()) };
        
       basis *faceBasis[2];
       faceBasis[0] = linearQuad;
@@ -1332,6 +1354,7 @@ namespace femus {
 	    yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
 	    zv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 2);
 	  }
+	  std::cout<<faceGauss[type]->GetGaussPointsNumber()<<std::endl;
 	  for(unsigned i = 0; i < faceGauss[type]->GetGaussPointsNumber(); i++) {    
 	    double xg = 0;
 	    double yg = 0;
@@ -1343,6 +1366,30 @@ namespace femus {
 	      zg += faceBasis[type]->eval_phi( faceBasis[type]->GetIND(j), vertex ) * zv[j] ;
 	    }
 	    std::cout << vertex[0] <<" "<< vertex[1] <<" "<< xg <<" "<< yg <<" "<< zg << std::endl;
+	    double x[3]={xg, yg, zg};
+	    double phi[_nc], dphidxi[_nc], dphideta[_nc], dphidzeta[_nc];
+	    double d2phidxi2, d2phideta2, d2phidzeta2, d2phidxideta, d2phidetadzeta, d2phidzetadxi;
+	    double phisum = 0, dphidxisum = 0, dphidetasum =0, dphidzetasum = 0;
+	    for(int j = 0; j < _nc; j++) {
+              phi[j] = _pt_basis->eval_phi(_IND[j], x);
+	      phisum += phi[j];
+              dphidxi[j] = _pt_basis->eval_dphidx(_IND[j], x);
+	      dphidxisum += dphidxi[j];
+              dphideta[j] = _pt_basis->eval_dphidy(_IND[j], x);
+	      dphidetasum += dphideta[j];
+              dphidzeta[j] = _pt_basis->eval_dphidz(_IND[j], x);
+	      dphidzetasum += dphidzeta[j];
+
+              d2phidxi2 = _pt_basis->eval_d2phidx2(_IND[j], x);
+              d2phideta2 = _pt_basis->eval_d2phidy2(_IND[j], x);
+              d2phidzeta2 = _pt_basis->eval_d2phidz2(_IND[j], x);
+
+              d2phidxideta = _pt_basis->eval_d2phidxdy(_IND[j], x);
+              d2phidetadzeta = _pt_basis->eval_d2phidydz(_IND[j], x);
+              d2phidzetadxi = _pt_basis->eval_d2phidzdx(_IND[j], x);
+            }
+            std::cout << _nc << " "  << phisum << " " << dphidxisum << " " << dphidetasum << " " << dphidzetasum << std::endl;
+            std::cout << std::endl;
 	  }
 	}
       }
