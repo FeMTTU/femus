@@ -416,8 +416,8 @@ namespace femus {
       unsigned counter_o = 0;
       unsigned counter = 0;
       for(int k = 0; k < ncols; k++) {
-        double phi = (identity)? 1. : _pt_basis->eval_phi(_pt_basis->GetIND(k), _pt_basis->GetXcoarse(i));
-        if( fabs(phi) > 1.0e-14){
+        double phi = (identity) ? 1. : _pt_basis->eval_phi(_pt_basis->GetIND(k), _pt_basis->GetXcoarse(i));
+        if(fabs(phi) > 1.0e-14) {
           counter++;
           int kcolumn = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(k, iel, _SolType);
           if(kcolumn < mesh._dofOffset[_SolType][iproc] || kcolumn >= mesh._dofOffset[_SolType][iproc + 1]) counter_o++;
@@ -438,8 +438,8 @@ namespace femus {
       unsigned counter = 0;
       cols.resize(_nc);
       for(int k = 0; k < ncols; k++) {
-        double phi = (identity)? 1. : _pt_basis->eval_phi(_pt_basis->GetIND(k), _pt_basis->GetXcoarse(i));
-        if( fabs(phi) > 1.0e-14){
+        double phi = (identity) ? 1. : _pt_basis->eval_phi(_pt_basis->GetIND(k), _pt_basis->GetXcoarse(i));
+        if(fabs(phi) > 1.0e-14) {
           cols[counter]  = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(k, iel, _SolType);
           value[counter] = phi;
           counter++;
@@ -461,8 +461,8 @@ namespace femus {
 
   elem_type_1D::elem_type_1D(const char* geom_elem, const char* order, const char* order_gauss) :
     elem_type(geom_elem, order_gauss) {
-      
-      basis *linearElement;
+
+    basis *linearElement;
 
     _dim = 1;
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -481,7 +481,7 @@ namespace femus {
 
     if(!strcmp(geom_elem, "line")) {  //line
       linearElement = new LineLinear;
-      
+
       if(_SolType == 0) _pt_basis = new LineLinear;
       else if(_SolType == 1) _pt_basis = new LineBiquadratic;
       else if(_SolType == 2) _pt_basis = new LineBiquadratic;
@@ -521,7 +521,7 @@ namespace femus {
         double xm = 0.;
         for(int k = 0; k <  _nlag[0]; k++) {
           unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
-          double xv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(element,k) ) + 0);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
           unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
           xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
         }
@@ -530,31 +530,35 @@ namespace femus {
         std::cout << *(_pt_basis->GetX(i) + 0) << std::endl;
       }
     }
-    
+
     for(int i = 0; i < _nf; i++) {
       _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
       _X[i] = _pt_basis->GetX(i);
     }
     //******************************************************
-    
+
     // local projection matrix evaluation
     int counter = 0;
 
     for(int i = 0; i < _nf; i++) {
-      
+
       double jac[2] = {0, 0};
 
       if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
         for(int k = 0; k <  _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect the fine elements
-	  double xv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 2,  k)) + 0);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 2,  k)) + 0);
           jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
         }
       }
-      
+
       for(int j = 0; j < _nc; j++) {
+	
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-        
+
+
+	std::cout << j << " "<< phi << std::endl;
+	
         if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
           phi = jac[j];
         }
@@ -577,18 +581,18 @@ namespace femus {
     pt_i = _mem_prol_ind;
 
     for(int i = 0; i < _nf; i++) {
-      
+
       double jac[2] = {0, 0};
 
       if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
         for(int k = 0; k <  _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect the fine elements
-	  double xv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 2, k)) + 0);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 2, k)) + 0);
           jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
         }
         std::cout << jac[0] << " " << jac[1] << std::endl;
       }
-      
+
       _prol_val[i] = pt_d;
       _prol_ind[i] = pt_i;
 
@@ -643,17 +647,62 @@ namespace femus {
       }
     }
 
+    
+    if(_SolType < 3) {
+          
+      unsigned nFaces = 2;
+      _phiFace.resize(nFaces);
+      _gradPhiFace.resize(nFaces);
+      _hessianPhiFace.resize(nFaces);
+
+       double xv[2]={-1,1};
+      
+      for(int iface = 0; iface < nFaces; iface++) {
+        _phiFace[iface].resize(1);
+        _gradPhiFace[iface].resize(1);
+        _hessianPhiFace[iface].resize(1);
+        
+	_phiFace[iface][0].resize(_nc);
+        _gradPhiFace[iface][0].resize(_nc);
+        _hessianPhiFace[iface][0].resize(_nc);
+        
+	for(int j = 0; j < _nc; j++) {
+         _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xv[iface]);
+
+	 std::cout <<  _phiFace[iface][0][j] << " ";
+	 
+         _gradPhiFace[iface][0][j].resize(1);
+         _gradPhiFace[iface][0][j][0] = _pt_basis->eval_dphidx(_IND[j], &xv[iface]);
+         
+	 std::cout <<  _gradPhiFace[iface][0][j][0] << " ";
+
+          _hessianPhiFace[iface][0][j].resize(1);
+          _hessianPhiFace[iface][0][j][0].resize(1);
+          _hessianPhiFace[iface][0][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], &xv[iface]);
+            
+	  std::cout <<  _hessianPhiFace[iface][0][j][0][0] << " ";
+        }
+        std::cout << std::endl;
+      }
+     
+    }
+    
+    
+    
+    
+    
+    
+    
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
-    
+
     delete linearElement;
 
   }
 
 
   elem_type_2D::elem_type_2D(const char* geom_elem, const char* order, const char* order_gauss):
-    elem_type(geom_elem, order_gauss)
-  {
+    elem_type(geom_elem, order_gauss) {
 
     basis *linearElement;
 
@@ -730,8 +779,8 @@ namespace femus {
         double xm = 0., ym = 0.;
         for(int k = 0; k <  _nlag[0]; k++) {
           unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
-          double xv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
-          double yv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
           unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
           xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
           ym += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
@@ -762,8 +811,8 @@ namespace femus {
       if(_SolType == 4 && i / 4 >= 1) { //if piece_wise_linear derivatives
         for(int k = 0; k <  _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect the fine elements
-	  double xv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 0);
-          double yv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 1);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 1);
           if(i / 4 == 1) {
             jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
             jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
@@ -806,8 +855,8 @@ namespace femus {
       if(_SolType == 4 && i / 4 >= 1) { //if piece_wise_linear derivatives
         for(int k = 0; k <  _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect the fine elements
-	  double xv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 0);
-          double yv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 1);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 1);
           if(i / 4 == 1) {
             jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
             jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
@@ -883,113 +932,82 @@ namespace femus {
         ptx[j]++;
       }
 
-      //double phisum=0.;
-      //double dphidxisum=0.;
-      //double dphidetasum=0.;
-      //double d2phidxi2sum=0.;
-      //double d2phideta2sum=0.;
-      //double d2phidxidetasum=0.;
-
-
       for(int j = 0; j < _nc; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
-        //phisum += _phi[i][j];
-        //std::cout << _phi[i][j] <<" ";
         _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j], x);
-        //dphidxisum += _dphidxi[i][j];
-        //std::cout << _dphidxi[i][j] <<" ";
         _dphideta[i][j] = _pt_basis->eval_dphidy(_IND[j], x);
-        //_dphidxi[i][j] += _dphideta[i][j];
-        //std::cout << _dphideta[i][j] <<" ";
         _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j], x);
-        //d2phidxi2sum += _d2phidxi2[i][j];
-        //std::cout << _d2phidxi2[i][j] <<" ";
         _d2phideta2[i][j] = _pt_basis->eval_d2phidy2(_IND[j], x);
-        //d2phideta2sum += _d2phideta2[i][j];
-        //std::cout << _d2phideta2[i][j] <<" ";
         _d2phidxideta[i][j] = _pt_basis->eval_d2phidxdy(_IND[j], x);
-        //d2phidxidetasum += _d2phidxideta[i][j];
-        //std::cout << _d2phidxideta[i][j] <<"\n";
       }
-
-//       std::cout<<std::endl;
-//
-//       std::cout<< phisum <<" "<<
-//       dphidxisum <<" "<<
-//       dphidetasum<<" "<<
-//       d2phidxi2sum<<" "<<
-//       d2phideta2sum<<" "<<
-//       d2phidxidetasum<<"\n\n";
 
     }
 
-    std::cout<<std::endl;
-    if(_SolType < 3){
+    std::cout << std::endl;
+    if(_SolType < 3) {
       basis *linearLine = new LineLinear;
-    
-      Gauss lineGaussPoint = Gauss("line", order_gauss);
-      const double* xi = {lineGaussPoint.GetGaussWeightsPointer() + lineGaussPoint.GetGaussPointsNumber()};
 
-      basis *faceBasis[2];
-      faceBasis[0] = linearLine;
-      faceBasis[1] = linearLine;
-      
-      for(unsigned type = 0; type < 2; type++){
-	for(int iface = _pt_basis->faceNumber[type]; iface < _pt_basis->faceNumber[type+1]; iface++){
-	  std::vector< double > xv( faceBasis[type] -> _nc );
-	  std::vector< double > yv( faceBasis[type] -> _nc );
-	  for(int jnode = 0; jnode < faceBasis[type] -> _nc; jnode++){
-	    unsigned iDof = _pt_basis->GetFaceDof(iface,jnode);
-	    xv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
-	    yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
-	  }
-	  for(unsigned i = 0; i < lineGaussPoint.GetGaussPointsNumber(); i++) {	    
-	    double xg = 0;
-	    double yg = 0;
-	    for(int j = 0; j <  faceBasis[type] -> _nc; j++) {
-	      xg += faceBasis[type]->eval_phi( faceBasis[type]->GetIND(j), &xi[i]) * xv[j] ;
-	      yg += faceBasis[type]->eval_phi( faceBasis[type]->GetIND(j), &xi[i]) * yv[j] ;
-	    }
-	    std::cout << xi[i]<<" "<< xg <<" "<< yg << std::endl;
-	    double x[2]={xg, yg};
-	    double phi[_nc], dphidxi[_nc], dphideta[_nc], d2phidxi2, d2phideta2, d2phidxideta;
-	    double phisum = 0, dphidxisum = 0, dphidetasum =0;
-            for(int j = 0; j < _nc; j++) {
-              phi[j] = _pt_basis->eval_phi(_IND[j], x);
-              phisum += phi[j];
-              std::cout << phi[j] <<" ";
-              dphidxi[j] = _pt_basis->eval_dphidx(_IND[j], x);
-              dphidxisum += dphidxi[j];
-              std::cout << dphidxi[j] <<" ";
-              dphideta[j] = _pt_basis->eval_dphidy(_IND[j], x);
-              dphidetasum += dphideta[j];
-              std::cout << dphideta[j] <<" ";
-	      
-              d2phidxi2 = _pt_basis->eval_d2phidx2(_IND[j], x);
-              std::cout << d2phidxi2 <<" ";
-              d2phideta2 = _pt_basis->eval_d2phidy2(_IND[j], x);
-              std::cout << d2phideta2 <<" ";
-              d2phidxideta = _pt_basis->eval_d2phidxdy(_IND[j], x);
-              std::cout << d2phidxideta <<"\n";
-            }  
-            std::cout << _nc << " " << phisum << " " << dphidxisum << " " << dphidetasum << std::endl;
-            std::cout << std::endl;
-	  }
-	}
+      Gauss faceGaussPoint = Gauss("line", order_gauss);
+      const double* xi = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
+
+      basis *faceBasis = linearLine;
+
+      unsigned nFaces = _pt_basis->faceNumber[2];
+      _phiFace.resize(nFaces);
+      _gradPhiFace.resize(nFaces);
+      _hessianPhiFace.resize(nFaces);
+
+      for(int iface = 0; iface < nFaces; iface++) {
+        std::vector< double > xv(faceBasis -> _nc);
+        std::vector< double > yv(faceBasis -> _nc);
+        for(int jnode = 0; jnode < faceBasis -> _nc; jnode++) {
+          unsigned iDof = _pt_basis->GetFaceDof(iface, jnode);
+          xv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
+          yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
+        }
+        unsigned nGaussPts = faceGaussPoint.GetGaussPointsNumber();
+        _phiFace[iface].resize(nGaussPts);
+        _gradPhiFace[iface].resize(nGaussPts);
+        _hessianPhiFace[iface].resize(nGaussPts);
+        for(unsigned i = 0; i < nGaussPts; i++) {
+          double x[2] = {0., 0.};
+          for(int j = 0; j <  faceBasis -> _nc; j++) {
+            x[0] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi[i]) * xv[j] ;
+            x[1] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi[i]) * yv[j] ;
+          }
+          _phiFace[iface][i].resize(_nc);
+          _gradPhiFace[iface][i].resize(_nc);
+          _hessianPhiFace[iface][i].resize(_nc);
+          for(int j = 0; j < _nc; j++) {
+            _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x);
+
+            _gradPhiFace[iface][i][j].resize(2);
+            _gradPhiFace[iface][i][j][0] = _pt_basis->eval_dphidx(_IND[j], x);
+            _gradPhiFace[iface][i][j][1] = _pt_basis->eval_dphidy(_IND[j], x);
+
+            _hessianPhiFace[iface][i][j].resize(2);
+            _hessianPhiFace[iface][i][j][0].resize(2);
+            _hessianPhiFace[iface][i][j][1].resize(2);
+            _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x);
+            _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x);
+            _hessianPhiFace[iface][i][j][0][1] = _pt_basis->eval_d2phidxdy(_IND[j], x);
+            _hessianPhiFace[iface][i][j][1][0] = _hessianPhiFace[iface][i][j][1][0];
+          }
+        }
       }
       delete linearLine;
     }
-    
+
 
 //
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
 
     std::cout << std::endl;
-    
+
     delete linearElement;
-   
-    
+
+
   }
 
   elem_type_3D::elem_type_3D(const char* geom_elem, const char* order, const char* order_gauss) :
@@ -1084,18 +1102,18 @@ namespace femus {
         double xm = 0., ym = 0., zm = 0.;
         for(int k = 0; k <  _nlag[0]; k++) {
           unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
-          double xv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
-          double yv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
-	  double zv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(element, k)) + 2);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
+          double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 2);
 
           unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
           xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
           ym += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
-	  zm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * zv;
+          zm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * zv;
         }
         _pt_basis->SetX(i, 0, xm);
         _pt_basis->SetX(i, 1, ym);
-	_pt_basis->SetX(i, 2, zm);
+        _pt_basis->SetX(i, 2, zm);
 
         std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << " " << *(_pt_basis->GetX(i) + 2) << std::endl;
       }
@@ -1122,9 +1140,9 @@ namespace femus {
       if(_SolType == 4 && i / 8 >= 1) { //if piece_wise_linear derivatives
         for(int k = 0; k < _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect to the fine elements
-          double xv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 0);
-          double yv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 1);
-          double zv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 2);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 1);
+          double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 2);
           if(i / 8 == 1) {
             jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
             jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
@@ -1170,9 +1188,9 @@ namespace femus {
       if(_SolType == 4 && i / 8 >= 1) { //if piece_wise_linear derivatives
         for(int k = 0; k <  _nlag[0]; k++) {
           //coordinates of the coarse vertices with respect to the fine elements
-          double xv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 0);
-          double yv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 1);
-          double zv = * (linearElement->GetXcoarse( linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 2);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 1);
+          double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 2);
           if(i / 8 == 1) {
             jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
             jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
@@ -1267,7 +1285,6 @@ namespace femus {
         ptx[j]++;
       }
 
-
       double phisum = 0.;
       double dphidxisum = 0.;
       double dphidetasum = 0.;
@@ -1279,21 +1296,15 @@ namespace femus {
       double d2phidetadzetasum = 0.;
       double d2phidzetadxisum = 0.;
 
-
       for(int j = 0; j < _nc; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
         _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j], x);
         _dphideta[i][j] = _pt_basis->eval_dphidy(_IND[j], x);
         _dphidzeta[i][j] = _pt_basis->eval_dphidz(_IND[j], x);
 
-
-
-
         _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j], x);
         _d2phideta2[i][j] = _pt_basis->eval_d2phidy2(_IND[j], x);
         _d2phidzeta2[i][j] = _pt_basis->eval_d2phidz2(_IND[j], x);
-
-        //std::cout << j <<" "<<_d2phideta2[i][j]<< " " << _d2phidzeta2[i][j] <<std::endl;
 
         _d2phidxideta[i][j] = _pt_basis->eval_d2phidxdy(_IND[j], x);
         _d2phidetadzeta[i][j] = _pt_basis->eval_d2phidydz(_IND[j], x);
@@ -1313,85 +1324,93 @@ namespace femus {
         d2phidetadzetasum +=  _d2phidetadzeta[i][j];
         d2phidzetadxisum += _d2phidzetadxi[i][j];
       }
-
-      //std::cout << "gauss " << i <<" "<<_nc <<" "<<x[0] <<" "<<x[1]<<" "<<x[2] << std::endl;
-      //std::cout << phisum << std::endl;
-      //std::cout << dphidxisum  << " " <<dphidetasum    <<" "<< dphidzetasum << std::endl;
-      //std::cout << d2phidxi2sum <<" " << d2phideta2sum <<" "<< d2phidzeta2sum << std::endl;
-      //std::cout << d2phidxidetasum <<" "<< d2phidetadzetasum <<" "<< d2phidzetadxisum << std::endl << std::endl;
     }
-      
-      std::cout << std::endl;
-      if(_SolType < 3){
+
+    std::cout << std::endl;
+    if(_SolType < 3) {
       basis *linearQuad = new QuadLinear;
       basis *linearTri = new TriLinear;
-    
+
       Gauss quadGaussPoint = Gauss("quad", order_gauss);
       Gauss triGaussPoint = Gauss("tri", order_gauss);
-      
+
       Gauss *faceGauss[2];
       faceGauss[0] = &quadGaussPoint;
       faceGauss[1] = &triGaussPoint;
-      
-      const double* xi[2]={ faceGauss[0]->GetGaussWeightsPointer() + faceGauss[0]->GetGaussPointsNumber(),
-	                    faceGauss[1]->GetGaussWeightsPointer() + faceGauss[1]->GetGaussPointsNumber() };
 
-      const double* yi[2]={ faceGauss[0]->GetGaussWeightsPointer() + 2*(faceGauss[0]->GetGaussPointsNumber()),
-	                    faceGauss[1]->GetGaussWeightsPointer() + 2*(faceGauss[1]->GetGaussPointsNumber()) };
-       
+      const double* xi[2] = { faceGauss[0]->GetGaussWeightsPointer() + faceGauss[0]->GetGaussPointsNumber(),
+                              faceGauss[1]->GetGaussWeightsPointer() + faceGauss[1]->GetGaussPointsNumber()
+                            };
+
+      const double* yi[2] = { faceGauss[0]->GetGaussWeightsPointer() + 2 * (faceGauss[0]->GetGaussPointsNumber()),
+                              faceGauss[1]->GetGaussWeightsPointer() + 2 * (faceGauss[1]->GetGaussPointsNumber())
+                            };
+
       basis *faceBasis[2];
       faceBasis[0] = linearQuad;
       faceBasis[1] = linearTri;
-    
-      for(unsigned type = 0; type < 2; type++){
-	for(int iface = _pt_basis->faceNumber[type]; iface < _pt_basis->faceNumber[type+1]; iface++){
-	  std::vector< double > xv( faceBasis[type] -> _nc );
-	  std::vector< double > yv( faceBasis[type] -> _nc );
-	  std::vector< double > zv( faceBasis[type] -> _nc );
-	  for(int jnode = 0; jnode < faceBasis[type] -> _nc; jnode++){
-	    unsigned iDof = _pt_basis->GetFaceDof(iface,jnode);
-	    xv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
-	    yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
-	    zv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 2);
-	  }
-	  std::cout<<faceGauss[type]->GetGaussPointsNumber()<<std::endl;
-	  for(unsigned i = 0; i < faceGauss[type]->GetGaussPointsNumber(); i++) {    
-	    double xg = 0;
-	    double yg = 0;
-	    double zg = 0;
-	    const double vertex[2] = {xi[type][i], yi[type][i]};
-	    for(int j = 0; j <  faceBasis[type] -> _nc; j++) {
-	      xg += faceBasis[type]->eval_phi( faceBasis[type]->GetIND(j), vertex ) * xv[j] ;
-	      yg += faceBasis[type]->eval_phi( faceBasis[type]->GetIND(j), vertex ) * yv[j] ;
-	      zg += faceBasis[type]->eval_phi( faceBasis[type]->GetIND(j), vertex ) * zv[j] ;
-	    }
-	    std::cout << vertex[0] <<" "<< vertex[1] <<" "<< xg <<" "<< yg <<" "<< zg << std::endl;
-	    double x[3]={xg, yg, zg};
-	    double phi[_nc], dphidxi[_nc], dphideta[_nc], dphidzeta[_nc];
-	    double d2phidxi2, d2phideta2, d2phidzeta2, d2phidxideta, d2phidetadzeta, d2phidzetadxi;
-	    double phisum = 0, dphidxisum = 0, dphidetasum =0, dphidzetasum = 0;
-	    for(int j = 0; j < _nc; j++) {
-              phi[j] = _pt_basis->eval_phi(_IND[j], x);
-	      phisum += phi[j];
-              dphidxi[j] = _pt_basis->eval_dphidx(_IND[j], x);
-	      dphidxisum += dphidxi[j];
-              dphideta[j] = _pt_basis->eval_dphidy(_IND[j], x);
-	      dphidetasum += dphideta[j];
-              dphidzeta[j] = _pt_basis->eval_dphidz(_IND[j], x);
-	      dphidzetasum += dphidzeta[j];
+      
+      unsigned nFaces = _pt_basis->faceNumber[2];
+      _phiFace.resize(nFaces);
+      _gradPhiFace.resize(nFaces);
+      _hessianPhiFace.resize(nFaces);
 
-              d2phidxi2 = _pt_basis->eval_d2phidx2(_IND[j], x);
-              d2phideta2 = _pt_basis->eval_d2phidy2(_IND[j], x);
-              d2phidzeta2 = _pt_basis->eval_d2phidz2(_IND[j], x);
-
-              d2phidxideta = _pt_basis->eval_d2phidxdy(_IND[j], x);
-              d2phidetadzeta = _pt_basis->eval_d2phidydz(_IND[j], x);
-              d2phidzetadxi = _pt_basis->eval_d2phidzdx(_IND[j], x);
+      for(unsigned type = 0; type < 2; type++) {
+        for(int iface = _pt_basis->faceNumber[type]; iface < _pt_basis->faceNumber[type + 1]; iface++) {
+          std::vector< double > xv(faceBasis[type] -> _nc);
+          std::vector< double > yv(faceBasis[type] -> _nc);
+          std::vector< double > zv(faceBasis[type] -> _nc);
+          for(int jnode = 0; jnode < faceBasis[type] -> _nc; jnode++) {
+            unsigned iDof = _pt_basis->GetFaceDof(iface, jnode);
+            xv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
+            yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
+            zv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 2);
+          }
+          
+	  unsigned nGaussPts = faceGauss[type]->GetGaussPointsNumber();
+	  _phiFace[iface].resize(nGaussPts);
+	  _gradPhiFace[iface].resize(nGaussPts);
+	  _hessianPhiFace[iface].resize(nGaussPts);
+	  
+          for(unsigned i = 0; i < nGaussPts; i++) {
+            double x[3] = {0., 0., 0.};
+            const double vertex[2] = {xi[type][i], yi[type][i]};
+            for(int j = 0; j <  faceBasis[type] -> _nc; j++) {
+              x[0] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * xv[j] ;
+              x[1] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * yv[j] ;
+              x[2] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * zv[j] ;
             }
-            std::cout << _nc << " "  << phisum << " " << dphidxisum << " " << dphidetasum << " " << dphidzetasum << std::endl;
-            std::cout << std::endl;
-	  }
-	}
+	    
+	    _phiFace[iface][i].resize(_nc);
+	    _gradPhiFace[iface][i].resize(_nc);
+	    _hessianPhiFace[iface][i].resize(_nc);
+            for(int j = 0; j < _nc; j++) {
+              _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x);
+	      
+	      _gradPhiFace[iface][i][j].resize(3);
+              _gradPhiFace[iface][i][j][0] = _pt_basis->eval_dphidx(_IND[j], x);
+              _gradPhiFace[iface][i][j][1] = _pt_basis->eval_dphidy(_IND[j], x);
+              _gradPhiFace[iface][i][j][2] = _pt_basis->eval_dphidz(_IND[j], x);
+
+	      _hessianPhiFace[iface][i][j].resize(3);
+	      _hessianPhiFace[iface][i][j][0].resize(3);
+	      _hessianPhiFace[iface][i][j][1].resize(3);
+	      _hessianPhiFace[iface][i][j][2].resize(3);
+              
+	      _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x);
+              _hessianPhiFace[iface][i][j][0][1] = _pt_basis->eval_d2phidxdy(_IND[j], x);
+	      _hessianPhiFace[iface][i][j][0][2] = _pt_basis->eval_d2phidzdx(_IND[j], x);
+	      
+	      _hessianPhiFace[iface][i][j][1][0] =  _hessianPhiFace[iface][i][j][0][1];
+	      _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x);
+              _hessianPhiFace[iface][i][j][1][2] = _pt_basis->eval_d2phidydz(_IND[j], x);
+             
+	      _hessianPhiFace[iface][i][j][2][0] = _hessianPhiFace[iface][i][j][0][2];
+	      _hessianPhiFace[iface][i][j][2][1] = _hessianPhiFace[iface][i][j][1][2];
+	      _hessianPhiFace[iface][i][j][2][2] = _pt_basis->eval_d2phidz2(_IND[j], x);
+            }
+          }
+        }
       }
       delete linearQuad;
       delete linearTri;
@@ -1401,7 +1420,7 @@ namespace femus {
     EvaluateShapeAtQP(geom_elem, order);
 
     std::cout << std::endl;
-    
+
     delete linearElement;
 
   }

@@ -30,7 +30,12 @@ double InitalValueV(const std::vector < double >& x) {
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
-  FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+ // FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
+   std::cout<< "**LINE**" <<std::endl;
+  const elem_type * _finiteElement1 = new const elem_type_1D("line","quadratic","seventh");
+  delete _finiteElement1;
+  
   
 //   std::cout<<std::endl;
 //   const elem_type * _finiteElement2 = new const elem_type_2D("tri","disc_linear","seventh");
@@ -44,8 +49,9 @@ int main(int argc, char** args) {
 //   std::cout<< "**QUAD**" <<std::endl;
 //   const elem_type * _finiteElement1 = new const elem_type_2D("quad","quadratic","seventh");
   
-  std::cout<< "**TRI**" <<std::endl;
-  const elem_type * _finiteElement2 = new const elem_type_2D("tri","quadratic","seventh");
+//   std::cout<< "**TRI**" <<std::endl;
+//   const elem_type * _finiteElement2 = new const elem_type_2D("tri","quadratic","seventh");
+//   delete _finiteElement2;
   //const elem_type * _finiteElement2 = new const elem_type_2D("tri","biquadratic","seventh");
   
 //   std::cout<< "**HEX**" <<std::endl;
@@ -55,10 +61,10 @@ int main(int argc, char** args) {
 //   const elem_type * _finiteElement4 = new const elem_type_3D("tet","quadratic","seventh");
   //const elem_type * _finiteElement6 = new const elem_type_3D("tet","biquadratic","seventh");
   
-  std::cout<< "**WEDGE**" <<std::endl;
-  const elem_type * _finiteElement5 = new const elem_type_3D("wedge","quadratic","seventh");
-  //const elem_type * _finiteElement4 = new const elem_type_3D("wedge","biquadratic","third");
-
+//   std::cout<< "**WEDGE**" <<std::endl;
+//   const elem_type * _finiteElement5 = new const elem_type_3D("wedge","linear","ninth");
+//   //const elem_type * _finiteElement4 = new const elem_type_3D("wedge","biquadratic","third");
+//   delete _finiteElement5;
 
 
 

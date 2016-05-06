@@ -240,6 +240,11 @@ public:
 
   double **_d2phidxi2;
   double *_d2phidxi2_memory;
+  
+  std::vector < std::vector < std::vector < double > > > _phiFace; 
+  std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
+  std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
+  
 };
 
 class elem_type_2D : public elem_type {
@@ -314,6 +319,11 @@ private:
 
   double **_d2phidxideta;
   double *_d2phidxideta_memory;
+  
+  std::vector < std::vector < std::vector < double > > > _phiFace; 
+  std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
+  std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
+  
 };
 
 class elem_type_3D : public elem_type {
@@ -404,6 +414,11 @@ private:
   double *_d2phidetadzeta_memory;
   double **_d2phidzetadxi;
   double *_d2phidzetadxi_memory;
+  
+  std::vector < std::vector < std::vector < double > > > _phiFace; 
+  std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
+  std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
+  
 };
 
 
