@@ -516,7 +516,7 @@ namespace femus {
     _X = new const double * [_nf];
 
     //******************************************************
-    if(_SolType == 2) {
+    if(_SolType <= 2) {
       for(int i = 0; i < _nlag[3]; i++) {
         double xm = 0.;
         for(int k = 0; k <  _nlag[0]; k++) {
@@ -553,12 +553,12 @@ namespace femus {
       }
 
       for(int j = 0; j < _nc; j++) {
-	
+
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
 
 
 	std::cout << j << " "<< phi << std::endl;
-	
+
         if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
           phi = jac[j];
         }
@@ -647,52 +647,52 @@ namespace femus {
       }
     }
 
-    
+
     if(_SolType < 3) {
-          
+
       unsigned nFaces = 2;
       _phiFace.resize(nFaces);
       _gradPhiFace.resize(nFaces);
       _hessianPhiFace.resize(nFaces);
 
        double xv[2]={-1,1};
-      
+
       for(int iface = 0; iface < nFaces; iface++) {
         _phiFace[iface].resize(1);
         _gradPhiFace[iface].resize(1);
         _hessianPhiFace[iface].resize(1);
-        
+
 	_phiFace[iface][0].resize(_nc);
         _gradPhiFace[iface][0].resize(_nc);
         _hessianPhiFace[iface][0].resize(_nc);
-        
+
 	for(int j = 0; j < _nc; j++) {
          _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xv[iface]);
 
 	 std::cout <<  _phiFace[iface][0][j] << " ";
-	 
+
          _gradPhiFace[iface][0][j].resize(1);
          _gradPhiFace[iface][0][j][0] = _pt_basis->eval_dphidx(_IND[j], &xv[iface]);
-         
+
 	 std::cout <<  _gradPhiFace[iface][0][j][0] << " ";
 
           _hessianPhiFace[iface][0][j].resize(1);
           _hessianPhiFace[iface][0][j][0].resize(1);
           _hessianPhiFace[iface][0][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], &xv[iface]);
-            
+
 	  std::cout <<  _hessianPhiFace[iface][0][j][0][0] << " ";
         }
         std::cout << std::endl;
       }
-     
+
     }
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
 
@@ -1349,7 +1349,7 @@ namespace femus {
       basis *faceBasis[2];
       faceBasis[0] = linearQuad;
       faceBasis[1] = linearTri;
-      
+
       unsigned nFaces = _pt_basis->faceNumber[2];
       _phiFace.resize(nFaces);
       _gradPhiFace.resize(nFaces);
@@ -1366,12 +1366,12 @@ namespace femus {
             yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
             zv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 2);
           }
-          
+
 	  unsigned nGaussPts = faceGauss[type]->GetGaussPointsNumber();
 	  _phiFace[iface].resize(nGaussPts);
 	  _gradPhiFace[iface].resize(nGaussPts);
 	  _hessianPhiFace[iface].resize(nGaussPts);
-	  
+
           for(unsigned i = 0; i < nGaussPts; i++) {
             double x[3] = {0., 0., 0.};
             const double vertex[2] = {xi[type][i], yi[type][i]};
@@ -1380,13 +1380,13 @@ namespace femus {
               x[1] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * yv[j] ;
               x[2] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * zv[j] ;
             }
-	    
+
 	    _phiFace[iface][i].resize(_nc);
 	    _gradPhiFace[iface][i].resize(_nc);
 	    _hessianPhiFace[iface][i].resize(_nc);
             for(int j = 0; j < _nc; j++) {
               _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x);
-	      
+
 	      _gradPhiFace[iface][i][j].resize(3);
               _gradPhiFace[iface][i][j][0] = _pt_basis->eval_dphidx(_IND[j], x);
               _gradPhiFace[iface][i][j][1] = _pt_basis->eval_dphidy(_IND[j], x);
@@ -1396,15 +1396,15 @@ namespace femus {
 	      _hessianPhiFace[iface][i][j][0].resize(3);
 	      _hessianPhiFace[iface][i][j][1].resize(3);
 	      _hessianPhiFace[iface][i][j][2].resize(3);
-              
+
 	      _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x);
               _hessianPhiFace[iface][i][j][0][1] = _pt_basis->eval_d2phidxdy(_IND[j], x);
 	      _hessianPhiFace[iface][i][j][0][2] = _pt_basis->eval_d2phidzdx(_IND[j], x);
-	      
+
 	      _hessianPhiFace[iface][i][j][1][0] =  _hessianPhiFace[iface][i][j][0][1];
 	      _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x);
               _hessianPhiFace[iface][i][j][1][2] = _pt_basis->eval_d2phidydz(_IND[j], x);
-             
+
 	      _hessianPhiFace[iface][i][j][2][0] = _hessianPhiFace[iface][i][j][0][2];
 	      _hessianPhiFace[iface][i][j][2][1] = _hessianPhiFace[iface][i][j][1][2];
 	      _hessianPhiFace[iface][i][j][2][2] = _pt_basis->eval_d2phidz2(_IND[j], x);
