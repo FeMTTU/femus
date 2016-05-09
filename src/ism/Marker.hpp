@@ -54,6 +54,8 @@ namespace femus {
     unsigned GetNextElement2D(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
     unsigned GetNextElement3D(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
     
+    void InverseMappingQuad(const unsigned &currentElem, const unsigned &SolutionType, std::vector< double > &x);
+    
     std::vector < double > _x;
     MarkerType _markerType;
     const Mesh * _mesh;

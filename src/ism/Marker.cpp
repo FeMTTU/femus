@@ -658,6 +658,99 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
 
     return (nextElem >= 0) ? nextElem : UINT_MAX;
 }
+
+
+
+void Marker::InverseMappingQuad(const unsigned &currentElem, const unsigned &solutionType, 
+				std::vector< double > &x){
+  
+    unsigned dim = 2;
+    unsigned nDofs = _mesh->GetElementDofNumber(currentElem, solutionType);
+    std::vector < std::vector < double > > xv(2);
+    std::vector < std::vector < double > > a(2);
+    
+    for(unsigned k=0; k<dim; k++){
+      xv[k].resize(nDofs);
+      a[k].resize(nDofs);
+    }
+    
+    short unsigned ielType = _mesh->GetElementType(currentElem);
+
+    for(unsigned i = 0; i < nDofs; i++) {
+      unsigned iDof  = _mesh->GetSolutionDof(facePoints[ielType][i], currentElem, solutionType); // global to global mapping between coordinates node and coordinate dof
+      for(int k=0; k<dim; k++){
+	xv[k][i] = (*_mesh->_topology->_Sol[0])(iDof); // global extraction and local storage for the element coordinates
+      } 
+    }
+    
+    if(solutionType == 0){
+      for(int k=0; k<dim; k++){
+	a[k][0] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]);
+	a[k][1] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]);
+	a[k][2] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]);
+	a[k][3] = 0.25 * ( xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]); 
+      }
+    }
+    else if(solutionType == 1){
+      for(int k=0; k<dim; k++){
+	a[k][0] = -0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) + 
+		    0.5 * ( xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7]);
+	a[k][1] = 0.5 * (xv[k][5] - xv[k][7] );
+	a[k][2] = 0.5 * (xv[k][6] - xv[k][4] );
+	a[k][3] = 0.25 * ( xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]); 
+	a[k][4] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) - 0.5 * (xv[k][4] + xv[k][6] );
+	a[k][5] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) - 0.5 * (xv[k][5] + xv[k][7] );
+	a[k][6] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]) + 0.5 * (xv[k][4] - xv[k][6] );
+	a[k][7] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]) + 0.5 * (xv[k][7] - xv[k][5] ); 
+      }
+    }
+    else if(solutionType == 2){
+      for(int k=0; k<dim; k++){
+	a[k][0] = xv[k][8];
+	a[k][1] = 0.5 * (xv[k][5] - xv[k][7] );
+	a[k][2] = 0.5 * (xv[k][6] - xv[k][4] );
+	a[k][3] = 0.25 * ( xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]); 
+	a[k][4] =  0.5 * ( xv[k][5] + xv[k][7] ) - xv[k][8]; 
+	a[k][5] =  0.5 * ( xv[k][4] + xv[k][6] ) - xv[k][8]; 
+	a[k][6] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]) +  
+		   0.5 * ( xv[k][4] - xv[k][6] ); 
+	a[k][7] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]) +  
+		   0.5 * (-xv[k][5] + xv[k][7] ); 
+	a[k][8] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) - 
+		   0.5 * ( xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7]) + xv[k][8];
+      }
+    }
+    
+    std::vector < double > phi(nDofs);
+    double xi = 0.25;
+    double eta = 0.25;
+    
+    phi[0] = 1.;
+    phi[1] = xi;
+    phi[2] = eta;
+    phi[3] = xi * eta;
+    if(solutionType > 1){
+      phi[4] = xi * xi;
+      phi[5] = eta * eta;
+      phi[6] = phi[4] *eta;
+      phi[7] = phi[5] * xi;
+    }
+    if(solutionType > 2){
+      phi[8] = phi[3] * phi[3];
+    }
+       
+    double xp[2]={0.,0.};   
+    for(int i=0; i<nDofs; i++){
+      for(int k=0; k<dim; k++){
+	xp[k] += a[k][i]*phi[i];
+      }
+    }
+    std::cout << xp[0]<<" "<< xp[1]<<std::endl;
+    
+  }
+
+  
+  
 }
 
 
