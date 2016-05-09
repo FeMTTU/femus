@@ -61,7 +61,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 7;
+  unsigned numberOfUniformLevels = 8;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -74,7 +74,7 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("T", LAGRANGE, FIRST);
+  mlSol.AddSolution("T", LAGRANGE, SERENDIPITY);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
 
@@ -111,12 +111,12 @@ int main(int argc, char** args) {
   fieldUVP[0] = system.GetSolPdeIndex("U");
   fieldUVP[1] = system.GetSolPdeIndex("V");
   fieldUVP[2] = system.GetSolPdeIndex("P");
-  
+
   std::vector < unsigned > solutionType(3);
   solutionType[0] = mlSol.GetSolutionType("U");
   solutionType[1] = mlSol.GetSolutionType("V");
   solutionType[2] = mlSol.GetSolutionType("P");
-  
+
   FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, solutionType, "Navier-Stokes");
 
 //   std::vector < unsigned > fieldUV(2);
@@ -191,11 +191,11 @@ int main(int argc, char** args) {
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  system.SetResidualUpdateConvergenceTolerance(1.e-12);
+  system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(0);
+  system.SetNumberPreSmoothingStep(2);
   system.SetNumberPostSmoothingStep(2);
   // initilaize and solve the system
   system.init();
@@ -219,6 +219,8 @@ int main(int argc, char** args) {
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+
+  mlMsh.PrintInfo();
 
   return 0;
 }

@@ -148,8 +148,8 @@ namespace femus {
           }
             std::cout << "   ********* Level Max " << igridn << " MG PROJECTION MATRICES TIME:\t" \
 	    << static_cast<double>( ( clock() - mg_proj_mat_time ) ) / CLOCKS_PER_SEC << std::endl;
-          
-          clock_t mg_init_time = clock();  
+
+          clock_t mg_init_time = clock();
 	  if( _MGsolver ) {
             _LinSolver[igridn - 1u]->MGInit( mgSmootherType, igridn, _outer_ksp_solver.c_str() );
 

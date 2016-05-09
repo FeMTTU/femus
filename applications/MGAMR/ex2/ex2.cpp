@@ -142,7 +142,7 @@ int main(int argc, char** args) {
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  system.SetResidualUpdateConvergenceTolerance(1.e-12);
+  system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
 
@@ -155,7 +155,7 @@ int main(int argc, char** args) {
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
-  
+
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
