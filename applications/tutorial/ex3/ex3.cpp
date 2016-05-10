@@ -50,8 +50,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
     probably in the furure it is not going to be an argument of this function   */
@@ -61,7 +61,7 @@ int main(int argc, char** args) {
   if (dim == 2) {
     maxNumberOfMeshes = 7;
   } else {
-    maxNumberOfMeshes = 4;
+    maxNumberOfMeshes = 5;
   }
 
   vector < vector < double > > l2Norm;

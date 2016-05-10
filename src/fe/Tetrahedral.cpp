@@ -69,28 +69,56 @@ namespace femus {
     {1,5},{1,6},{1,4},{1,8},{1,9},{1,7}, //16->21 
     {2,6},{2,4},{2,5},{2,9},{2,7},{2,8}, //22->27 
     {3,4},{3,5},{3,6},{3,7},{3,8},{3,9}, //28->33 
-    {4,4},                               //34 
-    {4,12},{5,12},{6,11},{7,11},         //external faces of internal tetrahedra
+//     {4,4},                               //34 
+    {4,5},                               //34 
+//     {4,12},{5,12},{6,11},{7,11},         //external faces of internal tetrahedra
+//     {4,12},{5,11},{6,10},{7,13},         //external faces of internal tetrahedra
+    {4,11},{5,12},{6,10},{7,13},         //external faces of internal tetrahedra
     {0,10},{0,11},{0,12},{0,13},         //faces of 1st external tetrahedra 
     {1,10},{1,12},{1,13},{1,11},         //faces of 2nd external tetrahedra 
     {2,10},{2,13},{2,11},{2,12},         //faces of 3rd external tetrahedra 
     {3,10},{3,11},{3,12},{3,13},         //faces of 4th external tetrahedra 
-    {4,10},{4,11},{5,10},{6,13},         //internal faces of internal tetrahedra 
+//     {4,10},{4,11},{5,10},{6,13},         //internal faces of internal tetrahedra 
+    {4,12},{4,10},{5,11},{6,11},         //internal faces of internal tetrahedra 
     {0,14},{1,14},{2,14},{3,14},         // baricenters
     {4,14},{5,14},{6,14},{7,14}
   };
   
   
-    const unsigned tet_lag::fine2CoarseVertexMapping[8][4]= { //nuova numerazione
+//    const unsigned tet_lag::fine2CoarseVertexMapping[8][4]= { //nuova numerazione
+//     {0,4,6,7},
+//     {4,1,5,8},
+//     {6,5,2,9},
+//     {7,8,9,3},
+//     {5,7,4,8}, 
+//     {7,5,9,8}, 
+//     {5,4,7,6}, 
+//     {7,9,5,6}
+//   };
+  
+//    const unsigned tet_lag::fine2CoarseVertexMapping[8][4]= { //nuova numerazione
+//     {0,4,6,7},
+//     {4,1,5,8},
+//     {6,5,2,9},
+//     {7,8,9,3},
+//     {5,7,4,8}, 
+//     {5,9,7,8}, 
+//     {6,4,5,7}, 
+//     {6,5,9,7}
+//   };
+  
+   const unsigned tet_lag::fine2CoarseVertexMapping[8][4]= { //nuova numerazione
     {0,4,6,7},
     {4,1,5,8},
     {6,5,2,9},
     {7,8,9,3},
-    {5,7,4,8}, 
-    {7,5,9,8}, 
-    {5,4,7,6}, 
-    {7,9,5,6}
+    {8,7,5,4}, 
+    {7,9,8,5}, 
+    {5,6,4,7}, 
+    {9,5,7,6}  
   };
+  
+  
   
     const unsigned tet_lag::faceDofs[4][7] = { 
       {0, 2, 1, 6, 5, 4, 10},
