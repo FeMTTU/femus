@@ -52,16 +52,19 @@ namespace femus {
 
     delete _pt_basis;
 
-    if (isMpGDAllocated) {
-      for (int g = 0; g < GetGaussRule().GetGaussPointsNumber(); g++) {
+    if(isMpGDAllocated) {
+      for(int g = 0; g < GetGaussRule().GetGaussPointsNumber(); g++) {
         delete [] _phi_mapGD[g];
         delete [] _dphidxez_mapGD[g];
       }
+
       delete [] _phi_mapGD;
       delete [] _dphidxez_mapGD;
     }
 
   }
+
+
 
 
 //----------------------------------------------------------------------------------------------------
@@ -76,7 +79,7 @@ namespace femus {
     _phi_mapGD = new double*[GetGaussRule().GetGaussPointsNumber()];// TODO valgrind, remember to DEALLOCATE THESE, e.g. with smart pointers
     _dphidxez_mapGD = new double*[GetGaussRule().GetGaussPointsNumber()];
 
-    for (int g = 0; g < GetGaussRule().GetGaussPointsNumber(); g++) {
+    for(int g = 0; g < GetGaussRule().GetGaussPointsNumber(); g++) {
       _phi_mapGD[g] = new double[GetNDofs()];
       _dphidxez_mapGD[g] = new double[GetNDofs()*GetDim()];
     }
@@ -94,18 +97,18 @@ namespace femus {
 // from libmesh to eu connectivity
     const unsigned from_libmesh_to_femus[27] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 12, 13, 14, 15, 21, 22, 23, 24, 20, 25, 26};
 
-    if ((!strcmp(fe_in.c_str(), "biquadratic")) && GetDim() == 3  && (!strcmp(geomel_id_in.c_str(), "hex"))) {
+    if((!strcmp(fe_in.c_str(), "biquadratic")) && GetDim() == 3  && (!strcmp(geomel_id_in.c_str(), "hex"))) {
 //             std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << "REMEMBER THAT ONLY HEX27 HAS A DIFFERENT CONNECTIVITY MAP"  << std::endl;
 
-      for (int ig = 0; ig < GetGaussRule().GetGaussPointsNumber(); ig++) {
+      for(int ig = 0; ig < GetGaussRule().GetGaussPointsNumber(); ig++) {
 
-        for (int idof = 0; idof < GetNDofs(); idof++) {
+        for(int idof = 0; idof < GetNDofs(); idof++) {
 //                 std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << idof << std::endl;
           _phi_mapGD[ig][idof] = GetPhi(ig)[ from_femus_to_libmesh[idof] ];
 // 	std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << vb << " " << ig << " " << dof << " phi " << _phi_mapGD[vb][ig][dof] << std::endl;
 
 // derivatives in canonical element
-          for (uint idim = 0; idim < GetDim(); idim++) {
+          for(uint idim = 0; idim < GetDim(); idim++) {
             double* dphi_g = (this->*(_DPhiXiEtaZetaPtr[idim]))(ig);      //how to access a pointer to member function
             _dphidxez_mapGD[ig][ idof + idim * GetNDofs()] =  dphi_g[ from_femus_to_libmesh[idof] ];
 //           std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << " " << ig << " " << idof << " " << idim << " dphi         " << _dphidxez_mapGD[ig][ idof + idim*GetNDofs()]  << "                                      "  << std::endl;
@@ -129,13 +132,13 @@ namespace femus {
 
     else {
 
-      for (int ig = 0; ig < GetGaussRule().GetGaussPointsNumber(); ig++) {
+      for(int ig = 0; ig < GetGaussRule().GetGaussPointsNumber(); ig++) {
 
-        for (int idof = 0; idof < GetNDofs(); idof++) {
+        for(int idof = 0; idof < GetNDofs(); idof++) {
           _phi_mapGD[ig][idof] = GetPhi(ig)[idof];
 
 // derivatives in canonical element
-          for (uint idim = 0; idim < GetDim(); idim++) {
+          for(uint idim = 0; idim < GetDim(); idim++) {
             double* dphi_g = (this->*(_DPhiXiEtaZetaPtr[idim]))(ig);   //how to access a pointer to member function
             _dphidxez_mapGD[ig][ idof + idim * GetNDofs()] =  dphi_g[idof];
 
@@ -161,21 +164,24 @@ namespace femus {
   void elem_type::GetSparsityPatternSize(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc,
                                          NumericVector* NNZ_d, NumericVector* NNZ_o,
                                          const unsigned& index_sol, const unsigned& kkindex_sol) const {
-    if (lspdec._msh->GetRefinedElementIndex(ielc)) { // coarse2fine prolongation
-      for (int i = 0; i < _nf; i++) {
+    if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+      for(int i = 0; i < _nf; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, i0, i1, lspdec._msh); //  local-id to dof
 
         int iproc = 0;
-        while (irow >= lspdef.KKoffset[lspdef.KKIndex.size() - 1][iproc]) iproc++;
+
+        while(irow >= lspdef.KKoffset[lspdef.KKIndex.size() - 1][iproc]) iproc++;
 
         int ncols = _prol_ind[i + 1] - _prol_ind[i];
         int counter_o = 0;
-        for (int k = 0; k < ncols; k++) {
+
+        for(int k = 0; k < ncols; k++) {
           int j = _prol_ind[i][k];
           int jcolumn = lspdec.GetSystemDof(index_sol, kkindex_sol, j, ielc);
-          if (jcolumn < lspdec.KKoffset[0][iproc] || jcolumn >= lspdec.KKoffset[lspdef.KKIndex.size() - 1][iproc]) counter_o++;
+
+          if(jcolumn < lspdec.KKoffset[0][iproc] || jcolumn >= lspdec.KKoffset[lspdef.KKIndex.size() - 1][iproc]) counter_o++;
         }
 
         NNZ_d->set(irow, ncols - counter_o);
@@ -183,14 +189,16 @@ namespace femus {
       }
     }
     else { // coarse2coarse prolongation
-      for (int i = 0; i < _nc; i++) {
+      for(int i = 0; i < _nc; i++) {
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
 
         int iproc = 0;
-        while (irow >= lspdef.KKoffset[lspdef.KKIndex.size() - 1][iproc]) iproc++;
+
+        while(irow >= lspdef.KKoffset[lspdef.KKIndex.size() - 1][iproc]) iproc++;
 
         int jcolumn = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
-        if (jcolumn < lspdec.KKoffset[0][iproc] || jcolumn >= lspdec.KKoffset[lspdef.KKIndex.size() - 1][iproc]) {
+
+        if(jcolumn < lspdec.KKoffset[0][iproc] || jcolumn >= lspdec.KKoffset[lspdef.KKIndex.size() - 1][iproc]) {
           NNZ_o->set(irow, 1);
         }
         else {
@@ -204,27 +212,31 @@ namespace femus {
   void elem_type::BuildProlongation(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc, SparseMatrix* Projmat,
                                     const unsigned& index_sol, const unsigned& kkindex_sol) const {
 
-    if (lspdec._msh->GetRefinedElementIndex(ielc)) { // coarse2fine prolongation
+    if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       vector<int> cols(_nc);
-      for (int i = 0; i < _nf; i++) {
+
+      for(int i = 0; i < _nf; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, i0, i1, lspdec._msh);
 
         int ncols = _prol_ind[i + 1] - _prol_ind[i];
         cols.assign(ncols, 0);
-        for (int k = 0; k < ncols; k++) {
+
+        for(int k = 0; k < ncols; k++) {
           int j = _prol_ind[i][k];
           int jj = lspdec.GetSystemDof(index_sol, kkindex_sol, j, ielc);
           cols[k] = jj;
         }
+
         Projmat->insert_row(irow, ncols, cols, _prol_val[i]);
       }
     }
     else {
       vector <int> jcol(1);
       double one = 1.;
-      for (int i = 0; i < _nc; i++) {
+
+      for(int i = 0; i < _nc; i++) {
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
         jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
         Projmat->insert_row(irow, 1, jcol, &one);
@@ -237,30 +249,35 @@ namespace femus {
       const unsigned& index_sol, const unsigned& kkindex_sol,
       const unsigned& index_pair_sol, const unsigned& kkindex_pair_sol) const {
 
-    if (lspdec._msh->GetRefinedElementIndex(ielc)) { // coarse2fine prolongation
+    if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
 
       //BEGIN project nodeSolidMark
       vector < double > fineNodeSolidMark(_nf, 0);
       vector < bool > coarseNodeSolidMark(_nc, 0);
-      if (_SolType == 2) {
-        for (unsigned j = 0; j < _nc; j++) {
+
+      if(_SolType == 2) {
+        for(unsigned j = 0; j < _nc; j++) {
           int jadd = lspdec._msh->GetSolutionDof(j, ielc, _SolType);
           coarseNodeSolidMark[j] = lspdec._msh->GetSolidMark(jadd);
         }
-        for (unsigned i = 0; i < _nf; i++) {
+
+        for(unsigned i = 0; i < _nf; i++) {
           int ncols = _prol_ind[i + 1] - _prol_ind[i];
-          for (int k = 0; k < ncols; k++) {
+
+          for(int k = 0; k < ncols; k++) {
             int j = _prol_ind[i][k];
             fineNodeSolidMark[i] += _prol_val[i][k] * coarseNodeSolidMark[j];
           }
         }
       }
+
       //END project nodeSolidMark
 
       vector <int> cols(_nc);
       vector <double> copy_prol_val;
       copy_prol_val.reserve(_nc);
-      for (int i = 0; i < _nf; i++) {
+
+      for(int i = 0; i < _nf; i++) {
         int i0 = _KVERT_IND[i][0]; // id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; // local id node on the subdivision of the fine element
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, i0, i1, lspdec._msh);
@@ -269,10 +286,12 @@ namespace femus {
         int ncols = _prol_ind[i + 1] - _prol_ind[i];
         cols.assign(ncols, 0);
         copy_prol_val.assign(ncols, 0);
-        for (int k = 0; k < ncols; k++) {
+
+        for(int k = 0; k < ncols; k++) {
           int j = _prol_ind[i][k];
           bool jsolidmark = coarseNodeSolidMark[j];
-          if (isolidmark == jsolidmark) {
+
+          if(isolidmark == jsolidmark) {
             int jcolumn = lspdec.GetSystemDof(index_sol, kkindex_sol, j, ielc);
             cols[k] = jcolumn;
             copy_prol_val[k] = _prol_val[i][k];
@@ -283,13 +302,15 @@ namespace femus {
             copy_prol_val[k] = (index_sol != index_pair_sol) ? _prol_val[i][k] : 0.;
           }
         }
+
         Projmat->insert_row(irow, ncols, cols, &copy_prol_val[0]);
       }
     }
     else {
       vector <int> jcol(1);
       double one = 1.;
-      for (int i = 0; i < _nc; i++) {
+
+      for(int i = 0; i < _nc; i++) {
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, 0, i, lspdec._msh);
         jcol[0] = lspdec.GetSystemDof(index_sol, kkindex_sol, i, ielc);
         Projmat->insert_row(irow, 1, jcol, &one);
@@ -307,8 +328,8 @@ namespace femus {
 
   void elem_type::GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const {
 
-    if (meshc.GetRefinedElementIndex(ielc)) { // coarse2fine prolongation
-      for (int i = 0; i < _nf; i++) {
+    if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+      for(int i = 0; i < _nf; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
         int irow = meshf.GetSolutionDof(ielc, i0, i1, _SolType, &meshc);
@@ -316,22 +337,26 @@ namespace femus {
         int iproc = meshf.IsdomBisectionSearch(irow, _SolType);
         int ncols = _prol_ind[i + 1] - _prol_ind[i];
         unsigned counter_o = 0;
-        for (int k = 0; k < ncols; k++) {
+
+        for(int k = 0; k < ncols; k++) {
           int j = _prol_ind[i][k];
           int jcolumn = meshc.GetSolutionDof(j, ielc, _SolType);
-          if (jcolumn < meshc._dofOffset[_SolType][iproc] || jcolumn >= meshc._dofOffset[_SolType][iproc + 1]) counter_o++;
+
+          if(jcolumn < meshc._dofOffset[_SolType][iproc] || jcolumn >= meshc._dofOffset[_SolType][iproc + 1]) counter_o++;
         }
+
         NNZ_d->set(irow, ncols - counter_o);
         NNZ_o->set(irow, counter_o);
       }
     }
     else { // coarse2coarse prolongation
-      for (int i = 0; i < _nc; i++) {
+      for(int i = 0; i < _nc; i++) {
         int irow = meshf.GetSolutionDof(ielc, 0, i , _SolType, &meshc);
 
         int iproc = meshf.IsdomBisectionSearch(irow, _SolType);
         int jcolumn = meshc.GetSolutionDof(i, ielc, _SolType);
-        if (jcolumn < meshc._dofOffset[_SolType][iproc] || jcolumn >= meshc._dofOffset[_SolType][iproc + 1]) {
+
+        if(jcolumn < meshc._dofOffset[_SolType][iproc] || jcolumn >= meshc._dofOffset[_SolType][iproc + 1]) {
           NNZ_o->set(irow, 1);
         }
         else {
@@ -343,26 +368,30 @@ namespace femus {
 
   void elem_type::BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc,
                                     SparseMatrix* Projmat) const {
-    if (meshc.GetRefinedElementIndex(ielc)) { // coarse2fine prolongation
+    if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       vector<int> jcols(_nc);
-      for (int i = 0; i < _nf; i++) {
+
+      for(int i = 0; i < _nf; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
         int irow = meshf.GetSolutionDof(ielc, i0, i1, _SolType, &meshc);
         int ncols = _prol_ind[i + 1] - _prol_ind[i];
         jcols.assign(ncols, 0);
-        for (int k = 0; k < ncols; k++) {
+
+        for(int k = 0; k < ncols; k++) {
           int j = _prol_ind[i][k];
           int jcolumn = meshc.GetSolutionDof(j, ielc, _SolType);
           jcols[k] = jcolumn;
         }
+
         Projmat->insert_row(irow, ncols, jcols, _prol_val[i]);
       }
     }
     else { // coarse2coarse prolongation
       vector <int> jcol(1);
       double one = 1.;
-      for (int i = 0; i < _nc; i++) {
+
+      for(int i = 0; i < _nc; i++) {
         int irow = meshf.GetSolutionDof(ielc, 0, i , _SolType, &meshc);
         jcol[0] = meshc.GetSolutionDof(i, ielc, _SolType);
         Projmat->insert_row(irow, 1, jcol, &one);
@@ -379,17 +408,22 @@ namespace femus {
 //----------------------------------------------------------------------------------------------------
 
   void elem_type::GetSparsityPatternSize(const Mesh& mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const {
-    bool identity = ( _nlag[itype] == _nc ) ? true : false;
-    for (int i = 0; i < _nlag[itype]; i++) {
+    bool identity = (_nlag[itype] <= _nc) ? true : false;
+    for(int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
       int iproc = mesh.IsdomBisectionSearch(irow, itype);
-      int ncols = (identity)? 1 : _prol_ind[i + 1] - _prol_ind[i];
+      int ncols = (identity) ? 1 : _nc;
       unsigned counter_o = 0;
-      for (int k = 0; k < ncols; k++) {
-        int jcolumn = (identity) ? irow : mesh.GetSolutionDof(_prol_ind[i][k], iel, _SolType);
-        if (jcolumn < mesh._dofOffset[_SolType][iproc] || jcolumn >= mesh._dofOffset[_SolType][iproc + 1]) counter_o++;
+      unsigned counter = 0;
+      for(int k = 0; k < ncols; k++) {
+        double phi = (identity) ? 1. : _pt_basis->eval_phi(_pt_basis->GetIND(k), _pt_basis->GetXcoarse(i));
+        if(fabs(phi) > 1.0e-14) {
+          counter++;
+          int kcolumn = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(k, iel, _SolType);
+          if(kcolumn < mesh._dofOffset[_SolType][iproc] || kcolumn >= mesh._dofOffset[_SolType][iproc + 1]) counter_o++;
+        }
       }
-      NNZ_d->set(irow, ncols - counter_o);
+      NNZ_d->set(irow, counter - counter_o);
       NNZ_o->set(irow, counter_o);
     }
   }
@@ -397,18 +431,24 @@ namespace femus {
   void elem_type::BuildProlongation(const Mesh& mesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const {
     vector<int> cols(_nc);
     vector<double> value(_nc);
-    bool identity = ( _nlag[itype] == _nc ) ? true : false;
-    for (int i = 0; i < _nlag[itype]; i++) {
+    bool identity = (_nlag[itype] <= _nc) ? true : false;
+    for(int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
-      int ncols = (identity) ? 1 : _prol_ind[i + 1] - _prol_ind[i];
-      int ncols_stored = static_cast <int>(floor((*NNZ_d)(irow) + (*NNZ_o)(irow) + 0.5));
-      if (ncols == ncols_stored) {
-        cols.assign(ncols, 0);
-        for (int k = 0; k < ncols; k++) {
-          cols[k]  = (identity) ? irow : mesh.GetSolutionDof( _prol_ind[i][k], iel, _SolType);
-          value[k] = (identity) ? 1.: _prol_val[i][k];
+      int ncols = (identity) ? 1 : _nc;
+      unsigned counter = 0;
+      cols.resize(_nc);
+      for(int k = 0; k < ncols; k++) {
+        double phi = (identity) ? 1. : _pt_basis->eval_phi(_pt_basis->GetIND(k), _pt_basis->GetXcoarse(i));
+        if(fabs(phi) > 1.0e-14) {
+          cols[counter]  = (identity) ? mesh.GetSolutionDof(i, iel, _SolType) : mesh.GetSolutionDof(k, iel, _SolType);
+          value[counter] = phi;
+          counter++;
         }
-        Projmat->insert_row(irow, ncols, cols, &value[0]);
+      }
+      cols.resize(counter);
+      int ncols_stored = static_cast <int>(floor((*NNZ_d)(irow) + (*NNZ_o)(irow) + 0.5));
+      if(counter == ncols_stored) {
+        Projmat->insert_row(irow, counter, cols, &value[0]);
       }
     }
   }
@@ -422,27 +462,31 @@ namespace femus {
   elem_type_1D::elem_type_1D(const char* geom_elem, const char* order, const char* order_gauss) :
     elem_type(geom_elem, order_gauss) {
 
+    basis *linearElement;
+
     _dim = 1;
     _DPhiXiEtaZetaPtr.resize(_dim);
     _DPhiXiEtaZetaPtr[0] = &elem_type::GetDPhiDXi;
 
     //************ BEGIN FE and MG SETUP ******************
-    if (!strcmp(order, "linear")) 		 _SolType = 0;
-    else if (!strcmp(order, "quadratic")) 	 _SolType = 1;
-    else if (!strcmp(order, "biquadratic")) _SolType = 2;
-    else if (!strcmp(order, "constant"))    _SolType = 3;
-    else if (!strcmp(order, "disc_linear")) _SolType = 4;
+    if(!strcmp(order, "linear")) 		 _SolType = 0;
+    else if(!strcmp(order, "quadratic")) 	 _SolType = 1;
+    else if(!strcmp(order, "biquadratic")) _SolType = 2;
+    else if(!strcmp(order, "constant"))    _SolType = 3;
+    else if(!strcmp(order, "disc_linear")) _SolType = 4;
     else {
       cout << order << " is not a valid option for " << geom_elem << endl;
       exit(0);
     }
 
-    if (!strcmp(geom_elem, "line")) { //line
-      if (_SolType == 0) _pt_basis = new LineLinear;
-      else if (_SolType == 1) _pt_basis = new LineBiquadratic;
-      else if (_SolType == 2) _pt_basis = new LineBiquadratic;
-      else if (_SolType == 3) _pt_basis = new line0;
-      else if (_SolType == 4) _pt_basis = new linepwLinear;
+    if(!strcmp(geom_elem, "line")) {  //line
+      linearElement = new LineLinear;
+
+      if(_SolType == 0) _pt_basis = new LineLinear;
+      else if(_SolType == 1) _pt_basis = new LineBiquadratic;
+      else if(_SolType == 2) _pt_basis = new LineBiquadratic;
+      else if(_SolType == 3) _pt_basis = new line0;
+      else if(_SolType == 4) _pt_basis = new linepwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         exit(0);
@@ -459,32 +503,72 @@ namespace femus {
     _nlag[0] = _pt_basis->_nlag0;
     _nlag[1] = _pt_basis->_nlag1;
     _nlag[2] = _pt_basis->_nlag2;
+    _nlag[3] = _pt_basis->_nlag3;
 
 
     _IND = new const int * [_nc];
-    for (int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->getIND(i);
+
+    for(int i = 0; i < _nc; i++) {
+      _IND[i] = _pt_basis->GetIND(i);
     }
+
     _KVERT_IND = new const int * [_nf];
     _X = new const double * [_nf];
-    for (int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->getKVERT_IND(i);
-      _X[i] = _pt_basis->getX(i);
+
+    //******************************************************
+    if(_SolType <= 2) {
+      for(int i = 0; i < _nlag[3]; i++) {
+        double xm = 0.;
+        for(int k = 0; k <  _nlag[0]; k++) {
+          unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
+          unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
+          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
+        }
+        _pt_basis->SetX(i, 0, xm);
+
+        std::cout << *(_pt_basis->GetX(i) + 0) << std::endl;
+      }
     }
+
+    for(int i = 0; i < _nf; i++) {
+      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
+      _X[i] = _pt_basis->GetX(i);
+    }
+    //******************************************************
 
     // local projection matrix evaluation
     int counter = 0;
-    for (int i = 0; i < _nf; i++) {
-      for (int j = 0; j < _nc; j++) {
-        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-        if (_SolType == 4) {   //if piece_wise_linear
-          if (i / 2 == 1)  phi = _pt_basis->eval_dphidx(_IND[j], _X[i]);
+
+    for(int i = 0; i < _nf; i++) {
+
+      double jac[2] = {0, 0};
+
+      if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
+        for(int k = 0; k <  _nlag[0]; k++) {
+          //coordinates of the coarse vertices with respect the fine elements
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 2,  k)) + 0);
+          jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
         }
-        if (fabs(phi) >= 1.0e-14) {
+      }
+
+      for(int j = 0; j < _nc; j++) {
+
+        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
+
+
+	std::cout << j << " "<< phi << std::endl;
+
+        if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
+          phi = jac[j];
+        }
+
+        if(fabs(phi) >= 1.0e-14) {
           counter++;
         }
       }
     }
+
     double* pt_d;
     int* pt_i;
 
@@ -495,15 +579,31 @@ namespace femus {
 
     pt_d = _mem_prol_val;
     pt_i = _mem_prol_ind;
-    for (int i = 0; i < _nf; i++) {
+
+    for(int i = 0; i < _nf; i++) {
+
+      double jac[2] = {0, 0};
+
+      if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
+        for(int k = 0; k <  _nlag[0]; k++) {
+          //coordinates of the coarse vertices with respect the fine elements
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 2, k)) + 0);
+          jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
+        }
+        std::cout << jac[0] << " " << jac[1] << std::endl;
+      }
+
       _prol_val[i] = pt_d;
       _prol_ind[i] = pt_i;
-      for (int j = 0; j < _nc; j++) {
+
+      for(int j = 0; j < _nc; j++) {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-        if (_SolType == 4) { //if piece_wise_linear
-          if (i / 2 == 1) phi = _pt_basis->eval_dphidx(_IND[j], _X[i]) / 2.;
+
+        if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
+          phi = jac[j];
         }
-        if (fabs(phi) >= 1.0e-14) {
+
+        if(fabs(phi) >= 1.0e-14) {
           *(pt_d++) = phi;
           *(pt_i++) = j;
         }
@@ -524,37 +624,87 @@ namespace femus {
     _dphidxi_memory  = new double [n_gauss * _nc];
     _d2phidxi2_memory  = new double [n_gauss * _nc];
 
-    for (unsigned i = 0; i < n_gauss; i++) {
+    for(unsigned i = 0; i < n_gauss; i++) {
       _phi[i] = &_phi_memory[i * _nc];
       _dphidxi[i]  = &_dphidxi_memory[i * _nc];
       _d2phidxi2[i]  = &_d2phidxi2_memory[i * _nc];
     }
 
     const double* ptx[1] = {_gauss.GetGaussWeightsPointer() + n_gauss};
-    for (unsigned i = 0; i < n_gauss; i++) {
+
+    for(unsigned i = 0; i < n_gauss; i++) {
       double x[1];
-      for (unsigned j = 0; j < 1; j++) {
+
+      for(unsigned j = 0; j < 1; j++) {
         x[j] = *ptx[j];
         ptx[j]++;
       }
 
-      for (int j = 0; j < _nc; j++) {
+      for(int j = 0; j < _nc; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
         _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j], x);
         _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j], x);
       }
     }
 
+
+    if(_SolType < 3) {
+
+      unsigned nFaces = 2;
+      _phiFace.resize(nFaces);
+      _gradPhiFace.resize(nFaces);
+      _hessianPhiFace.resize(nFaces);
+
+       double xv[2]={-1,1};
+
+      for(int iface = 0; iface < nFaces; iface++) {
+        _phiFace[iface].resize(1);
+        _gradPhiFace[iface].resize(1);
+        _hessianPhiFace[iface].resize(1);
+
+	_phiFace[iface][0].resize(_nc);
+        _gradPhiFace[iface][0].resize(_nc);
+        _hessianPhiFace[iface][0].resize(_nc);
+
+	for(int j = 0; j < _nc; j++) {
+         _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xv[iface]);
+
+	 std::cout <<  _phiFace[iface][0][j] << " ";
+
+         _gradPhiFace[iface][0][j].resize(1);
+         _gradPhiFace[iface][0][j][0] = _pt_basis->eval_dphidx(_IND[j], &xv[iface]);
+
+	 std::cout <<  _gradPhiFace[iface][0][j][0] << " ";
+
+          _hessianPhiFace[iface][0][j].resize(1);
+          _hessianPhiFace[iface][0][j][0].resize(1);
+          _hessianPhiFace[iface][0][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], &xv[iface]);
+
+	  std::cout <<  _hessianPhiFace[iface][0][j][0][0] << " ";
+        }
+        std::cout << std::endl;
+      }
+
+    }
+
+
+
+
+
+
+
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
 
+    delete linearElement;
 
   }
 
 
   elem_type_2D::elem_type_2D(const char* geom_elem, const char* order, const char* order_gauss):
-    elem_type(geom_elem, order_gauss)
-  {
+    elem_type(geom_elem, order_gauss) {
+
+    basis *linearElement;
 
     _dim = 2;
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -562,38 +712,37 @@ namespace femus {
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
 
     //************ BEGIN FE and MG SETUP ******************
-    if (!strcmp(order, "linear")) 	 _SolType = 0;
-    else if (!strcmp(order, "quadratic")) 	 _SolType = 1;
-    else if (!strcmp(order, "biquadratic")) _SolType = 2;
-    else if (!strcmp(order, "constant"))    _SolType = 3;
-    else if (!strcmp(order, "disc_linear")) _SolType = 4;
+    if(!strcmp(order, "linear")) 	 _SolType = 0;
+    else if(!strcmp(order, "quadratic"))   _SolType = 1;
+    else if(!strcmp(order, "biquadratic")) _SolType = 2;
+    else if(!strcmp(order, "constant"))    _SolType = 3;
+    else if(!strcmp(order, "disc_linear")) _SolType = 4;
     else {
       cout << order << " is not a valid option for " << geom_elem << endl;
       abort();
     }
 
-    unsigned elementType;
-    
-    if (!strcmp(geom_elem, "quad")) { //QUAD
-      elementType = 3;
-      if (_SolType == 0) _pt_basis = new QuadLinear;
-      else if (_SolType == 1) _pt_basis = new QuadQuadratic;
-      else if (_SolType == 2) _pt_basis = new QuadBiquadratic;
-      else if (_SolType == 3) _pt_basis = new quad0;
-      else if (_SolType == 4) _pt_basis = new quadpwLinear;
+    if(!strcmp(geom_elem, "quad")) {  //QUAD
+      linearElement = new QuadLinear;
+
+      if(_SolType == 0) _pt_basis = new QuadLinear;
+      else if(_SolType == 1) _pt_basis = new QuadQuadratic;
+      else if(_SolType == 2) _pt_basis = new QuadBiquadratic;
+      else if(_SolType == 3) _pt_basis = new quad0;
+      else if(_SolType == 4) _pt_basis = new quadpwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         abort();
       }
     }
-    else if (!strcmp(geom_elem, "tri")) { //TRIANGLE
+    else if(!strcmp(geom_elem, "tri")) {  //TRIANGLE
+      linearElement = new TriLinear;
 
-      elementType = 4;
-      if (_SolType == 0) _pt_basis = new TriLinear;
-      else if (_SolType == 1) _pt_basis = new TriQuadratic;
-      else if (_SolType == 2) _pt_basis = new TriBiquadratic;
-      else if (_SolType == 3) _pt_basis = new tri0;
-      else if (_SolType == 4) _pt_basis = new tripwLinear;
+      if(_SolType == 0) _pt_basis = new TriLinear;
+      else if(_SolType == 1) _pt_basis = new TriQuadratic;
+      else if(_SolType == 2) _pt_basis = new TriBiquadratic;
+      else if(_SolType == 3) _pt_basis = new tri0;
+      else if(_SolType == 4) _pt_basis = new tripwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         abort();
@@ -610,32 +759,84 @@ namespace femus {
     _nlag[0] = _pt_basis->_nlag0;
     _nlag[1] = _pt_basis->_nlag1;
     _nlag[2] = _pt_basis->_nlag2;
+    _nlag[3] = _pt_basis->_nlag3;
 
     _IND = new const int * [_nc];
-    for (int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->getIND(i);
+
+    for(int i = 0; i < _nc; i++) {
+      _IND[i] = _pt_basis->GetIND(i);
     }
+
     _KVERT_IND = new const int * [_nf];
     _X = new const double * [_nf];
-    for (int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->getKVERT_IND(i);
-      _X[i] = _pt_basis->getX(i);
+
+
+
+    //***********************************************************
+    // construction of coordinates
+    if(_SolType <= 2) {
+      for(int i = 0; i < _nlag[3]; i++) {
+        double xm = 0., ym = 0.;
+        for(int k = 0; k <  _nlag[0]; k++) {
+          unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
+          unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
+          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
+          ym += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
+        }
+        _pt_basis->SetX(i, 0, xm);
+        _pt_basis->SetX(i, 1, ym);
+
+        std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << std::endl;
+      }
     }
+
+
+
+    for(int i = 0; i < _nf; i++) {
+      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
+      _X[i] = _pt_basis->GetX(i);
+    }
+
+    //***********************************************************
 
     // local projection matrix evaluation
     int counter = 0;
-    for (int i = 0; i < _nf; i++) {
-      for (int j = 0; j < _nc; j++) {
-        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-        if (_SolType == 4) { //if piece_wise_linear
-          if	(i / 4 == 1) phi = _pt_basis->eval_dphidx(_IND[j], _X[i]);
-          else if (i / 4 == 2) phi = _pt_basis->eval_dphidy(_IND[j], _X[i]);
+
+    for(int i = 0; i < _nf; i++) {
+
+      double jac[3] = {0, 0, 0};
+
+      if(_SolType == 4 && i / 4 >= 1) { //if piece_wise_linear derivatives
+        for(int k = 0; k <  _nlag[0]; k++) {
+          //coordinates of the coarse vertices with respect the fine elements
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 1);
+          if(i / 4 == 1) {
+            jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
+          }
+          else if(i / 4 == 2) {
+            jac[1] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * yv;
+          }
         }
-        if (fabs(phi) >= 1.0e-14) {
+      }
+
+      for(int j = 0; j < _nc; j++) {
+        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
+
+        if(_SolType == 4 && i / 4 >= 1) { //if piece_wise_linear derivatives
+          phi = jac[j];
+        }
+
+        if(fabs(phi) >= 1.0e-14) {
           counter++;
         }
       }
     }
+
     double* pt_d;
     int* pt_i;
 
@@ -646,36 +847,43 @@ namespace femus {
 
     pt_d = _mem_prol_val;
     pt_i = _mem_prol_ind;
-    for (int i = 0; i < _nf; i++) {
-      // std::cout << "\n" << i << std::endl;
-      // double sum = 0;
+
+    for(int i = 0; i < _nf; i++) {
+
+      double jac[3] = {0, 0, 0};
+
+      if(_SolType == 4 && i / 4 >= 1) { //if piece_wise_linear derivatives
+        for(int k = 0; k <  _nlag[0]; k++) {
+          //coordinates of the coarse vertices with respect the fine elements
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 4, k)) + 1);
+          if(i / 4 == 1) {
+            jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
+          }
+          else if(i / 4 == 2) {
+            jac[1] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * yv;
+          }
+        }
+        std::cout << jac[0] << " " << jac[1] << " " << jac[2] << std::endl;
+      }
 
       _prol_val[i] = pt_d;
       _prol_ind[i] = pt_i;
-      for (int j = 0; j < _nc; j++) {
-        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-        if (_SolType == 4) { //if piece_wise_linear
-	  
-          if	(i / 4 == 1) {
-	    phi = _pt_basis->eval_dphidx(_IND[j], _X[i]) / 2.;
-	  }
-          else if (i / 4 == 2){
-	    phi = _pt_basis->eval_dphidy(_IND[j], _X[i]) / 2.;
-	  }
-	   
-	  if( elementType == 4 && ( i == 7 || i == 11) ){
-	    phi *= -1.;
-	  }
-        }
-        if (fabs(phi) >= 1.0e-14) {
-          *(pt_d++) = phi;
-	  //sum += phi;
-          *(pt_i++) = j;
-	  // std::cout << j <<" " << phi<<std::endl;
 
+      for(int j = 0; j < _nc; j++) {
+        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
+
+        if(_SolType == 4 && i / 4 >= 1) { //if piece_wise_linear derivatives
+          phi = jac[j];
+        }
+
+        if(fabs(phi) >= 1.0e-14) {
+          *(pt_d++) = phi;
+          *(pt_i++) = j;
         }
       }
-      // std::cout<<sum<<std::endl;
     }
 
     _prol_val[_nf] = pt_d;
@@ -702,7 +910,7 @@ namespace femus {
 
     _d2phidxideta_memory  = new double [n_gauss * _nc];
 
-    for (unsigned i = 0; i < n_gauss; i++) {
+    for(unsigned i = 0; i < n_gauss; i++) {
       _phi[i] = &_phi_memory[i * _nc];
       _dphidxi[i]  = &_dphidxi_memory[i * _nc];
       _dphideta[i] = &_dphideta_memory[i * _nc];
@@ -715,54 +923,89 @@ namespace femus {
     }
 
     const double* ptx[2] = {_gauss.GetGaussWeightsPointer() + n_gauss, _gauss.GetGaussWeightsPointer() + 2 * n_gauss};
-    for (unsigned i = 0; i < n_gauss; i++) {
+
+    for(unsigned i = 0; i < n_gauss; i++) {
       double x[2];
-      for (unsigned j = 0; j < 2; j++) {
+
+      for(unsigned j = 0; j < 2; j++) {
         x[j] = *ptx[j];
         ptx[j]++;
       }
 
-      //double phisum=0.;
-      //double dphidxisum=0.;
-      //double dphidetasum=0.;
-      //double d2phidxi2sum=0.;
-      //double d2phideta2sum=0.;
-      //double d2phidxidetasum=0.;
-
-
-      for (int j = 0; j < _nc; j++) {
+      for(int j = 0; j < _nc; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
-	//phisum += _phi[i][j];
-	//std::cout << _phi[i][j] <<" ";
         _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j], x);
-	//dphidxisum += _dphidxi[i][j];
-	//std::cout << _dphidxi[i][j] <<" ";
         _dphideta[i][j] = _pt_basis->eval_dphidy(_IND[j], x);
-	//_dphidxi[i][j] += _dphideta[i][j];
-	//std::cout << _dphideta[i][j] <<" ";
         _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j], x);
-	//d2phidxi2sum += _d2phidxi2[i][j];
-	//std::cout << _d2phidxi2[i][j] <<" ";
         _d2phideta2[i][j] = _pt_basis->eval_d2phidy2(_IND[j], x);
-	//d2phideta2sum += _d2phideta2[i][j];
-	//std::cout << _d2phideta2[i][j] <<" ";
         _d2phidxideta[i][j] = _pt_basis->eval_d2phidxdy(_IND[j], x);
-	//d2phidxidetasum += _d2phidxideta[i][j];
-	//std::cout << _d2phidxideta[i][j] <<"\n";
       }
-//       std::cout<<std::endl;
-//
-//       std::cout<< phisum <<" "<<
-//       dphidxisum <<" "<<
-//       dphidetasum<<" "<<
-//       d2phidxi2sum<<" "<<
-//       d2phideta2sum<<" "<<
-//       d2phidxidetasum<<"\n\n";
 
     }
+
+    std::cout << std::endl;
+    if(_SolType < 3) {
+      basis *linearLine = new LineLinear;
+
+      Gauss faceGaussPoint = Gauss("line", order_gauss);
+      const double* xi = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
+
+      basis *faceBasis = linearLine;
+
+      unsigned nFaces = _pt_basis->faceNumber[2];
+      _phiFace.resize(nFaces);
+      _gradPhiFace.resize(nFaces);
+      _hessianPhiFace.resize(nFaces);
+
+      for(int iface = 0; iface < nFaces; iface++) {
+        std::vector< double > xv(faceBasis -> _nc);
+        std::vector< double > yv(faceBasis -> _nc);
+        for(int jnode = 0; jnode < faceBasis -> _nc; jnode++) {
+          unsigned iDof = _pt_basis->GetFaceDof(iface, jnode);
+          xv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
+          yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
+        }
+        unsigned nGaussPts = faceGaussPoint.GetGaussPointsNumber();
+        _phiFace[iface].resize(nGaussPts);
+        _gradPhiFace[iface].resize(nGaussPts);
+        _hessianPhiFace[iface].resize(nGaussPts);
+        for(unsigned i = 0; i < nGaussPts; i++) {
+          double x[2] = {0., 0.};
+          for(int j = 0; j <  faceBasis -> _nc; j++) {
+            x[0] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi[i]) * xv[j] ;
+            x[1] += faceBasis->eval_phi(faceBasis->GetIND(j), &xi[i]) * yv[j] ;
+          }
+          _phiFace[iface][i].resize(_nc);
+          _gradPhiFace[iface][i].resize(_nc);
+          _hessianPhiFace[iface][i].resize(_nc);
+          for(int j = 0; j < _nc; j++) {
+            _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x);
+
+            _gradPhiFace[iface][i][j].resize(2);
+            _gradPhiFace[iface][i][j][0] = _pt_basis->eval_dphidx(_IND[j], x);
+            _gradPhiFace[iface][i][j][1] = _pt_basis->eval_dphidy(_IND[j], x);
+
+            _hessianPhiFace[iface][i][j].resize(2);
+            _hessianPhiFace[iface][i][j][0].resize(2);
+            _hessianPhiFace[iface][i][j][1].resize(2);
+            _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x);
+            _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x);
+            _hessianPhiFace[iface][i][j][0][1] = _pt_basis->eval_d2phidxdy(_IND[j], x);
+            _hessianPhiFace[iface][i][j][1][0] = _hessianPhiFace[iface][i][j][1][0];
+          }
+        }
+      }
+      delete linearLine;
+    }
+
+
 //
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
+
+    std::cout << std::endl;
+
+    delete linearElement;
 
 
   }
@@ -776,47 +1019,54 @@ namespace femus {
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
     _DPhiXiEtaZetaPtr[2] = &elem_type::GetDPhiDZeta;
 
+    basis *linearElement;
 
     //************ BEGIN FE and MG SETUP ******************
-    if (!strcmp(order, "linear")) 	 _SolType = 0;
-    else if (!strcmp(order, "quadratic")) 	 _SolType = 1;
-    else if (!strcmp(order, "biquadratic")) _SolType = 2;
-    else if (!strcmp(order, "constant"))    _SolType = 3;
-    else if (!strcmp(order, "disc_linear")) _SolType = 4;
+    if(!strcmp(order, "linear")) 	 _SolType = 0;
+    else if(!strcmp(order, "quadratic")) 	 _SolType = 1;
+    else if(!strcmp(order, "biquadratic")) _SolType = 2;
+    else if(!strcmp(order, "constant"))    _SolType = 3;
+    else if(!strcmp(order, "disc_linear")) _SolType = 4;
     else {
       cout << order << " is not a valid option for " << geom_elem << endl;
       exit(0);
     }
 
-    if (!strcmp(geom_elem, "hex")) { //HEX
+    if(!strcmp(geom_elem, "hex")) {  //HEX
 
-      if (_SolType == 0) _pt_basis = new HexLinear;
-      else if (_SolType == 1) _pt_basis = new HexQuadratic;
-      else if (_SolType == 2) _pt_basis = new HexBiquadratic;
-      else if (_SolType == 3) _pt_basis = new hex0;
-      else if (_SolType == 4) _pt_basis = new hexpwLinear;
+      linearElement = new HexLinear;
+
+      if(_SolType == 0) _pt_basis = new HexLinear;
+      else if(_SolType == 1) _pt_basis = new HexQuadratic;
+      else if(_SolType == 2) _pt_basis = new HexBiquadratic;
+      else if(_SolType == 3) _pt_basis = new hex0;
+      else if(_SolType == 4) _pt_basis = new hexpwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         exit(0);
       }
     }
-    else if (!strcmp(geom_elem, "wedge")) { //WEDGE
-      if (_SolType == 0) _pt_basis = new WedgeLinear;
-      else if (_SolType == 1) _pt_basis = new WedgeQuadratic;
-      else if (_SolType == 2) _pt_basis = new WedgeBiquadratic;
-      else if (_SolType == 3) _pt_basis = new wedge0;
-      else if (_SolType == 4) _pt_basis = new wedgepwLinear;
+    else if(!strcmp(geom_elem, "wedge")) {  //WEDGE
+      linearElement = new WedgeLinear;
+
+      if(_SolType == 0) _pt_basis = new WedgeLinear;
+      else if(_SolType == 1) _pt_basis = new WedgeQuadratic;
+      else if(_SolType == 2) _pt_basis = new WedgeBiquadratic;
+      else if(_SolType == 3) _pt_basis = new wedge0;
+      else if(_SolType == 4) _pt_basis = new wedgepwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         exit(0);
       }
     }
-    else if (!strcmp(geom_elem, "tet")) { //TETRAHEDRA
-      if (_SolType == 0) _pt_basis = new TetLinear;
-      else if (_SolType == 1) _pt_basis = new TetQuadratic;
-      else if (_SolType == 2) _pt_basis = new TetBiquadratic;
-      else if (_SolType == 3) _pt_basis = new tet0;
-      else if (_SolType == 4) _pt_basis = new tetpwLinear;
+    else if(!strcmp(geom_elem, "tet")) {  //TETRAHEDRA
+      linearElement = new TetLinear;
+
+      if(_SolType == 0) _pt_basis = new TetLinear;
+      else if(_SolType == 1) _pt_basis = new TetQuadratic;
+      else if(_SolType == 2) _pt_basis = new TetBiquadratic;
+      else if(_SolType == 3) _pt_basis = new tet0;
+      else if(_SolType == 4) _pt_basis = new tetpwLinear;
       else {
         cout << order << " is not a valid option for " << geom_elem << endl;
         exit(0);
@@ -833,33 +1083,94 @@ namespace femus {
     _nlag[0] = _pt_basis->_nlag0;
     _nlag[1] = _pt_basis->_nlag1;
     _nlag[2] = _pt_basis->_nlag2;
+    _nlag[3] = _pt_basis->_nlag3;
+
 
     _IND = new const int * [_nc];
-    for (int i = 0; i < _nc; i++) {
-      _IND[i] = _pt_basis->getIND(i);
+
+    for(int i = 0; i < _nc; i++) {
+      _IND[i] = _pt_basis->GetIND(i);
     }
+
     _KVERT_IND = new const int * [_nf];
     _X = new const double * [_nf];
-    for (int i = 0; i < _nf; i++) {
-      _KVERT_IND[i] = _pt_basis->getKVERT_IND(i);
-      _X[i] = _pt_basis->getX(i);
+
+    // ****************************************************
+    // construction of coordinates
+    if(_SolType <= 2) {
+      for(int i = 0; i < _nlag[3]; i++) {
+        double xm = 0., ym = 0., zm = 0.;
+        for(int k = 0; k <  _nlag[0]; k++) {
+          unsigned element = *(linearElement->GetKVERT_IND(i) + 0);
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 1);
+          double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(element, k)) + 2);
+
+          unsigned vertex = *(linearElement->GetKVERT_IND(i) + 1);
+          xm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * xv;
+          ym += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * yv;
+          zm += linearElement->eval_phi(linearElement->GetIND(k), linearElement->GetXcoarse(vertex)) * zv;
+        }
+        _pt_basis->SetX(i, 0, xm);
+        _pt_basis->SetX(i, 1, ym);
+        _pt_basis->SetX(i, 2, zm);
+
+        std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << " " << *(_pt_basis->GetX(i) + 2) << std::endl;
+      }
+    }
+
+    // ****************************************************
+
+    for(int i = 0; i < _nf; i++) {
+      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
+      _X[i] = _pt_basis->GetX(i);
+    }
+
+    for(int i = 0; i < _nf; i++) {
+      _KVERT_IND[i] = _pt_basis->GetKVERT_IND(i);
+      _X[i] = _pt_basis->GetX(i);
     }
 
     // local projection matrix evaluation
     int counter = 0;
-    for (int i = 0; i < _nf; i++) {
-      for (int j = 0; j < _nc; j++) {
-        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-        if (_SolType == 4) { //if piece_wise_linear
-          if	(i / 8 == 1) phi = _pt_basis->eval_dphidx(_IND[j], _X[i]);
-          else if (i / 8 == 2) phi = _pt_basis->eval_dphidy(_IND[j], _X[i]);
-          else if (i / 8 == 3) phi = _pt_basis->eval_dphidz(_IND[j], _X[i]);
+
+    for(int i = 0; i < _nf; i++) {
+
+      double jac[4] = {0, 0, 0, 0};
+      if(_SolType == 4 && i / 8 >= 1) { //if piece_wise_linear derivatives
+        for(int k = 0; k < _nlag[0]; k++) {
+          //coordinates of the coarse vertices with respect to the fine elements
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 1);
+          double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 2);
+          if(i / 8 == 1) {
+            jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
+            jac[3] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * zv;
+          }
+          else if(i / 8 == 2) {
+            jac[1] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * yv;
+            jac[3] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * zv;
+          }
+          else if(i / 8 == 3) {
+            jac[1] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * yv;
+            jac[3] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * zv;
+          }
         }
-        if (fabs(phi) >= 1.0e-14) {
+      }
+      for(int j = 0; j < _nc; j++) {
+        double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
+        if(_SolType == 4 && i / 8 >= 1) { //if piece_wise_linear
+          phi = jac[j];
+        }
+        if(fabs(phi) >= 1.0e-14) {
           counter++;
         }
       }
     }
+
     double* pt_d;
     int* pt_i;
 
@@ -870,17 +1181,43 @@ namespace femus {
 
     pt_d = _mem_prol_val;
     pt_i = _mem_prol_ind;
-    for (int i = 0; i < _nf; i++) {
+
+    for(int i = 0; i < _nf; i++) {
+
+      double jac[4] = {0, 0, 0, 0};
+      if(_SolType == 4 && i / 8 >= 1) { //if piece_wise_linear derivatives
+        for(int k = 0; k <  _nlag[0]; k++) {
+          //coordinates of the coarse vertices with respect to the fine elements
+          double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 0);
+          double yv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 1);
+          double zv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 8, k)) + 2);
+          if(i / 8 == 1) {
+            jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * yv;
+            jac[3] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * zv;
+          }
+          else if(i / 8 == 2) {
+            jac[1] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * yv;
+            jac[3] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * zv;
+          }
+          else if(i / 8 == 3) {
+            jac[1] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * xv;
+            jac[2] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * yv;
+            jac[3] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * zv;
+          }
+        }
+        std::cout << jac[0] << " " << jac[1] << " " << jac[2] << " " << jac[3] << std::endl;
+      }
+
       _prol_val[i] = pt_d;
       _prol_ind[i] = pt_i;
-      for (int j = 0; j < _nc; j++) {
+      for(int j = 0; j < _nc; j++) {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
-        if (_SolType == 4) { //if piece_wise_linear
-          if	(i / 8 == 1) phi = _pt_basis->eval_dphidx(_IND[j], _X[i]) / 2.;
-          else if (i / 8 == 2) phi = _pt_basis->eval_dphidy(_IND[j], _X[i]) / 2.;
-          else if (i / 8 == 3) phi = _pt_basis->eval_dphidz(_IND[j], _X[i]) / 2.;
+        if(_SolType == 4 && i / 8 >= 1) { //if piece_wise_linear derivatives
+          phi = jac[j];
         }
-        if (fabs(phi) >= 1.0e-14) {
+        if(fabs(phi) >= 1.0e-14) {
           *(pt_d++) = phi;
           *(pt_i++) = j;
         }
@@ -919,7 +1256,7 @@ namespace femus {
     _d2phidetadzeta_memory = new double [n_gauss * _nc];
     _d2phidzetadxi_memory = new double [n_gauss * _nc];
 
-    for (unsigned i = 0; i < n_gauss; i++) {
+    for(unsigned i = 0; i < n_gauss; i++) {
       _phi[i] = &_phi_memory[i * _nc];
       _dphidxi[i]  = &_dphidxi_memory[i * _nc];
       _dphideta[i] = &_dphideta_memory[i * _nc];
@@ -939,70 +1276,152 @@ namespace femus {
                             _gauss.GetGaussWeightsPointer() + 2 * n_gauss,
                             _gauss.GetGaussWeightsPointer() + 3 * n_gauss
                            };
-    for (unsigned i = 0; i < n_gauss; i++) {
+
+    for(unsigned i = 0; i < n_gauss; i++) {
       double x[3];
-      for (unsigned j = 0; j < 3; j++) {
+
+      for(unsigned j = 0; j < 3; j++) {
         x[j] = *ptx[j];
         ptx[j]++;
       }
 
+      double phisum = 0.;
+      double dphidxisum = 0.;
+      double dphidetasum = 0.;
+      double dphidzetasum = 0.;
+      double d2phidxi2sum = 0.;
+      double d2phideta2sum = 0.;
+      double d2phidzeta2sum = 0.;
+      double d2phidxidetasum = 0.;
+      double d2phidetadzetasum = 0.;
+      double d2phidzetadxisum = 0.;
 
-      double phisum=0.;
-      double dphidxisum=0.;
-      double dphidetasum=0.;
-      double dphidzetasum=0.;
-      double d2phidxi2sum=0.;
-      double d2phideta2sum=0.;
-      double d2phidzeta2sum=0.;
-      double d2phidxidetasum=0.;
-      double d2phidetadzetasum=0.;
-      double d2phidzetadxisum=0.;
-
-
-      for (int j = 0; j < _nc; j++) {
+      for(int j = 0; j < _nc; j++) {
         _phi[i][j] = _pt_basis->eval_phi(_IND[j], x);
         _dphidxi[i][j] = _pt_basis->eval_dphidx(_IND[j], x);
         _dphideta[i][j] = _pt_basis->eval_dphidy(_IND[j], x);
-	_dphidzeta[i][j] = _pt_basis->eval_dphidz(_IND[j], x);
-
-
-
+        _dphidzeta[i][j] = _pt_basis->eval_dphidz(_IND[j], x);
 
         _d2phidxi2[i][j] = _pt_basis->eval_d2phidx2(_IND[j], x);
         _d2phideta2[i][j] = _pt_basis->eval_d2phidy2(_IND[j], x);
         _d2phidzeta2[i][j] = _pt_basis->eval_d2phidz2(_IND[j], x);
 
-	//std::cout << j <<" "<<_d2phideta2[i][j]<< " " << _d2phidzeta2[i][j] <<std::endl;
-
         _d2phidxideta[i][j] = _pt_basis->eval_d2phidxdy(_IND[j], x);
         _d2phidetadzeta[i][j] = _pt_basis->eval_d2phidydz(_IND[j], x);
         _d2phidzetadxi[i][j] = _pt_basis->eval_d2phidzdx(_IND[j], x);
 
-	phisum += _phi[i][j];
+        phisum += _phi[i][j];
 
         dphidxisum += _dphidxi[i][j];
         dphidetasum += _dphideta[i][j];
-	dphidzetasum += _dphidzeta[i][j];
+        dphidzetasum += _dphidzeta[i][j];
 
-	d2phidxi2sum += _d2phidxi2[i][j];
+        d2phidxi2sum += _d2phidxi2[i][j];
         d2phideta2sum += _d2phideta2[i][j];
-	d2phidzeta2sum += _d2phidzeta2[i][j];
+        d2phidzeta2sum += _d2phidzeta2[i][j];
 
-        d2phidxidetasum +=_d2phidxideta[i][j];
-	d2phidetadzetasum +=  _d2phidetadzeta[i][j];
-	d2phidzetadxisum += _d2phidzetadxi[i][j];
+        d2phidxidetasum += _d2phidxideta[i][j];
+        d2phidetadzetasum +=  _d2phidetadzeta[i][j];
+        d2phidzetadxisum += _d2phidzetadxi[i][j];
       }
-
-      //std::cout << "gauss " << i <<" "<<_nc <<" "<<x[0] <<" "<<x[1]<<" "<<x[2] << std::endl;
-      //std::cout << phisum << std::endl;
-      //std::cout << dphidxisum  << " " <<dphidetasum    <<" "<< dphidzetasum << std::endl;
-      //std::cout << d2phidxi2sum <<" " << d2phideta2sum <<" "<< d2phidzeta2sum << std::endl;
-      //std::cout << d2phidxidetasum <<" "<< d2phidetadzetasum <<" "<< d2phidzetadxisum << std::endl << std::endl;
     }
 
+    std::cout << std::endl;
+    if(_SolType < 3) {
+      basis *linearQuad = new QuadLinear;
+      basis *linearTri = new TriLinear;
+
+      Gauss quadGaussPoint = Gauss("quad", order_gauss);
+      Gauss triGaussPoint = Gauss("tri", order_gauss);
+
+      Gauss *faceGauss[2];
+      faceGauss[0] = &quadGaussPoint;
+      faceGauss[1] = &triGaussPoint;
+
+      const double* xi[2] = { faceGauss[0]->GetGaussWeightsPointer() + faceGauss[0]->GetGaussPointsNumber(),
+                              faceGauss[1]->GetGaussWeightsPointer() + faceGauss[1]->GetGaussPointsNumber()
+                            };
+
+      const double* yi[2] = { faceGauss[0]->GetGaussWeightsPointer() + 2 * (faceGauss[0]->GetGaussPointsNumber()),
+                              faceGauss[1]->GetGaussWeightsPointer() + 2 * (faceGauss[1]->GetGaussPointsNumber())
+                            };
+
+      basis *faceBasis[2];
+      faceBasis[0] = linearQuad;
+      faceBasis[1] = linearTri;
+
+      unsigned nFaces = _pt_basis->faceNumber[2];
+      _phiFace.resize(nFaces);
+      _gradPhiFace.resize(nFaces);
+      _hessianPhiFace.resize(nFaces);
+
+      for(unsigned type = 0; type < 2; type++) {
+        for(int iface = _pt_basis->faceNumber[type]; iface < _pt_basis->faceNumber[type + 1]; iface++) {
+          std::vector< double > xv(faceBasis[type] -> _nc);
+          std::vector< double > yv(faceBasis[type] -> _nc);
+          std::vector< double > zv(faceBasis[type] -> _nc);
+          for(int jnode = 0; jnode < faceBasis[type] -> _nc; jnode++) {
+            unsigned iDof = _pt_basis->GetFaceDof(iface, jnode);
+            xv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 0);
+            yv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 1);
+            zv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 2);
+          }
+
+	  unsigned nGaussPts = faceGauss[type]->GetGaussPointsNumber();
+	  _phiFace[iface].resize(nGaussPts);
+	  _gradPhiFace[iface].resize(nGaussPts);
+	  _hessianPhiFace[iface].resize(nGaussPts);
+
+          for(unsigned i = 0; i < nGaussPts; i++) {
+            double x[3] = {0., 0., 0.};
+            const double vertex[2] = {xi[type][i], yi[type][i]};
+            for(int j = 0; j <  faceBasis[type] -> _nc; j++) {
+              x[0] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * xv[j] ;
+              x[1] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * yv[j] ;
+              x[2] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * zv[j] ;
+            }
+
+	    _phiFace[iface][i].resize(_nc);
+	    _gradPhiFace[iface][i].resize(_nc);
+	    _hessianPhiFace[iface][i].resize(_nc);
+            for(int j = 0; j < _nc; j++) {
+              _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x);
+
+	      _gradPhiFace[iface][i][j].resize(3);
+              _gradPhiFace[iface][i][j][0] = _pt_basis->eval_dphidx(_IND[j], x);
+              _gradPhiFace[iface][i][j][1] = _pt_basis->eval_dphidy(_IND[j], x);
+              _gradPhiFace[iface][i][j][2] = _pt_basis->eval_dphidz(_IND[j], x);
+
+	      _hessianPhiFace[iface][i][j].resize(3);
+	      _hessianPhiFace[iface][i][j][0].resize(3);
+	      _hessianPhiFace[iface][i][j][1].resize(3);
+	      _hessianPhiFace[iface][i][j][2].resize(3);
+
+	      _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x);
+              _hessianPhiFace[iface][i][j][0][1] = _pt_basis->eval_d2phidxdy(_IND[j], x);
+	      _hessianPhiFace[iface][i][j][0][2] = _pt_basis->eval_d2phidzdx(_IND[j], x);
+
+	      _hessianPhiFace[iface][i][j][1][0] =  _hessianPhiFace[iface][i][j][0][1];
+	      _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x);
+              _hessianPhiFace[iface][i][j][1][2] = _pt_basis->eval_d2phidydz(_IND[j], x);
+
+	      _hessianPhiFace[iface][i][j][2][0] = _hessianPhiFace[iface][i][j][0][2];
+	      _hessianPhiFace[iface][i][j][2][1] = _hessianPhiFace[iface][i][j][1][2];
+	      _hessianPhiFace[iface][i][j][2][2] = _pt_basis->eval_d2phidz2(_IND[j], x);
+            }
+          }
+        }
+      }
+      delete linearQuad;
+      delete linearTri;
+    }
 
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
+
+    std::cout << std::endl;
+
+    delete linearElement;
 
   }
 
@@ -1021,7 +1440,7 @@ namespace femus {
 
     const double* dxi = _dphidxi[ig];
 
-    for (int inode = 0; inode < _nc; inode++, dxi++) {
+    for(int inode = 0; inode < _nc; inode++, dxi++) {
       Jac += (*dxi) * vt[0][inode];
     }
 
@@ -1032,7 +1451,7 @@ namespace femus {
     dxi = _dphidxi[ig];
     const double* dxi2 = _d2phidxi2[ig];
 
-    for (int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
+    for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
       phi[inode] = _phi[ig][inode];
       gradphi[inode] = (*dxi) * JacI;
       nablaphi[inode] = (*dxi2) * JacI * JacI;
@@ -1054,7 +1473,7 @@ namespace femus {
 
     const double* dfeta = _dphidxi[ig];
 
-    for (int inode = 0; inode < _nc; inode++, dfeta++) {
+    for(int inode = 0; inode < _nc; inode++, dfeta++) {
       Jac[0][0] += (*dfeta) * vt[0][inode];
       Jac[1][0] += (*dfeta) * vt[1][inode];
     }
@@ -1083,7 +1502,7 @@ namespace femus {
 
     Weight = det * _gauss.GetGaussWeightsPointer()[ig];
 
-    for (int inode = 0; inode < _nc; inode++) {
+    for(int inode = 0; inode < _nc; inode++) {
       phi[inode] = _phi[ig][inode];
     }
 
@@ -1103,12 +1522,14 @@ namespace femus {
     type JacI[2][2];
     const double* dxi = _dphidxi[ig];
     const double* deta = _dphideta[ig];
-    for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
+
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++) {
       Jac[0][0] += (*dxi) * vt[0][inode];
       Jac[0][1] += (*dxi) * vt[1][inode];
       Jac[1][0] += (*deta) * vt[0][inode];
       Jac[1][1] += (*deta) * vt[1][inode];
     }
+
     type det = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
 
     JacI[0][0] = Jac[1][1] / det;
@@ -1125,7 +1546,7 @@ namespace femus {
     const double* deta2 = _d2phideta2[ig];
     const double* dxideta = _d2phidxideta[ig];
 
-    for (int inode = 0; inode < _nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dxi2++, deta2++, dxideta++) {
 
       phi[inode] = _phi[ig][inode];
 
@@ -1158,7 +1579,7 @@ namespace femus {
     const double* dfx = _dphidxi[ig];
     const double* dfy = _dphideta[ig];
 
-    for (int inode = 0; inode < _nc; inode++, dfx++, dfy++) {
+    for(int inode = 0; inode < _nc; inode++, dfx++, dfy++) {
       Jac[0][0] += (*dfx) * vt[0][inode];
       Jac[1][0] += (*dfx) * vt[1][inode];
       Jac[2][0] += (*dfx) * vt[2][inode];
@@ -1189,7 +1610,7 @@ namespace femus {
 
     Weight = det * _gauss.GetGaussWeightsPointer()[ig];
 
-    for (int inode = 0; inode < _nc; inode++) {
+    for(int inode = 0; inode < _nc; inode++) {
       phi[inode] = _phi[ig][inode];
     }
 
@@ -1214,7 +1635,7 @@ namespace femus {
     const double* deta = _dphideta[ig];
     const double* dzeta = _dphidzeta[ig];
 
-    for (int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++) {
       Jac[0][0] += (*dxi) * vt[0][inode];
       Jac[0][1] += (*dxi) * vt[1][inode];
       Jac[0][2] += (*dxi) * vt[2][inode];
@@ -1225,6 +1646,7 @@ namespace femus {
       Jac[2][1] += (*dzeta) * vt[1][inode];
       Jac[2][2] += (*dzeta) * vt[2][inode];
     }
+
     type det = (Jac[0][0] * (Jac[1][1] * Jac[2][2] - Jac[1][2] * Jac[2][1]) +
                 Jac[0][1] * (Jac[1][2] * Jac[2][0] - Jac[1][0] * Jac[2][2]) +
                 Jac[0][2] * (Jac[1][0] * Jac[2][1] - Jac[1][1] * Jac[2][0]));
@@ -1252,7 +1674,7 @@ namespace femus {
     const double* detadzeta = _d2phidetadzeta[ig];
     const double* dzetadxi = _d2phidzetadxi[ig];
 
-    for (int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
+    for(int inode = 0; inode < _nc; inode++, dxi++, deta++, dzeta++, dxi2++, deta2++, dzeta2++, dxideta++, detadzeta++, dzetadxi++) {
 
       phi[inode] = _phi[ig][inode];
 
@@ -1291,5 +1713,10 @@ namespace femus {
 //---------------------------------------------------------------------------------------------------------
 
 } //end namespace femus
+
+
+
+
+
 
 

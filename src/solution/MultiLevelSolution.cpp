@@ -258,11 +258,11 @@ namespace femus {
                 xx[0] /= nloc_dof;
                 xx[1] /= nloc_dof;
                 xx[2] /= nloc_dof;
-		
+
 		value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
 
-		 unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(0, iel, sol_type);
-		
+		 unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(2, iel, sol_type);
+
                 _solution[ig]->_Sol[i]->set(solDof, value);
 
                 if(_solTimeOrder[i] == 2) {
@@ -570,18 +570,30 @@ namespace femus {
           std::vector < short unsigned > markedElement(owned, 0);
           // Add all interior boundary elements
           for(unsigned iel = offset; iel < offsetp1; iel++) {
-            short unsigned ielt = msh->GetElementType(iel);
-            for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
-              if(msh->el->GetBoundaryIndex(iel, jface) == 0) {
-                markedElement[iel - offset] = 1;
+            if( markedElement[iel - offset] == 0 ){
+              short unsigned ielt = msh->GetElementType(iel);
+              for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+                if(msh->el->GetBoundaryIndex(iel, jface) == 0) {
+                  markedElement[iel - offset] = 1;
+                  for(unsigned kface = 0; kface < msh->GetElementFaceNumber(iel); kface++) {
+                    int kel = msh->el->GetFaceElementIndex(iel, kface) - 1;
+                    if( kel >= offset && kel < offsetp1){
+                      markedElement[kel - offset] = 1;
+                    }
+                  }
+                  break;
+                }
               }
             }
           }
           //remove adjacent interior boundary elements
+          std::vector < unsigned > seed;
+          seed.reserve(owned);
           for(unsigned i = 0; i < owned; i++) {
             if( markedElement[i] == 1){
               markedElement[i] = 2;
-              std::vector < unsigned > seed(1, offset + i);
+              seed.resize(1);
+              seed[0] = offset + i;
               while(seed.size() != 0){
                 bool testSeed = true;
                 unsigned iel = seed[ seed.size() - 1u];
@@ -667,20 +679,20 @@ namespace femus {
 
   }
 
-  
+
   void MultiLevelSolution::RefineSolution( const unsigned &gridf ) {
 
       Mesh *msh = _mlMesh->GetLevel(gridf);
-    
+
       for( unsigned k = 0; k < _solType.size(); k++ ) {
 
 	unsigned solType = _solType[k];
-	
+
 	_solution[gridf]->_Sol[k]->matrix_mult( *_solution[gridf - 1]->_Sol[k],
 	    *msh->GetCoarseToFineProjection( solType ) );
 	_solution[gridf]->_Sol[k]->close();
       }
     }
-  
+
 
 } //end namespace femus

@@ -80,7 +80,8 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/triAMR.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -148,11 +149,11 @@ int main(int argc, char** args) {
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
-  // initilaize and solve the system
+  // initialize and solve the system
   system.init();
 
-  system.SetSolverFineGrids(GMRES);
-  //system.SetSolverFineGrids(RICHARDSON);
+  //system.SetSolverFineGrids(GMRES);
+  system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
 
@@ -177,13 +178,13 @@ int main(int argc, char** args) {
   vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-  GMVWriter gmvIO(&mlSol);
-  gmvIO.SetDebugOutput(true);
-  gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-
-  XDMFWriter xdmfIO(&mlSol);
-  xdmfIO.SetDebugOutput(true);
-  xdmfIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//   GMVWriter gmvIO(&mlSol);
+//   gmvIO.SetDebugOutput(true);
+//   gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//
+//   XDMFWriter xdmfIO(&mlSol);
+//   xdmfIO.SetDebugOutput(true);
+//   xdmfIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   // print mesh info
   mlMsh.PrintInfo();

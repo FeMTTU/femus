@@ -155,11 +155,13 @@ public:
 
   static const unsigned _fe_new_to_old[NFE_FAMS];
 
+  basis * GetBasis() const { return _pt_basis;} 
+  
 protected:
 
   // member data
   unsigned _dim; /*Spatial dimension of the geometric element*/
-  int _nc,_nf,_nlag[3];
+  int _nc,_nf,_nlag[4];
   unsigned _SolType;   /*Finite Element Family flag*/
   const double **_X;
   const int **_IND;
@@ -238,6 +240,11 @@ public:
 
   double **_d2phidxi2;
   double *_d2phidxi2_memory;
+  
+  std::vector < std::vector < std::vector < double > > > _phiFace; 
+  std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
+  std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
+  
 };
 
 class elem_type_2D : public elem_type {
@@ -312,6 +319,11 @@ private:
 
   double **_d2phidxideta;
   double *_d2phidxideta_memory;
+  
+  std::vector < std::vector < std::vector < double > > > _phiFace; 
+  std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
+  std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
+  
 };
 
 class elem_type_3D : public elem_type {
@@ -402,6 +414,11 @@ private:
   double *_d2phidetadzeta_memory;
   double **_d2phidzetadxi;
   double *_d2phidzetadxi_memory;
+  
+  std::vector < std::vector < std::vector < double > > > _phiFace; 
+  std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
+  std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
+  
 };
 
 
