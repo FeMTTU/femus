@@ -45,16 +45,20 @@ namespace femus {
   
   void GetElement(const bool & debug = false);
   
+  
   MarkerType GetMarkerType(){ 
     return _markerType; 
   };  
+  
+  void InverseMappingTEST(std::vector< double > &x);
     
   private:
     
+    void InverseMappingQuad(const unsigned &currentElem, const unsigned &solutionType, std::vector< double > &x);
+    void InverseMappingTri(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
+    
     unsigned GetNextElement2D(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
     unsigned GetNextElement3D(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
-    
-    void InverseMappingQuad(const unsigned &currentElem, const unsigned &SolutionType, std::vector< double > &x);
     
     std::vector < double > _x;
     MarkerType _markerType;

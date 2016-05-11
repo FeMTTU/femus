@@ -32,7 +32,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
- mlMsh.ReadCoarseMesh( "./input/prism3D.neu", "seventh", scalingFactor );
+ mlMsh.ReadCoarseMesh( "./input/square2.neu", "seventh", scalingFactor );
   
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   unsigned numberOfUniformLevels = 1;
@@ -86,9 +86,9 @@ int main(int argc, char** args) {
 //////////////////////////////////////////////////////////////////////////////////////////////  
   
 //Test 4: the maker is VERY close to a vertex of element 15 (point 19)
-//  x[0]=-2.72848e-05;  //it is on element 15 
-//  x[1]=2.62822e-05;
-//  x[2]=0.;
+ x[0]=-2.72848e-05;  //it is on element 15 
+ x[1]=2.62822e-05;
+ x[2]=0.;
 //WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 //NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
  // I changed the tollerance to 1-e10 because with 1e-04 it was not working with square.neu however now the code, in this limit case, gives the
@@ -224,14 +224,19 @@ int main(int argc, char** args) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 //Test 2 :  22
-x[0] = 0.;
-x[1] = 0.;
-x[2] = 0.001;
+// x[0] = 0.;
+// x[1] = 0.;
+// x[2] = 0.001;
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
   Marker a( x, VOLUME, mlMsh.GetLevel(0), true );
   //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
   
+  std::vector <double> xc(2);
+  xc[0]=0; // x coordinate of vertex 1
+  xc[1]=0; // y coordinate of vertex 1 (in the reference frame)
+  a.InverseMappingTEST(xc);  
+
   
  std::vector < double > y = a.GetMarkerCoordinates();
   

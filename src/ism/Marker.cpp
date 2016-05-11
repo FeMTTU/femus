@@ -212,12 +212,12 @@ void Marker::GetElement(const bool &debug) {
         if(!elementHasBeenFound) {
             if(processorMarkerFlag[_iproc] == 2) {
                 MPI_Send(&nextElem[_iproc], 1, MPI_UNSIGNED, nextProc, 1 , PETSC_COMM_WORLD);
-		MPI_Send(&previousElem[_iproc], 1, MPI_UNSIGNED, nextProc, 2 , PETSC_COMM_WORLD);
+                MPI_Send(&previousElem[_iproc], 1, MPI_UNSIGNED, nextProc, 2 , PETSC_COMM_WORLD);
             }
             for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
                 if(processorMarkerFlag[jproc] == 3) {
                     MPI_Recv(&nextElem[jproc], 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-		    MPI_Recv(&previousElem[jproc], 1, MPI_UNSIGNED, jproc, 2 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+                    MPI_Recv(&previousElem[jproc], 1, MPI_UNSIGNED, jproc, 2 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                 }
             }
 
@@ -247,9 +247,9 @@ void Marker::GetElement(const bool &debug) {
 
                     if(modulusKel < modulus) {
                         iel = jel;
-			previousElem[_iproc] = previousElem[jproc];
+                        previousElem[_iproc] = previousElem[jproc];
                         modulus = modulusKel;
-			
+
                     }
                 }
                 //END SMART search
@@ -398,15 +398,15 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
 
 
     for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
-      
-     // std::cout << " iface = " << iface << std::endl;
-        
+
+        // std::cout << " iface = " << iface << std::endl;
+
         short unsigned currentElementType = _mesh->GetElementType(currentElem);
 
         for(unsigned itri = 0; itri < trianglesPerFace[currentElementType][iface]; itri ++) {
 
-	 // std::cout << "faceIntersectionCounter  = " << faceIntersectionCounter  << " , " << " markerIsInElement = " << markerIsInElement <<  std::endl;
-	  
+            // std::cout << "faceIntersectionCounter  = " << faceIntersectionCounter  << " , " << " markerIsInElement = " << markerIsInElement <<  std::endl;
+
             faceIntersectionCounterOld = faceIntersectionCounter ;
             bool lineIntersection = false;
 
@@ -432,7 +432,7 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
 
             for(unsigned i = 0; i < 4; i++) {
                 unsigned itriDof  = _mesh->GetSolutionDof(faceTriangleNodes[currentElementType][iface][itri][i], currentElem, 2);
-                 //std::cout << "itriDof = " << itriDof << std::endl;
+                //std::cout << "itriDof = " << itriDof << std::endl;
                 for(unsigned k = 0; k < dim; k++) {
                     xv[k][i] = (*_mesh->_topology->_Sol[k])(itriDof) - _x[k];     // global extraction and local storage for the element coordinates
                 }
@@ -483,11 +483,11 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
             double Cz0 = C * xv[2][0];
 
 
-           // std::cout << "A = " << A << " , " << "By0 = " << By0 << " , " << " Cz0 = " << Cz0 <<  std::endl;
+            // std::cout << "A = " << A << " , " << "By0 = " << By0 << " , " << " Cz0 = " << Cz0 <<  std::endl;
 
 
             if(fabs(A) < epsilon && epsilon < fabs(By0 + Cz0)) { // A = 0 and By0 != -Cz0
-               // std::cout << "The plane of face " << iface << "and the x-axis don't intersect " << std::endl;
+                // std::cout << "The plane of face " << iface << "and the x-axis don't intersect " << std::endl;
 
             }
             else {
@@ -496,13 +496,13 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
                 double r = 0;
 
                 if(fabs(A) < epsilon && fabs(By0 + Cz0) < epsilon) { // A = 0 and By0 = -Cz0
-                 //   std::cout << "The plane of face " << iface << "and the x-axis intersect on a line" << std::endl;
+                    //   std::cout << "The plane of face " << iface << "and the x-axis intersect on a line" << std::endl;
                     // the marker and the face are already on the same plane so there is no need for further shifting
                     lineIntersection = true ;
                 }
 
                 else if(epsilon < fabs(A)) {  // A != 0
-                   // std::cout << "The plane of face " << iface << "and the x-axis intersect at a point" << std::endl;
+                    // std::cout << "The plane of face " << iface << "and the x-axis intersect at a point" << std::endl;
 
                     r = (A * xv[0][0] + B * xv[1][0] + C * xv[2][0]) / A;
                     xTilde[0] = r;
@@ -528,14 +528,14 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
                         double q1 = xv[2][i] * (xv[0][i] - xv[0][i + 1]) + xv[0][i] * (xv[2][i + 1] - xv[2][i]);
                         double q2 = xv[0][i] * (xv[1][i] - xv[1][i + 1]) + xv[1][i] * (xv[0][i + 1] - xv[0][i]);
 
-                      //  std::cout << "q0 = " << q0 << " , " << "q1 = " << q1 << " , " << " q2 = " << q2 <<  std::endl;
+                        //  std::cout << "q0 = " << q0 << " , " << "q1 = " << q1 << " , " << " q2 = " << q2 <<  std::endl;
 
                         double  scalarProduct = q0 * A + q1 * B + q2 * C;
 
-                      //  std::cout << "scalarProduct = " << scalarProduct << std::endl;
+                        //  std::cout << "scalarProduct = " << scalarProduct << std::endl;
 
                         if(scalarProduct > 0) {  // this can be cancelled once the code is working ok
-                        //    std::cout << "the marker is outside face " << iface <<  std::endl;
+                            //    std::cout << "the marker is outside face " << iface <<  std::endl;
                             break;
 
                         }
@@ -543,13 +543,13 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
                             std::cout << " the marker and the edge are aligned " << std::endl; //check if xTilde is actually on the edge.
                             if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
                                 if(lineIntersection == true) {
-                                   // std::cout << " the marker belongs to an edge of face " << iface << std::endl;
+                                    // std::cout << " the marker belongs to an edge of face " << iface << std::endl;
                                     markerIsInElement = true;
                                     break;
                                 }
                                 else {
                                     faceIntersectionCounter++;
-                                   // std::cout << " faceIntersectionCounter = " << faceIntersectionCounter << std::endl;
+                                    // std::cout << " faceIntersectionCounter = " << faceIntersectionCounter << std::endl;
                                     break;
                                 }
 
@@ -557,7 +557,7 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
                             else if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
                                     (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
                                 if(lineIntersection == true) {
-                                   // std::cout << " one of the vertices is the marker" << std::endl;
+                                    // std::cout << " one of the vertices is the marker" << std::endl;
                                     markerIsInElement = true;
                                     break;
                                 }
@@ -569,9 +569,9 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
                             }
                         }
                         else if(scalarProduct < 0) {
-                     //     std::cout << "increase scalarCount" <<std::endl; 
-			  scalarCount++;
-			//  std::cout << "scalarCount = " << scalarCount << std::endl;
+                            //     std::cout << "increase scalarCount" <<std::endl;
+                            scalarCount++;
+                            //  std::cout << "scalarCount = " << scalarCount << std::endl;
                         }
                     }
 
@@ -594,7 +594,7 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
             if(markerIsInElement == true) {
                 break;
             }
- 
+
         } //end of the loop on tri
 
         if(markerIsInElement == true) {
@@ -613,19 +613,19 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
 
         for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
 
-	    double xg[3]={0.,0.,0.};
-	    for (int i = 0;i<3;i ++){
-	       unsigned j = _mesh->GetLocalFaceVertexIndex(currentElem, iface, i);
-	       unsigned iDof = _mesh->GetSolutionDof(j, currentElem, 2);
-	       
-	        for(unsigned k = 0; k < dim; k++) {
-		  std::cout << (*_mesh->_topology->_Sol[k])(iDof)  <<" ";
-		  xg[k] += 1./3.*(*_mesh->_topology->_Sol[k])(iDof); 
-		}
-		std::cout<<std::endl;
-	    }
-	    std::cout<< "xg= "<<xg[0]<< " "<<xg[1]<<" "<<xg[2]<<std::endl;
-	  
+            double xg[3]= {0.,0.,0.};
+            for (int i = 0; i<3; i ++) {
+                unsigned j = _mesh->GetLocalFaceVertexIndex(currentElem, iface, i);
+                unsigned iDof = _mesh->GetSolutionDof(j, currentElem, 2);
+
+                for(unsigned k = 0; k < dim; k++) {
+                    std::cout << (*_mesh->_topology->_Sol[k])(iDof)  <<" ";
+                    xg[k] += 1./3.*(*_mesh->_topology->_Sol[k])(iDof);   ///COS 'E' QUESTO ??
+                }
+                std::cout<<std::endl;
+            }
+            std::cout<< "xg= "<<xg[0]<< " "<<xg[1]<<" "<<xg[2]<<std::endl;
+
             unsigned faceNodeNumber = _mesh->GetElementFaceDofNumber(currentElem, iface, 2);
             unsigned i = _mesh->GetLocalFaceVertexIndex(currentElem, iface, faceNodeNumber - 1);
             //std::cout << faceNodeNumber-1 <<" "<<i << " ";
@@ -635,15 +635,15 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
             //std::cout << "faceCentralDof =" << faceCentralDof << std::endl;
             double distance2 = 0;
             for(unsigned k = 0; k < dim; k++) {
-	        std::cout << (*_mesh->_topology->_Sol[k])(faceCentralDof)  <<" ";
+                std::cout << (*_mesh->_topology->_Sol[k])(faceCentralDof)  <<" ";
                 double dk = (*_mesh->_topology->_Sol[k])(faceCentralDof) - _x[k];     // global extraction and local storage for the element coordinates
                 distance2 += dk * dk;
             }
             std::cout<<std::endl;
             double ifaceModulus = sqrt(distance2);
 
-	    std::cout << faceCentralDof <<" "<<ifaceModulus<<std::endl;
-	    
+            std::cout << faceCentralDof <<" "<<ifaceModulus<<std::endl;
+
             if(ifaceModulus < modulus) {
                 int jel = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
                 // std::cout << "jel = " << jel << "iface = " << iface <<  std::endl;
@@ -661,98 +661,208 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
 
 
 
-void Marker::InverseMappingQuad(const unsigned &currentElem, const unsigned &solutionType, 
-				std::vector< double > &x){
-  
-    unsigned dim = 2;
-    unsigned nDofs = _mesh->GetElementDofNumber(currentElem, solutionType);
-    std::vector < std::vector < double > > xv(2);
-    std::vector < std::vector < double > > a(2);
-    
-    for(unsigned k=0; k<dim; k++){
-      xv[k].resize(nDofs);
-      a[k].resize(nDofs);
-    }
-    
-    short unsigned ielType = _mesh->GetElementType(currentElem);
+void Marker::InverseMappingQuad(const unsigned &currentElem, const unsigned &solutionType,
+                                std::vector< double > &x) {
 
+    unsigned dim = 2;
+    std::vector< std::vector < double > > xv(dim);
+    std::vector < std::vector < double > > a(dim);
+
+    unsigned nDofs = _mesh->GetElementDofNumber(currentElem, solutionType);
+    short unsigned currentElementType = _mesh->GetElementType(currentElem);
+
+    for(unsigned k = 0; k < dim; k++) {
+        xv[k].resize(nDofs);
+        a[k].resize(nDofs);
+    }
     for(unsigned i = 0; i < nDofs; i++) {
-      unsigned iDof  = _mesh->GetSolutionDof(facePoints[ielType][i], currentElem, solutionType); // global to global mapping between coordinates node and coordinate dof
-      for(int k=0; k<dim; k++){
-	xv[k][i] = (*_mesh->_topology->_Sol[0])(iDof); // global extraction and local storage for the element coordinates
-      } 
+        unsigned currentElemDof  = _mesh->GetSolutionDof(facePoints[currentElementType][i], currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
+        for(unsigned k = 0; k < dim; k++) {
+            xv[k][i] = (*_mesh->_topology->_Sol[k])(currentElemDof);     // global extraction and local storage for the element coordinates
+        }
     }
-    
-    if(solutionType == 0){
-      for(int k=0; k<dim; k++){
-	a[k][0] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]);
-	a[k][1] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]);
-	a[k][2] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]);
-	a[k][3] = 0.25 * ( xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]); 
-      }
+
+
+    if(solutionType == 0) {
+        for(int k=0; k<dim; k++) {
+            a[k][0] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]);
+            a[k][1] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]);
+            a[k][2] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]);
+            a[k][3] = 0.25 * ( xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]);
+        }
     }
-    else if(solutionType == 1){
-      for(int k=0; k<dim; k++){
-	a[k][0] = -0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) + 
-		    0.5 * ( xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7]);
-	a[k][1] = 0.5 * (xv[k][5] - xv[k][7] );
-	a[k][2] = 0.5 * (xv[k][6] - xv[k][4] );
-	a[k][3] = 0.25 * ( xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]); 
-	a[k][4] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) - 0.5 * (xv[k][4] + xv[k][6] );
-	a[k][5] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) - 0.5 * (xv[k][5] + xv[k][7] );
-	a[k][6] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]) + 0.5 * (xv[k][4] - xv[k][6] );
-	a[k][7] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]) + 0.5 * (xv[k][7] - xv[k][5] ); 
-      }
+    else if(solutionType == 1) {
+        for(int k=0; k<dim; k++) {
+            a[k][0] = -0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) +
+                      0.5 * ( xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7]);
+            a[k][1] = 0.5 * (xv[k][5] - xv[k][7] );
+            a[k][2] = 0.5 * (xv[k][6] - xv[k][4] );
+            a[k][3] = 0.25 * ( xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]);
+            a[k][4] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) - 0.5 * (xv[k][4] + xv[k][6] );
+            a[k][5] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) - 0.5 * (xv[k][5] + xv[k][7] );
+            a[k][6] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]) + 0.5 * (xv[k][4] - xv[k][6] );
+            a[k][7] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]) + 0.5 * (xv[k][7] - xv[k][5] );
+        }
     }
-    else if(solutionType == 2){
-      for(int k=0; k<dim; k++){
-	a[k][0] = xv[k][8];
-	a[k][1] = 0.5 * (xv[k][5] - xv[k][7] );
-	a[k][2] = 0.5 * (xv[k][6] - xv[k][4] );
-	a[k][3] = 0.25 * ( xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]); 
-	a[k][4] =  0.5 * ( xv[k][5] + xv[k][7] ) - xv[k][8]; 
-	a[k][5] =  0.5 * ( xv[k][4] + xv[k][6] ) - xv[k][8]; 
-	a[k][6] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]) +  
-		   0.5 * ( xv[k][4] - xv[k][6] ); 
-	a[k][7] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]) +  
-		   0.5 * (-xv[k][5] + xv[k][7] ); 
-	a[k][8] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) - 
-		   0.5 * ( xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7]) + xv[k][8];
-      }
+    else if(solutionType == 2) {
+        for(int k=0; k<dim; k++) {
+            a[k][0] = xv[k][8];
+            a[k][1] = 0.5 * (xv[k][5] - xv[k][7] );
+            a[k][2] = 0.5 * (xv[k][6] - xv[k][4] );
+            a[k][3] = 0.25 * ( xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]);
+            a[k][4] =  0.5 * ( xv[k][5] + xv[k][7] ) - xv[k][8];
+            a[k][5] =  0.5 * ( xv[k][4] + xv[k][6] ) - xv[k][8];
+            a[k][6] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]) +
+                      0.5 * ( xv[k][4] - xv[k][6] );
+            a[k][7] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]) +
+                      0.5 * (-xv[k][5] + xv[k][7] );
+            a[k][8] = 0.25 * ( xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) -
+                      0.5 * ( xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7]) + xv[k][8];
+        }
     }
-    
+
     std::vector < double > phi(nDofs);
-    double xi = 0.25;
-    double eta = 0.25;
-    
+
+    double xi = x[0];
+    double eta = x[1];
+
     phi[0] = 1.;
     phi[1] = xi;
     phi[2] = eta;
     phi[3] = xi * eta;
-    if(solutionType > 1){
-      phi[4] = xi * xi;
-      phi[5] = eta * eta;
-      phi[6] = phi[4] *eta;
-      phi[7] = phi[5] * xi;
+    if(solutionType > 0) {
+        phi[4] = xi * xi;
+        phi[5] = eta * eta;
+        phi[6] = phi[4] *eta;
+        phi[7] = phi[5] * xi;
     }
-    if(solutionType > 2){
-      phi[8] = phi[3] * phi[3];
+    if(solutionType > 1) {
+        phi[8] = phi[3] * phi[3];
     }
-       
-    double xp[2]={0.,0.};   
-    for(int i=0; i<nDofs; i++){
-      for(int k=0; k<dim; k++){
-	xp[k] += a[k][i]*phi[i];
-      }
-    }
-    std::cout << xp[0]<<" "<< xp[1]<<std::endl;
-    
-  }
 
-  
-  
+    double xp[2] = {0., 0.};
+    for(int i=0; i<nDofs; i++) {
+        for(int k=0; k<dim; k++) {
+            xp[k] += a[k][i]*phi[i];
+        }
+    }
+    std::cout << "element" << currentElem << " , " << "x coordinate = " << xp[0] << " , " << "y coordinate = " << xp[1] <<std::endl;
+
 }
 
+
+void Marker::InverseMappingTri(const unsigned &currentElem, const unsigned &solutionType,
+                                std::vector< double > &x) {
+
+    unsigned dim = 2;
+    std::vector< std::vector < double > > xv(dim);
+    std::vector < std::vector < double > > a(dim);
+
+    unsigned nDofs = _mesh->GetElementDofNumber(currentElem, solutionType);
+    short unsigned currentElementType = _mesh->GetElementType(currentElem);
+
+    for(unsigned k = 0; k < dim; k++) {
+        xv[k].resize(nDofs);
+        a[k].resize(nDofs);
+    }
+    for(unsigned i = 0; i < nDofs; i++) {
+        unsigned currentElemDof  = _mesh->GetSolutionDof(facePoints[currentElementType][i], currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
+        for(unsigned k = 0; k < dim; k++) {
+            xv[k][i] = (*_mesh->_topology->_Sol[k])(currentElemDof);     // global extraction and local storage for the element coordinates
+        }
+    }
+
+
+    if(solutionType == 0) {
+        for(int k=0; k<dim; k++) {
+            a[k][0] = xv[k][0];
+            a[k][1] = - xv[k][0] + xv[k][1];
+            a[k][2] = - xv[k][0] + xv[k][2];
+        }
+    }
+    else if(solutionType == 1) {
+        for(int k=0; k<dim; k++) {
+            a[k][0] = xv[k][0];
+            a[k][1] = - 3 * xv[k][0] - xv[k][1] + 4 * xv[k][3];
+	    a[k][2] = - 3 * xv[k][0] - xv[k][2] + 4 * xv[k][5];
+            a[k][3] = 4 * xv[k][0] - 4 * xv[k][3] + 4 * xv[k][4] - 4 * xv[k][5];
+            a[k][4] = 2 * xv[k][0] + 2 * xv[k][1] - 4 * xv[k][3];
+            a[k][5] = 2 * xv[k][0] + 2 * xv[k][2] - 4 * xv[k][5];
+        }
+    }
+    else if(solutionType == 2) {
+        for(int k=0; k<dim; k++) {
+            a[k][0] = xv[k][0];
+            a[k][1] = - 3 * xv[k][0] - xv[k][1] + 4 * xv[k][3];
+	    a[k][2] = - 3 * xv[k][0] - xv[k][2] + 4 * xv[k][5];
+            a[k][3] = 7 * xv[k][0] + 3 * xv[k][1] + 3 * xv[k][2] - 16 * xv[k][3] -
+                       8 * xv[k][4] - 16 * xv[k][5] + 27 * xv[k][6];
+            a[k][4] = 2 * xv[k][0] + 2 * xv[k][1] - 4 * xv[k][3];
+            a[k][5] = 2 * xv[k][0] + 2 * xv[k][2] - 4 * xv[k][5];
+	    a[k][6] = - 3 * xv[k][0] - 3 * xv[k][1] - 3 * xv[k][2] + 12 * xv[k][3] +
+                       12 * xv[k][4] + 12 * xv[k][5] - 27 * xv[k][6];
+            a[k][7] = - 3 * xv[k][0] - 3 * xv[k][1] - 3 * xv[k][2] + 12 * xv[k][3] +
+                       12 * xv[k][4] + 12 * xv[k][5] - 27 * xv[k][6];
+        }
+    }
+
+    std::vector < double > phi(nDofs);
+
+    double xi = x[0];
+    double eta = x[1];
+
+    phi[0] = 1.;
+    phi[1] = xi;
+    phi[2] = eta;
+    if(solutionType > 0) {
+        phi[3] = xi * eta;
+        phi[4] = xi * xi;
+        phi[5] = eta * eta;
+    }
+    if(solutionType > 1) {
+        phi[6] = phi[4] * eta;
+        phi[7] = phi[5] * xi;
+    }
+
+    double xp[2] = {0., 0.};
+    for(int i=0; i<nDofs; i++) {
+        for(int k=0; k<dim; k++) {
+            xp[k] += a[k][i]*phi[i];
+        }
+    }
+    std::cout << "element" << currentElem << " , " << "x coordinate = " << xp[0] << " , " << "y coordinate = " << xp[1] <<std::endl;
+
+}
+
+
+void Marker::InverseMappingTEST(std::vector < double > &x) {
+    unsigned dim = 2;
+    std::vector < std::vector < double > > xv(2);
+    for(int solType = 0; solType < 3; solType++) {
+        std::cout << "solType = " << solType << std::endl;
+        for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel ++) {
+
+            unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
+            short unsigned ielType = _mesh->GetElementType(iel);
+
+            for(unsigned k = 0; k < dim; k++) {
+                xv[k].resize(nDofs);
+            }
+            for(unsigned i = 0; i < nDofs; i++) {
+                unsigned ielDof  = _mesh->GetSolutionDof(facePoints[ielType][i], iel, 2);    // global to global mapping between coordinates node and coordinate dof
+                for(unsigned k = 0; k < dim; k++) {
+                    xv[k][i] = (*_mesh->_topology->_Sol[k])(ielDof);     // global extraction and local storage for the element coordinates
+                }
+            }
+
+
+            InverseMappingTri(iel, solType, x);
+            std::cout << xv[0][0] << " , " << xv[1][0] << std::endl;
+        }
+    }
+}
+
+}
 
 
 
