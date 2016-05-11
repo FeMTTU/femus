@@ -32,7 +32,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
- mlMsh.ReadCoarseMesh( "./input/square.neu", "seventh", scalingFactor );
+ mlMsh.ReadCoarseMesh( "./input/cubeHex.neu", "seventh", scalingFactor );
   
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   unsigned numberOfUniformLevels = 1;
@@ -232,9 +232,10 @@ int main(int argc, char** args) {
   Marker a( x, VOLUME, mlMsh.GetLevel(0), true );
   //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
   
-  std::vector <double> xc(2);
+  std::vector <double> xc(3);
   xc[0]=-1; // x coordinate of vertex 1
   xc[1]=-1; // y coordinate of vertex 1 (in the reference frame)
+  xc[2]=-1; // z coordinate of vertex 1 (in the reference frame)
   a.InverseMappingTEST(xc);  
 
   
