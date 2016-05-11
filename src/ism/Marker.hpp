@@ -56,6 +56,7 @@ namespace femus {
     
     void InverseMappingQuad(const unsigned &currentElem, const unsigned &solutionType, std::vector< double > &x);
     void InverseMappingTri(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
+    void InverseMappingHex(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
     
     unsigned GetNextElement2D(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
     unsigned GetNextElement3D(const unsigned &dim, const unsigned &iel,  const unsigned &kel);

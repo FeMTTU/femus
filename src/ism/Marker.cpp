@@ -835,6 +835,178 @@ void Marker::InverseMappingTri(const unsigned &currentElem, const unsigned &solu
 }
 
 
+void Marker::InverseMappingHex(const unsigned &currentElem, const unsigned &solutionType,
+                                std::vector< double > &x) {
+
+    unsigned dim = 3;
+    std::vector< std::vector < double > > xv(dim);
+    std::vector < std::vector < double > > a(dim);
+
+    unsigned nDofs = _mesh->GetElementDofNumber(currentElem, solutionType);
+    short unsigned currentElementType = _mesh->GetElementType(currentElem);
+
+    for(unsigned k = 0; k < dim; k++) {
+        xv[k].resize(nDofs);
+        a[k].resize(nDofs);
+    }
+    for(unsigned i = 0; i < nDofs; i++) {
+        unsigned currentElemDof  = _mesh->GetSolutionDof(facePoints[currentElementType][i], currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
+        for(unsigned k = 0; k < dim; k++) {
+            xv[k][i] = (*_mesh->_topology->_Sol[k])(currentElemDof);     // global extraction and local storage for the element coordinates
+        }
+    }
+
+
+    if(solutionType == 0) {
+        for(int k=0; k<dim; k++) {
+            a[k][0] = 0.125 * (xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3] + xv[k][4] + 
+                               xv[k][5] + xv[k][6] + xv[k][7]) ;
+            a[k][1] = 0.125 * (- xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3] - xv[k][4] + 
+                               xv[k][5] + xv[k][6] - xv[k][7]) ;
+            a[k][2] = 0.125 * (- xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3] - xv[k][4] - 
+                               xv[k][5] + xv[k][6] + xv[k][7]) ;
+	    a[k][3] = 0.125 * (- xv[k][0] - xv[k][1] - xv[k][2] - xv[k][3] + xv[k][4] + 
+                               xv[k][5] + xv[k][6] + xv[k][7]) ;
+	    a[k][4] = 0.125 * (xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3] + xv[k][4] - 
+                               xv[k][5] + xv[k][6] - xv[k][7]) ;
+	    a[k][5] = 0.125 * (xv[k][0] - xv[k][1] - xv[k][2] + xv[k][3] - xv[k][4] + 
+                               xv[k][5] + xv[k][6] - xv[k][7]) ;
+	    a[k][6] = 0.125 * (xv[k][0] + xv[k][1] - xv[k][2] - xv[k][3] - xv[k][4] - 
+                               xv[k][5] + xv[k][6] + xv[k][7]) ; 
+	    a[k][7] = 0.125 * (- xv[k][0] + xv[k][1] - xv[k][2] + xv[k][3] + xv[k][4] - 
+                               xv[k][5] + xv[k][6] - xv[k][7]) ;
+	    
+        }
+    }
+    else if(solutionType == 1) {
+        for(int k=0; k<dim; k++) {
+            a[k][0] = 0.25 * (- xv[k][0] + xv[k][9] + xv[k][10] + xv[k][11] + xv[k][12] +xv[k][13] + xv[k][14] +
+	                       xv[k][15] + xv[k][16] + xv[k][17] + xv[k][18] - xv[k][1] + xv[k][19] - xv[k][2] -
+			       xv[k][3] - xv[k][4] - xv[k][5] - xv[k][6] - xv[k][7] + xv[k][8]);
+            a[k][1] = 0.125 * (xv[k][0] + 2 * xv[k][9] - 2 * xv[k][11] + 2 * xv[k][13] - 2 * xv[k][15] - 2 * xv[k][16] +
+	                       2 * xv[k][17] + 2 * xv[k][18] - xv[k][1] - 2 * xv[k][19] - xv[k][2] + xv[k][3] + 
+			        xv[k][4] - xv[k][5] - xv[k][6] + xv[k][7]);
+	    a[k][2] = 0.125 * (xv[k][0] + 2 * xv[k][10] - 2 * xv[k][12] + 2 * xv[k][14] - 2 * xv[k][16] - 2 * xv[k][17] +
+	                       2 * xv[k][18] + xv[k][1] + 2 * xv[k][19] - xv[k][2] - xv[k][3] + xv[k][4] + xv[k][5] - xv[k][6] - xv[k][7] - 2 * xv[k][8]);
+            a[k][3] = 0.125 * (xv[k][0] - 2 * xv[k][9] - 2 * xv[k][10] - 2 * xv[k][11] + 2 * xv[k][12] + 2 * xv[k][13] + 2 * xv[k][14] +
+                               2 * xv[k][15] + xv[k][1] + xv[k][2] + xv[k][3] - xv[k][4] - xv[k][5] - xv[k][6] - xv[k][7] - 2 * xv[k][10]);
+            a[k][4] = 0.25 * (xv[k][16] - xv[k][17] + xv[k][18] - xv[k][19]);
+            a[k][5] = 0.25 * (- xv[k][9] + xv[k][11] + xv[k][13] - xv[k][15]);
+	    a[k][6] = 0.25 * (- xv[k][10] - xv[k][12] + xv[k][14] + xv[k][8]);
+            a[k][7] = 0.125 * (xv[k][0] - 2 * xv[k][10] - 2 *  xv[k][12] - 2 * xv[k][14] + xv[k][1] + xv[k][2] + xv[k][3] + xv[k][4] + 
+                               xv[k][5] + xv[k][6] + xv[k][7] - 2 * xv[k][8]);
+            a[k][8] = 0.125 * (xv[k][0] - 2 * xv[k][9] - 2 * xv[k][11] - 2 *  xv[k][13] - 2 * xv[k][15] + xv[k][1] + xv[k][2] + xv[k][3] + 
+                               xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7]);
+            a[k][9] = 0.125 * (xv[k][0] - 2  * xv[k][16] - 2 * xv[k][17] - 2 *  xv[k][20] + xv[k][1] - 2 * xv[k][19] + xv[k][2] + xv[k][3] +
+                               xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7]);
+            a[k][10] = 0.125 * (- xv[k][0] + xv[k][1] - xv[k][2] + xv[k][3] + xv[k][4] - xv[k][5] + xv[k][6] - xv[k][7]);
+            a[k][11] = 0.125 * (- xv[k][0] - 2 * xv[k][10] + 2 *  xv[k][12] - 2 *  xv[k][14] - xv[k][1] + xv[k][2] + xv[k][3] - xv[k][4] -
+                                xv[k][5] + xv[k][6] + xv[k][7] + 2 * xv[k][8]);
+            a[k][12] = 0.125 * (- xv[k][0] + 2 * xv[k][10] - 2 * xv[k][12] - 2 * xv[k][14] - xv[k][1] - xv[k][2] - xv[k][3] + xv[k][4] + 
+                                xv[k][5] + xv[k][6] + xv[k][7] + 2 * xv[k][8]);
+            a[k][13] = 0.125 * (- xv[k][0] + 2 * xv[k][9] + 2 * xv[k][11] - 2 * xv[k][13] - 2 * xv[k][15] - xv[k][1] - xv[k][2] - xv[k][3] + 
+                                xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7]);
+            a[k][14] = 0.125 * (- xv[k][0] - 2 * xv[k][9] + 2 * xv[k][11] - 2 * xv[k][13] + 2 * xv[k][15] + xv[k][1] + xv[k][2] - xv[k][3] - 
+                                xv[k][4] + xv[k][5] + xv[k][6] - xv[k][7]);
+            a[k][15] = 0.125 * (- xv[k][0] + 2 * xv[k][16] - 2 * xv[k][17] - 2 * xv[k][18] + xv[k][1] + 2 * xv[k][19] + xv[k][2] - xv[k][3] - xv[k][4] + 
+                                xv[k][5] + xv[k][6] - xv[k][7]);
+            a[k][16] = 0.125 * (- xv[k][0] + 2 * xv[k][16] + 2 * xv[k][17] - 2 * xv[k][18] - xv[k][1] - 2 * xv[k][19] + xv[k][2] + xv[k][3] - xv[k][4] - 
+                                xv[k][5] + xv[k][6] + xv[k][7]);
+            a[k][17] = 0.125 * (xv[k][0] + 2 * xv[k][10] + 2 * xv[k][12] - 2 * xv[k][14] + xv[k][1] - xv[k][2] - xv[k][3] - xv[k][4] - xv[k][5] + xv[k][6] + 
+                                xv[k][7] - 2 * xv[k][8]);
+            a[k][18] = 0.125 * (xv[k][0] + 2 * xv[k][9] - 2 * xv[k][11] - 2 * xv[k][13] + 2 * xv[k][15] - xv[k][1] - xv[k][2] + xv[k][3] - xv[k][4] +
+                                xv[k][5] + xv[k][6] - xv[k][7]);
+            a[k][19] = 0.125 * (xv[k][0] - 2 * xv[k][16] + 2 * xv[k][17] - 2 * xv[k][18] - xv[k][1] + 2 * xv[k][19] + xv[k][2] - xv[k][3] + xv[k][4] - 
+                                xv[k][5] + xv[k][6] - xv[k][7]);
+        }
+    }
+    else if(solutionType == 2) {
+        for(int k=0; k<dim; k++) {
+            a[k][0] = xv[k][26];
+            a[k][1] = 0.5 * (xv[k][21] - xv[k][23]);
+	    a[k][2] = 0.5 * (xv[k][22] - xv[k][20]);
+            a[k][3] = 0.5 * (xv[k][25] - xv[k][24]);
+            a[k][4] = 0.25 * (xv[k][16] - xv[k][17] + xv[k][18] - xv[k][19]);
+            a[k][5] = 0.25 * (- xv[k][9] + xv[k][11] + xv[k][13] - xv[k][15]);
+	    a[k][6] = 0.25 * (- xv[k][10] - xv[k][12] + xv[k][14] + xv[k][8]);
+            a[k][7] = 0.5 * (xv[k][21] + xv[k][23] - 2 * xv[k][26]);
+            a[k][8] = 0.5 * (xv[k][20] + xv[k][22] - 2 * xv[k][26]);
+            a[k][9] = 0.5 *(xv[k][24] + xv[k][25] - 2 * xv[k][26]);
+            a[k][10] = 0.125 * (- xv[k][0] + xv[k][1] - xv[k][2] + xv[k][3] + xv[k][4] - xv[k][5] + xv[k][6] - xv[k][7]);
+            a[k][11] = 0.25 * (- xv[k][16] - xv[k][17] + xv[k][18] + xv[k][19] + 2 * xv[k][20] - 2 * xv[k][22]);
+            a[k][12] = 0.25 * (- xv[k][9] - xv[k][11] + xv[k][13] + xv[k][15] + 2 * xv[k][24] - 2 * xv[k][25]);
+            a[k][13] = 0.25 * (- xv[k][9] - xv[k][11] + xv[k][13] + xv[k][15] + 2 * xv[k][24] - 2 * xv[k][25]);
+            a[k][14] = 0.25 * (- xv[k][10] + xv[k][12] + xv[k][14] + 2 * xv[k][24] - 2 * xv[k][25] - xv[k][8]);
+            a[k][15] = 0.25 * (- xv[k][16] + xv[k][17] + xv[k][18] - xv[k][19] - 2 * xv[k][21] + 2 * xv[k][23]);
+            a[k][16] = 0.25 * (xv[k][9] - xv[k][11] + xv[k][13] - xv[k][15] - 2 * xv[k][21] + 2 * xv[k][23]);
+            a[k][17] = 0.25 * (xv[k][10] - xv[k][12] + xv[k][14] + 2 * xv[k][20] - 2 * xv[k][22] - xv[k][8]);
+            a[k][18] = 0.125 * (xv[k][0] + 2 * xv[k][10] + 2 * xv[k][12] - 2 * xv[k][14] + xv[k][1] - xv[k][2] - xv[k][3] - xv[k][4] - xv[k][5] + xv[k][6] + xv[k][7] - 2 * xv[k][8]);
+            a[k][19] = 0.125 * (xv[k][0] + 2 * xv[k][9] - 2 * xv[k][11] - 2 * xv[k][13] + 2 * xv[k][15] - xv[k][1] - xv[k][2] + xv[k][3] - xv[k][4] + xv[k][5] + xv[k][6] - xv[k][7]);
+            a[k][20] = 0.125 * (xv[k][0] - 2 * xv[k][16] + 2 * xv[k][17] - 2 * xv[k][18]- xv[k][1] + 2 * xv[k][19] + xv[k][2] - xv[k][3] + xv[k][4] - xv[k][5] + xv[k][6] - xv[k][7]); 
+            a[k][21] = 0.25 * (xv[k][16] + xv[k][17] + xv[k][18] + xv[k][19] - 2 * (xv[k][20] + xv[k][21] + xv[k][22] + xv[k][23])) + xv[k][26];
+            a[k][22] = 0.25 * (xv[k][9] + xv[k][11] + xv[k][13] + xv[k][15] - 2 * (xv[k][21] + xv[k][23] + xv[k][24] + xv[k][25])) + xv[k][26];
+            a[k][23] = 0.25 * (xv[k][10] + xv[k][12] + xv[k][14] - 2 * (xv[k][20] + xv[k][22] + xv[k][24] + xv[k][25] - 2 * xv[k][26]) + xv[k][8]);
+            a[k][24] = 0.125 * (- xv[k][0] - 2 * xv[k][10] + 2 * xv[k][12] - 2 * xv[k][14] + 2 * xv[k][16] + 2 * xv[k][17] - 2 * xv[k][18] - xv[k][1] - 
+                                2 * xv[k][19] - 4 * xv[k][20] + 4 * xv[k][22] + xv[k][2] + xv[k][3] - xv[k][4] - xv[k][5] + xv[k][6] + xv[k][7] + 2 * xv[k][8]);
+            a[k][25] = 0.125 *(- xv[k][0] + 2 * xv[k][9] + 2 * xv[k][10] + 2 * xv[k][11] - 2 * xv[k][12] - 2 * xv[k][13] - 2 * xv[k][14] - 
+                               2 * xv[k][15] - xv[k][1] - 4 * xv[k][24] + 4 * xv[k][25] - xv[k][2] - xv[k][3] + xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7] + 2 * xv[k][8]);
+            a[k][26] = 0.125 * (- xv[k][0] - 2 * xv[k][9] + 2 * xv[k][11] - 2 * xv[k][13] + 2 * xv[k][15] + 2 * xv[k][16] - 2 * xv[k][17] - 
+                                2 * xv[k][18] + xv[k][1] + 2 * xv[k][19] + 4 * xv[k][21] - 4 * xv[k][23] + xv[k][2] - xv[k][3] - xv[k][4] + xv[k][5] + xv[k][6] - xv[k][7]);
+            a[k][27] = 0.125 * (xv[k][0] - 2 * xv[k][9] - 2 * xv[k][10] - 2 * xv[k][11] - 2 * xv[k][12] - 2 * xv[k][13] - 2 * xv[k][14] - 2 * xv[k][15] -
+                                2 * xv[k][16] - 2 * xv[k][17] - 2 * xv[k][18] + xv[k][1]- 2 * xv[k][19] + 4 * xv[k][20] + 4 * xv[k][21] + 4 * xv[k][22] + 4 * xv[k][23] + 
+                                4 * xv[k][24] + 4 * xv[k][25] - 8 * xv[k][26] + xv[k][2] + xv[k][3] + xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7] - 2 * xv[k][8]);
+        }
+    }
+
+    std::vector < double > phi(nDofs);
+
+    double xi = x[0];
+    double eta = x[1];
+    double zita = x[2];
+
+    phi[0] = 1.;
+    phi[1] = xi;
+    phi[2] = eta;
+    phi[3] = zita;
+    phi[4] = phi[1]*phi[2];
+    phi[5] = phi[1]*phi[3];
+    phi[6] = phi[2]*phi[3];
+    phi[7] = phi[4]*phi[3];
+    if(solutionType > 0) {
+        phi[7] = phi[1]*phi[1];
+        phi[8] = phi[2]*phi[2];
+        phi[9] = phi[3]*phi[3];
+        phi[10] = phi[4]*phi[3];
+	phi[11] = phi[7] * phi[2];
+	phi[12] = phi[7] * phi[3];
+	phi[13] = phi[8] * phi[3];
+	phi[14] = phi[1] * phi[8];
+	phi[15] = phi[1] * phi[9];
+	phi[16] = phi[2] * phi[9];
+	phi[17] = phi[11] * phi[3];
+	phi[18] = phi[1] * phi[13];
+	phi[19] = phi[1] * phi[16];
+    }
+    if(solutionType > 1) {
+        phi[20] = phi[7] * phi[8];
+	phi[21] = phi[7] * phi[9];
+	phi[22] = phi[8] * phi[9];
+	phi[23] = phi[11] * phi[9];
+	phi[24] = phi[7] * phi[13];
+	phi[25] = phi[14] * phi[9];
+	phi[26] = phi[7] * phi[8] * phi[9];
+    }
+
+    double xp[2] = {0., 0.};
+    for(int i=0; i<nDofs; i++) {
+        for(int k=0; k<dim; k++) {
+            xp[k] += a[k][i]*phi[i];
+        }
+    }
+    std::cout << "element" << currentElem << " , " << "x coordinate = " << xp[0] << " , " << "y coordinate = " << xp[1] <<std::endl;
+
+}
+
 void Marker::InverseMappingTEST(std::vector < double > &x) {
     unsigned dim = 2;
     std::vector < std::vector < double > > xv(2);
@@ -855,8 +1027,8 @@ void Marker::InverseMappingTEST(std::vector < double > &x) {
                 }
             }
 
-
-            InverseMappingTri(iel, solType, x);
+            // This is the test
+            InverseMappingQuad(iel, solType, x);
             std::cout << xv[0][0] << " , " << xv[1][0] << std::endl;
         }
     }
