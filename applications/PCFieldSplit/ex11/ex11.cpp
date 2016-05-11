@@ -61,7 +61,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 7;
+  unsigned numberOfUniformLevels = 8;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -74,7 +74,7 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("T", LAGRANGE, FIRST);
+  mlSol.AddSolution("T", LAGRANGE, SERENDIPITY);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
 
@@ -111,13 +111,16 @@ int main(int argc, char** args) {
   fieldUVP[0] = system.GetSolPdeIndex("U");
   fieldUVP[1] = system.GetSolPdeIndex("V");
   fieldUVP[2] = system.GetSolPdeIndex("P");
-  
-  std::vector < unsigned > solutionType(3);
-  solutionType[0] = mlSol.GetSolutionType("U");
-  solutionType[1] = mlSol.GetSolutionType("V");
-  solutionType[2] = mlSol.GetSolutionType("P");
-  
-  FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, solutionType, "Navier-Stokes");
+
+  std::vector < unsigned > solutionTypeUVP(3);
+  solutionTypeUVP[0] = mlSol.GetSolutionType("U");
+  solutionTypeUVP[1] = mlSol.GetSolutionType("V");
+  solutionTypeUVP[2] = mlSol.GetSolutionType("P");
+
+  FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
+  FS_NS.SetAsmBlockSize(4);
+  FS_NS.SetAsmNumeberOfSchurVariables(1);
+    
 
 //   std::vector < unsigned > fieldUV(2);
 //   fieldUV[0] = system.GetSolPdeIndex("U");
@@ -138,12 +141,20 @@ int main(int argc, char** args) {
 //   FieldSplitTree FS_NS( GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
 
 
+  
   std::vector < unsigned > fieldT(1);
   fieldT[0] = system.GetSolPdeIndex("T");
-  FieldSplitTree FS_T( PREONLY, ILU_PRECOND, fieldT, "Temperature");
-
+  
+  std::vector < unsigned > solutionTypeT(1);
+  solutionTypeT[0] = mlSol.GetSolutionType("T");
+  
+  
+  FieldSplitTree FS_T( PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
+  FS_T.SetAsmBlockSize(4);
+  FS_T.SetAsmNumeberOfSchurVariables(1);
+  
+  
   std::vector < FieldSplitTree *> FS2;
-
   FS2.reserve(2);
   FS2.push_back(&FS_NS);
   FS2.push_back(&FS_T);
@@ -190,12 +201,15 @@ int main(int argc, char** args) {
 
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  system.SetResidualUpdateConvergenceTolerance(1.e-12);
+  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
+  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
+  system.SetMaxNumberOfLinearIterations(10);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+  
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(0);
+  system.SetNumberPreSmoothingStep(2);
   system.SetNumberPostSmoothingStep(2);
   // initilaize and solve the system
   system.init();
@@ -219,6 +233,8 @@ int main(int argc, char** args) {
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+
+  mlMsh.PrintInfo();
 
   return 0;
 }
@@ -462,16 +478,19 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           solP_gss += phiP[i] * solP[i];
         }
 
-        double nu = 1.;
+        
         double alpha = 1.;
-        double beta = 2000.;
+        double beta = 1.;//40000.;
+	
+	double Pr = 1./10;
+        double Ra = 10000;
 
         // *** phiT_i loop ***
         for (unsigned i = 0; i < nDofsT; i++) {
           adept::adouble Temp = 0.;
 
           for (unsigned j = 0; j < dim; j++) {
-            Temp +=  alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
+            Temp +=  1./sqrt(Ra*Pr)*alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
             Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
           }
 
@@ -485,7 +504,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
           for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
-              NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
+              NSV[k]   +=  sqrt(Pr/Ra) * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
               NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
             }
           }

@@ -120,16 +120,34 @@ namespace femus {
       
       std::vector < std::vector< std::vector < unsigned > > >_MatrixOffset;
       
-      //for ASM pourposes
-      std::vector< std::vector < std::vector <PetscInt> > > _overlappingIsIndex;
-      std::vector< std::vector < std::vector <PetscInt> > > _localIsIndex;
-      std::vector< std::vector <IS> > _overlappingIs;
-      std::vector< std::vector <IS> > _localIs;
-      std::vector< std::vector <unsigned> > _blockTypeRange;
+      
+    //for ASM pourposes  
+    public: 
+      void SetAsmBlockSize(const unsigned &BlockSize){
+	_asmBlockSize = BlockSize;
+	_asmStandard = false;
+	_asmOverlapping = 0; 
+      };
+      void SetAsmNumeberOfSchurVariables(const unsigned &SchurVariableNumber){
+	_asmSchurVariableNumber = SchurVariableNumber;
+      };
+      void SetAsmOverlapping(const unsigned &overlapping){
+	_asmOverlapping = overlapping;
+      }
+    private: 
+      std::vector< std::vector < std::vector <PetscInt> > > _asmOverlappingIsIndex;
+      std::vector< std::vector < std::vector <PetscInt> > > _asmLocalIsIndex;
+      std::vector< std::vector <IS> > _asmOverlappingIs;
+      std::vector< std::vector <IS> > _asmLocalIs;
+      std::vector< std::vector <unsigned> > _asmBlockMaterialRange;
+      unsigned _asmBlockSize;
+      unsigned _asmSchurVariableNumber;
                  
-      std::vector< PetscInt >  _nlocal;
-      bool _standardASM;
-      unsigned _overlap;
+      //std::vector< PetscInt >  _nlocal;
+      bool _asmStandard;
+      unsigned _asmOverlapping;  
+      
+      
       
   };
 
