@@ -567,3 +567,11 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
   return norm;
 
 }
+
+
+/***************
+ Q1: line 425 the variable "ml_prob" of the function "GetErrorNorm"  is from line 110  or 
+ line254 function AssemblePoisson_AD?
+ 
+ Q2: Flag
+ ***************/
