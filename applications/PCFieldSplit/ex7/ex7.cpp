@@ -1,1241 +1,643 @@
-static char help[] = "Stokes Problem with Temperature in 2d and 3d with simplicial finite elements.\n\
-We solve the Stokes problem in a rectangular\n\
-domain, using a parallel unstructured mesh (DMPLEX) to discretize it.\n\n\n";
+/** \file Ex11.cpp
+ *  \brief This example shows how to set and solve the weak form
+ *   of the Boussinesq appoximation of the Navier-Stokes Equation
+ *
+ *  \f{eqnarray*}
+ *  && \mathbf{V} \cdot \nabla T - \nabla \cdot\alpha \nabla T = 0 \\
+ *  && \mathbf{V} \cdot \nabla \mathbf{V} - \nabla \cdot \nu (\nabla \mathbf{V} +(\nabla \mathbf{V})^T)
+ *  +\nabla P = \beta T \mathbf{j} \\
+ *  && \nabla \cdot \mathbf{V} = 0
+ *  \f}
+ *  in a unit box domain (in 2D and 3D) with given temperature 0 and 1 on
+ *  the left and right walls, respectively, and insulated walls elsewhere.
+ *  \author Eugenio Aulisa
+ */
 
-/*
-TODO for Mantle Convection:
-#NAME?
-#NAME?
-#NAME?
+#include "FemusInit.hpp"
+#include "MultiLevelProblem.hpp"
+#include "NumericVector.hpp"
+#include "VTKWriter.hpp"
+#include "GMVWriter.hpp"
+#include "TransientSystem.hpp"
+#include "NonLinearImplicitSystem.hpp"
+#include "adept.h"
+#include "FieldSplitTree.hpp"
 
-The isoviscous Stokes problem, which we discretize using the finite
-element method on an unstructured mesh. The weak form equations are
 
-< \nabla v, \nabla u + {\nabla u}^T > - < \nabla\cdot v, p > + < v, f > = 0
-< q, \nabla\cdot v >                                                    = 0
-< \nabla t, \nabla T>                                                   = q_T
+using namespace femus;
 
-Boundary Conditions:
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  bool dirichlet = true; //dirichlet
+  value = 0.;
 
-#NAME?
+  if (!strcmp(SolName, "T")) {
+    if (facename == 2) {
+      value = 1.;
+    } else if (facename == 3) {
+      dirichlet = false; //Neumann
+    }
+  } else if (!strcmp(SolName, "P")) {
+    dirichlet = false;
+  }
 
-#NAME?
-#NAME?
-
-Discretization:
-
-We use a Python script to generate a tabulation of the finite element basis
-functions at quadrature points, which we put in a C header file. The generic
-command would be:
-
-bin/pythonscripts/PetscGenerateFEMQuadrature.py dim order dim 1 laplacian dim order 1 1 gradient src/snes/examples/tutorials/ex62.h
-
-We can currently generate an arbitrary order Lagrange element. The underlying
-FIAT code is capable of handling more exotic elements, but these have not been
-tested with this code.
-
-Field Data:
-
-Sieve data is organized by point, and the closure operation just stacks up the
-data from each sieve point in the closure. Thus, for a P_2-P_1 Stokes element, we
-have
-
-cl{e} = {f e_0 e_1 e_2 v_0 v_1 v_2}
-x     = [u_{e_0} v_{e_0} u_{e_1} v_{e_1} u_{e_2} v_{e_2} u_{v_0} v_{v_0} p_{v_0} u_{v_1} v_{v_1} p_{v_1} u_{v_2} v_{v_2} p_{v_2}]
-
-The problem here is that we would like to loop over each field separately for
-integration. Therefore, the closure visitor in DMPlexVecGetClosure() reorders
-the data so that each field is contiguous
-
-x'    = [u_{e_0} v_{e_0} u_{e_1} v_{e_1} u_{e_2} v_{e_2} u_{v_0} v_{v_0} u_{v_1} v_{v_1} u_{v_2} v_{v_2} p_{v_0} p_{v_1} p_{v_2}]
-
-Likewise, DMPlexVecSetClosure() takes data partitioned by field, and correctly
-puts it into the Sieve ordering.
-*/
-
-#include <petscdmplex.h>
-#include <petscsnes.h>
-
-int main(){
-  return 1;
+  return dirichlet;
 }
 
-/*------------------------------------------------------------------------------
-This code can be generated using 'bin/pythonscripts/PetscGenerateFEMQuadrature.py dim order dim 1 laplacian dim order 1 1 gradient dim order 1 1 identity src/snes/examples/tutorials/ex31.h'
------------------------------------------------------------------------------*/
-// #include "ex31.h"
-//
-// typedef enum {DIRICHLET, FREE_SLIP} BCType;
-// typedef enum {RUN_FULL, RUN_TEST} RunType;
-// typedef enum {FORCING_CONSTANT, FORCING_LINEAR, FORCING_CUBIC} ForcingType;
-//
-// typedef struct {
-// DM            dm;                /* REQUIRED in order to use SNES evaluation functions */
-// PetscFEM      fem;               /* REQUIRED to use DMPlexComputeResidualFEM() */
-// PetscInt      debug;             /* The debugging level */
-// PetscMPIInt   rank;              /* The process rank */
-// PetscMPIInt   numProcs;          /* The number of processes */
-// RunType       runType;           /* Whether to run tests, or solve the full problem */
-// PetscBool     jacobianMF;        /* Whether to calculate the Jacobian action on the fly */
-// PetscLogEvent createMeshEvent;
-// PetscBool     showInitial, showSolution;
-// /* Domain and mesh definition */
-// PetscInt      dim;               /* The topological mesh dimension */
-// PetscBool     interpolate;       /* Generate intermediate mesh elements */
-// PetscReal     refinementLimit;   /* The largest allowable cell volume */
-// char          partitioner[2048]; /* The graph partitioner */
-// /* GPU partitioning */
-// PetscInt      numBatches;        /* The number of cell batches per kernel */
-// PetscInt      numBlocks;         /* The number of concurrent blocks per kernel */
-// /* Element quadrature */
-// PetscQuadrature q[NUM_FIELDS];
-// /* Problem definition */
-// void (*f0Funcs[NUM_FIELDS])(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar f0[]); /* f0_u(x,y,z), and f0_p(x,y,z) */
-// void (*f1Funcs[NUM_FIELDS])(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar f1[]); /* f1_u(x,y,z), and f1_p(x,y,z) */
-// void (*g0Funcs[NUM_FIELDS*NUM_FIELDS])(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar g0[]); /* g0_uu(x,y,z), g0_up(x,y,z), g0_pu(x,y,z), and g0_pp(x,y,z) */
-// void (*g1Funcs[NUM_FIELDS*NUM_FIELDS])(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar g1[]); /* g1_uu(x,y,z), g1_up(x,y,z), g1_pu(x,y,z), and g1_pp(x,y,z) */
-// void (*g2Funcs[NUM_FIELDS*NUM_FIELDS])(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar g2[]); /* g2_uu(x,y,z), g2_up(x,y,z), g2_pu(x,y,z), and g2_pp(x,y,z) */
-// void (*g3Funcs[NUM_FIELDS*NUM_FIELDS])(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar g3[]); /* g3_uu(x,y,z), g3_up(x,y,z), g3_pu(x,y,z), and g3_pp(x,y,z) */
-// void (*exactFuncs[NUM_BASIS_COMPONENTS_TOTAL])(const PetscReal x[], PetscScalar *u); /* The exact solution function u(x,y,z), v(x,y,z), p(x,y,z), and T(x,y,z) */
-// BCType      bcType;              /* The type of boundary conditions */
-// ForcingType forcingType;         /* The type of rhs */
-// } AppCtx;
-//
-// void zero(const PetscReal coords[], PetscScalar *u)
-// {
-// *u = 0.0;
-// }
-//
-// /*
-// In 2D, for constant forcing,
-//
-// f_x = f_y = 3
-//
-// we use the exact solution,
-//
-// u = x^2 + y^2
-// v = 2 x^2 - 2xy
-// p = x + y - 1
-// T = x + y
-//
-// so that
-//
-// -\Delta u + \nabla p + f = <-4, -4> + <1, 1> + <3, 3> = 0
-// \nabla \cdot u           = 2x - 2x                    = 0
-// #NAME?
-// */
-// void quadratic_u_2d(const PetscReal x[], PetscScalar *u)
-// {
-// *u = x[0]*x[0] + x[1]*x[1];
-// };
-//
-// void quadratic_v_2d(const PetscReal x[], PetscScalar *v)
-// {
-// *v = 2.0*x[0]*x[0] - 2.0*x[0]*x[1];
-// };
-//
-// void linear_p_2d(const PetscReal x[], PetscScalar *p)
-// {
-// *p = x[0] + x[1] - 1.0;
-// };
-//
-// void linear_T_2d(const PetscReal x[], PetscScalar *T)
-// {
-// *T = x[0] + x[1];
-// };
-//
-// /*
-// In 2D, for linear forcing,
-//
-// f_x =  3 - 8y
-// f_y = -5 + 8x
-//
-// we use the exact solution,
-//
-// u =  2 x (x-1) (1 - 2 y)
-// v = -2 y (y-1) (1 - 2 x)
-// p = x + y - 1
-// T = x + y
-//
-// so that
-//
-// -\Delta u + \nabla p + f = <-4+8y, 4-8x> + <1, 1> + <3-8y, 8x-5> = 0
-// \nabla \cdot u           = (4x-2) (1-2y) - (4y-2) (1-2x)         = 0
-// #NAME?
-// */
-// void cubic_u_2d(const PetscReal x[], PetscScalar *u)
-// {
-// *u = 2.0*x[0]*(x[0]-1.0)*(1.0 - 2.0*x[1]);
-// };
-//
-// void cubic_v_2d(const PetscReal x[], PetscScalar *v)
-// {
-// *v = -2.0*x[1]*(x[1]-1.0)*(1.0 - 2.0*x[0]);
-// };
-//
-// /*
-// Let \sigma = (\nabla u + \nabla u^T) = < \sigma_{ij} >, where \sigma_{ij} = \sigma_{ji}
-// Then at the top and bottom (t = <1,0>),
-// <\sigma_{00}, \sigma_{01}> = 0 so \sigma_{00} = A(x,y) y(1-y) \sigma_{01} = B(x,y) y(1-y)
-// Using the left and right (t = <0,1>),
-// <\sigma_{10}, \sigma_{11}> = 0 so \sigma_{10} = C(x,y) x(1-x) \sigma_{11} = D(x,y) x(1-x)
-// Which means
-// \sigma_{00} = A(x,y) y(1-y)        = 2 u_x
-// \sigma_{01} = E(x,y) x(1-x) y(1-y) = u_y + v_x
-// \sigma_{11} = D(x,y) x(1-x)        = 2 v_y
-// Also we have
-// u(x=0,1) = 0 ==> u = A'(x,y) x(1-x)
-// v(y=0,1) = 0 ==> v = D'(x,y) y(1-y)
-// Thus we need
-// \int x - x^2 = x^2/2 - x^3/3 + C ==> 3 x^2 - 2 x^3 + 1 = 0 at x=0,1
-// so that
-// u =  (3 x^2 - 2 x^3 + 1) y(1-y)
-// v = -(3 y^2 - 2 y^3 + 1) x(1-x)
-// u_x =  6 x(1-x) y(1-y)
-// v_y = -6 x(1-x) y(1-y)
-// u_xx =  6 (1-2x) y(1-y)
-// v_yy = -6 (1-2y) x(1-x)
-//
-// In 2D, for cubic forcing,
-//
-// f_x = -1 + 6 (1-2x) y(1-y)
-// f_y = -1 - 6 (1-2y) x(1-x)
-//
-// we use the exact solution,
-//
-// u =  (3 x^2 - 2 x^3 + 1) y(1-y)
-// v = -(3 y^2 - 2 y^3 + 1) x(1-x)
-// p = x + y - 1
-// T = x + y
-//
-// so that
-//
-// -\Delta u + \nabla p + f = <-6 (1-2x) y(1-y), 6 (1-2y) x(1-x)> + <1, 1> + <-1 + 6 (1-2x) y(1-y), -1 - 6 (1-2y) x(1-x)> = 0
-// \nabla \cdot u           = 6 x(1-x) y(1-y) -6 (1-2y) x(1-x) = 0
-// #NAME?
-// */
-// void quintic_u_2d(const PetscReal x[], PetscScalar *u)
-// {
-// *u = (3.0*x[0]*x[0] - 2.0*x[0]*x[0]*x[0] + 1.0)*x[1]*(1.0-x[1]);
-// };
-//
-// void quintic_v_2d(const PetscReal x[], PetscScalar *v)
-// {
-// *v = -(3.0*x[1]*x[1] - 2.0*x[1]*x[1]*x[1] + 1.0)*x[0]*(1.0-x[0]);
-// };
-//
-// void f0_u_constant(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar f0[])
-// {
-// const PetscInt Ncomp = NUM_BASIS_COMPONENTS_0;
-// PetscInt       comp;
-//
-// for (comp = 0; comp < Ncomp; ++comp) f0[comp] = 3.0;
-// }
-//
-// void f0_u_linear_2d(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar f0[])
-// {
-// f0[0] =  3.0 - 8.0*x[1];
-// f0[1] = -5.0 + 8.0*x[0];
-// }
-//
-// void f0_u_cubic_2d(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar f0[])
-// {
-// f0[0] = -1.0 + 6.0*(1.0 - 2.0*x[0])*x[1]*(1.0 - x[1]);
-// f0[1] = -1.0 - 6.0*(1.0 - 2.0*x[1])*x[0]*(1.0 - x[0]);
-// }
-//
-// /* gradU[comp*dim+d] = {u_x, u_y, v_x, v_y} or {u_x, u_y, u_z, v_x, v_y, v_z, w_x, w_y, w_z}
-// u[Ncomp]          = {p} */
-// void f1_u(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar f1[])
-// {
-// const PetscInt dim   = SPATIAL_DIM_0;
-// const PetscInt Ncomp = NUM_BASIS_COMPONENTS_0;
-// PetscInt       comp, d;
-//
-// for (comp = 0; comp < Ncomp; ++comp) {
-// for (d = 0; d < dim; ++d) {
-// /* f1[comp*dim+d] = 0.5*(gradU[comp*dim+d] + gradU[d*dim+comp]); */
-// f1[comp*dim+d] = gradU[comp*dim+d];
-// }
-// f1[comp*dim+comp] -= u[Ncomp];
-// }
-// }
-//
-// /* gradU[comp*dim+d] = {u_x, u_y, v_x, v_y} or {u_x, u_y, u_z, v_x, v_y, v_z, w_x, w_y, w_z} */
-// void f0_p(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar f0[])
-// {
-// const PetscInt dim = SPATIAL_DIM_0;
-// PetscInt       d;
-//
-// f0[0] = 0.0;
-// for (d = 0; d < dim; ++d) f0[0] += gradU[d*dim+d];
-// }
-//
-// void f1_p(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar f1[])
-// {
-// const PetscInt dim = SPATIAL_DIM_0;
-// PetscInt       d;
-//
-// for (d = 0; d < dim; ++d) f1[d] = 0.0;
-// }
-//
-// void f0_T(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar f0[])
-// {
-// f0[0] = 0.0;
-// }
-//
-// void f1_T(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar f1[])
-// {
-// const PetscInt dim = SPATIAL_DIM_2;
-// const PetscInt off = SPATIAL_DIM_0*NUM_BASIS_COMPONENTS_0+SPATIAL_DIM_1*NUM_BASIS_COMPONENTS_1;
-// PetscInt       d;
-//
-// for (d = 0; d < dim; ++d) f1[d] = gradU[off+d];
-// }
-//
-// /* < v_t, I t > */
-// void g0_TT(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar g0[])
-// {
-// g0[0] = 1.0;
-// }
-//
-// /* < q, \nabla\cdot v >
-// NcompI = 1, NcompJ = dim */
-// void g1_pu(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar g1[])
-// {
-// const PetscInt dim = SPATIAL_DIM_0;
-// PetscInt       d;
-//
-// for (d = 0; d < dim; ++d) g1[d*dim+d] = 1.0; /* \frac{\partial\phi^{u_d}}{\partial x_d} */
-// }
-//
-// /* -< \nabla\cdot v, p >
-// NcompI = dim, NcompJ = 1 */
-// void g2_up(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar g2[])
-// {
-// const PetscInt dim = SPATIAL_DIM_0;
-// PetscInt       d;
-//
-// for (d = 0; d < dim; ++d) g2[d*dim+d] = -1.0; /* \frac{\partial\psi^{u_d}}{\partial x_d} */
-// }
-//
-// /* < \nabla v, \nabla u + {\nabla u}^T >
-// This just gives \nabla u, give the perdiagonal for the transpose */
-// void g3_uu(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar g3[])
-// {
-// const PetscInt dim   = SPATIAL_DIM_0;
-// const PetscInt Ncomp = NUM_BASIS_COMPONENTS_0;
-// PetscInt       compI, d;
-//
-// for (compI = 0; compI < Ncomp; ++compI) {
-// for (d = 0; d < dim; ++d) {
-// g3[((compI*Ncomp+compI)*dim+d)*dim+d] = 1.0;
-// }
-// }
-// }
-//
-// /* < \nabla t, \nabla T + {\nabla u}^T >
-// This just gives \nabla T, give the perdiagonal for the transpose */
-// void g3_TT(const PetscScalar u[], const PetscScalar gradU[], const PetscReal x[], PetscScalar g3[])
-// {
-// const PetscInt dim   = SPATIAL_DIM_2;
-// const PetscInt Ncomp = NUM_BASIS_COMPONENTS_2;
-// PetscInt       compI, d;
-//
-// for (compI = 0; compI < Ncomp; ++compI) {
-// for (d = 0; d < dim; ++d) {
-// g3[((compI*Ncomp+compI)*dim+d)*dim+d] = 1.0;
-// }
-// }
-// }
-//
-// /*
-// In 3D we use exact solution:
-//
-// u = x^2 + y^2
-// v = y^2 + z^2
-// w = x^2 + y^2 - 2(x+y)z
-// p = x + y + z - 3/2
-// f_x = f_y = f_z = 3
-//
-// so that
-//
-// -\Delta u + \nabla p + f = <-4, -4, -4> + <1, 1, 1> + <3, 3, 3> = 0
-// \nabla \cdot u           = 2x + 2y - 2(x + y)                   = 0
-// */
-// void quadratic_u_3d(const PetscReal x[], PetscScalar *u)
-// {
-// *u = x[0]*x[0] + x[1]*x[1];
-// };
-//
-// void quadratic_v_3d(const PetscReal x[], PetscScalar *v)
-// {
-// *v = x[1]*x[1] + x[2]*x[2];
-// };
-//
-// void quadratic_w_3d(const PetscReal x[], PetscScalar *w)
-// {
-// *w = x[0]*x[0] + x[1]*x[1] - 2.0*(x[0] + x[1])*x[2];
-// };
-//
-// void linear_p_3d(const PetscReal x[], PetscScalar *p)
-// {
-// *p = x[0] + x[1] + x[2] - 1.5;
-// };
-//
-// PetscErrorCode ProcessOptions(MPI_Comm comm, AppCtx *options)
-// {
-// const char     *bcTypes[2]      = {"dirichlet", "freeslip"};
-// const char     *forcingTypes[3] = {"constant", "linear", "cubic"};
-// const char     *runTypes[2]     = {"full", "test"};
-// PetscInt       bc, forcing, run;
-//
-// options->debug           = 0;
-// options->runType         = RUN_FULL;
-// options->dim             = 2;
-// options->interpolate     = PETSC_FALSE;
-// options->refinementLimit = 0.0;
-// options->bcType          = DIRICHLET;
-// options->forcingType     = FORCING_CONSTANT;
-// options->numBatches      = 1;
-// options->numBlocks       = 1;
-// options->jacobianMF      = PETSC_FALSE;
-// options->showInitial     = PETSC_FALSE;
-// options->showSolution    = PETSC_TRUE;
-//
-// options->fem.quad    = (PetscQuadrature*) &options->q;
-// options->fem.f0Funcs = (void (**)(const PetscScalar[], const PetscScalar[], const PetscReal[], PetscScalar[])) &options->f0Funcs;
-// options->fem.f1Funcs = (void (**)(const PetscScalar[], const PetscScalar[], const PetscReal[], PetscScalar[])) &options->f1Funcs;
-// options->fem.g0Funcs = (void (**)(const PetscScalar[], const PetscScalar[], const PetscReal[], PetscScalar[])) &options->g0Funcs;
-// options->fem.g1Funcs = (void (**)(const PetscScalar[], const PetscScalar[], const PetscReal[], PetscScalar[])) &options->g1Funcs;
-// options->fem.g2Funcs = (void (**)(const PetscScalar[], const PetscScalar[], const PetscReal[], PetscScalar[])) &options->g2Funcs;
-// options->fem.g3Funcs = (void (**)(const PetscScalar[], const PetscScalar[], const PetscReal[], PetscScalar[])) &options->g3Funcs;
-//
-// MPI_Comm_size(comm, &options->numProcs);
-// MPI_Comm_rank(comm, &options->rank);
-// PetscOptionsBegin(comm, "", "Stokes Problem Options", "DMPLEX");
-// PetscOptionsInt("-debug", "The debugging level", "ex31.c", options->debug, &options->debug, NULL);
-// run  = options->runType;
-// PetscOptionsEList("-run_type", "The run type", "ex31.c", runTypes, 2, runTypes[options->runType], &run, NULL);
-//
-// options->runType = (RunType) run;
-//
-// PetscOptionsInt("-dim", "The topological mesh dimension", "ex31.c", options->dim, &options->dim, NULL);
-// PetscOptionsBool("-interpolate", "Generate intermediate mesh elements", "ex31.c", options->interpolate, &options->interpolate, NULL);
-// PetscOptionsReal("-refinement_limit", "The largest allowable cell volume", "ex31.c", options->refinementLimit, &options->refinementLimit, NULL);
-// PetscStrcpy(options->partitioner, "chaco");
-// PetscOptionsString("-partitioner", "The graph partitioner", "pflotran.cxx", options->partitioner, options->partitioner, 2048, NULL);
-// bc   = options->bcType;
-// PetscOptionsEList("-bc_type","Type of boundary condition","ex31.c",bcTypes,2,bcTypes[options->bcType],&bc,NULL);
-//
-// options->bcType = (BCType) bc;
-// forcing         = options->forcingType;
-//
-// PetscOptionsEList("-forcing_type","Type of forcing function","ex31.c",forcingTypes,3,forcingTypes[options->forcingType],&forcing,NULL);
-//
-// options->forcingType = (ForcingType) forcing;
-//
-// PetscOptionsInt("-gpu_batches", "The number of cell batches per kernel", "ex31.c", options->numBatches, &options->numBatches, NULL);
-// PetscOptionsInt("-gpu_blocks", "The number of concurrent blocks per kernel", "ex31.c", options->numBlocks, &options->numBlocks, NULL);
-// PetscOptionsBool("-jacobian_mf", "Calculate the action of the Jacobian on the fly", "ex31.c", options->jacobianMF, &options->jacobianMF, NULL);
-// PetscOptionsBool("-show_initial", "Output the initial guess for verification", "ex31.c", options->showInitial, &options->showInitial, NULL);
-// PetscOptionsBool("-show_solution", "Output the solution for verification", "ex31.c", options->showSolution, &options->showSolution, NULL);
-// PetscOptionsEnd();
-//
-// PetscLogEventRegister("CreateMesh", DM_CLASSID, &options->createMeshEvent);
-// return(0);
-// };
-//
-// PetscErrorCode DMVecViewLocal(DM dm, Vec v, PetscViewer viewer)
-// {
-// Vec            lv;
-// PetscInt       p;
-// PetscMPIInt    rank, numProcs;
-//
-// MPI_Comm_rank(PetscObjectComm((PetscObject)dm), &rank);
-// MPI_Comm_size(PetscObjectComm((PetscObject)dm), &numProcs);
-// DMGetLocalVector(dm, &lv);
-// DMGlobalToLocalBegin(dm, v, INSERT_VALUES, lv);
-// DMGlobalToLocalEnd(dm, v, INSERT_VALUES, lv);
-// PetscPrintf(PETSC_COMM_WORLD, "Local function\n");
-// for (p = 0; p < numProcs; ++p) {
-// if (p == rank) {VecView(lv, PETSC_VIEWER_STDOUT_SELF);}
-// PetscBarrier((PetscObject) dm);
-// }
-// DMRestoreLocalVector(dm, &lv);
-// return(0);
-// }
-//
-// PetscErrorCode CreateMesh(MPI_Comm comm, AppCtx *user, DM *dm)
-// {
-// PetscInt       dim             = user->dim;
-// PetscBool      interpolate     = user->interpolate;
-// PetscReal      refinementLimit = user->refinementLimit;
-// const char     *partitioner    = user->partitioner;
-//
-// PetscLogEventBegin(user->createMeshEvent,0,0,0,0);
-// DMPlexCreateBoxMesh(comm, dim, interpolate, dm);
-// {
-// DM refinedMesh     = NULL;
-// DM distributedMesh = NULL;
-//
-// /* Refine mesh using a volume constraint */
-// DMPlexSetRefinementLimit(*dm, refinementLimit);
-// DMRefine(*dm, comm, &refinedMesh);
-// if (refinedMesh) {
-// DMDestroy(dm);
-// *dm  = refinedMesh;
-// }
-// /* Distribute mesh over processes */
-// DMPlexDistribute(*dm, partitioner, 0, &distributedMesh);
-// if (distributedMesh) {
-// DMDestroy(dm);
-// *dm  = distributedMesh;
-// }
-// }
-// DMSetFromOptions(*dm);
-// PetscLogEventEnd(user->createMeshEvent,0,0,0,0);
-// user->dm = *dm;
-// return(0);
-// }
-//
-// PetscErrorCode PointOnBoundary_2D(const PetscScalar coords[], PetscBool onBd[])
-// {
-// const PetscInt  corner = 0, bottom = 1, right = 2, top = 3, left = 4;
-// const PetscReal eps    = 1.0e-10;
-//
-// onBd[bottom] = PetscAbsScalar(coords[1])       < eps ? PETSC_TRUE : PETSC_FALSE;
-// onBd[right]  = PetscAbsScalar(coords[0] - 1.0) < eps ? PETSC_TRUE : PETSC_FALSE;
-// onBd[top]    = PetscAbsScalar(coords[1] - 1.0) < eps ? PETSC_TRUE : PETSC_FALSE;
-// onBd[left]   = PetscAbsScalar(coords[0])       < eps ? PETSC_TRUE : PETSC_FALSE;
-// onBd[corner] = onBd[bottom] + onBd[right] + onBd[top] + onBd[left] > 1 ? PETSC_TRUE : PETSC_FALSE;
-// return(0);
-// }
-//
-// PetscErrorCode CreateBoundaryPointIS_Square(DM dm, PetscInt *numBoundaries, PetscInt **numBoundaryConstraints, IS **boundaryPoints, IS **constraintIndices)
-// {
-// MPI_Comm       comm;
-// PetscSection   coordSection;
-// Vec            coordinates;
-// PetscScalar    *coords;
-// PetscInt       vStart, vEnd;
-// IS             bcPoints;
-// const PetscInt *points;
-// const PetscInt corner               = 0, bottom = 1, right = 2, top = 3, left = 4;
-// PetscInt       numBoundaryPoints[5] = {0, 0, 0, 0, 0}, bd, numPoints, p;
-// PetscInt       *bdPoints[5], *idx;
-//
-// PetscObjectGetComm((PetscObject)dm,&comm);
-// DMPlexGetDepthStratum(dm, 0, &vStart, &vEnd);
-// /* boundary 0: corners
-// boundary 1: bottom
-// boundary 2: right
-// boundary 3: top
-// boundary 4: left
-// */
-// *numBoundaries = 5;
-//
-// PetscMalloc(*numBoundaries * sizeof(PetscInt), numBoundaryConstraints);
-// PetscMalloc(*numBoundaries * sizeof(IS), boundaryPoints);
-// PetscMalloc(*numBoundaries * sizeof(IS), constraintIndices);
-//
-// /* Set number of constraints for each boundary */
-// (*numBoundaryConstraints)[corner] = 2;
-// (*numBoundaryConstraints)[bottom] = 1;
-// (*numBoundaryConstraints)[right]  = 1;
-// (*numBoundaryConstraints)[top]    = 1;
-// (*numBoundaryConstraints)[left]   = 1;
-// /* Set local constraint indices for each boundary */
-// PetscMalloc((*numBoundaryConstraints)[corner] * sizeof(PetscInt), &idx);
-// idx[0] = 0; idx[1] = 1;
-// ISCreateGeneral(comm, (*numBoundaryConstraints)[corner], idx, PETSC_OWN_POINTER, &(*constraintIndices)[corner]);
-// PetscMalloc((*numBoundaryConstraints)[bottom] * sizeof(PetscInt), &idx);
-// idx[0] = 1;
-// ISCreateGeneral(comm, (*numBoundaryConstraints)[bottom], idx, PETSC_OWN_POINTER, &(*constraintIndices)[bottom]);
-// PetscMalloc((*numBoundaryConstraints)[right] * sizeof(PetscInt), &idx);
-// idx[0] = 0;
-// ISCreateGeneral(comm, (*numBoundaryConstraints)[right], idx, PETSC_OWN_POINTER, &(*constraintIndices)[right]);
-// PetscMalloc((*numBoundaryConstraints)[top] * sizeof(PetscInt), &idx);
-// idx[0] = 1;
-// ISCreateGeneral(comm, (*numBoundaryConstraints)[top], idx, PETSC_OWN_POINTER, &(*constraintIndices)[top]);
-// PetscMalloc((*numBoundaryConstraints)[left] * sizeof(PetscInt), &idx);
-// idx[0] = 0;
-// ISCreateGeneral(comm, (*numBoundaryConstraints)[left], idx, PETSC_OWN_POINTER, &(*constraintIndices)[left]);
-//
-// /* Count points on each boundary */
-// DMPlexGetCoordinateSection(dm, &coordSection);
-// DMGetCoordinatesLocal(dm, &coordinates);
-// VecGetArray(coordinates, &coords);
-// DMPlexGetStratumIS(dm, "marker", 1, &bcPoints);
-// ISGetLocalSize(bcPoints, &numPoints);
-// ISGetIndices(bcPoints, &points);
-// for (p = 0; p < numPoints; ++p) {
-// PetscBool onBd[5];
-// PetscInt  off, bd;
-//
-// if ((points[p] >= vStart) && (points[p] < vEnd)) {
-// PetscSectionGetOffset(coordSection, points[p], &off);
-// PointOnBoundary_2D(&coords[off], onBd);
-// } else {
-// PetscInt *closure = NULL;
-// PetscInt closureSize, q, r;
-//
-// DMPlexGetTransitiveClosure(dm, points[p], PETSC_TRUE, &closureSize, &closure);
-// /* Compress out non-vertices */
-// for (q = 0, r = 0; q < closureSize*2; q += 2) {
-// if ((closure[q] >= vStart) && (closure[q] < vEnd)) {
-// closure[r] = closure[q];
-// ++r;
-// }
-// }
-// closureSize = r;
-// for (q = 0; q < closureSize; ++q) {
-// PetscSectionGetOffset(coordSection, closure[q], &off);
-// PointOnBoundary_2D(&coords[off], onBd);
-// if (!onBd[corner]) break;
-// }
-// DMPlexRestoreTransitiveClosure(dm, points[p], PETSC_TRUE, &closureSize, &closure);
-// if (q == closureSize) SETERRQ1(comm, PETSC_ERR_PLIB, "Cannot handle face %d which has every vertex on a corner", points[p]);
-// }
-//
-// for (bd = 0; bd < 5; ++bd) {
-// if (onBd[bd]) {
-// ++numBoundaryPoints[bd];
-// break;
-// }
-// }
-// }
-// /* Set points on each boundary */
-// for (bd = 0; bd < 5; ++bd) {
-// PetscMalloc(numBoundaryPoints[bd] * sizeof(PetscInt), &bdPoints[bd]);
-// numBoundaryPoints[bd] = 0;
-// }
-// for (p = 0; p < numPoints; ++p) {
-// PetscBool onBd[5];
-// PetscInt  off, bd;
-//
-// if ((points[p] >= vStart) && (points[p] < vEnd)) {
-// PetscSectionGetOffset(coordSection, points[p], &off);
-// PointOnBoundary_2D(&coords[off], onBd);
-// } else {
-// PetscInt *closure = NULL;
-// PetscInt closureSize, q, r;
-//
-// DMPlexGetTransitiveClosure(dm, points[p], PETSC_TRUE, &closureSize, &closure);
-// /* Compress out non-vertices */
-// for (q = 0, r = 0; q < closureSize*2; q += 2) {
-// if ((closure[q] >= vStart) && (closure[q] < vEnd)) {
-// closure[r] = closure[q];
-// ++r;
-// }
-// }
-// closureSize = r;
-// for (q = 0; q < closureSize; ++q) {
-// PetscSectionGetOffset(coordSection, closure[q], &off);
-// PointOnBoundary_2D(&coords[off], onBd);
-// if (!onBd[corner]) break;
-// }
-// DMPlexRestoreTransitiveClosure(dm, points[p], PETSC_TRUE, &closureSize, &closure);
-// if (q == closureSize) SETERRQ1(comm, PETSC_ERR_PLIB, "Cannot handle face %d which has every vertex on a corner", points[p]);
-// }
-//
-// for (bd = 0; bd < 5; ++bd) {
-// if (onBd[bd]) {
-// bdPoints[bd][numBoundaryPoints[bd]++] = points[p];
-// break;
-// }
-// }
-// }
-// VecRestoreArray(coordinates, &coords);
-// ISRestoreIndices(bcPoints, &points);
-// ISDestroy(&bcPoints);
-// for (bd = 0; bd < 5; ++bd) {
-// ISCreateGeneral(comm, numBoundaryPoints[bd], bdPoints[bd], PETSC_OWN_POINTER, &(*boundaryPoints)[bd]);
-// }
-// return(0);
-// }
-//
-// PetscErrorCode CreateBoundaryPointIS_Cube(DM dm, PetscInt *numBoundaries, PetscInt **numBoundaryConstraints, IS **boundaryPoints, IS **constraintIndices)
-// {
-// SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, "Just lazy");
-// return(0);
-// }
-//
-// /* This will only work for the square/cube, but I think the interface is robust */
-// PetscErrorCode CreateBoundaryPointIS(DM dm, PetscInt *numBoundaries, PetscInt **numBoundaryConstraints, IS **boundaryPoints, IS **constraintIndices)
-// {
-// PetscInt       dim;
-//
-// DMPlexGetDimension(dm, &dim);
-// switch (dim) {
-// case 2:
-// CreateBoundaryPointIS_Square(dm, numBoundaries, numBoundaryConstraints, boundaryPoints, constraintIndices);
-// break;
-// case 3:
-// CreateBoundaryPointIS_Cube(dm, numBoundaries, numBoundaryConstraints, boundaryPoints, constraintIndices);
-// break;
-// default:
-// SETERRQ1(PetscObjectComm((PetscObject)dm), PETSC_ERR_ARG_WRONG, "No boundary creatin routine for dimension %d", dim);
-// }
-// return(0);
-// }
-//
-// PetscErrorCode SetupQuadrature(AppCtx *user)
-// {
-// user->fem.quad[0].numQuadPoints = NUM_QUADRATURE_POINTS_0;
-// user->fem.quad[0].quadPoints    = points_0;
-// user->fem.quad[0].quadWeights   = weights_0;
-// user->fem.quad[0].numBasisFuncs = NUM_BASIS_FUNCTIONS_0;
-// user->fem.quad[0].numComponents = NUM_BASIS_COMPONENTS_0;
-// user->fem.quad[0].basis         = Basis_0;
-// user->fem.quad[0].basisDer      = BasisDerivatives_0;
-// user->fem.quad[1].numQuadPoints = NUM_QUADRATURE_POINTS_1;
-// user->fem.quad[1].quadPoints    = points_1;
-// user->fem.quad[1].quadWeights   = weights_1;
-// user->fem.quad[1].numBasisFuncs = NUM_BASIS_FUNCTIONS_1;
-// user->fem.quad[1].numComponents = NUM_BASIS_COMPONENTS_1;
-// user->fem.quad[1].basis         = Basis_1;
-// user->fem.quad[1].basisDer      = BasisDerivatives_1;
-// user->fem.quad[2].numQuadPoints = NUM_QUADRATURE_POINTS_2;
-// user->fem.quad[2].quadPoints    = points_2;
-// user->fem.quad[2].quadWeights   = weights_2;
-// user->fem.quad[2].numBasisFuncs = NUM_BASIS_FUNCTIONS_2;
-// user->fem.quad[2].numComponents = NUM_BASIS_COMPONENTS_2;
-// user->fem.quad[2].basis         = Basis_2;
-// user->fem.quad[2].basisDer      = BasisDerivatives_2;
-// return(0);
-// }
-//
-// /*
-// There is a problem here with uninterpolated meshes. The index in numDof[] is not dimension in this case,
-// but sieve depth.
-// */
-// PetscErrorCode SetupSection(DM dm, AppCtx *user)
-// {
-// PetscSection   section;
-// const PetscInt numFields           = NUM_FIELDS;
-// PetscInt       dim                 = user->dim;
-// PetscInt       numBC               = 0;
-// PetscInt       numComp[NUM_FIELDS] = {NUM_BASIS_COMPONENTS_0, NUM_BASIS_COMPONENTS_1, NUM_BASIS_COMPONENTS_2};
-// PetscInt       bcFields[2]         = {0, 2};
-// IS             bcPoints[2]         = {NULL, NULL};
-// PetscInt       numDof[NUM_FIELDS*(SPATIAL_DIM_0+1)];
-// PetscInt       f, d;
-// PetscBool      view;
-//
-// if (dim != SPATIAL_DIM_0) SETERRQ2(PetscObjectComm((PetscObject)dm), PETSC_ERR_ARG_SIZ, "Spatial dimension %d should be %d", dim, SPATIAL_DIM_0);
-// if (dim != SPATIAL_DIM_1) SETERRQ2(PetscObjectComm((PetscObject)dm), PETSC_ERR_ARG_SIZ, "Spatial dimension %d should be %d", dim, SPATIAL_DIM_1);
-// for (d = 0; d <= dim; ++d) {
-// numDof[0*(dim+1)+d] = numDof_0[d];
-// numDof[1*(dim+1)+d] = numDof_1[d];
-// numDof[2*(dim+1)+d] = numDof_2[d];
-// }
-// for (f = 0; f < numFields; ++f) {
-// for (d = 1; d < dim; ++d) {
-// if ((numDof[f*(dim+1)+d] > 0) && !user->interpolate) SETERRQ(PetscObjectComm((PetscObject)dm), PETSC_ERR_ARG_WRONG, "Mesh must be interpolated when unknowns are specified on edges or faces.");
-// }
-// }
-// if (user->bcType == FREE_SLIP) {
-// PetscInt numBoundaries, b;
-// PetscInt *numBoundaryConstraints;
-// IS       *boundaryPoints, *constraintIndices;
-//
-// DMPlexCreateSectionInitial(dm, dim, numFields, numComp, numDof, &section);
-// /* Velocity conditions */
-// CreateBoundaryPointIS(dm, &numBoundaries, &numBoundaryConstraints, &boundaryPoints, &constraintIndices);
-// for (b = 0; b < numBoundaries; ++b) {
-// DMPlexCreateSectionBCDof(dm, 1, &bcFields[0], &boundaryPoints[b], numBoundaryConstraints[b], section);
-// }
-// /* Temperature conditions */
-// DMPlexGetStratumIS(dm, "marker", 1, &bcPoints[0]);
-// DMPlexCreateSectionBCDof(dm, 1, &bcFields[1], &bcPoints[0], PETSC_DETERMINE, section);
-// PetscSectionSetUp(section);
-// for (b = 0; b < numBoundaries; ++b) {
-// DMPlexCreateSectionBCIndicesField(dm, bcFields[0], boundaryPoints[b], constraintIndices[b], section);
-// }
-// DMPlexCreateSectionBCIndicesField(dm, bcFields[1], bcPoints[0], NULL, section);
-// DMPlexCreateSectionBCIndices(dm, section);
-// } else {
-// if (user->bcType == DIRICHLET) {
-// numBC       = 2;
-// DMPlexGetStratumIS(dm, "marker", 1, &bcPoints[0]);
-// bcPoints[1] = bcPoints[0];
-// PetscObjectReference((PetscObject) bcPoints[1]);
-// }
-// DMPlexCreateSection(dm, dim, numFields, numComp, numDof, numBC, bcFields, bcPoints, &section);
-// }
-// PetscSectionSetFieldName(section, 0, "velocity");
-// PetscSectionSetFieldName(section, 1, "pressure");
-// PetscSectionSetFieldName(section, 2, "temperature");
-// DMSetDefaultSection(dm, section);
-// ISDestroy(&bcPoints[0]);
-// ISDestroy(&bcPoints[1]);
-// PetscOptionsHasName(((PetscObject) dm)->prefix, "-section_view", &view);
-// if ((user->bcType == FREE_SLIP) && view) {
-// PetscSection s, gs;
-//
-// DMGetDefaultSection(dm, &s);
-// PetscSectionView(s, PETSC_VIEWER_STDOUT_WORLD);
-// DMGetDefaultGlobalSection(dm, &gs);
-// PetscSectionView(gs, PETSC_VIEWER_STDOUT_WORLD);
-// }
-// return(0);
-// }
-//
-// PetscErrorCode SetupExactSolution(DM dm, AppCtx *user)
-// {
-// PetscFEM       *fem = &user->fem;
-//
-// switch (user->forcingType) {
-// case FORCING_CONSTANT:
-// if (user->bcType == FREE_SLIP) SETERRQ(PetscObjectComm((PetscObject)dm), PETSC_ERR_ARG_WRONG, "Constant forcing is incompatible with freeslip boundary conditions");
-// fem->f0Funcs[0] = f0_u_constant;
-// break;
-// case FORCING_LINEAR:
-// switch (user->bcType) {
-// case DIRICHLET:
-// case FREE_SLIP:
-// switch (user->dim) {
-// case 2:
-// fem->f0Funcs[0] = f0_u_linear_2d;
-// break;
-// default:
-// SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_ARG_OUTOFRANGE, "Invalid dimension %d", user->dim);
-// }
-// break;
-// default:
-// SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_ARG_OUTOFRANGE, "Invalid boundary condition type %d", user->bcType);
-// }
-// break;
-// case FORCING_CUBIC:
-// switch (user->bcType) {
-// case DIRICHLET:
-// case FREE_SLIP:
-// switch (user->dim) {
-// case 2:
-// fem->f0Funcs[0] = f0_u_cubic_2d;
-// break;
-// default:
-// SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_ARG_OUTOFRANGE, "Invalid dimension %d", user->dim);
-// }
-// break;
-// default:
-// SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_ARG_OUTOFRANGE, "Invalid boundary condition type %d", user->bcType);
-// }
-// break;
-// }
-// fem->f0Funcs[1] = f0_p;
-// fem->f0Funcs[2] = f0_T;
-// fem->f1Funcs[0] = f1_u;
-// fem->f1Funcs[1] = f1_p;
-// fem->f1Funcs[2] = f1_T;
-// fem->g0Funcs[0] = NULL;
-// fem->g0Funcs[1] = NULL;
-// fem->g0Funcs[2] = NULL;
-// fem->g0Funcs[3] = NULL;
-// fem->g0Funcs[4] = NULL;
-// fem->g0Funcs[5] = NULL;
-// fem->g0Funcs[6] = NULL;
-// fem->g0Funcs[7] = NULL;
-// fem->g0Funcs[8] = NULL;
-// fem->g1Funcs[0] = NULL;
-// fem->g1Funcs[1] = NULL;
-// fem->g1Funcs[2] = NULL;
-// fem->g1Funcs[3] = g1_pu;      /* < q, \nabla\cdot v > */
-// fem->g1Funcs[4] = NULL;
-// fem->g1Funcs[5] = NULL;
-// fem->g1Funcs[6] = NULL;
-// fem->g1Funcs[7] = NULL;
-// fem->g1Funcs[8] = NULL;
-// fem->g2Funcs[0] = NULL;
-// fem->g2Funcs[1] = g2_up;      /* < \nabla\cdot v, p > */
-// fem->g2Funcs[2] = NULL;
-// fem->g2Funcs[3] = NULL;
-// fem->g2Funcs[4] = NULL;
-// fem->g2Funcs[5] = NULL;
-// fem->g2Funcs[6] = NULL;
-// fem->g2Funcs[7] = NULL;
-// fem->g2Funcs[8] = NULL;
-// fem->g3Funcs[0] = g3_uu;      /* < \nabla v, \nabla u + {\nabla u}^T > */
-// fem->g3Funcs[1] = NULL;
-// fem->g3Funcs[2] = NULL;
-// fem->g3Funcs[3] = NULL;
-// fem->g3Funcs[4] = NULL;
-// fem->g3Funcs[5] = NULL;
-// fem->g3Funcs[6] = NULL;
-// fem->g3Funcs[7] = NULL;
-// fem->g3Funcs[8] = g3_TT;      /* < \nabla t, \nabla T + {\nabla T}^T > */
-// switch (user->forcingType) {
-// case FORCING_CONSTANT:
-// switch (user->bcType) {
-// case DIRICHLET:
-// switch (user->dim) {
-// case 2:
-// user->exactFuncs[0] = quadratic_u_2d;
-// user->exactFuncs[1] = quadratic_v_2d;
-// user->exactFuncs[2] = linear_p_2d;
-// user->exactFuncs[3] = linear_T_2d;
-// break;
-// case 3:
-// user->exactFuncs[0] = quadratic_u_3d;
-// user->exactFuncs[1] = quadratic_v_3d;
-// user->exactFuncs[2] = quadratic_w_3d;
-// user->exactFuncs[3] = linear_p_3d;
-// user->exactFuncs[4] = linear_T_2d;
-// break;
-// default:
-// SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_ARG_OUTOFRANGE, "Invalid dimension %d", user->dim);
-// }
-// break;
-// default:
-// SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_ARG_OUTOFRANGE, "Invalid boundary condition type %d", user->bcType);
-// }
-// break;
-// case FORCING_LINEAR:
-// switch (user->bcType) {
-// case DIRICHLET:
-// switch (user->dim) {
-// case 2:
-// user->exactFuncs[0] = cubic_u_2d;
-// user->exactFuncs[1] = cubic_v_2d;
-// user->exactFuncs[2] = linear_p_2d;
-// user->exactFuncs[3] = linear_T_2d;
-// break;
-// default:
-// SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_ARG_OUTOFRANGE, "Invalid dimension %d", user->dim);
-// }
-// break;
-// default:
-// SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_ARG_OUTOFRANGE, "Invalid boundary condition type %d", user->bcType);
-// }
-// break;
-// case FORCING_CUBIC:
-// switch (user->bcType) {
-// case DIRICHLET:
-// case FREE_SLIP:
-// switch (user->dim) {
-// case 2:
-// user->exactFuncs[0] = quintic_u_2d;
-// user->exactFuncs[1] = quintic_v_2d;
-// user->exactFuncs[2] = linear_p_2d;
-// user->exactFuncs[3] = linear_T_2d;
-// break;
-// default:
-// SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_ARG_OUTOFRANGE, "Invalid dimension %d", user->dim);
-// }
-// break;
-// default:
-// SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_ARG_OUTOFRANGE, "Invalid boundary condition type %d", user->bcType);
-// }
-// break;
-// default:
-// SETERRQ1(PETSC_COMM_WORLD, PETSC_ERR_ARG_OUTOFRANGE, "Invalid forcing type %d", user->forcingType);
-// }
-// DMPlexSetFEMIntegration(dm, FEMIntegrateResidualBatch, FEMIntegrateJacobianActionBatch, FEMIntegrateJacobianBatch);
-// return(0);
-// }
-//
-// /*
-// . field - The field whose diagonal block (of the Jacobian) has this null space
-// */
-// PetscErrorCode CreateNullSpaces(DM dm, PetscInt field, MatNullSpace *nullSpace)
-// {
-// AppCtx         *user;
-// Vec            nullVec, localNullVec;
-// PetscSection   section;
-// PetscScalar    *a;
-// PetscInt       pressure = field;
-// PetscInt       pStart, pEnd, p;
-//
-// DMGetApplicationContext(dm, (void**) &user);
-// DMGetGlobalVector(dm, &nullVec);
-// DMGetLocalVector(dm, &localNullVec);
-// VecSet(nullVec, 0.0);
-// /* Put a constant in for all pressures */
-// DMGetDefaultSection(dm, &section);
-// PetscSectionGetChart(section, &pStart, &pEnd);
-// VecGetArray(localNullVec, &a);
-// for (p = pStart; p < pEnd; ++p) {
-// PetscInt fDim, off, d;
-//
-// PetscSectionGetFieldDof(section, p, pressure, &fDim);
-// PetscSectionGetFieldOffset(section, p, pressure, &off);
-// for (d = 0; d < fDim; ++d) a[off+d] = 1.0;
-// }
-// VecRestoreArray(localNullVec, &a);
-// DMLocalToGlobalBegin(dm, localNullVec, INSERT_VALUES, nullVec);
-// DMLocalToGlobalEnd(dm, localNullVec, INSERT_VALUES, nullVec);
-// DMRestoreLocalVector(dm, &localNullVec);
-// VecNormalize(nullVec, NULL);
-// if (user->debug) {
-// PetscPrintf(PetscObjectComm((PetscObject)dm), "Pressure Null Space\n");
-// VecView(nullVec, PETSC_VIEWER_STDOUT_WORLD);
-// }
-// MatNullSpaceCreate(PetscObjectComm((PetscObject)dm), PETSC_FALSE, 1, &nullVec, nullSpace);
-// DMRestoreGlobalVector(dm, &nullVec);
-// return(0);
-// }
-//
-// /*
-// FormJacobianAction - Form the global Jacobian action Y = JX from the global input X
-//
-// Input Parameters:
-// #NAME?
-// #NAME?
-//
-// Output Parameter:
-// . Y  - Local output vector
-//
-// Note:
-// We form the residual one batch of elements at a time. This allows us to offload work onto an accelerator,
-// like a GPU, or vectorize on a multicore machine.
-//
-// .seealso: FormJacobianActionLocal()
-// */
-// PetscErrorCode FormJacobianAction(Mat J, Vec X,  Vec Y)
-// {
-// JacActionCtx   *ctx;
-// DM             dm;
-// Vec            dummy, localX, localY;
-// PetscInt       N, n;
-//
-// MatShellGetContext(J, &ctx);
-// dm   = ctx->dm;
-//
-// /* determine whether X = localX */
-// DMGetLocalVector(dm, &dummy);
-// DMGetLocalVector(dm, &localX);
-// DMGetLocalVector(dm, &localY);
-// /* TODO: THIS dummy restore is necessary here so that the first available local vector has boundary conditions in it
-// I think the right thing to do is have the user put BC into a local vector and give it to us
-// */
-// DMRestoreLocalVector(dm, &dummy);
-// VecGetSize(X, &N);
-// VecGetSize(localX, &n);
-//
-// if (n != N) { /* X != localX */
-// VecSet(localX, 0.0);
-// DMGlobalToLocalBegin(dm, X, INSERT_VALUES, localX);
-// DMGlobalToLocalEnd(dm, X, INSERT_VALUES, localX);
-// } else {
-// DMRestoreLocalVector(dm, &localX);
-// localX = X;
-// }
-// DMPlexComputeJacobianActionFEM(dm, J, localX, localY, ctx->user);
-// if (n != N) {
-// DMRestoreLocalVector(dm, &localX);
-// }
-// VecSet(Y, 0.0);
-// DMLocalToGlobalBegin(dm, localY, ADD_VALUES, Y);
-// DMLocalToGlobalEnd(dm, localY, ADD_VALUES, Y);
-// DMRestoreLocalVector(dm, &localY);
-// if (0) {
-// Vec       r;
-// PetscReal norm;
-//
-// VecDuplicate(X, &r);
-// MatMult(ctx->J, X, r);
-// VecAXPY(r, -1.0, Y);
-// VecNorm(r, NORM_2, &norm);
-// if (norm > 1.0e-8) {
-// PetscPrintf(PETSC_COMM_WORLD, "Jacobian Action Input:\n");
-// VecView(X, PETSC_VIEWER_STDOUT_WORLD);
-// PetscPrintf(PETSC_COMM_WORLD, "Jacobian Action Result:\n");
-// VecView(Y, PETSC_VIEWER_STDOUT_WORLD);
-// PetscPrintf(PETSC_COMM_WORLD, "Difference:\n");
-// VecView(r, PETSC_VIEWER_STDOUT_WORLD);
-// SETERRQ1(PetscObjectComm((PetscObject)J), PETSC_ERR_ARG_WRONG, "The difference with assembled multiply is too large %g", norm);
-// }
-// VecDestroy(&r);
-// }
-// return(0);
-// }
-//
-// int main(int argc, char **argv)
-// {
-// MPI_Comm       comm;
-// SNES           snes;                 /* nonlinear solver */
-// Vec            u,r;                  /* solution, residual vectors */
-// Mat            A,J;                  /* Jacobian matrix */
-// MatNullSpace   nullSpace = 0;            /* May be necessary for pressure */
-// AppCtx         user;                 /* user-defined work context */
-// JacActionCtx   userJ;                /* context for Jacobian MF action */
-// PetscInt       its;                  /* iterations for convergence */
-// PetscReal      error         = 0.0;  /* L_2 error in the solution */
-// const PetscInt numComponents = NUM_BASIS_COMPONENTS_TOTAL;
-//
-// PetscInitialize(&argc, &argv, NULL, help);
-// comm = PETSC_COMM_WORLD;
-// ProcessOptions(comm, &user);
-// SNESCreate(comm, &snes);
-// CreateMesh(comm, &user, &user.dm);
-// SNESSetDM(snes, user.dm);
-// DMSetApplicationContext(user.dm, &user);
-//
-// SetupExactSolution(user.dm, &user);
-// SetupQuadrature(&user);
-// SetupSection(user.dm, &user);
-//
-// DMCreateGlobalVector(user.dm, &u);
-// PetscObjectSetName((PetscObject) u, "solution");
-// VecDuplicate(u, &r);
-//
-// DMCreateMatrix(user.dm, MATAIJ, &J);
-// if (user.jacobianMF) {
-// PetscInt M, m, N, n;
-//
-// MatGetSize(J, &M, &N);
-// MatGetLocalSize(J, &m, &n);
-// MatCreate(comm, &A);
-// MatSetSizes(A, m, n, M, N);
-// MatSetType(A, MATSHELL);
-// MatSetUp(A);
-// MatShellSetOperation(A, MATOP_MULT, (void (*)(void)) FormJacobianAction);
-//
-// userJ.dm   = user.dm;
-// userJ.J    = J;
-// userJ.user = &user;
-//
-// DMCreateLocalVector(user.dm, &userJ.u);
-// MatShellSetContext(A, &userJ);
-// } else {
-// A = J;
-// }
-// DMSetNullSpaceConstructor(user.dm, 1, CreateNullSpaces);
-//
-// DMSNESSetFunctionLocal(user.dm,  (PetscErrorCode (*)(DM,Vec,Vec,void*))DMPlexComputeResidualFEM,&user);
-// DMSNESSetJacobianLocal(user.dm,  (PetscErrorCode (*)(DM,Vec,Mat,Mat,MatStructure*,void*))DMPlexComputeJacobianFEM,&user);
-//
-// SNESSetFromOptions(snes);
-//
-// {
-// KSP               ksp; PC pc; Vec crd_vec;
-// const PetscScalar *v;
-// PetscInt          i,k,j,mlocal;
-// PetscReal         *coords;
-//
-// SNESGetKSP(snes, &ksp);
-// KSPGetPC(ksp, &pc);
-// DMGetCoordinatesLocal(user.dm, &crd_vec);
-// VecGetLocalSize(crd_vec,&mlocal);
-// PetscMalloc(SPATIAL_DIM_0*mlocal*sizeof(*coords),&coords);
-// VecGetArrayRead(crd_vec,&v);
-// for (k=j=0; j<mlocal; j++) {
-// for (i=0; i<SPATIAL_DIM_0; i++,k++) {
-// coords[k] = PetscRealPart(v[k]);
-// }
-// }
-// VecRestoreArrayRead(crd_vec,&v);
-// PCSetCoordinates(pc, SPATIAL_DIM_0, mlocal, coords);
-// PetscFree(coords);
-// }
-//
-// DMPlexProjectFunction(user.dm, numComponents, user.exactFuncs, INSERT_ALL_VALUES, u);
-// if (user.showInitial) {DMVecViewLocal(user.dm, u, PETSC_VIEWER_STDOUT_SELF);}
-// if (user.runType == RUN_FULL) {
-// PetscScalar (*initialGuess[numComponents])(const PetscReal x[]);
-// PetscInt c;
-//
-// for (c = 0; c < numComponents; ++c) initialGuess[c] = zero;
-// DMPlexProjectFunction(user.dm, numComponents, initialGuess, INSERT_VALUES, u);
-// if (user.showInitial) {DMVecViewLocal(user.dm, u, PETSC_VIEWER_STDOUT_SELF);}
-// if (user.debug) {
-// PetscPrintf(comm, "Initial guess\n");
-// VecView(u, PETSC_VIEWER_STDOUT_WORLD);
-// }
-// SNESSolve(snes, NULL, u);
-// SNESGetIterationNumber(snes, &its);
-// PetscPrintf(comm, "Number of SNES iterations = %D\n", its);
-// DMPlexComputeL2Diff(user.dm, user.q, user.exactFuncs, u, &error);
-// PetscPrintf(comm, "L_2 Error: %.3g\n", error);
-// if (user.showSolution) {
-// PetscPrintf(comm, "Solution\n");
-// VecChop(u, 3.0e-9);
-// VecView(u, PETSC_VIEWER_STDOUT_WORLD);
-// }
-// } else {
-// PetscReal res = 0.0;
-//
-// /* Check discretization error */
-// PetscPrintf(comm, "Initial guess\n");
-// VecView(u, PETSC_VIEWER_STDOUT_WORLD);
-// DMPlexComputeL2Diff(user.dm, user.q, user.exactFuncs, u, &error);
-// PetscPrintf(comm, "L_2 Error: %g\n", error);
-// /* Check residual */
-// SNESComputeFunction(snes, u, r);
-// PetscPrintf(comm, "Initial Residual\n");
-// VecChop(r, 1.0e-10);
-// VecView(r, PETSC_VIEWER_STDOUT_WORLD);
-// VecNorm(r, NORM_2, &res);
-// PetscPrintf(comm, "L_2 Residual: %g\n", res);
-// /* Check Jacobian */
-// {
-// Vec          b;
-// MatStructure flag;
-// MatNullSpace nullSpace2;
-// PetscBool    isNull;
-//
-// CreateNullSpaces(user.dm, 1, &nullSpace2);
-// MatNullSpaceTest(nullSpace2, J, &isNull);
-// if (!isNull) SETERRQ(comm, PETSC_ERR_PLIB, "The null space calculated for the system operator is invalid.");
-// MatNullSpaceDestroy(&nullSpace2);
-//
-// SNESComputeJacobian(snes, u, &A, &A, &flag);
-// VecDuplicate(u, &b);
-// VecSet(r, 0.0);
-// SNESComputeFunction(snes, r, b);
-// MatMult(A, u, r);
-// VecAXPY(r, 1.0, b);
-// VecDestroy(&b);
-// PetscPrintf(comm, "Au - b = Au + F(0)\n");
-// VecChop(r, 1.0e-10);
-// VecView(r, PETSC_VIEWER_STDOUT_WORLD);
-// VecNorm(r, NORM_2, &res);
-// PetscPrintf(comm, "Linear L_2 Residual: %g\n", res);
-// }
-// }
-//
-// if (user.runType == RUN_FULL) {
-// PetscContainer c;
-// PetscSection   section;
-// Vec            sol;
-// PetscViewer    viewer;
-// const char     *name;
-//
-// PetscViewerCreate(comm, &viewer);
-// PetscViewerSetType(viewer, PETSCVIEWERVTK);
-// PetscViewerFileSetName(viewer, "ex31_sol.vtk");
-// PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_VTK);
-// DMGetLocalVector(user.dm, &sol);
-// PetscObjectGetName((PetscObject) u, &name);
-// PetscObjectSetName((PetscObject) sol, name);
-// DMGlobalToLocalBegin(user.dm, u, INSERT_VALUES, sol);
-// DMGlobalToLocalEnd(user.dm, u, INSERT_VALUES, sol);
-// DMGetDefaultSection(user.dm, &section);
-// PetscObjectReference((PetscObject) user.dm); /* Needed because viewer destroys the DM */
-// PetscViewerVTKAddField(viewer, (PetscObject) user.dm, DMPlexVTKWriteAll, PETSC_VTK_POINT_FIELD, (PetscObject) sol);
-// PetscObjectReference((PetscObject) sol); /* Needed because viewer destroys the Vec */
-// PetscContainerCreate(comm, &c);
-// PetscContainerSetPointer(c, section);
-// PetscObjectCompose((PetscObject) sol, "section", (PetscObject) c);
-// PetscContainerDestroy(&c);
-// DMRestoreLocalVector(user.dm, &sol);
-// PetscViewerDestroy(&viewer);
-// }
-//
-// MatNullSpaceDestroy(&nullSpace);
-// if (user.jacobianMF) {
-// VecDestroy(&userJ.u);
-// }
-// if (A != J) {
-// MatDestroy(&A);
-// }
-// MatDestroy(&J);
-// VecDestroy(&u);
-// VecDestroy(&r);
-// SNESDestroy(&snes);
-// DMDestroy(&user.dm);
-// PetscFinalize();
-// return 0;
-// }
 
+void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+
+
+int main(int argc, char** args) {
+
+  // init Petsc-MPI communicator
+  FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+
+  // define multilevel mesh
+  MultiLevelMesh mlMsh;
+  // read coarse level mesh and generate finers level meshes
+  double scalingFactor = 1.;
+  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
+     probably in the furure it is not going to be an argument of this function   */
+  unsigned dim = mlMsh.GetDimension();
+
+  unsigned numberOfUniformLevels = 6;
+  unsigned numberOfSelectiveLevels = 0;
+  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+
+  // erase all the coarse mesh levels
+  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
+
+  // print mesh info
+  mlMsh.PrintInfo();
+
+  MultiLevelSolution mlSol(&mlMsh);
+
+  // add variables to mlSol
+  mlSol.AddSolution("T", LAGRANGE, SERENDIPITY,2);
+  mlSol.AddSolution("U", LAGRANGE, SECOND,2);
+  mlSol.AddSolution("V", LAGRANGE, SECOND,2);
+
+  if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND,2);
+
+  //mlSol.AddSolution("P", LAGRANGE, FIRST);
+  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST,2);
+
+  mlSol.AssociatePropertyToSolution("P", "Pressure");
+  mlSol.Initialize("All");
+
+  // attach the boundary condition function and generate boundary data
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol.FixSolutionAtOnePoint("P");
+  mlSol.GenerateBdc("All");
+
+  // define the multilevel problem attach the mlSol object to it
+  MultiLevelProblem mlProb(&mlSol);
+
+  // add system Poisson in mlProb as a Linear Implicit System
+  TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("NS");
+
+  // add solution "u" to system
+  system.AddSolutionToSystemPDE("U");
+  system.AddSolutionToSystemPDE("V");
+  system.AddSolutionToSystemPDE("P");
+
+  if (dim == 3) system.AddSolutionToSystemPDE("W");
+
+  system.AddSolutionToSystemPDE("T");
+
+
+  std::vector < unsigned > fieldUVP(3);
+  fieldUVP[0] = system.GetSolPdeIndex("U");
+  fieldUVP[1] = system.GetSolPdeIndex("V");
+  fieldUVP[2] = system.GetSolPdeIndex("P");
+
+  std::vector < unsigned > solutionTypeUVP(3);
+  solutionTypeUVP[0] = mlSol.GetSolutionType("U");
+  solutionTypeUVP[1] = mlSol.GetSolutionType("V");
+  solutionTypeUVP[2] = mlSol.GetSolutionType("P");
+
+  FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
+  FS_NS.SetAsmBlockSize(4);
+  FS_NS.SetAsmNumeberOfSchurVariables(1);
+    
+
+//   std::vector < unsigned > fieldUV(2);
+//   fieldUV[0] = system.GetSolPdeIndex("U");
+//   fieldUV[1] = system.GetSolPdeIndex("V");
+//
+//   FieldSplitTree FS_UV( PREONLY, ILU_PRECOND, fieldUV, "Velocity");
+//
+//   std::vector < unsigned > fieldP(1);
+//   fieldP[0] = system.GetSolPdeIndex("P");
+//
+//   FieldSplitTree FS_P( PREONLY, ILU_PRECOND, fieldP, "pressure");
+//
+//    std::vector < FieldSplitTree *> FS1;
+//
+//   FS1.reserve(2);
+//   FS1.push_back(&FS_UV);
+//   FS1.push_back(&FS_P);
+//   FieldSplitTree FS_NS( GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
+
+
+  
+  std::vector < unsigned > fieldT(1);
+  fieldT[0] = system.GetSolPdeIndex("T");
+  
+  std::vector < unsigned > solutionTypeT(1);
+  solutionTypeT[0] = mlSol.GetSolutionType("T");
+  
+  
+  FieldSplitTree FS_T( PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
+  FS_T.SetAsmBlockSize(4);
+  FS_T.SetAsmNumeberOfSchurVariables(1);
+  
+  
+  std::vector < FieldSplitTree *> FS2;
+  FS2.reserve(2);
+  FS2.push_back(&FS_NS);
+  FS2.push_back(&FS_T);
+  FieldSplitTree FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
+  //FieldSplitTree FS_NST( GMRES, FS_SCHUR_PRECOND, FS2, "Benard");
+
+//   std::vector < unsigned > fieldUV(2);
+//   fieldUV[0] = system.GetSolPdeIndex("U");
+//   fieldUV[1] = system.GetSolPdeIndex("V");
+//   FieldSpliTreeStructure FS_UV( GMRES, ILU_PRECOND, fieldUV , "Velocity");
+//
+//   std::vector < unsigned > fieldP(1);
+//   fieldP[0] = system.GetSolPdeIndex("P");
+//   FieldSpliTreeStructure FS_P( GMRES, ILU_PRECOND, fieldP, "Pressure");
+//
+//   std::vector < FieldSpliTreeStructure *> FS1;
+//
+//   FS1.reserve(2);
+//   FS1.push_back(&FS_UV);
+//   FS1.push_back(&FS_P);
+//
+//   FieldSpliTreeStructure FS_NS( GMRES, ILU_PRECOND, FS1, "Navier-Stokes");
+//
+//   std::vector < unsigned > fieldT(1);
+//   fieldT[0] = system.GetSolPdeIndex("T");
+//   FieldSpliTreeStructure FS_T( PREONLY, ILU_PRECOND, fieldT, "Temperature");
+//
+//   std::vector < FieldSpliTreeStructure *> FS2;
+//
+//   FS2.reserve(2);
+//   FS2.push_back(&FS_NS);
+//   FS2.push_back(&FS_T);
+//   FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
+
+
+
+
+  //system.SetMgSmoother(GMRES_SMOOTHER);
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz preconditioner
+  //system.SetMgSmoother(ASM_SMOOTHER); // Field-Split preconditioned
+
+  // attach the assembling function to system
+  system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
+
+  system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetNonLinearConvergenceTolerance(1.e-8);
+  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
+  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
+
+  system.SetMaxNumberOfLinearIterations(10);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+  
+  system.SetMgType(F_CYCLE);
+
+  system.SetNumberPreSmoothingStep(2);
+  system.SetNumberPostSmoothingStep(2);
+  // initilaize and solve the system
+  system.init();
+
+  system.SetSolverFineGrids(RICHARDSON);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetFieldSplitTree(&FS_NST);
+  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 20);
+
+  system.ClearVariablesToBeSolved();
+  system.AddVariableToBeSolved("All");
+  system.SetNumberOfSchurVariables(1);
+  system.SetElementBlockNumber(4);
+
+  system.SetSamePreconditioner();
+ 
+
+  // print solutions
+  std::vector < std::string > variablesToBePrinted;
+  variablesToBePrinted.push_back("All");
+
+  VTKWriter vtkIO(&mlSol);
+  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+
+  unsigned n_timesteps = 100;
+  
+  for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+    
+    if( time_step > 0 )
+      system.SetMgType(V_CYCLE);
+    
+    system.MGsolve();
+    system.UpdateSolution();
+    
+    vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step+1);
+  }
+      
+  mlMsh.PrintInfo();
+
+  return 0;
+}
+
+
+void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
+  //  ml_prob is the global object from/to where get/set all the data
+  //  level is the level of the PDE system to be assembled
+  //  levelMax is the Maximum level of the MultiLevelProblem
+  //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
+
+  //  extract pointers to the several objects that we are going to use
+  TransientNonlinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<TransientNonlinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
+
+  Mesh*           msh         = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  elem*           el          = msh->el;  // pointer to the elem object in msh (level)
+
+  MultiLevelSolution*   mlSol         = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution*   sol         = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+
+
+  LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
+
+  bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
+  // call the adept stack object
+  adept::Stack& s = FemusInit::_adeptStack;
+  if( assembleMatrix ) s.continue_recording();
+  else s.pause_recording();
+
+  SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+
+  // reserve memory for the local standar vectors
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+  //solution variable
+  unsigned solTIndex;
+  solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
+  unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
+
+  vector < unsigned > solVIndex(dim);
+  solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
+  solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
+
+  if (dim == 3) solVIndex[2] = mlSol->GetIndex("W");      // get the position of "V" in the ml_sol object
+
+  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+
+  unsigned solPIndex;
+  solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
+  unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
+
+  unsigned solTPdeIndex;
+  solTPdeIndex = mlPdeSys->GetSolPdeIndex("T");    // get the position of "T" in the pdeSys object
+
+  // std::cout << solTIndex <<" "<<solTPdeIndex<<std::endl;
+
+
+  vector < unsigned > solVPdeIndex(dim);
+  solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
+  solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
+
+  if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
+
+  unsigned solPPdeIndex;
+  solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
+
+  vector < adept::adouble >  solT; // local solution
+  vector < vector < adept::adouble > >  solV(dim);    // local solution
+  vector < adept::adouble >  solP; // local solution
+  
+  vector < double >  solTold; // local solution
+  vector < vector < double > >  solVold(dim);    // local solution
+  vector < double >  solPold; // local solution
+  
+  vector< adept::adouble > aResT; // local redidual vector
+  vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
+  vector< adept::adouble > aResP; // local redidual vector
+ 
+  vector < vector < double > > coordX(dim);    // local coordinates
+  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+  solT.reserve(maxSize);
+  solTold.reserve(maxSize);
+  aResT.reserve(maxSize);
+
+  for (unsigned  k = 0; k < dim; k++) {
+    solV[k].reserve(maxSize);
+    solVold[k].reserve(maxSize);
+    aResV[k].reserve(maxSize);
+    coordX[k].reserve(maxSize);
+  }
+
+  solP.reserve(maxSize);
+  solPold.reserve(maxSize);
+  aResP.reserve(maxSize);
+
+
+  vector <double> phiV;  // local test function
+  vector <double> phiV_x; // local test function first order partial derivatives
+  vector <double> phiV_xx; // local test function second order partial derivatives
+
+  phiV.reserve(maxSize);
+  phiV_x.reserve(maxSize * dim);
+  phiV_xx.reserve(maxSize * dim2);
+
+  vector <double> phiT;  // local test function
+  vector <double> phiT_x; // local test function first order partial derivatives
+  vector <double> phiT_xx; // local test function second order partial derivatives
+
+  phiT.reserve(maxSize);
+  phiT_x.reserve(maxSize * dim);
+  phiT_xx.reserve(maxSize * dim2);
+
+  double* phiP;
+  double weight; // gauss point weight
+
+  vector< int > sysDof; // local to global pdeSys dofs
+  sysDof.reserve((dim + 2) *maxSize);
+
+  vector< double > Res; // local redidual vector
+  Res.reserve((dim + 2) *maxSize);
+
+  vector < double > Jac;
+  Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
+
+  if(assembleMatrix)
+    KK->zero(); // Set to zero all the entries of the Global Matrix
+
+  // element loop: each process loops only on the elements that owns
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    // element geometry type
+    short unsigned ielGeom = msh->GetElementType(iel);
+
+    unsigned nDofsT = msh->GetElementDofNumber(iel, solTType);    // number of solution element dofs
+    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
+    unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);    // number of solution element dofs
+    unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
+
+    unsigned nDofsTVP = nDofsT + dim * nDofsV + nDofsP;
+    // resize local arrays
+    sysDof.resize(nDofsTVP);
+
+    solT.resize(nDofsV);
+    solTold.resize(nDofsV);
+
+    for (unsigned  k = 0; k < dim; k++) {
+      solV[k].resize(nDofsV);
+      solVold[k].resize(nDofsV);
+      coordX[k].resize(nDofsX);
+    }
+
+    solP.resize(nDofsP);
+    solPold.resize(nDofsP);
+    
+    aResT.resize(nDofsV);    //resize
+    std::fill(aResT.begin(), aResT.end(), 0);    //set aRes to zero
+
+    for (unsigned  k = 0; k < dim; k++) {
+      aResV[k].resize(nDofsV);    //resize
+      std::fill(aResV[k].begin(), aResV[k].end(), 0);    //set aRes to zero
+    }
+
+    aResP.resize(nDofsP);    //resize
+    std::fill(aResP.begin(), aResP.end(), 0);    //set aRes to zero
+
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofsT; i++) {
+      unsigned solTDof = msh->GetSolutionDof(i, iel, solTType);    // global to global mapping between solution node and solution dof
+      solT[i] = (*sol->_Sol[solTIndex])(solTDof);      // global extraction and local storage for the solution
+      solTold[i] = (*sol->_SolOld[solTIndex])(solTDof);      // global extraction and local storage for the solution
+      sysDof[i] = pdeSys->GetSystemDof(solTIndex, solTPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dofs
+    }
+
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nDofsV; i++) {
+      unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
+
+      for (unsigned  k = 0; k < dim; k++) {
+        solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
+	solVold[k][i] = (*sol->_SolOld[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
+        sysDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+      }
+    }
+
+    for (unsigned i = 0; i < nDofsP; i++) {
+      unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);    // global to global mapping between solution node and solution dof
+      solP[i] = (*sol->_Sol[solPIndex])(solPDof);      // global extraction and local storage for the solution
+      solPold[i] = (*sol->_SolOld[solPIndex])(solPDof);      // global extraction and local storage for the solution
+      sysDof[i + nDofsT + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+    }
+
+    // local storage of coordinates
+    for (unsigned i = 0; i < nDofsX; i++) {
+      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
+
+      for (unsigned k = 0; k < dim; k++) {
+        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+      }
+    }
+
+
+      // start a new recording of all the operations involving adept::adouble variables
+       if( assembleMatrix ) s.new_recording();
+
+      // *** Gauss point loop ***
+      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
+        // *** get gauss point weight, test function and test function partial derivatives ***
+        msh->_finiteElement[ielGeom][solTType]->Jacobian(coordX, ig, weight, phiT, phiT_x, phiT_xx);
+        msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
+        phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
+
+        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+        adept::adouble solT_gss = 0;
+	double solTold_gss = 0;
+        vector < adept::adouble > gradSolT_gss(dim, 0.);
+	vector < double > gradSolTold_gss(dim, 0.);
+
+        for (unsigned i = 0; i < nDofsT; i++) {
+          solT_gss += phiT[i] * solT[i];
+	  solTold_gss += phiT[i] * solTold[i];
+
+          for (unsigned j = 0; j < dim; j++) {
+            gradSolT_gss[j] += phiT_x[i * dim + j] * solT[i];
+	    gradSolTold_gss[j] += phiT_x[i * dim + j] * solTold[i];
+          }
+        }
+
+        vector < adept::adouble > solV_gss(dim, 0);
+	vector < double > solVold_gss(dim, 0);
+        vector < vector < adept::adouble > > gradSolV_gss(dim);
+        vector < vector < double > > gradSolVold_gss(dim);
+	
+        for (unsigned  k = 0; k < dim; k++) {
+          gradSolV_gss[k].resize(dim);
+	  gradSolVold_gss[k].resize(dim);
+          std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0);
+	  std::fill(gradSolVold_gss[k].begin(), gradSolVold_gss[k].end(), 0);
+        }
+
+        for (unsigned i = 0; i < nDofsV; i++) {
+          for (unsigned  k = 0; k < dim; k++) {
+            solV_gss[k] += phiV[i] * solV[k][i];
+	    solVold_gss[k] += phiV[i] * solVold[k][i];
+          }
+
+          for (unsigned j = 0; j < dim; j++) {
+            for (unsigned  k = 0; k < dim; k++) {
+              gradSolV_gss[k][j] += phiV_x[i * dim + j] * solV[k][i];
+	      gradSolVold_gss[k][j] += phiV_x[i * dim + j] * solVold[k][i];
+            }
+          }
+        }
+
+        adept::adouble solP_gss = 0;
+        double solPold_gss = 0;
+	
+        for (unsigned i = 0; i < nDofsP; i++) {
+          solP_gss += phiP[i] * solP[i];
+	  solPold_gss += phiP[i] * solPold[i];
+        }
+
+        
+        double alpha = 1.;
+        double beta = 1.;//40000.;
+	
+	double Pr = 1./10;
+        double Ra = 10000;
+
+	double dt = 0.1;
+        // *** phiT_i loop ***
+        for (unsigned i = 0; i < nDofsT; i++) {
+          adept::adouble Temp = 0.;
+	  adept::adouble TempOld = 0.;
+
+          for (unsigned j = 0; j < dim; j++) {
+            Temp +=  1./sqrt(Ra*Pr)*alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
+            Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
+	    
+	    TempOld +=  1./sqrt(Ra*Pr)*alpha * phiT_x[i * dim + j] * gradSolTold_gss[j];
+            TempOld +=  phiT[i] * (solVold_gss[j] * gradSolTold_gss[j]);
+	    
+          }
+
+          aResT[i] += ( - (solT_gss-solTold_gss) * phiT[i]/dt - 0.5*(Temp+TempOld) ) * weight;
+        } // end phiT_i loop
+
+
+        // *** phiV_i loop ***
+        for (unsigned i = 0; i < nDofsV; i++) {
+          vector < adept::adouble > NSV(dim, 0.);
+	  vector < double > NSVold(dim, 0.);
+
+          for (unsigned j = 0; j < dim; j++) {
+            for (unsigned  k = 0; k < dim; k++) {
+              NSV[k]   +=  sqrt(Pr/Ra) * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
+              NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
+	      
+	      NSVold[k]   +=  sqrt(Pr/Ra) * phiV_x[i * dim + j] * (gradSolVold_gss[k][j] + gradSolVold_gss[j][k]);
+              NSVold[k]   +=  phiV[i] * (solVold_gss[j] * gradSolVold_gss[k][j]);
+	      
+            }
+          }
+
+          for (unsigned  k = 0; k < dim; k++) {
+            NSV[k] += -solP_gss * phiV_x[i * dim + k];
+	    NSVold[k] += -solPold_gss * phiV_x[i * dim + k];
+          }
+
+          NSV[1] += -beta * solT_gss * phiV[i];
+	  NSVold[1] += -beta * solTold_gss * phiV[i];
+
+          for (unsigned  k = 0; k < dim; k++) {
+            aResV[k][i] += (- (solV_gss[k]-solVold_gss[k]) * phiV[i]/dt - 0.5*(NSV[k]+NSVold[k]) ) * weight;
+          }
+        } // end phiV_i loop
+
+        // *** phiP_i loop ***
+        for (unsigned i = 0; i < nDofsP; i++) {
+          for (int k = 0; k < dim; k++) {
+            aResP[i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
+          }
+        } // end phiP_i loop
+
+      } // end gauss point loop
+
+    //--------------------------------------------------------------------------------------------------------
+    // Add the local Matrix/Vector into the global Matrix/Vector
+
+    //copy the value of the adept::adoube aRes in double Res and store them in RES
+    Res.resize(nDofsTVP);    //resize
+
+    for (int i = 0; i < nDofsT; i++) {
+      Res[i] = -aResT[i].value();
+    }
+
+    for (int i = 0; i < nDofsV; i++) {
+      for (unsigned  k = 0; k < dim; k++) {
+        Res[ i + nDofsT + k * nDofsV ] = -aResV[k][i].value();
+      }
+    }
+
+    for (int i = 0; i < nDofsP; i++) {
+      Res[ i + nDofsT + dim * nDofsV ] = -aResP[i].value();
+    }
+
+    RES->add_vector_blocked(Res, sysDof);
+
+    //Extarct and store the Jacobian
+    if(assembleMatrix){
+      Jac.resize(nDofsTVP * nDofsTVP);
+      // define the dependent variables
+      s.dependent(&aResT[0], nDofsT);
+
+      for (unsigned  k = 0; k < dim; k++) {
+        s.dependent(&aResV[k][0], nDofsV);
+      }
+
+      s.dependent(&aResP[0], nDofsP);
+
+      // define the independent variables
+      s.independent(&solT[0], nDofsT);
+
+      for (unsigned  k = 0; k < dim; k++) {
+        s.independent(&solV[k][0], nDofsV);
+      }
+
+      s.independent(&solP[0], nDofsP);
+
+      // get the and store jacobian matrix (row-major)
+      s.jacobian(&Jac[0] , true);
+      KK->add_matrix_blocked(Jac, sysDof, sysDof);
+
+      s.clear_independents();
+      s.clear_dependents();
+    }
+  } //end element loop for each process
+
+  RES->close();
+
+  if(assembleMatrix){
+    KK->close();
+  }
+
+  // ***************** END ASSEMBLY *******************
+}
