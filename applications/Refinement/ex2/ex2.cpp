@@ -7,29 +7,42 @@ void GetRefinedElement(const std::vector <double > &x0, std::vector <double > &x
                        std::vector< std::vector <double > > &y);
 
 void GetNewPoints(const std::vector <double > &x0, std::vector <double > &x1,
-                 const std::vector <double > &x2, std::vector <double > &x3,
-                 std::vector< std::vector <double > > &y);
+                  const std::vector <double > &x2, std::vector <double > &x3,
+                  std::vector< std::vector <double > > &y);
 
-void ShiftToOrigin( std::vector< std::vector <double > > &y);
+void ShiftToOrigin(std::vector< std::vector <double > > &y);
 
 void GetRotationMatrix(const std::vector< std::vector <double > > &y, double M[3][3]);
 
 void RotateAndScale(const double M[3][3], const double &scale, std::vector< std::vector <double > > &y);
 
-  const unsigned ind[24][4] = {
-    {0, 1, 2, 3}, {0, 2, 3, 1}, {0, 3, 1, 2}, {1, 0, 3, 2}, {1, 2, 0, 3}, {1, 3, 2, 0},
-    {2, 0, 1, 3}, {2, 1, 3, 0}, {2, 3, 0, 1}, {3, 0, 2, 1}, {3, 1, 0, 2}, {3, 2, 1, 0},
-    {0, 1, 3, 2}, {0, 2, 1, 3}, {0, 3, 2, 1}, {1, 0, 2, 3}, {1, 2, 3, 0}, {1, 3, 0, 2},
-    {2, 0, 3, 1}, {2, 1, 0, 3}, {2, 3, 1, 0}, {3, 0, 1, 2}, {3, 1, 2, 0}, {3, 2, 0, 1}
-  };
+bool CheckIfElementIsDouble(const std::vector< std::vector <double > > &y,
+                            const std::vector< std::vector< std::vector <double > > > &x,
+                            const unsigned &n, const bool &printInfo = false);
 
-  const double xi[10][3] = {
-    {0.,0.,0.}, {1.,0.,0.}, {0.,1.,0.}, {0.,0.,1.},
-    {.5,0.,0.}, {.5,.5,0.}, {0.,.5,0.},
-    {0.,0.,.5}, {.5,0.,.5}, {0.,.5,.5}
-  };
+const unsigned refInd[2][4][4] = {
+  {{5, 6, 4, 7}, {8, 7, 5, 4}, {7, 9, 8, 5}, {9, 5, 7, 6}}, // our
+  {{4, 6, 7, 8}, {4, 6, 5, 8}, {6, 7, 8, 9}, {6, 5, 8, 9}} // red
+};
+
+const unsigned rotInd[24][4] = {
+  {0, 1, 2, 3}, {0, 2, 3, 1}, {0, 3, 1, 2}, {1, 0, 3, 2}, {1, 2, 0, 3}, {1, 3, 2, 0},
+  {2, 0, 1, 3}, {2, 1, 3, 0}, {2, 3, 0, 1}, {3, 0, 2, 1}, {3, 1, 0, 2}, {3, 2, 1, 0},
+  {0, 1, 3, 2}, {0, 2, 1, 3}, {0, 3, 2, 1}, {1, 0, 2, 3}, {1, 2, 3, 0}, {1, 3, 0, 2},
+  {2, 0, 3, 1}, {2, 1, 0, 3}, {2, 3, 1, 0}, {3, 0, 1, 2}, {3, 1, 2, 0}, {3, 2, 0, 1}
+};
+
+const double xi[10][3] = {
+  {0., 0., 0.}, {1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.},
+  {.5, 0., 0.}, {.5, .5, 0.}, {0., .5, 0.},
+  {0., 0., .5}, {.5, 0., .5}, {0., .5, .5}
+};
+
 
 int main(int argc, char** args) {
+
+  unsigned refType = 0; //our
+  //unsigned refType = 1; //red
 
   std::vector < std::vector< double > > y;
   y.resize(10);
@@ -76,11 +89,10 @@ int main(int argc, char** args) {
 
 
   std::vector < std::vector < std::vector< double > > > x;
-  x.reserve(1000);
+  x.reserve(100);
 
-  unsigned n = x.size();
-  x.resize(n + 1);
-  x[n] = y;
+  x.resize(x.size() + 1);
+  x[ x.size() - 1] = y;
 
   unsigned levelElements[10];
   levelElements[0] = 0;
@@ -96,62 +108,16 @@ int main(int argc, char** args) {
     for(unsigned iel = levelElements[level - 1]; iel < levelElements[level]; iel++) {
       std::cout << iel << " ";
 
-      for(unsigned k = 5; k <= 8; k++) {
-        // our refinement
-        if(k == 5) {
-          GetRefinedElement(x[iel][5], x[iel][6], x[iel][4], x[iel][7], y);
-        }
-        else if(k == 6) {
-          GetRefinedElement(x[iel][8], x[iel][7], x[iel][5], x[iel][4], y);
-        }
-        else if(k == 7) {
-          GetRefinedElement(x[iel][7], x[iel][9], x[iel][8], x[iel][5], y);
-        }
-        else if(k == 8) {
-          GetRefinedElement(x[iel][9], x[iel][5], x[iel][7], x[iel][6], y);
-        }
+      for(unsigned i = 0; i < 4; i++) {
+        GetRefinedElement(x[iel][refInd[refType][i][0]], x[iel][refInd[refType][i][1]],
+                          x[iel][refInd[refType][i][2]], x[iel][refInd[refType][i][3]], y);
 
-//         // red refinement
-//         if(k == 5) {
-//           GetRefinedElement(x[iel][4], x[iel][6], x[iel][7], x[iel][8], y);
-//         }
-//         else if(k == 6) {
-//           GetRefinedElement(x[iel][4], x[iel][6], x[iel][5], x[iel][8], y);
-//         }
-//         else if(k == 7) {
-//           GetRefinedElement(x[iel][6], x[iel][7], x[iel][8], x[iel][9], y);
-//         }
-//         else if(k == 8) {
-//           GetRefinedElement(x[iel][6], x[iel][5], x[iel][8], x[iel][9], y);
-//         }
-
-
-        // check new element
-        bool newElement = true;
-
-        for(unsigned i = 0; i < x.size(); i++) {
-          bool sameVertex[4] = { true, false, false, false};
-
-          for(int j = 1; j < 4; j++) {
-            if((y[j][0] - x[i][j][0]) * (y[j][0] - x[i][j][0]) +
-                (y[j][1] - x[i][j][1]) * (y[j][1] - x[i][j][1]) +
-                (y[j][2] - x[i][j][2]) * (y[j][2] - x[i][j][2]) < 1.0e-14) {
-              sameVertex[j] = true;
-            }
-          }
-
-          if(sameVertex[1]*sameVertex[2]*sameVertex[3] == true) {
-            newElement = false;
-            break;
-          }
-        }
-
-        if(newElement) {
-          n = x.size();
-          x.resize(n + 1);
-          x[n] = y;
+        if(!CheckIfElementIsDouble(y, x, x.size())) {
+          x.resize(x.size() + 1);
+          x[ x.size() - 1] = y;
           levelElements[level + 1]++;
         }
+
       }
     }
 
@@ -160,12 +126,17 @@ int main(int argc, char** args) {
     if(levelElements[level + 1] > levelElements[level]) numberOfLevels++;
   }
 
-  //Check for congruence by translation and rotation
+  std::cout << "The number of congruent refined tetrahedron families is at most " << x.size() << std::endl;
+  std::cout << std::endl;
+
+
+  //Check for congruence by rotation
+  std::cout << "Checking overlapping for all possible element rotations" << std::endl;
   for(unsigned jel = x.size() - 1; jel >= 1 ; jel--) {
     for(unsigned i = 0; i < 12; i++) {
       for(unsigned j = 0; j < 4; j++) {
         for(int k = 0; k < 3; k++) {
-          y[j][k] = x[jel][ind[i][j]][k];
+          y[j][k] = x[jel][rotInd[i][j]][k];
         }
       }
 
@@ -174,37 +145,24 @@ int main(int argc, char** args) {
       GetRotationMatrix(y, M);
       RotateAndScale(M, 1., y);
 
-      bool elementIsDouble = false;
-
-      for(unsigned iel = 0; iel < jel; iel++) {
-        // Compare
-        bool sameVertex[4] = { true, false, false, false};
-
-        for(int j = 1; j < 4; j++) {
-          if((y[j][0] - x[iel][j][0]) * (y[j][0] - x[iel][j][0]) +
-              (y[j][1] - x[iel][j][1]) * (y[j][1] - x[iel][j][1]) +
-              (y[j][2] - x[iel][j][2]) * (y[j][2] - x[iel][j][2]) < 1.0e-14) {
-            sameVertex[j] = true;
-          }
-        }
-        if(sameVertex[1]*sameVertex[2]*sameVertex[3] == true) {
-          std::cout << "Element " << jel << " is element " << iel << std::endl;
-          x.erase(x.begin() + jel);
-          elementIsDouble = true;
-          break;
-        }
+      if(CheckIfElementIsDouble(y, x, jel, true)) {
+        x.erase(x.begin() + jel);
+        break;
       }
-      if(elementIsDouble) break;
     }
   }
 
-  //Check for congruence by mirroring, translation and rotation
+  std::cout << "The number of congruent refined tetrahedron families is at most " << x.size() << std::endl;
+  std::cout << std::endl;
+
+  //Check for congruence by reflection and rotation
+  std::cout << "Checking overlapping for all possible reflected element rotations" << std::endl;
   for(unsigned jel = x.size() - 1; jel >= 1 ; jel--) {
     for(unsigned i = 0; i < 24; i++) {
       for(unsigned j = 0; j < 4; j++) {
-        y[j][0] = -x[jel][ind[i][j]][0];
-        y[j][1] = x[jel][ind[i][j]][1];
-        y[j][2] = x[jel][ind[i][j]][2];
+        y[j][0] = -x[jel][rotInd[i][j]][0];
+        y[j][1] = x[jel][rotInd[i][j]][1];
+        y[j][2] = x[jel][rotInd[i][j]][2];
       }
 
       ShiftToOrigin(y);
@@ -212,36 +170,15 @@ int main(int argc, char** args) {
       GetRotationMatrix(y, M);
       RotateAndScale(M, 1., y);
 
-      bool elementIsDouble = false;
-
-      for(unsigned iel = 0; iel < jel; iel++) {
-        // Compare
-        bool sameVertex[4] = { true, false, false, false};
-
-        for(int j = 1; j < 4; j++) {
-          if((y[j][0] - x[iel][j][0]) * (y[j][0] - x[iel][j][0]) +
-              (y[j][1] - x[iel][j][1]) * (y[j][1] - x[iel][j][1]) +
-              (y[j][2] - x[iel][j][2]) * (y[j][2] - x[iel][j][2]) < 1.0e-14) {
-            sameVertex[j] = true;
-          }
-        }
-
-        if(sameVertex[1]*sameVertex[2]*sameVertex[3] == true) {
-          std::cout << "Element " << jel << " is element " << iel << std::endl;
-          x.erase(x.begin() + jel);
-          elementIsDouble = true;
-          break;
-        }
+      if(CheckIfElementIsDouble(y, x, jel, true)) {
+        x.erase(x.begin() + jel);
+        break;
       }
-
-      if(elementIsDouble) break;
     }
   }
 
-
-  std::cout << "The number of congruent tetrahedron families is " << x.size() << std::endl;
+  std::cout << "The number of congruent refined tetrahedron families is " << x.size() << std::endl;
   std::cout << std::endl;
-
 
   for(int i = 0; i < x.size(); i++) {
     std::cout  << std::endl;
@@ -255,7 +192,6 @@ int main(int argc, char** args) {
       std::cout << x[i][3][0] << " " << x[i][3][1] << " " << x[i][3][2] << std::endl;
     }
   }
-
 
   return 0;
 }
@@ -277,21 +213,22 @@ void GetRefinedElement(const std::vector <double > &x0, std::vector <double > &x
 }
 
 void GetNewPoints(const std::vector <double > &x0, std::vector <double > &x1,
-                 const std::vector <double > &x2, std::vector <double > &x3,
-                 std::vector< std::vector <double > > &y) {
-  for(unsigned i=0; i<10; i++){
+                  const std::vector <double > &x2, std::vector <double > &x3,
+                  std::vector< std::vector <double > > &y) {
+  for(unsigned i = 0; i < 10; i++) {
     for(unsigned k = 0; k < 3; k++) {
       y[i][k] = (1 - xi[i][0] - xi[i][1] - xi[i][2]) * x0[k] + xi[i][0] * x1[k] + xi[i][1] * x2[k] + xi[i][2] * x3[k];
     }
   }
 }
 
-void ShiftToOrigin( std::vector< std::vector <double > > &y){
+void ShiftToOrigin(std::vector< std::vector <double > > &y) {
   for(unsigned i = 1; i < 10; i++) {
     for(unsigned k = 0; k < 3; k++) {
       y[i][k] -= y[0][k] ;
     }
   }
+
   y[0][0] = y[0][1] = y[0][2] = 0.;
 }
 
@@ -326,7 +263,7 @@ void GetRotationMatrix(const std::vector< std::vector <double > > &y, double M[3
   M[1][2] = M[2][0] * M[0][1] - M[2][1] * M[0][0];
 }
 
-void RotateAndScale(const double M[3][3], const double &scale, std::vector< std::vector <double > > &y){
+void RotateAndScale(const double M[3][3], const double &scale, std::vector< std::vector <double > > &y) {
 
   // Rotate and scale
   for(unsigned i = 0; i < 10; i++) {
@@ -342,4 +279,34 @@ void RotateAndScale(const double M[3][3], const double &scale, std::vector< std:
       y[i][k] = z[k];
     }
   }
+}
+
+bool CheckIfElementIsDouble(const std::vector< std::vector <double > > &y,
+                            const std::vector< std::vector< std::vector <double > > > &x,
+                            const unsigned &n, const bool &printInfo) {
+  bool elementIsDouble = false;
+
+  for(unsigned iel = 0; iel < n; iel++) {
+    // Compare
+    bool sameVertex[4] = { true, false, false, false};
+
+    for(int j = 1; j < 4; j++) {
+      if((y[j][0] - x[iel][j][0]) * (y[j][0] - x[iel][j][0]) +
+          (y[j][1] - x[iel][j][1]) * (y[j][1] - x[iel][j][1]) +
+          (y[j][2] - x[iel][j][2]) * (y[j][2] - x[iel][j][2]) < 1.0e-14) {
+        sameVertex[j] = true;
+      }
+    }
+
+    if(sameVertex[1]*sameVertex[2]*sameVertex[3] == true) {
+      if(printInfo) {
+        std::cout << "Element " << n << " is element " << iel << std::endl;
+      }
+
+      elementIsDouble = true;
+      break;
+    }
+  }
+
+  return elementIsDouble;
 }
