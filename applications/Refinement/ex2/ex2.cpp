@@ -6,12 +6,28 @@ void GetRefinedElement(const std::vector <double > &x0, std::vector <double > &x
                        const std::vector <double > &x2, std::vector <double > &x3,
                        std::vector< std::vector <double > > &y);
 
-void GetNewPoint(const std::vector <double > &xi,
-                 const std::vector <double > &x0, std::vector <double > &x1,
+void GetNewPoints(const std::vector <double > &x0, std::vector <double > &x1,
                  const std::vector <double > &x2, std::vector <double > &x3,
-                 std::vector <double > &y);
+                 std::vector< std::vector <double > > &y);
+
+void ShiftToOrigin( std::vector< std::vector <double > > &y);
 
 void GetRotationMatrix(const std::vector< std::vector <double > > &y, double M[3][3]);
+
+void RotateAndScale(const double M[3][3], const double &scale, std::vector< std::vector <double > > &y);
+
+  const unsigned ind[24][4] = {
+    {0, 1, 2, 3}, {0, 2, 3, 1}, {0, 3, 1, 2}, {1, 0, 3, 2}, {1, 2, 0, 3}, {1, 3, 2, 0},
+    {2, 0, 1, 3}, {2, 1, 3, 0}, {2, 3, 0, 1}, {3, 0, 2, 1}, {3, 1, 0, 2}, {3, 2, 1, 0},
+    {0, 1, 3, 2}, {0, 2, 1, 3}, {0, 3, 2, 1}, {1, 0, 2, 3}, {1, 2, 3, 0}, {1, 3, 0, 2},
+    {2, 0, 3, 1}, {2, 1, 0, 3}, {2, 3, 1, 0}, {3, 0, 1, 2}, {3, 1, 2, 0}, {3, 2, 0, 1}
+  };
+
+  const double xi[10][3] = {
+    {0.,0.,0.}, {1.,0.,0.}, {0.,1.,0.}, {0.,0.,1.},
+    {.5,0.,0.}, {.5,.5,0.}, {0.,.5,0.},
+    {0.,0.,.5}, {.5,0.,.5}, {0.,.5,.5}
+  };
 
 int main(int argc, char** args) {
 
@@ -25,15 +41,29 @@ int main(int argc, char** args) {
   y[0][0] = 0.;
   y[0][1] = 0.;
   y[0][2] = 0.;
-  y[1][0] = 1.2;
+  y[1][0] = 1.22354;
   y[1][1] = 0.;
   y[1][2] = 0.;
-  y[2][0] = -0.2;
-  y[2][1] = 1.;
+  y[2][0] = -0.23423;
+  y[2][1] = 1.2131;
   y[2][2] = 0.;
-  y[3][0] = -0.3;
-  y[3][1] = -0.1;
-  y[3][2] = 1.3;
+  y[3][0] = -0.3214;
+  y[3][1] = -0.2345;
+  y[3][2] = 1.32342;
+
+
+//   y[0][0] = 0.;
+//   y[0][1] = 0.;
+//   y[0][2] = 0.;
+//   y[1][0] = 1.;
+//   y[1][1] = 0.;
+//   y[1][2] = 0.;
+//   y[2][0] = 0.;
+//   y[2][1] = 1.;
+//   y[2][2] = 0.;
+//   y[3][0] = 0.;
+//   y[3][1] = 0.;
+//   y[3][2] = 1.;
 
   for(int k = 0; k < 3; k++) {
     y[4][k] = 0.5 * (y[0][k] + y[1][k]);
@@ -130,60 +160,23 @@ int main(int argc, char** args) {
     if(levelElements[level + 1] > levelElements[level]) numberOfLevels++;
   }
 
-  unsigned ind[12][4] = {
-    {0, 1, 2, 3},
-    {0, 2, 3, 1},
-    {0, 3, 1, 2},
-    {1, 0, 3, 2},
-    {1, 2, 0, 3},
-    {1, 3, 2, 0},
-    {2, 0, 1, 3},
-    {2, 1, 3, 0},
-    {2, 3, 0, 1},
-    {3, 0, 2, 1},
-    {3, 1, 0, 2},
-    {3, 2, 1, 0}
-  };
-
-
   //Check for congruence by translation and rotation
-  for(unsigned iel = 0; iel < x.size() - 1; iel++) {
-    for(unsigned jel = iel + 1; jel < x.size(); jel++) {
-      for(unsigned i = 0; i < 12; i++) {
-
-        for(unsigned j = 0; j < 4; j++) {
-          for(int k = 0; k < 3; k++) {
-            y[j][k] = x[jel][ind[i][j]][k];
-          }
+  for(unsigned jel = x.size() - 1; jel >= 1 ; jel--) {
+    for(unsigned i = 0; i < 12; i++) {
+      for(unsigned j = 0; j < 4; j++) {
+        for(int k = 0; k < 3; k++) {
+          y[j][k] = x[jel][ind[i][j]][k];
         }
+      }
 
-        // Translate;
-        for(unsigned j = 1; j < 4; j++) {
-          for(unsigned k = 0; k < 3; k++) {
-            y[j][k] -= y[0][k] ;
-          }
-        }
-        y[0][0] = y[0][1] = y[0][2] = 0.;
+      ShiftToOrigin(y);
+      double M[3][3];
+      GetRotationMatrix(y, M);
+      RotateAndScale(M, 1., y);
 
-        // Build rotation Matrix
-        double M[3][3];
-        GetRotationMatrix(y, M);
+      bool elementIsDouble = false;
 
-        // Rotate and scale
-        for(unsigned j = 0; j < 4; j++) {
-          double z[3] = {0., 0., 0.};
-
-          for(unsigned k = 0; k < 3; k++) {
-            for(unsigned l = 0; l < 3 ; l++) {
-              z[k] += M[k][l] * y[j][l];
-            }
-          }
-
-          for(unsigned k = 0; k < 3; k++) {
-            y[j][k] = z[k];
-          }
-        }
-
+      for(unsigned iel = 0; iel < jel; iel++) {
         // Compare
         bool sameVertex[4] = { true, false, false, false};
 
@@ -194,56 +187,34 @@ int main(int argc, char** args) {
             sameVertex[j] = true;
           }
         }
-
         if(sameVertex[1]*sameVertex[2]*sameVertex[3] == true) {
           std::cout << "Element " << jel << " is element " << iel << std::endl;
           x.erase(x.begin() + jel);
+          elementIsDouble = true;
           break;
         }
       }
+      if(elementIsDouble) break;
     }
   }
 
+  //Check for congruence by mirroring, translation and rotation
+  for(unsigned jel = x.size() - 1; jel >= 1 ; jel--) {
+    for(unsigned i = 0; i < 24; i++) {
+      for(unsigned j = 0; j < 4; j++) {
+        y[j][0] = -x[jel][ind[i][j]][0];
+        y[j][1] = x[jel][ind[i][j]][1];
+        y[j][2] = x[jel][ind[i][j]][2];
+      }
 
-  //Check for congruence by mirroring translation and rotation
-  for(unsigned iel = 0; iel < x.size() - 1; iel++) {
-    for(unsigned jel = iel + 1; jel < x.size(); jel++) {
-      for(unsigned i = 0; i < 12; i++) {
+      ShiftToOrigin(y);
+      double M[3][3];
+      GetRotationMatrix(y, M);
+      RotateAndScale(M, 1., y);
 
-        for(unsigned j = 0; j < 4; j++) {
-          y[j][0] = -x[jel][ind[i][j]][0];
-          for(int k = 1; k < 3; k++) {
-            y[j][k] = x[jel][ind[i][j]][k];
-          }
-        }
+      bool elementIsDouble = false;
 
-        // Translate;
-        for(unsigned j = 1; j < 4; j++) {
-          for(unsigned k = 0; k < 3; k++) {
-            y[j][k] -= y[0][k] ;
-          }
-        }
-        y[0][0] = y[0][1] = y[0][2] = 0.;
-
-        // Build rotation Matrix
-        double M[3][3];
-        GetRotationMatrix(y, M);
-
-        // Rotate and scale
-        for(unsigned j = 0; j < 4; j++) {
-          double z[3] = {0., 0., 0.};
-
-          for(unsigned k = 0; k < 3; k++) {
-            for(unsigned l = 0; l < 3 ; l++) {
-              z[k] += M[k][l] * y[j][l];
-            }
-          }
-
-          for(unsigned k = 0; k < 3; k++) {
-            y[j][k] = z[k];
-          }
-        }
-
+      for(unsigned iel = 0; iel < jel; iel++) {
         // Compare
         bool sameVertex[4] = { true, false, false, false};
 
@@ -258,9 +229,12 @@ int main(int argc, char** args) {
         if(sameVertex[1]*sameVertex[2]*sameVertex[3] == true) {
           std::cout << "Element " << jel << " is element " << iel << std::endl;
           x.erase(x.begin() + jel);
+          elementIsDouble = true;
           break;
         }
       }
+
+      if(elementIsDouble) break;
     }
   }
 
@@ -269,18 +243,18 @@ int main(int argc, char** args) {
   std::cout << std::endl;
 
 
-//   for(int i = 0; i < x.size(); i++) {
-//     std::cout  << std::endl;
-//
-//     for(int j = 0; j < 3; j++) {
-//       std::cout << 2 * i + x[i][j][0] << " " << x[i][j][1] << " " << x[i][j][2] << std::endl;
-//     }
-//
-//     for(int j = 0; j < 3; j++) {
-//       std::cout << x[i][j][0] << " " << x[i][j][1] << " " << x[i][j][2] << std::endl;
-//       std::cout << x[i][3][0] << " " << x[i][3][1] << " " << x[i][3][2] << std::endl;
-//     }
-//   }
+  for(int i = 0; i < x.size(); i++) {
+    std::cout  << std::endl;
+
+    for(int j = 0; j < 3; j++) {
+      std::cout << x[i][j][0] << " " << x[i][j][1] << " " << x[i][j][2] << std::endl;
+    }
+
+    for(int j = 0; j < 3; j++) {
+      std::cout << x[i][j][0] << " " << x[i][j][1] << " " << x[i][j][2] << std::endl;
+      std::cout << x[i][3][0] << " " << x[i][3][1] << " " << x[i][3][2] << std::endl;
+    }
+  }
 
 
   return 0;
@@ -291,105 +265,34 @@ void GetRefinedElement(const std::vector <double > &x0, std::vector <double > &x
                        const std::vector <double > &x2, std::vector <double > &x3,
                        std::vector< std::vector <double > > &y) {
 
-  std::vector < std::vector< double > > xi;
+  GetNewPoints(x0, x1, x2, x3, y);
 
-  xi.resize(10);
+  ShiftToOrigin(y);
 
-  for(int j = 0; j < 10; j++) {
-    xi[j].resize(3);
+  double M[3][3];
+  GetRotationMatrix(y, M);
+
+  RotateAndScale(M, 2., y);
+
+}
+
+void GetNewPoints(const std::vector <double > &x0, std::vector <double > &x1,
+                 const std::vector <double > &x2, std::vector <double > &x3,
+                 std::vector< std::vector <double > > &y) {
+  for(unsigned i=0; i<10; i++){
+    for(unsigned k = 0; k < 3; k++) {
+      y[i][k] = (1 - xi[i][0] - xi[i][1] - xi[i][2]) * x0[k] + xi[i][0] * x1[k] + xi[i][1] * x2[k] + xi[i][2] * x3[k];
+    }
   }
+}
 
-  xi[0][0] = 0.;
-  xi[0][1] = 0.;
-  xi[0][2] = 0.;
-  xi[1][0] = 1.;
-  xi[1][1] = 0.;
-  xi[1][2] = 0.;
-  xi[2][0] = 0.;
-  xi[2][1] = 1.;
-  xi[2][2] = 0.;
-  xi[3][0] = 0.;
-  xi[3][1] = 0.;
-  xi[3][2] = 1.;
-
-  for(int k = 0; k < 3; k++) {
-    xi[4][k] = 0.5 * (xi[0][k] + xi[1][k]);
-    xi[5][k] = 0.5 * (xi[1][k] + xi[2][k]);
-    xi[6][k] = 0.5 * (xi[0][k] + xi[2][k]);
-    xi[7][k] = 0.5 * (xi[0][k] + xi[3][k]);
-    xi[8][k] = 0.5 * (xi[1][k] + xi[3][k]);
-    xi[9][k] = 0.5 * (xi[2][k] + xi[3][k]);
-  }
-
-  for(unsigned i = 0; i < 10; i++) {
-    GetNewPoint(xi[i], x0, x1, x2, x3, y[i]);
-  }
-
-  // Translate;
+void ShiftToOrigin( std::vector< std::vector <double > > &y){
   for(unsigned i = 1; i < 10; i++) {
     for(unsigned k = 0; k < 3; k++) {
       y[i][k] -= y[0][k] ;
     }
   }
-
   y[0][0] = y[0][1] = y[0][2] = 0.;
-
-  // Build rotation Matrix
-  double M[3][3];
-  double norm = 0;
-
-  for(unsigned k = 0; k < 3; k++) {
-    M[0][k] = y[1][k];
-    norm += M[0][k] * M[0][k];
-    M[1][k] = y[2][k];
-  }
-
-  norm = sqrt(norm);
-
-  for(unsigned k = 0; k < 3; k++) M[0][k] /= norm;
-
-  M[2][0] = M[0][1] * M[1][2] - M[0][2] * M[1][1];
-  M[2][1] = M[0][2] * M[1][0] - M[0][0] * M[1][2];
-  M[2][2] = M[0][0] * M[1][1] - M[0][1] * M[1][0];
-  norm = 0;
-
-  for(unsigned k = 0; k < 3; k++) {
-    norm += M[2][k] * M[2][k];
-  }
-
-  norm = sqrt(norm);
-
-  for(int k = 0; k < 3; k++) M[2][k] /= norm;
-
-  M[1][0] = M[2][1] * M[0][2] - M[2][2] * M[0][1];
-  M[1][1] = M[2][2] * M[0][0] - M[2][0] * M[0][2];
-  M[1][2] = M[2][0] * M[0][1] - M[2][1] * M[0][0];
-
-  // Rotate and scale
-  for(unsigned i = 0; i < 10; i++) {
-    double z[3] = {0., 0., 0.};
-
-    for(unsigned k = 0; k < 3; k++) {
-      for(unsigned l = 0; l < 3 ; l++) {
-        z[k] += 2. * M[k][l] * y[i][l];
-      }
-    }
-
-    for(unsigned k = 0; k < 3; k++) {
-      y[i][k] = z[k];
-    }
-  }
-
-
-}
-
-void GetNewPoint(const std::vector <double > &xi,
-                 const std::vector <double > &x0, std::vector <double > &x1,
-                 const std::vector <double > &x2, std::vector <double > &x3,
-                 std::vector <double > &y) {
-  for(unsigned k = 0; k < 3; k++) {
-    y[k] = (1 - xi[0] - xi[1] - xi[2]) * x0[k] + xi[0] * x1[k] + xi[1] * x2[k] + xi[2] * x3[k];
-  }
 }
 
 void GetRotationMatrix(const std::vector< std::vector <double > > &y, double M[3][3]) {
@@ -421,4 +324,22 @@ void GetRotationMatrix(const std::vector< std::vector <double > > &y, double M[3
   M[1][0] = M[2][1] * M[0][2] - M[2][2] * M[0][1];
   M[1][1] = M[2][2] * M[0][0] - M[2][0] * M[0][2];
   M[1][2] = M[2][0] * M[0][1] - M[2][1] * M[0][0];
+}
+
+void RotateAndScale(const double M[3][3], const double &scale, std::vector< std::vector <double > > &y){
+
+  // Rotate and scale
+  for(unsigned i = 0; i < 10; i++) {
+    double z[3] = {0., 0., 0.};
+
+    for(unsigned k = 0; k < 3; k++) {
+      for(unsigned l = 0; l < 3 ; l++) {
+        z[k] += scale * M[k][l] * y[i][l];
+      }
+    }
+
+    for(unsigned k = 0; k < 3; k++) {
+      y[i][k] = z[k];
+    }
+  }
 }
