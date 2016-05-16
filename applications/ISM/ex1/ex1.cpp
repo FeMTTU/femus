@@ -86,9 +86,9 @@ int main(int argc, char** args) {
 //////////////////////////////////////////////////////////////////////////////////////////////  
   
 //Test 4: the maker is VERY close to a vertex of element 15 (point 19)
- x[0]=-2.72848e-05;  //it is on element 15 
- x[1]=2.62822e-05;
- x[2]=0.;
+//  x[0]=-2.72848e-05;  //it is on element 15 
+//  x[1]=2.62822e-05;
+//  x[2]=0.;
 //WARNING these are actually NOT the exact coordinates of the vertex (the first 5 decimal digits are equal).
 //NOTE I put a tollerance of 1e-04 for equality and it seems to work nice.
  // I changed the tollerance to 1-e10 because with 1e-04 it was not working with square.neu however now the code, in this limit case, gives the
@@ -228,6 +228,12 @@ int main(int argc, char** args) {
 // x[1] = 0.;
 // x[2] = 0.001;
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
+
+// test for the wedge
+ x[0]=0.;  // point 52 if we ran serial
+ x[1]=1.3;
+ x[2]=4.;
+
 
   Marker a( x, VOLUME, mlMsh.GetLevel(0), true );
   //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
