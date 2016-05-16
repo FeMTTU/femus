@@ -32,7 +32,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
- mlMsh.ReadCoarseMesh( "./input/wedge.neu", "seventh", scalingFactor );
+ mlMsh.ReadCoarseMesh( "./input/square2.neu", "seventh", scalingFactor );
   
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   unsigned numberOfUniformLevels = 1;
@@ -229,10 +229,6 @@ int main(int argc, char** args) {
 // x[2] = 0.001;
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
-// test for the wedge
- x[0]=0.;  // point 52 if we ran serial
- x[1]=1.3;
- x[2]=4.;
 
 
   Marker a( x, VOLUME, mlMsh.GetLevel(0), true );
@@ -244,6 +240,8 @@ int main(int argc, char** args) {
   xc[2]=0; // z coordinate of vertex 1 (in the reference frame)
   a.InverseMappingTEST(xc);  
 
+  
+  
   
  std::vector < double > y = a.GetMarkerCoordinates();
   
