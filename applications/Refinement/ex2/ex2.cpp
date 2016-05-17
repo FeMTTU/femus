@@ -21,9 +21,10 @@ bool CheckIfElementIsDouble(const std::vector< std::vector <double > > &y,
                             const std::vector< std::vector< std::vector <double > > > &x,
                             const unsigned &n, const bool &printInfo = false);
 
-const unsigned refInd[2][4][4] = {
+const unsigned refInd[3][4][4] = {
   {{5, 6, 4, 7}, {8, 7, 5, 4}, {7, 9, 8, 5}, {9, 5, 7, 6}}, // our
-  {{4, 6, 7, 8}, {4, 6, 5, 8}, {6, 7, 8, 9}, {6, 5, 8, 9}} // red
+  {{4, 6, 7, 8}, {4, 6, 5, 8}, {6, 7, 8, 9}, {6, 5, 8, 9}}, // red
+  {{ 6, 5, 7, 4},{ 7, 8, 4, 5},{ 9, 7, 5, 8},{ 5, 9, 6, 7}} //85  	size1 12 size2 6 size3 3 proper 
 };
 
 const unsigned rotInd[24][4] = {
@@ -45,17 +46,17 @@ int main(int argc, char** args) {
   std::ofstream fout;
   fout.open( "congruence_proper_class.txt" );
 
-  //our
-  unsigned refType = 0;
+//   //our
+  unsigned refType = 2;
   unsigned nmax = 1;
 
-  //red
-  // unsigned refType = 1;
-  // unsigned nmax = 1;
+//   //red
+//   unsigned refType = 1;
+//   unsigned nmax = 1;
 
-  // //All proper refinements
-  //unsigned refType = 0;
-  //unsigned nmax = 12;
+//   //All proper refinements
+//   unsigned refType = 0;
+//   unsigned nmax = 12;
 
   // refinements
   //unsigned refType = 0;
@@ -191,7 +192,8 @@ int main(int argc, char** args) {
                 << refInd[refType][3][rotInd[i3][0]]<<", "
                 << refInd[refType][3][rotInd[i3][1]]<<", "
                 << refInd[refType][3][rotInd[i3][2]]<<", "
-                << refInd[refType][3][rotInd[i3][3]]<<"}}, //"<< counter << "  \tsize before "<<x.size();
+                << refInd[refType][3][rotInd[i3][3]]<<"}}, //"<< counter << "  \tsize1 "<<x.size();
+		
             std::cout << "The number of congruent refined tetrahedron families is at most " << x.size() << std::endl;
             std::cout << std::endl;
             counter++;
@@ -222,6 +224,8 @@ int main(int argc, char** args) {
             std::cout << "The number of congruent refined tetrahedron families is at most " << x.size() << std::endl;
             std::cout << std::endl;
 
+	    fout << " size2 " << x.size();
+	    
             //Check for congruence by reflection and rotation
             std::cout << "Checking overlapping for all possible reflected element rotations" << std::endl;
 
@@ -248,7 +252,7 @@ int main(int argc, char** args) {
             std::cout << "The number of congruent refined tetrahedron families is " << x.size() << std::endl;
             std::cout << std::endl;
 
-            fout << " size after " << x.size();
+            fout << " size3 " << x.size();
             if( i0 < 12 && i1 < 12 && i1 < 12 && i3 < 12 ) fout << " proper " ;
             fout << std::endl;
 
@@ -269,7 +273,8 @@ int main(int argc, char** args) {
       }
     }
   }
-
+  
+  fout.close();
   return 0;
 }
 
