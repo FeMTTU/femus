@@ -70,8 +70,6 @@ int main(int argc, char** args) {
 
   // print mesh info
   mlMsh.PrintInfo();
-return 0;
-
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
