@@ -50,8 +50,8 @@ int main(int argc, char** args) {
   unsigned nmax = 1;
 
   //red
-  // unsigned refType = 1;
-  // unsigned nmax = 1;
+  //unsigned refType = 1;
+  //unsigned nmax = 1;
 
   // //All proper refinements
   //unsigned refType = 0;
