@@ -43,6 +43,9 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
+double InitalValueT(const std::vector < double >& x){
+  return sin(x[0]);
+};
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
@@ -86,6 +89,8 @@ int main(int argc, char** args) {
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
 
+  mlSol.Initialize("T",InitalValueT);
+  
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.FixSolutionAtOnePoint("P");
@@ -238,7 +243,7 @@ int main(int argc, char** args) {
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
   
   system.SetIntervalTime(0.1);
-  unsigned n_timesteps = 100;
+  unsigned n_timesteps = 1000;
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
     
