@@ -29,17 +29,17 @@ using namespace femus;
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
-
   if (!strcmp(SolName, "T")) {
-    if (facename == 2) {
-      value = 1.;
-    } else if (facename == 3) {
-      dirichlet = false; //Neumann
+    if (facename == 1){
+	value = 0.5 * (1.0 - exp (-10.0 * time));   
+    }else if (facename == 2){
+	value = -0.5 * (1.0 - exp (-10.0 * time));
+    }else{
+      dirichlet = false;
     }
   } else if (!strcmp(SolName, "P")) {
     dirichlet = false;
   }
-
   return dirichlet;
 }
 
@@ -53,15 +53,16 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   // define multilevel mesh
   MultiLevelMesh mlMsh;
+  
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/rectangle_quad.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -88,7 +89,10 @@ int main(int argc, char** args) {
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.FixSolutionAtOnePoint("P");
-  mlSol.GenerateBdc("All");
+  mlSol.GenerateBdc("U");
+  mlSol.GenerateBdc("V");
+  mlSol.GenerateBdc("P");
+  mlSol.GenerateBdc("T","Time_dependent");
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
@@ -232,7 +236,8 @@ int main(int argc, char** args) {
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
-
+  
+  system.SetIntervalTime(0.1);
   unsigned n_timesteps = 100;
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
@@ -519,10 +524,10 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         double alpha = 1.;
         double beta = 1.;//40000.;
 	
-	double Pr = 1./10;
-        double Ra = 10000;
+	double Pr = 7.1;
+        double Ra = 15000;
 
-	double dt = 0.1;
+	double dt = mlPdeSys -> GetIntervalTime(); 
         // *** phiT_i loop ***
         for (unsigned i = 0; i < nDofsT; i++) {
           adept::adouble Temp = 0.;
