@@ -806,11 +806,11 @@ namespace femus {
 
     
     // initial guess
-    double xi = 1. / 3.;
+    double xi = 1. / 3.;  //coordinate del baricentro
     double eta = 1. / 3.;
 
     bool convergence = false;
-
+    std::cout << "xi = " << xi << " , " << "eta = " << eta << std::endl;
     while(!convergence) {
       
       std::vector < double > phi(nDofs);
@@ -919,7 +919,7 @@ namespace femus {
         for(int i = 0; i < nDofs; i++) {
           xp[k] += a[k][i] * phi[i];
           for(int i1 = 0; i1 < dim; i1++) {
-            gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
+            gradXp[k][i1] += a[k][i] * gradPhi[i][i1]; 
             for(int i2 = 0; i2 < dim; i2++) {
               hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
             }
@@ -936,7 +936,7 @@ namespace femus {
 
       for(int k = 0; k < dim; k++) {
         for(int i1 = 0; i1 < dim; i1++) {
-          gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
+          gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1]; 
           for(int i2 = 0; i2 < dim; i2++) {
             hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
           }
@@ -964,7 +964,7 @@ namespace femus {
       if(dxi * dxi + deta * deta < 1.0e-6)
         convergence = true;
 
-      std::cout << xi <<" "<< eta << std::endl;
+      std::cout << "xi = " << xi <<" , "<< "eta = " << eta << std::endl;
     }
 
     std::vector <double> xcord(2, 0);
@@ -1509,10 +1509,10 @@ namespace femus {
 
         std::cout << "j = " << j << " ";
         for(int k = 0; k < dim; k++) {
-          double a = (fabs(xp[k] - xv[k][j]) < 1.0e-10) ? 0 : xp[k] - xv[k][j];
+          double a = (fabs(xp[k] - x[k]) < 1.0e-10) ? 0 : xp[k] - x[k];
           std::cout << " a =" << a << " ";
           std::cout << "xp[" << k << "]=" << xp[k] << " ";
-          std::cout << "xv[" << k << "][" << j << "]=" << xv[k][j] << " ; ";
+          std::cout << "x[" << k << "]" << x[k] << " ; ";
         }
         std::cout << std::endl;
         std::cout << " -------------------------------------------------- " << std::endl;
