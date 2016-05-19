@@ -926,7 +926,8 @@ namespace femus {
           }
         }
       }
-
+      
+     
       std::vector < double > gradF(dim, 0.);
       std::vector < std::vector < double > >  hessF(dim);
 
@@ -961,10 +962,15 @@ namespace femus {
       xi  -= dxi;
       eta -= deta;
 
-      if(dxi * dxi + deta * deta < 1.0e-6)
+      if(dxi * dxi + deta * deta < 1.0e-6){
         convergence = true;
+	for(int k = 0; k < dim; k++) {
+	  std::cout << xp[k] << " ";
+	}
+	std::cout << std::endl;
+      }
 
-      std::cout << "xi = " << xi <<" , "<< "eta = " << eta << std::endl;
+      //std::cout << "xi = " << xi <<" , "<< "eta = " << eta << std::endl;
     }
 
     std::vector <double> xcord(2, 0);
@@ -1466,8 +1472,8 @@ namespace femus {
 
   void Marker::InverseMappingTEST(std::vector < double > &x) {
     unsigned dim = _mesh->GetDimension();
-    std::vector < std::vector < double > > xv(dim);
-    for(int solType = 2; solType < 3; solType++) {
+    
+    for(int solType = 0; solType < 3; solType++) {
       std::cout << "solType = " << solType << std::endl;
       int iel = _mesh->_elementOffset[_iproc + 1] - 1  ;
       std::cout << "iel = " << iel << std::endl;
@@ -1475,46 +1481,51 @@ namespace femus {
       unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
       short unsigned ielType = _mesh->GetElementType(iel);
 
-
-      for(int j = 0; j < nDofs; j++) {
+      std::vector < std::vector < double > > xv(nDofs);
+      for(unsigned i = 0; i < nDofs; i++) {
+	xv[i].resize(dim);
+        unsigned iDof  = _mesh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
         for(unsigned k = 0; k < dim; k++) {
-          x[k] = *(_mesh->_finiteElement[ielType][0]->GetBasis()->GetXcoarse(j) + k);
-          xv[k].resize(nDofs);
+          xv[i][k] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
         }
-        for(unsigned i = 0; i < nDofs; i++) {
-          unsigned iDof  = _mesh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
-          for(unsigned k = 0; k < dim; k++) {
-            xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
-          }
-        }
-
-
+      }
+      
+      for(int j = 0; j < nDofs; j++) {
+	std::vector < double > xiT(dim);
+        for(unsigned k = 0; k < dim; k++) {
+	  xiT[k] = *(_mesh->_finiteElement[ielType][0]->GetBasis()->GetXcoarse(j) + k);
+         }
+        
         // This is the test
-        std::vector < double > xp;
+        std::vector < double > xi;
+	
+	for(int k = 0; k<dim; k++){
+	  std::cout << "xv["<<k<<"]= " << xv[j][k] <<  " ";
+	}
+	std::cout<<std::endl;
+	
         if(ielType == 0) {
-          xp = InverseMappingHex(iel, solType, x);
+          xi = InverseMappingHex(iel, solType, xv[j]);
         }
         else if(ielType == 1) {
-          xp = InverseMappingTet(iel, solType, x);
+          xi = InverseMappingTet(iel, solType, xv[j]);
         }
         else if(ielType == 2) {
-          xp = InverseMappingWedge(iel, solType, x);
+          xi = InverseMappingWedge(iel, solType, xv[j]);
         }
         else if(ielType == 3) {
-          xp = InverseMappingQuad(iel, solType, x);
+          xi = InverseMappingQuad(iel, solType, xv[j]);
         }
         else if(ielType == 4) {
-          xp = InverseMappingTri(iel, solType, x);
+          xi = InverseMappingTri(iel, solType, xv[j]);
         }
 
-        std::cout << "j = " << j << " ";
-        for(int k = 0; k < dim; k++) {
-          double a = (fabs(xp[k] - x[k]) < 1.0e-10) ? 0 : xp[k] - x[k];
-          std::cout << " a =" << a << " ";
-          std::cout << "xp[" << k << "]=" << xp[k] << " ";
-          std::cout << "x[" << k << "]" << x[k] << " ; ";
-        }
-        std::cout << std::endl;
+        for(int k = 0; k<dim; k++){
+	  std::cout << "xiT["<<k<<"]= " << xiT[k] <<  " xi["<<k<< "]= " << xi[k];
+	  std::cout <<" test: " << xiT[k]-xi[k] <<std::endl;
+	}
+        
+        
         std::cout << " -------------------------------------------------- " << std::endl;
       }
 
