@@ -243,7 +243,7 @@ int main(int argc, char** args) {
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
   
   system.SetIntervalTime(0.1);
-  unsigned n_timesteps = 1000;
+  unsigned n_timesteps = 6000;
   
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
     
