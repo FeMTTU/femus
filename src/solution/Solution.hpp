@@ -71,7 +71,7 @@ public:
     void UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const vector <vector <unsigned> > &KKoffset);
 
     /** Update the solution */
-    void UpdateSolution();
+    void CopySolutionToOldSolution();
 
     /** Get a const solution (Numeric Vector) by name */
     const NumericVector& GetSolutionName(const char* var) const {

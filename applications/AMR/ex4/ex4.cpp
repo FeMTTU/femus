@@ -30,6 +30,9 @@
 #include "adept.h"
 
 
+#include "MeshRefinement.hpp"
+
+
 using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -61,7 +64,8 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 void AssemblePoisson_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
-std::pair < double, double > GetError(MultiLevelSolution* mlSol);
+void GetError(MultiLevelSolution* mlSol);
+
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -78,147 +82,94 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned maxNumberOfMeshes = 5;
+  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfSelectiveLevels = 0;
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+   
+  // erase all the coarse mesh levels
+  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
+  // print mesh info
+  mlMsh.PrintInfo();
 
-  vector < vector < double > > l2Norm;
-  l2Norm.resize(maxNumberOfMeshes);
+  MultiLevelSolution mlSol(&mlMsh);
 
-  vector < vector < double > > semiNorm;
-  semiNorm.resize(maxNumberOfMeshes);
+  // add variables to mlSol
 
-//   unsigned numberOfUniformLevels = 3;
-//   unsigned numberOfSelectiveLevels = 0;
-//   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  mlSol.AddSolution("Error",  DISCONTINOUS_POLYNOMIAL, ZERO);
 
-  for(unsigned i = 1; i < maxNumberOfMeshes; i++) {
+  mlSol.AddSolution("U", LAGRANGE, FIRST);
 
-    unsigned numberOfUniformLevels = i + 3;
-    unsigned numberOfSelectiveLevels = 0;
-    //mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-    mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
-    // erase all the coarse mesh levels
-    //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
+  mlSol.Initialize("All");
 
-    // print mesh info
-    mlMsh.PrintInfo();
+  // attach the boundary condition function and generate boundary data
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
 
-    FEOrder feOrder[3] = {FIRST, SERENDIPITY, SECOND};
-    l2Norm[i].resize(3);
-    semiNorm[i].resize(3);
+  mlSol.GenerateBdc("All");
 
-    for(unsigned j = 0; j < 3; j++) {
+     
+  unsigned maxNumberOfMeshes = 6;  
+  for(unsigned i = 0; i < maxNumberOfMeshes; i++) {
+    // define the multilevel problem attach the mlSol object to it
+    MultiLevelProblem mlProb(&mlSol);
 
-      MultiLevelSolution mlSol(&mlMsh);
+    // add system Poisson in mlProb as a Linear Implicit System
+    NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Poisson");
 
-      // add variables to mlSol
+    // add solution "u" to system
+    system.AddSolutionToSystemPDE("U");
 
-      mlSol.AddSolution("Flag",  DISCONTINOUS_POLYNOMIAL, ZERO);
+    //system.SetMgSmoother(GMRES_SMOOTHER);
+    system.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz Method
+    // attach the assembling function to system
+    system.SetAssembleFunction(AssemblePoisson_AD);
 
-      mlSol.AddSolution("U", LAGRANGE, feOrder[j]);
+    system.SetMaxNumberOfNonLinearIterations(10);
+    system.SetMaxNumberOfLinearIterations(3);
+    system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
+    system.SetNonLinearConvergenceTolerance(1.e-8);
+    system.SetMgType(F_CYCLE);
 
-      mlSol.Initialize("All");
+    system.SetNumberPreSmoothingStep(0);
+    system.SetNumberPostSmoothingStep(2);
+    // initilaize and solve the system
+    system.init();
 
-      // attach the boundary condition function and generate boundary data
-      mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+    system.SetSolverFineGrids(GMRES);
+    system.SetPreconditionerFineGrids(ILU_PRECOND);
+    system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
 
-      mlSol.GenerateBdc("All");
+    system.SetNumberOfSchurVariables(1);
+    system.SetElementBlockNumber(4);
+   
+    system.MGsolve();
+    
+    GetError(&mlSol);
+    
+    // print solutions
+    std::vector < std::string > variablesToBePrinted;
+    variablesToBePrinted.push_back("All");
+    VTKWriter vtkIO(&mlSol);
+    vtkIO.SetDebugOutput(true);
+    vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-      // define the multilevel problem attach the mlSol object to it
-      MultiLevelProblem mlProb(&mlSol);
-
-      // add system Poisson in mlProb as a Linear Implicit System
-      NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Poisson");
-
-      // add solution "u" to system
-      system.AddSolutionToSystemPDE("U");
-
-      //system.SetMgSmoother(GMRES_SMOOTHER);
-      system.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz Method
-      // attach the assembling function to system
-      system.SetAssembleFunction(AssemblePoisson_AD);
-
-      system.SetMaxNumberOfNonLinearIterations(10);
-      system.SetMaxNumberOfLinearIterations(3);
-      system.SetAbsoluteLinearConvergenceTolerance(1.e-12);
-      system.SetNonLinearConvergenceTolerance(1.e-8);
-      system.SetMgType(F_CYCLE);
-
-      system.SetNumberPreSmoothingStep(0);
-      system.SetNumberPostSmoothingStep(2);
-      // initilaize and solve the system
-      system.init();
-
-      system.SetSolverFineGrids(GMRES);
-      system.SetPreconditionerFineGrids(ILU_PRECOND);
-      system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 5);
-
-      system.SetNumberOfSchurVariables(1);
-      system.SetElementBlockNumber(4);
-      //system.SetDirichletBCsHandling(ELIMINATION);
-      //system.solve();
-      system.MGsolve();
-
-      std::pair< double , double > norm = GetError(&mlSol);
-//       l2Norm[i][j]  = norm.first;
-//       semiNorm[i][j] = norm.second;
-
-      // print solutions
-      std::vector < std::string > variablesToBePrinted;
-      variablesToBePrinted.push_back("All");
-      VTKWriter vtkIO(&mlSol);
-      vtkIO.SetDebugOutput(true);
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
-
-//       GMVWriter gmvIO (&mlSol);
-//       variablesToBePrinted.push_back ("all");
-//       gmvIO.SetDebugOutput (true);
-//       gmvIO.Write (DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
-
-    }
+    //refine the mesh
+    MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
+    meshcoarser.FlagElementsToBeRefined(5.1e-3, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));
+    mlMsh.AddAMRMeshLevel();
+    mlSol.AddSolutionLevel();
+    mlSol.RefineSolution(numberOfUniformLevels);
+    numberOfUniformLevels += 1;
+    
+    
 
   }
-  // print the seminorm of the error and the order of convergence between different levels
-//   std::cout << std::endl;
-//   std::cout << std::endl;
-//   std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
-//   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-//
-//   for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
-//     std::cout << i + 1 << "\t";
-//     std::cout.precision (14);
-//
-//     for (unsigned j = 0; j < 3; j++) {
-//       std::cout << l2Norm[i][j] << "\t";
-//     }
-//
-//     std::cout << std::endl;
-//
-//
-//
-//   }
-//
-//   std::cout << std::endl;
-//   std::cout << std::endl;
-//   std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
-//   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-//
-//   for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
-//     std::cout << i + 1 << "\t";
-//     std::cout.precision (14);
-//
-//     for (unsigned j = 0; j < 3; j++) {
-//       std::cout << semiNorm[i][j] << "\t";
-//     }
-//
-//     std::cout << std::endl;
-//
-//
-//
-//   }
+
 
   return 0;
 }
+
+
 
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
@@ -235,6 +186,7 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
   return - 2 * pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
 };
+
 
 
 void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
@@ -426,7 +378,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
 }
 
 
-std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
+void GetError(MultiLevelSolution* mlSol) {
   unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
   //  extract pointers to the several objects that we are going to use
   Mesh*          msh          = mlSol->_mlMesh->GetLevel(level);    // pointer to the mesh (level) object
@@ -442,7 +394,7 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
   unsigned solUType = mlSol->GetSolutionType(solUIndex);    // get the finite element type for "u"
 
 
-  unsigned solFlagIndex = mlSol->GetIndex("Flag");
+  unsigned errorIndex = mlSol->GetIndex("Error");
 
   vector < double >  solU; // local solution
 
@@ -520,70 +472,34 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
         }
         laplaceUh += (phi_xx[i * dim2 + 0] + phi_xx[i * dim2 + 1]) * solU[i];
       }
-      
+
+      //std::cout << laplaceUh << " ";
       // find h_k
       double hk = 0.;
       double dij = 0.;
-      for(unsigned i = 0; i < nDofsX - 1; i++){
-	for(unsigned j = i+1; j < nDofsX; j++)
-	  for (unsigned jdim = 0; jdim < dim; jdim++){
-	    dij += (crdX[jdim][i] - crdX[jdim][j])*(crdX[jdim][i] - crdX[jdim][j]);
-	  }
-	  dij = sqrt(dij);
-	if (dij > hk)
-	  hk = dij;
+      for(unsigned i = 0; i < nDofsX - 1; i++) {
+        for(unsigned j = i + 1; j < nDofsX; j++)
+          for(unsigned jdim = 0; jdim < dim; jdim++) {
+            dij += (crdX[jdim][i] - crdX[jdim][j]) * (crdX[jdim][i] - crdX[jdim][j]);
+          }
+        dij = sqrt(dij);
+        if(dij > hk)
+          hk = dij;
       }
 
 
       double LaplaceUexact = GetExactSolutionLaplace(x_gss);
       Rhok += hk * (LaplaceUexact - laplaceUh) * (LaplaceUexact - laplaceUh) * weight;
 
-
-
-
-
-//       vector <double> solGrad (dim);
-//       GetExactSolutionGradient (x_gss, solGrad);
-//
-//       for (unsigned j = 0; j < dim ; j++) {
-//         seminorm   += ( (gradSolUig[j] - solGrad[j]) * (gradSolUig[j] - solGrad[j])) * weight;
-//       }
-//
-//       double exactSol = GetExactSolutionValue (x_gss);
-//       l2norm += (exactSol - solUig) * (exactSol - solUig) * weight;
-      // end gauss point loop
-
-
-
     } //end element loop for each process
 
     Rhok = sqrt(Rhok);
-    sol->_Sol[solFlagIndex]->set(iel, Rhok);
+    sol->_Sol[errorIndex]->set(iel, Rhok);
 
 
   }// add the norms of all processes
-//   NumericVector* norm_vec;
-//   norm_vec = NumericVector::build().release();
-//   norm_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
-//
-//   norm_vec->set (iproc, l2norm);
-//   norm_vec->close();
-//
-//   l2norm = norm_vec->l1_norm();
-//
-//   norm_vec->set (iproc, seminorm);
-//   norm_vec->close();
-//
-//   seminorm = norm_vec->l1_norm();
-//
-//   delete norm_vec;
-//
-//   std::pair < double, double > norm;
-//   norm.first  = sqrt (l2norm);
-//   norm.second = sqrt (seminorm);
-//
-//   sol->_Sol[solFlagIndex]->close();
-//
-//   return norm;
-  sol->_Sol[solFlagIndex]->close();
+
+  sol->_Sol[errorIndex]->close();
 }
+
+

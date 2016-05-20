@@ -255,7 +255,7 @@ protected:
 
     /** Solves the system. */
     virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
-
+    void Solve( const unsigned& gridn, const bool &kspClean, const int &npre, const int &npost );
 
   };
 

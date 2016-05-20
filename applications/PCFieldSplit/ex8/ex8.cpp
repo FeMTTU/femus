@@ -251,7 +251,8 @@ int main(int argc, char** args) {
       system.SetMgType(V_CYCLE);
     
     system.MGsolve();
-    system.UpdateSolution();
+    system.CopySolutionToOldSolution();
+    //system.UpdateSolution();
     
     vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step+1);
   }
