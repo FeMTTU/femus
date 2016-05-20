@@ -41,7 +41,8 @@ namespace femus {
     _SmootherType( smoother_type ),
     _MGmatrixFineReuse( false ),
     _MGmatrixCoarseReuse( false ),
-    _printSolverInfo( false )
+    _printSolverInfo( false ),
+    _assembleMatrix( true )
   {
     _SparsityPattern.resize( 0 );
     _outer_ksp_solver = "gmres";
@@ -91,10 +92,10 @@ namespace femus {
 
     _LinSolver.resize( _gridn );
 
-    _LinSolver[0] = LinearEquationSolver::build( 0, _msh[0], GMRES_SMOOTHER ).release();
+    _LinSolver[0] = LinearEquationSolver::build( 0, _solution[0], GMRES_SMOOTHER ).release();
 
     for( unsigned i = 1; i < _gridn; i++ ) {
-      _LinSolver[i] = LinearEquationSolver::build( i, _msh[i], _SmootherType ).release();
+      _LinSolver[i] = LinearEquationSolver::build( i, _solution[i], _SmootherType ).release();
     }
 
     for( unsigned i = 0; i < _gridn; i++ ) {
@@ -188,9 +189,9 @@ namespace femus {
 
         for( unsigned i = 0; i < igridn; i++ ) {
           if( _RR[i] )
-            _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
+            _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost );
           else
-            _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], i, igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
+            _LinSolver[i]->MGSetLevel( _LinSolver[igridn - 1u], igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost );
         }
 
         MGVcycle( igridn, mgSmootherType );
@@ -221,7 +222,7 @@ namespace femus {
     for( unsigned k = 0; k < _SolSystemPdeIndex.size(); k++ ) {
       unsigned indexSol = _SolSystemPdeIndex[k];
       L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
-      std::cout << " *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName( indexSol ) << " = " << L2normRes << std::endl;
+      std::cout << "       *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName( indexSol ) << " = " << L2normRes << std::endl;
 
       if( L2normRes < _linearAbsoluteConvergenceTolerance && conv == true ) {
         conv = true;
@@ -262,7 +263,7 @@ namespace femus {
 
     for( unsigned linearIterator = 0; linearIterator < _n_max_linear_iterations; linearIterator++ ) { //linear cycle
 
-      std::cout << std::endl << " *************** Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
+      std::cout << "       *************** Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
       bool ksp_clean = !linearIterator * _assembleMatrix;
       _LinSolver[gridn - 1u]->MGSolve( ksp_clean );
       _solution[gridn - 1u]->UpdateRes( _SolSystemPdeIndex, _LinSolver[gridn - 1u]->_RES, _LinSolver[gridn - 1u]->KKoffset );
@@ -273,7 +274,7 @@ namespace femus {
 
     _solution[gridn - 1u]->UpdateSol( _SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset );
 
-    std::cout << "\n ************ Linear-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
+    std::cout << "       *************** Linear-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
               << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
     return linearIsConverged;
   }
@@ -300,7 +301,7 @@ namespace femus {
           _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
         }
 
-        // ============== AMR Restriction ==============
+        // ============== Restriction ==============
         Restrictor( ig );
       }
 
@@ -409,7 +410,7 @@ namespace femus {
 
     _LinSolver.resize( _gridn + 1 );
 
-    _LinSolver[_gridn] = LinearEquationSolver::build( _gridn, _msh[_gridn], _SmootherType ).release();
+    _LinSolver[_gridn] = LinearEquationSolver::build( _gridn, _solution[_gridn], _SmootherType ).release();
 
     _LinSolver[_gridn]->InitPde( _SolSystemPdeIndex, _ml_sol->GetSolType(),
                                  _ml_sol->GetSolName(), &_solution[_gridn]->_Bdc, _gridr, _gridn + 1, _SparsityPattern );
@@ -568,6 +569,14 @@ namespace femus {
 
   // ********************************************
 
+  void LinearImplicitSystem::SetSamePreconditioner(){
+    for( unsigned i = 0; i < _gridn; i++ ) {
+      _LinSolver[i]->SetSamePreconditioner();
+    }
+  }
+
+  // ********************************************
+
   void LinearImplicitSystem::AddVariableToBeSolved( const char solname[] ) {
 
     if( !strcmp( solname, "All" ) || !strcmp( solname, "ALL" ) || !strcmp( solname, "all" ) ) {
@@ -706,10 +715,10 @@ namespace femus {
 
     _LinSolver.resize( _gridn );
 
-    _LinSolver[0] = LinearEquationSolver::build( 0, _msh[0], GMRES_SMOOTHER ).release();
+    _LinSolver[0] = LinearEquationSolver::build( 0, _solution[0], GMRES_SMOOTHER ).release();
 
     for( unsigned i = 1; i < _gridn; i++ ) {
-      _LinSolver[i] = LinearEquationSolver::build( i, _msh[i], _SmootherType ).release();
+      _LinSolver[i] = LinearEquationSolver::build( i, _solution[i], _SmootherType ).release();
     }
 
 //     for (unsigned i=0; i<_gridn; i++) {

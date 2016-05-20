@@ -90,6 +90,7 @@ namespace femus {
     unsigned DofOffsetSize = KKoffset[KKIndex.size() - 1][iproc] - KKoffset[0][iproc];
     vector < unsigned > indexa(DofOffsetSize, DofOffsetSize);
     vector < unsigned > indexb(DofOffsetSize, DofOffsetSize);
+
     vector <bool> owned(DofOffsetSize, false);
 
     map<int, bool> mymap;
@@ -103,6 +104,7 @@ namespace femus {
     vector < vector < unsigned > > block_elements;
 
     MeshASMPartitioning meshasmpartitioning(*_msh);
+
     meshasmpartitioning.DoPartition(_elementBlockNumber, block_elements, _blockTypeRange);
 
     vector <bool> ThisVaribaleIsNonSchur(_SolPdeIndex.size(), true);
@@ -117,7 +119,7 @@ namespace femus {
     _localIsIndex.resize(block_elements.size());
     _overlappingIsIndex.resize(block_elements.size());
 
-    for(int vb_index = 0; vb_index < block_elements.size(); vb_index++) {
+    for(int vb_index = 0; vb_index < block_elements.size(); vb_index++) { //loop on the vanka-blocks
       _localIsIndex[vb_index].resize(DofOffsetSize);
       _overlappingIsIndex[vb_index].resize(DofOffsetSize);
 
@@ -127,15 +129,15 @@ namespace femus {
       PetscInt Csize = 0;
 
       // ***************** NODE/ELEMENT SERCH *******************
-      for(int kel = 0; kel < block_elements[vb_index].size(); kel++) {
+      for(int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
         unsigned iel = block_elements[vb_index][kel];
 
-        for(unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) {
+        for(unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) { //loop on the element vertices
           unsigned inode = _msh->el->GetElementDofIndex(iel, i);
           const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
-          unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
-
-          for(unsigned j = 0; j < nve; j++) {
+          //loop on the neighboring elemnets (!FastVankaBlock) or on iel only (FastVankaBlock) 
+	  unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
+          for(unsigned j = 0; j < nve; j++) { 
             unsigned jel = (!FastVankaBlock) ? localElementNearVertexNumber[j] : iel;
 
             //add elements for velocity to be solved
@@ -143,7 +145,7 @@ namespace femus {
               indexci[Csize] = jel - ElemOffset;
               indexc[jel - ElemOffset] = Csize++;
 
-              //add non-schur node to be solved
+              //add non-schur variables to be solved
               for(int indexSol = 0; indexSol < _SolPdeIndex.size(); indexSol++) {
                 if(ThisVaribaleIsNonSchur[indexSol]) {
                   unsigned SolPdeIndex = _SolPdeIndex[indexSol];
@@ -227,16 +229,22 @@ namespace femus {
       }
 
       _localIsIndex[vb_index].resize(PAsize);
+      std::vector < PetscInt >(_localIsIndex[vb_index]).swap(_localIsIndex[vb_index]);
 
       _overlappingIsIndex[vb_index].resize(PBsize + mymap.size());
       int i = 0;
-
       for(std::map<int, bool>::iterator it = mymap.begin(); it != mymap.end(); ++it, ++i) {
         _overlappingIsIndex[vb_index][PBsize + i] = it->first;
       }
+      std::vector < PetscInt >(_overlappingIsIndex[vb_index]).swap(_overlappingIsIndex[vb_index]);
+      
+     
+      mymap.clear();
 
       std::sort(_localIsIndex[vb_index].begin(), _localIsIndex[vb_index].end());
       std::sort(_overlappingIsIndex[vb_index].begin(), _overlappingIsIndex[vb_index].end());
+
+
     }
 
     //BEGIN Generate std::vector<IS> for ASM PC ***********

@@ -268,6 +268,9 @@ public:
   /// Swaps the raw PETSc vector context pointers.
   void swap (NumericVector &v);
 
+  void BinaryPrint(const char* fileName);
+  void BinaryLoad(const char* fileName);
+  
 protected:
 
   /// Queries the array (and the local form if the vector is ghosted) from Petsc.

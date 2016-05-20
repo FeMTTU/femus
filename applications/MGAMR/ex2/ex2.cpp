@@ -141,12 +141,17 @@ int main(int argc, char** args) {
 
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  system.SetResidualUpdateConvergenceTolerance(1.e-12);
+  
+  system.SetMaxNumberOfLinearIterations(10);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+  
+  
+//   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
+//   system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(0);
+  system.SetNumberPreSmoothingStep(2);
   system.SetNumberPostSmoothingStep(2);
   // initilaize and solve the system
   system.init();
@@ -154,14 +159,16 @@ int main(int argc, char** args) {
   //system.SetSolverFineGrids(GMRES);
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
-
+  //system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
+  
+  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(4);
+  system.SetElementBlockNumber(2);
 
+  system.SetSamePreconditioner();
   system.MGsolve();
 
   // print solutions
@@ -421,16 +428,20 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         solP_gss += phiP[i] * solP[i];
       }
 
-      double nu = 1.;
+      
       double alpha = 1.;
-      double beta = 2000.;
+      double beta = 1.; //20000;
+      
+      
+      double Pr = 1./10;
+      double Ra = 10000;
 
       // *** phiT_i loop ***
       for (unsigned i = 0; i < nDofsT; i++) {
         adept::adouble Temp = 0.;
 
         for (unsigned j = 0; j < dim; j++) {
-          Temp +=  alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
+          Temp +=  1./sqrt(Ra*Pr)*alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
           Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
         }
 
@@ -444,7 +455,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned  k = 0; k < dim; k++) {
-            NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
+            NSV[k]   +=  sqrt(Pr/Ra) * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
             NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
           }
         }

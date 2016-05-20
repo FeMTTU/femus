@@ -149,6 +149,8 @@ namespace femus {
 //---------------------------------------------------------------------------------------------------------------
   void MeshRefinement::RefineMesh( const unsigned& igrid, Mesh* mshc, const elem_type* otherFiniteElement[6][5] ) {
 
+    _mesh.SetIfHomogeneous(true);
+
     _mesh.SetCoarseMesh( mshc );
 
     _mesh.SetFiniteElementPtr( otherFiniteElement );
@@ -217,6 +219,7 @@ namespace femus {
           _mesh.el->AddToElementNumber( _mesh.GetRefIndex(), elt );
         }
         else {
+          _mesh.SetIfHomogeneous(false);
           AMR = true;
           unsigned elt = static_cast < short unsigned >( coarseLocalizedElementType[iel] + 0.25 );
 

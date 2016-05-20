@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iostream>
 
-static const double um = 0.2;
+static const double um = 0.133333333333;
 static const double H = 0.40;
 static const double L = 1.5;
 
@@ -12,7 +12,7 @@ extern "C" double InitalValueU(const std::vector < double >& xyz) {
   const double x = xyz[0];
   const double y = xyz[1];
   const double z = xyz[2];
-  const double k = ((1.125)*(1.125))/((H*0.5)*(H*0.5)*H*H);
+  const double k = 9./(H*H*H*H);
   return k*(z*(H - z))*(H*H - y*y)*um*exp(-10.*L*x);
 }
 
@@ -25,7 +25,7 @@ extern "C" bool BdcFunction(const std::vector < double >& xyz,const char name[],
     // inflow
     if(5==facename){
       test=1; // Dirichlet
-      const double k = ((1.125)*(1.125))/((H*0.5)*(H*0.5)*H*H);
+      const double k = 9./(H*H*H*H);
       const double x = xyz[0];
       const double y = xyz[1];
       const double z = xyz[2];

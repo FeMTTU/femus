@@ -39,7 +39,8 @@ TransientSystem<Base>::TransientSystem (MultiLevelProblem& ml_probl,
   _is_selective_timestep(false),
   _time(0.),
   _time_step(0),
-  _dt(0.1)
+  _dt(0.1),
+  _assembleCounter(0)
 {
 
 }
@@ -70,9 +71,26 @@ void TransientSystem<Base>::UpdateSolution() {
 template <class Base>
 void TransientSystem<Base>::MLsolve() {
 
+  double dtOld = _dt;
+
   if (_is_selective_timestep) {
     _dt = _get_time_interval_function(_time);
   }
+
+
+  if(_assembleCounter % 1 == 0 || _dt != dtOld){
+    std::cout<<"Assemble Matrix\n";
+    Base::_buildSolver = true;
+    if( _dt != dtOld )
+      _assembleCounter = 0;
+  }
+  else{
+    std::cout<<"Do not Assemble Matrix";
+    Base::_buildSolver = false;
+  }
+  std::cout<<"assemble counter = "<<_assembleCounter<<std::endl;
+  _assembleCounter++;
+
 
   //update time
   _time += _dt;
@@ -95,9 +113,27 @@ void TransientSystem<Base>::MLsolve() {
 
 template <class Base>
 void TransientSystem<Base>::MGsolve( const MgSmootherType& mgSmootherType ) {
+
+  double dtOld = _dt;
+
   if (_is_selective_timestep) {
     _dt = _get_time_interval_function(_time);
   }
+
+
+  if(_assembleCounter % 1 == 0 || _dt != dtOld){
+    std::cout<<"Assemble Matrix\n";
+    Base::_buildSolver = true;
+    if( _dt != dtOld )
+      _assembleCounter = 0;
+  }
+  else{
+    std::cout<<"Do not Assemble Matrix";
+    Base::_buildSolver = false;
+  }
+  std::cout<<"assemble counter = "<<_assembleCounter<<std::endl;
+  _assembleCounter++;
+
 
   //update time
   _time += _dt;
