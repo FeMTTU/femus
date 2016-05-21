@@ -73,6 +73,16 @@ unsigned LinearEquation::GetSystemDof(const unsigned &index_sol, const unsigned 
   return KKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
 }
 
+unsigned LinearEquation::GetSystemDof(const unsigned &soltype, const unsigned &kkindex_sol,
+				      const unsigned &i, const unsigned &iel, const vector < vector <unsigned> > &otherKKoffset) const {
+
+  //unsigned soltype =  _SolType[index_sol];
+  unsigned idof= _msh->GetSolutionDof(i, iel, soltype);
+
+  unsigned isubdom = _msh->IsdomBisectionSearch(idof, soltype);
+  return otherKKoffset[kkindex_sol][isubdom] + idof - _msh->_dofOffset[soltype][isubdom];
+}
+
 
 unsigned LinearEquation::GetSystemDof(const unsigned &index_sol, const unsigned &kkindex_sol,
 				      const unsigned &ielc, const unsigned &i0,const unsigned &i1,
