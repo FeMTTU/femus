@@ -244,7 +244,12 @@ int main(int argc, char** args) {
 
     system.MGsolve();
     system.CopySolutionToOldSolution();
+<<<<<<< HEAD
 
+=======
+    //system.UpdateSolution();
+    
+>>>>>>> lee
     vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step+1);
   }
 

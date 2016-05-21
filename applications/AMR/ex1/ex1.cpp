@@ -196,7 +196,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
 
 
   vector < adept::adouble >  solU; // local solution
-  vector< adept::adouble > aResU; // local redidual vector
+  vector< adept::adouble > aResU; // local residual vector
 
   vector < vector < double > > crdX(dim);    // local coordinates
   unsigned crdXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -335,6 +335,11 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
+/*****************************
+Q1: Is solUig a weak solution of solU?
+Q2: Since u_h = sum (u_j * phi_j) where u_j are unknown coefficients. Why at line 277, the coefficients of solUig is solU? 
 
+
+*****************************/
 
 

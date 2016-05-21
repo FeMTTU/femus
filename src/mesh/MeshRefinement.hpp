@@ -49,6 +49,7 @@ public:
 
     /** Flag all the elements to be refined */
     void FlagAllElementsToBeRefined();
+    void FlagElementsToBeRefined(const double & treshold, NumericVector& error);
 
     /** Flag all the even elements to be refined */
     void FlagOnlyEvenElementsToBeRefined();
@@ -60,6 +61,7 @@ public:
 private:
 
     void FlagElementsToRefine(const unsigned& type);
+    void FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error);
 
     /** To be added */
     void Buildkmid();
