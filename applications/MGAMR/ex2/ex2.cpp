@@ -160,12 +160,7 @@ int main(int argc, char** args) {
   //system.SetSolverFineGrids(GMRES);
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-<<<<<<< HEAD
 
-=======
-  //system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
-  
->>>>>>> lee
   system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
