@@ -151,8 +151,8 @@ int main(int argc, char** args) {
 
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(2);
-  system.SetNumberPostSmoothingStep(2);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
   system.init();
 
@@ -161,12 +161,12 @@ int main(int argc, char** args) {
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
   
-  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 20);
+  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(2);
+  system.SetElementBlockNumber(4);
 
   system.SetSamePreconditioner();
   system.MGsolve();
