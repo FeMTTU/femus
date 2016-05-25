@@ -41,12 +41,13 @@ namespace femus {
   }
   
 //-------------------------------------------------------------------
-  void MeshRefinement::FlagElementsToBeRefined(const double & treshold, NumericVector& error) {
-    FlagElementsToRefineBaseOnError(treshold, error);
+  bool MeshRefinement::FlagElementsToBeRefined(const double & treshold, NumericVector& error) {
+    return FlagElementsToRefineBaseOnError(treshold, error);
   }
 //-------------------------------------------------------------------
-  void MeshRefinement::FlagElementsToBeRefined() {
+  bool MeshRefinement::FlagElementsToBeRefined() {
     FlagElementsToRefine(1);
+    return true;
   }
 //-------------------------------------------------------------------
   void MeshRefinement::FlagOnlyEvenElementsToBeRefined() {
@@ -153,10 +154,12 @@ namespace femus {
   }
   
   
-    void MeshRefinement::FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error) {
+    bool MeshRefinement::FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error) {
 
     unsigned type = 2;  
-      
+    
+    
+    
     //BEGIN temporary parallel vector initialization
     NumericVector* numberOfRefinedElement;
     numberOfRefinedElement = NumericVector::build().release();
@@ -206,6 +209,11 @@ namespace femus {
       delete numberOfRefinedElementType[i];
     }
 
+    bool elementsHaveBeenRefined = true; 
+    if( totalNumber < _nprocs){
+      elementsHaveBeenRefined = false; 
+    }
+    return elementsHaveBeenRefined;
     //END update elem
   }
   

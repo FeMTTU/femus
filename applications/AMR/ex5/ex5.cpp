@@ -85,7 +85,7 @@ int main(int argc, char** args) {
 
   mlSol.AddSolution("Error",  DISCONTINOUS_POLYNOMIAL, ZERO);
 
-  mlSol.AddSolution("U", LAGRANGE, FIRST);
+  mlSol.AddSolution("U", LAGRANGE, SECOND);
 
   mlSol.Initialize("All");
 
@@ -95,7 +95,7 @@ int main(int argc, char** args) {
   mlSol.GenerateBdc("All");
 
      
-  unsigned maxNumberOfMeshes = 6;  
+  unsigned maxNumberOfMeshes = 8;  
   for(unsigned i = 0; i < maxNumberOfMeshes; i++) {
     // define the multilevel problem attach the mlSol object to it
     MultiLevelProblem mlProb(&mlSol);
@@ -142,7 +142,11 @@ int main(int argc, char** args) {
 
     //refine the mesh
     MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
-    meshcoarser.FlagElementsToBeRefined(5.1e-3, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));
+    bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(1.e-2, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));
+    
+    if( !elementsHaveBeenRefined ){
+      break;
+    }
     mlMsh.AddAMRMeshLevel();
     mlSol.AddSolutionLevel();
     mlSol.RefineSolution(numberOfUniformLevels);
@@ -406,14 +410,11 @@ void GetError(MultiLevelSolution* mlSol) {
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   phi_xx.reserve(maxSize * dim2);
 
-  double seminorm = 0.;
-  double l2norm = 0.;
+  double seminorm2 = 0.;
+  double l2norm2 = 0.;
 
   // element loop: each process loops only on the elements that owns
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-
-
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofsU  = msh->GetElementDofNumber(iel, solUType);    // number of solution element dofs
@@ -452,9 +453,14 @@ void GetError(MultiLevelSolution* mlSol) {
       vector < double > x_gss(dim, 0.);
       double laplaceUh =  0.;
 
+      double Uig = 0.;
+      std::vector< double > gradUig(dim,0);
+      
 
       for(unsigned i = 0; i < nDofsU; i++) {
+	Uig += phi[i] * solU[i];
         for(unsigned j = 0; j < dim; j++) {
+	  gradUig[j] += phi_x[i * dim + j] * solU[i]; 
           x_gss[j] += crdX[j][i] * phi[i];
         }
         laplaceUh += (phi_xx[i * dim2 + 0] + phi_xx[i * dim2 + 1]) * solU[i];
@@ -474,7 +480,10 @@ void GetError(MultiLevelSolution* mlSol) {
           hk = dij;
       }
 
-
+      l2norm2 += Uig*Uig*weight;
+      for(unsigned j = 0; j < dim; j++) {
+	seminorm2 += gradUig[j] * gradUig[j] * weight;
+      }
 
       double LaplaceUexact = GetExactSolutionLaplace(x_gss);
       Rhok += hk * (LaplaceUexact - laplaceUh) * (LaplaceUexact - laplaceUh) * weight;
@@ -482,12 +491,43 @@ void GetError(MultiLevelSolution* mlSol) {
     } //end element loop for each process
 
     Rhok = sqrt(Rhok);
-    sol->_Sol[errorIndex]->set(iel, Rhok);
-
+    
+    if( msh->el->GetIfElementCanBeRefined(iel) ) {
+      sol->_Sol[errorIndex]->set(iel, Rhok);
+    }
+    else {
+      sol->_Sol[errorIndex]->set(iel, 0.);
+    }
 
   }// add the norms of all processes
 
   sol->_Sol[errorIndex]->close();
+  
+  
+   // add the norms of all processes
+  NumericVector* norm_vec;
+  norm_vec = NumericVector::build().release();
+  norm_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
+
+  norm_vec->set (iproc, l2norm2);
+  norm_vec->close();
+
+  l2norm2 = norm_vec->l1_norm();
+
+  norm_vec->set (iproc, seminorm2);
+  norm_vec->close();
+
+  seminorm2 = norm_vec->l1_norm();
+
+  delete norm_vec;
+
+  double H1norm = sqrt( l2norm2 + seminorm2 );
+  
+  unsigned N = msh->GetNumberOfElements();
+  *sol->_Sol[errorIndex] *= (2.*sqrt(N)) / ( 3.*H1norm );
+  
+  sol->_Sol[errorIndex]->close();
+      
 }
 
 

@@ -49,19 +49,19 @@ public:
 
     /** Flag all the elements to be refined */
     void FlagAllElementsToBeRefined();
-    void FlagElementsToBeRefined(const double & treshold, NumericVector& error);
+    bool FlagElementsToBeRefined(const double & treshold, NumericVector& error);
 
     /** Flag all the even elements to be refined */
     void FlagOnlyEvenElementsToBeRefined();
 
     /** Flag the elements to be refined in according to AMR criteria */
-    void FlagElementsToBeRefined();
+    bool FlagElementsToBeRefined();
 
 
 private:
 
     void FlagElementsToRefine(const unsigned& type);
-    void FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error);
+    bool FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error);
 
     /** To be added */
     void Buildkmid();
