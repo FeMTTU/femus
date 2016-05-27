@@ -237,8 +237,8 @@ namespace femus {
         _overlappingIsIndex[vb_index][PBsize + i] = it->first;
       }
       std::vector < PetscInt >(_overlappingIsIndex[vb_index]).swap(_overlappingIsIndex[vb_index]);
-      
-     
+
+
       mymap.clear();
 
       std::sort(_localIsIndex[vb_index].begin(), _localIsIndex[vb_index].end());

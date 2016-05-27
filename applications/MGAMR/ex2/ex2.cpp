@@ -80,7 +80,8 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/triAMR.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -89,8 +90,8 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 8;
-  unsigned numberOfSelectiveLevels = 0;
+  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
@@ -110,8 +111,8 @@ int main(int argc, char** args) {
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
   mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
 
-  mlSol.AssociatePropertyToSolution("P", "Pressure", false);
-  //mlSol.AssociatePropertyToSolution("P", "Pressure", true);
+  //mlSol.AssociatePropertyToSolution("P", "Pressure", false);
+  mlSol.AssociatePropertyToSolution("P", "Pressure", true);
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
@@ -141,35 +142,40 @@ int main(int argc, char** args) {
 
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
-  
+
   system.SetMaxNumberOfLinearIterations(10);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
-  
-  
+
+
 //   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
 //   system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(2);
-  system.SetNumberPostSmoothingStep(2);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
+
   system.init();
 
   //system.SetSolverFineGrids(GMRES);
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  //system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
-  
-  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 20);
+
+  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(2);
+  system.SetElementBlockNumber(4);
+
+
+  system.PrintSolverInfo(false);
+//  system.MLsolve();
 
   system.SetSamePreconditioner();
   system.MGsolve();
+
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -179,13 +185,13 @@ int main(int argc, char** args) {
   vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-  GMVWriter gmvIO(&mlSol);
-  gmvIO.SetDebugOutput(true);
-  gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-
-  XDMFWriter xdmfIO(&mlSol);
-  xdmfIO.SetDebugOutput(true);
-  xdmfIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//   GMVWriter gmvIO(&mlSol);
+//   gmvIO.SetDebugOutput(true);
+//   gmvIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//
+//   XDMFWriter xdmfIO(&mlSol);
+//   xdmfIO.SetDebugOutput(true);
+//   xdmfIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -428,11 +434,11 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         solP_gss += phiP[i] * solP[i];
       }
 
-      
+
       double alpha = 1.;
       double beta = 1.; //20000;
-      
-      
+
+
       double Pr = 1./10;
       double Ra = 10000;
 

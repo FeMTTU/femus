@@ -617,7 +617,7 @@ void Solution::BuildGradMatrixStructure(unsigned SolType) {
 
 
 // ------------------------------------------------------------------
-void Solution::UpdateSolution() {
+void Solution::CopySolutionToOldSolution() {
   for (unsigned i=0; i<_Sol.size(); i++) {
     // Copy the old vector
     if (_SolTmOrder[i]==2) {

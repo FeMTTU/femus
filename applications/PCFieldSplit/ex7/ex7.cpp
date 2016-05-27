@@ -121,7 +121,7 @@ int main(int argc, char** args) {
   FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
   FS_NS.SetAsmBlockSize(4);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
-    
+
 
 //   std::vector < unsigned > fieldUV(2);
 //   fieldUV[0] = system.GetSolPdeIndex("U");
@@ -142,19 +142,19 @@ int main(int argc, char** args) {
 //   FieldSplitTree FS_NS( GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
 
 
-  
+
   std::vector < unsigned > fieldT(1);
   fieldT[0] = system.GetSolPdeIndex("T");
-  
+
   std::vector < unsigned > solutionTypeT(1);
   solutionTypeT[0] = mlSol.GetSolutionType("T");
-  
-  
+
+
   FieldSplitTree FS_T( PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
   FS_T.SetAsmBlockSize(4);
   FS_T.SetAsmNumeberOfSchurVariables(1);
-  
-  
+
+
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
   FS2.push_back(&FS_NS);
@@ -207,7 +207,7 @@ int main(int argc, char** args) {
 
   system.SetMaxNumberOfLinearIterations(10);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
-  
+
   system.SetMgType(F_CYCLE);
 
   system.SetNumberPreSmoothingStep(2);
@@ -226,7 +226,7 @@ int main(int argc, char** args) {
   system.SetElementBlockNumber(4);
 
   system.SetSamePreconditioner();
- 
+
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -236,18 +236,18 @@ int main(int argc, char** args) {
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
   unsigned n_timesteps = 100;
-  
+
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-    
+
     if( time_step > 0 )
       system.SetMgType(V_CYCLE);
-    
+
     system.MGsolve();
-    system.UpdateSolution();
-    
+    system.CopySolutionToOldSolution();
+
     vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step+1);
   }
-      
+
   mlMsh.PrintInfo();
 
   return 0;
@@ -324,15 +324,15 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   vector < adept::adouble >  solT; // local solution
   vector < vector < adept::adouble > >  solV(dim);    // local solution
   vector < adept::adouble >  solP; // local solution
-  
+
   vector < double >  solTold; // local solution
   vector < vector < double > >  solVold(dim);    // local solution
   vector < double >  solPold; // local solution
-  
+
   vector< adept::adouble > aResT; // local redidual vector
   vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
   vector< adept::adouble > aResP; // local redidual vector
- 
+
   vector < vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
@@ -409,7 +409,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     solP.resize(nDofsP);
     solPold.resize(nDofsP);
-    
+
     aResT.resize(nDofsV);    //resize
     std::fill(aResT.begin(), aResT.end(), 0);    //set aRes to zero
 
@@ -487,7 +487,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 	vector < double > solVold_gss(dim, 0);
         vector < vector < adept::adouble > > gradSolV_gss(dim);
         vector < vector < double > > gradSolVold_gss(dim);
-	
+
         for (unsigned  k = 0; k < dim; k++) {
           gradSolV_gss[k].resize(dim);
 	  gradSolVold_gss[k].resize(dim);
@@ -511,16 +511,16 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
         adept::adouble solP_gss = 0;
         double solPold_gss = 0;
-	
+
         for (unsigned i = 0; i < nDofsP; i++) {
           solP_gss += phiP[i] * solP[i];
 	  solPold_gss += phiP[i] * solPold[i];
         }
 
-        
+
         double alpha = 1.;
         double beta = 1.;//40000.;
-	
+
 	double Pr = 1./10;
         double Ra = 10000;
 
@@ -533,10 +533,10 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           for (unsigned j = 0; j < dim; j++) {
             Temp +=  1./sqrt(Ra*Pr)*alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
             Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
-	    
+
 	    TempOld +=  1./sqrt(Ra*Pr)*alpha * phiT_x[i * dim + j] * gradSolTold_gss[j];
             TempOld +=  phiT[i] * (solVold_gss[j] * gradSolTold_gss[j]);
-	    
+
           }
 
           aResT[i] += ( - (solT_gss-solTold_gss) * phiT[i]/dt - 0.5*(Temp+TempOld) ) * weight;
@@ -552,10 +552,10 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
             for (unsigned  k = 0; k < dim; k++) {
               NSV[k]   +=  sqrt(Pr/Ra) * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
               NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
-	      
+
 	      NSVold[k]   +=  sqrt(Pr/Ra) * phiV_x[i * dim + j] * (gradSolVold_gss[k][j] + gradSolVold_gss[j][k]);
               NSVold[k]   +=  phiV[i] * (solVold_gss[j] * gradSolVold_gss[k][j]);
-	      
+
             }
           }
 

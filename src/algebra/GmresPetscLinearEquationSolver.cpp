@@ -344,7 +344,7 @@ namespace femus {
 
   void GmresPetscLinearEquationSolver::RemoveNullSpace() {
 
-    if(_msh->GetLevel() != 0) {
+    if( _msh->GetLevel() != 0) {
       std::vector < Vec > nullspBase;
       GetNullSpaceBase(nullspBase);
       if(nullspBase.size() != 0) {
@@ -400,7 +400,6 @@ namespace femus {
       }
     }
   }
-
   // =================================================
 
   void GmresPetscLinearEquationSolver::ZerosBoundaryResiduals() {

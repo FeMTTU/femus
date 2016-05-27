@@ -30,6 +30,7 @@ PURPOSE.  See the above copyright notice for more information.
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <sys/stat.h>
 
 namespace femus {
 
@@ -258,12 +259,14 @@ namespace femus {
                 xx[1] /= nloc_dof;
                 xx[2] /= nloc_dof;
 
-                value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
+		value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
 
-                _solution[ig]->_Sol[i]->set(iel, value);
+		 unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(2, iel, sol_type);
+
+                _solution[ig]->_Sol[i]->set(solDof, value);
 
                 if(_solTimeOrder[i] == 2) {
-                  _solution[ig]->_SolOld[i]->set(iel, value);
+                  _solution[ig]->_SolOld[i]->set(solDof, value);
                 }
               }
             }
@@ -561,16 +564,59 @@ namespace femus {
           }
         }
         else if(_addAMRPressureStability[k]) {  // interior boundary (AMR) for discontinuous elements u = 0
-          for(int iel = msh->_elementOffset[_iproc]; iel < msh->_elementOffset[_iproc + 1]; iel++) {
-            short unsigned ielt = msh->GetElementType(iel);
-            for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
-              if(msh->el->GetBoundaryIndex(iel, jface) == 0) {
-                unsigned nv1 = msh->GetElementDofNumber(iel, _solType[k]);
-                for(unsigned i = 0; i < 1; i++) {
-                  unsigned idof = msh->GetSolutionDof(i, iel, _solType[k]);
-                  _solution[igridn]->_Bdc[k]->set(idof, 1.);
+          unsigned offset = msh->_elementOffset[_iproc];
+          unsigned offsetp1 = msh->_elementOffset[_iproc + 1];
+          unsigned owned = offsetp1 - offset;
+          std::vector < short unsigned > markedElement(owned, 0);
+          // Add all interior boundary elements
+          for(unsigned iel = offset; iel < offsetp1; iel++) {
+            if( markedElement[iel - offset] == 0 ){
+              short unsigned ielt = msh->GetElementType(iel);
+              for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+                if(msh->el->GetBoundaryIndex(iel, jface) == 0) {
+                  markedElement[iel - offset] = 1;
+                  for(unsigned kface = 0; kface < msh->GetElementFaceNumber(iel); kface++) {
+                    int kel = msh->el->GetFaceElementIndex(iel, kface) - 1;
+                    if( kel >= offset && kel < offsetp1){
+                      markedElement[kel - offset] = 1;
+                    }
+                  }
+                  break;
                 }
               }
+            }
+          }
+          //remove adjacent interior boundary elements
+          std::vector < unsigned > seed;
+          seed.reserve(owned);
+          for(unsigned i = 0; i < owned; i++) {
+            if( markedElement[i] == 1){
+              markedElement[i] = 2;
+              seed.resize(1);
+              seed[0] = offset + i;
+              while(seed.size() != 0){
+                bool testSeed = true;
+                unsigned iel = seed[ seed.size() - 1u];
+                short unsigned ielt = msh->GetElementType(iel);
+                for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+                  int jel = msh->el->GetFaceElementIndex(seed[seed.size()-1], jface) - 1;
+                  if( jel >= offset && jel < offsetp1 && markedElement[jel - offset] == 1 ){
+                    markedElement[jel - offset] = 0;
+                    seed.resize(seed.size() + 1);
+                    seed[seed.size() - 1] = jel;
+                    testSeed = false;
+                  }
+                }
+                if(testSeed) seed.resize(seed.size() - 1);
+              }
+            }
+          }
+
+          for(unsigned i = 0; i < owned; i++) {
+            if( markedElement[i] > 0){
+              unsigned iel = offset + i;
+              unsigned idof = msh->GetSolutionDof(0, iel, _solType[k]);
+              _solution[igridn]->_Bdc[k]->set(idof, 1.);
             }
           }
         }
@@ -586,26 +632,21 @@ namespace femus {
 
   }
 
-  void MultiLevelSolution::SaveSolution(const char* filename, const unsigned &timeStep) {
+  void MultiLevelSolution::SaveSolution(const char* filename, const double time) {
 
     char composedFileName[100];
 
     for(int i = 0; i < _solName.size(); i++) {
-      if(timeStep != UINT_MAX) {
-        sprintf(composedFileName, "./save/%s_sol%s_level%d_time%d", filename, _solName[i], _gridn, timeStep);
-      }
-      else {
-        sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], _gridn);
-      }
+      sprintf(composedFileName, "./save/%s_time%f_sol%s_level%d", filename, time, _solName[i], _gridn);
       _solution[_gridn - 1]->_Sol[i]->BinaryPrint(composedFileName);
     }
   }
 
-  void MultiLevelSolution::LoadSolution(const char* filename, const unsigned &timeStep) {
-    LoadSolution(_gridn, filename, timeStep);
+  void MultiLevelSolution::LoadSolution(const char* filename) {
+    LoadSolution(_gridn, filename);
   }
 
-  void MultiLevelSolution::LoadSolution(const unsigned &level, const char* filename,  const unsigned &timeStep) {
+  void MultiLevelSolution::LoadSolution(const unsigned &level, const char* filename) {
 
     if(level > _gridn){
       std::cout<< "Error in MultiLevelSolution::LoadSolution function:"<<std::endl;
@@ -613,14 +654,16 @@ namespace femus {
       abort();
     }
 
-    char composedFileName[100];
-
+    char composedFileName[200];
     for(int i = 0; i < _solName.size(); i++) {
-      if(timeStep != UINT_MAX) {
-        sprintf(composedFileName, "./save/%s_sol%s_level%d_time%d", filename, _solName[i], level, timeStep);
-      }
-      else {
-        sprintf(composedFileName, "./save/%s_sol%s_level%d", filename, _solName[i], level);
+      sprintf(composedFileName, "%s_sol%s_level%d", filename, _solName[i], level);
+      // check if the file really exists
+      if ( strncmp(filename, "http://", 7) && strncmp(filename, "ftp://", 6) ){
+        struct stat buffer;
+        if(stat (composedFileName, &buffer) != 0) {
+          std::cerr << "Error: cannot locate file " << composedFileName << std::endl;
+          abort();
+        }
       }
       _solution[level - 1]->_Sol[i]->BinaryLoad(composedFileName);
     }
@@ -635,6 +678,21 @@ namespace femus {
 
 
   }
+
+
+  void MultiLevelSolution::RefineSolution( const unsigned &gridf ) {
+
+      Mesh *msh = _mlMesh->GetLevel(gridf);
+
+      for( unsigned k = 0; k < _solType.size(); k++ ) {
+
+	unsigned solType = _solType[k];
+
+	_solution[gridf]->_Sol[k]->matrix_mult( *_solution[gridf - 1]->_Sol[k],
+	    *msh->GetCoarseToFineProjection( solType ) );
+	_solution[gridf]->_Sol[k]->close();
+      }
+    }
 
 
 } //end namespace femus

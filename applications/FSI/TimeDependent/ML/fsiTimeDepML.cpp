@@ -127,7 +127,7 @@ int main(int argc,char **args) {
   std::string infile;
 
   if(1 == simulation){
-    infile = "./input/turek_FSI3.neu";
+    infile = "./input/turek_2D_FSI.neu";
   }
   else if(2 == simulation){
     infile = "./input/beam.neu";
@@ -219,9 +219,9 @@ int main(int argc,char **args) {
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
   if(simulation < 3){
-    numberOfUniformRefinedMeshes=3;
+    numberOfUniformRefinedMeshes=4;
     if( turek_FSI ==3 )
-      numberOfUniformRefinedMeshes=4;
+      numberOfUniformRefinedMeshes=5;
   }
   else if(simulation == 3)
      numberOfUniformRefinedMeshes=4;
@@ -391,7 +391,7 @@ int main(int argc,char **args) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 500;
+  const unsigned int n_timesteps = 300;
 
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
@@ -401,9 +401,11 @@ int main(int argc,char **args) {
     if( time_step > 0 )
       system.SetMgType(V_CYCLE);
 
+
+    system.CopySolutionToOldSolution();
+
     system.MLsolve();
 
-    system.UpdateSolution();
 
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
@@ -423,7 +425,8 @@ double SetVariableTimeStep(const double time) {
   }
   else if ( turek_FSI == 3 ){
     if	    ( time < 5. ) dt = 0.1;
-    else if ( time < 6. ) dt = 0.05;
+    else if ( time < 5.5 ) dt = 0.05;
+    else  if ( time < 6. ) dt = 0.025;
     else 		  dt = 0.01;
   }
   else if ( simulation == 3 ) dt=0.001;
@@ -474,7 +477,6 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,
     }
     else if(2==facename ){  //outflow
       test=0;
-      //    test=1;
       value=0.;
     }
     else if(3==facename ){  // no-slip fluid wall
@@ -497,7 +499,6 @@ bool SetBoundaryConditionTurek_2D_FSI_and_solid(const std::vector < double >& x,
     }
     else if(2==facename ){      //outflow
       test=0;
-      //    test=1;
       value=0.;
     }
     else if(3==facename ){      // no-slip fluid wall
