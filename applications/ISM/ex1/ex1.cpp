@@ -32,7 +32,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
- mlMsh.ReadCoarseMesh( "./input/square.neu", "seventh", scalingFactor );
+ mlMsh.ReadCoarseMesh( "./input/cubeHex.neu", "seventh", scalingFactor );
   
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   unsigned numberOfUniformLevels = 1;

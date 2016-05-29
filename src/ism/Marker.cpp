@@ -1262,11 +1262,22 @@ std::vector< double > Marker::InverseMappingHex(const unsigned &currentElem, con
         }
     }
 
-    std::vector < double > phi(nDofs);
-
-    double xi = x[0];
-    double eta = x[1];
-    double zita = x[2];
+    //initial guess
+    double xi = 0.;
+    double eta = 0.;
+    double zita = 0.;
+    
+     std::vector < double > phi(nDofs);
+     std::vector < std::vector < double > > gradPhi(nDofs);
+     std::vector < std::vector < std::vector < double > > > hessPhi(nDofs);
+     
+     for(int i = 0; i < nDofs; i++) {
+            gradPhi[i].resize(dim);
+            hessPhi[i].resize(dim);
+            for(int i1 = 0; i1 < dim; i1++) {
+                hessPhi[i][i1].resize(dim);
+            }
+     }
 
     phi[0] = 1.;
     phi[1] = xi;
@@ -1301,6 +1312,111 @@ std::vector< double > Marker::InverseMappingHex(const unsigned &currentElem, con
         phi[26] = phi[20] * phi[9]; // xx yy zz
     }
 
+    
+    //phi_x
+    gradPhi[0][0] = 0.; // 0
+    gradPhi[1][0] = 1.; // 1
+    gradPhi[2][0] = 0.; // 0
+    gradPhi[3][0] = 0.; // 0
+    gradPhi[4][0] = eta ; // y
+    gradPhi[5][0] = zita ; // z
+    gradPhi[6][0] = 0.; // 0
+    gradPhi[7][0] = phi[6];  //  y z
+    if(solutionType > 0) {
+        gradPhi[7][0] = 2 * xi;   // 2 x 
+        gradPhi[8][0] = 0.;   // 0
+        gradPhi[9][0] = 0.;   // 0
+        gradPhi[10][0] = phi[6];  // y z
+        gradPhi[11][0] = 2 * phi[4];  // 2 x y
+        gradPhi[12][0] = 2 * phi[5];  // 2 x z
+        gradPhi[13][0] = 0.;  // 0
+        gradPhi[14][0] = phi[8];  // yy
+        gradPhi[15][0] = phi[9];  // zz
+        gradPhi[16][0] = 0.;  // 0
+        gradPhi[17][0] = 2 * phi[10]; // 2 x y z
+        gradPhi[18][0] = phi[13]; //  yy z
+        gradPhi[19][0] = phi[16]; // y zz
+    }
+    if(solutionType > 1) {
+        gradPhi[20][0] = 2 * phi[14];  // 2 x yy
+        gradPhi[21][0] = 2 * phi[15];  // 2 x zz
+        gradPhi[22][0] = 0.;  // 0
+        gradPhi[23][0] = 2 * phi[19]; // 2 x y zz
+        gradPhi[24][0] = 2 * phi[18]; // 2 x yy z
+        gradPhi[25][0] = phi[22]; //  yy zz
+        gradPhi[26][0] = 2 * phi[25]; // 2 x yy zz
+    }
+    
+    
+    //phi_y
+    gradPhi[0][1] = 0.; // 0
+    gradPhi[1][1] = 0.;  // 0
+    gradPhi[2][1] = 1.; // 1
+    gradPhi[3][1] = 0.; // 0
+    gradPhi[4][1] = xi; // x 
+    gradPhi[5][1] = 0.; // 0
+    gradPhi[6][1] = zita; // z
+    gradPhi[7][1] = xi * zita;  // x z
+    if(solutionType > 0) {
+        gradPhi[7][1] = 0.;   // 0
+        gradPhi[8][1] = 2 * eta;   // 2 y
+        gradPhi[9][1] = 0.;   // 0
+        gradPhi[10][1] = phi[5];  // x z
+        gradPhi[11][1] = phi[7];  // xx 
+        gradPhi[12][1] = 0.;  // 0
+        gradPhi[13][1] = 2 * phi[6];  // 2 y z
+        gradPhi[14][1] = 2 * phi[4];  // 2 x y
+        gradPhi[15][1] = 0.;  // 0
+        gradPhi[16][1] = phi[9];  // zz
+        gradPhi[17][1] = phi[12]; // xx  z
+        gradPhi[18][1] = 2 * phi[10]; // 2 x y z
+        gradPhi[19][1] = phi[15]; // x zz
+    }
+    if(solutionType > 1) {
+        gradPhi[20][1] = 2 * phi[11];  // 2 xx y
+        gradPhi[21][1] = 0.;  // 0
+        gradPhi[22][1] = 2 * phi[16];  // 2 y zz
+        gradPhi[23][1] = phi[21]; // xx zz
+        gradPhi[24][1] = 2 * phi[17]; // 2 xx y z
+        gradPhi[25][1] = 2 * phi[19]; // 2 x y zz
+        gradPhi[26][1] = 2 * phi[23]; // 2 xx y zz
+    }
+    
+    
+    //phi_z
+    gradPhi[0][2] = 0.; // 0
+    gradPhi[1][2] = 0.; // 0
+    gradPhi[2][2] = 0.; // 0
+    gradPhi[3][2] = 1.; // 1
+    gradPhi[4][2] = 0.; // 0
+    gradPhi[5][2] = xi; // x 
+    gradPhi[6][2] = eta; // y 
+    gradPhi[7][2] = phi[4];  // x y 
+    if(solutionType > 0) {
+        gradPhi[7][2] = 0.;   // 0
+        gradPhi[8][2] = 0.;   // 0
+        gradPhi[9][2] = 2 * zita;   // 2 z
+        gradPhi[10][2] = phi[4];  // x y 
+        gradPhi[11][2] = 0.;  // 0
+        gradPhi[12][2] = phi[7];  // xx 
+        gradPhi[13][2] = phi[8];  // yy 
+        gradPhi[14][2] = 0.;  // 0
+        gradPhi[15][2] = 2 * phi[5];  // 2 x z
+        gradPhi[16][2] = 2 * phi[6];  // 2 y z
+        gradPhi[17][2] = phi[11]; // xx y 
+        gradPhi[18][2] = phi[14]; // x yy 
+        gradPhi[19][2] = 2 * phi[10]; // 2 x y z
+    }
+    if(solutionType > 1) {
+        gradPhi[20][2] = 0.;  // 0
+        gradPhi[21][2] = 2 * phi[12];  // 2 xx z
+        gradPhi[22][2] = 2 * phi[13];  // 2 yy z
+        gradPhi[23][2] = 2 * phi[17]; // 2 xx y z
+        gradPhi[24][2] = phi[20]; // xx yy 
+        gradPhi[25][2] = 2 * phi[18]; // 2 x yy z
+        gradPhi[26][2] = 2 * phi[24]; // 2 xx yy z
+    }
+    
     std::vector < double > xp(dim);
     for(int i = 0; i < nDofs; i++) {
         for(int k = 0; k < dim; k++) {
