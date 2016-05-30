@@ -47,7 +47,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 double InitalValueT(const std::vector < double >& x) {
-  return sin(x[0]);
+  return sin(0.1 * x[0]);
 };
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
