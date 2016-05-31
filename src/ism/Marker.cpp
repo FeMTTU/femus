@@ -1181,7 +1181,7 @@ std::vector< double > Marker::InverseMappingHex(const unsigned &currentElem, con
 
         }
     }
-    else if(solutionType == 1) { //questo non funziona quando si fanno i test
+    else if(solutionType == 1) { 
 
         for(int k = 0; k < dim; k++) {
 
@@ -1194,7 +1194,7 @@ std::vector< double > Marker::InverseMappingHex(const unsigned &currentElem, con
             a[k][2] = 0.125 * (xv[k][0] + 2 * xv[k][10] - 2 * xv[k][12] + 2 * xv[k][14] - 2 * xv[k][16] - 2 * xv[k][17] +
                                2 * xv[k][18] + xv[k][1] + 2 * xv[k][19] - xv[k][2] - xv[k][3] + xv[k][4] + xv[k][5] - xv[k][6] - xv[k][7] - 2 * xv[k][8]);
             a[k][3] = 0.125 * (xv[k][0] - 2 * xv[k][9] - 2 * xv[k][10] - 2 * xv[k][11] + 2 * xv[k][12] + 2 * xv[k][13] + 2 * xv[k][14] +
-                               2 * xv[k][15] + xv[k][1] + xv[k][2] + xv[k][3] - xv[k][4] - xv[k][5] - xv[k][6] - xv[k][7] - 2 * xv[k][10]);
+                               2 * xv[k][15] + xv[k][1] + xv[k][2] + xv[k][3] - xv[k][4] - xv[k][5] - xv[k][6] - xv[k][7] - 2 * xv[k][8]);
             a[k][4] = 0.25 * (xv[k][16] - xv[k][17] + xv[k][18] - xv[k][19]);
             a[k][5] = 0.25 * (- xv[k][9] + xv[k][11] + xv[k][13] - xv[k][15]);
             a[k][6] = 0.25 * (- xv[k][10] - xv[k][12] + xv[k][14] + xv[k][8]);
@@ -1266,6 +1266,10 @@ std::vector< double > Marker::InverseMappingHex(const unsigned &currentElem, con
     double xi = 0.;
     double eta = 0.;
     double zita = 0.;
+    
+     bool convergence = false;
+    std::cout << "xi = " << xi << " , " << "eta = " << eta << " , " << "zita = " << zita << std::endl;
+    while(!convergence) {
     
      std::vector < double > phi(nDofs);
      std::vector < std::vector < double > > gradPhi(nDofs);
@@ -1356,7 +1360,7 @@ std::vector< double > Marker::InverseMappingHex(const unsigned &currentElem, con
     gradPhi[4][1] = xi; // x 
     gradPhi[5][1] = 0.; // 0
     gradPhi[6][1] = zita; // z
-    gradPhi[7][1] = xi * zita;  // x z
+    gradPhi[7][1] = phi[5];  // x z
     if(solutionType > 0) {
         gradPhi[7][1] = 0.;   // 0
         gradPhi[8][1] = 2 * eta;   // 2 y
@@ -1417,13 +1421,302 @@ std::vector< double > Marker::InverseMappingHex(const unsigned &currentElem, con
         gradPhi[26][2] = 2 * phi[24]; // 2 xx yy z
     }
     
-    std::vector < double > xp(dim);
-    for(int i = 0; i < nDofs; i++) {
-        for(int k = 0; k < dim; k++) {
-            xp[k] += a[k][i] * phi[i];
-        }
+    
+    //phi_xx
+    hessPhi[0][0][0] = 0.; // 0
+    hessPhi[1][0][0] = 0.; // 0
+    hessPhi[2][0][0] = 0.; // 0
+    hessPhi[3][0][0] = 0.; // 0
+    hessPhi[4][0][0] = 0.; // 0
+    hessPhi[5][0][0] = 0.; // 0
+    hessPhi[6][0][0] = 0.; // 0
+    hessPhi[7][0][0] = 0.;  //  0
+    if(solutionType > 0) {
+        hessPhi[7][0][0] = 2.;   // 2  
+        hessPhi[8][0][0] = 0.;   // 0
+        hessPhi[9][0][0] = 0.;   // 0
+        hessPhi[10][0][0] = 0.;  // 0
+        hessPhi[11][0][0] = 2 * eta;  // 2 y
+        hessPhi[12][0][0] = 2 * zita;  // 2 z
+        hessPhi[13][0][0] = 0.;  // 0
+        hessPhi[14][0][0] = 0.;  // 0
+        hessPhi[15][0][0] = 0.;  // 0
+        hessPhi[16][0][0] = 0.;  // 0
+        hessPhi[17][0][0] = 2 * phi[6]; // 2 y z
+        hessPhi[18][0][0] = 0.; //  0
+        hessPhi[19][0][0] = 0.; // 0
     }
-    return xp;
+    if(solutionType > 1) {
+        hessPhi[20][0][0] = 2 * phi[8];  // 2 yy
+        hessPhi[21][0][0] = 2 * phi[9];  // 2 zz
+        hessPhi[22][0][0] = 0.;  // 0
+        hessPhi[23][0][0] = 2 * phi[16]; // 2  y zz
+        hessPhi[24][0][0] = 2 * phi[13]; // 2  yy z
+        hessPhi[25][0][0] = 0.; //  0
+        hessPhi[26][0][0] = 2 * phi[22]; // 2  yy zz
+    }
+    
+    
+    //phi_xy
+    hessPhi[0][1][0] = hessPhi[0][0][1] = 0.; // 0
+    hessPhi[1][1][0] = hessPhi[1][0][1] = 0.; // 0
+    hessPhi[2][1][0] = hessPhi[2][0][1] = 0.; // 0
+    hessPhi[3][1][0] = hessPhi[3][0][1] = 0.; // 0
+    hessPhi[4][1][0] = hessPhi[4][0][1] = 1.; // 1
+    hessPhi[5][1][0] = hessPhi[5][0][1] = 0.; // 0
+    hessPhi[6][1][0] = hessPhi[6][0][1] = 0.; // 0
+    hessPhi[7][1][0] = hessPhi[7][0][1] = zita;  // z
+    if(solutionType > 0) {
+        hessPhi[7][1][0] = hessPhi[7][0][1] = 0.;   // 0 
+        hessPhi[8][1][0] = hessPhi[8][0][1] = 0.;   // 0
+        hessPhi[9][1][0] = hessPhi[9][0][1] = 0.;   // 0
+        hessPhi[10][1][0] = hessPhi[10][0][1] = zita;  // z
+        hessPhi[11][1][0] = hessPhi[11][0][1] = 2 * xi;  // 2 x
+        hessPhi[12][1][0] = hessPhi[12][0][1] = 0.;  // 0.
+        hessPhi[13][1][0] = hessPhi[13][0][1] = 0.;  // 0
+        hessPhi[14][1][0] = hessPhi[14][0][1] = 2 * eta;  // 2 y
+        hessPhi[15][1][0] = hessPhi[15][0][1] = 0.;  // 0
+        hessPhi[16][1][0] = hessPhi[16][0][1] = 0.;  // 0
+        hessPhi[17][1][0] = hessPhi[17][0][1] = 2 * phi[5]; // 2 x z
+        hessPhi[18][1][0] = hessPhi[18][0][1] = 2 * phi[6]; //  2 y z
+        hessPhi[19][1][0] = hessPhi[19][0][1] = phi[9]; // zz
+    }
+    if(solutionType > 1) {
+        hessPhi[20][1][0] = hessPhi[20][0][1] = 4 * phi[4];  // 4 x y
+        hessPhi[21][1][0] = hessPhi[21][0][1] = 0.;  // 0
+        hessPhi[22][1][0] = hessPhi[22][0][1] = 0.;  // 0
+        hessPhi[23][1][0] = hessPhi[23][0][1] = 2 * phi[15]; // 2 x zz
+        hessPhi[24][1][0] = hessPhi[24][0][1] = 4 * phi[10]; // 4 x y z
+        hessPhi[25][1][0] = hessPhi[25][0][1] = 2 * phi[16]; //  2 y zz
+        hessPhi[26][1][0] = hessPhi[26][0][1] = 4 * phi[19]; // 4 x y zz
+    }
+    
+    
+    //phi_xz
+    hessPhi[0][2][0] = hessPhi[0][0][2] = 0.; // 0
+    hessPhi[1][2][0] = hessPhi[1][0][2] = 0.; // 0
+    hessPhi[2][2][0] = hessPhi[2][0][2] = 0.; // 0
+    hessPhi[3][2][0] = hessPhi[3][0][2] = 0.; // 0
+    hessPhi[4][2][0] = hessPhi[4][0][2] = 0.; // 0
+    hessPhi[5][2][0] = hessPhi[5][0][2] = 1.; // 1
+    hessPhi[6][2][0] = hessPhi[6][0][2] = 0.; // 0
+    hessPhi[7][2][0] = hessPhi[7][0][2] = eta;  //  y
+    if(solutionType > 0) {
+        hessPhi[7][2][0] = hessPhi[7][0][2] = 0.;   // 0 
+        hessPhi[8][2][0] = hessPhi[8][0][2] = 0.;   // 0
+        hessPhi[9][2][0] = hessPhi[9][0][2] = 0.;   // 0
+        hessPhi[10][2][0] = hessPhi[10][0][2] = eta;  // y 
+        hessPhi[11][2][0] = hessPhi[11][0][2] = 0.;  // 0
+        hessPhi[12][2][0] = hessPhi[12][0][2] = 2 * xi;  // 2 x 
+        hessPhi[13][2][0] = hessPhi[13][0][2] = 0.;  // 0
+        hessPhi[14][2][0] = hessPhi[14][0][2] = 0.;  // 0
+        hessPhi[15][2][0] = hessPhi[15][0][2] = 2 * zita;  // 2 z
+        hessPhi[16][2][0] = hessPhi[16][0][2] = 0.;  // 0
+        hessPhi[17][2][0] = hessPhi[17][0][2] = 2 * phi[4]; // 2 x y 
+        hessPhi[18][2][0] = hessPhi[18][0][2] = phi[8]; //  yy 
+        hessPhi[19][2][0] = hessPhi[19][0][2] = 2 * phi[6]; // 2 y z
+    }
+    if(solutionType > 1) {
+        hessPhi[20][2][0] = hessPhi[20][0][2] = 0.;  // 0
+        hessPhi[21][2][0] = hessPhi[21][0][2] = 4 * phi[5];  // 4 x z
+        hessPhi[22][2][0] = hessPhi[22][0][2] = 0.;  // 0
+        hessPhi[23][2][0] = hessPhi[23][0][2] = 4 * phi[10]; // 4 x y z
+        hessPhi[24][2][0] = hessPhi[24][0][2] = 2 * phi[14]; // 2 x yy 
+        hessPhi[25][2][0] = hessPhi[25][0][2] = 2 * phi[13]; //  2 yy z
+        hessPhi[26][2][0] = hessPhi[26][0][2] = 4 * phi[18]; // 4 x yy z
+    }
+    
+    
+    //phi_yy
+    hessPhi[0][1][1] = 0.; // 0
+    hessPhi[1][1][1] = 0.;  // 0
+    hessPhi[2][1][1] = 0.; // 0
+    hessPhi[3][1][1] = 0.; // 0
+    hessPhi[4][1][1] = 0.; // 0 
+    hessPhi[5][1][1] = 0.; // 0
+    hessPhi[6][1][1] = 0.; // 0
+    hessPhi[7][1][1] = 0.;  // 0
+    if(solutionType > 0) {
+        hessPhi[7][1][1] = 0.;   // 0
+        hessPhi[8][1][1] = 2.;   // 2 
+        hessPhi[9][1][1] = 0.;   // 0
+        hessPhi[10][1][1] = 0.;  // 0
+        hessPhi[11][1][1] = 0.;  // 0 
+        hessPhi[12][1][1] = 0.;  // 0
+        hessPhi[13][1][1] = 2 * zita;  // 2 z
+        hessPhi[14][1][1] = 2 * xi;  // 2 x 
+        hessPhi[15][1][1] = 0.;  // 0
+        hessPhi[16][1][1] = 0.;  // 0
+        hessPhi[17][1][1] = 0.; // 0
+        hessPhi[18][1][1] = 2 * phi[5]; // 2 x z
+        hessPhi[19][1][1] = 0.; // 0
+    }
+    if(solutionType > 1) {
+        hessPhi[20][1][1] = 2 * phi[7];  // 2 xx 
+        hessPhi[21][1][1] = 0.;  // 0
+        hessPhi[22][1][1] = 2 * phi[9];  // 2 zz
+        hessPhi[23][1][1] = 0.; // 0
+        hessPhi[24][1][1] = 2 * phi[12]; // 2 xx z
+        hessPhi[25][1][1] = 2 * phi[15]; // 2 x zz
+        hessPhi[26][1][1] = 2 * phi[21]; // 2 xx zz
+    }
+    
+    
+    //phi_yz
+    hessPhi[0][2][1] = hessPhi[0][1][2] = 0.; // 0
+    hessPhi[1][2][1] = hessPhi[1][1][2] = 0.;  // 0
+    hessPhi[2][2][1] = hessPhi[2][1][2] = 0.; // 0
+    hessPhi[3][2][1] = hessPhi[3][1][2] = 0.; // 0
+    hessPhi[4][2][1] = hessPhi[4][1][2] = 0.; // 0 
+    hessPhi[5][2][1] = hessPhi[5][1][2] = 0.; // 0
+    hessPhi[6][2][1] = hessPhi[6][1][2] = 1.; // 1
+    hessPhi[7][2][1] = hessPhi[7][1][2] = xi ;  // x 
+    if(solutionType > 0) {
+        hessPhi[7][2][1] = hessPhi[7][1][2] = 0.;   // 0
+        hessPhi[8][2][1] = hessPhi[8][1][2] = 0.;   // 0
+        hessPhi[9][2][1] = hessPhi[9][1][2] = 0.;   // 0
+        hessPhi[10][2][1] = hessPhi[10][1][2] = xi ;  // x 
+        hessPhi[11][2][1] = hessPhi[11][1][2] = 0.;  // 0 
+        hessPhi[12][2][1] = hessPhi[12][1][2] = 0.;  // 0
+        hessPhi[13][2][1] = hessPhi[13][1][2] = 2 * eta ;  // 2 y 
+        hessPhi[14][2][1] = hessPhi[14][1][2] = 0.;  // 0
+        hessPhi[15][2][1] = hessPhi[15][1][2] = 0.;  // 0
+        hessPhi[16][2][1] = hessPhi[16][1][2] = 2 * zita ;  // 2 z
+        hessPhi[17][2][1] = hessPhi[17][1][2] = phi[7]; // xx  
+        hessPhi[18][2][1] = hessPhi[18][1][2] = 2 * phi[4]; // 2 x y 
+        hessPhi[19][2][1] = hessPhi[19][1][2] = 2 * phi[5]; // 2 x z
+    }
+    if(solutionType > 1) {
+        hessPhi[20][2][1] = hessPhi[20][1][2] = 0.;  // 0
+        hessPhi[21][2][1] = hessPhi[21][1][2] = 0.;  // 0
+        hessPhi[22][2][1] = hessPhi[22][1][2] = 4 * phi[6];  // 4 y z
+        hessPhi[23][2][1] = hessPhi[23][1][2] = 2 * phi[12]; // 2 xx z
+        hessPhi[24][2][1] = hessPhi[24][1][2] = 2 * phi[11]; // 2 xx y 
+        hessPhi[25][2][1] = hessPhi[25][1][2] = 4 * phi[10]; // 4 x y z
+        hessPhi[26][2][1] = hessPhi[26][1][2] = 4 * phi[17]; // 4 xx y z
+    }
+    
+    
+    //phi_zz
+    hessPhi[0][2][2] = 0.; // 0
+    hessPhi[1][2][2] = 0.; // 0
+    hessPhi[2][2][2] = 0.; // 0
+    hessPhi[3][2][2] = 0.; // 0
+    hessPhi[4][2][2] = 0.; // 0
+    hessPhi[5][2][2] = 0.; // 0 
+    hessPhi[6][2][2] = 0.; // 0 
+    hessPhi[7][2][2] = 0.;  // 0 
+    if(solutionType > 0) {
+        hessPhi[7][2][2] = 0.;   // 0
+        hessPhi[8][2][2] = 0.;   // 0
+        hessPhi[9][2][2] = 2.;   // 2 
+        hessPhi[10][2][2] = 0.;  // 0
+        hessPhi[11][2][2] = 0.;  // 0
+        hessPhi[12][2][2] = 0.;  // 0 
+        hessPhi[13][2][2] = 0.;  // 0
+        hessPhi[14][2][2] = 0.;  // 0
+        hessPhi[15][2][2] = 2 * xi;  // 2 x 
+        hessPhi[16][2][2] = 2 * eta;  // 2 y 
+        hessPhi[17][2][2] = 0.; // 0
+        hessPhi[18][2][2] = 0.; // 0 
+        hessPhi[19][2][2] = 2 * phi[4]; // 2 x y
+    }
+    if(solutionType > 1) {
+        hessPhi[20][2][2] = 0.;  // 0
+        hessPhi[21][2][2] = 2 * phi[7];  // 2 xx 
+        hessPhi[22][2][2] = 2 * phi[8];  // 2 yy 
+        hessPhi[23][2][2] = 2 * phi[11]; // 2 xx y 
+        hessPhi[24][2][2] = 0.; // 0
+        hessPhi[25][2][2] = 2 * phi[14]; // 2 x yy 
+        hessPhi[26][2][2] = 2 * phi[20]; // 2 xx yy 
+    }
+    
+    
+        std::vector < double > xp(dim, 0.);
+        std::vector < std::vector < double > > gradXp(dim);
+        std::vector < std::vector < std::vector < double > > > hessXp(dim);
+
+        for(int k = 0; k < dim; k++) {
+            gradXp[k].assign(dim, 0.);
+            hessXp[k].resize(dim);
+            for(int i1 = 0; i1 < dim; i1++) {
+                hessXp[k][i1].assign(dim, 0.);
+            }
+        }
+
+        for(int k = 0; k < dim; k++) {
+            for(int i = 0; i < nDofs; i++) {
+                xp[k] += a[k][i] * phi[i];
+                for(int i1 = 0; i1 < dim; i1++) {
+                    gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
+                    for(int i2 = 0; i2 < dim; i2++) {
+                        hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
+                    }
+                }
+            }
+        }
+
+
+        std::vector < double > gradF(dim, 0.);
+        std::vector < std::vector < double > >  hessF(dim);
+
+        for(int i1 = 0; i1 < dim; i1++) {
+            hessF[i1].assign(dim, 0.);
+        }
+
+        for(int k = 0; k < dim; k++) {
+            for(int i1 = 0; i1 < dim; i1++) {
+                gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
+                for(int i2 = 0; i2 < dim; i2++) {
+                    hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
+                }
+            }
+        }
+
+        std::vector < std::vector < double > >  hessFm1(dim);
+        for(int i1 = 0; i1 < dim; i1++) {
+            hessFm1[i1].resize(dim);
+        }
+        
+        double det = ( hessF[0][0]*hessF[1][1]*hessF[2][2] + hessF[0][1]*hessF[1][2]*hessF[2][0] + hessF[0][2]*hessF[1][0]*hessF[2][1] )
+                     - ( hessF[2][0]*hessF[1][1]*hessF[0][2] + hessF[2][1]*hessF[1][2]*hessF[0][0] + hessF[2][2]*hessF[1][0]*hessF[0][1] ) ;
+
+        hessFm1[0][0] = (hessF[1][1]*hessF[2][2] - hessF[2][1]*hessF[1][2]) / det ;
+        hessFm1[0][1] = (hessF[0][2]*hessF[2][1] - hessF[2][2]*hessF[0][1]) / det ;
+	hessFm1[0][2] = (hessF[0][1]*hessF[1][2] - hessF[1][1]*hessF[0][2]) / det ;
+        hessFm1[1][0] = (hessF[1][2]*hessF[2][0] - hessF[2][2]*hessF[1][0]) / det ;
+        hessFm1[1][1] = (hessF[0][0]*hessF[2][2] - hessF[2][0]*hessF[0][2]) / det ;
+	hessFm1[1][2] = (hessF[0][2]*hessF[1][0] - hessF[0][0]*hessF[1][2]) / det ;
+	hessFm1[2][0] = (hessF[1][0]*hessF[2][1] - hessF[2][0]*hessF[1][1]) / det ;
+	hessFm1[2][1] = (hessF[0][1]*hessF[2][0] - hessF[2][1]*hessF[0][0]) / det ;
+	hessFm1[2][2] = (hessF[0][0]*hessF[1][1] - hessF[1][0]*hessF[0][1]) / det ;
+        
+	double dxi = hessFm1[0][0] * gradF[0] + hessFm1[0][1] * gradF[1] + hessFm1[0][2] * gradF[2];
+        double deta = hessFm1[1][0] * gradF[0] + hessFm1[1][1] * gradF[1] + hessFm1[1][2] * gradF[2];
+	double dzita = hessFm1[2][0] * gradF[0] + hessFm1[2][1] * gradF[1] + hessFm1[2][2] * gradF[2]; 
+
+        xi  -= dxi;
+        eta -= deta;
+	zita -= dzita;
+
+        if(dxi * dxi + deta * deta + dzita * dzita < 1.0e-6) {
+            convergence = true;
+            for(int k = 0; k < dim; k++) {
+                std::cout << xp[k] << " ";
+            }
+            std::cout << std::endl;
+        }
+
+        //std::cout << "xi = " << xi <<" , "<< "eta = " << eta << " , " << "zita= " << zita <<  std::endl;
+    }
+
+    std::vector <double> xcord(3, 0);
+    xcord[0] = xi;
+    xcord[1] = eta;
+    xcord[2] = zita;
+    
+    return xcord;
+    
 }
 
 
