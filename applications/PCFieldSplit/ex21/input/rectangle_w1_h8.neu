@@ -2,9 +2,9 @@
 ** GAMBIT NEUTRAL FILE
 default_id
 PROGRAM:                Gambit     VERSION:  2.3.16
-31 May 2016    20:15:18 
+31 May 2016    22:34:01 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
-       165        32         1         0         2         2
+       165        32         1         4         2         2
 ENDOFSECTION
    NODAL COORDINATES 2.3.16
          1  -5.00000000000e-01  -4.00000000000e+00
@@ -247,4 +247,52 @@ GROUP:          1 ELEMENTS:         32 MATERIAL:          2 NFLAGS:          1
       11      12      13      14      15      16      17      18      19      20
       21      22      23      24      25      26      27      28      29      30
       31      32
+ENDOFSECTION
+ BOUNDARY CONDITIONS 2.3.16
+                               1       1      16       0       6
+        31    2    4
+        29    2    4
+        27    2    4
+        25    2    4
+        23    2    4
+        21    2    4
+        19    2    4
+        17    2    4
+        15    2    4
+        13    2    4
+        11    2    4
+         9    2    4
+         7    2    4
+         5    2    4
+         3    2    4
+         1    2    4
+ENDOFSECTION
+ BOUNDARY CONDITIONS 2.3.16
+                               2       1      16       0       6
+         2    2    2
+         4    2    2
+         6    2    2
+         8    2    2
+        10    2    2
+        12    2    2
+        14    2    2
+        16    2    2
+        18    2    2
+        20    2    2
+        22    2    2
+        24    2    2
+        26    2    2
+        28    2    2
+        30    2    2
+        32    2    2
+ENDOFSECTION
+ BOUNDARY CONDITIONS 2.3.16
+                               3       1       2       0       6
+         1    2    1
+         2    2    1
+ENDOFSECTION
+ BOUNDARY CONDITIONS 2.3.16
+                               4       1       2       0       6
+        32    2    3
+        31    2    3
 ENDOFSECTION
