@@ -245,8 +245,8 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
-  system.SetIntervalTime(0.1);
-  unsigned n_timesteps = 6000;
+  system.SetIntervalTime(0.5);
+  unsigned n_timesteps = 4000;
 
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
