@@ -68,7 +68,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -255,7 +255,7 @@ int main(int argc, char** args) {
 
     system.MGsolve();
     system.CopySolutionToOldSolution();
-    if (time_step % 10 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+    if ((time_step + 1) % 5 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
   }
 
   mlMsh.PrintInfo();

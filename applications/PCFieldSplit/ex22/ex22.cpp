@@ -47,7 +47,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 double InitalValueT(const std::vector < double >& x) {
-  return sin(0.0 * x[0]);
+  return sin(4.0 * x[0]);
 };
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
@@ -246,7 +246,7 @@ int main(int argc, char** args) {
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
   system.SetIntervalTime(0.5);
-  unsigned n_timesteps = 300;
+  unsigned n_timesteps = 600;
 
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
@@ -255,7 +255,7 @@ int main(int argc, char** args) {
 
     system.MGsolve();
     system.CopySolutionToOldSolution();
-    if (time_step % 10 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+    if ((time_step + 1) % 5 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
   }
 
   mlMsh.PrintInfo();
@@ -531,7 +531,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       double alpha = 1.;
       double beta = 1.;//40000.;
 
-      double Pr = 7.1;
+      double Pr = 0.015;
       double Ra = 3000;
 
       double dt = mlPdeSys -> GetIntervalTime();
