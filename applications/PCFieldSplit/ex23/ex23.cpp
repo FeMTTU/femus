@@ -254,7 +254,7 @@ int main(int argc, char** args) {
   double kineticEnergy;
   double pointValue;
   char out_file[100]="";
-  strcpy(out_file,"residual_interation.dat");
+  strcpy(out_file,"KineticEnery.dat");
   ofstream outfile(out_file,ios::out|ios::trunc|ios::binary);
   
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
@@ -264,9 +264,8 @@ int main(int argc, char** args) {
     system.MGsolve();
     system.CopySolutionToOldSolution();
    
-    std::pair < double, double > norm = GetKineandPointVlaue(&mlSol) ;
-    norm.first = kineticEnergy;
-    norm.second = 0.0;
+    std::pair < double, double > out_value = GetKineandPointVlaue(&mlSol) ;
+    kineticEnergy = out_value.first;
     outfile << (time_step + 1) * dt   <<"  "<< kineticEnergy << std::endl; 
     if ((time_step + 1) % 5 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
   }
@@ -758,22 +757,24 @@ std::pair<double, double>GetKineandPointVlaue(MultiLevelSolution* mlSol){
         }
       }
       
-      for(unsigned  k = 0; k < dim; k++) kineticEnergy += solV_gss[k] * solV_gss[k];
+      for(unsigned  k = 0; k < dim; k++) kineticEnergy += solV_gss[k] * solV_gss[k] * weight;
+      
     } // end gauss point loop
   } // end element loop for each process
   // add the kinetic energy of all process
   
-  NumericVector* norm_vec;
-  norm_vec = NumericVector::build().release();
-  norm_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
-  norm_vec->set (iproc, kineticEnergy);
-  norm_vec->close();
-  kineticEnergy = norm_vec->l1_norm();
+  NumericVector* out_vec;
+  out_vec = NumericVector::build().release();
+  out_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
   
-  delete norm_vec;
+  out_vec->set (iproc, kineticEnergy);
+  out_vec->close();
+  kineticEnergy = out_vec->l1_norm();
   
-  std::pair < double, double > norm;
-  norm.first = kineticEnergy;
-  norm.second = 0.0;
-  return norm;
+  delete out_vec;
+  
+  std::pair < double, double > out_value;
+  out_value.first = kineticEnergy;
+  out_value.second = 0.0;
+  return out_value;
 }
