@@ -30,7 +30,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   value = 0.;
 
   if (!strcmp(SolName, "T")) {
-    if (facename == 2) {
+    if (facename == 2 ) {
       value = 1.;
     } else if (facename == 3) {
       dirichlet = false; //Neumann
@@ -61,7 +61,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 8;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -482,8 +482,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         double alpha = 1.;
         double beta = 1.;//40000.;
 	
-	double Pr = 1./10;
-        double Ra = 10000;
+	double Pr = 1.0;
+        double Ra = 3000;
 
         // *** phiT_i loop ***
         for (unsigned i = 0; i < nDofsT; i++) {

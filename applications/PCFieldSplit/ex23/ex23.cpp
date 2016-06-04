@@ -33,10 +33,10 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   value = 0.;
   if(!strcmp(SolName, "T")) {
     if(facename == 1) {
-      value = 0.5 * (1.0 - exp(-10.0 * time));
+      value = 0.0; //* (1.0 - exp(-10.0 * time));
     }
     else if(facename == 2) {
-      value = -0.5 * (1.0 - exp(-10.0 * time));
+      value = 1.0; //* (1.0 - exp(-10.0 * time));
     }
     else {
       dirichlet = false;
@@ -49,7 +49,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 double InitalValueT(const std::vector < double >& x) {
-  return sin(4.0 * x[0]);
+  return 0.0;//sin(4.0 * x[0]);
 };
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
@@ -65,7 +65,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/rectangle_w4_h1.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -254,7 +254,7 @@ int main(int argc, char** args) {
   double kineticEnergy;
   double pointValue;
   char out_file[100]="";
-  strcpy(out_file,"KineticEnery.dat");
+  strcpy(out_file,"KineticEnergy.dat");
   ofstream outfile(out_file,ios::out|ios::trunc|ios::binary);
   
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
@@ -267,7 +267,7 @@ int main(int argc, char** args) {
     std::pair < double, double > out_value = GetKineandPointVlaue(&mlSol) ;
     kineticEnergy = out_value.first;
     outfile << (time_step + 1) * dt   <<"  "<< kineticEnergy << std::endl; 
-    if ((time_step + 1) % 5 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+    if ((time_step + 1) % 20 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
   }
 
   mlMsh.PrintInfo();
@@ -543,7 +543,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       double alpha = 1.;
       double beta = 1.;//40000.;
 
-      double Pr = 0.015;
+      double Pr = 1.0;
       double Ra = 3000;
 
       double dt = mlPdeSys -> GetIntervalTime();
@@ -665,13 +665,14 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 }
 std::pair<double, double>GetKineandPointVlaue(MultiLevelSolution* mlSol){
 
-  unsigned level = mlSol->_mlMesh->GetNumberOfLevels() - 1u;
+  unsigned level = mlSol->_mlMesh->GetNumberOfLevels()-2u;
   //  extract pointers to the several objects that we are going to use
-  Mesh* msh = mlSol->_mlMesh->GetLevel(level); // pointer to the mesh (level)    
+  Mesh* msh = mlSol->_mlMesh->GetLevel(level); // pointer to the mesh (level) object 
+  elem* el = msh->el; // pointer to the elem object in msh (level)
   Solution* sol = mlSol -> GetSolutionLevel (level); //pointer to the solution (level) object 
   
   const unsigned dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1)); // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
   
   // reserve memory for the local standar vectors
@@ -680,8 +681,8 @@ std::pair<double, double>GetKineandPointVlaue(MultiLevelSolution* mlSol){
   vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
-  if(dim == 3) solVIndex[2] = mlSol->GetIndex("W");       // get the position of "W" in the ml_sol object
-  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "U"
+  if(dim == 3) solVIndex[2] = mlSol->GetIndex("W");	// get the position of "W" in the ml_sol object
+  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);	// get the finite element type for "U"
 
   vector < vector < double > >  solV(dim);    // local solution
   vector < vector < double > > coordX(dim);    // local coordinates
@@ -701,7 +702,7 @@ std::pair<double, double>GetKineandPointVlaue(MultiLevelSolution* mlSol){
   phiV_xx.reserve(maxSize * dim2);
   
   double weight; // gauss point weight
-  double kineticEnergy = 0; 
+  double kineticEnergy = 0.0; 
   
   // element loop: each process loops only on the elements that owns
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
