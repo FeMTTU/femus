@@ -403,7 +403,6 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
     short unsigned currentElementType = _mesh->GetElementType(currentElem);
 
     unsigned ifaceBound;
-
     if(dim == 2) ifaceBound = 1;
     else if(dim == 3) ifaceBound = _mesh->GetElementFaceNumber(currentElem);
 
@@ -565,7 +564,7 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
                                     break;
                                 }
                             }
-                            
+
                             else if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || check1 < 0) {
                                 if(lineIntersection == true) {
                                     std::cout << " the marker belongs to an edge of triangle " << itri << std::endl;
@@ -642,35 +641,33 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
             }
         }
 
-        else if( dim == 3) { //WARNING problema concettuale con questa search, vedi caso del WEDGE
-            for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
-	      
-	      std::cout << "modulus = " << modulus << std::endl;
+        else if( dim == 3) { //WARNING va modificata usando i midpoint degli edges
+            double iFaceModulus = 1.e10;
+            double jFaceModulus = 1.e10;
+            for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) { 
+                for(unsigned i = 0; i < _mesh->GetElementFaceDofNumber(currentElem, iface, 0); i++) { // loop on the midpoints of each face
+		    unsigned iNode = _mesh->GetLocalFaceVertexIndex(currentElem, iface, _mesh->GetElementFaceNumber(currentElem) + i);
+                    unsigned iDof = _mesh->GetSolutionDof(iNode, currentElem, 2);
+                    double distanceNodes = 0;
+                    for(unsigned k = 0; k < dim; k++) {
+                        double dkNodes = (*_mesh->_topology->_Sol[k])(iDof) - _x[k];     // global extraction and local storage for the element coordinates
+                        distanceNodes += dkNodes * dkNodes;
+                    }
 
-                unsigned faceNodeNumber = _mesh->GetElementFaceDofNumber(currentElem, iface, 2);
-                unsigned i = _mesh->GetLocalFaceVertexIndex(currentElem, iface, faceNodeNumber - 1); //central node of face iface
-                //std::cout << faceNodeNumber-1 <<" "<<i << " ";
-
-                unsigned faceCentralDof = _mesh->GetSolutionDof(i, currentElem, 2);
-
-                //std::cout << "faceCentralDof =" << faceCentralDof << std::endl;
-                double distance2 = 0;
-                for(unsigned k = 0; k < dim; k++) {
-                    // std::cout << (*_mesh->_topology->_Sol[k])(faceCentralDof)  << " ";
-                    double dk = (*_mesh->_topology->_Sol[k])(faceCentralDof) - _x[k];     // global extraction and local storage for the element coordinates
-                    distance2 += dk * dk;
+                    double iNodeModulus = sqrt(distanceNodes);
+                    if(iNodeModulus < modulus) {
+                        modulus = iNodeModulus;
+                        iFaceModulus = modulus;
+                    }
                 }
-                //std::cout << std::endl;
-                double ifaceModulus = sqrt(distance2);
+                modulus = 1.e10;
 
-                 std::cout << "faceCentralDof =" <<  faceCentralDof << " , " << "ifaceModulus= " << ifaceModulus << std::endl;
-
-                if(ifaceModulus < modulus) {
+		if(iFaceModulus < jFaceModulus) {
                     int jel = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
-                     std::cout << "jel = " << jel << " , " << "iface = " << iface <<  std::endl;
+                    std::cout << "jel = " << jel << " , " << "iface = " << iface <<  std::endl;
                     if(jel != previousElem) {
                         nextElem = jel;
-                        modulus = ifaceModulus;
+                        jFaceModulus = iFaceModulus;
                     }
                 }
             }
@@ -916,11 +913,11 @@ unsigned Marker::GetNextElement3D(const unsigned &dim, const unsigned &currentEl
 //                 unsigned j = _mesh->GetLocalFaceVertexIndex(currentElem, iface, i);
 //                 unsigned iDof = _mesh->GetSolutionDof(j, currentElem, 2);
 
-                //  for(unsigned k = 0; k < dim; k++) {
-                //std::cout << (*_mesh->_topology->_Sol[k])(iDof)  << " ";
-                // xg[k] += 1. / 3.*(*_mesh->_topology->_Sol[k])(iDof); ///COS 'E' QUESTO ??
-                //  }
-                //std::cout << std::endl;
+            //  for(unsigned k = 0; k < dim; k++) {
+            //std::cout << (*_mesh->_topology->_Sol[k])(iDof)  << " ";
+            // xg[k] += 1. / 3.*(*_mesh->_topology->_Sol[k])(iDof); ///COS 'E' QUESTO ??
+            //  }
+            //std::cout << std::endl;
             //}
             // std::cout << "xg= " << xg[0] << " " << xg[1] << " " << xg[2] << std::endl;
 
