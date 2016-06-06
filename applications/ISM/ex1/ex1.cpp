@@ -45,7 +45,7 @@ int main(int argc, char** args) {
     4 = TRI
      */
     
-    int elementType = 3; // this decides what elements to test
+    int elementType = 2; // this decides what elements to test
 
     switch(elementType) {
     case 3: // QUAD
@@ -233,7 +233,7 @@ int main(int argc, char** args) {
 
 //NOTE Tests ran with 2 procs
 //Test 1 (HEX):
-        x[0]=-0.3;  //  point 1409 shared by element 97,112 (proc 2) and 45 and 55 (proc 1) It says the marker is on element 45, yes!
+        x[0]=-0.3;  //  point 98 shared by element 97,112 (proc 2) and 45 and 55 (proc 1) It says the marker is on element 45, yes!
         x[1]=0.1; //
         x[2]=0.5;
 
@@ -375,9 +375,9 @@ break;
 
 //NOTE Tests ran with 2 procs
 //Test 1 (WEDGE):
-        x[0] = -0.5;
-        x[1] = 0.;
-        x[2] = 0.;
+        x[0] = 0.1630658; //point 1134 //WARNING c'e' un problema con il next element per il wedge dal 25 dovrebbe andare nel 20 ma non va
+        x[1] = 0.2632687;
+        x[2] = 0.0000001;
 
 	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a1WEDGE( x, VOLUME, mlMsh.GetLevel(0), true );
