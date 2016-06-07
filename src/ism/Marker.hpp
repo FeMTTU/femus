@@ -63,7 +63,7 @@ namespace femus {
     
     unsigned GetNextElement2D(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
     unsigned GetNextElement3D(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
-    unsigned GetNextElement(const unsigned &iel,  const unsigned &kel);
+    unsigned GetNextElement(std::vector <int> &elementsChecked, const unsigned &iel,  const unsigned &kel);
     
     std::vector < double > _x;
     MarkerType _markerType;

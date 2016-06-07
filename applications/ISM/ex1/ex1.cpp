@@ -375,9 +375,9 @@ break;
 
 //NOTE Tests ran with 2 procs
 //Test 1 (WEDGE):
-        x[0] = 0.1630658; //point 1134 //WARNING c'e' un problema con il next element per il wedge dal 25 dovrebbe andare nel 20 ma non va
-        x[1] = 0.2632687;
-        x[2] = 0.0000001;
+        x[0] = 0.0815329; //element 10
+        x[1] = 0.23; 
+        x[2] = 0.;
 
 	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a1WEDGE( x, VOLUME, mlMsh.GetLevel(0), true );
@@ -386,9 +386,9 @@ break;
         std::cout << " The marker type is " <<  a1WEDGE.GetMarkerType() <<std::endl;
 
 //Test 2 (WEDGE):
-        x[0] = 0.;
-        x[1] = 0.;
-        x[2] = 0.001;
+        x[0] = 0.36; // if z =5 is in element 59
+        x[1] = 1.4;
+        x[2] = 6.;
 
 	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a2WEDGE( x, VOLUME, mlMsh.GetLevel(0), true );
