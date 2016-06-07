@@ -388,7 +388,7 @@ break;
 //Test 2 (WEDGE):
         x[0] = 0.36; // if z =5 is in element 59
         x[1] = 1.4;
-        x[2] = 6.;
+        x[2] = 5.;
 
 	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a2WEDGE( x, VOLUME, mlMsh.GetLevel(0), true );
