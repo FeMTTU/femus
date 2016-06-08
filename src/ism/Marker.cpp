@@ -480,7 +480,7 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
             std::cout << "A= " << A << " , " <<"B= " << B << " , " << "C = " << C << " , " <<std::endl;
 
             double tBottom = (A*xc[0] + B*xc[1] + C*xc[2]);
-            double tTop = A*(xv[0][0]-xc[0]) + B*(xv[1][0]-xc[1]) + C*(xv[2][0]-xc[2]);
+            double tTop = A*xv[0][0] + B*xv[1][0] + C*xv[2][0];
 
             if(fabs(tBottom) < epsilon && tTop != 0) {
                 // std::cout << "The plane of face" << itri << "does not intersect the line" <<std::endl;
@@ -490,16 +490,16 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
             else {
                 //now let's find the coordinates of the intersection point r
                 double t = tTop / tBottom ; //WARNING aggiustare problemi con i valori di t
-                std::cout<< "1 + t = " << (1+t) <<std::endl;
+                std::cout<< "t = " << t <<std::endl;
 
                 for(unsigned k = 0; k < dim; k++) {
-                    r[k] = (1+t) * xc[k];
+                    r[k] = t * xc[k];
                     std::cout << "r[" << k << "] = " << r[k] <<std::endl;
                 }
 
                 double currentModulusR = r[0]*r[0] + r[1]*r[1] + r[2]*r[2];
 
-                if (fabs(1+t) < 1 ) {  //if not, it means the point r is farther away from the marker, and we don't want to go in that direction
+                if (t <= 1) {  //if not, it means the point r is farther away from the marker, and we don't want to go in that direction
 		  
 		  std::cout<< "ITRI is RELEVANT" << std::endl;
 
