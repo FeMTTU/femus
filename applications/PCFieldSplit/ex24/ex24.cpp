@@ -70,7 +70,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -247,9 +247,9 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
-  double dt = 0.1;
+  double dt = 0.05;
   system.SetIntervalTime(dt);
-  unsigned n_timesteps = 6000;
+  unsigned n_timesteps = 16000;
   
   double kineticEnergy;
   char out_file[100]="";
@@ -276,11 +276,11 @@ int main(int argc, char** args) {
     kineticEnergy = out_value.first;
 	ptCoord = out_value.second;
 
-    outfile << (time_step + 1) * dt <<"  "<< kineticEnergy << std::endl; 
-	outfile1 << (time_step + 1) * dt <<"  "<< ptCoord[1] << std::endl;
-	outfile2 << (time_step + 1) * dt <<"  "<< ptCoord[2] << std::endl;
+    outfile << (time_step + 1) * dt <<"  "<< sqrt(kineticEnergy/2.0/8.0) << std::endl; 
+	outfile1 << (time_step + 1) * dt <<"  "<< ptCoord[0] << std::endl;
+	outfile2 << (time_step + 1) * dt <<"  "<< ptCoord[1] << std::endl;
 
-    if ((time_step + 1) % 50 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+    if ((time_step + 1) % 100 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
   }
 
   mlMsh.PrintInfo();
@@ -420,6 +420,11 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   if(assembleMatrix)
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
+/*
+ // test by guoyi 
+ unsigned recordCoord =0;
+ // test by guoyi 
+*/
   // element loop: each process loops only on the elements that owns
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -493,6 +498,22 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       }
     }
 
+/*
+// test the output by guoyi
+	adept::adouble ptUCoord = 0.0;
+	adept::adouble ptVCoord = 0.0;
+	if (recordCoord == 0){
+		for(unsigned i = 0; i < nDofsX; i++) {
+			if (fabs(coordX[0][i] + 0.3125) < 1.0e-6 && fabs(coordX[1][i] - 3.375) < 1.0e-6) {
+				ptUCoord = solV[0][i];
+				ptVCoord = solV[1][i];
+				recordCoord = 1;
+std:: cout << "aaaaa first U "  << " "  << ptUCoord << "bbbbbb first V "  << "  " << ptVCoord <<std:: endl;
+			}
+		}
+	}
+// test the output by guoyi
+*/
 
     // start a new recording of all the operations involving adept::adouble variables
     if(assembleMatrix) s.new_recording();
@@ -754,7 +775,7 @@ std::pair <double, vector <double> >GetKineandPointVlaue(MultiLevelSolution* mlS
 
 	if (recordCoord == 0){
 		for(unsigned i = 0; i < nDofsX; i++) {
-			if (fabs(coordX[0][i] + 0.3125) < 1.0e-6 && fabs(coordX[1][i] - 6.875) < 1.0e-6) {
+			if (fabs(coordX[0][i] + 0.3125) < 1.0e-6 && fabs(coordX[1][i] - 3.375) < 1.0e-6) {
 				ptUCoord = solV[0][i];
 				ptVCoord = solV[1][i];
 				recordCoord = 1;
