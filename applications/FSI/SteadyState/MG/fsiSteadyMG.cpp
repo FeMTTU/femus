@@ -111,7 +111,7 @@ int main(int argc,char **args) {
   std::string infile;
 
   if(1 == simulation){
-    infile = "./input/turek_FSI1_tri_Sara2.neu";
+    infile = "./input/turek_Sara.neu";
   }
   else if(2 == simulation){
     infile = "./input/beam.neu";
