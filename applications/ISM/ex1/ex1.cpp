@@ -233,7 +233,7 @@ int main(int argc, char** args) {
 
 //NOTE Tests ran with 2 procs
 //Test 1 (HEX):
-        x[0]=-0.3;  //  point 98 shared by element 97,112 (proc 2) and 45 and 55 (proc 1) It says the marker is on element 45, yes!
+        x[0]=-0.3;  //  point 98 shared by element 97,112 (proc 1) and 45 and 55 (proc 0). Proc 1 says the marker is in 45, proc 1 says it is is 112.
         x[1]=0.1; //
         x[2]=0.5;
 
@@ -243,7 +243,7 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a1HEX.GetMarkerType() <<std::endl;
 
-//Test 2 (HEX): the marker is on the midpoint of an edge of element 60 (the trick was that the intersection point was actually ON a midpoint of an edge)
+//Test 2 (HEX): the marker is on the midpoint of an edge of element 60 
         x[0]=-0.5;
         x[1]=0.5;
         x[2]=0.;
