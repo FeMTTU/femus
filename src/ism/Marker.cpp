@@ -18,6 +18,7 @@
 //----------------------------------------------------------------------------
 #include "Marker.hpp"
 #include "NumericVector.hpp"
+#include <math.h>
 
 const unsigned facePointNumber[6] = {0, 0, 0, 9, 7, 0};
 
@@ -408,7 +409,7 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
     bool markerIsInElement = false;
     bool nextElementFound = false;
     short unsigned currentElementType = _mesh->GetElementType(currentElem);
-    double epsilon  = 10e-10;
+    double epsilon  = 10.e-10;
     double epsilon2  = epsilon * epsilon;
     double t;
 
@@ -517,14 +518,19 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
 
                         double  scalarProduct = q0 * A + q1 * B + q2 * C;
 
-                        //  std::cout << "scalarProduct = " << scalarProduct << std::endl;
-
-                        if(scalarProduct > 0) {
+                        std::cout << "fabs(scalarProduct) = " << fabs(scalarProduct) << std::endl;
+			
+                        if(scalarProduct > epsilon) {
                             std::cout << "r is outside triangle " << itri <<  std::endl;
                             break;
 
                         }
                         else if(fabs(scalarProduct) < epsilon) {  //scalarProduct == 0
+			  
+			  double SUCA1 = xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i];
+			  double SUCA2 = xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1];
+			  
+			  std::cout << "SUCA1 = " << SUCA1 << " , " << "SUCA2 = " << SUCA2 << std::endl;
 
                             if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
                                     (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
@@ -566,6 +572,7 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
                             }
                         }
                         else if(scalarProduct < 0) {
+			    std::cout <<" scalarProduct = " << scalarProduct << std::endl;
                             scalarCount++;
                         }
                     } // closes the for loop
