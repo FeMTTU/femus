@@ -45,7 +45,7 @@ int main(int argc, char** args) {
     4 = TRI
      */
     
-    int elementType = 2; // this decides what elements to test
+    int elementType = 0; // this decides what elements to test
 
     switch(elementType) {
     case 3: // QUAD

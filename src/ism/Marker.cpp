@@ -413,6 +413,9 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
     double t;
 
     for(unsigned iface = 0; iface <_mesh->GetElementFaceNumber(currentElem); iface++) {
+
+        std::cout<< "iface = " << iface << std::endl;
+
         for(unsigned itri = 0; itri < trianglesPerFace[currentElementType][iface]; itri ++) {
 
             std::cout<<"itri = " <<itri <<std::endl;
@@ -429,7 +432,7 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
 
             for(unsigned k = 0; k < dim; k++) {
                 xc[k] = (*_mesh->_topology->_Sol[k])(centralNodeDof) - _x[k];    // coordinates are translated so that the marker is the new origin
-                std::cout << "xc[" << k << "]= " <<xc[k] <<std::endl;
+                //std::cout << "xc[" << k << "]= " <<xc[k] <<std::endl;
             }
 
             unsigned scalarCount = 0;
@@ -446,7 +449,7 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
 
             for(unsigned i = 0; i < 4; i++) {
                 unsigned itriDof  = _mesh->GetSolutionDof(faceTriangleNodes[currentElementType][iface][itri][i], currentElem, 2);
-                std::cout << "itriDof = " << itriDof << std::endl;
+                //std::cout << "itriDof = " << itriDof << std::endl;
                 for(unsigned k = 0; k < dim; k++) {
                     xv[k][i] = (*_mesh->_topology->_Sol[k])(itriDof) - _x[k];     // coordinates are translated so that the marker is the new origin
                 }
@@ -476,7 +479,7 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
             double B = -(xv[2][2] - xv[2][0]) * (xv[0][1] - xv[0][0]) + (xv[0][2] - xv[0][0]) * (xv[2][1] - xv[2][0]);
             double C = -(xv[0][2] - xv[0][0]) * (xv[1][1] - xv[1][0]) + (xv[1][2] - xv[1][0]) * (xv[0][1] - xv[0][0]);
 
-            std::cout << "A= " << A << " , " <<"B= " << B << " , " << "C = " << C << " , " <<std::endl;
+            // std::cout << "A= " << A << " , " <<"B= " << B << " , " << "C = " << C << " , " <<std::endl;
 
             double tBottom = (A*xc[0] + B*xc[1] + C*xc[2]);
             double tTop = A*xv[0][0] + B*xv[1][0] + C*xv[2][0];
@@ -493,7 +496,7 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
 
                 for(unsigned k = 0; k < dim; k++) {
                     r[k] = t * xc[k];
-                    std::cout << "r[" << k << "] = " << r[k] <<std::endl;
+                    // std::cout << "r[" << k << "] = " << r[k] <<std::endl;
                 }
 
                 if (t < 1) {  //if not, it means the point r is farther away from the marker, and we don't want to go in that direction
@@ -528,12 +531,13 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
                             if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
                                     (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
                                 std::cout << " intersection on a vertex of itri" << std::endl;
-                                if( t < 0 ) { //this means the marker is on one of the faces
+                                if( t <= 0 ) { //this means the marker is on one of the faces
                                     std::cout<<"setting markerIsInElement = true because the marker is on one of the faces of triangle " << itri << std::endl;
                                     markerIsInElement = true;
                                     break;
                                 }
                                 else {
+                                    std::cout << "r is in triangle " << itri << std::endl;
                                     nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
                                     nextElementFound = true;
                                     break;
@@ -544,12 +548,13 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
 
                             else if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
                                 std::cout << " intersection on a vertex of itri" << std::endl;
-                                if( t < 0 ) { //this means the marker is on one of the faces
+                                if( t <= 0 ) { //this means the marker is on one of the faces
                                     std::cout<<"setting markerIsInElement = true because the marker is on one of VERTICES of triangle " << itri << std::endl;
                                     markerIsInElement = true;
                                     break;
                                 }
                                 else {
+                                    std::cout << "r is in triangle " << itri << std::endl;
                                     nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
                                     nextElementFound = true;
                                     break;
@@ -565,12 +570,13 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
 
 
             if(scalarCount == 3) {
-                if( t < 0 ) { //this means the marker is on one of the faces
-                    std::cout<<"setting markerIsInElement = true because the marker is on  triangle " << itri << std::endl;
+                if( t <= 0 ) { //this means the marker is on one of the faces
+                    std::cout<<"setting markerIsInElement = true because the marker is on triangle " << itri << std::endl;
                     markerIsInElement = true;
                     break;
                 }
                 else {
+                    std::cout << "r is in triangle " << itri << std::endl;
                     nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
                     nextElementFound = true;
                     break;
@@ -597,9 +603,17 @@ unsigned Marker::GetNextElement(const unsigned &currentElem, const unsigned &pre
 
     if(markerIsInElement == true) {
         nextElem = currentElem;
+        std::cout << "The marker belongs to element " << currentElem << std::endl;
     }
-  
-    return nextElem;
+
+    if(nextElementFound == true) {
+        std::cout << "The marker does not belong to element " << currentElem << std::endl;
+    }
+
+
+    std::cout << "nextElem = " << nextElem << std::endl;
+
+    return (nextElem >= 0) ? nextElem : UINT_MAX;
 
 //     unsigned dim = _mesh->GetDimension();
 //     int nextElem ;
