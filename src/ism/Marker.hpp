@@ -60,11 +60,11 @@ namespace femus {
     std::vector< double > InverseMappingTet(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
     std::vector< double > InverseMappingWedge(const unsigned &currentElem, const unsigned &solutionType, std::vector< double > &x);
     
-    
-    unsigned GetNextElement2D(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
-    unsigned GetNextElement3D(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
-    unsigned GetNextElement(const unsigned &iel,  const unsigned &kel);
-    
+    unsigned GetNextElement2D(const unsigned &iel,  const unsigned &kel);
+    unsigned GetNextElement3D(const unsigned &iel,  const unsigned &kel);
+    unsigned GetNextElement2DOLD(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
+    unsigned GetNextElement3DOLD(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
+       
     std::vector < double > _x;
     MarkerType _markerType;
     const Mesh * _mesh;
