@@ -57,11 +57,11 @@ int main(int argc, char** args) {
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
         mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
-//Test 1 (QUAD): the marker is just a little bit BELOW an horizontal edge
-        x[0]=0.33375;  //the marker is outside the mesh
-        x[1]=-0.062500000001; //if the y was -0.625 then it is on the lower edge of element 1
+	//NOTE tests ran with 4 procs
+//Test 1 (QUAD): 
+        x[0]=0.33375;  //the marker is in element 117 (proc 1)
+        x[1]=-0.0627; 
         x[2]=0.;
-//WARNING With more than 7 zeros the marker is considered to be ON the edge and so it would belong to element 1 anyways.
 
         std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
 	Marker a1QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
@@ -70,11 +70,10 @@ int main(int argc, char** args) {
         std::cout << " The marker type is " <<  a1QUAD.GetMarkerType() <<std::endl;
 	
 
-//Test 2 (QUAD): the marker is just a little bit ABOVE an horizontal edge
-        x[0]=0.33375;  //the marker is inside the mesh (of square.neu), it is in element 1
-        x[1]=-0.062499999999; //if the y was -0.625 then it is on the lower edge of element 1,
+//Test 2 (QUAD): 
+        x[0]=-0.0625;  //the marker is in element 246 (proc 3)
+        x[1]=-0.09375; 
         x[2]=0.;
-// WARNING With more than 9 nines the code thinks the marker is actually ON the edge.
 
         std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
 	Marker a2QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
@@ -82,13 +81,10 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a2QUAD.GetMarkerType() <<std::endl;
 
-//Test 3 (QUAD): the marker is just a little bit to the LEFT of a vertical edge
-        x[0]=0.3124999999999;  //the marker is on element 0
-        x[1]=-0.05555555; // if the x is 0.3125 then it is on the vertical edge of element 1
-        x[2]=0.; //
-// WARNING With more than 8 nines the code considers the marker to be ON the edge and so it is considered to be on element 0
-// only because that edge appears first in element 0 than in element 1.
-// In this case it is ok because the element numbers increase from left to right.
+//Test 3 (QUAD): 
+        x[0]=0;  //the marker is shared by 4 elements, each one in a different proc
+        x[1]=0.0625; 
+        x[2]=0.; 
 
         std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a3QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
@@ -96,12 +92,11 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a3QUAD.GetMarkerType() <<std::endl;
 
-//Test 4 (QUAD): the marker is just a little bit to the RIGHT of a vertical edge
-        x[0]=0.312500000001;  //the marker is on element 1
-        x[1]=-0.05555555; // if the x is 0.3125 then it is on the vertical edge of element 1
+//Test 4 (QUAD): 
+        x[0]=0.4377;  //the marker is on element 63, it is on the boundary of the domain
+        x[1]=0.5; 
         x[2]=0.;
-// WARNING With more than 7 zeros the marker is considered to be ON the vertical edge, which belongs first to element 0
-// this is why it is considered to be on element 0 instead of on element 1.
+
 
         std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
 	Marker a4QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
@@ -132,7 +127,7 @@ int main(int argc, char** args) {
         std::cout << " The marker type is " <<  a6QUAD.GetMarkerType() <<std::endl;
 
 // Test 7 (QUAD): the marker is on element 35 but the y coordinate is the same as the MIDPOINT of the RIGHT edge of element 35
-        x[0]=0.23; //element 203, 204, 219 and 220 in serial
+        x[0]=0.23; 
         x[1]=0.28125;
         x[2]=0.;
 

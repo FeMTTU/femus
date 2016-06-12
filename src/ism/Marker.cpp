@@ -325,9 +325,10 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
         xv[k].resize(facePointNumber[currentElementType]);
     }
     for(unsigned i = 0; i < facePointNumber[currentElementType]; i++) {
-        unsigned ielDof  = _mesh->GetSolutionDof(facePoints[currentElementType][i], currentElem, 2);
+        unsigned inodeDof  = _mesh->GetSolutionDof(facePoints[currentElementType][i], currentElem, 2);
+        std::cout << "inodeDof = " << inodeDof << std::endl;
         for(unsigned k = 0; k < dim; k++) {
-            xv[k][i] = (*_mesh->_topology->_Sol[k])(ielDof) - _x[k];
+            xv[k][i] = (*_mesh->_topology->_Sol[k])(inodeDof) - _x[k];
         }
     }
 
@@ -342,6 +343,7 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
     }
 
     length /= facePointNumber[currentElementType];
+    std::cout << "length= " << length << std::endl;
 
     for(unsigned k = 0; k < dim; k++) {
         xc[k] /= length;
@@ -352,14 +354,15 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
 
     for(unsigned i=0 ; i < facePointNumber[currentElementType] - 1; i++) {
 
-        // let's find the plane passing through the points xv[][i], xv[][i+1] and xv[][2] = xv[][i] but with z = 1.
+        // let's find the plane passing through the points xv[][i], xv[][i+1] and xv[][2] = xv[][i] but with z = length .
         double A =  (xv[1][i+1] - xv[1][i]);
         double B = -(xv[0][i+1] - xv[0][i]);
 
-        // std::cout << "A= " << A << " , " <<"B= " << B <<std::endl;
+        //std::cout << "A= " << A << " , " <<"B= " << B <<std::endl;
 
         double tBottom = (A*xc[0] + B*xc[1]) ;
         double tTop = A*xv[0][i] + B*xv[1][i];
+        std::cout << "tBottom = " << tBottom << " , " << "A= " << A << " , " <<  "B= " << B << " , " << "xv[1]["<< i << "] =" << xv[1][i] << " , " <<  "tTop = " <<   tTop << std::endl;
 
         if(fabs(tBottom) < epsilon && tTop != 0) {
             // std::cout << "The plane of edge " << i << "does not intersect the line" <<std::endl;
@@ -372,21 +375,29 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
 
             for(unsigned k = 0; k < dim; k++) {
                 r[k] = t * xc[k];
-                 std::cout << "r[" << k << "] = " << r[k] <<std::endl;
+                //std::cout << "r[" << k << "] = " << r[k] <<std::endl;
             }
 
             if (t < 1) {  //if not, it means the point r is farther away from the marker, and we don't want to go in that direction
 
+	        std::vector< std::vector < double > > xvr(dim);
+                for(unsigned k = 0; k < dim; k++) {
+                    xvr[k].reserve(9);
+                }
+                for(unsigned k = 0; k < dim; k++) {
+                    xvr[k].resize(facePointNumber[currentElementType]);
+                }
+
                 //now we have to determine if r is inside edge i
                 for(unsigned j = 0; j < facePointNumber[currentElementType]; j++) {
                     for(unsigned k = 0; k < dim; k++) {
-                        xv[k][j] = xv[k][j] - r[k];     //transate again the reference frame so that the origin is r
+                        xvr[k][j] = xv[k][j] - r[k];     //transate again the reference frame so that the origin is r
                     }
                 }
 
 
-                if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i]) < epsilon2 ||
-                        (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1]) < epsilon2) {
+                if((xvr[0][i] * xvr[0][i]  + xvr[1][i] * xvr[1][i]) < epsilon2 ||
+                        (xvr[0][i + 1]*xvr[0][i + 1] + xvr[1][i + 1]*xvr[1][i + 1]) < epsilon2) {
                     std::cout << "intersection on a vertex of the edge" << std::endl;
                     if( fabs(t) < epsilon || t < 0 ) { //this means the marker is on one of the edges
 
@@ -397,7 +408,11 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
                         break;
                     }
                     else {
-                        nextElem = (_mesh->el->GetFaceElementIndex(currentElem, i) - 1);
+		        unsigned nodeIndex;
+			if(i % 2 == 0 && i != facePointNumber[currentElementType]) nodeIndex = i / 2 ;
+			else if(i == facePointNumber[currentElementType]) nodeIndex = (i-2) / 2 ;
+			else if(i % 2 != 0) nodeIndex = (i-1) / 2 ;
+                        nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
                         nextElementFound = true;
                         break;
                     }
@@ -405,7 +420,7 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
                 }
 
 
-                else if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 ) {
+                else if(xvr[0][i]*xvr[0][i + 1] < 0 || xvr[1][i]*xvr[1][i + 1] < 0 ) {
                     std::cout << "intersection on an edge" << std::endl;
                     if( fabs(t) < epsilon || t < 0 ) { //this means the marker is on one of the edges
 
@@ -416,7 +431,11 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
                         break;
                     }
                     else {
-                        nextElem = (_mesh->el->GetFaceElementIndex(currentElem, i) - 1);
+                        unsigned nodeIndex;
+			if(i % 2 == 0 && i != facePointNumber[currentElementType]) nodeIndex = i / 2 ;
+			else if(i == facePointNumber[currentElementType]) nodeIndex = (i-2) / 2 ;
+			else if(i % 2 != 0) nodeIndex = (i-1) / 2 ;
+                        nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
                         nextElementFound = true;
                         break;
                     }
