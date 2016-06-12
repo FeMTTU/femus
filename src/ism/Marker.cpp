@@ -301,248 +301,143 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
     double epsilon2  = epsilon * epsilon;
     double t;
 
-    for(unsigned iedge = 0; iedge <facePointNumber[currentElementType]; iedge++) {
+    std::vector<double> xc(dim,0); //stores the coordinates of the face node of currentElem
+    unsigned faceNodeLocalIndex;
 
-        std::cout<< "iedge = " << iedge << std::endl;
+    if(currentElementType == 3) faceNodeLocalIndex = 8;
+    else if(currentElementType == 4) faceNodeLocalIndex = 6;
 
-        std::vector<double> xc(dim,0); //stores the coordinates of the face node of currentElem
-        unsigned faceNodeLocalIndex;
+    unsigned faceNodeDof = _mesh->GetSolutionDof(faceNodeLocalIndex, currentElem, 2);
+    //std::cout << "faceNodeDof = " << faceNodeDof << std::endl;
 
-        if(currentElementType == 3) faceNodeLocalIndex = 8;
-        else if(currentElementType == 4) faceNodeLocalIndex = 6;
-
-        unsigned faceNodeDof = _mesh->GetSolutionDof(faceNodeLocalIndex, currentElem, 2);
-
-        for(unsigned k = 0; k < dim; k++) {
-            xc[k] = (*_mesh->_topology->_Sol[k])(faceNodeDof) - _x[k];    // coordinates are translated so that the marker is the new origin
-            //std::cout << "xc[" << k << "]= " <<xc[k] <<std::endl;
-        }
-
-        std::vector<double> r (dim,0);   //coordinates of the intersection point between the plane of itri and the line through the element center point and the marker
-        std::vector< std::vector < double > > xv(dim);   //stores the coordinates of the 
-
-        for(unsigned k = 0; k < dim; k++) {
-            xv[k].reserve(9);
-        }
-        for(unsigned k = 0; k < dim; k++) {
-            xv[k].resize(facePointNumber[ielType]);
-        }
-        for(unsigned i = 0; i < facePointNumber[ielType]; i++) {
-            unsigned ielDof  = _mesh->GetSolutionDof(facePoints[ielType][i], currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
-            for(unsigned k = 0; k < dim; k++) {
-                xv[k][i] = (*_mesh->_topology->_Sol[k])(ielDof) - _x[k];     // global extraction and local storage for the element coordinates
-            }
-        }
-
-
+    for(unsigned k = 0; k < dim; k++) {
+        xc[k] = (*_mesh->_topology->_Sol[k])(faceNodeDof) - _x[k];    // coordinates are translated so that the marker is the new origin
+        //std::cout << "xc[" << k << "]= " <<xc[k] <<std::endl;
     }
 
-//         for(unsigned itri = 0; itri < trianglesPerFace[currentElementType][iface]; itri ++) {
-//
-//             std::cout<<"itri = " <<itri <<std::endl;
-//
-//
-//             std::vector<double> xc(dim,0); //stores the coordinates of the central node of currentElem
-//             unsigned centralNodeLocalIndex;
-//
-//             if(currentElementType == 0) centralNodeLocalIndex = 26;
-//             else if(currentElementType == 1) centralNodeLocalIndex = 14;
-//             else if(currentElementType == 2) centralNodeLocalIndex = 20;
-//
-//             unsigned centralNodeDof = _mesh->GetSolutionDof(centralNodeLocalIndex, currentElem, 2);
-//
-//             for(unsigned k = 0; k < dim; k++) {
-//                 xc[k] = (*_mesh->_topology->_Sol[k])(centralNodeDof) - _x[k];    // coordinates are translated so that the marker is the new origin
-//                 //std::cout << "xc[" << k << "]= " <<xc[k] <<std::endl;
-//             }
-//
-//             unsigned scalarCount = 0;
-//             std::vector<double> r (dim,0);   //coordinates of the intersection point between the plane of itri and the line through the element center point and the marker
-//             std::vector< std::vector < double > > xv(dim);   //stores the coordinates of the nodes of the triangle itri
-//
-//             // fill in the coordinates of the vertices of itri
-//             for(unsigned k = 0; k < dim; k++) {
-//                 xv[k].reserve(4);
-//             }
-//             for(unsigned k = 0; k < dim; k++) {
-//                 xv[k].resize(4);
-//             }
-//
-//             for(unsigned i = 0; i < 4; i++) {
-//                 unsigned itriDof  = _mesh->GetSolutionDof(faceTriangleNodes[currentElementType][iface][itri][i], currentElem, 2);
-//                 std::cout << "itriDof = " << itriDof << std::endl;
-//                 for(unsigned k = 0; k < dim; k++) {
-//                     xv[k][i] = (*_mesh->_topology->_Sol[k])(itriDof) - _x[k];     // coordinates are translated so that the marker is the new origin
-//                 }
-//             }
-//
-//             // rescaling coordinates to properly handle different scales of meshes
-//             double length = 0.;
-//             double sum = 0.;
-//             for(unsigned i = 0; i < 3; i++) {
-//                 for(unsigned k = 0; k < dim; k++) {
-//                     sum += (xv[k][i + 1] - xv[k][i]) * (xv[k][i + 1] - xv[k][i]);
-//                 }
-//                 length += sqrt(sum);
-//             }
-//
-//             length /= 4;
-//
-//             for(unsigned k = 0; k < dim; k++) {
-//                 xc[k] /= length;
-//                 for(unsigned i = 0; i < 4; i++) {
-//                     xv[k][i] /= length;
-//                 }
-//             }
-//
-//             // let's find the plane passing through the vertices of the triangle itri
-//             double A = -(xv[1][2] - xv[1][0]) * (xv[2][1] - xv[2][0]) + (xv[2][2] - xv[2][0]) * (xv[1][1] - xv[1][0]);
-//             double B = -(xv[2][2] - xv[2][0]) * (xv[0][1] - xv[0][0]) + (xv[0][2] - xv[0][0]) * (xv[2][1] - xv[2][0]);
-//             double C = -(xv[0][2] - xv[0][0]) * (xv[1][1] - xv[1][0]) + (xv[1][2] - xv[1][0]) * (xv[0][1] - xv[0][0]);
-//
-//             // std::cout << "A= " << A << " , " <<"B= " << B << " , " << "C = " << C << " , " <<std::endl;
-//
-//             double tBottom = (A*xc[0] + B*xc[1] + C*xc[2]);
-//             double tTop = A*xv[0][0] + B*xv[1][0] + C*xv[2][0];
-//
-//             if(fabs(tBottom) < epsilon && tTop != 0) {
-//                 // std::cout << "The plane of face" << itri << "does not intersect the line" <<std::endl;
-//                 break; // must exit the loop on itri
-//             }
-//
-//             else {
-//                 //now let's find the coordinates of the intersection point r
-//                 t = tTop / tBottom ;
-//                 std::cout<< "t = " << t <<std::endl;
-//
-//                 for(unsigned k = 0; k < dim; k++) {
-//                     r[k] = t * xc[k];
-//                     // std::cout << "r[" << k << "] = " << r[k] <<std::endl;
-//                 }
-//
-//                 if (t < 1) {  //if not, it means the point r is farther away from the marker, and we don't want to go in that direction
-//
-//                     //now we have to determine if r is inside itri
-//                     for(unsigned i = 0; i < 4; i++) {
-//                         for(unsigned k = 0; k < dim; k++) {
-//                             xv[k][i] = xv[k][i] - r[k];     //transate again the reference frame so that the origin is r
-//                         }
-//                     }
-//
-//                     for(unsigned i = 0; i < 3; i++) {
-//                         double q0 = xv[1][i] * (xv[2][i] - xv[2][i + 1]) + xv[2][i] * (xv[1][i + 1] - xv[1][i]);
-//                         double q1 = xv[2][i] * (xv[0][i] - xv[0][i + 1]) + xv[0][i] * (xv[2][i + 1] - xv[2][i]);
-//                         double q2 = xv[0][i] * (xv[1][i] - xv[1][i + 1]) + xv[1][i] * (xv[0][i + 1] - xv[0][i]);
-//
-//                         // std::cout << "q0 = " << q0 << " , " << "q1 = " << q1 << " , " << " q2 = " << q2 <<  std::endl;
-//
-//                         double  scalarProduct = q0 * A + q1 * B + q2 * C;
-//
-//                         std::cout << "fabs(scalarProduct) = " << fabs(scalarProduct) << std::endl;
-//
-//                         if(scalarProduct > epsilon) {
-//                             std::cout << "r is outside triangle " << itri <<  std::endl;
-//                             break;
-//
-//                         }
-//                         else if(fabs(scalarProduct) < epsilon) {  //scalarProduct == 0
-//
-//                             if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
-//                                     (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
-//                                 std::cout << "intersection on a vertex of itri" << std::endl;
-//                                 if( fabs(t) < epsilon || t < 0 ) { //this means the marker is on one of the faces
-//
-//                                     if( fabs(t) < epsilon ) std::cout<<"setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
-//                                     if( t < 0 ) std::cout<<"setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
-//
-//                                     markerIsInElement = true;
-//                                     break;
-//                                 }
-//                                 else {
-//                                     std::cout << "r is in triangle " << itri << std::endl;
-//                                     nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
-//                                     nextElementFound = true;
-//                                     break;
-//                                 }
-//
-//                             }
-//
-//
-//                             else if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
-//                                 std::cout << "intersection on a vertex of itri" << std::endl;
-//                                 if( fabs(t) < epsilon || t < 0 ) { //this means the marker is on one of the faces
-//
-// 				    if( fabs(t) < epsilon ) std::cout<<"setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
-//                                     if( t < 0 ) std::cout<<"setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
-//
-// 				    markerIsInElement = true;
-//                                     break;
-//                                 }
-//                                 else {
-//                                     std::cout << "r is in triangle " << itri << std::endl;
-//                                     nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
-//                                     nextElementFound = true;
-//                                     break;
-//                                 }
-//                             }
-//                         }
-//                         else if(scalarProduct < 0) {
-// 			    std::cout <<" scalarProduct = " << scalarProduct << std::endl;
-//                             scalarCount++;
-//                         }
-//                     } // closes the for loop
-//                 } // closes " if t < 1 "
-//             } // closes the "else" on tBottom = 0
-//
-//
-//             if(scalarCount == 3) {
-//                 if( fabs(t) < epsilon || t < 0 ) { //this means the marker is on one of the faces
-//
-// 		    if( fabs(t) < epsilon ) std::cout<<"setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
-//                     if( t < 0 ) std::cout<<"setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
-//
-// 		    markerIsInElement = true;
-//                     break;
-//                 }
-//                 else {
-//                     std::cout << "r is in triangle " << itri << std::endl;
-//                     nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
-//                     nextElementFound = true;
-//                     break;
-//                 }
-//             }
-//
-//             if(nextElementFound == true) {
-//                 break;
-//             }
-//
-//             if(markerIsInElement == true) {
-//                 break;
-//             }
-//         } //end for on itri
-//
-//         if(nextElementFound == true) {
-//             break;
-//         }
-//
-//         if(markerIsInElement == true) {
-//             break;
-//         }
-//     } //end for on iedge
-//
-//     if(markerIsInElement == true) {
-//         nextElem = currentElem;
-//         std::cout << "The marker belongs to element " << currentElem << std::endl;
-//     }
-//
-//     if(nextElementFound == true) {
-//         std::cout << "The marker does not belong to element " << currentElem << std::endl;
-//     }
-//
-//
-//     std::cout <<"markerIsInElement = " << markerIsInElement<< " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
-//
-//     return (nextElem >= 0) ? nextElem : UINT_MAX;
+    std::vector<double> r (dim,0);   //coordinates of the intersection point between the line of the edges and the line that connects the marker and the face node
+    std::vector< std::vector < double > > xv(dim);   //stores the coordinates of the vertices and midpoints of the element, the first and the last are the same
+
+    for(unsigned k = 0; k < dim; k++) {
+        xv[k].reserve(9);
+    }
+    for(unsigned k = 0; k < dim; k++) {
+        xv[k].resize(facePointNumber[currentElementType]);
+    }
+    for(unsigned i = 0; i < facePointNumber[currentElementType]; i++) {
+        unsigned ielDof  = _mesh->GetSolutionDof(facePoints[currentElementType][i], currentElem, 2);
+        for(unsigned k = 0; k < dim; k++) {
+            xv[k][i] = (*_mesh->_topology->_Sol[k])(ielDof) - _x[k];
+        }
+    }
+
+    // rescaling coordinates to properly handle different scales of meshes
+    double length = 0.;
+    double sum = 0.;
+    for(unsigned i = 0; i < facePointNumber[currentElementType] -1; i++) {
+        for(unsigned k = 0; k < dim; k++) {
+            sum += (xv[k][i + 1] - xv[k][i]) * (xv[k][i + 1] - xv[k][i]);
+        }
+        length += sqrt(sum);
+    }
+
+    length /= facePointNumber[currentElementType];
+
+    for(unsigned k = 0; k < dim; k++) {
+        xc[k] /= length;
+        for(unsigned i = 0; i < facePointNumber[currentElementType]; i++) {
+            xv[k][i] /= length;
+        }
+    }
+
+    for(unsigned i=0 ; i < facePointNumber[currentElementType] - 1; i++) {
+
+        // let's find the plane passing through the points xv[][i], xv[][i+1] and xv[][2] = xv[][i] but with z = 1.
+        double A =  (xv[1][i+1] - xv[1][i]);
+        double B = -(xv[0][i+1] - xv[0][i]);
+
+        // std::cout << "A= " << A << " , " <<"B= " << B <<std::endl;
+
+        double tBottom = (A*xc[0] + B*xc[1]) ;
+        double tTop = A*xv[0][i] + B*xv[1][i];
+
+        if(fabs(tBottom) < epsilon && tTop != 0) {
+            // std::cout << "The plane of edge " << i << "does not intersect the line" <<std::endl;
+        }
+
+        else {
+            //now let's find the coordinates of the intersection point r
+            t = tTop / tBottom ;
+            std::cout<< "t = " << t <<std::endl;
+
+            for(unsigned k = 0; k < dim; k++) {
+                r[k] = t * xc[k];
+                 std::cout << "r[" << k << "] = " << r[k] <<std::endl;
+            }
+
+            if (t < 1) {  //if not, it means the point r is farther away from the marker, and we don't want to go in that direction
+
+                //now we have to determine if r is inside edge i
+                for(unsigned j = 0; j < facePointNumber[currentElementType]; j++) {
+                    for(unsigned k = 0; k < dim; k++) {
+                        xv[k][j] = xv[k][j] - r[k];     //transate again the reference frame so that the origin is r
+                    }
+                }
+
+
+                if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i]) < epsilon2 ||
+                        (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1]) < epsilon2) {
+                    std::cout << "intersection on a vertex of the edge" << std::endl;
+                    if( fabs(t) < epsilon || t < 0 ) { //this means the marker is on one of the edges
+
+                        if( fabs(t) < epsilon ) std::cout<<"setting markerIsInElement = true because the marker is one of the nodes" << std::endl;
+                        if( t < 0 ) std::cout<<"setting markerIsInElement = true because r is one of the nodes" << std::endl;
+
+                        markerIsInElement = true;
+                        break;
+                    }
+                    else {
+                        nextElem = (_mesh->el->GetFaceElementIndex(currentElem, i) - 1);
+                        nextElementFound = true;
+                        break;
+                    }
+
+                }
+
+
+                else if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 ) {
+                    std::cout << "intersection on an edge" << std::endl;
+                    if( fabs(t) < epsilon || t < 0 ) { //this means the marker is on one of the edges
+
+                        if( fabs(t) < epsilon ) std::cout<<"setting markerIsInElement = true because the marker is on one of the edges " << std::endl;
+                        if( t < 0 ) std::cout<<"setting markerIsInElement = true because r is on one of the edges " << std::endl;
+
+                        markerIsInElement = true;
+                        break;
+                    }
+                    else {
+                        nextElem = (_mesh->el->GetFaceElementIndex(currentElem, i) - 1);
+                        nextElementFound = true;
+                        break;
+                    }
+                }
+            } // closes the " if t < 1 "
+        } // closes the else
+    } //closes the for on the nodes
+
+    if(markerIsInElement == true) {
+        nextElem = currentElem;
+        std::cout << "The marker belongs to element " << currentElem << std::endl;
+    }
+
+    if(nextElementFound == true) {
+        std::cout << "The marker does not belong to element " << currentElem << std::endl;
+    }
+
+
+    std::cout <<"markerIsInElement = " << markerIsInElement<< " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
+
+    return (nextElem >= 0) ? nextElem : UINT_MAX;
 
 }
 
@@ -681,8 +576,8 @@ unsigned Marker::GetNextElement3D(const unsigned &currentElem, const unsigned &p
                                 std::cout << "intersection on a vertex of itri" << std::endl;
                                 if( fabs(t) < epsilon || t < 0 ) { //this means the marker is on one of the faces
 
-                                    if( fabs(t) < epsilon ) std::cout<<"setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
-                                    if( t < 0 ) std::cout<<"setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
+                                    if( fabs(t) < epsilon ) std::cout<<"setting markerIsInElement = true because the marker is one vertex of triangle " << itri << std::endl;
+                                    if( t < 0 ) std::cout<<"setting markerIsInElement = true because r is one vertex of triangle " << itri << std::endl;
 
                                     markerIsInElement = true;
                                     break;
@@ -698,7 +593,7 @@ unsigned Marker::GetNextElement3D(const unsigned &currentElem, const unsigned &p
 
 
                             else if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
-                                std::cout << "intersection on a vertex of itri" << std::endl;
+                                std::cout << "intersection on an edge of itri" << std::endl;
                                 if( fabs(t) < epsilon || t < 0 ) { //this means the marker is on one of the faces
 
                                     if( fabs(t) < epsilon ) std::cout<<"setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
