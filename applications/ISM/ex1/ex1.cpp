@@ -159,9 +159,9 @@ int main(int argc, char** args) {
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
         mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
-//Test 1 (TRI): the maker is VERY close to a vertex of element 49 (point 37)
-        x[0]=1.61638e-05;  // it is on element 49
-        x[1]=7.81317e-05;
+//Test 1 (TRI):
+        x[0]=5.e-05;  // it is on element 12
+        x[1]=0.00015;
         x[2]=0.;
 
         std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
@@ -170,9 +170,9 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a1TRI.GetMarkerType() <<std::endl;
 
-//Test 2 (TRI): the maker is VERY close to a midpoint of an edge of element 60 (point 144)
-        x[0]=5.77398e-05;  //it is on element 60
-        x[1]=7.23015e-05;
+//Test 2 (TRI): 
+        x[0]=8.29839e-05;  //it is on element 115
+        x[1]=-2.38334e-05;
         x[2]=0.;
 
 	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
@@ -181,9 +181,9 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a2TRI.GetMarkerType() <<std::endl;
 
-// Test 3 (TRI): the maker has the "same" y coordinate of a midpoint of an edge of element 60 (point 144)
-        x[0]=5.77298e-05;  //it is on element 60
-        x[1]=7.23015e-05;
+// Test 3 (TRI): 
+        x[0]=-5.e-05;  //it is on element 153
+        x[1]=2.9e-05;
         x[2]=0.;
 
 	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
@@ -192,9 +192,9 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a3TRI.GetMarkerType() <<std::endl;
 
-// Test 4 (TRI): the maker is VERY close to a vertex of element 15 (point 19)
-        x[0]=-2.72848e-05;  //it is on element 15
-        x[1]=2.62822e-05;
+// Test 4 (TRI): 
+        x[0]=-5.5e-05;  //it is outside the domain
+        x[1]=2.9e-05;
         x[2]=0.;
 
 	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
