@@ -120,7 +120,7 @@ int main(int argc,char **args) {
     infile = "./input/drum.neu";
   }
   else if(4 == simulation) {
-    infile = "./input/bathe_FSI_prova.neu";
+    infile = "./input/bathe_FSI_Eugenio.neu";
   }
   else if(5 == simulation){
     infile = "./input/bathe_shell.neu";
@@ -324,7 +324,7 @@ int main(int argc,char **args) {
   system.MGsolve();
 
   // ******* Print solution *******
-  ml_sol.SetWriter(VTK);
+  ml_sol.SetWriter(GMV);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
