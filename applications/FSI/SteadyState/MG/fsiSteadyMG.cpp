@@ -120,7 +120,7 @@ int main(int argc,char **args) {
     infile = "./input/drum.neu";
   }
   else if(4 == simulation) {
-    infile = "./input/bathe_FSI_Eugenio.neu";
+    infile = "./input/bathe_FSI_Sara.neu";
   }
   else if(5 == simulation){
     infile = "./input/bathe_shell.neu";
