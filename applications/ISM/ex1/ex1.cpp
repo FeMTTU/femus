@@ -40,12 +40,12 @@ int main(int argc, char** args) {
     /* element types
     0 = HEX
     1 = TET
-    2 = WEDGE 
+    2 = WEDGE
     3 = QUAD
     4 = TRI
      */
-    
-    int elementType = 4; // this decides what elements to test
+
+    int elementType = 3; // this decides what elements to test
 
     switch(elementType) {
     case 3: // QUAD
@@ -57,34 +57,34 @@ int main(int argc, char** args) {
 //   mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
         mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
-	//NOTE tests ran with 4 procs
-//Test 1 (QUAD): 
+        //NOTE tests ran with 4 procs
+//Test 1 (QUAD):
         x[0]=0.33375;  //the marker is in element 117 (proc 1)
-        x[1]=-0.0627; 
+        x[1]=-0.0627;
         x[2]=0.;
 
         std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-	Marker a1QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
+        Marker a1QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a1QUAD.GetMarkerType() <<std::endl;
-	
 
-//Test 2 (QUAD): 
+
+//Test 2 (QUAD):
         x[0]=-0.0625;  //the marker is in element 246 (proc 3)
-        x[1]=-0.09375; 
+        x[1]=-0.09375;
         x[2]=0.;
 
         std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-	Marker a2QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
+        Marker a2QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a2QUAD.GetMarkerType() <<std::endl;
 
-//Test 3 (QUAD): 
+//Test 3 (QUAD):
         x[0]=0;  //the marker is shared by 4 elements, each one in a different proc
-        x[1]=0.0625; 
-        x[2]=0.; 
+        x[1]=0.0625;
+        x[2]=0.;
 
         std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a3QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
@@ -92,25 +92,25 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a3QUAD.GetMarkerType() <<std::endl;
 
-//Test 4 (QUAD): 
+//Test 4 (QUAD):
         x[0]=0.4377;  //the marker is on element 63, it is on the boundary of the domain
-        x[1]=0.5; 
+        x[1]=0.5;
         x[2]=0.;
 
 
         std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-	Marker a4QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
+        Marker a4QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a4QUAD.GetMarkerType() <<std::endl;
-	
+
 //Test 5 (QUAD): the marker is on the lower half of the RIGHT edge of element 0
         x[0]=0.3125;
         x[1]=-0.05555555;
         x[2]=0.;
 
         std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-	Marker a5QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
+        Marker a5QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a5QUAD.GetMarkerType() <<std::endl;
@@ -126,16 +126,27 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a6QUAD.GetMarkerType() <<std::endl;
 
-// Test 7 (QUAD): the marker is on element 35 but the y coordinate is the same as the MIDPOINT of the RIGHT edge of element 35
-        x[0]=0.23; 
+// Test 7 (QUAD): the marker is on element 35 and the y coordinate is the same as the MIDPOINT of the RIGHT edge of element 35
+        x[0]=0.23;
         x[1]=0.28125;
         x[2]=0.;
 
-      std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;    
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a7QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a7QUAD.GetMarkerType() <<std::endl;
+
+// Test 8 (QUAD): the marker the central face point of element 27
+        x[0]=0.21875;
+        x[1]=0.21875;
+        x[2]=0.;
+
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        Marker a8QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
+        //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
+        std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
+        std::cout << " The marker type is " <<  a8QUAD.GetMarkerType() <<std::endl;
 
 
         //print mesh
@@ -145,8 +156,8 @@ int main(int argc, char** args) {
         VTKWriter vtkIO( &mlSol );
         vtkIO.SetDebugOutput( true );
         vtkIO.Write( DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted );
-	
-	
+
+
 
     }
     break;
@@ -170,34 +181,34 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a1TRI.GetMarkerType() <<std::endl;
 
-//Test 2 (TRI): 
+//Test 2 (TRI):
         x[0]=8.29839e-05;  //it is on element 115
         x[1]=-2.38334e-05;
         x[2]=0.;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a2TRI( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a2TRI.GetMarkerType() <<std::endl;
 
-// Test 3 (TRI): 
+// Test 3 (TRI):
         x[0]=-5.e-05;  //it is on element 153
         x[1]=2.9e-05;
         x[2]=0.;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a3TRI( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a3TRI.GetMarkerType() <<std::endl;
 
-// Test 4 (TRI): 
+// Test 4 (TRI):
         x[0]=-5.5e-05;  //it is outside the domain
         x[1]=2.9e-05;
         x[2]=0.;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a4TRI( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
@@ -213,9 +224,9 @@ int main(int argc, char** args) {
         vtkIO.Write( DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted );
 
     }
- break;
-    
-    
+    break;
+
+
     case 0: // HEX
 
     {
@@ -232,18 +243,18 @@ int main(int argc, char** args) {
         x[1]=0.1; //
         x[2]=0.5;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a1HEX( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a1HEX.GetMarkerType() <<std::endl;
 
-//Test 2 (HEX): the marker is on the midpoint of an edge of element 60 
+//Test 2 (HEX): the marker is on the midpoint of an edge of element 60
         x[0]=-0.5;
         x[1]=0.5;
         x[2]=0.;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a2HEX( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
@@ -254,7 +265,7 @@ int main(int argc, char** args) {
         x[1]=0.5;
         x[2]=0.005;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a3HEX( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
@@ -265,7 +276,7 @@ int main(int argc, char** args) {
         x[1]=0.5;
         x[2]=-0.1;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a4HEX( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
@@ -287,7 +298,7 @@ int main(int argc, char** args) {
         x[1]=0.5;
         x[2]=-0.05;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a6HEX( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
@@ -298,7 +309,7 @@ int main(int argc, char** args) {
         x[1]=0.1;
         x[2]=0.2;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a7HEX( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
@@ -314,7 +325,7 @@ int main(int argc, char** args) {
         vtkIO.Write( DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted );
 
     }
-break;
+    break;
 
     case 1: // TET
     {
@@ -330,7 +341,7 @@ break;
         x[1] = 0.;
         x[2] = 0.;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a1TET( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
@@ -341,7 +352,7 @@ break;
         x[1] = 0.;
         x[2] = 0.001;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a2TET( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
@@ -357,8 +368,8 @@ break;
         vtkIO.Write( DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted );
 
     }
-break;
-    
+    break;
+
     case 2: //WEDGE
     {
 
@@ -371,10 +382,10 @@ break;
 //NOTE Tests ran with 2 procs
 //Test 1 (WEDGE):
         x[0] = 0.0815329; //element 10
-        x[1] = 0.23; 
+        x[1] = 0.23;
         x[2] = 0.;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a1WEDGE( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
@@ -385,7 +396,7 @@ break;
         x[1] = 1.4;
         x[2] = 5.;
 
-	std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
         Marker a2WEDGE( x, VOLUME, mlMsh.GetLevel(0), true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
