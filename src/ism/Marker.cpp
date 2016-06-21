@@ -127,14 +127,6 @@ void Marker::GetElement(const bool &debug) {
     previousElem[_iproc] = iel;
     unsigned nextProc = _iproc;
 
-
-    unsigned iprocElements = 0;
-    for(int jel = _mesh->_elementOffset[_iproc]; jel < _mesh->_elementOffset[_iproc + 1]; jel ++) {
-        iprocElements++;
-    }
-    std::vector < int > elementsChecked(iprocElements , -1);
-
-
     while(!elementHasBeenFound) {
 
         //BEGIN next element search
