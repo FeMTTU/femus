@@ -90,7 +90,7 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 8;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
@@ -439,8 +439,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       double beta = 1.; //20000;
 
 
-      double Pr = 1.0;
-      double Ra = 300;
+      double Pr = 0.4;
+      double Ra = 40000;
 
       // *** phiT_i loop ***
       for (unsigned i = 0; i < nDofsT; i++) {
