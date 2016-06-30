@@ -82,8 +82,8 @@ int main (int argc, char** args) {
   vector < vector < double > > l2Norm;
   l2Norm.resize (maxNumberOfMeshes);
 
-  vector < vector < double > > semiNorm;
-  semiNorm.resize (maxNumberOfMeshes);
+  vector < vector < double > > H1norm;
+  H1norm.resize (maxNumberOfMeshes);
 
 //   unsigned numberOfUniformLevels = 3;
 //   unsigned numberOfSelectiveLevels = 0;
@@ -103,7 +103,7 @@ int main (int argc, char** args) {
 
     FEOrder feOrder[3] = {FIRST, SERENDIPITY, SECOND};
     l2Norm[i].resize (3);
-    semiNorm[i].resize (3);
+    H1norm[i].resize (3);
 
     for (unsigned j = 0; j < 3; j++) {
 
@@ -159,7 +159,7 @@ int main (int argc, char** args) {
 
       std::pair< double , double > norm = GetErrorNorm (&mlSol);
       l2Norm[i][j]  = norm.first;
-      semiNorm[i][j] = norm.second;
+      H1norm[i][j] = norm.second;
 
       // print solutions
       std::vector < std::string > variablesToBePrinted;
@@ -198,7 +198,7 @@ int main (int argc, char** args) {
 
   std::cout << std::endl;
   std::cout << std::endl;
-  std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
+  std::cout << "H1 ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
 
   for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
@@ -206,7 +206,7 @@ int main (int argc, char** args) {
     std::cout.precision (14);
 
     for (unsigned j = 0; j < 3; j++) {
-      std::cout << semiNorm[i][j] << "\t";
+      std::cout << H1norm[i][j] << "\t";
     }
 
     std::cout << std::endl;
@@ -558,20 +558,15 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
 
   delete norm_vec;
 
+  double H1norm = sqrt( l2norm + seminorm );
+  
+  
   std::pair < double, double > norm;
   norm.first  = sqrt (l2norm);
-  norm.second = sqrt (seminorm);
+  norm.second = sqrt (H1norm);
 
   sol->_Sol[solFlagIndex]->close();
 
   return norm;
 
 }
-
-
-/***************
- Q1: line 425 the variable "ml_prob" of the function "GetErrorNorm"  is from line 110  or 
- line254 function AssemblePoisson_AD?
- 
- Q2: Flag
- ***************/

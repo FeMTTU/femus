@@ -335,11 +335,4 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
-/*****************************
-Q1: Is solUig a weak solution of solU?
-Q2: Since u_h = sum (u_j * phi_j) where u_j are unknown coefficients. Why at line 277, the coefficients of solUig is solU? 
-
-
-*****************************/
-
 
