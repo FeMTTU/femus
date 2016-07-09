@@ -519,7 +519,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       double beta = 1.;//40000.;
 
       double Pr = 0.03;
-      double Ra = 8000;
+      double Ra = 3600;
 
       double dt = mlPdeSys -> GetIntervalTime();
       // *** phiT_i loop ***
