@@ -20,6 +20,7 @@
 #include "NumericVector.hpp"
 #include <math.h>
 
+
 const unsigned facePointNumber[6] = {0, 0, 0, 9, 7, 0};
 
 
@@ -2796,6 +2797,74 @@ void Marker::InverseMappingTEST(std::vector < double > &x) {
 
     }
 }
+
+
+//this function returns the position of the marker at time T given the position at time T0 = 0, given the function f and the stepsize h
+std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<double> , double ), double h, double T) {
+
+    unsigned dim = _mesh->GetDimension();
+
+    unsigned RKOrder = 4;  //order of the RK integration scheme
+
+    std::vector< std::vector<double> > x(RKOrder);
+    std::vector< std::vector<double> > K(RKOrder);
+    
+    // initialize time
+    double t = 0;   
+
+    for(unsigned i = 0; i < RKOrder; i++) {
+        x[i].reserve(dim);
+        K[i].reserve(dim);
+    }
+    for(unsigned i = 0; i < RKOrder; i++) {
+        x[i].resize(dim);
+        K[i].resize(dim);
+    }
+
+    // initialize the position
+    for(unsigned i=0; i < dim; i++) {
+        x[0][i] = _x[i] ;      
+    }
+
+
+    while(t < T){
+  
+    for(unsigned i = 0; i<dim; i++) {
+
+        K[0][i] = h * (*f)(x[0] , t)[i] ;
+
+        for(unsigned j=0; j<dim; j++) {
+            x[1][j] = x[0][j] + 0.5 * K[0][j];
+        }
+
+        K[1][i] = h * (*f)(x[1] , t + (0.5 * h))[i] ;
+
+        for(unsigned j=0; j<dim; j++) {
+            x[2][j] = x[0][j] + 0.5 * K[1][j];
+        }
+
+        K[2][i] = h * (*f)(x[2] , t + (0.5 * h))[i] ;
+
+        for(unsigned j=0; j<dim; j++) {
+            x[3][j] = x[0][j] + K[2][j];
+        }
+
+        K[3][i] = h * (*f)(x[3] , t + h)[i] ;
+    }
+
+    
+    for(unsigned i=0; i<dim; i++){
+	x[0][i] += (1/6)*(K[0][i] + 2 * K[0][i] + 2 * K[0][i] + K[0][i]); 
+    }
+      t += h ;
+    }
+    
+    return x[0];
+    
+}
+
+
+///////////////////////////////////////////// Here there are the OLD functions used for the 2D and 3D inclusion test ///////////////////////////////////////////////
 
 
 

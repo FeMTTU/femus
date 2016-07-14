@@ -28,6 +28,7 @@
 #include "Mesh.hpp"
 
 
+
 namespace femus {
 
   class Marker : public ParallelObject {
@@ -43,6 +44,7 @@ namespace femus {
     return _x; 
   };  
   
+
   void GetElement(const bool & debug = false);
   
   
@@ -64,7 +66,11 @@ namespace femus {
     unsigned GetNextElement3D(const unsigned &iel,  const unsigned &kel);
     unsigned GetNextElement2DOLD(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
     unsigned GetNextElement3DOLD(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
+        
        
+    std::vector<double> GetPosition(std::vector<double> (*f)(std::vector<double> , double ), double h, double T);
+    
+    
     std::vector < double > _x;
     MarkerType _markerType;
     const Mesh * _mesh;
