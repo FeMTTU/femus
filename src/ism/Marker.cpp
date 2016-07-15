@@ -2858,7 +2858,7 @@ std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<dou
 
     
     for(unsigned i=0; i<dim; i++){
-	x[0][i] += (1/6)*(K[0][i] + 2 * K[0][i] + 2 * K[0][i] + K[0][i]); 
+	x[0][i] += (1/6)*(K[0][i] + 2 * K[1][i] + 2 * K[2][i] + K[3][i]); 
     }
       t += h ;
     }
