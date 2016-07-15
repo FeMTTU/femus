@@ -2800,7 +2800,7 @@ void Marker::InverseMappingTEST(std::vector < double > &x) {
 
 
 //this function returns the position of the marker at time T given the position at time T0 = 0, given the function f and the stepsize h
-std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<double> , double ), double h, double T) {
+std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<double> , double ), int n, double T) {
 
     unsigned dim = _mesh->GetDimension();
 
@@ -2810,7 +2810,11 @@ std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<dou
     std::vector< std::vector<double> > K(RKOrder);
     
     // initialize time
-    double t = 0;   
+    double t = 0;  
+    
+    // determine the step size
+    
+    double h = T / n;
 
     for(unsigned i = 0; i < RKOrder; i++) {
         x[i].reserve(dim);

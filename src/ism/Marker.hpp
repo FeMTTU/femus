@@ -68,7 +68,7 @@ namespace femus {
     unsigned GetNextElement3DOLD(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
         
        
-    std::vector<double> GetPosition(std::vector<double> (*f)(std::vector<double> , double ), double h, double T);
+    std::vector<double> GetPosition(std::vector<double> (*f)(std::vector<double> , double ), int n, double T);
     
     
     std::vector < double > _x;
