@@ -2800,7 +2800,7 @@ void Marker::InverseMappingTEST(std::vector < double > &x) {
 
 
 //this function returns the position of the marker at time T given the position at time T0 = 0, given the function f and the stepsize h
-std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<double> , double ), int n, double T) {
+std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<double>), int n, double T) {
 
     unsigned dim = _mesh->GetDimension();
 
@@ -2808,62 +2808,69 @@ std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<dou
 
     std::vector< std::vector<double> > x(RKOrder);
     std::vector< std::vector<double> > K(RKOrder);
-    
-    // initialize time
-    double t = 0;  
+    std::vector< double > y(dim,0);
     
     // determine the step size
-    
     double h = T / n;
 
     for(unsigned i = 0; i < RKOrder; i++) {
-        x[i].reserve(dim);
+        x[i].reserve(dim + 1); // x = (t, x, y, z)
         K[i].reserve(dim);
     }
     for(unsigned i = 0; i < RKOrder; i++) {
-        x[i].resize(dim);
+        x[i].resize(dim + 1);
         K[i].resize(dim);
     }
 
+    //initialize time
+    x[0][0] = 0;    
+    
     // initialize the position
-    for(unsigned i=0; i < dim; i++) {
+    for(unsigned i=1; i < dim + 1; i++) {
         x[0][i] = _x[i] ;      
     }
 
 
-    while(t < T){
+    while(x[0][0] < T){
   
     for(unsigned i = 0; i<dim; i++) {
 
-        K[0][i] = h * (*f)(x[0] , t)[i] ;
+        K[0][i] = h * (*f)(x[0])[i] ;
 
-        for(unsigned j=0; j<dim; j++) {
-            x[1][j] = x[0][j] + 0.5 * K[0][j];
+	x[1][0] = x[0][0] + (0.5 * h);
+        for(unsigned j=1; j<dim+1; j++) {
+            x[1][j] = x[0][j] + 0.5 * K[0][j-1];
         }
 
-        K[1][i] = h * (*f)(x[1] , t + (0.5 * h))[i] ;
+        K[1][i] = h * (*f)(x[1])[i] ;
 
-        for(unsigned j=0; j<dim; j++) {
-            x[2][j] = x[0][j] + 0.5 * K[1][j];
+	x[2][0] = x[0][0] + (0.5 * h);
+        for(unsigned j=1; j<dim+1; j++) {
+            x[2][j] = x[0][j] + 0.5 * K[1][j-1];
         }
 
-        K[2][i] = h * (*f)(x[2] , t + (0.5 * h))[i] ;
+        K[2][i] = h * (*f)(x[2])[i] ;
 
-        for(unsigned j=0; j<dim; j++) {
-            x[3][j] = x[0][j] + K[2][j];
+	x[3][0] = x[0][0] + h;
+        for(unsigned j=1; j<dim+1; j++) {
+            x[3][j] = x[0][j] + K[2][j-1];
         }
 
-        K[3][i] = h * (*f)(x[3] , t + h)[i] ;
+        K[3][i] = h * (*f)(x[3])[i] ;
     }
 
     
-    for(unsigned i=0; i<dim; i++){
-	x[0][i] += (1/6)*(K[0][i] + 2 * K[1][i] + 2 * K[2][i] + K[3][i]); 
+    for(unsigned i=1; i<dim+1; i++){
+	x[0][i] += (1/6)*(K[0][i-1] + 2 * K[1][i-1] + 2 * K[2][i-1] + K[3][i-1]); 
     }
-      t += h ;
+      x[0][0] += h ;
     }
     
-    return x[0];
+    for(unsigned i=1; i<dim+1; i++){
+      y[i] = x[0][i];
+    }
+    
+    return y;
     
 }
 

@@ -25,6 +25,13 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 }
 
 
+// function for the advection: simple translation along y
+std::vector<double> translate(std::vector<double> x) {
+    x[2] = x[2] + 1;
+    return x;
+}
+
+
 int main(int argc, char** args) {
 
     // init Petsc-MPI communicator
@@ -45,7 +52,7 @@ int main(int argc, char** args) {
     4 = TRI
      */
 
-    int elementType = 4; // this decides what elements to test
+    int elementType = 3; // this decides what elements to test
 
     switch(elementType) {
     case 3: // QUAD
@@ -147,6 +154,24 @@ int main(int argc, char** args) {
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a8QUAD.GetMarkerType() <<std::endl;
+
+// Test 9 (QUAD): the marker is shared between two processors, proc 1 finds it in element 120, proc 3 finds it in element 254
+
+        x[0]=0.;
+        x[1]=0.;
+        x[2]=0.;
+
+
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        Marker a9QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
+        //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
+        std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
+        std::cout << " The marker type is " <<  a9QUAD.GetMarkerType() <<std::endl;
+
+       std::vector<double> y = a9QUAD.GetPosition(translate, 10, 1);
+       for(unsigned i=0; i<2; i++){
+	 std::cout << "y[" << i << "] = " << y[i] << std::endl ;
+      }
 
 
         //print mesh

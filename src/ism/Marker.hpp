@@ -53,6 +53,8 @@ namespace femus {
   };  
   
   void InverseMappingTEST(std::vector< double > &x);
+  
+  std::vector<double> GetPosition(std::vector<double> (*f)(std::vector<double>), int n, double T);
     
   private:
     
@@ -66,11 +68,7 @@ namespace femus {
     unsigned GetNextElement3D(const unsigned &iel,  const unsigned &kel);
     unsigned GetNextElement2DOLD(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
     unsigned GetNextElement3DOLD(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
-        
-       
-    std::vector<double> GetPosition(std::vector<double> (*f)(std::vector<double> , double ), int n, double T);
-    
-    
+           
     std::vector < double > _x;
     MarkerType _markerType;
     const Mesh * _mesh;
