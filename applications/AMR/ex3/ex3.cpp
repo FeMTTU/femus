@@ -89,7 +89,7 @@ int main (int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
 
     unsigned numberOfUniformLevels = i + 3;
     unsigned numberOfSelectiveLevels = 0;
@@ -182,7 +182,7 @@ int main (int argc, char** args) {
   std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
     std::cout << i + 1 << "\t";
     std::cout.precision (14);
 
@@ -201,7 +201,7 @@ int main (int argc, char** args) {
   std::cout << "H1 ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
     std::cout << i + 1 << "\t";
     std::cout.precision (14);
 

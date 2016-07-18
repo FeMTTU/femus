@@ -194,7 +194,7 @@ int main(int argc, char** args) {
   std::cout << "H1 ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
     std::cout << i + 1 << "\t";
     std::cout.precision (14);
 
@@ -213,7 +213,7 @@ int main(int argc, char** args) {
   std::cout << "H1 Relative ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
     std::cout << i + 1 << "\t";
     std::cout.precision (14);
 
