@@ -2809,7 +2809,7 @@ std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<dou
     std::vector< std::vector<double> > x(RKOrder);
     std::vector< std::vector<double> > K(RKOrder);
     std::vector< double > y(dim,0);
-    
+
     // determine the step size
     double h = T / n;
 
@@ -2823,64 +2823,63 @@ std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<dou
     }
 
     //initialize time
-    x[0][0] = 0;    
-    
+    x[0][0] = 0;
+
     // initialize the position
     for(unsigned i=1; i < dim + 1; i++) {
-        x[0][i] = _x[i] ;      
-	std::cout << "x[0][ "<< i << "] =" << x[0][i] << std::endl;
-    }
+        x[0][i] = _x[i-1] ;
+	std::cout << "x[0][" << i << "]= " << x[0][i] << std::endl;
+     }
 
 
-    while(x[0][0] < T){
-  
-    for(unsigned i = 0; i<dim; i++) {
+    while(x[0][0] < T) {
 
-      std::cout<< "f(x)[ " << i << "]= " << (*f)(x[0])[i] << std::endl ; 
-      
-        K[0][i] = h * (*f)(x[0])[i] ;
-      std::cout<< "K[0][[ " << i << "]= " << K[0][i] << std::endl ;
-	
-	x[1][0] = x[0][0] + (0.5 * h);
-        for(unsigned j=1; j<dim + 1; j++) {
-            x[1][j] = x[0][j] + 0.5 * K[0][j-1];
+        for(unsigned i = 0; i<dim; i++) {
+
+            std::cout<< "f(x)[ " << i << "]= " << (*f)(x[0])[i] << std::endl ;
+
+            K[0][i] = h * (*f)(x[0])[i] ;
+            std::cout<< "K[0][[ " << i << "]= " << K[0][i] << std::endl ;
+
+            x[1][0] = x[0][0] + (0.5 * h);
+            for(unsigned j=1; j<dim + 1; j++) {
+                x[1][j] = x[0][j] + 0.5 * K[0][j-1];
+            }
+
+            K[1][i] = h * (*f)(x[1])[i] ;
+           std::cout<< "K[1][[ " << i << "]= " << K[1][i] << std::endl ;
+
+            x[2][0] = x[0][0] + (0.5 * h);
+            for(unsigned j=1; j<dim + 1; j++) {
+                x[2][j] = x[0][j] + 0.5 * K[1][j-1];
+            }
+
+            K[2][i] = h * (*f)(x[2])[i] ;
+            std::cout<< "K[2][[ " << i << "]= " << K[2][i] << std::endl ;
+
+            x[3][0] = x[0][0] + h;
+            for(unsigned j=1; j<dim + 1; j++) {
+                x[3][j] = x[0][j] + K[2][j-1];
+            }
+
+            K[3][i] = h * (*f)(x[3])[i] ;
+            std::cout<< "K[3][[ " << i << "]= " << K[3][i] << std::endl ;
+
         }
 
-        K[1][i] = h * (*f)(x[1])[i] ;
-        std::cout<< "K[1][[ " << i << "]= " << K[1][i] << std::endl ;
-	
-	x[2][0] = x[0][0] + (0.5 * h);
-        for(unsigned j=1; j<dim + 1; j++) {
-            x[2][j] = x[0][j] + 0.5 * K[1][j-1];
+        for(unsigned i=1; i<dim + 1; i++) {
+            x[0][i] += (1./6)*(K[0][i-1] + 2 * K[1][i-1] + 2 * K[2][i-1] + K[3][i-1]);
+	    std::cout << "x[0][" << i << "]=" << x[0][i] << std::endl;
         }
-
-        K[2][i] = h * (*f)(x[2])[i] ;
-        std::cout<< "K[2][[ " << i << "]= " << K[2][i] << std::endl ;
-	 
-	x[3][0] = x[0][0] + h;
-        for(unsigned j=1; j<dim + 1; j++) {
-            x[3][j] = x[0][j] + K[2][j-1];
-        }
-
-        K[3][i] = h * (*f)(x[3])[i] ;
-	std::cout<< "K[3][[ " << i << "]= " << K[3][i] << std::endl ;
-	
+        x[0][0] += h ;
     }
 
-    
-    for(unsigned i=1; i<dim + 1; i++){
-	x[0][i] += (1/6)*(K[0][i-1] + 2 * K[1][i-1] + 2 * K[2][i-1] + K[3][i-1]); 
-	std::cout << "x[0][" << i << "]= " << x[0][i] << std::endl; //PROBLEMA QUA NON FA STA SOMMA
+    for(unsigned i=1; i<dim + 1; i++) {
+        y[i-1] = x[0][i];
     }
-      x[0][0] += h ;
-    }
-    
-    for(unsigned i=1; i<dim + 1; i++){
-      y[i-1] = x[0][i];
-    }
-    
+
     return y;
-    
+
 }
 
 
