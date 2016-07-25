@@ -117,7 +117,7 @@ int main(int argc, char** args) {
   solutionTypeUVP[1] = mlSol.GetSolutionType("V");
   solutionTypeUVP[2] = mlSol.GetSolutionType("P");
 
-  FieldSplitTree FS_NS( PREONLY, ILU_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
+  FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
   FS_NS.SetAsmBlockSize(4);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
     
@@ -149,7 +149,7 @@ int main(int argc, char** args) {
   solutionTypeT[0] = mlSol.GetSolutionType("T");
   
   
-  FieldSplitTree FS_T( PREONLY, ILU_PRECOND, fieldT, solutionTypeT, "Temperature");
+  FieldSplitTree FS_T( PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
   FS_T.SetAsmBlockSize(4);
   FS_T.SetAsmNumeberOfSchurVariables(1);
   
@@ -482,8 +482,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         double alpha = 1.;
         double beta = 1.;//40000.;
 	
-	double Pr = 0.4;
-        double Ra = 100;
+	double Pr = 0.1;
+        double Ra = 10000;
 
         // *** phiT_i loop ***
         for (unsigned i = 0; i < nDofsT; i++) {
