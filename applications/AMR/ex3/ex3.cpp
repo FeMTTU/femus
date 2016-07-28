@@ -191,6 +191,17 @@ int main (int argc, char** args) {
     }
 
     std::cout << std::endl;
+    
+    if (i < maxNumberOfMeshes - 1) {
+      std::cout.precision(3);
+      std::cout << "\t\t";
+
+      for (unsigned j = 0; j < 3; j++) {
+        std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "\t\t\t";
+      }
+
+      std::cout << std::endl;
+    }    
 
 
 
@@ -211,7 +222,16 @@ int main (int argc, char** args) {
 
     std::cout << std::endl;
 
+    if (i < maxNumberOfMeshes - 1) {
+      std::cout.precision(3);
+      std::cout << "\t\t";
 
+      for (unsigned j = 0; j < 3; j++) {
+        std::cout << log(H1norm[i][j] / H1norm[i + 1][j]) / log(2.) << "\t\t\t";
+      }
+
+      std::cout << std::endl;
+    }
 
   }
 

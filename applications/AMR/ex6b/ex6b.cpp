@@ -68,34 +68,34 @@ int main(int argc, char** args) {
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
-
-  // unsigned numberOfUniformLevels = 3;
-  // unsigned numberOfSelectiveLevels = 0;
-  // mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
-   
+  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfSelectiveLevels = 0;
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+  
+  
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
   // print mesh info
-  //mlMsh.PrintInfo();
-
-  //MultiLevelSolution mlSol(&mlMsh);
-
+  mlMsh.PrintInfo();
   // add variables to mlSol
 
-  //mlSol.AddSolution("Error",  DISCONTINOUS_POLYNOMIAL, ZERO);
+  MultiLevelSolution mlSol(&mlMsh);
+  
+  mlSol.AddSolution("Error",  DISCONTINOUS_POLYNOMIAL, ZERO);
 
-  //mlSol.AddSolution("U", LAGRANGE, SECOND);
+  mlSol.AddSolution("U", LAGRANGE, SECOND);
 
-  //mlSol.Initialize("All");
+  mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
-  //mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
 
-  //mlSol.GenerateBdc("All");
-    unsigned numberOfUniformLevels = 3;
-    unsigned numberOfSelectiveLevels = 0;
-    mlMsh.RefineMesh (numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+  mlSol.GenerateBdc("All");
+  
+
+  
+
      
   unsigned maxNumberOfMeshes = 5;  
   
@@ -105,29 +105,24 @@ int main(int argc, char** args) {
   vector < vector < double > > H1norm;
   H1norm.resize (maxNumberOfMeshes);
   
+  
   for(unsigned i = 0; i < maxNumberOfMeshes; i++) {
-
-
-    mlMsh.PrintInfo();
+    // define the multilevel problem attach the mlSol object to it
+    
+   
+    
     FEOrder feOrder[3] = {FIRST, SERENDIPITY, SECOND};
     H1normE[i].resize (3);
     H1norm[i].resize (3);
+
+    //for (unsigned j = 0; j < 3; j++) {
     
-    for (unsigned j = 0; j < 3; j++) {
       
-      MultiLevelSolution mlSol (&mlMsh);
+
+
       
-     mlSol.AddSolution("Error",  DISCONTINOUS_POLYNOMIAL, ZERO);
-
-     mlSol.AddSolution("U", LAGRANGE, feOrder[j]);
-
-     mlSol.Initialize("All");
-     
-     mlSol.AttachSetBoundaryConditionFunction (SetBoundaryCondition);
-
-     mlSol.GenerateBdc ("All");
-     
-     // define the multilevel problem attach the mlSol object to it
+      
+      
     MultiLevelProblem mlProb(&mlSol);
 
     // add system Poisson in mlProb as a Linear Implicit System
@@ -164,16 +159,16 @@ int main(int argc, char** args) {
     GetError(&mlSol);
     
     std::pair< double , double > norm = GetError (&mlSol);
-      H1normE[i][j]  = norm.first;
-      H1norm[i][j] = norm.second;
-      
-      // print solutions
+      H1normE[i][0]  = norm.first;
+      H1norm[i][0] = norm.second;
+    
+    // print solutions
     std::vector < std::string > variablesToBePrinted;
     variablesToBePrinted.push_back("All");
     VTKWriter vtkIO(&mlSol);
     vtkIO.SetDebugOutput(true);
     vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-
+    
     //refine the mesh
     MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
     bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(1.e-2, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));
@@ -184,31 +179,44 @@ int main(int argc, char** args) {
     mlMsh.AddAMRMeshLevel();
     mlSol.AddSolutionLevel();
     mlSol.RefineSolution(numberOfUniformLevels);
-    
-    }
+    //}
     numberOfUniformLevels += 1;
-  }
+    
+    
 
+  }
+  
+  
   // print the seminorm of the error and the order of convergence between different levels
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "H1 ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
+  std::cout << "LEVEL \n";
 
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
     std::cout << i + 1 << "\t";
     std::cout.precision (14);
 
-    for (unsigned j = 0; j < 3; j++) {
-      std::cout << H1normE[i][j] << "\t";
-    }
+    //for (unsigned j = 0; j < 3; j++) {
+      std::cout << H1normE[i][0] << "\t";
+    //}
 
     std::cout << std::endl;
 
+    if (i < maxNumberOfMeshes - 1) {
+      std::cout.precision(3);
+      std::cout << "\t\t";
+
+      //for (unsigned j = 0; j < 3; j++) {
+        std::cout << log(H1normE[i][0] / H1normE[i + 1][0]) / log(2.) << "\t\t\t";
+      //}
+
+      std::cout << std::endl;
+    }     
 
 
   }
-
+/*
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "H1 Relative ERROR and ORDER OF CONVERGENCE:\n\n";
@@ -227,8 +235,11 @@ int main(int argc, char** args) {
 
 
   }
+
+*/
   return 0;
 }
+
 
 
 
@@ -558,8 +569,7 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
 
       double LaplaceUexact = GetExactSolutionLaplace(x_gss);
       Rhok += hk * (LaplaceUexact - laplaceUh) * (LaplaceUexact - laplaceUh) * weight;
-      
-      
+
       // ||u-u_e||
       vector <double> solGrad (dim);
       GetExactSolutionGradient (x_gss, solGrad);
@@ -568,8 +578,6 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
       }
       double exactSol = GetExactSolutionValue (x_gss);
       l2normE += (exactSol - Uig) * (exactSol - Uig) * weight;
-      
-      
       
     } //end element loop for each process
 
@@ -617,12 +625,9 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
   double H1norm = sqrt( l2norm2 + seminorm2 );
   double H1normE = sqrt( l2normE + seminormE );
   
-  
   unsigned N = msh->GetNumberOfElements();
   *sol->_Sol[errorIndex] *= (2.*sqrt(N)) / ( 3.*H1norm );
   
-  
-   
   std::pair < double, double > norm;
   norm.first  = H1normE;
   norm.second = H1norm;
@@ -630,6 +635,7 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
   sol->_Sol[errorIndex]->close();
   
   return norm;
+      
 }
 
 
