@@ -97,7 +97,7 @@ int main(int argc, char** args) {
   
 
      
-  unsigned maxNumberOfMeshes = 5;  
+  unsigned maxNumberOfMeshes = 6;  
   
   vector < vector < double > > H1normE;
   H1normE.resize (maxNumberOfMeshes);
@@ -171,9 +171,13 @@ int main(int argc, char** args) {
     
     //refine the mesh
     MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
-    bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(1.e-2, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));
+    bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(1.e-2, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));  //non-uniform
     
+    //bool elementsHaveBeenRefined = true; //uniform
+    //meshcoarser.FlagAllElementsToBeRefined();//uniform
     if( !elementsHaveBeenRefined ){
+      std::cout << " the solution has converged\n"; 
+      maxNumberOfMeshes = i + 1;
       break;
     }
     mlMsh.AddAMRMeshLevel();
