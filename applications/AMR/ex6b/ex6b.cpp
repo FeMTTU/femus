@@ -84,7 +84,7 @@ int main(int argc, char** args) {
   
   mlSol.AddSolution("Error",  DISCONTINOUS_POLYNOMIAL, ZERO);
 
-  mlSol.AddSolution("U", LAGRANGE, SECOND);
+  mlSol.AddSolution("U", LAGRANGE, FIRST);
 
   mlSol.Initialize("All");
 
@@ -97,7 +97,7 @@ int main(int argc, char** args) {
   
 
      
-  unsigned maxNumberOfMeshes = 6;  
+  unsigned maxNumberOfMeshes = 8;  
   
   vector < vector < double > > H1normE;
   H1normE.resize (maxNumberOfMeshes);
@@ -220,7 +220,7 @@ int main(int argc, char** args) {
 
 
   }
-/*
+
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "H1 Relative ERROR and ORDER OF CONVERGENCE:\n\n";
@@ -230,9 +230,9 @@ int main(int argc, char** args) {
     std::cout << i + 1 << "\t";
     std::cout.precision (14);
 
-    for (unsigned j = 0; j < 3; j++) {
-      std::cout << H1normE[i][j] / H1norm[i][j] << "\t";
-    }
+    //for (unsigned j = 0; j < 3; j++) {
+      std::cout << H1normE[i][0] / H1norm[i][0] << "\t";
+    //}
 
     std::cout << std::endl;
 
@@ -240,7 +240,7 @@ int main(int argc, char** args) {
 
   }
 
-*/
+
   return 0;
 }
 

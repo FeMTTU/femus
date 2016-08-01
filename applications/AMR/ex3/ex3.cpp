@@ -76,7 +76,7 @@ int main (int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned maxNumberOfMeshes = 5;
+  unsigned maxNumberOfMeshes = 6;
 
 
   vector < vector < double > > l2Norm;
@@ -557,8 +557,15 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
     //sol->_Sol[solFlagIndex]->set(iel, 0);
 
     //for now
-    sol->_Sol[solFlagIndex]->set(iel, iel);
+    // sol->_Sol[solFlagIndex]->set(iel, iel);
 
+    if( msh->el->GetIfElementCanBeRefined(iel) ) {
+      sol->_Sol[solFlagIndex]->set(iel, 1.);
+    }
+    else {
+      sol->_Sol[solFlagIndex]->set(iel, 0.);
+    }
+    
   } //end element loop for each process
 
   // add the norms of all processes
@@ -583,7 +590,7 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
   
   std::pair < double, double > norm;
   norm.first  = sqrt (l2norm);
-  norm.second = sqrt (H1norm);
+  norm.second = H1norm;
 
   sol->_Sol[solFlagIndex]->close();
 
