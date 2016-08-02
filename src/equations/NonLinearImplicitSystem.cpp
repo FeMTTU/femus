@@ -88,6 +88,8 @@ namespace femus {
 
     clock_t start_mg_time = clock();
 
+    double totalAssembyTime = 0.;
+
     unsigned grid0;
 
     if( _mg_type == F_CYCLE ) {
@@ -163,6 +165,7 @@ namespace femus {
           std::cout << "   ********* Level Max " << igridn << " MGINIT TIME:\t" \
 	    << static_cast<double>( ( clock() - mg_init_time ) ) / CLOCKS_PER_SEC << std::endl;
         }
+        totalAssembyTime += static_cast<double>( ( clock() - start_assembly_time ) ) / CLOCKS_PER_SEC;
         std::cout << "   ********* Level Max " << igridn << " ASSEMBLY TIME:\t" << \
           static_cast<double>( ( clock() - start_assembly_time ) ) / CLOCKS_PER_SEC << std::endl;
         clock_t startUpdateResidualTime = clock();
@@ -206,8 +209,10 @@ namespace femus {
       std::cout << std::endl << "   ****** End Level Max " << igridn << " ******" << std::endl;
     }
 
+    double totalSolverTime = static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC;
     std::cout << std::endl << "   *** Nonlinear " << _solverType << " TIME: " << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
-              << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
+              << totalSolverTime <<  " = assembly TIME( " << totalAssembyTime << " ) + ( "
+              << " solver TIME( " << totalSolverTime - totalAssembyTime << " ) "<< std::endl;
 
   }
 
