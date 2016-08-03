@@ -148,7 +148,7 @@ int main(int argc, char** args) {
   solutionTypeUVP[2] = mlSol.GetSolutionType("P");
 
   FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
-  FS_NS.SetAsmBlockSize(3);
+  FS_NS.SetAsmBlockSize(4);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
 
   std::vector < unsigned > fieldT(1);
