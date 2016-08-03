@@ -148,7 +148,7 @@ int main(int argc, char** args) {
   solutionTypeUVP[2] = mlSol.GetSolutionType("P");
 
   FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
-  FS_NS.SetAsmBlockSize(4);
+  FS_NS.SetAsmBlockSize(3);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
 
   std::vector < unsigned > fieldT(1);
@@ -167,14 +167,12 @@ int main(int argc, char** args) {
   FS2.push_back(&FS_T);
   if( precType == FS_TVp ) FS2.push_back(&FS_NS); //Navier-Stokes block last
 
-  FieldSplitTree FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
+  FieldSplitTree FS_NST( JACOBI, FIELDSPLIT_PRECOND, FS2, "Benard");
 
   //END buid fieldSplitTree
-
-
   if ( precType == FS_VTp || precType == FS_TVp ) system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Field-Split preconditioned
-  else if( precType == ASM_VTp || ASM_TVp) system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz preconditioner
-  else if( precType == ILU_VTp || ILU_TVp) system.SetMgSmoother(GMRES_SMOOTHER );
+  else if( precType == ASM_VTp || precType == ASM_TVp) system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz preconditioner
+  else if( precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(GMRES_SMOOTHER );
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
@@ -461,11 +459,11 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
 
         double alpha = 1.;
-        double beta = 40000.;
+        double beta = 1.;//40000.;
 
 
-	double Pr = 1.;//1./10;
-        double Ra = 1.;//10000;
+	double Pr = 1./10;
+        double Ra = 10000;
 
         // *** phiT_i loop ***
         for (unsigned i = 0; i < nDofsT; i++) {
