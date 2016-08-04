@@ -77,14 +77,14 @@ int main(int argc, char** args) {
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
   // print mesh info
-  mlMsh.PrintInfo();
+ 
   // add variables to mlSol
 
   MultiLevelSolution mlSol(&mlMsh);
   
   mlSol.AddSolution("Error",  DISCONTINOUS_POLYNOMIAL, ZERO);
 
-  mlSol.AddSolution("U", LAGRANGE, FIRST);
+  mlSol.AddSolution("U", LAGRANGE, SECOND);
 
   mlSol.Initialize("All");
 
@@ -171,7 +171,7 @@ int main(int argc, char** args) {
     
     //refine the mesh
     MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
-    bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(1.e-2, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));  //non-uniform
+    bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(1.e-3, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));  //non-uniform
     
     //bool elementsHaveBeenRefined = true; //uniform
     //meshcoarser.FlagAllElementsToBeRefined();//uniform
@@ -241,6 +241,8 @@ int main(int argc, char** args) {
   }
 
 
+   mlMsh.PrintInfo();
+  
   return 0;
 }
 
@@ -528,13 +530,27 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
       }
     }
 
-    double Rhok = 0.;
+   
 
+    // find h_k
+    double hk = 0.;
+    for(unsigned i = 0; i < nDofsX - 1; i++) {
+      for(unsigned j = i + 1; j < nDofsX; j++) {
+	double dij = 0.;
+        for(unsigned jdim = 0; jdim < dim; jdim++) {
+          dij += (crdX[jdim][i] - crdX[jdim][j]) * (crdX[jdim][i] - crdX[jdim][j]);
+        }
+	dij = sqrt(dij);
+	if(dij > hk)
+	hk = dij;
+      }
+    }
+    
+    double Rhok = 0.;
     // *** Gauss point loop ***
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solUType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][solUType]->Jacobian(crdX, ig, weight, phi, phi_x, phi_xx);
-
 
       vector < double > x_gss(dim, 0.);
       double laplaceUh =  0.;
@@ -542,7 +558,6 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
       double Uig = 0.;
       std::vector< double > gradUig(dim,0);
       
-
       for(unsigned i = 0; i < nDofsU; i++) {
 	Uig += phi[i] * solU[i];
         for(unsigned j = 0; j < dim; j++) {
@@ -553,26 +568,15 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
       }
 
       //std::cout << laplaceUh << " ";
-      // find h_k
-      double hk = 0.;
-      double dij = 0.;
-      for(unsigned i = 0; i < nDofsX - 1; i++) {
-        for(unsigned j = i + 1; j < nDofsX; j++)
-          for(unsigned jdim = 0; jdim < dim; jdim++) {
-            dij += (crdX[jdim][i] - crdX[jdim][j]) * (crdX[jdim][i] - crdX[jdim][j]);
-          }
-        dij = sqrt(dij);
-        if(dij > hk)
-          hk = dij;
-      }
+
 
       l2norm2 += Uig*Uig*weight;
       for(unsigned j = 0; j < dim; j++) {
 	seminorm2 += gradUig[j] * gradUig[j] * weight;
       }
 
-      double LaplaceUexact = GetExactSolutionLaplace(x_gss);
-      Rhok += hk * (LaplaceUexact - laplaceUh) * (LaplaceUexact - laplaceUh) * weight;
+      double f = GetExactSolutionLaplace(x_gss);
+      Rhok += ( f - laplaceUh) * (f - laplaceUh) * weight;
 
       // ||u-u_e||
       vector <double> solGrad (dim);
@@ -583,9 +587,9 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
       double exactSol = GetExactSolutionValue (x_gss);
       l2normE += (exactSol - Uig) * (exactSol - Uig) * weight;
       
-    } //end element loop for each process
-
-    Rhok = sqrt(Rhok);
+    } //end gauss loop for each element
+       
+    Rhok = hk * sqrt(Rhok);
     
     if( msh->el->GetIfElementCanBeRefined(iel) ) {
       sol->_Sol[errorIndex]->set(iel, Rhok);
@@ -630,6 +634,9 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
   double H1normE = sqrt( l2normE + seminormE );
   
   unsigned N = msh->GetNumberOfElements();
+   
+  //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << (2.*sqrt(N)) / ( 3.*H1norm ) <<std::endl;
+ 
   *sol->_Sol[errorIndex] *= (2.*sqrt(N)) / ( 3.*H1norm );
   
   std::pair < double, double > norm;
