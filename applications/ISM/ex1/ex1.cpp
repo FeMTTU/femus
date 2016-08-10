@@ -26,13 +26,13 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 
 // function for the advection: simple translation along y
-std::vector<double> translate(std::vector<double> x) {
-    x[1] = 0.;
-    x[2] = 1.;
+std::vector<double> trial(std::vector<double> x) {  // x[0] is time
+    //x[1] = 0.;
+    //x[2] = 1.;
     std::vector< double > y(2,0);
-    
-    y[0] = x[1];
-    y[1] = x[2];
+    double pi = 3.14159265359;
+    y[0] = - pi * x[2]; // exact x(t) = cos(pi t) 
+    y[1] = pi * x[1];  // exact y(t) = sin(pi t) 
     
     return y;
 }
@@ -164,7 +164,7 @@ int main(int argc, char** args) {
 // Test 9 (QUAD): the marker is shared between two processors, proc 1 finds it in element 120, proc 3 finds it in element 254
 
         x[0]=1.;
-        x[1]=2.;
+        x[1]=0.;
         x[2]=0.;
 
 
@@ -174,7 +174,7 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a9QUAD.GetMarkerType() <<std::endl;
 
-       std::vector<double> y = a9QUAD.GetPosition(translate, 5, 1);
+       std::vector<double> y = a9QUAD.GetPosition(trial, 16, 0.5);
        for(unsigned i=0; i<2; i++){
 	 std::cout << "y[" << i << "] = " << y[i] << std::endl ;
       }
