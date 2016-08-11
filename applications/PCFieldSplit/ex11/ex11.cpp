@@ -159,7 +159,7 @@ int main(int argc, char** args) {
   FieldSplitTree FS_T( PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
 
   FS_T.SetAsmBlockSize(4);
-  FS_T.SetAsmNumeberOfSchurVariables(1);
+  FS_T.SetAsmNumeberOfSchurVariables(0);
 
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
@@ -167,7 +167,7 @@ int main(int argc, char** args) {
   FS2.push_back(&FS_T);
   if( precType == FS_TVp ) FS2.push_back(&FS_NS); //Navier-Stokes block last
 
-  FieldSplitTree FS_NST( JACOBI, FIELDSPLIT_PRECOND, FS2, "Benard");
+  FieldSplitTree FS_NST( RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
 
   //END buid fieldSplitTree
   if ( precType == FS_VTp || precType == FS_TVp ) system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Field-Split preconditioned
@@ -365,7 +365,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     solP.resize(nDofsP);
 
-    aResT.resize(nDofsV);    //resize
+    aResT.resize(nDofsT);    //resize
     std::fill(aResT.begin(), aResT.end(), 0);    //set aRes to zero
 
     for (unsigned  k = 0; k < dim; k++) {

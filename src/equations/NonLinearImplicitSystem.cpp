@@ -211,7 +211,7 @@ namespace femus {
 
     double totalSolverTime = static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC;
     std::cout << std::endl << "   *** Nonlinear " << _solverType << " TIME: " << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
-              << totalSolverTime <<  " = assembly TIME( " << totalAssembyTime << " ) + ( "
+              << totalSolverTime <<  " = assembly TIME( " << totalAssembyTime << " ) + "
               << " solver TIME( " << totalSolverTime - totalAssembyTime << " ) "<< std::endl;
 
   }
