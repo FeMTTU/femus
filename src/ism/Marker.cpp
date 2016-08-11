@@ -2832,7 +2832,8 @@ std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<dou
     }
 
 
-    while(x[0][0] < T) {
+    double step = 0;
+    while(step < n) {
 
         std::cout << "------------------------------------- t = " << x[0][0] << "----------------------------------" <<std::endl;
         std::cout << "------------------------------------- h = " << h << "------------------------------------" <<std::endl;
@@ -2886,7 +2887,9 @@ std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<dou
         }
         //update t
         x[0][0] += h ;
-	std::cout << "t = " << x[0][0] << " , " << "T = " << T << std::endl;
+
+	//update the step
+	step++;
     }
 
     for(unsigned j=1; j<dim + 1; j++) {
