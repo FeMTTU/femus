@@ -73,7 +73,7 @@ namespace femus {
       std::cout << "Error! The Solution type with PCFieldSplit - ASM preconditioner has to be specified"<<std::endl;
       abort();
     }
-    
+
     //Only for ASM preconditioner
     _asmLocalIs.reserve(10);
     _asmOverlappingIs.reserve(10);
@@ -327,9 +327,9 @@ namespace femus {
       }
       PCASMSetOverlap(pc, _asmOverlapping);
       KSPSetUp(ksp);
-      
+
       //PCASMSetLocalType(pc, PC_COMPOSITE_MULTIPLICATIVE);
-      
+
       KSP* subksps;
       PetscInt nlocal;
       PCASMGetSubKSP(pc, &nlocal, PETSC_NULL, &subksps);
@@ -608,18 +608,18 @@ namespace femus {
     vector < unsigned > indexc(ElemOffsetSize, ElemOffsetSize);
 
     vector < vector < unsigned > > block_elements;
-        
+
     unsigned base = pow(2, msh->GetDimension());
     unsigned elementBlockNumber[2];
     elementBlockNumber[0] = pow(base, _asmBlockSize);
     elementBlockNumber[1] = pow(base, _asmBlockSize);
-    
+
 
     elementBlockNumber[0] = 256;
     elementBlockNumber[1] = 256;
 
     _asmBlockMaterialRange.resize(level);
-    
+
     MeshASMPartitioning meshasmpartitioning(*msh);
 
     meshasmpartitioning.DoPartition(elementBlockNumber, block_elements, _asmBlockMaterialRange[level-1]);
