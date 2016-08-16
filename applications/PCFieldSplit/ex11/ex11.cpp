@@ -46,7 +46,35 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
 
+enum PrecType {
+    FS_VTp = 1,
+    FS_TVp,
+    ASM_VTp,
+    ASM_TVp,
+    ILU_VTp,
+    ILU_TVp
+};
+
 int main(int argc, char** args) {
+
+  unsigned precType = 0;
+  if (argc >= 2) {
+    if( !strcmp("FS_VT", args[1])) precType = FS_VTp;
+    else if( !strcmp("FS_TV", args[1])) precType = FS_TVp;
+    else if( !strcmp("ASM_VT", args[1])) precType = ASM_VTp;
+    else if( !strcmp("ASM_TV", args[1])) precType = ASM_TVp;
+    else if( !strcmp("ILU_VT",args[1])) precType = ILU_VTp;
+    if( !strcmp("ILU_TV",args[1])) precType = ILU_TVp;
+
+    if( precType == 0) {
+      std::cout << "wrong input arguments!" << std::endl;
+      abort();
+    }
+  }
+  else {
+    std::cout << "No input argument set default preconditioner = NS+T" << std::endl;
+    precType == FS_VTp;
+  }
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
@@ -64,9 +92,8 @@ int main(int argc, char** args) {
   unsigned numberOfUniformLevels = 8;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
-
   // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
+  //mlMsh.EraseCoarseLevels(0);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -77,10 +104,8 @@ int main(int argc, char** args) {
   mlSol.AddSolution("T", LAGRANGE, SERENDIPITY);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
-
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
-  //mlSol.AddSolution("P", LAGRANGE, FIRST);
   mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
@@ -97,16 +122,21 @@ int main(int argc, char** args) {
   // add system Poisson in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
 
+  if( precType == FS_TVp || precType == ASM_TVp || precType == ILU_TVp)
+    system.AddSolutionToSystemPDE("T");
+
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
+  if( precType == ASM_VTp)
+    system.AddSolutionToSystemPDE("T");
+  if (dim == 3) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("P");
 
-  if (dim == 3) system.AddSolutionToSystemPDE("W");
-
-  system.AddSolutionToSystemPDE("T");
+  if( precType == FS_VTp || precType == ILU_VTp) system.AddSolutionToSystemPDE("T");
 
 
+  //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
   std::vector < unsigned > fieldUVP(3);
   fieldUVP[0] = system.GetSolPdeIndex("U");
   fieldUVP[1] = system.GetSolPdeIndex("V");
@@ -120,81 +150,29 @@ int main(int argc, char** args) {
   FieldSplitTree FS_NS( PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
   FS_NS.SetAsmBlockSize(4);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
-    
 
-//   std::vector < unsigned > fieldUV(2);
-//   fieldUV[0] = system.GetSolPdeIndex("U");
-//   fieldUV[1] = system.GetSolPdeIndex("V");
-//
-//   FieldSplitTree FS_UV( PREONLY, ILU_PRECOND, fieldUV, "Velocity");
-//
-//   std::vector < unsigned > fieldP(1);
-//   fieldP[0] = system.GetSolPdeIndex("P");
-//
-//   FieldSplitTree FS_P( PREONLY, ILU_PRECOND, fieldP, "pressure");
-//
-//    std::vector < FieldSplitTree *> FS1;
-//
-//   FS1.reserve(2);
-//   FS1.push_back(&FS_UV);
-//   FS1.push_back(&FS_P);
-//   FieldSplitTree FS_NS( GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
-
-
-  
   std::vector < unsigned > fieldT(1);
   fieldT[0] = system.GetSolPdeIndex("T");
-  
+
   std::vector < unsigned > solutionTypeT(1);
   solutionTypeT[0] = mlSol.GetSolutionType("T");
-  
-  
+
   FieldSplitTree FS_T( PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
   FS_T.SetAsmBlockSize(4);
-  FS_T.SetAsmNumeberOfSchurVariables(1);
-  
-  
+  FS_T.SetAsmNumeberOfSchurVariables(0);
+
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
-  FS2.push_back(&FS_NS);
+  if( precType == FS_VTp ) FS2.push_back(&FS_NS); //Navier-Stokes block first
   FS2.push_back(&FS_T);
-  FieldSplitTree FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
-  //FieldSplitTree FS_NST( GMRES, FS_SCHUR_PRECOND, FS2, "Benard");
+  if( precType == FS_TVp ) FS2.push_back(&FS_NS); //Navier-Stokes block last
 
-//   std::vector < unsigned > fieldUV(2);
-//   fieldUV[0] = system.GetSolPdeIndex("U");
-//   fieldUV[1] = system.GetSolPdeIndex("V");
-//   FieldSpliTreeStructure FS_UV( GMRES, ILU_PRECOND, fieldUV , "Velocity");
-//
-//   std::vector < unsigned > fieldP(1);
-//   fieldP[0] = system.GetSolPdeIndex("P");
-//   FieldSpliTreeStructure FS_P( GMRES, ILU_PRECOND, fieldP, "Pressure");
-//
-//   std::vector < FieldSpliTreeStructure *> FS1;
-//
-//   FS1.reserve(2);
-//   FS1.push_back(&FS_UV);
-//   FS1.push_back(&FS_P);
-//
-//   FieldSpliTreeStructure FS_NS( GMRES, ILU_PRECOND, FS1, "Navier-Stokes");
-//
-//   std::vector < unsigned > fieldT(1);
-//   fieldT[0] = system.GetSolPdeIndex("T");
-//   FieldSpliTreeStructure FS_T( PREONLY, ILU_PRECOND, fieldT, "Temperature");
-//
-//   std::vector < FieldSpliTreeStructure *> FS2;
-//
-//   FS2.reserve(2);
-//   FS2.push_back(&FS_NS);
-//   FS2.push_back(&FS_T);
-//   FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
+  FieldSplitTree FS_NST( RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
 
-
-
-
-//  system.SetMgSmoother(GMRES_SMOOTHER); // ILU
-    system.SetMgSmoother(FIELDSPLIT_SMOOTHER); //  Field-Split preconditioned
-//  system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz preconditioner (VANKA)
+  //END buid fieldSplitTree
+  if ( precType == FS_VTp || precType == FS_TVp ) system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Field-Split preconditioned
+  else if( precType == ASM_VTp || precType == ASM_TVp) system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz preconditioner
+  else if( precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(GMRES_SMOOTHER );
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
@@ -206,7 +184,7 @@ int main(int argc, char** args) {
 
   system.SetMaxNumberOfLinearIterations(10);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
-  
+
   system.SetMgType(F_CYCLE);
 
   system.SetNumberPreSmoothingStep(1);
@@ -216,13 +194,14 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  system.SetFieldSplitTree(&FS_NST);
+  if ( precType == FS_VTp || precType == FS_TVp ) system.SetFieldSplitTree(&FS_NST);
   system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
+  //system.SetElementBlockNumber("All");
 
   system.SetSamePreconditioner();
   system.MGsolve();
@@ -386,7 +365,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     solP.resize(nDofsP);
 
-    aResT.resize(nDofsV);    //resize
+    aResT.resize(nDofsT);    //resize
     std::fill(aResT.begin(), aResT.end(), 0);    //set aRes to zero
 
     for (unsigned  k = 0; k < dim; k++) {
@@ -478,11 +457,10 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           solP_gss += phiP[i] * solP[i];
         }
 
-        
         double alpha = 1.;
         double beta = 1.;//40000.;
-	
-	double Pr = 0.1;
+
+	double Pr = 1./10;
         double Ra = 10000;
 
         // *** phiT_i loop ***
