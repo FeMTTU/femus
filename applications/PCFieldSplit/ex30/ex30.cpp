@@ -218,26 +218,22 @@ int main(int argc, char** args) {
   //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
   std::vector < unsigned > fieldTs(1);
   fieldTs[0] = system2.GetSolPdeIndex("Ts");
-  //fieldTs[1] = system2.GetSolPdeIndex("Lambda");
-  //fieldTs[2] = system2.GetSolPdeIndex("T0");
   std::vector < unsigned > solutionTypeTs(1);
   solutionTypeTs[0] = mlSol.GetSolutionType("Ts");
-  //solutionTypeTs[1] = mlSol.GetSolutionType("Lambda");
-  //solutionTypeTs[2] = mlSol.GetSolutionType("T0");
   FieldSplitTree FS_Ts( PREONLY, ASM_PRECOND, fieldTs, solutionTypeTs, "Ts");
   FS_Ts.SetAsmBlockSize(4);
   FS_Ts.SetAsmNumeberOfSchurVariables(0);
 
 
-  std::vector < unsigned > fieldLambda(1);
-  fieldLambda[0] = system2.GetSolPdeIndex("Lambda");
-  //fieldLambda[1] = system2.GetSolPdeIndex("T0");
-  std::vector < unsigned > solutionTypeLambda(1);
-  solutionTypeLambda[0] = mlSol.GetSolutionType("Lambda");
-  //solutionTypeLambda[1] = mlSol.GetSolutionType("T0");
-  FieldSplitTree FS_Lambda( PREONLY, ASM_PRECOND, fieldLambda, solutionTypeLambda, "Lambda");
-  FS_Lambda.SetAsmBlockSize(4);
-  FS_Lambda.SetAsmNumeberOfSchurVariables(0);
+//   std::vector < unsigned > fieldLambda(1);
+//   fieldLambda[0] = system2.GetSolPdeIndex("Lambda");
+//   //fieldLambda[1] = system2.GetSolPdeIndex("T0");
+//   std::vector < unsigned > solutionTypeLambda(1);
+//   solutionTypeLambda[0] = mlSol.GetSolutionType("Lambda");
+//   //solutionTypeLambda[1] = mlSol.GetSolutionType("T0");
+//   FieldSplitTree FS_Lambda( PREONLY, ASM_PRECOND, fieldLambda, solutionTypeLambda, "Lambda");
+//   FS_Lambda.SetAsmBlockSize(4);
+//   FS_Lambda.SetAsmNumeberOfSchurVariables(0);
 
   std::vector < unsigned > fieldT0(2);
   fieldT0[0] = system2.GetSolPdeIndex("T0");
