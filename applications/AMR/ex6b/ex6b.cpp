@@ -224,7 +224,7 @@ int main(int argc, char** args) {
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "H1 Relative ERROR and ORDER OF CONVERGENCE:\n\n";
-  std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
+  std::cout << "LEVEL \n";
 
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
     std::cout << i + 1 << "\t";
@@ -630,6 +630,9 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
 
   delete norm_vec;
 
+  double L2norm = sqrt(l2norm2);
+  double L2normE = sqrt(l2normE);
+  
   double H1norm = sqrt( l2norm2 + seminorm2 );
   double H1normE = sqrt( l2normE + seminormE );
   
@@ -639,9 +642,13 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
  
   *sol->_Sol[errorIndex] *= (2.*sqrt(N)) / ( 3.*H1norm );
   
+  //std::pair < double, double > norm;
+  //norm.first  = H1normE;
+  //norm.second = H1norm;
+  
   std::pair < double, double > norm;
-  norm.first  = H1normE;
-  norm.second = H1norm;
+  norm.first  = L2normE;
+  norm.second = L2norm;
   
   sol->_Sol[errorIndex]->close();
   
