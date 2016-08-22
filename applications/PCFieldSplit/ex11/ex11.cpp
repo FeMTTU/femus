@@ -24,6 +24,10 @@
 
 using namespace femus;
 
+double InitalValueT(const std::vector < double >& x){
+  return (x[0]+0.5);
+}
+
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
@@ -94,7 +98,7 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(0);
+  //mlMsh.EraseCoarseLevels(2);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -112,6 +116,7 @@ int main(int argc, char** args) {
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
+  mlSol.Initialize("T",InitalValueT);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
