@@ -27,6 +27,7 @@
 #include "map"
 #include "Mesh.hpp"
 
+#include "GeomElTypeEnum.hpp"
 
 
 namespace femus {
@@ -58,7 +59,10 @@ namespace femus {
     
   private:
     
-    std::vector< double > InverseMappingQuad(const unsigned &currentElem, const unsigned &solutionType, std::vector< double > &x);
+    void GetElementCoefficients(std::vector < std::vector <double > > &a, const short unsigned &currentElement, const unsigned &solutiontype);
+    
+    
+    std::vector< double > InverseMappingQuad(const unsigned &currentElem, const unsigned &solutionType, const std::vector< double > &x);
     std::vector< double > InverseMappingTri(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
     std::vector< double > InverseMappingHex(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
     std::vector< double > InverseMappingTet(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
