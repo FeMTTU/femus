@@ -834,14 +834,13 @@ namespace femus {
       delta2 += deltak * deltak;
     }
 
+    for (int k = 0; k < dim; k++) {
+          std::cout << "xT[" << k << "]= " << xp[k] <<  " ";
+    }
+    std::cout << std::endl;
+    
     if (delta2 < 1.0e-6) {
       convergence = true;
-
-      for (int k = 0; k < dim; k++) {
-        std::cout << xp[k] << " ";
-      }
-
-      std::cout << std::endl;
     }
 
     return convergence;
@@ -870,7 +869,7 @@ namespace femus {
     //END extraction
 
 
-    //BEGIN projection nodal to polynomial
+    //BEGIN projection nodal to polynomial coefficients
     std::vector < std::vector < double > > a;
     ProjectNodalToPolynomialCoefficients(a, xv, ielType, solType);
     //END projection
@@ -891,6 +890,8 @@ namespace femus {
       GetPolynomialShapeFunctionGradientHessian(phi, gradPhi, hessPhi, xi, ielType, solType);
 
       convergence = GetNewLocalCoordinates(xi, x, phi, gradPhi, hessPhi, a, dim, nDofs);
+      std::cout << "xi = " << xi[0] << " , " << "eta = " << xi[1] << std::endl;
+      
     }
     //END inverse mapping search
 
@@ -2807,10 +2808,13 @@ namespace femus {
     unsigned dim = _mesh->GetDimension();
 
     for (int solType = 0; solType < 3; solType++) {
+      std::cout << "\n\n--------------------------------------------------" << std::endl;
       std::cout << "solType = " << solType << std::endl;
+       
       int iel = _mesh->_elementOffset[_iproc + 1] - 1  ;
       std::cout << "iel = " << iel << std::endl;
-
+      std::cout << "--------------------------------------------------\n" << std::endl;
+      
       unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
       short unsigned ielType = _mesh->GetElementType(iel);
 
@@ -2859,11 +2863,11 @@ namespace femus {
 
         for (int k = 0; k < dim; k++) {
           std::cout << "xiT[" << k << "]= " << xiT[k] <<  " xi[" << k << "]= " << xi[k];
-          std::cout << " test: " << xiT[k] - xi[k] << std::endl;
+          std::cout << " error: " << xiT[k] - xi[k] << std::endl;
         }
 
 
-        std::cout << " -------------------------------------------------- " << std::endl;
+        std::cout << "--------------------------------------------------\n" << std::endl;
       }
 
     }
