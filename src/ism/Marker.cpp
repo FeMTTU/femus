@@ -20,6 +20,7 @@
 #include "NumericVector.hpp"
 #include <math.h>
 
+#include "PolynomialBases.hpp"
 
 const unsigned facePointNumber[6] = {0, 0, 0, 9, 7, 0};
 
@@ -90,32 +91,36 @@ namespace femus {
     // look to the closest element among a restricted list
     double modulus = 1.e10;
     unsigned iel = UINT_MAX;
-    for(int jel = _mesh->_elementOffset[_iproc]; jel < _mesh->_elementOffset[_iproc + 1]; jel += 25) {
+
+    for (int jel = _mesh->_elementOffset[_iproc]; jel < _mesh->_elementOffset[_iproc + 1]; jel += 25) {
 
       unsigned interiorNode = _mesh->GetElementDofNumber(jel, 2) - 1;
       unsigned jDof  = _mesh->GetSolutionDof(interiorNode, jel, 2);    // global to global mapping between coordinates node and coordinate dof
 
       double distance2 = 0;
-      for(unsigned k = 0; k < dim; k++) {
+
+      for (unsigned k = 0; k < dim; k++) {
         double dk = (*_mesh->_topology->_Sol[k])(jDof) - _x[k];     // global extraction and local storage for the element coordinates
         distance2 += dk * dk;
       }
 
       double modulusKel = sqrt(distance2);
 
-      if(modulusKel < modulus) {
+      if (modulusKel < modulus) {
         iel = jel;
         modulus = modulusKel;
       }
     }
-    if(debug) {
-      if(iel == UINT_MAX) {
+
+    if (debug) {
+      if (iel == UINT_MAX) {
         std::cout << "Warning the marker is located on unreasonable distance from the mesh >= 1.e10" << std::endl;
       }
       else {
         std::cout << "the smart search starts from element " << iel << std::endl;
       }
     }
+
     //END SMART search:
 
 
@@ -128,31 +133,32 @@ namespace femus {
     previousElem[_iproc] = iel;
     unsigned nextProc = _iproc;
 
-    while(!elementHasBeenFound) {
+    while (!elementHasBeenFound) {
 
       //BEGIN next element search
-      while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
-        if(dim == 2) {
+      while (elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
+        if (dim == 2) {
           nextElem[_iproc] = GetNextElement2D(iel, previousElem[_iproc]);
         }
-        else if(dim == 3) {
+        else if (dim == 3) {
           nextElem[_iproc] = GetNextElement3D(iel, previousElem[_iproc]);
         }
 
         previousElem[_iproc] = iel;
 
-        if(nextElem[_iproc] == iel) {
+        if (nextElem[_iproc] == iel) {
           _elem = iel;
           elementHasBeenFound = true;
           processorMarkerFlag[_iproc] = 1;
         }
-        else if(nextElem[_iproc] == UINT_MAX) {
+        else if (nextElem[_iproc] == UINT_MAX) {
           pointIsOutsideTheDomain = true;
           processorMarkerFlag[_iproc] = 0;
         }
         else {
           nextProc = _mesh->IsdomBisectionSearch(nextElem[_iproc], 3);
-          if(nextProc != _iproc) {
+
+          if (nextProc != _iproc) {
             pointIsOutsideThisProcess = true;
             processorMarkerFlag[_iproc] = 2;
           }
@@ -161,71 +167,81 @@ namespace femus {
           }
         }
       }
+
       std::cout << std::flush;
       MPI_Barrier(PETSC_COMM_WORLD);
 
-      if(debug) {
-        if(elementHasBeenFound) {
+      if (debug) {
+        if (elementHasBeenFound) {
           std::cout << " The marker belongs to element " << _elem << std::endl;
         }
-        else if(pointIsOutsideTheDomain) {
+        else if (pointIsOutsideTheDomain) {
           std::cout << " The marker does not belong to this domain" << std::endl;
         }
-        else if(pointIsOutsideThisProcess) {
+        else if (pointIsOutsideThisProcess) {
           std::cout << "proc " << _iproc << " believes the marker is in proc = " << nextProc << std::endl;
         }
       }
+
       //END next element search
 
       //BEGIN process exchange
       //send/receive if any process found the element
-      for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
-        if(jproc != _iproc) {
-          if(processorMarkerFlag[_iproc] == 2 && jproc == nextProc) {
+      for (unsigned jproc = 0; jproc < _nprocs; jproc++) {
+        if (jproc != _iproc) {
+          if (processorMarkerFlag[_iproc] == 2 && jproc == nextProc) {
             unsigned three = 3;
             MPI_Send(&three, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
           }
           else {
             MPI_Send(&processorMarkerFlag[_iproc], 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
           }
+
           MPI_Recv(&processorMarkerFlag[jproc], 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
         }
       }
+
       // check if any process found the element
       unsigned sumFlag = 0;
-      for(unsigned i = 0; i < _nprocs; i++) {
+
+      for (unsigned i = 0; i < _nprocs; i++) {
         sumFlag += processorMarkerFlag[i];
-        if(processorMarkerFlag[i] == 1) {
+
+        if (processorMarkerFlag[i] == 1) {
           elementHasBeenFound = true;
           break;
         }
       }
-      if(sumFlag == 0) {   // all the processes beleive that the marker is outside the domain
+
+      if (sumFlag == 0) {  // all the processes beleive that the marker is outside the domain
         std::cout << "Marker is outside the domain" << std::endl;
         _elem = UINT_MAX;
-        if(debug) {
-          for(unsigned j = 0 ; j < _nprocs; j++) {
+
+        if (debug) {
+          for (unsigned j = 0 ; j < _nprocs; j++) {
             std::cout << " processorMarkerFlag[" << j << "] = " << processorMarkerFlag[j] <<  std::endl;
           }
         }
+
         break;
       }
 
       // _iproc sends its nextElem (which is in jproc) to jproc
-      if(!elementHasBeenFound) {
-        if(processorMarkerFlag[_iproc] == 2) {
+      if (!elementHasBeenFound) {
+        if (processorMarkerFlag[_iproc] == 2) {
           MPI_Send(&nextElem[_iproc], 1, MPI_UNSIGNED, nextProc, 1 , PETSC_COMM_WORLD);
           MPI_Send(&previousElem[_iproc], 1, MPI_UNSIGNED, nextProc, 2 , PETSC_COMM_WORLD);
         }
-        for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
-          if(processorMarkerFlag[jproc] == 3) {
+
+        for (unsigned jproc = 0; jproc < _nprocs; jproc++) {
+          if (processorMarkerFlag[jproc] == 3) {
             MPI_Recv(&nextElem[jproc], 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Recv(&previousElem[jproc], 1, MPI_UNSIGNED, jproc, 2 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
           }
         }
 
-        if(debug) {
-          for(unsigned j = 0 ; j < _nprocs; j++) {
+        if (debug) {
+          for (unsigned j = 0 ; j < _nprocs; j++) {
             std::cout << " processorMarkerFlag[" << j << "] = " << processorMarkerFlag[j] << "  " << nextElem[j] << std::endl;
           }
         }
@@ -234,31 +250,35 @@ namespace femus {
         //BEGIN SMART search among all the elements received by _iproc and sent from jprocs
         double modulus = 1.e10;
         iel = _mesh->_elementOffset[_iproc + 1] ;
-        for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
-          if(processorMarkerFlag[jproc] == 3) {
+
+        for (unsigned jproc = 0; jproc < _nprocs; jproc++) {
+          if (processorMarkerFlag[jproc] == 3) {
 
             unsigned jel = nextElem[jproc];
             unsigned interiorNode = _mesh->GetElementDofNumber(jel, 2) - 1;
 
             unsigned jDof  = _mesh->GetSolutionDof(interiorNode, jel, 2);    // global to global mapping between coordinates node and coordinate dof
             double distance2 = 0;
-            for(unsigned k = 0; k < dim; k++) {
+
+            for (unsigned k = 0; k < dim; k++) {
               double dk = (*_mesh->_topology->_Sol[k])(jDof) - _x[k];     // global extraction and local storage for the element coordinates
               distance2 += dk * dk;
             }
+
             double modulusKel = sqrt(distance2);
 
-            if(modulusKel < modulus) {
+            if (modulusKel < modulus) {
               iel = jel;
               previousElem[_iproc] = previousElem[jproc];
               modulus = modulusKel;
 
             }
           }
+
           //END SMART search
         }
 
-        if(iel != _mesh->_elementOffset[_iproc + 1]) {
+        if (iel != _mesh->_elementOffset[_iproc + 1]) {
           std::cout << "start element= " << iel << std::endl;
           pointIsOutsideTheDomain = false;
           pointIsOutsideThisProcess = false;
@@ -297,17 +317,17 @@ namespace femus {
     std::vector<double> xc(dim, 0); //stores the coordinates of the face node of currentElem
     unsigned faceNodeLocalIndex;
 
-    if(currentElementType == 3) faceNodeLocalIndex = 8;
-    else if(currentElementType == 4) faceNodeLocalIndex = 6;
+    if (currentElementType == 3) faceNodeLocalIndex = 8;
+    else if (currentElementType == 4) faceNodeLocalIndex = 6;
 
     unsigned faceNodeDof = _mesh->GetSolutionDof(faceNodeLocalIndex, currentElem, 2);
     //std::cout << "faceNodeDof = " << faceNodeDof << std::endl;
 
-    for(unsigned k = 0; k < dim; k++) {
+    for (unsigned k = 0; k < dim; k++) {
       xc[k] = (*_mesh->_topology->_Sol[k])(faceNodeDof) - _x[k];    // coordinates are translated so that the marker is the new origin
     }
 
-    if(xc[0]*xc[0] < epsilon2 && xc[1]*xc[1] < epsilon2) {
+    if (xc[0]*xc[0] < epsilon2 && xc[1]*xc[1] < epsilon2) {
       std::cout << "the marker is the central face node" << std::endl;
       markerIsInElement = true; //the marker is xc
     }
@@ -317,16 +337,19 @@ namespace femus {
       std::vector<double> r(dim, 0);   //coordinates of the intersection point between the line of the edges and the line that connects the marker and the face node
       std::vector< std::vector < double > > xv(dim);   //stores the coordinates of the vertices and midpoints of the element, the first and the last are the same
 
-      for(unsigned k = 0; k < dim; k++) {
+      for (unsigned k = 0; k < dim; k++) {
         xv[k].reserve(9);
       }
-      for(unsigned k = 0; k < dim; k++) {
+
+      for (unsigned k = 0; k < dim; k++) {
         xv[k].resize(facePointNumber[currentElementType]);
       }
-      for(unsigned i = 0; i < facePointNumber[currentElementType]; i++) {
+
+      for (unsigned i = 0; i < facePointNumber[currentElementType]; i++) {
         unsigned inodeDof  = _mesh->GetSolutionDof(facePoints[currentElementType][i], currentElem, 2);
         std::cout << "inodeDof = " << inodeDof << std::endl;
-        for(unsigned k = 0; k < dim; k++) {
+
+        for (unsigned k = 0; k < dim; k++) {
           xv[k][i] = (*_mesh->_topology->_Sol[k])(inodeDof) - _x[k];
         }
       }
@@ -334,25 +357,28 @@ namespace femus {
       // rescaling coordinates to properly handle different scales of meshes
       double length = 0.;
       double sum = 0.;
-      for(unsigned i = 0; i < facePointNumber[currentElementType] - 1; i++) {
-        for(unsigned k = 0; k < dim; k++) {
+
+      for (unsigned i = 0; i < facePointNumber[currentElementType] - 1; i++) {
+        for (unsigned k = 0; k < dim; k++) {
           sum += (xv[k][i + 1] - xv[k][i]) * (xv[k][i + 1] - xv[k][i]);
         }
+
         length += sqrt(sum);
       }
 
       length /= facePointNumber[currentElementType];
       std::cout << "length= " << length << std::endl;
 
-      for(unsigned k = 0; k < dim; k++) {
+      for (unsigned k = 0; k < dim; k++) {
         xc[k] /= length;
-        for(unsigned i = 0; i < facePointNumber[currentElementType]; i++) {
+
+        for (unsigned i = 0; i < facePointNumber[currentElementType]; i++) {
           xv[k][i] /= length;
         }
       }
 
 
-      for(unsigned i = 0 ; i < facePointNumber[currentElementType] - 1; i++) {
+      for (unsigned i = 0 ; i < facePointNumber[currentElementType] - 1; i++) {
 
         // let's find the plane passing through the points xv[][i], xv[][i+1] and xv[][2] = xv[][i] but with z = length .
         double A = (xv[1][i + 1] - xv[1][i]);
@@ -364,7 +390,7 @@ namespace femus {
         double tTop = A * xv[0][i] + B * xv[1][i];
         std::cout << "tBottom = " << tBottom << " , " << "A= " << A << " , " <<  "B= " << B << " , " << "xv[1][" << i << "] =" << xv[1][i] << " , " <<  "tTop = " <<   tTop << std::endl;
 
-        if(fabs(tBottom) < epsilon && tTop != 0) {
+        if (fabs(tBottom) < epsilon && tTop != 0) {
           // std::cout << "The plane of edge " << i << "does not intersect the line" <<std::endl;
         }
 
@@ -373,45 +399,51 @@ namespace femus {
           t = tTop / tBottom ;
           std::cout << "t = " << t << std::endl;
 
-          for(unsigned k = 0; k < dim; k++) {
+          for (unsigned k = 0; k < dim; k++) {
             r[k] = t * xc[k];
             //std::cout << "r[" << k << "] = " << r[k] <<std::endl;
           }
 
-          if(t < 1) {   //if not, it means the point r is far away from the marker, and we don't want to go in that direction
+          if (t < 1) {  //if not, it means the point r is far away from the marker, and we don't want to go in that direction
 
             std::vector< std::vector < double > > xvr(dim);
-            for(unsigned k = 0; k < dim; k++) {
+
+            for (unsigned k = 0; k < dim; k++) {
               xvr[k].reserve(9);
             }
-            for(unsigned k = 0; k < dim; k++) {
+
+            for (unsigned k = 0; k < dim; k++) {
               xvr[k].resize(facePointNumber[currentElementType]);
             }
 
             //now we have to determine if r is inside edge i
-            for(unsigned j = 0; j < facePointNumber[currentElementType]; j++) {
-              for(unsigned k = 0; k < dim; k++) {
+            for (unsigned j = 0; j < facePointNumber[currentElementType]; j++) {
+              for (unsigned k = 0; k < dim; k++) {
                 xvr[k][j] = xv[k][j] - r[k];     //transate again the reference frame so that the origin is r
               }
             }
 
 
-            if((xvr[0][i] * xvr[0][i]  + xvr[1][i] * xvr[1][i]) < epsilon2 ||
+            if ((xvr[0][i] * xvr[0][i]  + xvr[1][i] * xvr[1][i]) < epsilon2 ||
                 (xvr[0][i + 1]*xvr[0][i + 1] + xvr[1][i + 1]*xvr[1][i + 1]) < epsilon2) {
               std::cout << "intersection on a vertex of the edge" << std::endl;
-              if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the edges
 
-                if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is one of the nodes" << std::endl;
-                if(t < 0) std::cout << "setting markerIsInElement = true because r is one of the nodes" << std::endl;
+              if (fabs(t) < epsilon || t < 0) {  //this means the marker is on one of the edges
+
+                if (fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is one of the nodes" << std::endl;
+
+                if (t < 0) std::cout << "setting markerIsInElement = true because r is one of the nodes" << std::endl;
 
                 markerIsInElement = true;
                 break;
               }
               else {
                 unsigned nodeIndex;
-                if(i % 2 == 0 && i != facePointNumber[currentElementType]) nodeIndex = i / 2 ;
-                else if(i == facePointNumber[currentElementType]) nodeIndex = (i - 2) / 2 ;
-                else if(i % 2 != 0) nodeIndex = (i - 1) / 2 ;
+
+                if (i % 2 == 0 && i != facePointNumber[currentElementType]) nodeIndex = i / 2 ;
+                else if (i == facePointNumber[currentElementType]) nodeIndex = (i - 2) / 2 ;
+                else if (i % 2 != 0) nodeIndex = (i - 1) / 2 ;
+
                 nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
                 nextElementFound = true;
                 break;
@@ -420,21 +452,25 @@ namespace femus {
             }
 
 
-            else if(xvr[0][i]*xvr[0][i + 1] < 0 || xvr[1][i]*xvr[1][i + 1] < 0) {
+            else if (xvr[0][i]*xvr[0][i + 1] < 0 || xvr[1][i]*xvr[1][i + 1] < 0) {
               std::cout << "intersection on an edge" << std::endl;
-              if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the edges
 
-                if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges " << std::endl;
-                if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges " << std::endl;
+              if (fabs(t) < epsilon || t < 0) {  //this means the marker is on one of the edges
+
+                if (fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges " << std::endl;
+
+                if (t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges " << std::endl;
 
                 markerIsInElement = true;
                 break;
               }
               else {
                 unsigned nodeIndex;
-                if(i % 2 == 0 && i != facePointNumber[currentElementType]) nodeIndex = i / 2 ;
-                else if(i == facePointNumber[currentElementType]) nodeIndex = (i - 2) / 2 ;
-                else if(i % 2 != 0) nodeIndex = (i - 1) / 2 ;
+
+                if (i % 2 == 0 && i != facePointNumber[currentElementType]) nodeIndex = i / 2 ;
+                else if (i == facePointNumber[currentElementType]) nodeIndex = (i - 2) / 2 ;
+                else if (i % 2 != 0) nodeIndex = (i - 1) / 2 ;
+
                 nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
                 nextElementFound = true;
                 break;
@@ -445,12 +481,12 @@ namespace femus {
       } //closes the for on the nodes
     }// closes the else before the for
 
-    if(markerIsInElement == true) {
+    if (markerIsInElement == true) {
       nextElem = currentElem;
       std::cout << "The marker belongs to element " << currentElem << std::endl;
     }
 
-    if(nextElementFound == true) {
+    if (nextElementFound == true) {
       std::cout << "The marker does not belong to element " << currentElem << std::endl;
     }
 
@@ -480,18 +516,18 @@ namespace femus {
     std::vector<double> xc(dim, 0); //stores the coordinates of the central node of currentElem
     unsigned centralNodeLocalIndex;
 
-    if(currentElementType == 0) centralNodeLocalIndex = 26;
-    else if(currentElementType == 1) centralNodeLocalIndex = 14;
-    else if(currentElementType == 2) centralNodeLocalIndex = 20;
+    if (currentElementType == 0) centralNodeLocalIndex = 26;
+    else if (currentElementType == 1) centralNodeLocalIndex = 14;
+    else if (currentElementType == 2) centralNodeLocalIndex = 20;
 
     unsigned centralNodeDof = _mesh->GetSolutionDof(centralNodeLocalIndex, currentElem, 2);
 
-    for(unsigned k = 0; k < dim; k++) {
+    for (unsigned k = 0; k < dim; k++) {
       xc[k] = (*_mesh->_topology->_Sol[k])(centralNodeDof) - _x[k];    // coordinates are translated so that the marker is the new origin
       //std::cout << "xc[" << k << "]= " <<xc[k] <<std::endl;
     }
 
-    if(xc[0]*xc[0] < epsilon2 && xc[1]*xc[1] < epsilon2 && xc[2]*xc[2] < epsilon2) {
+    if (xc[0]*xc[0] < epsilon2 && xc[1]*xc[1] < epsilon2 && xc[2]*xc[2] < epsilon2) {
       std::cout << "the marker is the central element node" << std::endl;
       markerIsInElement = true; //the marker is xc
     }
@@ -499,11 +535,11 @@ namespace femus {
     else {
 
 
-      for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
+      for (unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
 
         std::cout << "iface = " << iface << std::endl;
 
-        for(unsigned itri = 0; itri < trianglesPerFace[currentElementType][iface]; itri ++) {
+        for (unsigned itri = 0; itri < trianglesPerFace[currentElementType][iface]; itri ++) {
 
           std::cout << "itri = " << itri << std::endl;
 
@@ -512,17 +548,19 @@ namespace femus {
           std::vector< std::vector < double > > xv(dim);   //stores the coordinates of the nodes of the triangle itri
 
           // fill in the coordinates of the vertices of itri
-          for(unsigned k = 0; k < dim; k++) {
+          for (unsigned k = 0; k < dim; k++) {
             xv[k].reserve(4);
           }
-          for(unsigned k = 0; k < dim; k++) {
+
+          for (unsigned k = 0; k < dim; k++) {
             xv[k].resize(4);
           }
 
-          for(unsigned i = 0; i < 4; i++) {
+          for (unsigned i = 0; i < 4; i++) {
             unsigned itriDof  = _mesh->GetSolutionDof(faceTriangleNodes[currentElementType][iface][itri][i], currentElem, 2);
             std::cout << "itriDof = " << itriDof << std::endl;
-            for(unsigned k = 0; k < dim; k++) {
+
+            for (unsigned k = 0; k < dim; k++) {
               xv[k][i] = (*_mesh->_topology->_Sol[k])(itriDof) - _x[k];     // coordinates are translated so that the marker is the new origin
             }
           }
@@ -530,18 +568,21 @@ namespace femus {
           // rescaling coordinates to properly handle different scales of meshes
           double length = 0.;
           double sum = 0.;
-          for(unsigned i = 0; i < 3; i++) {
-            for(unsigned k = 0; k < dim; k++) {
+
+          for (unsigned i = 0; i < 3; i++) {
+            for (unsigned k = 0; k < dim; k++) {
               sum += (xv[k][i + 1] - xv[k][i]) * (xv[k][i + 1] - xv[k][i]);
             }
+
             length += sqrt(sum);
           }
 
           length /= 4;
 
-          for(unsigned k = 0; k < dim; k++) {
+          for (unsigned k = 0; k < dim; k++) {
             xc[k] /= length;
-            for(unsigned i = 0; i < 4; i++) {
+
+            for (unsigned i = 0; i < 4; i++) {
               xv[k][i] /= length;
             }
           }
@@ -556,7 +597,7 @@ namespace femus {
           double tBottom = (A * xc[0] + B * xc[1] + C * xc[2]);
           double tTop = A * xv[0][0] + B * xv[1][0] + C * xv[2][0];
 
-          if(fabs(tBottom) < epsilon && tTop != 0) {
+          if (fabs(tBottom) < epsilon && tTop != 0) {
             // std::cout << "The plane of face" << itri << "does not intersect the line" <<std::endl;
             break; // must exit the loop on itri
           }
@@ -566,21 +607,21 @@ namespace femus {
             t = tTop / tBottom ;
             std::cout << "t = " << t << std::endl;
 
-            for(unsigned k = 0; k < dim; k++) {
+            for (unsigned k = 0; k < dim; k++) {
               r[k] = t * xc[k];
               // std::cout << "r[" << k << "] = " << r[k] <<std::endl;
             }
 
-            if(t < 1) {   //if not, it means the point r is far away from the marker, and we don't want to go in that direction
+            if (t < 1) {  //if not, it means the point r is far away from the marker, and we don't want to go in that direction
 
               //now we have to determine if r is inside itri
-              for(unsigned i = 0; i < 4; i++) {
-                for(unsigned k = 0; k < dim; k++) {
+              for (unsigned i = 0; i < 4; i++) {
+                for (unsigned k = 0; k < dim; k++) {
                   xv[k][i] = xv[k][i] - r[k];     //transate again the reference frame so that the origin is r
                 }
               }
 
-              for(unsigned i = 0; i < 3; i++) {
+              for (unsigned i = 0; i < 3; i++) {
                 double q0 = xv[1][i] * (xv[2][i] - xv[2][i + 1]) + xv[2][i] * (xv[1][i + 1] - xv[1][i]);
                 double q1 = xv[2][i] * (xv[0][i] - xv[0][i + 1]) + xv[0][i] * (xv[2][i + 1] - xv[2][i]);
                 double q2 = xv[0][i] * (xv[1][i] - xv[1][i + 1]) + xv[1][i] * (xv[0][i + 1] - xv[0][i]);
@@ -591,20 +632,22 @@ namespace femus {
 
                 std::cout << "fabs(scalarProduct) = " << fabs(scalarProduct) << std::endl;
 
-                if(scalarProduct > epsilon) {
+                if (scalarProduct > epsilon) {
                   std::cout << "r is outside triangle " << itri <<  std::endl;
                   break;
 
                 }
-                else if(fabs(scalarProduct) < epsilon) {  //scalarProduct == 0
+                else if (fabs(scalarProduct) < epsilon) { //scalarProduct == 0
 
-                  if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
+                  if ((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
                       (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
                     std::cout << "intersection on a vertex of itri" << std::endl;
-                    if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the faces
 
-                      if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is one vertex of triangle " << itri << std::endl;
-                      if(t < 0) std::cout << "setting markerIsInElement = true because r is one vertex of triangle " << itri << std::endl;
+                    if (fabs(t) < epsilon || t < 0) {  //this means the marker is on one of the faces
+
+                      if (fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is one vertex of triangle " << itri << std::endl;
+
+                      if (t < 0) std::cout << "setting markerIsInElement = true because r is one vertex of triangle " << itri << std::endl;
 
                       markerIsInElement = true;
                       break;
@@ -619,12 +662,14 @@ namespace femus {
                   }
 
 
-                  else if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
+                  else if (xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
                     std::cout << "intersection on an edge of itri" << std::endl;
-                    if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the faces
 
-                      if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
-                      if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
+                    if (fabs(t) < epsilon || t < 0) {  //this means the marker is on one of the faces
+
+                      if (fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
+
+                      if (t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
 
                       markerIsInElement = true;
                       break;
@@ -637,7 +682,7 @@ namespace femus {
                     }
                   }
                 }
-                else if(scalarProduct < 0) {
+                else if (scalarProduct < 0) {
                   std::cout << " scalarProduct = " << scalarProduct << std::endl;
                   scalarCount++;
                 }
@@ -646,11 +691,12 @@ namespace femus {
           } // closes the "else" on tBottom = 0
 
 
-          if(scalarCount == 3) {
-            if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the faces
+          if (scalarCount == 3) {
+            if (fabs(t) < epsilon || t < 0) {  //this means the marker is on one of the faces
 
-              if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
-              if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
+              if (fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
+
+              if (t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
 
               markerIsInElement = true;
               break;
@@ -663,31 +709,31 @@ namespace femus {
             }
           }
 
-          if(nextElementFound == true) {
+          if (nextElementFound == true) {
             break;
           }
 
-          if(markerIsInElement == true) {
+          if (markerIsInElement == true) {
             break;
           }
         } //end for on itri
 
-        if(nextElementFound == true) {
+        if (nextElementFound == true) {
           break;
         }
 
-        if(markerIsInElement == true) {
+        if (markerIsInElement == true) {
           break;
         }
       } //end for on iface
     } //end of else before for on iface
 
-    if(markerIsInElement == true) {
+    if (markerIsInElement == true) {
       nextElem = currentElem;
       std::cout << "The marker belongs to element " << currentElem << std::endl;
     }
 
-    if(nextElementFound == true) {
+    if (nextElementFound == true) {
       std::cout << "The marker does not belong to element " << currentElem << std::endl;
     }
 
@@ -696,75 +742,6 @@ namespace femus {
 
     return (nextElem >= 0) ? nextElem : UINT_MAX;
 
-  }
-
-  void GetQuadCoefficients(std::vector < std::vector <double > > &a, const std::vector < std::vector <double > > &xv,
-                           const unsigned &dim, const unsigned &solutionType) {
-    if(solutionType == 0) {
-      for(int k = 0; k < dim; k++) {
-        a[k][0] = 0.25 * (xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]);
-        a[k][1] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]);
-        a[k][2] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]);
-        a[k][3] = 0.25 * (xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]);
-      }
-    }
-    else if(solutionType == 1) {
-      for(int k = 0; k < dim; k++) {
-        a[k][0] = -0.25 * (xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) +
-                  0.5 * (xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7]);
-        a[k][1] = 0.5 * (xv[k][5] - xv[k][7]);
-        a[k][2] = 0.5 * (xv[k][6] - xv[k][4]);
-        a[k][3] = 0.25 * (xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]);
-        a[k][4] = 0.25 * (xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) - 0.5 * (xv[k][4] + xv[k][6]);
-        a[k][5] = 0.25 * (xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) - 0.5 * (xv[k][5] + xv[k][7]);
-        a[k][6] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]) + 0.5 * (xv[k][4] - xv[k][6]);
-        a[k][7] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]) + 0.5 * (xv[k][7] - xv[k][5]);
-      }
-    }
-    else if(solutionType == 2) {
-      for(int k = 0; k < dim; k++) {
-        a[k][0] = xv[k][8];
-        a[k][1] = 0.5 * (xv[k][5] - xv[k][7]);
-        a[k][2] = 0.5 * (xv[k][6] - xv[k][4]);
-        a[k][3] = 0.25 * (xv[k][0] - xv[k][1] + xv[k][2] - xv[k][3]);
-        a[k][4] =  0.5 * (xv[k][5] + xv[k][7]) - xv[k][8];
-        a[k][5] =  0.5 * (xv[k][4] + xv[k][6]) - xv[k][8];
-        a[k][6] = 0.25 * (-xv[k][0] - xv[k][1] + xv[k][2] + xv[k][3]) +
-                  0.5 * (xv[k][4] - xv[k][6]);
-        a[k][7] = 0.25 * (-xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3]) +
-                  0.5 * (-xv[k][5] + xv[k][7]);
-        a[k][8] = 0.25 * (xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3]) -
-                  0.5 * (xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7]) + xv[k][8];
-      }
-    }
-  }
-
-
-
-  void Marker::GetElementCoefficients(std::vector < std::vector <double > > &a, const short unsigned &iel, const unsigned &solType) {
-
-    unsigned dim =  _mesh->GetDimension();
-
-    std::vector< std::vector < double > > xv(dim);
-    a.resize(dim);
-
-    unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
-
-    for(unsigned k = 0; k < dim; k++) {
-      xv[k].resize(nDofs);
-      a[k].resize(nDofs);
-    }
-    for(unsigned i = 0; i < nDofs; i++) {
-      unsigned iDof  = _mesh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
-      for(unsigned k = 0; k < dim; k++) {
-        xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
-      }
-    }
-
-    short unsigned ielType = _mesh->GetElementType(iel);
-    if(ielType == QUAD) {
-      GetQuadCoefficients(a, xv, dim, solType);
-    }
   }
 
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
@@ -776,20 +753,23 @@ namespace femus {
     std::vector < std::vector < double > > gradXp(dim);
     std::vector < std::vector < std::vector < double > > > hessXp(dim);
 
-    for(int k = 0; k < dim; k++) {
+    for (int k = 0; k < dim; k++) {
       gradXp[k].assign(dim, 0.);
       hessXp[k].resize(dim);
-      for(int i1 = 0; i1 < dim; i1++) {
+
+      for (int i1 = 0; i1 < dim; i1++) {
         hessXp[k][i1].assign(dim, 0.);
       }
     }
 
-    for(int k = 0; k < dim; k++) {
-      for(int i = 0; i < nDofs; i++) {
+    for (int k = 0; k < dim; k++) {
+      for (int i = 0; i < nDofs; i++) {
         xp[k] += a[k][i] * phi[i];
-        for(int i1 = 0; i1 < dim; i1++) {
+
+        for (int i1 = 0; i1 < dim; i1++) {
           gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
-          for(int i2 = 0; i2 < dim; i2++) {
+
+          for (int i2 = 0; i2 < dim; i2++) {
             hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
           }
         }
@@ -799,32 +779,34 @@ namespace femus {
     std::vector < double > gradF(dim, 0.);
     std::vector < std::vector < double > >  hessF(dim);
 
-    for(int i1 = 0; i1 < dim; i1++) {
+    for (int i1 = 0; i1 < dim; i1++) {
       hessF[i1].assign(dim, 0.);
     }
 
-    for(int k = 0; k < dim; k++) {
-      for(int i1 = 0; i1 < dim; i1++) {
+    for (int k = 0; k < dim; k++) {
+      for (int i1 = 0; i1 < dim; i1++) {
         gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
-        for(int i2 = 0; i2 < dim; i2++) {
+
+        for (int i2 = 0; i2 < dim; i2++) {
           hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
         }
       }
     }
 
     std::vector < std::vector < double > >  hessFm1(dim);
-    for(int i1 = 0; i1 < dim; i1++) {
+
+    for (int i1 = 0; i1 < dim; i1++) {
       hessFm1[i1].resize(dim);
     }
 
-    if(dim == 2) {
+    if (dim == 2) {
       double det = hessF[0][0] * hessF[1][1] - hessF[0][1] * hessF[1][0];
       hessFm1[0][0] = hessF[1][1] / det;
       hessFm1[0][1] = -hessF[0][1] / det;
       hessFm1[1][0] = -hessF[1][0] / det;
       hessFm1[1][1] = hessF[0][0] / det;
     }
-    else if(dim == 3) {
+    else if (dim == 3) {
       double det = (hessF[0][0] * hessF[1][1] * hessF[2][2] + hessF[0][1] * hessF[1][2] * hessF[2][0] + hessF[0][2] * hessF[1][0] * hessF[2][1])
                    - (hessF[2][0] * hessF[1][1] * hessF[0][2] + hessF[2][1] * hessF[1][2] * hessF[0][0] + hessF[2][2] * hessF[1][0] * hessF[0][1]) ;
 
@@ -840,124 +822,77 @@ namespace femus {
     }
 
     double delta2 = 0.;
-    for(int i1 = 0; i1 < dim; i1++) {
+
+    for (int i1 = 0; i1 < dim; i1++) {
       double deltak = 0.;
-      for(int i2 = 0; i2 < dim; i2++) {
+
+      for (int i2 = 0; i2 < dim; i2++) {
         deltak += hessFm1[i1][i2] * gradF[i2];
       }
+
       xi[i1] -= deltak;
       delta2 += deltak * deltak;
     }
 
-    if(delta2 < 1.0e-6) {
+    if (delta2 < 1.0e-6) {
       convergence = true;
-      for(int k = 0; k < dim; k++) {
+
+      for (int k = 0; k < dim; k++) {
         std::cout << xp[k] << " ";
       }
+
       std::cout << std::endl;
     }
+
     return convergence;
   }
 
-
-  std::vector< double > Marker::InverseMappingQuad(const unsigned &iel,
-      const unsigned &solType,
-      const std::vector< double > &x) {
+  std::vector< double > Marker::InverseMappingQuad(const unsigned &iel, const unsigned &solType, const std::vector< double > &x) {
 
     unsigned dim =  _mesh->GetDimension();
     unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
+    short unsigned ielType = _mesh->GetElementType(iel);
 
+    //BEGIN extraction nodal coordinate values
+    std::vector< std::vector < double > > xv(dim);
+
+    for (unsigned k = 0; k < dim; k++) {
+      xv[k].resize(nDofs);
+    }
+
+    for (unsigned i = 0; i < nDofs; i++) {
+      unsigned iDof  = _mesh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
+
+      for (unsigned k = 0; k < dim; k++) {
+        xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
+      }
+    }
+    //END extraction
+
+
+    //BEGIN projection nodal to polynomial
     std::vector < std::vector < double > > a;
-    GetElementCoefficients(a, iel, solType);
+    ProjectNodalToPolynomialCoefficients(a, xv, ielType, solType);
+    //END projection
 
-    //initial guess
+
+    //BEGIN inverse mapping search
     std::vector <double> xi(dim, 0.);
 
     bool convergence = false;
     std::cout << "xi = " << xi[0] << " , " << "eta = " << xi[1] << std::endl;
-    while(!convergence) {
 
-      std::vector < double > phi(nDofs);
-      std::vector < std::vector < double > > gradPhi(nDofs);
-      std::vector < std::vector < std::vector < double > > > hessPhi(nDofs);
+    while (!convergence) {
 
-      for(int i = 0; i < nDofs; i++) {
-        gradPhi[i].assign(dim, 0.);
-        hessPhi[i].resize(dim);
-        for(int i1 = 0; i1 < dim; i1++) {
-          hessPhi[i][i1].assign(dim, 0.);
-        }
-      }
+      std::vector < double > phi;
+      std::vector < std::vector < double > > gradPhi;
+      std::vector < std::vector < std::vector < double > > > hessPhi;
 
-      //phi
-      phi[0] = 1.;
-      phi[1] = xi[0]; // x
-      phi[2] = xi[1];  // y
-      phi[3] = xi[0] * xi[1];  // x y
-      if(solType > 0) {
-        phi[4] = xi[0] * xi[0]; // x x
-        phi[5] = xi[1] * xi[1]; // y y
-        phi[6] = phi[4] * xi[1]; // xx y
-        phi[7] = phi[5] * xi[0]; // x yy
-      }
-      if(solType > 1) {
-        phi[8] = phi[3] * phi[3]; // xx yy
-      }
+      GetPolynomialShapeFunctionGradientHessian(phi, gradPhi, hessPhi, xi, ielType, solType);
 
-      //phi_x
-      gradPhi[1][0] = 1; // 1
-      gradPhi[3][0] = xi[1];  //  y
-      if(solType > 0) {
-        gradPhi[4][0] = 2 * xi[0]; // 2 x
-        gradPhi[6][0] = 2 * phi[3]; // 2 x y
-        gradPhi[7][0] = phi[5]; //  yy
-      }
-      if(solType > 1) {
-        gradPhi[8][0] = 2 * phi[7]; // 2 x yy
-      }
-
-      //phi_y
-      gradPhi[2][1] = 1;  // 1
-      gradPhi[3][1] = xi[0];  // x
-      if(solType > 0) {
-        gradPhi[5][1] = 2 * xi[1]; // 2 y
-        gradPhi[6][1] = phi[4]; // xx
-        gradPhi[7][1] = 2 * phi[3]; // 2 x y
-      }
-      if(solType > 1) {
-        gradPhi[8][1] = 2 * phi[6]; // 2 xx y
-      }
-
-      //phi_xx
-      if(solType > 0) {
-        hessPhi[4][0][0] = 2; // 2
-        hessPhi[6][0][0] = 2 * xi[1]; // 2 y
-      }
-      if(solType > 1) {
-        hessPhi[8][0][0] = 2 * phi[5]; // 2 yy
-      }
-
-
-      //phi_xy
-      hessPhi[3][1][0] = hessPhi[3][0][1] = 1.; //1
-      if(solType > 0) {
-        hessPhi[6][1][0] = hessPhi[6][0][1] = 2 * xi[0]; // 2 x
-        hessPhi[7][1][0] = hessPhi[7][0][1] = 2 * xi[1]; // 2 y
-      }
-      if(solType > 1) {
-        hessPhi[8][1][0] = hessPhi[8][0][1] = 4 * phi[3]; // 4 x y
-      }
-
-      //phi_yy
-      if(solType > 0) {
-        hessPhi[5][1][1] = 2.; // 2
-        hessPhi[7][1][1] = 2 * xi[0]; // 2 x
-      }
-      if(solType > 1) {
-        hessPhi[8][1][1] = 2 * phi[4]; // 2 xx
-      }
       convergence = GetNewLocalCoordinates(xi, x, phi, gradPhi, hessPhi, a, dim, nDofs);
     }
+    //END inverse mapping search
 
     return xi;
 
@@ -975,27 +910,29 @@ namespace femus {
     unsigned nDofs = _mesh->GetElementDofNumber(currentElem, solutionType);
     short unsigned currentElementType = _mesh->GetElementType(currentElem);
 
-    for(unsigned k = 0; k < dim; k++) {
+    for (unsigned k = 0; k < dim; k++) {
       xv[k].resize(nDofs);
       a[k].resize(nDofs);
     }
-    for(unsigned i = 0; i < nDofs; i++) {
+
+    for (unsigned i = 0; i < nDofs; i++) {
       unsigned iDof  = _mesh->GetSolutionDof(i, currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
-      for(unsigned k = 0; k < dim; k++) {
+
+      for (unsigned k = 0; k < dim; k++) {
         xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
       }
     }
 
 
-    if(solutionType == 0) {
-      for(int k = 0; k < dim; k++) {
+    if (solutionType == 0) {
+      for (int k = 0; k < dim; k++) {
         a[k][0] = xv[k][0];
         a[k][1] = - xv[k][0] + xv[k][1];
         a[k][2] = - xv[k][0] + xv[k][2];
       }
     }
-    else if(solutionType == 1) {
-      for(int k = 0; k < dim; k++) {
+    else if (solutionType == 1) {
+      for (int k = 0; k < dim; k++) {
         a[k][0] = xv[k][0];
         a[k][1] = - 3 * xv[k][0] - xv[k][1] + 4 * xv[k][3];
         a[k][2] = - 3 * xv[k][0] - xv[k][2] + 4 * xv[k][5];
@@ -1004,8 +941,8 @@ namespace femus {
         a[k][5] = 2 * xv[k][0] + 2 * xv[k][2] - 4 * xv[k][5];
       }
     }
-    else if(solutionType == 2) {
-      for(int k = 0; k < dim; k++) {
+    else if (solutionType == 2) {
+      for (int k = 0; k < dim; k++) {
         a[k][0] = xv[k][0];
         a[k][1] = - 3 * xv[k][0] - xv[k][1] + 4 * xv[k][3];
         a[k][2] = - 3 * xv[k][0] - xv[k][2] + 4 * xv[k][5];
@@ -1025,16 +962,18 @@ namespace femus {
 
     bool convergence = false;
     std::cout << "xi = " << xi << " , " << "eta = " << eta << std::endl;
-    while(!convergence) {
+
+    while (!convergence) {
 
       std::vector < double > phi(nDofs);
       std::vector < std::vector < double > > gradPhi(nDofs);
       std::vector < std::vector < std::vector < double > > > hessPhi(nDofs);
 
-      for(int i = 0; i < nDofs; i++) {
+      for (int i = 0; i < nDofs; i++) {
         gradPhi[i].resize(dim);
         hessPhi[i].resize(dim);
-        for(int i1 = 0; i1 < dim; i1++) {
+
+        for (int i1 = 0; i1 < dim; i1++) {
           hessPhi[i][i1].resize(dim);
         }
       }
@@ -1042,12 +981,14 @@ namespace femus {
       phi[0] = 1.;
       phi[1] = xi; // x
       phi[2] = eta; // y
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         phi[3] = xi * eta; // x y
         phi[4] = xi * xi;  // x x
         phi[5] = eta * eta; // y y
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         phi[6] = phi[4] * eta + phi[5] * xi; // xx y + x yy
       }
 
@@ -1055,12 +996,14 @@ namespace femus {
       gradPhi[0][0] = 0.; // 0
       gradPhi[1][0] = 1.; // 1
       gradPhi[2][0] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         gradPhi[3][0] = eta; // y
         gradPhi[4][0] = 2.*xi ;  // 2 x
         gradPhi[5][0] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         gradPhi[6][0] = gradPhi[4][0] * eta + phi[5]; // 2 x y + y y
       }
 
@@ -1068,12 +1011,14 @@ namespace femus {
       gradPhi[0][1] = 0.; // 0
       gradPhi[1][1] = 0.;  // 0
       gradPhi[2][1] = 1.;  // 1
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         gradPhi[3][1] = xi; // x
         gradPhi[4][1] = 0.;  // 0
         gradPhi[5][1] = 2.*eta; // 2*y
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         gradPhi[6][1] = phi[4] + gradPhi[5][1] * xi; // xx  + 2 x y
       }
 
@@ -1081,12 +1026,14 @@ namespace femus {
       hessPhi[0][0][0] = 0.; // 0
       hessPhi[1][0][0] = 0.; // 0
       hessPhi[2][0][0] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[3][0][0] = 0;  // 0
         hessPhi[4][0][0] = 2.; // 2
         hessPhi[5][0][0] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[6][0][0] = 2. * eta; // 2 y
       }
 
@@ -1094,12 +1041,14 @@ namespace femus {
       hessPhi[0][1][0] = hessPhi[0][0][1] = 0.; // 0
       hessPhi[1][1][0] = hessPhi[1][0][1] = 0.; // 0
       hessPhi[2][1][0] = hessPhi[2][0][1] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[3][1][0] = hessPhi[3][0][1] = 1.; // 1
         hessPhi[4][1][0] = hessPhi[4][0][1] = 0.; // 0
         hessPhi[5][1][0] = hessPhi[5][0][1] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[6][1][0] = hessPhi[6][0][1] = 2. * xi + 2. * eta; // 2. x + 2 * y
       }
 
@@ -1107,12 +1056,14 @@ namespace femus {
       hessPhi[0][1][1] = 0.; // 0
       hessPhi[1][1][1] = 0.; // 0
       hessPhi[2][1][1] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[3][1][1] = 0.; // 0
         hessPhi[4][1][1] = 0.; // 0
         hessPhi[5][1][1] = 2.; // 2
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[6][1][1] = 2. * xi; // 2 * x
       }
 
@@ -1121,20 +1072,23 @@ namespace femus {
       std::vector < std::vector < double > > gradXp(dim);
       std::vector < std::vector < std::vector < double > > > hessXp(dim);
 
-      for(int k = 0; k < dim; k++) {
+      for (int k = 0; k < dim; k++) {
         gradXp[k].assign(dim, 0.);
         hessXp[k].resize(dim);
-        for(int i1 = 0; i1 < dim; i1++) {
+
+        for (int i1 = 0; i1 < dim; i1++) {
           hessXp[k][i1].assign(dim, 0.);
         }
       }
 
-      for(int k = 0; k < dim; k++) {
-        for(int i = 0; i < nDofs; i++) {
+      for (int k = 0; k < dim; k++) {
+        for (int i = 0; i < nDofs; i++) {
           xp[k] += a[k][i] * phi[i];
-          for(int i1 = 0; i1 < dim; i1++) {
+
+          for (int i1 = 0; i1 < dim; i1++) {
             gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
-            for(int i2 = 0; i2 < dim; i2++) {
+
+            for (int i2 = 0; i2 < dim; i2++) {
               hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
             }
           }
@@ -1145,21 +1099,23 @@ namespace femus {
       std::vector < double > gradF(dim, 0.);
       std::vector < std::vector < double > >  hessF(dim);
 
-      for(int i1 = 0; i1 < dim; i1++) {
+      for (int i1 = 0; i1 < dim; i1++) {
         hessF[i1].assign(dim, 0.);
       }
 
-      for(int k = 0; k < dim; k++) {
-        for(int i1 = 0; i1 < dim; i1++) {
+      for (int k = 0; k < dim; k++) {
+        for (int i1 = 0; i1 < dim; i1++) {
           gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
-          for(int i2 = 0; i2 < dim; i2++) {
+
+          for (int i2 = 0; i2 < dim; i2++) {
             hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
           }
         }
       }
 
       std::vector < std::vector < double > >  hessFm1(dim);
-      for(int i1 = 0; i1 < dim; i1++) {
+
+      for (int i1 = 0; i1 < dim; i1++) {
         hessFm1[i1].resize(dim);
       }
 
@@ -1176,11 +1132,13 @@ namespace femus {
       xi  -= dxi;
       eta -= deta;
 
-      if(dxi * dxi + deta * deta < 1.0e-6) {
+      if (dxi * dxi + deta * deta < 1.0e-6) {
         convergence = true;
-        for(int k = 0; k < dim; k++) {
+
+        for (int k = 0; k < dim; k++) {
           std::cout << xp[k] << " ";
         }
+
         std::cout << std::endl;
       }
 
@@ -1204,20 +1162,22 @@ namespace femus {
     unsigned nDofs = _mesh->GetElementDofNumber(currentElem, solutionType);
     short unsigned currentElementType = _mesh->GetElementType(currentElem);
 
-    for(unsigned k = 0; k < dim; k++) {
+    for (unsigned k = 0; k < dim; k++) {
       xv[k].resize(nDofs);
       a[k].resize(nDofs);
     }
-    for(unsigned i = 0; i < nDofs; i++) {
+
+    for (unsigned i = 0; i < nDofs; i++) {
       unsigned iDof  = _mesh->GetSolutionDof(i, currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
-      for(unsigned k = 0; k < dim; k++) {
+
+      for (unsigned k = 0; k < dim; k++) {
         xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
       }
     }
 
 
-    if(solutionType == 0) {
-      for(int k = 0; k < dim; k++) {
+    if (solutionType == 0) {
+      for (int k = 0; k < dim; k++) {
         a[k][0] = 0.125 * (xv[k][0] + xv[k][1] + xv[k][2] + xv[k][3] + xv[k][4] +
                            xv[k][5] + xv[k][6] + xv[k][7]) ;
         a[k][1] = 0.125 * (- xv[k][0] + xv[k][1] + xv[k][2] - xv[k][3] - xv[k][4] +
@@ -1237,9 +1197,9 @@ namespace femus {
 
       }
     }
-    else if(solutionType == 1) {
+    else if (solutionType == 1) {
 
-      for(int k = 0; k < dim; k++) {
+      for (int k = 0; k < dim; k++) {
 
         a[k][0] = 0.25 * (- xv[k][0] + xv[k][9] + xv[k][10] + xv[k][11] + xv[k][12] + xv[k][13] + xv[k][14] +
                           xv[k][15] + xv[k][16] + xv[k][17] + xv[k][18] - xv[k][1] + xv[k][19] - xv[k][2] -
@@ -1281,8 +1241,8 @@ namespace femus {
                             xv[k][5] + xv[k][6] - xv[k][7]);
       }
     }
-    else if(solutionType == 2) {
-      for(int k = 0; k < dim; k++) {
+    else if (solutionType == 2) {
+      for (int k = 0; k < dim; k++) {
         a[k][0] = xv[k][26];
         a[k][1] = 0.5 * (xv[k][21] - xv[k][23]);
         a[k][2] = 0.5 * (xv[k][22] - xv[k][20]);
@@ -1325,16 +1285,18 @@ namespace femus {
 
     bool convergence = false;
     std::cout << "xi = " << xi << " , " << "eta = " << eta << " , " << "zita = " << zita << std::endl;
-    while(!convergence) {
+
+    while (!convergence) {
 
       std::vector < double > phi(nDofs);
       std::vector < std::vector < double > > gradPhi(nDofs);
       std::vector < std::vector < std::vector < double > > > hessPhi(nDofs);
 
-      for(int i = 0; i < nDofs; i++) {
+      for (int i = 0; i < nDofs; i++) {
         gradPhi[i].resize(dim);
         hessPhi[i].resize(dim);
-        for(int i1 = 0; i1 < dim; i1++) {
+
+        for (int i1 = 0; i1 < dim; i1++) {
           hessPhi[i][i1].resize(dim);
         }
       }
@@ -1347,7 +1309,8 @@ namespace femus {
       phi[5] = phi[1] * phi[3]; // x z
       phi[6] = phi[2] * phi[3]; // y z
       phi[7] = phi[4] * phi[3];  // x y z
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         phi[7] = phi[1] * phi[1];   // x x
         phi[8] = phi[2] * phi[2];   // y y
         phi[9] = phi[3] * phi[3];   // z z
@@ -1362,7 +1325,8 @@ namespace femus {
         phi[18] = phi[1] * phi[13]; // x yy z
         phi[19] = phi[1] * phi[16]; // x y zz
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         phi[20] = phi[7] * phi[8];  // xx yy
         phi[21] = phi[7] * phi[9];  // xx zz
         phi[22] = phi[8] * phi[9];  // yy zz
@@ -1382,7 +1346,8 @@ namespace femus {
       gradPhi[5][0] = zita ; // z
       gradPhi[6][0] = 0.; // 0
       gradPhi[7][0] = phi[6];  //  y z
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         gradPhi[7][0] = 2 * xi;   // 2 x
         gradPhi[8][0] = 0.;   // 0
         gradPhi[9][0] = 0.;   // 0
@@ -1397,7 +1362,8 @@ namespace femus {
         gradPhi[18][0] = phi[13]; //  yy z
         gradPhi[19][0] = phi[16]; // y zz
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         gradPhi[20][0] = 2 * phi[14];  // 2 x yy
         gradPhi[21][0] = 2 * phi[15];  // 2 x zz
         gradPhi[22][0] = 0.;  // 0
@@ -1417,7 +1383,8 @@ namespace femus {
       gradPhi[5][1] = 0.; // 0
       gradPhi[6][1] = zita; // z
       gradPhi[7][1] = phi[5];  // x z
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         gradPhi[7][1] = 0.;   // 0
         gradPhi[8][1] = 2 * eta;   // 2 y
         gradPhi[9][1] = 0.;   // 0
@@ -1432,7 +1399,8 @@ namespace femus {
         gradPhi[18][1] = 2 * phi[10]; // 2 x y z
         gradPhi[19][1] = phi[15]; // x zz
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         gradPhi[20][1] = 2 * phi[11];  // 2 xx y
         gradPhi[21][1] = 0.;  // 0
         gradPhi[22][1] = 2 * phi[16];  // 2 y zz
@@ -1452,7 +1420,8 @@ namespace femus {
       gradPhi[5][2] = xi; // x
       gradPhi[6][2] = eta; // y
       gradPhi[7][2] = phi[4];  // x y
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         gradPhi[7][2] = 0.;   // 0
         gradPhi[8][2] = 0.;   // 0
         gradPhi[9][2] = 2 * zita;   // 2 z
@@ -1467,7 +1436,8 @@ namespace femus {
         gradPhi[18][2] = phi[14]; // x yy
         gradPhi[19][2] = 2 * phi[10]; // 2 x y z
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         gradPhi[20][2] = 0.;  // 0
         gradPhi[21][2] = 2 * phi[12];  // 2 xx z
         gradPhi[22][2] = 2 * phi[13];  // 2 yy z
@@ -1487,7 +1457,8 @@ namespace femus {
       hessPhi[5][0][0] = 0.; // 0
       hessPhi[6][0][0] = 0.; // 0
       hessPhi[7][0][0] = 0.;  //  0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[7][0][0] = 2.;   // 2
         hessPhi[8][0][0] = 0.;   // 0
         hessPhi[9][0][0] = 0.;   // 0
@@ -1502,7 +1473,8 @@ namespace femus {
         hessPhi[18][0][0] = 0.; //  0
         hessPhi[19][0][0] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[20][0][0] = 2 * phi[8];  // 2 yy
         hessPhi[21][0][0] = 2 * phi[9];  // 2 zz
         hessPhi[22][0][0] = 0.;  // 0
@@ -1522,7 +1494,8 @@ namespace femus {
       hessPhi[5][1][0] = hessPhi[5][0][1] = 0.; // 0
       hessPhi[6][1][0] = hessPhi[6][0][1] = 0.; // 0
       hessPhi[7][1][0] = hessPhi[7][0][1] = zita;  // z
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[7][1][0] = hessPhi[7][0][1] = 0.;   // 0
         hessPhi[8][1][0] = hessPhi[8][0][1] = 0.;   // 0
         hessPhi[9][1][0] = hessPhi[9][0][1] = 0.;   // 0
@@ -1537,7 +1510,8 @@ namespace femus {
         hessPhi[18][1][0] = hessPhi[18][0][1] = 2 * phi[6]; //  2 y z
         hessPhi[19][1][0] = hessPhi[19][0][1] = phi[9]; // zz
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[20][1][0] = hessPhi[20][0][1] = 4 * phi[4];  // 4 x y
         hessPhi[21][1][0] = hessPhi[21][0][1] = 0.;  // 0
         hessPhi[22][1][0] = hessPhi[22][0][1] = 0.;  // 0
@@ -1557,7 +1531,8 @@ namespace femus {
       hessPhi[5][2][0] = hessPhi[5][0][2] = 1.; // 1
       hessPhi[6][2][0] = hessPhi[6][0][2] = 0.; // 0
       hessPhi[7][2][0] = hessPhi[7][0][2] = eta;  //  y
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[7][2][0] = hessPhi[7][0][2] = 0.;   // 0
         hessPhi[8][2][0] = hessPhi[8][0][2] = 0.;   // 0
         hessPhi[9][2][0] = hessPhi[9][0][2] = 0.;   // 0
@@ -1572,7 +1547,8 @@ namespace femus {
         hessPhi[18][2][0] = hessPhi[18][0][2] = phi[8]; //  yy
         hessPhi[19][2][0] = hessPhi[19][0][2] = 2 * phi[6]; // 2 y z
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[20][2][0] = hessPhi[20][0][2] = 0.;  // 0
         hessPhi[21][2][0] = hessPhi[21][0][2] = 4 * phi[5];  // 4 x z
         hessPhi[22][2][0] = hessPhi[22][0][2] = 0.;  // 0
@@ -1592,7 +1568,8 @@ namespace femus {
       hessPhi[5][1][1] = 0.; // 0
       hessPhi[6][1][1] = 0.; // 0
       hessPhi[7][1][1] = 0.;  // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[7][1][1] = 0.;   // 0
         hessPhi[8][1][1] = 2.;   // 2
         hessPhi[9][1][1] = 0.;   // 0
@@ -1607,7 +1584,8 @@ namespace femus {
         hessPhi[18][1][1] = 2 * phi[5]; // 2 x z
         hessPhi[19][1][1] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[20][1][1] = 2 * phi[7];  // 2 xx
         hessPhi[21][1][1] = 0.;  // 0
         hessPhi[22][1][1] = 2 * phi[9];  // 2 zz
@@ -1627,7 +1605,8 @@ namespace femus {
       hessPhi[5][2][1] = hessPhi[5][1][2] = 0.; // 0
       hessPhi[6][2][1] = hessPhi[6][1][2] = 1.; // 1
       hessPhi[7][2][1] = hessPhi[7][1][2] = xi ;  // x
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[7][2][1] = hessPhi[7][1][2] = 0.;   // 0
         hessPhi[8][2][1] = hessPhi[8][1][2] = 0.;   // 0
         hessPhi[9][2][1] = hessPhi[9][1][2] = 0.;   // 0
@@ -1642,7 +1621,8 @@ namespace femus {
         hessPhi[18][2][1] = hessPhi[18][1][2] = 2 * phi[4]; // 2 x y
         hessPhi[19][2][1] = hessPhi[19][1][2] = 2 * phi[5]; // 2 x z
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[20][2][1] = hessPhi[20][1][2] = 0.;  // 0
         hessPhi[21][2][1] = hessPhi[21][1][2] = 0.;  // 0
         hessPhi[22][2][1] = hessPhi[22][1][2] = 4 * phi[6];  // 4 y z
@@ -1662,7 +1642,8 @@ namespace femus {
       hessPhi[5][2][2] = 0.; // 0
       hessPhi[6][2][2] = 0.; // 0
       hessPhi[7][2][2] = 0.;  // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[7][2][2] = 0.;   // 0
         hessPhi[8][2][2] = 0.;   // 0
         hessPhi[9][2][2] = 2.;   // 2
@@ -1677,7 +1658,8 @@ namespace femus {
         hessPhi[18][2][2] = 0.; // 0
         hessPhi[19][2][2] = 2 * phi[4]; // 2 x y
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[20][2][2] = 0.;  // 0
         hessPhi[21][2][2] = 2 * phi[7];  // 2 xx
         hessPhi[22][2][2] = 2 * phi[8];  // 2 yy
@@ -1692,20 +1674,23 @@ namespace femus {
       std::vector < std::vector < double > > gradXp(dim);
       std::vector < std::vector < std::vector < double > > > hessXp(dim);
 
-      for(int k = 0; k < dim; k++) {
+      for (int k = 0; k < dim; k++) {
         gradXp[k].assign(dim, 0.);
         hessXp[k].resize(dim);
-        for(int i1 = 0; i1 < dim; i1++) {
+
+        for (int i1 = 0; i1 < dim; i1++) {
           hessXp[k][i1].assign(dim, 0.);
         }
       }
 
-      for(int k = 0; k < dim; k++) {
-        for(int i = 0; i < nDofs; i++) {
+      for (int k = 0; k < dim; k++) {
+        for (int i = 0; i < nDofs; i++) {
           xp[k] += a[k][i] * phi[i];
-          for(int i1 = 0; i1 < dim; i1++) {
+
+          for (int i1 = 0; i1 < dim; i1++) {
             gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
-            for(int i2 = 0; i2 < dim; i2++) {
+
+            for (int i2 = 0; i2 < dim; i2++) {
               hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
             }
           }
@@ -1716,21 +1701,23 @@ namespace femus {
       std::vector < double > gradF(dim, 0.);
       std::vector < std::vector < double > >  hessF(dim);
 
-      for(int i1 = 0; i1 < dim; i1++) {
+      for (int i1 = 0; i1 < dim; i1++) {
         hessF[i1].assign(dim, 0.);
       }
 
-      for(int k = 0; k < dim; k++) {
-        for(int i1 = 0; i1 < dim; i1++) {
+      for (int k = 0; k < dim; k++) {
+        for (int i1 = 0; i1 < dim; i1++) {
           gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
-          for(int i2 = 0; i2 < dim; i2++) {
+
+          for (int i2 = 0; i2 < dim; i2++) {
             hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
           }
         }
       }
 
       std::vector < std::vector < double > >  hessFm1(dim);
-      for(int i1 = 0; i1 < dim; i1++) {
+
+      for (int i1 = 0; i1 < dim; i1++) {
         hessFm1[i1].resize(dim);
       }
 
@@ -1755,11 +1742,13 @@ namespace femus {
       eta -= deta;
       zita -= dzita;
 
-      if(dxi * dxi + deta * deta + dzita * dzita < 1.0e-6) {
+      if (dxi * dxi + deta * deta + dzita * dzita < 1.0e-6) {
         convergence = true;
-        for(int k = 0; k < dim; k++) {
+
+        for (int k = 0; k < dim; k++) {
           std::cout << xp[k] << " ";
         }
+
         std::cout << std::endl;
       }
 
@@ -1785,19 +1774,21 @@ namespace femus {
     unsigned nDofs = _mesh->GetElementDofNumber(currentElem, solutionType);
     short unsigned currentElementType = _mesh->GetElementType(currentElem);
 
-    for(unsigned k = 0; k < dim; k++) {
+    for (unsigned k = 0; k < dim; k++) {
       xv[k].resize(nDofs);
       a[k].resize(nDofs);
     }
-    for(unsigned i = 0; i < nDofs; i++) {
+
+    for (unsigned i = 0; i < nDofs; i++) {
       unsigned iDof  = _mesh->GetSolutionDof(i, currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
-      for(unsigned k = 0; k < dim; k++) {
+
+      for (unsigned k = 0; k < dim; k++) {
         xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
       }
     }
 
-    if(solutionType == 0) {
-      for(int k = 0; k < dim; k++) {
+    if (solutionType == 0) {
+      for (int k = 0; k < dim; k++) {
 
         a[k][0] = xv[k][0] ;
         a[k][1] = - xv[k][0] + xv[k][1] ;
@@ -1805,9 +1796,9 @@ namespace femus {
         a[k][3] = - xv[k][0] + xv[k][3] ;
       }
     }
-    else if(solutionType == 1) {
+    else if (solutionType == 1) {
 
-      for(int k = 0; k < dim; k++) {
+      for (int k = 0; k < dim; k++) {
 
         a[k][0] = xv[k][0];
         a[k][1] =  - 3 * xv[k][0] - xv[k][1] + 4 * xv[k][4];
@@ -1827,8 +1818,8 @@ namespace femus {
 //         }
       }
     }
-    else if(solutionType == 2) {
-      for(int k = 0; k < dim; k++) {
+    else if (solutionType == 2) {
+      for (int k = 0; k < dim; k++) {
 
         a[k][14] = 4 * (xv[k][0] - 8 * xv[k][9] + 27 * xv[k][10] + 27 * xv[k][11] + 27 * xv[k][12] + 27 * xv[k][13] - 64 * xv[k][14] +
                         xv[k][1] + xv[k][2] + xv[k][3] - 8 * (xv[k][4] + xv[k][5] + xv[k][6] + xv[k][7] + xv[k][8]));
@@ -1864,17 +1855,19 @@ namespace femus {
 
     bool convergence = false;
     std::cout << "xi = " << xi << " , " << "eta = " << eta << " , " << "zita = " << zita << std::endl;
-    while(!convergence) {
+
+    while (!convergence) {
 
 
       std::vector < double > phi(nDofs);
       std::vector < std::vector < double > > gradPhi(nDofs);
       std::vector < std::vector < std::vector < double > > > hessPhi(nDofs);
 
-      for(int i = 0; i < nDofs; i++) {
+      for (int i = 0; i < nDofs; i++) {
         gradPhi[i].resize(dim);
         hessPhi[i].resize(dim);
-        for(int i1 = 0; i1 < dim; i1++) {
+
+        for (int i1 = 0; i1 < dim; i1++) {
           hessPhi[i][i1].resize(dim);
         }
       }
@@ -1883,7 +1876,8 @@ namespace femus {
       phi[1] = xi; // x
       phi[2] = eta;  // y
       phi[3] = zita; // z
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         phi[4] = phi[1] * phi[2];  // x y
         phi[5] = phi[1] * phi[3];  // x z
         phi[6] = phi[2] * phi[3];  // y z
@@ -1891,7 +1885,8 @@ namespace femus {
         phi[8] = phi[2] * phi[2]; // y y
         phi[9] = phi[3] * phi[3]; // z z
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         phi[10] = phi[4] * phi[3]; // x y z
         phi[11] = phi[1] * phi[8] + phi[7] * phi[2] ; // x y y + x x y
         phi[12] = phi[1] * phi[9] + phi[7] * phi[3] ; // x z z + x x z
@@ -1905,7 +1900,8 @@ namespace femus {
       gradPhi[1][0] = 1.; // 1
       gradPhi[2][0] = 0.;  // 0
       gradPhi[3][0] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         gradPhi[4][0] = eta ;  //  y
         gradPhi[5][0] = zita ;  //  z
         gradPhi[6][0] = 0.;  // 0
@@ -1913,7 +1909,8 @@ namespace femus {
         gradPhi[8][0] = 0.; // 0
         gradPhi[9][0] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         gradPhi[10][0] = phi[6]; //  y z
         gradPhi[11][0] = phi[8] + 2 * phi[4] ; //  y y + 2 x y
         gradPhi[12][0] = phi[9] + 2 * phi[5] ; // z z + 2 x z
@@ -1927,7 +1924,8 @@ namespace femus {
       gradPhi[1][1] = 0.; // 0
       gradPhi[2][1] = 1.;  // 1
       gradPhi[3][1] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         gradPhi[4][1] = xi ;  // x
         gradPhi[5][1] = 0.;  // 0
         gradPhi[6][1] = zita ;  //  z
@@ -1935,7 +1933,8 @@ namespace femus {
         gradPhi[8][1] = 2 * eta; // 2 y
         gradPhi[9][1] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         gradPhi[10][1] = phi[5]; // x z
         gradPhi[11][1] = 2 * phi[4] + phi[7] ; //  2 x y + x x
         gradPhi[12][1] = 0.; // 0
@@ -1949,7 +1948,8 @@ namespace femus {
       gradPhi[1][2] = 0.; // 0
       gradPhi[2][2] = 0.;  // 0
       gradPhi[3][2] = 1.; // 1
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         gradPhi[4][2] = 0.;  // 0
         gradPhi[5][2] = xi;  // x
         gradPhi[6][2] = eta;  // y
@@ -1957,7 +1957,8 @@ namespace femus {
         gradPhi[8][2] = 0.; // 0
         gradPhi[9][2] = 2 * zita; // 2 z
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         gradPhi[10][2] = phi[4]; // x y
         gradPhi[11][2] = 0.; // 0
         gradPhi[12][2] = 2 * phi[5] + phi[7]; // 2 x z  + x x
@@ -1971,7 +1972,8 @@ namespace femus {
       hessPhi[1][0][0] = 0.; // 0
       hessPhi[2][0][0] = 0.;  // 0
       hessPhi[3][0][0] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][0][0] = 0.;  //  0
         hessPhi[5][0][0] = 0.;  //  0
         hessPhi[6][0][0] = 0.;  // 0
@@ -1979,7 +1981,8 @@ namespace femus {
         hessPhi[8][0][0] = 0.; // 0
         hessPhi[9][0][0] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[10][0][0] = 0.; //  0
         hessPhi[11][0][0] = 2 * eta; //  2 y
         hessPhi[12][0][0] = 2 * zita; // 2 z
@@ -1993,7 +1996,8 @@ namespace femus {
       hessPhi[1][1][0] = hessPhi[1][0][1] = 0.; // 0
       hessPhi[2][1][0] = hessPhi[2][0][1] = 0.;  // 0
       hessPhi[3][1][0] = hessPhi[3][0][1] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][1][0] = hessPhi[4][0][1] = 1.;  //  1
         hessPhi[5][1][0] = hessPhi[5][0][1] = 0.;  //  0
         hessPhi[6][1][0] = hessPhi[6][0][1] = 0.;  // 0
@@ -2001,7 +2005,8 @@ namespace femus {
         hessPhi[8][1][0] = hessPhi[8][0][1] = 0.; // 0
         hessPhi[9][1][0] = hessPhi[9][0][1] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[10][1][0] = hessPhi[10][0][1] = zita ; //  z
         hessPhi[11][1][0] = hessPhi[11][0][1] = 2 * eta + 2 * xi ; //  2 y + 2 x
         hessPhi[12][1][0] = hessPhi[12][0][1] = 0.; // 0
@@ -2015,7 +2020,8 @@ namespace femus {
       hessPhi[1][2][0] = hessPhi[1][0][2] = 0.; // 0
       hessPhi[2][2][0] = hessPhi[2][0][2] = 0.;  // 0
       hessPhi[3][2][0] = hessPhi[3][0][2] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][2][0] = hessPhi[4][0][2] = 0.;  //  0
         hessPhi[5][2][0] = hessPhi[5][0][2] = 1.;  //  1
         hessPhi[6][2][0] = hessPhi[6][0][2] = 0.;  // 0
@@ -2023,7 +2029,8 @@ namespace femus {
         hessPhi[8][2][0] = hessPhi[8][0][2] = 0.; // 0
         hessPhi[9][2][0] = hessPhi[9][0][2] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[10][2][0] = hessPhi[10][0][2] = eta ; //  y
         hessPhi[11][2][0] = hessPhi[11][0][2] = 0.; //  0
         hessPhi[12][2][0] = hessPhi[12][0][2] = 2 * (xi + zita) ; // 2 z + 2 x
@@ -2037,7 +2044,8 @@ namespace femus {
       hessPhi[1][1][1] = 0.; // 0
       hessPhi[2][1][1] = 0.; // 0
       hessPhi[3][1][1] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][1][1] = 0.;  // 0
         hessPhi[5][1][1] = 0.;  // 0
         hessPhi[6][1][1] = 0.;  //  0
@@ -2045,7 +2053,8 @@ namespace femus {
         hessPhi[8][1][1] = 2.; // 2
         hessPhi[9][1][1] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[10][1][1] = 0.; // 0
         hessPhi[11][1][1] = 2 * xi ; //  2 x
         hessPhi[12][1][1] = 0.; // 0
@@ -2059,7 +2068,8 @@ namespace femus {
       hessPhi[1][2][1] = hessPhi[1][1][2] = 0.; // 0
       hessPhi[2][2][1] = hessPhi[2][1][2] = 0.;  // 0
       hessPhi[3][2][1] = hessPhi[3][1][2] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][2][1] = hessPhi[4][1][2] = 0.;  // 0
         hessPhi[5][2][1] = hessPhi[5][1][2] = 0.;  // 0
         hessPhi[6][2][1] = hessPhi[6][1][2] = 1.;  //  1
@@ -2067,7 +2077,8 @@ namespace femus {
         hessPhi[8][2][1] = hessPhi[8][1][2] = 0.; // 0
         hessPhi[9][2][1] = hessPhi[9][1][2] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[10][2][1] = hessPhi[10][1][2] = xi ; // x
         hessPhi[11][2][1] = hessPhi[11][1][2] = 0.; //  0
         hessPhi[12][2][1] = hessPhi[12][1][2] = 0.; // 0
@@ -2081,7 +2092,8 @@ namespace femus {
       hessPhi[1][2][2] = 0.; // 0
       hessPhi[2][2][2] = 0.; // 0
       hessPhi[3][2][2] = 0.; // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][2][2] = 0.;  // 0
         hessPhi[5][2][2] = 0.;  // 0
         hessPhi[6][2][2] = 0.;  // 0
@@ -2089,7 +2101,8 @@ namespace femus {
         hessPhi[8][2][2] = 0.; // 0
         hessPhi[9][2][2] = 2.; // 2
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
         hessPhi[10][2][2] = 0.; // 0
         hessPhi[11][2][2] = 0.; // 0
         hessPhi[12][2][2] = 2 * xi ; // 2 x
@@ -2101,20 +2114,23 @@ namespace femus {
       std::vector < std::vector < double > > gradXp(dim);
       std::vector < std::vector < std::vector < double > > > hessXp(dim);
 
-      for(int k = 0; k < dim; k++) {
+      for (int k = 0; k < dim; k++) {
         gradXp[k].assign(dim, 0.);
         hessXp[k].resize(dim);
-        for(int i1 = 0; i1 < dim; i1++) {
+
+        for (int i1 = 0; i1 < dim; i1++) {
           hessXp[k][i1].assign(dim, 0.);
         }
       }
 
-      for(int k = 0; k < dim; k++) {
-        for(int i = 0; i < nDofs; i++) {
+      for (int k = 0; k < dim; k++) {
+        for (int i = 0; i < nDofs; i++) {
           xp[k] += a[k][i] * phi[i];
-          for(int i1 = 0; i1 < dim; i1++) {
+
+          for (int i1 = 0; i1 < dim; i1++) {
             gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
-            for(int i2 = 0; i2 < dim; i2++) {
+
+            for (int i2 = 0; i2 < dim; i2++) {
               hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
             }
           }
@@ -2125,21 +2141,23 @@ namespace femus {
       std::vector < double > gradF(dim, 0.);
       std::vector < std::vector < double > >  hessF(dim);
 
-      for(int i1 = 0; i1 < dim; i1++) {
+      for (int i1 = 0; i1 < dim; i1++) {
         hessF[i1].assign(dim, 0.);
       }
 
-      for(int k = 0; k < dim; k++) {
-        for(int i1 = 0; i1 < dim; i1++) {
+      for (int k = 0; k < dim; k++) {
+        for (int i1 = 0; i1 < dim; i1++) {
           gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
-          for(int i2 = 0; i2 < dim; i2++) {
+
+          for (int i2 = 0; i2 < dim; i2++) {
             hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
           }
         }
       }
 
       std::vector < std::vector < double > >  hessFm1(dim);
-      for(int i1 = 0; i1 < dim; i1++) {
+
+      for (int i1 = 0; i1 < dim; i1++) {
         hessFm1[i1].resize(dim);
       }
 
@@ -2164,11 +2182,13 @@ namespace femus {
       eta -= deta;
       zita -= dzita;
 
-      if(dxi * dxi + deta * deta + dzita * dzita < 1.0e-6) {
+      if (dxi * dxi + deta * deta + dzita * dzita < 1.0e-6) {
         convergence = true;
-        for(int k = 0; k < dim; k++) {
+
+        for (int k = 0; k < dim; k++) {
           std::cout << xp[k] << " ";
         }
+
         std::cout << std::endl;
       }
 
@@ -2193,22 +2213,23 @@ namespace femus {
     unsigned nDofs = _mesh->GetElementDofNumber(currentElem, solutionType);
     short unsigned currentElementType = _mesh->GetElementType(currentElem);
 
-    for(unsigned k = 0; k < dim; k++) {
+    for (unsigned k = 0; k < dim; k++) {
       xv[k].resize(nDofs);
       a[k].resize(nDofs);
     }
 
-    for(unsigned i = 0; i < nDofs; i++) {
+    for (unsigned i = 0; i < nDofs; i++) {
       unsigned iDof  = _mesh->GetSolutionDof(i, currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
-      for(unsigned k = 0; k < dim; k++) {
+
+      for (unsigned k = 0; k < dim; k++) {
         xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
       }
     }
 
 
 
-    if(solutionType == 0) {
-      for(int k = 0; k < dim; k++) {
+    if (solutionType == 0) {
+      for (int k = 0; k < dim; k++) {
         a[k][0] = 0.5 * (xv[k][0] + xv[k][3]);
         a[k][1] = 0.5 * (- xv[k][0] + xv[k][1] - xv[k][3] + xv[k][4]);
         a[k][2] = 0.5 * (- xv[k][0] + xv[k][2] - xv[k][3] + xv[k][5]);
@@ -2217,8 +2238,8 @@ namespace femus {
         a[k][5] = 0.5 * (xv[k][0] - xv[k][2] - xv[k][3] + xv[k][5]);
       }
     }
-    else if(solutionType == 1) {
-      for(int k = 0; k < dim; k++) {
+    else if (solutionType == 1) {
+      for (int k = 0; k < dim; k++) {
 
 //             for(int i=0 ; i <nDofs;  i++) {
 //                 xv[k][i] = i;
@@ -2246,8 +2267,8 @@ namespace femus {
 //             }
       }
     }
-    else if(solutionType == 2) { // I think the coefficients get too small
-      for(int k = 0; k < dim; k++) {
+    else if (solutionType == 2) { // I think the coefficients get too small
+      for (int k = 0; k < dim; k++) {
 
 //             for(int i=0 ; i <nDofs;  i++){
 //               xv[k][i] = i;
@@ -2303,16 +2324,18 @@ namespace femus {
 
     bool convergence = false;
     std::cout << "xi = " << xi << " , " << "eta = " << eta << " , " << "zita = " << zita << std::endl;
-    while(!convergence) {
+
+    while (!convergence) {
 
       std::vector < double > phi(nDofs);
       std::vector < std::vector < double > > gradPhi(nDofs);
       std::vector < std::vector < std::vector < double > > > hessPhi(nDofs);
 
-      for(int i = 0; i < nDofs; i++) {
+      for (int i = 0; i < nDofs; i++) {
         gradPhi[i].resize(dim);
         hessPhi[i].resize(dim);
-        for(int i1 = 0; i1 < dim; i1++) {
+
+        for (int i1 = 0; i1 < dim; i1++) {
           hessPhi[i][i1].resize(dim);
         }
       }
@@ -2324,7 +2347,8 @@ namespace femus {
       phi[3] = zita; // z
       phi[4] = phi[1] * phi[3];  // x z
       phi[5] = phi[2] * phi[3];  // y z
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         phi[4] = xi * eta;  // x y
         phi[5] = xi * zita;  // x z
         phi[6] = eta * zita;  // y z
@@ -2337,7 +2361,8 @@ namespace femus {
         phi[13] = xi * phi[9]; // x z z
         phi[14] = eta * phi[9]; // y z z;
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
 
         phi[11] = phi[7] * eta + xi * phi[8]; // xx y + x yy
         phi[12] = phi[7] * zita; // x x z
@@ -2359,7 +2384,8 @@ namespace femus {
       gradPhi[3][0] = 0.; // 0
       gradPhi[4][0] = zita ;  //  z
       gradPhi[5][0] = 0.;  // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         gradPhi[4][0] = eta ;  //  y
         gradPhi[5][0] = zita ;  //  z
         gradPhi[6][0] = 0.;  // 0
@@ -2372,7 +2398,8 @@ namespace femus {
         gradPhi[13][0] = phi[9]; //  z z
         gradPhi[14][0] = 0.; // 0 ;
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
 
         gradPhi[11][0] = 2 * phi[4] + phi[8]; // 2 x y +  yy
         gradPhi[12][0] = 2 * phi[5]; // 2 x z
@@ -2394,7 +2421,8 @@ namespace femus {
       gradPhi[3][1] = 0.; // 0
       gradPhi[4][1] = 0.;  // 0
       gradPhi[5][1] = zita ;  // z
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         gradPhi[4][1] = xi ;  //  x
         gradPhi[5][1] = 0.;  // 0
         gradPhi[6][1] = zita ;  // z
@@ -2407,7 +2435,8 @@ namespace femus {
         gradPhi[13][1] = 0.; // 0
         gradPhi[14][1] = phi[9]; //  z z;
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
 
         gradPhi[11][1] = phi[7] + 2 * phi[4]; // xx + 2 x y
         gradPhi[12][1] = 0.; // 0
@@ -2429,7 +2458,8 @@ namespace femus {
       gradPhi[3][2] = 1.; // 1
       gradPhi[4][2] = xi ;  // x
       gradPhi[5][2] = eta ;  // y
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         gradPhi[4][2] = 0.;  // 0
         gradPhi[5][2] = xi ;  // x
         gradPhi[6][2] = eta ;  // y
@@ -2442,7 +2472,8 @@ namespace femus {
         gradPhi[13][2] = 2 * phi[5]; // 2 x z
         gradPhi[14][2] = 2 * phi[6]; // 2 y z;
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
 
         gradPhi[11][2] = 0.; // 0
         gradPhi[12][2] = phi[7]; // x x
@@ -2464,7 +2495,8 @@ namespace femus {
       hessPhi[3][0][0] = 0.; // 0
       hessPhi[4][0][0] = 0.;  //  0
       hessPhi[5][0][0] = 0.;  // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][0][0] = 0.;  //  0
         hessPhi[5][0][0] = 0.;  //  0
         hessPhi[6][0][0] = 0.;  // 0
@@ -2477,7 +2509,8 @@ namespace femus {
         hessPhi[13][0][0] = 0.; //  0
         hessPhi[14][0][0] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
 
         hessPhi[11][0][0] = 2 * eta; // 2 y
         hessPhi[12][0][0] = 2 * zita; // 2 z
@@ -2499,7 +2532,8 @@ namespace femus {
       hessPhi[3][1][0] = hessPhi[3][0][1] = 0.; // 0
       hessPhi[4][1][0] = hessPhi[4][0][1] = 0.;  //  0
       hessPhi[5][1][0] = hessPhi[5][0][1] = 0.;  // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][1][0] = hessPhi[4][0][1] = 1.;  //  1
         hessPhi[5][1][0] = hessPhi[5][0][1] = 0.;  //  0
         hessPhi[6][1][0] = hessPhi[6][0][1] = 0.;  // 0
@@ -2512,7 +2546,8 @@ namespace femus {
         hessPhi[13][1][0] = hessPhi[13][0][1] = 0.; //  0
         hessPhi[14][1][0] = hessPhi[14][0][1] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
 
         hessPhi[11][1][0] = hessPhi[11][0][1] = 2 * xi + 2 * eta; // 2 x + 2 y
         hessPhi[12][1][0] = hessPhi[12][0][1] = 0.; // 0
@@ -2534,7 +2569,8 @@ namespace femus {
       hessPhi[3][0][2] = 0.; // 0
       hessPhi[4][0][2] = 1.;  //  1
       hessPhi[5][0][2] = 0.;  // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][0][2] = 0.;  //  0
         hessPhi[5][0][2] = 1.;  //  1
         hessPhi[6][0][2] = 0.;  // 0
@@ -2547,7 +2583,8 @@ namespace femus {
         hessPhi[13][0][2] = 2 * zita; //  2 z
         hessPhi[14][0][2] = 0.; // 0
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
 
         hessPhi[11][0][2] = 0.; // 0
         hessPhi[12][0][2] = 2 * xi; // 2 x
@@ -2569,7 +2606,8 @@ namespace femus {
       hessPhi[3][1][1] = 0.; // 0
       hessPhi[4][1][1] = 0.;  // 0
       hessPhi[5][1][1] = 0.;  // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][1][1] = 0.;  //  0
         hessPhi[5][1][1] = 0.;  // 0
         hessPhi[6][1][1] = 0.;  // 0
@@ -2582,7 +2620,8 @@ namespace femus {
         hessPhi[13][1][1] = 0.; // 0
         hessPhi[14][1][1] = 0.; //  0;
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
 
         hessPhi[11][1][1] = 2 * xi ; // 2 x
         hessPhi[12][1][1] = 0.; // 0
@@ -2603,7 +2642,8 @@ namespace femus {
       hessPhi[3][2][1] = hessPhi[3][1][2] = 0.; // 0
       hessPhi[4][2][1] = hessPhi[4][1][2] = 0.;  // 0
       hessPhi[5][2][1] = hessPhi[5][1][2] = 1.;  // 1
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][2][1] = hessPhi[4][1][2] = 0.;  //  0
         hessPhi[5][2][1] = hessPhi[5][1][2] = 0.;  // 0
         hessPhi[6][2][1] = hessPhi[6][1][2] = 1.;  // 1
@@ -2616,7 +2656,8 @@ namespace femus {
         hessPhi[13][2][1] = hessPhi[13][1][2] = 0.; // 0
         hessPhi[14][2][1] = hessPhi[14][1][2] = 2 * zita; //  2 z;
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
 
         hessPhi[11][2][1] = hessPhi[11][1][2] = 0.; // 0
         hessPhi[12][2][1] = hessPhi[12][1][2] = 0.; // 0
@@ -2638,7 +2679,8 @@ namespace femus {
       hessPhi[3][2][2] = 0.; // 0
       hessPhi[4][2][2] = 0.;  // 0
       hessPhi[5][2][2] = 0.;  // 0
-      if(solutionType > 0) {
+
+      if (solutionType > 0) {
         hessPhi[4][2][2] = 0.;  // 0
         hessPhi[5][2][2] = 0.;  // 0
         hessPhi[6][2][2] = 0.;  // 0
@@ -2651,7 +2693,8 @@ namespace femus {
         hessPhi[13][2][2] = 2 * xi; // 2 x
         hessPhi[14][2][2] = 2 * eta; // 2 y ;
       }
-      if(solutionType > 1) {
+
+      if (solutionType > 1) {
 
         hessPhi[11][2][2] = 0.; // 0
         hessPhi[12][2][2] = 0.; // 0
@@ -2669,20 +2712,23 @@ namespace femus {
       std::vector < std::vector < double > > gradXp(dim);
       std::vector < std::vector < std::vector < double > > > hessXp(dim);
 
-      for(int k = 0; k < dim; k++) {
+      for (int k = 0; k < dim; k++) {
         gradXp[k].assign(dim, 0.);
         hessXp[k].resize(dim);
-        for(int i1 = 0; i1 < dim; i1++) {
+
+        for (int i1 = 0; i1 < dim; i1++) {
           hessXp[k][i1].assign(dim, 0.);
         }
       }
 
-      for(int k = 0; k < dim; k++) {
-        for(int i = 0; i < nDofs; i++) {
+      for (int k = 0; k < dim; k++) {
+        for (int i = 0; i < nDofs; i++) {
           xp[k] += a[k][i] * phi[i];
-          for(int i1 = 0; i1 < dim; i1++) {
+
+          for (int i1 = 0; i1 < dim; i1++) {
             gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
-            for(int i2 = 0; i2 < dim; i2++) {
+
+            for (int i2 = 0; i2 < dim; i2++) {
               hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
             }
           }
@@ -2693,21 +2739,23 @@ namespace femus {
       std::vector < double > gradF(dim, 0.);
       std::vector < std::vector < double > >  hessF(dim);
 
-      for(int i1 = 0; i1 < dim; i1++) {
+      for (int i1 = 0; i1 < dim; i1++) {
         hessF[i1].assign(dim, 0.);
       }
 
-      for(int k = 0; k < dim; k++) {
-        for(int i1 = 0; i1 < dim; i1++) {
+      for (int k = 0; k < dim; k++) {
+        for (int i1 = 0; i1 < dim; i1++) {
           gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
-          for(int i2 = 0; i2 < dim; i2++) {
+
+          for (int i2 = 0; i2 < dim; i2++) {
             hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
           }
         }
       }
 
       std::vector < std::vector < double > >  hessFm1(dim);
-      for(int i1 = 0; i1 < dim; i1++) {
+
+      for (int i1 = 0; i1 < dim; i1++) {
         hessFm1[i1].resize(dim);
       }
 
@@ -2732,11 +2780,13 @@ namespace femus {
       eta -= deta;
       zita -= dzita;
 
-      if(dxi * dxi + deta * deta + dzita * dzita < 1.0e-6) {
+      if (dxi * dxi + deta * deta + dzita * dzita < 1.0e-6) {
         convergence = true;
-        for(int k = 0; k < dim; k++) {
+
+        for (int k = 0; k < dim; k++) {
           std::cout << xp[k] << " ";
         }
+
         std::cout << std::endl;
       }
 
@@ -2756,7 +2806,7 @@ namespace femus {
   void Marker::InverseMappingTEST(std::vector < double > &x) {
     unsigned dim = _mesh->GetDimension();
 
-    for(int solType = 0; solType < 3; solType++) {
+    for (int solType = 0; solType < 3; solType++) {
       std::cout << "solType = " << solType << std::endl;
       int iel = _mesh->_elementOffset[_iproc + 1] - 1  ;
       std::cout << "iel = " << iel << std::endl;
@@ -2765,45 +2815,49 @@ namespace femus {
       short unsigned ielType = _mesh->GetElementType(iel);
 
       std::vector < std::vector < double > > xv(nDofs);
-      for(unsigned i = 0; i < nDofs; i++) {
+
+      for (unsigned i = 0; i < nDofs; i++) {
         xv[i].resize(dim);
         unsigned iDof  = _mesh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
-        for(unsigned k = 0; k < dim; k++) {
+
+        for (unsigned k = 0; k < dim; k++) {
           xv[i][k] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
         }
       }
 
-      for(int j = 0; j < nDofs; j++) {
+      for (int j = 0; j < nDofs; j++) {
         std::vector < double > xiT(dim);
-        for(unsigned k = 0; k < dim; k++) {
+
+        for (unsigned k = 0; k < dim; k++) {
           xiT[k] = *(_mesh->_finiteElement[ielType][0]->GetBasis()->GetXcoarse(j) + k);
         }
 
         // This is the test
         std::vector < double > xi;
 
-        for(int k = 0; k < dim; k++) {
+        for (int k = 0; k < dim; k++) {
           std::cout << "xv[" << k << "]= " << xv[j][k] <<  " ";
         }
+
         std::cout << std::endl;
 
-        if(ielType == 0) {
+        if (ielType == 0) {
           xi = InverseMappingHex(iel, solType, xv[j]);
         }
-        else if(ielType == 1) {
+        else if (ielType == 1) {
           xi = InverseMappingTet(iel, solType, xv[j]);
         }
-        else if(ielType == 2) {
+        else if (ielType == 2) {
           xi = InverseMappingWedge(iel, solType, xv[j]);
         }
-        else if(ielType == 3) {
+        else if (ielType == 3) {
           xi = InverseMappingQuad(iel, solType, xv[j]);
         }
-        else if(ielType == 4) {
+        else if (ielType == 4) {
           xi = InverseMappingTri(iel, solType, xv[j]);
         }
 
-        for(int k = 0; k < dim; k++) {
+        for (int k = 0; k < dim; k++) {
           std::cout << "xiT[" << k << "]= " << xiT[k] <<  " xi[" << k << "]= " << xi[k];
           std::cout << " test: " << xiT[k] - xi[k] << std::endl;
         }
@@ -2830,11 +2884,12 @@ namespace femus {
     // determine the step size
     double h = T / n;
 
-    for(unsigned i = 0; i < RKOrder; i++) {
+    for (unsigned i = 0; i < RKOrder; i++) {
       x[i].reserve(dim + 1); // x = (t, x, y, z)
       K[i].reserve(dim);
     }
-    for(unsigned i = 0; i < RKOrder; i++) {
+
+    for (unsigned i = 0; i < RKOrder; i++) {
       x[i].resize(dim + 1);
       K[i].resize(dim);
     }
@@ -2843,18 +2898,18 @@ namespace femus {
     x[0][0] = 0;
 
     // initialize the position
-    for(unsigned i = 1; i < dim + 1; i++) {
+    for (unsigned i = 1; i < dim + 1; i++) {
       x[0][i] = _x[i - 1] ;
       std::cout << "x[0][" << i << "]= " << x[0][i] << std::endl;
     }
 
 
-    while(x[0][0] < T) {
+    while (x[0][0] < T) {
 
       std::cout << "------------------------------------- t = " << x[0][0] << "----------------------------------" << std::endl;
       std::cout << "------------------------------------- h = " << h << "------------------------------------" << std::endl;
 
-      for(unsigned i = 0; i < dim; i++) {
+      for (unsigned i = 0; i < dim; i++) {
         std::cout << "f(x)[ " << i << "]= " << (*f)(x[0])[i] << std::endl ;
         K[0][i] = h * (*f)(x[0])[i] ;
         std::cout << "K[0][[ " << i << "]= " << K[0][i] << std::endl ;
@@ -2862,51 +2917,55 @@ namespace femus {
 
       //compute x[1]
       x[1][0] = x[0][0] + (0.5 * h);
-      for(unsigned j = 1; j < dim + 1; j++) {
+
+      for (unsigned j = 1; j < dim + 1; j++) {
         x[1][j] = x[0][j] + 0.5 * K[0][j - 1];
       }
 
       //compute K[1]
-      for(unsigned i = 0; i < dim; i++) {
+      for (unsigned i = 0; i < dim; i++) {
         K[1][i] = h * (*f)(x[1])[i] ;
         std::cout << "K[1][[ " << i << "]= " << K[1][i] << std::endl ;
       }
 
       //compute x[2]
       x[2][0] = x[0][0] + (0.5 * h);
-      for(unsigned j = 1; j < dim + 1; j++) {
+
+      for (unsigned j = 1; j < dim + 1; j++) {
         x[2][j] = x[0][j] + 0.5 * K[1][j - 1];
       }
 
       //compute K[2]
-      for(unsigned i = 0; i < dim; i++) {
+      for (unsigned i = 0; i < dim; i++) {
         K[2][i] = h * (*f)(x[2])[i] ;
         std::cout << "K[2][[ " << i << "]= " << K[2][i] << std::endl ;
       }
 
       //compute x[3]
       x[3][0] = x[0][0] + h;
-      for(unsigned j = 1; j < dim + 1; j++) {
+
+      for (unsigned j = 1; j < dim + 1; j++) {
         x[3][j] = x[0][j] + K[2][j - 1];
       }
 
       //compute K[3]
-      for(unsigned i = 0; i < dim; i++) {
+      for (unsigned i = 0; i < dim; i++) {
         K[3][i] = h * (*f)(x[3])[i] ;
         std::cout << "K[3][[ " << i << "]= " << K[3][i] << std::endl ;
       }
 
       // RK stepping
-      for(unsigned j = 1; j < dim + 1; j++) {
+      for (unsigned j = 1; j < dim + 1; j++) {
         x[0][j] += (1. / 6) * (K[0][j - 1] + 2. * K[1][j - 1] + 2. * K[2][j - 1] + K[3][j - 1]);
         std::cout << "x[0][" << j << "]=" << x[0][j] << std::endl;
       }
+
       //update t
       x[0][0] += h ;
       std::cout << "t = " << x[0][0] << " , " << "T = " << T << std::endl;
     }
 
-    for(unsigned j = 1; j < dim + 1; j++) {
+    for (unsigned j = 1; j < dim + 1; j++) {
       y[j - 1] = x[0][j];
     }
 
@@ -2925,27 +2984,34 @@ namespace femus {
 
     std::vector< std::vector < double > > xv(dim);
 
-    for(unsigned k = 0; k < dim; k++) {
+    for (unsigned k = 0; k < dim; k++) {
       xv[k].reserve(9);
     }
+
     short unsigned ielType = _mesh->GetElementType(currentElem);
-    for(unsigned k = 0; k < dim; k++) {
+
+    for (unsigned k = 0; k < dim; k++) {
       xv[k].resize(facePointNumber[ielType]);
     }
-    for(unsigned i = 0; i < facePointNumber[ielType]; i++) {
+
+    for (unsigned i = 0; i < facePointNumber[ielType]; i++) {
       unsigned ielDof  = _mesh->GetSolutionDof(facePoints[ielType][i], currentElem, 2);    // global to global mapping between coordinates node and coordinate dof
-      for(unsigned k = 0; k < dim; k++) {
+
+      for (unsigned k = 0; k < dim; k++) {
         xv[k][i] = (*_mesh->_topology->_Sol[k])(ielDof) - _x[k];     // global extraction and local storage for the element coordinates
       }
     }
 
     double length = 0.;
-    for(unsigned i = 0; i < xv[0].size() - 1; i++) {
+
+    for (unsigned i = 0; i < xv[0].size() - 1; i++) {
       length += sqrt((xv[0][i + 1] - xv[0][i]) * (xv[0][i + 1] - xv[0][i]) +
                      (xv[1][i + 1] - xv[1][i]) * (xv[1][i + 1] - xv[1][i]));
     }
+
     length /= xv[0].size();
-    for(unsigned i = 0; i < xv[0].size(); i++) {
+
+    for (unsigned i = 0; i < xv[0].size(); i++) {
       xv[0][i] /= length;
       xv[1][i] /= length;
     }
@@ -2954,66 +3020,74 @@ namespace femus {
     double epsilon  = 10e-10;
 
     double w = 0.;
-    for(unsigned i = 0; i < xv[0].size() - 1; i++) {
+
+    for (unsigned i = 0; i < xv[0].size() - 1; i++) {
       double Delta = -xv[0][i] * (xv[1][i + 1] - xv[1][i]) + xv[1][i] * (xv[0][i + 1] - xv[0][i]);
+
       //std::cout << "Delta=" << Delta << " " << epsilon << std::endl;
-      if(fabs(Delta) > epsilon) {   // the edge does not pass for the origin
+      if (fabs(Delta) > epsilon) {  // the edge does not pass for the origin
         //std::cout << " xv[1][i]*xv[1][i+1] = " << xv[1][i]*xv[1][i + 1] << std::endl;
-        if(fabs(xv[1][i]) < epsilon && xv[0][i] > 0) {  // the first vertex is on the positive x-axis
+        if (fabs(xv[1][i]) < epsilon && xv[0][i] > 0) { // the first vertex is on the positive x-axis
           //std::cout << "the first vertex is on the positive x-axis" << std::endl;
-          if(xv[1][i + 1] > 0) w += .5;
+          if (xv[1][i + 1] > 0) w += .5;
           else w -= .5;
         }
-        else if(fabs(xv[1][i + 1]) < epsilon && xv[0][i + 1] > 0) { // the second vertex is on the positive x-axis
+        else if (fabs(xv[1][i + 1]) < epsilon && xv[0][i + 1] > 0) { // the second vertex is on the positive x-axis
           //std::cout << "the second vertex is on the positive x-axis" << std::endl;
-          if(xv[1][i] < 0) w += .5;
+          if (xv[1][i] < 0) w += .5;
           else w -= .5;
         }
-        else if(xv[1][i]*xv[1][i + 1] < 0) { // the edge crosses the x-axis but doesn't pass through the origin
+        else if (xv[1][i]*xv[1][i + 1] < 0) { // the edge crosses the x-axis but doesn't pass through the origin
           double r = xv[0][i] - xv[1][i] * (xv[0][i + 1] - xv[0][i]) / (xv[1][i + 1] - xv[1][i]);
+
           //std::cout << " r = " << r << std::endl;
-          if(r > 0) {
-            if(xv[1][i] < 0) w += 1.;
+          if (r > 0) {
+            if (xv[1][i] < 0) w += 1.;
             else w -= 1;
           }
         }
       }
       else { // the line trought the edge passes for the origin
         //std::cout << " xv[0][i]*xv[0][i+1] = " << xv[0][i]*xv[0][i + 1] << std::endl;
-        if(fabs(xv[0][i]) < epsilon  && fabs(xv[1][i]) < epsilon) {  // vertex 1 is the origin
+        if (fabs(xv[0][i]) < epsilon  && fabs(xv[1][i]) < epsilon) { // vertex 1 is the origin
           w = 1; // set to 1 by default
           //std::cout << "w set to 1 by default (vertex 1 is in the origin)" << std::endl;
           break;
         }
-        else if(fabs(xv[0][i + 1]) < epsilon && fabs(xv[1][i + 1]) < epsilon) { // vertex 2 is the origin
+        else if (fabs(xv[0][i + 1]) < epsilon && fabs(xv[1][i + 1]) < epsilon) { // vertex 2 is the origin
           w = 1; // set to 1 by default
           //std::cout << "w set to 1 by default (vertex 2 is in the origin)" << std::endl;
           break;
         }
-        else if(xv[0][i] * xv[0][i + 1] < 0 || xv[1][i] * xv[1][i + 1] < 0) { //the edge crosses the origin
+        else if (xv[0][i] * xv[0][i + 1] < 0 || xv[1][i] * xv[1][i + 1] < 0) { //the edge crosses the origin
           w = 1; // set to 1 by default
           //std::cout << "w set to 1 by default (the edge passes through the origin)" << std::endl;
           break;
         }
       }
+
       //std::cout << " w = " << w << " and currentElem = " << currentElem << std::endl;
     }
 
     nextElem = currentElem;
 
-    if(w == 0) {
+    if (w == 0) {
 
       double distance = 1.e10;
-      for(unsigned j = 1; j < xv[0].size() - 1; j += 2) {
+
+      for (unsigned j = 1; j < xv[0].size() - 1; j += 2) {
         double distancej = 0.;
-        for(unsigned k = 0; k < dim; k++) {
+
+        for (unsigned k = 0; k < dim; k++) {
           distancej += xv[k][j] * xv[k][j];
         }
+
         distancej = sqrt(distancej);
 
-        if(distancej < distance) {
+        if (distancej < distance) {
           int jel = (_mesh->el->GetFaceElementIndex(currentElem, (j - 1) / 2) - 1);
-          if(jel != previousElem) {
+
+          if (jel != previousElem) {
             nextElem = jel;
             distance = distancej;
           }
@@ -3021,7 +3095,7 @@ namespace femus {
       }
 
     }
-    else if(w < 0) {
+    else if (w < 0) {
       //std::cout << " Error negative Winding Number with counterclockwise oriented points " << std::endl;
       abort();
     }
@@ -3043,13 +3117,13 @@ namespace femus {
     bool markerIsInElement = false;
 
 
-    for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
+    for (unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
 
       // std::cout << " iface = " << iface << std::endl;
 
       short unsigned currentElementType = _mesh->GetElementType(currentElem);
 
-      for(unsigned itri = 0; itri < trianglesPerFace[currentElementType][iface]; itri ++) {
+      for (unsigned itri = 0; itri < trianglesPerFace[currentElementType][iface]; itri ++) {
 
         // std::cout << "faceIntersectionCounter  = " << faceIntersectionCounter  << " , " << " markerIsInElement = " << markerIsInElement <<  std::endl;
 
@@ -3058,16 +3132,18 @@ namespace femus {
 
         std::vector< std::vector < double > > xv(dim); //stores the coordinates of the nodes of the triangle itri
 
-        for(unsigned k = 0; k < dim; k++) {
+        for (unsigned k = 0; k < dim; k++) {
           //xv[k].reserve(9);
           xv[k].reserve(4);
         }
+
 //       short unsigned currentElementType = _mesh->GetElementType(currentElem);
 //       short unsigned ifaceType = _mesh->GetElementFaceType(currentElem, iface);
-        for(unsigned k = 0; k < dim; k++) {
+        for (unsigned k = 0; k < dim; k++) {
           // xv[k].resize(facePointNumber[ifaceType]);
           xv[k].resize(4);
         }
+
 //             for(unsigned i = 0; i < facePointNumber[ifaceType]; i++) {
 //                 unsigned ifaceDof  = _mesh->GetSolutionDof(facePoints3D[currentElementType][iface][i], currentElem, 2);
 //                 // std::cout << "ifaceDof = " << ifaceDof << std::endl;
@@ -3076,18 +3152,20 @@ namespace femus {
 //                 }
 //             }
 
-        for(unsigned i = 0; i < 4; i++) {
+        for (unsigned i = 0; i < 4; i++) {
           unsigned itriDof  = _mesh->GetSolutionDof(faceTriangleNodes[currentElementType][iface][itri][i], currentElem, 2);
+
           //std::cout << "itriDof = " << itriDof << std::endl;
-          for(unsigned k = 0; k < dim; k++) {
+          for (unsigned k = 0; k < dim; k++) {
             xv[k][i] = (*_mesh->_topology->_Sol[k])(itriDof) - _x[k];     // global extraction and local storage for the element coordinates
           }
         }
 
 
         double length = 0.;
+
         //  for(unsigned i = 0; i < xv[0].size() - 1; i++) {
-        for(unsigned i = 0; i < 3; i++) {
+        for (unsigned i = 0; i < 3; i++) {
           length += sqrt((xv[0][i + 1] - xv[0][i]) * (xv[0][i + 1] - xv[0][i]) +
                          (xv[1][i + 1] - xv[1][i]) * (xv[1][i + 1] - xv[1][i]) +
                          (xv[2][i + 1] - xv[2][i]) * (xv[2][i + 1] - xv[2][i]));
@@ -3095,8 +3173,9 @@ namespace femus {
 
 //             length /= xv[0].size();
         length /= 4;
+
         // for(unsigned i = 0; i < xv[0].size(); i++) {
-        for(unsigned i = 0; i < 4; i++) {
+        for (unsigned i = 0; i < 4; i++) {
           xv[0][i] /= length;
           xv[1][i] /= length;
           xv[2][i] /= length;
@@ -3132,7 +3211,7 @@ namespace femus {
         // std::cout << "A = " << A << " , " << "By0 = " << By0 << " , " << " Cz0 = " << Cz0 <<  std::endl;
 
 
-        if(fabs(A) < epsilon && epsilon < fabs(By0 + Cz0)) { // A = 0 and By0 != -Cz0
+        if (fabs(A) < epsilon && epsilon < fabs(By0 + Cz0)) { // A = 0 and By0 != -Cz0
           // std::cout << "The plane of face " << iface << "and the x-axis don't intersect " << std::endl;
 
         }
@@ -3141,26 +3220,28 @@ namespace femus {
           std::vector < double > xTilde(dim, 0);
           double r = 0;
 
-          if(fabs(A) < epsilon && fabs(By0 + Cz0) < epsilon) { // A = 0 and By0 = -Cz0
+          if (fabs(A) < epsilon && fabs(By0 + Cz0) < epsilon) { // A = 0 and By0 = -Cz0
             //   std::cout << "The plane of face " << iface << "and the x-axis intersect on a line" << std::endl;
             // the marker and the face are already on the same plane so there is no need for further shifting
             lineIntersection = true ;
           }
 
-          else if(epsilon < fabs(A)) {  // A != 0
+          else if (epsilon < fabs(A)) { // A != 0
             // std::cout << "The plane of face " << iface << "and the x-axis intersect at a point" << std::endl;
 
             r = (A * xv[0][0] + B * xv[1][0] + C * xv[2][0]) / A;
             xTilde[0] = r;
-            if(fabs(r) < epsilon) { // r = 0
+
+            if (fabs(r) < epsilon) { // r = 0
               lineIntersection = true; // the intersection point is the actual marker
             }
           }
-          if(r > 0 || fabs(r) < epsilon) {
+
+          if (r > 0 || fabs(r) < epsilon) {
 
             //  for(unsigned i = 0; i < facePointNumber[ifaceType]; i++) {
-            for(unsigned i = 0; i < 4; i++) {
-              for(unsigned k = 0; k < dim; k++) {
+            for (unsigned i = 0; i < 4; i++) {
+              for (unsigned k = 0; k < dim; k++) {
                 xv[k][i] = xv[k][i] - xTilde[k];     //transate again the reference frame so that the origin is xTilde
               }
             }
@@ -3168,7 +3249,7 @@ namespace femus {
             unsigned scalarCount = 0;
 
             // for(unsigned i = 0; i < xv[0].size() - 1; i++) {
-            for(unsigned i = 0; i < 3; i++) {
+            for (unsigned i = 0; i < 3; i++) {
               //entries of the vector (xTilde - xi) X ( xi+1 -xi)
               double q0 = xv[1][i] * (xv[2][i] - xv[2][i + 1]) + xv[2][i] * (xv[1][i + 1] - xv[1][i]);
               double q1 = xv[2][i] * (xv[0][i] - xv[0][i + 1]) + xv[0][i] * (xv[2][i + 1] - xv[2][i]);
@@ -3180,15 +3261,16 @@ namespace femus {
 
               //  std::cout << "scalarProduct = " << scalarProduct << std::endl;
 
-              if(scalarProduct > 0) {  // this can be cancelled once the code is working ok
+              if (scalarProduct > 0) { // this can be cancelled once the code is working ok
                 //    std::cout << "the marker is outside face " << iface <<  std::endl;
                 break;
 
               }
-              else if(fabs(scalarProduct) < epsilon) {  //scalarProduct == 0
+              else if (fabs(scalarProduct) < epsilon) { //scalarProduct == 0
                 std::cout << " the marker and the edge are aligned " << std::endl; //check if xTilde is actually on the edge.
-                if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
-                  if(lineIntersection == true) {
+
+                if (xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
+                  if (lineIntersection == true) {
                     // std::cout << " the marker belongs to an edge of face " << iface << std::endl;
                     markerIsInElement = true;
                     break;
@@ -3200,9 +3282,9 @@ namespace femus {
                   }
 
                 }
-                else if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
-                        (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
-                  if(lineIntersection == true) {
+                else if ((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
+                         (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
+                  if (lineIntersection == true) {
                     // std::cout << " one of the vertices is the marker" << std::endl;
                     markerIsInElement = true;
                     break;
@@ -3214,50 +3296,52 @@ namespace femus {
                   }
                 }
               }
-              else if(scalarProduct < 0) {
+              else if (scalarProduct < 0) {
                 //     std::cout << "increase scalarCount" <<std::endl;
                 scalarCount++;
                 //  std::cout << "scalarCount = " << scalarCount << std::endl;
               }
             }
 
-            if(faceIntersectionCounterOld < faceIntersectionCounter) {
+            if (faceIntersectionCounterOld < faceIntersectionCounter) {
               break;
             }
+
 //           if(scalarCount == acePointNumber[ifaceType] - 1 && lineIntersection == true) {
-            if(scalarCount == 3 && lineIntersection == true) {
+            if (scalarCount == 3 && lineIntersection == true) {
               markerIsInElement = true ;
               break;
             }
             //else if(scalarCount == facePointNumber[ifaceType] - 1 && lineIntersection == false) {
-            else if(scalarCount == 3 && lineIntersection == false) {
+            else if (scalarCount == 3 && lineIntersection == false) {
               faceIntersectionCounter++;
               break;
             }
           }
 
         } //end of else
-        if(markerIsInElement == true) {
+
+        if (markerIsInElement == true) {
           break;
         }
 
       } //end of the loop on tri
 
-      if(markerIsInElement == true) {
+      if (markerIsInElement == true) {
         break;
       }
     }// end of the loop on iface
 
     //std::cout << "markerIsInElement = " << markerIsInElement << " and faceIntersectionCounter  = " << faceIntersectionCounter  <<  std::endl;
 
-    if(markerIsInElement == true || faceIntersectionCounter % 2 != 0) {
+    if (markerIsInElement == true || faceIntersectionCounter % 2 != 0) {
       nextElem = currentElem;
     }
-    else if(markerIsInElement == false && faceIntersectionCounter % 2 == 0) {
+    else if (markerIsInElement == false && faceIntersectionCounter % 2 == 0) {
       // std::cout << " The marker doesn't belong to element " << currentElem << std::endl;
       double modulus = 1.e10;
 
-      for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
+      for (unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
 
         // double xg[3] = {0., 0., 0.};
 //             for(int i = 0; i < 3; i ++) {
@@ -3280,26 +3364,30 @@ namespace femus {
 
         //std::cout << "faceCentralDof =" << faceCentralDof << std::endl;
         double distance2 = 0;
-        for(unsigned k = 0; k < dim; k++) {
+
+        for (unsigned k = 0; k < dim; k++) {
           // std::cout << (*_mesh->_topology->_Sol[k])(faceCentralDof)  << " ";
           double dk = (*_mesh->_topology->_Sol[k])(faceCentralDof) - _x[k];     // global extraction and local storage for the element coordinates
           distance2 += dk * dk;
         }
+
         //std::cout << std::endl;
         double ifaceModulus = sqrt(distance2);
 
         // std::cout << faceCentralDof << " " << ifaceModulus << std::endl;
 
-        if(ifaceModulus < modulus) {
+        if (ifaceModulus < modulus) {
           int jel = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
+
           // std::cout << "jel = " << jel << "iface = " << iface <<  std::endl;
-          if(jel != previousElem) {
+          if (jel != previousElem) {
             nextElem = jel;
             modulus = ifaceModulus;
           }
         }
       }
     }
+
     std::cout << "nextElem = " << nextElem << std::endl;
 
     return (nextElem >= 0) ? nextElem : UINT_MAX;
@@ -3309,6 +3397,7 @@ namespace femus {
 
 
 }
+
 
 
 

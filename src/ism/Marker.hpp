@@ -27,9 +27,6 @@
 #include "map"
 #include "Mesh.hpp"
 
-#include "GeomElTypeEnum.hpp"
-
-
 namespace femus {
 
   class Marker : public ParallelObject {
@@ -58,9 +55,6 @@ namespace femus {
   std::vector<double> GetPosition(std::vector<double> (*f)(std::vector<double>), int n, double T);
     
   private:
-    
-    void GetElementCoefficients(std::vector < std::vector <double > > &a, const short unsigned &currentElement, const unsigned &solutiontype);
-    
     
     std::vector< double > InverseMappingQuad(const unsigned &currentElem, const unsigned &solutionType, const std::vector< double > &x);
     std::vector< double > InverseMappingTri(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
