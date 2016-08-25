@@ -21,8 +21,6 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 #include "FieldSplitTree.hpp"
-#include "PetscMatrix.hpp"
-
 
 using namespace femus;
 
@@ -213,7 +211,6 @@ int main(int argc, char** args) {
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
-  //system.SetElementBlockNumber("All");
 
   system.SetSamePreconditioner();
   system.MGsolve();
@@ -226,10 +223,6 @@ int main(int argc, char** args) {
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   mlMsh.PrintInfo();
-
-
-//   double ff;
-//   std::cin>>ff;
 
   return 0;
 }
@@ -657,25 +650,17 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   vector < vector < double > >  solV(dim);    // local solution
   vector < double >  solP; // local solution
 
-  vector< double > aResT; // local redidual vector
-  vector< vector < double > > aResV(dim);    // local redidual vector
-  vector< double > aResP; // local redidual vector
-
   vector < vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   solT.reserve(maxSize);
-  aResT.reserve(maxSize);
 
   for(unsigned  k = 0; k < dim; k++) {
     solV[k].reserve(maxSize);
-    aResV[k].reserve(maxSize);
     coordX[k].reserve(maxSize);
   }
 
   solP.reserve(maxSize);
-  aResP.reserve(maxSize);
-
 
   vector <double> phiV;  // local test function
   vector <double> phiV_x; // local test function first order partial derivatives
@@ -708,23 +693,22 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   if(assembleMatrix)
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
-  // element loop: each process loops only on the elements that owns
+  //BEGIN element loop
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    // element geometry type
-    short unsigned ielGeom = msh->GetElementType(iel);
+    //BEGIN local dof number extraction
+    unsigned nDofsT = msh->GetElementDofNumber(iel, solTType);  //temperature
+    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);  //velocity
+    unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);  //pressure
+    unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType); // coordinates
+    unsigned nDofsTVP = nDofsT + dim * nDofsV + nDofsP; // all solutions
+    //END local dof number extraction
 
-    unsigned nDofsT = msh->GetElementDofNumber(iel, solTType);    // number of solution element dofs
-    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-    unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);    // number of solution element dofs
-    unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
-
-    unsigned nDofsTVP = nDofsT + dim * nDofsV + nDofsP;
-
+    //BEGIN memory allocation
+    Res.resize(nDofsTVP);
+    std::fill(Res.begin(), Res.end(), 0);
     Jac.resize(nDofsTVP * nDofsTVP);
     std::fill(Jac.begin(), Jac.end(), 0);
-
-    // resize local arrays
     sysDof.resize(nDofsTVP);
 
     solT.resize(nDofsV);
@@ -735,51 +719,43 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     }
 
     solP.resize(nDofsP);
+    //END memory allocation
 
-    aResT.resize(nDofsT);    //resize
-    std::fill(aResT.begin(), aResT.end(), 0);    //set aRes to zero
-
-    for(unsigned  k = 0; k < dim; k++) {
-      aResV[k].resize(nDofsV);    //resize
-      std::fill(aResV[k].begin(), aResV[k].end(), 0);    //set aRes to zero
+    //BEGIN global to local extraction
+    for(unsigned i = 0; i < nDofsT; i++) { //temperature
+      unsigned solTDof = msh->GetSolutionDof(i, iel, solTType);  //local to global solution dof
+      solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
+      sysDof[i] = pdeSys->GetSystemDof(solTIndex, solTPdeIndex, i, iel);  //local to global system dof
     }
 
-    aResP.resize(nDofsP);    //resize
-    std::fill(aResP.begin(), aResP.end(), 0);    //set aRes to zero
-
-    // local storage of global mapping and solution
-    for(unsigned i = 0; i < nDofsT; i++) {
-      unsigned solTDof = msh->GetSolutionDof(i, iel, solTType);    // global to global mapping between solution node and solution dof
-      solT[i] = (*sol->_Sol[solTIndex])(solTDof);      // global extraction and local storage for the solution
-      sysDof[i] = pdeSys->GetSystemDof(solTIndex, solTPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dofs
-    }
-
-    // local storage of global mapping and solution
-    for(unsigned i = 0; i < nDofsV; i++) {
-      unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
+    for(unsigned i = 0; i < nDofsV; i++) { //velocity
+      unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);  //local to global solution dof
 
       for(unsigned  k = 0; k < dim; k++) {
-        solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
-        sysDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+        solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);  //global to local solution value
+        sysDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);  //local to global system dof
       }
     }
 
-    for(unsigned i = 0; i < nDofsP; i++) {
-      unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);    // global to global mapping between solution node and solution dof
-      solP[i] = (*sol->_Sol[solPIndex])(solPDof);      // global extraction and local storage for the solution
-      sysDof[i + nDofsT + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+    for(unsigned i = 0; i < nDofsP; i++) { //pressure
+      unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);  //local to global solution dof
+      solP[i] = (*sol->_Sol[solPIndex])(solPDof);  //global to local solution value
+      sysDof[i + nDofsT + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);  //local to global system dof
     }
 
-    // local storage of coordinates
-    for(unsigned i = 0; i < nDofsX; i++) {
-      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
+    for(unsigned i = 0; i < nDofsX; i++) { //coordinates
+      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);  //local to global coordinate dof
 
       for(unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);  //global to local coordinate value
       }
     }
 
-    // *** Gauss point loop ***
+    //END global to local extraction
+
+    //BEGIN Gauss point loop
+    short unsigned ielGeom = msh->GetElementType(iel);
+
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][solTType]->Jacobian(coordX, ig, weight, phiT, phiT_x, phiT_xx);
@@ -832,147 +808,124 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       double Pr = 1. / 10;
       double Ra = 10000;
 
-      // *** phiT_i loop ***
+      //BEGIN phiT_i loop: Energy balance
       for(unsigned i = 0; i < nDofsT; i++) {
-        double Temp = 0.;
+        unsigned irow = i;
 
         for(unsigned k = 0; k < dim; k++) {
-          Temp +=  1. / sqrt(Ra * Pr) * alpha * phiT_x[i * dim + k] * gradSolT_gss[k];
-          Temp +=  phiT[i] * (solV_gss[k] * gradSolT_gss[k]);
-        }
+          Res[irow] +=  -alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * gradSolT_gss[k] * weight;
+          Res[irow] +=  -phiT[i] * solV_gss[k] * gradSolT_gss[k] * weight;
 
-        aResT[i] += - Temp * weight;
-
-
-        if(assembleMatrix) {
-          for(unsigned k = 0; k < dim; k++) {
-            unsigned irow = i * nDofsTVP;
+          if(assembleMatrix) {
+            unsigned irowMat = irow * nDofsTVP;
 
             for(unsigned j = 0; j < nDofsT; j++) {
-              Jac[ irow + j ] -=  1. / sqrt(Ra * Pr) * alpha * phiT_x[i * dim + k] * phiT_x[j * dim + k] * weight;
-              Jac[ irow + j ] -=  phiT[i] * solV_gss[k] * phiT_x[j * dim + k] * weight;
+              Jac[ irowMat + j ] +=  alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * phiT_x[j * dim + k] * weight;
+              Jac[ irowMat + j ] +=  phiT[i] * solV_gss[k] * phiT_x[j * dim + k] * weight;
             }
 
             for(unsigned j = 0; j < nDofsV; j++) {
               unsigned jcol = nDofsT + k * nDofsV + j;
-              Jac[ irow + jcol ] -= phiT[i] * phiV[j] * gradSolT_gss[k] * weight;
+              Jac[ irowMat + jcol ] += phiT[i] * phiV[j] * gradSolT_gss[k] * weight;
             }
           }
+
         }
+      }
 
-      } // end phiT_i loop
+      //END phiT_i loop
 
-      // *** phiV_i loop ***
+      //BEGIN phiV_i loop: Momentum balance
       for(unsigned i = 0; i < nDofsV; i++) {
-        vector < double > NSV(dim, 0.);
 
         for(unsigned k = 0; k < dim; k++) {
+          unsigned irow = nDofsT + k * nDofsV + i;
+
           for(unsigned l = 0; l < dim; l++) {
-            NSV[k]   +=  sqrt(Pr / Ra) * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]);
-            NSV[k]   +=  phiV[i] * solV_gss[l] * gradSolV_gss[k][l];
+            Res[irow] +=  -sqrt(Pr / Ra) * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
+            Res[irow] +=  -phiV[i] * solV_gss[l] * gradSolV_gss[k][l] * weight;
           }
-        }
 
-        for(unsigned  k = 0; k < dim; k++) {
-          NSV[k] += -solP_gss * phiV_x[i * dim + k];
-        }
+          Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
 
-        NSV[1] += -beta * solT_gss * phiV[i];
+          if(k == 1) {
+            Res[irow] += beta * solT_gss * phiV[i] * weight;
+          }
 
-        for(unsigned  k = 0; k < dim; k++) {
-          aResV[k][i] += - NSV[k] * weight;
-        }
-
-        if(assembleMatrix) {
-          for(unsigned k = 0; k < dim; k++) {
-            unsigned irow = nDofsTVP * (nDofsT + k * nDofsV + i);
+          if(assembleMatrix) {
+            unsigned irowMat = nDofsTVP * irow;
 
             for(unsigned l = 0; l < dim; l++) {
               for(unsigned j = 0; j < nDofsV; j++) {
-                unsigned j1col = (nDofsT + k * nDofsV + j);
-                unsigned j2col = (nDofsT + l * nDofsV + j);
-                Jac[ irow + j1col] -= sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
-                Jac[ irow + j2col] -= sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
-                Jac[ irow + j1col] -= phiV[i] * solV_gss[l] * phiV_x[j * dim + l] * weight;
-                Jac[ irow + j2col] -= phiV[i] * phiV[j] * gradSolV_gss[k][l] * weight;
+                unsigned jcol1 = (nDofsT + k * nDofsV + j);
+                unsigned jcol2 = (nDofsT + l * nDofsV + j);
+                Jac[ irowMat + jcol1] += sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
+                Jac[ irowMat + jcol2] += sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
+                Jac[ irowMat + jcol1] += phiV[i] * solV_gss[l] * phiV_x[j * dim + l] * weight;
+                Jac[ irowMat + jcol2] += phiV[i] * phiV[j] * gradSolV_gss[k][l] * weight;
               }
             }
 
             for(unsigned j = 0; j < nDofsP; j++) {
               unsigned jcol = (nDofsT + dim * nDofsV) + j;
-              Jac[ irow + jcol] -= - phiV_x[i * dim + k] * phiP[j] * weight;
+              Jac[ irowMat + jcol] += - phiV_x[i * dim + k] * phiP[j] * weight;
             }
 
             if(k == 1) {
               for(unsigned j = 0; j < nDofsT; j++) {
-                Jac[ irow + j ] -= -beta * phiV[i] * phiT[j] * weight;
+                Jac[ irowMat + j ] += -beta * phiV[i] * phiT[j] * weight;
               }
             }
           }
-        }
-      } // end phiV_i loop
 
-      // *** phiP_i loop ***
+        }
+      }
+
+      //END phiV_i loop
+
+      //BEGIN phiP_i loop: mass balance
       for(unsigned i = 0; i < nDofsP; i++) {
-        for(int k = 0; k < dim; k++) {
-          aResP[i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
-        }
+        unsigned irow = nDofsT + dim * nDofsV + i;
 
-        if(assembleMatrix) {
-          unsigned irow = nDofsTVP * (nDofsT + dim * nDofsV + i);
-          for(int k = 0; k < dim; k++) {
+        for(int k = 0; k < dim; k++) {
+          Res[irow] += (gradSolV_gss[k][k]) * phiP[i]  * weight;
+
+          if(assembleMatrix) {
+            unsigned irowMat = nDofsTVP * irow;
+
             for(unsigned j = 0; j < nDofsV; j++) {
               unsigned jcol = (nDofsT + k * nDofsV + j);
-              Jac[ irow + jcol ] -=  phiP[i] * phiV_x[j * dim + k] * weight;
+              Jac[ irowMat + jcol ] += - phiP[i] * phiV_x[j * dim + k] * weight;
             }
           }
+
         }
-      } // end phiP_i loop
-
-    } // end gauss point loop
-
-    //--------------------------------------------------------------------------------------------------------
-    // Add the local Matrix/Vector into the global Matrix/Vector
-
-    //copy the value of the doube aRes in double Res and store them in RES
-    Res.resize(nDofsTVP);    //resize
-
-    for(int i = 0; i < nDofsT; i++) {
-      Res[i] = -aResT[i];
-    }
-
-    for(int i = 0; i < nDofsV; i++) {
-      for(unsigned  k = 0; k < dim; k++) {
-        Res[ i + nDofsT + k * nDofsV ] = -aResV[k][i];
       }
+
+      //END phiP_i loop
+
     }
 
-    for(int i = 0; i < nDofsP; i++) {
-      Res[ i + nDofsT + dim * nDofsV ] = -aResP[i];
-    }
+    //END Gauss point loop
 
+    //BEGIN local to global Matrix/Vector assembly
     RES->add_vector_blocked(Res, sysDof);
 
     if(assembleMatrix) {
       KK->add_matrix_blocked(Jac, sysDof, sysDof);
     }
 
-  } //end element loop for each process
+    //END local to global Matrix/Vector assembly
+
+  }
+
+  //END element loop
 
   RES->close();
 
   if(assembleMatrix) {
     KK->close();
   }
-
-//   Mat KKmat = (static_cast< PetscMatrix* >(KK))->mat();
-//   PetscViewer viewer;
-//   PetscViewerDrawOpen(PETSC_COMM_WORLD,PETSC_NULL,PETSC_NULL,0,0,600,600,&viewer);
-//   MatView( KKmat,viewer);
-
-
-
-
 
   // ***************** END ASSEMBLY *******************
 }
