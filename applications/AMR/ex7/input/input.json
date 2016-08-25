@@ -57,7 +57,7 @@
     "mgsolver" : { "nlevels" : 1,
 		   "AMR" : "yes",
 		   "maxAMRlevels" : 10,
-		   "AMRnorm" : "l2",
+		   "AMRnorm" : "seminorm",
 		   "AMRthreshold": 0.00001,
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,

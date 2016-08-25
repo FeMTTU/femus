@@ -171,7 +171,7 @@ int main(int argc, char** args) {
     
     //refine the mesh
     MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
-    bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(1.e-3, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));  //non-uniform
+    bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(1.e-2, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));  //non-uniform
     
     //bool elementsHaveBeenRefined = true; //uniform
     //meshcoarser.FlagAllElementsToBeRefined();//uniform
@@ -251,18 +251,18 @@ int main(int argc, char** args) {
 
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
+  return exp(10. * x[0]) * sin(4. * pi * x[0]) * sin(4. * pi * x[1]);
 };
 
 void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
   double pi = acos(-1.);
-  solGrad[0]  = - pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1]  = - pi * cos(pi * x[0]) * sin(pi * x[1]);
+  solGrad[0]  = exp(10. * x[0]) * (10. * sin(4. * pi * x[0]) + 4. * pi * cos(4 * pi * x[0])) * sin( 4 * pi * x[1]);
+  solGrad[1]  = exp(10. * x[0]) * sin(4. * pi * x[0]) * 4. * pi * cos(4. * pi * x[1]);
 };
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return - 2 * pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+  return - 2 * exp(10 *x[0]) * (-10. * 4. * pi * cos(4. * pi * x[0]) + (4. * pi * 4. * pi- 50.) * sin(4. * pi * x[0])) * sin(4. * pi * x[1]);
 };
 
 
@@ -640,15 +640,15 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
    
   //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << (2.*sqrt(N)) / ( 3.*H1norm ) <<std::endl;
  
-  *sol->_Sol[errorIndex] *= (2.*sqrt(N)) / ( 3.*H1norm );
-  
-  std::pair < double, double > norm;
-  norm.first  = H1normE;
-  norm.second = H1norm;
+  *sol->_Sol[errorIndex] *= (2.*sqrt(N)) / ( 3.*L2norm );
   
   //std::pair < double, double > norm;
-  //norm.first  = L2normE;
-  //norm.second = L2norm;
+  //norm.first  = H1normE;
+  //norm.second = H1norm;
+  
+  std::pair < double, double > norm;
+  norm.first  = L2normE;
+  norm.second = L2norm;
   
   sol->_Sol[errorIndex]->close();
   
