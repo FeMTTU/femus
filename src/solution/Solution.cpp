@@ -462,11 +462,11 @@ bool Solution::FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,co
 
 	_GradVec[SolIndex[k]][i]->matrix_mult(*_Sol[SolIndex[k]],*_GradMat[SolType[k]][i]);
 	double GradSolMaxi=_GradVec[SolIndex[k]][i]->linfty_norm();
-	GradSolMax[k] =GradSolMaxi*GradSolMaxi;
+	GradSolMax[k] += GradSolMaxi*GradSolMaxi;
 	_GradVec[SolIndex[k]][i]->close();
 	_GradVec[SolIndex[k]][i]->matrix_mult(*_Eps[SolIndex[k]],*_GradMat[SolType[k]][i]);
       }
-      GradSolMax[k]=AMRthreshold*(GradSolMax[k]);
+      GradSolMax[k]=AMRthreshold*sqrt(GradSolMax[k]);
     }
   }
 

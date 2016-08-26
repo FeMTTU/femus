@@ -47,7 +47,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 double InitalValueT(const std::vector < double >& x) {
-  return sin(5.0*x[0]);
+  return sin(4.0 * x[0]);
 };
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
@@ -63,12 +63,12 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/rectangle_quad.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/box_4_1_1.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -83,7 +83,6 @@ int main(int argc, char** args) {
   mlSol.AddSolution("T", LAGRANGE, SERENDIPITY, 2);
   mlSol.AddSolution("U", LAGRANGE, SECOND, 2);
   mlSol.AddSolution("V", LAGRANGE, SECOND, 2);
-
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND, 2);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
@@ -91,7 +90,6 @@ int main(int argc, char** args) {
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
-
   mlSol.Initialize("T", InitalValueT);
 
   // attach the boundary condition function and generate boundary data
@@ -99,6 +97,7 @@ int main(int argc, char** args) {
   mlSol.FixSolutionAtOnePoint("P");
   mlSol.GenerateBdc("U");
   mlSol.GenerateBdc("V");
+  if(dim == 3)  mlSol.GenerateBdc("W");
   mlSol.GenerateBdc("P");
   mlSol.GenerateBdc("T", "Time_dependent");
 
@@ -111,27 +110,25 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-  system.AddSolutionToSystemPDE("P");
-
   if(dim == 3) system.AddSolutionToSystemPDE("W");
-
+  system.AddSolutionToSystemPDE("P");
   system.AddSolutionToSystemPDE("T");
 
-
-  std::vector < unsigned > fieldUVP(3);
+  std::vector < unsigned > fieldUVP(4);
   fieldUVP[0] = system.GetSolPdeIndex("U");
   fieldUVP[1] = system.GetSolPdeIndex("V");
-  fieldUVP[2] = system.GetSolPdeIndex("P");
+  fieldUVP[2] = system.GetSolPdeIndex("W");
+  fieldUVP[3] = system.GetSolPdeIndex("P");
 
-  std::vector < unsigned > solutionTypeUVP(3);
+  std::vector < unsigned > solutionTypeUVP(4);
   solutionTypeUVP[0] = mlSol.GetSolutionType("U");
   solutionTypeUVP[1] = mlSol.GetSolutionType("V");
-  solutionTypeUVP[2] = mlSol.GetSolutionType("P");
+  solutionTypeUVP[2] = mlSol.GetSolutionType("W");
+  solutionTypeUVP[3] = mlSol.GetSolutionType("P");
 
   FieldSplitTree FS_NS(PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
   FS_NS.SetAsmBlockSize(4);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
-
 
 //   std::vector < unsigned > fieldUV(2);
 //   fieldUV[0] = system.GetSolPdeIndex("U");
@@ -151,19 +148,15 @@ int main(int argc, char** args) {
 //   FS1.push_back(&FS_P);
 //   FieldSplitTree FS_NS( GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
 
-
-
   std::vector < unsigned > fieldT(1);
   fieldT[0] = system.GetSolPdeIndex("T");
 
   std::vector < unsigned > solutionTypeT(1);
   solutionTypeT[0] = mlSol.GetSolutionType("T");
 
-
   FieldSplitTree FS_T(PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
   FS_T.SetAsmBlockSize(4);
   FS_T.SetAsmNumeberOfSchurVariables(1);
-
 
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
@@ -199,8 +192,6 @@ int main(int argc, char** args) {
 //   FS2.push_back(&FS_NS);
 //   FS2.push_back(&FS_T);
 //   FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
-
-
 
 
   //system.SetMgSmoother(GMRES_SMOOTHER);
@@ -245,9 +236,9 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
-  system.SetIntervalTime(1.0);
+  system.SetIntervalTime(0.5);
   unsigned n_timesteps = 600;
-
+  
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
     if(time_step > 0)
@@ -255,11 +246,11 @@ int main(int argc, char** args) {
 
     system.MGsolve();
     system.CopySolutionToOldSolution();
-    if ((time_step  + 1) % 10 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+    if ((time_step + 1) % 10 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, 
+						"biquadratic", variablesToBePrinted, time_step + 1);
   }
 
   mlMsh.PrintInfo();
-
   return 0;
 }
 
@@ -297,7 +288,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   // reserve memory for the local standar vectors
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));  // conservative: based on line3, quad9, hex27
 
   //solution variable
   unsigned solTIndex;
@@ -307,8 +298,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
-
-  if(dim == 3) solVIndex[2] = mlSol->GetIndex("W");       // get the position of "V" in the ml_sol object
+  if(dim == 3) solVIndex[2] = mlSol->GetIndex("W");   // get the position of "V" in the ml_sol object
 
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
@@ -318,15 +308,12 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   unsigned solTPdeIndex;
   solTPdeIndex = mlPdeSys->GetSolPdeIndex("T");    // get the position of "T" in the pdeSys object
-
   // std::cout << solTIndex <<" "<<solTPdeIndex<<std::endl;
-
 
   vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
-
-  if(dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
+  if(dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W"); // get the position of "W" in the pdeSys object
 
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
@@ -531,8 +518,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       double alpha = 1.;
       double beta = 1.;//40000.;
 
-      double Pr = 7.1;
-      double Ra = 15000;
+      double Pr = 0.03;
+      double Ra = 3600;
 
       double dt = mlPdeSys -> GetIntervalTime();
       // *** phiT_i loop ***
@@ -574,8 +561,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           NSVold[k] += -solPold_gss * phiV_x[i * dim + k];
         }
 
-        NSV[1] += -beta * solT_gss * phiV[i];
-        NSVold[1] += -beta * solTold_gss * phiV[i];
+        NSV[2] += -beta * solT_gss * phiV[i];
+        NSVold[2] += -beta * solTold_gss * phiV[i];
 
         for(unsigned  k = 0; k < dim; k++) {
           aResV[k][i] += (- (solV_gss[k] - solVold_gss[k]) * phiV[i] / dt - 0.5 * (NSV[k] + NSVold[k])) * weight;
