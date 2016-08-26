@@ -59,7 +59,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 6;
+  unsigned numberOfUniformLevels = 8;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -101,15 +101,48 @@ int main(int argc, char** args) {
 
   if (dim == 3) system.AddSolutionToSystemPDE("W");
 
+//   std::vector < unsigned > solutionTypeU(1);
+//   solutionTypeU[0] = mlSol.GetSolutionType("U");
+//   std::vector < unsigned > fieldU(1);
+//   fieldU[0] = system.GetSolPdeIndex("U");
+//   FieldSplitTree FS_U( PREONLY, ASM_PRECOND, fieldU, solutionTypeU,  "VelU");
+//   FS_U.SetAsmBlockSize(4);
+//   FS_U.SetAsmNumeberOfSchurVariables(0);
+//
+//   std::vector < unsigned > solutionTypeV(1);
+//   solutionTypeV[0] = mlSol.GetSolutionType("V");
+//   std::vector < unsigned > fieldV(1);
+//   fieldV[0] = system.GetSolPdeIndex("V");
+//   FieldSplitTree FS_V( PREONLY, ASM_PRECOND, fieldV, solutionTypeV,  "VelV");
+//   FS_V.SetAsmBlockSize(4);
+//   FS_V.SetAsmNumeberOfSchurVariables(0);
+//
+//   std::vector < FieldSplitTree *> FS2;
+//   FS2.reserve(2);
+//   FS2.push_back(&FS_U);
+//   FS2.push_back(&FS_V);
+//
+//   FieldSplitTree FS_UV( PREONLY, FIELDSPLIT_PRECOND, FS2, "Velocity");
+
+  std::vector < unsigned > solutionTypeUV(2);
+  solutionTypeUV[0] = mlSol.GetSolutionType("U");
+  solutionTypeUV[1] = mlSol.GetSolutionType("V");
+
   std::vector < unsigned > fieldUV(2);
   fieldUV[0] = system.GetSolPdeIndex("U");
   fieldUV[1] = system.GetSolPdeIndex("V");
-  FieldSplitTree FS_UV( PREONLY, ILU_PRECOND, fieldUV , "Velocity");
+  FieldSplitTree FS_UV( PREONLY, ASM_PRECOND, fieldUV, solutionTypeUV,  "Velocity");
+  FS_UV.SetAsmBlockSize(4);
+  FS_UV.SetAsmNumeberOfSchurVariables(0);
 
+  std::vector < unsigned > solutionTypeP(1);
+  solutionTypeP[0] = mlSol.GetSolutionType("P");
   std::vector < unsigned > fieldP(1);
   fieldP[0] = system.GetSolPdeIndex("P");
-  FieldSplitTree FS_P(GMRES, LSC_PRECOND, fieldP, "Pressure");// It works, but it is slower than ILU_PRECOND
-  //FieldSplitTree FS_P(PREONLY, ILU_PRECOND, fieldP, "Pressure");// It works, but it is slower that Vanka-ASM
+  //FieldSplitTree FS_P(GMRES, LSC_PRECOND, fieldP, "Pressure");// It works, but it is slower than ILU_PRECOND
+  FieldSplitTree FS_P(PREONLY, ASM_PRECOND, fieldP, solutionTypeP, "Pressure");// It works, but it is slower that Vanka-ASM
+  FS_P.SetAsmBlockSize(4);
+  FS_P.SetAsmNumeberOfSchurVariables(0);
 
 
   std::vector < FieldSplitTree *> FS1;
@@ -139,7 +172,7 @@ int main(int argc, char** args) {
   // initilaize and solve the system
   system.init();
 
-  system.SetSolverFineGrids(GMRES);
+  system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetFieldSplitTree(&FS_NS);
   system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 5);
@@ -356,7 +389,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           solP_gss += phiP[i] * solP[i];
         }
 
-        double nu = 1.0;
+        double nu = 0.01;
         double alpha = 1.;
         double beta = 2000.;
 
@@ -368,7 +401,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
               NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j]);// + gradSolV_gss[j][k]);
-              //NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
+              NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
             }
           }
 

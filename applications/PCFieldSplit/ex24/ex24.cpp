@@ -22,8 +22,10 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 #include "FieldSplitTree.hpp"
+#include <iostream>
+#include <fstream>
 
-
+using namespace std;
 using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -47,11 +49,11 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 double InitalValueT(const std::vector < double >& x) {
-  return sin(5.0*x[0]);
+  return sin(4.0 * x[0]);
 };
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
-
+std::pair< double, vector <double> >GetKineandPointValue(MultiLevelSolution* mlSol);// obtain the Knetc energy evlolution;
 
 int main(int argc, char** args) {
 
@@ -63,7 +65,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/rectangle_quad.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/rectangle_w1_h8.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -245,21 +247,46 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
-  system.SetIntervalTime(1.0);
-  unsigned n_timesteps = 600;
+  double dt = 1.0;
+  system.SetIntervalTime(dt);
+  unsigned n_timesteps = 1;
+  
+  double kineticEnergy;
+  char out_file[100]="";
+  strcpy(out_file,"KineticEnergy.dat");
+  ofstream outfile(out_file,ios::out|ios::trunc|ios::binary);
+  
+  char out_file1[100]="";
+  strcpy(out_file1,"Uvelocity.dat");
+  ofstream outfile1(out_file1,ios::out|ios::trunc|ios::binary);
 
+  char out_file2[100]="";
+  strcpy(out_file2,"Vvelocity.dat");
+  ofstream outfile2(out_file2,ios::out|ios::trunc|ios::binary);
+
+  vector <double> ptCoord;
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-
-    if(time_step > 0)
-      system.SetMgType(V_CYCLE);
+    
+    if(time_step > 0) system.SetMgType(V_CYCLE);
 
     system.MGsolve();
     system.CopySolutionToOldSolution();
-    if ((time_step  + 1) % 10 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+   
+    std::pair < double, vector <double> > out_value = GetKineandPointValue(&mlSol) ;
+    kineticEnergy = out_value.first;
+	ptCoord = out_value.second;
+
+    outfile << (time_step + 1) * dt <<"  "<< sqrt(kineticEnergy/2.0/8.0) << std::endl; 
+	outfile1 << (time_step + 1) * dt <<"  "<< ptCoord[0] << std::endl;
+	outfile2 << (time_step + 1) * dt <<"  "<< ptCoord[1] << std::endl;
+
+    if ((time_step + 1) % 10 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
   }
 
   mlMsh.PrintInfo();
-
+  outfile.close();
+  outfile1.close();
+  outfile2.close();
   return 0;
 }
 
@@ -279,7 +306,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   MultiLevelSolution*   mlSol         = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*   sol         = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
-
 
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
 
@@ -466,7 +492,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       }
     }
 
-
     // start a new recording of all the operations involving adept::adouble variables
     if(assembleMatrix) s.new_recording();
 
@@ -531,8 +556,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       double alpha = 1.;
       double beta = 1.;//40000.;
 
-      double Pr = 7.1;
-      double Ra = 15000;
+      double Pr = 0.71;
+      double Ra = 340000.0;
 
       double dt = mlPdeSys -> GetIntervalTime();
       // *** phiT_i loop ***
@@ -650,4 +675,163 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   }
 
   // ***************** END ASSEMBLY *******************
+}
+std::pair <double, vector <double> >GetKineandPointValue(MultiLevelSolution* mlSol){
+
+  unsigned level = mlSol -> _mlMesh->GetNumberOfLevels()-1u;
+  //  extract pointers to the several objects that we are going to use
+  Mesh* msh = mlSol -> _mlMesh->GetLevel(level); // pointer to the mesh (level) object 
+  elem* el = msh -> el; // pointer to the elem object in msh (level)
+  Solution* sol = mlSol -> GetSolutionLevel (level); //pointer to the solution (level) object 
+  
+  const unsigned dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1)); // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  
+  // reserve memory for the local standar vectors
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+  vector < unsigned > solVIndex(dim);
+  solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
+  solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
+  if(dim == 3) solVIndex[2] = mlSol->GetIndex("W");	// get the position of "W" in the ml_sol object
+  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);	// get the finite element type for "U"
+
+  vector < vector < double > >  solV(dim);    // local solution
+  vector < vector < double > > coordX(dim);    // local coordinates
+  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+  for(unsigned  k = 0; k < dim; k++) {
+    solV[k].reserve(maxSize);
+    coordX[k].reserve(maxSize);
+  }
+
+  vector <double> phiV;  // local test function
+  vector <double> phiV_x; // local test function first order partial derivatives
+  vector <double> phiV_xx; // local test function second order partial derivatives
+
+  phiV.reserve(maxSize);
+  phiV_x.reserve(maxSize * dim);
+  phiV_xx.reserve(maxSize * dim2);
+  
+  double weight; // gauss point weight
+  double kineticEnergy = 0.0; 
+  
+  unsigned recordCoord = 0; 
+  double ptUCoord = 0.0;
+  double ptVCoord = 0.0;
+  
+  // element loop: each process loops only on the elements that owns
+  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+    // element geometry type
+    short unsigned ielGeom = msh->GetElementType(iel);
+    unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
+    unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
+
+	for(unsigned  k = 0; k < dim; k++) {
+      solV[k].resize(nDofsV);
+      coordX[k].resize(nDofsX);
+    }
+
+    // local storage of global mapping and solution
+    for(unsigned i = 0; i < nDofsV; i++) {
+      unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
+      for(unsigned  k = 0; k < dim; k++) {
+        solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
+      }
+    }
+
+    // local storage of coordinates
+    for(unsigned i = 0; i < nDofsX; i++) {
+      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // global to global mapping between coordinates node and coordinate dof
+      for(unsigned k = 0; k < dim; k++) {
+        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+      }
+    }
+
+
+
+	if (recordCoord == 0){
+		for(unsigned i = 0; i < nDofsX; i++) {
+			if (fabs(coordX[0][i] + 0.3125) < 1.0e-6 && fabs(coordX[1][i] - 3.375) < 1.0e-6) {
+				ptUCoord = solV[0][i];
+				ptVCoord = solV[1][i];
+				recordCoord = 1;
+// std :: cout<<"11111_solV" <<"   "<<  iel <<"   "<<solV[0][i] <<"   "<< solV[1][i]<< std::endl;
+// std :: cout<<"22222_coordX" <<"   "<<  iel <<"   "<<coordX[0][i]<<"   "<< coordX[1][i]<<std::endl;
+			}
+		}
+	}
+
+    // *** Gauss point loop ***
+    for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
+      // *** get gauss point weight, test function and test function partial derivatives ***
+      msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
+
+      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+      vector < double > solV_gss(dim, 0);
+      vector < vector < double > > gradSolV_gss(dim);
+
+	  if (iel ==1846){
+		std :: cout<<"11111" <<"   "<< ig <<"   "<<weight <<"   "<< phiV[1] << 
+			"   "<< phiV[2] << "   "<< phiV[3] << "   "<< phiV[4] <<"   "<< phiV[5]<< 
+			"   "<< phiV[6]<< "   "<< phiV[7]<< "   "<< phiV[8] << std::endl;
+	  }
+
+
+      for(unsigned  k = 0; k < dim; k++) {
+        gradSolV_gss[k].resize(dim);
+        std::fill(gradSolV_gss[k].begin(), gradSolV_gss[k].end(), 0);
+      }
+
+      for(unsigned i = 0; i < nDofsV; i++) {
+        for(unsigned  k = 0; k < dim; k++) {
+          solV_gss[k] += phiV[i] * solV[k][i];
+        }
+        for(unsigned j = 0; j < dim; j++) {
+          for(unsigned  k = 0; k < dim; k++) {
+            gradSolV_gss[k][j] += phiV_x[i * dim + j] * solV[k][i];
+          }
+        }
+      }
+      
+      for(unsigned  k = 0; k < dim; k++) kineticEnergy += solV_gss[k] * solV_gss[k] * weight;
+      
+    } // end gauss point loop
+  } // end element loop for each process
+  // add the kinetic energy of all process
+  
+  NumericVector* out_vec;
+  out_vec = NumericVector::build().release();
+  out_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
+  
+  out_vec->set (iproc, kineticEnergy);
+  out_vec->close();
+  kineticEnergy = out_vec->l1_norm();
+
+  double ptCoord1, ptCoord2;
+  out_vec->set (iproc, ptUCoord);
+  out_vec->close();
+  ptCoord1 = out_vec->max();
+  ptCoord2 = out_vec->min();
+  if (fabs (ptCoord1) > 1.0e-6) ptUCoord = ptCoord1;
+  if (fabs (ptCoord2) > 1.0e-6) ptUCoord = ptCoord2;
+  
+  out_vec->set (iproc, ptVCoord);
+  out_vec->close();
+  ptCoord1 = out_vec->max();
+  ptCoord2 = out_vec->min();
+  if (fabs (ptCoord1) > 1.0e-6) ptVCoord = ptCoord1;
+  if (fabs (ptCoord2) > 1.0e-6) ptVCoord = ptCoord2;
+  delete out_vec;
+  
+  std::pair < double, vector <double> > out_value;
+  out_value.first = kineticEnergy;
+  
+  vector <double> ptCoord(2);
+  ptCoord[0] = ptUCoord;
+  ptCoord[1] = ptVCoord; 
+  out_value.second = ptCoord; 
+  return out_value;
 }
