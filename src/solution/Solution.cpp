@@ -410,7 +410,12 @@ namespace femus {
     Solution* AMR = _msh->_topology;
     unsigned  AMRIndex = AMR->GetIndex("AMR");
     AMR->_Sol[AMRIndex]->zero();
-
+    
+    NumericVector *counter_vec;
+    counter_vec = NumericVector::build().release();
+    counter_vec->init(_msh->n_processors(), 1 , false, AUTOMATIC);
+    counter_vec->zero();
+    
     for (unsigned k = 0; k < solIndex.size(); k++) {
 
       vector < double >  sol; // local solution
@@ -437,7 +442,8 @@ namespace femus {
       unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
       phi_xx.reserve(maxSize * dim2);
 
-      double l2Norm2 = 0.;
+      double soll2Norm2 = 0.;
+      double volume = 0.;
 
       for (int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -478,20 +484,86 @@ namespace femus {
             solig += phi[i] * sol[i];
           }
 
-          l2Norm2 += solig * solig * weight;
-
+          soll2Norm2 += solig * solig * weight;
+	  volume += weight;
         }
       }
 
-      NumericVector* norm_vec;
-      norm_vec = NumericVector::build().release();
-      norm_vec->init(_msh->n_processors(), 1 , false, AUTOMATIC);
-      norm_vec->set(iproc, l2Norm2);
-      norm_vec->close();
-      l2Norm2 = norm_vec->l1_norm();
-      double soll2norm = sqrt(l2Norm2);
+      NumericVector* parallelVec;
+      parallelVec = NumericVector::build().release();
+      parallelVec->init(_msh->n_processors(), 1 , false, AUTOMATIC);
+      
+      parallelVec->set(iproc, soll2Norm2);
+      parallelVec->close();
+      soll2Norm2 = parallelVec->l1_norm();
+      
+      parallelVec->set(iproc, volume);
+      parallelVec->close();
+      volume = parallelVec->l1_norm();
+      
+      for (int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
+	if( _msh->el->GetIfElementCanBeRefined(iel) && (*AMR->_Sol[AMRIndex])(iel) == 0.){
+	  
+	  double ielErrl2error2 = 0.;
+	  double ielVolume =0.;
+	  
+	  short unsigned ielGeom = _msh->GetElementType(iel);
+	  unsigned solDofs  = _msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
+	  unsigned xDofs  = _msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
+	  // resize local arrays
+	  sol.resize(solDofs);
+
+	  for (int i = 0; i < dim; i++) {
+	    x[i].resize(xDofs);
+	  }
+
+	  // local storage of global mapping and solution
+	  for (unsigned i = 0; i < solDofs; i++) {
+	    unsigned iDof = _msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
+	    sol[i] = (*_AMREps[ solIndex[k]])(iDof);      // global extraction and local storage for the solution
+	  }
+
+	  // local storage of coordinates
+	  for (unsigned i = 0; i < xDofs; i++) {
+	    unsigned iDof  = _msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+
+	    for (unsigned j = 0; j < dim; j++) {
+	      x[j][i] = (*_msh->_topology->_Sol[j])(iDof);      // global extraction and local storage for the element coordinates
+	    }
+	  }
+
+	  // *** Gauss point loop ***
+	  for (unsigned ig = 0; ig < _msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+	    // *** get gauss point weight, test function and test function partial derivatives ***
+	    _msh->_finiteElement[ielGeom][solType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+
+	    double solig = 0.;
+
+	    for (unsigned i = 0; i < solDofs; i++) {
+	      solig += phi[i] * sol[i];
+	    }
+
+	    ielErrl2error2 += solig * solig * weight;
+	    ielVolume += weight;
+	  }
+	  
+	  if( ielErrl2error2 > AMRthreshold * AMRthreshold * soll2Norm2 *ielVolume / volume ){
+	    AMR->_Sol[AMRIndex]->set(iel, 1.);
+	    counter_vec->add(_iproc,1.);
+	  }
+	}
+      }
     }
+    
+    AMR->_Sol[AMRIndex]->close();
+
+    counter_vec->close();
+    double counter=counter_vec->l1_norm();
+    bool test = (counter<=_nprocs)?1:0;
+
+    delete counter_vec;
+    return test;
   }
 
 // bool Solution::FlagAMRRegionBasedOnl2(const vector <unsigned> &SolIndex,const double &AMRthreshold){
