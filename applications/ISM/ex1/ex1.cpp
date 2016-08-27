@@ -174,7 +174,7 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a9QUAD.GetMarkerType() <<std::endl;
 
-       std::vector<double> y = a9QUAD.GetPosition(trial, 13, 0.5);
+       std::vector<double> y = a9QUAD.GetPosition(trial, 12, 0.5);
        for(unsigned i=0; i<2; i++){
 	 std::cout << "y[" << i << "] = " << y[i] << std::endl ;
       }
