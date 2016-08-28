@@ -2875,7 +2875,7 @@ namespace femus {
 
 
 //this function returns the position of the marker at time T given the position at time T0 = 0, given the function f and the stepsize h
-  std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<double>), int n, double T) {
+std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<double>), int n, double T) {
 
     unsigned dim = _mesh->GetDimension();
 
@@ -2883,74 +2883,78 @@ namespace femus {
 
     std::vector< std::vector<double> > x(RKOrder);
     std::vector< std::vector<double> > K(RKOrder);
-    std::vector< double > y(dim, 0);
+    std::vector< double > y(dim,0);
 
     // determine the step size
     double h = T / n;
 
-    for (unsigned i = 0; i < RKOrder; i++) {
-      x[i].reserve(dim + 1); // x = (t, x, y, z)
-      K[i].reserve(dim);
+    for(unsigned i = 0; i < RKOrder; i++) {
+        x[i].reserve(dim + 1); // x = (t, x, y, z)
+        K[i].reserve(dim);
     }
-
-    for (unsigned i = 0; i < RKOrder; i++) {
-      x[i].resize(dim + 1);
-      K[i].resize(dim);
+    for(unsigned i = 0; i < RKOrder; i++) {
+        x[i].resize(dim + 1);
+        K[i].resize(dim);
     }
 
     //initialize time
     x[0][0] = 0;
 
     // initialize the position
-    for (unsigned i = 1; i < dim + 1; i++) {
-      x[0][i] = _x[i - 1] ;
-      std::cout << "x[0][" << i << "]= " << x[0][i] << std::endl;
+    for(unsigned i=1; i < dim + 1; i++) {
+        x[0][i] = _x[i-1] ;
+        std::cout << "x[0][" << i << "]= " << x[0][i] << std::endl;
     }
 
 
-<<<<<<< HEAD
     double step = 0;
     while(step < n) {
-=======
-    while (x[0][0] < T) {
->>>>>>> e68cdd653c56e3f91cf8504d9d833cde0daaeac9
 
-      std::cout << "------------------------------------- t = " << x[0][0] << "----------------------------------" << std::endl;
-      std::cout << "------------------------------------- h = " << h << "------------------------------------" << std::endl;
+        std::cout << "------------------------------------- t = " << x[0][0] << "----------------------------------" <<std::endl;
+        std::cout << "------------------------------------- h = " << h << "------------------------------------" <<std::endl;
 
-      for (unsigned i = 0; i < dim; i++) {
-        std::cout << "f(x)[ " << i << "]= " << (*f)(x[0])[i] << std::endl ;
-        K[0][i] = h * (*f)(x[0])[i] ;
-        std::cout << "K[0][[ " << i << "]= " << K[0][i] << std::endl ;
-      }
+        for(unsigned i = 0; i<dim; i++) {
+            std::cout<< "f(x)[ " << i << "]= " << (*f)(x[0])[i] << std::endl ;
+            K[0][i] = h * (*f)(x[0])[i] ;
+            std::cout<< "K[0][[ " << i << "]= " << K[0][i] << std::endl ;
+        }
 
-      //compute x[1]
-      x[1][0] = x[0][0] + (0.5 * h);
+        //compute x[1]
+        x[1][0] = x[0][0] + (0.5 * h);
+        for(unsigned j=1; j<dim + 1; j++) {
+            x[1][j] = x[0][j] + 0.5 * K[0][j-1];
+        }
 
-      for (unsigned j = 1; j < dim + 1; j++) {
-        x[1][j] = x[0][j] + 0.5 * K[0][j - 1];
-      }
+        //compute K[1]
+        for(unsigned i = 0; i<dim; i++) {
+            K[1][i] = h * (*f)(x[1])[i] ;
+            std::cout<< "K[1][[ " << i << "]= " << K[1][i] << std::endl ;
+        }
 
-      //compute K[1]
-      for (unsigned i = 0; i < dim; i++) {
-        K[1][i] = h * (*f)(x[1])[i] ;
-        std::cout << "K[1][[ " << i << "]= " << K[1][i] << std::endl ;
-      }
+        //compute x[2]
+        x[2][0] = x[0][0] + (0.5 * h);
+        for(unsigned j=1; j<dim + 1; j++) {
+            x[2][j] = x[0][j] + 0.5 * K[1][j-1];
+        }
 
-      //compute x[2]
-      x[2][0] = x[0][0] + (0.5 * h);
+        //compute K[2]
+        for(unsigned i = 0; i<dim; i++) {
+            K[2][i] = h * (*f)(x[2])[i] ;
+            std::cout<< "K[2][[ " << i << "]= " << K[2][i] << std::endl ;
+        }
 
-      for (unsigned j = 1; j < dim + 1; j++) {
-        x[2][j] = x[0][j] + 0.5 * K[1][j - 1];
-      }
+        //compute x[3]
+        x[3][0] = x[0][0] + h;
+        for(unsigned j=1; j<dim + 1; j++) {
+            x[3][j] = x[0][j] + K[2][j-1];
+        }
 
-      //compute K[2]
-      for (unsigned i = 0; i < dim; i++) {
-        K[2][i] = h * (*f)(x[2])[i] ;
-        std::cout << "K[2][[ " << i << "]= " << K[2][i] << std::endl ;
-      }
+        //compute K[3]
+        for(unsigned i = 0; i<dim; i++) {
+            K[3][i] = h * (*f)(x[3])[i] ;
+            std::cout<< "K[3][[ " << i << "]= " << K[3][i] << std::endl ;
+        }
 
-<<<<<<< HEAD
         // RK stepping
         for(unsigned j=1; j<dim + 1; j++) {
             x[0][j] += (1./6)*(K[0][j-1] + 2. * K[1][j-1] + 2. * K[2][j-1] + K[3][j-1]);
@@ -2961,39 +2965,15 @@ namespace femus {
 
 	//update the step
 	step++;
-=======
-      //compute x[3]
-      x[3][0] = x[0][0] + h;
-
-      for (unsigned j = 1; j < dim + 1; j++) {
-        x[3][j] = x[0][j] + K[2][j - 1];
-      }
-
-      //compute K[3]
-      for (unsigned i = 0; i < dim; i++) {
-        K[3][i] = h * (*f)(x[3])[i] ;
-        std::cout << "K[3][[ " << i << "]= " << K[3][i] << std::endl ;
-      }
-
-      // RK stepping
-      for (unsigned j = 1; j < dim + 1; j++) {
-        x[0][j] += (1. / 6) * (K[0][j - 1] + 2. * K[1][j - 1] + 2. * K[2][j - 1] + K[3][j - 1]);
-        std::cout << "x[0][" << j << "]=" << x[0][j] << std::endl;
-      }
-
-      //update t
-      x[0][0] += h ;
-      std::cout << "t = " << x[0][0] << " , " << "T = " << T << std::endl;
->>>>>>> e68cdd653c56e3f91cf8504d9d833cde0daaeac9
     }
 
-    for (unsigned j = 1; j < dim + 1; j++) {
-      y[j - 1] = x[0][j];
+    for(unsigned j=1; j<dim + 1; j++) {
+        y[j-1] = x[0][j];
     }
 
     return y;
 
-  }
+}
 
 
 ///////////////////////////////////////////// Here there are the OLD functions used for the 2D and 3D inclusion test ///////////////////////////////////////////////

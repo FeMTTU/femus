@@ -221,5 +221,78 @@ namespace femus {
     }
   }
   //END QUAD
+  
+  //BEGIN TRI specialized functions  
+  const unsigned triNumberOfDofs[3] = {3, 6, 7};
+
+  void ProjectTriNodalToPolynomialCoefficients(std::vector < std::vector <double > > &aP, const std::vector < std::vector <double > > &aN, const unsigned &solType) {
+
+    unsigned dim =  aN.size();
+    aP.resize(dim);
+    unsigned nDofs = aN[0].size();
+    
+    if( nDofs != triNumberOfDofs[solType]){
+      std::cout << "Error in ProjectTriNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent"<<std::endl;
+      abort();
+    }
+
+    for (unsigned k = 0; k < dim; k++) {
+      aP[k].resize(nDofs);
+    }
+
+    if (solType == 0) {
+      for (int k = 0; k < dim; k++) {
+	aP[k][0] = aN[k][0];
+        aP[k][1] = - aN[k][0] + aN[k][1];
+        aP[k][2] = - aN[k][0] + aN[k][2];
+      }
+    }
+    else if (solType == 1) {
+      for (int k = 0; k < dim; k++) {
+	aP[k][0] = aN[k][0];
+        aP[k][1] = - 3 * aN[k][0] - aN[k][1] + 4 * aN[k][3];
+        aP[k][2] = - 3 * aN[k][0] - aN[k][2] + 4 * aN[k][5];
+        aP[k][3] = 4 * aN[k][0] - 4 * aN[k][3] + 4 * aN[k][4] - 4 * aN[k][5];
+        aP[k][4] = 2 * aN[k][0] + 2 * aN[k][1] - 4 * aN[k][3];
+        aP[k][5] = 2 * aN[k][0] + 2 * aN[k][2] - 4 * aN[k][5];
+      }
+    }
+    else if (solType == 2) {
+      for (int k = 0; k < dim; k++) {
+	aP[k][0] = aN[k][0];
+        aP[k][1] = - 3 * aN[k][0] - aN[k][1] + 4 * aN[k][3];
+        aP[k][2] = - 3 * aN[k][0] - aN[k][2] + 4 * aN[k][5];
+        aP[k][3] = 7 * aN[k][0] + 3 * aN[k][1] + 3 * aN[k][2] - 16 * aN[k][3] -
+                  8 * aN[k][4] - 16 * aN[k][5] + 27 * aN[k][6];
+        aP[k][4] = 2 * aN[k][0] + 2 * aN[k][1] - 4 * aN[k][3];
+        aP[k][5] = 2 * aN[k][0] + 2 * aN[k][2] - 4 * aN[k][5];
+        aP[k][6] = - 3 * aN[k][0] - 3 * aN[k][1] - 3 * aN[k][2] + 12 * aN[k][3] +
+                  12 * aN[k][4] + 12 * aN[k][5] - 27 * aN[k][6];
+      }
+    }
+  }  
+  
+  void GetTriPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
+
+    const unsigned nDofs = triNumberOfDofs[solType];
+
+    phi.resize(nDofs);
+
+    phi[0] = 1.;
+      phi[1] = xi[0]; // x
+      phi[2] = xi[1]; // y
+
+      if (solType > 0) {
+        phi[3] = xi[0] * xi[1]; // x y
+        phi[4] = xi[0] * xi[0];  // x x
+        phi[5] = xi[1] * xi[1]; // y y
+     
+	if (solType > 1) {
+	  phi[6] = phi[4] * xi[1] + phi[5] * xi[0]; // xx y + x yy
+	}
+      }
+    
+  }
+  //END TRI
 
 }

@@ -166,42 +166,37 @@ int main(int argc, char** args) {
 
 // Test 9 (QUAD): the marker is shared between two processors, proc 1 finds it in element 120, proc 3 finds it in element 254
 
-      x[0] = 1.;
-      x[1] = 0.;
-      x[2] = 0.;
+        x[0]=1.;
+        x[1]=0.;
+        x[2]=0.;
 
 
-      std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a9QUAD(x, VOLUME, mlMsh.GetLevel(0), true);
-      //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
-      std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
-      std::cout << " The marker type is " <<  a9QUAD.GetMarkerType() << std::endl;
+        std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+        Marker a9QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
+        //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
+        std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
+        std::cout << " The marker type is " <<  a9QUAD.GetMarkerType() <<std::endl;
 
-<<<<<<< HEAD
        std::vector<double> y = a9QUAD.GetPosition(trial, 12, 0.5);
        for(unsigned i=0; i<2; i++){
 	 std::cout << "y[" << i << "] = " << y[i] << std::endl ;
-=======
-      std::vector<double> y = a9QUAD.GetPosition(trial, 13, 0.5);
-      for(unsigned i = 0; i < 2; i++) {
-        std::cout << "y[" << i << "] = " << y[i] << std::endl ;
->>>>>>> e68cdd653c56e3f91cf8504d9d833cde0daaeac9
       }
-      std::cout << "errorX = " << sqrt((y[0]) * (y[0])) << std::endl;
-      std::cout << "errorY = " << sqrt((1 - y[1]) * (1 - y[1])) << std::endl;
+      std::cout << "errorX = " << sqrt((y[0])*(y[0])) << std::endl;
+      std::cout << "errorY = " << sqrt((1-y[1])*(1-y[1])) <<std::endl;
 
-      //print mesh
-      MultiLevelSolution mlSol(&mlMsh);
-      variablesToBePrinted.push_back("All");
+        //print mesh
+        MultiLevelSolution mlSol( &mlMsh );
+        variablesToBePrinted.push_back( "All" );
 
-      VTKWriter vtkIO(&mlSol);
-      vtkIO.SetDebugOutput(true);
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+        VTKWriter vtkIO( &mlSol );
+        vtkIO.SetDebugOutput( true );
+        vtkIO.Write( DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted );
 
 
 
     }
     break;
+
 
     case 4: { // TRI
       std::cout << " --------------------------------------------------     TRI      --------------------------------------------------" << std::endl;
