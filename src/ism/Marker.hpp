@@ -27,8 +27,6 @@
 #include "map"
 #include "Mesh.hpp"
 
-
-
 namespace femus {
 
   class Marker : public ParallelObject {
@@ -58,7 +56,7 @@ namespace femus {
     
   private:
     
-    std::vector< double > InverseMappingQuad(const unsigned &currentElem, const unsigned &solutionType, std::vector< double > &x);
+    std::vector< double > InverseMappingQuad(const unsigned &currentElem, const unsigned &solutionType, const std::vector< double > &x);
     std::vector< double > InverseMappingTri(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
     std::vector< double > InverseMappingHex(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
     std::vector< double > InverseMappingTet(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
