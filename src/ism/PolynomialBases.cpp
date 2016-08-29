@@ -503,5 +503,245 @@ void ProjectHexNodalToPolynomialCoefficients(std::vector < std::vector <double >
         }
     }
 }
+
+void GetHexPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
+
+    const unsigned nDofs = hexNumberOfDofs[solType];
+
+    phi.resize(nDofs);
+
+    phi[0] = 1.;
+    phi[1] = xi[0];
+    phi[2] = xi[1];
+    phi[3] = xi[2];
+    phi[4] = phi[1] * phi[2]; // x y
+    phi[5] = phi[1] * phi[3]; // x z
+    phi[6] = phi[2] * phi[3]; // y z
+    phi[7] = phi[4] * phi[3];  // x y z
+
+    if (solType > 0) {
+        phi[7] = phi[1] * phi[1];   // x x
+        phi[8] = phi[2] * phi[2];   // y y
+        phi[9] = phi[3] * phi[3];   // z z
+        phi[10] = phi[4] * phi[3];  // x y z
+        phi[11] = phi[7] * phi[2];  // xx y
+        phi[12] = phi[7] * phi[3];  // xx z
+        phi[13] = phi[8] * phi[3];  // yy z
+        phi[14] = phi[1] * phi[8];  // x yy
+        phi[15] = phi[1] * phi[9];  // x zz
+        phi[16] = phi[2] * phi[9];  // y zz
+        phi[17] = phi[11] * phi[3]; // xx y z
+        phi[18] = phi[1] * phi[13]; // x yy z
+        phi[19] = phi[1] * phi[16]; // x y zz
+
+
+        if (solType > 1) {
+            phi[20] = phi[7] * phi[8];  // xx yy
+            phi[21] = phi[7] * phi[9];  // xx zz
+            phi[22] = phi[8] * phi[9];  // yy zz
+            phi[23] = phi[11] * phi[9]; // xx y zz
+            phi[24] = phi[7] * phi[13]; // xx yy z
+            phi[25] = phi[14] * phi[9]; // x yy zz
+            phi[26] = phi[20] * phi[9]; // xx yy zz
+        }
+    }
+
+}
+
+void GetHexPolynomialShapeFunctionGradient(std::vector < double >& phi, std::vector < std::vector < double > >& gradPhi,
+        const std::vector < double >& xi, const unsigned & solType) {
+
+    GetHexPolynomialShapeFunction(phi,  xi, solType);
+
+    const unsigned dim = 3;
+
+    const unsigned nDofs = hexNumberOfDofs[solType];
+
+    gradPhi.resize(nDofs);
+
+    for (int i = 0; i < nDofs; i++) {
+        gradPhi[i].assign(dim, 0.);
+    }
+
+    //phi_x
+    gradPhi[1][0] = 1.; // 1
+    gradPhi[4][0] = xi[1] ; // y
+    gradPhi[5][0] = xi[2] ; // z
+    gradPhi[7][0] = phi[6];  //  y z
+    //phi_y
+    gradPhi[2][1] = 1.; // 1
+    gradPhi[4][1] = xi[0]; // x
+    gradPhi[6][1] = xi[2]; // z
+    gradPhi[7][1] = phi[5];  // x z
+    //phi_z
+    gradPhi[3][2] = 1.; // 1
+    gradPhi[5][2] = xi[0]; // x
+    gradPhi[6][2] = xi[1]; // y
+    gradPhi[7][2] = phi[4];  // x y
+
+    if (solType > 0) {
+        //phi_x
+        gradPhi[7][0] = 2 * xi[0];   // 2 x
+        gradPhi[10][0] = phi[6];  // y z
+        gradPhi[11][0] = 2 * phi[4];  // 2 x y
+        gradPhi[12][0] = 2 * phi[5];  // 2 x z
+        gradPhi[14][0] = phi[8];  // yy
+        gradPhi[15][0] = phi[9];  // zz
+        gradPhi[17][0] = 2 * phi[10]; // 2 x y z
+        gradPhi[18][0] = phi[13]; //  yy z
+        gradPhi[19][0] = phi[16]; // y zz
+        //phi_y
+        gradPhi[8][1] = 2 * xi[1];   // 2 y
+        gradPhi[10][1] = phi[5];  // x z
+        gradPhi[11][1] = phi[7];  // xx
+        gradPhi[13][1] = 2 * phi[6];  // 2 y z
+        gradPhi[14][1] = 2 * phi[4];  // 2 x y
+        gradPhi[16][1] = phi[9];  // zz
+        gradPhi[17][1] = phi[12]; // xx  z
+        gradPhi[18][1] = 2 * phi[10]; // 2 x y z
+        gradPhi[19][1] = phi[15]; // x zz
+        //phi_z
+        gradPhi[9][2] = 2 * xi[2];   // 2 z
+        gradPhi[10][2] = phi[4];  // x y
+        gradPhi[12][2] = phi[7];  // xx
+        gradPhi[13][2] = phi[8];  // yy
+        gradPhi[15][2] = 2 * phi[5];  // 2 x z
+        gradPhi[16][2] = 2 * phi[6];  // 2 y z
+        gradPhi[17][2] = phi[11]; // xx y
+        gradPhi[18][2] = phi[14]; // x yy
+        gradPhi[19][2] = 2 * phi[10]; // 2 x y z
+
+        if (solType > 1) {
+            //phi_x
+            gradPhi[20][0] = 2 * phi[14];  // 2 x yy
+            gradPhi[21][0] = 2 * phi[15];  // 2 x zz
+            gradPhi[23][0] = 2 * phi[19]; // 2 x y zz
+            gradPhi[24][0] = 2 * phi[18]; // 2 x yy z
+            gradPhi[25][0] = phi[22]; //  yy zz
+            gradPhi[26][0] = 2 * phi[25]; // 2 x yy zz
+            //phi_y
+            gradPhi[20][1] = 2 * phi[11];  // 2 xx y
+            gradPhi[22][1] = 2 * phi[16];  // 2 y zz
+            gradPhi[23][1] = phi[21]; // xx zz
+            gradPhi[24][1] = 2 * phi[17]; // 2 xx y z
+            gradPhi[25][1] = 2 * phi[19]; // 2 x y zz
+            gradPhi[26][1] = 2 * phi[23]; // 2 xx y zz
+            //phi_z
+            gradPhi[21][2] = 2 * phi[12];  // 2 xx z
+            gradPhi[22][2] = 2 * phi[13];  // 2 yy z
+            gradPhi[23][2] = 2 * phi[17]; // 2 xx y z
+            gradPhi[24][2] = phi[20]; // xx yy
+            gradPhi[25][2] = 2 * phi[18]; // 2 x yy z
+            gradPhi[26][2] = 2 * phi[24]; // 2 xx yy z
+        }
+    }
+}
+
+void GetHexPolynomialShapeFunctionGradientHessian(std::vector < double >& phi, std::vector < std::vector < double > >& gradPhi,
+        std::vector < std::vector < std::vector < double > > >& hessPhi, const std::vector < double >& xi, const unsigned & solType) {
+
+    GetHexPolynomialShapeFunctionGradient(phi,   gradPhi,  xi, solType);
+
+    const unsigned dim = 3;
+    const unsigned nDofs = hexNumberOfDofs[solType];
+
+    hessPhi.resize(nDofs);
+
+    for (int i = 0; i < nDofs; i++) {
+        hessPhi[i].resize(dim);
+
+        for (int i1 = 0; i1 < dim; i1++) {
+            hessPhi[i][i1].assign(dim, 0.);
+        }
+    }
+
+    //phi_xy
+    hessPhi[4][1][0] = hessPhi[4][0][1] = 1.; // 1
+    hessPhi[7][1][0] = hessPhi[7][0][1] = xi[2];  // z
+    //phi_xz
+    hessPhi[5][2][0] = hessPhi[5][0][2] = 1.; // 1
+    hessPhi[7][2][0] = hessPhi[7][0][2] = xi[1];  //  y
+    //phi_yz
+    hessPhi[6][2][1] = hessPhi[6][1][2] = 1.; // 1
+    hessPhi[7][2][1] = hessPhi[7][1][2] = xi[0] ;  // x
+
+    if (solType > 0) {
+        //phi_xx
+        hessPhi[7][0][0] = 2.;   // 2
+        hessPhi[11][0][0] = 2 * xi[1];  // 2 y
+        hessPhi[12][0][0] = 2 * xi[2];  // 2 z
+        hessPhi[17][0][0] = 2 * phi[6]; // 2 y z
+        //phi_xy
+        hessPhi[10][1][0] = hessPhi[10][0][1] = xi[2];  // z
+        hessPhi[11][1][0] = hessPhi[11][0][1] = 2 * xi[0];  // 2 x
+        hessPhi[14][1][0] = hessPhi[14][0][1] = 2 * xi[1];  // 2 y
+        hessPhi[17][1][0] = hessPhi[17][0][1] = 2 * phi[5]; // 2 x z
+        hessPhi[18][1][0] = hessPhi[18][0][1] = 2 * phi[6]; //  2 y z
+        hessPhi[19][1][0] = hessPhi[19][0][1] = phi[9]; // zz
+        //phi_xz
+        hessPhi[10][2][0] = hessPhi[10][0][2] = xi[1];  // y
+        hessPhi[12][2][0] = hessPhi[12][0][2] = 2 * xi[0];  // 2 x
+        hessPhi[15][2][0] = hessPhi[15][0][2] = 2 * xi[2];  // 2 z
+        hessPhi[17][2][0] = hessPhi[17][0][2] = 2 * phi[4]; // 2 x y
+        hessPhi[18][2][0] = hessPhi[18][0][2] = phi[8]; //  yy
+        hessPhi[19][2][0] = hessPhi[19][0][2] = 2 * phi[6]; // 2 y z
+        //phi_yy
+        hessPhi[8][1][1] = 2.;   // 2
+        hessPhi[13][1][1] = 2 * xi[2];  // 2 z
+        hessPhi[14][1][1] = 2 * xi[0];  // 2 x
+        hessPhi[18][1][1] = 2 * phi[5]; // 2 x z
+        //phi_yz
+        hessPhi[10][2][1] = hessPhi[10][1][2] = xi[0];  // x
+        hessPhi[13][2][1] = hessPhi[13][1][2] = 2 * xi[1];  // 2 y
+        hessPhi[16][2][1] = hessPhi[16][1][2] = 2 * xi[2];  // 2 z
+        hessPhi[17][2][1] = hessPhi[17][1][2] = phi[7]; // xx
+        hessPhi[18][2][1] = hessPhi[18][1][2] = 2 * phi[4]; // 2 x y
+        hessPhi[19][2][1] = hessPhi[19][1][2] = 2 * phi[5]; // 2 x z
+        //phi_zz
+        hessPhi[9][2][2] = 2.;   // 2
+        hessPhi[15][2][2] = 2 * xi[0];  // 2 x
+        hessPhi[16][2][2] = 2 * xi[1];  // 2 y
+        hessPhi[19][2][2] = 2 * phi[4]; // 2 x y
+
+        if (solType > 1) {
+            //phi_xx
+            hessPhi[20][0][0] = 2 * phi[8];  // 2 yy
+            hessPhi[21][0][0] = 2 * phi[9];  // 2 zz
+            hessPhi[23][0][0] = 2 * phi[16]; // 2  y zz
+            hessPhi[24][0][0] = 2 * phi[13]; // 2  yy z
+            hessPhi[26][0][0] = 2 * phi[22]; // 2  yy zz
+            //phi_xy
+            hessPhi[20][1][0] = hessPhi[20][0][1] = 4 * phi[4];  // 4 x y
+            hessPhi[23][1][0] = hessPhi[23][0][1] = 2 * phi[15]; // 2 x zz
+            hessPhi[24][1][0] = hessPhi[24][0][1] = 4 * phi[10]; // 4 x y z
+            hessPhi[25][1][0] = hessPhi[25][0][1] = 2 * phi[16]; //  2 y zz
+            hessPhi[26][1][0] = hessPhi[26][0][1] = 4 * phi[19]; // 4 x y zz
+            //phi_xz
+            hessPhi[21][2][0] = hessPhi[21][0][2] = 4 * phi[5];  // 4 x z
+            hessPhi[23][2][0] = hessPhi[23][0][2] = 4 * phi[10]; // 4 x y z
+            hessPhi[24][2][0] = hessPhi[24][0][2] = 2 * phi[14]; // 2 x yy
+            hessPhi[25][2][0] = hessPhi[25][0][2] = 2 * phi[13]; //  2 yy z
+            hessPhi[26][2][0] = hessPhi[26][0][2] = 4 * phi[18]; // 4 x yy z
+            //phi_yy
+            hessPhi[20][1][1] = 2 * phi[7];  // 2 xx
+            hessPhi[22][1][1] = 2 * phi[9];  // 2 zz
+            hessPhi[24][1][1] = 2 * phi[12]; // 2 xx z
+            hessPhi[25][1][1] = 2 * phi[15]; // 2 x zz
+            hessPhi[26][1][1] = 2 * phi[21]; // 2 xx zz
+            //phi_yz
+            hessPhi[22][2][1] = hessPhi[22][1][2] = 4 * phi[6];  // 4 y z
+            hessPhi[23][2][1] = hessPhi[23][1][2] = 2 * phi[12]; // 2 xx z
+            hessPhi[24][2][1] = hessPhi[24][1][2] = 2 * phi[11]; // 2 xx y
+            hessPhi[25][2][1] = hessPhi[25][1][2] = 4 * phi[10]; // 4 x y z
+            hessPhi[26][2][1] = hessPhi[26][1][2] = 4 * phi[17]; // 4 xx y z
+            //phi_zz
+            hessPhi[21][2][2] = 2 * phi[7];  // 2 xx
+            hessPhi[22][2][2] = 2 * phi[8];  // 2 yy
+            hessPhi[23][2][2] = 2 * phi[11]; // 2 xx y
+            hessPhi[25][2][2] = 2 * phi[14]; // 2 x yy
+            hessPhi[26][2][2] = 2 * phi[20]; // 2 xx yy
+        }
+    }
+}
 //END HEX
 }
