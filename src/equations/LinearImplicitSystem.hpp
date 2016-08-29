@@ -249,7 +249,7 @@ protected:
     bool _AMRtest;
     unsigned _maxAMRlevels;
     short _AMRnorm;
-    double _AMRthreshold;
+    std::vector <double> _AMRthreshold;
 
     vector <bool> _SparsityPattern;
 

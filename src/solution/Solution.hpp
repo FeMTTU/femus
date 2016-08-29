@@ -36,98 +36,109 @@ namespace femus {
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-class elem_type;
-class NumericVector;
-class SparseMatrix;
-class Mesh;
-class MultiLevelSolution;
+  class elem_type;
+  class NumericVector;
+  class SparseMatrix;
+  class Mesh;
+  class MultiLevelSolution;
 
-using std::vector;
+  using std::vector;
 
-class Solution : public ParallelObject {
+  class Solution : public ParallelObject {
 
-public:
+    public:
 
-    /** Constructor */
-    Solution(Mesh *other_msh);
+      /** Constructor */
+      Solution(Mesh *other_msh);
 
-    /** Destructor */
-    ~Solution();
+      /** Destructor */
+      ~Solution();
 
-    /** Add a new variable called 'name' */
-    void AddSolution( const char name[], const FEFamily fefamily, const FEOrder order, const unsigned& tmorder=0, const bool &Pde_type=1);
+      /** Add a new variable called 'name' */
+      void AddSolution(const char name[], const FEFamily fefamily, const FEOrder order, const unsigned& tmorder = 0, const bool &Pde_type = 1);
 
-    /** Resize the solution vector */
-    void ResizeSolutionVector(const char name[]);
+      /** Resize the solution vector */
+      void ResizeSolutionVector(const char name[]);
 
-    /** Free the solution vectors */
-    void FreeSolutionVectors();
+      /** Free the solution vectors */
+      void FreeSolutionVectors();
 
-    /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
-    void UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
+      /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
+      void UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
 
-    void UpdateSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, const vector <vector <unsigned> > &KKoffset);
-    /** */
-    void UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const vector <vector <unsigned> > &KKoffset);
+      void UpdateSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, const vector <vector <unsigned> > &KKoffset);
+      /** */
+      void UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const vector <vector <unsigned> > &KKoffset);
 
-    /** Update the solution */
-    void CopySolutionToOldSolution();
+      /** Update the solution */
+      void CopySolutionToOldSolution();
 
-    /** Get a const solution (Numeric Vector) by name */
-    const NumericVector& GetSolutionName(const char* var) const {
+      /** Get a const solution (Numeric Vector) by name */
+      const NumericVector& GetSolutionName(const char* var) const {
         return *_Sol[GetIndex(var)];
-    };
+      };
 
-    /** Get a solution (Numeric Vector) by name */
-    NumericVector& GetSolutionName(const char* var) {
+      /** Get a solution (Numeric Vector) by name */
+      NumericVector& GetSolutionName(const char* var) {
         return *_Sol[GetIndex(var)];
-    };
+      };
 
-     /** Flag the elemets to be refined in the AMR alghorithm based on the epsilon*/
-    bool FlagAMRRegionBasedOnl2(const vector <unsigned> &_SolPdeIndex, const double &AMRthreshold);
+//      /** Flag the elemets to be refined in the AMR alghorithm based on the epsilon*/
+//     bool FlagAMRRegionBasedOnl2(const vector <unsigned> &_SolPdeIndex, const double &AMRthreshold);
+//
+//      /** Flag the elemets to be refined in the AMR alghorithm based on the solution gradient*/
+//     bool FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,const double &AMRthreshold);
 
-     /** Flag the elemets to be refined in the AMR alghorithm based on the solution gradient*/
-    bool FlagAMRRegionBasedOnSemiNorm(const vector <unsigned> &SolIndex,const double &AMRthreshold);
+      /** Flag the elemets to be refined in the AMR alghorithm based on the solution gradient*/
+      bool FlagAMRRegionBasedOnErroNorm(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType);
+      bool FlagAMRRegionBasedOnErroNormAdaptive(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType);
 
-    /** Build Grad Matrix structure for SolType 0,1,2 */
-    void BuildGradMatrixStructure(unsigned SolType);
 
-    /** Init and set to zero The AMR Eps vector */
-    void InitAMREps();
-    /** member data - one for each variable - */
-    vector <NumericVector*> _Sol;
-    vector <NumericVector*> _SolOld;
-    vector <NumericVector*> _Res;
-    vector <NumericVector*> _Eps;
-    vector <NumericVector*> _AMREps;
-    bool _AMR_flag;
-    vector <NumericVector*> _Bdc;
-    vector <bool> _ResEpsBdcFlag;
+      /** Build Grad Matrix structure for SolType 0,1,2 */
+      void BuildGradMatrixStructure(unsigned SolType);
 
-    vector < vector <NumericVector*> > _GradVec;
+      /** Init and set to zero The AMR Eps vector */
+      void InitAMREps();
+      /** member data - one for each variable - */
+      vector <NumericVector*> _Sol;
+      vector <NumericVector*> _SolOld;
+      vector <NumericVector*> _Res;
+      vector <NumericVector*> _Eps;
+      vector <NumericVector*> _AMREps;
+      bool _AMR_flag;
+      vector <NumericVector*> _Bdc;
+      vector <bool> _ResEpsBdcFlag;
 
-    vector <SparseMatrix*> _GradMat[5];
-   // bool _GradMatFlag[5];
+      vector < vector <NumericVector*> > _GradVec;
 
-   void RemoveNullSpace( const unsigned &index ){ _removeNullSpace[index] = true ;};
-   bool GetIfRemoveNullSpace( const unsigned &index ){ return _removeNullSpace[index];};
+      vector <SparseMatrix*> _GradMat[5];
+      // bool _GradMatFlag[5];
 
-   Mesh * GetMesh(){return _msh;}
-private:
+      void RemoveNullSpace(const unsigned &index) {
+        _removeNullSpace[index] = true ;
+      };
+      bool GetIfRemoveNullSpace(const unsigned &index) {
+        return _removeNullSpace[index];
+      };
 
-    /** Get the index of the variable -name- */
-    unsigned GetIndex(const char name[]) const;
+      Mesh * GetMesh() {
+        return _msh;
+      }
+    private:
 
-    //member data
-    vector <int> _SolType;
-    vector <char*> _SolName;
-    vector <unsigned> _SolTmOrder;
-    vector <FEFamily> _family;
-    vector <FEOrder> _order;
-    Mesh *_msh;
-    vector <bool> _removeNullSpace;
+      /** Get the index of the variable -name- */
+      unsigned GetIndex(const char name[]) const;
 
-};
+      //member data
+      vector <int> _SolType;
+      vector <char*> _SolName;
+      vector <unsigned> _SolTmOrder;
+      vector <FEFamily> _family;
+      vector <FEOrder> _order;
+      Mesh *_msh;
+      vector <bool> _removeNullSpace;
+
+  };
 
 
 } //end namespace femus
