@@ -744,4 +744,218 @@ void GetHexPolynomialShapeFunctionGradientHessian(std::vector < double >& phi, s
     }
 }
 //END HEX
+
+//BEGIN TET specialized functions
+const unsigned tetNumberOfDofs[3] = {4, 10, 15};
+
+void ProjectTetNodalToPolynomialCoefficients(std::vector < std::vector <double > > &aP, const std::vector < std::vector <double > > &aN, const unsigned &solType) {
+
+    unsigned dim =  aN.size();
+    aP.resize(dim);
+    unsigned nDofs = aN[0].size();
+
+    if( nDofs != tetNumberOfDofs[solType]) {
+        std::cout << "Error in ProjectTetNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent"<<std::endl;
+        abort();
+    }
+
+    for (unsigned k = 0; k < dim; k++) {
+        aP[k].resize(nDofs);
+    }
+
+    if (solType == 0) {
+        for (int k = 0; k < dim; k++) {
+            aP[k][0] = aN[k][0] ;
+            aP[k][1] = - aN[k][0] + aN[k][1] ;
+            aP[k][2] = - aN[k][0] + aN[k][2] ;
+            aP[k][3] = - aN[k][0] + aN[k][3] ;
+        }
+    }
+    else if (solType == 1) {
+        for (int k = 0; k < dim; k++) {
+            aP[k][0] = aN[k][0];
+            aP[k][1] =  - 3 * aN[k][0] - aN[k][1] + 4 * aN[k][4];
+            aP[k][2] = - 3 * aN[k][0] - aN[k][2] + 4 * aN[k][6];
+            aP[k][3] =  - 3 * aN[k][0] - aN[k][3] + 4 * aN[k][7];
+            aP[k][4] = 4 * aN[k][0] - 4 * aN[k][4] + 4 * aN[k][5] - 4 * aN[k][6];
+            aP[k][5] = 4 * aN[k][0] - 4 * aN[k][4] - 4 * aN[k][7] + 4 * aN[k][8];
+            aP[k][6] = 4 * aN[k][0] + 4 * aN[k][9] - 4 * aN[k][6] - 4 * aN[k][7];
+            aP[k][7] =  2 * aN[k][0] + 2 * aN[k][1] - 4 * aN[k][4];
+            aP[k][8] = 2 * aN[k][0] + 2 * aN[k][2] - 4 * aN[k][6];
+            aP[k][9] = 2 * aN[k][0] + 2 * aN[k][3] - 4 * aN[k][7];
+        }
+    }
+    else if (solType == 2) {
+        for (int k = 0; k < dim; k++) {
+            aP[k][14] = 4 * (aN[k][0] - 8 * aN[k][9] + 27 * aN[k][10] + 27 * aN[k][11] + 27 * aN[k][12] + 27 * aN[k][13] - 64 * aN[k][14] +
+                             aN[k][1] + aN[k][2] + aN[k][3] - 8 * (aN[k][4] + aN[k][5] + aN[k][6] + aN[k][7] + aN[k][8]));
+            aP[k][13] = -3 * (aN[k][0] - 4 * aN[k][9] + 9 * aN[k][13] + aN[k][2] + aN[k][3] - 4 * (aN[k][6] + aN[k][7]));
+            aP[k][12] = -3  * (aN[k][0] + 9 * aN[k][11] + aN[k][1] + aN[k][3] - 4 * (aN[k][4] + aN[k][7] + aN[k][8]));
+            aP[k][11] = -3 * (aN[k][0] + 9  * aN[k][10] + aN[k][1] + aN[k][2] - 4 * (aN[k][4] + aN[k][5] + aN[k][6]));
+            aP[k][10] = -13 * aN[k][0] + 32  * aN[k][9] - 135 * aN[k][10] - 135 * aN[k][11] - 81  * aN[k][12] - 135 * aN[k][13] +
+                        256 * aN[k][14] - 7 * aN[k][1] - 7 * aN[k][2] - 7 * aN[k][3] + 8 * (7 * aN[k][4] + 4 * aN[k][5] + 7 * (aN[k][6] + aN[k][7]) + 4 * aN[k][8]);
+            aP[k][9] = 2 * (aN[k][0] + aN[k][3] - 2 * aN[k][7]);
+            aP[k][8] = 2 * (aN[k][0] + aN[k][2] - 2 * aN[k][6]);
+            aP[k][7] = 2 * (aN[k][0] + aN[k][1] - 2 * aN[k][4]);
+            aP[k][6] = 7 * aN[k][0] - 8 * aN[k][9] + 27 * aN[k][13] + 3 * aN[k][2] + 3 * aN[k][3] - 16 * (aN[k][6] + aN[k][7]);
+            aP[k][5] = 7 * aN[k][0] + 27 * aN[k][11] + 3 * aN[k][1] + 3 * aN[k][3] - 8 * (2 * (aN[k][4] + aN[k][7]) + aN[k][8]);
+            aP[k][4] = 7 * aN[k][0] + 27 * aN[k][10] + 3 * aN[k][1] + 3 * aN[k][2] - 8 * (2 * aN[k][4] + aN[k][5] + 2 * aN[k][6]);
+            aP[k][3] = -3 * aN[k][0] - aN[k][3] + 4 * aN[k][7];
+            aP[k][2] = -3 * aN[k][0] - aN[k][2] + 4 * aN[k][6];
+            aP[k][1] = -3 * aN[k][0] - aN[k][1] + 4 * aN[k][4];
+            aP[k][0] = aN[k][0];
+        }
+    }
+}
+
+void GetTetPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
+
+    const unsigned nDofs = tetNumberOfDofs[solType];
+
+    phi.resize(nDofs);
+
+    phi[0] = 1.;
+    phi[1] = xi[0]; // x
+    phi[2] = xi[1];  // y
+    phi[3] = xi[2]; // z
+
+    if (solType > 0) {
+        phi[4] = phi[1] * phi[2];  // x y
+        phi[5] = phi[1] * phi[3];  // x z
+        phi[6] = phi[2] * phi[3];  // y z
+        phi[7] = phi[1] * phi[1]; // x x
+        phi[8] = phi[2] * phi[2]; // y y
+        phi[9] = phi[3] * phi[3]; // z z
+
+
+        if (solType > 1) {
+            phi[10] = phi[4] * phi[3]; // x y z
+            phi[11] = phi[1] * phi[8] + phi[7] * phi[2] ; // x y y + x x y
+            phi[12] = phi[1] * phi[9] + phi[7] * phi[3] ; // x z z + x x z
+            phi[13] = phi[2] * phi[9] + phi[8] * phi[3] ; // y z z + y y z
+            phi[14] = phi[4] * phi[9] + phi[4] * phi[6] + phi[7] * phi[6]; // x y z z + x y y z + x x y z
+        }
+    }
+
+}
+
+
+void GetTetPolynomialShapeFunctionGradient(std::vector < double >& phi, std::vector < std::vector < double > >& gradPhi,
+        const std::vector < double >& xi, const unsigned & solType) {
+
+    GetTetPolynomialShapeFunction(phi,  xi, solType);
+
+    const unsigned dim = 3;
+
+    const unsigned nDofs = tetNumberOfDofs[solType];
+
+    gradPhi.resize(nDofs);
+
+    for (int i = 0; i < nDofs; i++) {
+        gradPhi[i].assign(dim, 0.);
+    }
+
+    //phi_x
+    gradPhi[1][0] = 1.; // 1
+    //phi_y
+    gradPhi[2][1] = 1.;  // 1
+    //phi_z
+    gradPhi[3][2] = 1.; // 1
+
+    if (solType > 0) {
+        //phi_x
+        gradPhi[4][0] = xi[1] ;  //  y
+        gradPhi[5][0] = xi[2] ;  //  z
+        gradPhi[7][0] = 2 * xi[0] ; // 2 x
+        //phi_y
+        gradPhi[4][1] = xi[0] ;  // x
+        gradPhi[6][1] = xi[2] ;  //  z
+        gradPhi[8][1] = 2 * xi[1]; // 2 y
+        //phi_z
+        gradPhi[5][2] = xi[0];  // x
+        gradPhi[6][2] = xi[1];  // y
+        gradPhi[9][2] = 2 * xi[2]; // 2 z
+
+        if (solType > 1) {
+            //phi_x
+            gradPhi[10][0] = phi[6]; //  y z
+            gradPhi[11][0] = phi[8] + 2 * phi[4] ; //  y y + 2 x y
+            gradPhi[12][0] = phi[9] + 2 * phi[5] ; // z z + 2 x z
+            gradPhi[14][0] = xi[1] * (gradPhi[12][0] + phi[6]) ; //  y z z +  y y z + 2 x y z
+            //phi_y
+            gradPhi[10][1] = phi[5]; // x z
+            gradPhi[11][1] = 2 * phi[4] + phi[7] ; //  2 x y + x x
+            gradPhi[13][1] = phi[9] + 2 * phi[6]; //  z z + 2 y z
+            gradPhi[14][1] = xi[0] * (gradPhi[13][1] + phi[5]); // x z z + 2 x y z + x x z
+            //phi_z
+            gradPhi[10][2] = phi[4]; // x y
+            gradPhi[12][2] = 2 * phi[5] + phi[7]; // 2 x z  + x x
+            gradPhi[13][2] = 2 * phi[6] + phi[8]; // 2 y z  + y y
+            gradPhi[14][2] = xi[0] * (gradPhi[13][2] + phi[4]); //  2 x y z  + x y y  + x x y
+        }
+    }
+}
+
+void GetTetPolynomialShapeFunctionGradientHessian(std::vector < double >& phi, std::vector < std::vector < double > >& gradPhi,
+        std::vector < std::vector < std::vector < double > > >& hessPhi, const std::vector < double >& xi, const unsigned & solType) {
+
+    GetTetPolynomialShapeFunctionGradient(phi,   gradPhi,  xi, solType);
+
+    const unsigned dim = 3;
+    const unsigned nDofs = tetNumberOfDofs[solType];
+
+    hessPhi.resize(nDofs);
+
+    for (int i = 0; i < nDofs; i++) {
+        hessPhi[i].resize(dim);
+
+        for (int i1 = 0; i1 < dim; i1++) {
+            hessPhi[i][i1].assign(dim, 0.);
+        }
+    }
+
+    if (solType > 0) {
+        //phi_xx
+        hessPhi[7][0][0] = 2.; // 2
+        //phi_xy
+        hessPhi[4][1][0] = hessPhi[4][0][1] = 1.;  //  1
+        //phi_xz
+        hessPhi[5][2][0] = hessPhi[5][0][2] = 1.;  //  1
+        //phi_yy
+        hessPhi[8][1][1] = 2.; // 2
+        //phi_yz
+        hessPhi[6][2][1] = hessPhi[6][1][2] = 1.;  //  1
+        //phi_zz
+        hessPhi[9][2][2] = 2.; // 2
+        
+        if (solType > 1) {
+            //phi_xx
+        hessPhi[11][0][0] = 2 * xi[1]; //  2 y
+        hessPhi[12][0][0] = 2 * xi[2]; // 2 z
+        hessPhi[14][0][0] = 2 * phi[6]; //  2 y z
+            //phi_xy
+        hessPhi[10][1][0] = hessPhi[10][0][1] = xi[2] ; //  z
+        hessPhi[11][1][0] = hessPhi[11][0][1] = 2 * xi[1] + 2 * xi[0] ; //  2 y + 2 x
+        hessPhi[14][1][0] = hessPhi[14][0][1] = gradPhi[13][1] + 2 * phi[5] ; //  z z +  2 y z + 2 x z
+            //phi_xz
+        hessPhi[10][2][0] = hessPhi[10][0][2] = xi[1] ; //  y
+        hessPhi[12][2][0] = hessPhi[12][0][2] = 2 * (xi[0] + xi[2]) ; // 2 z + 2 x
+        hessPhi[14][2][0] = hessPhi[14][0][2] = gradPhi[13][2] +  2 * phi[4] ; //  2 y z +  y y  + 2 x y
+            //phi_yy
+        hessPhi[11][1][1] = 2 * xi[0] ; //  2 x
+        hessPhi[13][1][1] = 2 * xi[2]; //  2 z
+        hessPhi[14][1][1] = 2 * phi[5]; // 2 x z
+            //phi_yz
+        hessPhi[10][2][1] = hessPhi[10][1][2] = xi[0] ; // x
+        hessPhi[13][2][1] = hessPhi[13][1][2] = 2 * xi[2] + 2 * xi[1]; //  2 z + 2 y
+        hessPhi[14][2][1] = hessPhi[14][1][2] = 2 * phi[5] + gradPhi[11][1] ; // 2 x z  + 2 x y  + x x
+            //phi_zz
+        hessPhi[12][2][2] = 2 * xi[0] ; // 2 x
+        hessPhi[13][2][2] = 2 * xi[1] ; // 2 y
+        hessPhi[14][2][2] = 2 * phi[4]; //  2 x y
+        }
+    }
+}
+//END TET
+
 }
