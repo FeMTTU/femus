@@ -846,7 +846,7 @@ namespace femus {
     return convergence;
   }
 
-  std::vector< double > Marker::InverseMappingQuad(const unsigned &iel, const unsigned &solType, const std::vector< double > &x) {
+  std::vector< double > Marker::InverseMapping(const unsigned &iel, const unsigned &solType, const std::vector< double > &x) {
 
     unsigned dim =  _mesh->GetDimension();
     unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
@@ -2844,22 +2844,8 @@ namespace femus {
         }
 
         std::cout << std::endl;
-
-        if (ielType == 0) {
-          xi = InverseMappingHex(iel, solType, xv[j]);
-        }
-        else if (ielType == 1) {
-          xi = InverseMappingTet(iel, solType, xv[j]);
-        }
-        else if (ielType == 2) {
-          xi = InverseMappingWedge(iel, solType, xv[j]);
-        }
-        else if (ielType == 3) {
-          xi = InverseMappingQuad(iel, solType, xv[j]);
-        }
-        else if (ielType == 4) {
-          xi = InverseMappingTri(iel, solType, xv[j]);
-        }
+ 
+          xi = InverseMapping(iel, solType, xv[j]);
 
         for (int k = 0; k < dim; k++) {
           std::cout << "xiT[" << k << "]= " << xiT[k] <<  " xi[" << k << "]= " << xi[k];

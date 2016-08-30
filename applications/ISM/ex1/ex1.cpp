@@ -58,7 +58,7 @@ int main(int argc, char** args) {
   4 = TRI
    */
 
-  int elementType = 13; // this decides what elements to test
+  int elementType = 4; // this decides what elements to test
 
   switch(elementType) {
     case 3: { // QUAD
@@ -215,6 +215,8 @@ int main(int argc, char** args) {
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a1TRI.GetMarkerType() << std::endl;
+      
+       a1TRI.InverseMappingTEST(x);
 
 //Test 2 (TRI):
       x[0] = 8.29839e-05; //it is on element 115
