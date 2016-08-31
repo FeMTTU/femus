@@ -276,7 +276,7 @@ int main(int argc, char** args) {
 
 //NOTE Tests ran with 2 procs
 //Test 1 (HEX):
-      x[0] = -0.3; //  point 98 shared by element 97,112 (proc 1) and 45 and 55 (proc 0). Proc 1 says the marker is in 45, proc 1 says it is is 112.
+      x[0] = -0.3; //  point 98 shared by element 97,112 (proc 1) and 45 and 55 (proc 0). Proc 0 says the marker is in 45, proc 1 says it is is 112.
       x[1] = 0.1; //
       x[2] = 0.5;
 
