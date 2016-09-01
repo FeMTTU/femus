@@ -1,0 +1,821 @@
+/ File opened for write Thu Sep  1 12:24:39 2016.
+The /home/eaulisa/FEMuS/MyFEMuS/applications/FSI/aneurysm/input/gambit/aneurisma_aorta_10.dbs database is being opened.
+ 
+*** LISTING "aneurisma_aorta_10" FILES IN DIRECTORY:
+    /home/eaulisa/FEMuS/MyFEMuS/applications/FSI/aneurysm/input/gambit
+ 
+    aneurisma_aorta_10.lok
+    aneurisma_aorta_10.dbs
+Command> default set "MESH.NODES.HEX" numeric 27
+Command> volume delete "volume.1" "volume.2" "volume.3" "volume.4" "volume.5" \
+  "volume.6" "volume.7" "volume.8" "volume.9" "volume.10" "volume.11" \
+  "volume.12" "volume.13" "volume.14" "volume.15" "volume.16" "volume.17" \
+  "volume.18" "volume.19" "volume.20" "volume.21" "volume.22" "volume.23" \
+  "volume.24" "volume.25" "volume.26" lowertopology onlymesh
+Mesh removed from volume volume.1:   mesh volumes = 24.
+Mesh removed from volume volume.2:   mesh volumes = 12.
+Mesh removed from volume volume.3:   mesh volumes = 12.
+Mesh removed from volume volume.4:   mesh volumes = 8.
+Mesh removed from volume volume.5:   mesh volumes = 4.
+Mesh removed from volume volume.6:   mesh volumes = 4.
+Mesh removed from volume volume.23:   mesh volumes = 1.
+Mesh removed from volume volume.24:   mesh volumes = 1.
+Mesh removed from volume volume.25:   mesh volumes = 10.
+Mesh removed from volume volume.26:   mesh volumes = 10.
+Command> face delete "face.1" "face.2" "face.3" "face.4" "face.5" "face.6" "face.7" \
+  "face.8" "face.9" "face.10" "face.11" "face.12" "face.13" "face.14" \
+  "face.15" "face.16" "face.17" "face.18" "face.19" "face.20" "face.21" \
+  "face.22" "face.23" "face.24" "face.25" "face.26" "face.27" "face.28" \
+  "face.29" "face.30" "face.31" "face.32" "face.33" "face.34" "face.35" \
+  "face.36" "face.37" "face.38" "face.39" "face.40" "face.41" "face.42" \
+  "face.43" "face.44" "face.45" "face.46" "face.47" "face.48" "face.49" \
+  "face.50" "face.51" "face.52" "face.53" "face.54" "face.55" "face.56" \
+  "face.57" "face.58" "face.59" "face.60" "face.61" "face.62" "face.63" \
+  "face.64" "face.65" "face.66" "face.67" "face.68" "face.69" "face.70" \
+  "face.71" "face.72" "face.73" "face.74" "face.75" "face.76" "face.77" \
+  "face.78" "face.79" "face.80" "face.81" "face.82" "face.83" "face.84" \
+  "face.85" "face.86" "face.87" "face.88" "face.89" "face.90" "face.91" \
+  "face.92" "face.93" "face.94" "face.95" "face.96" "face.97" "face.98" \
+  "face.99" "face.100" "face.101" "face.102" "face.103" "face.104" "face.105" \
+  "face.106" "face.107" "face.108" "face.109" "face.110" "face.111" \
+  "face.112" "face.113" "face.114" "face.115" "face.116" "face.117" \
+  "face.118" "face.119" "face.120" "face.121" "face.122" "face.123" \
+  "face.124" "face.125" "face.126" "face.127" "face.128" "face.129" \
+  "face.130" "face.131" "face.132" "face.133" "face.134" "face.135" \
+  "face.136" "face.137" "face.138" "face.139" "face.140" "face.141" \
+  "face.142" "face.143" "face.144" "face.145" "face.146" "face.147" \
+  "face.148" "face.149" "face.150" "face.151" "face.152" "face.153" \
+  "face.154" "face.155" "face.156" "face.157" "face.158" "face.159" \
+  "face.160" "face.169" "face.171" "face.182" "face.183" "face.191" \
+  "face.192" "face.193" "face.194" "face.195" "face.196" "face.197" \
+  "face.198" "face.199" "face.200" "face.201" "face.202" "face.203" \
+  "face.204" "face.205" "face.206" "face.207" "face.225" "face.226" \
+  "face.227" lowertopology onlymesh
+Mesh removed from face face.227:   mesh faces = 2.
+Mesh removed from face face.183:   mesh faces = 2.
+Mesh removed from face face.182:   mesh faces = 2.
+Mesh removed from face face.149:   mesh faces = 2.
+Command> edge delete "edge.906" "edge.861" "edge.859" "edge.847" lowertopology onlymesh
+Mesh removed from edge edge.847:   mesh edges = 1.
+Mesh removed from edge edge.859:   mesh edges = 1.
+Mesh removed from edge edge.861:   mesh edges = 1.
+Mesh removed from edge edge.906:   mesh edges = 7.
+Command> save name \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/FSI/aneurysm/input/gambit/aneurisma_aorta_11.dbs"
+Command> face create wireframe "edge.906" "edge.520" "edge.490" "edge.944" "edge.1024" \
+  "edge.919" "edge.702" "edge.532" real
+Attempting to create a planar face using Least Squares Covering.
+ERROR: The loop of edges is either not continuous or is self intersecting.
+Command> face create wireframe "edge.532" "edge.906" "edge.490" "edge.944" "edge.1024" \
+  "edge.919" "edge.702" real
+Created face: face.228
+Command> face create wireframe "edge.521" "edge.841" "edge.925" "edge.1022" "edge.945" \
+  "edge.495" "edge.906" real
+Created face: face.229
+Command> face create wireframe "edge.945" "edge.944" "edge.1013" "edge.492" real
+Created face: face.230
+Command> face create wireframe "edge.1013" "edge.1022" "edge.1024" "edge.926" real
+Created face: face.231
+Command> volume create stitch "face.183" "face.229" "face.228" "face.202" "face.193" \
+  "face.231" "face.230" "face.182" real
+Created volume: volume.27
+Command> save
+Command> undo begingroup
+Command> edge picklink "edge.841" "edge.945" "edge.944" "edge.702"
+Command> edge mesh "edge.702" "edge.944" "edge.945" "edge.841" successive ratio1 1 \
+  intervals 2
+Mesh generated for edge edge.702:   mesh edges = 2.
+Mesh generated for edge edge.944:   mesh edges = 2.
+Mesh generated for edge edge.945:   mesh edges = 2.
+Mesh generated for edge edge.841:   mesh edges = 2.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge picklink "edge.919" "edge.1024" "edge.1022" "edge.925"
+Command> edge mesh "edge.925" "edge.1022" "edge.1024" "edge.919" successive ratio1 1 \
+  intervals 1
+Mesh generated for edge edge.925:   mesh edges = 1.
+Mesh generated for edge edge.1022:   mesh edges = 1.
+Mesh generated for edge edge.1024:   mesh edges = 1.
+Mesh generated for edge edge.919:   mesh edges = 1.
+Command> undo endgroup
+Command> edge mesh "edge.492" "edge.490" "edge.1013" "edge.926" "edge.917" "edge.531" \
+  "edge.532" successive ratio1 1 intervals 1
+Mesh generated for edge edge.492:   mesh edges = 1.
+Mesh generated for edge edge.490:   mesh edges = 1.
+Mesh generated for edge edge.1013:   mesh edges = 1.
+Mesh generated for edge edge.926:   mesh edges = 1.
+Mesh generated for edge edge.917:   mesh edges = 1.
+Mesh generated for edge edge.531:   mesh edges = 1.
+Mesh generated for edge edge.532:   mesh edges = 1.
+Command> edge mesh "edge.521" "edge.495" successive ratio1 1 intervals 2
+Mesh generated for edge edge.521:   mesh edges = 2.
+Mesh generated for edge edge.495:   mesh edges = 2.
+Command> undo begingroup
+Command> edge picklink "edge.906"
+Command> edge mesh "edge.906" successive ratio1 1.5 ratio2 1.5 intervals 6
+Mesh generated for edge edge.906:   mesh edges = 6.
+Command> undo endgroup
+Command> face mesh "face.230" map size 1
+Mesh generated for face face.230:   mesh faces = 2.
+Command> face mesh "face.231" map size 1
+Mesh generated for face face.231:   mesh faces = 1.
+Command> face mesh "face.193" map intervals 1
+Mesh generated for face face.193:   mesh faces = 1.
+Command> face mesh "face.202" map intervals 2
+Mesh generated for face face.202:   mesh faces = 2.
+Command> face mesh "face.183" triprimitive intervals 2
+ERROR: Number of intervals on meshed edges of face face.183
+does not allow meshing using a scheme of Triangle Primitive.
+Command> face mesh "face.183" triangle intervals 2
+Mesh generated for face face.183:   mesh faces = 2.
+Command> face mesh "face.182" triangle intervals 2
+Mesh generated for face face.182:   mesh faces = 2.
+Command> face mesh "face.228" map intervals 6
+Face face.228, vertex vertex.437 was set to side.
+ERROR: Number of intervals on meshed edges of face face.228
+does not allow meshing using a scheme of Map.
+Command> undo
+Undone to: face mesh "face.228" map intervals 6.  
+Command> face mesh "face.228" pave intervals 10
+Mesh generated for face face.228:   mesh faces = 6.
+Command> face mesh "face.229" pave intervals 10
+Mesh generated for face face.229:   mesh faces = 18.
+Command> undo
+Undone to: face mesh "face.229" pave intervals 10.  
+Command> face mesh "face.229" map intervals 1
+Face face.229, vertex vertex.469 was set to side.
+ERROR: Number of intervals on meshed edges of face face.229
+does not allow meshing using a scheme of Map.
+Command> face mesh "face.229" map intervals 10
+ERROR: Number of intervals on meshed edges of face face.229
+does not allow meshing using a scheme of Map.
+Command> face mesh "face.229" submap intervals 10
+ERROR: Number of intervals on meshed edges of face face.229
+does not allow meshing using a scheme of Submap.
+Command> undo
+Undone to: face mesh "face.229" submap intervals 10.  
+Command> undo
+Undone to: face mesh "face.229" map intervals 10.  
+Command> undo
+Undone to: face mesh "face.229" map intervals 1.  
+Command> undo
+Undone to: face mesh "face.228" pave intervals 10.  
+Command> face mesh "face.230" map intervals 2
+Mesh already exists for face face.230:   mesh faces = 2.
+Command> face mesh "face.231" map intervals 1
+Mesh already exists for face face.231:   mesh faces = 1.
+Command> undo begingroup
+Command> face delete "face.229" onlymesh
+Command> face mesh "face.229" map intervals 6
+Face face.229, vertex vertex.469 was set to side.
+ERROR: Number of intervals on meshed edges of face face.229
+does not allow meshing using a scheme of Map.
+Command> undo endgroup
+Command> volume mesh "volume.27" cooper source "face.183" "face.182" size 1
+Face face.228, vertex vertex.437 was set to side.
+ERROR: Number of intervals on meshed edges of face face.229
+does not allow meshing using a scheme of Map.
+ERROR: Volume volume.27 could not be meshed with a scheme of Cooper because
+the previously meshed edges on one of the faces is unacceptable.
+Command> edge delete "edge.906" lowertopology onlymesh
+Mesh removed from edge edge.906:   mesh edges = 6.
+Command> volume mesh "volume.27" cooper source "face.183" "face.182" size 1
+ERROR: Number of intervals on meshed edges of face face.229
+does not allow meshing using a scheme of Map.
+ERROR: Volume volume.27 could not be meshed with a scheme of Cooper because
+the previously meshed edges on one of the faces is unacceptable.
+Command> undo begingroup
+Command> face delete "face.231" "face.144" onlymesh
+Mesh removed from face face.231:   mesh faces = 1.
+Command> face mesh "face.231" "face.144" triangle intervals 2
+Mesh generated for face face.231:   mesh faces = 2.
+Mesh generated for face face.144:   mesh faces = 4.
+Command> undo endgroup
+Command> undo
+Undone to: undo begingroup.  
+Command> edge mesh "edge.325" "edge.327" successive ratio1 1 intervals 1
+Mesh generated for edge edge.325:   mesh edges = 1.
+Mesh generated for edge edge.327:   mesh edges = 1.
+Command> edge mesh "edge.923" "edge.792" successive ratio1 1 intervals 2
+Mesh generated for edge edge.923:   mesh edges = 2.
+Mesh generated for edge edge.792:   mesh edges = 2.
+Command> undo begingroup
+Command> edge delete "edge.920" "edge.918" "edge.915" "edge.917" keepsettings onlymesh
+Mesh removed from edge edge.917:   mesh edges = 1.
+Command> edge picklink "edge.917" "edge.915" "edge.918" "edge.920"
+Command> edge mesh "edge.920" "edge.918" "edge.915" "edge.917" successive ratio1 1 \
+  intervals 1
+Mesh generated for edge edge.920:   mesh edges = 1.
+Mesh generated for edge edge.918:   mesh edges = 1.
+Mesh generated for edge edge.915:   mesh edges = 1.
+Mesh generated for edge edge.917:   mesh edges = 1.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.313" keepsettings onlymesh
+Command> edge mesh "edge.313" successive ratio1 1 intervals 2
+Mesh generated for edge edge.313:   mesh edges = 2.
+Command> undo endgroup
+Command> face mesh "face.144" triangle intervals 2
+Mesh generated for face face.144:   mesh faces = 2.
+Command> face mesh "face.200" map intervals 2
+Mesh generated for face face.200:   mesh faces = 2.
+Command> face mesh "face.192" map intervals 1
+Mesh generated for face face.192:   mesh faces = 1.
+Command> face mesh "face.203" map intervals 5
+Mesh generated for face face.203:   mesh faces = 5.
+Command> face mesh "face.204" map intervals 5
+Mesh generated for face face.204:   mesh faces = 10.
+Command> volume mesh "volume.25" cooper size 1
+WARN:  The desired meshing scheme of Triangle Primitive could not be
+maintained by the cooper tool for face face.169
+when meshing volume volume.25.
+You may want to try meshing this face first.
+Mesh generated for volume volume.25:   mesh volumes = 10.
+Command> volume mesh "volume.24" cooper size 1
+WARN:  The desired meshing scheme of Triangle Primitive could not be
+maintained by the cooper tool for face face.195
+when meshing volume volume.24.
+You may want to try meshing this face first.
+WARN:  Face face.195 contains a bad quad mesh face.
+You may want to consider adjusting edge intervals.
+Mesh generated for volume volume.24:   mesh volumes = 1.
+ 
+     Mesh of volume volume.24 contains 1 highly skewed elements (EQUISIZE SKEW > 0.97).
+Command> undo
+Undone to: volume mesh "volume.24" cooper size 1.  
+Command> volume mesh "volume.24" cooper intervals 1
+WARN:  The desired meshing scheme of Triangle Primitive could not be
+maintained by the cooper tool for face face.195
+when meshing volume volume.24.
+You may want to try meshing this face first.
+WARN:  Face face.195 contains a bad quad mesh face.
+You may want to consider adjusting edge intervals.
+Mesh generated for volume volume.24:   mesh volumes = 1.
+ 
+     Mesh of volume volume.24 contains 1 highly skewed elements (EQUISIZE SKEW > 0.97).
+Command> undo
+Undone to: volume mesh "volume.24" cooper intervals 1.  
+Command> undo begingroup
+Command> edge delete "edge.924" "edge.793" keepsettings onlymesh
+Command> edge picklink "edge.793" "edge.924"
+Command> edge mesh "edge.924" "edge.793" successive ratio1 1 intervals 1
+Mesh generated for edge edge.924:   mesh edges = 1.
+Mesh generated for edge edge.793:   mesh edges = 1.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.926" keepsettings onlymesh
+Mesh removed from edge edge.926:   mesh edges = 1.
+Command> edge picklink "edge.926"
+Command> edge mesh "edge.926" successive ratio1 1 intervals 1
+Mesh generated for edge edge.926:   mesh edges = 1.
+Command> undo endgroup
+Command> volume mesh "volume.24" cooper intervals 1
+ERROR: Number of intervals on meshed edges of face face.194
+does not allow meshing using a scheme of Triangle Primitive.
+ERROR: Volume volume.24 could not be meshed with a scheme of Cooper because
+the previously meshed edges on one of the faces is unacceptable.
+Command> face mesh "face.195" triprimitive intervals 1
+ERROR: Number of intervals on meshed edges of face face.195
+does not allow meshing using a scheme of Triangle Primitive.
+Command> face mesh "face.195" triangle intervals 1
+Mesh generated for face face.195:   mesh faces = 1.
+Command> face mesh "face.194" triangle intervals 1
+Mesh generated for face face.194:   mesh faces = 1.
+Command> undo begingroup
+Command> volume delete "volume.24" onlymesh
+Command> volume mesh "volume.24" cooper intervals 1
+Mesh generated for volume volume.24:   mesh volumes = 1.
+Command> undo endgroup
+Command> volume delete "volume.25" lowertopology onlymesh
+Mesh removed from volume volume.25:   mesh volumes = 10.
+Command> undo
+Undone to: volume delete "volume.25" lowertopology onlymesh.  
+Command> undo
+Undone to: undo begingroup.  
+Command> undo
+Undone to: face mesh "face.194" triangle intervals 1.  
+Command> undo
+Undone to: face mesh "face.195" triangle intervals 1.  
+Command> undo
+Undone to: face mesh "face.195" triprimitive intervals 1.  
+Command> redo
+ERROR: Number of intervals on meshed edges of face face.195
+does not allow meshing using a scheme of Triangle Primitive.
+Command> redo
+Mesh generated for face face.195:   mesh faces = 1.
+Command> redo
+Mesh generated for face face.194:   mesh faces = 1.
+Command> redo
+Mesh generated for volume volume.24:   mesh volumes = 1.
+Command> redo
+Mesh removed from volume volume.25:   mesh volumes = 10.
+Command> face mesh "face.202" map intervals 3
+Mesh generated for face face.202:   mesh faces = 3.
+ERROR: Entity edge.841 currently exists in the select list.
+Command> undo begingroup
+Command> edge delete "edge.841" keepsettings onlymesh
+Mesh removed from edge edge.841:   mesh edges = 3.
+Command> edge mesh "edge.841" successive ratio1 2.5 ratio2 2 size 0.33379409
+Mesh generated for edge edge.841:   mesh edges = 3.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.841" keepsettings onlymesh
+Mesh removed from edge edge.841:   mesh edges = 3.
+Command> edge mesh "edge.841" successive ratio1 2.5 ratio2 2 size 0.33379409
+Mesh generated for edge edge.841:   mesh edges = 3.
+Command> undo endgroup
+Command> face mesh "face.202" map intervals 3
+Mesh generated for face face.202:   mesh faces = 3.
+Command> undo
+Undone to: face mesh "face.202" map intervals 3.  
+Command> undo begingroup
+Command> edge delete "edge.841" keepsettings onlymesh
+Mesh removed from edge edge.841:   mesh edges = 3.
+Command> edge mesh "edge.841" successive ratio1 2 ratio2 2 size 0.33379409
+Mesh generated for edge edge.841:   mesh edges = 3.
+Command> undo endgroup
+Command> face mesh "face.202" map intervals 3
+Mesh generated for face face.202:   mesh faces = 3.
+Command> undo begingroup
+Command> edge delete "edge.835" keepsettings onlymesh
+Command> edge mesh "edge.835" successive ratio1 1.4 intervals 6
+Mesh generated for edge edge.835:   mesh edges = 6.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.835" keepsettings onlymesh
+Mesh removed from edge edge.835:   mesh edges = 6.
+Command> edge mesh "edge.835" successive ratio1 1.3 intervals 6
+Mesh generated for edge edge.835:   mesh edges = 6.
+Command> undo endgroup
+Command> face mesh "face.203" map intervals 5
+Mesh generated for face face.203:   mesh faces = 30.
+Command> face mesh "face.204" map intervals 5
+Mesh generated for face face.204:   mesh faces = 30.
+Command> face mesh "face.144" triangle intervals 2
+Mesh generated for face face.144:   mesh faces = 18.
+Command> undo
+Undone to: face mesh "face.144" triangle intervals 2.  
+Command> undo
+Undone to: face mesh "face.204" map intervals 5.  
+Command> undo
+Undone to: face mesh "face.203" map intervals 5.  
+Command> undo begingroup
+Command> edge delete "edge.313" keepsettings onlymesh
+Command> edge mesh "edge.313" successive ratio1 1 intervals 2
+Mesh generated for edge edge.313:   mesh edges = 2.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.325" "edge.327" keepsettings onlymesh
+Command> edge mesh "edge.325" "edge.327" successive ratio1 1 intervals 1
+Mesh generated for edge edge.325:   mesh edges = 1.
+Mesh generated for edge edge.327:   mesh edges = 1.
+Command> undo endgroup
+Command> face mesh "face.203" map intervals 5
+Mesh generated for face face.203:   mesh faces = 6.
+Command> face mesh "face.204" map intervals 5
+Mesh generated for face face.204:   mesh faces = 12.
+Command> face mesh "face.144" triangle intervals 2
+Mesh generated for face face.144:   mesh faces = 2.
+Command> volume mesh "volume.25" cooper source "face.169" "face.144" intervals 10
+WARN:  The desired meshing scheme of Triangle Primitive could not be
+maintained by the cooper tool for face face.169
+when meshing volume volume.25.
+You may want to try meshing this face first.
+Mesh generated for volume volume.25:   mesh volumes = 12.
+Command> undo begingroup
+Command> edge delete "edge.906" keepsettings onlymesh
+Command> edge picklink "edge.906"
+Command> edge mesh "edge.906" successive ratio1 1 intervals 7
+Mesh generated for edge edge.906:   mesh edges = 7.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.925" "edge.1022" "edge.926" "edge.917" "edge.919" \
+  "edge.1024" "edge.1013" keepsettings onlymesh
+Mesh removed from edge edge.1013:   mesh edges = 1.
+Mesh removed from edge edge.1024:   mesh edges = 1.
+Mesh removed from edge edge.919:   mesh edges = 1.
+Mesh removed from edge edge.917:   mesh edges = 1.
+Mesh removed from edge edge.926:   mesh edges = 1.
+Mesh removed from edge edge.1022:   mesh edges = 1.
+Mesh removed from edge edge.925:   mesh edges = 1.
+Command> edge mesh "edge.925" "edge.1022" "edge.926" "edge.917" "edge.919" "edge.1024" \
+  "edge.1013" successive ratio1 1 intervals 1
+Mesh generated for edge edge.925:   mesh edges = 1.
+Mesh generated for edge edge.1022:   mesh edges = 1.
+Mesh generated for edge edge.926:   mesh edges = 1.
+Mesh generated for edge edge.917:   mesh edges = 1.
+Mesh generated for edge edge.919:   mesh edges = 1.
+Mesh generated for edge edge.1024:   mesh edges = 1.
+Mesh generated for edge edge.1013:   mesh edges = 1.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.944" "edge.945" keepsettings onlymesh
+Mesh removed from edge edge.945:   mesh edges = 2.
+Mesh removed from edge edge.944:   mesh edges = 2.
+Command> edge mesh "edge.944" "edge.945" successive ratio1 1 intervals 2
+Mesh generated for edge edge.944:   mesh edges = 2.
+Mesh generated for edge edge.945:   mesh edges = 2.
+Command> undo endgroup
+Command> face mesh "face.228" map intervals 10
+ERROR: Number of intervals on meshed edges of face face.228
+does not allow meshing using a scheme of Map.
+Command> face mesh "face.229" map intervals 6
+ERROR: Number of intervals on meshed edges of face face.229
+does not allow meshing using a scheme of Map.
+Command> face mesh "face.231" map intervals 1
+Mesh generated for face face.231:   mesh faces = 1.
+Command> face mesh "face.193" map intervals 1
+Mesh generated for face face.193:   mesh faces = 1.
+Command> face mesh "face.230" map intervals 2
+Mesh generated for face face.230:   mesh faces = 2.
+Command> undo begingroup
+Command> face delete "face.182" onlymesh
+Mesh removed from face face.182:   mesh faces = 2.
+Command> face mesh "face.182" triangle intervals 2
+Mesh generated for face face.182:   mesh faces = 2.
+Command> undo endgroup
+Command> face mesh "face.228" map size 0.26563489
+ERROR: Number of intervals on meshed edges of face face.228
+does not allow meshing using a scheme of Map.
+Command> face mesh "face.228" map size 0.26563489
+ERROR: Number of intervals on meshed edges of face face.228
+does not allow meshing using a scheme of Map.
+Command> edge split "edge.906" percentarclength 0.5 connected
+Created vertex: vertex.804
+Mesh removed from edge edge.906:   mesh edges = 7.
+Edge edge.906 was split, and edge edge.1026 created
+Command> edge create center2points "vertex.745" "vertex.749" "vertex.804" minarc arc
+WARN:  The two points are at different radius. A spiral arc is created.
+Created edge: edge.1027
+Command> volume delete "volume.27" lowertopology
+Deleted volume: volume.27
+Command> undo
+Undone to: volume delete "volume.27" lowertopology.  
+Command> volume delete "volume.27"
+Deleted volume: volume.27
+Command> edge create straight "vertex.804" "vertex.745"
+Created edge: edge.1028
+Command> face delete "face.228" "face.229"
+Deleted face: face.228
+Deleted face: face.229
+Command> face create wireframe "edge.906" "edge.521" "edge.841" "edge.925" "edge.1027" \
+  real
+Created face: face.232
+Command> face create wireframe "edge.1027" "edge.1026" "edge.1022" "edge.945" \
+  "edge.490" real
+Attempting to create a planar face using Least Squares Covering.
+ERROR: A single closed edge was expected.
+Command> face create wireframe "edge.1026" "edge.1027" "edge.490" "edge.945" \
+  "edge.1022" real
+Attempting to create a planar face using Least Squares Covering.
+ERROR: A single closed edge was expected.
+Command> face create wireframe "edge.906" "edge.532" "edge.702" "edge.919" "edge.1028" \
+  real
+Created face: face.233
+Command> face create wireframe "edge.1028" "edge.1026" "edge.490" "edge.944" \
+  "edge.1024" real
+Created face: face.234
+Command> face create wireframe "edge.1026" "edge.1027" "edge.1022" "edge.945" \
+  "edge.495" real
+Created face: face.235
+Command> face create wireframe "edge.1027" "edge.1028" "edge.926" real
+Created face: face.236
+Command> volume create stitch "face.183" "face.202" "face.232" "face.233" "face.193" \
+  "face.236" real
+Created volume: volume.27
+Command> volume create stitch "face.232" "face.234" "face.235" "face.230" "face.231" \
+  "face.182" real
+WARN:  The faces do not define a single closed region.
+WARN:  Following faces are included in input face list to define closed volume:
+ Added face face.183 
+ Added face face.233 
+ Added face face.202 
+ Added face face.193 
+WARN:  An edge on the volume resulting from the face stitch changes
+convexity. Its possible (but not likely) that subsequent operations
+with this volume may fail. If they do, then setting the
+GEOMETRY.VOLUME.SPLIT_AT_CVXTY_PTS_IN_FACE_STITCH default before
+the face stitch operation may be recommended.
+Created volume: volume.28
+Command> edge delete "edge.925" "edge.920" "edge.919" "edge.917" "edge.915" "edge.841" \
+  "edge.835" "edge.702" "edge.1024" "edge.1022" "edge.1013" "edge.945" \
+  "edge.944" "edge.926" "edge.327" "edge.924" "edge.923" "edge.313" \
+  "edge.325" "edge.918" "edge.490" "edge.492" "edge.495" "edge.519" \
+  "edge.793" "edge.792" "edge.521" "edge.532" "edge.531" "edge.530" \
+  lowertopology onlymesh
+Mesh removed from edge edge.530:   mesh edges = 1.
+Mesh removed from edge edge.531:   mesh edges = 1.
+Mesh removed from edge edge.532:   mesh edges = 1.
+Mesh removed from edge edge.521:   mesh edges = 2.
+Mesh removed from edge edge.792:   mesh edges = 2.
+Mesh removed from edge edge.793:   mesh edges = 1.
+Mesh removed from edge edge.519:   mesh edges = 2.
+Mesh removed from edge edge.495:   mesh edges = 2.
+Mesh removed from edge edge.492:   mesh edges = 1.
+Mesh removed from edge edge.490:   mesh edges = 1.
+Mesh removed from edge edge.918:   mesh edges = 1.
+Mesh removed from edge edge.325:   mesh edges = 1.
+Mesh removed from edge edge.313:   mesh edges = 2.
+Mesh removed from edge edge.923:   mesh edges = 2.
+Mesh removed from edge edge.924:   mesh edges = 1.
+Mesh removed from edge edge.327:   mesh edges = 1.
+Mesh removed from edge edge.926:   mesh edges = 1.
+Mesh removed from edge edge.944:   mesh edges = 2.
+Mesh removed from edge edge.945:   mesh edges = 2.
+Mesh removed from edge edge.1013:   mesh edges = 1.
+Mesh removed from edge edge.1022:   mesh edges = 1.
+Mesh removed from edge edge.1024:   mesh edges = 1.
+Mesh removed from edge edge.702:   mesh edges = 3.
+Mesh removed from edge edge.835:   mesh edges = 6.
+Mesh removed from edge edge.841:   mesh edges = 3.
+Mesh removed from edge edge.915:   mesh edges = 1.
+Mesh removed from edge edge.917:   mesh edges = 1.
+Mesh removed from edge edge.919:   mesh edges = 1.
+Mesh removed from edge edge.920:   mesh edges = 1.
+Mesh removed from edge edge.925:   mesh edges = 1.
+Command> undo begingroup
+Command> edge delete "edge.841" "edge.702" keepsettings onlymesh
+Command> edge picklink "edge.702" "edge.841"
+Command> edge mesh "edge.841" "edge.702" successive ratio1 1 intervals 2
+Mesh generated for edge edge.841:   mesh edges = 2.
+Mesh generated for edge edge.702:   mesh edges = 2.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.532" "edge.531" "edge.917" "edge.925" "edge.919" "edge.926" \
+  "edge.1028" keepsettings onlymesh
+Command> edge picklink "edge.1028" "edge.926" "edge.919" "edge.925" "edge.917" \
+  "edge.531" "edge.532"
+Command> edge mesh "edge.532" "edge.531" "edge.917" "edge.925" "edge.919" "edge.926" \
+  "edge.1028" successive ratio1 1 intervals 1
+Mesh generated for edge edge.532:   mesh edges = 1.
+Mesh generated for edge edge.531:   mesh edges = 1.
+Mesh generated for edge edge.917:   mesh edges = 1.
+Mesh generated for edge edge.925:   mesh edges = 1.
+Mesh generated for edge edge.919:   mesh edges = 1.
+Mesh generated for edge edge.926:   mesh edges = 1.
+Mesh generated for edge edge.1028:   mesh edges = 1.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.1027" keepsettings onlymesh
+Command> edge picklink "edge.1027"
+Command> edge mesh "edge.1027" successive ratio1 1 intervals 2
+Mesh generated for edge edge.1027:   mesh edges = 2.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.521" keepsettings onlymesh
+Command> edge picklink "edge.521"
+Command> edge mesh "edge.521" successive ratio1 1 intervals 2
+Mesh generated for edge edge.521:   mesh edges = 2.
+Command> undo endgroup
+Command> undo begingroup
+Command> edge delete "edge.906" keepsettings onlymesh
+Command> edge picklink "edge.906"
+Command> edge mesh "edge.906" successive ratio1 1.3 intervals 3
+Mesh generated for edge edge.906:   mesh edges = 3.
+Command> undo endgroup
+Command> face mesh "face.202" map size 0.34821951
+Mesh generated for face face.202:   mesh faces = 2.
+Command> face mesh "face.193" map size 0.81751743
+Mesh generated for face face.193:   mesh faces = 1.
+Command> face mesh "face.232" map size 1
+Mesh generated for face face.232:   mesh faces = 6.
+Command> face mesh "face.233" map size 1
+Mesh generated for face face.233:   mesh faces = 3.
+Command> face mesh "face.236" "face.183" triangle intervals 2
+Mesh generated for face face.236:   mesh faces = 2.
+Mesh generated for face face.183:   mesh faces = 2.
+Command> volume mesh "volume.27" cooper source "face.236" "face.183" intervals 10
+Mesh generated for volume volume.27:   mesh volumes = 6.
+Command> undo
+Undone to: volume mesh "volume.27" cooper source "face.236" "face.183" intervals.  
+Command> volume delete "volume.22" "volume.28" onlymesh
+Command> face delete "face.232" lowertopology onlymesh
+Mesh removed from face face.232:   mesh faces = 6.
+Command> volume delete "volume.28"
+Deleted volume: volume.28
+Command> face connect "face.1" "face.2" "face.3" "face.4" "face.5" "face.6" "face.7" \
+  "face.8" "face.9" "face.10" "face.11" "face.12" "face.13" "face.14" \
+  "face.15" "face.16" "face.17" "face.18" "face.19" "face.20" "face.21" \
+  "face.22" "face.23" "face.24" "face.25" "face.26" "face.27" "face.28" \
+  "face.29" "face.30" "face.31" "face.32" "face.33" "face.34" "face.35" \
+  "face.36" "face.37" "face.38" "face.39" "face.40" "face.41" "face.42" \
+  "face.43" "face.44" "face.45" "face.46" "face.47" "face.48" "face.49" \
+  "face.50" "face.51" "face.52" "face.53" "face.54" "face.55" "face.56" \
+  "face.57" "face.58" "face.59" "face.60" "face.61" "face.62" "face.63" \
+  "face.64" "face.65" "face.66" "face.67" "face.68" "face.69" "face.70" \
+  "face.71" "face.72" "face.73" "face.74" "face.75" "face.76" "face.77" \
+  "face.78" "face.79" "face.80" "face.81" "face.82" "face.83" "face.84" \
+  "face.85" "face.86" "face.87" "face.88" "face.89" "face.90" "face.91" \
+  "face.92" "face.93" "face.94" "face.95" "face.96" "face.97" "face.98" \
+  "face.99" "face.100" "face.101" "face.102" "face.103" "face.104" "face.105" \
+  "face.106" "face.107" "face.108" "face.109" "face.110" "face.111" \
+  "face.112" "face.113" "face.114" "face.115" "face.116" "face.117" \
+  "face.118" "face.119" "face.120" "face.121" "face.122" "face.123" \
+  "face.124" "face.125" "face.126" "face.127" "face.128" "face.129" \
+  "face.130" "face.131" "face.132" "face.133" "face.134" "face.135" \
+  "face.136" "face.137" "face.138" "face.139" "face.140" "face.141" \
+  "face.142" "face.143" "face.145" "face.146" "face.147" "face.149" \
+  "face.150" "face.151" "face.152" "face.153" "face.155" "face.156" \
+  "face.157" "face.158" "face.159" "face.160" "face.196" "face.225" \
+  "face.227" "face.148" "face.171" "face.198" "face.201" "face.205" \
+  "face.207" "face.199" "face.154" "face.144" "face.169" "face.182" \
+  "face.191" "face.192" "face.194" "face.195" "face.197" "face.200" \
+  "face.203" "face.204" "face.206" "face.226" "face.230" "face.231" \
+  "face.234" "face.235" "face.183" "face.193" "face.202" "face.232" \
+  "face.233" "face.236" real
+WARN:  The call to connect on list of faces resulted in no actual
+connect operations.
+Command> edge connect "edge.122" "edge.123" "edge.124" "edge.125" "edge.126" \
+  "edge.127" "edge.128" "edge.129" "edge.130" "edge.131" "edge.132" \
+  "edge.133" "edge.134" "edge.135" "edge.136" "edge.137" "edge.139" \
+  "edge.140" "edge.141" "edge.142" "edge.143" "edge.144" "edge.145" \
+  "edge.146" "edge.147" "edge.148" "edge.149" "edge.150" "edge.151" \
+  "edge.152" "edge.153" "edge.158" "edge.159" "edge.160" "edge.161" \
+  "edge.162" "edge.163" "edge.164" "edge.165" "edge.166" "edge.167" \
+  "edge.168" "edge.169" "edge.170" "edge.171" "edge.172" "edge.173" \
+  "edge.176" "edge.177" "edge.178" "edge.179" "edge.180" "edge.181" \
+  "edge.182" "edge.183" "edge.186" "edge.193" "edge.194" "edge.195" \
+  "edge.196" "edge.198" "edge.199" "edge.200" "edge.201" "edge.202" \
+  "edge.205" "edge.206" "edge.207" "edge.208" "edge.209" "edge.210" \
+  "edge.211" "edge.212" "edge.213" "edge.214" "edge.217" "edge.218" \
+  "edge.219" "edge.220" "edge.221" "edge.222" "edge.223" "edge.224" \
+  "edge.225" "edge.226" "edge.227" "edge.228" "edge.231" "edge.232" \
+  "edge.233" "edge.234" "edge.235" "edge.236" "edge.239" "edge.240" \
+  "edge.241" "edge.242" "edge.243" "edge.244" "edge.245" "edge.246" \
+  "edge.247" "edge.248" "edge.249" "edge.250" "edge.251" "edge.252" \
+  "edge.253" "edge.254" "edge.255" "edge.256" "edge.257" "edge.258" \
+  "edge.296" "edge.298" "edge.299" "edge.300" "edge.301" "edge.302" \
+  "edge.303" "edge.304" "edge.305" "edge.306" "edge.307" "edge.308" \
+  "edge.309" "edge.310" "edge.311" "edge.312" "edge.314" "edge.315" \
+  "edge.316" "edge.318" "edge.319" "edge.320" "edge.323" "edge.324" \
+  "edge.326" "edge.328" "edge.329" "edge.330" "edge.331" "edge.332" \
+  "edge.333" "edge.334" "edge.335" "edge.336" "edge.337" "edge.338" \
+  "edge.339" "edge.340" "edge.341" "edge.342" "edge.343" "edge.462" \
+  "edge.463" "edge.464" "edge.465" "edge.466" "edge.467" "edge.468" \
+  "edge.469" "edge.470" "edge.471" "edge.472" "edge.473" "edge.474" \
+  "edge.475" "edge.476" "edge.477" "edge.478" "edge.479" "edge.480" \
+  "edge.481" "edge.482" "edge.483" "edge.484" "edge.485" "edge.486" \
+  "edge.487" "edge.488" "edge.489" "edge.493" "edge.494" "edge.496" \
+  "edge.498" "edge.499" "edge.500" "edge.501" "edge.502" "edge.503" \
+  "edge.504" "edge.505" "edge.506" "edge.507" "edge.508" "edge.509" \
+  "edge.510" "edge.511" "edge.512" "edge.513" "edge.514" "edge.515" \
+  "edge.516" "edge.517" "edge.518" "edge.520" "edge.522" "edge.524" \
+  "edge.525" "edge.526" "edge.529" "edge.533" "edge.534" "edge.535" \
+  "edge.536" "edge.537" "edge.538" "edge.539" "edge.540" "edge.541" \
+  "edge.542" "edge.543" "edge.544" "edge.545" "edge.546" "edge.547" \
+  "edge.548" "edge.549" "edge.550" "edge.553" "edge.554" "edge.555" \
+  "edge.556" "edge.557" "edge.558" "edge.559" "edge.560" "edge.561" \
+  "edge.562" "edge.563" "edge.564" "edge.565" "edge.566" "edge.567" \
+  "edge.568" "edge.569" "edge.570" "edge.571" "edge.572" "edge.573" \
+  "edge.574" "edge.575" "edge.576" "edge.577" "edge.579" "edge.580" \
+  "edge.582" "edge.583" "edge.584" "edge.586" "edge.587" "edge.588" \
+  "edge.589" "edge.590" "edge.591" "edge.592" "edge.593" "edge.594" \
+  "edge.595" "edge.596" "edge.597" "edge.598" "edge.599" "edge.600" \
+  "edge.601" "edge.602" "edge.603" "edge.604" "edge.605" "edge.606" \
+  "edge.607" "edge.608" "edge.609" "edge.610" "edge.611" "edge.612" \
+  "edge.613" "edge.614" "edge.615" "edge.616" "edge.617" "edge.618" \
+  "edge.623" "edge.624" "edge.625" "edge.626" "edge.627" "edge.628" \
+  "edge.629" "edge.630" "edge.631" "edge.632" "edge.633" "edge.634" \
+  "edge.635" "edge.636" "edge.637" "edge.638" "edge.639" "edge.640" \
+  "edge.641" "edge.642" "edge.643" "edge.644" "edge.645" "edge.646" \
+  "edge.647" "edge.648" "edge.649" "edge.650" "edge.651" "edge.652" \
+  "edge.653" "edge.654" "edge.655" "edge.656" "edge.657" "edge.658" \
+  "edge.659" "edge.660" "edge.661" "edge.662" "edge.663" "edge.664" \
+  "edge.665" "edge.666" "edge.667" "edge.669" "edge.670" "edge.677" \
+  "edge.678" "edge.679" "edge.680" "edge.681" "edge.682" "edge.683" \
+  "edge.684" "edge.685" "edge.686" "edge.688" "edge.689" "edge.690" \
+  "edge.692" "edge.693" "edge.694" "edge.703" "edge.721" "edge.725" \
+  "edge.726" "edge.727" "edge.734" "edge.758" "edge.759" "edge.760" \
+  "edge.761" "edge.765" "edge.766" "edge.769" "edge.820" "edge.837" \
+  "edge.846" "edge.847" "edge.850" "edge.852" "edge.857" "edge.859" \
+  "edge.860" "edge.861" "edge.864" "edge.875" "edge.881" "edge.905" \
+  "edge.962" "edge.966" "edge.972" "edge.975" "edge.977" "edge.984" \
+  "edge.985" "edge.986" "edge.987" "edge.988" "edge.989" "edge.990" \
+  "edge.1003" "edge.1004" "edge.1005" "edge.1011" "edge.1012" "edge.1014" \
+  "edge.1015" "edge.1020" "edge.1021" "edge.1023" "edge.1025" "edge.317" \
+  "edge.321" "edge.322" "edge.523" "edge.528" "edge.836" "edge.931" \
+  "edge.933" "edge.929" "edge.932" "edge.297" "edge.327" "edge.687" \
+  "edge.691" "edge.313" "edge.325" "edge.490" "edge.491" "edge.492" \
+  "edge.495" "edge.497" "edge.519" "edge.527" "edge.530" "edge.792" \
+  "edge.793" "edge.835" "edge.915" "edge.918" "edge.920" "edge.923" \
+  "edge.924" "edge.927" "edge.928" "edge.930" "edge.934" "edge.944" \
+  "edge.945" "edge.1013" "edge.1022" "edge.1024" "edge.1026" "edge.521" \
+  "edge.531" "edge.532" "edge.702" "edge.841" "edge.906" "edge.917" \
+  "edge.919" "edge.925" "edge.926" "edge.1027" "edge.1028" real
+Deleted edge: edge.200
+Command> vertex connect "vertex.164" "vertex.165" "vertex.166" "vertex.167" \
+  "vertex.171" "vertex.173" "vertex.175" "vertex.178" "vertex.181" \
+  "vertex.182" "vertex.183" "vertex.184" "vertex.186" "vertex.188" \
+  "vertex.190" "vertex.192" "vertex.199" "vertex.200" "vertex.201" \
+  "vertex.202" "vertex.203" "vertex.205" "vertex.207" "vertex.209" \
+  "vertex.216" "vertex.217" "vertex.220" "vertex.221" "vertex.225" \
+  "vertex.227" "vertex.228" "vertex.229" "vertex.234" "vertex.235" \
+  "vertex.236" "vertex.238" "vertex.239" "vertex.240" "vertex.242" \
+  "vertex.248" "vertex.249" "vertex.250" "vertex.251" "vertex.254" \
+  "vertex.255" "vertex.256" "vertex.258" "vertex.263" "vertex.271" \
+  "vertex.272" "vertex.273" "vertex.274" "vertex.281" "vertex.283" \
+  "vertex.284" "vertex.285" "vertex.289" "vertex.287" "vertex.286" \
+  "vertex.290" "vertex.291" "vertex.292" "vertex.293" "vertex.353" \
+  "vertex.354" "vertex.355" "vertex.357" "vertex.359" "vertex.360" \
+  "vertex.361" "vertex.379" "vertex.384" "vertex.378" "vertex.380" \
+  "vertex.382" "vertex.385" "vertex.416" "vertex.419" "vertex.423" \
+  "vertex.401" "vertex.408" "vertex.404" "vertex.405" "vertex.409" \
+  "vertex.420" "vertex.426" "vertex.427" "vertex.428" "vertex.429" \
+  "vertex.430" "vertex.431" "vertex.432" "vertex.433" "vertex.434" \
+  "vertex.435" "vertex.438" "vertex.439" "vertex.441" "vertex.442" \
+  "vertex.443" "vertex.444" "vertex.445" "vertex.446" "vertex.447" \
+  "vertex.449" "vertex.451" "vertex.453" "vertex.455" "vertex.463" \
+  "vertex.466" "vertex.468" "vertex.470" "vertex.471" "vertex.472" \
+  "vertex.473" "vertex.474" "vertex.475" "vertex.476" "vertex.478" \
+  "vertex.480" "vertex.484" "vertex.486" "vertex.497" "vertex.498" \
+  "vertex.499" "vertex.500" "vertex.501" "vertex.502" "vertex.503" \
+  "vertex.504" "vertex.505" "vertex.506" "vertex.507" "vertex.508" \
+  "vertex.509" "vertex.510" "vertex.511" "vertex.512" "vertex.513" \
+  "vertex.514" "vertex.515" "vertex.525" "vertex.526" "vertex.529" \
+  "vertex.530" "vertex.532" "vertex.533" "vertex.539" "vertex.540" \
+  "vertex.548" "vertex.549" "vertex.550" "vertex.551" "vertex.552" \
+  "vertex.553" "vertex.554" "vertex.555" "vertex.556" "vertex.557" \
+  "vertex.558" "vertex.559" "vertex.560" "vertex.561" "vertex.562" \
+  "vertex.563" "vertex.564" "vertex.565" "vertex.566" "vertex.570" \
+  "vertex.571" "vertex.572" "vertex.573" "vertex.574" "vertex.577" \
+  "vertex.578" "vertex.579" "vertex.694" "vertex.607" "vertex.609" \
+  "vertex.611" "vertex.612" "vertex.613" "vertex.614" "vertex.615" \
+  "vertex.616" "vertex.619" "vertex.620" "vertex.621" "vertex.623" \
+  "vertex.624" "vertex.625" "vertex.633" "vertex.635" "vertex.708" \
+  "vertex.636" "vertex.696" "vertex.697" "vertex.705" "vertex.707" \
+  "vertex.752" "vertex.789" "vertex.790" "vertex.791" "vertex.800" \
+  "vertex.795" "vertex.803" "vertex.758" "vertex.757" "vertex.356" \
+  "vertex.358" "vertex.381" "vertex.383" "vertex.390" "vertex.465" \
+  "vertex.740" "vertex.436" "vertex.437" "vertex.440" "vertex.464" \
+  "vertex.467" "vertex.469" "vertex.739" "vertex.745" "vertex.742" \
+  "vertex.804" "vertex.744" "vertex.749" "vertex.801" "vertex.802" real
+WARN:  The call to connect on list of vertices resulted in no actual
+connect operations.
+Command> volume mesh "volume.27" cooper size 1
+Mesh generated for volume volume.27:   mesh volumes = 6.
+Command> undo
+Undone to: volume mesh "volume.27" cooper size 1.  
+Command> undo
+Undone to: vertex connect "vertex.164" "vertex.165" "vertex.166" "vertex.167" .  
+Command> volume delete "volume.27" onlymesh
+Command> face delete "face.236" "face.183" lowertopology onlymesh
+Mesh removed from face face.183:   mesh faces = 2.
+Mesh removed from face face.236:   mesh faces = 2.
+Command> face delete "face.232" lowertopology onlymesh
+Command> face delete "face.196" "face.171" "face.198" "face.205" "face.207" "face.199" \
+  "face.169" "face.191" "face.192" "face.194" "face.195" "face.197" \
+  "face.203" "face.204" "face.206" "face.231" "face.234" "face.235" \
+  "face.183" "face.193" "face.202" "face.232" "face.233" "face.236" \
+  lowertopology onlymesh
+Mesh removed from face face.233:   mesh faces = 3.
+Mesh removed from face face.202:   mesh faces = 2.
+Mesh removed from face face.193:   mesh faces = 1.
+Command> undo begingroup
+Command> edge delete "edge.1027" "edge.1028" "edge.926" keepsettings onlymesh
+Command> edge mesh "edge.1027" "edge.1028" "edge.926" successive ratio1 1 intervals 2
+Mesh generated for edge edge.1027:   mesh edges = 2.
+Mesh generated for edge edge.1028:   mesh edges = 2.
+Mesh generated for edge edge.926:   mesh edges = 2.
+Command> undo endgroup
+Command> face mesh "face.236" triangle intervals 2
+Mesh generated for face face.236:   mesh faces = 4.
+Command> face mesh "face.183" triangle intervals 2
+Mesh generated for face face.183:   mesh faces = 4.
+Command> undo begingroup
+Command> edge delete "edge.906" keepsettings onlymesh
+Command> edge mesh "edge.906" successive ratio1 1.3 intervals 3
+Mesh generated for edge edge.906:   mesh edges = 3.
+Command> undo endgroup
+Command> edge mesh "edge.702" "edge.841" successive ratio1 1 intervals 2
+Mesh generated for edge edge.702:   mesh edges = 2.
+Mesh generated for edge edge.841:   mesh edges = 2.
+Command> undo begingroup
+Command> edge delete "edge.919" "edge.917" "edge.925" "edge.926" keepsettings onlymesh
+Mesh removed from edge edge.926:   mesh edges = 2.
+Command> edge mesh "edge.919" "edge.917" "edge.925" "edge.926" successive ratio1 1 \
+  size 0.67572226
+Mesh generated for edge edge.919:   mesh edges = 1.
+Mesh generated for edge edge.917:   mesh edges = 1.
+Mesh generated for edge edge.925:   mesh edges = 1.
+Mesh generated for edge edge.926:   mesh edges = 2.
+Command> undo endgroup
+Command> undo
+Undone to: undo begingroup.  
+Command> undo begingroup
+Command> edge delete "edge.919" "edge.925" keepsettings onlymesh
+Command> edge mesh "edge.919" "edge.925" successive ratio1 1 intervals 1
+Mesh generated for edge edge.919:   mesh edges = 1.
+Mesh generated for edge edge.925:   mesh edges = 1.
+Command> undo endgroup
+Command> face mesh "face.193" map intervals 1
+Mesh generated for face face.193:   mesh faces = 2.
+Command> face mesh "face.202" map intervals 3
+Mesh generated for face face.202:   mesh faces = 4.
+Command> face mesh "face.233" map intervals 10
+Mesh generated for face face.233:   mesh faces = 6.
+Command> face mesh "face.232" map intervals 10
+Mesh generated for face face.232:   mesh faces = 6.
+Command> undo
+Undone to: face mesh "face.232" map intervals 10.  
+Command> volume mesh "volume.27" cooper size 1
+Mesh generated for volume volume.27:   mesh volumes = 12.
