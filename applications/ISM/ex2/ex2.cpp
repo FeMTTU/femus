@@ -45,13 +45,18 @@ int main(int argc, char** args) {
     4 = TRI
      */
 
-    for(int elementType = 0; elementType < 5; elementType++) {
+    for(int elementType = 3; elementType < 4; elementType++) {
         if(elementType == 0) {
             std::cout << " --------------------------------------------------     HEX      --------------------------------------------------" << std::endl;
-            mlMsh.ReadCoarseMesh("./input/cubeHex.neu", "seventh", scalingFactor);
-            x[0] = -0.3; //  point 98 shared by element 97,112 (proc 1) and 45 and 55 (proc 0). Proc 1 says the marker is in 45, proc 1 says it is is 112.
-            x[1] = 0.1; //
-            x[2] = 0.5;
+//             mlMsh.ReadCoarseMesh("./input/cubeHex.neu", "seventh", scalingFactor);
+// 	    x[0] = -0.3; //  point 98 shared by element 97,112 (proc 1) and 45 and 55 (proc 0). Proc 1 says the marker is in 45, proc 1 says it is is 112.
+//             x[1] = 0.1; //
+//             x[2] = 0.5;
+	    
+	    mlMsh.ReadCoarseMesh("./input/aneurysm.neu", "seventh", scalingFactor);
+            x[0] = 0.; 
+            x[1] = 0.; 
+            x[2] = 0.;
         }
         else if(elementType == 1) {
             std::cout << " --------------------------------------------------     TET      --------------------------------------------------" << std::endl;
@@ -70,10 +75,21 @@ int main(int argc, char** args) {
         }
         else if(elementType == 3) {
             std::cout << " --------------------------------------------------     QUAD     --------------------------------------------------" << std::endl;
-            mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
-            x[0] = 0.33375; //the marker is in element 117 (proc 1)
-            x[1] = -0.0627;
+//             mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
+//             x[0] = 0.33375; //the marker is in element 117 (proc 1)
+//             x[1] = -0.0627;
+//             x[2] = 0.;
+	    
+// 	    mlMsh.ReadCoarseMesh("./input/distortedQuad.neu", "seventh", scalingFactor);
+//             x[0] = 0.; 
+//             x[1] = -0.;
+//             x[2] = 0.;
+// 	    
+	    mlMsh.ReadCoarseMesh("./input/rotatedQuad.neu", "seventh", scalingFactor);
+            x[0] = 0.; 
+            x[1] = -0.;
             x[2] = 0.;
+	    
         }
         else if(elementType == 4) {
             std::cout << " --------------------------------------------------     TRI      --------------------------------------------------" << std::endl;
