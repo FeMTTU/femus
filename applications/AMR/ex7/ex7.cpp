@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
   std::string variableName = root["variable"].get("name", "Q").asString();
 
   FEOrder fe_order;
-  std::string fe_order_str = root["variable"].get("fe_order", "second").asString();
+  std::string fe_order_str = root["variable"].get("fe_order", "first").asString();
 
   if (!strcmp(fe_order_str.c_str(), "first"))
   {

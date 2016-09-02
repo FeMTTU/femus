@@ -442,6 +442,20 @@ void GetError(MultiLevelSolution* mlSol) {
       }
     }
 
+    // find h_k
+    double hk = 0.;
+    for(unsigned i = 0; i < nDofsX - 1; i++) {
+      for(unsigned j = i + 1; j < nDofsX; j++) {
+	double dij = 0.;
+        for(unsigned jdim = 0; jdim < dim; jdim++) {
+          dij += (crdX[jdim][i] - crdX[jdim][j]) * (crdX[jdim][i] - crdX[jdim][j]);
+        }
+	dij = sqrt(dij);
+	if(dij > hk)
+	hk = dij;
+      }
+    }
+    
     double Rhok = 0.;
 
     // *** Gauss point loop ***
@@ -467,18 +481,6 @@ void GetError(MultiLevelSolution* mlSol) {
       }
 
       //std::cout << laplaceUh << " ";
-      // find h_k
-      double hk = 0.;
-      double dij = 0.;
-      for(unsigned i = 0; i < nDofsX - 1; i++) {
-        for(unsigned j = i + 1; j < nDofsX; j++)
-          for(unsigned jdim = 0; jdim < dim; jdim++) {
-            dij += (crdX[jdim][i] - crdX[jdim][j]) * (crdX[jdim][i] - crdX[jdim][j]);
-          }
-        dij = sqrt(dij);
-        if(dij > hk)
-          hk = dij;
-      }
 
       l2norm2 += Uig*Uig*weight;
       for(unsigned j = 0; j < dim; j++) {
@@ -486,11 +488,11 @@ void GetError(MultiLevelSolution* mlSol) {
       }
 
       double LaplaceUexact = GetExactSolutionLaplace(x_gss);
-      Rhok += hk * (LaplaceUexact - laplaceUh) * (LaplaceUexact - laplaceUh) * weight;
+      Rhok += (LaplaceUexact - laplaceUh) * (LaplaceUexact - laplaceUh) * weight;
 
     } //end element loop for each process
 
-    Rhok = sqrt(Rhok);
+    Rhok = hk * sqrt(Rhok);
     
     if( msh->el->GetIfElementCanBeRefined(iel) ) {
       sol->_Sol[errorIndex]->set(iel, Rhok);
