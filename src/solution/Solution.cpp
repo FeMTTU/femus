@@ -655,6 +655,7 @@ namespace femus {
       phi_xx.reserve(maxSize * dim2);
 
       double solNorm2 = 0.;
+      double volumeRefined = 0.;
       double volume = 0.;
 
       for (int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
@@ -711,8 +712,9 @@ namespace femus {
             }
           }
 
+          volume += weight;
           if (_msh->el->GetIfElementCanBeRefined(iel)) {
-            volume += weight;
+            volumeRefined += weight;
           }
         }
       }
@@ -728,12 +730,16 @@ namespace femus {
       parallelVec->set(iproc, volume);
       parallelVec->close();
       volume = parallelVec->l1_norm();
+      
+      parallelVec->set(iproc, volumeRefined);
+      parallelVec->close();
+      volumeRefined = parallelVec->l1_norm();
 
       double  volumeTestFalse = 0.;
       double errTestTrue2;
 
-      double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volume;
-
+      double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volumeRefined;
+//      double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volume;
       for (int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
         if (_msh->el->GetIfElementCanBeRefined(iel) && (*AMR->_Sol[AMRIndex])(iel) == 0.) {
 
@@ -828,7 +834,8 @@ namespace femus {
       errTestTrue2 = parallelVec->l1_norm();
 
       if (volumeTestFalse != 0) {
-        AMRthreshold[k] = sqrt( (AMRthreshold[k] * AMRthreshold[k] - errTestTrue2 / solNorm2) * volume / volumeTestFalse);
+        AMRthreshold[k] = sqrt( (AMRthreshold[k] * AMRthreshold[k] - errTestTrue2 / solNorm2) * volumeRefined / volumeTestFalse);
+	//AMRthreshold[k] = sqrt( (AMRthreshold[k] * AMRthreshold[k] - (errTestTrue2 / solNorm2)*(volume/volumeRefined)) * volumeRefined / volumeTestFalse);
       }
       else {
         AMRthreshold[k] = 1.;
