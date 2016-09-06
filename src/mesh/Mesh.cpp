@@ -239,6 +239,9 @@ namespace femus {
 
     MeshTools::Generation::BuildBox(*this, _coords, nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, elemType, type_elem_flag);
 
+    
+    BiquadraticNodesNotInGambit();
+
     el->SharpMemoryAllocation();
 
     el->SetNodeNumber(_nnodes);

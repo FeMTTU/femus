@@ -1,4 +1,4 @@
-/** \file Ex7.cpp
+/** \file Ex10.cpp
  *  \brief This example shows how to set and solve the weak form
  *   of the Boussinesq appoximation of the Navier-Stokes Equation
  *

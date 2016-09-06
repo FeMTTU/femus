@@ -76,20 +76,20 @@ int main (int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned maxNumberOfMeshes = 5;
+  unsigned maxNumberOfMeshes = 6;
 
 
   vector < vector < double > > l2Norm;
   l2Norm.resize (maxNumberOfMeshes);
 
-  vector < vector < double > > semiNorm;
-  semiNorm.resize (maxNumberOfMeshes);
+  vector < vector < double > > H1norm;
+  H1norm.resize (maxNumberOfMeshes);
 
 //   unsigned numberOfUniformLevels = 3;
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
 
     unsigned numberOfUniformLevels = i + 3;
     unsigned numberOfSelectiveLevels = 0;
@@ -103,7 +103,7 @@ int main (int argc, char** args) {
 
     FEOrder feOrder[3] = {FIRST, SERENDIPITY, SECOND};
     l2Norm[i].resize (3);
-    semiNorm[i].resize (3);
+    H1norm[i].resize (3);
 
     for (unsigned j = 0; j < 3; j++) {
 
@@ -159,7 +159,7 @@ int main (int argc, char** args) {
 
       std::pair< double , double > norm = GetErrorNorm (&mlSol);
       l2Norm[i][j]  = norm.first;
-      semiNorm[i][j] = norm.second;
+      H1norm[i][j] = norm.second;
 
       // print solutions
       std::vector < std::string > variablesToBePrinted;
@@ -182,7 +182,7 @@ int main (int argc, char** args) {
   std::cout << "l2 ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
     std::cout << i + 1 << "\t";
     std::cout.precision (14);
 
@@ -191,6 +191,17 @@ int main (int argc, char** args) {
     }
 
     std::cout << std::endl;
+    
+    if (i < maxNumberOfMeshes - 1) {
+      std::cout.precision(3);
+      std::cout << "\t\t";
+
+      for (unsigned j = 0; j < 3; j++) {
+        std::cout << log(l2Norm[i][j] / l2Norm[i + 1][j]) / log(2.) << "\t\t\t";
+      }
+
+      std::cout << std::endl;
+    }    
 
 
 
@@ -198,20 +209,29 @@ int main (int argc, char** args) {
 
   std::cout << std::endl;
   std::cout << std::endl;
-  std::cout << "SEMINORM ERROR and ORDER OF CONVERGENCE:\n\n";
+  std::cout << "H1 ERROR and ORDER OF CONVERGENCE:\n\n";
   std::cout << "LEVEL\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
 
-  for (unsigned i = 1; i < maxNumberOfMeshes; i++) {
+  for (unsigned i = 0; i < maxNumberOfMeshes; i++) {
     std::cout << i + 1 << "\t";
     std::cout.precision (14);
 
     for (unsigned j = 0; j < 3; j++) {
-      std::cout << semiNorm[i][j] << "\t";
+      std::cout << H1norm[i][j] << "\t";
     }
 
     std::cout << std::endl;
 
+    if (i < maxNumberOfMeshes - 1) {
+      std::cout.precision(3);
+      std::cout << "\t\t";
 
+      for (unsigned j = 0; j < 3; j++) {
+        std::cout << log(H1norm[i][j] / H1norm[i + 1][j]) / log(2.) << "\t\t\t";
+      }
+
+      std::cout << std::endl;
+    }
 
   }
 
@@ -537,8 +557,15 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
     //sol->_Sol[solFlagIndex]->set(iel, 0);
 
     //for now
-    sol->_Sol[solFlagIndex]->set(iel, iel);
+    // sol->_Sol[solFlagIndex]->set(iel, iel);
 
+    if( msh->el->GetIfElementCanBeRefined(iel) ) {
+      sol->_Sol[solFlagIndex]->set(iel, 1.);
+    }
+    else {
+      sol->_Sol[solFlagIndex]->set(iel, 0.);
+    }
+    
   } //end element loop for each process
 
   // add the norms of all processes
@@ -558,9 +585,12 @@ std::pair < double, double > GetErrorNorm (MultiLevelSolution* mlSol) {
 
   delete norm_vec;
 
+  double H1norm = sqrt( l2norm + seminorm );
+  
+  
   std::pair < double, double > norm;
   norm.first  = sqrt (l2norm);
-  norm.second = sqrt (seminorm);
+  norm.second = H1norm;
 
   sol->_Sol[solFlagIndex]->close();
 
