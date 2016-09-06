@@ -45,7 +45,7 @@ int main(int argc, char** args) {
     4 = TRI
      */
 
-    for(int elementType = 3; elementType < 4; elementType++) {
+    for(int elementType = 0; elementType < 1; elementType++) {
         if(elementType == 0) {
             std::cout << " --------------------------------------------------     HEX      --------------------------------------------------" << std::endl;
 //             mlMsh.ReadCoarseMesh("./input/cubeHex.neu", "seventh", scalingFactor);

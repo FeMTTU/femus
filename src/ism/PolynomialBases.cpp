@@ -639,6 +639,7 @@ void GetHexPolynomialShapeFunctionGradient(std::vector < double >& phi, std::vec
         gradPhi[18][0] = phi[13]; //  yy z
         gradPhi[19][0] = phi[16]; // y zz
         //phi_y
+        gradPhi[7][1] = 0.;   // 0
         gradPhi[8][1] = 2 * xi[1];   // 2 y
         gradPhi[10][1] = phi[5];  // x z
         gradPhi[11][1] = phi[7];  // xx
@@ -649,6 +650,7 @@ void GetHexPolynomialShapeFunctionGradient(std::vector < double >& phi, std::vec
         gradPhi[18][1] = 2 * phi[10]; // 2 x y z
         gradPhi[19][1] = phi[15]; // x zz
         //phi_z
+        gradPhi[7][2] = 0.;   // 0
         gradPhi[9][2] = 2 * xi[2];   // 2 z
         gradPhi[10][2] = phi[4];  // x y
         gradPhi[12][2] = phi[7];  // xx

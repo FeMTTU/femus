@@ -742,81 +742,168 @@ namespace femus {
 
   }
 
+//   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
+//                               const std::vector < std::vector <double > > &gradPhi, const std::vector < std::vector < std::vector <double> > > hessPhi,
+//                               const std::vector < std::vector <double > > &a, const unsigned &dim, const unsigned &nDofs) {
+//
+//     bool convergence = false;
+//     std::vector < double > xp(dim, 0.);
+//     std::vector < std::vector < double > > gradXp(dim);
+//     std::vector < std::vector < std::vector < double > > > hessXp(dim);
+//
+//     for(int k = 0; k < dim; k++) {
+//       gradXp[k].assign(dim, 0.);
+//       hessXp[k].resize(dim);
+//
+//       for(int i1 = 0; i1 < dim; i1++) {
+//         hessXp[k][i1].assign(dim, 0.);
+//       }
+//     }
+//
+//     for(int k = 0; k < dim; k++) {
+//       for(int i = 0; i < nDofs; i++) {
+//         xp[k] += a[k][i] * phi[i];
+//
+//         for(int i1 = 0; i1 < dim; i1++) {
+//           gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
+//
+//           for(int i2 = 0; i2 < dim; i2++) {
+//             hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
+//           }
+//         }
+//       }
+//     }
+//
+//     std::vector < double > gradF(dim, 0.);
+//     std::vector < std::vector < double > >  hessF(dim);
+//
+//     for(int i1 = 0; i1 < dim; i1++) {
+//       hessF[i1].assign(dim, 0.);
+//     }
+//
+//     for(int k = 0; k < dim; k++) {
+//       for(int i1 = 0; i1 < dim; i1++) {
+//         gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
+//
+//         for(int i2 = 0; i2 < dim; i2++) {
+//           hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
+//         }
+//       }
+//     }
+//
+//     std::vector < std::vector < double > >  hessFm1(dim);
+//
+//     for(int i1 = 0; i1 < dim; i1++) {
+//       hessFm1[i1].resize(dim);
+//     }
+//
+//     if(dim == 2) {
+//       double det = hessF[0][0] * hessF[1][1] - hessF[0][1] * hessF[1][0];
+//       hessFm1[0][0] = hessF[1][1] / det;
+//       hessFm1[0][1] = -hessF[0][1] / det;
+//       hessFm1[1][0] = -hessF[1][0] / det;
+//       hessFm1[1][1] = hessF[0][0] / det;
+//     }
+//     else if(dim == 3) {
+//       double det = (hessF[0][0] * hessF[1][1] * hessF[2][2] + hessF[0][1] * hessF[1][2] * hessF[2][0] + hessF[0][2] * hessF[1][0] * hessF[2][1])
+//                    - (hessF[2][0] * hessF[1][1] * hessF[0][2] + hessF[2][1] * hessF[1][2] * hessF[0][0] + hessF[2][2] * hessF[1][0] * hessF[0][1]) ;
+//
+//       hessFm1[0][0] = (hessF[1][1] * hessF[2][2] - hessF[2][1] * hessF[1][2]) / det ;
+//       hessFm1[0][1] = (hessF[0][2] * hessF[2][1] - hessF[2][2] * hessF[0][1]) / det ;
+//       hessFm1[0][2] = (hessF[0][1] * hessF[1][2] - hessF[1][1] * hessF[0][2]) / det ;
+//       hessFm1[1][0] = (hessF[1][2] * hessF[2][0] - hessF[2][2] * hessF[1][0]) / det ;
+//       hessFm1[1][1] = (hessF[0][0] * hessF[2][2] - hessF[2][0] * hessF[0][2]) / det ;
+//       hessFm1[1][2] = (hessF[0][2] * hessF[1][0] - hessF[0][0] * hessF[1][2]) / det ;
+//       hessFm1[2][0] = (hessF[1][0] * hessF[2][1] - hessF[2][0] * hessF[1][1]) / det ;
+//       hessFm1[2][1] = (hessF[0][1] * hessF[2][0] - hessF[2][1] * hessF[0][0]) / det ;
+//       hessFm1[2][2] = (hessF[0][0] * hessF[1][1] - hessF[1][0] * hessF[0][1]) / det ;
+//     }
+//
+//     double delta2 = 0.;
+//
+//     for(int i1 = 0; i1 < dim; i1++) {
+//       double deltak = 0.;
+//
+//       for(int i2 = 0; i2 < dim; i2++) {
+//         deltak -= hessFm1[i1][i2] * gradF[i2];
+//       }
+//
+//       xi[i1] += deltak;
+//       delta2 += deltak * deltak;
+//     }
+//
+// //     for(int k = 0; k < dim; k++) {
+// //       std::cout << "xT[" << k << "]= " << xp[k] <<  " ";
+// //     }
+// //     std::cout << std::endl;
+//
+//     if(delta2 < 1.0e-6) {
+//       convergence = true;
+//     }
+//
+//     return convergence;
+//   }
+
+
+
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
                               const std::vector < std::vector <double > > &gradPhi, const std::vector < std::vector < std::vector <double> > > hessPhi,
                               const std::vector < std::vector <double > > &a, const unsigned &dim, const unsigned &nDofs) {
 
     bool convergence = false;
-    std::vector < double > xp(dim, 0.);
-    std::vector < std::vector < double > > gradXp(dim);
-    std::vector < std::vector < std::vector < double > > > hessXp(dim);
+    std::vector < double > F(dim, 0.);
+    std::vector < std::vector < double > > J(dim);
 
     for(int k = 0; k < dim; k++) {
-      gradXp[k].assign(dim, 0.);
-      hessXp[k].resize(dim);
-
-      for(int i1 = 0; i1 < dim; i1++) {
-        hessXp[k][i1].assign(dim, 0.);
-      }
+      J[k].assign(dim, 0.);
     }
 
     for(int k = 0; k < dim; k++) {
       for(int i = 0; i < nDofs; i++) {
-        xp[k] += a[k][i] * phi[i];
+        F[k] += a[k][i] * phi[i];
 
         for(int i1 = 0; i1 < dim; i1++) {
-          gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
-
-          for(int i2 = 0; i2 < dim; i2++) {
-            hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
-          }
+          J[k][i1] += a[k][i] * gradPhi[i][i1];
+	  if(i1 == 1){
+	    std::cout << i << " " << gradPhi[i][i1] <<std::endl;
+	  }
         }
       }
-    }
-
-    std::vector < double > gradF(dim, 0.);
-    std::vector < std::vector < double > >  hessF(dim);
-
-    for(int i1 = 0; i1 < dim; i1++) {
-      hessF[i1].assign(dim, 0.);
-    }
-
-    for(int k = 0; k < dim; k++) {
-      for(int i1 = 0; i1 < dim; i1++) {
-        gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
-
-        for(int i2 = 0; i2 < dim; i2++) {
-          hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
-        }
+      if(k == 1){
+	std::cout << F[k] << " " << J[k][0] <<" " << J[k][1] <<" " << J[k][2] << std::endl; 
       }
+      
+      F[k] -= x[k];
     }
+    
+    
 
-    std::vector < std::vector < double > >  hessFm1(dim);
+    std::vector < std::vector < double > >  Jm1(dim);
 
     for(int i1 = 0; i1 < dim; i1++) {
-      hessFm1[i1].resize(dim);
+      Jm1[i1].resize(dim);
     }
 
     if(dim == 2) {
-      double det = hessF[0][0] * hessF[1][1] - hessF[0][1] * hessF[1][0];
-      hessFm1[0][0] = hessF[1][1] / det;
-      hessFm1[0][1] = -hessF[0][1] / det;
-      hessFm1[1][0] = -hessF[1][0] / det;
-      hessFm1[1][1] = hessF[0][0] / det;
+      double det = J[0][0] * J[1][1] - J[0][1] * J[1][0];
+      Jm1[0][0] =  J[1][1] / det;
+      Jm1[0][1] = -J[0][1] / det;
+      Jm1[1][0] = -J[1][0] / det;
+      Jm1[1][1] =  J[0][0] / det;
     }
     else if(dim == 3) {
-      double det = (hessF[0][0] * hessF[1][1] * hessF[2][2] + hessF[0][1] * hessF[1][2] * hessF[2][0] + hessF[0][2] * hessF[1][0] * hessF[2][1])
-                   - (hessF[2][0] * hessF[1][1] * hessF[0][2] + hessF[2][1] * hessF[1][2] * hessF[0][0] + hessF[2][2] * hessF[1][0] * hessF[0][1]) ;
+      double det = (J[0][0] * J[1][1] * J[2][2] + J[0][1] * J[1][2] * J[2][0] + J[0][2] * J[1][0] * J[2][1])
+                   - (J[2][0] * J[1][1] * J[0][2] + J[2][1] * J[1][2] * J[0][0] + J[2][2] * J[1][0] * J[0][1]) ;
 
-      hessFm1[0][0] = (hessF[1][1] * hessF[2][2] - hessF[2][1] * hessF[1][2]) / det ;
-      hessFm1[0][1] = (hessF[0][2] * hessF[2][1] - hessF[2][2] * hessF[0][1]) / det ;
-      hessFm1[0][2] = (hessF[0][1] * hessF[1][2] - hessF[1][1] * hessF[0][2]) / det ;
-      hessFm1[1][0] = (hessF[1][2] * hessF[2][0] - hessF[2][2] * hessF[1][0]) / det ;
-      hessFm1[1][1] = (hessF[0][0] * hessF[2][2] - hessF[2][0] * hessF[0][2]) / det ;
-      hessFm1[1][2] = (hessF[0][2] * hessF[1][0] - hessF[0][0] * hessF[1][2]) / det ;
-      hessFm1[2][0] = (hessF[1][0] * hessF[2][1] - hessF[2][0] * hessF[1][1]) / det ;
-      hessFm1[2][1] = (hessF[0][1] * hessF[2][0] - hessF[2][1] * hessF[0][0]) / det ;
-      hessFm1[2][2] = (hessF[0][0] * hessF[1][1] - hessF[1][0] * hessF[0][1]) / det ;
+      Jm1[0][0] = (J[1][1] * J[2][2] - J[2][1] * J[1][2]) / det ;
+      Jm1[0][1] = (J[0][2] * J[2][1] - J[2][2] * J[0][1]) / det ;
+      Jm1[0][2] = (J[0][1] * J[1][2] - J[1][1] * J[0][2]) / det ;
+      Jm1[1][0] = (J[1][2] * J[2][0] - J[2][2] * J[1][0]) / det ;
+      Jm1[1][1] = (J[0][0] * J[2][2] - J[2][0] * J[0][2]) / det ;
+      Jm1[1][2] = (J[0][2] * J[1][0] - J[0][0] * J[1][2]) / det ;
+      Jm1[2][0] = (J[1][0] * J[2][1] - J[2][0] * J[1][1]) / det ;
+      Jm1[2][1] = (J[0][1] * J[2][0] - J[2][1] * J[0][0]) / det ;
+      Jm1[2][2] = (J[0][0] * J[1][1] - J[1][0] * J[0][1]) / det ;
     }
 
     double delta2 = 0.;
@@ -825,7 +912,7 @@ namespace femus {
       double deltak = 0.;
 
       for(int i2 = 0; i2 < dim; i2++) {
-        deltak -= hessFm1[i1][i2] * gradF[i2];
+        deltak -= Jm1[i1][i2] * F[i2];
       }
 
       xi[i1] += deltak;
@@ -847,10 +934,14 @@ namespace femus {
   void Marker::InverseMapping(const unsigned &iel, const unsigned &solType,
                               const std::vector< double > &x, std::vector< double > &xi) {
 
+    
+    
     unsigned dim =  _mesh->GetDimension();
     unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
     short unsigned ielType = _mesh->GetElementType(iel);
 
+    std::cout << solType <<" "<< nDofs <<std::endl;
+    
     //BEGIN extraction nodal coordinate values
     std::vector< std::vector < double > > xv(dim);
 
@@ -871,6 +962,16 @@ namespace femus {
     //BEGIN projection nodal to polynomial coefficients
     std::vector < std::vector < double > > a;
     ProjectNodalToPolynomialCoefficients(a, xv, ielType, solType);
+    
+    for(int k=0;k<dim;k++){
+      for(int i=0;i<nDofs;i++){
+	std::cout << a[k][i] <<std::endl;
+      }
+      std::cout << std::endl;
+    }
+    
+    //exit(0);
+    
     //END projection
 
 
@@ -2807,26 +2908,28 @@ namespace femus {
 
   }
 
-  const double InitialGuess[6][3]=
-  {{0., 0., 0.},
-  {0.25, 0.25, 0.25},
-  {1./3.,1./3.,0}, 
-  {0.,0.},
-  {1./3.,1./3.},
-  {0.}};
-  
+  const double InitialGuess[6][3] = {
+    {0., 0., 0.},
+    {0.25, 0.25, 0.25},
+    {1. / 3., 1. / 3., 0},
+    {0., 0.},
+    {1. / 3., 1. / 3.},
+    {0.}
+  };
+
   void Marker::InverseMappingTEST(std::vector < double > &x) {
     unsigned dim = _mesh->GetDimension();
 
-    for(int solType = 0; solType < 3; solType++) {
+    for(int solType = 1; solType < 2; solType++) {
       std::cout << "\n\n--------------------------------------------------" << std::endl;
       std::cout << "solType = " << solType << std::endl;
 
-      for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+      //for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+      for(int iel = 394; iel <395; iel++) {
         std::cout << "iel = " << iel << std::endl;
         std::cout << "--------------------------------------------------\n" << std::endl;
 
-        unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
+        unsigned nDofs = _mesh->GetElementDofNumber(iel, 2);
         short unsigned ielType = _mesh->GetElementType(iel);
 
         std::vector < std::vector < double > > xv(nDofs);
@@ -2838,8 +2941,11 @@ namespace femus {
           for(unsigned k = 0; k < dim; k++) {
             xv[i][k] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
           }
+          //std::cout <<"x"<< i+1 <<"="<< xv[i][2]<<"; " << std::endl;
+          
         }
 
+        //exit(0);
         for(int j = 0; j < nDofs; j++) {
           std::vector < double > xiT(dim);
 
@@ -2849,9 +2955,9 @@ namespace femus {
 
           // This is the test
           std::vector < double > xi(dim);
-	  for(int k=0;k<dim;k++){
-	    xi[k] = InitialGuess[ielType][k];
-	  }
+          for(int k = 0; k < dim; k++) {
+            xi[k] = InitialGuess[ielType][k];
+          }
 
           for(int k = 0; k < dim; k++) {
             std::cout << "xv[" << k << "]= " << xv[j][k] <<  " ";
@@ -2860,9 +2966,9 @@ namespace femus {
           std::cout << std::endl;
 
 
-          InverseMapping(iel, 0, xv[j], xi);
+          //InverseMapping(iel, 0, xv[j], xi);
           if(solType > 0) {
-	    std::cout<<std::endl;
+            std::cout << std::endl;
             InverseMapping(iel, solType, xv[j], xi);
           }
 
