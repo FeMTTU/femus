@@ -743,12 +743,12 @@ unsigned Marker::GetNextElement3D(const unsigned &currentElem, const unsigned &p
 }
 
 
-bool SPDCheck2D(std::vector< std::vector <double> > A) {
+bool SPDCheck2D(std::vector< std::vector <double> > &A) {
     bool SPD = true;
 
     if(A[0][1] != A[1][0]) {
-        SPD = false; 
-	std::cout << "The matrix is not symmetric" << std::endl;
+        SPD = false;
+        std::cout << "The matrix is not symmetric" << std::endl;
     }
 
     else if(A[0][0] < 0 || fabs(A[0][0]) < 1.0e-8) {
@@ -761,12 +761,20 @@ bool SPDCheck2D(std::vector< std::vector <double> > A) {
         }
     }
 
+    if(SPD == true) {
+        std::cout << "The matrix is SPD" << std::endl;
+    }
+
+    else {
+        std::cout << "The matrix is not SPD" << std::endl;
+    }
+
     return SPD;
 
 }
 
 
-bool SPDCheck3D(std::vector< std::vector <double> > A) {
+bool SPDCheck3D(std::vector< std::vector <double> > &A) {
 
     bool SPD = true;
     bool notSymm = false;
@@ -779,7 +787,7 @@ bool SPDCheck3D(std::vector< std::vector <double> > A) {
     for(int i = 0; i < 2; i++) {
         B[i].resize(2);
     }
-    
+
     B[0][0] = A[0][0];
     B[0][1] = A[0][1];
     B[1][0] = A[1][0];
@@ -787,7 +795,7 @@ bool SPDCheck3D(std::vector< std::vector <double> > A) {
 
     if(SPDCheck2D(B) == false || notSymm == true) {
         SPD = false;
-	std::cout << "The matrix is not symmetric" << std::endl;
+        std::cout << "The matrix is not symmetric" << std::endl;
     }
 
     else {
@@ -813,6 +821,14 @@ bool SPDCheck3D(std::vector< std::vector <double> > A) {
         if(A[2][2] - KK < 0 || fabs(A[2][2] - KK) < 1.0e-8) {
             SPD = false;
         }
+    }
+
+    if(SPD == true) {
+        std::cout << "The matrix is SPD" << std::endl;
+    }
+
+    else {
+        std::cout << "The matrix is not SPD" << std::endl;
     }
 
     return SPD;
@@ -956,17 +972,12 @@ bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double 
     }
 
     bool isJSPD;
-    if(dim == 3) {
+    if(dim == 2) {
+        isJSPD = SPDCheck2D(J);
+    }
+    else if(dim == 3) {
         isJSPD = SPDCheck3D(J);
     }
-
-    if(isJSPD == true) {
-        std::cout << "J is SPD" <<std::endl;
-    }
-    else {
-        std::cout <<"J is not SPD" <<std::endl;
-    }
-
 
     std::vector < std::vector < double > >  Jm1(dim);
 

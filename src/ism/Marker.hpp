@@ -70,8 +70,8 @@ namespace femus {
     unsigned GetNextElement2DOLD(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
     unsigned GetNextElement3DOLD(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
     
-    bool SPDCheck2D(std::vector< std::vector <double> > A);
-    bool SPDCheck3D(std::vector< std::vector <double> > A);
+    bool SPDCheck2D(std::vector< std::vector <double> > &A);
+    bool SPDCheck3D(std::vector< std::vector <double> > &A);
      
      
     std::vector < double > _x;
