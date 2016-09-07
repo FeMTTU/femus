@@ -618,17 +618,19 @@ namespace femus {
     gradPhi[1][0] = 1.; // 1
     gradPhi[4][0] = xi[1] ; // y
     gradPhi[5][0] = xi[2] ; // z
-    gradPhi[7][0] = phi[6];  //  y z
     //phi_y
     gradPhi[2][1] = 1.; // 1
     gradPhi[4][1] = xi[0]; // x
     gradPhi[6][1] = xi[2]; // z
-    gradPhi[7][1] = phi[5];  // x z
+   
     //phi_z
     gradPhi[3][2] = 1.; // 1
     gradPhi[5][2] = xi[0]; // x
     gradPhi[6][2] = xi[1]; // y
+    
     if(solType < 1) {  //only linear
+      gradPhi[7][0] = phi[6];  // y z
+      gradPhi[7][1] = phi[5];  // x z
       gradPhi[7][2] = phi[4];  // x y
     }
     else { //only quadratic and biquadratic
@@ -713,13 +715,13 @@ namespace femus {
     // common for linear, quadratic and biquadratic
     //phi_xy
     hessPhi[4][1][0] = hessPhi[4][0][1] = 1.; // 1
-    hessPhi[7][1][0] = hessPhi[7][0][1] = xi[2];  // z
     //phi_xz
     hessPhi[5][2][0] = hessPhi[5][0][2] = 1.; // 1
-    hessPhi[7][2][0] = hessPhi[7][0][2] = xi[1];  //  y
     //phi_yz
     hessPhi[6][2][1] = hessPhi[6][1][2] = 1.; // 1
     if(solType < 1) { //only linear
+      hessPhi[7][1][0] = hessPhi[7][0][1] = xi[2];  // z
+      hessPhi[7][2][0] = hessPhi[7][0][2] = xi[1];  //  y
       hessPhi[7][2][1] = hessPhi[7][1][2] = xi[0] ;  // x
     }
     else { //only quadraic and biquadratic

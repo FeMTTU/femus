@@ -959,25 +959,25 @@ bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double 
 
             for(int i1 = 0; i1 < dim; i1++) {
                 J[k][i1] += a[k][i] * gradPhi[i][i1];
-                if(i1 == 1) {
-                    std::cout << i << " " << "gradphi[" << i << "][" << i1 << "]=" << gradPhi[i][i1] <<std::endl;
-                }
+//                 if(i1 == 1) {
+//                     std::cout << i << " " << "gradphi[" << i << "][" << i1 << "]=" << gradPhi[i][i1] <<std::endl;
+//                 }
             }
         }
-        if(k == 1) {
-            std::cout << "F[" << k << "]= " << F[k] << " " << " J[" << k << "][0]= " << J[k][0] <<" " << "J[" << k << "][1] = " << J[k][1] <<" " << "J[" << k <<"][2] =" << J[k][2] << std::endl;
-        }
+//         if(k == 1) {
+//             std::cout << "F[" << k << "]= " << F[k] << " " << " J[" << k << "][0]= " << J[k][0] <<" " << "J[" << k << "][1] = " << J[k][1] <<" " << "J[" << k <<"][2] =" << J[k][2] << std::endl;
+//         }
 
         F[k] -= x[k];
     }
 
-    bool isJSPD;
-    if(dim == 2) {
-        isJSPD = SPDCheck2D(J);
-    }
-    else if(dim == 3) {
-        isJSPD = SPDCheck3D(J);
-    }
+//     bool isJSPD;
+//     if(dim == 2) {
+//         isJSPD = SPDCheck2D(J);
+//     }
+//     else if(dim == 3) {
+//         isJSPD = SPDCheck3D(J);
+//     }
 
     std::vector < std::vector < double > >  Jm1(dim);
 
@@ -1025,7 +1025,7 @@ bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double 
 //     }
 //     std::cout << std::endl;
 
-    if(delta2 < 1.0e-6) {
+    if(delta2 < 1.0e-7) {
         convergence = true;
     }
 
