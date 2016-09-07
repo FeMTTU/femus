@@ -745,58 +745,58 @@ namespace femus {
 //   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
 //                               const std::vector < std::vector <double > > &gradPhi, const std::vector < std::vector < std::vector <double> > > hessPhi,
 //                               const std::vector < std::vector <double > > &a, const unsigned &dim, const unsigned &nDofs) {
-//
+// 
 //     bool convergence = false;
 //     std::vector < double > xp(dim, 0.);
 //     std::vector < std::vector < double > > gradXp(dim);
 //     std::vector < std::vector < std::vector < double > > > hessXp(dim);
-//
+// 
 //     for(int k = 0; k < dim; k++) {
 //       gradXp[k].assign(dim, 0.);
 //       hessXp[k].resize(dim);
-//
+// 
 //       for(int i1 = 0; i1 < dim; i1++) {
 //         hessXp[k][i1].assign(dim, 0.);
 //       }
 //     }
-//
+// 
 //     for(int k = 0; k < dim; k++) {
 //       for(int i = 0; i < nDofs; i++) {
 //         xp[k] += a[k][i] * phi[i];
-//
+// 
 //         for(int i1 = 0; i1 < dim; i1++) {
 //           gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
-//
+// 
 //           for(int i2 = 0; i2 < dim; i2++) {
 //             hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
 //           }
 //         }
 //       }
 //     }
-//
+// 
 //     std::vector < double > gradF(dim, 0.);
 //     std::vector < std::vector < double > >  hessF(dim);
-//
+// 
 //     for(int i1 = 0; i1 < dim; i1++) {
 //       hessF[i1].assign(dim, 0.);
 //     }
-//
+// 
 //     for(int k = 0; k < dim; k++) {
 //       for(int i1 = 0; i1 < dim; i1++) {
 //         gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
-//
+// 
 //         for(int i2 = 0; i2 < dim; i2++) {
 //           hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
 //         }
 //       }
 //     }
-//
+// 
 //     std::vector < std::vector < double > >  hessFm1(dim);
-//
+// 
 //     for(int i1 = 0; i1 < dim; i1++) {
 //       hessFm1[i1].resize(dim);
 //     }
-//
+// 
 //     if(dim == 2) {
 //       double det = hessF[0][0] * hessF[1][1] - hessF[0][1] * hessF[1][0];
 //       hessFm1[0][0] = hessF[1][1] / det;
@@ -807,7 +807,7 @@ namespace femus {
 //     else if(dim == 3) {
 //       double det = (hessF[0][0] * hessF[1][1] * hessF[2][2] + hessF[0][1] * hessF[1][2] * hessF[2][0] + hessF[0][2] * hessF[1][0] * hessF[2][1])
 //                    - (hessF[2][0] * hessF[1][1] * hessF[0][2] + hessF[2][1] * hessF[1][2] * hessF[0][0] + hessF[2][2] * hessF[1][0] * hessF[0][1]) ;
-//
+// 
 //       hessFm1[0][0] = (hessF[1][1] * hessF[2][2] - hessF[2][1] * hessF[1][2]) / det ;
 //       hessFm1[0][1] = (hessF[0][2] * hessF[2][1] - hessF[2][2] * hessF[0][1]) / det ;
 //       hessFm1[0][2] = (hessF[0][1] * hessF[1][2] - hessF[1][1] * hessF[0][2]) / det ;
@@ -818,29 +818,29 @@ namespace femus {
 //       hessFm1[2][1] = (hessF[0][1] * hessF[2][0] - hessF[2][1] * hessF[0][0]) / det ;
 //       hessFm1[2][2] = (hessF[0][0] * hessF[1][1] - hessF[1][0] * hessF[0][1]) / det ;
 //     }
-//
+// 
 //     double delta2 = 0.;
-//
+// 
 //     for(int i1 = 0; i1 < dim; i1++) {
 //       double deltak = 0.;
-//
+// 
 //       for(int i2 = 0; i2 < dim; i2++) {
 //         deltak -= hessFm1[i1][i2] * gradF[i2];
 //       }
-//
+// 
 //       xi[i1] += deltak;
 //       delta2 += deltak * deltak;
 //     }
-//
+// 
 // //     for(int k = 0; k < dim; k++) {
 // //       std::cout << "xT[" << k << "]= " << xp[k] <<  " ";
 // //     }
 // //     std::cout << std::endl;
-//
+// 
 //     if(delta2 < 1.0e-6) {
 //       convergence = true;
 //     }
-//
+// 
 //     return convergence;
 //   }
 
@@ -2916,6 +2916,78 @@ namespace femus {
     {1. / 3., 1. / 3.},
     {0.}
   };
+  
+  
+  bool SPDCheck2D(std::vector< std::vector <double> > &A){
+    bool SPD = true;
+    
+    if(A[0][1] != A[1][0]){
+      std::cout << "ERROR : matrix A is not symmetric" <<std::endl;
+      exit(0);
+    }
+    
+    else if(A[0][0] < 0 || fabs(A[0][0]) < 1.0e-8){
+      SPD = false;
+    }
+    else{
+      double lambda = A[1][1] - ((A[0][1] * A[0][1]) / A[0][0]);
+      if(lambda < 0 || fabs(lambda) < 1.0e-8){
+	SPD = false;
+      }
+    }
+    
+    return SPD;
+    
+  }
+  
+
+    bool SPDCheck3D(std::vector< std::vector <double> > &A){
+    
+      bool SPD = true;
+      bool notSymm = false;
+    
+    if(A[0][2] = A[2][0]){
+       notSymm = true;
+    }
+    
+    std::vector < std::vector <double> > B;
+    B[0][0] = A[0][0];
+    B[0][1] = A[0][1];
+    B[1][0] = A[1][0];
+    B[1][1] = A[1][1];
+    
+    if(SPDCheck2D(B) == false || notSymm == true){
+      std::cout << "ERROR : matrix A is not symmetric" <<std::endl;
+      exit(0);
+    }
+    
+    double l00 = sqrt(A[0][0]);
+    double l11 = sqrt( A[1][1] - ( (A[0][1] * A[0][1]) / A[0][0] ) );
+    double l01 = A[0][1] / l00;
+    
+    double detL =  l00 * l11;
+    std::vector < std::vector < double > > Lm1 ;
+    
+    Lm1[0][0] = (1/detL) * l11;
+    Lm1[1][0] = -(1/detL) * l01;
+    Lm1[0][1] = 0. ;
+    Lm1[1][1] = (1/detL) * l00 ;
+    
+    std::vector < double > K;
+    
+    K[0] = Lm1[0][0] * A[0][2] + Lm1[0][1] * A[1][2];
+    K[1] = Lm1[1][0] * A[0][2] + Lm1[1][1] * A[1][2];
+    
+    double KK = sqrt(K[0]*K[0] + K[1]*K[1]) ;
+    
+    if(A[2][2] - KK < 0 || fabs(A[2][2] - KK) < 1.0e-8){
+      SPD = false;
+    }
+    
+    return SPD;
+    
+  }
+  
 
   void Marker::InverseMappingTEST(std::vector < double > &x) {
     unsigned dim = _mesh->GetDimension();
