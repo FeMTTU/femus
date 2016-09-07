@@ -865,12 +865,12 @@ namespace femus {
         for(int i1 = 0; i1 < dim; i1++) {
           J[k][i1] += a[k][i] * gradPhi[i][i1];
 	  if(i1 == 1){
-	    std::cout << i << " " << gradPhi[i][i1] <<std::endl;
+	    std::cout << i << " " << "gradphi[" << i << "][" << i1 << "]=" << gradPhi[i][i1] <<std::endl;
 	  }
         }
       }
       if(k == 1){
-	std::cout << F[k] << " " << J[k][0] <<" " << J[k][1] <<" " << J[k][2] << std::endl; 
+	std::cout << "F[" << k << "]= " << F[k] << " " << " J[" << k << "][0]= " << J[k][0] <<" " << "J[" << k << "][1] = " << J[k][1] <<" " << "J[" << k <<"][2] =" << J[k][2] << std::endl; 
       }
       
       F[k] -= x[k];
