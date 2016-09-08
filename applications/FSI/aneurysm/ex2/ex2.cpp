@@ -38,7 +38,7 @@ int main(int argc, char **args) {
 
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
-  std::string infile = "./input/aneurysm.neu";
+  std::string infile = "./input/aneurysm_Sara_5.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
@@ -69,7 +69,7 @@ int main(int argc, char **args) {
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 1;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
