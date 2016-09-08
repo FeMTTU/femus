@@ -1025,7 +1025,7 @@ bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double 
 //     }
 //     std::cout << std::endl;
 
-    if(delta2 < 1.0e-7) {
+    if(delta2 < 1.0e-6) {
         convergence = true;
     }
 
@@ -1064,12 +1064,12 @@ void Marker::InverseMapping(const unsigned &iel, const unsigned &solType,
     std::vector < std::vector < double > > a;
     ProjectNodalToPolynomialCoefficients(a, xv, ielType, solType);
 
-    for(int k=0; k<dim; k++) {
-        for(int i=0; i<nDofs; i++) {
-            std::cout << a[k][i] <<std::endl;
-        }
-        std::cout << std::endl;
-    }
+//     for(int k=0; k<dim; k++) {
+//         for(int i=0; i<nDofs; i++) {
+//             std::cout << a[k][i] <<std::endl;
+//         }
+//         std::cout << std::endl;
+//     }
 
     //exit(0);
 
@@ -3022,16 +3022,16 @@ const double InitialGuess[6][3] = {
 void Marker::InverseMappingTEST(std::vector < double > &x) {
     unsigned dim = _mesh->GetDimension();
 
-    for(int solType = 1; solType < 2; solType++) {
+    for(int solType = 0; solType < 3; solType++) {
         std::cout << "\n\n--------------------------------------------------" << std::endl;
         std::cout << "solType = " << solType << std::endl;
 
-        //for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
-        for(int iel = 394; iel <395; iel++) {
+        for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+        //for(int iel = 394; iel <395; iel++) {
             std::cout << "iel = " << iel << std::endl;
             std::cout << "--------------------------------------------------\n" << std::endl;
 
-            unsigned nDofs = _mesh->GetElementDofNumber(iel, 2);
+            unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
             short unsigned ielType = _mesh->GetElementType(iel);
 
             std::vector < std::vector < double > > xv(nDofs);
@@ -3049,6 +3049,7 @@ void Marker::InverseMappingTEST(std::vector < double > &x) {
 
             //exit(0);
             for(int j = 0; j < nDofs; j++) {
+	        std::cout<<j<<std::endl;
                 std::vector < double > xiT(dim);
 
                 for(unsigned k = 0; k < dim; k++) {
@@ -3068,20 +3069,24 @@ void Marker::InverseMappingTEST(std::vector < double > &x) {
                 std::cout << std::endl;
 
 
-                //InverseMapping(iel, 0, xv[j], xi);
+                InverseMapping(iel, 0, xv[j], xi);
                 if(solType > 0) {
                     std::cout << std::endl;
                     InverseMapping(iel, solType, xv[j], xi);
                 }
 
+                bool test = true;
                 for(int k = 0; k < dim; k++) {
                     std::cout << "xiT[" << k << "]= " << xiT[k] <<  " xi[" << k << "]= " << xi[k];
                     std::cout << " error: " << xiT[k] - xi[k] << std::endl;
                     if(fabs(xiT[k] - xi[k]) > 1.0e-3) {
-                        std::cout << "Inverse map test failed " << std::endl;
-                        abort();
+		       test = false;
                     }
                 }
+                if(test == false){
+		  std::cout << "Inverse map test failed " << std::endl;
+                  abort();
+		}
                 std::cout << "--------------------------------------------------\n" << std::endl;
             }
         }
