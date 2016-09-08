@@ -917,36 +917,36 @@ namespace femus {
 
 
 
-    bool isSPD;
-    if(dim == 2) {
-      isSPD = SPDCheck2D(hessF);
-    }
-    else if(dim == 3) {
-      isSPD = SPDCheck3D(hessF);
-    }
+//     bool isSPD;
+//     if(dim == 2) {
+//       isSPD = SPDCheck2D(hessF);
+//     }
+//     else if(dim == 3) {
+//       isSPD = SPDCheck3D(hessF);
+//     }
 
 
-    if(isSPD == false) {
-      double norm = 0.;
-      for(int i1 = 0; i1 < dim; i1++) {
-        double rowSum = 0.;
-        for(int i2 = 0; i2 < dim; i2++) {
-          rowSum += fabs(hessF[i1][i2]);
-        }
-        if(rowSum > norm) norm  = rowSum;
-      }
-
-      for(int i1 = 0; i1 < dim; i1++) {
-        hessF[i1][i1] += norm;
-      }
-    }
-    
-    if(dim == 2) {
-      isSPD = SPDCheck2D(hessF);
-    }
-    else if(dim == 3) {
-      isSPD = SPDCheck3D(hessF);
-    }
+//     if(isSPD == false) {
+//       double norm = 0.;
+//       for(int i1 = 0; i1 < dim; i1++) {
+//         double rowSum = 0.;
+//         for(int i2 = 0; i2 < dim; i2++) {
+//           rowSum += fabs(hessF[i1][i2]);
+//         }
+//         if(rowSum > norm) norm  = rowSum;
+//       }
+// 
+//       for(int i1 = 0; i1 < dim; i1++) {
+//         hessF[i1][i1] += norm;
+//       }
+//     }
+//     
+//     if(dim == 2) {
+//       isSPD = SPDCheck2D(hessF);
+//     }
+//     else if(dim == 3) {
+//       isSPD = SPDCheck3D(hessF);
+//     }
 
 
     std::vector < std::vector < double > >  hessFm1(dim);
@@ -1088,7 +1088,7 @@ namespace femus {
 //     }
 //     std::cout << std::endl;
 
-    if(delta2 < 1.0e-6) {
+    if(delta2 < 1.0e-9) {
       convergence = true;
     }
 
@@ -1156,7 +1156,12 @@ namespace femus {
 
       GetPolynomialShapeFunctionGradientHessian(phi, gradPhi, hessPhi, xi, ielType, solType);
 
-      convergence = GetNewLocalCoordinates(xi, x, phi, gradPhi, hessPhi, a, dim, nDofs);
+      if(solType==0){
+	convergence = GetNewLocalCoordinates(xi, x, phi, gradPhi, hessPhi, a, dim, nDofs);
+      }
+      else {
+	convergence = GetNewLocalCoordinatesHess(xi, x, phi, gradPhi, hessPhi, a, dim, nDofs);
+      }
       for(unsigned k = 0; k < dim; k++) {
         std::cout << "xi[" << k << "] = " << xi[k] << " ";
       }
@@ -3137,6 +3142,13 @@ namespace femus {
 	    std::cout << std::endl;
 	  }
 
+// 	  InverseMapping(iel, 0, xv[j], xi);
+// 	  if(solType > 0){
+// 	    InverseMapping(iel, solType, xv[j], xi);
+// 	    std::cout << std::endl;
+// 	  }
+	  
+	  
           bool test = true;
           for(int k = 0; k < dim; k++) {
             std::cout << "xiT[" << k << "]= " << xiT[k] <<  " xi[" << k << "]= " << xi[k];
