@@ -1162,15 +1162,19 @@ namespace femus {
     //common for linear, quadratic and biquadratic
     //phi_x
     gradPhi[1][0] = 1.; // 1
-    gradPhi[4][0] = xi[2] ;  //  z
     //phi_y
     gradPhi[2][1] = 1.;  // 1
-    gradPhi[5][1] = xi[2] ;  // z
     //phi_z
     gradPhi[3][2] = 1.; // 1
     if(solType < 1) { //only linear
+      //phi_x
+      gradPhi[4][0] = xi[2] ;  //  z
+      //phi_y
+      gradPhi[5][1] = xi[2] ;  // z
+      //phi_z
       gradPhi[4][2] = xi[0] ;  // x
       gradPhi[5][2] = xi[1] ;  // y
+      
     }
     else { //only quadratic and biquadratic
       //phi_x
@@ -1260,7 +1264,7 @@ namespace femus {
 
     if(solType < 1) { //only linear
       //phi_xz
-      hessPhi[4][0][2] = 1.;  //  1
+      hessPhi[4][0][2] = hessPhi[4][2][0] = 1.;  //  1
       //phi_yz
       hessPhi[5][2][1] = hessPhi[5][1][2] = 1.;  // 1
     }
@@ -1271,8 +1275,8 @@ namespace femus {
       hessPhi[4][1][0] = hessPhi[4][0][1] = 1.;  //  1
       hessPhi[10][1][0] = hessPhi[10][0][1] = xi[2] ; //  z
       //phi_xz
-      hessPhi[5][0][2] = 1.;  //  1
-      hessPhi[10][0][2] = xi[1] ; //  y
+      hessPhi[5][0][2] = hessPhi[5][2][0] = 1.;  //  1
+      hessPhi[10][0][2] = hessPhi[10][2][0] =  xi[1] ; //  y
       //phi_yy
       hessPhi[8][1][1] = 2.; // 2
       //phi_yz
@@ -1285,8 +1289,8 @@ namespace femus {
         //phi_xx
         hessPhi[11][0][0] = 2 * xi[2]; // 2 z
         //phi_xz
-        hessPhi[11][0][2] = 2 * xi[0]; // 2 x
-        hessPhi[13][0][2] = 2 * xi[2]; //  2 z
+        hessPhi[11][0][2] = hessPhi[11][2][0] = 2 * xi[0]; // 2 x
+        hessPhi[13][0][2] = hessPhi[13][2][0] = 2 * xi[2]; //  2 z
         //phi_yy
         hessPhi[12][1][1] = 2 * xi[2]; // 2 z
         //phi_yz
@@ -1309,12 +1313,12 @@ namespace femus {
         hessPhi[19][1][0] = hessPhi[19][0][1] = phi[9]; // zz
         hessPhi[20][1][0] = hessPhi[20][0][1] = hessPhi[18][0][1] * xi[2]; // 2 y zz + 2 x zz
         //phi_xz
-        hessPhi[12][0][2] = 2 * xi[0]; // 2 x
-        hessPhi[14][0][2] = 2 * xi[2]; //  2 z
-        hessPhi[16][0][2] = 4 * phi[5]; // 4 x z
-        hessPhi[18][0][2] = phi[8] + 2 * phi[4]; //  yy  + 2 x y
-        hessPhi[19][0][2] = 2 * phi[6]; // 2 y z
-        hessPhi[20][0][2] = 2 * xi[2] * hessPhi[18][0][3]; //  2 yy z + 4 x y z
+        hessPhi[12][0][2] = hessPhi[12][2][0] = 2 * xi[0]; // 2 x
+        hessPhi[14][0][2] = hessPhi[14][2][0] = 2 * xi[2]; //  2 z
+        hessPhi[16][0][2] = hessPhi[16][2][0] = 4 * phi[5]; // 4 x z
+        hessPhi[18][0][2] = hessPhi[18][2][0] = phi[8] + 2 * phi[4]; //  yy  + 2 x y
+        hessPhi[19][0][2] = hessPhi[19][2][0] = 2 * phi[6]; // 2 y z
+        hessPhi[20][0][2] = hessPhi[20][2][0] = 2 * xi[2] * hessPhi[18][0][3]; //  2 yy z + 4 x y z
         //phi_yy
         hessPhi[11][1][1] = 2 * xi[0] ; // 2 x
         hessPhi[13][1][1] = 2 * xi[2]; // 2 z

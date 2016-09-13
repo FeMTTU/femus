@@ -53,7 +53,7 @@ int main(int argc, char** args) {
 //             x[1] = 0.1; //
 //             x[2] = 0.5;
 	    
-	    mlMsh.ReadCoarseMesh("./input/aneurysm.neu", "seventh", scalingFactor);
+	    mlMsh.ReadCoarseMesh("./input/aneurysm_Sara_5.neu", "seventh", scalingFactor);
             x[0] = 0.; 
             x[1] = 0.; 
             x[2] = 0.;
