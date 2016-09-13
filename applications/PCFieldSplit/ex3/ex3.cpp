@@ -748,8 +748,6 @@ int main(int argc, char **argv)
 //   ierr = MatDestroy(&s1.myS);CHKERRQ(ierr);
 //   
 //   ierr = PetscFinalize();CHKERRQ(ierr);
-  
-  
-  
+ 
   return 0;
 }
