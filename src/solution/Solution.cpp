@@ -812,7 +812,7 @@ namespace femus {
             AMR->_Sol[AMRIndex]->set(iel, 1.);
             volumeTestFalse += ielVolume[iel-offset];
 
-            if(ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset]) {
+            if( ielGeom == 4 && ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset]) {
               for(unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) { //loop on the element vertices
                 unsigned inode = _msh->el->GetElementDofIndex(iel, i);
                 const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
@@ -864,7 +864,7 @@ namespace femus {
     AMR->_Sol[AMRIndex]->close();
 
     double counter = AMR->_Sol[AMRIndex]->l1_norm();
-    bool test = (counter <= _nprocs) ? 1 : 0;
+    bool test = (counter * _msh->GetRefIndex() <= _nprocs) ? 1 : 0;
 
     return test;
   }

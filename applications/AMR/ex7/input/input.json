@@ -12,7 +12,7 @@
                           "yb" : 1.,
                           "za" : 0.,
                           "zb" : 0.,
-                          "elem_type" : "Tri6"
+                          "elem_type" : "Quad9"
                          }
              },
 
@@ -57,7 +57,7 @@
     "mgsolver" : { "nlevels" : 1,
 		   "AMR" : "yes",
 		   "maxAMRlevels" : 10,
-		   "AMRnorm" : "l2",
+		   "AMRnorm" : "h1",
 		   "AMRthreshold": 0.0005,
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,
