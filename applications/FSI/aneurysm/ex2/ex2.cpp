@@ -50,7 +50,7 @@ int main(int argc, char **args) {
   muf = 1.;
   rhos = 800;
   ni = 0.5;
-  E = 1800000;
+  E = 1800;
 
   Parameter par(Lref, Uref);
 
@@ -83,10 +83,6 @@ int main(int argc, char **args) {
 
   // mark Solid nodes
   ml_msh.MarkStructureNode();
-
-
-  std::cout << 1 << std::endl;
-
 
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
@@ -125,15 +121,11 @@ int main(int argc, char **args) {
 
   // ******* Define the FSI Multilevel Problem *******
 
-  std::cout << 2 << std::endl;
   MultiLevelProblem ml_prob(&ml_sol);
   // Add fluid object
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
-
-
-  std::cout << 3 << std::endl;
 
   // ******* Add FSI system to the MultiLevel problem *******
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
@@ -148,16 +140,12 @@ int main(int argc, char **args) {
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSISteadyStateAssembly);
 
-  std::cout << 4 << std::endl;
-
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
 
-  std::cout << 5 << std::endl;
-
   system.SetNonLinearConvergenceTolerance(1.e-9);
   system.SetResidualUpdateConvergenceTolerance(1.e-15);
-  system.SetMaxNumberOfNonLinearIterations(2);
+  system.SetMaxNumberOfNonLinearIterations(4);
   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(1);
 
   system.SetNumberPreSmoothingStep(0);
@@ -165,13 +153,9 @@ int main(int argc, char **args) {
 
   // ******* Set Preconditioner *******
 
-  std::cout << 6 << std::endl;
-
   system.SetMgSmoother(ASM_SMOOTHER);
 
   system.init();
-
-  std::cout << 7 << std::endl;
 
   // ******* Set Smoother *******
   system.SetSolverFineGrids(RICHARDSON);
@@ -194,15 +178,10 @@ int main(int argc, char **args) {
   // ******* For Gmres Preconditioner only *******
   //system.SetDirichletBCsHandling(ELIMINATION);
 
-  // ******* Solve *******
-  std::cout << std::endl;
-  std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-  system.MGsolve();
-
-  std::cout << 8 << std::endl;
-
+  
   // ******* Print solution *******
-  ml_sol.SetWriter(GMV);
+  ml_sol.SetWriter(VTK);
+
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -213,12 +192,17 @@ int main(int argc, char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
-  //ml_sol.GetWriter()->SetDebugOutput( true );
-  //ml_sol.GetWriter()->ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
-  VTKWriter vtkIO(&ml_sol);
-  vtkIO.SetDebugOutput(true);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars);
+  ml_sol.GetWriter()->SetDebugOutput(true);
+  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars,0);
 
+  
+  // ******* Solve *******
+  std::cout << std::endl;
+  std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
+  system.MGsolve();
+
+  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars,1);
+  
   // ******* Clear all systems *******
   ml_prob.clear();
   return 0;
@@ -237,14 +221,18 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 
   if(!strcmp(name, "U") || !strcmp(name, "V") || !strcmp(name, "W")) {
 
-    if(1 == facename  || 2 == facename || 3 == facename) {
+    if(1 == facename) {
       test = 0;
-      if(!strcmp(name, "U")) {
-        value = 1.;
-      }
-      else if(7 == facename) {
-        value = 0.;
-      }
+      value = 10.;
+    }
+    else if( 2 == facename ) {
+      test = 0;
+      value = 10.;
+
+    }
+    else if( 3 == facename) {
+      test = 0;
+      value = 20.;
     }
   }
 
@@ -259,7 +247,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
       value = 1.;
     }
   }
-  
+
   return test;
-  
+
 }
