@@ -49,17 +49,19 @@ public:
 
     /** Flag all the elements to be refined */
     void FlagAllElementsToBeRefined();
+    bool FlagElementsToBeRefined(const double & treshold, NumericVector& error);
 
     /** Flag all the even elements to be refined */
     void FlagOnlyEvenElementsToBeRefined();
 
     /** Flag the elements to be refined in according to AMR criteria */
-    void FlagElementsToBeRefined();
+    bool FlagElementsToBeRefined();
 
 
 private:
 
     void FlagElementsToRefine(const unsigned& type);
+    bool FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error);
 
     /** To be added */
     void Buildkmid();
@@ -79,17 +81,11 @@ private:
       { {0,4},{1,4},{2,4},{3,4} },
       { {4,5},{5,5},{6,5},{7,5} }
     },
-//     {
-//       { {0,0},{1,0},{2,0},{6,1} }, 
-//       { {0,1},{1,1},{3,1},{4,2} },
-//       { {1,2},{2,2},{3,2},{5,2} },
-//       { {2,3},{0,3},{3,3},{7,1} } 
-//     },
     {
-      { {0,0},{1,0},{2,0},{4,0} }, //it was {6,0}
-      { {0,1},{1,1},{3,1},{5,1} }, //it was {4,1}
-      { {1,2},{2,2},{3,2},{6,2} }, //it was {5,2}
-      { {2,3},{0,3},{3,3},{7,3} }  //it was {7,3}
+      { {0,0},{1,0},{2,0},{4,0} }, 
+      { {0,1},{1,1},{3,1},{5,1} }, 
+      { {1,2},{2,2},{3,2},{6,2} }, 
+      { {2,3},{0,3},{3,3},{7,3} }  
     },
     {
       { {0,0},{1,0},{4,0},{5,0} },

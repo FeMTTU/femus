@@ -397,12 +397,14 @@ namespace femus {
   void LinearImplicitSystem::AddAMRLevel( unsigned& AMRCounter ) {
     bool conv_test = 0;
 
-    if( _AMRnorm == 0 ) {
-      conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnl2( _SolSystemPdeIndex, _AMRthreshold );
-    }
-    else if( _AMRnorm == 1 ) {
-      conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnSemiNorm( _SolSystemPdeIndex, _AMRthreshold );
-    }
+    conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnErroNormAdaptive( _SolSystemPdeIndex, _AMRthreshold, _AMRnorm );
+    
+    //     if( _AMRnorm == 0 ) {
+//       conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnl2( _SolSystemPdeIndex, _AMRthreshold );
+//     }
+//     else if( _AMRnorm == 1 ) {
+//       conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnSemiNorm( _SolSystemPdeIndex, _AMRthreshold );
+//     }
 
     if( conv_test == 0 ) {
       _ml_msh->AddAMRMeshLevel();
@@ -478,17 +480,18 @@ namespace femus {
     }
 
     _maxAMRlevels = AMRlevels;
-    _AMRthreshold = AMRthreshold;
+    _AMRthreshold.resize(1);
+    _AMRthreshold[0] = AMRthreshold;
 
-    if( !strcmp( "l2", AMRnorm.c_str() ) ) {
+    if( !strcmp( "l2", AMRnorm.c_str() )  || !strcmp( "h0", AMRnorm.c_str() ) || !strcmp( "H0", AMRnorm.c_str() )) {
       _AMRnorm = 0;
     }
-    else if( !strcmp( "seminorm", AMRnorm.c_str() ) || !strcmp( "semi-norm", AMRnorm.c_str() ) ) {
+    else if( !strcmp( "H1", AMRnorm.c_str() ) || !strcmp( "h1", AMRnorm.c_str() ) ) {
       _AMRnorm = 1;
     }
     else {
-      std::cout << AMRnorm << " invalid AMRnorm type \n set to default l2 norm" << std::endl;
-      _AMRnorm = 0;
+      std::cout << AMRnorm << " invalid AMRnorm type \n set to default H1 norm" << std::endl;
+      _AMRnorm = 1;
     }
 
     if( SetRefinementFlag == NULL ) {

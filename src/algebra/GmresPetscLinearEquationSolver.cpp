@@ -502,10 +502,9 @@ namespace femus {
         return;
 
       case RICHARDSON:
-        ierr = KSPSetType(ksp, (char*) KSPRICHARDSON);
-        ierr =  KSPRichardsonSetScale(ksp, 0.7);
-        CHKERRABORT(MPI_COMM_WORLD, ierr);
-//         ierr =  KSPRichardsonSetSelfScale(ksp, PETSC_TRUE); CHKERRABORT(MPI_COMM_WORLD, ierr);
+        KSPSetType(ksp, (char*) KSPRICHARDSON);
+        KSPRichardsonSetScale(ksp, 0.5);
+        //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
         return;
 
       case CHEBYSHEV:

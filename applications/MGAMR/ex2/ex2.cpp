@@ -79,8 +79,8 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/triAMR.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/triAMR.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
@@ -90,8 +90,8 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 4;
-  unsigned numberOfSelectiveLevels = 3;
+  unsigned numberOfUniformLevels = 8;
+  unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
@@ -142,20 +142,27 @@ int main(int argc, char** args) {
 
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  system.SetResidualUpdateConvergenceTolerance(1.e-12);
+
+  system.SetMaxNumberOfLinearIterations(10);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+
+
+//   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
+//   system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(0);
-  system.SetNumberPostSmoothingStep(2);
-  // initialize and solve the system
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
+  // initilaize and solve the system
+
   system.init();
 
   //system.SetSolverFineGrids(GMRES);
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  system.SetTolerances(1.e-3, 1.e-20, 1.e+50, 20, 5);
+
+  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
@@ -427,16 +434,20 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         solP_gss += phiP[i] * solP[i];
       }
 
-      double nu = 1.;
+
       double alpha = 1.;
-      double beta = 2000.;
+      double beta = 1.; //20000;
+
+
+      double Pr = 0.4;
+      double Ra = 40000;
 
       // *** phiT_i loop ***
       for (unsigned i = 0; i < nDofsT; i++) {
         adept::adouble Temp = 0.;
 
         for (unsigned j = 0; j < dim; j++) {
-          Temp +=  alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
+          Temp +=  1./sqrt(Ra*Pr)*alpha * phiT_x[i * dim + j] * gradSolT_gss[j];
           Temp +=  phiT[i] * (solV_gss[j] * gradSolT_gss[j]);
         }
 
@@ -450,7 +461,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned  k = 0; k < dim; k++) {
-            NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
+            NSV[k]   +=  sqrt(Pr/Ra) * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
             NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
           }
         }

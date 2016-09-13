@@ -873,7 +873,12 @@ int main(int argc, char** argv) {
 //   CHKERRQ(ierr);
 //   s.nx     = 4;
 //   s.ny     = 6;
+<<<<<<< HEAD
 //   ierr     = PetscOptionsGetInt(NULL, "-nx", &s.nx, NULL);
+=======
+//   
+//   TODO ierr     = PetscOptionsGetInt(NULL, "-nx", &s.nx, NULL);
+>>>>>>> sara
 //   CHKERRQ(ierr);
 //   ierr     = PetscOptionsGetInt(NULL, "-ny", &s.ny, NULL);
 //   CHKERRQ(ierr);
@@ -933,5 +938,9 @@ int main(int argc, char** argv) {
 //   CHKERRQ(ierr);
 //   ierr = PetscFinalize();
 //   CHKERRQ(ierr);
+<<<<<<< HEAD
 //   return 0;
+=======
+  return 0;
+>>>>>>> sara
 }
