@@ -422,7 +422,7 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
         }
 
 
-        //Find a ball center with center in (xc,yc) that inscribes the element
+        //Find a ball centered in (xc[0] , xc[1]) that inscribes the element
         double radius2 = 0.;
         for(unsigned i = 0; i < facePointNumber[currentElementType][solType] - 1; i++) {
             double iradius2 = 0.;
@@ -434,7 +434,7 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
 
         radius2 *= 1.2;
 
-//       //TEST if the marker is inside a ball with centered in (xc,yc) and given radius
+//       //TEST if the marker is inside a ball centered in (xc[0] , xc[1]) and given radius 
 //       if(radius2 < xc[0]*xc[0] + xc[1]*xc[1]) {  // project direction
 //
 //
@@ -509,7 +509,7 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
                                 if(i % 2 == 0 && i != facePointNumber[currentElementType][solType]) nodeIndex = i / 2 ;
                                 else if(i == facePointNumber[currentElementType][solType]) nodeIndex = (i - 2) / 2 ;
                                 else if(i % 2 != 0) nodeIndex = (i - 1) / 2 ;
-
+                                
                                 nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
                                 nextElementFound = true;
                                 break;
@@ -537,6 +537,9 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &p
                                 else if(i == facePointNumber[currentElementType][solType]) nodeIndex = (i - 2) / 2 ;
                                 else if(i % 2 != 0) nodeIndex = (i - 1) / 2 ;
 
+				//TODO need to change how we find the next element for solType = 0 
+				std::cout << "SIAMO QUI " <<std::endl;
+				
                                 nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
                                 nextElementFound = true;
                                 break;
