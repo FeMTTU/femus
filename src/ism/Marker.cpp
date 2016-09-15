@@ -81,7 +81,7 @@ const unsigned faceTriangleNodes[6][3][6][8][4] = { // elementType - solType - n
   },
   { { {{0, 2, 1, 0}},   //tet
       {{0, 1, 3, 0}},
-      {{1, 2, 0, 1}},
+      {{1, 2, 3, 1}},
       {{2, 0, 3, 2}}
     },
     { {{0, 6, 10, 0}, {6, 2, 10, 6}, {2, 5, 10, 2}, {5, 1, 10, 5}, {1, 4, 10, 1}, {4, 0, 10, 4}},
@@ -544,16 +544,6 @@ namespace femus {
 // //                   if(i % 2 == 0 && i != facePointNumber[currentElementType][solType]) nodeIndex = i / 2 ;
 // //                   else if(i == facePointNumber[currentElementType][solType]) nodeIndex = (i - 2) / 2 ;
 // //                   else if(i % 2 != 0) nodeIndex = (i - 1) / 2 ;
-// 		  if( _solType > 0){
-// 		    nodeIndex = i/2;//(i % 2 == 0) ? i / 2 : (i - 1) / 2 ;
-// 		  }
-// 		  else{
-// 		    nodeIndex = i;
-// 		  }
-//
-
-                  //TODO need to change how we find the next element for solType = 0
-                  std::cout << "SIAMO QUI " << std::endl;
 
                   nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
                   nextElementFound = true;
