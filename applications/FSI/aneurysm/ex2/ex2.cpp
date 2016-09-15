@@ -19,7 +19,8 @@ using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[],
                           double &value, const int facename, const double time);
-
+bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[], 
+			       double &value, const int facename, const double time);
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, char **args) {
@@ -38,7 +39,8 @@ int main(int argc, char **args) {
 
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
-  std::string infile = "./input/aneurysm_Sara_5.neu";
+//   std::string infile = "./input/aneurysm_Sara_5.neu";
+  std::string infile = "./input/aneurisma_aorta.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
@@ -107,7 +109,8 @@ int main(int argc, char **args) {
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
@@ -243,6 +246,44 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 
   else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
     if(7 == facename) {
+      test = 0;
+      value = 1.;
+    }
+  }
+
+  return test;
+
+}
+
+
+bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+  bool test = 1; //dirichlet
+  value = 0.;
+
+  if(!strcmp(name, "U") || !strcmp(name, "V") || !strcmp(name, "W")) {
+
+    if(1 == facename) {
+      test = 0;
+      value = 20.;
+    }
+    else if( 2 == facename || 3 == facename || 4 == facename) {
+      test = 0;
+      value = 15.;
+
+    }
+    else if( 5 == facename) {
+      test = 0;
+      value = 10.;
+    }
+  }
+
+  else if(!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+  }
+
+  else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
+    if(11 == facename) {
       test = 0;
       value = 1.;
     }
