@@ -31,10 +31,11 @@ namespace femus {
 
   class Marker : public ParallelObject {
   public:
-    Marker( std::vector < double > x, const MarkerType &markerType, Mesh *mesh,const bool &debug = false){
+    Marker( std::vector < double > x, const MarkerType &markerType, Mesh *mesh, const unsigned & solType, const bool &debug = false){
       _x = x;
       _markerType = markerType;
       _mesh = mesh;
+      _solType = solType;
       GetElement(debug);
     };
   
@@ -65,10 +66,11 @@ namespace femus {
     std::vector< double > InverseMappingTet(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
     std::vector< double > InverseMappingWedge(const unsigned &currentElem, const unsigned &solutionType, std::vector< double > &x);
     
-    unsigned GetNextElement2D(const unsigned &iel,  const unsigned &kel, const unsigned &solType);
-    unsigned GetNextElement3D(const unsigned &iel,  const unsigned &kel, const unsigned &solType);
+    unsigned GetNextElement2D(const unsigned &iel,  const unsigned &kel);
+    unsigned GetNextElement3D(const unsigned &iel,  const unsigned &kel);
      
     std::vector < double > _x;
+    unsigned _solType;
     MarkerType _markerType;
     const Mesh * _mesh;
     unsigned _elem;

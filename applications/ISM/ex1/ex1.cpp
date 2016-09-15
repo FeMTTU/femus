@@ -58,8 +58,9 @@ int main(int argc, char** args) {
   4 = TRI
    */
 
-  int elementType = 4; // this decides what elements to test
+  int elementType = 0; // this decides what elements to test
 
+  unsigned solType = 0;
   switch(elementType) {
     case 3: { // QUAD
 
@@ -76,7 +77,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a1QUAD(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a1QUAD(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a1QUAD.GetMarkerType() << std::endl;
@@ -87,7 +88,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a2QUAD(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a2QUAD(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a2QUAD.GetMarkerType() << std::endl;
@@ -98,7 +99,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a3QUAD(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a3QUAD(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a3QUAD.GetMarkerType() << std::endl;
@@ -110,7 +111,7 @@ int main(int argc, char** args) {
 
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a4QUAD(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a4QUAD(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a4QUAD.GetMarkerType() << std::endl;
@@ -121,7 +122,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a5QUAD(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a5QUAD(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a5QUAD.GetMarkerType() << std::endl;
@@ -132,7 +133,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a6QUAD(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a6QUAD(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a6QUAD.GetMarkerType() << std::endl;
@@ -143,7 +144,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a7QUAD(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a7QUAD(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a7QUAD.GetMarkerType() << std::endl;
@@ -154,7 +155,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a8QUAD(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a8QUAD(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a8QUAD.GetMarkerType() << std::endl;
@@ -167,7 +168,7 @@ int main(int argc, char** args) {
 
 
         std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-        Marker a9QUAD( x, VOLUME, mlMsh.GetLevel(0), true );
+        Marker a9QUAD( x, VOLUME, mlMsh.GetLevel(0), solType, true );
         //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a9QUAD.GetMarkerType() <<std::endl;
@@ -206,7 +207,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a1TRI(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a1TRI(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a1TRI.GetMarkerType() << std::endl;
@@ -217,7 +218,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a2TRI(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a2TRI(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a2TRI.GetMarkerType() << std::endl;
@@ -228,7 +229,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a3TRI(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a3TRI(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a3TRI.GetMarkerType() << std::endl;
@@ -239,7 +240,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a4TRI(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a4TRI(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a4TRI.GetMarkerType() << std::endl;
@@ -274,7 +275,7 @@ int main(int argc, char** args) {
       x[2] = 0.5;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a1HEX(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a1HEX(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a1HEX.GetMarkerType() << std::endl;
@@ -285,7 +286,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a2HEX(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a2HEX(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a2HEX.GetMarkerType() << std::endl;
@@ -296,7 +297,7 @@ int main(int argc, char** args) {
       x[2] = 0.005;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a3HEX(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a3HEX(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a3HEX.GetMarkerType() << std::endl;
@@ -307,7 +308,7 @@ int main(int argc, char** args) {
       x[2] = -0.1;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a4HEX(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a4HEX(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a4HEX.GetMarkerType() << std::endl;
@@ -318,7 +319,7 @@ int main(int argc, char** args) {
       x[2] = -0.10000001; // If you add one more zero then it will be in element 60.
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a5HEX(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a5HEX(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a5HEX.GetMarkerType() << std::endl;
@@ -329,7 +330,7 @@ int main(int argc, char** args) {
       x[2] = -0.05;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a6HEX(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a6HEX(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a6HEX.GetMarkerType() << std::endl;
@@ -340,7 +341,7 @@ int main(int argc, char** args) {
       x[2] = 0.2;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a7HEX(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a7HEX(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a7HEX.GetMarkerType() << std::endl;
@@ -371,7 +372,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a1TET(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a1TET(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a1TET.GetMarkerType() << std::endl;
@@ -382,7 +383,7 @@ int main(int argc, char** args) {
       x[2] = 0.001;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a2TET(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a2TET(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a2TET.GetMarkerType() << std::endl;
@@ -414,7 +415,7 @@ int main(int argc, char** args) {
       x[2] = 0.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a1WEDGE(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a1WEDGE(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a1WEDGE.GetMarkerType() << std::endl;
@@ -425,7 +426,7 @@ int main(int argc, char** args) {
       x[2] = 5.;
 
       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a2WEDGE(x, VOLUME, mlMsh.GetLevel(0), true);
+      Marker a2WEDGE(x, VOLUME, mlMsh.GetLevel(0), solType, true);
       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a2WEDGE.GetMarkerType() << std::endl;
