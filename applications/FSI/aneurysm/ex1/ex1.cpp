@@ -80,7 +80,7 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/aneurysm.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/junction.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/aneurysm_one_ball.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/aneurisma_aorta.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/aneurisma_aorta_9Oscaled.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 3;

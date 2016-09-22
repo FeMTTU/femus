@@ -49,10 +49,10 @@ int main(int argc, char **args) {
   Uref = 1.;
 
   rhof = 100.;
-  muf = 1.;
+  muf = 0.1;
   rhos = 800;
   ni = 0.5;
-  E = 1800;
+  E = 18000;
 
   Parameter par(Lref, Uref);
 
@@ -264,16 +264,16 @@ bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[
 
     if(1 == facename) {
       test = 0;
-      value = 20.;
+      value = 200.;
     }
     else if( 2 == facename || 3 == facename || 4 == facename) {
       test = 0;
-      value = 15.;
+      value = 150.;
 
     }
     else if( 5 == facename) {
       test = 0;
-      value = 10.;
+      value = 100.;
     }
   }
 
