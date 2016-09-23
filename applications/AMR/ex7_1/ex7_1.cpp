@@ -29,11 +29,10 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob);
 double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1);
 
 static std::string
-readInputTestFile(const char* path)
-{
+readInputTestFile(const char* path) {
   FILE* file = fopen(path, "rb");
 
-  if (!file)
+  if(!file)
     return std::string("");
 
   fseek(file, 0, SEEK_END);
@@ -43,7 +42,7 @@ readInputTestFile(const char* path)
   char* buffer = new char[size + 1000];
   buffer[size] = 0;
 
-  if (fread(buffer, 1, size, file) == (unsigned long)size)
+  if(fread(buffer, 1, size, file) == (unsigned long)size)
     text = buffer;
 
   fclose(file);
@@ -51,8 +50,7 @@ readInputTestFile(const char* path)
   return text;
 }
 
-static void show_usage()
-{
+static void show_usage() {
   std::cout << "Use --inputfile variable to set the input file" << endl;
   std::cout << "e.g.: ./AMR_ex7_1 --inputfile ./input/input.json" << std::endl;
 }
@@ -67,28 +65,24 @@ int main(int argc, char** argv) {
 
   std::string path;
 
-  if (argc < 2)
-  {
+  if(argc < 2) {
     std::cout << "Error: no input file specified!" << std::endl;
     show_usage();
     return 1;
   }
 
-  for (int count = 1; count < argc; ++count)
-  {
+  for(int count = 1; count < argc; ++count) {
     std::string arg = argv[count];
 
-    if ((arg == "-h") || (arg == "--help")) {
+    if((arg == "-h") || (arg == "--help")) {
       show_usage();
       return 0;
     }
-    else if ((arg == "-i") || (arg == "--inputfile"))
-    {
-      if (count + 1 < argc) {
+    else if((arg == "-i") || (arg == "--inputfile")) {
+      if(count + 1 < argc) {
         path = argv[++count];
       }
-      else
-      {
+      else {
         std::cerr << "--input file option requires one argument." << std::endl;
         return 1;
       }
@@ -100,8 +94,7 @@ int main(int argc, char** argv) {
 
   std::string input = readInputTestFile(path.c_str());
 
-  if (input.empty())
-  {
+  if(input.empty()) {
     printf("Failed to read input or empty input: %s\n", path.c_str());
     return 1;
   }
@@ -110,8 +103,7 @@ int main(int argc, char** argv) {
   Json::Reader reader;
   bool parsingSuccessful = reader.parse(input, root);
 
-  if (!parsingSuccessful)
-  {
+  if(!parsingSuccessful) {
     // report to the user the failure and their locations in the document.
     std::cout  << "Failed to parse configuration\n" << reader.getFormatedErrorMessages();
     return 1;
@@ -127,7 +119,7 @@ int main(int argc, char** argv) {
 
   bool isBox = root["mesh"].get("box", false).asBool();
 
-  if (isBox) {
+  if(isBox) {
     numelemx = root["mesh"].get("box", "").get("nx", 2).asUInt();
     numelemy = root["mesh"].get("box", "").get("ny", 2).asUInt();
     numelemz = root["mesh"].get("box", "").get("nz", 2).asUInt();
@@ -138,7 +130,7 @@ int main(int argc, char** argv) {
     za = root["mesh"].get("box", "").get("za", 0.).asDouble();
     zb = root["mesh"].get("box", "").get("zb", 0.).asDouble();
 //     std::string elemtypestr = root["mesh"].get("box", "").get("elem_type", "Quad9").asString();
-// 
+//
 //     if (elemtypestr == "Quad9")
 //     {
 //       elemtype = QUAD9;
@@ -166,7 +158,7 @@ int main(int argc, char** argv) {
 
 //   FEOrder fe_order;
 //   std::string fe_order_str = root["variable"].get("fe_order", "first").asString();
-// 
+//
 //   if (!strcmp(fe_order_str.c_str(), "first"))
 //   {
 //     fe_order = FIRST;
@@ -184,20 +176,25 @@ int main(int argc, char** argv) {
 //     std::cerr << " Error: Lagrange finite element order not supported!" << std::endl;
 //     exit(1);
 //   }
-    
+
 //     vector < double >  l2error;
 //     l2error.resize (3);
 //     vector < double >  H1error;
 //     H1error.resize (3);
-    double l2error[2][2][3];
-    double H1error[2][2][3];
-    FEOrder fe_order[3] = {FIRST, SERENDIPITY, SECOND};
-    
-    std::string elemtypestr[2] = {"Tri6", "Quad9"};
+  double l2error[2][2][3];
+  double H1error[2][2][3];
+  
+  int levels[2][2][3];
+  int dofs[2][2][3];
+  int elements[2][2][3];
+  
+  FEOrder fe_order[3] = {FIRST, SERENDIPITY, SECOND};
 
-    
+  std::string elemtypestr[2] = {"Tri6", "Quad9"};
 
-    
+
+
+
   unsigned int nlevels 	= root["mgsolver"].get("nlevels", 1).asInt();
   unsigned int SMRlevels 	= root["mgsolver"].get("SMRlevels", 0).asInt();
   std::string  AMR       	= root["mgsolver"].get("AMR", "no").asString();
@@ -213,16 +210,13 @@ int main(int argc, char** argv) {
 
   MgType mgtype;
 
-  if (!strcmp("V_cycle", mg_type.c_str()))
-  {
+  if(!strcmp("V_cycle", mg_type.c_str())) {
     mgtype = V_CYCLE;
   }
-  else if (!strcmp("F_cycle", mg_type.c_str()))
-  {
+  else if(!strcmp("F_cycle", mg_type.c_str())) {
     mgtype = F_CYCLE;
   }
-  else if (!strcmp("F_cycle", mg_type.c_str()))
-  {
+  else if(!strcmp("F_cycle", mg_type.c_str())) {
     mgtype = F_CYCLE;
   }
   else {
@@ -231,10 +225,10 @@ int main(int argc, char** argv) {
   }
 
   bool Gmres = 0, Asm = 0;
-  if (!strcmp("gmres", smoother_type.c_str()))     Gmres = 1;
-  else if (!strcmp("asm", smoother_type.c_str()))       Asm = 1;
+  if(!strcmp("gmres", smoother_type.c_str()))     Gmres = 1;
+  else if(!strcmp("asm", smoother_type.c_str()))       Asm = 1;
 
-  if (Gmres + Asm == 0) {
+  if(Gmres + Asm == 0) {
     cout << "The selected MG smoother does not exist!" << endl;
     exit(1);
   }
@@ -281,7 +275,7 @@ int main(int argc, char** argv) {
 
   const Json::Value boundary_conditions = root["boundary_conditions"];
 
-  for (unsigned int index = 0; index < boundary_conditions.size(); ++index) {
+  for(unsigned int index = 0; index < boundary_conditions.size(); ++index) {
 
     std::string facename = boundary_conditions[index].get("facename", "to").asString();
     facenamearray.push_back(facename);
@@ -289,10 +283,10 @@ int main(int argc, char** argv) {
     std::string bdctypestr = boundary_conditions[index].get("bdc_type", "to").asString();
     BDCType bdctype = DIRICHLET;
 
-    if (bdctypestr.compare("dirichlet") == 0) {
+    if(bdctypestr.compare("dirichlet") == 0) {
       bdctype = DIRICHLET;
     }
-    else if (bdctypestr.compare("neumann") == 0) {
+    else if(bdctypestr.compare("neumann") == 0) {
       bdctype = NEUMANN;
     }
     else {
@@ -333,229 +327,298 @@ int main(int argc, char** argv) {
 
   //Steadystate NonLinearMultiLevelProblem
   MultiLevelMesh ml_msh;
-  
-  for (unsigned H = 0; H < 2; H++) {
-    if (H == 0)
-    {
+
+  for(unsigned H = 0; H < 2; H++) {
+    if(H == 0) {
       AMRnorm = "l2";
     }
-    else if (H == 1)
-    {
+    else if(H == 1) {
       AMRnorm = "H1";
     }
-  
-  //TYPE LOOP----------------------------->
-  for(unsigned k = 0; k< 2; k++) {
-        if (elemtypestr[k] == "Tri6")
-    {
-      elemtype = TRI6;
-    }
-    else if (elemtypestr[k] == "Quad9")
-    {
-      elemtype = QUAD9;
-    }
-  if (filename != "")
-  {
-    ml_msh.ReadCoarseMesh(filename.c_str(), "seventh", Lref);
-  }
-  else
-  {
-    ml_msh.GenerateCoarseBoxMesh(numelemx, numelemy, numelemz, xa, xb, ya, yb, za, zb, elemtype, "seventh");
-  }
-  
-  //FEOrder LOOP--------------------------->
-    for (unsigned j = 0; j < 3; j++) {
-  //ml_msh.RefineMesh(nm,nr, SetRefinementFlag);
-  ml_msh.RefineMesh(nm, nr, NULL);
 
-  ml_msh.PrintInfo();
+    //TYPE LOOP----------------------------->
+    for(unsigned k = 0; k < 2; k++) {
+      if(elemtypestr[k] == "Tri6") {
+        elemtype = TRI6;
+      }
+      else if(elemtypestr[k] == "Quad9") {
+        elemtype = QUAD9;
+      }
+      if(filename != "") {
+        ml_msh.ReadCoarseMesh(filename.c_str(), "seventh", Lref);
+      }
+      else {
+        ml_msh.GenerateCoarseBoxMesh(numelemx, numelemy, numelemz, xa, xb, ya, yb, za, zb, elemtype, "seventh");
+      }
 
-  MultiLevelSolution ml_sol(&ml_msh);
+      //FEOrder LOOP--------------------------->
+      for(unsigned j = 0; j < 3; j++) {
+        //ml_msh.RefineMesh(nm,nr, SetRefinementFlag);
+        ml_msh.RefineMesh(nm, nr, NULL);
 
-  // generate solution vector
-  ml_sol.AddSolution("Sol", LAGRANGE, fe_order[j]);
+        ml_msh.PrintInfo();
 
-  //Initialize (update Init(...) function)
-  ml_sol.Initialize("Sol");
+        MultiLevelSolution ml_sol(&ml_msh);
 
-  //Set Boundary (update Dirichlet(...) function)
-  ml_sol.InitializeBdc();
+        // generate solution vector
+        ml_sol.AddSolution("Sol", LAGRANGE, fe_order[j]);
+
+        //Initialize (update Init(...) function)
+        ml_sol.Initialize("Sol");
+
+        //Set Boundary (update Dirichlet(...) function)
+        ml_sol.InitializeBdc();
 
 //     ml_sol.SetBoundaryCondition("Sol","right", NEUMANN, false, false, &bdcfunc);
 //     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
 
-  for (int i = 0; i < boundary_conditions.size(); ++i) {
-    ml_sol.SetBoundaryCondition_new("Sol", facenamearray[i], bdctypearray[i], false, &parsedfunctionarray[i]);
-  }
+        for(int i = 0; i < boundary_conditions.size(); ++i) {
+          ml_sol.SetBoundaryCondition_new("Sol", facenamearray[i], bdctypearray[i], false, &parsedfunctionarray[i]);
+        }
 
-  ml_sol.GenerateBdc("All");
-
-
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  //ml_sol.GenerateBdc("Sol");
+        ml_sol.GenerateBdc("All");
 
 
+        //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+        //ml_sol.GenerateBdc("Sol");
 
 
-  // ml_msh.AddMeshLevel(SetRefinementFlag);
-  // ml_sol.AddSolutionLevel();
 
 
-  MultiLevelProblem ml_prob(&ml_sol);
+        // ml_msh.AddMeshLevel(SetRefinementFlag);
+        // ml_sol.AddSolutionLevel();
+
+
+        MultiLevelProblem ml_prob(&ml_sol);
 
 
 // ml_prob.parameters.set<func>("func_source") = fpsource;
 
-  // add fluid material
-  Parameter parameter(Lref, Uref);
+        // add fluid material
+        Parameter parameter(Lref, Uref);
 
-  //BEGIN Poisson MultiLevel Problem
-  std::cout << std::endl;
-  std::cout << " PDE problem to solve: Poisson " << std::endl;
+        //BEGIN Poisson MultiLevel Problem
+        std::cout << std::endl;
+        std::cout << " PDE problem to solve: Poisson " << std::endl;
 
-  LinearImplicitSystem& system2 = ml_prob.add_system<LinearImplicitSystem>("Poisson");
-  system2.AddSolutionToSystemPDE("Sol");
+        LinearImplicitSystem& system2 = ml_prob.add_system<LinearImplicitSystem>("Poisson");
+        system2.AddSolutionToSystemPDE("Sol");
 
-  // Set MG Options
-  system2.SetAssembleFunction(AssemblePoissonMatrixandRhs);
-  system2.SetMaxNumberOfLinearIterations(max_number_linear_iteration);
-  system2.SetAbsoluteLinearConvergenceTolerance(abs_conv_tol);
-  system2.SetMgType(mgtype);
-  system2.SetNumberPreSmoothingStep(npresmoothing);
-  system2.SetNumberPostSmoothingStep(npostmoothing);
+        // Set MG Options
+        system2.SetAssembleFunction(AssemblePoissonMatrixandRhs);
+        system2.SetMaxNumberOfLinearIterations(max_number_linear_iteration);
+        system2.SetAbsoluteLinearConvergenceTolerance(abs_conv_tol);
+        system2.SetMgType(mgtype);
+        system2.SetNumberPreSmoothingStep(npresmoothing);
+        system2.SetNumberPostSmoothingStep(npostmoothing);
 
-  //Set Smoother Options
-  if (Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
-  else if (Asm) 	system2.SetMgSmoother(ASM_SMOOTHER);
+        //Set Smoother Options
+        if(Gmres) 		system2.SetMgSmoother(GMRES_SMOOTHER);
+        else if(Asm) 	system2.SetMgSmoother(ASM_SMOOTHER);
 
-  system2.init();
+        system2.init();
 
-  //system2.SetAMRSetOptions(AMR,AMRlevels,AMRnorm,AMRthreshold,SetRefinementFlag);
-  system2.SetAMRSetOptions(AMR, maxAMRlevels, AMRnorm, AMRthreshold);
+        //system2.SetAMRSetOptions(AMR,AMRlevels,AMRnorm,AMRthreshold,SetRefinementFlag);
+        system2.SetAMRSetOptions(AMR, maxAMRlevels, AMRnorm, AMRthreshold);
 
-  //common smoother option
-  //system2.SetSolverFineGrids(GMRES);
-  system2.SetSolverFineGrids(RICHARDSON);
-  system2.SetTolerances(1.e-12, 1.e-20, 1.e+50, 4);
-  system2.SetPreconditionerFineGrids(ILU_PRECOND);
-  //for Vanka and ASM smoothers
-  system2.ClearVariablesToBeSolved();
-  system2.AddVariableToBeSolved("All");
+        //common smoother option
+        //system2.SetSolverFineGrids(GMRES);
+        system2.SetSolverFineGrids(RICHARDSON);
+        system2.SetTolerances(1.e-12, 1.e-20, 1.e+50, 4);
+        system2.SetPreconditionerFineGrids(ILU_PRECOND);
+        //for Vanka and ASM smoothers
+        system2.ClearVariablesToBeSolved();
+        system2.AddVariableToBeSolved("All");
 
-  if (Asm )
-  {
-    system2.SetNumberOfSchurVariables(0);
-    system2.SetElementBlockNumber(4);
-  }
+        if(Asm) {
+          system2.SetNumberOfSchurVariables(0);
+          system2.SetElementBlockNumber(4);
+        }
 
-  //for Gmres smoother
-  system2.SetDirichletBCsHandling(PENALTY);
+        //for Gmres smoother
+        system2.SetDirichletBCsHandling(PENALTY);
 
-  // Solve Temperature system
-  system2.SetSamePreconditioner();
-  system2.MGsolve();
-  //END Temperature Multilevel Problem
+        // Solve Temperature system
+        system2.SetSamePreconditioner();
+        system2.MGsolve();
+        //END Temperature Multilevel Problem
 
-  /// Print all solutions
-  std::vector<std::string> print_vars;
-  print_vars.push_back("Sol");
+        /// Print all solutions
+        std::vector<std::string> print_vars;
+        print_vars.push_back("Sol");
 
-  //VTKWriter vtkio(&ml_sol);
-  //vtkio.ParallelWrite(files.GetOutputPath(),"biquadratic",print_vars);
+        //VTKWriter vtkio(&ml_sol);
+        //vtkio.ParallelWrite(files.GetOutputPath(),"biquadratic",print_vars);
 
-  //GMVWriter gmvio(&ml_sol);
-  //gmvio.ParallelWrite(files.GetOutputPath(),"biquadratic",print_vars);
+        //GMVWriter gmvio(&ml_sol);
+        //gmvio.ParallelWrite(files.GetOutputPath(),"biquadratic",print_vars);
 
-  VTKWriter vtkio(&ml_sol);
-  vtkio.Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars);
+        VTKWriter vtkio(&ml_sol);
+	
+        vtkio.Write(DEFAULT_OUTPUTDIR, "first", print_vars,H*100+k*10+j);
+        vtkio.Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars,H*100+k*10+j);
 
-  //GMVWriter gmvio(&ml_sol);
-  //gmvio.ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
+        //GMVWriter gmvio(&ml_sol);
+        //gmvio.ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
-  //
-  //     XDMFWriter xdmfio(ml_sol);
-  //     xdmfio.write("biquadratic",print_vars);
+        //
+        //     XDMFWriter xdmfio(ml_sol);
+        //     xdmfio.write("biquadratic",print_vars);
 
-  int  iproc;
-  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  
-  //bool H1 = false;
-  if(AMRnorm == "l2")
-  {
-      l2error[H][k][j] = GetRelativeError(ml_sol, 0);
-      if (iproc == 0) printf("\n||Sol_h-Sol||_L2 / ||Sol||_L2  = %g \n", l2error[H][k][j]);
-  }
-  else if(AMRnorm == "H1")
-  {  
-    //H1 = true;
-    H1error[H][k][j] = GetRelativeError(ml_sol, 1);
-    if (iproc == 0) printf("\n||Sol_h-Sol||_H1 / ||Sol||_H1  = %g \n", H1error[H][k][j]);
-    
-  }
+       
 
-  
 
-  ml_msh.PrintInfo();
+        levels[H][k][j] = ml_msh.GetNumberOfLevels();
+        int nprocs;
+        MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+        dofs[H][k][j] = ml_msh.GetLevel(levels[H][k][j]-1)->_dofOffset[j][nprocs];
+        elements[H][k][j] = ml_msh.GetLevel(levels[H][k][j]-1)->GetNumberOfElements(); 
+	
+	
+	int  iproc;
+        MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+	
+        //bool H1 = false;
+        if(AMRnorm == "l2") {
+          l2error[H][k][j] = GetRelativeError(ml_sol, 0);
+          if(iproc == 0) printf("\n||Sol_h-Sol||_L2 / ||Sol||_L2  = %g \n", l2error[H][k][j]);
+        }
+        else if(AMRnorm == "H1") {
+          //H1 = true;
+          H1error[H][k][j] = GetRelativeError(ml_sol, 1);
+          if(iproc == 0) printf("\n||Sol_h-Sol||_H1 / ||Sol||_H1  = %g \n", H1error[H][k][j]);
 
-  //Destroy all the new systems
-  ml_prob.clear();
+        }
+
+
+
+        ml_msh.PrintInfo();
+
+        //Destroy all the new systems
+        ml_prob.clear();
+      }
     }
-}
   }
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "||Sol_h-Sol||_L2 / ||Sol||_L2:\n\n";
   std::cout << "TYPE\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-  for (unsigned k = 0; k < 2; k++) {
+  for(unsigned k = 0; k < 2; k++) {
     std::cout << elemtypestr[k] << "\t";
-  for (unsigned j = 0; j < 3; j++) {
-    std::cout.precision (9);
-    std::cout << l2error[0][k][j] << "\t\t";
-  }
-  std::cout << std::endl;
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout.precision(9);
+      std::cout << l2error[0][k][j] << "\t\t";
+    }
+    std::cout << std::endl;
+    std::cout << "     " << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout << levels[0][k][j] << "\t\t\t";
+    }
+    std::cout << std::endl;
+    std::cout << "     " << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout << elements[0][k][j] << "\t\t\t";
+    }
+    std::cout << std::endl;
+    std::cout << "     " << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout << dofs[0][k][j] << "\t\t\t";
+    }
+    std::cout << std::endl;
   }
   std::cout << std::endl;
   std::cout << std::endl;
   std::cout << "||Sol_h-Sol||_H1 / ||Sol||_H1:\n\n";
   std::cout << "TYPE\tFIRST\t\t\tSERENDIPITY\t\tSECOND\n";
-  for (unsigned k = 0; k < 2; k++) {
+  for(unsigned k = 0; k < 2; k++) {
     std::cout << elemtypestr[k] << "\t";
-  for (unsigned j = 0; j < 3; j++) {
-    std::cout.precision (9);
-    std::cout << H1error[1][k][j] << "\t\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout.precision(9);
+      std::cout << H1error[1][k][j] << "\t\t";
+    }
+    std::cout << std::endl;
+    std::cout << "     " << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout << levels[1][k][j] << "\t\t\t";
+    }
+    std::cout << std::endl;
+    std::cout << "     " << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout << elements[1][k][j] << "\t\t\t";
+    }
+    std::cout << std::endl;
+    std::cout << "     " << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout << dofs[1][k][j] << "\t\t\t";
+    }
+    std::cout << std::endl;
   }
   std::cout << std::endl;
-  }
   std::cout << std::endl;
-  std::cout << std::endl;
-  //********* Latex Code ********* 
+  //********* Latex Code *********
   std::cout << "Latex Codes:\n\n";
   std::cout << std::endl;
   std::cout << "\\begin{table}[h]\n\\centering\n\\caption{The Relative Error Based on the Order, Element Type and Norm Space}\n\\label{my-label}\n\\begin{tabular}{llll}\n\\hline\n";
   std::cout << "\\multicolumn{4}{c}{\\cellcolor[HTML]{EFEFEF}$||u_h-u||_{L_2} / ||u||_{L_2}$}\t\\\\ \\hline\n";
   std::cout << "TYPE\t& First\t\t\t& Serendipity\t\t& Second\t\t\\\\ \\hline\n";
-  for (unsigned k = 0; k < 2; k++) {
-    std::cout << elemtypestr[k]<<"\t";
-  for (unsigned j = 0; j < 3; j++) {
-    std::cout.precision (9);
-    std::cout << "& " << l2error[0][k][j] << "\t\t";
-  }
-  std::cout << "\\\\" << std::endl;
+  for(unsigned k = 0; k < 2; k++) {
+    std::cout << elemtypestr[k] << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout.precision(9);
+      std::cout << "& " << l2error[0][k][j] << "\t\t";
+    }
+    std::cout << "\\\\" << std::endl;
+    std::cout << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout.precision(9);
+      std::cout << "& " << levels[0][k][j] << "\t\t\t";
+    }
+    std::cout << "\\\\" << std::endl;
+    std::cout << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout.precision(9);
+      std::cout << "& " << elements[0][k][j] << "\t\t\t";
+    }
+    std::cout << "\\\\" << std::endl;
+    std::cout << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout.precision(9);
+      std::cout << "& " << dofs[0][k][j] << "\t\t\t";
+    }
+    std::cout << "\\\\" << std::endl;
   }
   std::cout << "\n\\hline\\hline\n\\multicolumn{4}{c}{\\cellcolor[HTML]{EFEFEF}$||u_h-u||_{H_1} / ||u||_{H_1}$}\t\\\\ \\hline\n";
   std::cout << "TYPE\t& First\t\t\t& Serendipity\t\t& Second\t\t\\\\ \\hline\n";
-  for (unsigned k = 0; k < 2; k++) {
-    std::cout << elemtypestr[k]<<"\t";
-  for (unsigned j = 0; j < 3; j++) {
-    std::cout.precision (9);
-    std::cout << "& " << H1error[1][k][j] << "\t\t";
-  }
-  std::cout << "\\\\" << std::endl;
+  for(unsigned k = 0; k < 2; k++) {
+    std::cout << elemtypestr[k] << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout.precision(9);
+      std::cout << "& " << H1error[1][k][j] << "\t\t";
+    }
+    std::cout << "\\\\" << std::endl;
+    std::cout << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout.precision(9);
+      std::cout << "& " << levels[1][k][j] << "\t\t\t";
+    }
+    std::cout << "\\\\" << std::endl;
+    std::cout << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout.precision(9);
+      std::cout << "& " << elements[1][k][j] << "\t\t\t";
+    }
+    std::cout << "\\\\" << std::endl;
+    std::cout << "\t";
+    for(unsigned j = 0; j < 3; j++) {
+      std::cout.precision(9);
+      std::cout << "& " << dofs[1][k][j] << "\t\t\t";
+    }
+    std::cout << "\\\\" << std::endl;
   }
   std::cout << "\\end{tabular}\n";
   std::cout << "\\end{table}";
   std::cout << std::endl;
-  //********* Latex Code End ********* 
+  //********* Latex Code End *********
   return 0;
 }
 
@@ -612,7 +675,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
   metis_node.reserve(max_size);
   KK_dof.reserve(max_size);
 
-  for (int i = 0; i < dim; i++)
+  for(int i = 0; i < dim; i++)
     coordinates[i].reserve(max_size);
 
   phi.reserve(max_size);
@@ -625,7 +688,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
   myKK->zero();
 
   // *** element loop ***
-  for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielt = mymsh->GetElementType(iel);
     unsigned nve = mymsh->GetElementDofNumber(iel, order_ind);
@@ -637,7 +700,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
     gradphi.resize(nve * dim);
     nablaphi.resize(nve * (3 * (dim - 1) + !(dim - 1)));
 
-    for (int i = 0; i < dim; i++) {
+    for(int i = 0; i < dim; i++) {
       coordinates[i].resize(nve);
     }
 
@@ -649,11 +712,11 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
 
     // get local to global mappings
-    for (unsigned i = 0; i < nve; i++) {
+    for(unsigned i = 0; i < nve; i++) {
       unsigned inode_coord_metis = mymsh->GetSolutionDof(i, iel, 2);
       metis_node[i] = mymsh->GetSolutionDof(i, iel, order_ind);
 
-      for (unsigned ivar = 0; ivar < dim; ivar++) {
+      for(unsigned ivar = 0; ivar < dim; ivar++) {
         coordinates[ivar][i] = (*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
       }
 
@@ -662,39 +725,39 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
 
     // *** Gauss poit loop ***
-    for (unsigned ig = 0; ig < ml_prob._ml_msh->_finiteElement[ielt][order_ind]->GetGaussPointNumber(); ig++) {
+    for(unsigned ig = 0; ig < ml_prob._ml_msh->_finiteElement[ielt][order_ind]->GetGaussPointNumber(); ig++) {
       // *** get Jacobian and test function and test function derivatives ***
       ml_prob._ml_msh->_finiteElement[ielt][order_ind]->Jacobian(coordinates, ig, weight, phi, gradphi, nablaphi);
       //current solution
       double SolT = 0;
       vector < double > gradSolT(dim, 0.);
 
-      for (unsigned ivar = 0; ivar < dim; ivar++) {
+      for(unsigned ivar = 0; ivar < dim; ivar++) {
         gradSolT[ivar] = 0;
       }
 
       xyzt.assign(4, 0.);
       unsigned SolType = ml_sol->GetSolutionType("Sol");
 
-      for (unsigned i = 0; i < nve; i++) {
+      for(unsigned i = 0; i < nve; i++) {
         double soli = (*mysolution->_Sol[SolIndex])(metis_node[i]);
 
-        for (unsigned ivar = 0; ivar < dim; ivar++) {
+        for(unsigned ivar = 0; ivar < dim; ivar++) {
           xyzt[ivar] += coordinates[ivar][i] * phi[i];
         }
 
         SolT += phi[i] * soli;
 
-        for (unsigned ivar2 = 0; ivar2 < dim; ivar2++) gradSolT[ivar2] += gradphi[i * dim + ivar2] * soli;
+        for(unsigned ivar2 = 0; ivar2 < dim; ivar2++) gradSolT[ivar2] += gradphi[i * dim + ivar2] * soli;
       }
 
       // *** phi_i loop ***
-      for (unsigned i = 0; i < nve; i++) {
+      for(unsigned i = 0; i < nve; i++) {
         //BEGIN RESIDUALS A block ===========================
         double Adv_rhs = 0;
         double Lap_rhs = 0;
 
-        for (unsigned ivar = 0; ivar < dim; ivar++) {
+        for(unsigned ivar = 0; ivar < dim; ivar++) {
           Lap_rhs += gradphi[i * dim + ivar] * gradSolT[ivar];
         }
 
@@ -709,11 +772,11 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
         //END RESIDUALS A block ===========================
         // *** phi_j loop ***
-        for (unsigned j = 0; j < nve; j++) {
+        for(unsigned j = 0; j < nve; j++) {
           double Lap = 0;
           double Adv1 = 0;
 
-          for (unsigned ivar = 0; ivar < dim; ivar++) {
+          for(unsigned ivar = 0; ivar < dim; ivar++) {
             // Laplacian
             Lap  += gradphi[i * dim + ivar] * gradphi[j * dim + ivar] * weight;
           }
@@ -729,43 +792,42 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
     unsigned nfaces = mymsh->GetElementFaceNumber(iel);
 
     // loop on faces
-    for (unsigned jface = 0; jface < nfaces; jface++) {
+    for(unsigned jface = 0; jface < nfaces; jface++) {
 
       // look for boundary faces
-      if (myel->GetBoundaryIndex(iel, jface) > 0) {
+      if(myel->GetBoundaryIndex(iel, jface) > 0) {
 
         unsigned int faceIndex =  myel->GetBoundaryIndex(iel, jface) - 1u;
 
-        if (ml_sol->GetBoundaryCondition("Sol", faceIndex) == NEUMANN && !ml_sol->Ishomogeneous("Sol", faceIndex)) {
+        if(ml_sol->GetBoundaryCondition("Sol", faceIndex) == NEUMANN && !ml_sol->Ishomogeneous("Sol", faceIndex)) {
 
           bdcfunc = (ParsedFunction*)(ml_sol->GetBdcFunction("Sol", faceIndex));
           unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, order_ind);
           const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
-          for (unsigned i = 0; i < nve; i++) {
+          for(unsigned i = 0; i < nve; i++) {
             unsigned ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
             unsigned inode_coord_metis = mymsh->GetSolutionDof(ilocal, iel, 2);
 
-            for (unsigned ivar = 0; ivar < dim; ivar++) {
+            for(unsigned ivar = 0; ivar < dim; ivar++) {
               coordinates[ivar][i] = (*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
             }
           }
 
-          if (felt != 6)
-          {
-            for (unsigned igs = 0; igs < ml_prob._ml_msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
+          if(felt != 6) {
+            for(unsigned igs = 0; igs < ml_prob._ml_msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
               ml_prob._ml_msh->_finiteElement[felt][order_ind]->JacobianSur(coordinates, igs, weight, phi, gradphi, normal);
 
               xyzt.assign(4, 0.);
 
-              for (unsigned i = 0; i < nve; i++) {
-                for (unsigned ivar = 0; ivar < dim; ivar++) {
+              for(unsigned i = 0; i < nve; i++) {
+                for(unsigned ivar = 0; ivar < dim; ivar++) {
                   xyzt[ivar] += coordinates[ivar][i] * phi[i];
                 }
               }
 
               // *** phi_i loop ***
-              for (unsigned i = 0; i < nve; i++) {
+              for(unsigned i = 0; i < nve; i++) {
                 double surfterm_g = (*bdcfunc)(&xyzt[0]);
                 double bdintegral = phi[i] * surfterm_g * weight;
                 unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
@@ -773,8 +835,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
               }
             }
           }
-          else // 1D : the side elems are points and does not still exist the point elem
-          {
+          else { // 1D : the side elems are points and does not still exist the point elem
             // in 1D it is only one point
             xyzt[0] = coordinates[0][0];
             xyzt[1] = 0.;
@@ -818,7 +879,7 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
   error_vec = NumericVector::build().release();
   solution_vec = NumericVector::build().release();
 
-  if (nprocs == 1) {
+  if(nprocs == 1) {
     error_vec->init(nprocs, 1, false, SERIAL);
     solution_vec->init(nprocs, 1, false, SERIAL);
   }
@@ -832,7 +893,7 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
 
   unsigned gridn = ml_sol._mlMesh->GetNumberOfLevels();
 
-  for (int ilevel = gridn - 1; ilevel < gridn; ilevel++) {
+  for(int ilevel = gridn - 1; ilevel < gridn; ilevel++) {
     Solution*      solution  = ml_sol.GetSolutionLevel(ilevel);
     Mesh*          msh	     = ml_sol._mlMesh->GetLevel(ilevel);
     unsigned 	   iproc     = msh->processor_id();
@@ -853,7 +914,7 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
     const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
     metis_node.reserve(max_size);
 
-    for (int i = 0; i < dim; i++)
+    for(int i = 0; i < dim; i++)
       coordinates[i].reserve(max_size);
 
     phi.reserve(max_size);
@@ -866,7 +927,7 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
     unsigned SolOrder = ml_sol.GetSolutionType(SolIndex);
 
 
-    for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
       short unsigned ielt = msh->GetElementType(iel);
       unsigned nve = msh->GetElementDofNumber(iel, SolOrder);
@@ -876,28 +937,28 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
       gradphi.resize(nve * dim);
       nablaphi.resize(nve * (3 * (dim - 1) + !(dim - 1)));
 
-      for (int i = 0; i < dim; i++) {
+      for(int i = 0; i < dim; i++) {
         coordinates[i].resize(nve);
       }
 
       // get local to global mappings
-      for (unsigned i = 0; i < nve; i++) {
+      for(unsigned i = 0; i < nve; i++) {
         unsigned inode_coord_metis = msh->GetSolutionDof(i, iel, 2);
         metis_node[i] = msh->GetSolutionDof(i, iel, SolOrder);
 
-        for (unsigned idim = 0; idim < dim; idim++) {
+        for(unsigned idim = 0; idim < dim; idim++) {
           coordinates[idim][i] = (*msh->_topology->_Sol[idim])(inode_coord_metis);
         }
       }
 
-      for (unsigned ig = 0; ig < ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->GetGaussPointNumber(); ig++) {
+      for(unsigned ig = 0; ig < ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->GetGaussPointNumber(); ig++) {
         // *** get Jacobian and test function and test function derivatives ***
         ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->Jacobian(coordinates, ig, weight, phi, gradphi, nablaphi);
         //current solution
         double SolT = 0;
         vector < double > gradSolT(dim, 0.);
 
-        for (unsigned ivar = 0; ivar < dim; ivar++) {
+        for(unsigned ivar = 0; ivar < dim; ivar++) {
           gradSolT[ivar] = 0;
         }
 
@@ -906,16 +967,16 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
 
         unsigned SolType = ml_sol.GetSolutionType("Sol");
 
-        for (unsigned i = 0; i < nve; i++) {
+        for(unsigned i = 0; i < nve; i++) {
           double soli = (*solution->_Sol[SolIndex])(metis_node[i]);
 
-          for (unsigned ivar = 0; ivar < dim; ivar++) {
+          for(unsigned ivar = 0; ivar < dim; ivar++) {
             x[ivar] += coordinates[ivar][i] * phi[i];
           }
 
           SolT += phi[i] * soli;
 
-          for (unsigned ivar2 = 0; ivar2 < dim; ivar2++) {
+          for(unsigned ivar2 = 0; ivar2 < dim; ivar2++) {
             gradSolT[ivar2] += gradphi[i * dim + ivar2] * soli;
           }
         }
