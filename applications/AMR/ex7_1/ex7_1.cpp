@@ -558,62 +558,62 @@ int main(int argc, char** argv) {
   //********* Latex Code *********
   std::cout << "Latex Codes:\n\n";
   std::cout << std::endl;
-  std::cout << "\\begin{table}[h]\n\\centering\n\\caption{The Relative Error Based on the Order, Element Type and Norm Space}\n\\label{my-label}\n\\begin{tabular}{llll}\n\\hline\n";
-  std::cout << "\\multicolumn{4}{c}{\\cellcolor[HTML]{EFEFEF}$||u_h-u||_{L_2} / ||u||_{L_2}$}\t\\\\ \\hline\n";
-  std::cout << "TYPE\t& First\t\t\t& Serendipity\t\t& Second\t\t\\\\ \\hline\n";
+  std::cout << "\\begin{table}[h]\n\\centering\n\\caption{The Relative Error Based on the Order, Element Type and Norm Space}\n\\label{my-label}\n\\begin{tabular}{lllll}\n\\hline\n";
+  std::cout << "\\multicolumn{5}{c}{\\cellcolor[HTML]{EFEFEF}$||u_h-u||_{L_2} / ||u||_{L_2}$}\t\\\\ \\hline\n";
+  std::cout << "TYPE\t&Item \t\t\t& First\t\t\t& Serendipity\t\t& Second\t\t\\\\ \\hline\n";
   for(unsigned k = 0; k < 2; k++) {
-    std::cout << elemtypestr[k] << "\t";
+    std::cout << elemtypestr[k] << "\t& Relative Error\t";
     for(unsigned j = 0; j < 3; j++) {
       std::cout.precision(9);
       std::cout << "& " << l2error[0][k][j] << "\t\t";
     }
     std::cout << "\\\\" << std::endl;
-    std::cout << "\t";
+    std::cout << "\t& Level\t\t\t";
     for(unsigned j = 0; j < 3; j++) {
       std::cout.precision(9);
       std::cout << "& " << levels[0][k][j] << "\t\t\t";
     }
     std::cout << "\\\\" << std::endl;
-    std::cout << "\t";
+    std::cout << "\t& Number of elements\t";
     for(unsigned j = 0; j < 3; j++) {
       std::cout.precision(9);
       std::cout << "& " << elements[0][k][j] << "\t\t\t";
     }
     std::cout << "\\\\" << std::endl;
-    std::cout << "\t";
+    std::cout << "\t& Number of nodes\t";
     for(unsigned j = 0; j < 3; j++) {
       std::cout.precision(9);
       std::cout << "& " << dofs[0][k][j] << "\t\t\t";
     }
-    std::cout << "\\\\" << std::endl;
+    std::cout << "\\\\ \\hline" << std::endl;
   }
-  std::cout << "\n\\hline\\hline\n\\multicolumn{4}{c}{\\cellcolor[HTML]{EFEFEF}$||u_h-u||_{H_1} / ||u||_{H_1}$}\t\\\\ \\hline\n";
-  std::cout << "TYPE\t& First\t\t\t& Serendipity\t\t& Second\t\t\\\\ \\hline\n";
+  std::cout << "\n\\hline\\hline\n\\multicolumn{5}{c}{\\cellcolor[HTML]{EFEFEF}$||u_h-u||_{H_1} / ||u||_{H_1}$}\t\\\\ \\hline\n";
+  std::cout << "TYPE\t&Item \t\t\t& First\t\t\t& Serendipity\t\t& Second\t\t\\\\ \\hline\n";
   for(unsigned k = 0; k < 2; k++) {
-    std::cout << elemtypestr[k] << "\t";
+    std::cout << elemtypestr[k] << "\t& Relative Error\t";
     for(unsigned j = 0; j < 3; j++) {
       std::cout.precision(9);
       std::cout << "& " << H1error[1][k][j] << "\t\t";
     }
     std::cout << "\\\\" << std::endl;
-    std::cout << "\t";
+    std::cout << "\t& Level\t\t\t";
     for(unsigned j = 0; j < 3; j++) {
       std::cout.precision(9);
       std::cout << "& " << levels[1][k][j] << "\t\t\t";
     }
     std::cout << "\\\\" << std::endl;
-    std::cout << "\t";
+    std::cout << "\t& Number of elements\t";
     for(unsigned j = 0; j < 3; j++) {
       std::cout.precision(9);
       std::cout << "& " << elements[1][k][j] << "\t\t\t";
     }
     std::cout << "\\\\" << std::endl;
-    std::cout << "\t";
+    std::cout << "\t& Number of nodes\t";
     for(unsigned j = 0; j < 3; j++) {
       std::cout.precision(9);
       std::cout << "& " << dofs[1][k][j] << "\t\t\t";
     }
-    std::cout << "\\\\" << std::endl;
+    std::cout << "\\\\ \\hline" << std::endl;
   }
   std::cout << "\\end{tabular}\n";
   std::cout << "\\end{table}";
