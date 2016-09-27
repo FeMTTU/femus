@@ -109,11 +109,11 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("T", LAGRANGE, SERENDIPITY);//FIRST);
+  mlSol.AddSolution("T", LAGRANGE, FIRST);//FIRST);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
 
-  if (dim == 3) mlSol.AddSolution("W", LAGRANGE, FIRST);
+  if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   //mlSol.AddSolution("P", LAGRANGE, FIRST);
   mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
@@ -552,13 +552,13 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   if(assembleMatrix)
     KK->close();
   
-  PetscViewer viewer;
-  PetscViewerCreate(PETSC_COMM_WORLD, &viewer);
-  PetscViewerSetType(viewer,PETSCVIEWERASCII);
-  //MatView( (static_cast < PetscMatrix* >(KK))->mat(),viewer);
-  VecView((static_cast < PetscVector* >(RES))->vec(),viewer);
-  double ff;
-  std::cin>>ff;
+//   PetscViewer viewer;
+//   PetscViewerCreate(PETSC_COMM_WORLD, &viewer);
+//   PetscViewerSetType(viewer,PETSCVIEWERASCII);
+//   //MatView( (static_cast < PetscMatrix* >(KK))->mat(),viewer);
+//   VecView((static_cast < PetscVector* >(RES))->vec(),viewer);
+//   double ff;
+//   std::cin>>ff;
   
 
   // ***************** END ASSEMBLY *******************

@@ -22,6 +22,28 @@
 
 #include "PolynomialBases.hpp"
 
+const double initialGuess[6][3] = {
+  {0., 0., 0.},
+  {0.25, 0.25, 0.25},
+  {1. / 3., 1. / 3., 0},
+  {0., 0.},
+  {1. / 3., 1. / 3.},
+  {0.}
+};
+
+const double faceNormal[6][6][3] = {
+  {{0., -1., 0.} , {1., 0., 0.}, {0., 1., 0.} , { -1., 0., 0.}, {0., 0., -1.} , {0., 0., 1.}},
+  {{0., 0., -1}, {0., -1., 0.}, {1. / sqrt(3.), 1. / sqrt(3.), 1. / sqrt(3.)}, {-1., 0., 0.}},
+  {{0., -1., 0.}, {1. / sqrt(2.), 1. / sqrt(2.), 0.}, {-1., 0., 0.}, {0., 0., -1}, {0., 0., 1}},
+  {{0., -1.} , {1., 0.}, {0., 1.} , { -1., 0.}},
+  {{0., -1.}, {1. / sqrt(2.), 1. / sqrt(2.)}, {-1., 0.}},
+  {{ -1}, {1}}
+};
+
+const unsigned faceNumber[6] = {6,4,5,4,3,2};
+
+
+
 unsigned counter = 0;
 
 const unsigned facePointNumber[6][3] = {{}, {}, {}, {5, 9, 9}, {4, 7, 7}, {}}; //facePointNumber[elemType][solType]
@@ -180,7 +202,7 @@ namespace femus {
     std::vector< unsigned > previousElem(_nprocs, UINT_MAX);
     previousElem[_iproc] = iel;
     unsigned nextProc = _iproc;
-    
+
     while(!elementHasBeenFound) {
 
       //BEGIN next element search
@@ -426,26 +448,149 @@ namespace femus {
       }
 
 
-      //Find a ball centered in (xc[0] , xc[1]) that inscribes the element
+      //Find a ball centered in (xcc[0] , xcc[1]) that inscribes the element
       double radius2 = 0.;
       for(unsigned i = 0; i < facePointNumber[currentElementType][_solType] - 1; i++) {
         double iradius2 = 0.;
         for(unsigned k = 0; k < dim; k++) {
-          iradius2 += (xc[k] - xv[k][i]) * (xc[k] - xv[k][i]);
+          iradius2 += (xcc[k] - xv[k][i]) * (xcc[k] - xv[k][i]);
         }
         if(radius2 < iradius2) radius2 = iradius2;
       }
-
       radius2 *= 1.2;
 
-//       //TEST if the marker is inside a ball centered in (xc[0] , xc[1]) and given radius
-//       if(radius2 < xc[0]*xc[0] + xc[1]*xc[1]) {  // project direction
-//
-//
-//       }
-//
-//       else {
-      if(true) {
+      std::cout << radius2 << " " << xcc[0]*xcc[0] + xcc[1]*xcc[1] << " " ;
+      
+//       //TEST if the marker is inside a ball centered in (xcc[0] , xcc[1]) and given radius
+      std::cout<<"aaaaaaaaaaaaaaaaaaa\n";
+      if(radius2 < xcc[0]*xcc[0] + xcc[1]*xcc[1]) {  // project direction
+
+	std::cout<<"aaaaaaaaaaaaaaaaaaa\n";
+	
+        unsigned iel = currentElem;
+        unsigned solType = _solType;
+
+        unsigned dim =  _mesh->GetDimension();
+        unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
+        short unsigned ielType = _mesh->GetElementType(iel);
+
+        //BEGIN extraction nodal coordinate values
+        std::vector< std::vector < double > > xv(dim);
+
+        for(unsigned k = 0; k < dim; k++) {
+          xv[k].resize(nDofs);
+        }
+
+        for(unsigned i = 0; i < nDofs; i++) {
+          unsigned iDof  = _mesh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
+
+          for(unsigned k = 0; k < dim; k++) {
+            xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
+          }
+        }
+        //END extraction
+
+
+        //BEGIN projection nodal to polynomial coefficients
+        std::vector < std::vector < double > > a;
+        ProjectNodalToPolynomialCoefficients(a, xv, ielType, solType);
+
+        //END projection
+
+
+        //BEGIN inverse mapping search
+        //std::vector <double> xi(dim, 0.);
+
+        std::vector < double > phi;
+        std::vector < std::vector < double > > gradPhi;
+
+        std::vector < double > xi(dim);
+        for(int k = 0; k < dim; k++) {
+          xi[k] = initialGuess[ielType][k];
+        }
+
+        GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, solType);
+
+
+        std::vector < double > v(dim, 0.);
+        std::vector < std::vector < double > > J(dim);
+
+        for(int k = 0; k < dim; k++) {
+          J[k].assign(dim, 0.);
+        }
+
+        for(int k = 0; k < dim; k++) {
+          for(int i = 0; i < nDofs; i++) {
+            v[k] -= a[k][i] * phi[i];
+
+            for(int i1 = 0; i1 < dim; i1++) {
+              J[k][i1] += a[k][i] * gradPhi[i][i1];
+            }
+          }
+          v[k] += _x[k];
+        }
+        
+        std::cout << v[0] << " "<< v[1] <<std::endl;
+
+        std::vector < std::vector < double > >  Jm1(dim);
+
+        for(int i1 = 0; i1 < dim; i1++) {
+          Jm1[i1].resize(dim);
+        }
+
+        if(dim == 2) {
+          double det = J[0][0] * J[1][1] - J[0][1] * J[1][0];
+          Jm1[0][0] =  J[1][1] / det;
+          Jm1[0][1] = -J[0][1] / det;
+          Jm1[1][0] = -J[1][0] / det;
+          Jm1[1][1] =  J[0][0] / det;
+        }
+        else if(dim == 3) {
+          double det = (J[0][0] * J[1][1] * J[2][2] + J[0][1] * J[1][2] * J[2][0] + J[0][2] * J[1][0] * J[2][1])
+                       - (J[2][0] * J[1][1] * J[0][2] + J[2][1] * J[1][2] * J[0][0] + J[2][2] * J[1][0] * J[0][1]) ;
+
+          Jm1[0][0] = (J[1][1] * J[2][2] - J[2][1] * J[1][2]) / det ;
+          Jm1[0][1] = (J[0][2] * J[2][1] - J[2][2] * J[0][1]) / det ;
+          Jm1[0][2] = (J[0][1] * J[1][2] - J[1][1] * J[0][2]) / det ;
+          Jm1[1][0] = (J[1][2] * J[2][0] - J[2][2] * J[1][0]) / det ;
+          Jm1[1][1] = (J[0][0] * J[2][2] - J[2][0] * J[0][2]) / det ;
+          Jm1[1][2] = (J[0][2] * J[1][0] - J[0][0] * J[1][2]) / det ;
+          Jm1[2][0] = (J[1][0] * J[2][1] - J[2][0] * J[1][1]) / det ;
+          Jm1[2][1] = (J[0][1] * J[2][0] - J[2][1] * J[0][0]) / det ;
+          Jm1[2][2] = (J[0][0] * J[1][1] - J[1][0] * J[0][1]) / det ;
+        }
+
+        std::vector < double > vt(dim, 0.);
+        for(unsigned i = 0; i < dim; i++) {
+          for(unsigned j = 0; j < dim; j++) {
+            vt[i] += Jm1[i][j] * v[j];
+          }
+        }
+        
+        
+        std::cout << vt[0] << " "<< vt[1] <<std::endl;
+
+        double maxProjection = 0.;
+	unsigned faceIndex = 0;
+	
+	for(unsigned jface=0; jface < faceNumber[ielType]; jface++){
+	  double projection = 0.;
+	  for( unsigned k = 0; k < dim; k++){
+	    projection += vt[k] * faceNormal[ielType][jface][k];
+	  }
+	  if(projection > maxProjection){
+	    faceIndex = jface;
+	  }
+	}
+	
+	nextElem = (_mesh->el->GetFaceElementIndex(currentElem, faceIndex) - 1);
+        //nextElementFound = true;
+	
+	std::cout<<"I want to go to"<< nextElem <<std::endl;
+      }
+
+      else {
+      //if(true) {
         //BEGIN look for face intersection
 
         for(unsigned i = 0 ; i < facePointNumber[currentElementType][_solType] - 1; i++) {
@@ -508,13 +653,13 @@ namespace femus {
                   break;
                 }
                 else {
-                  unsigned nodeIndex = (_solType == 0)? i : i/2;
+                  unsigned nodeIndex = (_solType == 0) ? i : i / 2;
 
-		  		  
-		 /* 
-                  if(i % 2 == 0 && i != facePointNumber[currentElementType][_solType]) nodeIndex = i / 2 ;
-                  else if(i == facePointNumber[currentElementType][_solType]) nodeIndex = (i - 2) / 2 ;
-                  else if(i % 2 != 0) nodeIndex = (i - 1) / 2 ;*/
+
+                  /*
+                               if(i % 2 == 0 && i != facePointNumber[currentElementType][_solType]) nodeIndex = i / 2 ;
+                               else if(i == facePointNumber[currentElementType][_solType]) nodeIndex = (i - 2) / 2 ;
+                               else if(i % 2 != 0) nodeIndex = (i - 1) / 2 ;*/
 
                   nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
                   nextElementFound = true;
@@ -537,8 +682,8 @@ namespace femus {
                   break;
                 }
                 else {
-		  
-		  unsigned nodeIndex = (_solType == 0)? i : i/2;
+
+                  unsigned nodeIndex = (_solType == 0) ? i : i / 2;
 //                   unsigned nodeIndex;
 //
 // //                   if(i % 2 == 0 && i != facePointNumber[currentElementType][solType]) nodeIndex = i / 2 ;
@@ -577,7 +722,7 @@ namespace femus {
 
 
 
-  unsigned Marker::GetNextElement3D(const unsigned &currentElem, const unsigned &previousElem) {
+  unsigned Marker::GetNextElement3D(const unsigned & currentElem, const unsigned & previousElem) {
 
 
     unsigned dim = _mesh->GetDimension();
@@ -918,7 +1063,7 @@ namespace femus {
 
   bool GetNewLocalCoordinatesHess(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
                                   const std::vector < std::vector <double > > &gradPhi, const std::vector < std::vector < std::vector <double> > > hessPhi,
-                                  const std::vector < std::vector <double > > &a, const unsigned &dim, const unsigned &nDofs) {
+                                  const std::vector < std::vector <double > > &a, const unsigned & dim, const unsigned & nDofs) {
 
     bool convergence = false;
     std::vector < double > xp(dim, 0.);
@@ -1080,7 +1225,7 @@ namespace femus {
 
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
                               const std::vector < std::vector <double > > &gradPhi, const std::vector < std::vector < std::vector <double> > > hessPhi,
-                              const std::vector < std::vector <double > > &a, const unsigned &dim, const unsigned &nDofs) {
+                              const std::vector < std::vector <double > > &a, const unsigned & dim, const unsigned & nDofs) {
 
     bool convergence = false;
     std::vector < double > F(dim, 0.);
@@ -1096,25 +1241,11 @@ namespace femus {
 
         for(int i1 = 0; i1 < dim; i1++) {
           J[k][i1] += a[k][i] * gradPhi[i][i1];
-//                 if(i1 == 1) {
-//                     std::cout << i << " " << "gradphi[" << i << "][" << i1 << "]=" << gradPhi[i][i1] <<std::endl;
-//                 }
         }
       }
-//         if(k == 1) {
-//             std::cout << "F[" << k << "]= " << F[k] << " " << " J[" << k << "][0]= " << J[k][0] <<" " << "J[" << k << "][1] = " << J[k][1] <<" " << "J[" << k <<"][2] =" << J[k][2] << std::endl;
-//         }
-
       F[k] -= x[k];
     }
 
-//     bool isJSPD;
-//     if(dim == 2) {
-//         isJSPD = SPDCheck2D(J);
-//     }
-//     else if(dim == 3) {
-//         isJSPD = SPDCheck3D(J);
-//     }
 
     std::vector < std::vector < double > >  Jm1(dim);
 
@@ -1171,7 +1302,7 @@ namespace femus {
 
 
 
-  void Marker::InverseMapping(const unsigned &iel, const unsigned &solType,
+  void Marker::InverseMapping(const unsigned & iel, const unsigned & solType,
                               const std::vector< double > &x, std::vector< double > &xi) {
 
 
@@ -1253,7 +1384,7 @@ namespace femus {
   }
 
 
-  std::vector< double > Marker::InverseMappingTri(const unsigned &currentElem, const unsigned &solutionType,
+  std::vector< double > Marker::InverseMappingTri(const unsigned & currentElem, const unsigned & solutionType,
       std::vector< double > &x) {
 
     unsigned dim = 2;
@@ -1505,7 +1636,7 @@ namespace femus {
   }
 
 
-  std::vector< double > Marker::InverseMappingHex(const unsigned &currentElem, const unsigned &solutionType,
+  std::vector< double > Marker::InverseMappingHex(const unsigned & currentElem, const unsigned & solutionType,
       std::vector< double > &x) {
 
     unsigned dim = 3;
@@ -2118,7 +2249,7 @@ namespace femus {
   }
 
 
-  std::vector< double > Marker::InverseMappingTet(const unsigned &currentElem, const unsigned &solutionType,
+  std::vector< double > Marker::InverseMappingTet(const unsigned & currentElem, const unsigned & solutionType,
       std::vector< double > &x) {
     unsigned dim = 3;
     std::vector< std::vector < double > > xv(dim);
@@ -2557,7 +2688,7 @@ namespace femus {
 
   }
 
-  std::vector< double > Marker::InverseMappingWedge(const unsigned &currentElem, const unsigned &solutionType,
+  std::vector< double > Marker::InverseMappingWedge(const unsigned & currentElem, const unsigned & solutionType,
       std::vector< double > &x) {
     unsigned dim = 3;
     std::vector< std::vector < double > > xv(dim);
@@ -3155,14 +3286,7 @@ namespace femus {
 
   }
 
-  const double InitialGuess[6][3] = {
-    {0., 0., 0.},
-    {0.25, 0.25, 0.25},
-    {1. / 3., 1. / 3., 0},
-    {0., 0.},
-    {1. / 3., 1. / 3.},
-    {0.}
-  };
+
 
 
   void Marker::InverseMappingTEST(std::vector < double > &x) {
@@ -3205,7 +3329,7 @@ namespace femus {
           // This is the test
           std::vector < double > xi(dim);
           for(int k = 0; k < dim; k++) {
-            xi[k] = InitialGuess[ielType][k];
+            xi[k] = initialGuess[ielType][k];
           }
 
           for(int k = 0; k < dim; k++) {
@@ -3350,6 +3474,8 @@ namespace femus {
   }
 
 }
+
+
 
 
 

@@ -212,47 +212,47 @@ int main(int argc, char** args) {
       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
       std::cout << " The marker type is " <<  a1TRI.GetMarkerType() << std::endl;
       
-//Test 2 (TRI):
-      x[0] = 8.29839e-05; //it is on element 115
-      x[1] = -2.38334e-05;
-      x[2] = 0.;
-
-      std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a2TRI(x, VOLUME, mlMsh.GetLevel(0), solType, true);
-      //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
-      std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
-      std::cout << " The marker type is " <<  a2TRI.GetMarkerType() << std::endl;
-
-// Test 3 (TRI):
-      x[0] = -5.e-05; //it is on element 153
-      x[1] = 2.9e-05;
-      x[2] = 0.;
-
-      std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a3TRI(x, VOLUME, mlMsh.GetLevel(0), solType, true);
-      //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
-      std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
-      std::cout << " The marker type is " <<  a3TRI.GetMarkerType() << std::endl;
-
-// Test 4 (TRI):
-      x[0] = -5.5e-05; //it is outside the domain
-      x[1] = 2.9e-05;
-      x[2] = 0.;
-
-      std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-      Marker a4TRI(x, VOLUME, mlMsh.GetLevel(0), solType, true);
-      //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
-      std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
-      std::cout << " The marker type is " <<  a4TRI.GetMarkerType() << std::endl;
-
-
-      //print mesh
-      MultiLevelSolution mlSol(&mlMsh);
-      variablesToBePrinted.push_back("All");
-
-      VTKWriter vtkIO(&mlSol);
-      vtkIO.SetDebugOutput(true);
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+// //Test 2 (TRI):
+//       x[0] = 8.29839e-05; //it is on element 115
+//       x[1] = -2.38334e-05;
+//       x[2] = 0.;
+// 
+//       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+//       Marker a2TRI(x, VOLUME, mlMsh.GetLevel(0), solType, true);
+//       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
+//       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
+//       std::cout << " The marker type is " <<  a2TRI.GetMarkerType() << std::endl;
+// 
+// // Test 3 (TRI):
+//       x[0] = -5.e-05; //it is on element 153
+//       x[1] = 2.9e-05;
+//       x[2] = 0.;
+// 
+//       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+//       Marker a3TRI(x, VOLUME, mlMsh.GetLevel(0), solType, true);
+//       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
+//       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
+//       std::cout << " The marker type is " <<  a3TRI.GetMarkerType() << std::endl;
+// 
+// // Test 4 (TRI):
+//       x[0] = -5.5e-05; //it is outside the domain
+//       x[1] = 2.9e-05;
+//       x[2] = 0.;
+// 
+//       std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+//       Marker a4TRI(x, VOLUME, mlMsh.GetLevel(0), solType, true);
+//       //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
+//       std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
+//       std::cout << " The marker type is " <<  a4TRI.GetMarkerType() << std::endl;
+// 
+// 
+//       //print mesh
+//       MultiLevelSolution mlSol(&mlMsh);
+//       variablesToBePrinted.push_back("All");
+// 
+//       VTKWriter vtkIO(&mlSol);
+//       vtkIO.SetDebugOutput(true);
+//       vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
     }
     break;
