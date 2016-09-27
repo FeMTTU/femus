@@ -25,9 +25,12 @@
 #include "ElemTypeEnum.hpp"
 #include "ParallelObject.hpp"
 #include <assert.h>
+#include "MeshParallelVector.hpp"
 
 #include "vector"
 #include "map"
+
+
 
 namespace femus {
 
