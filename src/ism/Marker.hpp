@@ -61,13 +61,9 @@ namespace femus {
     std::vector< double > InverseMapping(const unsigned &currentElem, const unsigned &solutionType, const std::vector< double > &x);
     void InverseMapping(const unsigned &iel, const unsigned &solType, 
 			      const std::vector< double > &x, std::vector< double > &xi);
-    std::vector< double > InverseMappingTri(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
-    std::vector< double > InverseMappingHex(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
-    std::vector< double > InverseMappingTet(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
-    std::vector< double > InverseMappingWedge(const unsigned &currentElem, const unsigned &solutionType, std::vector< double > &x);
     
-    unsigned GetNextElement2D(const unsigned &iel,  const unsigned &kel);
-    unsigned GetNextElement3D(const unsigned &iel,  const unsigned &kel);
+    unsigned GetNextElement2D(const unsigned &iel);
+    unsigned GetNextElement3D(const unsigned &iel);
      
     std::vector < double > _x;
     unsigned _solType;
