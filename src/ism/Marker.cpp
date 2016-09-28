@@ -413,7 +413,118 @@ const std::vector< std::vector <double> > inverseMatrix(const std::vector< std::
 }
 
 
+unsigned Marker::FastForward(const unsigned &iel){
+              //std::cout<<"aaaaaaaaaaaaaaaaaaa\n";
+
+            unsigned dim =  _mesh->GetDimension();
+            unsigned nDofs = _mesh->GetElementDofNumber(iel, _solType);
+            short unsigned ielType = _mesh->GetElementType(iel);
+
+            //BEGIN extraction nodal coordinate values
+            std::vector< std::vector < double > > xv(dim);
+
+            for(unsigned k = 0; k < dim; k++) {
+                xv[k].resize(nDofs);
+            }
+
+            for(unsigned i = 0; i < nDofs; i++) {
+                unsigned iDof  = _mesh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
+
+                for(unsigned k = 0; k < dim; k++) {
+                    xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
+                }
+            }
+            //END extraction
+
+
+            //BEGIN projection nodal to polynomial coefficients
+            std::vector < std::vector < double > > a;
+            ProjectNodalToPolynomialCoefficients(a, xv, ielType, _solType);
+
+            //END projection
+
+
+            //BEGIN inverse mapping search
+            //std::vector <double> xi(dim, 0.);
+
+            std::vector < double > phi;
+            std::vector < std::vector < double > > gradPhi;
+
+            std::vector < double > xi(dim);
+            for(int k = 0; k < dim; k++) {
+                xi[k] = initialGuess[ielType][k];
+            }
+
+            GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, _solType);
+
+
+            std::vector < double > v(dim, 0.);
+            std::vector < std::vector < double > > J(dim);
+
+            for(int k = 0; k < dim; k++) {
+                J[k].assign(dim, 0.);
+            }
+
+            for(int k = 0; k < dim; k++) {
+                for(int i = 0; i < nDofs; i++) {
+                    v[k] -= a[k][i] * phi[i];   // why a - sign ?????
+
+                    for(int i1 = 0; i1 < dim; i1++) {
+                        J[k][i1] += a[k][i] * gradPhi[i][i1];
+                    }
+                }
+                v[k] += _x[k];  // why - _x ??????
+            }
+
+           // std::cout << " v[0] = " << v[0] << " "<< " v[1] = " << v[1] <<std::endl;
+
+            std::vector < std::vector < double > >  Jm1(dim);
+
+            for(int i1 = 0; i1 < dim; i1++) {
+                Jm1[i1].resize(dim);
+            }
+
+            Jm1 = inverseMatrix(J, dim);
+
+            std::vector < double > vt(dim, 0.);
+            for(unsigned i = 0; i < dim; i++) {
+                for(unsigned j = 0; j < dim; j++) {
+                    vt[i] += Jm1[i][j] * v[j];
+                }
+            }
+
+
+           // std::cout << " vt[0] " <<  vt[0] << " " << " vt[1] " << vt[1] <<std::endl;
+
+            double maxProjection = 0.;
+            unsigned faceIndex = 0;
+
+            for(unsigned jface=0; jface < faceNumber[ielType]; jface++) {
+                double projection = 0.;
+                for( unsigned k = 0; k < dim; k++) {
+                    projection += vt[k] * faceNormal[ielType][jface][k];
+                }
+                if(projection > maxProjection) {
+		  maxProjection = projection;
+                  //std::cout<< " jface = " << jface << " projection= " << projection <<std::endl;  
+		  faceIndex = jface;
+                }
+            }
+
+            
+            unsigned nextElem = (_mesh->el->GetFaceElementIndex(iel, faceIndex) -1);
+            //nextElementFound = true;
+
+           // std::cout<<"I want to go to "<< nextElem <<std::endl;
+	    
+	    return nextElem;
+  
+}
+
+
+
 unsigned Marker::GetNextElement2D(const unsigned &currentElem) {
+  
 
 
     unsigned dim = _mesh->GetDimension();
@@ -460,7 +571,7 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem) {
 
         for(unsigned i = 0; i < facePointNumber[currentElementType][_solType]; i++) {
             unsigned inodeDof  = _mesh->GetSolutionDof(facePoints[currentElementType][_solType][i], currentElem, 2);
-            std::cout << "inodeDof = " << inodeDof << std::endl;
+           // std::cout << "inodeDof = " << inodeDof << std::endl;
 
             for(unsigned k = 0; k < dim; k++) {
                 xv[k][i] = (*_mesh->_topology->_Sol[k])(inodeDof) - _x[k];
@@ -505,10 +616,10 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem) {
         std::cout << radius2 << " " << xcc[0]*xcc[0] + xcc[1]*xcc[1] << " " ;
 
 //       //TEST if the marker is inside a ball centered in (xcc[0] , xcc[1]) and given radius
-        std::cout<<"aaaaaaaaaaaaaaaaaaa\n";
+        //std::cout<<"aaaaaaaaaaaaaaaaaaa\n";
         if(radius2 < xcc[0]*xcc[0] + xcc[1]*xcc[1]) {  // project direction
 
-            std::cout<<"aaaaaaaaaaaaaaaaaaa\n";
+            //std::cout<<"aaaaaaaaaaaaaaaaaaa\n";
 
             unsigned iel = currentElem;
             unsigned solType = _solType;
@@ -564,16 +675,16 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem) {
 
             for(int k = 0; k < dim; k++) {
                 for(int i = 0; i < nDofs; i++) {
-                    v[k] -= a[k][i] * phi[i];
+                    v[k] -= a[k][i] * phi[i];   // why a - sign ?????
 
                     for(int i1 = 0; i1 < dim; i1++) {
                         J[k][i1] += a[k][i] * gradPhi[i][i1];
                     }
                 }
-                v[k] += _x[k];
+                v[k] += _x[k];  // why - _x ??????
             }
 
-            std::cout << v[0] << " "<< v[1] <<std::endl;
+           // std::cout << " v[0] = " << v[0] << " "<< " v[1] = " << v[1] <<std::endl;
 
             std::vector < std::vector < double > >  Jm1(dim);
 
@@ -591,7 +702,7 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem) {
             }
 
 
-            std::cout << vt[0] << " "<< vt[1] <<std::endl;
+           // std::cout << " vt[0] " <<  vt[0] << " " << " vt[1] " << vt[1] <<std::endl;
 
             double maxProjection = 0.;
             unsigned faceIndex = 0;
@@ -602,14 +713,17 @@ unsigned Marker::GetNextElement2D(const unsigned &currentElem) {
                     projection += vt[k] * faceNormal[ielType][jface][k];
                 }
                 if(projection > maxProjection) {
-                    faceIndex = jface;
+		  maxProjection = projection;
+                  //std::cout<< " jface = " << jface << " projection= " << projection <<std::endl;  
+		  faceIndex = jface;
                 }
             }
 
-            nextElem = (_mesh->el->GetFaceElementIndex(currentElem, faceIndex) - 1);
+            
+            nextElem = (_mesh->el->GetFaceElementIndex(currentElem, faceIndex) -1);
             //nextElementFound = true;
 
-            std::cout<<"I want to go to "<< nextElem <<std::endl;
+           // std::cout<<"I want to go to "<< nextElem <<std::endl;
         }
 
         //else {
