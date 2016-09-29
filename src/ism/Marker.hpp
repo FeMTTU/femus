@@ -64,7 +64,7 @@ namespace femus {
     
     unsigned GetNextElement2D(const unsigned &iel);
     unsigned GetNextElement3D(const unsigned &iel);
-    unsigned FastForward(const unsigned &currentElem);
+    int FastForward(const unsigned &currentElem);
      
     std::vector < double > _x;
     unsigned _solType;
