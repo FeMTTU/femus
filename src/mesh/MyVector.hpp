@@ -106,6 +106,7 @@ namespace femus {
       void clearLocalized() {
         std::vector<Type>().swap(_lVec);
         _vecIsLocalized = false;
+        _vecIsLocalizedToMe = false;
       }
 
       // ******************
@@ -204,6 +205,40 @@ namespace femus {
 
         MPI_Bcast(&_lVec[0], _lVec.size(), _MPI_MYDATATYPE, _lproc, MPI_COMM_WORLD);
         _vecIsLocalized = true;
+        _vecIsLocalizedToMe = true;
+      }
+
+      // ******************
+      void localizeToOne(const unsigned &lproc, const unsigned &kproc) {
+
+        if(!_vecIsParallel) {
+          std::cout << "Error in MyVector.LocalizeToAll(), vector is in a wrong status" << std::endl;
+          abort();
+        }
+
+        if(_iproc == kproc)
+          _vecIsLocalizedToMe = true;
+        else
+          _vecIsLocalizedToMe = false;
+
+        if(_iproc == lproc || _iproc == kproc) {
+          _lproc = lproc;
+          _lVec.resize(_offset[_lproc + 1] - _offset[_lproc]);
+
+          if(_iproc == _lproc) {
+            for(unsigned i = 0; i < _lVec.size(); i++) {
+              _lVec[i] = _pVec[i];
+            }
+          }
+
+          if(lproc != kproc) {
+            if(_iproc == lproc)
+              MPI_Send(&_lVec[0], _lVec.size(), _MPI_MYDATATYPE, kproc, 1, MPI_COMM_WORLD);
+            else
+              MPI_Recv(&_lVec[0], _lVec.size(), _MPI_MYDATATYPE, lproc, 1, MPI_COMM_WORLD,  MPI_STATUS_IGNORE);
+          }
+        }
+        _vecIsLocalized = true;
       }
 
       // ******************
@@ -224,8 +259,12 @@ namespace femus {
           return _sVec[i];
         else if(_vecIsParallel && !_vecIsLocalized)
           return _pVec[i - _offset[_iproc] ];
-        else if(_vecIsLocalized)
-          return _lVec[i - _offset[_lproc] ];
+        else if(_vecIsLocalized) {
+          if(_vecIsLocalizedToMe)
+            return _lVec[i - _offset[_lproc] ];
+          else
+            return 0;
+        }
         else {
           std::cout << "Error in MyVector.get(), vector is in a wrong status" << std::endl;
           abort();
@@ -244,6 +283,7 @@ namespace femus {
       unsigned _nprocs;
       std::vector< Type > _lVec;
       bool _vecIsLocalized;
+      bool _vecIsLocalizedToMe;
       unsigned _lproc;
 
       MPI_Datatype _MPI_MYDATATYPE;

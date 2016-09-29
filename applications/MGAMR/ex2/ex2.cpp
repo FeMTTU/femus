@@ -87,7 +87,7 @@ int main(int argc, char** args) {
   a = new  MyVector <unsigned> (10);
   delete a;
 
-  MyVector <unsigned> b(10);
+  MyVector <double> b;
 
   MyVector <double> c;
 
@@ -136,16 +136,30 @@ int main(int argc, char** args) {
   for(int i = 0; i < nprocs + 1; i++) {
     offset[i] = 2 * offset[i];
   }
-  c.resize(offset);
+  
+  b = c;
+  
+  b.resize(offset);
   std::cout << std::endl;
 
   for(int j = 0; j < nprocs; j++) {
-    c.localizeToAll(j);
-    for(unsigned i = c.begin(); i < c.end(); i++) {
-      std::cout << i << " " << c.get(i) << std::endl;
+    b.localizeToAll(j);
+    for(unsigned i = b.begin(); i < b.end(); i++) {
+      std::cout << i << " " << b.get(i) << std::endl;
     }
     std::cout << std::endl;
-    c.clearLocalized();
+    b.clearLocalized();
+  }
+  
+  for(int j = 0; j < nprocs; j++) {
+    b.localizeToOne(j,0);
+    if(iproc == 3){
+      for(unsigned i = b.begin(); i < b.end(); i++) {
+	std::cout << i << " " << b.get(i) << std::endl;
+      }
+    }
+    std::cout << std::endl;
+    b.clearLocalized();
   }
 
 
