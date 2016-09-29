@@ -22,14 +22,8 @@
 
 #include "PolynomialBases.hpp"
 
-const double initialGuess[6][3] = {
-  {0., 0., 0.},
-  {0.25, 0.25, 0.25},
-  {1. / 3., 1. / 3., 0},
-  {0., 0.},
-  {1. / 3., 1. / 3.},
-  {0.}
-};
+
+
 
 const double faceNormal[6][6][3] = {
   {{0., -1., 0.} , {1., 0., 0.}, {0., 1., 0.} , { -1., 0., 0.}, {0., 0., -1.} , {0., 0., 1.}},
@@ -137,6 +131,15 @@ const unsigned faceTriangleNodes[6][3][6][8][4] = { // elementType - solType - n
 };
 
 namespace femus {
+
+  const double Marker::_initialGuess[6][3] = {
+    {0., 0., 0.},
+    {0.25, 0.25, 0.25},
+    {1. / 3., 1. / 3., 0},
+    {0., 0.},
+    {1. / 3., 1. / 3.},
+    {0.}
+  };
 
   void Marker::GetElement(const bool &debug) {
 
@@ -358,7 +361,7 @@ namespace femus {
 
   void inverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA) {
 
-    unsigned dim =A.size(); 
+    unsigned dim = A.size();
     invA.resize(dim);
 
     for(int i = 0; i < dim; i++) {
@@ -367,12 +370,12 @@ namespace femus {
 
     double detA;
     if(dim == 1) {
-      
+
       if(A[0][0] == 0) {
         std::cout << " ERROR: the matrix is singular " << std::endl;
         abort();
       }
-      invA[0][0]=1./A[0][0];
+      invA[0][0] = 1. / A[0][0];
     }
     else if(dim == 2) {
 
@@ -456,7 +459,7 @@ namespace femus {
 
     std::vector < double > xi(dim);
     for(int k = 0; k < dim; k++) {
-      xi[k] = initialGuess[ielType][k];
+      xi[k] = _initialGuess[ielType][k];
     }
 
     GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, _solType);
@@ -515,7 +518,7 @@ namespace femus {
     int nextElem = (_mesh->el->GetFaceElementIndex(iel, faceIndex) - 1);
 
 
-    std::cout << "I want to go to " << nextElem << std::endl;
+    //std::cout << "I want to go to " << nextElem << std::endl;
 
     return nextElem;
 
@@ -556,8 +559,6 @@ namespace femus {
 
     else {
 
-      std::vector<double> xcc(dim, 0); // will store the coordinates of the center scaled
-
       std::vector<double> r(dim, 0);   //coordinates of the intersection point between the line of the edges and the line that connects the marker and the face node
       std::vector< std::vector < double > > xv(dim);   //stores the coordinates of the vertices and midpoints of the element, the first and the last are the same
 
@@ -578,55 +579,56 @@ namespace femus {
         }
       }
 
-      // rescaling coordinates to properly handle different scales of meshes
-      double length = 0.;
-      double sum = 0.;
-
-      for(unsigned i = 0; i < facePointNumber[currentElementType][_solType] - 1; i++) {
-        for(unsigned k = 0; k < dim; k++) {
-          sum += (xv[k][i + 1] - xv[k][i]) * (xv[k][i + 1] - xv[k][i]);
-        }
-
-        length += sqrt(sum);
-      }
-
-      length /= facePointNumber[currentElementType][_solType];
-      // std::cout << "length= " << length << std::endl;
-
-      for(unsigned k = 0; k < dim; k++) {
-        xcc[k] = xc[k] / length;
-
-        for(unsigned i = 0; i < facePointNumber[currentElementType][_solType]; i++) {
-          xv[k][i] /= length;
-        }
-      }
-
-
       //Find a ball centered in (xcc[0] , xcc[1]) that inscribes the element
       double radius2 = 0.;
       for(unsigned i = 0; i < facePointNumber[currentElementType][_solType] - 1; i++) {
         double iradius2 = 0.;
         for(unsigned k = 0; k < dim; k++) {
-          iradius2 += (xcc[k] - xv[k][i]) * (xcc[k] - xv[k][i]);
+          iradius2 += (xc[k] - xv[k][i]) * (xc[k] - xv[k][i]);
         }
         if(radius2 < iradius2) radius2 = iradius2;
       }
       radius2 *= 1.2;
 
-      //  std::cout << "radius2 = " <<radius2 << " " << " xcc[0]*xcc[0] + xcc[1]*xcc[1] = " << xcc[0]*xcc[0] + xcc[1]*xcc[1] << " " ;
-
-//       //TEST if the marker is inside a ball centered in (xcc[0] , xcc[1]) and given radius
-
-      if(radius2 < xcc[0]*xcc[0] + xcc[1]*xcc[1]) {  // project direction
+      if(radius2 < xc[0]*xc[0] + xc[1]*xc[1]) {  // project direction
 
         nextElem = FastForward(currentElem);
         nextElementFound = true;
 
       }
 
+
       else {
+
         //if(true) {
         //BEGIN look for face intersection
+
+        // rescaling coordinates to properly handle different scales of meshes
+        std::vector<double> xcc(dim, 0); // will store the coordinates of the center scaled
+        double length = 0.;
+        double sum = 0.;
+
+        for(unsigned i = 0; i < facePointNumber[currentElementType][_solType] - 1; i++) {
+          for(unsigned k = 0; k < dim; k++) {
+            sum += (xv[k][i + 1] - xv[k][i]) * (xv[k][i + 1] - xv[k][i]);
+          }
+
+          length += sqrt(sum);
+        }
+
+        length /= facePointNumber[currentElementType][_solType];
+        // std::cout << "length= " << length << std::endl;
+
+        for(unsigned k = 0; k < dim; k++) {
+          xcc[k] = xc[k] / length;
+
+          for(unsigned i = 0; i < facePointNumber[currentElementType][_solType]; i++) {
+            xv[k][i] /= length;
+          }
+        }
+
+
+
 
         for(unsigned i = 0 ; i < facePointNumber[currentElementType][_solType] - 1; i++) {
 
@@ -638,7 +640,7 @@ namespace femus {
 
           double tBottom = (A * xcc[0] + B * xcc[1]) ;
           double tTop = A * xv[0][i] + B * xv[1][i];
-          std::cout << "tBottom = " << tBottom << " , " << "A= " << A << " , " <<  "B= " << B << " , " << "xv[1][" << i << "] =" << xv[1][i] << " , " <<  "tTop = " <<   tTop << std::endl;
+          //std::cout << "tBottom = " << tBottom << " , " << "A= " << A << " , " <<  "B= " << B << " , " << "xv[1][" << i << "] =" << xv[1][i] << " , " <<  "tTop = " <<   tTop << std::endl;
 
           if(fabs(tBottom) < epsilon && tTop != 0) {
             // std::cout << "The plane of edge " << i << "does not intersect the line" <<std::endl;
@@ -647,7 +649,7 @@ namespace femus {
           else {
             //now let's find the coordinates of the intersection point r
             t = tTop / tBottom ;
-            std::cout << "t = " << t << std::endl;
+            //std::cout << "t = " << t << std::endl;
 
             for(unsigned k = 0; k < dim; k++) {
               r[k] = t * xcc[k];
@@ -676,25 +678,19 @@ namespace femus {
 
               if((xvr[0][i] * xvr[0][i]  + xvr[1][i] * xvr[1][i]) < epsilon2 ||
                   (xvr[0][i + 1]*xvr[0][i + 1] + xvr[1][i + 1]*xvr[1][i + 1]) < epsilon2) {
-                std::cout << "intersection on a vertex of the edge" << std::endl;
+                // std::cout << "intersection on a vertex of the edge" << std::endl;
 
                 if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the edges
 
-                  if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is one of the nodes" << std::endl;
+                  // if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is one of the nodes" << std::endl;
 
-                  if(t < 0) std::cout << "setting markerIsInElement = true because r is one of the nodes" << std::endl;
+                  // if(t < 0) std::cout << "setting markerIsInElement = true because r is one of the nodes" << std::endl;
 
                   markerIsInElement = true;
                   break;
                 }
                 else {
                   unsigned nodeIndex = (_solType == 0) ? i : i / 2;
-
-
-                  /*
-                               if(i % 2 == 0 && i != facePointNumber[currentElementType][_solType]) nodeIndex = i / 2 ;
-                               else if(i == facePointNumber[currentElementType][_solType]) nodeIndex = (i - 2) / 2 ;
-                               else if(i % 2 != 0) nodeIndex = (i - 1) / 2 ;*/
 
                   nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
                   nextElementFound = true;
@@ -705,13 +701,13 @@ namespace femus {
 
 
               else if(xvr[0][i]*xvr[0][i + 1] < 0 || xvr[1][i]*xvr[1][i + 1] < 0) {
-                std::cout << "intersection on an edge" << std::endl;
+                // std::cout << "intersection on an edge" << std::endl;
 
                 if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the edges
 
-                  if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges " << std::endl;
+                  //  if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges " << std::endl;
 
-                  if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges " << std::endl;
+                  // if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges " << std::endl;
 
                   markerIsInElement = true;
                   break;
@@ -719,11 +715,6 @@ namespace femus {
                 else {
 
                   unsigned nodeIndex = (_solType == 0) ? i : i / 2;
-//                   unsigned nodeIndex;
-//
-// //                   if(i % 2 == 0 && i != facePointNumber[currentElementType][solType]) nodeIndex = i / 2 ;
-// //                   else if(i == facePointNumber[currentElementType][solType]) nodeIndex = (i - 2) / 2 ;
-// //                   else if(i % 2 != 0) nodeIndex = (i - 1) / 2 ;
 
                   nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
                   nextElementFound = true;
@@ -762,7 +753,7 @@ namespace femus {
 
     unsigned dim = _mesh->GetDimension();
     unsigned nDofs = _mesh->GetElementDofNumber(currentElem, _solType);
-    unsigned nFaceDofs = (_solType == 2) ? nDofs - 1: nDofs;
+    unsigned nFaceDofs = (_solType == 2) ? nDofs - 1 : nDofs;
     int nextElem ;
     bool markerIsInElement = false;
     bool nextElementFound = false;
@@ -809,33 +800,6 @@ namespace femus {
       }
     }
 
-    
-//     // rescaling coordinates to properly handle different scales of meshes (MAYBE WE WILL NOT NEED TO RECOMPUTE LENGTH)
-//     std::vector<double> xcc(dim, 0); //maybe don't define it later
-//     double length = 0.;
-//     double sum = 0.;
-// 
-//     for(unsigned i = 0; i < nFaceDofs; i++) {
-//       for(unsigned k = 0; k < dim; k++) {
-//         sum += (xvv[k][i + 1] - xvv[k][i]) * (xvv[k][i + 1] - xvv[k][i]);
-//       }
-// 
-//       length += sqrt(sum);
-//     }
-// 
-//     length /= nFaceDofs;
-// 
-//     std::cout <<  "length = " << length << std::endl;
-// 
-//     for(unsigned k = 0; k < dim; k++) {
-//       xcc[k] = xc[k] / length;
-// 
-//       for(unsigned i = 0; i < nFaceDofs; i++) {
-//         xvv[k][i] /= length;
-//       }
-//     }
-
-
     //Find a ball centered in (xcc[0] , xcc[1]) that inscribes the element
     double radius2 = 0.;
     for(unsigned i = 0; i < nFaceDofs - 1; i++) {
@@ -854,33 +818,24 @@ namespace femus {
       markerIsInElement = true; //the marker is xc
     }
 
-
-
     //TEST if the marker is inside a ball centered in (xcc[0] , xcc[1]) and given radius
 
-    if(radius2 < xc[0]*xc[0] + xc[1]*xc[1] + xc[2]*xc[2]) {  
-
-      std::cout << " radius2 " << radius2 << " " << " xc[0]*xc[0] + xc[1]*xc[1] + xc[2]*xc[2] " 
-		<< xc[0]*xc[0] + xc[1]*xc[1] + xc[2]*xc[2] << std::endl;
-
-      std::cout << " WE ARE HERE SCEMO " << std::endl;
-
+    if(radius2 < xc[0]*xc[0] + xc[1]*xc[1] + xc[2]*xc[2]) {
       nextElem = FastForward(currentElem);
       nextElementFound = true;
-
     }
 
     //if(true) {
-    else{
+    else {
 
 
       for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
 
-        std::cout << "iface = " << iface << std::endl;
+        // std::cout << "iface = " << iface << std::endl;
 
         for(unsigned itri = 0; itri < trianglesPerFace[currentElementType][_solType][iface]; itri ++) {
 
-          std::cout << "itri = " << itri << std::endl;
+          //  std::cout << "itri = " << itri << std::endl;
 
           std::vector<double> xcc(dim, 0); // will store the coordinates of the center scaled
 
@@ -946,7 +901,7 @@ namespace femus {
           else {
             //now let's find the coordinates of the intersection point r
             t = tTop / tBottom ;
-            std::cout << "t = " << t << std::endl;
+            //std::cout << "t = " << t << std::endl;
 
             for(unsigned k = 0; k < dim; k++) {
               r[k] = t * xcc[k];
@@ -971,10 +926,10 @@ namespace femus {
 
                 double  scalarProduct = q0 * A + q1 * B + q2 * C;
 
-                std::cout << "fabs(scalarProduct) = " << fabs(scalarProduct) << std::endl;
+                //   std::cout << "fabs(scalarProduct) = " << fabs(scalarProduct) << std::endl;
 
                 if(scalarProduct > epsilon) {
-                  std::cout << "r is outside triangle " << itri <<  std::endl;
+                  //   std::cout << "r is outside triangle " << itri <<  std::endl;
                   break;
 
                 }
@@ -982,17 +937,17 @@ namespace femus {
 
                   if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
                       (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
-                    std::cout << "intersection on a vertex of itri" << std::endl;
+                    //    std::cout << "intersection on a vertex of itri" << std::endl;
                     if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the faces
 
-                      if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is one vertex of triangle " << itri << std::endl;
-                      if(t < 0) std::cout << "setting markerIsInElement = true because r is one vertex of triangle " << itri << std::endl;
+                      //     if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is one vertex of triangle " << itri << std::endl;
+                      //     if(t < 0) std::cout << "setting markerIsInElement = true because r is one vertex of triangle " << itri << std::endl;
 
                       markerIsInElement = true;
                       break;
                     }
                     else {
-                      std::cout << "r is in triangle " << itri << std::endl;
+                      //     std::cout << "r is in triangle " << itri << std::endl;
                       nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
                       nextElementFound = true;
                       break;
@@ -1002,17 +957,17 @@ namespace femus {
 
 
                   else if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
-                    std::cout << "intersection on an edge of itri" << std::endl;
+                    //   std::cout << "intersection on an edge of itri" << std::endl;
                     if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the faces
 
-                      if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
-                      if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
+                      //    if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
+                      //    if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
 
                       markerIsInElement = true;
                       break;
                     }
                     else {
-                      std::cout << "r is in triangle " << itri << std::endl;
+                      //     std::cout << "r is in triangle " << itri << std::endl;
                       nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
                       nextElementFound = true;
                       break;
@@ -1020,7 +975,7 @@ namespace femus {
                   }
                 }
                 else if(scalarProduct < 0) {
-                  std::cout << " scalarProduct = " << scalarProduct << std::endl;
+                  //    std::cout << " scalarProduct = " << scalarProduct << std::endl;
                   scalarCount++;
                 }
               } // closes the for loop
@@ -1038,7 +993,7 @@ namespace femus {
               break;
             }
             else {
-              std::cout << "r is in triangle " << itri << std::endl;
+              //    std::cout << "r is in triangle " << itri << std::endl;
               nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
               nextElementFound = true;
               break;
@@ -1439,10 +1394,7 @@ namespace femus {
           }
 
           // This is the test
-          std::vector < double > xi(dim);
-          for(int k = 0; k < dim; k++) {
-            xi[k] = initialGuess[ielType][k];
-          }
+
 
           for(int k = 0; k < dim; k++) {
             std::cout << "xv[" << k << "]= " << xv[j][k] <<  " ";
@@ -1450,7 +1402,11 @@ namespace femus {
 
           std::cout << std::endl;
 
+          std::vector < double > xi(dim);
 
+          for(int k = 0; k < dim; k++) {
+            xi[k] = _initialGuess[ielType][k];
+          }
           for(int itype = 0; itype <= solType; itype++) {
             InverseMapping(iel, itype, xv[j], xi);
             std::cout << std::endl;

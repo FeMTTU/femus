@@ -36,7 +36,23 @@ namespace femus {
       _markerType = markerType;
       _mesh = mesh;
       _solType = solType;
+      
       GetElement(debug);
+      
+//       _xi.resize( _mesh->GetDimension() );
+//       short unsigned elemType = _mesh->GetElementType(_elem);
+//       for(int k = 0; k < _mesh->GetDimension(); k++) {
+//         _xi[k] = _initialGuess[elemType][k];
+//       }
+//       for(int itype = 0; itype <= _solType; itype++) {
+//         InverseMapping(_elem, itype,_x,_xi);
+//       }
+//       for(int k = 0; k < _mesh->GetDimension(); k++) {
+// 	std::cout<< _xi[k] <<" ";
+//       }
+//       std::cout << std::endl;
+      
+     
     };
   
   std::vector < double > GetMarkerCoordinates(){ 
@@ -67,10 +83,13 @@ namespace femus {
     int FastForward(const unsigned &currentElem);
      
     std::vector < double > _x;
+    std::vector < double > _xi;
     unsigned _solType;
     MarkerType _markerType;
     const Mesh * _mesh;
     unsigned _elem;
+    
+    static const double _initialGuess[6][3];
 
   };
 } //end namespace femus
