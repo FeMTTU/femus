@@ -83,40 +83,32 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  MyVector <double> b;
-  MyVector <double> c;
+  MyVector <unsigned> b;
+  MyVector <unsigned> c;
 
-  c.resize(100);
-
-  int iproc, nprocs;
-  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
+  std::cout << c << std::endl;
+  
+  c.resize(10);
   for(unsigned i = c.begin(); i < c.end(); i++) {
     c[i] = 1.3 * i;
   }
-
   std::cout << c << std::endl;
 
-  std::vector <unsigned> offset(nprocs + 1);
-  unsigned localsize = c.size() / nprocs;
-  offset[0] = 0;
-  for(int i = 1; i < nprocs; i++) {
-    offset[i] = offset[i - 1] + localsize;
-  }
-  offset[nprocs] = c.size();
-
-  c.scatter(offset);
+  c.scatter();
   std::cout << c << std::endl;
 
-  for(int i = 0; i < nprocs + 1; i++) {
+  
+  std::vector <unsigned> offset;
+  offset = c.getOffset();
+  for(int i = 0; i < offset.size(); i++) {
     offset[i] = 2 * offset[i];
   }
-
   b = c;
 
   b.resize(offset, 1);
   std::cout << b << std::endl;
+  
+  std::cout << c << std::endl;
 
   return 0;
 }
