@@ -246,22 +246,22 @@ int main(int argc, char** argv) {
 
 #ifdef HAVE_FPARSER
 
-  function = root["variable"].get("func_source1", "0.").asString();
+  function = root["variable"].get("func_source3", "0.").asString();
   fpsource.SetExpression(function);
   fpsource.SetIndependentVariables(variables);
   fpsource.Parse();
 
-  function = root["func_sol1"].get("sol", "0.").asString();
+  function = root["func_sol3"].get("sol", "0.").asString();
   fp_sol.SetExpression(function);
   fp_sol.SetIndependentVariables(variables);
   fp_sol.Parse();
 
-  function = root["func_sol1"].get("dsoldx", "0.").asString();
+  function = root["func_sol3"].get("dsoldx", "0.").asString();
   fp_dsoldx.SetExpression(function);
   fp_dsoldx.SetIndependentVariables(variables);
   fp_dsoldx.Parse();
 
-  function = root["func_sol1"].get("dsoldy", "0.").asString();
+  function = root["func_sol3"].get("dsoldy", "0.").asString();
   fp_dsoldy.SetExpression(function);
   fp_dsoldy.SetIndependentVariables(variables);
   fp_dsoldy.Parse();
@@ -558,7 +558,7 @@ int main(int argc, char** argv) {
   //********* Latex Code *********
   std::cout << "Latex Codes:\n\n";
   std::cout << std::endl;
-  std::cout << "\\begin{table}[h]\n\\centering\n\\caption{The Relative Error Based on the Order, Element Type and Norm Space}\n\\label{my-label}\n\\begin{tabular}{lllll}\n\\hline\n";
+  std::cout << "\\begin{table}[ht]\n\\centering\n\\caption{The Relative Error Based on the Order, Element Type and Norm Space}\n\\label{my-label}\n\\begin{tabular}{lllll}\n\\hline\n";
   std::cout << "\\multicolumn{5}{c}{\\cellcolor[HTML]{EFEFEF}$||u_h-u||_{L_2} / ||u||_{L_2}$}\t\\\\ \\hline\n";
   std::cout << "TYPE\t&Item \t\t\t& First\t\t\t& Serendipity\t\t& Second\t\t\\\\ \\hline\n";
   for(unsigned k = 0; k < 2; k++) {
