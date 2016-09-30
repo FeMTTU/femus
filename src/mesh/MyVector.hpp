@@ -35,10 +35,10 @@ namespace femus {
     public:
       // ******************
       MyVector() {
-        _vecIsSerial = false;
-        _vecIsParallel = false;
-        _vecIsLocalized = false;
-
+        _vecIsallocated = false;
+        _serial = false;
+	_parallel = false;
+	
         int iproc, nprocs;
 
         MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -47,9 +47,13 @@ namespace femus {
         _iproc = static_cast < unsigned >(iproc);
         _nprocs = static_cast < unsigned >(nprocs);
 
-        Type a;
-        _MPI_MYDATATYPE = boost::mpi::get_mpi_datatype(a);
-      }
+        _dummy = 0;
+        _MPI_MYDATATYPE = boost::mpi::get_mpi_datatype(_dummy);
+	
+	_begin = 0;
+	_end = 0;
+	_size = 0;
+     }
 
 
       // ******************
@@ -67,9 +71,11 @@ namespace femus {
       // ******************
       void resize(const unsigned &globalSize, const Type value = 0) {
         clearParallel();
-        clearLocalized();
-        _sVec.resize(globalSize, value);
-        _vecIsSerial = true;
+        _vec.resize(globalSize, value);
+        
+	_begin = 0;
+	_end = globalSize;
+	_size = globalSize;
       }
 
       // ******************
@@ -79,10 +85,13 @@ namespace femus {
           abort();
         }
         clearSerial();
-        clearLocalized();
         _offset = offset;
-        _pVec.resize(_offset[_iproc + 1] - offset[_iproc], value);
-        _vecIsParallel = true;
+        _vec.resize(_offset[_iproc + 1] - offset[_iproc], value);
+        
+	_vecIsallocated = true;
+	_begin = _offset[_iproc];
+	_end = _offset[_iproc+1];
+	_size = _offset[_nprocs];
       }
 
       // ******************
@@ -93,79 +102,53 @@ namespace femus {
       // ******************
       void clearSerial() {
         std::vector<Type>().swap(_sVec);
-        _vecIsSerial = false;
       }
 
       // ******************
       void clearParallel() {
         std::vector<Type>().swap(_pVec);
-        _vecIsParallel = false;
       }
 
       // ******************
       void clearLocalized() {
         std::vector<Type>().swap(_lVec);
-        _vecIsLocalized = false;
-        _vecIsLocalizedToMe = false;
+      	
+	_vec.swap(_pVec);
+	std::vector<Type>().swap(_pVec);
+	_begin = _offset[_iproc];
+	_end = _offset[_iproc+1];
+	_size = _offset[_nprocs];
       }
 
       // ******************
       void clear() {
         clearSerial();
         clearParallel();
-        clearLocalized();
+        std::vector<Type>().swap(_vec);
       }
 
 
       // ******************
       unsigned size() {
-        if(_vecIsSerial)
-          return _sVec.size();
-        else if(_vecIsParallel)
-          return _offset[_nprocs];
-        else {
-          std::cout << "Error in MyVector.size(), vector is in a wrong status" << std::endl;
-          abort();
-        }
+	return _size;
       }
 
       // ******************
       unsigned begin() {
-        if(_vecIsSerial)
-          return 0;
-        else if(_vecIsParallel && !_vecIsLocalized)
-          return _offset[_iproc];
-        else if(_vecIsLocalized) {
-          return _offset[_lproc];
-        }
-        else {
-          std::cout << "Error in MyVector.begin(), vector is in a wrong status" << std::endl;
-          abort();
-        }
+	return _begin;
       }
 
       // ******************
       unsigned end() {
-        if(_vecIsSerial)
-          return _sVec.size();
-        else if(_vecIsParallel && !_vecIsLocalized)
-          return _offset[_iproc + 1];
-        else if(_vecIsLocalized) {
-          return _offset[_lproc + 1];
-        }
-        else {
-          std::cout << "Error in MyVector.end(), vector is in a wrong status" << std::endl;
-          abort();
-        }
-
+	return _end;
       }
 
       // ******************
-      void scatter(const std::vector < unsigned > & offset) {
+      void scatter(const std::vector < unsigned > &offset) {
 
         _offset = offset;
 
-        if(!_vecIsSerial) {
+        if(!_vecIsallocated) {
           std::cout << "Error in MyVector.scatter(), vector is in a wrong status" << std::endl;
           abort();
         }
@@ -178,22 +161,29 @@ namespace femus {
         _pVec.resize(_offset[_iproc + 1] - offset[_iproc]);
 
         for(unsigned i = _offset[_iproc]; i < _offset[_iproc + 1]; i++) {
-          _pVec[i - _offset[_iproc] ] = _sVec[i];
+          _pVec[i - _offset[_iproc] ] = _vec[i];
         }
 
         clearSerial();
-        clearLocalized();
-        _vecIsParallel = true;
+	
+        _vecIsallocated = true;
+	_vec.swap(_pVec);
+	std::vector<Type>().swap(_pVec);
+	_begin = _offset[_iproc];
+	_end = _offset[_iproc+1];
+	_size = _offset[_nprocs];
       }
 
       // ******************
       void localizeToAll(const unsigned &lproc) {
-
-        if(!_vecIsParallel) {
+	
+        if(_serial) {
           std::cout << "Error in MyVector.LocalizeToAll(), vector is in a wrong status" << std::endl;
           abort();
         }
 
+        _vec.swap(_pVec);
+        
         _lproc = lproc;
         _lVec.resize(_offset[_lproc + 1] - _offset[_lproc]);
 
@@ -204,22 +194,30 @@ namespace femus {
         }
 
         MPI_Bcast(&_lVec[0], _lVec.size(), _MPI_MYDATATYPE, _lproc, MPI_COMM_WORLD);
-        _vecIsLocalized = true;
-        _vecIsLocalizedToMe = true;
+        
+	_vecIsallocated = true;
+	
+	_vec.swap(_lVec);
+	std::vector<Type>().swap(_lVec);
+	_begin = _offset[_lproc];
+	_end = _offset[_lproc+1];
+	
       }
 
       // ******************
       void localizeToOne(const unsigned &lproc, const unsigned &kproc) {
 
-        if(!_vecIsParallel) {
+        if(!_serial) {
           std::cout << "Error in MyVector.LocalizeToAll(), vector is in a wrong status" << std::endl;
           abort();
         }
 
+        _vec.swap(_pVec);
+        
         if(_iproc == kproc)
-          _vecIsLocalizedToMe = true;
+          _vecIsallocated = true;
         else
-          _vecIsLocalizedToMe = false;
+          _vecIsallocated = false;
 
         if(_iproc == lproc || _iproc == kproc) {
           _lproc = lproc;
@@ -238,59 +236,75 @@ namespace femus {
               MPI_Recv(&_lVec[0], _lVec.size(), _MPI_MYDATATYPE, lproc, 1, MPI_COMM_WORLD,  MPI_STATUS_IGNORE);
           }
         }
-        _vecIsLocalized = true;
+        
+	_vec.swap(_lVec);
+	std::vector<Type>().swap(_lVec);
+	_begin = _offset[_lproc];
+	_end = _offset[_lproc+1];
       }
 
       // ******************
-      void set(const unsigned &i, const Type &value) {
-        if(_vecIsSerial)
-          _sVec[i] = value;
-        else if(_vecIsParallel && !_vecIsLocalized)
-          _pVec[i - _offset[_iproc] ] = value;
-        else {
-          std::cout << "Error in MyVector.set(), vector is in a wrong status" << std::endl;
-          abort();
-        }
+      Type& operator[](const unsigned &i) {
+	if(_vecIsallocated){
+	  return _vec[i-_begin];
+	}
+	else{  
+	  return _dummy;
+	}
+	
       }
 
-      // ******************
-      Type get(const unsigned &i) {
-        if(_vecIsSerial)
-          return _sVec[i];
-        else if(_vecIsParallel && !_vecIsLocalized)
-          return _pVec[i - _offset[_iproc] ];
-        else if(_vecIsLocalized) {
-          if(_vecIsLocalizedToMe)
-            return _lVec[i - _offset[_lproc] ];
-          else
-            return 0;
+      // *****************
+      friend std::ostream& operator<<(std::ostream& os, MyVector<Type>& vec) {
+	
+	if(vec._serial) {	  
+          for(unsigned i = vec.begin(); i < vec.end(); i++) {
+            os << i << " " << vec[i] << std::endl;
+          }
         }
         else {
-          std::cout << "Error in MyVector.get(), vector is in a wrong status" << std::endl;
-          abort();
+          for(int j = 0; j < vec._nprocs; j++) {
+            vec.localizeToOne(j, 0);
+            for(unsigned i = vec.begin(); i < vec.end(); i++) {
+              os << i << " " << vec[i] << std::endl;
+            }
+            vec.clearLocalized();
+          }
         }
+        return os;
       }
 
     private:
-      std::vector< Type > _sVec;
-      bool _vecIsSerial;
-
-      std::vector< Type > _pVec;
-      bool _vecIsParallel;
-
-      std::vector < unsigned > _offset;
+      
+      bool _serial;
+      bool _parallel;
+      
       unsigned _iproc;
       unsigned _nprocs;
+      MPI_Datatype _MPI_MYDATATYPE;
+      Type _dummy;
+      
+      unsigned _begin;
+      unsigned _end;
+      unsigned _size;
+      
+      std::vector< Type > _vec;
+      bool _vecIsallocated;
+      
+      std::vector< Type > _sVec;
+     
+      std::vector< Type > _pVec;
+      std::vector < unsigned > _offset;
+
       std::vector< Type > _lVec;
-      bool _vecIsLocalized;
-      bool _vecIsLocalizedToMe;
       unsigned _lproc;
 
-      MPI_Datatype _MPI_MYDATATYPE;
 
   };
 
 
 } //end namespace femus
+
+
 
 #endif

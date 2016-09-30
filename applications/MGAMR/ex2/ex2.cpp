@@ -83,12 +83,7 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  MyVector <unsigned> *a;
-  a = new  MyVector <unsigned> (10);
-  delete a;
-
   MyVector <double> b;
-
   MyVector <double> c;
 
   c.resize(100);
@@ -98,15 +93,10 @@ int main(int argc, char** args) {
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
   for(unsigned i = c.begin(); i < c.end(); i++) {
-    c.set(i, 1.3 * i);
+    c[i] = 1.3 * i;
   }
 
-
-  for(unsigned i = c.begin(); i < c.end(); i++) {
-    std::cout << i << " " << c.get(i) << std::endl;
-  }
-
-  std::cout << std::endl;
+  std::cout << c << std::endl;
 
   std::vector <unsigned> offset(nprocs + 1);
   unsigned localsize = c.size() / nprocs;
@@ -117,51 +107,16 @@ int main(int argc, char** args) {
   offset[nprocs] = c.size();
 
   c.scatter(offset);
-
-  for(unsigned i = c.begin(); i < c.end(); i++) {
-    std::cout << i << " " << c.get(i) << std::endl;
-  }
-
-  std::cout << std::endl;
-
-  for(int j = 0; j < nprocs; j++) {
-    c.localizeToAll(j);
-    for(unsigned i = c.begin(); i < c.end(); i++) {
-      std::cout << i << " " << c.get(i) << std::endl;
-    }
-    std::cout << std::endl;
-    c.clearLocalized();
-  }
+  std::cout << c << std::endl;
 
   for(int i = 0; i < nprocs + 1; i++) {
     offset[i] = 2 * offset[i];
   }
-  
+
   b = c;
-  
-  b.resize(offset);
-  std::cout << std::endl;
 
-  for(int j = 0; j < nprocs; j++) {
-    b.localizeToAll(j);
-    for(unsigned i = b.begin(); i < b.end(); i++) {
-      std::cout << i << " " << b.get(i) << std::endl;
-    }
-    std::cout << std::endl;
-    b.clearLocalized();
-  }
-  
-  for(int j = 0; j < nprocs; j++) {
-    b.localizeToOne(j,0);
-    if(iproc == 3){
-      for(unsigned i = b.begin(); i < b.end(); i++) {
-	std::cout << i << " " << b.get(i) << std::endl;
-      }
-    }
-    std::cout << std::endl;
-    b.clearLocalized();
-  }
-
+  b.resize(offset, 1);
+  std::cout << b << std::endl;
 
   return 0;
 }
