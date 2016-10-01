@@ -20,6 +20,7 @@
 #include <map>
 
 #include "Mesh.hpp"
+#include "MyVector.hpp"
 
 namespace femus {
 
@@ -271,8 +272,11 @@ namespace femus {
       unsigned _nelr, _nelrt[6];
       unsigned _ngroup;
 
-      bool* _elementCanBeRefined; //element
-      bool _elementCanBeRefinedIsScattered;
+       bool* _elementCanBeRefined; //element
+       bool _elementCanBeRefinedIsScattered;
+      
+//      MyVector< short unsigned> _elementCanBeRefined; //element
+     
       
 //       short unsigned* _elementLevel; //element
 //       short unsigned _elementLevelIsScattered;
