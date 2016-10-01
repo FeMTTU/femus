@@ -72,10 +72,10 @@ namespace femus {
     _elementNearFace[_nel] = pt_i;
 
     _elementCanBeRefined = new bool [_nel];
-    _elementLevel = new short unsigned [_nel];
+    //_elementLevel = new short unsigned [_nel];
     for( unsigned i = 0; i < _nel; i++ ) {
       _elementCanBeRefined[i] = true;
-      _elementLevel[i] = _level;
+      //_elementLevel[i] = _level;
     }
 
     _childElemFlag = false;
@@ -165,8 +165,8 @@ namespace femus {
     _elementCanBeRefinedIsScattered = false;
     memset( _elementCanBeRefined, 0, _nel * sizeof( bool ) );
     
-    _elementLevel = new short unsigned [_nel];
-    _elementLevelIsScattered = false;
+    //_elementLevel = new short unsigned [_nel];
+    //_elementLevelIsScattered = false;
     
 
     
@@ -250,15 +250,15 @@ namespace femus {
       delete [] tempElementCanBeRefined;
     }
     
-    if( _level != 0 ) {
-      short unsigned* tempElementLevel;
-      tempElementLevel = _elementLevel;
-      _elementLevel = new short unsigned [_nel];
-      for( unsigned iel = 0; iel < _nel; iel++ ) {
-        _elementLevel[elementMapping [iel]] = tempElementLevel[iel];
-      }
-      delete [] tempElementLevel;
-    }
+//     if( _level != 0 ) {
+//       short unsigned* tempElementLevel;
+//       tempElementLevel = _elementLevel;
+//       _elementLevel = new short unsigned [_nel];
+//       for( unsigned iel = 0; iel < _nel; iel++ ) {
+//         _elementLevel[elementMapping [iel]] = tempElementLevel[iel];
+//       }
+//       delete [] tempElementLevel;
+//     }
     
     //END reordering _elementCanBeRefined
 
@@ -375,7 +375,7 @@ namespace femus {
     }
 
     delete [] _elementCanBeRefined;
-    delete [] _elementLevel;
+    //delete [] _elementLevel;
 
   }
 
@@ -397,13 +397,13 @@ namespace femus {
     _elementCanBeRefinedIsScattered = true;
     delete [] tempElementCanBeRefined;
     
-    short unsigned* tempElementLevel = _elementLevel;
-    _elementLevel = new short unsigned [_elementOwned];
-    for( unsigned iel = _elementOffset[ _iproc ]; iel < _elementOffset[ _iproc + 1]; iel++ ) {
-      _elementLevel[iel - _elementOffset[ _iproc ]] = tempElementLevel[iel];
-    }
-    _elementLevelIsScattered = true;
-    delete [] tempElementLevel;
+//     short unsigned* tempElementLevel = _elementLevel;
+//     _elementLevel = new short unsigned [_elementOwned];
+//     for( unsigned iel = _elementOffset[ _iproc ]; iel < _elementOffset[ _iproc + 1]; iel++ ) {
+//       _elementLevel[iel - _elementOffset[ _iproc ]] = tempElementLevel[iel];
+//     }
+//     _elementLevelIsScattered = true;
+//     delete [] tempElementLevel;
 
   }
 
@@ -526,9 +526,9 @@ namespace femus {
     return ( _elementCanBeRefinedIsScattered == false ) ?
            _elementCanBeRefined[iel] : _elementCanBeRefined[iel - _elementOffset[ _iproc ]];
 	   
-    return ( _elementLevelIsScattered == false ) ?
-            (_elementLevel[iel] == _level) : 
-            (_elementCanBeRefined[iel - _elementOffset[ _iproc ]] == _level);	   
+//     return ( _elementLevelIsScattered == false ) ?
+//             (_elementLevel[iel] == _level) : 
+//             (_elementCanBeRefined[iel - _elementOffset[ _iproc ]] == _level);	   
   }
 
   /**
@@ -536,7 +536,7 @@ namespace femus {
    **/
   void elem::SetIfElementCanBeRefined( const unsigned& iel, const bool& refined ) {
     _elementCanBeRefined[iel] = refined;
-    if( refined ) _elementLevel[iel] = _level;
+    //if( refined ) _elementLevel[iel] = _level;
   }
 
   /**

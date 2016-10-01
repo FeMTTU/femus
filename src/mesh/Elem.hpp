@@ -175,9 +175,9 @@ namespace femus {
       /** To be Added */
       void SetIfElementCanBeRefined(const unsigned& iel, const bool& refined);
       
-      short unsigned GetElementLevel(const unsigned iel){
-	return _elementLevel[iel];
-      };
+//       short unsigned GetElementLevel(const unsigned iel){
+// 	return _elementLevel[iel];
+//       };
 
       /** To be Added */
       bool GetIfElementCanBeRefined(const unsigned& iel) const;
@@ -274,8 +274,8 @@ namespace femus {
       bool* _elementCanBeRefined; //element
       bool _elementCanBeRefinedIsScattered;
       
-      short unsigned* _elementLevel; //element
-      short unsigned _elementLevelIsScattered;
+//       short unsigned* _elementLevel; //element
+//       short unsigned _elementLevelIsScattered;
 
       unsigned _level;
 
