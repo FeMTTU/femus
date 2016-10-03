@@ -215,7 +215,7 @@ namespace femus {
     el->DeleteGroupAndMaterial();
     el->DeleteElementType();
 
-    el->ScatterElementCanBeRefinedVector();
+    el->ScatterElementLevel();
     el->ScatterElementDof();
     el->ScatterElementNearFace();
 
@@ -308,7 +308,7 @@ namespace femus {
     el->DeleteGroupAndMaterial();
     el->DeleteElementType();
 
-    el->ScatterElementCanBeRefinedVector();
+    el->ScatterElementLevel();
     el->ScatterElementDof();
     el->ScatterElementNearFace();
 

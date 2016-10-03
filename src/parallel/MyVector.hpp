@@ -104,7 +104,7 @@ namespace femus {
           }
           else {
             for(int j = 0; j < vec._nprocs; j++) {
-              vec.localizeToOne(j, 0);
+              vec.localizeToAll(j);
               for(unsigned i = vec.begin(); i < vec.end(); i++) {
                 os << i << " " << vec[i] << std::endl;
               }

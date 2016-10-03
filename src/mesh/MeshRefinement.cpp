@@ -39,7 +39,7 @@ namespace femus {
   void MeshRefinement::FlagAllElementsToBeRefined() {
     FlagElementsToRefine(0);
   }
-  
+
 //-------------------------------------------------------------------
   bool MeshRefinement::FlagElementsToBeRefined(const double & treshold, NumericVector& error) {
     return FlagElementsToRefineBaseOnError(treshold, error);
@@ -152,14 +152,14 @@ namespace femus {
 
     //END update elem
   }
-  
-  
-    bool MeshRefinement::FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error) {
 
-    unsigned type = 2;  
-    
-    
-    
+
+  bool MeshRefinement::FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error) {
+
+    unsigned type = 2;
+
+
+
     //BEGIN temporary parallel vector initialization
     NumericVector* numberOfRefinedElement;
     numberOfRefinedElement = NumericVector::build().release();
@@ -181,18 +181,18 @@ namespace femus {
     }
     //END temporary parallel vector initialization
 
-    
+
     //BEGIN flag element to be refined
     for(int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
       if(_mesh.el->GetIfElementCanBeRefined(iel)) {
         if((*_mesh._topology->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && error(iel) > treshold) {
-	    _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
-            numberOfRefinedElement->add(_iproc, 1.);
-            numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
+          _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
+          numberOfRefinedElement->add(_iproc, 1.);
+          numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
         }
       }
     }
-   
+
     _mesh._topology->_Sol[_mesh.GetAmrIndex()]->close();
     //END flag element to be refined
 
@@ -209,23 +209,23 @@ namespace femus {
       delete numberOfRefinedElementType[i];
     }
 
-    bool elementsHaveBeenRefined = true; 
-    if( totalNumber < _nprocs){
-      elementsHaveBeenRefined = false; 
+    bool elementsHaveBeenRefined = true;
+    if(totalNumber < _nprocs) {
+      elementsHaveBeenRefined = false;
     }
     return elementsHaveBeenRefined;
     //END update elem
   }
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
+
 //---------------------------------------------------------------------------------------------------------------
   void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, const elem_type* otherFiniteElement[6][5]) {
 
@@ -268,13 +268,22 @@ namespace femus {
     for(unsigned isdom = 0; isdom < _nprocs; isdom++) {
       elc->LocalizeElementDofFromOneToAll(isdom);
       elc->LocalizeElementNearFaceFromOneToAll(isdom);
+      elc->LocalizeElementLevel(isdom);
+      elc->LocalizeElementType(isdom);
+      elc->LocalizeElementMaterial(isdom);
+      elc->LocalizeElementGroup(isdom);
       for(unsigned iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
         if(static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
           unsigned elt = static_cast < short unsigned >(coarseLocalizedElementType[iel] + 0.25);
           // project element type
           for(unsigned j = 0; j < _mesh.GetRefIndex(); j++) {
-            _mesh.el->SetElementType(jel + j, elt);
-            _mesh.el-> SetIfElementCanBeRefined(jel + j, true);
+            //_mesh.el->SetElementType(jel + j, elt);
+	    
+	    _mesh.el->SetElementType(jel + j, elc->GetElementType(iel));
+	    _mesh.el->SetElementGroup(jel + j, elc->GetElementGroup(iel));
+	    _mesh.el->SetElementMaterial(jel + j, elc->GetElementMaterial(iel));
+	    
+            _mesh.el->SetElementLevel(jel + j, elc->GetElementLevel(iel) + 1);
             if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1) {
               elc->SetChildElement(iel, j, jel + j);
             }
@@ -282,10 +291,10 @@ namespace femus {
 
           // project vertex indeces
           for(unsigned j = 0; j < _mesh.GetRefIndex(); j++)
-            for(unsigned inode = 0; inode < elc->GetNVE(elt, 0); inode++){
+            for(unsigned inode = 0; inode < elc->GetNVE(elt, 0); inode++) {
               unsigned jDof =  otherFiniteElement[elt][0]->GetBasis()->GetFine2CoarseVertexMapping(j, inode);
-	      _mesh.el->SetElementDofIndex(jel + j, inode,  elc->GetElementDofIndex(iel, jDof) );
-	    }
+              _mesh.el->SetElementDofIndex(jel + j, inode,  elc->GetElementDofIndex(iel, jDof));
+            }
 
           // project face indeces
           for(unsigned iface = 0; iface <  elc->GetNFC(elt, 1); iface++) {
@@ -306,8 +315,13 @@ namespace femus {
           unsigned elt = static_cast < short unsigned >(coarseLocalizedElementType[iel] + 0.25);
 
           // project element type
-          _mesh.el->SetElementType(jel, elt);
-          _mesh.el-> SetIfElementCanBeRefined(jel, false);
+          //_mesh.el->SetElementType(jel, elt);
+	  
+	  _mesh.el->SetElementType(jel, elc->GetElementType(iel));
+	  _mesh.el->SetElementGroup(jel , elc->GetElementGroup(iel));
+	  _mesh.el->SetElementMaterial(jel, elc->GetElementMaterial(iel));
+	  
+          _mesh.el->SetElementLevel(jel, elc->GetElementLevel(iel));
           if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1) {
             elc->SetChildElement(iel, 0, jel);
           }
@@ -332,6 +346,10 @@ namespace femus {
       }
       elc->FreeLocalizedElementDof();
       elc->FreeLocalizedElementNearFace();
+      elc->FreeLocalizedElementLevel();
+      elc->FreeLocalizedElementType();
+      elc->FreeLocalizedElementMaterial();
+      elc->FreeLocalizedElementGroup();
     }
 
 
@@ -483,11 +501,12 @@ namespace femus {
     _mesh.el->BuildLocalElementNearVertex();
     _mesh.el->DeleteElementNearVertex();
 
+    _mesh.el->DeleteGroupAndMaterial();
     _mesh.el->DeleteElementType();
 
     _mesh._topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
 
-    _mesh.el->ScatterElementCanBeRefinedVector();
+    _mesh.el->ScatterElementLevel();
     _mesh.el->ScatterElementDof();
     _mesh.el->ScatterElementNearFace();
   }

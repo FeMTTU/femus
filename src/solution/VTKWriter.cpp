@@ -487,6 +487,31 @@ namespace femus {
     fout << std::endl;
     fout << "        </DataArray>" << std::endl;
 
+    
+    //-------------------------------------------------------TYPE--------------------------------------------------
+    fout  << "      <DataArray type=\"Float32\" Name=\"" << "Level" << "\" format=\"binary\">" << std::endl;
+    Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Level" << "\" format=\"binary\"/>" << std::endl;
+    // point pointer to common memory area buffer of void type;
+    var_el = static_cast< float*>( buffer_void );
+    icount = 0;
+    for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
+      var_el[icount] = mesh->el->GetElementLevel(iel);
+      icount++;
+    }
+    //print solution on element dimension
+    cch = b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), NULL, 0 );
+    b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), &enc[0], cch );
+    pt_char = &enc[0];
+    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
+    //print solution on element array
+    cch = b64::b64_encode( &var_el[0], dim_array_elvar[0] , NULL, 0 );
+    b64::b64_encode( &var_el[0], dim_array_elvar[0], &enc[0], cch );
+    pt_char = &enc[0];
+    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
+    fout << std::endl;
+    fout << "        </DataArray>" << std::endl;
+    
+    
     //END SARA&GIACOMO
 
     if( _ml_sol == NULL ) {
