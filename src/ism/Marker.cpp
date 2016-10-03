@@ -474,7 +474,7 @@ namespace femus {
 
     for(int k = 0; k < dim; k++) {
       for(int i = 0; i < nDofs; i++) {
-        v[k] -= a[k][i] * phi[i];
+        v[k] -= a[k][i] * phi[i]; // WHY IS THERE PHI AND NOT GRADPHI ???
 
         for(int i1 = 0; i1 < dim; i1++) {
           J[k][i1] += a[k][i] * gradPhi[i][i1];
