@@ -145,8 +145,8 @@ namespace femus {
    * This constructor allocates the memory for the \textit{finer elem}
    * starting from the parameters of the \textit{coarser elem}
    **/
-  elem::elem( elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrVector, const std::vector < double >& coarseElementType ) {
-
+  //elem::elem( elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrVector, const std::vector < double >& coarseElementType ) {
+  elem::elem( elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrVector) {
     _coarseElem = elc;
 
     _level = elc->_level + 1;
@@ -170,12 +170,17 @@ namespace femus {
       _elementNearFaceMemorySize += elc->GetRefinedElementTypeNumber( i ) * refindex * NFC[i][1];
     }
 
-    for( unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ) {
-      if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 0 ) {
-        unsigned type = static_cast < short unsigned >( coarseElementType[iel] + 0.25 );
-        _elementDofMemorySize += NVE[type][2];
-        _elementNearFaceMemorySize += NFC[type][1];
+    
+    for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
+      elc->_elementType.localizeToAll(isdom);
+      for(unsigned iel = elc->_elementOffset[isdom]; iel < elc->_elementOffset[isdom + 1]; iel++) {
+	if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 0 ) {
+	  short unsigned type = elc->_elementType[iel];
+	  _elementDofMemorySize += NVE[type][2];
+	  _elementNearFaceMemorySize += NFC[type][1];
+	}
       }
+      elc->_elementType.clearLocalized();
     }
 
     _elementDofMemory = new unsigned [ _elementDofMemorySize ];
@@ -186,19 +191,24 @@ namespace femus {
     int* ptElementNearFaceMemory = _elementNearFaceMemory;
     unsigned* ptElementDofMemory = _elementDofMemory;
     unsigned jel = 0;
-    for( unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ) {
-      short unsigned elemt = static_cast < short unsigned >( coarseElementType[iel] + 0.25 );
-      int increment = 1;
-      if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 1 ) {
-        increment = NRE[elemt];
+    
+    for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
+      elc->_elementType.localizeToAll(isdom);
+      for(unsigned iel = elc->_elementOffset[isdom]; iel < elc->_elementOffset[isdom + 1]; iel++) {
+   	short unsigned elemt = elc->_elementType[iel];
+	int increment = 1;
+	if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 1 ) {
+	  increment = NRE[elemt];
+	}
+	for( unsigned j = 0; j < increment; j++ ) {
+	  _elementDof[jel + j] = ptElementDofMemory;
+	  ptElementDofMemory += NVE[elemt][2];
+	  _elementNearFace[jel + j] = ptElementNearFaceMemory;
+	  ptElementNearFaceMemory += NFC[ elemt ][1];
+	}
+	jel += increment;
       }
-      for( unsigned j = 0; j < increment; j++ ) {
-        _elementDof[jel + j] = ptElementDofMemory;
-        ptElementDofMemory += NVE[elemt][2];
-        _elementNearFace[jel + j] = ptElementNearFaceMemory;
-        ptElementNearFaceMemory += NFC[ elemt ][1];
-      }
-      jel += increment;
+      elc->_elementType.clearLocalized();
     }
     _elementDof[_nel] = ptElementDofMemory;
     _elementNearFace[_nel] = ptElementNearFaceMemory;
@@ -350,15 +360,6 @@ namespace femus {
       delete [] _childElemDofMemoryPointer;
       delete [] _childElemDof;
     }
-  }
-
-  void elem::DeleteGroupAndMaterial() {
-    _elementGroup.scatter(_elementOffset);
-    _elementMaterial.scatter(_elementOffset);
-  }
-
-  void elem::DeleteElementType() {
-    _elementType.scatter(_elementOffset);
   }
 
   void elem::DeleteElementNearVertex() {

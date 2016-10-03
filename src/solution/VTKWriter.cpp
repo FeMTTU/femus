@@ -408,7 +408,7 @@ namespace femus {
 
     //-------------------------------------------MATERIAL---------------------------------------------------------
 
-    NumericVector& material =  mesh->_topology->GetSolutionName( "Material" );
+    //NumericVector& material =  mesh->_topology->GetSolutionName( "Material" );
 
     fout  << "        <DataArray type=\"Float32\" Name=\"" << "Material" << "\" format=\"binary\">" << std::endl;
     Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Material" << "\" format=\"binary\"/>" << std::endl;
@@ -416,8 +416,7 @@ namespace femus {
     float* var_el = static_cast< float*>( buffer_void );
     icount = 0;
     for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      unsigned iel_Metis = mesh->GetSolutionDof( 0, iel, 3 );
-      var_el[icount] = ( material )( iel_Metis );
+      var_el[icount] = mesh->GetElementMaterial(iel); 
       icount++;
     }
 
@@ -436,7 +435,7 @@ namespace femus {
 
     //------------------------------------------------------GROUP-----------------------------------------------------------
 
-    NumericVector& group =  mesh->_topology->GetSolutionName( "Group" );
+    //NumericVector& group =  mesh->_topology->GetSolutionName( "Group" );
 
     fout  << "        <DataArray type=\"Float32\" Name=\"" << "Group" << "\" format=\"binary\">" << std::endl;
     Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Group" << "\" format=\"binary\"/>" << std::endl;
@@ -444,8 +443,7 @@ namespace femus {
     var_el = static_cast< float*>( buffer_void );
     icount = 0;
     for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      unsigned iel_Metis = mesh->GetSolutionDof( 0, iel, 3 );
-      var_el[icount] = ( group )( iel_Metis );
+      var_el[icount] = mesh->GetElementGroup(iel);
       icount++;
     }
     //print solution on element dimension
@@ -462,7 +460,7 @@ namespace femus {
     fout << "        </DataArray>" << std::endl;
 
     //-------------------------------------------------------TYPE--------------------------------------------------
-    NumericVector& type =  mesh->_topology->GetSolutionName( "Type" );
+   // NumericVector& type =  mesh->_topology->GetSolutionName( "Type" );
 
     fout  << "        <DataArray type=\"Float32\" Name=\"" << "TYPE" << "\" format=\"binary\">" << std::endl;
     Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "TYPE" << "\" format=\"binary\"/>" << std::endl;
@@ -470,8 +468,7 @@ namespace femus {
     var_el = static_cast< float*>( buffer_void );
     icount = 0;
     for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      unsigned iel_Metis = mesh->GetSolutionDof( 0, iel, 3 );
-      var_el[icount] = ( type )( iel_Metis );
+      var_el[icount] = mesh->GetElementType(iel);
       icount++;
     }
     //print solution on element dimension

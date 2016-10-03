@@ -36,17 +36,14 @@ namespace femus {
       /** constructors */
       elem(const unsigned& other_nel);
 
-      elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal, const std::vector < double >& localizedElementType);
-
+      //elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal, const std::vector < double >& localizedElementType);
+      elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal);
+      
       void SharpMemoryAllocation();
 
       /** destructor */
       ~elem();
 
-      void DeleteGroupAndMaterial();
-
-      void DeleteElementType();
-      
       void ScatterElementNearFace();
       void LocalizeElementNearFaceFromOneToAll(const unsigned& jproc);
       void FreeLocalizedElementNearFace();
@@ -179,15 +176,25 @@ namespace femus {
       short unsigned GetElementLevel(const unsigned &jel) {
         return _elementLevel[jel];
       }
-      void ScatterElementLevel() {
+      void ScatterElementQuantities() {
 	_elementLevel.scatter(_elementOffset);
+	_elementType.scatter(_elementOffset);
+	_elementMaterial.scatter(_elementOffset);
+	_elementGroup.scatter(_elementOffset);
       }
-      void LocalizeElementLevel(const unsigned &lproc) {
+      void LocalizeElementQuantities(const unsigned &lproc) {
         _elementLevel.localizeToAll(lproc);
+	_elementType.localizeToAll(lproc);
+	_elementMaterial.localizeToAll(lproc);
+	_elementGroup.localizeToAll(lproc);
       }
-      void FreeLocalizedElementLevel() {
+      void FreeLocalizedElementQuantities() {
         _elementLevel.clearLocalized();
+	_elementType.clearLocalized();
+	_elementMaterial.clearLocalized();
+	_elementGroup.clearLocalized();
       }
+      
       bool GetIfElementCanBeRefined(const unsigned& iel) {
         return (_elementLevel[iel] == _level) ? true : false;
       }
@@ -195,29 +202,7 @@ namespace femus {
         return GetIfElementCanBeRefined(iel);
       }
       //END _ElementLevel functions
-      
-      void LocalizeElementType(const unsigned &lproc) {
-	_elementType.localizeToAll(lproc);
-      }
-      void FreeLocalizedElementType() {
-        _elementType.clearLocalized();
-      }
-      
-      void LocalizeElementMaterial(const unsigned &lproc) {
-        _elementMaterial.localizeToAll(lproc);
-      }
-      void FreeLocalizedElementMaterial() {
-        _elementMaterial.clearLocalized();
-      }
-      
-      void LocalizeElementGroup(const unsigned &lproc) {
-        _elementGroup.localizeToAll(lproc);
-      }
-      void FreeLocalizedElementGroup() {
-        _elementGroup.clearLocalized();
-      }
-      
-      
+           
 
       /** To be Added */
       void AllocateChildrenElement(const unsigned& ref_index, Mesh* msh);

@@ -146,13 +146,15 @@ namespace femus {
 
     unsigned topology[27];
 
-    mesh->_topology->_Sol[mesh->GetTypeIndex()]->localize_to_one( vector1, 0 );
+    //mesh->_topology->_Sol[mesh->GetTypeIndex()]->localize_to_one( vector1, 0 );
 
     for( unsigned isdom = 0; isdom < _nprocs; isdom++ ) {
       mesh->el->LocalizeElementDofFromOneToOne( isdom, 0 );
+      mesh->el->LocalizeElementQuantities(isdom);
       if( _iproc == 0 ) {
         for( unsigned ii = mesh->_elementOffset[isdom]; ii < mesh->_elementOffset[isdom + 1]; ii++ ) {
-          short unsigned ielt = static_cast < short unsigned >( vector1[ii] + 0.25 );
+          //short unsigned ielt = static_cast < short unsigned >( vector1[ii] + 0.25 );
+	  short unsigned ielt = mesh->GetElementType(ii);
           if( ielt == 0 )
             sprintf( buffer, "phex%d", eltp[index][0] );
           else if( ielt == 1 )
@@ -187,6 +189,7 @@ namespace femus {
         }
       }
       mesh->el->FreeLocalizedElementDof();
+      mesh->el->FreeLocalizedElementQuantities();
     }
 
     //END CONNETTIVITY
