@@ -39,25 +39,24 @@ namespace femus {
       
       GetElement(debug);
       
-//       _xi.resize( _mesh->GetDimension() );
-//       short unsigned elemType = _mesh->GetElementType(_elem);
-//       for(int k = 0; k < _mesh->GetDimension(); k++) {
-//         _xi[k] = _initialGuess[elemType][k];
-//       }
-//       for(int itype = 0; itype <= _solType; itype++) {
-//         InverseMapping(_elem, itype,_x,_xi);
-//       }
-//       for(int k = 0; k < _mesh->GetDimension(); k++) {
-// 	std::cout<< _xi[k] <<" ";
-//       }
-//       std::cout << std::endl;
       
-     
+      if( _iproc == _mproc ){
+	_xi.resize( _mesh->GetDimension() );
+	short unsigned elemType = _mesh->GetElementType(_elem);
+	for(int k = 0; k < _mesh->GetDimension(); k++) {
+	  _xi[k] = _initialGuess[elemType][k];
+	}
+	for(int itype = 0; itype <= _solType; itype++) {
+	  InverseMapping(_elem, itype,_x,_xi);
+	}
+	for(int k = 0; k < _mesh->GetDimension(); k++) {
+	  std::cout<< _xi[k] <<" ";
+	}
+	std::cout << std::endl;
+      }    
     };
-  
-  std::vector < double > GetMarkerCoordinates(){ 
-    return _x; 
-  };  
+    
+   
   
 
   void GetElement(const bool & debug = false);
@@ -68,9 +67,8 @@ namespace femus {
   };  
   
   void InverseMappingTEST(std::vector< double > &x);
+  void Advection(Solution* solution, int n, double T);
   
-  std::vector<double> GetPosition(std::vector<double> (*f)(std::vector<double>), int n, double T);
-    
   private:
     
     
@@ -88,6 +86,8 @@ namespace femus {
     MarkerType _markerType;
     const Mesh * _mesh;
     unsigned _elem;
+    
+    unsigned _mproc;
     
     static const double _initialGuess[6][3];
 

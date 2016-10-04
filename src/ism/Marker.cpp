@@ -268,6 +268,7 @@ namespace femus {
         sumFlag += processorMarkerFlag[i];
 
         if(processorMarkerFlag[i] == 1) {
+          _mproc = i;
           elementHasBeenFound = true;
           break;
         }
@@ -1441,103 +1442,127 @@ namespace femus {
 
 
 //this function returns the position of the marker at time T given the position at time T0 = 0, given the function f and the stepsize h
-  std::vector<double> Marker::GetPosition(std::vector<double> (*f)(std::vector<double>), int n, double T) {
+  void Marker::Advection(Solution* sol, int n, double T) {
 
-    unsigned dim = _mesh->GetDimension();
+    if(_iproc == _mproc) {
+      unsigned dim = _mesh->GetDimension();
+      vector < unsigned > solVIndex(dim);
+      solVIndex[0] = sol->GetIndex("U");    // get the position of "U" in the ml_sol object
+      solVIndex[1] = sol->GetIndex("V");    // get the position of "V" in the ml_sol object
+      if(dim == 3) solVIndex[2] = sol->GetIndex("W");       // get the position of "V" in the ml_sol object
+      unsigned solVType = sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+      vector < vector < double > >  solV(dim);    // local solution
+      unsigned nDofsV = _mesh->GetElementDofNumber(_elem, solVType);    // number of solution element dofs
+      for( unsigned  k = 0; k < dim; k++ ) {
+	solV[k].resize(nDofsV);
+      }
+      for(unsigned i = 0; i < nDofsV; i++) {
+        unsigned solVDof = _mesh->GetSolutionDof(i, _elem, solVType);    // global to global mapping between solution node and solution dof
+        for(unsigned  k = 0; k < dim; k++) {
+          solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
 
-    unsigned RKOrder = 4;  //order of the RK integration scheme
-
-    std::vector< std::vector<double> > x(RKOrder);
-    std::vector< std::vector<double> > K(RKOrder);
-    std::vector< double > y(dim, 0);
-
-    // determine the step size
-    double h = T / n;
-
-    for(unsigned i = 0; i < RKOrder; i++) {
-      x[i].reserve(dim + 1); // x = (t, x, y, z)
-      K[i].reserve(dim);
-    }
-    for(unsigned i = 0; i < RKOrder; i++) {
-      x[i].resize(dim + 1);
-      K[i].resize(dim);
-    }
-
-    //initialize time
-    x[0][0] = 0;
-
-    // initialize the position
-    for(unsigned i = 1; i < dim + 1; i++) {
-      x[0][i] = _x[i - 1] ;
-      std::cout << "x[0][" << i << "]= " << x[0][i] << std::endl;
+        }
+      }
     }
 
 
-    double step = 0;
-    while(step < n) {
 
-      std::cout << "------------------------------------- t = " << x[0][0] << "----------------------------------" << std::endl;
-      std::cout << "------------------------------------- h = " << h << "------------------------------------" << std::endl;
 
-      for(unsigned i = 0; i < dim; i++) {
-        std::cout << "f(x)[ " << i << "]= " << (*f)(x[0])[i] << std::endl ;
-        K[0][i] = h * (*f)(x[0])[i] ;
-        std::cout << "K[0][[ " << i << "]= " << K[0][i] << std::endl ;
-      }
-
-      //compute x[1]
-      x[1][0] = x[0][0] + (0.5 * h);
-      for(unsigned j = 1; j < dim + 1; j++) {
-        x[1][j] = x[0][j] + 0.5 * K[0][j - 1];
-      }
-
-      //compute K[1]
-      for(unsigned i = 0; i < dim; i++) {
-        K[1][i] = h * (*f)(x[1])[i] ;
-        std::cout << "K[1][[ " << i << "]= " << K[1][i] << std::endl ;
-      }
-
-      //compute x[2]
-      x[2][0] = x[0][0] + (0.5 * h);
-      for(unsigned j = 1; j < dim + 1; j++) {
-        x[2][j] = x[0][j] + 0.5 * K[1][j - 1];
-      }
-
-      //compute K[2]
-      for(unsigned i = 0; i < dim; i++) {
-        K[2][i] = h * (*f)(x[2])[i] ;
-        std::cout << "K[2][[ " << i << "]= " << K[2][i] << std::endl ;
-      }
-
-      //compute x[3]
-      x[3][0] = x[0][0] + h;
-      for(unsigned j = 1; j < dim + 1; j++) {
-        x[3][j] = x[0][j] + K[2][j - 1];
-      }
-
-      //compute K[3]
-      for(unsigned i = 0; i < dim; i++) {
-        K[3][i] = h * (*f)(x[3])[i] ;
-        std::cout << "K[3][[ " << i << "]= " << K[3][i] << std::endl ;
-      }
-
-      // RK stepping
-      for(unsigned j = 1; j < dim + 1; j++) {
-        x[0][j] += (1. / 6) * (K[0][j - 1] + 2. * K[1][j - 1] + 2. * K[2][j - 1] + K[3][j - 1]);
-        std::cout << "x[0][" << j << "]=" << x[0][j] << std::endl;
-      }
-      //update t
-      x[0][0] += h ;
-
-      //update the step
-      step++;
-    }
-
-    for(unsigned j = 1; j < dim + 1; j++) {
-      y[j - 1] = x[0][j];
-    }
-
-    return y;
+//     unsigned dim = _mesh->GetDimension();
+//
+//     unsigned RKOrder = 4;  //order of the RK integration scheme
+//
+//     std::vector< std::vector<double> > x(RKOrder);
+//     std::vector< std::vector<double> > K(RKOrder);
+//     std::vector< double > y(dim, 0);
+//
+//     // determine the step size
+//     double h = T / n;
+//
+//     for(unsigned i = 0; i < RKOrder; i++) {
+//       x[i].reserve(dim + 1); // x = (t, x, y, z)
+//       K[i].reserve(dim);
+//     }
+//     for(unsigned i = 0; i < RKOrder; i++) {
+//       x[i].resize(dim + 1);
+//       K[i].resize(dim);
+//     }
+//
+//     //initialize time
+//     x[0][0] = 0;
+//
+//     // initialize the position
+//     for(unsigned i = 1; i < dim + 1; i++) {
+//       x[0][i] = _x[i - 1] ;
+//       std::cout << "x[0][" << i << "]= " << x[0][i] << std::endl;
+//     }
+//
+//
+//     double step = 0;
+//     while(step < n) {
+//
+//       std::cout << "------------------------------------- t = " << x[0][0] << "----------------------------------" << std::endl;
+//       std::cout << "------------------------------------- h = " << h << "------------------------------------" << std::endl;
+//
+//       for(unsigned i = 0; i < dim; i++) {
+//         std::cout << "f(x)[ " << i << "]= " << (*f)(x[0])[i] << std::endl ;
+//         K[0][i] = h * (*f)(x[0])[i] ;
+//         std::cout << "K[0][[ " << i << "]= " << K[0][i] << std::endl ;
+//       }
+//
+//       //compute x[1]
+//       x[1][0] = x[0][0] + (0.5 * h);
+//       for(unsigned j = 1; j < dim + 1; j++) {
+//         x[1][j] = x[0][j] + 0.5 * K[0][j - 1];
+//       }
+//
+//       //compute K[1]
+//       for(unsigned i = 0; i < dim; i++) {
+//         K[1][i] = h * (*f)(x[1])[i] ;
+//         std::cout << "K[1][[ " << i << "]= " << K[1][i] << std::endl ;
+//       }
+//
+//       //compute x[2]
+//       x[2][0] = x[0][0] + (0.5 * h);
+//       for(unsigned j = 1; j < dim + 1; j++) {
+//         x[2][j] = x[0][j] + 0.5 * K[1][j - 1];
+//       }
+//
+//       //compute K[2]
+//       for(unsigned i = 0; i < dim; i++) {
+//         K[2][i] = h * (*f)(x[2])[i] ;
+//         std::cout << "K[2][[ " << i << "]= " << K[2][i] << std::endl ;
+//       }
+//
+//       //compute x[3]
+//       x[3][0] = x[0][0] + h;
+//       for(unsigned j = 1; j < dim + 1; j++) {
+//         x[3][j] = x[0][j] + K[2][j - 1];
+//       }
+//
+//       //compute K[3]
+//       for(unsigned i = 0; i < dim; i++) {
+//         K[3][i] = h * (*f)(x[3])[i] ;
+//         std::cout << "K[3][[ " << i << "]= " << K[3][i] << std::endl ;
+//       }
+//
+//       // RK stepping
+//       for(unsigned j = 1; j < dim + 1; j++) {
+//         x[0][j] += (1. / 6) * (K[0][j - 1] + 2. * K[1][j - 1] + 2. * K[2][j - 1] + K[3][j - 1]);
+//         std::cout << "x[0][" << j << "]=" << x[0][j] << std::endl;
+//       }
+//       //update t
+//       x[0][0] += h ;
+//
+//       //update the step
+//       step++;
+//     }
+//
+//     for(unsigned j = 1; j < dim + 1; j++) {
+//       y[j - 1] = x[0][j];
+//     }
+//
+//     return y;
 
   }
 
