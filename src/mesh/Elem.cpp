@@ -43,10 +43,11 @@ namespace femus {
     _nelt[0] = _nelt[1] = _nelt[2] = _nelt[3] = _nelt[4] = _nelt[5] = 0;
     _nel = other_nel;
 
-    _elementType = new unsigned short [ _nel ];
-    _elementGroup = new unsigned short [ _nel ];
-    _elementMaterial = new unsigned short [ _nel ];
-
+    _elementType.resize(_nel);
+    _elementGroup.resize(_nel);
+    _elementMaterial.resize(_nel);
+    _elementLevel.resize(_nel,_level);
+        
     _elementDof = new unsigned * [_nel + 1];
     _elementNearFace = new int *[_nel + 1];
 
@@ -71,13 +72,8 @@ namespace femus {
     _elementDof[_nel] = pt_u;
     _elementNearFace[_nel] = pt_i;
 
-    _elementCanBeRefined = new bool [_nel];
-    _elementLevel = new short unsigned [_nel];
-    for( unsigned i = 0; i < _nel; i++ ) {
-      _elementCanBeRefined[i] = true;
-      _elementLevel[i] = _level;
-    }
-
+    
+    
     _childElemFlag = false;
 
     _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
@@ -149,8 +145,8 @@ namespace femus {
    * This constructor allocates the memory for the \textit{finer elem}
    * starting from the parameters of the \textit{coarser elem}
    **/
-  elem::elem( elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrVector, const std::vector < double >& coarseElementType ) {
-
+  //elem::elem( elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrVector, const std::vector < double >& coarseElementType ) {
+  elem::elem( elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrVector) {
     _coarseElem = elc;
 
     _level = elc->_level + 1;
@@ -159,18 +155,11 @@ namespace femus {
     _nel = elc->GetRefinedElementNumber() * refindex; //refined
     _nel += elc->GetElementNumber() - elc->GetRefinedElementNumber(); // + non-refined;
 
-    _elementType = new unsigned short [_nel];
-
-    _elementCanBeRefined = new bool [_nel];
-    _elementCanBeRefinedIsScattered = false;
-    memset( _elementCanBeRefined, 0, _nel * sizeof( bool ) );
+    _elementType.resize(_nel);
+    _elementGroup.resize(_nel);
+    _elementMaterial.resize(_nel);
+    _elementLevel.resize(_nel,_level);
     
-    _elementLevel = new short unsigned [_nel];
-    _elementLevelIsScattered = false;
-    
-
-    
-
     _elementDof = new unsigned * [_nel + 1];
     _elementNearFace = new int * [_nel + 1];
 
@@ -181,12 +170,17 @@ namespace femus {
       _elementNearFaceMemorySize += elc->GetRefinedElementTypeNumber( i ) * refindex * NFC[i][1];
     }
 
-    for( unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ) {
-      if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 0 ) {
-        unsigned type = static_cast < short unsigned >( coarseElementType[iel] + 0.25 );
-        _elementDofMemorySize += NVE[type][2];
-        _elementNearFaceMemorySize += NFC[type][1];
+    
+    for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
+      elc->_elementType.localizeToAll(isdom);
+      for(unsigned iel = elc->_elementOffset[isdom]; iel < elc->_elementOffset[isdom + 1]; iel++) {
+	if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 0 ) {
+	  short unsigned type = elc->_elementType[iel];
+	  _elementDofMemorySize += NVE[type][2];
+	  _elementNearFaceMemorySize += NFC[type][1];
+	}
       }
+      elc->_elementType.clearLocalized();
     }
 
     _elementDofMemory = new unsigned [ _elementDofMemorySize ];
@@ -197,19 +191,24 @@ namespace femus {
     int* ptElementNearFaceMemory = _elementNearFaceMemory;
     unsigned* ptElementDofMemory = _elementDofMemory;
     unsigned jel = 0;
-    for( unsigned iel = 0; iel < elc->GetElementNumber(); iel++ ) {
-      short unsigned elemt = static_cast < short unsigned >( coarseElementType[iel] + 0.25 );
-      int increment = 1;
-      if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 1 ) {
-        increment = NRE[elemt];
+    
+    for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
+      elc->_elementType.localizeToAll(isdom);
+      for(unsigned iel = elc->_elementOffset[isdom]; iel < elc->_elementOffset[isdom + 1]; iel++) {
+   	short unsigned elemt = elc->_elementType[iel];
+	int increment = 1;
+	if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 1 ) {
+	  increment = NRE[elemt];
+	}
+	for( unsigned j = 0; j < increment; j++ ) {
+	  _elementDof[jel + j] = ptElementDofMemory;
+	  ptElementDofMemory += NVE[elemt][2];
+	  _elementNearFace[jel + j] = ptElementNearFaceMemory;
+	  ptElementNearFaceMemory += NFC[ elemt ][1];
+	}
+	jel += increment;
       }
-      for( unsigned j = 0; j < increment; j++ ) {
-        _elementDof[jel + j] = ptElementDofMemory;
-        ptElementDofMemory += NVE[elemt][2];
-        _elementNearFace[jel + j] = ptElementNearFaceMemory;
-        ptElementNearFaceMemory += NFC[ elemt ][1];
-      }
-      jel += increment;
+      elc->_elementType.clearLocalized();
     }
     _elementDof[_nel] = ptElementDofMemory;
     _elementNearFace[_nel] = ptElementNearFaceMemory;
@@ -230,53 +229,41 @@ namespace femus {
   void elem::ReorderMeshElements( const std::vector < unsigned >& elementMapping ) {
 
     //BEGIN reordering _elementType
-    short unsigned* tempElementType;
+    MyVector <short unsigned> tempElementType;
     tempElementType = _elementType;
-    _elementType = new short unsigned [_nel];
+    //_elementType = new short unsigned [_nel];
     for( unsigned iel = 0; iel < _nel; iel++ ) {
       _elementType[ elementMapping [iel] ]  = tempElementType[iel] ;
     }
-    delete [] tempElementType;
+    tempElementType.clear();
     //END reordering _elementType
 
-    //BEGIN reordering _elementCanBeRefined
-    if( _level != 0 ) {
-      bool* tempElementCanBeRefined;
-      tempElementCanBeRefined = _elementCanBeRefined;
-      _elementCanBeRefined = new bool [_nel];
-      for( unsigned iel = 0; iel < _nel; iel++ ) {
-        _elementCanBeRefined[elementMapping [iel]] = tempElementCanBeRefined[iel];
-      }
-      delete [] tempElementCanBeRefined;
-    }
-    
-    if( _level != 0 ) {
-      short unsigned* tempElementLevel;
+    //BEGIN reordering _elementLevel
+    if( _level != 0 ) {      
+      MyVector <short unsigned> tempElementLevel;
       tempElementLevel = _elementLevel;
-      _elementLevel = new short unsigned [_nel];
       for( unsigned iel = 0; iel < _nel; iel++ ) {
-        _elementLevel[elementMapping [iel]] = tempElementLevel[iel];
+	_elementLevel[elementMapping [iel]] = tempElementLevel[iel];
       }
-      delete [] tempElementLevel;
-    }
-    
+      tempElementLevel.clear();
+    }   
     //END reordering _elementCanBeRefined
 
     //BEGIN reordering _elementGroup and _elementMaterial
-    if( _level == 0 ) {
-      short unsigned* tempElementGroup;
-      short unsigned* tempElementMaterial;
+    //if( _level == 0 ) {
+      MyVector <short unsigned> tempElementGroup;
+      MyVector <short unsigned> tempElementMaterial;
       tempElementGroup = _elementGroup;
       tempElementMaterial = _elementMaterial;
-      _elementGroup = new short unsigned [_nel];
-      _elementMaterial = new short unsigned [_nel];
+      //_elementGroup = new short unsigned [_nel];
+      //_elementMaterial = new short unsigned [_nel];
       for( unsigned iel = 0; iel < _nel; iel++ ) {
         _elementGroup[elementMapping[iel]]   = tempElementGroup[iel];
         _elementMaterial[elementMapping[iel]] = tempElementMaterial[iel] ;
       }
-      delete [] tempElementGroup;
-      delete [] tempElementMaterial;
-    }
+      tempElementGroup.clear();
+      tempElementMaterial.clear();
+    //}
     //END reordering _elementGroup and _elementMaterial
 
     //BEGIN reordering _elementNearFace (rows)
@@ -373,38 +360,6 @@ namespace femus {
       delete [] _childElemDofMemoryPointer;
       delete [] _childElemDof;
     }
-
-    delete [] _elementCanBeRefined;
-    delete [] _elementLevel;
-
-  }
-
-  void elem::DeleteGroupAndMaterial() {
-    delete [] _elementGroup;
-    delete [] _elementMaterial;
-  }
-
-  void elem::DeleteElementType() {
-    delete [] _elementType;
-  }
-
-  void elem::ScatterElementCanBeRefinedVector() {
-    bool* tempElementCanBeRefined = _elementCanBeRefined;
-    _elementCanBeRefined = new bool [_elementOwned];
-    for( unsigned iel = _elementOffset[ _iproc ]; iel < _elementOffset[ _iproc + 1]; iel++ ) {
-      _elementCanBeRefined[iel - _elementOffset[ _iproc ]] = tempElementCanBeRefined[iel];
-    }
-    _elementCanBeRefinedIsScattered = true;
-    delete [] tempElementCanBeRefined;
-    
-    short unsigned* tempElementLevel = _elementLevel;
-    _elementLevel = new short unsigned [_elementOwned];
-    for( unsigned iel = _elementOffset[ _iproc ]; iel < _elementOffset[ _iproc + 1]; iel++ ) {
-      _elementLevel[iel - _elementOffset[ _iproc ]] = tempElementLevel[iel];
-    }
-    _elementLevelIsScattered = true;
-    delete [] tempElementLevel;
-
   }
 
   void elem::DeleteElementNearVertex() {
@@ -416,7 +371,7 @@ namespace femus {
   /**
    * Return the number of vertices(type=0) + midpoints(type=1) + facepoints(type=2) + interiorpoits(type=2)
    **/
-  unsigned elem::GetElementDofNumber( const unsigned& iel, const unsigned& type ) const {
+  unsigned elem::GetElementDofNumber( const unsigned& iel, const unsigned& type ) {
     return NVE[_elementType[iel]][type];
   }
 
@@ -431,7 +386,7 @@ namespace femus {
   /**
    * Return the local->global face node index
    **/
-  unsigned elem::GetFaceVertexIndex( const unsigned& iel, const unsigned& iface, const unsigned& inode )const {
+  unsigned elem::GetFaceVertexIndex( const unsigned& iel, const unsigned& iface, const unsigned& inode ) {
     return _elementDof[iel][ig[_elementType[iel]][iface][inode]];
   }
 
@@ -472,7 +427,7 @@ namespace femus {
   void elem::AddToElementNumber( const unsigned& value, short unsigned ielt ) {
     _nelt[ielt] += value;
   }
-  unsigned elem::GetElementFaceNumber( const unsigned& iel, const unsigned& type )const {
+  unsigned elem::GetElementFaceNumber( const unsigned& iel, const unsigned& type ) {
     return NFC[ _elementType[iel] ][type];
   }
 
@@ -508,7 +463,7 @@ namespace femus {
   /**
    * Return element type: 0=hex, 1=Tet, 2=Wedge, 3=Quad, 4=Triangle and 5=Line
    **/
-  short unsigned elem::GetElementType( const unsigned& iel ) const {
+  short unsigned elem::GetElementType( const unsigned& iel ) {
     return _elementType[iel];
   }
 
@@ -519,30 +474,12 @@ namespace femus {
     _elementType[iel] = value;
   }
 
-  /**
-   * Return if the element can be refined
-   **/
-  bool elem::GetIfElementCanBeRefined( const unsigned& iel ) const {
-    return ( _elementCanBeRefinedIsScattered == false ) ?
-           _elementCanBeRefined[iel] : _elementCanBeRefined[iel - _elementOffset[ _iproc ]];
-	   
-    return ( _elementLevelIsScattered == false ) ?
-            (_elementLevel[iel] == _level) : 
-            (_elementCanBeRefined[iel - _elementOffset[ _iproc ]] == _level);	   
-  }
-
-  /**
-   * Set if the element can be refined
-   **/
-  void elem::SetIfElementCanBeRefined( const unsigned& iel, const bool& refined ) {
-    _elementCanBeRefined[iel] = refined;
-    if( refined ) _elementLevel[iel] = _level;
-  }
+  
 
   /**
    * Return element group
    **/
-  short unsigned elem::GetElementGroup( const unsigned& iel ) const {
+  short unsigned elem::GetElementGroup( const unsigned& iel ) {
     return _elementGroup[iel];
   }
 
@@ -563,7 +500,7 @@ namespace femus {
   /**
    * Return element material
    **/
-  short unsigned elem::GetElementMaterial( const unsigned& iel ) const {
+  short unsigned elem::GetElementMaterial( const unsigned& iel ) {
     return _elementMaterial[iel];
   }
 
@@ -759,7 +696,7 @@ namespace femus {
     return;
   }
 
-  void elem::SetChildElementDof( const unsigned& refIndex, Mesh* msh, const elem* elf ) {
+  void elem::SetChildElementDof( const unsigned& refIndex, Mesh* msh, elem* elf ) {
     for( unsigned iel = _elementOffset[ _iproc ]; iel < _elementOffset[ _iproc + 1]; iel++ ) {
       unsigned elementType = msh->GetElementType( iel );
       unsigned endIndex = ( msh->GetRefinedElementIndex( iel ) == 1 ) ? refIndex : 1u;

@@ -124,11 +124,17 @@ namespace femus {
       Mesh * GetMesh() {
         return _msh;
       }
-    private:
-
+      
       /** Get the index of the variable -name- */
       unsigned GetIndex(const char name[]) const;
-
+      
+      
+      unsigned GetSolutionType(const unsigned &index ) {
+	return _SolType[index];
+      }
+      
+      
+    private:
       //member data
       vector <int> _SolType;
       vector <char*> _SolName;

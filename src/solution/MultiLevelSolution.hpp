@@ -216,7 +216,9 @@ public:
 
   // ********************************************
     
-    
+    Solution* GetLevel(const unsigned i) {
+      return _solution[i];
+    };
 private:
     /** boundary condition function pointer */
 

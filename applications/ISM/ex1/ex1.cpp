@@ -58,7 +58,7 @@ int main(int argc, char** args) {
   4 = TRI
    */
 
-  int elementType = 2; // this decides what elements to test
+  int elementType = 1; // this decides what elements to test
 
   unsigned solType = 2;
   switch(elementType) {
@@ -173,12 +173,12 @@ int main(int argc, char** args) {
         std::cout<< " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," <<x[2]<<std::endl;
         std::cout << " The marker type is " <<  a9QUAD.GetMarkerType() <<std::endl;
 
-       std::vector<double> y = a9QUAD.GetPosition(trial, 12, 0.5);
-       for(unsigned i=0; i<2; i++){
-	 std::cout << "y[" << i << "] = " << y[i] << std::endl ;
-      }
-      std::cout << "errorX = " << sqrt((y[0])*(y[0])) << std::endl;
-      std::cout << "errorY = " << sqrt((1-y[1])*(1-y[1])) <<std::endl;
+//        std::vector<double> y = a9QUAD.GetPosition(trial, 12, 0.5);
+//        for(unsigned i=0; i<2; i++){
+// 	 std::cout << "y[" << i << "] = " << y[i] << std::endl ;
+//       }
+//       std::cout << "errorX = " << sqrt((y[0])*(y[0])) << std::endl;
+//       std::cout << "errorY = " << sqrt((1-y[1])*(1-y[1])) <<std::endl;
 
         //print mesh
         MultiLevelSolution mlSol( &mlMsh );

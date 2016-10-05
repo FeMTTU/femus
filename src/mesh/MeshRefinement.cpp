@@ -39,7 +39,7 @@ namespace femus {
   void MeshRefinement::FlagAllElementsToBeRefined() {
     FlagElementsToRefine(0);
   }
-  
+
 //-------------------------------------------------------------------
   bool MeshRefinement::FlagElementsToBeRefined(const double & treshold, NumericVector& error) {
     return FlagElementsToRefineBaseOnError(treshold, error);
@@ -152,14 +152,14 @@ namespace femus {
 
     //END update elem
   }
-  
-  
-    bool MeshRefinement::FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error) {
 
-    unsigned type = 2;  
-    
-    
-    
+
+  bool MeshRefinement::FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error) {
+
+    unsigned type = 2;
+
+
+
     //BEGIN temporary parallel vector initialization
     NumericVector* numberOfRefinedElement;
     numberOfRefinedElement = NumericVector::build().release();
@@ -181,18 +181,18 @@ namespace femus {
     }
     //END temporary parallel vector initialization
 
-    
+
     //BEGIN flag element to be refined
     for(int iel = _mesh._elementOffset[_iproc]; iel < _mesh._elementOffset[_iproc + 1]; iel++) {
       if(_mesh.el->GetIfElementCanBeRefined(iel)) {
         if((*_mesh._topology->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && error(iel) > treshold) {
-	    _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
-            numberOfRefinedElement->add(_iproc, 1.);
-            numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
+          _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
+          numberOfRefinedElement->add(_iproc, 1.);
+          numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
         }
       }
     }
-   
+
     _mesh._topology->_Sol[_mesh.GetAmrIndex()]->close();
     //END flag element to be refined
 
@@ -209,23 +209,23 @@ namespace femus {
       delete numberOfRefinedElementType[i];
     }
 
-    bool elementsHaveBeenRefined = true; 
-    if( totalNumber < _nprocs){
-      elementsHaveBeenRefined = false; 
+    bool elementsHaveBeenRefined = true;
+    if(totalNumber < _nprocs) {
+      elementsHaveBeenRefined = false;
     }
     return elementsHaveBeenRefined;
     //END update elem
   }
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
+
 //---------------------------------------------------------------------------------------------------------------
   void MeshRefinement::RefineMesh(const unsigned& igrid, Mesh* mshc, const elem_type* otherFiniteElement[6][5]) {
 
@@ -251,13 +251,10 @@ namespace femus {
     vector < double > coarseLocalizedAmrVector;
     mshc->_topology->_Sol[mshc->GetAmrIndex()]->localize_to_all(coarseLocalizedAmrVector);
 
-    vector < double > coarseLocalizedElementType;
-    mshc->_topology->_Sol[mshc->GetTypeIndex()]->localize_to_all(coarseLocalizedElementType);
-
     mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), mshc);
 
-    _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector, coarseLocalizedElementType);
-
+    _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector);
+    
     unsigned jel = 0;
     //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elements and find all the vertices
 
@@ -268,13 +265,16 @@ namespace femus {
     for(unsigned isdom = 0; isdom < _nprocs; isdom++) {
       elc->LocalizeElementDofFromOneToAll(isdom);
       elc->LocalizeElementNearFaceFromOneToAll(isdom);
+      elc->LocalizeElementQuantities(isdom);
       for(unsigned iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
         if(static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
-          unsigned elt = static_cast < short unsigned >(coarseLocalizedElementType[iel] + 0.25);
+          unsigned elt = elc->GetElementType(iel);
           // project element type
           for(unsigned j = 0; j < _mesh.GetRefIndex(); j++) {
-            _mesh.el->SetElementType(jel + j, elt);
-            _mesh.el-> SetIfElementCanBeRefined(jel + j, true);
+            _mesh.el->SetElementType(jel + j, elc->GetElementType(iel));
+	    _mesh.el->SetElementGroup(jel + j, elc->GetElementGroup(iel));
+	    _mesh.el->SetElementMaterial(jel + j, elc->GetElementMaterial(iel));
+	    _mesh.el->SetElementLevel(jel + j, elc->GetElementLevel(iel) + 1);
             if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1) {
               elc->SetChildElement(iel, j, jel + j);
             }
@@ -282,10 +282,10 @@ namespace femus {
 
           // project vertex indeces
           for(unsigned j = 0; j < _mesh.GetRefIndex(); j++)
-            for(unsigned inode = 0; inode < elc->GetNVE(elt, 0); inode++){
+            for(unsigned inode = 0; inode < elc->GetNVE(elt, 0); inode++) {
               unsigned jDof =  otherFiniteElement[elt][0]->GetBasis()->GetFine2CoarseVertexMapping(j, inode);
-	      _mesh.el->SetElementDofIndex(jel + j, inode,  elc->GetElementDofIndex(iel, jDof) );
-	    }
+              _mesh.el->SetElementDofIndex(jel + j, inode,  elc->GetElementDofIndex(iel, jDof));
+            }
 
           // project face indeces
           for(unsigned iface = 0; iface <  elc->GetNFC(elt, 1); iface++) {
@@ -303,11 +303,11 @@ namespace femus {
         else {
           _mesh.SetIfHomogeneous(false);
           AMR = true;
-          unsigned elt = static_cast < short unsigned >(coarseLocalizedElementType[iel] + 0.25);
-
-          // project element type
-          _mesh.el->SetElementType(jel, elt);
-          _mesh.el-> SetIfElementCanBeRefined(jel, false);
+          unsigned elt = elc->GetElementType(iel);
+          _mesh.el->SetElementType(jel, elc->GetElementType(iel));
+	  _mesh.el->SetElementGroup(jel , elc->GetElementGroup(iel));
+	  _mesh.el->SetElementMaterial(jel, elc->GetElementMaterial(iel));
+	  _mesh.el->SetElementLevel(jel, elc->GetElementLevel(iel));
           if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1) {
             elc->SetChildElement(iel, 0, jel);
           }
@@ -332,11 +332,12 @@ namespace femus {
       }
       elc->FreeLocalizedElementDof();
       elc->FreeLocalizedElementNearFace();
+      elc->FreeLocalizedElementQuantities();
     }
 
 
     coarseLocalizedAmrVector.resize(0);
-    coarseLocalizedElementType.resize(0);
+    //coarseLocalizedElementType.resize(0);
 
     int nnodes = elc->GetNodeNumber();
     _mesh.SetNumberOfNodes(nnodes);
@@ -458,36 +459,33 @@ namespace femus {
     _mesh._topology->_Sol[1]->close();
     _mesh._topology->_Sol[2]->close();
 
-    _mesh._topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-    _mesh._topology->ResizeSolutionVector("Material");
-    NumericVector& materialf =  _mesh._topology->GetSolutionName("Material");
-    NumericVector& materialc =   mshc->_topology->GetSolutionName("Material");
-    materialf.matrix_mult(materialc, *_mesh.GetCoarseToFineProjection(3));
-    materialf.close();
-
-    _mesh._topology->AddSolution("Group", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-    _mesh._topology->ResizeSolutionVector("Group");
-    NumericVector& groupf =  _mesh._topology->GetSolutionName("Group");
-    NumericVector& groupc =   mshc->_topology->GetSolutionName("Group");
-    groupf.matrix_mult(groupc, *_mesh.GetCoarseToFineProjection(3));
-    groupf.close();
-
-    _mesh._topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-    _mesh._topology->ResizeSolutionVector("Type");
-    NumericVector& typef =  _mesh._topology->GetSolutionName("Type");
-    NumericVector& typec =   mshc->_topology->GetSolutionName("Type");
-    typef.matrix_mult(typec, *_mesh.GetCoarseToFineProjection(3));
-    typef.close();
-
+//     _mesh._topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+//     _mesh._topology->ResizeSolutionVector("Material");
+//     NumericVector& materialf =  _mesh._topology->GetSolutionName("Material");
+//     NumericVector& materialc =   mshc->_topology->GetSolutionName("Material");
+//     materialf.matrix_mult(materialc, *_mesh.GetCoarseToFineProjection(3));
+//     materialf.close();
+// 
+//     _mesh._topology->AddSolution("Group", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+//     _mesh._topology->ResizeSolutionVector("Group");
+//     NumericVector& groupf =  _mesh._topology->GetSolutionName("Group");
+//     NumericVector& groupc =   mshc->_topology->GetSolutionName("Group");
+//     groupf.matrix_mult(groupc, *_mesh.GetCoarseToFineProjection(3));
+//     groupf.close();
+// 
+//     _mesh._topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
+//     _mesh._topology->ResizeSolutionVector("Type");
+//     NumericVector& typef =  _mesh._topology->GetSolutionName("Type");
+//     NumericVector& typec =   mshc->_topology->GetSolutionName("Type");
+//     typef.matrix_mult(typec, *_mesh.GetCoarseToFineProjection(3));
+//     typef.close();
 
     _mesh.el->BuildLocalElementNearVertex();
     _mesh.el->DeleteElementNearVertex();
 
-    _mesh.el->DeleteElementType();
-
     _mesh._topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
 
-    _mesh.el->ScatterElementCanBeRefinedVector();
+    _mesh.el->ScatterElementQuantities();
     _mesh.el->ScatterElementDof();
     _mesh.el->ScatterElementNearFace();
   }
