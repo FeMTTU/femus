@@ -101,11 +101,10 @@ namespace femus {
         if(mat._matIsAllocated) {
           if(mat._serial) {
             for(unsigned i = mat.begin(); i < mat.end(); i++) {
-              os << i << "\t" << std::endl;
-              for(unsigned j = mat(i).begin(); j < mat(i).end(); j++) {
-                os << j << " " << mat(i, j) << " ";
+	      for(unsigned j = mat(i).begin(); j < mat(i).end(); j++) {
+                os << mat(i, j) << " ";
               }
-              std::cout << std::endl;
+              os << std::endl;
             }
           }
           else {
@@ -136,7 +135,8 @@ namespace femus {
       unsigned _end;
       unsigned _size;
 
-      MyVector < unsigned > _elementOffset;
+      MyVector < unsigned > _rowOffset;
+      MyVector < unsigned > _rowSize;
 
       std::vector< Type > _mat;
       std::vector< Type > _mat2;

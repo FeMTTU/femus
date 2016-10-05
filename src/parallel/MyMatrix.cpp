@@ -47,8 +47,8 @@ namespace femus {
     _begin = 0;
     _end = 0;
     _size = 0;
-    
-     _irowIsSet = false;
+
+    _irowIsSet = false;
   }
 
   // ******************
@@ -71,7 +71,14 @@ namespace femus {
   // ******************
   template <class Type> void MyMatrix<Type>::resize(const unsigned &rsize, const unsigned &csize, const Type value) {
 
-    _elementOffset.resize(rsize, csize);
+    
+    _rowSize.resize(rsize, csize);
+    _rowOffset.resize(rsize);
+    _rowOffset[0] = 0;
+    for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
+      _rowOffset[i] = _rowOffset[i-1] + _rowSize[i-1] ;
+    }
+
     _mat.resize(rsize * csize, value);
 
     _matIsAllocated = true;
@@ -92,7 +99,11 @@ namespace femus {
       abort();
     }
 
-    _elementOffset.resize(_offset[_iproc + 1] - offset[_iproc], csize);
+    _rowOffset.resize(_offset[_iproc + 1] - offset[_iproc] + 1);
+    for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
+      _rowOffset[i] = i * csize;
+    }
+
     _mat.resize((_offset[_iproc + 1] - offset[_iproc])*csize, value);
 
     _matIsAllocated = true;
@@ -108,52 +119,53 @@ namespace femus {
   template <class Type> void MyMatrix<Type>::clear() {
     std::vector<Type>().swap(_mat);
     std::vector<Type>().swap(_mat2);
-    _elementOffset.clear();
+    _rowOffset.clear();
     _matIsAllocated = false;
     _serial = true;
   }
 
   template <class Type> Type& MyMatrix<Type>::operator()(const unsigned &i, const unsigned &j) {
-    return (_matIsAllocated) ? _mat[_elementOffset[i - _begin]+j] : _dummy;
+    return (_matIsAllocated) ? _mat[_rowOffset[i-_begin] + j] : _dummy;
   }
-  
+
   template <class Type> MyMatrix<Type>& MyMatrix<Type>::operator()(const unsigned &i) {
     _irowIsSet = true;
+    _irow = i;
     *this;
   }
-  
+
 
 
   // ******************
   template <class Type> unsigned MyMatrix<Type>::size() {
-    if(!_irowIsSet){
+    if(!_irowIsSet) {
       return _size;
     }
-    else{
+    else {
       _irowIsSet = false;
-      return (_matIsAllocated) ? ( _elementOffset[_irow + 1  - _begin] - _elementOffset[_irow  - _begin] ):0; 
+      return (_matIsAllocated) ? _rowSize[_irow] : 0;
     }
   }
 
   // ******************
   template <class Type> unsigned MyMatrix<Type>::begin() {
-    if(!_irowIsSet){
+    if(!_irowIsSet) {
       return _begin;
     }
-    else{
+    else {
       _irowIsSet = false;
-      return 0;
+      return (_matIsAllocated) ? _rowOffset[_irow] : 0;
     }
   }
 
   // ******************
   template <class Type> unsigned MyMatrix<Type>::end() {
-    if(!_irowIsSet){
+    if(!_irowIsSet) {
       return _end;
     }
-    else{
+    else {
       _irowIsSet = false;
-      return (_matIsAllocated) ? ( _elementOffset[_irow + 1  - _begin] - _elementOffset[_irow  - _begin] ):0; 
+      return (_matIsAllocated) ? _rowOffset[_irow] + _rowSize[_irow] : 0;
     }
   }
 
