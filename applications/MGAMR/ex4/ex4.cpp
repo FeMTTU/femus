@@ -137,27 +137,21 @@ int main(int argc, char** args) {
   a.scatter();
   std::cout << a << std::endl;
   
-  return 0;
+  std::vector <unsigned> offset;
+  offset = a.getOffset();
+  std::cout << std::endl;
+  for(int i = 0; i < offset.size(); i++) {
+    offset[i] = 2 * offset[i];
+  }
+ 
+  MyMatrix <double> b(offset,10,1);
 
+  std::cout << b << std::endl;
   
-// 
-//   std::vector <unsigned> offset;
-//   offset = c.getOffset();
-// 
-//   for(unsigned i = 0; i < offset.size(); i++) {
-//     std::cout << i << " " << offset[i] << std::endl;
-//   }
-//   std::cout << std::endl;
-//   for(int i = 0; i < offset.size(); i++) {
-//     offset[i] = 2 * offset[i];
-//   }
-// 
-//   for(unsigned i = 0; i < offset.size(); i++) {
-//     std::cout << i << " " << offset[i] << std::endl;
-//   }
-// 
-//   b = c;
-//   b.resize(offset, 1);
+  
+  //  b.resize(offset, 1);
+  // return 0;
+  
 //   std::cout << b << std::endl;
 // 
 //   std::cout << c << std::endl;

@@ -29,6 +29,28 @@ namespace femus {
 
   // ******************
   template <class Type> MyVector<Type>::MyVector() {
+    init();
+  }
+
+  // ******************
+  template <class Type> MyVector<Type>::MyVector(const unsigned &size, const Type value) {
+    init();
+    resize(size, value);
+  }
+
+  // ******************
+  template <class Type> MyVector<Type>::MyVector(const std::vector < unsigned > &offset, const Type value) {
+    init();
+    resize(offset, value);
+  }
+
+  // ******************
+  template <class Type> MyVector<Type>::~MyVector() {
+    clear();
+  }
+  
+  // ******************
+  template <class Type> void MyVector<Type>::init() {
 
     int iproc, nprocs;
 
@@ -48,23 +70,7 @@ namespace femus {
     _end = 0;
     _size = 0;
   }
-
-  // ******************
-  template <class Type> MyVector<Type>::MyVector(const unsigned &size, const Type value) {
-    MyVector();
-    resize(size, value);
-  }
-
-  // ******************
-  template <class Type> MyVector<Type>::MyVector(const std::vector < unsigned > &offset, const Type value) {
-    MyVector();
-    resize(offset, value);
-  }
-
-  // ******************
-  template <class Type> MyVector<Type>::~MyVector() {
-    clear();
-  }
+  
 
   // ******************
   template <class Type> void MyVector<Type>::resize(const unsigned &size, const Type value) {

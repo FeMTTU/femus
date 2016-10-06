@@ -29,12 +29,15 @@ namespace femus {
 
   // ******************
   template <class Type> MyMatrix<Type>::MyMatrix() {
-
+    init();
+  }
+  
+  template <class Type> void MyMatrix<Type>::init() {
     int iproc, nprocs;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
+   
     _iproc = static_cast < unsigned >(iproc);
     _nprocs = static_cast < unsigned >(nprocs);
 
@@ -47,19 +50,17 @@ namespace femus {
     _begin = 0;
     _end = 0;
     _size = 0;
-
   }
-
   // ******************
   template <class Type> MyMatrix<Type>::MyMatrix(const unsigned &rsize, const unsigned &csize, const Type value) {
-    MyMatrix();
+    init();
     resize(rsize, csize, value);
   }
 
   // ******************
   template <class Type> MyMatrix<Type>::MyMatrix(const std::vector < unsigned > &offset, const unsigned &csize, const Type value) {
-    MyMatrix();
-    resize(offset, csize, value);
+   init();
+   resize(offset, csize, value);
   }
 
   // ******************
@@ -92,10 +93,11 @@ namespace femus {
 
   // ******************
   template <class Type> void MyMatrix<Type>::resize(const std::vector < unsigned > &offset, const unsigned &csize, const Type value) {
-
+    
     _offset = offset;
     if(_nprocs != _offset.size() - 1) {
-      std::cout << "Error in MyMatrix.Resize(...), offset.size() != from nprocs" << std::endl;
+      std::cout << "Error in MyMatrix.Resize(...), offset.size()"<<_offset.size()
+      << "!= from nprocs+1="<<_nprocs+1 << std::endl;
       abort();
     }
 

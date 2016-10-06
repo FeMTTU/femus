@@ -46,6 +46,9 @@ namespace femus {
       // ******************
       ~MyMatrix();
 
+      //*******************
+      void init();
+      
       // ******************
       void resize(const unsigned &rsize, const unsigned &csize, const Type value = 0);
 
@@ -134,7 +137,6 @@ namespace femus {
             }
           }
         }
-        os << std::endl;
         return os;
       }
 

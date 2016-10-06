@@ -47,6 +47,9 @@ namespace femus {
       ~MyVector();
       
       // ******************
+      void init();
+      
+      //*******************
       void resize(const unsigned &size, const Type value = 0);
 
       // ******************
