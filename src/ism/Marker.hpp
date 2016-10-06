@@ -30,54 +30,70 @@
 namespace femus {
 
   class Marker : public ParallelObject {
-  public:
-    Marker( std::vector < double > x, const MarkerType &markerType, Mesh *mesh,const bool &debug = false){
-      _x = x;
-      _markerType = markerType;
-      _mesh = mesh;
-      GetElement(debug);
-    };
-  
-  std::vector < double > GetMarkerCoordinates(){ 
-    return _x; 
-  };  
-  
+    public:
+      Marker(std::vector < double > x, const MarkerType &markerType, Mesh *mesh, const unsigned & solType, const bool &debug = false) {
+        _x = x;
+        _markerType = markerType;
+        _mesh = mesh;
+        _solType = solType;
 
-  void GetElement(const bool & debug = false);
-  
-  
-  MarkerType GetMarkerType(){ 
-    return _markerType; 
-  };  
-  
-  void InverseMappingTEST(std::vector< double > &x);
-  
-  std::vector<double> GetPosition(std::vector<double> (*f)(std::vector<double>), int n, double T);
-    
-  private:
-    
-    
-    std::vector< double > InverseMapping(const unsigned &currentElem, const unsigned &solutionType, const std::vector< double > &x);
-    void InverseMapping(const unsigned &iel, const unsigned &solType, 
-			      const std::vector< double > &x, std::vector< double > &xi);
-    std::vector< double > InverseMappingTri(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
-    std::vector< double > InverseMappingHex(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
-    std::vector< double > InverseMappingTet(const unsigned &currentElem, const unsigned &solutionType,  std::vector< double > &x);
-    std::vector< double > InverseMappingWedge(const unsigned &currentElem, const unsigned &solutionType, std::vector< double > &x);
-    
-    unsigned GetNextElement2D(const unsigned &iel,  const unsigned &kel);
-    unsigned GetNextElement3D(const unsigned &iel,  const unsigned &kel);
-    unsigned GetNextElement2DOLD(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
-    unsigned GetNextElement3DOLD(const unsigned &dim, const unsigned &iel,  const unsigned &kel);
-    
-    bool SPDCheck2D(std::vector< std::vector <double> > &A);
-    bool SPDCheck3D(std::vector< std::vector <double> > &A);
-     
-     
-    std::vector < double > _x;
-    MarkerType _markerType;
-    const Mesh * _mesh;
-    unsigned _elem;
+        GetElement(debug);
+
+
+        if(_iproc == _mproc) {
+          _xi.resize(_mesh->GetDimension());
+          short unsigned elemType = _mesh->GetElementType(_elem);
+          for(int k = 0; k < _mesh->GetDimension(); k++) {
+            _xi[k] = _initialGuess[elemType][k];
+          }
+          for(int itype = 0; itype <= _solType; itype++) {
+            InverseMapping(_elem, itype, _x, _xi);
+          }
+          for(int k = 0; k < _mesh->GetDimension(); k++) {
+            std::cout << _xi[k] << " ";
+          }
+          std::cout << std::endl;
+        }
+      };
+
+
+
+
+      void GetElement(const bool & debug = false);
+      void GetElementSerial(unsigned & iel);
+
+
+      MarkerType GetMarkerType() {
+        return _markerType;
+      };
+
+      void InverseMappingTEST(std::vector< double > &x);
+      void Advection(Solution* sol, const unsigned &n, const double& T);
+
+      void ProjectVelocityCoefficients(Solution* sol, const unsigned &dim, const unsigned &solVtype, const std::vector<unsigned> &solVIndex,
+                                       unsigned &nDofsV,  short unsigned &ieltype, std::vector < std::vector < double > > &a);
+
+    private:
+
+
+      std::vector< double > InverseMapping(const unsigned &currentElem, const unsigned &solutionType, const std::vector< double > &x);
+      void InverseMapping(const unsigned &iel, const unsigned &solType,
+                          const std::vector< double > &x, std::vector< double > &xi);
+
+      unsigned GetNextElement2D(const unsigned &iel);
+      unsigned GetNextElement3D(const unsigned &iel);
+      int FastForward(const unsigned &currentElem);
+
+      std::vector < double > _x;
+      std::vector < double > _xi;
+      unsigned _solType;
+      MarkerType _markerType;
+      const Mesh * _mesh;
+      unsigned _elem;
+
+      unsigned _mproc;
+
+      static const double _initialGuess[6][3];
 
   };
 } //end namespace femus
