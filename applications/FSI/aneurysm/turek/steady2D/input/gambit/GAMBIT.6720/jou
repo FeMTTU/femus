@@ -1,0 +1,6 @@
+/ Journal File for GAMBIT 2.3.16, Database 2.3.14, lnamd64 SP2006033020
+/ Identifier "Turek_stents"
+/ File opened for append Thu Oct  6 12:36:37 2016.
+identifier name \
+  "/home/eaulisa/FEMuS/MyFEMuS/applications/FSI/aneurysm/turek/steady2D/input/gambit/Turek_stents.dbs" \
+  old nosaveprevious
