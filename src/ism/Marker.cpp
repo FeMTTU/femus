@@ -359,6 +359,64 @@ namespace femus {
   }
 
 
+  void Marker::GetElementSerial(unsigned & iel) {
+
+    unsigned dim = _mesh->GetDimension();
+
+    bool elementHasBeenFound = false;
+    bool pointIsOutsideThisProcess = false;
+    bool pointIsOutsideTheDomain = false;
+
+    unsigned nextElem = UINT_MAX ;
+    unsigned nextProc = _iproc;
+
+
+
+
+    //BEGIN next element search
+    while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
+      if(dim == 2) {
+        nextElem = GetNextElement2D(iel);
+      }
+      else if(dim == 3) {
+        nextElem = GetNextElement3D(iel);
+      }
+      if(nextElem == iel) {
+        elementHasBeenFound = true;
+      }
+      else if(nextElem == UINT_MAX) {
+        pointIsOutsideTheDomain = true;
+        iel = UINT_MAX;
+        break;
+      }
+      else {
+        iel = nextElem;
+        nextProc = _mesh->IsdomBisectionSearch(nextElem, 3);
+        if(nextProc != _iproc) {
+          pointIsOutsideThisProcess = true;
+          break;
+        }
+      }
+    }
+
+
+    if(elementHasBeenFound) {
+      std::cout << " The marker belongs to element " << _elem << std::endl;
+    }
+    else if(pointIsOutsideTheDomain) {
+      std::cout << " The marker does not belong to this domain" << std::endl;
+    }
+    else if(pointIsOutsideThisProcess) {
+      std::cout << "proc " << _iproc << " believes the marker is in proc = " << nextProc << std::endl;
+    }
+
+
+    //END next element search
+
+
+  }
+
+
 
   void inverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA) {
 
@@ -1442,28 +1500,47 @@ namespace femus {
 
 
 //this function returns the position of the marker at time T given the position at time T0 = 0, given the function f and the stepsize h
-  void Marker::Advection(Solution* sol, int n, double T) {
+  void Marker::Advection(Solution* sol, const unsigned &n, const double& T) {
+
+    unsigned dim = _mesh->GetDimension();
+    vector < unsigned > solVIndex(dim);
+    solVIndex[0] = sol->GetIndex("U");    // get the position of "U" in the ml_sol object
+    solVIndex[1] = sol->GetIndex("V");    // get the position of "V" in the ml_sol object
+    if(dim == 3) solVIndex[2] = sol->GetIndex("W");       // get the position of "V" in the ml_sol object
+    unsigned solVType = sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+
+
 
     if(_iproc == _mproc) {
-      unsigned dim = _mesh->GetDimension();
-      vector < unsigned > solVIndex(dim);
-      solVIndex[0] = sol->GetIndex("U");    // get the position of "U" in the ml_sol object
-      solVIndex[1] = sol->GetIndex("V");    // get the position of "V" in the ml_sol object
-      if(dim == 3) solVIndex[2] = sol->GetIndex("W");       // get the position of "V" in the ml_sol object
-      unsigned solVType = sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
-      vector < vector < double > >  solV(dim);    // local solution
-      unsigned nDofsV = _mesh->GetElementDofNumber(_elem, solVType);    // number of solution element dofs
-      for( unsigned  k = 0; k < dim; k++ ) {
-	solV[k].resize(nDofsV);
-      }
-      for(unsigned i = 0; i < nDofsV; i++) {
-        unsigned solVDof = _mesh->GetSolutionDof(i, _elem, solVType);    // global to global mapping between solution node and solution dof
-        for(unsigned  k = 0; k < dim; k++) {
-          solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
+      std::vector < std::vector < double > > a;
 
+      unsigned nDofsV;
+      short unsigned ielType;
+
+      ProjectVelocityCoefficients(sol, dim, solVType, solVIndex, nDofsV, ielType, a);
+
+      std::vector < double > phi;
+      GetPolynomialShapeFunction(phi, _xi, ielType, solVType);
+
+      std::vector<double> V(dim, 0.);
+
+      for(unsigned i = 0; i < dim; i++) {
+        for(unsigned j = 0; j < nDofsV; j++) {
+          V[i] += a[i][j] * phi[j];
         }
       }
+
+      for(unsigned i = 0; i < dim; i++) {
+        _x[i] += V[i] * T;
+      }
+
     }
+
+
+
+
+
+
 
 
 
@@ -1563,6 +1640,26 @@ namespace femus {
 //     }
 //
 //     return y;
+
+  }
+
+
+  void Marker::ProjectVelocityCoefficients(Solution* sol, const unsigned &dim, const unsigned &solVType,
+      const std::vector<unsigned> &solVIndex,  unsigned &nDofsV,  short unsigned &ielType,
+      std::vector < std::vector < double > > &a) {
+    vector < vector < double > >  solV(dim);    // local solution
+    nDofsV = _mesh->GetElementDofNumber(_elem, solVType);    // number of solution element dofs
+    for(unsigned  k = 0; k < dim; k++) {
+      solV[k].resize(nDofsV);
+    }
+    for(unsigned i = 0; i < nDofsV; i++) {
+      unsigned solVDof = _mesh->GetSolutionDof(i, _elem, solVType);    // global to global mapping between solution node and solution dof
+      for(unsigned  k = 0; k < dim; k++) {
+        solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
+      }
+    }
+    ielType = _mesh->GetElementType(_elem);
+    ProjectNodalToPolynomialCoefficients(a, solV, ielType, solVType);
 
   }
 

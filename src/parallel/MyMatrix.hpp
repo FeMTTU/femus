@@ -121,13 +121,16 @@ namespace femus {
             }
           }
           else {
-//             for(int j = 0; j < vec._nprocs; j++) {
-//               vec.localizeToAll(j);
-//               for(unsigned i = vec.begin(); i < vec.end(); i++) {
-//                 os << i << " " << vec[i] << std::endl;
-//               }
-//               vec.clearLocalized();
-//             }
+            for(int j = 0; j < mat._nprocs; j++) {
+              mat.localizeToAll(j);
+              for(unsigned i = mat.begin(); i < mat.end(); i++) {
+		for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
+		  os << mat(i,j) << " ";
+		}
+		os << std::endl;
+	      }
+              mat.clearLocalized();
+            }
           }
         }
         return os;

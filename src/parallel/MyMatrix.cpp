@@ -101,7 +101,7 @@ namespace femus {
 
     _begin = _offset[_iproc];
     _end = _offset[_iproc + 1];
-    _size = _begin - _end;
+    _size = _end - _begin;
 
     _rowSize.resize(offset, csize);
     _rowOffset.resize(offset);
@@ -191,7 +191,7 @@ namespace femus {
 
     _begin = _offset[_iproc];
     _end = _offset[_iproc + 1];
-    _size = _begin - _end;
+    _size = _end - _begin;
 
     MyVector < unsigned > rowOffset2 = _rowOffset;
     
@@ -246,32 +246,39 @@ namespace femus {
     _offset[_nprocs] = _size;
   }
 
-//   // ******************
-//   template <class Type> std::vector<unsigned>  MyMatrix<Type>::getOffset() {
-//     return _offset;
-//   }
-//
-//   // ******************
-//   template <class Type> void MyMatrix<Type>::localizeToAll(const unsigned &lproc) {
-//
-//     if(_serial) {
-//       std::cout << "Error in MyMatrix.LocalizeToAll(), vector is in " << status() << " status" << std::endl;
-//       abort();
-//     }
-//
-//     if(_iproc != lproc) {
-//       _vec.swap(_vec2);
-//       _vec.resize(_offset[lproc + 1] - _offset[lproc]);
-//     }
-//
-//     MPI_Bcast(&_vec[0], _vec.size(), _MY_MPI_DATATYPE, lproc, MPI_COMM_WORLD);
-//
-//     _begin = _offset[lproc];
-//     _end = _offset[lproc + 1];
-//
-//     _lproc = lproc;
-//
-//   }
+  // ******************
+  template <class Type> std::vector<unsigned>  MyMatrix<Type>::getOffset() {
+    return _offset;
+  }
+
+  // ******************
+  template <class Type> void MyMatrix<Type>::localizeToAll(const unsigned &lproc) {
+
+    if(_serial) {
+      std::cout << "Error in MyMatrix.LocalizeToAll(), matrix is in " << status() << " status" << std::endl;
+      abort();
+    }
+
+    _matSize.localizeToAll(lproc);
+    _rowSize.localizeToAll(lproc);
+    _rowOffset.localizeToAll(lproc);
+
+    
+    if(_iproc != lproc) {
+      _mat.swap(_mat2);
+      _mat.resize(_matSize[lproc]);
+    }
+
+    MPI_Bcast(&_mat[0], _matSize[lproc], _MY_MPI_DATATYPE, lproc, MPI_COMM_WORLD);
+
+    
+    _begin = _offset[_lproc];
+    _end = _offset[_lproc + 1];
+    _size = _end - _begin;
+    
+    _lproc = lproc;
+
+  }
 //
 //   // ******************
 //   template <class Type> void MyMatrix<Type>::localizeToOne(const unsigned &lproc, const unsigned &kproc) {
@@ -302,20 +309,24 @@ namespace femus {
 //   }
 //
 //   // ******************
-//   template <class Type> void MyMatrix<Type>::clearLocalized() {
-//
-//     if(_lproc != _iproc && _matIsAllocated) {
-//       _vec.swap(_vec2);
-//       std::vector<Type>().swap(_vec2);
-//       _begin = _offset[_iproc];
-//       _end = _offset[_iproc + 1];
-//       _size = _offset[_nprocs];
-//     }
-//     else {
-//       _matIsAllocated = true;
-//     }
-//
-//   }
+  template <class Type> void MyMatrix<Type>::clearLocalized() {
+
+    _matSize.clearLocalized();
+    _rowOffset.clearLocalized();
+    _rowSize.clearLocalized();
+    
+    if(_lproc != _iproc && _matIsAllocated) {
+      _mat.swap(_mat2);
+      std::vector<Type>().swap(_mat2);
+      _begin = _offset[_iproc];
+      _end = _offset[_iproc + 1];
+      _size = _end - _begin;
+    }
+    else {
+      _matIsAllocated = true;
+    }
+
+  }
 //
   // ****************
   template <class Type> const std::string & MyMatrix<Type>::status() {
