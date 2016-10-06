@@ -130,9 +130,11 @@ namespace femus {
 		os << std::endl;
 	      }
               mat.clearLocalized();
+	      os << std::endl;
             }
           }
         }
+        os << std::endl;
         return os;
       }
 

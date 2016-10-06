@@ -135,7 +135,7 @@ int main(int argc, char** args) {
   std::cout << a << std::endl;
   
   a.scatter();
-  //std::cout << a << std::endl;
+  std::cout << a << std::endl;
   
   return 0;
 

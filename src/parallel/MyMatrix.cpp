@@ -211,10 +211,10 @@ namespace femus {
 
     _mat.resize(_matSize[_iproc]);
 
-    std::cout<< _offset[_iproc] <<" "<< _offset[_iproc + 1] << " "<<_matSize[_iproc] << std::endl;
+    //std::cout<< _offset[_iproc] <<" "<< _offset[_iproc + 1] << " "<<_matSize[_iproc] << std::endl;
     
     for(unsigned i = _offset[_iproc]; i < _offset[_iproc + 1]; i++) {
-      std::cout<< _rowOffset[i] << " " << end(i) << std::endl;
+      //std::cout<< _rowOffset[i] << " " << end(i) << std::endl;
       for(unsigned j = begin(i); j< end(i); j++){
 	
 	_mat[_rowOffset[i] + j] = _mat2[rowOffset2[i] + j];
@@ -271,12 +271,12 @@ namespace femus {
 
     MPI_Bcast(&_mat[0], _matSize[lproc], _MY_MPI_DATATYPE, lproc, MPI_COMM_WORLD);
 
-    
-    _begin = _offset[_lproc];
-    _end = _offset[_lproc + 1];
+           
+    _begin = _offset[lproc];
+    _end = _offset[lproc + 1];
     _size = _end - _begin;
     
-    _lproc = lproc;
+    _lproc = lproc;   
 
   }
 //
