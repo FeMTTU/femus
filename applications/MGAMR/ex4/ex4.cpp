@@ -126,18 +126,20 @@ int main(int argc, char** args) {
 
   std::cout << a << std::endl;
 
-  a.resize(5,5);
+  a.resize(10,5);
   for(unsigned i = a.begin(); i < a.end(); i++) {
-    for(unsigned j = a.begin(); j < a.end(); j++) {
-      a(i,j) = i+j;
+    for(unsigned j = a.begin(i); j < a.end(i); j++) {
+      a[i][j] = (i*5)+j;
     }
   }
   std::cout << a << std::endl;
   
+  a.scatter();
+  //std::cout << a << std::endl;
+  
   return 0;
 
-//   c.scatter();
-//   std::cout << c << std::endl;
+  
 // 
 //   std::vector <unsigned> offset;
 //   offset = c.getOffset();

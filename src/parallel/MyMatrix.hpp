@@ -57,14 +57,22 @@ namespace femus {
 
       // ******************
       unsigned size();
+      
+      unsigned size(const unsigned &i);
 
       // ******************
       unsigned begin();
+       
+      unsigned begin(const unsigned &i);
 
       // ******************
       unsigned end();
 
+      unsigned end(const unsigned &i);
+
       // ******************
+      
+      
       void scatter(const std::vector < unsigned > &offset);
 
       // ******************
@@ -89,9 +97,14 @@ namespace femus {
       const std::string &status();
 
       // ******************
+      
+      Type* operator[](const unsigned &i);
+          
       Type& operator()(const unsigned &i, const unsigned &j);
 
       MyMatrix<Type>& operator()(const unsigned &i);
+      
+      
 
       // *****************
       friend std::ostream& operator<<(std::ostream& os, MyMatrix<Type>& mat) {
@@ -101,8 +114,8 @@ namespace femus {
         if(mat._matIsAllocated) {
           if(mat._serial) {
             for(unsigned i = mat.begin(); i < mat.end(); i++) {
-	      for(unsigned j = mat(i).begin(); j < mat(i).end(); j++) {
-                os << mat(i, j) << " ";
+	      for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
+                os << mat[i][j] << " ";
               }
               os << std::endl;
             }
@@ -137,14 +150,13 @@ namespace femus {
 
       MyVector < unsigned > _rowOffset;
       MyVector < unsigned > _rowSize;
+      MyVector < unsigned > _matSize;
 
       std::vector< Type > _mat;
       std::vector< Type > _mat2;
       std::vector < unsigned > _offset;
 
       unsigned _lproc;
-      bool _irowIsSet;
-      unsigned _irow;
   };
 
 

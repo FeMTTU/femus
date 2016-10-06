@@ -141,7 +141,7 @@ namespace femus {
 
     _vec.swap(_vec2);
 
-    _vec.resize(_offset[_iproc + 1] - offset[_iproc]);
+    _vec.resize(_offset[_iproc + 1] - _offset[_iproc]);
 
     for(unsigned i = _offset[_iproc]; i < _offset[_iproc + 1]; i++) {
       _vec[i - _offset[_iproc] ] = _vec2[i];

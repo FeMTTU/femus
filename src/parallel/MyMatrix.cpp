@@ -48,7 +48,6 @@ namespace femus {
     _end = 0;
     _size = 0;
 
-    _irowIsSet = false;
   }
 
   // ******************
@@ -71,22 +70,23 @@ namespace femus {
   // ******************
   template <class Type> void MyMatrix<Type>::resize(const unsigned &rsize, const unsigned &csize, const Type value) {
 
-    
-    _rowSize.resize(rsize, csize);
-    _rowOffset.resize(rsize);
-    _rowOffset[0] = 0;
+    _begin = 0;
+    _end = rsize;
+    _size = _end - _begin;
+
+    _rowSize.resize(_size, csize);
+    _rowOffset.resize(_size);
+    _rowOffset[_rowOffset.begin()] = 0;
     for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
-      _rowOffset[i] = _rowOffset[i-1] + _rowSize[i-1] ;
+      _rowOffset[i] = _rowOffset[i - 1] + _rowSize[i - 1] ;
     }
 
-    _mat.resize(rsize * csize, value);
+    _matSize.resize(_nprocs);
+    _matSize[_iproc] = _size * csize;
+    _mat.resize(_matSize[_iproc], value);
 
     _matIsAllocated = true;
     _serial = true;
-
-    _begin = 0;
-    _end = rsize;
-    _size = rsize;
 
   }
 
@@ -99,19 +99,24 @@ namespace femus {
       abort();
     }
 
-    _rowOffset.resize(_offset[_iproc + 1] - offset[_iproc] + 1);
+    _begin = _offset[_iproc];
+    _end = _offset[_iproc + 1];
+    _size = _begin - _end;
+
+    _rowSize.resize(offset, csize);
+    _rowOffset.resize(offset);
+    _rowOffset[_rowOffset.begin()] = 0;
     for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
-      _rowOffset[i] = i * csize;
+      _rowOffset[i] = _rowOffset[i - 1] + _rowSize[i - 1] ;
     }
 
-    _mat.resize((_offset[_iproc + 1] - offset[_iproc])*csize, value);
+    _matSize.resize(_nprocs);
+    _matSize.scatter();
+    _matSize[_iproc] = _size * csize;
+    _mat.resize(_matSize[_iproc], value);
 
     _matIsAllocated = true;
     _serial = false;
-
-    _begin = _offset[_iproc];
-    _end = _offset[_iproc + 1];
-    _size = _offset[_nprocs];
 
   }
 
@@ -124,103 +129,123 @@ namespace femus {
     _serial = true;
   }
 
+
+  //This function should never be used (as mat[i][j])
+  //when the matrix is in localizedToOne status.
+  //Use mat(i,j) instead
+  template <class Type> Type* MyMatrix<Type>::operator[](const unsigned &i) {
+    return &_mat[ _rowOffset[i]];
+  }
+
+
   template <class Type> Type& MyMatrix<Type>::operator()(const unsigned &i, const unsigned &j) {
-    return (_matIsAllocated) ? _mat[_rowOffset[i-_begin] + j] : _dummy;
+    return (_matIsAllocated) ? _mat[ _rowOffset[i] + j] : _dummy;
   }
-
-  template <class Type> MyMatrix<Type>& MyMatrix<Type>::operator()(const unsigned &i) {
-    _irowIsSet = true;
-    _irow = i;
-    *this;
-  }
-
 
 
   // ******************
+
   template <class Type> unsigned MyMatrix<Type>::size() {
-    if(!_irowIsSet) {
-      return _size;
-    }
-    else {
-      _irowIsSet = false;
-      return (_matIsAllocated) ? _rowSize[_irow] : 0;
-    }
+    return _size;
+  }
+
+  template <class Type> unsigned MyMatrix<Type>::size(const unsigned & i) {
+    return (_matIsAllocated) ? _rowSize[i] : 0;
   }
 
   // ******************
+
   template <class Type> unsigned MyMatrix<Type>::begin() {
-    if(!_irowIsSet) {
-      return _begin;
-    }
-    else {
-      _irowIsSet = false;
-      return (_matIsAllocated) ? _rowOffset[_irow] : 0;
-    }
+    return _begin;
+  }
+
+  template <class Type> unsigned MyMatrix<Type>::begin(const unsigned &i) {
+    return 0;
   }
 
   // ******************
+
   template <class Type> unsigned MyMatrix<Type>::end() {
-    if(!_irowIsSet) {
-      return _end;
-    }
-    else {
-      _irowIsSet = false;
-      return (_matIsAllocated) ? _rowOffset[_irow] + _rowSize[_irow] : 0;
-    }
+    return _end;
   }
 
-//   // ******************
-//   template <class Type> void MyMatrix<Type>::scatter(const std::vector < unsigned > &offset) {
-//
-//     _offset = offset;
-//
-//     if(!_serial) {
-//       std::cout << "Error in MyMatrix.scatter(), vector is in " << status() << " status" << std::endl;
-//       abort();
-//     }
-//
-//     if(_nprocs != _offset.size() - 1) {
-//       std::cout << "Error in MyMatrix.resize(...), offset.size() != from nprocs" << std::endl;
-//       abort();
-//     }
-//
-//     _vec.swap(_vec2);
-//
-//     _vec.resize(_offset[_iproc + 1] - offset[_iproc]);
-//
-//     for(unsigned i = _offset[_iproc]; i < _offset[_iproc + 1]; i++) {
-//       _vec[i - _offset[_iproc] ] = _vec2[i];
-//     }
-//
-//     std::vector<Type>().swap(_vec2);
-//
-//     _serial = false;
-//
-//     _begin = _offset[_iproc];
-//     _end = _offset[_iproc + 1];
-//     _size = _offset[_nprocs];
-//
-//   }
-//
-//   // ******************
-//   template <class Type> void MyMatrix<Type>::scatter() {
-//     buildOffset();
-//     scatter(_offset);
-//   }
-//
-//   // ******************
-//   template <class Type> void MyMatrix<Type>::buildOffset() {
-//     unsigned locsize = _size / _nprocs;
-//     unsigned reminder = _size % _nprocs;
-//     _offset.resize(_nprocs + 1);
-//     _offset[0] = 0;
-//     for(unsigned i = 1; i < _nprocs; i++) {
-//       _offset[i] = _offset[i - 1] + locsize;
-//       if(i <= reminder) _offset[i] += 1;
-//     }
-//     _offset[_nprocs] = _size;
-//   }
-//
+  template <class Type> unsigned MyMatrix<Type>::end(const unsigned &i) {
+    return (_matIsAllocated) ? _rowSize[i] : 0;
+  }
+
+  // ******************
+
+  template <class Type> void MyMatrix<Type>::scatter(const std::vector < unsigned > &offset) {
+
+    _offset = offset;
+
+    if(!_serial) {
+      std::cout << "Error in MyMatrix.scatter(), matrix is in " << status() << " status" << std::endl;
+      abort();
+    }
+
+    if(_nprocs != _offset.size() - 1) {
+      std::cout << "Error in MyMatrix.resize(...), offset.size() != from nprocs" << std::endl;
+      abort();
+    }
+
+    _begin = _offset[_iproc];
+    _end = _offset[_iproc + 1];
+    _size = _begin - _end;
+
+    MyVector < unsigned > rowOffset2 = _rowOffset;
+    
+    _rowSize.scatter(_offset);
+    _rowOffset.scatter(_offset);
+    _rowOffset[_rowOffset.begin()] = 0;
+    unsigned matsize = _rowSize[_rowOffset.begin()];
+    for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
+      _rowOffset[i] = _rowOffset[i - 1] + _rowSize[i - 1] ;
+      matsize += _rowSize[i - 1];
+    }
+
+    _matSize.scatter();
+    _matSize[_iproc] = matsize;
+        
+    _mat.swap(_mat2);
+
+    _mat.resize(_matSize[_iproc]);
+
+    std::cout<< _offset[_iproc] <<" "<< _offset[_iproc + 1] << " "<<_matSize[_iproc] << std::endl;
+    
+    for(unsigned i = _offset[_iproc]; i < _offset[_iproc + 1]; i++) {
+      std::cout<< _rowOffset[i] << " " << end(i) << std::endl;
+      for(unsigned j = begin(i); j< end(i); j++){
+	
+	_mat[_rowOffset[i] + j] = _mat2[rowOffset2[i] + j];
+      }
+    }
+
+    std::vector<Type>().swap(_mat2);
+
+    _serial = false;
+
+  }
+
+  // ******************
+  template <class Type> void MyMatrix<Type>::scatter() {
+    buildOffset();
+    scatter(_offset);
+  }
+  
+  // ******************
+  template <class Type> void MyMatrix<Type>::buildOffset() {
+    unsigned locsize = _size / _nprocs;
+    unsigned reminder = _size % _nprocs;
+    _offset.resize(_nprocs + 1);
+    _offset[0] = 0;
+    for(unsigned i = 1; i < _nprocs; i++) {
+      _offset[i] = _offset[i - 1] + locsize;
+      if(i <= reminder) _offset[i] += 1;
+    }
+    _offset[_nprocs] = _size;
+  }
+
 //   // ******************
 //   template <class Type> std::vector<unsigned>  MyMatrix<Type>::getOffset() {
 //     return _offset;
