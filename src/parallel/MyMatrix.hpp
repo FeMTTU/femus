@@ -44,6 +44,10 @@ namespace femus {
       MyMatrix(const std::vector < unsigned > &offset, const unsigned &csize, const Type value = 0);
 
       // ******************
+      MyMatrix(const MyVector < unsigned > &rowSize, const Type value = 0);
+      
+      // ******************
+      
       ~MyMatrix();
 
       //*******************

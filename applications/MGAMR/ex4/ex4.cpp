@@ -148,6 +148,16 @@ int main(int argc, char** args) {
 
   std::cout << b << std::endl;
   
+
+  MyVector < unsigned > v(5,0);
+  v.scatter();
+  MyMatrix <double> m(v,1);
+  
+  std::cout<<m<<std::endl;
+  
+
+
+  return 0;
   
   //  b.resize(offset, 1);
   // return 0;
