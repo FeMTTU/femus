@@ -29,6 +29,28 @@ namespace femus {
 
   // ******************
   template <class Type> MyVector<Type>::MyVector() {
+    init();
+  }
+
+  // ******************
+  template <class Type> MyVector<Type>::MyVector(const unsigned &size, const Type value) {
+    init();
+    resize(size, value);
+  }
+
+  // ******************
+  template <class Type> MyVector<Type>::MyVector(const std::vector < unsigned > &offset, const Type value) {
+    init();
+    resize(offset, value);
+  }
+
+  // ******************
+  template <class Type> MyVector<Type>::~MyVector() {
+    clear();
+  }
+  
+  // ******************
+  template <class Type> void MyVector<Type>::init() {
 
     int iproc, nprocs;
 
@@ -48,23 +70,7 @@ namespace femus {
     _end = 0;
     _size = 0;
   }
-
-  // ******************
-  template <class Type> MyVector<Type>::MyVector(const unsigned &size, const Type value) {
-    MyVector();
-    resize(size, value);
-  }
-
-  // ******************
-  template <class Type> MyVector<Type>::MyVector(const std::vector < unsigned > &offset, const Type value) {
-    MyVector();
-    resize(offset, value);
-  }
-
-  // ******************
-  template <class Type> MyVector<Type>::~MyVector() {
-    clear();
-  }
+  
 
   // ******************
   template <class Type> void MyVector<Type>::resize(const unsigned &size, const Type value) {
@@ -141,7 +147,7 @@ namespace femus {
 
     _vec.swap(_vec2);
 
-    _vec.resize(_offset[_iproc + 1] - offset[_iproc]);
+    _vec.resize(_offset[_iproc + 1] - _offset[_iproc]);
 
     for(unsigned i = _offset[_iproc]; i < _offset[_iproc + 1]; i++) {
       _vec[i - _offset[_iproc] ] = _vec2[i];

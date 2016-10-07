@@ -2,7 +2,7 @@
 /*=========================================================================
 
  Program: FEMuS
- Module: MyVector
+ Module: MyMatrix
  Authors: Eugenio Aulisa
 
  Copyright (c) FEMuS
@@ -16,8 +16,8 @@
 
 #include <string>
 
-#ifndef __femus_mesh_MyVector_hpp__
-#define __femus_mesh_MyVector_hpp__
+#ifndef __femus_mesh_MyMatrix_hpp__
+#define __femus_mesh_MyMatrix_hpp__
 
 
 #include <iostream>
@@ -27,47 +27,55 @@
 #include <mpi.h>
 #include <boost/mpi/datatype.hpp>
 
-
+#include "MyVector.hpp"
 
 namespace femus {
 
-  template <class Type> class MyVector {
+  template <class Type> class MyMatrix {
 
     public:
       // ******************
-      MyVector();
+      MyMatrix();
 
       // ******************
-      MyVector(const unsigned &size, const Type value = 0);
+      MyMatrix(const unsigned &rsize, const unsigned &csize, const Type value = 0);
 
       // ******************
-      MyVector(const std::vector < unsigned > &offset, const Type value = 0);
+      MyMatrix(const std::vector < unsigned > &offset, const unsigned &csize, const Type value = 0);
 
       // ******************
-      ~MyVector();
-      
-      // ******************
+      ~MyMatrix();
+
+      //*******************
       void init();
       
-      //*******************
-      void resize(const unsigned &size, const Type value = 0);
+      // ******************
+      void resize(const unsigned &rsize, const unsigned &csize, const Type value = 0);
 
       // ******************
-      void resize(const std::vector < unsigned > &offset, const Type value = 0);
+      void resize(const std::vector < unsigned > &offset, const unsigned &csize, const Type value = 0);
 
       // ******************
       void clear();
 
       // ******************
       unsigned size();
+      
+      unsigned size(const unsigned &i);
 
       // ******************
       unsigned begin();
+       
+      unsigned begin(const unsigned &i);
 
       // ******************
       unsigned end();
 
+      unsigned end(const unsigned &i);
+
       // ******************
+      
+      
       void scatter(const std::vector < unsigned > &offset);
 
       // ******************
@@ -81,10 +89,10 @@ namespace femus {
 
       // ******************
       void localizeToAll(const unsigned &lproc);
-      
+
       // ******************
       void localizeToOne(const unsigned &lproc, const unsigned &kproc);
-      
+
       // ******************
       void clearLocalized();
 
@@ -92,26 +100,40 @@ namespace femus {
       const std::string &status();
 
       // ******************
-      Type& operator[](const unsigned &i);
+      
+      Type* operator[](const unsigned &i);
+          
+      Type& operator()(const unsigned &i, const unsigned &j);
+
+      MyMatrix<Type>& operator()(const unsigned &i);
+      
+      
 
       // *****************
-      friend std::ostream& operator<<(std::ostream& os, MyVector<Type>& vec) {
+      friend std::ostream& operator<<(std::ostream& os, MyMatrix<Type>& mat) {
 
-        os << vec.status() << std::endl;
+        os << mat.status() << std::endl;
 
-        if(vec._vecIsAllocated) {
-          if(vec._serial) {
-            for(unsigned i = vec.begin(); i < vec.end(); i++) {
-              os << i << " " << vec[i] << std::endl;
+        if(mat._matIsAllocated) {
+          if(mat._serial) {
+            for(unsigned i = mat.begin(); i < mat.end(); i++) {
+	      for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
+                os << mat[i][j] << " ";
+              }
+              os << std::endl;
             }
           }
           else {
-            for(int j = 0; j < vec._nprocs; j++) {
-              vec.localizeToAll(j);
-              for(unsigned i = vec.begin(); i < vec.end(); i++) {
-                os << i << " " << vec[i] << std::endl;
-              }
-              vec.clearLocalized();
+            for(int j = 0; j < mat._nprocs; j++) {
+              mat.localizeToAll(j);
+              for(unsigned i = mat.begin(); i < mat.end(); i++) {
+		for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
+		  os << mat(i,j) << " ";
+		}
+		os << std::endl;
+	      }
+              mat.clearLocalized();
+	      os << std::endl;
             }
           }
         }
@@ -122,7 +144,7 @@ namespace femus {
 
       std::string _status;
       bool _serial;
-      bool _vecIsAllocated;
+      bool _matIsAllocated;
 
       unsigned _iproc;
       unsigned _nprocs;
@@ -133,15 +155,19 @@ namespace femus {
       unsigned _end;
       unsigned _size;
 
-      std::vector< Type > _vec;
-      std::vector< Type > _vec2;
+      MyVector < unsigned > _rowOffset;
+      MyVector < unsigned > _rowSize;
+      MyVector < unsigned > _matSize;
+
+      std::vector< Type > _mat;
+      std::vector< Type > _mat2;
       std::vector < unsigned > _offset;
 
       unsigned _lproc;
   };
 
 
-  
+
 
 
 } //end namespace femus

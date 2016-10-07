@@ -83,6 +83,7 @@ mesh/MeshRefinement.cpp
 mesh/MeshMetisPartitioning.cpp
 mesh/MeshPartitioning.cpp
 mesh/MeshASMPartitioning.cpp
+parallel/MyMatrix.cpp
 parallel/MyVector.cpp
 physics/Fluid.cpp
 physics/Material.cpp

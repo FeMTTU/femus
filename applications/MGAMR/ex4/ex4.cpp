@@ -30,6 +30,7 @@
 
 
 #include "MyVector.hpp"
+#include "MyMatrix.hpp"
 
 using namespace femus;
 
@@ -61,67 +62,123 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  MyVector <double> b;
-  MyVector <double> c;
+//   MyVector <double> b;
+//   MyVector <double> c;
+//
+//   std::cout << c << std::endl;
+//
+//   c.resize(10);
+//   for(unsigned i = c.begin(); i < c.end(); i++) {
+//     c[i] = 1.3 * i;
+//   }
+//   std::cout << c << std::endl;
+//
+//   c.scatter();
+//   std::cout << c << std::endl;
+//
+//   std::vector <unsigned> offset;
+//   offset = c.getOffset();
+//
+//   for(unsigned i = 0; i < offset.size(); i++) {
+//     std::cout << i << " " << offset[i] << std::endl;
+//   }
+//   std::cout << std::endl;
+//   for(int i = 0; i < offset.size(); i++) {
+//     offset[i] = 2 * offset[i];
+//   }
+//
+//   for(unsigned i = 0; i < offset.size(); i++) {
+//     std::cout << i << " " << offset[i] << std::endl;
+//   }
+//
+//   b = c;
+//   b.resize(offset, 1);
+//   std::cout << b << std::endl;
+//
+//   std::cout << c << std::endl;
+//
+//   MyVector <unsigned> a;
+//   MyVector <unsigned> d;
+//
+//   std::cout << a << std::endl;
+//
+//   a.resize(10);
+//   for(unsigned i = a.begin(); i < a.end(); i++) {
+//     a[i] = 1.3 * i;
+//   }
+//   std::cout << a << std::endl;
+//
+//   a.scatter();
+//   std::cout << a << std::endl;
+//
+//   offset = a.getOffset();
+//   for(int i = 0; i < offset.size(); i++) {
+//     offset[i] = 2 * offset[i];
+//   }
+//   d = a;
+//   d.resize(offset, 1);
+//   std::cout << d << std::endl;
+//
+//   std::cout << a << std::endl;
 
-  std::cout << c << std::endl;
 
-  c.resize(10);
-  for(unsigned i = c.begin(); i < c.end(); i++) {
-    c[i] = 1.3 * i;
+  MyMatrix <double> a;
+
+  std::cout << a << std::endl;
+
+  a.resize(10,5);
+  for(unsigned i = a.begin(); i < a.end(); i++) {
+    for(unsigned j = a.begin(i); j < a.end(i); j++) {
+      a[i][j] = (i*5)+j;
+    }
   }
-  std::cout << c << std::endl;
-
-  c.scatter();
-  std::cout << c << std::endl;
-
+  std::cout << a << std::endl;
+  
+  a.scatter();
+  std::cout << a << std::endl;
+  
   std::vector <unsigned> offset;
-  offset = c.getOffset();
-
-  for(unsigned i = 0; i < offset.size(); i++) {
-    std::cout << i << " " << offset[i] << std::endl;
-  }
+  offset = a.getOffset();
   std::cout << std::endl;
   for(int i = 0; i < offset.size(); i++) {
     offset[i] = 2 * offset[i];
   }
+ 
+  MyMatrix <double> b(offset,10,1);
 
-  for(unsigned i = 0; i < offset.size(); i++) {
-    std::cout << i << " " << offset[i] << std::endl;
-  }
-
-  b = c;
-  b.resize(offset, 1);
   std::cout << b << std::endl;
-
-  std::cout << c << std::endl;
-
-  MyVector <unsigned> a;
-  MyVector <unsigned> d;
-
-  std::cout << a << std::endl;
-
-  a.resize(10);
-  for(unsigned i = a.begin(); i < a.end(); i++) {
-    a[i] = 1.3 * i;
-  }
-  std::cout << a << std::endl;
-
-  a.scatter();
-  std::cout << a << std::endl;
-
-  offset = a.getOffset();
-  for(int i = 0; i < offset.size(); i++) {
-    offset[i] = 2 * offset[i];
-  }
-  d = a;
-  d.resize(offset, 1);
-  std::cout << d << std::endl;
-
-  std::cout << a << std::endl;
-
-
-
+  
+  
+  //  b.resize(offset, 1);
+  // return 0;
+  
+//   std::cout << b << std::endl;
+// 
+//   std::cout << c << std::endl;
+// 
+//   MyVector <unsigned> a;
+//   MyVector <unsigned> d;
+// 
+//   std::cout << a << std::endl;
+// 
+//   a.resize(10);
+//   for(unsigned i = a.begin(); i < a.end(); i++) {
+//     a[i] = 1.3 * i;
+//   }
+//   std::cout << a << std::endl;
+// 
+//   a.scatter();
+//   std::cout << a << std::endl;
+// 
+//   offset = a.getOffset();
+//   for(int i = 0; i < offset.size(); i++) {
+//     offset[i] = 2 * offset[i];
+//   }
+//   d = a;
+//   d.resize(offset, 1);
+//   std::cout << d << std::endl;
+// 
+//   std::cout << a << std::endl;
 
 
 
@@ -350,7 +407,7 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solTType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][solTType]->Jacobian(coordX, ig, weight, phiT, phiT_x, phiT_xx);
-      
+
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       adept::adouble solT_gss = 0;
       vector < adept::adouble > gradSolT_gss(dim, 0.);
