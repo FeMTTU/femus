@@ -56,7 +56,7 @@ namespace femus {
     init();
     resize(rsize, csize, value);
   }
-  
+
   // ******************
   template <class Type> MyMatrix<Type>::MyMatrix(const std::vector < unsigned > &offset, const unsigned &csize, const Type value) {
     init();
@@ -66,27 +66,27 @@ namespace femus {
   // ******************
   template <class Type> MyMatrix<Type>::MyMatrix(const MyVector < unsigned > &rowSize, const Type value) {
     init();
-    
+
     _rowSize = rowSize;
     _begin = _rowSize.begin();
     _end = _rowSize.end();
     _size = _rowSize.size();
     _matSize.resize(_nprocs);
-    
-    if( (_rowSize.status()).compare("UNINITIALIZED") == 0 ){
-      std::cout << "In function MyMatrix(const MyVector < unsigned > &rowSize, const Type value), rowSize is UNINITIALIZED"<<std::endl;
+
+    if((_rowSize.status()).compare("UNINITIALIZED") == 0) {
+      std::cout << "In function MyMatrix(const MyVector < unsigned > &rowSize, const Type value), rowSize is UNINITIALIZED" << std::endl;
       abort();
     }
-    else  if( (_rowSize.status()).compare("PARALLEL") == 0 ){
+    else  if((_rowSize.status()).compare("PARALLEL") == 0) {
       _offset = _rowSize.getOffset();
       _rowOffset.resize(_offset);
       _matSize.scatter();
       _serial = false;
     }
-    else{
+    else {
       _rowOffset.resize(_size);
     }
-       
+
     _rowOffset[_rowOffset.begin()] = 0;
     unsigned matsize = _rowSize[_rowOffset.begin()];
     for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
@@ -98,7 +98,7 @@ namespace femus {
 
     _matIsAllocated = true;
   }
-  
+
   // ******************
   template <class Type> MyMatrix<Type>::~MyMatrix() {
     clear();

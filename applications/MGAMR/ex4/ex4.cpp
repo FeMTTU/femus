@@ -149,7 +149,7 @@ int main(int argc, char** args) {
   std::cout << b << std::endl;
   
 
-  MyVector < unsigned > v(5,0);
+  MyVector < unsigned > v(10,3);
   v.scatter();
   MyMatrix <double> m(v,1);
   
