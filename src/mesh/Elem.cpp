@@ -172,7 +172,7 @@ namespace femus {
 
     
     for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
-      elc->_elementType.localizeToAll(isdom);
+      elc->_elementType.localize(isdom);
       for(unsigned iel = elc->_elementOffset[isdom]; iel < elc->_elementOffset[isdom + 1]; iel++) {
 	if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 0 ) {
 	  short unsigned type = elc->_elementType[iel];
@@ -193,7 +193,7 @@ namespace femus {
     unsigned jel = 0;
     
     for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
-      elc->_elementType.localizeToAll(isdom);
+      elc->_elementType.localize(isdom);
       for(unsigned iel = elc->_elementOffset[isdom]; iel < elc->_elementOffset[isdom + 1]; iel++) {
    	short unsigned elemt = elc->_elementType[iel];
 	int increment = 1;

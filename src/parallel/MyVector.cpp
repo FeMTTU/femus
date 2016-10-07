@@ -60,8 +60,8 @@ namespace femus {
     _iproc = static_cast < unsigned >(iproc);
     _nprocs = static_cast < unsigned >(nprocs);
 
-    _dummy = 0;
-    _MY_MPI_DATATYPE = boost::mpi::get_mpi_datatype(_dummy);
+     Type dummy = 0;
+    _MY_MPI_DATATYPE = boost::mpi::get_mpi_datatype(dummy);
 
     _vecIsAllocated = false;
     _serial = true;
@@ -102,7 +102,7 @@ namespace femus {
 
     _begin = _offset[_iproc];
     _end = _offset[_iproc + 1];
-    _size = _offset[_nprocs];
+    _size = _end - _begin;
 
   }
 
@@ -159,7 +159,7 @@ namespace femus {
 
     _begin = _offset[_iproc];
     _end = _offset[_iproc + 1];
-    _size = _offset[_nprocs];
+    _size = _end - _begin;
 
   }
 
@@ -188,7 +188,7 @@ namespace femus {
   }
 
   // ******************
-  template <class Type> void MyVector<Type>::localizeToAll(const unsigned &lproc) {
+  template <class Type> void MyVector<Type>::localize(const unsigned &lproc) {
 
     if(_serial) {
       std::cout << "Error in MyVector.LocalizeToAll(), vector is in " << status() << " status" << std::endl;
@@ -204,51 +204,18 @@ namespace femus {
 
     _begin = _offset[lproc];
     _end = _offset[lproc + 1];
-
-    _lproc = lproc;
-
-  }
-
-  // ******************
-  template <class Type> void MyVector<Type>::localizeToOne(const unsigned &lproc, const unsigned &kproc) {
-
-    if(_serial) {
-      std::cout << "Error in MyVector.LocalizeToAll(), vector is in " << status() << " status" << std::endl;
-      abort();
-    }
-
-    if(_iproc == lproc) {
-      if(_iproc != kproc){
-	MPI_Send(&_vec[0], _vec.size(), _MY_MPI_DATATYPE, kproc, 1, MPI_COMM_WORLD);
-	_vecIsAllocated = false;
-      }
-    }
-    else if(_iproc == kproc) {
-      _vec.swap(_vec2);
-      _vec.resize(_offset[lproc + 1] - _offset[lproc]);
-      MPI_Recv(&_vec[0], _vec.size(), _MY_MPI_DATATYPE, lproc, 1, MPI_COMM_WORLD,  MPI_STATUS_IGNORE);
-      _begin = _offset[lproc];
-      _end = _offset[lproc + 1];
-    }
-    else {
-      _vecIsAllocated = false;
-    }
-
     _lproc = lproc;
   }
 
   // ******************
   template <class Type> void MyVector<Type>::clearLocalized() {
 
-    if(_lproc != _iproc && _vecIsAllocated) {
+    if(_lproc != _iproc) {
       _vec.swap(_vec2);
       std::vector<Type>().swap(_vec2);
       _begin = _offset[_iproc];
       _end = _offset[_iproc + 1];
-      _size = _offset[_nprocs];
-    }
-    else {
-      _vecIsAllocated = true;
+      _size = _end - _begin;
     }
 
   }
@@ -268,7 +235,7 @@ namespace femus {
 
   // ******************
   template <class Type> Type& MyVector<Type>::operator[](const unsigned &i) {
-    return (_vecIsAllocated) ? _vec[i - _begin] : _dummy;
+    return _vec[i - _begin];
   }
 
   // Explicit template instantiation

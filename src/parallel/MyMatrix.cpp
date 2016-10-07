@@ -31,18 +31,18 @@ namespace femus {
   template <class Type> MyMatrix<Type>::MyMatrix() {
     init();
   }
-  
+
   template <class Type> void MyMatrix<Type>::init() {
     int iproc, nprocs;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-   
+
     _iproc = static_cast < unsigned >(iproc);
     _nprocs = static_cast < unsigned >(nprocs);
 
-    _dummy = 0;
-    _MY_MPI_DATATYPE = boost::mpi::get_mpi_datatype(_dummy);
+    Type dummy = 0;
+    _MY_MPI_DATATYPE = boost::mpi::get_mpi_datatype(dummy);
 
     _matIsAllocated = false;
     _serial = true;
@@ -59,8 +59,8 @@ namespace femus {
 
   // ******************
   template <class Type> MyMatrix<Type>::MyMatrix(const std::vector < unsigned > &offset, const unsigned &csize, const Type value) {
-   init();
-   resize(offset, csize, value);
+    init();
+    resize(offset, csize, value);
   }
 
   // ******************
@@ -93,11 +93,11 @@ namespace femus {
 
   // ******************
   template <class Type> void MyMatrix<Type>::resize(const std::vector < unsigned > &offset, const unsigned &csize, const Type value) {
-    
+
     _offset = offset;
     if(_nprocs != _offset.size() - 1) {
-      std::cout << "Error in MyMatrix.Resize(...), offset.size()"<<_offset.size()
-      << "!= from nprocs+1="<<_nprocs+1 << std::endl;
+      std::cout << "Error in MyMatrix.Resize(...), offset.size()" << _offset.size()
+                << "!= from nprocs+1=" << _nprocs + 1 << std::endl;
       abort();
     }
 
@@ -131,32 +131,24 @@ namespace femus {
     _serial = true;
   }
 
-
-  //This function should never be used (as mat[i][j])
-  //when the matrix is in localizedToOne status.
-  //Use mat(i,j) instead
   template <class Type> Type* MyMatrix<Type>::operator[](const unsigned &i) {
     return &_mat[ _rowOffset[i]];
   }
 
-
   template <class Type> Type& MyMatrix<Type>::operator()(const unsigned &i, const unsigned &j) {
-    return (_matIsAllocated) ? _mat[ _rowOffset[i] + j] : _dummy;
+    return _mat[ _rowOffset[i] + j];
   }
 
-
   // ******************
-
   template <class Type> unsigned MyMatrix<Type>::size() {
     return _size;
   }
 
-  template <class Type> unsigned MyMatrix<Type>::size(const unsigned & i) {
+  template <class Type> unsigned MyMatrix<Type>::size(const unsigned &i) {
     return (_matIsAllocated) ? _rowSize[i] : 0;
   }
 
   // ******************
-
   template <class Type> unsigned MyMatrix<Type>::begin() {
     return _begin;
   }
@@ -166,7 +158,6 @@ namespace femus {
   }
 
   // ******************
-
   template <class Type> unsigned MyMatrix<Type>::end() {
     return _end;
   }
@@ -176,7 +167,6 @@ namespace femus {
   }
 
   // ******************
-
   template <class Type> void MyMatrix<Type>::scatter(const std::vector < unsigned > &offset) {
 
     _offset = offset;
@@ -196,7 +186,7 @@ namespace femus {
     _size = _end - _begin;
 
     MyVector < unsigned > rowOffset2 = _rowOffset;
-    
+
     _rowSize.scatter(_offset);
     _rowOffset.scatter(_offset);
     _rowOffset[_rowOffset.begin()] = 0;
@@ -208,18 +198,14 @@ namespace femus {
 
     _matSize.scatter();
     _matSize[_iproc] = matsize;
-        
+
     _mat.swap(_mat2);
 
     _mat.resize(_matSize[_iproc]);
 
-    //std::cout<< _offset[_iproc] <<" "<< _offset[_iproc + 1] << " "<<_matSize[_iproc] << std::endl;
-    
     for(unsigned i = _offset[_iproc]; i < _offset[_iproc + 1]; i++) {
-      //std::cout<< _rowOffset[i] << " " << end(i) << std::endl;
-      for(unsigned j = begin(i); j< end(i); j++){
-	
-	_mat[_rowOffset[i] + j] = _mat2[rowOffset2[i] + j];
+      for(unsigned j = begin(i); j < end(i); j++) {
+        _mat[_rowOffset[i] + j] = _mat2[rowOffset2[i] + j];
       }
     }
 
@@ -234,7 +220,7 @@ namespace femus {
     buildOffset();
     scatter(_offset);
   }
-  
+
   // ******************
   template <class Type> void MyMatrix<Type>::buildOffset() {
     unsigned locsize = _size / _nprocs;
@@ -254,18 +240,17 @@ namespace femus {
   }
 
   // ******************
-  template <class Type> void MyMatrix<Type>::localizeToAll(const unsigned &lproc) {
+  template <class Type> void MyMatrix<Type>::localize(const unsigned &lproc) {
 
     if(_serial) {
       std::cout << "Error in MyMatrix.LocalizeToAll(), matrix is in " << status() << " status" << std::endl;
       abort();
     }
 
-    _matSize.localizeToAll(lproc);
-    _rowSize.localizeToAll(lproc);
-    _rowOffset.localizeToAll(lproc);
+    _matSize.localize(lproc);
+    _rowSize.localize(lproc);
+    _rowOffset.localize(lproc);
 
-    
     if(_iproc != lproc) {
       _mat.swap(_mat2);
       _mat.resize(_matSize[lproc]);
@@ -273,63 +258,29 @@ namespace femus {
 
     MPI_Bcast(&_mat[0], _matSize[lproc], _MY_MPI_DATATYPE, lproc, MPI_COMM_WORLD);
 
-           
     _begin = _offset[lproc];
     _end = _offset[lproc + 1];
     _size = _end - _begin;
-    
-    _lproc = lproc;   
 
+    _lproc = lproc;
   }
-//
-//   // ******************
-//   template <class Type> void MyMatrix<Type>::localizeToOne(const unsigned &lproc, const unsigned &kproc) {
-//
-//     if(_serial) {
-//       std::cout << "Error in MyMatrix.LocalizeToAll(), vector is in " << status() << " status" << std::endl;
-//       abort();
-//     }
-//
-//     if(_iproc == lproc) {
-//       if(_iproc != kproc){
-// 	MPI_Send(&_vec[0], _vec.size(), _MY_MPI_DATATYPE, kproc, 1, MPI_COMM_WORLD);
-// 	_matIsAllocated = false;
-//       }
-//     }
-//     else if(_iproc == kproc) {
-//       _vec.swap(_vec2);
-//       _vec.resize(_offset[lproc + 1] - _offset[lproc]);
-//       MPI_Recv(&_vec[0], _vec.size(), _MY_MPI_DATATYPE, lproc, 1, MPI_COMM_WORLD,  MPI_STATUS_IGNORE);
-//       _begin = _offset[lproc];
-//       _end = _offset[lproc + 1];
-//     }
-//     else {
-//       _matIsAllocated = false;
-//     }
-//
-//     _lproc = lproc;
-//   }
-//
-//   // ******************
+
+  // ******************
   template <class Type> void MyMatrix<Type>::clearLocalized() {
 
     _matSize.clearLocalized();
-    _rowOffset.clearLocalized();
     _rowSize.clearLocalized();
-    
-    if(_lproc != _iproc && _matIsAllocated) {
+    _rowOffset.clearLocalized();
+
+    if(_lproc != _iproc) {
       _mat.swap(_mat2);
       std::vector<Type>().swap(_mat2);
       _begin = _offset[_iproc];
       _end = _offset[_iproc + 1];
       _size = _end - _begin;
     }
-    else {
-      _matIsAllocated = true;
-    }
-
   }
-//
+
   // ****************
   template <class Type> const std::string & MyMatrix<Type>::status() {
 
@@ -344,7 +295,6 @@ namespace femus {
   }
 
   // ******************
-
 
   // Explicit template instantiation
   template class MyMatrix<float>;
