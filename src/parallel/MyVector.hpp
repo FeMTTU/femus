@@ -45,10 +45,10 @@ namespace femus {
 
       // ******************
       ~MyVector();
-      
+
       // ******************
       void init();
-      
+
       //*******************
       void resize(const unsigned &size, const Type value = 0);
 
@@ -81,7 +81,7 @@ namespace femus {
 
       // ******************
       void localize(const unsigned &lproc);
-      
+
       // ******************
       void clearLocalized();
 
@@ -124,7 +124,7 @@ namespace femus {
       unsigned _iproc;
       unsigned _nprocs;
       MPI_Datatype _MY_MPI_DATATYPE;
-      
+
       unsigned _begin;
       unsigned _end;
       unsigned _size;
@@ -137,7 +137,7 @@ namespace femus {
   };
 
 
-  
+
 
 
 } //end namespace femus

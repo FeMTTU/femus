@@ -153,7 +153,15 @@ int main(int argc, char** args) {
   v.scatter();
   MyMatrix <double> m(v,1);
   
-  std::cout<<m<<std::endl;
+  
+  MyVector < unsigned > s(10,3);
+  s[1]=5;
+  s[8]=9;
+ 
+  MyMatrix <double> n(s,2);
+  std::cout<<n<<std::endl;
+  n.scatter();
+  std::cout<<n<<std::endl;
   
 
 

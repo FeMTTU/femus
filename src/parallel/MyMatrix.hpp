@@ -45,14 +45,13 @@ namespace femus {
 
       // ******************
       MyMatrix(const MyVector < unsigned > &rowSize, const Type value = 0);
-      
+
       // ******************
-      
       ~MyMatrix();
 
       //*******************
       void init();
-      
+
       // ******************
       void resize(const unsigned &rsize, const unsigned &csize, const Type value = 0);
 
@@ -64,12 +63,12 @@ namespace femus {
 
       // ******************
       unsigned size();
-      
+
       unsigned size(const unsigned &i);
 
       // ******************
       unsigned begin();
-       
+
       unsigned begin(const unsigned &i);
 
       // ******************
@@ -78,11 +77,8 @@ namespace femus {
       unsigned end(const unsigned &i);
 
       // ******************
-      
-      
       void scatter(const std::vector < unsigned > &offset);
 
-      // ******************
       void scatter();
 
       // ******************
@@ -101,11 +97,11 @@ namespace femus {
       const std::string &status();
 
       // ******************
-      
+
       Type* operator[](const unsigned &i);
-          
+
       Type& operator()(const unsigned &i, const unsigned &j);
-    
+
       // *****************
       friend std::ostream& operator<<(std::ostream& os, MyMatrix<Type>& mat) {
 
@@ -114,7 +110,7 @@ namespace femus {
         if(mat._matIsAllocated) {
           if(mat._serial) {
             for(unsigned i = mat.begin(); i < mat.end(); i++) {
-	      for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
+              for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
                 os << mat[i][j] << " ";
               }
               os << std::endl;
@@ -124,19 +120,19 @@ namespace femus {
             for(int j = 0; j < mat._nprocs; j++) {
               mat.localize(j);
               for(unsigned i = mat.begin(); i < mat.end(); i++) {
-		for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
-		  os << mat(i,j) << " ";
-		}
-		os << std::endl;
-	      }
+                for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
+                  os << mat[i][j] << " ";
+                }
+                os << std::endl;
+              }
               mat.clearLocalized();
-	      os << std::endl;
+              os << std::endl;
             }
           }
         }
         return os;
       }
-
+   
     private:
 
       std::string _status;
@@ -146,19 +142,19 @@ namespace femus {
       unsigned _iproc;
       unsigned _nprocs;
       MPI_Datatype _MY_MPI_DATATYPE;
-     
+
       unsigned _begin;
       unsigned _end;
       unsigned _size;
 
+      std::vector< Type > _mat;
+      std::vector< Type > _mat2;
+
+      //only to be used when matrix status is parallel
+      std::vector < unsigned > _offset;
       MyVector < unsigned > _rowOffset;
       MyVector < unsigned > _rowSize;
       MyVector < unsigned > _matSize;
-
-      std::vector< Type > _mat;
-      std::vector< Type > _mat2;
-      std::vector < unsigned > _offset;
-
       unsigned _lproc;
   };
 
