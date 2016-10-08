@@ -80,10 +80,7 @@ namespace femus {
       std::vector<unsigned> getOffset();
 
       // ******************
-      void localizeToAll(const unsigned &lproc);
-      
-      // ******************
-      void localizeToOne(const unsigned &lproc, const unsigned &kproc);
+      void localize(const unsigned &lproc);
       
       // ******************
       void clearLocalized();
@@ -127,8 +124,7 @@ namespace femus {
       unsigned _iproc;
       unsigned _nprocs;
       MPI_Datatype _MY_MPI_DATATYPE;
-      Type _dummy;
-
+      
       unsigned _begin;
       unsigned _end;
       unsigned _size;

@@ -44,6 +44,10 @@ namespace femus {
       MyMatrix(const std::vector < unsigned > &offset, const unsigned &csize, const Type value = 0);
 
       // ******************
+      MyMatrix(const MyVector < unsigned > &rowSize, const Type value = 0);
+      
+      // ******************
+      
       ~MyMatrix();
 
       //*******************
@@ -88,10 +92,7 @@ namespace femus {
       std::vector<unsigned> getOffset();
 
       // ******************
-      void localizeToAll(const unsigned &lproc);
-
-      // ******************
-      void localizeToOne(const unsigned &lproc, const unsigned &kproc);
+      void localize(const unsigned &lproc);
 
       // ******************
       void clearLocalized();
@@ -104,11 +105,7 @@ namespace femus {
       Type* operator[](const unsigned &i);
           
       Type& operator()(const unsigned &i, const unsigned &j);
-
-      MyMatrix<Type>& operator()(const unsigned &i);
-      
-      
-
+    
       // *****************
       friend std::ostream& operator<<(std::ostream& os, MyMatrix<Type>& mat) {
 
@@ -125,7 +122,7 @@ namespace femus {
           }
           else {
             for(int j = 0; j < mat._nprocs; j++) {
-              mat.localizeToAll(j);
+              mat.localize(j);
               for(unsigned i = mat.begin(); i < mat.end(); i++) {
 		for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
 		  os << mat(i,j) << " ";
@@ -149,8 +146,7 @@ namespace femus {
       unsigned _iproc;
       unsigned _nprocs;
       MPI_Datatype _MY_MPI_DATATYPE;
-      Type _dummy;
-
+     
       unsigned _begin;
       unsigned _end;
       unsigned _size;

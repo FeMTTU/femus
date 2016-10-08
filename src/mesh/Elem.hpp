@@ -183,10 +183,10 @@ namespace femus {
 	_elementGroup.scatter(_elementOffset);
       }
       void LocalizeElementQuantities(const unsigned &lproc) {
-        _elementLevel.localizeToAll(lproc);
-	_elementType.localizeToAll(lproc);
-	_elementMaterial.localizeToAll(lproc);
-	_elementGroup.localizeToAll(lproc);
+        _elementLevel.localize(lproc);
+	_elementType.localize(lproc);
+	_elementMaterial.localize(lproc);
+	_elementGroup.localize(lproc);
       }
       void FreeLocalizedElementQuantities() {
         _elementLevel.clearLocalized();
