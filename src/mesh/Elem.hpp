@@ -244,41 +244,6 @@ namespace femus {
       unsigned* _elementNearVertexMemory;
       unsigned* _elementNearVertexNumber;
 
-      
-      //////////////////////////////
-      MyMatrix <unsigned> _elementDof1;
-      MyMatrix <int> _elementNearFace1;
-      unsigned** _elementDof; //element -> nodes
-      unsigned* _elementDofMemory;
-      unsigned _elementDofMemorySize;
-
-      unsigned _elementDofOffset;
-      bool _elementDofIsScattered;
-
-      bool _elementDofIsLocalizedFromJproc;
-      unsigned _jprocElementDofIsLocalizedFrom;
-
-      unsigned** _localElementDof; //element -> nodes
-      unsigned* _localElementDofMemory;
-      unsigned _localElementDofMemorySize;
-      
-      int** _elementNearFace;
-      int* _elementNearFaceMemory;
-      unsigned _elementNearFaceMemorySize;
-
-      unsigned _elementNearFaceOffset;
-      bool _elementNearFaceIsScattered;
-
-      bool _elementNearFaceIsLocalizedFromJproc;
-      unsigned _jprocElementNearFaceIsLocalizedFrom;
-
-      int** _localElementNearFace; //element -> nodes
-      int* _localElementNearFaceMemory;
-      unsigned _localElementNearFaceMemorySize;
-      
-      
-      //////////////////////////
-
       unsigned** _childElem;
       unsigned* _childElemMemory;
       unsigned _childElemMemorySize;
@@ -301,7 +266,10 @@ namespace femus {
       MyVector< short unsigned> _elementType;
       MyVector< short unsigned> _elementGroup;
       MyVector< short unsigned> _elementMaterial;
-      
+            
+      MyMatrix <unsigned> _elementDof;
+      MyMatrix <int> _elementNearFace;
+
       unsigned _level;
 
       elem* _coarseElem;

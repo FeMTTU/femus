@@ -47,51 +47,14 @@ namespace femus {
     _elementGroup.resize(_nel);
     _elementMaterial.resize(_nel);
     _elementLevel.resize(_nel,_level);
-      
-    /////////////////////////////
-    _elementDof1.resize(_nel,NVE[0][2]);
-    _elementNearFace1.resize(_nel,NFC[0][1]);
-    ///////////////////////////////////
-    
-    _elementDof = new unsigned * [_nel + 1];
-    _elementNearFace = new int *[_nel + 1];
-
-    _elementDofMemorySize = _nel * NVE[0][2];
-    _elementNearFaceMemorySize = _nel * NFC[0][1];
-
-    _elementDofMemory = new unsigned [_elementDofMemorySize];
-
-    _elementNearFaceMemory = new int [_elementNearFaceMemorySize];
-    for( unsigned i = 0; i < _elementNearFaceMemorySize; i++ )
-      _elementNearFaceMemory[i] = -1;
-
-    unsigned* pt_u = _elementDofMemory;
-    int* pt_i = _elementNearFaceMemory;
-
-    for( unsigned i = 0; i < _nel; i++ ) {
-      _elementDof[i] = pt_u;
-      pt_u += NVE[0][2];
-      _elementNearFace[i] = pt_i;
-      pt_i += NFC[0][1];
-    }
-    _elementDof[_nel] = pt_u;
-    _elementNearFace[_nel] = pt_i;
-    
-    _elementDofIsScattered = false;
-    _elementDofIsLocalizedFromJproc = false;
-    _localElementDofMemorySize = 0;
-
-    _elementNearFaceIsScattered = false;
-    _elementNearFaceIsLocalizedFromJproc = false;
-    _localElementNearFaceMemorySize = 0;
-    
-    /////////////////////////////
-    
+   
+    _elementDof.resize(_nel,NVE[0][2]);
+    _elementNearFace.resize(_nel,NFC[0][1]);
+     
     _childElemFlag = false;
 
     _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
-
-  
+ 
   }
 
 
@@ -113,73 +76,21 @@ namespace femus {
         
     for(unsigned i=tmpElDof.begin();i<tmpElDof.end();i++){
       for(unsigned j=tmpElDof.begin(i);j<tmpElDof.end(i);j++){
-	tmpElDof[i][j] = _elementDof1[i][j];
+	tmpElDof[i][j] = _elementDof[i][j];
       }
     }
     
     for(unsigned i=tmpElNearFace.begin();i<tmpElNearFace.end();i++){
       for(unsigned j=tmpElNearFace.begin(i);j<tmpElNearFace.end(i);j++){
-	tmpElNearFace[i][j] = _elementNearFace1[i][j];
+	tmpElNearFace[i][j] = _elementNearFace[i][j];
       }
     }
     
-    _elementDof1 = tmpElDof;
-    _elementNearFace1 = tmpElNearFace;
+    _elementDof = tmpElDof;
+    _elementNearFace = tmpElNearFace;
     
     tmpElDof.clear();
     tmpElNearFace.clear();
-    
-    // ***************************************************************************
-    
-    _elementDofMemorySize = _nelt[0] * NVE[0][2] + _nelt[1] * NVE[1][2] +
-                            _nelt[2] * NVE[2][2] + _nelt[3] * NVE[3][2] +
-                            _nelt[4] * NVE[4][2] + _nelt[5] * NVE[5][2];
-    
-    unsigned** tempElementDof = _elementDof;
-
-    _elementDof = new unsigned* [_nel + 1];
-    _elementDofMemory = new unsigned [_elementDofMemorySize];
-
-    unsigned* ptElemDofMem = _elementDofMemory;
-    for( unsigned iel = 0; iel < _nel; iel++ ) {
-      _elementDof[iel] = ptElemDofMem;
-      unsigned ielType = GetElementType( iel );
-      for( unsigned j = 0; j < NVE[ielType][2]; j++ ) {
-        _elementDof[iel][j] = tempElementDof[iel][j];
-      }
-      ptElemDofMem += NVE[ielType][2];
-    }
-    _elementDof[_nel] = ptElemDofMem;
-
-    delete [] tempElementDof[0];
-    delete [] tempElementDof;
-
-
-    // *****************************************************************
-
-
-    _elementNearFaceMemorySize = _nelt[0] * NFC[0][1] + _nelt[1] * NFC[1][1] +
-                                 _nelt[2] * NFC[2][1] + _nelt[3] * NFC[3][1] +
-                                 _nelt[4] * NFC[4][1] + _nelt[5] * NFC[5][1];
-
-    int** tempElementNearFace = _elementNearFace;
-
-    _elementNearFace = new int* [_nel + 1];
-    _elementNearFaceMemory = new int [_elementNearFaceMemorySize];
-
-    int* ptElemNearFaceMem = _elementNearFaceMemory;
-    for( unsigned iel = 0; iel < _nel; iel++ ) {
-      _elementNearFace[iel] = ptElemNearFaceMem;
-      unsigned ielType = GetElementType( iel );
-      for( unsigned j = 0; j < NFC[ielType][1]; j++ ) {
-        _elementNearFace[iel][j] = tempElementNearFace[iel][j];
-      }
-      ptElemNearFaceMem += NFC[ielType][1];
-    }
-    _elementNearFace[_nel] = ptElemNearFaceMem;
-
-    delete [] tempElementNearFace[0];
-    delete [] tempElementNearFace;
 
   }
   /**
@@ -221,83 +132,16 @@ namespace femus {
       }
       elc->_elementType.clearLocalized();
     }
-    _elementDof1 = MyMatrix <unsigned> (rowSizeElDof);
-    _elementNearFace1 = MyMatrix <int> (rowSizeElNearFace,-1);
+    _elementDof = MyMatrix <unsigned> (rowSizeElDof);
+    _elementNearFace = MyMatrix <int> (rowSizeElNearFace,-1);
     
     rowSizeElDof.clear();
     rowSizeElNearFace.clear();
-    
-    //std::cout << _elementDof1 << std::endl;
-    //std::cout << _elementNearFace1 <<std::endl;
-    
-    // *************************
-    _elementDof = new unsigned * [_nel + 1];
-    _elementNearFace = new int * [_nel + 1];
-
-    _elementDofMemorySize = 0;
-    _elementNearFaceMemorySize = 0;
-    for( unsigned i = 0; i < N_GEOM_ELS; i++ ) {
-      _elementDofMemorySize += elc->GetRefinedElementTypeNumber( i ) * refindex * NVE[i][2];
-      _elementNearFaceMemorySize += elc->GetRefinedElementTypeNumber( i ) * refindex * NFC[i][1];
-    }
-    
-    for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
-      elc->_elementType.localize(isdom);
-      for(unsigned iel = elc->_elementOffset[isdom]; iel < elc->_elementOffset[isdom + 1]; iel++) {
-	if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 0 ) {
-	  short unsigned type = elc->_elementType[iel];
-	  _elementDofMemorySize += NVE[type][2];
-	  _elementNearFaceMemorySize += NFC[type][1];
-	}
-      }
-      elc->_elementType.clearLocalized();
-    }
-
-    _elementDofMemory = new unsigned [ _elementDofMemorySize ];
-    _elementNearFaceMemory = new int [ _elementNearFaceMemorySize ];
-    for( unsigned i = 0; i < _elementNearFaceMemorySize; i++ )
-      _elementNearFaceMemory[i] = -1;
-    
-    int* ptElementNearFaceMemory = _elementNearFaceMemory;
-    unsigned* ptElementDofMemory = _elementDofMemory;
-    jel = 0;
-    
-    for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
-      elc->_elementType.localize(isdom);
-      for(unsigned iel = elc->_elementOffset[isdom]; iel < elc->_elementOffset[isdom + 1]; iel++) {
-   	short unsigned elemt = elc->_elementType[iel];
-	int increment = 1;
-	if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 1 ) {
-	  increment = NRE[elemt];
-	}
-	for( unsigned j = 0; j < increment; j++ ) {
-	  _elementDof[jel + j] = ptElementDofMemory;
-	  ptElementDofMemory += NVE[elemt][2];
-	  _elementNearFace[jel + j] = ptElementNearFaceMemory;
-	  ptElementNearFaceMemory += NFC[ elemt ][1];
-	}
-	jel += increment;
-      }
-      elc->_elementType.clearLocalized();
-    }
-    _elementDof[_nel] = ptElementDofMemory;
-    _elementNearFace[_nel] = ptElementNearFaceMemory;
-
-    _elementDofIsScattered = false;
-    _elementDofIsLocalizedFromJproc = false;
-    _localElementDofMemorySize = 0;
-
-    _elementNearFaceIsScattered = false;
-    _elementNearFaceIsLocalizedFromJproc = false;
-    _localElementNearFaceMemorySize = 0;
-    
-    // ***********************************
         
     _childElemFlag = false;
 
     _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
-
-    
+  
   }
 
   void elem::ReorderMeshElements( const std::vector < unsigned >& elementMapping ) {
@@ -324,95 +168,41 @@ namespace femus {
     //END reordering _elementCanBeRefined
 
     //BEGIN reordering _elementGroup and _elementMaterial
-    //if( _level == 0 ) {
+    
       MyVector <short unsigned> tempElementGroup;
       MyVector <short unsigned> tempElementMaterial;
       tempElementGroup = _elementGroup;
       tempElementMaterial = _elementMaterial;
-      //_elementGroup = new short unsigned [_nel];
-      //_elementMaterial = new short unsigned [_nel];
+      
       for( unsigned iel = 0; iel < _nel; iel++ ) {
         _elementGroup[elementMapping[iel]]   = tempElementGroup[iel];
         _elementMaterial[elementMapping[iel]] = tempElementMaterial[iel] ;
       }
       tempElementGroup.clear();
       tempElementMaterial.clear();
-    //}
+ 
     //END reordering _elementGroup and _elementMaterial
 
       
-    //***********************
-      
-    
-    MyMatrix <unsigned> tmpElDof = _elementDof1;
-    for(unsigned i=_elementDof1.begin();i<_elementDof1.end();i++){
-      for(unsigned j=_elementDof1.begin(i);j<_elementDof1.end(i);j++){
-	_elementDof1[elementMapping [i]][j] = tmpElDof[i][j];
+    //BEGIN reordering _elementDof (rows)
+    MyMatrix <unsigned> tmpElDof = _elementDof;
+    for(unsigned i=_elementDof.begin();i<_elementDof.end();i++){
+      for(unsigned j=_elementDof.begin(i);j<_elementDof.end(i);j++){
+	_elementDof[elementMapping [i]][j] = tmpElDof[i][j];
       }
     }
     tmpElDof.clear();
+    //END reordering OF _elementDof
     
-    
-    MyMatrix <int> tmpElNearFace = _elementNearFace1;
-    for(unsigned i=_elementNearFace1.begin();i<_elementNearFace1.end();i++){
-      for(unsigned j=_elementNearFace1.begin(i);j<_elementNearFace1.end(i);j++){
-	_elementNearFace1[elementMapping [i]][j] = tmpElNearFace[i][j];
+    //BEGIN reordering _elementNearFace (rows)
+    MyMatrix <int> tmpElNearFace = _elementNearFace;
+    for(unsigned i=_elementNearFace.begin();i<_elementNearFace.end();i++){
+      for(unsigned j=_elementNearFace.begin(i);j<_elementNearFace.end(i);j++){
+	_elementNearFace[elementMapping [i]][j] = tmpElNearFace[i][j];
       }
     }
     tmpElNearFace.clear();
-    
-          
-    //BEGIN reordering _elementNearFace (rows)
-    int** tempElementNearFace;
-    tempElementNearFace = _elementNearFace;
-
-    _elementNearFace = new int * [_nel + 1];
-    _elementNearFaceMemory = new int [ _elementNearFaceMemorySize ];
-
-    int* ptKel = _elementNearFaceMemory;
-
-    for( unsigned iel = 0; iel < _nel; iel++ ) {
-      _elementNearFace[iel] = ptKel;
-      ptKel +=  NFC[_elementType[iel]][1];
-    }
-    _elementNearFace[_nel] = ptKel;
-
-    for( unsigned iel = 0; iel < _nel; iel++ ) {
-      for( unsigned iface = 0; iface < NFC[ _elementType[ elementMapping [iel] ]][1]; iface++ ) {
-        _elementNearFace[elementMapping [iel]][iface] = tempElementNearFace[iel][iface];
-      }
-    }
-    delete [] tempElementNearFace[0];
-    delete [] tempElementNearFace;
     //END reordering _elementNearFace
-
-    //BEGIN reordering _elementDof (rows)
-    unsigned** tempElementDof = _elementDof;
-
-    tempElementDof = _elementDof;
-
-    _elementDof = new unsigned* [_nel + 1];
-    _elementDofMemory = new unsigned [ _elementDofMemorySize ];
-
-    unsigned* ptElementDof = _elementDofMemory;
-
-    for( unsigned iel = 0; iel < _nel; iel++ ) {
-      _elementDof[iel] = ptElementDof;
-      ptElementDof +=  NVE[_elementType[iel]][2];
-    }
-    _elementDof[_nel] = ptElementDof;
-
-    for( unsigned iel = 0; iel < _nel; iel++ ) {
-      for( unsigned inode = 0; inode < NVE[_elementType[elementMapping [iel]]][2]; inode++ ) {
-        _elementDof[elementMapping [iel]][inode] = tempElementDof[iel][inode];
-      }
-    }
-
-    delete [] tempElementDof[0];
-    delete [] tempElementDof;
-    //END reordering OF _elementDof
-
-    //********************************************************
     
     //BEGIN reordering _childElementDof (columns) on coarse level
     if( _level != 0 ) {
@@ -424,40 +214,15 @@ namespace femus {
   }
 
 
-  void elem::ReorderMeshNodes( const std::vector < unsigned >& nodeMapping ) {
-    for( unsigned i = 0; i < _elementDofMemorySize; i++ ) {
-      _elementDofMemory[i] =  nodeMapping[ _elementDofMemory[i] ];
-    }
-    
-    for( unsigned i = _elementDof1.begin(); i < _elementDof1.end(); i++ ) {
-      for( unsigned j = _elementDof1.begin(i); j < _elementDof1.end(i); j++ ) {
-	_elementDof1[i][j] =  nodeMapping[ _elementDof1[i][j] ];
+  void elem::ReorderMeshNodes( const std::vector < unsigned >& nodeMapping ) {  
+    for( unsigned i = _elementDof.begin(); i < _elementDof.end(); i++ ) {
+      for( unsigned j = _elementDof.begin(i); j < _elementDof.end(i); j++ ) {
+	_elementDof[i][j] =  nodeMapping[ _elementDof[i][j] ];
       }
-    }
-    
-    
+    }   
   }
 
   elem::~elem() {
-
-    delete [] _localElementDof;
-    delete [] _localElementDofMemory;
-
-    if( _elementDof != NULL ) {
-      delete [] _elementDof;
-      delete [] _elementDofMemory;
-      _elementDof = NULL;
-    }
-
-    delete [] _localElementNearFace;
-    delete [] _localElementNearFaceMemory;
-
-    if( _elementNearFace != NULL ) {
-      delete [] _elementNearFace;
-      delete [] _elementNearFaceMemory;
-      _elementNearFace == NULL;
-    }
-
     if( _childElemFlag ) {
       delete [] _childElemMemory;
       delete [] _childElem;
@@ -486,16 +251,16 @@ namespace femus {
    * Set the local->global node number
    **/
   void elem::SetElementDofIndex( const unsigned& iel, const unsigned& inode, const unsigned& value ) {
+    //_elementDof[iel][inode] = value;
     _elementDof[iel][inode] = value;
-    _elementDof1[iel][inode] = value;
   }
 
   /**
    * Return the local->global face node index
    **/
   unsigned elem::GetFaceVertexIndex( const unsigned& iel, const unsigned& iface, const unsigned& inode ) {
-    unsigned value = _elementDof1[iel][ig[_elementType[iel]][iface][inode]];
     return _elementDof[iel][ig[_elementType[iel]][iface][inode]];
+    //return _elementDof[iel][ig[_elementType[iel]][iface][inode]];
   }
 
   /**
@@ -539,37 +304,24 @@ namespace femus {
     return NFC[ _elementType[iel] ][type];
   }
 
-
   /**
    * Return the global adiacent-to-face element number
    **/
   int elem::GetFaceElementIndex( const unsigned& iel, const unsigned& iface ) {
-    return _elementNearFace1[iel][iface];
-    
-    if (_elementNearFaceIsScattered ) {
-      return _localElementNearFace[iel - _elementOffset[ _iproc ]][iface];
-    }
-    else if(_elementNearFaceIsLocalizedFromJproc){
-      return _elementNearFace[iel- _elementOffset[ _jprocElementNearFaceIsLocalizedFrom ]][iface];
-    }
-    else{
-      return _elementNearFace[iel][iface];
-    }
+    return _elementNearFace[iel][iface];
   }
 
   int elem::GetBoundaryIndex( const unsigned& iel, const unsigned& iface ) {
     return  -( GetFaceElementIndex( iel, iface ) + 1 );
   }
 
-
   /**
    * Set the global adiacent-to-face element number
    **/
   void elem::SetFaceElementIndex( const unsigned& iel, const unsigned& iface, const int& value ) {
+    //_elementNearFace[iel][iface] = value;
     _elementNearFace[iel][iface] = value;
-    _elementNearFace1[iel][iface] = value;
   }
-
 
   /**
    * Return element type: 0=hex, 1=Tet, 2=Wedge, 3=Quad, 4=Triangle and 5=Line
@@ -584,8 +336,6 @@ namespace femus {
   void elem::SetElementType( const unsigned& iel, const short unsigned& value ) {
     _elementType[iel] = value;
   }
-
-  
 
   /**
    * Return element group
@@ -629,7 +379,6 @@ namespace femus {
     _ngroup = value;
   }
 
-
   /**
    * Set the memory storage and initialize nve and kvtel (node->element vectors)
    **/
@@ -651,8 +400,6 @@ namespace femus {
       }
     }
   }
-
-
 
   void elem::BuildElementNearVertex() {
     unsigned counter = ( _nelt[0] * NVE[0][0] + _nelt[1] * NVE[1][0] + _nelt[2] * NVE[2][0] +
@@ -690,9 +437,6 @@ namespace femus {
     }
   }
 
-
-
-
   /**
    * Return the number of elements which have given node
    **/
@@ -706,7 +450,6 @@ namespace femus {
   unsigned elem::GetElementNearVertex( const unsigned& inode, const unsigned& j )const {
     return _elementNearVertex[inode][j];
   }
-
 
   /**
    * return the index 0=hex, 1=Tet, 2=Wedge, 3=Quad, 4=Triangle and 5=Line
@@ -846,268 +589,35 @@ namespace femus {
   }
 
   void elem::ScatterElementDof() {
-
-    _elementDof1.scatter(_elementOffset);
-    
-    if( _localElementDofMemorySize == 0 ) {
-      _localElementDofMemorySize = _elementDof[_elementOffset[ _iproc + 1]] - _elementDof[_elementOffset[ _iproc ]];
-
-      _elementDofOffset = _elementDof[_elementOffset[ _iproc ]] - _elementDof[0];
-
-      _localElementDofMemory = new unsigned [_localElementDofMemorySize];
-
-      for( unsigned i = 0; i < _localElementDofMemorySize; i++ ) {
-        _localElementDofMemory[i] =  *( _elementDof[_elementOffset[ _iproc ]] + i );
-      }
-
-      _localElementDof = new unsigned *[_elementOwned + 1];
-      unsigned* pt_u = _localElementDofMemory;
-      for( unsigned i = 0; i < _elementOwned; i++ ) {
-        _localElementDof[i] = pt_u;
-        pt_u += _elementDof[_elementOffset[ _iproc ] + ( i + 1 )] - _elementDof[_elementOffset[ _iproc ] + i];
-      }
-      _localElementDof[_elementOwned] = pt_u;
-    }
-    _elementDofIsScattered = true;
-    _elementDofIsLocalizedFromJproc = false;
-
-    if( _elementDof != NULL ) {
-      delete [] _elementDofMemory;
-      delete [] _elementDof;
-      _elementDof = NULL;
-    }
-
-  };
+    _elementDof.scatter(_elementOffset);
+  }
 
   void elem::LocalizeElementDofFromOneToAll( const unsigned& jproc ) {
-
-    _elementDof1.localize(jproc);
-    
-    if( _elementDof != NULL ) {
-      delete [] _elementDofMemory;
-      delete [] _elementDof;
-      _elementDof = NULL;
-    }
-
-    unsigned jLocalElementDofMemorySize = _localElementDofMemorySize;
-    MPI_Bcast( &jLocalElementDofMemorySize, 1, MPI_UNSIGNED, jproc, MPI_COMM_WORLD );
-
-    _elementDofMemory = new unsigned [jLocalElementDofMemorySize];
-
-    if( _iproc == jproc ) {
-      for( unsigned i = 0; i < jLocalElementDofMemorySize; i++ ) {
-        _elementDofMemory[i] = _localElementDofMemory[i];
-      }
-    }
-    MPI_Bcast( _elementDofMemory, jLocalElementDofMemorySize, MPI_UNSIGNED, jproc, MPI_COMM_WORLD );
-
-    unsigned bufferSize = _elementOffset[ jproc + 1 ] - _elementOffset[ jproc ];
-    unsigned* buffer = new unsigned [ bufferSize ];
-
-    if( _iproc == jproc ) {
-      for( unsigned i = 0; i < _elementOwned; i++ ) {
-        buffer[i] = _localElementDof[i + 1] - _localElementDof[i];
-      }
-    }
-
-    MPI_Bcast( buffer , bufferSize, MPI_UNSIGNED, jproc, MPI_COMM_WORLD );
-
-    _elementDof = new unsigned * [bufferSize + 1];
-    unsigned* pt_u = _elementDofMemory;
-    for( unsigned iel = 0; iel < bufferSize; iel++ ) {
-      _elementDof[iel] = pt_u;
-      pt_u += buffer[iel];
-    }
-    _elementDof[bufferSize] = pt_u;
-
-    delete [] buffer;
-
-    _elementDofIsScattered = false;
-    _elementDofIsLocalizedFromJproc = true;
-    _jprocElementDofIsLocalizedFrom = jproc;
+    _elementDof.localize(jproc);
   }
-
 
   void elem::LocalizeElementDofFromOneToOne( const unsigned& jproc, const unsigned& kproc ) {
-
-    _elementDof1.localize(jproc);
-    
-    if( (_iproc == jproc || _iproc == kproc ) && jproc != kproc) {
-      if( _iproc == kproc && _elementDof != NULL ) {
-        delete [] _elementDofMemory;
-        delete [] _elementDof;
-        _elementDof = NULL;
-      }
-
-      unsigned jLocalElementDofMemorySize;
-      if( _iproc == jproc ) {
-        jLocalElementDofMemorySize = _localElementDofMemorySize;
-        MPI_Send( &jLocalElementDofMemorySize, 1, MPI_UNSIGNED, kproc, 0, MPI_COMM_WORLD );
-      }
-      else {
-        MPI_Recv( &jLocalElementDofMemorySize, 1, MPI_UNSIGNED, jproc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
-      }
-
-      if( _iproc == jproc ) {
-        MPI_Send( _localElementDofMemory, jLocalElementDofMemorySize, MPI_UNSIGNED, kproc, 1 , MPI_COMM_WORLD );
-      }
-      else {
-        _elementDofMemory = new unsigned [jLocalElementDofMemorySize];
-        MPI_Recv( _elementDofMemory, jLocalElementDofMemorySize, MPI_UNSIGNED, jproc, 1,  MPI_COMM_WORLD, MPI_STATUS_IGNORE );
-      }
-
-      unsigned bufferSize = _elementOffset[ jproc + 1 ] - _elementOffset[ jproc ];
-      unsigned* buffer = new unsigned [ bufferSize ];
-
-      if( _iproc == jproc ) {
-        for( unsigned i = 0; i < _elementOwned; i++ ) {
-          buffer[i] = _localElementDof[i + 1] - _localElementDof[i];
-        }
-        MPI_Send( buffer , bufferSize, MPI_UNSIGNED, kproc, 2, MPI_COMM_WORLD );
-      }
-      else {
-        MPI_Recv( buffer , bufferSize, MPI_UNSIGNED, jproc, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
-
-        _elementDof = new unsigned * [bufferSize + 1];
-        unsigned* pt_u = _elementDofMemory;
-        for( unsigned iel = 0; iel < bufferSize; iel++ ) {
-          _elementDof[iel] = pt_u;
-          pt_u += buffer[iel];
-        }
-        _elementDof[bufferSize] = pt_u;
-        _elementDofIsScattered = false;
-        _elementDofIsLocalizedFromJproc = true;
-        _jprocElementDofIsLocalizedFrom = jproc;
-      }
-
-      delete [] buffer;
-    }
+    _elementDof.localize(jproc);
   }
 
-
-  unsigned elem::GetElementDofIndex( const unsigned& iel, const unsigned& inode ) {
-    
-    return _elementDof1[iel][inode];
-    
-    if( _elementDofIsScattered ) {
-      return _localElementDof[ iel - _elementOffset[ _iproc ]][inode];
-    }
-    else if( _elementDofIsLocalizedFromJproc ) {
-      return _elementDof[ iel - _elementOffset[ _jprocElementDofIsLocalizedFrom ]][inode];
-    }
-    else {
-      return _elementDof[iel][inode];
-    }
+  unsigned elem::GetElementDofIndex( const unsigned& iel, const unsigned& inode ) {  
+    return _elementDof[iel][inode];
   };
 
-  void elem::FreeLocalizedElementDof() {
-    
-    _elementDof1.clearLocalized();
-    
-    _elementDofIsScattered = true;
-    _elementDofIsLocalizedFromJproc = false;
-    if( _elementDof != NULL ) {
-      delete [] _elementDofMemory;
-      delete [] _elementDof;
-      _elementDof = NULL;
-    }
+  void elem::FreeLocalizedElementDof() {  
+    _elementDof.clearLocalized();
   }
 
   void elem::ScatterElementNearFace() {
-
-    _elementNearFace1.scatter(_elementOffset);
-    
-    if( _localElementNearFaceMemorySize == 0 ) {
-      _localElementNearFaceMemorySize = _elementNearFace[_elementOffset[ _iproc + 1 ]] - _elementNearFace[_elementOffset[ _iproc ]];
-
-      _elementNearFaceOffset = _elementNearFace[_elementOffset[ _iproc ]] - _elementNearFace[0];
-
-      _localElementNearFaceMemory = new int [_localElementNearFaceMemorySize];
-
-      for( unsigned i = 0; i < _localElementNearFaceMemorySize; i++ ) {
-        _localElementNearFaceMemory[i] =  *( _elementNearFace[_elementOffset[ _iproc ]] + i );
-      }
-
-      _localElementNearFace = new int *[_elementOwned + 1];
-      int* pt_i = _localElementNearFaceMemory;
-      for( unsigned i = 0; i < _elementOwned; i++ ) {
-        _localElementNearFace[i] = pt_i;
-        pt_i += _elementNearFace[_elementOffset[ _iproc ] + ( i + 1 )] - _elementNearFace[_elementOffset[ _iproc ] + i];
-      }
-      _localElementNearFace[_elementOwned] = pt_i;
-    }
-    _elementNearFaceIsScattered = true;
-    _elementNearFaceIsLocalizedFromJproc = false;
-
-    if( _elementNearFace != NULL ) {
-      delete [] _elementNearFaceMemory;
-      delete [] _elementNearFace;
-      _elementNearFace = NULL;
-    }
-
+    _elementNearFace.scatter(_elementOffset);
   };
 
   void elem::LocalizeElementNearFaceFromOneToAll( const unsigned& jproc ) {
-   
-    _elementNearFace1.localize(jproc);
-    
-    if( _elementNearFace != NULL ) {
-      delete [] _elementNearFaceMemory;
-      delete [] _elementNearFace;
-      _elementNearFace = NULL;
-    }
-
-    unsigned jLocalElementNearFaceMemorySize = _localElementNearFaceMemorySize;
-    MPI_Bcast( &jLocalElementNearFaceMemorySize, 1, MPI_UNSIGNED, jproc, MPI_COMM_WORLD );
-
-    _elementNearFaceMemory = new int [jLocalElementNearFaceMemorySize];
-
-    if( _iproc == jproc ) {
-      for( unsigned i = 0; i < jLocalElementNearFaceMemorySize; i++ ) {
-        _elementNearFaceMemory[i] = _localElementNearFaceMemory[i];
-      }
-    }
-    MPI_Bcast( _elementNearFaceMemory, jLocalElementNearFaceMemorySize, MPI_INT, jproc, MPI_COMM_WORLD );
-
-    unsigned bufferSize = _elementOffset[ jproc + 1 ] - _elementOffset[ jproc ];
-    unsigned* buffer = new unsigned [ bufferSize ];
-
-    if( _iproc == jproc ) {
-      for( unsigned i = 0; i < _elementOwned; i++ ) {
-        buffer[i] = _localElementNearFace[i + 1] - _localElementNearFace[i];
-      }
-    }
-
-    MPI_Bcast( buffer , bufferSize, MPI_UNSIGNED, jproc, MPI_COMM_WORLD );
-
-    _elementNearFace = new int * [bufferSize + 1];
-    int* pt_int = _elementNearFaceMemory;
-    for( unsigned iel = 0; iel < bufferSize; iel++ ) {
-      _elementNearFace[iel] = pt_int;
-      pt_int += buffer[iel];
-    }
-    _elementNearFace[bufferSize] = pt_int;
-
-    delete [] buffer;
-
-    _elementNearFaceIsScattered = false;
-    _elementNearFaceIsLocalizedFromJproc = true;
-    _jprocElementNearFaceIsLocalizedFrom = jproc;
+    _elementNearFace.localize(jproc);
   }
 
-
   void elem::FreeLocalizedElementNearFace() {
-
-    _elementNearFace1.clearLocalized();
-    
-    _elementNearFaceIsScattered = true;
-    _elementNearFaceIsLocalizedFromJproc = false;
-
-    if( _elementNearFace != NULL ) {
-      delete [] _elementNearFaceMemory;
-      delete [] _elementNearFace;
-      _elementNearFace = NULL;
-    }
+    _elementNearFace.clearLocalized();
   }
 
 } //end namespace femus
