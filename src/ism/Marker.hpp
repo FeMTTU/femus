@@ -37,8 +37,9 @@ namespace femus {
         _mesh = mesh;
         _solType = solType;
 
-        GetElement(debug);
-
+        GetElement(1,UINT_MAX);
+	//unsigned iiel = _mesh->_elementOffset[_iproc];
+        //GetElementSerial(iiel);
 
         if(_iproc == _mproc) {
           _xi.resize(_mesh->GetDimension());
@@ -59,7 +60,7 @@ namespace femus {
 
 
 
-      void GetElement(const bool & debug = false);
+      void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
       void GetElementSerial(unsigned & iel);
 
 
