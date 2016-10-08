@@ -22,6 +22,8 @@
 #include "Mesh.hpp"
 #include "MyVector.hpp"
 
+#include "MyMatrix.hpp"
+
 namespace femus {
 
   class Mesh;
@@ -63,7 +65,7 @@ namespace femus {
       unsigned GetElementDofNumber(const unsigned& iel, const unsigned& type);
 
       /** Return the local->global node number */
-      unsigned GetElementDofIndex(const unsigned& iel, const unsigned& inode)const;
+      unsigned GetElementDofIndex(const unsigned& iel, const unsigned& inode);
 
       /** To be Added */
       void SetElementDofIndex(const unsigned& iel, const unsigned& inode, const unsigned& value);
@@ -96,9 +98,9 @@ namespace femus {
       void SetElementGroupNumber(const unsigned& value);
 
       /** To be Added */
-      int GetFaceElementIndex(const unsigned& iel, const unsigned& iface) const;
+      int GetFaceElementIndex(const unsigned& iel, const unsigned& iface);
 
-      int GetBoundaryIndex(const unsigned& iel, const unsigned& iface) const;
+      int GetBoundaryIndex(const unsigned& iel, const unsigned& iface);
 
       /** To be Added */
       void SetFaceElementIndex(const unsigned& iel, const unsigned& iface, const int& value);
@@ -234,19 +236,7 @@ namespace femus {
 
 
       // member data
-      int** _elementNearFace;
-      int* _elementNearFaceMemory;
-      unsigned _elementNearFaceMemorySize;
-
-      unsigned _elementNearFaceOffset;
-      bool _elementNearFaceIsScattered;
-
-      bool _elementNearFaceIsLocalizedFromJproc;
-      unsigned _jprocElementNearFaceIsLocalizedFrom;
-
-      int** _localElementNearFace; //element -> nodes
-      int* _localElementNearFaceMemory;
-      unsigned _localElementNearFaceMemorySize;
+      
 
 
       std::map< unsigned, std::vector< unsigned > > _localElementNearVertexMap;
@@ -254,6 +244,10 @@ namespace femus {
       unsigned* _elementNearVertexMemory;
       unsigned* _elementNearVertexNumber;
 
+      
+      //////////////////////////////
+      MyMatrix <unsigned> _elementDof1;
+      MyMatrix <int> _elementNearFace1;
       unsigned** _elementDof; //element -> nodes
       unsigned* _elementDofMemory;
       unsigned _elementDofMemorySize;
@@ -267,6 +261,23 @@ namespace femus {
       unsigned** _localElementDof; //element -> nodes
       unsigned* _localElementDofMemory;
       unsigned _localElementDofMemorySize;
+      
+      int** _elementNearFace;
+      int* _elementNearFaceMemory;
+      unsigned _elementNearFaceMemorySize;
+
+      unsigned _elementNearFaceOffset;
+      bool _elementNearFaceIsScattered;
+
+      bool _elementNearFaceIsLocalizedFromJproc;
+      unsigned _jprocElementNearFaceIsLocalizedFrom;
+
+      int** _localElementNearFace; //element -> nodes
+      int* _localElementNearFaceMemory;
+      unsigned _localElementNearFaceMemorySize;
+      
+      
+      //////////////////////////
 
       unsigned** _childElem;
       unsigned* _childElemMemory;

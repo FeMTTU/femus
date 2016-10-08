@@ -47,7 +47,12 @@ namespace femus {
     _elementGroup.resize(_nel);
     _elementMaterial.resize(_nel);
     _elementLevel.resize(_nel,_level);
-        
+      
+    /////////////////////////////
+    _elementDof1.resize(_nel,NVE[0][2]);
+    _elementNearFace1.resize(_nel,NFC[0][1]);
+    ///////////////////////////////////
+    
     _elementDof = new unsigned * [_nel + 1];
     _elementNearFace = new int *[_nel + 1];
 
@@ -71,13 +76,7 @@ namespace femus {
     }
     _elementDof[_nel] = pt_u;
     _elementNearFace[_nel] = pt_i;
-
     
-    
-    _childElemFlag = false;
-
-    _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
-
     _elementDofIsScattered = false;
     _elementDofIsLocalizedFromJproc = false;
     _localElementDofMemorySize = 0;
@@ -85,15 +84,57 @@ namespace femus {
     _elementNearFaceIsScattered = false;
     _elementNearFaceIsLocalizedFromJproc = false;
     _localElementNearFaceMemorySize = 0;
+    
+    /////////////////////////////
+    
+    _childElemFlag = false;
+
+    _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
+
+  
   }
 
 
   void elem::SharpMemoryAllocation() {
 
+    MyVector <unsigned> rowSizeElDof(_nel);
+    MyVector <unsigned> rowSizeElNearFace(_nel);
+    for( unsigned iel = 0; iel < _nel; iel++ ) {
+      unsigned ielType = GetElementType( iel );
+      rowSizeElDof[iel] = NVE[ielType][2];
+      rowSizeElNearFace[iel] = NFC[ielType][1];
+    }
+    
+    MyMatrix <unsigned> tmpElDof(rowSizeElDof);
+    MyMatrix <int> tmpElNearFace(rowSizeElNearFace);
+    
+    rowSizeElDof.clear();
+    rowSizeElNearFace.clear();
+        
+    for(unsigned i=tmpElDof.begin();i<tmpElDof.end();i++){
+      for(unsigned j=tmpElDof.begin(i);j<tmpElDof.end(i);j++){
+	tmpElDof[i][j] = _elementDof1[i][j];
+      }
+    }
+    
+    for(unsigned i=tmpElNearFace.begin();i<tmpElNearFace.end();i++){
+      for(unsigned j=tmpElNearFace.begin(i);j<tmpElNearFace.end(i);j++){
+	tmpElNearFace[i][j] = _elementNearFace1[i][j];
+      }
+    }
+    
+    _elementDof1 = tmpElDof;
+    _elementNearFace1 = tmpElNearFace;
+    
+    tmpElDof.clear();
+    tmpElNearFace.clear();
+    
+    // ***************************************************************************
+    
     _elementDofMemorySize = _nelt[0] * NVE[0][2] + _nelt[1] * NVE[1][2] +
                             _nelt[2] * NVE[2][2] + _nelt[3] * NVE[3][2] +
                             _nelt[4] * NVE[4][2] + _nelt[5] * NVE[5][2];
-
+    
     unsigned** tempElementDof = _elementDof;
 
     _elementDof = new unsigned* [_nel + 1];
@@ -159,7 +200,37 @@ namespace femus {
     _elementGroup.resize(_nel);
     _elementMaterial.resize(_nel);
     _elementLevel.resize(_nel,_level);
+        
+    //**************************
+    MyVector <unsigned> rowSizeElDof(_nel);
+    MyVector <unsigned> rowSizeElNearFace(_nel);
+    unsigned jel = 0;
+    for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
+      elc->_elementType.localize(isdom);
+      for(unsigned iel = elc->_elementType.begin(); iel < elc->_elementType.end(); iel++) {
+   	short unsigned elemt = elc->_elementType[iel];
+	int increment = 1;
+	if( static_cast < short unsigned >( coarseAmrVector[iel] + 0.25 ) == 1 ) {
+	  increment = NRE[elemt];
+	}
+	for( unsigned j = 0; j < increment; j++ ) {
+	  rowSizeElDof[jel + j] += NVE[elemt][2];
+	  rowSizeElNearFace[jel + j] += NFC[ elemt ][1];
+	}
+	jel += increment;
+      }
+      elc->_elementType.clearLocalized();
+    }
+    _elementDof1 = MyMatrix <unsigned> (rowSizeElDof);
+    _elementNearFace1 = MyMatrix <int> (rowSizeElNearFace,-1);
     
+    rowSizeElDof.clear();
+    rowSizeElNearFace.clear();
+    
+    //std::cout << _elementDof1 << std::endl;
+    //std::cout << _elementNearFace1 <<std::endl;
+    
+    // *************************
     _elementDof = new unsigned * [_nel + 1];
     _elementNearFace = new int * [_nel + 1];
 
@@ -169,7 +240,6 @@ namespace femus {
       _elementDofMemorySize += elc->GetRefinedElementTypeNumber( i ) * refindex * NVE[i][2];
       _elementNearFaceMemorySize += elc->GetRefinedElementTypeNumber( i ) * refindex * NFC[i][1];
     }
-
     
     for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
       elc->_elementType.localize(isdom);
@@ -187,10 +257,10 @@ namespace femus {
     _elementNearFaceMemory = new int [ _elementNearFaceMemorySize ];
     for( unsigned i = 0; i < _elementNearFaceMemorySize; i++ )
       _elementNearFaceMemory[i] = -1;
-
+    
     int* ptElementNearFaceMemory = _elementNearFaceMemory;
     unsigned* ptElementDofMemory = _elementDofMemory;
-    unsigned jel = 0;
+    jel = 0;
     
     for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
       elc->_elementType.localize(isdom);
@@ -213,10 +283,6 @@ namespace femus {
     _elementDof[_nel] = ptElementDofMemory;
     _elementNearFace[_nel] = ptElementNearFaceMemory;
 
-    _childElemFlag = false;
-
-    _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
-
     _elementDofIsScattered = false;
     _elementDofIsLocalizedFromJproc = false;
     _localElementDofMemorySize = 0;
@@ -224,6 +290,14 @@ namespace femus {
     _elementNearFaceIsScattered = false;
     _elementNearFaceIsLocalizedFromJproc = false;
     _localElementNearFaceMemorySize = 0;
+    
+    // ***********************************
+        
+    _childElemFlag = false;
+
+    _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
+
+    
   }
 
   void elem::ReorderMeshElements( const std::vector < unsigned >& elementMapping ) {
@@ -266,6 +340,28 @@ namespace femus {
     //}
     //END reordering _elementGroup and _elementMaterial
 
+      
+    //***********************
+      
+    
+    MyMatrix <unsigned> tmpElDof = _elementDof1;
+    for(unsigned i=_elementDof1.begin();i<_elementDof1.end();i++){
+      for(unsigned j=_elementDof1.begin(i);j<_elementDof1.end(i);j++){
+	_elementDof1[elementMapping [i]][j] = tmpElDof[i][j];
+      }
+    }
+    tmpElDof.clear();
+    
+    
+    MyMatrix <int> tmpElNearFace = _elementNearFace1;
+    for(unsigned i=_elementNearFace1.begin();i<_elementNearFace1.end();i++){
+      for(unsigned j=_elementNearFace1.begin(i);j<_elementNearFace1.end(i);j++){
+	_elementNearFace1[elementMapping [i]][j] = tmpElNearFace[i][j];
+      }
+    }
+    tmpElNearFace.clear();
+    
+          
     //BEGIN reordering _elementNearFace (rows)
     int** tempElementNearFace;
     tempElementNearFace = _elementNearFace;
@@ -316,6 +412,8 @@ namespace femus {
     delete [] tempElementDof;
     //END reordering OF _elementDof
 
+    //********************************************************
+    
     //BEGIN reordering _childElementDof (columns) on coarse level
     if( _level != 0 ) {
       for( unsigned i = 0; i < _coarseElem->_childElemMemorySize; i++ ) {
@@ -330,6 +428,14 @@ namespace femus {
     for( unsigned i = 0; i < _elementDofMemorySize; i++ ) {
       _elementDofMemory[i] =  nodeMapping[ _elementDofMemory[i] ];
     }
+    
+    for( unsigned i = _elementDof1.begin(); i < _elementDof1.end(); i++ ) {
+      for( unsigned j = _elementDof1.begin(i); j < _elementDof1.end(i); j++ ) {
+	_elementDof1[i][j] =  nodeMapping[ _elementDof1[i][j] ];
+      }
+    }
+    
+    
   }
 
   elem::~elem() {
@@ -381,12 +487,14 @@ namespace femus {
    **/
   void elem::SetElementDofIndex( const unsigned& iel, const unsigned& inode, const unsigned& value ) {
     _elementDof[iel][inode] = value;
+    _elementDof1[iel][inode] = value;
   }
 
   /**
    * Return the local->global face node index
    **/
   unsigned elem::GetFaceVertexIndex( const unsigned& iel, const unsigned& iface, const unsigned& inode ) {
+    unsigned value = _elementDof1[iel][ig[_elementType[iel]][iface][inode]];
     return _elementDof[iel][ig[_elementType[iel]][iface][inode]];
   }
 
@@ -435,7 +543,9 @@ namespace femus {
   /**
    * Return the global adiacent-to-face element number
    **/
-  int elem::GetFaceElementIndex( const unsigned& iel, const unsigned& iface ) const {
+  int elem::GetFaceElementIndex( const unsigned& iel, const unsigned& iface ) {
+    return _elementNearFace1[iel][iface];
+    
     if (_elementNearFaceIsScattered ) {
       return _localElementNearFace[iel - _elementOffset[ _iproc ]][iface];
     }
@@ -447,7 +557,7 @@ namespace femus {
     }
   }
 
-  int elem::GetBoundaryIndex( const unsigned& iel, const unsigned& iface ) const {
+  int elem::GetBoundaryIndex( const unsigned& iel, const unsigned& iface ) {
     return  -( GetFaceElementIndex( iel, iface ) + 1 );
   }
 
@@ -457,6 +567,7 @@ namespace femus {
    **/
   void elem::SetFaceElementIndex( const unsigned& iel, const unsigned& iface, const int& value ) {
     _elementNearFace[iel][iface] = value;
+    _elementNearFace1[iel][iface] = value;
   }
 
 
@@ -736,6 +847,8 @@ namespace femus {
 
   void elem::ScatterElementDof() {
 
+    _elementDof1.scatter(_elementOffset);
+    
     if( _localElementDofMemorySize == 0 ) {
       _localElementDofMemorySize = _elementDof[_elementOffset[ _iproc + 1]] - _elementDof[_elementOffset[ _iproc ]];
 
@@ -768,6 +881,8 @@ namespace femus {
 
   void elem::LocalizeElementDofFromOneToAll( const unsigned& jproc ) {
 
+    _elementDof1.localize(jproc);
+    
     if( _elementDof != NULL ) {
       delete [] _elementDofMemory;
       delete [] _elementDof;
@@ -815,6 +930,8 @@ namespace femus {
 
   void elem::LocalizeElementDofFromOneToOne( const unsigned& jproc, const unsigned& kproc ) {
 
+    _elementDof1.localize(jproc);
+    
     if( (_iproc == jproc || _iproc == kproc ) && jproc != kproc) {
       if( _iproc == kproc && _elementDof != NULL ) {
         delete [] _elementDofMemory;
@@ -868,7 +985,10 @@ namespace femus {
   }
 
 
-  unsigned elem::GetElementDofIndex( const unsigned& iel, const unsigned& inode )const {
+  unsigned elem::GetElementDofIndex( const unsigned& iel, const unsigned& inode ) {
+    
+    return _elementDof1[iel][inode];
+    
     if( _elementDofIsScattered ) {
       return _localElementDof[ iel - _elementOffset[ _iproc ]][inode];
     }
@@ -881,6 +1001,9 @@ namespace femus {
   };
 
   void elem::FreeLocalizedElementDof() {
+    
+    _elementDof1.clearLocalized();
+    
     _elementDofIsScattered = true;
     _elementDofIsLocalizedFromJproc = false;
     if( _elementDof != NULL ) {
@@ -892,6 +1015,8 @@ namespace femus {
 
   void elem::ScatterElementNearFace() {
 
+    _elementNearFace1.scatter(_elementOffset);
+    
     if( _localElementNearFaceMemorySize == 0 ) {
       _localElementNearFaceMemorySize = _elementNearFace[_elementOffset[ _iproc + 1 ]] - _elementNearFace[_elementOffset[ _iproc ]];
 
@@ -923,7 +1048,9 @@ namespace femus {
   };
 
   void elem::LocalizeElementNearFaceFromOneToAll( const unsigned& jproc ) {
-
+   
+    _elementNearFace1.localize(jproc);
+    
     if( _elementNearFace != NULL ) {
       delete [] _elementNearFaceMemory;
       delete [] _elementNearFace;
@@ -971,6 +1098,8 @@ namespace femus {
 
   void elem::FreeLocalizedElementNearFace() {
 
+    _elementNearFace1.clearLocalized();
+    
     _elementNearFaceIsScattered = true;
     _elementNearFaceIsLocalizedFromJproc = false;
 

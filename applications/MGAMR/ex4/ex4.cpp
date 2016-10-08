@@ -165,7 +165,7 @@ int main(int argc, char** args) {
   
 
 
-  return 0;
+ 
   
   //  b.resize(offset, 1);
   // return 0;
