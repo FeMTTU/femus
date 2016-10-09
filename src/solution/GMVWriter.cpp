@@ -149,7 +149,7 @@ namespace femus {
     //mesh->_topology->_Sol[mesh->GetTypeIndex()]->localize_to_one( vector1, 0 );
 
     for( unsigned isdom = 0; isdom < _nprocs; isdom++ ) {
-      mesh->el->LocalizeElementDofFromOneToOne( isdom, 0 );
+      mesh->el->LocalizeElementDof( isdom );
       mesh->el->LocalizeElementQuantities(isdom);
       if( _iproc == 0 ) {
         for( unsigned ii = mesh->_elementOffset[isdom]; ii < mesh->_elementOffset[isdom + 1]; ii++ ) {

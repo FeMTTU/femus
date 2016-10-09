@@ -110,6 +110,7 @@ namespace femus {
         if(mat._matIsAllocated) {
           if(mat._serial) {
             for(unsigned i = mat.begin(); i < mat.end(); i++) {
+	      os << i <<"   ";
               for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
                 os << mat[i][j] << " ";
               }
@@ -120,6 +121,7 @@ namespace femus {
             for(int j = 0; j < mat._nprocs; j++) {
               mat.localize(j);
               for(unsigned i = mat.begin(); i < mat.end(); i++) {
+		os << i <<"   ";
                 for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
                   os << mat[i][j] << " ";
                 }

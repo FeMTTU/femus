@@ -267,7 +267,7 @@ namespace femus {
     //BEGIN CONNETTIVITY
     unsigned icount = 0;
     for( unsigned isdom = 0; isdom < _nprocs; isdom++ ) {
-      mesh->el->LocalizeElementDofFromOneToOne( isdom, 0 );
+      mesh->el->LocalizeElementDof( isdom );
       if( _iproc == 0 ) {
         for( unsigned iel = mesh->_elementOffset[isdom]; iel < mesh->_elementOffset[isdom + 1]; iel++ ) {
           for( unsigned j = 0; j < ndofs; j++ ) {
