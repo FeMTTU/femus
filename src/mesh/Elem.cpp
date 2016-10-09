@@ -361,25 +361,7 @@ namespace femus {
    * Set the memory storage and initialize nve and kvtel (node->element vectors)
    **/
 
-  void elem::BuildLocalElementNearVertex() {
-    for(unsigned iel = _elementOffset[ _iproc ]; iel < _elementOffset[ _iproc + 1]; iel++) {
-      for(unsigned i = 0; i < GetElementDofNumber(iel, 0); i++) {
-        unsigned inode = GetElementDofIndex(iel, i);
-        unsigned inodesize = 1;
-        if(_localElementNearVertexMap.find(inode) != _localElementNearVertexMap.end()) {
-          inodesize = _localElementNearVertexMap[inode].size();
-          inodesize++;
-        }
-        else {
-          _localElementNearVertexMap[inode].reserve(_elementNearVertex.size(inode));
-        }
-        _localElementNearVertexMap[inode].resize(inodesize);
-        _localElementNearVertexMap[inode][inodesize - 1] = iel;
-      }
-    }
-
-    ////////////////////////////////////////////////
-    
+  void elem::BuildElementNearElement() {
     MyVector < unsigned > rowSize(_elementOffset, 1);
     for(unsigned iel = rowSize.begin(); iel < rowSize.end(); iel++) {
       std::map< unsigned, bool> elements;
@@ -408,7 +390,6 @@ namespace femus {
         _elementNearElement[iel][j] = it->first;
       }
     }
-    ///////////////////////////////////////////////
   }
 
   void elem::BuildElementNearVertex() {

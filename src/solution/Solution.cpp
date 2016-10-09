@@ -739,7 +739,7 @@ namespace femus {
       volumeRefined = parallelVec->l1_norm();
 
       double  volumeTestFalse = 0.;
-      double errTestTrue2;
+      double errTestTrue2 = 0.;
 
       double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volume;
 
@@ -813,17 +813,14 @@ namespace femus {
             volumeTestFalse += ielVolume[iel-offset];
 
             if( ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset] ) {
-              for(unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) { //loop on the element vertices
-                unsigned inode = _msh->el->GetElementDofIndex(iel, i);
-                const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
-                unsigned nve = localElementNearVertexNumber.size();
-                for(unsigned j = 0; j < nve; j++) {
-                  unsigned jel = localElementNearVertexNumber[j];
+              for(unsigned j = 1; j < _msh->el->GetElementNearElementSize(iel,1);j++){
+		unsigned jel = _msh->el->GetElementNearElement(iel,j);
+		if( jel >= _msh->_elementOffset[iproc] && jel<_msh->_elementOffset[iproc + 1] ){
 		  if(_msh->el->GetIfElementCanBeRefined(jel)){
-		    if(jel > iel && jel < _msh->_elementOffset[iproc + 1]) {
+		    if(jel > iel) {
                       AMR->_Sol[AMRIndex]->set(jel, 2.);
                     }
-                    else if(jel >= _msh->_elementOffset[iproc] && (*AMR->_Sol[AMRIndex])(iel) == 0.) {
+                    else if( (*AMR->_Sol[AMRIndex])(iel) == 0. ) {
 		      errTestTrue2 -= ielErrNorm2[jel-offset];
 		      AMR->_Sol[AMRIndex]->set(jel, 1.);
 		      volumeTestFalse += ielVolume[jel-offset];
@@ -849,10 +846,9 @@ namespace femus {
       errTestTrue2 = parallelVec->l1_norm();
 
       if(volumeTestFalse != 0) {
-        //std::cout << volumeTestFalse <<std::endl;
         std::cout  << errTestTrue2 << " " << solNorm2 << " " << volume << " " << volumeRefined << " " << volumeTestFalse << std::endl;
-        std::cout << AMRthreshold[k] * AMRthreshold[k] * volumeRefined / volumeTestFalse - errTestTrue2 / solNorm2 * volume / volumeTestFalse << std::endl;
-        AMRthreshold[k] = sqrt(AMRthreshold[k] * AMRthreshold[k] * volumeRefined / volumeTestFalse - errTestTrue2 / solNorm2 * volume / volumeTestFalse);
+	AMRthreshold[k] = sqrt(AMRthreshold[k] * AMRthreshold[k] * volumeRefined / volumeTestFalse - errTestTrue2 / solNorm2 * volume / volumeTestFalse);
+        std::cout << AMRthreshold[k] << std::endl;  
       }
       else {
         AMRthreshold[k] = 1.;

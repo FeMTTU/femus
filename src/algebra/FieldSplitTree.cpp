@@ -694,25 +694,11 @@ namespace femus {
 
       // ***************** NODE/ELEMENT SERCH *******************
       for(int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
-
-        //std::cout<<std::endl;
         unsigned iel = block_elements[vb_index][kel];
-
-        //std::cout << iel <<" ";
-
-        for(unsigned i = 0; i < msh->GetElementDofNumber(iel, 0); i++) { //loop on the element vertices
-          unsigned inode = msh->el->GetElementDofIndex(iel, i);
-          const std::vector < unsigned > & localElementNearVertexNumber = msh->el->GetLocalElementNearVertex(inode);
-          //loop on the neighboring elemnets (!FastVankaBlock) or on iel only (FastVankaBlock)
-          unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
-
-          for(unsigned j = 0; j < nve; j++) {
-            unsigned jel = (!FastVankaBlock) ? localElementNearVertexNumber[j] : iel;
-
-            //std::cout << "     ";
-
-            //add elements for velocity to be solved
-            if(indexc[jel - ElemOffset] == ElemOffsetSize) {
+	for(unsigned j = 0; j < msh->el->GetElementNearElementSize(iel,!FastVankaBlock);j++){
+	  unsigned jel = msh->el->GetElementNearElement(iel,j);
+	  if( jel >= ElemOffset && jel<ElemOffsetp1 ){
+	    if(indexc[jel - ElemOffset] == ElemOffsetSize) {
               indexci[Csize] = jel - ElemOffset;
               indexc[jel - ElemOffset] = Csize++;
 
@@ -726,9 +712,7 @@ namespace femus {
                     unsigned jdof = msh->GetSolutionDof(jj, jel, SolType);
 
                     unsigned kkdof = solver->GetSystemDof(SolType, indexSol, jj, jel, _MatrixOffset[level - 1]);
-
-                    //std::cout<< kkdof << " ";
-
+                  
                     if(jdof >= msh->_dofOffset[SolType][iproc] &&
                         jdof <  msh->_dofOffset[SolType][iproc + 1]) {
                       if(indexa[kkdof - DofOffset] == DofOffsetSize && owned[kkdof - DofOffset] == false) {

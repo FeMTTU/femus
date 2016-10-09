@@ -527,7 +527,7 @@ namespace femus {
         }
         _pt_basis->SetX(i, 0, xm);
 
-        std::cout << *(_pt_basis->GetX(i) + 0) << std::endl;
+        //std::cout << *(_pt_basis->GetX(i) + 0) << std::endl;
       }
     }
 
@@ -557,7 +557,7 @@ namespace femus {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
 
 
-	std::cout << j << " "<< phi << std::endl;
+	//std::cout << j << " "<< phi << std::endl;
 
         if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
           phi = jac[j];
@@ -590,7 +590,7 @@ namespace femus {
           double xv = * (linearElement->GetXcoarse(linearElement->GetFine2CoarseVertexMapping(i % 2, k)) + 0);
           jac[1] += linearElement->eval_dphidx(linearElement->GetIND(k), _X[i]) * xv;
         }
-        std::cout << jac[0] << " " << jac[1] << std::endl;
+        //std::cout << jac[0] << " " << jac[1] << std::endl;
       }
 
       _prol_val[i] = pt_d;
@@ -669,20 +669,20 @@ namespace femus {
 	for(int j = 0; j < _nc; j++) {
          _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xv[iface]);
 
-	 std::cout <<  _phiFace[iface][0][j] << " ";
+	 //std::cout <<  _phiFace[iface][0][j] << " ";
 
          _gradPhiFace[iface][0][j].resize(1);
          _gradPhiFace[iface][0][j][0] = _pt_basis->eval_dphidx(_IND[j], &xv[iface]);
 
-	 std::cout <<  _gradPhiFace[iface][0][j][0] << " ";
+	 //std::cout <<  _gradPhiFace[iface][0][j][0] << " ";
 
           _hessianPhiFace[iface][0][j].resize(1);
           _hessianPhiFace[iface][0][j][0].resize(1);
           _hessianPhiFace[iface][0][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], &xv[iface]);
 
-	  std::cout <<  _hessianPhiFace[iface][0][j][0][0] << " ";
+	  //std::cout <<  _hessianPhiFace[iface][0][j][0][0] << " ";
         }
-        std::cout << std::endl;
+        //std::cout << std::endl;
       }
 
     }
@@ -788,7 +788,7 @@ namespace femus {
         _pt_basis->SetX(i, 0, xm);
         _pt_basis->SetX(i, 1, ym);
 
-        std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << std::endl;
+        //std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << std::endl;
       }
     }
 
@@ -866,7 +866,7 @@ namespace femus {
             jac[2] += linearElement->eval_dphidy(linearElement->GetIND(k), _X[i]) * yv;
           }
         }
-        std::cout << jac[0] << " " << jac[1] << " " << jac[2] << std::endl;
+        //std::cout << jac[0] << " " << jac[1] << " " << jac[2] << std::endl;
       }
 
       _prol_val[i] = pt_d;
@@ -943,7 +943,7 @@ namespace femus {
 
     }
 
-    std::cout << std::endl;
+    //std::cout << std::endl;
     if(_SolType < 3) {
       basis *linearLine = new LineLinear;
 
@@ -1003,7 +1003,7 @@ namespace femus {
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
 
-    std::cout << std::endl;
+    //std::cout << std::endl;
 
     delete linearElement;
 
@@ -1115,7 +1115,7 @@ namespace femus {
         _pt_basis->SetX(i, 1, ym);
         _pt_basis->SetX(i, 2, zm);
 
-        std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << " " << *(_pt_basis->GetX(i) + 2) << std::endl;
+        //std::cout << *(_pt_basis->GetX(i) + 0) << " " << *(_pt_basis->GetX(i) + 1) << " " << *(_pt_basis->GetX(i) + 2) << std::endl;
       }
     }
 
@@ -1207,7 +1207,7 @@ namespace femus {
             jac[3] += linearElement->eval_dphidz(linearElement->GetIND(k), _X[i]) * zv;
           }
         }
-        std::cout << jac[0] << " " << jac[1] << " " << jac[2] << " " << jac[3] << std::endl;
+        //std::cout << jac[0] << " " << jac[1] << " " << jac[2] << " " << jac[3] << std::endl;
       }
 
       _prol_val[i] = pt_d;
@@ -1326,7 +1326,7 @@ namespace femus {
       }
     }
 
-    std::cout << std::endl;
+    //std::cout << std::endl;
     if(_SolType < 3) {
       basis *linearQuad = new QuadLinear;
       basis *linearTri = new TriLinear;
@@ -1419,7 +1419,7 @@ namespace femus {
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
 
-    std::cout << std::endl;
+    //std::cout << std::endl;
 
     delete linearElement;
 

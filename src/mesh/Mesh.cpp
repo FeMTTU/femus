@@ -186,7 +186,7 @@ namespace femus {
     _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
 
 
-    el->BuildLocalElementNearVertex();
+    el->BuildElementNearElement();
 
     el->ScatterElementQuantities();
     el->ScatterElementDof();
@@ -252,7 +252,7 @@ namespace femus {
 
     _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1 , 0);
 
-    el->BuildLocalElementNearVertex();
+    el->BuildElementNearElement();
     el->DeleteElementNearVertex();
 
     el->ScatterElementQuantities();

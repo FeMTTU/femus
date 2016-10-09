@@ -131,17 +131,9 @@ namespace femus {
       // ***************** NODE/ELEMENT SERCH *******************
       for(int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
         unsigned iel = block_elements[vb_index][kel];
-	{
-//         for(unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) { //loop on the element vertices
-//           unsigned inode = _msh->el->GetElementDofIndex(iel, i);
-//           const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
-//           //loop on the neighboring elemnets (!FastVankaBlock) or on iel only (FastVankaBlock) 
-// 	  unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
-//           for(unsigned j = 0; j < nve; j++) { 
-//             unsigned jel = (!FastVankaBlock) ? localElementNearVertexNumber[j] : iel;
-
-	  for(unsigned j = 0; j < _msh->el->GetElementNearElementSize(iel,!FastVankaBlock);j++){
-	    unsigned jel = _msh->el->GetElementNearElement(iel,j);
+	for(unsigned j = 0; j < _msh->el->GetElementNearElementSize(iel,!FastVankaBlock);j++){
+	  unsigned jel = _msh->el->GetElementNearElement(iel,j);
+	  if( jel >= ElemOffset && jel<ElemOffsetp1 ){
 	    
             //add elements for velocity to be solved
             if(indexc[jel - ElemOffset] == ElemOffsetSize) {

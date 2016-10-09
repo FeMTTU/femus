@@ -480,7 +480,7 @@ namespace femus {
 //     typef.matrix_mult(typec, *_mesh.GetCoarseToFineProjection(3));
 //     typef.close();
 
-    _mesh.el->BuildLocalElementNearVertex();
+    _mesh.el->BuildElementNearElement();
     _mesh.el->DeleteElementNearVertex();
 
     _mesh._topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);

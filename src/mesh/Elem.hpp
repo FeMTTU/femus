@@ -161,11 +161,7 @@ namespace femus {
       /** To be Added */
       unsigned GetElementNearVertex(const unsigned& inode, const unsigned& jnode);
 
-      void BuildLocalElementNearVertex();
-
-      const std::vector<unsigned>& GetLocalElementNearVertex(const unsigned& inode)  {
-        return _localElementNearVertexMap[inode];
-      };
+      void BuildElementNearElement();
 
       const unsigned GetElementNearElementSize(const unsigned& iel, const unsigned &layers)  {
         return (layers == 0) ? 1 : _elementNearElement.end(iel);
@@ -261,8 +257,7 @@ namespace femus {
 
       MyMatrix <unsigned> _childElem;
       MyMatrix <unsigned> _childElemDof;
-
-      std::map< unsigned, std::vector< unsigned > > _localElementNearVertexMap;
+    
       MyMatrix <unsigned> _elementNearVertex;
       MyMatrix <unsigned> _elementNearElement;
 
