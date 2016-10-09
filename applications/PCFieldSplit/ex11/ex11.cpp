@@ -195,8 +195,12 @@ int main(int argc, char** args) {
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
   //system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
-  system.SetMaxNumberOfLinearIterations(10);
+  //system.SetMaxNumberOfLinearIterations(10);
+  //system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+  
+  system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+  
 
   system.SetMgType(F_CYCLE);
 
@@ -210,7 +214,7 @@ int main(int argc, char** args) {
 
   if(precType == FS_VTp || precType == FS_TVp) system.SetFieldSplitTree(&FS_NST);
 
-  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
+  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 30, 30); //GMRES tolerances
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
