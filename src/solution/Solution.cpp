@@ -616,6 +616,8 @@ namespace femus {
 
   bool Solution::FlagAMRRegionBasedOnErroNormAdaptive(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType) {
 
+    const double scale2[3][2] = {{0.111111, 1.}, {0.0625, 0.111111}, {0.0625, 0.111111} };
+
     unsigned    iproc = _msh->processor_id(); // get the process_id (for parallel computation)
     const unsigned  dim = _msh->GetDimension();
 
@@ -713,6 +715,7 @@ namespace femus {
           }
 
           volume += weight;
+
           if (_msh->el->GetIfElementCanBeRefined(iel)) {
             volumeRefined += weight;
           }
@@ -730,7 +733,7 @@ namespace femus {
       parallelVec->set(iproc, volume);
       parallelVec->close();
       volume = parallelVec->l1_norm();
-      
+
       parallelVec->set(iproc, volumeRefined);
       parallelVec->close();
       volumeRefined = parallelVec->l1_norm();
@@ -738,8 +741,9 @@ namespace femus {
       double  volumeTestFalse = 0.;
       double errTestTrue2;
 
-      double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volumeRefined;
-//      double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volume;
+      //double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volumeRefined;
+      double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volume;
+
       for (int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
         if (_msh->el->GetIfElementCanBeRefined(iel) && (*AMR->_Sol[AMRIndex])(iel) == 0.) {
 
@@ -789,11 +793,11 @@ namespace femus {
               }
             }
 
-            ielErrNorm2 += solig * solig * weight;
+            ielErrNorm2 += scale2[solType][normType] * solig * solig * weight;
 
             if (normType > 0) {
               for (int j = 0; j < dim; j++) {
-                ielErrNorm2 += solGradig[j] * solGradig[j] * weight;
+                ielErrNorm2 += scale2[solType][normType] * solGradig[j] * solGradig[j] * weight;
               }
             }
 
@@ -834,8 +838,10 @@ namespace femus {
       errTestTrue2 = parallelVec->l1_norm();
 
       if (volumeTestFalse != 0) {
-        AMRthreshold[k] = sqrt( (AMRthreshold[k] * AMRthreshold[k] - errTestTrue2 / solNorm2) * volumeRefined / volumeTestFalse);
-	//AMRthreshold[k] = sqrt( (AMRthreshold[k] * AMRthreshold[k] - (errTestTrue2 / solNorm2)*(volume/volumeRefined)) * volumeRefined / volumeTestFalse);
+        //std::cout << volumeTestFalse <<std::endl;
+        std::cout  << errTestTrue2 << " " << solNorm2 << " " << volume << " " << volumeRefined << " " << volumeTestFalse << std::endl;
+        std::cout << AMRthreshold[k] * AMRthreshold[k] * volumeRefined / volumeTestFalse - errTestTrue2 / solNorm2 * volume / volumeTestFalse << std::endl;
+        AMRthreshold[k] = sqrt(AMRthreshold[k] * AMRthreshold[k] * volumeRefined / volumeTestFalse - errTestTrue2 / solNorm2 * volume / volumeTestFalse);
       }
       else {
         AMRthreshold[k] = 1.;
