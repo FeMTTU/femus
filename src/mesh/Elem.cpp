@@ -176,9 +176,15 @@ namespace femus {
 
 
     //BEGIN reordering _elementDof (rows)
+    MyVector <unsigned> rowSize(_nel, 0);
+    for(unsigned i = rowSize.begin(); i < rowSize.end(); i++) {
+      rowSize[elementMapping[i]] = _elementDof.size(i);
+    }
+
     MyMatrix <unsigned> tmpElDof = _elementDof;
-    for(unsigned i = _elementDof.begin(); i < _elementDof.end(); i++) {
-      for(unsigned j = _elementDof.begin(i); j < _elementDof.end(i); j++) {
+    _elementDof = MyMatrix <unsigned>(rowSize, 0);
+    for(unsigned i = tmpElDof.begin(); i < tmpElDof.end(); i++) {
+      for(unsigned j = tmpElDof.begin(i); j < tmpElDof.end(i); j++) {
         _elementDof[elementMapping [i]][j] = tmpElDof[i][j];
       }
     }
@@ -186,9 +192,13 @@ namespace femus {
     //END reordering OF _elementDof
 
     //BEGIN reordering _elementNearFace (rows)
+    for(unsigned i = rowSize.begin(); i < rowSize.end(); i++) {
+      rowSize[elementMapping[i]] = _elementNearFace.size(i);
+    }
     MyMatrix <int> tmpElNearFace = _elementNearFace;
-    for(unsigned i = _elementNearFace.begin(); i < _elementNearFace.end(); i++) {
-      for(unsigned j = _elementNearFace.begin(i); j < _elementNearFace.end(i); j++) {
+    _elementNearFace = MyMatrix <int>(rowSize, 0);
+    for(unsigned i = tmpElNearFace.begin(); i < tmpElNearFace.end(); i++) {
+      for(unsigned j = tmpElNearFace.begin(i); j < tmpElNearFace.end(i); j++) {
         _elementNearFace[elementMapping [i]][j] = tmpElNearFace[i][j];
       }
     }
