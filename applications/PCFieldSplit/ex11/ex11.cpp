@@ -21,6 +21,10 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 #include "FieldSplitTree.hpp"
+#include <stdlib.h>
+
+double Prandtl = 0.1;
+double Rayleigh =10000.;
 
 using namespace femus;
 
@@ -45,6 +49,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
+
+void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
@@ -80,7 +86,21 @@ int main(int argc, char** args) {
     std::cout << "No input argument set default preconditioner = NS+T" << std::endl;
     precType == FS_VTp;
   }
-
+  
+  if(argc >= 3) {
+    Prandtl = strtod(args[2], NULL);
+    std::cout << Prandtl<<std::endl;
+  }
+  
+  
+  if(argc >= 4) {
+    Rayleigh = strtod(args[3], NULL);
+    std::cout << Rayleigh <<std::endl;
+  }
+  
+  
+  
+   
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
@@ -94,7 +114,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 8;
+  unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
@@ -232,6 +252,18 @@ int main(int argc, char** args) {
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   mlMsh.PrintInfo();
+  
+  //char infile[256]="FSVTtrueResidual.txt";
+  //char stdOutfile[256]="output.txt"; 
+  char *stdOutfile =  new char[100];
+  char *outfile =  new char[100];
+  
+  sprintf(stdOutfile,"%strueResidualPr=%sRa=%s.txt",args[1],args[2],args[3]);
+  sprintf(outfile,"%sconvergencePr=%sRa=%s.txt",args[1],args[2],args[3]);
+  
+  std::cout << stdOutfile <<std::endl;
+  
+  PrintConvergenceInfo(stdOutfile, outfile, numberOfUniformLevels);
 
   return 0;
 }
@@ -814,8 +846,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       double beta = 1.;//40000.;
 
 
-      double Pr = 1. / 10;
-      double Ra = 10000;
+      double Pr = Prandtl;
+      double Ra = Rayleigh;
 
       //BEGIN phiT_i loop: Energy balance
       for(unsigned i = 0; i < nDofsT; i++) {
@@ -939,6 +971,75 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
+void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numofrefinements){
 
+  std::cout<<"END_COMPUTATION\n"<<std::flush;
+
+  std::ifstream inf;
+  inf.open(stdOutfile);
+  if (!inf) {
+    std::cout<<"Redirected standard output file not found\n";
+    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+    return;
+  }
+
+  std::ofstream outf;
+
+  outf.open(outfile, std::ofstream::app);
+  outf << std::endl << std::endl;
+  outf << "Number_of_refinements="<<numofrefinements<<std::endl;
+  outf << "Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
+
+  std::string str1;
+  inf >> str1;
+  while (str1.compare("END_COMPUTATION") != 0) {
+
+    if (str1.compare("Nonlinear") == 0) {
+      inf >> str1;
+      if (str1.compare("iteration") == 0) {
+        inf >> str1;
+        outf << std::endl << str1;
+      }
+    }
+    else if (str1.compare("KSP") == 0){
+      inf >> str1;
+      if (str1.compare("preconditioned") == 0){
+        inf >> str1;
+        if (str1.compare("resid") == 0){
+          inf >> str1;
+          if (str1.compare("norm") == 0){
+            double norm0 = 1.;
+            double normN = 1.;
+            unsigned counter = 0;
+            inf >> norm0;
+            outf <<","<< norm0;
+            for (unsigned i = 0; i < 11; i++){
+              inf >> str1;
+            }
+            while(str1.compare("norm") == 0){
+              inf >> normN;
+              counter++;
+              for (unsigned i = 0; i < 11; i++){
+                inf >> str1;
+              }
+            }
+            outf <<","<< normN;
+            if(counter != 0){
+              outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
+            }
+            else{
+              outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
+            }
+          }
+        }
+      }
+    }
+    inf >> str1;
+  }
+
+  outf.close();
+  inf.close();
+
+}
 
 
