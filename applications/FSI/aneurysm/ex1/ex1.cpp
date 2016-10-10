@@ -39,8 +39,28 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
       dirichlet = true;
     }
   }
-   else if(!strcmp(solName,"A")){
+  else if(!strcmp(solName,"A")){
     if (faceName == 7){
+      dirichlet = true;
+    }
+  }
+  else if(!strcmp(solName,"B")){
+    if (faceName == 8){
+      dirichlet = true;
+    }
+  }
+  else if(!strcmp(solName,"C")){
+    if (faceName == 9){
+      dirichlet = true;
+    }
+  }
+  else if(!strcmp(solName,"D")){
+    if (faceName == 10){
+      dirichlet = true;
+    }
+  }
+  else if(!strcmp(solName,"E")){
+    if (faceName == 11){
       dirichlet = true;
     }
   }
@@ -60,10 +80,11 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/aneurysm.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/junction.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/aneurysm_one_ball.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/aneurysm_Sara_5.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/aneurisma_aorta_9Oscaled.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/Turek_stents.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.PrintInfo();
@@ -79,6 +100,10 @@ int main(int argc, char** args) {
   mlSol.AddSolution("Y", LAGRANGE, SECOND);
   mlSol.AddSolution("Z", LAGRANGE, SECOND);
   mlSol.AddSolution("A", LAGRANGE, SECOND);
+  mlSol.AddSolution("B", LAGRANGE, SECOND);
+  mlSol.AddSolution("C", LAGRANGE, SECOND);
+  mlSol.AddSolution("D", LAGRANGE, SECOND);
+  mlSol.AddSolution("E", LAGRANGE, SECOND);
 
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
@@ -90,17 +115,22 @@ int main(int argc, char** args) {
   mlSol.GenerateBdc("Y");
   mlSol.GenerateBdc("Z");
   mlSol.GenerateBdc("A");
+  mlSol.GenerateBdc("B");
+  mlSol.GenerateBdc("C");
+  mlSol.GenerateBdc("D");
+  mlSol.GenerateBdc("E");
 
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("U");
+  /*variablesToBePrinted.push_back("U");
   variablesToBePrinted.push_back("V");
   variablesToBePrinted.push_back("W");
   variablesToBePrinted.push_back("X");
   variablesToBePrinted.push_back("Y");
   variablesToBePrinted.push_back("Z");
-  variablesToBePrinted.push_back("A");
+  */
+  variablesToBePrinted.push_back("All");
 
 
   VTKWriter vtkIO(&mlSol);

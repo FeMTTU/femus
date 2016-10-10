@@ -263,8 +263,8 @@ namespace femus {
     bool AMR = false;
 
     for(unsigned isdom = 0; isdom < _nprocs; isdom++) {
-      elc->LocalizeElementDofFromOneToAll(isdom);
-      elc->LocalizeElementNearFaceFromOneToAll(isdom);
+      elc->LocalizeElementDof(isdom);
+      elc->LocalizeElementNearFace(isdom);
       elc->LocalizeElementQuantities(isdom);
       for(unsigned iel = mshc->_elementOffset[isdom]; iel < mshc->_elementOffset[isdom + 1]; iel++) {
         if(static_cast < unsigned short >(coarseLocalizedAmrVector[iel] + 0.25) == 1) {
@@ -430,7 +430,7 @@ namespace femus {
     _mesh.FillISvector(partition);
     partition.resize(0);
 
-    elc->SetChildElementDof(_mesh.GetRefIndex(), mshc, _mesh.el);
+    elc->SetChildElementDof(_mesh.el);
 
     _mesh.el->DeleteElementNearVertex();
     _mesh.el->BuildElementNearVertex();
@@ -480,7 +480,7 @@ namespace femus {
 //     typef.matrix_mult(typec, *_mesh.GetCoarseToFineProjection(3));
 //     typef.close();
 
-    _mesh.el->BuildLocalElementNearVertex();
+    _mesh.el->BuildElementNearElement();
     _mesh.el->DeleteElementNearVertex();
 
     _mesh._topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);

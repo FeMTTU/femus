@@ -39,7 +39,7 @@ namespace femus {
   Solution::Solution(Mesh *other_msh) {
     _msh = other_msh;
 
-    for (int i = 0; i < 5; i++) {
+    for(int i = 0; i < 5; i++) {
       _GradMat[i].resize(_msh->GetDimension());
       _AMR_flag = 0;
     }
@@ -50,7 +50,7 @@ namespace femus {
    **/
 // ------------------------------------------------------------------
   Solution::~Solution() {
-    for (unsigned i = 0; i < _SolName.size(); i++) {
+    for(unsigned i = 0; i < _SolName.size(); i++) {
       delete [] _SolName[i];
     }
   }
@@ -81,7 +81,7 @@ namespace femus {
     _GradVec.resize(n + 1u);
     _GradVec[n].resize(_msh->GetDimension());
 
-    for (int i = 0; i < _msh->GetDimension(); i++) {
+    for(int i = 0; i < _msh->GetDimension(); i++) {
       _GradVec[n][i] = NULL;
     }
 
@@ -112,10 +112,10 @@ namespace femus {
   unsigned Solution::GetIndex(const char name[]) const {
     unsigned index = 0;
 
-    while (strcmp(_SolName[index], name)) {
+    while(strcmp(_SolName[index], name)) {
       index++;
 
-      if (index == _Res.size()) {
+      if(index == _Res.size()) {
         cout << "error! invalid name entry GetIndex(...)" << endl;
         exit(0);
       }
@@ -132,28 +132,28 @@ namespace femus {
 
     unsigned i = GetIndex(name);
 
-    if (_Sol[i])  delete _Sol[i];
+    if(_Sol[i])  delete _Sol[i];
 
-    if (_ResEpsBdcFlag[i]) {
-      if (_Res[i]) delete _Res[i];
+    if(_ResEpsBdcFlag[i]) {
+      if(_Res[i]) delete _Res[i];
 
-      if (_Eps[i]) delete _Eps[i];
+      if(_Eps[i]) delete _Eps[i];
 
-      if (_Bdc[i]) delete _Bdc[i];
+      if(_Bdc[i]) delete _Bdc[i];
     }
 
-    if (_SolTmOrder[i] == 2) {
-      if (_SolOld[i]) delete _SolOld[i];
+    if(_SolTmOrder[i] == 2) {
+      if(_SolOld[i]) delete _SolOld[i];
     }
 
     _Sol[i] = NumericVector::build().release();
 
-    if (n_processors() == 1) { // IF SERIAL
+    if(n_processors() == 1) {  // IF SERIAL
       _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()], _msh->_ownSize[_SolType[i]][processor_id()], false, SERIAL);
     }
     else { // IF PARALLEL
-      if (_SolType[i] < 3) {
-        if (_msh->_ghostDofs[_SolType[i]][processor_id()].size() != 0) {
+      if(_SolType[i] < 3) {
+        if(_msh->_ghostDofs[_SolType[i]][processor_id()].size() != 0) {
           _Sol[i]->init(_msh->_dofOffset[_SolType[i]][n_processors()], _msh->_ownSize[_SolType[i]][processor_id()],
                         _msh->_ghostDofs[_SolType[i]][processor_id()], false, GHOSTED);
         }
@@ -168,12 +168,12 @@ namespace femus {
       }
     }
 
-    if (_SolTmOrder[i] == 2) { // only if the variable is time dependent
+    if(_SolTmOrder[i] == 2) {  // only if the variable is time dependent
       _SolOld[i] = NumericVector::build().release();
       _SolOld[i]->init(*_Sol[i]);
     }
 
-    if (_ResEpsBdcFlag[i]) { //only if the variable is a Pde type
+    if(_ResEpsBdcFlag[i]) {  //only if the variable is a Pde type
 
       _Res[i] = NumericVector::build().release();
       _Res[i]->init(*_Sol[i]);
@@ -192,7 +192,7 @@ namespace femus {
     _AMR_flag = 1;
     _AMREps.resize(_Sol.size());
 
-    for (int i = 0; i < _Sol.size(); i++) {
+    for(int i = 0; i < _Sol.size(); i++) {
       _AMREps[i] = NumericVector::build().release();
       _AMREps[i]->init(*_Sol[i]);
       _AMREps[i]->zero();
@@ -207,50 +207,50 @@ namespace femus {
    **/
 // ------------------------------------------------------------------
   void Solution::FreeSolutionVectors() {
-    for (unsigned i = 0; i < _Sol.size(); i++) {
-      if (_Sol[i]) delete _Sol[i];
+    for(unsigned i = 0; i < _Sol.size(); i++) {
+      if(_Sol[i]) delete _Sol[i];
 
       _Sol[i] = NULL;
 
-      if (_ResEpsBdcFlag[i]) {
-        if (_Res[i]) delete _Res[i];
+      if(_ResEpsBdcFlag[i]) {
+        if(_Res[i]) delete _Res[i];
 
         _Res[i] = NULL;
 
-        if (_Eps[i]) delete _Eps[i];
+        if(_Eps[i]) delete _Eps[i];
 
         _Eps[i] = NULL;
 
-        if (_Bdc[i]) delete _Bdc[i];
+        if(_Bdc[i]) delete _Bdc[i];
 
         _Bdc[i] = NULL;
 
       }
 
-      if (_SolTmOrder[i] == 2) {
-        if (_SolOld[i]) delete _SolOld[i];
+      if(_SolTmOrder[i] == 2) {
+        if(_SolOld[i]) delete _SolOld[i];
 
         _SolOld[i] = NULL;
       }
 
-      for (int j = 0; j < _msh->GetDimension(); j++) {
-        if (_GradVec[i][j]) {
-          if (_GradVec[i][j]) delete _GradVec[i][j];
+      for(int j = 0; j < _msh->GetDimension(); j++) {
+        if(_GradVec[i][j]) {
+          if(_GradVec[i][j]) delete _GradVec[i][j];
 
           _GradVec[i][j] = NULL;
         }
       }
 
-      if (_AMR_flag) {
-        if (_AMREps[i]) delete _AMREps[i];
+      if(_AMR_flag) {
+        if(_AMREps[i]) delete _AMREps[i];
 
         _AMREps[i] = NULL;
       }
     }
 
-    for (unsigned i = 0; i < 5; i++) {
-      for (int j = 0; j < _msh->GetDimension(); j++) {
-        if (_GradMat[i][j]) {
+    for(unsigned i = 0; i < 5; i++) {
+      for(int j = 0; j < _msh->GetDimension(); j++) {
+        if(_GradMat[i][j]) {
           delete _GradMat[i][j];
         }
       }
@@ -266,7 +266,7 @@ namespace femus {
 
     PetscScalar zero = 0.;
 
-    for (unsigned k = 0; k < _SolPdeIndex.size(); k++) {
+    for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype =  _SolType[indexSol];
 
@@ -276,7 +276,7 @@ namespace femus {
 
       vector <int> index(_msh->_ownSize[soltype][processor_id()]);
 
-      for (int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
         index[i] = loc_offset_EPS + i;
       }
 
@@ -285,10 +285,10 @@ namespace femus {
       vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
       _RES->get(index, valueRES);
 
-      for (int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
         _Eps[indexSol]->set(i + glob_offset_eps, valueEPS[i]);
 
-        if ((*_Bdc[indexSol])(i + glob_offset_eps) > 1.1) _Res[indexSol]->set(i + glob_offset_eps, valueRES[i]);
+        if((*_Bdc[indexSol])(i + glob_offset_eps) > 1.1) _Res[indexSol]->set(i + glob_offset_eps, valueRES[i]);
         else _Res[indexSol]->set(i + glob_offset_eps, zero);
       }
 
@@ -296,12 +296,12 @@ namespace femus {
       _Eps[indexSol]->close();
     }
 
-    for (unsigned k = 0; k < _SolPdeIndex.size(); k++) {
+    for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       _Sol[indexSol]->add(*_Eps[indexSol]);
       _Sol[indexSol]->close();
 
-      if (_AMR_flag) {
+      if(_AMR_flag) {
         _AMREps[indexSol]->add(*_Eps[indexSol]);
         _AMREps[indexSol]->close();
       }
@@ -318,7 +318,7 @@ namespace femus {
 
     PetscScalar zero = 0.;
 
-    for (unsigned k = 0; k < _SolPdeIndex.size(); k++) {
+    for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype =  _SolType[indexSol];
 
@@ -328,7 +328,7 @@ namespace femus {
 
       vector <int> index(_msh->_ownSize[soltype][processor_id()]);
 
-      for (int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
         index[i] = loc_offset_EPS + i;
       }
 
@@ -337,7 +337,7 @@ namespace femus {
       //vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
       //_RES->get(index,valueRES);
 
-      for (int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
         _Eps[indexSol]->set(i + glob_offset_eps, valueEPS[i]);
         //if ((*_Bdc[indexSol])(i+glob_offset_eps)>1.1) _Res[indexSol]->set(i+glob_offset_eps,valueRES[i]);
         //else _Res[indexSol]->set(i+glob_offset_eps,zero);
@@ -347,12 +347,12 @@ namespace femus {
       _Eps[indexSol]->close();
     }
 
-    for (unsigned k = 0; k < _SolPdeIndex.size(); k++) {
+    for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       _Sol[indexSol]->add(*_Eps[indexSol]);
       _Sol[indexSol]->close();
 
-      if (_AMR_flag) {
+      if(_AMR_flag) {
         _AMREps[indexSol]->add(*_Eps[indexSol]);
         _AMREps[indexSol]->close();
       }
@@ -370,7 +370,7 @@ namespace femus {
 
     PetscScalar zero = 0.;
 
-    for (unsigned k = 0; k < _SolPdeIndex.size(); k++) {
+    for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype =  _SolType[indexSol];
 
@@ -380,15 +380,15 @@ namespace femus {
 
       vector <int> index(_msh->_ownSize[soltype][processor_id()]);
 
-      for (int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
         index[i] = loc_offset_RES + i;
       }
 
       vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
       _RES->get(index, valueRES);
 
-      for (int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
-        if ((*_Bdc[indexSol])(i + glob_offset_res) > 1.1) {
+      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+        if((*_Bdc[indexSol])(i + glob_offset_res) > 1.1) {
           _Res[indexSol]->set(i + glob_offset_res, valueRES[i]);
         }
         else {
@@ -415,12 +415,12 @@ namespace femus {
     counter_vec->init(_msh->n_processors(), 1 , false, AUTOMATIC);
     counter_vec->zero();
 
-    if (AMRthreshold.size() != solIndex.size()) {
+    if(AMRthreshold.size() != solIndex.size()) {
       double value = AMRthreshold[0];
       AMRthreshold.assign(solIndex.size(), value);
     }
 
-    for (unsigned k = 0; k < solIndex.size(); k++) {
+    for(unsigned k = 0; k < solIndex.size(); k++) {
 
       vector < double >  sol; // local solution
       unsigned solType = _SolType[solIndex[k]];;    // get the finite element type for "u"
@@ -437,7 +437,7 @@ namespace femus {
       const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
       sol.reserve(maxSize);
 
-      for (unsigned i = 0; i < dim; i++) {
+      for(unsigned i = 0; i < dim; i++) {
         x[i].reserve(maxSize);
       }
 
@@ -449,7 +449,7 @@ namespace femus {
       double solNorm2 = 0.;
       double volume = 0.;
 
-      for (int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
+      for(int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
 
         short unsigned ielGeom = _msh->GetElementType(iel);
         unsigned solDofs  = _msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
@@ -458,38 +458,38 @@ namespace femus {
         // resize local arrays
         sol.resize(solDofs);
 
-        for (int i = 0; i < dim; i++) {
+        for(int i = 0; i < dim; i++) {
           x[i].resize(xDofs);
         }
 
         // local storage of global mapping and solution
-        for (unsigned i = 0; i < solDofs; i++) {
+        for(unsigned i = 0; i < solDofs; i++) {
           unsigned iDof = _msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
           sol[i] = (*_Sol[ solIndex[k]])(iDof);      // global extraction and local storage for the solution
         }
 
         // local storage of coordinates
-        for (unsigned i = 0; i < xDofs; i++) {
+        for(unsigned i = 0; i < xDofs; i++) {
           unsigned iDof  = _msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-          for (unsigned j = 0; j < dim; j++) {
+          for(unsigned j = 0; j < dim; j++) {
             x[j][i] = (*_msh->_topology->_Sol[j])(iDof);      // global extraction and local storage for the element coordinates
           }
         }
 
         // *** Gauss point loop ***
-        for (unsigned ig = 0; ig < _msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+        for(unsigned ig = 0; ig < _msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
           // *** get gauss point weight, test function and test function partial derivatives ***
           _msh->_finiteElement[ielGeom][solType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
           double solig = 0.;
           std::vector < double > solGradig(dim, 0.);
 
-          for (unsigned i = 0; i < solDofs; i++) {
+          for(unsigned i = 0; i < solDofs; i++) {
             solig += phi[i] * sol[i];
 
-            if (normType > 0) {
-              for (int j = 0; j < dim; j++) {
+            if(normType > 0) {
+              for(int j = 0; j < dim; j++) {
                 solGradig[j] += sol[i] * phi_x[i * dim + j];
               }
             }
@@ -497,8 +497,8 @@ namespace femus {
 
           solNorm2 += solig * solig * weight;
 
-          if (normType > 0) {
-            for (int j = 0; j < dim; j++) {
+          if(normType > 0) {
+            for(int j = 0; j < dim; j++) {
               solNorm2 += solGradig[j] * solGradig[j] * weight;
             }
           }
@@ -519,8 +519,8 @@ namespace femus {
       parallelVec->close();
       volume = parallelVec->l1_norm();
 
-      for (int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
-        if (_msh->el->GetIfElementCanBeRefined(iel) && (*AMR->_Sol[AMRIndex])(iel) == 0.) {
+      for(int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
+        if(_msh->el->GetIfElementCanBeRefined(iel) && (*AMR->_Sol[AMRIndex])(iel) == 0.) {
 
           double ielErrNorm2 = 0.;
           double ielVolume = 0.;
@@ -532,37 +532,37 @@ namespace femus {
           // resize local arrays
           sol.resize(solDofs);
 
-          for (int i = 0; i < dim; i++) {
+          for(int i = 0; i < dim; i++) {
             x[i].resize(xDofs);
           }
 
           // local storage of global mapping and solution
-          for (unsigned i = 0; i < solDofs; i++) {
+          for(unsigned i = 0; i < solDofs; i++) {
             unsigned iDof = _msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
             sol[i] = (*_AMREps[ solIndex[k]])(iDof);      // global extraction and local storage for the solution
           }
 
           // local storage of coordinates
-          for (unsigned i = 0; i < xDofs; i++) {
+          for(unsigned i = 0; i < xDofs; i++) {
             unsigned iDof  = _msh->GetSolutionDof(i, iel, xType); // global to global mapping between coordinates node and coordinate dof
 
-            for (unsigned j = 0; j < dim; j++) {
+            for(unsigned j = 0; j < dim; j++) {
               x[j][i] = (*_msh->_topology->_Sol[j])(iDof); // global extraction and local storage for the element coordinates
             }
           }
 
-          for (unsigned ig = 0; ig < _msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+          for(unsigned ig = 0; ig < _msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
             _msh->_finiteElement[ielGeom][solType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
             double solig = 0.;
 
             std::vector < double > solGradig(dim, 0.);
 
-            for (unsigned i = 0; i < solDofs; i++) {
+            for(unsigned i = 0; i < solDofs; i++) {
               solig += phi[i] * sol[i];
 
-              if (normType) {
-                for (int j = 0; j < dim; j++) {
+              if(normType) {
+                for(int j = 0; j < dim; j++) {
                   solGradig[j] += sol[i] * phi_x[i * dim + j];
                 }
               }
@@ -570,8 +570,8 @@ namespace femus {
 
             ielErrNorm2 += solig * solig * weight;
 
-            if (normType > 0) {
-              for (int j = 0; j < dim; j++) {
+            if(normType > 0) {
+              for(int j = 0; j < dim; j++) {
                 ielErrNorm2 += solGradig[j] * solGradig[j] * weight;
               }
             }
@@ -579,7 +579,7 @@ namespace femus {
             ielVolume += weight;
           }
 
-          if (ielErrNorm2 > AMRthreshold[k] * AMRthreshold[k] * solNorm2 * ielVolume / volume) {
+          if(ielErrNorm2 > AMRthreshold[k] * AMRthreshold[k] * solNorm2 * ielVolume / volume) {
             AMR->_Sol[AMRIndex]->set(iel, 1.);
             counter_vec->add(_iproc, 1.);
 
@@ -616,6 +616,8 @@ namespace femus {
 
   bool Solution::FlagAMRRegionBasedOnErroNormAdaptive(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType) {
 
+    const double scale2[3][2] = {{0.111111, 1.}, {0.0204081632653, 0.111111}, {0.0204081632653, 0.111111} };
+
     unsigned    iproc = _msh->processor_id(); // get the process_id (for parallel computation)
     const unsigned  dim = _msh->GetDimension();
 
@@ -623,12 +625,12 @@ namespace femus {
     unsigned  AMRIndex = AMR->GetIndex("AMR");
     AMR->_Sol[AMRIndex]->zero();
 
-    if (AMRthreshold.size() != solIndex.size()) {
+    if(AMRthreshold.size() != solIndex.size()) {
       double value = AMRthreshold[0];
       AMRthreshold.assign(solIndex.size(), value);
     }
 
-    for (unsigned k = 0; k < solIndex.size(); k++) {
+    for(unsigned k = 0; k < solIndex.size(); k++) {
 
       vector < double >  sol; // local solution
       unsigned solType = _SolType[solIndex[k]];;    // get the finite element type for "u"
@@ -645,7 +647,7 @@ namespace femus {
       const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
       sol.reserve(maxSize);
 
-      for (unsigned i = 0; i < dim; i++) {
+      for(unsigned i = 0; i < dim; i++) {
         x[i].reserve(maxSize);
       }
 
@@ -658,7 +660,7 @@ namespace femus {
       double volumeRefined = 0.;
       double volume = 0.;
 
-      for (int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
+      for(int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
 
         short unsigned ielGeom = _msh->GetElementType(iel);
         unsigned solDofs  = _msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
@@ -667,38 +669,38 @@ namespace femus {
         // resize local arrays
         sol.resize(solDofs);
 
-        for (int i = 0; i < dim; i++) {
+        for(int i = 0; i < dim; i++) {
           x[i].resize(xDofs);
         }
 
         // local storage of global mapping and solution
-        for (unsigned i = 0; i < solDofs; i++) {
+        for(unsigned i = 0; i < solDofs; i++) {
           unsigned iDof = _msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
           sol[i] = (*_Sol[ solIndex[k]])(iDof);      // global extraction and local storage for the solution
         }
 
         // local storage of coordinates
-        for (unsigned i = 0; i < xDofs; i++) {
+        for(unsigned i = 0; i < xDofs; i++) {
           unsigned iDof  = _msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-          for (unsigned j = 0; j < dim; j++) {
+          for(unsigned j = 0; j < dim; j++) {
             x[j][i] = (*_msh->_topology->_Sol[j])(iDof);      // global extraction and local storage for the element coordinates
           }
         }
 
         // *** Gauss point loop ***
-        for (unsigned ig = 0; ig < _msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+        for(unsigned ig = 0; ig < _msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
           // *** get gauss point weight, test function and test function partial derivatives ***
           _msh->_finiteElement[ielGeom][solType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
           double solig = 0.;
           std::vector < double > solGradig(dim, 0.);
 
-          for (unsigned i = 0; i < solDofs; i++) {
+          for(unsigned i = 0; i < solDofs; i++) {
             solig += phi[i] * sol[i];
 
-            if (normType > 0) {
-              for (int j = 0; j < dim; j++) {
+            if(normType > 0) {
+              for(int j = 0; j < dim; j++) {
                 solGradig[j] += sol[i] * phi_x[i * dim + j];
               }
             }
@@ -706,14 +708,15 @@ namespace femus {
 
           solNorm2 += solig * solig * weight;
 
-          if (normType > 0) {
-            for (int j = 0; j < dim; j++) {
+          if(normType > 0) {
+            for(int j = 0; j < dim; j++) {
               solNorm2 += solGradig[j] * solGradig[j] * weight;
             }
           }
 
           volume += weight;
-          if (_msh->el->GetIfElementCanBeRefined(iel)) {
+
+          if(_msh->el->GetIfElementCanBeRefined(iel)) {
             volumeRefined += weight;
           }
         }
@@ -730,21 +733,26 @@ namespace femus {
       parallelVec->set(iproc, volume);
       parallelVec->close();
       volume = parallelVec->l1_norm();
-      
+
       parallelVec->set(iproc, volumeRefined);
       parallelVec->close();
       volumeRefined = parallelVec->l1_norm();
 
       double  volumeTestFalse = 0.;
-      double errTestTrue2;
+      double errTestTrue2 = 0.;
 
-      double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volumeRefined;
-//      double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volume;
-      for (int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
-        if (_msh->el->GetIfElementCanBeRefined(iel) && (*AMR->_Sol[AMRIndex])(iel) == 0.) {
+      double eps2 = AMRthreshold[k] * AMRthreshold[k] * solNorm2  / volume;
 
-          double ielErrNorm2 = 0.;
-          double ielVolume = 0.;
+      unsigned offset = _msh->_elementOffset[iproc];
+      std::vector < double > ielVolume(_msh->_elementOffset[iproc + 1] - _msh->_elementOffset[iproc],0);
+      std::vector < double > ielErrNorm2(_msh->_elementOffset[iproc + 1] - _msh->_elementOffset[iproc],0);
+      
+      
+      for(int iel = _msh->_elementOffset[iproc]; iel < _msh->_elementOffset[iproc + 1]; iel++) {
+        if(_msh->el->GetIfElementCanBeRefined(iel)) {
+
+//           double ielErrNorm2 = 0.;
+//           double ielVolume = 0.;
 
           short unsigned ielGeom = _msh->GetElementType(iel);
           unsigned solDofs  = _msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
@@ -753,74 +761,78 @@ namespace femus {
           // resize local arrays
           sol.resize(solDofs);
 
-          for (int i = 0; i < dim; i++) {
+          for(int i = 0; i < dim; i++) {
             x[i].resize(xDofs);
           }
 
           // local storage of global mapping and solution
-          for (unsigned i = 0; i < solDofs; i++) {
+          for(unsigned i = 0; i < solDofs; i++) {
             unsigned iDof = _msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
             sol[i] = (*_AMREps[ solIndex[k]])(iDof);      // global extraction and local storage for the solution
           }
 
           // local storage of coordinates
-          for (unsigned i = 0; i < xDofs; i++) {
+          for(unsigned i = 0; i < xDofs; i++) {
             unsigned iDof  = _msh->GetSolutionDof(i, iel, xType); // global to global mapping between coordinates node and coordinate dof
 
-            for (unsigned j = 0; j < dim; j++) {
+            for(unsigned j = 0; j < dim; j++) {
               x[j][i] = (*_msh->_topology->_Sol[j])(iDof); // global extraction and local storage for the element coordinates
             }
           }
 
-          for (unsigned ig = 0; ig < _msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+          for(unsigned ig = 0; ig < _msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
             _msh->_finiteElement[ielGeom][solType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
-            double solig = 0.;
+            double errig = 0.;
 
-            std::vector < double > solGradig(dim, 0.);
+            std::vector < double > errGradig(dim, 0.);
 
-            for (unsigned i = 0; i < solDofs; i++) {
-              solig += phi[i] * sol[i];
+            for(unsigned i = 0; i < solDofs; i++) {
+              errig += phi[i] * sol[i];
 
-              if (normType) {
-                for (int j = 0; j < dim; j++) {
-                  solGradig[j] += sol[i] * phi_x[i * dim + j];
+              if(normType) {
+                for(int j = 0; j < dim; j++) {
+                  errGradig[j] += sol[i] * phi_x[i * dim + j];
                 }
               }
             }
 
-            ielErrNorm2 += solig * solig * weight;
+            ielErrNorm2[iel-offset] += scale2[solType][normType] * errig * errig * weight;
 
-            if (normType > 0) {
-              for (int j = 0; j < dim; j++) {
-                ielErrNorm2 += solGradig[j] * solGradig[j] * weight;
+            if(normType > 0) {
+              for(int j = 0; j < dim; j++) {
+                ielErrNorm2[iel-offset] += scale2[solType][normType] * errGradig[j] * errGradig[j] * weight;
               }
             }
 
-            ielVolume += weight;
+            ielVolume[iel-offset] += weight;
           }
 
-          if (ielErrNorm2 > eps2 * ielVolume) {
+          if(ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset]  || (*AMR->_Sol[AMRIndex])(iel) == 2.) {
             AMR->_Sol[AMRIndex]->set(iel, 1.);
-            volumeTestFalse += ielVolume;
+            volumeTestFalse += ielVolume[iel-offset];
 
-// 	    for(unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) { //loop on the element vertices
-// 	      unsigned inode = _msh->el->GetElementDofIndex(iel, i);
-// 	      const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
-// 	      unsigned nve = localElementNearVertexNumber.size();
-// 	      for(unsigned j = 0; j < nve; j++) {
-// 		unsigned jel = localElementNearVertexNumber[j];
-// 		if(jel >= _msh->_elementOffset[iproc] && jel < _msh->_elementOffset[iproc + 1]) {
-// 		  if(_msh->el->GetIfElementCanBeRefined(jel) && (*AMR->_Sol[AMRIndex])(jel) == 0.) {
-// 		    AMR->_Sol[AMRIndex]->set(jel, 1.);
-// 		    counter_vec->add(_iproc, 1.);
-// 		  }
-// 		}
-//               }
-//             }
+            if( ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset] ) {
+              for(unsigned j = 1; j < _msh->el->GetElementNearElementSize(iel,1);j++){
+		unsigned jel = _msh->el->GetElementNearElement(iel,j);
+		if( jel >= _msh->_elementOffset[iproc] && jel<_msh->_elementOffset[iproc + 1] ){
+		  if(_msh->el->GetIfElementCanBeRefined(jel)){
+		    if(jel > iel) {
+                      AMR->_Sol[AMRIndex]->set(jel, 2.);
+                    }
+                    else if( (*AMR->_Sol[AMRIndex])(iel) == 0. ) {
+		      errTestTrue2 -= ielErrNorm2[jel-offset];
+		      AMR->_Sol[AMRIndex]->set(jel, 1.);
+		      volumeTestFalse += ielVolume[jel-offset];
+		    }
+                  }
+                }
+              }
+            }
+
           }
           else {
-            errTestTrue2 += ielErrNorm2;
+            errTestTrue2 += ielErrNorm2[iel-offset];
           }
         }
       }
@@ -833,9 +845,10 @@ namespace femus {
       parallelVec->close();
       errTestTrue2 = parallelVec->l1_norm();
 
-      if (volumeTestFalse != 0) {
-        AMRthreshold[k] = sqrt( (AMRthreshold[k] * AMRthreshold[k] - errTestTrue2 / solNorm2) * volumeRefined / volumeTestFalse);
-	//AMRthreshold[k] = sqrt( (AMRthreshold[k] * AMRthreshold[k] - (errTestTrue2 / solNorm2)*(volume/volumeRefined)) * volumeRefined / volumeTestFalse);
+      if(volumeTestFalse != 0) {
+        std::cout  << errTestTrue2 << " " << solNorm2 << " " << volume << " " << volumeRefined << " " << volumeTestFalse << std::endl;
+	AMRthreshold[k] = sqrt(AMRthreshold[k] * AMRthreshold[k] * volumeRefined / volumeTestFalse - errTestTrue2 / solNorm2 * volume / volumeTestFalse);
+        std::cout << AMRthreshold[k] << std::endl;  
       }
       else {
         AMRthreshold[k] = 1.;
@@ -847,7 +860,7 @@ namespace femus {
     AMR->_Sol[AMRIndex]->close();
 
     double counter = AMR->_Sol[AMRIndex]->l1_norm();
-    bool test = (counter <= _nprocs) ? 1 : 0;
+    bool test = (counter * _msh->GetRefIndex() <= _nprocs) ? 1 : 0;
 
     return test;
   }
@@ -1013,7 +1026,7 @@ namespace femus {
 
   void Solution::BuildGradMatrixStructure(unsigned SolType) {
 
-    if (SolType < 3 && _GradMat[SolType][0] == 0) {
+    if(SolType < 3 && _GradMat[SolType][0] == 0) {
 
       unsigned dim = _msh->GetDimension();
 
@@ -1022,7 +1035,7 @@ namespace femus {
       int nr_loc = _msh->_ownSize[3][_iproc];
       int nc_loc = _msh->_ownSize[SolType][_iproc];
 
-      for (int i = 0; i < dim; i++) {
+      for(int i = 0; i < dim; i++) {
         _GradMat[SolType][i] = SparseMatrix::build().release();
         _GradMat[SolType][i]->init(nr, nc, nr_loc, nc_loc, 27, 27);
       }
@@ -1039,7 +1052,7 @@ namespace femus {
 
       const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
-      for (int i = 0; i < dim; i++)
+      for(int i = 0; i < dim; i++)
         coordinates[i].reserve(max_size);
 
       row_dof.reserve(1);
@@ -1049,18 +1062,18 @@ namespace femus {
       gradphi.reserve(max_size * dim);
       nablaphi.reserve(max_size * (3 * (dim - 1) + !(dim - 1)));
 
-      for (int i = 0; i < dim; i++) {
+      for(int i = 0; i < dim; i++) {
         B[i].reserve(max_size);
       }
 
       // Set to zeto all the entries of the Global Matrix
-      for (int i = 0; i < dim; i++) {
+      for(int i = 0; i < dim; i++) {
         _GradMat[SolType][i]->zero();
       }
 
       unsigned nel = _msh->GetNumberOfElements();
 
-      for (int iel = _msh->_elementOffset[_iproc]; iel < _msh->_elementOffset[_iproc + 1]; iel++) {
+      for(int iel = _msh->_elementOffset[_iproc]; iel < _msh->_elementOffset[_iproc + 1]; iel++) {
 
         row_dof.resize(1);
         row_dof[0] = iel;
@@ -1075,21 +1088,21 @@ namespace femus {
         gradphi.resize(nve * dim);
         nablaphi.resize(nve * (3 * (dim - 1) + !(dim - 1)));
 
-        for (int i = 0; i < dim; i++) {
+        for(int i = 0; i < dim; i++) {
           coordinates[i].resize(nve);
         }
 
         // set to zero all the entries of the FE matrices
-        for (int i = 0; i < dim; i++) {
+        for(int i = 0; i < dim; i++) {
           B[i].resize(nve);
           memset(&B[i][0], 0, nve * sizeof(double));
         }
 
-        for (unsigned i = 0; i < nve; i++) {
+        for(unsigned i = 0; i < nve; i++) {
           unsigned inode_coord_metis = _msh->GetSolutionDof(i, iel, 2);
           column_dofs[i] = _msh->GetSolutionDof(i, iel, SolType);
 
-          for (unsigned ivar = 0; ivar < dim; ivar++) {
+          for(unsigned ivar = 0; ivar < dim; ivar++) {
             coordinates[ivar][i] = (*_msh->_topology->_Sol[ivar])(inode_coord_metis);
           }
         }
@@ -1097,20 +1110,20 @@ namespace femus {
         _msh->_finiteElement[ielt][SolType]->Jacobian(coordinates, 0, weight, phi, gradphi, nablaphi);
 
 
-        for (int i = 0; i < nve; i++) {
-          for (int j = 0; j < dim; j++) {
+        for(int i = 0; i < nve; i++) {
+          for(int j = 0; j < dim; j++) {
             B[j][i] = gradphi[i * dim + j];
           }
         }
 
-        for (int i = 0; i < dim; i++) {
+        for(int i = 0; i < dim; i++) {
           _GradMat[SolType][i]->add_matrix_blocked(B[i], row_dof, column_dofs);
         }
       }
 
 
       // End build elem type structure
-      for (int i = 0; i < dim; i++) {
+      for(int i = 0; i < dim; i++) {
         _GradMat[SolType][i]->close();
       }
     }
@@ -1119,9 +1132,9 @@ namespace femus {
 
 // ------------------------------------------------------------------
   void Solution::CopySolutionToOldSolution() {
-    for (unsigned i = 0; i < _Sol.size(); i++) {
+    for(unsigned i = 0; i < _Sol.size(); i++) {
       // Copy the old vector
-      if (_SolTmOrder[i] == 2) {
+      if(_SolTmOrder[i] == 2) {
         *(_SolOld[i]) = *(_Sol[i]);
       }
     }
@@ -1129,5 +1142,7 @@ namespace femus {
 
 
 } //end namespace femus
+
+
 
 

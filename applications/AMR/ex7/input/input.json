@@ -18,7 +18,7 @@
 
     // Properties
     "variable" : { "name" : "T",
-                   "fe_order" : "second",
+                   "fe_order" : "serendipity",
                    "func_source1" : "2.*exp(10*x)*(-10.*pi*cos(pi*x)+(pi*pi-50.)*sin(pi*x))*sin(pi*y)",
 		   "func_source2" : "2.*exp(10*x)*(-10.*4.*pi*cos(4*pi*x)+(4.*pi*4.*pi-50.)*sin(4.*pi*x))*sin(4.*pi*y)",
 		   "func_source3" : "2*pi*pi*sin(pi*x)*sin(pi*y)"
@@ -57,8 +57,8 @@
     "mgsolver" : { "nlevels" : 1,
 		   "AMR" : "yes",
 		   "maxAMRlevels" : 10,
-		   "AMRnorm" : "h1",
-		   "AMRthreshold": 0.005,
+		   "AMRnorm" : "l2",
+		   "AMRthreshold": 0.0005,
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,
                    "smoother_type" : "gmres",

@@ -32,7 +32,59 @@ namespace femus {
     init();
   }
 
-  template <class Type> void MyMatrix<Type>::init() {
+  // ******************
+  template <class Type> MyMatrix<Type>::MyMatrix(const unsigned &rsize, const unsigned &csize, const Type value) {
+    init();
+    resize(rsize, csize, value);
+  }
+
+  // ******************
+  template <class Type> MyMatrix<Type>::MyMatrix(const std::vector < unsigned > &offset, const unsigned &csize, const Type value) {
+    init();
+    resize(offset, csize, value);
+  }
+
+  // ******************
+  template <class Type> MyMatrix<Type>::MyMatrix(const MyVector < unsigned > &rowSize, const Type value) {
+
+    init();
+
+    _rowSize = rowSize;
+    _begin = _rowSize.begin();
+    _end = _rowSize.end();
+    _size = _rowSize.size();
+
+    if((_rowSize.status()).compare("UNINITIALIZED") == 0) {
+      std::cout << "In function MyMatrix(const MyVector < unsigned > &rowSize, const Type value), rowSize is UNINITIALIZED" << std::endl;
+      abort();
+    }
+    else  if((_rowSize.status()).compare("PARALLEL") == 0) {
+      _offset = _rowSize.getOffset();
+      _rowOffset.resize(_offset);
+      _matSize.resize(_nprocs);
+      _matSize.scatter();
+      _serial = false;
+    }
+    else {
+      _rowOffset.resize(_size);
+    }
+
+    _rowOffset[_rowOffset.begin()] = 0;
+    unsigned matsize = _rowSize[_rowOffset.begin()];
+    for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
+      _rowOffset[i] = _rowOffset[i - 1] + _rowSize[i - 1] ;
+      matsize += _rowSize[i];
+    }
+    _mat.resize(matsize, value);
+
+    if(!_serial)
+      _matSize[_iproc] = matsize;
+
+    _matIsAllocated = true;
+  }
+  
+  //*******************
+    template <class Type> void MyMatrix<Type>::init() {
     int iproc, nprocs;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -51,54 +103,7 @@ namespace femus {
     _end = 0;
     _size = 0;
   }
-  // ******************
-  template <class Type> MyMatrix<Type>::MyMatrix(const unsigned &rsize, const unsigned &csize, const Type value) {
-    init();
-    resize(rsize, csize, value);
-  }
-
-  // ******************
-  template <class Type> MyMatrix<Type>::MyMatrix(const std::vector < unsigned > &offset, const unsigned &csize, const Type value) {
-    init();
-    resize(offset, csize, value);
-  }
-
-  // ******************
-  template <class Type> MyMatrix<Type>::MyMatrix(const MyVector < unsigned > &rowSize, const Type value) {
-    init();
-
-    _rowSize = rowSize;
-    _begin = _rowSize.begin();
-    _end = _rowSize.end();
-    _size = _rowSize.size();
-    _matSize.resize(_nprocs);
-
-    if((_rowSize.status()).compare("UNINITIALIZED") == 0) {
-      std::cout << "In function MyMatrix(const MyVector < unsigned > &rowSize, const Type value), rowSize is UNINITIALIZED" << std::endl;
-      abort();
-    }
-    else  if((_rowSize.status()).compare("PARALLEL") == 0) {
-      _offset = _rowSize.getOffset();
-      _rowOffset.resize(_offset);
-      _matSize.scatter();
-      _serial = false;
-    }
-    else {
-      _rowOffset.resize(_size);
-    }
-
-    _rowOffset[_rowOffset.begin()] = 0;
-    unsigned matsize = _rowSize[_rowOffset.begin()];
-    for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
-      _rowOffset[i] = _rowOffset[i - 1] + _rowSize[i - 1] ;
-      matsize += _rowSize[i - 1];
-    }
-    _matSize[_iproc] = matsize;
-    _mat.resize(_matSize[_iproc], value);
-
-    _matIsAllocated = true;
-  }
-
+  
   // ******************
   template <class Type> MyMatrix<Type>::~MyMatrix() {
     clear();
@@ -229,9 +234,10 @@ namespace femus {
     unsigned matsize = _rowSize[_rowOffset.begin()];
     for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
       _rowOffset[i] = _rowOffset[i - 1] + _rowSize[i - 1] ;
-      matsize += _rowSize[i - 1];
+      matsize += _rowSize[i];
     }
 
+    _matSize.resize(_nprocs);
     _matSize.scatter();
     _matSize[_iproc] = matsize;
 
@@ -279,7 +285,7 @@ namespace femus {
   template <class Type> void MyMatrix<Type>::localize(const unsigned &lproc) {
 
     if(_serial) {
-      std::cout << "Error in MyMatrix.LocalizeToAll(), matrix is in " << status() << " status" << std::endl;
+      std::cout << "Error in MyMatrix.localize(), matrix is in " << status() << " status" << std::endl;
       abort();
     }
 

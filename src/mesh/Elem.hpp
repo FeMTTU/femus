@@ -22,6 +22,8 @@
 #include "Mesh.hpp"
 #include "MyVector.hpp"
 
+#include "MyMatrix.hpp"
+
 namespace femus {
 
   class Mesh;
@@ -38,19 +40,18 @@ namespace femus {
 
       //elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal, const std::vector < double >& localizedElementType);
       elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal);
-      
+
       void SharpMemoryAllocation();
 
       /** destructor */
       ~elem();
 
       void ScatterElementNearFace();
-      void LocalizeElementNearFaceFromOneToAll(const unsigned& jproc);
+      void LocalizeElementNearFace(const unsigned& jproc);
       void FreeLocalizedElementNearFace();
 
       void ScatterElementDof();
-      void LocalizeElementDofFromOneToAll(const unsigned &jproc);
-      void LocalizeElementDofFromOneToOne(const unsigned &jproc, const unsigned &kproc);
+      void LocalizeElementDof(const unsigned &jproc);
       void FreeLocalizedElementDof();
 
       // reorder the element according to the new element mapping
@@ -63,7 +64,7 @@ namespace femus {
       unsigned GetElementDofNumber(const unsigned& iel, const unsigned& type);
 
       /** Return the local->global node number */
-      unsigned GetElementDofIndex(const unsigned& iel, const unsigned& inode)const;
+      unsigned GetElementDofIndex(const unsigned& iel, const unsigned& inode);
 
       /** To be Added */
       void SetElementDofIndex(const unsigned& iel, const unsigned& inode, const unsigned& value);
@@ -96,9 +97,9 @@ namespace femus {
       void SetElementGroupNumber(const unsigned& value);
 
       /** To be Added */
-      int GetFaceElementIndex(const unsigned& iel, const unsigned& iface) const;
+      int GetFaceElementIndex(const unsigned& iel, const unsigned& iface);
 
-      int GetBoundaryIndex(const unsigned& iel, const unsigned& iface) const;
+      int GetBoundaryIndex(const unsigned& iel, const unsigned& iface);
 
       /** To be Added */
       void SetFaceElementIndex(const unsigned& iel, const unsigned& iface, const int& value);
@@ -148,24 +149,26 @@ namespace femus {
       void BuildElementNearVertex();
 
       /** To be Added */
-      void SetChildElementDof(const unsigned& ref_index, Mesh* msh, elem* elf);
+      void SetChildElementDof(elem* elf);
 
-      unsigned GetChildElementDof(const unsigned& iel, const unsigned& i0, const unsigned i1) const {
-        return _childElemDof[iel - _elementOffset[_iproc] ][i0][i1];
-      }
+      unsigned GetChildElementDof(const unsigned& iel, const unsigned& i0, const unsigned i1);
 
       void DeleteElementNearVertex();
 
       /** To be Added */
-      unsigned GetElementNearVertexNumber(const unsigned& inode)const;
+      unsigned GetElementNearVertexNumber(const unsigned& inode);
 
       /** To be Added */
-      unsigned GetElementNearVertex(const unsigned& inode, const unsigned& jnode)const;
+      unsigned GetElementNearVertex(const unsigned& inode, const unsigned& jnode);
 
-      void BuildLocalElementNearVertex();
+      void BuildElementNearElement();
 
-      const std::vector<unsigned>& GetLocalElementNearVertex(const unsigned& inode)  {
-        return _localElementNearVertexMap[inode];
+      const unsigned GetElementNearElementSize(const unsigned& iel, const unsigned &layers)  {
+        return (layers == 0) ? 1 : _elementNearElement.end(iel);
+      };
+
+      const unsigned GetElementNearElement(const unsigned& iel, const unsigned &j)  {
+        return _elementNearElement[iel][j];
       };
 
 
@@ -177,24 +180,24 @@ namespace femus {
         return _elementLevel[jel];
       }
       void ScatterElementQuantities() {
-	_elementLevel.scatter(_elementOffset);
-	_elementType.scatter(_elementOffset);
-	_elementMaterial.scatter(_elementOffset);
-	_elementGroup.scatter(_elementOffset);
+        _elementLevel.scatter(_elementOffset);
+        _elementType.scatter(_elementOffset);
+        _elementMaterial.scatter(_elementOffset);
+        _elementGroup.scatter(_elementOffset);
       }
       void LocalizeElementQuantities(const unsigned &lproc) {
         _elementLevel.localize(lproc);
-	_elementType.localize(lproc);
-	_elementMaterial.localize(lproc);
-	_elementGroup.localize(lproc);
+        _elementType.localize(lproc);
+        _elementMaterial.localize(lproc);
+        _elementGroup.localize(lproc);
       }
       void FreeLocalizedElementQuantities() {
         _elementLevel.clearLocalized();
-	_elementType.clearLocalized();
-	_elementMaterial.clearLocalized();
-	_elementGroup.clearLocalized();
+        _elementType.clearLocalized();
+        _elementMaterial.clearLocalized();
+        _elementGroup.clearLocalized();
       }
-      
+
       bool GetIfElementCanBeRefined(const unsigned& iel) {
         return (_elementLevel[iel] == _level) ? true : false;
       }
@@ -202,7 +205,7 @@ namespace femus {
         return GetIfElementCanBeRefined(iel);
       }
       //END _ElementLevel functions
-           
+
 
       /** To be Added */
       void AllocateChildrenElement(const unsigned& ref_index, Mesh* msh);
@@ -211,7 +214,7 @@ namespace femus {
       void SetChildElement(const unsigned& iel, const unsigned& json, const unsigned& value);
 
       /** To be Added */
-      unsigned GetChildElement(const unsigned& iel, const unsigned& json) const;
+      unsigned GetChildElement(const unsigned& iel, const unsigned& json);
 
       const unsigned GetNVE(const unsigned& elementType, const unsigned& doftype) const;
 
@@ -229,71 +232,34 @@ namespace femus {
       }
 
     private:
+
+      elem* _coarseElem;
+
       unsigned _iproc;
       unsigned _nprocs;
-
-
-      // member data
-      int** _elementNearFace;
-      int* _elementNearFaceMemory;
-      unsigned _elementNearFaceMemorySize;
-
-      unsigned _elementNearFaceOffset;
-      bool _elementNearFaceIsScattered;
-
-      bool _elementNearFaceIsLocalizedFromJproc;
-      unsigned _jprocElementNearFaceIsLocalizedFrom;
-
-      int** _localElementNearFace; //element -> nodes
-      int* _localElementNearFaceMemory;
-      unsigned _localElementNearFaceMemorySize;
-
-
-      std::map< unsigned, std::vector< unsigned > > _localElementNearVertexMap;
-      unsigned** _elementNearVertex; //node->element
-      unsigned* _elementNearVertexMemory;
-      unsigned* _elementNearVertexNumber;
-
-      unsigned** _elementDof; //element -> nodes
-      unsigned* _elementDofMemory;
-      unsigned _elementDofMemorySize;
-
-      unsigned _elementDofOffset;
-      bool _elementDofIsScattered;
-
-      bool _elementDofIsLocalizedFromJproc;
-      unsigned _jprocElementDofIsLocalizedFrom;
-
-      unsigned** _localElementDof; //element -> nodes
-      unsigned* _localElementDofMemory;
-      unsigned _localElementDofMemorySize;
-
-      unsigned** _childElem;
-      unsigned* _childElemMemory;
-      unsigned _childElemMemorySize;
-      bool _childElemFlag;
-
-      unsigned*** _childElemDof; //element -> nodes
-      unsigned** _childElemDofMemoryPointer; //element -> nodes
-      unsigned* _childElemDofMemory;
-      unsigned _childElemDofMemorySize;
-
-      std::vector < unsigned > _elementOffset;
-      unsigned _elementOwned;
 
       unsigned _nvt;
       unsigned _nel, _nelt[6];
       unsigned _nelr, _nelrt[6];
       unsigned _ngroup;
+      unsigned _level;
+
+      std::vector < unsigned > _elementOffset;
+      unsigned _elementOwned;
 
       MyVector< short unsigned> _elementLevel; //element
       MyVector< short unsigned> _elementType;
       MyVector< short unsigned> _elementGroup;
       MyVector< short unsigned> _elementMaterial;
-      
-      unsigned _level;
 
-      elem* _coarseElem;
+      MyMatrix <unsigned> _elementDof;
+      MyMatrix <int> _elementNearFace;
+
+      MyMatrix <unsigned> _childElem;
+      MyMatrix <unsigned> _childElemDof;
+    
+      MyMatrix <unsigned> _elementNearVertex;
+      MyMatrix <unsigned> _elementNearElement;
 
   };
 
