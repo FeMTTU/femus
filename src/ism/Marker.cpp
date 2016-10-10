@@ -1335,13 +1335,13 @@ namespace femus {
   void Marker::InverseMapping(const unsigned & iel, const unsigned & solType,
                               const std::vector< double > &x, std::vector< double > &xi) {
 
-
+    std::cout << " ----------------------  Outputs of the inverse mapping ---------------------- " << std::endl;
 
     unsigned dim =  _mesh->GetDimension();
     unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
     short unsigned ielType = _mesh->GetElementType(iel);
 
-    std::cout << solType << " " << nDofs << std::endl;
+    std::cout << "solType = " << solType << " , " << "nDofs =" <<  nDofs << std::endl;
 
     //BEGIN extraction nodal coordinate values
     std::vector< std::vector < double > > xv(dim);
@@ -1507,8 +1507,12 @@ namespace femus {
   }
 
 
+
+
 //this function returns the position of the marker at time T given the position at time T0 = 0, given the function f and the stepsize h
   void Marker::Advection(Solution* sol, const unsigned &n, const double& T) {
+
+    //BEGIN  Initialize the parameters for all processors, to be used when awake
 
     unsigned dim = _mesh->GetDimension();
     vector < unsigned > solVIndex(dim);
@@ -1516,56 +1520,71 @@ namespace femus {
     solVIndex[1] = sol->GetIndex("V");    // get the position of "V" in the ml_sol object
     if(dim == 3) solVIndex[2] = sol->GetIndex("W");       // get the position of "V" in the ml_sol object
     unsigned solVType = sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+    unsigned nDofsV = _mesh->GetElementDofNumber(_elem, solVType);   // perche' non erano inizializzati?
+    short unsigned ielType = _mesh->GetElementType(_elem);
+    std::vector < double > phi;
+    std::vector<double> V(dim, 0.);
+    std::vector < std::vector < double > > a;
+
+    //END
+
+    //BEGIN Numerical integration scheme
+
+    // determine the step size
+    double h = T / n;
+
+    //let's take it easy and just apply Euler's method
+    double step = 0;
 
 
+    while(step < n) {
 
-    if(_iproc == _mproc) {
-      std::vector < std::vector < double > > a;
+      if(_iproc == _mproc) {
 
-      unsigned nDofsV;
-      short unsigned ielType;
+        std::cout << " -----------------------------" << "step = " <<  step << " -----------------------------" << std::endl;
 
-      ProjectVelocityCoefficients(sol, dim, solVType, solVIndex, nDofsV, ielType, a);
-
-      std::vector < double > phi;
-      GetPolynomialShapeFunction(phi, _xi, ielType, solVType);
-
-      std::vector<double> V(dim, 0.);
-
-      for(unsigned i = 0; i < dim; i++) {
-        for(unsigned j = 0; j < nDofsV; j++) {
-          V[i] += a[i][j] * phi[j];
+        for(unsigned i = 0; i < dim; i++) {
+          std::cout << "_x[" << i << "] = " << _x[i] ;
+          std::cout << " " ;
         }
-      }
+        std::cout << std::endl;
 
 
-      // determine the step size
-      double h = T / n;
 
-      //let's take it easy and just apply Euler's method
-      double step = 0;
-      while(step < n) {
+        updateVelocity(V, sol, solVIndex, a, phi);
         for(unsigned i = 0; i < dim; i++) {
           _x[i] += V[i] * h;
-
         }
-        step++ ;
 
         unsigned iel = _elem;
-        GetElementSerial(iel);
-
-        if(iel == _elem) {
-          for(unsigned i = 0; i < dim; i++) {
-            _x[i] += V[i] * h;
-          }
-          step++ ;
+        GetElementSerial(iel);//TODO Right now if the element is outside, we don't store _elem = UINT_MAX
+        if(_elem == UINT_MAX) {
+          std::cout << " the marker has been advected outside the domain " << std::endl;
+          break;
         }
 
-        else {
+        else if(iel != _elem && _iproc != _mproc) {
+
+          GetElement(0, iel);
+
+          if(_elem == UINT_MAX) {
+            std::cout << " the marker has been advected outside the domain " << std::endl;
+            break;
+          }
+          else {
+
+            if(_iproc == _mproc) {
+
+              ielType = _mesh->GetElementType(_elem);
+              InverseMapping(_elem, ielType, _x, _xi);
+            }
+          }
 
         }
 
       }
+
+      step++;
     }
 
 
@@ -1668,11 +1687,15 @@ namespace femus {
   }
 
 
-  void Marker::ProjectVelocityCoefficients(Solution * sol, const unsigned & dim, const unsigned & solVType,
-      const std::vector<unsigned> &solVIndex,  unsigned & nDofsV,  short unsigned & ielType,
-      std::vector < std::vector < double > > &a) {
+  void Marker::ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex, std::vector < std::vector < double > > &a) {
+
+    unsigned dim = _mesh->GetDimension();
+
     vector < vector < double > >  solV(dim);    // local solution
-    nDofsV = _mesh->GetElementDofNumber(_elem, solVType);    // number of solution element dofs
+
+    unsigned solVType = sol->GetSolutionType(solVIndex[0]);
+
+    unsigned nDofsV = _mesh->GetElementDofNumber(_elem, solVType);    // number of solution element dofs
     for(unsigned  k = 0; k < dim; k++) {
       solV[k].resize(nDofsV);
     }
@@ -1682,10 +1705,36 @@ namespace femus {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
       }
     }
-    ielType = _mesh->GetElementType(_elem);
+    unsigned ielType = _mesh->GetElementType(_elem);
+
     ProjectNodalToPolynomialCoefficients(a, solV, ielType, solVType);
 
   }
+
+
+  void Marker::updateVelocity(std::vector <double> & V, Solution* sol, const vector < unsigned > &solVIndex,
+                              std::vector < std::vector < double > > &a,  std::vector < double > &phi) {
+
+    unsigned solVType = sol->GetSolutionType(solVIndex[0]);
+
+    unsigned dim = _mesh->GetDimension();
+
+    unsigned nDofsV = _mesh->GetElementDofNumber(_elem, solVType);
+    short unsigned ielType = _mesh->GetElementType(_elem);
+
+    ProjectVelocityCoefficients(sol, solVIndex, a);
+    GetPolynomialShapeFunction(phi, _xi, ielType, solVType);
+
+    for(unsigned i = 0; i < dim; i++) {
+      for(unsigned j = 0; j < nDofsV; j++) {
+        V[i] += a[i][j] * phi[j];
+      }
+    }
+
+  }
+
+
+
 
 }
 
