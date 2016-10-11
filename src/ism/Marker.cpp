@@ -374,33 +374,27 @@ namespace femus {
     bool pointIsOutsideThisProcess = false;
     bool pointIsOutsideTheDomain = false;
 
-    unsigned nextElem = UINT_MAX ;
-    unsigned nextProc = _iproc;
-
-
-
     //BEGIN next element search
     while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
+      
       if(dim == 2) {
-
-        nextElem = GetNextElement2D(iel);
+        _elem = GetNextElement2D(iel);
       }
       else if(dim == 3) {
-        nextElem = GetNextElement3D(iel);
+        _elem = GetNextElement3D(iel);
       }
-      if(nextElem == iel) {
-        _elem = iel;
+           
+      if(_elem == iel) {
         elementHasBeenFound = true;
       }
-      else if(nextElem == UINT_MAX) {
+      else if(_elem  == UINT_MAX) {
         pointIsOutsideTheDomain = true;
-        iel = UINT_MAX;
         break;
       }
       else {
-        iel = nextElem;
-        nextProc = _mesh->IsdomBisectionSearch(nextElem, 3);
-        if(nextProc != _iproc) {
+        iel = _elem;
+        _mproc = _mesh->IsdomBisectionSearch(_elem , 3);
+        if(_mproc != _iproc) {
           pointIsOutsideThisProcess = true;
           break;
         }
@@ -415,13 +409,9 @@ namespace femus {
       std::cout << " The marker does not belong to this domain" << std::endl;
     }
     else if(pointIsOutsideThisProcess) {
-      std::cout << "proc " << _iproc << " believes the marker is in proc = " << nextProc << std::endl;
+      std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
     }
-
-
     //END next element search
-
-
   }
 
 
@@ -1513,73 +1503,64 @@ namespace femus {
   void Marker::Advection(Solution* sol, const unsigned &n, const double& T) {
 
     //BEGIN  Initialize the parameters for all processors, to be used when awake
-
     unsigned dim = _mesh->GetDimension();
     vector < unsigned > solVIndex(dim);
     solVIndex[0] = sol->GetIndex("U");    // get the position of "U" in the ml_sol object
     solVIndex[1] = sol->GetIndex("V");    // get the position of "V" in the ml_sol object
     if(dim == 3) solVIndex[2] = sol->GetIndex("W");       // get the position of "V" in the ml_sol object
     unsigned solVType = sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
-    unsigned nDofsV = _mesh->GetElementDofNumber(_elem, solVType);   // perche' non erano inizializzati?
-    short unsigned ielType = _mesh->GetElementType(_elem);
+   
     std::vector < double > phi;
     std::vector<double> V(dim, 0.);
     std::vector < std::vector < double > > a;
-
     //END
 
     //BEGIN Numerical integration scheme
-
     // determine the step size
     double h = T / n;
-
     //let's take it easy and just apply Euler's method
     double step = 0;
-
-
+    bool pcElemUpdate = true;
     while(step < n) {
-
       if(_iproc == _mproc) {
-
         std::cout << " -----------------------------" << "step = " <<  step << " -----------------------------" << std::endl;
-
+        updateVelocity(V, sol, solVIndex, solVType, a, phi, pcElemUpdate);
+        for(unsigned i = 0; i < dim; i++) {
+          _x[i] += V[i] * h;
+        }
+        //BEGIN TO BE REMOVED
         for(unsigned i = 0; i < dim; i++) {
           std::cout << "_x[" << i << "] = " << _x[i] ;
           std::cout << " " ;
         }
         std::cout << std::endl;
-
-
-
-        updateVelocity(V, sol, solVIndex, a, phi);
-        for(unsigned i = 0; i < dim; i++) {
-          _x[i] += V[i] * h;
-        }
-
+        //END TO BE REMOVED
+        pcElemUpdate = false;
         unsigned iel = _elem;
         GetElementSerial(iel);//TODO Right now if the element is outside, we don't store _elem = UINT_MAX
         if(_elem == UINT_MAX) {
           std::cout << " the marker has been advected outside the domain " << std::endl;
           break;
         }
-
         else if(iel != _elem && _iproc != _mproc) {
+          //GetElement(0, iel);
 
-          GetElement(0, iel);
+//           if(_elem == UINT_MAX) {
+//             std::cout << " the marker has been advected outside the domain " << std::endl;
+//             break;
+//           }
+//           else {
+//
+//             if(_iproc == _mproc) {
+//
+//               ielType = _mesh->GetElementType(_elem);
+//               InverseMapping(_elem, ielType, _x, _xi);
+//             }
+//           }
 
-          if(_elem == UINT_MAX) {
-            std::cout << " the marker has been advected outside the domain " << std::endl;
-            break;
-          }
-          else {
-
-            if(_iproc == _mproc) {
-
-              ielType = _mesh->GetElementType(_elem);
-              InverseMapping(_elem, ielType, _x, _xi);
-            }
-          }
-
+        }
+        else if(_elem != iel) {
+          pcElemUpdate = true;
         }
 
       }
@@ -1687,15 +1668,13 @@ namespace femus {
   }
 
 
-  void Marker::ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex, std::vector < std::vector < double > > &a) {
+  void Marker::ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex,
+      const unsigned &solVType,  const unsigned &nDofsV,
+      const unsigned &ielType, std::vector < std::vector < double > > &a) {
 
     unsigned dim = _mesh->GetDimension();
-
     vector < vector < double > >  solV(dim);    // local solution
 
-    unsigned solVType = sol->GetSolutionType(solVIndex[0]);
-
-    unsigned nDofsV = _mesh->GetElementDofNumber(_elem, solVType);    // number of solution element dofs
     for(unsigned  k = 0; k < dim; k++) {
       solV[k].resize(nDofsV);
     }
@@ -1705,26 +1684,29 @@ namespace femus {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
       }
     }
-    unsigned ielType = _mesh->GetElementType(_elem);
 
     ProjectNodalToPolynomialCoefficients(a, solV, ielType, solVType);
-
   }
 
 
-  void Marker::updateVelocity(std::vector <double> & V, Solution* sol, const vector < unsigned > &solVIndex,
-                              std::vector < std::vector < double > > &a,  std::vector < double > &phi) {
+  void Marker::updateVelocity(std::vector <double> & V, Solution* sol, 
+			      const vector < unsigned > &solVIndex, const unsigned & solVType,
+                              std::vector < std::vector < double > > &a,  std::vector < double > &phi,
+                              const bool & pcElemUpdate) {
 
-    unsigned solVType = sol->GetSolutionType(solVIndex[0]);
-
-    unsigned dim = _mesh->GetDimension();
-
+   
     unsigned nDofsV = _mesh->GetElementDofNumber(_elem, solVType);
     short unsigned ielType = _mesh->GetElementType(_elem);
 
-    ProjectVelocityCoefficients(sol, solVIndex, a);
+    unsigned dim = _mesh->GetDimension();
+
+    if(pcElemUpdate) {
+      ProjectVelocityCoefficients(sol, solVIndex, solVType, nDofsV, ielType, a);
+    }
+
     GetPolynomialShapeFunction(phi, _xi, ielType, solVType);
 
+    V.assign(dim, 0.);
     for(unsigned i = 0; i < dim; i++) {
       for(unsigned j = 0; j < nDofsV; j++) {
         V[i] += a[i][j] * phi[j];

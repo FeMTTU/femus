@@ -73,11 +73,15 @@ namespace femus {
       void InverseMappingTEST(std::vector< double > &x);
       void Advection(Solution* sol, const unsigned &n, const double& T);
 
-      void ProjectVelocityCoefficients(Solution* sol, const std::vector<unsigned> &solVIndex, std::vector < std::vector < double > > &a);
+     void updateVelocity(std::vector <double> & V, Solution* sol, 
+			 const vector < unsigned > &solVIndex, const unsigned & solVType,
+                         std::vector < std::vector < double > > &a,  std::vector < double > &phi, const bool & pcElemUpdate);
 
-      void updateVelocity(std::vector <double> & V, Solution* sol, const vector < unsigned > &solVIndex,
-                          std::vector < std::vector < double > > &a,  std::vector < double > &phi);
+      void ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex, 
+				       const unsigned &solVType,  const unsigned &nDofsV,
+				       const unsigned &ielType, std::vector < std::vector < double > > &a);
 
+      
     private:
 
 

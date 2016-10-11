@@ -11,7 +11,7 @@
 using namespace femus;
 
 double InitalValueU(const std::vector < double >& x) {
-  return 0.1;
+  return 10;
 }
 
 double InitalValueV(const std::vector < double >& x) {
