@@ -459,27 +459,6 @@ namespace femus {
     _mesh._topology->_Sol[1]->close();
     _mesh._topology->_Sol[2]->close();
 
-//     _mesh._topology->AddSolution("Material", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-//     _mesh._topology->ResizeSolutionVector("Material");
-//     NumericVector& materialf =  _mesh._topology->GetSolutionName("Material");
-//     NumericVector& materialc =   mshc->_topology->GetSolutionName("Material");
-//     materialf.matrix_mult(materialc, *_mesh.GetCoarseToFineProjection(3));
-//     materialf.close();
-// 
-//     _mesh._topology->AddSolution("Group", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-//     _mesh._topology->ResizeSolutionVector("Group");
-//     NumericVector& groupf =  _mesh._topology->GetSolutionName("Group");
-//     NumericVector& groupc =   mshc->_topology->GetSolutionName("Group");
-//     groupf.matrix_mult(groupc, *_mesh.GetCoarseToFineProjection(3));
-//     groupf.close();
-// 
-//     _mesh._topology->AddSolution("Type", DISCONTINOUS_POLYNOMIAL, ZERO, 1 , 0);
-//     _mesh._topology->ResizeSolutionVector("Type");
-//     NumericVector& typef =  _mesh._topology->GetSolutionName("Type");
-//     NumericVector& typec =   mshc->_topology->GetSolutionName("Type");
-//     typef.matrix_mult(typec, *_mesh.GetCoarseToFineProjection(3));
-//     typef.close();
-
     _mesh.el->BuildElementNearElement();
     _mesh.el->DeleteElementNearVertex();
 
@@ -488,6 +467,10 @@ namespace femus {
     _mesh.el->ScatterElementQuantities();
     _mesh.el->ScatterElementDof();
     _mesh.el->ScatterElementNearFace();
+    
+//     if(AMR){
+//       _mesh.el->SetLevelInterfaceElement();
+//     }
   }
 
 
