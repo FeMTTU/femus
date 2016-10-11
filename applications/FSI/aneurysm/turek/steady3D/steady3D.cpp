@@ -53,7 +53,7 @@ int main(int argc, char **args) {
   muf = 3.38*1.0e-4*rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 120000*1.e4;
+  E = 120000*1.e1;
 
   Parameter par(Lref, Uref);
 
@@ -203,7 +203,7 @@ int main(int argc, char **args) {
   // ******* Solve *******
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-  //system.MGsolve();
+  system.MGsolve();
 
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars,1);
   
@@ -264,7 +264,8 @@ bool SetBoundaryConditionTurek(const std::vector < double >& x, const char name[
 if( !strcmp(name, "U") ){
 
     if(1 == facename) {
-      value = -0.05 * (x[1]*1000 - 6) * ( x[1]*1000 - 8); //inflow
+      double r2 = ((x[1]*1000.)-7.)*((x[1]*1000.)-7.) + (x[2]*1000.)*(x[2]*1000.);
+      value = 0.05 * (1.-r2); //inflow
     }
     else if( 2 == facename ){
       test = 0;
@@ -294,7 +295,7 @@ if( !strcmp(name, "U") ){
     }
   }
   else if(!strcmp(name, "DZ") ) {
-    if(5 == facename || 6 == facename) {
+    if(1 == facename || 3 == facename || 5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
