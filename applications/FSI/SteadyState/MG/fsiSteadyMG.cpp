@@ -111,8 +111,7 @@ int main(int argc,char **args) {
   std::string infile;
 
   if(1 == simulation){
-//     infile = "./input/turek.neu";
-     infile = "./input/turek_tri_FSI1.neu";
+    infile = "./input/turek_Sara.neu";
   }
   else if(2 == simulation){
     infile = "./input/beam.neu";
@@ -121,7 +120,7 @@ int main(int argc,char **args) {
     infile = "./input/drum.neu";
   }
   else if(4 == simulation) {
-    infile = "./input/bathe_FSI.neu";
+    infile = "./input/bathe_FSI_good_quality.neu";
   }
   else if(5 == simulation){
     infile = "./input/bathe_shell.neu";
@@ -325,7 +324,7 @@ int main(int argc,char **args) {
   system.MGsolve();
 
   // ******* Print solution *******
-  ml_sol.SetWriter(VTK);
+  ml_sol.SetWriter(GMV);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");

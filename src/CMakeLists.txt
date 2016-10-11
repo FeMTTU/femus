@@ -51,6 +51,7 @@ fe/Tetrahedral.cpp
 fe/Triangle.cpp
 fe/Wedge.cpp
 ism/Marker.cpp
+ism/PolynomialBases.cpp
 meshGencase/Box.cpp
 meshGencase/Domain.cpp
 meshGencase/ElemSto.cpp
@@ -82,6 +83,8 @@ mesh/MeshRefinement.cpp
 mesh/MeshMetisPartitioning.cpp
 mesh/MeshPartitioning.cpp
 mesh/MeshASMPartitioning.cpp
+parallel/MyMatrix.cpp
+parallel/MyVector.cpp
 physics/Fluid.cpp
 physics/Material.cpp
 physics/Parameter.cpp
