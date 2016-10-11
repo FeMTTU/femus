@@ -37,8 +37,11 @@ namespace femus {
         _mesh = mesh;
         _solType = solType;
 
-        GetElement(debug);
-
+        GetElement(1, UINT_MAX);
+	//BEGIN to test the serial version of GetElement
+        //unsigned iiel = _mesh->_elementOffset[_iproc];
+        //GetElementSerial(iiel);
+	//END
 
         if(_iproc == _mproc) {
           _xi.resize(_mesh->GetDimension());
@@ -46,11 +49,11 @@ namespace femus {
           for(int k = 0; k < _mesh->GetDimension(); k++) {
             _xi[k] = _initialGuess[elemType][k];
           }
-          for(int itype = 0; itype <= _solType; itype++) {
+          for(int itype = 0; itype <= _solType; itype++) {  //why is there this for on type?
             InverseMapping(_elem, itype, _x, _xi);
           }
           for(int k = 0; k < _mesh->GetDimension(); k++) {
-            std::cout << _xi[k] << " ";
+            std::cout << "_xi[ " << k <<  "] = " << _xi[k] << " ";
           }
           std::cout << std::endl;
         }
@@ -59,7 +62,7 @@ namespace femus {
 
 
 
-      void GetElement(const bool & debug = false);
+      void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
       void GetElementSerial(unsigned & iel);
 
 
@@ -70,8 +73,10 @@ namespace femus {
       void InverseMappingTEST(std::vector< double > &x);
       void Advection(Solution* sol, const unsigned &n, const double& T);
 
-      void ProjectVelocityCoefficients(Solution* sol, const unsigned &dim, const unsigned &solVtype, const std::vector<unsigned> &solVIndex,
-                                       unsigned &nDofsV,  short unsigned &ieltype, std::vector < std::vector < double > > &a);
+      void ProjectVelocityCoefficients(Solution* sol, const std::vector<unsigned> &solVIndex, std::vector < std::vector < double > > &a);
+
+      void updateVelocity(std::vector <double> & V, Solution* sol, const vector < unsigned > &solVIndex,
+                          std::vector < std::vector < double > > &a,  std::vector < double > &phi);
 
     private:
 
@@ -91,7 +96,7 @@ namespace femus {
       const Mesh * _mesh;
       unsigned _elem;
 
-      unsigned _mproc;
+      unsigned _mproc; //processor who has the marker
 
       static const double _initialGuess[6][3];
 
