@@ -41,7 +41,7 @@ int main(int argc, char **args) {
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
 //   std::string infile = "./input/aneurysm_Sara_5.neu";
   //std::string infile = "./input/aneurisma_aorta.neu";
-  std::string infile = "./input/Turek_3D_C.neu";
+  std::string infile = "./input/Turek_3D_D.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
@@ -203,7 +203,7 @@ int main(int argc, char **args) {
   // ******* Solve *******
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
-  system.MGsolve();
+  //system.MGsolve();
 
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars,1);
   
