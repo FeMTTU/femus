@@ -545,36 +545,39 @@ namespace femus {
   }
 
   void elem::SetLevelInterfaceElement() {
-    
-    std::cout << "Mesh level" << _level<<std::endl;
+
+    std::cout << "Mesh level" << _level << std::endl;
+
+    std::cout<<_elementNearFace<<std::endl;
     
     _levelInterfaceElement.resize(_level + 1);
     for(unsigned ilevel = 0; ilevel <= _level; ilevel++) {
       unsigned counter = 0;
       for(unsigned i = _elementLevel.begin(); i < _elementLevel.end(); i++) {
         if(ilevel == _elementLevel[i]) {
-          for(unsigned j = _elementNearFace.begin(i); j < _elementNearElement.end(i); j++) {
+          for(unsigned j = _elementNearFace.begin(i); j < _elementNearFace.end(i); j++) {
             if(-1 == _elementNearFace[i][j]) {
               counter++;
+	      break;
             }
           }
         }
       }
       _levelInterfaceElement[ilevel] = MyVector <unsigned> (counter);
-      for(unsigned ilevel = 0; ilevel <= _level; ilevel++) {
-        unsigned counter = 0;
-        for(unsigned i = _elementLevel.begin(); i < _elementLevel.end(); i++) {
-          if(ilevel == _elementLevel[i]) {
-            for(unsigned j = _elementNearFace.begin(i); j < _elementNearElement.end(i); j++) {
-              if(-1 == _elementNearFace[i][j]) {
-                _levelInterfaceElement[counter] = i;
-              }
+      counter = 0;
+      for(unsigned i = _elementLevel.begin(); i < _elementLevel.end(); i++) {
+        if(ilevel == _elementLevel[i]) {
+          for(unsigned j = _elementNearFace.begin(i); j < _elementNearFace.end(i); j++) {
+	    if(-1 == _elementNearFace[i][j]) {
+              _levelInterfaceElement[ilevel][counter] = i;
+	      counter++;
+	      break;
             }
           }
         }
-        std::cout << "level =" << ilevel << std::endl;
-        std::cout << _levelInterfaceElement[ilevel] << std::endl;
       }
+      std::cout << "level =" << ilevel << std::endl;
+      std::cout << _levelInterfaceElement[ilevel] << std::endl;
     }
   }
 
