@@ -57,8 +57,13 @@
     "mgsolver" : { "nlevels" : 1,
 		   "AMR" : "yes",
 		   "maxAMRlevels" : 10,
+<<<<<<< HEAD
 		   "AMRnorm" : "l2",
 		   "AMRthreshold": 0.005,
+=======
+		   "AMRnorm" : "h1",
+		   "AMRthreshold": 0.0005,
+>>>>>>> 0a3cd2467d3b37e293bcfe8f58fa63ab473c976f
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,
                    "smoother_type" : "gmres",
