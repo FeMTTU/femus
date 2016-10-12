@@ -186,7 +186,8 @@ int main(int argc, char** args) {
 
   std::vector < unsigned > solutionTypeT(1);
   solutionTypeT[0] = mlSol.GetSolutionType("T");
-  FieldSplitTree FS_T(PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
+
+  FieldSplitTree FS_T( PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
 
   FS_T.SetAsmBlockSize(4);
   FS_T.SetAsmNumeberOfSchurVariables(0);
@@ -507,7 +508,6 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       for(unsigned i = 0; i < nDofsP; i++) {
         solP_gss += phiP[i] * solP[i];
       }
-
 
       double alpha = 1.;
       double beta = 1.;//40000.;
