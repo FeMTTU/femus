@@ -11,15 +11,15 @@
 using namespace femus;
 
 double InitalValueU(const std::vector < double >& x) {
-  return 1;
+  return 10;
 }
 
 double InitalValueV(const std::vector < double >& x) {
-  return 1;
+  return 0.1;
 }
 
 double InitalValueW(const std::vector < double >& x) {
-  return 1;
+  return 0.1;
 }
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
@@ -32,19 +32,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   return refine;
 
-}
-
-
-// function for the advection: simple translation along y
-std::vector<double> trial(std::vector<double> x) {  // x[0] is time
-  //x[1] = 0.;
-  //x[2] = 1.;
-  std::vector< double > y(2, 0);
-  double pi = 3.14159265359;
-  y[0] = - pi * x[2]; // exact x(t) = cos(pi t)
-  y[1] = pi * x[1];  // exact y(t) = sin(pi t)
-
-  return y;
 }
 
 
@@ -89,8 +76,8 @@ int main(int argc, char** args) {
   if(dim == 3) mlSol.Initialize("W", InitalValueW);
 
   //Test 1 (QUAD):
-  x[0] = 0.33375; //the marker is in element 117 (proc 1)
-  x[1] = -0.0627;
+  x[0] = -0.4375; //the marker is in element 113 (serial run)
+  x[1] = 0.;
   x[2] = 0.;
   
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;

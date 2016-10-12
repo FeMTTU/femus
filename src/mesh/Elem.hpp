@@ -230,6 +230,8 @@ namespace femus {
         _iproc = iproc;
         _nprocs = nprocs;
       }
+      
+      void SetLevelInterfaceElement();
 
     private:
 
@@ -257,9 +259,11 @@ namespace femus {
 
       MyMatrix <unsigned> _childElem;
       MyMatrix <unsigned> _childElemDof;
-    
+
       MyMatrix <unsigned> _elementNearVertex;
       MyMatrix <unsigned> _elementNearElement;
+
+      std::vector < MyVector<unsigned> > _levelInterfaceElement;
 
   };
 
@@ -327,8 +331,7 @@ namespace femus {
   };
 
 
-  const unsigned NFACENODES[6][6][3] =
-  {
+  const unsigned NFACENODES[6][6][3] = {
     { {4, 8, 9}, // Hex
       {4, 8, 9},
       {4, 8, 9},
