@@ -60,7 +60,8 @@ int main(int argc, char** args) {
 
   int elementType = 4; // this decides what elements to test
 
-  unsigned solType = 2; // solType 3 is giving us problems, maybe because of what we added in the constructor
+  unsigned solType = 2; 
+
   switch(elementType) {
     case 3: { // QUAD
 
