@@ -366,7 +366,9 @@ namespace femus {
   }
 
 
-  void Marker::GetElementSerial(unsigned &iel) {
+  void Marker::GetElementSerial(unsigned &initialElem) {
+
+    unsigned iel = initialElem;
 
     unsigned dim = _mesh->GetDimension();
 
@@ -392,11 +394,13 @@ namespace femus {
         break;
       }
       else {
-        iel = _elem;
         _mproc = _mesh->IsdomBisectionSearch(_elem , 3);
         if(_mproc != _iproc) {
           pointIsOutsideThisProcess = true;
           break;
+        }
+        else {
+          iel = _elem;
         }
       }
     }
@@ -1520,51 +1524,66 @@ namespace femus {
     double h = T / n;
     //let's take it easy and just apply Euler's method
     double step = 0.;
-    bool pcElemUpdate ;
+    bool  pcElemUpdate ;
+    bool integrationIsOver = false;
 
-    if(_iproc == _mproc) {
+    while(integrationIsOver == false) {
 
-      pcElemUpdate = true ;
+      if(_iproc == _mproc) {
 
-      while(step < n) {
+        while(step < n) {
 
-        std::cout << " -----------------------------" << "step = " <<  step << " -----------------------------" << std::endl;
-        updateVelocity(V, sol, solVIndex, solVType, a, phi, pcElemUpdate);
-        for(unsigned i = 0; i < dim; i++) {
-          _x[i] += V[i] * h;
-        }
+          pcElemUpdate = true ;
 
+          std::cout << " -----------------------------" << "step = " <<  step << " -----------------------------" << std::endl;
 
-        //BEGIN TO BE REMOVED
-        for(unsigned i = 0; i < dim; i++) {
-          std::cout << "_x[" << i << "] = " << _x[i] ;
-          std::cout << " " ;
-        }
-        std::cout << std::endl;
-        //END TO BE REMOVED
+          std::cout << " _iproc = " << _iproc << std::endl;
+
+          updateVelocity(V, sol, solVIndex, solVType, a, phi, pcElemUpdate);
+          for(unsigned i = 0; i < dim; i++) {
+            _x[i] += V[i] * h;
+          }
+
+          step++;
 
 
-        pcElemUpdate = false;
-        unsigned iel = _elem;
-        GetElementSerial(iel);
-        if(_elem == UINT_MAX) {
-          std::cout << " the marker has been advected outside the domain " << std::endl;
-          break;
-        }
-        else if(iel != _elem && _iproc != _mproc) {
+          //BEGIN TO BE REMOVED
+          for(unsigned i = 0; i < dim; i++) {
+            std::cout << "_x[" << i << "] = " << _x[i] ;
+            std::cout << " " ;
+          }
+          std::cout << std::endl;
+          //END TO BE REMOVED
 
-          MPI_Bcast(& step, 1, MPI_DOUBLE, _iproc, PETSC_COMM_WORLD);
-          MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _iproc, PETSC_COMM_WORLD);
-          MPI_Bcast(& _xi, 3, MPI_DOUBLE, _iproc, PETSC_COMM_WORLD);
 
-        }
-        else if(iel != _elem) {
-          pcElemUpdate = true;
+          pcElemUpdate = false;
+          unsigned iel = _elem;
+          GetElementSerial(_elem);
+
+          if(_elem == UINT_MAX) {
+            std::cout << " the marker has been advected outside the domain " << std::endl;
+            break;
+          }
+          else if(iel != _elem && _iproc != _mproc) {
+
+            break;
+
+          }
+          else if(iel != _elem) {
+            pcElemUpdate = true;
+          }
+
         }
 
       }
 
-      step++;
+      MPI_Bcast(& step, 1, MPI_DOUBLE, _iproc, PETSC_COMM_WORLD);
+      MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _iproc, PETSC_COMM_WORLD);
+      MPI_Bcast(& _xi, 3, MPI_DOUBLE, _iproc, PETSC_COMM_WORLD);
+
+      std::cout << "step = " << step << std::endl;
+      if(step == n) integrationIsOver = true;
+
     }
 
 
@@ -1718,6 +1737,7 @@ namespace femus {
 
 
 }
+
 
 
 

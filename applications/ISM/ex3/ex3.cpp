@@ -11,15 +11,15 @@
 using namespace femus;
 
 double InitalValueU(const std::vector < double >& x) {
-  return 10;
+  return 0.5;
 }
 
 double InitalValueV(const std::vector < double >& x) {
-  return 0.1;
+  return 0.5;
 }
 
 double InitalValueW(const std::vector < double >& x) {
-  return 0.1;
+  return 0.5;
 }
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
@@ -76,8 +76,8 @@ int main(int argc, char** args) {
   if(dim == 3) mlSol.Initialize("W", InitalValueW);
 
   //Test 1 (QUAD):
-  x[0] = -0.4375; //the marker is in element 113 (serial run)
-  x[1] = 0.;
+  x[0] = -0.46875; //the marker is in element 191 (proc 3 of 4)
+  x[1] = -0.5;
   x[2] = 0.;
   
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
@@ -88,7 +88,7 @@ int main(int argc, char** args) {
   
   double dt=1.0;
   
-  a1Quad.Advection(mlSol.GetLevel(0), 10, dt);
+  a1Quad.Advection(mlSol.GetLevel(0), 20, dt);
 
   variablesToBePrinted.push_back("All");
 
