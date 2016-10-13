@@ -84,7 +84,7 @@ int main(int argc, char** args) {
   }
   else {
     std::cout << "No input argument set default preconditioner = NS+T" << std::endl;
-    precType == FS_VTp;
+    precType = FS_VTp;
   }
   
   if(argc >= 3) {
@@ -259,12 +259,14 @@ int main(int argc, char** args) {
   char *stdOutfile =  new char[100];
   char *outfile =  new char[100];
   
-  sprintf(stdOutfile,"%strueResidualPr=%sRa=%s.txt",args[1],args[2],args[3]);
-  sprintf(outfile,"%sconvergencePr=%sRa=%s.txt",args[1],args[2],args[3]);
+  if(argc >= 5){
+    sprintf(stdOutfile,"%strueResidualPr=%sRa=%s.txt",args[1],args[2],args[3]);
+    sprintf(outfile,"%sconvergencePr=%sRa=%s.txt",args[1],args[2],args[3]);
   
-  std::cout << stdOutfile <<std::endl;
+    std::cout << stdOutfile <<std::endl;
   
-  PrintConvergenceInfo(stdOutfile, outfile, numberOfUniformLevels);
+    PrintConvergenceInfo(stdOutfile, outfile, numberOfUniformLevels);
+  }
 
   return 0;
 }
