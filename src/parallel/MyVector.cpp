@@ -162,6 +162,40 @@ namespace femus {
     _size = _end - _begin;
 
   }
+  
+  // ******************
+  template <class Type> void MyVector<Type>::gather() {
+
+    if(!_serial) {
+      std::cout << "Error in MyVector.gather(), vector is in " << status() << " status" << std::endl;
+      abort();
+    }
+
+    _offset.resize(_nprocs+1);
+    _offset[0]=0;
+    
+    for(unsigned jproc = 0; jproc<_nprocs; jproc++ ){
+      if(jproc != _iproc){
+	MPI_Send(&_size, 1, MPI_UNSIGNED, jproc, 1, MPI_COMM_WORLD);
+	MPI_Recv(&_offset[jproc+1], 1, MPI_UNSIGNED, jproc, 1, MPI_COMM_WORLD, NULL);
+      }
+      else{
+	_offset[_iproc+1]=_size;
+      }
+    }
+    
+    for(unsigned i=0;i<_nprocs;i++){
+      _offset[i+1] += _offset[i];
+    }
+    
+    _serial = false;
+
+    _begin = _offset[_iproc];
+    _end = _offset[_iproc + 1];
+    _size = _end - _begin;
+
+  }
+  
 
   // ******************
   template <class Type> void MyVector<Type>::scatter() {

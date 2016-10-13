@@ -121,7 +121,7 @@ int main(int argc, char** args) {
 //
 //   std::cout << a << std::endl;
 
-
+/*
   MyMatrix <double> a;
 
   std::cout << a << std::endl;
@@ -161,7 +161,7 @@ int main(int argc, char** args) {
   MyMatrix <double> n(s,2);
   std::cout<<n<<std::endl;
   n.scatter();
-  std::cout<<n<<std::endl;
+  std::cout<<n<<std::endl;*/
   
 
 
@@ -283,7 +283,7 @@ int main(int argc, char** args) {
   system.PrintSolverInfo(false);
 
   system.SetSamePreconditioner();
-  system.MGsolve();
+  //system.MGsolve();
 
 
   // print solutions

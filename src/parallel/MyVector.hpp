@@ -72,6 +72,9 @@ namespace femus {
 
       // ******************
       void scatter();
+      
+      // ******************
+      void gather();
 
       // ******************
       void buildOffset();
@@ -108,6 +111,7 @@ namespace femus {
               for(unsigned i = vec.begin(); i < vec.end(); i++) {
                 os << i << " " << vec[i] << std::endl;
               }
+              os << std::endl;
               vec.clearLocalized();
             }
           }

@@ -547,10 +547,9 @@ namespace femus {
   void elem::SetLevelInterfaceElement() {
 
     std::cout << "Mesh level" << _level << std::endl;
-
-    std::cout<<_elementNearFace<<std::endl;
-    
+   
     _levelInterfaceElement.resize(_level + 1);
+    _levelInterfaceNodes.resize(_level + 1);
     for(unsigned ilevel = 0; ilevel <= _level; ilevel++) {
       unsigned counter = 0;
       for(unsigned i = _elementLevel.begin(); i < _elementLevel.end(); i++) {
@@ -576,6 +575,7 @@ namespace femus {
           }
         }
       }
+      _levelInterfaceElement[ilevel].gather();
       std::cout << "level =" << ilevel << std::endl;
       std::cout << _levelInterfaceElement[ilevel] << std::endl;
     }
