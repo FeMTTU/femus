@@ -1575,11 +1575,13 @@ namespace femus {
 
         }
 
+        MPI_Bcast(& step, 1, MPI_DOUBLE, _iproc, PETSC_COMM_WORLD);
+        MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _iproc, PETSC_COMM_WORLD);
+        MPI_Bcast(& _xi, 3, MPI_DOUBLE, _iproc, PETSC_COMM_WORLD);
+	MPI_Bcast(& _mproc, 1, MPI_UNSIGNED, _iproc, PETSC_COMM_WORLD);
+
       }
 
-      MPI_Bcast(& step, 1, MPI_DOUBLE, _iproc, PETSC_COMM_WORLD);
-      MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _iproc, PETSC_COMM_WORLD);
-      MPI_Bcast(& _xi, 3, MPI_DOUBLE, _iproc, PETSC_COMM_WORLD);
 
       std::cout << "step = " << step << std::endl;
       if(step == n) integrationIsOver = true;
