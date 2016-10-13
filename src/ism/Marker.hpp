@@ -63,7 +63,7 @@ namespace femus {
 
 
       void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
-      void GetElementSerial(unsigned & iel);
+      void GetElementSerial(unsigned &initialElem);
 
 
       MarkerType GetMarkerType() {

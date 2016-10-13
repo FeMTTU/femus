@@ -366,7 +366,9 @@ namespace femus {
   }
 
 
-  void Marker::GetElementSerial(unsigned &iel) {
+  void Marker::GetElementSerial(unsigned &initialElem) {
+
+    unsigned iel = initialElem;
 
     unsigned dim = _mesh->GetDimension();
 
@@ -376,14 +378,14 @@ namespace femus {
 
     //BEGIN next element search
     while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
-      
+
       if(dim == 2) {
         _elem = GetNextElement2D(iel);
       }
       else if(dim == 3) {
         _elem = GetNextElement3D(iel);
       }
-           
+
       if(_elem == iel) {
         elementHasBeenFound = true;
       }
@@ -392,11 +394,13 @@ namespace femus {
         break;
       }
       else {
-        iel = _elem;
         _mproc = _mesh->IsdomBisectionSearch(_elem , 3);
         if(_mproc != _iproc) {
           pointIsOutsideThisProcess = true;
           break;
+        }
+        else {
+          iel = _elem;
         }
       }
     }
@@ -1509,7 +1513,7 @@ namespace femus {
     solVIndex[1] = sol->GetIndex("V");    // get the position of "V" in the ml_sol object
     if(dim == 3) solVIndex[2] = sol->GetIndex("W");       // get the position of "V" in the ml_sol object
     unsigned solVType = sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
-   
+
     std::vector < double > phi;
     std::vector<double> V(dim, 0.);
     std::vector < std::vector < double > > a;
@@ -1519,53 +1523,69 @@ namespace femus {
     // determine the step size
     double h = T / n;
     //let's take it easy and just apply Euler's method
-    double step = 0;
-    bool pcElemUpdate = true;
-    while(step < n) {
+    double step = 0.;
+    bool  pcElemUpdate ;
+    bool integrationIsOver = false;
+
+    while(integrationIsOver == false) {
+
       if(_iproc == _mproc) {
-        std::cout << " -----------------------------" << "step = " <<  step << " -----------------------------" << std::endl;
-        updateVelocity(V, sol, solVIndex, solVType, a, phi, pcElemUpdate);
-        for(unsigned i = 0; i < dim; i++) {
-          _x[i] += V[i] * h;
-        }
-        //BEGIN TO BE REMOVED
-        for(unsigned i = 0; i < dim; i++) {
-          std::cout << "_x[" << i << "] = " << _x[i] ;
-          std::cout << " " ;
-        }
-        std::cout << std::endl;
-        //END TO BE REMOVED
-        pcElemUpdate = false;
-        unsigned iel = _elem;
-        GetElementSerial(iel);//TODO Right now if the element is outside, we don't store _elem = UINT_MAX
-        if(_elem == UINT_MAX) {
-          std::cout << " the marker has been advected outside the domain " << std::endl;
-          break;
-        }
-        else if(iel != _elem && _iproc != _mproc) {
-          //GetElement(0, iel);
 
-//           if(_elem == UINT_MAX) {
-//             std::cout << " the marker has been advected outside the domain " << std::endl;
-//             break;
-//           }
-//           else {
-//
-//             if(_iproc == _mproc) {
-//
-//               ielType = _mesh->GetElementType(_elem);
-//               InverseMapping(_elem, ielType, _x, _xi);
-//             }
-//           }
+        while(step < n) {
+
+          pcElemUpdate = true ;
+
+          std::cout << " -----------------------------" << "step = " <<  step << " -----------------------------" << std::endl;
+
+          std::cout << " _iproc = " << _iproc << std::endl;
+
+          updateVelocity(V, sol, solVIndex, solVType, a, phi, pcElemUpdate);
+          for(unsigned i = 0; i < dim; i++) {
+            _x[i] += V[i] * h;
+          }
+
+          step++;
+
+
+          //BEGIN TO BE REMOVED
+          for(unsigned i = 0; i < dim; i++) {
+            std::cout << "_x[" << i << "] = " << _x[i] ;
+            std::cout << " " ;
+          }
+          std::cout << std::endl;
+          //END TO BE REMOVED
+
+
+          pcElemUpdate = false;
+          unsigned iel = _elem;
+          GetElementSerial(_elem);
+
+          if(_elem == UINT_MAX) {
+            std::cout << " the marker has been advected outside the domain " << std::endl;
+            break;
+          }
+          else if(iel != _elem && _iproc != _mproc) {
+
+            break;
+
+          }
+          else if(iel != _elem) {
+            pcElemUpdate = true;
+          }
 
         }
-        else if(_elem != iel) {
-          pcElemUpdate = true;
-        }
+
+        MPI_Bcast(& step, 1, MPI_DOUBLE, _iproc, PETSC_COMM_WORLD);
+        MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _iproc, PETSC_COMM_WORLD);
+        MPI_Bcast(& _xi, 3, MPI_DOUBLE, _iproc, PETSC_COMM_WORLD);
+	MPI_Bcast(& _mproc, 1, MPI_UNSIGNED, _iproc, PETSC_COMM_WORLD);
 
       }
 
-      step++;
+
+      std::cout << "step = " << step << std::endl;
+      if(step == n) integrationIsOver = true;
+
     }
 
 
@@ -1689,12 +1709,12 @@ namespace femus {
   }
 
 
-  void Marker::updateVelocity(std::vector <double> & V, Solution* sol, 
-			      const vector < unsigned > &solVIndex, const unsigned & solVType,
+  void Marker::updateVelocity(std::vector <double> & V, Solution* sol,
+                              const vector < unsigned > &solVIndex, const unsigned & solVType,
                               std::vector < std::vector < double > > &a,  std::vector < double > &phi,
                               const bool & pcElemUpdate) {
 
-   
+
     unsigned nDofsV = _mesh->GetElementDofNumber(_elem, solVType);
     short unsigned ielType = _mesh->GetElementType(_elem);
 
@@ -1719,6 +1739,7 @@ namespace femus {
 
 
 }
+
 
 
 
