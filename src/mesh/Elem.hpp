@@ -230,7 +230,7 @@ namespace femus {
         _iproc = iproc;
         _nprocs = nprocs;
       }
-      
+
       void SetLevelInterfaceElement();
 
     private:
@@ -264,7 +264,7 @@ namespace femus {
       MyMatrix <unsigned> _elementNearElement;
 
       std::vector < MyVector<unsigned> > _levelInterfaceElement;
-      std::vector < MyVector<unsigned> > _levelInterfaceNodes;
+      std::vector < MyMatrix<unsigned> > _levelInterfaceLocalDofs;
 
   };
 

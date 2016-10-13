@@ -547,9 +547,9 @@ namespace femus {
   void elem::SetLevelInterfaceElement() {
 
     std::cout << "Mesh level" << _level << std::endl;
-   
+
     _levelInterfaceElement.resize(_level + 1);
-    _levelInterfaceNodes.resize(_level + 1);
+    _levelInterfaceLocalDofs.resize(_level + 1);
     for(unsigned ilevel = 0; ilevel <= _level; ilevel++) {
       unsigned counter = 0;
       for(unsigned i = _elementLevel.begin(); i < _elementLevel.end(); i++) {
@@ -557,7 +557,7 @@ namespace femus {
           for(unsigned j = _elementNearFace.begin(i); j < _elementNearFace.end(i); j++) {
             if(-1 == _elementNearFace[i][j]) {
               counter++;
-	      break;
+              break;
             }
           }
         }
@@ -567,10 +567,10 @@ namespace femus {
       for(unsigned i = _elementLevel.begin(); i < _elementLevel.end(); i++) {
         if(ilevel == _elementLevel[i]) {
           for(unsigned j = _elementNearFace.begin(i); j < _elementNearFace.end(i); j++) {
-	    if(-1 == _elementNearFace[i][j]) {
+            if(-1 == _elementNearFace[i][j]) {
               _levelInterfaceElement[ilevel][counter] = i;
-	      counter++;
-	      break;
+              counter++;
+              break;
             }
           }
         }
@@ -578,6 +578,25 @@ namespace femus {
       _levelInterfaceElement[ilevel].gather();
       std::cout << "level =" << ilevel << std::endl;
       std::cout << _levelInterfaceElement[ilevel] << std::endl;
+
+      std::vector< unsigned > offset = _levelInterfaceElement[ilevel].getOffset();
+      MyVector<unsigned> rowSize(offset, 0);
+      for(unsigned i = _levelInterfaceElement[ilevel].begin(); i < _levelInterfaceElement[ilevel].end(); i++) {
+        unsigned iel =  _levelInterfaceElement[ilevel][i];
+	std::map<unsigned,bool> lDofs;
+        for(unsigned jface = _elementNearFace.begin(iel); jface < _elementNearFace.end(iel); jface++) {
+//           if(-1 == _elementNearFace[i][jface]) {
+// 	    for(unsigned k=0;k < GetNFACENODES(GetElementType(iel), jface, 2);k++){
+// 	      unsigned index = GetIG(GetElementType(iel), jface, k);
+// 	      lDofs[index] = true;
+// 	    }
+//           }
+        }
+        rowSize[i] = lDofs.size();
+      }
+      std::cout << rowSize <<std::endl;
+//       _levelInterfaceLocalDofs[ilevel] = MyMatrix <unsigned>(rowSize,0);
+//       std::cout << _levelInterfaceLocalDofs[ilevel] <<std::endl;
     }
   }
 
