@@ -68,26 +68,23 @@ namespace femus {
     else {
       _rowOffset.resize(_size);
     }
-   
+
     unsigned matsize = 0;
-    if(_rowOffset.size() > 0){
-      _rowOffset[_rowOffset.begin()] = 0;
-      matsize = _rowSize[_rowOffset.begin()];
-      for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
-	_rowOffset[i] = _rowOffset[i - 1] + _rowSize[i - 1] ;
-	matsize += _rowSize[i];
-      }  
+    for(unsigned i = _rowOffset.begin(); i < _rowOffset.end(); i++) {
+      _rowOffset[i] = matsize ;
+      matsize += _rowSize[i];
     }
+
     _mat.resize(matsize, value);
-    
+
     if(!_serial)
       _matSize[_iproc] = matsize;
 
     _matIsAllocated = true;
   }
-  
+
   //*******************
-    template <class Type> void MyMatrix<Type>::init() {
+  template <class Type> void MyMatrix<Type>::init() {
     int iproc, nprocs;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -106,7 +103,7 @@ namespace femus {
     _end = 0;
     _size = 0;
   }
-  
+
   // ******************
   template <class Type> MyMatrix<Type>::~MyMatrix() {
     clear();
@@ -121,9 +118,11 @@ namespace femus {
 
     _rowSize.resize(_size, csize);
     _rowOffset.resize(_size);
-    _rowOffset[_rowOffset.begin()] = 0;
-    for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
-      _rowOffset[i] = _rowOffset[i - 1] + _rowSize[i - 1] ;
+
+    unsigned matsize = 0;
+    for(unsigned i = _rowOffset.begin(); i < _rowOffset.end(); i++) {
+      _rowOffset[i] = matsize ;
+      matsize += _rowSize[i];
     }
 
     _matSize.resize(_nprocs);
@@ -151,9 +150,11 @@ namespace femus {
 
     _rowSize.resize(offset, csize);
     _rowOffset.resize(offset);
-    _rowOffset[_rowOffset.begin()] = 0;
-    for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
-      _rowOffset[i] = _rowOffset[i - 1] + _rowSize[i - 1] ;
+
+    unsigned matsize = 0;
+    for(unsigned i = _rowOffset.begin(); i < _rowOffset.end(); i++) {
+      _rowOffset[i] = matsize ;
+      matsize += _rowSize[i];
     }
 
     _matSize.resize(_nprocs);
@@ -165,6 +166,74 @@ namespace femus {
     _serial = false;
 
   }
+
+
+  // ******************
+  template <class Type> void MyMatrix<Type>::shrinkToFit(Type remove) {
+    MyVector <unsigned> rowSize2 = _rowSize;
+    MyVector <unsigned> rowOffset2 = _rowOffset;
+    unsigned counter = 0;
+    for(unsigned i = begin(); i < end(); i++) {
+      rowOffset2[i] = counter;
+      unsigned j = 0;
+      while(j < end(i) && _mat[_rowOffset[i] + j] != remove) {
+        counter++;
+        j++;
+      }
+      rowSize2[i] = j;
+    }
+
+    _mat2.resize(counter);
+    if(!_serial)
+      _matSize[_iproc] = counter;
+
+    for(unsigned i = begin(); i < end(); i++) {
+      for(unsigned j = 0; j < rowSize2[i]; j++) {
+        _mat2[rowOffset2[i] + j] = _mat[_rowOffset[i] + j];
+      }
+    }
+
+    _rowSize = rowSize2;
+    rowSize2.clear();
+
+    _rowOffset = rowOffset2;
+    rowOffset2.clear();
+
+    _mat.swap(_mat2);
+    std::vector<Type>().swap(_mat2);
+
+  }
+
+  // ******************
+  template <class Type> void MyMatrix<Type>::shrinkToFit(MyVector<unsigned> &rowSize2) {
+
+    MyVector <unsigned> rowOffset2 = _rowOffset;
+    unsigned counter = 0;
+    for(unsigned i = begin(); i < end(); i++) {
+      rowOffset2[i] = counter;
+      counter += rowSize2[i];
+    }
+
+    _mat2.resize(counter);
+    if(!_serial)
+      _matSize[_iproc] = counter;
+
+    for(unsigned i = begin(); i < end(); i++) {
+      for(unsigned j = 0; j < rowSize2[i]; j++) {
+        _mat2[rowOffset2[i] + j] = _mat[_rowOffset[i] + j];
+      }
+    }
+
+    _rowSize = rowSize2;
+
+    _rowOffset = rowOffset2;
+    rowOffset2.clear();
+
+    _mat.swap(_mat2);
+    std::vector<Type>().swap(_mat2);
+
+  }
+
 
   // ******************
   template <class Type> void MyMatrix<Type>::clear() {

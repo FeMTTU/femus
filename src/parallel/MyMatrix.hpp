@@ -59,11 +59,16 @@ namespace femus {
       void resize(const std::vector < unsigned > &offset, const unsigned &csize, const Type value = 0);
 
       // ******************
+      void shrinkToFit(Type remove);
+      
+      void shrinkToFit(MyVector<unsigned> &r);
+      
+      // ******************
       void clear();
 
       // ******************
       unsigned size();
-
+      
       unsigned size(const unsigned &i);
 
       // ******************

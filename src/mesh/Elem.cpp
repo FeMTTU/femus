@@ -47,46 +47,34 @@ namespace femus {
     _elementMaterial.resize(_nel);
     _elementLevel.resize(_nel, _level);
 
-    _elementDof.resize(_nel, NVE[0][2]);
-    _elementNearFace.resize(_nel, NFC[0][1]);
+    _elementDof.resize(_nel, NVE[0][2], UINT_MAX);
+    _elementNearFace.resize(_nel, NFC[0][1], -1);
 
     _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
   }
 
   void elem::SharpMemoryAllocation() {
 
-    MyVector <unsigned> rowSizeElDof(_nel);
+    _elementDof.shrinkToFit(UINT_MAX);
+
+
     MyVector <unsigned> rowSizeElNearFace(_nel);
     for(unsigned iel = 0; iel < _nel; iel++) {
       unsigned ielType = GetElementType(iel);
-      rowSizeElDof[iel] = NVE[ielType][2];
       rowSizeElNearFace[iel] = NFC[ielType][1];
     }
-
-    MyMatrix <unsigned> tmpElDof(rowSizeElDof);
     MyMatrix <int> tmpElNearFace(rowSizeElNearFace);
-
-    rowSizeElDof.clear();
     rowSizeElNearFace.clear();
-
-    for(unsigned i = tmpElDof.begin(); i < tmpElDof.end(); i++) {
-      for(unsigned j = tmpElDof.begin(i); j < tmpElDof.end(i); j++) {
-        tmpElDof[i][j] = _elementDof[i][j];
-      }
-    }
-
     for(unsigned i = tmpElNearFace.begin(); i < tmpElNearFace.end(); i++) {
       for(unsigned j = tmpElNearFace.begin(i); j < tmpElNearFace.end(i); j++) {
         tmpElNearFace[i][j] = _elementNearFace[i][j];
       }
     }
-
-    _elementDof = tmpElDof;
     _elementNearFace = tmpElNearFace;
-
-    tmpElDof.clear();
     tmpElNearFace.clear();
 
+    //_elementNearFace.shrinkToFit(rowSizeElNearFace);
+    
   }
   /**
    * This constructor allocates the memory for the \textit{finer elem}
@@ -546,8 +534,6 @@ namespace femus {
 
   void elem::SetLevelInterfaceElement() {
 
-    std::cout << "Mesh level" << _level << std::endl;
-
     _levelInterfaceElement.resize(_level + 1);
     _levelInterfaceLocalDofs.resize(_level + 1);
     for(unsigned ilevel = 0; ilevel <= _level; ilevel++) {
@@ -576,47 +562,30 @@ namespace femus {
         }
       }
       _levelInterfaceElement[ilevel].gather();
-      std::cout << "level =" << ilevel << std::endl;
       std::cout << _levelInterfaceElement[ilevel] << std::endl;
 
       std::vector< unsigned > offset = _levelInterfaceElement[ilevel].getOffset();
-      MyVector<unsigned> rowSize(offset, 0);
+      _levelInterfaceLocalDofs[ilevel] = MyMatrix <unsigned>(offset, NVE[0][2], UINT_MAX);
       for(unsigned i = _levelInterfaceElement[ilevel].begin(); i < _levelInterfaceElement[ilevel].end(); i++) {
         unsigned iel =  _levelInterfaceElement[ilevel][i];
-	std::map<unsigned,bool> lDofs;
+        std::map <unsigned, bool> ldofs;
         for(unsigned jface = _elementNearFace.begin(iel); jface < _elementNearFace.end(iel); jface++) {
           if(-1 == _elementNearFace[iel][jface]) {
-	    for(unsigned k=0;k < GetNFACENODES(GetElementType(iel), jface, 2);k++){
-	     unsigned index = GetIG(GetElementType(iel), jface, k);
-	     lDofs[index] = true;
-	    }
+            for(unsigned k = 0; k < GetNFACENODES(GetElementType(iel), jface, 2); k++) {
+              unsigned index = GetIG(GetElementType(iel), jface, k);
+              ldofs[index] = true;
+            }
           }
         }
-        rowSize[i] = lDofs.size();
-      }
-      _levelInterfaceLocalDofs[ilevel] = MyMatrix <unsigned>(rowSize,0.);
-      for(unsigned i = _levelInterfaceElement[ilevel].begin(); i < _levelInterfaceElement[ilevel].end(); i++) {
-        unsigned iel =  _levelInterfaceElement[ilevel][i];
-	std::map<unsigned,bool> ldofs;
-        for(unsigned jface = _elementNearFace.begin(iel); jface < _elementNearFace.end(iel); jface++) {
-          if(-1 == _elementNearFace[iel][jface]) {
-	    for(unsigned k=0;k < GetNFACENODES(GetElementType(iel), jface, 2);k++){
-	     unsigned index = GetIG(GetElementType(iel), jface, k);
-	     ldofs[index] = true;
-	    }
-          }
+        unsigned j = 0;
+        for(std::map<unsigned, bool>::iterator it = ldofs.begin(); it != ldofs.end(); it++) {
+          _levelInterfaceLocalDofs[ilevel][i][j] = it->first;
+          j++;
         }
-        unsigned j=0;
-        for( std::map<unsigned,bool>::iterator it = ldofs.begin(); it != ldofs.end(); it++) {
-         _levelInterfaceLocalDofs[ilevel][i][j] = it->first;
-         j++;
-	}
       }
-      
-       std::cout << _levelInterfaceLocalDofs[ilevel] <<std::endl;
-      
-      
-      
+      _levelInterfaceLocalDofs[ilevel].shrinkToFit(UINT_MAX);
+      std::cout << _levelInterfaceLocalDofs[ilevel] << std::endl;
+
     }
   }
 
