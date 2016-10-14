@@ -112,7 +112,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 5;
+  unsigned numberOfUniformLevels = 8;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
@@ -264,8 +264,8 @@ int main(int argc, char** args) {
   
   char *stdOutfile1 = new char[100];
   char *outfile1 = new char[100];
-  sprintf(stdOutfile1,"%stimeforeachlevelPr=%sRa=%s_time.txt",args[1],args[2],args[3]);
-  sprintf(outfile1,"%stotaltimePr=%sRa=%s_time.txt",args[1],args[2],args[3]);
+  sprintf(stdOutfile1,"%sprintout_infoPr=%sRa=%s_time.txt",args[1],args[2],args[3]);
+  sprintf(outfile1,"%stime_iterationPr=%sRa=%s_time.txt",args[1],args[2],args[3]);
   
   PrintNonlinearTime(stdOutfile1, outfile1, numberOfUniformLevels);
   return 0;
@@ -1038,7 +1038,7 @@ void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numof
     }
     inf >> str1;
   }
-
+ 
   outf.close();
   inf.close();
 }
@@ -1067,40 +1067,60 @@ void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofre
   double Total_Assembly_Time = 0.; 
   double Total_Nonliear_Time = 0.;  
 
+  std :: vector <unsigned> Level(numofrefinements, 0);
+  std :: vector <unsigned> Num_Nonlinear(numofrefinements, 0);
+  std :: vector <unsigned> Num_GMRES(numofrefinements, 0);
+  std :: vector <unsigned> Ave_GMRES(numofrefinements, 0);
+  
   std::string str1;
   inf >> str1;
+  counter = 0;
   while (str1.compare("END_COMPUTATION") != 0) {
-
     if (str1.compare("Start") == 0){
       inf >> str1;
       if (str1.compare("Level") == 0){
         inf >> str1;
         if (str1.compare("Max") == 0){
-          inf >> str1;
-          outf <<"\n"<< str1 <<",";
-          Assembly_Time = 0.;
-          Nonliear_Time = 0.;
+			int value;
+			inf >> value;
+			outf <<"\n"<< value <<",";
+			Level[counter] = value;
+			Assembly_Time = 0.;
+			Nonliear_Time = 0.;
         }
       }
     }
     else if (str1.compare("ASSEMBLY") == 0) {
       inf >> str1;
       if (str1.compare("TIME:") == 0) {
-        double value;
-        inf >> value;
-        Assembly_Time += value;
-	    Total_Assembly_Time += value;
+        double value1;
+        inf >> value1;
+        Assembly_Time += value1;
+	    Total_Assembly_Time += value1;
 	  }
     }
     else if (str1.compare("Nonlinear-Cycle") == 0) {
       inf >> str1;
       if (str1.compare("TIME:") == 0) {
-        double value1;
-        inf >> value1;
-        Nonliear_Time += value1;
-	    Total_Nonliear_Time += value1;
+        double value2;
+        inf >> value2;
+        Nonliear_Time += value2;
+	    Total_Nonliear_Time += value2;
 	  }
     } 
+	else if (str1.compare("Nonlinear") == 0) {
+      inf >> str1;
+      if (str1.compare("iteration") == 0) {
+		Num_Nonlinear[counter] += 1;  
+	  }
+    }
+	else if (str1.compare("Linear") == 0) {
+      inf >> str1;
+      if (str1.compare("iteration") == 0) {
+		Num_GMRES[counter] += 1;  
+	  }
+    }
+
     if (str1.compare("End") == 0){
       inf >> str1;
       if (str1.compare("Level") == 0){
@@ -1109,6 +1129,7 @@ void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofre
           outf << "Assembly Time =" 
 		  << Assembly_Time << ", Solver Time =" << Nonliear_Time - Assembly_Time 
 		  << ", Nonliear Time =" << Nonliear_Time;
+		  counter ++ ;
         }
       }
     }  
@@ -1119,9 +1140,14 @@ void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofre
 	   << Total_Nonliear_Time - Total_Assembly_Time << ")" << std::endl;  
 //   outf << ave_lin_solver_time / counter;
 
+  outf << std::endl;
+  outf << "Level, Number of nonlinear,Number of GMRES, Average number of GMRES per nonlinear" << std::endl;
+  for (unsigned i = 0; i < numofrefinements; i++){
+		outf << Level[i] << "," << Num_Nonlinear[i] << "," 
+		<< Num_GMRES[i] << "," << double(Num_GMRES[i])/double(Num_Nonlinear[i]) << std::endl;
+  }
   outf.close();
   inf.close();
-
 }
 
 
