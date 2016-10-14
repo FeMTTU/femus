@@ -74,7 +74,7 @@ namespace femus {
       void scatter();
       
       // ******************
-      void gather();
+      void stack();
 
       // ******************
       void buildOffset();

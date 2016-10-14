@@ -194,11 +194,8 @@ namespace femus {
     }
 
     _rowSize = rowSize2;
-    rowSize2.clear();
-
     _rowOffset = rowOffset2;
-    rowOffset2.clear();
-
+   
     _mat.swap(_mat2);
     std::vector<Type>().swap(_mat2);
 
@@ -225,9 +222,7 @@ namespace femus {
     }
 
     _rowSize = rowSize2;
-
     _rowOffset = rowOffset2;
-    rowOffset2.clear();
 
     _mat.swap(_mat2);
     std::vector<Type>().swap(_mat2);

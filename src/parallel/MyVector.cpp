@@ -164,10 +164,10 @@ namespace femus {
   }
   
   // ******************
-  template <class Type> void MyVector<Type>::gather() {
+  template <class Type> void MyVector<Type>::stack() {
 
     if(!_serial) {
-      std::cout << "Error in MyVector.gather(), vector is in " << status() << " status" << std::endl;
+      std::cout << "Error in MyVector.stack(), vector is in " << status() << " status" << std::endl;
       abort();
     }
 

@@ -57,24 +57,13 @@ namespace femus {
 
     _elementDof.shrinkToFit(UINT_MAX);
 
-
-    MyVector <unsigned> rowSizeElNearFace(_nel);
+    MyVector <unsigned> rowSize(_nel);
     for(unsigned iel = 0; iel < _nel; iel++) {
       unsigned ielType = GetElementType(iel);
-      rowSizeElNearFace[iel] = NFC[ielType][1];
+      rowSize[iel] = NFC[ielType][1];
     }
-    MyMatrix <int> tmpElNearFace(rowSizeElNearFace);
-    rowSizeElNearFace.clear();
-    for(unsigned i = tmpElNearFace.begin(); i < tmpElNearFace.end(); i++) {
-      for(unsigned j = tmpElNearFace.begin(i); j < tmpElNearFace.end(i); j++) {
-        tmpElNearFace[i][j] = _elementNearFace[i][j];
-      }
-    }
-    _elementNearFace = tmpElNearFace;
-    tmpElNearFace.clear();
+    _elementNearFace.shrinkToFit(rowSize);
 
-    //_elementNearFace.shrinkToFit(rowSizeElNearFace);
-    
   }
   /**
    * This constructor allocates the memory for the \textit{finer elem}
@@ -537,19 +526,8 @@ namespace femus {
     _levelInterfaceElement.resize(_level + 1);
     _levelInterfaceLocalDofs.resize(_level + 1);
     for(unsigned ilevel = 0; ilevel <= _level; ilevel++) {
+      _levelInterfaceElement[ilevel] = MyVector <unsigned> (_elementOwned);
       unsigned counter = 0;
-      for(unsigned i = _elementLevel.begin(); i < _elementLevel.end(); i++) {
-        if(ilevel == _elementLevel[i]) {
-          for(unsigned j = _elementNearFace.begin(i); j < _elementNearFace.end(i); j++) {
-            if(-1 == _elementNearFace[i][j]) {
-              counter++;
-              break;
-            }
-          }
-        }
-      }
-      _levelInterfaceElement[ilevel] = MyVector <unsigned> (counter);
-      counter = 0;
       for(unsigned i = _elementLevel.begin(); i < _elementLevel.end(); i++) {
         if(ilevel == _elementLevel[i]) {
           for(unsigned j = _elementNearFace.begin(i); j < _elementNearFace.end(i); j++) {
@@ -561,7 +539,9 @@ namespace femus {
           }
         }
       }
-      _levelInterfaceElement[ilevel].gather();
+      
+      _levelInterfaceElement[ilevel].resize(counter);
+      _levelInterfaceElement[ilevel].stack();
       std::cout << _levelInterfaceElement[ilevel] << std::endl;
 
       std::vector< unsigned > offset = _levelInterfaceElement[ilevel].getOffset();
