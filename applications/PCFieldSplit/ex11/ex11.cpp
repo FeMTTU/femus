@@ -84,7 +84,7 @@ int main(int argc, char** args) {
   }
   else {
     std::cout << "No input argument set default preconditioner = NS+T" << std::endl;
-    precType == FS_VTp;
+    precType = FS_VTp;
   }
   
   if(argc >= 3) {
@@ -97,10 +97,7 @@ int main(int argc, char** args) {
     Rayleigh = strtod(args[3], NULL);
     std::cout << Rayleigh <<std::endl;
   }
-  
-  
-  
-   
+    
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
