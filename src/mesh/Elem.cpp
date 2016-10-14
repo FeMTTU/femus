@@ -111,7 +111,7 @@ namespace femus {
     MyVector <unsigned> rowSizeElNearFace(_nel);
     unsigned jel = 0;
     for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
-      elc->_elementType.localize(isdom);
+      elc->_elementType.broadcast(isdom);
       for(unsigned iel = elc->_elementType.begin(); iel < elc->_elementType.end(); iel++) {
         short unsigned elType = elc->_elementType[iel];
         int increment = 1;
@@ -124,7 +124,7 @@ namespace femus {
         }
         jel += increment;
       }
-      elc->_elementType.clearLocalized();
+      elc->_elementType.clearBroadcast();
     }
     _elementDof = MyMatrix <unsigned> (rowSizeElDof);
     _elementNearFace = MyMatrix <int> (rowSizeElNearFace, -1);
@@ -521,7 +521,7 @@ namespace femus {
   }
 
   void elem::LocalizeElementDof(const unsigned& jproc) {
-    _elementDof.localize(jproc);
+    _elementDof.broadcast(jproc);
   }
 
   unsigned elem::GetElementDofIndex(const unsigned& iel, const unsigned& inode) {
@@ -529,7 +529,7 @@ namespace femus {
   };
 
   void elem::FreeLocalizedElementDof() {
-    _elementDof.clearLocalized();
+    _elementDof.clearBroadcast();
   }
 
   void elem::ScatterElementNearFace() {
@@ -537,11 +537,11 @@ namespace femus {
   };
 
   void elem::LocalizeElementNearFace(const unsigned& jproc) {
-    _elementNearFace.localize(jproc);
+    _elementNearFace.broadcast(jproc);
   }
 
   void elem::FreeLocalizedElementNearFace() {
-    _elementNearFace.clearLocalized();
+    _elementNearFace.clearBroadcast();
   }
 
   void elem::SetLevelInterfaceElement() {
@@ -585,18 +585,38 @@ namespace femus {
         unsigned iel =  _levelInterfaceElement[ilevel][i];
 	std::map<unsigned,bool> lDofs;
         for(unsigned jface = _elementNearFace.begin(iel); jface < _elementNearFace.end(iel); jface++) {
-//           if(-1 == _elementNearFace[i][jface]) {
-// 	    for(unsigned k=0;k < GetNFACENODES(GetElementType(iel), jface, 2);k++){
-// 	      unsigned index = GetIG(GetElementType(iel), jface, k);
-// 	      lDofs[index] = true;
-// 	    }
-//           }
+          if(-1 == _elementNearFace[iel][jface]) {
+	    for(unsigned k=0;k < GetNFACENODES(GetElementType(iel), jface, 2);k++){
+	     unsigned index = GetIG(GetElementType(iel), jface, k);
+	     lDofs[index] = true;
+	    }
+          }
         }
         rowSize[i] = lDofs.size();
       }
-      std::cout << rowSize <<std::endl;
-//       _levelInterfaceLocalDofs[ilevel] = MyMatrix <unsigned>(rowSize,0);
-//       std::cout << _levelInterfaceLocalDofs[ilevel] <<std::endl;
+      _levelInterfaceLocalDofs[ilevel] = MyMatrix <unsigned>(rowSize,0.);
+      for(unsigned i = _levelInterfaceElement[ilevel].begin(); i < _levelInterfaceElement[ilevel].end(); i++) {
+        unsigned iel =  _levelInterfaceElement[ilevel][i];
+	std::map<unsigned,bool> ldofs;
+        for(unsigned jface = _elementNearFace.begin(iel); jface < _elementNearFace.end(iel); jface++) {
+          if(-1 == _elementNearFace[iel][jface]) {
+	    for(unsigned k=0;k < GetNFACENODES(GetElementType(iel), jface, 2);k++){
+	     unsigned index = GetIG(GetElementType(iel), jface, k);
+	     ldofs[index] = true;
+	    }
+          }
+        }
+        unsigned j=0;
+        for( std::map<unsigned,bool>::iterator it = ldofs.begin(); it != ldofs.end(); it++) {
+         _levelInterfaceLocalDofs[ilevel][i][j] = it->first;
+         j++;
+	}
+      }
+      
+       std::cout << _levelInterfaceLocalDofs[ilevel] <<std::endl;
+      
+      
+      
     }
   }
 

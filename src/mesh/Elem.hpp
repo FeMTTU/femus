@@ -186,16 +186,16 @@ namespace femus {
         _elementGroup.scatter(_elementOffset);
       }
       void LocalizeElementQuantities(const unsigned &lproc) {
-        _elementLevel.localize(lproc);
-        _elementType.localize(lproc);
-        _elementMaterial.localize(lproc);
-        _elementGroup.localize(lproc);
+        _elementLevel.broadcast(lproc);
+        _elementType.broadcast(lproc);
+        _elementMaterial.broadcast(lproc);
+        _elementGroup.broadcast(lproc);
       }
       void FreeLocalizedElementQuantities() {
-        _elementLevel.clearLocalized();
-        _elementType.clearLocalized();
-        _elementMaterial.clearLocalized();
-        _elementGroup.clearLocalized();
+        _elementLevel.clearBroadcast();
+        _elementType.clearBroadcast();
+        _elementMaterial.clearBroadcast();
+        _elementGroup.clearBroadcast();
       }
 
       bool GetIfElementCanBeRefined(const unsigned& iel) {

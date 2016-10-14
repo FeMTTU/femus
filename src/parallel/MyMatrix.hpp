@@ -88,10 +88,10 @@ namespace femus {
       std::vector<unsigned> getOffset();
 
       // ******************
-      void localize(const unsigned &lproc);
+      void broadcast(const unsigned &lproc);
 
       // ******************
-      void clearLocalized();
+      void clearBroadcast();
 
       // ****************
       const std::string &status();
@@ -119,7 +119,7 @@ namespace femus {
           }
           else {
             for(int j = 0; j < mat._nprocs; j++) {
-              mat.localize(j);
+              mat.broadcast(j);
               for(unsigned i = mat.begin(); i < mat.end(); i++) {
 		os << i <<"   ";
                 for(unsigned j = mat.begin(i); j < mat.end(i); j++) {
@@ -127,7 +127,7 @@ namespace femus {
                 }
                 os << std::endl;
               }
-              mat.clearLocalized();
+              mat.clearBroadcast();
               os << std::endl;
             }
           }

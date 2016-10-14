@@ -468,9 +468,9 @@ namespace femus {
     _mesh.el->ScatterElementDof();
     _mesh.el->ScatterElementNearFace();
     
-//     if(AMR){
-//       _mesh.el->SetLevelInterfaceElement();
-//     }
+    if(AMR){
+      _mesh.el->SetLevelInterfaceElement();
+    }
   }
 
 

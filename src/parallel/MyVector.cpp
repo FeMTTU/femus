@@ -222,7 +222,7 @@ namespace femus {
   }
 
   // ******************
-  template <class Type> void MyVector<Type>::localize(const unsigned &lproc) {
+  template <class Type> void MyVector<Type>::broadcast(const unsigned &lproc) {
 
     if(_serial) {
       std::cout << "Error in MyVector.LocalizeToAll(), vector is in " << status() << " status" << std::endl;
@@ -242,7 +242,7 @@ namespace femus {
   }
 
   // ******************
-  template <class Type> void MyVector<Type>::clearLocalized() {
+  template <class Type> void MyVector<Type>::clearBroadcast() {
 
     if(_lproc != _iproc) {
       _vec.swap(_vec2);

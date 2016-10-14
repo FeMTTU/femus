@@ -68,15 +68,18 @@ namespace femus {
     else {
       _rowOffset.resize(_size);
     }
-
-    _rowOffset[_rowOffset.begin()] = 0;
-    unsigned matsize = _rowSize[_rowOffset.begin()];
-    for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
-      _rowOffset[i] = _rowOffset[i - 1] + _rowSize[i - 1] ;
-      matsize += _rowSize[i];
+   
+    unsigned matsize = 0;
+    if(_rowOffset.size() > 0){
+      _rowOffset[_rowOffset.begin()] = 0;
+      matsize = _rowSize[_rowOffset.begin()];
+      for(unsigned i = _rowOffset.begin() + 1; i < _rowOffset.end(); i++) {
+	_rowOffset[i] = _rowOffset[i - 1] + _rowSize[i - 1] ;
+	matsize += _rowSize[i];
+      }  
     }
     _mat.resize(matsize, value);
-
+    
     if(!_serial)
       _matSize[_iproc] = matsize;
 
@@ -282,16 +285,16 @@ namespace femus {
   }
 
   // ******************
-  template <class Type> void MyMatrix<Type>::localize(const unsigned &lproc) {
+  template <class Type> void MyMatrix<Type>::broadcast(const unsigned &lproc) {
 
     if(_serial) {
-      std::cout << "Error in MyMatrix.localize(), matrix is in " << status() << " status" << std::endl;
+      std::cout << "Error in MyMatrix.broadcast(), matrix is in " << status() << " status" << std::endl;
       abort();
     }
 
-    _matSize.localize(lproc);
-    _rowSize.localize(lproc);
-    _rowOffset.localize(lproc);
+    _matSize.broadcast(lproc);
+    _rowSize.broadcast(lproc);
+    _rowOffset.broadcast(lproc);
 
     if(_iproc != lproc) {
       _mat.swap(_mat2);
@@ -308,11 +311,11 @@ namespace femus {
   }
 
   // ******************
-  template <class Type> void MyMatrix<Type>::clearLocalized() {
+  template <class Type> void MyMatrix<Type>::clearBroadcast() {
 
-    _matSize.clearLocalized();
-    _rowSize.clearLocalized();
-    _rowOffset.clearLocalized();
+    _matSize.clearBroadcast();
+    _rowSize.clearBroadcast();
+    _rowOffset.clearBroadcast();
 
     if(_lproc != _iproc) {
       _mat.swap(_mat2);
