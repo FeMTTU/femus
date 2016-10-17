@@ -265,7 +265,7 @@ int main(int argc, char** args) {
   char *stdOutfile1 = new char[100];
   char *outfile1 = new char[100];
   sprintf(stdOutfile1,"%sprintout_infoPr=%sRa=%s_time.txt",args[1],args[2],args[3]);
-  sprintf(outfile1,"%stime_iterationPr=%sRa=%s_time.txt",args[1],args[2],args[3]);
+  sprintf(outfile1,"%scomputational_timePr=%sRa=%s_time.txt",args[1],args[2],args[3]);
   
   PrintNonlinearTime(stdOutfile1, outfile1, numberOfUniformLevels);
   return 0;
@@ -984,9 +984,14 @@ void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numof
     std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
     return;
   }
+  
+  unsigned counter1 = 0;
+  std :: vector <unsigned> Level(numofrefinements, 0);
+  std :: vector <unsigned> Num_Nonlinear(numofrefinements, 0);
+  std :: vector <unsigned> Num_GMRES(numofrefinements, 0);
+  std :: vector <unsigned> Ave_GMRES(numofrefinements, 0);
 
   std::ofstream outf;
-
   outf.open(outfile, std::ofstream::app);
   outf << std::endl << std::endl;
   outf << "Number_of_refinements="<<numofrefinements<<std::endl;
@@ -995,50 +1000,81 @@ void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numof
   std::string str1;
   inf >> str1;
   while (str1.compare("END_COMPUTATION") != 0) {
+	
+	  if (str1.compare("Start") == 0){
+		inf >> str1;
+		if (str1.compare("Level") == 0){
+			inf >> str1;
+			if (str1.compare("Max") == 0){
+				int value;
+				inf >> value;
+				Level[counter1] = value;
+			}
+		}
+	  }	
 
-    if (str1.compare("Nonlinear") == 0) {
-      inf >> str1;
-      if (str1.compare("iteration") == 0) {
-        inf >> str1;
-        outf << std::endl << str1;
+	if (str1.compare("Nonlinear") == 0) {
+		inf >> str1;
+		if (str1.compare("iteration") == 0) {
+			inf >> str1;
+			outf << std::endl << str1;
+			Num_Nonlinear[counter1] += 1;
+		}
+	}
+	else if (str1.compare("KSP") == 0){
+		inf >> str1;
+		if (str1.compare("preconditioned") == 0){
+			inf >> str1;
+			if (str1.compare("resid") == 0){
+				inf >> str1;
+				if (str1.compare("norm") == 0){
+					double norm0 = 1.;
+					double normN = 1.;
+					unsigned counter = 0;
+					inf >> norm0;
+					outf <<","<< norm0;
+					for (unsigned i = 0; i < 11; i++){
+						inf >> str1;
+					}
+					while(str1.compare("norm") == 0){
+						inf >> normN;
+						counter++;
+						for (unsigned i = 0; i < 11; i++){
+							inf >> str1;
+						}
+						Num_GMRES[counter1] += 1;
+					}
+					outf <<","<< normN;
+				if(counter != 0){
+					outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
+				}
+				else{
+					outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
+				}
+			}
+		}
       }
     }
-    else if (str1.compare("KSP") == 0){
+
+	if (str1.compare("End") == 0){
       inf >> str1;
-      if (str1.compare("preconditioned") == 0){
+      if (str1.compare("Level") == 0){
         inf >> str1;
-        if (str1.compare("resid") == 0){
-          inf >> str1;
-          if (str1.compare("norm") == 0){
-            double norm0 = 1.;
-            double normN = 1.;
-            unsigned counter = 0;
-            inf >> norm0;
-            outf <<","<< norm0;
-            for (unsigned i = 0; i < 11; i++){
-              inf >> str1;
-            }
-            while(str1.compare("norm") == 0){
-              inf >> normN;
-              counter++;
-              for (unsigned i = 0; i < 11; i++){
-                inf >> str1;
-              }
-            }
-            outf <<","<< normN;
-            if(counter != 0){
-              outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
-            }
-            else{
-              outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
-            }
-          }
+        if (str1.compare("Max") == 0){
+		  counter1 ++ ;
         }
       }
-    }
+    }  
     inf >> str1;
   }
- 
+  
+
+  outf <<"\n" <<"Level, Number of nonlinear,Number of GMRES, Average number of GMRES per nonlinear" << std::endl;
+  for (unsigned i = 0; i < numofrefinements; i++){
+		outf << Level[i] << "," << Num_Nonlinear[i] << "," 
+		<< Num_GMRES[i] << "," << double(Num_GMRES[i])/double(Num_Nonlinear[i]) << std::endl;
+  }
+
   outf.close();
   inf.close();
 }
@@ -1056,25 +1092,17 @@ void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofre
   }
 
   std::ofstream outf;
-
   outf.open(outfile, std::ofstream::app);
   outf << std::endl;
   outf << "\nLevel_Max, Assembly Time, Solver Time, Nonlinear Time";
 
-  int counter = 0;
-  double Assembly_Time = 0.;
-  double Nonliear_Time = 0.;
-  double Total_Assembly_Time = 0.; 
-  double Total_Nonliear_Time = 0.;  
-
-  std :: vector <unsigned> Level(numofrefinements, 0);
-  std :: vector <unsigned> Num_Nonlinear(numofrefinements, 0);
-  std :: vector <unsigned> Num_GMRES(numofrefinements, 0);
-  std :: vector <unsigned> Ave_GMRES(numofrefinements, 0);
-  
+  unsigned counter = 0;
+  std::vector <double> Assembly_Time(numofrefinements, 0.);
+  std::vector <double> Nonlinear_Time(numofrefinements, 0.);
+ 
   std::string str1;
   inf >> str1;
-  counter = 0;
+
   while (str1.compare("END_COMPUTATION") != 0) {
     if (str1.compare("Start") == 0){
       inf >> str1;
@@ -1083,10 +1111,7 @@ void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofre
         if (str1.compare("Max") == 0){
 			int value;
 			inf >> value;
-			outf <<"\n"<< value <<",";
-			Level[counter] = value;
-			Assembly_Time = 0.;
-			Nonliear_Time = 0.;
+			outf <<"\n"<< value <<", ";
         }
       }
     }
@@ -1095,8 +1120,7 @@ void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofre
       if (str1.compare("TIME:") == 0) {
         double value1;
         inf >> value1;
-        Assembly_Time += value1;
-	    Total_Assembly_Time += value1;
+		Assembly_Time[counter] += value1;
 	  }
     }
     else if (str1.compare("Nonlinear-Cycle") == 0) {
@@ -1104,22 +1128,9 @@ void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofre
       if (str1.compare("TIME:") == 0) {
         double value2;
         inf >> value2;
-        Nonliear_Time += value2;
-	    Total_Nonliear_Time += value2;
+        Nonlinear_Time[counter] += value2;
 	  }
     } 
-	else if (str1.compare("Nonlinear") == 0) {
-      inf >> str1;
-      if (str1.compare("iteration") == 0) {
-		Num_Nonlinear[counter] += 1;  
-	  }
-    }
-	else if (str1.compare("Linear") == 0) {
-      inf >> str1;
-      if (str1.compare("iteration") == 0) {
-		Num_GMRES[counter] += 1;  
-	  }
-    }
 
     if (str1.compare("End") == 0){
       inf >> str1;
@@ -1127,25 +1138,32 @@ void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofre
         inf >> str1;
         if (str1.compare("Max") == 0){
           outf << "Assembly Time =" 
-		  << Assembly_Time << ", Solver Time =" << Nonliear_Time - Assembly_Time 
-		  << ", Nonliear Time =" << Nonliear_Time;
-		  counter ++ ;
+			  << Assembly_Time[counter] << ", Solver Time =" 
+			  << Nonlinear_Time[counter] - Assembly_Time[counter] 
+		  << ", Nonliear Time =" << Nonlinear_Time[counter];
+			  counter ++;
         }
       }
     }  
     inf >> str1;
   }
-  outf << "\n" << "Total Nonliear Time:" << Total_Nonliear_Time 
-       << " = Assembly Time (" << Total_Assembly_Time << ") + " << "Solver Time (" 
-	   << Total_Nonliear_Time - Total_Assembly_Time << ")" << std::endl;  
-//   outf << ave_lin_solver_time / counter;
 
   outf << std::endl;
-  outf << "Level, Number of nonlinear,Number of GMRES, Average number of GMRES per nonlinear" << std::endl;
+
   for (unsigned i = 0; i < numofrefinements; i++){
-		outf << Level[i] << "," << Num_Nonlinear[i] << "," 
-		<< Num_GMRES[i] << "," << double(Num_GMRES[i])/double(Num_Nonlinear[i]) << std::endl;
+	  double sum1 = Assembly_Time[i];
+	  double sum2 = Nonlinear_Time[i];
+	  for (unsigned j = 0; j < i; j++){
+		sum1 = sum1 + Assembly_Time[j];
+		sum2 = sum2 + Nonlinear_Time[j];
+	  }
+	  outf << "\n" << "level" <<" "<< i+1 << ", "     
+		   << "Total Nonliear Time:" << sum2 
+           << " = Assembly Time (" << sum1 << ") + " << "Solver Time (" 
+	       << sum2 - sum1 << ")";
   }
+
+  outf << std::endl;
   outf.close();
   inf.close();
 }
