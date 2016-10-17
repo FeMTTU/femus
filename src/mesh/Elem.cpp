@@ -772,16 +772,19 @@ namespace femus {
                         xi[d] = *(_fe[ielType][2]->GetXcoarse(jmin + d));
                       }
 
-                      bool convergence = false;
-		      while(!convergence) {
-			std::vector < double > phi;
-			std::vector < std::vector < double > > gradPhi;
-			GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, 2);
-			convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[2], dim, ndofs);
-		      }
-                           
+                      for(unsigned soltype = 0; soltype < 3; soltype++) {
+                        std::vector < double > phi;
+                        std::vector < std::vector < double > > gradPhi;
+                        bool convergence = false;
+                        while(!convergence) {
+                          GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, soltype);
+                          convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[soltype], dim,  phi.size());
+                        }
+                      }
+                      bool test = CheckIfPointIsInsideReferenceDomain(xi, ielType, 0.001);
+
                       candidateNodes[lprocInterfaceDof[k][l]] = true;
-                      std::cout << jmin <<" " << xi[0] << " " << xi[1] << " " << lprocInterfaceDof[k][l] << "\t\t";
+                      std::cout << jmin << " " << xi[0] << " " << xi[1] << " " << lprocInterfaceDof[k][l] << "\t\t";
                     }
                     else {
                       candidateNodes[lprocInterfaceDof[k][l]] = false;

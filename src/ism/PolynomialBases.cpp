@@ -15,6 +15,7 @@
 
 #include <stdlib.h>
 #include<iostream>
+#include<cmath>
 
 #include "PolynomialBases.hpp"
 #include "GeomElTypeEnum.hpp"
@@ -622,12 +623,12 @@ namespace femus {
     gradPhi[2][1] = 1.; // 1
     gradPhi[4][1] = xi[0]; // x
     gradPhi[6][1] = xi[2]; // z
-   
+
     //phi_z
     gradPhi[3][2] = 1.; // 1
     gradPhi[5][2] = xi[0]; // x
     gradPhi[6][2] = xi[1]; // y
-    
+
     if(solType < 1) {  //only linear
       gradPhi[7][0] = phi[6];  // y z
       gradPhi[7][1] = phi[5];  // x z
@@ -1174,7 +1175,7 @@ namespace femus {
       //phi_z
       gradPhi[4][2] = xi[0] ;  // x
       gradPhi[5][2] = xi[1] ;  // y
-      
+
     }
     else { //only quadratic and biquadratic
       //phi_x
@@ -1345,8 +1346,54 @@ namespace femus {
 //END WEDGE
 
 
+
+  bool CheckIfPointIsInsideReferenceDomain(std::vector<double> &xi, const short unsigned &ielType, const double &eps) {
+    if(ielType == 0) {
+      CheckIfPointIsInsideReferenceDomainHex(xi, eps);
+    }
+    else if(ielType == 1) {
+      CheckIfPointIsInsideReferenceDomainTet(xi, eps);
+    }
+    else if(ielType == 2) {
+      CheckIfPointIsInsideReferenceDomainWedge(xi, eps);
+    }
+    else if(ielType == 3) {
+      CheckIfPointIsInsideReferenceDomainQuad(xi, eps);
+    }
+    else if(ielType == 4) {
+      CheckIfPointIsInsideReferenceDomainTri(xi, eps);
+    }
+    else if(ielType == 5) {
+      CheckIfPointIsInsideReferenceDomainLine(xi, eps);
+    }
+  }
+  bool CheckIfPointIsInsideReferenceDomainHex(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (fabs(xi[0]) < threshold && fabs(xi[1]) < threshold && fabs(xi[2]) < threshold) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainTet(std::vector<double> &xi, const double &eps) {
+    return (xi[0] > - eps && xi[1] > -eps &&  xi[2] > -eps && xi[0] + xi[1] + xi[2] < 1. + eps) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainWedge(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (xi[0] > -eps && xi[1] > -eps && xi[0] + xi[1] < threshold && fabs(xi[2]) < threshold) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainQuad(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (fabs(xi[0]) < threshold && fabs(xi[1]) < threshold) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainTri(std::vector<double> &xi, const double &eps) {
+    return (xi[0] > -eps && xi[1] > -eps && xi[0] + xi[1] < 1. + eps) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainLine(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (fabs(xi[0]) < threshold) ? true : false;
+  }
+
+
+
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
-                              const std::vector < std::vector <double > > &gradPhi, 
+                              const std::vector < std::vector <double > > &gradPhi,
                               const std::vector < std::vector <double > > &a, const unsigned & dim, const unsigned & nDofs) {
 
     bool convergence = false;
@@ -1385,18 +1432,13 @@ namespace femus {
       delta2 += deltak * deltak;
     }
 
-//     for(int k = 0; k < dim; k++) {
-//       std::cout << "xT[" << k << "]= " << xp[k] <<  " ";
-//     }
-//     std::cout << std::endl;
-
     if(delta2 < 1.0e-9) {
       convergence = true;
     }
 
     return convergence;
   }
-  
+
   void inverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA) {
 
     unsigned dim = A.size();
