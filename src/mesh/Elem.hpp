@@ -20,13 +20,20 @@
 #include <map>
 
 #include "Mesh.hpp"
-#include "MyVector.hpp"
+#include "NumericVector.hpp"
 
+#include "MyVector.hpp"
 #include "MyMatrix.hpp"
+#include "Basis.hpp"
+#include "PolynomialBases.hpp"
 
 namespace femus {
 
+  class basis;
+  
   class Mesh;
+  
+  class NumericVector;
   /**
    * The elem class
   */
@@ -41,7 +48,7 @@ namespace femus {
       //elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal, const std::vector < double >& localizedElementType);
       elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal);
 
-      void SharpMemoryAllocation();
+      void ShrinkToFit();
 
       /** destructor */
       ~elem();
@@ -122,18 +129,8 @@ namespace femus {
       };
 
       /** To be Added */
-      unsigned GetRefinedElementTypeNumber(const unsigned& ielt) const {
-        return _nelrt[ielt];
-      };
-
-      /** To be Added */
       void SetRefinedElementNumber(const unsigned& value) {
         _nelr = value;
-      };
-
-      /** To be Added */
-      void SetRefinedElemenTypeNumber(const unsigned& value, const unsigned& ielt) {
-        _nelrt[ielt] = value;
       };
 
       /** To be Added */
@@ -231,18 +228,20 @@ namespace femus {
         _nprocs = nprocs;
       }
 
-      void SetLevelInterfaceElement();
+      void GetHangingElementAndNodes(Mesh *msh);
 
     private:
 
       elem* _coarseElem;
-
+      
+      std::vector < std::vector< basis*> > _fe;
+      
       unsigned _iproc;
       unsigned _nprocs;
 
       unsigned _nvt;
       unsigned _nel, _nelt[6];
-      unsigned _nelr, _nelrt[6];
+      unsigned _nelr;
       unsigned _ngroup;
       unsigned _level;
 
@@ -263,8 +262,13 @@ namespace femus {
       MyMatrix <unsigned> _elementNearVertex;
       MyMatrix <unsigned> _elementNearElement;
 
-      std::vector < MyVector<unsigned> > _levelInterfaceElement;
-      std::vector < MyMatrix<unsigned> > _levelInterfaceLocalDofs;
+      std::vector < MyVector<unsigned> > _interfaceElement;
+      std::vector < MyMatrix<unsigned> > _interfaceLocalDof;
+      std::vector < MyMatrix<unsigned> > _interfaceDof;
+      std::vector < MyMatrix<short unsigned> > _hangingNode;
+      
+      std::vector < std::vector < MyMatrix< double > > > _interfaceNodeCoordinates;
+      
 
   };
 

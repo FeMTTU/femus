@@ -50,10 +50,32 @@ namespace femus {
     _elementDof.resize(_nel, NVE[0][2], UINT_MAX);
     _elementNearFace.resize(_nel, NFC[0][1], -1);
 
-    _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
+    _fe.resize(6);
+    for(unsigned i = 0; i < 6; i++) {
+      _fe[i].resize(3);
+    }
+
+    _fe[0][0] = new HexLinear;
+    _fe[0][1] = new HexQuadratic;
+    _fe[0][2] = new HexBiquadratic;
+    _fe[1][0] = new TetLinear;
+    _fe[1][1] = new TetQuadratic;
+    _fe[1][2] = new TetBiquadratic;
+    _fe[2][0] = new WedgeLinear;
+    _fe[2][1] = new WedgeQuadratic;
+    _fe[2][2] = new WedgeBiquadratic;
+    _fe[3][0] = new QuadLinear;
+    _fe[3][1] = new QuadQuadratic;
+    _fe[3][2] = new QuadBiquadratic;
+    _fe[4][0] = new TriLinear;
+    _fe[4][1] = new TriQuadratic;
+    _fe[4][2] = new TriBiquadratic;
+    _fe[5][0] = new LineLinear;
+    _fe[5][1] = new LineBiquadratic;
+    _fe[5][2] = new LineBiquadratic;
   }
 
-  void elem::SharpMemoryAllocation() {
+  void elem::ShrinkToFit() {
 
     _elementDof.shrinkToFit(UINT_MAX);
 
@@ -109,7 +131,29 @@ namespace femus {
     rowSizeElDof.clear();
     rowSizeElNearFace.clear();
 
-    _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
+    _fe.resize(6);
+    for(unsigned i = 0; i < 6; i++) {
+      _fe[i].resize(3);
+    }
+
+    _fe[0][0] = new HexLinear;
+    _fe[0][1] = new HexQuadratic;
+    _fe[0][2] = new HexBiquadratic;
+    _fe[1][0] = new TetLinear;
+    _fe[1][1] = new TetQuadratic;
+    _fe[1][2] = new TetBiquadratic;
+    _fe[2][0] = new WedgeLinear;
+    _fe[2][1] = new WedgeQuadratic;
+    _fe[2][2] = new WedgeBiquadratic;
+    _fe[3][0] = new QuadLinear;
+    _fe[3][1] = new QuadQuadratic;
+    _fe[3][2] = new QuadBiquadratic;
+    _fe[4][0] = new TriLinear;
+    _fe[4][1] = new TriQuadratic;
+    _fe[4][2] = new TriBiquadratic;
+    _fe[5][0] = new LineLinear;
+    _fe[5][1] = new LineBiquadratic;
+    _fe[5][2] = new LineBiquadratic;
 
   }
 
@@ -202,7 +246,15 @@ namespace femus {
     }
   }
 
-  elem::~elem() {}
+  elem::~elem() {
+
+    for(unsigned i = 0; i < 6; i++) {
+      for(unsigned j = 0; j < 3; j++) {
+        delete _fe[i][j];
+      }
+    }
+
+  }
 
   void elem::DeleteElementNearVertex() {
     _elementNearVertex.clear();
@@ -521,33 +573,40 @@ namespace femus {
     _elementNearFace.clearBroadcast();
   }
 
-  void elem::SetLevelInterfaceElement() {
+  void elem::GetHangingElementAndNodes(Mesh *msh) {
 
-    _levelInterfaceElement.resize(_level + 1);
-    _levelInterfaceLocalDofs.resize(_level + 1);
+    _interfaceElement.resize(_level + 1);
+    _interfaceLocalDof.resize(_level + 1);
+    _interfaceDof.resize(_level + 1);
+    _interfaceNodeCoordinates.resize(_level + 1);
+    _hangingNode.resize(_level + 1);
+    unsigned dim = msh->GetDimension();
+
     for(unsigned ilevel = 0; ilevel <= _level; ilevel++) {
-      _levelInterfaceElement[ilevel] = MyVector <unsigned> (_elementOwned);
+      //BEGIN interface element search
+      _interfaceElement[ilevel] = MyVector <unsigned> (_elementOwned);
       unsigned counter = 0;
       for(unsigned i = _elementLevel.begin(); i < _elementLevel.end(); i++) {
         if(ilevel == _elementLevel[i]) {
           for(unsigned j = _elementNearFace.begin(i); j < _elementNearFace.end(i); j++) {
             if(-1 == _elementNearFace[i][j]) {
-              _levelInterfaceElement[ilevel][counter] = i;
+              _interfaceElement[ilevel][counter] = i;
               counter++;
               break;
             }
           }
         }
       }
-      
-      _levelInterfaceElement[ilevel].resize(counter);
-      _levelInterfaceElement[ilevel].stack();
-      std::cout << _levelInterfaceElement[ilevel] << std::endl;
+      _interfaceElement[ilevel].resize(counter);
+      _interfaceElement[ilevel].stack();
+      std::cout << _interfaceElement[ilevel] << std::endl;
+      //END interface element search
 
-      std::vector< unsigned > offset = _levelInterfaceElement[ilevel].getOffset();
-      _levelInterfaceLocalDofs[ilevel] = MyMatrix <unsigned>(offset, NVE[0][2], UINT_MAX);
-      for(unsigned i = _levelInterfaceElement[ilevel].begin(); i < _levelInterfaceElement[ilevel].end(); i++) {
-        unsigned iel =  _levelInterfaceElement[ilevel][i];
+      //BEGIN interface node search
+      std::vector< unsigned > offset = _interfaceElement[ilevel].getOffset();
+      _interfaceLocalDof[ilevel] = MyMatrix <unsigned>(offset, NVE[0][2], UINT_MAX);
+      for(unsigned i = _interfaceElement[ilevel].begin(); i < _interfaceElement[ilevel].end(); i++) {
+        unsigned iel =  _interfaceElement[ilevel][i];
         std::map <unsigned, bool> ldofs;
         for(unsigned jface = _elementNearFace.begin(iel); jface < _elementNearFace.end(iel); jface++) {
           if(-1 == _elementNearFace[iel][jface]) {
@@ -559,13 +618,187 @@ namespace femus {
         }
         unsigned j = 0;
         for(std::map<unsigned, bool>::iterator it = ldofs.begin(); it != ldofs.end(); it++) {
-          _levelInterfaceLocalDofs[ilevel][i][j] = it->first;
+          _interfaceLocalDof[ilevel][i][j] = it->first;
           j++;
         }
       }
-      _levelInterfaceLocalDofs[ilevel].shrinkToFit(UINT_MAX);
-      std::cout << _levelInterfaceLocalDofs[ilevel] << std::endl;
+      _interfaceLocalDof[ilevel].shrinkToFit(UINT_MAX);
+      std::cout << _interfaceLocalDof[ilevel] << std::endl;
+      //END interface node search
 
+      //BEGIN interface node coordinates search
+      MyVector <unsigned> rowSize = _interfaceLocalDof[ilevel].getRowSize();
+
+      _interfaceDof[ilevel] = MyMatrix< unsigned > (rowSize, 0.);
+      _interfaceNodeCoordinates[ilevel].resize(dim);
+      for(unsigned k = 0; k < dim; k++) {
+        _interfaceNodeCoordinates[ilevel][k] = MyMatrix< double > (rowSize, 0.);
+      }
+      _hangingNode[ilevel] = MyMatrix< short unsigned > (rowSize, 1);
+
+      for(unsigned i = _interfaceLocalDof[ilevel].begin(); i < _interfaceLocalDof[ilevel].end(); i++) {
+        unsigned iel = _interfaceElement[ilevel][i];
+        for(unsigned j = _interfaceLocalDof[ilevel].begin(i); j < _interfaceLocalDof[ilevel].end(i); j++) {
+          unsigned jnode = _interfaceLocalDof[ilevel][i][j];
+          unsigned xDof  = msh->GetSolutionDof(jnode, iel, 2);
+          _interfaceDof[ilevel][i][j] = xDof;
+          for(unsigned k = 0; k < dim; k++) {
+            _interfaceNodeCoordinates[ilevel][k][i][j] = (*msh->_topology->_Sol[k])(xDof);
+          }
+        }
+      }
+
+      std::cout << _interfaceDof[ilevel] << std::endl;
+
+      //END interface node coordinates search
+    }
+    std::map<unsigned, unsigned> dofMap;
+
+    for(unsigned ilevel = 0; ilevel <= _level; ilevel++) {
+      for(unsigned i = _interfaceDof[ilevel].begin(); i < _interfaceDof[ilevel].end(); i++) {
+        for(unsigned j = _interfaceDof[ilevel].begin(i); j < _interfaceDof[ilevel].end(i); j++) {
+          if(dofMap.find(_interfaceDof[ilevel][i][j]) == dofMap.end()) {
+            dofMap[_interfaceDof[ilevel][i][j]] = 1;
+          }
+        }
+      }
+    }
+    unsigned counter = 0;
+    for(std::map<unsigned, unsigned>::iterator it = dofMap.begin(); it != dofMap.end(); it++) {
+      it->second = counter++;
+      std::cout << it->second << " " << it->first << std::endl;
+    }
+
+
+    std::vector < std::vector <double > > xv(dim);
+    for(int ilevel = 0; ilevel < _level; ilevel++) {
+      std::cout << "ilevel=" << ilevel << std::endl;
+      for(int jlevel = ilevel + 1; jlevel <= _level; jlevel++) {
+        std::cout << "jlevel=" << jlevel << std::endl;
+
+        MyMatrix < unsigned > lprocInterfaceDof = _interfaceDof[jlevel];
+        std::vector < MyMatrix < double > > lprocInterfaceNodeCoordinates(dim);
+        for(unsigned d = 0; d < dim; d++) {
+          lprocInterfaceNodeCoordinates[d] = _interfaceNodeCoordinates[jlevel][d];
+        }
+
+        for(unsigned lproc = 0; lproc < _nprocs; lproc++) {
+          lprocInterfaceDof.broadcast(lproc);
+          for(unsigned d = 0; d < dim; d++) {
+            lprocInterfaceNodeCoordinates[d].broadcast(lproc);
+          }
+          std::map< unsigned, bool> candidateNodes;
+          std::map< unsigned, bool> elementNodes;
+
+          for(unsigned i = _interfaceDof[ilevel].begin(); i < _interfaceDof[ilevel].end(); i++) {
+            elementNodes.clear();
+            candidateNodes.clear();
+
+            std::vector < std::vector < std::vector <double > > > aP(3);
+            bool aPIsInitialized = false;
+
+            unsigned iel = _interfaceElement[ilevel][i];
+            short unsigned ielType = _elementType[iel];
+
+            std::cout << "iel= " << iel << " ";
+            unsigned ndofs = GetElementDofNumber(iel, 2);
+            for(int d = 0; d < dim; d++) {
+              xv[d].resize(ndofs);
+            }
+            for(unsigned j = 0; j < ndofs; j++) {
+              unsigned xDof  = msh->GetSolutionDof(j, iel, 2);
+              elementNodes[xDof] = true;
+              for(int d = 0; d < dim; d++) {
+                xv[d][j] = (*msh->_topology->_Sol[d])(xDof);
+              }
+            }
+            std::vector < double > xc(dim);
+            for(int d = 0; d < dim; d++) {
+              xc[d] = xv[d][ndofs - 1];
+            }
+            double r2 = 0.;
+            for(unsigned j = 0; j < ndofs; j++) {
+              double d2 = 0.;
+              for(int d = 0; d < dim; d++) {
+                d2 += (xv[d][j] - xc[d]) * (xv[d][j] - xc[d]);
+              }
+              r2 = (r2 > d2) ? r2 : d2;
+            }
+            r2 *= 1.01;
+            for(int k = 0; k < dim; k++) {
+              std::cout << xc[k] << " ";
+            }
+            std::cout << r2 << std::endl;
+            for(unsigned k = lprocInterfaceDof.begin(); k < lprocInterfaceDof.end(); k++) {
+              for(unsigned l = lprocInterfaceDof.begin(k); l < lprocInterfaceDof.end(k); l++) {
+                unsigned ldof = lprocInterfaceDof[k][l];
+                if(candidateNodes.find(lprocInterfaceDof[k][l]) == candidateNodes.end() || candidateNodes[ldof] != false) {
+                  double d2 = 0.;
+                  std::vector<double> xl(dim);
+                  for(int d = 0; d < dim; d++) {
+                    xl[d] = lprocInterfaceNodeCoordinates[d][k][l];
+                    d2 += (xl[d] - xc[d]) * (xl[d] - xc[d]);
+                  }
+                  if(d2 < r2) {
+                    if(elementNodes.find(ldof) == elementNodes.end()) {
+
+                      if(!aPIsInitialized) {
+                        aPIsInitialized = true;
+                        std::vector < std::vector <double> > x1(dim);
+                        for(unsigned soltype = 0; soltype < 3; soltype++) {
+                          for(unsigned d = 0; d < dim; d++) {
+                            x1[d] = xv[d];
+                            x1[d].resize(GetElementDofNumber(iel, soltype));
+                          }
+                          ProjectNodalToPolynomialCoefficients(aP[soltype], x1, ielType, soltype) ;
+                        }
+                      }
+
+                      unsigned jmin = ndofs - 1;
+                      double d2min = d2 ;
+                      for(unsigned j = 0; j < ndofs - 1; j++) {
+                        d2 = 0;
+                        for(int d = 0; d < dim; d++) {
+                          d2 += (xv[d][j] - xl[d]) * (xv[d][j] - xl[d]);
+                        }
+                        if(d2 < d2min) {
+                          d2min = d2;
+                          jmin = j;
+                        }
+                      }
+                      std::vector <double> xi(dim);
+
+                      for(unsigned d = 0; d < dim; d++) {
+                        xi[d] = *(_fe[ielType][2]->GetXcoarse(jmin + d));
+                      }
+
+                      bool convergence = false;
+		      while(!convergence) {
+			std::vector < double > phi;
+			std::vector < std::vector < double > > gradPhi;
+			GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, 2);
+			convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[2], dim, ndofs);
+		      }
+                           
+                      candidateNodes[lprocInterfaceDof[k][l]] = true;
+                      std::cout << jmin <<" " << xi[0] << " " << xi[1] << " " << lprocInterfaceDof[k][l] << "\t\t";
+                    }
+                    else {
+                      candidateNodes[lprocInterfaceDof[k][l]] = false;
+                    }
+                  }
+                }
+              }
+            }
+            std::cout << std::endl;
+          }
+          lprocInterfaceDof.clearBroadcast();
+          for(unsigned d = 0; d < dim; d++) {
+            lprocInterfaceNodeCoordinates[d].clearBroadcast();
+          }
+        }
+      }
+//     std::cout << _hangingNode[ilevel] << std::endl;
     }
   }
 

@@ -56,6 +56,10 @@ namespace femus {
   void GetWedgePolynomialShapeFunctionGradient(std::vector < double >& phi, std::vector < std::vector < double > >& gradPhi, const std::vector < double >& xi, const unsigned & solType) ;
   void GetWedgePolynomialShapeFunctionGradientHessian(std::vector < double >& phi, std::vector < std::vector < double > >& gradPhi, std::vector < std::vector < std::vector < double > > >& hessPhi, const std::vector < double >& xi, const unsigned & solType) ;
   
+  bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
+                              const std::vector < std::vector <double > > &gradPhi, 
+                              const std::vector < std::vector <double > > &a, const unsigned & dim, const unsigned & nDofs);
   
+  void inverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA);
 }
 #endif

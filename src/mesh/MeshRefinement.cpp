@@ -64,17 +64,6 @@ namespace femus {
     else numberOfRefinedElement->init(_nprocs, 1, false, PARALLEL);
 
     numberOfRefinedElement->zero();
-
-    vector < NumericVector*> numberOfRefinedElementType(N_GEOM_ELS);
-
-    for(unsigned i = 0; i < N_GEOM_ELS; i++) {
-      numberOfRefinedElementType[i] = NumericVector::build().release();
-
-      if(_nprocs == 1) numberOfRefinedElementType[i]->init(_nprocs, 1, false, SERIAL);
-      else numberOfRefinedElementType[i]->init(_nprocs, 1, false, PARALLEL);
-
-      numberOfRefinedElementType[i]->zero();
-    }
     //END temporary parallel vector initialization
 
     //BEGIN flag element to be refined
@@ -83,7 +72,6 @@ namespace femus {
         if(_mesh.el->GetIfElementCanBeRefined(iel)) {
           _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
           numberOfRefinedElement->add(_iproc, 1.);
-          numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
         }
       }
     }
@@ -92,7 +80,6 @@ namespace femus {
         if(_mesh.el->GetIfElementCanBeRefined(iel)) {
           if((*_mesh._topology->_Sol[ _mesh.GetAmrIndex() ])(iel) > 0.5) {
             numberOfRefinedElement->add(_iproc, 1.);
-            numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
           }
           else if(_mesh._IsUserRefinementFunctionDefined) {
             short unsigned ielt = _mesh.GetElementType(iel);
@@ -113,7 +100,6 @@ namespace femus {
             if(_mesh._SetRefinementFlag(x, _mesh.GetElementGroup(iel), _mesh.GetLevel())) {
               _mesh._topology->_Sol[ _mesh.GetAmrIndex() ]->set(iel, 1.);
               numberOfRefinedElement->add(_iproc, 1.);
-              numberOfRefinedElementType[ielt]->add(_iproc, 1.);
             }
           }
         }
@@ -128,7 +114,6 @@ namespace femus {
           if((*_mesh._topology->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && iel % 2 == 0) {
             _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
             numberOfRefinedElement->add(_iproc, 1.);
-            numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
           }
         }
       }
@@ -143,13 +128,6 @@ namespace femus {
     _mesh.el->SetRefinedElementNumber(static_cast < unsigned >(totalNumber + 0.25));
     delete numberOfRefinedElement;
 
-    for(unsigned i = 0; i < N_GEOM_ELS; i++) {
-      numberOfRefinedElementType[i]->close();
-      double totalNumber = numberOfRefinedElementType[i]->l1_norm();
-      _mesh.el->SetRefinedElemenTypeNumber(static_cast < unsigned >(totalNumber + 0.25), i);
-      delete numberOfRefinedElementType[i];
-    }
-
     //END update elem
   }
 
@@ -157,8 +135,6 @@ namespace femus {
   bool MeshRefinement::FlagElementsToRefineBaseOnError(const double& treshold, NumericVector& error) {
 
     unsigned type = 2;
-
-
 
     //BEGIN temporary parallel vector initialization
     NumericVector* numberOfRefinedElement;
@@ -168,17 +144,6 @@ namespace femus {
     else numberOfRefinedElement->init(_nprocs, 1, false, PARALLEL);
 
     numberOfRefinedElement->zero();
-
-    vector < NumericVector*> numberOfRefinedElementType(N_GEOM_ELS);
-
-    for(unsigned i = 0; i < N_GEOM_ELS; i++) {
-      numberOfRefinedElementType[i] = NumericVector::build().release();
-
-      if(_nprocs == 1) numberOfRefinedElementType[i]->init(_nprocs, 1, false, SERIAL);
-      else numberOfRefinedElementType[i]->init(_nprocs, 1, false, PARALLEL);
-
-      numberOfRefinedElementType[i]->zero();
-    }
     //END temporary parallel vector initialization
 
 
@@ -188,7 +153,6 @@ namespace femus {
         if((*_mesh._topology->_Sol[_mesh.GetAmrIndex()])(iel) < 0.5 && error(iel) > treshold) {
           _mesh._topology->_Sol[_mesh.GetAmrIndex()]->set(iel, 1.);
           numberOfRefinedElement->add(_iproc, 1.);
-          numberOfRefinedElementType[_mesh.GetElementType(iel)]->add(_iproc, 1.);
         }
       }
     }
@@ -201,13 +165,6 @@ namespace femus {
     double totalNumber = numberOfRefinedElement->l1_norm();
     _mesh.el->SetRefinedElementNumber(static_cast < unsigned >(totalNumber + 0.25));
     delete numberOfRefinedElement;
-
-    for(unsigned i = 0; i < N_GEOM_ELS; i++) {
-      numberOfRefinedElementType[i]->close();
-      double totalNumber = numberOfRefinedElementType[i]->l1_norm();
-      _mesh.el->SetRefinedElemenTypeNumber(static_cast < unsigned >(totalNumber + 0.25), i);
-      delete numberOfRefinedElementType[i];
-    }
 
     bool elementsHaveBeenRefined = true;
     if(totalNumber < _nprocs) {
@@ -469,7 +426,7 @@ namespace femus {
     _mesh.el->ScatterElementNearFace();
     
     if(AMR){
-      _mesh.el->SetLevelInterfaceElement();
+      _mesh.el->GetHangingElementAndNodes(&_mesh);
     }
   }
 

@@ -430,67 +430,7 @@ namespace femus {
 
 
 
-  void inverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA) {
-
-    unsigned dim = A.size();
-    invA.resize(dim);
-
-    for(int i = 0; i < dim; i++) {
-      invA[i].resize(dim);
-    }
-
-    double detA;
-    if(dim == 1) {
-
-      if(A[0][0] == 0) {
-        std::cout << " ERROR: the matrix is singular " << std::endl;
-        abort();
-      }
-      invA[0][0] = 1. / A[0][0];
-    }
-    else if(dim == 2) {
-
-      detA = A[0][0] * A[1][1] - A[0][1] * A[1][0];
-
-      if(detA == 0) {
-        std::cout << " ERROR: the matrix is singular " << std::endl;
-        abort();
-      }
-      else {
-        invA[0][0] = A[1][1] / detA;
-        invA[0][1] = -A[0][1] / detA;
-        invA[1][0] = -A[1][0] / detA;
-        invA[1][1] = A[0][0] / detA;
-      }
-    }
-    else if(dim == 3) {
-
-      detA = (A[0][0] * A[1][1] * A[2][2] + A[0][1] * A[1][2] * A[2][0] + A[0][2] * A[1][0] * A[2][1])
-             - (A[2][0] * A[1][1] * A[0][2] + A[2][1] * A[1][2] * A[0][0] + A[2][2] * A[1][0] * A[0][1]) ;
-
-      if(detA == 0) {
-        std::cout << " ERROR: the matrix is singular " << std::endl;
-        abort();
-      }
-      else {
-
-        invA[0][0] = (A[1][1] * A[2][2] - A[2][1] * A[1][2]) / detA ;
-        invA[0][1] = (A[0][2] * A[2][1] - A[2][2] * A[0][1]) / detA ;
-        invA[0][2] = (A[0][1] * A[1][2] - A[1][1] * A[0][2]) / detA ;
-        invA[1][0] = (A[1][2] * A[2][0] - A[2][2] * A[1][0]) / detA ;
-        invA[1][1] = (A[0][0] * A[2][2] - A[2][0] * A[0][2]) / detA ;
-        invA[1][2] = (A[0][2] * A[1][0] - A[0][0] * A[1][2]) / detA ;
-        invA[2][0] = (A[1][0] * A[2][1] - A[2][0] * A[1][1]) / detA ;
-        invA[2][1] = (A[0][1] * A[2][0] - A[2][1] * A[0][0]) / detA ;
-        invA[2][2] = (A[0][0] * A[1][1] - A[1][0] * A[0][1]) / detA ;
-
-      }
-    }
-    else {
-      std::cout << " ERROR: the matrix is neither 2x2 nor 3x3 so we cannot use this function " << std::endl;
-      abort();
-    }
-  }
+  
 
 
   int Marker::FastForward(const unsigned &iel) {
@@ -1282,57 +1222,7 @@ namespace femus {
 
 
 
-  bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
-                              const std::vector < std::vector <double > > &gradPhi, const std::vector < std::vector < std::vector <double> > > hessPhi,
-                              const std::vector < std::vector <double > > &a, const unsigned & dim, const unsigned & nDofs) {
-
-    bool convergence = false;
-    std::vector < double > F(dim, 0.);
-    std::vector < std::vector < double > > J(dim);
-
-    for(int k = 0; k < dim; k++) {
-      J[k].assign(dim, 0.);
-    }
-
-    for(int k = 0; k < dim; k++) {
-      for(int i = 0; i < nDofs; i++) {
-        F[k] += a[k][i] * phi[i];
-
-        for(int i1 = 0; i1 < dim; i1++) {
-          J[k][i1] += a[k][i] * gradPhi[i][i1];
-        }
-      }
-      F[k] -= x[k];
-    }
-
-
-    std::vector < std::vector < double > >  Jm1;
-    inverseMatrix(J, Jm1);
-
-    double delta2 = 0.;
-
-    for(int i1 = 0; i1 < dim; i1++) {
-      double deltak = 0.;
-
-      for(int i2 = 0; i2 < dim; i2++) {
-        deltak -= Jm1[i1][i2] * F[i2];
-      }
-
-      xi[i1] += deltak;
-      delta2 += deltak * deltak;
-    }
-
-//     for(int k = 0; k < dim; k++) {
-//       std::cout << "xT[" << k << "]= " << xp[k] <<  " ";
-//     }
-//     std::cout << std::endl;
-
-    if(delta2 < 1.0e-9) {
-      convergence = true;
-    }
-
-    return convergence;
-  }
+  
 
 
 
@@ -1398,11 +1288,11 @@ namespace femus {
       GetPolynomialShapeFunctionGradientHessian(phi, gradPhi, hessPhi, xi, ielType, solType);
 
       if(solType == 0) {
-        convergence = GetNewLocalCoordinates(xi, x, phi, gradPhi, hessPhi, a, dim, nDofs);
+        convergence = GetNewLocalCoordinates(xi, x, phi, gradPhi, a, dim, nDofs);
       }
       else {
         counter++;
-        //convergence = GetNewLocalCoordinates(xi, x, phi, gradPhi, hessPhi, a, dim, nDofs);
+        //convergence = GetNewLocalCoordinates(xi, x, phi, gradPhi, a, dim, nDofs);
         convergence = GetNewLocalCoordinatesHess(xi, x, phi, gradPhi, hessPhi, a, dim, nDofs);
       }
       for(unsigned k = 0; k < dim; k++) {

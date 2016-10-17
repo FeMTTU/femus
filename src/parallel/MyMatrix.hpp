@@ -91,6 +91,10 @@ namespace femus {
 
       // ******************
       std::vector<unsigned> getOffset();
+      
+      MyVector < unsigned > getRowSize(){
+	return _rowSize;
+      }
 
       // ******************
       void broadcast(const unsigned &lproc);
