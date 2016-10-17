@@ -669,7 +669,8 @@ namespace femus {
       std::cout << it->second << " " << it->first << std::endl;
     }
 
-
+    std::map < unsigned,  std::map < unsigned, double  > > Restriction;
+    
     std::vector < std::vector <double > > xv(dim);
     for(int ilevel = 0; ilevel < _level; ilevel++) {
       std::cout << "ilevel=" << ilevel << std::endl;
@@ -700,7 +701,7 @@ namespace femus {
             unsigned iel = _interfaceElement[ilevel][i];
             short unsigned ielType = _elementType[iel];
 
-            std::cout << "iel= " << iel << " ";
+            //std::cout << "iel= " << iel << " ";
             unsigned ndofs = GetElementDofNumber(iel, 2);
             for(int d = 0; d < dim; d++) {
               xv[d].resize(ndofs);
@@ -725,10 +726,10 @@ namespace femus {
               r2 = (r2 > d2) ? r2 : d2;
             }
             r2 *= 1.01;
-            for(int k = 0; k < dim; k++) {
-              std::cout << xc[k] << " ";
-            }
-            std::cout << r2 << std::endl;
+//             for(int k = 0; k < dim; k++) {
+//               std::cout << xc[k] << " ";
+//             }
+//             std::cout << r2 << std::endl;
             for(unsigned k = lprocInterfaceDof.begin(); k < lprocInterfaceDof.end(); k++) {
               for(unsigned l = lprocInterfaceDof.begin(k); l < lprocInterfaceDof.end(k); l++) {
                 unsigned ldof = lprocInterfaceDof[k][l];
@@ -781,10 +782,19 @@ namespace femus {
                           convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[soltype], dim,  phi.size());
                         }
                       }
-                      bool test = CheckIfPointIsInsideReferenceDomain(xi, ielType, 0.001);
-
-                      candidateNodes[lprocInterfaceDof[k][l]] = true;
-                      std::cout << jmin << " " << xi[0] << " " << xi[1] << " " << lprocInterfaceDof[k][l] << "\t\t";
+                      bool insideDomain = CheckIfPointIsInsideReferenceDomain(xi, ielType, 0.001);
+		      if(insideDomain){
+			candidateNodes[lprocInterfaceDof[k][l]] = true;
+			for(unsigned j = _interfaceLocalDof[ilevel].begin(i); j < _interfaceLocalDof[ilevel].end(i); j++) { 
+			  unsigned jlocDof = _interfaceLocalDof[ilevel][i][j];
+			  double value = _fe[ielType][2]->eval_phi(_fe[ielType][2]->GetIND(jlocDof), &xi[0]);
+			  std::cout << _interfaceDof[ilevel][i][j]<< " " << lprocInterfaceDof[k][l]<< " " << value <<std::endl;
+			  Restriction[_interfaceDof[ilevel][i][j]][lprocInterfaceDof[k][l]] = value;
+			}
+		      }
+		      else{
+			candidateNodes[lprocInterfaceDof[k][l]] = false;
+		      }
                     }
                     else {
                       candidateNodes[lprocInterfaceDof[k][l]] = false;
@@ -793,7 +803,7 @@ namespace femus {
                 }
               }
             }
-            std::cout << std::endl;
+            //std::cout << std::endl;
           }
           lprocInterfaceDof.clearBroadcast();
           for(unsigned d = 0; d < dim; d++) {
@@ -803,6 +813,16 @@ namespace femus {
       }
 //     std::cout << _hangingNode[ilevel] << std::endl;
     }
+    
+    for(std::map<unsigned, std::map<unsigned,double> >::iterator it1 = Restriction.begin(); it1 != Restriction.end(); it1++) {
+      std::cout << it1->first <<"\t";
+      for(std::map<unsigned,double> ::iterator it2 = Restriction[it1->first].begin(); it2 != Restriction[it1->first].end(); it2++) {
+	std::cout << it2 ->first << " (" <<  it2->second << ")  ";
+      }
+      std::cout << std::endl;
+    }
+    
+    
   }
 
 } //end namespace femus
