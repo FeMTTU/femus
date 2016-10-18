@@ -669,7 +669,7 @@ namespace femus {
       std::cout << it->second << " " << it->first << std::endl;
     }
 
-    std::map < unsigned,  std::map < unsigned, double  > > Restriction;
+    std::map < unsigned,  std::map < unsigned, double  > > restriction;
     
     std::vector < std::vector <double > > xv(dim);
     for(int ilevel = 0; ilevel < _level; ilevel++) {
@@ -784,12 +784,15 @@ namespace femus {
                       }
                       bool insideDomain = CheckIfPointIsInsideReferenceDomain(xi, ielType, 0.001);
 		      if(insideDomain){
-			candidateNodes[lprocInterfaceDof[k][l]] = true;
 			for(unsigned j = _interfaceLocalDof[ilevel].begin(i); j < _interfaceLocalDof[ilevel].end(i); j++) { 
 			  unsigned jlocDof = _interfaceLocalDof[ilevel][i][j];
 			  double value = _fe[ielType][2]->eval_phi(_fe[ielType][2]->GetIND(jlocDof), &xi[0]);
-			  std::cout << _interfaceDof[ilevel][i][j]<< " " << lprocInterfaceDof[k][l]<< " " << value <<std::endl;
-			  Restriction[_interfaceDof[ilevel][i][j]][lprocInterfaceDof[k][l]] = value;
+			  //std::cout << _interfaceDof[ilevel][i][j]<< " " << lprocInterfaceDof[k][l]<< " " << value <<std::endl;
+			  if(fabs(value) >= 1.0e-10){
+			    restriction[_interfaceDof[ilevel][i][j]][_interfaceDof[ilevel][i][j]] = 1.;
+			    candidateNodes[lprocInterfaceDof[k][l]] = true;
+			    restriction[_interfaceDof[ilevel][i][j]][lprocInterfaceDof[k][l]] = value;
+			  }
 			}
 		      }
 		      else{
@@ -814,9 +817,9 @@ namespace femus {
 //     std::cout << _hangingNode[ilevel] << std::endl;
     }
     
-    for(std::map<unsigned, std::map<unsigned,double> >::iterator it1 = Restriction.begin(); it1 != Restriction.end(); it1++) {
+    for(std::map<unsigned, std::map<unsigned,double> >::iterator it1 = restriction.begin(); it1 != restriction.end(); it1++) {
       std::cout << it1->first <<"\t";
-      for(std::map<unsigned,double> ::iterator it2 = Restriction[it1->first].begin(); it2 != Restriction[it1->first].end(); it2++) {
+      for(std::map<unsigned,double> ::iterator it2 = restriction[it1->first].begin(); it2 != restriction[it1->first].end(); it2++) {
 	std::cout << it2 ->first << " (" <<  it2->second << ")  ";
       }
       std::cout << std::endl;
