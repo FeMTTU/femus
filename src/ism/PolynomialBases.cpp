@@ -128,9 +128,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
-
-    if(nDofs != quadNumberOfDofs[solType]) {
+   
+    unsigned nDofs = quadNumberOfDofs[solType];
+    if( nDofs > aN[0].size() ) {
       std::cout << "Error in ProjectQuadNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -294,9 +294,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
-
-    if(nDofs != triNumberOfDofs[solType]) {
+    
+    unsigned nDofs = triNumberOfDofs[solType];
+    if( nDofs > aN[0].size() ) {
       std::cout << "Error in ProjectTriNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -442,9 +442,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
-
-    if(nDofs != hexNumberOfDofs[solType]) {
+    
+    unsigned nDofs = hexNumberOfDofs[solType];
+    if( nDofs > aN[0].size() ) {
       std::cout << "Error in ProjectHexNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -816,9 +816,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
-
-    if(nDofs != tetNumberOfDofs[solType]) {
+    
+    unsigned nDofs = tetNumberOfDofs[solType];
+    if( nDofs > aN[0].size() ) {
       std::cout << "Error in ProjectTetNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -1029,9 +1029,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
-
-    if(nDofs != wedgeNumberOfDofs[solType]) {
+    
+    unsigned nDofs = wedgeNumberOfDofs[solType];
+    if( nDofs > aN[0].size() ) {
       std::cout << "Error in ProjectWedgeNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }

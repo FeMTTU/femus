@@ -1416,7 +1416,7 @@ namespace femus {
 
     std::vector < double > phi;
     std::vector<double> V(dim, 0.);
-    std::vector < std::vector < double > > a;
+    std::vector < std::vector < double > > aV;
     //END
 
     //BEGIN Numerical integration scheme
@@ -1435,15 +1435,12 @@ namespace femus {
         //single process
         while(step < n) {
           std::cout << " -----------------------------" << "step = " <<  step << " -----------------------------" << std::endl;
-
           std::cout << " _iproc = " << _iproc << std::endl;
 
-          updateVelocity(V, sol, solVIndex, solVType, a, phi, pcElemUpdate);
-	  
+          updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate);
           for(unsigned i = 0; i < dim; i++) {
             _x[i] += V[i] * h;
           }
-
           step++;
 
           //BEGIN TO BE REMOVED
@@ -1470,12 +1467,11 @@ namespace femus {
           }
           else if(iel != _elem) {
             pcElemUpdate = true;
-            updateXi(_elem, solVType, 1);
+            FindLocalCoordinates(solVType, _aX, pcElemUpdate);
           }
-
           else {
             pcElemUpdate = true; //added this
-            updateXi(_elem, solVType, 0);
+            FindLocalCoordinates(solVType, _aX, pcElemUpdate);
           }
         }
       }
@@ -1492,21 +1488,21 @@ namespace femus {
       }
       else {
         _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
-//         if(_mproc != mprocOld) {
-//           GetElement(true, _elem);
-        if(_mproc == _iproc) {
-          GetElementSerial(_elem);
-          updateXi(_elem, solVType, 1);
+        if(_mproc != mprocOld) {
+          GetElement();
+          if(_mproc == _iproc) {
+            FindLocalCoordinates(solVType, _aX, true);
+          }
+          else if(mprocOld == _iproc) {
+            _xi.resize(0);
+            std::vector < std::vector < std::vector < double > > >().swap(_aX);
+          }
         }
-        else if(mprocOld == _iproc) {
-          _xi.resize(0);
-        }
-        //}
       }
       std::cout << "step = " << step << std::endl;
       if(step == n) {
-	integrationIsOver = true;
-	std::cout<< "Integration is over, point in proc " << _mproc <<std::endl; 
+        integrationIsOver = true;
+        std::cout << "Integration is over, point in proc " << _mproc << std::endl;
       }
     }
 
@@ -1610,9 +1606,43 @@ namespace femus {
   }
 
 
+  void Marker::GetElement() {
+
+    unsigned mprocStart = _mproc;
+    
+    bool found = false;
+    while(found) {
+      if(_mproc == _iproc) {
+        GetElementSerial(_elem);
+      }
+      MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _mproc, PETSC_COMM_WORLD);
+      if(_elem == UINT_MAX) {
+        std::cout << " the marker has been advected outside the domain " << std::endl;
+        break;
+      }
+      else {
+        _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
+        if(_mproc == mprocStart) {
+          found = true;
+        }
+        else {
+          mprocStart = _mproc;
+        }
+      }
+    }
+  }
+
+
+
+
+
+
+
+
+
   void Marker::ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex,
-      const unsigned &solVType,  const unsigned &nDofsV,
-      const unsigned &ielType, std::vector < std::vector < double > > &a) {
+      const unsigned & solVType,  const unsigned & nDofsV,
+      const unsigned & ielType, std::vector < std::vector < double > > &a) {
 
     unsigned dim = _mesh->GetDimension();
     vector < vector < double > >  solV(dim);    // local solution
@@ -1631,7 +1661,7 @@ namespace femus {
   }
 
 
-  void Marker::updateVelocity(std::vector <double> & V, Solution* sol,
+  void Marker::updateVelocity(std::vector <double> & V, Solution * sol,
                               const vector < unsigned > &solVIndex, const unsigned & solVType,
                               std::vector < std::vector < double > > &a,  std::vector < double > &phi,
                               const bool & pcElemUpdate) {
@@ -1657,22 +1687,55 @@ namespace femus {
 
   }
 
-  void Marker::updateXi(const unsigned & _elem, const unsigned & solVType, const bool & initialGuess) {
+  void Marker::FindLocalCoordinates(const unsigned & solType, std::vector < std::vector < std::vector < double > > > &aX, const bool & pcElemUpdate) {
 
-    if(initialGuess == true) {
+    unsigned dim =  _mesh->GetDimension();
+    short unsigned elemType = _mesh->GetElementType(_elem);
+    if(pcElemUpdate) {
+      unsigned nDofs = _mesh->GetElementDofNumber(_elem, solType);
 
-      _xi.resize(_mesh->GetDimension());
+      //BEGIN extraction nodal coordinate values
+      std::vector< std::vector < double > > xv(dim);
 
-      short unsigned elemType = _mesh->GetElementType(_elem);
+      for(unsigned k = 0; k < dim; k++) {
+        xv[k].resize(nDofs);
+      }
+
+      for(unsigned i = 0; i < nDofs; i++) {
+        unsigned iDof  = _mesh->GetSolutionDof(i, _elem, 2);    // global to global mapping between coordinates node and coordinate dof
+        for(unsigned k = 0; k < dim; k++) {
+          xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
+        }
+      }
+      //END extraction
+
+      //BEGIN projection nodal to polynomial coefficients
+      aX.resize(solType + 1);
+      for(unsigned j = 0; j < solType + 1; j++) {
+        ProjectNodalToPolynomialCoefficients(aX[j], xv, elemType, j);
+      }
+      //END projection nodal to polynomial coefficients
+
+      //BEGIN find initial guess
+      _xi.resize(dim);
       for(int k = 0; k < _mesh->GetDimension(); k++) {
         _xi[k] = _initialGuess[elemType][k];
       }
-
+      //END find initial guess
     }
 
-    for(int itype = 0; itype <= solVType; itype++) {
-      InverseMapping(_elem, itype, _x, _xi);
+    //BEGIN Inverse mapping loop
+    for(unsigned j = 0; j < solType; j++) {
+      std::vector < double > phi;
+      std::vector < std::vector < double > > gradPhi;
+      bool convergence = false;
+      while(!convergence) {
+        GetPolynomialShapeFunctionGradient(phi, gradPhi, _xi, elemType, solType);
+        convergence = GetNewLocalCoordinates(_xi, _x, phi, gradPhi, aX[solType], dim,  phi.size());
+      }
     }
+    //END Inverse mapping loop
+
   }
 
 
