@@ -149,8 +149,8 @@ namespace femus {
 
     unsigned iel = initialElem;
 
-    unsigned ielProc = (initialElem < _mesh->_elementOffset[_nprocs])? 
-			_mesh->IsdomBisectionSearch(iel, 3) : _nprocs;
+    unsigned ielProc = (initialElem < _mesh->_elementOffset[_nprocs]) ?
+                       _mesh->IsdomBisectionSearch(iel, 3) : _nprocs;
 
     if(useInitialSearch || _iproc != ielProc) {
 
@@ -286,7 +286,7 @@ namespace femus {
 
       if(sumFlag == 0) {   // all the processes beleive that the marker is outside the domain
         std::cout << "Marker is outside the domain" << std::endl;
-	_mproc = _nprocs;
+        _mproc = _nprocs;
         _elem = UINT_MAX;
 
 
@@ -367,12 +367,12 @@ namespace femus {
       //END process exchange
 
     }
-    
-    
-    
+
+
+
     MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _mproc, PETSC_COMM_WORLD);
-    std::cout <<"The marker belongs to process "<< _mproc<<" and is in element " << _elem  <<std::endl;
-    
+    std::cout << "The marker belongs to process " << _mproc << " and is in element " << _elem  << std::endl;
+
   }
 
 
@@ -430,7 +430,7 @@ namespace femus {
 
 
 
-  
+
 
 
   int Marker::FastForward(const unsigned &iel) {
@@ -1222,20 +1222,20 @@ namespace femus {
 
 
 
-  
+
 
 
 
   void Marker::InverseMapping(const unsigned & iel, const unsigned & solType,
                               const std::vector< double > &x, std::vector< double > &xi) {
 
-    std::cout << " ----------------------  Outputs of the inverse mapping ---------------------- " << std::endl;
+    //std::cout << " ----------------------  Outputs of the inverse mapping ---------------------- " << std::endl;
 
     unsigned dim =  _mesh->GetDimension();
     unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
     short unsigned ielType = _mesh->GetElementType(iel);
 
-    std::cout << "solType = " << solType << " , " << "nDofs =" <<  nDofs << std::endl;
+    //std::cout << "solType = " << solType << " , " << "nDofs =" <<  nDofs << std::endl;
 
     //BEGIN extraction nodal coordinate values
     std::vector< std::vector < double > > xv(dim);
@@ -1428,11 +1428,11 @@ namespace femus {
     bool integrationIsOver = false;
 
     while(integrationIsOver == false) {
-      
+
       unsigned mprocOld = _mproc;
       if(_iproc == _mproc) {
-	pcElemUpdate = true ;
-	//single process
+        pcElemUpdate = true ;
+        //single process
         while(step < n) {
           std::cout << " -----------------------------" << "step = " <<  step << " -----------------------------" << std::endl;
 
@@ -1440,7 +1440,7 @@ namespace femus {
 
           updateVelocity(V, sol, solVIndex, solVType, a, phi, pcElemUpdate);
 	  
-	  for(unsigned i = 0; i < dim; i++) {
+          for(unsigned i = 0; i < dim; i++) {
             _x[i] += V[i] * h;
           }
 
@@ -1470,49 +1470,44 @@ namespace femus {
           }
           else if(iel != _elem) {
             pcElemUpdate = true;
-	    short unsigned elemType = _mesh->GetElementType(_elem);
-	    for(int k = 0; k < _mesh->GetDimension(); k++) {
-	      _xi[k] = _initialGuess[elemType][k];
-	    }
+            updateXi(_elem, solVType, 1);
           }
-          
-          for(int itype = 0; itype <= solVType; itype++) {  
-	    InverseMapping(_elem, itype, _x, _xi);
-	  }
+
+          else {
+            pcElemUpdate = true; //added this
+            updateXi(_elem, solVType, 0);
+          }
         }
       }
       // all processes
       MPI_Bcast(& _elem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& _x[0], dim, MPI_DOUBLE, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& step, 1, MPI_DOUBLE, mprocOld, PETSC_COMM_WORLD);
-      
-      
-      
+
+
+
       if(_elem == UINT_MAX) {
         std::cout << " the marker has been advected outside the domain " << std::endl;
         break;
       }
       else {
         _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
-        if(_mproc != mprocOld) {
-          GetElement(true, _elem);
-	  if(_mproc == _iproc){
-	    _xi.resize(_mesh->GetDimension());
-	    short unsigned elemType = _mesh->GetElementType(_elem);
-	    for(int k = 0; k < _mesh->GetDimension(); k++) {
-	      _xi[k] = _initialGuess[elemType][k];
-	    }
-	    for(int itype = 0; itype <= _solType; itype++) {  //why is there this for on type?
-	      InverseMapping(_elem, itype, _x, _xi);
-	    }
-	  }
-	  else if (mprocOld == _iproc){
-	    _xi.resize(0);
-	  }	  
+//         if(_mproc != mprocOld) {
+//           GetElement(true, _elem);
+        if(_mproc == _iproc) {
+          GetElementSerial(_elem);
+          updateXi(_elem, solVType, 1);
         }
+        else if(mprocOld == _iproc) {
+          _xi.resize(0);
+        }
+        //}
       }
       std::cout << "step = " << step << std::endl;
-      if(step == n) integrationIsOver = true;
+      if(step == n) {
+	integrationIsOver = true;
+	std::cout<< "Integration is over, point in proc " << _mproc <<std::endl; 
+      }
     }
 
 
@@ -1646,13 +1641,13 @@ namespace femus {
     short unsigned ielType = _mesh->GetElementType(_elem);
 
     unsigned dim = _mesh->GetDimension();
-    
+
     if(pcElemUpdate) {
       ProjectVelocityCoefficients(sol, solVIndex, solVType, nDofsV, ielType, a);
     }
-    
+
     GetPolynomialShapeFunction(phi, _xi, ielType, solVType);
-      
+
     V.assign(dim, 0.);
     for(unsigned i = 0; i < dim; i++) {
       for(unsigned j = 0; j < nDofsV; j++) {
@@ -1662,10 +1657,27 @@ namespace femus {
 
   }
 
+  void Marker::updateXi(const unsigned & _elem, const unsigned & solVType, const bool & initialGuess) {
 
+    if(initialGuess == true) {
+
+      _xi.resize(_mesh->GetDimension());
+
+      short unsigned elemType = _mesh->GetElementType(_elem);
+      for(int k = 0; k < _mesh->GetDimension(); k++) {
+        _xi[k] = _initialGuess[elemType][k];
+      }
+
+    }
+
+    for(int itype = 0; itype <= solVType; itype++) {
+      InverseMapping(_elem, itype, _x, _xi);
+    }
+  }
 
 
 }
+
 
 
 

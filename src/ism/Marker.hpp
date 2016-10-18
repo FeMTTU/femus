@@ -76,6 +76,8 @@ namespace femus {
      void updateVelocity(std::vector <double> & V, Solution* sol, 
 			 const vector < unsigned > &solVIndex, const unsigned & solVType,
                          std::vector < std::vector < double > > &a,  std::vector < double > &phi, const bool & pcElemUpdate);
+     
+      void updateXi(const unsigned & _elem, const unsigned & solVType, const bool & initialGuess);
 
       void ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex, 
 				       const unsigned &solVType,  const unsigned &nDofsV,
