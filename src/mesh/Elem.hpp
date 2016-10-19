@@ -264,9 +264,7 @@ namespace femus {
 
       std::vector < MyVector<unsigned> > _interfaceElement;
       std::vector < MyMatrix<unsigned> > _interfaceLocalDof;
-      std::vector < MyMatrix<unsigned> > _interfaceDof;
-      std::vector < MyMatrix<short unsigned> > _hangingNode;
-      
+      std::vector < std::vector < MyMatrix<unsigned> > > _interfaceDof;
       std::vector < std::vector < MyMatrix< double > > > _interfaceNodeCoordinates;
       
 

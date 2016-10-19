@@ -577,9 +577,11 @@ namespace femus {
 
     _interfaceElement.resize(_level + 1);
     _interfaceLocalDof.resize(_level + 1);
-    _interfaceDof.resize(_level + 1);
+    _interfaceDof.resize(3);
+    for(unsigned i = 0; i < 3; i++) {
+      _interfaceDof[i].resize(_level + 1);
+    }
     _interfaceNodeCoordinates.resize(_level + 1);
-    _hangingNode.resize(_level + 1);
     unsigned dim = msh->GetDimension();
 
     for(unsigned ilevel = 0; ilevel <= _level; ilevel++) {
@@ -626,63 +628,76 @@ namespace femus {
       std::cout << _interfaceLocalDof[ilevel] << std::endl;
       //END interface node search
 
-      //BEGIN interface node coordinates and global (soltype 2) search
+      //BEGIN interface node coordinates and global (soltype) search
       MyVector <unsigned> rowSize = _interfaceLocalDof[ilevel].getRowSize();
+      for(unsigned soltype=0; soltype < 3;soltype++){
+	_interfaceDof[soltype][ilevel] = MyMatrix< unsigned > (rowSize, UINT_MAX);
+	for(unsigned i = _interfaceLocalDof[ilevel].begin(); i < _interfaceLocalDof[ilevel].end(); i++) {
+	  unsigned iel = _interfaceElement[ilevel][i];
+	  unsigned counter = 0;
+	  for(unsigned j = _interfaceLocalDof[ilevel].begin(i); j < _interfaceLocalDof[ilevel].end(i); j++) {
+	    unsigned jloc = _interfaceLocalDof[ilevel][i][j];
+	    if(jloc < GetElementDofNumber(iel,soltype) ){
+	      unsigned jdof  = msh->GetSolutionDof(jloc, iel, soltype);
+	      _interfaceDof[soltype][ilevel][i][counter++] = jdof;
+	    }
+	    else{
+	      break;
+	    }
+	  }
+	}
+	_interfaceDof[soltype][ilevel].shrinkToFit(UINT_MAX);
+	std::cout << _interfaceDof[2][ilevel] << std::endl;
+      }
 
-      _interfaceDof[ilevel] = MyMatrix< unsigned > (rowSize, 0.);
       _interfaceNodeCoordinates[ilevel].resize(dim);
       for(unsigned k = 0; k < dim; k++) {
         _interfaceNodeCoordinates[ilevel][k] = MyMatrix< double > (rowSize, 0.);
       }
-      _hangingNode[ilevel] = MyMatrix< short unsigned > (rowSize, 1);
-
       for(unsigned i = _interfaceLocalDof[ilevel].begin(); i < _interfaceLocalDof[ilevel].end(); i++) {
         unsigned iel = _interfaceElement[ilevel][i];
         for(unsigned j = _interfaceLocalDof[ilevel].begin(i); j < _interfaceLocalDof[ilevel].end(i); j++) {
           unsigned jnode = _interfaceLocalDof[ilevel][i][j];
           unsigned xDof  = msh->GetSolutionDof(jnode, iel, 2);
-          _interfaceDof[ilevel][i][j] = xDof;
           for(unsigned k = 0; k < dim; k++) {
             _interfaceNodeCoordinates[ilevel][k][i][j] = (*msh->_topology->_Sol[k])(xDof);
           }
         }
       }
 
-      std::cout << _interfaceDof[ilevel] << std::endl;
-
       //END interface node coordinates and global (soltype 2) search
     }
 
 
-    
+
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
     unsigned solTypeMax = 2;
-    
+
     std::map < unsigned,  std::map < unsigned, double  > > restriction;
-    
+
     std::vector < std::vector <double > > xv(dim);
     for(int ilevel = 0; ilevel < _level; ilevel++) {
       std::cout << "ilevel=" << ilevel << std::endl;
       for(int jlevel = ilevel + 1; jlevel <= _level; jlevel++) {
         std::cout << "jlevel=" << jlevel << std::endl;
 
-        MyMatrix < unsigned > lprocInterfaceDof = _interfaceDof[jlevel];
-        std::vector < MyMatrix < double > > lprocInterfaceNodeCoordinates(dim);
+        MyMatrix < unsigned > jlevelInterfaceDof = _interfaceDof[2][jlevel];
+        std::vector < MyMatrix < double > > jlevelInterfaceNodeCoordinates(dim);
         for(unsigned d = 0; d < dim; d++) {
-          lprocInterfaceNodeCoordinates[d] = _interfaceNodeCoordinates[jlevel][d];
+          jlevelInterfaceNodeCoordinates[d] = _interfaceNodeCoordinates[jlevel][d];
         }
 
         for(unsigned lproc = 0; lproc < _nprocs; lproc++) {
-          lprocInterfaceDof.broadcast(lproc);
+          jlevelInterfaceDof.broadcast(lproc);
           for(unsigned d = 0; d < dim; d++) {
-            lprocInterfaceNodeCoordinates[d].broadcast(lproc);
+            jlevelInterfaceNodeCoordinates[d].broadcast(lproc);
           }
           std::map< unsigned, bool> candidateNodes;
           std::map< unsigned, bool> elementNodes;
 
-          for(unsigned i = _interfaceDof[ilevel].begin(); i < _interfaceDof[ilevel].end(); i++) {
-            
+          for(unsigned i = _interfaceLocalDof[ilevel].begin(); i < _interfaceLocalDof[ilevel].end(); i++) {
+
             candidateNodes.clear();
 
             std::vector < std::vector < std::vector <double > > > aP(3);
@@ -692,11 +707,11 @@ namespace femus {
             short unsigned ielType = _elementType[iel];
 
             elementNodes.clear();
-	    for(unsigned j = 0; j < GetElementDofNumber(iel, solTypeMax); j++) {
+            for(unsigned j = 0; j < GetElementDofNumber(iel, solTypeMax); j++) {
               unsigned jdof  = msh->GetSolutionDof(j, iel, solTypeMax);
               elementNodes[jdof] = true;
-	    }
-	    
+            }
+
             unsigned ndofs = GetElementDofNumber(iel, 2);
             for(int d = 0; d < dim; d++) {
               xv[d].resize(ndofs);
@@ -720,14 +735,14 @@ namespace femus {
               r2 = (r2 > d2) ? r2 : d2;
             }
             r2 *= 1.01;
-            for(unsigned k = lprocInterfaceDof.begin(); k < lprocInterfaceDof.end(); k++) {
-              for(unsigned l = lprocInterfaceDof.begin(k); l < lprocInterfaceDof.end(k); l++) {
-                unsigned ldof = lprocInterfaceDof[k][l];
-                if(candidateNodes.find(lprocInterfaceDof[k][l]) == candidateNodes.end() || candidateNodes[ldof] != false) {
+            for(unsigned k = jlevelInterfaceDof.begin(); k < jlevelInterfaceDof.end(); k++) {
+              for(unsigned l = jlevelInterfaceDof.begin(k); l < jlevelInterfaceDof.end(k); l++) {
+                unsigned ldof = jlevelInterfaceDof[k][l];
+                if(candidateNodes.find(ldof) == candidateNodes.end() || candidateNodes[ldof] != false) {
                   double d2 = 0.;
                   std::vector<double> xl(dim);
                   for(int d = 0; d < dim; d++) {
-                    xl[d] = lprocInterfaceNodeCoordinates[d][k][l];
+                    xl[d] = jlevelInterfaceNodeCoordinates[d][k][l];
                     d2 += (xl[d] - xc[d]) * (xl[d] - xc[d]);
                   }
                   if(d2 < r2) {
@@ -769,50 +784,51 @@ namespace femus {
                         }
                       }
                       bool insideDomain = CheckIfPointIsInsideReferenceDomain(xi, ielType, 0.001);
-		      if(insideDomain){
-			for(unsigned j = _interfaceLocalDof[ilevel].begin(i); j < _interfaceLocalDof[ilevel].end(i); j++) { 
-			  unsigned jlocDof = _interfaceLocalDof[ilevel][i][j];
-			  double value = _fe[ielType][2]->eval_phi(_fe[ielType][2]->GetIND(jlocDof), &xi[0]);
-			  if(fabs(value) >= 1.0e-10){
-			    restriction[_interfaceDof[ilevel][i][j]][_interfaceDof[ilevel][i][j]] = 1.;
-			    candidateNodes[lprocInterfaceDof[k][l]] = true;
-			    restriction[_interfaceDof[ilevel][i][j]][lprocInterfaceDof[k][l]] = value;
-			  }
-			}
-		      }
-		      else{
-			candidateNodes[lprocInterfaceDof[k][l]] = false;
-		      }
+                      if(insideDomain) {
+                        for(unsigned j = _interfaceLocalDof[ilevel].begin(i); j < _interfaceLocalDof[ilevel].end(i); j++) {
+                          unsigned jloc = _interfaceLocalDof[ilevel][i][j];
+                          double value = _fe[ielType][2]->eval_phi(_fe[ielType][2]->GetIND(jloc), &xi[0]);
+                          if(fabs(value) >= 1.0e-10) {
+                            unsigned jdof = msh->GetSolutionDof(jloc, iel, solTypeMax);
+                            restriction[jdof][jdof] = 1.;
+                            restriction[jdof][ldof] = value;
+                            candidateNodes[ldof] = true;
+                          }
+                        }
+                      }
+                      else {
+                        candidateNodes[ldof] = false;
+                      }
                     }
                     else {
-                      candidateNodes[lprocInterfaceDof[k][l]] = false;
+                      candidateNodes[ldof] = false;
                     }
                   }
                 }
               }
             }
           }
-          lprocInterfaceDof.clearBroadcast();
+          jlevelInterfaceDof.clearBroadcast();
           for(unsigned d = 0; d < dim; d++) {
-            lprocInterfaceNodeCoordinates[d].clearBroadcast();
+            jlevelInterfaceNodeCoordinates[d].clearBroadcast();
           }
         }
       }
     }
-    
-    for(std::map<unsigned, std::map<unsigned,double> >::iterator it1 = restriction.begin(); it1 != restriction.end(); it1++) {
-      std::cout << it1->first <<"\t";
-      for(std::map<unsigned,double> ::iterator it2 = restriction[it1->first].begin(); it2 != restriction[it1->first].end(); it2++) {
-	std::cout << it2 ->first << " (" <<  it2->second << ")  ";
+
+    for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction.begin(); it1 != restriction.end(); it1++) {
+      std::cout << it1->first << "\t";
+      for(std::map<unsigned, double> ::iterator it2 = restriction[it1->first].begin(); it2 != restriction[it1->first].end(); it2++) {
+        std::cout << it2 ->first << " (" <<  it2->second << ")  ";
       }
       std::cout << std::endl;
     }
-    
-    
 
-    
-    
-    
+
+
+
+
+
   }
 
 } //end namespace femus
