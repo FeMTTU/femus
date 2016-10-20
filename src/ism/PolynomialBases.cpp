@@ -128,9 +128,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-   
+
     unsigned nDofs = quadNumberOfDofs[solType];
-    if( nDofs > aN[0].size() ) {
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectQuadNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -294,9 +294,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    
+
     unsigned nDofs = triNumberOfDofs[solType];
-    if( nDofs > aN[0].size() ) {
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectTriNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -442,9 +442,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    
+
     unsigned nDofs = hexNumberOfDofs[solType];
-    if( nDofs > aN[0].size() ) {
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectHexNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -816,9 +816,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    
+
     unsigned nDofs = tetNumberOfDofs[solType];
-    if( nDofs > aN[0].size() ) {
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectTetNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -1029,9 +1029,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    
+
     unsigned nDofs = wedgeNumberOfDofs[solType];
-    if( nDofs > aN[0].size() ) {
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectWedgeNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -1394,7 +1394,10 @@ namespace femus {
 
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
                               const std::vector < std::vector <double > > &gradPhi,
-                              const std::vector < std::vector <double > > &a, const unsigned & dim, const unsigned & nDofs) {
+                              const std::vector < std::vector <double > > &a) {
+
+    const unsigned dim = gradPhi[0].size();
+    const unsigned  nDofs = phi.size();
 
     bool convergence = false;
     std::vector < double > F(dim, 0.);
@@ -1417,7 +1420,7 @@ namespace femus {
 
 
     std::vector < std::vector < double > >  Jm1;
-    inverseMatrix(J, Jm1);
+    InverseMatrix(J, Jm1);
 
     double delta2 = 0.;
 
@@ -1439,7 +1442,7 @@ namespace femus {
     return convergence;
   }
 
-  void inverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA) {
+  void InverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA) {
 
     unsigned dim = A.size();
     invA.resize(dim);
@@ -1500,4 +1503,60 @@ namespace femus {
       abort();
     }
   }
+
+  void GetConvexHullSphere(const std::vector< std::vector < double > > &xv, std::vector <double> &xc, double & r) {
+    unsigned dim = xv.size();
+    unsigned ndofs = xv[0].size();
+    xc.resize(dim, 0.);
+    for(int d = 0; d < dim; d++) {
+      for(int i = 0; i < ndofs; i++) {
+        xc[d] += xv[d][i];
+      }
+      xc[d] /= ndofs;
+    }
+    double r2 = 0.;
+    for(unsigned j = 0; j < ndofs; j++) {
+      double d2 = 0.;
+      for(int d = 0; d < dim; d++) {
+        d2 += (xv[d][j] - xc[d]) * (xv[d][j] - xc[d]);
+      }
+      r2 = (r2 > d2) ? r2 : d2;
+    }
+    r2 *= 1.01;
+    r = sqrt(r2);
+  }
+
+  unsigned GetClosestPoint(const std::vector< std::vector < double > > &xv, std::vector <double> &x) {
+
+    unsigned dim = xv.size();
+    unsigned ndofs = xv[0].size();
+    unsigned jmin = ndofs;
+    double d2min = 1.0e100;
+    for(unsigned j = 0; j < ndofs; j++) {
+      double d2 = 0;
+      for(int d = 0; d < dim; d++) {
+        d2 += (xv[d][j] - x[d]) * (xv[d][j] - x[d]);
+      }
+      if(d2 < d2min) {
+        d2min = d2;
+        jmin = j;
+      }
+    }
+    return jmin;
+  }
+
+  void GetInverseMapping(const unsigned &solType, short unsigned &ielType, const std::vector < std::vector < std::vector <double > > > &aP,
+                         const std::vector <double > &xl, std::vector <double > &xi) {
+
+    for(short unsigned jtype = 0; jtype < solType; jtype++) {
+      std::vector < double > phi;
+      std::vector < std::vector < double > > gradPhi;
+      bool convergence = false;
+      while(!convergence) {
+        GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, jtype);
+        convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[jtype]);
+      }
+    }
+  }
+
 }

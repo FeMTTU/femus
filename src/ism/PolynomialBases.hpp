@@ -66,8 +66,13 @@ namespace femus {
 
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
                               const std::vector < std::vector <double > > &gradPhi,
-                              const std::vector < std::vector <double > > &a, const unsigned & dim, const unsigned & nDofs);
+                              const std::vector < std::vector <double > > &a);
 
-  void inverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA);
+  void InverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA);
+  
+  void GetConvexHullSphere(const std::vector< std::vector < double > > &xv, std::vector <double> &xc, double & r);
+  unsigned GetClosestPoint(const std::vector< std::vector < double > > &xv, std::vector <double> &x);
+  void GetInverseMapping(const unsigned &solType, short unsigned &ielType, const std::vector < std::vector < std::vector <double > > > &aP,
+                         const std::vector <double > &xl, std::vector <double > &xi) ;
 }
 #endif

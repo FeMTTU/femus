@@ -498,7 +498,7 @@ namespace femus {
 
     std::vector < std::vector < double > >  Jm1;
 
-    inverseMatrix(J, Jm1);
+    InverseMatrix(J, Jm1);
 
     std::vector < double > vt(dim, 0.);
     for(unsigned i = 0; i < dim; i++) {
@@ -1198,7 +1198,7 @@ namespace femus {
     }
 
     std::vector < std::vector < double > >  hessFm1;
-    inverseMatrix(hessF, hessFm1);
+    InverseMatrix(hessF, hessFm1);
 
     double delta2 = 0.;
 
@@ -1288,7 +1288,7 @@ namespace femus {
       GetPolynomialShapeFunctionGradientHessian(phi, gradPhi, hessPhi, xi, ielType, solType);
 
       if(solType == 0) {
-        convergence = GetNewLocalCoordinates(xi, x, phi, gradPhi, a, dim, nDofs);
+        convergence = GetNewLocalCoordinates(xi, x, phi, gradPhi, a);
       }
       else {
         counter++;
@@ -1731,7 +1731,7 @@ namespace femus {
       bool convergence = false;
       while(!convergence) {
         GetPolynomialShapeFunctionGradient(phi, gradPhi, _xi, elemType, solType);
-        convergence = GetNewLocalCoordinates(_xi, _x, phi, gradPhi, aX[solType], dim,  phi.size());
+        convergence = GetNewLocalCoordinates(_xi, _x, phi, gradPhi, aX[solType]);
       }
     }
     //END Inverse mapping loop

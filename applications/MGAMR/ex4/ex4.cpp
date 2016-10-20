@@ -298,6 +298,7 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "quadratic", variablesToBePrinted);
+  vtkIO.Write(DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted);
 
   mlMsh.PrintInfo();
 
