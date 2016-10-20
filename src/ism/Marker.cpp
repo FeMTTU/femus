@@ -132,6 +132,37 @@ const unsigned faceTriangleNodes[6][3][6][8][4] = { // elementType - solType - n
 
 namespace femus {
 
+  const double Marker::_a[4][4][4] = {
+    { {} // first order
+    },
+    { {}, // second order (Heun's)
+      {1., 0.}
+    },
+    { {}, // third-order method
+      {0.5},
+      { -1., 2}
+    },
+    { {}, // fourth-order method
+      {0.5},
+      {0., 0.5},
+      {0., 0., 1.}
+    }
+  };
+
+  const double Marker::_b[4][4] = {
+    {1.}, // first order
+    {0.5, 0.5}, // second order (Heun's)
+    {1. / 6., 2. / 3., 1. / 6.}, // third-order method
+    {1. / 6., 1. / 3., 1. / 3., 1. / 6.} // fourth-order method
+  };
+
+  const double Marker::_c[4][4] = {
+    {0.}, // first order
+    {0., 1.}, // second order (Heun's)
+    {0., 0.5, 1.}, // third-order method
+    {0., 0.5, 0.5, 1.} // fourth-order method
+  };
+
   const double Marker::_initialGuess[6][3] = {
     {0., 0., 0.},
     {0.25, 0.25, 0.25},
@@ -1423,9 +1454,18 @@ namespace femus {
     // determine the step size
     double h = T / n;
     //let's take it easy and just apply Euler's method
-    double step = 0.;
+
     bool  pcElemUpdate ;
     bool integrationIsOver = false;
+
+    unsigned order = 1;
+    unsigned step = 0.;
+
+    _K.resize(order);
+
+    for(unsigned k = 0; k < order; k++) {
+      _K[k].resize(dim);
+    }
 
     while(integrationIsOver == false) {
 
@@ -1433,15 +1473,51 @@ namespace femus {
       if(_iproc == _mproc) {
         pcElemUpdate = true ;
         //single process
-        while(step < n) {
+        while(step < n * order) {
+
+          unsigned tstep = step / order;
+          unsigned istep = step % order;
+
+	   std::vector< double > xk(dim);
+	  
+          if(istep == 0) {
+	    for(unsigned i = 0; i < dim; i++) {
+	      xk[i] = _x[i];
+	    }
+            for(unsigned k = 0; k < order; k++) {
+              _K[k].assign(dim, 0.);
+            }
+          }
+
+
           std::cout << " -----------------------------" << "step = " <<  step << " -----------------------------" << std::endl;
           std::cout << " _iproc = " << _iproc << std::endl;
 
-          updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate);
+          updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); //send xk
+
           for(unsigned i = 0; i < dim; i++) {
-            _x[i] += V[i] * h;
+            _K[istep][i] = V[i] * h;
           }
+          
+          	  
           step++;
+	  istep++;
+	  
+	  if(istep < order){
+	    for(unsigned i = 0; i < dim; i++) {
+	      for(unsigned j = 0; j < order; j++){
+		xk[i] += _a[order - 1][istep][j] * _K[j][i];
+	      }
+	    }
+	  }
+	  else if (istep == order){
+	    for(unsigned i = 0; i < dim; i++) {
+	      for(unsigned j = 0; j < order; j++){
+		_x[i] += _b[order - 1][j] * _K[j][i];
+	      }
+	    }
+	  }
+	  
 
           //BEGIN TO BE REMOVED
           for(unsigned i = 0; i < dim; i++) {
@@ -1478,7 +1554,7 @@ namespace femus {
       // all processes
       MPI_Bcast(& _elem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& _x[0], dim, MPI_DOUBLE, mprocOld, PETSC_COMM_WORLD);
-      MPI_Bcast(& step, 1, MPI_DOUBLE, mprocOld, PETSC_COMM_WORLD);
+      MPI_Bcast(& step, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
 
 
 
@@ -1609,7 +1685,7 @@ namespace femus {
   void Marker::GetElement() {
 
     unsigned mprocStart = _mproc;
-    
+
     bool found = false;
     while(found) {
       if(_mproc == _iproc) {

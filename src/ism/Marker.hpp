@@ -94,6 +94,12 @@ namespace femus {
       static const double _initialGuess[6][3];
       
       std::vector < std::vector < std::vector < double > > > _aX;
+      
+      std::vector < std::vector < double > > _K;
+            
+      static const double _a[4][4][4];
+      static const double _b[4][4];
+      static const double _c[4][4];
 
   };
 } //end namespace femus
