@@ -262,12 +262,6 @@ namespace femus {
       MyMatrix <unsigned> _elementNearVertex;
       MyMatrix <unsigned> _elementNearElement;
 
-      std::vector < MyVector<unsigned> > _interfaceElement;
-      std::vector < MyMatrix<unsigned> > _interfaceLocalDof;
-      std::vector < std::vector < MyMatrix<unsigned> > > _interfaceDof;
-      std::vector < std::vector < MyMatrix< double > > > _interfaceNodeCoordinates;
-      
-
   };
 
 //linear, quadratic, biquadratic, picewise costant, picewise linear discontinuous

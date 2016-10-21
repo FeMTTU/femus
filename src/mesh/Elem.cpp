@@ -575,39 +575,46 @@ namespace femus {
 
   void elem::GetHangingElementAndNodes(Mesh *msh) {
 
-    _interfaceElement.resize(_level + 1);
-    _interfaceLocalDof.resize(_level + 1);
-    _interfaceDof.resize(3);
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > restriction(3);
+    
+    std::vector < MyVector<unsigned> > interfaceElement;
+    std::vector < MyMatrix<unsigned> > interfaceLocalDof;
+    std::vector < std::vector < MyMatrix<unsigned> > > interfaceDof;
+    std::vector < std::vector < MyMatrix< double > > > interfaceNodeCoordinates;
+
+    interfaceElement.resize(_level + 1);
+    interfaceLocalDof.resize(_level + 1);
+    interfaceDof.resize(3);
     for(unsigned i = 0; i < 3; i++) {
-      _interfaceDof[i].resize(_level + 1);
+      interfaceDof[i].resize(_level + 1);
     }
-    _interfaceNodeCoordinates.resize(_level + 1);
+    interfaceNodeCoordinates.resize(_level + 1);
     unsigned dim = msh->GetDimension();
 
     for(unsigned ilevel = 0; ilevel <= _level; ilevel++) {
       //BEGIN interface element search
-      _interfaceElement[ilevel] = MyVector <unsigned> (_elementOwned);
+      interfaceElement[ilevel] = MyVector <unsigned> (_elementOwned);
       unsigned counter = 0;
       for(unsigned i = _elementLevel.begin(); i < _elementLevel.end(); i++) {
         if(ilevel == _elementLevel[i]) {
           for(unsigned j = _elementNearFace.begin(i); j < _elementNearFace.end(i); j++) {
             if(-1 == _elementNearFace[i][j]) {
-              _interfaceElement[ilevel][counter] = i;
+              interfaceElement[ilevel][counter] = i;
               counter++;
               break;
             }
           }
         }
       }
-      _interfaceElement[ilevel].resize(counter);
-      _interfaceElement[ilevel].stack();
+      interfaceElement[ilevel].resize(counter);
+      interfaceElement[ilevel].stack();
       //END interface element search
 
       //BEGIN interface node search
-      std::vector< unsigned > offset = _interfaceElement[ilevel].getOffset();
-      _interfaceLocalDof[ilevel] = MyMatrix <unsigned>(offset, NVE[0][2], UINT_MAX);
-      for(unsigned i = _interfaceElement[ilevel].begin(); i < _interfaceElement[ilevel].end(); i++) {
-        unsigned iel =  _interfaceElement[ilevel][i];
+      std::vector< unsigned > offset = interfaceElement[ilevel].getOffset();
+      interfaceLocalDof[ilevel] = MyMatrix <unsigned>(offset, NVE[0][2], UINT_MAX);
+      for(unsigned i = interfaceElement[ilevel].begin(); i < interfaceElement[ilevel].end(); i++) {
+        unsigned iel =  interfaceElement[ilevel][i];
         std::map <unsigned, bool> ldofs;
         for(unsigned jface = _elementNearFace.begin(iel); jface < _elementNearFace.end(iel); jface++) {
           if(-1 == _elementNearFace[iel][jface]) {
@@ -619,49 +626,47 @@ namespace femus {
         }
         unsigned j = 0;
         for(std::map<unsigned, bool>::iterator it = ldofs.begin(); it != ldofs.end(); it++) {
-          _interfaceLocalDof[ilevel][i][j] = it->first;
+          interfaceLocalDof[ilevel][i][j] = it->first;
           j++;
         }
       }
-      _interfaceLocalDof[ilevel].shrinkToFit(UINT_MAX);
+      interfaceLocalDof[ilevel].shrinkToFit(UINT_MAX);
       //END interface node search
 
       //BEGIN interface node dof global search, one for each soltype
-      MyVector <unsigned> rowSize = _interfaceLocalDof[ilevel].getRowSize();
+      MyVector <unsigned> rowSize = interfaceLocalDof[ilevel].getRowSize();
       for(unsigned soltype = 0; soltype < 3; soltype++) {
-        _interfaceDof[soltype][ilevel] = MyMatrix< unsigned > (rowSize, UINT_MAX);
-        for(unsigned i = _interfaceLocalDof[ilevel].begin(); i < _interfaceLocalDof[ilevel].end(); i++) {
-          unsigned iel = _interfaceElement[ilevel][i];
+        interfaceDof[soltype][ilevel] = MyMatrix< unsigned > (rowSize, UINT_MAX);
+        for(unsigned i = interfaceLocalDof[ilevel].begin(); i < interfaceLocalDof[ilevel].end(); i++) {
+          unsigned iel = interfaceElement[ilevel][i];
           unsigned counter = 0;
-          for(unsigned j = _interfaceLocalDof[ilevel].begin(i); j < _interfaceLocalDof[ilevel].end(i); j++) {
-            unsigned jloc = _interfaceLocalDof[ilevel][i][j];
+          for(unsigned j = interfaceLocalDof[ilevel].begin(i); j < interfaceLocalDof[ilevel].end(i); j++) {
+            unsigned jloc = interfaceLocalDof[ilevel][i][j];
             if(jloc < GetElementDofNumber(iel, soltype)) {
               unsigned jdof  = msh->GetSolutionDof(jloc, iel, soltype);
-              _interfaceDof[soltype][ilevel][i][counter++] = jdof;
+              interfaceDof[soltype][ilevel][i][counter++] = jdof;
             }
             else {
               break;
             }
           }
         }
-        _interfaceDof[soltype][ilevel].shrinkToFit(UINT_MAX);
-        std::cout << "solution type = " << soltype << std::endl;
-        std::cout << _interfaceDof[soltype][ilevel] << std::endl;
+        interfaceDof[soltype][ilevel].shrinkToFit(UINT_MAX);
       }
       //END interface node dof global search, one for each soltype
 
       //BEGIN interface node coordinates
-      _interfaceNodeCoordinates[ilevel].resize(dim);
+      interfaceNodeCoordinates[ilevel].resize(dim);
       for(unsigned k = 0; k < dim; k++) {
-        _interfaceNodeCoordinates[ilevel][k] = MyMatrix< double > (rowSize, 0.);
+        interfaceNodeCoordinates[ilevel][k] = MyMatrix< double > (rowSize, 0.);
       }
-      for(unsigned i = _interfaceLocalDof[ilevel].begin(); i < _interfaceLocalDof[ilevel].end(); i++) {
-        unsigned iel = _interfaceElement[ilevel][i];
-        for(unsigned j = _interfaceLocalDof[ilevel].begin(i); j < _interfaceLocalDof[ilevel].end(i); j++) {
-          unsigned jnode = _interfaceLocalDof[ilevel][i][j];
+      for(unsigned i = interfaceLocalDof[ilevel].begin(); i < interfaceLocalDof[ilevel].end(); i++) {
+        unsigned iel = interfaceElement[ilevel][i];
+        for(unsigned j = interfaceLocalDof[ilevel].begin(i); j < interfaceLocalDof[ilevel].end(i); j++) {
+          unsigned jnode = interfaceLocalDof[ilevel][i][j];
           unsigned xDof  = msh->GetSolutionDof(jnode, iel, 2);
           for(unsigned k = 0; k < dim; k++) {
-            _interfaceNodeCoordinates[ilevel][k][i][j] = (*msh->_topology->_Sol[k])(xDof);
+            interfaceNodeCoordinates[ilevel][k][i][j] = (*msh->_topology->_Sol[k])(xDof);
           }
         }
       }
@@ -669,18 +674,13 @@ namespace femus {
     }
 
     for(unsigned soltype = 0; soltype < 3; soltype++) {
-
-      std::map < unsigned,  std::map < unsigned, double  > > restriction;
-
       for(int ilevel = 0; ilevel < _level; ilevel++) {
-        std::cout << "ilevel=" << ilevel << std::endl;
         for(int jlevel = ilevel + 1; jlevel <= _level; jlevel++) {
-          std::cout << "jlevel=" << jlevel << std::endl;
 
-          MyMatrix < unsigned > jlevelInterfaceDof = _interfaceDof[soltype][jlevel];
+          MyMatrix < unsigned > jlevelInterfaceDof = interfaceDof[soltype][jlevel];
           std::vector < MyMatrix < double > > jlevelInterfaceNodeCoordinates(dim);
           for(unsigned d = 0; d < dim; d++) {
-            jlevelInterfaceNodeCoordinates[d] = _interfaceNodeCoordinates[jlevel][d];
+            jlevelInterfaceNodeCoordinates[d] = interfaceNodeCoordinates[jlevel][d];
           }
 
           for(unsigned lproc = 0; lproc < _nprocs; lproc++) {
@@ -691,14 +691,14 @@ namespace femus {
             std::map< unsigned, bool> candidateNodes;
             std::map< unsigned, bool> elementNodes;
 
-            for(unsigned i = _interfaceDof[soltype][ilevel].begin(); i < _interfaceDof[soltype][ilevel].end(); i++) {
+            for(unsigned i = interfaceDof[soltype][ilevel].begin(); i < interfaceDof[soltype][ilevel].end(); i++) {
 
               candidateNodes.clear();
 
               std::vector < std::vector < std::vector <double > > > aP(3);
               bool aPIsInitialized = false;
 
-              unsigned iel = _interfaceElement[ilevel][i];
+              unsigned iel = interfaceElement[ilevel][i];
               short unsigned ielType = _elementType[iel];
 
               elementNodes.clear();
@@ -746,16 +746,16 @@ namespace femus {
 
                         bool insideDomain = CheckIfPointIsInsideReferenceDomain(xi, ielType, 0.001);
                         if(insideDomain) {
-                          for(unsigned j = _interfaceDof[soltype][ilevel].begin(i); j < _interfaceDof[soltype][ilevel].end(i); j++) {
-                            unsigned jloc = _interfaceLocalDof[ilevel][i][j];
+                          for(unsigned j = interfaceDof[soltype][ilevel].begin(i); j < interfaceDof[soltype][ilevel].end(i); j++) {
+                            unsigned jloc = interfaceLocalDof[ilevel][i][j];
                             double value = _fe[ielType][soltype]->eval_phi(_fe[ielType][soltype]->GetIND(jloc), &xi[0]);
                             if(fabs(value) >= 1.0e-10) {
-                              unsigned jdof = _interfaceDof[soltype][ilevel][i][j];
-                              if(restriction[jdof].find(jdof) == restriction[jdof].end()) {
-                                restriction[jdof][jdof] = 1.;
+                              unsigned jdof = interfaceDof[soltype][ilevel][i][j];
+                              if(restriction[soltype][jdof].find(jdof) == restriction[soltype][jdof].end()) {
+                                restriction[soltype][jdof][jdof] = 1.;
                               }
-                              restriction[jdof][ldof] = value;
-                              restriction[ldof][ldof] = 10.;
+                              restriction[soltype][jdof][ldof] = value;
+                              restriction[soltype][ldof][ldof] = 10.;
                               candidateNodes[ldof] = true;
                             }
                           }
@@ -780,52 +780,116 @@ namespace femus {
         }
       }
 
-      MyVector <unsigned> rowSize(restriction.size(), 0);
-      unsigned cnt1 = 0;
-      for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction.begin(); it1 != restriction.end(); it1++) {
-        rowSize[cnt1] = restriction[it1->first].size();
-        cnt1++;
+      NumericVector* pvector;
+      pvector = NumericVector::build().release();
+      pvector->init(_nprocs, 1 , false, AUTOMATIC);
+
+      unsigned counter = 1;
+      while(counter != 0) {
+        counter = 0;
+
+        MyVector <unsigned> rowSize(restriction[soltype].size(), 0);
+        unsigned cnt1 = 0;
+        for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
+          rowSize[cnt1] = restriction[soltype][it1->first].size();
+          cnt1++;
+        }
+        rowSize.stack();
+
+        std::vector< unsigned > offset = rowSize.getOffset();
+
+        MyVector <unsigned> masterNode(offset);
+        MyMatrix <unsigned> slaveNodes(rowSize);
+        MyMatrix <double> slaveNodesValues(rowSize);
+
+        cnt1 = 0;
+        for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
+          masterNode[offset[_iproc] + cnt1] = it1->first;
+          unsigned cnt2 = 0;
+          for(std::map<unsigned, double> ::iterator it2 = restriction[soltype][it1->first].begin(); it2 != restriction[soltype][it1->first].end(); it2++) {
+            slaveNodes[offset[_iproc] + cnt1][cnt2] = it2->first;
+            slaveNodesValues[offset[_iproc] + cnt1][cnt2] = it2->second;
+            cnt2++;
+          }
+          cnt1++;
+        }
+
+        for(unsigned lproc = 0; lproc < _nprocs; lproc++) {
+          masterNode.broadcast(lproc);
+          slaveNodes.broadcast(lproc);
+          slaveNodesValues.broadcast(lproc);
+          for(unsigned i = slaveNodes.begin(); i < slaveNodes.end(); i++) {
+            unsigned inode = masterNode[i];
+            for(unsigned j = slaveNodes.begin(i); j < slaveNodes.end(i); j++) {
+              unsigned jnode = slaveNodes[i][j];
+              if(inode == jnode) {
+                if(restriction[soltype].find(jnode) != restriction[soltype].end()) {
+                  for(unsigned k = slaveNodes.begin(i); k < slaveNodes.end(i); k++) {
+                    unsigned knode = slaveNodes[i][k];
+                    double value = slaveNodesValues[i][k];
+                    restriction[soltype][jnode][knode] = (jnode != knode || value > 5.) ? value : restriction[soltype][jnode][knode];
+                    if(restriction[soltype].find(knode) == restriction[soltype].end()) {
+                      for(unsigned l = masterNode.begin(); l < masterNode.end(); l++) {
+                        counter++;
+                        if(masterNode[l] == knode) {
+                          for(unsigned m = slaveNodes.begin(l); m < slaveNodes.end(l); m++) {
+                            unsigned mnode = slaveNodes[l][m];
+                            restriction[soltype][knode][mnode] = slaveNodesValues[l][m];
+                          }
+                          break;
+                        }
+                      }
+                    }
+                  }
+                }
+                break;
+              }
+            }
+          }
+          masterNode.clearBroadcast();
+          slaveNodes.clearBroadcast();
+          slaveNodesValues.clearBroadcast();
+        }
+
+        pvector->set(_iproc, counter);
+        pvector->close();
+        counter = static_cast <unsigned>(floor(pvector->l1_norm() + 0.5));
       }
-      rowSize.stack();
+      delete pvector;
 
-      std::cout << rowSize << std::endl;
+      for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
+        unsigned inode = it1->first;
+        if(restriction[soltype][inode][inode] > 5.) {
+          if(restriction[soltype][inode].size() > 1) {
+            for(std::map<unsigned, std::map<unsigned, double> >::iterator it2 = restriction[soltype].begin(); it2 != restriction[soltype].end(); it2++) {
+              unsigned jnode = it2->first;
+              if(jnode != inode && restriction[soltype][jnode].find(inode) != restriction[soltype][jnode].end()) {
+                double value =  restriction[soltype][jnode][inode];
+                for(std::map<unsigned, double> ::iterator it3 = restriction[soltype][inode].begin(); it3 != restriction[soltype][inode].end(); it3++) {
+                  unsigned knode = it3->first;
+                  if(knode != inode) {
+                    restriction[soltype][jnode][knode] = it3->second * value;
+                  }
+                }
+              }
+            }
+          }
+          restriction[soltype][inode].clear();
+          restriction[soltype][inode][inode] = 0.;
+        }
+      }
+    }
 
-      std::vector< unsigned > offset = rowSize.getOffset();
-
-//       std::cout<<offset.size()<<std::endl;
-//       std::cout<<offset[0]<<std::endl;
-//       std::cout<<offset[1]<<std::endl;
-//       std::cout<<offset[2]<<std::endl;
-//       std::cout<<offset[3]<<std::endl;
-//       std::cout<<offset[4]<<std::endl;
-//       for(unsigned i=0; i<offset.size();i++){
-// 	std::cout<<offset[i]<<std::endl;
-//       }
-      MyVector <unsigned> masterNode(offset);
-      //MyVector <double> masterNodeValue(offset);
-      //MyMatrix <unsigned> slaveNodes(rowSize);
-      //MyMatrix <double> slaveNodesValues(rowSize);
+    for(unsigned soltype = 0; soltype < 3; soltype++) {
       std::cout << "solution type = " << soltype << std::endl;
-      cnt1 = 0;
-      for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction.begin(); it1 != restriction.end(); it1++) {
+      for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
         std::cout << it1->first << "\t";
-        masterNode[offset[_iproc] + cnt1] = it1->first;
-//         unsigned cnt2 = 0;
-//         for(std::map<unsigned, double> ::iterator it2 = restriction[it1->first].begin(); it2 != restriction[it1->first].end(); it2++) {
-//           std::cout << it2 ->first << " (" <<  it2->second << ")  ";
-//           //slaveNodes[cnt1][cnt2] = it2->first;
-//           //slaveNodesValues[cnt1][cnt2] = it2->second;
-//           if(it1->first == it2->first) {
-//             //masterNodeValue[cnt1] = it2->second;
-//           }
-//           cnt2++;
-//         }
-        cnt1++;
+        for(std::map<unsigned, double> ::iterator it2 = restriction[soltype][it1->first].begin(); it2 != restriction[soltype][it1->first].end(); it2++) {
+          std::cout << it2->first << " (" << it2->second << ")  ";
+
+        }
         std::cout << std::endl;
       }
-
-
-
     }
   }
 
