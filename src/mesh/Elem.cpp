@@ -669,9 +669,9 @@ namespace femus {
     }
 
     for(unsigned soltype = 0; soltype < 3; soltype++) {
-     
+
       std::map < unsigned,  std::map < unsigned, double  > > restriction;
-      
+
       for(int ilevel = 0; ilevel < _level; ilevel++) {
         std::cout << "ilevel=" << ilevel << std::endl;
         for(int jlevel = ilevel + 1; jlevel <= _level; jlevel++) {
@@ -709,13 +709,13 @@ namespace femus {
 
               std::vector < std::vector <double > > xv;
               msh->GetElementNodeCoordinates(xv, iel);
-	      unsigned ndofs = xv[0].size();
-	      
-	      double r;
-	      std::vector <double> xc;
-	      GetConvexHullSphere(xv, xc, r);
-	      double r2 = r*r;
-      
+              unsigned ndofs = xv[0].size();
+
+              double r;
+              std::vector <double> xc;
+              GetConvexHullSphere(xv, xc, r);
+              double r2 = r * r;
+
               for(unsigned k = jlevelInterfaceDof.begin(); k < jlevelInterfaceDof.end(); k++) {
                 for(unsigned l = jlevelInterfaceDof.begin(k); l < jlevelInterfaceDof.end(k); l++) {
                   unsigned ldof = jlevelInterfaceDof[k][l];
@@ -728,8 +728,8 @@ namespace femus {
                     }
                     if(d2 < r2) {
                       if(elementNodes.find(ldof) == elementNodes.end()) {
-                        
-			if(!aPIsInitialized) {
+
+                        if(!aPIsInitialized) {
                           aPIsInitialized = true;
                           std::vector < std::vector <double> > x1(dim);
                           for(unsigned jtype = 0; jtype < 3; jtype++) {
@@ -737,25 +737,28 @@ namespace femus {
                           }
                         }
 
-                        unsigned jmin = GetClosestPoint(xv,xl);
+                        unsigned jmin = GetClosestPoint(xv, xl);
                         std::vector <double> xi(dim);
                         for(unsigned d = 0; d < dim; d++) {
                           xi[d] = *(_fe[ielType][2]->GetXcoarse(jmin + d));
                         }
                         GetInverseMapping(soltype, ielType, aP, xl, xi);
-			                   
+
                         bool insideDomain = CheckIfPointIsInsideReferenceDomain(xi, ielType, 0.001);
                         if(insideDomain) {
                           for(unsigned j = _interfaceDof[soltype][ilevel].begin(i); j < _interfaceDof[soltype][ilevel].end(i); j++) {
                             unsigned jloc = _interfaceLocalDof[ilevel][i][j];
                             double value = _fe[ielType][soltype]->eval_phi(_fe[ielType][soltype]->GetIND(jloc), &xi[0]);
-                              if(fabs(value) >= 1.0e-10) {
-                                unsigned jdof = _interfaceDof[soltype][ilevel][i][j];
+                            if(fabs(value) >= 1.0e-10) {
+                              unsigned jdof = _interfaceDof[soltype][ilevel][i][j];
+                              if(restriction[jdof].find(jdof) == restriction[jdof].end()) {
                                 restriction[jdof][jdof] = 1.;
-                                restriction[jdof][ldof] = value;
-                                candidateNodes[ldof] = true;
                               }
-                           }
+                              restriction[jdof][ldof] = value;
+                              restriction[ldof][ldof] = 10.;
+                              candidateNodes[ldof] = true;
+                            }
+                          }
                         }
                         else {
                           candidateNodes[ldof] = false;
@@ -776,20 +779,59 @@ namespace femus {
           }
         }
       }
+
+      MyVector <unsigned> rowSize(restriction.size(), 0);
+      unsigned cnt1 = 0;
+      for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction.begin(); it1 != restriction.end(); it1++) {
+        rowSize[cnt1] = restriction[it1->first].size();
+        cnt1++;
+      }
+      rowSize.stack();
+
+      std::cout << rowSize << std::endl;
+
+      std::vector< unsigned > offset = rowSize.getOffset();
+
+//       std::cout<<offset.size()<<std::endl;
+//       std::cout<<offset[0]<<std::endl;
+//       std::cout<<offset[1]<<std::endl;
+//       std::cout<<offset[2]<<std::endl;
+//       std::cout<<offset[3]<<std::endl;
+//       std::cout<<offset[4]<<std::endl;
+//       for(unsigned i=0; i<offset.size();i++){
+// 	std::cout<<offset[i]<<std::endl;
+//       }
+      MyVector <unsigned> masterNode(offset);
+      //MyVector <double> masterNodeValue(offset);
+      //MyMatrix <unsigned> slaveNodes(rowSize);
+      //MyMatrix <double> slaveNodesValues(rowSize);
       std::cout << "solution type = " << soltype << std::endl;
+      cnt1 = 0;
       for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction.begin(); it1 != restriction.end(); it1++) {
         std::cout << it1->first << "\t";
-        for(std::map<unsigned, double> ::iterator it2 = restriction[it1->first].begin(); it2 != restriction[it1->first].end(); it2++) {
-          std::cout << it2 ->first << " (" <<  it2->second << ")  ";
-        }
+        masterNode[offset[_iproc] + cnt1] = it1->first;
+//         unsigned cnt2 = 0;
+//         for(std::map<unsigned, double> ::iterator it2 = restriction[it1->first].begin(); it2 != restriction[it1->first].end(); it2++) {
+//           std::cout << it2 ->first << " (" <<  it2->second << ")  ";
+//           //slaveNodes[cnt1][cnt2] = it2->first;
+//           //slaveNodesValues[cnt1][cnt2] = it2->second;
+//           if(it1->first == it2->first) {
+//             //masterNodeValue[cnt1] = it2->second;
+//           }
+//           cnt2++;
+//         }
+        cnt1++;
         std::cout << std::endl;
       }
+
+
+
     }
   }
 
-  
-  void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel){
-    xv.resize(_dimension); 
+
+  void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel) {
+    xv.resize(_dimension);
     unsigned ndofs = el->GetElementDofNumber(iel, 2);
     for(int d = 0; d < _dimension; d++) {
       xv[d].resize(ndofs);
@@ -801,9 +843,9 @@ namespace femus {
       }
     }
   }
-             
-  
-  
+
+
+
 } //end namespace femus
 
 

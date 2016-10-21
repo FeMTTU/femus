@@ -1548,7 +1548,7 @@ namespace femus {
   void GetInverseMapping(const unsigned &solType, short unsigned &ielType, const std::vector < std::vector < std::vector <double > > > &aP,
                          const std::vector <double > &xl, std::vector <double > &xi) {
 
-    for(short unsigned jtype = 0; jtype < solType; jtype++) {
+    for(short unsigned jtype = 0; jtype < solType + 1; jtype++) {
       std::vector < double > phi;
       std::vector < std::vector < double > > gradPhi;
       bool convergence = false;
