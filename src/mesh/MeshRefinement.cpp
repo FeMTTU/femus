@@ -426,7 +426,7 @@ namespace femus {
     _mesh.el->ScatterElementNearFace();
 
     if(AMR) {
-      std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& restriction = _mesh.GetAmrRestriction();
+      std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& restriction = _mesh.GetAmrRestrictionMap();
       _mesh.el->GetAMRRestriction(&_mesh, restriction);
       for(unsigned soltype = 0; soltype < 3; soltype++) {
         std::cout << "solution type = " << soltype << std::endl;
