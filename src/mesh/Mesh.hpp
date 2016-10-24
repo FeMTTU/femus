@@ -182,7 +182,10 @@ public:
     void Buildkel();
     
     void BiquadraticNodesNotInGambit();
-
+    
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestriction(){
+      return _amrRestriction;
+    }
 
     // member data
     Solution* _topology;
@@ -265,6 +268,8 @@ private:
     static const unsigned _zIndex = 2;
     static const unsigned _amrIndex = 3;
     static const unsigned _solidMarkIndex = 4;
+    
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
 
 };
 

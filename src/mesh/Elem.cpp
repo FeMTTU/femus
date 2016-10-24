@@ -573,9 +573,9 @@ namespace femus {
     _elementNearFace.clearBroadcast();
   }
 
-  void elem::GetHangingElementAndNodes(Mesh *msh) {
+  void elem::GetAMRRestriction(Mesh *msh, std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &restriction) {
 
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > restriction(3);
+    restriction.resize(3);
     
     std::vector < MyVector<unsigned> > interfaceElement;
     std::vector < MyMatrix<unsigned> > interfaceLocalDof;
@@ -877,18 +877,6 @@ namespace femus {
           restriction[soltype][inode].clear();
           restriction[soltype][inode][inode] = 0.;
         }
-      }
-    }
-
-    for(unsigned soltype = 0; soltype < 3; soltype++) {
-      std::cout << "solution type = " << soltype << std::endl;
-      for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
-        std::cout << it1->first << "\t";
-        for(std::map<unsigned, double> ::iterator it2 = restriction[soltype][it1->first].begin(); it2 != restriction[soltype][it1->first].end(); it2++) {
-          std::cout << it2->first << " (" << it2->second << ")  ";
-
-        }
-        std::cout << std::endl;
       }
     }
   }

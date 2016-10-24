@@ -211,7 +211,7 @@ namespace femus {
     mshc->el->AllocateChildrenElement(_mesh.GetRefIndex(), mshc);
 
     _mesh.el = new elem(elc, _mesh.GetRefIndex(), coarseLocalizedAmrVector);
-    
+
     unsigned jel = 0;
     //divide each coarse element in 8(3D), 4(2D) or 2(1D) fine elements and find all the vertices
 
@@ -229,9 +229,9 @@ namespace femus {
           // project element type
           for(unsigned j = 0; j < _mesh.GetRefIndex(); j++) {
             _mesh.el->SetElementType(jel + j, elc->GetElementType(iel));
-	    _mesh.el->SetElementGroup(jel + j, elc->GetElementGroup(iel));
-	    _mesh.el->SetElementMaterial(jel + j, elc->GetElementMaterial(iel));
-	    _mesh.el->SetElementLevel(jel + j, elc->GetElementLevel(iel) + 1);
+            _mesh.el->SetElementGroup(jel + j, elc->GetElementGroup(iel));
+            _mesh.el->SetElementMaterial(jel + j, elc->GetElementMaterial(iel));
+            _mesh.el->SetElementLevel(jel + j, elc->GetElementLevel(iel) + 1);
             if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1) {
               elc->SetChildElement(iel, j, jel + j);
             }
@@ -262,9 +262,9 @@ namespace femus {
           AMR = true;
           unsigned elt = elc->GetElementType(iel);
           _mesh.el->SetElementType(jel, elc->GetElementType(iel));
-	  _mesh.el->SetElementGroup(jel , elc->GetElementGroup(iel));
-	  _mesh.el->SetElementMaterial(jel, elc->GetElementMaterial(iel));
-	  _mesh.el->SetElementLevel(jel, elc->GetElementLevel(iel));
+          _mesh.el->SetElementGroup(jel , elc->GetElementGroup(iel));
+          _mesh.el->SetElementMaterial(jel, elc->GetElementMaterial(iel));
+          _mesh.el->SetElementLevel(jel, elc->GetElementLevel(iel));
           if(iel >= elementOffsetCoarse && iel < elementOffsetCoarseP1) {
             elc->SetChildElement(iel, 0, jel);
           }
@@ -424,9 +424,21 @@ namespace femus {
     _mesh.el->ScatterElementQuantities();
     _mesh.el->ScatterElementDof();
     _mesh.el->ScatterElementNearFace();
-    
-    if(AMR){
-      _mesh.el->GetHangingElementAndNodes(&_mesh);
+
+    if(AMR) {
+      std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& restriction = _mesh.GetAmrRestriction();
+      _mesh.el->GetAMRRestriction(&_mesh, restriction);
+      for(unsigned soltype = 0; soltype < 3; soltype++) {
+        std::cout << "solution type = " << soltype << std::endl;
+        for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
+          std::cout << it1->first << "\t";
+          for(std::map<unsigned, double> ::iterator it2 = restriction[soltype][it1->first].begin(); it2 != restriction[soltype][it1->first].end(); it2++) {
+            std::cout << it2->first << " (" << it2->second << ")  ";
+
+          }
+          std::cout << std::endl;
+        }
+      }
     }
   }
 
