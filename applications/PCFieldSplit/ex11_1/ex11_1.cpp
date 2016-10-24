@@ -22,14 +22,15 @@
 #include "adept.h"
 #include "FieldSplitTree.hpp"
 #include <stdlib.h>
+#include "Marker.hpp"
 
 double Prandtl = 0.1;
-double Rayleigh =10000.;
+double Rayleigh = 10000.;
 
 using namespace femus;
 
-double InitalValueT(const std::vector < double >& x){
-  return (x[0]+0.5);
+double InitalValueT(const std::vector < double >& x) {
+  return (x[0] + 0.5);
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -39,10 +40,12 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   if(!strcmp(SolName, "T")) {
     if(facename == 2) {
       value = 1.;
-    } else if(facename == 3) {
+    }
+    else if(facename == 3) {
       dirichlet = false; //Neumann
     }
-  } else if(!strcmp(SolName, "P")) {
+  }
+  else if(!strcmp(SolName, "P")) {
     dirichlet = false;
   }
 
@@ -55,6 +58,8 @@ void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofre
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
+
+double GetTemperatureValue(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi);
 
 enum PrecType {
   FS_VTp = 1,
@@ -87,18 +92,18 @@ int main(int argc, char** args) {
     std::cout << "No input argument set default preconditioner = NS+T" << std::endl;
     precType = FS_VTp;
   }
-  
+
   if(argc >= 3) {
     Prandtl = strtod(args[2], NULL);
-    std::cout << Prandtl<<std::endl;
+    std::cout << Prandtl << std::endl;
   }
-  
-  
+
+
   if(argc >= 4) {
     Rayleigh = strtod(args[3], NULL);
-    std::cout << Rayleigh <<std::endl;
+    std::cout << Rayleigh << std::endl;
   }
-    
+
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
@@ -112,7 +117,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 8;
+  unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
@@ -134,7 +139,7 @@ int main(int argc, char** args) {
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
-  mlSol.Initialize("T",InitalValueT);
+  mlSol.Initialize("T", InitalValueT);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -185,7 +190,7 @@ int main(int argc, char** args) {
   std::vector < unsigned > solutionTypeT(1);
   solutionTypeT[0] = mlSol.GetSolutionType("T");
 
-  FieldSplitTree FS_T( PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
+  FieldSplitTree FS_T(PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
 
   FS_T.SetAsmBlockSize(4);
   FS_T.SetAsmNumeberOfSchurVariables(0);
@@ -216,10 +221,10 @@ int main(int argc, char** args) {
 
   //system.SetMaxNumberOfLinearIterations(10);
   //system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
-  
+
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
-  
+
 
   system.SetMgType(F_CYCLE);
 
@@ -243,6 +248,21 @@ int main(int argc, char** args) {
   system.SetSamePreconditioner();
   system.MGsolve();
 
+  std::vector< double > x(3);
+  x[0] = 0.33375; //the marker is in element 117 (proc 1)
+  x[1] = 0.0627;
+  x[2] = 0.;
+  Marker marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+  unsigned elem = marker.GetMarkerElement();
+  std::vector<double> xi = marker.GetMarkerLocalCoordinates();
+
+  std::cout << "marker\n";
+  std::cout << elem << " " << xi[0] << " " << xi[1] << " " << GetTemperatureValue(mlProb, elem, xi) << std::endl;
+
+
+
+
+
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
@@ -251,22 +271,22 @@ int main(int argc, char** args) {
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   mlMsh.PrintInfo();
-  
+
   //char infile[256]="FSVTtrueResidual.txt";
-  //char stdOutfile[256]="output.txt"; 
+  //char stdOutfile[256]="output.txt";
   char *stdOutfile =  new char[100];
   char *outfile =  new char[100];
-  sprintf(stdOutfile,"%strueResidualPr=%sRa=%s.txt",args[1],args[2],args[3]);
-  sprintf(outfile,"%sconvergencePr=%sRa=%s.txt",args[1],args[2],args[3]);
-  std::cout << stdOutfile <<std::endl;
-  
+  sprintf(stdOutfile, "%strueResidualPr=%sRa=%s.txt", args[1], args[2], args[3]);
+  sprintf(outfile, "%sconvergencePr=%sRa=%s.txt", args[1], args[2], args[3]);
+  std::cout << stdOutfile << std::endl;
+
   PrintConvergenceInfo(stdOutfile, outfile, numberOfUniformLevels);
-  
+
   char *stdOutfile1 = new char[100];
   char *outfile1 = new char[100];
-  sprintf(stdOutfile1,"%sprintout_infoPr=%sRa=%s_time.txt",args[1],args[2],args[3]);
-  sprintf(outfile1,"%scomputational_timePr=%sRa=%s_time.txt",args[1],args[2],args[3]);
-  
+  sprintf(stdOutfile1, "%sprintout_infoPr=%sRa=%s_time.txt", args[1], args[2], args[3]);
+  sprintf(outfile1, "%scomputational_timePr=%sRa=%s_time.txt", args[1], args[2], args[3]);
+
   PrintNonlinearTime(stdOutfile1, outfile1, numberOfUniformLevels);
   return 0;
 }
@@ -973,18 +993,71 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
-void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numofrefinements){
 
-  std::cout<<"END_COMPUTATION\n"<<std::flush;
+
+
+double GetTemperatureValue(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi) {
+
+  NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
+
+  Mesh* msh = ml_prob._ml_msh->GetLevel(level);
+
+  MultiLevelSolution* mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution* sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+
+  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
+
+  //solution variable
+  unsigned solTIndex;
+  solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
+  unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
+  vector < double >  solT; // local solution
+
+  //BEGIN local dof number extraction
+  unsigned nDofsT = msh->GetElementDofNumber(elem, solTType);  //temperature
+  solT.resize(nDofsT);
+
+  //BEGIN global to local extraction
+  for(unsigned i = 0; i < nDofsT; i++) { //temperature
+    unsigned solTDof = msh->GetSolutionDof(i, elem, solTType);  //local to global solution dof
+    solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
+  }
+
+  short unsigned ielGeom = msh->GetElementType(elem);
+  double solTXi = 0.;
+  for(unsigned i = 0; i < nDofsT; i++) {
+    basis *base = msh->_finiteElement[ielGeom][solTType]->GetBasis();
+    double phi = base->eval_phi(base->GetIND(i), &xi[0]);
+    solTXi += phi * solT[i];
+  }
+  // ***************** END ASSEMBLY *******************
+
+  return solTXi;
+}
+
+
+
+
+
+
+
+
+
+
+
+void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numofrefinements) {
+
+  std::cout << "END_COMPUTATION\n" << std::flush;
 
   std::ifstream inf;
   inf.open(stdOutfile);
-  if (!inf) {
-    std::cout<<"Redirected standard output file not found\n";
-    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+  if(!inf) {
+    std::cout << "Redirected standard output file not found\n";
+    std::cout << "add option -std_output std_out_filename > std_out_filename\n";
     return;
   }
-  
+
   unsigned counter1 = 0;
   std :: vector <unsigned> Level(numofrefinements, 0);
   std :: vector <unsigned> Num_Nonlinear(numofrefinements, 0);
@@ -994,100 +1067,100 @@ void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numof
   std::ofstream outf;
   outf.open(outfile, std::ofstream::app);
   outf << std::endl << std::endl;
-  outf << "Number_of_refinements="<<numofrefinements<<std::endl;
+  outf << "Number_of_refinements=" << numofrefinements << std::endl;
   outf << "Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
 
   std::string str1;
   inf >> str1;
-  while (str1.compare("END_COMPUTATION") != 0) {
-	
-	  if (str1.compare("Start") == 0){
-		inf >> str1;
-		if (str1.compare("Level") == 0){
-			inf >> str1;
-			if (str1.compare("Max") == 0){
-				int value;
-				inf >> value;
-				Level[counter1] = value;
-			}
-		}
-	  }	
+  while(str1.compare("END_COMPUTATION") != 0) {
 
-	if (str1.compare("Nonlinear") == 0) {
-		inf >> str1;
-		if (str1.compare("iteration") == 0) {
-			inf >> str1;
-			outf << std::endl << str1;
-			Num_Nonlinear[counter1] += 1;
-		}
-	}
-	else if (str1.compare("KSP") == 0){
-		inf >> str1;
-		if (str1.compare("preconditioned") == 0){
-			inf >> str1;
-			if (str1.compare("resid") == 0){
-				inf >> str1;
-				if (str1.compare("norm") == 0){
-					double norm0 = 1.;
-					double normN = 1.;
-					unsigned counter = 0;
-					inf >> norm0;
-					outf <<","<< norm0;
-					for (unsigned i = 0; i < 11; i++){
-						inf >> str1;
-					}
-					while(str1.compare("norm") == 0){
-						inf >> normN;
-						counter++;
-						for (unsigned i = 0; i < 11; i++){
-							inf >> str1;
-						}
-						Num_GMRES[counter1] += 1;
-					}
-					outf <<","<< normN;
-				if(counter != 0){
-					outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
-				}
-				else{
-					outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
-				}
-			}
-		}
+    if(str1.compare("Start") == 0) {
+      inf >> str1;
+      if(str1.compare("Level") == 0) {
+        inf >> str1;
+        if(str1.compare("Max") == 0) {
+          int value;
+          inf >> value;
+          Level[counter1] = value;
+        }
       }
     }
 
-	if (str1.compare("End") == 0){
+    if(str1.compare("Nonlinear") == 0) {
       inf >> str1;
-      if (str1.compare("Level") == 0){
+      if(str1.compare("iteration") == 0) {
         inf >> str1;
-        if (str1.compare("Max") == 0){
-		  counter1 ++ ;
+        outf << std::endl << str1;
+        Num_Nonlinear[counter1] += 1;
+      }
+    }
+    else if(str1.compare("KSP") == 0) {
+      inf >> str1;
+      if(str1.compare("preconditioned") == 0) {
+        inf >> str1;
+        if(str1.compare("resid") == 0) {
+          inf >> str1;
+          if(str1.compare("norm") == 0) {
+            double norm0 = 1.;
+            double normN = 1.;
+            unsigned counter = 0;
+            inf >> norm0;
+            outf << "," << norm0;
+            for(unsigned i = 0; i < 11; i++) {
+              inf >> str1;
+            }
+            while(str1.compare("norm") == 0) {
+              inf >> normN;
+              counter++;
+              for(unsigned i = 0; i < 11; i++) {
+                inf >> str1;
+              }
+              Num_GMRES[counter1] += 1;
+            }
+            outf << "," << normN;
+            if(counter != 0) {
+              outf << "," << counter << "," << pow(normN / norm0, 1. / counter);
+            }
+            else {
+              outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
+            }
+          }
         }
       }
-    }  
+    }
+
+    if(str1.compare("End") == 0) {
+      inf >> str1;
+      if(str1.compare("Level") == 0) {
+        inf >> str1;
+        if(str1.compare("Max") == 0) {
+          counter1 ++ ;
+        }
+      }
+    }
     inf >> str1;
   }
-  
 
-  outf <<"\n" <<"Level, Number of nonlinear,Number of GMRES, Average number of GMRES per nonlinear" << std::endl;
-  for (unsigned i = 0; i < numofrefinements; i++){
-		outf << Level[i] << "," << Num_Nonlinear[i] << "," 
-		<< Num_GMRES[i] << "," << double(Num_GMRES[i])/double(Num_Nonlinear[i]) << std::endl;
+
+  outf << "\n" << "Level, Number of nonlinear,Number of GMRES, Average number of GMRES per nonlinear" << std::endl;
+  for(unsigned i = 0; i < numofrefinements; i++) {
+    outf << Level[i] << "," << Num_Nonlinear[i] << ","
+         << Num_GMRES[i] << "," << double(Num_GMRES[i]) / double(Num_Nonlinear[i]) << std::endl;
   }
 
   outf.close();
   inf.close();
 }
 
-void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofrefinements){
+void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofrefinements) {
 
-  std::cout<<"END_COMPUTATION\n"<<std::flush;
+  std::cout << "END_COMPUTATION\n" << std::flush;
 
   std::ifstream inf;
   inf.open(stdOutfile);
-  if (!inf) {
-    std::cout<<"Redirected standard output file not found\n";
-    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+  if(!inf) {
+    std::cout << "Redirected standard output file not found\n";
+    std::cout << "add option -std_output std_out_filename > std_out_filename\n";
     return;
   }
 
@@ -1099,68 +1172,68 @@ void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofre
   unsigned counter = 0;
   std::vector <double> Assembly_Time(numofrefinements, 0.);
   std::vector <double> Nonlinear_Time(numofrefinements, 0.);
- 
+
   std::string str1;
   inf >> str1;
 
-  while (str1.compare("END_COMPUTATION") != 0) {
-    if (str1.compare("Start") == 0){
+  while(str1.compare("END_COMPUTATION") != 0) {
+    if(str1.compare("Start") == 0) {
       inf >> str1;
-      if (str1.compare("Level") == 0){
+      if(str1.compare("Level") == 0) {
         inf >> str1;
-        if (str1.compare("Max") == 0){
-			int value;
-			inf >> value;
-			outf <<"\n"<< value <<", ";
+        if(str1.compare("Max") == 0) {
+          int value;
+          inf >> value;
+          outf << "\n" << value << ", ";
         }
       }
     }
-    else if (str1.compare("ASSEMBLY") == 0) {
+    else if(str1.compare("ASSEMBLY") == 0) {
       inf >> str1;
-      if (str1.compare("TIME:") == 0) {
+      if(str1.compare("TIME:") == 0) {
         double value1;
         inf >> value1;
-		Assembly_Time[counter] += value1;
-	  }
+        Assembly_Time[counter] += value1;
+      }
     }
-    else if (str1.compare("Nonlinear-Cycle") == 0) {
+    else if(str1.compare("Nonlinear-Cycle") == 0) {
       inf >> str1;
-      if (str1.compare("TIME:") == 0) {
+      if(str1.compare("TIME:") == 0) {
         double value2;
         inf >> value2;
         Nonlinear_Time[counter] += value2;
-	  }
-    } 
+      }
+    }
 
-    if (str1.compare("End") == 0){
+    if(str1.compare("End") == 0) {
       inf >> str1;
-      if (str1.compare("Level") == 0){
+      if(str1.compare("Level") == 0) {
         inf >> str1;
-        if (str1.compare("Max") == 0){
-          outf << "Assembly Time =" 
-			  << Assembly_Time[counter] << ", Solver Time =" 
-			  << Nonlinear_Time[counter] - Assembly_Time[counter] 
-		  << ", Nonliear Time =" << Nonlinear_Time[counter];
-			  counter ++;
+        if(str1.compare("Max") == 0) {
+          outf << "Assembly Time ="
+               << Assembly_Time[counter] << ", Solver Time ="
+               << Nonlinear_Time[counter] - Assembly_Time[counter]
+               << ", Nonliear Time =" << Nonlinear_Time[counter];
+          counter ++;
         }
       }
-    }  
+    }
     inf >> str1;
   }
 
   outf << std::endl;
 
-  for (unsigned i = 0; i < numofrefinements; i++){
-	  double sum1 = Assembly_Time[i];
-	  double sum2 = Nonlinear_Time[i];
-	  for (unsigned j = 0; j < i; j++){
-		sum1 = sum1 + Assembly_Time[j];
-		sum2 = sum2 + Nonlinear_Time[j];
-	  }
-	  outf << "\n" << "level" <<" "<< i+1 << ", "     
-		   << "Total Nonliear Time:" << sum2 
-           << " = Assembly Time (" << sum1 << ") + " << "Solver Time (" 
-	       << sum2 - sum1 << ")";
+  for(unsigned i = 0; i < numofrefinements; i++) {
+    double sum1 = Assembly_Time[i];
+    double sum2 = Nonlinear_Time[i];
+    for(unsigned j = 0; j < i; j++) {
+      sum1 = sum1 + Assembly_Time[j];
+      sum2 = sum2 + Nonlinear_Time[j];
+    }
+    outf << "\n" << "level" << " " << i + 1 << ", "
+         << "Total Nonliear Time:" << sum2
+         << " = Assembly Time (" << sum1 << ") + " << "Solver Time ("
+         << sum2 - sum1 << ")";
   }
 
   outf << std::endl;
