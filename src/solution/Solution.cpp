@@ -855,6 +855,8 @@ namespace femus {
       }
 
       std::cout << "\nNew AMR threshold value =" << AMRthreshold[k] << std::endl;
+      
+      delete parallelVec;
     }
 
     AMR->_Sol[AMRIndex]->close();

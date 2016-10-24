@@ -15,6 +15,7 @@
 
 #include <stdlib.h>
 #include<iostream>
+#include<cmath>
 
 #include "PolynomialBases.hpp"
 #include "GeomElTypeEnum.hpp"
@@ -127,9 +128,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
 
-    if(nDofs != quadNumberOfDofs[solType]) {
+    unsigned nDofs = quadNumberOfDofs[solType];
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectQuadNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -293,9 +294,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
 
-    if(nDofs != triNumberOfDofs[solType]) {
+    unsigned nDofs = triNumberOfDofs[solType];
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectTriNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -441,9 +442,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
 
-    if(nDofs != hexNumberOfDofs[solType]) {
+    unsigned nDofs = hexNumberOfDofs[solType];
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectHexNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -622,12 +623,12 @@ namespace femus {
     gradPhi[2][1] = 1.; // 1
     gradPhi[4][1] = xi[0]; // x
     gradPhi[6][1] = xi[2]; // z
-   
+
     //phi_z
     gradPhi[3][2] = 1.; // 1
     gradPhi[5][2] = xi[0]; // x
     gradPhi[6][2] = xi[1]; // y
-    
+
     if(solType < 1) {  //only linear
       gradPhi[7][0] = phi[6];  // y z
       gradPhi[7][1] = phi[5];  // x z
@@ -815,9 +816,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
 
-    if(nDofs != tetNumberOfDofs[solType]) {
+    unsigned nDofs = tetNumberOfDofs[solType];
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectTetNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -1028,9 +1029,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
 
-    if(nDofs != wedgeNumberOfDofs[solType]) {
+    unsigned nDofs = wedgeNumberOfDofs[solType];
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectWedgeNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -1174,7 +1175,7 @@ namespace femus {
       //phi_z
       gradPhi[4][2] = xi[0] ;  // x
       gradPhi[5][2] = xi[1] ;  // y
-      
+
     }
     else { //only quadratic and biquadratic
       //phi_x
@@ -1343,5 +1344,219 @@ namespace femus {
     }
   }
 //END WEDGE
+
+
+
+  bool CheckIfPointIsInsideReferenceDomain(std::vector<double> &xi, const short unsigned &ielType, const double &eps) {
+    if(ielType == 0) {
+      CheckIfPointIsInsideReferenceDomainHex(xi, eps);
+    }
+    else if(ielType == 1) {
+      CheckIfPointIsInsideReferenceDomainTet(xi, eps);
+    }
+    else if(ielType == 2) {
+      CheckIfPointIsInsideReferenceDomainWedge(xi, eps);
+    }
+    else if(ielType == 3) {
+      CheckIfPointIsInsideReferenceDomainQuad(xi, eps);
+    }
+    else if(ielType == 4) {
+      CheckIfPointIsInsideReferenceDomainTri(xi, eps);
+    }
+    else if(ielType == 5) {
+      CheckIfPointIsInsideReferenceDomainLine(xi, eps);
+    }
+  }
+  bool CheckIfPointIsInsideReferenceDomainHex(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (fabs(xi[0]) < threshold && fabs(xi[1]) < threshold && fabs(xi[2]) < threshold) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainTet(std::vector<double> &xi, const double &eps) {
+    return (xi[0] > - eps && xi[1] > -eps &&  xi[2] > -eps && xi[0] + xi[1] + xi[2] < 1. + eps) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainWedge(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (xi[0] > -eps && xi[1] > -eps && xi[0] + xi[1] < threshold && fabs(xi[2]) < threshold) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainQuad(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (fabs(xi[0]) < threshold && fabs(xi[1]) < threshold) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainTri(std::vector<double> &xi, const double &eps) {
+    return (xi[0] > -eps && xi[1] > -eps && xi[0] + xi[1] < 1. + eps) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainLine(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (fabs(xi[0]) < threshold) ? true : false;
+  }
+
+
+
+  bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
+                              const std::vector < std::vector <double > > &gradPhi,
+                              const std::vector < std::vector <double > > &a) {
+
+    const unsigned dim = gradPhi[0].size();
+    const unsigned  nDofs = phi.size();
+
+    bool convergence = false;
+    std::vector < double > F(dim, 0.);
+    std::vector < std::vector < double > > J(dim);
+
+    for(int k = 0; k < dim; k++) {
+      J[k].assign(dim, 0.);
+    }
+
+    for(int k = 0; k < dim; k++) {
+      for(int i = 0; i < nDofs; i++) {
+        F[k] += a[k][i] * phi[i];
+
+        for(int i1 = 0; i1 < dim; i1++) {
+          J[k][i1] += a[k][i] * gradPhi[i][i1];
+        }
+      }
+      F[k] -= x[k];
+    }
+
+
+    std::vector < std::vector < double > >  Jm1;
+    InverseMatrix(J, Jm1);
+
+    double delta2 = 0.;
+
+    for(int i1 = 0; i1 < dim; i1++) {
+      double deltak = 0.;
+
+      for(int i2 = 0; i2 < dim; i2++) {
+        deltak -= Jm1[i1][i2] * F[i2];
+      }
+
+      xi[i1] += deltak;
+      delta2 += deltak * deltak;
+    }
+
+    if(delta2 < 1.0e-9) {
+      convergence = true;
+    }
+
+    return convergence;
+  }
+
+  void InverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA) {
+
+    unsigned dim = A.size();
+    invA.resize(dim);
+
+    for(int i = 0; i < dim; i++) {
+      invA[i].resize(dim);
+    }
+
+    double detA;
+    if(dim == 1) {
+
+      if(A[0][0] == 0) {
+        std::cout << " ERROR: the matrix is singular " << std::endl;
+        abort();
+      }
+      invA[0][0] = 1. / A[0][0];
+    }
+    else if(dim == 2) {
+
+      detA = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+
+      if(detA == 0) {
+        std::cout << " ERROR: the matrix is singular " << std::endl;
+        abort();
+      }
+      else {
+        invA[0][0] = A[1][1] / detA;
+        invA[0][1] = -A[0][1] / detA;
+        invA[1][0] = -A[1][0] / detA;
+        invA[1][1] = A[0][0] / detA;
+      }
+    }
+    else if(dim == 3) {
+
+      detA = (A[0][0] * A[1][1] * A[2][2] + A[0][1] * A[1][2] * A[2][0] + A[0][2] * A[1][0] * A[2][1])
+             - (A[2][0] * A[1][1] * A[0][2] + A[2][1] * A[1][2] * A[0][0] + A[2][2] * A[1][0] * A[0][1]) ;
+
+      if(detA == 0) {
+        std::cout << " ERROR: the matrix is singular " << std::endl;
+        abort();
+      }
+      else {
+
+        invA[0][0] = (A[1][1] * A[2][2] - A[2][1] * A[1][2]) / detA ;
+        invA[0][1] = (A[0][2] * A[2][1] - A[2][2] * A[0][1]) / detA ;
+        invA[0][2] = (A[0][1] * A[1][2] - A[1][1] * A[0][2]) / detA ;
+        invA[1][0] = (A[1][2] * A[2][0] - A[2][2] * A[1][0]) / detA ;
+        invA[1][1] = (A[0][0] * A[2][2] - A[2][0] * A[0][2]) / detA ;
+        invA[1][2] = (A[0][2] * A[1][0] - A[0][0] * A[1][2]) / detA ;
+        invA[2][0] = (A[1][0] * A[2][1] - A[2][0] * A[1][1]) / detA ;
+        invA[2][1] = (A[0][1] * A[2][0] - A[2][1] * A[0][0]) / detA ;
+        invA[2][2] = (A[0][0] * A[1][1] - A[1][0] * A[0][1]) / detA ;
+
+      }
+    }
+    else {
+      std::cout << " ERROR: the matrix is neither 2x2 nor 3x3 so we cannot use this function " << std::endl;
+      abort();
+    }
+  }
+
+  void GetConvexHullSphere(const std::vector< std::vector < double > > &xv, std::vector <double> &xc, double & r) {
+    unsigned dim = xv.size();
+    unsigned ndofs = xv[0].size();
+    xc.resize(dim, 0.);
+    for(int d = 0; d < dim; d++) {
+      for(int i = 0; i < ndofs; i++) {
+        xc[d] += xv[d][i];
+      }
+      xc[d] /= ndofs;
+    }
+    double r2 = 0.;
+    for(unsigned j = 0; j < ndofs; j++) {
+      double d2 = 0.;
+      for(int d = 0; d < dim; d++) {
+        d2 += (xv[d][j] - xc[d]) * (xv[d][j] - xc[d]);
+      }
+      r2 = (r2 > d2) ? r2 : d2;
+    }
+    r2 *= 1.01;
+    r = sqrt(r2);
+  }
+
+  unsigned GetClosestPoint(const std::vector< std::vector < double > > &xv, std::vector <double> &x) {
+
+    unsigned dim = xv.size();
+    unsigned ndofs = xv[0].size();
+    unsigned jmin = ndofs;
+    double d2min = 1.0e100;
+    for(unsigned j = 0; j < ndofs; j++) {
+      double d2 = 0;
+      for(int d = 0; d < dim; d++) {
+        d2 += (xv[d][j] - x[d]) * (xv[d][j] - x[d]);
+      }
+      if(d2 < d2min) {
+        d2min = d2;
+        jmin = j;
+      }
+    }
+    return jmin;
+  }
+
+  void GetInverseMapping(const unsigned &solType, short unsigned &ielType, const std::vector < std::vector < std::vector <double > > > &aP,
+                         const std::vector <double > &xl, std::vector <double > &xi) {
+
+    for(short unsigned jtype = 0; jtype < solType + 1; jtype++) {
+      std::vector < double > phi;
+      std::vector < std::vector < double > > gradPhi;
+      bool convergence = false;
+      while(!convergence) {
+        GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, jtype);
+        convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[jtype]);
+      }
+    }
+  }
 
 }

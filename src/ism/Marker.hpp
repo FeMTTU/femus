@@ -38,33 +38,19 @@ namespace femus {
         _solType = solType;
 
         GetElement(1, UINT_MAX);
-	//BEGIN to test the serial version of GetElement
-        //unsigned iiel = _mesh->_elementOffset[_iproc];
-        //GetElementSerial(iiel);
-	//END
 
         if(_iproc == _mproc) {
-          _xi.resize(_mesh->GetDimension());
-          short unsigned elemType = _mesh->GetElementType(_elem);
-          for(int k = 0; k < _mesh->GetDimension(); k++) {
-            _xi[k] = _initialGuess[elemType][k];
-          }
-          for(int itype = 0; itype <= _solType; itype++) {  //why is there this for on type?
-            InverseMapping(_elem, itype, _x, _xi);
-          }
-          for(int k = 0; k < _mesh->GetDimension(); k++) {
-            std::cout << "_xi[ " << k <<  "] = " << _xi[k] << " ";
-          }
-          std::cout << std::endl;
-        }
+	  FindLocalCoordinates(_solType, _aX, true);
+	}
       };
 
 
 
 
       void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
-      void GetElementSerial(unsigned & iel);
-
+      void GetElementSerial(unsigned &initialElem);
+      void GetElement();
+      
 
       MarkerType GetMarkerType() {
         return _markerType;
@@ -76,6 +62,9 @@ namespace femus {
      void updateVelocity(std::vector <double> & V, Solution* sol, 
 			 const vector < unsigned > &solVIndex, const unsigned & solVType,
                          std::vector < std::vector < double > > &a,  std::vector < double > &phi, const bool & pcElemUpdate);
+     
+      void FindLocalCoordinates(const unsigned & solVType, std::vector < std::vector < std::vector < double > > > &aX, 
+		    const bool & pcElemUpdate);
 
       void ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex, 
 				       const unsigned &solVType,  const unsigned &nDofsV,
@@ -103,6 +92,14 @@ namespace femus {
       unsigned _mproc; //processor who has the marker
 
       static const double _initialGuess[6][3];
+      
+      std::vector < std::vector < std::vector < double > > > _aX;
+      
+      std::vector < std::vector < double > > _K;
+            
+      static const double _a[4][4][4];
+      static const double _b[4][4];
+      static const double _c[4][4];
 
   };
 } //end namespace femus

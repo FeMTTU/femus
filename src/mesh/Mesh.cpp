@@ -144,7 +144,7 @@ namespace femus {
 
     BiquadraticNodesNotInGambit();
 
-    el->SharpMemoryAllocation();
+    el->ShrinkToFit();
 
     //el->SetNodeNumber(_nnodes);
 
@@ -215,7 +215,7 @@ namespace femus {
     
     BiquadraticNodesNotInGambit();
 
-    el->SharpMemoryAllocation();
+    el->ShrinkToFit();
 
     el->SetNodeNumber(_nnodes);
 

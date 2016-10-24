@@ -11,15 +11,15 @@
 using namespace femus;
 
 double InitalValueU(const std::vector < double >& x) {
-  return 10;
+  return 0.5;
 }
 
 double InitalValueV(const std::vector < double >& x) {
-  return 0.1;
+  return 0.5;
 }
 
 double InitalValueW(const std::vector < double >& x) {
-  return 0.1;
+  return 0.5;
 }
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
@@ -57,14 +57,14 @@ int main(int argc, char** args) {
 
   unsigned solType = 2;
 
-  std::cout << " --------------------------------------------------     QUAD     --------------------------------------------------" << std::endl;
+  std::cout << " --------------------------------------------------     TEST     --------------------------------------------------" << std::endl;
 
-  mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/prism3D.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   unsigned dim = mlMsh.GetDimension();
 
-  //NOTE tests ran with 4 procs
+
  
   MultiLevelSolution mlSol(&mlMsh);
   // add variables to mlSol
@@ -75,10 +75,19 @@ int main(int argc, char** args) {
   mlSol.Initialize("V" , InitalValueV);
   if(dim == 3) mlSol.Initialize("W", InitalValueW);
 
-  //Test 1 (QUAD):
-  x[0] = -0.4375; //the marker is in element 113 (serial run)
-  x[1] = 0.;
-  x[2] = 0.;
+//   //Test 1 (QUAD):
+//   
+//     NOTE tests ran with 4 procs
+//   x[0] = -0.46875; //the marker is in element 191 (proc 3 of 4)
+//   x[1] = -0.5;
+//   x[2] = 0.;
+  
+
+//Test 1 (TET):  element 20
+    //NOTE Tests ran with 2 procs
+      x[0] = -0.5;
+      x[1] = 0.;
+      x[2] = 0.;
   
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
   Marker a1Quad(x, VOLUME, mlMsh.GetLevel(0), solType, true);
@@ -86,9 +95,9 @@ int main(int argc, char** args) {
   std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
   std::cout << " The marker type is " <<  a1Quad.GetMarkerType() << std::endl;
   
-  double dt=1.0;
-  
-  a1Quad.Advection(mlSol.GetLevel(0), 10, dt);
+  double T = 1.0;
+  unsigned n  = 20;
+  a1Quad.Advection(mlSol.GetLevel(0), n, T);
 
   variablesToBePrinted.push_back("All");
 
