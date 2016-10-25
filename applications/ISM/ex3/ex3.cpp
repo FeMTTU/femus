@@ -59,7 +59,8 @@ int main(int argc, char** args) {
 
   std::cout << " --------------------------------------------------     TEST     --------------------------------------------------" << std::endl;
 
-  mlMsh.ReadCoarseMesh("./input/prism3D.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/prism3D.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   unsigned dim = mlMsh.GetDimension();
@@ -77,17 +78,17 @@ int main(int argc, char** args) {
 
 //   //Test 1 (QUAD):
 //   
-//     NOTE tests ran with 4 procs
-//   x[0] = -0.46875; //the marker is in element 191 (proc 3 of 4)
-//   x[1] = -0.5;
-//   x[2] = 0.;
+  //NOTE tests ran with 4 procs
+  x[0] = -0.46875; //the marker is in element 191 (proc 3 of 4)
+  x[1] = -0.5;
+  x[2] = 0.;
   
 
-//Test 1 (TET):  element 20
-    //NOTE Tests ran with 2 procs
-      x[0] = -0.5;
-      x[1] = 0.;
-      x[2] = 0.;
+// //Test 1 (TET):  element 20
+//     //NOTE Tests ran with 2 procs
+//       x[0] = -0.5;
+//       x[1] = 0.;
+//       x[2] = 0.;
   
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
   Marker a1Quad(x, VOLUME, mlMsh.GetLevel(0), solType, true);

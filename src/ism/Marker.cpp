@@ -1458,17 +1458,18 @@ namespace femus {
     bool  pcElemUpdate ;
     bool integrationIsOver = false;
 
-    unsigned order = 1;
+    unsigned order = 2;
     unsigned step = 0.;
 
-    _K.resize(order);
-
-    for(unsigned k = 0; k < order; k++) {
-      _K[k].resize(dim);
+    if(_iproc == _mproc) {
+      _K.resize(order);
+      for(unsigned k = 0; k < order; k++) {
+        _K[k].resize(dim);
+      }
     }
 
-    while(integrationIsOver == false) {
 
+    while(integrationIsOver == false) {
       unsigned mprocOld = _mproc;
       if(_iproc == _mproc) {
         pcElemUpdate = true ;
@@ -1478,19 +1479,17 @@ namespace femus {
           unsigned tstep = step / order;
           unsigned istep = step % order;
 
-	   std::vector< double > xk(dim);
-	  
+
+
           if(istep == 0) {
-	    for(unsigned i = 0; i < dim; i++) {
-	      xk[i] = _x[i];
-	    }
+            _x0 = _x;
             for(unsigned k = 0; k < order; k++) {
               _K[k].assign(dim, 0.);
             }
           }
 
 
-          std::cout << " -----------------------------" << "step = " <<  step << " -----------------------------" << std::endl;
+          std::cout << " -----------------------------" << "step = " <<  step <<" tstep = " << tstep << " istep = " << istep << " -----------------------------" << std::endl;
           std::cout << " _iproc = " << _iproc << std::endl;
 
           updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); //send xk
@@ -1498,26 +1497,27 @@ namespace femus {
           for(unsigned i = 0; i < dim; i++) {
             _K[istep][i] = V[i] * h;
           }
-          
-          	  
+
           step++;
-	  istep++;
-	  
-	  if(istep < order){
-	    for(unsigned i = 0; i < dim; i++) {
-	      for(unsigned j = 0; j < order; j++){
-		xk[i] += _a[order - 1][istep][j] * _K[j][i];
-	      }
-	    }
-	  }
-	  else if (istep == order){
-	    for(unsigned i = 0; i < dim; i++) {
-	      for(unsigned j = 0; j < order; j++){
-		_x[i] += _b[order - 1][j] * _K[j][i];
-	      }
-	    }
-	  }
-	  
+          istep++;
+
+          if(istep < order) {
+            for(unsigned i = 0; i < dim; i++) {
+	      _x[i] = _x0[i];
+              for(unsigned j = 0; j < order; j++) {
+                _x[i] +=  _a[order - 1][istep][j] * _K[j][i];
+              }
+            }
+          }
+          else if(istep == order) {
+            for(unsigned i = 0; i < dim; i++) {
+	      _x[i] = _x0[i];
+              for(unsigned j = 0; j < order; j++) {
+                _x[i] += _b[order - 1][j] * _K[j][i];
+              }
+            }
+          }
+
 
           //BEGIN TO BE REMOVED
           for(unsigned i = 0; i < dim; i++) {
@@ -1532,31 +1532,28 @@ namespace femus {
           unsigned iel = _elem;
           GetElementSerial(_elem);
 
-          if(_elem == UINT_MAX) {
+          if(_elem == UINT_MAX) { //out of the domain
             std::cout << " the marker has been advected outside the domain " << std::endl;
             break;
           }
-          else if(iel != _elem && _iproc != _mproc) {
-
+          else if(iel != _elem && _iproc != _mproc) { //different element different process
             break;
-
           }
-          else if(iel != _elem) {
+          else if(iel != _elem) { //different element same process
             pcElemUpdate = true;
             FindLocalCoordinates(solVType, _aX, pcElemUpdate);
           }
-          else {
-            pcElemUpdate = true; //added this
+          else { //same element same process
             FindLocalCoordinates(solVType, _aX, pcElemUpdate);
           }
         }
       }
+      std::cout << step;
+      
       // all processes
       MPI_Bcast(& _elem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& _x[0], dim, MPI_DOUBLE, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& step, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
-
-
 
       if(_elem == UINT_MAX) {
         std::cout << " the marker has been advected outside the domain " << std::endl;
@@ -1566,119 +1563,43 @@ namespace femus {
         _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
         if(_mproc != mprocOld) {
           GetElement();
-          if(_mproc == _iproc) {
-            FindLocalCoordinates(solVType, _aX, true);
-          }
-          else if(mprocOld == _iproc) {
-            _xi.resize(0);
+
+          if(mprocOld == _iproc) {
+            unsigned istep = step % order;
+            if(istep != 0) {
+//               for(int j = 0; j < order; j++) {
+//                 MPI_Send(&_K[order][0], dim, MPI_DOUBLE, _mproc, j, PETSC_COMM_WORLD);
+//               }
+              MPI_Send(&_x0[0], dim, MPI_DOUBLE, _mproc, order , PETSC_COMM_WORLD);
+            }
+            std::vector < double > ().swap(_xi);
+            std::vector < double > ().swap(_x0);
+            std::vector < std::vector < double > > ().swap(_K);
             std::vector < std::vector < std::vector < double > > >().swap(_aX);
+          }
+          else if(_mproc == _iproc) {
+            _x0.resize(dim);
+            _K.resize(order);
+            for(unsigned i = 0; i < order; i++) {
+              _K[i].resize(dim);
+            }
+            unsigned istep = step % order;
+            if(istep != 0) {
+//               for(int j = 0; j < order; j++) {
+//                 MPI_Recv(&_K[order][0], dim, MPI_DOUBLE, mprocOld, j, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+//               }
+              MPI_Recv(&_x0[0], dim, MPI_DOUBLE, mprocOld, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+            FindLocalCoordinates(solVType, _aX, true);
           }
         }
       }
       std::cout << "step = " << step << std::endl;
-      if(step == n) {
+      if(step == n * order) {
         integrationIsOver = true;
         std::cout << "Integration is over, point in proc " << _mproc << std::endl;
       }
     }
-
-
-//     unsigned dim = _mesh->GetDimension();
-//
-//     unsigned RKOrder = 4;  //order of the RK integration scheme
-//
-//     std::vector< std::vector<double> > x(RKOrder);
-//     std::vector< std::vector<double> > K(RKOrder);
-//     std::vector< double > y(dim, 0);
-//
-//     // determine the step size
-//     double h = T / n;
-//
-//     for(unsigned i = 0; i < RKOrder; i++) {
-//       x[i].reserve(dim + 1); // x = (t, x, y, z)
-//       K[i].reserve(dim);
-//     }
-//     for(unsigned i = 0; i < RKOrder; i++) {
-//       x[i].resize(dim + 1);
-//       K[i].resize(dim);
-//     }
-//
-//     //initialize time
-//     x[0][0] = 0;
-//
-//     // initialize the position
-//     for(unsigned i = 1; i < dim + 1; i++) {
-//       x[0][i] = _x[i - 1] ;
-//       std::cout << "x[0][" << i << "]= " << x[0][i] << std::endl;
-//     }
-//
-//
-//     double step = 0;
-//     while(step < n) {
-//
-//       std::cout << "------------------------------------- t = " << x[0][0] << "----------------------------------" << std::endl;
-//       std::cout << "------------------------------------- h = " << h << "------------------------------------" << std::endl;
-//
-//       for(unsigned i = 0; i < dim; i++) {
-//         std::cout << "f(x)[ " << i << "]= " << (*f)(x[0])[i] << std::endl ;
-//         K[0][i] = h * (*f)(x[0])[i] ;
-//         std::cout << "K[0][[ " << i << "]= " << K[0][i] << std::endl ;
-//       }
-//
-//       //compute x[1]
-//       x[1][0] = x[0][0] + (0.5 * h);
-//       for(unsigned j = 1; j < dim + 1; j++) {
-//         x[1][j] = x[0][j] + 0.5 * K[0][j - 1];
-//       }
-//
-//       //compute K[1]
-//       for(unsigned i = 0; i < dim; i++) {
-//         K[1][i] = h * (*f)(x[1])[i] ;
-//         std::cout << "K[1][[ " << i << "]= " << K[1][i] << std::endl ;
-//       }
-//
-//       //compute x[2]
-//       x[2][0] = x[0][0] + (0.5 * h);
-//       for(unsigned j = 1; j < dim + 1; j++) {
-//         x[2][j] = x[0][j] + 0.5 * K[1][j - 1];
-//       }
-//
-//       //compute K[2]
-//       for(unsigned i = 0; i < dim; i++) {
-//         K[2][i] = h * (*f)(x[2])[i] ;
-//         std::cout << "K[2][[ " << i << "]= " << K[2][i] << std::endl ;
-//       }
-//
-//       //compute x[3]
-//       x[3][0] = x[0][0] + h;
-//       for(unsigned j = 1; j < dim + 1; j++) {
-//         x[3][j] = x[0][j] + K[2][j - 1];
-//       }
-//
-//       //compute K[3]
-//       for(unsigned i = 0; i < dim; i++) {
-//         K[3][i] = h * (*f)(x[3])[i] ;
-//         std::cout << "K[3][[ " << i << "]= " << K[3][i] << std::endl ;
-//       }
-//
-//       // RK stepping
-//       for(unsigned j = 1; j < dim + 1; j++) {
-//         x[0][j] += (1. / 6) * (K[0][j - 1] + 2. * K[1][j - 1] + 2. * K[2][j - 1] + K[3][j - 1]);
-//         std::cout << "x[0][" << j << "]=" << x[0][j] << std::endl;
-//       }
-//       //update t
-//       x[0][0] += h ;
-//
-//       //update the step
-//       step++;
-//     }
-//
-//     for(unsigned j = 1; j < dim + 1; j++) {
-//       y[j - 1] = x[0][j];
-//     }
-//
-//     return y;
-
   }
 
 
@@ -1707,12 +1628,6 @@ namespace femus {
       }
     }
   }
-
-
-
-
-
-
 
 
 
