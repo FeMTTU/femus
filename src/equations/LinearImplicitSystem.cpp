@@ -119,6 +119,14 @@ namespace femus {
       BuildProlongatorMatrix(ig);
     }
 
+    _PPamr.resize(_gridn);
+    _RRamr.resize(_gridn);
+
+    for(unsigned i = 0; i < _gridn; i++) {
+      _PPamr[i] = NULL;
+      _RRamr[i] = NULL;
+    }
+    
     for(unsigned ig = 0; ig < _gridn; ig++) {
       BuildAmrRestrictionMatrix(ig);
     }
@@ -616,8 +624,8 @@ namespace femus {
     for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
       
       unsigned solIndex = _SolSystemPdeIndex[k];
-      unsigned  solType = _ml_sol->GetSolutionType(solIndex);
-      unsigned kOffset = LinSol->KKoffset[solIndex][iproc];
+      unsigned solType = _ml_sol->GetSolutionType(solIndex);
+      unsigned kOffset = LinSol->KKoffset[k][iproc];
       
       unsigned solOffset = mesh->_dofOffset[solType][iproc];
       unsigned solOffsetp1 = mesh->_dofOffset[solType][iproc+1];
@@ -626,7 +634,7 @@ namespace femus {
           NNZ_d->set(kOffset + (i - solOffset), 1);
         }
         else {
-          double cnt_d = 0;
+	  double cnt_d = 0;
           double cnt_o = 0;
           for(std::map<unsigned, double> ::iterator it = amrRestriction[solType][i].begin(); it != amrRestriction[solType][i].end(); it++) {
             if(it->first >= solOffset && it->first < solOffsetp1) {
@@ -664,7 +672,7 @@ namespace femus {
       unsigned solIndex = _SolSystemPdeIndex[k];
       unsigned  solType = _ml_sol->GetSolutionType(solIndex);
       
-      unsigned kOffset = LinSol->KKoffset[solIndex][iproc];
+      unsigned kOffset = LinSol->KKoffset[k][iproc];
       
       unsigned solOffset = mesh->_dofOffset[solType][iproc];
       unsigned solOffsetp1 = mesh->_dofOffset[solType][iproc+1];
@@ -683,14 +691,24 @@ namespace femus {
 	  std::vector <double> value(ncols);
 	  unsigned j = 0;
           for(std::map<unsigned, double> ::iterator it = amrRestriction[solType][i].begin(); it != amrRestriction[solType][i].end(); it++) {
-	    col[j] = kOffset + (it->first - solOffset);
-	    value[j] = it->second;
+	    if(it->first >= solOffset && it->first < solOffsetp1) {
+              col[j] = kOffset + (it->first - solOffset);
+            }
+            else {
+	      unsigned jproc = _msh[level]->IsdomBisectionSearch(it->first, solType);
+	      col[j] = LinSol->KKoffset[k][jproc] + (it->first - mesh->_dofOffset[solType][jproc]);
+            }
+            value[j] = it->second;
+	    j++;
           }
           _RRamr[level]->insert_row(irow, ncols, col, &value[0]);
         }
       }
     }
     _RRamr[level]->close();
+    int a;
+    std::cout<<"AAAAAAAAAA"<<std::endl;
+    std::cin>>a;
   }
 
 
