@@ -171,6 +171,12 @@ public:
     virtual void matrix_ABC(const SparseMatrix &mat_A,const SparseMatrix &mat_B, const SparseMatrix &mat_C, const bool &reuse) = 0;
 
     /** To be Addded */
+    virtual void matrix_RightMultiplyMatTranspose(const SparseMatrix &mat_A) = 0;
+    
+    /** To be Addded */
+    virtual void matrix_LeftMultiplyMatTranspose(const SparseMatrix &mat_A) = 0;
+    
+    /** To be Addded */
     virtual void matrix_get_diagonal_values(const std::vector< int > &index, std::vector<double> &value)const=0;
 
     /** To be Addded */

@@ -109,7 +109,6 @@ namespace femus {
 
     _PP.resize(_gridn);
     _RR.resize(_gridn);
-
     for(unsigned i = 0; i < _gridn; i++) {
       _PP[i] = NULL;
       _RR[i] = NULL;
@@ -118,7 +117,6 @@ namespace femus {
     for(unsigned ig = 1; ig < _gridn; ig++) {
       BuildProlongatorMatrix(ig);
     }
-
     _PPamr.resize(_gridn);
     _RRamr.resize(_gridn);
 
@@ -126,12 +124,15 @@ namespace femus {
       _PPamr[i] = NULL;
       _RRamr[i] = NULL;
     }
-    
     for(unsigned ig = 0; ig < _gridn; ig++) {
       BuildAmrRestrictionMatrix(ig);
     }
     
-    
+    for(unsigned ig = 1; ig < _gridn; ig++) {
+      _PP[ig]->matrix_RightMultiplyMatTranspose(*_RRamr[ig-1]);
+    } 
+      
+      
     
     _NSchurVar_test = 0;
     _numblock_test = 0;
@@ -706,9 +707,6 @@ namespace femus {
       }
     }
     _RRamr[level]->close();
-    int a;
-    std::cout<<"AAAAAAAAAA"<<std::endl;
-    std::cin>>a;
   }
 
 
