@@ -128,17 +128,15 @@ namespace femus {
         _LinSolver[igridn - 1u]->SetResZero();
         _assembleMatrix = _buildSolver;
         _assemble_system_function( _equation_systems );
-// 	NumericVector *RESamr = _LinSolver[igridn - 1u]->_RES;
-// 	_LinSolver[igridn - 1u]->_RES = NULL;
-// 	_LinSolver[igridn - 1u]->_RES->
-// 	delete RESamr;
-	
+			 	
+	 (_LinSolver[igridn - 1u]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn - 1u]->_RES, *_PPamr[igridn - 1u]);  
+	 *(_LinSolver[igridn - 1u]->_RES) = *(_LinSolver[igridn - 1u]->_RESC);
 	
         if( _buildSolver ){
 	  
-	/*  _LinSolver[igridn - 1u]->SwapMatrices();
+	  _LinSolver[igridn - 1u]->SwapMatrices();
 	  _LinSolver[igridn - 1u]->_KK->matrix_PtAP(*_PPamr[igridn - 1u], *_LinSolver[igridn - 1u]->_KKamr, false);
-	*/  
+	  
           _MGmatrixFineReuse = ( 0 == nonLinearIterator ) ? false : true;
           _MGmatrixCoarseReuse = ( igridn - grid0 > 0 ) ?  true : _MGmatrixFineReuse;
 
@@ -193,11 +191,20 @@ namespace femus {
           _LinSolver[igridn - 1u]->SetResZero();
           _assembleMatrix = false;
           _assemble_system_function( _equation_systems );
+	   (_LinSolver[igridn - 1u]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn - 1u]->_RES, *_PPamr[igridn - 1u]);  
+	  *(_LinSolver[igridn - 1u]->_RES) = *(_LinSolver[igridn - 1u]->_RESC);
 
         }
 
-        if( _MGsolver * _buildSolver ) _LinSolver[igridn - 1u]->MGClear();
+        if( _buildSolver ) {
+	  _LinSolver[igridn - 1u]->SwapMatrices();
+	  if( _MGsolver) {
+	  _LinSolver[igridn - 1u]->MGClear();
+	  }
+	}
 
+	
+	
         double nonLinearEps;
         bool nonLinearIsConverged = IsNonLinearConverged( igridn - 1, nonLinearEps );
 
@@ -228,4 +235,6 @@ namespace femus {
 
 
 } //end namespace femus
+
+
 

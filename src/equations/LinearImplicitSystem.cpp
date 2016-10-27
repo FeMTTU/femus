@@ -128,12 +128,10 @@ namespace femus {
       BuildAmrOperatorMatrices(ig);
     }
     
-//     for(unsigned ig = 1; ig < _gridn; ig++) {
-//       _PP[ig]->matrix_RightMultiplyMatTranspose(*_RRamr[ig-1]);
-//     } 
-      
-      
-    
+    for(unsigned ig = 1; ig < _gridn; ig++) {
+      _PP[ig]->matrix_RightMatMult(*_PPamr[ig-1]);
+    } 
+       
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
@@ -296,6 +294,9 @@ namespace femus {
       if(linearIsConverged)  break;
     }
 
+    (_LinSolver[gridn - 1u]->_RESC)->matrix_mult(*_LinSolver[gridn - 1u]->_EPS, *_PPamr[gridn - 1u]);  
+    *(_LinSolver[gridn - 1u]->_EPS) = *(_LinSolver[gridn - 1u]->_RESC);
+    
     _solution[gridn - 1u]->UpdateSol(_SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset);
 
     std::cout << "       *************** Linear-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed

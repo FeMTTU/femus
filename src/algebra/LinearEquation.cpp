@@ -196,6 +196,7 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
 
   _KK = SparseMatrix::build().release();
   _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
+  _KKamr = SparseMatrix::build().release();
 }
 
 //--------------------------------------------------------------------------------
