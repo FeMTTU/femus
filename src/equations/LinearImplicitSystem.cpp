@@ -65,9 +65,9 @@ namespace femus {
       if(_RR[ig]) delete _RR[ig];
       
       
-      if(_PPamr[ig]) delete _PP[ig];
+      if(_PPamr[ig]) delete _PPamr[ig];
 
-      if(_RRamr[ig]) delete _RR[ig];
+      if(_RRamr[ig]) delete _RRamr[ig];
     }
 
     _NSchurVar_test = 0;
@@ -125,7 +125,7 @@ namespace femus {
       _RRamr[i] = NULL;
     }
     for(unsigned ig = 0; ig < _gridn; ig++) {
-      BuildAmrRestrictionMatrix(ig);
+      BuildAmrOperatorMatrices(ig);
     }
     
 //     for(unsigned ig = 1; ig < _gridn; ig++) {
@@ -185,9 +185,8 @@ namespace femus {
       _assemble_system_function(_equation_systems);
 
       _LinSolver[igridn - 1u]->SwapMatrices();
-      //_LinSolver[igridn - 1u]->_KK->matrix_RARt(*_RRamr[igridn - 1u], *_LinSolver[igridn - 1u]->_KKamr, false);
-      _LinSolver[igridn - 1u]->SwapMatrices();
-      
+      _LinSolver[igridn - 1u]->_KK->matrix_PtAP(*_PPamr[igridn - 1u], *_LinSolver[igridn - 1u]->_KKamr, false);
+           
       _MGmatrixFineReuse = false;
       _MGmatrixCoarseReuse = (igridn - grid0 > 0) ?  true : _MGmatrixFineReuse;
       for(unsigned i = igridn - 1u; i > 0; i--) {
@@ -223,6 +222,8 @@ namespace femus {
       }
       else MLVcycle(igridn);
 
+      _LinSolver[igridn - 1u]->SwapMatrices();
+      
       if(ThisIsAMR) AddAMRLevel(AMRCounter);
 
       if(igridn < _gridn) ProlongatorSol(igridn);
@@ -605,7 +606,7 @@ namespace femus {
   }
 
 
-  void LinearImplicitSystem::BuildAmrRestrictionMatrix(unsigned level) {
+  void LinearImplicitSystem::BuildAmrOperatorMatrices(unsigned level) {
 
     int iproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -670,6 +671,8 @@ namespace femus {
     delete NNZ_d;
     delete NNZ_o;
 
+    
+    
     _RRamr[level] = SparseMatrix::build().release();
     _RRamr[level]->init(n, n, n_loc, n_loc, nnz_d, nnz_o);
 
@@ -711,6 +714,10 @@ namespace femus {
       }
     }
     _RRamr[level]->close();
+    _PPamr[level] = SparseMatrix::build().release();
+    _RRamr[level]->get_transpose( *_PPamr[level]); 
+    
+    
   }
 
 

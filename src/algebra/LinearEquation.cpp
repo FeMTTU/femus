@@ -43,6 +43,7 @@ LinearEquation::LinearEquation(Solution *other_solution){
   _RES = NULL;
   _RESC = NULL;
   _KK = NULL;
+  _KKamr = NULL;
 }
 
 //--------------------------------------------------------------------------------
@@ -229,6 +230,9 @@ void LinearEquation::DeletePde() {
 
   if(_KK)
     delete _KK;
+  
+  if(_KKamr)
+    delete _KKamr;
 
   if(_EPS)
     delete _EPS;
