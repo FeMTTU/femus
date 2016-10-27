@@ -1453,12 +1453,11 @@ namespace femus {
     //BEGIN Numerical integration scheme
     // determine the step size
     double h = T / n;
-    //let's take it easy and just apply Euler's method
-
+   
     bool  pcElemUpdate ;
     bool integrationIsOver = false;
 
-    unsigned order = 2;
+    unsigned order = 4;
     unsigned step = 0.;
 
     if(_iproc == _mproc) {
@@ -1479,8 +1478,6 @@ namespace femus {
           unsigned tstep = step / order;
           unsigned istep = step % order;
 
-
-
           if(istep == 0) {
             _x0 = _x;
             for(unsigned k = 0; k < order; k++) {
@@ -1488,10 +1485,9 @@ namespace femus {
             }
           }
 
-
           std::cout << " -----------------------------" << "step = " <<  step <<" tstep = " << tstep << " istep = " << istep << " -----------------------------" << std::endl;
           std::cout << " _iproc = " << _iproc << std::endl;
-
+  
           updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); //send xk
 
           for(unsigned i = 0; i < dim; i++) {
@@ -1517,7 +1513,6 @@ namespace femus {
               }
             }
           }
-
 
           //BEGIN TO BE REMOVED
           for(unsigned i = 0; i < dim; i++) {
@@ -1567,9 +1562,9 @@ namespace femus {
           if(mprocOld == _iproc) {
             unsigned istep = step % order;
             if(istep != 0) {
-//               for(int j = 0; j < order; j++) {
-//                 MPI_Send(&_K[order][0], dim, MPI_DOUBLE, _mproc, j, PETSC_COMM_WORLD);
-//               }
+	      for(int i = 0; i < order; i++){
+		MPI_Send(&_K[i][0], dim, MPI_DOUBLE, _mproc, i , PETSC_COMM_WORLD);
+	      }
               MPI_Send(&_x0[0], dim, MPI_DOUBLE, _mproc, order , PETSC_COMM_WORLD);
             }
             std::vector < double > ().swap(_xi);
@@ -1584,10 +1579,10 @@ namespace femus {
               _K[i].resize(dim);
             }
             unsigned istep = step % order;
-            if(istep != 0) {
-//               for(int j = 0; j < order; j++) {
-//                 MPI_Recv(&_K[order][0], dim, MPI_DOUBLE, mprocOld, j, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-//               }
+            if(istep != 0) {               
+	      for(int i = 0; i < order; i++){
+		MPI_Recv(&_K[i][0], dim, MPI_DOUBLE, mprocOld, i , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+	      }
               MPI_Recv(&_x0[0], dim, MPI_DOUBLE, mprocOld, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
             }
             FindLocalCoordinates(solVType, _aX, true);
@@ -1731,6 +1726,7 @@ namespace femus {
 
 
 }
+
 
 
 
