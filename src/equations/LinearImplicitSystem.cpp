@@ -128,9 +128,9 @@ namespace femus {
       BuildAmrRestrictionMatrix(ig);
     }
     
-    for(unsigned ig = 1; ig < _gridn; ig++) {
-      _PP[ig]->matrix_RightMultiplyMatTranspose(*_RRamr[ig-1]);
-    } 
+//     for(unsigned ig = 1; ig < _gridn; ig++) {
+//       _PP[ig]->matrix_RightMultiplyMatTranspose(*_RRamr[ig-1]);
+//     } 
       
       
     
@@ -184,6 +184,10 @@ namespace femus {
       _assembleMatrix = true;
       _assemble_system_function(_equation_systems);
 
+      _LinSolver[igridn - 1u]->SwapMatrices();
+      //_LinSolver[igridn - 1u]->_KK->matrix_RARt(*_RRamr[igridn - 1u], *_LinSolver[igridn - 1u]->_KKamr, false);
+      _LinSolver[igridn - 1u]->SwapMatrices();
+      
       _MGmatrixFineReuse = false;
       _MGmatrixCoarseReuse = (igridn - grid0 > 0) ?  true : _MGmatrixFineReuse;
       for(unsigned i = igridn - 1u; i > 0; i--) {

@@ -633,26 +633,55 @@ namespace femus {
     A->close();
     Mat matCopy;
 
-    MatConvert(_mat, MATSAME, MAT_INITIAL_MATRIX, &matCopy);
+    int ierr = MatConvert(_mat, MATSAME, MAT_INITIAL_MATRIX, &matCopy);
+    CHKERRABORT(MPI_COMM_WORLD, ierr);
+
     this->clear();
 
-    MatMatTransposeMult(A->mat(), matCopy, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &_mat);;
-    MatDestroy(&matCopy);
+    Mat At;
+
+    ierr = MatTranspose(A->mat(), MAT_INITIAL_MATRIX, &At);
+    CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+    MatMatMultSymbolic(matCopy, At, 1.0, &_mat);
+    MatMatMultNumeric(matCopy, At, _mat);
+
+    ierr = MatDestroy(&matCopy);
+    CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+    ierr = MatDestroy(&At);
+    CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+    this->_is_initialized = true;
 
   }
-  
-  
+
   void PetscMatrix::matrix_LeftMultiplyMatTranspose(const SparseMatrix &mat_A) {
 
     PetscMatrix* A = const_cast< PetscMatrix* >(static_cast < const PetscMatrix* >(&mat_A));
     A->close();
     Mat matCopy;
 
-    MatConvert(_mat, MATSAME, MAT_INITIAL_MATRIX, &matCopy);
+    int ierr = MatConvert(_mat, MATSAME, MAT_INITIAL_MATRIX, &matCopy);
+    CHKERRABORT(MPI_COMM_WORLD, ierr);
+
     this->clear();
 
-    MatTransposeMatMult(A->mat(), matCopy, MAT_INITIAL_MATRIX, PETSC_DEFAULT, &_mat);;
-    MatDestroy(&matCopy);
+    Mat At;
+
+    ierr = MatTranspose(A->mat(), MAT_INITIAL_MATRIX, &At);
+    CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+    MatMatMultSymbolic(At, matCopy, 1.0, &_mat);
+    MatMatMultNumeric(At, matCopy, _mat);
+
+    ierr = MatDestroy(&matCopy);
+    CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+    ierr = MatDestroy(&At);
+    CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+    this->_is_initialized = true;
 
   }
 

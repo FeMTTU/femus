@@ -88,11 +88,18 @@ public:
   /** AddLevel */
   void AddLevel();
 
+  void SwapMatrices(){
+    SparseMatrix *Temp = _KK;
+    _KK = _KKamr;
+    _KKamr = Temp;
+  }
+  
   // member data
   Mesh *_msh;
   Solution *_solution;
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
   SparseMatrix *_KK;
+  SparseMatrix *_KKamr;
   vector < vector <unsigned> > KKoffset;
   vector < unsigned > KKghostsize;
   vector < vector < int> > KKghost_nd;
