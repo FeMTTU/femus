@@ -43,7 +43,7 @@ void MeshASMPartitioning::DoPartition( const unsigned *block_size, vector < vect
   for (unsigned iel = ElemOffset; iel < ElemOffsetp1; iel++) {
     unsigned flag_mat   = _mesh.GetElementMaterial(iel);
 
-    if(2 == flag_mat){
+    if(4 > flag_mat){
       counter[1]++;
     }
   }
@@ -70,7 +70,7 @@ void MeshASMPartitioning::DoPartition( const unsigned *block_size, vector < vect
       unsigned counter=0;
       for (unsigned iel = ElemOffset; iel < ElemOffsetp1; iel++) {
 	unsigned flag_mat   = _mesh.GetElementMaterial(iel);
-	if( flag_block[iblock] == flag_mat ){
+	if( flag_block[iblock] == flag_mat || flag_block[iblock] + 1 == flag_mat){
 	  block_elements[ block_start + (counter / block_size[iblock]) ][ counter % block_size[iblock] ]=iel;
 	  counter++;
 	}

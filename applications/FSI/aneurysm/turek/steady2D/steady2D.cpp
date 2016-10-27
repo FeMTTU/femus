@@ -36,8 +36,8 @@ int main(int argc, char **args) {
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
 //   std::string infile = "./input/aneurysm_Sara_5.neu";
-  std::string infile = "./input/Turek_stents.neu";
-
+  std::string infile = "./input/Turek_porous_medium.neu";
+  
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
 
@@ -142,7 +142,7 @@ int main(int argc, char **args) {
   system.SetNonLinearConvergenceTolerance(1.e-9);
   system.SetResidualUpdateConvergenceTolerance(1.e-15);
   system.SetMaxNumberOfNonLinearIterations(4);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(1);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
