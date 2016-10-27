@@ -42,6 +42,7 @@ int main(int argc, char **args) {
 //   std::string infile = "./input/aneurysm_Sara_5.neu";
   //std::string infile = "./input/aneurisma_aorta.neu";
   std::string infile = "./input/turek_porous_scaled.neu";
+  //std::string infile = "./input/Turek_3D_D.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
