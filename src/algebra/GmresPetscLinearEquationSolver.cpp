@@ -389,7 +389,11 @@ namespace femus {
         if ( soltype == 4 ) owndofs /= ( _msh->GetDimension() + 1 );
         for(unsigned i = 0; i < owndofs; i++) {
           int idof_kk = KKoffset[k][processor_id()] + i;
-          VecSetValue(nullspBase[nullspSize], idof_kk, 1., INSERT_VALUES);
+	  
+	  unsigned inode_mts = _msh->_dofOffset[soltype][processor_id()] + i;  
+	  if((* (*_Bdc) [indexSol])(inode_mts) > 1.9){
+	    VecSetValue(nullspBase[nullspSize], idof_kk, 1., INSERT_VALUES);
+	  }
         }
 
         VecAssemblyBegin(nullspBase[nullspSize]);

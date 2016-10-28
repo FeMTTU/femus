@@ -55,10 +55,15 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
   if (elemgroupnumber == 7 && level < 5) refine = 1;
   if (elemgroupnumber == 8 && level < 6) refine = 1;
 
+  //if (elemgroupnumber==6 && level<1) refine=1;
+  //if (elemgroupnumber==7 && level<2) refine=1;
+  //if (elemgroupnumber==8 && level<3) refine=1;
 
-//   if (elemgroupnumber==6 && level<1) refine=1;
-//   if (elemgroupnumber==7 && level<2) refine=1;
-//   if (elemgroupnumber==8 && level<3) refine=1;
+  
+  
+//   if (elemgroupnumber==6 && level<2) refine=1;
+//   if (elemgroupnumber==7 && level<3) refine=1;
+//   if (elemgroupnumber==8 && level<4) refine=1;
 
   return refine;
 
@@ -91,7 +96,7 @@ int main(int argc, char** args) {
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   unsigned numberOfUniformLevels = 4;
-  unsigned numberOfSelectiveLevels = 1;
+  unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();

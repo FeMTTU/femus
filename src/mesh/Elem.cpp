@@ -814,13 +814,13 @@ namespace femus {
           cnt1++;
         }
 
+        unsigned solutionOffset = msh->_dofOffset[soltype][_iproc];
+	unsigned solutionOffsetp1 = msh->_dofOffset[soltype][_iproc+1];
         for(unsigned lproc = 0; lproc < _nprocs; lproc++) {
           masterNode.broadcast(lproc);
           slaveNodes.broadcast(lproc);
           slaveNodesValues.broadcast(lproc);
-	  unsigned solutionOffset = msh->_dofOffset[soltype][lproc];
-	  unsigned solutionOffsetp1 = msh->_dofOffset[soltype][lproc+1];
-          for(unsigned i = slaveNodes.begin(); i < slaveNodes.end(); i++) {
+	  for(unsigned i = slaveNodes.begin(); i < slaveNodes.end(); i++) {
             unsigned inode = masterNode[i];
 	    if(inode >= solutionOffset && inode< solutionOffsetp1 &&
 	      restriction[soltype].find(inode) == restriction[soltype].end()) {
