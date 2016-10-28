@@ -818,32 +818,44 @@ namespace femus {
           masterNode.broadcast(lproc);
           slaveNodes.broadcast(lproc);
           slaveNodesValues.broadcast(lproc);
+	  unsigned solutionOffset = msh->_dofOffset[soltype][lproc];
+	  unsigned solutionOffsetp1 = msh->_dofOffset[soltype][lproc+1];
           for(unsigned i = slaveNodes.begin(); i < slaveNodes.end(); i++) {
             unsigned inode = masterNode[i];
-            for(unsigned j = slaveNodes.begin(i); j < slaveNodes.end(i); j++) {
-              unsigned jnode = slaveNodes[i][j];
-              if(inode == jnode) {
-                if(restriction[soltype].find(jnode) != restriction[soltype].end()) {
-                  for(unsigned k = slaveNodes.begin(i); k < slaveNodes.end(i); k++) {
-                    unsigned knode = slaveNodes[i][k];
-                    double value = slaveNodesValues[i][k];
-                    restriction[soltype][jnode][knode] = (jnode != knode || value > 5.) ? value : restriction[soltype][jnode][knode];
-                    if(restriction[soltype].find(knode) == restriction[soltype].end()) {
-                      for(unsigned l = masterNode.begin(); l < masterNode.end(); l++) {
-                        counter++;
-                        if(masterNode[l] == knode) {
-                          for(unsigned m = slaveNodes.begin(l); m < slaveNodes.end(l); m++) {
-                            unsigned mnode = slaveNodes[l][m];
-                            restriction[soltype][knode][mnode] = slaveNodesValues[l][m];
-                          }
-                          break;
-                        }
-                      }
-                    }
-                  }
-                }
-                break;
-              }
+	    if(inode >= solutionOffset && inode< solutionOffsetp1 &&
+	      restriction[soltype].find(inode) == restriction[soltype].end()) {
+	      counter++;
+	      for(unsigned j = slaveNodes.begin(i); j < slaveNodes.end(i); j++) {
+		unsigned jnode = slaveNodes[i][j];
+		restriction[soltype][inode][jnode] = slaveNodesValues[i][j];
+	      }
+	    }
+	    else{
+	      for(unsigned j = slaveNodes.begin(i); j < slaveNodes.end(i); j++) {
+		unsigned jnode = slaveNodes[i][j];
+		if(inode == jnode) {
+		  if(restriction[soltype].find(jnode) != restriction[soltype].end()) {
+		    for(unsigned k = slaveNodes.begin(i); k < slaveNodes.end(i); k++) {
+		      unsigned knode = slaveNodes[i][k];
+		      double value = slaveNodesValues[i][k];
+		      restriction[soltype][jnode][knode] = (jnode != knode || value > 5.) ? value : restriction[soltype][jnode][knode];
+		      if(restriction[soltype].find(knode) == restriction[soltype].end()) {
+			for(unsigned l = masterNode.begin(); l < masterNode.end(); l++) {
+			  counter++;
+			  if(masterNode[l] == knode) {
+			    for(unsigned m = slaveNodes.begin(l); m < slaveNodes.end(l); m++) {
+			      unsigned mnode = slaveNodes[l][m];
+			      restriction[soltype][knode][mnode] = slaveNodesValues[l][m];
+			    }
+			    break;
+			  }
+			}
+		      }
+		    }
+		  }
+		  break;
+		}
+	      }
             }
           }
           masterNode.clearBroadcast();

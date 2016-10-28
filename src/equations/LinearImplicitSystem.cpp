@@ -717,13 +717,7 @@ namespace femus {
       }
     }
     _PPamr[level]->close();
-    double a;
-    std::cin>>a;
     _PPamr[level]->get_transpose(*_PPamr[level]);
-    
-   
-    
-
   }
 
 
