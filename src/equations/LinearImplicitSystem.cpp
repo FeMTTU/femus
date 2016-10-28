@@ -63,8 +63,8 @@ namespace femus {
       if(_PP[ig]) delete _PP[ig];
 
       if(_RR[ig]) delete _RR[ig];
-      
-      
+
+
       if(_PPamr[ig]) delete _PPamr[ig];
 
       if(_RRamr[ig]) delete _RRamr[ig];
@@ -127,11 +127,11 @@ namespace femus {
     for(unsigned ig = 0; ig < _gridn; ig++) {
       BuildAmrOperatorMatrices(ig);
     }
-    
+
     for(unsigned ig = 1; ig < _gridn; ig++) {
-      _PP[ig]->matrix_RightMatMult(*_PPamr[ig-1]);
-    } 
-       
+      _PP[ig]->matrix_RightMatMult(*_PPamr[ig - 1]);
+    }
+
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
@@ -184,7 +184,7 @@ namespace femus {
 
       _LinSolver[igridn - 1u]->SwapMatrices();
       _LinSolver[igridn - 1u]->_KK->matrix_PtAP(*_PPamr[igridn - 1u], *_LinSolver[igridn - 1u]->_KKamr, false);
-           
+
       _MGmatrixFineReuse = false;
       _MGmatrixCoarseReuse = (igridn - grid0 > 0) ?  true : _MGmatrixFineReuse;
       for(unsigned i = igridn - 1u; i > 0; i--) {
@@ -221,7 +221,7 @@ namespace femus {
       else MLVcycle(igridn);
 
       _LinSolver[igridn - 1u]->SwapMatrices();
-      
+
       if(ThisIsAMR) AddAMRLevel(AMRCounter);
 
       if(igridn < _gridn) ProlongatorSol(igridn);
@@ -294,9 +294,9 @@ namespace femus {
       if(linearIsConverged)  break;
     }
 
-    (_LinSolver[gridn - 1u]->_RESC)->matrix_mult(*_LinSolver[gridn - 1u]->_EPS, *_PPamr[gridn - 1u]);  
+    (_LinSolver[gridn - 1u]->_RESC)->matrix_mult(*_LinSolver[gridn - 1u]->_EPS, *_PPamr[gridn - 1u]);
     *(_LinSolver[gridn - 1u]->_EPS) = *(_LinSolver[gridn - 1u]->_RESC);
-    
+
     _solution[gridn - 1u]->UpdateSol(_SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset);
 
     std::cout << "       *************** Linear-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
@@ -629,19 +629,19 @@ namespace femus {
     NNZ_o->zero();
 
     for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
-      
+
       unsigned solIndex = _SolSystemPdeIndex[k];
       unsigned solType = _ml_sol->GetSolutionType(solIndex);
       unsigned kOffset = LinSol->KKoffset[k][iproc];
-      
+
       unsigned solOffset = mesh->_dofOffset[solType][iproc];
-      unsigned solOffsetp1 = mesh->_dofOffset[solType][iproc+1];
+      unsigned solOffsetp1 = mesh->_dofOffset[solType][iproc + 1];
       for(unsigned i = solOffset; i < solOffsetp1; i++) {
-        if(solType > 2 || amrRestriction[solType].find(i) == amrRestriction[solType].end() ) {
+        if(solType > 2 || amrRestriction[solType].find(i) == amrRestriction[solType].end()) {
           NNZ_d->set(kOffset + (i - solOffset), 1);
         }
         else {
-	  double cnt_d = 0;
+          double cnt_d = 0;
           double cnt_o = 0;
           for(std::map<unsigned, double> ::iterator it = amrRestriction[solType][i].begin(); it != amrRestriction[solType][i].end(); it++) {
             if(it->first >= solOffset && it->first < solOffsetp1) {
@@ -672,53 +672,58 @@ namespace femus {
     delete NNZ_d;
     delete NNZ_o;
 
-    
-    
-    _RRamr[level] = SparseMatrix::build().release();
-    _RRamr[level]->init(n, n, n_loc, n_loc, nnz_d, nnz_o);
+
+
+    _PPamr[level] = SparseMatrix::build().release();
+    _PPamr[level]->init(n, n, n_loc, n_loc, nnz_d, nnz_o);
 
     for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
       unsigned solIndex = _SolSystemPdeIndex[k];
       unsigned  solType = _ml_sol->GetSolutionType(solIndex);
-      
+
       unsigned kOffset = LinSol->KKoffset[k][iproc];
-      
+
       unsigned solOffset = mesh->_dofOffset[solType][iproc];
-      unsigned solOffsetp1 = mesh->_dofOffset[solType][iproc+1];
-      for(unsigned i = solOffset; i < solOffsetp1; i++) {
+      unsigned solOffsetp1 = mesh->_dofOffset[solType][iproc + 1];
       
-	unsigned irow = kOffset + (i - solOffset);
-	std::vector< unsigned > col;
-         if(solType > 2 || amrRestriction[solType].find(i) == amrRestriction[solType].end() ) {
-	   std::vector <int> col(1,irow);
-	   double value = 1.;
-	   _RRamr[level]->insert_row(irow, 1, col, &value);
+      std::cout << solOffset <<" "<<solOffsetp1<<std::endl;
+      
+      for(unsigned i = solOffset; i < solOffsetp1; i++) {
+        unsigned irow = kOffset + (i - solOffset);
+        if(solType > 2 || amrRestriction[solType].find(i) == amrRestriction[solType].end()) {
+          std::vector <int> col(1, irow);
+          double value = 1.;
+          _PPamr[level]->insert_row(irow, 1, col, &value);
         }
         else {
-	  int ncols = amrRestriction[solType][i].size();
-	  std::vector <int> col(ncols);
-	  std::vector <double> value(ncols);
-	  unsigned j = 0;
+          int ncols = amrRestriction[solType][i].size();
+          std::vector <int> col(ncols);
+          std::vector <double> value(ncols);
+          unsigned j = 0;
           for(std::map<unsigned, double> ::iterator it = amrRestriction[solType][i].begin(); it != amrRestriction[solType][i].end(); it++) {
-	    if(it->first >= solOffset && it->first < solOffsetp1) {
+            if(it->first >= solOffset && it->first < solOffsetp1) {
               col[j] = kOffset + (it->first - solOffset);
             }
             else {
-	      unsigned jproc = _msh[level]->IsdomBisectionSearch(it->first, solType);
-	      col[j] = LinSol->KKoffset[k][jproc] + (it->first - mesh->_dofOffset[solType][jproc]);
+	      std::cout << it->first <<std::endl;
+              unsigned jproc = _msh[level]->IsdomBisectionSearch(it->first, solType);
+              col[j] = LinSol->KKoffset[k][jproc] + (it->first - mesh->_dofOffset[solType][jproc]);
             }
             value[j] = it->second;
-	    j++;
+            j++;
           }
-          _RRamr[level]->insert_row(irow, ncols, col, &value[0]);
+          _PPamr[level]->insert_row(irow, ncols, col, &value[0]);
         }
       }
     }
-    _RRamr[level]->close();
-    _PPamr[level] = SparseMatrix::build().release();
-    _RRamr[level]->get_transpose( *_PPamr[level]); 
+    _PPamr[level]->close();
+    double a;
+    std::cin>>a;
+    _PPamr[level]->get_transpose(*_PPamr[level]);
     
+   
     
+
   }
 
 
