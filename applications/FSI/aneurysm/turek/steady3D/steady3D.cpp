@@ -54,7 +54,7 @@ int main(int argc, char **args) {
   muf = 3.38*1.0e-4*rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 120000*1.e1;
+  E = 120000*1.e3;
 
   Parameter par(Lref, Uref);
 
@@ -73,7 +73,7 @@ int main(int argc, char **args) {
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -267,6 +267,7 @@ if( !strcmp(name, "U") ){
     if(1 == facename) {
       double r2 = ((x[1]*1000.)-7.)*((x[1]*1000.)-7.) + (x[2]*1000.)*(x[2]*1000.);
       value = 0.05 * (1.-r2); //inflow
+      //value=25;
     }
     else if( 2 == facename ){
       test = 0;
