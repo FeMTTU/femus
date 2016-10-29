@@ -61,12 +61,8 @@ namespace femus {
       delete _LinSolver[ig];
 
       if(_PP[ig]) delete _PP[ig];
-
       if(_RR[ig]) delete _RR[ig];
-
-
       if(_PPamr[ig]) delete _PPamr[ig];
-
       if(_RRamr[ig]) delete _RRamr[ig];
     }
 
@@ -117,18 +113,17 @@ namespace femus {
     for(unsigned ig = 1; ig < _gridn; ig++) {
       BuildProlongatorMatrix(ig);
     }
+    
     _PPamr.resize(_gridn);
     _RRamr.resize(_gridn);
-
     for(unsigned i = 0; i < _gridn; i++) {
       _PPamr[i] = NULL;
       _RRamr[i] = NULL;
     }
-    for(unsigned ig = 0; ig < _gridn; ig++) {
-      BuildAmrOperatorMatrices(ig);
+    for(unsigned ig = _gridr; ig < _gridn; ig++) {
+      BuildAmrProlongatorMatrix(ig);
     }
-
-    for(unsigned ig = 1; ig < _gridn; ig++) {
+    for(unsigned ig = _gridr + 1; ig < _gridn; ig++) {
       _PP[ig]->matrix_RightMatMult(*_PPamr[ig - 1]);
     }
 
@@ -150,15 +145,15 @@ namespace femus {
 
     if(_mg_type == F_CYCLE) {
       std::cout << std::endl << " *** Start " << _solverType << " Linear Full-Cycle ***" << std::endl;
-      grid0 = 1;
+      grid0 = 0;
     }
     else if(_mg_type == V_CYCLE) {
       std::cout << std::endl << " *** Start " << _solverType << " Linear V-Cycle ***" << std::endl;
-      grid0 = _gridn;
+      grid0 = _gridn-1;
     }
     else if(_mg_type == M_CYCLE) {
       std::cout << std::endl << " *** Start " << _solverType << " Linear Mixed-Cycle ***" << std::endl;
-      grid0 = _gridr;
+      grid0 = _gridr-1;
     }
     else {
       std::cout << "wrong " << _solverType << " type for this solver " << std::endl;
@@ -167,66 +162,73 @@ namespace femus {
 
     unsigned AMRCounter = 0;
 
-    for(unsigned igridn = grid0; igridn <= _gridn; igridn++) {     //_igridn
-      std::cout << std::endl << " ****** Start Level Max " << igridn << " ******" << std::endl;
+    for(unsigned igridn = grid0; igridn < _gridn; igridn++) {     //_igridn
+      std::cout << std::endl << " ****** Start Level Max " << igridn + 1 << " ******" << std::endl;
 
 
-      bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn) ? 1 : 0;
+      bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn - 1) ? 1 : 0;
 
-      if(ThisIsAMR) _solution[igridn - 1]->InitAMREps();
+      if(ThisIsAMR) _solution[igridn]->InitAMREps();
 
       clock_t start_assembly_time = clock();
 
-      _levelToAssemble = igridn - 1u; //Be carefull!!!! this is needed in the _assemble_function
-      _LinSolver[igridn - 1u]->SetResZero();
+      _levelToAssemble = igridn; //Be carefull!!!! this is needed in the _assemble_function
+      _LinSolver[igridn]->SetResZero();
       _assembleMatrix = true;
       _assemble_system_function(_equation_systems);
 
-      _LinSolver[igridn - 1u]->SwapMatrices();
-      _LinSolver[igridn - 1u]->_KK->matrix_PtAP(*_PPamr[igridn - 1u], *_LinSolver[igridn - 1u]->_KKamr, false);
+      if(igridn >= _gridr) {
+        (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
+        *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
+        _LinSolver[igridn]->SwapMatrices();
+        _LinSolver[igridn]->_KK->matrix_PtAP(*_PPamr[igridn], *_LinSolver[igridn]->_KKamr, false);
+      }
+
 
       _MGmatrixFineReuse = false;
       _MGmatrixCoarseReuse = (igridn - grid0 > 0) ?  true : _MGmatrixFineReuse;
-      for(unsigned i = igridn - 1u; i > 0; i--) {
+      for(unsigned i = igridn; i > 0; i--) {
         if(_RR[i]) {
-          if(i == igridn - 1u)
+          if(i == igridn)
             _LinSolver[i - 1u]->_KK->matrix_ABC(*_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixFineReuse);
           else
             _LinSolver[i - 1u]->_KK->matrix_ABC(*_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixCoarseReuse);
         }
         else {
-          if(i == igridn - 1u)
+          if(i == igridn)
             _LinSolver[i - 1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixFineReuse);
           else
             _LinSolver[i - 1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse);
         }
       }
 
-      std::cout << std::endl << " ****** Level Max " << igridn << " ASSEMBLY TIME:\t" << static_cast<double>((clock() - start_assembly_time)) / CLOCKS_PER_SEC << std::endl;
+      std::cout << std::endl << " ****** Level Max " << igridn + 1 << " ASSEMBLY TIME:\t" << static_cast<double>((clock() - start_assembly_time)) / CLOCKS_PER_SEC << std::endl;
 
       if(_MGsolver) {
-        _LinSolver[igridn - 1u]->MGInit(mgSmootherType, igridn, _outer_ksp_solver.c_str());
+        _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _outer_ksp_solver.c_str());
 
-        for(unsigned i = 0; i < igridn; i++) {
+        for(unsigned i = 0; i < igridn + 1; i++) {
           if(_RR[i])
-            _LinSolver[i]->MGSetLevel(_LinSolver[igridn - 1u], igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost);
+            _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _RR[i], _npre, _npost);
           else
-            _LinSolver[i]->MGSetLevel(_LinSolver[igridn - 1u], igridn - 1u, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost);
+            _LinSolver[i]->MGSetLevel(_LinSolver[igridn], igridn, _VariablesToBeSolvedIndex, _PP[i], _PP[i], _npre, _npost);
         }
 
         MGVcycle(igridn, mgSmootherType);
 
-        _LinSolver[igridn - 1u]->MGClear();
+        _LinSolver[igridn]->MGClear();
       }
-      else MLVcycle(igridn);
+      else MLVcycle(igridn + 1);
 
-      _LinSolver[igridn - 1u]->SwapMatrices();
+      if(igridn >= _gridr) {
+        _LinSolver[igridn]->SwapMatrices();
+      }
 
       if(ThisIsAMR) AddAMRLevel(AMRCounter);
 
-      if(igridn < _gridn) ProlongatorSol(igridn);
+      if(igridn + 1 < _gridn) ProlongatorSol(igridn + 1);
 
-      std::cout << std::endl << " ****** End Level Max " << igridn << " ******" << std::endl;
+      std::cout << std::endl << " ****** End Level Max " << igridn + 1 << " ******" << std::endl;
     }
 
     std::cout << std::endl << " *** Linear " << _solverType << " TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
@@ -275,11 +277,11 @@ namespace femus {
 
   // ********************************************
 
-  bool LinearImplicitSystem::MGVcycle(const unsigned& gridn, const MgSmootherType& mgSmootherType) {
+  bool LinearImplicitSystem::MGVcycle(const unsigned& level, const MgSmootherType& mgSmootherType) {
 
     clock_t start_mg_time = clock();
 
-    _LinSolver[gridn - 1u]->SetEpsZero();
+    _LinSolver[level]->SetEpsZero();
 
     bool linearIsConverged;
 
@@ -287,17 +289,18 @@ namespace femus {
 
       std::cout << "       *************** Linear iteration " << linearIterator + 1 << " ***********" << std::endl;
       bool ksp_clean = !linearIterator * _assembleMatrix;
-      _LinSolver[gridn - 1u]->MGSolve(ksp_clean);
-      _solution[gridn - 1u]->UpdateRes(_SolSystemPdeIndex, _LinSolver[gridn - 1u]->_RES, _LinSolver[gridn - 1u]->KKoffset);
-      linearIsConverged = IsLinearConverged(gridn - 1u);
+      _LinSolver[level]->MGSolve(ksp_clean);
+      _solution[level]->UpdateRes(_SolSystemPdeIndex, _LinSolver[level]->_RES, _LinSolver[level]->KKoffset);
+      linearIsConverged = IsLinearConverged(level);
 
       if(linearIsConverged)  break;
     }
 
-    (_LinSolver[gridn - 1u]->_RESC)->matrix_mult(*_LinSolver[gridn - 1u]->_EPS, *_PPamr[gridn - 1u]);
-    *(_LinSolver[gridn - 1u]->_EPS) = *(_LinSolver[gridn - 1u]->_RESC);
-
-    _solution[gridn - 1u]->UpdateSol(_SolSystemPdeIndex, _LinSolver[gridn - 1u]->_EPS, _LinSolver[gridn - 1u]->KKoffset);
+    if(level >= _gridr) {
+      (_LinSolver[level]->_EPSC)->matrix_mult(*_LinSolver[level]->_EPS, *_PPamr[level]);
+      *(_LinSolver[level]->_EPS) = *(_LinSolver[level]->_EPSC);
+    }
+    _solution[level]->UpdateSol(_SolSystemPdeIndex, _LinSolver[level]->_EPS, _LinSolver[level]->KKoffset);
 
     std::cout << "       *************** Linear-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
               << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
@@ -468,7 +471,14 @@ namespace femus {
     _PP.resize(_gridn + 1);
     _RR.resize(_gridn + 1);
     BuildProlongatorMatrix(_gridn);
-
+    if(_gridn > _gridr){
+      _PP[_gridn]->matrix_RightMatMult(*_PPamr[_gridn - 1]);
+    }
+    
+    _PPamr.resize(_gridn + 1);
+    _RRamr.resize(_gridn + 1);
+    BuildAmrProlongatorMatrix(_gridn);
+    
     _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
     _LinSolver[_gridn]->SetTolerances(_rtol, _atol, _divtol, _maxits, _restart);
     _LinSolver[_gridn]->set_preconditioner_type(_finegridpreconditioner);
@@ -607,7 +617,7 @@ namespace femus {
   }
 
 
-  void LinearImplicitSystem::BuildAmrOperatorMatrices(unsigned level) {
+  void LinearImplicitSystem::BuildAmrProlongatorMatrix(unsigned level) {
 
     int iproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -685,9 +695,9 @@ namespace femus {
 
       unsigned solOffset = mesh->_dofOffset[solType][iproc];
       unsigned solOffsetp1 = mesh->_dofOffset[solType][iproc + 1];
-      
-      std::cout << solOffset <<" "<<solOffsetp1<<std::endl;
-      
+
+      std::cout << solOffset << " " << solOffsetp1 << std::endl;
+
       for(unsigned i = solOffset; i < solOffsetp1; i++) {
         unsigned irow = kOffset + (i - solOffset);
         if(solType > 2 || amrRestriction[solType].find(i) == amrRestriction[solType].end()) {
@@ -705,7 +715,7 @@ namespace femus {
               col[j] = kOffset + (it->first - solOffset);
             }
             else {
-	      std::cout << it->first <<std::endl;
+              std::cout << it->first << std::endl;
               unsigned jproc = _msh[level]->IsdomBisectionSearch(it->first, solType);
               col[j] = LinSol->KKoffset[k][jproc] + (it->first - mesh->_dofOffset[solType][jproc]);
             }

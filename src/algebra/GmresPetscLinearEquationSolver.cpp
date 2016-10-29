@@ -389,7 +389,6 @@ namespace femus {
         if ( soltype == 4 ) owndofs /= ( _msh->GetDimension() + 1 );
         for(unsigned i = 0; i < owndofs; i++) {
           int idof_kk = KKoffset[k][processor_id()] + i;
-	  
 	  unsigned inode_mts = _msh->_dofOffset[soltype][processor_id()] + i;  
 	  if((* (*_Bdc) [indexSol])(inode_mts) > 1.9){
 	    VecSetValue(nullspBase[nullspSize], idof_kk, 1., INSERT_VALUES);
@@ -429,7 +428,7 @@ namespace femus {
       MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
       if( _hangingNodesIndex.size() != 0){
         MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-        MatZeroRows(_pmat, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1.e100, 0, 0);
+        MatZeroRows(_pmat, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1., 0, 0);
       }
       _pmatIsInitialized = true;
     }

@@ -113,8 +113,8 @@ int main(int argc, char** args) {
 
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
-  //mlSol.AddSolution("P", LAGRANGE, FIRST);
-  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("P", LAGRANGE, FIRST);
+  //mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
 
   //mlSol.AssociatePropertyToSolution("P", "Pressure", false);
   mlSol.AssociatePropertyToSolution("P", "Pressure", true);
@@ -444,7 +444,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
 
       double Pr = 0.4;
-      double Ra = 20000;
+      double Ra = 40000;
 
       // *** phiT_i loop ***
       for (unsigned i = 0; i < nDofsT; i++) {
