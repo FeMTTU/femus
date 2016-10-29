@@ -151,8 +151,7 @@ int main(int argc, char** args) {
   system.SetMaxNumberOfLinearIterations(10);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
 
-
-//   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
+//   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
 //   system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
@@ -445,7 +444,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
 
       double Pr = 0.4;
-      double Ra = 40000;
+      double Ra = 20000;
 
       // *** phiT_i loop ***
       for (unsigned i = 0; i < nDofsT; i++) {

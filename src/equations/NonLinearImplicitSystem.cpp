@@ -109,6 +109,8 @@ namespace femus {
       abort();
     }
 
+    std::cout << "AAAAAAAAAAAAAAAA " << _gridr << " " <<_gridn << std::endl;
+    
     unsigned AMRCounter = 0;
 
     for( unsigned igridn = grid0; igridn <= _gridn; igridn++ ) {   //_igridn
