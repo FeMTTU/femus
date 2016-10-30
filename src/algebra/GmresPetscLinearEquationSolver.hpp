@@ -68,7 +68,8 @@ namespace femus {
         _samePreconditioner = true;
       }
       bool UseSamePreconditioner(){
-        return _samePreconditioner * _msh->GetIfHomogeneous();
+        //return _samePreconditioner * _msh->GetIfHomogeneous();
+	return true;
       }
 
       void RemoveNullSpace();
@@ -113,13 +114,13 @@ namespace femus {
       PetscInt  _restart;
 
       vector <PetscInt> _bdcIndex;
-      vector <PetscInt> _hangingNodesIndex;
+      //vector <PetscInt> _hangingNodesIndex;
       bool _bdcIndexIsInitialized;
 
-      Mat _pmat;
+      //Mat _pmat;
 
 
-      bool _pmatIsInitialized;
+      //bool _pmatIsInitialized;
       bool _samePreconditioner;
 
   };
@@ -145,7 +146,7 @@ namespace femus {
     _restart = 30;
 
     _bdcIndexIsInitialized = 0;
-    _pmatIsInitialized = false;
+    //_pmatIsInitialized = false;
 
     _printSolverInfo = false;
 
@@ -163,10 +164,7 @@ namespace femus {
 
   inline void GmresPetscLinearEquationSolver::Clear() {
 
-    if(_pmatIsInitialized) {
-      _pmatIsInitialized = false;
-      MatDestroy(&_pmat);
-    }
+//     
 
     if(this->initialized()) {
       this->_is_initialized = false;

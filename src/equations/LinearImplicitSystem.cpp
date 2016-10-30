@@ -696,8 +696,6 @@ namespace femus {
       unsigned solOffset = mesh->_dofOffset[solType][iproc];
       unsigned solOffsetp1 = mesh->_dofOffset[solType][iproc + 1];
 
-      std::cout << solOffset << " " << solOffsetp1 << std::endl;
-
       for(unsigned i = solOffset; i < solOffsetp1; i++) {
         unsigned irow = kOffset + (i - solOffset);
         if(solType > 2 || amrRestriction[solType].find(i) == amrRestriction[solType].end()) {
@@ -715,7 +713,6 @@ namespace femus {
               col[j] = kOffset + (it->first - solOffset);
             }
             else {
-              std::cout << it->first << std::endl;
               unsigned jproc = _msh[level]->IsdomBisectionSearch(it->first, solType);
               col[j] = LinSol->KKoffset[k][jproc] + (it->first - mesh->_dofOffset[solType][jproc]);
             }

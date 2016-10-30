@@ -113,8 +113,8 @@ int main(int argc, char** args) {
 
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
-  mlSol.AddSolution("P", LAGRANGE, FIRST);
-  //mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  //mlSol.AddSolution("P", LAGRANGE, FIRST);
+  mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
 
   //mlSol.AssociatePropertyToSolution("P", "Pressure", false);
   mlSol.AssociatePropertyToSolution("P", "Pressure", true);
