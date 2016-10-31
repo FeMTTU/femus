@@ -1525,6 +1525,29 @@ namespace femus {
     r2 *= 1.01;
     r = sqrt(r2);
   }
+  
+  void GetBoundingBox(const std::vector< std::vector < double > > &xv, std::vector< std::vector < double > > &xe) {
+    unsigned dim = xv.size();
+    unsigned ndofs = xv[0].size();
+    xe.resize(dim);
+    for(int d = 0; d < dim; d++) {
+      xe[d].resize(2);
+      xe[d][0] = xv[d][0];
+      xe[d][1] = xv[d][0];
+    }
+    for(int d = 0; d < dim; d++) {
+      for(int i = 1; i < ndofs; i++) {
+        xe[d][0] = (xv[d][i] < xe[d][0]) ? xv[d][i] : xe[d][0];
+	xe[d][1] = (xv[d][i] > xe[d][1]) ? xv[d][i] : xe[d][1];
+      }
+    }
+    for(int d = 0; d < dim; d++) {
+      double epsilon = 0.001 * (xe[d][1] - xe[d][0]);
+      xe[d][0] -= epsilon;
+      xe[d][1] += epsilon;
+    }
+  }
+  
 
   unsigned GetClosestPoint(const std::vector< std::vector < double > > &xv, std::vector <double> &x) {
 
@@ -1551,10 +1574,12 @@ namespace femus {
     for(short unsigned jtype = 0; jtype < solType + 1; jtype++) {
       std::vector < double > phi;
       std::vector < std::vector < double > > gradPhi;
+      std::cout << jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
       bool convergence = false;
       while(!convergence) {
         GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, jtype);
         convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[jtype]);
+	std::cout <<jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
       }
     }
   }

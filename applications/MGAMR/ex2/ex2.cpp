@@ -51,13 +51,13 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //   if (elemgroupnumber == 7 && level < 4) refine = 1;
 //   if (elemgroupnumber == 8 && level < 5) refine = 1;
 
-  if (elemgroupnumber == 6 && level < 4) refine = 1;
-  if (elemgroupnumber == 7 && level < 5) refine = 1;
-  if (elemgroupnumber == 8 && level < 6) refine = 1;
+  //if (elemgroupnumber == 6 && level < 4) refine = 1;
+  //if (elemgroupnumber == 7 && level < 5) refine = 1;
+  //if (elemgroupnumber == 8 && level < 6) refine = 1;
 
-  //if (elemgroupnumber==6 && level<1) refine=1;
-  //if (elemgroupnumber==7 && level<2) refine=1;
-  //if (elemgroupnumber==8 && level<3) refine=1;
+  if (elemgroupnumber==6 && level<1) refine=1;
+  if (elemgroupnumber==7 && level<2) refine=1;
+  if (elemgroupnumber==8 && level<3) refine=1;
 
   
   
@@ -95,8 +95,8 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 4;
-  unsigned numberOfSelectiveLevels = 3;
+  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels = 2;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
@@ -140,8 +140,8 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
+  system.SetMgSmoother(GMRES_SMOOTHER);
+  //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
@@ -157,14 +157,14 @@ int main(int argc, char** args) {
   system.SetMgType(F_CYCLE);
 
   system.SetNumberPreSmoothingStep(0);
-  system.SetNumberPostSmoothingStep(2);
+  system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
 
   system.init();
 
   //system.SetSolverFineGrids(GMRES);
   system.SetSolverFineGrids(RICHARDSON);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetPreconditionerFineGrids(MLU_PRECOND);
 
   system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
 
