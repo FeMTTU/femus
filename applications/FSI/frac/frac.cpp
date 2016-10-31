@@ -106,13 +106,13 @@ int main(int argc, char** args) {
 
 //   MultiLevelMesh mlMsh;
 //  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
-    mlMsh.GenerateCoarseBoxMesh(8,8,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
+    mlMsh.GenerateCoarseBoxMesh(2,2,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
     
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 5; 
+  unsigned numberOfUniformLevels = 1/*5*/; 
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -134,7 +134,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("UADJ", LAGRANGE, SECOND);
   mlSol.AddSolution("VADJ", LAGRANGE, SECOND);
   if (dim == 3) mlSol.AddSolution("WADJ", LAGRANGE, SECOND);
-  mlSol.AddSolution("PADJ", LAGRANGE, FIRST);
+//   mlSol.AddSolution("PADJ", LAGRANGE, FIRST);
   // control =====================  
 
   mlSol.Initialize("All");
@@ -166,10 +166,10 @@ int main(int argc, char** args) {
 //   system_opt.AddSolutionToSystemPDE("UADJ");
 //   system_opt.AddSolutionToSystemPDE("VADJ");
 //   if (dim == 3) system_opt.AddSolutionToSystemPDE("WADJ");
-//   system_opt.AddSolutionToSystemPDE("PADJ");
+// //   system_opt.AddSolutionToSystemPDE("PADJ");
   
   // attach the assembling function to system
-//   system_opt.SetAssembleFunction(AssembleNavierStokes_AD);
+//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
   system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
     
   // initilaize and solve the system
@@ -589,8 +589,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
   
   
   // solution variables *******************************************
-  const int n_unknowns = (dim+1);
+  const int n_unknowns/*n_vars*/ = (dim+1); //was n_unknowns , when it had just state equations
+//   const int n_unknowns = (2.*dim)+1; //state , adjoint of velocity terms and one pressure term 
   const int vel_type_pos = 0;
+  const int adj_vel_type_pos = vel_type_pos;
   const int press_type_pos = dim;
   const int state_pos_begin = 0;
   const int adj_pos_begin   = dim+1;
@@ -603,7 +605,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 //   Solname              [adj_pos_begin + 0] =              "UADJ";
 //   Solname              [adj_pos_begin + 1] =              "VADJ";
 //   if (dim == 3) Solname[adj_pos_begin + 2] =              "WADJ";
-//   Solname              [adj_pos_begin + press_type_pos] = "PADJ";
+// //   Solname              [adj_pos_begin + press_type_pos] = "PADJ";
   
   vector < unsigned > SolPdeIndex(n_unknowns);
   vector < unsigned > SolIndex(n_unknowns);  
@@ -620,9 +622,11 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
   
   //==========================================================================================
   // velocity ************************************
+  //-----------state------------------------------
   vector < vector < double > > phi_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_xx_gss_fe(NFE_FAMS);
+  
   for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_gss_fe[fe].reserve(maxSize);
       phi_x_gss_fe[fe].reserve(maxSize*dim);
@@ -659,10 +663,15 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
       }
     }
   }
-    
+   
+  //-----------state,adj------------------------------ 
   vector < double > SolVAR(n_unknowns);
   vector < vector < double > > gradSolVAR(n_unknowns);
-  for(int i=0; i<n_unknowns; i++) {     gradSolVAR[i].resize(dim);    }
+  
+  for(int i=0; i<n_unknowns; i++) {     
+    gradSolVAR[i].resize(dim);   
+    
+  }
   
 
   double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
@@ -707,6 +716,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
       Sol_n_el_dofs[unk] = el->GetElementDofNumber(kel,SolFEType[unk]);
        JACDof[unk].resize(Sol_n_el_dofs[unk]);
     }
+    
+    //	unsigned nDof_st = Sol_n_el_dofs[state_pos_begin];
+    //	unsigned nDof_adj = Sol_n_el_dofs[adj_pos_begin];
+    
     
 // fe data
   for(int fe=0; fe < NFE_FAMS; fe++) {
@@ -754,6 +767,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
     }
   }
   
+  // std::fill(Res.begin(),Res.end(),0.);
+  // std::fill(Jac.begin(),Jac.end(),0.);
     //=============================================================================
 
 // SUPG - not needed
@@ -761,6 +776,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 //       (coordX[1][2] - coordX[1][0])*(coordX[1][2] - coordX[1][0]) );
     
 
+       
+       //	int nDof_max = nDof_t;
+	// add the comparison with nDof_adj!!
        
     if(igrid==levelMax || !el->GetRefinedElementIndex(kel)) {
       
@@ -797,19 +815,19 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
  //end unknowns eval at gauss points ********************************
 	
   //begin NS block row *********************************
-     for(unsigned ivar_block=0; ivar_block<dim; ivar_block++) {
+     for(unsigned ivar_block=0; ivar_block<dim; ivar_block++) {	// 1st row blocks A B'
 	// *** phi_i loop ***
-	for(unsigned i_u=0; i_u < Sol_n_el_dofs[vel_type_pos]; i_u++) {
+	for(unsigned i_u=0; i_u < Sol_n_el_dofs[vel_type_pos]; i_u++) {	// 1st row
 	
 	  double Lap_rhs_i=0;
-	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
+	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {	// RHS column Velocity values
 	      Lap_rhs_i += phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar2]*gradSolVAR[ivar_block][ivar2];
 	    }
 	    
 	    Res[SolPdeIndex[ivar_block]][i_u] += ( -IRe*Lap_rhs_i + /*Picard iteration*/SolVAR[dim]*phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_block] + force[ivar_block] * phi_gss_fe[SolFEType[vel_type_pos]][i_u])*weight;
 
 	    // *** phi_j loop ***
-	    for(unsigned j_u=0; j_u < Sol_n_el_dofs[vel_type_pos]; j_u++) {
+	    for(unsigned j_u=0; j_u < Sol_n_el_dofs[vel_type_pos]; j_u++) { // Matrix 4x4 block 1st row vel values of 3x3 block, especially A
 
 	    double Lap_ij=0;
 	      for(unsigned ivar_lap=0; ivar_lap<dim; ivar_lap++) {
@@ -820,7 +838,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	      }//end phij loop
 	      
 	    // *** phiP_j loop ***
-	      for(unsigned j_p = 0; j_p < Sol_n_el_dofs[press_type_pos]; j_p++){
+	      for(unsigned j_p = 0; j_p < Sol_n_el_dofs[press_type_pos]; j_p++){	// Matrix block 1st row's last col values, especially B' 
 		Jac[ SolPdeIndex[ivar_block] ][ SolPdeIndex[press_type_pos] ][ i_u*Sol_n_el_dofs[press_type_pos]+j_p ]  -=  phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_block]*phi_gss_fe[SolFEType[press_type_pos]][j_p]*weight;
 	      }//end phiP_j loop
 	      
@@ -830,7 +848,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
    //end NS block row *********************************
 
    //begin div u block row *********************************
-    for(unsigned ivar_block=0; ivar_block<1; ivar_block++) {
+    for(unsigned ivar_block=0; ivar_block<1; ivar_block++) { // Matrix block 2nd row values, B and null
       
 	  double div = 0;
 	  for(unsigned ivar=0; ivar<dim; ivar++) {
@@ -848,7 +866,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	    // *** phi_j loop ***
     for(unsigned jvar_block=0; jvar_block<dim; jvar_block++) {
      for(unsigned i_p=0; i_p<Sol_n_el_dofs[press_type_pos]; i_p++) {
-	 for(unsigned j_u = 0; j_u < Sol_n_el_dofs[vel_type_pos]; j_u++) {
+	 for(unsigned j_u = 0; j_u < Sol_n_el_dofs[vel_type_pos]; j_u++) { // Matrix block 2nd row values, especially B
 		Jac[ SolPdeIndex[press_type_pos] ][ SolPdeIndex[jvar_block] ][ i_p*Sol_n_el_dofs[vel_type_pos]+j_u ] -= phi_gss_fe[SolFEType[press_type_pos]][i_p]*phi_x_gss_fe[SolFEType[vel_type_pos]][j_u*dim+jvar_block]*weight;
 	        }  //end phij loop
 	     }//end phiP_i loop
