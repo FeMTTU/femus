@@ -39,6 +39,8 @@ IF(BUILD_FSIAPPS)
 # FSI SteadyState in porous media
   ADD_SUBDIRECTORY(${FSI_FOLDER}/frac/)
   
+  # FSI SteadyState in porous media //NS - Ex6
+  ADD_SUBDIRECTORY(${FSI_FOLDER}/fsiOPT/testNS)
   
 #   # FSI SteadyState in porous media
 #   ADD_SUBDIRECTORY(${FSI_FOLDER}/fracfsitest/)
