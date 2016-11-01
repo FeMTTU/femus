@@ -36,8 +36,8 @@ int main(int argc, char **args) {
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
 //   std::string infile = "./input/aneurysm_Sara_5.neu";
-  //std::string infile = "./input/Turek.neu";
-  std::string infile = "./input/Turek_small_stents.neu";
+  //std::string infile = "./input/Turek_small_stents.neu";
+  std::string infile = "./input/Turek_porous_60micron.neu";
   
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
