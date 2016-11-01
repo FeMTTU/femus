@@ -76,6 +76,10 @@ namespace femus {
       void GetNullSpaceBase( std::vector < Vec > &nullspBase);
       void ZerosBoundaryResiduals();
       void SetPenalty();
+      
+      void SetRichardsonFactor(double & richardsonFactor){
+	_richardsonFactor = richardsonFactor;
+      }
 
       virtual void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved);
       virtual void SetPreconditioner(KSP& subksp, PC& subpc);
@@ -122,6 +126,8 @@ namespace femus {
 
       bool _pmatIsInitialized;
       bool _samePreconditioner;
+      
+      double _richardsonFactor;
 
   };
 
@@ -144,6 +150,7 @@ namespace femus {
     _dtol   = 1.e+5;
     _maxits = 1000;
     _restart = 30;
+    _richardsonFactor = 0.5;
 
     _bdcIndexIsInitialized = 0;
     //_pmatIsInitialized = false;

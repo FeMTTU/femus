@@ -516,7 +516,7 @@ namespace femus {
 
       case RICHARDSON:
         KSPSetType(ksp, (char*) KSPRICHARDSON);
-        KSPRichardsonSetScale(ksp, 0.5);
+        KSPRichardsonSetScale(ksp, _richardsonFactor);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
         return;
 

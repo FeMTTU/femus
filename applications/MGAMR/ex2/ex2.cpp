@@ -96,7 +96,7 @@ int main(int argc, char** args) {
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 2;
+  unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
@@ -156,8 +156,8 @@ int main(int argc, char** args) {
 
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(0);
-  system.SetNumberPostSmoothingStep(1);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(0);
   // initilaize and solve the system
 
   system.init();
