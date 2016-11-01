@@ -144,6 +144,12 @@ namespace femus {
       void SetTolerances(const double &rtol, const double &atol,
                          const double &divtol, const unsigned &maxits,
                          const unsigned &restart = 30);
+      
+      void SetRichardsonFactor(const double &richardsonFactor){
+	for(unsigned i=0;i<_gridn;i++){
+	   _LinSolver[i]->SetRichardsonFactor(richardsonFactor);
+	}
+      }
 
 
       void SetOuterKSPSolver(const std::string outer_ksp_solver) {

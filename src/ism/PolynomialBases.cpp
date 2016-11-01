@@ -1574,12 +1574,12 @@ namespace femus {
     for(short unsigned jtype = 0; jtype < solType + 1; jtype++) {
       std::vector < double > phi;
       std::vector < std::vector < double > > gradPhi;
-      std::cout << jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
+      //std::cout << jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
       bool convergence = false;
       while(!convergence) {
         GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, jtype);
         convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[jtype]);
-	std::cout <<jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
+	//std::cout <<jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
       }
     }
   }

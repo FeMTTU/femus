@@ -77,7 +77,7 @@ namespace femus {
       void ZerosBoundaryResiduals();
       void SetPenalty();
       
-      void SetRichardsonFactor(double & richardsonFactor){
+      void SetRichardsonFactor(const double & richardsonFactor){
 	_richardsonFactor = richardsonFactor;
       }
 
@@ -153,7 +153,7 @@ namespace femus {
     _richardsonFactor = 0.5;
 
     _bdcIndexIsInitialized = 0;
-    //_pmatIsInitialized = false;
+    _pmatIsInitialized = false;
 
     _printSolverInfo = false;
 

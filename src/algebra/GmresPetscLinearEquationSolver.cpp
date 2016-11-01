@@ -435,7 +435,7 @@ namespace femus {
       MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
       if( _hangingNodesIndex.size() != 0){
         MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-        MatZeroRows(_pmat, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1., 0, 0);
+        MatZeroRows(_pmat, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1.e100, 0, 0);
       }
       _pmatIsInitialized = true;
     }

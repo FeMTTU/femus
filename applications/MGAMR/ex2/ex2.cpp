@@ -156,14 +156,16 @@ int main(int argc, char** args) {
 
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(1);
-  system.SetNumberPostSmoothingStep(0);
+  system.SetNumberPreSmoothingStep(0);
+  system.SetNumberPostSmoothingStep(2);
   // initilaize and solve the system
 
   system.init();
 
   //system.SetSolverFineGrids(GMRES);
+  
   system.SetSolverFineGrids(RICHARDSON);
+  system.SetRichardsonFactor(1.0);
   system.SetPreconditionerFineGrids(MLU_PRECOND);
 
   system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
