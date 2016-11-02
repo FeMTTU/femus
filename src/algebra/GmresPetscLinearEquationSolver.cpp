@@ -426,10 +426,12 @@ namespace femus {
     MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
     MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
     MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
-//     if( _hangingNodesIndex.size() != 0 && (_preconditioner_type == MLU_PRECOND || _preconditioner_type == LU_PRECOND )){
-//       MatZeroRows(KK, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1., 0, 0);
-//     }
-
+    if( _hangingNodesIndex.size() != 0 && (_preconditioner_type == MLU_PRECOND || _preconditioner_type == LU_PRECOND )){
+      MatZeroRows(KK, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1., 0, 0);
+    }
+    //MatZeroRows(KK, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1., 0, 0);
+    
+    
     if( !UseSamePreconditioner() ) {
       if(_pmatIsInitialized) MatDestroy(&_pmat);
       MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
@@ -516,7 +518,7 @@ namespace femus {
 
       case RICHARDSON:
         KSPSetType(ksp, (char*) KSPRICHARDSON);
-        KSPRichardsonSetScale(ksp, _richardsonFactor);
+        KSPRichardsonSetScale(ksp, _richardsonPenaltyFactor);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
         return;
 

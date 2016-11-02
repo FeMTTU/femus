@@ -130,6 +130,7 @@ namespace femus {
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
+    _richardsonPenaltyFactorIsSet = false;
     // By default we solve for all the PDE variables
     ClearVariablesToBeSolved();
     AddVariableToBeSolved("All");
@@ -494,6 +495,10 @@ namespace femus {
 
     if(_NSchurVar_test) {
       _LinSolver[_gridn]->SetNumberOfSchurVariables(_NSchurVar);
+    }
+    
+    if(_richardsonPenaltyFactorIsSet) {
+      _LinSolver[_gridn]->SetRichardsonPenaltyFactor(_richardsonPenaltyFactor);
     }
 
     _gridn++;
@@ -919,6 +924,7 @@ namespace femus {
     _NSchurVar_test = 0;
     _numblock_test = 0;
     _numblock_all_test = 0;
+    _richardsonPenaltyFactorIsSet = false;
     // By default we solved for all the PDE variables
     ClearVariablesToBeSolved();
     AddVariableToBeSolved("All");
