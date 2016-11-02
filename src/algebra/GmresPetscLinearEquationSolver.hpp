@@ -77,8 +77,8 @@ namespace femus {
       void ZerosBoundaryResiduals();
       void SetPenalty();
       
-      void SetRichardsonPenaltyFactor(const double & richardsonPenaltyFactor){
-	_richardsonPenaltyFactor = richardsonPenaltyFactor;
+      void SetRichardsonScaleFactor(const double & richardsonScaleFactor){
+	_richardsonScaleFactor = richardsonScaleFactor;
       }
 
       virtual void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved);
@@ -127,7 +127,7 @@ namespace femus {
       bool _pmatIsInitialized;
       bool _samePreconditioner;
       
-      double _richardsonPenaltyFactor;
+      double _richardsonScaleFactor;
 
   };
 
@@ -150,7 +150,7 @@ namespace femus {
     _dtol   = 1.e+5;
     _maxits = 1000;
     _restart = 30;
-    _richardsonPenaltyFactor = 0.5;
+    _richardsonScaleFactor = 0.5;
 
     _bdcIndexIsInitialized = 0;
     _pmatIsInitialized = false;

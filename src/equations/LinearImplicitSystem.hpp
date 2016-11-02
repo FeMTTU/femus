@@ -145,11 +145,11 @@ namespace femus {
                          const double &divtol, const unsigned &maxits,
                          const unsigned &restart = 30);
       
-      void SetRichardsonPenaltyFactor(const double &richardsonPenaltyFactor){
-	_richardsonPenaltyFactor = richardsonPenaltyFactor;
-	_richardsonPenaltyFactorIsSet = true;
+      void SetRichardsonScaleFactor(const double &richardsonScaleFactor){
+	_richardsonScaleFactor = richardsonScaleFactor;
+	_richardsonScaleFactorIsSet = true;
 	for(unsigned i=0;i<_gridn;i++){
-	   _LinSolver[i]->SetRichardsonPenaltyFactor(richardsonPenaltyFactor);
+	   _LinSolver[i]->SetRichardsonScaleFactor(richardsonScaleFactor);
 	}
       }
 
@@ -281,8 +281,8 @@ namespace femus {
       virtual void solve(const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
       void Solve(const unsigned& gridn, const bool &kspClean, const int &npre, const int &npost);
       
-      double _richardsonPenaltyFactor;
-      bool _richardsonPenaltyFactorIsSet;
+      double _richardsonScaleFactor;
+      bool _richardsonScaleFactorIsSet;
 
   };
 
