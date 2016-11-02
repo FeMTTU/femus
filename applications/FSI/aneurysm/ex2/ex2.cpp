@@ -39,8 +39,8 @@ int main(int argc, char **args) {
 
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
-//   std::string infile = "./input/aneurysm_Sara_5.neu";
-  std::string infile = "./input/aneurisma_aorta.neu";
+  std::string infile = "./input/aneurysm_Sara_5_scaled.neu";
+  //std::string infile = "./input/aneurisma_aorta.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
@@ -48,11 +48,24 @@ int main(int argc, char **args) {
   Lref = 1.;
   Uref = 1.;
 
-  rhof = 100.;
-  muf = 0.1;
-  rhos = 800;
-  ni = 0.5;
-  E = 18000;
+//   rhof = 100.;
+//   muf = 0.1;
+//   rhos = 800;
+//   ni = 0.5;
+//   E = 18000;
+  
+  // Parameters aneurisma_aorta Quarteroni
+//   rhof = 1035.;
+//   muf = 3.5*1.0e-4*rhof;//muf = 3.38*1.0e-4*rhof;
+//   rhos = 1120;
+//   ni = 0.48;
+//   E = 400000;
+  // Parameters aneurysm_Sara_5_scaled
+  rhof = 1035.;
+  muf = 4*1.0e-4*rhof;//muf = 3.38*1.0e-4*rhof;
+  rhos = 1120;
+  ni = 0.45;
+  E = 1000000;
 
   Parameter par(Lref, Uref);
 
@@ -109,8 +122,8 @@ int main(int argc, char **args) {
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
