@@ -72,7 +72,9 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 }
 
-
+double InitalValueT(const std::vector < double >& x){
+  return (x[0]+0.5);
+}
 
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
@@ -98,13 +100,13 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  numberOfUniformLevels = 1;
+  numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
   // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  //mlMsh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
 
 
   MultiLevelSolution mlSol(&mlMsh);
@@ -122,6 +124,7 @@ int main(int argc, char** args) {
   //mlSol.AssociatePropertyToSolution("P", "Pressure", false);
   mlSol.AssociatePropertyToSolution("P", "Pressure", true);
   mlSol.Initialize("All");
+  mlSol.Initialize("T",InitalValueT);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -449,7 +452,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
 
       double Pr = 0.4;
-      double Ra = 40000;
+      double Ra = 4000;
 
       // *** phiT_i loop ***
       for(unsigned i = 0; i < nDofsT; i++) {
