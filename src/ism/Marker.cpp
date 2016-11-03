@@ -570,8 +570,6 @@ namespace femus {
 
   unsigned Marker::GetNextElement2D(const unsigned &currentElem) {
 
-
-
     unsigned dim = _mesh->GetDimension();
     int nextElem ;
     bool markerIsInElement = false;
@@ -582,14 +580,8 @@ namespace femus {
     double t;
 
     std::vector<double> xc(dim, 0); //stores the coordinates of the face node of currentElem
-    unsigned faceNodeLocalIndex;
-
-    if(currentElementType == 3) faceNodeLocalIndex = 8;
-    else if(currentElementType == 4) faceNodeLocalIndex = 6;
-
+    unsigned faceNodeLocalIndex = (currentElementType == 3) ? 8 : 6;
     unsigned faceNodeDof = _mesh->GetSolutionDof(faceNodeLocalIndex, currentElem, 2);
-    //std::cout << "faceNodeDof = " << faceNodeDof << std::endl;
-
     for(unsigned k = 0; k < dim; k++) {
       xc[k] = (*_mesh->_topology->_Sol[k])(faceNodeDof) - _x[k];    // coordinates are translated so that the marker is the new origin
     }
@@ -598,49 +590,51 @@ namespace femus {
       std::cout << "the marker is the central face node" << std::endl;
       markerIsInElement = true; //the marker is xc
     }
-
     else {
-
-      std::vector<double> r(dim, 0);   //coordinates of the intersection point between the line of the edges and the line that connects the marker and the face node
+      unsigned faceNodeNumber = facePointNumber[currentElementType][_solType];
       std::vector< std::vector < double > > xv(dim);   //stores the coordinates of the vertices and midpoints of the element, the first and the last are the same
-
       for(unsigned k = 0; k < dim; k++) {
-        xv[k].reserve(9);
+        xv[k].reserve(faceNodeNumber);
+	xv[k].resize(faceNodeNumber - 1);
       }
-
-      for(unsigned k = 0; k < dim; k++) {
-        xv[k].resize(facePointNumber[currentElementType][_solType]);
-      }
-
-      for(unsigned i = 0; i < facePointNumber[currentElementType][_solType]; i++) {
+      for(unsigned i = 0; i < faceNodeNumber - 1; i++) {
         unsigned inodeDof  = _mesh->GetSolutionDof(facePoints[currentElementType][_solType][i], currentElem, 2);
-        // std::cout << "inodeDof = " << inodeDof << std::endl;
-
         for(unsigned k = 0; k < dim; k++) {
           xv[k][i] = (*_mesh->_topology->_Sol[k])(inodeDof) - _x[k];
         }
       }
-
-      //Find a ball centered in (xcc[0] , xcc[1]) that inscribes the element
-      double radius2 = 0.;
-      for(unsigned i = 0; i < facePointNumber[currentElementType][_solType] - 1; i++) {
-        double iradius2 = 0.;
-        for(unsigned k = 0; k < dim; k++) {
-          iradius2 += (xc[k] - xv[k][i]) * (xc[k] - xv[k][i]);
-        }
-        if(radius2 < iradius2) radius2 = iradius2;
+      
+      std::vector < double >  xcs;
+      double radius;
+      GetConvexHullSphere( xv, xcs, radius, 0.1);
+      std::vector< std::vector < double > > xe;
+      GetBoundingBox(xv, xe, 0.1);
+      
+      double radius2 = radius * radius;
+      double d2 = 0.;
+      for(int d = 0; d < dim; d++) {
+        d2 += xcs[d] * xcs[d];
       }
-      radius2 *= 1.2;
-
-      if(radius2 < xc[0]*xc[0] + xc[1]*xc[1]) {  // project direction
-
+      bool insideHull = true;
+      if(d2 > radius2) {
+        insideHull = false;
+      }
+      for(unsigned k = 0; k < dim; k++) {
+        if( xe[k][0] * xe[k][1] > 0.) {
+          insideHull = false;
+        }
+      }
+      if(!insideHull) {
         nextElem = FastForward(currentElem);
         nextElementFound = true;
-
       }
 
-
       else {
+	std::vector<double> r(dim, 0);   //coordinates of the intersection point between the line of the edges and the line that connects the marker and the face node
+	for(unsigned k = 0; k < dim; k++) {
+	  xv[k].resize(faceNodeNumber);
+	  xv[k][faceNodeNumber-1] = xv[k][0];
+	}
 
         //if(true) {
         //BEGIN look for face intersection
@@ -650,7 +644,7 @@ namespace femus {
         double length = 0.;
         double sum = 0.;
 
-        for(unsigned i = 0; i < facePointNumber[currentElementType][_solType] - 1; i++) {
+        for(unsigned i = 0; i < faceNodeNumber - 1; i++) {
           for(unsigned k = 0; k < dim; k++) {
             sum += (xv[k][i + 1] - xv[k][i]) * (xv[k][i + 1] - xv[k][i]);
           }
@@ -658,13 +652,13 @@ namespace femus {
           length += sqrt(sum);
         }
 
-        length /= facePointNumber[currentElementType][_solType];
+        length /= faceNodeNumber;
         // std::cout << "length= " << length << std::endl;
 
         for(unsigned k = 0; k < dim; k++) {
           xcc[k] = xc[k] / length;
 
-          for(unsigned i = 0; i < facePointNumber[currentElementType][_solType]; i++) {
+          for(unsigned i = 0; i < faceNodeNumber; i++) {
             xv[k][i] /= length;
           }
         }
@@ -672,7 +666,7 @@ namespace femus {
 
 
 
-        for(unsigned i = 0 ; i < facePointNumber[currentElementType][_solType] - 1; i++) {
+        for(unsigned i = 0 ; i < faceNodeNumber - 1; i++) {
 
           // let's find the plane passing through the points xv[][i], xv[][i+1] and xv[][2] = xv[][i] but with z = length .
           double A = (xv[1][i + 1] - xv[1][i]);
@@ -707,11 +701,11 @@ namespace femus {
               }
 
               for(unsigned k = 0; k < dim; k++) {
-                xvr[k].resize(facePointNumber[currentElementType][_solType]);
+                xvr[k].resize(faceNodeNumber);
               }
 
               //now we have to determine if r is inside edge i
-              for(unsigned j = 0; j < facePointNumber[currentElementType][_solType]; j++) {
+              for(unsigned j = 0; j < faceNodeNumber; j++) {
                 for(unsigned k = 0; k < dim; k++) {
                   xvr[k][j] = xv[k][j] - r[k];     //transate again the reference frame so that the origin is r
                 }
@@ -1453,22 +1447,22 @@ namespace femus {
     //BEGIN Numerical integration scheme
     // determine the step size
     double h = T / n;
-   
+    //let's take it easy and just apply Euler's method
+
     bool  pcElemUpdate ;
     bool integrationIsOver = false;
 
-    unsigned order = 4;
+    unsigned order = 1;
     unsigned step = 0.;
 
-    if(_iproc == _mproc) {
-      _K.resize(order);
-      for(unsigned k = 0; k < order; k++) {
-        _K[k].resize(dim);
-      }
+    _K.resize(order);
+
+    for(unsigned k = 0; k < order; k++) {
+      _K[k].resize(dim);
     }
 
-
     while(integrationIsOver == false) {
+
       unsigned mprocOld = _mproc;
       if(_iproc == _mproc) {
         pcElemUpdate = true ;
@@ -1478,41 +1472,46 @@ namespace femus {
           unsigned tstep = step / order;
           unsigned istep = step % order;
 
+	   std::vector< double > xk(dim);
+	  
           if(istep == 0) {
-            _x0 = _x;
+	    for(unsigned i = 0; i < dim; i++) {
+	      xk[i] = _x[i];
+	    }
             for(unsigned k = 0; k < order; k++) {
               _K[k].assign(dim, 0.);
             }
           }
 
-          std::cout << " -----------------------------" << "step = " <<  step <<" tstep = " << tstep << " istep = " << istep << " -----------------------------" << std::endl;
+
+          std::cout << " -----------------------------" << "step = " <<  step << " -----------------------------" << std::endl;
           std::cout << " _iproc = " << _iproc << std::endl;
-  
+
           updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); //send xk
 
           for(unsigned i = 0; i < dim; i++) {
             _K[istep][i] = V[i] * h;
           }
-
+          
+          	  
           step++;
-          istep++;
-
-          if(istep < order) {
-            for(unsigned i = 0; i < dim; i++) {
-	      _x[i] = _x0[i];
-              for(unsigned j = 0; j < order; j++) {
-                _x[i] +=  _a[order - 1][istep][j] * _K[j][i];
-              }
-            }
-          }
-          else if(istep == order) {
-            for(unsigned i = 0; i < dim; i++) {
-	      _x[i] = _x0[i];
-              for(unsigned j = 0; j < order; j++) {
-                _x[i] += _b[order - 1][j] * _K[j][i];
-              }
-            }
-          }
+	  istep++;
+	  
+	  if(istep < order){
+	    for(unsigned i = 0; i < dim; i++) {
+	      for(unsigned j = 0; j < order; j++){
+		xk[i] += _a[order - 1][istep][j] * _K[j][i];
+	      }
+	    }
+	  }
+	  else if (istep == order){
+	    for(unsigned i = 0; i < dim; i++) {
+	      for(unsigned j = 0; j < order; j++){
+		_x[i] += _b[order - 1][j] * _K[j][i];
+	      }
+	    }
+	  }
+	  
 
           //BEGIN TO BE REMOVED
           for(unsigned i = 0; i < dim; i++) {
@@ -1527,28 +1526,31 @@ namespace femus {
           unsigned iel = _elem;
           GetElementSerial(_elem);
 
-          if(_elem == UINT_MAX) { //out of the domain
+          if(_elem == UINT_MAX) {
             std::cout << " the marker has been advected outside the domain " << std::endl;
             break;
           }
-          else if(iel != _elem && _iproc != _mproc) { //different element different process
+          else if(iel != _elem && _iproc != _mproc) {
+
             break;
+
           }
-          else if(iel != _elem) { //different element same process
+          else if(iel != _elem) {
             pcElemUpdate = true;
             FindLocalCoordinates(solVType, _aX, pcElemUpdate);
           }
-          else { //same element same process
+          else {
+            pcElemUpdate = true; //added this
             FindLocalCoordinates(solVType, _aX, pcElemUpdate);
           }
         }
       }
-      std::cout << step;
-      
       // all processes
       MPI_Bcast(& _elem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& _x[0], dim, MPI_DOUBLE, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& step, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
+
+
 
       if(_elem == UINT_MAX) {
         std::cout << " the marker has been advected outside the domain " << std::endl;
@@ -1558,43 +1560,119 @@ namespace femus {
         _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
         if(_mproc != mprocOld) {
           GetElement();
-
-          if(mprocOld == _iproc) {
-            unsigned istep = step % order;
-            if(istep != 0) {
-	      for(int i = 0; i < order; i++){
-		MPI_Send(&_K[i][0], dim, MPI_DOUBLE, _mproc, i , PETSC_COMM_WORLD);
-	      }
-              MPI_Send(&_x0[0], dim, MPI_DOUBLE, _mproc, order , PETSC_COMM_WORLD);
-            }
-            std::vector < double > ().swap(_xi);
-            std::vector < double > ().swap(_x0);
-            std::vector < std::vector < double > > ().swap(_K);
-            std::vector < std::vector < std::vector < double > > >().swap(_aX);
-          }
-          else if(_mproc == _iproc) {
-            _x0.resize(dim);
-            _K.resize(order);
-            for(unsigned i = 0; i < order; i++) {
-              _K[i].resize(dim);
-            }
-            unsigned istep = step % order;
-            if(istep != 0) {               
-	      for(int i = 0; i < order; i++){
-		MPI_Recv(&_K[i][0], dim, MPI_DOUBLE, mprocOld, i , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-	      }
-              MPI_Recv(&_x0[0], dim, MPI_DOUBLE, mprocOld, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-            }
+          if(_mproc == _iproc) {
             FindLocalCoordinates(solVType, _aX, true);
+          }
+          else if(mprocOld == _iproc) {
+            _xi.resize(0);
+            std::vector < std::vector < std::vector < double > > >().swap(_aX);
           }
         }
       }
       std::cout << "step = " << step << std::endl;
-      if(step == n * order) {
+      if(step == n) {
         integrationIsOver = true;
         std::cout << "Integration is over, point in proc " << _mproc << std::endl;
       }
     }
+
+
+//     unsigned dim = _mesh->GetDimension();
+//
+//     unsigned RKOrder = 4;  //order of the RK integration scheme
+//
+//     std::vector< std::vector<double> > x(RKOrder);
+//     std::vector< std::vector<double> > K(RKOrder);
+//     std::vector< double > y(dim, 0);
+//
+//     // determine the step size
+//     double h = T / n;
+//
+//     for(unsigned i = 0; i < RKOrder; i++) {
+//       x[i].reserve(dim + 1); // x = (t, x, y, z)
+//       K[i].reserve(dim);
+//     }
+//     for(unsigned i = 0; i < RKOrder; i++) {
+//       x[i].resize(dim + 1);
+//       K[i].resize(dim);
+//     }
+//
+//     //initialize time
+//     x[0][0] = 0;
+//
+//     // initialize the position
+//     for(unsigned i = 1; i < dim + 1; i++) {
+//       x[0][i] = _x[i - 1] ;
+//       std::cout << "x[0][" << i << "]= " << x[0][i] << std::endl;
+//     }
+//
+//
+//     double step = 0;
+//     while(step < n) {
+//
+//       std::cout << "------------------------------------- t = " << x[0][0] << "----------------------------------" << std::endl;
+//       std::cout << "------------------------------------- h = " << h << "------------------------------------" << std::endl;
+//
+//       for(unsigned i = 0; i < dim; i++) {
+//         std::cout << "f(x)[ " << i << "]= " << (*f)(x[0])[i] << std::endl ;
+//         K[0][i] = h * (*f)(x[0])[i] ;
+//         std::cout << "K[0][[ " << i << "]= " << K[0][i] << std::endl ;
+//       }
+//
+//       //compute x[1]
+//       x[1][0] = x[0][0] + (0.5 * h);
+//       for(unsigned j = 1; j < dim + 1; j++) {
+//         x[1][j] = x[0][j] + 0.5 * K[0][j - 1];
+//       }
+//
+//       //compute K[1]
+//       for(unsigned i = 0; i < dim; i++) {
+//         K[1][i] = h * (*f)(x[1])[i] ;
+//         std::cout << "K[1][[ " << i << "]= " << K[1][i] << std::endl ;
+//       }
+//
+//       //compute x[2]
+//       x[2][0] = x[0][0] + (0.5 * h);
+//       for(unsigned j = 1; j < dim + 1; j++) {
+//         x[2][j] = x[0][j] + 0.5 * K[1][j - 1];
+//       }
+//
+//       //compute K[2]
+//       for(unsigned i = 0; i < dim; i++) {
+//         K[2][i] = h * (*f)(x[2])[i] ;
+//         std::cout << "K[2][[ " << i << "]= " << K[2][i] << std::endl ;
+//       }
+//
+//       //compute x[3]
+//       x[3][0] = x[0][0] + h;
+//       for(unsigned j = 1; j < dim + 1; j++) {
+//         x[3][j] = x[0][j] + K[2][j - 1];
+//       }
+//
+//       //compute K[3]
+//       for(unsigned i = 0; i < dim; i++) {
+//         K[3][i] = h * (*f)(x[3])[i] ;
+//         std::cout << "K[3][[ " << i << "]= " << K[3][i] << std::endl ;
+//       }
+//
+//       // RK stepping
+//       for(unsigned j = 1; j < dim + 1; j++) {
+//         x[0][j] += (1. / 6) * (K[0][j - 1] + 2. * K[1][j - 1] + 2. * K[2][j - 1] + K[3][j - 1]);
+//         std::cout << "x[0][" << j << "]=" << x[0][j] << std::endl;
+//       }
+//       //update t
+//       x[0][0] += h ;
+//
+//       //update the step
+//       step++;
+//     }
+//
+//     for(unsigned j = 1; j < dim + 1; j++) {
+//       y[j - 1] = x[0][j];
+//     }
+//
+//     return y;
+
   }
 
 
@@ -1623,6 +1701,12 @@ namespace femus {
       }
     }
   }
+
+
+
+
+
+
 
 
 
@@ -1726,7 +1810,6 @@ namespace femus {
 
 
 }
-
 
 
 

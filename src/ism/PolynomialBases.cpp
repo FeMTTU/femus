@@ -1504,7 +1504,7 @@ namespace femus {
     }
   }
 
-  void GetConvexHullSphere(const std::vector< std::vector < double > > &xv, std::vector <double> &xc, double & r) {
+  void GetConvexHullSphere(const std::vector< std::vector < double > > &xv, std::vector <double> &xc, double & r, const double tolerance) {
     unsigned dim = xv.size();
     unsigned ndofs = xv[0].size();
     xc.resize(dim, 0.);
@@ -1522,11 +1522,11 @@ namespace femus {
       }
       r2 = (r2 > d2) ? r2 : d2;
     }
-    r2 *= 1.01;
-    r = sqrt(r2);
+    
+    r = (1. + tolerance ) * sqrt(r2);
   }
   
-  void GetBoundingBox(const std::vector< std::vector < double > > &xv, std::vector< std::vector < double > > &xe) {
+  void GetBoundingBox(const std::vector< std::vector < double > > &xv, std::vector< std::vector < double > > &xe, const double tolerance) {
     unsigned dim = xv.size();
     unsigned ndofs = xv[0].size();
     xe.resize(dim);
@@ -1542,7 +1542,7 @@ namespace femus {
       }
     }
     for(int d = 0; d < dim; d++) {
-      double epsilon = 0.001 * (xe[d][1] - xe[d][0]);
+      double epsilon = tolerance * (xe[d][1] - xe[d][0]);
       xe[d][0] -= epsilon;
       xe[d][1] += epsilon;
     }

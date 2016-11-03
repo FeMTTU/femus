@@ -714,11 +714,11 @@ namespace femus {
 
               double r;
               std::vector <double> xc;
-              GetConvexHullSphere(xv, xc, r);
+              GetConvexHullSphere(xv, xc, r, 0.01);
               double r2 = r * r;
 
               std::vector < std::vector< double > > xe;
-              GetBoundingBox(xv, xe);
+              GetBoundingBox(xv, xe, 0.01);
 
 
               for(unsigned k = jlevelInterfaceDof.begin(); k < jlevelInterfaceDof.end(); k++) {
