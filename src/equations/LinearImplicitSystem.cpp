@@ -100,7 +100,7 @@ namespace femus {
 
     for(unsigned i = 0; i < _gridn; i++) {
       _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
-                             _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridr, _gridn, _SparsityPattern);
+                             _ml_sol->GetSolName(), &_solution[i]->_Bdc, 0, _gridn, _SparsityPattern);
     }
 
     _PP.resize(_gridn);
@@ -113,18 +113,22 @@ namespace femus {
     for(unsigned ig = 1; ig < _gridn; ig++) {
       BuildProlongatorMatrix(ig);
     }
-    
+
     _PPamr.resize(_gridn);
     _RRamr.resize(_gridn);
     for(unsigned i = 0; i < _gridn; i++) {
       _PPamr[i] = NULL;
       _RRamr[i] = NULL;
     }
-    for(unsigned ig = _gridr; ig < _gridn; ig++) {
-      BuildAmrProlongatorMatrix(ig);
+    for(unsigned ig = 0; ig < _gridn; ig++) {
+      if(!_ml_msh->GetLevel(ig)->GetIfHomogeneous()) {
+        BuildAmrProlongatorMatrix(ig);
+      }
     }
-    for(unsigned ig = _gridr + 1; ig < _gridn; ig++) {
-      _PP[ig]->matrix_RightMatMult(*_PPamr[ig - 1]);
+    for(unsigned ig = 1; ig < _gridn; ig++) {
+      if(!_ml_msh->GetLevel(ig - 1)->GetIfHomogeneous()) {
+        _PP[ig]->matrix_RightMatMult(*_PPamr[ig - 1]);
+      }
     }
 
     _NSchurVar_test = 0;
@@ -150,12 +154,12 @@ namespace femus {
     }
     else if(_mg_type == V_CYCLE) {
       std::cout << std::endl << " *** Start " << _solverType << " Linear V-Cycle ***" << std::endl;
-      grid0 = _gridn-1;
+      grid0 = _gridn - 1;
     }
-    else if(_mg_type == M_CYCLE) {
-      std::cout << std::endl << " *** Start " << _solverType << " Linear Mixed-Cycle ***" << std::endl;
-      grid0 = _gridr-1;
-    }
+//     else if(_mg_type == M_CYCLE) {
+//       std::cout << std::endl << " *** Start " << _solverType << " Linear Mixed-Cycle ***" << std::endl;
+//       grid0 = _gridr-1;
+//     }
     else {
       std::cout << "wrong " << _solverType << " type for this solver " << std::endl;
       abort();
@@ -178,7 +182,7 @@ namespace femus {
       _assembleMatrix = true;
       _assemble_system_function(_equation_systems);
 
-      if(igridn >= _gridr) {
+      if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
         (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
         *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
         _LinSolver[igridn]->SwapMatrices();
@@ -221,7 +225,7 @@ namespace femus {
       }
       else MLVcycle(igridn + 1);
 
-      if(igridn >= _gridr) {
+      if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
         _LinSolver[igridn]->SwapMatrices();
       }
 
@@ -297,7 +301,7 @@ namespace femus {
       if(linearIsConverged)  break;
     }
 
-    if(level >= _gridr) {
+    if(!_ml_msh->GetLevel(level)->GetIfHomogeneous()) {
       (_LinSolver[level]->_EPSC)->matrix_mult(*_LinSolver[level]->_EPS, *_PPamr[level]);
       *(_LinSolver[level]->_EPS) = *(_LinSolver[level]->_EPSC);
     }
@@ -350,9 +354,9 @@ namespace femus {
       }
 
       // ============== Update AMR Solution and Residual ( _gridr-1 <= ig <= gridn-2 ) ==============
-      for(unsigned ig = _gridr - 1; ig < gridn - 1; ig++) {   // _gridr
-        _solution[ig]->UpdateSolAndRes(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset);
-      }
+//       for(unsigned ig = _gridr - 1; ig < gridn - 1; ig++) {   // _gridr
+//         _solution[ig]->UpdateSolAndRes(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset);
+//       }
 
       // ============== Update Fine Residual ==============
       _solution[gridn - 1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[gridn - 1]->_RES, _LinSolver[gridn - 1]->KKoffset);
@@ -375,23 +379,23 @@ namespace femus {
 
   void LinearImplicitSystem::Solve(const unsigned& gridn, const bool &kspClean, const int &npre, const int &npost) {
 
-    unsigned grid0 = (gridn <= _gridr) ? gridn : _gridr;
-
-    for(unsigned ig = gridn - 1u; ig > grid0 - 1u; ig--) {
-      for(unsigned k = 0; k < npre; k++) {
-        _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, kspClean);
-      }
-      Restrictor(ig);
-    }
-
-    _LinSolver[grid0 - 1u]->Solve(_VariablesToBeSolvedIndex, kspClean);
-
-    for(unsigned ig = grid0; ig < gridn; ig++) {
-      Prolongator(ig);
-      for(unsigned k = 0; k < npost; k++) {
-        _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, kspClean);
-      }
-    }
+//     unsigned grid0 = (gridn <= _gridr) ? gridn : _gridr;
+//
+//     for(unsigned ig = gridn - 1u; ig > grid0 - 1u; ig--) {
+//       for(unsigned k = 0; k < npre; k++) {
+//         _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, kspClean);
+//       }
+//       Restrictor(ig);
+//     }
+//
+//     _LinSolver[grid0 - 1u]->Solve(_VariablesToBeSolvedIndex, kspClean);
+//
+//     for(unsigned ig = grid0; ig < gridn; ig++) {
+//       Prolongator(ig);
+//       for(unsigned k = 0; k < npost; k++) {
+//         _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, kspClean);
+//       }
+//     }
   }
   // ********************************************
 
@@ -467,19 +471,24 @@ namespace femus {
     _LinSolver[_gridn] = LinearEquationSolver::build(_gridn, _solution[_gridn], _SmootherType).release();
 
     _LinSolver[_gridn]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
-                                _ml_sol->GetSolName(), &_solution[_gridn]->_Bdc, _gridr, _gridn + 1, _SparsityPattern);
+                                _ml_sol->GetSolName(), &_solution[_gridn]->_Bdc,  _gridn + 1, _gridn + 1, _SparsityPattern);
 
     _PP.resize(_gridn + 1);
     _RR.resize(_gridn + 1);
+    _PP[_gridn] = NULL;
+    _RR[_gridn] = NULL;
     BuildProlongatorMatrix(_gridn);
-    if(_gridn > _gridr){
+    if(!_ml_msh->GetLevel(_gridn - 1)->GetIfHomogeneous()) {
       _PP[_gridn]->matrix_RightMatMult(*_PPamr[_gridn - 1]);
     }
-    
+
     _PPamr.resize(_gridn + 1);
     _RRamr.resize(_gridn + 1);
-    BuildAmrProlongatorMatrix(_gridn);
-    
+    _PPamr[_gridn] = NULL;
+    _RRamr[_gridn] = NULL;
+    if(!_ml_msh->GetLevel(_gridn)->GetIfHomogeneous()) {
+      BuildAmrProlongatorMatrix(_gridn);
+    }
     _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
     _LinSolver[_gridn]->SetTolerances(_rtol, _atol, _divtol, _maxits, _restart);
     _LinSolver[_gridn]->set_preconditioner_type(_finegridpreconditioner);
@@ -496,7 +505,7 @@ namespace femus {
     if(_NSchurVar_test) {
       _LinSolver[_gridn]->SetNumberOfSchurVariables(_NSchurVar);
     }
-    
+
     if(_richardsonScaleFactorIsSet) {
       _LinSolver[_gridn]->SetRichardsonScaleFactor(_richardsonScaleFactor);
     }

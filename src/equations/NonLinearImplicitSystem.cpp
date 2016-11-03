@@ -100,16 +100,16 @@ namespace femus {
       std::cout << std::endl << " *** Start Nonlinear  " << _solverType << " V-Cycle ***" << std::endl;
       grid0 = _gridn - 1;
     }
-    else if(_mg_type == M_CYCLE) {
-      std::cout << std::endl << " *** Start Nonlinear  " << _solverType << " Mixed-Cycle ***" << std::endl;
-      grid0 = _gridr - 1;
-    }
+//     else if(_mg_type == M_CYCLE) {
+//       std::cout << std::endl << " *** Start Nonlinear  " << _solverType << " Mixed-Cycle ***" << std::endl;
+//       grid0 = _gridr - 1;
+//     }
     else {
       std::cout << "wrong " << _solverType << " type for this solver " << std::endl;
       abort();
     }
 
-    std::cout << "AAAAAAAAAAAAAAAA " << _gridr << " " << _gridn << std::endl;
+    //std::cout << "AAAAAAAAAAAAAAAA " << _gridr << " " << _gridn << std::endl;
 
     unsigned AMRCounter = 0;
 
@@ -131,7 +131,7 @@ namespace femus {
         _assembleMatrix = _buildSolver;
         _assemble_system_function(_equation_systems);
 
-        if(igridn >= _gridr) {
+        if( !_ml_msh->GetLevel(igridn)->GetIfHomogeneous() ) {
           (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
           *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
         }
@@ -141,7 +141,7 @@ namespace femus {
           _MGmatrixFineReuse = (0 == nonLinearIterator) ? false : true;
           _MGmatrixCoarseReuse = (igridn - grid0 > 0) ?  true : _MGmatrixFineReuse;
 
-	  if(igridn >= _gridr) {
+	  if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
             _LinSolver[igridn]->SwapMatrices();
             _LinSolver[igridn]->_KK->matrix_PtAP(*_PPamr[igridn], *_LinSolver[igridn]->_KKamr, _MGmatrixFineReuse);
           }
@@ -197,7 +197,7 @@ namespace femus {
           _LinSolver[igridn]->SetResZero();
           _assembleMatrix = false;
           _assemble_system_function(_equation_systems);
-          if(igridn >= _gridr) {
+          if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
             (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
             *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
           }
@@ -205,7 +205,7 @@ namespace femus {
         }
 
         if(_buildSolver) {
-          if(igridn >= _gridr) {
+          if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
             _LinSolver[igridn]->SwapMatrices();
           }
           if(_MGsolver) {

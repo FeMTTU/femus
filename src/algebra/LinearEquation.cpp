@@ -101,7 +101,7 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
 		     const vector <char*> &SolName_other, vector <NumericVector*> *Bdc_other,
 		     const unsigned &other_gridr, const unsigned &other_gridn, vector <bool> &SparsityPattern_other) {
   _SolPdeIndex=SolPdeIndex_other;
-  _gridr=other_gridr;
+  //_gridr=other_gridr;
   _gridn=other_gridn;
 
   _SolType=SolType_other;

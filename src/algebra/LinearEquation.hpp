@@ -104,7 +104,8 @@ public:
   vector < unsigned > KKghostsize;
   vector < vector < int> > KKghost_nd;
   vector <int> KKIndex;
-  unsigned _gridr,_gridn;
+  //unsigned _gridr;
+  unsigned _gridn;
 
   vector < int > d_nnz;
   vector < int > o_nnz;
