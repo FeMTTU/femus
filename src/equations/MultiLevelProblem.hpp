@@ -156,10 +156,10 @@ public:
         return _gridn;
     };
 
-    /** Get the number of grid totally refined; it is a subset of _gridn */
-    const unsigned GetNumberOfUniformlyRefinedLevels() const {
-        return _gridr;
-    };
+//     /** Get the number of grid totally refined; it is a subset of _gridn */
+//     const unsigned GetNumberOfUniformlyRefinedLevels() const {
+//         return _gridr;
+//     };
 
     /** Increase of one the number of levels */
     void AddLevel(){
@@ -208,7 +208,7 @@ private:
     // member data
     vector < map <unsigned,bool> > index;
     unsigned short _gridn;
-    unsigned short _gridr;
+    //unsigned short _gridr;
 
     std::vector< std::vector<const elem_type*> >  _elem_type;
     std::vector<Gauss>                      _qrule;
