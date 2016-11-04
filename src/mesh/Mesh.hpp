@@ -183,7 +183,7 @@ public:
     
     void BiquadraticNodesNotInGambit();
     
-    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestriction(){
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap(){
       return _amrRestriction;
     }
 

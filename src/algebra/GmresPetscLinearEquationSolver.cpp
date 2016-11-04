@@ -113,6 +113,7 @@ namespace femus {
       this->Clear();
       SetPenalty();
       RemoveNullSpace();
+//      this->Init(KK, KK);
       if( UseSamePreconditioner() ) {
         this->Init(KK, KK);
       }
@@ -249,6 +250,8 @@ namespace femus {
     RemoveNullSpace();
 
     Mat KK = (static_cast< PetscMatrix* >(_KK))->mat();
+    
+    //KSPSetOperators(subksp, KK, KK);
     if( UseSamePreconditioner() ) {
       KSPSetOperators(subksp, KK, KK);
     }
@@ -294,6 +297,7 @@ namespace femus {
     if(ksp_clean) {
       Mat KK = (static_cast< PetscMatrix* >(_KK))->mat();
 
+      //KSPSetOperators(_ksp, KK, KK);
       if( UseSamePreconditioner() ) {
         KSPSetOperators(_ksp, KK, KK);
       }
@@ -389,7 +393,10 @@ namespace femus {
         if ( soltype == 4 ) owndofs /= ( _msh->GetDimension() + 1 );
         for(unsigned i = 0; i < owndofs; i++) {
           int idof_kk = KKoffset[k][processor_id()] + i;
-          VecSetValue(nullspBase[nullspSize], idof_kk, 1., INSERT_VALUES);
+	  unsigned inode_mts = _msh->_dofOffset[soltype][processor_id()] + i;  
+	  if((* (*_Bdc) [indexSol])(inode_mts) > 1.9){
+	    VecSetValue(nullspBase[nullspSize], idof_kk, 1., INSERT_VALUES);
+	  }
         }
 
         VecAssemblyBegin(nullspBase[nullspSize]);
@@ -419,7 +426,12 @@ namespace femus {
     MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
     MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
     MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
-
+    if( _hangingNodesIndex.size() != 0 && (_preconditioner_type == MLU_PRECOND || _preconditioner_type == LU_PRECOND )){
+      MatZeroRows(KK, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1., 0, 0);
+    }
+    //MatZeroRows(KK, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1., 0, 0);
+    
+    
     if( !UseSamePreconditioner() ) {
       if(_pmatIsInitialized) MatDestroy(&_pmat);
       MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
@@ -434,10 +446,13 @@ namespace femus {
   // =================================================
 
   void GmresPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc) {
-    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpc);
+    
+    int parallelOverlapping = ( _msh->GetIfHomogeneous() )? 0 : 0;
+    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpc, parallelOverlapping);
     PetscReal zero = 1.e-16;
     PCFactorSetZeroPivot(subpc, zero);
-    PCFactorSetShiftType(subpc, MAT_SHIFT_NONZERO);
+    PCFactorSetShiftType(subpc, MAT_SHIFT_NONZERO); 
+    
   }
 
   // ================================================
@@ -503,7 +518,7 @@ namespace femus {
 
       case RICHARDSON:
         KSPSetType(ksp, (char*) KSPRICHARDSON);
-        KSPRichardsonSetScale(ksp, 0.5);
+        KSPRichardsonSetScale(ksp, _richardsonScaleFactor);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
         return;
 

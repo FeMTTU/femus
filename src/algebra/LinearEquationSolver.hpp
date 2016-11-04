@@ -96,6 +96,8 @@ namespace femus {
                               ) = 0;
 
       virtual void MGSolve(const bool ksp_clean) = 0;
+      
+      virtual void SetRichardsonScaleFactor(const double & richardsonScaleFactor) = 0; 
 
       /** Sets the type of solver to use. */
       void set_solver_type(const SolverType st)  {

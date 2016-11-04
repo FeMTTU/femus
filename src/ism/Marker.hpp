@@ -45,7 +45,13 @@ namespace femus {
       };
 
 
-
+      unsigned GetMarkerElement(){
+	return _elem;
+      }
+      
+      std::vector<double> GetMarkerLocalCoordinates(){
+	return _xi;
+      }
 
       void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
       void GetElementSerial(unsigned &initialElem);
@@ -83,7 +89,6 @@ namespace femus {
       int FastForward(const unsigned &currentElem);
 
       std::vector < double > _x;
-      std::vector < double > _x0;
       std::vector < double > _xi;
       unsigned _solType;
       MarkerType _markerType;

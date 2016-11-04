@@ -815,12 +815,12 @@ namespace femus {
             if( ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset] ) {
               for(unsigned j = 1; j < _msh->el->GetElementNearElementSize(iel,1);j++){
 		unsigned jel = _msh->el->GetElementNearElement(iel,j);
-		if( jel >= _msh->_elementOffset[iproc] && jel<_msh->_elementOffset[iproc + 1] ){
+		if(jel >= _msh->_elementOffset[iproc] && jel<_msh->_elementOffset[iproc + 1] ){
 		  if(_msh->el->GetIfElementCanBeRefined(jel)){
 		    if(jel > iel) {
                       AMR->_Sol[AMRIndex]->set(jel, 2.);
                     }
-                    else if( (*AMR->_Sol[AMRIndex])(iel) == 0. ) {
+                    else if( (*AMR->_Sol[AMRIndex])(jel) == 0. ) {
 		      errTestTrue2 -= ielErrNorm2[jel-offset];
 		      AMR->_Sol[AMRIndex]->set(jel, 1.);
 		      volumeTestFalse += ielVolume[jel-offset];

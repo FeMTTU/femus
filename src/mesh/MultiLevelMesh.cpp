@@ -51,7 +51,9 @@ MultiLevelMesh::~MultiLevelMesh() {
 }
 
 //---------------------------------------------------------------------------------------------------
-MultiLevelMesh::MultiLevelMesh(): _gridn0(0),_gridr0(0) {
+MultiLevelMesh::MultiLevelMesh(): _gridn0(0)
+  //,_gridr0(0) 
+  {
 
   _finiteElementGeometryFlag.resize(6,false);
 
@@ -115,8 +117,9 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
 			       const char mesh_file[], const char GaussOrder[], const double Lref,
 			       bool (* SetRefinementFlag)(const std::vector < double > &x,
 							  const int &ElemGroupNumber,const int &level) ):
-    _gridn0(igridn),
-    _gridr0(igridr) {
+    _gridn0(igridn)
+    //,_gridr0(igridr) 
+    {
 
 
     _level0.resize(_gridn0);
@@ -130,7 +133,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
     BuildElemType(GaussOrder);
 
     //totally refined meshes
-    for (unsigned i=1; i<_gridr0; i++) {
+    for (unsigned i=1; i<igridr; i++) {
         MeshRefinement meshcoarser(*_level0[i-1u]);
         meshcoarser.FlagAllElementsToBeRefined();
 	_level0[i] = new Mesh();
@@ -147,7 +150,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
 
 
     //partially refined meshes
-    for (unsigned i=_gridr0; i<_gridn0; i++) {
+    for (unsigned i=igridr; i<_gridn0; i++) {
       if(!Mesh::_IsUserRefinementFunctionDefined) {
         cout << "Set Refinement Region flag is not defined! " << endl;
         exit(1);
@@ -167,7 +170,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
 
 
     _gridn=_gridn0;
-    _gridr=_gridr0;
+    //_gridr=_gridr0;
     _level.resize(_gridn);
     for(int i=0; i<_gridn; i++)
         _level[i]=_level0[i];
@@ -177,7 +180,7 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
 void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrder[], const double Lref)
 {
     _gridn0 = 1;
-    _gridr0 = 1;
+    //_gridr0 = 1;
 
     _level0.resize(_gridn0);
     _finiteElementGeometryFlag.resize(5,false);
@@ -190,7 +193,7 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
     BuildElemType(GaussOrder);
 
     _gridn=_gridn0;
-    _gridr=_gridr0;
+    //_gridr=_gridr0;
     _level.resize(_gridn);
     _level[0] = _level0[0];
 
@@ -204,7 +207,7 @@ void MultiLevelMesh::GenerateCoarseBoxMesh(
         const ElemType type, const char GaussOrder[])
 {
     _gridn0 = 1;
-    _gridr0 = 1;
+    //_gridr0 = 1;
 
     _level0.resize(_gridn0);
     _finiteElementGeometryFlag.resize(5,false);
@@ -218,7 +221,7 @@ void MultiLevelMesh::GenerateCoarseBoxMesh(
     BuildElemType(GaussOrder);
 
     _gridn=_gridn0;
-    _gridr=_gridr0;
+    //_gridr=_gridr0;
     _level.resize(_gridn);
     _level[0] = _level0[0];
 
@@ -231,12 +234,12 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
 {
 
     _gridn0 = igridn;
-    _gridr0 = igridr;
+    //_gridr0 = igridr;
 
     _level0.resize(_gridn0);
 
     //totally refined meshes
-    for (unsigned i=1; i<_gridr0; i++) {
+    for (unsigned i=1; i<igridr; i++) {
       MeshRefinement meshcoarser(*_level0[i-1u]);
       meshcoarser.FlagAllElementsToBeRefined();
 
@@ -255,7 +258,7 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
       Mesh::_IsUserRefinementFunctionDefined = true;
     }
 
-    for (unsigned i=_gridr0; i<_gridn0; i++) {
+    for (unsigned i=igridr; i<_gridn0; i++) {
       if(Mesh::_IsUserRefinementFunctionDefined == false) {
         cout << "Set Refinement Region flag is not defined! " << endl;
         exit(1);
@@ -275,7 +278,7 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
 
 
     _gridn=_gridn0;
-    _gridr=_gridr0;
+    //_gridr=_gridr0;
     _level.resize(_gridn);
     for(int i=0; i<_gridn; i++)
         _level[i]=_level0[i];
@@ -306,11 +309,11 @@ void MultiLevelMesh::AddAMRMeshLevel()
 //---------------------------------------------------------------------------------------------
 
 void MultiLevelMesh::EraseCoarseLevels(unsigned levels_to_be_erased) {
-    if(levels_to_be_erased >= _gridr) {
-        levels_to_be_erased = _gridr-1;
-        cout<<"Warning the number of levels to be erased has been reduced to"<<levels_to_be_erased;
-    }
-    _gridr -= levels_to_be_erased;
+//     if(levels_to_be_erased >= _gridr) {
+//         levels_to_be_erased = _gridr-1;
+//         cout<<"Warning the number of levels to be erased has been reduced to"<<levels_to_be_erased;
+//     }
+//     _gridr -= levels_to_be_erased;
     _gridn -= levels_to_be_erased;
     for(int i=0; i<_gridn; i++) {
       _level[i]=_level0[i+levels_to_be_erased];

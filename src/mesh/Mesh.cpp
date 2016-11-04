@@ -191,6 +191,8 @@ namespace femus {
     el->ScatterElementQuantities();
     el->ScatterElementDof();
     el->ScatterElementNearFace();
+    
+    _amrRestriction.resize(3);
 
   };
 
@@ -258,6 +260,8 @@ namespace femus {
     el->ScatterElementQuantities();
     el->ScatterElementDof();
     el->ScatterElementNearFace();
+    
+    _amrRestriction.resize(3);
 
   }
 

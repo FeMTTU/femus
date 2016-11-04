@@ -576,7 +576,7 @@ namespace femus {
   void elem::GetAMRRestriction(Mesh *msh, std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &restriction) {
 
     restriction.resize(3);
-    
+
     std::vector < MyVector<unsigned> > interfaceElement;
     std::vector < MyMatrix<unsigned> > interfaceLocalDof;
     std::vector < std::vector < MyMatrix<unsigned> > > interfaceDof;
@@ -674,6 +674,7 @@ namespace femus {
     }
 
     for(unsigned soltype = 0; soltype < 3; soltype++) {
+      std::cout << "AAAAAAAAAAAAAAA" << soltype << std::endl;
       for(int ilevel = 0; ilevel < _level; ilevel++) {
         for(int jlevel = ilevel + 1; jlevel <= _level; jlevel++) {
 
@@ -713,8 +714,12 @@ namespace femus {
 
               double r;
               std::vector <double> xc;
-              GetConvexHullSphere(xv, xc, r);
+              GetConvexHullSphere(xv, xc, r, 0.01);
               double r2 = r * r;
+
+              std::vector < std::vector< double > > xe;
+              GetBoundingBox(xv, xe, 0.01);
+
 
               for(unsigned k = jlevelInterfaceDof.begin(); k < jlevelInterfaceDof.end(); k++) {
                 for(unsigned l = jlevelInterfaceDof.begin(k); l < jlevelInterfaceDof.end(k); l++) {
@@ -726,7 +731,16 @@ namespace femus {
                       xl[d] = jlevelInterfaceNodeCoordinates[d][k][l];
                       d2 += (xl[d] - xc[d]) * (xl[d] - xc[d]);
                     }
-                    if(d2 < r2) {
+                    bool insideHull = true;
+                    if(d2 > r2) {
+                      insideHull = false;
+                    }
+                    for(unsigned d = 0; d < dim; d++) {
+                      if(xl[d] < xe[d][0] || xl[d] > xe[d][1]) {
+                        insideHull = false;
+                      }
+                    }
+                    if(insideHull) {
                       if(elementNodes.find(ldof) == elementNodes.end()) {
 
                         if(!aPIsInitialized) {
@@ -740,9 +754,11 @@ namespace femus {
                         unsigned jmin = GetClosestPoint(xv, xl);
                         std::vector <double> xi(dim);
                         for(unsigned d = 0; d < dim; d++) {
-                          xi[d] = *(_fe[ielType][2]->GetXcoarse(jmin + d));
+                          xi[d] = *(_fe[ielType][2]->GetXcoarse(jmin) + d);
                         }
-                        GetInverseMapping(soltype, ielType, aP, xl, xi);
+                        std::cout << "BBBBBBBBBB" << soltype << std::endl;
+                        GetInverseMapping(2, ielType, aP, xl, xi);
+                        std::cout << "CCCCCCCCCC" << soltype << std::endl;
 
                         bool insideDomain = CheckIfPointIsInsideReferenceDomain(xi, ielType, 0.001);
                         if(insideDomain) {
@@ -784,8 +800,11 @@ namespace femus {
       pvector = NumericVector::build().release();
       pvector->init(_nprocs, 1 , false, AUTOMATIC);
 
+      std::cout << "AAAAAAAAAAAAAAA" << soltype << std::endl;
+
       unsigned counter = 1;
       while(counter != 0) {
+        std::cout << "counter = " << counter << std::endl;
         counter = 0;
 
         MyVector <unsigned> rowSize(restriction[soltype].size(), 0);
@@ -814,35 +833,47 @@ namespace femus {
           cnt1++;
         }
 
+        unsigned solutionOffset = msh->_dofOffset[soltype][_iproc];
+        unsigned solutionOffsetp1 = msh->_dofOffset[soltype][_iproc + 1];
         for(unsigned lproc = 0; lproc < _nprocs; lproc++) {
           masterNode.broadcast(lproc);
           slaveNodes.broadcast(lproc);
           slaveNodesValues.broadcast(lproc);
           for(unsigned i = slaveNodes.begin(); i < slaveNodes.end(); i++) {
             unsigned inode = masterNode[i];
-            for(unsigned j = slaveNodes.begin(i); j < slaveNodes.end(i); j++) {
-              unsigned jnode = slaveNodes[i][j];
-              if(inode == jnode) {
-                if(restriction[soltype].find(jnode) != restriction[soltype].end()) {
-                  for(unsigned k = slaveNodes.begin(i); k < slaveNodes.end(i); k++) {
-                    unsigned knode = slaveNodes[i][k];
-                    double value = slaveNodesValues[i][k];
-                    restriction[soltype][jnode][knode] = (jnode != knode || value > 5.) ? value : restriction[soltype][jnode][knode];
-                    if(restriction[soltype].find(knode) == restriction[soltype].end()) {
-                      for(unsigned l = masterNode.begin(); l < masterNode.end(); l++) {
-                        counter++;
-                        if(masterNode[l] == knode) {
-                          for(unsigned m = slaveNodes.begin(l); m < slaveNodes.end(l); m++) {
-                            unsigned mnode = slaveNodes[l][m];
-                            restriction[soltype][knode][mnode] = slaveNodesValues[l][m];
+            if(inode >= solutionOffset && inode < solutionOffsetp1 &&
+                restriction[soltype].find(inode) == restriction[soltype].end()) {
+              counter++;
+              for(unsigned j = slaveNodes.begin(i); j < slaveNodes.end(i); j++) {
+                unsigned jnode = slaveNodes[i][j];
+                restriction[soltype][inode][jnode] = slaveNodesValues[i][j];
+              }
+            }
+            else {
+              for(unsigned j = slaveNodes.begin(i); j < slaveNodes.end(i); j++) {
+                unsigned jnode = slaveNodes[i][j];
+                if(inode == jnode) {
+                  if(restriction[soltype].find(jnode) != restriction[soltype].end()) {
+                    for(unsigned k = slaveNodes.begin(i); k < slaveNodes.end(i); k++) {
+                      unsigned knode = slaveNodes[i][k];
+                      double value = slaveNodesValues[i][k];
+                      restriction[soltype][jnode][knode] = (jnode != knode || value > 5.) ? value : restriction[soltype][jnode][knode];
+                      if(restriction[soltype].find(knode) == restriction[soltype].end()) {
+                        for(unsigned l = masterNode.begin(); l < masterNode.end(); l++) {
+                          counter++;
+                          if(masterNode[l] == knode) {
+                            for(unsigned m = slaveNodes.begin(l); m < slaveNodes.end(l); m++) {
+                              unsigned mnode = slaveNodes[l][m];
+                              restriction[soltype][knode][mnode] = slaveNodesValues[l][m];
+                            }
+                            break;
                           }
-                          break;
                         }
                       }
                     }
                   }
+                  break;
                 }
-                break;
               }
             }
           }

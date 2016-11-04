@@ -43,6 +43,7 @@ LinearEquation::LinearEquation(Solution *other_solution){
   _RES = NULL;
   _RESC = NULL;
   _KK = NULL;
+  _KKamr = NULL;
 }
 
 //--------------------------------------------------------------------------------
@@ -100,7 +101,7 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
 		     const vector <char*> &SolName_other, vector <NumericVector*> *Bdc_other,
 		     const unsigned &other_gridr, const unsigned &other_gridn, vector <bool> &SparsityPattern_other) {
   _SolPdeIndex=SolPdeIndex_other;
-  _gridr=other_gridr;
+  //_gridr=other_gridr;
   _gridn=other_gridn;
 
   _SolType=SolType_other;
@@ -195,6 +196,7 @@ void LinearEquation::InitPde(const vector <unsigned> &SolPdeIndex_other, const  
 
   _KK = SparseMatrix::build().release();
   _KK->init(KK_size,KK_size,KK_local_size,KK_local_size,d_nnz,o_nnz);
+  _KKamr = SparseMatrix::build().release();
 }
 
 //--------------------------------------------------------------------------------
@@ -229,6 +231,9 @@ void LinearEquation::DeletePde() {
 
   if(_KK)
     delete _KK;
+  
+  if(_KKamr)
+    delete _KKamr;
 
   if(_EPS)
     delete _EPS;
