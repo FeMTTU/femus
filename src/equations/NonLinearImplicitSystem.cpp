@@ -100,16 +100,10 @@ namespace femus {
       std::cout << std::endl << " *** Start Nonlinear  " << _solverType << " V-Cycle ***" << std::endl;
       grid0 = _gridn - 1;
     }
-//     else if(_mg_type == M_CYCLE) {
-//       std::cout << std::endl << " *** Start Nonlinear  " << _solverType << " Mixed-Cycle ***" << std::endl;
-//       grid0 = _gridr - 1;
-//     }
     else {
       std::cout << "wrong " << _solverType << " type for this solver " << std::endl;
       abort();
     }
-
-    //std::cout << "AAAAAAAAAAAAAAAA " << _gridr << " " << _gridn << std::endl;
 
     unsigned AMRCounter = 0;
 

@@ -106,7 +106,7 @@ int main(int argc, char** args) {
 
   mlMsh.MarkStructureNode();
   // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
+  mlMsh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
 
 
   MultiLevelSolution mlSol(&mlMsh);

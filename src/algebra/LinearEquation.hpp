@@ -52,7 +52,7 @@ public:
   /** To be Added */
   void InitPde(const vector <unsigned> &_SolPdeIndex,const  vector <int> &SolType,
                const vector <char*> &SolName, vector <NumericVector*> *Bdc_other,
-               const unsigned &other_gridr, const unsigned &other_gridn, vector < bool > &SparsityPattern_other);
+               const unsigned &other_gridn, vector < bool > &SparsityPattern_other);
 
   void GetSparsityPatternSize();
 
@@ -104,7 +104,6 @@ public:
   vector < unsigned > KKghostsize;
   vector < vector < int> > KKghost_nd;
   vector <int> KKIndex;
-  //unsigned _gridr;
   unsigned _gridn;
 
   vector < int > d_nnz;

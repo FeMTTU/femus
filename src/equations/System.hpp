@@ -141,9 +141,6 @@ protected:
     /** Number of Levels */
     unsigned _gridn;
 
-    /** Number of Totally Refined Levels */
-    //unsigned _gridr;
-
     unsigned _levelToAssemble;
 
     bool _MGsolver, _MLsolver;

@@ -28,7 +28,6 @@ namespace femus {
   _sys_name                         (name_in),
   _sys_number                       (number_in),
   _gridn(ml_probl.GetNumberOfLevels()),
-  //_gridr(ml_probl.GetNumberOfUniformlyRefinedLevels()),
   _ml_sol(ml_probl._ml_sol),
   _ml_msh(ml_probl._ml_msh),
   _buildSolver( true )

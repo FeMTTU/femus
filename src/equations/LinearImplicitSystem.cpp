@@ -100,7 +100,7 @@ namespace femus {
 
     for(unsigned i = 0; i < _gridn; i++) {
       _LinSolver[i]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
-                             _ml_sol->GetSolName(), &_solution[i]->_Bdc, 0, _gridn, _SparsityPattern);
+                             _ml_sol->GetSolName(), &_solution[i]->_Bdc, _gridn, _SparsityPattern);
     }
 
     _PP.resize(_gridn);
@@ -471,7 +471,7 @@ namespace femus {
     _LinSolver[_gridn] = LinearEquationSolver::build(_gridn, _solution[_gridn], _SmootherType).release();
 
     _LinSolver[_gridn]->InitPde(_SolSystemPdeIndex, _ml_sol->GetSolType(),
-                                _ml_sol->GetSolName(), &_solution[_gridn]->_Bdc,  _gridn + 1, _gridn + 1, _SparsityPattern);
+                                _ml_sol->GetSolName(), &_solution[_gridn]->_Bdc,  _gridn + 1, _SparsityPattern);
 
     _PP.resize(_gridn + 1);
     _RR.resize(_gridn + 1);
