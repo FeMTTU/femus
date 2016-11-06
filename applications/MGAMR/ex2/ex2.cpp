@@ -100,13 +100,13 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  numberOfUniformLevels = 3;
+  numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   mlMsh.MarkStructureNode();
   // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
+  //mlMsh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
 
 
   MultiLevelSolution mlSol(&mlMsh);
@@ -124,7 +124,7 @@ int main(int argc, char** args) {
   //mlSol.AssociatePropertyToSolution("P", "Pressure", false);
   mlSol.AssociatePropertyToSolution("P", "Pressure", true);
   mlSol.Initialize("All");
-  mlSol.Initialize("T",InitalValueT);
+  //mlSol.Initialize("T",InitalValueT);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -146,8 +146,8 @@ int main(int argc, char** args) {
 
   system.AddSolutionToSystemPDE("P");
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
+  system.SetMgSmoother(GMRES_SMOOTHER);
+  //system.SetMgSmoother(ASM_SMOOTHER); // Additive Swartz Method
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
@@ -452,7 +452,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
 
       double Pr = 0.4;
-      double Ra = 4000;
+      double Ra = 40000;
 
       // *** phiT_i loop ***
       for(unsigned i = 0; i < nDofsT; i++) {

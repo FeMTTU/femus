@@ -187,6 +187,8 @@ public:
       return _amrRestriction;
     }
 
+    basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
+    
     // member data
     Solution* _topology;
     const elem_type *_finiteElement[6][5];

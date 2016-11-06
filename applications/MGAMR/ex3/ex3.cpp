@@ -135,7 +135,7 @@ bool SetBoundaryCondition( const std::vector < double >& x, const char name[],
 }
 
 // //------------------------------------------------------------------------------------------------------------
-
+unsigned numberOfUniformLevels;
 
 bool SetRefinementFlag( const std::vector < double >& x, const int& elemgroupnumber, const int& level ) {
 
@@ -144,9 +144,9 @@ bool SetRefinementFlag( const std::vector < double >& x, const int& elemgroupnum
   //------------------ 3D --------------------------//
   //if (elemgroupnumber == 6 && level < 2) refine = 1;
 
-  if( elemgroupnumber == 7 && level < 1 ) refine = 1;
+  if( elemgroupnumber == 7 && level < numberOfUniformLevels ) refine = 1;
 
-  if( elemgroupnumber == 8 && level < 2 ) refine = 1;
+  if( elemgroupnumber == 8 && level < numberOfUniformLevels + 1 ) refine = 1;
 
   //------------------ 2D --------------------------//
   //if (elemgroupnumber == 7 && level < 2) refine = 1;
@@ -184,7 +184,7 @@ int main( int argc, char** args ) {
      probably in the furure it is not going to be an argument of this function   */
   dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 1;
+  numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 2;
   mlMsh.RefineMesh( numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag );
 
@@ -236,10 +236,13 @@ int main( int argc, char** args ) {
   system.init();
 
   system.SetSolverFineGrids(GMRES);
-  //system.SetSolverFineGrids( RICHARDSON );
-  system.SetPreconditionerFineGrids( ILU_PRECOND );
   system.SetTolerances( 1.e-20, 1.e-20, 1.e+50, 50, 10 );
-
+  
+//   system.SetSolverFineGrids(RICHARDSON);
+//   system.SetRichardsonScaleFactor(.5);
+//   system.SetTolerances( 1.e-20, 1.e-20, 1.e+50, 50, 10 );
+  
+  system.SetPreconditionerFineGrids( ILU_PRECOND );
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved( "All" );

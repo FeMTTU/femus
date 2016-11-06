@@ -223,7 +223,7 @@ namespace femus {
 
         _LinSolver[igridn]->MGClear();
       }
-      else MLVcycle(igridn + 1);
+      else MLVcycle(igridn);
 
       if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
         _LinSolver[igridn]->SwapMatrices();
@@ -314,11 +314,11 @@ namespace femus {
 
   // ********************************************
 
-  bool LinearImplicitSystem::MLVcycle(const unsigned& gridn) {
+  bool LinearImplicitSystem::MLVcycle(const unsigned& level) {
 
     clock_t start_mg_time = clock();
 
-    _LinSolver[gridn - 1u]->SetEpsZero();
+    _LinSolver[level]->SetEpsZero();
 
     bool linearIsConverged;
 
@@ -328,13 +328,11 @@ namespace femus {
 
       bool ksp_clean = !linearIterator * _assembleMatrix;
 
-      for(unsigned ig = gridn - 1u; ig > 0; ig--) {
+      for(unsigned ig = level; ig > 0; ig--) {
         // ============== Presmoothing ==============
         for(unsigned k = 0; k < _npre; k++) {
-          //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
-          Solve(ig + 1, ksp_clean * (!k), 0, 1);
+          _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, ksp_clean * (!k));
         }
-
         // ============== Restriction ==============
         Restrictor(ig);
       }
@@ -342,33 +340,28 @@ namespace femus {
       // ============== Direct Solver ==============
       _LinSolver[0]->Solve(_VariablesToBeSolvedIndex, ksp_clean);
 
-      for(unsigned ig = 1; ig < gridn; ig++) {
-        // ============== Standard Prolongation ==============
+      for(unsigned ig = 1; ig <= level; ig++) {
+        // ============== Prolongation ==============
         Prolongator(ig);
 
         // ============== PostSmoothing ==============
         for(unsigned k = 0; k < _npost; k++) {
-          //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
-          Solve(ig + 1, ksp_clean * (!_npre) * (!k), 0, 1);
+          _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
         }
       }
 
-      // ============== Update AMR Solution and Residual ( _gridr-1 <= ig <= gridn-2 ) ==============
-//       for(unsigned ig = _gridr - 1; ig < gridn - 1; ig++) {   // _gridr
-//         _solution[ig]->UpdateSolAndRes(_SolSystemPdeIndex, _LinSolver[ig]->_EPS, _LinSolver[ig]->_RES, _LinSolver[ig]->KKoffset);
-//       }
-
       // ============== Update Fine Residual ==============
-      _solution[gridn - 1]->UpdateRes(_SolSystemPdeIndex, _LinSolver[gridn - 1]->_RES, _LinSolver[gridn - 1]->KKoffset);
-      linearIsConverged = IsLinearConverged(gridn - 1);
-
+      _solution[level]->UpdateRes(_SolSystemPdeIndex, _LinSolver[level]->_RES, _LinSolver[level]->KKoffset);
+      linearIsConverged = IsLinearConverged(level);
       if(linearIsConverged) break;
-
     }
 
     // ============== Update Fine Solution ==============
-    _solution[gridn - 1]->UpdateSol(_SolSystemPdeIndex, _LinSolver[gridn - 1]->_EPS, _LinSolver[gridn - 1]->KKoffset);
-
+    if(!_ml_msh->GetLevel(level)->GetIfHomogeneous()) {
+      (_LinSolver[level]->_EPSC)->matrix_mult(*_LinSolver[level]->_EPS, *_PPamr[level]);
+      *(_LinSolver[level]->_EPS) = *(_LinSolver[level]->_EPSC);
+    }
+    _solution[level]->UpdateSol(_SolSystemPdeIndex, _LinSolver[level]->_EPS, _LinSolver[level]->KKoffset);
 
     std::cout << "\n ************ Linear-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
               << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
@@ -376,27 +369,6 @@ namespace femus {
     return linearIsConverged;
   }
 
-
-  void LinearImplicitSystem::Solve(const unsigned& gridn, const bool &kspClean, const int &npre, const int &npost) {
-
-//     unsigned grid0 = (gridn <= _gridr) ? gridn : _gridr;
-//
-//     for(unsigned ig = gridn - 1u; ig > grid0 - 1u; ig--) {
-//       for(unsigned k = 0; k < npre; k++) {
-//         _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, kspClean);
-//       }
-//       Restrictor(ig);
-//     }
-//
-//     _LinSolver[grid0 - 1u]->Solve(_VariablesToBeSolvedIndex, kspClean);
-//
-//     for(unsigned ig = grid0; ig < gridn; ig++) {
-//       Prolongator(ig);
-//       for(unsigned k = 0; k < npost; k++) {
-//         _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, kspClean);
-//       }
-//     }
-  }
   // ********************************************
 
   void LinearImplicitSystem::Restrictor(const unsigned& gridf) {

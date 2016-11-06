@@ -63,8 +63,8 @@ namespace femus {
       /** Free the solution vectors */
       void FreeSolutionVectors();
 
-      /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
-      void UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
+//       /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
+//       void UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
 
       void UpdateSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, const vector <vector <unsigned> > &KKoffset);
       /** */

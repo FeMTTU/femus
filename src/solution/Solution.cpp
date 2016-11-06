@@ -260,55 +260,55 @@ namespace femus {
   /**
    * Update _Sol, _Res and _Eps based on EPS and RES
    **/
-//--------------------------------------------------------------------------------
-  void Solution::UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVector* _EPS,  NumericVector* _RES,
-                                 const vector <vector <unsigned> > &KKoffset) {
-
-    PetscScalar zero = 0.;
-
-    for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
-      unsigned indexSol = _SolPdeIndex[k];
-      unsigned soltype =  _SolType[indexSol];
-
-      int loc_offset_EPS = KKoffset[k][processor_id()];
-
-      int glob_offset_eps = _msh->_dofOffset[soltype][processor_id()];
-
-      vector <int> index(_msh->_ownSize[soltype][processor_id()]);
-
-      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
-        index[i] = loc_offset_EPS + i;
-      }
-
-      vector <double> valueEPS(_msh->_ownSize[soltype][processor_id()]);
-      _EPS->get(index, valueEPS);
-      vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
-      _RES->get(index, valueRES);
-
-      for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
-        _Eps[indexSol]->set(i + glob_offset_eps, valueEPS[i]);
-
-        if((*_Bdc[indexSol])(i + glob_offset_eps) > 1.1) _Res[indexSol]->set(i + glob_offset_eps, valueRES[i]);
-        else _Res[indexSol]->set(i + glob_offset_eps, zero);
-      }
-
-      _Res[indexSol]->close();
-      _Eps[indexSol]->close();
-    }
-
-    for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
-      unsigned indexSol = _SolPdeIndex[k];
-      _Sol[indexSol]->add(*_Eps[indexSol]);
-      _Sol[indexSol]->close();
-
-      if(_AMR_flag) {
-        _AMREps[indexSol]->add(*_Eps[indexSol]);
-        _AMREps[indexSol]->close();
-      }
-
-    }
-
-  }
+// //--------------------------------------------------------------------------------
+//   void Solution::UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVector* _EPS,  NumericVector* _RES,
+//                                  const vector <vector <unsigned> > &KKoffset) {
+// 
+//     PetscScalar zero = 0.;
+// 
+//     for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
+//       unsigned indexSol = _SolPdeIndex[k];
+//       unsigned soltype =  _SolType[indexSol];
+// 
+//       int loc_offset_EPS = KKoffset[k][processor_id()];
+// 
+//       int glob_offset_eps = _msh->_dofOffset[soltype][processor_id()];
+// 
+//       vector <int> index(_msh->_ownSize[soltype][processor_id()]);
+// 
+//       for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+//         index[i] = loc_offset_EPS + i;
+//       }
+// 
+//       vector <double> valueEPS(_msh->_ownSize[soltype][processor_id()]);
+//       _EPS->get(index, valueEPS);
+//       vector <double> valueRES(_msh->_ownSize[soltype][processor_id()]);
+//       _RES->get(index, valueRES);
+// 
+//       for(int i = 0; i < _msh->_ownSize[soltype][processor_id()]; i++) {
+//         _Eps[indexSol]->set(i + glob_offset_eps, valueEPS[i]);
+// 
+//         if((*_Bdc[indexSol])(i + glob_offset_eps) > 1.1) _Res[indexSol]->set(i + glob_offset_eps, valueRES[i]);
+//         else _Res[indexSol]->set(i + glob_offset_eps, zero);
+//       }
+// 
+//       _Res[indexSol]->close();
+//       _Eps[indexSol]->close();
+//     }
+// 
+//     for(unsigned k = 0; k < _SolPdeIndex.size(); k++) {
+//       unsigned indexSol = _SolPdeIndex[k];
+//       _Sol[indexSol]->add(*_Eps[indexSol]);
+//       _Sol[indexSol]->close();
+// 
+//       if(_AMR_flag) {
+//         _AMREps[indexSol]->add(*_Eps[indexSol]);
+//         _AMREps[indexSol]->close();
+//       }
+// 
+//     }
+// 
+//   }
 
   /**
    * Update _Sol

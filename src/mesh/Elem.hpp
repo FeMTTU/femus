@@ -233,9 +233,7 @@ namespace femus {
     private:
 
       elem* _coarseElem;
-      
-      std::vector < std::vector< basis*> > _fe;
-      
+            
       unsigned _iproc;
       unsigned _nprocs;
 

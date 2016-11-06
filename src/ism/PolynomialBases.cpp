@@ -1522,10 +1522,10 @@ namespace femus {
       }
       r2 = (r2 > d2) ? r2 : d2;
     }
-    
-    r = (1. + tolerance ) * sqrt(r2);
+
+    r = (1. + tolerance) * sqrt(r2);
   }
-  
+
   void GetBoundingBox(const std::vector< std::vector < double > > &xv, std::vector< std::vector < double > > &xe, const double tolerance) {
     unsigned dim = xv.size();
     unsigned ndofs = xv[0].size();
@@ -1538,7 +1538,7 @@ namespace femus {
     for(int d = 0; d < dim; d++) {
       for(int i = 1; i < ndofs; i++) {
         xe[d][0] = (xv[d][i] < xe[d][0]) ? xv[d][i] : xe[d][0];
-	xe[d][1] = (xv[d][i] > xe[d][1]) ? xv[d][i] : xe[d][1];
+        xe[d][1] = (xv[d][i] > xe[d][1]) ? xv[d][i] : xe[d][1];
       }
     }
     for(int d = 0; d < dim; d++) {
@@ -1547,10 +1547,62 @@ namespace femus {
       xe[d][1] += epsilon;
     }
   }
-  
 
-  unsigned GetClosestPoint(const std::vector< std::vector < double > > &xv, std::vector <double> &x) {
 
+
+
+  void GetInverseMapping(const unsigned &solType, short unsigned &ielType, const std::vector < std::vector < std::vector <double > > > &aP,
+                         const std::vector <double > &xl, std::vector <double > &xi) {
+
+    for(short unsigned jtype = 0; jtype < solType + 1; jtype++) {
+      std::vector < double > phi;
+      std::vector < std::vector < double > > gradPhi;
+      bool convergence = false;
+      while(!convergence) {
+        GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, jtype);
+        convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[jtype]);
+      }
+    }
+  }
+
+  const double XI[6][27][3] = {{
+      { -1, -1, -1}, {1, -1, -1}, {1, 1, -1}, { -1, 1, -1}, { -1, -1, 1}, {1, -1, 1}, {1, 1, 1}, { -1, 1, 1}, {0, -1, -1},
+      {1, 0, -1}, {0, 1, -1}, { -1, 0, -1}, {0, -1, 1}, {1, 0, 1}, {0, 1, 1}, { -1, 0, 1}, { -1, -1, 0},
+      {1, -1, 0}, {1, 1, 0}, { -1, 1, 0}, {0, -1, 0}, {1, 0, 0}, {0, 1, 0}, { -1, 0, 0}, {0, 0, -1},
+      {0, 0, 1}, {0, 0, 0}
+    },
+    {
+      {0, 0, 0},        {1, 0, 0},       {0, 1, 0},   {0, 0, 1},         		//0->4
+      {0.5, 0, 0},      {0.5, 0.5, 0},   {0, 0.5, 0},
+      {0.,  0, 0.5},    {0.5, 0., 0.5},  {0, 0.5, 0.5},                  		//5->9
+      {1. / 3., 1. / 3., 0.}, {1. / 3., 0., 1. / 3.}, {1. / 3., 1. / 3., 1. / 3.}, {0., 1. / 3., 1. / 3.}, //external faces of internal tetrahedra
+      {0.25, 0.25, 0.25} //34
+    },
+    {
+      {0, 0, -1},      {1, 0, -1},      {0, 1, -1},                     //vertici triangoli
+      {0, 0, 1},       {1, 0, 1},       {0, 1, 1},
+      {0.5, 0, -1},    {0.5, 0.5, -1},  {0, 0.5, -1},                   //midpoints triangoli
+      {0.5, 0, 1},     {0.5, 0.5, 1},   {0, 0.5, 1},
+      {0, 0, 0},       {1, 0, 0} ,      {0, 1, 0},                      //midpoints quadrati
+      {0.5, 0, 0},     {0.5, 0.5, 0},    {0, 0.5, 0}, //0->17           //facce quadrati
+      {1. / 3., 1. / 3., -1}, {1. / 3., 1. / 3., 1}, {1. / 3., 1. / 3., 0}
+    },
+    {
+      { -1, -1}, {1, -1}, {1, 1}, { -1, 1},
+      { 0, -1}, {1, 0}, {0, 1}, { -1, 0}, {0, 0}
+    },
+    {
+      {0, 0},         {1, 0},         {0, 1},
+      {0.5, 0},       {0.5, 0.5},     {0, 0.5},
+      {1. / 3., 1. / 3.}
+    },
+    {
+      { -1}, {1}, {0}
+    }
+  };
+
+  void GetClosestPointInReferenceElement(const std::vector< std::vector < double > > &xv, std::vector <double> &x,
+                                         const short unsigned &ieltype, std::vector < double > &xi) {
     unsigned dim = xv.size();
     unsigned ndofs = xv[0].size();
     unsigned jmin = ndofs;
@@ -1565,23 +1617,11 @@ namespace femus {
         jmin = j;
       }
     }
-    return jmin;
-  }
 
-  void GetInverseMapping(const unsigned &solType, short unsigned &ielType, const std::vector < std::vector < std::vector <double > > > &aP,
-                         const std::vector <double > &xl, std::vector <double > &xi) {
-
-    for(short unsigned jtype = 0; jtype < solType + 1; jtype++) {
-      std::vector < double > phi;
-      std::vector < std::vector < double > > gradPhi;
-      //std::cout << jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
-      bool convergence = false;
-      while(!convergence) {
-        GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, jtype);
-        convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[jtype]);
-	//std::cout <<jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
-      }
+    xi.resize(dim);
+    for(unsigned k = 0; k < dim; k++) {
+      xi[k] = XI[ieltype][jmin][k];
     }
-  }
 
+  }
 }

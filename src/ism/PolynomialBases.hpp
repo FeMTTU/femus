@@ -72,8 +72,10 @@ namespace femus {
   
   void GetConvexHullSphere(const std::vector< std::vector < double > > &xv, std::vector <double> &xc, double & r, const double tolerance = 1.0e-10);
   void GetBoundingBox(const std::vector< std::vector < double > > &xv, std::vector< std::vector < double > > &xe, const double tolerance = 1.0e-10);
-  unsigned GetClosestPoint(const std::vector< std::vector < double > > &xv, std::vector <double> &x);
   void GetInverseMapping(const unsigned &solType, short unsigned &ielType, const std::vector < std::vector < std::vector <double > > > &aP,
                          const std::vector <double > &xl, std::vector <double > &xi);
+  void GetClosestPointInReferenceElement(const std::vector< std::vector < double > > &xv, std::vector <double> &x,
+                                         const short unsigned &ieltype, std::vector < double > &xi);
 }
 #endif
+

@@ -50,29 +50,6 @@ namespace femus {
     _elementDof.resize(_nel, NVE[0][2], UINT_MAX);
     _elementNearFace.resize(_nel, NFC[0][1], -1);
 
-    _fe.resize(6);
-    for(unsigned i = 0; i < 6; i++) {
-      _fe[i].resize(3);
-    }
-
-    _fe[0][0] = new HexLinear;
-    _fe[0][1] = new HexQuadratic;
-    _fe[0][2] = new HexBiquadratic;
-    _fe[1][0] = new TetLinear;
-    _fe[1][1] = new TetQuadratic;
-    _fe[1][2] = new TetBiquadratic;
-    _fe[2][0] = new WedgeLinear;
-    _fe[2][1] = new WedgeQuadratic;
-    _fe[2][2] = new WedgeBiquadratic;
-    _fe[3][0] = new QuadLinear;
-    _fe[3][1] = new QuadQuadratic;
-    _fe[3][2] = new QuadBiquadratic;
-    _fe[4][0] = new TriLinear;
-    _fe[4][1] = new TriQuadratic;
-    _fe[4][2] = new TriBiquadratic;
-    _fe[5][0] = new LineLinear;
-    _fe[5][1] = new LineBiquadratic;
-    _fe[5][2] = new LineBiquadratic;
   }
 
   void elem::ShrinkToFit() {
@@ -130,30 +107,6 @@ namespace femus {
 
     rowSizeElDof.clear();
     rowSizeElNearFace.clear();
-
-    _fe.resize(6);
-    for(unsigned i = 0; i < 6; i++) {
-      _fe[i].resize(3);
-    }
-
-    _fe[0][0] = new HexLinear;
-    _fe[0][1] = new HexQuadratic;
-    _fe[0][2] = new HexBiquadratic;
-    _fe[1][0] = new TetLinear;
-    _fe[1][1] = new TetQuadratic;
-    _fe[1][2] = new TetBiquadratic;
-    _fe[2][0] = new WedgeLinear;
-    _fe[2][1] = new WedgeQuadratic;
-    _fe[2][2] = new WedgeBiquadratic;
-    _fe[3][0] = new QuadLinear;
-    _fe[3][1] = new QuadQuadratic;
-    _fe[3][2] = new QuadBiquadratic;
-    _fe[4][0] = new TriLinear;
-    _fe[4][1] = new TriQuadratic;
-    _fe[4][2] = new TriBiquadratic;
-    _fe[5][0] = new LineLinear;
-    _fe[5][1] = new LineBiquadratic;
-    _fe[5][2] = new LineBiquadratic;
 
   }
 
@@ -247,13 +200,6 @@ namespace femus {
   }
 
   elem::~elem() {
-
-    for(unsigned i = 0; i < 6; i++) {
-      for(unsigned j = 0; j < 3; j++) {
-        delete _fe[i][j];
-      }
-    }
-
   }
 
   void elem::DeleteElementNearVertex() {
@@ -674,7 +620,6 @@ namespace femus {
     }
 
     for(unsigned soltype = 0; soltype < 3; soltype++) {
-      std::cout << "AAAAAAAAAAAAAAA" << soltype << std::endl;
       for(int ilevel = 0; ilevel < _level; ilevel++) {
         for(int jlevel = ilevel + 1; jlevel <= _level; jlevel++) {
 
@@ -751,20 +696,18 @@ namespace femus {
                           }
                         }
 
-                        unsigned jmin = GetClosestPoint(xv, xl);
-                        std::vector <double> xi(dim);
-                        for(unsigned d = 0; d < dim; d++) {
-                          xi[d] = *(_fe[ielType][2]->GetXcoarse(jmin) + d);
-                        }
-                        std::cout << "BBBBBBBBBB" << soltype << std::endl;
+                        std::vector <double> xi;
+                        GetClosestPointInReferenceElement(xv, xl, ielType, xi);
                         GetInverseMapping(2, ielType, aP, xl, xi);
-                        std::cout << "CCCCCCCCCC" << soltype << std::endl;
 
-                        bool insideDomain = CheckIfPointIsInsideReferenceDomain(xi, ielType, 0.001);
+                        bool insideDomain = CheckIfPointIsInsideReferenceDomain(xi, ielType, 0.0001);
                         if(insideDomain) {
                           for(unsigned j = interfaceDof[soltype][ilevel].begin(i); j < interfaceDof[soltype][ilevel].end(i); j++) {
                             unsigned jloc = interfaceLocalDof[ilevel][i][j];
-                            double value = _fe[ielType][soltype]->eval_phi(_fe[ielType][soltype]->GetIND(jloc), &xi[0]);
+
+                            basis* base = msh->GetBasis(ielType, soltype);
+                            double value = base->eval_phi(jloc, xi);
+
                             if(fabs(value) >= 1.0e-10) {
                               unsigned jdof = interfaceDof[soltype][ilevel][i][j];
                               if(restriction[soltype][jdof].find(jdof) == restriction[soltype][jdof].end()) {
@@ -800,11 +743,8 @@ namespace femus {
       pvector = NumericVector::build().release();
       pvector->init(_nprocs, 1 , false, AUTOMATIC);
 
-      std::cout << "AAAAAAAAAAAAAAA" << soltype << std::endl;
-
       unsigned counter = 1;
       while(counter != 0) {
-        std::cout << "counter = " << counter << std::endl;
         counter = 0;
 
         MyVector <unsigned> rowSize(restriction[soltype].size(), 0);

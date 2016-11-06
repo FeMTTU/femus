@@ -184,7 +184,7 @@ namespace femus {
           bool thisIsConverged;
 
           if(_MGsolver) thisIsConverged = MGVcycle(igridn, mgSmootherType);
-          else thisIsConverged = MLVcycle(igridn + 1);
+          else thisIsConverged = MLVcycle(igridn);
 
           if(thisIsConverged || updateResidualIterator == _maxNumberOfResidualUpdateIterations - 1) break;
 
