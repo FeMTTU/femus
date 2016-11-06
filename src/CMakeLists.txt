@@ -26,6 +26,7 @@ algebra/Preconditioner.cpp
 algebra/SparseMatrix.cpp
 algebra/FunctionBase.cpp
 algebra/ParsedFunction.cpp
+algebra/SlepcSVD.cpp
 equations/DofMap.cpp
 equations/BoundaryConditions.cpp
 equations/CurrentElem.cpp

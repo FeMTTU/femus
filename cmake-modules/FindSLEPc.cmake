@@ -2,8 +2,8 @@
 # Once done this will define
 #
 #  SLEPC_FOUND        - system has SLEPc
-#  SLEPC_INCLUDE_DIR  - include directories for SLEPc
-#  SLEPC_LIBARIES     - libraries for SLEPc
+#  SLEPC_INCLUDE_DIRS - include directories for SLEPc
+#  SLEPC_LIBRARIES    - libraries for SLEPc
 #  SLEPC_DIR          - directory where SLEPc is built
 #  SLEPC_VERSION      - version of SLEPc
 #  SLEPC_VERSION_MAJOR - First number in SLEPC_VERSION
