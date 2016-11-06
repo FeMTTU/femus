@@ -15,6 +15,7 @@
 
 #include "SlepcSVD.hpp"
 #include "iostream"
+#include "PetscMatrix.hpp"
 
 #if defined(HAVE_PETSC) && defined(HAVE_SLEPC)
 
@@ -42,6 +43,11 @@ SlepcSVD::~SlepcSVD() {
 
 
 void SlepcSVD::set_operator(Mat A) {
+  SVDSetOperator(m_svd, A);
+}
+
+void SlepcSVD::set_operator(SparseMatrix* Amat) {
+  Mat A = (static_cast< PetscMatrix* >(Amat))->mat();
   SVDSetOperator(m_svd, A);
 }
 

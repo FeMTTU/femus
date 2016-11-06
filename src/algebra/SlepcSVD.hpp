@@ -27,6 +27,7 @@
 
 // Local includes
 #include "PetscMacro.hpp"
+#include "SparseMatrix.hpp"
 
 /// Petsc include files.
 EXTERN_C_FOR_PETSC_BEGIN
@@ -46,6 +47,8 @@ public:
   ~SlepcSVD();
   
   void set_operator(Mat A);
+  
+  void set_operator(SparseMatrix* Amat);
   
   void init();
 
