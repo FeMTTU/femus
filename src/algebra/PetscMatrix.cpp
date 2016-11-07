@@ -775,12 +775,29 @@ namespace femus {
       ierr = MatTranspose(_mat, MAT_INITIAL_MATRIX, &petsc_dest._mat);
     CHKERRABORT(MPI_COMM_WORLD, ierr);
 #endif
+    
+    int temp = _m;
+    petsc_dest._m = _n;
+    petsc_dest._n = temp;
+  
+    temp = _m_l;
+    petsc_dest._m_l = _n_l;
+    petsc_dest._n_l = temp;
+    
     // Specify that the transposed matrix is initialized and close it.
     petsc_dest._is_initialized = true;
     petsc_dest.close();
   }
-
-
+  
+  
+  void PetscMatrix::mat_zero_rows(const std::vector <int> &index, const double &diagonal_value) const {
+    MatSetOption(_mat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
+    MatSetOption(_mat, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
+    MatZeroRows(_mat, index.size(), &index[0], diagonal_value, 0, 0);
+  }
+  
+  
+   
 } //end namespace femus
 
 

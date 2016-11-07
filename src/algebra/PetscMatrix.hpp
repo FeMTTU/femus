@@ -181,6 +181,8 @@ public:
   /// Transpose Matrix.
   virtual void get_transpose(SparseMatrix& dest) const;
   /// Swaps the raw PETSc matrix context pointers.
+  void mat_zero_rows(const std::vector <int> &index, const double &diagonal_value) const;
+  
   void swap(PetscMatrix &);
 
 

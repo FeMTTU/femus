@@ -54,7 +54,7 @@ namespace femus {
 
     unsigned BDCIndexSize = KKoffset[KKIndex.size() - 1][processor_id()] - KKoffset[0][processor_id()];
     _bdcIndex.resize(BDCIndexSize);
-    _hangingNodesIndex.resize(BDCIndexSize);
+    //_hangingNodesIndex.resize(BDCIndexSize);
 
     vector <bool> ThisSolutionIsIncluded(_SolPdeIndex.size(), false);
 
@@ -75,14 +75,14 @@ namespace femus {
         int local_mts = inode_mts - _msh->_dofOffset[soltype][processor_id()];
         int idof_kk = KKoffset[k][processor_id()] + local_mts;
 
-        if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 0.9) {
+        if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 1.5) {
           _bdcIndex[count0] = idof_kk;
           count0++;
         }
-        else if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 1.9) {
-          _hangingNodesIndex[count1] = idof_kk;
-          count1++;
-        }
+//         else if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 1.9) {
+//           _hangingNodesIndex[count1] = idof_kk;
+//           count1++;
+//         }
       }
     }
 
@@ -90,9 +90,9 @@ namespace femus {
     std::vector < PetscInt >(_bdcIndex).swap(_bdcIndex);
     std::sort(_bdcIndex.begin(), _bdcIndex.end());
 
-    _hangingNodesIndex.resize(count1);
-    std::vector < PetscInt >(_hangingNodesIndex).swap(_hangingNodesIndex);
-    std::sort(_hangingNodesIndex.begin(), _hangingNodesIndex.end());
+//     _hangingNodesIndex.resize(count1);
+//     std::vector < PetscInt >(_hangingNodesIndex).swap(_hangingNodesIndex);
+//     std::sort(_hangingNodesIndex.begin(), _hangingNodesIndex.end());
 
 
     return;
@@ -410,11 +410,17 @@ namespace femus {
   // =================================================
 
   void GmresPetscLinearEquationSolver::ZerosBoundaryResiduals() {
-    std::vector< PetscScalar > value(_bdcIndex.size(), 0.);
-    Vec RES = (static_cast< PetscVector* >(_RES))->vec();
-    VecSetValues(RES, _bdcIndex.size(), &_bdcIndex[0], &value[0],  INSERT_VALUES);
-    VecAssemblyBegin(RES);
-    VecAssemblyEnd(RES);
+//     std::vector< PetscScalar > value(_bdcIndex.size(), 0.);
+//     Vec RES = (static_cast< PetscVector* >(_RES))->vec();
+//     VecSetValues(RES, _bdcIndex.size(), &_bdcIndex[0], &value[0],  INSERT_VALUES);
+    
+//     value.resize(_hangingNodesIndex.size(), 0.);
+//     RES = (static_cast< PetscVector* >(_RES))->vec();
+//     VecSetValues(RES, _hangingNodesIndex.size(), &_hangingNodesIndex[0], &value[0],  INSERT_VALUES);
+    
+    
+//     VecAssemblyBegin(RES);
+//     VecAssemblyEnd(RES);
   }
 
   // =================================================
@@ -426,10 +432,10 @@ namespace femus {
     MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
     MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
     MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
-    if( _hangingNodesIndex.size() != 0 && (_preconditioner_type == MLU_PRECOND || _preconditioner_type == LU_PRECOND )){
-      MatZeroRows(KK, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1., 0, 0);
-    }
-    //MatZeroRows(KK, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1., 0, 0);
+//     if( _hangingNodesIndex.size() != 0 && (_preconditioner_type == MLU_PRECOND || _preconditioner_type == LU_PRECOND )){
+//        MatZeroRows(KK, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1., 0, 0);
+//     }
+//    MatZeroRows(KK, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1.e100, 0, 0);
     
     
     if( !UseSamePreconditioner() ) {

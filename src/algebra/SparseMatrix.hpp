@@ -205,6 +205,8 @@ public:
     /** Matrix transpose */
     virtual void get_transpose (SparseMatrix& dest) const = 0;
 
+    virtual void mat_zero_rows(const std::vector <int> &index, const double &diagonal_value) const = 0;
+    
     // Read - Print ------------------------------
     // print
     /** Print  to file */

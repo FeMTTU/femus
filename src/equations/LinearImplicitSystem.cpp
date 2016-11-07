@@ -130,6 +130,12 @@ namespace femus {
         _PP[ig]->matrix_RightMatMult(*_PPamr[ig - 1]);
       }
     }
+    for(unsigned ig = 1; ig < _gridn; ig++) {
+      if(!_ml_msh->GetLevel(ig)->GetIfHomogeneous()) {
+        ZerosHangingNodes(ig);
+      }
+    }
+    
 
     _NSchurVar_test = 0;
     _numblock_test = 0;
@@ -461,6 +467,17 @@ namespace femus {
     if(!_ml_msh->GetLevel(_gridn)->GetIfHomogeneous()) {
       BuildAmrProlongatorMatrix(_gridn);
     }
+    
+    if(!_ml_msh->GetLevel(_gridn)->GetIfHomogeneous()) {
+      ZerosHangingNodes(_gridn);
+    }
+    
+    
+    
+    
+    
+    
+    
     _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
     _LinSolver[_gridn]->SetTolerances(_rtol, _atol, _divtol, _maxits, _restart);
     _LinSolver[_gridn]->set_preconditioner_type(_finegridpreconditioner);
@@ -668,8 +685,6 @@ namespace femus {
     delete NNZ_d;
     delete NNZ_o;
 
-
-
     _PPamr[level] = SparseMatrix::build().release();
     _PPamr[level]->init(n, n, n_loc, n_loc, nnz_d, nnz_o);
 
@@ -713,7 +728,40 @@ namespace femus {
     _PPamr[level]->get_transpose(*_PPamr[level]);
   }
 
+  void LinearImplicitSystem::ZerosHangingNodes(const unsigned &level) {
 
+    int iproc;
+    MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+
+    LinearEquationSolver* LinSol = _LinSolver[level];
+
+    Mesh* mesh = _msh[level];
+
+    unsigned BDCIndexSize = LinSol->KKoffset[LinSol->KKIndex.size() - 1][iproc] - LinSol->KKoffset[0][iproc];
+    std::vector < int > hangingNodesIndex(BDCIndexSize);
+
+    unsigned count = 0;
+
+    for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
+      unsigned solIndex = _SolSystemPdeIndex[k];
+      unsigned  solType = _ml_sol->GetSolutionType(solIndex);
+
+      for(unsigned inode_mts = mesh->_dofOffset[solType][iproc]; inode_mts < mesh->_dofOffset[solType][iproc + 1]; inode_mts++) {
+        int local_mts = inode_mts - mesh->_dofOffset[solType][iproc];
+        int idof_kk = LinSol->KKoffset[k][iproc] + local_mts;
+        double bcvalue = (*_solution[level]->_Bdc[solIndex])(inode_mts);
+        if(bcvalue > 0.5 && bcvalue < 1.5) {
+          hangingNodesIndex[count] = idof_kk;
+          count++;
+        }
+      }
+    }
+
+    hangingNodesIndex.resize(count);
+    std::vector < PetscInt >(hangingNodesIndex).swap(hangingNodesIndex);
+    std::sort(hangingNodesIndex.begin(), hangingNodesIndex.end());
+    _PP[level]->mat_zero_rows(hangingNodesIndex, 0);
+  }
 
 
 
