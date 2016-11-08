@@ -131,9 +131,7 @@ namespace femus {
       }
     }
     for(unsigned ig = 1; ig < _gridn; ig++) {
-      if(!_ml_msh->GetLevel(ig)->GetIfHomogeneous()) {
-        ZerosHangingNodes(ig);
-      }
+      ZeroDirichletNodeProjection(ig);
     }
     
 
@@ -468,15 +466,8 @@ namespace femus {
       BuildAmrProlongatorMatrix(_gridn);
     }
     
-    if(!_ml_msh->GetLevel(_gridn)->GetIfHomogeneous()) {
-      ZerosHangingNodes(_gridn);
-    }
-    
-    
-    
-    
-    
-    
+    ZeroDirichletNodeProjection(_gridn);
+        
     
     _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
     _LinSolver[_gridn]->SetTolerances(_rtol, _atol, _divtol, _maxits, _restart);
@@ -728,7 +719,7 @@ namespace femus {
     _PPamr[level]->get_transpose(*_PPamr[level]);
   }
 
-  void LinearImplicitSystem::ZerosHangingNodes(const unsigned &level) {
+  void LinearImplicitSystem::ZeroDirichletNodeProjection(const unsigned &level) {
 
     int iproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -738,7 +729,7 @@ namespace femus {
     Mesh* mesh = _msh[level];
 
     unsigned BDCIndexSize = LinSol->KKoffset[LinSol->KKIndex.size() - 1][iproc] - LinSol->KKoffset[0][iproc];
-    std::vector < int > hangingNodesIndex(BDCIndexSize);
+    std::vector < int > dirichletNodeIndex(BDCIndexSize);
 
     unsigned count = 0;
 
@@ -750,17 +741,17 @@ namespace femus {
         int local_mts = inode_mts - mesh->_dofOffset[solType][iproc];
         int idof_kk = LinSol->KKoffset[k][iproc] + local_mts;
         double bcvalue = (*_solution[level]->_Bdc[solIndex])(inode_mts);
-        if(bcvalue > 0.5 && bcvalue < 1.5) {
-          hangingNodesIndex[count] = idof_kk;
+        if(bcvalue < 1.5) {
+          dirichletNodeIndex[count] = idof_kk;
           count++;
         }
       }
     }
 
-    hangingNodesIndex.resize(count);
-    std::vector < PetscInt >(hangingNodesIndex).swap(hangingNodesIndex);
-    std::sort(hangingNodesIndex.begin(), hangingNodesIndex.end());
-    _PP[level]->mat_zero_rows(hangingNodesIndex, 0);
+    dirichletNodeIndex.resize(count);
+    std::vector < PetscInt >(dirichletNodeIndex).swap(dirichletNodeIndex);
+    std::sort(dirichletNodeIndex.begin(), dirichletNodeIndex.end());
+    _PP[level]->mat_zero_rows(dirichletNodeIndex, 0);
   }
 
 

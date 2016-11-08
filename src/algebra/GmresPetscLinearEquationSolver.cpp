@@ -64,7 +64,7 @@ namespace femus {
     }
 
     unsigned count0 = 0;
-    unsigned count1 = 0;
+    //unsigned count1 = 0;
 
     for(int k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
@@ -244,7 +244,7 @@ namespace femus {
     KSPSetOptionsPrefix(subksp, levelName.str().c_str());
     KSPSetFromOptions(subksp);
 
-    ZerosBoundaryResiduals();
+    //ZerosBoundaryResiduals();
 
     SetPenalty();
     RemoveNullSpace();
@@ -318,8 +318,6 @@ namespace femus {
     }
 
     ZerosBoundaryResiduals();
-
-
     KSPSolve(_ksp, (static_cast< PetscVector* >(_RES))->vec(), (static_cast< PetscVector* >(_EPSC))->vec());
 
     _RESC->matrix_mult(*_EPSC, *_KK);
@@ -413,12 +411,7 @@ namespace femus {
 //     std::vector< PetscScalar > value(_bdcIndex.size(), 0.);
 //     Vec RES = (static_cast< PetscVector* >(_RES))->vec();
 //     VecSetValues(RES, _bdcIndex.size(), &_bdcIndex[0], &value[0],  INSERT_VALUES);
-    
-//     value.resize(_hangingNodesIndex.size(), 0.);
-//     RES = (static_cast< PetscVector* >(_RES))->vec();
-//     VecSetValues(RES, _hangingNodesIndex.size(), &_hangingNodesIndex[0], &value[0],  INSERT_VALUES);
-    
-    
+//         
 //     VecAssemblyBegin(RES);
 //     VecAssemblyEnd(RES);
   }
@@ -432,11 +425,6 @@ namespace femus {
     MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
     MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
     MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
-//     if( _hangingNodesIndex.size() != 0 && (_preconditioner_type == MLU_PRECOND || _preconditioner_type == LU_PRECOND )){
-//        MatZeroRows(KK, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1., 0, 0);
-//     }
-//    MatZeroRows(KK, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1.e100, 0, 0);
-    
     
     if( !UseSamePreconditioner() ) {
       if(_pmatIsInitialized) MatDestroy(&_pmat);

@@ -190,7 +190,7 @@ int main(int argc,char **args) {
   else if(simulation == 3 || simulation == 7)
     numberOfUniformRefinedMeshes = 4;
   else if(simulation < 7)
-    numberOfUniformRefinedMeshes = 2;
+    numberOfUniformRefinedMeshes = 3;
 
   numberOfAMRLevels = 0;
 
