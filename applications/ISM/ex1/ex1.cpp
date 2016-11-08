@@ -71,7 +71,7 @@ int main(int argc, char** args) {
       std::cout << " The marker type is " <<  a1QUAD.GetMarkerType() << std::endl;
 
 //Test 2 (QUAD):
-      x[0] = -0.0625; //the marker is in element 246 (proc 3)
+      x[0] = -0.0625; //the marker is in element 245 / 246 (proc 3)
       x[1] = -0.09375;
       x[2] = 0.;
 

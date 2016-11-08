@@ -70,6 +70,11 @@ namespace femus {
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
                               const std::vector < std::vector <double > > &gradPhi,
                               const std::vector < std::vector <double > > &a);
+  
+  bool GetNewLocalCoordinatesHess(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
+                                  const std::vector < std::vector <double > > &gradPhi, const std::vector < std::vector < std::vector <double> > > hessPhi,
+                                  const std::vector < std::vector <double > > &a);
+
 
   void InverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA);
 

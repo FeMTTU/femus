@@ -36,6 +36,7 @@ namespace femus {
         _markerType = markerType;
         _mesh = mesh;
         _solType = solType;
+	_dim = _mesh->GetDimension();
 
         GetElement(1, UINT_MAX);
 
@@ -95,6 +96,7 @@ namespace femus {
       MarkerType _markerType;
       const Mesh * _mesh;
       unsigned _elem;
+      unsigned _dim;
 
       unsigned _mproc; //processor who has the marker
 

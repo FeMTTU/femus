@@ -1541,6 +1541,84 @@ namespace femus {
 
     return convergence;
   }
+  
+  
+  bool GetNewLocalCoordinatesHess(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
+                                  const std::vector < std::vector <double > > &gradPhi, const std::vector < std::vector < std::vector <double> > > hessPhi,
+                                  const std::vector < std::vector <double > > &a) {
+
+    const unsigned dim = gradPhi[0].size();
+    const unsigned  nDofs = phi.size();
+    
+    bool convergence = false;
+    std::vector < double > xp(dim, 0.);
+    std::vector < std::vector < double > > gradXp(dim);
+    std::vector < std::vector < std::vector < double > > > hessXp(dim);
+
+    for(int k = 0; k < dim; k++) {
+      gradXp[k].assign(dim, 0.);
+      hessXp[k].resize(dim);
+
+      for(int i1 = 0; i1 < dim; i1++) {
+        hessXp[k][i1].assign(dim, 0.);
+      }
+    }
+
+    for(int k = 0; k < dim; k++) {
+      for(int i = 0; i < nDofs; i++) {
+        xp[k] += a[k][i] * phi[i];
+
+        for(int i1 = 0; i1 < dim; i1++) {
+          gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
+
+          for(int i2 = 0; i2 < dim; i2++) {
+            hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
+          }
+        }
+      }
+    }
+
+    std::vector < double > gradF(dim, 0.);
+    std::vector < std::vector < double > >  hessF(dim);
+
+    for(int i1 = 0; i1 < dim; i1++) {
+      hessF[i1].assign(dim, 0.);
+    }
+
+    for(int k = 0; k < dim; k++) {
+      for(int i1 = 0; i1 < dim; i1++) {
+        gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
+
+        for(int i2 = 0; i2 < dim; i2++) {
+          hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
+        }
+      }
+    }
+
+    std::vector < std::vector < double > >  hessFm1;
+    InverseMatrix(hessF, hessFm1);
+
+    double delta2 = 0.;
+
+    for(int i1 = 0; i1 < dim; i1++) {
+      double deltak = 0.;
+
+      for(int i2 = 0; i2 < dim; i2++) {
+        deltak -= hessFm1[i1][i2] * gradF[i2];
+      }
+
+      xi[i1] += deltak;
+      delta2 += deltak * deltak;
+    }
+
+    if(delta2 < 1.0e-9) {
+      convergence = true;
+    }
+
+    return convergence;
+  }
+
+  
 
   void InverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA) {
 
