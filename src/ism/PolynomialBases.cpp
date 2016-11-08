@@ -1391,6 +1391,106 @@ namespace femus {
   }
 
 
+  bool SPDCheck2D(const std::vector< std::vector <double> > &A) {
+    bool SPD = true;
+
+    if(A[0][1] != A[1][0]) {
+      SPD = false;
+      std::cout << "The 2D matrix is not symmetric" << std::endl;
+    }
+
+    else if(A[0][0] < 1.0e-8) {
+      SPD = false;
+    }
+    else {
+      double lambda = A[1][1] - ((A[0][1] * A[0][1]) / A[0][0]);
+      if(lambda < 0 || fabs(lambda) < 1.0e-8) {
+        SPD = false;
+      }
+    }
+
+    if(SPD == true) {
+      std::cout << "The 2D matrix is SPD" << std::endl;
+    }
+
+    else {
+      std::cout << "The 2D matrix is not SPD" << std::endl;
+    }
+
+    return SPD;
+
+  }
+
+
+
+
+  bool SPDCheck3D(const std::vector< std::vector <double> > &A) {
+
+    bool SPD = true;
+    bool notSymm = false;
+
+    if(A[0][2] != A[2][0] || A[1][2] != A[2][1] || A[0][1] != A[1][0]) {
+      notSymm = true;
+      std::cout << "The 3D matrix is not symmetric" << std::endl;
+    }
+
+    std::vector < std::vector <double> > B(2);
+    for(int i = 0; i < 2; i++) {
+      B[i].resize(2);
+    }
+
+    B[0][0] = A[0][0];
+    B[0][1] = A[0][1];
+    B[1][0] = A[1][0];
+    B[1][1] = A[1][1];
+
+
+
+    if(SPDCheck2D(B) == false || notSymm == true) {
+      SPD = false;
+    }
+
+    else {
+      double l00 = sqrt(A[0][0]);
+      double l11 = sqrt(A[1][1] - ((A[0][1] * A[0][1]) / A[0][0]));
+      double l01 = A[0][1] / l00;
+
+      double detL =  l00 * l11;
+      std::vector < std::vector < double > > Lm1(2);
+      for(int i = 0; i < 2; i++) {
+        Lm1[i].resize(2);
+      }
+
+      Lm1[0][0] = (1 / detL) * l11;
+      Lm1[1][0] = -(1 / detL) * l01;
+      Lm1[0][1] = 0. ;
+      Lm1[1][1] = (1 / detL) * l00 ;
+
+      std::vector < double > K(2);
+
+      K[0] = Lm1[0][0] * A[0][2] + Lm1[0][1] * A[1][2];
+      K[1] = Lm1[1][0] * A[0][2] + Lm1[1][1] * A[1][2];
+
+      double KK = sqrt(K[0] * K[0] + K[1] * K[1]) ;
+
+      if(A[2][2] - KK < 0 || fabs(A[2][2] - KK) < 1.0e-8) {
+        SPD = false;
+      }
+    }
+
+    if(SPD == true) {
+      std::cout << "The 3D matrix is SPD" << std::endl;
+    }
+
+    else {
+      std::cout << "The 3D matrix is not SPD" << std::endl;
+    }
+
+    return SPD;
+
+  }
+
+
 
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
                               const std::vector < std::vector <double > > &gradPhi,
@@ -1522,10 +1622,10 @@ namespace femus {
       }
       r2 = (r2 > d2) ? r2 : d2;
     }
-    
-    r = (1. + tolerance ) * sqrt(r2);
+
+    r = (1. + tolerance) * sqrt(r2);
   }
-  
+
   void GetBoundingBox(const std::vector< std::vector < double > > &xv, std::vector< std::vector < double > > &xe, const double tolerance) {
     unsigned dim = xv.size();
     unsigned ndofs = xv[0].size();
@@ -1538,7 +1638,7 @@ namespace femus {
     for(int d = 0; d < dim; d++) {
       for(int i = 1; i < ndofs; i++) {
         xe[d][0] = (xv[d][i] < xe[d][0]) ? xv[d][i] : xe[d][0];
-	xe[d][1] = (xv[d][i] > xe[d][1]) ? xv[d][i] : xe[d][1];
+        xe[d][1] = (xv[d][i] > xe[d][1]) ? xv[d][i] : xe[d][1];
       }
     }
     for(int d = 0; d < dim; d++) {
@@ -1547,7 +1647,7 @@ namespace femus {
       xe[d][1] += epsilon;
     }
   }
-  
+
 
   unsigned GetClosestPoint(const std::vector< std::vector < double > > &xv, std::vector <double> &x) {
 
@@ -1579,7 +1679,7 @@ namespace femus {
       while(!convergence) {
         GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, jtype);
         convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[jtype]);
-	//std::cout <<jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
+        //std::cout <<jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
       }
     }
   }
