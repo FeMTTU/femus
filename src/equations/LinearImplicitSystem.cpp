@@ -752,6 +752,15 @@ namespace femus {
     std::vector < PetscInt >(dirichletNodeIndex).swap(dirichletNodeIndex);
     std::sort(dirichletNodeIndex.begin(), dirichletNodeIndex.end());
     _PP[level]->mat_zero_rows(dirichletNodeIndex, 0);
+    
+    if(_RR[level]){
+      SparseMatrix *RRt;
+      RRt = SparseMatrix::build().release();
+      _RR[level]->get_transpose(*RRt);
+      RRt->mat_zero_rows(dirichletNodeIndex, 0);
+      RRt->get_transpose(*_RR[level]);
+      delete RRt;
+    }
   }
 
 
