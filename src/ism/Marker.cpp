@@ -163,7 +163,7 @@ namespace femus {
     {0., 0.5, 0.5, 1.} // fourth-order method
   };
 
-  const double Marker::_initialGuess[6][3] = {
+  const double Marker::_localCentralNode[6][3] = {
     {0., 0., 0.},
     {0.25, 0.25, 0.25},
     {1. / 3., 1. / 3., 0},
@@ -501,7 +501,7 @@ namespace femus {
 
     std::vector < double > xi(dim);
     for(int k = 0; k < dim; k++) {
-      xi[k] = _initialGuess[ielType][k];
+      xi[k] = _localCentralNode[ielType][k];
     }
 
     GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, _solType);
@@ -1298,7 +1298,7 @@ namespace femus {
           std::vector < double > xi(dim);
 
           for(int k = 0; k < dim; k++) {
-            xi[k] = _initialGuess[ielType][k];
+            xi[k] = _localCentralNode[ielType][k];
           }
           for(int itype = 0; itype <= solType; itype++) {
             InverseMapping(iel, itype, xv[j], xi);
@@ -1696,7 +1696,7 @@ namespace femus {
       //BEGIN find initial guess
       _xi.resize(dim);
       for(int k = 0; k < _mesh->GetDimension(); k++) {
-        _xi[k] = _initialGuess[elemType][k];
+        _xi[k] = _localCentralNode[elemType][k];
       }
       //END find initial guess
     }

@@ -97,7 +97,7 @@ namespace femus {
 
       unsigned _mproc; //processor who has the marker
 
-      static const double _initialGuess[6][3];
+      static const double _localCentralNode[6][3];
       
       std::vector < std::vector < std::vector < double > > > _aX;
       
