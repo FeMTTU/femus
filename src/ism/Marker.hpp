@@ -89,6 +89,7 @@ namespace femus {
       int FastForward(const unsigned &currentElem);
 
       std::vector < double > _x;
+      std::vector < double > _x0;
       std::vector < double > _xi;
       unsigned _solType;
       MarkerType _markerType;

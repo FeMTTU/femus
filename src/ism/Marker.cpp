@@ -1426,8 +1426,173 @@ namespace femus {
   }
 
 
+  
+  
+  
+  //this function returns the position of the marker at time T given the position at time T0 = 0, given the function f and the stepsize h
+  void Marker::Advection(Solution* sol, const unsigned &n, const double& T) {
+
+    //BEGIN  Initialize the parameters for all processors, to be used when awake
+    unsigned dim = _mesh->GetDimension();
+    vector < unsigned > solVIndex(dim);
+    solVIndex[0] = sol->GetIndex("U");    // get the position of "U" in the ml_sol object
+    solVIndex[1] = sol->GetIndex("V");    // get the position of "V" in the ml_sol object
+    if(dim == 3) solVIndex[2] = sol->GetIndex("W");       // get the position of "V" in the ml_sol object
+    unsigned solVType = sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+
+    std::vector < double > phi;
+    std::vector<double> V(dim, 0.);
+    std::vector < std::vector < double > > aV;
+    //END
+
+    //BEGIN Numerical integration scheme
+    // determine the step size
+    double h = T / n;
+   
+    bool  pcElemUpdate ;
+    bool integrationIsOver = false;
+
+    unsigned order = 4;
+    unsigned step = 0.;
+
+    if(_iproc == _mproc) {
+      _K.resize(order);
+      for(unsigned k = 0; k < order; k++) {
+        _K[k].resize(dim);
+      }
+    }
 
 
+    while(integrationIsOver == false) {
+      unsigned mprocOld = _mproc;
+      if(_iproc == _mproc) {
+        pcElemUpdate = true ;
+        //single process
+        while(step < n * order) {
+
+          unsigned tstep = step / order;
+          unsigned istep = step % order;
+
+          if(istep == 0) {
+            _x0 = _x;
+            for(unsigned k = 0; k < order; k++) {
+              _K[k].assign(dim, 0.);
+            }
+          }
+
+          std::cout << " -----------------------------" << "step = " <<  step <<" tstep = " << tstep << " istep = " << istep << " -----------------------------" << std::endl;
+          std::cout << " _iproc = " << _iproc << std::endl;
+  
+          updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); //send xk
+
+          for(unsigned i = 0; i < dim; i++) {
+            _K[istep][i] = V[i] * h;
+          }
+
+          step++;
+          istep++;
+
+          if(istep < order) {
+            for(unsigned i = 0; i < dim; i++) {
+	      _x[i] = _x0[i];
+              for(unsigned j = 0; j < order; j++) {
+                _x[i] +=  _a[order - 1][istep][j] * _K[j][i];
+              }
+            }
+          }
+          else if(istep == order) {
+            for(unsigned i = 0; i < dim; i++) {
+	      _x[i] = _x0[i];
+              for(unsigned j = 0; j < order; j++) {
+                _x[i] += _b[order - 1][j] * _K[j][i];
+              }
+            }
+          }
+
+          //BEGIN TO BE REMOVED
+          for(unsigned i = 0; i < dim; i++) {
+            std::cout << "_x[" << i << "] = " << _x[i] ;
+            std::cout << " " ;
+          }
+          std::cout << std::endl;
+          //END TO BE REMOVED
+
+
+          pcElemUpdate = false;
+          unsigned iel = _elem;
+          GetElementSerial(_elem);
+
+          if(_elem == UINT_MAX) { //out of the domain
+            std::cout << " the marker has been advected outside the domain " << std::endl;
+            break;
+          }
+          else if(iel != _elem && _iproc != _mproc) { //different element different process
+            break;
+          }
+          else if(iel != _elem) { //different element same process
+            pcElemUpdate = true;
+            FindLocalCoordinates(solVType, _aX, pcElemUpdate);
+          }
+          else { //same element same process
+            FindLocalCoordinates(solVType, _aX, pcElemUpdate);
+          }
+        }
+      }
+      std::cout << step;
+      
+      // all processes
+      MPI_Bcast(& _elem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
+      MPI_Bcast(& _x[0], dim, MPI_DOUBLE, mprocOld, PETSC_COMM_WORLD);
+      MPI_Bcast(& step, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
+
+      if(_elem == UINT_MAX) {
+        std::cout << " the marker has been advected outside the domain " << std::endl;
+        break;
+      }
+      else {
+        _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
+        if(_mproc != mprocOld) {
+          GetElement();
+
+          if(mprocOld == _iproc) {
+            unsigned istep = step % order;
+            if(istep != 0) {
+	      for(int i = 0; i < order; i++){
+		MPI_Send(&_K[i][0], dim, MPI_DOUBLE, _mproc, i , PETSC_COMM_WORLD);
+	      }
+              MPI_Send(&_x0[0], dim, MPI_DOUBLE, _mproc, order , PETSC_COMM_WORLD);
+            }
+            std::vector < double > ().swap(_xi);
+            std::vector < double > ().swap(_x0);
+            std::vector < std::vector < double > > ().swap(_K);
+            std::vector < std::vector < std::vector < double > > >().swap(_aX);
+          }
+          else if(_mproc == _iproc) {
+            _x0.resize(dim);
+            _K.resize(order);
+            for(unsigned i = 0; i < order; i++) {
+              _K[i].resize(dim);
+            }
+            unsigned istep = step % order;
+            if(istep != 0) {               
+	      for(int i = 0; i < order; i++){
+		MPI_Recv(&_K[i][0], dim, MPI_DOUBLE, mprocOld, i , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+	      }
+              MPI_Recv(&_x0[0], dim, MPI_DOUBLE, mprocOld, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+            FindLocalCoordinates(solVType, _aX, true);
+          }
+        }
+      }
+      std::cout << "step = " << step << std::endl;
+      if(step == n * order) {
+        integrationIsOver = true;
+        std::cout << "Integration is over, point in proc " << _mproc << std::endl;
+      }
+    }
+  }
+
+/*
 //this function returns the position of the marker at time T given the position at time T0 = 0, given the function f and the stepsize h
   void Marker::Advection(Solution* sol, const unsigned &n, const double& T) {
 
@@ -1673,7 +1838,7 @@ namespace femus {
 //
 //     return y;
 
-  }
+  }*/
 
 
   void Marker::GetElement() {
