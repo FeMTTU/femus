@@ -21,6 +21,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[],
                           double &value, const int facename, const double time);
 bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[], 
 			       double &value, const int facename, const double time);
+bool SetBoundaryConditionNew(const std::vector < double >& x, const char name[],
+                          double &value, const int facename, const double time);
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, char **args) {
@@ -39,8 +41,8 @@ int main(int argc, char **args) {
 
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
-  //std::string infile = "./input/aneurysm_Sara_5_scaled_mm.neu";
-  std::string infile = "./input/aneurisma_aorta.neu";
+  std::string infile = "./input/aneurysm_Sara_5_scaled_mm.neu";
+  //std::string infile = "./input/aneurisma_aorta.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
@@ -55,17 +57,17 @@ int main(int argc, char **args) {
 //   E = 18000;
   
   // Parameters aneurisma_aorta Quarteroni
-  rhof = 1035.;
-  muf = 3.5*1.0e-3*rhof;//muf = 3.38*1.0e-4*rhof;
-  rhos = 1120;
-  ni = 0.48;
-  E = 400000;
-  // Parameters aneurysm_Sara_5_scaled
 //   rhof = 1035.;
-//   muf = 4*1.0e-3*rhof;//muf = 3.38*1.0e-4*rhof;
+//   muf = 3.5*1.0e-3*rhof;//muf = 3.38*1.0e-4*rhof;
 //   rhos = 1120;
-//   ni = 0.45;
-//   E = 1000000;
+//   ni = 0.48;
+//   E = 400000;
+  // Parameters aneurysm_Sara_5_scaled
+  rhof = 1035.;
+  muf = 4*1.0e-3;//muf = 3.38*1.0e-6*rhof;
+  rhos = 1120;
+  ni = 0.49;
+  E = 1000000;
 
   Parameter par(Lref, Uref);
 
@@ -122,8 +124,8 @@ int main(int argc, char **args) {
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
@@ -299,6 +301,43 @@ bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[
     if(11 == facename) {
       test = 0;
       value = 1.;
+    }
+  }
+
+  return test;
+
+}
+
+bool SetBoundaryConditionNew(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+  bool test = 1; //dirichlet
+  value = 0.;
+
+  if(!strcmp(name, "V")){
+    if(3 == facename) {
+      //test = 0;
+      value = 0.5;
+    }
+    else if(1 == facename || 2 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+  if(!strcmp(name, "U") || !strcmp(name, "W")){
+    if(1 == facename || 2 == facename) {
+      test = 0;
+      value = 0;
+    } 
+  }
+  else if(!strcmp(name, "P")) {
+    if(1 == facename || 2 == facename) {
+    //test = 0;
+    value = 10000;
+    }
+  }
+  else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
+    if(7 == facename) {
+      test = 0;
+      value = 0.;
     }
   }
 
