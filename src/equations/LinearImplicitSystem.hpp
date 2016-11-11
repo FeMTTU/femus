@@ -222,7 +222,7 @@ namespace femus {
 
       /** Create the Prolongator Operator in order to get the coarser matrix for the Algebraic Multigrid Solver */
       virtual void BuildProlongatorMatrix(unsigned gridf);
-      void BuildAmrProlongatorMatrix( unsigned level);
+      virtual void BuildAmrProlongatorMatrix( unsigned level);
       void ZeroInterpolatorDirichletNodes(const unsigned &level);
       
       // member data

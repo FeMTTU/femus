@@ -187,10 +187,18 @@ namespace femus {
       _assemble_system_function(_equation_systems);
 
       if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
-        (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
-        *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
-        _LinSolver[igridn]->SwapMatrices();
-        _LinSolver[igridn]->_KK->matrix_PtAP(*_PPamr[igridn], *_LinSolver[igridn]->_KKamr, false);
+	if(!_RR[igridn]) {
+	  (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
+	  *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
+	  _LinSolver[igridn]->SwapMatrices();
+	  _LinSolver[igridn]->_KK->matrix_PtAP(*_PPamr[igridn], *_LinSolver[igridn]->_KKamr, false);
+	}
+	else{
+	  (_LinSolver[igridn]->_RESC)->matrix_mult(*_LinSolver[igridn]->_RES, *_RRamr[igridn]);
+	  *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
+	  _LinSolver[igridn]->SwapMatrices();
+	  _LinSolver[igridn]->_KK->matrix_ABC(*_RRamr[igridn], *_LinSolver[igridn]->_KKamr, *_PPamr[igridn], false);
+	}
       }
 
 

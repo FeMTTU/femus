@@ -181,6 +181,10 @@ public:
     unsigned GetSolutionPairIndex(const unsigned& i) const{
       return _solPairIndex[i];
     }
+    
+    unsigned GetSolutionPairInverseIndex(const unsigned& i) const{
+      return _solPairInverseIndex[i];
+    }
 
     void build();
 
@@ -260,6 +264,7 @@ private:
     vector < bool >   _fixSolutionAtOnePoint;
 
     vector <unsigned> _solPairIndex;
+    vector <unsigned> _solPairInverseIndex;
 
     /** Multilevel solution writer */
     Writer* _writer;

@@ -118,6 +118,7 @@ namespace femus {
     _addAMRPressureStability.resize(n + 1u);
     _fixSolutionAtOnePoint.resize(n + 1u);
     _solPairIndex.resize(n + 1u);
+    _solPairInverseIndex.resize(n + 1u);
 
 
     _testIfPressure[n] = 0;
@@ -132,6 +133,8 @@ namespace femus {
     _solTimeOrder[n] = tmorder;
     _pdeType[n] = PdeType;
     _solPairIndex[n] = n;
+    _solPairInverseIndex[n] = n;
+
 
     cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
          << std::setw(12) << order << " and time discretzation order " << tmorder << endl;
@@ -180,6 +183,7 @@ namespace femus {
     unsigned index = GetIndex(solution_name);
     unsigned indexPair = GetIndex(solution_pair);
     _solPairIndex[index] = indexPair;
+    _solPairInverseIndex[indexPair] = index;
   }
 
 // *******************************************************
