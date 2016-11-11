@@ -131,8 +131,7 @@ namespace femus {
       }
     }
     for(unsigned ig = 1; ig < _gridn; ig++) {
-      ZeroDirichletNodeProjection(ig);
-      if(_RR[ig]) ZeroDirichletNodeRestriction(ig);
+      ZeroInterpolatorDirichletNodes(ig);
     }
     
 
@@ -467,9 +466,8 @@ namespace femus {
       BuildAmrProlongatorMatrix(_gridn);
     }
     
-    ZeroDirichletNodeProjection(_gridn);
-    if(_RR[_gridn]) ZeroDirichletNodeRestriction(_gridn);    
-    
+    ZeroInterpolatorDirichletNodes(_gridn);
+        
     _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
     _LinSolver[_gridn]->SetTolerances(_rtol, _atol, _divtol, _maxits, _restart);
     _LinSolver[_gridn]->set_preconditioner_type(_finegridpreconditioner);
@@ -720,15 +718,18 @@ namespace femus {
     _PPamr[level]->get_transpose(*_PPamr[level]);
   }
 
-  void LinearImplicitSystem::ZeroDirichletNodeProjection(const unsigned &level) {
+  void LinearImplicitSystem::ZeroInterpolatorDirichletNodes(const unsigned &level) {
 
     int iproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-
+    
+    // Delete the Dirichlet nodes of the fine level (level): 
+    // set to zero all the corresponding rows for _PP[level] and columns for _RR[level]
+    
     LinearEquationSolver* LinSol = _LinSolver[level];
-
     Mesh* mesh = _msh[level];
-
+    Solution* solution = _solution[level];
+    
     unsigned BDCIndexSize = LinSol->KKoffset[LinSol->KKIndex.size() - 1][iproc] - LinSol->KKoffset[0][iproc];
     std::vector < int > dirichletNodeIndex(BDCIndexSize);
 
@@ -741,7 +742,7 @@ namespace femus {
       for(unsigned inode_mts = mesh->_dofOffset[solType][iproc]; inode_mts < mesh->_dofOffset[solType][iproc + 1]; inode_mts++) {
         int local_mts = inode_mts - mesh->_dofOffset[solType][iproc];
         int idof_kk = LinSol->KKoffset[k][iproc] + local_mts;
-        double bcvalue = (*_solution[level]->_Bdc[solIndex])(inode_mts);
+        double bcvalue = (*solution->_Bdc[solIndex])(inode_mts);
         if(bcvalue < 1.5) {
           dirichletNodeIndex[count] = idof_kk;
           count++;
@@ -753,22 +754,27 @@ namespace femus {
     std::vector < PetscInt >(dirichletNodeIndex).swap(dirichletNodeIndex);
     std::sort(dirichletNodeIndex.begin(), dirichletNodeIndex.end());
     _PP[level]->mat_zero_rows(dirichletNodeIndex, 0);
-  }
+    
+    if(_RR[level]){
+      SparseMatrix *RRt;
+      RRt = SparseMatrix::build().release();
+      _RR[level]->get_transpose(*RRt);
+      RRt->mat_zero_rows(dirichletNodeIndex, 0); 
+      RRt->get_transpose(*_RR[level]);
+      delete RRt;
+    }
+    
+    // Delete the Dirichlet nodes of the coarse level (level-1): 
+    // set to zero all the corresponding columns for _PP[level] and rows for _RR[level]
+        
+    LinSol = _LinSolver[level-1];
+    mesh = _msh[level-1];
+    solution = _solution[level-1];
 
-  
-   void LinearImplicitSystem::ZeroDirichletNodeRestriction(const unsigned &level) {
+    BDCIndexSize = LinSol->KKoffset[LinSol->KKIndex.size() - 1][iproc] - LinSol->KKoffset[0][iproc];
+    dirichletNodeIndex.resize(BDCIndexSize);
 
-    int iproc;
-    MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-
-    LinearEquationSolver* LinSol = _LinSolver[level-1];
-
-    Mesh* mesh = _msh[level-1];
-
-    unsigned BDCIndexSize = LinSol->KKoffset[LinSol->KKIndex.size() - 1][iproc] - LinSol->KKoffset[0][iproc];
-    std::vector < int > dirichletNodeIndex(BDCIndexSize);
-
-    unsigned count = 0;
+    count = 0;
 
     for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
       unsigned solIndex = _SolSystemPdeIndex[k];
@@ -777,7 +783,7 @@ namespace femus {
       for(unsigned inode_mts = mesh->_dofOffset[solType][iproc]; inode_mts < mesh->_dofOffset[solType][iproc + 1]; inode_mts++) {
         int local_mts = inode_mts - mesh->_dofOffset[solType][iproc];
         int idof_kk = LinSol->KKoffset[k][iproc] + local_mts;
-        double bcvalue = (*_solution[level-1]->_Bdc[solIndex])(inode_mts);
+        double bcvalue = (*solution->_Bdc[solIndex])(inode_mts);
         if(bcvalue < 1.5) {
           dirichletNodeIndex[count] = idof_kk;
           count++;
@@ -789,11 +795,18 @@ namespace femus {
     std::vector < PetscInt >(dirichletNodeIndex).swap(dirichletNodeIndex);
     std::sort(dirichletNodeIndex.begin(), dirichletNodeIndex.end());
 
-    _RR[level]->mat_zero_rows(dirichletNodeIndex, 0); 
+    SparseMatrix *PPt;
+    PPt = SparseMatrix::build().release();
+    _PP[level]->get_transpose(*PPt);
+    PPt->mat_zero_rows(dirichletNodeIndex, 0); 
+    PPt->get_transpose(*_PP[level]);
+    delete PPt;
     
+    if(_RR[level]){
+      _RR[level]->mat_zero_rows(dirichletNodeIndex, 0); 
+    }
+        
   }
-  
-
 
   // ********************************************
 
