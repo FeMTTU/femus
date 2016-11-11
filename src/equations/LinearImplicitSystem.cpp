@@ -132,6 +132,7 @@ namespace femus {
     }
     for(unsigned ig = 1; ig < _gridn; ig++) {
       ZeroDirichletNodeProjection(ig);
+      if(_RR[ig]) ZeroDirichletNodeRestriction(ig);
     }
     
 
@@ -467,7 +468,7 @@ namespace femus {
     }
     
     ZeroDirichletNodeProjection(_gridn);
-        
+    if(_RR[_gridn]) ZeroDirichletNodeRestriction(_gridn);    
     
     _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
     _LinSolver[_gridn]->SetTolerances(_rtol, _atol, _divtol, _maxits, _restart);
@@ -752,17 +753,46 @@ namespace femus {
     std::vector < PetscInt >(dirichletNodeIndex).swap(dirichletNodeIndex);
     std::sort(dirichletNodeIndex.begin(), dirichletNodeIndex.end());
     _PP[level]->mat_zero_rows(dirichletNodeIndex, 0);
-    
-    if(_RR[level]){
-      SparseMatrix *RRt;
-      RRt = SparseMatrix::build().release();
-      _RR[level]->get_transpose(*RRt);
-      RRt->mat_zero_rows(dirichletNodeIndex, 0);
-      RRt->get_transpose(*_RR[level]);
-      delete RRt;
-    }
   }
 
+  
+   void LinearImplicitSystem::ZeroDirichletNodeRestriction(const unsigned &level) {
+
+    int iproc;
+    MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+
+    LinearEquationSolver* LinSol = _LinSolver[level-1];
+
+    Mesh* mesh = _msh[level-1];
+
+    unsigned BDCIndexSize = LinSol->KKoffset[LinSol->KKIndex.size() - 1][iproc] - LinSol->KKoffset[0][iproc];
+    std::vector < int > dirichletNodeIndex(BDCIndexSize);
+
+    unsigned count = 0;
+
+    for(unsigned k = 0; k < _SolSystemPdeIndex.size(); k++) {
+      unsigned solIndex = _SolSystemPdeIndex[k];
+      unsigned  solType = _ml_sol->GetSolutionType(solIndex);
+
+      for(unsigned inode_mts = mesh->_dofOffset[solType][iproc]; inode_mts < mesh->_dofOffset[solType][iproc + 1]; inode_mts++) {
+        int local_mts = inode_mts - mesh->_dofOffset[solType][iproc];
+        int idof_kk = LinSol->KKoffset[k][iproc] + local_mts;
+        double bcvalue = (*_solution[level-1]->_Bdc[solIndex])(inode_mts);
+        if(bcvalue < 1.5) {
+          dirichletNodeIndex[count] = idof_kk;
+          count++;
+        }
+      }
+    }
+
+    dirichletNodeIndex.resize(count);
+    std::vector < PetscInt >(dirichletNodeIndex).swap(dirichletNodeIndex);
+    std::sort(dirichletNodeIndex.begin(), dirichletNodeIndex.end());
+
+    _RR[level]->mat_zero_rows(dirichletNodeIndex, 0); 
+    
+  }
+  
 
 
   // ********************************************
@@ -1209,6 +1239,7 @@ namespace femus {
 
 
 } //end namespace femus
+
 
 
 

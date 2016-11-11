@@ -224,6 +224,7 @@ namespace femus {
       virtual void BuildProlongatorMatrix(unsigned gridf);
       void BuildAmrProlongatorMatrix( unsigned level);
       void ZeroDirichletNodeProjection(const unsigned &level);
+      void ZeroDirichletNodeRestriction(const unsigned &level);
       
       // member data
       /** The number of linear iterations required to solve the linear system Ax=b. */
