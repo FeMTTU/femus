@@ -1391,6 +1391,106 @@ namespace femus {
   }
 
 
+  bool SPDCheck2D(const std::vector< std::vector <double> > &A) {
+    bool SPD = true;
+
+    if(A[0][1] != A[1][0]) {
+      SPD = false;
+      std::cout << "The 2D matrix is not symmetric" << std::endl;
+    }
+
+    else if(A[0][0] < 1.0e-8) {
+      SPD = false;
+    }
+    else {
+      double lambda = A[1][1] - ((A[0][1] * A[0][1]) / A[0][0]);
+      if(lambda < 0 || fabs(lambda) < 1.0e-8) {
+        SPD = false;
+      }
+    }
+
+    if(SPD == true) {
+      std::cout << "The 2D matrix is SPD" << std::endl;
+    }
+
+    else {
+      std::cout << "The 2D matrix is not SPD" << std::endl;
+    }
+
+    return SPD;
+
+  }
+
+
+
+
+  bool SPDCheck3D(const std::vector< std::vector <double> > &A) {
+
+    bool SPD = true;
+    bool notSymm = false;
+
+    if(A[0][2] != A[2][0] || A[1][2] != A[2][1] || A[0][1] != A[1][0]) {
+      notSymm = true;
+      std::cout << "The 3D matrix is not symmetric" << std::endl;
+    }
+
+    std::vector < std::vector <double> > B(2);
+    for(int i = 0; i < 2; i++) {
+      B[i].resize(2);
+    }
+
+    B[0][0] = A[0][0];
+    B[0][1] = A[0][1];
+    B[1][0] = A[1][0];
+    B[1][1] = A[1][1];
+
+
+
+    if(SPDCheck2D(B) == false || notSymm == true) {
+      SPD = false;
+    }
+
+    else {
+      double l00 = sqrt(A[0][0]);
+      double l11 = sqrt(A[1][1] - ((A[0][1] * A[0][1]) / A[0][0]));
+      double l01 = A[0][1] / l00;
+
+      double detL =  l00 * l11;
+      std::vector < std::vector < double > > Lm1(2);
+      for(int i = 0; i < 2; i++) {
+        Lm1[i].resize(2);
+      }
+
+      Lm1[0][0] = (1 / detL) * l11;
+      Lm1[1][0] = -(1 / detL) * l01;
+      Lm1[0][1] = 0. ;
+      Lm1[1][1] = (1 / detL) * l00 ;
+
+      std::vector < double > K(2);
+
+      K[0] = Lm1[0][0] * A[0][2] + Lm1[0][1] * A[1][2];
+      K[1] = Lm1[1][0] * A[0][2] + Lm1[1][1] * A[1][2];
+
+      double KK = sqrt(K[0] * K[0] + K[1] * K[1]) ;
+
+      if(A[2][2] - KK < 0 || fabs(A[2][2] - KK) < 1.0e-8) {
+        SPD = false;
+      }
+    }
+
+    if(SPD == true) {
+      std::cout << "The 3D matrix is SPD" << std::endl;
+    }
+
+    else {
+      std::cout << "The 3D matrix is not SPD" << std::endl;
+    }
+
+    return SPD;
+
+  }
+
+
 
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
                               const std::vector < std::vector <double > > &gradPhi,
@@ -1441,6 +1541,84 @@ namespace femus {
 
     return convergence;
   }
+  
+  
+  bool GetNewLocalCoordinatesHess(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
+                                  const std::vector < std::vector <double > > &gradPhi, const std::vector < std::vector < std::vector <double> > > hessPhi,
+                                  const std::vector < std::vector <double > > &a) {
+
+    const unsigned dim = gradPhi[0].size();
+    const unsigned  nDofs = phi.size();
+    
+    bool convergence = false;
+    std::vector < double > xp(dim, 0.);
+    std::vector < std::vector < double > > gradXp(dim);
+    std::vector < std::vector < std::vector < double > > > hessXp(dim);
+
+    for(int k = 0; k < dim; k++) {
+      gradXp[k].assign(dim, 0.);
+      hessXp[k].resize(dim);
+
+      for(int i1 = 0; i1 < dim; i1++) {
+        hessXp[k][i1].assign(dim, 0.);
+      }
+    }
+
+    for(int k = 0; k < dim; k++) {
+      for(int i = 0; i < nDofs; i++) {
+        xp[k] += a[k][i] * phi[i];
+
+        for(int i1 = 0; i1 < dim; i1++) {
+          gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
+
+          for(int i2 = 0; i2 < dim; i2++) {
+            hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
+          }
+        }
+      }
+    }
+
+    std::vector < double > gradF(dim, 0.);
+    std::vector < std::vector < double > >  hessF(dim);
+
+    for(int i1 = 0; i1 < dim; i1++) {
+      hessF[i1].assign(dim, 0.);
+    }
+
+    for(int k = 0; k < dim; k++) {
+      for(int i1 = 0; i1 < dim; i1++) {
+        gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
+
+        for(int i2 = 0; i2 < dim; i2++) {
+          hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
+        }
+      }
+    }
+
+    std::vector < std::vector < double > >  hessFm1;
+    InverseMatrix(hessF, hessFm1);
+
+    double delta2 = 0.;
+
+    for(int i1 = 0; i1 < dim; i1++) {
+      double deltak = 0.;
+
+      for(int i2 = 0; i2 < dim; i2++) {
+        deltak -= hessFm1[i1][i2] * gradF[i2];
+      }
+
+      xi[i1] += deltak;
+      delta2 += deltak * deltak;
+    }
+
+    if(delta2 < 1.0e-9) {
+      convergence = true;
+    }
+
+    return convergence;
+  }
+
+  
 
   void InverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA) {
 
@@ -1548,9 +1726,6 @@ namespace femus {
     }
   }
 
-
-
-
   void GetInverseMapping(const unsigned &solType, short unsigned &ielType, const std::vector < std::vector < std::vector <double > > > &aP,
                          const std::vector <double > &xl, std::vector <double > &xi) {
 
@@ -1618,10 +1793,24 @@ namespace femus {
       }
     }
 
+//<<<<<<< HEAD
     xi.resize(dim);
     for(unsigned k = 0; k < dim; k++) {
       xi[k] = XI[ieltype][jmin][k];
     }
+// =======
+//     for(short unsigned jtype = 0; jtype < solType + 1; jtype++) {
+//       std::vector < double > phi;
+//       std::vector < std::vector < double > > gradPhi;
+//       //std::cout << jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
+//       bool convergence = false;
+//       while(!convergence) {
+//         GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, jtype);
+//         convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[jtype]);
+//         //std::cout <<jtype<<" "<< xi[0] <<" "<<xi[1]<<" "<<xi[2]<<std::endl;
+//       }
+// >>>>>>> 0b9c07f4f7eb0cf265277a12f5bacdde21270c01
+//     }
 
   }
 }

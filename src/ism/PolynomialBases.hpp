@@ -64,12 +64,20 @@ namespace femus {
   bool CheckIfPointIsInsideReferenceDomainTri(std::vector<double> &xi, const double &eps = 0.);
   bool CheckIfPointIsInsideReferenceDomainLine(std::vector<double> &xi, const double &eps = 0.);
 
+  bool SPDCheck2D(const std::vector< std::vector <double> > &A);
+  bool SPDCheck3D(const std::vector< std::vector <double> > &A);
+
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
                               const std::vector < std::vector <double > > &gradPhi,
                               const std::vector < std::vector <double > > &a);
+  
+  bool GetNewLocalCoordinatesHess(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
+                                  const std::vector < std::vector <double > > &gradPhi, const std::vector < std::vector < std::vector <double> > > hessPhi,
+                                  const std::vector < std::vector <double > > &a);
+
 
   void InverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA);
-  
+
   void GetConvexHullSphere(const std::vector< std::vector < double > > &xv, std::vector <double> &xc, double & r, const double tolerance = 1.0e-10);
   void GetBoundingBox(const std::vector< std::vector < double > > &xv, std::vector< std::vector < double > > &xe, const double tolerance = 1.0e-10);
   void GetInverseMapping(const unsigned &solType, short unsigned &ielType, const std::vector < std::vector < std::vector <double > > > &aP,
