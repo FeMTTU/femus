@@ -187,10 +187,6 @@ int main(int argc,char **args) {
 
   dimension = ml_msh.GetLevel(0)->GetDimension();
 
-  // mark Solid nodes
-  ml_msh.MarkStructureNode();
-
-
   // ******* Fluid and Solid Parameters *******
   Parameter par(Lref,Uref);
 

@@ -225,7 +225,6 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 2;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
-  mlMsh.MarkStructureNode();
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 

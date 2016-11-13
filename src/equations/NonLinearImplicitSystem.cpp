@@ -126,7 +126,7 @@ namespace femus {
         _assemble_system_function(_equation_systems);
 
         if( !_ml_msh->GetLevel(igridn)->GetIfHomogeneous() ) {
-	  if(!_RR[igridn]){
+	  if(!_RRamr[igridn]){
 	    (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
 	  }
 	  else{
@@ -142,7 +142,7 @@ namespace femus {
 
 	  if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
             _LinSolver[igridn]->SwapMatrices();
-	    if(!_RR[igridn]) {
+	    if(!_RRamr[igridn]) {
 	      _LinSolver[igridn]->_KK->matrix_PtAP(*_PPamr[igridn], *_LinSolver[igridn]->_KKamr, _MGmatrixFineReuse);
 	    }
 	    else{
@@ -202,7 +202,7 @@ namespace femus {
           _assembleMatrix = false;
           _assemble_system_function(_equation_systems);
           if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
-	    if(!_RR[igridn]){
+	    if(!_RRamr[igridn]){
 	      (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
 	    }
 	    else{

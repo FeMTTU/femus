@@ -151,6 +151,8 @@ namespace femus {
     Mesh* mesh = _msh[level];
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &amrRestriction = mesh->GetAmrRestrictionMap();
 
+    std::vector < std::map < unsigned, bool > > & amrSolidMark = mesh->GetAmrSolidMark();
+    
     int n = LinSol->KKIndex[LinSol->KKIndex.size() - 1u];
     int n_loc = LinSol->KKoffset[LinSol->KKIndex.size() - 1][iproc] - LinSol->KKoffset[0][iproc];
 
@@ -236,7 +238,7 @@ namespace femus {
 	  _RRamr[level]->insert_row(irow, 1, col, &value);
         }
         else {
-	  bool solidi = (solType == 2) ? _msh[level]->GetSolidMark(i) : true;
+	  bool solidMarki = amrSolidMark[solType][i];
 	  int ncols = amrRestriction[solType][i].size();
           std::vector <int> colPP(ncols);
 	  std::vector <int> colRR(ncols);
@@ -244,10 +246,10 @@ namespace femus {
 	  std::vector <double> valueRR(ncols);
           unsigned j = 0;
           for(std::map<unsigned, double> ::iterator it = amrRestriction[solType][i].begin(); it != amrRestriction[solType][i].end(); it++) {
-	    bool solidj = (solType == 2) ? _msh[level]->GetSolidMark(it->first) : true;
+	    bool solidMarkj = amrSolidMark[solType][it->first];
             if(it->first >= solOffset && it->first < solOffsetp1) {
               colPP[j] = kOffset + (it->first - solOffset);
-	      if(solidi == true && solidj == false){
+	      if(solidMarki == true && solidMarkj == false && k != kPair){
 		colRR[j] = kPairOffset + (it->first - solOffset);
 	      }
 	      else{
@@ -257,7 +259,7 @@ namespace femus {
             else {
               unsigned jproc = _msh[level]->IsdomBisectionSearch(it->first, solType);
               colPP[j] = LinSol->KKoffset[k][jproc] + (it->first - mesh->_dofOffset[solType][jproc]);
-	      if(solidi == true && solidj == false){
+	      if(solidMarki == true && solidMarkj == false && k != kPair){
 		colRR[j] = LinSol->KKoffset[kPair][jproc] + (it->first - mesh->_dofOffset[solType][jproc]);
 	      }
 	      else{
@@ -265,7 +267,7 @@ namespace femus {
 	      }
             }
             valuePP[j] = it->second;
-	    if(solidi == false && solidj == true){
+	    if( solidMarki == true && solidMarkj == false  && k == kPair){
 	      valueRR[j] = 0.;   
 	    }
 	    else{
@@ -282,6 +284,7 @@ namespace femus {
     _RRamr[level]->close();
     
     _PPamr[level]->get_transpose(*_PPamr[level]);
+    //_RRamr[level]->get_transpose(*_PPamr[level]);
   }
   
   

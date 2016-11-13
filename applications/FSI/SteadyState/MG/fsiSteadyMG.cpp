@@ -227,18 +227,12 @@ int main(int argc,char **args) {
   else if(simulation < 7)
     numberOfUniformRefinedMeshes = 3;
 
-  
-
   MultiLevelMesh ml_msh( numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
 
   //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes + numberOfAMRLevels - 1);
 
   ml_msh.PrintInfo();
-
-  // mark Solid nodes
-  ml_msh.MarkStructureNode();
-
 
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
@@ -314,8 +308,8 @@ int main(int argc,char **args) {
 
   system.SetNonLinearConvergenceTolerance(1.e-9);
   system.SetResidualUpdateConvergenceTolerance(1.e-15);
-  system.SetMaxNumberOfNonLinearIterations(5);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(1);
+  system.SetMaxNumberOfNonLinearIterations(15);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(5);
   if (simulation == 3) {
     system.SetResidualUpdateConvergenceTolerance(1.e-8);
     system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);

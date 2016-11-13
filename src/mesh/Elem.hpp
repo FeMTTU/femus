@@ -228,7 +228,7 @@ namespace femus {
         _nprocs = nprocs;
       }
 
-      void GetAMRRestriction(Mesh *msh, std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &restriction);
+      void GetAMRRestriction(Mesh *msh);
 
     private:
 

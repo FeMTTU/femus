@@ -155,6 +155,7 @@ public:
   void matrix_ABC(const SparseMatrix &mat_A,const SparseMatrix &mat_B, const SparseMatrix &mat_C, const bool &reuse);
   
   void matrix_RightMatMult(const SparseMatrix &mat_A);
+  void matrix_LeftMatMult(const SparseMatrix &mat_A);
   
   void matrix_get_diagonal_values(const std::vector< int > &index, std::vector<double> &value) const ;
   void matrix_set_diagonal_values(const std::vector< int > &index, const double &value);

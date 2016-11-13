@@ -128,6 +128,7 @@ namespace femus {
     for(unsigned ig = 1; ig < _gridn; ig++) {
       if(!_ml_msh->GetLevel(ig - 1)->GetIfHomogeneous()) {
         _PP[ig]->matrix_RightMatMult(*_PPamr[ig - 1]);
+	if(_RR[ig]) _RR[ig]->matrix_LeftMatMult(*_RRamr[ig - 1]);
       }
     }
     for(unsigned ig = 1; ig < _gridn; ig++) {
@@ -187,7 +188,7 @@ namespace femus {
       _assemble_system_function(_equation_systems);
 
       if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
-	if(!_RR[igridn]) {
+	if(!_RRamr[igridn]) {
 	  (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
 	  *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
 	  _LinSolver[igridn]->SwapMatrices();
@@ -464,6 +465,7 @@ namespace femus {
     BuildProlongatorMatrix(_gridn);
     if(!_ml_msh->GetLevel(_gridn - 1)->GetIfHomogeneous()) {
       _PP[_gridn]->matrix_RightMatMult(*_PPamr[_gridn - 1]);
+      if(_RRamr[_gridn]) _RR[_gridn]->matrix_LeftMatMult(*_RRamr[_gridn - 1]);
     }
 
     _PPamr.resize(_gridn + 1);

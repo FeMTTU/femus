@@ -173,6 +173,8 @@ public:
     /** To be Addded */
     virtual void matrix_RightMatMult(const SparseMatrix &mat_A) = 0;
     
+    virtual void matrix_LeftMatMult(const SparseMatrix &mat_A) = 0;
+    
     /** To be Addded */
     virtual void matrix_get_diagonal_values(const std::vector< int > &index, std::vector<double> &value)const=0;
 

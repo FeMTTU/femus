@@ -646,6 +646,27 @@ namespace femus {
     this->_is_initialized = true;
 
   }
+  
+  void PetscMatrix::matrix_LeftMatMult(const SparseMatrix &mat_A) {
+
+    PetscMatrix* A = const_cast< PetscMatrix* >(static_cast < const PetscMatrix* >(&mat_A));
+    A->close();
+    Mat matCopy;
+
+    int ierr = MatConvert(_mat, MATSAME, MAT_INITIAL_MATRIX, &matCopy);
+    CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+    this->clear();
+
+    MatMatMult(A->mat(),matCopy, MAT_INITIAL_MATRIX, 1.0, &_mat);
+    
+    ierr = MatDestroy(&matCopy);
+    CHKERRABORT(MPI_COMM_WORLD, ierr);
+   
+    this->_is_initialized = true;
+
+  }
+  
 
 // ===========================================================
 

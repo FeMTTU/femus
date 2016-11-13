@@ -87,10 +87,7 @@ public:
 
     /** Erase levels_to_be_erased levels from the mesh array */
     void EraseCoarseLevels(unsigned levels_to_be_erased);
-
-    /** Mark the node as solid or fluid */
-    void MarkStructureNode();
-
+   
     /** Print the mesh info for each level */
     void PrintInfo();
 

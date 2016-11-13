@@ -420,14 +420,15 @@ namespace femus {
     _mesh.el->DeleteElementNearVertex();
 
     _mesh._topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
-
+    _mesh.AllocateAndMarkStructureNode();
+    
     _mesh.el->ScatterElementQuantities();
     _mesh.el->ScatterElementDof();
     _mesh.el->ScatterElementNearFace();
 
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& restriction = _mesh.GetAmrRestrictionMap();
     if(AMR) {
-      _mesh.el->GetAMRRestriction(&_mesh, restriction);
+      _mesh.el->GetAMRRestriction(&_mesh);
 //       for(unsigned soltype = 0; soltype < 3; soltype++) {
 //         std::cout << "solution type = " << soltype << std::endl;
 //         for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {

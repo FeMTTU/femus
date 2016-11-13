@@ -308,13 +308,6 @@ void MultiLevelMesh::EraseCoarseLevels(unsigned levels_to_be_erased) {
 
 //---------------------------------------------------------------------------------------------
 
-void MultiLevelMesh::MarkStructureNode() {
-    for (unsigned i=0; i<_gridn0; i++) _level0[i]->AllocateAndMarkStructureNode();
-}
-
-
-//---------------------------------------------------------------------------------------------
-
 void MultiLevelMesh::PrintInfo() {
     std::cout << " Number of uniform mesh refinement: " << _gridn << std::endl;
     for(int i=0; i<_gridn; i++) {

@@ -184,7 +184,7 @@ namespace femus {
     _topology->ResizeSolutionVector("AMR");
 
     _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
-
+    AllocateAndMarkStructureNode();
 
     el->BuildElementNearElement();
 
@@ -253,6 +253,7 @@ namespace femus {
     _topology->ResizeSolutionVector("AMR");
 
     _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1 , 0);
+    AllocateAndMarkStructureNode();
 
     el->BuildElementNearElement();
     el->DeleteElementNearVertex();

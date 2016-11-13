@@ -519,20 +519,27 @@ namespace femus {
     _elementNearFace.clearBroadcast();
   }
 
-  void elem::GetAMRRestriction(Mesh *msh, std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &restriction) {
+  void elem::GetAMRRestriction(Mesh *msh) {
 
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &restriction = msh->GetAmrRestrictionMap();
     restriction.resize(3);
+
+    std::vector < std::map < unsigned, bool > > &interfaceSolidMark = msh->GetAmrSolidMark();
+    interfaceSolidMark.resize(3);
 
     std::vector < MyVector<unsigned> > interfaceElement;
     std::vector < MyMatrix<unsigned> > interfaceLocalDof;
     std::vector < std::vector < MyMatrix<unsigned> > > interfaceDof;
+    std::vector < std::vector < MyMatrix<unsigned> > > levelInterfaceSolidMark;
     std::vector < std::vector < MyMatrix< double > > > interfaceNodeCoordinates;
 
     interfaceElement.resize(_level + 1);
     interfaceLocalDof.resize(_level + 1);
     interfaceDof.resize(3);
+    levelInterfaceSolidMark.resize(3);
     for(unsigned i = 0; i < 3; i++) {
       interfaceDof[i].resize(_level + 1);
+      levelInterfaceSolidMark[i].resize(_level + 1);
     }
     interfaceNodeCoordinates.resize(_level + 1);
     unsigned dim = msh->GetDimension();
@@ -583,6 +590,7 @@ namespace femus {
       MyVector <unsigned> rowSize = interfaceLocalDof[ilevel].getRowSize();
       for(unsigned soltype = 0; soltype < 3; soltype++) {
         interfaceDof[soltype][ilevel] = MyMatrix< unsigned > (rowSize, UINT_MAX);
+	levelInterfaceSolidMark[soltype][ilevel] = MyMatrix< unsigned > (rowSize, UINT_MAX);
         for(unsigned i = interfaceLocalDof[ilevel].begin(); i < interfaceLocalDof[ilevel].end(); i++) {
           unsigned iel = interfaceElement[ilevel][i];
           unsigned counter = 0;
@@ -590,7 +598,10 @@ namespace femus {
             unsigned jloc = interfaceLocalDof[ilevel][i][j];
             if(jloc < GetElementDofNumber(iel, soltype)) {
               unsigned jdof  = msh->GetSolutionDof(jloc, iel, soltype);
-              interfaceDof[soltype][ilevel][i][counter++] = jdof;
+              interfaceDof[soltype][ilevel][i][counter] = jdof;
+	      unsigned jdof2  = msh->GetSolutionDof(jloc, iel, 2);
+	      levelInterfaceSolidMark[soltype][ilevel][i][counter] = msh->GetSolidMark(jdof2);
+	      counter++;
             }
             else {
               break;
@@ -598,6 +609,7 @@ namespace femus {
           }
         }
         interfaceDof[soltype][ilevel].shrinkToFit(UINT_MAX);
+	levelInterfaceSolidMark[soltype][ilevel].shrinkToFit(UINT_MAX);
       }
       //END interface node dof global search, one for each soltype
 
@@ -622,17 +634,11 @@ namespace femus {
     for(unsigned soltype = 0; soltype < 3; soltype++) {
       for(int ilevel = 0; ilevel < _level; ilevel++) {
         for(int jlevel = ilevel + 1; jlevel <= _level; jlevel++) {
-
-          MyMatrix < unsigned > jlevelInterfaceDof = interfaceDof[soltype][jlevel];
-          std::vector < MyMatrix < double > > jlevelInterfaceNodeCoordinates(dim);
-          for(unsigned d = 0; d < dim; d++) {
-            jlevelInterfaceNodeCoordinates[d] = interfaceNodeCoordinates[jlevel][d];
-          }
-
           for(unsigned lproc = 0; lproc < _nprocs; lproc++) {
-            jlevelInterfaceDof.broadcast(lproc);
+            interfaceDof[soltype][jlevel].broadcast(lproc);
+	    levelInterfaceSolidMark[soltype][jlevel].broadcast(lproc);
             for(unsigned d = 0; d < dim; d++) {
-              jlevelInterfaceNodeCoordinates[d].broadcast(lproc);
+              interfaceNodeCoordinates[jlevel][d].broadcast(lproc);
             }
             std::map< unsigned, bool> candidateNodes;
             std::map< unsigned, bool> elementNodes;
@@ -666,14 +672,14 @@ namespace femus {
               GetBoundingBox(xv, xe, 0.01);
 
 
-              for(unsigned k = jlevelInterfaceDof.begin(); k < jlevelInterfaceDof.end(); k++) {
-                for(unsigned l = jlevelInterfaceDof.begin(k); l < jlevelInterfaceDof.end(k); l++) {
-                  unsigned ldof = jlevelInterfaceDof[k][l];
+              for(unsigned k = interfaceDof[soltype][jlevel].begin(); k < interfaceDof[soltype][jlevel].end(); k++) {
+                for(unsigned l = interfaceDof[soltype][jlevel].begin(k); l < interfaceDof[soltype][jlevel].end(k); l++) {
+                  unsigned ldof = interfaceDof[soltype][jlevel][k][l];
                   if(candidateNodes.find(ldof) == candidateNodes.end() || candidateNodes[ldof] != false) {
                     double d2 = 0.;
                     std::vector<double> xl(dim);
                     for(int d = 0; d < dim; d++) {
-                      xl[d] = jlevelInterfaceNodeCoordinates[d][k][l];
+                      xl[d] = interfaceNodeCoordinates[jlevel][d][k][l];
                       d2 += (xl[d] - xc[d]) * (xl[d] - xc[d]);
                     }
                     bool insideHull = true;
@@ -712,10 +718,13 @@ namespace femus {
                               unsigned jdof = interfaceDof[soltype][ilevel][i][j];
                               if(restriction[soltype][jdof].find(jdof) == restriction[soltype][jdof].end()) {
                                 restriction[soltype][jdof][jdof] = 1.;
+                                unsigned jdof2  = msh->GetSolutionDof(jloc, iel, 2);
+				interfaceSolidMark[soltype][jdof] = levelInterfaceSolidMark[soltype][ilevel][i][j];
                               }
                               restriction[soltype][jdof][ldof] = value;
                               restriction[soltype][ldof][ldof] = 10.;
-                              candidateNodes[ldof] = true;
+			      interfaceSolidMark[soltype][ldof] = levelInterfaceSolidMark[soltype][jlevel][k][l];
+			      candidateNodes[ldof] = true;
                             }
                           }
                         }
@@ -731,9 +740,10 @@ namespace femus {
                 }
               }
             }
-            jlevelInterfaceDof.clearBroadcast();
+            interfaceDof[soltype][jlevel].clearBroadcast();
+	    levelInterfaceSolidMark[soltype][jlevel].clearBroadcast();
             for(unsigned d = 0; d < dim; d++) {
-              jlevelInterfaceNodeCoordinates[d].clearBroadcast();
+              interfaceNodeCoordinates[jlevel][d].clearBroadcast();
             }
           }
         }
@@ -848,6 +858,32 @@ namespace femus {
           restriction[soltype][inode].clear();
           restriction[soltype][inode][inode] = 0.;
         }
+      }
+
+
+      MyVector <unsigned> InterfaceSolidMarkNode(interfaceSolidMark[soltype].size());
+      MyVector <short unsigned> InterfaceSolidMarkValue(interfaceSolidMark[soltype].size());
+
+      unsigned cnt = 0;
+      for(std::map<unsigned, bool >::iterator it = interfaceSolidMark[soltype].begin(); it != interfaceSolidMark[soltype].end(); it++) {
+        InterfaceSolidMarkNode[cnt] = it->first;
+        InterfaceSolidMarkValue[cnt] = it->second;
+	cnt++;
+      }
+      InterfaceSolidMarkNode.stack();
+      InterfaceSolidMarkValue.stack();
+
+      for(unsigned lproc = 0; lproc < _nprocs; lproc++) {
+        InterfaceSolidMarkNode.broadcast(lproc);
+        InterfaceSolidMarkValue.broadcast(lproc);
+	for(unsigned i = InterfaceSolidMarkNode.begin(); i < InterfaceSolidMarkNode.end(); i++) {
+	  unsigned jnode = InterfaceSolidMarkNode[i];
+	  if( restriction[soltype].find(jnode) != restriction[soltype].end()){
+	    interfaceSolidMark[soltype][jnode] = InterfaceSolidMarkValue[i]; 
+	  }
+	}
+        InterfaceSolidMarkNode.clearBroadcast();
+        InterfaceSolidMarkValue.clearBroadcast();
       }
     }
   }

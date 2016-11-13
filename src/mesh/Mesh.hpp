@@ -157,7 +157,6 @@ public:
     /** Allocate memory for adding fluid or solid mark */
     void AllocateAndMarkStructureNode();
 
-
     /** To be Added */
     void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
 
@@ -185,6 +184,10 @@ public:
     
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap(){
       return _amrRestriction;
+    }
+    
+    std::vector < std::map < unsigned, bool > > & GetAmrSolidMark(){
+      return _amrSolidMark;
     }
 
     basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
@@ -272,6 +275,7 @@ private:
     static const unsigned _solidMarkIndex = 4;
     
     std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
+    std::vector < std::map < unsigned, bool > > _amrSolidMark;
 
 };
 
