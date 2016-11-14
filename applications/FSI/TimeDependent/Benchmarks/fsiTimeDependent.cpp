@@ -377,7 +377,6 @@ int main(int argc,char **args) {
 
   std::cout << " *********** Solving... ************  " << std::endl;
 
-  system.SetSamePreconditioner();
   system.PrintSolverInfo(true);
 
   // ******* Print solution *******

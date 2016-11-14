@@ -325,7 +325,6 @@ int main(int argc,char **args) {
 
   std::cout << " *********** Solving... ************  " << std::endl;
 
-  system.SetSamePreconditioner();
   system.PrintSolverInfo(true);
 
   if(mem_infos) {

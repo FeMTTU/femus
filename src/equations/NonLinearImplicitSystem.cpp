@@ -125,14 +125,14 @@ namespace femus {
         _assembleMatrix = _buildSolver;
         _assemble_system_function(_equation_systems);
 
-        if( !_ml_msh->GetLevel(igridn)->GetIfHomogeneous() ) {
-	  if(!_RRamr[igridn]){
-	    (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
-	  }
-	  else{
-	    (_LinSolver[igridn]->_RESC)->matrix_mult(*_LinSolver[igridn]->_RES, *_RRamr[igridn]);
-	  }
-	  *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
+        if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
+          if(!_RRamr[igridn]) {
+            (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
+          }
+          else {
+            (_LinSolver[igridn]->_RESC)->matrix_mult(*_LinSolver[igridn]->_RES, *_RRamr[igridn]);
+          }
+          *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
         }
 
         if(_buildSolver) {
@@ -140,29 +140,39 @@ namespace femus {
           _MGmatrixFineReuse = (0 == nonLinearIterator) ? false : true;
           _MGmatrixCoarseReuse = (igridn - grid0 > 0) ?  true : _MGmatrixFineReuse;
 
-	  if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
+          if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
             _LinSolver[igridn]->SwapMatrices();
-	    if(!_RRamr[igridn]) {
-	      _LinSolver[igridn]->_KK->matrix_PtAP(*_PPamr[igridn], *_LinSolver[igridn]->_KKamr, _MGmatrixFineReuse);
-	    }
-	    else{
-	      _LinSolver[igridn]->_KK->matrix_ABC(*_RRamr[igridn], *_LinSolver[igridn]->_KKamr, *_PPamr[igridn], _MGmatrixFineReuse);
-	    }
+            if(!_RRamr[igridn]) {
+              _LinSolver[igridn]->_KK->matrix_PtAP(*_PPamr[igridn], *_LinSolver[igridn]->_KKamr, _MGmatrixFineReuse);
+            }
+            else {
+              _LinSolver[igridn]->_KK->matrix_ABC(*_RRamr[igridn], *_LinSolver[igridn]->_KKamr, *_PPamr[igridn], _MGmatrixFineReuse);
+            }
           }
-	  
+
           clock_t mg_proj_mat_time = clock();
           for(unsigned i = igridn; i > 0; i--) {
             if(_RR[i]) {
               if(i == igridn)
                 _LinSolver[i - 1u]->_KK->matrix_ABC(*_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixFineReuse);
-              else
+              else {
                 _LinSolver[i - 1u]->_KK->matrix_ABC(*_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixCoarseReuse);
+                if(_LinSolver[i - 1u]->_KKamr) {
+                  delete _LinSolver[i - 1u]->_KKamr;
+                  _LinSolver[i - 1u]->_KKamr = NULL;
+                }
+              }
             }
             else {
               if(i == igridn)
                 _LinSolver[i - 1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixFineReuse);
-              else
+              else {
                 _LinSolver[i - 1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse);
+                if(_LinSolver[i - 1u]->_KKamr) {
+                  delete _LinSolver[i - 1u]->_KKamr;
+                  _LinSolver[i - 1u]->_KKamr = NULL;
+                }
+              }
             }
           }
           std::cout << "   ********* Level Max " << igridn + 1 << " MG PROJECTION MATRICES TIME:\t" \
@@ -202,13 +212,13 @@ namespace femus {
           _assembleMatrix = false;
           _assemble_system_function(_equation_systems);
           if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
-	    if(!_RRamr[igridn]){
-	      (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
-	    }
-	    else{
-	      (_LinSolver[igridn]->_RESC)->matrix_mult(*_LinSolver[igridn]->_RES, *_RRamr[igridn]);
-	    }
-	    *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
+            if(!_RRamr[igridn]) {
+              (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
+            }
+            else {
+              (_LinSolver[igridn]->_RESC)->matrix_mult(*_LinSolver[igridn]->_RES, *_RRamr[igridn]);
+            }
+            *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
           }
 
         }

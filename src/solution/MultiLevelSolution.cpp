@@ -504,15 +504,8 @@ namespace femus {
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
               if(msh->el->GetBoundaryIndex(iel, jface) == 0) {   // interior boundary (AMR) u = 0
                 short unsigned ielt = msh->GetElementType(iel);
-//                 unsigned nv1 = (_addAMRPressureStability[k] == true) ?
-//                                msh->GetElementDofNumber(iel, _solType[k]) :  //all the dofs in the element
-//                                msh->GetElementFaceDofNumber(iel, jface, _solType[k]);  // only the face dofs
-                
-	        unsigned nv1 = msh->GetElementFaceDofNumber(iel, jface, _solType[k]);  // only the face dofs
-
-			       
+		unsigned nv1 = msh->GetElementFaceDofNumber(iel, jface, _solType[k]);  // only the face dofs
                 for(unsigned iv = 0; iv < nv1; iv++) {
-                  //unsigned i = (_addAMRPressureStability[k] == true) ? iv : msh->GetLocalFaceVertexIndex(iel, jface, iv);
                   unsigned i = msh->GetLocalFaceVertexIndex(iel, jface, iv);
 		  unsigned idof = msh->GetSolutionDof(i, iel, _solType[k]);
 		  if(amrRestriction[_solType[k]].find(idof) != amrRestriction[_solType[k]].end() &&
@@ -576,63 +569,6 @@ namespace femus {
             }
           }
         }
-//         else if(_addAMRPressureStability[k]) {  // interior boundary (AMR) for discontinuous elements u = 0
-//           unsigned offset = msh->_elementOffset[_iproc];
-//           unsigned offsetp1 = msh->_elementOffset[_iproc + 1];
-//           unsigned owned = offsetp1 - offset;
-//           std::vector < short unsigned > markedElement(owned, 0);
-//           // Add all interior boundary elements
-//           for(unsigned iel = offset; iel < offsetp1; iel++) {
-//             if( markedElement[iel - offset] == 0 ){
-//               short unsigned ielt = msh->GetElementType(iel);
-//               for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
-//                 if(msh->el->GetBoundaryIndex(iel, jface) == 0) {
-//                   markedElement[iel - offset] = 1;
-//                   for(unsigned kface = 0; kface < msh->GetElementFaceNumber(iel); kface++) {
-//                     int kel = msh->el->GetFaceElementIndex(iel, kface) - 1;
-//                     if( kel >= offset && kel < offsetp1){
-//                       markedElement[kel - offset] = 1;
-//                     }
-//                   }
-//                   break;
-//                 }
-//               }
-//             }
-//           }
-//           //remove adjacent interior boundary elements
-//           std::vector < unsigned > seed;
-//           seed.reserve(owned);
-//           for(unsigned i = 0; i < owned; i++) {
-//             if( markedElement[i] == 1){
-//               markedElement[i] = 2;
-//               seed.resize(1);
-//               seed[0] = offset + i;
-//               while(seed.size() != 0){
-//                 bool testSeed = true;
-//                 unsigned iel = seed[ seed.size() - 1u];
-//                 short unsigned ielt = msh->GetElementType(iel);
-//                 for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
-//                   int jel = msh->el->GetFaceElementIndex(seed[seed.size()-1], jface) - 1;
-//                   if( jel >= offset && jel < offsetp1 && markedElement[jel - offset] == 1 ){
-//                     markedElement[jel - offset] = 0;
-//                     seed.resize(seed.size() + 1);
-//                     seed[seed.size() - 1] = jel;
-//                     testSeed = false;
-//                   }
-//                 }
-//                 if(testSeed) seed.resize(seed.size() - 1);
-//               }
-//             }
-//           }
-// 
-//           for(unsigned i = 0; i < owned; i++) {
-//             if( markedElement[i] > 0){
-//               unsigned iel = offset + i;
-//               unsigned idof = msh->GetSolutionDof(0, iel, _solType[k]);
-//               _solution[igridn]->_Bdc[k]->set(idof, 1.);
-//             }
-//           }
-//         }
         if( _fixSolutionAtOnePoint[k] == true  && igridn == 0 && _iproc == 0 ){
           _solution[igridn]->_Bdc[k]->set(0, 0.);
           _solution[igridn]->_Sol[k]->set(0, 0.);

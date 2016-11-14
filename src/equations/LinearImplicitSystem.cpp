@@ -161,10 +161,6 @@ namespace femus {
       std::cout << std::endl << " *** Start " << _solverType << " Linear V-Cycle ***" << std::endl;
       grid0 = _gridn - 1;
     }
-//     else if(_mg_type == M_CYCLE) {
-//       std::cout << std::endl << " *** Start " << _solverType << " Linear Mixed-Cycle ***" << std::endl;
-//       grid0 = _gridr-1;
-//     }
     else {
       std::cout << "wrong " << _solverType << " type for this solver " << std::endl;
       abort();
@@ -209,14 +205,24 @@ namespace femus {
         if(_RR[i]) {
           if(i == igridn)
             _LinSolver[i - 1u]->_KK->matrix_ABC(*_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixFineReuse);
-          else
+          else{
             _LinSolver[i - 1u]->_KK->matrix_ABC(*_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixCoarseReuse);
+	    if(_LinSolver[i - 1u]->_KKamr){
+	      delete _LinSolver[i - 1u]->_KKamr;
+	      _LinSolver[i - 1u]->_KKamr = NULL;
+	    }
+	  }
         }
         else {
           if(i == igridn)
             _LinSolver[i - 1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixFineReuse);
-          else
+          else {
             _LinSolver[i - 1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse);
+	    if(_LinSolver[i - 1u]->_KKamr){
+	      delete _LinSolver[i - 1u]->_KKamr;
+	      _LinSolver[i - 1u]->_KKamr = NULL;
+	    }
+	  }
         }
       }
 
@@ -465,7 +471,7 @@ namespace femus {
     BuildProlongatorMatrix(_gridn);
     if(!_ml_msh->GetLevel(_gridn - 1)->GetIfHomogeneous()) {
       _PP[_gridn]->matrix_RightMatMult(*_PPamr[_gridn - 1]);
-      if(_RRamr[_gridn]) _RR[_gridn]->matrix_LeftMatMult(*_RRamr[_gridn - 1]);
+      if(_RR[_gridn]) _RR[_gridn]->matrix_LeftMatMult(*_RRamr[_gridn - 1]);
     }
 
     _PPamr.resize(_gridn + 1);
@@ -827,14 +833,6 @@ namespace femus {
     }
     else { // elimination
       _DirichletBCsHandlingMode = 1;
-    }
-  }
-
-  // ********************************************
-
-  void LinearImplicitSystem::SetSamePreconditioner() {
-    for(unsigned i = 0; i < _gridn; i++) {
-      _LinSolver[i]->SetSamePreconditioner();
     }
   }
 

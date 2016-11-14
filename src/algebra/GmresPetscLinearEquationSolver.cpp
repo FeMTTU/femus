@@ -54,8 +54,7 @@ namespace femus {
 
     unsigned BDCIndexSize = KKoffset[KKIndex.size() - 1][processor_id()] - KKoffset[0][processor_id()];
     _bdcIndex.resize(BDCIndexSize);
-    //_hangingNodesIndex.resize(BDCIndexSize);
-
+    
     vector <bool> ThisSolutionIsIncluded(_SolPdeIndex.size(), false);
 
     for(unsigned iind = 0; iind < variable_to_be_solved.size(); iind++) {
@@ -64,8 +63,7 @@ namespace femus {
     }
 
     unsigned count0 = 0;
-    //unsigned count1 = 0;
-
+   
     for(int k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype = _SolType[indexSol];
@@ -79,21 +77,12 @@ namespace femus {
           _bdcIndex[count0] = idof_kk;
           count0++;
         }
-//         else if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 1.9) {
-//           _hangingNodesIndex[count1] = idof_kk;
-//           count1++;
-//         }
       }
     }
 
     _bdcIndex.resize(count0);
     std::vector < PetscInt >(_bdcIndex).swap(_bdcIndex);
     std::sort(_bdcIndex.begin(), _bdcIndex.end());
-
-//     _hangingNodesIndex.resize(count1);
-//     std::vector < PetscInt >(_hangingNodesIndex).swap(_hangingNodesIndex);
-//     std::sort(_hangingNodesIndex.begin(), _hangingNodesIndex.end());
-
 
     return;
   }
@@ -113,13 +102,7 @@ namespace femus {
       this->Clear();
       SetPenalty();
       RemoveNullSpace();
-//      this->Init(KK, KK);
-      if( UseSamePreconditioner() ) {
-        this->Init(KK, KK);
-      }
-      else{
-        this->Init(KK, _pmat);
-      }
+      this->Init(KK, KK);
     }
     //END ASSEMBLE
 
@@ -251,14 +234,8 @@ namespace femus {
 
     Mat KK = (static_cast< PetscMatrix* >(_KK))->mat();
     
-    //KSPSetOperators(subksp, KK, KK);
-    if( UseSamePreconditioner() ) {
-      KSPSetOperators(subksp, KK, KK);
-    }
-    else{
-      KSPSetOperators(subksp, KK, _pmat);
-    }
-
+    KSPSetOperators(subksp, KK, KK);
+    
     PC subpc;
     KSPGetPC(subksp, &subpc);
     SetPreconditioner(subksp, subpc);
@@ -297,14 +274,8 @@ namespace femus {
     if(ksp_clean) {
       Mat KK = (static_cast< PetscMatrix* >(_KK))->mat();
 
-      //KSPSetOperators(_ksp, KK, KK);
-      if( UseSamePreconditioner() ) {
-        KSPSetOperators(_ksp, KK, KK);
-      }
-      else {
-        KSPSetOperators(_ksp, KK, _pmat);
-      }
-
+      KSPSetOperators(_ksp, KK, KK);
+      
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
 
       if(_solver_type != PREONLY) {
@@ -359,12 +330,6 @@ namespace femus {
 
         MatSetNullSpace( (static_cast< PetscMatrix* >(_KK))->mat(), nullsp);
         MatSetTransposeNullSpace( (static_cast< PetscMatrix* >(_KK))->mat(), nullsp);
-        if( !UseSamePreconditioner() ) {
-          MatNullSpaceTest(nullsp, _pmat, &isNull);
-          if (!isNull) std::cout<<"The null space created for _pmat is not correct!"<<std::endl;
-          MatSetNullSpace( _pmat, nullsp);
-          MatSetTransposeNullSpace( _pmat, nullsp);
-        }
         MatNullSpaceDestroy(&nullsp);
 
         for(unsigned i = 0; i < nullspBase.size(); i++) {
@@ -424,17 +389,8 @@ namespace femus {
 
     MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
     MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
-    MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
+    MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1., 0, 0);
     
-    if( !UseSamePreconditioner() ) {
-      if(_pmatIsInitialized) MatDestroy(&_pmat);
-      MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
-      if( _hangingNodesIndex.size() != 0){
-        MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-        MatZeroRows(_pmat, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1.e100, 0, 0);
-      }
-      _pmatIsInitialized = true;
-    }
   }
 
   // =================================================

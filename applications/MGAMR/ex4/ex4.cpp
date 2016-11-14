@@ -286,7 +286,6 @@ int main(int argc, char** args) {
 
   system.PrintSolverInfo(false);
 
-  system.SetSamePreconditioner();
   //system.MGsolve();
 
 

@@ -163,9 +163,7 @@ namespace femus {
                             const std::string& AMRnorm, const double &AMRthreshold,
                             bool (* SetRefinementFlag)(const std::vector < double > &x,
                                 const int &ElemGroupNumber, const int &level) = NULL);
-
-      void SetSamePreconditioner();
-
+     
       /** Set the options of the Schur-Vanka smoother */
       //void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);
       void SetNumberOfSchurVariables(const unsigned short &NSchurVar);

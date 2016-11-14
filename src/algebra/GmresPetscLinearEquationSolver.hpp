@@ -64,14 +64,6 @@ namespace femus {
                       SparseMatrix* PP, SparseMatrix* RR,
                       const unsigned &npre, const unsigned &npost);
 
-      void SetSamePreconditioner(){
-        _samePreconditioner = true;
-      }
-      bool UseSamePreconditioner(){
-	return true;
-        return _samePreconditioner * _msh->GetIfHomogeneous();
-      }
-
       void RemoveNullSpace();
       void GetNullSpaceBase( std::vector < Vec > &nullspBase);
       void ZerosBoundaryResiduals();
@@ -118,14 +110,7 @@ namespace femus {
       PetscInt  _restart;
 
       vector <PetscInt> _bdcIndex;
-      vector <PetscInt> _hangingNodesIndex;
       bool _bdcIndexIsInitialized;
-
-      Mat _pmat;
-
-
-      bool _pmatIsInitialized;
-      bool _samePreconditioner;
       
       double _richardsonScaleFactor;
 
@@ -153,12 +138,9 @@ namespace femus {
     _richardsonScaleFactor = 0.5;
 
     _bdcIndexIsInitialized = 0;
-    _pmatIsInitialized = false;
-
+    
     _printSolverInfo = false;
-
-    _samePreconditioner = false;
-
+ 
   }
 
   // =============================================

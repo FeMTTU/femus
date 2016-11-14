@@ -182,9 +182,7 @@ int main(int argc, char** args) {
 
 
   system.PrintSolverInfo(false);
-//  system.MLsolve();
 
-  system.SetSamePreconditioner();
   system.MGsolve();
 
 

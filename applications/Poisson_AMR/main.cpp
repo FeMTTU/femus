@@ -418,7 +418,6 @@ int main(int argc, char** argv) {
   system2.SetDirichletBCsHandling(PENALTY);
 
   // Solve Temperature system
-  system2.SetSamePreconditioner();
   system2.MGsolve();
   //END Temperature Multilevel Problem
 

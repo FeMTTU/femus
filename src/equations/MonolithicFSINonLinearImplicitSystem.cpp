@@ -284,7 +284,6 @@ namespace femus {
     _RRamr[level]->close();
     
     _PPamr[level]->get_transpose(*_PPamr[level]);
-    //_RRamr[level]->get_transpose(*_PPamr[level]);
   }
   
   

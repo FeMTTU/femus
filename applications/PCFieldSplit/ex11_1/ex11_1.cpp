@@ -245,7 +245,6 @@ int main(int argc, char** args) {
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
 
-  system.SetSamePreconditioner();
   system.MGsolve();
 
   std::vector< double > x(3);
