@@ -1,5 +1,5 @@
 # - UseFemus.CMake collects a set of CMake variables 
-# useful for build a vertical application outside of the Femus package 
+# useful for building a vertical application outside of the Femus package 
 
 SET(FEMUS_LIBRARY_DIRS "@LIBRARY_OUTPUT_PATH@")
 
