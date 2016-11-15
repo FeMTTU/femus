@@ -134,7 +134,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("UADJ", LAGRANGE, SECOND);
   mlSol.AddSolution("VADJ", LAGRANGE, SECOND);
   if (dim == 3) mlSol.AddSolution("WADJ", LAGRANGE, SECOND);
-//   mlSol.AddSolution("PADJ", LAGRANGE, FIRST);
+  mlSol.AddSolution("PADJ", LAGRANGE, FIRST);
   // control =====================  
 
   mlSol.Initialize("All");
@@ -166,7 +166,7 @@ int main(int argc, char** args) {
   system_opt.AddSolutionToSystemPDE("UADJ");
   system_opt.AddSolutionToSystemPDE("VADJ");
   if (dim == 3) system_opt.AddSolutionToSystemPDE("WADJ");
-//   system_opt.AddSolutionToSystemPDE("PADJ");
+  system_opt.AddSolutionToSystemPDE("PADJ");
   
   // attach the assembling function to system
 //   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
@@ -590,7 +590,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
   
   // solution variables *******************************************
   const int n_vars = (dim+1); //was n_unknowns , when it had just state equations
-  const int n_unknowns = (2.*dim)+1; //state , adjoint of velocity terms and one pressure term 
+  const int n_unknowns = 2*(dim+1) /*(2.*dim)+1*/; //state , adjoint of velocity terms and one pressure term 
   const int vel_type_pos = 0;
   const int adj_vel_type_pos = vel_type_pos;
   const int press_type_pos = dim;
@@ -605,7 +605,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
   Solname              [adj_pos_begin + 0] =              "UADJ";
   Solname              [adj_pos_begin + 1] =              "VADJ";
   if (dim == 3) Solname[adj_pos_begin + 2] =              "WADJ";
-//   Solname              [adj_pos_begin + press_type_pos] = "PADJ";
+  Solname              [adj_pos_begin + press_type_pos] = "PADJ";
   
   vector < unsigned > SolPdeIndex(n_unknowns);
   vector < unsigned > SolIndex(n_unknowns);  
@@ -904,9 +904,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	      Lap_rhs_i += phi_x_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar2]*gradSolVAR[ivar_block_adj][ivar2];
 	    }
 	    
-	    Res[SolPdeIndex[ivar_block_adj]][i_u] += 0.*( -IRe*Lap_rhs_i + /*Picard iteration*/SolVAR[dim]*phi_x_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block] +(/*SolVAR[ivar_block]*/- vel_desired[ivar_block])* phi_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block] )*weight;
+	    Res[SolPdeIndex[ivar_block_adj]][i_u] += 1.*( -IRe*Lap_rhs_i + /*Picard iteration*/SolVAR[n_unknowns]*phi_x_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block] + vel_desired[ivar_block]* phi_gss_fe[SolFEType[adj_vel_type_pos]][i_u] )*weight;
  
-// 	     Res[SolPdeIndex[ivar_block]][i_u] -=/* fRHS[ivar_block-adj_pos_begin] */0. *phi_gss_fe[SolFEType[ivar_block]][i_u] *weight;
+
 
  
 	  
@@ -920,7 +920,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 
 		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[ivar_block_adj] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos]+j_u ] += (IRe* Lap_ij)*weight;
 		
-// 		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[ivar_block] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos]+j_u ] -=SolVAR[ivar_block]* phi_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block]*weight;
+		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[ivar_block] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos]+j_u ] +=SolVAR[ivar_block]* phi_gss_fe[SolFEType[adj_vel_type_pos]][i_u]*weight;
 
 	
 	      }//end phij loop
@@ -929,12 +929,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	      
 	     	    
 	  
-// 	      	    // *** phiP_j loop ***
-// 	      for(unsigned j_p = 0; j_p < Sol_n_el_dofs[press_type_pos]; j_p++){ // Matrix block 1st row's last col values, especially B' 
-// // 		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[adj_vel_type_pos] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos]+j_p ]  -= SolVAR[ivar_block]* phi_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block]*weight;
-// 
-// 		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[press_type_pos] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos+press_type_pos]+j_p]  -=  phi_x_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block]*phi_gss_fe[SolFEType[press_type_pos]][j_p]*weight;
-// 	      }//end phiP_j loop
+	      	    // *** phiP_j loop ***
+	      for(unsigned j_p = 0; j_p < Sol_n_el_dofs[press_type_pos]; j_p++){ // Matrix block 1st row's last col values, especially B' 
+// 		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[adj_vel_type_pos] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos]+j_p ]  -= SolVAR[ivar_block]* phi_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block]*weight;
+
+		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[press_type_pos+adj_pos_begin] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos+press_type_pos]+j_p]  -=  phi_x_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block]*phi_gss_fe[SolFEType[press_type_pos]][j_p]*weight;
+	      }//end phiP_j loop
 
 
 
@@ -948,32 +948,32 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 
     
    //begin DIV LAMBDA block row *********************************
-//       for(unsigned ivar_block=0; ivar_block<1; ivar_block++) { // Matrix block 2nd row values, B and null
-//       
-// 	  double div = 0;
-// 	  for(unsigned ivar=0; ivar<dim; ivar++) {
-// 	    div += gradSolVAR[ivar][ivar];
-// 	  }
-// 	  
-// 	for(unsigned i_p=0; i_p < Sol_n_el_dofs[press_type_pos]; i_p++) { //RHS column Pressure values
-// 
-// 	  //RESIDUALS B block ===========================
-// 	  Res[SolPdeIndex[press_type_pos]][i_p] += phi_gss_fe[SolFEType[press_type_pos]][i_p]*div*weight;
-// // 	  Res[SolPdeIndex[press_type_pos]][i_p] += (phiP_gss[i]*div + /*penalty*ILambda*phiP_gss[i]*SolVAR[dim]*/ 
-// // 	                             + 0.*((hk*hk)/(4.*IRe))*alpha*(GradSolP[0]*phiV_x_gss[i*dim + 0] + GradSolP[1]*phiV_x_gss[i*dim + 1]) )*weight; //REMOVED !!
-// 	  	}  //end phiP_i loop
-// 
-// 	    // *** phi_j loop ***
-//     for(unsigned jvar_block=0; jvar_block<dim; jvar_block++) {
-//      for(unsigned i_p=0; i_p<Sol_n_el_dofs[press_type_pos]; i_p++) {
-// 	 for(unsigned j_u = 0; j_u < Sol_n_el_dofs[vel_type_pos]; j_u++) { // Matrix block 2nd row values, especially B
-// 		Jac[ SolPdeIndex[press_type_pos] ][ SolPdeIndex[jvar_block] ][ i_p*Sol_n_el_dofs[vel_type_pos]+j_u ] -= phi_gss_fe[SolFEType[press_type_pos]][i_p]*phi_x_gss_fe[SolFEType[vel_type_pos]][j_u*dim+jvar_block]*weight;
-// 	        }  //end phij loop
-// 	     }//end phiP_i loop
-// 	          
-//          } //end column u jvar 
-//  
-//        }
+      for(unsigned ivar_block=0; ivar_block<1; ivar_block++) { // Matrix block 2nd row values, B and null
+      
+	  double div = 0;
+	  for(unsigned ivar=0; ivar<dim; ivar++) {
+	    div += gradSolVAR[ivar][ivar];
+	  }
+	  
+	for(unsigned i_p=0; i_p < Sol_n_el_dofs[press_type_pos]; i_p++) { //RHS column Pressure values
+
+	  //RESIDUALS B block ===========================
+	  Res[SolPdeIndex[press_type_pos+adj_pos_begin]][i_p] += phi_gss_fe[SolFEType[press_type_pos+adj_pos_begin]][i_p]*div*weight;
+// 	  Res[SolPdeIndex[press_type_pos]][i_p] += (phiP_gss[i]*div + /*penalty*ILambda*phiP_gss[i]*SolVAR[dim]*/ 
+// 	                             + 0.*((hk*hk)/(4.*IRe))*alpha*(GradSolP[0]*phiV_x_gss[i*dim + 0] + GradSolP[1]*phiV_x_gss[i*dim + 1]) )*weight; //REMOVED !!
+	  	}  //end phiP_i loop
+
+	    // *** phi_j loop ***
+    for(unsigned jvar_block=0; jvar_block<dim; jvar_block++) {
+     for(unsigned i_p=0; i_p<Sol_n_el_dofs[press_type_pos+adj_pos_begin]; i_p++) {
+	 for(unsigned j_u = 0; j_u < Sol_n_el_dofs[adj_vel_type_pos]; j_u++) { // Matrix block 2nd row values, especially B
+		Jac[ SolPdeIndex[press_type_pos+adj_pos_begin] ][ SolPdeIndex[jvar_block+adj_pos_begin] ][ i_p*Sol_n_el_dofs[adj_vel_type_pos]+j_u ] -= phi_gss_fe[SolFEType[press_type_pos+adj_pos_begin]][i_p]*phi_x_gss_fe[SolFEType[adj_vel_type_pos]][j_u*dim+jvar_block]*weight;
+	        }  //end phij loop
+	     }//end phiP_i loop
+	          
+         } //end column u jvar 
+ 
+       }
    //end DIV LAMBDA block row *********************************
 
    
