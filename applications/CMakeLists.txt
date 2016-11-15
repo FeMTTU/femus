@@ -42,9 +42,14 @@ IF(BUILD_FSIAPPS)
   # FSI SteadyState in porous media //NS - Ex6
   ADD_SUBDIRECTORY(${FSI_FOLDER}/fsiOPT/testNS)
   
+   # FSI SteadyState in porous media //NS - Opt
+  ADD_SUBDIRECTORY(${FSI_FOLDER}/fsiOPT/testNS_Opt)
+  
   # FSI SteadyState in porous media //NS - StAdCtrl
   ADD_SUBDIRECTORY(${FSI_FOLDER}/fsiOPT/testOPT)
   
+  # FSI SteadyState in porous media //Poisson_Lifting_restriction_opt_Saikanths
+  ADD_SUBDIRECTORY(${FSI_FOLDER}/fsiOPT/lift_restr)
   
 #   # FSI SteadyState in porous media
 #   ADD_SUBDIRECTORY(${FSI_FOLDER}/fracfsitest/)

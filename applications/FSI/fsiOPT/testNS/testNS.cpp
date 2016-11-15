@@ -324,8 +324,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
           for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
-              NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
-              NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
+              NSV[k]   +=  nu * phiV_x[i * dim + j] * (gradSolV_gss[k][j] /*+ gradSolV_gss[j][k]*/);
+//               NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
             }
           }
 
