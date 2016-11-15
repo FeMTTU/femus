@@ -212,8 +212,11 @@ public:
     // Read - Print ------------------------------
     // print
     /** Print  to file */
-    virtual void print(const std::string& name)const;
+    virtual void print(const std::string& name) const;
 
+    /** Print  to Matlab format */
+    virtual void print_matlab(const std::string& name, const std::string& format) const {};
+    
     /** Print  to the screen */
     virtual  void print(std::ostream& os=std::cout) const {
         print_personal(os);
