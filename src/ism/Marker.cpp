@@ -668,7 +668,7 @@ namespace femus {
           double tTop = A * xv[0][i] + B * xv[1][i];
           //std::cout << "tBottom = " << tBottom << " , " << "A= " << A << " , " <<  "B= " << B << " , " << "xv[1][" << i << "] =" << xv[1][i] << " , " <<  "tTop = " <<   tTop << std::endl;
 
-          if ( fabs(tBottom) >= epsilon || fabs(tTop) < epsilon ) {
+          if(fabs(tBottom) >= epsilon || fabs(tTop) < epsilon) {
             //now let's find the coordinates of the intersection point r
             t = tTop / tBottom ;
             //std::cout << "t = " << t << std::endl;
@@ -934,7 +934,7 @@ namespace femus {
               }
 
               if(t < 1) {   //if not, it means the point r is far away from the marker, and we don't want to go in that direction
-                
+
                 for(unsigned i = 0; i < 4; i++) { //now we have to determine if r is inside itri
                   for(unsigned k = 0; k < _dim; k++) {
                     xv[k][i] = xv[k][i] - r[k];     //transate again the reference frame so that the origin is r
@@ -1106,7 +1106,7 @@ namespace femus {
       GetPolynomialShapeFunctionGradientHessian(phi, gradPhi, hessPhi, xi, ielType, solType);
 
       if(solType == 0) {
-	counter++;
+        counter++;
         convergence = GetNewLocalCoordinates(xi, x, phi, gradPhi, a);
       }
       else {
@@ -1171,16 +1171,16 @@ namespace femus {
 
           std::cout << std::endl;
 
-          
-	  std::vector < double > xi;	
-	  GetClosestPointInReferenceElement(xv, xv[j], ielType, xi);
-	  
-	  
+
+          std::vector < double > xi;
+          GetClosestPointInReferenceElement(xv, xv[j], ielType, xi);
+
+
 // 	  std::vector < double > xi(_dim);
 //           for(int k = 0; k < _dim; k++) {
 //              xi[k] = _localCentralNode[ielType][k];
 //           }
-	  
+
           for(int itype = 0; itype <= solType; itype++) {
             InverseMapping(iel, itype, xv[j], xi);
             std::cout << std::endl;
@@ -1226,8 +1226,8 @@ namespace femus {
     unsigned solVType = sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
     std::vector < double > phi;
-    std::vector<double> V(_dim, 0.);
-    std::vector < std::vector < double > > aV;
+    std::vector < std::vector<double > > V(2);
+    std::vector < std::vector < std::vector < double > > > aV;
     //END
 
     //BEGIN Numerical integration scheme
@@ -1269,8 +1269,10 @@ namespace femus {
 
           updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); //send xk
 
+          double s = (tstep + _c[order - 1][istep]) / n;
+
           for(unsigned i = 0; i < _dim; i++) {
-            _K[istep][i] = V[i] * h;
+            _K[istep][i] = (s * V[0][i] + (1. - s) * V[1][i]) * h;
           }
 
           step++;
@@ -1410,27 +1412,49 @@ namespace femus {
 
   void Marker::ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex,
       const unsigned & solVType,  const unsigned & nDofsV,
-      const unsigned & ielType, std::vector < std::vector < double > > &a) {
+      const unsigned & ielType, std::vector < std::vector < std::vector < double > > > &a) {
 
+    bool timeDependent = true;
+    for(unsigned  k = 0; k < _dim; k++) {
+      if ( sol->GetSolutionTimeOrder(solVIndex[k]) != 2 ){
+	timeDependent = false;
+      }
+    }
+    
     vector < vector < double > >  solV(_dim);    // local solution
+    vector < vector < double > >  solVold(_dim);    // local solution
 
     for(unsigned  k = 0; k < _dim; k++) {
       solV[k].resize(nDofsV);
+      if (timeDependent){
+	solVold[k].resize(nDofsV);
+      }
     }
     for(unsigned i = 0; i < nDofsV; i++) {
       unsigned solVDof = _mesh->GetSolutionDof(i, _elem, solVType);    // global to global mapping between solution node and solution dof
       for(unsigned  k = 0; k < _dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
+	if ( timeDependent ){
+	  solVold[k][i] = (*sol->_SolOld[solVIndex[k]])(solVDof);
+	}
       }
     }
 
-    ProjectNodalToPolynomialCoefficients(a, solV, ielType, solVType);
+    a.resize(2);
+    
+    ProjectNodalToPolynomialCoefficients(a[0], solV, ielType, solVType);
+    if ( timeDependent ){
+      ProjectNodalToPolynomialCoefficients(a[1], solVold, ielType, solVType);
+    }
+    else{
+      a[1] = a[0];
+    }
   }
 
 
-  void Marker::updateVelocity(std::vector <double> & V, Solution * sol,
+  void Marker::updateVelocity(std::vector< std::vector <double> > & V, Solution * sol,
                               const vector < unsigned > &solVIndex, const unsigned & solVType,
-                              std::vector < std::vector < double > > &a,  std::vector < double > &phi,
+                              std::vector < std::vector < std::vector < double > > > &a,  std::vector < double > &phi,
                               const bool & pcElemUpdate) {
 
 
@@ -1443,12 +1467,16 @@ namespace femus {
 
     GetPolynomialShapeFunction(phi, _xi, ielType, solVType);
 
-    V.assign(_dim, 0.);
+    V.resize(2);
+    V[0].assign(_dim, 0.);
+    V[1].assign(_dim, 0.);
     for(unsigned i = 0; i < _dim; i++) {
       for(unsigned j = 0; j < nDofsV; j++) {
-        V[i] += a[i][j] * phi[j];
+        V[0][i] += a[0][i][j] * phi[j];
+        V[1][i] += a[1][i][j] * phi[j];
       }
     }
+
 
   }
 
@@ -1481,9 +1509,9 @@ namespace femus {
       //END projection nodal to polynomial coefficients
 
       //BEGIN find initial guess
-      
+
       GetClosestPointInReferenceElement(xv, _x, elemType, _xi);
-      
+
       /*
       _xi.resize(_dim);
       for(int k = 0; k < _mesh->GetDimension(); k++) {

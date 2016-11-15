@@ -25,7 +25,7 @@
 
 #include "vector"
 #include "map"
-#include "Mesh.hpp"
+#include "MyVector.hpp"
 
 namespace femus {
 
@@ -53,6 +53,24 @@ namespace femus {
       std::vector<double> GetMarkerLocalCoordinates(){
 	return _xi;
       }
+      
+     void GetMarkerCoordinates( std::vector< double > &xn ){
+	xn.resize(_dim);
+	if(_mproc == _iproc){
+	  xn = _x;
+	}
+	MPI_Bcast(&xn[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
+      }
+      
+      void GetMarkerCoordinates( std::vector< MyVector <double > > &xn ){
+	if(_mproc == _iproc){
+	  for(unsigned d=0; d<_dim; d++){
+	    unsigned size = xn.size();
+	    xn[d].resize(size + 1);
+	    xn[d][size] = _x[d];
+	  }
+	}
+      }
 
       void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
       void GetElementSerial(unsigned &initialElem);
@@ -66,16 +84,17 @@ namespace femus {
       void InverseMappingTEST(std::vector< double > &x);
       void Advection(Solution* sol, const unsigned &n, const double& T);
 
-     void updateVelocity(std::vector <double> & V, Solution* sol, 
-			 const vector < unsigned > &solVIndex, const unsigned & solVType,
-                         std::vector < std::vector < double > > &a,  std::vector < double > &phi, const bool & pcElemUpdate);
+     void updateVelocity(std::vector< std::vector <double> > & V, Solution * sol,
+                              const vector < unsigned > &solVIndex, const unsigned & solVType,
+                              std::vector < std::vector < std::vector < double > > > &a,  std::vector < double > &phi,
+                              const bool & pcElemUpdate);
      
       void FindLocalCoordinates(const unsigned & solVType, std::vector < std::vector < std::vector < double > > > &aX, 
 		    const bool & pcElemUpdate);
 
       void ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex, 
 				       const unsigned &solVType,  const unsigned &nDofsV,
-				       const unsigned &ielType, std::vector < std::vector < double > > &a);
+				       const unsigned &ielType, std::vector < std::vector < std::vector < double > > > &a);
 
       
     private:
