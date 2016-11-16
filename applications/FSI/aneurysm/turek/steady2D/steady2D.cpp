@@ -50,7 +50,7 @@ int main(int argc, char **args) {
   muf = 3.5*1.0e-3;//wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  E = 120000*1.e2; //turek:120000*1.e6;
+  E = 120000*1.e1; //turek:120000*1.e6;
 
   Parameter par(Lref, Uref);
 
@@ -77,7 +77,7 @@ int main(int argc, char **args) {
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
                         infile.c_str(), "fifth", Lref, NULL);
 
-  //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
+  //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 2);
 
   ml_msh.PrintInfo();
 
@@ -216,7 +216,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
   if( !strcmp(name, "U") ){
 
     if(1 == facename) {
-      value = -0.05 * (x[1]*1000 - 6) * ( x[1]*1000 - 8); //inflow
+      value = 0.05 * (x[1]*1000 - 6) * ( x[1]*1000 - 8); //inflow
     }
     else if( 2 == facename ){
       test = 0;
@@ -234,13 +234,15 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
     value = 0.;
   }
   else if(!strcmp(name, "DX") ) {
-    if(2 == facename || 4 == facename || 5 == facename || 6 == facename) {
+    //if(2 == facename || 4 == facename || 5 == facename || 6 == facename) {
+    if(5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
   }
   else if(!strcmp(name, "DY") ) {
-    if(1 == facename || 3 == facename || 5 == facename || 6 == facename) {
+    //if(1 == facename || 3 == facename || 5 == facename || 6 == facename) {
+    if( 5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
