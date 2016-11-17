@@ -38,17 +38,17 @@ double InitalValueW(const std::vector < double >& x) {
 }
 
 
-double InitalValueU(const std::vector < double >& x) {
-  return (-x[1]+x[2])/sqrt(3);
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  return (x[0]-x[2])/sqrt(3);
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  return (x[1]-x[0])/sqrt(3);
-}
+// double InitalValueU(const std::vector < double >& x) {
+//   return (-x[1]+x[2])/sqrt(3);
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   return (x[0]-x[2])/sqrt(3);
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   return (x[1]-x[0])/sqrt(3);
+// }
 
 
 
