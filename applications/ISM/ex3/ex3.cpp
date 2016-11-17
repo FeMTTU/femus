@@ -12,17 +12,45 @@ using namespace femus;
 
 void PrintStreamline(const std::string output_path, const std::vector< std::vector<double> > &xn);
 
+// double InitalValueU(const std::vector < double >& x) {
+//   return 0.5;
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   return 0.5;
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   return 0.5;
+// }
+
+
 double InitalValueU(const std::vector < double >& x) {
-  return 0.5;
+  return -x[1];
 }
 
 double InitalValueV(const std::vector < double >& x) {
-  return 0.5;
+  return x[0];
 }
 
 double InitalValueW(const std::vector < double >& x) {
-  return 0.5;
+  return 0.;
 }
+
+
+double InitalValueU(const std::vector < double >& x) {
+  return (-x[1]+x[2])/sqrt(3);
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  return (x[0]-x[2])/sqrt(3);
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  return (x[1]-x[0])/sqrt(3);
+}
+
+
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
@@ -62,7 +90,10 @@ int main(int argc, char** args) {
   std::cout << " --------------------------------------------------     TEST     --------------------------------------------------" << std::endl;
 
   //mlMsh.ReadCoarseMesh("./input/prism3D.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/tri2.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cubeHex.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cubeTet.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   unsigned dim = mlMsh.GetDimension();
@@ -81,9 +112,14 @@ int main(int argc, char** args) {
 //   //Test 1 (QUAD):
 //
   //NOTE tests ran with 4 procs
-  x[0] = -0.46875; //the marker is in element 191 (proc 3 of 4)
-  x[1] = -0.5;
-  x[2] = 0.;
+//   x[0] = -0.46875; //the marker is in element 191 (proc 3 of 4)
+//   x[1] = -0.5;
+//   x[2] = 0.;
+  
+    x[0] = 0.125; 
+    x[1] = 0.125;
+    x[2] = -0.25;
+
 
 
 // //Test 1 (TET):  element 20
@@ -98,8 +134,8 @@ int main(int argc, char** args) {
   std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
   std::cout << " The marker type is " <<  a1Quad.GetMarkerType() << std::endl;
 
-  double T = 1.0;
-  unsigned n  = 10;
+  double T = 2 * acos(-1.);
+  unsigned n  = 100;
 
 
   std::vector < std::vector < double > > xn(n + 1);
