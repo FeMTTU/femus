@@ -19,8 +19,12 @@ using namespace femus;
 bool SetBoundaryConditionOmino(const std::vector < double >& x, const char name[], 
 			       double &value, const int facename, const double time);
 
+bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[], 
+			       double &value, const int facename, const double time);
+
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[],
                           double &value, const int facename, const double time);
+
 bool SetBoundaryConditionTurek(const std::vector < double >& x, const char name[],
                                double &value, const int facename, const double time);
 
@@ -47,8 +51,8 @@ int main(int argc, char **args) {
 
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
-  std::string infile = "./input/aneurysm_omino.neu";
-  // std::string infile = "./input/aneurisma_aorta.neu";
+  //std::string infile = "./input/aneurysm_omino.neu";
+  std::string infile = "./input/aneurisma_aorta.neu";
   // std::string infile = "./input/turek_porous_scaled.neu";
   //std::string infile = "./input/turek_porous_omino.neu";
   //std::string infile = "./input/Turek_3D_D.neu";
@@ -65,7 +69,14 @@ int main(int argc, char **args) {
   ni = 0.5;
   E = 6000;
   
-//   Maximumu Turek_3D_D deformation (velocity = 0.2)
+  // Maximum aneurysm_omino deformation (velocity = 0.1)
+//   rhof = 1035.;
+//   muf = 3.38 * 1.0e-6 * rhof;
+//   rhos = 1120;
+//   ni = 0.5;
+//   E = 6000;
+  
+  // Maximum Turek_3D_D deformation (velocity = 0.2)
 //   rhof = 1035.;
 //   muf = 3.38 * 1.0e-6 * rhof;
 //   rhos = 1120;
@@ -129,10 +140,11 @@ int main(int argc, char **args) {
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOmino);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
+  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOmino);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionPorous);
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOmino);
+  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOminoPorous);
   
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
@@ -170,7 +182,7 @@ int main(int argc, char **args) {
 
   system.SetNonLinearConvergenceTolerance(1.e-9);
   system.SetResidualUpdateConvergenceTolerance(1.e-15);
-  system.SetMaxNumberOfNonLinearIterations(8);
+  system.SetMaxNumberOfNonLinearIterations(4);
   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(1);
 
   system.SetNumberPreSmoothingStep(0);
@@ -274,7 +286,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   }
 
   return test;
-
 }
 
 
@@ -324,7 +335,6 @@ bool SetBoundaryConditionTurek(const std::vector < double >& x, const char name[
   }
 
   return test;
-
 }
 
 
@@ -372,7 +382,6 @@ bool SetBoundaryConditionPorous(const std::vector < double >& x, const char name
   }
 
   return test;
-
 }
 
 bool SetBoundaryConditionOminoPorous(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
@@ -419,7 +428,6 @@ bool SetBoundaryConditionOminoPorous(const std::vector < double >& x, const char
   }
 
   return test;
-
 }
 
 bool SetBoundaryConditionOmino(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
@@ -429,7 +437,7 @@ bool SetBoundaryConditionOmino(const std::vector < double >& x, const char name[
   if(!strcmp(name, "V")){
     if(3 == facename) {
       //test = 0;
-      value = 0.05;
+      value = 0.1;
     }
     else if(1 == facename || 2 == facename ) {
       test = 0;
@@ -456,6 +464,42 @@ bool SetBoundaryConditionOmino(const std::vector < double >& x, const char name[
   }
 
   return test;
+}
 
+bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+  bool test = 1; //dirichlet
+  value = 0.;
+
+  if(!strcmp(name, "V")) {
+    if(1 == facename || 2 == facename || 3 == facename || 4 == facename) {
+      test = 0;
+      value = 0;
+    }
+    else if(5 == facename) {
+      //test = 0;
+      value = 0.02;
+    }
+  }
+  
+  if(!strcmp(name, "U") || !strcmp(name, "W")){
+    if(1 == facename || 2 == facename || 3 == facename || 4 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+
+  else if(!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+  }
+
+  else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
+    if(1 == facename || 6 == facename || 11 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+
+  return test;
 }
 
