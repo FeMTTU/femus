@@ -436,7 +436,8 @@ bool SetBoundaryConditionOmino(const std::vector < double >& x, const char name[
   
   if(!strcmp(name, "V")){
     if(3 == facename) {
-      //test = 0;
+      //double r2 = ((x[1] * 1000.) + 8.38) * ((x[1] * 1000.) + 8.38) + ((x[2] * 1000.) + 0.589) * ((x[2] * 1000.) + 0.589);
+      //value = -0.1 * (1. - r2); //inflow
       value = 0.1;
     }
     else if(1 == facename || 2 == facename ) {
@@ -476,7 +477,8 @@ bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[
       value = 0;
     }
     else if(5 == facename) {
-      //test = 0;
+      //double r2 = ((x[1] * 1000.) + 70) * ((x[1] * 1000.) + 70) + ((x[2] * 1000.) + 20) * ((x[2] * 1000.) + 20);
+      //value = 0.02 * (1. - r2); //inflow
       value = 0.02;
     }
   }
