@@ -10,7 +10,7 @@
 
 using namespace femus;
 
-void PrintStreamline(const std::string output_path, const std::vector< std::vector<double> > &xn);
+void PrintLine(const std::string output_path, const std::vector< std::vector<double> > &xn, const bool &streamline = true, const unsigned &step = 0);
 
 // double InitalValueU(const std::vector < double >& x) {
 //   return 0.5;
@@ -24,7 +24,7 @@ void PrintStreamline(const std::string output_path, const std::vector< std::vect
 //   return 0.5;
 // }
 
-
+/*
 double InitalValueU(const std::vector < double >& x) {
   return -x[1];
 }
@@ -35,7 +35,7 @@ double InitalValueV(const std::vector < double >& x) {
 
 double InitalValueW(const std::vector < double >& x) {
   return 0.;
-}
+}*/
 
 
 // double InitalValueU(const std::vector < double >& x) {
@@ -50,6 +50,20 @@ double InitalValueW(const std::vector < double >& x) {
 //   return (x[1]-x[0])/sqrt(3);
 // }
 
+
+double pi= acos(-1.);
+
+double InitalValueU(const std::vector < double >& x) {
+  return 2. * sin(pi*(x[0]+0.5))* sin(pi*(x[0]+0.5)) * sin(pi*(x[1]+0.5))* cos(pi*(x[1]+0.5));
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  return -2. * sin(pi*(x[1]+0.5))* sin(pi*(x[1]+0.5)) * sin(pi*(x[0]+0.5))* cos(pi*(x[0]+0.5));
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  return 0.;
+}
 
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
@@ -116,13 +130,13 @@ int main(int argc, char** args) {
 //   x[1] = -0.5;
 //   x[2] = 0.;
   
-//     x[0] = 0.125; 
-//     x[1] = 0.125;
-//     x[2] = -0.25;
+    x[0] = 0.125; 
+    x[1] = 0.125;
+    x[2] = -0.25;
 
-  x[0] = -0.46875; //the marker is in element 191 (proc 3 of 4)
-  x[1] = -0.5;
-  x[2] = 0.;
+//   x[0] = -0.46875; //the marker is in element 191 (proc 3 of 4)
+//   x[1] = -0.5;
+//   x[2] = 0.;
    
 
 // //Test 1 (TET):  element 20
@@ -154,37 +168,61 @@ int main(int argc, char** args) {
     std::cout << std::endl;
   }
 
-
-
-
-
-
-
-
-  std::vector < MyVector < double > > x1n(dim);
-  for(unsigned k = 0; k < n; k++) {
-    a1Quad.GetMarkerCoordinates(x1n);
-    a1Quad.Advection(mlSol.GetLevel(0), 2, T / n);
-  }
-  a1Quad.GetMarkerCoordinates(x1n);
-  for(unsigned d = 0; d < dim; d++) {
-    x1n[d].stack();
-    std::cout << x1n[d] << std::endl;
-  }
-
-
-
-
-
-
+  
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
+  PrintLine(DEFAULT_OUTPUTDIR, xn);
 
-  PrintStreamline(DEFAULT_OUTPUTDIR, xn);
+
+  
+  
+  unsigned pSize =100;
+  std::vector < Marker*> particle(pSize);
+    
+  double pi = acos(-1.);
+  for(unsigned j = 0; j < pSize; j++){
+    x[0] = 0. + 0.125 * cos(2.*pi/pSize*j); //the marker is in element 191 (proc 3 of 4)
+    x[1] = .25 + 0.125 * sin(2.*pi/pSize*j);
+    x[2] = 0.;
+    particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(0), solType, true);
+  } 
+
+  std::vector < std::vector < double > > line(pSize + 1);
+  for(unsigned j = 0; j < pSize; j++){
+    particle[j]->GetMarkerCoordinates(line[j]);
+  }
+  particle[0]->GetMarkerCoordinates(line[pSize]);
+  PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
+  
+  for(unsigned k = 0; k < n; k++) {
+    for(unsigned j = 0; j < pSize; j++){
+      particle[j]->Advection(mlSol.GetLevel(0), 2, T / n);
+      particle[j]->GetMarkerCoordinates(line[j]);
+    }
+    particle[0]->GetMarkerCoordinates(line[pSize]);
+    PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
+  }
+  
+  
+  
+  
+  
+  
+  for(unsigned j = 0; j < pSize; j++){
+    delete particle[j];
+  } 
+
+ 
+
+
+
+
+
+  
 
 
   return 0;
@@ -193,7 +231,7 @@ int main(int argc, char** args) {
 #include "Files.hpp"
 #include <b64/b64.h>
 
-void PrintStreamline(const std::string output_path, const std::vector< std::vector<double> > &xn) {
+void PrintLine(const std::string output_path, const std::vector< std::vector<double> > &xn, const bool &streamline, const unsigned &step) {
 
   // *********** open vtu files *************
   std::ofstream fout;
@@ -202,10 +240,10 @@ void PrintStreamline(const std::string output_path, const std::vector< std::vect
   Files files;
   files.CheckDir(output_path, dirnamePVTK);
 
-  std::string filename_prefix = "streamline";
+  std::string filename_prefix = (streamline)? "streamline":"line";
 
   std::ostringstream filename;
-  filename << output_path << "./" << filename_prefix << ".vtu";
+  filename << output_path << "./" << filename_prefix<<"." << step << ".vtu";
 
   fout.open(filename.str().c_str());
   if(!fout.is_open()) {
