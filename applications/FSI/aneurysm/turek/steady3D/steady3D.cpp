@@ -51,8 +51,8 @@ int main(int argc, char **args) {
 
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
-  std::string infile = "./input/aneurysm_omino.neu";
-  //std::string infile = "./input/aneurisma_aorta.neu";
+  //std::string infile = "./input/aneurysm_omino.neu";
+  std::string infile = "./input/aneurisma_aorta.neu";
   // std::string infile = "./input/turek_porous_scaled.neu";
   //std::string infile = "./input/turek_porous_omino.neu";
   //std::string infile = "./input/Turek_3D_D.neu";
@@ -63,18 +63,18 @@ int main(int argc, char **args) {
   Lref = 1.;
   Uref = 1.;
 
-//   rhof = 1035.;
-//   muf = 3.38 * 1.0e-6 * rhof;
-//   rhos = 1120;
-//   ni = 0.5;
-//   E = 6000;
-  
-  // Maximum aneurysm_omino deformation (velocity = 0.1)
   rhof = 1035.;
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
   E = 6000;
+  
+  // Maximum aneurysm_omino deformation (velocity = 0.1)
+//   rhof = 1035.;
+//   muf = 3.38 * 1.0e-6 * rhof;
+//   rhos = 1120;
+//   ni = 0.5;
+//   E = 6000;
   
   // Maximum Turek_3D_D deformation (velocity = 0.2)
 //   rhof = 1035.;
@@ -140,8 +140,8 @@ int main(int argc, char **args) {
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOmino);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
+  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOmino);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionPorous);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOminoPorous);
@@ -436,8 +436,8 @@ bool SetBoundaryConditionOmino(const std::vector < double >& x, const char name[
   
   if(!strcmp(name, "V")){
     if(3 == facename) {
-      double r2 = ((x[1] * 1000.) + 8.38) * ((x[1] * 1000.) + 8.38) + ((x[2] * 1000.) + 0.589) * ((x[2] * 1000.) + 0.589);
-      value = -0.1 * (1. - r2); //inflow
+      double r2 = ((x[2] * 1000.) + 0.403) * ((x[2] * 1000.) + 0.403) + ((x[0] * 1000.) + 0.589) * ((x[0] * 1000.) + 0.589);
+      value = 0.1 * (1. - r2); //inflow
       //value = 0.1;
     }
     else if(1 == facename || 2 == facename ) {
@@ -477,9 +477,9 @@ bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[
       value = 0;
     }
     else if(5 == facename) {
-      //double r2 = ((x[1] * 1000.) + 70) * ((x[1] * 1000.) + 70) + ((x[2] * 1000.) + 20) * ((x[2] * 1000.) + 20);
-      //value = 0.02 * (1. - r2); //inflow
-      value = 0.02;
+      double r2 = ((x[0] + 0.075563)/0.0104) * ((x[0] + 0.075563)/0.0104) + (x[2] /0.0104) * (x[2] /0.0104);
+      value = 0.03 * (1. - r2); //inflow
+      //value = 0.02;
     }
   }
   
@@ -496,7 +496,8 @@ bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[
   }
 
   else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
-    if(1 == facename || 6 == facename || 11 == facename) {
+    if(1 == facename || 6 == facename || 11 == facename || 2 == facename || 3 == facename || 4 == facename
+      || 7 == facename || 8 == facename || 9 == facename ) {
       test = 0;
       value = 0;
     }
