@@ -65,7 +65,7 @@ namespace femus {
       void GetMarkerCoordinates( std::vector< MyVector <double > > &xn ){
 	if(_mproc == _iproc){
 	  for(unsigned d=0; d<_dim; d++){
-	    unsigned size = xn.size();
+	    unsigned size = xn[d].size();
 	    xn[d].resize(size + 1);
 	    xn[d][size] = _x[d];
 	  }

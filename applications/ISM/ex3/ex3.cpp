@@ -158,16 +158,16 @@ int main(int argc, char** args) {
 
 
 
-//   std::vector < MyVector < double > > xn(dim);
-//   for(unsigned k = 0; k < n; k++) {
-//     a1Quad.GetMarkerCoordinates(xn);
-//     a1Quad.Advection(mlSol.GetLevel(0), 2, T / n);
-//   }
-//   a1Quad.GetMarkerCoordinates(xn);
-//   for(unsigned d = 0; d < dim; d++) {
-//     xn[d].stack();
-//     std::cout << xn[d] << std::endl;
-//   }
+  std::vector < MyVector < double > > x1n(dim);
+  for(unsigned k = 0; k < n; k++) {
+    a1Quad.GetMarkerCoordinates(x1n);
+    a1Quad.Advection(mlSol.GetLevel(0), 2, T / n);
+  }
+  a1Quad.GetMarkerCoordinates(x1n);
+  for(unsigned d = 0; d < dim; d++) {
+    x1n[d].stack();
+    std::cout << x1n[d] << std::endl;
+  }
 
 
 
