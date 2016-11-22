@@ -91,9 +91,9 @@ int main(int argc, char** args) {
 
   //mlMsh.ReadCoarseMesh("./input/prism3D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/tri2.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/tri2.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeHex.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/cubeTet.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/cubeTet.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   unsigned dim = mlMsh.GetDimension();
@@ -116,11 +116,14 @@ int main(int argc, char** args) {
 //   x[1] = -0.5;
 //   x[2] = 0.;
   
-    x[0] = 0.125; 
-    x[1] = 0.125;
-    x[2] = -0.25;
+//     x[0] = 0.125; 
+//     x[1] = 0.125;
+//     x[2] = -0.25;
 
-
+  x[0] = -0.46875; //the marker is in element 191 (proc 3 of 4)
+  x[1] = -0.5;
+  x[2] = 0.;
+   
 
 // //Test 1 (TET):  element 20
 //     //NOTE Tests ran with 2 procs
