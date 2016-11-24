@@ -102,7 +102,7 @@ int main(int argc, char **args) {
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -477,14 +477,15 @@ bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[
       value = 0;
     }
     else if(5 == facename) {
+//       test = 0;
+//       value = 0.5 *1.e-01; //Pressure value/rhof
       double r2 = ((x[0] + 0.075563)/0.0104) * ((x[0] + 0.075563)/0.0104) + (x[2] /0.0104) * (x[2] /0.0104);
       value = 0.03 * (1. - r2); //inflow
-      //value = 0.02;
     }
   }
   
   if(!strcmp(name, "U") || !strcmp(name, "W")){
-    if(1 == facename || 2 == facename || 3 == facename || 4 == facename) {
+    if(1 == facename || 2 == facename || 3 == facename || 4 == facename){// || 5 == facename) {
       test = 0;
       value = 0;
     }
