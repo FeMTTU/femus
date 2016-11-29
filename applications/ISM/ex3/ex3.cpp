@@ -54,14 +54,17 @@ double InitalValueW(const std::vector < double >& x) {
 double pi= acos(-1.);
 
 double InitalValueU(const std::vector < double >& x) {
-  return 2. * sin(pi*(x[0]+0.5))* sin(pi*(x[0]+0.5)) * sin(pi*(x[1]+0.5))* cos(pi*(x[1]+0.5));
+  double time = (x.size() == 4) ? x[3]: 0.;
+  return 2. * sin(pi*(x[0]+0.5))* sin(pi*(x[0]+0.5)) * sin(pi*(x[1]+0.5))* cos(pi*(x[1]+0.5))*cos(time);
 }
 
 double InitalValueV(const std::vector < double >& x) {
-  return -2. * sin(pi*(x[1]+0.5))* sin(pi*(x[1]+0.5)) * sin(pi*(x[0]+0.5))* cos(pi*(x[0]+0.5));
+  double time = (x.size() == 4) ? x[3]: 0.;
+  return -2. * sin(pi*(x[1]+0.5))* sin(pi*(x[1]+0.5)) * sin(pi*(x[0]+0.5))* cos(pi*(x[0]+0.5))*cos(time);
 }
 
 double InitalValueW(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3]: 0.;
   return 0.;
 }
 
@@ -198,30 +201,25 @@ int main(int argc, char** args) {
   particle[0]->GetMarkerCoordinates(line[pSize]);
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
   
-  for(unsigned k = 0; k < n; k++) {
+  for(unsigned k = 1; k <= n; k++) {
     for(unsigned j = 0; j < pSize; j++){
+      
+      mlSol.CopySolutionToOldSolution();
+      mlSol.UpdateSolution("U" , InitalValueU, pi*k/n);
+      mlSol.UpdateSolution("V" , InitalValueV, pi*k/n);
+      if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi*k/n);
+            
       particle[j]->Advection(mlSol.GetLevel(0), 2, T / n);
       particle[j]->GetMarkerCoordinates(line[j]);
     }
     particle[0]->GetMarkerCoordinates(line[pSize]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }
-  
-  
-  
-  
-  
+ 
   
   for(unsigned j = 0; j < pSize; j++){
     delete particle[j];
   } 
-
- 
-
-
-
-
-
   
 
 

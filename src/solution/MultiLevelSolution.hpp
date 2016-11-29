@@ -223,6 +223,11 @@ public:
     Solution* GetLevel(const unsigned i) {
       return _solution[i];
     };
+    
+    
+    void UpdateSolution(const char name[], InitFunc func, const double& time);
+    
+    void CopySolutionToOldSolution();
 private:
     /** boundary condition function pointer */
 
