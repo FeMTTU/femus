@@ -17,11 +17,14 @@ using namespace std;
 using namespace femus;
 
 
-bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], 
-			         double &value, const int facename, const double time);
+bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[],
+                                 double &value, const int facename, const double time);
+
+void GetSolutionNorm(MultiLevelSolution& ml_sol);
 //------------------------------------------------------------------------------------------------------------------
 
-int main(int argc, char **args) {
+int main(int argc, char **args)
+{
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
@@ -40,7 +43,7 @@ int main(int argc, char **args) {
   //std::string infile = "./input/Turek_stents_60micron.neu";
   std::string infile = "./input/Turek_11stents_60micron.neu";
   //std::string infile = "./input/Turek.neu";
-  
+
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
 
@@ -48,10 +51,10 @@ int main(int argc, char **args) {
   Uref = 1.;
 
   rhof = 1035.;
-  muf = 3.5*1.0e-3;//wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
+  muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  E = 120000*1.e1; //turek:120000*1.e6;
+  E = 120000 * 1.e1; //turek:120000*1.e6;
 
   Parameter par(Lref, Uref);
 
@@ -70,7 +73,7 @@ int main(int argc, char **args) {
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 4;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -91,30 +94,30 @@ int main(int argc, char **args) {
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 1);
   ml_sol.AddSolution("DY", LAGRANGE, SECOND, 1);
-  
+
   ml_sol.AddSolution("U", LAGRANGE, SECOND, 1);
   ml_sol.AddSolution("V", LAGRANGE, SECOND, 1);
-  
+
   // Pair each velocity variable with the corresponding displacement variable
   ml_sol.PairSolution("U", "DX"); // Add this line
   ml_sol.PairSolution("V", "DY"); // Add this line
-  
+
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 1);
   ml_sol.AssociatePropertyToSolution("P", "Pressure", false); // Add this line
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
-  
+
   ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek2D);
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
-  
+
   ml_sol.GenerateBdc("U", "Steady");
   ml_sol.GenerateBdc("V", "Steady");
- 
+
   ml_sol.GenerateBdc("P", "Steady");
 
 
@@ -130,10 +133,10 @@ int main(int argc, char **args) {
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
   system.AddSolutionToSystemPDE("DX");
   system.AddSolutionToSystemPDE("DY");
-  
+
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-  
+
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
@@ -177,7 +180,7 @@ int main(int argc, char **args) {
   // ******* For Gmres Preconditioner only *******
   //system.SetDirichletBCsHandling(ELIMINATION);
 
-  
+
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
 
@@ -192,16 +195,18 @@ int main(int argc, char **args) {
   print_vars.push_back("All");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars,0);
+  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
-  
+
   // ******* Solve *******
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
   system.MGsolve();
 
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars,1);
-  
+  GetSolutionNorm(ml_sol);
+
+  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1);
+
   // ******* Clear all systems *******
   ml_prob.clear();
   return 0;
@@ -210,40 +215,41 @@ int main(int argc, char **args) {
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+{
   bool test = 1; //dirichlet
   value = 0.;
 
-  if( !strcmp(name, "U") ){
+  if ( !strcmp(name, "U") ) {
 
-    if(1 == facename) {
-      value = 0.05 * (x[1]*1000 - 6) * ( x[1]*1000 - 8); //inflow
+    if (1 == facename) {
+      value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8); //inflow
     }
-    else if( 2 == facename ){
+    else if ( 2 == facename ) {
       test = 0;
       value = 0.;
     }
   }
-  else if( !strcmp(name, "V") ){
-    if( 2 == facename ){
+  else if ( !strcmp(name, "V") ) {
+    if ( 2 == facename ) {
       test = 0;
       value = 0.;
     }
   }
-  else if(!strcmp(name, "P")) {
+  else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
   }
-  else if(!strcmp(name, "DX") ) {
+  else if (!strcmp(name, "DX") ) {
     //if(2 == facename || 4 == facename || 5 == facename || 6 == facename) {
-    if(5 == facename || 6 == facename) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "DY") ) {
+  else if (!strcmp(name, "DY") ) {
     //if(1 == facename || 3 == facename || 5 == facename || 6 == facename) {
-    if( 5 == facename || 6 == facename) {
+    if ( 5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
@@ -252,3 +258,175 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
   return test;
 
 }
+
+
+void GetSolutionNorm(MultiLevelSolution& mlSol)
+{
+
+  int  iproc, nprocs;
+  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+  NumericVector* p2;
+  NumericVector* v2;
+  NumericVector* vol;
+  p2 = NumericVector::build().release();
+  v2 = NumericVector::build().release();
+  vol = NumericVector::build().release();
+
+  if (nprocs == 1) {
+    p2->init(nprocs, 1, false, SERIAL);
+    v2->init(nprocs, 1, false, SERIAL);
+    vol->init(nprocs, 1, false, SERIAL);
+  }
+  else {
+    p2->init(nprocs, 1, false, PARALLEL);
+    v2->init(nprocs, 1, false, PARALLEL);
+    vol->init(nprocs, 1, false, PARALLEL);
+  }
+
+  p2->zero();
+  v2->zero();
+  vol->zero();
+
+  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+
+  Solution* solution  = mlSol.GetSolutionLevel(level);
+  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+
+
+  const unsigned dim = msh->GetDimension();
+
+
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
+
+  vector< double > solP;
+  vector< vector < double> >  solV(dim);
+  vector< vector < double> > x(dim);
+
+  solP.reserve(max_size);
+  for (int i = 0; i < dim; i++) {
+    solV[i].reserve(max_size);
+    x[i].reserve(max_size);
+  }
+  double weight;
+
+  vector <double> phiV;
+  vector <double> gradphiV;
+  vector <double> nablaphiV;
+
+  double *phiP;
+
+  phiV.reserve(max_size);
+  gradphiV.reserve(max_size * dim);
+  nablaphiV.reserve(max_size * (3 * (dim - 1) + !(dim - 1)));
+
+  vector < unsigned > solVIndex(dim);
+  solVIndex[0] = mlSol.GetIndex("U");    // get the position of "U" in the ml_sol object
+  solVIndex[1] = mlSol.GetIndex("V");    // get the position of "V" in the ml_sol object
+  if (dim == 3) solVIndex[2] = mlSol.GetIndex("W");      // get the position of "V" in the ml_sol object
+
+  unsigned solVType = mlSol.GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+
+
+  std::cout << solVIndex[0] <<" "<< solVIndex[1] <<" "<< solVType<<std::endl;  
+  
+  
+  unsigned solPIndex;
+  solPIndex = mlSol.GetIndex("P");
+  unsigned solPType = mlSol.GetSolutionType(solPIndex);
+
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    if ( msh->GetElementGroup(iel) == 8 ) {
+      short unsigned ielt = msh->GetElementType(iel);
+      unsigned ndofV = msh->GetElementDofNumber(iel, solVType);
+      unsigned ndofP = msh->GetElementDofNumber(iel, solPType);
+      unsigned ndofX = msh->GetElementDofNumber(iel, 2);
+      // resize
+
+      phiV.resize(ndofV);
+      gradphiV.resize(ndofV * dim);
+      nablaphiV.resize(ndofV * (3 * (dim - 1) + !(dim - 1)));
+
+      solP.resize(ndofP);
+      for (int i = 0; i < dim; i++) {
+        solV[i].resize(ndofV);
+        x[i].resize(ndofX);
+      }
+      // get local to global mappings
+      for (unsigned i = 0; i < ndofX; i++) {
+        unsigned idof = msh->GetSolutionDof(i, iel, 2);
+        for (unsigned idim = 0; idim < dim; idim++) {
+          x[idim][i] = (*msh->_topology->_Sol[idim])(idof);
+        }
+      }
+
+       //std::cout << "AAAAAAAAAAAAAAAAAAA";
+      
+      for (unsigned i = 0; i < ndofV; i++) {
+	unsigned idof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
+	for (unsigned  k = 0; k < dim; k++) {
+	  solV[k][i] = (*solution->_Sol[solVIndex[k]])(idof);      // global extraction and local storage for the solution
+	  //std::cout << solV[k][i]<<" ";
+	}
+      }
+      
+     
+
+      for (unsigned i = 0; i < ndofP; i++) {
+        unsigned idof = msh->GetSolutionDof(i, iel, solPType);
+        solP[i] = (*solution->_Sol[solPIndex])(idof);
+	//std::cout << solP[i]<<" ";
+      }
+
+
+      for (unsigned ig = 0; ig < mlSol._mlMesh->_finiteElement[ielt][solVType]->GetGaussPointNumber(); ig++) {
+        // *** get Jacobian and test function and test function derivatives ***
+        msh->_finiteElement[ielt][solVType]->Jacobian(x, ig, weight, phiV, gradphiV, nablaphiV);
+        phiP = msh->_finiteElement[ielt][solPType]->GetPhi(ig);
+
+        vol->add(iproc, weight);
+      
+        std::vector < double> SolV2(dim, 0.);
+        for (unsigned i = 0; i < ndofV; i++) {
+          for (unsigned idim = 0; idim < dim; idim++) {
+            SolV2[idim] += solV[idim][i] * phiV[i];
+          }
+        }
+
+        double V2 = 0.;
+        for (unsigned idim = 0; idim < dim; idim++) {
+          V2 += SolV2[idim] * SolV2[idim];
+        }
+        v2->add(iproc, V2 * weight);
+
+        double P2 = 0;
+        for (unsigned i = 0; i < ndofP; i++) {
+          P2 += solP[i] * phiP[i];
+        }
+        p2->add(iproc, P2 * weight);
+      }
+    }
+  }
+
+  p2->close();
+  v2->close();
+  vol->close();
+
+  double p2_l2 = p2->l1_norm();
+  double v2_l2 = v2->l1_norm();
+  double VOL = vol->l1_norm();
+
+  std::cout << " p_l2 norm / vol = " << sqrt(p2_l2) / VOL << std::endl;
+  std::cout << " v_l2 norm / vol = " << sqrt(v2_l2) / VOL << std::endl;
+
+  delete p2;
+  delete v2;
+  delete vol;
+
+}
+
+
+
+
+
