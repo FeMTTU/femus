@@ -20,7 +20,7 @@ using namespace femus;
 bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[],
                                  double &value, const int facename, const double time);
 
-void GetSolutionNorm(MultiLevelSolution& ml_sol);
+void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group);
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, char **args)
@@ -177,10 +177,6 @@ int main(int argc, char **args)
   // ******* Set block size for the ASM smoothers *******
   system.SetElementBlockNumber(2);
 
-  // ******* For Gmres Preconditioner only *******
-  //system.SetDirichletBCsHandling(ELIMINATION);
-
-
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
 
@@ -201,9 +197,10 @@ int main(int argc, char **args)
   // ******* Solve *******
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
+  
+  GetSolutionNorm(ml_sol, 9);
   system.MGsolve();
-
-  GetSolutionNorm(ml_sol);
+  GetSolutionNorm(ml_sol, 9);
 
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1);
 
@@ -260,7 +257,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 }
 
 
-void GetSolutionNorm(MultiLevelSolution& mlSol)
+void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
 {
 
   int  iproc, nprocs;
@@ -305,9 +302,9 @@ void GetSolutionNorm(MultiLevelSolution& mlSol)
   vector< vector < double> > x(dim);
 
   solP.reserve(max_size);
-  for (int i = 0; i < dim; i++) {
-    solV[i].reserve(max_size);
-    x[i].reserve(max_size);
+  for (unsigned d = 0; d < dim; d++) {
+    solV[d].reserve(max_size);
+    x[d].reserve(max_size);
   }
   double weight;
 
@@ -328,20 +325,23 @@ void GetSolutionNorm(MultiLevelSolution& mlSol)
 
   unsigned solVType = mlSol.GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
+  vector < unsigned > solDIndex(dim);
+  solDIndex[0] = mlSol.GetIndex("DX");    // get the position of "U" in the ml_sol object
+  solDIndex[1] = mlSol.GetIndex("DY");    // get the position of "V" in the ml_sol object
+  if (dim == 3) solDIndex[2] = mlSol.GetIndex("DZ");      // get the position of "V" in the ml_sol object
 
-  std::cout << solVIndex[0] <<" "<< solVIndex[1] <<" "<< solVType<<std::endl;  
-  
-  
+  unsigned solDType = mlSol.GetSolutionType(solDIndex[0]);  
+     
   unsigned solPIndex;
   solPIndex = mlSol.GetIndex("P");
   unsigned solPType = mlSol.GetSolutionType(solPIndex);
 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    if ( msh->GetElementGroup(iel) == 8 ) {
+    if ( msh->GetElementGroup(iel) == group ) {
       short unsigned ielt = msh->GetElementType(iel);
       unsigned ndofV = msh->GetElementDofNumber(iel, solVType);
       unsigned ndofP = msh->GetElementDofNumber(iel, solPType);
-      unsigned ndofX = msh->GetElementDofNumber(iel, 2);
+      unsigned ndofD = msh->GetElementDofNumber(iel, solDType);
       // resize
 
       phiV.resize(ndofV);
@@ -349,25 +349,23 @@ void GetSolutionNorm(MultiLevelSolution& mlSol)
       nablaphiV.resize(ndofV * (3 * (dim - 1) + !(dim - 1)));
 
       solP.resize(ndofP);
-      for (int i = 0; i < dim; i++) {
-        solV[i].resize(ndofV);
-        x[i].resize(ndofX);
+      for (int d = 0; d < dim; d++) {
+        solV[d].resize(ndofV);
+        x[d].resize(ndofD);
       }
       // get local to global mappings
-      for (unsigned i = 0; i < ndofX; i++) {
-        unsigned idof = msh->GetSolutionDof(i, iel, 2);
-        for (unsigned idim = 0; idim < dim; idim++) {
-          x[idim][i] = (*msh->_topology->_Sol[idim])(idof);
+      for (unsigned i = 0; i < ndofD; i++) {
+        unsigned idof = msh->GetSolutionDof(i, iel, solDType);
+        for (unsigned d = 0; d < dim; d++) {
+          x[d][i] = (*msh->_topology->_Sol[d])(idof) +
+		    (*solution->_Sol[solDIndex[d]])(idof);
         }
       }
-
-       //std::cout << "AAAAAAAAAAAAAAAAAAA";
       
       for (unsigned i = 0; i < ndofV; i++) {
 	unsigned idof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
-	for (unsigned  k = 0; k < dim; k++) {
-	  solV[k][i] = (*solution->_Sol[solVIndex[k]])(idof);      // global extraction and local storage for the solution
-	  //std::cout << solV[k][i]<<" ";
+	for (unsigned  d = 0; d < dim; d++) {
+	  solV[d][i] = (*solution->_Sol[solVIndex[d]])(idof);      // global extraction and local storage for the solution
 	}
       }
       
@@ -376,7 +374,6 @@ void GetSolutionNorm(MultiLevelSolution& mlSol)
       for (unsigned i = 0; i < ndofP; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solPType);
         solP[i] = (*solution->_Sol[solPIndex])(idof);
-	//std::cout << solP[i]<<" ";
       }
 
 
@@ -389,14 +386,14 @@ void GetSolutionNorm(MultiLevelSolution& mlSol)
       
         std::vector < double> SolV2(dim, 0.);
         for (unsigned i = 0; i < ndofV; i++) {
-          for (unsigned idim = 0; idim < dim; idim++) {
-            SolV2[idim] += solV[idim][i] * phiV[i];
+          for (unsigned d = 0; d < dim; d++) {
+            SolV2[d] += solV[d][i] * phiV[i];
           }
         }
 
         double V2 = 0.;
-        for (unsigned idim = 0; idim < dim; idim++) {
-          V2 += SolV2[idim] * SolV2[idim];
+        for (unsigned d = 0; d < dim; d++) {
+          V2 += SolV2[d] * SolV2[d];
         }
         v2->add(iproc, V2 * weight);
 
@@ -404,6 +401,7 @@ void GetSolutionNorm(MultiLevelSolution& mlSol)
         for (unsigned i = 0; i < ndofP; i++) {
           P2 += solP[i] * phiP[i];
         }
+        P2 *= P2;
         p2->add(iproc, P2 * weight);
       }
     }
@@ -417,8 +415,11 @@ void GetSolutionNorm(MultiLevelSolution& mlSol)
   double v2_l2 = v2->l1_norm();
   double VOL = vol->l1_norm();
 
-  std::cout << " p_l2 norm / vol = " << sqrt(p2_l2) / VOL << std::endl;
-  std::cout << " v_l2 norm / vol = " << sqrt(v2_l2) / VOL << std::endl;
+  std::cout.precision(14);
+  std::scientific;
+  std::cout << " vol = " << VOL << std::endl;
+  std::cout << " p_l2 norm / sqrt(vol) = " << sqrt(p2_l2/VOL)  << std::endl;
+  std::cout << " v_l2 norm / sqrt(vol) = " << sqrt(v2_l2/VOL)  << std::endl;
 
   delete p2;
   delete v2;
