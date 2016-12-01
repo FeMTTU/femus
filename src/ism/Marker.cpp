@@ -1235,7 +1235,7 @@ namespace femus {
     double h = T / n;
 
     bool  pcElemUpdate ;
-    bool integrationIsOver = false;
+    bool integrationIsOver = (_elem != UINT_MAX ) ? false : true;
 
     unsigned order = 4;
     unsigned step = 0.;
@@ -1336,7 +1336,7 @@ namespace femus {
 
       if(_elem == UINT_MAX) {
         std::cout << " the marker has been advected outside the domain " << std::endl;
-	_mproc = _nprocs; 
+	//_mproc = _nprocs; 
         break;
       }
       else {

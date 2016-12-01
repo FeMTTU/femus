@@ -55,6 +55,7 @@ namespace femus {
       }
       
      void GetMarkerCoordinates( std::vector< double > &xn ){
+       
 	xn.resize(_dim);
 	if(_mproc == _iproc){
 	  xn = _x;

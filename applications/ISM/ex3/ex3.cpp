@@ -181,41 +181,6 @@ int main(int argc, char** args) {
   PrintLine(DEFAULT_OUTPUTDIR, xn);
 
 
-  //BEGIN tests to fix the problem
-//   unsigned pSize = 100;
-//   std::vector < Marker*> particle(pSize);
-//
-//   double pi = acos(-1.);
-//   x[0] = 0.125 ;
-//   x[1] = .25 ;
-//   x[2] = 0.;
-//   Marker malvagio(x, VOLUME, mlMsh.GetLevel(0), solType, true);
-//
-//   std::vector < std::vector < double > > line(pSize + 1);
-//
-//   malvagio.GetMarkerCoordinates(line[0]);
-//
-//   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
-//
-//   for(unsigned j = 0; j < pSize + 1; j++) {
-//     line[j].assign(pSize + 1, 0.);
-//   }
-//   for(unsigned k = 1; k <= n; k++) {
-//
-//     mlSol.CopySolutionToOldSolution();
-//     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
-//     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
-//     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-//
-//     malvagio.Advection(mlSol.GetLevel(0), 2, T / n);
-//     malvagio.GetMarkerCoordinates(line[0]);
-//
-//     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
-//   }
-  //END tests to fix the problem
-
-
-
   unsigned pSize = 100;
   std::vector < Marker*> particle(pSize);
 
@@ -234,15 +199,12 @@ int main(int argc, char** args) {
   particle[0]->GetMarkerCoordinates(line[pSize]);
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
 
-  for(unsigned k = 1; k < n; k++) {  //at step n=50, all points don't move except point 100 that goes on step further so it goes out of phase
-    
+  for(unsigned k = 1; k <= n; k++) {  //at step n=50, all points don't move except point 100 that goes on step further so it goes out of phase
+    mlSol.CopySolutionToOldSolution();
+    mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
+    mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
+    if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
     for(unsigned j = 0; j < pSize; j++) {
-
-      mlSol.CopySolutionToOldSolution();
-      mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
-      mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
-      if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-
       particle[j]->Advection(mlSol.GetLevel(0), 2, T / n);
       particle[j]->GetMarkerCoordinates(line[j]);
     }
