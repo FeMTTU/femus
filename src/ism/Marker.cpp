@@ -1336,7 +1336,7 @@ namespace femus {
 
       if(_elem == UINT_MAX) {
         std::cout << " the marker has been advected outside the domain " << std::endl;
-	_mproc = _nprocs; //ADDED THIS
+	_mproc = _nprocs; 
         break;
       }
       else {
