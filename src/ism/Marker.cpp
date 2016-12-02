@@ -477,10 +477,15 @@ namespace femus {
 
       for(unsigned k = 0; k < _dim; k++) {
         xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
+	std::cout << xv[k][i] << " ";
       }
+      std::cout<<std::endl;
     }
     //END extraction
 
+    
+    //GetClosestPointInReferenceElement(xv, _x, _ieltype, xi);
+    
 
     //BEGIN projection nodal to polynomial coefficients
     std::vector < std::vector < double > > a;
@@ -489,6 +494,8 @@ namespace femus {
     //END projection
 
 
+    
+    
     //BEGIN inverse mapping search
 
     std::vector < double > phi;
@@ -517,10 +524,12 @@ namespace femus {
           J[k][i1] += a[k][i] * gradPhi[i][i1];
         }
       }
+      std::cout << " xg["<<k<<" ]= " << -v[k] <<" ";
       v[k] += _x[k];
     }
-
-    // std::cout << " v[0] = " << v[0] << " "<< " v[1] = " << v[1] <<std::endl;
+    std::cout<< std::endl;
+    std::cout << " x[0] = " << _x[0] << " "<< " x[1] = " << _x[1] <<std::endl;
+    std::cout << " v[0] = " << v[0] << " "<< " v[1] = " << v[1] <<std::endl;
 
     std::vector < std::vector < double > >  Jm1;
 
@@ -533,6 +542,7 @@ namespace femus {
       }
     }
 
+    std::cout << " vt[0] = " << vt[0] << " "<< " vt[1] = " << vt[1] <<std::endl;
 
     // std::cout << " vt[0] " <<  vt[0] << " " << " vt[1] " << vt[1] <<std::endl;
 
@@ -544,6 +554,7 @@ namespace femus {
       for(unsigned k = 0; k < _dim; k++) {
         projection += vt[k] * faceNormal[ielType][jface][k];
       }
+      std::cout << jface <<" " << projection<<std::endl;
       if(projection > maxProjection) {
         maxProjection = projection;
         //std::cout<< " jface = " << jface << " projection= " << projection <<std::endl;
@@ -621,6 +632,8 @@ namespace femus {
       if(!insideHull) {
         nextElem = FastForward(currentElem);
         nextElementFound = true;
+	
+	std::cout<<"AAAAAAAAAAAAAAAAAAA"<<std::endl;
       }
 
       else {

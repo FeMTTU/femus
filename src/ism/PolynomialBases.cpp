@@ -1800,7 +1800,7 @@ namespace femus {
     }
   }
 
-  void PrintLine(const std::string output_path, const std::vector< std::vector<double> > &xn, const bool &streamline, const unsigned &step) {
+  void PrintLine(const std::string output_path, const std::vector < std::vector< std::vector<double> > > &xn, const bool &streamline, const unsigned &step) {
 
     // *********** open vtu files *************
     std::ofstream fout;
@@ -1820,9 +1820,14 @@ namespace femus {
       abort();
     }
 
-    unsigned nvt = xn.size();
-    unsigned nel = nvt - 1;
-
+    unsigned nvt = 0;
+    unsigned nel = 0;
+    
+    for(unsigned l = 0; l < xn.size(); l++){
+      nvt += xn[l].size();
+      nel += xn[l].size()-1;
+    }
+      
     const unsigned dim_array_coord [] = { nvt * 3 * sizeof(float) };
     const unsigned dim_array_conn[]   = { nel * 2 * sizeof(int) };
     const unsigned dim_array_off []   = { nel * sizeof(int) };
@@ -1856,9 +1861,13 @@ namespace femus {
     // point pointer to common mamory area buffer of void type;
     float* var_coord = static_cast< float* >(buffer_void);
 
-    for(unsigned i = 0; i < nvt; i++) {
-      for(unsigned d = 0; d < 3; d++) {
-        var_coord[i * 3 + d] = (xn[i].size() > d) ? xn[i][d] : 0.;
+    unsigned counter = 0;
+    for(unsigned l = 0; l < xn.size(); l++){
+      for(unsigned i = 0; i < xn[l].size(); i++) {
+	for(unsigned d = 0; d < 3; d++) {
+	  var_coord[counter * 3 + d] = (xn[l][i].size() > d) ? xn[l][i][d] : 0.;
+	}
+	counter++;
       }
     }
 
@@ -1887,10 +1896,17 @@ namespace femus {
     // point pointer to common mamory area buffer of void type;
     int* var_conn = static_cast <int*>(buffer_void);
     unsigned icount = 0;
+    unsigned skip = 0;
+    unsigned restart = 0;
     for(unsigned iel = 0; iel < nel; iel++) {
       for(unsigned j = 0; j < 2; j++) {
-        var_conn[icount] = iel + j;;
+        var_conn[icount] = iel + j + skip;
         icount++;
+      }
+      restart++;
+      if(restart == xn[skip].size() - 1){
+	skip++;
+	restart = 0;
       }
     }
 

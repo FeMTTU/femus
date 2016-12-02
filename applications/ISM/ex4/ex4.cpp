@@ -143,7 +143,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   dim = mlMsh.GetDimension();
 
-  numberOfUniformLevels = 3;
+  numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
@@ -221,27 +221,43 @@ int main(int argc, char** args) {
   // print mesh info
   mlMsh.PrintInfo();
 
-  std::vector<double>x(dim, 0.);
-  std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-  Marker a1Quad(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels-1), 2, true);
-  //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
-  std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
-  std::cout << " The marker type is " <<  a1Quad.GetMarkerType() << std::endl;
+  
+  unsigned pSize = 7;
+  std::vector < Marker*> particle(pSize);
 
+ 
+  for(unsigned j = 0; j < pSize; j++) {
+    std::vector < double > x(3);
+    x[0] = 0.;
+    x[1] = 0.;
+    x[2] = -0.75 + 0.25 * j;
+    particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels-1), 2, true);
+  }
+  
   double T = 30;
   unsigned n  = 100;
 
 
-  std::vector < std::vector < double > > xn;
-  xn.resize(1);
-  a1Quad.GetMarkerCoordinates(xn[0]);
+  std::vector < std::vector < std::vector < double > > > xn(pSize);
+  
+  for(unsigned j = 0; j < pSize; j++) {
+    xn[j].resize(1);
+    particle[j]->GetMarkerCoordinates(xn[j][0]);
+  }
+  
   for(unsigned k = 0; k < n; k++) {
-    a1Quad.Advection(mlSol.GetLevel(numberOfUniformLevels-1), 2, T / n);
-    xn.resize(k+2);
-    a1Quad.GetMarkerCoordinates(xn[k+1]);
+    for(unsigned j = 0; j < pSize; j++) {
+      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels-1), 2, T / n);
+      xn[j].resize(k+2);
+      particle[j]->GetMarkerCoordinates(xn[j][k+1]);
+    }
     PrintLine(DEFAULT_OUTPUTDIR, xn, true, k+1);
   }
 
+  for(unsigned j = 0; j < pSize; j++) {
+    delete particle[j];
+  }
+  
   return 0;
 }
 

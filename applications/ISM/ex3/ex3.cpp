@@ -156,15 +156,16 @@ int main(int argc, char** args) {
   unsigned n  = 100;
 
 
-  std::vector < std::vector < double > > xn(n + 1);
+  std::vector< std::vector < std::vector < double > > > xn(1);
+  xn[0].resize(n + 1);
   for(unsigned k = 0; k < n; k++) {
-    a1Quad.GetMarkerCoordinates(xn[k]);
+    a1Quad.GetMarkerCoordinates(xn[0][k]);
     a1Quad.Advection(mlSol.GetLevel(0), 2, T / n);
   }
-  a1Quad.GetMarkerCoordinates(xn[n]);
-  for(unsigned i = 0;  i < xn.size(); i++) {
-    for(unsigned d = 0; d < xn[i].size(); d++) {
-      std::cout << xn[i][d] << " ";
+  a1Quad.GetMarkerCoordinates(xn[0][n]);
+  for(unsigned i = 0;  i < xn[0].size(); i++) {
+    for(unsigned d = 0; d < xn[0][i].size(); d++) {
+      std::cout << xn[0][i][d] << " ";
     }
     std::cout << std::endl;
   }
@@ -190,23 +191,27 @@ int main(int argc, char** args) {
     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(0), solType, true);
   }
 
-  std::vector < std::vector < double > > line(pSize + 1);
+  std::vector < std::vector < std::vector < double > > > line(1);
+  line[0].resize(pSize + 1);
+  
   for(unsigned j = 0; j < pSize; j++) {
-    particle[j]->GetMarkerCoordinates(line[j]);
+    particle[j]->GetMarkerCoordinates(line[0][j]);
   }
-  particle[0]->GetMarkerCoordinates(line[pSize]);
+  particle[0]->GetMarkerCoordinates(line[0][pSize]);
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
 
-  for(unsigned k = 1; k <= n; k++) {  //at step n=50, all points don't move except point 100 that goes on step further so it goes out of phase
+  n = 20;
+  
+  for(unsigned k = 1; k <= n; k++) {  
     mlSol.CopySolutionToOldSolution();
     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
     for(unsigned j = 0; j < pSize; j++) {
       particle[j]->Advection(mlSol.GetLevel(0), 2, T / n);
-      particle[j]->GetMarkerCoordinates(line[j]);
+      particle[j]->GetMarkerCoordinates(line[0][j]);
     }
-    particle[0]->GetMarkerCoordinates(line[pSize]);
+    particle[0]->GetMarkerCoordinates(line[0][pSize]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }
 
