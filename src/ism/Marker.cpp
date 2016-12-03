@@ -243,7 +243,6 @@ namespace femus {
           nextElem[_iproc] = GetNextElement3D(iel);
         }
 
-        //_previousElem = previousElem[_iproc]; // ADDED THIS
         previousElem[_iproc] = iel;
 
         if(nextElem[_iproc] == iel) {
@@ -385,7 +384,7 @@ namespace femus {
           pointIsOutsideTheDomain = false;
           pointIsOutsideThisProcess = false;
           nextProc = _iproc;
-          _previousElem = previousElem[_iproc]; //ADDED THIS
+          //previousElem = iel;
         }
         else {
           pointIsOutsideTheDomain = true;
@@ -401,9 +400,7 @@ namespace femus {
 
 
     MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _mproc, PETSC_COMM_WORLD);
-    MPI_Bcast(& _previousElem, 1, MPI_UNSIGNED, _mproc, PETSC_COMM_WORLD); // ADDED THIS
     std::cout << "The marker belongs to process " << _mproc << " and is in element " << _elem  << std::endl;
-    std::cout << "Previous element from GetElement =  " << _previousElem << std::endl; //ADDED THIS
 
   }
 
@@ -420,10 +417,7 @@ namespace femus {
     while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
 
       if(_dim == 2) {
-
         _elem = GetNextElement2D(iel);
-        _previousElem = iel; //ADDED THIS
-
       }
       else if(_dim == 3) {
         _elem = GetNextElement3D(iel);
@@ -440,7 +434,6 @@ namespace femus {
         _mproc = _mesh->IsdomBisectionSearch(_elem , 3);
         if(_mproc != _iproc) {
           pointIsOutsideThisProcess = true;
-          _previousElem = _elem; //ADDED THIS
           break;
         }
         else {
@@ -484,13 +477,15 @@ namespace femus {
 
       for(unsigned k = 0; k < _dim; k++) {
         xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
-        std::cout << xv[k][i] << " ";
+	std::cout << xv[k][i] << " ";
       }
-      std::cout << std::endl;
+      std::cout<<std::endl;
     }
     //END extraction
 
-
+    
+    //GetClosestPointInReferenceElement(xv, _x, _ieltype, xi);
+    
 
     //BEGIN projection nodal to polynomial coefficients
     std::vector < std::vector < double > > a;
@@ -499,8 +494,8 @@ namespace femus {
     //END projection
 
 
-
-
+    
+    
     //BEGIN inverse mapping search
 
     std::vector < double > phi;
@@ -510,8 +505,6 @@ namespace femus {
     for(int k = 0; k < _dim; k++) {
       xi[k] = _localCentralNode[ielType][k];
     }
-//     GetClosestPointInReferenceElement(xv, _x, ielType, xi);
-
 
     GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, _solType);
 
@@ -531,12 +524,12 @@ namespace femus {
           J[k][i1] += a[k][i] * gradPhi[i][i1];
         }
       }
-      std::cout << " xg[" << k << " ]= " << -v[k] << " ";
+      std::cout << " xg["<<k<<" ]= " << -v[k] <<" ";
       v[k] += _x[k];
     }
-    std::cout << std::endl;
-    std::cout << " x[0] = " << _x[0] << " " << " x[1] = " << _x[1] << std::endl;
-    std::cout << " v[0] = " << v[0] << " " << " v[1] = " << v[1] << std::endl;
+    std::cout<< std::endl;
+    std::cout << " x[0] = " << _x[0] << " "<< " x[1] = " << _x[1] <<std::endl;
+    std::cout << " v[0] = " << v[0] << " "<< " v[1] = " << v[1] <<std::endl;
 
     std::vector < std::vector < double > >  Jm1;
 
@@ -549,7 +542,7 @@ namespace femus {
       }
     }
 
-    std::cout << " vt[0] = " << vt[0] << " " << " vt[1] = " << vt[1] << std::endl;
+    std::cout << " vt[0] = " << vt[0] << " "<< " vt[1] = " << vt[1] <<std::endl;
 
     // std::cout << " vt[0] " <<  vt[0] << " " << " vt[1] " << vt[1] <<std::endl;
 
@@ -561,7 +554,7 @@ namespace femus {
       for(unsigned k = 0; k < _dim; k++) {
         projection += vt[k] * faceNormal[ielType][jface][k];
       }
-      std::cout << jface << " " << projection << std::endl;
+      std::cout << jface <<" " << projection<<std::endl;
       if(projection > maxProjection) {
         maxProjection = projection;
         //std::cout<< " jface = " << jface << " projection= " << projection <<std::endl;
@@ -636,20 +629,12 @@ namespace femus {
           insideHull = false;
         }
       }
-
-      //--------------------------------------------------   MODIFIED (ADDED THIS)
-      
       if(!insideHull) {
         nextElem = FastForward(currentElem);
-
-        if(nextElem != _previousElem) { 
-          nextElementFound = true;
-          std::cout << "OUTSIDE HULL" << " " << "previousElem = " << _previousElem << " " << "nextElem = " << nextElem << std::endl;
-        }
-         
+        nextElementFound = true;
+	
+	std::cout<<"AAAAAAAAAAAAAAAAAAA"<<std::endl;
       }
-
-      //-------------------------------------------------
 
       else {
         std::vector<double> r(_dim, 0);   //coordinates of the intersection point between the line of the edges and the line that connects the marker and the face node
@@ -784,20 +769,15 @@ namespace femus {
     if(markerIsInElement == true) {
       nextElem = currentElem;
       std::cout << "The marker belongs to element " << currentElem << std::endl;
-      std::cout << "previousElem FOUND POINT =  " << _previousElem << std::endl;//ADDED THIS
     }
 
     if(nextElementFound == true) {
       std::cout << "The marker does not belong to element " << currentElem << std::endl;
-      _previousElem = currentElem;  //ADDED THIS
-           std::cout << "previousElem NOT FOUND POINT =  " << _previousElem << std::endl;//ADDED THIS
     }
 
 
     std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
 
-    std::cout << "previousElem from GetNextElement2D= " << _previousElem << " " << "nextElem = " << nextElem << std::endl;  //ADDED THIS
-    
     return (nextElem >= 0) ? nextElem : UINT_MAX;
 
   }
@@ -1268,7 +1248,7 @@ namespace femus {
     double h = T / n;
 
     bool  pcElemUpdate ;
-    bool integrationIsOver = (_elem != UINT_MAX) ? false : true;
+    bool integrationIsOver = (_elem != UINT_MAX ) ? false : true;
 
     unsigned order = 4;
     unsigned step = 0.;
@@ -1369,7 +1349,7 @@ namespace femus {
 
       if(_elem == UINT_MAX) {
         std::cout << " the marker has been advected outside the domain " << std::endl;
-        //_mproc = _nprocs;
+	//_mproc = _nprocs; 
         break;
       }
       else {
@@ -1450,37 +1430,37 @@ namespace femus {
 
     bool timeDependent = true;
     for(unsigned  k = 0; k < _dim; k++) {
-      if(sol->GetSolutionTimeOrder(solVIndex[k]) != 2) {
-        timeDependent = false;
+      if ( sol->GetSolutionTimeOrder(solVIndex[k]) != 2 ){
+	timeDependent = false;
       }
     }
-
+    
     vector < vector < double > >  solV(_dim);    // local solution
     vector < vector < double > >  solVold(_dim);    // local solution
 
     for(unsigned  k = 0; k < _dim; k++) {
       solV[k].resize(nDofsV);
-      if(timeDependent) {
-        solVold[k].resize(nDofsV);
+      if (timeDependent){
+	solVold[k].resize(nDofsV);
       }
     }
     for(unsigned i = 0; i < nDofsV; i++) {
       unsigned solVDof = _mesh->GetSolutionDof(i, _elem, solVType);    // global to global mapping between solution node and solution dof
       for(unsigned  k = 0; k < _dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
-        if(timeDependent) {
-          solVold[k][i] = (*sol->_SolOld[solVIndex[k]])(solVDof);
-        }
+	if ( timeDependent ){
+	  solVold[k][i] = (*sol->_SolOld[solVIndex[k]])(solVDof);
+	}
       }
     }
 
     a.resize(2);
-
+    
     ProjectNodalToPolynomialCoefficients(a[0], solV, ielType, solVType);
-    if(timeDependent) {
+    if ( timeDependent ){
       ProjectNodalToPolynomialCoefficients(a[1], solVold, ielType, solVType);
     }
-    else {
+    else{
       a[1] = a[0];
     }
   }

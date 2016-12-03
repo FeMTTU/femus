@@ -38,10 +38,8 @@ namespace femus {
         _solType = solType;
 	_dim = _mesh->GetDimension();
 
-	_previousElem = UINT_MAX;
-	
         GetElement(1, UINT_MAX);
-	
+
         if(_iproc == _mproc) {
 	  FindLocalCoordinates(_solType, _aX, true);
 	}
@@ -118,7 +116,6 @@ namespace femus {
       MarkerType _markerType;
       const Mesh * _mesh;
       unsigned _elem;
-      unsigned _previousElem; //ADDED THIS
       unsigned _dim;
 
       unsigned _mproc; //processor who has the marker
