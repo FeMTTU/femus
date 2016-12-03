@@ -75,7 +75,7 @@ namespace femus {
 
       void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
       void GetElementSerial(unsigned &initialElem);
-      void GetElement();
+      void GetElement(unsigned &previousElem);
       
 
       MarkerType GetMarkerType() {
@@ -105,9 +105,9 @@ namespace femus {
       void InverseMapping(const unsigned &iel, const unsigned &solType,
                           const std::vector< double > &x, std::vector< double > &xi);
 
-      unsigned GetNextElement2D(const unsigned &iel);
-      unsigned GetNextElement3D(const unsigned &iel);
-      int FastForward(const unsigned &currentElem);
+      unsigned GetNextElement2D(const unsigned &iel, const unsigned &previousElem);
+      unsigned GetNextElement3D(const unsigned &iel, const unsigned &previousElem);
+      int FastForward(const unsigned &currentElem, const unsigned &previousElem);
 
       std::vector < double > _x;
       std::vector < double > _x0;

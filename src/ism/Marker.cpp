@@ -237,10 +237,10 @@ namespace femus {
       //BEGIN next element search
       while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
         if(_dim == 2) {
-          nextElem[_iproc] = GetNextElement2D(iel);
+          nextElem[_iproc] = GetNextElement2D(iel, previousElem[_iproc]);
         }
         else if(_dim == 3) {
-          nextElem[_iproc] = GetNextElement3D(iel);
+          nextElem[_iproc] = GetNextElement3D(iel, previousElem[_iproc]);
         }
 
         previousElem[_iproc] = iel;
@@ -405,25 +405,26 @@ namespace femus {
   }
 
 
-  void Marker::GetElementSerial(unsigned &initialElem) {
+  void Marker::GetElementSerial(unsigned &previousElem) {
 
-    unsigned iel = initialElem;
-
+    unsigned currentElem = _elem;
     bool elementHasBeenFound = false;
     bool pointIsOutsideThisProcess = false;
     bool pointIsOutsideTheDomain = false;
-
+    
     //BEGIN next element search
     while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
 
       if(_dim == 2) {
-        _elem = GetNextElement2D(iel);
+        _elem = GetNextElement2D(currentElem, previousElem);
       }
       else if(_dim == 3) {
-        _elem = GetNextElement3D(iel);
+        _elem = GetNextElement3D(currentElem, previousElem);
       }
 
-      if(_elem == iel) {
+      previousElem = currentElem;
+      
+      if(_elem == currentElem) {
         elementHasBeenFound = true;
       }
       else if(_elem  == UINT_MAX) {
@@ -437,7 +438,7 @@ namespace femus {
           break;
         }
         else {
-          iel = _elem;
+          currentElem = _elem;
         }
       }
     }
@@ -460,7 +461,7 @@ namespace femus {
 
 
 
-  int Marker::FastForward(const unsigned &iel) {
+  int Marker::FastForward(const unsigned &iel, const unsigned &previousElem) {
 
     unsigned nDofs = _mesh->GetElementDofNumber(iel, _solType);
     short unsigned ielType = _mesh->GetElementType(iel);
@@ -549,21 +550,25 @@ namespace femus {
     double maxProjection = 0.;
     unsigned faceIndex = 0;
 
+    int nextElem;
+    
     for(unsigned jface = 0; jface < faceNumber[ielType]; jface++) {
       double projection = 0.;
       for(unsigned k = 0; k < _dim; k++) {
         projection += vt[k] * faceNormal[ielType][jface][k];
       }
       std::cout << jface <<" " << projection<<std::endl;
-      if(projection > maxProjection) {
+      int jelement =  (_mesh->el->GetFaceElementIndex(iel, jface) - 1);
+      if(projection > maxProjection && jelement != previousElem) {
         maxProjection = projection;
         //std::cout<< " jface = " << jface << " projection= " << projection <<std::endl;
         faceIndex = jface;
+	nextElem = jelement;
       }
     }
 
-
-    int nextElem = (_mesh->el->GetFaceElementIndex(iel, faceIndex) - 1);
+ 
+    
 
 
     //std::cout << "I want to go to " << nextElem << std::endl;
@@ -574,7 +579,7 @@ namespace femus {
 
 
 
-  unsigned Marker::GetNextElement2D(const unsigned &currentElem) {
+  unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &previousElem) {
 
     int nextElem ;
     bool markerIsInElement = false;
@@ -630,10 +635,9 @@ namespace femus {
         }
       }
       if(!insideHull) {
-        nextElem = FastForward(currentElem);
-        nextElementFound = true;
-	
 	std::cout<<"AAAAAAAAAAAAAAAAAAA"<<std::endl;
+        nextElem = FastForward(currentElem, previousElem);
+        nextElementFound = true;
       }
 
       else {
@@ -783,7 +787,7 @@ namespace femus {
   }
 
 
-  unsigned Marker::GetNextElement3D(const unsigned & currentElem) {
+  unsigned Marker::GetNextElement3D(const unsigned & currentElem, const unsigned &previousElem) {
 
     unsigned nDofs = _mesh->GetElementDofNumber(currentElem, _solType);
     unsigned nFaceDofs = (_solType == 2) ? nDofs - 1 : nDofs;
@@ -860,7 +864,7 @@ namespace femus {
         }
       }
       if(!insideHull) {
-        nextElem = FastForward(currentElem);
+        nextElem = FastForward(currentElem, previousElem);
         nextElementFound = true;
       }
 
@@ -1247,7 +1251,7 @@ namespace femus {
     // determine the step size
     double h = T / n;
 
-    bool  pcElemUpdate ;
+    bool pcElemUpdate ;
     bool integrationIsOver = (_elem != UINT_MAX ) ? false : true;
 
     unsigned order = 4;
@@ -1262,6 +1266,7 @@ namespace femus {
 
     while(integrationIsOver == false) {
       unsigned mprocOld = _mproc;
+      unsigned previousElem;
       if(_iproc == _mproc) {
         pcElemUpdate = true ;
         //single process
@@ -1322,7 +1327,8 @@ namespace femus {
 
           pcElemUpdate = false;
           unsigned iel = _elem;
-          GetElementSerial(_elem);
+	  previousElem = _elem;
+          GetElementSerial(previousElem);
 
           if(_elem == UINT_MAX) { //out of the domain
             std::cout << " the marker has been advected outside the domain " << std::endl;
@@ -1349,13 +1355,13 @@ namespace femus {
 
       if(_elem == UINT_MAX) {
         std::cout << " the marker has been advected outside the domain " << std::endl;
-	//_mproc = _nprocs; 
-        break;
+	break;
       }
       else {
         _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
         if(_mproc != mprocOld) {
-          GetElement();
+	  MPI_Bcast(& previousElem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
+          GetElement(previousElem);
 
           if(mprocOld == _iproc) {
             unsigned istep = step % order;
@@ -1396,16 +1402,16 @@ namespace femus {
   }
 
 
-  void Marker::GetElement() {
+  void Marker::GetElement(unsigned &previousElem) {
 
     unsigned mprocStart = _mproc;
-
     bool found = false;
     while(found) {
       if(_mproc == _iproc) {
-        GetElementSerial(_elem);
+        GetElementSerial(previousElem);
       }
       MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _mproc, PETSC_COMM_WORLD);
+      MPI_Bcast(& previousElem, 1, MPI_UNSIGNED, _mproc, PETSC_COMM_WORLD);
       if(_elem == UINT_MAX) {
         std::cout << " the marker has been advected outside the domain " << std::endl;
         break;
