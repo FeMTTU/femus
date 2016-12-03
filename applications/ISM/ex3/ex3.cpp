@@ -200,7 +200,7 @@ int main(int argc, char** args) {
   particle[0]->GetMarkerCoordinates(line[0][pSize]);
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
 
-  n = 20;
+  n = 50;
   
   for(unsigned k = 1; k <= n; k++) {  
     mlSol.CopySolutionToOldSolution();
