@@ -43,6 +43,9 @@ namespace femus {
         if(_iproc == _mproc) {
 	  FindLocalCoordinates(_solType, _aX, true);
 	}
+	else{
+	  std::vector < double > ().swap(_x);
+	}
       };
 
 
@@ -75,7 +78,7 @@ namespace femus {
 
       void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
       void GetElementSerial(unsigned &initialElem);
-      void GetElement(unsigned &previousElem);
+      void GetElement(unsigned &previousElem, const unsigned &previousMproc);
       
 
       MarkerType GetMarkerType() {
@@ -118,14 +121,11 @@ namespace femus {
       unsigned _elem;
       unsigned _dim;
 
-      unsigned _mproc; //processor who has the marker
-
-      static const double _localCentralNode[6][3];
-      
+      unsigned _mproc; //processor who has the marker      
       std::vector < std::vector < std::vector < double > > > _aX;
-      
       std::vector < std::vector < double > > _K;
-            
+        
+      static const double _localCentralNode[6][3];
       static const double _a[4][4][4];
       static const double _b[4][4];
       static const double _c[4][4];
