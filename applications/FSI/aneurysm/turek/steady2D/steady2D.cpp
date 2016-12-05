@@ -39,9 +39,9 @@ int main(int argc, char **args)
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
 //   std::string infile = "./input/aneurysm_Sara_5.neu";
-  //std::string infile = "./input/Turek_porous_60micron.neu";
+  std::string infile = "./input/Turek_porous_60micron.neu";
   //std::string infile = "./input/Turek_stents_60micron.neu";
-  std::string infile = "./input/Turek_11stents_60micron.neu";
+  //std::string infile = "./input/Turek_11stents_60micron.neu";
   //std::string infile = "./input/Turek.neu";
 
   // ******* Set physics parameters *******
@@ -73,7 +73,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 1;
+  numberOfUniformRefinedMeshes = 4;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -198,7 +198,6 @@ int main(int argc, char **args)
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
   
-  GetSolutionNorm(ml_sol, 9);
   system.MGsolve();
   GetSolutionNorm(ml_sol, 9);
 
@@ -267,24 +266,29 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
   NumericVector* p2;
   NumericVector* v2;
   NumericVector* vol;
+  NumericVector* vol0;
   p2 = NumericVector::build().release();
   v2 = NumericVector::build().release();
   vol = NumericVector::build().release();
+  vol0 = NumericVector::build().release();
 
   if (nprocs == 1) {
     p2->init(nprocs, 1, false, SERIAL);
     v2->init(nprocs, 1, false, SERIAL);
     vol->init(nprocs, 1, false, SERIAL);
+    vol0->init(nprocs, 1, false, SERIAL);
   }
   else {
     p2->init(nprocs, 1, false, PARALLEL);
     v2->init(nprocs, 1, false, PARALLEL);
     vol->init(nprocs, 1, false, PARALLEL);
+    vol0->init(nprocs, 1, false, PARALLEL);
   }
 
   p2->zero();
   v2->zero();
   vol->zero();
+  vol0->zero();
 
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
 
@@ -299,14 +303,17 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
 
   vector< double > solP;
   vector< vector < double> >  solV(dim);
+  vector< vector < double> > x0(dim);
   vector< vector < double> > x(dim);
 
   solP.reserve(max_size);
   for (unsigned d = 0; d < dim; d++) {
     solV[d].reserve(max_size);
+    x0[d].reserve(max_size);
     x[d].reserve(max_size);
   }
   double weight;
+  double weight0;
 
   vector <double> phiV;
   vector <double> gradphiV;
@@ -351,12 +358,15 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
       solP.resize(ndofP);
       for (int d = 0; d < dim; d++) {
         solV[d].resize(ndofV);
+	x0[d].resize(ndofD);
         x[d].resize(ndofD);
       }
       // get local to global mappings
       for (unsigned i = 0; i < ndofD; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solDType);
         for (unsigned d = 0; d < dim; d++) {
+	  x0[d][i] = (*msh->_topology->_Sol[d])(idof);
+	  
           x[d][i] = (*msh->_topology->_Sol[d])(idof) +
 		    (*solution->_Sol[solDIndex[d]])(idof);
         }
@@ -379,9 +389,11 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
 
       for (unsigned ig = 0; ig < mlSol._mlMesh->_finiteElement[ielt][solVType]->GetGaussPointNumber(); ig++) {
         // *** get Jacobian and test function and test function derivatives ***
+	msh->_finiteElement[ielt][solVType]->Jacobian(x0, ig, weight0, phiV, gradphiV, nablaphiV);
         msh->_finiteElement[ielt][solVType]->Jacobian(x, ig, weight, phiV, gradphiV, nablaphiV);
         phiP = msh->_finiteElement[ielt][solPType]->GetPhi(ig);
 
+	vol0->add(iproc, weight0);
         vol->add(iproc, weight);
       
         std::vector < double> SolV2(dim, 0.);
@@ -409,15 +421,19 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
 
   p2->close();
   v2->close();
+  vol0->close();
   vol->close();
 
   double p2_l2 = p2->l1_norm();
   double v2_l2 = v2->l1_norm();
+  double VOL0 = vol0->l1_norm();
   double VOL = vol->l1_norm();
 
   std::cout.precision(14);
   std::scientific;
+  std::cout << " vol0 = " << VOL0 << std::endl;
   std::cout << " vol = " << VOL << std::endl;
+  std::cout << " (vol-vol0)/vol0 = " << (VOL-VOL0) / VOL0 << std::endl;
   std::cout << " p_l2 norm / sqrt(vol) = " << sqrt(p2_l2/VOL)  << std::endl;
   std::cout << " v_l2 norm / sqrt(vol) = " << sqrt(v2_l2/VOL)  << std::endl;
 

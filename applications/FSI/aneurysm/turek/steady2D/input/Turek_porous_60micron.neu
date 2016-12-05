@@ -2,7 +2,7 @@
 ** GAMBIT NEUTRAL FILE
 Turek_porous_60micron
 PROGRAM:                Gambit     VERSION:  2.3.16
-23 Nov 2016    17:48:12 
+ 1 Dec 2016    12:17:22 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
        512       163         4         5         2         2
 ENDOFSECTION
@@ -774,13 +774,13 @@ GROUP:          2 ELEMENTS:         50 MATERIAL:          4 NFLAGS:          1
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
 GROUP:          3 ELEMENTS:         10 MATERIAL:          3 NFLAGS:          1
-                               9
+                              10
        0
       30      32      33      34      35      36      37      38      39      31
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
 GROUP:          4 ELEMENTS:         84 MATERIAL:          2 NFLAGS:          1
-                              10
+                               9
        0
       80      81      82      83      84      85      86      87      88      89
       90      91      92      93      94      95      96      97      98      99
