@@ -22,12 +22,8 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 #include "FieldSplitTree.hpp"
-#include "Marker.hpp"
 
-double Prandtl = 0.71;
-double Rayleigh = 340000.;
 
-using namespace std;
 using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -53,53 +49,12 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 double InitalValueT(const std::vector < double >& x) {
   return sin(4.0 * x[0]);
 };
-void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numofrefinements);
-void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofrefinements);
+
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
-double GetTemperatureValue(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi);
-enum PrecType {
-  FS_VTp = 1,
-  FS_TVp,
-  ASM_VTp,
-  ASM_TVp,
-  ILU_VTp,
-  ILU_TVp
-};
+
 
 int main(int argc, char** args) {
 
-   unsigned precType = 0;
-
-  if(argc >= 2) {
-    if(!strcmp("FS_VT", args[1])) precType = FS_VTp;
-    else if(!strcmp("FS_TV", args[1])) precType = FS_TVp;
-    else if(!strcmp("ASM_VT", args[1])) precType = ASM_VTp;
-    else if(!strcmp("ASM_TV", args[1])) precType = ASM_TVp;
-    else if(!strcmp("ILU_VT", args[1])) precType = ILU_VTp;
-
-    if(!strcmp("ILU_TV", args[1])) precType = ILU_TVp;
-
-    if(precType == 0) {
-      std::cout << "wrong input arguments!" << std::endl;
-      abort();
-    }
-  }
-  else {
-    std::cout << "No input argument set default preconditioner = NS+T" << std::endl;
-    precType = FS_VTp;
-  }
-
-  if(argc >= 3) {
-    Prandtl = strtod(args[2], NULL);
-    std::cout << Prandtl << std::endl;
-  }
-
-
-  if(argc >= 4) {
-    Rayleigh = strtod(args[3], NULL);
-    std::cout << Rayleigh << std::endl;
-  }
-  
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   // define multilevel mesh
@@ -136,6 +91,7 @@ int main(int argc, char** args) {
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
+
   mlSol.Initialize("T", InitalValueT);
 
   // attach the boundary condition function and generate boundary data
@@ -152,20 +108,16 @@ int main(int argc, char** args) {
   // add system Poisson in mlProb as a Linear Implicit System
   TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("NS");
 
-  if(precType == FS_TVp || precType == ASM_TVp || precType == ILU_TVp) system.AddSolutionToSystemPDE("T");
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-  
-  if(precType == ASM_VTp) system.AddSolutionToSystemPDE("T");
-  
-  if(dim == 3) system.AddSolutionToSystemPDE("W");
-  
   system.AddSolutionToSystemPDE("P");
-  
-  if(precType == FS_VTp || precType == ILU_VTp) system.AddSolutionToSystemPDE("T");
 
-  //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
+  if(dim == 3) system.AddSolutionToSystemPDE("W");
+
+  system.AddSolutionToSystemPDE("T");
+
+
   std::vector < unsigned > fieldUVP(3);
   fieldUVP[0] = system.GetSolPdeIndex("U");
   fieldUVP[1] = system.GetSolPdeIndex("V");
@@ -180,31 +132,80 @@ int main(int argc, char** args) {
   FS_NS.SetAsmBlockSize(4);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
 
+
+//   std::vector < unsigned > fieldUV(2);
+//   fieldUV[0] = system.GetSolPdeIndex("U");
+//   fieldUV[1] = system.GetSolPdeIndex("V");
+//
+//   FieldSplitTree FS_UV( PREONLY, ILU_PRECOND, fieldUV, "Velocity");
+//
+//   std::vector < unsigned > fieldP(1);
+//   fieldP[0] = system.GetSolPdeIndex("P");
+//
+//   FieldSplitTree FS_P( PREONLY, ILU_PRECOND, fieldP, "pressure");
+//
+//    std::vector < FieldSplitTree *> FS1;
+//
+//   FS1.reserve(2);
+//   FS1.push_back(&FS_UV);
+//   FS1.push_back(&FS_P);
+//   FieldSplitTree FS_NS( GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
+
+
+
   std::vector < unsigned > fieldT(1);
   fieldT[0] = system.GetSolPdeIndex("T");
 
   std::vector < unsigned > solutionTypeT(1);
   solutionTypeT[0] = mlSol.GetSolutionType("T");
 
+
   FieldSplitTree FS_T(PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
   FS_T.SetAsmBlockSize(4);
-  FS_T.SetAsmNumeberOfSchurVariables(0); // why here change 1 to 0
+  FS_T.SetAsmNumeberOfSchurVariables(1);
+
 
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
-  
-  if(precType == FS_VTp) FS2.push_back(&FS_NS);   //Navier-Stokes block first
-
+  FS2.push_back(&FS_NS);
   FS2.push_back(&FS_T);
+  FieldSplitTree FS_NST(GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
+  //FieldSplitTree FS_NST( GMRES, FS_SCHUR_PRECOND, FS2, "Benard");
 
-  if(precType == FS_TVp) FS2.push_back(&FS_NS);   //Navier-Stokes block last
+//   std::vector < unsigned > fieldUV(2);
+//   fieldUV[0] = system.GetSolPdeIndex("U");
+//   fieldUV[1] = system.GetSolPdeIndex("V");
+//   FieldSpliTreeStructure FS_UV( GMRES, ILU_PRECOND, fieldUV , "Velocity");
+//
+//   std::vector < unsigned > fieldP(1);
+//   fieldP[0] = system.GetSolPdeIndex("P");
+//   FieldSpliTreeStructure FS_P( GMRES, ILU_PRECOND, fieldP, "Pressure");
+//
+//   std::vector < FieldSpliTreeStructure *> FS1;
+//
+//   FS1.reserve(2);
+//   FS1.push_back(&FS_UV);
+//   FS1.push_back(&FS_P);
+//
+//   FieldSpliTreeStructure FS_NS( GMRES, ILU_PRECOND, FS1, "Navier-Stokes");
+//
+//   std::vector < unsigned > fieldT(1);
+//   fieldT[0] = system.GetSolPdeIndex("T");
+//   FieldSpliTreeStructure FS_T( PREONLY, ILU_PRECOND, fieldT, "Temperature");
+//
+//   std::vector < FieldSpliTreeStructure *> FS2;
+//
+//   FS2.reserve(2);
+//   FS2.push_back(&FS_NS);
+//   FS2.push_back(&FS_T);
+//   FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
 
-  FieldSplitTree FS_NST(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
-  
-  //END buid fieldSplitTree
-  if(precType == FS_VTp || precType == FS_TVp) system.SetMgSmoother(FIELDSPLIT_SMOOTHER);    // Field-Split preconditioned
-  else if(precType == ASM_VTp || precType == ASM_TVp) system.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz preconditioner
-  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(GMRES_SMOOTHER);
+
+
+
+  //system.SetMgSmoother(GMRES_SMOOTHER);
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz preconditioner
+  //system.SetMgSmoother(ASM_SMOOTHER); // Field-Split preconditioned
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
@@ -219,15 +220,15 @@ int main(int argc, char** args) {
 
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(1);
-  system.SetNumberPostSmoothingStep(1);
+  system.SetNumberPreSmoothingStep(2);
+  system.SetNumberPostSmoothingStep(2);
   // initilaize and solve the system
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  if(precType == FS_VTp || precType == FS_TVp) system.SetFieldSplitTree(&FS_NST);
-  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
+  system.SetFieldSplitTree(&FS_NST);
+  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
@@ -236,11 +237,7 @@ int main(int argc, char** args) {
 
   system.SetSamePreconditioner();
 
- std::vector< double > x(3);
-  x[0] = 0.819-0.5; //the marker is in element 117 (proc 1)
-  x[1] = 7.370-4.0;
-  x[2] = 0.;
-  
+
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
@@ -248,16 +245,9 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
-  double dt = 0.1;
-  system.SetIntervalTime(dt);
-  unsigned n_timesteps = 5000;
-  Marker marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
-  unsigned elem = marker.GetMarkerElement();
-  std::vector<double> xi = marker.GetMarkerLocalCoordinates();
-  
-  char out_file[100]="";
-  strcpy(out_file,"Temperature.dat");
-  ofstream outfile(out_file,ios::out|ios::trunc|ios::binary);
+  system.SetIntervalTime(0.5);
+  unsigned n_timesteps = 2000;
+
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
     if(time_step > 0)
@@ -265,12 +255,9 @@ int main(int argc, char** args) {
 
     system.MGsolve();
     system.CopySolutionToOldSolution();
-    
-    outfile << (time_step + 1) * dt <<"  "<< GetTemperatureValue(mlProb, elem, xi) << std::endl;
     if ((time_step + 1) % 5 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
-    
   }
-  outfile.close();
+
   mlMsh.PrintInfo();
 
   return 0;
@@ -544,8 +531,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       double alpha = 1.;
       double beta = 1.;//40000.;
 
-      double Pr = Prandtl;
-      double Ra = Rayleigh;
+      double Pr = 0.71;
+      double Ra = 340000;
 
       double dt = mlPdeSys -> GetIntervalTime();
       // *** phiT_i loop ***
@@ -663,44 +650,4 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   }
 
   // ***************** END ASSEMBLY *******************
-}
-
-double GetTemperatureValue(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi) {
-
-  NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
-  const unsigned level = mlPdeSys->GetLevelToAssemble();
-
-  Mesh* msh = ml_prob._ml_msh->GetLevel(level);
-
-  MultiLevelSolution* mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution* sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
-
-  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
-
-  //solution variable
-  unsigned solTIndex;
-  solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
-  unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
-  vector < double >  solT; // local solution
-
-  //BEGIN local dof number extraction
-  unsigned nDofsT = msh->GetElementDofNumber(elem, solTType);  //temperature
-  solT.resize(nDofsT);
-
-  //BEGIN global to local extraction
-  for(unsigned i = 0; i < nDofsT; i++) { //temperature
-    unsigned solTDof = msh->GetSolutionDof(i, elem, solTType);  //local to global solution dof
-    solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
-  }
-
-  short unsigned ielGeom = msh->GetElementType(elem);
-  double solTXi = 0.;
-  for(unsigned i = 0; i < nDofsT; i++) {
-    basis *base = msh->_finiteElement[ielGeom][solTType]->GetBasis();
-    double phi = base->eval_phi(base->GetIND(i), &xi[0]);
-    solTXi += phi * solT[i];
-  }
-  // ***************** END ASSEMBLY *******************
-
-  return solTXi;
 }
