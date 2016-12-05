@@ -31,6 +31,9 @@ bool SetBoundaryConditionTurek(const std::vector < double >& x, const char name[
 bool SetBoundaryConditionPorous(const std::vector < double >& x, const char name[], 
 				double &value, const int facename, const double time);
 
+bool SetBoundaryConditionThrombus(const std::vector < double >& x, const char name[], 
+				  double &value, const int facename, const double time);
+
 bool SetBoundaryConditionOminoPorous(const std::vector < double >& x, const char name[], 
 				double &value, const int facename, const double time);
 //------------------------------------------------------------------------------------------------------------------
@@ -52,11 +55,12 @@ int main(int argc, char **args) {
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
   //std::string infile = "./input/aneurysm_omino.neu";
-  std::string infile = "./input/aneurisma_aorta.neu";
+  //std::string infile = "./input/aneurisma_aorta.neu";
   // std::string infile = "./input/turek_porous_scaled.neu";
   //std::string infile = "./input/turek_porous_omino.neu";
   //std::string infile = "./input/Turek_3D_D.neu";
-
+  //std::string infile = "./input/AAA_thrombus.neu";
+  std::string infile = "./input/AAA.neu";
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
 
@@ -102,7 +106,7 @@ int main(int argc, char **args) {
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 1;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -140,11 +144,12 @@ int main(int argc, char **args) {
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
+  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOmino);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionPorous);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOminoPorous);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus);
   
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
@@ -499,6 +504,53 @@ bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[
   else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
     if(1 == facename || 6 == facename || 11 == facename || 2 == facename || 3 == facename || 4 == facename
       || 7 == facename || 8 == facename || 9 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+
+  return test;
+}
+
+bool SetBoundaryConditionThrombus(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+  bool test = 1; //dirichlet
+  value = 0.;
+
+  if(!strcmp(name, "V")) {
+
+    if(1 == facename) {
+      double r2 = (x[0] * 100.) * (x[0] * 100.) + (x[2] * 100.) * (x[2] * 100.);
+      value = -0.01/.9 * (.9 - r2); //inflow
+    }
+    else if(2 == facename) {
+      test = 0;
+      value = 10.;
+    }
+  }
+  else if(!strcmp(name, "U") || !strcmp(name, "W")) {
+    if(2 == facename) {
+      test = 0;
+      value = 0.;
+    }
+  }
+  else if(!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+  }
+  else if(!strcmp(name, "DX")) {
+    if( 5 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if(!strcmp(name, "DY")) {
+    if( 5 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if(!strcmp(name, "DZ")) {
+    if( 5 == facename) {
       test = 0;
       value = 0;
     }
