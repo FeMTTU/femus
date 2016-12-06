@@ -42,9 +42,9 @@ int main(int argc, char **args)
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
 //   std::string infile = "./input/aneurysm_Sara_5.neu";
   //std::string infile = "./input/Turek_porous_60micron.neu";
-  std::string infile = "./input/Turek_stents_60micron.neu";
+  //std::string infile = "./input/Turek_stents_60micron.neu";
   //std::string infile = "./input/Turek_11stents_60micron.neu";
-  //std::string infile = "./input/Turek.neu";
+  std::string infile = "./input/Turek.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
@@ -258,13 +258,13 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
       double ramp = (time < 1) ? sin(PI/2 * time) : 1.;
       value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8)*(1.+ 0.75*sin(2.*PI*time)) * ramp; //inflow
     }
-    else if ( 2 == facename ) {
+    else if ( 2 == facename || 5 == facename ) {
       test = 0;
       value = 0.;
     }
   }
   else if ( !strcmp(name, "V") ) {
-    if ( 2 == facename ) {
+    if ( 2 == facename || 5 == facename ) {
       test = 0;
       value = 0.;
     }

@@ -312,9 +312,9 @@ namespace femus {
 
             unsigned int face = -(mymsh->el->GetFaceElementIndex(iel, jface) + 1);
 
-            if (!ml_sol->GetBdcFunction()(xx, "U", tau, face, time) && tau != 0.) {
+            if (!ml_sol->GetBdcFunction()(xx, "V", tau, face, time) && tau != 0.) {
               double tau_old;
-              ml_sol->GetBdcFunction()(xx, "U", tau_old, face, time - dt);
+              ml_sol->GetBdcFunction()(xx, "V", tau_old, face, time - dt);
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
               const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
