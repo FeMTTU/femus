@@ -237,13 +237,14 @@ int main(int argc, char** args) {
   double T = 30;
   unsigned n  = 100;
 
-
   std::vector < std::vector < std::vector < double > > > xn(pSize);
-  
+   
   for(unsigned j = 0; j < pSize; j++) {
     xn[j].resize(1);
     particle[j]->GetMarkerCoordinates(xn[j][0]);
   }
+  
+  clock_t start_time = clock();
   
   for(unsigned k = 0; k < n; k++) {
     for(unsigned j = 0; j < pSize; j++) {
@@ -254,6 +255,9 @@ int main(int argc, char** args) {
     PrintLine(DEFAULT_OUTPUTDIR, xn, true, k+1);
   }
 
+  std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
+            << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC <<" s" << std::endl;
+  
   for(unsigned j = 0; j < pSize; j++) {
     delete particle[j];
   }
