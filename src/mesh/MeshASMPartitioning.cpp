@@ -43,7 +43,7 @@ void MeshASMPartitioning::DoPartition( const unsigned *block_size, vector < vect
   for (unsigned iel = ElemOffset; iel < ElemOffsetp1; iel++) {
     unsigned flag_mat   = _mesh.GetElementMaterial(iel);
 
-    if(2 == flag_mat){
+    if(flag_mat < 4){
       counter[1]++;
     }
   }
@@ -53,10 +53,10 @@ void MeshASMPartitioning::DoPartition( const unsigned *block_size, vector < vect
 
   unsigned flag_block[2]={4,2};
 
-  unsigned block_start=0;
-  unsigned iblock=0;
+  unsigned block_start = 0;
+  unsigned iblock = 0;
   while(iblock < 2){
-    if(counter[iblock] !=0 ){
+    if(counter[iblock] !=0 ){ //material of this type is there
       unsigned reminder = counter[iblock] % block_size[iblock];
       unsigned blocks = (0 == reminder)? counter[iblock]/block_size[iblock] : counter[iblock]/block_size[iblock] + 1 ;
       block_elements.resize(block_start+blocks);
@@ -70,7 +70,7 @@ void MeshASMPartitioning::DoPartition( const unsigned *block_size, vector < vect
       unsigned counter=0;
       for (unsigned iel = ElemOffset; iel < ElemOffsetp1; iel++) {
 	unsigned flag_mat   = _mesh.GetElementMaterial(iel);
-	if( flag_block[iblock] == flag_mat ){
+	if( flag_block[iblock] == flag_mat || flag_block[iblock] + 1 == flag_mat){
 	  block_elements[ block_start + (counter / block_size[iblock]) ][ counter % block_size[iblock] ]=iel;
 	  counter++;
 	}
