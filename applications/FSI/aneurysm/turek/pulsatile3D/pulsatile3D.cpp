@@ -399,7 +399,7 @@ bool SetBoundaryConditionTurek(const std::vector < double > & x, const char name
     }
     else if( 2 == facename ) {
       test = 0;
-      value = 10 * ramp;
+      value = 100 * ramp;
     }
     else if( 5 == facename ) {
       test = 0;
