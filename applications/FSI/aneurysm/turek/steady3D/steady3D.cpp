@@ -43,6 +43,22 @@ int main(int argc, char **args) {
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+    unsigned simulation = 0;
+
+  if(argc >= 2) {
+    if(!strcmp("0", args[1])) {    /** FSI Turek3D no stent */
+      simulation = 0;
+    }
+    else if(!strcmp("1", args[1])) {     /** FSI Omino no stent */
+      simulation = 1;
+    }
+    else if(!strcmp("2", args[1])) {   /** FSI Thoracic Aortic Aneurysm */
+      simulation = 2;
+    }
+    else if(!strcmp("3", args[1])) {   /** FSI Abdominal Aortic Aneurysm */
+      simulation = 3;
+    }
+  }
 
   bool dimension2D = false;
 
@@ -54,13 +70,26 @@ int main(int argc, char **args) {
 
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
+   std::string infile;
+  if(simulation == 0) {
+    infile = "./input/Turek_3D_D.neu";
+  }
+  else if(simulation == 1) {
+    infile = "./input/aneurysm_omino.neu";
+  }
+  else if(simulation == 2) {
+    infile = "./input/aneurisma_aorta.neu";
+  }
+  else if(simulation == 3) {
+    infile = "./input/AAA.neu";
+  }
   //std::string infile = "./input/aneurysm_omino.neu";
   //std::string infile = "./input/aneurisma_aorta.neu";
   // std::string infile = "./input/turek_porous_scaled.neu";
   //std::string infile = "./input/turek_porous_omino.neu";
   //std::string infile = "./input/Turek_3D_D.neu";
   //std::string infile = "./input/AAA_thrombus.neu";
-  std::string infile = "./input/AAA.neu";
+  //std::string infile = "./input/AAA.neu";
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
 
@@ -144,12 +173,24 @@ int main(int argc, char **args) {
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
+    if(simulation == 0) {
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
+  }
+  else if(simulation == 1) {
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOmino);
+  }
+  else if(simulation == 2) {
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
+  }
+  else if(simulation == 3) {
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus);
+  }
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOmino);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionPorous);
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOminoPorous);
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus);
+  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus);
   
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
@@ -477,9 +518,13 @@ bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[
   value = 0.;
 
   if(!strcmp(name, "V")) {
-    if(1 == facename || 2 == facename || 3 == facename || 4 == facename) {
+    if(1 == facename) {
       test = 0;
-      value = 0;
+      value = 60;
+    }
+    if(2 == facename || 3 == facename || 4 == facename) {
+      test = 0;
+      value = 20;
     }
     else if(5 == facename) {
 //       test = 0;
@@ -501,9 +546,15 @@ bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[
     value = 0.;
   }
 
+//   else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
+//     if(1 == facename || 6 == facename || 11 == facename || 2 == facename || 3 == facename || 4 == facename
+//       || 7 == facename || 8 == facename || 9 == facename ) {
+//       test = 0;
+//       value = 0;
+//     }
+
   else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
-    if(1 == facename || 6 == facename || 11 == facename || 2 == facename || 3 == facename || 4 == facename
-      || 7 == facename || 8 == facename || 9 == facename ) {
+    if(11 == facename) {
       test = 0;
       value = 0;
     }
