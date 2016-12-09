@@ -188,9 +188,8 @@ int main(int argc, char** args) {
   solutionTypeT[0] = mlSol.GetSolutionType("T");
 
   FieldSplitTree FS_T(PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
-
   FS_T.SetAsmBlockSize(4);
-  FS_T.SetAsmNumeberOfSchurVariables(0);
+  FS_T.SetAsmNumeberOfSchurVariables(0); // // why here change 1 to 0
 
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
