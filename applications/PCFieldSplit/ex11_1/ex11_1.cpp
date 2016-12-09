@@ -80,9 +80,7 @@ int main(int argc, char** args) {
     else if(!strcmp("ASM_VT", args[1])) precType = ASM_VTp;
     else if(!strcmp("ASM_TV", args[1])) precType = ASM_TVp;
     else if(!strcmp("ILU_VT", args[1])) precType = ILU_VTp;
-
-    if(!strcmp("ILU_TV", args[1])) precType = ILU_TVp;
-
+    else if(!strcmp("ILU_TV", args[1])) precType = ILU_TVp;
     if(precType == 0) {
       std::cout << "wrong input arguments!" << std::endl;
       abort();
@@ -97,7 +95,6 @@ int main(int argc, char** args) {
     Prandtl = strtod(args[2], NULL);
     std::cout << Prandtl << std::endl;
   }
-
 
   if(argc >= 4) {
     Rayleigh = strtod(args[3], NULL);
@@ -258,10 +255,6 @@ int main(int argc, char** args) {
 
   std::cout << "marker\n";
   std::cout << elem << " " << xi[0] << " " << xi[1] << " " << GetTemperatureValue(mlProb, elem, xi) << std::endl;
-
-
-
-
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
