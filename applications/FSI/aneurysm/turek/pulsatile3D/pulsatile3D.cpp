@@ -587,22 +587,28 @@ bool SetBoundaryConditionAorta(const std::vector < double > & x, const char name
 {
   bool test = 1; //dirichlet
   value = 0.;
+  double PI = acos(-1.);
+  double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
 
   if(!strcmp(name, "V")) {
     if(1 == facename || 2 == facename || 3 == facename || 4 == facename) {
       test = 0;
-      value = 0;
+      value = 30;
     }
     else if(5 == facename) {
 //       test = 0;
 //       value = 0.5 *1.e-01; //Pressure value/rhof
       double r2 = ((x[0] + 0.075563) / 0.0104) * ((x[0] + 0.075563) / 0.0104) + (x[2] / 0.0104) * (x[2] / 0.0104);
-      value = 0.03 * (1. - r2); //inflow
+      value = 0.03 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+    }
+    if(11 == facename) {
+      test = 0;
+      value = 0;
     }
   }
 
   if(!strcmp(name, "U") || !strcmp(name, "W")) {
-    if(1 == facename || 2 == facename || 3 == facename || 4 == facename) {  // || 5 == facename) {
+    if(1 == facename || 2 == facename || 3 == facename || 4 == facename || 11==facename) {  // || 5 == facename) {
       test = 0;
       value = 0;
     }
@@ -614,8 +620,7 @@ bool SetBoundaryConditionAorta(const std::vector < double > & x, const char name
   }
 
   else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
-    if(1 == facename || 6 == facename || 11 == facename || 2 == facename || 3 == facename || 4 == facename
-        || 7 == facename || 8 == facename || 9 == facename) {
+    if(11 == facename) {
       test = 0;
       value = 0;
     }
