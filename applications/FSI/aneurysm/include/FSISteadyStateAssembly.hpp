@@ -263,9 +263,7 @@ namespace femus {
           if(myel->GetFaceElementIndex(iel, jface) < 0) {
             unsigned int face = -(mymsh->el->GetFaceElementIndex(iel, jface) + 1);
 
-            if((!ml_sol->GetBdcFunction()(xx, "V", tau, face, 0.) ||
-                !ml_sol->GetBdcFunction()(xx, "DX", tau, face, 0.))
-                && tau != 0.) {
+            if( !ml_sol->GetBdcFunction()(xx, "V", tau, face, 0.) && tau != 0.) {
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
               const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
