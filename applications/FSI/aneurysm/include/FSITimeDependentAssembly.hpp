@@ -318,7 +318,8 @@ namespace femus
             if((!ml_sol->GetBdcFunction()(xx, "U", tau, face, time) &&
                 !ml_sol->GetBdcFunction()(xx, "U", tau_old, face, time - dt))
                 && (tau != 0. || tau_old != 0.)) {
-
+	      tau /= rhof;
+	      tau_old /= rhof;
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
               const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 

@@ -102,7 +102,7 @@ int main(int argc, char ** args)
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 6000;
+  E = 60000;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
@@ -137,7 +137,7 @@ int main(int argc, char ** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -604,9 +604,13 @@ bool SetBoundaryConditionAorta(const std::vector < double > & x, const char name
   }
 
   else if(!strcmp(name, "U")) {
-    if(1 == facename || 2 == facename || 3 == facename || 4 == facename) {   // || 5 == facename) {
+    if(1 == facename) {   // || 5 == facename) {
       test = 0;
-      value = 30 * ramp;
+      value = (10000 + 2500 * sin(2*PI*time)) * ramp;
+    }
+    else if( 2 == facename || 3 == facename || 4 == facename) {   // || 5 == facename) {
+      test = 0;
+      value = (10500 + 2500 * sin(2*PI*time)) * ramp;
     }
     else if(11 == facename) {
       test = 0;
