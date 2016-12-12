@@ -102,7 +102,7 @@ int main(int argc, char ** args)
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 60000;
+  E = 6000;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
@@ -633,7 +633,7 @@ bool SetBoundaryConditionAorta(const std::vector < double > & x, const char name
 
   else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
     if( 2 == facename || 3 == facename || 4 == facename ||
-        7 == facename || 8 == facename || 9 == facename || 11 == facename) {
+        7 == facename || 9 == facename || 8 == facename || 11 == facename) {
       test = 0;
       value = 0;
     }
