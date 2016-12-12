@@ -23,6 +23,7 @@
 #include "FieldSplitTree.hpp"
 #include <stdlib.h>
 #include "Marker.hpp"
+#include "MyVector.hpp"
 
 double Prandtl = 0.1;
 double Rayleigh = 10000.;
@@ -1015,16 +1016,28 @@ double GetTemperatureValue(MultiLevelProblem& ml_prob, const unsigned &elem, con
     solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
   }
 
-  short unsigned ielGeom = msh->GetElementType(elem);
-  double solTXi = 0.;
-  for(unsigned i = 0; i < nDofsT; i++) {
-    basis *base = msh->_finiteElement[ielGeom][solTType]->GetBasis();
-    double phi = base->eval_phi(base->GetIND(i), &xi[0]);
-    solTXi += phi * solT[i];
-  }
-  // ***************** END ASSEMBLY *******************
-
-  return solTXi;
+  
+  unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  MyVector <double> solTXi(1,0.);
+  if(elem >= msh->_elementOffset[iproc] && elem  < msh->_elementOffset[iproc + 1]){
+    short unsigned ielGeom = msh->GetElementType(elem);
+    for(unsigned i = 0; i < nDofsT; i++) {
+      basis *base = msh->_finiteElement[ielGeom][solTType]->GetBasis();
+      double phi = base->eval_phi(base->GetIND(i), &xi[0]);
+      solTXi[0] += phi * solT[i];
+    }
+  } 
+  solTXi.stack();
+  
+  std::cout << solTXi << std::endl;
+  
+  unsigned mproc = msh->IsdomBisectionSearch(elem , 3);
+  
+  solTXi.broadcast(mproc);
+  double value = solTXi[mproc];
+  solTXi.clearBroadcast();
+  return value;
+  
 }
 
 
