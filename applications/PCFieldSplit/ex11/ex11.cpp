@@ -24,7 +24,7 @@
 #include <stdlib.h>
 
 double Prandtl = 0.1;
-double Rayleigh =10000.;
+double Rayleigh = 10000.;
 
 using namespace femus;
 
@@ -106,12 +106,12 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square_16quads.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 8;
+  unsigned numberOfUniformLevels = 7;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
@@ -203,7 +203,7 @@ int main(int argc, char** args) {
   //END buid fieldSplitTree
   if(precType == FS_VTp || precType == FS_TVp) system.SetMgSmoother(FIELDSPLIT_SMOOTHER);    // Field-Split preconditioned
   else if(precType == ASM_VTp || precType == ASM_TVp) system.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz preconditioner
-  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(GMRES_SMOOTHER);
+  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(ASM_SMOOTHER);
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
@@ -229,6 +229,8 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
+  
+  system.SetRichardsonScaleFactor(.6);
 
   if(precType == FS_VTp || precType == FS_TVp) system.SetFieldSplitTree(&FS_NST);
 
@@ -236,9 +238,15 @@ int main(int argc, char** args) {
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
-  system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(4);
-
+  
+  if(precType == ASM_VTp || precType == ASM_TVp){
+    system.SetNumberOfSchurVariables(1);
+    system.SetElementBlockNumber(3);
+  }
+  else if(precType == ILU_VTp || precType == ILU_TVp){
+    system.SetElementBlockNumber("All");
+  }
+  
   system.MGsolve();
 
   // print solutions
