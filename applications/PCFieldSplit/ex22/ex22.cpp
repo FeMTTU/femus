@@ -253,6 +253,7 @@ int main(int argc, char** args) {
   double dt = 0.5;
   system.SetIntervalTime(dt);
   unsigned n_timesteps = 600;
+ 
   Marker marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
   unsigned elem = marker.GetMarkerElement();
   std::vector<double> xi = marker.GetMarkerLocalCoordinates();
@@ -570,8 +571,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       double alpha = 1.;
       double beta = 1.;//40000.;
 
-      double Pr = 0.015;
-      double Ra = 3000;
+      double Pr = Prandtl;
+      double Ra = Rayleigh;
 
       double dt = mlPdeSys -> GetIntervalTime();
       // *** phiT_i loop ***
