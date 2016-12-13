@@ -255,7 +255,8 @@ int main(int argc, char** args) {
  
   Marker marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
   unsigned elem = marker.GetMarkerElement();
-  std::vector<double> xi = marker.GetMarkerLocalCoordinates();
+  std::vector<double> xi;
+  marker.GetMarkerLocalCoordinates(xi);
  
   
   char out_file1[100]="";

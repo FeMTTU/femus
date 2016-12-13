@@ -250,7 +250,9 @@ int main(int argc, char** args) {
   x[2] = 0.;
   Marker marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
   unsigned elem = marker.GetMarkerElement();
-  std::vector<double> xi = marker.GetMarkerLocalCoordinates();
+
+  std::vector<double> xi;
+  marker.GetMarkerLocalCoordinates(xi);
 
   std::cout << "marker\n";
   std::cout << elem << " " << xi[0] << " " << xi[1] << " " << GetTemperatureValue(mlProb, elem, xi) << std::endl;
@@ -266,6 +268,7 @@ int main(int argc, char** args) {
 
   //char infile[256]="FSVTtrueResidual.txt";
   //char stdOutfile[256]="output.txt";
+  
   char *stdOutfile =  new char[100];
   char *outfile =  new char[100];
   sprintf(stdOutfile, "%strueResidualPr=%sRa=%s.txt", args[1], args[2], args[3]);
@@ -280,6 +283,7 @@ int main(int argc, char** args) {
   sprintf(outfile1, "%scomputational_timePr=%sRa=%s_time.txt", args[1], args[2], args[3]);
 
   PrintNonlinearTime(stdOutfile1, outfile1, numberOfUniformLevels);
+  
   return 0;
 }
 
@@ -1006,38 +1010,35 @@ double GetTemperatureValue(MultiLevelProblem& ml_prob, const unsigned &elem, con
   unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
   vector < double >  solT; // local solution
 
-  //BEGIN local dof number extraction
-  unsigned nDofsT = msh->GetElementDofNumber(elem, solTType);  //temperature
-  solT.resize(nDofsT);
-
-  //BEGIN global to local extraction
-  for(unsigned i = 0; i < nDofsT; i++) { //temperature
-    unsigned solTDof = msh->GetSolutionDof(i, elem, solTType);  //local to global solution dof
-    solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
-  }
-
-  
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
-  MyVector <double> solTXi(1,0.);
-  if(elem >= msh->_elementOffset[iproc] && elem  < msh->_elementOffset[iproc + 1]){
+  MyVector <double> solTXi(1, 0.);
+  solTXi.stack();
+
+  if(elem >= msh->_elementOffset[iproc] && elem  < msh->_elementOffset[iproc + 1]) {
+    //BEGIN local dof number extraction
+    unsigned nDofsT = msh->GetElementDofNumber(elem, solTType);  //temperature
+    solT.resize(nDofsT);
+
+    //BEGIN global to local extraction
+    for(unsigned i = 0; i < nDofsT; i++) { //temperature
+      unsigned solTDof = msh->GetSolutionDof(i, elem, solTType);  //local to global solution dof
+      solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
+    }
     short unsigned ielGeom = msh->GetElementType(elem);
     for(unsigned i = 0; i < nDofsT; i++) {
       basis *base = msh->_finiteElement[ielGeom][solTType]->GetBasis();
       double phi = base->eval_phi(base->GetIND(i), &xi[0]);
-      solTXi[0] += phi * solT[i];
+      solTXi[iproc] += phi * solT[i];
     }
-  } 
-  solTXi.stack();
-  
-  std::cout << solTXi << std::endl;
-  
+  }
+
   unsigned mproc = msh->IsdomBisectionSearch(elem , 3);
-  
+
   solTXi.broadcast(mproc);
   double value = solTXi[mproc];
   solTXi.clearBroadcast();
   return value;
-  
+
 }
 
 

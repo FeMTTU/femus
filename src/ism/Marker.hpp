@@ -53,8 +53,13 @@ namespace femus {
 	return _elem;
       }
       
-      std::vector<double> GetMarkerLocalCoordinates(){
-	return _xi;
+      void GetMarkerLocalCoordinates( std::vector< double > &xi ){
+	
+	xi.resize(_dim);
+	if(_mproc == _iproc){
+	  xi = _xi;
+	}
+	MPI_Bcast(&xi[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
       }
       
      void GetMarkerCoordinates( std::vector< double > &xn ){
