@@ -25,7 +25,7 @@
 
 #include "vector"
 #include "map"
-#include "Mesh.hpp"
+#include "MyVector.hpp"
 
 namespace femus {
 
@@ -43,6 +43,9 @@ namespace femus {
         if(_iproc == _mproc) {
 	  FindLocalCoordinates(_solType, _aX, true);
 	}
+	else{
+	  std::vector < double > ().swap(_x);
+	}
       };
 
 
@@ -53,10 +56,29 @@ namespace femus {
       std::vector<double> GetMarkerLocalCoordinates(){
 	return _xi;
       }
+      
+     void GetMarkerCoordinates( std::vector< double > &xn ){
+       
+	xn.resize(_dim);
+	if(_mproc == _iproc){
+	  xn = _x;
+	}
+	MPI_Bcast(&xn[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
+      }
+      
+      void GetMarkerCoordinates( std::vector< MyVector <double > > &xn ){
+	if(_mproc == _iproc){
+	  for(unsigned d=0; d<_dim; d++){
+	    unsigned size = xn[d].size();
+	    xn[d].resize(size + 1);
+	    xn[d][size] = _x[d];
+	  }
+	}
+      }
 
       void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
       void GetElementSerial(unsigned &initialElem);
-      void GetElement();
+      void GetElement(unsigned &previousElem, const unsigned &previousMproc);
       
 
       MarkerType GetMarkerType() {
@@ -66,16 +88,17 @@ namespace femus {
       void InverseMappingTEST(std::vector< double > &x);
       void Advection(Solution* sol, const unsigned &n, const double& T);
 
-     void updateVelocity(std::vector <double> & V, Solution* sol, 
-			 const vector < unsigned > &solVIndex, const unsigned & solVType,
-                         std::vector < std::vector < double > > &a,  std::vector < double > &phi, const bool & pcElemUpdate);
+     void updateVelocity(std::vector< std::vector <double> > & V, Solution * sol,
+                              const vector < unsigned > &solVIndex, const unsigned & solVType,
+                              std::vector < std::vector < std::vector < double > > > &a,  std::vector < double > &phi,
+                              const bool & pcElemUpdate);
      
       void FindLocalCoordinates(const unsigned & solVType, std::vector < std::vector < std::vector < double > > > &aX, 
 		    const bool & pcElemUpdate);
 
       void ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex, 
 				       const unsigned &solVType,  const unsigned &nDofsV,
-				       const unsigned &ielType, std::vector < std::vector < double > > &a);
+				       const unsigned &ielType, std::vector < std::vector < std::vector < double > > > &a);
 
       
     private:
@@ -85,9 +108,9 @@ namespace femus {
       void InverseMapping(const unsigned &iel, const unsigned &solType,
                           const std::vector< double > &x, std::vector< double > &xi);
 
-      unsigned GetNextElement2D(const unsigned &iel);
-      unsigned GetNextElement3D(const unsigned &iel);
-      int FastForward(const unsigned &currentElem);
+      unsigned GetNextElement2D(const unsigned &iel, const unsigned &previousElem);
+      unsigned GetNextElement3D(const unsigned &iel, const unsigned &previousElem);
+      int FastForward(const unsigned &currentElem, const unsigned &previousElem);
 
       std::vector < double > _x;
       std::vector < double > _x0;
@@ -98,14 +121,11 @@ namespace femus {
       unsigned _elem;
       unsigned _dim;
 
-      unsigned _mproc; //processor who has the marker
-
-      static const double _localCentralNode[6][3];
-      
+      unsigned _mproc; //processor who has the marker      
       std::vector < std::vector < std::vector < double > > > _aX;
-      
       std::vector < std::vector < double > > _K;
-            
+        
+      static const double _localCentralNode[6][3];
       static const double _a[4][4][4];
       static const double _b[4][4];
       static const double _c[4][4];

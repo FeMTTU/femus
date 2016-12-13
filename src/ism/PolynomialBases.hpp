@@ -16,7 +16,9 @@
 #ifndef __femus_ism_PolynomialBases_hpp__
 #define __femus_ism_PolynomialBases_hpp__
 
-#include "vector"
+#include <vector>
+#include "Files.hpp"
+#include <b64/b64.h>
 
 namespace femus {
 
@@ -84,6 +86,8 @@ namespace femus {
                          const std::vector <double > &xl, std::vector <double > &xi);
   void GetClosestPointInReferenceElement(const std::vector< std::vector < double > > &xv, std::vector <double> &x,
                                          const short unsigned &ieltype, std::vector < double > &xi);
+  
+  void PrintLine(const std::string output_path, const std::vector < std::vector< std::vector<double> > > &xn, const bool &streamline = true, const unsigned &step = 0);
 }
 #endif
 

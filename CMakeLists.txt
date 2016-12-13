@@ -228,8 +228,11 @@ CONFIGURE_FILE(
   "${PROJECT_BINARY_DIR}/include/FemusConfig.hpp" @ONLY IMMEDIATE
   )
 
-
-
+CONFIGURE_FILE(
+  "${PROJECT_SOURCE_DIR}/UseFemus.CMake.in"
+  "${PROJECT_BINARY_DIR}/UseFemus.CMake" @ONLY IMMEDIATE
+  )
+  
 #############################################################################################
 ### Include files
 #############################################################################################
