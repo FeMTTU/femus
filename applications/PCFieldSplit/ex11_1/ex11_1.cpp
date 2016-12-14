@@ -268,7 +268,7 @@ int main(int argc, char** args) {
 
   //char infile[256]="FSVTtrueResidual.txt";
   //char stdOutfile[256]="output.txt";
-  
+ /* 
   char *stdOutfile =  new char[100];
   char *outfile =  new char[100];
   sprintf(stdOutfile, "%strueResidualPr=%sRa=%s.txt", args[1], args[2], args[3]);
@@ -283,7 +283,7 @@ int main(int argc, char** args) {
   sprintf(outfile1, "%scomputational_timePr=%sRa=%s_time.txt", args[1], args[2], args[3]);
 
   PrintNonlinearTime(stdOutfile1, outfile1, numberOfUniformLevels);
-  
+*/  
   return 0;
 }
 
