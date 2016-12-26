@@ -88,8 +88,7 @@ int main(int argc, char **args)
   ml_msh.PrintInfo();
 
   // mark Solid nodes
-  ml_msh.MarkStructureNode();
-
+  
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
 
