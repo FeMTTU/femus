@@ -71,30 +71,30 @@ double InitalValueW(const std::vector < double >& x) {
 
 // 3D CASE with vorticity
 // double pi = acos(-1.);
-// 
+//
 // double InitalValueU(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
-//   return 
-//     2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * 
+//   return
+//     2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
 //     ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
 //     )* cos(time);
 // }
-// 
+//
 // double InitalValueV(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
-//   return 
-//     2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * 
+//   return
+//     2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
 //     ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
 //     )* cos(time);
 // }
-// 
+//
 // double InitalValueW(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
-//   return  
-//     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) * 
+//   return
+//     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
 //     ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
 //     )* cos(time);
-//   
+//
 //   return 0.;
 // }
 
@@ -200,9 +200,9 @@ int main(int argc, char** args) {
   a1Quad.GetMarkerCoordinates(xn[0][n]);
   for(unsigned i = 0;  i < xn[0].size(); i++) {
     for(unsigned d = 0; d < xn[0][i].size(); d++) {
-   //   std::cout << xn[0][i][d] << " ";
+      //   std::cout << xn[0][i][d] << " ";
     }
-   // std::cout << std::endl;
+    // std::cout << std::endl;
   }
 
 
@@ -223,47 +223,60 @@ int main(int argc, char** args) {
     x[0] = 0. + 0.125 * cos(2.*pi / pSize * j);
     x[1] = .25 + 0.125 * sin(2.*pi / pSize * j);
     x[2] = 0.;
-    particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels-1), solType, true);
+    particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
   }
 
   std::vector < std::vector < std::vector < double > > > line(1);
   line[0].resize(pSize + 1);
-  
+
   for(unsigned j = 0; j < pSize; j++) {
     particle[j]->GetMarkerCoordinates(line[0][j]);
   }
   particle[0]->GetMarkerCoordinates(line[0][pSize]);
-  
-  std::vector < std::vector < std::vector < double > > > line0 = line;
-  
+
+  std::vector < std::vector < std::vector < double > > > line0 = line; // saves the initial position
+
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
 
-  n = 100;
-  
+  n = 20;
+
   clock_t start_time = clock();
-  
-  for(unsigned k = 1; k <= n; k++) {  
+
+  for(unsigned k = 1; k <= n; k++) {
     mlSol.CopySolutionToOldSolution();
     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
     for(unsigned j = 0; j < pSize; j++) {
-      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels-1), 4, T / n);
+      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n);
       particle[j]->GetMarkerCoordinates(line[0][j]);
     }
     particle[0]->GetMarkerCoordinates(line[0][pSize]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }
 
-   std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
-              << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC <<" s" << std::endl;
-  
+  std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
+            << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+
+
+  //computing the geometric error
+  double error = 0.;
+  for(unsigned j = 0; j < pSize + 1; j++) {
+    double tempError = 0.;
+    for(unsigned i = 0; i < dim; i++) {
+      tempError += (line0[0][j][i] - line[0][j][i]) * (line0[0][j][i] - line[0][j][i]);
+    }
+    error += sqrt(tempError);
+  }
+
+  std::cout << " ERROR = " << error << std::endl;
+
 
   for(unsigned j = 0; j < pSize; j++) {
     delete particle[j];
   }
 
-  
+
 
   return 0;
 }
