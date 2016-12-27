@@ -238,7 +238,7 @@ int main(int argc, char** args) {
 
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
 
-  n = 20;
+  n = 200;
 
   clock_t start_time = clock();
 
