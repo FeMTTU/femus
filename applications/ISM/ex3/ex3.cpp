@@ -23,18 +23,33 @@ using namespace femus;
 // }
 
 
-//2D CASE rigid translation
+//2D CASE translation
 double InitalValueU(const std::vector < double >& x) {
-  return -x[1];
+  return 1.;
 }
 
 double InitalValueV(const std::vector < double >& x) {
-  return x[0];
+  return 0.;
 }
 
 double InitalValueW(const std::vector < double >& x) {
   return 0.;
 }
+
+
+
+//2D CASE rigid rotation
+// double InitalValueU(const std::vector < double >& x) {
+//   return -x[1];
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   return x[0];
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   return 0.;
+// }
 
 
 // double InitalValueU(const std::vector < double >& x) {
@@ -219,13 +234,29 @@ int main(int argc, char** args) {
   unsigned pSize = 100;
   std::vector < Marker*> particle(pSize);
 
-  double pi = acos(-1.);
-  for(unsigned j = 0; j < pSize; j++) {
-    x[0] = 0. + 0.125 * cos(2.*pi / pSize * j);
-    x[1] = .25 + 0.125 * sin(2.*pi / pSize * j);
+  
+//uncomment to do solid body rotation and vortex test  
+//   double pi = acos(-1.);
+//   for(unsigned j = 0; j < pSize; j++) {
+//     x[0] = 0. + 0.125 * cos(2.*pi / pSize * j);
+//     x[1] = .25 + 0.125 * sin(2.*pi / pSize * j);
+//     x[2] = 0.;
+//     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
+//   }
+  
+  
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  //initializing the particles for the translation test
+  
+    T = 1.;
+    for(unsigned j = 0; j < pSize; j++) {
+    x[0] = -0.5;
+    x[1] = -0.5 + j/99;
     x[2] = 0.;
     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
   }
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
 
   std::vector < std::vector < std::vector < double > > > line(1);
   line[0].resize(pSize + 1);
@@ -239,15 +270,16 @@ int main(int argc, char** args) {
 
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
 
-  n = 200;
+  n = 10;
 
   clock_t start_time = clock();
 
   for(unsigned k = 1; k <= n; k++) {
-    mlSol.CopySolutionToOldSolution();
-    mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
-    mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
-    if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
+ // uncomment for rigid translation ad vortex test  
+     //mlSol.CopySolutionToOldSolution();
+  //     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
+//     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
+//     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
     for(unsigned j = 0; j < pSize; j++) {
       particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n);
       particle[j]->GetMarkerCoordinates(line[0][j]);
