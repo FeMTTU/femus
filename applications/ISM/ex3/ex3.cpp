@@ -22,7 +22,8 @@ using namespace femus;
 //   return 0.5;
 // }
 
-/*
+
+//2D CASE rigid translation
 double InitalValueU(const std::vector < double >& x) {
   return -x[1];
 }
@@ -33,7 +34,7 @@ double InitalValueV(const std::vector < double >& x) {
 
 double InitalValueW(const std::vector < double >& x) {
   return 0.;
-}*/
+}
 
 
 // double InitalValueU(const std::vector < double >& x) {
@@ -50,22 +51,22 @@ double InitalValueW(const std::vector < double >& x) {
 
 
 // 2D CASE with vorticity
-double pi = acos(-1.);
-
-double InitalValueU(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return 0.;
-}
+// double pi = acos(-1.);
+// 
+// double InitalValueU(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return 0.;
+// }
 
 
 
@@ -121,8 +122,8 @@ int main(int argc, char** args) {
   std::vector < double > x(3, 0); // marker
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  //unsigned numberOfUniformLevels = 3; //for refinement
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 3; //for refinement
+  //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   std::vector < std::string > variablesToBePrinted;
 
@@ -268,8 +269,10 @@ int main(int argc, char** args) {
     }
     error += sqrt(tempError);
   }
+  
+  error = error / pSize;
 
-  std::cout << " ERROR = " << error << std::endl;
+  std::cout << " ERROR = " << std::setprecision (15) << error << std::endl;
 
 
   for(unsigned j = 0; j < pSize; j++) {
