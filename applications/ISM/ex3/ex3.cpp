@@ -275,6 +275,8 @@ int main(int argc, char** args) {
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
 
   n = 10;
+  
+  //comment T for tests that are not translation
   T = 2. ;
   clock_t start_time = clock();
 
@@ -284,7 +286,19 @@ int main(int argc, char** args) {
 //     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
 //     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
 //     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-
+    
+    
+    //uncomment for vortex test and rigid rotation
+//           for(unsigned j = 0; j < pSize; j++) {
+// 	particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n);
+// 	particle[j]->GetMarkerCoordinates(line[0][j]);
+//       }
+//       particle[0]->GetMarkerCoordinates(line[0][pSize]);
+//       PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
+//     }
+    
+    
+    
     //uncomment for translation test
     mlSol.CopySolutionToOldSolution();
     mlSol.UpdateSolution("U" , InitalValueU, static_cast<double>(k));
