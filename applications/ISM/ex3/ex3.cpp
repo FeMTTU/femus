@@ -25,7 +25,12 @@ using namespace femus;
 
 //2D CASE translation
 double InitalValueU(const std::vector < double >& x) {
-  return 1.;
+  double time = (x.size() == 4) ? x[3] : 0.;
+  unsigned nHalf = 5;
+  double U = 1.;
+  if (time >= nHalf) U  = -1.;
+  
+  return U;
 }
 
 double InitalValueV(const std::vector < double >& x) {
@@ -38,15 +43,15 @@ double InitalValueW(const std::vector < double >& x) {
 
 
 
-//2D CASE rigid rotation
+// 2D CASE rigid rotation
 // double InitalValueU(const std::vector < double >& x) {
 //   return -x[1];
 // }
-// 
+//
 // double InitalValueV(const std::vector < double >& x) {
 //   return x[0];
 // }
-// 
+//
 // double InitalValueW(const std::vector < double >& x) {
 //   return 0.;
 // }
@@ -67,17 +72,17 @@ double InitalValueW(const std::vector < double >& x) {
 
 // 2D CASE with vorticity
 // double pi = acos(-1.);
-// 
+//
 // double InitalValueU(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
 // }
-// 
+//
 // double InitalValueV(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
 // }
-// 
+//
 // double InitalValueW(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return 0.;
@@ -204,7 +209,7 @@ int main(int argc, char** args) {
   //std::cout << " The marker type is " <<  a1Quad.GetMarkerType() << std::endl;
 
   double T = 2 * acos(-1.);
-  unsigned n  = 100;
+  unsigned n  = 10;
 
 
   std::vector< std::vector < std::vector < double > > > xn(1);
@@ -220,8 +225,8 @@ int main(int argc, char** args) {
     }
     // std::cout << std::endl;
   }
-
-
+// 
+// 
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
@@ -234,8 +239,8 @@ int main(int argc, char** args) {
   unsigned pSize = 100;
   std::vector < Marker*> particle(pSize);
 
-  
-//uncomment to do solid body rotation and vortex test  
+
+//uncomment to do solid body rotation and vortex test
 //   double pi = acos(-1.);
 //   for(unsigned j = 0; j < pSize; j++) {
 //     x[0] = 0. + 0.125 * cos(2.*pi / pSize * j);
@@ -243,20 +248,20 @@ int main(int argc, char** args) {
 //     x[2] = 0.;
 //     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
 //   }
-  
-  
+
+
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  //initializing the particles for the translation test
-  
-    T = 1.;
-    for(unsigned j = 0; j < pSize; j++) {
+  //initializing the particles and time for the translation test
+
+  T = 2. ;
+  for(unsigned j = 0; j < pSize; j++) {
     x[0] = -0.5;
-    x[1] = -0.5 + j/99;
+    x[1] = -0.5 + j / 99;
     x[2] = 0.;
     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
   }
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
 
   std::vector < std::vector < std::vector < double > > > line(1);
   line[0].resize(pSize + 1);
@@ -275,11 +280,19 @@ int main(int argc, char** args) {
   clock_t start_time = clock();
 
   for(unsigned k = 1; k <= n; k++) {
- // uncomment for rigid translation ad vortex test  
-     //mlSol.CopySolutionToOldSolution();
-  //     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
+// uncomment for  vortex test
+//mlSol.CopySolutionToOldSolution();
+//     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
 //     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
 //     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
+
+    //uncomment for translation test
+    mlSol.CopySolutionToOldSolution();
+    mlSol.UpdateSolution("U" , InitalValueU, k);
+    mlSol.UpdateSolution("V" , InitalValueV, k);
+    if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, k);
+
+
     for(unsigned j = 0; j < pSize; j++) {
       particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n);
       particle[j]->GetMarkerCoordinates(line[0][j]);
@@ -301,10 +314,10 @@ int main(int argc, char** args) {
     }
     error += sqrt(tempError);
   }
-  
+
   error = error / pSize;
 
-  std::cout << " ERROR = " << std::setprecision (15) << error << std::endl;
+  std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
 
 
   for(unsigned j = 0; j < pSize; j++) {
