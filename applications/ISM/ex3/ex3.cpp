@@ -46,11 +46,11 @@ double InitalValueW(const std::vector < double >& x) {
 // double InitalValueU(const std::vector < double >& x) {
 //   return -x[1];
 // }
-//
+// 
 // double InitalValueV(const std::vector < double >& x) {
 //   return x[0];
 // }
-//
+// 
 // double InitalValueW(const std::vector < double >& x) {
 //   return 0.;
 // }
@@ -251,14 +251,31 @@ int main(int argc, char** args) {
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //initializing the particles and time for the translation test
-
-  
   for(unsigned j = 0; j < pSize; j++) {
     x[0] = -0.5;
-    x[1] = -0.5 + j / 99;
+    x[1] = -0.5 + 0.01 * static_cast<double>(j);
     x[2] = 0.;
     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
   }
+  //BEGIN TESTS PER CAPIRE CHE CASPITA SUCCEDE COL PUNTO j = 58
+  std::vector < double > xTrial(2, 0);
+  particle[58]->GetMarkerCoordinates(xTrial);
+  for(unsigned k=0; k<3; k++){
+    std::cout << "xTrial[" << k << "] = " << xTrial[k] << std::endl;
+  }
+  xTrial[0] = -0.5;
+  xTrial[1] = 0.8;
+  xTrial[2] = 0.;
+  Marker aTrial(xTrial, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
+  xTrial[0] = 0.;
+  xTrial[1] = 0.;
+  xTrial[2] = 0.;
+  aTrial.GetMarkerCoordinates(xTrial);
+  
+   for(unsigned k=0; k<3; k++){
+    std::cout << "xTrial[" << k << "] = " << xTrial[k] << std::endl;
+  }
+  //END
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -269,17 +286,17 @@ int main(int argc, char** args) {
     particle[j]->GetMarkerCoordinates(line[0][j]);
   }
   particle[0]->GetMarkerCoordinates(line[0][pSize]);
-
+ 
   std::vector < std::vector < std::vector < double > > > line0 = line; // saves the initial position
-
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
 
   n = 10;
   
   //comment T for tests that are not translation
-  T = 2. ;
+   T = 2. ;
   clock_t start_time = clock();
 
+  // k<=n+1 for translation k<=n for the other tests
   for(unsigned k = 1; k <= n+1; k++) {
 // uncomment for  vortex test
 //mlSol.CopySolutionToOldSolution();
@@ -313,7 +330,7 @@ int main(int argc, char** args) {
       particle[0]->GetMarkerCoordinates(line[0][pSize]);
       PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
     }
-  }
+ }
 
   std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
