@@ -258,23 +258,23 @@ int main(int argc, char** args) {
     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
   }
   //BEGIN TESTS PER CAPIRE CHE CASPITA SUCCEDE COL PUNTO j = 58
-  std::vector < double > xTrial(2, 0);
-  particle[58]->GetMarkerCoordinates(xTrial);
-  for(unsigned k=0; k<3; k++){
-    std::cout << "xTrial[" << k << "] = " << xTrial[k] << std::endl;
-  }
-  xTrial[0] = -0.5;
-  xTrial[1] = 0.8;
-  xTrial[2] = 0.;
-  Marker aTrial(xTrial, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
-  xTrial[0] = 0.;
-  xTrial[1] = 0.;
-  xTrial[2] = 0.;
-  aTrial.GetMarkerCoordinates(xTrial);
-  
-   for(unsigned k=0; k<3; k++){
-    std::cout << "xTrial[" << k << "] = " << xTrial[k] << std::endl;
-  }
+//   std::vector < double > xTrial(3, 0);
+//   particle[58]->GetMarkerCoordinates(xTrial);
+//   for(unsigned k=0; k<3; k++){
+//     std::cout << "xTrial[" << k << "] = " << xTrial[k] << std::endl;
+//   }
+//   xTrial[0] = 1.5;
+//   xTrial[1] = 1.7;
+//   xTrial[2] = 1.;
+//   Marker aTrial(xTrial, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
+//   xTrial[0] = 15.;
+//   xTrial[1] = 15.;
+//   xTrial[2] = 0.;
+//   aTrial.GetMarkerCoordinates(xTrial);
+//   
+//    for(unsigned k=0; k<3; k++){
+//     std::cout << "xTrial[" << k << "] = " << xTrial[k] << std::endl;
+//   }
   //END
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
