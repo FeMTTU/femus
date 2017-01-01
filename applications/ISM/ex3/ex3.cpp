@@ -10,35 +10,23 @@
 
 using namespace femus;
 
-// double InitalValueU(const std::vector < double >& x) {
-//   return 0.5;
-// }
-//
-// double InitalValueV(const std::vector < double >& x) {
-//   return 0.5;
-// }
-//
-// double InitalValueW(const std::vector < double >& x) {
-//   return 0.5;
-// }
-
 
 //2D CASE translation
-double InitalValueU(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  double nHalf = 5.5;
-  double U = 1.;
-  if (time >= nHalf) U  = -1.;
-  return U;
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  return 0.;
-}
+// double InitalValueU(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   double nHalf = 5.5;
+//   double U = 1.;
+//   if (time >= nHalf) U  = -1.;
+//   return U;
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   return 0.;
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   return 0.;
+// }
 
 
 
@@ -56,17 +44,18 @@ double InitalValueW(const std::vector < double >& x) {
 // }
 
 
-// double InitalValueU(const std::vector < double >& x) {
-//   return (-x[1]+x[2])/sqrt(3);
-// }
-//
-// double InitalValueV(const std::vector < double >& x) {
-//   return (x[0]-x[2])/sqrt(3);
-// }
-//
-// double InitalValueW(const std::vector < double >& x) {
-//   return (x[1]-x[0])/sqrt(3);
-// }
+//3D CASE rigid rotation
+double InitalValueU(const std::vector < double >& x) {
+  return (-x[1]+x[2])/sqrt(3);
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  return (x[0]-x[2])/sqrt(3);
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  return (x[1]-x[0])/sqrt(3);
+}
 
 
 // 2D CASE with vorticity
@@ -141,7 +130,8 @@ int main(int argc, char** args) {
   std::vector < double > x(3, 0); // marker
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 3; //for refinement
+  //unsigned numberOfUniformLevels = 3; //for refinement in 2D
+  unsigned numberOfUniformLevels = 4; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   std::vector < std::string > variablesToBePrinted;
@@ -161,8 +151,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/prism3D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/tri2.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cubeMixed.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/test2D.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cubeMixed.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/test2D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeTet.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
@@ -180,50 +170,35 @@ int main(int argc, char** args) {
   if(dim == 3) mlSol.Initialize("W", InitalValueW);
 
 //   //Test 1 (QUAD):
-//
-  //NOTE tests ran with 4 procs
-//   x[0] = -0.46875; //the marker is in element 191 (proc 3 of 4)
-//   x[1] = -0.5;
-//   x[2] = 0.;
 
-  x[0] = 0.125;
-  x[1] = 0.125;
-  x[2] = -0.25;
+//   x[0] = 0.125;
+//   x[1] = 0.125;
+//   x[2] = -0.25;
 
-//   x[0] = -0.46875; //the marker is in element 191 (proc 3 of 4)
-//   x[1] = -0.5;
-//   x[2] = 0.;
-
-
-// //Test 1 (TET):  element 20
-//     //NOTE Tests ran with 2 procs
-//       x[0] = -0.5;
-//       x[1] = 0.;
-//       x[2] = 0.;
 
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-  Marker a1Quad(x, VOLUME, mlMsh.GetLevel(0), solType, true);
+ // Marker a1Quad(x, VOLUME, mlMsh.GetLevel(0), solType, true);
   //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
   //std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
   //std::cout << " The marker type is " <<  a1Quad.GetMarkerType() << std::endl;
 
   double T = 2 * acos(-1.);
-  unsigned n  = 10;
+  unsigned n  = 1;
 
 
-  std::vector< std::vector < std::vector < double > > > xn(1);
-  xn[0].resize(n + 1);
-  for(unsigned k = 0; k < n; k++) {
-    a1Quad.GetMarkerCoordinates(xn[0][k]);
-    a1Quad.Advection(mlSol.GetLevel(0), 2, T / n);
-  }
-  a1Quad.GetMarkerCoordinates(xn[0][n]);
-  for(unsigned i = 0;  i < xn[0].size(); i++) {
-    for(unsigned d = 0; d < xn[0][i].size(); d++) {
-      //   std::cout << xn[0][i][d] << " ";
-    }
-    // std::cout << std::endl;
-  }
+//   std::vector< std::vector < std::vector < double > > > xn(1);
+//   xn[0].resize(n + 1);
+//   for(unsigned k = 0; k < n; k++) {
+//     a1Quad.GetMarkerCoordinates(xn[0][k]);
+//     a1Quad.Advection(mlSol.GetLevel(0), 2, T / n);
+//   }
+//   a1Quad.GetMarkerCoordinates(xn[0][n]);
+//   for(unsigned i = 0;  i < xn[0].size(); i++) {
+//     for(unsigned d = 0; d < xn[0][i].size(); d++) {
+//       //   std::cout << xn[0][i][d] << " ";
+//     }
+//     // std::cout << std::endl;
+//   }
 // 
 // 
   variablesToBePrinted.push_back("All");
@@ -232,7 +207,7 @@ int main(int argc, char** args) {
   vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-  PrintLine(DEFAULT_OUTPUTDIR, xn);
+ // PrintLine(DEFAULT_OUTPUTDIR, xn);
 
 
   unsigned pSize = 100;
@@ -240,23 +215,23 @@ int main(int argc, char** args) {
 
 
 //uncomment to do solid body rotation and vortex test
-//   double pi = acos(-1.);
-//   for(unsigned j = 0; j < pSize; j++) {
-//     x[0] = 0. + 0.125 * cos(2.*pi / pSize * j);
-//     x[1] = .25 + 0.125 * sin(2.*pi / pSize * j);
-//     x[2] = 0.;
-//     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
-//   }
+  double pi = acos(-1.);
+  for(unsigned j = 0; j < pSize; j++) {
+    x[0] = 0. + 0.125 * cos(2.*pi / pSize * j);
+    x[1] = .25 + 0.125 * sin(2.*pi / pSize * j);
+    x[2] = 0.;
+    particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
+  }
 
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //initializing the particles and time for the translation test
-  for(unsigned j = 0; j < pSize; j++) {
-    x[0] = -0.5;
-    x[1] = -0.5 + 0.01 * static_cast<double>(j);
-    x[2] = 0.;
-    particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
-  }
+//   for(unsigned j = 0; j < pSize; j++) {
+//     x[0] = -0.5;
+//     x[1] = -0.5 + 0.01 * static_cast<double>(j);
+//     x[2] = 0.;
+//     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
+//   }
   //BEGIN TESTS PER CAPIRE CHE CASPITA SUCCEDE COL PUNTO j = 58
 //   std::vector < double > xTrial(3, 0);
 //   particle[58]->GetMarkerCoordinates(xTrial);
@@ -293,11 +268,11 @@ int main(int argc, char** args) {
   n = 10;
   
   //comment T for tests that are not translation
-   T = 2. ;
+  // T = 2. ;
   clock_t start_time = clock();
 
   // k<=n+1 for translation k<=n for the other tests
-  for(unsigned k = 1; k <= n+1; k++) {
+  for(unsigned k = 1; k <= n; k++) {
 // uncomment for  vortex test
 //mlSol.CopySolutionToOldSolution();
 //     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
@@ -306,31 +281,31 @@ int main(int argc, char** args) {
     
     
     //uncomment for vortex test and rigid rotation
-//           for(unsigned j = 0; j < pSize; j++) {
-// 	particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n);
-// 	particle[j]->GetMarkerCoordinates(line[0][j]);
-//       }
-//       particle[0]->GetMarkerCoordinates(line[0][pSize]);
-//       PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
-//     }
-    
-    
-    
-    //uncomment for translation test
-    mlSol.CopySolutionToOldSolution();
-    mlSol.UpdateSolution("U" , InitalValueU, static_cast<double>(k));
-    mlSol.UpdateSolution("V" , InitalValueV, static_cast<double>(k));
-    if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, static_cast<double>(k));
-
-    if(k != 6){
-      for(unsigned j = 0; j < pSize; j++) {
+          for(unsigned j = 0; j < pSize; j++) {
 	particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n);
 	particle[j]->GetMarkerCoordinates(line[0][j]);
       }
       particle[0]->GetMarkerCoordinates(line[0][pSize]);
       PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
     }
- }
+    
+    
+    
+    //uncomment for translation test
+//     mlSol.CopySolutionToOldSolution();
+//     mlSol.UpdateSolution("U" , InitalValueU, static_cast<double>(k));
+//     mlSol.UpdateSolution("V" , InitalValueV, static_cast<double>(k));
+//     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, static_cast<double>(k));
+// 
+//     if(k != 6){
+//       for(unsigned j = 0; j < pSize; j++) {
+// 	particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n);
+// 	particle[j]->GetMarkerCoordinates(line[0][j]);
+//       }
+//       particle[0]->GetMarkerCoordinates(line[0][pSize]);
+//       PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
+//     }
+//  }
 
   std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
