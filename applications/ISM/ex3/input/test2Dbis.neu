@@ -2,7 +2,7 @@
 ** GAMBIT NEUTRAL FILE
 test2Dbis
 PROGRAM:                Gambit     VERSION:  2.3.16
- 1 Jan 2016    10:32:05 
+ 1 Jan 2016    13:15:42 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
       5177      1780         1         1         2         2
 ENDOFSECTION
@@ -7879,7 +7879,7 @@ GROUP:          1 ELEMENTS:       1780 MATERIAL:          2 NFLAGS:          1
      381     382     383     384     385     386     387     388     389     390
 ENDOFSECTION
  BOUNDARY CONDITIONS 2.3.16
-                  element_side.1       1     160       0       6
+                               1       1     160       0       6
        263    3    1
        266    3    3
        272    3    3
