@@ -151,9 +151,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/prism3D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/tri2.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cubeMixed.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cubeMixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/test2D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeTet.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
