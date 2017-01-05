@@ -31,31 +31,31 @@ using namespace femus;
 
 
 // 2D CASE rigid rotation
-double InitalValueU(const std::vector < double >& x) {
-  return -x[1];
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  return x[0];
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  return 0.;
-}
-
-
-//3D CASE  rotation
 // double InitalValueU(const std::vector < double >& x) {
-//   return (-x[1]+x[2])/sqrt(3);
+//   return -x[1];
 // }
 // 
 // double InitalValueV(const std::vector < double >& x) {
-//   return (x[0]-x[2])/sqrt(3);
+//   return x[0];
 // }
 // 
 // double InitalValueW(const std::vector < double >& x) {
-//   return (x[1]-x[0])/sqrt(3);
+//   return 0.;
 // }
+
+
+//3D CASE  rotation
+double InitalValueU(const std::vector < double >& x) {
+  return (-x[1]+x[2])/sqrt(3);
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  return (x[0]-x[2])/sqrt(3);
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  return (x[1]-x[0])/sqrt(3);
+}
 
 
 // 2D CASE with vorticity
@@ -130,8 +130,8 @@ int main(int argc, char** args) {
   std::vector < double > x(3, 0); // marker
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-   //unsigned numberOfUniformLevels = 3; //for refinement in 3D
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 3; //for refinement in 3D
+  //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   std::vector < std::string > variablesToBePrinted;
 
@@ -151,8 +151,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/tri2.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeMixed.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/test2D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeTet.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
@@ -266,7 +266,7 @@ int main(int argc, char** args) {
   std::vector < std::vector < std::vector < double > > > line0 = line; // saves the initial position
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
 
-  n = 250;
+  n = 10;
   
   //comment T for tests that are not translation
   // T = 2. ;
