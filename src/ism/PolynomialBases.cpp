@@ -1776,7 +1776,7 @@ namespace femus {
     }
   };
 
-  void GetClosestPointInReferenceElement(const std::vector< std::vector < double > > &xv, std::vector <double> &x,
+  void GetClosestPointInReferenceElement(const std::vector< std::vector < double > > &xv, const std::vector <double> &x,
                                          const short unsigned &ieltype, std::vector < double > &xi) {
     unsigned dim = xv.size();
     unsigned ndofs = xv[0].size();

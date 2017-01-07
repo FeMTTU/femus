@@ -809,9 +809,9 @@ namespace femus {
 
       std::vector < double >  xcs;
       double radius;
-      GetConvexHullSphere(xvv, xcs, radius, 0.1);
+      GetConvexHullSphere(xvv, xcs, radius, 0.5);
       std::vector< std::vector < double > > xe;
-      GetBoundingBox(xvv, xe, 0.1);
+      GetBoundingBox(xvv, xe, 0.5);
 
       double radius2 = radius * radius;
       double d2 = 0.;
@@ -1536,6 +1536,7 @@ namespace femus {
 
 
 }
+
 
 
 

@@ -84,7 +84,7 @@ namespace femus {
   void GetBoundingBox(const std::vector< std::vector < double > > &xv, std::vector< std::vector < double > > &xe, const double tolerance = 1.0e-10);
   void GetInverseMapping(const unsigned &solType, short unsigned &ielType, const std::vector < std::vector < std::vector <double > > > &aP,
                          const std::vector <double > &xl, std::vector <double > &xi);
-  void GetClosestPointInReferenceElement(const std::vector< std::vector < double > > &xv, std::vector <double> &x,
+  void GetClosestPointInReferenceElement(const std::vector< std::vector < double > > &xv, const std::vector <double> &x,
                                          const short unsigned &ieltype, std::vector < double > &xi);
   
   void PrintLine(const std::string output_path, const std::vector < std::vector< std::vector<double> > > &xn, const bool &streamline = true, const unsigned &step = 0);
