@@ -406,6 +406,9 @@ namespace femus {
 
 
   void Marker::GetElementSerial(unsigned &previousElem) {
+    
+    
+    std::cout << "CHIAMATA SERIAL " << std::endl;
 
     unsigned currentElem = _elem;
     bool elementHasBeenFound = false;
@@ -444,14 +447,18 @@ namespace femus {
 
 
     if(elementHasBeenFound) {
-    //  std::cout << " The marker belongs to element " << _elem << std::endl;
+      std::cout << " The marker belongs to element " << _elem << std::endl;
     }
     else if(pointIsOutsideTheDomain) {
-    //  std::cout << " The marker does not belong to this domain" << std::endl;
+      std::cout << " The marker does not belong to this domain" << std::endl;
     }
     else if(pointIsOutsideThisProcess) {
-    //  std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
+      std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
     }
+    
+    
+    std::cout << "FINE SERIAL" << std::endl;
+    
     //END next element search
   }
 
@@ -545,6 +552,9 @@ namespace femus {
 
 
   unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &previousElem) {
+    
+    
+    std::cout<< "CHIAMATA 2D" << std::endl;
 
     int nextElem ;
     bool markerIsInElement = false;
@@ -736,15 +746,15 @@ namespace femus {
 
     if(markerIsInElement == true) {
       nextElem = currentElem;
-   //  std::cout << "The marker belongs to element " << currentElem << std::endl;
+     std::cout << "The marker belongs to element " << currentElem << std::endl;
     }
 
     if(nextElementFound == true) {
-   //  std::cout << "The marker does not belong to element " << currentElem << std::endl;
+     std::cout << "The marker does not belong to element " << currentElem << std::endl;
     }
 
 
-   // std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
+    std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
 
     return (nextElem >= 0) ? nextElem : UINT_MAX;
 
