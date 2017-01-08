@@ -444,13 +444,13 @@ namespace femus {
 
 
     if(elementHasBeenFound) {
-   //   std::cout << " The marker belongs to element " << _elem << std::endl;
+    //  std::cout << " The marker belongs to element " << _elem << std::endl;
     }
     else if(pointIsOutsideTheDomain) {
     //  std::cout << " The marker does not belong to this domain" << std::endl;
     }
     else if(pointIsOutsideThisProcess) {
-   //   std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
+    //  std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
     }
     //END next element search
   }
@@ -538,7 +538,7 @@ namespace femus {
         nextElem = jelement;
       }
     }
-    return nextElem;
+     return nextElem;
 
   }
 
@@ -581,10 +581,10 @@ namespace femus {
 
       std::vector < double >  xcs;
       double radius;
-      GetConvexHullSphere(xv, xcs, radius, 0.1);
+      GetConvexHullSphere(xv, xcs, radius, 0.1); 
       std::vector< std::vector < double > > xe;
-      GetBoundingBox(xv, xe, 0.1);
-
+      GetBoundingBox(xv, xe, 0.1); 
+      
       double radius2 = radius * radius;
       double d2 = 0.;
       for(int d = 0; d < _dim; d++) {
@@ -736,15 +736,15 @@ namespace femus {
 
     if(markerIsInElement == true) {
       nextElem = currentElem;
-   //   std::cout << "The marker belongs to element " << currentElem << std::endl;
+   //  std::cout << "The marker belongs to element " << currentElem << std::endl;
     }
 
     if(nextElementFound == true) {
- //     std::cout << "The marker does not belong to element " << currentElem << std::endl;
+   //  std::cout << "The marker does not belong to element " << currentElem << std::endl;
     }
 
 
-  //  std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
+   // std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
 
     return (nextElem >= 0) ? nextElem : UINT_MAX;
 
