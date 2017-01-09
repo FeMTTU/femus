@@ -19,11 +19,11 @@ using namespace femus;
 //   if (time >= nHalf) U  = -1.;
 //   return U;
 // }
-// 
+//
 // double InitalValueV(const std::vector < double >& x) {
 //   return 0.;
 // }
-// 
+//
 // double InitalValueW(const std::vector < double >& x) {
 //   return 0.;
 // }
@@ -48,11 +48,11 @@ double InitalValueW(const std::vector < double >& x) {
 // double InitalValueU(const std::vector < double >& x) {
 //   return (-x[1]+x[2])/sqrt(3);
 // }
-// 
+//
 // double InitalValueV(const std::vector < double >& x) {
 //   return (x[0]-x[2])/sqrt(3);
 // }
-// 
+//
 // double InitalValueW(const std::vector < double >& x) {
 //   return (x[1]-x[0])/sqrt(3);
 // }
@@ -178,7 +178,7 @@ int main(int argc, char** args) {
 
 
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
- // Marker a1Quad(x, VOLUME, mlMsh.GetLevel(0), solType, true);
+// Marker a1Quad(x, VOLUME, mlMsh.GetLevel(0), solType, true);
   //Marker a( x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels + numberOfSelectiveLevels -1) );
   //std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
   //std::cout << " The marker type is " <<  a1Quad.GetMarkerType() << std::endl;
@@ -200,15 +200,15 @@ int main(int argc, char** args) {
 //     }
 //     // std::cout << std::endl;
 //   }
-// 
-// 
+//
+//
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
- // PrintLine(DEFAULT_OUTPUTDIR, xn);
+// PrintLine(DEFAULT_OUTPUTDIR, xn);
 
 
   unsigned pSize = 100;
@@ -247,7 +247,7 @@ int main(int argc, char** args) {
 //   xTrial[1] = 15.;
 //   xTrial[2] = 0.;
 //   aTrial.GetMarkerCoordinates(xTrial);
-//   
+//
 //    for(unsigned k=0; k<3; k++){
 //     std::cout << "xTrial[" << k << "] = " << xTrial[k] << std::endl;
 //   }
@@ -262,12 +262,12 @@ int main(int argc, char** args) {
     particle[j]->GetMarkerCoordinates(line[0][j]);
   }
   particle[0]->GetMarkerCoordinates(line[0][pSize]);
- 
+
   std::vector < std::vector < std::vector < double > > > line0 = line; // saves the initial position
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
 
   n = 10;
-  
+
   //comment T for tests that are not translation
   // T = 2. ;
   clock_t start_time = clock();
@@ -279,25 +279,26 @@ int main(int argc, char** args) {
 //     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
 //     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
 //     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-    
-    
+
+
     //uncomment for vortex test and rigid rotation
-          for(unsigned j = 0; j < pSize; j++) {
-	particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 1, T / n);
-	particle[j]->GetMarkerCoordinates(line[0][j]);
-      }
-      particle[0]->GetMarkerCoordinates(line[0][pSize]);
-      PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
+    for(unsigned j = 0; j < pSize; j++) {
+
+      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 1, T / n);
+      particle[j]->GetMarkerCoordinates(line[0][j]);
     }
-    
-    
-    
-    //uncomment for translation test
+    particle[0]->GetMarkerCoordinates(line[0][pSize]);
+    PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
+  }
+
+
+
+  //uncomment for translation test
 //     mlSol.CopySolutionToOldSolution();
 //     mlSol.UpdateSolution("U" , InitalValueU, static_cast<double>(k));
 //     mlSol.UpdateSolution("V" , InitalValueV, static_cast<double>(k));
 //     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, static_cast<double>(k));
-// 
+//
 //     if(k != 6){
 //       for(unsigned j = 0; j < pSize; j++) {
 // 	particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n);
