@@ -407,7 +407,7 @@ namespace femus {
 
   void Marker::GetElementSerial(unsigned &previousElem) {
 
-    std::cout << " SERIALE " << std::endl<<std::flush;
+    std::cout << " SERIALE " << std::endl << std::flush;
 
     unsigned currentElem = _elem;
     bool elementHasBeenFound = false;
@@ -425,8 +425,8 @@ namespace femus {
       }
       previousElem = currentElem;
 
-      std::cout << previousElem <<std::cout<<std::flush;
-      
+      std::cout << previousElem << std::cout << std::flush;
+
       if(_elem == currentElem) {
         elementHasBeenFound = true;
       }
@@ -438,10 +438,10 @@ namespace femus {
         _mproc = _mesh->IsdomBisectionSearch(_elem , 3);
         if(_mproc != _iproc) {
           pointIsOutsideThisProcess = true;
-          // previousElem = _elem ; //Non ne capisco il motivo e l'ho cancellato ma ho visto che hai fatto altri cambi relativi a questo che ho lasciato, 
-	  // perche' non li capisco ed e' meglio che li metti a post te 
-	  // se lo lasci come l'hai messo te allora rischia di sbagliare se salta tra 2 processi
-	  // WARNING ADDED THIS in case the element in the other proc is not the right one (when the point is advected by a lot)
+          // previousElem = _elem ; //Non ne capisco il motivo e l'ho cancellato ma ho visto che hai fatto altri cambi relativi a questo che ho lasciato,
+          // perche' non li capisco ed e' meglio che li metti a post te
+          // se lo lasci come l'hai messo te allora rischia di sbagliare se salta tra 2 processi
+          // WARNING ADDED THIS in case the element in the other proc is not the right one (when the point is advected by a lot)
           // however I think there is the risk that we call FastForward with currentElem = previousElem = _elem, I did something about it
           break;
         }
@@ -537,7 +537,7 @@ namespace femus {
 
     double maxProjection = 0.;
     unsigned faceIndex = 0;
-    int nextElem = previousElem ;  //WARNING added this in case we call it with currentElem = previousElem
+    int nextElem;
     for(unsigned jface = 0; jface < faceNumber[ielType]; jface++) {
       double projection = 0.;
       for(unsigned k = 0; k < _dim; k++) {
@@ -614,10 +614,7 @@ namespace femus {
       }
       if(!insideHull) {
         nextElem = FastForward(currentElem, previousElem);
-        if(nextElem == previousElem) { //WARNING added this if for the  case we have that FastForward is called with currentElem = previousElem
-          markerIsInElement = true;
-        }
-        else nextElementFound = true;
+        nextElementFound = true;
       }
 
       else {
@@ -1352,37 +1349,37 @@ namespace femus {
           GetElement(previousElem, mprocOld);  //fissato, WARNING QUESTO e' il problema, dovrebbe dire 724 invece dice 716
 
           std::cout << "_elem = " << _elem << std::endl;
-	  std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
-	  
-	  if(_mproc != mprocOld){
-	    if(mprocOld == _iproc) {
-	      unsigned istep = step % order;
-	      if(istep != 0) {
-		for(int i = 0; i < order; i++) {
-		  MPI_Send(&_K[i][0], _dim, MPI_DOUBLE, _mproc, i , PETSC_COMM_WORLD);
-		}
-		MPI_Send(&_x0[0], _dim, MPI_DOUBLE, _mproc, order , PETSC_COMM_WORLD);
-	      }
-	      std::vector < double > ().swap(_xi);
-	      std::vector < double > ().swap(_x0);
-	      std::vector < std::vector < double > > ().swap(_K);
-	      std::vector < std::vector < std::vector < double > > >().swap(_aX);
-	    }
-	    else if(_mproc == _iproc) {
-	      _x0.resize(_dim);
-	      _K.resize(order);
-	      for(unsigned i = 0; i < order; i++) {
-		_K[i].resize(_dim);
-	      }
-	      unsigned istep = step % order;
-	      if(istep != 0) {
-		for(int i = 0; i < order; i++) {
-		  MPI_Recv(&_K[i][0], _dim, MPI_DOUBLE, mprocOld, i , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-		}
-		MPI_Recv(&_x0[0], _dim, MPI_DOUBLE, mprocOld, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-	      }
-	      FindLocalCoordinates(solVType, _aX, true);
-	    }
+          std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
+
+          if(_mproc != mprocOld) {
+            if(mprocOld == _iproc) {
+              unsigned istep = step % order;
+              if(istep != 0) {
+                for(int i = 0; i < order; i++) {
+                  MPI_Send(&_K[i][0], _dim, MPI_DOUBLE, _mproc, i , PETSC_COMM_WORLD);
+                }
+                MPI_Send(&_x0[0], _dim, MPI_DOUBLE, _mproc, order , PETSC_COMM_WORLD);
+              }
+              std::vector < double > ().swap(_xi);
+              std::vector < double > ().swap(_x0);
+              std::vector < std::vector < double > > ().swap(_K);
+              std::vector < std::vector < std::vector < double > > >().swap(_aX);
+            }
+            else if(_mproc == _iproc) {
+              _x0.resize(_dim);
+              _K.resize(order);
+              for(unsigned i = 0; i < order; i++) {
+                _K[i].resize(_dim);
+              }
+              unsigned istep = step % order;
+              if(istep != 0) {
+                for(int i = 0; i < order; i++) {
+                  MPI_Recv(&_K[i][0], _dim, MPI_DOUBLE, mprocOld, i , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+                }
+                MPI_Recv(&_x0[0], _dim, MPI_DOUBLE, mprocOld, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+              }
+              FindLocalCoordinates(solVType, _aX, true);
+            }
           }
         }
       }
@@ -1411,7 +1408,7 @@ namespace femus {
     }
 
     mprocOld = _mproc;
-    while( true ) {   //Corretto ora dovrebbe funzionare. WARNING credo debba essere while(!found) perche' senno' non fa mai GetElementSerial e non cambia mai 716 in 724, pero' se si mette !found non ranna piu niente
+    while(true) {     //Corretto ora dovrebbe funzionare. WARNING credo debba essere while(!found) perche' senno' non fa mai GetElementSerial e non cambia mai 716 in 724, pero' se si mette !found non ranna piu niente
       if(_mproc == _iproc) {
         GetElementSerial(previousElem);
       }
@@ -1423,7 +1420,7 @@ namespace femus {
       else {
         _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
         if(_mproc == mprocOld) {
-	  break;
+          break;
         }
         else {
           if(mprocOld == _iproc) {
