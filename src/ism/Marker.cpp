@@ -407,6 +407,7 @@ namespace femus {
 
   void Marker::GetElementSerial(unsigned &previousElem) {
 
+    std::cout << " SERIALE " << std::endl;
 
     unsigned currentElem = _elem;
     bool elementHasBeenFound = false;
@@ -435,6 +436,8 @@ namespace femus {
         _mproc = _mesh->IsdomBisectionSearch(_elem , 3);
         if(_mproc != _iproc) {
           pointIsOutsideThisProcess = true;
+          previousElem = _elem ; //WARNING ADDED THIS in case the element in the other proc is not the right one (when the point is advected by a lot)
+          // however I think there is the risk that we call FastForward with currentElem = previousElem = _elem, I did something about it
           break;
         }
         else {
@@ -454,6 +457,7 @@ namespace femus {
       //  std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
     }
 
+    std::cout << "FINE SERIALE " << std::endl;
 
     //END next element search
   }
@@ -528,7 +532,7 @@ namespace femus {
 
     double maxProjection = 0.;
     unsigned faceIndex = 0;
-    int nextElem;
+    int nextElem = previousElem ;  //WARNING added this in case we call it with currentElem = previousElem
     for(unsigned jface = 0; jface < faceNumber[ielType]; jface++) {
       double projection = 0.;
       for(unsigned k = 0; k < _dim; k++) {
@@ -605,7 +609,10 @@ namespace femus {
       }
       if(!insideHull) {
         nextElem = FastForward(currentElem, previousElem);
-        nextElementFound = true;
+        if(nextElem == previousElem) { //WARNING added this if for the  case we have that FastForward is called with currentElem = previousElem
+          markerIsInElement = true;
+        }
+        else nextElementFound = true;
       }
 
       else {
@@ -740,15 +747,15 @@ namespace femus {
 
     if(markerIsInElement == true) {
       nextElem = currentElem;
-       std::cout << "The marker belongs to element " << currentElem << std::endl;
+      std::cout << "The marker belongs to element " << currentElem << std::endl;
     }
 
     if(nextElementFound == true) {
-       std::cout << "The marker does not belong to element " << currentElem << std::endl;
+      std::cout << "The marker does not belong to element " << currentElem << std::endl;
     }
 
 
-     std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
+    std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
 
     return (nextElem >= 0) ? nextElem : UINT_MAX;
 
@@ -1233,6 +1240,10 @@ namespace femus {
     while(integrationIsOver == false) {
       unsigned mprocOld = _mproc;
 
+
+      std::cout << "INIZIA UN CICLO DI INTEGRAZIONE " << " " << " previousElem = " << _elem << " " << " mprocOld = " << mprocOld << std::endl;
+
+
       unsigned previousElem;
       if(_iproc == _mproc) { //single process
         bool pcElemUpdate = true ;
@@ -1317,14 +1328,26 @@ namespace femus {
       MPI_Bcast(& _elem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& step, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
 
+
+      std::cout << "_elem = " << _elem << std::endl;
+
       if(_elem == UINT_MAX) {
         //   std::cout << " the marker has been advected outside the domain " << std::endl;
         break;
       }
       else {
         _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
+
+        std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
+
         if(_mproc != mprocOld) {
-          GetElement(previousElem, mprocOld);
+
+          std::cout << "SON QUA previousElem = " << previousElem << std::endl;
+
+          GetElement(previousElem, mprocOld);  //WARNING QUESTO e' il problema, dovrebbe dire 724 invece dice 716
+
+          std::cout << "_elem = " << _elem << std::endl;
+
           if(mprocOld == _iproc) {
             unsigned istep = step % order;
             if(istep != 0) {
@@ -1379,9 +1402,11 @@ namespace femus {
       MPI_Recv(&_x[0], _dim, MPI_DOUBLE, mprocOld, 2 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
+    std::cout << "previousElem = " << previousElem <<   std::endl;
+
     mprocOld = _mproc;
     bool found = false;
-    while(found) {
+    while(found) {   //WARNING credo debba essere while(!found) perche' senno' non fa mai GetElementSerial e non cambia mai 716 in 724, pero' se si mette !found non ranna piu niente
       if(_mproc == _iproc) {
         GetElementSerial(previousElem);
       }
