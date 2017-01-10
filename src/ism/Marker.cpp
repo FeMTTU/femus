@@ -1229,7 +1229,7 @@ namespace femus {
     double h = T / n;
     bool integrationIsOver = (_elem != UINT_MAX) ? false : true;
 
-    unsigned order = 4;
+    unsigned order = 1;
     unsigned step = 0.;
 
     if(_iproc == _mproc) {
@@ -1275,7 +1275,7 @@ namespace femus {
           step++;
           istep++;
 
-          if(istep < order) {
+          if(istep < order) { 
 
             for(unsigned i = 0; i < _dim; i++) {
               _x[i] = _x0[i];
@@ -1284,7 +1284,7 @@ namespace femus {
               }
             }
           }
-          else if(istep == order) {
+          else if(istep == order) {  
 
             for(unsigned i = 0; i < _dim; i++) {
               _x[i] = _x0[i];
