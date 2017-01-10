@@ -1229,7 +1229,7 @@ namespace femus {
     double h = T / n;
     bool integrationIsOver = (_elem != UINT_MAX) ? false : true;
 
-    unsigned order = 1;
+    unsigned order = 2;
     unsigned step = 0.;
 
     if(_iproc == _mproc) {
@@ -1380,9 +1380,11 @@ namespace femus {
                 }
                 MPI_Recv(&_x0[0], _dim, MPI_DOUBLE, mprocOld, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
               }
-              FindLocalCoordinates(solVType, _aX, true);
             }
           }
+          if(_mproc == _iproc) { //WARNING this now should be outside and was causing the problem with different processes
+	    FindLocalCoordinates(solVType, _aX, true);
+	  }
         }
       }
 //     std::cout << "step = " << step << std::endl;
