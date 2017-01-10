@@ -1243,7 +1243,7 @@ namespace femus {
       unsigned mprocOld = _mproc;
 
 
-      std::cout << "INIZIA UN CICLO DI INTEGRAZIONE " << " " << " previousElem = " << _elem << " " << " mprocOld = " << mprocOld << std::endl;
+      std::cout << "INIZIA UN CICLO DI INTEGRAZIONE " << " " << " _elem da cui si parte = " << _elem << " " << " mprocOld = " << mprocOld << " " << "_mproc = " << _mproc <<  std::endl;
 
 
       unsigned previousElem;
@@ -1326,12 +1326,14 @@ namespace femus {
       }
       //   std::cout << step;
 
+      std::cout << "prima del bcast _elem = " << _elem << std::endl;
+      
       // all processes
       MPI_Bcast(& _elem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& step, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
 
 
-      std::cout << "_elem = " << _elem << std::endl;
+      std::cout << "dopo il bcast _elem = " << _elem << std::endl;
 
       if(_elem == UINT_MAX) {
         //   std::cout << " the marker has been advected outside the domain " << std::endl;
