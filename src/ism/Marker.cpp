@@ -1229,7 +1229,7 @@ namespace femus {
     double h = T / n;
     bool integrationIsOver = (_elem != UINT_MAX) ? false : true;
 
-    unsigned order = 2;
+    unsigned order = 1;
     unsigned step = 0.;
 
     if(_iproc == _mproc) {
@@ -1353,6 +1353,8 @@ namespace femus {
           std::cout << "_elem = " << _elem << std::endl;
           std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
 
+	  if(_elem == UINT_MAX) break;
+	  
           if(_mproc != mprocOld) {
             if(mprocOld == _iproc) {
               unsigned istep = step % order;

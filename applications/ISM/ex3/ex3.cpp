@@ -283,7 +283,7 @@ int main(int argc, char** args) {
 
     //uncomment for vortex test and rigid rotation
     for(unsigned j = 0; j < pSize; j++) {
-
+//       std::cout << j <<" " << k << std::endl<<std::flush;
       particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 1, T / n);
       particle[j]->GetMarkerCoordinates(line[0][j]);
     }
