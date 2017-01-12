@@ -407,7 +407,7 @@ namespace femus {
 
   void Marker::GetElementSerial(unsigned &previousElem) {
 
-    std::cout << " SERIALE " << std::endl << std::flush;
+    //std::cout << " SERIALE " << std::endl << std::flush;
 
     unsigned currentElem = _elem;
     bool elementHasBeenFound = false;
@@ -425,7 +425,7 @@ namespace femus {
       }
       previousElem = currentElem;
 
-      std::cout << previousElem << std::cout << std::flush;
+     // std::cout << previousElem << std::cout << std::flush;
 
       if(_elem == currentElem) {
         elementHasBeenFound = true;
@@ -438,11 +438,6 @@ namespace femus {
         _mproc = _mesh->IsdomBisectionSearch(_elem , 3);
         if(_mproc != _iproc) {
           pointIsOutsideThisProcess = true;
-          // previousElem = _elem ; //Non ne capisco il motivo e l'ho cancellato ma ho visto che hai fatto altri cambi relativi a questo che ho lasciato,
-          // perche' non li capisco ed e' meglio che li metti a post te
-          // se lo lasci come l'hai messo te allora rischia di sbagliare se salta tra 2 processi
-          // WARNING ADDED THIS in case the element in the other proc is not the right one (when the point is advected by a lot)
-          // however I think there is the risk that we call FastForward with currentElem = previousElem = _elem, I did something about it
           break;
         }
         else {
@@ -462,7 +457,7 @@ namespace femus {
       //  std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
     }
 
-    std::cout << "FINE SERIALE " << std::endl;
+   // std::cout << "FINE SERIALE " << std::endl;
 
     //END next element search
   }
@@ -749,15 +744,15 @@ namespace femus {
 
     if(markerIsInElement == true) {
       nextElem = currentElem;
-      std::cout << "The marker belongs to element " << currentElem << std::endl;
+     // std::cout << "The marker belongs to element " << currentElem << std::endl;
     }
 
     if(nextElementFound == true) {
-      std::cout << "The marker does not belong to element " << currentElem << std::endl;
+     // std::cout << "The marker does not belong to element " << currentElem << std::endl;
     }
 
 
-    std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
+   // std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
 
     return (nextElem >= 0) ? nextElem : UINT_MAX;
 
@@ -1229,7 +1224,7 @@ namespace femus {
     double h = T / n;
     bool integrationIsOver = (_elem != UINT_MAX) ? false : true;
 
-    unsigned order = 1;
+    unsigned order = 4;
     unsigned step = 0.;
 
     if(_iproc == _mproc) {
@@ -1243,7 +1238,7 @@ namespace femus {
       unsigned mprocOld = _mproc;
 
 
-      std::cout << "INIZIA UN CICLO DI INTEGRAZIONE " << " " << " _elem da cui si parte = " << _elem << " " << " mprocOld = " << mprocOld << " " << "_mproc = " << _mproc <<  std::endl;
+     // std::cout << "INIZIA UN CICLO DI INTEGRAZIONE " << " " << " _elem da cui si parte = " << _elem << " " << " mprocOld = " << mprocOld << " " << "_mproc = " << _mproc <<  std::endl;
 
 
       unsigned previousElem;
@@ -1326,14 +1321,14 @@ namespace femus {
       }
       //   std::cout << step;
 
-      std::cout << "prima del bcast _elem = " << _elem << std::endl;
+    //  std::cout << "prima del bcast _elem = " << _elem << std::endl;
       
       // all processes
       MPI_Bcast(& _elem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& step, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
 
 
-      std::cout << "dopo il bcast _elem = " << _elem << std::endl;
+     // std::cout << "dopo il bcast _elem = " << _elem << std::endl;
 
       if(_elem == UINT_MAX) {
         //   std::cout << " the marker has been advected outside the domain " << std::endl;
@@ -1342,16 +1337,16 @@ namespace femus {
       else {
         _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
 
-        std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
+      //  std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
 
         if(_mproc != mprocOld) {
 
-          std::cout << "SON QUA previousElem = " << previousElem << std::endl;
+       //   std::cout << "SON QUA previousElem = " << previousElem << std::endl;
 
           GetElement(previousElem, mprocOld);  //fissato, WARNING QUESTO e' il problema, dovrebbe dire 724 invece dice 716
 
-          std::cout << "_elem = " << _elem << std::endl;
-          std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
+        //  std::cout << "_elem = " << _elem << std::endl;
+        //  std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
 
 	  if(_elem == UINT_MAX) break;
 	  
@@ -1520,9 +1515,9 @@ namespace femus {
   void Marker::FindLocalCoordinates(const unsigned & solType, std::vector < std::vector < std::vector < double > > > &aX, const bool & pcElemUpdate) {
 
     //BEGIN TO BE REMOVED
-    std::cout << "ENTRIAMO NELL' INVERSE MAPPING, _elem =" << _elem << std::endl;
+   // std::cout << "ENTRIAMO NELL' INVERSE MAPPING, _elem =" << _elem << std::endl;
     for(unsigned i = 0; i < 3; i++) {
-      std::cout << "_x[" << i << "]= " << _x[i] << std::endl;
+    //  std::cout << "_x[" << i << "]= " << _x[i] << std::endl;
     }
     //END TO BE REMOVED
 
@@ -1558,9 +1553,9 @@ namespace femus {
       GetClosestPointInReferenceElement(xv, _x, elemType, _xi);
 
       //BEGIN TO BE REMOVED
-      std::cout << "INITIAL GUESS" << std::endl;
+     // std::cout << "INITIAL GUESS" << std::endl;
       for(unsigned i = 0; i < 3; i++) {
-        std::cout << "_xi[" << i << "]= " << _xi[i] << std::endl;
+      //  std::cout << "_xi[" << i << "]= " << _xi[i] << std::endl;
       }
       //END TO BE REMOVED
 
@@ -1586,7 +1581,7 @@ namespace femus {
     //END Inverse mapping loop
 
 
-    std::cout << "ED USCIAMO" << std::endl;
+  //  std::cout << "ED USCIAMO" << std::endl;
 
   }
 
