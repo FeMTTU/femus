@@ -402,7 +402,7 @@ namespace femus {
   }
 
   /**
-   * Return the local->global face node number
+   * Return the local->global face node index
    **/
   unsigned elem::GetFaceVertexIndex( const unsigned& iel, const unsigned& iface, const unsigned& inode )const {
     return _elementDof[iel][ig[_elementType[iel]][iface][inode]];
@@ -423,7 +423,7 @@ namespace femus {
   }
 
   /**
-   * Return the total number of the element
+   * Return the total number of elements
    **/
   unsigned elem::GetElementNumber( const char* name ) const {
     if( !strcmp( name, "All" ) ) {

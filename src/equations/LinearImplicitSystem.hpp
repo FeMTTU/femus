@@ -249,13 +249,13 @@ protected:
     bool _AMRtest;
     unsigned _maxAMRlevels;
     short _AMRnorm;
-    double _AMRthreshold;
+    std::vector <double> _AMRthreshold;
 
     vector <bool> _SparsityPattern;
 
     /** Solves the system. */
     virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
-
+    void Solve( const unsigned& gridn, const bool &kspClean, const int &npre, const int &npost );
 
   };
 

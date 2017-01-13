@@ -298,7 +298,8 @@ namespace femus {
       for( unsigned ig = gridn - 1u; ig > 0; ig-- ) {
         // ============== Presmoothing ==============
         for( unsigned k = 0; k < _npre; k++ ) {
-          _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
+          //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
+	  Solve(ig + 1, ksp_clean * ( !k ), 0, 1);
         }
 
         // ============== Restriction ==============
@@ -314,7 +315,8 @@ namespace femus {
 
         // ============== PostSmoothing ==============
         for( unsigned k = 0; k < _npost; k++ ) {
-          _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
+          //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
+	  Solve(ig + 1, ksp_clean * ( !_npre ) * ( !k ), 0, 1);
         }
       }
 
@@ -340,7 +342,28 @@ namespace femus {
 
     return linearIsConverged;
   }
+  
+  
+  void LinearImplicitSystem::Solve( const unsigned& gridn, const bool &kspClean, const int &npre, const int &npost ) {
+    
+    unsigned grid0 = ( gridn <= _gridr ) ? gridn : _gridr;
+    
+    for( unsigned ig = gridn - 1u; ig > grid0 - 1u; ig-- ) {
+      for( unsigned k = 0; k < npre; k++ ) {
+	_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, kspClean );
+      }
+      Restrictor( ig );
+    }
+      
+    _LinSolver[grid0 - 1u]->Solve( _VariablesToBeSolvedIndex, kspClean );
 
+    for( unsigned ig = grid0; ig < gridn; ig++ ) {
+      Prolongator( ig );
+      for( unsigned k = 0; k < npost; k++ ) {
+	_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, kspClean );
+      }
+    }
+  }
   // ********************************************
 
   void LinearImplicitSystem::Restrictor( const unsigned& gridf ) {
@@ -374,12 +397,14 @@ namespace femus {
   void LinearImplicitSystem::AddAMRLevel( unsigned& AMRCounter ) {
     bool conv_test = 0;
 
-    if( _AMRnorm == 0 ) {
-      conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnl2( _SolSystemPdeIndex, _AMRthreshold );
-    }
-    else if( _AMRnorm == 1 ) {
-      conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnSemiNorm( _SolSystemPdeIndex, _AMRthreshold );
-    }
+    conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnErroNormAdaptive( _SolSystemPdeIndex, _AMRthreshold, _AMRnorm );
+    
+    //     if( _AMRnorm == 0 ) {
+//       conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnl2( _SolSystemPdeIndex, _AMRthreshold );
+//     }
+//     else if( _AMRnorm == 1 ) {
+//       conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnSemiNorm( _SolSystemPdeIndex, _AMRthreshold );
+//     }
 
     if( conv_test == 0 ) {
       _ml_msh->AddAMRMeshLevel();
@@ -455,17 +480,18 @@ namespace femus {
     }
 
     _maxAMRlevels = AMRlevels;
-    _AMRthreshold = AMRthreshold;
+    _AMRthreshold.resize(1);
+    _AMRthreshold[0] = AMRthreshold;
 
-    if( !strcmp( "l2", AMRnorm.c_str() ) ) {
+    if( !strcmp( "l2", AMRnorm.c_str() )  || !strcmp( "h0", AMRnorm.c_str() ) || !strcmp( "H0", AMRnorm.c_str() )) {
       _AMRnorm = 0;
     }
-    else if( !strcmp( "seminorm", AMRnorm.c_str() ) || !strcmp( "semi-norm", AMRnorm.c_str() ) ) {
+    else if( !strcmp( "H1", AMRnorm.c_str() ) || !strcmp( "h1", AMRnorm.c_str() ) ) {
       _AMRnorm = 1;
     }
     else {
-      std::cout << AMRnorm << " invalid AMRnorm type \n set to default l2 norm" << std::endl;
-      _AMRnorm = 0;
+      std::cout << AMRnorm << " invalid AMRnorm type \n set to default H1 norm" << std::endl;
+      _AMRnorm = 1;
     }
 
     if( SetRefinementFlag == NULL ) {

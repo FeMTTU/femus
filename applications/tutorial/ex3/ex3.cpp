@@ -47,10 +47,10 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/square_mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_tet.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
 
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -61,7 +61,7 @@ int main(int argc, char** args) {
   if (dim == 2) {
     maxNumberOfMeshes = 7;
   } else {
-    maxNumberOfMeshes = 4;
+    maxNumberOfMeshes = 6;
   }
 
   vector < vector < double > > l2Norm;
@@ -72,7 +72,7 @@ int main(int argc, char** args) {
 
   for (unsigned i = 1; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
-    unsigned numberOfUniformLevels = i + 1;
+    unsigned numberOfUniformLevels = i ;
     unsigned numberOfSelectiveLevels = 0;
     mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -122,7 +122,11 @@ int main(int argc, char** args) {
       variablesToBePrinted.push_back("All");
 
       VTKWriter vtkIO(&mlSol);
-      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
+      vtkIO.SetDebugOutput(true);
+      vtkIO.Write(DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted, i+j*10);
+      vtkIO.Write(DEFAULT_OUTPUTDIR, "quadratic", variablesToBePrinted, i+j*10);
+      vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i+j*10);
+
 
 //       GMVWriter gmvIO(&mlSol);
 //       gmvIO.SetDebugOutput(true);
@@ -168,7 +172,7 @@ int main(int argc, char** args) {
     std::cout << i + 1 << "\t";
     std::cout.precision(14);
 
-    for (unsigned j = 2; j < 3; j++) {
+    for (unsigned j = 0; j < 3; j++) {
       std::cout << semiNorm[i][j] << "\t";
     }
 
@@ -189,8 +193,8 @@ int main(int argc, char** args) {
 
 
 
-  
- 
+
+
 }
 
 
@@ -295,7 +299,7 @@ void AssembleNonlinearProblem(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-   
+
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
@@ -496,7 +500,7 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    
+
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
@@ -566,7 +570,7 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           mLaplace   +=  phi_x[i * dim + jdim] * soluGauss_x[jdim];
-          nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
+          //nonLinearTerm += soluGauss * soluGauss_x[jdim] * phi[i];
         }
 
         double exactSolValue = GetExactSolutionValue(xGauss);
@@ -575,7 +579,7 @@ void AssembleNonlinearProblem_AD(MultiLevelProblem& ml_prob) {
         double exactSolLaplace = GetExactSolutionLaplace(xGauss);
 
 
-        double f = (- exactSolLaplace + exactSolValue * (exactSolGrad[0] + exactSolGrad[1])) * phi[i] ;
+        double f = (- exactSolLaplace + 0*exactSolValue * (exactSolGrad[0] + exactSolGrad[1])) * phi[i] ;
         aRes[i] += (f - (mLaplace + nonLinearTerm)) * weight;
 
       } // end phi_i loop
@@ -672,11 +676,11 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    
+
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofs  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofs2 = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-    
+
     // resize local arrays
     solu.resize(nDofs);
 

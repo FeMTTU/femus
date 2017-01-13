@@ -2,7 +2,7 @@
 
   Program: FEMUS
   Module: Hexaedron
-  Authors: Eugenio Aulisa
+  Authors: Eugenio Aulisa and Sara Calandrini
  
   Copyright (c) FEMTTU
   All rights reserved. 
@@ -25,24 +25,13 @@ namespace femus {
   
   
   //hex const vectors
-  const double hex_lag::X[125][3]= {
+  const double hex_lag::Xc[27][3]= {
     {-1, -1, -1},{1, -1, -1},{1, 1, -1},{-1, 1, -1},{-1, -1, 1},{1, -1, 1},{1, 1, 1},{-1, 1, 1},{0, -1, -1},
     {1, 0, -1},{0, 1, -1},{-1, 0, -1},{0, -1, 1},{1, 0, 1},{0, 1, 1},{-1, 0, 1},{-1, -1, 0},
     {1, -1, 0},{1, 1, 0},{-1, 1, 0},{0, -1, 0},{1, 0, 0},{0, 1, 0},{-1, 0, 0},{0, 0, -1},
-    {0, 0, 1},{0, 0, 0},{-0.5, -1, -1},{0, -0.5, -1},{-0.5, 0, -1},{-1, -0.5, -1},{-0.5, -1, 0},{0, -0.5, 0},
-    {-0.5, 0, 0},{-1, -0.5, 0},{-1, -1, -0.5},{0, -1, -0.5},{0, 0, -0.5},{-1, 0, -0.5},{0.5, -1, -1},{1, -0.5, -1},
-    {0.5, 0, -1},{0.5, -1, 0},{1, -0.5, 0},{0.5, 0, 0},{1, -1, -0.5},{1, 0, -0.5},{1, 0.5, -1},{0.5, 1, -1},
-    {0, 0.5, -1},{1, 0.5, 0},{0.5, 1, 0},{0, 0.5, 0},{1, 1, -0.5},{0, 1, -0.5},{-0.5, 1, -1},{-1, 0.5, -1},
-    {-0.5, 1, 0},{-1, 0.5, 0},{-1, 1, -0.5},{-0.5, -1, 1},{0, -0.5, 1},{-0.5, 0, 1},{-1, -0.5, 1},{-1, -1, 0.5},
-    {0, -1, 0.5},{0, 0, 0.5},{-1, 0, 0.5},{0.5, -1, 1},{1, -0.5, 1},{0.5, 0, 1},{1, -1, 0.5},{1, 0, 0.5},
-    {1, 0.5, 1},{0.5, 1, 1},{0, 0.5, 1},{1, 1, 0.5},{0, 1, 0.5},{-0.5, 1, 1},{-1, 0.5, 1},{-1, 1, 0.5},
-    {-0.5, -1, -0.5},{0, -0.5, -0.5},{-0.5, 0, -0.5},{-1, -0.5, -0.5},{-0.5, -0.5, -1},{-0.5, -0.5, 0},{0.5, -1, -0.5},{1, -0.5, -0.5},
-    {0.5, 0, -0.5},{0.5, -0.5, -1},{0.5, -0.5, 0},{1, 0.5, -0.5},{0.5, 1, -0.5},{0, 0.5, -0.5},{0.5, 0.5, -1},{0.5, 0.5, 0},
-    {-0.5, 1, -0.5},{-1, 0.5, -0.5},{-0.5, 0.5, -1},{-0.5, 0.5, 0},{-0.5, -1, 0.5},{0, -0.5, 0.5},{-0.5, 0, 0.5},{-1, -0.5, 0.5},
-    {-0.5, -0.5, 1},{0.5, -1, 0.5},{1, -0.5, 0.5},{0.5, 0, 0.5},{0.5, -0.5, 1},{1, 0.5, 0.5},{0.5, 1, 0.5},{0, 0.5, 0.5},
-    {0.5, 0.5, 1},{-0.5, 1, 0.5},{-1, 0.5, 0.5},{-0.5, 0.5, 1},{-0.5, -0.5, -0.5},{0.5, -0.5, -0.5},{0.5, 0.5, -0.5},{-0.5, 0.5, -0.5},
-    {-0.5, -0.5, 0.5},{0.5, -0.5, 0.5},{0.5, 0.5, 0.5},{-0.5, 0.5, 0.5}
-  };
+    {0, 0, 1},{0, 0, 0}
+  }; 
+    
 
   const int hex_lag::IND[27][3]= {
     {0, 0, 0},{2, 0, 0},{2, 2, 0},{0, 2, 0},
@@ -79,6 +68,27 @@ namespace femus {
   
   
   
+  const unsigned hex_lag::fine2CoarseVertexMapping[8][8]={
+    {0,8,24,11,16,20,26,23},
+    {8,1,9,24,20,17,21,26},
+    {24,9,2,10,26,21,18,22},
+    {11,24,10,3,23,26,22,19},
+    {16,20,26,23,4,12,25,15},
+    {20,17,21,26,12,5,13,25},
+    {26,21,18,22,25,13,6,14},
+    {23,26,22,19,15,25,14,7} };
+    
+  const unsigned hex_lag::faceDofs[6][9] = { 
+    {0, 1, 5, 4, 8, 17, 12, 16, 20},
+    {1, 2, 6, 5, 9, 18, 13, 17, 21},
+    {2, 3, 7, 6, 10, 19, 14, 18, 22},
+    {3, 0, 4, 7, 11, 16, 15, 19, 23},
+    {0, 3, 2, 1, 11, 10, 9, 8, 24},
+    {4, 5, 6, 7, 12, 13, 14, 15, 25}
+  };
+  
+  //******************************************************************
+  
   const double hex_const::X[32][3]= {
     {-0.5,-0.5,-0.5},{0.5,-0.5,-0.5},{0.5, 0.5,-0.5},{-0.5, 0.5,-0.5},
     {-0.5,-0.5, 0.5},{0.5,-0.5, 0.5},{0.5, 0.5, 0.5},{-0.5, 0.5, 0.5},
@@ -100,185 +110,185 @@ namespace femus {
   };
   
   
-  double hexpwl::eval_phi(const int *I,const double* x) const {
+  double hexpwLinear::eval_phi(const int *I,const double* x) const {
     return (1.-I[0])*(1.-I[1])*(1.-I[2]) + 
 	    x[0]*eval_dphidx(I,x) + 
 	    x[1]*eval_dphidy(I,x) + 
 	    x[2]*eval_dphidz(I,x);
   }
 
-  double hexpwl::eval_dphidx(const int *I,const double* x) const {
+  double hexpwLinear::eval_dphidx(const int *I,const double* x) const {
     return I[0];
   }
 
-  double hexpwl::eval_dphidy(const int *I,const double* x) const {
+  double hexpwLinear::eval_dphidy(const int *I,const double* x) const {
     return I[1];
   }
 
-  double hexpwl::eval_dphidz(const int *I,const double* x) const {
+  double hexpwLinear::eval_dphidz(const int *I,const double* x) const {
     return I[2];
   }
 
   // ************************************************************
 
-  double hex1::eval_phi(const int *I,const double* x) const {
-    return lag1(x[0],I[0])*lag1(x[1],I[1])*lag1(x[2],I[2]);
+  double HexLinear::eval_phi(const int *I,const double* x) const {
+    return lagLinear(x[0],I[0])*lagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_dphidx(const int *I,const double* x) const {
-    return dlag1(x[0],I[0])*lag1(x[1],I[1])*lag1(x[2],I[2]);
+  double HexLinear::eval_dphidx(const int *I,const double* x) const {
+    return dlagLinear(x[0],I[0])*lagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_dphidy(const int *I,const double* x) const {
-    return lag1(x[0],I[0])*dlag1(x[1],I[1])*lag1(x[2],I[2]);
+  double HexLinear::eval_dphidy(const int *I,const double* x) const {
+    return lagLinear(x[0],I[0])*dlagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_dphidz(const int *I,const double* x) const {
-    return lag1(x[0],I[0])*lag1(x[1],I[1])*dlag1(x[2],I[2]);
+  double HexLinear::eval_dphidz(const int *I,const double* x) const {
+    return lagLinear(x[0],I[0])*lagLinear(x[1],I[1])*dlagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_d2phidxdy(const int *I,const double* x) const {
-    return dlag1(x[0],I[0])*dlag1(x[1],I[1])*lag1(x[2],I[2]);
+  double HexLinear::eval_d2phidxdy(const int *I,const double* x) const {
+    return dlagLinear(x[0],I[0])*dlagLinear(x[1],I[1])*lagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_d2phidydz(const int *I,const double* x) const {
-    return lag1(x[0],I[0])*dlag1(x[1],I[1])*dlag1(x[2],I[2]);
+  double HexLinear::eval_d2phidydz(const int *I,const double* x) const {
+    return lagLinear(x[0],I[0])*dlagLinear(x[1],I[1])*dlagLinear(x[2],I[2]);
   }
 
-  double hex1::eval_d2phidzdx(const int *I,const double* x) const {
-    return dlag1(x[0],I[0])*lag1(x[1],I[1])*dlag1(x[2],I[2]);
-  }
-
-  // ************************************************************
-
-  double hex2::eval_phi(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*lag2(x[1],I[1])*lag2(x[2],I[2]);
-  }
-
-  double hex2::eval_dphidx(const int *I,const double* x) const {
-    return dlag2(x[0],I[0])*lag2(x[1],I[1])*lag2(x[2],I[2]);
-  }
-
-  double hex2::eval_dphidy(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*dlag2(x[1],I[1])*lag2(x[2],I[2]);
-  }
-
-  double hex2::eval_dphidz(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*lag2(x[1],I[1])*dlag2(x[2],I[2]);
-  }
-
-  double hex2::eval_d2phidx2(const int *I,const double* x) const {
-    return d2lag2(x[0],I[0])*lag2(x[1],I[1])*lag2(x[2],I[2]);
-  }
-
-  double hex2::eval_d2phidy2(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*d2lag2(x[1],I[1])*lag2(x[2],I[2]);
-  }
-
-  double hex2::eval_d2phidz2(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*lag2(x[1],I[1])*d2lag2(x[2],I[2]);
-  }
-
-  double hex2::eval_d2phidxdy(const int *I,const double* x) const {
-    return dlag2(x[0],I[0])*dlag2(x[1],I[1])*lag2(x[2],I[2]);
-  }
-
-  double hex2::eval_d2phidydz(const int *I,const double* x) const {
-    return lag2(x[0],I[0])*dlag2(x[1],I[1])*dlag2(x[2],I[2]);
-  }
-
-  double hex2::eval_d2phidzdx(const int *I,const double* x) const {
-    return dlag2(x[0],I[0])*lag2(x[1],I[1])*dlag2(x[2],I[2]);
+  double HexLinear::eval_d2phidzdx(const int *I,const double* x) const {
+    return dlagLinear(x[0],I[0])*lagLinear(x[1],I[1])*dlagLinear(x[2],I[2]);
   }
 
   // ************************************************************
 
-  double hexth::eval_phi(const int *I,const double* x) const {
+  double HexBiquadratic::eval_phi(const int *I,const double* x) const {
+    return lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
+  }
+
+  double HexBiquadratic::eval_dphidx(const int *I,const double* x) const {
+    return dlagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
+  }
+
+  double HexBiquadratic::eval_dphidy(const int *I,const double* x) const {
+    return lagBiquadratic(x[0],I[0])*dlagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
+  }
+
+  double HexBiquadratic::eval_dphidz(const int *I,const double* x) const {
+    return lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*dlagBiquadratic(x[2],I[2]);
+  }
+
+  double HexBiquadratic::eval_d2phidx2(const int *I,const double* x) const {
+    return d2lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
+  }
+
+  double HexBiquadratic::eval_d2phidy2(const int *I,const double* x) const {
+    return lagBiquadratic(x[0],I[0])*d2lagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
+  }
+
+  double HexBiquadratic::eval_d2phidz2(const int *I,const double* x) const {
+    return lagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*d2lagBiquadratic(x[2],I[2]);
+  }
+
+  double HexBiquadratic::eval_d2phidxdy(const int *I,const double* x) const {
+    return dlagBiquadratic(x[0],I[0])*dlagBiquadratic(x[1],I[1])*lagBiquadratic(x[2],I[2]);
+  }
+
+  double HexBiquadratic::eval_d2phidydz(const int *I,const double* x) const {
+    return lagBiquadratic(x[0],I[0])*dlagBiquadratic(x[1],I[1])*dlagBiquadratic(x[2],I[2]);
+  }
+
+  double HexBiquadratic::eval_d2phidzdx(const int *I,const double* x) const {
+    return dlagBiquadratic(x[0],I[0])*lagBiquadratic(x[1],I[1])*dlagBiquadratic(x[2],I[2]);
+  }
+
+  // ************************************************************
+
+  double HexQuadratic::eval_phi(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)? 
-      th2(x[0],I[0])*th2(x[1],I[1])*th2(x[2],I[2])
+      lagQuadratic(x[0],I[0])*lagQuadratic(x[1],I[1])*lagQuadratic(x[2],I[2])
       : 
-      (-2.+ix*x[0]+jx*x[1]+kx*x[2])*th2(x[0],I[0])*th2(x[1],I[1])*th2(x[2],I[2]);
+      (-2.+ix*x[0]+jx*x[1]+kx*x[2])*lagQuadratic(x[0],I[0])*lagQuadratic(x[1],I[1])*lagQuadratic(x[2],I[2]);
   }
 
-  double hexth::eval_dphidx(const int *I,const double* x) const {
+  double HexQuadratic::eval_dphidx(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
-      dth2(x[0],I[0])*th2(x[1],I[1])*th2(x[2],I[2]) 
+      dlagQuadratic(x[0],I[0])*lagQuadratic(x[1],I[1])*lagQuadratic(x[2],I[2]) 
       :
-      th2(x[1],I[1])*th2(x[2],I[2])*(ix*th2(x[0],I[0]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dth2(x[0],I[0]));
+      lagQuadratic(x[1],I[1])*lagQuadratic(x[2],I[2])*(ix*lagQuadratic(x[0],I[0]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dlagQuadratic(x[0],I[0]));
   }
 
-  double hexth::eval_dphidy(const int *I,const double* x) const {
+  double HexQuadratic::eval_dphidy(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
-      th2(x[0],I[0])*dth2(x[1],I[1])*th2(x[2],I[2]) 
+      lagQuadratic(x[0],I[0])*dlagQuadratic(x[1],I[1])*lagQuadratic(x[2],I[2]) 
       :
-      th2(x[0],I[0])*th2(x[2],I[2])*(jx*th2(x[1],I[1]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dth2(x[1],I[1]));
+      lagQuadratic(x[0],I[0])*lagQuadratic(x[2],I[2])*(jx*lagQuadratic(x[1],I[1]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dlagQuadratic(x[1],I[1]));
   }
 
-  double hexth::eval_dphidz(const int *I,const double* x) const {
+  double HexQuadratic::eval_dphidz(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
-      th2(x[0],I[0])*th2(x[1],I[1])*dth2(x[2],I[2]) 
+      lagQuadratic(x[0],I[0])*lagQuadratic(x[1],I[1])*dlagQuadratic(x[2],I[2]) 
       :
-      th2(x[0],I[0])*th2(x[1],I[1])*(kx*th2(x[2],I[2]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dth2(x[2],I[2]));
+      lagQuadratic(x[0],I[0])*lagQuadratic(x[1],I[1])*(kx*lagQuadratic(x[2],I[2]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dlagQuadratic(x[2],I[2]));
   }
 
-  double hexth::eval_d2phidx2(const int *I,const double* x) const {
+  double HexQuadratic::eval_d2phidx2(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
-      d2th2(x[0],I[0])*th2(x[1],I[1])*th2(x[2],I[2]) 
+      d2lagQuadratic(x[0],I[0])*lagQuadratic(x[1],I[1])*lagQuadratic(x[2],I[2]) 
       :
-      th2(x[1],I[1])*th2(x[2],I[2])*( 2.*ix*dth2(x[0],I[0]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*d2th2(x[0],I[0]) );
+      lagQuadratic(x[1],I[1])*lagQuadratic(x[2],I[2])*( 2.*ix*dlagQuadratic(x[0],I[0]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*d2lagQuadratic(x[0],I[0]) );
   }
 
-  double hexth::eval_d2phidy2(const int *I,const double* x) const {
+  double HexQuadratic::eval_d2phidy2(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
-      th2(x[0],I[0])*d2th2(x[1],I[1])*th2(x[2],I[2]) 
+      lagQuadratic(x[0],I[0])*d2lagQuadratic(x[1],I[1])*lagQuadratic(x[2],I[2]) 
       :
-      th2(x[2],I[2])*th2(x[0],I[0])*( 2.*jx*dth2(x[1],I[1]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*d2th2(x[1],I[1]) );
+      lagQuadratic(x[2],I[2])*lagQuadratic(x[0],I[0])*( 2.*jx*dlagQuadratic(x[1],I[1]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*d2lagQuadratic(x[1],I[1]) );
   }
 
-  double hexth::eval_d2phidz2(const int *I,const double* x) const {
+  double HexQuadratic::eval_d2phidz2(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
-      th2(x[0],I[0])*th2(x[1],I[1])*d2th2(x[2],I[2]) 
+      lagQuadratic(x[0],I[0])*lagQuadratic(x[1],I[1])*d2lagQuadratic(x[2],I[2]) 
       :
-      th2(x[0],I[0])*th2(x[1],I[1])*( 2.*kx*dth2(x[2],I[2]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*d2th2(x[2],I[2]) );
+      lagQuadratic(x[0],I[0])*lagQuadratic(x[1],I[1])*( 2.*kx*dlagQuadratic(x[2],I[2]) + (-2.+ix*x[0]+jx*x[1]+kx*x[2])*d2lagQuadratic(x[2],I[2]) );
   }
 
-  double hexth::eval_d2phidxdy(const int *I,const double* x) const {
+  double HexQuadratic::eval_d2phidxdy(const int *I,const double* x) const {
     const double ix=I[0]-1., jx=I[1]-1., kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
-      dth2(x[0],I[0])*dth2(x[1],I[1])*th2(x[2],I[2]) 
+      dlagQuadratic(x[0],I[0])*dlagQuadratic(x[1],I[1])*lagQuadratic(x[2],I[2]) 
       :
-      th2(x[2],I[2])*( ix*th2(x[0],I[0])*dth2(x[1],I[1]) + 
-		       jx*th2(x[1],I[1])*dth2(x[0],I[0]) +
-		       (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dth2(x[0],I[0])*dth2(x[1],I[1]));
+      lagQuadratic(x[2],I[2])*( ix*lagQuadratic(x[0],I[0])*dlagQuadratic(x[1],I[1]) + 
+		       jx*lagQuadratic(x[1],I[1])*dlagQuadratic(x[0],I[0]) +
+		       (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dlagQuadratic(x[0],I[0])*dlagQuadratic(x[1],I[1]));
 	      
   }
 
-  double hexth::eval_d2phidydz(const int *I,const double* x) const {
+  double HexQuadratic::eval_d2phidydz(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
-      th2(x[0],I[0])*dth2(x[1],I[1])*dth2(x[2],I[2]) 
+      lagQuadratic(x[0],I[0])*dlagQuadratic(x[1],I[1])*dlagQuadratic(x[2],I[2]) 
       :
-      th2(x[0],I[0])*( jx*th2(x[1],I[1])*dth2(x[2],I[2]) + 
-		       kx*th2(x[2],I[2])*dth2(x[1],I[1]) +
-		       (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dth2(x[1],I[1])*dth2(x[2],I[2]));
+      lagQuadratic(x[0],I[0])*( jx*lagQuadratic(x[1],I[1])*dlagQuadratic(x[2],I[2]) + 
+		       kx*lagQuadratic(x[2],I[2])*dlagQuadratic(x[1],I[1]) +
+		       (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dlagQuadratic(x[1],I[1])*dlagQuadratic(x[2],I[2]));
 	    
   }
 
-  double hexth::eval_d2phidzdx(const int *I,const double* x) const {
+  double HexQuadratic::eval_d2phidzdx(const int *I,const double* x) const {
     const double ix=I[0]-1.,jx=I[1]-1.,kx=I[2]-1.;
     return (fabs(ix*jx*kx)==0)?
-      dth2(x[0],I[0])*th2(x[1],I[1])*dth2(x[2],I[2]) 
+      dlagQuadratic(x[0],I[0])*lagQuadratic(x[1],I[1])*dlagQuadratic(x[2],I[2]) 
       :
-      th2(x[1],I[1])*( kx*th2(x[2],I[2])*dth2(x[0],I[0]) + 
-		       ix*th2(x[0],I[0])*dth2(x[2],I[2]) +
-		       (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dth2(x[2],I[2])*dth2(x[0],I[0]));
+      lagQuadratic(x[1],I[1])*( kx*lagQuadratic(x[2],I[2])*dlagQuadratic(x[0],I[0]) + 
+		       ix*lagQuadratic(x[0],I[0])*dlagQuadratic(x[2],I[2]) +
+		       (-2.+ix*x[0]+jx*x[1]+kx*x[2])*dlagQuadratic(x[2],I[2])*dlagQuadratic(x[0],I[0]));
   }
 
 } //end namespace femus

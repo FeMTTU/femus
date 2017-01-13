@@ -68,9 +68,9 @@ namespace femus {
         if(!_standardASM){
           BuildAMSIndex(variable_to_be_solved);
         }
-
         GmresPetscLinearEquationSolver::BuildBdcIndex(variable_to_be_solved);
       }
+      
       void SetPreconditioner(KSP& subksp, PC& subpc);
 
       // data member
