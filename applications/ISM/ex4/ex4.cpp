@@ -239,7 +239,7 @@ int main(int argc, char** args) {
   double pi = acos(-1.);
   for(unsigned j = 0; j < pSize; j++) {
     std::vector < double > x(3);
-    x[0] = 0.;
+    x[0] = 0.001;
     x[1] = 0.5 * sin(2.*pi / pSize * j);
     x[2] = 0.5 * cos(2.*pi / pSize * j);
     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
@@ -249,26 +249,29 @@ int main(int argc, char** args) {
   double T = 40;
   unsigned n  = 20;
 
-  std::vector < std::vector < std::vector < double > > > xn(pSize+1);
+  std::vector < std::vector < std::vector < double > > > xn(pSize);
    
   for(unsigned j = 0; j < pSize; j++) {
-    xn[j].resize(1);
+    xn[j].resize(2);
     particle[j]->GetMarkerCoordinates(xn[j][0]);
+    xn[j][1]=xn[j][0];
+    //std::cout<< j <<" "<< xn[j][0][0]<<" "<< xn[j][0][1]<<" "<< xn[j][0][2] << std::endl ;
   }
-  xn[pSize].resize(1);
-  particle[0]->GetMarkerCoordinates(xn[pSize][0]);
+//   xn[pSize].resize(2);
+//   particle[0]->GetMarkerCoordinates(xn[pSize][0]);
+//   xn[pSize][1]=xn[pSize][0];
+  PrintLine(DEFAULT_OUTPUTDIR, xn, true, 1);
   
   clock_t start_time = clock();
-  
   for(unsigned k = 0; k < n; k++) {
     for(unsigned j = 0; j < pSize; j++) {
       particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels-1), n, T / n);
-      xn[j].resize(k+2);
-      particle[j]->GetMarkerCoordinates(xn[j][k+1]);
+      xn[j].resize(k+3);
+      particle[j]->GetMarkerCoordinates(xn[j][k+2]);
     }
-    xn[pSize].resize(k+2);
-    particle[0]->GetMarkerCoordinates(xn[pSize][k+1]);
-    PrintLine(DEFAULT_OUTPUTDIR, xn, true, k+1);
+//     xn[pSize].resize(k+3);
+//     particle[0]->GetMarkerCoordinates(xn[pSize][k+2]);
+    PrintLine(DEFAULT_OUTPUTDIR, xn, true, k+2);
   }
 
   std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed

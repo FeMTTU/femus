@@ -209,8 +209,7 @@ namespace femus {
           modulus = modulusKel;
         }
       }
-
-
+     
       if(iel == UINT_MAX) {
         //  std::cout << "Warning the marker is located on unreasonable distance from the mesh >= 1.e10" << std::endl;
       }
@@ -607,12 +606,21 @@ namespace femus {
           insideHull = false;
         }
       }
+//       if(!insideHull) {
+//         nextElem = FastForward(currentElem, previousElem);
+//         nextElementFound = true;
+//       }
+//
       if(!insideHull) {
         nextElem = FastForward(currentElem, previousElem);
-        nextElementFound = true;
+	if(nextElem >=0 ){
+	  nextElementFound = true;
+	}
+	else{
+	  insideHull = true;
+	}
       }
-
-      else {
+      if(insideHull){
         std::vector<double> r(_dim, 0);   //coordinates of the intersection point between the line of the edges and the line that connects the marker and the face node
         for(unsigned k = 0; k < _dim; k++) {
           xv[k].resize(faceNodeNumber);
@@ -837,13 +845,15 @@ namespace femus {
       }
       if(!insideHull) {
         nextElem = FastForward(currentElem, previousElem);
-        nextElementFound = true;
+	if(nextElem >=0 ){
+	  nextElementFound = true;
+	}
+	else{
+	  insideHull = true;
+	}
       }
 
-      //if(true) {
-      else {
-
-
+      if(insideHull){
         for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
 
           // std::cout << "iface = " << iface << std::endl;
