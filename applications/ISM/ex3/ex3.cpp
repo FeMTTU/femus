@@ -45,42 +45,42 @@ using namespace femus;
 
 
 //3D CASE  rotation
-double InitalValueU(const std::vector < double >& x) {
-  return (-x[1]+x[2])/sqrt(3);
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  return (x[0]-x[2])/sqrt(3);
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  return (x[1]-x[0])/sqrt(3);
-}
-
-
-// 2D CASE with vorticity
-// double pi = acos(-1.);
-// 
 // double InitalValueU(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
+//   return (-x[1]+x[2])/sqrt(3);
 // }
 // 
 // double InitalValueV(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
+//   return (x[0]-x[2])/sqrt(3);
 // }
 // 
 // double InitalValueW(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return 0.;
+//   return (x[1]-x[0])/sqrt(3);
 // }
+
+
+// 2D CASE with vorticity
+double pi = acos(-1.);
+
+double InitalValueU(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return 0.;
+}
 
 
 
 // 3D CASE with vorticity
 // double pi = acos(-1.);
-//
+// 
 // double InitalValueU(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return
@@ -88,7 +88,7 @@ double InitalValueW(const std::vector < double >& x) {
 //     ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
 //     )* cos(time);
 // }
-//
+// 
 // double InitalValueV(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return
@@ -96,14 +96,14 @@ double InitalValueW(const std::vector < double >& x) {
 //     ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
 //     )* cos(time);
 // }
-//
+// 
 // double InitalValueW(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return
 //     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
 //     ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
 //     )* cos(time);
-//
+// 
 //   return 0.;
 // }
 
@@ -151,8 +151,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/tri2.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeMixed.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/test2D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeTet.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
@@ -274,11 +274,11 @@ int main(int argc, char** args) {
 
   // k<=n+1 for translation k<=n for the other tests
   for(unsigned k = 1; k <= n; k++) {
-// uncomment for  vortex test
-// mlSol.CopySolutionToOldSolution();
-//     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
-//     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
-//     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
+   //uncomment for  vortex test
+mlSol.CopySolutionToOldSolution();
+    mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
+    mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
+    if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
 
 
     //uncomment for vortex test and rigid rotation

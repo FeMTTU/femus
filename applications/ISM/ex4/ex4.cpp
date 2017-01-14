@@ -222,36 +222,52 @@ int main(int argc, char** args) {
   mlMsh.PrintInfo();
 
   
-  unsigned pSize = 7;
+  //unsigned pSize = 7;
+  unsigned pSize = 100;
+  
   std::vector < Marker*> particle(pSize);
 
  
+//   for(unsigned j = 0; j < pSize; j++) {
+//     std::vector < double > x(3);
+//     x[0] = 0.;
+//     x[1] = 0.;
+//     x[2] = -0.75 + 0.25 * j;
+//     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels-1), 2, true);
+//   }
+  
+  double pi = acos(-1.);
   for(unsigned j = 0; j < pSize; j++) {
     std::vector < double > x(3);
     x[0] = 0.;
-    x[1] = 0.;
-    x[2] = -0.75 + 0.25 * j;
-    particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels-1), 2, true);
+    x[1] = 0.5 * sin(2.*pi / pSize * j);
+    x[2] = 0.5 * cos(2.*pi / pSize * j);
+    particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
   }
   
-  double T = 30;
-  unsigned n  = 100;
+   
+  double T = 40;
+  unsigned n  = 20;
 
-  std::vector < std::vector < std::vector < double > > > xn(pSize);
+  std::vector < std::vector < std::vector < double > > > xn(pSize+1);
    
   for(unsigned j = 0; j < pSize; j++) {
     xn[j].resize(1);
     particle[j]->GetMarkerCoordinates(xn[j][0]);
   }
+  xn[pSize].resize(1);
+  particle[0]->GetMarkerCoordinates(xn[pSize][0]);
   
   clock_t start_time = clock();
   
   for(unsigned k = 0; k < n; k++) {
     for(unsigned j = 0; j < pSize; j++) {
-      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels-1), 2, T / n);
+      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels-1), n, T / n);
       xn[j].resize(k+2);
       particle[j]->GetMarkerCoordinates(xn[j][k+1]);
     }
+    xn[pSize].resize(k+2);
+    particle[0]->GetMarkerCoordinates(xn[pSize][k+1]);
     PrintLine(DEFAULT_OUTPUTDIR, xn, true, k+1);
   }
 
