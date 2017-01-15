@@ -223,7 +223,7 @@ int main(int argc, char** args) {
 
   
   //unsigned pSize = 7;
-  unsigned pSize = 100;
+  unsigned pSize = 500;
   
   std::vector < Marker*> particle(pSize);
 
@@ -236,18 +236,53 @@ int main(int argc, char** args) {
 //     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels-1), 2, true);
 //   }
   
+  //BEGIN INITIALIZE PARTICLES
+  
   double pi = acos(-1.);
-  for(unsigned j = 0; j < pSize; j++) {
+  for(unsigned j = 0; j < 100; j++) {
     std::vector < double > x(3);
     x[0] = 0.001;
-    x[1] = 0.5 * sin(2.*pi / pSize * j);
-    x[2] = 0.5 * cos(2.*pi / pSize * j);
+    x[1] = 0.9 * sin(2.*pi / 100 * j);
+    x[2] = 0.9 * cos(2.*pi / 100 * j);
     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
   }
+    for(unsigned j = 0; j < 100; j++) {
+    std::vector < double > x(3);
+    x[0] = 0.001;
+    x[1] = 0.7 * sin(2.*pi / 100 * j);
+    x[2] = 0.7 * cos(2.*pi / 100 * j);
+    particle[100+j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+  }
   
+      for(unsigned j = 0; j < 100; j++) {
+    std::vector < double > x(3);
+    x[0] = 0.001;
+    x[1] = 0.5 * sin(2.*pi / 100 * j);
+    x[2] = 0.5 * cos(2.*pi / 100 * j);
+    particle[200+j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+  }
+  
+        for(unsigned j = 0; j < 100; j++) {
+    std::vector < double > x(3);
+    x[0] = 0.001;
+    x[1] = 0.3 * sin(2.*pi / 100 * j);
+    x[2] = 0.3 * cos(2.*pi / 100 * j);
+    particle[300+j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+  }
+  
+      for(unsigned j = 0; j < 100; j++) {
+    std::vector < double > x(3);
+    x[0] = 0.001;
+    x[1] = 0.1 * sin(2.*pi / 100 * j);
+    x[2] = 0.1 * cos(2.*pi / 100 * j);
+    particle[400+j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+  }
+  
+  
+  //END INITIALIZE PARTICLES
    
   double T = 40;
-  unsigned n  = 20;
+  unsigned n  = 30;
 
   std::vector < std::vector < std::vector < double > > > xn(pSize);
    
