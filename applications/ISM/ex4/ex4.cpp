@@ -143,7 +143,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   dim = mlMsh.GetDimension();
 
-  numberOfUniformLevels = 1;
+  numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
@@ -221,13 +221,13 @@ int main(int argc, char** args) {
   // print mesh info
   mlMsh.PrintInfo();
 
-  
+
   //unsigned pSize = 7;
-  unsigned pSize = 500;
-  
+  unsigned pSize = 900;
+
   std::vector < Marker*> particle(pSize);
 
- 
+
 //   for(unsigned j = 0; j < pSize; j++) {
 //     std::vector < double > x(3);
 //     x[0] = 0.;
@@ -235,87 +235,57 @@ int main(int argc, char** args) {
 //     x[2] = -0.75 + 0.25 * j;
 //     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels-1), 2, true);
 //   }
-  
+
   //BEGIN INITIALIZE PARTICLES
-  
+
   double pi = acos(-1.);
-  for(unsigned j = 0; j < 100; j++) {
-    std::vector < double > x(3);
-    x[0] = 0.001;
-    x[1] = 0.9 * sin(2.*pi / 100 * j);
-    x[2] = 0.9 * cos(2.*pi / 100 * j);
-    particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
-  }
+  for(unsigned k = 1; k < 10 ; k++) {
     for(unsigned j = 0; j < 100; j++) {
-    std::vector < double > x(3);
-    x[0] = 0.001;
-    x[1] = 0.7 * sin(2.*pi / 100 * j);
-    x[2] = 0.7 * cos(2.*pi / 100 * j);
-    particle[100+j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+      std::vector < double > x(3);
+      x[0] = 0.001;
+      x[1] = 0.1 * k * sin(2.*pi / 100 * j);
+      x[2] = 0.1 * k * cos(2.*pi / 100 * j);
+      particle[100 * (k - 1) + j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+    }
   }
-  
-      for(unsigned j = 0; j < 100; j++) {
-    std::vector < double > x(3);
-    x[0] = 0.001;
-    x[1] = 0.5 * sin(2.*pi / 100 * j);
-    x[2] = 0.5 * cos(2.*pi / 100 * j);
-    particle[200+j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
-  }
-  
-        for(unsigned j = 0; j < 100; j++) {
-    std::vector < double > x(3);
-    x[0] = 0.001;
-    x[1] = 0.3 * sin(2.*pi / 100 * j);
-    x[2] = 0.3 * cos(2.*pi / 100 * j);
-    particle[300+j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
-  }
-  
-      for(unsigned j = 0; j < 100; j++) {
-    std::vector < double > x(3);
-    x[0] = 0.001;
-    x[1] = 0.1 * sin(2.*pi / 100 * j);
-    x[2] = 0.1 * cos(2.*pi / 100 * j);
-    particle[400+j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
-  }
-  
-  
+
   //END INITIALIZE PARTICLES
-   
-  double T = 40;
-  unsigned n  = 30;
+
+  double T = 180;
+  unsigned n  = 100;
 
   std::vector < std::vector < std::vector < double > > > xn(pSize);
-   
+
   for(unsigned j = 0; j < pSize; j++) {
     xn[j].resize(2);
     particle[j]->GetMarkerCoordinates(xn[j][0]);
-    xn[j][1]=xn[j][0];
+    xn[j][1] = xn[j][0];
     //std::cout<< j <<" "<< xn[j][0][0]<<" "<< xn[j][0][1]<<" "<< xn[j][0][2] << std::endl ;
   }
 //   xn[pSize].resize(2);
 //   particle[0]->GetMarkerCoordinates(xn[pSize][0]);
 //   xn[pSize][1]=xn[pSize][0];
   PrintLine(DEFAULT_OUTPUTDIR, xn, true, 1);
-  
+
   clock_t start_time = clock();
   for(unsigned k = 0; k < n; k++) {
     for(unsigned j = 0; j < pSize; j++) {
-      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels-1), n, T / n);
-      xn[j].resize(k+3);
-      particle[j]->GetMarkerCoordinates(xn[j][k+2]);
+      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), n, T / n);
+      xn[j].resize(k + 3);
+      particle[j]->GetMarkerCoordinates(xn[j][k + 2]);
     }
 //     xn[pSize].resize(k+3);
 //     particle[0]->GetMarkerCoordinates(xn[pSize][k+2]);
-    PrintLine(DEFAULT_OUTPUTDIR, xn, true, k+2);
+    PrintLine(DEFAULT_OUTPUTDIR, xn, true, k + 2);
   }
 
   std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
-            << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC <<" s" << std::endl;
-  
+            << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+
   for(unsigned j = 0; j < pSize; j++) {
     delete particle[j];
   }
-  
+
   return 0;
 }
 
