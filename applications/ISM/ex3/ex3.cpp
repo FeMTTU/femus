@@ -59,53 +59,53 @@ using namespace femus;
 
 
 // 2D CASE with vorticity
-double pi = acos(-1.);
-
-double InitalValueU(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return 0.;
-}
-
-
-
-// 3D CASE with vorticity
 // double pi = acos(-1.);
 // 
 // double InitalValueU(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
-//     ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
-//     )* cos(time);
+//   return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
 // }
 // 
 // double InitalValueV(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
-//     ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
-//     )* cos(time);
+//   return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
 // }
 // 
 // double InitalValueW(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
-//     ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
-//     )* cos(time);
-// 
 //   return 0.;
 // }
+
+
+
+// 3D CASE with vorticity
+double pi = acos(-1.);
+
+double InitalValueU(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
+    ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
+    )* cos(time);
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
+    ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
+    )* cos(time);
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
+    ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
+    )* cos(time);
+
+  return 0.;
+}
 
 
 
@@ -151,8 +151,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/tri2.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeMixed.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/test2D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeTet.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
@@ -211,6 +211,10 @@ int main(int argc, char** args) {
 // PrintLine(DEFAULT_OUTPUTDIR, xn);
 
 
+  clock_t start_time = clock();
+  clock_t init_time = clock();
+ 
+  
   unsigned pSize = 100;
   std::vector < Marker*> particle(pSize);
 
@@ -266,11 +270,16 @@ int main(int argc, char** args) {
   std::vector < std::vector < std::vector < double > > > line0 = line; // saves the initial position
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 0);
 
-  n = 20;
+  n = 30;
 
   //comment T for tests that are not translation
   // T = 2. ;
-  clock_t start_time = clock();
+  std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
+           << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+  
+
+  clock_t advection_time = clock();
+  
 
   // k<=n+1 for translation k<=n for the other tests
   for(unsigned k = 1; k <= n; k++) {
@@ -309,6 +318,9 @@ mlSol.CopySolutionToOldSolution();
 //     }
 //  }
 
+  std::cout << std::endl << " advection in: " << std::setw(11) << std::setprecision(6) << std::fixed
+            << static_cast<double>((clock() - advection_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+  
   std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
 

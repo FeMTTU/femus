@@ -236,6 +236,9 @@ int main(int argc, char** args) {
 //     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels-1), 2, true);
 //   }
 
+  
+ clock_t start_time = clock();
+ clock_t init_time = clock();
   //BEGIN INITIALIZE PARTICLES
 
   double pi = acos(-1.);
@@ -250,6 +253,8 @@ int main(int argc, char** args) {
   }
 
   //END INITIALIZE PARTICLES
+ 
+  
 
   double T = 160;
   unsigned n  = 80;
@@ -267,7 +272,11 @@ int main(int argc, char** args) {
 //   xn[pSize][1]=xn[pSize][0];
   PrintLine(DEFAULT_OUTPUTDIR, xn, true, 1);
 
-  clock_t start_time = clock();
+  std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
+           << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+  
+
+  clock_t advection_time = clock();
   for(unsigned k = 0; k < n; k++) {
     for(unsigned j = 0; j < pSize; j++) {
       particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), n, T / n);
@@ -279,6 +288,9 @@ int main(int argc, char** args) {
     PrintLine(DEFAULT_OUTPUTDIR, xn, true, k + 2);
   }
 
+   std::cout << std::endl << " advection in: " << std::setw(11) << std::setprecision(6) << std::fixed
+            << static_cast<double>((clock() - advection_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+  
   std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
 
