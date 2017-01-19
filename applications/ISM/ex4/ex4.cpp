@@ -251,8 +251,8 @@ int main(int argc, char** args) {
 
   //END INITIALIZE PARTICLES
 
-  double T = 180;
-  unsigned n  = 90;
+  double T = 160;
+  unsigned n  = 80;
 
   std::vector < std::vector < std::vector < double > > > xn(pSize);
 
