@@ -1,10 +1,10 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: Mesh
+ Module: Marker
  Authors: Eugenio Aulisa, Giacomo Capodaglio
 
- Copyright (c) FEMTTU
+ Copyright (c) FEMuS
  All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
