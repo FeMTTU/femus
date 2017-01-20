@@ -38,6 +38,7 @@ namespace femus {
 
         std::vector < Marker*> particles(size);
 
+	_size = size;
         _markerOffset.resize(_nprocs);
         _particles.resize(size);
 
@@ -76,21 +77,20 @@ namespace femus {
       };
 
 
-      std::vector < Marker*> GetParticles() {
-        return _particles;
-      }
-
-      std::vector < std::vector < std::vector < double > > > GetLine() {
+     std::vector < std::vector < std::vector < double > > > GetLine() {
         return _line;
       }
 
       void UpdateParticles();
+      
+      void AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned & order); 
 
     private:
 
       std::vector < std::vector < std::vector < double > > > _line;
       std::vector < Marker*> _particles;
       std::vector < unsigned> _markerOffset;
+      unsigned _size;
 
   };
 } //end namespace femus

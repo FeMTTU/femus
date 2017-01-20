@@ -17,6 +17,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "Marker.hpp"
+#include "Line.hpp"
 #include "NumericVector.hpp"
 #include <math.h>
 
@@ -1594,8 +1595,9 @@ namespace femus {
   //  std::cout << "ED USCIAMO" << std::endl;
 
   }
-
-
+  
+  
+  
 }
 
 

@@ -45,7 +45,6 @@ namespace femus {
     std::vector < Marker* > ().swap(particlesOld);
   }
 
- 
-  
+   
   
 }

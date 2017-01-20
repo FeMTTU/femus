@@ -58,18 +58,6 @@ namespace femus {
       }
 
 
-      void SetMarkerProc(const unsigned &proc) {
-        _mproc = proc;
-      }
-
-      void SetMarkerCoordinates(const std::vector <double> &x) {
-        _x = x;
-      }
-
-      void SetMarkerx0(const std::vector <double> &x0) {
-        _x0 = x0;
-      }
-
       std::vector<double> GetMarkerLocalCoordinates() {
         return _xi;
       }
@@ -104,7 +92,7 @@ namespace femus {
 
       void InverseMappingTEST(std::vector< double > &x);
       void Advection(Solution* sol, const unsigned &n, const double& T);
-
+      
       void updateVelocity(std::vector< std::vector <double> > & V, Solution * sol,
                           const vector < unsigned > &solVIndex, const unsigned & solVType,
                           std::vector < std::vector < std::vector < double > > > &a,  std::vector < double > &phi,
