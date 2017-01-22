@@ -65,6 +65,7 @@ namespace femus {
         //END reorder the markers by proc
 
         //BEGIN reorder markers also by element
+
         for(unsigned j = 0; j < _size; j++) {
           particles[j] = _particles[j];
         }
@@ -91,7 +92,7 @@ namespace femus {
                 if(ip != jp && iel == jel) {
                   elementList[iel] = 1;
                   _particles[_markerOffset[iproc] + counter] = particles[ip];
-                  _printList[ip] = _markerOffset[iproc] + counter; //TODO FIX 
+                  _printList[ip] = _markerOffset[iproc] + counter; //TODO FIX
                   counter++;
                 }
               }
@@ -101,13 +102,17 @@ namespace femus {
 
         //END reorder markers also by element
 
+//         for(unsigned i = 0; i < _size; i++) {
+//           std::cout << "_printList[ " << i << "] = " << _printList[i] << std::endl;
+//         }
+
 
         //BEGIN TEST TO SEE IF IT's TRUE,  IT WORKS :)
 
-//         for(unsigned i = 0; i < size; i++) {
-//           std::cout << "Particle: " << i << " , " << "Processor: " << _particles[i]->GetMarkerProc() << " , "
-//                     << "Element: " << _particles[i]->GetMarkerElement() << " " << std::endl;
-//         }
+        for(unsigned i = 0; i < size; i++) {
+          std::cout << "Particle: " << i << " , " << "Processor: " << _particles[i]->GetMarkerProc() << " , "
+                    << "Element: " << _particles[i]->GetMarkerElement() << " " << std::endl;
+        }
 
         //END TESTS
 
@@ -157,6 +162,7 @@ namespace femus {
 
 
 #endif
+
 
 
 
