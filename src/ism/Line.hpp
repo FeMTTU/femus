@@ -101,6 +101,12 @@ namespace femus {
 //                     << "Element: " << _particles[i]->GetMarkerElement() << " " << std::endl;
 //         }
 
+//         for(unsigned i = 0; i < _size; i++) {
+//           std::cout << "_printList[ " << i << "] = " << _printList[i] << std::endl;
+//         }
+// 
+// 
+//         std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
 
         //BEGIN reorder markers also by element
 
@@ -139,10 +145,10 @@ namespace femus {
               }
             }
 
-            
-            std::cout << "upperBound =" << upperBound << std::endl;
-                
-            
+
+            //std::cout << "upperBound =" << upperBound << std::endl;
+
+
             for(unsigned jp = _markerOffset[iproc]; jp < upperBound; jp++) {
 
               unsigned jel = particles[jp]->GetMarkerElement();
@@ -152,7 +158,12 @@ namespace femus {
                 elementList[jel] = 1;
 
                 _particles[_markerOffset[iproc] + counter] = particles[jp];
-                _printList[jp] = _markerOffset[iproc] + counter;
+                for(unsigned iList = 0; iList < size; iList++) {
+                  if(printList[iList] == jp) {
+                    _printList[iList] = _markerOffset[iproc] + counter;
+                    break;
+                  }
+                }
                 counter++;
 
 
@@ -162,7 +173,12 @@ namespace femus {
                     //std::cout << " jel =" << jel << " , " << "ip = " << ip << " , " << "jp = " << jp <<  std::endl;
                     elementList[iel] = 1;
                     _particles[_markerOffset[iproc] + counter] = particles[ip];
-                    _printList[ip] = _markerOffset[iproc] + counter; //TODO FIX
+                    for(unsigned iList = 0; iList < size; iList++) {
+                      if(printList[iList] == ip) {
+                        _printList[iList] = _markerOffset[iproc] + counter;
+                        break;
+                      }
+                    }
                     counter++;
                   }
                 }
