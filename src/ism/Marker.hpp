@@ -60,6 +60,7 @@ namespace femus {
       unsigned GetMarkerProc() {
         return _mproc;
       }
+      
       std::vector<double> GetMarkerx0() {
         return _x0;
       }
@@ -67,7 +68,6 @@ namespace femus {
       unsigned GetMarkerElement() {
         return _elem;
       }
-
 
       std::vector<double> GetMarkerLocalCoordinates() {
         return _xi;
@@ -152,3 +152,4 @@ namespace femus {
 
 
 #endif
+

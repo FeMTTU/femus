@@ -43,12 +43,9 @@ namespace femus {
         _markerOffset.resize(_nprocs);
         _particles.resize(size);
         _printList.resize(size);
-	
-	unsigned* printList = new unsigned [_size];
 
         for(unsigned j = 0; j < size; j++) {
           particles[j] = new Marker(x[j], markerType[j], mesh, solType, debug);
-	  printList[j] = j;
         }
 
 
@@ -58,46 +55,61 @@ namespace femus {
           for(unsigned j = 0; j < size; j++) {
             unsigned markerProc = particles[j]->GetMarkerProc();
             if(markerProc == iproc) {
-
-//               //BEGIN TESTS PART 1
-// 	      std::cout << " PRIMA PARTE" << std::endl;
-//               std::cout << "proc = " << particles[j]->GetMarkerProc() << std::endl;
-//               std::cout << "elem = " << particles[j]->GetMarkerElement() << std::endl;
-//               std::vector < double > trial(_dim, 0);
-//               particles[j]->GetMarkerCoordinates(trial);
-//               for(unsigned l = 0; l < _dim; l++) {
-//                 std::cout << "trail[" << l << "]=" << trial[l] << std::endl;
-//               }
-//               trial = particles[j]->GetMarkerLocalCoordinates();
-//               for(unsigned l = 0; l < _dim; l++) {
-//                 std::cout << "xi trail[" << l << "]=" << trial[l] << std::endl;
-//               }
-//               //END TESTS PART 1
-
               _particles[counter] = particles[j];
-	      _printList[j] = counter;
-
-//               //BEGIN TESTS PART 2
-//               std::cout << " SECONDA PARTE" << std::endl;
-// 	      std::cout << "proc = " << _particles[counter]->GetMarkerProc() << std::endl;
-//               std::cout << "elem = " << _particles[counter]->GetMarkerElement() << std::endl;
-//               _particles[counter]->GetMarkerCoordinates(trial);
-//               for(unsigned l = 0; l < _dim; l++) {
-//                 std::cout << "trail[" << l << "]=" << trial[l] << std::endl;
-//               }
-//               trial = _particles[counter]->GetMarkerLocalCoordinates();
-//               for(unsigned l = 0; l < _dim; l++) {
-//                 std::cout << "xi trail[" << l << "]=" << trial[l] << std::endl;
-//               }
-//               //END TESTS PART 2
-
-
+              _printList[j] = counter;
               counter++;
             }
           }
           _markerOffset[iproc] = counter;
         }
         //END reorder the markers by proc
+
+        //BEGIN reorder markers also by element
+        for(unsigned j = 0; j < _size; j++) {
+          particles[j] = _particles[j];
+        }
+
+        unsigned* elementList = new unsigned [mesh->GetNumberOfElements()];
+        for(unsigned iFlag = 0; iFlag < mesh->GetNumberOfElements(); iFlag++) {
+          elementList[iFlag] = 0;
+        }
+
+        for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+
+          unsigned counter = 1;
+
+          for(unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc + 1]; jp++) {
+
+            unsigned jel = particles[jp]->GetMarkerElement();
+
+            if(elementList[jel] != 1) {
+
+              elementList[jel] = 1;
+
+              for(unsigned ip = _markerOffset[iproc]; ip < _markerOffset[iproc + 1]; ip++) {
+                unsigned iel = _particles[ip]->GetMarkerElement();
+                if(ip != jp && iel == jel) {
+                  elementList[iel] = 1;
+                  _particles[_markerOffset[iproc] + counter] = particles[ip];
+                  _printList[ip] = _markerOffset[iproc] + counter; //TODO FIX 
+                  counter++;
+                }
+              }
+            }
+          }
+        }
+
+        //END reorder markers also by element
+
+
+        //BEGIN TEST TO SEE IF IT's TRUE,  IT WORKS :)
+
+//         for(unsigned i = 0; i < size; i++) {
+//           std::cout << "Particle: " << i << " , " << "Processor: " << _particles[i]->GetMarkerProc() << " , "
+//                     << "Element: " << _particles[i]->GetMarkerElement() << " " << std::endl;
+//         }
+
+        //END TESTS
 
         _line.resize(1);
         _line[0].resize(size + 1);
@@ -111,7 +123,7 @@ namespace femus {
         for(unsigned j = 0; j < size; j++) {
           delete particles[j];
         }
-        delete[] printList;
+        delete[] elementList;
 
       };
 
@@ -120,7 +132,7 @@ namespace femus {
         return _line;
       }
 
-      void UpdateParticles();
+      void UpdateLine(); //TODO update the function
 
       void AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order);
 
