@@ -57,38 +57,6 @@ namespace femus {
   };
 
 
-  void Line::UpdateLine() {
-
-    std::vector < Marker*> particlesOld(_size);
-    for(unsigned j = 0; j < _size; j++) {
-      particlesOld[j] = _particles[j];
-    }
-
-    unsigned counter = 0;
-    for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
-      for(unsigned j = 0; j < _size; j++) {
-        unsigned markerProc = particlesOld[j]->GetMarkerProc();
-        if(markerProc == iproc) {
-          _particles[counter] = particlesOld[j];
-          _printList[j] = counter;
-          counter++;
-        }
-      }
-      _markerOffset[iproc] = counter;
-    }
-
-
-    for(unsigned j = 0; j < _size; j++) {
-      _particles[_printList[j]]->GetMarkerCoordinates(_line[0][j]);
-    }
-    _particles[_printList[0]]->GetMarkerCoordinates(_line[0][_size]);
-
-    std::vector < Marker* > ().swap(particlesOld);
-  }
-
-
-
-
   void Line::AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order) {
 
     //BEGIN  Initialize the parameters for all processors, to be used when awake
@@ -106,25 +74,25 @@ namespace femus {
 
     std::vector <unsigned> step;
     step.assign(_size, 0);
+
+    std::vector < double > x;
+    std::vector < double > x0;
     //END
 
     //BEGIN Numerical integration scheme
     // determine the step size
     double h = T / n;
-    
-    unsigned previousElemProc = UINT_MAX; //if two markers are in the same element, we do not update the velocity coefficients
+
+    unsigned previousElem = UINT_MAX;
 
     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
-      //BEGIN MAYBE TO REMOVE
-      std::vector < double > x;
-      std::vector < double > x0;
-
       _particles[iMarker]->GetMarkerCoordinates(x);
       x0 = _particles[iMarker]->GetMarkerx0();
-      //END MAYBE TO REMOVE
-      
-      bool integrationIsOver = (_particles[iMarker]->GetMarkerElement() != UINT_MAX) ? false : true;
+
+      unsigned currentElem = _particles[iMarker]->GetMarkerElement();
+
+      bool integrationIsOver = (currentElem != UINT_MAX) ? false : true;
 
       _K.resize(_size);
       for(unsigned k = 0; k < _size; k++) {
@@ -135,91 +103,83 @@ namespace femus {
       }
 
       while(integrationIsOver == false) {
-        unsigned mprocOld = _iproc;
+        unsigned mprocOld = _iproc; //TODO don't know if we need this
 
-	bool pcElemUpdate = (previousElemProc == _particles[iMarker]->GetMarkerElement()) ? false: true; //update only if the marker is in a different element
-        previousElemProc = _particles[iMarker]->GetMarkerElement(); //update for the next particle
-	
-	//TODO reored the markers not only by proc but also so that markers in the same element are next to each other
-        
+        bool pcElemUpdate = (previousElem == currentElem) ? false : true; //update only if the marker is in a different element
+
         while(step[iMarker] < n * order) {
-//
-//           unsigned tstep = step[iMarker] / order;
-//           unsigned istep = step[iMarker] % order;
-//
-//           if(istep == 0) {
-//             x0[iMarker] = x[iMarker];
-//             for(unsigned k = 0; k < order; k++) {
-//               _K[iMarker][k].assign(_dim, 0.);
-//             }
-//           }
-//
-//           //  std::cout << " -----------------------------" << "step = " <<  step << " tstep = " << tstep << " istep = " << istep << " -----------------------------" << std::endl;
-//           //  std::cout << " _iproc = " << _iproc << std::endl;
-//
-//           Marker::updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); //send xk
-//
-//           double s = (tstep + _c[order - 1][istep]) / n;
-//
-//           for(unsigned k = 0; k < _dim; k++) {
-//             _K[iMarker][istep][k] = (s * V[0][k] + (1. - s) * V[1][k]) * h;
-//           }
-//
-//           step[iMarker] += 1 ;
-//           istep++;
-//
-//           if(istep < order) {
-//
-//             for(unsigned k = 0; k < _dim; k++) {
-// 	      x[iMarker][k] = x0[iMarker][k];
-//               for(unsigned j = 0; j < order; j++) {
-//                 x[iMarker][k] +=  _a[order - 1][istep][j] * _K[iMarker][j][k];
-//               }
-//             }
-//           }
-//
-//           //WARNING arrivato qui
-//
-//           else if(istep == order) {
-//
-//             for(unsigned i = 0; i < _dim; i++) {
-//               _x[i] = _x0[i];
-//               for(unsigned j = 0; j < order; j++) {
-//                 _x[i] += _b[order - 1][j] * _K[j][i];
-//               }
-//             }
-//           }
-//
-//
-//           //BEGIN TO BE REMOVED
-//           for(unsigned i = 0; i < _dim; i++) {
-//             //    std::cout << "_x[" << i << "] = " << _x[i] ;
-//             //    std::cout << " " ;
-//           }
-//           //  std::cout << std::endl;
-//           //END TO BE REMOVED
-//
-//           pcElemUpdate = false;
-//           unsigned iel = _elem;
-//           previousElem = _elem;
-//           Marker::GetElementSerial(previousElem);
-//
-//           if(_elem == UINT_MAX) { //out of the domain
-//             //    std::cout << " the marker has been advected outside the domain " << std::endl;
-//             break;
-//           }
-//           else if(iel != _elem && _iproc != _mproc) { //different element different process
-//             break;
-//           }
-//           else if(iel != _elem) { //different element same process
-//             pcElemUpdate = true;
-//             Marker::FindLocalCoordinates(solVType, _aX, pcElemUpdate);
-//           }
-//           else { //same element same process
-//             Marker::FindLocalCoordinates(solVType, _aX, pcElemUpdate);
-//           }
+
+          unsigned tstep = step[iMarker] / order;
+          unsigned istep = step[iMarker] % order;
+
+          if(istep == 0) {
+            x0 = x;
+            for(unsigned k = 0; k < order; k++) {
+              _K[iMarker][k].assign(_dim, 0.);
+            }
+          }
+
+          _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); //send xk
+
+          double s = (tstep + _c[order - 1][istep]) / n;
+
+          for(unsigned k = 0; k < _dim; k++) {
+            _K[iMarker][istep][k] = (s * V[0][k] + (1. - s) * V[1][k]) * h;
+          }
+
+          step[iMarker] += 1 ;
+          istep++;
+
+          if(istep < order) {
+
+            for(unsigned k = 0; k < _dim; k++) {
+              x[k] = x0[k];
+              for(unsigned j = 0; j < order; j++) {
+                x[k] +=  _a[order - 1][istep][j] * _K[iMarker][j][k];
+              }
+            }
+          }
+
+          else if(istep == order) {
+
+            for(unsigned i = 0; i < _dim; i++) {
+              x[i] = x0[i];
+              for(unsigned j = 0; j < order; j++) {
+                x[i] += _b[order - 1][j] * _K[iMarker][j][i];
+              }
+            }
+          }
+
+          _particles[iMarker]->SetMarkerx0(x0);
+          _particles[iMarker]->SetMarkerCoordinates(x);
+
+          previousElem = currentElem;
+
+          _particles[iMarker]->GetElementSerial(currentElem);
+
+          currentElem = _particles[iMarker]->GetMarkerElement();
+
+          if(currentElem == UINT_MAX) { //out of the domain
+            //    std::cout << " the marker has been advected outside the domain " << std::endl;
+            break;
+          }
+          else if(previousElem != currentElem && _iproc != _particles[iMarker]->GetMarkerProc()) { //different element different process
+            break;
+          }
+          else if(previousElem != currentElem) { //different element same process
+            pcElemUpdate = true;
+            _particles[iMarker]->FindLocalCoordinates(solVType, _aX[iMarker], pcElemUpdate);
+          }
+          else { //same element same process
+            _particles[iMarker]->FindLocalCoordinates(solVType, _aX[iMarker], pcElemUpdate);
+          }
+        }
       }
     }
+
+
+    //TODO TO BE CONTINUED...
+
+
   }
-}
 }

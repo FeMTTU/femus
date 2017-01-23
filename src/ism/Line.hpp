@@ -104,8 +104,8 @@ namespace femus {
 //         for(unsigned i = 0; i < _size; i++) {
 //           std::cout << "_printList[ " << i << "] = " << _printList[i] << std::endl;
 //         }
-// 
-// 
+//
+//
 //         std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
 
         //BEGIN reorder markers also by element
@@ -223,8 +223,6 @@ namespace femus {
         return _line;
       }
 
-      void UpdateLine(); //TODO update the function
-
       void AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order);
 
     private:
@@ -237,6 +235,7 @@ namespace femus {
       unsigned _dim;
 
       std::vector < std::vector < std::vector < double > > > _K;
+      std::vector < std::vector < std::vector < std::vector < double > > > > _aX;
 
       static const double _a[4][4][4];
       static const double _b[4][4];
