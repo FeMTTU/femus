@@ -50,7 +50,7 @@ namespace femus {
       };
 
 
-      void SetMarkerx0(std::vector <double> &x0) {
+      void SetMarker_x0(std::vector <double> &x0) {
         _x0 = x0;
       }
 
@@ -58,27 +58,35 @@ namespace femus {
         _x = x;
       }
       
-      void SetMarkerK(std::vector < std::vector < double > > K){
+      void SetMarker_K(std::vector < std::vector < double > > K){
 	_K = K;
       }
       
       void SetMarkerStep(unsigned step){
 	_step = step;
       }
+      
+      void SetMarkerElement(unsigned elem){
+	_elem = elem;
+      }
+      
+      void SetMarker_aX(std::vector < std::vector < std::vector < double > > > aX){
+	_aX = aX;
+      }
 
       unsigned GetMarkerProc() {
         return _mproc;
       }
       
-      std::vector<double> GetMarkerx0() {
+      std::vector<double> GetMarker_x0() {
         return _x0;
       }
       
-      std::vector < std::vector < std::vector < double > > > GetMarkeraX(){
+      std::vector < std::vector < std::vector < double > > > GetMarker_aX(){
 	return _aX;
       }
       
-      std::vector < std::vector < double > > GetMarkerK(){
+      std::vector < std::vector < double > > GetMarker_K(){
 	return _K;
       }
       

@@ -57,6 +57,11 @@ namespace femus {
   };
 
 
+  void Line::UpdateLine(){
+    
+  }
+  
+  
   void Line::AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order) {
 
     //BEGIN  Initialize the parameters for all processors
@@ -99,25 +104,25 @@ namespace femus {
         x.resize(_dim);
         x0.resize(_dim);
         _particles[iMarker]->GetMarkerCoordinates(x);
-        x0 = _particles[iMarker]->GetMarkerx0();
+        x0 = _particles[iMarker]->GetMarker_x0();
 
         K.resize(order);
         for(unsigned j = 0; j < order; j++) {
           K[j].resize(_dim);
         }
 
-        K = _particles[iMarker]->GetMarkerK();
+        K = _particles[iMarker]->GetMarker_K();
         step = _particles[iMarker]->GetMarkerStep();
-        aX = _particles[iMarker]->GetMarkeraX();
+        aX = _particles[iMarker]->GetMarker_aX();
 
 
         unsigned currentElem = _particles[iMarker]->GetMarkerElement();
 
         //END
 
-        bool integrationIsOver = (currentElem != UINT_MAX) ? false : true;
+        bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
 
-        while(integrationIsOver == false) {
+        if(markerOutsideDomain == false) {
           unsigned mprocOld = _iproc; //TODO don't know if we need this
 
           bool pcElemUpdate = (previousElem == currentElem) ? false : true; //update only if the marker is in a different element
@@ -165,10 +170,10 @@ namespace femus {
               }
             }
 
-            _particles[iMarker]->SetMarkerx0(x0);
+            _particles[iMarker]->SetMarker_x0(x0);
             _particles[iMarker]->SetMarkerCoordinates(x);
             _particles[iMarker]->SetMarkerStep(step);
-            _particles[iMarker]->SetMarkerK(K);
+            _particles[iMarker]->SetMarker_K(K);
 
             previousElem = currentElem;
 
@@ -178,10 +183,10 @@ namespace femus {
 
             if(currentElem == UINT_MAX) { //out of the domain
               //    std::cout << " the marker has been advected outside the domain " << std::endl;
-              break; //TODO check where this is taking us
+              break; //TODO double check where this is taking us
             }
             else if(previousElem != currentElem && _iproc != _particles[iMarker]->GetMarkerProc()) { //different element different process
-              break; //TODO check where this is taking us
+              break; //TODO double check where this is taking us
             }
             else if(previousElem != currentElem) { //different element same process
               pcElemUpdate = true;
@@ -193,18 +198,82 @@ namespace femus {
           }
 
           if(step == n * order) {
-            integrationIsOver = true;
+            integrationIsOverCounter++;
+            step = UINT_MAX;
+            _particles[iMarker]->SetMarkerStep(step);
             //     std::cout << "Integration is over, point in proc " << _mproc << std::endl;
           }
 
+          
+          _particles[iMarker]->GetElement(previousElem, mprocOld);
+	  
+	  currentElem = _particles[iMarker]->GetMarkerElement();
+	  
+          
+          
+          //BEGIN exchange of information to reorder _particles
+
+          for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
+	    MPI_Send(&integrationIsOverCounter, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
+            MPI_Send(&x0, _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
+            MPI_Send(&x, _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
+            MPI_Send(&step, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
+            for(unsigned j = 0; j < order; j++) {
+              MPI_Send(&K[j], _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
+            }
+            MPI_Send(&currentElem, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
+            for(unsigned i = 0; i < solVType + 1 ; i++) {
+              for(unsigned j = 0; j < _dim; j++) {
+                MPI_Send(&aX[i][j], 27, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD); //TODO qua dovremmo mandare solo tanti quanti il numero di dofs dell'elemento, non 27 che e' il  max
+              }
+            }
+
+            if(jproc != _iproc) {
+              MPI_Recv(&x0, _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+              MPI_Recv(&x, _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+              MPI_Recv(&step, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+	      MPI_Recv(&integrationIsOverCounter, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+              for(unsigned j = 0; j < order; j++) {
+                MPI_Recv(&K[j], _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+              }
+              for(unsigned i = 0; i < solVType + 1 ; i++) {
+                for(unsigned j = 0; j < _dim; j++) {
+                  MPI_Recv(&aX[i][j], 27, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+                }
+              }
+              MPI_Recv(&currentElem, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+
+              _particles[iMarker]->SetMarker_x0(x0);
+              _particles[iMarker]->SetMarkerCoordinates(x);
+              _particles[iMarker]->SetMarkerStep(step);
+              _particles[iMarker]->SetMarker_K(K);
+              _particles[iMarker]->SetMarkerElement(currentElem);
+              _particles[iMarker]->SetMarker_aX(aX);
+            }
+          }
+
+          //END exchange of information
+
+
         }
-        //if we are here, it means integrationIsOver = true for this marker
 
         if(step != UINT_MAX) {
           integrationIsOverCounter++;
-          _particles[iMarker]->SetMarkerStep(UINT_MAX);
+          step = UINT_MAX;
+          _particles[iMarker]->SetMarkerStep(step);
+          for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
+            MPI_Send(&step, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
+	    MPI_Send(&integrationIsOverCounter, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
+            if(jproc != _iproc) {
+              MPI_Recv(&step, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+              _particles[iMarker]->SetMarkerStep(step);
+            }
+          }
         }
       }
+      
+      UpdateLine(); //TODO write this function, it should reorder _particles like the constructor so that all procs can restart advecting
+      
     }
 
     //TODO TO BE CONTINUED...
@@ -212,3 +281,4 @@ namespace femus {
 
   }
 }
+

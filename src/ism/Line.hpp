@@ -225,6 +225,8 @@ namespace femus {
 
       void AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order);
 
+      void UpdateLine();
+      
     private:
 
       std::vector < std::vector < std::vector < double > > > _line;
