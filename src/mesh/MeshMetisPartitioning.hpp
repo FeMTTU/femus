@@ -19,6 +19,7 @@
 //----------------------------------------------------------------------------
 // includes :
 //----------------------------------------------------------------------------
+#include <vector>
 #include "MeshPartitioning.hpp"
 
 namespace femus {
@@ -40,18 +41,17 @@ public:
     MeshMetisPartitioning(Mesh& mesh);
 
     /** destructor */
-    ~MeshMetisPartitioning() {}; 
-    
-    /** New Metis parallel partitioning: 
-     *  for coarse and AMR mesh */
-    void DoPartition();
-    
-    /** Parallel partitioning imported from coarser mesh partition: 
-     *  for uniformed refined meshes */
-    void DoPartition(const Mesh &meshc);
-    
-private:
+    ~MeshMetisPartitioning() {};
 
+    /** New Metis parallel partitioning:
+     *  for coarse and AMR mesh */
+    void DoPartition( std::vector < int > &epart, const bool &AMR );
+
+    /** Parallel partitioning imported from coarser mesh partition:
+     *  for uniformed refined meshes */
+    void DoPartition( std::vector < int > &epart, const Mesh &meshc );
+
+private:
 
 
 };

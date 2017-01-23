@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: MultiLevelMesh
  Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -36,31 +36,31 @@ using std::cout;
 using std::endl;
 
 MultiLevelMesh::~MultiLevelMesh() {
-  
+
     for (unsigned i=0; i<_level0.size(); i++) {
         delete _level0[i];
     }
-    
+
     for(unsigned i=0;i<6;i++){
       if( _finiteElementGeometryFlag[i])
       for(unsigned j=0;j<5;j++){
 	delete _finiteElement[i][j];
       }
     }
-    
+
 }
 
 //---------------------------------------------------------------------------------------------------
 MultiLevelMesh::MultiLevelMesh(): _gridn0(0),_gridr0(0) {
-  
+
   _finiteElementGeometryFlag.resize(6,false);
-  
+
   for(int i=0; i<6; i++) {
     for(int j=0; j<5; j++) {
-      _finiteElement[i][j] = NULL;  
+      _finiteElement[i][j] = NULL;
     }
   }
-  
+
 }
 
 
@@ -96,69 +96,65 @@ MultiLevelMesh::MultiLevelMesh(): _gridn0(0),_gridr0(0) {
     if(_finiteElementGeometryFlag[4]) {
       _finiteElement[4][0]=new const elem_type_2D("tri","linear",GaussOrder);
       _finiteElement[4][1]=new const elem_type_2D("tri","quadratic",GaussOrder);
-      _finiteElement[4][2]=new const elem_type_2D("tri","biquadratic",GaussOrder);  
+      _finiteElement[4][2]=new const elem_type_2D("tri","biquadratic",GaussOrder);
       _finiteElement[4][3]=new const elem_type_2D("tri","constant",GaussOrder);
-      _finiteElement[4][4]=new const elem_type_2D("tri","disc_linear",GaussOrder); 
+      _finiteElement[4][4]=new const elem_type_2D("tri","disc_linear",GaussOrder);
     }
-    _finiteElementGeometryFlag[5]=1; 
+    _finiteElementGeometryFlag[5]=1;
     _finiteElement[5][0]=new const elem_type_1D("line","linear",GaussOrder);
     _finiteElement[5][1]=new const elem_type_1D("line","quadratic",GaussOrder);
-    _finiteElement[5][2]=new const elem_type_1D("line","biquadratic",GaussOrder); 
+    _finiteElement[5][2]=new const elem_type_1D("line","biquadratic",GaussOrder);
     _finiteElement[5][3]=new const elem_type_1D("line","constant",GaussOrder);
-    _finiteElement[5][4]=new const elem_type_1D("line","disc_linear",GaussOrder); 
-    _level0[0]->SetFiniteElementPtr(_finiteElement); 
+    _finiteElement[5][4]=new const elem_type_1D("line","disc_linear",GaussOrder);
+    _level0[0]->SetFiniteElementPtr(_finiteElement);
   }
 
 
 //---------------------------------------------------------------------------------------------------
-MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr, 
-			       const char mesh_file[], const char GaussOrder[], const double Lref, 
+MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short &igridr,
+			       const char mesh_file[], const char GaussOrder[], const double Lref,
 			       bool (* SetRefinementFlag)(const std::vector < double > &x,
 							  const int &ElemGroupNumber,const int &level) ):
     _gridn0(igridn),
     _gridr0(igridr) {
 
-        
+
     _level0.resize(_gridn0);
     _finiteElementGeometryFlag.resize(5,false);
-    
+
     //coarse mesh
     _level0[0] = new Mesh();
     std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
     _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag);
-    
-    BuildElemType(GaussOrder); 
+
+    BuildElemType(GaussOrder);
 
     //totally refined meshes
     for (unsigned i=1; i<_gridr0; i++) {
         MeshRefinement meshcoarser(*_level0[i-1u]);
         meshcoarser.FlagAllElementsToBeRefined();
-        //_level0[i-1u]->FlagAllElementsToBeRefined();
-        
 	_level0[i] = new Mesh();
 	MeshRefinement meshfiner(*_level0[i]);
         meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
-        //_level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
-    if(SetRefinementFlag==NULL){    
+    if(SetRefinementFlag==NULL){
     }
     else{
       Mesh::_SetRefinementFlag = SetRefinementFlag;
-      Mesh::_TestSetRefinementFlag=1;
+      Mesh::_IsUserRefinementFunctionDefined = true;
     }
-    
-    
+
+
     //partially refined meshes
     for (unsigned i=_gridr0; i<_gridn0; i++) {
-      if(!Mesh::_TestSetRefinementFlag) {
+      if(!Mesh::_IsUserRefinementFunctionDefined) {
         cout << "Set Refinement Region flag is not defined! " << endl;
         exit(1);
       }
       else {
 	MeshRefinement meshcoarser(*_level0[i-1u]);
-        meshcoarser.FlagElementsToBeRefinedByUserDefinedFunction();
-	//_level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
+        meshcoarser.FlagElementsToBeRefined();
       }
       _level0[i] = new Mesh();
       MeshRefinement meshfiner(*_level0[i]);
@@ -185,14 +181,14 @@ void MultiLevelMesh::ReadCoarseMesh(const char mesh_file[], const char GaussOrde
 
     _level0.resize(_gridn0);
     _finiteElementGeometryFlag.resize(5,false);
-    
+
     //coarse mesh
     _level0[0] = new Mesh();
     std::cout << " Reading corse mesh from file: " << mesh_file << std::endl;
     _level0[0]->ReadCoarseMesh(mesh_file, Lref,_finiteElementGeometryFlag);
 
     BuildElemType(GaussOrder);
-   
+
     _gridn=_gridn0;
     _gridr=_gridr0;
     _level.resize(_gridn);
@@ -212,15 +208,15 @@ void MultiLevelMesh::GenerateCoarseBoxMesh(
 
     _level0.resize(_gridn0);
     _finiteElementGeometryFlag.resize(5,false);
-    
+
     //coarse mesh
     _level0[0] = new Mesh();
     std::cout << " Building brick mesh using the built-in mesh generator" << std::endl;
-    
+
     _level0[0]->GenerateCoarseBoxMesh(nx,ny,nz,xmin,xmax,ymin,ymax,zmin,zmax,type,_finiteElementGeometryFlag);
-   
+
     BuildElemType(GaussOrder);
-     
+
     _gridn=_gridn0;
     _gridr=_gridr0;
     _level.resize(_gridn);
@@ -241,40 +237,37 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
 
     //totally refined meshes
     for (unsigned i=1; i<_gridr0; i++) {
-        MeshRefinement meshcoarser(*_level0[i-1u]);
-        meshcoarser.FlagAllElementsToBeRefined();
-        //_level0[i-1u]->FlagAllElementsToBeRefined();
-       
-	_level0[i] = new Mesh();
-	MeshRefinement meshfiner(*_level0[i]);
-        meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
-        //_level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
+      MeshRefinement meshcoarser(*_level0[i-1u]);
+      meshcoarser.FlagAllElementsToBeRefined();
+
+      _level0[i] = new Mesh();
+      MeshRefinement meshfiner(*_level0[i]);
+      meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
     //partially refined meshes
-    
-    if(SetRefinementFlag==NULL){ 
-      
+
+    if(SetRefinementFlag==NULL){
+
     }
     else{
       Mesh::_SetRefinementFlag = SetRefinementFlag;
-      Mesh::_TestSetRefinementFlag=1;
+      Mesh::_IsUserRefinementFunctionDefined = true;
     }
-    
+
     for (unsigned i=_gridr0; i<_gridn0; i++) {
-      if(Mesh::_TestSetRefinementFlag==0) {
+      if(Mesh::_IsUserRefinementFunctionDefined == false) {
         cout << "Set Refinement Region flag is not defined! " << endl;
         exit(1);
       }
       else {
 	MeshRefinement meshcoarser(*_level0[i-1u]);
-        meshcoarser.FlagElementsToBeRefinedByUserDefinedFunction();
-        //_level0[i-1u]->FlagElementsToBeRefinedByUserDefinedFunction();
+        meshcoarser.FlagElementsToBeRefined();
+	//meshcoarser.FlagOnlyEvenElementsToBeRefined();
       }
       _level0[i] = new Mesh();
       MeshRefinement meshfiner(*_level0[i]);
       meshfiner.RefineMesh(i,_level0[i-1],_finiteElement);
-      //_level0[i]->RefineMesh(i,_level0[i-1],_finiteElement);
     }
 
     unsigned refindex = _level0[0]->GetRefIndex();
@@ -289,45 +282,19 @@ void MultiLevelMesh::RefineMesh( const unsigned short &igridn, const unsigned sh
 
 }
 
-
-void MultiLevelMesh::AddMeshLevel()
-{
- 
-  //AMR refine mesh
-   _level0.resize(_gridn0+1u);
-            
-  if(Mesh::_TestSetRefinementFlag==0) {
-     cout << "Set Refinement Region flag is not defined! " << endl;
-     exit(1);
-  }
-
-  MeshRefinement meshcoarser(*_level0[_gridn0-1u]);
-  meshcoarser.FlagElementsToBeRefinedByUserDefinedFunction();
-  
-  _level0[_gridn0] = new Mesh();
-  MeshRefinement meshfiner(*_level0[_gridn0]);
-  meshfiner.RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
-    
-  _level.resize(_gridn+1u);
-  _level[_gridn]=_level0[_gridn0];
-
-  _gridn0++;
-  _gridn++;
-}
-
 void MultiLevelMesh::AddAMRMeshLevel()
 {
- 
+
   //AMR refine mesh
    _level0.resize(_gridn0+1u);
-  
+
   MeshRefinement meshcoarser(*_level0[_gridn0-1u]);
-  meshcoarser.FlagElementsToBeRefinedByAMR();
-  
+  meshcoarser.FlagElementsToBeRefined();
+
   _level0[_gridn0] = new Mesh();
   MeshRefinement meshfiner(*_level0[_gridn0]);
   meshfiner.RefineMesh(_gridn0,_level0[_gridn0-1u],_finiteElement);
-    
+
   _level.resize(_gridn+1u);
   _level[_gridn]=_level0[_gridn0];
 
@@ -371,22 +338,22 @@ void MultiLevelMesh::PrintInfo() {
     const unsigned MultiLevelMesh::GetDimension() const {
       return _level0[LEV_PICK]->GetDimension();
     }
-    
+
 // ========================================================
   void MultiLevelMesh::SetDomain(Domain* domain_in)  {
-    
+
     _domain = domain_in;
-    
-   return; 
+
+   return;
   }
-  
+
  // ========================================================
   Domain* MultiLevelMesh::GetDomain() const {
-    
-   return _domain; 
-   
+
+   return _domain;
+
   }
-  
+
 } //end namespace femus
 
 

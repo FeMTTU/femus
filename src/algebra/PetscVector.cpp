@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: PetscVector
  Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -30,7 +30,7 @@
 #include "DenseSubvector.hpp"
 #include "Parallel.hpp"
 #include "PetscMacro.hpp"
-#include "Casts.hpp"  
+#include "Casts.hpp"
 
 
 namespace femus {
@@ -133,10 +133,10 @@ void PetscVector::add_vector_blocked(const std::vector<double>& values,
   //this->_restore_array();
   int dof_size = dof_indices.size();
   assert(values.size() == dof_size);
-    
+
   int ierr = VecSetValues(_vec,dof_size,&dof_indices[0],&values[0],ADD_VALUES);
   CHKERRABORT(MPI_COMM_WORLD,ierr);
-    
+
 }
 
 // ===============================================================
@@ -594,7 +594,7 @@ void PetscVector::localize(
   // Make sure ghost dofs are up to date
   if (v_local->type() == GHOSTED)  v_local->close();
   return;
-  
+
 }
 
 // ================================================================
@@ -867,10 +867,27 @@ void PetscVector::create_subvector(
   CHKERRABORT(MPI_COMM_WORLD,ierr);
   return;
 }
-
+  
+  void PetscVector::BinaryPrint(const char* fileName){
+    
+    PetscViewer binv;
+    PetscViewerBinaryOpen(MPI_COMM_WORLD,fileName, FILE_MODE_WRITE, &binv);
+    VecView(_vec, binv);
+    PetscViewerDestroy(&binv);
+    
+  }
+  
+  void PetscVector::BinaryLoad(const char* fileName){
+    
+    PetscViewer binv;
+    PetscViewerBinaryOpen(MPI_COMM_WORLD,fileName, FILE_MODE_READ, &binv);
+    VecLoad(_vec, binv);
+    PetscViewerDestroy(&binv);
+    
+  }
 
 } //end namespace femus
 
 
 
-#endif 
+#endif

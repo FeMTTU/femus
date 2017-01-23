@@ -61,9 +61,8 @@ public:
 
   /** To be Added */
   void BuildProlongation(const Mesh &meshf, const Mesh &meshc, const int& ielc, SparseMatrix* Projmat) const;
-
   /** To be Added */
-  void BuildProlongation(const Mesh& mymesh, const int& iel, SparseMatrix* Projmat, const unsigned &itype) const;
+  void BuildProlongation(const Mesh& mymesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const;
 
 
   virtual void Jacobian(const vector < vector < adept::adouble > > &vt,const unsigned &ig, adept::adouble &Weight,
@@ -147,6 +146,7 @@ public:
   void GetSparsityPatternSize(const LinearEquation &lspdef,const LinearEquation &lspdec, const int& ielc,
 			      NumericVector* NNZ_d, NumericVector* NNZ_o,
 			      const unsigned &index_sol, const unsigned &kkindex_sol) const;
+
   void GetSparsityPatternSize(const Mesh &meshf,const Mesh &meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const;
 
   void GetSparsityPatternSize(const Mesh& Mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const;
