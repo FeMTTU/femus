@@ -335,6 +335,16 @@ public:
     return os;
   }
   
+  virtual void BinaryPrint(const char* fileName){
+    std::cout << "BinaryPrint is not available for this vector type\n";
+    abort();
+  };
+  
+  virtual void BinaryLoad(const char* fileName){
+    std::cout << "BinaryLoad is not available for this vector type\n";
+    abort();
+  };
+  
 protected:
 
   // member data

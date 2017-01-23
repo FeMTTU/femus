@@ -50,8 +50,7 @@ namespace femus {
     virtual ~Writer();
 
     /** write output function */
-    virtual void write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0)  const = 0;
-    virtual void Pwrite(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0) const = 0;
+    virtual void Write(const std::string output_path, const char order[], const std::vector < std::string > & vars = std::vector < std::string > (), const unsigned time_step = 0)  = 0;
     /** set moving mesh */
     void SetMovingMesh(std::vector<std::string>& movvars_in);
 
@@ -65,8 +64,12 @@ namespace femus {
       std::cout<<"Warning this writer type does not have debug printing"<<std::endl;
     };
 
-    void SetSurfaceVariable(const std::string &surfaceVaraible);
-    void UnsetSurfaceVariable(){ _surface = false;};
+    void SetGraphVariable(const std::string &GraphVaraible);
+    void UnsetGraphVariable(){ _graph = false;};
+
+    void SetSurfaceVariables( std::vector < std::string > &surfaceVariable );
+    void UnsetSurfaceVariables(){ _surface = false;};
+
   protected:
 
     /** a flag to move the output mesh */
@@ -75,8 +78,12 @@ namespace femus {
     /** the displacement variables for mesh moving */
     std::vector<std::string> _moving_vars;
 
+    bool _graph;
+    std::string _graphVariable;
+
     bool _surface;
-    std::string _surfaceVariable;
+    std::vector < std::string > _surfaceVariables;
+
 
     /** the multilevelsolution pointer */
     MultiLevelSolution* _ml_sol;
@@ -85,8 +92,6 @@ namespace femus {
     MultiLevelMesh* _ml_mesh;
 
     int _gridn;
-
-    int _gridr;
 
     /** map from femus connectivity to vtk-connectivity for paraview visualization */
     static const unsigned FemusToVTKorToXDMFConn[27];

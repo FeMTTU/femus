@@ -217,8 +217,10 @@ void BoundaryConditions::GenerateBdc() {
     for (uint Level=0; Level <_dofmap->_mesh._NoLevels;Level++)   { //loop over the levels
 
   Mesh		*mymsh		=  _dofmap->_eqn->GetMLProb()._ml_msh->GetLevel(Level);
-    const uint el_nnodes_b = mymsh->el->GetElementFaceDofNumber(ZERO_ELEM,ZERO_FACE,BIQUADR_FE);
-
+  
+   unsigned iel0 = mymsh->_elementOffset[ mymsh->processor_id() ]; //WARNING CHANGE MADE WITH NO TESTING!!!!!!
+   const uint el_nnodes_b = mymsh->GetElementFaceDofNumber(iel0,ZERO_FACE,BIQUADR_FE);
+   
         for (uint isubd=0; isubd<_dofmap->_mesh._NoSubdom; ++isubd) {
             uint iel_b = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd + Level];
             uint iel_e = _dofmap->_mesh._off_el[BB][ _dofmap->_mesh._NoLevels*isubd + Level+1];
