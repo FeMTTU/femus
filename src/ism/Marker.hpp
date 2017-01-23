@@ -37,6 +37,7 @@ namespace femus {
         _mesh = mesh;
         _solType = solType;
         _dim = _mesh->GetDimension();
+	_step=0;
 
         GetElement(1, UINT_MAX);
 
@@ -56,6 +57,14 @@ namespace femus {
       void SetMarkerCoordinates(std::vector <double> &x) {
         _x = x;
       }
+      
+      void SetMarkerK(std::vector < std::vector < double > > K){
+	_K = K;
+      }
+      
+      void SetMarkerStep(unsigned step){
+	_step = step;
+      }
 
       unsigned GetMarkerProc() {
         return _mproc;
@@ -63,6 +72,18 @@ namespace femus {
       
       std::vector<double> GetMarkerx0() {
         return _x0;
+      }
+      
+      std::vector < std::vector < std::vector < double > > > GetMarkeraX(){
+	return _aX;
+      }
+      
+      std::vector < std::vector < double > > GetMarkerK(){
+	return _K;
+      }
+      
+      unsigned GetMarkerStep(){
+	return _step;
       }
 
       unsigned GetMarkerElement() {
@@ -140,6 +161,7 @@ namespace femus {
       unsigned _mproc; //processor who has the marker
       std::vector < std::vector < std::vector < double > > > _aX;
       std::vector < std::vector < double > > _K;
+      unsigned _step; //added for line
 
       static const double _localCentralNode[6][3];
       static const double _a[4][4][4];

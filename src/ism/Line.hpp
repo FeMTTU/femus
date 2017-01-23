@@ -234,9 +234,6 @@ namespace femus {
       unsigned _size;
       unsigned _dim;
 
-      std::vector < std::vector < std::vector < double > > > _K;
-      std::vector < std::vector < std::vector < std::vector < double > > > > _aX;
-
       static const double _a[4][4][4];
       static const double _b[4][4];
       static const double _c[4][4];

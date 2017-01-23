@@ -59,7 +59,7 @@ namespace femus {
 
   void Line::AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order) {
 
-    //BEGIN  Initialize the parameters for all processors, to be used when awake
+    //BEGIN  Initialize the parameters for all processors
 
     vector < unsigned > solVIndex(_dim);
     solVIndex[0] = sol->GetIndex("U");    // get the position of "U" in the ml_sol object
@@ -70,113 +70,142 @@ namespace femus {
     std::vector < double > phi;
     std::vector < std::vector<double > > V(2);
     std::vector < std::vector < std::vector < double > > > aV;
-
-
-    std::vector <unsigned> step;
-    step.assign(_size, 0);
-
-    std::vector < double > x;
-    std::vector < double > x0;
-    //END
-
-    //BEGIN Numerical integration scheme
-    // determine the step size
     double h = T / n;
 
-    unsigned previousElem = UINT_MAX;
+    //END
 
-    for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
-      _particles[iMarker]->GetMarkerCoordinates(x);
-      x0 = _particles[iMarker]->GetMarkerx0();
+    //BEGIN initialize marker instances
+    unsigned step;
+    std::vector < double > x;
+    std::vector < double > x0;
+    std::vector < std::vector < double > > K;
+    std::vector < std::vector < std::vector < double > > > aX;
+    //END
 
-      unsigned currentElem = _particles[iMarker]->GetMarkerElement();
+    unsigned integrationIsOverCounter = 0; // when integrationIsOverCounter = _size (which is the number of particles) it means all particles have been advected;
+    // when the step of each marker is = n * order and/or marker element is UINT_MAX we increase by one such counter
 
-      bool integrationIsOver = (currentElem != UINT_MAX) ? false : true;
+    //BEGIN Numerical integration scheme
 
-      _K.resize(_size);
-      for(unsigned k = 0; k < _size; k++) {
-        _K[k].resize(order);
+    while(integrationIsOverCounter != _size) {
+
+      unsigned previousElem = UINT_MAX;
+
+      for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
+
+
+        //BEGIN extraction of the marker instances
+        x.resize(_dim);
+        x0.resize(_dim);
+        _particles[iMarker]->GetMarkerCoordinates(x);
+        x0 = _particles[iMarker]->GetMarkerx0();
+
+        K.resize(order);
         for(unsigned j = 0; j < order; j++) {
-          _K[k][j].resize(_dim);
+          K[j].resize(_dim);
         }
-      }
 
-      while(integrationIsOver == false) {
-        unsigned mprocOld = _iproc; //TODO don't know if we need this
+        K = _particles[iMarker]->GetMarkerK();
+        step = _particles[iMarker]->GetMarkerStep();
+        aX = _particles[iMarker]->GetMarkeraX();
 
-        bool pcElemUpdate = (previousElem == currentElem) ? false : true; //update only if the marker is in a different element
 
-        while(step[iMarker] < n * order) {
+        unsigned currentElem = _particles[iMarker]->GetMarkerElement();
 
-          unsigned tstep = step[iMarker] / order;
-          unsigned istep = step[iMarker] % order;
+        //END
 
-          if(istep == 0) {
-            x0 = x;
-            for(unsigned k = 0; k < order; k++) {
-              _K[iMarker][k].assign(_dim, 0.);
+        bool integrationIsOver = (currentElem != UINT_MAX) ? false : true;
+
+        while(integrationIsOver == false) {
+          unsigned mprocOld = _iproc; //TODO don't know if we need this
+
+          bool pcElemUpdate = (previousElem == currentElem) ? false : true; //update only if the marker is in a different element
+
+          while(step < n * order) {
+
+            unsigned tstep = step / order;
+            unsigned istep = step % order;
+
+            if(istep == 0) {
+              x0 = x;
+              for(unsigned k = 0; k < order; k++) {
+                K[k].assign(_dim, 0.);
+              }
             }
-          }
 
-          _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); //send xk
+            _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); //send xk
 
-          double s = (tstep + _c[order - 1][istep]) / n;
-
-          for(unsigned k = 0; k < _dim; k++) {
-            _K[iMarker][istep][k] = (s * V[0][k] + (1. - s) * V[1][k]) * h;
-          }
-
-          step[iMarker] += 1 ;
-          istep++;
-
-          if(istep < order) {
+            double s = (tstep + _c[order - 1][istep]) / n;
 
             for(unsigned k = 0; k < _dim; k++) {
-              x[k] = x0[k];
-              for(unsigned j = 0; j < order; j++) {
-                x[k] +=  _a[order - 1][istep][j] * _K[iMarker][j][k];
+              K[istep][k] = (s * V[0][k] + (1. - s) * V[1][k]) * h;
+            }
+
+            step++;
+            istep++;
+
+            if(istep < order) {
+
+              for(unsigned k = 0; k < _dim; k++) {
+                x[k] = x0[k];
+                for(unsigned j = 0; j < order; j++) {
+                  x[k] +=  _a[order - 1][istep][j] * K[j][k];
+                }
               }
+            }
+
+            else if(istep == order) {
+
+              for(unsigned i = 0; i < _dim; i++) {
+                x[i] = x0[i];
+                for(unsigned j = 0; j < order; j++) {
+                  x[i] += _b[order - 1][j] * K[j][i];
+                }
+              }
+            }
+
+            _particles[iMarker]->SetMarkerx0(x0);
+            _particles[iMarker]->SetMarkerCoordinates(x);
+            _particles[iMarker]->SetMarkerStep(step);
+            _particles[iMarker]->SetMarkerK(K);
+
+            previousElem = currentElem;
+
+            _particles[iMarker]->GetElementSerial(currentElem);
+
+            currentElem = _particles[iMarker]->GetMarkerElement();
+
+            if(currentElem == UINT_MAX) { //out of the domain
+              //    std::cout << " the marker has been advected outside the domain " << std::endl;
+              break; //TODO check where this is taking us
+            }
+            else if(previousElem != currentElem && _iproc != _particles[iMarker]->GetMarkerProc()) { //different element different process
+              break; //TODO check where this is taking us
+            }
+            else if(previousElem != currentElem) { //different element same process
+              pcElemUpdate = true;
+              _particles[iMarker]->FindLocalCoordinates(solVType, aX, pcElemUpdate);
+            }
+            else { //same element same process
+              _particles[iMarker]->FindLocalCoordinates(solVType, aX, pcElemUpdate);
             }
           }
 
-          else if(istep == order) {
-
-            for(unsigned i = 0; i < _dim; i++) {
-              x[i] = x0[i];
-              for(unsigned j = 0; j < order; j++) {
-                x[i] += _b[order - 1][j] * _K[iMarker][j][i];
-              }
-            }
+          if(step == n * order) {
+            integrationIsOver = true;
+            //     std::cout << "Integration is over, point in proc " << _mproc << std::endl;
           }
 
-          _particles[iMarker]->SetMarkerx0(x0);
-          _particles[iMarker]->SetMarkerCoordinates(x);
+        }
+        //if we are here, it means integrationIsOver = true for this marker
 
-          previousElem = currentElem;
-
-          _particles[iMarker]->GetElementSerial(currentElem);
-
-          currentElem = _particles[iMarker]->GetMarkerElement();
-
-          if(currentElem == UINT_MAX) { //out of the domain
-            //    std::cout << " the marker has been advected outside the domain " << std::endl;
-            break;
-          }
-          else if(previousElem != currentElem && _iproc != _particles[iMarker]->GetMarkerProc()) { //different element different process
-            break;
-          }
-          else if(previousElem != currentElem) { //different element same process
-            pcElemUpdate = true;
-            _particles[iMarker]->FindLocalCoordinates(solVType, _aX[iMarker], pcElemUpdate);
-          }
-          else { //same element same process
-            _particles[iMarker]->FindLocalCoordinates(solVType, _aX[iMarker], pcElemUpdate);
-          }
+        if(step != UINT_MAX) {
+          integrationIsOverCounter++;
+          _particles[iMarker]->SetMarkerStep(UINT_MAX);
         }
       }
     }
-
 
     //TODO TO BE CONTINUED...
 
