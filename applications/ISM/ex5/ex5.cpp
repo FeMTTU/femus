@@ -102,17 +102,24 @@ int main(int argc, char** args) {
   
   Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType);
   
-  std::vector <Marker* > particles(size);
   
-//    for(unsigned i=0; i<size; i++){
-//     particles[i] = linea._particles[i];
+  //BEGIN TEST FOR UPDATE LINE: to use it, make _particles public and initialize as the identity printList in UpdateLine
+//   std::vector <Marker* > particles(size);
+//   
+//   for(unsigned j = 0; j < size; j++) {
+//     std::vector <double> y(dim);
+//     y[0] = -0.15 + 0.2 * cos(2.*pi / size * j);
+//     y[1] = 0. + 0.2 * sin(2.*pi / size * j);
+//     particles[j] = new Marker(y, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
 //   }
 //     
-//   for(unsigned i=50; i<size; i++){
-//     linea._particles[i] = particles[size-i];
+//   for(unsigned i=0; i<size; i++){
+//     linea._particles[i] = particles[i];
 //   }
-
-  linea.UpdateLine(); 
+// 
+//   linea.UpdateLine(); 
+  
+  //END
 
   MultiLevelSolution mlSol(&mlMsh);
   // add variables to mlSol
