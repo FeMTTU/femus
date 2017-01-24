@@ -116,13 +116,15 @@ namespace femus {
         return _xi;
       }
       
-        void GetMarkerLocalCoordinatesLine(std::vector<double> &xi) {
-	  xi.resize(_dim);
-        xi =_xi;
+      void GetMarkerLocalCoordinatesLine(std::vector<double> &xi) {
+	xi.resize(_dim);
+	if(_mproc == _iproc) {
+	  xi =_xi;
+	}
+	MPI_Bcast(&xi[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
       }
 
       void GetMarkerCoordinates(std::vector< double > &xn) {
-
         xn.resize(_dim);
         if(_mproc == _iproc) {
           xn = _x;

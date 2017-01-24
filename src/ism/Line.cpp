@@ -56,6 +56,228 @@ namespace femus {
     {0., 0.5, 0.5, 1.} // fourth-order method
   };
 
+  
+  Line::Line(const std::vector < std::vector < double > > x, 
+	     const std::vector <MarkerType> &markerType,
+	     Mesh *mesh, const unsigned & solType) {
+
+	_size = x.size();
+    
+        std::vector < Marker*> particles(_size);
+
+        _dim = mesh->GetDimension();
+        
+        _markerOffset.resize(_nprocs + 1);
+        _markerOffset[_nprocs] = _size;
+
+        _particles.resize(_size);
+        _printList.resize(_size);
+
+        for(unsigned j = 0; j < _size; j++) {
+          particles[j] = new Marker(x[j], markerType[j], mesh, solType, true);
+        }
+
+
+
+        //BEGIN TEST ASSIGNATION
+
+        std::vector <double> xtry(_dim);
+        std::vector <double> xitry(_dim);
+
+
+        for(unsigned j = 0; j < _size; j++) {
+
+          unsigned proc;
+          unsigned elem;
+          particles[j]->GetMarkerProcLine(proc);
+          particles[j]->GetMarkerElementLine(elem);
+
+          std::cout << "proc = " << proc << " , " << "elem = " << elem <<
+                    " , " << std::endl;
+          particles[j]->GetMarkerCoordinates(xtry);
+          for(unsigned i = 0 ; i < _dim; i++) {
+            std::cout << "x[" << i << "]=" << xtry[i] << std::endl;
+          }
+          particles[j]->GetMarkerLocalCoordinatesLine(xitry);
+          for(unsigned i = 0 ; i < _dim; i++) {
+            std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
+          }
+        }
+
+
+        for(unsigned j = 0; j < _size; j++) {
+          _particles[j] = particles[j];
+        }
+
+        std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
+
+        for(unsigned j = 0; j < _size; j++) {
+
+          unsigned proc;
+          unsigned elem;
+          _particles[j]->GetMarkerProcLine(proc);
+          _particles[j]->GetMarkerElementLine(elem);
+          std::cout << "proc = " << proc << " , " << "elem = " << elem <<
+                    " , " << std::endl;
+          _particles[j]->GetMarkerCoordinates(xtry);
+          for(unsigned i = 0 ; i < _dim; i++) {
+            std::cout << "x[" << i << "]=" << xtry[i] << std::endl;
+          }
+          _particles[j]->GetMarkerLocalCoordinatesLine(xitry);
+          for(unsigned i = 0 ; i < _dim; i++) {
+            std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
+          }
+        }
+
+
+        //END TEST ASSIGNATION
+
+
+        std::cout << "FIRST OF ALL" << std::endl;
+        for(unsigned i = 0; i < _size; i++) {
+          unsigned proc;
+          particles[i]->GetMarkerProcLine(proc);
+          unsigned elem;
+          particles[i]->GetMarkerElementLine(elem);
+          std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+                    << "Element: " << elem << " " << std::endl;
+        }
+
+        //BEGIN reorder the markers by proc
+        unsigned counter = 0;
+        for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+             _markerOffset[iproc] = counter;
+	  //unsigned  offsetCounter = counter;
+          for(unsigned j = 0; j < _size; j++) {
+            unsigned markerProc;
+            particles[j]->GetMarkerProcLine(markerProc);
+            if(markerProc == iproc) {
+              _particles[counter] = particles[j];
+              _printList[j] = counter;
+              counter++;
+             }
+          }
+        }
+        //END reorder the markers by proc
+
+
+        std::cout << "AFTER THE REORDERING BY PROC" << std::endl;
+        for(unsigned i = 0; i < _size; i++) {
+          unsigned proc;
+          _particles[i]->GetMarkerProcLine(proc);
+          unsigned elem;
+          _particles[i]->GetMarkerElementLine(elem);
+          std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+                    << "Element: " << elem << " " << std::endl;
+        }
+
+        for(unsigned iproc=0; iproc<=_nprocs; iproc++){
+	  std::cout << "_markerOffset[" << iproc << "]= " << _markerOffset[iproc] << std::endl;
+	}
+        
+//         for(unsigned i = 0; i < _size; i++) {
+//           std::cout << "_printList[ " << i << "] = " << _printList[i] << std::endl;
+//         }
+//
+//
+//         std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
+
+        //BEGIN reorder markers also by element
+
+        for(unsigned j = 0; j < _size; j++) {
+          particles[j] = _particles[j];
+        }
+
+        unsigned* elementList = new unsigned [mesh->GetNumberOfElements()];
+        std::vector < unsigned> printList(_size);
+
+        //flags to see if we already ordered by that element, 0 = not considered yet
+        for(unsigned iFlag = 0; iFlag < mesh->GetNumberOfElements(); iFlag++) {
+          elementList[iFlag] = 0;
+        }
+
+        printList = _printList;
+
+        for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+
+            counter = 0;
+
+            for(unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc+1]; jp++) {
+
+              unsigned jel;
+              particles[jp]->GetMarkerElementLine(jel);
+
+              if(elementList[jel] == 0) {
+
+                elementList[jel] = 1;
+
+                _particles[_markerOffset[iproc] + counter] = particles[jp];
+                for(unsigned iList = 0; iList < _size; iList++) {
+                  if(printList[iList] == jp) {
+                    _printList[iList] = _markerOffset[iproc] + counter;
+                    break;
+                  }
+                }
+                counter++;
+
+
+                for(unsigned ip = _markerOffset[iproc]; ip < _markerOffset[iproc+1]; ip++) {
+                  unsigned iel;
+                  particles[ip]->GetMarkerElementLine(iel);
+                  if(ip != jp && iel == jel) {
+                    //std::cout << " jel =" << jel << " , " << "ip = " << ip << " , " << "jp = " << jp <<  std::endl;
+                    elementList[iel] = 1;
+                    _particles[_markerOffset[iproc] + counter] = particles[ip];
+                    for(unsigned iList = 0; iList < _size; iList++) {
+                      if(printList[iList] == ip) {
+                        _printList[iList] = _markerOffset[iproc] + counter;
+                        break;
+                      }
+                    }
+                    counter++;
+                  }
+                }
+              }
+            }
+          }
+
+        //END reorder markers also by element
+
+//         for(unsigned i = 0; i < _size; i++) {
+//           std::cout << "_printList[ " << i << "] = " << _printList[i] << std::endl;
+//         }
+
+
+        std::cout << "AFTER THE REORDERING BY ELEM" << std::endl;
+        for(unsigned i = 0; i < _size; i++) {
+          unsigned proc;
+          _particles[i]->GetMarkerProcLine(proc);
+          unsigned elem;
+          _particles[i]->GetMarkerElementLine(elem);
+          std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+                    << "Element: " << elem << " " << "Pointer: "<< _particles[i] << std::endl;
+        }
+
+
+        _line.resize(1);
+        _line[0].resize(_size + 1);
+
+        for(unsigned j = 0; j < _size; j++) {
+          _particles[_printList[j]]->GetMarkerCoordinates(_line[0][j]);
+        }
+        _particles[_printList[0]]->GetMarkerCoordinates(_line[0][_size]);
+
+        delete[] elementList;
+        std::vector < unsigned > ().swap(printList);
+
+      };
+  
+  Line::~Line(){
+    for(unsigned j = 0; j < _size; j++) {
+      //std::cout << j << " " << _particles[j] << std::endl<< std::flush;
+      delete _particles[j];
+    }
+  }
 
   void Line::UpdateLine() {   //TODO it gives segmentation fault when _nprocs = 4
 
@@ -82,8 +304,7 @@ namespace femus {
     //BEGIN reorder the markers by proc
     unsigned counter = 0;
     for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
-      bool markersInProc = false;
-      unsigned  offsetCounter = counter;
+      _markerOffset[iproc] = counter;
       for(unsigned j = 0; j < _size; j++) {
         unsigned markerProc = particles[j]->GetMarkerProc();
         if(markerProc == iproc) {
@@ -95,26 +316,7 @@ namespace femus {
             }
           }
           counter++;
-          markersInProc = true;
-        }
-      }
-      if(markersInProc == true) {
-        if(iproc == 0) {
-          _markerOffset[iproc] = 0;
-        }
-        else {
-          unsigned firstCounter = 0;
-          for(unsigned jproc = 0; jproc < iproc; jproc++) {
-            if(_markerOffset[jproc] == UINT_MAX) firstCounter++;
-          }
-          if(firstCounter == iproc) _markerOffset[iproc] = 0;
-          else {
-            _markerOffset[iproc] = offsetCounter;
-          }
-        }
-      }
-      else {
-        _markerOffset[iproc] = UINT_MAX;
+         }
       }
     }
     //END reorder the markers by proc
@@ -152,27 +354,9 @@ namespace femus {
 
      for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
 
-      if(_markerOffset[iproc] != UINT_MAX) {
-
         counter = 0;
 
-        unsigned upperBound;
-        bool upperBoundFound = 0;
-        bool finishedProcs = 0;
-        unsigned lproc = iproc + 1;
-        while(upperBoundFound + finishedProcs == 0) {
-          if(_markerOffset[lproc] != UINT_MAX) {
-            upperBound = _markerOffset[lproc];
-            upperBoundFound = 1;
-          }
-          else {
-            if(lproc < _nprocs) lproc ++;
-            else finishedProcs = 1;
-          }
-        }
-
-
-        for(unsigned jp = _markerOffset[iproc]; jp < upperBound; jp++) {
+        for(unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc+1]; jp++) {
 
           unsigned jel;
 	  particles[jp]->GetMarkerElementLine(jel);
@@ -191,7 +375,7 @@ namespace femus {
             counter++;
 
 
-            for(unsigned ip = _markerOffset[iproc]; ip < upperBound; ip++) {
+            for(unsigned ip = _markerOffset[iproc]; ip < _markerOffset[iproc+1]; ip++) {
               unsigned iel;
 	      particles[ip]->GetMarkerElementLine(iel);
               if(jel == 1132) std::cout <<  "ip" <<  ip << " , " << "iel =" << iel << std::endl;
@@ -210,8 +394,7 @@ namespace femus {
             }
           }
         }
-      }
-    }
+     }
 
     //END reorder markers also by element
 
@@ -221,10 +404,6 @@ namespace femus {
     }
     _particles[_printList[0]]->GetMarkerCoordinates(_line[0][_size]);
 
-
-//     for(unsigned j = 0; j < _size; j++) {  //TODO I don't know why but it says segmentation fault if I decommment it
-//       delete particles[j];
-//     }
 
     delete[] elementList;
     std::vector < unsigned > ().swap(printList);

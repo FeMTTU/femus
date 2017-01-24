@@ -97,20 +97,20 @@ int main(int argc, char** args) {
   for(unsigned j = 0; j < size; j++) {
     x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
     x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
-    x[j][2] = 0.;
+   // x[j][2] = 0.;
   }
   
-  Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, size, true);
+  Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType);
   
   std::vector <Marker* > particles(size);
   
-   for(unsigned i=0; i<size; i++){
-    particles[i] = linea._particles[i];
-  }
-    
-  for(unsigned i=50; i<size; i++){
-    linea._particles[i] = particles[size-i];
-  }
+//    for(unsigned i=0; i<size; i++){
+//     particles[i] = linea._particles[i];
+//   }
+//     
+//   for(unsigned i=50; i<size; i++){
+//     linea._particles[i] = particles[size-i];
+//   }
 
   linea.UpdateLine(); 
 
