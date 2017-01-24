@@ -73,33 +73,52 @@ namespace femus {
       void SetMarker_aX(std::vector < std::vector < std::vector < double > > > aX){
 	_aX = aX;
       }
+      
+      unsigned GetNumberOfMeshElements(){
+	return _mesh->GetNumberOfElements();
+      }
 
       unsigned GetMarkerProc() {
         return _mproc;
       }
       
-      std::vector<double> GetMarker_x0() {
-        return _x0;
+      void GetMarkerProcLine(unsigned &mproc){
+	mproc = _mproc;
       }
       
-      std::vector < std::vector < std::vector < double > > > GetMarker_aX(){
+     
+      void GetMarker_x0Line(std::vector<double> &x0) {
+	x0.resize(_dim);
+        x0 = _x0;
+      }
+      
+      std::vector < std::vector < std::vector < double > > >  GetMarker_aXLine(){ 
 	return _aX;
       }
       
-      std::vector < std::vector < double > > GetMarker_K(){
+     std::vector < std::vector < double > > GetMarker_KLine(){
 	return _K;
       }
       
-      unsigned GetMarkerStep(){
-	return _step;
+      void GetMarkerStepLine(unsigned &step){
+	step = _step;
       }
 
       unsigned GetMarkerElement() {
         return _elem;
       }
+      
+      void GetMarkerElementLine(unsigned &elem) {
+        elem = _elem;
+      }
 
       std::vector<double> GetMarkerLocalCoordinates() {
         return _xi;
+      }
+      
+        void GetMarkerLocalCoordinatesLine(std::vector<double> &xi) {
+	  xi.resize(_dim);
+        xi =_xi;
       }
 
       void GetMarkerCoordinates(std::vector< double > &xn) {

@@ -51,12 +51,71 @@ namespace femus {
           particles[j] = new Marker(x[j], markerType[j], mesh, solType, debug);
         }
 
-//         std::cout << "FIRST OF ALL" << std::endl;
-//         for(unsigned i = 0; i < size; i++) {
-//           std::cout << "Particle: " << i << " , " << "Processor: " << particles[i]->GetMarkerProc() << " , "
-//                     << "Element: " << particles[i]->GetMarkerElement() << " " << std::endl;
-//         }
 
+
+        //BEGIN TEST ASSIGNATION
+
+        std::vector <double> xtry(_dim);
+        std::vector <double> xitry(_dim);
+
+
+        for(unsigned j = 0; j < size; j++) {
+
+          unsigned proc;
+          unsigned elem;
+          particles[j]->GetMarkerProcLine(proc);
+          particles[j]->GetMarkerElementLine(elem);
+
+          std::cout << "proc = " << proc << " , " << "elem = " << elem <<
+                    " , " << std::endl;
+          particles[j]->GetMarkerCoordinates(xtry);
+          for(unsigned i = 0 ; i < _dim; i++) {
+            std::cout << "x[" << i << "]=" << xtry[i] << std::endl;
+          }
+          particles[j]->GetMarkerLocalCoordinatesLine(xitry);
+          for(unsigned i = 0 ; i < _dim; i++) {
+            std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
+          }
+        }
+
+
+        for(unsigned j = 0; j < _size; j++) {
+          _particles[j] = particles[j];
+        }
+
+        std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
+
+        for(unsigned j = 0; j < size; j++) {
+
+          unsigned proc;
+          unsigned elem;
+          _particles[j]->GetMarkerProcLine(proc);
+          _particles[j]->GetMarkerElementLine(elem);
+          std::cout << "proc = " << proc << " , " << "elem = " << elem <<
+                    " , " << std::endl;
+          _particles[j]->GetMarkerCoordinates(xtry);
+          for(unsigned i = 0 ; i < _dim; i++) {
+            std::cout << "x[" << i << "]=" << xtry[i] << std::endl;
+          }
+          _particles[j]->GetMarkerLocalCoordinatesLine(xitry);
+          for(unsigned i = 0 ; i < _dim; i++) {
+            std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
+          }
+        }
+
+
+        //END TEST ASSIGNATION
+
+
+        std::cout << "FIRST OF ALL" << std::endl;
+        for(unsigned i = 0; i < size; i++) {
+          unsigned proc;
+          particles[i]->GetMarkerProcLine(proc);
+          unsigned elem;
+          particles[i]->GetMarkerElementLine(elem);
+          std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+                    << "Element: " << elem << " " << std::endl;
+        }
 
         //BEGIN reorder the markers by proc
         unsigned counter = 0;
@@ -64,7 +123,8 @@ namespace femus {
           bool markersInProc = false;
           unsigned  offsetCounter = counter;
           for(unsigned j = 0; j < size; j++) {
-            unsigned markerProc = particles[j]->GetMarkerProc();
+            unsigned markerProc;
+            particles[j]->GetMarkerProcLine(markerProc);
             if(markerProc == iproc) {
               _particles[counter] = particles[j];
               _printList[j] = counter;
@@ -95,11 +155,15 @@ namespace femus {
         //END reorder the markers by proc
 
 
-//         std::cout << "AFTER THE REORDERING BY PROC" << std::endl;
-//         for(unsigned i = 0; i < size; i++) {
-//           std::cout << "Particle: " << i << " , " << "Processor: " << _particles[i]->GetMarkerProc() << " , "
-//                     << "Element: " << _particles[i]->GetMarkerElement() << " " << std::endl;
-//         }
+        std::cout << "AFTER THE REORDERING BY PROC" << std::endl;
+        for(unsigned i = 0; i < size; i++) {
+          unsigned proc;
+          _particles[i]->GetMarkerProcLine(proc);
+          unsigned elem;
+          _particles[i]->GetMarkerElementLine(elem);
+          std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+                    << "Element: " << elem << " " << std::endl;
+        }
 
 //         for(unsigned i = 0; i < _size; i++) {
 //           std::cout << "_printList[ " << i << "] = " << _printList[i] << std::endl;
@@ -151,7 +215,8 @@ namespace femus {
 
             for(unsigned jp = _markerOffset[iproc]; jp < upperBound; jp++) {
 
-              unsigned jel = particles[jp]->GetMarkerElement();
+              unsigned jel;
+              particles[jp]->GetMarkerElementLine(jel);
 
               if(elementList[jel] == 0) {
 
@@ -168,7 +233,8 @@ namespace femus {
 
 
                 for(unsigned ip = _markerOffset[iproc]; ip < upperBound; ip++) {
-                  unsigned iel = particles[ip]->GetMarkerElement();
+                  unsigned iel;
+                  particles[ip]->GetMarkerElementLine(iel);
                   if(ip != jp && iel == jel) {
                     //std::cout << " jel =" << jel << " , " << "ip = " << ip << " , " << "jp = " << jp <<  std::endl;
                     elementList[iel] = 1;
@@ -194,11 +260,15 @@ namespace femus {
 //         }
 
 
-//         std::cout << "AFTER THE REORDERING BY ELEM" << std::endl;
-//         for(unsigned i = 0; i < size; i++) {
-//           std::cout << "Particle: " << i << " , " << "Processor: " << _particles[i]->GetMarkerProc() << " , "
-//                     << "Element: " << _particles[i]->GetMarkerElement() << " " << std::endl;
-//         }
+        std::cout << "AFTER THE REORDERING BY ELEM" << std::endl;
+        for(unsigned i = 0; i < size; i++) {
+          unsigned proc;
+          _particles[i]->GetMarkerProcLine(proc);
+          unsigned elem;
+          _particles[i]->GetMarkerElementLine(elem);
+          std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+                    << "Element: " << elem << " " << std::endl;
+        }
 
 
         _line.resize(1);
@@ -223,14 +293,21 @@ namespace femus {
         return _line;
       }
 
+      std::vector < Marker*> GetParticles() {
+        return _particles;
+      }
+
+
       void AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order);
 
       void UpdateLine();
-      
-    private:
 
-      std::vector < std::vector < std::vector < double > > > _line;
       std::vector < Marker*> _particles;
+
+    private:
+//TODO rimettere _particles private
+      std::vector < std::vector < std::vector < double > > > _line;
+
       std::vector < unsigned > _markerOffset;
       std::vector < unsigned > _printList;
       unsigned _size;

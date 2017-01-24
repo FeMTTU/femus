@@ -57,11 +57,193 @@ namespace femus {
   };
 
 
-  void Line::UpdateLine(){
+  void Line::UpdateLine() {   //TODO it gives segmentation fault when _nprocs = 4
+
+    std::vector < Marker*> particles(_size);
+    std::vector < unsigned> printList(_size);
+
+    for(unsigned j = 0; j < _size; j++) {
+      particles[j] = _particles[j];
+//       printList[j] = _printList[j];
+    }
     
+    printList = _printList;
+
+    std::cout << "FIRST OF ALL ----------------------- UPDATE LINE" << std::endl;
+    for(unsigned i = 0; i < _size; i++) {
+      unsigned proc;
+      unsigned elem;
+      particles[i]->GetMarkerProcLine(proc);
+      particles[i]->GetMarkerElementLine(elem);
+      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+                << "Element: " << elem << " " << std::endl;
+    }
+
+    //BEGIN reorder the markers by proc
+    unsigned counter = 0;
+    for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+      bool markersInProc = false;
+      unsigned  offsetCounter = counter;
+      for(unsigned j = 0; j < _size; j++) {
+        unsigned markerProc = particles[j]->GetMarkerProc();
+        if(markerProc == iproc) {
+          _particles[counter] = particles[j];
+          for(unsigned iList = 0; iList < _size; iList++) {
+            if(printList[iList] == j) {
+              _printList[iList] = counter; //TODO fix this
+              break;
+            }
+          }
+          counter++;
+          markersInProc = true;
+        }
+      }
+      if(markersInProc == true) {
+        if(iproc == 0) {
+          _markerOffset[iproc] = 0;
+        }
+        else {
+          unsigned firstCounter = 0;
+          for(unsigned jproc = 0; jproc < iproc; jproc++) {
+            if(_markerOffset[jproc] == UINT_MAX) firstCounter++;
+          }
+          if(firstCounter == iproc) _markerOffset[iproc] = 0;
+          else {
+            _markerOffset[iproc] = offsetCounter;
+          }
+        }
+      }
+      else {
+        _markerOffset[iproc] = UINT_MAX;
+      }
+    }
+    //END reorder the markers by proc
+
+    for(unsigned iproc = 0; iproc <= _nprocs; iproc++) {
+      std::cout << "_markerOffset[" << iproc << "]= " << _markerOffset[iproc] << std::endl;
+    }
+
+    std::cout << "-----------------------------------------  UPDATE LINE  BY PROCS  -----------------------------------------" << std::endl;
+    for(unsigned i = 0; i < _size; i++) {
+            unsigned proc;
+      unsigned elem;
+      _particles[i]->GetMarkerProcLine(proc);
+      _particles[i]->GetMarkerElementLine(elem);
+      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+                << "Element: " << elem << " " << std::endl;
+    }
+
+
+    //BEGIN reorder markers also by element
+
+    for(unsigned j = 0; j < _size; j++) {
+      particles[j] = _particles[j];
+      //printList[j] = _printList[j];
+    }
+
+    printList = _printList;
+    
+    unsigned* elementList = new unsigned [particles[0]->GetNumberOfMeshElements()];
+
+    //flags to see if we already ordered by that element, 0 = not considered yet
+    for(unsigned iFlag = 0; iFlag < particles[0]->GetNumberOfMeshElements(); iFlag++) {
+      elementList[iFlag] = 0;
+    }
+
+     for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+
+      if(_markerOffset[iproc] != UINT_MAX) {
+
+        counter = 0;
+
+        unsigned upperBound;
+        bool upperBoundFound = 0;
+        bool finishedProcs = 0;
+        unsigned lproc = iproc + 1;
+        while(upperBoundFound + finishedProcs == 0) {
+          if(_markerOffset[lproc] != UINT_MAX) {
+            upperBound = _markerOffset[lproc];
+            upperBoundFound = 1;
+          }
+          else {
+            if(lproc < _nprocs) lproc ++;
+            else finishedProcs = 1;
+          }
+        }
+
+
+        for(unsigned jp = _markerOffset[iproc]; jp < upperBound; jp++) {
+
+          unsigned jel;
+	  particles[jp]->GetMarkerElementLine(jel);
+
+          if(elementList[jel] == 0) {
+
+            elementList[jel] = 1;
+
+            _particles[_markerOffset[iproc] + counter] = particles[jp];
+            for(unsigned iList = 0; iList < _size; iList++) {
+              if(printList[iList] == jp) {
+                _printList[iList] = _markerOffset[iproc] + counter;
+                break;
+              }
+            }
+            counter++;
+
+
+            for(unsigned ip = _markerOffset[iproc]; ip < upperBound; ip++) {
+              unsigned iel;
+	      particles[ip]->GetMarkerElementLine(iel);
+              if(jel == 1132) std::cout <<  "ip" <<  ip << " , " << "iel =" << iel << std::endl;
+              if(ip != jp && iel == jel) {
+                if(jel == 1132) std::cout <<  "ip after" <<  ip << std::endl;
+                elementList[iel] = 1;
+                _particles[_markerOffset[iproc] + counter] = particles[ip];
+                for(unsigned iList = 0; iList < _size; iList++) {
+                  if(printList[iList] == ip) {
+                    _printList[iList] = _markerOffset[iproc] + counter;
+                    break;
+                  }
+                }
+                counter++;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    //END reorder markers also by element
+
+
+    for(unsigned j = 0; j < _size; j++) {
+      _particles[_printList[j]]->GetMarkerCoordinates(_line[0][j]);
+    }
+    _particles[_printList[0]]->GetMarkerCoordinates(_line[0][_size]);
+
+
+//     for(unsigned j = 0; j < _size; j++) {  //TODO I don't know why but it says segmentation fault if I decommment it
+//       delete particles[j];
+//     }
+
+    delete[] elementList;
+    std::vector < unsigned > ().swap(printList);
+
+
+    std::cout << "-----------------------------------------  UPDATE LINE  BY ELEMENTS-----------------------------------------" << std::endl;
+    for(unsigned i = 0; i < _size; i++) {
+      unsigned proc;
+     _particles[i]->GetMarkerProcLine(proc);
+     unsigned elem;
+     _particles[i]->GetMarkerElementLine(elem);
+      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+                << "Element: " << elem << " " << std::endl;
+    }
+
+
   }
-  
-  
+
+
   void Line::AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order) {
 
     //BEGIN  Initialize the parameters for all processors
@@ -80,7 +262,7 @@ namespace femus {
     //END
 
 
-    //BEGIN initialize marker instances
+    //BEGIN declare marker instances
     unsigned step;
     std::vector < double > x;
     std::vector < double > x0;
@@ -104,27 +286,26 @@ namespace femus {
         x.resize(_dim);
         x0.resize(_dim);
         _particles[iMarker]->GetMarkerCoordinates(x);
-        x0 = _particles[iMarker]->GetMarker_x0();
+        _particles[iMarker]->GetMarker_x0Line(x0);
 
         K.resize(order);
         for(unsigned j = 0; j < order; j++) {
           K[j].resize(_dim);
         }
 
-        K = _particles[iMarker]->GetMarker_K();
-        step = _particles[iMarker]->GetMarkerStep();
-        aX = _particles[iMarker]->GetMarker_aX();
+        K = _particles[iMarker]->GetMarker_KLine();
+        _particles[iMarker]->GetMarkerStepLine(step);
+        aX = _particles[iMarker]->GetMarker_aXLine();
 
 
-        unsigned currentElem = _particles[iMarker]->GetMarkerElement();
+        unsigned currentElem;
+	_particles[iMarker]->GetMarkerElementLine(currentElem);
 
         //END
 
         bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
 
         if(markerOutsideDomain == false) {
-          unsigned mprocOld = _iproc; //TODO don't know if we need this
-
           bool pcElemUpdate = (previousElem == currentElem) ? false : true; //update only if the marker is in a different element
 
           while(step < n * order) {
@@ -179,14 +360,17 @@ namespace femus {
 
             _particles[iMarker]->GetElementSerial(currentElem);
 
-            currentElem = _particles[iMarker]->GetMarkerElement();
+            _particles[iMarker]->GetMarkerElementLine(currentElem);
 
+	    unsigned markProc;
+	    _particles[iMarker]->GetMarkerProcLine(markProc);
+	    
             if(currentElem == UINT_MAX) { //out of the domain
-              //    std::cout << " the marker has been advected outside the domain " << std::endl;
-              break; //TODO double check where this is taking us
+              markerOutsideDomain = true;
+              break;
             }
-            else if(previousElem != currentElem && _iproc != _particles[iMarker]->GetMarkerProc()) { //different element different process
-              break; //TODO double check where this is taking us
+            else if(previousElem != currentElem && _iproc != markProc) { //different element different process
+              break;
             }
             else if(previousElem != currentElem) { //different element same process
               pcElemUpdate = true;
@@ -204,80 +388,73 @@ namespace femus {
             //     std::cout << "Integration is over, point in proc " << _mproc << std::endl;
           }
 
-          
-          _particles[iMarker]->GetElement(previousElem, mprocOld);
-	  
-	  currentElem = _particles[iMarker]->GetMarkerElement();
-	  
-          
-          
-          //BEGIN exchange of information to reorder _particles
 
-          for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
-	    MPI_Send(&integrationIsOverCounter, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
-            MPI_Send(&x0, _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
-            MPI_Send(&x, _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
-            MPI_Send(&step, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
-            for(unsigned j = 0; j < order; j++) {
-              MPI_Send(&K[j], _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
-            }
-            MPI_Send(&currentElem, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
-            for(unsigned i = 0; i < solVType + 1 ; i++) {
-              for(unsigned j = 0; j < _dim; j++) {
-                MPI_Send(&aX[i][j], 27, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD); //TODO qua dovremmo mandare solo tanti quanti il numero di dofs dell'elemento, non 27 che e' il  max
-              }
-            }
+          _particles[iMarker]->GetElement(previousElem, _iproc);
 
-            if(jproc != _iproc) {
-              MPI_Recv(&x0, _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-              MPI_Recv(&x, _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-              MPI_Recv(&step, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-	      MPI_Recv(&integrationIsOverCounter, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-              for(unsigned j = 0; j < order; j++) {
-                MPI_Recv(&K[j], _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-              }
-              for(unsigned i = 0; i < solVType + 1 ; i++) {
-                for(unsigned j = 0; j < _dim; j++) {
-                  MPI_Recv(&aX[i][j], 27, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-                }
-              }
-              MPI_Recv(&currentElem, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-
-              _particles[iMarker]->SetMarker_x0(x0);
-              _particles[iMarker]->SetMarkerCoordinates(x);
-              _particles[iMarker]->SetMarkerStep(step);
-              _particles[iMarker]->SetMarker_K(K);
-              _particles[iMarker]->SetMarkerElement(currentElem);
-              _particles[iMarker]->SetMarker_aX(aX);
-            }
-          }
-
-          //END exchange of information
-
+          _particles[iMarker]->GetMarkerElementLine(currentElem);
 
         }
 
-        if(step != UINT_MAX) {
+        if(step != UINT_MAX && markerOutsideDomain == true) {
           integrationIsOverCounter++;
           step = UINT_MAX;
           _particles[iMarker]->SetMarkerStep(step);
-          for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
-            MPI_Send(&step, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
-	    MPI_Send(&integrationIsOverCounter, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
-            if(jproc != _iproc) {
-              MPI_Recv(&step, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-              _particles[iMarker]->SetMarkerStep(step);
+        }
+
+        //BEGIN exchange of information to reorder _particles
+
+        for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
+          MPI_Send(&integrationIsOverCounter, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
+          MPI_Send(&x0, _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
+          MPI_Send(&x, _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
+          MPI_Send(&step, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
+          for(unsigned j = 0; j < order; j++) {
+            MPI_Send(&K[j], _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
+          }
+          MPI_Send(&currentElem, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
+          for(unsigned i = 0; i < solVType + 1 ; i++) {
+            for(unsigned j = 0; j < _dim; j++) {
+              MPI_Send(&aX[i][j], 27, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD); //TODO qua dovremmo mandare solo tanti quanti il numero di dofs dell'elemento, non 27 che e' il  max
             }
           }
+
+          if(jproc != _iproc) {
+            MPI_Recv(&x0, _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&x, _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&step, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&integrationIsOverCounter, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+            for(unsigned j = 0; j < order; j++) {
+              MPI_Recv(&K[j], _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+            for(unsigned i = 0; i < solVType + 1 ; i++) {
+              for(unsigned j = 0; j < _dim; j++) {
+                MPI_Recv(&aX[i][j], 27, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+              }
+            }
+            MPI_Recv(&currentElem, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            _particles[iMarker]->SetMarker_x0(x0);
+            _particles[iMarker]->SetMarkerCoordinates(x);
+            _particles[iMarker]->SetMarkerStep(step);
+            _particles[iMarker]->SetMarker_K(K);
+            _particles[iMarker]->SetMarkerElement(currentElem);
+            _particles[iMarker]->SetMarker_aX(aX);
+          }
         }
+
+        //END exchange of information
+
+
       }
-      
-      UpdateLine(); //TODO write this function, it should reorder _particles like the constructor so that all procs can restart advecting
-      
+
+      UpdateLine();
+
     }
 
-    //TODO TO BE CONTINUED...
-
+    //set step to 0 for future integration
+    for(unsigned i = 0; i < _size; i++) {
+      _particles[i]->SetMarkerStep(0);
+    }
 
   }
 }
