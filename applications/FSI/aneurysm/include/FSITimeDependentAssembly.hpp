@@ -436,7 +436,7 @@ namespace femus
 
         // ---------------------------------------------------------------------------
         //BEGIN FLUID ASSEMBLY ============
-        if(flag_mat == 2) {
+        if(flag_mat == 2 || flag_mat == 3 ) {
           //BEGIN ALE + Momentum (Navier-Stokes)
           {
             for(unsigned i = 0; i < nve; i++) {
@@ -456,53 +456,129 @@ namespace femus
 
               //END redidual Laplacian ALE map in reference domain
 
-              //BEGIN redidual Navier-Stokes in moving domain
-              adept::adouble LapvelVAR[3] = {0., 0., 0.};
-              adept::adouble LapvelVAR_old[3] = {0., 0., 0.};
-              adept::adouble AdvaleVAR[3] = {0., 0., 0.};
-              adept::adouble AdvaleVAR_old[3] = {0., 0., 0.};
+              if(flag_mat == 2){
+		//BEGIN redidual Navier-Stokes in moving domain
+		adept::adouble LapvelVAR[3] = {0., 0., 0.};
+		adept::adouble LapvelVAR_old[3] = {0., 0., 0.};
+		adept::adouble AdvaleVAR[3] = {0., 0., 0.};
+		adept::adouble AdvaleVAR_old[3] = {0., 0., 0.};
 
-              for(int idim = 0.; idim < dim; idim++) {
-                for(int jdim = 0.; jdim < dim; jdim++) {
+		for(int idim = 0.; idim < dim; idim++) {
+		  for(int jdim = 0.; jdim < dim; jdim++) {
 
-                  LapvelVAR[idim]     += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
-                  LapvelVAR_old[idim] += (GradSolVAR_old[dim + idim][jdim] + GradSolVAR_old[dim + jdim][idim]) * gradphi_old[i * dim + jdim];
+		    LapvelVAR[idim]     += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
+		    LapvelVAR_old[idim] += (GradSolVAR_old[dim + idim][jdim] + GradSolVAR_old[dim + jdim][idim]) * gradphi_old[i * dim + jdim];
 
-                  AdvaleVAR[idim]	+= ((SolVAR[dim + jdim] - meshVel[jdim]) * GradSolVAR[dim + idim][jdim]
-                                      + (GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim]
-                                     ) * phi[i];
+		    AdvaleVAR[idim]	+= ((SolVAR[dim + jdim] - meshVel[jdim]) * GradSolVAR[dim + idim][jdim]
+					+ (GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim]
+				      ) * phi[i];
 
-                  AdvaleVAR_old[idim]	+= ((SolVAR_old[dim + jdim] - meshVel[jdim]) * GradSolVAR_old[dim + idim][jdim]
-                                          + (GradSolVAR_old[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR_old[dim + idim]
-                                         ) * phi_old[i];
-                }
-              }
+		    AdvaleVAR_old[idim]	+= ((SolVAR_old[dim + jdim] - meshVel[jdim]) * GradSolVAR_old[dim + idim][jdim]
+					    + (GradSolVAR_old[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR_old[dim + idim]
+					  ) * phi_old[i];
+		  }
+		}
 
-              for(int idim = 0; idim < dim; idim++) {
+		for(int idim = 0; idim < dim; idim++) {
 
-                adept::adouble timeDerivative = -(SolVAR[dim + idim] * phi[i] * Weight
+		  adept::adouble timeDerivative = -(SolVAR[dim + idim] * phi[i] * Weight
                                                   - SolVAR_old[dim + idim] * phi_old[i] * Weight_old);
 
-                adept::adouble value =  theta * dt * (
-                                          - AdvaleVAR[idim]      	             // advection term
-                                          - IRe * LapvelVAR[idim]	             // viscous dissipation
-                                          + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
-                                        ) * Weight;                                // at time t
+		  adept::adouble value =  theta * dt * (
+					    - AdvaleVAR[idim]      	             // advection term
+					    - IRe * LapvelVAR[idim]	             // viscous dissipation
+					    + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
+					  ) * Weight;                                // at time t
 
-                adept::adouble value_old = (1. - theta) * dt * (
-                                             - AdvaleVAR_old[idim]               	         // advection term
-                                             - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
-                                             + SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
-                                           ) * Weight_old;			                 // at time t-dt
+		  adept::adouble value_old = (1. - theta) * dt * (
+					      - AdvaleVAR_old[idim]               	         // advection term
+					      - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
+					      + SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
+					    ) * Weight_old;			                 // at time t-dt
 
-                if(!solidmark[i]) {
-                  aRhs[indexVAR[dim + idim]][i] += timeDerivative + value + value_old;
+		  if(!solidmark[i]) {
+		    aRhs[indexVAR[dim + idim]][i] += timeDerivative + value + value_old;
+		  }
+		  else {
+		    aRhs[indexVAR[idim]][i] += timeDerivative + value + value_old;
+		  }
+		  
+		} 
+		 //END redidual Navier-Stokes in moving domain
+              }
+              else if(flag_mat == 3){
+		//BEGIN redidual Porous Media in moving domain
+		
+		
+		adept::adouble speed = 0.;
+		adept::adouble speed_old = 0.;
+                for(int idim = 0.; idim < dim; idim++) {
+                  speed += SolVAR[dim + idim] * SolVAR[dim + idim];
+		  speed_old += SolVAR_old[dim + idim] * SolVAR_old[dim + idim];
                 }
-                else {
-                  aRhs[indexVAR[idim]][i] += timeDerivative + value + value_old;
-                }
+                double eps = 1.0e-12;
+                speed = sqrt(speed + eps);
+		speed_old = sqrt(speed_old + eps);
+                //double DE = 0.000125; // porous3D
+                double DE = 0.00006; // turek2D
+                double b = 4188;
+                double a = 1452;
+                double K = DE * IRe * rhof / b;
+                double C2 = 2 * a / (rhof * DE);
+		
+		
+		
+		
+		
+// 		adept::adouble LapvelVAR[3] = {0., 0., 0.};
+// 		adept::adouble LapvelVAR_old[3] = {0., 0., 0.};
+// 		adept::adouble AdvaleVAR[3] = {0., 0., 0.};
+// 		adept::adouble AdvaleVAR_old[3] = {0., 0., 0.};
+// 
+// 		for(int idim = 0.; idim < dim; idim++) {
+// 		  for(int jdim = 0.; jdim < dim; jdim++) {
+// 
+// 		    LapvelVAR[idim]     += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
+// 		    LapvelVAR_old[idim] += (GradSolVAR_old[dim + idim][jdim] + GradSolVAR_old[dim + jdim][idim]) * gradphi_old[i * dim + jdim];
+// 
+// 		    AdvaleVAR[idim]	+= ((SolVAR[dim + jdim] - meshVel[jdim]) * GradSolVAR[dim + idim][jdim]
+// 					+ (GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim]
+// 				      ) * phi[i];
+// 
+// 		    AdvaleVAR_old[idim]	+= ((SolVAR_old[dim + jdim] - meshVel[jdim]) * GradSolVAR_old[dim + idim][jdim]
+// 					    + (GradSolVAR_old[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR_old[dim + idim]
+// 					  ) * phi_old[i];
+// 		  }
+// 		}
 
-                //END redidual Navier-Stokes in moving domain
+		for(int idim = 0; idim < dim; idim++) {
+
+// 		  adept::adouble timeDerivative = -(SolVAR[dim + idim] * phi[i] * Weight
+//                                                   - SolVAR_old[dim + idim] * phi_old[i] * Weight_old);
+
+		  adept::adouble value =  theta * dt * (
+// 					    - AdvaleVAR[idim]      	             // advection term
+// 					    - IRe * LapvelVAR[idim]	             // viscous dissipation
+					    - SolVAR[dim + idim] * (IRe / K + 0.5 * C2 * speed) * phi[i]
+					    + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
+					  ) * Weight;                                // at time t
+
+		  adept::adouble value_old = (1. - theta) * dt * (
+// 					      - AdvaleVAR_old[idim]               	         // advection term
+// 					      - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
+					      - SolVAR_old[dim + idim] * (IRe / K + 0.5 * C2 * speed_old) * phi_old[i]
+					      + SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
+					    ) * Weight_old;			                 // at time t-dt
+
+		  if(!solidmark[i]) {
+		    aRhs[indexVAR[dim + idim]][i] += value + value_old;
+		  }
+		  else {
+		    aRhs[indexVAR[idim]][i] += value + value_old;
+		  }
+		  
+		} 
+		//END redidual Porous Media in moving domain
               }
             }
           }

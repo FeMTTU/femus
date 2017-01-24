@@ -426,20 +426,20 @@ namespace femus {
                 double K = DE * IRe * rhof / b;
                 double C2 = 2 * a / (rhof * DE);
 				
-		adept::adouble LapvelVAR[3] = {0., 0., 0.};
-                adept::adouble AdvaleVAR[3] = {0., 0., 0.};
-				
-                for(int idim = 0.; idim < dim; idim++) {
-                  for(int jdim = 0.; jdim < dim; jdim++) {
-                    LapvelVAR[idim] += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
-		    AdvaleVAR[idim] +=  SolVAR[dim + jdim] * GradSolVAR[dim + idim][jdim] * phi[i];
-                  }
-                }
+// 		adept::adouble LapvelVAR[3] = {0., 0., 0.};
+//                 adept::adouble AdvaleVAR[3] = {0., 0., 0.};
+// 				
+//                 for(int idim = 0.; idim < dim; idim++) {
+//                   for(int jdim = 0.; jdim < dim; jdim++) {
+//                     LapvelVAR[idim] += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
+// 		    AdvaleVAR[idim] +=  SolVAR[dim + jdim] * GradSolVAR[dim + idim][jdim] * phi[i];
+//                   }
+//                 }
 
                 for(int idim = 0; idim < dim; idim++) {
                   adept::adouble value = (- SolVAR[dim + idim] * (IRe / K + 0.5 * C2 * speed) * phi[i]
-					  - 0*AdvaleVAR[idim] 
-                                          - 0*IRe * LapvelVAR[idim]	   	 // viscous dissipation
+// 					  - 0*AdvaleVAR[idim] 
+//                                           - 0*IRe * LapvelVAR[idim]	   	 // viscous dissipation
                                           + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                          ) * jacobian;
                   if((!solidmark[i])) {
