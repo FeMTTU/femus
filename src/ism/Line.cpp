@@ -81,67 +81,67 @@ namespace femus {
 
     //BEGIN TEST ASSIGNATION
 
-    std::vector <double> xtry(_dim);
-    std::vector <double> xitry(_dim);
-
-
-    for(unsigned j = 0; j < _size; j++) {
-
-      unsigned proc;
-      unsigned elem;
-      particles[j]->GetMarkerProcLine(proc);
-      particles[j]->GetMarkerElementLine(elem);
-
-      std::cout << "proc = " << proc << " , " << "elem = " << elem <<
-                " , " << std::endl;
-      particles[j]->GetMarkerCoordinates(xtry);
-      for(unsigned i = 0 ; i < _dim; i++) {
-        std::cout << "x[" << i << "]=" << xtry[i] << std::endl;
-      }
-      particles[j]->GetMarkerLocalCoordinatesLine(xitry);
-      for(unsigned i = 0 ; i < _dim; i++) {
-        std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
-      }
-    }
-
-
-    for(unsigned j = 0; j < _size; j++) {
-      _particles[j] = particles[j];
-    }
-
-    std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
-
-    for(unsigned j = 0; j < _size; j++) {
-
-      unsigned proc;
-      unsigned elem;
-      _particles[j]->GetMarkerProcLine(proc);
-      _particles[j]->GetMarkerElementLine(elem);
-      std::cout << "proc = " << proc << " , " << "elem = " << elem <<
-                " , " << std::endl;
-      _particles[j]->GetMarkerCoordinates(xtry);
-      for(unsigned i = 0 ; i < _dim; i++) {
-        std::cout << "x[" << i << "]=" << xtry[i] << std::endl;
-      }
-      _particles[j]->GetMarkerLocalCoordinatesLine(xitry);
-      for(unsigned i = 0 ; i < _dim; i++) {
-        std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
-      }
-    }
-
+//     std::vector <double> xtry(_dim);
+//     std::vector <double> xitry(_dim);
+// 
+// 
+//     for(unsigned j = 0; j < _size; j++) {
+// 
+//       unsigned proc;
+//       unsigned elem;
+//       particles[j]->GetMarkerProcLine(proc);
+//       particles[j]->GetMarkerElementLine(elem);
+// 
+//       std::cout << "proc = " << proc << " , " << "elem = " << elem <<
+//                 " , " << std::endl;
+//       particles[j]->GetMarkerCoordinates(xtry);
+//       for(unsigned i = 0 ; i < _dim; i++) {
+//         std::cout << "x[" << i << "]=" << xtry[i] << std::endl;
+//       }
+//       particles[j]->GetMarkerLocalCoordinatesLine(xitry);
+//       for(unsigned i = 0 ; i < _dim; i++) {
+//         std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
+//       }
+//     }
+// 
+// 
+//     for(unsigned j = 0; j < _size; j++) {
+//       _particles[j] = particles[j];
+//     }
+// 
+//     std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
+// 
+//     for(unsigned j = 0; j < _size; j++) {
+// 
+//       unsigned proc;
+//       unsigned elem;
+//       _particles[j]->GetMarkerProcLine(proc);
+//       _particles[j]->GetMarkerElementLine(elem);
+//       std::cout << "proc = " << proc << " , " << "elem = " << elem <<
+//                 " , " << std::endl;
+//       _particles[j]->GetMarkerCoordinates(xtry);
+//       for(unsigned i = 0 ; i < _dim; i++) {
+//         std::cout << "x[" << i << "]=" << xtry[i] << std::endl;
+//       }
+//       _particles[j]->GetMarkerLocalCoordinatesLine(xitry);
+//       for(unsigned i = 0 ; i < _dim; i++) {
+//         std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
+//       }
+//     }
+// 
 
     //END TEST ASSIGNATION
 
 
-    std::cout << "FIRST OF ALL" << std::endl;
-    for(unsigned i = 0; i < _size; i++) {
-      unsigned proc;
-      particles[i]->GetMarkerProcLine(proc);
-      unsigned elem;
-      particles[i]->GetMarkerElementLine(elem);
-      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
-                << "Element: " << elem << " " << std::endl;
-    }
+//     std::cout << "FIRST OF ALL" << std::endl;
+//     for(unsigned i = 0; i < _size; i++) {
+//       unsigned proc;
+//       particles[i]->GetMarkerProcLine(proc);
+//       unsigned elem;
+//       particles[i]->GetMarkerElementLine(elem);
+//       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+//                 << "Element: " << elem << " " << std::endl;
+//     }
 
     //BEGIN reorder the markers by proc
     unsigned counter = 0;
@@ -161,19 +161,19 @@ namespace femus {
     //END reorder the markers by proc
 
 
-    std::cout << "AFTER THE REORDERING BY PROC" << std::endl;
-    for(unsigned i = 0; i < _size; i++) {
-      unsigned proc;
-      _particles[i]->GetMarkerProcLine(proc);
-      unsigned elem;
-      _particles[i]->GetMarkerElementLine(elem);
-      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
-                << "Element: " << elem << " " << std::endl;
-    }
-
-    for(unsigned iproc = 0; iproc <= _nprocs; iproc++) {
-      std::cout << "_markerOffset[" << iproc << "]= " << _markerOffset[iproc] << std::endl;
-    }
+//     std::cout << "AFTER THE REORDERING BY PROC" << std::endl;
+//     for(unsigned i = 0; i < _size; i++) {
+//       unsigned proc;
+//       _particles[i]->GetMarkerProcLine(proc);
+//       unsigned elem;
+//       _particles[i]->GetMarkerElementLine(elem);
+//       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+//                 << "Element: " << elem << " " << std::endl;
+//     }
+// 
+//     for(unsigned iproc = 0; iproc <= _nprocs; iproc++) {
+//       std::cout << "_markerOffset[" << iproc << "]= " << _markerOffset[iproc] << std::endl;
+//     }
 
 //         for(unsigned i = 0; i < _size; i++) {
 //           std::cout << "_printList[ " << i << "] = " << _printList[i] << std::endl;
@@ -248,15 +248,15 @@ namespace femus {
 //         }
 
 
-    std::cout << "AFTER THE REORDERING BY ELEM" << std::endl;
-    for(unsigned i = 0; i < _size; i++) {
-      unsigned proc;
-      _particles[i]->GetMarkerProcLine(proc);
-      unsigned elem;
-      _particles[i]->GetMarkerElementLine(elem);
-      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
-                << "Element: " << elem << " " << "Pointer: " << _particles[i] << std::endl;
-    }
+//     std::cout << "AFTER THE REORDERING BY ELEM" << std::endl;
+//     for(unsigned i = 0; i < _size; i++) {
+//       unsigned proc;
+//       _particles[i]->GetMarkerProcLine(proc);
+//       unsigned elem;
+//       _particles[i]->GetMarkerElementLine(elem);
+//       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+//                 << "Element: " << elem << " " << "Pointer: " << _particles[i] << std::endl;
+//     }
 
 
     _line.resize(1);
@@ -291,15 +291,15 @@ namespace femus {
 
     printList = _printList;
 
-    std::cout << "FIRST OF ALL ----------------------- UPDATE LINE" << std::endl;
-    for(unsigned i = 0; i < _size; i++) {
-      unsigned proc;
-      unsigned elem;
-      particles[i]->GetMarkerProcLine(proc);
-      particles[i]->GetMarkerElementLine(elem);
-      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
-                << "Element: " << elem << " " << std::endl;
-    }
+//     std::cout << "FIRST OF ALL ----------------------- UPDATE LINE" << std::endl;
+//     for(unsigned i = 0; i < _size; i++) {
+//       unsigned proc;
+//       unsigned elem;
+//       particles[i]->GetMarkerProcLine(proc);
+//       particles[i]->GetMarkerElementLine(elem);
+//       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+//                 << "Element: " << elem << " " << std::endl;
+//     }
 
     //BEGIN reorder the markers by proc
     unsigned counter = 0;
@@ -321,19 +321,19 @@ namespace femus {
     }
     //END reorder the markers by proc
 
-    for(unsigned iproc = 0; iproc <= _nprocs; iproc++) {
-      std::cout << "_markerOffset[" << iproc << "]= " << _markerOffset[iproc] << std::endl;
-    }
+//     for(unsigned iproc = 0; iproc <= _nprocs; iproc++) {
+//       std::cout << "_markerOffset[" << iproc << "]= " << _markerOffset[iproc] << std::endl;
+//     }
 
-    std::cout << "-----------------------------------------  UPDATE LINE  BY PROCS  -----------------------------------------" << std::endl;
-    for(unsigned i = 0; i < _size; i++) {
-      unsigned proc;
-      unsigned elem;
-      _particles[i]->GetMarkerProcLine(proc);
-      _particles[i]->GetMarkerElementLine(elem);
-      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
-                << "Element: " << elem << " " << std::endl;
-    }
+//     std::cout << "-----------------------------------------  UPDATE LINE  BY PROCS  -----------------------------------------" << std::endl;
+//     for(unsigned i = 0; i < _size; i++) {
+//       unsigned proc;
+//       unsigned elem;
+//       _particles[i]->GetMarkerProcLine(proc);
+//       _particles[i]->GetMarkerElementLine(elem);
+//       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+//                 << "Element: " << elem << " " << std::endl;
+//     }
 
 
     //BEGIN reorder markers also by element
@@ -345,10 +345,12 @@ namespace femus {
 
     printList = _printList;
 
-    unsigned* elementList = new unsigned [particles[0]->GetNumberOfMeshElements()];
+    unsigned meshElements;
+    particles[0]->GetNumberOfMeshElements(meshElements);
+    unsigned* elementList = new unsigned [meshElements];
 
     //flags to see if we already ordered by that element, 0 = not considered yet
-    for(unsigned iFlag = 0; iFlag < particles[0]->GetNumberOfMeshElements(); iFlag++) {
+    for(unsigned iFlag = 0; iFlag < meshElements; iFlag++) {
       elementList[iFlag] = 0;
     }
 
@@ -407,15 +409,15 @@ namespace femus {
     std::vector < unsigned > ().swap(printList);
 
 
-    std::cout << "-----------------------------------------  UPDATE LINE  BY ELEMENTS-----------------------------------------" << std::endl;
-    for(unsigned i = 0; i < _size; i++) {
-      unsigned proc;
-      _particles[i]->GetMarkerProcLine(proc);
-      unsigned elem;
-      _particles[i]->GetMarkerElementLine(elem);
-      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
-                << "Element: " << elem << " " << std::endl;
-    }
+//     std::cout << "-----------------------------------------  UPDATE LINE  BY ELEMENTS-----------------------------------------" << std::endl;
+//     for(unsigned i = 0; i < _size; i++) {
+//       unsigned proc;
+//       _particles[i]->GetMarkerProcLine(proc);
+//       unsigned elem;
+//       _particles[i]->GetMarkerElementLine(elem);
+//       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+//                 << "Element: " << elem << " " << std::endl;
+//     }
 
 
   }
@@ -455,6 +457,8 @@ namespace femus {
 
     while(integrationIsOverCounter != _size) {
 
+      std::cout<< " BEGIN integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
+      
       unsigned previousElem = UINT_MAX;
       unsigned currentElem;
 
@@ -480,7 +484,6 @@ namespace femus {
 
         _particles[iMarker]->GetMarker_KLine(K);
         _particles[iMarker]->GetMarkerStepLine(step);
-        aX = _particles[iMarker]->GetMarker_aXLine(); //TODO maybe we don't need it
         _particles[iMarker]->GetMarkerElementLine(currentElem);
 
         //END
@@ -563,11 +566,10 @@ namespace femus {
             else if(previousElem != currentElem) { //different element same process
 //               pcElemUpdate = true;
               outsideProc[iMarker] = 1;
-              _particles[iMarker]->FindLocalCoordinates(solVType, aX, pcElemUpdate);
               break;
             }
             else { //same element same process
-              _particles[iMarker]->FindLocalCoordinates(solVType, aX, pcElemUpdate);
+              _particles[iMarker]->FindLocalCoordinates(solVType, _particles[iMarker]->_aX, pcElemUpdate);
             }
           }
 
@@ -592,11 +594,14 @@ namespace femus {
          // _particles[i]->GetElement(previousElem, _iproc); //TODO da' segmentation fault
           _particles[i]->GetElement(false, previousElem);
 	  _particles[i]->GetMarkerElementLine(currentElem);
+	  _particles[i]->FindLocalCoordinates(solVType, _particles[i]->_aX, true);
         }
       }
 
       for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
+	
+	std::cout<< " BEGIN: process exchange" << std::endl;
 
         //BEGIN exchange of information to reorder _particles
 
@@ -609,11 +614,6 @@ namespace femus {
             MPI_Send(&K[j], _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
           }
           MPI_Send(&currentElem, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
-          for(unsigned i = 0; i < solVType + 1 ; i++) {
-            for(unsigned j = 0; j < _dim; j++) {
-              MPI_Send(&aX[i][j], 27, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD); //TODO qua dovremmo mandare solo tanti quanti il numero di dofs dell'elemento, non 27 che e' il  max
-            }
-          }
 
           if(jproc != _iproc) {
             MPI_Recv(&x0, _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -623,11 +623,6 @@ namespace femus {
             for(unsigned j = 0; j < order; j++) {
               MPI_Recv(&K[j], _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
             }
-            for(unsigned i = 0; i < solVType + 1 ; i++) {
-              for(unsigned j = 0; j < _dim; j++) {
-                MPI_Recv(&aX[i][j], 27, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-              }
-            }
             MPI_Recv(&currentElem, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
 
             _particles[iMarker]->SetMarker_x0(x0);
@@ -635,15 +630,19 @@ namespace femus {
             _particles[iMarker]->SetMarkerStep(step);
             _particles[iMarker]->SetMarker_K(K);
             _particles[iMarker]->SetMarkerElement(currentElem);
-            _particles[iMarker]->SetMarker_aX(aX);
           }
         }
 
         //END exchange of information
+        
+        std::cout<< " END: process exchange" << std::endl;
+        
       }
 
 
       UpdateLine();
+      
+      std::cout<< " END integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
     }
 

@@ -70,12 +70,8 @@ namespace femus {
 	_elem = elem;
       }
       
-      void SetMarker_aX(std::vector < std::vector < std::vector < double > > > aX){
-	_aX = aX;
-      }
-      
-      unsigned GetNumberOfMeshElements(){
-	return _mesh->GetNumberOfElements();
+      void GetNumberOfMeshElements(unsigned &elements){
+	elements = _mesh->GetNumberOfElements();
       }
 
       unsigned GetMarkerProc() {
@@ -92,10 +88,7 @@ namespace femus {
         x0 = _x0;
       }
       
-      std::vector < std::vector < std::vector < double > > >  GetMarker_aXLine(){  //TODO occhio a questa
-	return _aX;
-      }
-      
+  
      void GetMarker_KLine(std::vector < std::vector < double > > &K){
 	K = _K;
       }
@@ -166,6 +159,8 @@ namespace femus {
                                        const unsigned &solVType,  const unsigned &nDofsV,
                                        const unsigned &ielType, std::vector < std::vector < std::vector < double > > > &a);
 
+      
+      std::vector < std::vector < std::vector < double > > > _aX; // TODO IT WAS PRIVATE
 
     private:
 
@@ -188,7 +183,7 @@ namespace femus {
       unsigned _dim;
 
       unsigned _mproc; //processor who has the marker
-      std::vector < std::vector < std::vector < double > > > _aX;
+      //std::vector < std::vector < std::vector < double > > > _aX; //TODO I PUT THIS PUBLIC
       std::vector < std::vector < double > > _K;
       unsigned _step; //added for line
 
