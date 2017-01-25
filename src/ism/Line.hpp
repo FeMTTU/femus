@@ -33,26 +33,23 @@ namespace femus {
 
   class Line : public ParallelObject {
     public:
-      
-    Line( const std::vector < std::vector < double > > x, 
-	  const std::vector <MarkerType> &markerType,
-          Mesh *mesh, const unsigned & solType);  
-    ~Line();
 
-      std::vector < std::vector < std::vector < double > > > GetLine() {
-        return _line;
+      Line(const std::vector < std::vector < double > > x,
+           const std::vector <MarkerType> &markerType,
+           Mesh *mesh, const unsigned & solType);
+      ~Line();
+
+      void GetLine(std::vector < std::vector < std::vector < double > > > &line) {
+        line.resize(1);
+        line[0].resize(_size + 1);
+        line =  _line;
       }
-
-      std::vector < Marker*> GetParticles() {
-        return _particles;
-      }
-
 
       void AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order);
 
       void UpdateLine();
 
-      
+
 
     private:
       std::vector < std::vector < std::vector < double > > > _line;

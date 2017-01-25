@@ -92,12 +92,12 @@ namespace femus {
         x0 = _x0;
       }
       
-      std::vector < std::vector < std::vector < double > > >  GetMarker_aXLine(){ 
+      std::vector < std::vector < std::vector < double > > >  GetMarker_aXLine(){  //TODO occhio a questa
 	return _aX;
       }
       
-     std::vector < std::vector < double > > GetMarker_KLine(){
-	return _K;
+     void GetMarker_KLine(std::vector < std::vector < double > > &K){
+	K = _K;
       }
       
       void GetMarkerStepLine(unsigned &step){

@@ -81,45 +81,47 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
 
-  unsigned size = 100;
-  std::vector < std::vector < double > > x; // marker
-  std::vector < MarkerType > markerType;
-  
-  x.resize(size);
-  markerType.resize(size);
-  
-  for(unsigned j = 0; j < size; j++) {
-    x[j].assign(dim, 0);
-    markerType[j] = VOLUME;
-  }
+//   unsigned size = 100;
+//   std::vector < std::vector < double > > x; // marker
+//   std::vector < MarkerType > markerType;
+//
+//   x.resize(size);
+//   markerType.resize(size);
+//
+//   for(unsigned j = 0; j < size; j++) {
+//     x[j].assign(dim, 0);
+//     markerType[j] = VOLUME;
+//   }
+//
+//   double pi = acos(-1.);
+//   for(unsigned j = 0; j < size; j++) {
+//     x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
+//     x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
+//    // x[j][2] = 0.;
+//   }
+//
+//   Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType);
 
-  double pi = acos(-1.);
-  for(unsigned j = 0; j < size; j++) {
-    x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
-    x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
-   // x[j][2] = 0.;
-  }
-  
-  Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType);
-  
-  
+
   //BEGIN TEST FOR UPDATE LINE: to use it, make _particles public and initialize as the identity printList in UpdateLine
 //   std::vector <Marker* > particles(size);
-//   
+//
 //   for(unsigned j = 0; j < size; j++) {
 //     std::vector <double> y(dim);
 //     y[0] = -0.15 + 0.2 * cos(2.*pi / size * j);
 //     y[1] = 0. + 0.2 * sin(2.*pi / size * j);
 //     particles[j] = new Marker(y, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
 //   }
-//     
+//
 //   for(unsigned i=0; i<size; i++){
 //     linea._particles[i] = particles[i];
 //   }
-// 
-//   linea.UpdateLine(); 
-  
+//
+//   linea.UpdateLine();
+
   //END
+
+//   PrintLine(DEFAULT_OUTPUTDIR, linea.GetLine(), false, 0);
 
   MultiLevelSolution mlSol(&mlMsh);
   // add variables to mlSol
@@ -136,17 +138,87 @@ int main(int argc, char** args) {
   //std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
   //std::cout << " The marker type is " <<  a1Quad.GetMarkerType() << std::endl;
 
-  double T = 2 * acos(-1.);
-  unsigned n  = 1;
-
-
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-  PrintLine(DEFAULT_OUTPUTDIR, linea.GetLine(), false, 0);
+
+  clock_t start_time = clock();
+  clock_t init_time = clock();
+
+  unsigned size = 100;
+  std::vector < std::vector < double > > x; // marker
+  std::vector < MarkerType > markerType;
+
+  x.resize(size);
+  markerType.resize(size);
+
+  std::vector < std::vector < std::vector < double > > > line;
+  std::vector < std::vector < std::vector < double > > > line0;
+  line.resize(1);
+  line[0].resize(size + 1);
+  line0.resize(1);
+  line0[0].resize(size + 1);
+
+  for(unsigned j = 0; j < size; j++) {
+    x[j].assign(dim, 0);
+    markerType[j] = VOLUME;
+  }
+
+  double pi = acos(-1.);
+  for(unsigned j = 0; j < size; j++) {
+    x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
+    x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
+    if(dim == 3) {
+      x[j][2] = 0.;
+    }
+  }
+
+  Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType);
+
+
+  linea.GetLine(line0);
+  PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
+
+  double T = 2 * acos(-1.);
+  unsigned n = 30;
+
+  std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
+            << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+
+
+  clock_t advection_time = clock();
+
+
+  for(unsigned k = 1; k <= n; k++) {
+    //uncomment for  vortex test
+    mlSol.CopySolutionToOldSolution();
+    mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
+    mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
+    if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
+
+    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), n, T / n, 4);
+    linea.GetLine(line);
+    PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
+  }
+
+
+  //computing the geometric error
+  double error = 0.;
+  for(unsigned j = 0; j < size + 1; j++) {
+    double tempError = 0.;
+    for(unsigned i = 0; i < dim; i++) {
+      tempError += (line0[0][j][i] - line[0][j][i]) * (line0[0][j][i] - line[0][j][i]);
+    }
+    error += sqrt(tempError);
+  }
+
+  error = error / size;
+
+  std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
+
 
   return 0;
 }

@@ -445,6 +445,7 @@ namespace femus {
     std::vector < double > x0;
     std::vector < std::vector < double > > K;
     std::vector < std::vector < std::vector < double > > > aX;
+    std::vector< unsigned > outsideProc;
     //END
 
     unsigned integrationIsOverCounter = 0; // when integrationIsOverCounter = _size (which is the number of particles) it means all particles have been advected;
@@ -455,10 +456,17 @@ namespace femus {
     while(integrationIsOverCounter != _size) {
 
       unsigned previousElem = UINT_MAX;
+      unsigned currentElem;
 
       for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
 
+	outsideProc.resize(_size);
+	for(unsigned i=0; i<_size; i++){
+	  outsideProc[i]=0;
+	}
+	
+	
         //BEGIN extraction of the marker instances
         x.resize(_dim);
         x0.resize(_dim);
@@ -470,12 +478,9 @@ namespace femus {
           K[j].resize(_dim);
         }
 
-        K = _particles[iMarker]->GetMarker_KLine();
+        _particles[iMarker]->GetMarker_KLine(K);
         _particles[iMarker]->GetMarkerStepLine(step);
-        aX = _particles[iMarker]->GetMarker_aXLine();
-
-
-        unsigned currentElem;
+        aX = _particles[iMarker]->GetMarker_aXLine(); //TODO maybe we don't need it
         _particles[iMarker]->GetMarkerElementLine(currentElem);
 
         //END
@@ -492,6 +497,12 @@ namespace femus {
 
             if(istep == 0) {
               x0 = x;
+
+              K.resize(order);
+              for(unsigned j = 0; j < order; j++) {   //TODO maybe to remove this
+                K[j].resize(_dim);
+              }
+
               for(unsigned k = 0; k < order; k++) {
                 K[k].assign(_dim, 0.);
               }
@@ -551,6 +562,7 @@ namespace femus {
             }
             else if(previousElem != currentElem) { //different element same process
 //               pcElemUpdate = true;
+              outsideProc[iMarker] = 1;
               _particles[iMarker]->FindLocalCoordinates(solVType, aX, pcElemUpdate);
               break;
             }
@@ -566,11 +578,6 @@ namespace femus {
             //     std::cout << "Integration is over, point in proc " << _mproc << std::endl;
           }
 
-
-          _particles[iMarker]->GetElement(previousElem, _iproc);
-
-          _particles[iMarker]->GetMarkerElementLine(currentElem);
-
         }
 
         if(step != UINT_MAX && markerOutsideDomain == true) {
@@ -578,6 +585,18 @@ namespace femus {
           step = UINT_MAX;
           _particles[iMarker]->SetMarkerStep(step);
         }
+      }
+
+      for(unsigned i = 0; i < _size; i++) {
+        if(outsideProc[i] == 1) {
+         // _particles[i]->GetElement(previousElem, _iproc); //TODO da' segmentation fault
+          _particles[i]->GetElement(false, previousElem);
+	  _particles[i]->GetMarkerElementLine(currentElem);
+        }
+      }
+
+      for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
+
 
         //BEGIN exchange of information to reorder _particles
 
@@ -621,9 +640,8 @@ namespace femus {
         }
 
         //END exchange of information
-
-
       }
+
 
       UpdateLine();
 
@@ -633,7 +651,7 @@ namespace femus {
     for(unsigned i = 0; i < _size; i++) {
       _particles[i]->SetMarkerStep(0);
     }
-
+    std::vector < unsigned > ().swap(outsideProc);
   }
 }
 
