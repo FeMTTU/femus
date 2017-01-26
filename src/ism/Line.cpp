@@ -404,24 +404,25 @@ namespace femus {
           someMarkersOutsideDomain = true;
         }
       }
-    }
-
-    if(someMarkersOutsideDomain == true) {
-      for(unsigned i = 0; i < _size; i++) {
-        unsigned jel;
-        particles[i]->GetMarkerElementLine(jel);
-        if(jel == UINT_MAX) {
-          _particles[_markerOffset[_nprocs - 1] + counter] = particles[i];
-          for(unsigned iList = 0; iList < _size; iList++) {
-            if(printList[iList] == i) {
-              _printList[iList] = _markerOffset[_nprocs - 1] + counter;
-              break;
+      if(someMarkersOutsideDomain == true) {
+        for(unsigned i = 0; i < _size; i++) {
+          unsigned jel;
+          particles[i]->GetMarkerElementLine(jel);
+          if(jel == UINT_MAX) {
+            _particles[_markerOffset[_nprocs - 1] + counter] = particles[i];
+            for(unsigned iList = 0; iList < _size; iList++) {
+              if(printList[iList] == i) {
+                _printList[iList] = _markerOffset[_nprocs - 1] + counter;
+                break;
+              }
             }
+            counter++;
           }
-          counter++;
         }
       }
     }
+
+
 
 
     //END reorder markers also by element
