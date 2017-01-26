@@ -22,7 +22,7 @@ double SetVariableTimeStep(const double time);
 bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[],
                                  double &value, const int facename, const double time);
 
-void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group);
+void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, char **args)
@@ -233,15 +233,31 @@ int main(int argc, char **args)
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
   const unsigned int n_timesteps = 500;
   
+  std::vector < std::vector <double> > data(n_timesteps);
+    
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-
+    data[time_step].resize(5);
     if( time_step > 0 )
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    GetSolutionNorm(ml_sol, 9);
+    data[time_step][0] = time_step / 32.;
+    GetSolutionNorm(ml_sol, 9, data[time_step]);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
+  
+  std::ofstream outf;
+  outf.open("DataPrint.txt");
+  if (!outf) {
+    std::cout<<"Error in opening file DataPrint.txt";
+    return 1;
+  }
+  for (unsigned k = 0; k < n_timesteps; k++) {
+    outf<<data[k][0]<<"\t"<<data[k][1]<<"\t"<<data[k][2]<<"\t"<<data[k][3]<<"\t"<<data[k][4]<<std::endl;
+  }
+  outf.close();
+   
+  
   
   // ******* Clear all systems *******
   ml_prob.clear();
@@ -322,7 +338,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 }
 
 
-void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
+void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
 {
 
   int  iproc, nprocs;
@@ -503,6 +519,11 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
   std::cout << " p_l2 norm / sqrt(vol) = " << sqrt(p2_l2/VOL)  << std::endl;
   std::cout << " v_l2 norm / sqrt(vol) = " << sqrt(v2_l2/VOL)  << std::endl;
 
+  data[1] = VOL0;
+  data[2] = VOL;
+  data[3] = p2_l2;
+  data[4] = v2_l2;
+   
   delete p2;
   delete v2;
   delete vol;

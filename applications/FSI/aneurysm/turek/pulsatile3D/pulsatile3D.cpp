@@ -184,7 +184,7 @@ int main(int argc, char ** args)
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
-  if(simulation == 0) {
+  if(simulation == 0 || simulation == 4) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
   }
   else if(simulation == 1) {
@@ -196,9 +196,7 @@ int main(int argc, char ** args)
   else if(simulation == 3) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus);
   }
-  else if(simulation == 4) {
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
-  }
+ 
 
 
 
@@ -211,7 +209,7 @@ int main(int argc, char ** args)
   ml_sol.GenerateBdc("DY", "Steady");
   if(!dimension2D) ml_sol.GenerateBdc("DZ", "Steady");
 
-  if(simulation == 0) {
+  if(simulation == 0 || simulation == 4) {
     ml_sol.GenerateBdc("U", "Time_dependent");
     ml_sol.GenerateBdc("V", "Steady");
   }
