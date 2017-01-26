@@ -609,7 +609,7 @@ namespace femus {
       }
 
       for(unsigned i = 0; i < _size; i++) {
-        if(outsideProc[i] == 1) {
+        if(outsideProc[i] == 2) {
           // _particles[i]->GetElement(previousElem, _iproc); //TODO da' segmentation fault
           _particles[i]->GetElement(false, previousElem);
           _particles[i]->GetMarkerElementLine(currentElem);
