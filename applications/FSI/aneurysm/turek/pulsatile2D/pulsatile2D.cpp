@@ -231,7 +231,7 @@ int main(int argc, char **args)
   
    // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 500;
+  const unsigned int n_timesteps = 10;
   
   std::vector < std::vector <double> > data(n_timesteps);
     
@@ -246,16 +246,31 @@ int main(int argc, char **args)
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
   
-  std::ofstream outf;
-  outf.open("DataPrint.txt");
-  if (!outf) {
-    std::cout<<"Error in opening file DataPrint.txt";
-    return 1;
+  
+  int  iproc;
+  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+  if(iproc == 0){
+    std::ofstream outf;
+    if(simulation == 0) {
+      outf.open("DataPrint_turek.txt");
+    }
+    else if(simulation == 3) {
+      outf.open("DataPrint_turekporous.txt");
+    }
+    else {
+      outf.open("DataPrint.txt");
+    }
+    
+    
+    if (!outf) {
+      std::cout<<"Error in opening file DataPrint.txt";
+      return 1;
+    }
+    for (unsigned k = 0; k < n_timesteps; k++) {
+      outf<<data[k][0]<<"\t"<<data[k][1]<<"\t"<<data[k][2]<<"\t"<<data[k][3]<<"\t"<<data[k][4]<<std::endl;
+    }
+    outf.close();
   }
-  for (unsigned k = 0; k < n_timesteps; k++) {
-    outf<<data[k][0]<<"\t"<<data[k][1]<<"\t"<<data[k][2]<<"\t"<<data[k][3]<<"\t"<<data[k][4]<<std::endl;
-  }
-  outf.close();
    
   
   
