@@ -1228,6 +1228,7 @@ namespace femus {
     std::vector < double > phi;
     std::vector < std::vector<double > > V(2);
     std::vector < std::vector < std::vector < double > > > aV;
+    std::vector < std::vector < std::vector < double > > > aX;
     //END
 
     //BEGIN Numerical integration scheme
@@ -1239,6 +1240,7 @@ namespace femus {
     unsigned step = 0.;
 
     if(_iproc == _mproc) {
+      FindLocalCoordinates(solVType, aX, true);
       _K.resize(order);
       for(unsigned k = 0; k < order; k++) {
         _K[k].resize(_dim);
@@ -1323,10 +1325,10 @@ namespace femus {
           }
           else if(iel != _elem) { //different element same process
             pcElemUpdate = true;
-            FindLocalCoordinates(solVType, _aX, pcElemUpdate);
+            FindLocalCoordinates(solVType, aX, pcElemUpdate);
           }
           else { //same element same process
-            FindLocalCoordinates(solVType, _aX, pcElemUpdate);
+            FindLocalCoordinates(solVType, aX, pcElemUpdate);
           }
         }
       }
@@ -1373,7 +1375,7 @@ namespace femus {
               std::vector < double > ().swap(_xi);
               std::vector < double > ().swap(_x0);
               std::vector < std::vector < double > > ().swap(_K);
-              std::vector < std::vector < std::vector < double > > >().swap(_aX);
+              std::vector < std::vector < std::vector < double > > >().swap(aX);
             }
             else if(_mproc == _iproc) {
               _x0.resize(_dim);
@@ -1391,7 +1393,7 @@ namespace femus {
             }
           }
           if(_mproc == _iproc) { //WARNING this now should be outside and was causing the problem with different processes
-	    FindLocalCoordinates(solVType, _aX, true);
+	    FindLocalCoordinates(solVType, aX, true);
 	  }
         }
       }

@@ -42,7 +42,8 @@ namespace femus {
         GetElement(1, UINT_MAX);
 
         if(_iproc == _mproc) {
-          FindLocalCoordinates(_solType, _aX, true);
+	  std::vector < std::vector < std::vector < double > > > aX;
+          FindLocalCoordinates(_solType, aX, true);
         }
         else {
           std::vector < double > ().swap(_x);
@@ -50,19 +51,19 @@ namespace femus {
       };
 
 
-      void SetMarker_x0(std::vector <double> &x0) {
+      void SetIprocMarkerOldCoordinates(const std::vector <double> &x0) {
         _x0 = x0;
       }
 
-      void SetMarkerCoordinates(std::vector <double> &x) {
+      void SetIprocMarkerCoordinates(const std::vector <double> &x) {
         _x = x;
       }
       
-      void SetMarker_K(std::vector < std::vector < double > > K){
+      void SetIprocMarkerK(const std::vector < std::vector < double > > &K){
 	_K = K;
       }
       
-      void SetMarkerStep(unsigned step){
+      void SetIprocMarkerStep(const unsigned &step){
 	_step = step;
       }
       
@@ -75,27 +76,22 @@ namespace femus {
       }
 
       unsigned GetMarkerProc() {
-        return _mproc;
+        return _mesh->IsdomBisectionSearch(_elem , 3);;
       }
-      
-      void GetMarkerProcLine(unsigned &mproc){
-	mproc = _mproc;
-      }
-      
-     
-      void GetMarker_x0Line(std::vector<double> &x0) {
-	x0.resize(_dim);
-        x0 = _x0;
-      }
+           
+//       void GetMarker_x0Line(std::vector<double> &x0) {
+// 	x0.resize(_dim);
+//         x0 = _x0;
+//       }
       
   
-     void GetMarker_KLine(std::vector < std::vector < double > > &K){
-	K = _K;
-      }
+//      void GetMarker_KLine(std::vector < std::vector < double > > &K){
+// 	K = _K;
+//       }
       
-      void GetMarkerStepLine(unsigned &step){
-	step = _step;
-      }
+//       void GetMarkerStepLine(unsigned &step){
+// 	step = _step;
+//       }
 
       unsigned GetMarkerElement() {
         return _elem;
@@ -117,6 +113,32 @@ namespace femus {
 	MPI_Bcast(&xi[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
       }
 
+      std::vector< double > GetIprocMarkerCoordinates() {
+        return _x;
+      }
+      
+      std::vector< double > GetIprocMarkerOldCoordinates() {
+        return _x0;
+      }
+      
+      unsigned GetIprocMarkerStep() {
+        return _step;
+      }
+      
+      std::vector< std::vector < double> > GetIprocMarkerK() {
+        return _K;
+      }
+      
+      void InitializeMarkerForAdvection(const unsigned &order){
+	_x0 = _x;
+	_step = 0;
+	_K.resize(order);
+        for(unsigned j = 0; j < order; j++) {
+          _K[j].assign(_dim,0.);
+        }
+      }
+      
+      
       void GetMarkerCoordinates(std::vector< double > &xn) {
         xn.resize(_dim);
         if(_mproc == _iproc) {
@@ -160,7 +182,6 @@ namespace femus {
                                        const unsigned &ielType, std::vector < std::vector < std::vector < double > > > &a);
 
       
-      std::vector < std::vector < std::vector < double > > > _aX; // TODO IT WAS PRIVATE
 
     private:
 
@@ -183,7 +204,7 @@ namespace femus {
       unsigned _dim;
 
       unsigned _mproc; //processor who has the marker
-      //std::vector < std::vector < std::vector < double > > > _aX; //TODO I PUT THIS PUBLIC
+      //std::vector < std::vector < std::vector < double > > > _aX; 
       std::vector < std::vector < double > > _K;
       unsigned _step; //added for line
 
