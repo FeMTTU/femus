@@ -231,7 +231,7 @@ int main(int argc, char **args)
   
    // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 10;
+  const unsigned int n_timesteps = 500;
   
   std::vector < std::vector <double> > data(n_timesteps);
     
@@ -252,13 +252,16 @@ int main(int argc, char **args)
   if(iproc == 0){
     std::ofstream outf;
     if(simulation == 0) {
-      outf.open("DataPrint_turek.txt");
+      outf.open("DataPrint_Turek.txt");
     }
-    else if(simulation == 3) {
-      outf.open("DataPrint_turekporous.txt");
+    else if(simulation == 1) {
+      outf.open("DataPrint_TurekPorous.txt");
     }
-    else {
-      outf.open("DataPrint.txt");
+    else if(simulation == 2){
+      outf.open("DataPrint_TurekStents.txt");
+    }
+    else if(simulation == 3){
+      outf.open("DataPrint_Turek11Stents.txt");
     }
     
     
