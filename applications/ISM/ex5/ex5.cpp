@@ -191,7 +191,6 @@ int main(int argc, char** args) {
 
   clock_t advection_time = clock();
 
-
   for(unsigned k = 1; k <= n; k++) {
     //uncomment for  vortex test
     mlSol.CopySolutionToOldSolution();
@@ -204,6 +203,12 @@ int main(int argc, char** args) {
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }
 
+
+  std::cout << std::endl << " advection in: " << std::setw(11) << std::setprecision(6) << std::fixed
+            << static_cast<double>((clock() - advection_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+
+  std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
+            << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
 
   //computing the geometric error
   double error = 0.;
@@ -218,6 +223,8 @@ int main(int argc, char** args) {
   error = error / size;
 
   std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
+
+
 
 
   return 0;

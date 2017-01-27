@@ -67,8 +67,16 @@ namespace femus {
 	_step = step;
       }
       
-      void SetMarkerElement(unsigned elem){
+      void SetMarkerElement(const unsigned &elem){
 	_elem = elem;
+      }
+      
+      void SetMarkerAOI(const bool &aoi){
+	_aoi = aoi;
+      }
+      
+      bool GetMarkerAOI(){
+	return _aoi;
       }
       
       void GetNumberOfMeshElements(unsigned &elements){
@@ -76,7 +84,7 @@ namespace femus {
       }
 
       unsigned GetMarkerProc() {
-        return _mesh->IsdomBisectionSearch(_elem , 3);;
+        return _mesh->IsdomBisectionSearch(_elem , 3);
       }
            
 //       void GetMarker_x0Line(std::vector<double> &x0) {
@@ -136,6 +144,7 @@ namespace femus {
         for(unsigned j = 0; j < order; j++) {
           _K[j].assign(_dim,0.);
         }
+        _aoi = false;
       }
       
       
@@ -202,6 +211,7 @@ namespace femus {
       const Mesh * _mesh;
       unsigned _elem;
       unsigned _dim;
+      bool _aoi; //stands for Advected Outside Iproc
 
       unsigned _mproc; //processor who has the marker
       //std::vector < std::vector < std::vector < double > > > _aX; 

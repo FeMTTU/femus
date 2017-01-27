@@ -310,7 +310,7 @@ namespace femus {
           _particles[counter] = particles[j];
           for(unsigned iList = 0; iList < _size; iList++) {
             if(printList[iList] == j) {
-              _printList[iList] = counter; 
+              _printList[iList] = counter;
               break;
             }
           }
@@ -333,6 +333,7 @@ namespace femus {
 //       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
 //                 << "Element: " << elem << " " << std::endl;
 //     }
+
 
 
     //BEGIN reorder markers also by element
@@ -362,9 +363,6 @@ namespace femus {
 
         unsigned jel;
         particles[jp]->GetMarkerElementLine(jel);
-
-        std::cout << "number of elements" << meshElements << std::endl;
-        std::cout << " jel = " << jel << std::endl;
 
         if(jel != UINT_MAX) {
 
@@ -426,12 +424,11 @@ namespace femus {
 
     //END reorder markers also by element
 
-
     for(unsigned j = 0; j < _size; j++) {
+
       _particles[_printList[j]]->GetMarkerCoordinates(_line[0][j]);
     }
     _particles[_printList[0]]->GetMarkerCoordinates(_line[0][_size]);
-
 
     delete[] elementList;
     std::vector < unsigned > ().swap(printList);
@@ -476,7 +473,7 @@ namespace femus {
     std::vector < double > x0;
     std::vector < std::vector < double > > K;
     //std::vector < std::vector < std::vector < double > > > aX;
-    std::vector< unsigned > outsideProc;
+    //std::vector< unsigned > outsideProc;
     //END
 
     unsigned integrationIsOverCounter = 0; // when integrationIsOverCounter = _size (which is the number of particles) it means all particles have been advected;
@@ -484,20 +481,18 @@ namespace femus {
 
     //BEGIN Numerical integration scheme
 
-    
-    outsideProc.resize(_size);	
-    for(unsigned i = 0; i < _size; i++) {
-      outsideProc[i] = (_particles[i]->GetMarkerElement() == UINT_MAX)? 1 : 0;
-    }
+
+//     outsideProc.resize(_size);
+//     for(unsigned i = 0; i < _size; i++) {
+//       outsideProc[i] = (_particles[i]->GetMarkerElement() == UINT_MAX) ? 1 : 0;
+//     }
     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
       _particles[iMarker]->InitializeMarkerForAdvection(order);
     }
-    
-    
-    
+
     while(integrationIsOverCounter != _size) {
 
-      std::cout << " BEGIN integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
+      //std::cout << " BEGIN integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
       unsigned previousElem = UINT_MAX;
       unsigned currentElem;
@@ -505,13 +500,12 @@ namespace femus {
       for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
         //BEGIN extraction of the marker instances
-	
+
         x = _particles[iMarker]->GetIprocMarkerCoordinates();
         x0 = _particles[iMarker]->GetIprocMarkerOldCoordinates();
         K = _particles[iMarker]->GetIprocMarkerK();
         step = _particles[iMarker]->GetIprocMarkerStep();
         currentElem = _particles[iMarker]->GetMarkerElement();
-
         //END
 
         bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
@@ -520,15 +514,15 @@ namespace femus {
           bool pcElemUpdate = (previousElem == currentElem) ? false : true; //update only if the marker is in a different element
           _particles[iMarker]->FindLocalCoordinates(solVType, aX, pcElemUpdate);
           while(step < n * order) {
-
-            unsigned tstep = step / order;
+	    
+	    unsigned tstep = step / order;
             unsigned istep = step % order;
 
             if(istep == 0) {
               x0 = x;
               K.resize(order);
-              for(unsigned j = 0; j < order; j++) {   
-                K[j].assign(_dim,0.);
+              for(unsigned j = 0; j < order; j++) {
+                K[j].assign(_dim, 0.);
               }
             }
 
@@ -573,23 +567,29 @@ namespace femus {
             _particles[iMarker]->GetElementSerial(currentElem);
 
             currentElem = _particles[iMarker]->GetMarkerElement(); // probablilmente non c'e' ne bisogno
-
+	    
             unsigned markProc = _particles[iMarker]->GetMarkerProc();
 
+
             if(currentElem == UINT_MAX) { //out of the domain
-	      outsideProc[iMarker] = 1;
-	      markerOutsideDomain = true;
+	     // std::cout << " OUT OF DOMAIN " <<std::endl;
+              //outsideProc[iMarker] = 1; //TODO non si usa mai
+              markerOutsideDomain = true;
               break;
             }
             else if(previousElem != currentElem && _iproc != markProc) { //different element different process
-	      outsideProc[iMarker] = 2;
+             // std::cout << " DIFFERENT ELEMENT DIFFERENT PROCESS " <<std::endl;
+	      //outsideProc[iMarker] = 2;
+              _particles[iMarker]->SetMarkerAOI(true);
               break;
             }
             else if(previousElem != currentElem) { //different element same process
-              break;
+              //std::cout << " DIFFERENT ELEM SAME PROCESS " <<std::endl;
+	      break;
             }
             else { //same element same process
-              _particles[iMarker]->FindLocalCoordinates(solVType, aX, false); 
+	     // std::cout << " SAME ELEM SAME PROCESS " << std::endl;
+              _particles[iMarker]->FindLocalCoordinates(solVType, aX, false);
             }
           }
 
@@ -600,68 +600,73 @@ namespace femus {
             //     std::cout << "Integration is over, point in proc " << _mproc << std::endl;
           }
         }
-        else if( step != UINT_MAX ) {
+
+        else if(step != UINT_MAX) {
           integrationIsOverCounter++;
           step = UINT_MAX;
-	  outsideProc[iMarker] = 1;
+          //outsideProc[iMarker] = 1;  //TODO non si usa mai
           _particles[iMarker]->SetIprocMarkerStep(step);
         }
+
       }
 
+
       for(unsigned i = 0; i < _size; i++) {
-        if(outsideProc[i] == 2) {
-          // _particles[i]->GetElement(previousElem, _iproc); //TODO da' segmentation fault
-          _particles[i]->GetElement(false, previousElem);
-          _particles[i]->GetMarkerElementLine(currentElem);
+
+        if(_particles[i]->GetMarkerAOI() == true  /*outsideProc[i] = 2 */) {
+          // _particles[i]->GetElement(previousElem, _iproc); //TODO si incanta con questo
+          _particles[i]->GetElement(false, previousElem); //segmentation fault
           _particles[i]->FindLocalCoordinates(solVType, aX, true);
+          _particles[i]->SetMarkerAOI(false);
         }
       }
 
-      for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
+      //BEGIN exchange of information to reorder _particles
 
-        std::cout << " BEGIN: process exchange" << std::endl;
+      for(unsigned iMarker = 0; iMarker < _size; iMarker++) {
 
-        //BEGIN exchange of information to reorder _particles
+        x = _particles[iMarker]->GetIprocMarkerCoordinates();
+        x0 = _particles[iMarker]->GetIprocMarkerOldCoordinates();
+        K = _particles[iMarker]->GetIprocMarkerK();
+        step = _particles[iMarker]->GetIprocMarkerStep();
+        currentElem = _particles[iMarker]->GetMarkerElement();
 
-        for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
-          MPI_Send(&integrationIsOverCounter, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
-          MPI_Send(&x0, _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
-          MPI_Send(&x, _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
-          MPI_Send(&step, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
-          for(unsigned j = 0; j < order; j++) {
-            MPI_Send(&K[j], _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD);
+        for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+
+          if(_markerOffset[_iproc] <= iMarker || iMarker < _markerOffset[_iproc + 1]) {
+            MPI_Send(&x0, _dim, MPI_DOUBLE, iproc, 1 , PETSC_COMM_WORLD);
+            MPI_Send(&x, _dim, MPI_DOUBLE, iproc, 1 , PETSC_COMM_WORLD);
+            MPI_Send(&step, 1, MPI_UNSIGNED, iproc, 1 , PETSC_COMM_WORLD);
+            for(unsigned j = 0; j < order; j++) {
+              MPI_Send(&K[j], _dim, MPI_DOUBLE, iproc, 1 , PETSC_COMM_WORLD);
+            }
+            MPI_Send(&currentElem, 1, MPI_UNSIGNED, iproc, 1 , PETSC_COMM_WORLD);
           }
-          MPI_Send(&currentElem, 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD);
 
-          if(jproc != _iproc) {
+          else {
             MPI_Recv(&x0, _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Recv(&x, _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Recv(&step, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Recv(&integrationIsOverCounter, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
             for(unsigned j = 0; j < order; j++) {
               MPI_Recv(&K[j], _dim, MPI_DOUBLE, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
             }
             MPI_Recv(&currentElem, 1, MPI_UNSIGNED, _iproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-
-            _particles[iMarker]->SetIprocMarkerOldCoordinates(x0);
-            _particles[iMarker]->SetIprocMarkerCoordinates(x);
-            _particles[iMarker]->SetIprocMarkerStep(step);
-            _particles[iMarker]->SetIprocMarkerK(K);
-            _particles[iMarker]->SetMarkerElement(currentElem);
           }
+
+          _particles[iMarker]->SetIprocMarkerOldCoordinates(x0);
+          _particles[iMarker]->SetIprocMarkerCoordinates(x);
+          _particles[iMarker]->SetIprocMarkerStep(step);
+          _particles[iMarker]->SetIprocMarkerK(K);
+          _particles[iMarker]->SetMarkerElement(currentElem);
         }
-
-        //END exchange of information
-
-        std::cout << " END: process exchange" << std::endl;
-
       }
 
+      //END exchange of information
 
       UpdateLine();
 
-      std::cout << " END integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
+     // std::cout << " END integrationIsOverCounter = " << integrationIsOverCounter << " , " << "size = " << _size <<   std::endl;
 
     }
 
@@ -669,7 +674,7 @@ namespace femus {
     for(unsigned i = 0; i < _size; i++) {
       _particles[i]->SetIprocMarkerStep(0);
     }
-    std::vector < unsigned > ().swap(outsideProc);
+    // std::vector < unsigned > ().swap(outsideProc);
   }
 }
 

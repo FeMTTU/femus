@@ -299,6 +299,7 @@ namespace femus {
           MPI_Recv(&processorMarkerFlag[jproc], 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
         }
       }
+      
 
       // check if any process found the element
       unsigned sumFlag = 0;
@@ -396,8 +397,6 @@ namespace femus {
       //END process exchange
 
     }
-
-
 
     MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _mproc, PETSC_COMM_WORLD);
     //  std::cout << "The marker belongs to process " << _mproc << " and is in element " << _elem  << std::endl;
@@ -1528,10 +1527,10 @@ namespace femus {
   void Marker::FindLocalCoordinates(const unsigned & solType, std::vector < std::vector < std::vector < double > > > &aX, const bool & pcElemUpdate) {
 
     //BEGIN TO BE REMOVED
-   // std::cout << "ENTRIAMO NELL' INVERSE MAPPING, _elem =" << _elem << std::endl;
-    for(unsigned i = 0; i < 3; i++) {
-    //  std::cout << "_x[" << i << "]= " << _x[i] << std::endl;
-    }
+//     std::cout << "ENTRIAMO NELL' INVERSE MAPPING, _elem =" << _elem << std::endl;
+//     for(unsigned i = 0; i < 3; i++) {
+//      std::cout << "_x[" << i << "]= " << _x[i] << std::endl;
+//     }
     //END TO BE REMOVED
 
 
@@ -1545,8 +1544,8 @@ namespace femus {
       for(unsigned k = 0; k < _dim; k++) {
         xv[k].resize(nDofs);
       }
-
-      for(unsigned i = 0; i < nDofs; i++) {
+      
+     for(unsigned i = 0; i < nDofs; i++) {
         unsigned iDof  = _mesh->GetSolutionDof(i, _elem, 2);    // global to global mapping between coordinates node and coordinate dof
         for(unsigned k = 0; k < _dim; k++) {
           xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
@@ -1567,9 +1566,9 @@ namespace femus {
 
       //BEGIN TO BE REMOVED
      // std::cout << "INITIAL GUESS" << std::endl;
-      for(unsigned i = 0; i < 3; i++) {
+      //for(unsigned i = 0; i < 3; i++) {
       //  std::cout << "_xi[" << i << "]= " << _xi[i] << std::endl;
-      }
+      //}
       //END TO BE REMOVED
 
 
@@ -1580,9 +1579,12 @@ namespace femus {
       }*/
       //END find initial guess
     }
+    
+   
 
     //BEGIN Inverse mapping loop
     for(unsigned j = 0; j < solType; j++) {
+      
       std::vector < double > phi;
       std::vector < std::vector < double > > gradPhi;
       bool convergence = false;
@@ -1594,7 +1596,7 @@ namespace femus {
     //END Inverse mapping loop
 
 
-  //  std::cout << "ED USCIAMO" << std::endl;
+//    std::cout << "ED USCIAMO" << std::endl;
 
   }
   

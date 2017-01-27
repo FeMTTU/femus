@@ -1494,7 +1494,7 @@ namespace femus {
 
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
                               const std::vector < std::vector <double > > &gradPhi,
-                              const std::vector < std::vector <double > > &a) {
+                              const std::vector < std::vector <double > > &a) { 
 
     const unsigned dim = gradPhi[0].size();
     const unsigned  nDofs = phi.size();
