@@ -29,6 +29,22 @@ int main(int argc, char **args)
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  unsigned simulation = 0;
+
+  if(argc >= 2) {
+    if(!strcmp("0", args[1])) {    /** FSI Turek2D no stent */
+      simulation = 0;
+    }
+    else if(!strcmp("1", args[1])) {     /** FSI Turek porous */
+      simulation = 1;
+    }
+    else if(!strcmp("2", args[1])) {   /** FSI Turek stents 60 micron */
+      simulation = 2;
+    }
+    else if(!strcmp("3", args[1])) {   /** FSI Turek 11 stents 60 micron */
+      simulation = 3;
+    }
+  }
 
   //Files files;
   //files.CheckIODirectories();
@@ -39,10 +55,23 @@ int main(int argc, char **args)
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
 //   std::string infile = "./input/aneurysm_Sara_5.neu";
-  std::string infile = "./input/Turek_porous_60micron.neu";
+  //std::string infile = "./input/Turek_porous_60micron.neu";
   //std::string infile = "./input/Turek_stents_60micron.neu";
   //std::string infile = "./input/Turek_11stents_60micron.neu";
   //std::string infile = "./input/Turek.neu";
+  std::string infile;
+  if(simulation == 0) {
+    infile = "./input/Turek.neu";
+  }
+  else if(simulation == 1) {
+    infile = "./input/Turek_porous_60micron.neu";
+  }
+  else if(simulation == 2) {
+    infile = "./input/Turek_stents_60micron.neu";
+  }
+  else if(simulation == 3) {
+    infile = "./input/Turek_11stents_60micron.neu";
+  }
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;

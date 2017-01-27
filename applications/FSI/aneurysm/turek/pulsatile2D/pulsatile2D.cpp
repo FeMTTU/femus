@@ -34,16 +34,16 @@ int main(int argc, char **args)
  unsigned simulation = 0;
 
   if(argc >= 2) {
-    if(!strcmp("0", args[1])) {    /** FSI Turek3D no stent */
+    if(!strcmp("0", args[1])) {    /** FSI Turek2D no stent */
       simulation = 0;
     }
-    else if(!strcmp("1", args[1])) {     /** FSI Omino no stent */
+    else if(!strcmp("1", args[1])) {     /** FSI Turek porous */
       simulation = 1;
     }
-    else if(!strcmp("2", args[1])) {   /** FSI Thoracic Aortic Aneurysm */
+    else if(!strcmp("2", args[1])) {   /** FSI Turek stents 60 micron */
       simulation = 2;
     }
-    else if(!strcmp("3", args[1])) {   /** FSI Abdominal Aortic Aneurysm */
+    else if(!strcmp("3", args[1])) {   /** FSI Turek 11 stents 60 micron */
       simulation = 3;
     }
   }
@@ -231,7 +231,7 @@ int main(int argc, char **args)
   
    // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 500;
+  const unsigned int n_timesteps = 5;
   
   std::vector < std::vector <double> > data(n_timesteps);
     
