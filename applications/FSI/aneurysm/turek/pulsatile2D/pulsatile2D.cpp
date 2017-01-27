@@ -85,7 +85,7 @@ int main(int argc, char **args)
   muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  E = 120000 * 1.e0; //turek:120000*1.e6;
+  E = 1000000 * 1.e0; //turek:120000*1.e0;
 
   Parameter par(Lref, Uref);
 
@@ -231,7 +231,7 @@ int main(int argc, char **args)
   
    // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 5;
+  const unsigned int n_timesteps = 400;
   
   std::vector < std::vector <double> > data(n_timesteps);
     
