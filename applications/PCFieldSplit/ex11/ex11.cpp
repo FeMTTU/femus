@@ -935,14 +935,14 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
         unsigned irow = nDofsT + dim * nDofsV + i;
 
         for(int k = 0; k < dim; k++) {
-          Res[irow] += (gradSolV_gss[k][k]) * phiP[i]  * weight;
+          Res[irow] += -(gradSolV_gss[k][k]) * phiP[i]  * weight;
 
           if(assembleMatrix) {
             unsigned irowMat = nDofsTVP * irow;
 
             for(unsigned j = 0; j < nDofsV; j++) {
               unsigned jcol = (nDofsT + k * nDofsV + j);
-              Jac[ irowMat + jcol ] += - phiP[i] * phiV_x[j * dim + k] * weight;
+              Jac[ irowMat + jcol ] += phiP[i] * phiV_x[j * dim + k] * weight;
             }
           }
 

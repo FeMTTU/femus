@@ -433,9 +433,7 @@ int main(int argc, char** args) {
       abort();
     }
     
-    for(unsigned j = 0; j < sizeT; j++ ){
-      fout << (*sol->_Sol[solTIndex])(j) << " ";
-    }
+    
     for(unsigned j = 0; j < sizeU; j++ ){
       fout << (*sol->_Sol[solVIndex[0]])(j) << " ";
     }
@@ -444,6 +442,9 @@ int main(int argc, char** args) {
     }
     for(unsigned j = 0; j < sizeP; j++ ){
       fout << (*sol->_Sol[solPIndex])(j) << " ";
+    }
+    for(unsigned j = 0; j < sizeT; j++ ){
+      fout << (*sol->_Sol[solTIndex])(j) << " ";
     }
 
 // std::cout << sizeT <<"AAA" << sizeU <<"BBB"<<sizeV<<"CCC" << sizeP<<"DDD"<<std::endl;   
