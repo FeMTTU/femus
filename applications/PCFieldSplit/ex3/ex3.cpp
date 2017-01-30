@@ -676,24 +676,24 @@ int main(int argc, char **argv)
   ierr     = PetscInitialize(&argc, &argv, NULL, help);CHKERRQ(ierr);
   s.nx     = 4;
   s.ny     = 6;
-  ierr     = PetscOptionsGetInt(NULL, "-nx", &s.nx, NULL);CHKERRQ(ierr);
-  ierr     = PetscOptionsGetInt(NULL, "-ny", &s.ny, NULL);CHKERRQ(ierr);
+  ierr     = PetscOptionsGetInt(NULL,NULL, "-nx", &s.nx, NULL);CHKERRQ(ierr);
+  ierr     = PetscOptionsGetInt(NULL,NULL, "-ny", &s.ny, NULL);CHKERRQ(ierr);
   s.hx     = 2.0/s.nx;
   s.hy     = 1.0/s.ny;
   s.userPC = s.userKSP = PETSC_FALSE;
-  ierr     = PetscOptionsHasName(NULL, "-user_pc", &s.userPC);CHKERRQ(ierr);
-  ierr     = PetscOptionsHasName(NULL, "-user_ksp", &s.userKSP);CHKERRQ(ierr);
+  ierr     = PetscOptionsHasName(NULL, NULL,"-user_pc", &s.userPC);CHKERRQ(ierr);
+  ierr     = PetscOptionsHasName(NULL,NULL, "-user_ksp", &s.userKSP);CHKERRQ(ierr);
   
   ierr     = PetscInitialize(&argc, &argv, NULL, help);CHKERRQ(ierr);
   s1.nx     = 4;
   s1.ny     = 6;
-  ierr     = PetscOptionsGetInt(NULL, "-nx1", &s1.nx, NULL);CHKERRQ(ierr);
-  ierr     = PetscOptionsGetInt(NULL, "-ny1", &s1.ny, NULL);CHKERRQ(ierr);
+  ierr     = PetscOptionsGetInt(NULL,NULL, "-nx1", &s1.nx, NULL);CHKERRQ(ierr);
+  ierr     = PetscOptionsGetInt(NULL,NULL, "-ny1", &s1.ny, NULL);CHKERRQ(ierr);
   s1.hx     = 2.0/s1.nx;
   s1.hy     = 1.0/s1.ny;
   s1.userPC = s1.userKSP = PETSC_FALSE;
-  ierr     = PetscOptionsHasName(NULL, "-user_pc1", &s1.userPC);CHKERRQ(ierr);
-  ierr     = PetscOptionsHasName(NULL, "-user_ksp1", &s1.userKSP);CHKERRQ(ierr);
+  ierr     = PetscOptionsHasName(NULL,NULL, "-user_pc1", &s1.userPC);CHKERRQ(ierr);
+  ierr     = PetscOptionsHasName(NULL, NULL,"-user_ksp1", &s1.userKSP);CHKERRQ(ierr);
 
   ierr = StokesSetupMatrix(&s);CHKERRQ(ierr);
   ierr = StokesSetupIndexSets(&s);CHKERRQ(ierr);
