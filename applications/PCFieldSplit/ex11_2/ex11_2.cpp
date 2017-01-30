@@ -967,7 +967,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     sol->_Sol[solVIndex[1]]->close();
   }
   else if ( counter < sizeUVP ){
-    sol->_Sol[solPIndex]->set(counter - sizeUV, -1.);
+    sol->_Sol[solPIndex]->set(counter - sizeUV, 1.);
     sol->_Sol[solPIndex]->close();
   }
   else {

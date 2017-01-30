@@ -389,7 +389,7 @@ namespace femus {
 
     MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
     MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
-    MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1., 0, 0);
+    MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 10., 0, 0);
     
   }
 
