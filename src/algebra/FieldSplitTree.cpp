@@ -346,6 +346,23 @@ namespace femus {
     else if(_preconditioner == ASM_PRECOND) {
       SetPetscSolverType(ksp);
       KSPSetTolerances(ksp, _rtol, _abstol, _dtol, _maxits);
+      
+//       PetscPreconditioner::set_petsc_preconditioner_type(FIELDSPLIT_PRECOND, pc);
+//       
+//       if(!_asmStandard) {
+// 	for(unsigned i=0;i<_asmLocalIsIndex[level - 1].size();i++){
+// 	  PCFieldSplitSetIS(pc,NULL,_asmOverlappingIs[level - 1][i]);
+// 	}
+//       }
+// 
+//       //PCFieldSplitSetType(pc, PC_COMPOSITE_ADDITIVE);
+//       KSPSetUp(ksp);
+// 
+//       KSP* subksps;
+//       PetscInt nlocal;
+//       PCFieldSplitGetSubKSP(pc, &nlocal, &subksps);
+      
+      
       PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, pc);
 
       if(!_asmStandard) {

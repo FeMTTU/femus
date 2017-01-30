@@ -952,25 +952,26 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   sol->_Sol[solVIndex[1]]->zero();  
   sol->_Sol[solPIndex]->zero();  
   unsigned nprocs = msh->n_processors();
-  unsigned sizeT = msh->_dofOffset[solTType][nprocs];
-  unsigned sizeTU = sizeT + msh->_dofOffset[solVType][nprocs];
-  unsigned sizeTUV = sizeTU + msh->_dofOffset[solVType][nprocs];
+  unsigned sizeU = msh->_dofOffset[solVType][nprocs];
+  unsigned sizeUV = sizeU + msh->_dofOffset[solVType][nprocs];
+  unsigned sizeUVP = sizeUV + msh->_dofOffset[solPType][nprocs];
   
-  if( counter < sizeT ){
-    sol->_Sol[solTIndex]->set(counter, 1.);
-    sol->_Sol[solTIndex]->close();
-  }
-  else if ( counter <  sizeTU ){
-    sol->_Sol[solVIndex[0]]->set(counter - sizeT , 1.);
+
+  if ( counter <  sizeU ){
+    sol->_Sol[solVIndex[0]]->set(counter, 1.);
     sol->_Sol[solVIndex[0]]->close();
   }	
-  else if ( counter < sizeTUV ){
-    sol->_Sol[solVIndex[1]]->set(counter - sizeTU, 1.);
+  else if ( counter < sizeUV ){
+    sol->_Sol[solVIndex[1]]->set(counter - sizeU, 1.);
     sol->_Sol[solVIndex[1]]->close();
   }
-  else {
-    sol->_Sol[solPIndex]->set(counter - sizeTUV, 1.);
+  else if ( counter < sizeUVP ){
+    sol->_Sol[solPIndex]->set(counter - sizeUV, 1.);
     sol->_Sol[solPIndex]->close();
+  }
+  else {
+    sol->_Sol[solTIndex]->set(counter- sizeUVP, 1.);
+    sol->_Sol[solTIndex]->close();
   }
   counter++;
   
@@ -1192,14 +1193,14 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
         unsigned irow = nDofsT + dim * nDofsV + i;
 
         for(int k = 0; k < dim; k++) {
-          Res[irow] += (gradSolV_gss[k][k]) * phiP[i]  * weight;
+          Res[irow] += -(gradSolV_gss[k][k]) * phiP[i]  * weight;
 
           if(assembleMatrix) {
             unsigned irowMat = nDofsTVP * irow;
 
             for(unsigned j = 0; j < nDofsV; j++) {
               unsigned jcol = (nDofsT + k * nDofsV + j);
-              Jac[ irowMat + jcol ] += - phiP[i] * phiV_x[j * dim + k] * weight;
+              Jac[ irowMat + jcol ] += phiP[i] * phiV_x[j * dim + k] * weight;
             }
           }
 
