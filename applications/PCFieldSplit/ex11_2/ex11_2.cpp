@@ -445,6 +445,8 @@ int main(int argc, char** args) {
     for(unsigned j = 0; j < sizeP; j++ ){
       fout << (*sol->_Sol[solPIndex])(j) << " ";
     }
+
+// std::cout << sizeT <<"AAA" << sizeU <<"BBB"<<sizeV<<"CCC" << sizeP<<"DDD"<<std::endl;   
     fout<<std::endl;
     fout.close();
   }
