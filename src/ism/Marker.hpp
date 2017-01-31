@@ -71,7 +71,12 @@ namespace femus {
 	_elem = elem;
       }
       
-      void SetMarkerAOI(const bool &aoi){
+      void SetMarkerProc(const unsigned &mproc){
+	_mproc = mproc;
+      }
+      
+      
+      void SetIprocMarkerAOI(const bool &aoi){
 	_aoi = aoi;
       }
       
@@ -145,6 +150,14 @@ namespace femus {
           _K[j].assign(_dim,0.);
         }
         _aoi = false;
+      }
+      
+       void InitializeX0andK(const unsigned &order){
+	_x0.resize(_dim);
+	_K.resize(order);
+        for(unsigned j = 0; j < order; j++) {
+          _K[j].assign(_dim,0.);
+        }
       }
       
       
