@@ -245,7 +245,7 @@ int main(int argc, char** args) {
   for(unsigned k = 1; k < 10 ; k++) {
     for(unsigned j = 0; j < 100; j++) {
       std::vector < double > x(3);
-      x[0] = 0.001;
+      x[0] = 0.001; 
       x[1] = 0.1 * k * sin(2.*pi / 100 * j);
       x[2] = 0.1 * k * cos(2.*pi / 100 * j);
       particle[100 * (k - 1) + j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
