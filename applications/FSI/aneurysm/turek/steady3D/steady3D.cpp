@@ -93,7 +93,7 @@ int main(int argc, char **args) {
   //std::string infile = "./input/AAA_thrombus.neu";
   //std::string infile = "./input/AAA.neu";
   // ******* Set physics parameters *******
-  double Lref, Uref, rhof, muf, rhos, ni, E;
+  double Lref, Uref, rhof, muf, rhos, ni, E, E1;
 
   Lref = 1.;
   Uref = 1.;
@@ -103,6 +103,7 @@ int main(int argc, char **args) {
   rhos = 1120;
   ni = 0.5;
   E = 6000;
+  E1 = 6000;
   
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
@@ -125,6 +126,10 @@ int main(int argc, char **args) {
   // Generate Solid Object
   Solid solid;
   solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
+  
+  Solid solid1;
+  solid1 = Solid(par, E1, ni, rhos, "Mooney-Rivlin");
+  
 
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -211,6 +216,7 @@ int main(int argc, char **args) {
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
+  ml_prob.parameters.set<Solid>("Solid1") = solid1;
 
   // ******* Add FSI system to the MultiLevel problem *******
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");

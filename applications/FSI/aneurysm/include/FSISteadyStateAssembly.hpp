@@ -109,6 +109,8 @@ namespace femus {
     double mu_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_shear_modulus();
     double lambda_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_lambda();
     double mus		= mu_lame / rhof;
+    double mu_lame1 	= ml_prob.parameters.get < Solid>("Solid1").get_lame_shear_modulus();
+    double mus1 	= mu_lame1 / rhof;
     double IRe 		= ml_prob.parameters.get < Fluid>("Fluid").get_IReynolds_number();
     double lambda	= lambda_lame / rhof;
     double betans	= 1.;
@@ -176,7 +178,7 @@ namespace femus {
       unsigned nve        = mymsh->GetElementDofNumber(iel, SolType2);
       unsigned nve1       = mymsh->GetElementDofNumber(iel, SolType1);
       int flag_mat        = mymsh->GetElementMaterial(iel);
-
+      unsigned elementGroup = mymsh->GetElementGroup(iel);
       // *******************************************************************************************************
 
       //initialization of everything in common between fluid and solid
@@ -573,7 +575,7 @@ namespace femus {
               I2_B = B[0][0] * B[1][1] + B[1][1] * B[2][2] + B[2][2] * B[0][0]
                      - B[0][1] * B[1][0] - B[1][2] * B[2][1] - B[2][0] * B[0][2];
 
-              double C1 = mus / 3.;
+              double C1 = ( elementGroup == elementGroup )? mus / 3.: mus1 / 3.;
               double C2 = C1 / 2.;
 
               for(int I = 0; I < 3; ++I) {
