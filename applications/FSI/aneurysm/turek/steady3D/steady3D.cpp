@@ -83,7 +83,7 @@ int main(int argc, char **args) {
     infile = "./input/aneurisma_aorta.neu";
   }
   else if(simulation == 3) {
-    infile = "./input/AAA.neu";
+    infile = "./input/AAA_thrombus.neu";
   }
   //std::string infile = "./input/aneurysm_omino.neu";
   //std::string infile = "./input/aneurisma_aorta.neu";
