@@ -103,7 +103,7 @@ int main(int argc, char **args) {
   rhos = 1120;
   ni = 0.5;
   E = 6000;
-  E1 = 6000;
+  E1 = 600; //E1=600o;
   
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
@@ -291,8 +291,9 @@ int main(int argc, char **args) {
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
   system.MGsolve();
-  GetSolutionNorm(ml_sol, 9);
-
+  //GetSolutionNorm(ml_sol, 9);
+  GetSolutionNorm(ml_sol, 8); //for AAA_thrombus
+  
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1);
 
   // ******* Clear all systems *******

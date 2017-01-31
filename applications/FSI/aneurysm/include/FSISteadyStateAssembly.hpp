@@ -575,7 +575,7 @@ namespace femus {
               I2_B = B[0][0] * B[1][1] + B[1][1] * B[2][2] + B[2][2] * B[0][0]
                      - B[0][1] * B[1][0] - B[1][2] * B[2][1] - B[2][0] * B[0][2];
 
-              double C1 = ( elementGroup == elementGroup )? mus / 3.: mus1 / 3.;
+              double C1 = ( elementGroup == 9 )? mus / 3.: mus1 / 3.;
               double C2 = C1 / 2.;
 
               for(int I = 0; I < 3; ++I) {
