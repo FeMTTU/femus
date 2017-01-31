@@ -1239,7 +1239,9 @@ namespace femus {
     unsigned step = 0.;
 
     if(_iproc == _mproc) {
-      FindLocalCoordinates(solVType, aX, true);
+      if(_elem != UINT_MAX){
+	FindLocalCoordinates(solVType, aX, true);
+      }
       _K.resize(order);
       for(unsigned k = 0; k < order; k++) {
         _K[k].resize(_dim);

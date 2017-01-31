@@ -223,7 +223,7 @@ int main(int argc, char** args) {
 
 
   //unsigned pSize = 7;
-  unsigned pSize = 9;
+  unsigned pSize = 900;
 
   std::vector < Marker*> particle(pSize);
 
