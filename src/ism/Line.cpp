@@ -609,7 +609,7 @@ namespace femus {
       }
       //END LOCAL ADVECTION INSIDE IPROC
 
-      //BEGIN exchange on information
+      
 
       // std::cout << "PRIMA integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
@@ -620,6 +620,8 @@ namespace femus {
 
       // std::cout << "DOPO integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
+      //BEGIN exchange on information
+      
       for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
         for(unsigned iMarker = _markerOffset[jproc]; iMarker < _markerOffset[jproc + 1]; iMarker++) {
           unsigned elem =  _particles[iMarker]->GetMarkerElement();
@@ -633,8 +635,8 @@ namespace femus {
           if(elem != UINT_MAX) {  // if it is outside jproc //TODO ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but no outside the domain
             unsigned mproc = _particles[iMarker]->GetMarkerProc();
             //          _particles[iMarker]->SetMarkerProc(mproc); //TODO perche' facciamo sta cosa?
-            if(mproc != jproc) {
-              _particles[iMarker]->GetElement(previousElem[iMarker], jproc);  //fissato, WARNING QUESTO e' il problema, dovrebbe dire 724 invece dice 716
+	    if(mproc != jproc) {
+              _particles[iMarker]->GetElement(previousElem[iMarker], jproc);  
             }
             elem = _particles[iMarker]->GetMarkerElement(); //TODO don't we have to resend elem with a broadcast? we need it for update line
             if(elem != UINT_MAX) {  // if it is not outside the domain
@@ -652,6 +654,7 @@ namespace femus {
                   }
 
                   _particles[iMarker]->FreeXiX0andK();
+		  std::vector < std::vector < std::vector < double > > >().swap(aX);
 
                 }
                 else if(mproc == _iproc) {
