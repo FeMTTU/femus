@@ -1040,7 +1040,10 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
       solT0[i] = (*sol->_Sol[solT0Index])(solTDof);  //global to local solution value
       sysDof[i] = pdeSys->GetSystemDof(solTIndex, solTPdeIndex, i, iel);  //local to global system dof
-      if(sysDof[i]==counter) fT[i]=1.;
+      if(sysDof[i]==counter) {
+	fT[i]=1.;
+	std::cout<<counter<<" "<<"T"<<std::endl;
+      }
     }
 
     for(unsigned i = 0; i < nDofsV; i++) { //velocity
@@ -1050,7 +1053,10 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);  //global to local solution value
 	solV0[k][i] = (*sol->_Sol[solV0Index[k]])(solVDof);  //global to local solution value
         sysDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);  //local to global system dof
-	if(sysDof[i + nDofsT + k * nDofsV]==counter) fV[k][i]=1.;
+	if(sysDof[i + nDofsT + k * nDofsV]==counter) {
+	  fV[k][i]=1.;
+	  std::cout<<counter<<" V"<<k<<std::endl;
+	}
       }
     }
 
@@ -1058,7 +1064,10 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);  //local to global solution dof
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);  //global to local solution value
       sysDof[i + nDofsT + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);  //local to global system dof
-      if(sysDof[i + nDofsT + dim * nDofsV]==counter) fP[i]=1.;
+      if(sysDof[i + nDofsT + dim * nDofsV]==counter) {
+	fP[i]=1.;
+	std::cout<<counter<<" P"<<std::endl;
+      }
     }
 
     for(unsigned i = 0; i < nDofsX; i++) { //coordinates
