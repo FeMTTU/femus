@@ -60,6 +60,9 @@ int main(int argc, char **args) {
     else if(!strcmp("3", args[1])) {   /** FSI Abdominal Aortic Aneurysm */
       simulation = 3;
     }
+    else if(!strcmp("4", args[1])) {   /** FSI Turek3D porous */
+      simulation = 4;
+    }
   }
 
   bool dimension2D = false;
@@ -85,6 +88,9 @@ int main(int argc, char **args) {
   else if(simulation == 3) {
     infile = "./input/AAA_thrombus.neu";
   }
+  else if(simulation == 4) {
+    infile = "./input/Turek_3D_porous.neu";
+  }
   //std::string infile = "./input/aneurysm_omino.neu";
   //std::string infile = "./input/aneurisma_aorta.neu";
   // std::string infile = "./input/turek_porous_scaled.neu";
@@ -102,8 +108,8 @@ int main(int argc, char **args) {
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 6000;
-  E1 = 600; //E1=600o;
+  E = 6000; 
+  E1 = 600; 
   
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
@@ -180,7 +186,7 @@ int main(int argc, char **args) {
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
-    if(simulation == 0) {
+    if(simulation == 0 || simulation == 4) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
   }
   else if(simulation == 1) {
@@ -291,8 +297,19 @@ int main(int argc, char **args) {
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
   system.MGsolve();
-  //GetSolutionNorm(ml_sol, 9);
-  GetSolutionNorm(ml_sol, 8); //for AAA_thrombus
+  
+  if(simulation == 0 || simulation == 4) {
+    GetSolutionNorm(ml_sol, 9); //Turek_3D_D & Turek_3D_porous
+  }
+  else if(simulation == 1) {
+    GetSolutionNorm(ml_sol, 10); //aneurysm_omino
+  }
+  else if(simulation == 2) {
+    GetSolutionNorm(ml_sol, 14); //aneurisma_aorta
+  }
+  else if(simulation == 3) {
+    GetSolutionNorm(ml_sol, 7); //AAA_thrombus, 15=thrombus
+  }
   
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1);
 
