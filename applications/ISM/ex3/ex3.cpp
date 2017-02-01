@@ -31,17 +31,17 @@ using namespace femus;
 
 
 // 2D CASE rigid rotation
-double InitalValueU(const std::vector < double >& x) {
-  return -x[1];
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  return x[0];
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  return 0.;
-}
+// double InitalValueU(const std::vector < double >& x) {
+//   return -x[1];
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   return x[0];
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   return 0.;
+// }
 
 
 //3D CASE  rotation
@@ -59,22 +59,22 @@ double InitalValueW(const std::vector < double >& x) {
 
 
 // 2D CASE with vorticity
-// double pi = acos(-1.);
-// 
-// double InitalValueU(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
-// }
-// 
-// double InitalValueV(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
-// }
-// 
-// double InitalValueW(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return 0.;
-// }
+double pi = acos(-1.);
+
+double InitalValueU(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return 0.;
+}
 
 
 

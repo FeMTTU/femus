@@ -1305,10 +1305,10 @@ namespace femus {
 
 
           //BEGIN TO BE REMOVED
-          for(unsigned i = 0; i < _dim; i++) {
-            //    std::cout << "_x[" << i << "] = " << _x[i] ;
-            //    std::cout << " " ;
-          }
+//           for(unsigned i = 0; i < _dim; i++) {
+//             //    std::cout << "_x[" << i << "] = " << _x[i] ;
+//             //    std::cout << " " ;
+//           }
           //  std::cout << std::endl;
           //END TO BE REMOVED
 
