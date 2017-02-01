@@ -420,6 +420,8 @@ int main(int argc, char** args) {
     
   for(unsigned i=0; i< sizeTUVP; i++){
     system.MGsolve();
+
+    mlSol.GenerateBdc("All");
     
     std::ofstream fout;
     if(i==0){
@@ -450,6 +452,15 @@ int main(int argc, char** args) {
 // std::cout << sizeT <<"AAA" << sizeU <<"BBB"<<sizeV<<"CCC" << sizeP<<"DDD"<<std::endl;   
     fout<<std::endl;
     fout.close();
+    
+    // print solutions
+    std::vector < std::string > variablesToBePrinted;
+    variablesToBePrinted.push_back("All");
+
+    VTKWriter vtkIO(&mlSol);
+    vtkIO.SetDebugOutput( true );
+    vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, counter);
+    
   }
   
   ///////////////////////////////////////////////////////////////
@@ -915,6 +926,16 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
   solP.reserve(maxSize);
 
+  //RHS vectors
+  vector < double >  fT; // local solution
+  fT.reserve(maxSize);
+  vector < vector < double > >  fV(dim);    // local solution
+  for(unsigned  k = 0; k < dim; k++) {
+    fV[k].reserve(maxSize);
+  }
+  vector < double >  fP; // local solution
+  fP.reserve(maxSize);
+  
   vector <double> phiV;  // local test function
   vector <double> phiV_x; // local test function first order partial derivatives
   vector <double> phiV_xx; // local test function second order partial derivatives
@@ -948,39 +969,34 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   if(assembleMatrix)
     KK->zero(); // Set to zero all the entries of the Global Matrix
     
-  sol->_Sol[solTIndex]->zero();  
+  
   sol->_Sol[solVIndex[0]]->zero();  
   sol->_Sol[solVIndex[1]]->zero();  
   sol->_Sol[solPIndex]->zero();  
+  sol->_Sol[solTIndex]->zero();  
+  
   unsigned nprocs = msh->n_processors();
   unsigned sizeU = msh->_dofOffset[solVType][nprocs];
   unsigned sizeUV = sizeU + msh->_dofOffset[solVType][nprocs];
   unsigned sizeUVP = sizeUV + msh->_dofOffset[solPType][nprocs];
   
-
-  if ( counter <  sizeU ){
-    sol->_Sol[solVIndex[0]]->set(counter, 1.);
-    sol->_Sol[solVIndex[0]]->close();
-  }	
-  else if ( counter < sizeUV ){
-    sol->_Sol[solVIndex[1]]->set(counter - sizeU, 1.);
-    sol->_Sol[solVIndex[1]]->close();
-  }
-  else if ( counter < sizeUVP ){
-    sol->_Sol[solPIndex]->set(counter - sizeUV, 1.);
-    sol->_Sol[solPIndex]->close();
-  }
-  else {
-    sol->_Sol[solTIndex]->set(counter- sizeUVP, 1.);
-    sol->_Sol[solTIndex]->close();
-  }
-  counter++;
-  
-  
-  
-    
-  
-  
+//   if ( counter <  sizeU ){
+//     sol->_Sol[solVIndex[0]]->set(counter, 1.);
+//     sol->_Sol[solVIndex[0]]->close();
+//   }	
+//   else if ( counter < sizeUV ){
+//     sol->_Sol[solVIndex[1]]->set(counter - sizeU, 1.);
+//     sol->_Sol[solVIndex[1]]->close();
+//   }
+//   else if ( counter < sizeUVP ){
+//     sol->_Sol[solPIndex]->set(counter - sizeUV, 1.);
+//     sol->_Sol[solPIndex]->close();
+//   }
+//   else {
+//     sol->_Sol[solTIndex]->set(counter- sizeUVP, 1.);
+//     sol->_Sol[solTIndex]->close();
+//   }
+   
   
 
   //BEGIN element loop
@@ -1012,13 +1028,19 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
     solP.resize(nDofsP);
     //END memory allocation
-
+    fT.assign(nDofsT,0.);
+    fP.assign(nDofsP,0.);
+    for(unsigned  k = 0; k < dim; k++) {
+      fV[k].assign(nDofsV,0.);
+    }
+    
     //BEGIN global to local extraction
     for(unsigned i = 0; i < nDofsT; i++) { //temperature
       unsigned solTDof = msh->GetSolutionDof(i, iel, solTType);  //local to global solution dof
       solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
       solT0[i] = (*sol->_Sol[solT0Index])(solTDof);  //global to local solution value
       sysDof[i] = pdeSys->GetSystemDof(solTIndex, solTPdeIndex, i, iel);  //local to global system dof
+      if(sysDof[i]==counter) fT[i]=1.;
     }
 
     for(unsigned i = 0; i < nDofsV; i++) { //velocity
@@ -1028,6 +1050,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);  //global to local solution value
 	solV0[k][i] = (*sol->_Sol[solV0Index[k]])(solVDof);  //global to local solution value
         sysDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);  //local to global system dof
+	if(sysDof[i + nDofsT + k * nDofsV]==counter) fV[k][i]=1.;
       }
     }
 
@@ -1035,6 +1058,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);  //local to global solution dof
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);  //global to local solution value
       sysDof[i + nDofsT + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);  //local to global system dof
+      if(sysDof[i + nDofsT + dim * nDofsV]==counter) fP[i]=1.;
     }
 
     for(unsigned i = 0; i < nDofsX; i++) { //coordinates
@@ -1117,10 +1141,12 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       //BEGIN phiT_i loop: Energy balance
       for(unsigned i = 0; i < nDofsT; i++) {
         unsigned irow = i;
-
+        
+	Res[irow] +=  phiT[i] * fT[i] * weight;
+	
         for(unsigned k = 0; k < dim; k++) {
           Res[irow] +=  -alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * gradSolT_gss[k] * weight;
-          Res[irow] +=  -0.5 * phiT[i] *(solV0_gss[k] * gradSolT_gss[k] + solV_gss[k] * gradSolT0_gss[k]) * weight;
+          Res[irow] +=  - 0.5 * phiT[i] *(solV0_gss[k] * gradSolT_gss[k] + solV_gss[k] * gradSolT0_gss[k]) * weight;
 
           if(assembleMatrix) {
             unsigned irowMat = irow * nDofsTVP;
@@ -1147,6 +1173,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
         for(unsigned k = 0; k < dim; k++) {
           unsigned irow = nDofsT + k * nDofsV + i;
 
+	  Res[irow] +=  phiV[i] * fV[k][i] * weight;
+	  
           for(unsigned l = 0; l < dim; l++) {
             Res[irow] +=  -sqrt(Pr / Ra) * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
             Res[irow] +=  -0.5 * phiV[i] * ( solV0_gss[l] * gradSolV_gss[k][l] + solV_gss[l] * gradSolV0_gss[k][l] ) * weight;
@@ -1192,7 +1220,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       //BEGIN phiP_i loop: mass balance
       for(unsigned i = 0; i < nDofsP; i++) {
         unsigned irow = nDofsT + dim * nDofsV + i;
-
+	Res[irow] += phiP[i] * fP[i]  * weight;
         for(int k = 0; k < dim; k++) {
           Res[irow] += -(gradSolV_gss[k][k]) * phiP[i]  * weight;
 
@@ -1233,6 +1261,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     KK->close();
   }
 
+  counter++;
+  
   // ***************** END ASSEMBLY *******************
 }
 
