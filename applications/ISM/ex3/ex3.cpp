@@ -11,25 +11,6 @@
 using namespace femus;
 
 
-//2D CASE translation
-// double InitalValueU(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   double nHalf = 5.5;
-//   double U = 1.;
-//   if (time >= nHalf) U  = -1.;
-//   return U;
-// }
-//
-// double InitalValueV(const std::vector < double >& x) {
-//   return 0.;
-// }
-//
-// double InitalValueW(const std::vector < double >& x) {
-//   return 0.;
-// }
-
-
-
 // 2D CASE rigid rotation
 // double InitalValueU(const std::vector < double >& x) {
 //   return -x[1];
@@ -215,8 +196,7 @@ int main(int argc, char** args) {
   clock_t init_time = clock();
 
 
-  //unsigned pSize = 100;
-  unsigned pSize = 14;
+  unsigned pSize = 100;
   std::vector < Marker*> particle(pSize);
 
 
@@ -228,36 +208,6 @@ int main(int argc, char** args) {
     x[2] = 0.;
     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
   }
-
-
-  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  //initializing the particles and time for the translation test
-//   for(unsigned j = 0; j < pSize; j++) {
-//     x[0] = -0.5;
-//     x[1] = -0.5 + 0.01 * static_cast<double>(j);
-//     x[2] = 0.;
-//     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
-//   }
-  //BEGIN TESTS PER CAPIRE CHE CASPITA SUCCEDE COL PUNTO j = 58
-//   std::vector < double > xTrial(3, 0);
-//   particle[58]->GetMarkerCoordinates(xTrial);
-//   for(unsigned k=0; k<3; k++){
-//     std::cout << "xTrial[" << k << "] = " << xTrial[k] << std::endl;
-//   }
-//   xTrial[0] = 1.5;
-//   xTrial[1] = 1.7;
-//   xTrial[2] = 1.;
-//   Marker aTrial(xTrial, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
-//   xTrial[0] = 15.;
-//   xTrial[1] = 15.;
-//   xTrial[2] = 0.;
-//   aTrial.GetMarkerCoordinates(xTrial);
-//
-//    for(unsigned k=0; k<3; k++){
-//     std::cout << "xTrial[" << k << "] = " << xTrial[k] << std::endl;
-//   }
-  //END
-  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
   std::vector < std::vector < std::vector < double > > > line(1);
@@ -273,8 +223,6 @@ int main(int argc, char** args) {
 
   n = 30;
 
-  //comment T for tests that are not translation
-  // T = 2. ;
   std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
 
@@ -282,8 +230,7 @@ int main(int argc, char** args) {
   clock_t advection_time = clock();
 
 
-  // k<=n+1 for translation k<=n for the other tests
-  for(unsigned k = 1; k <= 3; k++) {
+  for(unsigned k = 1; k <= n; k++) {
     //uncomment for  vortex test
     mlSol.CopySolutionToOldSolution();
     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
@@ -301,23 +248,6 @@ int main(int argc, char** args) {
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }
 
-
-
-  //uncomment for translation test
-//     mlSol.CopySolutionToOldSolution();
-//     mlSol.UpdateSolution("U" , InitalValueU, static_cast<double>(k));
-//     mlSol.UpdateSolution("V" , InitalValueV, static_cast<double>(k));
-//     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, static_cast<double>(k));
-//
-//     if(k != 6){
-//       for(unsigned j = 0; j < pSize; j++) {
-// 	particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n);
-// 	particle[j]->GetMarkerCoordinates(line[0][j]);
-//       }
-//       particle[0]->GetMarkerCoordinates(line[0][pSize]);
-//       PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
-//     }
-//  }
 
   std::cout << std::endl << " advection in: " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - advection_time)) / CLOCKS_PER_SEC << " s" << std::endl;
@@ -341,19 +271,12 @@ int main(int argc, char** args) {
    std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
 
  
-  //BEGIN to remove when fixed ex5
-  for(unsigned j = 0; j < pSize + 1; j++) {
-    for(unsigned i = 0; i < dim; i++) {
-      std::cout << "x[ " << j << " ][ " << i << " ] = " << line[0][j][i] << std::endl;
-    }
-  }
-  //END to remove when fixed ex5
 
   for(unsigned j = 0; j < pSize; j++) {
     delete particle[j];
   }
 
- std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
+
 
   return 0;
 }
