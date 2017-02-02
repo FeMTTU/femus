@@ -83,15 +83,15 @@ namespace femus {
 
 //     std::vector <double> xtry(_dim);
 //     std::vector <double> xitry(_dim);
-//
-//
+// 
+// 
 //     for(unsigned j = 0; j < _size; j++) {
-//
+// 
 //       unsigned proc;
 //       unsigned elem;
-//       particles[j]->GetMarkerProcLine(proc);
-//       particles[j]->GetMarkerElementLine(elem);
-//
+//       proc = particles[j]->GetMarkerProc();
+//       elem = particles[j]->GetMarkerElement();
+// 
 //       std::cout << "proc = " << proc << " , " << "elem = " << elem <<
 //                 " , " << std::endl;
 //       particles[j]->GetMarkerCoordinates(xtry);
@@ -103,20 +103,20 @@ namespace femus {
 //         std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
 //       }
 //     }
-//
-//
+// 
+// 
 //     for(unsigned j = 0; j < _size; j++) {
 //       _particles[j] = particles[j];
 //     }
-//
+// 
 //     std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
-//
+// 
 //     for(unsigned j = 0; j < _size; j++) {
-//
+// 
 //       unsigned proc;
 //       unsigned elem;
-//       _particles[j]->GetMarkerProcLine(proc);
-//       _particles[j]->GetMarkerElementLine(elem);
+//       proc = _particles[j]->GetMarkerProc();
+//       elem = _particles[j]->GetMarkerElement();
 //       std::cout << "proc = " << proc << " , " << "elem = " << elem <<
 //                 " , " << std::endl;
 //       _particles[j]->GetMarkerCoordinates(xtry);
@@ -128,7 +128,7 @@ namespace femus {
 //         std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
 //       }
 //     }
-//
+
 
     //END TEST ASSIGNATION
 
@@ -289,6 +289,66 @@ namespace femus {
     }
 
     printList = _printList;
+
+
+    //BEGIN TEST ASSIGNATION
+
+//     std::vector <double> xtry(_dim);
+//     std::vector <double> xitry(_dim);
+//
+//
+//     for(unsigned j = 0; j < _size; j++) {
+//
+//       unsigned proc;
+//       unsigned elem;
+//       proc = particles[j]->GetMarkerProc();
+//       elem = particles[j]->GetMarkerElement();
+//
+//       std::cout << "proc = " << proc << " , " << "elem = " << elem <<
+//                 " , " << std::endl;
+//       particles[j]->GetMarkerCoordinates(xtry);
+//       for(unsigned i = 0 ; i < _dim; i++) {
+//         std::cout << "x[" << i << "]=" << xtry[i] << std::endl;
+//       }
+//       particles[j]->GetMarkerLocalCoordinatesLine(xitry);
+//       for(unsigned i = 0 ; i < _dim; i++) {
+//         std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
+//       }
+//     }
+//
+//
+//     for(unsigned j = 0; j < _size; j++) {
+//       _particles[j] = particles[j];
+//     }
+//
+//     std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
+//
+//     for(unsigned j = 0; j < _size; j++) {
+//
+//       unsigned proc;
+//       unsigned elem;
+//       proc = _particles[j]->GetMarkerProc();
+//       elem = _particles[j]->GetMarkerElement();
+//       std::cout << "proc = " << proc << " , " << "elem = " << elem <<
+//                 " , " << std::endl;
+//       _particles[j]->GetMarkerCoordinates(xtry);
+//       for(unsigned i = 0 ; i < _dim; i++) {
+//         std::cout << "x[" << i << "]=" << xtry[i] << std::endl;
+//       }
+//       _particles[j]->GetMarkerLocalCoordinatesLine(xitry);
+//       for(unsigned i = 0 ; i < _dim; i++) {
+//         std::cout << "xi[" << i << "]=" << xitry[i] << std::endl;
+//       }
+//     }
+
+
+    //END TEST ASSIGNATION
+
+
+
+
+
+
 
 //     std::cout << "FIRST OF ALL ----------------------- UPDATE LINE" << std::endl;
 //     for(unsigned i = 0; i < _size; i++) {
@@ -503,12 +563,18 @@ namespace femus {
 
 
         //BEGIN extraction of the marker instances
-        x = _particles[iMarker]->GetIprocMarkerCoordinates();
+        x =_particles[iMarker]->GetIprocMarkerCoordinates();
         x0 = _particles[iMarker]->GetIprocMarkerOldCoordinates();
         K = _particles[iMarker]->GetIprocMarkerK();
         step = _particles[iMarker]->GetIprocMarkerStep();
         currentElem = _particles[iMarker]->GetMarkerElement();
         //END
+
+
+        for(unsigned i = 0; i < _dim; i++) {
+          std::cout << "MISTAKE x[ " << i << " ] = " << x[i] << std::endl; //WARNING MISTAKE, AFTER THE EXTRACTION WE LOST A LOT OF INFO
+        }
+
 
         bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
 
@@ -609,7 +675,7 @@ namespace femus {
       }
       //END LOCAL ADVECTION INSIDE IPROC
 
-      
+
 
       // std::cout << "PRIMA integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
@@ -621,7 +687,7 @@ namespace femus {
       // std::cout << "DOPO integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
       //BEGIN exchange on information
-      
+
       for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
         for(unsigned iMarker = _markerOffset[jproc]; iMarker < _markerOffset[jproc + 1]; iMarker++) {
           unsigned elem =  _particles[iMarker]->GetMarkerElement();
@@ -635,8 +701,8 @@ namespace femus {
           if(elem != UINT_MAX) {  // if it is outside jproc //TODO ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but no outside the domain
             unsigned mproc = _particles[iMarker]->GetMarkerProc();
             //          _particles[iMarker]->SetMarkerProc(mproc); //TODO perche' facciamo sta cosa?
-	    if(mproc != jproc) {
-              _particles[iMarker]->GetElement(previousElem[iMarker], jproc);  
+            if(mproc != jproc) {
+              _particles[iMarker]->GetElement(previousElem[iMarker], jproc);
             }
             elem = _particles[iMarker]->GetMarkerElement(); //TODO don't we have to resend elem with a broadcast? we need it for update line
             if(elem != UINT_MAX) {  // if it is not outside the domain
@@ -654,7 +720,7 @@ namespace femus {
                   }
 
                   _particles[iMarker]->FreeXiX0andK();
-		  std::vector < std::vector < std::vector < double > > >().swap(aX);
+                  std::vector < std::vector < std::vector < double > > >().swap(aX);
 
                 }
                 else if(mproc == _iproc) {

@@ -148,7 +148,7 @@ int main(int argc, char** args) {
   clock_t start_time = clock();
   clock_t init_time = clock();
 
-  unsigned size = 100;
+  unsigned size = 14;
   std::vector < std::vector < double > > x; // marker
   std::vector < MarkerType > markerType;
 
@@ -163,9 +163,10 @@ int main(int argc, char** args) {
   line0[0].resize(size + 1);
 
   for(unsigned j = 0; j < size; j++) {
-    x[j].assign(dim, 0);
+    x[j].assign(dim, 0.);
     markerType[j] = VOLUME;
   }
+
 
   double pi = acos(-1.);
   for(unsigned j = 0; j < size; j++) {
@@ -175,6 +176,7 @@ int main(int argc, char** args) {
       x[j][2] = 0.;
     }
   }
+
 
   Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType);
 
@@ -219,6 +221,25 @@ int main(int argc, char** args) {
     }
     error += sqrt(tempError);
   }
+
+  //BEGIN to remove when fixed ex5
+  for(unsigned j = 0; j < size + 1; j++) {
+    for(unsigned i = 0; i < dim; i++) {
+      std::cout << "x[ " << j << " ][ " << i << " ] = " << line[0][j][i] << std::endl;
+    }
+  }
+  
+  std::cout << " ----------------------------------------- " << std::endl;
+  
+  std::vector <double> tr(dim,0);
+  for(unsigned j = 0; j < size; j++) {
+    linea._particles[j]->GetMarkerCoordinates(tr);
+    for(unsigned i = 0; i < dim; i++) {
+            std::cout << "x[ " << j << " ][ " << i << " ] = " << tr[i] << std::endl;
+    }
+  }
+  
+  //END to remove when fixed ex5
 
   error = error / size;
 

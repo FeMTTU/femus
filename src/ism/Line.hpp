@@ -49,12 +49,12 @@ namespace femus {
 
       void UpdateLine();
 
-
+std::vector < Marker*> _particles;
 
     private:
       std::vector < std::vector < std::vector < double > > > _line;
 
-      std::vector < Marker*> _particles;
+     // std::vector < Marker*> _particles; //TODO make it private again after tests
       std::vector < unsigned > _markerOffset;
       std::vector < unsigned > _printList;
       unsigned _size;

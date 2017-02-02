@@ -34,11 +34,11 @@ using namespace femus;
 // double InitalValueU(const std::vector < double >& x) {
 //   return -x[1];
 // }
-// 
+//
 // double InitalValueV(const std::vector < double >& x) {
 //   return x[0];
 // }
-// 
+//
 // double InitalValueW(const std::vector < double >& x) {
 //   return 0.;
 // }
@@ -48,11 +48,11 @@ using namespace femus;
 // double InitalValueU(const std::vector < double >& x) {
 //   return (-x[1]+x[2])/sqrt(3);
 // }
-// 
+//
 // double InitalValueV(const std::vector < double >& x) {
 //   return (x[0]-x[2])/sqrt(3);
 // }
-// 
+//
 // double InitalValueW(const std::vector < double >& x) {
 //   return (x[1]-x[0])/sqrt(3);
 // }
@@ -80,7 +80,7 @@ double InitalValueW(const std::vector < double >& x) {
 
 // 3D CASE with vorticity
 // double pi = acos(-1.);
-// 
+//
 // double InitalValueU(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return
@@ -88,7 +88,7 @@ double InitalValueW(const std::vector < double >& x) {
 //     ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
 //     )* cos(time);
 // }
-// 
+//
 // double InitalValueV(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return
@@ -96,14 +96,14 @@ double InitalValueW(const std::vector < double >& x) {
 //     ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
 //     )* cos(time);
 // }
-// 
+//
 // double InitalValueW(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return
 //     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
 //     ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
 //     )* cos(time);
-// 
+//
 //   return 0.;
 // }
 
@@ -213,9 +213,10 @@ int main(int argc, char** args) {
 
   clock_t start_time = clock();
   clock_t init_time = clock();
- 
-  
-  unsigned pSize = 100;
+
+
+  //unsigned pSize = 100;
+  unsigned pSize = 14;
   std::vector < Marker*> particle(pSize);
 
 
@@ -275,16 +276,16 @@ int main(int argc, char** args) {
   //comment T for tests that are not translation
   // T = 2. ;
   std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
-           << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
-  
+            << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+
 
   clock_t advection_time = clock();
-  
+
 
   // k<=n+1 for translation k<=n for the other tests
   for(unsigned k = 1; k <= n; k++) {
-   //uncomment for  vortex test
-mlSol.CopySolutionToOldSolution();
+    //uncomment for  vortex test
+    mlSol.CopySolutionToOldSolution();
     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
@@ -293,7 +294,7 @@ mlSol.CopySolutionToOldSolution();
     //uncomment for vortex test and rigid rotation
     for(unsigned j = 0; j < pSize; j++) {
 //       std::cout << j <<" " << k << std::endl<<std::flush;
-      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), n, T/n);
+      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), n, T / n);
       particle[j]->GetMarkerCoordinates(line[0][j]);
     }
     particle[0]->GetMarkerCoordinates(line[0][pSize]);
@@ -320,7 +321,7 @@ mlSol.CopySolutionToOldSolution();
 
   std::cout << std::endl << " advection in: " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - advection_time)) / CLOCKS_PER_SEC << " s" << std::endl;
-  
+
   std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
 
@@ -339,6 +340,14 @@ mlSol.CopySolutionToOldSolution();
 
   std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
 
+
+  //BEGIN to remove when fixed ex5
+  for(unsigned j = 0; j < pSize + 1; j++) {
+    for(unsigned i = 0; i < dim; i++) {
+      std::cout << "x[ " << j << " ][ " << i << " ] = " << line[0][j][i] << std::endl;
+    }
+  }
+  //END to remove when fixed ex5
 
   for(unsigned j = 0; j < pSize; j++) {
     delete particle[j];
