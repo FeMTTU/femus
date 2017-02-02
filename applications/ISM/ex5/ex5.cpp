@@ -148,7 +148,7 @@ int main(int argc, char** args) {
   clock_t start_time = clock();
   clock_t init_time = clock();
 
-  unsigned size = 14;
+  unsigned size = 5;
   std::vector < std::vector < double > > x; // marker
   std::vector < MarkerType > markerType;
 
@@ -170,8 +170,8 @@ int main(int argc, char** args) {
 
   double pi = acos(-1.);
   for(unsigned j = 0; j < size; j++) {
-    x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
-    x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
+    x[j][0] = 0. + 0.125 * cos(2.*pi / 14 * j);
+    x[j][1] = .25 + 0.125 * sin(2.*pi / 14 * j);
     if(dim == 3) {
       x[j][2] = 0.;
     }
@@ -193,7 +193,7 @@ int main(int argc, char** args) {
 
   clock_t advection_time = clock();
 
-  for(unsigned k = 1; k <= n; k++) {
+  for(unsigned k = 1; k <= 3; k++) {
     //uncomment for  vortex test
     mlSol.CopySolutionToOldSolution();
     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
@@ -230,7 +230,7 @@ int main(int argc, char** args) {
   }
   
   std::cout << " ----------------------------------------- " << std::endl;
-  
+  std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
   std::vector <double> tr(dim,0);
   for(unsigned j = 0; j < size; j++) {
     linea._particles[j]->GetMarkerCoordinates(tr);

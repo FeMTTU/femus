@@ -283,7 +283,7 @@ int main(int argc, char** args) {
 
 
   // k<=n+1 for translation k<=n for the other tests
-  for(unsigned k = 1; k <= n; k++) {
+  for(unsigned k = 1; k <= 3; k++) {
     //uncomment for  vortex test
     mlSol.CopySolutionToOldSolution();
     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
@@ -338,9 +338,9 @@ int main(int argc, char** args) {
 
   error = error / pSize;
 
-  std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
+   std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
 
-
+ 
   //BEGIN to remove when fixed ex5
   for(unsigned j = 0; j < pSize + 1; j++) {
     for(unsigned i = 0; i < dim; i++) {
@@ -353,7 +353,7 @@ int main(int argc, char** args) {
     delete particle[j];
   }
 
-
+ std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
 
   return 0;
 }

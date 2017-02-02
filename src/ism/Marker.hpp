@@ -176,6 +176,14 @@ namespace femus {
         }
       }
 
+      unsigned GetIprocMarkerPreviousElement(){
+	return _previousElem;
+      }
+      
+      void SetIprocMarkerPreviousElement( const unsigned &previousElem){
+	_previousElem = previousElem;
+      }
+      
       void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
       void GetElementSerial(unsigned &initialElem);
       void GetElement(unsigned &previousElem, const unsigned &previousMproc);
@@ -220,6 +228,7 @@ namespace femus {
       MarkerType _markerType;
       const Mesh * _mesh;
       unsigned _elem;
+      unsigned _previousElem; //for advection reasons
       unsigned _dim;
 
       unsigned _mproc; //processor who has the marker
