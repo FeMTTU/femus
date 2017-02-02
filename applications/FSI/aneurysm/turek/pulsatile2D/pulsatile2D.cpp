@@ -11,7 +11,7 @@
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
 #include "../../include/FSITimeDependentAssembly.hpp"
-
+#include <cmath>
 double scale = 1000.;
 
 using namespace std;
@@ -283,7 +283,7 @@ int main(int argc, char **args)
 }
 
 double SetVariableTimeStep(const double time) {
-  double dt = 1./32;
+  double dt = 1./(64*1.4);
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
 //     else dt = 0.025;
@@ -309,17 +309,41 @@ double SetVariableTimeStep(const double time) {
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
-{
+bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time){
   bool test = 1; //dirichlet
   value = 0.;
 
+  
+  std::ifstream inf;
+  inf.open("./input/womersleyProfile64_R0p001_f84.txt");
+  if(!inf) {
+    std::cout << "velocity file ./input/womersleyProfile64_R0p001_f84.txt can not be opened\n";
+    exit(0);
+  }
+   
+  std::vector<double> vel(64);
+   
+  for(unsigned i=0; i<64; i++){
+      inf>>vel[i];
+  }
+  inf.close();
+  
+  double period = 1./1.4;
+  double dt = period/64;
+  
+  double time1 = time - floor ( time / period ) * period;
+  
+  unsigned j = static_cast < unsigned > ( floor( time1 / dt ) );
+  
+  //git pstd::cout<< name << " " << time <<" "<< j <<" "<<  vel[j] << std::endl;
+  
   double PI = acos(-1.);
   if ( !strcmp(name, "U") ) {
 
     if (1 == facename) {
-      double ramp = (time < 1) ? sin(PI/2 * time) : 1.;
-      value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8)*(1.+ 0.75*sin(2.*PI*time)) * ramp; //inflow
+      double ramp = (time < period) ? sin(PI/2 * time / period) : 1.;
+//       value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8)*(1.+ 0.75*sin(2.*PI* time / period)) * ramp; //inflow
+      value = (x[1] * 1000 - 6) * ( x[1] * 1000 - 8) * vel[j] * ramp; //inflow
     }
     else if ( 2 == facename || 5 == facename ) {
       test = 0;
@@ -525,7 +549,9 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   vol->close();
 
   double p2_l2 = p2->l1_norm();
+  p2_l2 = sqrt(p2_l2);
   double v2_l2 = v2->l1_norm();
+  v2_l2 = sqrt(v2_l2);
   double VOL0 = vol0->l1_norm();
   double VOL = vol->l1_norm();
 
@@ -534,8 +560,8 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   std::cout << " vol0 = " << VOL0 << std::endl;
   std::cout << " vol = " << VOL << std::endl;
   std::cout << " (vol-vol0)/vol0 = " << (VOL-VOL0) / VOL0 << std::endl;
-  std::cout << " p_l2 norm / sqrt(vol) = " << sqrt(p2_l2/VOL)  << std::endl;
-  std::cout << " v_l2 norm / sqrt(vol) = " << sqrt(v2_l2/VOL)  << std::endl;
+  std::cout << " p_l2 norm / vol = " << p2_l2/VOL  << std::endl;
+  std::cout << " v_l2 norm / vol = " << v2_l2/VOL  << std::endl;
 
   data[1] = VOL0;
   data[2] = VOL;
