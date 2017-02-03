@@ -539,8 +539,6 @@ namespace femus {
     //END
 
 
-    //std::vector<unsigned> previousElem(_size, 0); //sbagliato
-
     //BEGIN declare marker instances
     unsigned step;
     std::vector < double > x;
@@ -572,7 +570,7 @@ namespace femus {
       //BEGIN LOCAL ADVECTION INSIDE IPROC
       for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
-        //std::cout << "Number of markers = " << _markerOffset[_iproc + 1] - _markerOffset[_iproc] << " , " << "iMarker = " << iMarker << std::endl;
+        std::cout << "Number of markers = " << _markerOffset[_iproc + 1] - _markerOffset[_iproc] << " , " << "iMarker = " << iMarker << std::endl;
 
 
         //BEGIN extraction of the marker instances
@@ -584,21 +582,21 @@ namespace femus {
         //END
 
 
-//         for(unsigned i = 0; i < _dim; i++) {
-//           std::cout << "Coordinates as we begin x[ " << i << " ] = " << x[_printList[i]] << std::endl;
-//         }
+        for(unsigned i = 0; i < _dim; i++) {
+          std::cout << "Coordinates as we begin x[ " << i << " ] = " << x[_printList[i]] << std::endl;
+        }
 
 
         bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
 
         if(markerOutsideDomain == false) {
 
-         // std::cout << currentElem << " " << initializedElem << std::endl;
+          std::cout << "currentElem =" << currentElem <<  " " << "initializedElem =" << initializedElem << std::endl;
 
           bool pcElemUpdate = (initializedElem == currentElem) ? false : true; //update only if the marker is in a different element
-         // std::cout << " PRIMA DI FIND LOCAL COORDINATES pcElemUpdate =" << pcElemUpdate << std::endl;
+          std::cout << " PRIMA DI FIND LOCAL COORDINATES pcElemUpdate =" << pcElemUpdate << std::endl;
           _particles[iMarker]->FindLocalCoordinates(solVType, aX, pcElemUpdate);
-         // std::cout << " PRIMA DI UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
+          std::cout << " PRIMA DI UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
           initializedElem = currentElem;
 
           while(step < n * order) {
@@ -614,9 +612,9 @@ namespace femus {
               }
             }
 
-
+            std::cout << " PRIMA DI  UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
             _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV, phi, true); // we put pcElemUpdate instead of true but it wasn't running
-            //std::cout << " DOPO UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
+            std::cout << " DOPO UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
             pcElemUpdate = false;
 
             double s = (tstep + _c[order - 1][istep]) / n;
@@ -711,6 +709,7 @@ namespace femus {
 
       //BEGIN exchange on information
 
+      std::cout << " ----------------------------------PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
       for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
         for(unsigned iMarker = _markerOffset[jproc]; iMarker < _markerOffset[jproc + 1]; iMarker++) {
           unsigned elem =  _particles[iMarker]->GetMarkerElement();
@@ -768,6 +767,8 @@ namespace femus {
           }
         }
       }
+
+      std::cout << " ----------------------------------END PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
 
       //END exchange of information
 

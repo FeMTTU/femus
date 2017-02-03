@@ -204,45 +204,27 @@ int main(int argc, char **args) {
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
 
-  // time loop parameter
-  system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 100;
 
-  for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-
-    if(time_step > 0)
-      system.SetMgType(V_CYCLE);
-    system.CopySolutionToOldSolution();
-    system.MGsolve();
-    GetSolutionNorm(ml_sol, 9);
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
-  }
+  //BEGIN INITIALIZE PARTICLES
 
   unsigned pSize = 100;
 
   std::vector < Marker*> particle(pSize);
 
-
-  clock_t start_time = clock();
-  clock_t init_time = clock();
-  //BEGIN INITIALIZE PARTICLES
-
-//   double pi = acos(-1.);
-  //for(unsigned k = 1; k < 10 ; k++) {
   for(unsigned j = 0; j < pSize; j++) {
     std::vector < double > x(2);
     x[0] = 0.0065 + j * 0.00001;
     x[1] = 0.;
     particle[j] = new Marker(x, VOLUME, ml_msh.GetLevel(numberOfUniformRefinedMeshes - 1), 2, true);
   }
-  //}
 
   //END INITIALIZE PARTICLES
 
 
-
   double T = 160;
-  unsigned n  = 100;
+
+
+  //BEGIN print first line
 
   std::vector < std::vector < std::vector < double > > > xn(pSize);
 
@@ -256,44 +238,37 @@ int main(int argc, char **args) {
 //   particle[0]->GetMarkerCoordinates(xn[pSize][0]);
 //   xn[pSize][1]=xn[pSize][0];
   PrintLine(DEFAULT_OUTPUTDIR, xn, true, 1);
+  
+  //END print first line
 
-  std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
-            << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+  // time loop parameter
+  system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
+  const unsigned int n_timesteps = 50;
 
+  for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
-  clock_t advection_time = clock();
-  for(unsigned k = 0; k < n; k++) {
+    if(time_step > 0)
+      system.SetMgType(V_CYCLE);
+    system.CopySolutionToOldSolution();
+    system.MGsolve();
 
-       //TODO write properly the update
-//     ml_sol.CopySolutionToOldSolution();
-//     ml_sol.UpdateSolution("U" , InitalValueU, k);
-//     ml_sol.UpdateSolution("V" , InitalValueV, k);
-    
     for(unsigned j = 0; j < pSize; j++) {
-      particle[j]->Advection(ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 4, T / n);
-      xn[j].resize(k + 3);
-      particle[j]->GetMarkerCoordinates(xn[j][k + 2]);
+      particle[j]->Advection(ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 4, T / n_timesteps);
+      xn[j].resize(time_step + 3);
+      particle[j]->GetMarkerCoordinates(xn[j][time_step + 2]);
     }
-//     xn[pSize].resize(k+3);
-//     particle[0]->GetMarkerCoordinates(xn[pSize][k+2]);
-    PrintLine(DEFAULT_OUTPUTDIR, xn, true, k + 2);
+    PrintLine(DEFAULT_OUTPUTDIR, xn, true, time_step + 2);
+    
+    GetSolutionNorm(ml_sol, 9);
+    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
-
-  std::cout << std::endl << " advection in: " << std::setw(11) << std::setprecision(6) << std::fixed
-            << static_cast<double>((clock() - advection_time)) / CLOCKS_PER_SEC << " s" << std::endl;
-
-  std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
-            << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
 
   for(unsigned j = 0; j < pSize; j++) {
     delete particle[j];
   }
 
 
-
-
-
-  // ******* Clear all systems *******
+// ******* Clear all systems *******
   ml_prob.clear();
   return 0;
 }
