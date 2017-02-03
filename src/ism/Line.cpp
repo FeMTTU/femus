@@ -572,6 +572,7 @@ namespace femus {
       //BEGIN LOCAL ADVECTION INSIDE IPROC
       for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
+        //std::cout << "Number of markers = " << _markerOffset[_iproc + 1] - _markerOffset[_iproc] << " , " << "iMarker = " << iMarker << std::endl;
 
 
         //BEGIN extraction of the marker instances
@@ -583,21 +584,21 @@ namespace femus {
         //END
 
 
-        for(unsigned i = 0; i < _dim; i++) {
-          std::cout << "Coordinates as we begin x[ " << i << " ] = " << x[_printList[i]] << std::endl;
-        }
+//         for(unsigned i = 0; i < _dim; i++) {
+//           std::cout << "Coordinates as we begin x[ " << i << " ] = " << x[_printList[i]] << std::endl;
+//         }
 
 
         bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
 
         if(markerOutsideDomain == false) {
 
-          std::cout << currentElem << " " << initializedElem << std::endl;
+         // std::cout << currentElem << " " << initializedElem << std::endl;
 
           bool pcElemUpdate = (initializedElem == currentElem) ? false : true; //update only if the marker is in a different element
-          std::cout << " PRIMA DI FIND LOCAL COORDINATES pcElemUpdate =" << pcElemUpdate << std::endl;
+         // std::cout << " PRIMA DI FIND LOCAL COORDINATES pcElemUpdate =" << pcElemUpdate << std::endl;
           _particles[iMarker]->FindLocalCoordinates(solVType, aX, pcElemUpdate);
-          std::cout << " PRIMA DI UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
+         // std::cout << " PRIMA DI UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
           initializedElem = currentElem;
 
           while(step < n * order) {
@@ -613,11 +614,11 @@ namespace femus {
               }
             }
 
-            
-            _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV, phi, true); //switch back to pcElemUpdate al posto di true
-	    std::cout << " DOPO UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
-	    pcElemUpdate = false;
-            
+
+            _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV, phi, true); // we put pcElemUpdate instead of true but it wasn't running
+            //std::cout << " DOPO UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
+            pcElemUpdate = false;
+
             double s = (tstep + _c[order - 1][istep]) / n;
 
             for(unsigned k = 0; k < _dim; k++) {
@@ -698,7 +699,7 @@ namespace femus {
 
 
 
-      // std::cout << "PRIMA integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
+      //std::cout << "PRIMA integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
 
       for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
@@ -706,7 +707,7 @@ namespace femus {
         integrationIsOverCounter += integrationIsOverCounterProc[jproc];
       }
 
-      // std::cout << "DOPO integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
+      //std::cout << "DOPO integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
       //BEGIN exchange on information
 
@@ -722,7 +723,7 @@ namespace femus {
 
           if(elem != UINT_MAX) {  // if it is outside jproc //TODO ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but no outside the domain
             unsigned mproc = _particles[iMarker]->GetMarkerProc();
-            //          _particles[iMarker]->SetMarkerProc(mproc); //TODO perche' facciamo sta cosa?
+            _particles[iMarker]->SetMarkerProc(mproc);
             if(mproc != jproc) {
               unsigned prevElem = _particles[iMarker]->GetIprocMarkerPreviousElement();
               _particles[iMarker]->GetElement(prevElem, jproc);
@@ -771,40 +772,42 @@ namespace femus {
       //END exchange of information
 
 
-      //BEGIN to be remove
-      std::vector<double> tr;
-      unsigned step;
-      for(unsigned j = 0; j < _size; j++) {
-        _particles[_printList[j]]->GetMarkerCoordinates(tr);
-        step = _particles[_printList[j]]->GetIprocMarkerStep();
-        for(unsigned i = 0; i < _dim; i++) {
-          std::cout << "x[ " << j << " ][ " << i << " ] = " << tr[i] ;
-        }
-        tr = _particles[_printList[j]]->GetIprocMarkerOldCoordinates();
-        for(unsigned i = 0; i < _dim; i++) {
-          std::cout << "x0[ " << j << " ][ " << i << " ] = " << tr[i] ;
-        }
-
-
-        std::cout << " step = " << step << "currentElem = " << _particles[_printList[j]]->GetMarkerElement() << " previousElem = " <<  _particles[_printList[j]]->GetIprocMarkerPreviousElement() << std::endl;
-      }
-      //END to be removed
+//       //BEGIN to be removed
+//       std::vector<double> tr;
+//       unsigned step;
+//       for(unsigned j = 0; j < _size; j++) {
+//         _particles[_printList[j]]->GetMarkerCoordinates(tr);
+//         step = _particles[_printList[j]]->GetIprocMarkerStep();
+//         for(unsigned i = 0; i < _dim; i++) {
+//           std::cout << "x[ " << j << " ][ " << i << " ] = " << tr[i] ;
+//         }
+//         tr = _particles[_printList[j]]->GetIprocMarkerOldCoordinates();
+//         for(unsigned i = 0; i < _dim; i++) {
+//           std::cout << "x0[ " << j << " ][ " << i << " ] = " << tr[i] ;
+//         }
+//
+//
+//         std::cout << " step = " << step << "currentElem = " << _particles[_printList[j]]->GetMarkerElement() << " previousElem = " <<  _particles[_printList[j]]->GetIprocMarkerPreviousElement() << std::endl;
+//       }
+//       //END to be removed
 
       UpdateLine();
 
-      for(unsigned j = 0; j < _size; j++) {
-        _particles[_printList[j]]->GetMarkerCoordinates(tr);
-        step = _particles[_printList[j]]->GetIprocMarkerStep();
-        for(unsigned i = 0; i < _dim; i++) {
-          std::cout << "x[ " << j << " ][ " << i << " ] = " << tr[i] ;
-        }
-        tr = _particles[_printList[j]]->GetIprocMarkerOldCoordinates();
-        for(unsigned i = 0; i < _dim; i++) {
-          std::cout << "x0[ " << j << " ][ " << i << " ] = " << tr[i] ;
-        }
-        std::cout << " step = " << step << "currentElem = " << _particles[j]->GetMarkerElement() << " previousElem = " <<  _particles[j]->GetIprocMarkerPreviousElement() << std::endl;
-      }
-
+//       //BEGIN to removed
+//       for(unsigned j = 0; j < _size; j++) {
+//         _particles[_printList[j]]->GetMarkerCoordinates(tr);
+//         step = _particles[_printList[j]]->GetIprocMarkerStep();
+//         for(unsigned i = 0; i < _dim; i++) {
+//           std::cout << "x[ " << j << " ][ " << i << " ] = " << tr[i] ;
+//         }
+//         tr = _particles[_printList[j]]->GetIprocMarkerOldCoordinates();
+//         for(unsigned i = 0; i < _dim; i++) {
+//           std::cout << "x0[ " << j << " ][ " << i << " ] = " << tr[i] ;
+//         }
+//         std::cout << " step = " << step << "currentElem = " << _particles[j]->GetMarkerElement() << " previousElem = " <<  _particles[j]->GetIprocMarkerPreviousElement() << std::endl;
+//       }
+//
+//       //END to be remove
 
       // std::cout << " END integrationIsOverCounter = " << integrationIsOverCounter <<  std::endl;
 

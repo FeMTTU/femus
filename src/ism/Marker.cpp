@@ -210,7 +210,7 @@ namespace femus {
           modulus = modulusKel;
         }
       }
-     
+
       if(iel == UINT_MAX) {
         //  std::cout << "Warning the marker is located on unreasonable distance from the mesh >= 1.e10" << std::endl;
       }
@@ -299,7 +299,7 @@ namespace femus {
           MPI_Recv(&processorMarkerFlag[jproc], 1, MPI_UNSIGNED, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
         }
       }
-      
+
 
       // check if any process found the element
       unsigned sumFlag = 0;
@@ -424,7 +424,7 @@ namespace femus {
       }
       previousElem = currentElem;
 
-     // std::cout << previousElem << std::cout << std::flush;
+      // std::cout << previousElem << std::cout << std::flush;
 
       if(_elem == currentElem) {
         elementHasBeenFound = true;
@@ -456,7 +456,7 @@ namespace femus {
       //  std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
     }
 
-   // std::cout << "FINE SERIALE " << std::endl;
+    // std::cout << "FINE SERIALE " << std::endl;
 
     //END next element search
   }
@@ -613,14 +613,14 @@ namespace femus {
 //
       if(!insideHull) {
         nextElem = FastForward(currentElem, previousElem);
-	if(nextElem >=0 ){
-	  nextElementFound = true;
-	}
-	else{
-	  insideHull = true;
-	}
+        if(nextElem >= 0) {
+          nextElementFound = true;
+        }
+        else {
+          insideHull = true;
+        }
       }
-      if(insideHull){
+      if(insideHull) {
         std::vector<double> r(_dim, 0);   //coordinates of the intersection point between the line of the edges and the line that connects the marker and the face node
         for(unsigned k = 0; k < _dim; k++) {
           xv[k].resize(faceNodeNumber);
@@ -752,15 +752,15 @@ namespace femus {
 
     if(markerIsInElement == true) {
       nextElem = currentElem;
-     // std::cout << "The marker belongs to element " << currentElem << std::endl;
+      // std::cout << "The marker belongs to element " << currentElem << std::endl;
     }
 
     if(nextElementFound == true) {
-     // std::cout << "The marker does not belong to element " << currentElem << std::endl;
+      // std::cout << "The marker does not belong to element " << currentElem << std::endl;
     }
 
 
-   // std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
+    // std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
 
     return (nextElem >= 0) ? nextElem : UINT_MAX;
 
@@ -845,15 +845,15 @@ namespace femus {
       }
       if(!insideHull) {
         nextElem = FastForward(currentElem, previousElem);
-	if(nextElem >=0 ){
-	  nextElementFound = true;
-	}
-	else{
-	  insideHull = true;
-	}
+        if(nextElem >= 0) {
+          nextElementFound = true;
+        }
+        else {
+          insideHull = true;
+        }
       }
 
-      if(insideHull){
+      if(insideHull) {
         for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
 
           // std::cout << "iface = " << iface << std::endl;
@@ -1239,8 +1239,8 @@ namespace femus {
     unsigned step = 0.;
 
     if(_iproc == _mproc) {
-      if(_elem != UINT_MAX){
-	FindLocalCoordinates(solVType, aX, true);
+      if(_elem != UINT_MAX) {
+        FindLocalCoordinates(solVType, aX, true);
       }
       _K.resize(order);
       for(unsigned k = 0; k < order; k++) {
@@ -1252,7 +1252,7 @@ namespace femus {
       unsigned mprocOld = _mproc;
 
 
-     // std::cout << "INIZIA UN CICLO DI INTEGRAZIONE " << " " << " _elem da cui si parte = " << _elem << " " << " mprocOld = " << mprocOld << " " << "_mproc = " << _mproc <<  std::endl;
+      // std::cout << "INIZIA UN CICLO DI INTEGRAZIONE " << " " << " _elem da cui si parte = " << _elem << " " << " mprocOld = " << mprocOld << " " << "_mproc = " << _mproc <<  std::endl;
 
 
       unsigned previousElem;
@@ -1284,7 +1284,7 @@ namespace femus {
           step++;
           istep++;
 
-          if(istep < order) { 
+          if(istep < order) {
 
             for(unsigned i = 0; i < _dim; i++) {
               _x[i] = _x0[i];
@@ -1293,7 +1293,7 @@ namespace femus {
               }
             }
           }
-          else if(istep == order) {  
+          else if(istep == order) {
 
             for(unsigned i = 0; i < _dim; i++) {
               _x[i] = _x0[i];
@@ -1335,14 +1335,14 @@ namespace femus {
       }
       //   std::cout << step;
 
-    //  std::cout << "prima del bcast _elem = " << _elem << std::endl;
-      
+      //  std::cout << "prima del bcast _elem = " << _elem << std::endl;
+
       // all processes
       MPI_Bcast(& _elem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& step, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
 
 
-     // std::cout << "dopo il bcast _elem = " << _elem << std::endl;
+      // std::cout << "dopo il bcast _elem = " << _elem << std::endl;
 
       if(_elem == UINT_MAX) {
         //   std::cout << " the marker has been advected outside the domain " << std::endl;
@@ -1351,19 +1351,19 @@ namespace femus {
       else {
         _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
 
-      //  std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
+        //  std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
 
         if(_mproc != mprocOld) {
 
-       //   std::cout << "SON QUA previousElem = " << previousElem << std::endl;
+          //   std::cout << "SON QUA previousElem = " << previousElem << std::endl;
 
           GetElement(previousElem, mprocOld);  //fissato, WARNING QUESTO e' il problema, dovrebbe dire 724 invece dice 716
 
-        //  std::cout << "_elem = " << _elem << std::endl;
-        //  std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
+          //  std::cout << "_elem = " << _elem << std::endl;
+          //  std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
 
-	  if(_elem == UINT_MAX) break;
-	  
+          if(_elem == UINT_MAX) break;
+
           if(_mproc != mprocOld) {
             if(mprocOld == _iproc) {
               unsigned istep = step % order;
@@ -1394,8 +1394,8 @@ namespace femus {
             }
           }
           if(_mproc == _iproc) { //WARNING this now should be outside and was causing the problem with different processes
-	    FindLocalCoordinates(solVType, aX, true);
-	  }
+            FindLocalCoordinates(solVType, aX, true);
+          }
         }
       }
 //     std::cout << "step = " << step << std::endl;
@@ -1535,7 +1535,6 @@ namespace femus {
 //     }
     //END TO BE REMOVED
 
-
     short unsigned elemType = _mesh->GetElementType(_elem);
     if(pcElemUpdate) {
       unsigned nDofs = _mesh->GetElementDofNumber(_elem, solType);
@@ -1546,8 +1545,8 @@ namespace femus {
       for(unsigned k = 0; k < _dim; k++) {
         xv[k].resize(nDofs);
       }
-      
-     for(unsigned i = 0; i < nDofs; i++) {
+
+      for(unsigned i = 0; i < nDofs; i++) {
         unsigned iDof  = _mesh->GetSolutionDof(i, _elem, 2);    // global to global mapping between coordinates node and coordinate dof
         for(unsigned k = 0; k < _dim; k++) {
           xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
@@ -1567,7 +1566,7 @@ namespace femus {
       GetClosestPointInReferenceElement(xv, _x, elemType, _xi);
 
       //BEGIN TO BE REMOVED
-     // std::cout << "INITIAL GUESS" << std::endl;
+      // std::cout << "INITIAL GUESS" << std::endl;
       //for(unsigned i = 0; i < 3; i++) {
       //  std::cout << "_xi[" << i << "]= " << _xi[i] << std::endl;
       //}
@@ -1581,12 +1580,12 @@ namespace femus {
       }*/
       //END find initial guess
     }
-    
-   
+
+
 
     //BEGIN Inverse mapping loop
     for(unsigned j = 0; j < solType; j++) {
-      
+
       std::vector < double > phi;
       std::vector < std::vector < double > > gradPhi;
       bool convergence = false;
@@ -1601,9 +1600,9 @@ namespace femus {
 //    std::cout << "ED USCIAMO" << std::endl;
 
   }
-  
-  
-  
+
+
+
 }
 
 

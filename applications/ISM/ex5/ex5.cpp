@@ -227,8 +227,7 @@ int main(int argc, char** args) {
 
   std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
 
-
-
+  
 
   return 0;
 }
