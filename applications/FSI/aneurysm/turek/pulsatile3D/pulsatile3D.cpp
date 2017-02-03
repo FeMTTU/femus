@@ -111,7 +111,7 @@ int main(int argc, char ** args)
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 100000; //E=6000;
+  E = 60000; //E=6000;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
@@ -427,9 +427,9 @@ bool SetBoundaryConditionTurek(const std::vector < double > & x, const char name
   value = 0.;
 
   std::ifstream inf;
-  inf.open("./input/womersleyProfile64_R0p001_f84_60cms.txt");
+  inf.open("./input/womersleyProfile64_R0p001_f84.txt");
   if(!inf) {
-    std::cout << "velocity file ./input/womersleyProfile64_R0p001_f84_60cms.txt can not be opened\n";
+    std::cout << "velocity file ./input/womersleyProfile64_R0p001_f84.txt can not be opened\n";
     exit(0);
   }
    
