@@ -12,23 +12,82 @@
 using namespace femus;
 
 
-// 2D CASE with vorticity
-double pi = acos(-1.);
-
+// 2D CASE rigid rotation
 double InitalValueU(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
+  return -x[1];
 }
 
 double InitalValueV(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
+  return x[0];
 }
 
 double InitalValueW(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
   return 0.;
 }
+
+
+//3D CASE  rotation
+// double InitalValueU(const std::vector < double >& x) {
+//   return (-x[1]+x[2])/sqrt(3);
+// }
+//
+// double InitalValueV(const std::vector < double >& x) {
+//   return (x[0]-x[2])/sqrt(3);
+// }
+//
+// double InitalValueW(const std::vector < double >& x) {
+//   return (x[1]-x[0])/sqrt(3);
+// }
+
+
+// 2D CASE with vorticity
+// double pi = acos(-1.);
+// 
+// double InitalValueU(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return 0.;
+// }
+
+
+
+// 3D CASE with vorticity
+// double pi = acos(-1.);
+//
+// double InitalValueU(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return
+//     2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
+//     ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
+//     )* cos(time);
+// }
+//
+// double InitalValueV(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return
+//     2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
+//     ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
+//     )* cos(time);
+// }
+//
+// double InitalValueW(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return
+//     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
+//     ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
+//     )* cos(time);
+//
+//   return 0.;
+// }
 
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
@@ -195,12 +254,12 @@ int main(int argc, char** args) {
 
   for(unsigned k = 1; k <= n; k++) {
     //uncomment for  vortex test
-    mlSol.CopySolutionToOldSolution();
-    mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
-    mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
-    if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
+//     mlSol.CopySolutionToOldSolution();
+//     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
+//     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
+//     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
 
-    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), n, T / n, 4);
+    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 1, T / n, 4);
     linea.GetLine(line);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }
@@ -226,6 +285,14 @@ int main(int argc, char** args) {
   error = error / size;
 
   std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
+  
+//   for(unsigned j = 0; j < size; j++) {
+//     std::vector <double> trial(dim);
+//     trial = linea._particles[linea._printList[j]]->GetIprocMarkerCoordinates();
+//     for(unsigned i=0; i<dim; i++){
+//       std::cout << " x[" << j << "][" << i << "]=" << trial[i] << std::endl;
+//     }
+//   }
 
   
 

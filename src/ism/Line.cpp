@@ -541,11 +541,17 @@ namespace femus {
 
     //BEGIN declare marker instances
     unsigned step;
-    std::vector < double > x;
-    std::vector < double > x0;
-    std::vector < std::vector < double > > K;
+    std::vector < double > x(_dim);
+    std::vector < double > x0(_dim);
+    std::vector < std::vector < double > > K(order);
+    for(unsigned j = 0; j < order; j++) {
+      K[j].resize(_dim);
+    }
     //END
 
+    
+    
+    
     unsigned integrationIsOverCounter = 0; // when integrationIsOverCounter = _size (which is the number of particles) it means all particles have been advected;
     // when the step of each marker is = n * order and/or marker element is UINT_MAX we increase by one such counter
 
@@ -559,7 +565,8 @@ namespace femus {
 
     while(integrationIsOverCounter != _size) {
 
-      std::vector <unsigned> integrationIsOverCounterProc(_nprocs, 0);
+      MyVector <unsigned> integrationIsOverCounterProc(1, 0);
+      integrationIsOverCounterProc.stack();
 
       // std::cout << " BEGIN integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
@@ -570,7 +577,7 @@ namespace femus {
       //BEGIN LOCAL ADVECTION INSIDE IPROC
       for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
-        std::cout << "Number of markers = " << _markerOffset[_iproc + 1] - _markerOffset[_iproc] << " , " << "iMarker = " << iMarker << std::endl;
+        //std::cout << "Number of markers = " << _markerOffset[_iproc + 1] - _markerOffset[_iproc] << " , " << "iMarker = " << iMarker << std::endl;
 
 
         //BEGIN extraction of the marker instances
@@ -582,24 +589,27 @@ namespace femus {
         //END
 
 
-        for(unsigned i = 0; i < _dim; i++) {
-          std::cout << "Coordinates as we begin x[ " << i << " ] = " << x[_printList[i]] << std::endl;
-        }
+//         for(unsigned i = 0; i < _dim; i++) {
+//           std::cout << "Coordinates as we begin x[ " << i << " ] = " << x[_printList[i]] << std::endl;
+//         }
 
 
         bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
 
         if(markerOutsideDomain == false) {
 
-          std::cout << "currentElem =" << currentElem <<  " " << "initializedElem =" << initializedElem << std::endl;
+         // std::cout << "currentElem =" << currentElem <<  " " << "initializedElem =" << initializedElem << std::endl;
 
-          bool pcElemUpdate = (initializedElem == currentElem) ? false : true; //update only if the marker is in a different element
-          std::cout << " PRIMA DI FIND LOCAL COORDINATES pcElemUpdate =" << pcElemUpdate << std::endl;
-          _particles[iMarker]->FindLocalCoordinates(solVType, aX, pcElemUpdate);
-          std::cout << " PRIMA DI UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
-          initializedElem = currentElem;
+         
 
           while(step < n * order) {
+	    
+	    bool pcElemUpdate = (initializedElem == currentElem) ? false : true; //update only if the marker is in a different element
+	    //std::cout << " PRIMA DI FIND LOCAL COORDINATES pcElemUpdate =" << pcElemUpdate << std::endl;
+	    _particles[iMarker]->FindLocalCoordinates(solVType, aX, pcElemUpdate);
+	    //std::cout << " PRIMA DI UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
+	    initializedElem = currentElem;
+	    
 
             unsigned tstep = step / order;
             unsigned istep = step % order;
@@ -612,9 +622,9 @@ namespace femus {
               }
             }
 
-            std::cout << " PRIMA DI  UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
-            _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV, phi, true); // we put pcElemUpdate instead of true but it wasn't running
-            std::cout << " DOPO UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
+            //std::cout << " PRIMA DI  UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
+            _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); // we put pcElemUpdate instead of true but it wasn't running
+            //std::cout << " DOPO UPDATE VELOCITY pcElemUpdate =" << pcElemUpdate << std::endl;
             pcElemUpdate = false;
 
             double s = (tstep + _c[order - 1][istep]) / n;
@@ -695,21 +705,19 @@ namespace femus {
       }
       //END LOCAL ADVECTION INSIDE IPROC
 
-
-
       //std::cout << "PRIMA integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
-
       for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
-        MPI_Bcast(& integrationIsOverCounterProc[jproc], 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
-        integrationIsOverCounter += integrationIsOverCounterProc[jproc];
+	integrationIsOverCounterProc.broadcast(jproc);
+	integrationIsOverCounter += integrationIsOverCounterProc[jproc];
+	integrationIsOverCounterProc.clearBroadcast();
       }
 
       //std::cout << "DOPO integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
       //BEGIN exchange on information
 
-      std::cout << " ----------------------------------PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
+      //std::cout << " ----------------------------------PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
       for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
         for(unsigned iMarker = _markerOffset[jproc]; iMarker < _markerOffset[jproc + 1]; iMarker++) {
           unsigned elem =  _particles[iMarker]->GetMarkerElement();
@@ -768,7 +776,7 @@ namespace femus {
         }
       }
 
-      std::cout << " ----------------------------------END PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
+      //std::cout << " ----------------------------------END PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
 
       //END exchange of information
 
@@ -777,18 +785,18 @@ namespace femus {
 //       std::vector<double> tr;
 //       unsigned step;
 //       for(unsigned j = 0; j < _size; j++) {
-//         _particles[_printList[j]]->GetMarkerCoordinates(tr);
-//         step = _particles[_printList[j]]->GetIprocMarkerStep();
+//         _particles[j]->GetMarkerCoordinates(tr);
+//         step = _particles[j]->GetIprocMarkerStep();
 //         for(unsigned i = 0; i < _dim; i++) {
 //           std::cout << "x[ " << j << " ][ " << i << " ] = " << tr[i] ;
 //         }
-//         tr = _particles[_printList[j]]->GetIprocMarkerOldCoordinates();
+//         tr = _particles[j]->GetIprocMarkerOldCoordinates();
 //         for(unsigned i = 0; i < _dim; i++) {
 //           std::cout << "x0[ " << j << " ][ " << i << " ] = " << tr[i] ;
 //         }
-//
-//
-//         std::cout << " step = " << step << "currentElem = " << _particles[_printList[j]]->GetMarkerElement() << " previousElem = " <<  _particles[_printList[j]]->GetIprocMarkerPreviousElement() << std::endl;
+// 
+// 
+//         std::cout << " step = " << step << "currentElem = " << _particles[j]->GetMarkerElement() << " previousElem = " <<  _particles[j]->GetIprocMarkerPreviousElement() << std::endl;
 //       }
 //       //END to be removed
 
@@ -796,18 +804,18 @@ namespace femus {
 
 //       //BEGIN to removed
 //       for(unsigned j = 0; j < _size; j++) {
-//         _particles[_printList[j]]->GetMarkerCoordinates(tr);
-//         step = _particles[_printList[j]]->GetIprocMarkerStep();
+//         _particles[j]->GetMarkerCoordinates(tr);
+//         step = _particles[j]->GetIprocMarkerStep();
 //         for(unsigned i = 0; i < _dim; i++) {
 //           std::cout << "x[ " << j << " ][ " << i << " ] = " << tr[i] ;
 //         }
-//         tr = _particles[_printList[j]]->GetIprocMarkerOldCoordinates();
+//         tr = _particles[j]->GetIprocMarkerOldCoordinates();
 //         for(unsigned i = 0; i < _dim; i++) {
 //           std::cout << "x0[ " << j << " ][ " << i << " ] = " << tr[i] ;
 //         }
 //         std::cout << " step = " << step << "currentElem = " << _particles[j]->GetMarkerElement() << " previousElem = " <<  _particles[j]->GetIprocMarkerPreviousElement() << std::endl;
 //       }
-//
+// 
 //       //END to be remove
 
       // std::cout << " END integrationIsOverCounter = " << integrationIsOverCounter <<  std::endl;

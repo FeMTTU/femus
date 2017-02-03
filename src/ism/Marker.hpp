@@ -81,7 +81,8 @@ namespace femus {
       }
 
       unsigned GetMarkerProc() {
-        return _mesh->IsdomBisectionSearch(_elem , 3);
+	_mproc = (_elem == UINT_MAX)? 0 : _mesh->IsdomBisectionSearch(_elem , 3);
+        return _mproc;
       }
 
 //       void GetMarker_x0Line(std::vector<double> &x0) {
@@ -144,6 +145,7 @@ namespace femus {
       }
 
       void InitializeX0andK(const unsigned &order) {
+	_xi.resize(_dim);
         _x0.resize(_dim);
         _K.resize(order);
         for(unsigned j = 0; j < order; j++) {

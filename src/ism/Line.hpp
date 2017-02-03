@@ -53,9 +53,9 @@ namespace femus {
     private:
       std::vector < std::vector < std::vector < double > > > _line;
 
-      std::vector < Marker*> _particles;
+      std::vector < Marker*> _particles;  
       std::vector < unsigned > _markerOffset;
-      std::vector < unsigned > _printList;
+      std::vector < unsigned > _printList; 
       unsigned _size;
       unsigned _dim;
 
