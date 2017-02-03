@@ -904,7 +904,9 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   vol->close();
 
   double p2_l2 = p2->l1_norm();
+  p2_l2 = sqrt(p2_l2);
   double v2_l2 = v2->l1_norm();
+  v2_l2 = sqrt(v2_l2);
   double VOL0 = vol0->l1_norm();
   double VOL = vol->l1_norm();
 
@@ -913,8 +915,8 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   std::cout << " vol0 = " << VOL0 << std::endl;
   std::cout << " vol = " << VOL << std::endl;
   std::cout << " (vol-vol0)/vol0 = " << (VOL-VOL0) / VOL0 << std::endl;
-  std::cout << " p_l2 norm / sqrt(vol) = " << sqrt(p2_l2/VOL)  << std::endl;
-  std::cout << " v_l2 norm / sqrt(vol) = " << sqrt(v2_l2/VOL)  << std::endl;
+  std::cout << " p_l2 norm / vol = " << p2_l2/VOL  << std::endl;
+  std::cout << " v_l2 norm / vol = " << v2_l2/VOL  << std::endl;
   
   data[1] = VOL0;
   data[2] = VOL;
