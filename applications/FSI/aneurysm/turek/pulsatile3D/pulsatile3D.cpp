@@ -427,9 +427,9 @@ bool SetBoundaryConditionTurek(const std::vector < double > & x, const char name
   value = 0.;
 
   std::ifstream inf;
-  inf.open("./input/womersleyProfile64_R0p001_f84.txt");
+  inf.open("./input/womersleyProfile_unPoPiuAlto.txt");
   if(!inf) {
-    std::cout << "velocity file ./input/womersleyProfile64_R0p001_f84.txt can not be opened\n";
+    std::cout << "velocity file ./input/womersleyProfile_unPoPiuAlto.txt can not be opened\n";
     exit(0);
   }
    
@@ -463,7 +463,7 @@ bool SetBoundaryConditionTurek(const std::vector < double > & x, const char name
     }
     else if(2 == facename) {
       test = 0;
-      value = 1000 * ramp;
+      value = 11335 * ramp;
       //value = (10000 + 2500 * sin(2*PI*time)/period) * ramp;      
     }
     else if(5 == facename) {
