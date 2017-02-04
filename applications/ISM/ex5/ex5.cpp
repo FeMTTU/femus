@@ -42,17 +42,17 @@ double InitalValueW(const std::vector < double >& x) {
 
 // 2D CASE with vorticity
 // double pi = acos(-1.);
-// 
+//
 // double InitalValueU(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
 // }
-// 
+//
 // double InitalValueV(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
 // }
-// 
+//
 // double InitalValueW(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return 0.;
@@ -258,7 +258,6 @@ int main(int argc, char** args) {
 //     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
 //     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
 //     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-    std::cout << " ------------------------------------------------------------------------------------------------------------- ADVECTION NUMBER " << k << std::endl;
     linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 1, T / n, 1);
     linea.GetLine(line);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
@@ -285,7 +284,7 @@ int main(int argc, char** args) {
   error = error / size;
 
   std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;
-  
+
 //   for(unsigned j = 0; j < size; j++) {
 //     std::vector <double> trial(dim);
 //     trial = linea._particles[linea._printList[j]]->GetIprocMarkerCoordinates();
@@ -294,7 +293,7 @@ int main(int argc, char** args) {
 //     }
 //   }
 
-  
+
 
   return 0;
 }
