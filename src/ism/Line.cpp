@@ -732,10 +732,6 @@ namespace femus {
           MPI_Bcast(& elem, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
           _particles[iMarker]->SetMarkerElement(elem);
 
-          unsigned step =  _particles[iMarker]->GetIprocMarkerStep();
-          MPI_Bcast(& step, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
-          _particles[iMarker]->SetIprocMarkerStep(step);
-
           if(elem != UINT_MAX) {  // if it is outside jproc, ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but not outside the domain
             unsigned mproc = _particles[iMarker]->GetMarkerProc();
             _particles[iMarker]->SetMarkerProc(mproc);
@@ -749,6 +745,10 @@ namespace femus {
               unsigned mproc = _particles[iMarker]->GetMarkerProc();
               if(mproc != jproc) {
                 if(jproc == _iproc) {
+
+                  unsigned step =  _particles[iMarker]->GetIprocMarkerStep();
+                  MPI_Send(& step, 1, MPI_UNSIGNED, mproc, order + 1, PETSC_COMM_WORLD);
+
                   unsigned istep = step % order;
                   if(istep != 0) {
                     K = _particles[iMarker]->GetIprocMarkerK();
@@ -758,13 +758,17 @@ namespace femus {
                     x0 = _particles[iMarker]->GetIprocMarkerOldCoordinates();
                     MPI_Send(&x0[0], _dim, MPI_DOUBLE, mproc, order , PETSC_COMM_WORLD);
                   }
-
                   _particles[iMarker]->FreeXiX0andK();
-                  std::vector < std::vector < std::vector < double > > >().swap(aX);
 
                 }
                 else if(mproc == _iproc) {
+
                   _particles[iMarker]->InitializeX0andK(order);
+
+                  unsigned step;
+                  MPI_Recv(& step, 1, MPI_UNSIGNED, jproc, order + 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+                  _particles[iMarker]->SetIprocMarkerStep(step);
+
                   unsigned istep = step % order;
                   if(istep != 0) {
                     for(int i = 0; i < order; i++) {
@@ -773,37 +777,24 @@ namespace femus {
                     }
                     MPI_Recv(&x0[0], _dim, MPI_DOUBLE, jproc, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                     _particles[iMarker]->SetIprocMarkerOldCoordinates(x0);
+
                   }
                 }
               }
-//               if(mproc == _iproc) { //WARNING this now should be outside and was causing the problem with different processes
-//                 _particles[iMarker]-> FindLocalCoordinates(solVType, aX, true);
-//               }
             }
           }
-
-
-
-
-          else {
-                    if(jproc != 0) {
-              if(jproc == _iproc) {
-                x = _particles[iMarker]->GetIprocMarkerCoordinates();
-                MPI_Send(&x[0], _dim, MPI_DOUBLE, 0, 1 , PETSC_COMM_WORLD);
-                _particles[iMarker]->FreeXiX0andK();
-                std::vector < std::vector < std::vector < double > > >().swap(aX);
-              }
-              else if(_iproc == 0) {
-                _particles[iMarker]->InitializeX();
-                MPI_Recv(&x[0], _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-                _particles[iMarker]->SetIprocMarkerCoordinates(x);
-              }
+          else if(jproc != 0) { // elem = UINT_MAX, but not yet in jproc = 0
+            if(jproc == _iproc) {
+              x = _particles[iMarker]->GetIprocMarkerCoordinates();
+              MPI_Send(&x[0], _dim, MPI_DOUBLE, 0, 1 , PETSC_COMM_WORLD);
+              _particles[iMarker]->FreeXiX0andK();
+            }
+            else if(_iproc == 0) {
+              _particles[iMarker]->InitializeX();
+              MPI_Recv(&x[0], _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+              _particles[iMarker]->SetIprocMarkerCoordinates(x);
             }
           }
-
-
-
-
         }
       }
 
