@@ -390,15 +390,15 @@ namespace femus {
 //       std::cout << "_markerOffset[" << iproc << "]= " << _markerOffset[iproc] << std::endl;
 //     }
 
-    std::cout << "-----------------------------------------  UPDATE LINE  BY PROCS  -----------------------------------------" << std::endl;
-    for(unsigned i = 0; i < _size; i++) {
-      unsigned proc;
-      unsigned elem;
-      proc = _particles[i]->GetMarkerProc();
-      elem = _particles[i]->GetMarkerElement();
-      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
-                << "Element: " << elem << " " << std::endl;
-    }
+//     std::cout << "-----------------------------------------  UPDATE LINE  BY PROCS  -----------------------------------------" << std::endl;
+//     for(unsigned i = 0; i < _size; i++) {
+//       unsigned proc;
+//       unsigned elem;
+//       proc = _particles[i]->GetMarkerProc();
+//       elem = _particles[i]->GetMarkerElement();
+//       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+//                 << "Element: " << elem << " " << std::endl;
+//     }
 
 
 
@@ -504,21 +504,21 @@ namespace femus {
     std::vector < unsigned > ().swap(printList);
 
 
-    std::cout << "-----------------------------------------  UPDATE LINE  BY ELEMENTS-----------------------------------------" << std::endl;
-    for(unsigned i = 0; i < _size; i++) {
-      unsigned proc;
-      unsigned elem;
-      //std::vector <double> chiappe;
-      //chiappe = _particles[_printList[i]]->GetIprocMarkerCoordinates();
-      proc = _particles[i]->GetMarkerProc();
-      elem = _particles[i]->GetMarkerElement();
-      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
-                << "Element: " << elem << " " <<  " "  ;
-//       for(unsigned j = 0; j < _dim; j++) {
-//         std::cout << "x[" << j << "]=" << chiappe[j] << " " ;
-//       }
-      std::cout << std::endl;
-    }
+//     std::cout << "-----------------------------------------  UPDATE LINE  BY ELEMENTS-----------------------------------------" << std::endl;
+//     for(unsigned i = 0; i < _size; i++) {
+//       unsigned proc;
+//       unsigned elem;
+//       //std::vector <double> chiappe;
+//       //chiappe = _particles[_printList[i]]->GetIprocMarkerCoordinates();
+//       proc = _particles[i]->GetMarkerProc();
+//       elem = _particles[i]->GetMarkerElement();
+//       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+//                 << "Element: " << elem << " " <<  " "  ;
+// //       for(unsigned j = 0; j < _dim; j++) {
+// //         std::cout << "x[" << j << "]=" << chiappe[j] << " " ;
+// //       }
+//       std::cout << std::endl;
+//     }
 
 
   }
@@ -594,11 +594,11 @@ namespace femus {
         //END
 
 
-        std::cout << "Particle: " << iMarker << " currentElem = " << currentElem << " ";
-        for(unsigned i = 0; i < _dim; i++) {
-          std::cout << " x[" << i << "]=" << x[i] << " " ;
-        }
-        std::cout << std::endl;
+//         std::cout << "Particle: " << iMarker << " currentElem = " << currentElem << " ";
+//         for(unsigned i = 0; i < _dim; i++) {
+//           std::cout << " x[" << i << "]=" << x[i] << " " ;
+//         }
+//         std::cout << std::endl;
 
         bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
 
@@ -786,8 +786,7 @@ namespace femus {
 
 
           else {
-            std::cout << " AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;
-            if(jproc != 0) {
+                    if(jproc != 0) {
               if(jproc == _iproc) {
                 x = _particles[iMarker]->GetIprocMarkerCoordinates();
                 MPI_Send(&x[0], _dim, MPI_DOUBLE, 0, 1 , PETSC_COMM_WORLD);

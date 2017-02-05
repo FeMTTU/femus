@@ -22,6 +22,7 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 #include "Marker.hpp"
+#include "Line.hpp"
 
 
 using namespace femus;
@@ -223,9 +224,25 @@ int main(int argc, char** args) {
 
 
   //unsigned pSize = 7;
-  unsigned pSize = 900;
+  unsigned size = 900;
 
-  std::vector < Marker*> particle(pSize);
+  std::vector < std::vector < double > > x; // marker
+  std::vector < MarkerType > markerType;
+
+  x.resize(size);
+  markerType.resize(size);
+
+  std::vector < std::vector < std::vector < double > > > line;
+  std::vector < std::vector < std::vector < double > > > line0;
+  line.resize(1);
+  line[0].resize(size + 1);
+  line0.resize(1);
+  line0[0].resize(size + 1);
+
+  for(unsigned j = 0; j < size; j++) {
+    x[j].assign(dim, 0.);
+    markerType[j] = VOLUME;
+  }
 
 
 //   for(unsigned j = 0; j < pSize; j++) {
@@ -236,67 +253,48 @@ int main(int argc, char** args) {
 //     particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels-1), 2, true);
 //   }
 
-  
- clock_t start_time = clock();
- clock_t init_time = clock();
+
+  clock_t start_time = clock();
+  clock_t init_time = clock();
   //BEGIN INITIALIZE PARTICLES
 
   double pi = acos(-1.);
+  unsigned counter = 0;
   for(unsigned k = 1; k < 10 ; k++) {
     for(unsigned j = 0; j < 100; j++) {
-      std::vector < double > x(3);
-      x[0] = 0.; 
-      x[1] = 0.1 * k * sin(2.*pi / 100 * j);
-      x[2] = 0.1 * k * cos(2.*pi / 100 * j);
-      particle[100 * (k - 1) + j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+      x[counter][0] = 0.;
+      x[counter][1] = 0.1 * k * sin(2.*pi / 100 * j);
+      x[counter][2] = 0.1 * k * cos(2.*pi / 100 * j);
+      counter++;
     }
   }
 
+  Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), 2);
+
+  linea.GetLine(line0);
+  PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
+
   //END INITIALIZE PARTICLES
- 
-  
 
   double T = 160;
   unsigned n  = 80;
 
-  std::vector < std::vector < std::vector < double > > > xn(pSize);
-
-  for(unsigned j = 0; j < pSize; j++) {
-    xn[j].resize(2);
-    particle[j]->GetMarkerCoordinates(xn[j][0]);
-    xn[j][1] = xn[j][0];
-    //std::cout<< j <<" "<< xn[j][0][0]<<" "<< xn[j][0][1]<<" "<< xn[j][0][2] << std::endl ;
-  }
-//   xn[pSize].resize(2);
-//   particle[0]->GetMarkerCoordinates(xn[pSize][0]);
-//   xn[pSize][1]=xn[pSize][0];
-  PrintLine(DEFAULT_OUTPUTDIR, xn, true, 1);
-
-  std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
-           << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+    std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
+            << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
   
 
   clock_t advection_time = clock();
   for(unsigned k = 0; k < n; k++) {
-    for(unsigned j = 0; j < pSize; j++) {
-      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), n, T / n);
-      xn[j].resize(k + 3);
-      particle[j]->GetMarkerCoordinates(xn[j][k + 2]);
-    }
-//     xn[pSize].resize(k+3);
-//     particle[0]->GetMarkerCoordinates(xn[pSize][k+2]);
-    PrintLine(DEFAULT_OUTPUTDIR, xn, true, k + 2);
+    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n, 4);
+    linea.GetLine(line);
+    PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }
 
-   std::cout << std::endl << " advection in: " << std::setw(11) << std::setprecision(6) << std::fixed
+  std::cout << std::endl << " advection in: " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - advection_time)) / CLOCKS_PER_SEC << " s" << std::endl;
-  
+
   std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
-
-  for(unsigned j = 0; j < pSize; j++) {
-    delete particle[j];
-  }
 
   return 0;
 }

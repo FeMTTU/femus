@@ -13,46 +13,46 @@ using namespace femus;
 
 
 // 2D CASE rigid rotation
-double InitalValueU(const std::vector < double >& x) {
-  return -x[1];
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  return x[0];
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  return 0.;
-}
+// double InitalValueU(const std::vector < double >& x) {
+//   return -x[1];
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   return x[0];
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   return 0.;
+// }
 
 
 //3D CASE  rotation
-// double InitalValueU(const std::vector < double >& x) {
-//   return (-x[1]+x[2])/sqrt(3);
-// }
-//
-// double InitalValueV(const std::vector < double >& x) {
-//   return (x[0]-x[2])/sqrt(3);
-// }
-//
-// double InitalValueW(const std::vector < double >& x) {
-//   return (x[1]-x[0])/sqrt(3);
-// }
+double InitalValueU(const std::vector < double >& x) {
+  return (-x[1]+x[2])/sqrt(3);
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  return (x[0]-x[2])/sqrt(3);
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  return (x[1]-x[0])/sqrt(3);
+}
 
 
 // 2D CASE with vorticity
 // double pi = acos(-1.);
-//
+// 
 // double InitalValueU(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return 2. * sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) * sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) * cos(time);
 // }
-//
+// 
 // double InitalValueV(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return -2. * sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) * sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) * cos(time);
 // }
-//
+// 
 // double InitalValueW(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return 0.;
@@ -62,7 +62,7 @@ double InitalValueW(const std::vector < double >& x) {
 
 // 3D CASE with vorticity
 // double pi = acos(-1.);
-//
+// 
 // double InitalValueU(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return
@@ -70,7 +70,7 @@ double InitalValueW(const std::vector < double >& x) {
 //     ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
 //     )* cos(time);
 // }
-//
+// 
 // double InitalValueV(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return
@@ -78,14 +78,14 @@ double InitalValueW(const std::vector < double >& x) {
 //     ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
 //     )* cos(time);
 // }
-//
+// 
 // double InitalValueW(const std::vector < double >& x) {
 //   double time = (x.size() == 4) ? x[3] : 0.;
 //   return
 //     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
 //     ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
 //     )* cos(time);
-//
+// 
 //   return 0.;
 // }
 
@@ -110,8 +110,8 @@ int main(int argc, char** args) {
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  //unsigned numberOfUniformLevels = 3; //for refinement in 3D
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 3; //for refinement in 3D
+  //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   std::vector < std::string > variablesToBePrinted;
 
@@ -131,8 +131,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/tri2.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeMixed.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/test2D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeTet.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
@@ -244,7 +244,7 @@ int main(int argc, char** args) {
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
   double T = 2 * acos(-1.);
-  unsigned n = 30;
+  unsigned n = 20;
 
   std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
@@ -258,7 +258,7 @@ int main(int argc, char** args) {
 //     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
 //     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
 //     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 1, T / n, 1);
+    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n, 4);
     linea.GetLine(line);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }
