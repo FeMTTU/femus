@@ -394,8 +394,8 @@ namespace femus {
     for(unsigned i = 0; i < _size; i++) {
       unsigned proc;
       unsigned elem;
-     proc = _particles[i]->GetMarkerProc();
-     elem = _particles[i]->GetMarkerElement();
+      proc = _particles[i]->GetMarkerProc();
+      elem = _particles[i]->GetMarkerElement();
       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
                 << "Element: " << elem << " " << std::endl;
     }
@@ -513,7 +513,7 @@ namespace femus {
       proc = _particles[i]->GetMarkerProc();
       elem = _particles[i]->GetMarkerElement();
       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
-                << "Element: " << elem << " " << "_printList[ " << i << "] = " << _printList[i] << " "  ;
+                << "Element: " << elem << " " <<  " "  ;
 //       for(unsigned j = 0; j < _dim; j++) {
 //         std::cout << "x[" << j << "]=" << chiappe[j] << " " ;
 //       }
@@ -594,8 +594,9 @@ namespace femus {
         //END
 
 
+        std::cout << "Particle: " << iMarker << " currentElem = " << currentElem << " ";
         for(unsigned i = 0; i < _dim; i++) {
-          std::cout << "Particle: " << iMarker << " x[" << i << "]=" << x[i] << " currentElem = " << currentElem << " " ;
+          std::cout << " x[" << i << "]=" << x[i] << " " ;
         }
         std::cout << std::endl;
 
@@ -667,7 +668,7 @@ namespace femus {
             _particles[iMarker]->SetIprocMarkerK(K);
 
             _particles[iMarker]->GetElementSerial(currentElem);
-            currentElem = _particles[iMarker]->GetMarkerElement(); // probablilmente non c'e' ne bisogno
+            currentElem = _particles[iMarker]->GetMarkerElement(); // probabilmente non c'e' ne bisogno
 
             unsigned markProc = _particles[iMarker]->GetMarkerProc();
 
@@ -735,7 +736,7 @@ namespace femus {
           MPI_Bcast(& step, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
           _particles[iMarker]->SetIprocMarkerStep(step);
 
-          if(elem != UINT_MAX) {  // if it is outside jproc //TODO ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but no outside the domain
+          if(elem != UINT_MAX) {  // if it is outside jproc, ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but not outside the domain
             unsigned mproc = _particles[iMarker]->GetMarkerProc();
             _particles[iMarker]->SetMarkerProc(mproc);
             if(mproc != jproc) {
@@ -743,7 +744,7 @@ namespace femus {
               _particles[iMarker]->GetElement(prevElem, jproc);
               _particles[iMarker]->SetIprocMarkerPreviousElement(prevElem);
             }
-            elem = _particles[iMarker]->GetMarkerElement(); //TODO don't we have to resend elem with a broadcast? we need it for update line
+            elem = _particles[iMarker]->GetMarkerElement();
             if(elem != UINT_MAX) {  // if it is not outside the domain
               unsigned mproc = _particles[iMarker]->GetMarkerProc();
               if(mproc != jproc) {
@@ -780,6 +781,30 @@ namespace femus {
 //               }
             }
           }
+
+
+
+
+          else {
+            std::cout << " AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;
+            if(jproc != 0) {
+              if(jproc == _iproc) {
+                x = _particles[iMarker]->GetIprocMarkerCoordinates();
+                MPI_Send(&x[0], _dim, MPI_DOUBLE, 0, 1 , PETSC_COMM_WORLD);
+                _particles[iMarker]->FreeXiX0andK();
+                std::vector < std::vector < std::vector < double > > >().swap(aX);
+              }
+              else if(_iproc == 0) {
+                _particles[iMarker]->InitializeX();
+                MPI_Recv(&x[0], _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+                _particles[iMarker]->SetIprocMarkerCoordinates(x);
+              }
+            }
+          }
+
+
+
+
         }
       }
 

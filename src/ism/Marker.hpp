@@ -81,7 +81,7 @@ namespace femus {
       }
 
       unsigned GetMarkerProc() {
-	_mproc = (_elem == UINT_MAX)? 0 : _mesh->IsdomBisectionSearch(_elem , 3);
+        _mproc = (_elem == UINT_MAX) ? 0 : _mesh->IsdomBisectionSearch(_elem , 3);
         return _mproc;
       }
 
@@ -122,7 +122,7 @@ namespace femus {
       std::vector< double > GetIprocMarkerCoordinates() {
         return _x;
       }
-      
+
       std::vector< double > GetIprocMarkerOldCoordinates() {
         return _x0;
       }
@@ -145,12 +145,16 @@ namespace femus {
       }
 
       void InitializeX0andK(const unsigned &order) {
-	_xi.resize(_dim);
+        _xi.resize(_dim);
         _x0.resize(_dim);
         _K.resize(order);
         for(unsigned j = 0; j < order; j++) {
           _K[j].assign(_dim, 0.);
         }
+      }
+
+      void InitializeX() {
+        _x.resize(_dim);
       }
 
       void FreeXiX0andK() {
@@ -178,14 +182,14 @@ namespace femus {
         }
       }
 
-      unsigned GetIprocMarkerPreviousElement(){
-	return _previousElem;
+      unsigned GetIprocMarkerPreviousElement() {
+        return _previousElem;
       }
-      
-      void SetIprocMarkerPreviousElement( const unsigned &previousElem){
-	_previousElem = previousElem;
+
+      void SetIprocMarkerPreviousElement(const unsigned &previousElem) {
+        _previousElem = previousElem;
       }
-      
+
       void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
       void GetElementSerial(unsigned &initialElem);
       void GetElement(unsigned &previousElem, const unsigned &previousMproc);
