@@ -1235,7 +1235,7 @@ namespace femus {
     double h = T / n;
     bool integrationIsOver = (_elem != UINT_MAX) ? false : true;
 
-    unsigned order = 4;
+    unsigned order = 1;
     unsigned step = 0.;
 
     if(_iproc == _mproc) {

@@ -144,7 +144,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   dim = mlMsh.GetDimension();
 
-  numberOfUniformLevels = 3;
+  numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
@@ -232,12 +232,7 @@ int main(int argc, char** args) {
   x.resize(size);
   markerType.resize(size);
 
-  std::vector < std::vector < std::vector < double > > > line;
-  std::vector < std::vector < std::vector < double > > > line0;
-  line.resize(1);
-  line[0].resize(size + 1);
-  line0.resize(1);
-  line0[0].resize(size + 1);
+  std::vector < std::vector < std::vector < double > > > streamline(size);
 
   for(unsigned j = 0; j < size; j++) {
     x[j].assign(dim, 0.);
@@ -271,23 +266,23 @@ int main(int argc, char** args) {
 
   Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), 2);
 
-  linea.GetLine(line0);
-  PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
+  linea.GetStreamLine(streamline, 0);
+  linea.GetStreamLine(streamline, 1);
+  PrintLine(DEFAULT_OUTPUTDIR, streamline, true, 0);
 
   //END INITIALIZE PARTICLES
 
   double T = 160;
   unsigned n  = 80;
 
-    std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
+  std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
-  
 
   clock_t advection_time = clock();
   for(unsigned k = 0; k < n; k++) {
     linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n, 4);
-    linea.GetLine(line);
-    PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
+    linea.GetStreamLine(streamline, k + 1);
+    PrintLine(DEFAULT_OUTPUTDIR, streamline, true, k + 1);
   }
 
   std::cout << std::endl << " advection in: " << std::setw(11) << std::setprecision(6) << std::fixed

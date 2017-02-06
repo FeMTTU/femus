@@ -39,19 +39,24 @@ namespace femus {
            Mesh *mesh, const unsigned & solType);
       ~Line();
 
-      void GetLine(std::vector < std::vector < std::vector < double > > > &line) {
-        line.resize(1);
-        line[0].resize(_size + 1);
-        line =  _line;
+      void GetLine(std::vector < std::vector < double > > &line) {
+        line = _line;
       }
 
+      void GetStreamLine(std::vector < std::vector < std::vector < double > > > &line, const unsigned &step) {
+	for(unsigned i=0; i<_size; i++){
+	  line[i].resize(step+1);
+	  line[i][step] = _line[i];
+	}
+      }
+      
       void AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order);
 
       void UpdateLine();
 
 
     private:
-      std::vector < std::vector < std::vector < double > > > _line;
+      std::vector < std::vector < double > > _line;
 
       std::vector < Marker*> _particles;  
       std::vector < unsigned > _markerOffset;

@@ -139,7 +139,6 @@ int main(int argc, char** args) {
 
   unsigned dim = mlMsh.GetDimension();
 
-
 //   unsigned size = 100;
 //   std::vector < std::vector < double > > x; // marker
 //   std::vector < MarkerType > markerType;
@@ -203,7 +202,6 @@ int main(int argc, char** args) {
   vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
-
   clock_t start_time = clock();
   clock_t init_time = clock();
 
@@ -214,18 +212,13 @@ int main(int argc, char** args) {
   x.resize(size);
   markerType.resize(size);
 
-  std::vector < std::vector < std::vector < double > > > line;
-  std::vector < std::vector < std::vector < double > > > line0;
-  line.resize(1);
-  line[0].resize(size + 1);
-  line0.resize(1);
-  line0[0].resize(size + 1);
+  std::vector < std::vector < std::vector < double > > > line(1);
+  std::vector < std::vector < std::vector < double > > > line0(1);
 
   for(unsigned j = 0; j < size; j++) {
     x[j].assign(dim, 0.);
     markerType[j] = VOLUME;
   }
-
 
   double pi = acos(-1.);
   for(unsigned j = 0; j < size; j++) {
@@ -236,11 +229,9 @@ int main(int argc, char** args) {
     }
   }
 
-
   Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType);
 
-
-  linea.GetLine(line0);
+  linea.GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
   double T = 2 * acos(-1.);
@@ -258,8 +249,8 @@ int main(int argc, char** args) {
 //     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
 //     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
 //     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 1, T / n, 1);
-    linea.GetLine(line);
+    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n, 4);
+    linea.GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }
 
@@ -279,7 +270,6 @@ int main(int argc, char** args) {
     }
     error += sqrt(tempError);
   }
-
 
   error = error / size;
 
