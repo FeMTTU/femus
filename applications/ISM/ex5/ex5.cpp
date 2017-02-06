@@ -258,7 +258,7 @@ int main(int argc, char** args) {
 //     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
 //     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
 //     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n, 4);
+    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 1, T / n, 1);
     linea.GetLine(line);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }

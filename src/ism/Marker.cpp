@@ -444,17 +444,17 @@ namespace femus {
         }
       }
     }
+    //previousElem = _elem;
 
-
-    if(elementHasBeenFound) {
-      //  std::cout << " The marker belongs to element " << _elem << std::endl;
-    }
-    else if(pointIsOutsideTheDomain) {
-      //  std::cout << " The marker does not belong to this domain" << std::endl;
-    }
-    else if(pointIsOutsideThisProcess) {
-      //  std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
-    }
+//     if(elementHasBeenFound) {
+//       //  std::cout << " The marker belongs to element " << _elem << std::endl;
+//     }
+//     else if(pointIsOutsideTheDomain) {
+//       //  std::cout << " The marker does not belong to this domain" << std::endl;
+//     }
+//     else if(pointIsOutsideThisProcess) {
+//       //  std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
+//     }
 
     // std::cout << "FINE SERIALE " << std::endl;
 
