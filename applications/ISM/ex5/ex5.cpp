@@ -27,17 +27,17 @@ using namespace femus;
 
 
 //3D CASE  rotation
-double InitalValueU(const std::vector < double >& x) {
-  return (-x[1]+x[2])/sqrt(3);
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  return (x[0]-x[2])/sqrt(3);
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  return (x[1]-x[0])/sqrt(3);
-}
+// double InitalValueU(const std::vector < double >& x) {
+//   return (-x[1]+x[2])/sqrt(3);
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   return (x[0]-x[2])/sqrt(3);
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   return (x[1]-x[0])/sqrt(3);
+// }
 
 
 // 2D CASE with vorticity
@@ -61,33 +61,33 @@ double InitalValueW(const std::vector < double >& x) {
 
 
 // 3D CASE with vorticity
-// double pi = acos(-1.);
-// 
-// double InitalValueU(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
-//     ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
-//     )* cos(time);
-// }
-// 
-// double InitalValueV(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
-//     ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
-//     )* cos(time);
-// }
-// 
-// double InitalValueW(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
-//     ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
-//     )* cos(time);
-// 
-//   return 0.;
-// }
+double pi = acos(-1.);
+
+double InitalValueU(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
+    ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
+    )* cos(time);
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
+    ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
+    )* cos(time);
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
+    ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
+    )* cos(time);
+
+  return 0.;
+}
 
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
@@ -245,11 +245,11 @@ int main(int argc, char** args) {
 
   for(unsigned k = 1; k <= n; k++) {
     //uncomment for  vortex test
-//     mlSol.CopySolutionToOldSolution();
-//     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
-//     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
-//     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n, 4);
+    mlSol.CopySolutionToOldSolution();
+    mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
+    mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
+    if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
+    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 400, T / n, 4);
     linea.GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }

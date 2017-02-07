@@ -12,7 +12,7 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
-#include "Marker.hpp"
+#include "Line.hpp"
 #include "adept.h"
 #include "include/FSITimeDependentAssembly.hpp"
 
@@ -29,7 +29,8 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group);
 //------------------------------------------------------------------------------------------------------------------
 
-int main(int argc, char **args) {
+int main(int argc, char **args)
+{
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
@@ -206,74 +207,67 @@ int main(int argc, char **args) {
 
 
   //BEGIN INITIALIZE PARTICLES
+  unsigned pSize = 10;
+  std::vector < std::vector < double > > x(pSize);
+  std::vector < MarkerType > markerType(pSize);
 
-  unsigned pSize = 100;
-
-  std::vector < Marker*> particle(pSize);
-
-  for(unsigned j = 0; j < pSize; j++) {
-    std::vector < double > x(2);
-    x[0] = 0.0065 + j * 0.00001;
-    x[1] = 0.;
-    particle[j] = new Marker(x, VOLUME, ml_msh.GetLevel(numberOfUniformRefinedMeshes - 1), 2, true);
+  for (unsigned j = 0; j < pSize; j++) {
+    x[j].resize(2);
+    x[j][0] = 0.;
+    x[j][1] = 0.0065 + j * 0.00001;
+    markerType[j] = VOLUME;
   }
-
   //END INITIALIZE PARTICLES
 
+  std::vector < std::vector < std::vector < double > > > streamline(pSize);
+  std::vector< Line* > linea(1);
 
-  double T = 160;
+  linea[0] =  new Line(x, markerType, ml_msh.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
 
+  linea[0]->GetStreamLine(streamline, 0);
+  linea[0]->GetStreamLine(streamline, 1);
+  PrintLine(DEFAULT_OUTPUTDIR, streamline, true, 0);
 
-  //BEGIN print first line
-
-  std::vector < std::vector < std::vector < double > > > xn(pSize);
-
-  for(unsigned j = 0; j < pSize; j++) {
-    xn[j].resize(2);
-    particle[j]->GetMarkerCoordinates(xn[j][0]);
-    xn[j][1] = xn[j][0];
-    //std::cout<< j <<" "<< xn[j][0][0]<<" "<< xn[j][0][1]<<" "<< xn[j][0][2] << std::endl ;
-  }
-//   xn[pSize].resize(2);
-//   particle[0]->GetMarkerCoordinates(xn[pSize][0]);
-//   xn[pSize][1]=xn[pSize][0];
-  PrintLine(DEFAULT_OUTPUTDIR, xn, true, 1);
-  
-  //END print first line
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
   const unsigned int n_timesteps = 50;
 
-  for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+  for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
-    if(time_step > 0)
+    if (time_step > 0)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-    for(unsigned j = 0; j < pSize; j++) {
-      particle[j]->Advection(ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 4, T / n_timesteps);
-      xn[j].resize(time_step + 3);
-      particle[j]->GetMarkerCoordinates(xn[j][time_step + 2]);
+    for (int i = linea.size() - 1; i >= 0; i--) {
+      linea[i]->AdvectionParallel(ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 4, 1. / 32., 4);
+      linea[i]->GetStreamLine(streamline, linea.size() - i );
+
     }
-    PrintLine(DEFAULT_OUTPUTDIR, xn, true, time_step + 2);
-    
+    PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
+    linea.resize(time_step + 2);
+    linea[time_step + 1] =  new Line(x, markerType, ml_msh.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
+
     GetSolutionNorm(ml_sol, 9);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
 
-  for(unsigned j = 0; j < pSize; j++) {
-    delete particle[j];
-  }
+
 
 
 // ******* Clear all systems *******
+
+  for (unsigned i = 0; i < linea.size(); i++) {
+    delete linea[i];
+  }
+
   ml_prob.clear();
   return 0;
 }
 
-double SetVariableTimeStep(const double time) {
+double SetVariableTimeStep(const double time)
+{
   double dt = 1. / 32;
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
@@ -300,42 +294,38 @@ double SetVariableTimeStep(const double time) {
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+{
   bool test = 1; //dirichlet
   value = 0.;
 
   double PI = acos(-1.);
-  if(!strcmp(name, "U")) {
+  if (!strcmp(name, "U")) {
 
-    if(1 == facename) {
+    if (1 == facename) {
       double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
       value = 0.05 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
-    }
-    else if(2 == facename || 5 == facename) {
+    } else if (2 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
-  }
-  else if(!strcmp(name, "V")) {
-    if(2 == facename || 5 == facename) {
+  } else if (!strcmp(name, "V")) {
+    if (2 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
-  }
-  else if(!strcmp(name, "P")) {
+  } else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
-  }
-  else if(!strcmp(name, "DX")) {
+  } else if (!strcmp(name, "DX")) {
     //if(2 == facename || 4 == facename || 5 == facename || 6 == facename) {
-    if(5 == facename || 6 == facename) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
-  }
-  else if(!strcmp(name, "DY")) {
+  } else if (!strcmp(name, "DY")) {
     //if(1 == facename || 3 == facename || 5 == facename || 6 == facename) {
-    if(5 == facename || 6 == facename) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
@@ -346,7 +336,8 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 }
 
 
-void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group) {
+void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
+{
 
   int  iproc, nprocs;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -361,13 +352,12 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group) {
   vol = NumericVector::build().release();
   vol0 = NumericVector::build().release();
 
-  if(nprocs == 1) {
+  if (nprocs == 1) {
     p2->init(nprocs, 1, false, SERIAL);
     v2->init(nprocs, 1, false, SERIAL);
     vol->init(nprocs, 1, false, SERIAL);
     vol0->init(nprocs, 1, false, SERIAL);
-  }
-  else {
+  } else {
     p2->init(nprocs, 1, false, PARALLEL);
     v2->init(nprocs, 1, false, PARALLEL);
     vol->init(nprocs, 1, false, PARALLEL);
@@ -396,7 +386,7 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group) {
   vector< vector < double> > x(dim);
 
   solP.reserve(max_size);
-  for(unsigned d = 0; d < dim; d++) {
+  for (unsigned d = 0; d < dim; d++) {
     solV[d].reserve(max_size);
     x0[d].reserve(max_size);
     x[d].reserve(max_size);
@@ -417,14 +407,14 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group) {
   vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol.GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol.GetIndex("V");    // get the position of "V" in the ml_sol object
-  if(dim == 3) solVIndex[2] = mlSol.GetIndex("W");       // get the position of "V" in the ml_sol object
+  if (dim == 3) solVIndex[2] = mlSol.GetIndex("W");      // get the position of "V" in the ml_sol object
 
   unsigned solVType = mlSol.GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
   vector < unsigned > solDIndex(dim);
   solDIndex[0] = mlSol.GetIndex("DX");    // get the position of "U" in the ml_sol object
   solDIndex[1] = mlSol.GetIndex("DY");    // get the position of "V" in the ml_sol object
-  if(dim == 3) solDIndex[2] = mlSol.GetIndex("DZ");       // get the position of "V" in the ml_sol object
+  if (dim == 3) solDIndex[2] = mlSol.GetIndex("DZ");      // get the position of "V" in the ml_sol object
 
   unsigned solDType = mlSol.GetSolutionType(solDIndex[0]);
 
@@ -432,8 +422,8 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group) {
   solPIndex = mlSol.GetIndex("P");
   unsigned solPType = mlSol.GetSolutionType(solPIndex);
 
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    if(msh->GetElementGroup(iel) == group) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    if (msh->GetElementGroup(iel) == group) {
       short unsigned ielt = msh->GetElementType(iel);
       unsigned ndofV = msh->GetElementDofNumber(iel, solVType);
       unsigned ndofP = msh->GetElementDofNumber(iel, solPType);
@@ -445,15 +435,15 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group) {
       nablaphiV.resize(ndofV * (3 * (dim - 1) + !(dim - 1)));
 
       solP.resize(ndofP);
-      for(int d = 0; d < dim; d++) {
+      for (int d = 0; d < dim; d++) {
         solV[d].resize(ndofV);
         x0[d].resize(ndofD);
         x[d].resize(ndofD);
       }
       // get local to global mappings
-      for(unsigned i = 0; i < ndofD; i++) {
+      for (unsigned i = 0; i < ndofD; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solDType);
-        for(unsigned d = 0; d < dim; d++) {
+        for (unsigned d = 0; d < dim; d++) {
           x0[d][i] = (*msh->_topology->_Sol[d])(idof);
 
           x[d][i] = (*msh->_topology->_Sol[d])(idof) +
@@ -461,22 +451,22 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group) {
         }
       }
 
-      for(unsigned i = 0; i < ndofV; i++) {
+      for (unsigned i = 0; i < ndofV; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
-        for(unsigned  d = 0; d < dim; d++) {
+        for (unsigned  d = 0; d < dim; d++) {
           solV[d][i] = (*solution->_Sol[solVIndex[d]])(idof);      // global extraction and local storage for the solution
         }
       }
 
 
 
-      for(unsigned i = 0; i < ndofP; i++) {
+      for (unsigned i = 0; i < ndofP; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solPType);
         solP[i] = (*solution->_Sol[solPIndex])(idof);
       }
 
 
-      for(unsigned ig = 0; ig < mlSol._mlMesh->_finiteElement[ielt][solVType]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < mlSol._mlMesh->_finiteElement[ielt][solVType]->GetGaussPointNumber(); ig++) {
         // *** get Jacobian and test function and test function derivatives ***
         msh->_finiteElement[ielt][solVType]->Jacobian(x0, ig, weight0, phiV, gradphiV, nablaphiV);
         msh->_finiteElement[ielt][solVType]->Jacobian(x, ig, weight, phiV, gradphiV, nablaphiV);
@@ -486,20 +476,20 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group) {
         vol->add(iproc, weight);
 
         std::vector < double> SolV2(dim, 0.);
-        for(unsigned i = 0; i < ndofV; i++) {
-          for(unsigned d = 0; d < dim; d++) {
+        for (unsigned i = 0; i < ndofV; i++) {
+          for (unsigned d = 0; d < dim; d++) {
             SolV2[d] += solV[d][i] * phiV[i];
           }
         }
 
         double V2 = 0.;
-        for(unsigned d = 0; d < dim; d++) {
+        for (unsigned d = 0; d < dim; d++) {
           V2 += SolV2[d] * SolV2[d];
         }
         v2->add(iproc, V2 * weight);
 
         double P2 = 0;
-        for(unsigned i = 0; i < ndofP; i++) {
+        for (unsigned i = 0; i < ndofP; i++) {
           P2 += solP[i] * phiP[i];
         }
         P2 *= P2;
