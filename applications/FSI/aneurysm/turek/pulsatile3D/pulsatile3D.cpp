@@ -427,9 +427,9 @@ bool SetBoundaryConditionTurek(const std::vector < double > & x, const char name
   value = 0.;
 
   std::ifstream inf;
-  inf.open("./input/womersleyProfile_unPoPiuAlto.txt");
+  inf.open("./input/womersleyProfile_velMax40cms.txt");
   if(!inf) {
-    std::cout << "velocity file ./input/womersleyProfile_unPoPiuAlto.txt can not be opened\n";
+    std::cout << "velocity file ./input/womersleyProfile_velMax40cms.txt can not be opened\n";
     exit(0);
   }
    
