@@ -115,7 +115,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 5;
+  unsigned numberOfUniformLevels = 8;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
@@ -243,7 +243,7 @@ int main(int argc, char** args) {
   system.SetElementBlockNumber(4);
 
   system.MGsolve();
-
+/*
   std::vector< double > x(3);
   x[0] = 0.33375; //the marker is in element 117 (proc 1)
   x[1] = 0.0627;
@@ -256,7 +256,7 @@ int main(int argc, char** args) {
 
   std::cout << "marker\n";
   std::cout << elem << " " << xi[0] << " " << xi[1] << " " << GetTemperatureValue(mlProb, elem, xi) << std::endl;
-
+*/
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
@@ -266,9 +266,9 @@ int main(int argc, char** args) {
 
   mlMsh.PrintInfo();
 
-  //char infile[256]="FSVTtrueResidual.txt";
-  //char stdOutfile[256]="output.txt";
- /* 
+// char infile[256]="FSVTtrueResidual.txt";
+// char stdOutfile[256]="output.txt";
+  
   char *stdOutfile =  new char[100];
   char *outfile =  new char[100];
   sprintf(stdOutfile, "%strueResidualPr=%sRa=%s.txt", args[1], args[2], args[3]);
@@ -282,8 +282,7 @@ int main(int argc, char** args) {
   sprintf(stdOutfile1, "%sprintout_infoPr=%sRa=%s_time.txt", args[1], args[2], args[3]);
   sprintf(outfile1, "%scomputational_timePr=%sRa=%s_time.txt", args[1], args[2], args[3]);
 
-  PrintNonlinearTime(stdOutfile1, outfile1, numberOfUniformLevels);
-*/  
+  PrintNonlinearTime(stdOutfile1, outfile1, numberOfUniformLevels);  
   return 0;
 }
 
@@ -947,14 +946,14 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
         unsigned irow = nDofsT + dim * nDofsV + i;
 
         for(int k = 0; k < dim; k++) {
-          Res[irow] += (gradSolV_gss[k][k]) * phiP[i]  * weight;
+          Res[irow] += -(gradSolV_gss[k][k]) * phiP[i]  * weight;
 
           if(assembleMatrix) {
             unsigned irowMat = nDofsTVP * irow;
 
             for(unsigned j = 0; j < nDofsV; j++) {
               unsigned jcol = (nDofsT + k * nDofsV + j);
-              Jac[ irowMat + jcol ] += - phiP[i] * phiV_x[j * dim + k] * weight;
+              Jac[ irowMat + jcol ] += phiP[i] * phiV_x[j * dim + k] * weight;
             }
           }
 
