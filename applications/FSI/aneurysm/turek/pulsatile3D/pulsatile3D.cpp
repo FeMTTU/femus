@@ -432,13 +432,22 @@ bool SetBoundaryConditionTurek(const std::vector < double > & x, const char name
     std::cout << "velocity file ./input/womersleyProfile_velMax40cms.txt can not be opened\n";
     exit(0);
   }
+  std::ifstream inf2;
+  inf2.open("./input/OutflowResistence64_R0p001_f84.txt");
+  if(!inf2) {
+    std::cout << "pressure file ./input/OutflowResistence64_R0p001_f84.txt can not be opened\n";
+    exit(0);
+  }
    
   std::vector<double> vel(64);
+  std::vector<double> pressure(64);
    
   for(unsigned i=0; i<64; i++){
       inf>>vel[i];
+      inf2>>pressure[i];
   }
   inf.close();
+  inf2.close();
   
   double period = 1./1.4;
   double dt = period/64;
@@ -463,7 +472,8 @@ bool SetBoundaryConditionTurek(const std::vector < double > & x, const char name
     }
     else if(2 == facename) {
       test = 0;
-      value = 11335 * ramp;
+      value = pressure[j] * ramp;
+      //value = 11335 * ramp;
       //value = (10000 + 2500 * sin(2*PI*time)/period) * ramp;      
     }
     else if(5 == facename) {
