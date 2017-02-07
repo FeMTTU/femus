@@ -144,7 +144,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   dim = mlMsh.GetDimension();
 
-  numberOfUniformLevels = 1;
+  numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
