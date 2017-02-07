@@ -566,17 +566,14 @@ namespace femus {
       MyVector <unsigned> integrationIsOverCounterProc(1, 0);
       integrationIsOverCounterProc.stack();
 
-      unsigned initializedElem = UINT_MAX;
-      unsigned currentElem;
-
       //BEGIN LOCAL ADVECTION INSIDE IPROC
       for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
-	currentElem = _particles[iMarker]->GetMarkerElement();
+	unsigned currentElem = _particles[iMarker]->GetMarkerElement();
 	bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
         
 	step = _particles[iMarker]->GetIprocMarkerStep();
-        if(markerOutsideDomain == false) {
+        if(!markerOutsideDomain) {
             
 	  while(step < n * order) {
 
@@ -584,14 +581,11 @@ namespace femus {
 	    x0 = _particles[iMarker]->GetIprocMarkerOldCoordinates();
 	    K = _particles[iMarker]->GetIprocMarkerK();
 	    
-	    bool pcElemUpdate = (aX.find(currentElem) != aX.end()) ? false : true; //update only if the marker is in a different element
-	    
-	    //std::cout << pcElemUpdate <<" ";
-	    
-            _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], pcElemUpdate);
-	    _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV[currentElem], phi, pcElemUpdate); // we put pcElemUpdate instead of true but it wasn't running
-            initializedElem = currentElem;
-
+	    bool elementUpdate = (aX.find(currentElem) != aX.end()) ? false : true; //update if currentElem was never updated
+	      
+            _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], elementUpdate);
+	    _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV[currentElem], phi, elementUpdate); // we put pcElemUpdate instead of true but it wasn't running
+          
             unsigned tstep = step / order;
             unsigned istep = step % order;
 
@@ -643,42 +637,31 @@ namespace femus {
 
 	    if(currentElem == UINT_MAX) { // the marker has been advected outise the domain 
 	      markerOutsideDomain = true;
-// 	      integrationIsOverCounterProc[_iproc] += 1;
-// 	      step = UINT_MAX;
-// 	      _particles[iMarker]->SetIprocMarkerStep(step);
+	      step = UINT_MAX;
+	      _particles[iMarker]->SetIprocMarkerStep(step);
               break;
             }
-            else if(initializedElem != currentElem && _iproc != mproc) { // the marker has been advected outise the process
-              //_particles[iMarker]->SetIprocMarkerPreviousElement(initializedElem);
+            else if(_iproc != mproc) { // the marker has been advected outise the process
               break;
             }
-//             else if(initializedElem != currentElem) { // the marker has been advected outise the element
-//               break;
-//             }
-//             else {  // the marker has been advected inside the same element
-//               //_particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], false); //inverse mapping to continue
-//             }
           }
-
           if(step == n * order) {
-            integrationIsOverCounterProc[_iproc] += 1;
 	    step = UINT_MAX;
             _particles[iMarker]->SetIprocMarkerStep(step);
           }
         }
-
-        else if(step != UINT_MAX && markerOutsideDomain){ // the marker has started outise the domain 
-	  integrationIsOverCounterProc[_iproc] += 1;
+	else{ // the marker started outise the domain 
 	  step = UINT_MAX;
           _particles[iMarker]->SetIprocMarkerStep(step);
         }
-
+	
+	if(step == UINT_MAX || markerOutsideDomain){
+	  integrationIsOverCounterProc[_iproc] += 1;
+	}
       }
       //END LOCAL ADVECTION INSIDE IPROC
 
-      // std::cout << "PRIMA integrationIsOverCounter = " << integrationIsOverCounter << " , " << "integrationIsOverCounterProc[ "
-      // << _iproc << "]=" << integrationIsOverCounterProc[_iproc]<< std::endl;
-
+      integrationIsOverCounter = 0;
       for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
         integrationIsOverCounterProc.broadcast(jproc);
         integrationIsOverCounter += integrationIsOverCounterProc[jproc];
@@ -747,7 +730,7 @@ namespace femus {
               }
             }
           }
-          else if(jproc != 0) { // elem = UINT_MAX, but not yet in jproc = 0
+          if(elem == UINT_MAX && jproc != 0) { // elem = UINT_MAX, but not yet in jproc = 0
             if(jproc == _iproc) {
               x = _particles[iMarker]->GetIprocMarkerCoordinates();
               MPI_Send(&x[0], _dim, MPI_DOUBLE, 0, 1 , PETSC_COMM_WORLD);
