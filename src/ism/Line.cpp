@@ -535,8 +535,8 @@ namespace femus {
 
     std::vector < double > phi;
     std::vector < std::vector<double > > V(2);
-    std::vector < std::vector < std::vector < double > > > aV;
-    std::vector < std::vector < std::vector < double > > > aX;
+    std::map<unsigned, std::vector < std::vector < std::vector < double > > > > aV;
+    std::map<unsigned, std::vector < std::vector < std::vector < double > > > > aX;
     double h = T / n;
 
     //END
@@ -584,9 +584,12 @@ namespace femus {
 	    x0 = _particles[iMarker]->GetIprocMarkerOldCoordinates();
 	    K = _particles[iMarker]->GetIprocMarkerK();
 	    
-            bool pcElemUpdate = (initializedElem == currentElem) ? false : true; //update only if the marker is in a different element
-            _particles[iMarker]->FindLocalCoordinates(solVType, aX, pcElemUpdate);
-	    _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); // we put pcElemUpdate instead of true but it wasn't running
+	    bool pcElemUpdate = (aX.find(currentElem) != aX.end()) ? false : true; //update only if the marker is in a different element
+	    
+	    //std::cout << pcElemUpdate <<" ";
+	    
+            _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], pcElemUpdate);
+	    _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV[currentElem], phi, pcElemUpdate); // we put pcElemUpdate instead of true but it wasn't running
             initializedElem = currentElem;
 
             unsigned tstep = step / order;
@@ -640,21 +643,21 @@ namespace femus {
 
 	    if(currentElem == UINT_MAX) { // the marker has been advected outise the domain 
 	      markerOutsideDomain = true;
-	      integrationIsOverCounterProc[_iproc] += 1;
-	      step = UINT_MAX;
-	      _particles[iMarker]->SetIprocMarkerStep(step);
+// 	      integrationIsOverCounterProc[_iproc] += 1;
+// 	      step = UINT_MAX;
+// 	      _particles[iMarker]->SetIprocMarkerStep(step);
               break;
             }
             else if(initializedElem != currentElem && _iproc != mproc) { // the marker has been advected outise the process
               //_particles[iMarker]->SetIprocMarkerPreviousElement(initializedElem);
               break;
             }
-            else if(initializedElem != currentElem) { // the marker has been advected outise the element
-              break;
-            }
-            else {  // the marker has been advected inside the same element
-              _particles[iMarker]->FindLocalCoordinates(solVType, aX, false); //inverse mapping to continue
-            }
+//             else if(initializedElem != currentElem) { // the marker has been advected outise the element
+//               break;
+//             }
+//             else {  // the marker has been advected inside the same element
+//               //_particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], false); //inverse mapping to continue
+//             }
           }
 
           if(step == n * order) {
@@ -664,7 +667,7 @@ namespace femus {
           }
         }
 
-        else if(step != UINT_MAX){ // the marker has started outise the domain 
+        else if(step != UINT_MAX && markerOutsideDomain){ // the marker has started outise the domain 
 	  integrationIsOverCounterProc[_iproc] += 1;
 	  step = UINT_MAX;
           _particles[iMarker]->SetIprocMarkerStep(step);
