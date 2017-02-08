@@ -61,6 +61,9 @@ namespace femus {
              const std::vector <MarkerType> &markerType,
              Mesh *mesh, const unsigned & solType) {
 
+    
+    _time.assign(10,0);
+    
     _size = x.size();
 
     std::vector < Marker*> particles(_size);
@@ -560,13 +563,21 @@ namespace femus {
     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
       _particles[iMarker]->InitializeMarkerForAdvection(order);
     }
-
+    unsigned maxload = 0;
+    for(unsigned jproc=0; jproc<_nprocs;jproc++){
+      unsigned temp = (_markerOffset[jproc + 1] - _markerOffset[jproc]);  
+      maxload = ( temp > maxload) ? temp : maxload;
+    }
+    maxload *= (n * order)/(_nprocs * _nprocs);
+    
     while(integrationIsOverCounter != _size) {
 
       MyVector <unsigned> integrationIsOverCounterProc(1, 0);
       integrationIsOverCounterProc.stack();
 
       //BEGIN LOCAL ADVECTION INSIDE IPROC
+      clock_t startTime = clock();
+      unsigned counter = 0;
       for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
 	unsigned currentElem = _particles[iMarker]->GetMarkerElement();
@@ -582,10 +593,12 @@ namespace femus {
 	    K = _particles[iMarker]->GetIprocMarkerK();
 	    
 	    bool elementUpdate = (aX.find(currentElem) != aX.end()) ? false : true; //update if currentElem was never updated
-	      
+	    
+	     clock_t localTime = clock();
             _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], elementUpdate);
 	    _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV[currentElem], phi, elementUpdate); // we put pcElemUpdate instead of true but it wasn't running
-          
+            _time[3] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
+            	    
             unsigned tstep = step / order;
             unsigned istep = step % order;
 
@@ -602,8 +615,11 @@ namespace femus {
               K[istep][k] = (s * V[0][k] + (1. - s) * V[1][k]) * h;
             }
 
+            counter++;
+	    
             step++;
             istep++;
+	    
 
             if(istep < order) {
               for(unsigned k = 0; k < _dim; k++) {
@@ -621,7 +637,7 @@ namespace femus {
                 }
               }
             }
-
+            
             _particles[iMarker]->SetIprocMarkerOldCoordinates(x0);
             _particles[iMarker]->SetIprocMarkerCoordinates(x);
             _particles[iMarker]->SetIprocMarkerK(K);
@@ -629,12 +645,16 @@ namespace femus {
 	    _particles[iMarker]->SetIprocMarkerStep(step);
 	    
             unsigned previousElem = currentElem;
-            _particles[iMarker]->GetElementSerial(previousElem);
+	    localTime = clock();
+	    _particles[iMarker]->GetElementSerial(previousElem);
+	    _time[4] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
+            localTime = clock();
+	    
             _particles[iMarker]->SetIprocMarkerPreviousElement(previousElem);
 	    
 	    currentElem = _particles[iMarker]->GetMarkerElement();
             unsigned mproc = _particles[iMarker]->GetMarkerProc();
-
+	    
 	    if(currentElem == UINT_MAX) { // the marker has been advected outise the domain 
 	      markerOutsideDomain = true;
 	      step = UINT_MAX;
@@ -658,16 +678,25 @@ namespace femus {
 	if(step == UINT_MAX || markerOutsideDomain){
 	  integrationIsOverCounterProc[_iproc] += 1;
 	}
+	if(counter > maxload) break;
       }
+      _time[5] += static_cast<double>((clock() - startTime)) / CLOCKS_PER_SEC;
+      MPI_Barrier( PETSC_COMM_WORLD );
+      _time[0] += static_cast<double>((clock() - startTime)) / CLOCKS_PER_SEC;
+      startTime = clock();
       //END LOCAL ADVECTION INSIDE IPROC
-
+     
       integrationIsOverCounter = 0;
       for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
         integrationIsOverCounterProc.broadcast(jproc);
         integrationIsOverCounter += integrationIsOverCounterProc[jproc];
         integrationIsOverCounterProc.clearBroadcast();
       }
-
+       
+//       MPI_Barrier( PETSC_COMM_WORLD );
+//       _time[1] += static_cast<double>((clock() - startTime)) / CLOCKS_PER_SEC;
+//       startTime = clock();
+             
       // std::cout << "DOPO integrationIsOverCounter = " << integrationIsOverCounter << std::endl;
 
       //BEGIN exchange on information
@@ -744,7 +773,11 @@ namespace femus {
           }
         }
       }
-
+      
+      MPI_Barrier( PETSC_COMM_WORLD );
+      _time[1] += static_cast<double>((clock() - startTime)) / CLOCKS_PER_SEC;
+      startTime = clock();
+      
       //std::cout << " ----------------------------------END PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
 
       //END exchange of information
@@ -773,7 +806,9 @@ namespace femus {
 
       UpdateLine();
 
-
+      MPI_Barrier( PETSC_COMM_WORLD );
+      _time[2] += static_cast<double>((clock() - startTime)) / CLOCKS_PER_SEC;
+      startTime = clock();
 
 //       //BEGIN to removed
 //       for(unsigned j = 0; j < _size; j++) {
@@ -794,6 +829,8 @@ namespace femus {
       // std::cout << " END integrationIsOverCounter = " << integrationIsOverCounter <<  std::endl;
 
     }
+    
+    std::cout<<_time[0]<<" "<<_time[1]<<" "<<_time[2]<<" "<<_time[3]<<" "<<_time[4]<<" "<<_time[5]<<std::endl<<std::flush;
   }
 }
 

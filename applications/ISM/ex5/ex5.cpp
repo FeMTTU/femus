@@ -27,20 +27,20 @@ using namespace femus;
 
 
 //3D CASE  rotation
-// double InitalValueU(const std::vector < double >& x) {
-//   return (-x[1]+x[2])/sqrt(3);
-// }
-// 
-// double InitalValueV(const std::vector < double >& x) {
-//   return (x[0]-x[2])/sqrt(3);
-// }
-// 
-// double InitalValueW(const std::vector < double >& x) {
-//   return (x[1]-x[0])/sqrt(3);
-// }
+double InitalValueU(const std::vector < double >& x) {
+  return (-x[1]+x[2])/sqrt(3);
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  return (x[0]-x[2])/sqrt(3);
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  return (x[1]-x[0])/sqrt(3);
+}
 
 
-// 2D CASE with vorticity
+// //2D CASE with vorticity
 // double pi = acos(-1.);
 // 
 // double InitalValueU(const std::vector < double >& x) {
@@ -61,33 +61,33 @@ using namespace femus;
 
 
 // 3D CASE with vorticity
-double pi = acos(-1.);
-
-double InitalValueU(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return
-    2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
-    ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
-    )* cos(time);
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return
-    2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
-    ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
-    )* cos(time);
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return
-    2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
-    ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
-    )* cos(time);
-
-  return 0.;
-}
+// double pi = acos(-1.);
+// 
+// double InitalValueU(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return
+//     2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
+//     ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
+//     )* cos(time);
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return
+//     2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
+//     ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
+//     )* cos(time);
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return
+//     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
+//     ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
+//     )* cos(time);
+// 
+//   return 0.;
+// }
 
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
@@ -222,11 +222,20 @@ int main(int argc, char** args) {
 
   double pi = acos(-1.);
   for(unsigned j = 0; j < size; j++) {
-    x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
-    x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
-    if(dim == 3) {
-      x[j][2] = 0.;
-    }
+    double r_rad = static_cast <double> (rand())/RAND_MAX;
+    r_rad = 0.5*(1.-r_rad*r_rad*r_rad);
+    double r_theta = static_cast <double> (rand())/RAND_MAX*2*pi;
+    double r_phi = static_cast <double> (rand())/RAND_MAX*pi;
+    
+    x[j][0] = r_rad * sin(r_phi) * cos(r_theta);
+    x[j][1] = r_rad * sin(r_phi) * sin(r_theta);
+    x[j][2] = r_rad * cos(r_phi); 
+    
+//     x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
+//     x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
+//     if(dim == 3) {
+//       x[j][2] = 0.;
+//     }
   }
 
   Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType);
@@ -245,11 +254,11 @@ int main(int argc, char** args) {
 
   for(unsigned k = 1; k <= n; k++) {
     //uncomment for  vortex test
-    mlSol.CopySolutionToOldSolution();
-    mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
-    mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
-    if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 400, T / n, 4);
+//     mlSol.CopySolutionToOldSolution();
+//     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
+//     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
+//     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
+    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 40, T / n, 4);
     linea.GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }

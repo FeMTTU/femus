@@ -415,7 +415,6 @@ namespace femus {
 
     //BEGIN next element search
     while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
-
       if(_dim == 2) {
         _elem = GetNextElement2D(currentElem, previousElem);
       }
@@ -797,12 +796,10 @@ namespace femus {
       //   std::cout << "the marker is the central element node" << std::endl;
       markerIsInElement = true; //the marker is xc
     }
-
+    
     else {
 
       //BEGIN Setting up the fast FastForward
-
-
 
       std::vector< std::vector < double > > xvv(_dim);
 
@@ -812,7 +809,6 @@ namespace femus {
 
       for(unsigned k = 0; k < _dim; k++) {
         xvv[k].resize(nFaceDofs);
-
       }
 
       for(unsigned i = 0; i < nFaceDofs; i++) {
@@ -936,7 +932,7 @@ namespace femus {
 
                 for(unsigned i = 0; i < 4; i++) { //now we have to determine if r is inside itri
                   for(unsigned k = 0; k < _dim; k++) {
-                    xv[k][i] = xv[k][i] - r[k];     //transate again the reference frame so that the origin is r
+                    xv[k][i] = xv[k][i] - r[k];     //translate again the reference frame so that the origin is r
                   }
                 }
 
