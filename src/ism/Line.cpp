@@ -563,12 +563,12 @@ namespace femus {
     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
       _particles[iMarker]->InitializeMarkerForAdvection(order);
     }
-    unsigned maxload = 0;
-    for(unsigned jproc=0; jproc<_nprocs;jproc++){
-      unsigned temp = (_markerOffset[jproc + 1] - _markerOffset[jproc]);  
-      maxload = ( temp > maxload) ? temp : maxload;
-    }
-    maxload *= (n * order)/(_nprocs * _nprocs);
+//     unsigned maxload = 0;
+//     for(unsigned jproc=0; jproc<_nprocs;jproc++){
+//       unsigned temp = (_markerOffset[jproc + 1] - _markerOffset[jproc]);  
+//       maxload = ( temp > maxload) ? temp : maxload;
+//     }
+//     maxload *= (n * order)/(_nprocs * _nprocs);
     
     while(integrationIsOverCounter != _size) {
 
@@ -678,7 +678,7 @@ namespace femus {
 	if(step == UINT_MAX || markerOutsideDomain){
 	  integrationIsOverCounterProc[_iproc] += 1;
 	}
-	if(counter > maxload) break;
+	//if(counter > maxload) break;
       }
       _time[5] += static_cast<double>((clock() - startTime)) / CLOCKS_PER_SEC;
       MPI_Barrier( PETSC_COMM_WORLD );
