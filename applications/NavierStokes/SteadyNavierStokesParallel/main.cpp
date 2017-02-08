@@ -768,6 +768,11 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 	    // ********************************* Tau_Supg FRANCA and FREY **************************
 	    // Computer Methods in Applied Mechanics and Engineering 99 (1992) 209-233 North-Holland
 	    // *************************************************************************************
+	    
+	    // Element diameter free stability parameters for stabilized methods applied to fluids
+	    // by Leopoldo P. Franca and Alexandre L. Madureira,
+	    // Computer Methods in Applied Mechanics and Engineering, Vol. 105 (1993) 395-403
+  
 	    // velocity
 	    // double Ck[6][3]={{1.,1.,1.},{1.,1.,1.},{1.,1.,1.},{0.5, 11./270., 11./270.},{0.,1./42.,1./42.},{1.,1.,1.}};
 

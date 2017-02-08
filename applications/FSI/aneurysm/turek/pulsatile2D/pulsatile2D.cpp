@@ -10,7 +10,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
-#include "../../include/FSITimeDependentAssembly.hpp"
+#include "../../include/FSITimeDependentAssemblySupg.hpp"
 #include <cmath>
 double scale = 1000.;
 
@@ -137,6 +137,8 @@ int main(int argc, char **args)
   ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("P", "Pressure", false); // Add this line
 
+  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+  
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
@@ -151,7 +153,8 @@ int main(int argc, char **args)
 
   ml_sol.GenerateBdc("P", "Steady");
 
-
+  //SetLambda(ml_sol, numberOfUniformRefinedMeshes - 1 , SECOND, ELASTICITY);
+  
   // ******* Define the FSI Multilevel Problem *******
 
   MultiLevelProblem ml_prob(&ml_sol);
@@ -171,7 +174,7 @@ int main(int argc, char **args)
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSITimeDependentAssembly);
+  system.SetAssembleFunction(FSITimeDependentAssemblySupg);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
