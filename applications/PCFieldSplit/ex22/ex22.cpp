@@ -216,20 +216,20 @@ int main(int argc, char** args) {
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
   //system.SetResidualUpdateConvergenceTolerance(1.e-15);
 
-  system.SetMaxNumberOfLinearIterations(10);
+  system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(2);
-  system.SetNumberPostSmoothingStep(2);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetFieldSplitTree(&FS_NST);
-  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 20);
+  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
@@ -249,9 +249,9 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
-  double dt = 0.5;
+  double dt = 0.25;
   system.SetIntervalTime(dt);
-  unsigned n_timesteps = 600;
+  unsigned n_timesteps = 2400;
  
   Marker marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
   unsigned elem = marker.GetMarkerElement();
@@ -292,7 +292,7 @@ int main(int argc, char** args) {
     outfile2 << (time_step + 1) * dt <<"  "<< solV_pt[1] << std::endl;
     outfile3 << (time_step + 1) * dt <<"  "<< solPT_pt[0] << std::endl;
     outfile4 << (time_step + 1) * dt <<"  "<< solPT_pt[1] << std::endl;
-    if ((time_step + 1) % 5 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+    if ((time_step + 1) % 10 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
   }
   outfile1.close();
   outfile2.close();
@@ -756,55 +756,75 @@ std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem&
   if (dim==3) solVIndex[2] = mlSol->GetIndex("W");
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);
   vector < vector <double> > solV(dim);
-
+  
+  unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  MyVector <double> solTXi(1, 0.);
+  solTXi.stack();
+  MyVector <double> solUXi(1, 0.);
+  solUXi.stack();
+  MyVector <double> solVXi(1, 0.);
+  solVXi.stack();
+  /*
+  if (dim==3) {
+  	MyVector <double> solWXi(1, 0.);
+    solWXi.stack();
+  }
+  */
   //BEGIN local dof number extraction
-  unsigned nDofsT = msh->GetElementDofNumber(elem, solTType);  //temperature
-  solT.resize(nDofsT);
+  if(elem >= msh->_elementOffset[iproc] && elem  < msh->_elementOffset[iproc + 1]) {
+	unsigned nDofsT = msh->GetElementDofNumber(elem, solTType);  //temperature
+  	solT.reserve(nDofsT);
   
-  unsigned nDofsV = msh->GetElementDofNumber(elem, solVType); //velocity
-  for(unsigned  k = 0; k < dim; k++) solV[k].reserve(nDofsV);
+    unsigned nDofsV = msh->GetElementDofNumber(elem, solVType); //velocity
+    for(unsigned  k = 0; k < dim; k++) solV[k].reserve(nDofsV);
 
-  //BEGIN global to local extraction
-  for(unsigned i = 0; i < nDofsT; i++) { //temperature
-    unsigned solTDof = msh->GetSolutionDof(i, elem, solTType);  //local to global solution dof
-    solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
-  }
+  	//BEGIN global to local extraction
+  	for(unsigned i = 0; i < nDofsT; i++) { //temperature
+      unsigned solTDof = msh->GetSolutionDof(i, elem, solTType);  //local to global solution dof
+      solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
+  	}
 
-  for(unsigned i = 0; i < nDofsV; i++){ //velocity
-    unsigned solVDof = msh->GetSolutionDof(i, elem, solVType);
-    for(unsigned  k = 0; k < dim; k++) {
+    for(unsigned i = 0; i < nDofsV; i++){ //velocity
+      unsigned solVDof = msh->GetSolutionDof(i, elem, solVType);
+      for(unsigned  k = 0; k < dim; k++) {
       solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof); // global extraction and local storage for the solution
-    }
-  }
+     }
+   }
   
-  short unsigned ielGeom = msh->GetElementType(elem);
-  double solTXi = 0.;
-  for(unsigned i = 0; i < nDofsT; i++) {
-    basis *base = msh->_finiteElement[ielGeom][solTType]->GetBasis();
-    double phiT = base->eval_phi(base->GetIND(i), &xi[0]);
-    solTXi += phiT * solT[i];
-  }
-  
-  vector <double> solVXi(dim);
-  solVXi[0] = 0.0;
-  solVXi[1] = 0.0;
-  for(unsigned i = 0; i < nDofsV; i++) {
+   short unsigned ielGeom = msh->GetElementType(elem);
+   for(unsigned i = 0; i < nDofsT; i++) {
+      basis *base = msh->_finiteElement[ielGeom][solTType]->GetBasis();
+      double phiT = base->eval_phi(base->GetIND(i), &xi[0]);
+      solTXi[iproc] += phiT * solT[i];
+   }
+   
+   for(unsigned i = 0; i < nDofsV; i++) {
     basis *base = msh->_finiteElement[ielGeom][solVType]->GetBasis();
     double phiV = base->eval_phi(base->GetIND(i), &xi[0]);
-    for(unsigned  k = 0; k < dim; k++) {
-      solVXi[k] += phiV * solV[k][i];
-    }
+    solUXi[iproc] += phiV * solV[0][i];
+    solVXi[iproc] += phiV * solV[1][i];
+ //   if(dim==3) solWXi[iproc] += phiV * solV[2][i];
+   }
   }
   
-  std::pair < vector <double>, vector <double> > out_value;
+  std::pair <vector <double>, vector <double> > out_value;
+  unsigned mproc = msh->IsdomBisectionSearch(elem , 3);
+  solUXi.broadcast(mproc);
+  solVXi.broadcast(mproc);
+  solTXi.broadcast(mproc);
+  
   vector <double> solV_pt(dim);
-  solV_pt[0] = solVXi[0];
-  solV_pt[1] = solVXi[1];
+  solV_pt[0]= solUXi[mproc];
+  solV_pt[1]= solVXi[mproc];
   out_value.first = solV_pt;
   
   vector <double> solPT_pt(2);
-  solPT_pt[0] = 0.;
-  solPT_pt[1] = solTXi;
+  solPT_pt[0]= 0.;
+  solPT_pt[1]=solTXi[mproc];
   out_value.second = solPT_pt;
+  
+  solUXi.clearBroadcast();
+  solVXi.clearBroadcast();
+  solTXi.clearBroadcast();
   return out_value;
 }
