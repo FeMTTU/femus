@@ -13,31 +13,31 @@ using namespace femus;
 
 
 // 2D CASE rigid rotation
-// double InitalValueU(const std::vector < double >& x) {
-//   return -x[1];
-// }
-// 
-// double InitalValueV(const std::vector < double >& x) {
-//   return x[0];
-// }
-// 
-// double InitalValueW(const std::vector < double >& x) {
-//   return 0.;
-// }
-
-
-//3D CASE  rotation
 double InitalValueU(const std::vector < double >& x) {
-  return (-x[1]+x[2])/sqrt(3);
+  return -x[1];
 }
 
 double InitalValueV(const std::vector < double >& x) {
-  return (x[0]-x[2])/sqrt(3);
+  return x[0];
 }
 
 double InitalValueW(const std::vector < double >& x) {
-  return (x[1]-x[0])/sqrt(3);
+  return 0.;
 }
+
+
+//3D CASE  rotation
+// double InitalValueU(const std::vector < double >& x) {
+//   return (-x[1]+x[2])/sqrt(3);
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   return (x[0]-x[2])/sqrt(3);
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   return (x[1]-x[0])/sqrt(3);
+// }
 
 
 // //2D CASE with vorticity
@@ -110,8 +110,8 @@ int main(int argc, char** args) {
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 3; //for refinement in 3D
-  //unsigned numberOfUniformLevels = 1;
+  //unsigned numberOfUniformLevels = 3; //for refinement in 3D
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   std::vector < std::string > variablesToBePrinted;
 
@@ -131,8 +131,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/tri2.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeMixed.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/test2D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeTet.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
@@ -220,22 +220,27 @@ int main(int argc, char** args) {
     markerType[j] = VOLUME;
   }
 
+  srand(1);
   double pi = acos(-1.);
   for(unsigned j = 0; j < size; j++) {
-//     double r_rad = static_cast <double> (rand())/RAND_MAX;
-//     r_rad = 0.5*(1.-r_rad*r_rad*r_rad);
-//     double r_theta = static_cast <double> (rand())/RAND_MAX*2*pi;
-//     double r_phi = static_cast <double> (rand())/RAND_MAX*pi;
-//     
-//     x[j][0] = r_rad * sin(r_phi) * cos(r_theta);
-//     x[j][1] = r_rad * sin(r_phi) * sin(r_theta);
-//     x[j][2] = r_rad * cos(r_phi); 
     
-    x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
-    x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
-    if(dim == 3) {
-      x[j][2] = 0.;
-    }
+    //BEGIN random initialization
+    double r_rad = static_cast <double> (rand())/RAND_MAX;
+    r_rad = 0.4*(1.-r_rad*r_rad*r_rad);
+    double r_theta = static_cast <double> (rand())/RAND_MAX*2*pi;
+    double r_phi = static_cast <double> (rand())/RAND_MAX*pi;
+    
+    x[j][0] = r_rad * sin(r_phi) * cos(r_theta);
+    x[j][1] = r_rad * sin(r_phi) * sin(r_theta);
+    //x[j][2] = r_rad * cos(r_phi); 
+    //END 
+    
+    
+//     x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
+//     x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
+//     if(dim == 3) {
+//       x[j][2] = 0.;
+//     }
   }
 
   Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType);

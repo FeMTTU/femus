@@ -270,20 +270,19 @@ int main(int argc, char** args)
 
   //END INITIALIZE PARTICLES
 
-  double T = 160;
-  unsigned n  = 80;
+  double T = 240;
+  unsigned n  = 160;
 
   std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
 
-  clock_t advection_time = clock();
+  clock_t advection_time;
   for (unsigned k = 0; k < n; k++) {
+    if(k == n/2) advection_time = clock();
     for(int i = linea.size() - 1; i>=0; i--){
       linea[i]->AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n, 4);
-      linea[i]->GetStreamLine(streamline, linea.size() - i );
-      
+      linea[i]->GetStreamLine(streamline, linea.size() - i );     
     }
-//     linea[0]->GetStreamLine(streamline, k+1 );
     PrintLine(DEFAULT_OUTPUTDIR, streamline, true, k + 1);
     linea.resize(k+2);
     linea[k+1] =  new Line(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), 2);

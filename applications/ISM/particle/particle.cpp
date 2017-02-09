@@ -27,6 +27,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
                                  double &value, const int facename, const double time);
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group);
+void UpdateMeshCoordinates(MultiLevelMesh &mlMesh, MultiLevelSolution& mlSol);
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, char **args)
@@ -79,7 +80,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 3;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -87,7 +88,10 @@ int main(int argc, char **args)
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
                         infile.c_str(), "fifth", Lref, NULL);
 
-  //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 2);
+  MultiLevelMesh ml_msh1(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
+                        infile.c_str(), "fifth", Lref, NULL);
+  
+  //ml_msh1.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
 
   ml_msh.PrintInfo();
 
@@ -97,6 +101,10 @@ int main(int argc, char **args)
 
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
+  
+  MultiLevelSolution ml_sol1(&ml_msh1);
+  ml_sol1.AddSolution("aaaa", LAGRANGE, SECOND, 2);
+  ml_sol1.Initialize("All");
 
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 2);
@@ -191,7 +199,7 @@ int main(int argc, char **args)
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  //mov_vars.push_back("DZ");
+  mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
 
   std::vector<std::string> print_vars;
@@ -207,23 +215,26 @@ int main(int argc, char **args)
 
 
   //BEGIN INITIALIZE PARTICLES
-  unsigned pSize = 10;
+  unsigned pSize = 100;
   std::vector < std::vector < double > > x(pSize);
   std::vector < MarkerType > markerType(pSize);
 
+  double y0 = 0.007-0.0019/2;
+  double dy = 0.0019/pSize;
+  
   for (unsigned j = 0; j < pSize; j++) {
     x[j].resize(2);
     x[j][0] = 0.;
-    x[j][1] = 0.0065 + j * 0.00001;
+    x[j][1] = y0 + j * dy;
     markerType[j] = VOLUME;
   }
   //END INITIALIZE PARTICLES
 
   std::vector < std::vector < std::vector < double > > > streamline(pSize);
   std::vector< Line* > linea(1);
-
+  
   linea[0] =  new Line(x, markerType, ml_msh.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
-
+  
   linea[0]->GetStreamLine(streamline, 0);
   linea[0]->GetStreamLine(streamline, 1);
   PrintLine(DEFAULT_OUTPUTDIR, streamline, true, 0);
@@ -240,17 +251,24 @@ int main(int argc, char **args)
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
+  
+    
     for (int i = linea.size() - 1; i >= 0; i--) {
       linea[i]->AdvectionParallel(ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 4, 1. / 32., 4);
       linea[i]->GetStreamLine(streamline, linea.size() - i );
 
     }
+      
     PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
     linea.resize(time_step + 2);
     linea[time_step + 1] =  new Line(x, markerType, ml_msh.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
-
+    
+    UpdateMeshCoordinates(ml_msh1, ml_sol);
+            
     GetSolutionNorm(ml_sol, 9);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+    
+    //ml_sol1.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
 
 
@@ -519,5 +537,42 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
   delete p2;
   delete v2;
   delete vol;
+
+}
+
+
+void UpdateMeshCoordinates(MultiLevelMesh &mlMesh, MultiLevelSolution& mlSol)
+{
+
+  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+
+  Solution* solution  = mlSol.GetSolutionLevel(level);
+  Mesh* msh0 = mlSol._mlMesh->GetLevel(level);
+  
+  Mesh* msh = mlMesh.GetLevel(level);
+
+  const unsigned dim = msh->GetDimension();
+
+  const char varname[3][3] = {"DX", "DY", "DZ"};
+  vector <unsigned> indVAR(dim);
+  
+  for(unsigned k = 0; k < dim; k++) {
+    indVAR[k] = mlSol.GetIndex(&varname[k][0]);
+  }
+  
+  
+  for(unsigned k = 0; k < dim; k++) {
+    
+    (*msh->_topology->_Sol[k]).zero();
+    (*msh->_topology->_Sol[k]).close();
+    
+    (*msh->_topology->_Sol[k]).add( (*msh0->_topology->_Sol[k]) );
+    (*msh->_topology->_Sol[k]).close();
+    
+    (*msh->_topology->_Sol[k]).add( (*solution->_Sol[indVAR[k]]) );
+    (*msh->_topology->_Sol[k]).close();
+    
+  }
+ 
 
 }
