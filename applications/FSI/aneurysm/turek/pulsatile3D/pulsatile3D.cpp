@@ -111,7 +111,7 @@ int main(int argc, char ** args)
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 12000; //E=6000;
+  E = 120000; //E=6000;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
@@ -724,22 +724,28 @@ bool SetBoundaryConditionThrombus(const std::vector < double > & x, const char n
   value = 0.;
   double PI = acos(-1.);
 
+  double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
   if(!strcmp(name, "V")) {
-    double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     if(1 == facename) {
       double r2 = (x[0] * 100.) * (x[0] * 100.) + (x[2] * 100.) * (x[2] * 100.);
-      value = -0.01 / .9 * (.9 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = -0.01 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
     }
-    else if(2 == facename) {
+    else if(2 == facename || 5 == facename) {
       test = 0;
-      value = 10. * ramp;
+      value = 0;
+    }
+  }
+  else if(!strcmp(name, "U")){
+    if(2 == facename) {
+      test = 0;
+      value = (10000 + 2500 * sin(2*PI*time)) * ramp;;
     }
     else if(5 == facename) {
       test = 0;
-      value = 0.;
+      value = 0;
     }
   }
-  else if(!strcmp(name, "U") || !strcmp(name, "W")) {
+  else if(!strcmp(name, "W")) {
     if(2 == facename || 5 == facename) {
       test = 0;
       value = 0.;
