@@ -10,7 +10,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
-#include "../../include/FSITimeDependentAssemblySupg.hpp"
+#include "../../include/FSITimeDependentAssembly.hpp"
 #include <cmath>
 double scale = 1000.;
 
@@ -20,6 +20,9 @@ using namespace femus;
 double SetVariableTimeStep(const double time);
 
 bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[],
+                                 double &value, const int facename, const double time);
+
+bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char name[],
                                  double &value, const int facename, const double time);
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
@@ -45,6 +48,9 @@ int main(int argc, char **args)
     }
     else if(!strcmp("3", args[1])) {   /** FSI Turek 11 stents 60 micron */
       simulation = 3;
+    }
+    else if(!strcmp("4", args[1])) {   /** FSI AAA thrombus 2D */
+      simulation = 4;
     }
   }
 
@@ -73,10 +79,13 @@ int main(int argc, char **args)
   else if(simulation == 3) {
     infile = "./input/Turek_11stents_60micron.neu";
   }
+  else if(simulation == 4) {
+    infile = "./input/AAA_thrombus_2D.neu";
+  }
   //std::string infile = "./input/Turek.neu";
 
   // ******* Set physics parameters *******
-  double Lref, Uref, rhof, muf, rhos, ni, E;
+  double Lref, Uref, rhof, muf, rhos, ni, E, E1;
 
   Lref = 1.;
   Uref = 1.;
@@ -86,6 +95,7 @@ int main(int argc, char **args)
   rhos = 1120;
   ni = 0.5;
   E = 1000000 * 1.e0; //turek:120000*1.e0;
+  E1 = 600;
 
   Parameter par(Lref, Uref);
 
@@ -93,6 +103,9 @@ int main(int argc, char **args)
   Solid solid;
   solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
 
+  Solid solid1;
+  solid1 = Solid(par, E, ni, rhos, "Mooney-Rivlin");
+  
   cout << "Solid properties: " << endl;
   cout << solid << endl;
 
@@ -142,7 +155,12 @@ int main(int argc, char **args)
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek2D);
+  if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3){
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek2D); 
+  }
+  else if(simulation == 4) {
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus2D);
+  }
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
@@ -162,6 +180,7 @@ int main(int argc, char **args)
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
+  ml_prob.parameters.set<Solid>("Solid1") = solid1;
 
   // ******* Add FSI system to the MultiLevel problem *******
   TransientMonolithicFSINonlinearImplicitSystem & system = ml_prob.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
@@ -174,7 +193,7 @@ int main(int argc, char **args)
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSITimeDependentAssemblySupg);
+  system.SetAssembleFunction(FSITimeDependentAssembly);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
@@ -246,7 +265,12 @@ int main(int argc, char **args)
     system.MGsolve();
     //data[time_step][0] = time_step / 32.;
     data[time_step][0] = time_step / (64*1.4);
-    GetSolutionNorm(ml_sol, 9, data[time_step]);
+    if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
+      GetSolutionNorm(ml_sol, 9, data[time_step]);
+    }
+    else if (simulation == 4){ //AAA_thrombus, 15=thrombus
+      GetSolutionNorm(ml_sol, 7, data[time_step]); 
+    }
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
   
@@ -266,6 +290,9 @@ int main(int argc, char **args)
     }
     else if(simulation == 3){
       outf.open("DataPrint_Turek11Stents.txt");
+    }
+    else if(simulation == 4){
+      outf.open("DataPrint_AAA_thrombus_2D.txt");
     }
     
     
@@ -383,6 +410,52 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
   return test;
 
 }
+
+
+bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+  bool test = 1; //dirichlet
+  value = 0.;
+  
+  double PI = acos(-1.);
+
+  if(!strcmp(name, "V")) {
+
+    if(1 == facename) {
+      double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
+      double r2 = (x[0] * 100.) * (x[0] * 100.);
+      value = -0.01/.9 * (.9 - r2); //inflow
+    }
+    else if(2 == facename) {
+      test = 0;
+      value = 11335.;
+    }
+  }
+  else if(!strcmp(name, "U")) {
+    if(2 == facename || 5==facename) {
+      test = 0;
+      value = 0.;
+    }
+  }
+  else if(!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+  }
+  else if(!strcmp(name, "DX")) {
+    if( 5 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if(!strcmp(name, "DY")) {
+    if( 5 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+
+  return test;
+}
+
 
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)

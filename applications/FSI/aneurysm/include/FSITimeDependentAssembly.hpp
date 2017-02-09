@@ -137,6 +137,8 @@ namespace femus
     double mu_lame 	= ml_prob.parameters.get<Solid>("Solid").get_lame_shear_modulus();
     double lambda_lame 	= ml_prob.parameters.get<Solid>("Solid").get_lame_lambda();
     double mus		= mu_lame / rhof;
+    double mu_lame1 	= ml_prob.parameters.get < Solid>("Solid1").get_lame_shear_modulus();
+    double mus1 	= mu_lame1 / rhof;
     double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
     double lambda	= lambda_lame / rhof;
     double betans	= 1.;
