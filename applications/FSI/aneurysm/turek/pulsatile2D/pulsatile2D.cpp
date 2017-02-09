@@ -95,7 +95,7 @@ int main(int argc, char **args)
   rhos = 1120;
   ni = 0.5;
   E = 1000000 * 1.e0; //turek:120000*1.e0;
-  E1 = 600;
+  E1 = 10000;
 
   Parameter par(Lref, Uref);
 
@@ -165,9 +165,15 @@ int main(int argc, char **args)
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
-
-  ml_sol.GenerateBdc("U", "Time_dependent");
-  ml_sol.GenerateBdc("V", "Steady");
+  
+  if(simulation == 4) {    
+    ml_sol.GenerateBdc("U", "Steady");
+    ml_sol.GenerateBdc("V", "Time_dependent");
+  }
+  else {
+    ml_sol.GenerateBdc("U", "Time_dependent");
+    ml_sol.GenerateBdc("V", "Steady");
+  }
 
   ml_sol.GenerateBdc("P", "Steady");
 
@@ -314,7 +320,9 @@ int main(int argc, char **args)
 }
 
 double SetVariableTimeStep(const double time) {
-  double dt = 1./(64*1.4);
+  //double dt = 1./(64*1.4);
+  double dt = 1./32;
+  
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
 //     else dt = 0.025;
@@ -419,19 +427,19 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
   double PI = acos(-1.);
 
   if(!strcmp(name, "V")) {
-
+    double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     if(1 == facename) {
-      double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
       double r2 = (x[0] * 100.) * (x[0] * 100.);
-      value = -0.01/.9 * (.9 - r2); //inflow
+      //value = -0.01/.9 * (.9 - r2); //inflow
+      value = -0.01 / .9 * (.9 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
     }
     else if(2 == facename) {
       test = 0;
-      value = 11335.;
+      value = (10000 + 2500 * sin(2*PI*time)) * ramp;;
     }
   }
   else if(!strcmp(name, "U")) {
-    if(2 == facename || 5==facename) {
+    if(2 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }

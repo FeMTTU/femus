@@ -213,6 +213,7 @@ namespace femus
       unsigned nve        = mymsh->GetElementDofNumber(iel, SolType2);
       unsigned nve1       = mymsh->GetElementDofNumber(iel, SolType1);
       int flag_mat        = mymsh->GetElementMaterial(iel);
+      unsigned elementGroup = mymsh->GetElementGroup(iel);
 
       // *******************************************************************************************************
 
@@ -521,8 +522,11 @@ namespace femus
                 double eps = 1.0e-12;
                 speed = sqrt(speed + eps);
 		speed_old = sqrt(speed_old + eps);
-                double DE = 0.00006; // turek2D
-                if (dim == 3){
+		double DE = 0;
+		if (dim == 2){
+		  double DE = 0.00006; // turek2D
+		}
+                else if (dim == 3){
 		  double DE = 0.000125; // porous3D
 		}
                 double b = 4188;
@@ -757,7 +761,8 @@ namespace femus
               I2_B_old = B_old[0][0] * B_old[1][1] + B_old[1][1] * B_old[2][2] + B_old[2][2] * B_old[0][0]
                          - B_old[0][1] * B_old[1][0] - B_old[1][2] * B_old[2][1] - B_old[2][0] * B_old[0][2];
 
-              double C1 = mus / 3.;
+              //double C1 = mus / 3.;
+	      double C1 = ( elementGroup == 15 )? mus1 / 3.: mus / 3.;
               double C2 = C1 / 2.;
 
               for(int I = 0; I < 3; ++I) {
