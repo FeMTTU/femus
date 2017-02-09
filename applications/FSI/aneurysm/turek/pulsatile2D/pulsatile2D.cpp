@@ -10,7 +10,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
-#include "../../include/FSITimeDependentAssembly.hpp"
+#include "../../include/FSITimeDependentAssemblySupg.hpp"
 #include <cmath>
 double scale = 1000.;
 
@@ -199,7 +199,7 @@ int main(int argc, char **args)
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSITimeDependentAssembly);
+  system.SetAssembleFunction(FSITimeDependentAssemblySupg);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
