@@ -53,8 +53,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 double InitalValueT(const std::vector < double >& x) {
   return sin(4.0 * x[0]);
 };
-void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numofrefinements);
-void PrintNonlinearTime(char *stdOutfile, char* outfile, const unsigned &numofrefinements);
+void PrintConvergenceInfo(unsigned n_timesteps, char *stdOutfile, char* outfile, const unsigned &numofrefinements);
+void PrintNonlinearTime(unsigned n_timesteps,char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi);
 
@@ -120,6 +120,7 @@ int main(int argc, char** args) {
 
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
+  mlMsh.EraseCoarseLevels(3);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -229,7 +230,7 @@ int main(int argc, char** args) {
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetFieldSplitTree(&FS_NST);
-  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
+  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
@@ -251,7 +252,7 @@ int main(int argc, char** args) {
 
   double dt = 0.25;
   system.SetIntervalTime(dt);
-  unsigned n_timesteps = 2400;
+  unsigned n_timesteps = 1200;
  
   Marker marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
   unsigned elem = marker.GetMarkerElement();
@@ -292,13 +293,19 @@ int main(int argc, char** args) {
     outfile2 << (time_step + 1) * dt <<"  "<< solV_pt[1] << std::endl;
     outfile3 << (time_step + 1) * dt <<"  "<< solPT_pt[0] << std::endl;
     outfile4 << (time_step + 1) * dt <<"  "<< solPT_pt[1] << std::endl;
-    if ((time_step + 1) % 10 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+    if ((time_step + 1) % 5 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
   }
   outfile1.close();
   outfile2.close();
   outfile3.close();
   outfile4.close();
   mlMsh.PrintInfo();
+    
+  char *stdOutfile1 = new char[100];
+  char *outfile6 = new char[100];
+  sprintf(stdOutfile1, "%sprintout_infoPr=%sRa=%s_time.txt", args[1], args[2], args[3]);
+  sprintf(outfile6, "%scomputational_timePr=%sRa=%s_time.txt", args[1], args[2], args[3]);
+  PrintNonlinearTime(n_timesteps,stdOutfile1, outfile6, numberOfUniformLevels);  
 
   return 0;
 }
@@ -827,4 +834,55 @@ std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem&
   solVXi.clearBroadcast();
   solTXi.clearBroadcast();
   return out_value;
+}
+
+
+void PrintNonlinearTime(unsigned n_timesteps, char *stdOutfile, char* outfile, const unsigned &numofrefinements) {
+
+  std::cout << "END_COMPUTATION\n" << std::flush;
+
+  std::ifstream inf;
+  inf.open(stdOutfile);
+  if(!inf) {
+    std::cout << "Redirected standard output file not found\n";
+    std::cout << "add option -std_output std_out_filename > std_out_filename\n";
+    return;
+  }
+
+  std::ofstream outf;
+  outf.open(outfile, std::ofstream::app);
+ // outf << std::endl;
+ // outf << "\nLevel_Max, Assembly Time, Solver Time, Nonlinear Time";
+
+  unsigned counter = 0;
+  std::vector <double> Assembly_Time(n_timesteps, 0.);
+  std::vector <double> Solver_Time(n_timesteps, 0.);
+  std::string str1;
+  inf >> str1;
+  while(str1.compare("END_COMPUTATION") != 0) {
+    if(str1.compare("assembly") == 0) {
+      inf >> str1;
+      if(str1.compare("TIME(") == 0) {
+         double value;
+         inf >> value;
+	 Assembly_Time[counter] = value; 
+      }
+    }
+    else if(str1.compare("solver") == 0) {
+      inf >> str1;
+      if(str1.compare("TIME(") == 0) {
+        double value1;
+        inf >> value1;
+        Solver_Time[counter]  = value1;
+	counter ++;
+      }
+    }
+    inf >> str1;
+  }
+
+  for(unsigned i = 0; i < n_timesteps; i++) {
+    outf << Assembly_Time[i] <<" "<<Solver_Time[i]<< std::endl;
+  }
+  outf.close();
+  inf.close();
 }

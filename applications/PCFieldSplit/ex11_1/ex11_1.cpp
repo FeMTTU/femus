@@ -119,7 +119,7 @@ int main(int argc, char** args) {
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(3);
+  mlMsh.EraseCoarseLevels(4);
 
   // print mesh info
   mlMsh.PrintInfo();
