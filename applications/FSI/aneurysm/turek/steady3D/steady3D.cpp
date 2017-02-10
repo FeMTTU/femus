@@ -108,8 +108,8 @@ int main(int argc, char **args) {
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 100000; //E = 6000;
-  E1 = 1000; 
+  E = 60000; //E = 6000;
+  E1 = 2000; 
   
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
@@ -405,6 +405,12 @@ bool SetBoundaryConditionTurek(const std::vector < double >& x, const char name[
     }
   }
   else if(!strcmp(name, "V") || !strcmp(name, "W")) {
+    if(2 == facename) {
+      test = 0;
+      value = 11335.;
+    }
+  }
+  else if(!strcmp(name, "W")) {
     if(2 == facename) {
       test = 0;
       value = 0.;
