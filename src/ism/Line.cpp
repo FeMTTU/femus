@@ -830,7 +830,7 @@ namespace femus {
 
     }
     
-   std::cout<<_time[0]<<" "<<_time[1]<<" "<<_time[2]<<" "<<_time[3]<<" "<<_time[4]<<" "<<_time[5]<<std::endl<<std::flush;
+   //std::cout<<_time[0]<<" "<<_time[1]<<" "<<_time[2]<<" "<<_time[3]<<" "<<_time[4]<<" "<<_time[5]<<std::endl<<std::flush;
   }
 }
 

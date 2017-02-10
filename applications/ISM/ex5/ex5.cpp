@@ -13,30 +13,33 @@ using namespace femus;
 
 
 // 2D CASE rigid rotation
-double InitalValueU(const std::vector < double >& x) {
-  return -x[1];
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  return x[0];
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  return 0.;
-}
+// double InitalValueU(const std::vector < double >& x) {
+//   return -x[1];
+// }
+//
+// double InitalValueV(const std::vector < double >& x) {
+//   return x[0];
+// }
+//
+// double InitalValueW(const std::vector < double >& x) {
+//   return 0.;
+// }
 
 
 //3D CASE  rotation
-// double InitalValueU(const std::vector < double >& x) {
-//   return (-x[1]+x[2])/sqrt(3);
+// double InitalValueU(const std::vector < double >& x)
+// {
+//   return (-x[1] + x[2]) / sqrt(3);
 // }
 // 
-// double InitalValueV(const std::vector < double >& x) {
-//   return (x[0]-x[2])/sqrt(3);
+// double InitalValueV(const std::vector < double >& x)
+// {
+//   return (x[0] - x[2]) / sqrt(3);
 // }
 // 
-// double InitalValueW(const std::vector < double >& x) {
-//   return (x[1]-x[0])/sqrt(3);
+// double InitalValueW(const std::vector < double >& x)
+// {
+//   return (x[1] - x[0]) / sqrt(3);
 // }
 
 
@@ -61,57 +64,59 @@ double InitalValueW(const std::vector < double >& x) {
 
 
 // 3D CASE with vorticity
-// double pi = acos(-1.);
-// 
-// double InitalValueU(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
-//     ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
-//     )* cos(time);
-// }
-// 
-// double InitalValueV(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
-//     ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
-//     )* cos(time);
-// }
-// 
-// double InitalValueW(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
-//     ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
-//     )* cos(time);
-// 
-//   return 0.;
-// }
+double pi = acos(-1.);
+
+double InitalValueU(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
+    ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
+    )* cos(time);
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
+    ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
+    )* cos(time);
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
+    ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
+    )* cos(time);
+
+  return 0.;
+}
 
 
-bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
+bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level)
+{
 
   bool refine = 0;
 
-  if(elemgroupnumber == 6 && level < 4) refine = 1;
-  if(elemgroupnumber == 7 && level < 5) refine = 1;
-  if(elemgroupnumber == 8 && level < 6) refine = 1;
+  if (elemgroupnumber == 6 && level < 4) refine = 1;
+  if (elemgroupnumber == 7 && level < 5) refine = 1;
+  if (elemgroupnumber == 8 && level < 6) refine = 1;
 
   return refine;
 
 }
 
 
-int main(int argc, char** args) {
+int main(int argc, char** args)
+{
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  //unsigned numberOfUniformLevels = 3; //for refinement in 3D
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 3; //for refinement in 3D
+  //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   std::vector < std::string > variablesToBePrinted;
 
@@ -131,8 +136,8 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/tri2.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeMixed.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/test3Dbis.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/test2Dbis.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/test2D.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cubeTet.neu", "seventh", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
@@ -185,10 +190,10 @@ int main(int argc, char** args) {
   // add variables to mlSol
   mlSol.AddSolution("U", LAGRANGE, SECOND, 2);
   mlSol.AddSolution("V", LAGRANGE, SECOND, 2);
-  if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND, 2);
+  if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND, 2);
   mlSol.Initialize("U" , InitalValueU);
   mlSol.Initialize("V" , InitalValueV);
-  if(dim == 3) mlSol.Initialize("W", InitalValueW);
+  if (dim == 3) mlSol.Initialize("W", InitalValueW);
 
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
 // Marker a1Quad(x, VOLUME, mlMsh.GetLevel(0), solType, true);
@@ -205,7 +210,7 @@ int main(int argc, char** args) {
   clock_t start_time = clock();
   clock_t init_time = clock();
 
-  unsigned size = 100;
+  unsigned size = 10000;
   std::vector < std::vector < double > > x; // marker
   std::vector < MarkerType > markerType;
 
@@ -215,32 +220,34 @@ int main(int argc, char** args) {
   std::vector < std::vector < std::vector < double > > > line(1);
   std::vector < std::vector < std::vector < double > > > line0(1);
 
-  for(unsigned j = 0; j < size; j++) {
+  for (unsigned j = 0; j < size; j++) {
     x[j].assign(dim, 0.);
     markerType[j] = VOLUME;
   }
 
-  srand(1);
+//   srand(2); //TODO 3D n=10, problem at iteration 6 with seed srand(1);
   double pi = acos(-1.);
-  for(unsigned j = 0; j < size; j++) {
-    
+  for (unsigned j = 0; j < size; j++) {
+
     //BEGIN random initialization
-    double r_rad = static_cast <double> (rand())/RAND_MAX;
-    r_rad = 0.4*(1.-r_rad*r_rad*r_rad);
-    double r_theta = static_cast <double> (rand())/RAND_MAX*2*pi;
-    double r_phi = static_cast <double> (rand())/RAND_MAX*pi;
-    
-    x[j][0] = r_rad * sin(r_phi) * cos(r_theta);
-    x[j][1] = r_rad * sin(r_phi) * sin(r_theta);
-    //x[j][2] = r_rad * cos(r_phi); 
-    //END 
-    
-    
-//     x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
-//     x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
-//     if(dim == 3) {
-//       x[j][2] = 0.;
+//     double r_rad = static_cast <double> (rand()) / RAND_MAX;
+//     r_rad = 0.4 * (1. - r_rad * r_rad * r_rad);
+//     double r_theta = static_cast <double> (rand()) / RAND_MAX * 2 * pi;
+//     double r_phi = static_cast <double> (rand()) / RAND_MAX * pi;
+// 
+//     x[j][0] = r_rad * sin(r_phi) * cos(r_theta);
+//     x[j][1] = r_rad * sin(r_phi) * sin(r_theta);
+//     if (dim == 3) {
+//       x[j][2] = r_rad * cos(r_phi);
 //     }
+    //END
+
+
+    x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
+    x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
+    if (dim == 3) {
+      x[j][2] = 0.;
+    }
   }
 
   Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType);
@@ -249,7 +256,7 @@ int main(int argc, char** args) {
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
   double T = 2 * acos(-1.);
-  unsigned n = 20;
+  unsigned n = 16;
 
   std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
@@ -257,12 +264,13 @@ int main(int argc, char** args) {
 
   clock_t advection_time = clock();
 
-  for(unsigned k = 1; k <= n; k++) {
+  for (unsigned k = 1; k <= n; k++) {
+    std::cout << "Iteration = " << k << std::endl;
     //uncomment for  vortex test
-//     mlSol.CopySolutionToOldSolution();
-//     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
-//     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
-//     if(dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
+    mlSol.CopySolutionToOldSolution();
+    mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
+    mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
+    if (dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
     linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 40, T / n, 4);
     linea.GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
@@ -277,9 +285,9 @@ int main(int argc, char** args) {
 
   //computing the geometric error
   double error = 0.;
-  for(unsigned j = 0; j < size + 1; j++) {
+  for (unsigned j = 0; j < size + 1; j++) {
     double tempError = 0.;
-    for(unsigned i = 0; i < dim; i++) {
+    for (unsigned i = 0; i < dim; i++) {
       tempError += (line0[0][j][i] - line[0][j][i]) * (line0[0][j][i] - line[0][j][i]);
     }
     error += sqrt(tempError);
