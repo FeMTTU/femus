@@ -421,8 +421,11 @@ namespace femus {
                 }
                 double eps = 1.0e-12;
                 speed = sqrt(speed + eps);
-                double DE = 0.00006; // turek2D
-                if (dim == 3){
+                double DE = 0.000125;
+                if (dim == 2){
+		 double DE = 0.00006; // turek2D 
+		}
+                else if (dim == 3){
 		  double DE = 0.000125; // porous3D
 		}
                 double b = 4188;
