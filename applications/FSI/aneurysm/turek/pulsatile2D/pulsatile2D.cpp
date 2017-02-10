@@ -269,8 +269,8 @@ int main(int argc, char **args)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    //data[time_step][0] = time_step / 32.;
-    data[time_step][0] = time_step / (64*1.4);
+    data[time_step][0] = time_step / 32.;
+    //data[time_step][0] = time_step / (64*1.4);
     if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
       GetSolutionNorm(ml_sol, 9, data[time_step]);
     }
@@ -380,10 +380,10 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
   if ( !strcmp(name, "U") ) {
 
     if (1 == facename) {
-      //double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
-      double ramp = (time < period) ? sin(PI/2 * time / period) : 1.;
-//       value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8)*(1.+ 0.75*sin(2.*PI* time / period)) * ramp; //inflow
-      value = (x[1] * 1000 - 6) * ( x[1] * 1000 - 8) * vel[j] * ramp; //inflow
+      double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
+      //double ramp = (time < period) ? sin(PI/2 * time / period) : 1.;
+      value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8)*(1.+ 0.75*sin(2.*PI* time)) * ramp; //inflow
+      //value = (x[1] * 1000 - 6) * ( x[1] * 1000 - 8) * vel[j] * ramp; //inflow
     }
     else if ( 2 == facename || 5 == facename ) {
       test = 0;

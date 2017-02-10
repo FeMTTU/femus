@@ -474,7 +474,7 @@ bool SetBoundaryConditionTurek(const std::vector < double > & x, const char name
       test = 0;
       value = pressure[j] * ramp;
       //value = 11335 * ramp;
-      //value = (10000 + 2500 * sin(2*PI*time)/period) * ramp;      
+      //value = (10000 + 2500 * sin(2*PI*time)) * ramp;      
     }
     else if(5 == facename) {
       test = 0;

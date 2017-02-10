@@ -458,10 +458,10 @@ namespace femus
                 aRhs[indexVAR[idim]][i] += (!solidmark[i]) * (- LapmapVAR[idim] * Weight_nojac);
               }
 
-              //END redidual Laplacian ALE map in reference domain
+              //END residual Laplacian ALE map in reference domain
 
               if(flag_mat == 2){
-		//BEGIN redidual Navier-Stokes in moving domain
+		//BEGIN residual Navier-Stokes in moving domain
 		adept::adouble LapvelVAR[3] = {0., 0., 0.};
 		adept::adouble LapvelVAR_old[3] = {0., 0., 0.};
 		adept::adouble AdvaleVAR[3] = {0., 0., 0.};
@@ -523,8 +523,11 @@ namespace femus
                 double eps = 1.0e-12;
                 speed = sqrt(speed + eps);
 		speed_old = sqrt(speed_old + eps);
-                double DE = 0.00006; // turek2D
-                if (dim == 3){
+		double DE = 0.000125;
+                if (dim == 2){
+		  double DE = 0.00006; // turek2D
+		}
+                else if (dim == 3){
 		  double DE = 0.000125; // porous3D
 		}
                 double b = 4188;
