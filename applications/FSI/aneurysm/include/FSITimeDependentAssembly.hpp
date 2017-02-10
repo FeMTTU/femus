@@ -524,10 +524,11 @@ namespace femus
 		speed_old = sqrt(speed_old + eps);
 		double DE = 0.000125;
 		if (dim == 2){
-		  double DE = 0.00006; // turek2D
+		  //DE = 0.00006; // turek2D
+		  DE = 0.000125;
 		}
                 else if (dim == 3){
-		  double DE = 0.000125; // porous3D
+		  DE = 0.000125; // porous3D
 		}
                 double b = 4188;
                 double a = 1452;

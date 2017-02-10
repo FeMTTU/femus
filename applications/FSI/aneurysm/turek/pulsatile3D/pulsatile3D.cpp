@@ -111,7 +111,7 @@ int main(int argc, char ** args)
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 120000; //E=6000;
+  E = 12000; //E=6000;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
