@@ -114,7 +114,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 6;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -214,11 +214,12 @@ int main(int argc, char** args) {
 
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
+  
+  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
+  //system.SetResidualUpdateConvergenceTolerance(1.e-12);
 
-  system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+//   system.SetMaxNumberOfLinearIterations(1);
+//   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
 
