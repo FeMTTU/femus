@@ -294,7 +294,7 @@ int main(int argc, char** args) {
     outfile2 << (time_step + 1) * dt <<"  "<< solV_pt[1] << std::endl;
     outfile3 << (time_step + 1) * dt <<"  "<< solPT_pt[0] << std::endl;
     outfile4 << (time_step + 1) * dt <<"  "<< solPT_pt[1] << std::endl;
-    if ((time_step + 1) % 5 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+    if ((time_step + 1) % 10 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
   }
   outfile1.close();
   outfile2.close();
