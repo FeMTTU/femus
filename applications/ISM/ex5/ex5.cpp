@@ -225,7 +225,9 @@ int main(int argc, char** args)
     markerType[j] = VOLUME;
   }
 
-//   srand(2); //TODO 3D n=10, problem at iteration 6 with seed srand(1);
+   //srand(1); //TODO 3D rotation n=10, problem at iteration 6 with seed srand(1);
+             //TODO 3D vortex n=16, problem at iteration 11 with seed srand(2);
+             //TODO 3D vortex srand(2) gives different errors
   double pi = acos(-1.);
   for (unsigned j = 0; j < size; j++) {
 

@@ -136,7 +136,7 @@ int main(int argc, char** args)
      probably in the furure it is not going to be an argument of this function   */
   dim = mlMsh.GetDimension();
 
-  numberOfUniformLevels = 1;
+  numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
@@ -278,9 +278,10 @@ int main(int argc, char** args)
 
   clock_t advection_time;
   for (unsigned k = 0; k < n; k++) {
+    std::cout<< "Iteration = "<< k << std::endl;
     if(k == n/2) advection_time = clock();
     for(int i = linea.size() - 1; i>=0; i--){
-      linea[i]->AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 4, T / n, 4);
+      linea[i]->AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 40, T / n, 4);
       linea[i]->GetStreamLine(streamline, linea.size() - i );     
     }
     PrintLine(DEFAULT_OUTPUTDIR, streamline, true, k + 1);
