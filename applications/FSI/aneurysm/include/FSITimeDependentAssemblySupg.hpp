@@ -168,6 +168,8 @@ namespace femus
     unsigned igrid  = mymsh->GetLevel();
     unsigned iproc  = mymsh->processor_id();
 
+     unsigned indLmbd=ml_sol->GetIndex("lmbd");
+    
     //----------------------------------------------------------------------------------
     //variable-name handling
     const char varname[7][3] = {"DX", "DY", "DZ", "U", "V", "W", "P"};
@@ -441,6 +443,33 @@ namespace femus
         // ---------------------------------------------------------------------------
         //BEGIN FLUID ASSEMBLY ============
         if(flag_mat == 2 || flag_mat == 3 ) {
+	  
+	  
+	    vector < adept::adouble > a(dim);
+	    for(int i=0; i<dim; i++){
+	      a[i]=SolVAR[i+dim];// maybe we subtract meshVel[i]
+	    }
+
+	    // speed
+	    adept::adouble aL2Norm=0.;
+	    for(int i=0;i<dim;i++){
+	      aL2Norm += a[i]*a[i];
+	    }
+	    aL2Norm=sqrt(aL2Norm);
+
+	    double sqrtlambdak = (*mysolution->_Sol[indLmbd])(iel);
+	    adept::adouble tauSupg=1. / ( sqrtlambdak*sqrtlambdak *4.*IRe);
+	    adept::adouble Rek   = aL2Norm / ( 4.*sqrtlambdak*IRe);
+
+	    if( Rek > 1.0e-15){
+	      adept::adouble xiRek = ( Rek >= 1. ) ? 1.:Rek;
+
+	      tauSupg   = xiRek/(aL2Norm*sqrtlambdak);
+	    }
+	  
+	  
+	  
+	  
           //BEGIN ALE + Momentum (Navier-Stokes)
           {
             for(unsigned i = 0; i < nve; i++) {
@@ -526,14 +555,14 @@ namespace femus
 		double DE = 0.;
                 if (dim == 2){
 		  //DE = 0.00006; // turek2D
-		  DE = 0.000125;
+		  DE = 0.000065;
 		}
                 else if (dim == 3){
-		  DE = 0.000125; // porous3D
+		  DE = 0.000065; // porous3D
 		}
                 double b = 4188;
                 double a = 1452;
-                double K = DE * IRe * rhof / b;
+                double K = DE * IRe * rhof / b; // alpha = mu/b * De
                 double C2 = 2 * a / (rhof * DE);
 		
 		

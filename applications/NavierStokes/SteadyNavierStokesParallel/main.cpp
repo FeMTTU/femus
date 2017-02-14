@@ -823,8 +823,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 		  else if (1 == ivar + jvar ) kvar = dim;   // xy
 		  else if (2 == ivar + jvar ) kvar = dim+2; // xz
 		  else if (3 == ivar + jvar ) kvar = dim+1; // yz
-		  Res[ivar] += - SolVAR[jvar]*GradSolVAR[ivar][jvar]
-			       + IRe * ( NablaSolVAR[ivar][jvar] + NablaSolVAR[jvar][kvar] );
+		  Res[ivar] += - SolVAR[jvar]*GradSolVAR[ivar][jvar] // inconsistent
+			       + IRe * ( NablaSolVAR[ivar][jvar] + NablaSolVAR[jvar][kvar] ); //consistent
 		}
 	      }
 
@@ -851,8 +851,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 		    Laplacian += IRe*gradphi[i*dim+jvar]*(GradSolVAR[ivar][jvar]+GradSolVAR[jvar][ivar]);
 		    phiSupg   += ( SolVAR[jvar]*gradphi[i*dim+jvar] ) * tauSupg;
 
-		    aRhs[indexVAR[ivar]][i] += 	 Res[ivar] * (-IRe * nablaphi[i*nabla_dim+jvar])* tauSupg * Weight;
-		    aRhs[indexVAR[jvar]][i] += 	 Res[ivar] * (-IRe * nablaphi[i*nabla_dim+kvar])* tauSupg * Weight;
+		    aRhs[indexVAR[ivar]][i] += 	 Res[ivar] * (-IRe * nablaphi[i*nabla_dim+jvar])* tauSupg * Weight; //only in least square
+		    aRhs[indexVAR[jvar]][i] += 	 Res[ivar] * (-IRe * nablaphi[i*nabla_dim+kvar])* tauSupg * Weight; //only in least square
 		  }
 		  aRhs[indexVAR[ivar]][i]+= ( - Advection - Laplacian
 					      + ( SolVAR[dim] - deltaSupg * div_vel) * gradphi[i*dim+ivar]
