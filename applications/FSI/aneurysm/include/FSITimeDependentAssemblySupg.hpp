@@ -446,25 +446,34 @@ namespace femus
 	  
 	  
 	    vector < adept::adouble > a(dim);
+	    vector < adept::adouble > a_old(dim);
 	    for(int i=0; i<dim; i++){
 	      a[i]=SolVAR[i+dim];// maybe we subtract meshVel[i]
+	      a_old[i]=SolVAR_old[i+dim];// maybe we subtract something??
 	    }
 
 	    // speed
 	    adept::adouble aL2Norm=0.;
+	    adept::adouble a_oldL2Norm=0.;
 	    for(int i=0;i<dim;i++){
 	      aL2Norm += a[i]*a[i];
+	      a_oldL2Norm += a_old[i]*a_old[i];
 	    }
 	    aL2Norm=sqrt(aL2Norm);
+	    a_oldL2Norm=sqrt(a_oldL2Norm);
 
 	    double sqrtlambdak = (*mysolution->_Sol[indLmbd])(iel);
 	    adept::adouble tauSupg=1. / ( sqrtlambdak*sqrtlambdak *4.*IRe);
-	    adept::adouble Rek   = aL2Norm / ( 4.*sqrtlambdak*IRe);
+	    adept::adouble tauSupg_old=1. / ( sqrtlambdak*sqrtlambdak *4.*IRe);
+	    adept::adouble Rek = aL2Norm / ( 4.*sqrtlambdak*IRe);
+	    adept::adouble Rek_old = a_oldL2Norm / ( 4.*sqrtlambdak*IRe);
 
-	    if( Rek > 1.0e-15){
+	    if( Rek > 1.0e-15 && Rek_old > 1.0e-15){
 	      adept::adouble xiRek = ( Rek >= 1. ) ? 1.:Rek;
+	      adept::adouble xiRek_old = ( Rek_old >= 1. ) ? 1.:Rek_old;
 
 	      tauSupg   = xiRek/(aL2Norm*sqrtlambdak);
+	      tauSupg_old   = xiRek_old/(a_oldL2Norm*sqrtlambdak);
 	    }
 	  
 	  
