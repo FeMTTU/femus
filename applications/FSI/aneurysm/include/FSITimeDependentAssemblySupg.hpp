@@ -467,7 +467,7 @@ void FSITimeDependentAssemblySupg(MultiLevelProblem & ml_prob)
                 adept::adouble Rek = aL2Norm / ( 4.*sqrtlambdak*IRe);
                 adept::adouble Rek_old = a_oldL2Norm / ( 4.*sqrtlambdak*IRe);
 
-                if( Rek > 1.0e-15 || Rek_old > 1.0e-15) {
+                if( Rek > 1.0e-15 && Rek_old > 1.0e-15) {
                     adept::adouble xiRek = ( Rek >= 1. ) ? 1.:Rek;
                     adept::adouble xiRek_old = ( Rek_old >= 1. ) ? 1.:Rek_old;
 
