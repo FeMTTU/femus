@@ -27,20 +27,20 @@ using namespace femus;
 
 
 //3D CASE  rotation
-// double InitalValueU(const std::vector < double >& x)
-// {
-//   return (-x[1] + x[2]) / sqrt(3);
-// }
-// 
-// double InitalValueV(const std::vector < double >& x)
-// {
-//   return (x[0] - x[2]) / sqrt(3);
-// }
-// 
-// double InitalValueW(const std::vector < double >& x)
-// {
-//   return (x[1] - x[0]) / sqrt(3);
-// }
+double InitalValueU(const std::vector < double >& x)
+{
+  return (-x[1] + x[2]) / sqrt(3);
+}
+
+double InitalValueV(const std::vector < double >& x)
+{
+  return (x[0] - x[2]) / sqrt(3);
+}
+
+double InitalValueW(const std::vector < double >& x)
+{
+  return (x[1] - x[0]) / sqrt(3);
+}
 
 
 // //2D CASE with vorticity
@@ -64,33 +64,33 @@ using namespace femus;
 
 
 // 3D CASE with vorticity
-double pi = acos(-1.);
-
-double InitalValueU(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return
-    2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
-    ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
-    )* cos(time);
-}
-
-double InitalValueV(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return
-    2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
-    ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
-    )* cos(time);
-}
-
-double InitalValueW(const std::vector < double >& x) {
-  double time = (x.size() == 4) ? x[3] : 0.;
-  return
-    2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
-    ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
-    )* cos(time);
-
-  return 0.;
-}
+// double pi = acos(-1.);
+// 
+// double InitalValueU(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return
+//     2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
+//     ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
+//     )* cos(time);
+// }
+// 
+// double InitalValueV(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return
+//     2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
+//     ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
+//     )* cos(time);
+// }
+// 
+// double InitalValueW(const std::vector < double >& x) {
+//   double time = (x.size() == 4) ? x[3] : 0.;
+//   return
+//     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
+//     ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
+//     )* cos(time);
+// 
+//   return 0.;
+// }
 
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level)
@@ -210,7 +210,7 @@ int main(int argc, char** args)
   clock_t start_time = clock();
   clock_t init_time = clock();
 
-  unsigned size = 10000;
+  unsigned size = 100;
   std::vector < std::vector < double > > x; // marker
   std::vector < MarkerType > markerType;
 
@@ -256,7 +256,7 @@ int main(int argc, char** args)
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
   double T = 2 * acos(-1.);
-  unsigned n = 16;
+  unsigned n = 100;
 
   std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
