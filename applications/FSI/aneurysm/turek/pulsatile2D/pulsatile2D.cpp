@@ -95,7 +95,7 @@ int main(int argc, char **args)
   rhos = 1120;
   ni = 0.5;
   E = 1000000 * 1.e0; //turek:120000*1.e0;
-  E1 = 10000;
+  E1 = 30000;
 
   Parameter par(Lref, Uref);
 
@@ -104,7 +104,7 @@ int main(int argc, char **args)
   solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
 
   Solid solid1;
-  solid1 = Solid(par, E, ni, rhos, "Mooney-Rivlin");
+  solid1 = Solid(par, E1, ni, rhos, "Mooney-Rivlin");
   
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -117,7 +117,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 3;
+  numberOfUniformRefinedMeshes = 4;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
