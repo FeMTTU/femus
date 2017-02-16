@@ -177,7 +177,9 @@ int main(int argc, char **args)
 
   ml_sol.GenerateBdc("P", "Steady");
 
-  SetLambda(ml_sol, numberOfUniformRefinedMeshes - 1 , SECOND, ELASTICITY);
+  for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
+    SetLambda(ml_sol, level , SECOND, ELASTICITY);
+  }
   
   // ******* Define the FSI Multilevel Problem *******
 
