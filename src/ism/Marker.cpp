@@ -415,6 +415,7 @@ namespace femus {
 
     //BEGIN next element search
     while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
+       std::cout <<previousElem<<" "<<currentElem<<std::endl<<std::flush;
       if(_dim == 2) {
         _elem = GetNextElement2D(currentElem, previousElem);
       }
@@ -422,7 +423,8 @@ namespace femus {
         _elem = GetNextElement3D(currentElem, previousElem);
       }
       previousElem = currentElem;
-
+      std::cout <<previousElem<<" "<<currentElem<<std::endl<<std::flush;
+      
       // std::cout << previousElem << std::cout << std::flush;
 
       if(_elem == currentElem) {
@@ -792,6 +794,38 @@ namespace femus {
       //std::cout << " xc[" << k << "]= " <<xc[k] <<std::endl;
     }
 
+    
+    if(currentElem == 2057){
+      std::cout<<std::endl<<std::flush;
+      for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
+        for(unsigned itri = 0; itri < trianglesPerFace[currentElementType][_solType][iface]; itri ++) {
+	  for(unsigned i = 0; i < 4; i++) {
+	    unsigned itriDof  = _mesh->GetSolutionDof(faceTriangleNodes[currentElementType][_solType][iface][itri][i], currentElem, 2);
+	    for(unsigned k = 0; k < _dim; k++) {
+	      std::cout << (*_mesh->_topology->_Sol[k])(itriDof) <<" ";
+	    }
+	    std::cout<<std::endl<<std::flush;
+	  }
+	  std::cout<<std::endl<<std::flush;
+	}
+	std::cout<<std::endl<<std::flush;
+      }
+      
+      unsigned centralNodeDof = _mesh->GetSolutionDof(centralNodeLocalIndex, currentElem, 2);
+
+      for(unsigned k = 0; k < _dim; k++) {
+	std::cout << (*_mesh->_topology->_Sol[k])(centralNodeDof) <<" ";     // coordinates are translated so that the marker is the new origin
+      }
+      std::cout<<std::endl<<std::flush;
+      for(unsigned k = 0; k < _dim; k++) {
+	std::cout << _x[k] << " ";    // coordinates are translated so that the marker is the new origin
+      }
+      std::cout<<std::endl<<std::flush;
+      exit(1);
+    }
+    
+   
+    
     if(xc[0]*xc[0] < epsilon2 && xc[1]*xc[1] < epsilon2 && xc[2]*xc[2] < epsilon2) {
       //   std::cout << "the marker is the central element node" << std::endl;
       markerIsInElement = true; //the marker is xc
@@ -831,25 +865,28 @@ namespace femus {
         d2 += xcs[d] * xcs[d];
       }
       bool insideHull = true;
-      if(d2 > radius2) {
-        insideHull = false;
-      }
-      for(unsigned k = 0; k < _dim; k++) {
-        if(xe[k][0] * xe[k][1] > 0.) {
-          insideHull = false;
-        }
-      }
-      if(!insideHull) {
-        nextElem = FastForward(currentElem, previousElem);
-        if(nextElem >= 0) {
-          nextElementFound = true;
-        }
-        else {
-          insideHull = true;
-        }
-      }
+//       if(d2 > radius2) {
+//         insideHull = false;
+//       }
+//       for(unsigned k = 0; k < _dim; k++) {
+//         if(xe[k][0] * xe[k][1] > 0.) {
+//           insideHull = false;
+//         }
+//       }
+//       if(!insideHull) {
+//         nextElem = FastForward(currentElem, previousElem);
+//         if(nextElem >= 0) {
+//           nextElementFound = true;
+//         }
+//         else {
+//           insideHull = true;
+//         }
+//       }
 
       if(insideHull) {
+	
+	std::cout<<"I am in...."<<std::flush;
+	
         for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
 
           // std::cout << "iface = " << iface << std::endl;
