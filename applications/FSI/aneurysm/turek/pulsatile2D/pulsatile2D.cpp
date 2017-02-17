@@ -95,7 +95,7 @@ int main(int argc, char **args)
   rhos = 1120;
   ni = 0.5;
   E = 1000000 * 1.e0; //turek:120000*1.e0;
-  E1 = 10000;
+  E1 = 100000;
 
   Parameter par(Lref, Uref);
 
@@ -104,7 +104,7 @@ int main(int argc, char **args)
   solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
 
   Solid solid1;
-  solid1 = Solid(par, E, ni, rhos, "Mooney-Rivlin");
+  solid1 = Solid(par, E1, ni, rhos, "Mooney-Rivlin");
   
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -434,7 +434,7 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
     if(1 == facename) {
       double r2 = (x[0] * 100.)*(x[0] * 100.);
       //value = -0.01/.9 * (.9 - r2); //inflow
-      value = -0.02 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = -0.04 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
     }
     if(2 == facename || 5 == facename) {
       test = 0;

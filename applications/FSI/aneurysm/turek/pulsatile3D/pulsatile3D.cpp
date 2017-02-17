@@ -10,7 +10,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
-#include "../../include/FSITimeDependentAssembly.hpp"
+#include "../../include/FSITimeDependentAssemblySupg.hpp"
 #include <cmath>
 
 double scale = 1000.;
@@ -102,7 +102,7 @@ int main(int argc, char ** args)
   //std::string infile = "./input/AAA_thrombus.neu";
 
   // ******* Set physics parameters *******
-  double Lref, Uref, rhof, muf, rhos, ni, E;
+  double Lref, Uref, rhof, muf, rhos, ni, E, E1;
 
   Lref = 1.;
   Uref = 1.;
@@ -111,7 +111,8 @@ int main(int argc, char ** args)
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 12000; //E=6000;
+  E = 6000; //E=12000;
+  E1 = 1200;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
@@ -134,6 +135,9 @@ int main(int argc, char ** args)
   // Generate Solid Object
   Solid solid;
   solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
+  
+  Solid solid1;
+  solid1 = Solid(par, E1, ni, rhos, "Mooney-Rivlin");
 
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -181,6 +185,8 @@ int main(int argc, char ** args)
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("P", "Pressure", false); // Add this line
+  
+  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -221,7 +227,10 @@ int main(int argc, char ** args)
 
   if(!dimension2D) ml_sol.GenerateBdc("W", "Steady");
   ml_sol.GenerateBdc("P", "Steady");
-
+  
+  for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
+    SetLambda(ml_sol, level , SECOND, ELASTICITY);
+  }
 
   // ******* Define the FSI Multilevel Problem *******
 
@@ -230,6 +239,7 @@ int main(int argc, char ** args)
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
+  ml_prob.parameters.set<Solid>("Solid1") = solid1;
 
   // ******* Add FSI system to the MultiLevel problem *******
   TransientMonolithicFSINonlinearImplicitSystem & system = ml_prob.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
@@ -242,7 +252,7 @@ int main(int argc, char ** args)
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSITimeDependentAssembly);
+  system.SetAssembleFunction(FSITimeDependentAssemblySupg);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
@@ -316,9 +326,14 @@ int main(int argc, char ** args)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    //data[time_step][0] = time_step / 32.;
-    data[time_step][0] = time_step / (64*1.4);
-    GetSolutionNorm(ml_sol, 9, data[time_step]);
+    data[time_step][0] = time_step / 32.;
+    //data[time_step][0] = time_step / (64*1.4);
+    if (simulation == 3){ //AAA_thrombus, 15=thrombus
+      GetSolutionNorm(ml_sol, 7, data[time_step]); 
+    }
+    else if (simulation == 0 || simulation == 4){
+      GetSolutionNorm(ml_sol, 9, data[time_step]);  
+    }
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
   
@@ -328,6 +343,9 @@ int main(int argc, char ** args)
     std::ofstream outf;
     if(simulation == 0) {
       outf.open("DataPrint_Turek_3D.txt");
+    }
+    else if(simulation == 3) {
+      outf.open("DataPrint_AAA_thrombus_3D.txt");
     }
     else if(simulation == 4) {
       outf.open("DataPrint_Turek_3D_Porous.txt");
@@ -357,8 +375,8 @@ int main(int argc, char ** args)
 
 double SetVariableTimeStep(const double time)
 {
-  //double dt = 1. / 32;
-  double dt = 1./(64*1.4); 
+  double dt = 1. / 32;
+  //double dt = 1./(64*1.4); 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
 //     else dt = 0.025;

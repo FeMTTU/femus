@@ -480,8 +480,6 @@ namespace femus
           
           vector < adept::adouble > phiSupg(nve,0.);
           vector < adept::adouble > phiSupg_old(nve,0.);
-          tauSupg = 0;
-          tauSupg_old = 0;
           for (unsigned i = 0; i < nve; i++) {
             for (unsigned j = 0; j < dim; j++ ) {
               phiSupg[i] += ( ( SolVAR[j + dim] - meshVel[j] ) * gradphi[i * dim + j] ) * tauSupg;
@@ -1269,7 +1267,7 @@ namespace femus
         }
       }
 
-      std::cout << lambdak*hk*hk << std::endl;
+      //std::cout << lambdak*hk*hk << std::endl;
       mysolution->_Sol[indLmbd]->set(iel, sqrt(lambdak));
       //abort();
     } //end list of elements loop
