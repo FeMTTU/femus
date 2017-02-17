@@ -109,18 +109,19 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/rectangle_w1_h8.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/rectangle_w1_h8.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/rectangle1.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 6;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
-  mlMsh.EraseCoarseLevels(3);
+  //mlMsh.EraseCoarseLevels(3);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -280,22 +281,22 @@ int main(int argc, char** args) {
   vector <double> solV_pt(2);
   vector <double> solPT_pt(2);
   std::pair < vector <double>, vector <double> > out_value;
-  for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-
-    if(time_step > 0) system.SetMgType(V_CYCLE);
-
-    system.MGsolve();
-    system.CopySolutionToOldSolution();
-    out_value = GetVaribleValues(mlProb, elem, xi);
-    solV_pt = out_value.first;
-    solPT_pt = out_value.second;
-    
-    outfile1 << (time_step + 1) * dt <<"  "<< solV_pt[0] << std::endl;
-    outfile2 << (time_step + 1) * dt <<"  "<< solV_pt[1] << std::endl;
-    outfile3 << (time_step + 1) * dt <<"  "<< solPT_pt[0] << std::endl;
-    outfile4 << (time_step + 1) * dt <<"  "<< solPT_pt[1] << std::endl;
-    if ((time_step + 1) % 100 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
-  }
+//   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+// 
+//     if(time_step > 0) system.SetMgType(V_CYCLE);
+// 
+//     //system.MGsolve();
+//     system.CopySolutionToOldSolution();
+//     out_value = GetVaribleValues(mlProb, elem, xi);
+//     solV_pt = out_value.first;
+//     solPT_pt = out_value.second;
+//     
+//     outfile1 << (time_step + 1) * dt <<"  "<< solV_pt[0] << std::endl;
+//     outfile2 << (time_step + 1) * dt <<"  "<< solV_pt[1] << std::endl;
+//     outfile3 << (time_step + 1) * dt <<"  "<< solPT_pt[0] << std::endl;
+//     outfile4 << (time_step + 1) * dt <<"  "<< solPT_pt[1] << std::endl;
+//     if ((time_step + 1) % 100 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+//   }
   outfile1.close();
   outfile2.close();
   outfile3.close();
