@@ -91,7 +91,7 @@ int main(int argc, char ** args)
     infile = "./input/aneurisma_aorta.neu";
   }
   else if(simulation == 3) {
-    infile = "./input/AAA_thrombus.neu";
+    infile = "./input/AAA.neu";
   }
   else if(simulation == 4) {
   infile = "./input/Turek_3D_porous.neu";
@@ -111,8 +111,8 @@ int main(int argc, char ** args)
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 12000; //E=6000;
-  E1 = 1200;
+  E = 6000; //E=12000;
+  //E1 = 1200;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
@@ -185,6 +185,8 @@ int main(int argc, char ** args)
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("P", "Pressure", false); // Add this line
+  
+  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -343,7 +345,7 @@ int main(int argc, char ** args)
       outf.open("DataPrint_Turek_3D.txt");
     }
     else if(simulation == 3) {
-      outf.open("DataPrint_AAA_thrombus.txt");
+      outf.open("DataPrint_AAA_thrombus_3D.txt");
     }
     else if(simulation == 4) {
       outf.open("DataPrint_Turek_3D_Porous.txt");
