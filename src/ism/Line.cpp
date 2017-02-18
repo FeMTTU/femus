@@ -590,7 +590,7 @@ namespace femus {
       unsigned counter = 0;
       for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
-	std::cout << _printList[iMarker] <<" "<<std::flush;
+	//std::cout << _printList[iMarker] <<" "<<std::flush;
 	
 	unsigned currentElem = _particles[iMarker]->GetMarkerElement();
 	bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
@@ -657,13 +657,13 @@ namespace femus {
 	    _particles[iMarker]->SetIprocMarkerStep(step);
 	    
 	    
-	    std::cout << step <<" "<< istep<< " AAAAAAAAAAAAA"<<std::endl<<std::flush;
+	    //std::cout << step <<" "<< istep<< " AAAAAAAAAAAAA"<<std::endl<<std::flush;
             unsigned previousElem = currentElem;
 	    localTime = clock();
 	    _particles[iMarker]->GetElementSerial(previousElem);
 	    _time[4] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
             localTime = clock();
-	    std::cout << step <<" "<< istep<< " BBBBBBBBBBBBB"<<std::endl<<std::flush;
+	   // std::cout << step <<" "<< istep<< " BBBBBBBBBBBBB"<<std::endl<<std::flush;
 	    
             _particles[iMarker]->SetIprocMarkerPreviousElement(previousElem);
 	    

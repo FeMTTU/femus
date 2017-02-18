@@ -27,20 +27,20 @@ using namespace femus;
 
 
 //3D CASE  rotation
-double InitalValueU(const std::vector < double >& x)
-{
-  return (-x[1] + x[2]) / sqrt(3);
-}
-
-double InitalValueV(const std::vector < double >& x)
-{
-  return (x[0] - x[2]) / sqrt(3);
-}
-
-double InitalValueW(const std::vector < double >& x)
-{
-  return (x[1] - x[0]) / sqrt(3);
-}
+// double InitalValueU(const std::vector < double >& x)
+// {
+//   return (-x[1] + x[2]) / sqrt(3);
+// }
+// 
+// double InitalValueV(const std::vector < double >& x)
+// {
+//   return (x[0] - x[2]) / sqrt(3);
+// }
+// 
+// double InitalValueW(const std::vector < double >& x)
+// {
+//   return (x[1] - x[0]) / sqrt(3);
+// }
 
 
 // //2D CASE with vorticity
@@ -64,33 +64,33 @@ double InitalValueW(const std::vector < double >& x)
 
 
 // 3D CASE with vorticity
-// double pi = acos(-1.);
-// 
-// double InitalValueU(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
-//     ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
-//     )* cos(time);
-// }
-// 
-// double InitalValueV(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
-//     ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
-//     )* cos(time);
-// }
-// 
-// double InitalValueW(const std::vector < double >& x) {
-//   double time = (x.size() == 4) ? x[3] : 0.;
-//   return
-//     2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
-//     ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
-//     )* cos(time);
-// 
-//   return 0.;
-// }
+double pi = acos(-1.);
+
+double InitalValueU(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*(sin(pi * (x[0] + 0.5)) * sin(pi * (x[0] + 0.5)) *
+    ( sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) - sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) )
+    )* cos(time);
+}
+
+double InitalValueV(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*(sin(pi * (x[1] + 0.5)) * sin(pi * (x[1] + 0.5)) *
+    ( sin(pi * (x[2] + 0.5)) * cos(pi * (x[2] + 0.5)) - sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) )
+    )* cos(time);
+}
+
+double InitalValueW(const std::vector < double >& x) {
+  double time = (x.size() == 4) ? x[3] : 0.;
+  return
+    2.*( sin(pi * (x[2] + 0.5)) * sin(pi * (x[2] + 0.5)) *
+    ( sin(pi * (x[0] + 0.5)) * cos(pi * (x[0] + 0.5)) - sin(pi * (x[1] + 0.5)) * cos(pi * (x[1] + 0.5)) )
+    )* cos(time);
+
+  return 0.;
+}
 
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level)
@@ -211,7 +211,7 @@ int main(int argc, char** args)
   clock_t init_time = clock();
 
 
-  unsigned size = 1;//0000;
+  unsigned size = 10000;
 
   std::vector < std::vector < double > > x; // marker
   std::vector < MarkerType > markerType;
@@ -227,8 +227,8 @@ int main(int argc, char** args)
     markerType[j] = VOLUME;
   }
 
-   srand(1); //TODO 3D rotation n=10, problem at iteration 6 with seed srand(1);
-             //TODO 3D vortex n=16, problem at iteration 11 with seed srand(2);
+   srand(2); //TODO 3D rotation n=10, problem at iteration 6 with seed srand(1);    FIXED
+             //TODO 3D vortex n=16, problem at iteration 11 with seed srand(2);     FIXED
              //TODO 3D vortex srand(2) gives different errors
   double pi = acos(-1.);
   for (unsigned j = 0; j < size; j++) {
@@ -251,7 +251,7 @@ int main(int argc, char** args)
     
   
  
-   if(j==1012) std::cout<< std::setprecision(14)<<x[j][0] <<" "<< x[j][1]<<" "<<x[j][2]<<std::endl;
+ //  if(j==1012) std::cout<< std::setprecision(14)<<x[j][0] <<" "<< x[j][1]<<" "<<x[j][2]<<std::endl;
 //     x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
 //     x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
 //     if (dim == 3) {
@@ -259,9 +259,9 @@ int main(int argc, char** args)
 //     }
   }
   
-     x[0][0] =  -0.026254446447862;
-     x[0][1] =  0.017548942620618;
-     x[0][2] =  0.28141676995866;
+//      x[0][0] =  -0.026254446447862;
+//      x[0][1] =  0.017548942620618;
+//      x[0][2] =  0.28141676995866;
      
  //exit(0);
 
@@ -272,7 +272,7 @@ int main(int argc, char** args)
 
   double T = 2 * acos(-1.);
 
-  unsigned n = 10;
+  unsigned n = 16;
 
   std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
             << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
