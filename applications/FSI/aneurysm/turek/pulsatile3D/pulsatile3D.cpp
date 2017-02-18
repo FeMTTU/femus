@@ -91,7 +91,7 @@ int main(int argc, char ** args)
     infile = "./input/aneurisma_aorta.neu";
   }
   else if(simulation == 3) {
-    infile = "./input/AAA.neu";
+    infile = "./input/AAA_thrombus.neu";
   }
   else if(simulation == 4) {
   infile = "./input/Turek_3D_porous.neu";
@@ -112,7 +112,7 @@ int main(int argc, char ** args)
   rhos = 1120;
   ni = 0.5;
   E = 6000; //E=12000;
-  E1 = 1200;
+  E1 = 3000;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
 //   rhof = 1035.;
