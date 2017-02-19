@@ -480,6 +480,8 @@ namespace femus
           
           vector < adept::adouble > phiSupg(nve,0.);
           vector < adept::adouble > phiSupg_old(nve,0.);
+	  tauSupg=0;
+	  tauSupg_old=0;
           for (unsigned i = 0; i < nve; i++) {
             for (unsigned j = 0; j < dim; j++ ) {
               phiSupg[i] += ( ( SolVAR[j + dim] - meshVel[j] ) * gradphi[i * dim + j] ) * tauSupg;
@@ -570,12 +572,11 @@ namespace femus
                 double eps = 1.0e-12;
                 speed = sqrt(speed + eps);
                 speed_old = sqrt(speed_old + eps);
-                double DE = 0.;
+                double DE = 0.000112;
                 if (dim == 2) {
-                  //DE = 0.00006; // turek2D
-                  DE = 0.000065;
+                  DE = 0.00006; // turek2D
                 } else if (dim == 3) {
-                  DE = 0.000065; // porous3D
+                  DE = 0.000112; // porous3D
                 }
                 double b = 4188;
                 double a = 1452;

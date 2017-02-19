@@ -111,7 +111,7 @@ int main(int argc, char ** args)
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 6000; //E=12000;
+  E = 12000; //E=6000;
   E1 = 3000;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
@@ -326,8 +326,8 @@ int main(int argc, char ** args)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step / 32.;
-    //data[time_step][0] = time_step / (64*1.4);
+    //data[time_step][0] = time_step / 32.;
+    data[time_step][0] = time_step / (64*1.4);
     if (simulation == 3){ //AAA_thrombus, 15=thrombus
       GetSolutionNorm(ml_sol, 7, data[time_step]); 
     }
@@ -375,8 +375,8 @@ int main(int argc, char ** args)
 
 double SetVariableTimeStep(const double time)
 {
-  double dt = 1. / 32;
-  //double dt = 1./(64*1.4); 
+  //double dt = 1. / 32;
+  double dt = 1./(64*1.4); 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
 //     else dt = 0.025;
