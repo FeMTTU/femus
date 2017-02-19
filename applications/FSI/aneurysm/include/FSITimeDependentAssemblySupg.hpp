@@ -480,8 +480,8 @@ namespace femus
           
           vector < adept::adouble > phiSupg(nve,0.);
           vector < adept::adouble > phiSupg_old(nve,0.);
-	  tauSupg=0;
-	  tauSupg_old=0;
+// 	  tauSupg=0;
+// 	  tauSupg_old=0;
           for (unsigned i = 0; i < nve; i++) {
             for (unsigned j = 0; j < dim; j++ ) {
               phiSupg[i] += ( ( SolVAR[j + dim] - meshVel[j] ) * gradphi[i * dim + j] ) * tauSupg;
@@ -526,12 +526,23 @@ namespace femus
                                         + (GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim]
                                         //) * phi[i];
                                        ) * (phi[i] + phiSupg[i]);
+				       
+// 		    AdvaleVAR[idim]	+= ((SolVAR[dim + jdim] - meshVel[jdim]) * GradSolVAR[dim + idim][jdim])
+//				           * (phi[i] + phiSupg[i])
+//                                         + ((GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim])
+//                                         * phi[i];
 
                     AdvaleVAR_old[idim]	+= ((SolVAR_old[dim + jdim] - meshVel[jdim]) * GradSolVAR_old[dim + idim][jdim]
                                             + (GradSolVAR_old[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR_old[dim + idim]
                                             //) * phi_old[i];
                                            ) * (phi_old[i] + phiSupg_old[i]);
-                  }
+                  
+// 		    AdvaleVAR_old[idim]	+= ((SolVAR_old[dim + jdim] - meshVel[jdim]) * GradSolVAR_old[dim + idim][jdim])
+// 					   * (phi_old[i] + phiSupg_old[i])
+//                                            + ((GradSolVAR_old[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR_old[dim + idim])
+//                                            * phi_old[i];
+					   
+		  }
                 }
 
                 for (int idim = 0; idim < dim; idim++) {

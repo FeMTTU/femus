@@ -228,9 +228,9 @@ int main(int argc, char ** args)
   if(!dimension2D) ml_sol.GenerateBdc("W", "Steady");
   ml_sol.GenerateBdc("P", "Steady");
   
-  for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
-    SetLambda(ml_sol, level , SECOND, ELASTICITY);
-  }
+//   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
+//     SetLambda(ml_sol, level , SECOND, ELASTICITY);
+//   }
 
   // ******* Define the FSI Multilevel Problem *******
 
@@ -321,18 +321,24 @@ int main(int argc, char ** args)
   std::vector < std::vector <double> > data(n_timesteps);
 
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+    for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
+      SetLambda(ml_sol, level , SECOND, ELASTICITY);
+    }
     data[time_step].resize(5);
     if(time_step > 0)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    //data[time_step][0] = time_step / 32.;
-    data[time_step][0] = time_step / (64*1.4);
-    if (simulation == 3){ //AAA_thrombus, 15=thrombus
-      GetSolutionNorm(ml_sol, 7, data[time_step]); 
-    }
-    else if (simulation == 0 || simulation == 4){
+    data[time_step][0] = time_step / 32.;
+    //data[time_step][0] = time_step / (64*1.4);
+    if (simulation == 0 || simulation == 4){
       GetSolutionNorm(ml_sol, 9, data[time_step]);  
+    }
+    else if (simulation == 2){ //aneurisma_aorta
+      GetSolutionNorm(ml_sol, 14, data[time_step]); 
+    }
+    else if (simulation == 3){ //AAA_thrombus, 15=thrombus
+      GetSolutionNorm(ml_sol, 7, data[time_step]); 
     }
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
@@ -343,6 +349,9 @@ int main(int argc, char ** args)
     std::ofstream outf;
     if(simulation == 0) {
       outf.open("DataPrint_Turek_3D.txt");
+    }
+    else if(simulation == 2) {
+      outf.open("DataPrint_aorta.txt");
     }
     else if(simulation == 3) {
       outf.open("DataPrint_AAA_thrombus_3D.txt");
@@ -375,8 +384,8 @@ int main(int argc, char ** args)
 
 double SetVariableTimeStep(const double time)
 {
-  //double dt = 1. / 32;
-  double dt = 1./(64*1.4); 
+  double dt = 1. / 32;
+  //double dt = 1./(64*1.4); 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
 //     else dt = 0.025;
