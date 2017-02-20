@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
     {
       elemtype = INVALID_ELEM;
     }
-
+    
   }
 
   std::string variableName = root["variable"].get("name", "Q").asString();
