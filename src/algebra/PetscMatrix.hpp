@@ -172,6 +172,8 @@ public:
   void print_personal(std::ostream& os=std::cout) const;    ///< print personal
   void print_personal(const std::string name="NULL") const; ///< print
   void print_hdf5(const std::string name="NULL") const;     ///< print hdf5
+  /** Print  to Matlab format */
+  void print_matlab(const std::string& name, const std::string& format) const;
 
   // functions ---------------------------------------------------
   /// Copies the diagonal part of the matrix

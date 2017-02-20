@@ -413,6 +413,79 @@ void PetscMatrix::print_personal(
   ierr = MatView(_mat, PETSC_VIEWER_STDOUT_WORLD);
   CHKERRABORT(MPI_COMM_WORLD,ierr);
 }
+
+
+void PetscMatrix::print_matlab(const std::string& name, const std::string& format) const
+{
+
+  this->close();
+
+  PetscErrorCode ierr=0;
+  PetscViewer petsc_viewer;
+  ierr = PetscViewerCreate (MPI_COMM_WORLD, 
+			    &petsc_viewer);
+  CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+  /**
+   * Create a binary file containing the matrix
+   * if a filename was provided.
+   */
+  if (name != "")
+    {
+      
+     if (format == "binary") {
+      
+         ierr = PetscViewerBinaryOpen( MPI_COMM_WORLD,
+                                      name.c_str(),
+                                      FILE_MODE_WRITE,
+                                      &petsc_viewer);
+         CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+         ierr = MatView (_mat, petsc_viewer);
+         CHKERRABORT(MPI_COMM_WORLD,ierr);
+     }
+     else if (format == "ascii") {
+         ierr = PetscViewerASCIIOpen( MPI_COMM_WORLD,
+                                      name.c_str(),
+                                      &petsc_viewer);
+         CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+         ierr = PetscViewerSetFormat (petsc_viewer,
+                                      PETSC_VIEWER_ASCII_MATLAB);
+         CHKERRABORT(MPI_COMM_WORLD,ierr);
+
+         ierr = MatView (_mat, petsc_viewer);
+         CHKERRABORT(MPI_COMM_WORLD,ierr);
+     }
+     else {
+       std::cout << "Provide either \"ascii\" or \"binary\" for the second argument" << std::endl;
+       abort(); 
+     }
+    
+    }
+
+  /**
+   * Otherwise the matrix will be dumped to the screen, regardless of the format you provide
+   */
+  else
+    {
+      ierr = PetscViewerSetFormat (PETSC_VIEWER_STDOUT_WORLD,
+                                   PETSC_VIEWER_ASCII_MATLAB);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
+      ierr = MatView (_mat, PETSC_VIEWER_STDOUT_WORLD);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
+    }
+
+  /**
+   * Destroy the viewer.
+   */
+  ierr = PetscViewerDestroy (&petsc_viewer);
+      CHKERRABORT(MPI_COMM_WORLD,ierr);
+      
+}
+
+
+
 // =====================================================
 void PetscMatrix::print_hdf5(const std::string /*name*/) const {
 
