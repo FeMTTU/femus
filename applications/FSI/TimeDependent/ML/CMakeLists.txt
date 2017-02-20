@@ -1,0 +1,9 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(FSI_TIME_DEPENDENT_ML)
+
+SET(MAIN_FILE "fsiTimeDepML")
+SET(EXEC_FILE "fsitimedepML")
+
+femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})
+

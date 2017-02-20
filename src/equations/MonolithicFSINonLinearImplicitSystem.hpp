@@ -62,23 +62,19 @@ public:
         return "MonolithicFSINonlinearImplicit";
     }
 
-     
+
     void SetElementBlockNumberFluid(unsigned const &dim_vanka_block, unsigned const &overlap=0);
     void SetElementBlockNumberSolid(unsigned const &dim_vanka_block, unsigned const &overlap=0);
     void SetElementBlockFluidAll();
     void SetElementBlockSolidAll();
-    
-protected:
 
-    /** Create the Restrictor matrix for the Multigrid solver */
-    void Restrictor(const unsigned &gridf, const unsigned &gridn, const unsigned &non_linear_iteration,
-                    const unsigned &linear_iteration, const bool &full_cycle);
+protected:
 
     /** Create the Prolongator and Restrictor Operators for the Algebraic Multigrid Solver */
     void BuildProlongatorMatrix(unsigned gridf);
-    
-   
-    
+
+
+
 
 private:
 

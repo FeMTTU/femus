@@ -314,11 +314,11 @@ void CurrentQuantity::GetElemDofs()  {
 //   
 //       for (unsigned i=0;i<nve2;i++) {
 // 	unsigned inode=_currEl._mesh_new->el->GetMeshDof(kel,i,SolType2);
-// 	unsigned inode_Metis=_currEl._mesh_new->GetMetisDof(inode,SolType2);
+// 	unsigned inode_Metis=_currEl._mesh_new->GetSolutionDof(inode,SolType2);
 // 	for(int j=0; j<_currEl._mesh_new->GetDimension(); j++) {
 
 // 	  Soli[indexVAR[j]][i] =  (*mysolution->_Sol[indVAR[j]])(inode_Metis);
-// // 	  dofsVAR[j][i] = myLinEqSolver->GetKKDof(indVAR[j],indexVAR[j],inode); 
+// // 	  dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indVAR[j],indexVAR[j],inode); 
 // 	}
 //       }
 

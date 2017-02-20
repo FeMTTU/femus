@@ -19,6 +19,7 @@
 #include <string>
 
 #include "MgSmootherEnum.hpp"
+#include "MgTypeEnum.hpp"
 
 namespace femus {
 
@@ -75,11 +76,14 @@ public:
 
 
     /** Update the old solution with new ones. It calls the update solution function of the Solution class */
-    virtual void UpdateSolution();
+    virtual void CopySolutionToOldSolution();
 
 
     /** calling the parent solve */
-    virtual void solve();
+    virtual void MLsolve();
+
+    /** calling the parent solve */
+    virtual void MGsolve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE );
 
 
     /** update the Newmark variables */
@@ -100,10 +104,15 @@ public:
     double GetIntervalTime() const {
         return _dt;
     };
-    
+
     /** Get the time */
     double GetTime() const {
         return _time;
+    };
+
+    /** Get the time */
+    void SetTime(const double time) {
+        _time = time;
     };
 
 protected:
@@ -120,6 +129,8 @@ private:
 
     /** pointer function to the set time step function */
     double (* _get_time_interval_function)(const double time);
+
+    unsigned _assembleCounter;
 
 };
 

@@ -37,11 +37,11 @@ namespace femus {
   const unsigned Writer::FemusToVTKorToXDMFConn[27] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,23,21,20,22,24,25,26};
 
   Writer::Writer( MultiLevelSolution* ml_sol ):
-    _ml_sol(ml_sol), _ml_mesh(ml_sol->_ml_msh)
+    _ml_sol(ml_sol), _ml_mesh(ml_sol->_mlMesh)
   {
     _gridn = _ml_mesh->GetNumberOfLevels();
-    _gridr = _ml_mesh->GetNumberOfGridTotallyRefined();
     _moving_mesh = 0;
+    _graph = false;
     _surface = false;
   }
 
@@ -49,8 +49,9 @@ namespace femus {
     _ml_sol(NULL), _ml_mesh(ml_mesh)
   {
     _gridn = _ml_mesh->GetNumberOfLevels();
-    _gridr = _ml_mesh->GetNumberOfGridTotallyRefined();
     _moving_mesh = 0;
+    _graph = false;
+    _surface = false;
   }
 
   Writer::~Writer() { }
@@ -101,10 +102,18 @@ namespace femus {
     _moving_vars = movvars_in;
   }
 
-  void Writer::SetSurfaceVariable(const std::string &surfaceVaraible){
-    _surface = true;
-    _surfaceVariable = surfaceVaraible;
+  void Writer::SetGraphVariable(const std::string &graphVaraible){
+    _graph = true;
+    _surface = false;
+    _graphVariable = graphVaraible;
   }
+
+  void Writer::SetSurfaceVariables( std::vector < std::string > &surfaceVariable ){
+    _surface = true;
+    _graph = false;
+    _surfaceVariables = surfaceVariable;
+  }
+
 
 } //end namespace femus
 

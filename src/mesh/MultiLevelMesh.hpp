@@ -72,8 +72,6 @@ public:
                             const int &ElemGroupNumber,const int &level));
 
     /** Add a partially refined mesh level in the AMR alghorithm **/
-    void AddMeshLevel();
-    
     void AddAMRMeshLevel();
     
     
@@ -105,7 +103,7 @@ public:
     const elem_type *_finiteElement[6][5];
     
     /** To be Added */
-    const Writer* GetWriter() const {return _writer; }
+    Writer* GetWriter() const {return _writer; }
 
     /** To be Added */
     void SetWriter(const WriterEnum format) { _writer = Writer::build(format,this).release(); }

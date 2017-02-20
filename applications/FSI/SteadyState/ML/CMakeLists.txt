@@ -1,0 +1,9 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+PROJECT(FSI_STEADY_ML)
+
+SET(MAIN_FILE "fsiSteadyML")
+SET(EXEC_FILE "fsisteadyML")
+
+femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})
+

@@ -12,6 +12,7 @@ enum SolverType {
     BICG,
     BICGSTAB,
     MINRES,
+    FGMRES,
     GMRES,
     LSQR,
     JACOBI,
