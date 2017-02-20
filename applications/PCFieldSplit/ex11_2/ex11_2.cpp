@@ -419,7 +419,7 @@ int main(int argc, char** args) {
   Solution* sol = mlSol.GetLevel(numberOfUniformLevels-1);
     
   for(unsigned i=0; i< sizeTUVP; i++){
-    system.MGsolve();
+    system.MLsolve();
 
     mlSol.GenerateBdc("All");
     
@@ -1155,14 +1155,14 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 	
         for(unsigned k = 0; k < dim; k++) {
           Res[irow] +=  -alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * gradSolT_gss[k] * weight;
-          Res[irow] +=  - 0.5 * phiT[i] *(solV0_gss[k] * gradSolT_gss[k] + solV_gss[k] * gradSolT0_gss[k]) * weight;
+          Res[irow] +=  - 0.5 * phiT[i] *(solV0_gss[k] * gradSolT_gss[k] + solV_gss[k] * gradSolT0_gss[k]) * weight; // why is gradsolT0_gass[k]
 
           if(assembleMatrix) {
             unsigned irowMat = irow * nDofsTVP;
 
             for(unsigned j = 0; j < nDofsT; j++) {
               Jac[ irowMat + j ] +=  alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * phiT_x[j * dim + k] * weight;
-              Jac[ irowMat + j ] +=  0.5 * phiT[i] * solV0_gss[k] * phiT_x[j * dim + k] * weight;
+              Jac[ irowMat + j ] +=  0.5 * phiT[i] * solV0_gss[k] * phiT_x[j * dim + k] * weight; //why is 0.5 here
             }
 
             for(unsigned j = 0; j < nDofsV; j++) {
@@ -1204,7 +1204,10 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
                 unsigned jcol2 = (nDofsT + l * nDofsV + j);
                 Jac[ irowMat + jcol1] += sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
                 Jac[ irowMat + jcol2] += sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
+//		Jac[ irowMat + jcol1] += sqrt(Pr / Ra) * phiV_x[i * dim + k] * phiV_x[j * dim + k] * weight;
+//		Jac[ irowMat + jcol2] += sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
                 Jac[ irowMat + jcol1] += 0.5 * phiV[i] * solV0_gss[l] * phiV_x[j * dim + l] * weight;
+//		Jac[ irowMat + jcol1] += 0.5 * phiV[i] * solV0_gss[l] * phiV_x[j * dim + k] * weight;
                 Jac[ irowMat + jcol2] += 0.5 * phiV[i] * phiV[j] * gradSolV0_gss[k][l] * weight;
               }
             }
