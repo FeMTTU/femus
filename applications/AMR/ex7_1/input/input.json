@@ -19,7 +19,8 @@
     "variable" : { "name" : "T",
                    "func_source1" : "2.*exp(10*x)*(-10.*pi*cos(pi*x)+(pi*pi-50.)*sin(pi*x))*sin(pi*y)",
 		   "func_source2" : "2.*exp(10*x)*(-10.*4.*pi*cos(4*pi*x)+(4.*pi*4.*pi-50.)*sin(4.*pi*x))*sin(4.*pi*y)",
-		   "func_source3" : "2*pi*pi*sin(pi*x)*sin(pi*y)"
+		   "func_source3" : "2*pi*pi*sin(pi*x)*sin(pi*y)",
+		   "func_source4" : "2*(y-y*y+x-x*x)*atan(10*sqrt(2)*(x+y)-16)-10*sqrt(2)*((1-2*x)*(y-y*y)+(x-x*x)*(1-2*y))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))-10*sqrt(2)*((1-2*x)*(y-y*y)+(x-x*x)*(1-2*y))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))+800.*(x-x*x)*(y-y*y)*(10*sqrt(2)*(x+y)-16)/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))"
                  },
 
     // Boundary conditions
@@ -49,6 +50,11 @@
     "func_sol3" : { "sol"   : "sin(pi*x) * sin(pi*y)",
                    "dsoldx" : "pi*cos(pi*x)*sin(pi*y)",
                    "dsoldy" : "pi*sin(pi*x)*cos(pi*y)"
+                   },
+                   
+    "func_sol4" : { "sol"   : "(x-x*x)*(y-y*y)*atan(10*sqrt(2)*(x+y)-16)",
+                   "dsoldx" : "(1-2*x)*(y-y*y)*atan(10*sqrt(2)*(x+y)-16)+10*sqrt(2)*(x-x*x)*(y-y*y)/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))",
+                   "dsoldy" : "(x-x*x)*(1-2*y)*atan(10*sqrt(2)*(x+y)-16)+10*sqrt(2)*(x-x*x)*(y-y*y)/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))"
                    },
 
     // MG Solver properties
