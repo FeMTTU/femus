@@ -436,44 +436,17 @@ int main(int argc, char** args) {
     }
     
        
-    unsigned sizeUV = sizeU + sizeV;
-    unsigned sizeUVP = sizeUV + sizeP;
-    std::vector < double > Case(4,0.);
-    
-    unsigned counterm1=counter - 1;
-//     if ( counterm1 <  sizeU ){
-//       counterm1 -= 0;
-//       Case[0] = 1.;
-//     }	
-//     else if ( counterm1 < sizeUV ){
-//       counterm1 -= sizeU;
-//       Case[1] = 1.;
-//     }
-//     else if ( counterm1 < sizeUVP ){
-//       counterm1 -= sizeUV;
-//       Case[2] = 1.;
-//     }
-//     else {
-//       counterm1 -= sizeUVP;
-//       Case[3] = 1.;
-//     }
-//    
-      
     for(unsigned j = 0; j < sizeU; j++ ){
-      double test = (j == counterm1)?1.:0.;
-      fout << (*sol->_Sol[solVIndex[0]])(j) - test*Case[0] << " ";
+      fout << (*sol->_Sol[solVIndex[0]])(j) << " ";
     }
     for(unsigned j = 0; j < sizeV; j++ ){
-      double test = (j == counterm1)?1.:0.;
-      fout << (*sol->_Sol[solVIndex[1]])(j) - test*Case[1]<< " ";
+      fout << (*sol->_Sol[solVIndex[1]])(j) << " ";
     }
     for(unsigned j = 0; j < sizeP; j++ ){
-      double test = (j == counterm1)?1.:0.;
-      fout << (*sol->_Sol[solPIndex])(j) - test*Case[2]<< " ";
+      fout << (*sol->_Sol[solPIndex])(j)<< " ";
     }
     for(unsigned j = 0; j < sizeT; j++ ){
-      double test = (j == counterm1)?1.:0.;
-      fout << (*sol->_Sol[solTIndex])(j) - test*Case[3] << " ";
+      fout << (*sol->_Sol[solTIndex])(j)<< " ";
     }
 
 // std::cout << sizeT <<"AAA" << sizeU <<"BBB"<<sizeV<<"CCC" << sizeP<<"DDD"<<std::endl;   
