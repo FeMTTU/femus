@@ -702,7 +702,7 @@ bool SetBoundaryConditionAorta(const std::vector < double > & x, const char name
 //       test = 0;
 //       value = 0.5 *1.e-01; //Pressure value/rhof
       double r2 = ((x[0] + 0.075563) / 0.0104) * ((x[0] + 0.075563) / 0.0104) + (x[2] / 0.0104) * (x[2] / 0.0104);
-      value = 0.03 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = 0.02 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
     }
   }
 

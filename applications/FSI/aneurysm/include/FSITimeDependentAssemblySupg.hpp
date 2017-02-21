@@ -519,36 +519,25 @@ namespace femus
                 for (int idim = 0.; idim < dim; idim++) {
                   for (int jdim = 0.; jdim < dim; jdim++) {
 
-                    LapvelVAR[idim]     += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
-                    LapvelVAR_old[idim] += (GradSolVAR_old[dim + idim][jdim] + GradSolVAR_old[dim + jdim][idim]) * gradphi_old[i * dim + jdim];
+                    LapvelVAR[idim]     += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim]; //laplaciano debole
+                    LapvelVAR_old[idim] += (GradSolVAR_old[dim + idim][jdim] + GradSolVAR_old[dim + jdim][idim]) * gradphi_old[i * dim + jdim]; //laplaciano debole vecchio
 
                     AdvaleVAR[idim]	+= ((SolVAR[dim + jdim] - meshVel[jdim]) * GradSolVAR[dim + idim][jdim]
                                         + (GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim]
                                         //) * phi[i];
                                        ) * (phi[i] + phiSupg[i]);
 				       
-// 		    AdvaleVAR[idim]	+= ((SolVAR[dim + jdim] - meshVel[jdim]) * GradSolVAR[dim + idim][jdim])
-//				           * (phi[i] + phiSupg[i])
-//                                         + ((GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim])
-//                                         * phi[i];
-
                     AdvaleVAR_old[idim]	+= ((SolVAR_old[dim + jdim] - meshVel[jdim]) * GradSolVAR_old[dim + idim][jdim]
                                             + (GradSolVAR_old[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR_old[dim + idim]
                                             //) * phi_old[i];
-                                           ) * (phi_old[i] + phiSupg_old[i]);
-                  
-// 		    AdvaleVAR_old[idim]	+= ((SolVAR_old[dim + jdim] - meshVel[jdim]) * GradSolVAR_old[dim + idim][jdim])
-// 					   * (phi_old[i] + phiSupg_old[i])
-//                                            + ((GradSolVAR_old[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR_old[dim + idim])
-//                                            * phi_old[i];
-					   
+                                           ) * (phi_old[i] + phiSupg_old[i]);					   
 		  }
                 }
 
                 for (int idim = 0; idim < dim; idim++) {
 
                   adept::adouble timeDerivative = -(SolVAR[dim + idim] * (phi[i] + phiSupg[i]) * Weight
-                                                    - SolVAR_old[dim + idim] * (phi_old[i]+phiSupg_old[i]) * Weight_old);
+                                                    - SolVAR_old[dim + idim] * (phi_old[i] + phiSupg_old[i]) * Weight_old);
 
                   adept::adouble value =  theta * dt * (
                                             - AdvaleVAR[idim]      	             // advection term
