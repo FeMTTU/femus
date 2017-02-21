@@ -547,8 +547,8 @@ namespace femus
 
                 for (int idim = 0; idim < dim; idim++) {
 
-                  adept::adouble timeDerivative = -(SolVAR[dim + idim] * phi[i] * Weight
-                                                    - SolVAR_old[dim + idim] * phi_old[i] * Weight_old);
+                  adept::adouble timeDerivative = -(SolVAR[dim + idim] * (phi[i] + phiSupg[i]) * Weight
+                                                    - SolVAR_old[dim + idim] * (phi_old[i]+phiSupg_old[i]) * Weight_old);
 
                   adept::adouble value =  theta * dt * (
                                             - AdvaleVAR[idim]      	             // advection term
@@ -997,6 +997,15 @@ namespace femus
     const unsigned nablaGoeDim = (3 * (geoDim - 1) + !(geoDim - 1));
     const unsigned max_size = static_cast< unsigned > (ceil(pow(3, geoDim)));
 
+    
+    const char varname[3][3] = {"DX", "DY", "DZ"};
+    vector <unsigned> indVAR(geoDim);
+    
+    for (unsigned ivar = 0; ivar < geoDim; ivar++) {
+      indVAR[ivar] = mlSol.GetIndex(&varname[ivar][0]);
+    }
+    
+    
     bool diffusion, elasticity;
     if ( operatorType == DIFFUSION ) {
       diffusion  = true;
@@ -1081,8 +1090,9 @@ namespace femus
         unsigned inodeVx_Metis = mymsh->GetSolutionDof(i, iel, SolTypeVx);
         for (int j = 0; j < geoDim; j++) {
           //coordinates
-          vx[j][i] =  (*mymsh->_topology->_Sol[j])(inodeVx_Metis);
-        }
+          vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) + 
+		      (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis);
+	 }
       }
       // ------------------------------------
 

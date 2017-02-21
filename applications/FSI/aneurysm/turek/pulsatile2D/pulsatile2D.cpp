@@ -177,9 +177,9 @@ int main(int argc, char **args)
 
   ml_sol.GenerateBdc("P", "Steady");
 
-  for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
-    SetLambda(ml_sol, level , SECOND, ELASTICITY);
-  }
+//   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
+//     SetLambda(ml_sol, level , SECOND, ELASTICITY);
+//   }
   
   // ******* Define the FSI Multilevel Problem *******
 
@@ -266,6 +266,9 @@ int main(int argc, char **args)
   std::vector < std::vector <double> > data(n_timesteps);
     
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+    for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
+      SetLambda(ml_sol, level , SECOND, ELASTICITY);
+    }
     data[time_step].resize(5);
     if( time_step > 0 )
       system.SetMgType(V_CYCLE);
