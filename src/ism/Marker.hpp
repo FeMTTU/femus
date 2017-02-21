@@ -27,29 +27,33 @@
 #include "map"
 #include "MyVector.hpp"
 
-namespace femus {
+namespace femus
+{
 
-  class Marker : public ParallelObject {
+  class Marker : public ParallelObject
+  {
     public:
       Marker(std::vector < double > x, const MarkerType &markerType, Mesh *mesh, const unsigned & solType, const bool &debug = false) {
         _x = x;
         _markerType = markerType;
-        _mesh = mesh;
         _solType = solType;
-        _dim = _mesh->GetDimension();
+        _dim = mesh->GetDimension();
         _step = 0;
 
-        GetElement(1, UINT_MAX);
+        GetElement(1, UINT_MAX, mesh);
 
-        if(_iproc == _mproc) {
+        if (_iproc == _mproc) {
           std::vector < std::vector < std::vector < double > > > aX;
-          FindLocalCoordinates(_solType, aX, true);
-        }
-        else {
+          FindLocalCoordinates(_solType, aX, true, mesh);
+        } else {
           std::vector < double > ().swap(_x);
         }
       };
 
+      double GetCoordinates(Mesh *mesh, const unsigned &k, const unsigned &i ){
+	return (*mesh->_topology->_Sol[k])(i);
+      }
+      
 
       void SetIprocMarkerOldCoordinates(const std::vector <double> &x0) {
         _x0 = x0;
@@ -76,12 +80,12 @@ namespace femus {
       }
 
 
-      void GetNumberOfMeshElements(unsigned &elements) {
-        elements = _mesh->GetNumberOfElements();
+      void GetNumberOfMeshElements(unsigned &elements, Mesh* mesh) {
+        elements = mesh->GetNumberOfElements();
       }
 
-      unsigned GetMarkerProc() {
-        _mproc = (_elem == UINT_MAX) ? 0 : _mesh->IsdomBisectionSearch(_elem , 3);
+      unsigned GetMarkerProc(Mesh* mesh) {
+        _mproc = (_elem == UINT_MAX) ? 0 : mesh->IsdomBisectionSearch(_elem , 3);
         return _mproc;
       }
 
@@ -113,7 +117,7 @@ namespace femus {
 
       void GetMarkerLocalCoordinatesLine(std::vector<double> &xi) {
         xi.resize(_dim);
-        if(_mproc == _iproc) {
+        if (_mproc == _iproc) {
           xi = _xi;
         }
         MPI_Bcast(&xi[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
@@ -139,7 +143,7 @@ namespace femus {
         _x0 = _x;
         _step = 0;
         _K.resize(order);
-        for(unsigned j = 0; j < order; j++) {
+        for (unsigned j = 0; j < order; j++) {
           _K[j].assign(_dim, 0.);
         }
       }
@@ -148,7 +152,7 @@ namespace femus {
         _xi.resize(_dim);
         _x0.resize(_dim);
         _K.resize(order);
-        for(unsigned j = 0; j < order; j++) {
+        for (unsigned j = 0; j < order; j++) {
           _K[j].assign(_dim, 0.);
         }
       }
@@ -166,15 +170,15 @@ namespace femus {
 
       void GetMarkerCoordinates(std::vector< double > &xn) {
         xn.resize(_dim);
-        if(_mproc == _iproc) {
+        if (_mproc == _iproc) {
           xn = _x;
         }
         MPI_Bcast(&xn[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
       }
 
       void GetMarkerCoordinates(std::vector< MyVector <double > > &xn) {
-        if(_mproc == _iproc) {
-          for(unsigned d = 0; d < _dim; d++) {
+        if (_mproc == _iproc) {
+          for (unsigned d = 0; d < _dim; d++) {
             unsigned size = xn[d].size();
             xn[d].resize(size + 1);
             xn[d][size] = _x[d];
@@ -190,29 +194,29 @@ namespace femus {
         _previousElem = previousElem;
       }
 
-      void GetElement(const bool &useInitialSearch, const unsigned &initialElem);
-      void GetElementSerial(unsigned &initialElem);
-      void GetElement(unsigned &previousElem, const unsigned &previousMproc);
+      void GetElement(const bool &useInitialSearch, const unsigned &initialElem, Mesh* mesh);
+      void GetElementSerial(unsigned &initialElem, Mesh* mesh);
+      void GetElement(unsigned &previousElem, const unsigned &previousMproc, Mesh* mesh);
 
 
       MarkerType GetMarkerType() {
         return _markerType;
       };
 
-      void InverseMappingTEST(std::vector< double > &x);
-      void Advection(Solution* sol, const unsigned &n, const double& T);
+      void InverseMappingTEST(std::vector< double > &x, Mesh* mesh);
+      void Advection(Solution* sol, const unsigned &n, const double& T, Mesh* mesh);
 
       void updateVelocity(std::vector< std::vector <double> > & V, Solution * sol,
                           const vector < unsigned > &solVIndex, const unsigned & solVType,
                           std::vector < std::vector < std::vector < double > > > &a,  std::vector < double > &phi,
-                          const bool & pcElemUpdate);
+                          const bool & pcElemUpdate, Mesh* mesh);
 
       void FindLocalCoordinates(const unsigned & solVType, std::vector < std::vector < std::vector < double > > > &aX,
-                                const bool & pcElemUpdate);
+                                const bool & pcElemUpdate, Mesh* mesh);
 
       void ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex,
                                        const unsigned &solVType,  const unsigned &nDofsV,
-                                       const unsigned &ielType, std::vector < std::vector < std::vector < double > > > &a);
+                                       const unsigned &ielType, std::vector < std::vector < std::vector < double > > > &a, Mesh* mesh);
 
 
 
@@ -221,18 +225,18 @@ namespace femus {
 
       std::vector< double > InverseMapping(const unsigned &currentElem, const unsigned &solutionType, const std::vector< double > &x);
       void InverseMapping(const unsigned &iel, const unsigned &solType,
-                          const std::vector< double > &x, std::vector< double > &xi);
+                          const std::vector< double > &x, std::vector< double > &xi, Mesh* mesh);
 
-      unsigned GetNextElement2D(const unsigned &iel, const unsigned &previousElem);
-      unsigned GetNextElement3D(const unsigned &iel, const unsigned &previousElem);
-      int FastForward(const unsigned &currentElem, const unsigned &previousElem);
+      unsigned GetNextElement2D(const unsigned &iel, const unsigned &previousElem, Mesh* mesh);
+      unsigned GetNextElement3D(const unsigned &iel, const unsigned &previousElem, Mesh* mesh);
+      int FastForward(const unsigned &currentElem, const unsigned &previousElem, Mesh* mesh);
 
       std::vector < double > _x;
       std::vector < double > _x0;
       std::vector < double > _xi;
       unsigned _solType;
       MarkerType _markerType;
-      const Mesh * _mesh;
+      //const Mesh * mesh;
       unsigned _elem;
       unsigned _previousElem; //for advection reasons
       unsigned _dim;

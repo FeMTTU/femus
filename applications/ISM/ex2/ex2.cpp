@@ -106,7 +106,7 @@ int main(int argc, char** args) {
         std::cout << " The marker type is " <<  mrk.GetMarkerType() << std::endl;
 
 
-        mrk.InverseMappingTEST(x);
+        mrk.InverseMappingTEST(x, mlMsh.GetLevel(0));
 
 
         //print mesh

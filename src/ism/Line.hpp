@@ -69,6 +69,7 @@ namespace femus {
       static const double _c[4][4];
       
       std::vector< double > _time;
+      Mesh *_mesh;
 
   };
 } //end namespace femus

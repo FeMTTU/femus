@@ -61,6 +61,7 @@ namespace femus {
              const std::vector <MarkerType> &markerType,
              Mesh *mesh, const unsigned & solType) {
 
+    _mesh = mesh;
     
     _time.assign(10,0);
     
@@ -152,7 +153,7 @@ namespace femus {
       _markerOffset[iproc] = counter;
       //unsigned  offsetCounter = counter;
       for(unsigned j = 0; j < _size; j++) {
-        unsigned markerProc = particles[j]->GetMarkerProc();
+        unsigned markerProc = particles[j]->GetMarkerProc(_mesh);
         if(markerProc == iproc) {
           _particles[counter] = particles[j];
           _printList[j] = counter;
@@ -383,7 +384,7 @@ namespace femus {
     for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
       _markerOffset[iproc] = counter;
       for(unsigned j = 0; j < _size; j++) {
-        unsigned markerProc = particles[j]->GetMarkerProc();
+        unsigned markerProc = particles[j]->GetMarkerProc(_mesh);
         if(markerProc == iproc) {
           _particles[counter] = particles[j];
           for(unsigned iList = 0; iList < _size; iList++) {
@@ -607,8 +608,8 @@ namespace femus {
 	    bool elementUpdate = (aX.find(currentElem) != aX.end()) ? false : true; //update if currentElem was never updated
 	    
 	     clock_t localTime = clock();
-            _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], elementUpdate);
-	    _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV[currentElem], phi, elementUpdate); // we put pcElemUpdate instead of true but it wasn't running
+            _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], elementUpdate,_mesh);
+	    _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV[currentElem], phi, elementUpdate,_mesh); // we put pcElemUpdate instead of true but it wasn't running
             _time[3] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
             	    
             unsigned tstep = step / order;
@@ -660,7 +661,7 @@ namespace femus {
 	    //std::cout << step <<" "<< istep<< " AAAAAAAAAAAAA"<<std::endl<<std::flush;
             unsigned previousElem = currentElem;
 	    localTime = clock();
-	    _particles[iMarker]->GetElementSerial(previousElem);
+	    _particles[iMarker]->GetElementSerial(previousElem,_mesh);
 	    _time[4] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
             localTime = clock();
 	   // std::cout << step <<" "<< istep<< " BBBBBBBBBBBBB"<<std::endl<<std::flush;
@@ -668,7 +669,7 @@ namespace femus {
             _particles[iMarker]->SetIprocMarkerPreviousElement(previousElem);
 	    
 	    currentElem = _particles[iMarker]->GetMarkerElement();
-            unsigned mproc = _particles[iMarker]->GetMarkerProc();
+            unsigned mproc = _particles[iMarker]->GetMarkerProc(_mesh);
 	    
 	    if(currentElem == UINT_MAX) { // the marker has been advected outise the domain 
 	      markerOutsideDomain = true;
@@ -724,16 +725,16 @@ namespace femus {
           _particles[iMarker]->SetMarkerElement(elem);
 
           if(elem != UINT_MAX) {  // if it is outside jproc, ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but not outside the domain
-            unsigned mproc = _particles[iMarker]->GetMarkerProc();
+            unsigned mproc = _particles[iMarker]->GetMarkerProc(_mesh);
             _particles[iMarker]->SetMarkerProc(mproc);
             if(mproc != jproc) {
               unsigned prevElem = _particles[iMarker]->GetIprocMarkerPreviousElement();
-              _particles[iMarker]->GetElement(prevElem, jproc);
+              _particles[iMarker]->GetElement(prevElem, jproc,_mesh);
               _particles[iMarker]->SetIprocMarkerPreviousElement(prevElem);
             }
             elem = _particles[iMarker]->GetMarkerElement();
             if(elem != UINT_MAX) {  // if it is not outside the domain
-              unsigned mproc = _particles[iMarker]->GetMarkerProc();
+              unsigned mproc = _particles[iMarker]->GetMarkerProc(_mesh);
               if(mproc != jproc) {
                 if(jproc == _iproc) {
 
