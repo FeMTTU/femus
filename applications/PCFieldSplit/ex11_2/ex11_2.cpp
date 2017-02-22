@@ -353,7 +353,7 @@ int main(int argc, char** args) {
   //system.SetMaxNumberOfLinearIterations(10);
   //system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
   
-  system.SetMaxNumberOfLinearIterations(1);
+  system.SetMaxNumberOfLinearIterations(10);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
   
 
@@ -435,7 +435,7 @@ int main(int argc, char** args) {
       abort();
     }
     
-    
+       
     for(unsigned j = 0; j < sizeU; j++ ){
       fout << (*sol->_Sol[solVIndex[0]])(j) << " ";
     }
@@ -443,10 +443,10 @@ int main(int argc, char** args) {
       fout << (*sol->_Sol[solVIndex[1]])(j) << " ";
     }
     for(unsigned j = 0; j < sizeP; j++ ){
-      fout << (*sol->_Sol[solPIndex])(j) << " ";
+      fout << (*sol->_Sol[solPIndex])(j)<< " ";
     }
     for(unsigned j = 0; j < sizeT; j++ ){
-      fout << (*sol->_Sol[solTIndex])(j) << " ";
+      fout << (*sol->_Sol[solTIndex])(j)<< " ";
     }
 
 // std::cout << sizeT <<"AAA" << sizeU <<"BBB"<<sizeV<<"CCC" << sizeP<<"DDD"<<std::endl;   
@@ -980,22 +980,22 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   unsigned sizeUV = sizeU + msh->_dofOffset[solVType][nprocs];
   unsigned sizeUVP = sizeUV + msh->_dofOffset[solPType][nprocs];
   
-//   if ( counter <  sizeU ){
-//     sol->_Sol[solVIndex[0]]->set(counter, 1.);
-//     sol->_Sol[solVIndex[0]]->close();
-//   }	
-//   else if ( counter < sizeUV ){
-//     sol->_Sol[solVIndex[1]]->set(counter - sizeU, 1.);
-//     sol->_Sol[solVIndex[1]]->close();
-//   }
-//   else if ( counter < sizeUVP ){
-//     sol->_Sol[solPIndex]->set(counter - sizeUV, 1.);
-//     sol->_Sol[solPIndex]->close();
-//   }
-//   else {
-//     sol->_Sol[solTIndex]->set(counter- sizeUVP, 1.);
-//     sol->_Sol[solTIndex]->close();
-//   }
+  if ( counter <  sizeU ){
+    sol->_Sol[solVIndex[0]]->set(counter, 1.);
+    sol->_Sol[solVIndex[0]]->close();
+  }	
+  else if ( counter < sizeUV ){
+    sol->_Sol[solVIndex[1]]->set(counter - sizeU, 1.);
+    sol->_Sol[solVIndex[1]]->close();
+  }
+  else if ( counter < sizeUVP ){
+    sol->_Sol[solPIndex]->set(counter - sizeUV, 1.);
+    sol->_Sol[solPIndex]->close();
+  }
+  else {
+    sol->_Sol[solTIndex]->set(counter- sizeUVP, 1.);
+    sol->_Sol[solTIndex]->close();
+  }
    
   
 
@@ -1041,7 +1041,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       solT0[i] = (*sol->_Sol[solT0Index])(solTDof);  //global to local solution value
       sysDof[i] = pdeSys->GetSystemDof(solTIndex, solTPdeIndex, i, iel);  //local to global system dof
       if(sysDof[i]==counter) {
-	fT[i]=1.;
+	fT[i]=0.;
 	std::cout<<counter<<" "<<"T"<<std::endl;
       }
     }
@@ -1054,7 +1054,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 	solV0[k][i] = (*sol->_Sol[solV0Index[k]])(solVDof);  //global to local solution value
         sysDof[i + nDofsT + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);  //local to global system dof
 	if(sysDof[i + nDofsT + k * nDofsV]==counter) {
-	  fV[k][i]=1.;
+	  fV[k][i]=0.;
 	  std::cout<<counter<<" V"<<k<<std::endl;
 	}
       }
@@ -1065,7 +1065,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);  //global to local solution value
       sysDof[i + nDofsT + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);  //local to global system dof
       if(sysDof[i + nDofsT + dim * nDofsV]==counter) {
-	fP[i]=1.;
+	fP[i]=0.;
 	std::cout<<counter<<" P"<<std::endl;
       }
     }
@@ -1277,5 +1277,3 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   
   // ***************** END ASSEMBLY *******************
 }
-
-
