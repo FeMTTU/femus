@@ -826,6 +826,7 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 		  Res[ivar] += - SolVAR[jvar]*GradSolVAR[ivar][jvar] // inconsistent
 			       + IRe * ( NablaSolVAR[ivar][jvar] + NablaSolVAR[jvar][kvar] ); //consistent
 		}
+		
 	      }
 
 	      adept::adouble div_vel=0.;
