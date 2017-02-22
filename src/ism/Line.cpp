@@ -59,9 +59,10 @@ namespace femus {
 
   Line::Line(const std::vector < std::vector < double > > x,
              const std::vector <MarkerType> &markerType,
-             Mesh *mesh, const unsigned & solType) {
+             Solution *sol, const unsigned & solType) {
 
-    _mesh = mesh;
+    _sol = sol;
+    _mesh = _sol->GetMesh();
     
     _time.assign(10,0);
     
@@ -69,7 +70,7 @@ namespace femus {
 
     std::vector < Marker*> particles(_size);
 
-    _dim = mesh->GetDimension();
+    _dim = _mesh->GetDimension();
 
     _markerOffset.resize(_nprocs + 1);
     _markerOffset[_nprocs] = _size;
@@ -78,7 +79,7 @@ namespace femus {
     _printList.resize(_size);
 
     for(unsigned j = 0; j < _size; j++) {
-      particles[j] = new Marker(x[j], markerType[j], mesh, solType, true);
+      particles[j] = new Marker(x[j], markerType[j], _sol, solType, true);
     }
 
 
@@ -153,7 +154,7 @@ namespace femus {
       _markerOffset[iproc] = counter;
       //unsigned  offsetCounter = counter;
       for(unsigned j = 0; j < _size; j++) {
-        unsigned markerProc = particles[j]->GetMarkerProc(_mesh);
+        unsigned markerProc = particles[j]->GetMarkerProc(_sol);
         if(markerProc == iproc) {
           _particles[counter] = particles[j];
           _printList[j] = counter;
@@ -193,11 +194,11 @@ namespace femus {
       particles[j] = _particles[j];
     }
 
-    unsigned* elementList = new unsigned [mesh->GetNumberOfElements()];
+    unsigned* elementList = new unsigned [_sol->GetMesh()->GetNumberOfElements()];
     std::vector < unsigned> printList(_size);
 
     //flags to see if we already ordered by that element, 0 = not considered yet
-    for(unsigned iFlag = 0; iFlag < mesh->GetNumberOfElements(); iFlag++) {
+    for(unsigned iFlag = 0; iFlag < _mesh->GetNumberOfElements(); iFlag++) {
       elementList[iFlag] = 0;
     }
 
@@ -384,7 +385,7 @@ namespace femus {
     for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
       _markerOffset[iproc] = counter;
       for(unsigned j = 0; j < _size; j++) {
-        unsigned markerProc = particles[j]->GetMarkerProc(_mesh);
+        unsigned markerProc = particles[j]->GetMarkerProc(_sol);
         if(markerProc == iproc) {
           _particles[counter] = particles[j];
           for(unsigned iList = 0; iList < _size; iList++) {
@@ -537,15 +538,15 @@ namespace femus {
   }
 
 
-  void Line::AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order) {
+  void Line::AdvectionParallel(const unsigned &n, const double& T, const unsigned &order) {
 
     //BEGIN  Initialize the parameters for all processors
 
     vector < unsigned > solVIndex(_dim);
-    solVIndex[0] = sol->GetIndex("U");    // get the position of "U" in the ml_sol object
-    solVIndex[1] = sol->GetIndex("V");    // get the position of "V" in the ml_sol object
-    if(_dim == 3) solVIndex[2] = sol->GetIndex("W");       // get the position of "V" in the ml_sol object
-    unsigned solVType = sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+    solVIndex[0] = _sol->GetIndex("U");    // get the position of "U" in the ml_sol object
+    solVIndex[1] = _sol->GetIndex("V");    // get the position of "V" in the ml_sol object
+    if(_dim == 3) solVIndex[2] =_sol->GetIndex("W");       // get the position of "V" in the ml_sol object
+    unsigned solVType = _sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
     std::vector < double > phi;
     std::vector < std::vector<double > > V(2);
@@ -608,8 +609,8 @@ namespace femus {
 	    bool elementUpdate = (aX.find(currentElem) != aX.end()) ? false : true; //update if currentElem was never updated
 	    
 	     clock_t localTime = clock();
-            _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], elementUpdate,_mesh);
-	    _particles[iMarker]->updateVelocity(V, sol, solVIndex, solVType, aV[currentElem], phi, elementUpdate,_mesh); // we put pcElemUpdate instead of true but it wasn't running
+            _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], elementUpdate,_sol);
+	    _particles[iMarker]->updateVelocity(V, solVIndex, solVType, aV[currentElem], phi, elementUpdate,_sol); // we put pcElemUpdate instead of true but it wasn't running
             _time[3] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
             	    
             unsigned tstep = step / order;
@@ -661,7 +662,7 @@ namespace femus {
 	    //std::cout << step <<" "<< istep<< " AAAAAAAAAAAAA"<<std::endl<<std::flush;
             unsigned previousElem = currentElem;
 	    localTime = clock();
-	    _particles[iMarker]->GetElementSerial(previousElem,_mesh);
+	    _particles[iMarker]->GetElementSerial(previousElem,_sol);
 	    _time[4] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
             localTime = clock();
 	   // std::cout << step <<" "<< istep<< " BBBBBBBBBBBBB"<<std::endl<<std::flush;
@@ -669,7 +670,7 @@ namespace femus {
             _particles[iMarker]->SetIprocMarkerPreviousElement(previousElem);
 	    
 	    currentElem = _particles[iMarker]->GetMarkerElement();
-            unsigned mproc = _particles[iMarker]->GetMarkerProc(_mesh);
+            unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
 	    
 	    if(currentElem == UINT_MAX) { // the marker has been advected outise the domain 
 	      markerOutsideDomain = true;
@@ -725,16 +726,16 @@ namespace femus {
           _particles[iMarker]->SetMarkerElement(elem);
 
           if(elem != UINT_MAX) {  // if it is outside jproc, ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but not outside the domain
-            unsigned mproc = _particles[iMarker]->GetMarkerProc(_mesh);
+            unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
             _particles[iMarker]->SetMarkerProc(mproc);
             if(mproc != jproc) {
               unsigned prevElem = _particles[iMarker]->GetIprocMarkerPreviousElement();
-              _particles[iMarker]->GetElement(prevElem, jproc,_mesh);
+              _particles[iMarker]->GetElement(prevElem, jproc,_sol);
               _particles[iMarker]->SetIprocMarkerPreviousElement(prevElem);
             }
             elem = _particles[iMarker]->GetMarkerElement();
             if(elem != UINT_MAX) {  // if it is not outside the domain
-              unsigned mproc = _particles[iMarker]->GetMarkerProc(_mesh);
+              unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
               if(mproc != jproc) {
                 if(jproc == _iproc) {
 

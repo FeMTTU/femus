@@ -33,25 +33,25 @@ namespace femus
   class Marker : public ParallelObject
   {
     public:
-      Marker(std::vector < double > x, const MarkerType &markerType, Mesh *mesh, const unsigned & solType, const bool &debug = false) {
+      Marker(std::vector < double > x, const MarkerType &markerType, Solution *sol, const unsigned & solType, const bool &debug = false) {
         _x = x;
         _markerType = markerType;
         _solType = solType;
-        _dim = mesh->GetDimension();
+        _dim = sol->GetMesh()->GetDimension();
         _step = 0;
 
-        GetElement(1, UINT_MAX, mesh);
+        GetElement(1, UINT_MAX, sol);
 
         if (_iproc == _mproc) {
           std::vector < std::vector < std::vector < double > > > aX;
-          FindLocalCoordinates(_solType, aX, true, mesh);
+          FindLocalCoordinates(_solType, aX, true, sol);
         } else {
           std::vector < double > ().swap(_x);
         }
       };
 
-      double GetCoordinates(Mesh *mesh, const unsigned &k, const unsigned &i ){
-	return (*mesh->_topology->_Sol[k])(i);
+      double GetCoordinates(Solution *sol, const unsigned &k, const unsigned &i ){
+	return (*sol->GetMesh()->_topology->_Sol[k])(i);
       }
       
 
@@ -80,12 +80,12 @@ namespace femus
       }
 
 
-      void GetNumberOfMeshElements(unsigned &elements, Mesh* mesh) {
-        elements = mesh->GetNumberOfElements();
+      void GetNumberOfMeshElements(unsigned &elements, Solution *sol) {
+        elements = sol->GetMesh()->GetNumberOfElements();
       }
 
-      unsigned GetMarkerProc(Mesh* mesh) {
-        _mproc = (_elem == UINT_MAX) ? 0 : mesh->IsdomBisectionSearch(_elem , 3);
+      unsigned GetMarkerProc(Solution *sol) {
+        _mproc = (_elem == UINT_MAX) ? 0 : sol->GetMesh()->IsdomBisectionSearch(_elem , 3);
         return _mproc;
       }
 
@@ -194,29 +194,29 @@ namespace femus
         _previousElem = previousElem;
       }
 
-      void GetElement(const bool &useInitialSearch, const unsigned &initialElem, Mesh* mesh);
-      void GetElementSerial(unsigned &initialElem, Mesh* mesh);
-      void GetElement(unsigned &previousElem, const unsigned &previousMproc, Mesh* mesh);
+      void GetElement(const bool &useInitialSearch, const unsigned &initialElem, Solution *sol);
+      void GetElementSerial(unsigned &initialElem, Solution *sol);
+      void GetElement(unsigned &previousElem, const unsigned &previousMproc, Solution *sol);
 
 
       MarkerType GetMarkerType() {
         return _markerType;
       };
 
-      void InverseMappingTEST(std::vector< double > &x, Mesh* mesh);
-      void Advection(Solution* sol, const unsigned &n, const double& T, Mesh* mesh);
+      void InverseMappingTEST(std::vector< double > &x, Solution *sol);
+      void Advection(const unsigned &n, const double& T, Solution *sol);
 
-      void updateVelocity(std::vector< std::vector <double> > & V, Solution * sol,
+      void updateVelocity(std::vector< std::vector <double> > & V, 
                           const vector < unsigned > &solVIndex, const unsigned & solVType,
                           std::vector < std::vector < std::vector < double > > > &a,  std::vector < double > &phi,
-                          const bool & pcElemUpdate, Mesh* mesh);
+                          const bool & pcElemUpdate, Solution *sol);
 
       void FindLocalCoordinates(const unsigned & solVType, std::vector < std::vector < std::vector < double > > > &aX,
-                                const bool & pcElemUpdate, Mesh* mesh);
+                                const bool & pcElemUpdate, Solution *sol);
 
-      void ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex,
+      void ProjectVelocityCoefficients(const std::vector<unsigned> &solVIndex,
                                        const unsigned &solVType,  const unsigned &nDofsV,
-                                       const unsigned &ielType, std::vector < std::vector < std::vector < double > > > &a, Mesh* mesh);
+                                       const unsigned &ielType, std::vector < std::vector < std::vector < double > > > &a, Solution *sol);
 
 
 
@@ -225,11 +225,11 @@ namespace femus
 
       std::vector< double > InverseMapping(const unsigned &currentElem, const unsigned &solutionType, const std::vector< double > &x);
       void InverseMapping(const unsigned &iel, const unsigned &solType,
-                          const std::vector< double > &x, std::vector< double > &xi, Mesh* mesh);
+                          const std::vector< double > &x, std::vector< double > &xi, Solution *sol);
 
-      unsigned GetNextElement2D(const unsigned &iel, const unsigned &previousElem, Mesh* mesh);
-      unsigned GetNextElement3D(const unsigned &iel, const unsigned &previousElem, Mesh* mesh);
-      int FastForward(const unsigned &currentElem, const unsigned &previousElem, Mesh* mesh);
+      unsigned GetNextElement2D(const unsigned &iel, const unsigned &previousElem, Solution *sol);
+      unsigned GetNextElement3D(const unsigned &iel, const unsigned &previousElem, Solution *sol);
+      int FastForward(const unsigned &currentElem, const unsigned &previousElem, Solution *sol);
 
       std::vector < double > _x;
       std::vector < double > _x0;

@@ -265,7 +265,7 @@ int main(int argc, char** args)
      
  //exit(0);
 
-  Line linea(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), solType);
+  Line linea(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
 
   linea.GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
@@ -287,7 +287,7 @@ int main(int argc, char** args)
     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
     if (dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-    linea.AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 40, T / n, 4);
+    linea.AdvectionParallel(40, T / n, 4);
     linea.GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
   }

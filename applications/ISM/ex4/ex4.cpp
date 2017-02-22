@@ -262,7 +262,7 @@ int main(int argc, char** args)
 
   std::vector< Line* > linea(1);
 
-  linea[0] =  new Line(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), 2);
+  linea[0] =  new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), 2);
 
   linea[0]->GetStreamLine(streamline, 0);
   linea[0]->GetStreamLine(streamline, 1);
@@ -281,12 +281,12 @@ int main(int argc, char** args)
     std::cout<< "Iteration = "<< k << std::endl;
     if(k == n/2) advection_time = clock();
     for(int i = linea.size() - 1; i>=0; i--){
-      linea[i]->AdvectionParallel(mlSol.GetLevel(numberOfUniformLevels - 1), 40, T / n, 4);
+      linea[i]->AdvectionParallel(40, T / n, 4);
       linea[i]->GetStreamLine(streamline, linea.size() - i );     
     }
     PrintLine(DEFAULT_OUTPUTDIR, streamline, true, k + 1);
     linea.resize(k+2);
-    linea[k+1] =  new Line(x, markerType, mlMsh.GetLevel(numberOfUniformLevels - 1), 2);
+    linea[k+1] =  new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), 2);
     
   }
 

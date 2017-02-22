@@ -251,7 +251,7 @@ int main(int argc, char** args) {
   x[0] = 0.33375; //the marker is in element 117 (proc 1)
   x[1] = 0.0627;
   x[2] = 0.;
-  Marker marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+  Marker marker(x, VOLUME, mlSol.GetLevel(numberOfUniformLevels - 1), 2, true);
   unsigned elem = marker.GetMarkerElement();
   std::vector<double> xi = marker.GetMarkerLocalCoordinates();
 

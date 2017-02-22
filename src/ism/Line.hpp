@@ -36,7 +36,7 @@ namespace femus {
 
       Line(const std::vector < std::vector < double > > x,
            const std::vector <MarkerType> &markerType,
-           Mesh *mesh, const unsigned & solType);
+           Solution *sol, const unsigned & solType);
       ~Line();
 
       void GetLine(std::vector < std::vector < double > > &line) {
@@ -50,7 +50,7 @@ namespace femus {
 	}
       }
       
-      void AdvectionParallel(Solution* sol, const unsigned &n, const double& T, const unsigned &order);
+      void AdvectionParallel(const unsigned &n, const double& T, const unsigned &order);
 
       void UpdateLine();
 
@@ -69,6 +69,7 @@ namespace femus {
       static const double _c[4][4];
       
       std::vector< double > _time;
+      Solution *_sol;
       Mesh *_mesh;
 
   };

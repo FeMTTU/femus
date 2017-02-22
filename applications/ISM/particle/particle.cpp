@@ -233,7 +233,7 @@ int main(int argc, char **args)
   std::vector < std::vector < std::vector < double > > > streamline(pSize);
   std::vector< Line* > linea(1);
   
-  linea[0] =  new Line(x, markerType, ml_msh.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
+  linea[0] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
   
   linea[0]->GetStreamLine(streamline, 0);
   linea[0]->GetStreamLine(streamline, 1);
@@ -254,14 +254,14 @@ int main(int argc, char **args)
   
     
     for (int i = linea.size() - 1; i >= 0; i--) {
-      linea[i]->AdvectionParallel(ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 4, 1. / 32., 4);
+      linea[i]->AdvectionParallel( 4, 1. / 32., 4);
       linea[i]->GetStreamLine(streamline, linea.size() - i );
 
     }
       
     PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
     linea.resize(time_step + 2);
-    linea[time_step + 1] =  new Line(x, markerType, ml_msh.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
+    linea[time_step + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
     
     UpdateMeshCoordinates(ml_msh1, ml_sol);
             

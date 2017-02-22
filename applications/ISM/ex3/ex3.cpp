@@ -206,7 +206,7 @@ int main(int argc, char** args) {
     x[0] = 0. + 0.125 * cos(2.*pi / pSize * j);
     x[1] = .25 + 0.125 * sin(2.*pi / pSize * j);
     x[2] = 0.;
-    particle[j] = new Marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), solType, true);
+    particle[j] = new Marker(x, VOLUME, mlSol.GetLevel(numberOfUniformLevels - 1), solType, true);
   }
 
 
@@ -241,7 +241,7 @@ int main(int argc, char** args) {
     //uncomment for vortex test and rigid rotation
     for(unsigned j = 0; j < pSize; j++) {
 //       std::cout << j <<" " << k << std::endl<<std::flush;
-      particle[j]->Advection(mlSol.GetLevel(numberOfUniformLevels - 1), n, T / n,  mlMsh.GetLevel(numberOfUniformLevels - 1));
+      particle[j]->Advection( n, T / n,  mlSol.GetLevel(numberOfUniformLevels - 1));
       particle[j]->GetMarkerCoordinates(line[0][j]);
     }
     particle[0]->GetMarkerCoordinates(line[0][pSize]);
