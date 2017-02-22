@@ -34,10 +34,10 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   bool dirichlet = true; //dirichlet
   value = 0.;
   if(!strcmp(SolName, "T")) {
-    if(facename == 1) {
+    if(facename == 2) {
       value = 0.5 * (1.0 - exp(-10.0 * time));
     }
-    else if(facename == 2) {
+    else if(facename == 1) {
       value = -0.5 * (1.0 - exp(-10.0 * time));
     }
     else {
@@ -260,6 +260,8 @@ int main(int argc, char** args) {
   unsigned elem = marker.GetMarkerElement();
   std::vector<double> xi;
   marker.GetMarkerLocalCoordinates(xi);
+  
+  std::cout<<elem<<" "<<xi[0]<< " "<<xi[1]<<std::endl;
   
   char out_file1[100]="";
   strcpy(out_file1,"Uvelocity.dat");

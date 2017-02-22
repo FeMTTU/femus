@@ -23,7 +23,7 @@
 #include "FieldSplitTree.hpp"
 #include <stdlib.h>
 
-double Prandtl = 0.02;
+double Prandtl = 0.1;
 double Rayleigh = 10000.;
 
 unsigned counter = 0;
@@ -130,7 +130,7 @@ int main(int argc, char** args) {
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
   mlMsh.EraseCoarseLevels(1);
-
+  numberOfUniformLevels -= 1;
   // print mesh info
   mlMsh.PrintInfo();
 
@@ -312,7 +312,7 @@ int main(int argc, char** args) {
   solutionTypeUVP[2] = mlSol.GetSolutionType("P");
 
   FieldSplitTree FS_NS(PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
-  FS_NS.SetAsmBlockSize(4);
+  FS_NS.SetAsmBlockSize(2);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
 
   std::vector < unsigned > fieldT(1);
@@ -323,7 +323,7 @@ int main(int argc, char** args) {
 
   FieldSplitTree FS_T( PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
 
-  FS_T.SetAsmBlockSize(4);
+  FS_T.SetAsmBlockSize(2);
   FS_T.SetAsmNumeberOfSchurVariables(0);
 
   std::vector < FieldSplitTree *> FS2;
@@ -353,7 +353,7 @@ int main(int argc, char** args) {
   //system.SetMaxNumberOfLinearIterations(10);
   //system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
   
-  system.SetMaxNumberOfLinearIterations(10);
+  system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
   
 
@@ -1155,19 +1155,19 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 	
         for(unsigned k = 0; k < dim; k++) {
           Res[irow] +=  -alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * gradSolT_gss[k] * weight;
-          Res[irow] +=  - 0.5 * phiT[i] *(solV0_gss[k] * gradSolT_gss[k] + solV_gss[k] * gradSolT0_gss[k]) * weight; // why is gradsolT0_gass[k]
+          Res[irow] +=  -  phiT[i] *(solV0_gss[k] * gradSolT_gss[k] + solV_gss[k] * gradSolT0_gss[k]) * weight; // why is gradsolT0_gass[k]
 
           if(assembleMatrix) {
             unsigned irowMat = irow * nDofsTVP;
 
             for(unsigned j = 0; j < nDofsT; j++) {
               Jac[ irowMat + j ] +=  alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * phiT_x[j * dim + k] * weight;
-              Jac[ irowMat + j ] +=  0.5 * phiT[i] * solV0_gss[k] * phiT_x[j * dim + k] * weight; //why is 0.5 here
+              Jac[ irowMat + j ] +=  phiT[i] * solV0_gss[k] * phiT_x[j * dim + k] * weight; 
             }
 
             for(unsigned j = 0; j < nDofsV; j++) {
               unsigned jcol = nDofsT + k * nDofsV + j;
-              Jac[ irowMat + jcol ] += 0.5 * phiT[i] * phiV[j] * gradSolT0_gss[k] * weight;
+              Jac[ irowMat + jcol ] +=  phiT[i] * phiV[j] * gradSolT0_gss[k] * weight;
             }
           }
 
@@ -1186,7 +1186,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 	  
           for(unsigned l = 0; l < dim; l++) {
             Res[irow] +=  -sqrt(Pr / Ra) * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
-            Res[irow] +=  -0.5 * phiV[i] * ( solV0_gss[l] * gradSolV_gss[k][l] + solV_gss[l] * gradSolV0_gss[k][l] ) * weight;
+            Res[irow] +=  - phiV[i] * ( solV0_gss[l] * gradSolV_gss[k][l] + solV_gss[l] * gradSolV0_gss[k][l] ) * weight;
           }
 
           Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
@@ -1206,9 +1206,9 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
                 Jac[ irowMat + jcol2] += sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
 //		Jac[ irowMat + jcol1] += sqrt(Pr / Ra) * phiV_x[i * dim + k] * phiV_x[j * dim + k] * weight;
 //		Jac[ irowMat + jcol2] += sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
-                Jac[ irowMat + jcol1] += 0.5 * phiV[i] * solV0_gss[l] * phiV_x[j * dim + l] * weight;
-//		Jac[ irowMat + jcol1] += 0.5 * phiV[i] * solV0_gss[l] * phiV_x[j * dim + k] * weight;
-                Jac[ irowMat + jcol2] += 0.5 * phiV[i] * phiV[j] * gradSolV0_gss[k][l] * weight;
+                Jac[ irowMat + jcol1] +=  phiV[i] * solV0_gss[l] * phiV_x[j * dim + l] * weight;
+//		Jac[ irowMat + jcol1] +=  phiV[i] * solV0_gss[l] * phiV_x[j * dim + k] * weight;
+                Jac[ irowMat + jcol2] +=  phiV[i] * phiV[j] * gradSolV0_gss[k][l] * weight;
               }
             }
 
