@@ -23,7 +23,7 @@
 #include "FieldSplitTree.hpp"
 #include <stdlib.h>
 
-double Prandtl = 0.1;
+double Prandtl = 0.02;
 double Rayleigh = 10000.;
 
 unsigned counter = 0;
@@ -125,11 +125,11 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(2);
+  mlMsh.EraseCoarseLevels(1);
 
   // print mesh info
   mlMsh.PrintInfo();
