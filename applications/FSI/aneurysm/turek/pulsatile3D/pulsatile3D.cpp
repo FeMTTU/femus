@@ -329,8 +329,8 @@ int main(int argc, char ** args)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step / 32.;
-    //data[time_step][0] = time_step / (64*1.4);
+    //data[time_step][0] = time_step / 32.;
+    data[time_step][0] = time_step / (64*1.4);
     if (simulation == 0 || simulation == 4){
       GetSolutionNorm(ml_sol, 9, data[time_step]);  
     }
@@ -384,8 +384,8 @@ int main(int argc, char ** args)
 
 double SetVariableTimeStep(const double time)
 {
-  double dt = 1. / 32;
-  //double dt = 1./(64*1.4); 
+  //double dt = 1. / 32;
+  double dt = 1./(64*1.4); 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
 //     else dt = 0.025;
@@ -454,15 +454,15 @@ bool SetBoundaryConditionTurek(const std::vector < double > & x, const char name
   value = 0.;
 
   std::ifstream inf;
-  inf.open("./input/womersleyProfile_velMax40cms.txt");
+  inf.open("./input/womersleyProfile_velMax65cms.txt");
   if(!inf) {
-    std::cout << "velocity file ./input/womersleyProfile_velMax40cms.txt can not be opened\n";
+    std::cout << "velocity file ./input/womersleyProfile_velMax65cms.txt can not be opened\n";
     exit(0);
   }
   std::ifstream inf2;
-  inf2.open("./input/OutflowResistence64_R0p001_f84.txt");
+  inf2.open("./input/OutflowResistence_velMax65cms.txt");
   if(!inf2) {
-    std::cout << "pressure file ./input/OutflowResistence64_R0p001_f84.txt can not be opened\n";
+    std::cout << "pressure file ./input/OutflowResistence_velMax65cms.txt can not be opened\n";
     exit(0);
   }
    
