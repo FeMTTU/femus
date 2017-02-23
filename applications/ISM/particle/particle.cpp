@@ -102,6 +102,8 @@ int main(int argc, char **args)
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
   
+  ml_sol.SetIfFSI(true);
+  
   MultiLevelSolution ml_sol1(&ml_msh1);
   ml_sol1.AddSolution("aaaa", LAGRANGE, SECOND, 2);
   ml_sol1.Initialize("All");
@@ -247,7 +249,7 @@ int main(int argc, char **args)
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
     if (time_step > 0)
-      system.SetMgType(V_CYCLE);
+    system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
 

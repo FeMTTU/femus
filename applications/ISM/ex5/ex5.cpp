@@ -211,7 +211,7 @@ int main(int argc, char** args)
   clock_t init_time = clock();
 
 
-  unsigned size = 10000;
+  unsigned size = 100;
 
   std::vector < std::vector < double > > x; // marker
   std::vector < MarkerType > markerType;
@@ -227,36 +227,36 @@ int main(int argc, char** args)
     markerType[j] = VOLUME;
   }
 
-   srand(2); //TODO 3D rotation n=10, problem at iteration 6 with seed srand(1);    FIXED
+  // srand(2); //TODO 3D rotation n=10, problem at iteration 6 with seed srand(1);    FIXED
              //TODO 3D vortex n=16, problem at iteration 11 with seed srand(2);     FIXED
              //TODO 3D vortex srand(2) gives different errors
   double pi = acos(-1.);
   for (unsigned j = 0; j < size; j++) {
 
     //BEGIN random initialization
-    double r_rad = static_cast <double> (rand()) / RAND_MAX;
-    r_rad = 0.4 * (1. - r_rad * r_rad * r_rad);
-    double r_theta = static_cast <double> (rand()) / RAND_MAX * 2 * pi;
-    double r_phi = static_cast <double> (rand()) / RAND_MAX * pi;
-
-    
-    
-    x[j][0] = r_rad * sin(r_phi) * cos(r_theta);
-    x[j][1] = r_rad * sin(r_phi) * sin(r_theta);
-    if (dim == 3) {
-      x[j][2] = r_rad * cos(r_phi);
-    }
+//     double r_rad = static_cast <double> (rand()) / RAND_MAX;
+//     r_rad = 0.4 * (1. - r_rad * r_rad * r_rad);
+//     double r_theta = static_cast <double> (rand()) / RAND_MAX * 2 * pi;
+//     double r_phi = static_cast <double> (rand()) / RAND_MAX * pi;
+// 
+//     
+//     
+//     x[j][0] = r_rad * sin(r_phi) * cos(r_theta);
+//     x[j][1] = r_rad * sin(r_phi) * sin(r_theta);
+//     if (dim == 3) {
+//       x[j][2] = r_rad * cos(r_phi);
+//     }
     //END
 
     
   
  
  //  if(j==1012) std::cout<< std::setprecision(14)<<x[j][0] <<" "<< x[j][1]<<" "<<x[j][2]<<std::endl;
-//     x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
-//     x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
-//     if (dim == 3) {
-//       x[j][2] = 0.;
-//     }
+    x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
+    x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
+    if (dim == 3) {
+      x[j][2] = 0.;
+    }
   }
   
 //      x[0][0] =  -0.026254446447862;

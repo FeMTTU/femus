@@ -41,9 +41,9 @@ namespace femus
         _dim = sol->GetMesh()->GetDimension();
         _step = 0;
 
-        GetElement(1, UINT_MAX, sol, s1);
+	GetElement(1, UINT_MAX, sol, s1);
 
-        if (_iproc == _mproc) {
+	if (_iproc == _mproc) {
           std::vector < std::vector < std::vector < std::vector < double > > > >aX;
           FindLocalCoordinates(_solType, aX, true, sol, s1);
         } else {
