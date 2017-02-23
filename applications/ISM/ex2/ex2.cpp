@@ -114,7 +114,7 @@ int main(int argc, char** args) {
         std::cout << " The marker type is " <<  mrk.GetMarkerType() << std::endl;
 
 
-        mrk.InverseMappingTEST(x, mlSol.GetLevel(0));
+       // mrk.InverseMappingTEST(x, mlSol.GetLevel(0));
 	
 	
 	

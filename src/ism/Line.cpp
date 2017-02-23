@@ -537,11 +537,12 @@ namespace femus {
 
   }
 
-
   void Line::AdvectionParallel(const unsigned &n, const double& T, const unsigned &order) {
 
     //BEGIN  Initialize the parameters for all processors
-
+    
+    double s1 = 0.;
+    
     vector < unsigned > solVIndex(_dim);
     solVIndex[0] = _sol->GetIndex("U");    // get the position of "U" in the ml_sol object
     solVIndex[1] = _sol->GetIndex("V");    // get the position of "V" in the ml_sol object
@@ -551,7 +552,7 @@ namespace femus {
     std::vector < double > phi;
     std::vector < std::vector<double > > V(2);
     std::map<unsigned, std::vector < std::vector < std::vector < double > > > > aV;
-    std::map<unsigned, std::vector < std::vector < std::vector < double > > > > aX;
+    std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
     double h = T / n;
 
     //END
@@ -609,7 +610,7 @@ namespace femus {
 	    bool elementUpdate = (aX.find(currentElem) != aX.end()) ? false : true; //update if currentElem was never updated
 	    
 	     clock_t localTime = clock();
-            _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], elementUpdate,_sol);
+            _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], elementUpdate,_sol, s1);
 	    _particles[iMarker]->updateVelocity(V, solVIndex, solVType, aV[currentElem], phi, elementUpdate,_sol); // we put pcElemUpdate instead of true but it wasn't running
             _time[3] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
             	    
@@ -662,7 +663,7 @@ namespace femus {
 	    //std::cout << step <<" "<< istep<< " AAAAAAAAAAAAA"<<std::endl<<std::flush;
             unsigned previousElem = currentElem;
 	    localTime = clock();
-	    _particles[iMarker]->GetElementSerial(previousElem,_sol);
+	    _particles[iMarker]->GetElementSerial(previousElem,_sol,s1);
 	    _time[4] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
             localTime = clock();
 	   // std::cout << step <<" "<< istep<< " BBBBBBBBBBBBB"<<std::endl<<std::flush;
@@ -730,7 +731,7 @@ namespace femus {
             _particles[iMarker]->SetMarkerProc(mproc);
             if(mproc != jproc) {
               unsigned prevElem = _particles[iMarker]->GetIprocMarkerPreviousElement();
-              _particles[iMarker]->GetElement(prevElem, jproc,_sol);
+              _particles[iMarker]->GetElement(prevElem, jproc,_sol, s1);
               _particles[iMarker]->SetIprocMarkerPreviousElement(prevElem);
             }
             elem = _particles[iMarker]->GetMarkerElement();

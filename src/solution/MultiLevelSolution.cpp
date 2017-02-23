@@ -71,6 +71,8 @@ namespace femus
     _useParsedBCFunction = false;
 
     _mlBCProblem = NULL;
+    
+    _FSI = false;
 
   }
 
