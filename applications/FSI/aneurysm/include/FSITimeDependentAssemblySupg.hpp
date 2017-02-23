@@ -536,15 +536,17 @@ namespace femus
 
                 for (int idim = 0.; idim < dim; idim++) {
                   for (int jdim = 0.; jdim < dim; jdim++) {
-		    
+		    unsigned kdim;
+		    if(idim == jdim) kdim = jdim;
+		    else if (1 == idim + jdim ) kdim = dim;   // xy
+		    else if (2 == idim + jdim ) kdim = dim+2; // xz
+		    else if (3 == idim + jdim ) kdim = dim+1; // yz
 		    //laplaciano debole
                     LapvelVAR[idim]     += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
                     LapvelVAR_old[idim] += (GradSolVAR_old[dim + idim][jdim] + GradSolVAR_old[dim + jdim][idim]) * gradphi_old[i * dim + jdim];
                     //laplaciano strong
-                    LapStrong[idim]     += (NablaSolVAR[idim][jdim] + NablaSolVAR[jdim][idim]) * tauSupg 
-                                           * gradphi[i * dim + jdim];
-		    LapStrong_old[idim] += (NablaSolVAR_old[idim][jdim] + NablaSolVAR_old[jdim][idim]) * tauSupg 
-		                           * gradphi_old[i * dim + jdim];;
+                    LapStrong[idim]     += (NablaSolVAR[dim+idim][jdim] + NablaSolVAR[dim+jdim][kdim]) * phiSupg[i];
+		    LapStrong_old[idim] += (NablaSolVAR_old[dim+idim][jdim] + NablaSolVAR_old[dim+jdim][kdim]) * phiSupg_old[i];
                     
                     AdvaleVAR[idim]	+= ((SolVAR[dim + jdim] - meshVel[jdim]) * GradSolVAR[dim + idim][jdim]
                                         + (GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim]
@@ -566,14 +568,14 @@ namespace femus
                   adept::adouble value =  theta * dt * (
                                             - AdvaleVAR[idim]      	             // advection term
                                             - IRe * LapvelVAR[idim]	             // viscous dissipation
-                                            //+ IRe * LapStrong[idim]
+                                            + IRe * LapStrong[idim]
                                             + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
 
                   adept::adouble value_old = (1. - theta) * dt * (
                                                - AdvaleVAR_old[idim]               	         // advection term
                                                - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
-                                               //+ IRe * LapStrong_old[idim]
+                                               + IRe * LapStrong_old[idim]
                                                + SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
                                              ) * Weight_old;			                 // at time t-dt
 
