@@ -23,7 +23,7 @@
 #include "FieldSplitTree.hpp"
 #include <stdlib.h>
 
-double Prandtl = 0.1;
+double Prandtl = 0.02;
 double Rayleigh = 10000.;
 
 unsigned counter = 0;
@@ -68,7 +68,7 @@ void AssembleBoussinesqAppoximation0(MultiLevelProblem& ml_prob);
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
-
+unsigned preconditioner = 0;
 enum PrecType {
   FS_VTp = 1,
   FS_TVp,
@@ -112,6 +112,8 @@ int main(int argc, char** args) {
     std::cout << Rayleigh <<std::endl;
   }
     
+  preconditioner = precType; // add by guoyi ke to denote the type of preconditioner in the assembling 
+  
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
@@ -146,8 +148,6 @@ int main(int argc, char** args) {
   mlSol.AddSolution("P0",  DISCONTINOUS_POLYNOMIAL, FIRST);
 
   mlSol.AssociatePropertyToSolution("P0", "Pressure");
-  
-  
   
   mlSol.AddSolution("T", LAGRANGE, SECOND);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
@@ -232,7 +232,7 @@ int main(int argc, char** args) {
   //END buid fieldSplitTree
   if(precType == FS_VTp || precType == FS_TVp) system0.SetMgSmoother(FIELDSPLIT_SMOOTHER);    // Field-Split preconditioned
   else if(precType == ASM_VTp || precType == ASM_TVp) system0.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz preconditioner
-  else if(precType == ILU_VTp || precType == ILU_TVp) system0.SetMgSmoother(ASM_SMOOTHER);
+  else if(precType == ILU_VTp || precType == ILU_TVp) system0.SetMgSmoother(GMRES_SMOOTHER);
   // attach the assembling function to system
   system0.SetAssembleFunction(AssembleBoussinesqAppoximation0);
 
@@ -262,19 +262,18 @@ int main(int argc, char** args) {
 
   if(precType == FS_VTp || precType == FS_TVp) system0.SetFieldSplitTree(&FS_NST0);
 
-  system0.SetTolerances(1.e-5, 1.e-20, 1.e+50, 30, 30); //GMRES tolerances
+  system0.SetTolerances(1.e-5, 1.e-8, 1.e+50, 30, 30); //GMRES tolerances
 
   system0.ClearVariablesToBeSolved();
   system0.AddVariableToBeSolved("All");
   
   if(precType == ASM_VTp || precType == ASM_TVp){
     system0.SetNumberOfSchurVariables(1);
-    system0.SetElementBlockNumber(3);
+    system0.SetElementBlockNumber(2);
   }
   else if(precType == ILU_VTp || precType == ILU_TVp){
     system0.SetElementBlockNumber("All");
   }
-  
   system0.MGsolve();
 
   
@@ -289,16 +288,13 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
+   if(dim == 3) system.AddSolutionToSystemPDE("W");
 
   if(precType == ASM_VTp)
     system.AddSolutionToSystemPDE("T");
-
-  if(dim == 3) system.AddSolutionToSystemPDE("W");
-
   system.AddSolutionToSystemPDE("P");
 
   if(precType == FS_VTp || precType == ILU_VTp) system.AddSolutionToSystemPDE("T");
-
 
   //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
   std::vector < unsigned > fieldUVP(3);
@@ -340,7 +336,7 @@ int main(int argc, char** args) {
   //END buid fieldSplitTree
   if(precType == FS_VTp || precType == FS_TVp) system.SetMgSmoother(FIELDSPLIT_SMOOTHER);    // Field-Split preconditioned
   else if(precType == ASM_VTp || precType == ASM_TVp) system.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz preconditioner
-  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(ASM_SMOOTHER);
+  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(GMRES_SMOOTHER);
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
@@ -374,14 +370,14 @@ int main(int argc, char** args) {
 
   if(precType == FS_VTp || precType == FS_TVp) system.SetFieldSplitTree(&FS_NST);
 
-  system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 1, 1); //GMRES tolerances
+  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 1, 1); //GMRES tolerances
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   
   if(precType == ASM_VTp || precType == ASM_TVp){
     system.SetNumberOfSchurVariables(1);
-    system.SetElementBlockNumber(3);
+    system.SetElementBlockNumber(2);
   }
   else if(precType == ILU_VTp || precType == ILU_TVp){
     system.SetElementBlockNumber("All");
@@ -398,7 +394,6 @@ int main(int argc, char** args) {
   vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol.GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol.GetIndex("V");    // get the position of "V" in the ml_sol object
-
   if(dim == 3) solVIndex[2] = mlSol.GetIndex("W");       // get the position of "V" in the ml_sol object
 
   unsigned solVType = mlSol.GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
@@ -435,20 +430,35 @@ int main(int argc, char** args) {
       abort();
     }
     
-       
+    if(precType == FS_TVp || precType == ASM_TVp || precType == ILU_TVp){
+      for(unsigned j = 0; j < sizeT; j++ ){
+	 fout << (*sol->_Sol[solTIndex])(j)<< " ";
+      } 
+    } 
+      
     for(unsigned j = 0; j < sizeU; j++ ){
       fout << (*sol->_Sol[solVIndex[0]])(j) << " ";
     }
+    
     for(unsigned j = 0; j < sizeV; j++ ){
       fout << (*sol->_Sol[solVIndex[1]])(j) << " ";
     }
+    
+    if (precType == ASM_VTp){
+      for(unsigned j = 0; j < sizeT; j++ ){
+	fout << (*sol->_Sol[solTIndex])(j)<< " ";
+      }
+    }
+    
     for(unsigned j = 0; j < sizeP; j++ ){
       fout << (*sol->_Sol[solPIndex])(j)<< " ";
     }
-    for(unsigned j = 0; j < sizeT; j++ ){
-      fout << (*sol->_Sol[solTIndex])(j)<< " ";
+    
+    if (precType == FS_VTp || precType == ILU_VTp){
+      for(unsigned j = 0; j < sizeT; j++ ){
+	fout << (*sol->_Sol[solTIndex])(j)<< " ";
+      }
     }
-
 // std::cout << sizeT <<"AAA" << sizeU <<"BBB"<<sizeV<<"CCC" << sizeP<<"DDD"<<std::endl;   
     fout<<std::endl;
     fout.close();
@@ -463,7 +473,7 @@ int main(int argc, char** args) {
     
   }
   
-  ///////////////////////////////////////////////////////////////
+  /////////////////////////////////////ultiLevelProb//////////////////////////
   
   
   
@@ -484,7 +494,7 @@ int main(int argc, char** args) {
 void AssembleBoussinesqAppoximation0(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
-  //  levelMax is the Maximum level of the MultiLevelProblem
+  //  levelMax is the Maximum level of the Mlem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
   //  extract pointers to the several objects that we are going to use
@@ -976,28 +986,88 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   sol->_Sol[solTIndex]->zero();  
   
   unsigned nprocs = msh->n_processors();
+// //   unsigned sizeU = msh->_dofOffset[solVType][nprocs];
+// //   unsigned sizeUV = sizeU + msh->_dofOffset[solVType][nprocs];
+// //   unsigned sizeUVP = sizeUV + msh->_dofOffset[solPType][nprocs];
+  
   unsigned sizeU = msh->_dofOffset[solVType][nprocs];
   unsigned sizeUV = sizeU + msh->_dofOffset[solVType][nprocs];
-  unsigned sizeUVP = sizeUV + msh->_dofOffset[solPType][nprocs];
+  unsigned sizeP = msh->_dofOffset[solPType][nprocs];
+  unsigned sizeT = msh->_dofOffset[solTType][nprocs];
   
-  if ( counter <  sizeU ){
-    sol->_Sol[solVIndex[0]]->set(counter, 1.);
-    sol->_Sol[solVIndex[0]]->close();
-  }	
-  else if ( counter < sizeUV ){
-    sol->_Sol[solVIndex[1]]->set(counter - sizeU, 1.);
-    sol->_Sol[solVIndex[1]]->close();
+  if(preconditioner == FS_TVp || preconditioner == ASM_TVp || preconditioner == ILU_TVp){
+    if (counter < sizeT){
+       sol->_Sol[solTIndex]->set(counter, 1.);
+       sol->_Sol[solTIndex]->close();
+    }
+    else if ( counter < sizeT + sizeU ){
+       sol->_Sol[solVIndex[0]]->set(counter - sizeT, 1.);
+       sol->_Sol[solVIndex[0]]->close();
+    }
+    else if ( counter < sizeT + sizeUV){
+      sol->_Sol[solVIndex[1]]->set(counter - sizeT - sizeU, 1.);
+      sol->_Sol[solVIndex[1]]->close();
+    }
+    else{
+      sol->_Sol[solPIndex]->set(counter - sizeT - sizeUV , 1.);
+      sol->_Sol[solPIndex]->close();
+    }
   }
-  else if ( counter < sizeUVP ){
-    sol->_Sol[solPIndex]->set(counter - sizeUV, 1.);
-    sol->_Sol[solPIndex]->close();
+  
+  if(preconditioner == ASM_VTp ){
+    if ( counter <  sizeU ){
+      sol->_Sol[solVIndex[0]]->set(counter, 1.);
+      sol->_Sol[solVIndex[0]]->close();
+    }
+    else if(counter < sizeUV ){
+      sol->_Sol[solVIndex[1]]->set(counter - sizeU, 1.);
+      sol->_Sol[solVIndex[1]]->close();
+    }
+    else if (counter < sizeUV + sizeT){
+      sol->_Sol[solTIndex]->set(counter - sizeUV, 1.);
+      sol->_Sol[solTIndex]->close();
+    }
+    else{
+      sol->_Sol[solPIndex]->set(counter - sizeUV - sizeT, 1.);
+      sol->_Sol[solPIndex]->close();
+    }
   }
-  else {
-    sol->_Sol[solTIndex]->set(counter- sizeUVP, 1.);
-    sol->_Sol[solTIndex]->close();
+  
+  if (preconditioner == FS_VTp || preconditioner == ILU_VTp){
+     if ( counter <  sizeU ){
+      sol->_Sol[solVIndex[0]]->set(counter, 1.);
+      sol->_Sol[solVIndex[0]]->close();
+     }
+     else if(counter < sizeUV ){
+      sol->_Sol[solVIndex[1]]->set(counter - sizeU, 1.);
+      sol->_Sol[solVIndex[1]]->close();
+     }
+     else if (counter < sizeUV + sizeP ){
+      sol->_Sol[solPIndex]->set(counter - sizeUV, 1.);
+      sol->_Sol[solPIndex]->close();
+    }
+    else{
+      sol->_Sol[solTIndex]->set(counter- sizeUV - sizeP, 1.);
+      sol->_Sol[solTIndex]->close();
+    }
   }
    
-  
+//   /*if ( counter <  sizeU ){
+//     sol->_Sol[solVIndex[0]]->set(counter, 1.);
+//     sol->_Sol[solVIndex[0]]->close();
+//   }	
+//   else if ( counter < sizeUV ){
+//     sol->_Sol[solVIndex[1]]->set(counter - sizeU, 1.);
+//     sol->_Sol[solVIndex[1]]->close();
+//   }
+//   else if ( counter < sizeUVP ){
+//     sol->_Sol[solPIndex]->set(counter - sizeUV, 1.);
+//     sol->_Sol[solPIndex]->close();
+//   }
+//   else {
+//     sol->_Sol[solTIndex]->set(counter- sizeUVP, 1.);
+//     sol->_Sol[solTIndex]->close();
+//   }*/
 
   //BEGIN element loop
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {

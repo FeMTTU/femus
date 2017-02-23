@@ -34,10 +34,10 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   bool dirichlet = true; //dirichlet
   value = 0.;
   if(!strcmp(SolName, "T")) {
-    if(facename == 1) {
+    if(facename == 2) {
       value = 0.5 * (1.0 - exp(-10.0 * time));
     }
-    else if(facename == 2) {
+    else if(facename == 1) {
       value = -0.5 * (1.0 - exp(-10.0 * time));
     }
     else {
@@ -219,8 +219,8 @@ int main(int argc, char** args) {
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
   //system.SetResidualUpdateConvergenceTolerance(1.e-12);
 
-//   system.SetMaxNumberOfLinearIterations(1);
-//   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+  system.SetMaxNumberOfLinearIterations(1);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
 
