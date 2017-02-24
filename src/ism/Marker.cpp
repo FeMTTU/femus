@@ -1625,8 +1625,6 @@ namespace femus {
         //END projection nodal to polynomial coefficients
       }
 
-
-
       //BEGIN find initial guess
       if(sol->GetIfFSI()) {
         for(unsigned i = 0; i < nDofs; i++) {
@@ -1644,7 +1642,7 @@ namespace femus {
       aXs = aX[0];
     }
     else {
-      
+
       aXs.resize(solType + 1);
       for(unsigned j = 0; j < solType + 1; j++) {
         aXs[j].resize(_dim);
