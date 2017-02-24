@@ -203,7 +203,7 @@ int main(int argc, char** args) {
   //END buid fieldSplitTree
   if(precType == FS_VTp || precType == FS_TVp) system.SetMgSmoother(FIELDSPLIT_SMOOTHER);    // Field-Split preconditioned
   else if(precType == ASM_VTp || precType == ASM_TVp) system.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz preconditioner
-  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(ASM_SMOOTHER);
+  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(GMRES_SMOOTHER);
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
@@ -241,7 +241,7 @@ int main(int argc, char** args) {
   
   if(precType == ASM_VTp || precType == ASM_TVp){
     system.SetNumberOfSchurVariables(1);
-    system.SetElementBlockNumber(3);
+    system.SetElementBlockNumber(4);
   }
   else if(precType == ILU_VTp || precType == ILU_TVp){
     system.SetElementBlockNumber("All");

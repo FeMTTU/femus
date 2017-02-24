@@ -65,7 +65,6 @@ bool SetBoundaryCondition0(const std::vector < double >& x, const char SolName[]
 }
 
 void AssembleBoussinesqAppoximation0(MultiLevelProblem& ml_prob);
-
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
 unsigned preconditioner = 0;
@@ -88,7 +87,6 @@ int main(int argc, char** args) {
     else if(!strcmp("ASM_VT", args[1])) precType = ASM_VTp;
     else if(!strcmp("ASM_TV", args[1])) precType = ASM_TVp;
     else if(!strcmp("ILU_VT", args[1])) precType = ILU_VTp;
-
     if(!strcmp("ILU_TV", args[1])) precType = ILU_TVp;
 
     if(precType == 0) {
@@ -135,31 +133,24 @@ int main(int argc, char** args) {
   numberOfUniformLevels -= 1;
   // print mesh info
   mlMsh.PrintInfo();
-
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
   mlSol.AddSolution("T0", LAGRANGE, SECOND);
   mlSol.AddSolution("U0", LAGRANGE, SECOND);
   mlSol.AddSolution("V0", LAGRANGE, SECOND);
-
   if(dim == 3) mlSol.AddSolution("W0", LAGRANGE, SECOND);
 
   mlSol.AddSolution("P0",  DISCONTINOUS_POLYNOMIAL, FIRST);
-
   mlSol.AssociatePropertyToSolution("P0", "Pressure");
   
   mlSol.AddSolution("T", LAGRANGE, SECOND);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
-
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
-
   mlSol.AssociatePropertyToSolution("P", "Pressure");
-  
-  
   mlSol.Initialize("All");
   //mlSol.Initialize("T0",InitalValueT0);
 
@@ -171,27 +162,20 @@ int main(int argc, char** args) {
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
-
   // add system Poisson in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system0 = mlProb.add_system < NonLinearImplicitSystem > ("NS0");
-
   if(precType == FS_TVp || precType == ASM_TVp || precType == ILU_TVp)
     system0.AddSolutionToSystemPDE("T0");
 
   // add solution "u" to system
   system0.AddSolutionToSystemPDE("U0");
   system0.AddSolutionToSystemPDE("V0");
-
-  if(precType == ASM_VTp)
-    system0.AddSolutionToSystemPDE("T0");
-
   if(dim == 3) system0.AddSolutionToSystemPDE("W0");
-
+  
+  if(precType == ASM_VTp) system0.AddSolutionToSystemPDE("T0");
   system0.AddSolutionToSystemPDE("P0");
 
   if(precType == FS_VTp || precType == ILU_VTp) system0.AddSolutionToSystemPDE("T0");
-
-
   //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
   std::vector < unsigned > fieldUVP0(3);
   fieldUVP0[0] = system0.GetSolPdeIndex("U0");
@@ -204,7 +188,7 @@ int main(int argc, char** args) {
   solutionTypeUVP0[2] = mlSol.GetSolutionType("P0");
 
   FieldSplitTree FS_NS0(PREONLY, ASM_PRECOND, fieldUVP0, solutionTypeUVP0, "Navier-Stokes");
-  FS_NS0.SetAsmBlockSize(4);
+  FS_NS0.SetAsmBlockSize(4); // size of vanka block is 4^4
   FS_NS0.SetAsmNumeberOfSchurVariables(1);
 
   std::vector < unsigned > fieldT0(1);
@@ -215,16 +199,13 @@ int main(int argc, char** args) {
 
   FieldSplitTree FS_T0( PREONLY, ASM_PRECOND, fieldT0, solutionTypeT0, "Temperature");
 
-  FS_T0.SetAsmBlockSize(4);
+  FS_T0.SetAsmBlockSize(4); //size of vanka block is 4^4
   FS_T0.SetAsmNumeberOfSchurVariables(0);
 
   std::vector < FieldSplitTree *> FS20;
   FS20.reserve(2);
-
   if(precType == FS_VTp) FS20.push_back(&FS_NS0);   //Navier-Stokes block first
-
   FS20.push_back(&FS_T0);
-
   if(precType == FS_TVp) FS20.push_back(&FS_NS0);   //Navier-Stokes block last
 
   FieldSplitTree FS_NST0(RICHARDSON, FIELDSPLIT_PRECOND, FS20, "Benard");
@@ -240,14 +221,10 @@ int main(int argc, char** args) {
   system0.SetNonLinearConvergenceTolerance(1.e-8);
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
   //system.SetResidualUpdateConvergenceTolerance(1.e-15);
-
-  //system.SetMaxNumberOfLinearIterations(10);
-  //system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
   
   system0.SetMaxNumberOfLinearIterations(1);
   system0.SetAbsoluteLinearConvergenceTolerance(1.e-15);
   
-
   system0.SetMgType(F_CYCLE);
 
   system0.SetNumberPreSmoothingStep(1);
@@ -257,41 +234,33 @@ int main(int argc, char** args) {
 
   system0.SetSolverFineGrids(RICHARDSON);
   system0.SetPreconditionerFineGrids(ILU_PRECOND);
-  
   system0.SetRichardsonScaleFactor(.6);
 
   if(precType == FS_VTp || precType == FS_TVp) system0.SetFieldSplitTree(&FS_NST0);
 
   system0.SetTolerances(1.e-5, 1.e-8, 1.e+50, 30, 30); //GMRES tolerances
-
   system0.ClearVariablesToBeSolved();
   system0.AddVariableToBeSolved("All");
   
   if(precType == ASM_VTp || precType == ASM_TVp){
     system0.SetNumberOfSchurVariables(1);
-    system0.SetElementBlockNumber(2);
+    system0.SetElementBlockNumber(4); // The number of block element 4^4
   }
   else if(precType == ILU_VTp || precType == ILU_TVp){
     system0.SetElementBlockNumber("All");
   }
   system0.MGsolve();
-
-  
   
   ///////////////////////////////////////////////////////////////
-  
-   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NST");
-
+  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NST");
   if(precType == FS_TVp || precType == ASM_TVp || precType == ILU_TVp)
     system.AddSolutionToSystemPDE("T");
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-   if(dim == 3) system.AddSolutionToSystemPDE("W");
-
-  if(precType == ASM_VTp)
-    system.AddSolutionToSystemPDE("T");
+  if(dim == 3) system.AddSolutionToSystemPDE("W");
+  if(precType == ASM_VTp) system.AddSolutionToSystemPDE("T");
   system.AddSolutionToSystemPDE("P");
 
   if(precType == FS_VTp || precType == ILU_VTp) system.AddSolutionToSystemPDE("T");
@@ -318,17 +287,14 @@ int main(int argc, char** args) {
   solutionTypeT[0] = mlSol.GetSolutionType("T");
 
   FieldSplitTree FS_T( PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
-
   FS_T.SetAsmBlockSize(2);
   FS_T.SetAsmNumeberOfSchurVariables(0);
 
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
-
   if(precType == FS_VTp) FS2.push_back(&FS_NS);   //Navier-Stokes block first
-
+  
   FS2.push_back(&FS_T);
-
   if(precType == FS_TVp) FS2.push_back(&FS_NS);   //Navier-Stokes block last
 
   FieldSplitTree FS_NST(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
@@ -340,21 +306,13 @@ int main(int argc, char** args) {
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
-
   system.SetMaxNumberOfNonLinearIterations(1);
   system.SetNonLinearConvergenceTolerance(1.e-8);
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
   //system.SetResidualUpdateConvergenceTolerance(1.e-15);
-
-  //system.SetMaxNumberOfLinearIterations(10);
-  //system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
   
   system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
-  
-
-//   char outer_ksp_solver[256] = "preonly";
-//   system.SetOuterKSPSolver(outer_ksp_solver);	
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);	
   
   system.SetMgType(V_CYCLE);
 
@@ -369,9 +327,8 @@ int main(int argc, char** args) {
   system.SetRichardsonScaleFactor(.6);
 
   if(precType == FS_VTp || precType == FS_TVp) system.SetFieldSplitTree(&FS_NST);
-
+  
   system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 1, 1); //GMRES tolerances
-
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   
@@ -385,7 +342,6 @@ int main(int argc, char** args) {
   
  
   //////////////////////////////////////////////////////////////////////
-  
   //solution variable
   unsigned solTIndex;
   solTIndex = mlSol.GetIndex("T");    // get the position of "T" in the ml_sol object
@@ -395,7 +351,6 @@ int main(int argc, char** args) {
   solVIndex[0] = mlSol.GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol.GetIndex("V");    // get the position of "V" in the ml_sol object
   if(dim == 3) solVIndex[2] = mlSol.GetIndex("W");       // get the position of "V" in the ml_sol object
-
   unsigned solVType = mlSol.GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
   unsigned solPIndex;
@@ -415,7 +370,6 @@ int main(int argc, char** args) {
     
   for(unsigned i=0; i< sizeTUVP; i++){
     system.MLsolve();
-
     mlSol.GenerateBdc("All");
     
     std::ofstream fout;
@@ -470,12 +424,8 @@ int main(int argc, char** args) {
     VTKWriter vtkIO(&mlSol);
     vtkIO.SetDebugOutput( true );
     vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, counter);
-    
   }
-  
-  /////////////////////////////////////ultiLevelProb//////////////////////////
-  
-  
+  /////////////////////////////////////ultiLevelProb/////////////////////////
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -484,7 +434,6 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput( true );
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-
   mlMsh.PrintInfo();
   
   return 0;
@@ -879,8 +828,6 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   solV0Index[0] = mlSol->GetIndex("U0");    // get the position of "U" in the ml_sol object
   solV0Index[1] = mlSol->GetIndex("V0");    // get the position of "V" in the ml_sol object
   if(dim == 3) solV0Index[2] = mlSol->GetIndex("W0");       // get the position of "V" in the ml_sol object
-
-  
   
   //solution variable
   unsigned solTIndex;
@@ -890,9 +837,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol->GetIndex("V");    // get the position of "V" in the ml_sol object
-
   if(dim == 3) solVIndex[2] = mlSol->GetIndex("W");       // get the position of "V" in the ml_sol object
-
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
   unsigned solPIndex;
@@ -902,13 +847,9 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   unsigned solTPdeIndex;
   solTPdeIndex = mlPdeSys->GetSolPdeIndex("T");    // get the position of "T" in the pdeSys object
 
-  // std::cout << solTIndex <<" "<<solTPdeIndex<<std::endl;
-
-
   vector < unsigned > solVPdeIndex(dim);
   solVPdeIndex[0] = mlPdeSys->GetSolPdeIndex("U");    // get the position of "U" in the pdeSys object
   solVPdeIndex[1] = mlPdeSys->GetSolPdeIndex("V");    // get the position of "V" in the pdeSys object
-
   if(dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
 
   unsigned solPPdeIndex;
@@ -977,19 +918,14 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   if(counter == 10) KK->print_matlab("matrix.txt", "ascii");
     
   if(assembleMatrix)
-    KK->zero(); // Set to zero all the entries of the Global Matrix
-    
+    KK->zero(); // Set to zero all the entries of the Global Matrix  
   
   sol->_Sol[solVIndex[0]]->zero();  
   sol->_Sol[solVIndex[1]]->zero();  
   sol->_Sol[solPIndex]->zero();  
   sol->_Sol[solTIndex]->zero();  
   
-  unsigned nprocs = msh->n_processors();
-// //   unsigned sizeU = msh->_dofOffset[solVType][nprocs];
-// //   unsigned sizeUV = sizeU + msh->_dofOffset[solVType][nprocs];
-// //   unsigned sizeUVP = sizeUV + msh->_dofOffset[solPType][nprocs];
-  
+  unsigned nprocs = msh->n_processors();  
   unsigned sizeU = msh->_dofOffset[solVType][nprocs];
   unsigned sizeUV = sizeU + msh->_dofOffset[solVType][nprocs];
   unsigned sizeP = msh->_dofOffset[solPType][nprocs];
