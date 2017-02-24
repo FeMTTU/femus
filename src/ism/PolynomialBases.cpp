@@ -47,6 +47,31 @@ namespace femus {
     }
   }
 
+  void InterpolatePolynomialCoefficients(std::vector < std::vector <double > > &aXs, const std::vector< std::vector < double > > &aX0,
+                                         const double &s, const std::vector< std::vector < double > > &aX1, const short unsigned &ielType, const unsigned &solType) {
+
+    if(ielType == QUAD) {
+      InterpolateQuadPolynomialCoefficients(aXs, aX0, aX1, s, solType);
+    }
+
+    else if(ielType == TRI) {
+      InterpolateTriPolynomialCoefficients(aXs, aX0, aX1, s, solType);
+    }
+
+    else if(ielType == HEX) {
+      InterpolateHexPolynomialCoefficients(aXs, aX0, aX1, s, solType);
+    }
+
+    else if(ielType == TET) {
+      InterpolateTetPolynomialCoefficients(aXs, aX0, aX1, s, solType);
+    }
+
+    else if(ielType == WEDGE) {
+      InterpolateWedgePolynomialCoefficients(aXs, aX0, aX1, s, solType);
+    }
+  }
+
+
   void GetPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi,
                                   short unsigned &ielType, const unsigned & solType) {
 
@@ -177,6 +202,25 @@ namespace femus {
       }
     }
   }
+
+
+  void InterpolateQuadPolynomialCoefficients(std::vector < std::vector <double > > &aXs, const std::vector< std::vector < double > > &aX0,
+      const std::vector< std::vector < double > > &aX1, const double &s, const unsigned &solType) {
+
+    unsigned dim =  aX0.size();
+    unsigned nDofs = quadNumberOfDofs[solType];
+
+    aXs.resize(dim);
+    for(unsigned k = 0; k < dim; k++) {
+      aXs[k].resize(nDofs);
+      for(unsigned i = 0; i < nDofs; i++) {
+        aXs[k][i] = (1. - s) * aX0[k][i] + s * aX1[k][i];
+      }
+    }
+
+  }
+
+
 
   void GetQuadPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
 
@@ -336,6 +380,22 @@ namespace femus {
       }
     }
   }
+  
+    void InterpolateTriPolynomialCoefficients(std::vector < std::vector <double > > &aXs, const std::vector< std::vector < double > > &aX0,
+      const std::vector< std::vector < double > > &aX1, const double &s, const unsigned &solType) {
+
+    unsigned dim =  aX0.size();
+    unsigned nDofs = triNumberOfDofs[solType];
+
+    aXs.resize(dim);
+    for(unsigned k = 0; k < dim; k++) {
+      aXs[k].resize(nDofs);
+      for(unsigned i = 0; i < nDofs; i++) {
+        aXs[k][i] = (1. - s) * aX0[k][i] + s * aX1[k][i];
+      }
+    }
+
+  }  
 
   void GetTriPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
 
@@ -551,6 +611,22 @@ namespace femus {
                              4 * aN[k][24] + 4 * aN[k][25] - 8 * aN[k][26] + aN[k][2] + aN[k][3] + aN[k][4] + aN[k][5] + aN[k][6] + aN[k][7] - 2 * aN[k][8]);
       }
     }
+  }
+  
+    void InterpolateHexPolynomialCoefficients(std::vector < std::vector <double > > &aXs, const std::vector< std::vector < double > > &aX0,
+      const std::vector< std::vector < double > > &aX1, const double &s, const unsigned &solType) {
+
+    unsigned dim =  aX0.size();
+    unsigned nDofs = hexNumberOfDofs[solType];
+
+    aXs.resize(dim);
+    for(unsigned k = 0; k < dim; k++) {
+      aXs[k].resize(nDofs);
+      for(unsigned i = 0; i < nDofs; i++) {
+        aXs[k][i] = (1. - s) * aX0[k][i] + s * aX1[k][i];
+      }
+    }
+
   }
 
   void GetHexPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
@@ -871,6 +947,22 @@ namespace femus {
       }
     }
   }
+  
+    void InterpolateTetPolynomialCoefficients(std::vector < std::vector <double > > &aXs, const std::vector< std::vector < double > > &aX0,
+      const std::vector< std::vector < double > > &aX1, const double &s, const unsigned &solType) {
+
+    unsigned dim =  aX0.size();
+    unsigned nDofs = tetNumberOfDofs[solType];
+
+    aXs.resize(dim);
+    for(unsigned k = 0; k < dim; k++) {
+      aXs[k].resize(nDofs);
+      for(unsigned i = 0; i < nDofs; i++) {
+        aXs[k][i] = (1. - s) * aX0[k][i] + s * aX1[k][i];
+      }
+    }
+
+  }
 
   void GetTetPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
 
@@ -1099,6 +1191,22 @@ namespace femus {
                             aN[k][2] + aN[k][3] + aN[k][4] + aN[k][5] - 4 * (aN[k][6] + aN[k][7] + aN[k][8]));
       }
     }
+  }
+  
+    void InterpolateWedgePolynomialCoefficients(std::vector < std::vector <double > > &aXs, const std::vector< std::vector < double > > &aX0,
+      const std::vector< std::vector < double > > &aX1, const double &s, const unsigned &solType) {
+
+    unsigned dim =  aX0.size();
+    unsigned nDofs = wedgeNumberOfDofs[solType];
+
+    aXs.resize(dim);
+    for(unsigned k = 0; k < dim; k++) {
+      aXs[k].resize(nDofs);
+      for(unsigned i = 0; i < nDofs; i++) {
+        aXs[k][i] = (1. - s) * aX0[k][i] + s * aX1[k][i];
+      }
+    }
+
   }
 
   void GetWedgePolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
@@ -1494,7 +1602,7 @@ namespace femus {
 
   bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
                               const std::vector < std::vector <double > > &gradPhi,
-                              const std::vector < std::vector <double > > &a) { 
+                              const std::vector < std::vector <double > > &a) {
 
     const unsigned dim = gradPhi[0].size();
     const unsigned  nDofs = phi.size();
@@ -1822,12 +1930,12 @@ namespace femus {
 
     unsigned nvt = 0;
     unsigned nel = 0;
-    
-    for(unsigned l = 0; l < xn.size(); l++){
+
+    for(unsigned l = 0; l < xn.size(); l++) {
       nvt += xn[l].size();
-      nel += xn[l].size()-1;
+      nel += xn[l].size() - 1;
     }
-      
+
     const unsigned dim_array_coord [] = { nvt * 3 * sizeof(float) };
     const unsigned dim_array_conn[]   = { nel * 2 * sizeof(int) };
     const unsigned dim_array_off []   = { nel * sizeof(int) };
@@ -1862,12 +1970,12 @@ namespace femus {
     float* var_coord = static_cast< float* >(buffer_void);
 
     unsigned counter = 0;
-    for(unsigned l = 0; l < xn.size(); l++){
+    for(unsigned l = 0; l < xn.size(); l++) {
       for(unsigned i = 0; i < xn[l].size(); i++) {
-	for(unsigned d = 0; d < 3; d++) {
-	  var_coord[counter * 3 + d] = (xn[l][i].size() > d) ? xn[l][i][d] : 0.;
-	}
-	counter++;
+        for(unsigned d = 0; d < 3; d++) {
+          var_coord[counter * 3 + d] = (xn[l][i].size() > d) ? xn[l][i][d] : 0.;
+        }
+        counter++;
       }
     }
 
@@ -1904,9 +2012,9 @@ namespace femus {
         icount++;
       }
       restart++;
-      if(restart == xn[skip].size() - 1){
-	skip++;
-	restart = 0;
+      if(restart == xn[skip].size() - 1) {
+        skip++;
+        restart = 0;
       }
     }
 

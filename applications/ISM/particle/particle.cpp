@@ -217,7 +217,7 @@ int main(int argc, char **args)
 
 
   //BEGIN INITIALIZE PARTICLES
-  unsigned pSize = 100;
+  unsigned pSize = 1;
   std::vector < std::vector < double > > x(pSize);
   std::vector < MarkerType > markerType(pSize);
 

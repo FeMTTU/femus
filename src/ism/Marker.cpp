@@ -1617,6 +1617,7 @@ namespace femus {
         }
         //END extraction
 
+
         //BEGIN projection nodal to polynomial coefficients
         aX[i1].resize(solType + 1);
         for(unsigned j = 0; j < solType + 1; j++) {
@@ -1624,6 +1625,7 @@ namespace femus {
         }
         //END projection nodal to polynomial coefficients
       }
+
 
       //BEGIN find initial guess
       if(sol->GetIfFSI()) {
@@ -1643,20 +1645,8 @@ namespace femus {
     }
     else {
 
-      aXs.resize(solType + 1);
       for(unsigned j = 0; j < solType + 1; j++) {
-        aXs[j].resize(_dim);
-        for(unsigned k = 0; k < _dim; k++) {
-          aXs[j][k].resize(nDofs);
-        }
-      }
-
-      for(unsigned i = 0; i < nDofs; i++) {
-        for(unsigned k = 0; k < _dim; k++) {
-          for(unsigned j = 0; j < solType + 1; j++) {
-            aXs[j][k][i] = (1. - s) * aX[0][j][k][i] + s * aX[1][j][k][i];
-          }
-        }
+        InterpolatePolynomialCoefficients(aXs[j], aX[0][j], aX[1][j], s, elemType, j);
       }
 
     }
