@@ -12,13 +12,13 @@
                           "yb" : 1.,
                           "za" : 0.,
                           "zb" : 0.,
-                          "elem_type" : "Quad9"
+                          "elem_type" : "Tri6"
                          }
              },
 
     // Properties
     "variable" : { "name" : "T",
-                   "fe_order" : "serendipity",
+                   "fe_order" : "first",
                    "func_source1" : "2.*exp(10*x)*(-10.*pi*cos(pi*x)+(pi*pi-50.)*sin(pi*x))*sin(pi*y)",
 		   "func_source2" : "2.*exp(10*x)*(-10.*4.*pi*cos(4*pi*x)+(4.*pi*4.*pi-50.)*sin(4.*pi*x))*sin(4.*pi*y)",
 		   "func_source3" : "2*pi*pi*sin(pi*x)*sin(pi*y)",
@@ -64,7 +64,7 @@
 		   "AMR" : "yes",
 		   "maxAMRlevels" : 15,
 		   "AMRnorm" : "H1",
-		   "AMRthreshold": 0.001,
+		   "AMRthreshold": 0.005,
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,
                    "smoother_type" : "gmres",
