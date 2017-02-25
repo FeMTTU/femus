@@ -600,7 +600,7 @@ namespace femus
                 double eps = 1.0e-12;
                 speed = sqrt(speed + eps);
                 speed_old = sqrt(speed_old + eps);
-                double DE = 0.000112;
+                double DE = 0.;
                 if (dim == 2) {
                   DE = 0.00006; // turek2D
                 } else if (dim == 3) {
