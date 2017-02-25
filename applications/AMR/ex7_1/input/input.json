@@ -1,20 +1,6 @@
 // Configuration options
 {
-    // mesh
-    "mesh" : {
-                "box" : {
-                          "nx" : 2,
-                          "ny" : 2,
-                          "nz" : 0,
-                          "xa" : 0.,
-                          "xb" : 1.,
-                          "ya" : 0.,
-                          "yb" : 1.,
-                          "za" : 0.,
-                          "zb" : 0.
-                         }
-             },
-
+   
     // Properties
     "variable" : { "name" : "T",
                    "func_source1" : "2.*exp(10*x)*(-10.*pi*cos(pi*x)+(pi*pi-50.)*sin(pi*x))*sin(pi*y)",
@@ -23,19 +9,6 @@
 		   "func_source4" : "2*(y-y*y+x-x*x)*atan(10*sqrt(2)*(x+y)-16)-10*sqrt(2)*((1-2*x)*(y-y*y)+(x-x*x)*(1-2*y))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))-10*sqrt(2)*((1-2*x)*(y-y*y)+(x-x*x)*(1-2*y))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))+800.*(x-x*x)*(y-y*y)*(10*sqrt(2)*(x+y)-16)/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))"
                  },
 
-    // Boundary conditions
-    "boundary_conditions" : [
-                             {
-                               "facename" : "top",
-                               "bdc_type" : "dirichlet"
-                             }//,
-                             //{
-                             //  "facename" : "right",
-                             //  "bdc_type" : "neumann",
-                             //  "is_homogeneous" : false,
-                             //  "bdc_func" : "0.2"
-                             // }
-                            ],
 
     "func_sol1" : { "sol"    : "exp(10.*x)*sin(pi*x)*sin(pi*y)",
    		      "dsoldx" : "exp(10.*x)*(10.*sin(pi*x)+pi*cos(pi*x))*sin(pi*y)",

@@ -28,6 +28,12 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob);
 
 double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1);
 
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  bool dirichlet = true; //dirichlet
+  value = 0.;
+  return dirichlet;
+}
+
 static std::string
 readInputTestFile(const char* path) {
   FILE* file = fopen(path, "rb");
@@ -109,50 +115,13 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  std::string filename = root["mesh"].get("filename", "").asString();
-
   int numelemx;
   int numelemy;
   int numelemz;
-  double xa, xb, ya, yb, za, zb;
-  ElemType elemtype;
+ 
+  //ElemType elemtype;
 
-  bool isBox = root["mesh"].get("box", false).asBool();
-
-  if(isBox) {
-    numelemx = root["mesh"].get("box", "").get("nx", 2).asUInt();
-    numelemy = root["mesh"].get("box", "").get("ny", 2).asUInt();
-    numelemz = root["mesh"].get("box", "").get("nz", 2).asUInt();
-    xa = root["mesh"].get("box", "").get("xa", 0.).asDouble();
-    xb = root["mesh"].get("box", "").get("xb", 1.).asDouble();
-    ya = root["mesh"].get("box", "").get("ya", 0.).asDouble();
-    yb = root["mesh"].get("box", "").get("yb", 1.).asDouble();
-    za = root["mesh"].get("box", "").get("za", 0.).asDouble();
-    zb = root["mesh"].get("box", "").get("zb", 0.).asDouble();
-//     std::string elemtypestr = root["mesh"].get("box", "").get("elem_type", "Quad9").asString();
-//
-//     if (elemtypestr == "Quad9")
-//     {
-//       elemtype = QUAD9;
-//     }
-//     else if (elemtypestr == "Tri6")
-//     {
-//       elemtype = TRI6;
-//     }
-//     else if (elemtypestr == "Edge3")
-//     {
-//       elemtype = EDGE3;
-//     }
-//     else if (elemtypestr == "Hex27")
-//     {
-//       elemtype = HEX27;
-//     }
-//     else
-//     {
-//       elemtype = INVALID_ELEM;
-//     }
-
-  }
+  
 
   std::string variableName = root["variable"].get("name", "Q").asString();
 
@@ -191,7 +160,7 @@ int main(int argc, char** argv) {
   FEOrder fe_order[3] = {FIRST, SERENDIPITY, SECOND};
 
   std::string elemtypestr[2] = {"Tri6", "Quad9"};
-
+  std::string filename[2] = {"./input/square_tri.neu", "./input/square_quad.neu"};
 
 
 
@@ -261,7 +230,7 @@ int main(int argc, char** argv) {
   fp_dsoldx.SetIndependentVariables(variables);
   fp_dsoldx.Parse();
 
-  function = root["func_sol3"].get("dsoldy", "0.").asString();
+  function = root["func_sol4"].get("dsoldy", "0.").asString();
   fp_dsoldy.SetExpression(function);
   fp_dsoldy.SetIndependentVariables(variables);
   fp_dsoldy.Parse();
@@ -338,18 +307,8 @@ int main(int argc, char** argv) {
 
     //TYPE LOOP----------------------------->
     for(unsigned k = 0; k < 2; k++) {
-      if(elemtypestr[k] == "Tri6") {
-        elemtype = TRI6;
-      }
-      else if(elemtypestr[k] == "Quad9") {
-        elemtype = QUAD9;
-      }
-      if(filename != "") {
-        ml_msh.ReadCoarseMesh(filename.c_str(), "seventh", Lref);
-      }
-      else {
-        ml_msh.GenerateCoarseBoxMesh(numelemx, numelemy, numelemz, xa, xb, ya, yb, za, zb, elemtype, "seventh");
-      }
+      ml_msh.ReadCoarseMesh(filename[k].c_str(), "seventh", Lref);
+     
 
       //FEOrder LOOP--------------------------->
       for(unsigned j = 0; j < 3; j++) {
@@ -366,27 +325,8 @@ int main(int argc, char** argv) {
         //Initialize (update Init(...) function)
         ml_sol.Initialize("Sol");
 
-        //Set Boundary (update Dirichlet(...) function)
-        ml_sol.InitializeBdc();
-
-//     ml_sol.SetBoundaryCondition("Sol","right", NEUMANN, false, false, &bdcfunc);
-//     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
-
-        for(int i = 0; i < boundary_conditions.size(); ++i) {
-          ml_sol.SetBoundaryCondition_new("Sol", facenamearray[i], bdctypearray[i], false, &parsedfunctionarray[i]);
-        }
-
-        ml_sol.GenerateBdc("All");
-
-
-        //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-        //ml_sol.GenerateBdc("Sol");
-
-
-
-
-        // ml_msh.AddMeshLevel(SetRefinementFlag);
-        // ml_sol.AddSolutionLevel();
+        ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+	ml_sol.GenerateBdc("Sol");
 
 
         MultiLevelProblem ml_prob(&ml_sol);
@@ -789,66 +729,66 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
     //number of faces for each type of element
     //number of faces for each type of element
-    unsigned nfaces = mymsh->GetElementFaceNumber(iel);
-
-    // loop on faces
-    for(unsigned jface = 0; jface < nfaces; jface++) {
-
-      // look for boundary faces
-      if(myel->GetBoundaryIndex(iel, jface) > 0) {
-
-        unsigned int faceIndex =  myel->GetBoundaryIndex(iel, jface) - 1u;
-
-        if(ml_sol->GetBoundaryCondition("Sol", faceIndex) == NEUMANN && !ml_sol->Ishomogeneous("Sol", faceIndex)) {
-
-          bdcfunc = (ParsedFunction*)(ml_sol->GetBdcFunction("Sol", faceIndex));
-          unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, order_ind);
-          const unsigned felt = mymsh->GetElementFaceType(iel, jface);
-
-          for(unsigned i = 0; i < nve; i++) {
-            unsigned ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
-            unsigned inode_coord_metis = mymsh->GetSolutionDof(ilocal, iel, 2);
-
-            for(unsigned ivar = 0; ivar < dim; ivar++) {
-              coordinates[ivar][i] = (*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
-            }
-          }
-
-          if(felt != 6) {
-            for(unsigned igs = 0; igs < ml_prob._ml_msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
-              ml_prob._ml_msh->_finiteElement[felt][order_ind]->JacobianSur(coordinates, igs, weight, phi, gradphi, normal);
-
-              xyzt.assign(4, 0.);
-
-              for(unsigned i = 0; i < nve; i++) {
-                for(unsigned ivar = 0; ivar < dim; ivar++) {
-                  xyzt[ivar] += coordinates[ivar][i] * phi[i];
-                }
-              }
-
-              // *** phi_i loop ***
-              for(unsigned i = 0; i < nve; i++) {
-                double surfterm_g = (*bdcfunc)(&xyzt[0]);
-                double bdintegral = phi[i] * surfterm_g * weight;
-                unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
-                F[ilocalnode] += bdintegral;
-              }
-            }
-          }
-          else { // 1D : the side elems are points and does not still exist the point elem
-            // in 1D it is only one point
-            xyzt[0] = coordinates[0][0];
-            xyzt[1] = 0.;
-            xyzt[2] = 0.;
-            xyzt[3] = 0.;
-
-            double bdintegral = (*bdcfunc)(&xyzt[0]);
-            unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, 0);
-            F[ilocalnode] += bdintegral;
-          }
-        }
-      }
-    }
+//     unsigned nfaces = mymsh->GetElementFaceNumber(iel);
+// 
+//     // loop on faces
+//     for(unsigned jface = 0; jface < nfaces; jface++) {
+// 
+//       // look for boundary faces
+//       if(myel->GetBoundaryIndex(iel, jface) > 0) {
+// 
+//         unsigned int faceIndex =  myel->GetBoundaryIndex(iel, jface) - 1u;
+// 
+//         if(ml_sol->GetBoundaryCondition("Sol", faceIndex) == NEUMANN && !ml_sol->Ishomogeneous("Sol", faceIndex)) {
+// 
+//           bdcfunc = (ParsedFunction*)(ml_sol->GetBdcFunction("Sol", faceIndex));
+//           unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, order_ind);
+//           const unsigned felt = mymsh->GetElementFaceType(iel, jface);
+// 
+//           for(unsigned i = 0; i < nve; i++) {
+//             unsigned ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
+//             unsigned inode_coord_metis = mymsh->GetSolutionDof(ilocal, iel, 2);
+// 
+//             for(unsigned ivar = 0; ivar < dim; ivar++) {
+//               coordinates[ivar][i] = (*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
+//             }
+//           }
+// 
+//           if(felt != 6) {
+//             for(unsigned igs = 0; igs < ml_prob._ml_msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
+//               ml_prob._ml_msh->_finiteElement[felt][order_ind]->JacobianSur(coordinates, igs, weight, phi, gradphi, normal);
+// 
+//               xyzt.assign(4, 0.);
+// 
+//               for(unsigned i = 0; i < nve; i++) {
+//                 for(unsigned ivar = 0; ivar < dim; ivar++) {
+//                   xyzt[ivar] += coordinates[ivar][i] * phi[i];
+//                 }
+//               }
+// 
+//               // *** phi_i loop ***
+//               for(unsigned i = 0; i < nve; i++) {
+//                 double surfterm_g = (*bdcfunc)(&xyzt[0]);
+//                 double bdintegral = phi[i] * surfterm_g * weight;
+//                 unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
+//                 F[ilocalnode] += bdintegral;
+//               }
+//             }
+//           }
+//           else { // 1D : the side elems are points and does not still exist the point elem
+//             // in 1D it is only one point
+//             xyzt[0] = coordinates[0][0];
+//             xyzt[1] = 0.;
+//             xyzt[2] = 0.;
+//             xyzt[3] = 0.;
+// 
+//             double bdintegral = (*bdcfunc)(&xyzt[0]);
+//             unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, 0);
+//             F[ilocalnode] += bdintegral;
+//           }
+//         }
+//       }
+//     }
 
 
     //--------------------------------------------------------------------------------------------------------
