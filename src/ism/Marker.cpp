@@ -1640,15 +1640,8 @@ namespace femus {
 
 
     std::vector < std::vector < std::vector < double > > > aXs;
-    if(!sol->GetIfFSI()) {
-      aXs = aX[0];
-    }
-    else {
-
-      for(unsigned j = 0; j < solType + 1; j++) {
-        InterpolatePolynomialCoefficients(aXs[j], aX[0][j], aX[1][j], s, elemType, j);
-      }
-
+    if(sol->GetIfFSI()) {
+      InterpolatePolynomialCoefficients(aXs, aX[0], aX[1], s);
     }
 
 
