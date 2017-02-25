@@ -188,66 +188,71 @@ namespace femus {
 //
 //         std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
 
-    //BEGIN reorder markers also by element
-
-    for(unsigned j = 0; j < _size; j++) {
-      particles[j] = _particles[j];
-    }
-
-    unsigned* elementList = new unsigned [_sol->GetMesh()->GetNumberOfElements()];
-    std::vector < unsigned> printList(_size);
-
-    //flags to see if we already ordered by that element, 0 = not considered yet
-    for(unsigned iFlag = 0; iFlag < _mesh->GetNumberOfElements(); iFlag++) {
-      elementList[iFlag] = 0;
-    }
-
-    printList = _printList;
-
-    for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
-
-      counter = 0;
-
-      for(unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc + 1]; jp++) {
-
-        unsigned jel;
-        jel = particles[jp]->GetMarkerElement();
-
-        if(elementList[jel] == 0) {
-
-          elementList[jel] = 1;
-
-          _particles[_markerOffset[iproc] + counter] = particles[jp];
-          for(unsigned iList = 0; iList < _size; iList++) {
-            if(printList[iList] == jp) {
-              _printList[iList] = _markerOffset[iproc] + counter;
-              break;
-            }
-          }
-          counter++;
-
-
-          for(unsigned ip = _markerOffset[iproc]; ip < _markerOffset[iproc + 1]; ip++) {
-            unsigned iel;
-            iel = particles[ip]->GetMarkerElement();
-            if(ip != jp && iel == jel) {
-              //std::cout << " jel =" << jel << " , " << "ip = " << ip << " , " << "jp = " << jp <<  std::endl;
-              elementList[iel] = 1;
-              _particles[_markerOffset[iproc] + counter] = particles[ip];
-              for(unsigned iList = 0; iList < _size; iList++) {
-                if(printList[iList] == ip) {
-                  _printList[iList] = _markerOffset[iproc] + counter;
-                  break;
-                }
-              }
-              counter++;
-            }
-          }
-        }
-      }
-    }
-
-    //END reorder markers also by element
+//     //BEGIN reorder markers also by element
+// 
+//     for(unsigned j = 0; j < _size; j++) {
+//       particles[j] = _particles[j];
+//     }
+// 
+//     unsigned* elementList = new unsigned [_sol->GetMesh()->GetNumberOfElements()];
+//     
+//     std::cout << "number of elements = " <<  _sol->GetMesh()->GetNumberOfElements() << std::endl;
+//     
+//     std::vector < unsigned> printList(_size);
+// 
+//     //flags to see if we already ordered by that element, 0 = not considered yet
+//     for(unsigned iFlag = 0; iFlag < _mesh->GetNumberOfElements(); iFlag++) {
+//       elementList[iFlag] = 0;
+//     }
+// 
+//     printList = _printList;
+// 
+//     for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+// 
+//       counter = 0;
+// 
+//       for(unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc + 1]; jp++) {
+// 
+//         unsigned jel;
+//         jel = particles[jp]->GetMarkerElement();
+// 	
+// 	std::cout<< " Marker in element jel = " << jel << std::endl;
+// 
+//         if(elementList[jel] == 0) {
+// 
+//           elementList[jel] = 1;
+// 
+//           _particles[_markerOffset[iproc] + counter] = particles[jp];
+//           for(unsigned iList = 0; iList < _size; iList++) {
+//             if(printList[iList] == jp) {
+//               _printList[iList] = _markerOffset[iproc] + counter;
+//               break;
+//             }
+//           }
+//           counter++;
+// 
+// 
+//           for(unsigned ip = _markerOffset[iproc]; ip < _markerOffset[iproc + 1]; ip++) {
+//             unsigned iel;
+//             iel = particles[ip]->GetMarkerElement();
+//             if(ip != jp && iel == jel) {
+//               //std::cout << " jel =" << jel << " , " << "ip = " << ip << " , " << "jp = " << jp <<  std::endl;
+//               elementList[iel] = 1;
+//               _particles[_markerOffset[iproc] + counter] = particles[ip];
+//               for(unsigned iList = 0; iList < _size; iList++) {
+//                 if(printList[iList] == ip) {
+//                   _printList[iList] = _markerOffset[iproc] + counter;
+//                   break;
+//                 }
+//               }
+//               counter++;
+//             }
+//           }
+//         }
+//       }
+//     }
+// 
+//     //END reorder markers also by element
 
 //         for(unsigned i = 0; i < _size; i++) {
 //           std::cout << "_printList[ " << i << "] = " << _printList[i] << std::endl;
@@ -272,8 +277,8 @@ namespace femus {
     }
     _particles[_printList[0]]->GetMarkerCoordinates(_line[_size]);
 
-    delete[] elementList;
-    std::vector < unsigned > ().swap(printList);
+   // delete[] elementList;
+   // std::vector < unsigned > ().swap(printList);
 
     
 //     for(unsigned i=0;i<_size;i++){
@@ -597,7 +602,7 @@ namespace femus {
 	
 	unsigned currentElem = _particles[iMarker]->GetMarkerElement();
 	bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
-        
+	
 	step = _particles[iMarker]->GetIprocMarkerStep();
         if(!markerOutsideDomain) {
             

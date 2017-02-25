@@ -217,7 +217,7 @@ int main(int argc, char **args)
 
 
   //BEGIN INITIALIZE PARTICLES
-  unsigned pSize = 1;
+  unsigned pSize = 100;
   std::vector < std::vector < double > > x(pSize);
   std::vector < MarkerType > markerType(pSize);
 
@@ -226,7 +226,7 @@ int main(int argc, char **args)
   
   for (unsigned j = 0; j < pSize; j++) {
     x[j].resize(2);
-    x[j][0] = 0.;
+    x[j][0] = -0.00005;
     x[j][1] = y0 + j * dy;
     markerType[j] = VOLUME;
   }

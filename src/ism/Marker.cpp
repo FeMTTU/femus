@@ -767,7 +767,7 @@ namespace femus {
 
     // std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
 
-    return (nextElem >= 0) ? nextElem : UINT_MAX;
+    return (nextElem >= 0) ? nextElem : UINT_MAX; 
 
   }
 
@@ -1099,7 +1099,8 @@ namespace femus {
     }
     //  std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
 
-    return (nextElem >= 0) ? nextElem : UINT_MAX;
+    
+    return (nextElem >= 0) ? nextElem : UINT_MAX;  
 
   }
 
@@ -1671,6 +1672,7 @@ namespace femus {
 
 
 }
+
 
 
 
