@@ -546,7 +546,7 @@ namespace femus {
 
     //BEGIN  Initialize the parameters for all processors
 
-    double s1 = 0.;
+    double s;
 
     vector < unsigned > solVIndex(_dim);
     solVIndex[0] = _sol->GetIndex("U");    // get the position of "U" in the ml_sol object
@@ -604,6 +604,7 @@ namespace femus {
         bool markerOutsideDomain = (currentElem != UINT_MAX) ? false : true;
 
         step = _particles[iMarker]->GetIprocMarkerStep();
+
         if(!markerOutsideDomain) {
 
           while(step < n * order) {
@@ -615,7 +616,8 @@ namespace femus {
             bool elementUpdate = (aX.find(currentElem) != aX.end()) ? false : true; //update if currentElem was never updated
 
             clock_t localTime = clock();
-            _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], elementUpdate, _sol, s1);
+            _particles[iMarker]->GetMarkerS(n, order, s);
+            _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], elementUpdate, _sol, s);
             _particles[iMarker]->updateVelocity(V, solVIndex, solVType, aV[currentElem], phi, elementUpdate, _sol); // we put pcElemUpdate instead of true but it wasn't running
             _time[3] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
 
@@ -629,7 +631,7 @@ namespace femus {
               }
             }
 
-            double s = (tstep + _c[order - 1][istep]) / n;
+            // double s = (tstep + _c[order - 1][istep]) / n;
 
             for(unsigned k = 0; k < _dim; k++) {
               K[istep][k] = (s * V[0][k] + (1. - s) * V[1][k]) * h;
@@ -668,7 +670,7 @@ namespace femus {
             //std::cout << step <<" "<< istep<< " AAAAAAAAAAAAA"<<std::endl<<std::flush;
             unsigned previousElem = currentElem;
             localTime = clock();
-            _particles[iMarker]->GetElementSerial(previousElem, _sol, s1);
+            _particles[iMarker]->GetElementSerial(previousElem, _sol, s);
             _time[4] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
             localTime = clock();
             // std::cout << step <<" "<< istep<< " BBBBBBBBBBBBB"<<std::endl<<std::flush;
@@ -736,7 +738,8 @@ namespace femus {
             _particles[iMarker]->SetMarkerProc(mproc);
             if(mproc != jproc) {
               unsigned prevElem = _particles[iMarker]->GetIprocMarkerPreviousElement();
-              _particles[iMarker]->GetElement(prevElem, jproc, _sol, s1);
+              _particles[iMarker]->GetMarkerS(n, order, s);
+              _particles[iMarker]->GetElement(prevElem, jproc, _sol, s);
               _particles[iMarker]->SetIprocMarkerPreviousElement(prevElem);
             }
             elem = _particles[iMarker]->GetMarkerElement();
@@ -856,4 +859,7 @@ namespace femus {
     //std::cout<<_time[0]<<" "<<_time[1]<<" "<<_time[2]<<" "<<_time[3]<<" "<<_time[4]<<" "<<_time[5]<<std::endl<<std::flush;
   }
 }
+
+
+
 

@@ -108,7 +108,7 @@ int main(int argc, char **args) {
   muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  E = 120000 * 1.e0; //turek: 1000000 * 1.e0;
+  E = 1000000 * 1.e1; //turek: 1000000 * 1.e0;
   E1 = 100000;
 
   Parameter par(Lref, Uref);
@@ -154,7 +154,7 @@ int main(int argc, char **args) {
   MultiLevelSolution ml_sol1(&ml_msh1);
 
   ml_sol.SetIfFSI(true);
- // ml_sol1.SetIfFSI(true);
+// ml_sol1.SetIfFSI(true);
 
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 2);
@@ -290,26 +290,26 @@ int main(int argc, char **args) {
   std::vector < MarkerType > markerType(pSize);
 
 
-  //for Turek
-  double y0 = 0.007 - 0.0019 / 2;
-  double dy = 0.0019 / pSize;
+  if(simulation == 0) {  //for Turek
+    double y0 = 0.007 - 0.0019 / 2;
+    double dy = 0.0019 / pSize;
 
-  for(unsigned j = 0; j < pSize; j++) {
-    x[j].resize(2);
-    x[j][0] = -0.00005;
-    x[j][1] = y0 + j * dy;
-    markerType[j] = VOLUME;
+    for(unsigned j = 0; j < pSize; j++) {
+      x[j].resize(2);
+      x[j][0] = -0.00005;
+      x[j][1] = y0 + j * dy;
+      markerType[j] = VOLUME;
+    }
   }
 
-
-  //for aneurysmBifurcation
-//   for(unsigned j = 0; j < pSize; j++) {
-//     x[j].resize(2);
-//     x[j][0] = -0.009 + 0.018 * j / (pSize - 1);
-//     x[j][1] = 0.107;
-//     markerType[j] = VOLUME;
-//   }
-
+  if(simulation == 5) {  //for aneurysmBifurcation
+    for(unsigned j = 0; j < pSize; j++) {
+      x[j].resize(2);
+      x[j][0] = -0.009 + 0.018 * j / (pSize - 1);
+      x[j][1] = 0.109;
+      markerType[j] = VOLUME;
+    }
+  }
 
   //END INITIALIZE PARTICLES
 
@@ -325,7 +325,7 @@ int main(int argc, char **args) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 20;
+  const unsigned int n_timesteps = 400;
 
   std::vector < std::vector <double> > data(n_timesteps);
 

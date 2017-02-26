@@ -27,11 +27,9 @@
 #include "map"
 #include "MyVector.hpp"
 
-namespace femus
-{
+namespace femus {
 
-  class Marker : public ParallelObject
-  {
+  class Marker : public ParallelObject {
     public:
       Marker(std::vector < double > x, const MarkerType &markerType, Solution *sol, const unsigned & solType, const bool &debug = false) {
         double s1 = 0.;
@@ -41,20 +39,22 @@ namespace femus
         _dim = sol->GetMesh()->GetDimension();
         _step = 0;
 
-	GetElement(1, UINT_MAX, sol, s1);
+        GetElement(1, UINT_MAX, sol, s1);
 
-	if (_iproc == _mproc) {
+        if(_iproc == _mproc) {
           std::vector < std::vector < std::vector < std::vector < double > > > >aX;
           FindLocalCoordinates(_solType, aX, true, sol, s1);
-        } else {
+        }
+        else {
           std::vector < double > ().swap(_x);
         }
       };
 
       double GetCoordinates(Solution *sol, const unsigned &k, const unsigned &i , const double &s) {
-        if (!sol->GetIfFSI()) {
+        if(!sol->GetIfFSI()) {
           return (*sol->GetMesh()->_topology->_Sol[k])(i);
-        } else {
+        }
+        else {
           const char varname[3][3] = {"DX", "DY", "DZ"};
           unsigned solIndex = sol->GetIndex(&varname[k][0]);
           return (*sol->GetMesh()->_topology->_Sol[k])(i)
@@ -126,7 +126,7 @@ namespace femus
 
       void GetMarkerLocalCoordinatesLine(std::vector<double> &xi) {
         xi.resize(_dim);
-        if (_mproc == _iproc) {
+        if(_mproc == _iproc) {
           xi = _xi;
         }
         MPI_Bcast(&xi[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
@@ -152,7 +152,7 @@ namespace femus
         _x0 = _x;
         _step = 0;
         _K.resize(order);
-        for (unsigned j = 0; j < order; j++) {
+        for(unsigned j = 0; j < order; j++) {
           _K[j].assign(_dim, 0.);
         }
       }
@@ -161,7 +161,7 @@ namespace femus
         _xi.resize(_dim);
         _x0.resize(_dim);
         _K.resize(order);
-        for (unsigned j = 0; j < order; j++) {
+        for(unsigned j = 0; j < order; j++) {
           _K[j].assign(_dim, 0.);
         }
       }
@@ -179,15 +179,15 @@ namespace femus
 
       void GetMarkerCoordinates(std::vector< double > &xn) {
         xn.resize(_dim);
-        if (_mproc == _iproc) {
+        if(_mproc == _iproc) {
           xn = _x;
         }
         MPI_Bcast(&xn[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
       }
 
       void GetMarkerCoordinates(std::vector< MyVector <double > > &xn) {
-        if (_mproc == _iproc) {
-          for (unsigned d = 0; d < _dim; d++) {
+        if(_mproc == _iproc) {
+          for(unsigned d = 0; d < _dim; d++) {
             unsigned size = xn[d].size();
             xn[d].resize(size + 1);
             xn[d][size] = _x[d];
@@ -227,6 +227,11 @@ namespace femus
                                        const unsigned &solVType,  const unsigned &nDofsV,
                                        const unsigned &ielType, std::vector < std::vector < std::vector < double > > > &a, Solution *sol);
 
+      void GetMarkerS(const unsigned &n, const unsigned &order, double &s) {
+        unsigned tstep = _step / order;
+        unsigned istep = _step % order;
+        s = (tstep + _c[order - 1][istep]) / n;
+      }
 
 
     private:
