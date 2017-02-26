@@ -136,8 +136,8 @@ int main(int argc, char **args) {
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
 
-  ml_sol.GenerateBdc("U", "Time_dependent");
-  ml_sol.GenerateBdc("V", "Steady");
+  ml_sol.GenerateBdc("V", "Time_dependent");
+  ml_sol.GenerateBdc("U", "Steady");
 
   ml_sol.GenerateBdc("P", "Steady");
 
@@ -205,7 +205,7 @@ int main(int argc, char **args) {
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  mov_vars.push_back("DZ");
+  //mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
 
   std::vector<std::string> print_vars;
@@ -242,7 +242,7 @@ int main(int argc, char **args) {
     for(unsigned j = 0; j < pSize; j++) {
     x[j].resize(2);
     x[j][0] = -0.009 + 0.018*j/(pSize-1);
-    x[j][1] = 0.1;
+    x[j][1] = 0.107;
     markerType[j] = VOLUME;
   }
   
