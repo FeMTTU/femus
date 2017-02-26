@@ -25,6 +25,9 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char name[],
                                  double &value, const int facename, const double time);
 
+bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[],
+                                 double &value, const int facename, const double time);
+
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 //------------------------------------------------------------------------------------------------------------------
 
@@ -51,6 +54,9 @@ int main(int argc, char **args)
     }
     else if(!strcmp("4", args[1])) {   /** FSI AAA thrombus 2D */
       simulation = 4;
+    }
+    else if(!strcmp("5", args[1])) {   /** FSI Aortic Bifurcation */
+      simulation = 5;
     }
   }
 
@@ -81,6 +87,9 @@ int main(int argc, char **args)
   }
   else if(simulation == 4) {
     infile = "./input/AAA_thrombus_2D.neu";
+  }
+  else if(simulation == 5) {
+    infile = "./input/aortic_bifurcation.neu";
   }
   //std::string infile = "./input/Turek.neu";
 
@@ -161,12 +170,15 @@ int main(int argc, char **args)
   else if(simulation == 4) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus2D);
   }
+  else if(simulation == 5) {
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorticBifurcation);
+  }
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
   
-  if(simulation == 4) {    
+  if(simulation == 4 || simulation == 5) {    
     ml_sol.GenerateBdc("U", "Steady");
     ml_sol.GenerateBdc("V", "Time_dependent");
   }
@@ -261,7 +273,7 @@ int main(int argc, char **args)
   
    // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 400;
+  const unsigned int n_timesteps = 150;
   
   std::vector < std::vector <double> > data(n_timesteps);
     
@@ -274,8 +286,8 @@ int main(int argc, char **args)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step / 32.;
-    //data[time_step][0] = time_step / (64*1.4);
+    //data[time_step][0] = time_step / 32.;
+    data[time_step][0] = time_step / (64*1.4);
     if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
       GetSolutionNorm(ml_sol, 9, data[time_step]);
     }
@@ -325,8 +337,8 @@ int main(int argc, char **args)
 }
 
 double SetVariableTimeStep(const double time) {
-  //double dt = 1./(64*1.4);
-  double dt = 1./32;
+  double dt = 1./(64*1.4);
+  //double dt = 1./32;
   
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
@@ -359,9 +371,9 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 
   
   std::ifstream inf;
-  inf.open("./input/womersleyProfile64_R0p001_f84.txt");
+  inf.open("./input/womersleyProfile_velMax65cms.txt");
   if(!inf) {
-    std::cout << "velocity file ./input/womersleyProfile64_R0p001_f84.txt can not be opened\n";
+    std::cout << "velocity file ./input/womersleyProfile_velMax65cms.txt can not be opened\n";
     exit(0);
   }
    
@@ -385,10 +397,10 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
   if ( !strcmp(name, "U") ) {
 
     if (1 == facename) {
-      double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
-      //double ramp = (time < period) ? sin(PI/2 * time / period) : 1.;
-      value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8)*(1.+ 0.75*sin(2.*PI* time)) * ramp; //inflow
-      //value = (x[1] * 1000 - 6) * ( x[1] * 1000 - 8) * vel[j] * ramp; //inflow
+      //double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
+      double ramp = (time < period) ? sin(PI/2 * time / period) : 1.;
+      //value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8)*(1.+ 0.75*sin(2.*PI* time)) * ramp; //inflow
+      value = (x[1] * 1000 - 6) * ( x[1] * 1000 - 8) * vel[j] * ramp; //inflow
     }
     else if ( 2 == facename || 5 == facename ) {
       test = 0;
@@ -474,6 +486,55 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
   return test;
 }
 
+
+bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+  bool test = 1; //dirichlet
+  value = 0.;
+  
+  double PI = acos(-1.);
+
+  double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
+  
+  if(!strcmp(name, "V")) {
+    if(1 == facename) {
+      double r2 = (x[0] * 100.)*(x[0] * 100.);
+      //value = -0.01/.9 * (.9 - r2); //inflow
+      value = -0.01 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+    }
+    if(2 == facename || 3 == facename || 7 == facename) {
+      test = 0;
+      value = 0.;
+    }
+  }
+  else if(!strcmp(name, "U")) {
+    if(2 == facename || 3 == facename) {
+      test = 0;
+      value = (10000 + 2500 * sin(2*PI*time)) * ramp;;
+    }
+    else if(7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if(!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+  }
+  else if(!strcmp(name, "DX")) {
+    if(7 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if(!strcmp(name, "DY")) {
+    if(7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+
+  return test;
+}
 
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
