@@ -665,7 +665,7 @@ namespace femus {
             _particles[iMarker]->SetIprocMarkerK(K);
 
             _particles[iMarker]->SetIprocMarkerStep(step);
-
+	    _particles[iMarker]->GetMarkerS(n, order, s);
 
             //std::cout << step <<" "<< istep<< " AAAAAAAAAAAAA"<<std::endl<<std::flush;
             unsigned previousElem = currentElem;
@@ -732,6 +732,10 @@ namespace femus {
           unsigned elem =  _particles[iMarker]->GetMarkerElement();
           MPI_Bcast(& elem, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
           _particles[iMarker]->SetMarkerElement(elem);
+	  
+	  unsigned step =  _particles[iMarker]->GetIprocMarkerStep();
+          MPI_Bcast(& step, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
+          _particles[iMarker]->SetIprocMarkerStep(step);
 
           if(elem != UINT_MAX) {  // if it is outside jproc, ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but not outside the domain
             unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);

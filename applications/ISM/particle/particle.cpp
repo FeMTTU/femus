@@ -139,8 +139,8 @@ int main(int argc, char **args) {
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
                         infile.c_str(), "fifth", Lref, NULL);
 
-  MultiLevelMesh ml_msh1(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
-                         infile.c_str(), "fifth", Lref, NULL);
+//   MultiLevelMesh ml_msh1(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
+//                          infile.c_str(), "fifth", Lref, NULL);
 
   //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 2);
 
@@ -151,10 +151,8 @@ int main(int argc, char **args) {
 
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
-  MultiLevelSolution ml_sol1(&ml_msh1);
 
   ml_sol.SetIfFSI(true);
-// ml_sol1.SetIfFSI(true);
 
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 2);
@@ -348,8 +346,6 @@ int main(int argc, char **args) {
     PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
     linea.resize(time_step + 2);
     linea[time_step + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
-
-    UpdateMeshCoordinates(ml_msh1, ml_sol);
 
     data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / (64*1.4);

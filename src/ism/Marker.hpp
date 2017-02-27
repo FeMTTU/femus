@@ -228,8 +228,9 @@ namespace femus {
                                        const unsigned &ielType, std::vector < std::vector < std::vector < double > > > &a, Solution *sol);
 
       void GetMarkerS(const unsigned &n, const unsigned &order, double &s) {
-        unsigned tstep = _step / order;
-        unsigned istep = _step % order;
+	unsigned step = (_step == UINT_MAX) ? n * order : _step; 
+        unsigned tstep = step / order;
+        unsigned istep = step % order;
         s = (tstep + _c[order - 1][istep]) / n;
       }
 
