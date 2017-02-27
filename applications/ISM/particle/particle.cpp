@@ -569,7 +569,7 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
     if(1 == facename) {
       double r2 = (x[0] * 100.) * (x[0] * 100.);
       //value = -0.01/.9 * (.9 - r2); //inflow
-      value = -0.01 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = -0.02 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
     }
     if(2 == facename || 3 == facename || 7 == facename) {
       test = 0;
