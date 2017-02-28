@@ -547,7 +547,8 @@ namespace femus {
     //BEGIN  Initialize the parameters for all processors
 
     double s;
-
+    double PI = acos(-1.);
+    std::vector <double> Fm(3,0); // magnetic force initialization
     vector < unsigned > solVIndex(_dim);
     solVIndex[0] = _sol->GetIndex("U");    // get the position of "U" in the ml_sol object
     solVIndex[1] = _sol->GetIndex("V");    // get the position of "V" in the ml_sol object
@@ -632,9 +633,12 @@ namespace femus {
             }
 
             // double s = (tstep + _c[order - 1][istep]) / n;
+            
+            
+            MagneticForceWire(x,Fm);
 
             for(unsigned k = 0; k < _dim; k++) {
-              K[istep][k] = (s * V[0][k] + (1. - s) * V[1][k]) * h;
+              K[istep][k] = (s * V[0][k] + (1. - s) * V[1][k] + Fm[k]) * h; 
             }
 
             counter++;
@@ -665,7 +669,7 @@ namespace femus {
             _particles[iMarker]->SetIprocMarkerK(K);
 
             _particles[iMarker]->SetIprocMarkerStep(step);
-	    _particles[iMarker]->GetMarkerS(n, order, s);
+            _particles[iMarker]->GetMarkerS(n, order, s);
 
             //std::cout << step <<" "<< istep<< " AAAAAAAAAAAAA"<<std::endl<<std::flush;
             unsigned previousElem = currentElem;
@@ -732,8 +736,8 @@ namespace femus {
           unsigned elem =  _particles[iMarker]->GetMarkerElement();
           MPI_Bcast(& elem, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
           _particles[iMarker]->SetMarkerElement(elem);
-	  
-	  unsigned step =  _particles[iMarker]->GetIprocMarkerStep();
+
+          unsigned step =  _particles[iMarker]->GetIprocMarkerStep();
           MPI_Bcast(& step, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
           _particles[iMarker]->SetIprocMarkerStep(step);
 
@@ -862,6 +866,85 @@ namespace femus {
 
     //std::cout<<_time[0]<<" "<<_time[1]<<" "<<_time[2]<<" "<<_time[3]<<" "<<_time[4]<<" "<<_time[5]<<std::endl<<std::flush;
   }
+
+
+  void Line::MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> Fm) {
+
+    double PI = acos(-1.);
+    
+    double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
+    
+    double muf = 3.5 * 1.0e-3; // fluid viscosity
+    
+    double D = 500 * 1.e-9;       //diameter of the particle
+    
+    std::vector <double> v(3);   //direction vector of the line that identifies the infinite wire
+    
+    v[0] = 0.;
+    v[1] = 0.;
+    v[2] = 1.;
+    
+    
+    std::vector <double> x(3);   //point that with v identifies the line
+    
+    x[0] = -0.0175;
+    x[1] = 0.05;
+    x[2] = 0.;
+    
+    double I = 8.e5; // electric current intensity
+    double Msat = 1.e6;  //  magnetic saturation
+    double  chi = 3.; //magnetic susceptibility
+
+    std::vector <double> xM(3);
+    xM[0] = xMarker[0];
+    xM[1] = xMarker[1];
+    xM[2] = (xMarker.size() == 3) ? xMarker[2] : 0. ;
+
+    double Gamma = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    double Omega = v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2]) * v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2]) +
+                   v[0] * (x[2] - xM[2]) - v[2] * (x[0] - xM[0]) * v[0] * (x[2] - xM[2]) - v[2] * (x[0] - xM[0]) +
+                   v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]) * v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]) ;
+
+    std::vector<double> gradOmega(3);
+
+    gradOmega[0] = 2 * v[2] * (v[0] * (x[2] - xM[2]) - v[2] * (x[0] - xM[0])) - 2 * v[1] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
+
+    gradOmega[1] = -2 * v[2] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) + 2 * v[0] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
+    
+    gradOmega[2] = 2 * v[1] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[0] * (x[2] - xM[2]) - v[2] * (x[0] - xM[0]));
+    
+    double H = (I / PI) * Gamma * (1 / sqrt(Omega)); //absolute value of the magnetic field at x = xMarker
+
+    double H0 = Msat / chi;
+
+    if(H < H0) {
+
+      double C1 = (PI * D * D *D * mu0 * chi) / 12;
+
+      Fm[0] = -C1 * I *  I * Gamma * Gamma * gradOmega[0] /(Omega*Omega*4*PI*PI);
+      Fm[1] = -C1 * I *  I * Gamma * Gamma * gradOmega[1] /(Omega*Omega*4*PI*PI);
+      Fm[2] = -C1 * I *  I * Gamma * Gamma * gradOmega[2] /(Omega*Omega*4*PI*PI);
+
+    }
+    
+    else{
+      
+      double C2 = (PI * D * D *D * mu0 * Msat) / 6;
+      
+      Fm[0] = - C2 * I *  Gamma * gradOmega[0] / sqrt(Omega*Omega*Omega*2*PI);
+      Fm[1] = - C2 * I *  Gamma * gradOmega[1] / sqrt(Omega*Omega*Omega*2*PI); 
+      Fm[2] = - C2 * I *  Gamma * gradOmega[2] / sqrt(Omega*Omega*Omega*2*PI);
+      
+    }
+    
+    for(unsigned i = 0 ; i<Fm.size(); i++){
+      Fm[i] = Fm[i] / (3 * PI * D *muf) ;
+    }
+    
+
+  }
+
+
 }
 
 

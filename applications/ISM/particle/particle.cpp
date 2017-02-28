@@ -283,7 +283,7 @@ int main(int argc, char **args) {
 
 
   //BEGIN INITIALIZE PARTICLES
-  unsigned pSize = 100;
+  unsigned pSize = 50;
   std::vector < std::vector < double > > x(pSize);
   std::vector < MarkerType > markerType(pSize);
 
@@ -300,13 +300,21 @@ int main(int argc, char **args) {
     }
   }
 
-  if(simulation == 5) {  //for aneurysmBifurcation
+  if(simulation == 5) {  //for aorticBifurcation
     for(unsigned j = 0; j < pSize; j++) {
       x[j].resize(2);
-      x[j][0] = -0.009 + 0.018 * j / (pSize - 1);
-      x[j][1] = 0.109;
+      x[j][0] = -0.007 + 0.012 * j / (pSize - 1);
+      x[j][1] = 0.08;
       markerType[j] = VOLUME;
     }
+
+//     for(unsigned j = 0; j < pSize; j++) {
+//       x[j].resize(2);
+//       x[j][0] = -0.008 + 0.012 * j / (pSize - 1);
+//       x[j][1] = 0.01;
+//       markerType[j] = VOLUME;
+//     }
+
   }
 
   //END INITIALIZE PARTICLES
@@ -565,7 +573,7 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
     if(1 == facename) {
       double r2 = (x[0] * 100.) * (x[0] * 100.);
       //value = -0.01/.9 * (.9 - r2); //inflow
-      value = -0.02 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = -0.04 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
     }
     if(2 == facename || 3 == facename || 7 == facename) {
       test = 0;

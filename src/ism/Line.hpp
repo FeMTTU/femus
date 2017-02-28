@@ -53,6 +53,8 @@ namespace femus {
       void AdvectionParallel(const unsigned &n, const double& T, const unsigned &order);
 
       void UpdateLine();
+      
+      void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> Fm);
 
 
     private:
