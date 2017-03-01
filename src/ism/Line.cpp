@@ -636,8 +636,13 @@ namespace femus {
             
             
             MagneticForceWire(x,Fm);
+	    
 
-            for(unsigned k = 0; k < _dim; k++) {
+	    for(unsigned l=0; l<Fm.size(); l++){
+	      std::cout << "Fm[" << l << "]=" << Fm[l] << std::endl;
+	    }
+	    
+	    for(unsigned k = 0; k < _dim; k++) {
               K[istep][k] = (s * V[0][k] + (1. - s) * V[1][k] + Fm[k]) * h; 
             }
 
@@ -868,7 +873,7 @@ namespace femus {
   }
 
 
-  void Line::MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> Fm) {
+  void Line::MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm) {
 
     double PI = acos(-1.);
     
@@ -902,7 +907,7 @@ namespace femus {
 //     x[1] = 0.;
 //     x[2] = 3.;
     
-    double I = 1.e5; // electric current intensity
+    double I = 2.e5; // electric current intensity
     double Msat = 1.e6;  //  magnetic saturation
     double  chi = 3.; //magnetic susceptibility
 
