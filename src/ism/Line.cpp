@@ -880,18 +880,29 @@ namespace femus {
     
     std::vector <double> v(3);   //direction vector of the line that identifies the infinite wire
     
+//     aortic bifurcation
     v[0] = 0.;
     v[1] = 0.;
     v[2] = 1.;
     
+    //bent tube no FSI
+//     v[0] = 0.;
+//     v[1] = 1.;
+//     v[2] = 0.;
     
     std::vector <double> x(3);   //point that with v identifies the line
     
-    x[0] = -0.0175;
-    x[1] = 0.05;
+//aortic bifurcation
+    x[0] = -0.016;
+    x[1] = 0.06;
     x[2] = 0.;
+
+//bent tube no FSI
+//     x[0] = 9.;
+//     x[1] = 0.;
+//     x[2] = 3.;
     
-    double I = 8.e5; // electric current intensity
+    double I = 1.e5; // electric current intensity
     double Msat = 1.e6;  //  magnetic saturation
     double  chi = 3.; //magnetic susceptibility
 
