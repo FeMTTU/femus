@@ -301,19 +301,13 @@ int main(int argc, char **args) {
   }
 
   if(simulation == 5) {  //for aorticBifurcation
+ 
     for(unsigned j = 0; j < pSize; j++) {
       x[j].resize(2);
-      x[j][0] = -0.006 + 0.013 * j / (pSize - 1);
-      x[j][1] = 0.08;
+      x[j][0] = -0.009 + 0.018 * j / (pSize - 1);
+      x[j][1] = 0.105;
       markerType[j] = VOLUME;
     }
-
-//     for(unsigned j = 0; j < pSize; j++) {
-//       x[j].resize(2);
-//       x[j][0] = -0.008 + 0.012 * j / (pSize - 1);
-//       x[j][1] = 0.01;
-//       markerType[j] = VOLUME;
-//     }
 
   }
 
