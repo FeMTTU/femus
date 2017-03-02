@@ -52,7 +52,7 @@ public:
   /** To be Added */
   void InitPde(const vector <unsigned> &_SolPdeIndex,const  vector <int> &SolType,
                const vector <char*> &SolName, vector <NumericVector*> *Bdc_other,
-               const unsigned &other_gridr, const unsigned &other_gridn, vector < bool > &SparsityPattern_other);
+               const unsigned &other_gridn, vector < bool > &SparsityPattern_other);
 
   void GetSparsityPatternSize();
 
@@ -88,16 +88,23 @@ public:
   /** AddLevel */
   void AddLevel();
 
+  void SwapMatrices(){
+    SparseMatrix *Temp = _KK;
+    _KK = _KKamr;
+    _KKamr = Temp;
+  }
+  
   // member data
   Mesh *_msh;
   Solution *_solution;
   NumericVector *_EPS, *_EPSC, *_RES, *_RESC;
   SparseMatrix *_KK;
+  SparseMatrix *_KKamr;
   vector < vector <unsigned> > KKoffset;
   vector < unsigned > KKghostsize;
   vector < vector < int> > KKghost_nd;
   vector <int> KKIndex;
-  unsigned _gridr,_gridn;
+  unsigned _gridn;
 
   vector < int > d_nnz;
   vector < int > o_nnz;

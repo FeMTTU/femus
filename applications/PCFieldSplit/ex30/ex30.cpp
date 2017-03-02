@@ -204,7 +204,6 @@ int main(int argc, char** args) {
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
 
-  system.SetSamePreconditioner();
   system.MGsolve();
 
   LinearImplicitSystem& system2 = mlProb.add_system < LinearImplicitSystem > ("T");
@@ -280,7 +279,6 @@ int main(int argc, char** args) {
   system2.SetElementBlockNumber(4);
   //system.SetElementBlockNumber("All");
 
-  system2.SetSamePreconditioner();
   system2.MGsolve();
 
 

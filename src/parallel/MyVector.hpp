@@ -72,6 +72,9 @@ namespace femus {
 
       // ******************
       void scatter();
+      
+      // ******************
+      void stack();
 
       // ******************
       void buildOffset();
@@ -80,10 +83,10 @@ namespace femus {
       std::vector<unsigned> getOffset();
 
       // ******************
-      void localize(const unsigned &lproc);
+      void broadcast(const unsigned &lproc);
 
       // ******************
-      void clearLocalized();
+      void clearBroadcast();
 
       // ****************
       const std::string &status();
@@ -104,11 +107,12 @@ namespace femus {
           }
           else {
             for(int j = 0; j < vec._nprocs; j++) {
-              vec.localizeToAll(j);
+              vec.broadcast(j);
               for(unsigned i = vec.begin(); i < vec.end(); i++) {
                 os << i << " " << vec[i] << std::endl;
               }
-              vec.clearLocalized();
+              os << std::endl;
+              vec.clearBroadcast();
             }
           }
         }

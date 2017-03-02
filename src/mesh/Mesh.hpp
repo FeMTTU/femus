@@ -112,6 +112,7 @@ public:
     /** Only for parallel */
     unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const;
 
+    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel);
 
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
@@ -156,7 +157,6 @@ public:
     /** Allocate memory for adding fluid or solid mark */
     void AllocateAndMarkStructureNode();
 
-
     /** To be Added */
     void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
 
@@ -181,8 +181,17 @@ public:
     void Buildkel();
     
     void BiquadraticNodesNotInGambit();
+    
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap(){
+      return _amrRestriction;
+    }
+    
+    std::vector < std::map < unsigned, bool > > & GetAmrSolidMark(){
+      return _amrSolidMark;
+    }
 
-
+    basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
+    
     // member data
     Solution* _topology;
     const elem_type *_finiteElement[6][5];
@@ -264,6 +273,9 @@ private:
     static const unsigned _zIndex = 2;
     static const unsigned _amrIndex = 3;
     static const unsigned _solidMarkIndex = 4;
+    
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
+    std::vector < std::map < unsigned, bool > > _amrSolidMark;
 
 };
 

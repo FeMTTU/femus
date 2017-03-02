@@ -20,13 +20,20 @@
 #include <map>
 
 #include "Mesh.hpp"
-#include "MyVector.hpp"
+#include "NumericVector.hpp"
 
+#include "MyVector.hpp"
 #include "MyMatrix.hpp"
+#include "Basis.hpp"
+#include "PolynomialBases.hpp"
 
 namespace femus {
 
+  class basis;
+  
   class Mesh;
+  
+  class NumericVector;
   /**
    * The elem class
   */
@@ -41,7 +48,7 @@ namespace femus {
       //elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal, const std::vector < double >& localizedElementType);
       elem(elem* elc, const unsigned refindex, const std::vector < double >& coarseAmrLocal);
 
-      void SharpMemoryAllocation();
+      void ShrinkToFit();
 
       /** destructor */
       ~elem();
@@ -122,18 +129,8 @@ namespace femus {
       };
 
       /** To be Added */
-      unsigned GetRefinedElementTypeNumber(const unsigned& ielt) const {
-        return _nelrt[ielt];
-      };
-
-      /** To be Added */
       void SetRefinedElementNumber(const unsigned& value) {
         _nelr = value;
-      };
-
-      /** To be Added */
-      void SetRefinedElemenTypeNumber(const unsigned& value, const unsigned& ielt) {
-        _nelrt[ielt] = value;
       };
 
       /** To be Added */
@@ -186,16 +183,16 @@ namespace femus {
         _elementGroup.scatter(_elementOffset);
       }
       void LocalizeElementQuantities(const unsigned &lproc) {
-        _elementLevel.localize(lproc);
-        _elementType.localize(lproc);
-        _elementMaterial.localize(lproc);
-        _elementGroup.localize(lproc);
+        _elementLevel.broadcast(lproc);
+        _elementType.broadcast(lproc);
+        _elementMaterial.broadcast(lproc);
+        _elementGroup.broadcast(lproc);
       }
       void FreeLocalizedElementQuantities() {
-        _elementLevel.clearLocalized();
-        _elementType.clearLocalized();
-        _elementMaterial.clearLocalized();
-        _elementGroup.clearLocalized();
+        _elementLevel.clearBroadcast();
+        _elementType.clearBroadcast();
+        _elementMaterial.clearBroadcast();
+        _elementGroup.clearBroadcast();
       }
 
       bool GetIfElementCanBeRefined(const unsigned& iel) {
@@ -231,16 +228,18 @@ namespace femus {
         _nprocs = nprocs;
       }
 
+      void GetAMRRestriction(Mesh *msh);
+
     private:
 
       elem* _coarseElem;
-
+            
       unsigned _iproc;
       unsigned _nprocs;
 
       unsigned _nvt;
       unsigned _nel, _nelt[6];
-      unsigned _nelr, _nelrt[6];
+      unsigned _nelr;
       unsigned _ngroup;
       unsigned _level;
 
@@ -257,7 +256,7 @@ namespace femus {
 
       MyMatrix <unsigned> _childElem;
       MyMatrix <unsigned> _childElemDof;
-    
+
       MyMatrix <unsigned> _elementNearVertex;
       MyMatrix <unsigned> _elementNearElement;
 
@@ -327,8 +326,7 @@ namespace femus {
   };
 
 
-  const unsigned NFACENODES[6][6][3] =
-  {
+  const unsigned NFACENODES[6][6][3] = {
     { {4, 8, 9}, // Hex
       {4, 8, 9},
       {4, 8, 9},

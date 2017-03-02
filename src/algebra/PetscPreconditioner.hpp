@@ -75,7 +75,7 @@ public:
     virtual void apply(const NumericVector & x, NumericVector & y);
 
     /** Tells PETSC to use the user-specified preconditioner */
-    static void set_petsc_preconditioner_type  (const PreconditionerType & preconditioner_type, PC & pc);
+    static void set_petsc_preconditioner_type  (const PreconditionerType & preconditioner_type, PC & pc, const int &parallelOverlapping = 0);
 
 private:
 

@@ -73,7 +73,7 @@ protected:
     /** Create the Prolongator and Restrictor Operators for the Algebraic Multigrid Solver */
     void BuildProlongatorMatrix(unsigned gridf);
 
-
+    void BuildAmrProlongatorMatrix(unsigned level);
 
 
 private:

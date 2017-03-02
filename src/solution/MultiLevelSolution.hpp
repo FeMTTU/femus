@@ -181,6 +181,10 @@ public:
     unsigned GetSolutionPairIndex(const unsigned& i) const{
       return _solPairIndex[i];
     }
+    
+    unsigned GetSolutionPairInverseIndex(const unsigned& i) const{
+      return _solPairInverseIndex[i];
+    }
 
     void build();
 
@@ -219,6 +223,24 @@ public:
     Solution* GetLevel(const unsigned i) {
       return _solution[i];
     };
+    
+    
+    void UpdateSolution(const char name[], InitFunc func, const double& time);
+    
+    void CopySolutionToOldSolution();
+    
+    void SetIfFSI(const bool &FSI = true){
+	_FSI = FSI; 
+	for(unsigned i=0;i<_gridn;i++){
+	  _solution[i]->SetIfFSI(FSI);
+	}
+    }
+      
+    bool GetIfFSI(){
+      return _FSI; 
+    }
+    
+    
 private:
     /** boundary condition function pointer */
 
@@ -260,11 +282,13 @@ private:
     vector < bool >   _fixSolutionAtOnePoint;
 
     vector <unsigned> _solPairIndex;
+    vector <unsigned> _solPairInverseIndex;
 
     /** Multilevel solution writer */
     Writer* _writer;
 
     const MultiLevelProblem* _mlBCProblem;
+    bool _FSI;
 
 };
 

@@ -96,8 +96,6 @@ int main(int argc, char** args) {
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
 
-  ml_msh.MarkStructureNode();
-
   //create systems
   // add the system FSI to the MultiLevel problem
   MonolithicFSINonLinearImplicitSystem& system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");

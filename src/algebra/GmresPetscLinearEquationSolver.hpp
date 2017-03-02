@@ -64,17 +64,14 @@ namespace femus {
                       SparseMatrix* PP, SparseMatrix* RR,
                       const unsigned &npre, const unsigned &npost);
 
-      void SetSamePreconditioner(){
-        _samePreconditioner = true;
-      }
-      bool UseSamePreconditioner(){
-        return _samePreconditioner * _msh->GetIfHomogeneous();
-      }
-
       void RemoveNullSpace();
       void GetNullSpaceBase( std::vector < Vec > &nullspBase);
       void ZerosBoundaryResiduals();
       void SetPenalty();
+      
+      void SetRichardsonScaleFactor(const double & richardsonScaleFactor){
+	_richardsonScaleFactor = richardsonScaleFactor;
+      }
 
       virtual void BuildBdcIndex(const vector <unsigned> &variable_to_be_solved);
       virtual void SetPreconditioner(KSP& subksp, PC& subpc);
@@ -113,14 +110,9 @@ namespace femus {
       PetscInt  _restart;
 
       vector <PetscInt> _bdcIndex;
-      vector <PetscInt> _hangingNodesIndex;
       bool _bdcIndexIsInitialized;
-
-      Mat _pmat;
-
-
-      bool _pmatIsInitialized;
-      bool _samePreconditioner;
+      
+      double _richardsonScaleFactor;
 
   };
 
@@ -143,14 +135,12 @@ namespace femus {
     _dtol   = 1.e+5;
     _maxits = 1000;
     _restart = 30;
+    _richardsonScaleFactor = 0.5;
 
     _bdcIndexIsInitialized = 0;
-    _pmatIsInitialized = false;
-
+    
     _printSolverInfo = false;
-
-    _samePreconditioner = false;
-
+ 
   }
 
   // =============================================
@@ -163,10 +153,7 @@ namespace femus {
 
   inline void GmresPetscLinearEquationSolver::Clear() {
 
-    if(_pmatIsInitialized) {
-      _pmatIsInitialized = false;
-      MatDestroy(&_pmat);
-    }
+//     
 
     if(this->initialized()) {
       this->_is_initialized = false;

@@ -171,6 +171,11 @@ public:
     virtual void matrix_ABC(const SparseMatrix &mat_A,const SparseMatrix &mat_B, const SparseMatrix &mat_C, const bool &reuse) = 0;
 
     /** To be Addded */
+    virtual void matrix_RightMatMult(const SparseMatrix &mat_A) = 0;
+    
+    virtual void matrix_LeftMatMult(const SparseMatrix &mat_A) = 0;
+    
+    /** To be Addded */
     virtual void matrix_get_diagonal_values(const std::vector< int > &index, std::vector<double> &value)const=0;
 
     /** To be Addded */
@@ -202,11 +207,16 @@ public:
     /** Matrix transpose */
     virtual void get_transpose (SparseMatrix& dest) const = 0;
 
+    virtual void mat_zero_rows(const std::vector <int> &index, const double &diagonal_value) const = 0;
+    
     // Read - Print ------------------------------
     // print
     /** Print  to file */
-    virtual void print(const std::string& name)const;
+    virtual void print(const std::string& name) const;
 
+    /** Print  to Matlab format */
+    virtual void print_matlab(const std::string& name, const std::string& format) const {};
+    
     /** Print  to the screen */
     virtual  void print(std::ostream& os=std::cout) const {
         print_personal(os);

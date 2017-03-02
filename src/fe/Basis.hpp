@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <stdlib.h>
+#include <vector>
 
 namespace femus {
 
@@ -47,6 +48,50 @@ namespace femus {
 	};
 
       virtual void PrintType() const = 0 ;
+      
+      double eval_phi(const unsigned &j, const std::vector < double > &x) const {
+        return eval_phi(this->GetIND(j), &x[0]);
+      };
+      
+     
+      double eval_dphidx(const unsigned &j, const std::vector < double > &x) const {
+	return eval_dphidx(this->GetIND(j), &x[0]);
+      };
+      
+      double eval_dphidy(const unsigned &j, const std::vector < double > &x) const {
+        return eval_dphidy(this->GetIND(j), &x[0]);
+      };
+      
+      double eval_dphidz(const unsigned &j, const std::vector < double > &x) const {
+        return eval_dphidz(this->GetIND(j), &x[0]);
+      };
+      
+      double eval_d2phidx2(const unsigned &j, const std::vector < double > &x) const {
+        return eval_d2phidx2(this->GetIND(j), &x[0]);
+      };
+      
+      double eval_d2phidy2(const unsigned &j, const std::vector < double > &x) const {
+        return eval_d2phidy2(this->GetIND(j), &x[0]);
+      };
+      
+      double eval_d2phidz2(const unsigned &j, const std::vector < double > &x) const {
+        return eval_d2phidz2(this->GetIND(j), &x[0]);
+      };
+      
+      double eval_d2phidxdy(const unsigned &j, const std::vector < double > &x) const {
+        return eval_d2phidxdy(this->GetIND(j), &x[0]);
+      };
+      
+      double eval_d2phidydz(const unsigned &j, const std::vector < double > &x) const {
+        return eval_d2phidydz(this->GetIND(j), &x[0]);
+      };
+      
+      double eval_d2phidzdx(const unsigned &j, const std::vector < double > &x) const {
+        return eval_d2phidzdx(this->GetIND(j), &x[0]);
+      };
+      
+      
+      
       virtual double eval_phi(const int *I, const double* x) const {
         std::cout << "Error this phi is not available for this element \n";
         abort();

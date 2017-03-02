@@ -144,7 +144,7 @@ namespace femus {
 
     BiquadraticNodesNotInGambit();
 
-    el->SharpMemoryAllocation();
+    el->ShrinkToFit();
 
     //el->SetNodeNumber(_nnodes);
 
@@ -184,13 +184,15 @@ namespace femus {
     _topology->ResizeSolutionVector("AMR");
 
     _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1, 0);
-
+    AllocateAndMarkStructureNode();
 
     el->BuildElementNearElement();
 
     el->ScatterElementQuantities();
     el->ScatterElementDof();
     el->ScatterElementNearFace();
+
+    _amrRestriction.resize(3);
 
   };
 
@@ -212,10 +214,10 @@ namespace femus {
 
     MeshTools::Generation::BuildBox(*this, _coords, nx, ny, nz, xmin, xmax, ymin, ymax, zmin, zmax, elemType, type_elem_flag);
 
-    
+
     BiquadraticNodesNotInGambit();
 
-    el->SharpMemoryAllocation();
+    el->ShrinkToFit();
 
     el->SetNodeNumber(_nnodes);
 
@@ -251,6 +253,7 @@ namespace femus {
     _topology->ResizeSolutionVector("AMR");
 
     _topology->AddSolution("solidMrk", LAGRANGE, SECOND, 1 , 0);
+    AllocateAndMarkStructureNode();
 
     el->BuildElementNearElement();
     el->DeleteElementNearVertex();
@@ -258,6 +261,8 @@ namespace femus {
     el->ScatterElementQuantities();
     el->ScatterElementDof();
     el->ScatterElementNearFace();
+
+    _amrRestriction.resize(3);
 
   }
 
@@ -1028,7 +1033,9 @@ namespace femus {
     }
   }
 
-
+  basis * Mesh::GetBasis(const short unsigned &ielType, const short unsigned &solType) {
+    return _finiteElement[ielType][solType]->GetBasis();
+  }
 
 } //end namespace femus
 

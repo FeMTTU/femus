@@ -96,14 +96,13 @@ namespace femus {
                               ) = 0;
 
       virtual void MGSolve(const bool ksp_clean) = 0;
+      
+      virtual void SetRichardsonScaleFactor(const double & richardsonScaleFactor) = 0; 
 
       /** Sets the type of solver to use. */
       void set_solver_type(const SolverType st)  {
         _solver_type = st;
       }
-
-      // Use the same preconditioner Amat = Pmat
-      virtual void SetSamePreconditioner() = 0;
 
       /** Sets the type of preconditioner to use. */
       void set_preconditioner_type(const PreconditionerType pct);

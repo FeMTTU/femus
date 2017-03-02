@@ -46,7 +46,12 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = 0;
 
-  if(x[0] > 0) refine = 1;
+  if(level == 0) {
+    if(x[0] > 0) refine = 1;
+  }
+  else if(level == 1){
+    if(x[0] > 0 && x[1] >- 0.25) refine = 1;
+  }
 
   return refine;
 
@@ -121,7 +126,7 @@ int main(int argc, char** args) {
 //
 //   std::cout << a << std::endl;
 
-
+/*
   MyMatrix <double> a;
 
   std::cout << a << std::endl;
@@ -161,7 +166,7 @@ int main(int argc, char** args) {
   MyMatrix <double> n(s,2);
   std::cout<<n<<std::endl;
   n.scatter();
-  std::cout<<n<<std::endl;
+  std::cout<<n<<std::endl;*/
   
 
 
@@ -216,11 +221,10 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 4;
-  unsigned numberOfSelectiveLevels = 1;
+  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels = 2;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
-  mlMsh.MarkStructureNode();
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
 
@@ -282,8 +286,7 @@ int main(int argc, char** args) {
 
   system.PrintSolverInfo(false);
 
-  system.SetSamePreconditioner();
-  system.MGsolve();
+  //system.MGsolve();
 
 
   // print solutions
@@ -293,6 +296,7 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "quadratic", variablesToBePrinted);
+  vtkIO.Write(DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted);
 
   mlMsh.PrintInfo();
 

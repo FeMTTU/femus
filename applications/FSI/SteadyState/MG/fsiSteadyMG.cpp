@@ -29,7 +29,39 @@ bool SetBoundaryConditionComsol_2D_FSI(const std::vector < double >& x,const cha
 
 double InitalValueU(const std::vector < double >& x);
 
-bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
+// bool SetRefinementFlag(const std::vector < double >& x, const int &ElemGroupNumber,const int &level);
+
+
+unsigned short numberOfUniformRefinedMeshes;
+
+bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
+
+  bool refine = 0;
+
+//   if (elemgroupnumber == 6 && level < 3) refine = 1;
+//   if (elemgroupnumber == 7 && level < 4) refine = 1;
+//   if (elemgroupnumber == 8 && level < 5) refine = 1;
+
+  //if (elemgroupnumber == 6 && level < 4) refine = 1;
+  //if (elemgroupnumber == 7 && level < 5) refine = 1;
+  //if (elemgroupnumber == 8 && level < 6) refine = 1;
+
+  //if(elemgroupnumber == 8 && level < numberOfUniformRefinedMeshes) refine = 1;
+  if(elemgroupnumber == 7 && level < numberOfUniformRefinedMeshes + 0) refine = 1;
+  if(elemgroupnumber == 6 && level < numberOfUniformRefinedMeshes + 1) refine = 1;
+  if(elemgroupnumber == 5 && level < numberOfUniformRefinedMeshes + 2) refine = 1;
+
+
+
+//   if (elemgroupnumber==6 && level<2) refine=1;
+//   if (elemgroupnumber==7 && level<3) refine=1;
+//   if (elemgroupnumber==8 && level<4) refine=1;
+
+  return refine;
+
+}
+
+
 
 //------------------------------------------------------------------------------------------------------------------
 
@@ -111,7 +143,7 @@ int main(int argc,char **args) {
   std::string infile;
 
   if(1 == simulation){
-    infile = "./input/turek_Sara.neu";
+    infile = "./input/turek.neu";
   }
   else if(2 == simulation){
     infile = "./input/beam.neu";
@@ -183,27 +215,24 @@ int main(int argc,char **args) {
   cout << fluid << endl;
 
   // ******* Init multilevel mesh from mesh.neu file *******
-  unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
+  unsigned short numberOfAMRLevels;
 
-  if(simulation < 3)
-    numberOfUniformRefinedMeshes = 3;
+  numberOfAMRLevels = 0;
+  if(simulation < 3){
+    numberOfUniformRefinedMeshes = 1;
+    numberOfAMRLevels = 3;
+  }
   else if(simulation == 3 || simulation == 7)
     numberOfUniformRefinedMeshes = 4;
   else if(simulation < 7)
-    numberOfUniformRefinedMeshes = 2;
-
-  numberOfAMRLevels = 0;
+    numberOfUniformRefinedMeshes = 3;
 
   MultiLevelMesh ml_msh( numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
 
-  //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
+  //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes + numberOfAMRLevels - 1);
 
   ml_msh.PrintInfo();
-
-  // mark Solid nodes
-  ml_msh.MarkStructureNode();
-
 
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
@@ -324,7 +353,7 @@ int main(int argc,char **args) {
   system.MGsolve();
 
   // ******* Print solution *******
-  ml_sol.SetWriter(GMV);
+  ml_sol.SetWriter(VTK);
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
@@ -335,7 +364,7 @@ int main(int argc,char **args) {
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
-  //ml_sol.GetWriter()->SetDebugOutput( true );
+  ml_sol.GetWriter()->SetDebugOutput( true );
   //ml_sol.GetWriter()->ParallelWrite(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
@@ -345,17 +374,17 @@ int main(int argc,char **args) {
 }
 
 
-bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
-  bool refine=0;
-
-  //refinemenet based on elemen group number
-  if (elemgroupnumber==5) refine=1;
-  if (elemgroupnumber==6) refine=1;
-  if (elemgroupnumber==7 && level<5) refine=1;
-
-  return refine;
-
-}
+// bool SetRefinementFlag(const std::vector < double >& x, const int &elemgroupnumber,const int &level) {
+//   bool refine=0;
+// 
+//   //refinemenet based on elemen group number
+//   if (elemgroupnumber==5) refine=1;
+//   if (elemgroupnumber==6) refine=1;
+//   if (elemgroupnumber==7 && level<5) refine=1;
+// 
+//   return refine;
+// 
+// }
 
 double InitalValueU(const std::vector < double >& x) {
   double xc = 0.2;

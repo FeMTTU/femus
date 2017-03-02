@@ -85,17 +85,9 @@ public:
         return _gridn;
     };
 
-    /** Get the Number of grid totally uniformly refined */
-    unsigned GetNumberOfGridTotallyRefined() {
-        return _gridr;
-    };
-
     /** Erase levels_to_be_erased levels from the mesh array */
     void EraseCoarseLevels(unsigned levels_to_be_erased);
-
-    /** Mark the node as solid or fluid */
-    void MarkStructureNode();
-
+   
     /** Print the mesh info for each level */
     void PrintInfo();
 
@@ -124,8 +116,8 @@ private:
     void BuildElemType(const char GaussOrder[]);
     
     /**  */
-    unsigned short _gridn0, _gridr0;
-    unsigned short _gridn, _gridr;
+    unsigned short _gridn0;
+    unsigned short _gridn;
 
     /** Array of mesh */
     std::vector <Mesh*> _level0;

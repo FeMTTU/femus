@@ -47,45 +47,21 @@ namespace femus {
     _elementMaterial.resize(_nel);
     _elementLevel.resize(_nel, _level);
 
-    _elementDof.resize(_nel, NVE[0][2]);
-    _elementNearFace.resize(_nel, NFC[0][1]);
+    _elementDof.resize(_nel, NVE[0][2], UINT_MAX);
+    _elementNearFace.resize(_nel, NFC[0][1], -1);
 
-    _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
   }
 
-  void elem::SharpMemoryAllocation() {
+  void elem::ShrinkToFit() {
 
-    MyVector <unsigned> rowSizeElDof(_nel);
-    MyVector <unsigned> rowSizeElNearFace(_nel);
+    _elementDof.shrinkToFit(UINT_MAX);
+
+    MyVector <unsigned> rowSize(_nel);
     for(unsigned iel = 0; iel < _nel; iel++) {
       unsigned ielType = GetElementType(iel);
-      rowSizeElDof[iel] = NVE[ielType][2];
-      rowSizeElNearFace[iel] = NFC[ielType][1];
+      rowSize[iel] = NFC[ielType][1];
     }
-
-    MyMatrix <unsigned> tmpElDof(rowSizeElDof);
-    MyMatrix <int> tmpElNearFace(rowSizeElNearFace);
-
-    rowSizeElDof.clear();
-    rowSizeElNearFace.clear();
-
-    for(unsigned i = tmpElDof.begin(); i < tmpElDof.end(); i++) {
-      for(unsigned j = tmpElDof.begin(i); j < tmpElDof.end(i); j++) {
-        tmpElDof[i][j] = _elementDof[i][j];
-      }
-    }
-
-    for(unsigned i = tmpElNearFace.begin(); i < tmpElNearFace.end(); i++) {
-      for(unsigned j = tmpElNearFace.begin(i); j < tmpElNearFace.end(i); j++) {
-        tmpElNearFace[i][j] = _elementNearFace[i][j];
-      }
-    }
-
-    _elementDof = tmpElDof;
-    _elementNearFace = tmpElNearFace;
-
-    tmpElDof.clear();
-    tmpElNearFace.clear();
+    _elementNearFace.shrinkToFit(rowSize);
 
   }
   /**
@@ -111,7 +87,7 @@ namespace femus {
     MyVector <unsigned> rowSizeElNearFace(_nel);
     unsigned jel = 0;
     for(unsigned isdom = 0; isdom < elc->_nprocs; isdom++) {
-      elc->_elementType.localize(isdom);
+      elc->_elementType.broadcast(isdom);
       for(unsigned iel = elc->_elementType.begin(); iel < elc->_elementType.end(); iel++) {
         short unsigned elType = elc->_elementType[iel];
         int increment = 1;
@@ -124,15 +100,13 @@ namespace femus {
         }
         jel += increment;
       }
-      elc->_elementType.clearLocalized();
+      elc->_elementType.clearBroadcast();
     }
     _elementDof = MyMatrix <unsigned> (rowSizeElDof);
     _elementNearFace = MyMatrix <int> (rowSizeElNearFace, -1);
 
     rowSizeElDof.clear();
     rowSizeElNearFace.clear();
-
-    _nelr = _nelrt[0] = _nelrt[1] = _nelrt[2] = _nelrt[3] = _nelrt[4] = _nelrt[5] = 0;
 
   }
 
@@ -225,7 +199,8 @@ namespace femus {
     }
   }
 
-  elem::~elem() {}
+  elem::~elem() {
+  }
 
   void elem::DeleteElementNearVertex() {
     _elementNearVertex.clear();
@@ -521,7 +496,7 @@ namespace femus {
   }
 
   void elem::LocalizeElementDof(const unsigned& jproc) {
-    _elementDof.localize(jproc);
+    _elementDof.broadcast(jproc);
   }
 
   unsigned elem::GetElementDofIndex(const unsigned& iel, const unsigned& inode) {
@@ -529,7 +504,7 @@ namespace femus {
   };
 
   void elem::FreeLocalizedElementDof() {
-    _elementDof.clearLocalized();
+    _elementDof.clearBroadcast();
   }
 
   void elem::ScatterElementNearFace() {
@@ -537,12 +512,398 @@ namespace femus {
   };
 
   void elem::LocalizeElementNearFace(const unsigned& jproc) {
-    _elementNearFace.localize(jproc);
+    _elementNearFace.broadcast(jproc);
   }
 
   void elem::FreeLocalizedElementNearFace() {
-    _elementNearFace.clearLocalized();
+    _elementNearFace.clearBroadcast();
   }
+
+  void elem::GetAMRRestriction(Mesh *msh) {
+
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &restriction = msh->GetAmrRestrictionMap();
+    restriction.resize(3);
+
+    std::vector < std::map < unsigned, bool > > &interfaceSolidMark = msh->GetAmrSolidMark();
+    interfaceSolidMark.resize(3);
+
+    std::vector < MyVector<unsigned> > interfaceElement;
+    std::vector < MyMatrix<unsigned> > interfaceLocalDof;
+    std::vector < std::vector < MyMatrix<unsigned> > > interfaceDof;
+    std::vector < std::vector < MyMatrix<unsigned> > > levelInterfaceSolidMark;
+    std::vector < std::vector < MyMatrix< double > > > interfaceNodeCoordinates;
+
+    interfaceElement.resize(_level + 1);
+    interfaceLocalDof.resize(_level + 1);
+    interfaceDof.resize(3);
+    levelInterfaceSolidMark.resize(3);
+    for(unsigned i = 0; i < 3; i++) {
+      interfaceDof[i].resize(_level + 1);
+      levelInterfaceSolidMark[i].resize(_level + 1);
+    }
+    interfaceNodeCoordinates.resize(_level + 1);
+    unsigned dim = msh->GetDimension();
+
+    for(unsigned ilevel = 0; ilevel <= _level; ilevel++) {
+      //BEGIN interface element search
+      interfaceElement[ilevel] = MyVector <unsigned> (_elementOwned);
+      unsigned counter = 0;
+      for(unsigned i = _elementLevel.begin(); i < _elementLevel.end(); i++) {
+        if(ilevel == _elementLevel[i]) {
+          for(unsigned j = _elementNearFace.begin(i); j < _elementNearFace.end(i); j++) {
+            if(-1 == _elementNearFace[i][j]) {
+              interfaceElement[ilevel][counter] = i;
+              counter++;
+              break;
+            }
+          }
+        }
+      }
+      interfaceElement[ilevel].resize(counter);
+      interfaceElement[ilevel].stack();
+      //END interface element search
+
+      //BEGIN interface node search
+      std::vector< unsigned > offset = interfaceElement[ilevel].getOffset();
+      interfaceLocalDof[ilevel] = MyMatrix <unsigned>(offset, NVE[0][2], UINT_MAX);
+      for(unsigned i = interfaceElement[ilevel].begin(); i < interfaceElement[ilevel].end(); i++) {
+        unsigned iel =  interfaceElement[ilevel][i];
+        std::map <unsigned, bool> ldofs;
+        for(unsigned jface = _elementNearFace.begin(iel); jface < _elementNearFace.end(iel); jface++) {
+          if(-1 == _elementNearFace[iel][jface]) {
+            for(unsigned k = 0; k < GetNFACENODES(GetElementType(iel), jface, 2); k++) {
+              unsigned index = GetIG(GetElementType(iel), jface, k);
+              ldofs[index] = true;
+            }
+          }
+        }
+        unsigned j = 0;
+        for(std::map<unsigned, bool>::iterator it = ldofs.begin(); it != ldofs.end(); it++) {
+          interfaceLocalDof[ilevel][i][j] = it->first;
+          j++;
+        }
+      }
+      interfaceLocalDof[ilevel].shrinkToFit(UINT_MAX);
+      //END interface node search
+
+      //BEGIN interface node dof global search, one for each soltype
+      MyVector <unsigned> rowSize = interfaceLocalDof[ilevel].getRowSize();
+      for(unsigned soltype = 0; soltype < 3; soltype++) {
+        interfaceDof[soltype][ilevel] = MyMatrix< unsigned > (rowSize, UINT_MAX);
+	levelInterfaceSolidMark[soltype][ilevel] = MyMatrix< unsigned > (rowSize, UINT_MAX);
+        for(unsigned i = interfaceLocalDof[ilevel].begin(); i < interfaceLocalDof[ilevel].end(); i++) {
+          unsigned iel = interfaceElement[ilevel][i];
+          unsigned counter = 0;
+          for(unsigned j = interfaceLocalDof[ilevel].begin(i); j < interfaceLocalDof[ilevel].end(i); j++) {
+            unsigned jloc = interfaceLocalDof[ilevel][i][j];
+            if(jloc < GetElementDofNumber(iel, soltype)) {
+              unsigned jdof  = msh->GetSolutionDof(jloc, iel, soltype);
+              interfaceDof[soltype][ilevel][i][counter] = jdof;
+	      unsigned jdof2  = msh->GetSolutionDof(jloc, iel, 2);
+	      levelInterfaceSolidMark[soltype][ilevel][i][counter] = msh->GetSolidMark(jdof2);
+	      counter++;
+            }
+            else {
+              break;
+            }
+          }
+        }
+        interfaceDof[soltype][ilevel].shrinkToFit(UINT_MAX);
+	levelInterfaceSolidMark[soltype][ilevel].shrinkToFit(UINT_MAX);
+      }
+      //END interface node dof global search, one for each soltype
+
+      //BEGIN interface node coordinates
+      interfaceNodeCoordinates[ilevel].resize(dim);
+      for(unsigned k = 0; k < dim; k++) {
+        interfaceNodeCoordinates[ilevel][k] = MyMatrix< double > (rowSize, 0.);
+      }
+      for(unsigned i = interfaceLocalDof[ilevel].begin(); i < interfaceLocalDof[ilevel].end(); i++) {
+        unsigned iel = interfaceElement[ilevel][i];
+        for(unsigned j = interfaceLocalDof[ilevel].begin(i); j < interfaceLocalDof[ilevel].end(i); j++) {
+          unsigned jnode = interfaceLocalDof[ilevel][i][j];
+          unsigned xDof  = msh->GetSolutionDof(jnode, iel, 2);
+          for(unsigned k = 0; k < dim; k++) {
+            interfaceNodeCoordinates[ilevel][k][i][j] = (*msh->_topology->_Sol[k])(xDof);
+          }
+        }
+      }
+      //END interface node coordinates search
+    }
+
+    for(unsigned soltype = 0; soltype < 3; soltype++) {
+      for(int ilevel = 0; ilevel < _level; ilevel++) {
+        for(int jlevel = ilevel + 1; jlevel <= _level; jlevel++) {
+          for(unsigned lproc = 0; lproc < _nprocs; lproc++) {
+            interfaceDof[soltype][jlevel].broadcast(lproc);
+	    levelInterfaceSolidMark[soltype][jlevel].broadcast(lproc);
+            for(unsigned d = 0; d < dim; d++) {
+              interfaceNodeCoordinates[jlevel][d].broadcast(lproc);
+            }
+            std::map< unsigned, bool> candidateNodes;
+            std::map< unsigned, bool> elementNodes;
+
+            for(unsigned i = interfaceDof[soltype][ilevel].begin(); i < interfaceDof[soltype][ilevel].end(); i++) {
+
+              candidateNodes.clear();
+
+              std::vector < std::vector < std::vector <double > > > aP(3);
+              bool aPIsInitialized = false;
+
+              unsigned iel = interfaceElement[ilevel][i];
+              short unsigned ielType = _elementType[iel];
+
+              elementNodes.clear();
+              for(unsigned j = 0; j < GetElementDofNumber(iel, soltype); j++) {
+                unsigned jdof  = msh->GetSolutionDof(j, iel, soltype);
+                elementNodes[jdof] = true;
+              }
+
+              std::vector < std::vector <double > > xv;
+              msh->GetElementNodeCoordinates(xv, iel);
+              unsigned ndofs = xv[0].size();
+
+              double r;
+              std::vector <double> xc;
+              GetConvexHullSphere(xv, xc, r, 0.01);
+              double r2 = r * r;
+
+              std::vector < std::vector< double > > xe;
+              GetBoundingBox(xv, xe, 0.01);
+
+
+              for(unsigned k = interfaceDof[soltype][jlevel].begin(); k < interfaceDof[soltype][jlevel].end(); k++) {
+                for(unsigned l = interfaceDof[soltype][jlevel].begin(k); l < interfaceDof[soltype][jlevel].end(k); l++) {
+                  unsigned ldof = interfaceDof[soltype][jlevel][k][l];
+                  if(candidateNodes.find(ldof) == candidateNodes.end() || candidateNodes[ldof] != false) {
+                    double d2 = 0.;
+                    std::vector<double> xl(dim);
+                    for(int d = 0; d < dim; d++) {
+                      xl[d] = interfaceNodeCoordinates[jlevel][d][k][l];
+                      d2 += (xl[d] - xc[d]) * (xl[d] - xc[d]);
+                    }
+                    bool insideHull = true;
+                    if(d2 > r2) {
+                      insideHull = false;
+                    }
+                    for(unsigned d = 0; d < dim; d++) {
+                      if(xl[d] < xe[d][0] || xl[d] > xe[d][1]) {
+                        insideHull = false;
+                      }
+                    }
+                    if(insideHull) {
+                      if(elementNodes.find(ldof) == elementNodes.end()) {
+
+                        if(!aPIsInitialized) {
+                          aPIsInitialized = true;
+                          std::vector < std::vector <double> > x1(dim);
+                          for(unsigned jtype = 0; jtype < 3; jtype++) {
+                            ProjectNodalToPolynomialCoefficients(aP[jtype], xv, ielType, jtype) ;
+                          }
+                        }
+
+                        std::vector <double> xi;
+                        GetClosestPointInReferenceElement(xv, xl, ielType, xi);
+                        GetInverseMapping(2, ielType, aP, xl, xi);
+
+                        bool insideDomain = CheckIfPointIsInsideReferenceDomain(xi, ielType, 0.0001);
+                        if(insideDomain) {
+                          for(unsigned j = interfaceDof[soltype][ilevel].begin(i); j < interfaceDof[soltype][ilevel].end(i); j++) {
+                            unsigned jloc = interfaceLocalDof[ilevel][i][j];
+
+                            basis* base = msh->GetBasis(ielType, soltype);
+                            double value = base->eval_phi(jloc, xi);
+
+                            if(fabs(value) >= 1.0e-10) {
+                              unsigned jdof = interfaceDof[soltype][ilevel][i][j];
+                              if(restriction[soltype][jdof].find(jdof) == restriction[soltype][jdof].end()) {
+                                restriction[soltype][jdof][jdof] = 1.;
+                                unsigned jdof2  = msh->GetSolutionDof(jloc, iel, 2);
+				interfaceSolidMark[soltype][jdof] = levelInterfaceSolidMark[soltype][ilevel][i][j];
+                              }
+                              restriction[soltype][jdof][ldof] = value;
+                              restriction[soltype][ldof][ldof] = 10.;
+			      interfaceSolidMark[soltype][ldof] = levelInterfaceSolidMark[soltype][jlevel][k][l];
+			      candidateNodes[ldof] = true;
+                            }
+                          }
+                        }
+                        else {
+                          candidateNodes[ldof] = false;
+                        }
+                      }
+                      else {
+                        candidateNodes[ldof] = false;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            interfaceDof[soltype][jlevel].clearBroadcast();
+	    levelInterfaceSolidMark[soltype][jlevel].clearBroadcast();
+            for(unsigned d = 0; d < dim; d++) {
+              interfaceNodeCoordinates[jlevel][d].clearBroadcast();
+            }
+          }
+        }
+      }
+
+      NumericVector* pvector;
+      pvector = NumericVector::build().release();
+      pvector->init(_nprocs, 1 , false, AUTOMATIC);
+
+      unsigned counter = 1;
+      while(counter != 0) {
+        counter = 0;
+
+        MyVector <unsigned> rowSize(restriction[soltype].size(), 0);
+        unsigned cnt1 = 0;
+        for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
+          rowSize[cnt1] = restriction[soltype][it1->first].size();
+          cnt1++;
+        }
+        rowSize.stack();
+
+        std::vector< unsigned > offset = rowSize.getOffset();
+
+        MyVector <unsigned> masterNode(offset);
+        MyMatrix <unsigned> slaveNodes(rowSize);
+        MyMatrix <double> slaveNodesValues(rowSize);
+
+        cnt1 = 0;
+        for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
+          masterNode[offset[_iproc] + cnt1] = it1->first;
+          unsigned cnt2 = 0;
+          for(std::map<unsigned, double> ::iterator it2 = restriction[soltype][it1->first].begin(); it2 != restriction[soltype][it1->first].end(); it2++) {
+            slaveNodes[offset[_iproc] + cnt1][cnt2] = it2->first;
+            slaveNodesValues[offset[_iproc] + cnt1][cnt2] = it2->second;
+            cnt2++;
+          }
+          cnt1++;
+        }
+
+        unsigned solutionOffset = msh->_dofOffset[soltype][_iproc];
+        unsigned solutionOffsetp1 = msh->_dofOffset[soltype][_iproc + 1];
+        for(unsigned lproc = 0; lproc < _nprocs; lproc++) {
+          masterNode.broadcast(lproc);
+          slaveNodes.broadcast(lproc);
+          slaveNodesValues.broadcast(lproc);
+          for(unsigned i = slaveNodes.begin(); i < slaveNodes.end(); i++) {
+            unsigned inode = masterNode[i];
+            if(inode >= solutionOffset && inode < solutionOffsetp1 &&
+                restriction[soltype].find(inode) == restriction[soltype].end()) {
+              counter++;
+              for(unsigned j = slaveNodes.begin(i); j < slaveNodes.end(i); j++) {
+                unsigned jnode = slaveNodes[i][j];
+                restriction[soltype][inode][jnode] = slaveNodesValues[i][j];
+              }
+            }
+            else {
+              for(unsigned j = slaveNodes.begin(i); j < slaveNodes.end(i); j++) {
+                unsigned jnode = slaveNodes[i][j];
+                if(inode == jnode) {
+                  if(restriction[soltype].find(jnode) != restriction[soltype].end()) {
+                    for(unsigned k = slaveNodes.begin(i); k < slaveNodes.end(i); k++) {
+                      unsigned knode = slaveNodes[i][k];
+                      double value = slaveNodesValues[i][k];
+                      restriction[soltype][jnode][knode] = (jnode != knode || value > 5.) ? value : restriction[soltype][jnode][knode];
+                      if(restriction[soltype].find(knode) == restriction[soltype].end()) {
+                        for(unsigned l = masterNode.begin(); l < masterNode.end(); l++) {
+                          counter++;
+                          if(masterNode[l] == knode) {
+                            for(unsigned m = slaveNodes.begin(l); m < slaveNodes.end(l); m++) {
+                              unsigned mnode = slaveNodes[l][m];
+                              restriction[soltype][knode][mnode] = slaveNodesValues[l][m];
+                            }
+                            break;
+                          }
+                        }
+                      }
+                    }
+                  }
+                  break;
+                }
+              }
+            }
+          }
+          masterNode.clearBroadcast();
+          slaveNodes.clearBroadcast();
+          slaveNodesValues.clearBroadcast();
+        }
+
+        pvector->set(_iproc, counter);
+        pvector->close();
+        counter = static_cast <unsigned>(floor(pvector->l1_norm() + 0.5));
+      }
+      delete pvector;
+
+      for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
+        unsigned inode = it1->first;
+        if(restriction[soltype][inode][inode] > 5.) {
+          if(restriction[soltype][inode].size() > 1) {
+            for(std::map<unsigned, std::map<unsigned, double> >::iterator it2 = restriction[soltype].begin(); it2 != restriction[soltype].end(); it2++) {
+              unsigned jnode = it2->first;
+              if(jnode != inode && restriction[soltype][jnode].find(inode) != restriction[soltype][jnode].end()) {
+                double value =  restriction[soltype][jnode][inode];
+                for(std::map<unsigned, double> ::iterator it3 = restriction[soltype][inode].begin(); it3 != restriction[soltype][inode].end(); it3++) {
+                  unsigned knode = it3->first;
+                  if(knode != inode) {
+                    restriction[soltype][jnode][knode] = it3->second * value;
+                  }
+                }
+              }
+            }
+          }
+          restriction[soltype][inode].clear();
+          restriction[soltype][inode][inode] = 0.;
+        }
+      }
+
+
+      MyVector <unsigned> InterfaceSolidMarkNode(interfaceSolidMark[soltype].size());
+      MyVector <short unsigned> InterfaceSolidMarkValue(interfaceSolidMark[soltype].size());
+
+      unsigned cnt = 0;
+      for(std::map<unsigned, bool >::iterator it = interfaceSolidMark[soltype].begin(); it != interfaceSolidMark[soltype].end(); it++) {
+        InterfaceSolidMarkNode[cnt] = it->first;
+        InterfaceSolidMarkValue[cnt] = it->second;
+	cnt++;
+      }
+      InterfaceSolidMarkNode.stack();
+      InterfaceSolidMarkValue.stack();
+
+      for(unsigned lproc = 0; lproc < _nprocs; lproc++) {
+        InterfaceSolidMarkNode.broadcast(lproc);
+        InterfaceSolidMarkValue.broadcast(lproc);
+	for(unsigned i = InterfaceSolidMarkNode.begin(); i < InterfaceSolidMarkNode.end(); i++) {
+	  unsigned jnode = InterfaceSolidMarkNode[i];
+	  if( restriction[soltype].find(jnode) != restriction[soltype].end()){
+	    interfaceSolidMark[soltype][jnode] = InterfaceSolidMarkValue[i]; 
+	  }
+	}
+        InterfaceSolidMarkNode.clearBroadcast();
+        InterfaceSolidMarkValue.clearBroadcast();
+      }
+    }
+  }
+
+
+  void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel) {
+    xv.resize(_dimension);
+    unsigned ndofs = el->GetElementDofNumber(iel, 2);
+    for(int d = 0; d < _dimension; d++) {
+      xv[d].resize(ndofs);
+    }
+    for(unsigned j = 0; j < ndofs; j++) {
+      unsigned xdof  = GetSolutionDof(j, iel, 2);
+      for(int d = 0; d < _dimension; d++) {
+        xv[d][j] = (*_topology->_Sol[d])(xdof);
+      }
+    }
+  }
+
+
 
 } //end namespace femus
 

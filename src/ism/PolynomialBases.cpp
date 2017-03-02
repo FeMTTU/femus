@@ -15,6 +15,7 @@
 
 #include <stdlib.h>
 #include<iostream>
+#include<cmath>
 
 #include "PolynomialBases.hpp"
 #include "GeomElTypeEnum.hpp"
@@ -45,6 +46,22 @@ namespace femus {
       ProjectWedgeNodalToPolynomialCoefficients(aP, aN, solType);
     }
   }
+
+  void InterpolatePolynomialCoefficients(std::vector<std::vector < std::vector <double > > > &aXs, const std::vector<std::vector < std::vector <double > > > &aX0,
+                                         const std::vector<std::vector < std::vector <double > > > aX1, const double &s){
+     
+    aXs.resize(aX0.size());
+    for(unsigned i=0; i<aX0.size(); i++){
+      aXs[i].resize(aX0[i].size());
+      for(unsigned j=0; j<aX0[i].size(); j++){
+	aXs[i][j].resize(aX0[i][j].size());
+	for(unsigned k=0; k<aX0[i][j].size(); k++){
+	  aXs[i][j][k] = (1.-s)*aX0[i][j][k] + s * aX1[i][j][k];
+	}
+      }
+    }
+  }
+
 
   void GetPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi,
                                   short unsigned &ielType, const unsigned & solType) {
@@ -127,9 +144,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
 
-    if(nDofs != quadNumberOfDofs[solType]) {
+    unsigned nDofs = quadNumberOfDofs[solType];
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectQuadNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -176,6 +193,7 @@ namespace femus {
       }
     }
   }
+
 
   void GetQuadPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
 
@@ -293,9 +311,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
 
-    if(nDofs != triNumberOfDofs[solType]) {
+    unsigned nDofs = triNumberOfDofs[solType];
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectTriNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -335,6 +353,7 @@ namespace femus {
       }
     }
   }
+  
 
   void GetTriPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
 
@@ -441,9 +460,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
 
-    if(nDofs != hexNumberOfDofs[solType]) {
+    unsigned nDofs = hexNumberOfDofs[solType];
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectHexNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -551,6 +570,7 @@ namespace femus {
       }
     }
   }
+  
 
   void GetHexPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
 
@@ -622,12 +642,12 @@ namespace femus {
     gradPhi[2][1] = 1.; // 1
     gradPhi[4][1] = xi[0]; // x
     gradPhi[6][1] = xi[2]; // z
-   
+
     //phi_z
     gradPhi[3][2] = 1.; // 1
     gradPhi[5][2] = xi[0]; // x
     gradPhi[6][2] = xi[1]; // y
-    
+
     if(solType < 1) {  //only linear
       gradPhi[7][0] = phi[6];  // y z
       gradPhi[7][1] = phi[5];  // x z
@@ -815,9 +835,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
 
-    if(nDofs != tetNumberOfDofs[solType]) {
+    unsigned nDofs = tetNumberOfDofs[solType];
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectTetNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -870,6 +890,7 @@ namespace femus {
       }
     }
   }
+  
 
   void GetTetPolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
 
@@ -1028,9 +1049,9 @@ namespace femus {
 
     unsigned dim =  aN.size();
     aP.resize(dim);
-    unsigned nDofs = aN[0].size();
 
-    if(nDofs != wedgeNumberOfDofs[solType]) {
+    unsigned nDofs = wedgeNumberOfDofs[solType];
+    if(nDofs > aN[0].size()) {
       std::cout << "Error in ProjectWedgeNodalToPolynomialCoefficients(...) the number of Dofs is inconsistent" << std::endl;
       abort();
     }
@@ -1099,6 +1120,7 @@ namespace femus {
       }
     }
   }
+  
 
   void GetWedgePolynomialShapeFunction(std::vector < double >& phi, const std::vector < double >& xi, const unsigned & solType) {
 
@@ -1174,7 +1196,7 @@ namespace femus {
       //phi_z
       gradPhi[4][2] = xi[0] ;  // x
       gradPhi[5][2] = xi[1] ;  // y
-      
+
     }
     else { //only quadratic and biquadratic
       //phi_x
@@ -1343,5 +1365,662 @@ namespace femus {
     }
   }
 //END WEDGE
+
+
+
+  bool CheckIfPointIsInsideReferenceDomain(std::vector<double> &xi, const short unsigned &ielType, const double &eps) {
+    if(ielType == 0) {
+      CheckIfPointIsInsideReferenceDomainHex(xi, eps);
+    }
+    else if(ielType == 1) {
+      CheckIfPointIsInsideReferenceDomainTet(xi, eps);
+    }
+    else if(ielType == 2) {
+      CheckIfPointIsInsideReferenceDomainWedge(xi, eps);
+    }
+    else if(ielType == 3) {
+      CheckIfPointIsInsideReferenceDomainQuad(xi, eps);
+    }
+    else if(ielType == 4) {
+      CheckIfPointIsInsideReferenceDomainTri(xi, eps);
+    }
+    else if(ielType == 5) {
+      CheckIfPointIsInsideReferenceDomainLine(xi, eps);
+    }
+  }
+  bool CheckIfPointIsInsideReferenceDomainHex(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (fabs(xi[0]) < threshold && fabs(xi[1]) < threshold && fabs(xi[2]) < threshold) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainTet(std::vector<double> &xi, const double &eps) {
+    return (xi[0] > - eps && xi[1] > -eps &&  xi[2] > -eps && xi[0] + xi[1] + xi[2] < 1. + eps) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainWedge(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (xi[0] > -eps && xi[1] > -eps && xi[0] + xi[1] < threshold && fabs(xi[2]) < threshold) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainQuad(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (fabs(xi[0]) < threshold && fabs(xi[1]) < threshold) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainTri(std::vector<double> &xi, const double &eps) {
+    return (xi[0] > -eps && xi[1] > -eps && xi[0] + xi[1] < 1. + eps) ? true : false;
+  }
+  bool CheckIfPointIsInsideReferenceDomainLine(std::vector<double> &xi, const double &eps) {
+    double threshold = 1. + eps;
+    return (fabs(xi[0]) < threshold) ? true : false;
+  }
+
+
+  bool SPDCheck2D(const std::vector< std::vector <double> > &A) {
+    bool SPD = true;
+
+    if(A[0][1] != A[1][0]) {
+      SPD = false;
+      std::cout << "The 2D matrix is not symmetric" << std::endl;
+    }
+
+    else if(A[0][0] < 1.0e-8) {
+      SPD = false;
+    }
+    else {
+      double lambda = A[1][1] - ((A[0][1] * A[0][1]) / A[0][0]);
+      if(lambda < 0 || fabs(lambda) < 1.0e-8) {
+        SPD = false;
+      }
+    }
+
+    if(SPD == true) {
+      std::cout << "The 2D matrix is SPD" << std::endl;
+    }
+
+    else {
+      std::cout << "The 2D matrix is not SPD" << std::endl;
+    }
+
+    return SPD;
+
+  }
+
+
+
+
+  bool SPDCheck3D(const std::vector< std::vector <double> > &A) {
+
+    bool SPD = true;
+    bool notSymm = false;
+
+    if(A[0][2] != A[2][0] || A[1][2] != A[2][1] || A[0][1] != A[1][0]) {
+      notSymm = true;
+      std::cout << "The 3D matrix is not symmetric" << std::endl;
+    }
+
+    std::vector < std::vector <double> > B(2);
+    for(int i = 0; i < 2; i++) {
+      B[i].resize(2);
+    }
+
+    B[0][0] = A[0][0];
+    B[0][1] = A[0][1];
+    B[1][0] = A[1][0];
+    B[1][1] = A[1][1];
+
+
+
+    if(SPDCheck2D(B) == false || notSymm == true) {
+      SPD = false;
+    }
+
+    else {
+      double l00 = sqrt(A[0][0]);
+      double l11 = sqrt(A[1][1] - ((A[0][1] * A[0][1]) / A[0][0]));
+      double l01 = A[0][1] / l00;
+
+      double detL =  l00 * l11;
+      std::vector < std::vector < double > > Lm1(2);
+      for(int i = 0; i < 2; i++) {
+        Lm1[i].resize(2);
+      }
+
+      Lm1[0][0] = (1 / detL) * l11;
+      Lm1[1][0] = -(1 / detL) * l01;
+      Lm1[0][1] = 0. ;
+      Lm1[1][1] = (1 / detL) * l00 ;
+
+      std::vector < double > K(2);
+
+      K[0] = Lm1[0][0] * A[0][2] + Lm1[0][1] * A[1][2];
+      K[1] = Lm1[1][0] * A[0][2] + Lm1[1][1] * A[1][2];
+
+      double KK = sqrt(K[0] * K[0] + K[1] * K[1]) ;
+
+      if(A[2][2] - KK < 0 || fabs(A[2][2] - KK) < 1.0e-8) {
+        SPD = false;
+      }
+    }
+
+    if(SPD == true) {
+      std::cout << "The 3D matrix is SPD" << std::endl;
+    }
+
+    else {
+      std::cout << "The 3D matrix is not SPD" << std::endl;
+    }
+
+    return SPD;
+
+  }
+
+
+
+  bool GetNewLocalCoordinates(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
+                              const std::vector < std::vector <double > > &gradPhi,
+                              const std::vector < std::vector <double > > &a) {
+
+    const unsigned dim = gradPhi[0].size();
+    const unsigned  nDofs = phi.size();
+
+    bool convergence = false;
+    std::vector < double > F(dim, 0.);
+    std::vector < std::vector < double > > J(dim);
+
+    for(int k = 0; k < dim; k++) {
+      J[k].assign(dim, 0.);
+    }
+
+    for(int k = 0; k < dim; k++) {
+      for(int i = 0; i < nDofs; i++) {
+        F[k] += a[k][i] * phi[i];
+
+        for(int i1 = 0; i1 < dim; i1++) {
+          J[k][i1] += a[k][i] * gradPhi[i][i1];
+        }
+      }
+      F[k] -= x[k];
+    }
+
+
+    std::vector < std::vector < double > >  Jm1;
+    InverseMatrix(J, Jm1);
+
+    double delta2 = 0.;
+
+    for(int i1 = 0; i1 < dim; i1++) {
+      double deltak = 0.;
+
+      for(int i2 = 0; i2 < dim; i2++) {
+        deltak -= Jm1[i1][i2] * F[i2];
+      }
+
+      xi[i1] += deltak;
+      delta2 += deltak * deltak;
+    }
+
+    if(delta2 < 1.0e-9) {
+      convergence = true;
+    }
+
+    return convergence;
+  }
+
+
+  bool GetNewLocalCoordinatesHess(std::vector <double> &xi, const std::vector< double > &x, const std::vector <double> &phi,
+                                  const std::vector < std::vector <double > > &gradPhi, const std::vector < std::vector < std::vector <double> > > hessPhi,
+                                  const std::vector < std::vector <double > > &a) {
+
+    const unsigned dim = gradPhi[0].size();
+    const unsigned  nDofs = phi.size();
+
+    bool convergence = false;
+    std::vector < double > xp(dim, 0.);
+    std::vector < std::vector < double > > gradXp(dim);
+    std::vector < std::vector < std::vector < double > > > hessXp(dim);
+
+    for(int k = 0; k < dim; k++) {
+      gradXp[k].assign(dim, 0.);
+      hessXp[k].resize(dim);
+
+      for(int i1 = 0; i1 < dim; i1++) {
+        hessXp[k][i1].assign(dim, 0.);
+      }
+    }
+
+    for(int k = 0; k < dim; k++) {
+      for(int i = 0; i < nDofs; i++) {
+        xp[k] += a[k][i] * phi[i];
+
+        for(int i1 = 0; i1 < dim; i1++) {
+          gradXp[k][i1] += a[k][i] * gradPhi[i][i1];
+
+          for(int i2 = 0; i2 < dim; i2++) {
+            hessXp[k][i1][i2] += a[k][i] * hessPhi[i][i1][i2];
+          }
+        }
+      }
+    }
+
+    std::vector < double > gradF(dim, 0.);
+    std::vector < std::vector < double > >  hessF(dim);
+
+    for(int i1 = 0; i1 < dim; i1++) {
+      hessF[i1].assign(dim, 0.);
+    }
+
+    for(int k = 0; k < dim; k++) {
+      for(int i1 = 0; i1 < dim; i1++) {
+        gradF[i1] += -2. * (x[k] - xp[k]) * gradXp[k][i1];
+
+        for(int i2 = 0; i2 < dim; i2++) {
+          hessF[i1][i2] += -2. * (x[k] - xp[k]) * hessXp[k][i1][i2] + 2. * gradXp[k][i1] * gradXp[k][i2];
+        }
+      }
+    }
+
+    std::vector < std::vector < double > >  hessFm1;
+    InverseMatrix(hessF, hessFm1);
+
+    double delta2 = 0.;
+
+    for(int i1 = 0; i1 < dim; i1++) {
+      double deltak = 0.;
+
+      for(int i2 = 0; i2 < dim; i2++) {
+        deltak -= hessFm1[i1][i2] * gradF[i2];
+      }
+
+      xi[i1] += deltak;
+      delta2 += deltak * deltak;
+    }
+
+    if(delta2 < 1.0e-9) {
+      convergence = true;
+    }
+
+    return convergence;
+  }
+
+
+
+  void InverseMatrix(const std::vector< std::vector <double> > &A, std::vector< std::vector <double> > &invA) {
+
+    unsigned dim = A.size();
+    invA.resize(dim);
+
+    for(int i = 0; i < dim; i++) {
+      invA[i].resize(dim);
+    }
+
+    double detA;
+    if(dim == 1) {
+
+      if(A[0][0] == 0) {
+        std::cout << " ERROR: the matrix is singular " << std::endl;
+        abort();
+      }
+      invA[0][0] = 1. / A[0][0];
+    }
+    else if(dim == 2) {
+
+      detA = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+
+      if(detA == 0) {
+        std::cout << " ERROR: the matrix is singular " << std::endl;
+        abort();
+      }
+      else {
+        invA[0][0] = A[1][1] / detA;
+        invA[0][1] = -A[0][1] / detA;
+        invA[1][0] = -A[1][0] / detA;
+        invA[1][1] = A[0][0] / detA;
+      }
+    }
+    else if(dim == 3) {
+
+      detA = (A[0][0] * A[1][1] * A[2][2] + A[0][1] * A[1][2] * A[2][0] + A[0][2] * A[1][0] * A[2][1])
+             - (A[2][0] * A[1][1] * A[0][2] + A[2][1] * A[1][2] * A[0][0] + A[2][2] * A[1][0] * A[0][1]) ;
+
+      if(detA == 0) {
+        std::cout << " ERROR: the matrix is singular " << std::endl;
+        abort();
+      }
+      else {
+
+        invA[0][0] = (A[1][1] * A[2][2] - A[2][1] * A[1][2]) / detA ;
+        invA[0][1] = (A[0][2] * A[2][1] - A[2][2] * A[0][1]) / detA ;
+        invA[0][2] = (A[0][1] * A[1][2] - A[1][1] * A[0][2]) / detA ;
+        invA[1][0] = (A[1][2] * A[2][0] - A[2][2] * A[1][0]) / detA ;
+        invA[1][1] = (A[0][0] * A[2][2] - A[2][0] * A[0][2]) / detA ;
+        invA[1][2] = (A[0][2] * A[1][0] - A[0][0] * A[1][2]) / detA ;
+        invA[2][0] = (A[1][0] * A[2][1] - A[2][0] * A[1][1]) / detA ;
+        invA[2][1] = (A[0][1] * A[2][0] - A[2][1] * A[0][0]) / detA ;
+        invA[2][2] = (A[0][0] * A[1][1] - A[1][0] * A[0][1]) / detA ;
+
+      }
+    }
+    else {
+      std::cout << " ERROR: the matrix is neither 2x2 nor 3x3 so we cannot use this function " << std::endl;
+      abort();
+    }
+  }
+
+  void GetConvexHullSphere(const std::vector< std::vector < double > > &xv, std::vector <double> &xc, double & r, const double tolerance) {
+    unsigned dim = xv.size();
+    unsigned ndofs = xv[0].size();
+    xc.resize(dim, 0.);
+    for(int d = 0; d < dim; d++) {
+      for(int i = 0; i < ndofs; i++) {
+        xc[d] += xv[d][i];
+      }
+      xc[d] /= ndofs;
+    }
+    double r2 = 0.;
+    for(unsigned j = 0; j < ndofs; j++) {
+      double d2 = 0.;
+      for(int d = 0; d < dim; d++) {
+        d2 += (xv[d][j] - xc[d]) * (xv[d][j] - xc[d]);
+      }
+      r2 = (r2 > d2) ? r2 : d2;
+    }
+
+    r = (1. + tolerance) * sqrt(r2);
+  }
+
+  void GetBoundingBox(const std::vector< std::vector < double > > &xv, std::vector< std::vector < double > > &xe, const double tolerance) {
+    unsigned dim = xv.size();
+    unsigned ndofs = xv[0].size();
+    xe.resize(dim);
+    for(int d = 0; d < dim; d++) {
+      xe[d].resize(2);
+      xe[d][0] = xv[d][0];
+      xe[d][1] = xv[d][0];
+    }
+    for(int d = 0; d < dim; d++) {
+      for(int i = 1; i < ndofs; i++) {
+        xe[d][0] = (xv[d][i] < xe[d][0]) ? xv[d][i] : xe[d][0];
+        xe[d][1] = (xv[d][i] > xe[d][1]) ? xv[d][i] : xe[d][1];
+      }
+    }
+    for(int d = 0; d < dim; d++) {
+      double epsilon = tolerance * (xe[d][1] - xe[d][0]);
+      xe[d][0] -= epsilon;
+      xe[d][1] += epsilon;
+    }
+  }
+
+  void GetInverseMapping(const unsigned &solType, short unsigned &ielType, const std::vector < std::vector < std::vector <double > > > &aP,
+                         const std::vector <double > &xl, std::vector <double > &xi) {
+
+    for(short unsigned jtype = 0; jtype < solType + 1; jtype++) {
+      std::vector < double > phi;
+      std::vector < std::vector < double > > gradPhi;
+      bool convergence = false;
+      while(!convergence) {
+        GetPolynomialShapeFunctionGradient(phi, gradPhi, xi, ielType, jtype);
+        convergence = GetNewLocalCoordinates(xi, xl, phi, gradPhi, aP[jtype]);
+      }
+    }
+  }
+
+  const double XI[6][27][3] = {{
+      { -1, -1, -1}, {1, -1, -1}, {1, 1, -1}, { -1, 1, -1}, { -1, -1, 1}, {1, -1, 1}, {1, 1, 1}, { -1, 1, 1}, {0, -1, -1},
+      {1, 0, -1}, {0, 1, -1}, { -1, 0, -1}, {0, -1, 1}, {1, 0, 1}, {0, 1, 1}, { -1, 0, 1}, { -1, -1, 0},
+      {1, -1, 0}, {1, 1, 0}, { -1, 1, 0}, {0, -1, 0}, {1, 0, 0}, {0, 1, 0}, { -1, 0, 0}, {0, 0, -1},
+      {0, 0, 1}, {0, 0, 0}
+    },
+    {
+      {0, 0, 0},        {1, 0, 0},       {0, 1, 0},   {0, 0, 1},         		//0->4
+      {0.5, 0, 0},      {0.5, 0.5, 0},   {0, 0.5, 0},
+      {0.,  0, 0.5},    {0.5, 0., 0.5},  {0, 0.5, 0.5},                  		//5->9
+      {1. / 3., 1. / 3., 0.}, {1. / 3., 0., 1. / 3.}, {1. / 3., 1. / 3., 1. / 3.}, {0., 1. / 3., 1. / 3.}, //external faces of internal tetrahedra
+      {0.25, 0.25, 0.25} //34
+    },
+    {
+      {0, 0, -1},      {1, 0, -1},      {0, 1, -1},                     //vertici triangoli
+      {0, 0, 1},       {1, 0, 1},       {0, 1, 1},
+      {0.5, 0, -1},    {0.5, 0.5, -1},  {0, 0.5, -1},                   //midpoints triangoli
+      {0.5, 0, 1},     {0.5, 0.5, 1},   {0, 0.5, 1},
+      {0, 0, 0},       {1, 0, 0} ,      {0, 1, 0},                      //midpoints quadrati
+      {0.5, 0, 0},     {0.5, 0.5, 0},    {0, 0.5, 0}, //0->17           //facce quadrati
+      {1. / 3., 1. / 3., -1}, {1. / 3., 1. / 3., 1}, {1. / 3., 1. / 3., 0}
+    },
+    {
+      { -1, -1}, {1, -1}, {1, 1}, { -1, 1},
+      { 0, -1}, {1, 0}, {0, 1}, { -1, 0}, {0, 0}
+    },
+    {
+      {0, 0},         {1, 0},         {0, 1},
+      {0.5, 0},       {0.5, 0.5},     {0, 0.5},
+      {1. / 3., 1. / 3.}
+    },
+    {
+      { -1}, {1}, {0}
+    }
+  };
+
+  void GetClosestPointInReferenceElement(const std::vector< std::vector < double > > &xv, const std::vector <double> &x,
+                                         const short unsigned &ieltype, std::vector < double > &xi) {
+    unsigned dim = xv.size();
+    unsigned ndofs = xv[0].size();
+    unsigned jmin = ndofs;
+    double d2min = 1.0e100;
+    for(unsigned j = 0; j < ndofs; j++) {
+      double d2 = 0;
+      for(int d = 0; d < dim; d++) {
+        d2 += (xv[d][j] - x[d]) * (xv[d][j] - x[d]);
+      }
+      if(d2 < d2min) {
+        d2min = d2;
+        jmin = j;
+      }
+    }
+
+//<<<<<<< HEAD
+    xi.resize(dim);
+    for(unsigned k = 0; k < dim; k++) {
+      xi[k] = XI[ieltype][jmin][k];
+    }
+  }
+
+  void PrintLine(const std::string output_path, const std::vector < std::vector< std::vector<double> > > &xn, const bool &streamline, const unsigned &step) {
+
+    // *********** open vtu files *************
+    std::ofstream fout;
+
+    std::string dirnamePVTK = "./";
+    Files files;
+    files.CheckDir(output_path, dirnamePVTK);
+
+    std::string filename_prefix = (streamline) ? "streamline" : "line";
+
+    std::ostringstream filename;
+    filename << output_path << "./" << filename_prefix << "." << step << ".vtu";
+
+    fout.open(filename.str().c_str());
+    if(!fout.is_open()) {
+      std::cout << std::endl << " The output file " << filename.str() << " cannot be opened.\n";
+      abort();
+    }
+
+    unsigned nvt = 0;
+    unsigned nel = 0;
+
+    for(unsigned l = 0; l < xn.size(); l++) {
+      nvt += xn[l].size();
+      nel += xn[l].size() - 1;
+    }
+
+    const unsigned dim_array_coord [] = { nvt * 3 * sizeof(float) };
+    const unsigned dim_array_conn[]   = { nel * 2 * sizeof(int) };
+    const unsigned dim_array_off []   = { nel * sizeof(int) };
+    const unsigned dim_array_type []  = { nel * sizeof(short unsigned) };
+
+    unsigned buffer_size = (dim_array_coord[0] > dim_array_conn[0]) ? dim_array_coord[0] : dim_array_conn[0];
+    void* buffer_void = new char [buffer_size];
+    char* buffer_char = static_cast <char*>(buffer_void);
+
+    size_t cch;
+    cch = b64::b64_encode(&buffer_char[0], buffer_size , NULL, 0);
+    std::vector <char> enc;
+    enc.resize(cch);
+    char* pt_char;
+
+    // *********** write vtu header ************
+    fout << "<?xml version=\"1.0\"?>" << std::endl;
+    fout << "<VTKFile type = \"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl;
+    fout << "  <UnstructuredGrid>" << std::endl;
+
+
+    fout  << "    <Piece NumberOfPoints= \"" << nvt
+          << "\" NumberOfCells= \"" << nel
+          << "\" >" << std::endl;
+
+    //-----------------------------------------------------------------------------------------------
+    // print coordinates *********************************************Solu*******************************************
+    fout  << "      <Points>" << std::endl;
+    fout  << "        <DataArray type=\"Float32\" NumberOfComponents=\"3\" format=\"binary\">" << std::endl;
+
+    // point pointer to common mamory area buffer of void type;
+    float* var_coord = static_cast< float* >(buffer_void);
+
+    unsigned counter = 0;
+    for(unsigned l = 0; l < xn.size(); l++) {
+      for(unsigned i = 0; i < xn[l].size(); i++) {
+        for(unsigned d = 0; d < 3; d++) {
+          var_coord[counter * 3 + d] = (xn[l][i].size() > d) ? xn[l][i][d] : 0.;
+        }
+        counter++;
+      }
+    }
+
+    cch = b64::b64_encode(&dim_array_coord[0], sizeof(dim_array_coord), NULL, 0);
+    b64::b64_encode(&dim_array_coord[0], sizeof(dim_array_coord), &enc[0], cch);
+    pt_char = &enc[0];
+    for(unsigned i = 0; i < cch; i++, pt_char++) fout << *pt_char;
+
+    //print coordinates array
+    cch = b64::b64_encode(&var_coord[0], dim_array_coord[0] , NULL, 0);
+    b64::b64_encode(&var_coord[0], dim_array_coord[0], &enc[0], cch);
+    pt_char = &enc[0];
+    for(unsigned i = 0; i < cch; i++, pt_char++) fout << *pt_char;
+    fout << std::endl;
+
+    fout  << "        </DataArray>" << std::endl;
+    fout  << "      </Points>" << std::endl;
+    //-----------------------------------------------------------------------------------------------
+
+    // Printing of element connectivity - offset - format type  *
+    fout  << "      <Cells>" << std::endl;
+    //-----------------------------------------------------------------------------------------------
+    //print connectivity
+    fout  << "        <DataArray type=\"Int32\" Name=\"connectivity\" format=\"binary\">" << std::endl;
+
+    // point pointer to common mamory area buffer of void type;
+    int* var_conn = static_cast <int*>(buffer_void);
+    unsigned icount = 0;
+    unsigned skip = 0;
+    unsigned restart = 0;
+    for(unsigned iel = 0; iel < nel; iel++) {
+      for(unsigned j = 0; j < 2; j++) {
+        var_conn[icount] = iel + j + skip;
+        icount++;
+      }
+      restart++;
+      if(restart == xn[skip].size() - 1) {
+        skip++;
+        restart = 0;
+      }
+    }
+
+    //print connectivity dimension
+    cch = b64::b64_encode(&dim_array_conn[0], sizeof(dim_array_conn), NULL, 0);
+    b64::b64_encode(&dim_array_conn[0], sizeof(dim_array_conn), &enc[0], cch);
+    pt_char = &enc[0];
+    for(unsigned i = 0; i < cch; i++, pt_char++) fout << *pt_char;
+
+    //print connectivity array
+    cch = b64::b64_encode(&var_conn[0], dim_array_conn[0] , NULL, 0);
+    b64::b64_encode(&var_conn[0], dim_array_conn[0], &enc[0], cch);
+    pt_char = &enc[0];
+    for(unsigned i = 0; i < cch; i++, pt_char++) fout << *pt_char;
+    fout << std::endl;
+    fout << "        </DataArray>" << std::endl;
+    //------------------------------------------------------------------------------------------------
+    fout  << "        <DataArray type=\"Int32\" Name=\"offsets\" format=\"binary\">" << std::endl;
+    // point pointer to common memory area buffer of void type;
+    int* var_off = static_cast <int*>(buffer_void);
+    // print offset array
+    for(int iel = 0; iel < nel; iel++) {
+      var_off[iel] = (iel + 1) * 2;
+    }
+
+    //print offset dimension
+    cch = b64::b64_encode(&dim_array_off[0], sizeof(dim_array_off), NULL, 0);
+    b64::b64_encode(&dim_array_off[0], sizeof(dim_array_off), &enc[0], cch);
+    pt_char = &enc[0];
+    for(unsigned i = 0; i < cch; i++, pt_char++) fout << *pt_char;
+
+    //print offset array
+    cch = b64::b64_encode(&var_off[0], dim_array_off[0] , NULL, 0);
+    b64::b64_encode(&var_off[0], dim_array_off[0], &enc[0], cch);
+    pt_char = &enc[0];
+    for(unsigned i = 0; i < cch; i++, pt_char++) fout << *pt_char;
+
+    fout  << std::endl;
+
+    fout  << "        </DataArray>" << std::endl;
+
+
+
+    //--------------------------------------------------------------------------------------------------
+
+    //Element format type : 23:Serendipity(8-nodes)  28:Quad9-Biquadratic
+    fout  << "        <DataArray type=\"UInt16\" Name=\"types\" format=\"binary\">" << std::endl;
+
+    // point pointer to common mamory area buffer of void type;
+    unsigned short* var_type = static_cast <unsigned short*>(buffer_void);
+
+    for(unsigned iel = 0; iel < nel; iel++) {
+      var_type[iel] = 3;
+    }
+
+    //print element format dimension
+    cch = b64::b64_encode(&dim_array_type[0], sizeof(dim_array_type), NULL, 0);
+    b64::b64_encode(&dim_array_type[0], sizeof(dim_array_type), &enc[0], cch);
+    pt_char = &enc[0];
+    for(unsigned i = 0; i < cch; i++, pt_char++) fout << *pt_char;
+
+    //print element format array
+    cch = b64::b64_encode(&var_type[0], dim_array_type[0] , NULL, 0);
+    b64::b64_encode(&var_type[0], dim_array_type[0], &enc[0], cch);
+    pt_char = &enc[0];
+    for(unsigned i = 0; i < cch; i++, pt_char++) fout << *pt_char;
+
+    fout  << std::endl;
+    fout  << "        </DataArray>" << std::endl;
+
+
+
+    //----------------------------------------------------------------------------------------------------
+//
+    fout  << "      </Cells>" << std::endl;
+
+
+
+    //-----------------------------------------------------------------------------------------------
+    // Printing of element connectivity - offset - format type  *
+//   fout  << "      <Cells>" << std::endl;
+//   fout  << "      </Cells>" << std::endl;
+
+    fout << "    </Piece>" << std::endl;
+    fout << "  </UnstructuredGrid>" << std::endl;
+    fout << "</VTKFile>" << std::endl;
+    fout.close();
+
+    delete [] var_coord;
+    //--------------------------------------------------------------------------------------------------------
+    return;
+  }
+
+
 
 }

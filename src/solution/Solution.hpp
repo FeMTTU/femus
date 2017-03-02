@@ -63,8 +63,13 @@ namespace femus {
       /** Free the solution vectors */
       void FreeSolutionVectors();
 
-      /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
-      void UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
+      unsigned GetSolutionTimeOrder(unsigned i) {
+        return _SolTmOrder[i];
+      };
+      
+      
+//       /** Sum to Solution vector the Epsilon vector. It is used inside the multigrid cycle */
+//       void UpdateSolAndRes(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, NumericVector* RES, const vector <vector <unsigned> > &KKoffset);
 
       void UpdateSol(const vector <unsigned> &_SolPdeIndex,  NumericVector* EPS, const vector <vector <unsigned> > &KKoffset);
       /** */
@@ -133,6 +138,13 @@ namespace femus {
 	return _SolType[index];
       }
       
+      void SetIfFSI(const bool &FSI = true){
+	_FSI = FSI; 
+      }
+      
+      bool GetIfFSI(){
+	return _FSI; 
+      }
       
     private:
       //member data
@@ -143,6 +155,7 @@ namespace femus {
       vector <FEOrder> _order;
       Mesh *_msh;
       vector <bool> _removeNullSpace;
+      bool _FSI;
 
   };
 

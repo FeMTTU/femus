@@ -54,8 +54,7 @@ namespace femus {
 
     unsigned BDCIndexSize = KKoffset[KKIndex.size() - 1][processor_id()] - KKoffset[0][processor_id()];
     _bdcIndex.resize(BDCIndexSize);
-    _hangingNodesIndex.resize(BDCIndexSize);
-
+    
     vector <bool> ThisSolutionIsIncluded(_SolPdeIndex.size(), false);
 
     for(unsigned iind = 0; iind < variable_to_be_solved.size(); iind++) {
@@ -64,8 +63,7 @@ namespace femus {
     }
 
     unsigned count0 = 0;
-    unsigned count1 = 0;
-
+   
     for(int k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
       unsigned soltype = _SolType[indexSol];
@@ -75,13 +73,9 @@ namespace femus {
         int local_mts = inode_mts - _msh->_dofOffset[soltype][processor_id()];
         int idof_kk = KKoffset[k][processor_id()] + local_mts;
 
-        if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 0.9) {
+        if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 1.5) {
           _bdcIndex[count0] = idof_kk;
           count0++;
-        }
-        else if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 1.9) {
-          _hangingNodesIndex[count1] = idof_kk;
-          count1++;
         }
       }
     }
@@ -89,11 +83,6 @@ namespace femus {
     _bdcIndex.resize(count0);
     std::vector < PetscInt >(_bdcIndex).swap(_bdcIndex);
     std::sort(_bdcIndex.begin(), _bdcIndex.end());
-
-    _hangingNodesIndex.resize(count1);
-    std::vector < PetscInt >(_hangingNodesIndex).swap(_hangingNodesIndex);
-    std::sort(_hangingNodesIndex.begin(), _hangingNodesIndex.end());
-
 
     return;
   }
@@ -113,12 +102,7 @@ namespace femus {
       this->Clear();
       SetPenalty();
       RemoveNullSpace();
-      if( UseSamePreconditioner() ) {
-        this->Init(KK, KK);
-      }
-      else{
-        this->Init(KK, _pmat);
-      }
+      this->Init(KK, KK);
     }
     //END ASSEMBLE
 
@@ -243,19 +227,15 @@ namespace femus {
     KSPSetOptionsPrefix(subksp, levelName.str().c_str());
     KSPSetFromOptions(subksp);
 
-    ZerosBoundaryResiduals();
+    //ZerosBoundaryResiduals();
 
     SetPenalty();
     RemoveNullSpace();
 
     Mat KK = (static_cast< PetscMatrix* >(_KK))->mat();
-    if( UseSamePreconditioner() ) {
-      KSPSetOperators(subksp, KK, KK);
-    }
-    else{
-      KSPSetOperators(subksp, KK, _pmat);
-    }
-
+    
+    KSPSetOperators(subksp, KK, KK);
+    
     PC subpc;
     KSPGetPC(subksp, &subpc);
     SetPreconditioner(subksp, subpc);
@@ -294,13 +274,8 @@ namespace femus {
     if(ksp_clean) {
       Mat KK = (static_cast< PetscMatrix* >(_KK))->mat();
 
-      if( UseSamePreconditioner() ) {
-        KSPSetOperators(_ksp, KK, KK);
-      }
-      else {
-        KSPSetOperators(_ksp, KK, _pmat);
-      }
-
+      KSPSetOperators(_ksp, KK, KK);
+      
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
 
       if(_solver_type != PREONLY) {
@@ -314,8 +289,6 @@ namespace femus {
     }
 
     ZerosBoundaryResiduals();
-
-
     KSPSolve(_ksp, (static_cast< PetscVector* >(_RES))->vec(), (static_cast< PetscVector* >(_EPSC))->vec());
 
     _RESC->matrix_mult(*_EPSC, *_KK);
@@ -357,12 +330,6 @@ namespace femus {
 
         MatSetNullSpace( (static_cast< PetscMatrix* >(_KK))->mat(), nullsp);
         MatSetTransposeNullSpace( (static_cast< PetscMatrix* >(_KK))->mat(), nullsp);
-        if( !UseSamePreconditioner() ) {
-          MatNullSpaceTest(nullsp, _pmat, &isNull);
-          if (!isNull) std::cout<<"The null space created for _pmat is not correct!"<<std::endl;
-          MatSetNullSpace( _pmat, nullsp);
-          MatSetTransposeNullSpace( _pmat, nullsp);
-        }
         MatNullSpaceDestroy(&nullsp);
 
         for(unsigned i = 0; i < nullspBase.size(); i++) {
@@ -389,7 +356,10 @@ namespace femus {
         if ( soltype == 4 ) owndofs /= ( _msh->GetDimension() + 1 );
         for(unsigned i = 0; i < owndofs; i++) {
           int idof_kk = KKoffset[k][processor_id()] + i;
-          VecSetValue(nullspBase[nullspSize], idof_kk, 1., INSERT_VALUES);
+	  unsigned inode_mts = _msh->_dofOffset[soltype][processor_id()] + i;  
+	  if((* (*_Bdc) [indexSol])(inode_mts) > 1.9){
+	    VecSetValue(nullspBase[nullspSize], idof_kk, 1., INSERT_VALUES);
+	  }
         }
 
         VecAssemblyBegin(nullspBase[nullspSize]);
@@ -406,6 +376,7 @@ namespace femus {
     std::vector< PetscScalar > value(_bdcIndex.size(), 0.);
     Vec RES = (static_cast< PetscVector* >(_RES))->vec();
     VecSetValues(RES, _bdcIndex.size(), &_bdcIndex[0], &value[0],  INSERT_VALUES);
+        
     VecAssemblyBegin(RES);
     VecAssemblyEnd(RES);
   }
@@ -418,26 +389,20 @@ namespace femus {
 
     MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
     MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
-    MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
-
-    if( !UseSamePreconditioner() ) {
-      if(_pmatIsInitialized) MatDestroy(&_pmat);
-      MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
-      if( _hangingNodesIndex.size() != 0){
-        MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-        MatZeroRows(_pmat, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1.e100, 0, 0);
-      }
-      _pmatIsInitialized = true;
-    }
+    MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1., 0, 0);
+    
   }
 
   // =================================================
 
   void GmresPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc) {
-    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpc);
+    
+    int parallelOverlapping = ( _msh->GetIfHomogeneous() )? 0 : 0;
+    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpc, parallelOverlapping);
     PetscReal zero = 1.e-16;
     PCFactorSetZeroPivot(subpc, zero);
-    PCFactorSetShiftType(subpc, MAT_SHIFT_NONZERO);
+    PCFactorSetShiftType(subpc, MAT_SHIFT_NONZERO); 
+    
   }
 
   // ================================================
@@ -503,7 +468,7 @@ namespace femus {
 
       case RICHARDSON:
         KSPSetType(ksp, (char*) KSPRICHARDSON);
-        KSPRichardsonSetScale(ksp, 0.5);
+        KSPRichardsonSetScale(ksp, _richardsonScaleFactor);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
         return;
 
