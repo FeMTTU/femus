@@ -634,13 +634,15 @@ namespace femus {
 
             // double s = (tstep + _c[order - 1][istep]) / n;
 
+            
+            if(_sol->GetIfFSI()) {
+	      unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
+	      MagneticForceWire(x, Fm, material);
+	    }
 
-            MagneticForceWire(x, Fm);
-
-
-            for(unsigned l = 0; l < Fm.size(); l++) {
-              std::cout << "Fm[" << l << "]=" << Fm[l] << std::endl;
-            }
+//             for(unsigned l = 0; l < Fm.size(); l++) {
+//               std::cout << "Fm[" << l << "]=" << Fm[l] << std::endl;
+//             }
 
             for(unsigned k = 0; k < _dim; k++) {
               K[istep][k] = (s * V[0][k] + (1. - s) * V[1][k] + Fm[k]) * h;
@@ -873,13 +875,13 @@ namespace femus {
   }
 
 
-  void Line::MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm) {
+  void Line::MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material) {
 
     double PI = acos(-1.);
 
     double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
 
-    double muf = 3.5 * 1.0e-3; // fluid viscosity
+    double muf = (material == 2)? 3.5 * 1.0e-3 : 1.0e100; // fluid viscosity
 
     double D = 500 * 1.e-9;       //diameter of the particle
 
@@ -899,7 +901,7 @@ namespace femus {
 
 //aortic bifurcation
     x[0] = 0.015;
-    x[1] = 0.08;
+    x[1] = 0.;
     x[2] = 0.;
 
 //bent tube no FSI
@@ -907,7 +909,7 @@ namespace femus {
 //     x[1] = 0.;
 //     x[2] = 3.;
 
-    double I = 3.e5; // electric current intensity
+    double I = 5.e5; // electric current intensity
     double Msat = 1.e6;  //  magnetic saturation
     double  chi = 3.; //magnetic susceptibility
 

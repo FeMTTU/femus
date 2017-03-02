@@ -108,7 +108,12 @@ int main(int argc, char **args) {
   muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  E = 1000000 * 1.e1; //turek: 1000000 * 1.e0;
+  if(simulation == 5){
+    E = 1000000 * 1.e1;   
+  } 
+  else{
+    E = 1000000 * 1.e0; //turek: 1000000 * 1.e0; 
+  }
   E1 = 100000;
 
   Parameter par(Lref, Uref);
@@ -304,8 +309,8 @@ int main(int argc, char **args) {
  
     for(unsigned j = 0; j < pSize; j++) {
       x[j].resize(2);
-      x[j][0] = -0.009 + 0.018 * j / (pSize - 1);
-      x[j][1] = 0.105;
+      x[j][0] = -0.008 + 0.016 * j / (pSize - 1);
+      x[j][1] = 0.108;
       markerType[j] = VOLUME;
     }
 
@@ -340,7 +345,7 @@ int main(int argc, char **args) {
     system.MGsolve();
 
     for(int i = linea.size() - 1; i >= 0; i--) {
-      linea[i]->AdvectionParallel(4, 1. / 32., 4);
+      linea[i]->AdvectionParallel(10, 1. / 32., 4);
       linea[i]->GetStreamLine(streamline, linea.size() - i);
 
     }
