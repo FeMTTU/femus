@@ -75,7 +75,7 @@ namespace femus {
 
       // data member
     private:
-      unsigned _elementBlockNumber[2];
+      unsigned _elementBlockNumber[3];
       unsigned short _NSchurVar;
 
       vector< vector <PetscInt> > _overlappingIsIndex;
