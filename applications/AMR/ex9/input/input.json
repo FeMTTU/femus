@@ -2,18 +2,7 @@
 {
     // mesh
     "mesh" : {
-                "box" : {
-                          "nx" : 2,
-                          "ny" : 2,
-                          "nz" : 2,
-                          "xa" : -1.,
-                          "xb" : 1.,
-                          "ya" : -1.,
-                          "yb" : 1.,
-                          "za" : -1.,
-                          "zb" : 1.,
-                          "elem_type" : "Hex27"
-                         }
+                "filename" : "./input/cubeMinusCube.neu"
              },
 
     // Properties
@@ -25,20 +14,6 @@
 		   "func_source4" : "2*(y-y*y+x-x*x)*atan(10*sqrt(2)*(x+y)-16)-10*sqrt(2)*((1-2*x)*(y-y*y)+(x-x*x)*(1-2*y))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))-10*sqrt(2)*((1-2*x)*(y-y*y)+(x-x*x)*(1-2*y))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))+800.*(x-x*x)*(y-y*y)*(10*sqrt(2)*(x+y)-16)/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))",
 		   "func_source5" : "-10./9 * pow(x*x+y*y+z*z, -2./3)"
                  },
-
-    // Boundary conditions
-    "boundary_conditions" : [
-                             {
-                               "facename" : "top",
-                               "bdc_type" : "dirichlet"
-                             }//,
-                             //{
-                             //  "facename" : "right",
-                             //  "bdc_type" : "neumann",
-                             //  "is_homogeneous" : false,
-                             //  "bdc_func" : "0.2"
-                             // }
-                            ],
 
     "func_sol1" : { "sol"    : "exp(10.*x)*sin(pi*x)*sin(pi*y)",
    		      "dsoldx" : "exp(10.*x)*(10.*sin(pi*x)+pi*cos(pi*x))*sin(pi*y)",
@@ -69,9 +44,9 @@
     // MG Solver properties
     "mgsolver" : { "nlevels" : 1,
 		   "AMR" : "yes",
-		   "maxAMRlevels" : 15,
+		   "maxAMRlevels" : 4,
 		   "AMRnorm" : "H1",
-		   "AMRthreshold": 0.16,
+		   "AMRthreshold": 0.0000005,
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,
                    "smoother_type" : "gmres",
