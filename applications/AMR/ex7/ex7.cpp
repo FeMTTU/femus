@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
     {
       elemtype = INVALID_ELEM;
     }
-
+    
   }
 
   std::string variableName = root["variable"].get("name", "Q").asString();
@@ -240,22 +240,22 @@ int main(int argc, char** argv) {
 
 #ifdef HAVE_FPARSER
 
-  function = root["variable"].get("func_source2", "0.").asString();
+  function = root["variable"].get("func_source4", "0.").asString();
   fpsource.SetExpression(function);
   fpsource.SetIndependentVariables(variables);
   fpsource.Parse();
 
-  function = root["func_sol2"].get("sol", "0.").asString();
+  function = root["func_sol4"].get("sol", "0.").asString();
   fp_sol.SetExpression(function);
   fp_sol.SetIndependentVariables(variables);
   fp_sol.Parse();
 
-  function = root["func_sol2"].get("dsoldx", "0.").asString();
+  function = root["func_sol4"].get("dsoldx", "0.").asString();
   fp_dsoldx.SetExpression(function);
   fp_dsoldx.SetIndependentVariables(variables);
   fp_dsoldx.Parse();
 
-  function = root["func_sol2"].get("dsoldy", "0.").asString();
+  function = root["func_sol4"].get("dsoldy", "0.").asString();
   fp_dsoldy.SetExpression(function);
   fp_dsoldy.SetIndependentVariables(variables);
   fp_dsoldy.Parse();
