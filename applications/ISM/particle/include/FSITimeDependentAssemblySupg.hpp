@@ -213,7 +213,10 @@ namespace femus
 
     start_time = clock();
 
-    myKK->zero();
+    bool assembleMatrix = my_nnlin_impl_sys.GetAssembleMatrix();
+    
+    if(assembleMatrix)
+      myKK->zero();
 
     // *** element loop ***
     for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
@@ -947,32 +950,34 @@ namespace femus
         myRES->add_vector_blocked(Rhs[indexVAR[i]], dofsVAR[i]);
       }
 
-      //Store equations
-      for (int i = 0; i < 2 * dim; i++) {
-        s.dependent(&aRhs[indexVAR[i]][0], nve);
-        s.independent(&Soli[indexVAR[i]][0], nve);
+      if(assembleMatrix){
+	//Store equations
+	for (int i = 0; i < 2 * dim; i++) {
+	  s.dependent(&aRhs[indexVAR[i]][0], nve);
+	  s.independent(&Soli[indexVAR[i]][0], nve);
+	}
+
+	s.dependent(&aRhs[indexVAR[2 * dim]][0], nve1);
+	s.independent(&Soli[indexVAR[2 * dim]][0], nve1);
+	s.jacobian(&Jac[0]);
+	unsigned nveAll = (2 * dim * nve + nve1);
+
+	for (int inode = 0; inode < nveAll; inode++) {
+	  for (int jnode = 0; jnode < nveAll; jnode++) {
+	    KKloc[inode * nveAll + jnode] = -Jac[jnode * nveAll + inode];
+	  }
+	}
+
+	myKK->add_matrix_blocked(KKloc, dofsAll, dofsAll);
+	s.clear_independents();
+	s.clear_dependents();
       }
-
-      s.dependent(&aRhs[indexVAR[2 * dim]][0], nve1);
-      s.independent(&Soli[indexVAR[2 * dim]][0], nve1);
-      s.jacobian(&Jac[0]);
-      unsigned nveAll = (2 * dim * nve + nve1);
-
-      for (int inode = 0; inode < nveAll; inode++) {
-        for (int jnode = 0; jnode < nveAll; jnode++) {
-          KKloc[inode * nveAll + jnode] = -Jac[jnode * nveAll + inode];
-        }
-      }
-
-      myKK->add_matrix_blocked(KKloc, dofsAll, dofsAll);
-      s.clear_independents();
-      s.clear_dependents();
-
       //END local to global assembly
 
     } //end list of elements loop
 
-    myKK->close();
+    if(assembleMatrix)
+      myKK->close();
     myRES->close();
 
     delete area_elem_first;
