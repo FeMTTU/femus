@@ -14,7 +14,7 @@
 #include "XDMFWriter.hpp"
 #include "Line.hpp"
 #include "adept.h"
-#include "include/FSITimeDependentAssemblySupg.hpp"
+#include "../../FSI/aneurysm/include/FSITimeDependentAssemblySupg.hpp"
 #include <cmath>
 double scale = 1000.;
 
