@@ -618,6 +618,8 @@ namespace femus {
   bool Solution::FlagAMRRegionBasedOnErroNormAdaptive(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType) {
 
     const double scale2[3][2] = {{0.111111, 1.}, {0.0204081632653, 0.111111}, {0.0204081632653, 0.111111} };
+    //const double scale2[3][2] = {{1., 1.}, {1., 1.}, {1., 1.} };
+
 
     unsigned    iproc = _msh->processor_id(); // get the process_id (for parallel computation)
     const unsigned  dim = _msh->GetDimension();
