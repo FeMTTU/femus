@@ -92,10 +92,10 @@ namespace femus {
     }
 
     _gridn++;
-    unsigned  grid0 = _gridn - 1;
+    unsigned  grid0 = _gridn - 2;
 
     for(int k = 0; k < _solName.size(); k++) {
-      GenerateBdc(k, grid0, 0.);
+      GenerateBdc(k, 0, 0.);
     }
 
 
