@@ -109,6 +109,8 @@ namespace femus {
     double mu_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_shear_modulus();
     double lambda_lame 	= ml_prob.parameters.get < Solid>("Solid").get_lame_lambda();
     double mus		= mu_lame / rhof;
+    double mu_lame1 	= ml_prob.parameters.get < Solid>("Solid1").get_lame_shear_modulus();
+    double mus1 	= mu_lame1 / rhof;
     double IRe 		= ml_prob.parameters.get < Fluid>("Fluid").get_IReynolds_number();
     double lambda	= lambda_lame / rhof;
     double betans	= 1.;
@@ -176,7 +178,7 @@ namespace femus {
       unsigned nve        = mymsh->GetElementDofNumber(iel, SolType2);
       unsigned nve1       = mymsh->GetElementDofNumber(iel, SolType1);
       int flag_mat        = mymsh->GetElementMaterial(iel);
-
+      unsigned elementGroup = mymsh->GetElementGroup(iel);
       // *******************************************************************************************************
 
       //initialization of everything in common between fluid and solid
@@ -263,9 +265,7 @@ namespace femus {
           if(myel->GetFaceElementIndex(iel, jface) < 0) {
             unsigned int face = -(mymsh->el->GetFaceElementIndex(iel, jface) + 1);
 
-            if((!ml_sol->GetBdcFunction()(xx, "V", tau, face, 0.) ||
-                !ml_sol->GetBdcFunction()(xx, "DX", tau, face, 0.))
-                && tau != 0.) {
+            if( !ml_sol->GetBdcFunction()(xx, "V", tau, face, 0.) && tau != 0.) {
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
               const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
@@ -421,27 +421,32 @@ namespace femus {
                 }
                 double eps = 1.0e-12;
                 speed = sqrt(speed + eps);
-                //double DE = 0.000125; // porous3D
-                double DE = 0.00006; // turek2D
+                double DE = 0.;
+                if (dim == 2){
+		  DE = 0.00006; // turek2D
+		}
+                else if (dim == 3){
+		  DE = 0.000112; // porous3D
+		}
                 double b = 4188;
                 double a = 1452;
                 double K = DE * IRe * rhof / b;
                 double C2 = 2 * a / (rhof * DE);
 				
-		adept::adouble LapvelVAR[3] = {0., 0., 0.};
-                adept::adouble AdvaleVAR[3] = {0., 0., 0.};
-				
-                for(int idim = 0.; idim < dim; idim++) {
-                  for(int jdim = 0.; jdim < dim; jdim++) {
-                    LapvelVAR[idim] += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
-		    AdvaleVAR[idim] +=  SolVAR[dim + jdim] * GradSolVAR[dim + idim][jdim] * phi[i];
-                  }
-                }
+// 		adept::adouble LapvelVAR[3] = {0., 0., 0.};
+//                 adept::adouble AdvaleVAR[3] = {0., 0., 0.};
+// 				
+//                 for(int idim = 0.; idim < dim; idim++) {
+//                   for(int jdim = 0.; jdim < dim; jdim++) {
+//                     LapvelVAR[idim] += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
+// 		    AdvaleVAR[idim] +=  SolVAR[dim + jdim] * GradSolVAR[dim + idim][jdim] * phi[i];
+//                   }
+//                 }
 
                 for(int idim = 0; idim < dim; idim++) {
                   adept::adouble value = (- SolVAR[dim + idim] * (IRe / K + 0.5 * C2 * speed) * phi[i]
-					  - 0*AdvaleVAR[idim] 
-                                          - 0*IRe * LapvelVAR[idim]	   	 // viscous dissipation
+// 					  - 0*AdvaleVAR[idim] 
+//                                           - 0*IRe * LapvelVAR[idim]	   	 // viscous dissipation
                                           + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                          ) * jacobian;
                   if((!solidmark[i])) {
@@ -574,8 +579,10 @@ namespace femus {
               I1_B = B[0][0] + B[1][1] + B[2][2];
               I2_B = B[0][0] * B[1][1] + B[1][1] * B[2][2] + B[2][2] * B[0][0]
                      - B[0][1] * B[1][0] - B[1][2] * B[2][1] - B[2][0] * B[0][2];
-
-              double C1 = mus / 3.;
+		     
+              //double C1 = ( elementGroup == 9 )? mus / 3.: mus1 / 3.; 
+	      double C1 = ( elementGroup == 15 )? mus1 / 3.: mus / 3.; 
+	      //double C1 = mus / 3.;
               double C2 = C1 / 2.;
 
               for(int I = 0; I < 3; ++I) {
