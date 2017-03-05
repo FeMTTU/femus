@@ -200,10 +200,10 @@ namespace femus {
       }
       else MLVcycle( igridn );
 
-      if( ThisIsAMR ) AddAMRLevel( AMRCounter );
-
       if( igridn < _gridn ) ProlongatorSol( igridn );
 
+      if( ThisIsAMR ) AddAMRLevel( AMRCounter );
+      
       std::cout << std::endl << " ****** End Level Max " << igridn << " ******" << std::endl;
     }
 

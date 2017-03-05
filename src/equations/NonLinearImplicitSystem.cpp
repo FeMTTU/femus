@@ -199,9 +199,9 @@ namespace femus {
 
       }
 
-      if( ThisIsAMR ) AddAMRLevel( AMRCounter );
-
       if( igridn < _gridn ) ProlongatorSol( igridn );
+      
+      if( ThisIsAMR ) AddAMRLevel( AMRCounter );
 
       std::cout << std::endl << "   ****** Nonlinear-Cycle TIME: " << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
                 << static_cast<double>( ( clock() - start_nl_time ) ) / CLOCKS_PER_SEC << std::endl;

@@ -81,24 +81,23 @@ namespace femus {
       _solution[_gridn]->AddSolution(_solName[i], _family[i], _order[i], _solTimeOrder[i], _pdeType[i]);
     }
 
-    for(unsigned i = 0; i < _solName.size(); i++) {
-      _solution[_gridn]->ResizeSolutionVector(_solName[i]);
-
-      _solution[_gridn]->_Sol[i]->zero();
-
-      if(_solTimeOrder[i] == 2) {
-        _solution[_gridn]->_SolOld[i]->zero();
+    for( unsigned k = 0; k < _solName.size(); k++ ) {
+      _solution[_gridn]->ResizeSolutionVector(_solName[k]);
+      _solution[_gridn]->_Sol[k]->matrix_mult( *_solution[_gridn - 1]->_Sol[k],
+          *_mlMesh->GetLevel(_gridn)->GetCoarseToFineProjection( _solType[k] ) );
+      _solution[_gridn]->_Sol[k]->close();
+      if(_solTimeOrder[k] == 2) {
+	_solution[_gridn]->_SolOld[k]->matrix_mult( *_solution[_gridn - 1]->_SolOld[k],
+          *_mlMesh->GetLevel(_gridn)->GetCoarseToFineProjection( _solType[k] ) );
+	_solution[_gridn]->_SolOld[k]->close();
       }
     }
-
+    
     _gridn++;
-    unsigned  grid0 = _gridn - 2;
-
+    
     for(int k = 0; k < _solName.size(); k++) {
-      GenerateBdc(k, 0, 0.);
+      GenerateBdc(k, _gridn - 1, 0.);
     }
-
-
 
   }
 
@@ -477,6 +476,7 @@ namespace femus {
       }
     }
   }
+  
 
 //---------------------------------------------------------------------------------------------------
   void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int grid0, const double time) {
