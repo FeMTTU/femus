@@ -68,8 +68,14 @@ namespace femus {
   // =================================================
 
   void AsmPetscLinearEquationSolver::SetElementBlockNumberFluid(const unsigned& block_elemet_number, const unsigned& overlap) {
-    _elementBlockNumber[1] = block_elemet_number;
     _elementBlockNumber[2] = block_elemet_number;
+    _bdcIndexIsInitialized = 0;
+    _standardASM = 0;
+    _overlap = overlap;
+  }
+  
+  void AsmPetscLinearEquationSolver::SetElementBlockNumberPorous(const unsigned& block_elemet_number, const unsigned& overlap) {
+    _elementBlockNumber[1] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
     _overlap = overlap;
