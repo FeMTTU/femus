@@ -279,7 +279,7 @@ int main(int argc, char **args)
   
    // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 250;
+  const unsigned int n_timesteps = 400;
   
   std::vector < std::vector <double> > data(n_timesteps);
     
