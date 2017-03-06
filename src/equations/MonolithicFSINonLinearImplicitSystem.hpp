@@ -65,8 +65,10 @@ public:
 
     void SetElementBlockNumberFluid(unsigned const &dim_vanka_block, unsigned const &overlap=0);
     void SetElementBlockNumberSolid(unsigned const &dim_vanka_block, unsigned const &overlap=0);
+    void SetElementBlockNumberPorous(unsigned const &dim_vanka_block, unsigned const &overlap=0);
     void SetElementBlockFluidAll();
     void SetElementBlockSolidAll();
+    void SetElementBlockPorousAll();
 
 protected:
 

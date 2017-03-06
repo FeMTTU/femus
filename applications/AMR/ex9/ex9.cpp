@@ -24,6 +24,12 @@ using std::endl;
 
 using namespace femus;
 
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  bool dirichlet = true; //dirichlet
+  value = pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],1./3);
+  return dirichlet;
+}
+
 void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob);
 
 double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1);
@@ -54,14 +60,14 @@ readInputTestFile(const char* path)
 static void show_usage()
 {
   std::cout << "Use --inputfile variable to set the input file" << endl;
-  std::cout << "e.g.: ./AMR_ex7 --inputfile ./input/input.json" << std::endl;
+  std::cout << "e.g.: ./AMR_ex9 --inputfile ./input/input.json" << std::endl;
 }
 
 ParsedFunction fpsource;
 ParsedFunction fp_sol;
 ParsedFunction fp_dsoldx;
 ParsedFunction fp_dsoldy;
-
+ParsedFunction fp_dsoldz;
 
 int main(int argc, char** argv) {
 
@@ -136,7 +142,7 @@ int main(int argc, char** argv) {
     ya = root["mesh"].get("box", "").get("ya", 0.).asDouble();
     yb = root["mesh"].get("box", "").get("yb", 1.).asDouble();
     za = root["mesh"].get("box", "").get("za", 0.).asDouble();
-    zb = root["mesh"].get("box", "").get("zb", 0.).asDouble();
+    zb = root["mesh"].get("box", "").get("zb", 1.).asDouble();
     std::string elemtypestr = root["mesh"].get("box", "").get("elem_type", "Quad9").asString();
 
     if (elemtypestr == "Quad9")
@@ -159,13 +165,13 @@ int main(int argc, char** argv) {
     {
       elemtype = INVALID_ELEM;
     }
-
+    
   }
 
   std::string variableName = root["variable"].get("name", "Q").asString();
 
   FEOrder fe_order;
-  std::string fe_order_str = root["variable"].get("fe_order", "second").asString();
+  std::string fe_order_str = root["variable"].get("fe_order", "first").asString();
 
   if (!strcmp(fe_order_str.c_str(), "first"))
   {
@@ -240,25 +246,30 @@ int main(int argc, char** argv) {
 
 #ifdef HAVE_FPARSER
 
-  function = root["variable"].get("func_source3", "0.").asString();
+  function = root["variable"].get("func_source5", "0.").asString();
   fpsource.SetExpression(function);
   fpsource.SetIndependentVariables(variables);
   fpsource.Parse();
 
-  function = root["func_sol3"].get("sol", "0.").asString();
+  function = root["func_sol5"].get("sol", "0.").asString();
   fp_sol.SetExpression(function);
   fp_sol.SetIndependentVariables(variables);
   fp_sol.Parse();
 
-  function = root["func_sol3"].get("dsoldx", "0.").asString();
+  function = root["func_sol5"].get("dsoldx", "0.").asString();
   fp_dsoldx.SetExpression(function);
   fp_dsoldx.SetIndependentVariables(variables);
   fp_dsoldx.Parse();
 
-  function = root["func_sol3"].get("dsoldy", "0.").asString();
+  function = root["func_sol5"].get("dsoldy", "0.").asString();
   fp_dsoldy.SetExpression(function);
   fp_dsoldy.SetIndependentVariables(variables);
   fp_dsoldy.Parse();
+  
+  function = root["func_sol5"].get("dsoldz", "0.").asString();
+  fp_dsoldz.SetExpression(function);
+  fp_dsoldz.SetIndependentVariables(variables);
+  fp_dsoldz.Parse();
 
 
 #endif
@@ -267,32 +278,32 @@ int main(int argc, char** argv) {
   std::vector<ParsedFunction> parsedfunctionarray;
   std::vector<BDCType> bdctypearray;
 
-  const Json::Value boundary_conditions = root["boundary_conditions"];
-
-  for (unsigned int index = 0; index < boundary_conditions.size(); ++index) {
-
-    std::string facename = boundary_conditions[index].get("facename", "to").asString();
-    facenamearray.push_back(facename);
-
-    std::string bdctypestr = boundary_conditions[index].get("bdc_type", "to").asString();
-    BDCType bdctype = DIRICHLET;
-
-    if (bdctypestr.compare("dirichlet") == 0) {
-      bdctype = DIRICHLET;
-    }
-    else if (bdctypestr.compare("neumann") == 0) {
-      bdctype = NEUMANN;
-    }
-    else {
-      std::cout << "Boundary condition not implemented! Default one (Dirichlet) is set." << std::endl;
-    }
-
-    bdctypearray.push_back(bdctype);
-
-    std::string bdcfuncstr = boundary_conditions[index].get("bdc_func", "0.").asString();
-    ParsedFunction pfunc(bdcfuncstr, "x,y,z,t");
-    parsedfunctionarray.push_back(pfunc);
-  }
+//   const Json::Value boundary_conditions = root["boundary_conditions"];
+// 
+//   for (unsigned int index = 0; index < boundary_conditions.size(); ++index) {
+// 
+//     std::string facename = boundary_conditions[index].get("facename", "to").asString();
+//     facenamearray.push_back(facename);
+// 
+//     std::string bdctypestr = boundary_conditions[index].get("bdc_type", "to").asString();
+//     BDCType bdctype = DIRICHLET;
+// 
+//     if (bdctypestr.compare("dirichlet") == 0) {
+//       bdctype = DIRICHLET;
+//     }
+//     else if (bdctypestr.compare("neumann") == 0) {
+//       bdctype = NEUMANN;
+//     }
+//     else {
+//       std::cout << "Boundary condition not implemented! Default one (Dirichlet) is set." << std::endl;
+//     }
+// 
+//     bdctypearray.push_back(bdctype);
+// 
+//     std::string bdcfuncstr = boundary_conditions[index].get("bdc_func", "0.").asString();
+//     ParsedFunction pfunc(bdcfuncstr, "x,y,z,t");
+//     parsedfunctionarray.push_back(pfunc);
+//   }
 
   //---------------------------------------------------------------------------
 
@@ -345,20 +356,20 @@ int main(int argc, char** argv) {
   ml_sol.Initialize("Sol");
 
   //Set Boundary (update Dirichlet(...) function)
-  ml_sol.InitializeBdc();
+ // ml_sol.InitializeBdc();
 
 //     ml_sol.SetBoundaryCondition("Sol","right", NEUMANN, false, false, &bdcfunc);
 //     ml_sol.SetBoundaryCondition("Sol","top", NEUMANN);
 
-  for (int i = 0; i < boundary_conditions.size(); ++i) {
-    ml_sol.SetBoundaryCondition_new("Sol", facenamearray[i], bdctypearray[i], false, &parsedfunctionarray[i]);
-  }
+//   for (int i = 0; i < boundary_conditions.size(); ++i) {
+//     ml_sol.SetBoundaryCondition_new("Sol", facenamearray[i], bdctypearray[i], false, &parsedfunctionarray[i]);
+//   }
+// 
+//   ml_sol.GenerateBdc("All");
 
-  ml_sol.GenerateBdc("All");
 
-
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  //ml_sol.GenerateBdc("Sol");
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  ml_sol.GenerateBdc("Sol");
 
 
 
@@ -418,7 +429,6 @@ int main(int argc, char** argv) {
   system2.SetDirichletBCsHandling(PENALTY);
 
   // Solve Temperature system
-  system2.SetSamePreconditioner();
   system2.MGsolve();
   //END Temperature Multilevel Problem
 
@@ -433,6 +443,7 @@ int main(int argc, char** argv) {
   //gmvio.ParallelWrite(files.GetOutputPath(),"biquadratic",print_vars);
 
   VTKWriter vtkio(&ml_sol);
+  vtkio.SetDebugOutput(true);
   vtkio.Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars);
 
   //GMVWriter gmvio(&ml_sol);
@@ -606,6 +617,7 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 #ifdef HAVE_FPARSER
         //src_term = fpsource.Eval(xyzt);
         src_term = fpsource(&xyzt[0]);
+	//std::cout << xyzt[0]<<" "<<xyzt[1]<<" "<< xyzt[2] <<" "<< src_term<<std::endl;
 #endif
 
         F[i] += (-Lap_rhs + src_term * phi[i]) * weight;
@@ -629,68 +641,68 @@ void AssemblePoissonMatrixandRhs(MultiLevelProblem& ml_prob) {
 
     //number of faces for each type of element
     //number of faces for each type of element
-    unsigned nfaces = mymsh->GetElementFaceNumber(iel);
-
-    // loop on faces
-    for (unsigned jface = 0; jface < nfaces; jface++) {
-
-      // look for boundary faces
-      if (myel->GetBoundaryIndex(iel, jface) > 0) {
-
-        unsigned int faceIndex =  myel->GetBoundaryIndex(iel, jface) - 1u;
-
-        if (ml_sol->GetBoundaryCondition("Sol", faceIndex) == NEUMANN && !ml_sol->Ishomogeneous("Sol", faceIndex)) {
-
-          bdcfunc = (ParsedFunction*)(ml_sol->GetBdcFunction("Sol", faceIndex));
-          unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, order_ind);
-          const unsigned felt = mymsh->GetElementFaceType(iel, jface);
-
-          for (unsigned i = 0; i < nve; i++) {
-            unsigned ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
-            unsigned inode_coord_metis = mymsh->GetSolutionDof(ilocal, iel, 2);
-
-            for (unsigned ivar = 0; ivar < dim; ivar++) {
-              coordinates[ivar][i] = (*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
-            }
-          }
-
-          if (felt != 6)
-          {
-            for (unsigned igs = 0; igs < ml_prob._ml_msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
-              ml_prob._ml_msh->_finiteElement[felt][order_ind]->JacobianSur(coordinates, igs, weight, phi, gradphi, normal);
-
-              xyzt.assign(4, 0.);
-
-              for (unsigned i = 0; i < nve; i++) {
-                for (unsigned ivar = 0; ivar < dim; ivar++) {
-                  xyzt[ivar] += coordinates[ivar][i] * phi[i];
-                }
-              }
-
-              // *** phi_i loop ***
-              for (unsigned i = 0; i < nve; i++) {
-                double surfterm_g = (*bdcfunc)(&xyzt[0]);
-                double bdintegral = phi[i] * surfterm_g * weight;
-                unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
-                F[ilocalnode] += bdintegral;
-              }
-            }
-          }
-          else // 1D : the side elems are points and does not still exist the point elem
-          {
-            // in 1D it is only one point
-            xyzt[0] = coordinates[0][0];
-            xyzt[1] = 0.;
-            xyzt[2] = 0.;
-            xyzt[3] = 0.;
-
-            double bdintegral = (*bdcfunc)(&xyzt[0]);
-            unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, 0);
-            F[ilocalnode] += bdintegral;
-          }
-        }
-      }
-    }
+//     unsigned nfaces = mymsh->GetElementFaceNumber(iel);
+// 
+//     // loop on faces
+//     for (unsigned jface = 0; jface < nfaces; jface++) {
+// 
+//       // look for boundary faces
+//       if (myel->GetBoundaryIndex(iel, jface) > 0) {
+// 
+//         unsigned int faceIndex =  myel->GetBoundaryIndex(iel, jface) - 1u;
+// 
+//         if (ml_sol->GetBoundaryCondition("Sol", faceIndex) == NEUMANN && !ml_sol->Ishomogeneous("Sol", faceIndex)) {
+// 
+//           bdcfunc = (ParsedFunction*)(ml_sol->GetBdcFunction("Sol", faceIndex));
+//           unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, order_ind);
+//           const unsigned felt = mymsh->GetElementFaceType(iel, jface);
+// 
+//           for (unsigned i = 0; i < nve; i++) {
+//             unsigned ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
+//             unsigned inode_coord_metis = mymsh->GetSolutionDof(ilocal, iel, 2);
+// 
+//             for (unsigned ivar = 0; ivar < dim; ivar++) {
+//               coordinates[ivar][i] = (*mymsh->_topology->_Sol[ivar])(inode_coord_metis);
+//             }
+//           }
+// 
+//           if (felt != 6)
+//           {
+//             for (unsigned igs = 0; igs < ml_prob._ml_msh->_finiteElement[felt][order_ind]->GetGaussPointNumber(); igs++) {
+//               ml_prob._ml_msh->_finiteElement[felt][order_ind]->JacobianSur(coordinates, igs, weight, phi, gradphi, normal);
+// 
+//               xyzt.assign(4, 0.);
+// 
+//               for (unsigned i = 0; i < nve; i++) {
+//                 for (unsigned ivar = 0; ivar < dim; ivar++) {
+//                   xyzt[ivar] += coordinates[ivar][i] * phi[i];
+//                 }
+//               }
+// 
+//               // *** phi_i loop ***
+//               for (unsigned i = 0; i < nve; i++) {
+//                 double surfterm_g = (*bdcfunc)(&xyzt[0]);
+//                 double bdintegral = phi[i] * surfterm_g * weight;
+//                 unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
+//                 F[ilocalnode] += bdintegral;
+//               }
+//             }
+//           }
+//           else // 1D : the side elems are points and does not still exist the point elem
+//           {
+//             // in 1D it is only one point
+//             xyzt[0] = coordinates[0][0];
+//             xyzt[1] = 0.;
+//             xyzt[2] = 0.;
+//             xyzt[3] = 0.;
+// 
+//             double bdintegral = (*bdcfunc)(&xyzt[0]);
+//             unsigned int ilocalnode = mymsh->GetLocalFaceVertexIndex(iel, jface, 0);
+//             F[ilocalnode] += bdintegral;
+//           }
+//         }
+//       }
+//     }
 
 
     //--------------------------------------------------------------------------------------------------------
@@ -823,20 +835,28 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1) {
           }
         }
 
-        double SolExact, dSolExactdx, dSolExactdy;
+        double SolExact, dSolExactdx, dSolExactdy, dSolExactdz;
 #ifdef HAVE_FPARSER
         SolExact    = fp_sol(x);
         dSolExactdx = fp_dsoldx(x);
         dSolExactdy = fp_dsoldy(x);
+        dSolExactdz = fp_dsoldz(x);
 #endif
+	
+// 	std::cout <<SolExact - SolT<<std::endl;
+// 	std::cout <<dSolExactdx - gradSolT[0]<<std::endl;
+// 	std::cout <<dSolExactdy - gradSolT[1]<<std::endl;
+// 	std::cout <<dSolExactdz -gradSolT[2]<<std::endl;
+// 	std::cout <<std::endl;
 
         error_vec->add(iproc, ((SolT - SolExact) * (SolT - SolExact) +
                                H1 * ((gradSolT[0] - dSolExactdx) * (gradSolT[0] - dSolExactdx) +
-                                     (gradSolT[1] - dSolExactdy) * (gradSolT[1] - dSolExactdy))
+                                     (gradSolT[1] - dSolExactdy) * (gradSolT[1] - dSolExactdy) +
+                                     (gradSolT[2] - dSolExactdz) * (gradSolT[2] - dSolExactdz))
                               )*weight);
 
         solution_vec->add(iproc, (SolExact * SolExact +
-                                  H1 * (dSolExactdx * dSolExactdx + dSolExactdy * dSolExactdy))*weight);
+                                  H1 * (dSolExactdx * dSolExactdx + dSolExactdy * dSolExactdy + dSolExactdz * dSolExactdz))*weight);
       }
     }
 

@@ -299,6 +299,12 @@ namespace femus {
       _LinSolver[i]->SetElementBlockNumberSolid(_msh[i]->GetNumberOfElements(), 0);
     }
   }
+  
+  void MonolithicFSINonLinearImplicitSystem::SetElementBlockPorousAll() {
+    for(unsigned i = 1; i < _gridn; i++) {
+      _LinSolver[i]->SetElementBlockNumberPorous(_msh[i]->GetNumberOfElements(), 0);
+    }
+  }
 
 
   void MonolithicFSINonLinearImplicitSystem::SetElementBlockNumberFluid(unsigned const &dim_block, unsigned const &overlap) {
@@ -322,6 +328,18 @@ namespace femus {
     for(unsigned i = 1; i < _gridn; i++) {
       unsigned num_block2 = std::min(_num_block, _msh[i]->GetNumberOfElements());
       _LinSolver[i]->SetElementBlockNumberSolid(num_block2, overlap);
+    }
+  }
+  
+  void MonolithicFSINonLinearImplicitSystem::SetElementBlockNumberPorous(unsigned const &dim_block, unsigned const &overlap) {
+    _numblock_test = 1;
+    const unsigned dim = _msh[0]->GetDimension();
+    const unsigned base = pow(2, dim);
+    _num_block = pow(base, dim_block);
+
+    for(unsigned i = 1; i < _gridn; i++) {
+      unsigned num_block2 = std::min(_num_block, _msh[i]->GetNumberOfElements());
+      _LinSolver[i]->SetElementBlockNumberPorous(num_block2, overlap);
     }
   }
 

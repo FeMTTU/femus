@@ -232,9 +232,9 @@ int main (int argc, char** args) {
 
       std::cout << std::endl;
     }
-
+  
   }
-
+mlMsh.PrintInfo();
   return 0;
 }
 

@@ -642,13 +642,13 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
  
   *sol->_Sol[errorIndex] *= (2.*sqrt(N)) / ( 3.*L2norm );
   
-  //std::pair < double, double > norm;
-  //norm.first  = H1normE;
-  //norm.second = H1norm;
-  
   std::pair < double, double > norm;
-  norm.first  = L2normE;
-  norm.second = L2norm;
+  norm.first  = H1normE;
+  norm.second = H1norm;
+  
+//   std::pair < double, double > norm;
+//   norm.first  = L2normE;
+//   norm.second = L2norm;
   
   sol->_Sol[errorIndex]->close();
   
