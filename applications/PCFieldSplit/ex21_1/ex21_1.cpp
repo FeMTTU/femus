@@ -252,9 +252,9 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
-  double dt = 0.0125;
+  double dt = 0.05;
   system.SetIntervalTime(dt);
-  unsigned n_timesteps =64000;
+  unsigned n_timesteps = 20000;
  
   Marker marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
   unsigned elem = marker.GetMarkerElement();

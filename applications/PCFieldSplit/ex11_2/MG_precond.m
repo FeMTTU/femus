@@ -9,19 +9,24 @@ eigimagP = imag(eig(pre));
 figure
 plot( eigrealP , eigimagP, 'k+')
 
-figure
-spy(pre)
-return
 load 'matrix.txt'
 aij = spconvert(matrix);
 aij = full(aij);
-realJ = real(eig(pre*aij));
-imagJ = imag(eig(pre*aij));
-figure
-plot(realJ, imagJ, 'b*')
 
 % figure
 % spy(aij)
+% return
+
+realJ = real(1.-eig(aij*pre));
+imagJ = imag(1.-eig(aij*pre));
+figure
+plot(realJ, imagJ, 'b*')
+
+return;
+y=[realJ';imagJ'];
+fid=fopen('/home/gke/coyi/matlab_MG_preconditioner/eig_ILU_TVP_0p8','w');
+fprintf(fid,'%e %e\n',y);  
+fclose(fid);
  
  
  
