@@ -251,6 +251,10 @@ int main(int argc, char** args) {
   }
   system0.MGsolve();
   
+  
+  std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::endl;
+  
+  
   ///////////////////////////////////////////////////////////////
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NST");
   if(precType == FS_TVp || precType == ASM_TVp || precType == ILU_TVp)

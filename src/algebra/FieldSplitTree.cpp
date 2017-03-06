@@ -677,8 +677,8 @@ namespace femus {
     elementBlockNumber[1] = pow(base, _asmBlockSize);
 
 
-    elementBlockNumber[0] = 256;
-    elementBlockNumber[1] = 256;
+    //elementBlockNumber[0] = 16;
+    //elementBlockNumber[1] = 16;
 
     _asmBlockMaterialRange.resize(level);
 
