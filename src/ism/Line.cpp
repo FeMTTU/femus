@@ -21,7 +21,7 @@
 #include "NumericVector.hpp"
 #include <math.h>
 // #include <cmath.h> //TODO added this
-// #define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1 //TODO and this
+// #define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1  //TODO and this
 #include "PolynomialBases.hpp"
 
 namespace femus {
