@@ -20,7 +20,8 @@
 #include "Line.hpp"
 #include "NumericVector.hpp"
 #include <math.h>
-
+// #include <cmath.h> //TODO added this
+// #define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1 //TODO and this
 #include "PolynomialBases.hpp"
 
 namespace femus {
@@ -634,11 +635,11 @@ namespace femus {
 
             // double s = (tstep + _c[order - 1][istep]) / n;
 
-            
+
             if(_sol->GetIfFSI()) {
-	      unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
-	      MagneticForceWire(x, Fm, material);
-	    }
+              unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
+              MagneticForceWire(x, Fm, material, 0);
+            }
 
 //             for(unsigned l = 0; l < Fm.size(); l++) {
 //               std::cout << "Fm[" << l << "]=" << Fm[l] << std::endl;
@@ -875,18 +876,42 @@ namespace femus {
   }
 
 
-  void Line::MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material) {
+  void Line::MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material, unsigned forceType) {
+
+    //case 0: infinitely long wire with a current I flowing modelled by the line identified by x and v
+    //case 1: current loop of radius a, center x and for z-axis the line identified by x and v
+
+    //BEGIN magnetic and electric parameters
 
     double PI = acos(-1.);
-
+    double I = 5.e5; // electric current intensity
+    double Msat = 1.e6;  //  magnetic saturation
+    double  chi = 3.; //magnetic susceptibility
     double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
+    double H;
+    std::vector <double> gradH(3);
+    std::vector <double> gradHSquared(3);
+    std::vector<double> vectorH(3);
+    double H0 = Msat / chi;
 
-    double muf = (material == 2)? 3.5 * 1.0e-3 : 1.0e100; // fluid viscosity
+    //END
+
+
+    //BEGIN fluid viscosity
+
+    double muf = (material == 2) ? 3.5 * 1.0e-3 : 1.0e100; // fluid viscosity
+
+    //END
+
+
+    //BEGIN geometric parameters
 
     double D = 500 * 1.e-9;       //diameter of the particle
 
-    std::vector <double> v(3);   //direction vector of the line that identifies the infinite wire
+    double a = 0.0225; //radius of the circular current loop in cm
 
+    std::vector <double> v(3);   //case 0: direction vector of the line that identifies the infinite wire
+    //case 1: z axis of the current loop (symmetry axis)
 //     aortic bifurcation
     v[0] = 0.;
     v[1] = 0.;
@@ -897,8 +922,8 @@ namespace femus {
 //     v[1] = 1.;
 //     v[2] = 0.;
 
-    std::vector <double> x(3);   //point that with v identifies the line
-
+    std::vector <double> x(3);   //case 0: point that with v identifies the line of the wire
+    //case 1: center of the current loop
 //aortic bifurcation
     x[0] = 0.015;
     x[1] = 0.;
@@ -909,55 +934,168 @@ namespace femus {
 //     x[1] = 0.;
 //     x[2] = 3.;
 
-    double I = 5.e5; // electric current intensity
-    double Msat = 1.e6;  //  magnetic saturation
-    double  chi = 3.; //magnetic susceptibility
+
+    //END
+
+
+    //BEGIN extraction of the coordinates of the particle
 
     std::vector <double> xM(3);
     xM[0] = xMarker[0];
     xM[1] = xMarker[1];
     xM[2] = (xMarker.size() == 3) ? xMarker[2] : 0. ;
 
-    double Gamma = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    double Omega = (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) +
-                   (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) +
-                   (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) ;
+    //END
 
-    std::vector<double> gradOmega(3);
 
-    gradOmega[0] = 2 * v[2] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) + 2 * v[1] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
+    //BEGIN evaluate H
 
-    gradOmega[1] = 2 * v[2] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
+    switch(forceType) { // infinite wire
 
-    gradOmega[2] = - 2 * v[1] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2]));
+      case 0: {
 
-    double H = (I / (2 * PI)) * Gamma * (1 / sqrt(Omega)); //absolute value of the magnetic field at x = xMarker
+        double Gamma;
+        double Omega;
+        std::vector<double> gradOmega(3);
 
-    double H0 = Msat / chi;
+        Gamma = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+        Omega = (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) +
+                (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) +
+                (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) ;
+
+        gradOmega[0] = 2 * v[2] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) + 2 * v[1] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
+
+        gradOmega[1] = 2 * v[2] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
+
+        gradOmega[2] = - 2 * v[1] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2]));
+
+        H = (I / (2 * PI)) * Gamma * (1 / sqrt(Omega));
+
+        gradHSquared[0] = (I / (2 * PI)) * (I / (2 * PI)) * ((-1) * Gamma * Gamma * (1 / (Omega * Omega))) * gradOmega[0];
+        gradHSquared[1] = (I / (2 * PI)) * (I / (2 * PI)) * ((-1) * Gamma * Gamma * (1 / (Omega * Omega))) * gradOmega[1];
+        gradHSquared[2] = (I / (2 * PI)) * (I / (2 * PI)) * ((-1) * Gamma * Gamma * (1 / (Omega * Omega))) * gradOmega[2];
+
+        gradH[0] = (I / (2 * PI)) * ((-0.5) * Gamma * gradOmega[0]) / sqrt(Omega * Omega * Omega);
+        gradH[1] = (I / (2 * PI)) * ((-0.5) * Gamma * gradOmega[1]) / sqrt(Omega * Omega * Omega);
+        gradH[2] = (I / (2 * PI)) * ((-0.5) * Gamma * gradOmega[2]) / sqrt(Omega * Omega * Omega);
+
+      }
+      break;
+
+      case 1: {
+
+//         for(unsigned i = 0; i < 3 ; i++) {
+//           xM[i] -= x[i];
+//         }
+//         double rhoSquared = xM[0] * xM[0] + xM[1] * xM[1];
+//         double rSquared = rhoSquared + xM[2] * xM[2];
+//         double alphaSquared = a * a + rSquared - 2 * a * sqrt(rhoSquared);
+//         double betaSquared = a * a + rSquared + 2 * a * sqrt(rhoSquared);
+//         double kSquared = 1 - (alphaSquared / betaSquared);
+//         double gamma = xM[0] * xM[0] - xM[1] * xM[1];
+//         double C = (I * mu0) / PI;
+//         std::vector < std::vector <double> > jacobianVectorH(3);
+//         for(unsigned i = 0; i < 3; i++) {
+//           jacobianVectorH[i].resize(3);
+//         }
+// 
+//         vectorH[0] = x[0] + (1 / mu0) * ((C * xM[0] * xM[2]) / (2 * alphaSquared * sqrt(betaSquared) * rhoSquared)) * ((a * a + rSquared) * std::comp_ellint_2(kSquared) - alphaSquared * std::comp_ellint_1(kSquared));
+//         vectorH[1] = (xM[1] / xM[0]) * vectorH[0];
+//         vectorH[2] = x[2] + (1 / mu0) * (C / (2 * alphaSquared * sqrt(betaSquared))) * ((a * a - rSquared) * std::comp_ellint_2(kSquared) + alphaSquared * std::comp_ellint_1(kSquared));
+// 
+//         jacobianVectorH[0][0] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared)) * (
+//                                   (a * a * a * a * (- gamma * (3 * xM[2] * xM[2] + a * a) + rhoSquared * (8 * xM[0] * xM[0] - xM[1] * xM[1])) -
+//                                    a * a * (rhoSquared * rhoSquared * (5 * xM[0] * xM[0] + xM[1] * xM[1]) -
+//                                             2 * rhoSquared * xM[2] * xM[2] * (2 * xM[0] * xM[0] + xM[1] * xM[1]) + 3 * xM[2] * xM[2] * xM[2] * xM[2] * xM[1]) -
+//                                    rSquared * rSquared * (2 * xM[0] * xM[0] * xM[0] * xM[0] + gamma * (xM[1] * xM[1] + xM[2] * xM[2])))  * std::comp_ellint_2(kSquared) +
+//                                   (a * a * (gamma * (a * a + 2 * xM[2] * xM[2]) - rhoSquared * (3 * xM[0] * xM[0] - 2 * xM[1] * xM[1])) +
+//                                    rSquared * (2 * xM[0] * xM[0] * xM[0] * xM[0] + gamma * (xM[1] * xM[1] + xM[2] * xM[2]))) * alphaSquared * std::comp_ellint_1(kSquared));
+// 
+// 
+//         jacobianVectorH[0][1] = ((C * xM[0] * xM[1] * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared)) * (
+//                                   (3 * a * a * a * a * (3 * rhoSquared - 2 * xM[2] * xM[2]) - rSquared * rSquared * (2 * rSquared + rhoSquared) - 2 * a * a * a * a * a * a  -
+//                                    2 * a * a * (2 * rhoSquared * rhoSquared - rhoSquared * xM[2] * xM[2] + 3 * xM[2] * xM[2] * xM[2] * xM[2])) * std::comp_ellint_2(kSquared) +
+//                                   (rSquared * (2 * rSquared + rhoSquared) - a * a * (5 * rhoSquared - 4 * xM[2] * xM[2]) + 2 * a * a * a * a) * alphaSquared * std::comp_ellint_1(kSquared));
+// 
+// 
+//         jacobianVectorH[0][2] = ((C * xM[0]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared)) * (
+//                                   ((rhoSquared - a * a) * (rhoSquared - a * a) * (rhoSquared + a * a) + 2 * xM[2] * xM[2] * (a * a * a * a - 6 * a * a * rhoSquared + rhoSquared * rhoSquared) +
+//                                    xM[2] * xM[2] * xM[2] * xM[2] * (a * a + rhoSquared)) *  std::comp_ellint_2(kSquared) -
+//                                   ((rhoSquared - a * a) * (rhoSquared - a * a) + xM[2] * xM[2] * (rhoSquared + a * a)) * alphaSquared *  std::comp_ellint_1(kSquared));
+// 
+// 
+//         jacobianVectorH[1][0] = jacobianVectorH[0][1];
+// 
+// 
+//         jacobianVectorH[1][1] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared)) * (
+//                                   (a * a * a * a * (gamma * (3 * xM[2] * xM[2] + a * a) + rhoSquared * (8 * xM[1] * xM[1] - xM[0] * xM[0])) -
+//                                    a * a * (rhoSquared * rhoSquared * (5 * xM[1] * xM[1] + xM[0] * xM[0]) - 2 * rhoSquared * xM[2] * xM[2] * (2 * xM[1] * xM[1] + xM[0] * xM[0]) -
+//                                             3 * xM[2] * xM[2] * xM[2] * xM[2] * xM[1])  - rSquared * rSquared * (2 * xM[1] * xM[1] * xM[1] * xM[1] - gamma * (xM[0] * xM[0] + xM[2] * xM[2]))) * std::comp_ellint_2(kSquared) +
+//                                   (a * a * (- gamma * (a * a + 2 * xM[2] * xM[2])  - rhoSquared * (3 * xM[1] * xM[1] - 2 * xM[0] * xM[0])) + rSquared * (2 * xM[1] * xM[1] * xM[1] * xM[1] -
+//                                       gamma * (xM[0] * xM[0] + xM[2] * xM[2]))) * alphaSquared * std::comp_ellint_1(kSquared));
+// 
+// 
+//         jacobianVectorH[1][2] = (xM[1] / xM[0]) * jacobianVectorH[0][2];
+// 
+// 
+//         jacobianVectorH[2][0] = jacobianVectorH[0][2];
+// 
+// 
+//         jacobianVectorH[2][1] = jacobianVectorH[1][2];
+// 
+// 
+//         jacobianVectorH[2][2] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared))) * (
+//                                   (6 * a * a * (rhoSquared - xM[2] * xM[2]) - 7 * a * a * a * a + rSquared * rSquared) * std::comp_ellint_2(kSquared) +
+//                                   (a * a - rSquared) * alphaSquared * std::comp_ellint_1(kSquared));
+// 
+//         H = sqrt(vectorH[0] * vectorH[0] + vectorH[1] * vectorH[1] * vectorH[2] * vectorH[2]);
+// 
+// 
+//         gradHSquared[0] = 2 * vectorH[0] * jacobianVectorH[0][0] + 2 * vectorH[1] * jacobianVectorH[1][0] + 2 * vectorH[2] * jacobianVectorH[2][0];
+//         gradHSquared[1] = 2 * vectorH[0] * jacobianVectorH[0][1] + 2 * vectorH[1] * jacobianVectorH[1][1] + 2 * vectorH[2] * jacobianVectorH[2][1];
+//         gradHSquared[2] = 2 * vectorH[0] * jacobianVectorH[0][2] + 2 * vectorH[1] * jacobianVectorH[1][2] + 2 * vectorH[2] * jacobianVectorH[2][2];
+// 
+//         gradH[0] = 0.5 * (1 / H) * gradHSquared[0];
+//         gradH[1] = 0.5 * (1 / H) * gradHSquared[1];
+//         gradH[2] = 0.5 * (1 / H) * gradHSquared[2];
+
+      }
+
+      break;
+
+    }
+    //END valuate H
+
+
+    //BEGIN evaluate Fm
 
     if(H < H0) {
 
+
       double C1 = (PI * D * D * D * mu0 * chi) / 12;
 
-      Fm[0] = -C1 * I *  I * Gamma * Gamma * gradOmega[0] / (Omega * Omega * 4 * PI * PI);
-      Fm[1] = -C1 * I *  I * Gamma * Gamma * gradOmega[1] / (Omega * Omega * 4 * PI * PI);
-      Fm[2] = -C1 * I *  I * Gamma * Gamma * gradOmega[2] / (Omega * Omega * 4 * PI * PI);
-
+      Fm[0] = C1 * gradHSquared[0];
+      Fm[1] = C1 * gradHSquared[1];
+      Fm[2] = C1 * gradHSquared[2];
     }
 
     else {
 
       double C2 = (PI * D * D * D * mu0 * Msat) / 6;
 
-      Fm[0] = - 0.5 * C2 * I *  Gamma * gradOmega[0] / sqrt(Omega * Omega * Omega * 2 * PI);
-      Fm[1] = - 0.5 * C2 * I *  Gamma * gradOmega[1] / sqrt(Omega * Omega * Omega * 2 * PI);
-      Fm[2] = - 0.5 * C2 * I *  Gamma * gradOmega[2] / sqrt(Omega * Omega * Omega * 2 * PI);
+      Fm[0] = C2 * gradH[0];
+      Fm[1] = C2 * gradH[1];
+      Fm[2] = C2 * gradH[2];
 
     }
+
 
     for(unsigned i = 0 ; i < Fm.size(); i++) {
       Fm[i] = Fm[i] / (3 * PI * D * muf) ;
     }
+
+    //END
+
 
     //BEGIN cheating to have attractive force
 
@@ -972,6 +1110,7 @@ namespace femus {
 
 
 }
+
 
 
 
