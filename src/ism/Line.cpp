@@ -647,7 +647,7 @@ namespace femus
 
             if (_sol->GetIfFSI()) {
               unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
-              MagneticForceWire(x, Fm, material, 1);
+              MagneticForce(x, Fm, material, 1);
             }
 
 //             for(unsigned l = 0; l < Fm.size(); l++) {
@@ -880,7 +880,7 @@ namespace femus
   }
 
 
-  void Line::MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material, unsigned forceType)
+  void Line::MagneticForce(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material, unsigned forceType)
   {
 
     //case 0: infinitely long wire with a current I flowing modelled by the line identified by x and v
@@ -889,7 +889,7 @@ namespace femus
     //BEGIN magnetic and electric parameters
 
     double PI = acos(-1.);
-    double I = 5.e5; // electric current intensity
+    double I = 1.e5; // electric current intensity
     double Msat = 1.e6;  //  magnetic saturation
     double  chi = 3.; //magnetic susceptibility
     double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
@@ -913,28 +913,48 @@ namespace femus
 
     double D = 500 * 1.e-9;       //diameter of the particle
 
-    double a = 0.0225; //radius of the circular current loop in cm
+    double a = 0.005; //radius of the circular current loop in cm
 
     std::vector <double> v(3);   //case 0: direction vector of the line that identifies the infinite wire
     //case 1: z axis of the current loop (symmetry axis)
-//     aortic bifurcation
-    v[0] = 0.;
-    v[1] = 0.;
-    v[2] = 1.;
 
-    //bent tube no FSI
+
+//     aortic bifurcation wire
+//     v[0] = 0.;
+//     v[1] = 0.;
+//     v[2] = 1.;
+
+
+    
+//     aortic bifurcation current loop
+    v[0] = -1.;
+    v[1] = 0.;
+    v[2] = 0.;
+    
+    //TODO put the def of u here otherwise we will forget
+
+
+
+    //bent tube no FSI wire
 //     v[0] = 0.;
 //     v[1] = 1.;
 //     v[2] = 0.;
 
     std::vector <double> x(3);   //case 0: point that with v identifies the line of the wire
     //case 1: center of the current loop
-//aortic bifurcation
-    x[0] = 0.015;
-    x[1] = 0.;
-    x[2] = 0.;
+//aortic bifurcation wire
+//     x[0] = 0.015;
+//     x[1] = 0.;
+//     x[2] = 0.;
 
-//bent tube no FSI
+
+    //aortic bifurcation current loop
+     x[0] = 0.02;
+     x[1] = 0.;
+     x[2] = 0.;
+
+    
+    //bent tube no FSI wire
 //     x[0] = 9.;
 //     x[1] = 0.;
 //     x[2] = 3.;
@@ -955,9 +975,9 @@ namespace femus
 
     //BEGIN evaluate H
 
-    switch (forceType) { // infinite wire
+    switch (forceType) { 
 
-      case 0: {
+      case 0: {  // infinite wire
 
           double Gamma;
           double Omega;
@@ -987,7 +1007,7 @@ namespace femus
         }
         break;
 
-      case 1: {
+      case 1: {  //current loop
 
           for (unsigned i = 0; i < 3 ; i++) {
             xM[i] -= x[i];
@@ -1017,21 +1037,26 @@ namespace femus
           v[1] /= v2;
           v[2] /= v2;
 
-          std::vector <double> u(3); //will be the x'-axis
+          std::vector <double> u(3); // will be the x'-axis
           std::vector <double> w(3); // will be the y'-axis
 
-          unsigned imax = 0;
-          double vmax = fabs(v[0]);
-          for (unsigned i = 1; i < 3; i++) {
-            if ( fabs(v[i]) > vmax ) {
-              imax = i;
-              vmax = fabs(v[i]);
-            }
-          }
+	  u[0] = 1.;
+	  u[1] = 1.;
+	  u[2] = 0.;
+	  	  
+	  
+//           unsigned imax = 0;
+//           double vmax = fabs(v[0]);
+//           for (unsigned i = 1; i < 3; i++) {
+//             if ( fabs(v[i]) > vmax ) {
+//               imax = i;
+//               vmax = fabs(v[i]);
+//             }
+//           }
 
-          u[0] = 1. - (imax == 0) * (1 + (v[1] + v[2]) / v[0] );
-          u[1] = 1. - (imax == 1) * (1 + (v[2] + v[0]) / v[1] );
-          u[2] = 1. - (imax == 2) * (1 + (v[0] + v[1]) / v[2] );
+//           u[0] = 1. - (imax == 0) * (1 + (v[1] + v[2]) / v[0] );
+//           u[1] = 1. - (imax == 1) * (1 + (v[2] + v[0]) / v[1] );
+//           u[2] = 1. - (imax == 2) * (1 + (v[0] + v[1]) / v[2] );
 
           double u2 = sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2] );
           u[0] /= u2;
@@ -1111,7 +1136,7 @@ namespace femus
             for (unsigned j = 0; j < 3; j++) {
               vectorH[i] += R[i][j] * vectorHp[j];
               jacobianVectorH[i][j] = 0.;
-	      std::cout << R[i][j] <<" ";
+	      //std::cout << R[i][j] <<" ";
 	      //std::cout << jacobianVectorHp[i][j] <<" ";
               for (unsigned k = 0; k < 3; k++) {
                 jacobianVectorH[i][j] += R[i][k] * jacobianVectorHp[k][j];
@@ -1151,7 +1176,7 @@ namespace femus
 	  
         }
         
-        std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::endl;
+        //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::endl;
         
         break;
 
@@ -1193,7 +1218,7 @@ namespace femus
 
     for (unsigned i = 0 ; i < Fm.size(); i++) {
       Fm[i] = - Fm[i] ;
-      std::cout << Fm[i] << " " <<std::flush;
+      //std::cout << Fm[i] << " " <<std::flush;
     }
 
     //END cheating
