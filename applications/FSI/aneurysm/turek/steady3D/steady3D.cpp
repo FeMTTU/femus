@@ -77,7 +77,7 @@ int main(int argc, char **args) {
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
    std::string infile;
   if(simulation == 0) {
-    infile = "./input/Turek_3D_D.neu";
+    infile = "./input/Turek_3D_F2.neu"; //Turek_3D_version2.neu gruppi 9 e 10 uniti
   }
   else if(simulation == 1) {
     infile = "./input/aneurysm_omino.neu";
