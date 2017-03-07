@@ -427,6 +427,7 @@ namespace femus {
 		}
                 else if (dim == 3){
 		  DE = 0.000112; // porous3D
+		  //DE = 0.000200; // porous3D
 		}
                 double b = 4188;
                 double a = 1452;

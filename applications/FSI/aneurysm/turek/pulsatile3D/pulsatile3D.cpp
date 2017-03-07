@@ -259,10 +259,14 @@ int main(int argc, char ** args)
   system.SetMgType(F_CYCLE);
 
   system.SetNonLinearConvergenceTolerance(1.e-9);
-  system.SetResidualUpdateConvergenceTolerance(1.e-13);
+  //system.SetResidualUpdateConvergenceTolerance(1.e-13);
   system.SetMaxNumberOfNonLinearIterations(4);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
-
+  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
+ 
+  
+  system.SetMaxNumberOfLinearIterations(4);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-13);
+  
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
 
@@ -495,7 +499,7 @@ bool SetBoundaryConditionTurek(const std::vector < double > & x, const char name
       //value = -0.2 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
       value = -(1. - r2) * vel[j] * ramp; //inflow
 
-      std::cout << value << " " << time << " " << ramp << std::endl;
+      //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
     }
     else if(2 == facename) {
