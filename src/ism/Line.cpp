@@ -889,7 +889,7 @@ namespace femus
     //BEGIN magnetic and electric parameters
 
     double PI = acos(-1.);
-    double I = 1.e5; // electric current intensity
+    double I = 5.e5; // electric current intensity
     double Msat = 1.e6;  //  magnetic saturation
     double  chi = 3.; //magnetic susceptibility
     double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
@@ -913,7 +913,7 @@ namespace femus
 
     double D = 500 * 1.e-9;       //diameter of the particle
 
-    double a = 0.005; //radius of the circular current loop in cm
+    double a = 0.005; //radius of the circular current loop in m
 
     std::vector <double> v(3);   //case 0: direction vector of the line that identifies the infinite wire
     //case 1: z axis of the current loop (symmetry axis)
@@ -927,9 +927,9 @@ namespace femus
 
     
 //     aortic bifurcation current loop
-    v[0] = -1.;
+    v[0] = 0.;
     v[1] = 0.;
-    v[2] = 0.;
+    v[2] = 1.;
     
     //TODO put the def of u here otherwise we will forget
 
@@ -949,7 +949,7 @@ namespace femus
 
 
     //aortic bifurcation current loop
-     x[0] = 0.02;
+     x[0] = 0.015;
      x[1] = 0.;
      x[2] = 0.;
 
@@ -1039,24 +1039,19 @@ namespace femus
 
           std::vector <double> u(3); // will be the x'-axis
           std::vector <double> w(3); // will be the y'-axis
-
-	  u[0] = 1.;
-	  u[1] = 1.;
-	  u[2] = 0.;
-	  	  
 	  
-//           unsigned imax = 0;
-//           double vmax = fabs(v[0]);
-//           for (unsigned i = 1; i < 3; i++) {
-//             if ( fabs(v[i]) > vmax ) {
-//               imax = i;
-//               vmax = fabs(v[i]);
-//             }
-//           }
+          unsigned imax = 0;
+          double vmax = fabs(v[0]);
+          for (unsigned i = 1; i < 3; i++) {
+            if ( fabs(v[i]) > vmax ) {
+              imax = i;
+              vmax = fabs(v[i]);
+            }
+          }
 
-//           u[0] = 1. - (imax == 0) * (1 + (v[1] + v[2]) / v[0] );
-//           u[1] = 1. - (imax == 1) * (1 + (v[2] + v[0]) / v[1] );
-//           u[2] = 1. - (imax == 2) * (1 + (v[0] + v[1]) / v[2] );
+          u[0] = (imax == 0) ? - (v[1] + v[2]) / v[0]  : 1;
+          u[1] = (imax == 1) ? - (v[2] + v[0]) / v[1]  : 1;
+          u[2] = (imax == 2) ? - (v[0] + v[1]) / v[2]  : 1;
 
           double u2 = sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2] );
           u[0] /= u2;
@@ -1214,12 +1209,12 @@ namespace femus
     //END
 
 
-    //BEGIN cheating to have attractive force
-
-    for (unsigned i = 0 ; i < Fm.size(); i++) {
-      Fm[i] = - Fm[i] ;
-      //std::cout << Fm[i] << " " <<std::flush;
-    }
+//     //BEGIN cheating to have attractive force
+// 
+//     for (unsigned i = 0 ; i < Fm.size(); i++) {
+//       Fm[i] = - Fm[i] ;
+//       //std::cout << Fm[i] << " " <<std::flush;
+//     }
 
     //END cheating
 
