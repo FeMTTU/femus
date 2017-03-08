@@ -74,7 +74,7 @@ int main(int argc, char **args)
   }
 
   // ******* Set physics parameters *******
-  double Lref, Uref, rhof, muf, rhos, ni, E;
+  double Lref, Uref, rhof, muf, rhos, ni, E, E1;
 
   Lref = 1.;
   Uref = 1.;
@@ -84,12 +84,16 @@ int main(int argc, char **args)
   rhos = 1120;
   ni = 0.5;
   E = 1000000; //turek:120000*1.e1;
+  E1 = 100000;
 
   Parameter par(Lref, Uref);
 
   // Generate Solid Object
   Solid solid;
   solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
+  
+  Solid solid1;
+  solid1 = Solid(par, E1, ni, rhos, "Mooney-Rivlin");
 
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -131,6 +135,8 @@ int main(int argc, char **args)
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 1);
   ml_sol.AssociatePropertyToSolution("P", "Pressure", false); // Add this line
+  
+  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -154,6 +160,7 @@ int main(int argc, char **args)
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
+  ml_prob.parameters.set<Solid>("Solid1") = solid1;
 
   // ******* Add FSI system to the MultiLevel problem *******
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
@@ -225,6 +232,9 @@ int main(int argc, char **args)
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
   
   std::vector <double> data;
+  for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
+    SetLambda(ml_sol, level , SECOND, ELASTICITY);
+  }
   data.resize(5);
   system.MGsolve();
   data[0]=0;
