@@ -28,12 +28,12 @@ namespace femus {
     SparseMatrix	* myKK		=  myLinEqSolver->_KK;
     NumericVector	* myRES		=  myLinEqSolver->_RES;
 
-    
+
     bool assembleMatrix = my_nnlin_impl_sys.GetAssembleMatrix();
     // call the adept stack object
     adept::Stack& s = FemusInit::_adeptStack;
-    if(assembleMatrix) s.continue_recording();
-    
+    if ( assembleMatrix ) s.continue_recording();
+
     const unsigned dim = mymsh->GetDimension();
     const unsigned nabla_dim = 3 * ( dim - 1 );
     const unsigned max_size = static_cast< unsigned > ( ceil ( pow ( 3, dim ) ) );
@@ -216,7 +216,7 @@ namespace femus {
 
     start_time = clock();
 
-    if (assembleMatrix) myKK->zero();
+    if ( assembleMatrix ) myKK->zero();
 
     // *** element loop ***
     for ( int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++ ) {
@@ -305,7 +305,7 @@ namespace femus {
 
       //if (igrid==gridn || !myel->GetRefinedElementIndex(iel) ) {
 
-      if(assembleMatrix) s.new_recording();
+      if ( assembleMatrix ) s.new_recording();
 
       for ( unsigned idim = 0; idim < dim; idim++ ) {
         for ( int j = 0; j < nve; j++ ) {
@@ -608,7 +608,8 @@ namespace femus {
                 speed_old = sqrt ( speed_old + eps );
                 double DE = 0.;
                 if ( dim == 2 ) {
-                  DE = 0.00006; // turek2D
+		  DE = 0.0002; // AAA_thrombus_2D
+                  //DE = 0.00006; // turek2D
                 }
                 else if ( dim == 3 ) {
                   DE = 0.000112; // porous3D
@@ -652,7 +653,7 @@ namespace femus {
 // 					    - AdvaleVAR[idim]      	             // advection term
 // 					    - IRe * LapvelVAR[idim]	             // viscous dissipation
                                             //- SolVAR[dim + idim] * ( IRe / K + 0.5 * C2 * speed ) * phi[i]
-					    - (SolVAR[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi[i] + phiSupg[i])
+                                            - ( SolVAR[dim + idim] - meshVel[idim] ) * ( IRe / K + 0.5 * C2 * speed ) * ( phi[i] + phiSupg[i] )
                                             + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
 
@@ -660,7 +661,7 @@ namespace femus {
 // 					      - AdvaleVAR_old[idim]               	         // advection term
 // 					      - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
                                                //- SolVAR_old[dim + idim] * ( IRe / K + 0.5 * C2 * speed_old ) * phi_old[i]
-					       - (SolVAR_old[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi_old[i] + phiSupg_old[i])
+                                               - ( SolVAR_old[dim + idim] - meshVel[idim] ) * ( IRe / K + 0.5 * C2 * speed ) * ( phi_old[i] + phiSupg_old[i] )
                                                + SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
                                              ) * Weight_old;			                 // at time t-dt
 
@@ -959,36 +960,36 @@ namespace femus {
         myRES->add_vector_blocked ( Rhs[indexVAR[i]], dofsVAR[i] );
       }
 
-      if (assembleMatrix){
-	//Store equations
-	for ( int i = 0; i < 2 * dim; i++ ) {
-	  s.dependent ( &aRhs[indexVAR[i]][0], nve );
-	  s.independent ( &Soli[indexVAR[i]][0], nve );
-	}
+      if ( assembleMatrix ) {
+        //Store equations
+        for ( int i = 0; i < 2 * dim; i++ ) {
+          s.dependent ( &aRhs[indexVAR[i]][0], nve );
+          s.independent ( &Soli[indexVAR[i]][0], nve );
+        }
 
-	s.dependent ( &aRhs[indexVAR[2 * dim]][0], nve1 );
-	s.independent ( &Soli[indexVAR[2 * dim]][0], nve1 );
-	s.jacobian ( &Jac[0] );
-	unsigned nveAll = ( 2 * dim * nve + nve1 );
+        s.dependent ( &aRhs[indexVAR[2 * dim]][0], nve1 );
+        s.independent ( &Soli[indexVAR[2 * dim]][0], nve1 );
+        s.jacobian ( &Jac[0] );
+        unsigned nveAll = ( 2 * dim * nve + nve1 );
 
-	for ( int inode = 0; inode < nveAll; inode++ ) {
-	  for ( int jnode = 0; jnode < nveAll; jnode++ ) {
-	    KKloc[inode * nveAll + jnode] = -Jac[jnode * nveAll + inode];
-	  }
-	}
-      
+        for ( int inode = 0; inode < nveAll; inode++ ) {
+          for ( int jnode = 0; jnode < nveAll; jnode++ ) {
+            KKloc[inode * nveAll + jnode] = -Jac[jnode * nveAll + inode];
+          }
+        }
 
-	myKK->add_matrix_blocked ( KKloc, dofsAll, dofsAll );
-	s.clear_independents();
-	s.clear_dependents();
+
+        myKK->add_matrix_blocked ( KKloc, dofsAll, dofsAll );
+        s.clear_independents();
+        s.clear_dependents();
 
 
       }
       //END local to global assembly
     } //end list of elements loop
 
-    if (assembleMatrix) myKK->close();
-    
+    if ( assembleMatrix ) myKK->close();
+
     myRES->close();
 
     delete area_elem_first;
