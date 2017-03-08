@@ -54,7 +54,7 @@ namespace femus {
 
       void UpdateLine();
       
-      void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material);
+      void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material, unsigned forceType);
 
 
     private:

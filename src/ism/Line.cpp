@@ -19,11 +19,17 @@
 #include "Marker.hpp"
 #include "Line.hpp"
 #include "NumericVector.hpp"
-#include <math.h>
-
+#include <cmath>
 #include "PolynomialBases.hpp"
 
-namespace femus {
+#include <boost/math/special_functions/ellint_1.hpp>
+#include <boost/math/special_functions/ellint_2.hpp>
+
+using boost::math::ellint_1;
+using boost::math::ellint_2;
+
+namespace femus
+{
 
   const double Line::_a[4][4][4] = {
     { {} // first order
@@ -59,7 +65,8 @@ namespace femus {
 
   Line::Line(const std::vector < std::vector < double > > x,
              const std::vector <MarkerType> &markerType,
-             Solution *sol, const unsigned & solType) {
+             Solution *sol, const unsigned & solType)
+  {
 
     _sol = sol;
     _mesh = _sol->GetMesh();
@@ -78,7 +85,7 @@ namespace femus {
     _particles.resize(_size);
     _printList.resize(_size);
 
-    for(unsigned j = 0; j < _size; j++) {
+    for (unsigned j = 0; j < _size; j++) {
       particles[j] = new Marker(x[j], markerType[j], _sol, solType, true);
     }
 
@@ -150,12 +157,12 @@ namespace femus {
 
     //BEGIN reorder the markers by proc
     unsigned counter = 0;
-    for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+    for (unsigned iproc = 0; iproc < _nprocs; iproc++) {
       _markerOffset[iproc] = counter;
       //unsigned  offsetCounter = counter;
-      for(unsigned j = 0; j < _size; j++) {
+      for (unsigned j = 0; j < _size; j++) {
         unsigned markerProc = particles[j]->GetMarkerProc(_sol);
-        if(markerProc == iproc) {
+        if (markerProc == iproc) {
           _particles[counter] = particles[j];
           _printList[j] = counter;
           counter++;
@@ -272,7 +279,7 @@ namespace femus {
 
     _line.resize(_size + 1);
 
-    for(unsigned j = 0; j < _size; j++) {
+    for (unsigned j = 0; j < _size; j++) {
       _particles[_printList[j]]->GetMarkerCoordinates(_line[j]);
     }
     _particles[_printList[0]]->GetMarkerCoordinates(_line[_size]);
@@ -290,19 +297,21 @@ namespace femus {
 //     exit(0);
   };
 
-  Line::~Line() {
-    for(unsigned j = 0; j < _size; j++) {
+  Line::~Line()
+  {
+    for (unsigned j = 0; j < _size; j++) {
       //std::cout << j << " " << _particles[j] << std::endl<< std::flush;
       delete _particles[j];
     }
   }
 
-  void Line::UpdateLine() {
+  void Line::UpdateLine()
+  {
 
     std::vector < Marker*> particles(_size);
     std::vector < unsigned> printList(_size);
 
-    for(unsigned j = 0; j < _size; j++) {
+    for (unsigned j = 0; j < _size; j++) {
       particles[j] = _particles[j];
 //       printList[j] = _printList[j];
     }
@@ -387,14 +396,14 @@ namespace femus {
 
     //BEGIN reorder the markers by proc
     unsigned counter = 0;
-    for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+    for (unsigned iproc = 0; iproc < _nprocs; iproc++) {
       _markerOffset[iproc] = counter;
-      for(unsigned j = 0; j < _size; j++) {
+      for (unsigned j = 0; j < _size; j++) {
         unsigned markerProc = particles[j]->GetMarkerProc(_sol);
-        if(markerProc == iproc) {
+        if (markerProc == iproc) {
           _particles[counter] = particles[j];
-          for(unsigned iList = 0; iList < _size; iList++) {
-            if(printList[iList] == j) {
+          for (unsigned iList = 0; iList < _size; iList++) {
+            if (printList[iList] == j) {
               _printList[iList] = counter;
               break;
             }
@@ -513,7 +522,7 @@ namespace femus {
 //
 //     //END reorder markers also by element
 
-    for(unsigned j = 0; j < _size; j++) {
+    for (unsigned j = 0; j < _size; j++) {
 
       _particles[_printList[j]]->GetMarkerCoordinates(_line[j]);
     }
@@ -542,7 +551,8 @@ namespace femus {
 
   }
 
-  void Line::AdvectionParallel(const unsigned &n, const double& T, const unsigned &order) {
+  void Line::AdvectionParallel(const unsigned &n, const double& T, const unsigned &order)
+  {
 
     //BEGIN  Initialize the parameters for all processors
 
@@ -552,7 +562,7 @@ namespace femus {
     vector < unsigned > solVIndex(_dim);
     solVIndex[0] = _sol->GetIndex("U");    // get the position of "U" in the ml_sol object
     solVIndex[1] = _sol->GetIndex("V");    // get the position of "V" in the ml_sol object
-    if(_dim == 3) solVIndex[2] = _sol->GetIndex("W");      // get the position of "V" in the ml_sol object
+    if (_dim == 3) solVIndex[2] = _sol->GetIndex("W");     // get the position of "V" in the ml_sol object
     unsigned solVType = _sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
     std::vector < double > phi;
@@ -569,7 +579,7 @@ namespace femus {
     std::vector < double > x(_dim);
     std::vector < double > x0(_dim);
     std::vector < std::vector < double > > K(order);
-    for(unsigned j = 0; j < order; j++) {
+    for (unsigned j = 0; j < order; j++) {
       K[j].resize(_dim);
     }
     //END
@@ -579,7 +589,7 @@ namespace femus {
 
     //BEGIN Numerical integration scheme
 
-    for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
+    for (unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
       _particles[iMarker]->InitializeMarkerForAdvection(order);
     }
 //     unsigned maxload = 0;
@@ -589,7 +599,7 @@ namespace femus {
 //     }
 //     maxload *= (n * order)/(_nprocs * _nprocs);
 
-    while(integrationIsOverCounter != _size) {
+    while (integrationIsOverCounter != _size) {
 
       MyVector <unsigned> integrationIsOverCounterProc(1, 0);
       integrationIsOverCounterProc.stack();
@@ -597,7 +607,7 @@ namespace femus {
       //BEGIN LOCAL ADVECTION INSIDE IPROC
       clock_t startTime = clock();
       unsigned counter = 0;
-      for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
+      for (unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
         //std::cout << _printList[iMarker] <<" "<<std::flush;
 
@@ -606,9 +616,9 @@ namespace femus {
 
         step = _particles[iMarker]->GetIprocMarkerStep();
 
-        if(!markerOutsideDomain) {
+        if (!markerOutsideDomain) {
 
-          while(step < n * order) {
+          while (step < n * order) {
 
             x = _particles[iMarker]->GetIprocMarkerCoordinates();
             x0 = _particles[iMarker]->GetIprocMarkerOldCoordinates();
@@ -625,26 +635,26 @@ namespace femus {
             unsigned tstep = step / order;
             unsigned istep = step % order;
 
-            if(istep == 0) {
+            if (istep == 0) {
               x0 = x;
-              for(unsigned j = 0; j < order; j++) {
+              for (unsigned j = 0; j < order; j++) {
                 K[j].assign(_dim, 0.);
               }
             }
 
             // double s = (tstep + _c[order - 1][istep]) / n;
 
-            
-            if(_sol->GetIfFSI()) {
-	      unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
-	      MagneticForceWire(x, Fm, material);
-	    }
+
+            if (_sol->GetIfFSI()) {
+              unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
+              MagneticForce(x, Fm, material, 1);
+            }
 
 //             for(unsigned l = 0; l < Fm.size(); l++) {
 //               std::cout << "Fm[" << l << "]=" << Fm[l] << std::endl;
 //             }
 
-            for(unsigned k = 0; k < _dim; k++) {
+            for (unsigned k = 0; k < _dim; k++) {
               K[istep][k] = (s * V[0][k] + (1. - s) * V[1][k] + Fm[k]) * h;
             }
 
@@ -654,18 +664,17 @@ namespace femus {
             istep++;
 
 
-            if(istep < order) {
-              for(unsigned k = 0; k < _dim; k++) {
+            if (istep < order) {
+              for (unsigned k = 0; k < _dim; k++) {
                 x[k] = x0[k];
-                for(unsigned j = 0; j < order; j++) {
+                for (unsigned j = 0; j < order; j++) {
                   x[k] +=  _a[order - 1][istep][j] * K[j][k];
                 }
               }
-            }
-            else {
-              for(unsigned i = 0; i < _dim; i++) {
+            } else {
+              for (unsigned i = 0; i < _dim; i++) {
                 x[i] = x0[i];
-                for(unsigned j = 0; j < order; j++) {
+                for (unsigned j = 0; j < order; j++) {
                   x[i] += _b[order - 1][j] * K[j][i];
                 }
               }
@@ -691,27 +700,25 @@ namespace femus {
             currentElem = _particles[iMarker]->GetMarkerElement();
             unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
 
-            if(currentElem == UINT_MAX) { // the marker has been advected outise the domain
+            if (currentElem == UINT_MAX) { // the marker has been advected outise the domain
               markerOutsideDomain = true;
               step = UINT_MAX;
               _particles[iMarker]->SetIprocMarkerStep(step);
               break;
-            }
-            else if(_iproc != mproc) { // the marker has been advected outise the process
+            } else if (_iproc != mproc) { // the marker has been advected outise the process
               break;
             }
           }
-          if(step == n * order) {
+          if (step == n * order) {
             step = UINT_MAX;
             _particles[iMarker]->SetIprocMarkerStep(step);
           }
-        }
-        else { // the marker started outise the domain
+        } else { // the marker started outise the domain
           step = UINT_MAX;
           _particles[iMarker]->SetIprocMarkerStep(step);
         }
 
-        if(step == UINT_MAX || markerOutsideDomain) {
+        if (step == UINT_MAX || markerOutsideDomain) {
           integrationIsOverCounterProc[_iproc] += 1;
         }
         //if(counter > maxload) break;
@@ -723,7 +730,7 @@ namespace femus {
       //END LOCAL ADVECTION INSIDE IPROC
 
       integrationIsOverCounter = 0;
-      for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
+      for (unsigned jproc = 0; jproc < _nprocs; jproc++) {
         integrationIsOverCounterProc.broadcast(jproc);
         integrationIsOverCounter += integrationIsOverCounterProc[jproc];
         integrationIsOverCounterProc.clearBroadcast();
@@ -738,8 +745,8 @@ namespace femus {
       //BEGIN exchange on information
 
       //std::cout << " ----------------------------------PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
-      for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
-        for(unsigned iMarker = _markerOffset[jproc]; iMarker < _markerOffset[jproc + 1]; iMarker++) {
+      for (unsigned jproc = 0; jproc < _nprocs; jproc++) {
+        for (unsigned iMarker = _markerOffset[jproc]; iMarker < _markerOffset[jproc + 1]; iMarker++) {
           unsigned elem =  _particles[iMarker]->GetMarkerElement();
           MPI_Bcast(& elem, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
           _particles[iMarker]->SetMarkerElement(elem);
@@ -748,28 +755,28 @@ namespace femus {
           MPI_Bcast(& step, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
           _particles[iMarker]->SetIprocMarkerStep(step);
 
-          if(elem != UINT_MAX) {  // if it is outside jproc, ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but not outside the domain
+          if (elem != UINT_MAX) { // if it is outside jproc, ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but not outside the domain
             unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
             _particles[iMarker]->SetMarkerProc(mproc);
-            if(mproc != jproc) {
+            if (mproc != jproc) {
               unsigned prevElem = _particles[iMarker]->GetIprocMarkerPreviousElement();
               _particles[iMarker]->GetMarkerS(n, order, s);
               _particles[iMarker]->GetElement(prevElem, jproc, _sol, s);
               _particles[iMarker]->SetIprocMarkerPreviousElement(prevElem);
             }
             elem = _particles[iMarker]->GetMarkerElement();
-            if(elem != UINT_MAX) {  // if it is not outside the domain
+            if (elem != UINT_MAX) { // if it is not outside the domain
               unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
-              if(mproc != jproc) {
-                if(jproc == _iproc) {
+              if (mproc != jproc) {
+                if (jproc == _iproc) {
 
                   unsigned step =  _particles[iMarker]->GetIprocMarkerStep();
                   MPI_Send(& step, 1, MPI_UNSIGNED, mproc, order + 1, PETSC_COMM_WORLD);
 
                   unsigned istep = step % order;
-                  if(istep != 0) {
+                  if (istep != 0) {
                     K = _particles[iMarker]->GetIprocMarkerK();
-                    for(int i = 0; i < order; i++) {
+                    for (int i = 0; i < order; i++) {
                       MPI_Send(&K[i][0], _dim, MPI_DOUBLE, mproc, i , PETSC_COMM_WORLD);
                     }
                     x0 = _particles[iMarker]->GetIprocMarkerOldCoordinates();
@@ -777,8 +784,7 @@ namespace femus {
                   }
                   _particles[iMarker]->FreeXiX0andK();
 
-                }
-                else if(mproc == _iproc) {
+                } else if (mproc == _iproc) {
 
                   _particles[iMarker]->InitializeX0andK(order);
 
@@ -787,8 +793,8 @@ namespace femus {
                   _particles[iMarker]->SetIprocMarkerStep(step);
 
                   unsigned istep = step % order;
-                  if(istep != 0) {
-                    for(int i = 0; i < order; i++) {
+                  if (istep != 0) {
+                    for (int i = 0; i < order; i++) {
                       MPI_Recv(&K[i][0], _dim, MPI_DOUBLE, jproc, i , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                       _particles[iMarker]->SetIprocMarkerK(K);
                     }
@@ -800,13 +806,12 @@ namespace femus {
               }
             }
           }
-          if(elem == UINT_MAX && jproc != 0) { // elem = UINT_MAX, but not yet in jproc = 0
-            if(jproc == _iproc) {
+          if (elem == UINT_MAX && jproc != 0) { // elem = UINT_MAX, but not yet in jproc = 0
+            if (jproc == _iproc) {
               x = _particles[iMarker]->GetIprocMarkerCoordinates();
               MPI_Send(&x[0], _dim, MPI_DOUBLE, 0, 1 , PETSC_COMM_WORLD);
               _particles[iMarker]->FreeXiX0andK();
-            }
-            else if(_iproc == 0) {
+            } else if (_iproc == 0) {
               _particles[iMarker]->InitializeX();
               MPI_Recv(&x[0], _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
               _particles[iMarker]->SetIprocMarkerCoordinates(x);
@@ -875,103 +880,352 @@ namespace femus {
   }
 
 
-  void Line::MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material) {
+  void Line::MagneticForce(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material, unsigned forceType)
+  {
+
+    //case 0: infinitely long wire with a current I flowing modelled by the line identified by x and v
+    //case 1: current loop of radius a, center x and for z-axis the line identified by x and v
+
+    //BEGIN magnetic and electric parameters
 
     double PI = acos(-1.);
-
+    double I = 5.e5; // electric current intensity
+    double Msat = 1.e6;  //  magnetic saturation
+    double  chi = 3.; //magnetic susceptibility
     double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
+    double H;
+    std::vector <double> gradH(3);
+    std::vector <double> gradHSquared(3);
+    std::vector<double> vectorH(3);
+    double H0 = Msat / chi;
 
-    double muf = (material == 2)? 3.5 * 1.0e-3 : 1.0e100; // fluid viscosity
+    //END
+
+
+    //BEGIN fluid viscosity
+
+    double muf = (material == 2) ? 3.5 * 1.0e-3 : 1.0e100; // fluid viscosity
+
+    //END
+
+
+    //BEGIN geometric parameters
 
     double D = 500 * 1.e-9;       //diameter of the particle
 
-    std::vector <double> v(3);   //direction vector of the line that identifies the infinite wire
+    double a = 0.005; //radius of the circular current loop in m
 
-//     aortic bifurcation
+    std::vector <double> v(3);   //case 0: direction vector of the line that identifies the infinite wire
+    //case 1: z axis of the current loop (symmetry axis)
+
+
+//     aortic bifurcation wire
+//     v[0] = 0.;
+//     v[1] = 0.;
+//     v[2] = 1.;
+
+
+    
+//     aortic bifurcation current loop
     v[0] = 0.;
     v[1] = 0.;
     v[2] = 1.;
+    
+    //TODO put the def of u here otherwise we will forget
 
-    //bent tube no FSI
+
+
+    //bent tube no FSI wire
 //     v[0] = 0.;
 //     v[1] = 1.;
 //     v[2] = 0.;
 
-    std::vector <double> x(3);   //point that with v identifies the line
+    std::vector <double> x(3);   //case 0: point that with v identifies the line of the wire
+    //case 1: center of the current loop
+//aortic bifurcation wire
+//     x[0] = 0.015;
+//     x[1] = 0.;
+//     x[2] = 0.;
 
-//aortic bifurcation
-    x[0] = 0.015;
-    x[1] = 0.;
-    x[2] = 0.;
 
-//bent tube no FSI
+    //aortic bifurcation current loop
+     x[0] = 0.015;
+     x[1] = 0.;
+     x[2] = 0.;
+
+    
+    //bent tube no FSI wire
 //     x[0] = 9.;
 //     x[1] = 0.;
 //     x[2] = 3.;
 
-    double I = 5.e5; // electric current intensity
-    double Msat = 1.e6;  //  magnetic saturation
-    double  chi = 3.; //magnetic susceptibility
+
+    //END
+
+
+    //BEGIN extraction of the coordinates of the particle
 
     std::vector <double> xM(3);
     xM[0] = xMarker[0];
     xM[1] = xMarker[1];
     xM[2] = (xMarker.size() == 3) ? xMarker[2] : 0. ;
 
-    double Gamma = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    double Omega = (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) +
-                   (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) +
-                   (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) ;
+    //END
 
-    std::vector<double> gradOmega(3);
 
-    gradOmega[0] = 2 * v[2] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) + 2 * v[1] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
+    //BEGIN evaluate H
 
-    gradOmega[1] = 2 * v[2] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
+    switch (forceType) { 
 
-    gradOmega[2] = - 2 * v[1] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2]));
+      case 0: {  // infinite wire
 
-    double H = (I / (2 * PI)) * Gamma * (1 / sqrt(Omega)); //absolute value of the magnetic field at x = xMarker
+          double Gamma;
+          double Omega;
+          std::vector<double> gradOmega(3);
 
-    double H0 = Msat / chi;
+          Gamma = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+          Omega = (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) +
+                  (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) +
+                  (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) ;
 
-    if(H < H0) {
+          gradOmega[0] = 2 * v[2] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) + 2 * v[1] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
+
+          gradOmega[1] = 2 * v[2] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
+
+          gradOmega[2] = - 2 * v[1] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2]));
+
+          H = (I / (2 * PI)) * Gamma * (1 / sqrt(Omega));
+
+          gradHSquared[0] = (I / (2 * PI)) * (I / (2 * PI)) * ((-1) * Gamma * Gamma * (1 / (Omega * Omega))) * gradOmega[0];
+          gradHSquared[1] = (I / (2 * PI)) * (I / (2 * PI)) * ((-1) * Gamma * Gamma * (1 / (Omega * Omega))) * gradOmega[1];
+          gradHSquared[2] = (I / (2 * PI)) * (I / (2 * PI)) * ((-1) * Gamma * Gamma * (1 / (Omega * Omega))) * gradOmega[2];
+
+          gradH[0] = (I / (2 * PI)) * ((-0.5) * Gamma * gradOmega[0]) / sqrt(Omega * Omega * Omega);
+          gradH[1] = (I / (2 * PI)) * ((-0.5) * Gamma * gradOmega[1]) / sqrt(Omega * Omega * Omega);
+          gradH[2] = (I / (2 * PI)) * ((-0.5) * Gamma * gradOmega[2]) / sqrt(Omega * Omega * Omega);
+
+        }
+        break;
+
+      case 1: {  //current loop
+
+          for (unsigned i = 0; i < 3 ; i++) {
+            xM[i] -= x[i];
+          }
+
+          std::vector < double > vectorHp(3);
+          std::vector < std::vector < double > > jacobianVectorHp(3);
+          for (unsigned i = 0; i < 3; i++) {
+            jacobianVectorHp[i].resize(3);
+          }
+          std::vector < std::vector <double> > jacobianVectorH(3);
+          for (unsigned i = 0; i < 3; i++) {
+            jacobianVectorH[i].resize(3);
+          }
+
+          double rhoSquared = xM[0] * xM[0] + xM[1] * xM[1];
+          double rSquared = rhoSquared + xM[2] * xM[2];
+          double alphaSquared = a * a + rSquared - 2 * a * sqrt(rhoSquared);
+          double betaSquared = a * a + rSquared + 2 * a * sqrt(rhoSquared);
+          double kSquared = 1 - (alphaSquared / betaSquared);
+          double gamma = xM[0] * xM[0] - xM[1] * xM[1];
+          double C = (I * mu0) / PI;
+
+
+          double v2 = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
+          v[0] /= v2;
+          v[1] /= v2;
+          v[2] /= v2;
+
+          std::vector <double> u(3); // will be the x'-axis
+          std::vector <double> w(3); // will be the y'-axis
+	  
+          unsigned imax = 0;
+          double vmax = fabs(v[0]);
+          for (unsigned i = 1; i < 3; i++) {
+            if ( fabs(v[i]) > vmax ) {
+              imax = i;
+              vmax = fabs(v[i]);
+            }
+          }
+
+          u[0] = (imax == 0) ? - (v[1] + v[2]) / v[0]  : 1;
+          u[1] = (imax == 1) ? - (v[2] + v[0]) / v[1]  : 1;
+          u[2] = (imax == 2) ? - (v[0] + v[1]) / v[2]  : 1;
+
+          double u2 = sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2] );
+          u[0] /= u2;
+          u[1] /= u2;
+          u[2] /= u2;
+
+          w[0] = v[1] * u[2] - v[2] * u[1];
+          w[1] = v[2] * u[0] - v[0] * u[2];
+          w[2] = v[0] * u[1] - v[1] * u[0];
+
+          double w2 = sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2] );
+          if (fabs(w2 - 1.) > 1.0e-12) {
+            std::cout << "ERRORE AAAAAAAAAAAAAAAAAAA" << std::endl;
+          }
+
+          std::vector< std::vector <double> > R(3);
+          for (unsigned i = 0; i < 3; i++) {
+            R[i].resize(3);
+            R[i][0] = u[i];
+            R[i][1] = w[i];
+            R[i][2] = v[i];
+          }
+
+          vectorHp[0] = (1 / mu0) * ((C * xM[0] * xM[2]) / (2 * alphaSquared * sqrt(betaSquared) * rhoSquared)) * ((a * a + rSquared) * ellint_2(kSquared) - alphaSquared * ellint_1(kSquared));
+          vectorHp[1] = (xM[1] / xM[0]) * vectorH[0];
+          vectorHp[2] = (1 / mu0) * (C / (2 * alphaSquared * sqrt(betaSquared))) * ((a * a - rSquared) * ellint_2(kSquared) + alphaSquared * ellint_1(kSquared));
+
+
+          jacobianVectorHp[0][0] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared)) * (
+                                     (a * a * a * a * (- gamma * (3 * xM[2] * xM[2] + a * a) + rhoSquared * (8 * xM[0] * xM[0] - xM[1] * xM[1])) -
+                                      a * a * (rhoSquared * rhoSquared * (5 * xM[0] * xM[0] + xM[1] * xM[1]) -
+                                               2 * rhoSquared * xM[2] * xM[2] * (2 * xM[0] * xM[0] + xM[1] * xM[1]) + 3 * xM[2] * xM[2] * xM[2] * xM[2] * xM[1]) -
+                                      rSquared * rSquared * (2 * xM[0] * xM[0] * xM[0] * xM[0] + gamma * (xM[1] * xM[1] + xM[2] * xM[2])))  * ellint_2(kSquared) +
+                                     (a * a * (gamma * (a * a + 2 * xM[2] * xM[2]) - rhoSquared * (3 * xM[0] * xM[0] - 2 * xM[1] * xM[1])) +
+                                      rSquared * (2 * xM[0] * xM[0] * xM[0] * xM[0] + gamma * (xM[1] * xM[1] + xM[2] * xM[2]))) * alphaSquared * ellint_1(kSquared));
+
+
+          jacobianVectorHp[0][1] = ((C * xM[0] * xM[1] * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared)) * (
+                                     (3 * a * a * a * a * (3 * rhoSquared - 2 * xM[2] * xM[2]) - rSquared * rSquared * (2 * rSquared + rhoSquared) - 2 * a * a * a * a * a * a  -
+                                      2 * a * a * (2 * rhoSquared * rhoSquared - rhoSquared * xM[2] * xM[2] + 3 * xM[2] * xM[2] * xM[2] * xM[2])) * ellint_2(kSquared) +
+                                     (rSquared * (2 * rSquared + rhoSquared) - a * a * (5 * rhoSquared - 4 * xM[2] * xM[2]) + 2 * a * a * a * a) * alphaSquared * ellint_1(kSquared));
+
+
+          jacobianVectorHp[0][2] = ((C * xM[0]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared)) * (
+                                     ((rhoSquared - a * a) * (rhoSquared - a * a) * (rhoSquared + a * a) + 2 * xM[2] * xM[2] * (a * a * a * a - 6 * a * a * rhoSquared + rhoSquared * rhoSquared) +
+                                      xM[2] * xM[2] * xM[2] * xM[2] * (a * a + rhoSquared)) *  ellint_2(kSquared) -
+                                     ((rhoSquared - a * a) * (rhoSquared - a * a) + xM[2] * xM[2] * (rhoSquared + a * a)) * alphaSquared *  ellint_1(kSquared));
+
+
+          jacobianVectorHp[1][0] = jacobianVectorHp[0][1];
+
+
+          jacobianVectorHp[1][1] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared)) * (
+                                     (a * a * a * a * (gamma * (3 * xM[2] * xM[2] + a * a) + rhoSquared * (8 * xM[1] * xM[1] - xM[0] * xM[0])) -
+                                      a * a * (rhoSquared * rhoSquared * (5 * xM[1] * xM[1] + xM[0] * xM[0]) - 2 * rhoSquared * xM[2] * xM[2] * (2 * xM[1] * xM[1] + xM[0] * xM[0]) -
+                                               3 * xM[2] * xM[2] * xM[2] * xM[2] * xM[1])  - rSquared * rSquared * (2 * xM[1] * xM[1] * xM[1] * xM[1] - gamma * (xM[0] * xM[0] + xM[2] * xM[2]))) * ellint_2(kSquared) +
+                                     (a * a * (- gamma * (a * a + 2 * xM[2] * xM[2])  - rhoSquared * (3 * xM[1] * xM[1] - 2 * xM[0] * xM[0])) + rSquared * (2 * xM[1] * xM[1] * xM[1] * xM[1] -
+                                         gamma * (xM[0] * xM[0] + xM[2] * xM[2]))) * alphaSquared * ellint_1(kSquared));
+
+
+          jacobianVectorHp[1][2] = (xM[1] / xM[0]) * jacobianVectorHp[0][2];
+
+
+          jacobianVectorHp[2][0] = jacobianVectorHp[0][2];
+
+
+          jacobianVectorHp[2][1] = jacobianVectorHp[1][2];
+
+
+          jacobianVectorHp[2][2] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared))) * (
+                                     (6 * a * a * (rhoSquared - xM[2] * xM[2]) - 7 * a * a * a * a + rSquared * rSquared) * ellint_2(kSquared) +
+                                     (a * a - rSquared) * alphaSquared * ellint_1(kSquared));
+
+
+          for (unsigned i = 0; i < 3; i++) {
+            vectorH[i] = 0.;
+            for (unsigned j = 0; j < 3; j++) {
+              vectorH[i] += R[i][j] * vectorHp[j];
+              jacobianVectorH[i][j] = 0.;
+	      //std::cout << R[i][j] <<" ";
+	      //std::cout << jacobianVectorHp[i][j] <<" ";
+              for (unsigned k = 0; k < 3; k++) {
+                jacobianVectorH[i][j] += R[i][k] * jacobianVectorHp[k][j];
+              }
+            }
+          }
+
+
+          for (unsigned i = 0; i < 3; i++) {
+            for (unsigned j = 0; j < 3; j++) {
+              jacobianVectorHp[i][j] = 0. ;
+              for (unsigned k = 0; k < 3; k++) {
+                jacobianVectorHp[i][j] += jacobianVectorH[i][k] * R[j][k];
+              }
+            }
+          }
+
+          for (unsigned i = 0; i < 3; i++) {
+            for (unsigned j = 0; j < 3; j++) {
+	      jacobianVectorH[i][j] = jacobianVectorHp[i][j];
+	    }
+          }
+
+
+          H = sqrt(vectorH[0] * vectorH[0] + vectorH[1] * vectorH[1] * vectorH[2] * vectorH[2]);
+
+
+          gradHSquared[0] = 2 * vectorH[0] * jacobianVectorH[0][0] + 2 * vectorH[1] * jacobianVectorH[1][0] + 2 * vectorH[2] * jacobianVectorH[2][0];
+          gradHSquared[1] = 2 * vectorH[0] * jacobianVectorH[0][1] + 2 * vectorH[1] * jacobianVectorH[1][1] + 2 * vectorH[2] * jacobianVectorH[2][1];
+          gradHSquared[2] = 2 * vectorH[0] * jacobianVectorH[0][2] + 2 * vectorH[1] * jacobianVectorH[1][2] + 2 * vectorH[2] * jacobianVectorH[2][2];
+
+          gradH[0] = 0.5 * (1 / H) * gradHSquared[0];
+          gradH[1] = 0.5 * (1 / H) * gradHSquared[1];
+          gradH[2] = 0.5 * (1 / H) * gradHSquared[2];
+
+	  
+	  
+        }
+        
+        //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::endl;
+        
+        break;
+
+    }
+    //END valuate H
+
+
+    //BEGIN evaluate Fm
+
+    if (H < H0) {
+
 
       double C1 = (PI * D * D * D * mu0 * chi) / 12;
 
-      Fm[0] = -C1 * I *  I * Gamma * Gamma * gradOmega[0] / (Omega * Omega * 4 * PI * PI);
-      Fm[1] = -C1 * I *  I * Gamma * Gamma * gradOmega[1] / (Omega * Omega * 4 * PI * PI);
-      Fm[2] = -C1 * I *  I * Gamma * Gamma * gradOmega[2] / (Omega * Omega * 4 * PI * PI);
-
+      Fm[0] = C1 * gradHSquared[0];
+      Fm[1] = C1 * gradHSquared[1];
+      Fm[2] = C1 * gradHSquared[2];
     }
 
     else {
 
       double C2 = (PI * D * D * D * mu0 * Msat) / 6;
 
-      Fm[0] = - 0.5 * C2 * I *  Gamma * gradOmega[0] / sqrt(Omega * Omega * Omega * 2 * PI);
-      Fm[1] = - 0.5 * C2 * I *  Gamma * gradOmega[1] / sqrt(Omega * Omega * Omega * 2 * PI);
-      Fm[2] = - 0.5 * C2 * I *  Gamma * gradOmega[2] / sqrt(Omega * Omega * Omega * 2 * PI);
+      Fm[0] = C2 * gradH[0];
+      Fm[1] = C2 * gradH[1];
+      Fm[2] = C2 * gradH[2];
 
     }
 
-    for(unsigned i = 0 ; i < Fm.size(); i++) {
+
+    for (unsigned i = 0 ; i < Fm.size(); i++) {
       Fm[i] = Fm[i] / (3 * PI * D * muf) ;
     }
 
-    //BEGIN cheating to have attractive force
+    //END
 
-    for(unsigned i = 0 ; i < Fm.size(); i++) {
-      Fm[i] = - Fm[i] ;
-    }
+
+//     //BEGIN cheating to have attractive force
+// 
+//     for (unsigned i = 0 ; i < Fm.size(); i++) {
+//       Fm[i] = - Fm[i] ;
+//       //std::cout << Fm[i] << " " <<std::flush;
+//     }
 
     //END cheating
 
-
+    
+    
+    
   }
 
 
 }
+
 
 
 
