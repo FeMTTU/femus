@@ -822,7 +822,7 @@ bool SetBoundaryConditionTubo ( const std::vector < double > & x, const char nam
     if ( 2 == facename ) {
 
       double r2 = ( ( x[1] * 100. ) - 0.0196 ) * ( ( x[1] * 100. ) - 0.0196 ) + ( x[2] * 100. ) * ( x[2] * 100. );
-      value = -0.4 * ( 1. - r2 ) * ( 1. + 0.75 * sin ( 2.*PI * time ) ) * ramp; //inflow
+      value = -0.04 * ( 1. - r2 ) * ( 1. + 0.75 * sin ( 2.*PI * time ) ) * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
     }

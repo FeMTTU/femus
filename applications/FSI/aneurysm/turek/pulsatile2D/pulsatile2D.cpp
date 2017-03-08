@@ -110,7 +110,7 @@ int main ( int argc, char **args ) {
   muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  if ( simulation == 4 || simulation == 6 ) {
+  if ( simulation == 4) {
     E = 1000000 * 1.e0; //turek:120000*1.e0;
   }
   else {
