@@ -41,6 +41,9 @@ bool SetBoundaryConditionThrombus(const std::vector < double > & x, const char n
 bool SetBoundaryConditionOminoPorous(const std::vector < double > & x, const char name[],
                                      double & value, const int facename, const double time);
 
+bool SetBoundaryConditionTubo(const std::vector < double > & x, const char name[],
+                                     double & value, const int facename, const double time);
+
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 //------------------------------------------------------------------------------------------------------------------
 
@@ -67,6 +70,9 @@ int main(int argc, char ** args)
     }
     else if(!strcmp("4", args[1])) {   /** FSI Turek 3D porous */
       simulation = 4;
+    }
+    else if(!strcmp("5", args[1])) {   /** FSI Turek 3D porous */
+      simulation = 5;
     }
   }
 
@@ -95,6 +101,9 @@ int main(int argc, char ** args)
   }
   else if(simulation == 4) {
   infile = "./input/Turek_3D_porous.neu";
+  }
+  else if(simulation == 5) {
+  infile = "./input/tubo3D.neu";
   }
 
   //std::string infile = "./input/turek_porous_scaled.neu";
@@ -204,8 +213,9 @@ int main(int argc, char ** args)
   else if(simulation == 3) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus);
   }
- 
-
+  else if(simulation == 5) {
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTubo);
+  }
 
 
   //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionPorous);
@@ -217,7 +227,7 @@ int main(int argc, char ** args)
   ml_sol.GenerateBdc("DY", "Steady");
   if(!dimension2D) ml_sol.GenerateBdc("DZ", "Steady");
 
-  if(simulation == 0 || simulation == 4) {
+  if(simulation == 0 || simulation == 4 || simulation == 5) {
     ml_sol.GenerateBdc("U", "Time_dependent");
     ml_sol.GenerateBdc("V", "Steady");
   }
@@ -334,8 +344,8 @@ int main(int argc, char ** args)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    //data[time_step][0] = time_step / 32.;
-    data[time_step][0] = time_step / (64*1.4);
+    data[time_step][0] = time_step / 32.;
+    //data[time_step][0] = time_step / (64*1.4);
     if (simulation == 0 || simulation == 4){
       GetSolutionNorm(ml_sol, 9, data[time_step]);  
     }
@@ -389,8 +399,8 @@ int main(int argc, char ** args)
 
 double SetVariableTimeStep(const double time)
 {
-  //double dt = 1. / 32;
-  double dt = 1./(64*1.4); 
+  double dt = 1. / 32;
+  //double dt = 1./(64*1.4); 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
 //     else dt = 0.025;
@@ -806,6 +816,53 @@ bool SetBoundaryConditionThrombus(const std::vector < double > & x, const char n
     }
   }
 
+  return test;
+}
+
+
+bool SetBoundaryConditionTubo(const std::vector < double > & x, const char name[], double & value, const int facename, const double time)
+{
+  bool test = 1; //dirichlet
+  value = 0.;
+  
+  double PI = acos(-1.);
+
+  if(!strcmp(name, "U")) {
+    double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
+    if(2 == facename) {
+
+      double r2 = ((x[1] * 100.) - 0.0196) * ((x[1] * 100.) - 0.0196) + (x[2] * 100.) * (x[2] * 100.);
+      value = -0.4 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      //std::cout << value << " " << time << " " << ramp << std::endl;
+      //value=25;
+    }
+    else if(1 == facename) {
+      test = 0;
+      //value = 11335 * ramp;
+      value = (10000 + 2500 * sin(2*PI*time)) * ramp;      
+    }
+    else if(5 == facename) {
+      test = 0;
+      value = 0.;
+    }
+  }
+  else if(!strcmp(name, "V") || !strcmp(name, "W")) {
+    if(1 == facename || 5 == facename) {
+      test = 0;
+      value = 0.;
+    }
+  }
+  else if(!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+  }
+  else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
+    if(5 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  
   return test;
 }
 
