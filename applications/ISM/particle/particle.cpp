@@ -108,11 +108,11 @@ int main(int argc, char **args) {
   muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  if(simulation == 5){
-    E = 1000000 * 1.e1;   
-  } 
-  else{
-    E = 1000000 * 1.e0; //turek: 1000000 * 1.e0; 
+  if(simulation == 5) {
+    E = 1000000 * 1.e1;
+  }
+  else {
+    E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
   }
   E1 = 100000;
 
@@ -289,6 +289,7 @@ int main(int argc, char **args) {
 
   //BEGIN INITIALIZE PARTICLES
   unsigned pSize = 50;
+  double PI = acos(-1.);
   std::vector < std::vector < double > > x(pSize);
   std::vector < MarkerType > markerType(pSize);
 
@@ -306,7 +307,7 @@ int main(int argc, char **args) {
   }
 
   if(simulation == 5) {  //for aorticBifurcation
- 
+
     for(unsigned j = 0; j < pSize; j++) {
       x[j].resize(2);
       x[j][0] = -0.008 + 0.016 * j / (pSize - 1);
@@ -315,6 +316,19 @@ int main(int argc, char **args) {
     }
 
   }
+
+  if(simulation == 6) {  //for 3D tube
+
+    for(unsigned j = 0; j < pSize; j++) {
+      x[j].resize(3);
+      x[j][0] = -0.035;
+      x[j][1] = 0.0196 + 0.125 * sin(2.*PI / pSize * j);
+      x[j][2] = 0. + 0.125 * cos(2.*PI / pSize * j);
+      markerType[j] = VOLUME;
+    }
+
+  }
+
 
   //END INITIALIZE PARTICLES
 

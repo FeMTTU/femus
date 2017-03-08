@@ -647,7 +647,7 @@ namespace femus
 
             if (_sol->GetIfFSI()) {
               unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
-              MagneticForce(x, Fm, material, 1);
+              MagneticForce(x, Fm, material, 0);
             }
 
 //             for(unsigned l = 0; l < Fm.size(); l++) {
@@ -927,12 +927,15 @@ namespace femus
 
     
 //     aortic bifurcation current loop
+//     v[0] = 0.;
+//     v[1] = 0.;
+//     v[2] = 1.;
+    
+
+//     tube 3D
     v[0] = 0.;
     v[1] = 0.;
     v[2] = 1.;
-    
-    //TODO put the def of u here otherwise we will forget
-
 
 
     //bent tube no FSI wire
@@ -949,10 +952,15 @@ namespace femus
 
 
     //aortic bifurcation current loop
-     x[0] = 0.015;
-     x[1] = 0.;
-     x[2] = 0.;
+//      x[0] = 0.015;
+//      x[1] = 0.;
+//      x[2] = 0.;
 
+         //tube 3D
+     x[0] = 0.008;
+     x[1] = 0.008;
+     x[2] = 0.;
+     
     
     //bent tube no FSI wire
 //     x[0] = 9.;
@@ -1209,12 +1217,12 @@ namespace femus
     //END
 
 
-//     //BEGIN cheating to have attractive force
-// 
-//     for (unsigned i = 0 ; i < Fm.size(); i++) {
-//       Fm[i] = - Fm[i] ;
-//       //std::cout << Fm[i] << " " <<std::flush;
-//     }
+    //BEGIN cheating to have attractive force
+
+    for (unsigned i = 0 ; i < Fm.size(); i++) {
+      Fm[i] = - Fm[i] ;
+      //std::cout << Fm[i] << " " <<std::flush;
+    }
 
     //END cheating
 
