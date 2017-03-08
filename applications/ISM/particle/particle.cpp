@@ -30,7 +30,10 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
                                     double &value, const int facename, const double time);
 
 bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[],
-    double &value, const int facename, const double time);
+                                           double &value, const int facename, const double time);
+
+bool SetBoundaryConditionTubo3D(const std::vector < double >& x, const char name[],
+                                           double &value, const int facename, const double time);
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 
@@ -62,6 +65,9 @@ int main(int argc, char **args) {
     }
     else if(!strcmp("5", args[1])) {   /** FSI Aortic Bifurcation */
       simulation = 5;
+    }
+    else if(!strcmp("6", args[1])) {   /** FSI Tubo 3D */
+      simulation = 6;
     }
   }
 
@@ -96,7 +102,11 @@ int main(int argc, char **args) {
   else if(simulation == 5) {
     infile = "./input/aortic_bifurcation.neu";
   }
-  //std::string infile = "./input/Turek.neu";
+  else if(simulation == 6) {
+    infile = "./input/tubo3D.neu";
+  }
+  
+  bool dimension2D = false;
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -162,13 +172,16 @@ int main(int argc, char **args) {
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("DY", LAGRANGE, SECOND, 2);
+  if(!dimension2D) ml_sol.AddSolution("DZ", LAGRANGE, SECOND, 2);
 
   ml_sol.AddSolution("U", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("V", LAGRANGE, SECOND, 2);
+  if(!dimension2D) ml_sol.AddSolution("W", LAGRANGE, SECOND, 2);
 
   // Pair each velocity variable with the corresponding displacement variable
   ml_sol.PairSolution("U", "DX"); // Add this line
   ml_sol.PairSolution("V", "DY"); // Add this line
+  if(!dimension2D) ml_sol.PairSolution("W", "DZ");  // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
@@ -188,10 +201,14 @@ int main(int argc, char **args) {
   else if(simulation == 5) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorticBifurcation);
   }
+  else if(simulation == 6) {
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTubo3D);
+  }
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
+  if(!dimension2D) ml_sol.GenerateBdc("DZ", "Steady");
 
   if(simulation == 4 || simulation == 5) {
     ml_sol.GenerateBdc("U", "Steady");
@@ -201,7 +218,8 @@ int main(int argc, char **args) {
     ml_sol.GenerateBdc("U", "Time_dependent");
     ml_sol.GenerateBdc("V", "Steady");
   }
-
+  
+  if(!dimension2D) ml_sol.GenerateBdc("W", "Steady");
   ml_sol.GenerateBdc("P", "Steady");
 
 //   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
@@ -221,10 +239,10 @@ int main(int argc, char **args) {
   TransientMonolithicFSINonlinearImplicitSystem & system = ml_prob.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
   system.AddSolutionToSystemPDE("DX");
   system.AddSolutionToSystemPDE("DY");
-
+  if(!dimension2D) system.AddSolutionToSystemPDE("DZ");
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-
+  if(!dimension2D) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
@@ -272,7 +290,7 @@ int main(int argc, char **args) {
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  //mov_vars.push_back("DZ");
+  mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
 
   std::vector<std::string> print_vars;
@@ -615,6 +633,52 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
   }
   else if(!strcmp(name, "DY")) {
     if(7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+
+  return test;
+}
+
+
+bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char name[], double & value, const int facename, const double time)
+{
+  bool test = 1; //dirichlet
+  value = 0.;
+  
+  double PI = acos(-1.);
+
+  if(!strcmp(name, "U")) {
+    double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
+    if(2 == facename) {
+      double r2 = ((x[1] * 100.) - 0.0196) * ((x[1] * 100.) - 0.0196) + (x[2] * 100.) * (x[2] * 100.);
+      value = -0.2 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      //std::cout << value << " " << time << " " << ramp << std::endl;
+      //value=25;
+    }
+    else if(1 == facename) {
+      test = 0;
+      //value = 11335 * ramp;
+      value = (10000 + 2500 * sin(2*PI*time)) * ramp;      
+    }
+    else if(5 == facename) {
+      test = 0;
+      value = 0.;
+    }
+  }
+  else if(!strcmp(name, "V") || !strcmp(name, "W")) {
+    if(1 == facename || 5 == facename) {
+      test = 0;
+      value = 0.;
+    }
+  }
+  else if(!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+  }
+  else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
+    if(5 == facename) {
       test = 0;
       value = 0;
     }
