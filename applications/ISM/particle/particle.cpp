@@ -315,6 +315,19 @@ int main(int argc, char **args) {
     }
 
   }
+  
+    if(simulation == 6) {  //for 3D tube
+ 
+    for(unsigned j = 0; j < pSize; j++) {
+      x[j].resize(3);
+      x[j][0] = 0.;  //to decide the position
+      x[j][1] = 0.;
+      x[j][2] = 0.;
+      markerType[j] = VOLUME;
+    }
+
+  }
+  
 
   //END INITIALIZE PARTICLES
 
