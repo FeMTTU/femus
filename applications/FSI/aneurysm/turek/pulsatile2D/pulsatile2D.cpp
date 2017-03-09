@@ -110,8 +110,8 @@ int main ( int argc, char **args ) {
   muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  E = 1000000 * 1.e1; //turek:120000*1.e0;
-  E1 = 100000;
+  E = 5000000 * 1.e0; //turek:120000*1.e0;
+  E1 = 50000;
 
   Parameter par ( Lref, Uref );
 
@@ -303,6 +303,9 @@ int main ( int argc, char **args ) {
     else if ( simulation == 4 ) { //AAA_thrombus, 15=thrombus
       GetSolutionNorm ( ml_sol, 7, data[time_step] );
     }
+    else if ( simulation == 6 ) { //AAA_thrombus, 15=thrombus
+      GetSolutionNorm ( ml_sol, 7, data[time_step] );
+    }
     ml_sol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1 );
   }
 
@@ -325,6 +328,9 @@ int main ( int argc, char **args ) {
     }
     else if ( simulation == 4 ) {
       outf.open ( "DataPrint_AAA_thrombus_2D.txt" );
+    }
+    else if ( simulation == 6 ) {
+      outf.open ( "DataPrint_AAA_thrombus_2D_porous.txt" );
     }
 
 
@@ -458,7 +464,7 @@ bool SetBoundaryConditionThrombus2D ( const std::vector < double >& x, const cha
     if ( 1 == facename ) {
       double r2 = ( x[0] * 100. ) * ( x[0] * 100. );
       //value = -0.01/.9 * (.9 - r2); //inflow
-      value = -0.04 / .81 * ( .81 - r2 ) * ( 1. + 0.75 * sin ( 2.*PI * time ) ) * ramp; //inflow
+      value = -0.05 / .81 * ( .81 - r2 ) * ( 1. + 0.75 * sin ( 2.*PI * time ) ) * ramp; //inflow
     }
     if ( 2 == facename || 5 == facename ) {
       test = 0;

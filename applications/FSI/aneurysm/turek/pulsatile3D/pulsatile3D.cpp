@@ -110,7 +110,7 @@ int main ( int argc, char ** args )
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 60000; //E=12000;
+  E = 12000; //E=6000;
   E1 = 3000;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
@@ -771,7 +771,6 @@ bool SetBoundaryConditionTubo ( const std::vector < double > & x, const char nam
   if ( !strcmp ( name, "U" ) ) {
     double ramp = ( time < 1 ) ? sin ( PI / 2 * time ) : 1.;
     if ( 2 == facename ) {
-
       double r2 = ((x[1] - 0.0196 ) * ( x[1] - 0.0196 ) + ( x[2] * x[2] ) ) / (0.0035 * 0.0035);
       value = 0.04 * ( 1. - r2 ) * ( 1. + 0.75 * sin ( 2.*PI * time ) ) * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
