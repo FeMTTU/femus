@@ -30,7 +30,7 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
                                     double &value, const int facename, const double time);
 
 bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[],
-					    double &value, const int facename, const double time);
+    double &value, const int facename, const double time);
 
 bool SetBoundaryConditionTubo3D(const std::vector < double >& x, const char name[],
                                 double &value, const int facename, const double time);
@@ -343,12 +343,20 @@ int main(int argc, char **args) {
 
   if(simulation == 6) {  //for 3D tube
 
-    for(unsigned j = 0; j < pSize; j++) {
-      x[j].resize(3);
-      x[j][0] = -0.035;
-      x[j][1] = 0.0196 + 0.125 * sin(2.*PI / pSize * j);
-      x[j][2] = 0. + 0.125 * cos(2.*PI / pSize * j);
-      markerType[j] = VOLUME;
+    unsigned theta_intervals = 10;
+    unsigned radius_intervals = 9;
+    unsigned size = radius_intervals * theta_intervals;
+    x.resize(size);
+    markerType.resize(size);
+
+    unsigned counter = 0;
+    for(unsigned k = 1; k < radius_intervals + 1 ; k++) {
+      for(unsigned j = 0; j < theta_intervals; j++) {
+        x[counter][0] = 0.;
+        x[counter][1] = 0.00034 * k * sin(2.*PI / theta_intervals * j);
+        x[counter][2] = 0.00034 * k * cos(2.*PI / theta_intervals * j);
+        counter++;
+      }
     }
 
   }
