@@ -47,7 +47,8 @@ bool SetBoundaryConditionTubo ( const std::vector < double > & x, const char nam
 void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data );
 //------------------------------------------------------------------------------------------------------------------
 
-int main ( int argc, char ** args ) {
+int main ( int argc, char ** args )
+{
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit ( argc, args, MPI_COMM_WORLD );
@@ -57,20 +58,15 @@ int main ( int argc, char ** args ) {
   if ( argc >= 2 ) {
     if ( !strcmp ( "0", args[1] ) ) { /** FSI Turek3D no stent */
       simulation = 0;
-    }
-    else if ( !strcmp ( "1", args[1] ) ) { /** FSI Omino no stent */
+    } else if ( !strcmp ( "1", args[1] ) ) { /** FSI Omino no stent */
       simulation = 1;
-    }
-    else if ( !strcmp ( "2", args[1] ) ) { /** FSI Thoracic Aortic Aneurysm */
+    } else if ( !strcmp ( "2", args[1] ) ) { /** FSI Thoracic Aortic Aneurysm */
       simulation = 2;
-    }
-    else if ( !strcmp ( "3", args[1] ) ) { /** FSI Abdominal Aortic Aneurysm */
+    } else if ( !strcmp ( "3", args[1] ) ) { /** FSI Abdominal Aortic Aneurysm */
       simulation = 3;
-    }
-    else if ( !strcmp ( "4", args[1] ) ) { /** FSI Turek 3D porous */
+    } else if ( !strcmp ( "4", args[1] ) ) { /** FSI Turek 3D porous */
       simulation = 4;
-    }
-    else if ( !strcmp ( "5", args[1] ) ) { /** FSI Turek 3D porous */
+    } else if ( !strcmp ( "5", args[1] ) ) { /** FSI tubo 3D */
       simulation = 5;
     }
   }
@@ -88,20 +84,15 @@ int main ( int argc, char ** args ) {
   std::string infile;
   if ( simulation == 0 ) {
     infile = "./input/Turek_3D_D.neu";
-  }
-  else if ( simulation == 1 ) {
+  } else if ( simulation == 1 ) {
     infile = "./input/aneurysm_omino.neu";
-  }
-  else if ( simulation == 2 ) {
+  } else if ( simulation == 2 ) {
     infile = "./input/aneurisma_aorta.neu";
-  }
-  else if ( simulation == 3 ) {
+  } else if ( simulation == 3 ) {
     infile = "./input/AAA_thrombus.neu";
-  }
-  else if ( simulation == 4 ) {
+  } else if ( simulation == 4 ) {
     infile = "./input/Turek_3D_porous.neu";
-  }
-  else if ( simulation == 5 ) {
+  } else if ( simulation == 5 ) {
     infile = "./input/tubo3D.neu";
   }
 
@@ -202,17 +193,13 @@ int main ( int argc, char ** args ) {
 
   if ( simulation == 0 || simulation == 4 ) {
     ml_sol.AttachSetBoundaryConditionFunction ( SetBoundaryConditionTurek );
-  }
-  else if ( simulation == 1 ) {
+  } else if ( simulation == 1 ) {
     ml_sol.AttachSetBoundaryConditionFunction ( SetBoundaryConditionOmino );
-  }
-  else if ( simulation == 2 ) {
+  } else if ( simulation == 2 ) {
     ml_sol.AttachSetBoundaryConditionFunction ( SetBoundaryConditionAorta );
-  }
-  else if ( simulation == 3 ) {
+  } else if ( simulation == 3 ) {
     ml_sol.AttachSetBoundaryConditionFunction ( SetBoundaryConditionThrombus );
-  }
-  else if ( simulation == 5 ) {
+  } else if ( simulation == 5 ) {
     ml_sol.AttachSetBoundaryConditionFunction ( SetBoundaryConditionTubo );
   }
 
@@ -229,8 +216,7 @@ int main ( int argc, char ** args ) {
   if ( simulation == 0 || simulation == 4 || simulation == 5 ) {
     ml_sol.GenerateBdc ( "U", "Time_dependent" );
     ml_sol.GenerateBdc ( "V", "Steady" );
-  }
-  else {
+  } else {
     ml_sol.GenerateBdc ( "U", "Steady" );
     ml_sol.GenerateBdc ( "V", "Time_dependent" );
   }
@@ -347,11 +333,9 @@ int main ( int argc, char ** args ) {
     //data[time_step][0] = time_step / (64*1.4);
     if ( simulation == 0 || simulation == 4 ) {
       GetSolutionNorm ( ml_sol, 9, data[time_step] );
-    }
-    else if ( simulation == 2 ) { //aneurisma_aorta
+    } else if ( simulation == 2 ) { //aneurisma_aorta
       GetSolutionNorm ( ml_sol, 14, data[time_step] );
-    }
-    else if ( simulation == 3 ) { //AAA_thrombus, 15=thrombus
+    } else if ( simulation == 3 ) { //AAA_thrombus, 15=thrombus
       GetSolutionNorm ( ml_sol, 7, data[time_step] );
     }
     ml_sol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1 );
@@ -363,17 +347,13 @@ int main ( int argc, char ** args ) {
     std::ofstream outf;
     if ( simulation == 0 ) {
       outf.open ( "DataPrint_Turek_3D.txt" );
-    }
-    else if ( simulation == 2 ) {
+    } else if ( simulation == 2 ) {
       outf.open ( "DataPrint_aorta.txt" );
-    }
-    else if ( simulation == 3 ) {
+    } else if ( simulation == 3 ) {
       outf.open ( "DataPrint_AAA_thrombus_3D.txt" );
-    }
-    else if ( simulation == 4 ) {
+    } else if ( simulation == 4 ) {
       outf.open ( "DataPrint_Turek_3D_Porous.txt" );
-    }
-    else {
+    } else {
       outf.open ( "DataPrint.txt" );
     }
 
@@ -396,7 +376,8 @@ int main ( int argc, char ** args ) {
 
 //---------------------------------------------------------------------------------------------------------------------
 
-double SetVariableTimeStep ( const double time ) {
+double SetVariableTimeStep ( const double time )
+{
   double dt = 1. / 32;
   //double dt = 1./(64*1.4);
 //   if( turek_FSI == 2 ){
@@ -423,7 +404,8 @@ double SetVariableTimeStep ( const double time ) {
 
 
 
-bool SetBoundaryCondition ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryCondition ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -432,13 +414,11 @@ bool SetBoundaryCondition ( const std::vector < double > & x, const char name[],
     if ( 1 == facename ) {
       test = 0;
       value = 10.;
-    }
-    else if ( 2 == facename ) {
+    } else if ( 2 == facename ) {
       test = 0;
       value = 10.;
 
-    }
-    else if ( 3 == facename ) {
+    } else if ( 3 == facename ) {
       test = 0;
       value = 20.;
     }
@@ -460,7 +440,8 @@ bool SetBoundaryCondition ( const std::vector < double > & x, const char name[],
 }
 
 
-bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -507,41 +488,34 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
 
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
-    }
-    else if ( 2 == facename ) {
+    } else if ( 2 == facename ) {
       test = 0;
       value = pressure[j] * ramp;
       //value = 11335 * ramp;
       //value = (10000 + 2500 * sin(2*PI*time)) * ramp;
-    }
-    else if ( 5 == facename ) {
+    } else if ( 5 == facename ) {
       test = 0;
       value = 0.;
     }
-  }
-  else if ( !strcmp ( name, "V" ) || !strcmp ( name, "W" ) ) {
+  } else if ( !strcmp ( name, "V" ) || !strcmp ( name, "W" ) ) {
     if ( 2 == facename || 5 == facename ) {
       test = 0;
       value = 0.;
     }
-  }
-  else if ( !strcmp ( name, "P" ) ) {
+  } else if ( !strcmp ( name, "P" ) ) {
     test = 0;
     value = 0.;
-  }
-  else if ( !strcmp ( name, "DX" ) ) {
+  } else if ( !strcmp ( name, "DX" ) ) {
     if ( 5 == facename || 6 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "DY" ) ) {
+  } else if ( !strcmp ( name, "DY" ) ) {
     if ( 5 == facename || 6 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "DZ" ) ) {
+  } else if ( !strcmp ( name, "DZ" ) ) {
     if ( 5 == facename || 6 == facename ) {
       test = 0;
       value = 0;
@@ -552,7 +526,8 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
 }
 
 
-bool SetBoundaryConditionPorous ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryConditionPorous ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -561,34 +536,28 @@ bool SetBoundaryConditionPorous ( const std::vector < double > & x, const char n
       test = 0;
       value = 0.;
     }
-  }
-  else if ( !strcmp ( name, "V" ) ) {
+  } else if ( !strcmp ( name, "V" ) ) {
     if ( 1 == facename ) {
       double r2 = ( x[0] * 1000. ) * ( x[0] * 1000. ) + ( x[2] * 1000. ) * ( x[2] * 1000. );
       value = 0.25 * ( 1. - r2 ); //inflow
-    }
-    else if ( 2 == facename ) {
+    } else if ( 2 == facename ) {
       test = 0;
       value = 0.;
     }
-  }
-  else if ( !strcmp ( name, "P" ) ) {
+  } else if ( !strcmp ( name, "P" ) ) {
     test = 0;
     value = 0.;
-  }
-  else if ( !strcmp ( name, "DX" ) ) {
+  } else if ( !strcmp ( name, "DX" ) ) {
     if ( 1 == facename || 2 == facename || 5 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "DY" ) ) {
+  } else if ( !strcmp ( name, "DY" ) ) {
     if ( 5 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "DZ" ) ) {
+  } else if ( !strcmp ( name, "DZ" ) ) {
     if ( 1 == facename || 2 == facename || 5 == facename ) {
       test = 0;
       value = 0;
@@ -598,7 +567,8 @@ bool SetBoundaryConditionPorous ( const std::vector < double > & x, const char n
   return test;
 }
 
-bool SetBoundaryConditionOminoPorous ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryConditionOminoPorous ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -607,34 +577,28 @@ bool SetBoundaryConditionOminoPorous ( const std::vector < double > & x, const c
       test = 0;
       value = 0.;
     }
-  }
-  else if ( !strcmp ( name, "W" ) ) {
+  } else if ( !strcmp ( name, "W" ) ) {
     if ( 6 == facename ) {
       double r2 = ( x[0] / .000375 ) * ( x[0] / .000375 ) + ( x[1] / .000375 ) * ( x[1] / .000375 );
       value = 1.0 * ( 1. - r2 ); //inflow
-    }
-    else if ( 1 == facename || 2 == facename ) {
+    } else if ( 1 == facename || 2 == facename ) {
       test = 0;
       value = 0.;
     }
-  }
-  else if ( !strcmp ( name, "P" ) ) {
+  } else if ( !strcmp ( name, "P" ) ) {
     test = 0;
     value = 0.;
-  }
-  else if ( !strcmp ( name, "DX" ) ) {
+  } else if ( !strcmp ( name, "DX" ) ) {
     if ( 1 == facename || 2 == facename || 6 == facename || 5 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "DY" ) ) {
+  } else if ( !strcmp ( name, "DY" ) ) {
     if ( 5 == facename || 6 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "DZ" ) ) {
+  } else if ( !strcmp ( name, "DZ" ) ) {
     if ( 1 == facename || 2 == facename || 5 == facename ) {
       test = 0;
       value = 0;
@@ -644,7 +608,8 @@ bool SetBoundaryConditionOminoPorous ( const std::vector < double > & x, const c
   return test;
 }
 
-bool SetBoundaryConditionOmino ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryConditionOmino ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
   double PI = acos ( -1. );
@@ -655,36 +620,30 @@ bool SetBoundaryConditionOmino ( const std::vector < double > & x, const char na
       double r2 = ( ( x[2] * 1000. ) + 0.403 ) * ( ( x[2] * 1000. ) + 0.403 ) + ( ( x[0] * 1000. ) + 0.589 ) * ( ( x[0] * 1000. ) + 0.589 );
       value = 0.1 * ( 1. - r2 ) * ( 1. + 0.75 * sin ( 2.*PI * time ) ) * ramp; //inflow
       //value = 0.1;
-    }
-    else if ( 1 == facename || 2 == facename || 7 == facename ) {
+    } else if ( 1 == facename || 2 == facename || 7 == facename ) {
       test = 0;
       value = 0.;
     }
-  }
-  else if ( !strcmp ( name, "U" ) ) {
+  } else if ( !strcmp ( name, "U" ) ) {
     if ( 1 == facename || 2 == facename ) {
       test = 0;
       //value = 10 * ramp;
       value = ( 10000 + 2500 * sin ( 2 * PI * time ) ) * ramp;
-    }
-    else if ( 7 == facename ) {
+    } else if ( 7 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "W" ) ) {
+  } else if ( !strcmp ( name, "W" ) ) {
     if ( 1 == facename || 2 == facename || 7 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "P" ) ) {
+  } else if ( !strcmp ( name, "P" ) ) {
     if ( 1 == facename || 2 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "DX" ) || !strcmp ( name, "DY" ) || !strcmp ( name, "DZ" ) ) {
+  } else if ( !strcmp ( name, "DX" ) || !strcmp ( name, "DY" ) || !strcmp ( name, "DZ" ) ) {
     if ( 7 == facename ) {
       test = 0;
       value = 0.;
@@ -694,7 +653,8 @@ bool SetBoundaryConditionOmino ( const std::vector < double > & x, const char na
   return test;
 }
 
-bool SetBoundaryConditionAorta ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryConditionAorta ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
   double PI = acos ( -1. );
@@ -704,8 +664,7 @@ bool SetBoundaryConditionAorta ( const std::vector < double > & x, const char na
     if ( 1 == facename || 2 == facename || 3 == facename || 4 == facename || 11 == facename ) {
       test = 0;
       value = 0;
-    }
-    else if ( 5 == facename ) {
+    } else if ( 5 == facename ) {
 //       test = 0;
 //       value = 0.5 *1.e-01; //Pressure value/rhof
       double r2 = ( ( x[0] + 0.075563 ) / 0.0104 ) * ( ( x[0] + 0.075563 ) / 0.0104 ) + ( x[2] / 0.0104 ) * ( x[2] / 0.0104 );
@@ -717,12 +676,10 @@ bool SetBoundaryConditionAorta ( const std::vector < double > & x, const char na
     if ( 1 == facename ) { // || 5 == facename) {
       test = 0;
       value = ( 10000 + 2500 * sin ( 2 * PI * time ) ) * ramp;
-    }
-    else if ( 2 == facename || 3 == facename || 4 == facename ) { // || 5 == facename) {
+    } else if ( 2 == facename || 3 == facename || 4 == facename ) { // || 5 == facename) {
       test = 0;
       value = ( 10500 + 2500 * sin ( 2 * PI * time ) ) * ramp;
-    }
-    else if ( 11 == facename ) {
+    } else if ( 11 == facename ) {
       test = 0;
       value = 0.;
     }
@@ -752,7 +709,8 @@ bool SetBoundaryConditionAorta ( const std::vector < double > & x, const char na
   return test;
 }
 
-bool SetBoundaryConditionThrombus ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryConditionThrombus ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
   double PI = acos ( -1. );
@@ -762,45 +720,37 @@ bool SetBoundaryConditionThrombus ( const std::vector < double > & x, const char
     if ( 1 == facename ) {
       double r2 = ( x[0] * 100. ) * ( x[0] * 100. ) + ( x[2] * 100. ) * ( x[2] * 100. );
       value = -0.01 / .81 * ( .81 - r2 ) * ( 1. + 0.75 * sin ( 2.*PI * time ) ) * ramp; //inflow
-    }
-    else if ( 2 == facename || 5 == facename ) {
+    } else if ( 2 == facename || 5 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "U" ) ) {
+  } else if ( !strcmp ( name, "U" ) ) {
     if ( 2 == facename ) {
       test = 0;
       value = ( 10000 + 2500 * sin ( 2 * PI * time ) ) * ramp;;
-    }
-    else if ( 5 == facename ) {
+    } else if ( 5 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "W" ) ) {
+  } else if ( !strcmp ( name, "W" ) ) {
     if ( 2 == facename || 5 == facename ) {
       test = 0;
       value = 0.;
     }
-  }
-  else if ( !strcmp ( name, "P" ) ) {
+  } else if ( !strcmp ( name, "P" ) ) {
     test = 0;
     value = 0.;
-  }
-  else if ( !strcmp ( name, "DX" ) ) {
+  } else if ( !strcmp ( name, "DX" ) ) {
     if ( 5 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "DY" ) ) {
+  } else if ( !strcmp ( name, "DY" ) ) {
     if ( 5 == facename ) {
       test = 0;
       value = 0;
     }
-  }
-  else if ( !strcmp ( name, "DZ" ) ) {
+  } else if ( !strcmp ( name, "DZ" ) ) {
     if ( 5 == facename ) {
       test = 0;
       value = 0;
@@ -811,7 +761,8 @@ bool SetBoundaryConditionThrombus ( const std::vector < double > & x, const char
 }
 
 
-bool SetBoundaryConditionTubo ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryConditionTubo ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -821,32 +772,27 @@ bool SetBoundaryConditionTubo ( const std::vector < double > & x, const char nam
     double ramp = ( time < 1 ) ? sin ( PI / 2 * time ) : 1.;
     if ( 2 == facename ) {
 
-      double r2 = ( ( x[1] * 100. ) - 0.0196 ) * ( ( x[1] * 100. ) - 0.0196 ) + ( x[2] * 100. ) * ( x[2] * 100. );
+      double r2 = ((x[1] - 0.0196 ) * ( x[1] - 0.0196 ) + ( x[2] * x[2] ) ) / (0.0035 * 0.0035);
       value = 0.04 * ( 1. - r2 ) * ( 1. + 0.75 * sin ( 2.*PI * time ) ) * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
-    }
-    else if ( 1 == facename ) {
+    } else if ( 1 == facename ) {
       test = 0;
       //value = 11335 * ramp;
       value = ( 10000 + 2500 * sin ( 2 * PI * time ) ) * ramp;
-    }
-    else if ( 5 == facename ) {
+    } else if ( 5 == facename ) {
       test = 0;
       value = 0.;
     }
-  }
-  else if ( !strcmp ( name, "V" ) || !strcmp ( name, "W" ) ) {
+  } else if ( !strcmp ( name, "V" ) || !strcmp ( name, "W" ) ) {
     if ( 1 == facename || 5 == facename ) {
       test = 0;
       value = 0.;
     }
-  }
-  else if ( !strcmp ( name, "P" ) ) {
+  } else if ( !strcmp ( name, "P" ) ) {
     test = 0;
     value = 0.;
-  }
-  else if ( !strcmp ( name, "DX" ) || !strcmp ( name, "DY" ) || !strcmp ( name, "DZ" ) ) {
+  } else if ( !strcmp ( name, "DX" ) || !strcmp ( name, "DY" ) || !strcmp ( name, "DZ" ) ) {
     if ( 5 == facename ) {
       test = 0;
       value = 0;
@@ -857,7 +803,8 @@ bool SetBoundaryConditionTubo ( const std::vector < double > & x, const char nam
 }
 
 
-void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data ) {
+void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data )
+{
 
   int  iproc, nprocs;
   MPI_Comm_rank ( MPI_COMM_WORLD, &iproc );
@@ -877,8 +824,7 @@ void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::v
     v2->init ( nprocs, 1, false, SERIAL );
     vol->init ( nprocs, 1, false, SERIAL );
     vol0->init ( nprocs, 1, false, SERIAL );
-  }
-  else {
+  } else {
     p2->init ( nprocs, 1, false, PARALLEL );
     v2->init ( nprocs, 1, false, PARALLEL );
     vol->init ( nprocs, 1, false, PARALLEL );
