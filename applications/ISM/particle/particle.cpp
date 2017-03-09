@@ -352,8 +352,8 @@ int main(int argc, char **args) {
     for(unsigned k = 1; k < radius_intervals + 1 ; k++) {
       for(unsigned j = 0; j < theta_intervals; j++) {
 	x[counter].resize(3);
-        x[counter][0] = 0.;
-        x[counter][1] = 0.00034 * k * sin(2.*PI / theta_intervals * j);
+        x[counter][0] = -0.035;
+        x[counter][1] = 0.0196 + 0.00034 * k * sin(2.*PI / theta_intervals * j);
         x[counter][2] = 0.00034 * k * cos(2.*PI / theta_intervals * j);
         counter++;
       }
