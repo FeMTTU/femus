@@ -49,15 +49,15 @@ double InitialValueTargReg(const std::vector < double >& x) {
   return ElementTargetFlag(x);
 }
 
-double InitialValueThom(const std::vector < double >& x) {
+double InitialValueState(const std::vector < double >& x) {
   return 0.;
 }
 
-double InitialValueThomAdj(const std::vector < double >& x) {
+double InitialValueAdjoint(const std::vector < double >& x) {
   return 0.;
 }
 
-double InitialValueTcont(const std::vector < double >& x) {
+double InitialValueControl(const std::vector < double >& x) {
   return 0.;
 }
 
@@ -66,7 +66,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   bool dirichlet = true; //dirichlet
   value = 0;
   
-  if(!strcmp(name,"Tcont")) {
+  if(!strcmp(name,"control")) {
   if (faceName == 3)
     dirichlet = false;
   }
@@ -77,7 +77,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 
 double ComputeIntegral(MultiLevelProblem& ml_prob);
 
-void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob);
+void AssembleOptSys(MultiLevelProblem& ml_prob);
 
 
 int main(int argc, char** args) {
@@ -101,26 +101,26 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("Thom", LAGRANGE, SECOND);
-  mlSol.AddSolution("ThomAdj", LAGRANGE, SECOND);
-  mlSol.AddSolution("Tcont", LAGRANGE, SECOND);
+  mlSol.AddSolution("state", LAGRANGE, SECOND);
+  mlSol.AddSolution("adjoint", LAGRANGE, SECOND);
+  mlSol.AddSolution("control", LAGRANGE, SECOND);
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
 
-  mlSol.Initialize("Thom", InitialValueThom);
-  mlSol.Initialize("ThomAdj", InitialValueThomAdj);
-  mlSol.Initialize("Tcont", InitialValueTcont);
+  mlSol.Initialize("state", InitialValueState);
+  mlSol.Initialize("adjoint", InitialValueAdjoint);
+  mlSol.Initialize("control", InitialValueControl);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.GenerateBdc("Thom");
-  mlSol.GenerateBdc("ThomAdj");
-  mlSol.GenerateBdc("Tcont");
+  mlSol.GenerateBdc("state");
+  mlSol.GenerateBdc("adjoint");
+  mlSol.GenerateBdc("control");
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
@@ -128,12 +128,12 @@ int main(int argc, char** args) {
  // add system  in mlProb as a Linear Implicit System
   LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("LiftRestr");
  
-  system.AddSolutionToSystemPDE("Thom");  
-  system.AddSolutionToSystemPDE("ThomAdj");  
-  system.AddSolutionToSystemPDE("Tcont");  
+  system.AddSolutionToSystemPDE("state");  
+  system.AddSolutionToSystemPDE("adjoint");  
+  system.AddSolutionToSystemPDE("control");  
   
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleLiftRestrProblem);
+  system.SetAssembleFunction(AssembleOptSys);
 
   // initilaize and solve the system
   system.init();
@@ -143,9 +143,9 @@ int main(int argc, char** args) {
  
   // print solutions
   std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("Thom");
-  variablesToBePrinted.push_back("ThomAdj");
-  variablesToBePrinted.push_back("Tcont");
+  variablesToBePrinted.push_back("state");
+  variablesToBePrinted.push_back("adjoint");
+  variablesToBePrinted.push_back("control");
   variablesToBePrinted.push_back("TargReg");
   variablesToBePrinted.push_back("ContReg");
 
@@ -165,7 +165,7 @@ int main(int argc, char** args) {
 
 
 
-void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
+void AssembleOptSys(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
 
   //  level is the level of the PDE system to be assembled
@@ -219,11 +219,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
  
   unsigned solIndexThom;
-  solIndexThom = mlSol->GetIndex("Thom");    // get the position of "Thom" in the ml_sol object
-  unsigned solTypeThom = mlSol->GetSolutionType(solIndexThom);    // get the finite element type for "Thom"
+  solIndexThom = mlSol->GetIndex("state");    // get the position of "state" in the ml_sol object
+  unsigned solTypeThom = mlSol->GetSolutionType(solIndexThom);    // get the finite element type for "state"
 
   unsigned solPdeIndexThom;
-  solPdeIndexThom = mlPdeSys->GetSolPdeIndex("Thom");    // get the position of "Thom" in the pdeSys object
+  solPdeIndexThom = mlPdeSys->GetSolPdeIndex("state");    // get the position of "state" in the pdeSys object
 
   vector < double >  solThom; // local solution
   solThom.reserve(maxSize);
@@ -248,11 +248,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  
   
  unsigned solIndexThomAdj;
-  solIndexThomAdj = mlSol->GetIndex("ThomAdj");    // get the position of "Thom" in the ml_sol object
-  unsigned solTypeThomAdj = mlSol->GetSolutionType(solIndexThomAdj);    // get the finite element type for "Thom"
+  solIndexThomAdj = mlSol->GetIndex("adjoint");    // get the position of "state" in the ml_sol object
+  unsigned solTypeThomAdj = mlSol->GetSolutionType(solIndexThomAdj);    // get the finite element type for "state"
 
   unsigned solPdeIndexThomAdj;
-  solPdeIndexThomAdj = mlPdeSys->GetSolPdeIndex("ThomAdj");    // get the position of "Thom" in the pdeSys object
+  solPdeIndexThomAdj = mlPdeSys->GetSolPdeIndex("adjoint");    // get the position of "state" in the pdeSys object
 
   vector < double >  solThomAdj; // local solution
   solThomAdj.reserve(maxSize);
@@ -273,11 +273,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   phi_xx_Tcont.reserve(maxSize * dim2);
   
   unsigned solIndexTcont;
-  solIndexTcont = mlSol->GetIndex("Tcont");
+  solIndexTcont = mlSol->GetIndex("control");
   unsigned solTypeTcont = mlSol->GetSolutionType(solIndexTcont);
 
   unsigned solPdeIndexTcont;
-  solPdeIndexTcont = mlPdeSys->GetSolPdeIndex("Tcont");
+  solPdeIndexTcont = mlPdeSys->GetSolPdeIndex("control");
 
   vector < double >  solTcont; // local solution
   solTcont.reserve(maxSize);
@@ -626,8 +626,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
  
   unsigned solIndexThom;
-  solIndexThom = mlSol->GetIndex("Thom");    // get the position of "Thom" in the ml_sol object
-  unsigned solTypeThom = mlSol->GetSolutionType(solIndexThom);    // get the finite element type for "Thom"
+  solIndexThom = mlSol->GetIndex("state");    // get the position of "state" in the ml_sol object
+  unsigned solTypeThom = mlSol->GetSolutionType(solIndexThom);    // get the finite element type for "state"
 
   vector < double >  solThom; // local solution
   solThom.reserve(maxSize);
@@ -649,8 +649,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  
   
 //  unsigned solIndexTdes;
-//   solIndexTdes = mlSol->GetIndex("Tdes");    // get the position of "Thom" in the ml_sol object
-//   unsigned solTypeTdes = mlSol->GetSolutionType(solIndexTdes);    // get the finite element type for "Thom"
+//   solIndexTdes = mlSol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
+//   unsigned solTypeTdes = mlSol->GetSolutionType(solIndexTdes);    // get the finite element type for "state"
 
   vector < double >  solTdes; // local solution
   solTdes.reserve(maxSize);
@@ -672,7 +672,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   phi_xx_Tcont.reserve(maxSize * dim2);
   
   unsigned solIndexTcont;
-  solIndexTcont = mlSol->GetIndex("Tcont");
+  solIndexTcont = mlSol->GetIndex("control");
   unsigned solTypeTcont = mlSol->GetSolutionType(solIndexTcont);
 
   vector < double >  solTcont; // local solution
