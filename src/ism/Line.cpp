@@ -895,7 +895,7 @@ namespace femus
     //BEGIN magnetic and electric parameters
 
     double PI = acos(-1.);
-    double I = 1.857e5; // electric current intensity
+    double I = 1.e5; // electric current intensity
     double Msat = 1.e6;  //  magnetic saturation
     double  chi = 3.; //magnetic susceptibility
     double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
@@ -932,16 +932,16 @@ namespace femus
 
 
 
-    // aortic bifurcation current loop
-    v[0] = 0.;
-    v[1] = 0.;
-    v[2] = 1.;
-
-
-// //     tube 3D
+ //   // aortic bifurcation current loop
 //     v[0] = 0.;
 //     v[1] = 0.;
 //     v[2] = 1.;
+
+
+//     tube 3D
+    v[0] = 0.;
+    v[1] = 0.;
+    v[2] = 1.;
 
 
     //bent tube no FSI wire
@@ -957,15 +957,15 @@ namespace femus
 //     x[2] = 0.;
 
 
-    //aortic bifurcation current loop
-    x[0] = 0.055;
-    x[1] = 0.;
-    x[2] = 0.;
-
-//     //tube 3D
-//     x[0] = 0.008;
-//     x[1] = 0.008;
+//    //aortic bifurcation current loop
+//     x[0] = 0.055;
+//     x[1] = 0.;
 //     x[2] = 0.;
+
+    //tube 3D
+    x[0] = 0.008;
+    x[1] = 0.008;
+    x[2] = 0.;
 
 
 //    //bent tube no FSI wire

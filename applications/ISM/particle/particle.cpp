@@ -30,10 +30,10 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
                                     double &value, const int facename, const double time);
 
 bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[],
-                                           double &value, const int facename, const double time);
+					    double &value, const int facename, const double time);
 
 bool SetBoundaryConditionTubo3D(const std::vector < double >& x, const char name[],
-                                           double &value, const int facename, const double time);
+                                double &value, const int facename, const double time);
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 
@@ -85,7 +85,7 @@ int main(int argc, char **args) {
   //std::string infile = "./input/Turek_11stents_60micron.neu";
   std::string infile;
   bool dimension2D = true;
-  
+
   if(simulation == 0) {
     infile = "./input/Turek.neu";
   }
@@ -108,8 +108,8 @@ int main(int argc, char **args) {
     infile = "./input/tubo3D.neu";
     dimension2D = false;
   }
-  
- 
+
+
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -123,6 +123,9 @@ int main(int argc, char **args) {
   ni = 0.5;
   if(simulation == 5) {
     E = 1000000 * 1.e1;
+  }
+  else if(simulation == 6) {
+    E = 12000;
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
@@ -221,7 +224,7 @@ int main(int argc, char **args) {
     ml_sol.GenerateBdc("U", "Time_dependent");
     ml_sol.GenerateBdc("V", "Steady");
   }
-  
+
   if(!dimension2D) ml_sol.GenerateBdc("W", "Steady");
   ml_sol.GenerateBdc("P", "Steady");
 
@@ -365,7 +368,7 @@ int main(int argc, char **args) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 400;
+  const unsigned int n_timesteps = 300;
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -645,25 +648,24 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
 }
 
 
-bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char name[], double & value, const int facename, const double time)
-{
+bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char name[], double & value, const int facename, const double time) {
   bool test = 1; //dirichlet
   value = 0.;
-  
+
   double PI = acos(-1.);
 
   if(!strcmp(name, "U")) {
     double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     if(2 == facename) {
-      double r2 = ((x[1] * 100.) - 0.0196) * ((x[1] * 100.) - 0.0196) + (x[2] * 100.) * (x[2] * 100.);
-      value = -0.2 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
+      value = 0.04 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
     }
     else if(1 == facename) {
       test = 0;
       //value = 11335 * ramp;
-      value = (10000 + 2500 * sin(2*PI*time)) * ramp;      
+      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
     }
     else if(5 == facename) {
       test = 0;
