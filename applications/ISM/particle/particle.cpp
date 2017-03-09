@@ -344,13 +344,14 @@ int main(int argc, char **args) {
   if(simulation == 6) {  //for 3D tube
     unsigned theta_intervals = 10;
     unsigned radius_intervals = 9;
-    unsigned size = radius_intervals * theta_intervals;
-    x.resize(size);
-    markerType.resize(size);
+    pSize = radius_intervals * theta_intervals;
+    x.resize(pSize);
+    markerType.resize(pSize);
 
     unsigned counter = 0;
     for(unsigned k = 1; k < radius_intervals + 1 ; k++) {
       for(unsigned j = 0; j < theta_intervals; j++) {
+	x[counter].resize(3);
         x[counter][0] = 0.;
         x[counter][1] = 0.00034 * k * sin(2.*PI / theta_intervals * j);
         x[counter][2] = 0.00034 * k * cos(2.*PI / theta_intervals * j);
