@@ -10,7 +10,7 @@ using namespace femus;
 int ElementTargetFlag(const std::vector<double> & elem_center) {
 
  //***** set target domain flag ********************************** 
-  int target_flag = 0;
+  int target_flag = 1; //set 0 to 1 to get the entire domain
   
    if ( elem_center[0] < (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > - (1./16. + 1./64.) - 1.e-5  && 
         elem_center[1] < (1./16. + 1./64.)  + 1.e-5  && elem_center[1] > - (1./16. + 1./64.) - 1.e-5 
@@ -38,7 +38,7 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
 
 double DesiredTarget() {
  
-  return 17.;
+  return 1.;
 }
 
 double InitialValueContReg(const std::vector < double >& x) {
@@ -306,9 +306,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
  //********** DATA ***************** 
   double T_des = DesiredTarget();
-  double alpha = 100000000000000000;
-  double beta  = 1.;
-  double gamma = 1.;
+  double alpha = 1;
+  double beta  = 1.e-3;
+  double gamma = 1.e-3;
   double penalty_strong = 10e+14;
  //*************************** 
   
@@ -354,7 +354,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
    
   //***** set control flag ********************************** 
   int control_el_flag = 0;
-        control_el_flag = ControlDomainFlag(elem_center);
+        control_el_flag = 1.; //ControlDomainFlag(elem_center);
 //   std::vector<int> control_node_flag(nDofx,0);
 //   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
   //*************************************** 
