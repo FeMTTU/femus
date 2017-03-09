@@ -346,8 +346,8 @@ int main(int argc, char **args) {
     for(unsigned j = 0; j < pSize; j++) {
       x[j].resize(3);
       x[j][0] = -0.035;
-      x[j][1] = 0.0196 + 0.125 * sin(2.*PI / pSize * j);
-      x[j][2] = 0. + 0.125 * cos(2.*PI / pSize * j);
+      x[j][1] = 0.0196 + 0.0034 * sin(2.*PI / pSize * j);
+      x[j][2] = 0. + 0.0034 * cos(2.*PI / pSize * j);
       markerType[j] = VOLUME;
     }
 
