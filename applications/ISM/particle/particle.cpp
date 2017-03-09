@@ -84,6 +84,8 @@ int main(int argc, char **args) {
   //std::string infile = "./input/Turek_stents_60micron.neu";
   //std::string infile = "./input/Turek_11stents_60micron.neu";
   std::string infile;
+  bool dimension2D = true;
+  
   if(simulation == 0) {
     infile = "./input/Turek.neu";
   }
@@ -104,9 +106,10 @@ int main(int argc, char **args) {
   }
   else if(simulation == 6) {
     infile = "./input/tubo3D.neu";
+    dimension2D = false;
   }
   
-  bool dimension2D = false;
+ 
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;

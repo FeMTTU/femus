@@ -645,11 +645,15 @@ namespace femus
             // double s = (tstep + _c[order - 1][istep]) / n;
 
 
+             //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+            
             if (_sol->GetIfFSI()) {
               unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
               MagneticForce(x, Fm, material, 0);
             }
 
+             //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::flush;
+            
 //             for(unsigned l = 0; l < Fm.size(); l++) {
 //               std::cout << "Fm[" << l << "]=" << Fm[l] << std::endl;
 //             }
@@ -882,14 +886,16 @@ namespace femus
 
   void Line::MagneticForce(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material, unsigned forceType)
   {
-
+    
+   // std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    
     //case 0: infinitely long wire with a current I flowing modelled by the line identified by x and v
     //case 1: current loop of radius a, center x and for z-axis the line identified by x and v
 
     //BEGIN magnetic and electric parameters
 
     double PI = acos(-1.);
-    double I = 5.e5; // electric current intensity
+    double I = 1.857e5; // electric current intensity
     double Msat = 1.e6;  //  magnetic saturation
     double  chi = 3.; //magnetic susceptibility
     double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
@@ -913,7 +919,7 @@ namespace femus
 
     double D = 500 * 1.e-9;       //diameter of the particle
 
-    double a = 0.005; //radius of the circular current loop in m
+    double a = 0.04; //radius of the circular current loop in m
 
     std::vector <double> v(3);   //case 0: direction vector of the line that identifies the infinite wire
     //case 1: z axis of the current loop (symmetry axis)
@@ -925,17 +931,17 @@ namespace femus
 //     v[2] = 1.;
 
 
-    
-//     aortic bifurcation current loop
-//     v[0] = 0.;
-//     v[1] = 0.;
-//     v[2] = 1.;
-    
 
-//     tube 3D
+    // aortic bifurcation current loop
     v[0] = 0.;
     v[1] = 0.;
     v[2] = 1.;
+
+
+// //     tube 3D
+//     v[0] = 0.;
+//     v[1] = 0.;
+//     v[2] = 1.;
 
 
     //bent tube no FSI wire
@@ -952,17 +958,17 @@ namespace femus
 
 
     //aortic bifurcation current loop
-//      x[0] = 0.015;
-//      x[1] = 0.;
-//      x[2] = 0.;
+    x[0] = 0.055;
+    x[1] = 0.;
+    x[2] = 0.;
 
-         //tube 3D
-     x[0] = 0.008;
-     x[1] = 0.008;
-     x[2] = 0.;
-     
-    
-    //bent tube no FSI wire
+//     //tube 3D
+//     x[0] = 0.008;
+//     x[1] = 0.008;
+//     x[2] = 0.;
+
+
+//    //bent tube no FSI wire
 //     x[0] = 9.;
 //     x[1] = 0.;
 //     x[2] = 3.;
@@ -983,7 +989,7 @@ namespace femus
 
     //BEGIN evaluate H
 
-    switch (forceType) { 
+    switch (forceType) {
 
       case 0: {  // infinite wire
 
@@ -1017,29 +1023,7 @@ namespace femus
 
       case 1: {  //current loop
 
-          for (unsigned i = 0; i < 3 ; i++) {
-            xM[i] -= x[i];
-          }
-
-          std::vector < double > vectorHp(3);
-          std::vector < std::vector < double > > jacobianVectorHp(3);
-          for (unsigned i = 0; i < 3; i++) {
-            jacobianVectorHp[i].resize(3);
-          }
-          std::vector < std::vector <double> > jacobianVectorH(3);
-          for (unsigned i = 0; i < 3; i++) {
-            jacobianVectorH[i].resize(3);
-          }
-
-          double rhoSquared = xM[0] * xM[0] + xM[1] * xM[1];
-          double rSquared = rhoSquared + xM[2] * xM[2];
-          double alphaSquared = a * a + rSquared - 2 * a * sqrt(rhoSquared);
-          double betaSquared = a * a + rSquared + 2 * a * sqrt(rhoSquared);
-          double kSquared = 1 - (alphaSquared / betaSquared);
-          double gamma = xM[0] * xM[0] - xM[1] * xM[1];
-          double C = (I * mu0) / PI;
-
-
+          //BEGIN bulid the rotation Matrix;
           double v2 = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
           v[0] /= v2;
           v[1] /= v2;
@@ -1047,7 +1031,7 @@ namespace femus
 
           std::vector <double> u(3); // will be the x'-axis
           std::vector <double> w(3); // will be the y'-axis
-	  
+
           unsigned imax = 0;
           double vmax = fabs(v[0]);
           for (unsigned i = 1; i < 3; i++) {
@@ -1082,13 +1066,56 @@ namespace femus
             R[i][1] = w[i];
             R[i][2] = v[i];
           }
+          //END bulid the rotation Matrix;
+          
+//           std::cout<<std::endl;
+//           for(unsigned i=0;i<3;i++){
+// 	    for(unsigned j=0;j<3;j++){
+// 	      std::cout << R[i][j] <<  " ";
+// 	    }
+// 	    std::cout<<std::endl;
+// 	  }
+          
+
+          //BEGIN find marker local coordinates
+          for (unsigned i = 0; i < 3 ; i++) {
+            xM[i] -= x[i];
+          }
+
+          std::vector<double> xM1(3, 0.);
+          for (unsigned i = 0; i < 3; i++) {
+            for (unsigned j = 0; j < 3; j++) {
+              xM1[i] += R[j][i] * xM[j];
+            }
+          }
+          xM = xM1;
+	  
+// 	  xM[0] = xM[1] = 0.01;
+// 	  xM[2] = 0.; //toDO
+          //END find marker local coordinates
+
+          double rhoSquared = xM[0] * xM[0] + xM[1] * xM[1];
+          double rSquared = rhoSquared + xM[2] * xM[2];
+          double alphaSquared = a * a + rSquared - 2 * a * sqrt(rhoSquared);
+          double betaSquared = a * a + rSquared + 2 * a * sqrt(rhoSquared);
+          double kSquared = 1 - (alphaSquared / betaSquared);
+          double gamma = xM[0] * xM[0] - xM[1] * xM[1];
+          double C = (I * mu0) / PI;
+
+
+
+          std::vector < double > vectorHp(3);
+          std::vector < std::vector < double > > jacobianVectorHp(3);
+          for (unsigned i = 0; i < 3; i++) {
+            jacobianVectorHp[i].resize(3);
+          }
 
           vectorHp[0] = (1 / mu0) * ((C * xM[0] * xM[2]) / (2 * alphaSquared * sqrt(betaSquared) * rhoSquared)) * ((a * a + rSquared) * ellint_2(kSquared) - alphaSquared * ellint_1(kSquared));
           vectorHp[1] = (xM[1] / xM[0]) * vectorH[0];
           vectorHp[2] = (1 / mu0) * (C / (2 * alphaSquared * sqrt(betaSquared))) * ((a * a - rSquared) * ellint_2(kSquared) + alphaSquared * ellint_1(kSquared));
 
 
-          jacobianVectorHp[0][0] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared)) * (
+          jacobianVectorHp[0][0] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared * mu0)) * (
                                      (a * a * a * a * (- gamma * (3 * xM[2] * xM[2] + a * a) + rhoSquared * (8 * xM[0] * xM[0] - xM[1] * xM[1])) -
                                       a * a * (rhoSquared * rhoSquared * (5 * xM[0] * xM[0] + xM[1] * xM[1]) -
                                                2 * rhoSquared * xM[2] * xM[2] * (2 * xM[0] * xM[0] + xM[1] * xM[1]) + 3 * xM[2] * xM[2] * xM[2] * xM[2] * xM[1]) -
@@ -1097,13 +1124,13 @@ namespace femus
                                       rSquared * (2 * xM[0] * xM[0] * xM[0] * xM[0] + gamma * (xM[1] * xM[1] + xM[2] * xM[2]))) * alphaSquared * ellint_1(kSquared));
 
 
-          jacobianVectorHp[0][1] = ((C * xM[0] * xM[1] * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared)) * (
+          jacobianVectorHp[0][1] = ((C * xM[0] * xM[1] * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared * mu0)) * (
                                      (3 * a * a * a * a * (3 * rhoSquared - 2 * xM[2] * xM[2]) - rSquared * rSquared * (2 * rSquared + rhoSquared) - 2 * a * a * a * a * a * a  -
                                       2 * a * a * (2 * rhoSquared * rhoSquared - rhoSquared * xM[2] * xM[2] + 3 * xM[2] * xM[2] * xM[2] * xM[2])) * ellint_2(kSquared) +
                                      (rSquared * (2 * rSquared + rhoSquared) - a * a * (5 * rhoSquared - 4 * xM[2] * xM[2]) + 2 * a * a * a * a) * alphaSquared * ellint_1(kSquared));
 
 
-          jacobianVectorHp[0][2] = ((C * xM[0]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared)) * (
+          jacobianVectorHp[0][2] = ((C * xM[0]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * mu0)) * (
                                      ((rhoSquared - a * a) * (rhoSquared - a * a) * (rhoSquared + a * a) + 2 * xM[2] * xM[2] * (a * a * a * a - 6 * a * a * rhoSquared + rhoSquared * rhoSquared) +
                                       xM[2] * xM[2] * xM[2] * xM[2] * (a * a + rhoSquared)) *  ellint_2(kSquared) -
                                      ((rhoSquared - a * a) * (rhoSquared - a * a) + xM[2] * xM[2] * (rhoSquared + a * a)) * alphaSquared *  ellint_1(kSquared));
@@ -1112,7 +1139,7 @@ namespace femus
           jacobianVectorHp[1][0] = jacobianVectorHp[0][1];
 
 
-          jacobianVectorHp[1][1] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared)) * (
+          jacobianVectorHp[1][1] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared* mu0)) * (
                                      (a * a * a * a * (gamma * (3 * xM[2] * xM[2] + a * a) + rhoSquared * (8 * xM[1] * xM[1] - xM[0] * xM[0])) -
                                       a * a * (rhoSquared * rhoSquared * (5 * xM[1] * xM[1] + xM[0] * xM[0]) - 2 * rhoSquared * xM[2] * xM[2] * (2 * xM[1] * xM[1] + xM[0] * xM[0]) -
                                                3 * xM[2] * xM[2] * xM[2] * xM[2] * xM[1])  - rSquared * rSquared * (2 * xM[1] * xM[1] * xM[1] * xM[1] - gamma * (xM[0] * xM[0] + xM[2] * xM[2]))) * ellint_2(kSquared) +
@@ -1129,18 +1156,36 @@ namespace femus
           jacobianVectorHp[2][1] = jacobianVectorHp[1][2];
 
 
-          jacobianVectorHp[2][2] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared))) * (
+          jacobianVectorHp[2][2] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared)* mu0)) * (
                                      (6 * a * a * (rhoSquared - xM[2] * xM[2]) - 7 * a * a * a * a + rSquared * rSquared) * ellint_2(kSquared) +
                                      (a * a - rSquared) * alphaSquared * ellint_1(kSquared));
 
+
+// 	  std::cout<<std::endl;
+//           for(unsigned i=0;i<3;i++){
+// 	    for(unsigned j=0;j<3;j++){
+// 	      std::cout << jacobianVectorHp[i][j] <<  " ";
+// 	    }
+// 	    std::cout<<std::endl;
+// 	  }
+// 	  std::cout<<std::endl;
+// 	  for(unsigned i=0;i<3;i++){
+// 	    std::cout << vectorHp[i] <<  " ";
+// 	  }
+//           std::cout<<std::endl;  std::cout<<std::endl;
+	  
+          std::vector < std::vector <double> > jacobianVectorH(3);
+          for (unsigned i = 0; i < 3; i++) {
+            jacobianVectorH[i].resize(3);
+          }
 
           for (unsigned i = 0; i < 3; i++) {
             vectorH[i] = 0.;
             for (unsigned j = 0; j < 3; j++) {
               vectorH[i] += R[i][j] * vectorHp[j];
               jacobianVectorH[i][j] = 0.;
-	      //std::cout << R[i][j] <<" ";
-	      //std::cout << jacobianVectorHp[i][j] <<" ";
+              //std::cout << R[i][j] <<" ";
+              //std::cout << jacobianVectorHp[i][j] <<" ";
               for (unsigned k = 0; k < 3; k++) {
                 jacobianVectorH[i][j] += R[i][k] * jacobianVectorHp[k][j];
               }
@@ -1157,30 +1202,52 @@ namespace femus
             }
           }
 
-          for (unsigned i = 0; i < 3; i++) {
-            for (unsigned j = 0; j < 3; j++) {
-	      jacobianVectorH[i][j] = jacobianVectorHp[i][j];
-	    }
-          }
+          jacobianVectorH = jacobianVectorHp;
+	  
+	  
+// 	  std::cout<<std::endl;
+//           for(unsigned i=0;i<3;i++){
+// 	    for(unsigned j=0;j<3;j++){
+// 	      std::cout << jacobianVectorH[i][j] <<  " ";
+// 	    }
+// 	    std::cout<<std::endl;
+// 	  }
+// 	  std::cout<<std::endl;
+// 	  for(unsigned i=0;i<3;i++){
+// 	    std::cout << vectorH[i] <<  " ";
+// 	  }
+//           std::cout<<std::endl;  std::cout<<std::endl;
+	  
 
+	  H = 0.;
+	  for(unsigned  i = 0;i<3;i++){
+	    H += vectorH[i] * vectorH[i];
+	  }
+	  H = sqrt(H);
+	  
+          for(unsigned  i = 0;i<3;i++){
+	    gradHSquared[i] =0.;
+	    for(unsigned  j = 0;j<3;j++){
+	      gradHSquared[i] += 2 * vectorH[j] * jacobianVectorH[j][i];
+	    }	    
+	  }
+	  
 
-          H = sqrt(vectorH[0] * vectorH[0] + vectorH[1] * vectorH[1] * vectorH[2] * vectorH[2]);
-
-
-          gradHSquared[0] = 2 * vectorH[0] * jacobianVectorH[0][0] + 2 * vectorH[1] * jacobianVectorH[1][0] + 2 * vectorH[2] * jacobianVectorH[2][0];
-          gradHSquared[1] = 2 * vectorH[0] * jacobianVectorH[0][1] + 2 * vectorH[1] * jacobianVectorH[1][1] + 2 * vectorH[2] * jacobianVectorH[2][1];
-          gradHSquared[2] = 2 * vectorH[0] * jacobianVectorH[0][2] + 2 * vectorH[1] * jacobianVectorH[1][2] + 2 * vectorH[2] * jacobianVectorH[2][2];
+//           gradHSquared[0] = 2 * vectorH[0] * jacobianVectorH[0][0] + 2 * vectorH[1] * jacobianVectorH[1][0] + 2 * vectorH[2] * jacobianVectorH[2][0];
+//           gradHSquared[1] = 2 * vectorH[0] * jacobianVectorH[0][1] + 2 * vectorH[1] * jacobianVectorH[1][1] + 2 * vectorH[2] * jacobianVectorH[2][1];
+//           gradHSquared[2] = 2 * vectorH[0] * jacobianVectorH[0][2] + 2 * vectorH[1] * jacobianVectorH[1][2] + 2 * vectorH[2] * jacobianVectorH[2][2];
 
           gradH[0] = 0.5 * (1 / H) * gradHSquared[0];
           gradH[1] = 0.5 * (1 / H) * gradHSquared[1];
           gradH[2] = 0.5 * (1 / H) * gradHSquared[2];
 
-	  
-	  
+//           for(unsigned i=0;i<3;i++){
+// 	    std::cout <<  gradHSquared[i]<<" "<< gradH[i] <<  " ";
+// 	  }
+//           std::cout<<std::endl;  std::cout<<std::endl;
+
         }
-        
-        //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::endl;
-        
+
         break;
 
     }
@@ -1193,7 +1260,7 @@ namespace femus
 
 
       double C1 = (PI * D * D * D * mu0 * chi) / 12;
-
+     // printf("%g\n",C1);
       Fm[0] = C1 * gradHSquared[0];
       Fm[1] = C1 * gradHSquared[1];
       Fm[2] = C1 * gradHSquared[2];
@@ -1203,6 +1270,7 @@ namespace femus
 
       double C2 = (PI * D * D * D * mu0 * Msat) / 6;
 
+      //printf("%g\n",C2);
       Fm[0] = C2 * gradH[0];
       Fm[1] = C2 * gradH[1];
       Fm[2] = C2 * gradH[2];
@@ -1221,15 +1289,15 @@ namespace femus
 
     for (unsigned i = 0 ; i < Fm.size(); i++) {
       Fm[i] = - Fm[i] ;
-      //std::cout << Fm[i] << " " <<std::flush;
+      //printf("%g ",Fm[i]);
     }
 
+    std::cout << std::endl;
+    
     //END cheating
 
-    
-    
-    
   }
+
 
 
 }
