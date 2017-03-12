@@ -951,16 +951,23 @@ namespace femus
 
     std::vector <double> x(3);   //case 0: point that with v identifies the line of the wire
     //case 1: center of the current loop
-//aortic bifurcation wire
+
+    //aeurysm bifurcation wire
+    x[0] = -0.01;
+    x[1] = 0.008;
+    x[2] = 0.;
+
+
+//     //aortic bifurcation wire
 //     x[0] = 0.015;
 //     x[1] = 0.;
 //     x[2] = 0.;
 
 
-    //aortic bifurcation current loop
-    x[0] = 0.055;
-    x[1] = 0.;
-    x[2] = 0.;
+//     //aortic bifurcation current loop
+//     x[0] = 0.055;
+//     x[1] = 0.;
+//     x[2] = 0.;
 
 //     //tube 3D
 //     x[0] = 0.008;
