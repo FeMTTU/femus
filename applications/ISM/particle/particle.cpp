@@ -386,7 +386,7 @@ int main(int argc, char **args) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 400;
+  const unsigned int n_timesteps = 300;
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -402,7 +402,7 @@ int main(int argc, char **args) {
 
     for(int i = linea.size() - 1; i >= 0; i--) {
       if(time_step < 200){
-	linea[i]->AdvectionParallel(10, 1. / 32., 4);
+	linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForce);
       }
       else{
 	linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForce);
@@ -1016,9 +1016,9 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
 
 
     //aortic bifurcation wire
-    x[0] = 0.015;
-    x[1] = 0.;
-    x[2] = 0.;
+//     x[0] = 0.015;
+//     x[1] = 0.;
+//     x[2] = 0.;
 
 
 
@@ -1027,10 +1027,10 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
 //     x[1] = 0.;
 //     x[2] = 0.;
 
-//     //tube 3D
-//     x[0] = 0.008;
-//     x[1] = 0.008;
-//     x[2] = 0.;
+    //tube 3D
+    x[0] = 0.008;
+    x[1] = 0.008;
+    x[2] = 0.;
 
 
 //    //bent tube no FSI wire
