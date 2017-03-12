@@ -39,6 +39,8 @@ namespace femus {
            Solution *sol, const unsigned & solType);
       ~Line();
 
+      typedef void (*ForceFunction) (const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material, unsigned forceType);
+      
       void GetLine(std::vector < std::vector < double > > &line) {
         line = _line;
       }
@@ -50,11 +52,11 @@ namespace femus {
 	}
       }
       
-      void AdvectionParallel(const unsigned &n, const double& T, const unsigned &order);
+      void AdvectionParallel(const unsigned &n, const double& T, const unsigned &order, ForceFunction Force = NULL);
 
       void UpdateLine();
       
-      void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material, unsigned forceType);
+     // void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material, unsigned forceType);
 
 
     private:
