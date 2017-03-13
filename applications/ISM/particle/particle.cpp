@@ -269,10 +269,15 @@ int main(int argc, char **args) {
   system.SetMgType(F_CYCLE);
 
   system.SetNonLinearConvergenceTolerance(1.e-9);
-  system.SetResidualUpdateConvergenceTolerance(1.e-15);
   system.SetMaxNumberOfNonLinearIterations(4);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
-
+  if(dimension2D){
+    system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
+    system.SetResidualUpdateConvergenceTolerance(1.e-15);
+  }
+  else{
+    system.SetMaxNumberOfLinearIterations(4);
+    system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+  }
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
 
@@ -1358,7 +1363,6 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
     //printf("%g ",Fm[i]);
   }
 
-  std::cout << std::endl;
 
   //END cheating
 
