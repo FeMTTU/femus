@@ -1034,8 +1034,8 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
 //     x[2] = 0.;
 
     //tube 3D
-    x[0] = 0.008;
-    x[1] = 0.008;
+    x[0] = 0.006788;
+    x[1] = 0.006788;
     x[2] = 0.;
 
 
