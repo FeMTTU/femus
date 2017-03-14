@@ -39,22 +39,22 @@ int main(int argc, char **args) {
   std::vector < std::vector < double > >  x(100);
   std::vector < double > Fm(3,0);
 
-  for(unsigned i = 0; i < 1; i++) {
-    for(unsigned j = 0; j < 1; j++) {
+  for(unsigned i = 0; i < 5; i++) {
+    for(unsigned j = 0; j < 20; j++) {
       x[i * 20 + j].resize(3); 
-      double r = 0.;
+      double r = i * 0.01;
       double theta = 2 * (acos(-1) / 20) * j; 
-      x[i * 20 + j][0] = 1 + r*cos(theta);
-      x[i * 20 + j][1] = 2 + r*sin(theta);
-      x[i * 20 + j][2] = -1 + (i * 20 + j)*0.02;
+      x[i * 20 + j][0] = 1. + r*cos(theta);
+      x[i * 20 + j][1] = 2. + r*sin(theta);
+      x[i * 20 + j][2] = 0.1;
       MagneticForce(x[i * 20 + j], Fm, 2, 1);
       double samsing = ( 0.04 * 0.04 + x[i * 20 + j][2] * x[i * 20 + j][2] );
       double Bz = (1.e12 * 0.04 * 0.04) / ( 2 * sqrt(samsing * samsing * samsing) );
       double dBz = (-3 * x[i * 20 + j][2] * 1.e12 * 0.04 * 0.04 ) / (2 *  sqrt(samsing * samsing * samsing * samsing * samsing) );
       std::cout <<   x[i * 20 + j][0] << " " << x[i * 20 + j][1] << " " << x[i * 20 + j][2] << std::endl;
       std::cout <<   x[i * 20 + j][0] + Fm[0] << " " << x[i * 20 + j][1] + Fm[1] << " " << x[i * 20 + j][2] + Fm[2] << std::endl;
-      std::cout << " Bz = " << Bz << std::endl;
-       std::cout << " dBz = " << dBz << std::endl;
+      //std::cout << " Bz = " << Bz << std::endl;
+      //std::cout << " dBz = " << dBz << std::endl;
       std::cout << std::endl << std::endl;
     }
      std::cout << std::endl;
@@ -84,7 +84,7 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
   //BEGIN magnetic and electric parameters
 
   double PI = acos(-1.);
-  double I = 1.e12; // electric current intensity
+  double I = 1.e5; // electric current intensity
   double Msat = 1.e6;  //  magnetic saturation
   double  chi = 3.; //magnetic susceptibility
   double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
@@ -309,12 +309,14 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
         jacobianVectorHp[i].resize(3);
       }
 
-      vectorHp[0] = (1 / mu0) * ((C * xM[0] * xM[2]) / (2 * alphaSquared * sqrt(betaSquared) * rhoSquared)) * ((a * a + rSquared) * ellint_2(kSquared) - alphaSquared * ellint_1(kSquared));
-      vectorHp[1] = (xM[1] / xM[0]) * vectorH[0];
+      bool nearZAxis = ( rhoSquared < 1e-5 * a * a ) ? true : false;
+      
+      vectorHp[0] = ( nearZAxis == true) ?  0 : (1 / mu0) * ((C * xM[0] * xM[2]) / (2 * alphaSquared * sqrt(betaSquared) * rhoSquared)) * ((a * a + rSquared) * ellint_2(kSquared) - alphaSquared * ellint_1(kSquared));
+      vectorHp[1] = ( nearZAxis == true) ?  0 : (xM[1] / xM[0]) * vectorH[0];
       vectorHp[2] = (1 / mu0) * (C / (2 * alphaSquared * sqrt(betaSquared))) * ((a * a - rSquared) * ellint_2(kSquared) + alphaSquared * ellint_1(kSquared));
 
 
-      jacobianVectorHp[0][0] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared * mu0)) * (
+      jacobianVectorHp[0][0] = ( nearZAxis == true) ?  0 : ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared * mu0)) * (
                                  (a * a * a * a * (- gamma * (3 * xM[2] * xM[2] + a * a) + rhoSquared * (8 * xM[0] * xM[0] - xM[1] * xM[1])) -
                                   a * a * (rhoSquared * rhoSquared * (5 * xM[0] * xM[0] + xM[1] * xM[1]) -
                                            2 * rhoSquared * xM[2] * xM[2] * (2 * xM[0] * xM[0] + xM[1] * xM[1]) + 3 * xM[2] * xM[2] * xM[2] * xM[2] * xM[1]) -
@@ -323,13 +325,13 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
                                   rSquared * (2 * xM[0] * xM[0] * xM[0] * xM[0] + gamma * (xM[1] * xM[1] + xM[2] * xM[2]))) * alphaSquared * ellint_1(kSquared));
 
 
-      jacobianVectorHp[0][1] = ((C * xM[0] * xM[1] * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared * mu0)) * (
+      jacobianVectorHp[0][1] = ( nearZAxis == true) ?  0 : ((C * xM[0] * xM[1] * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared * mu0)) * (
                                  (3 * a * a * a * a * (3 * rhoSquared - 2 * xM[2] * xM[2]) - rSquared * rSquared * (2 * rSquared + rhoSquared) - 2 * a * a * a * a * a * a  -
                                   2 * a * a * (2 * rhoSquared * rhoSquared - rhoSquared * xM[2] * xM[2] + 3 * xM[2] * xM[2] * xM[2] * xM[2])) * ellint_2(kSquared) +
                                  (rSquared * (2 * rSquared + rhoSquared) - a * a * (5 * rhoSquared - 4 * xM[2] * xM[2]) + 2 * a * a * a * a) * alphaSquared * ellint_1(kSquared));
 
 
-      jacobianVectorHp[0][2] = ((C * xM[0]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * mu0)) * (
+      jacobianVectorHp[0][2] = ( nearZAxis == true) ?  0 : ((C * xM[0]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * mu0)) * (
                                  ((rhoSquared - a * a) * (rhoSquared - a * a) * (rhoSquared + a * a) + 2 * xM[2] * xM[2] * (a * a * a * a - 6 * a * a * rhoSquared + rhoSquared * rhoSquared) +
                                   xM[2] * xM[2] * xM[2] * xM[2] * (a * a + rhoSquared)) *  ellint_2(kSquared) -
                                  ((rhoSquared - a * a) * (rhoSquared - a * a) + xM[2] * xM[2] * (rhoSquared + a * a)) * alphaSquared *  ellint_1(kSquared));
@@ -338,7 +340,7 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
       jacobianVectorHp[1][0] = jacobianVectorHp[0][1];
 
 
-      jacobianVectorHp[1][1] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared * mu0)) * (
+      jacobianVectorHp[1][1] = ( nearZAxis == true) ?  0 : ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * rhoSquared * rhoSquared * mu0)) * (
                                  (a * a * a * a * (gamma * (3 * xM[2] * xM[2] + a * a) + rhoSquared * (8 * xM[1] * xM[1] - xM[0] * xM[0])) -
                                   a * a * (rhoSquared * rhoSquared * (5 * xM[1] * xM[1] + xM[0] * xM[0]) - 2 * rhoSquared * xM[2] * xM[2] * (2 * xM[1] * xM[1] + xM[0] * xM[0]) -
                                            3 * xM[2] * xM[2] * xM[2] * xM[2] * xM[1])  - rSquared * rSquared * (2 * xM[1] * xM[1] * xM[1] * xM[1] - gamma * (xM[0] * xM[0] + xM[2] * xM[2]))) * ellint_2(kSquared) +
@@ -346,13 +348,13 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
                                      gamma * (xM[0] * xM[0] + xM[2] * xM[2]))) * alphaSquared * ellint_1(kSquared));
 
 
-      jacobianVectorHp[1][2] = (xM[1] / xM[0]) * jacobianVectorHp[0][2];
+      jacobianVectorHp[1][2] = ( nearZAxis == true) ?  0 : (xM[1] / xM[0]) * jacobianVectorHp[0][2];
 
 
-      jacobianVectorHp[2][0] = jacobianVectorHp[0][2];
+      jacobianVectorHp[2][0] = ( nearZAxis == true) ?  0 : jacobianVectorHp[0][2];
 
 
-      jacobianVectorHp[2][1] = jacobianVectorHp[1][2];
+      jacobianVectorHp[2][1] = ( nearZAxis == true) ?  0 : jacobianVectorHp[1][2];
 
 
       jacobianVectorHp[2][2] = ((C * xM[2]) / (2 * alphaSquared * alphaSquared * sqrt(betaSquared * betaSquared * betaSquared) * mu0)) * (
@@ -360,18 +362,18 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
                                  (a * a - rSquared) * alphaSquared * ellint_1(kSquared));
 
 
-	  std::cout<<std::endl;
-          for(unsigned i=0;i<3;i++){
-	    for(unsigned j=0;j<3;j++){
-	      std::cout << jacobianVectorHp[i][j] <<  " ";
-	    }
-	    std::cout<<std::endl;
-	  }
-	  std::cout<<std::endl;
-	  for(unsigned i=0;i<3;i++){
-	    std::cout << vectorHp[i] <<  " ";
-	  }
-          std::cout<<std::endl;  std::cout<<std::endl;
+// 	  std::cout<<std::endl;
+//           for(unsigned i=0;i<3;i++){
+// 	    for(unsigned j=0;j<3;j++){
+// 	      std::cout << jacobianVectorHp[i][j] <<  " ";
+// 	    }
+// 	    std::cout<<std::endl;
+// 	  }
+// 	  std::cout<<std::endl;
+// 	  for(unsigned i=0;i<3;i++){
+// 	    std::cout << vectorHp[i] <<  " ";
+// 	  }
+//           std::cout<<std::endl;  std::cout<<std::endl;
 
       std::vector < std::vector <double> > jacobianVectorH(3);
       for(unsigned i = 0; i < 3; i++) {
@@ -383,8 +385,8 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
         for(unsigned j = 0; j < 3; j++) {
           vectorH[i] += R[i][j] * vectorHp[j];
           jacobianVectorH[i][j] = 0.;
-          std::cout << R[i][j] <<" ";
-          std::cout << jacobianVectorHp[i][j] <<" ";
+          // std::cout << R[i][j] <<" ";
+          // std::cout << jacobianVectorHp[i][j] <<" ";
           for(unsigned k = 0; k < 3; k++) {
             jacobianVectorH[i][j] += R[i][k] * jacobianVectorHp[k][j];
           }
@@ -404,18 +406,18 @@ void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &F
       jacobianVectorH = jacobianVectorHp;
 
 
-	  std::cout<<std::endl;
-          for(unsigned i=0;i<3;i++){
-	    for(unsigned j=0;j<3;j++){
-	      std::cout << jacobianVectorH[i][j] <<  " ";
-	    }
-	    std::cout<<std::endl;
-	  }
-	  std::cout<<std::endl;
-	  for(unsigned i=0;i<3;i++){
-	    std::cout << vectorH[i] <<  " ";
-	  }
-          std::cout<<std::endl;  std::cout<<std::endl;
+// 	  std::cout<<std::endl;
+//           for(unsigned i=0;i<3;i++){
+// 	    for(unsigned j=0;j<3;j++){
+// 	      std::cout << jacobianVectorH[i][j] <<  " ";
+// 	    }
+// 	    std::cout<<std::endl;
+// 	  }
+// 	  std::cout<<std::endl;
+// 	  for(unsigned i=0;i<3;i++){
+// 	    std::cout << vectorH[i] <<  " ";
+// 	  }
+//           std::cout<<std::endl;  std::cout<<std::endl;
 
 
       H = 0.;
