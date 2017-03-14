@@ -56,8 +56,8 @@ double InitalValueT(const std::vector < double >& x) {
 void PrintConvergenceInfo(unsigned n_timesteps, char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 void PrintNonlinearTime(unsigned n_timesteps,char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
-std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi);
-
+std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem1, 
+							      const unsigned &elem2, const std::vector<double>&xi1, const std::vector<double>&xi2);
 enum PrecType {
   FS_VTp = 1,
   FS_TVp,
@@ -239,11 +239,15 @@ int main(int argc, char** args) {
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
 
-  std::vector< double > x(3);
-  x[0] = 0.819; //the marker is in element 117 (proc 1)
-  x[1] = 7.370;
-  x[2] = 0.;
+  std::vector< double > x1(3);
+  x1[0] = 0.181; //the marker is in element 117 (proc 1)
+  x1[1] = 7.370;
+  x1[2] = 0.;
   
+  std::vector< double > x2(3);
+  x2[0] = 0.819; //the marker is in element 117 (proc 1)
+  x2[1] = 7.370;
+  x2[2] = 0.;
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -256,12 +260,18 @@ int main(int argc, char** args) {
   system.SetIntervalTime(dt);
   unsigned n_timesteps =20000;
  
-  Marker marker(x, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
-  unsigned elem = marker.GetMarkerElement();
-  std::vector<double> xi;
-  marker.GetMarkerLocalCoordinates(xi);
+  Marker marker1(x1, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+  unsigned elem1 = marker1.GetMarkerElement();
+  std::vector<double> xi1;
+  marker1.GetMarkerLocalCoordinates(xi1);
   
-  std::cout<<elem<<" "<<xi[0]<< " "<<xi[1]<<std::endl;
+  Marker marker2(x2, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+  unsigned elem2 = marker2.GetMarkerElement();
+  std::vector<double> xi2;
+  marker2.GetMarkerLocalCoordinates(xi2);
+  
+  std::cout<<elem1<<" "<<xi1[0]<< " "<<xi1[1]<<std::endl;
+  std::cout<<elem1<<" "<<xi2[0]<< " "<<xi2[1]<<std::endl;
   
   char out_file1[100]="";
   strcpy(out_file1,"Uvelocity.dat");
@@ -288,7 +298,7 @@ int main(int argc, char** args) {
  
      system.MGsolve();
      system.CopySolutionToOldSolution();
-     out_value = GetVaribleValues(mlProb, elem, xi);
+     out_value = GetVaribleValues(mlProb, elem1, elem2,xi1,xi2);
      solV_pt = out_value.first;
      solPT_pt = out_value.second;
      
@@ -742,8 +752,9 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 //   return solTXi;
 // }
 
-std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi) {
-
+std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem1, 
+							      const unsigned &elem2, const std::vector<double>&xi1,const std::vector<double>&xi2) {
+  
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
@@ -770,7 +781,8 @@ std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem&
   unsigned solPIndex;
   solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
   unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "P"
-  vector < double >  solP; // local solution
+  vector < double >  solP1; // local solution
+  vector < double >  solP2; // local solution
   
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
   MyVector <double> solTXi(1, 0.);
@@ -779,8 +791,10 @@ std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem&
   solUXi.stack();
   MyVector <double> solVXi(1, 0.);
   solVXi.stack();
-  MyVector <double> solPXi(1, 0.);
-  solPXi.stack();
+  MyVector <double> solPXi1(1, 0.);
+  solPXi1.stack();
+  MyVector <double> solPXi2(1, 0.);
+  solPXi2.stack();
   /*
   if (dim==3) {
   	MyVector <double> solWXi(1, 0.);
@@ -788,76 +802,96 @@ std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem&
   }
   */
   //BEGIN local dof number extraction
-  if(elem >= msh->_elementOffset[iproc] && elem  < msh->_elementOffset[iproc + 1]) {
-    unsigned nDofsT = msh->GetElementDofNumber(elem, solTType);  //temperature
+  if(elem1 >= msh->_elementOffset[iproc] && elem1  < msh->_elementOffset[iproc + 1]) {
+    unsigned nDofsT = msh->GetElementDofNumber(elem1, solTType);  //temperature
     solT.reserve(nDofsT);
   
-    unsigned nDofsV = msh->GetElementDofNumber(elem, solVType); //velocity
+    unsigned nDofsV = msh->GetElementDofNumber(elem1, solVType); //velocity
     for(unsigned  k = 0; k < dim; k++) solV[k].reserve(nDofsV);
     
-    unsigned nDofsP = msh->GetElementDofNumber(elem, solPType);  //temperature
-    solP.reserve(nDofsP);
+    unsigned nDofsP1 = msh->GetElementDofNumber(elem1, solPType);  //temperature
+    solP1.reserve(nDofsP1);
     
   	//BEGIN global to local extraction
     for(unsigned i = 0; i < nDofsT; i++) { //temperature
-      unsigned solTDof = msh->GetSolutionDof(i, elem, solTType);  //local to global solution dof
+      unsigned solTDof = msh->GetSolutionDof(i, elem1, solTType);  //local to global solution dof
       solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
     }
 
     for(unsigned i = 0; i < nDofsV; i++){ //velocity
-      unsigned solVDof = msh->GetSolutionDof(i, elem, solVType);
+      unsigned solVDof = msh->GetSolutionDof(i, elem1, solVType);
       for(unsigned  k = 0; k < dim; k++) {
       solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof); // global extraction and local storage for the solution
       }
     }
    
-    for(unsigned i = 0; i < nDofsP; i++) { //temperature
-      unsigned solPDof = msh->GetSolutionDof(i, elem, solPType);  //local to global solution dof
-      solP[i] = (*sol->_Sol[solPIndex])(solPDof);  //global to local solution value
+    for(unsigned i = 0; i < nDofsP1; i++) { //temperature
+      unsigned solPDof1 = msh->GetSolutionDof(i, elem1, solPType);  //local to global solution dof
+      solP1[i] = (*sol->_Sol[solPIndex])(solPDof1);  //global to local solution value
     }
   
-    short unsigned ielGeom = msh->GetElementType(elem);
+    short unsigned ielGeom = msh->GetElementType(elem1);
     for(unsigned i = 0; i < nDofsT; i++) {
       basis *base = msh->_finiteElement[ielGeom][solTType]->GetBasis();
-      double phiT = base->eval_phi(base->GetIND(i), &xi[0]);
+      double phiT = base->eval_phi(base->GetIND(i), &xi1[0]);
       solTXi[iproc] += phiT * solT[i];
     }
    
     for(unsigned i = 0; i < nDofsV; i++) {
       basis *base = msh->_finiteElement[ielGeom][solVType]->GetBasis();
-      double phiV = base->eval_phi(base->GetIND(i), &xi[0]);
+      double phiV = base->eval_phi(base->GetIND(i), &xi1[0]);
       solUXi[iproc] += phiV * solV[0][i];
       solVXi[iproc] += phiV * solV[1][i];
  //   if(dim==3) solWXi[iproc] += phiV * solV[2][i];
     }
     
-    for(unsigned i = 0; i < nDofsP; i++) {
+    for(unsigned i = 0; i < nDofsP1; i++) {
       basis *base = msh->_finiteElement[ielGeom][solPType]->GetBasis();
-      double phiP = base->eval_phi(base->GetIND(i), &xi[0]);
-      solPXi[iproc] += phiP * solP[i];
+      double phiP1 = base->eval_phi(base->GetIND(i), &xi1[0]);
+      solPXi1[iproc] += phiP1 * solP1[i];
+    }
+  }
+  
+   //BEGIN local dof number extraction
+  if(elem2 >= msh->_elementOffset[iproc] && elem2  < msh->_elementOffset[iproc + 1]) {
+    unsigned nDofsP2 = msh->GetElementDofNumber(elem2, solPType);  //temperature
+    solP2.reserve(nDofsP2); 
+    //BEGIN global to local extraction
+    for(unsigned i = 0; i < nDofsP2; i++) { //temperature
+      unsigned solPDof2 = msh->GetSolutionDof(i, elem2, solPType);  //local to global solution dof
+      solP2[i] = (*sol->_Sol[solPIndex])(solPDof2);  //global to local solution value
+    }
+     short unsigned ielGeom = msh->GetElementType(elem2);
+    for(unsigned i = 0; i < nDofsP2; i++) {
+      basis *base = msh->_finiteElement[ielGeom][solPType]->GetBasis();
+      double phiP2 = base->eval_phi(base->GetIND(i), &xi2[0]);
+      solPXi2[iproc] += phiP2 * solP2[i];
     }
   }
   
   std::pair <vector <double>, vector <double> > out_value;
-  unsigned mproc = msh->IsdomBisectionSearch(elem , 3);
-  solUXi.broadcast(mproc);
-  solVXi.broadcast(mproc);
-  solPXi.broadcast(mproc);
-  solTXi.broadcast(mproc);
+  unsigned mproc1 = msh->IsdomBisectionSearch(elem1, 3);
+  unsigned mproc2 = msh->IsdomBisectionSearch(elem2, 3);
+  solUXi.broadcast(mproc1);
+  solVXi.broadcast(mproc1);
+  solPXi1.broadcast(mproc1);
+  solPXi2.broadcast(mproc2);
+  solTXi.broadcast(mproc1);
   
   vector <double> solV_pt(dim);
-  solV_pt[0] = solUXi[mproc];
-  solV_pt[1] = solVXi[mproc];
+  solV_pt[0] = solUXi[mproc1];
+  solV_pt[1] = solVXi[mproc1];
   out_value.first = solV_pt;
   
   vector <double> solPT_pt(2);
-  solPT_pt[0] = solPXi[mproc];
-  solPT_pt[1] = solTXi[mproc];
+  solPT_pt[0] = solPXi1[mproc1]-solPXi2[mproc2];
+  solPT_pt[1] = solTXi[mproc1];
   out_value.second = solPT_pt;
   
   solUXi.clearBroadcast();
   solVXi.clearBroadcast();
-  solPXi.clearBroadcast();
+  solPXi1.clearBroadcast();
+  solPXi2.clearBroadcast();
   solTXi.clearBroadcast();
   return out_value;
 }
