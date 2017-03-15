@@ -39,7 +39,7 @@ namespace femus {
            Solution *sol, const unsigned & solType);
       ~Line();
 
-      typedef void (*ForceFunction) (const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material, unsigned forceType);
+      typedef void (*ForceFunction) (const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material);
       
       void GetLine(std::vector < std::vector < double > > &line) {
         line = _line;
