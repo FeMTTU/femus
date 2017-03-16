@@ -409,10 +409,10 @@ int main(int argc, char **args) {
 
     for(int i = linea.size() - 1; i >= 0; i--) {
       if(time_step < 200) {
-        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceWire);
+        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceSC);
       }
       else {
-        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceWire);
+        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceSC);
       }
       linea[i]->GetStreamLine(streamline, linea.size() - i);
 
@@ -640,7 +640,7 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
     if(1 == facename) {
       double r2 = (x[0] * 100.) * (x[0] * 100.);
       //value = -0.01/.9 * (.9 - r2); //inflow
-      value = -0.05 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = -0.06 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
     }
     if(2 == facename || 3 == facename || 7 == facename) {
       test = 0;
@@ -1107,21 +1107,21 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   //BEGIN geometric parameters
 
-  double D = 500 * 1.e-9;       //diameter of the particle
+  double D = 4 * 1.e-6;       //diameter of the particle
 
   double a = 0.04; //radius of the circular current loop in m
 
   std::vector <double> v(3);   //case 0: direction vector of the line that identifies the infinite wire
  
-  v[0] = -1.;
+  v[0] = 0.;
   v[1] = 0.;
-  v[2] = 0.;
+  v[2] = -1;
 
   std::vector <double> x(3);   //case 0: point that with v identifies the line of the wire
  
-  x[0] = 0.0425;
-  x[1] = 0.;
-  x[2] = 0.;
+  x[0] = 0.;
+  x[1] = -0.013;
+  x[2] = 0.0175;
 
   //END
 
@@ -1419,10 +1419,10 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   //BEGIN cheating to have attractive force
 
-//   for(unsigned i = 0 ; i < Fm.size(); i++) {
-//     Fm[i] = - Fm[i] ;
-//     //printf("%g ",Fm[i]);
-//   }
+  for(unsigned i = 0 ; i < Fm.size(); i++) {
+    Fm[i] = - Fm[i] ;
+    //printf("%g ",Fm[i]);
+  }
 
 
   //END cheating
