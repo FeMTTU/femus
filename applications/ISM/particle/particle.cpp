@@ -979,7 +979,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN geometric parameters
 
-  double D = 500 * 1.e-9;       //diameter of the particle
+  double D =  1.e-6;       //diameter of the particle
 
   std::vector <double> v(3);    //direction vector of the line that identifies the infinite wire
 
