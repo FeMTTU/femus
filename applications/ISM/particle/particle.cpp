@@ -163,8 +163,8 @@ int main(int argc, char **args) {
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  //numberOfUniformRefinedMeshes = 2;
-  numberOfUniformRefinedMeshes = 1;
+  numberOfUniformRefinedMeshes = 2;
+  //numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -409,10 +409,10 @@ int main(int argc, char **args) {
 
     for(int i = linea.size() - 1; i >= 0; i--) {
       if(time_step < 200) {
-        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceSC);
+        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceWire);
       }
       else {
-        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceSC);
+        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceWire);
       }
       linea[i]->GetStreamLine(streamline, linea.size() - i);
 
@@ -688,7 +688,7 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
     double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     if(2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
-      value = 0.04 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = 0.1 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
     }
@@ -979,7 +979,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN geometric parameters
 
-  double D =  1.e-6;       //diameter of the particle
+  double D =  2.e-6;       //diameter of the particle
 
   std::vector <double> v(3);    //direction vector of the line that identifies the infinite wire
 
@@ -989,8 +989,8 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   std::vector <double> x(3);   //point that with v identifies the line of the wire
 
-  x[0] = 0.015;
-  x[1] = 0.;
+  x[0] = 0.6788225;
+  x[1] = 0.6788225;
   x[2] = 0.;
 
   //END
@@ -1067,10 +1067,10 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN cheating to have attractive force
 
-  for(unsigned i = 0 ; i < Fm.size(); i++) {
-    Fm[i] = - Fm[i] ;
-    //printf("%g ",Fm[i]);
-  }
+//   for(unsigned i = 0 ; i < Fm.size(); i++) {
+//     Fm[i] = - Fm[i] ;
+//     //printf("%g ",Fm[i]);
+//   }
 
 
   //END cheating
