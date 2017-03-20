@@ -306,7 +306,7 @@ int main(int argc, char** args) {
      outfile2 << (time_step + 1) * dt <<"  "<< solV_pt[1] << std::endl;
      outfile3 << (time_step + 1) * dt <<"  "<< solPT_pt[0] << std::endl;
      outfile4 << (time_step + 1) * dt <<"  "<< solPT_pt[1] << std::endl;
-     if ((time_step + 1) % 200 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+     if ((time_step + 1) % 1 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
    }
   outfile1.close();
   outfile2.close();
@@ -630,8 +630,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         }
 
         for(unsigned  k = 0; k < dim; k++) {
-          NSV[k] += -solP_gss * phiV_x[i * dim + k];
-          NSVold[k] += -solPold_gss * phiV_x[i * dim + k];
+          NSV[k] += -2.*solP_gss * phiV_x[i * dim + k];
+          NSVold[k] += -0.*solPold_gss * phiV_x[i * dim + k];
         }
 
         NSV[1] += -beta * solT_gss * phiV[i];
