@@ -809,9 +809,15 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
 	Thom_gss = 0.;  for (unsigned i = 0; i < nDofThom; i++) Thom_gss += solThom[i] * phi_Thom[i];		
 	Tcont_gss = 0.; for (unsigned i = 0; i < nDofTcont; i++) Tcont_gss += solTcont[i] * phi_Tcont[i];  
-	Tdes_gss  = 0.; for (unsigned i = 0; i < nDofTdes; i++)  Tdes_gss  += solTdes[i]  * phi_Tdes[i];  
+	Tdes_gss  = 0.; for (unsigned i = 0; i < nDofTdes; i++)  Tdes_gss  += solTdes[i]  * phi_Tdes[i]; 
+    Tcontgrad_gss  = 0.; for (unsigned i = 0; i < nDofTcont; i++)  
+    {
+       for (unsigned idim = 0; idim < dim; idim ++) Tcontgrad_gss  += solTcont[i] * phi_x_Tcont[i + idim * nDofTcont];
+    }
 
-               integral += target_flag * weight * (Thom_gss +  Tcont_gss - Tdes_gss) * (Thom_gss +  Tcont_gss - Tdes_gss);
+               integral += target_flag * (alpha * weight * (Thom_gss +  Tcont_gss - Tdes_gss) * (Thom_gss +  Tcont_gss - Tdes_gss)
+                                        + beta * weight * Tcont_gss * Tcont_gss 
+                                        + gamma * weight * Tcontgrad_gss * Tcontgrad_gss);
 	  
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
