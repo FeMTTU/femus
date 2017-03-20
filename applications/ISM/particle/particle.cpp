@@ -74,11 +74,14 @@ int main(int argc, char **args) {
     else if(!strcmp("4", args[1])) {   /** FSI AAA thrombus 2D */
       simulation = 4;
     }
-    else if(!strcmp("5", args[1])) {   /** FSI Aortic Bifurcation */
+    else if(!strcmp("5", args[1])) {   /** FSI Aortic Bifurcation 2D*/
       simulation = 5;
     }
     else if(!strcmp("6", args[1])) {   /** FSI Tubo 3D */
       simulation = 6;
+    }
+     else if(!strcmp("7", args[1])) {   /** FSI Aortic Bifurcation 3D*/
+      simulation = 7;
     }
   }
 
@@ -119,6 +122,10 @@ int main(int argc, char **args) {
     infile = "./input/tubo3D.neu";
     dimension2D = false;
   }
+  else if(simulation == 7) {
+    infile = "./input/aortic_bifurcation_3D.neu";
+    dimension2D = false;
+  }
 
 
 
@@ -135,7 +142,7 @@ int main(int argc, char **args) {
   if(simulation == 5) {
     E = 1000000 * 1.e1;
   }
-  else if(simulation == 6) {
+  else if(simulation == 6 || simulation == 7) {
     E = 12000;
   }
   else {
@@ -216,7 +223,7 @@ int main(int argc, char **args) {
   else if(simulation == 4) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus2D);
   }
-  else if(simulation == 5) {
+  else if(simulation == 5 || simulation == 7) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorticBifurcation);
   }
   else if(simulation == 6) {
@@ -228,7 +235,7 @@ int main(int argc, char **args) {
   ml_sol.GenerateBdc("DY", "Steady");
   if(!dimension2D) ml_sol.GenerateBdc("DZ", "Steady");
 
-  if(simulation == 4 || simulation == 5) {
+  if(simulation == 4 || simulation == 5 || simulation ==7) {
     ml_sol.GenerateBdc("U", "Steady");
     ml_sol.GenerateBdc("V", "Time_dependent");
   }
@@ -355,7 +362,6 @@ int main(int argc, char **args) {
       x[j][1] = 0.108;
       markerType[j] = VOLUME;
     }
-
   }
 
   if(simulation == 6) {  //for 3D tube
@@ -375,9 +381,26 @@ int main(int argc, char **args) {
         counter++;
       }
     }
-
   }
 
+  if(simulation ==7){
+    unsigned theta_intervals = 10;
+    unsigned radius_intervals = 9;
+    pSize = radius_intervals * theta_intervals;
+    x.resize(pSize);
+    markerType.resize(pSize);
+
+    unsigned counter = 0;
+    for(unsigned k = 1; k < radius_intervals + 1 ; k++) {
+      for(unsigned j = 0; j < theta_intervals; j++) {
+        x[counter].resize(3);
+        x[counter][0] = -0.008 + 0.0085 * k * sin(2.*PI / theta_intervals * j);
+        x[counter][1] = 0.108;
+        x[counter][2] = 0.0085 * k * cos(2.*PI / theta_intervals * j);
+        counter++;
+      }
+    }  
+  }
 
   //END INITIALIZE PARTICLES
 
@@ -639,8 +662,8 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
   if(!strcmp(name, "V")) {
     if(1 == facename) {
       double r2 = (x[0] * 100.) * (x[0] * 100.);
-      //value = -0.01/.9 * (.9 - r2); //inflow
-      value = -0.06 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      //value = -0.06 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = -0.1 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
     }
     if(2 == facename || 3 == facename || 7 == facename) {
       test = 0;
