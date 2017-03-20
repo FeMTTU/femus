@@ -409,10 +409,10 @@ int main(int argc, char **args) {
 
     for(int i = linea.size() - 1; i >= 0; i--) {
       if(time_step < 200) {
-        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceWire);
+        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceSC);
       }
       else {
-        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceWire);
+        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceSC);
       }
       linea[i]->GetStreamLine(streamline, linea.size() - i);
 
@@ -1120,8 +1120,8 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   std::vector <double> x(3);   //case 0: point that with v identifies the line of the wire
  
   x[0] = 0.;
-  x[1] = -0.013;
-  x[2] = 0.0175;
+  x[1] = -0.015;
+  x[2] = 0.;
 
   //END
 
