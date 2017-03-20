@@ -979,7 +979,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN geometric parameters
 
-  double D =  2.e-6;       //diameter of the particle
+  double D =  1.5e-6;       //diameter of the particle
 
   std::vector <double> v(3);    //direction vector of the line that identifies the infinite wire
 
@@ -989,8 +989,8 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   std::vector <double> x(3);   //point that with v identifies the line of the wire
 
-  x[0] = 0.6788225;
-  x[1] = 0.6788225;
+  x[0] = 0.006788225;
+  x[1] = 0.006788225;
   x[2] = 0.;
 
   //END
@@ -1067,10 +1067,10 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN cheating to have attractive force
 
-//   for(unsigned i = 0 ; i < Fm.size(); i++) {
-//     Fm[i] = - Fm[i] ;
-//     //printf("%g ",Fm[i]);
-//   }
+  for(unsigned i = 0 ; i < Fm.size(); i++) {
+    Fm[i] = - Fm[i] ;
+    //printf("%g ",Fm[i]);
+  }
 
 
   //END cheating
