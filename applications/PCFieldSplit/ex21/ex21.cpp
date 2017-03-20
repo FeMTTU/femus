@@ -271,7 +271,7 @@ int main(int argc, char** args) {
   marker2.GetMarkerLocalCoordinates(xi2);
   
   std::cout<<elem1<<" "<<xi1[0]<< " "<<xi1[1]<<std::endl;
-  std::cout<<elem2<<" "<<xi2[0]<< " "<<xi2[1]<<std::endl;
+  std::cout<<elem1<<" "<<xi2[0]<< " "<<xi2[1]<<std::endl;
   
   char out_file1[100]="";
   strcpy(out_file1,"Uvelocity.dat");
@@ -306,7 +306,7 @@ int main(int argc, char** args) {
      outfile2 << (time_step + 1) * dt <<"  "<< solV_pt[1] << std::endl;
      outfile3 << (time_step + 1) * dt <<"  "<< solPT_pt[0] << std::endl;
      outfile4 << (time_step + 1) * dt <<"  "<< solPT_pt[1] << std::endl;
-     if ((time_step + 1) % 1 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+     if ((time_step + 1) % 100 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
    }
   outfile1.close();
   outfile2.close();
@@ -374,8 +374,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
   unsigned solPIndex;
   solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
-  unsigned solPType = mlSol->GetSolut 
-ionType(solPIndex);    // get the finite element type for "u"
+  unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
 
   unsigned solTPdeIndex;
   solTPdeIndex = mlPdeSys->GetSolPdeIndex("T");    // get the position of "T" in the pdeSys object
@@ -628,12 +627,11 @@ ionType(solPIndex);    // get the finite element type for "u"
             NSVold[k]   +=  phiV[i] * (solVold_gss[j] * gradSolVold_gss[k][j]);
 
           }
-        } 
-
+        }
 
         for(unsigned  k = 0; k < dim; k++) {
-          NSV[k] += -2*solP_gss * phiV_x[i * dim + k];
-          NSVold[k] += -0*solPold_gss * phiV_x[i * dim + k];
+          NSV[k] += -2.*solP_gss * phiV_x[i * dim + k];
+          NSVold[k] += -0.*solPold_gss * phiV_x[i * dim + k];
         }
 
         NSV[1] += -beta * solT_gss * phiV[i];
@@ -761,6 +759,7 @@ std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem&
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh* msh = ml_prob._ml_msh->GetLevel(level);
+
   MultiLevelSolution* mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution* sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
@@ -777,7 +776,7 @@ std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem&
   solVIndex[1] = mlSol->GetIndex("V");
   if (dim==3) solVIndex[2] = mlSol->GetIndex("W");
   unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);
-  vector <vector <double> > solV(dim);
+  vector < vector <double> > solV(dim);
   
   unsigned solPIndex;
   solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
