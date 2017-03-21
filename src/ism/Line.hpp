@@ -56,8 +56,7 @@ namespace femus {
 
       void UpdateLine();
       
-     // void MagneticForce(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material, unsigned forceType);
-
+      unsigned NumberOfParticlesOutsideTheDomain();
 
     private:
       std::vector < std::vector < double > > _line;

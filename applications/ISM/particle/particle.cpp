@@ -170,8 +170,8 @@ int main(int argc, char **args) {
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
-  //numberOfUniformRefinedMeshes = 1;
+//   numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -359,7 +359,7 @@ int main(int argc, char **args) {
     for(unsigned j = 0; j < pSize; j++) {
       x[j].resize(2);
       x[j][0] = -0.008 + 0.016 * j / (pSize - 1);
-      x[j][1] = 0.108;
+      x[j][1] = 0.11;
       markerType[j] = VOLUME;
     }
   }
@@ -410,16 +410,22 @@ int main(int argc, char **args) {
 
   linea[0] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
 
+  unsigned itPeriod = 32;
+  
   linea[0]->GetStreamLine(streamline, 0);
   linea[0]->GetStreamLine(streamline, 1);
   PrintLine(DEFAULT_OUTPUTDIR, streamline, true, 0);
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 300;
+  const unsigned int n_timesteps = 500;
 
   std::vector < std::vector <double> > data(n_timesteps);
 
+  unsigned count_inside;
+  unsigned count_out;
+   unsigned count_tot = pSize;
+    
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
     for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambda(ml_sol, level , SECOND, ELASTICITY);
@@ -430,21 +436,32 @@ int main(int argc, char **args) {
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-    for(int i = linea.size() - 1; i >= 0; i--) {
-      if(time_step < 200) {
-        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceSC);
+    count_out = 0;
+    
+    if(time_step >= itPeriod) {
+      for(int i = 0; i < linea.size(); i++) {
+	linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
+	count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
       }
-      else {
-        linea[i]->AdvectionParallel(10, 1. / 32., 4, MagneticForceSC);
+      if(time_step < 2*itPeriod + itPeriod ){
+	count_tot += pSize; 
+	linea.resize(time_step - itPeriod + 2);
+	linea[time_step - itPeriod + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
       }
-      linea[i]->GetStreamLine(streamline, linea.size() - i);
-
     }
-
-    PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
-    linea.resize(time_step + 2);
-    linea[time_step + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
-
+    
+    count_inside = count_tot - count_out;
+    
+    std::cout << "particle inside = " << count_inside << std::endl;
+    std::cout << "particle ouside = " << count_out << std::endl;
+    std::cout << "capture efficiency = "<< static_cast< double > (count_inside) / count_tot << std::endl;
+    
+    linea[0]->GetStreamLine(streamline, 0);
+    for(int i = 0; i < linea.size(); i++) {
+      linea[i]->GetStreamLine(streamline, i+1);
+    }
+    PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);   
+    
     data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / (64*1.4);
     if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
@@ -1010,11 +1027,17 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
   v[1] = 0.;
   v[2] = 1.;
 
+
   std::vector <double> x(3);   //point that with v identifies the line of the wire
 
   x[0] = 0.006788225;
   x[1] = 0.006788225;
   x[2] = 0.;
+  
+  
+//   x[0] = 0.;
+//   x[1] = -0.015;
+//   x[2] = 0.;
 
   //END
 

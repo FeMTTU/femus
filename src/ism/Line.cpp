@@ -551,7 +551,8 @@ namespace femus
 
   }
 
-  void Line::AdvectionParallel(const unsigned &n, const double& T, const unsigned &order, ForceFunction force ){
+  void Line::AdvectionParallel(const unsigned &n, const double& T, const unsigned &order, ForceFunction force )
+  {
 
     //BEGIN  Initialize the parameters for all processors
 
@@ -644,19 +645,18 @@ namespace femus
             // double s = (tstep + _c[order - 1][istep]) / n;
 
 
-             //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-            
-            if (force == NULL){
-	      
-	    }
-	    else if (_sol->GetIfFSI()) {
+            //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
+            if (force == NULL) {
+
+            } else if (_sol->GetIfFSI()) {
               unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
 //               MagneticForce(x, Fm, material, 0);
-	      force(x, Fm, material);
+              force(x, Fm, material);
             }
 
-             //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::flush;
-            
+            //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::flush;
+
 //             for(unsigned l = 0; l < Fm.size(); l++) {
 //               std::cout << "Fm[" << l << "]=" << Fm[l] << std::endl;
 //             }
@@ -887,7 +887,19 @@ namespace femus
   }
 
 
+  unsigned Line::NumberOfParticlesOutsideTheDomain()
+  {
 
+    unsigned counter = 0;
+
+    for (unsigned iMarker = _markerOffset[0]; iMarker < _markerOffset[1]; iMarker++) {
+      unsigned elem =  _particles[iMarker]->GetMarkerElement();
+      if (elem == UINT_MAX) {
+        counter++;
+      }
+    }
+    return counter;
+  }
 }
 
 
