@@ -142,8 +142,11 @@ int main(int argc, char **args) {
   if(simulation == 5) {
     E = 1000000 * 1.e1;
   }
-  else if(simulation == 6 || simulation == 7) {
+  else if(simulation == 6) {
     E = 12000;
+  }
+  else if(simulation == 7){
+    E = 100000;  
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
@@ -394,9 +397,9 @@ int main(int argc, char **args) {
     for(unsigned k = 1; k < radius_intervals + 1 ; k++) {
       for(unsigned j = 0; j < theta_intervals; j++) {
         x[counter].resize(3);
-        x[counter][0] = -0.008 + 0.0085 * k * sin(2.*PI / theta_intervals * j);
+        x[counter][0] = 0.00085 * k * sin(2.*PI / theta_intervals * j);
         x[counter][1] = 0.108;
-        x[counter][2] = 0.0085 * k * cos(2.*PI / theta_intervals * j);
+        x[counter][2] = 0.00085 * k * cos(2.*PI / theta_intervals * j);
         counter++;
       }
     }  
@@ -680,7 +683,7 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
     if(1 == facename) {
       double r2 = (x[0] * 100.) * (x[0] * 100.);
       //value = -0.06 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
-      value = -0.1 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = -0.08 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
     }
     if(2 == facename || 3 == facename || 7 == facename) {
       test = 0;
@@ -1158,7 +1161,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   double a = 0.04; //radius of the circular current loop in m
 
   std::vector <double> v(3);   //case 0: direction vector of the line that identifies the infinite wire
- 
+  
   v[0] = 0.;
   v[1] = 0.;
   v[2] = -1;
@@ -1166,8 +1169,8 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   std::vector <double> x(3);   //case 0: point that with v identifies the line of the wire
  
   x[0] = 0.;
-  x[1] = -0.015;
-  x[2] = 0.;
+  x[1] = 0.;   //-0.015
+  x[2] = 1.75; //0.
 
   //END
 
