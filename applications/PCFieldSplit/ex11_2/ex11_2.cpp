@@ -22,6 +22,7 @@
 #include "adept.h"
 #include "FieldSplitTree.hpp"
 #include <stdlib.h>
+#include "PetscMatrix.hpp"
 
 double Prandtl = 0.02;
 double Rayleigh = 10000.;
@@ -919,8 +920,14 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
 
-  if(counter == 10) KK->print_matlab("matrix.txt", "ascii");
-    
+  if(counter == 10){ 
+    KK->print_matlab("matrix.txt", "ascii");
+    Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
+    PetscViewer    viewer;
+    PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+    MatView(KKp,viewer);	
+  }   
+  
   if(assembleMatrix)
     KK->zero(); // Set to zero all the entries of the Global Matrix  
   

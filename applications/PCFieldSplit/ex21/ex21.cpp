@@ -13,6 +13,8 @@
  *  \author Eugenio Aulisa
  */
 
+ 
+#include "PetscMatrix.hpp"
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
@@ -708,7 +710,13 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   if(assembleMatrix) {
     KK->close();
   }
-
+  
+  /*
+  Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
+  PetscViewer    viewer;
+  PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+  MatView(KKp,viewer);
+  */
   // ***************** END ASSEMBLY *******************
 }
 
