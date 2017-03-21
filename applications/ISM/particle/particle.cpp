@@ -173,8 +173,7 @@ int main(int argc, char **args) {
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-//   numberOfUniformRefinedMeshes = 2;
-  numberOfUniformRefinedMeshes = 1;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -443,7 +442,12 @@ int main(int argc, char **args) {
     
     if(time_step >= itPeriod) {
       for(int i = 0; i < linea.size(); i++) {
-	linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
+	if(simulation == 6){
+	  linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
+	}
+	else if(simulation == 5 || simulation == 7){
+	  linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceSC);
+	}
 	count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
       }
       if(time_step < 2*itPeriod + itPeriod ){
@@ -1169,8 +1173,8 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   std::vector <double> x(3);   //case 0: point that with v identifies the line of the wire
  
   x[0] = 0.;
-  x[1] = 0.;   //-0.015
-  x[2] = 1.75; //0.
+  x[1] = -0.015;
+  x[2] = 1.75;
 
   //END
 
