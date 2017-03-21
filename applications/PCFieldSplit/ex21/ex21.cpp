@@ -117,7 +117,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -242,12 +242,12 @@ int main(int argc, char** args) {
   system.SetElementBlockNumber(4);
 
   std::vector< double > x1(3);
-  x1[0] = 0.181; //the marker is in element 117 (proc 1)
+  x1[0] = 0.819; //the marker is in element 117 (proc 1)
   x1[1] = 7.370;
   x1[2] = 0.;
   
   std::vector< double > x2(3);
-  x2[0] = 0.819; //the marker is in element 117 (proc 1)
+  x2[0] = 0.181; //the marker is in element 117 (proc 1)
   x2[1] = 7.370;
   x2[2] = 0.;
 
