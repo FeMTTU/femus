@@ -51,36 +51,30 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material);
 //------------------------------------------------------------------------------------------------------------------
 
-int main(int argc, char **args) {
+int main(int argc, char **args)
+{
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
   unsigned simulation = 0;
 
-  if(argc >= 2) {
-    if(!strcmp("0", args[1])) {    /** FSI Turek2D no stent */
+  if (argc >= 2) {
+    if (!strcmp("0", args[1])) {   /** FSI Turek2D no stent */
       simulation = 0;
-    }
-    else if(!strcmp("1", args[1])) {     /** FSI Turek porous */
+    } else if (!strcmp("1", args[1])) {  /** FSI Turek porous */
       simulation = 1;
-    }
-    else if(!strcmp("2", args[1])) {   /** FSI Turek stents 60 micron */
+    } else if (!strcmp("2", args[1])) { /** FSI Turek stents 60 micron */
       simulation = 2;
-    }
-    else if(!strcmp("3", args[1])) {   /** FSI Turek 11 stents 60 micron */
+    } else if (!strcmp("3", args[1])) { /** FSI Turek 11 stents 60 micron */
       simulation = 3;
-    }
-    else if(!strcmp("4", args[1])) {   /** FSI AAA thrombus 2D */
+    } else if (!strcmp("4", args[1])) { /** FSI AAA thrombus 2D */
       simulation = 4;
-    }
-    else if(!strcmp("5", args[1])) {   /** FSI Aortic Bifurcation 2D*/
+    } else if (!strcmp("5", args[1])) { /** FSI Aortic Bifurcation 2D*/
       simulation = 5;
-    }
-    else if(!strcmp("6", args[1])) {   /** FSI Tubo 3D */
+    } else if (!strcmp("6", args[1])) { /** FSI Tubo 3D */
       simulation = 6;
-    }
-     else if(!strcmp("7", args[1])) {   /** FSI Aortic Bifurcation 3D*/
+    } else if (!strcmp("7", args[1])) { /** FSI Aortic Bifurcation 3D*/
       simulation = 7;
     }
   }
@@ -100,29 +94,22 @@ int main(int argc, char **args) {
   std::string infile;
   bool dimension2D = true;
 
-  if(simulation == 0) {
+  if (simulation == 0) {
     infile = "./input/Turek.neu";
-  }
-  else if(simulation == 1) {
+  } else if (simulation == 1) {
     infile = "./input/Turek_porous_60micron.neu";
-  }
-  else if(simulation == 2) {
+  } else if (simulation == 2) {
     infile = "./input/Turek_stents_60micron.neu";
-  }
-  else if(simulation == 3) {
+  } else if (simulation == 3) {
     infile = "./input/Turek_11stents_60micron.neu";
-  }
-  else if(simulation == 4) {
+  } else if (simulation == 4) {
     infile = "./input/AAA_thrombus_2D.neu";
-  }
-  else if(simulation == 5) {
+  } else if (simulation == 5) {
     infile = "./input/aortic_bifurcation.neu";
-  }
-  else if(simulation == 6) {
+  } else if (simulation == 6) {
     infile = "./input/tubo3D.neu";
     dimension2D = false;
-  }
-  else if(simulation == 7) {
+  } else if (simulation == 7) {
     infile = "./input/aortic_bifurcation_3D.neu";
     dimension2D = false;
   }
@@ -139,16 +126,13 @@ int main(int argc, char **args) {
   muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  if(simulation == 5) {
+  if (simulation == 5) {
     E = 1000000 * 1.e1;
-  }
-  else if(simulation == 6) {
-    E = 12000;
-  }
-  else if(simulation == 7){
-    E = 100000;  
-  }
-  else {
+  } else if (simulation == 6) {
+    E = 1000 * 1.e6;
+  } else if (simulation == 7) {
+    E = 100000;
+  } else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
   }
   E1 = 100000;
@@ -199,16 +183,16 @@ int main(int argc, char **args) {
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("DY", LAGRANGE, SECOND, 2);
-  if(!dimension2D) ml_sol.AddSolution("DZ", LAGRANGE, SECOND, 2);
+  if (!dimension2D) ml_sol.AddSolution("DZ", LAGRANGE, SECOND, 2);
 
   ml_sol.AddSolution("U", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("V", LAGRANGE, SECOND, 2);
-  if(!dimension2D) ml_sol.AddSolution("W", LAGRANGE, SECOND, 2);
+  if (!dimension2D) ml_sol.AddSolution("W", LAGRANGE, SECOND, 2);
 
   // Pair each velocity variable with the corresponding displacement variable
   ml_sol.PairSolution("U", "DX"); // Add this line
   ml_sol.PairSolution("V", "DY"); // Add this line
-  if(!dimension2D) ml_sol.PairSolution("W", "DZ");  // Add this line
+  if (!dimension2D) ml_sol.PairSolution("W", "DZ"); // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
@@ -219,34 +203,30 @@ int main(int argc, char **args) {
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
-  if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
+  if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek2D);
-  }
-  else if(simulation == 4) {
+  } else if (simulation == 4) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus2D);
-  }
-  else if(simulation == 5 || simulation == 7) {
+  } else if (simulation == 5 || simulation == 7) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorticBifurcation);
-  }
-  else if(simulation == 6) {
+  } else if (simulation == 6) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTubo3D);
   }
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
-  if(!dimension2D) ml_sol.GenerateBdc("DZ", "Steady");
+  if (!dimension2D) ml_sol.GenerateBdc("DZ", "Steady");
 
-  if(simulation == 4 || simulation == 5 || simulation ==7) {
+  if (simulation == 4 || simulation == 5 || simulation == 7) {
     ml_sol.GenerateBdc("U", "Steady");
     ml_sol.GenerateBdc("V", "Time_dependent");
-  }
-  else {
+  } else {
     ml_sol.GenerateBdc("U", "Time_dependent");
     ml_sol.GenerateBdc("V", "Steady");
   }
 
-  if(!dimension2D) ml_sol.GenerateBdc("W", "Steady");
+  if (!dimension2D) ml_sol.GenerateBdc("W", "Steady");
   ml_sol.GenerateBdc("P", "Steady");
 
 //   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
@@ -266,10 +246,10 @@ int main(int argc, char **args) {
   TransientMonolithicFSINonlinearImplicitSystem & system = ml_prob.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
   system.AddSolutionToSystemPDE("DX");
   system.AddSolutionToSystemPDE("DY");
-  if(!dimension2D) system.AddSolutionToSystemPDE("DZ");
+  if (!dimension2D) system.AddSolutionToSystemPDE("DZ");
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-  if(!dimension2D) system.AddSolutionToSystemPDE("W");
+  if (!dimension2D) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
@@ -280,11 +260,10 @@ int main(int argc, char **args) {
 
   system.SetNonLinearConvergenceTolerance(1.e-9);
   system.SetMaxNumberOfNonLinearIterations(4);
-  if(dimension2D) {
+  if (dimension2D) {
     system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
     system.SetResidualUpdateConvergenceTolerance(1.e-15);
-  }
-  else {
+  } else {
     system.SetMaxNumberOfLinearIterations(4);
     system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
   }
@@ -344,11 +323,11 @@ int main(int argc, char **args) {
   std::vector < MarkerType > markerType(pSize);
 
 
-  if(simulation == 0) {  //for Turek
+  if (simulation == 0) { //for Turek
     double y0 = 0.007 - 0.0019 / 2;
     double dy = 0.0019 / pSize;
 
-    for(unsigned j = 0; j < pSize; j++) {
+    for (unsigned j = 0; j < pSize; j++) {
       x[j].resize(2);
       x[j][0] = -0.00005;
       x[j][1] = y0 + j * dy;
@@ -356,9 +335,9 @@ int main(int argc, char **args) {
     }
   }
 
-  if(simulation == 5) {  //for aorticBifurcation
+  if (simulation == 5) { //for aorticBifurcation
 
-    for(unsigned j = 0; j < pSize; j++) {
+    for (unsigned j = 0; j < pSize; j++) {
       x[j].resize(2);
       x[j][0] = -0.008 + 0.016 * j / (pSize - 1);
       x[j][1] = 0.11;
@@ -366,7 +345,7 @@ int main(int argc, char **args) {
     }
   }
 
-  if(simulation == 6) {  //for 3D tube
+  if (simulation == 6) { //for 3D tube
     unsigned theta_intervals = 10;
     unsigned radius_intervals = 9;
     pSize = radius_intervals * theta_intervals;
@@ -374,8 +353,8 @@ int main(int argc, char **args) {
     markerType.resize(pSize);
 
     unsigned counter = 0;
-    for(unsigned k = 1; k < radius_intervals + 1 ; k++) {
-      for(unsigned j = 0; j < theta_intervals; j++) {
+    for (unsigned k = 1; k < radius_intervals + 1 ; k++) {
+      for (unsigned j = 0; j < theta_intervals; j++) {
         x[counter].resize(3);
         x[counter][0] = -0.035;
         x[counter][1] = 0.0196 + 0.00034 * k * sin(2.*PI / theta_intervals * j);
@@ -385,7 +364,7 @@ int main(int argc, char **args) {
     }
   }
 
-  if(simulation ==7){
+  if (simulation == 7) {
     unsigned theta_intervals = 10;
     unsigned radius_intervals = 9;
     pSize = radius_intervals * theta_intervals;
@@ -393,15 +372,15 @@ int main(int argc, char **args) {
     markerType.resize(pSize);
 
     unsigned counter = 0;
-    for(unsigned k = 1; k < radius_intervals + 1 ; k++) {
-      for(unsigned j = 0; j < theta_intervals; j++) {
+    for (unsigned k = 1; k < radius_intervals + 1 ; k++) {
+      for (unsigned j = 0; j < theta_intervals; j++) {
         x[counter].resize(3);
         x[counter][0] = 0.00085 * k * sin(2.*PI / theta_intervals * j);
         x[counter][1] = 0.108;
         x[counter][2] = 0.00085 * k * cos(2.*PI / theta_intervals * j);
         counter++;
       }
-    }  
+    }
   }
 
   //END INITIALIZE PARTICLES
@@ -413,7 +392,7 @@ int main(int argc, char **args) {
   linea[0] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
 
   unsigned itPeriod = 32;
-  
+
   linea[0]->GetStreamLine(streamline, 0);
   linea[0]->GetStreamLine(streamline, 1);
   PrintLine(DEFAULT_OUTPUTDIR, streamline, true, 0);
@@ -426,55 +405,56 @@ int main(int argc, char **args) {
 
   unsigned count_inside;
   unsigned count_out;
-   unsigned count_tot = pSize;
-    
-  for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-    for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
+  unsigned count_tot = pSize;
+
+  for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+    for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambda(ml_sol, level , SECOND, ELASTICITY);
     }
     data[time_step].resize(5);
-    if(time_step > 0)
-      system.SetMgType(V_CYCLE);
-    system.CopySolutionToOldSolution();
-    system.MGsolve();
 
-    count_out = 0;
-    
-    if(time_step >= itPeriod) {
-      for(int i = 0; i < linea.size(); i++) {
-	if(simulation == 6){
-	  linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
-	}
-	else if(simulation == 5 || simulation == 7){
-	  linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceSC);
-	}
-	count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
-      }
-      if(time_step < 2*itPeriod + itPeriod ){
-	count_tot += pSize; 
-	linea.resize(time_step - itPeriod + 2);
-	linea[time_step - itPeriod + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
-      }
+    if (time_step < 4) {
+      if (time_step > 0)
+        system.SetMgType(V_CYCLE);
+      // system.CopySolutionToOldSolution(); //WARNING decomment for non stationary cases
+      system.MGsolve();
     }
-    
+    count_out = 0;
+
+   // if (time_step >= itPeriod) { //WARNING decomment for non stationary cases
+    if (time_step >= 4) {
+      for (int i = 0; i < linea.size(); i++) {
+        if (simulation == 6) {
+          linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
+        } else if (simulation == 5 || simulation == 7) {
+          linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceSC);
+        }
+        count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
+      }
+      if (time_step < 2 * itPeriod + itPeriod ) {
+        count_tot += pSize;
+        linea.resize(time_step - 4/*itPeriod*/ + 2);
+        linea[time_step - 4 /*itPeriod*/ + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
+      }
+   }
+
     count_inside = count_tot - count_out;
-    
+
     std::cout << "particle inside = " << count_inside << std::endl;
     std::cout << "particle ouside = " << count_out << std::endl;
-    std::cout << "capture efficiency = "<< static_cast< double > (count_inside) / count_tot << std::endl;
-    
+    std::cout << "capture efficiency = " << static_cast< double > (count_inside) / count_tot << std::endl;
+
     linea[0]->GetStreamLine(streamline, 0);
-    for(int i = 0; i < linea.size(); i++) {
-      linea[i]->GetStreamLine(streamline, i+1);
+    for (int i = 0; i < linea.size(); i++) {
+      linea[i]->GetStreamLine(streamline, i + 1);
     }
-    PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);   
-    
+    PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
+
     data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / (64*1.4);
-    if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
+    if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
       GetSolutionNorm(ml_sol, 9, data[time_step]);
-    }
-    else if(simulation == 4) { //AAA_thrombus, 15=thrombus
+    } else if (simulation == 4) { //AAA_thrombus, 15=thrombus
       GetSolutionNorm(ml_sol, 7, data[time_step]);
     }
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
@@ -483,30 +463,26 @@ int main(int argc, char **args) {
 
   int  iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  if(iproc == 0) {
+  if (iproc == 0) {
     std::ofstream outf;
-    if(simulation == 0) {
+    if (simulation == 0) {
       outf.open("DataPrint_Turek.txt");
-    }
-    else if(simulation == 1) {
+    } else if (simulation == 1) {
       outf.open("DataPrint_TurekPorous.txt");
-    }
-    else if(simulation == 2) {
+    } else if (simulation == 2) {
       outf.open("DataPrint_TurekStents.txt");
-    }
-    else if(simulation == 3) {
+    } else if (simulation == 3) {
       outf.open("DataPrint_Turek11Stents.txt");
-    }
-    else if(simulation == 4) {
+    } else if (simulation == 4) {
       outf.open("DataPrint_AAA_thrombus_2D.txt");
     }
 
 
-    if(!outf) {
+    if (!outf) {
       std::cout << "Error in opening file DataPrint.txt";
       return 1;
     }
-    for(unsigned k = 0; k < n_timesteps; k++) {
+    for (unsigned k = 0; k < n_timesteps; k++) {
       outf << data[k][0] << "\t" << data[k][1] << "\t" << data[k][2] << "\t" << data[k][3] << "\t" << data[k][4] << std::endl;
     }
     outf.close();
@@ -516,7 +492,7 @@ int main(int argc, char **args) {
 
   // ******* Clear all systems *******
 
-  for(unsigned i = 0; i < linea.size(); i++) {
+  for (unsigned i = 0; i < linea.size(); i++) {
     delete linea[i];
   }
 
@@ -524,9 +500,11 @@ int main(int argc, char **args) {
   return 0;
 }
 
-double SetVariableTimeStep(const double time) {
+double SetVariableTimeStep(const double time)
+{
   //double dt = 1./(64*1.4);
-  double dt = 1. / 32;
+  //double dt = 1. / 32;
+  double dt = 60;
 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
@@ -553,7 +531,8 @@ double SetVariableTimeStep(const double time) {
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -582,39 +561,34 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
   //git pstd::cout<< name << " " << time <<" "<< j <<" "<<  vel[j] << std::endl;
 
   double PI = acos(-1.);
-  if(!strcmp(name, "U")) {
+  if (!strcmp(name, "U")) {
 
-    if(1 == facename) {
+    if (1 == facename) {
       double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
       //double ramp = (time < period) ? sin(PI/2 * time / period) : 1.;
       value = 0.05 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
       //value = (x[1] * 1000 - 6) * ( x[1] * 1000 - 8) * vel[j] * ramp; //inflow
-    }
-    else if(2 == facename || 5 == facename) {
+    } else if (2 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
-  }
-  else if(!strcmp(name, "V")) {
-    if(2 == facename || 5 == facename) {
+  } else if (!strcmp(name, "V")) {
+    if (2 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
-  }
-  else if(!strcmp(name, "P")) {
+  } else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
-  }
-  else if(!strcmp(name, "DX")) {
+  } else if (!strcmp(name, "DX")) {
     //if(2 == facename || 4 == facename || 5 == facename || 6 == facename) {
-    if(5 == facename || 6 == facename) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
-  }
-  else if(!strcmp(name, "DY")) {
+  } else if (!strcmp(name, "DY")) {
     //if(1 == facename || 3 == facename || 5 == facename || 6 == facename) {
-    if(5 == facename || 6 == facename) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
@@ -625,7 +599,8 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 }
 
 
-bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -633,39 +608,34 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
 
   double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
 
-  if(!strcmp(name, "V")) {
-    if(1 == facename) {
+  if (!strcmp(name, "V")) {
+    if (1 == facename) {
       double r2 = (x[0] * 100.) * (x[0] * 100.);
       //value = -0.01/.9 * (.9 - r2); //inflow
       value = -0.04 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
     }
-    if(2 == facename || 5 == facename) {
+    if (2 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
-  }
-  else if(!strcmp(name, "U")) {
-    if(2 == facename) {
+  } else if (!strcmp(name, "U")) {
+    if (2 == facename) {
       test = 0;
       value = (10000 + 2500 * sin(2 * PI * time)) * ramp;;
-    }
-    else if(5 == facename) {
+    } else if (5 == facename) {
       test = 0;
       value = 0;
     }
-  }
-  else if(!strcmp(name, "P")) {
+  } else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
-  }
-  else if(!strcmp(name, "DX")) {
-    if(5 == facename) {
+  } else if (!strcmp(name, "DX")) {
+    if (5 == facename) {
       test = 0;
       value = 0;
     }
-  }
-  else if(!strcmp(name, "DY")) {
-    if(5 == facename) {
+  } else if (!strcmp(name, "DY")) {
+    if (5 == facename) {
       test = 0;
       value = 0;
     }
@@ -675,7 +645,8 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
 }
 
 
-bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -683,39 +654,34 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
 
   double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
 
-  if(!strcmp(name, "V")) {
-    if(1 == facename) {
+  if (!strcmp(name, "V")) {
+    if (1 == facename) {
       double r2 = (x[0] * 100.) * (x[0] * 100.);
       //value = -0.06 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
       value = -0.08 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
     }
-    if(2 == facename || 3 == facename || 7 == facename) {
+    if (2 == facename || 3 == facename || 7 == facename) {
       test = 0;
       value = 0.;
     }
-  }
-  else if(!strcmp(name, "U")) {
-    if(2 == facename || 3 == facename) {
+  } else if (!strcmp(name, "U")) {
+    if (2 == facename || 3 == facename) {
       test = 0;
       value = (10000 + 2500 * sin(2 * PI * time)) * ramp;;
-    }
-    else if(7 == facename) {
+    } else if (7 == facename) {
       test = 0;
       value = 0;
     }
-  }
-  else if(!strcmp(name, "P")) {
+  } else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
-  }
-  else if(!strcmp(name, "DX")) {
-    if(7 == facename) {
+  } else if (!strcmp(name, "DX")) {
+    if (7 == facename) {
       test = 0;
       value = 0;
     }
-  }
-  else if(!strcmp(name, "DY")) {
-    if(7 == facename) {
+  } else if (!strcmp(name, "DY")) {
+    if (7 == facename) {
       test = 0;
       value = 0;
     }
@@ -725,42 +691,40 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
 }
 
 
-bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char name[], double & value, const int facename, const double time) {
+bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char name[], double & value, const int facename, const double time)
+{
   bool test = 1; //dirichlet
   value = 0.;
 
   double PI = acos(-1.);
 
-  if(!strcmp(name, "U")) {
-    double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
-    if(2 == facename) {
+  if (!strcmp(name, "U")) {
+    //double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
+    if (2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
-      value = 0.1 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      //value = 0.1 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = 0.1 * (1. - r2); //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
-    }
-    else if(1 == facename) {
+    } else if (1 == facename) {
       test = 0;
       //value = 11335 * ramp;
-      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
-    }
-    else if(5 == facename) {
+      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      value = 10000;
+    } else if (5 == facename) {
       test = 0;
       value = 0.;
     }
-  }
-  else if(!strcmp(name, "V") || !strcmp(name, "W")) {
-    if(1 == facename || 5 == facename) {
+  } else if (!strcmp(name, "V") || !strcmp(name, "W")) {
+    if (1 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
-  }
-  else if(!strcmp(name, "P")) {
+  } else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
-  }
-  else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
-    if(5 == facename) {
+  } else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
+    if (5 == facename) {
       test = 0;
       value = 0;
     }
@@ -770,7 +734,8 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
 }
 
 
-void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data) {
+void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
+{
 
   int  iproc, nprocs;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -785,13 +750,12 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   vol = NumericVector::build().release();
   vol0 = NumericVector::build().release();
 
-  if(nprocs == 1) {
+  if (nprocs == 1) {
     p2->init(nprocs, 1, false, SERIAL);
     v2->init(nprocs, 1, false, SERIAL);
     vol->init(nprocs, 1, false, SERIAL);
     vol0->init(nprocs, 1, false, SERIAL);
-  }
-  else {
+  } else {
     p2->init(nprocs, 1, false, PARALLEL);
     v2->init(nprocs, 1, false, PARALLEL);
     vol->init(nprocs, 1, false, PARALLEL);
@@ -820,7 +784,7 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   vector< vector < double> > x(dim);
 
   solP.reserve(max_size);
-  for(unsigned d = 0; d < dim; d++) {
+  for (unsigned d = 0; d < dim; d++) {
     solV[d].reserve(max_size);
     x0[d].reserve(max_size);
     x[d].reserve(max_size);
@@ -841,14 +805,14 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol.GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol.GetIndex("V");    // get the position of "V" in the ml_sol object
-  if(dim == 3) solVIndex[2] = mlSol.GetIndex("W");       // get the position of "V" in the ml_sol object
+  if (dim == 3) solVIndex[2] = mlSol.GetIndex("W");      // get the position of "V" in the ml_sol object
 
   unsigned solVType = mlSol.GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
   vector < unsigned > solDIndex(dim);
   solDIndex[0] = mlSol.GetIndex("DX");    // get the position of "U" in the ml_sol object
   solDIndex[1] = mlSol.GetIndex("DY");    // get the position of "V" in the ml_sol object
-  if(dim == 3) solDIndex[2] = mlSol.GetIndex("DZ");       // get the position of "V" in the ml_sol object
+  if (dim == 3) solDIndex[2] = mlSol.GetIndex("DZ");      // get the position of "V" in the ml_sol object
 
   unsigned solDType = mlSol.GetSolutionType(solDIndex[0]);
 
@@ -856,8 +820,8 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   solPIndex = mlSol.GetIndex("P");
   unsigned solPType = mlSol.GetSolutionType(solPIndex);
 
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    if(msh->GetElementGroup(iel) == group) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    if (msh->GetElementGroup(iel) == group) {
       short unsigned ielt = msh->GetElementType(iel);
       unsigned ndofV = msh->GetElementDofNumber(iel, solVType);
       unsigned ndofP = msh->GetElementDofNumber(iel, solPType);
@@ -869,15 +833,15 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
       nablaphiV.resize(ndofV * (3 * (dim - 1) + !(dim - 1)));
 
       solP.resize(ndofP);
-      for(int d = 0; d < dim; d++) {
+      for (int d = 0; d < dim; d++) {
         solV[d].resize(ndofV);
         x0[d].resize(ndofD);
         x[d].resize(ndofD);
       }
       // get local to global mappings
-      for(unsigned i = 0; i < ndofD; i++) {
+      for (unsigned i = 0; i < ndofD; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solDType);
-        for(unsigned d = 0; d < dim; d++) {
+        for (unsigned d = 0; d < dim; d++) {
           x0[d][i] = (*msh->_topology->_Sol[d])(idof);
 
           x[d][i] = (*msh->_topology->_Sol[d])(idof) +
@@ -885,22 +849,22 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
         }
       }
 
-      for(unsigned i = 0; i < ndofV; i++) {
+      for (unsigned i = 0; i < ndofV; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
-        for(unsigned  d = 0; d < dim; d++) {
+        for (unsigned  d = 0; d < dim; d++) {
           solV[d][i] = (*solution->_Sol[solVIndex[d]])(idof);      // global extraction and local storage for the solution
         }
       }
 
 
 
-      for(unsigned i = 0; i < ndofP; i++) {
+      for (unsigned i = 0; i < ndofP; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solPType);
         solP[i] = (*solution->_Sol[solPIndex])(idof);
       }
 
 
-      for(unsigned ig = 0; ig < mlSol._mlMesh->_finiteElement[ielt][solVType]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < mlSol._mlMesh->_finiteElement[ielt][solVType]->GetGaussPointNumber(); ig++) {
         // *** get Jacobian and test function and test function derivatives ***
         msh->_finiteElement[ielt][solVType]->Jacobian(x0, ig, weight0, phiV, gradphiV, nablaphiV);
         msh->_finiteElement[ielt][solVType]->Jacobian(x, ig, weight, phiV, gradphiV, nablaphiV);
@@ -910,20 +874,20 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
         vol->add(iproc, weight);
 
         std::vector < double> SolV2(dim, 0.);
-        for(unsigned i = 0; i < ndofV; i++) {
-          for(unsigned d = 0; d < dim; d++) {
+        for (unsigned i = 0; i < ndofV; i++) {
+          for (unsigned d = 0; d < dim; d++) {
             SolV2[d] += solV[d][i] * phiV[i];
           }
         }
 
         double V2 = 0.;
-        for(unsigned d = 0; d < dim; d++) {
+        for (unsigned d = 0; d < dim; d++) {
           V2 += SolV2[d] * SolV2[d];
         }
         v2->add(iproc, V2 * weight);
 
         double P2 = 0;
-        for(unsigned i = 0; i < ndofP; i++) {
+        for (unsigned i = 0; i < ndofP; i++) {
           P2 += solP[i] * phiP[i];
         }
         P2 *= P2;
@@ -963,7 +927,8 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
 
 }
 
-void UpdateMeshCoordinates(MultiLevelMesh &mlMesh, MultiLevelSolution& mlSol) {
+void UpdateMeshCoordinates(MultiLevelMesh &mlMesh, MultiLevelSolution& mlSol)
+{
 
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
 
@@ -977,12 +942,12 @@ void UpdateMeshCoordinates(MultiLevelMesh &mlMesh, MultiLevelSolution& mlSol) {
   const char varname[3][3] = {"DX", "DY", "DZ"};
   vector <unsigned> indVAR(dim);
 
-  for(unsigned k = 0; k < dim; k++) {
+  for (unsigned k = 0; k < dim; k++) {
     indVAR[k] = mlSol.GetIndex(&varname[k][0]);
   }
 
 
-  for(unsigned k = 0; k < dim; k++) {
+  for (unsigned k = 0; k < dim; k++) {
 
     (*msh->_topology->_Sol[k]).zero();
     (*msh->_topology->_Sol[k]).close();
@@ -997,7 +962,8 @@ void UpdateMeshCoordinates(MultiLevelMesh &mlMesh, MultiLevelSolution& mlSol) {
 
 }
 
-void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material) {
+void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material)
+{
 
   //infinitely long wire with a current I flowing modelled by the line identified by x and v
 
@@ -1040,8 +1006,8 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
   x[0] = 0.006788225;
   x[1] = 0.006788225;
   x[2] = 0.;
-  
-  
+
+
 //   x[0] = 0.;
 //   x[1] = -0.015;
 //   x[2] = 0.;
@@ -1089,7 +1055,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN evaluate Fm
 
-  if(H < H0) {
+  if (H < H0) {
 
 
     double C1 = (PI * D * D * D * mu0 * chi) / 12;
@@ -1111,7 +1077,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
   }
 
 
-  for(unsigned i = 0 ; i < Fm.size(); i++) {
+  for (unsigned i = 0 ; i < Fm.size(); i++) {
     Fm[i] = Fm[i] / (3 * PI * D * muf) ;
   }
 
@@ -1120,7 +1086,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN cheating to have attractive force
 
-  for(unsigned i = 0 ; i < Fm.size(); i++) {
+  for (unsigned i = 0 ; i < Fm.size(); i++) {
     Fm[i] = - Fm[i] ;
     //printf("%g ",Fm[i]);
   }
@@ -1131,7 +1097,8 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 }
 
 
-void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material) {
+void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material)
+{
 
   //current loop of radius a, center x and for z-axis the line identified by x and v
 
@@ -1165,13 +1132,13 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   double a = 0.04; //radius of the circular current loop in m
 
   std::vector <double> v(3);   //case 0: direction vector of the line that identifies the infinite wire
-  
+
   v[0] = 0.;
   v[1] = 0.;
   v[2] = -1;
 
   std::vector <double> x(3);   //case 0: point that with v identifies the line of the wire
- 
+
   x[0] = 0.;
   x[1] = -0.015;
   x[2] = 1.75;
@@ -1203,8 +1170,8 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   unsigned imax = 0;
   double vmax = fabs(v[0]);
-  for(unsigned i = 1; i < 3; i++) {
-    if(fabs(v[i]) > vmax) {
+  for (unsigned i = 1; i < 3; i++) {
+    if (fabs(v[i]) > vmax) {
       imax = i;
       vmax = fabs(v[i]);
     }
@@ -1224,12 +1191,12 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   w[2] = v[0] * u[1] - v[1] * u[0];
 
   double w2 = sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
-  if(fabs(w2 - 1.) > 1.0e-12) {
+  if (fabs(w2 - 1.) > 1.0e-12) {
     std::cout << "ERRORE AAAAAAAAAAAAAAAAAAA" << std::endl;
   }
 
   std::vector< std::vector <double> > R(3);
-  for(unsigned i = 0; i < 3; i++) {
+  for (unsigned i = 0; i < 3; i++) {
     R[i].resize(3);
     R[i][0] = u[i];
     R[i][1] = w[i];
@@ -1247,7 +1214,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
 
   //BEGIN find marker local coordinates
-  for(unsigned i = 0; i < 3 ; i++) {
+  for (unsigned i = 0; i < 3 ; i++) {
     xM[i] -= x[i];
   }
 
@@ -1255,8 +1222,8 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
 
   std::vector<double> xM1(3, 0.);
-  for(unsigned i = 0; i < 3; i++) {
-    for(unsigned j = 0; j < 3; j++) {
+  for (unsigned i = 0; i < 3; i++) {
+    for (unsigned j = 0; j < 3; j++) {
       xM1[i] += R[j][i] * xM[j];
     }
   }
@@ -1277,7 +1244,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   std::vector < double > vectorHp(3);
   std::vector < std::vector < double > > jacobianVectorHp(3);
-  for(unsigned i = 0; i < 3; i++) {
+  for (unsigned i = 0; i < 3; i++) {
     jacobianVectorHp[i].resize(3);
   }
 
@@ -1351,28 +1318,28 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 //           std::cout<<std::endl;  std::cout<<std::endl;
 
   std::vector < std::vector <double> > jacobianVectorH(3);
-  for(unsigned i = 0; i < 3; i++) {
+  for (unsigned i = 0; i < 3; i++) {
     jacobianVectorH[i].resize(3);
   }
 
-  for(unsigned i = 0; i < 3; i++) {
+  for (unsigned i = 0; i < 3; i++) {
     vectorH[i] = 0.;
-    for(unsigned j = 0; j < 3; j++) {
+    for (unsigned j = 0; j < 3; j++) {
       vectorH[i] += R[i][j] * vectorHp[j];
       jacobianVectorH[i][j] = 0.;
       // std::cout << R[i][j] <<" ";
       // std::cout << jacobianVectorHp[i][j] <<" ";
-      for(unsigned k = 0; k < 3; k++) {
+      for (unsigned k = 0; k < 3; k++) {
         jacobianVectorH[i][j] += R[i][k] * jacobianVectorHp[k][j];
       }
     }
   }
 
 
-  for(unsigned i = 0; i < 3; i++) {
-    for(unsigned j = 0; j < 3; j++) {
+  for (unsigned i = 0; i < 3; i++) {
+    for (unsigned j = 0; j < 3; j++) {
       jacobianVectorHp[i][j] = 0. ;
-      for(unsigned k = 0; k < 3; k++) {
+      for (unsigned k = 0; k < 3; k++) {
         jacobianVectorHp[i][j] += jacobianVectorH[i][k] * R[j][k];
       }
     }
@@ -1409,14 +1376,14 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
 
   H = 0.;
-  for(unsigned  i = 0; i < 3; i++) {
+  for (unsigned  i = 0; i < 3; i++) {
     H += vectorH[i] * vectorH[i];
   }
   H = sqrt(H);
 
-  for(unsigned  i = 0; i < 3; i++) {
+  for (unsigned  i = 0; i < 3; i++) {
     gradHSquared[i] = 0.;
-    for(unsigned  j = 0; j < 3; j++) {
+    for (unsigned  j = 0; j < 3; j++) {
       gradHSquared[i] += 2 * vectorH[j] * jacobianVectorH[j][i];
     }
   }
@@ -1441,7 +1408,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   //BEGIN evaluate Fm
 
-  if(H < H0) {
+  if (H < H0) {
 
 
     double C1 = (PI * D * D * D * mu0 * chi) / 12;
@@ -1463,7 +1430,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   }
 
 
-  for(unsigned i = 0 ; i < Fm.size(); i++) {
+  for (unsigned i = 0 ; i < Fm.size(); i++) {
     Fm[i] = Fm[i] / (3 * PI * D * muf) ;
   }
 
@@ -1472,7 +1439,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   //BEGIN cheating to have attractive force
 
-  for(unsigned i = 0 ; i < Fm.size(); i++) {
+  for (unsigned i = 0 ; i < Fm.size(); i++) {
     Fm[i] = - Fm[i] ;
     //printf("%g ",Fm[i]);
   }
