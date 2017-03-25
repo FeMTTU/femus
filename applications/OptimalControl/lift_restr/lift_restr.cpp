@@ -6,6 +6,10 @@
 
 using namespace femus;
 
+#define ALPHA_CTRL 1.
+#define BETA_CTRL  1.e-3
+#define GAMMA_CTRL 1.e-3
+
 
 int ElementTargetFlag(const std::vector<double> & elem_center) {
 
@@ -306,9 +310,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
  //********** DATA ***************** 
   double T_des = DesiredTarget();
-  double alpha = 1;
-  double beta  = 1.e-3;
-  double gamma = 1.e-3;
+  double alpha = ALPHA_CTRL;
+  double beta  = BETA_CTRL;
+  double gamma = GAMMA_CTRL;
   double penalty_strong = 10e+14;
  //*************************** 
   
@@ -602,6 +606,10 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //*************************** 
   double weight; // gauss point weight
   
+ //*************************** 
+  double alpha = ALPHA_CTRL;
+  double beta  = BETA_CTRL;
+  double gamma = GAMMA_CTRL;
 
  //******** Thom ******************* 
  //*************************** 
@@ -670,6 +678,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   l2GMap_Tcont.reserve(maxSize);
   
   double Tcont_gss = 0.;
+  double Tcontgrad_gss = 0.;
   //*************************** 
  //*************************** 
   
