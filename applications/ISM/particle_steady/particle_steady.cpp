@@ -1118,7 +1118,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   for (unsigned i = 0 ; i < Fm.size(); i++) {
     Fm[i] = - Fm[i] ;
-    //printf("%g ",Fm[i]);
+    printf("%g ",Fm[i]);
   }
 
 
