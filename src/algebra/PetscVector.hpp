@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: PetscVector
  Authors: Simone Bnà, Eugenio Aulisa, Giorgio Bornia
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -51,7 +51,7 @@ class SparseMatrix;
 /**
  * Petsc vector. Provides a nice interface to the
  * Petsc C-based data structures for parallel vectors.
- */ 
+ */
 
 class PetscVector : public NumericVector {
 
@@ -268,13 +268,16 @@ public:
   /// Swaps the raw PETSc vector context pointers.
   void swap (NumericVector &v);
 
-protected:
+  void BinaryPrint(const char* fileName);
+  void BinaryLoad(const char* fileName);
   
+protected:
+
   /// Queries the array (and the local form if the vector is ghosted) from Petsc.
   void _get_array(void) const;
   ///  Restores the array (and the local form if the vector is ghosted) to Petsc.
   void _restore_array(void) const;
-  
+
 private:
 
   /// Actual Petsc vector datatype
@@ -309,7 +312,7 @@ private:
   /// and \p _array_is_present is \p true.
   mutable int _local_size;
 #endif
-  
+
 };
 
 
@@ -379,7 +382,7 @@ inline PetscVector::PetscVector (Vec v)
 //   const VecType type;
 //   ierr = VecGetType(_vec, &type);
 //   CHKERRABORT(MPI_COMM_WORLD,ierr);
-  
+
     // Get the vector type from PETSc.
   // As of Petsc 3.0.0, the VecType #define lost its const-ness, so we
   // need to have it in the code
@@ -411,7 +414,7 @@ inline PetscVector::PetscVector (Vec v)
 #if PETSC_VERSION_RELEASE && PETSC_VERSION_LESS_THAN(3,4,0)
       const numeric_index_type ghost_end = static_cast<numeric_index_type>(mapping->n);
 #else
-      PetscInt n; 
+      PetscInt n;
       ierr = ISLocalToGlobalMappingGetSize(mapping, &n);
       CHKERRABORT(MPI_COMM_WORLD,ierr);
       const unsigned int ghost_end = static_cast<unsigned int>(n);
@@ -437,10 +440,10 @@ inline PetscVector::PetscVector (Vec v)
 //       for(unsigned int i=ghost_begin; i<ghost_end; i++)
 //         _global_to_local_map[indices[i]] = i-local_size;
 //       this->_type = GHOSTED;
-    } 
+    }
     else
       this->_type = PARALLEL;
-  } 
+  }
   else
     this->_type = SERIAL;
 
@@ -551,7 +554,7 @@ inline void PetscVector::init (const int n,
 
   this->_is_initialized = true;
   this->_is_closed = true;
-  if (fast == false) 
+  if (fast == false)
     this->zero ();
 }
 
@@ -585,11 +588,11 @@ inline void PetscVector::close () {
 
   ierr = VecAssemblyBegin(_vec);  					CHKERRABORT(MPI_COMM_WORLD,ierr);
   ierr = VecAssemblyEnd(_vec);  					CHKERRABORT(MPI_COMM_WORLD,ierr);
-  
+
   if (this->type() == GHOSTED) {
     ierr = VecGhostUpdateBegin(_vec,INSERT_VALUES,SCATTER_FORWARD);  	CHKERRABORT(MPI_COMM_WORLD,ierr);
-    ierr = VecGhostUpdateEnd(_vec,INSERT_VALUES,SCATTER_FORWARD);  	CHKERRABORT(MPI_COMM_WORLD,ierr);  
-    
+    ierr = VecGhostUpdateEnd(_vec,INSERT_VALUES,SCATTER_FORWARD);  	CHKERRABORT(MPI_COMM_WORLD,ierr);
+
   }
   this->_is_closed = true;
 }
@@ -702,12 +705,12 @@ inline double PetscVector::operator() (const int i) const {
     if (this->type() == GHOSTED) assert(local_index<_local_size);
 #endif
   return static_cast<double>(_values[local_index]);
-  
+
 //   double value;
 //   VecGetValues(_vec,1,&i,&value);
-//   
+//
 //   return value;
-  
+
 }
 
 

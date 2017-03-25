@@ -71,7 +71,7 @@ public:
     void UpdateRes(const vector <unsigned> &_SolPdeIndex, NumericVector* _RES, const vector <vector <unsigned> > &KKoffset);
 
     /** Update the solution */
-    void UpdateSolution();
+    void CopySolutionToOldSolution();
 
     /** Get a const solution (Numeric Vector) by name */
     const NumericVector& GetSolutionName(const char* var) const {
@@ -109,7 +109,10 @@ public:
     vector <SparseMatrix*> _GradMat[5];
    // bool _GradMatFlag[5];
 
+   void RemoveNullSpace( const unsigned &index ){ _removeNullSpace[index] = true ;};
+   bool GetIfRemoveNullSpace( const unsigned &index ){ return _removeNullSpace[index];};
 
+   Mesh * GetMesh(){return _msh;}
 private:
 
     /** Get the index of the variable -name- */
@@ -122,6 +125,7 @@ private:
     vector <FEFamily> _family;
     vector <FEOrder> _order;
     Mesh *_msh;
+    vector <bool> _removeNullSpace;
 
 };
 
