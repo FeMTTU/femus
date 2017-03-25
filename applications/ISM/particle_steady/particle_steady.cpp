@@ -180,6 +180,8 @@ int main(int argc, char **args)
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
 
+  ml_sol.SetIfFSI(true);
+  
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 1);
   ml_sol.AddSolution("DY", LAGRANGE, SECOND, 1);
