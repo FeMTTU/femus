@@ -20,6 +20,8 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "MultiLevelProblem.hpp"
+#include "MgTypeEnum.hpp"
+#include "FieldSplitTree.hpp"
 
 
 namespace femus {
@@ -76,8 +78,20 @@ public:
 
     AssembleFunctionType  GetAssembleFunction();
 
-    /** Solves the system.  Should be overloaded in derived systems. */
-    virtual void solve () {};
+
+    virtual void MGsolve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE){
+      _solverType = "MultiGrid";
+      _MLsolver = false;
+      _MGsolver = true;
+      solve(mgSmootherType);
+    };
+
+    virtual void MLsolve (){
+      _solverType = "MultiLevel";
+      _MLsolver = true;
+      _MGsolver = false;
+      solve();
+    };
 
     /** Clear all the data structures associated with the system. */
     virtual void clear();
@@ -101,12 +115,8 @@ public:
     inline const unsigned GetGridn() const { return _gridn; }
 
     inline unsigned GetLevelToAssemble(){ return _levelToAssemble; }
-    inline unsigned GetLevelMax(){ return _levelMax; }
-    inline bool GetAssembleMatrix(){ return _assembleMatrix; }
 
     inline unsigned SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
-    inline bool SetAssembleMatrix(const bool& assembleMatrix){ _assembleMatrix = assembleMatrix; }
-    inline unsigned SetLevelMax(const unsigned &levelMax){ _levelMax = levelMax; }
 
 protected:
 
@@ -134,13 +144,12 @@ protected:
     /** Number of Totally Refined Levels */
     unsigned _gridr;
 
-    bool _assembleMatrix;
     unsigned _levelToAssemble;
-    unsigned _levelMax;
 
+    bool _MGsolver, _MLsolver;
+    std::string _solverType;
 
-
-
+    virtual void solve( const MgSmootherType& mgSmootherType = MULTIPLICATIVE ){};
 
     /** Function that assembles the system. */
     AssembleFunctionType _assemble_system_function;
@@ -150,6 +159,8 @@ protected:
 
     /** A name associated with this system. */
     const std::string _sys_name;
+
+    bool _buildSolver;
 
 };
 

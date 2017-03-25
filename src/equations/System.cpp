@@ -3,9 +3,9 @@
  Program: FEMUS
  Module: System
  Authors: Simone Bnà, Giorgio Bornia
- 
+
  Copyright (c) FEMTTU
- All rights reserved. 
+ All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -27,11 +27,12 @@ namespace femus {
   _equation_systems                 (ml_probl),
   _sys_name                         (name_in),
   _sys_number                       (number_in),
-  _gridn(ml_probl.GetNumberOfLevels()), 
+  _gridn(ml_probl.GetNumberOfLevels()),
   _gridr(ml_probl.GetNumberOfUniformlyRefinedLevels()),
   _ml_sol(ml_probl._ml_sol),
-  _ml_msh(ml_probl._ml_msh)
-{ 
+  _ml_msh(ml_probl._ml_msh),
+  _buildSolver( true )
+{
   _msh.resize(_gridn);
   _solution.resize(_gridn);
   for(unsigned i=0;i<_gridn;i++){
@@ -40,17 +41,17 @@ namespace femus {
   }
 }
 
-  
+
 System::~System() {
   this->clear();
 }
 
 void System::clear() {
-  
+
 }
 
 void System::init() {
-  
+
 }
 
    System::AssembleFunctionType  System::GetAssembleFunction() {
@@ -63,17 +64,17 @@ void System::SetAssembleFunction(void fptr(MultiLevelProblem &ml_prob))
 
   _assemble_system_function = fptr;
 }
-  
+
 void System::AddSolutionToSystemPDEVector(const unsigned n_components, const std::string name) {
 
     for (unsigned i=0; i<n_components; i++) {
       std::ostringstream name_cmp; name_cmp << name << i;
        AddSolutionToSystemPDE(name_cmp.str().c_str());
      }
-     
+
 }
-  
-  
+
+
 void System::AddSolutionToSystemPDE(const char solname[]){
   unsigned jsol=0;
   for(unsigned j=0;j<_SolSystemPdeIndex.size();j++){
@@ -87,7 +88,7 @@ void System::AddSolutionToSystemPDE(const char solname[]){
 
 
 unsigned System::GetSolPdeIndex(const char solname[]) {
-  //unsigned ipde=GetPdeIndex(pdename);  
+  //unsigned ipde=GetPdeIndex(pdename);
   unsigned index=0;
   while (strcmp(_ml_sol->GetSolutionName(_SolSystemPdeIndex[index]),solname)) {
     index++;
@@ -98,6 +99,7 @@ unsigned System::GetSolPdeIndex(const char solname[]) {
   }
   return index;
 }
+
 
 
 } //end namespace femus

@@ -1,11 +1,35 @@
 #!/bin/bash
 
-#you need to install java, java-devel, cmake above 2.8.11
+#you need to install Java Compiler Compiler, an OpenJDK development environment
+
+# In opensuse, run as root (if you have another distro, figure out the equivalent needed packages)
+# zypper in javacc
+# zypper in java-1_7_0-openjdk-devel
+
+
+#=====================
+if test "$1" != "--prefix"; then
+echo "The first argument must be --prefix"; exit;
+fi
+
+if test "$2" = ""; then
+echo "The second argument must be the directory (either relative or absolute) where you want to install hdfjava"; exit;
+fi
+
+
+SOFTWARE_DIR=`readlink -f $2`
+echo "=========" $SOFTWARE_DIR
+
+mkdir -p $SOFTWARE_DIR
+cd $SOFTWARE_DIR
+#=====================
+
+
 
 HDFJAVA_TAR=hdf-java-2.11.0.tar
 HDFJAVA_CMAKE=HDFJAVALinuxCMake.cmake
 
-mkdir hdfjava
+mkdir -p hdfjava
 cd hdfjava
 wget http://www.hdfgroup.org/ftp/HDF5/hdf-java/current/cmake/SZip.tar.gz
 wget http://www.hdfgroup.org/ftp/HDF5/hdf-java/current/cmake/ZLib.tar.gz

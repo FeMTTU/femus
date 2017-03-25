@@ -137,7 +137,7 @@ int main(int argc, char** args) {
 
   // initilaize and solve the system
   system.init();
-  system.solve();
+  system.MGsolve();
   
   ComputeIntegral(mlProb);
  
@@ -149,8 +149,10 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("TargReg");
   variablesToBePrinted.push_back("ContReg");
 
-  VTKWriter vtkIO(&mlSol);
-  vtkIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+    // ******* Print solution *******
+  mlSol.SetWriter(VTK);
+  mlSol.GetWriter()->SetDebugOutput(true);
+  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
 //   GMVWriter gmvIO(&mlSol);
 //   variablesToBePrinted.push_back("all");
@@ -176,11 +178,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
-  const unsigned levelMax = mlPdeSys->GetLevelMax();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*                     el = msh->el;  // pointer to the elem object in msh (level)
 
   MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
@@ -317,21 +317,19 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
     
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
-    short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
+    short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
 
  //********* GEOMETRY ****************** 
-    unsigned nDofx = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
+    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
-      unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);  // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_coordinate->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -360,40 +358,37 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   //*************************************** 
     
  //*********** Thom **************************** 
-    unsigned nDofThom     = el->GetElementDofNumber(kel, solTypeThom);    // number of solution element dofs
+    unsigned nDofThom     = msh->GetElementDofNumber(iel, solTypeThom);    // number of solution element dofs
     solThom    .resize(nDofThom);
     l2GMap_Thom.resize(nDofThom);
    // local storage of global mapping and solution
     for (unsigned i = 0; i < solThom.size(); i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, solTypeThom);    // local to global solution node
-      unsigned solDofThom = msh->GetMetisDof(iNode, solTypeThom);    // global to global mapping between solution node and solution dof
-      solThom[i] = (*sol->_Sol[solIndexThom])(solDofThom);      // global extraction and local storage for the solution
-      l2GMap_Thom[i] = pdeSys->GetKKDof(solIndexThom, solPdeIndexThom, iNode);    // global to global mapping between solution node and pdeSys dof
+     unsigned solDofThom = msh->GetSolutionDof(i, iel, solTypeThom);  // global to global mapping between solution node and solution dof
+      solThom[i] = (*sol->_Sol[solIndexThom])(solDofThom);            // global extraction and local storage for the solution
+      l2GMap_Thom[i] = pdeSys->GetSystemDof(solIndexThom, solPdeIndexThom, i, iel);  // global to global mapping between solution node and pdeSys dof
     }
  //*********** Thom **************************** 
 
 
  //*********** ThomAdj **************************** 
-    unsigned nDofThomAdj  = el->GetElementDofNumber(kel, solTypeThomAdj);    // number of solution element dofs
+    unsigned nDofThomAdj  = msh->GetElementDofNumber(iel, solTypeThomAdj);    // number of solution element dofs
     solThomAdj    .resize(nDofThomAdj);
     l2GMap_ThomAdj.resize(nDofThomAdj);
     for (unsigned i = 0; i < solThomAdj.size(); i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, solTypeThomAdj);    // local to global solution node
-      unsigned solDofThomAdj = msh->GetMetisDof(iNode, solTypeThomAdj);    // global to global mapping between solution node and solution dof
+      unsigned solDofThomAdj = msh->GetSolutionDof(i, iel, solTypeThomAdj);   // global to global mapping between solution node and solution dof
       solThomAdj[i] = (*sol->_Sol[solIndexThomAdj])(solDofThomAdj);      // global extraction and local storage for the solution
-      l2GMap_ThomAdj[i] = pdeSys->GetKKDof(solIndexThomAdj, solPdeIndexThomAdj, iNode);    // global to global mapping between solution node and pdeSys dof
+      l2GMap_ThomAdj[i] = pdeSys->GetSystemDof(solIndexThomAdj, solPdeIndexThomAdj, i, iel);   // global to global mapping between solution node and pdeSys dof
     } 
  //*********** ThomAdj **************************** 
 
  //*********** Tcont **************************** 
-    unsigned nDofTcont  = el->GetElementDofNumber(kel, solTypeTcont);    // number of solution element dofs
+    unsigned nDofTcont  = msh->GetElementDofNumber(iel, solTypeTcont);    // number of solution element dofs
     solTcont    .resize(nDofTcont);
     l2GMap_Tcont.resize(nDofTcont);
     for (unsigned i = 0; i < solTcont.size(); i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, solTypeTcont);    // local to global solution node
-      unsigned solDofTcont = msh->GetMetisDof(iNode, solTypeTcont);    // global to global mapping between solution node and solution dof
+      unsigned solDofTcont = msh->GetSolutionDof(i, iel, solTypeTcont);    // global to global mapping between solution node and solution dof
       solTcont[i] = (*sol->_Sol[solIndexTcont])(solDofTcont);      // global extraction and local storage for the solution
-      l2GMap_Tcont[i] = pdeSys->GetKKDof(solIndexTcont, solPdeIndexTcont, iNode);    // global to global mapping between solution node and pdeSys dof
+      l2GMap_Tcont[i] = pdeSys->GetSystemDof(solIndexTcont, solPdeIndexTcont, i, iel);    // global to global mapping between solution node and pdeSys dof
     } 
  //*********** Tcont **************************** 
  
@@ -423,9 +418,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_ThomAdj.begin(),l2GMap_ThomAdj.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_Tcont.begin(),l2GMap_Tcont.end());
  //*************************** 
-
-
-    if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
    
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
@@ -556,7 +548,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
         } // end phi_i loop
         
       } // end gauss point loop
-    } // endif single element not refined or fine grid loop
 
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
@@ -586,10 +577,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
     LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
-  const unsigned levelMax = mlPdeSys->GetLevelMax();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*                     el = msh->el;  // pointer to the elem object in msh (level)
 
   MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
@@ -710,21 +699,19 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
     
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    unsigned kel = msh->IS_Mts2Gmt_elem[iel]; // mapping between paralell dof and mesh dof
-    short unsigned kelGeom = el->GetElementType(kel);    // element geometry type
+    short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
 
  //********* GEOMETRY ****************** 
-    unsigned nDofx = el->GetElementDofNumber(kel, xType);    // number of coordinate element dofs
+    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, xType);    // local to global coordinates node
-      unsigned xDof  = msh->GetMetisDof(iNode, xType);    // global to global mapping between coordinates node and coordinate dof
+      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_coordinate->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -747,30 +734,28 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
    
  //*********** Thom **************************** 
-    unsigned nDofThom     = el->GetElementDofNumber(kel, solTypeThom);    // number of solution element dofs
+    unsigned nDofThom     = msh->GetElementDofNumber(iel, solTypeThom);    // number of solution element dofs
     solThom    .resize(nDofThom);
    // local storage of global mapping and solution
     for (unsigned i = 0; i < solThom.size(); i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, solTypeThom);    // local to global solution node
-      unsigned solDofThom = msh->GetMetisDof(iNode, solTypeThom);    // global to global mapping between solution node and solution dof
-      solThom[i] = (*sol->_Sol[solIndexThom])(solDofThom);      // global extraction and local storage for the solution
+     unsigned solDofThom = msh->GetSolutionDof(i, iel, solTypeThom);  // global to global mapping between solution node and solution dof
+      solThom[i] = (*sol->_Sol[solIndexThom])(solDofThom);            // global extraction and local storage for the solution
     }
  //*********** Thom **************************** 
 
 
  //*********** Tcont **************************** 
-    unsigned nDofTcont  = el->GetElementDofNumber(kel, solTypeTcont);    // number of solution element dofs
+    unsigned nDofTcont  = msh->GetElementDofNumber(iel, solTypeTcont);    // number of solution element dofs
     solTcont    .resize(nDofTcont);
     for (unsigned i = 0; i < solTcont.size(); i++) {
-      unsigned iNode = el->GetMeshDof(kel, i, solTypeTcont);    // local to global solution node
-      unsigned solDofTcont = msh->GetMetisDof(iNode, solTypeTcont);    // global to global mapping between solution node and solution dof
+      unsigned solDofTcont = msh->GetSolutionDof(i, iel, solTypeTcont);    // global to global mapping between solution node and solution dof
       solTcont[i] = (*sol->_Sol[solIndexTcont])(solDofTcont);      // global extraction and local storage for the solution
     } 
  //*********** Tcont **************************** 
  
  
  //*********** Tdes **************************** 
-    unsigned nDofTdes  = el->GetElementDofNumber(kel, solTypeThom);    // number of solution element dofs
+    unsigned nDofTdes  = msh->GetElementDofNumber(iel, solTypeThom);    // number of solution element dofs
     solTdes    .resize(nDofTdes);
     for (unsigned i = 0; i < solTdes.size(); i++) {
       solTdes[i] = T_des;  //dof value
@@ -792,9 +777,6 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
     }
     
   //*************************** 
-
-
-    if (level == levelMax || !el->GetRefinedElementIndex(kel)) {      // do not care about this if now (it is used for the AMR)
    
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
@@ -820,7 +802,6 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
                                         + gamma * weight * Tcontgrad_gss * Tcontgrad_gss);
 	  
       } // end gauss point loop
-    } // endif single element not refined or fine grid loop
   } //end element loop
 
   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;

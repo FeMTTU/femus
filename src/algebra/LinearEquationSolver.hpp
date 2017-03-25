@@ -30,181 +30,187 @@
 #include "LinearEquation.hpp"
 #include "MgSmootherEnum.hpp"
 #include "MgTypeEnum.hpp"
+#include "FieldSplitTree.hpp"
 
 #include <petscksp.h>
 
 namespace femus {
 
 
-using std::vector;
+  using std::vector;
 
 //------------------------------------------------------------------------------
 // Forward declarations
 //------------------------------------------------------------------------------
-class SparseMatrix;
-class NumericVector;
-class Preconditioner;
+  class SparseMatrix;
+  class NumericVector;
+  class Preconditioner;
 
-/**
-* This class provides a uniform interface for linear solvers.  This base
-* class is overloaded to provide linear solvers from different packages
-* like PETSC or LASPACK.
-*/
+  /**
+  * This class provides a uniform interface for linear solvers.  This base
+  * class is overloaded to provide linear solvers from different packages
+  * like PETSC or LASPACK.
+  */
 
-class LinearEquationSolver : public LinearEquation {
+  class LinearEquationSolver : public LinearEquation {
 
-public:
+    public:
 
-    /**  Constructor. Initializes Solver data structure */
-    LinearEquationSolver (const unsigned &igrid, Mesh* other_msh);
+      /**  Constructor. Initializes Solver data structure */
+      LinearEquationSolver(const unsigned &igrid, Solution *other_solution);
 
-    /** Destructor. */
-    virtual ~LinearEquationSolver();
+      /** Destructor. */
+      virtual ~LinearEquationSolver();
 
-    /** Release all memory and clear data structures. */
-    virtual void clear() {}
+      /** Release all memory and clear data structures. */
+      virtual void Clear() {}
 
-    /** Builds a \p LinearEquationSolver using the linear solver in \p solver_package */
-    static std::auto_ptr<LinearEquationSolver> build(const unsigned &igrid, Mesh* other_msh,
-            const MgSmoother & smoother_type, const SolverPackage solver_package =LSOLVER);
+      /** Builds a \p LinearEquationSolver using the linear solver in \p solver_package */
+      static std::auto_ptr<LinearEquationSolver> build(const unsigned &igrid, Solution* other_solution,
+          const MgSmoother & smoother_type, const SolverPackage solver_package = LSOLVER);
 
-    /** Set the tolerance for the solver */
-    virtual void set_tolerances(const double &rtol, const double &atol,
-                                const double &divtol, const unsigned &maxits) = 0;
+      /** Set the tolerance for the solver */
+      virtual void SetTolerances(const double& rtol, const double& atol,
+                                 const double& divtol, const unsigned& maxits,
+                                 const unsigned& restart) = 0;
 
-    virtual KSP* GetKSP(){
-      std::cout<<"Warning GetKSP() is not available for this smoother\n";
-      abort();
-    }
+      virtual KSP* GetKSP() {
+        std::cout << "Warning GetKSP() is not available for this smoother\n";
+        abort();
+      }
 
-    virtual void MGinit( const MgSmootherType &mg_smoother_type, const unsigned &levelMax ){
-      std::cout<<"Warning InitMG(...) is not available for this smoother\n";
-      abort();
-    }
+      virtual void MGInit(const MgSmootherType &mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver = KSPGMRES) {
+        std::cout << "Warning InitMG(...) is not available for this smoother\n";
+        abort();
+      }
 
-    virtual void MGclear(){
-      std::cout<<"Warning ClearMG() is not available for this smoother\n";
-      abort();
-    };
+      virtual void MGClear() {
+        std::cout << "Warning ClearMG() is not available for this smoother\n";
+        abort();
+      };
 
-    virtual void MGsetLevels( LinearEquationSolver *LinSolver, const unsigned &level, const unsigned &levelMax,
-                               const vector <unsigned> &variable_to_be_solved,
-                               SparseMatrix* PP, SparseMatrix* RR,
-                               const unsigned &npre, const unsigned &npost
-                             ){
-      std::cout<<"Warning SetMGOptions(...) is not available for this smoother\n";
-      abort();
-    }
+      virtual void MGSetLevel(LinearEquationSolver *LinSolver, const unsigned &levelMax,
+                              const vector <unsigned> &variable_to_be_solved,
+                              SparseMatrix* PP, SparseMatrix* RR,
+                              const unsigned &npre, const unsigned &npost
+                              ) = 0;
 
-    virtual void MGsolve( const bool ksp_clean ) {
-      std::cout<<"Warning MGsolve(...) is not available for this smoother\n";
-      abort();
-    };
+      virtual void MGSolve(const bool ksp_clean) = 0;
 
-    /** Sets the type of solver to use. */
-    void set_solver_type (const SolverType st)  {
+      /** Sets the type of solver to use. */
+      void set_solver_type(const SolverType st)  {
         _solver_type = st;
-    }
+      }
 
-    /** Sets the type of preconditioner to use. */
-    void set_preconditioner_type (const PreconditionerType pct);
+      // Use the same preconditioner Amat = Pmat
+      virtual void SetSamePreconditioner() = 0;
 
-    /** Attaches a Preconditioner object to be used */
-    void attach_preconditioner(Preconditioner * preconditioner);
+      /** Sets the type of preconditioner to use. */
+      void set_preconditioner_type(const PreconditionerType pct);
 
-    /** @returns true if the data structures are */
-    bool initialized () const {
+      /** Attaches a Preconditioner object to be used */
+      void attach_preconditioner(Preconditioner * preconditioner);
+
+      /** @returns true if the data structures are */
+      bool initialized() const {
         return _is_initialized;
-    }
+      }
 
-    /** Returns the type of solver to use. */
-    SolverType solver_type () const {
+      /** Returns the type of solver to use. */
+      SolverType solver_type() const {
         return _solver_type;
-    }
+      }
 
-    /** Returns the type of preconditioner to use. */
-    PreconditionerType preconditioner_type () const;
+      /** Returns the type of preconditioner to use. */
+      PreconditionerType preconditioner_type() const;
 
-    /** Set the number of elements of the Vanka Block */
-    virtual void SetElementBlockNumber(const unsigned & block_elemet_number) {
-        std::cout<<"Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
-    };
-    virtual void SetElementBlockNumberFluid(const unsigned & block_elemet_number,const unsigned &overlap) {
-        std::cout<<"Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
-    };
-    virtual void SetElementBlockNumberSolid(const unsigned & block_elemet_number, const unsigned &overlap) {
-        std::cout<<"Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
-    };
+      void PrintSolverInfo(const bool & printInfo) {
+        _printSolverInfo = printInfo;
+      }
 
+      /** Set the number of elements of the Vanka Block */
+      virtual void SetElementBlockNumber(const unsigned & block_elemet_number) {
+        std::cout << "Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
+      };
+      virtual void SetElementBlockNumberFluid(const unsigned & block_elemet_number, const unsigned &overlap) {
+        std::cout << "Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
+      };
+      virtual void SetElementBlockNumberSolid(const unsigned & block_elemet_number, const unsigned &overlap) {
+        std::cout << "Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
+      };
 
-    /** To be Added */
-    virtual void SetElementBlockNumber(const char all[], const unsigned & overlap=1) {
-        std::cout<<"Warning SetElementBlockNumber(const char [], const unsigned & ) is not available for this smoother\n";
-    };
+      virtual void SetFieldSplitTree(FieldSplitTree * fieldSplitTree) {
+        std::cout << "SetFieldSplitTree(const FieldSpliTreeStructure & fieldSplitTree) is not available for this smoother\n";
+      };
 
-    /** To be Added */
-    virtual void SetNumberOfSchurVariables(const unsigned short & NSchurVar) {
-        std::cout<<"Warning SetNumberOfSchurVariables(const unsigned short &) is not available for this smoother\n";
-    };
+      /** To be Added */
+      virtual void SetElementBlockNumber(const char all[], const unsigned & overlap = 1) {
+        std::cout << "Warning SetElementBlockNumber(const char [], const unsigned & ) is not available for this smoother\n";
+      };
 
-    /** To be Added */
-    virtual void SetDirichletBCsHandling(const unsigned int &DirichletBCsHandlingMode) {
-        std::cout<<"Warning SetDirichletBCsHandling(const unsigned int &) is not available for this smoother\n";
-    };
+      /** To be Added */
+      virtual void SetNumberOfSchurVariables(const unsigned short & NSchurVar) {
+        std::cout << "Warning SetNumberOfSchurVariables(const unsigned short &) is not available for this smoother\n";
+      };
 
-    /** Call the smoother-solver using the PetscLibrary. */
-    virtual void solve(const vector <unsigned> &VankaIndex, const bool &ksp_clean) = 0;
-
-  /** @deprecated Old solver with algebra objects passed as arguments TODO think of removing */
-  virtual std::pair<unsigned int, double> solve (SparseMatrix&,  // System Matrix
-						SparseMatrix&,  // prec
-						NumericVector&, // Solution vector
-					       NumericVector&, // RHS vector
-					       const double,      // Stopping tolerance
-					       const unsigned int) { std::cout << "If I call this it's wrong" << std::endl; abort(); }
+      /** Call the smoother-solver using the PetscLibrary. */
+      virtual void Solve(const vector <unsigned> &VariableTobeSolved, const bool &ksp_clean) = 0;
 
 
-protected:
+      /** @deprecated Old solver with algebra objects passed as arguments TODO think of removing */
+      virtual std::pair<unsigned int, double> solve(SparseMatrix&,   // System Matrix
+          SparseMatrix&,  // prec
+          NumericVector&, // Solution vector
+          NumericVector&, // RHS vector
+          const double,      // Stopping tolerance
+          const unsigned int) {
+        std::cout << "If I call this it's wrong" << std::endl;
+        abort();
+      }
 
-    /** Enum stating which type of iterative solver to use. */
-    SolverType _solver_type;
+    protected:
 
-    /** Enum statitng with type of preconditioner to use. */
-    PreconditionerType _preconditioner_type;
+      /** Enum stating which type of iterative solver to use. */
+      SolverType _solver_type;
 
-    /** Holds the Preconditioner object to be used for the linear solves. */
-    Preconditioner *_preconditioner;
+      /** Enum statitng with type of preconditioner to use. */
+      PreconditionerType _preconditioner_type;
 
-    /** Flag indicating if the data structures have been initialized. */
-    bool _is_initialized;
+      /** Holds the Preconditioner object to be used for the linear solves. */
+      Preconditioner *_preconditioner;
 
-    /// Boolean flag to indicate whether we want to use an identical preconditioner to the previous solve.
-    bool same_preconditioner;
+      /** Flag indicating if the data structures have been initialized. */
+      bool _is_initialized;
 
-};
+      /// Boolean flag to indicate whether we want to use an identical preconditioner to the previous solve.
+      bool same_preconditioner;
 
-/**
- * -------------------- inline functions ---------------------
- */
+      bool _printSolverInfo;
 
-inline LinearEquationSolver::LinearEquationSolver(const unsigned &igrid, Mesh* other_msh) :
-    LinearEquation(other_msh),
+  };
+
+  /**
+   * -------------------- inline functions ---------------------
+   */
+
+  inline LinearEquationSolver::LinearEquationSolver(const unsigned &igrid, Solution *other_solution) :
+    LinearEquation(other_solution),
     _solver_type(GMRES),
     _preconditioner(NULL),
     _is_initialized(false),
     same_preconditioner(false) {
 
-    if(igrid==0) {
-        _preconditioner_type=LU_PRECOND;
+    if(igrid == 0) {
+      _preconditioner_type = LU_PRECOND;
     }
     else {
-        _preconditioner_type=ILU_PRECOND;
+      _preconditioner_type = ILU_PRECOND;
     }
-}
+  }
 
-inline LinearEquationSolver::~LinearEquationSolver() {
-    this->clear();
-}
+  inline LinearEquationSolver::~LinearEquationSolver() {
+    this->Clear();
+  }
 
 
 } //end namespace femus
