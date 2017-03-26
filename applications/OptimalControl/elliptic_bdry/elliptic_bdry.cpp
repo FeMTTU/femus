@@ -433,9 +433,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // ==================================
 
 		
-		unsigned nve = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
+		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
 		const unsigned felt = msh->GetElementFaceType(iel, jface);    
-		for(unsigned i=0; i<nve; i++) {
+		for(unsigned i=0; i < nve_bdry; i++) {
 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
                   unsigned iDof = msh->GetSolutionDof(i_vol, iel, xType);
 		  for(unsigned idim=0; idim<dim; idim++) {
@@ -447,8 +447,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  msh->_finiteElement[felt][solType_ctrl]->JacobianSur(x_bdry,igs,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 		  // *** phi_i loop ***
 
-		  for(unsigned i=0; i<nve; i++) {
-		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
+		  for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 
 	//construct control node flag field on the go	    
 	      if (dir_bool == false) { 
@@ -458,44 +458,44 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 			}
               }
 
-                 Res[ (nDof_u + i_vol) ] 
-			+=   control_node_flag[i_vol] * penalty_strong_bdry * 17.;
 //                  Res[ (nDof_u + i_vol) ] 
-// 			+=   control_node_flag[i_vol] *  weight_bdry * (phi_ctrl_bdry[i_vol]* 200.);
+// 			+=   control_node_flag[i_vol] * penalty_strong_bdry * 17.;
+                 Res[ (nDof_u + i_vol) ] 
+			+=   control_node_flag[i_vol] *  weight_bdry * (phi_ctrl_bdry[i_bdry]* 100.);
 		    
 
-		    for(unsigned j=0; j<nve; j++) {
-		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j);
+		    for(unsigned j_bdry=0; j_bdry < nve_bdry; j_bdry ++) {
+		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
 
 
 // block delta_adjoint/control ========
-// 		   if ( i < nDof_adj    && j < nDof_ctrl   &&  i==j)   Jac[ 
-// 			(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
-// 		        (nDof_u + j)             ]  += - (1 - control_node_flag[i]) * penalty_strong_bdry;      
+// 		   if ( i < nDof_adj    && j < nDof_ctrl   &&  i_vol==j_vol)   Jac[ 
+// 			(nDof_u + nDof_ctrl + i_vol) * (nDof_u + nDof_ctrl + nDof_adj)  +
+// 		        (nDof_u + j_vol)             ]  += - (1 - control_node_flag[i_vol]) * penalty_strong_bdry;      
 		    
 // block delta_control / control ========
    
-   	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl && i_vol == j_vol) {
-              Jac[  
-		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
-	            (nDof_u + j_vol) ] 
-			+=   control_node_flag[i_vol] * penalty_strong_bdry;
-	      }
-
-//    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl ) {
+//    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl && i_vol == j_vol) {
 //               Jac[  
 // 		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
 // 	            (nDof_u + j_vol) ] 
-// 			+=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_vol] * phi_ctrl_bdry[j_vol]);
+// 			+=   control_node_flag[i_vol] * penalty_strong_bdry;
 // 	      }
 
+   	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl ) {
+              Jac[  
+		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
+	            (nDof_u + j_vol) ] 
+			+=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]);
+	      }
+
 	      		    
-// 		    double grad_bdry = 0.;
-// 		      for (unsigned d = 0; d < dim; d++) {   grad_bdry += phi_ctrl_x_bdry[i+d*nve] * phi_ctrl_x_bdry[j+d*nve];    }
-// 	         Jac[
-// 		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
-// 	            (nDof_u + j_vol) ] 
-// 	                += control_node_flag[i_vol] * weight_bdry * beta * grad_bdry;
+		    double grad_bdry = 0.;
+		      for (unsigned d = 0; d < dim; d++) {   grad_bdry += phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * phi_ctrl_x_bdry[j_bdry + d*nve_bdry];    }
+	         Jac[
+		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
+	            (nDof_u + j_vol) ] 
+	                += control_node_flag[i_vol] * weight_bdry * beta * grad_bdry;
 			
 		   }
 				  
