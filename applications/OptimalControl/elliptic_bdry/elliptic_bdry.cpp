@@ -440,12 +440,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  }
 		}
 		for(unsigned igs=0; igs < msh->_finiteElement[felt][solType_ctrl]->GetGaussPointNumber(); igs++) {
+		  
 		  msh->_finiteElement[felt][solType_ctrl]->JacobianSur(x_bdry,igs,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
-		  //phi1 =msh->_finiteElement[felt][SolType2]->GetPhi(igs);
 		  // *** phi_i loop ***
+
 		  for(unsigned i=0; i<nve; i++) {
 		    unsigned int ilocal = msh->GetLocalFaceVertexIndex(iel, jface, i);
 
+	//construct control node flag field on the go	    
 	      if (dir_bool == false) { 
 		std::cout << " found boundary control nodes ==== " << std::endl;
 			for(unsigned k=0; k<control_node_flag.size(); k++) {
@@ -453,6 +455,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 			}
               }
 
+                 Res[ (nDof_u + ilocal) ] 
+			+=   /*control_node_flag[ilocal] **/ weight_bdry * (phi_ctrl_bdry[ilocal]* 200.);
 		    
 
 		    for(unsigned j=0; j<nve; j++) {
@@ -466,17 +470,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		    
 // block delta_control / control ========
    
-//                  Jac[  
-// 		    (nDof_u + ilocal) * (nDof_u + nDof_ctrl + nDof_adj) +
-// 	            (nDof_u + jlocal) ] 
-// 			+=   control_node_flag[ilocal] * weight_bdry* (alpha*phi_ctrl_bdry[ilocal]*phi_ctrl_bdry[jlocal]);
+                 Jac[  
+		    (nDof_u + ilocal) * (nDof_u + nDof_ctrl + nDof_adj) +
+	            (nDof_u + jlocal) ] 
+			+=   /*control_node_flag[ilocal] **/ weight_bdry* (alpha*phi_ctrl_bdry[ilocal]*phi_ctrl_bdry[jlocal]);
 		    
 		    double grad_bdry = 0.;
 		      for (unsigned d = 0; d < dim; d++) {   grad_bdry += phi_ctrl_x_bdry[i+d*nve] * phi_ctrl_x_bdry[j+d*nve];    }
-// 	         Jac[
-// 		    (nDof_u + ilocal) * (nDof_u + nDof_ctrl + nDof_adj) +
-// 	            (nDof_u + jlocal) ] 
-// 	                += control_node_flag[ilocal] * weight_bdry * beta * grad_bdry;
+	         Jac[
+		    (nDof_u + ilocal) * (nDof_u + nDof_ctrl + nDof_adj) +
+	            (nDof_u + jlocal) ] 
+	                += /*control_node_flag[ilocal] **/ weight_bdry * beta * grad_bdry;
 		   }
 				  
 		  }
