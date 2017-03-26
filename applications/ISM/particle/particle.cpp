@@ -795,7 +795,19 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
     double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     if(1 == facename) {
       double r2 = ((x[0] * x[0]) + (x[1] - 0.006) * (x[1] - 0.006)) / (0.0035 * 0.0035);
-      value = 0.1 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      //value = 0.1 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      double q;
+      double t = time - floor(time);
+      if (t >= 0. || t < 0.15){
+	q = 946.67 * t*t*t + 130 * t*t + 0.9333 * t + 3.94;
+      }
+      else if(t >= 0.15 || t < 0.45){
+	q = - 424889 * t*t*t*t*t*t + 876000 * t*t*t*t*t - 732289 * t*t*t*t + 317210 * t*t*t - 74927 * t*t + 9100.3 * t - 430.54;
+      }
+      else if(t >= 0.45 || t < 1.){
+	q = - 601.31  * t*t*t*t*t*t + 3582.2 * t*t*t*t*t - 8384.8 * t*t*t*t + 10028 * t*t*t - 6510.4 * t*t + 2177.1 * t - 286.61;
+      }
+      value = 2 * q * (1. - r2); //inflow
     }
     else if(2 == facename || 3 == facename) {
       test = 0;
