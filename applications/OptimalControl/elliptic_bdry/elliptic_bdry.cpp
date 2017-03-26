@@ -6,8 +6,8 @@
 
 using namespace femus;
 
-#define NSUB_X  2
-#define NSUB_Y  2
+#define NSUB_X  4
+#define NSUB_Y  4
 #define ALPHA_CTRL 1.
 #define BETA_CTRL  1.e-3
 #define GAMMA_CTRL 1.e-3
@@ -294,7 +294,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   double alpha = ALPHA_CTRL;
   double beta  = BETA_CTRL;
   double gamma = GAMMA_CTRL;
-  double penalty_strong = 1.e10;
+  double penalty_strong = 1.e50;
+  double penalty_strong_bdry = 1.e20;
  //*************************** 
   
   
@@ -458,7 +459,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               }
 
                  Res[ (nDof_u + i_vol) ] 
-			+=   control_node_flag[i_vol] * penalty_strong * 17.;
+			+=   control_node_flag[i_vol] * penalty_strong_bdry * 17.;
 //                  Res[ (nDof_u + i_vol) ] 
 // 			+=   control_node_flag[i_vol] *  weight_bdry * (phi_ctrl_bdry[i_vol]* 200.);
 		    
@@ -470,7 +471,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // block delta_adjoint/control ========
 // 		   if ( i < nDof_adj    && j < nDof_ctrl   &&  i==j)   Jac[ 
 // 			(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
-// 		        (nDof_u + j)             ]  += - (1 - control_node_flag[i]) * penalty_strong;      
+// 		        (nDof_u + j)             ]  += - (1 - control_node_flag[i]) * penalty_strong_bdry;      
 		    
 // block delta_control / control ========
    
@@ -478,14 +479,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               Jac[  
 		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
 	            (nDof_u + j_vol) ] 
-			+=   control_node_flag[i_vol] * penalty_strong;
+			+=   control_node_flag[i_vol] * penalty_strong_bdry;
 	      }
 
-//    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl /*&& i_vol==j_vol*/) {
+//    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl ) {
 //               Jac[  
 // 		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
 // 	            (nDof_u + j_vol) ] 
-// 			+=   /*control_node_flag[i_vol]* */ /** penalty_strong;*/  weight_bdry* (alpha*phi_ctrl_bdry[i_vol]*phi_ctrl_bdry[j_vol]);
+// 			+=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_vol] * phi_ctrl_bdry[j_vol]);
 // 	      }
 
 	      		    
@@ -586,16 +587,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
 		(nDof_u + nDof_ctrl + j)                                ]  += weight * phi_adj[i]*phi_adj[j];
 	      
-
-// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
-// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ] << " " << std::endl;
-// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
 	      
 	    } // end phi_j loop
           } // endif assemble_matrix
@@ -604,6 +595,26 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         
       } // end gauss point loop
 
+	if (control_el_flag == 1) {
+	  
+         for (unsigned i = 0; i < nDof_max; i++) {
+            for (unsigned j = 0; j < nDof_max; j++) {
+// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
+// 	      std::cout << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
+// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
+// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ] << " " << std::endl;
+	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ];
+// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ] << " " << std::endl;
+// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
+//       std::cout << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
+// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
+	    }
+	      std::cout << std::endl;
+	 }
+	 
+	}
+    std::cout << " ========== " << iel << " ================== " << std::endl;      
+    
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
