@@ -649,17 +649,18 @@ namespace femus
 
             if (force == NULL) {
 
-            } else if (_sol->GetIfFSI()) {
+            } 
+            //else if (_sol->GetIfFSI()) {
               unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
 //               MagneticForce(x, Fm, material, 0);
               force(x, Fm, material);
-            }
+            //}
 
             //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::flush;
 
-//             for(unsigned l = 0; l < Fm.size(); l++) {
-//               std::cout << "Fm[" << l << "]=" << Fm[l] << std::endl;
-//             }
+            for(unsigned l = 0; l < Fm.size(); l++) {
+              std::cout << "Fm[" << l << "]=" << Fm[l] << std::endl;
+            }
 
             for (unsigned k = 0; k < _dim; k++) {
               K[istep][k] = (s * V[0][k] + (1. - s) * V[1][k] + Fm[k]) * h;

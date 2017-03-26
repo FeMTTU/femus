@@ -180,7 +180,7 @@ int main(int argc, char **args)
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
 
-  ml_sol.SetIfFSI(true);
+  ml_sol.SetIfFSI(false); //TODO this should be set true, with true it gives SEG Fault
   
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 1);
@@ -1118,7 +1118,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   for (unsigned i = 0 ; i < Fm.size(); i++) {
     Fm[i] = - Fm[i] ;
-    printf("%g ",Fm[i]);
+    //printf("%g ",Fm[i]);
   }
 
 
