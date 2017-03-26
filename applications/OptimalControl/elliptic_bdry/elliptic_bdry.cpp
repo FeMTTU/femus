@@ -291,7 +291,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   double alpha = ALPHA_CTRL;
   double beta  = BETA_CTRL;
   double gamma = GAMMA_CTRL;
-  double penalty_strong = 1.e100;
+  double penalty_strong = 1.;
  //*************************** 
   
   
@@ -341,7 +341,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     
  //*********** state **********************
     unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);    // number of solution element dofs
-    sol_u    .resize(nDof_u);
+    sol_u   .resize(nDof_u);
     l2GMap_u.resize(nDof_u);
    // local storage of global mapping and solution
     for (unsigned i = 0; i < sol_u.size(); i++) {
@@ -405,7 +405,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //===========================   
 
 	// Perform face loop over elements that contain some control face
-	if (control_el_flag == 1) {
+	if (control_el_flag == 18) {
 	  
 	  double tau=0.;
 	  vector<double> normal(dim,0);
@@ -458,10 +458,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		    unsigned int jlocal = msh->GetLocalFaceVertexIndex(iel, jface, j);
 
 
-// block state-control ========
-		   if ( i < nDof_u    && j < nDof_ctrl )   Jac[    0     * (nDof_u + nDof_adj + nDof_ctrl)   +
-                                                                   i    * (nDof_u + nDof_adj + nDof_ctrl) +
-		                                                (nDof_u + nDof_adj + j)                      ]  += -penalty_strong;      
+// block delta_adjoint/control ========
+		   if ( i < nDof_adj    && j < nDof_ctrl   &&  i==j)   Jac[ 
+			(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+		        (nDof_u + j)             ]  += - (1 - control_node_flag[i]) * penalty_strong;      
 		    
 // block delta_control / control ========
    
@@ -499,7 +499,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
         //  ==== state 
-	msh->_finiteElement[kelGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
+	msh->_finiteElement[kelGeom][solType_u]  ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
         //  ==== adj 
         msh->_finiteElement[kelGeom][solType_adj]->Jacobian(x, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
           
@@ -509,20 +509,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         for (unsigned i = 0; i < nDof_max; i++) {
 
           // FIRST ROW - adj
-          if (i < nDof_u)  Res[0          + i] += weight * ( alpha * target_flag * u_des * phi_adj[i] );
+          if (i < nDof_u)      Res[0                  + i] += 0.;//weight * ( alpha * target_flag * u_des * phi_u[i] );
   
           // SECOND ROW - ctrl
-//          if ( control_el_flag == 1)  {
-//            if (i < nDof_ctrl)   Res[nDof_u + i] += weight * ( 0.);
-// 	      }
-// 	 else if ( control_el_flag == 0)  {  
-           if (i < nDof_ctrl)   {
-                             Res[nDof_u + i] += penalty_strong * 0.; //strong enforcement 
-	  }
-// 	}
+           if (i < nDof_ctrl)  Res[nDof_u             + i] +=  0.;
 	      
 	  // THIRD ROW - state
-	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl            + i] += weight * (0.) ;
+	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += weight * (0.) ;
 	      
 	      
           if (assembleMatrix) {
@@ -539,38 +532,52 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      }
 
               //adjoint row ==================
-              //BLOCK delta_state / adjoint
-              if ( i < nDof_u && j < nDof_adj )   Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) +
-							 (nDof_u + nDof_ctrl + j)                 ]  += weight * laplace_mat_adj;
-	      
               // BLOCK delta_state / state	      
               if ( i < nDof_u && j < nDof_u )   Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) +
 		                                         (0 + j)                      ]       += weight * 1. * target_flag *  phi_u[i] * phi_u[j];   
+//               //BLOCK delta_state / adjoint
+//               if ( i < nDof_u && j < nDof_adj )   Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) +
+// 							 (nDof_u + nDof_ctrl + j)                 ]  += weight * laplace_mat_adj;
+	      
 	      
               //control row ==================
              //BLOCK delta_control / control
-      
-// // // 	      else if ( control_el_flag == 0)  {  
-		
-              //BLOCK control - control
-
-		//  strong enforcement
-		if ( i < nDof_ctrl   && j < nDof_ctrl &&  i==j ) {
-		Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) +
-		     (nDof_u + j)                     ] += (1 - control_node_flag[i])*penalty_strong;
-		}
-	      
-// // // 	   }
-	      
+	      if ( i < nDof_ctrl && j < nDof_ctrl )
+		Jac[    
+		(nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+		(nDof_u + j)                                ]  += weight * phi_adj[i]*phi_adj[j];
 	      
               //state row ==================
               // BLOCK delta_adjoint / state
-	      if ( i < nDof_adj && j < nDof_u )       Jac[    
-		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
-		(0 + j)                                ]  += weight * laplace_mat_u;
-              // BLOCK state - control
+// 	      if ( i < nDof_adj && j < nDof_u  &&  i==j) 
+// 		Jac[    
+// 		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+// 		(0 + j)                                ]  += (1 - control_node_flag[i])*penalty_strong;
 	      
-            } // end phi_j loop
+              // BLOCK delta_adjoint / state
+// 	      if ( i < nDof_adj && j < nDof_u )
+// 		Jac[    
+// 		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+// 		(0 + j)                                ]  += weight * laplace_mat_u;
+	      
+              // BLOCK delta_adjoint / adjoint
+	      if ( i < nDof_adj && j < nDof_adj )
+		Jac[    
+		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+		(nDof_u + nDof_ctrl + j)                                ]  += weight * phi_adj[i]*phi_adj[j];
+	      
+
+// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
+// 	      std::cout << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
+// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
+// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ] << " " << std::endl;
+// 	      std::cout << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ] << " " << std::endl;
+// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ] << " " << std::endl;
+// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
+// 	      std::cout << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
+// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
+	      
+	    } // end phi_j loop
           } // endif assemble_matrix
 
         } // end phi_i loop
