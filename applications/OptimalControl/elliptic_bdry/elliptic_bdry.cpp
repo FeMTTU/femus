@@ -6,6 +6,8 @@
 
 using namespace femus;
 
+#define NSUB_X  2
+#define NSUB_Y  2
 #define ALPHA_CTRL 1.
 #define BETA_CTRL  1.e-3
 #define GAMMA_CTRL 1.e-3
@@ -32,7 +34,7 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
 
  //***** set flag ********************************** 
 
-  double mesh_size = 1./32.;
+  double mesh_size = 1./NSUB_Y;
   int control_el_flag = 0;
    if ( elem_center[1] >  1. - mesh_size ) { control_el_flag = 1; }
 
@@ -94,7 +96,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(32,32,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
    //1: bottom  //2: right  //3: top  //4: left
   
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -433,8 +435,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		unsigned nve = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
 		const unsigned felt = msh->GetElementFaceType(iel, jface);    
 		for(unsigned i=0; i<nve; i++) {
-		  unsigned int ilocal = msh->GetLocalFaceVertexIndex(iel, jface, i);
-                  unsigned iDof = msh->GetSolutionDof(ilocal, iel, xType);
+		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
+                  unsigned iDof = msh->GetSolutionDof(i_vol, iel, xType);
 		  for(unsigned idim=0; idim<dim; idim++) {
 		      x_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
 		  }
@@ -445,22 +447,24 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  // *** phi_i loop ***
 
 		  for(unsigned i=0; i<nve; i++) {
-		    unsigned int ilocal = msh->GetLocalFaceVertexIndex(iel, jface, i);
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
 
 	//construct control node flag field on the go	    
 	      if (dir_bool == false) { 
 		std::cout << " found boundary control nodes ==== " << std::endl;
 			for(unsigned k=0; k<control_node_flag.size(); k++) {
-				  control_node_flag[ilocal] = 1;
+				  control_node_flag[i_vol] = 1;
 			}
               }
 
-                 Res[ (nDof_u + ilocal) ] 
-			+=   control_node_flag[ilocal] * penalty_strong * 17.;//weight_bdry * (phi_ctrl_bdry[ilocal]* 200.);
+                 Res[ (nDof_u + i_vol) ] 
+			+=   control_node_flag[i_vol] * penalty_strong * 17.;
+//                  Res[ (nDof_u + i_vol) ] 
+// 			+=   control_node_flag[i_vol] *  weight_bdry * (phi_ctrl_bdry[i_vol]* 200.);
 		    
 
 		    for(unsigned j=0; j<nve; j++) {
-		    unsigned int jlocal = msh->GetLocalFaceVertexIndex(iel, jface, j);
+		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j);
 
 
 // block delta_adjoint/control ========
@@ -470,23 +474,31 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		    
 // block delta_control / control ========
    
-   	      if ( i < nDof_ctrl && j < nDof_ctrl && ilocal==jlocal) {
+   	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl && i_vol == j_vol) {
               Jac[  
-		    (nDof_u + ilocal) * (nDof_u + nDof_ctrl + nDof_adj) +
-	            (nDof_u + jlocal) ] 
-			+=   control_node_flag[ilocal] * penalty_strong; //* weight_bdry* (alpha*phi_ctrl_bdry[ilocal]*phi_ctrl_bdry[jlocal]);
+		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
+	            (nDof_u + j_vol) ] 
+			+=   control_node_flag[i_vol] * penalty_strong;
 	      }
-/*		    
-		    double grad_bdry = 0.;
-		      for (unsigned d = 0; d < dim; d++) {   grad_bdry += phi_ctrl_x_bdry[i+d*nve] * phi_ctrl_x_bdry[j+d*nve];    }
-	         Jac[
-		    (nDof_u + ilocal) * (nDof_u + nDof_ctrl + nDof_adj) +
-	            (nDof_u + jlocal) ] 
-	                += control_node_flag[ilocal] * weight_bdry * beta * grad_bdry;*/
+
+//    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl /*&& i_vol==j_vol*/) {
+//               Jac[  
+// 		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
+// 	            (nDof_u + j_vol) ] 
+// 			+=   /*control_node_flag[i_vol]* */ /** penalty_strong;*/  weight_bdry* (alpha*phi_ctrl_bdry[i_vol]*phi_ctrl_bdry[j_vol]);
+// 	      }
+
+	      		    
+// 		    double grad_bdry = 0.;
+// 		      for (unsigned d = 0; d < dim; d++) {   grad_bdry += phi_ctrl_x_bdry[i+d*nve] * phi_ctrl_x_bdry[j+d*nve];    }
+// 	         Jac[
+// 		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
+// 	            (nDof_u + j_vol) ] 
+// 	                += control_node_flag[i_vol] * weight_bdry * beta * grad_bdry;
 			
 		   }
 				  
-		  }
+		  }  //end i loop
 		}
 	      }
 	      
