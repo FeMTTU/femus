@@ -6,6 +6,9 @@
 
 using namespace femus;
 
+#define ALPHA_CTRL 1.
+#define BETA_CTRL  1.e-3
+#define GAMMA_CTRL 1.e-3
 
 int ElementTargetFlag(const std::vector<double> & elem_center) {
 
@@ -285,9 +288,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
  //********** DATA ***************** 
   double u_des = DesiredTarget();
-  double alpha = 1;
-  double beta  = 1.e-3;
-  double gamma = 1.e-3;
+  double alpha = ALPHA_CTRL;
+  double beta  = BETA_CTRL;
+  double gamma = GAMMA_CTRL;
   double penalty_strong = 1.e100;
  //*************************** 
   
