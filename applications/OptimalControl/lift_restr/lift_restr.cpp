@@ -16,8 +16,8 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ********************************** 
   int target_flag = 1; //set 0 to 1 to get the entire domain
   
-   if ( elem_center[0] < (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > - (1./16. + 1./64.) - 1.e-5  && 
-        elem_center[1] < (1./16. + 1./64.)  + 1.e-5  && elem_center[1] > - (1./16. + 1./64.) - 1.e-5 
+   if ( elem_center[0] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > 0.5 - (1./16. + 1./64.) - 1.e-5  && 
+        elem_center[1] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[1] > 0.5 - (1./16. + 1./64.) - 1.e-5 
   ) {
      
      target_flag = 1;
@@ -33,7 +33,7 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ********************************** 
 
   int control_el_flag = 0;
-   if ( elem_center[1] >  0.3 ) { control_el_flag = 1; }
+   if ( elem_center[1] >  0.8 ) { control_el_flag = 1; }
 
      return control_el_flag;
 
@@ -93,7 +93,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(32,32,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
+  mlMsh.GenerateCoarseBoxMesh(32,32,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 1;
@@ -157,11 +157,6 @@ int main(int argc, char** args) {
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-
-//   GMVWriter gmvIO(&mlSol);
-//   variablesToBePrinted.push_back("all");
-//   gmvIO.SetDebugOutput(false);
-//   gmvIO.write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   return 0;
 }
