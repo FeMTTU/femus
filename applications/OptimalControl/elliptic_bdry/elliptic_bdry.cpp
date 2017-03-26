@@ -456,7 +456,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               }
 
                  Res[ (nDof_u + ilocal) ] 
-			+=   /*control_node_flag[ilocal] **/ weight_bdry * (phi_ctrl_bdry[ilocal]* 200.);
+			+=   control_node_flag[ilocal] * penalty_strong * 17.;//weight_bdry * (phi_ctrl_bdry[ilocal]* 200.);
 		    
 
 		    for(unsigned j=0; j<nve; j++) {
@@ -470,17 +470,20 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		    
 // block delta_control / control ========
    
-                 Jac[  
+   	      if ( i < nDof_ctrl && j < nDof_ctrl && ilocal==jlocal) {
+              Jac[  
 		    (nDof_u + ilocal) * (nDof_u + nDof_ctrl + nDof_adj) +
 	            (nDof_u + jlocal) ] 
-			+=   /*control_node_flag[ilocal] **/ weight_bdry* (alpha*phi_ctrl_bdry[ilocal]*phi_ctrl_bdry[jlocal]);
-		    
+			+=   control_node_flag[ilocal] * penalty_strong; //* weight_bdry* (alpha*phi_ctrl_bdry[ilocal]*phi_ctrl_bdry[jlocal]);
+	      }
+/*		    
 		    double grad_bdry = 0.;
 		      for (unsigned d = 0; d < dim; d++) {   grad_bdry += phi_ctrl_x_bdry[i+d*nve] * phi_ctrl_x_bdry[j+d*nve];    }
 	         Jac[
 		    (nDof_u + ilocal) * (nDof_u + nDof_ctrl + nDof_adj) +
 	            (nDof_u + jlocal) ] 
-	                += /*control_node_flag[ilocal] **/ weight_bdry * beta * grad_bdry;
+	                += control_node_flag[ilocal] * weight_bdry * beta * grad_bdry;*/
+			
 		   }
 				  
 		  }
@@ -550,7 +553,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      if ( i < nDof_ctrl && j < nDof_ctrl && i==j)
 		Jac[    
 		(nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
-		(nDof_u + j)                                ]  += penalty_strong * ( (1 - control_node_flag[i]) + control_node_flag[i] )/*weight * phi_adj[i]*phi_adj[j]*/;
+		(nDof_u + j)                                ]  += penalty_strong * ( (1 - control_node_flag[i]) /*+ control_node_flag[i]*/ )/*weight * phi_adj[i]*phi_adj[j]*/;
 	      
               //state row ==================
               // BLOCK delta_adjoint / state
