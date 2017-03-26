@@ -12,8 +12,8 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ********************************** 
   int target_flag = 1; //set 0 to 1 to get the entire domain
   
-   if ( elem_center[0] < (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > - (1./16. + 1./64.) - 1.e-5  && 
-        elem_center[1] < (1./16. + 1./64.)  + 1.e-5  && elem_center[1] > - (1./16. + 1./64.) - 1.e-5 
+   if ( elem_center[0] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > 0.5 - (1./16. + 1./64.) - 1.e-5  && 
+        elem_center[1] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[1] > 0.5 - (1./16. + 1./64.) - 1.e-5 
   ) {
      
      target_flag = 1;
@@ -31,7 +31,7 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
 
   double mesh_size = 1./32.;
   int control_el_flag = 0;
-   if ( elem_center[1] >  0.5 - mesh_size ) { control_el_flag = 1; }
+   if ( elem_center[1] >  1. - mesh_size ) { control_el_flag = 1; }
 
      return control_el_flag;
 
@@ -91,7 +91,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(32,32,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
+  mlMsh.GenerateCoarseBoxMesh(32,32,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
    //1: bottom  //2: right  //3: top  //4: left
   
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
