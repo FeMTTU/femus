@@ -157,6 +157,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("ContReg");
 
   mlSol.SetWriter(VTK);
+  mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   return 0;
@@ -512,7 +513,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
           if (i < nDof_u)      Res[0                  + i] += weight * ( alpha * target_flag * u_des * phi_u[i] );
   
           // SECOND ROW - ctrl
-           if (i < nDof_ctrl)  Res[nDof_u             + i] += penalty_strong * ( (1 - control_node_flag[i]) * x[1][i] + control_node_flag[i]*19. );//weight * (0.);
+           if (i < nDof_ctrl)  Res[nDof_u             + i] += penalty_strong * ( (1 - control_node_flag[i]) * 0. /*+ control_node_flag[i]*19.*/ );
 	      
 	  // THIRD ROW - state
 	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += weight * (0.) ;
