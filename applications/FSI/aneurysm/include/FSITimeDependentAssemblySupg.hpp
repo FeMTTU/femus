@@ -735,7 +735,7 @@ namespace femus {
               for ( int j = 0; j < dim; j++ ) {
                 //incompressible
                 Cauchy[i][j]     = 2 * mus * e[i][j] - 2 * mus * I_e * SolVAR[2 * dim] * Id2th[i][j];
-                Cauchy_old[i][j] = 2 * mus * e_old[i][j] - 2 * mus * I_e_old * SolVAR_old[2 * dim] * Id2th[i][j];
+                Cauchy_old[i][j] = 2 * mus * e_old[i][j] - 2 * mus * I_e_old * SolVAR[2 * dim] * Id2th[i][j];
                 //+(penalty)*lambda*I_e*Id2th[i][j];
               }
             }
