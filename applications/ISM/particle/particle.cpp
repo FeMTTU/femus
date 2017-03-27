@@ -247,15 +247,17 @@ int main(int argc, char **args) {
     ml_sol.GenerateBdc("U", "Steady");
     ml_sol.GenerateBdc("V", "Time_dependent");
   }
+  else if(simulation == 7){
+   ml_sol.GenerateBdc("U", "Steady");
+   ml_sol.GenerateBdc("V", "Steady"); 
+  }
   else {
     ml_sol.GenerateBdc("U", "Time_dependent");
     ml_sol.GenerateBdc("V", "Steady");
   }
 
-  if(!dimension2D) ml_sol.GenerateBdc("W", "Steady");
+  if(!dimension2D && simulation != 7) ml_sol.GenerateBdc("W", "Steady");
   if(simulation == 7) {
-    ml_sol.GenerateBdc("U", "Steady");
-    ml_sol.GenerateBdc("V", "Steady");
     ml_sol.GenerateBdc("W", "Time_dependent");
   }
   ml_sol.GenerateBdc("P", "Steady");
@@ -407,8 +409,8 @@ int main(int argc, char **args) {
     for(unsigned k = 1; k < radius_intervals + 1 ; k++) {
       for(unsigned j = 0; j < theta_intervals; j++) {
         x[counter].resize(3);
-        x[counter][0] = 0.00034 * k * sin(2.*PI / theta_intervals * j);
-        x[counter][1] = 0.006 + 0.00034 * k * cos(2.*PI / theta_intervals * j);
+        x[counter][0] = 0.00033 * k * sin(2.*PI / theta_intervals * j);
+        x[counter][1] = 0.006 + 0.00033 * k * cos(2.*PI / theta_intervals * j);
         x[counter][2] = -0.06;
         counter++;
       }
@@ -431,7 +433,7 @@ int main(int argc, char **args) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 260 /*500*/;
+  const unsigned int n_timesteps = 300 /*260*/;
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -445,16 +447,16 @@ int main(int argc, char **args) {
     }
     data[time_step].resize(5);
 
-    if(time_step < 4) {
+    //if(time_step < 4) {
       if(time_step > 0)
         system.SetMgType(V_CYCLE);
-      // system.CopySolutionToOldSolution(); //WARNING decomment for non stationary cases
+      system.CopySolutionToOldSolution(); //WARNING decomment for non stationary cases
       system.MGsolve();
-    }
+    //}
     count_out = 0;
 
-    // if (time_step >= itPeriod) { //WARNING decomment for non stationary cases
-    if(time_step >= 4) {
+    if (time_step >= itPeriod) { //WARNING decomment for non stationary cases
+    //if(time_step >= 4) {
       for(int i = 0; i < linea.size(); i++) {
         if(simulation == 6) {
           linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
@@ -466,8 +468,8 @@ int main(int argc, char **args) {
       }
       if(time_step < 2 * itPeriod + itPeriod) {
         count_tot += pSize;
-        linea.resize(time_step - 4/*itPeriod*/ + 2);
-        linea[time_step - 4 /*itPeriod*/ + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
+        linea.resize(time_step - itPeriod /*4*/ + 2);
+        linea[time_step - itPeriod /*4*/ + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
       }
     }
 
@@ -540,8 +542,8 @@ int main(int argc, char **args) {
 
 double SetVariableTimeStep(const double time) {
   //double dt = 1./(64*1.4);
-  //double dt = 1. / 32;
-  double dt = 60;
+  double dt = 1. / 32;
+  //double dt = 60;
 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
@@ -807,11 +809,13 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
       else if(t >= 0.45 || t < 1.){
 	q = - 601.31  * t*t*t*t*t*t + 3582.2 * t*t*t*t*t - 8384.8 * t*t*t*t + 10028 * t*t*t - 6510.4 * t*t + 2177.1 * t - 286.61;
       }
-      value = 2 * q * (1. - r2); //inflow
+      value = 2 * q * 1.e-6 * (1. - r2) / (PI * 0.0035 * 0.0035); //inflow
+      //std::cout << "velocity we would like to have = " << value1 << " " << "time t is : " << t << std::endl;
     }
     else if(2 == facename || 3 == facename) {
       test = 0;
-      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      value = 13332;
     }
     else if(7 == facename) {
       test = 0;
@@ -1235,14 +1239,18 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   std::vector <double> v(3);   //case 0: direction vector of the line that identifies the infinite wire
 
   v[0] = 0.;
-  v[1] = 0.;
-  v[2] = -1;
+  v[1] = -1.;
+  v[2] = 0.;
 
   std::vector <double> x(3);   //case 0: point that with v identifies the line of the wire
 
-  x[0] = 0.;
-  x[1] = -0.015;
-  x[2] = 1.75;
+//   x[0] = 0.;
+//   x[1] = -0.015;
+//   x[2] = 1.75;
+  
+  x[0] = -0.002065;
+  x[1] = -0.019932;
+  x[2] = 0.000169;
 
   //END
 
