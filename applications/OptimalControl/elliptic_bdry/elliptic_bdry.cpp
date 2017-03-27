@@ -4,6 +4,8 @@
 #include "LinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
+#include "ElemType.hpp"
+
 using namespace femus;
 
 #define NSUB_X  16
@@ -11,6 +13,7 @@ using namespace femus;
 #define ALPHA_CTRL 1.
 #define BETA_CTRL  1.e-3
 #define GAMMA_CTRL 1.e-3
+
 
 int ElementTargetFlag(const std::vector<double> & elem_center) {
 
@@ -96,7 +99,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"fifth");
    //1: bottom  //2: right  //3: top  //4: left
   
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -110,9 +113,9 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("state", LAGRANGE, SECOND);
-  mlSol.AddSolution("control", LAGRANGE, SECOND);
-  mlSol.AddSolution("adjoint", LAGRANGE, SECOND);
+  mlSol.AddSolution("state", LAGRANGE, FIRST);
+  mlSol.AddSolution("control", LAGRANGE, FIRST);
+  mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
@@ -434,7 +437,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 		
 		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
-		const unsigned felt = msh->GetElementFaceType(iel, jface);    
+		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
 		for(unsigned i=0; i < nve_bdry; i++) {
 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
                   unsigned iDof = msh->GetSolutionDof(i_vol, iel, xType);
@@ -442,9 +445,24 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		      x_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
 		  }
 		}
-		for(unsigned igs=0; igs < msh->_finiteElement[felt][solType_ctrl]->GetGaussPointNumber(); igs++) {
+		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
 		  
-		  msh->_finiteElement[felt][solType_ctrl]->JacobianSur(x_bdry,igs,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
+		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
+		  //========== temporary soln for surface gradient on a face parallel to the X axis ===================
+		  double dx_dxi = 0.;
+		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
+		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
+		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dxi += myptr[inode] * x_bdry[0][inode];
+  
+		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) {
+                            for (int d = 0; d < 3; d++) {
+                              if (d==0 ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dxi);
+                              else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
+                         }
+                     }
+		  //========== temporary soln for surface gradient on a face parallel to the X axis ===================
+		  
+		  
 		  // *** phi_i loop ***
 
 		  for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
@@ -461,7 +479,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //                  Res[ (nDof_u + i_vol) ] 
 // 			+=   control_node_flag[i_vol] * penalty_strong_bdry * 17.;
                  Res[ (nDof_u + i_vol) ] 
-			+=   control_node_flag[i_vol] *  weight_bdry * (phi_ctrl_bdry[i_bdry]* 100.);
+			+=   control_node_flag[i_vol] *  weight_bdry * (phi_ctrl_bdry[i_bdry]* 1.);
 		    
 
 		    for(unsigned j_bdry=0; j_bdry < nve_bdry; j_bdry ++) {
@@ -482,6 +500,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // 			+=   control_node_flag[i_vol] * penalty_strong_bdry;
 // 	      }
 
+
    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl ) {
               Jac[  
 		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
@@ -489,13 +508,26 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 			+=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]);
 	      }
 
-	      		    
-		    double grad_bdry = 0.;
-		      for (unsigned d = 0; d < dim; d++) {   grad_bdry += phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * phi_ctrl_x_bdry[j_bdry + d*nve_bdry];    }
+//   std::cout << "====== phi values on boundary for gauss point " << ig_bdry << std::endl;
+//   
+//      for(unsigned i=0; i < nve_bdry; i ++) {
+//      std::cout << phi_ctrl_bdry[i] << " ";
+//      }
+//    std::cout << std::endl;
+ 
+//   std::cout << "====== phi derivatives on boundary for gauss point " << ig_bdry << std::endl;
+//   
+//   for (unsigned d = 0; d < dim; d++) {
+//      for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry ++) {
+//      std::cout << phi_ctrl_x_bdry[i_bdry + d*nve_bdry] << " ";
+//      }
+//   }
+              double lap_bdry = 0.;
+		      for (unsigned d = 0; d < dim; d++) { lap_bdry += phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * phi_ctrl_x_bdry[j_bdry + d*nve_bdry];    }
 	         Jac[
 		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
 	            (nDof_u + j_vol) ] 
-	                += control_node_flag[i_vol] * weight_bdry * beta * grad_bdry;
+	                += control_node_flag[i_vol] * weight_bdry * beta * lap_bdry;
 			
 		   }
 				  
