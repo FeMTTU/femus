@@ -6,8 +6,8 @@
 
 using namespace femus;
 
-#define NSUB_X  4
-#define NSUB_Y  4
+#define NSUB_X  16
+#define NSUB_Y  16
 #define ALPHA_CTRL 1.
 #define BETA_CTRL  1.e-3
 #define GAMMA_CTRL 1.e-3
