@@ -381,7 +381,7 @@ int main(int argc, char **args)
   }
 
   if (simulation == 6) { //for 3D tube
-    unsigned theta_intervals = 10;
+    unsigned theta_intervals = 40;
     unsigned radius_intervals = 9;
     pSize = radius_intervals * theta_intervals;
     x.resize(pSize);
@@ -434,7 +434,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 350 /*260*/;
+  const unsigned int n_timesteps = 210 /*260*/;
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -446,7 +446,7 @@ int main(int argc, char **args)
 
     data[time_step].resize(5);
 
-    if (time_step < 80) {
+    //if (time_step < 150) {
       for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
         SetLambda(ml_sol, level , SECOND, ELASTICITY);
       }
@@ -454,11 +454,11 @@ int main(int argc, char **args)
         system.SetMgType(V_CYCLE);
       system.CopySolutionToOldSolution(); //WARNING decomment for non stationary cases
       system.MGsolve();
-    }
+    //}
     count_out = 0;
 
-    //if (time_step >= itPeriod) { //WARNING decomment for non stationary cases
-    if (time_step >= 80) {
+    if (time_step >= itPeriod) { //WARNING decomment for non stationary cases
+    //if (time_step >= 150) {
       for (int i = 0; i < linea.size(); i++) {
         if (simulation == 6) {
           linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
@@ -468,10 +468,10 @@ int main(int argc, char **args)
         }
         count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
       }
-      if (time_step < 2 * itPeriod + itPeriod) {
+      if (time_step < 3 * itPeriod + itPeriod) {
         count_tot += pSize;
-        linea.resize(time_step - 80 /*itPeriod*/ + 2);
-        linea[time_step - 80 /*itPeriod*/ + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
+        linea.resize(time_step - itPeriod /*150*/ + 2);
+        linea[time_step - itPeriod /*150*/ + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
       }
     }
 
