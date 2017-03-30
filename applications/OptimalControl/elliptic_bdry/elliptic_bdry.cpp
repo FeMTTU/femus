@@ -85,10 +85,16 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   if (faceName == 3)
     dirichlet = false;
   }
+
+//     if(!strcmp(name,"adjoint")) { 
+//   if (faceName == 3)
+//     dirichlet = false;
+//   }
+
   
   
 //     if(!strcmp(name,"adjoint")) {  //"adjoint" corresponds to the third block row
-//     dirichlet = false;
+//     value = 7.;
 //   }
 
   
@@ -261,6 +267,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   vector < double >  sol_adj;   sol_adj.reserve(maxSize);
   vector < int > l2GMap_adj; l2GMap_adj.reserve(maxSize);
+
+  //boundary adjoint shape functions  
+  vector <double> phi_adj_bdry;  
+  vector <double> phi_adj_x_bdry; 
+
+  phi_adj_bdry.reserve(maxSize);
+  phi_adj_x_bdry.reserve(maxSize * dim);
+
   //*************************** 
  //*************************** 
 
@@ -310,7 +324,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   double gamma = GAMMA_CTRL;
   double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
   double penalty_strong_bdry = 1.e20;  // penalty for boundary equation on Gamma_c
-  double penalty_ctrl = 1.e100;         //penalty for u=q
+  double penalty_ctrl = 1.e10;         //penalty for u=q
  //*************************** 
   
   
@@ -460,6 +474,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
 		  
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
+		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
+		  
 		  //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  double dx_dxi = 0.;
 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
@@ -498,10 +514,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
 
 
-// block delta_adjoint/control ========
-// 		   if ( i < nDof_adj    && j < nDof_ctrl   &&  i_vol==j_vol)   Jac[ 
-// 			(nDof_u + nDof_ctrl + i_vol) * (nDof_u + nDof_ctrl + nDof_adj)  +
-// 		        (nDof_u + j_vol)             ]  += - (1 - control_node_flag[i_vol]) * penalty_strong_bdry;      
+// block delta_control/adjoint ========
+// 		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj)   Jac[ 
+// 			(nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj)  +
+// 		        (nDof_u + nDof_ctrl + j_vol)             ]  += - control_node_flag[i_vol] * weight_bdry *  phi_ctrl_bdry[i_bdry] * phi_adj_bdry[j_bdry];      
 		    
 // block delta_control / control ========
    
@@ -580,7 +596,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
            if (i < nDof_ctrl)  Res[nDof_u             + i] += penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * 0. /*+ control_node_flag[i]*19.*/ );
 	      
 	  // THIRD ROW - state
-	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += 0.;//penalty_ctrl *  ( control_node_flag[i])*   26. ;
+	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += 0.;
 	      
 	      
           if (assembleMatrix) {
@@ -620,14 +636,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
 		(0 + j)                                ]  += weight * laplace_mat_u;
 
-		if (i==j)  {
+	      }
+	      
+		if (i < nDof_adj && j < nDof_u && i==j)  {
 		  Jac[    
 		(/*nDof_u + nDof_ctrl*/ + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
 		(0 + j)                                ]  +=  penalty_ctrl * ( control_node_flag[i]);
 		  
 		}
-		
-	      }
 
                // BLOCK delta_adjoint / control
 	      if ( i < nDof_adj && j < nDof_ctrl && i==j) {
@@ -641,8 +657,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // 	      if ( i < nDof_adj && j < nDof_adj )
 // 		Jac[    
 // 		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
-// 		(nDof_u + nDof_ctrl + j)                                ]  += 0.;
-	      
+// 		(nDof_u + nDof_ctrl + j)                                ]  += weight * phi_adj[i]*phi_adj[j];
+// 	      
 	      
 	    } // end phi_j loop
           } // endif assemble_matrix
