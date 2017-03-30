@@ -337,7 +337,7 @@ int main(int argc, char **args)
   for (configuration = 0; configuration < confNumber; configuration++) {
     efficiencyVector[configuration].resize(21);
     for (partSim = 0; partSim < 21; partSim++) {
-      const unsigned int n_timesteps = 80;
+      const unsigned int n_timesteps = 120;
       std::vector < std::vector < std::vector < double > > > streamline(pSize);
       std::vector< Line* > linea(1);
 
