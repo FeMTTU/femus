@@ -31,15 +31,6 @@ using namespace femus;
 
 double SetVariableTimeStep(const double time);
 
-bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[],
-                                 double &value, const int facename, const double time);
-
-bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char name[],
-                                    double &value, const int facename, const double time);
-
-bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[],
-    double &value, const int facename, const double time);
-
 bool SetBoundaryConditionTubo3D(const std::vector < double >& x, const char name[],
                                 double &value, const int facename, const double time);
 
@@ -55,41 +46,13 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 //------------------------------------------------------------------------------------------------------------------
 
 unsigned partSim;
+unsigned configuration;
 
 int main(int argc, char **args)
 {
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
-
-  unsigned simulation = 0;
-
-  if (argc >= 2) {
-    if (!strcmp("0", args[1])) {   /** FSI Turek2D no stent */
-      simulation = 0;
-    }
-    else if (!strcmp("1", args[1])) {    /** FSI Turek porous */
-      simulation = 1;
-    }
-    else if (!strcmp("2", args[1])) {   /** FSI Turek stents 60 micron */
-      simulation = 2;
-    }
-    else if (!strcmp("3", args[1])) {   /** FSI Turek 11 stents 60 micron */
-      simulation = 3;
-    }
-    else if (!strcmp("4", args[1])) {   /** FSI AAA thrombus 2D */
-      simulation = 4;
-    }
-    else if (!strcmp("5", args[1])) {   /** FSI Aortic Bifurcation 2D*/
-      simulation = 5;
-    }
-    else if (!strcmp("6", args[1])) {   /** FSI Tubo 3D */
-      simulation = 6;
-    }
-    else if (!strcmp("7", args[1])) {   /** FSI Carotid Bifurcation 3D*/
-      simulation = 7;
-    }
-  }
 
   //Files files;
   //files.CheckIODirectories();
@@ -106,34 +69,8 @@ int main(int argc, char **args)
   std::string infile;
   bool dimension2D = true;
 
-  if (simulation == 0) {
-    infile = "./input/Turek.neu";
-  }
-  else if (simulation == 1) {
-    infile = "./input/Turek_porous_60micron.neu";
-  }
-  else if (simulation == 2) {
-    infile = "./input/Turek_stents_60micron.neu";
-  }
-  else if (simulation == 3) {
-    infile = "./input/Turek_11stents_60micron.neu";
-  }
-  else if (simulation == 4) {
-    infile = "./input/AAA_thrombus_2D.neu";
-  }
-  else if (simulation == 5) {
-    infile = "./input/aortic_bifurcation.neu";
-  }
-  else if (simulation == 6) {
-    infile = "./input/tubo3D.neu";
-    dimension2D = false;
-  }
-  else if (simulation == 7) {
-    infile = "./input/carotid_bifurcation_3D.neu";
-    dimension2D = false;
-  }
-
-
+  infile = "./input/tubo3D.neu";
+  dimension2D = false;
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -145,18 +82,7 @@ int main(int argc, char **args)
   muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  if (simulation == 5) {
-    E = 1000000 * 1.e1;
-  }
-  else if (simulation == 6) {
-    E = 10 * 1.e6;
-  }
-  else if (simulation == 7) {
-    E = 1000000 * 1.e0;
-  }
-  else {
-    E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
-  }
+  E = 10 * 1.e6;
   E1 = 100000;
 
   Parameter par(Lref, Uref);
@@ -225,44 +151,18 @@ int main(int argc, char **args)
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
-  if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek2D);
-  }
-  else if (simulation == 4) {
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus2D);
-  }
-  else if (simulation == 5) {
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorticBifurcation);
-  }
-  else if (simulation == 6) {
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTubo3D);
-  }
-  else if (simulation == 7) {
-    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionCarotidBifurcation);
-  }
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTubo3D);
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
   if (!dimension2D) ml_sol.GenerateBdc("DZ", "Steady");
 
-  if (simulation == 4 || simulation == 5) {
-    ml_sol.GenerateBdc("U", "Steady");
-    ml_sol.GenerateBdc("V", "Time_dependent");
-  }
-  else if (simulation == 7) {
-    ml_sol.GenerateBdc("U", "Steady");
-    ml_sol.GenerateBdc("V", "Steady");
-  }
-  else {
-    ml_sol.GenerateBdc("U", "Time_dependent");
-    ml_sol.GenerateBdc("V", "Steady");
-  }
+  ml_sol.GenerateBdc("U", "Time_dependent");
+  ml_sol.GenerateBdc("V", "Steady");
 
-  if (!dimension2D && simulation != 7) ml_sol.GenerateBdc("W", "Steady");
-  if (simulation == 7) {
-    ml_sol.GenerateBdc("W", "Time_dependent");
-  }
+  if (!dimension2D) ml_sol.GenerateBdc("W", "Steady");
+
   ml_sol.GenerateBdc("P", "Steady");
 
 //   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
@@ -354,190 +254,152 @@ int main(int argc, char **args)
 
 
   //BEGIN INITIALIZE PARTICLES
-  unsigned pSize = 50;
+
+
+  unsigned pSize;
   double PI = acos(-1.);
   std::vector < std::vector < double > > x(pSize);
   std::vector < MarkerType > markerType(pSize);
 
+  unsigned theta_intervals = 40;
+  unsigned radius_intervals = 9;
+  pSize = radius_intervals * theta_intervals;
+  x.resize(pSize);
+  markerType.resize(pSize);
 
-  if (simulation == 0) { //for Turek
-    double y0 = 0.007 - 0.0019 / 2;
-    double dy = 0.0019 / pSize;
+  
+//   // CIRCLUAR INITIALIZATION  
+//   
+//   unsigned counter = 0;
+//   for (unsigned k = 1; k < radius_intervals + 1 ; k++) {
+//     for (unsigned j = 0; j < theta_intervals; j++) {
+//       x[counter].resize(3);
+//       x[counter][0] = -0.035;
+//       x[counter][1] = 0.0196 + 0.00034 * k * sin(2.*PI / theta_intervals * j);
+//       x[counter][2] = 0.00034 * k * cos(2.*PI / theta_intervals * j);
+//       counter++;
+//     }
+//   }
 
-    for (unsigned j = 0; j < pSize; j++) {
-      x[j].resize(2);
-      x[j][0] = -0.00005;
-      x[j][1] = y0 + j * dy;
-      markerType[j] = VOLUME;
-    }
+  
+//  //RANDOM INITIALIZATION
+// 
+//   srand(2);
+//   for (unsigned j = 0; j < pSize; j++) {
+//     double r_rad = static_cast <double> (rand()) / RAND_MAX;
+//     r_rad = 0.00349 * (1. - r_rad * r_rad * r_rad);
+//     double r_theta = static_cast <double> (rand()) / RAND_MAX * 2 * PI;
+//     double r_phi = static_cast <double> (rand()) / RAND_MAX * PI;
+//     x[j].resize(3);
+//     x[j][0] = -0.035;
+//     x[j][1] = 0.0196 + r_rad * sin(r_phi) * sin(r_theta);
+//     x[j][2] = r_rad * sin(r_phi) * cos(r_theta);
+//   }
+  
+  
+  
+   //UNIFORM INITIALIZATION
+
+  srand(2);
+  for (unsigned j = 0; j < pSize; j++) {
+    double r_rad = static_cast <double> (rand()) / RAND_MAX;
+    //r_rad = 0.00349 * (1. - r_rad * r_rad * r_rad);
+    r_rad = 0.0034 * sqrt(r_rad);
+    double r_theta = static_cast <double> (rand()) / RAND_MAX * 2 * PI;
+    //double r_phi = static_cast <double> (rand()) / RAND_MAX * PI;
+    x[j].resize(3);
+    x[j][0] = -0.035;
+    x[j][1] = 0.0196 + r_rad * sin(r_theta);
+    x[j][2] = r_rad * cos(r_theta);
   }
-
-  if (simulation == 5) { //for aorticBifurcation
-
-    for (unsigned j = 0; j < pSize; j++) {
-      x[j].resize(2);
-      x[j][0] = -0.008 + 0.016 * j / (pSize - 1);
-      x[j][1] = 0.11;
-      markerType[j] = VOLUME;
-    }
-  }
-
-  if (simulation == 6) { //for 3D tube
-    unsigned theta_intervals = 40;
-    unsigned radius_intervals = 9;
-    pSize = radius_intervals * theta_intervals;
-    x.resize(pSize);
-    markerType.resize(pSize);
-
-    unsigned counter = 0;
-    for (unsigned k = 1; k < radius_intervals + 1 ; k++) {
-      for (unsigned j = 0; j < theta_intervals; j++) {
-        x[counter].resize(3);
-        x[counter][0] = -0.035;
-        x[counter][1] = 0.0196 + 0.00034 * k * sin(2.*PI / theta_intervals * j);
-        x[counter][2] = 0.00034 * k * cos(2.*PI / theta_intervals * j);
-        counter++;
-      }
-    }
-  }
-
-  if (simulation == 7) { //for carotidBifurcation
-    unsigned theta_intervals = 10;
-    unsigned radius_intervals = 9;
-    pSize = radius_intervals * theta_intervals;
-    x.resize(pSize);
-    markerType.resize(pSize);
-
-    unsigned counter = 0;
-    for (unsigned k = 1; k < radius_intervals + 1 ; k++) {
-      for (unsigned j = 0; j < theta_intervals; j++) {
-        x[counter].resize(3);
-        x[counter][0] = 0.00033 * k * sin(2.*PI / theta_intervals * j);
-        x[counter][1] = 0.006 + 0.00033 * k * cos(2.*PI / theta_intervals * j);
-        x[counter][2] = -0.06;
-        counter++;
-      }
-    }
-  }
-
+  
+  
   //END INITIALIZE PARTICLES
 
-
-  std::vector < std::vector < std::vector < double > > > streamline(pSize);
-  std::vector< Line* > linea(1);
-
-  linea[0] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
-
   unsigned itPeriod = 20;
-
-  linea[0]->GetStreamLine(streamline, 0);
-  linea[0]->GetStreamLine(streamline, 1);
-  PrintLine(DEFAULT_OUTPUTDIR, streamline, true, 0);
-
+  unsigned confNumber = 1;
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 224;
 
-  std::vector < std::vector <double> > data(n_timesteps);
-
-  unsigned count_inside;
-  unsigned count_out;
-  unsigned count_tot = pSize;
-
-  for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-
-    data[time_step].resize(5);
-
-    //if (time_step < 2 * itPeriod) { // WARNING comment for non stationary
-      for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
-        SetLambda(ml_sol, level , SECOND, ELASTICITY);
-      }
-      if (time_step > 0)
-        system.SetMgType(V_CYCLE);
-      system.CopySolutionToOldSolution();
-      system.MGsolve();
-    //}  // WARNING comment for non stationary
-    count_out = 0;
-
-    if (time_step >= itPeriod) { //WARNING decomment for non stationary cases
-    //if (time_step >= 2 * itPeriod) {
-      for (int i = 0; i < linea.size(); i++) {
-        if (simulation == 6) {
-          linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
-        }
-        else if (simulation == 5 || simulation == 7) {
-          linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceSC);
-        }
-        count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
-      }
-      if (time_step < 4 * itPeriod + itPeriod) {
-        count_tot += pSize;
-        linea.resize(time_step - itPeriod + 2);
-        linea[time_step - itPeriod + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
-      }
+  for (unsigned time_step = 0; time_step < 2 * itPeriod; time_step++) {
+    for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
+      SetLambda(ml_sol, level , SECOND, ELASTICITY);
     }
-
-    count_inside = count_tot - count_out;
-
-    std::cout << "particle inside = " << count_inside << std::endl;
-    std::cout << "particle ouside = " << count_out << std::endl;
-    std::cout << "capture efficiency = " << static_cast< double >(count_inside) / count_tot << std::endl;
-
-    linea[0]->GetStreamLine(streamline, 0);
-    for (int i = 0; i < linea.size(); i++) {
-      linea[i]->GetStreamLine(streamline, i + 1);
-    }
-    PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
-
-    data[time_step][0] = time_step / 32.;
-    //data[time_step][0] = time_step / (64*1.4);
-    if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
-      GetSolutionNorm(ml_sol, 9, data[time_step]);
-    }
-    else if (simulation == 4) {   //AAA_thrombus, 15=thrombus
-      GetSolutionNorm(ml_sol, 7, data[time_step]);
-    }
+    if (time_step > 0)
+      system.SetMgType(V_CYCLE);
+    system.CopySolutionToOldSolution();
+    system.MGsolve();
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
 
+  std::vector < std::vector <  double > > efficiencyVector(4);
 
-  int  iproc;
-  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  if (iproc == 0) {
-    std::ofstream outf;
-    if (simulation == 0) {
-      outf.open("DataPrint_Turek.txt");
-    }
-    else if (simulation == 1) {
-      outf.open("DataPrint_TurekPorous.txt");
-    }
-    else if (simulation == 2) {
-      outf.open("DataPrint_TurekStents.txt");
-    }
-    else if (simulation == 3) {
-      outf.open("DataPrint_Turek11Stents.txt");
-    }
-    else if (simulation == 4) {
-      outf.open("DataPrint_AAA_thrombus_2D.txt");
-    }
+  for (configuration = 0; configuration < confNumber; configuration++) {
+    efficiencyVector[configuration].resize(21);
+    for (partSim = 0; partSim < 21; partSim++) {
+      const unsigned int n_timesteps = 120;
+      std::vector < std::vector < std::vector < double > > > streamline(pSize);
+      std::vector< Line* > linea(1);
+
+      linea[0] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
+
+      linea[0]->GetStreamLine(streamline, 0);
+      linea[0]->GetStreamLine(streamline, 1);
+      PrintLine(DEFAULT_OUTPUTDIR, streamline, true, 0);
+
+      unsigned count_inside;
+      unsigned count_out;
+      unsigned count_tot = pSize;
+
+      for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+
+        count_out = 0;
+
+        if (time_step >= 2 * itPeriod) {
+          for (int i = 0; i < linea.size(); i++) {
+            linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
+            count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
+          }
+          if (time_step < 2 * itPeriod + 5) {
+            count_tot += pSize;
+            linea.resize(time_step -  2 * itPeriod + 2);
+            linea[time_step -  2 * itPeriod + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
+          }
+          if (partSim == 0) ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+        }
+
+        count_inside = count_tot - count_out;
+
+        efficiencyVector[configuration][partSim] =  static_cast< double >(count_inside) / count_tot;
+
+        double diam = (partSim + 1.) * 0.1 * 1.e-6;
+        std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
+        std::cout << "particle inside = " << count_inside << std::endl;
+        std::cout << "particle outside = " << count_out << std::endl;
+        std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
+
+        linea[0]->GetStreamLine(streamline, 0);
+        for (int i = 0; i < linea.size(); i++) {
+          linea[i]->GetStreamLine(streamline, i + 1);
+        }
+
+        PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
+      }
+
+      for (unsigned i = 0; i < linea.size(); i++) {
+        delete linea[i];
+      }
 
 
-    if (!outf) {
-      std::cout << "Error in opening file DataPrint.txt";
-      return 1;
     }
-    for (unsigned k = 0; k < n_timesteps; k++) {
-      outf << data[k][0] << "\t" << data[k][1] << "\t" << data[k][2] << "\t" << data[k][3] << "\t" << data[k][4] << std::endl;
-    }
-    outf.close();
   }
 
-
-
-  // ******* Clear all systems *******
-
-  for (unsigned i = 0; i < linea.size(); i++) {
-    delete linea[i];
+  for (unsigned j = 0; j < confNumber; j++) {
+    std::cout << " CONFIGURATION " << j << std::endl;
+    for (unsigned i = 0; i < 21; i++) {
+      std::cout << i << " " << efficiencyVector[j][i] << std::endl;
+    }
+    std::cout << " ---------------------------------------------------------------------------- " << std::endl;
   }
 
   ml_prob.clear();
@@ -547,7 +409,7 @@ int main(int argc, char **args)
 double SetVariableTimeStep(const double time)
 {
   //double dt = 1./(64*1.4);
-  double dt = 1. / 32;
+  double dt = 1. / 20/*32*/;
   //double dt = 60;
 
 //   if( turek_FSI == 2 ){
@@ -574,180 +436,6 @@ double SetVariableTimeStep(const double time)
 
 
 //---------------------------------------------------------------------------------------------------------------------
-
-bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
-{
-  bool test = 1; //dirichlet
-  value = 0.;
-
-
-//   std::ifstream inf;
-//   inf.open("./input/womersleyProfile64_R0p001_f84.txt");
-//   if(!inf) {
-//     std::cout << "velocity file ./input/womersleyProfile64_R0p001_f84.txt can not be opened\n";
-//     exit(0);
-//   }
-
-//   std::vector<double> vel(64);
-//
-//   for(unsigned i = 0; i < 64; i++) {
-//     inf >> vel[i];
-//   }
-//   inf.close();
-
-//   double period = 1. / 1.4;
-//   double dt = period / 64;
-//
-//   double time1 = time - floor(time / period) * period;
-//
-//   unsigned j = static_cast < unsigned >(floor(time1 / dt));
-
-  //git pstd::cout<< name << " " << time <<" "<< j <<" "<<  vel[j] << std::endl;
-
-  double PI = acos(-1.);
-  if (!strcmp(name, "U")) {
-
-    if (1 == facename) {
-      double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
-      //double ramp = (time < period) ? sin(PI/2 * time / period) : 1.;
-      value = 0.05 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
-      //value = (x[1] * 1000 - 6) * ( x[1] * 1000 - 8) * vel[j] * ramp; //inflow
-    }
-    else if (2 == facename || 5 == facename) {
-      test = 0;
-      value = 0.;
-    }
-  }
-  else if (!strcmp(name, "V")) {
-    if (2 == facename || 5 == facename) {
-      test = 0;
-      value = 0.;
-    }
-  }
-  else if (!strcmp(name, "P")) {
-    test = 0;
-    value = 0.;
-  }
-  else if (!strcmp(name, "DX")) {
-    //if(2 == facename || 4 == facename || 5 == facename || 6 == facename) {
-    if (5 == facename || 6 == facename) {
-      test = 0;
-      value = 0;
-    }
-  }
-  else if (!strcmp(name, "DY")) {
-    //if(1 == facename || 3 == facename || 5 == facename || 6 == facename) {
-    if (5 == facename || 6 == facename) {
-      test = 0;
-      value = 0;
-    }
-  }
-
-  return test;
-
-}
-
-
-bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
-{
-  bool test = 1; //dirichlet
-  value = 0.;
-
-  double PI = acos(-1.);
-
-  double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
-
-  if (!strcmp(name, "V")) {
-    if (1 == facename) {
-      double r2 = (x[0] * 100.) * (x[0] * 100.);
-      //value = -0.01/.9 * (.9 - r2); //inflow
-      value = -0.04 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
-    }
-    if (2 == facename || 5 == facename) {
-      test = 0;
-      value = 0.;
-    }
-  }
-  else if (!strcmp(name, "U")) {
-    if (2 == facename) {
-      test = 0;
-      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;;
-    }
-    else if (5 == facename) {
-      test = 0;
-      value = 0;
-    }
-  }
-  else if (!strcmp(name, "P")) {
-    test = 0;
-    value = 0.;
-  }
-  else if (!strcmp(name, "DX")) {
-    if (5 == facename) {
-      test = 0;
-      value = 0;
-    }
-  }
-  else if (!strcmp(name, "DY")) {
-    if (5 == facename) {
-      test = 0;
-      value = 0;
-    }
-  }
-
-  return test;
-}
-
-
-bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
-{
-  bool test = 1; //dirichlet
-  value = 0.;
-
-  double PI = acos(-1.);
-
-  double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
-
-  if (!strcmp(name, "V")) {
-    if (1 == facename) {
-      double r2 = (x[0] * 100.) * (x[0] * 100.);
-      value = -0.06 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
-    }
-    if (2 == facename || 3 == facename || 7 == facename) {
-      test = 0;
-      value = 0.;
-    }
-  }
-  else if (!strcmp(name, "U")) {
-    if (2 == facename || 3 == facename) {
-      test = 0;
-      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;;
-    }
-    else if (7 == facename) {
-      test = 0;
-      value = 0;
-    }
-  }
-  else if (!strcmp(name, "P")) {
-    test = 0;
-    value = 0.;
-  }
-  else if (!strcmp(name, "DX")) {
-    if (7 == facename) {
-      test = 0;
-      value = 0;
-    }
-  }
-  else if (!strcmp(name, "DY")) {
-    if (7 == facename) {
-      test = 0;
-      value = 0;
-    }
-  }
-
-  return test;
-}
-
 
 bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char name[], double & value, const int facename, const double time)
 {
@@ -838,7 +526,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
       value = 0.;
     }
   }
-  else if (!strcmp(name, "V")){
+  else if (!strcmp(name, "V")) {
     if (2 == facename || 3 == facename || 7 == facename) {
       test = 0;
       value = 0.;
@@ -1117,25 +805,64 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN geometric parameters
 
-  double D =  1.5e-6;       //diameter of the particle //rule con partSim
+  double D =  (partSim + 1.) * 0.1 * 1.e-6;       //diameter of the particle //rule con partSim
 
   std::vector <double> v(3);    //direction vector of the line that identifies the infinite wire
-
-  v[0] = 0.;
-  v[1] = 0.;
-  v[2] = -1.;
-
-
   std::vector <double> x(3);   //point that with v identifies the line of the wire
 
-  x[0] = 0.006788225;
-  x[1] = 0.006788225;
-  x[2] = 0.;
+  if (configuration == 0 ) {
+
+    x[0] = 0.02093036072;
+    x[1] = 0.02093036072;
+    x[2] = 0.;
+
+    v[0] = 0.;
+    v[1] = 0.;
+    v[2] = 1.;
+
+  }
+
+  else if ( configuration == 1 ) {
+
+    x[0] = 0.006788225;
+    x[1] = 0.006788225;
+    x[2] = 0.;
+
+    v[0] = 0.;
+    v[1] = 0.;
+    v[2] = -1.;
+
+  }
+
+  else if ( configuration == 2 ) {
+
+    //FIX
+
+    x[0] = 0.006788225;
+    x[1] = 0.006788225;
+    x[2] = 0.;
+
+    v[0] = 0.;
+    v[1] = 0.;
+    v[2] = -1.;
+
+  }
 
 
-//   x[0] = 0.;
-//   x[1] = -0.015;
-//   x[2] = 0.;
+  else if ( configuration == 3 ) {
+
+    // FIX
+
+    x[0] = 0.006788225;
+    x[1] = 0.006788225;
+    x[2] = 0.;
+
+    v[0] = 0.;
+    v[1] = 0.;
+    v[2] = -1.;
+
+  }
+
 
   //END
 
@@ -1192,7 +919,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   else {
 
-    
+
     double C2 = (PI * D * D * D * mu0 * Msat) / 6;
 
     //printf("%g\n",C2);
