@@ -80,6 +80,17 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   if (faceName == 3)
     dirichlet = false;
   }
+
+  if(!strcmp(name,"state")) {  //"state" corresponds to the first block row (u=q)
+  if (faceName == 3)
+    dirichlet = false;
+  }
+  
+  
+//     if(!strcmp(name,"adjoint")) {  //"adjoint" corresponds to the third block row
+//     dirichlet = false;
+//   }
+
   
   return dirichlet;
 }
@@ -297,8 +308,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   double alpha = ALPHA_CTRL;
   double beta  = BETA_CTRL;
   double gamma = GAMMA_CTRL;
-  double penalty_strong = 1.e50;
-  double penalty_strong_bdry = 1.e20;
+  double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
+  double penalty_strong_bdry = 1.e20;  // penalty for boundary equation on Gamma_c
+  double penalty_ctrl = 1.e100;         //penalty for u=q
  //*************************** 
   
   
@@ -560,15 +572,15 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
        //FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
-
+ 
           // FIRST ROW - adj
           if (i < nDof_u)      Res[0                  + i] += weight * ( alpha * target_flag * u_des * phi_u[i] );
   
           // SECOND ROW - ctrl
-           if (i < nDof_ctrl)  Res[nDof_u             + i] += penalty_strong * ( (1 - control_node_flag[i]) * 0. /*+ control_node_flag[i]*19.*/ );
+           if (i < nDof_ctrl)  Res[nDof_u             + i] += penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * 0. /*+ control_node_flag[i]*19.*/ );
 	      
 	  // THIRD ROW - state
-	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += weight * (0.) ;
+	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += 0.;//penalty_ctrl *  ( control_node_flag[i])*   26. ;
 	      
 	      
           if (assembleMatrix) {
@@ -598,26 +610,38 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      if ( i < nDof_ctrl && j < nDof_ctrl && i==j)
 		Jac[    
 		(nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
-		(nDof_u + j)                                ]  += penalty_strong * ( (1 - control_node_flag[i]) /*+ control_node_flag[i]*/ )/*weight * phi_adj[i]*phi_adj[j]*/;
+		(nDof_u + j)                                ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]) /*+ control_node_flag[i]*/ )/*weight * phi_adj[i]*phi_adj[j]*/;
 	      
-              //state row ==================
-              // BLOCK delta_adjoint / state
-// 	      if ( i < nDof_adj && j < nDof_u  &&  i==j) 
-// 		Jac[    
-// 		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
-// 		(0 + j)                                ]  += (1 - control_node_flag[i])*penalty_strong;
+              //state row ======================================================
 	      
               // BLOCK delta_adjoint / state
-	      if ( i < nDof_adj && j < nDof_u )
+	      if ( i < nDof_adj && j < nDof_u ) {
 		Jac[    
 		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
 		(0 + j)                                ]  += weight * laplace_mat_u;
-	      
-              // BLOCK delta_adjoint / adjoint
-	      if ( i < nDof_adj && j < nDof_adj )
+
+		if (i==j)  {
+		  Jac[    
+		(/*nDof_u + nDof_ctrl*/ + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+		(0 + j)                                ]  +=  penalty_ctrl * ( control_node_flag[i]);
+		  
+		}
+		
+	      }
+
+               // BLOCK delta_adjoint / control
+	      if ( i < nDof_adj && j < nDof_ctrl && i==j) {
 		Jac[    
-		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
-		(nDof_u + nDof_ctrl + j)                                ]  += weight * phi_adj[i]*phi_adj[j];
+		(/*nDof_u + nDof_ctrl*/ + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+		(nDof_u + j)                                ]  += penalty_ctrl * ( control_node_flag[i]) * (-1.);
+	
+	      }
+	      
+//               // BLOCK delta_adjoint / adjoint
+// 	      if ( i < nDof_adj && j < nDof_adj )
+// 		Jac[    
+// 		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+// 		(nDof_u + nDof_ctrl + j)                                ]  += 0.;
 	      
 	      
 	    } // end phi_j loop
