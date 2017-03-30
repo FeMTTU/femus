@@ -252,21 +252,38 @@ int main(int argc, char **args)
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
 
+  unsigned itPeriod = 20;
+  unsigned confNumber = 4;
+  // time loop parameter
+  system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
 
+  for (unsigned time_step = 0; time_step < 2 * itPeriod; time_step++) {
+    for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
+      SetLambda(ml_sol, level , SECOND, ELASTICITY);
+    }
+    if (time_step > 0)
+      system.SetMgType(V_CYCLE);
+    system.CopySolutionToOldSolution();
+    system.MGsolve();
+    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+  }
+
+// ml_sol.SaveSolution("steady_tube");
+// ml_sol.LoadSolution("http://www.math.ttu.edu/~eaulisa/Benchmarks/Tube/Steady/steady_tube_time0.000000");
+// system.CopySolutionToOldSolution();
+  
   //BEGIN INITIALIZE PARTICLES
 
 
   unsigned pSize;
+  
+  unsigned theta_intervals = 100;
+  unsigned radius_intervals = 9;
+  pSize = radius_intervals * theta_intervals;
+  
   double PI = acos(-1.);
   std::vector < std::vector < double > > x(pSize);
   std::vector < MarkerType > markerType(pSize);
-
-  unsigned theta_intervals = 40;
-  unsigned radius_intervals = 9;
-  pSize = radius_intervals * theta_intervals;
-  x.resize(pSize);
-  markerType.resize(pSize);
-
   
 //   // CIRCLUAR INITIALIZATION  
 //   
@@ -295,9 +312,7 @@ int main(int argc, char **args)
 //     x[j][1] = 0.0196 + r_rad * sin(r_phi) * sin(r_theta);
 //     x[j][2] = r_rad * sin(r_phi) * cos(r_theta);
 //   }
-  
-  
-  
+    
    //UNIFORM INITIALIZATION
 
   srand(2);
@@ -315,29 +330,14 @@ int main(int argc, char **args)
   
   
   //END INITIALIZE PARTICLES
-
-  unsigned itPeriod = 20;
-  unsigned confNumber = 2;
-  // time loop parameter
-  system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-
-  for (unsigned time_step = 0; time_step < 2 * itPeriod; time_step++) {
-    for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
-      SetLambda(ml_sol, level , SECOND, ELASTICITY);
-    }
-    if (time_step > 0)
-      system.SetMgType(V_CYCLE);
-    system.CopySolutionToOldSolution();
-    system.MGsolve();
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
-  }
-
+  
+  
   std::vector < std::vector <  double > > efficiencyVector(4);
-
+  
   for (configuration = 0; configuration < confNumber; configuration++) {
     efficiencyVector[configuration].resize(21);
     for (partSim = 0; partSim < 21; partSim++) {
-      const unsigned int n_timesteps = 100;
+      const unsigned int n_timesteps = 80;
       std::vector < std::vector < std::vector < double > > > streamline(pSize);
       std::vector< Line* > linea(1);
 
@@ -353,27 +353,23 @@ int main(int argc, char **args)
 
       for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
-        count_out = 0;
+	count_out = 0;
 
-        if (time_step >= 2 * itPeriod) {
-          for (int i = 0; i < linea.size(); i++) {
-            linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
-            count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
-          }
-          if (time_step < 2 * itPeriod + 1) {
-            count_tot += pSize;
-            linea.resize(time_step -  2 * itPeriod + 2);
-            linea[time_step -  2 * itPeriod + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
-          }
-          if (partSim == 0) ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+	for (int i = 0; i < linea.size(); i++) {
+          linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
+          count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
         }
+        
+        if (partSim + configuration == 0) ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
 
         count_inside = count_tot - count_out;
 
         efficiencyVector[configuration][partSim] =  static_cast< double >(count_inside) / count_tot;
 
         double diam = (partSim + 1.) * 0.1 * 1.e-6;
-        std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
+	std::cout << "configuration = "<< configuration <<std::endl;
+	std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
+	std::cout << "time_step = "<< time_step <<std::endl;
         std::cout << "particle inside = " << count_inside << std::endl;
         std::cout << "particle outside = " << count_out << std::endl;
         std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
@@ -382,14 +378,17 @@ int main(int argc, char **args)
         for (int i = 0; i < linea.size(); i++) {
           linea[i]->GetStreamLine(streamline, i + 1);
         }
-
-        PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
+        std::ostringstream output_path; 
+	output_path << "./output/particles-" << configuration << "-" << diam;
+	
+	//PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
+	PrintLine(output_path.str(), streamline, true, time_step + 1);
+	
       }
 
       for (unsigned i = 0; i < linea.size(); i++) {
         delete linea[i];
       }
-
 
     }
   }
@@ -397,9 +396,10 @@ int main(int argc, char **args)
   for (unsigned j = 0; j < confNumber; j++) {
     std::cout << " CONFIGURATION " << j << std::endl;
     for (unsigned i = 0; i < 21; i++) {
-      std::cout << i << " " << efficiencyVector[j][i] << std::endl;
+      std::cout << efficiencyVector[j][i] * 100 << std::endl;
     }
     std::cout << " ---------------------------------------------------------------------------- " << std::endl;
+    
   }
 
   ml_prob.clear();
@@ -836,30 +836,26 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   else if ( configuration == 2 ) {
 
-    //FIX
+    x[0] = 0.0196 * sqrt(2)/2;
+    x[1] = 0.0196 * sqrt(2)/2;
+    x[2] = 0.01;
 
-    x[0] = 0.006788225;
-    x[1] = 0.006788225;
-    x[2] = 0.;
-
-    v[0] = 0.;
-    v[1] = 0.;
-    v[2] = -1.;
+    v[0] = sqrt(2)/2.;
+    v[1] = sqrt(2)/2.;
+    v[2] = 0.;
 
   }
 
 
   else if ( configuration == 3 ) {
 
-    // FIX
-
-    x[0] = 0.006788225;
-    x[1] = 0.006788225;
-    x[2] = 0.;
-
-    v[0] = 0.;
-    v[1] = 0.;
-    v[2] = -1.;
+    x[0] = 0.0196 * sqrt(2)/2;
+    x[1] = 0.0196 * sqrt(2)/2;
+    x[2] = 0.01;
+    
+    v[0] = - sqrt(2)/2.;
+    v[1] = sqrt(2)/2.;
+    v[2] = 0.;
 
   }
 
