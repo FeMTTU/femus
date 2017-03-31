@@ -574,6 +574,15 @@ int main(int argc, char **args)
     }
   }
 
+
+  for (unsigned j = 0; j < confNumber; j++) {
+    std::cout << " CONFIGURATION " << j << std::endl;
+    for (unsigned i = 0; i < 21; i++) {
+      std::cout << efficiencyVector[j][i] * 100 << std::endl;
+    }
+    std::cout << " ---------------------------------------------------------------------------- " << std::endl;
+  }
+
   ml_prob.clear();
   return 0;
 }
@@ -1647,6 +1656,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   //END cheating
 
 }
+
 
 
 
