@@ -245,22 +245,22 @@ int main(int argc, char** argv)
   fpsource.Parse();
 
 
-  function = root["func_sol7_1"].get("sol", "0.").asString();
+  function = root["func_sol7"].get("sol", "0.").asString();
   fp_sol.SetExpression(function);
   fp_sol.SetIndependentVariables(variables);
   fp_sol.Parse();
 
-  function = root["func_sol7_1"].get("dsoldx", "0.").asString();
+  function = root["func_sol7"].get("dsoldx", "0.").asString();
   fp_dsoldx.SetExpression(function);
   fp_dsoldx.SetIndependentVariables(variables);
   fp_dsoldx.Parse();
 
-  function = root["func_sol7_1"].get("dsoldy", "0.").asString();
+  function = root["func_sol7"].get("dsoldy", "0.").asString();
   fp_dsoldy.SetExpression(function);
   fp_dsoldy.SetIndependentVariables(variables);
   fp_dsoldy.Parse();
 
-  function = root["func_sol7_1"].get("dsoldz", "0.").asString();
+  function = root["func_sol7"].get("dsoldz", "0.").asString();
   fp_dsoldz.SetExpression(function);
   fp_dsoldz.SetIndependentVariables(variables);
   fp_dsoldz.Parse();
@@ -444,17 +444,30 @@ int main(int argc, char** argv)
 
   int  iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  bool H1 = false;
-  double l2error = GetRelativeError(ml_sol, H1);
+//     bool H1 = false;
+//   double l2error = GetRelativeError(ml_sol, H1);
+// 
+//   if (iproc == 0) printf("\n||Sol_h-Sol||_L2 / ||Sol||_L2  = %g \n", l2error);
+// 
+//   H1 = true;
+//   double H1error = GetRelativeError(ml_sol, H1);
+// 
+//   if (iproc == 0) printf("\n||Sol_h-Sol||_H1 / ||Sol||_H1  = %g \n", H1error);
+  if(AMRnorm == "l2") {
+  double l2error = GetRelativeError(ml_sol, false);
 
   if (iproc == 0) printf("\n||Sol_h-Sol||_L2 / ||Sol||_L2  = %g \n", l2error);
-
-  H1 = true;
-  double H1error = GetRelativeError(ml_sol, H1);
+   ml_msh.PrintInfo();
+  }
+  else if(AMRnorm == "H1") {
+  double H1error = GetRelativeError(ml_sol, true);
 
   if (iproc == 0) printf("\n||Sol_h-Sol||_H1 / ||Sol||_H1  = %g \n", H1error);
-
-  ml_msh.PrintInfo();
+   ml_msh.PrintInfo();
+      
+ }
+ else {std::cout << std::endl<< std::endl << " *********AMRnorm use 'H1' or 'l2'************" << std::endl;}
+//   ml_msh.PrintInfo();
 
   //Destroy all the new systems
   ml_prob.clear();
