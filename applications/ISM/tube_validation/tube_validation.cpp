@@ -332,7 +332,7 @@ int main(int argc, char **args)
   //END INITIALIZE PARTICLES
   
   
-  std::vector < std::vector <  double > > efficiencyVector(4);
+  std::vector < std::vector <  double > > efficiencyVector(confNumber);
   
   for (configuration = 0; configuration < confNumber; configuration++) {
     efficiencyVector[configuration].resize(21);

@@ -55,6 +55,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 //------------------------------------------------------------------------------------------------------------------
 
 unsigned partSim;
+unsigned configuration;
 
 int main(int argc, char **args)
 {
@@ -149,7 +150,7 @@ int main(int argc, char **args)
     E = 1000000 * 1.e1;
   }
   else if (simulation == 6) {
-    E = 10 * 1.e6;
+    E = 100000;
   }
   else if (simulation == 7) {
     E = 1000000 * 1.e0;
@@ -179,7 +180,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 1;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -383,21 +384,20 @@ int main(int argc, char **args)
   }
 
   if (simulation == 6) { //for 3D tube
-    unsigned theta_intervals = 40;
+    unsigned theta_intervals = 100;
     unsigned radius_intervals = 9;
     pSize = radius_intervals * theta_intervals;
     x.resize(pSize);
     markerType.resize(pSize);
-
-    unsigned counter = 0;
-    for (unsigned k = 1; k < radius_intervals + 1 ; k++) {
-      for (unsigned j = 0; j < theta_intervals; j++) {
-        x[counter].resize(3);
-        x[counter][0] = -0.035;
-        x[counter][1] = 0.0196 + 0.00034 * k * sin(2.*PI / theta_intervals * j);
-        x[counter][2] = 0.00034 * k * cos(2.*PI / theta_intervals * j);
-        counter++;
-      }
+    srand(2);
+    for (unsigned j = 0; j < pSize; j++) {
+      double r_rad = static_cast <double> (rand()) / RAND_MAX;
+      r_rad = 0.0034 * sqrt(r_rad);
+      double r_theta = static_cast <double> (rand()) / RAND_MAX * 2 * PI;
+      x[j].resize(3);
+      x[j][0] = -0.035;
+      x[j][1] = 0.0196 + r_rad * sin(r_theta);
+      x[j][2] = r_rad * cos(r_theta);
     }
   }
 
@@ -422,82 +422,113 @@ int main(int argc, char **args)
 
   //END INITIALIZE PARTICLES
 
+  unsigned itPeriod = 32;
+  unsigned confNumber;
+  if (simulation == 6) confNumber = 4;
+  else if (simulation == 7) confNumber = 2;
+  else confNumber = 1;
 
   std::vector < std::vector < std::vector < double > > > streamline(pSize);
-  std::vector< Line* > linea(1);
+  std::vector < std::vector < std::vector < Line* > > > linea(confNumber);
 
-  linea[0] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
+  for (configuration = 0; configuration < confNumber; configuration++) {
+    linea[configuration].resize(21);
+    for (partSim = 0; partSim < 21; partSim++) {
+      linea[configuration][partSim].resize(1);
+      linea[configuration][partSim][0] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
+      linea[configuration][partSim][0]->GetStreamLine(streamline, 0);
+      linea[configuration][partSim][0]->GetStreamLine(streamline, 1);
 
-  unsigned itPeriod = 20;
+      std::ostringstream output_path;
+      double diam = (partSim + 1.) * 0.1 * 1.e-6;
+      output_path << "./output/particles-" << configuration << "-" << diam;
 
-  linea[0]->GetStreamLine(streamline, 0);
-  linea[0]->GetStreamLine(streamline, 1);
-  PrintLine(DEFAULT_OUTPUTDIR, streamline, true, 0);
+      PrintLine(output_path.str(), streamline, true, 0);
+    }
+  }
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 224;
+  const unsigned int n_timesteps = 192;
 
   std::vector < std::vector <double> > data(n_timesteps);
 
   unsigned count_inside;
   unsigned count_out;
   unsigned count_tot = pSize;
+  std::vector < std::vector <  double > > efficiencyVector(confNumber);
 
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
     data[time_step].resize(5);
 
-    //if (time_step < 2 * itPeriod) { // WARNING comment for non stationary
-      for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
-        SetLambda(ml_sol, level , SECOND, ELASTICITY);
-      }
-      if (time_step > 0)
-        system.SetMgType(V_CYCLE);
-      system.CopySolutionToOldSolution();
-      system.MGsolve();
-    //}  // WARNING comment for non stationary
-    count_out = 0;
-
-    if (time_step >= itPeriod) { //WARNING decomment for non stationary cases
-    //if (time_step >= 2 * itPeriod) {
-      for (int i = 0; i < linea.size(); i++) {
-        if (simulation == 6) {
-          linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
-        }
-        else if (simulation == 5 || simulation == 7) {
-          linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceSC);
-        }
-        count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
-      }
-      if (time_step < 4 * itPeriod + itPeriod) {
-        count_tot += pSize;
-        linea.resize(time_step - itPeriod + 2);
-        linea[time_step - itPeriod + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
-      }
+    for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
+      SetLambda(ml_sol, level , SECOND, ELASTICITY);
     }
-
-    count_inside = count_tot - count_out;
-
-    std::cout << "particle inside = " << count_inside << std::endl;
-    std::cout << "particle ouside = " << count_out << std::endl;
-    std::cout << "capture efficiency = " << static_cast< double >(count_inside) / count_tot << std::endl;
-
-    linea[0]->GetStreamLine(streamline, 0);
-    for (int i = 0; i < linea.size(); i++) {
-      linea[i]->GetStreamLine(streamline, i + 1);
-    }
-    PrintLine(DEFAULT_OUTPUTDIR, streamline, true, time_step + 1);
-
-    data[time_step][0] = time_step / 32.;
-    //data[time_step][0] = time_step / (64*1.4);
-    if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
-      GetSolutionNorm(ml_sol, 9, data[time_step]);
-    }
-    else if (simulation == 4) {   //AAA_thrombus, 15=thrombus
-      GetSolutionNorm(ml_sol, 7, data[time_step]);
-    }
+    if (time_step > 0)
+      system.SetMgType(V_CYCLE);
+    system.CopySolutionToOldSolution();
+    system.MGsolve();
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+
+    if (time_step >= itPeriod) {
+      for (configuration = 0; configuration < confNumber; configuration++) {
+        efficiencyVector[configuration].resize(21);
+        for (partSim = 0; partSim < 21; partSim++) {
+
+          count_out = 0;
+
+          for (int i = 0; i < linea[configuration][partSim].size(); i++) {
+            if (simulation == 6) {
+              linea[configuration][partSim][i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
+            }
+            else if (simulation == 5 || simulation == 7) {
+              linea[configuration][partSim][i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceSC);
+            }
+            count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
+          }
+//           if (time_step < 4 * itPeriod + itPeriod) {
+//             count_tot += pSize;
+//             linea.resize(time_step - itPeriod + 2);
+//             linea[time_step - itPeriod + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
+//           }
+
+
+          count_inside = count_tot - count_out;
+
+          efficiencyVector[configuration][partSim] =  static_cast< double >(count_inside) / count_tot;
+
+          double diam = (partSim + 1.) * 0.1 * 1.e-6;
+
+          std::cout << "configuration = " << configuration << std::endl;
+          std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
+          std::cout << "time_step = " << time_step << std::endl;
+          std::cout << "particle inside = " << count_inside << std::endl;
+          std::cout << "particle outside = " << count_out << std::endl;
+          std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
+
+          linea[configuration][partSim][0]->GetStreamLine(streamline, 0);
+          for (int i = 0; i < linea[configuration][partSim].size(); i++) {
+            linea[configuration][partSim][i]->GetStreamLine(streamline, i + 1);
+          }
+
+          std::ostringstream output_path;
+          output_path << "./output/particles-" << configuration << "-" << diam;
+
+          PrintLine(output_path.str(), streamline, true, time_step + 1);
+
+          data[time_step][0] = time_step / 32.;
+          //data[time_step][0] = time_step / (64*1.4);
+          if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
+            GetSolutionNorm(ml_sol, 9, data[time_step]);
+          }
+          else if (simulation == 4) {   //AAA_thrombus, 15=thrombus
+            GetSolutionNorm(ml_sol, 7, data[time_step]);
+          }
+        }
+      }
+    }
+
   }
 
 
@@ -535,9 +566,12 @@ int main(int argc, char **args)
 
 
   // ******* Clear all systems *******
-
-  for (unsigned i = 0; i < linea.size(); i++) {
-    delete linea[i];
+  for (configuration = 0; configuration < confNumber; configuration++) {
+    for (partSim = 0; partSim < 21; partSim++) {
+      for (unsigned i = 0; i < linea[configuration][partSim].size(); i++) {
+        delete linea[configuration][partSim][i];
+      }
+    }
   }
 
   ml_prob.clear();
@@ -575,7 +609,7 @@ double SetVariableTimeStep(const double time)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[], double & value, const int facename, const double time)
 {
   bool test = 1; //dirichlet
   value = 0.;
@@ -648,7 +682,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 }
 
 
-bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char name[], double & value, const int facename, const double time)
 {
   bool test = 1; //dirichlet
   value = 0.;
@@ -699,7 +733,7 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
 }
 
 
-bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[], double & value, const int facename, const double time)
 {
   bool test = 1; //dirichlet
   value = 0.;
@@ -760,15 +794,15 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
     double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     if (2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
-      //value = 0.1 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
-      value = 2 * 0.1 * (1. - r2) * ramp; //inflow
+      value = 0.1 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      //value = 2 * 0.1 * (1. - r2) * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
     }
     else if (1 == facename) {
       test = 0;
-      value = 11335 * ramp;
-      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      //value = 11335 * ramp;
+      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
       //value = 10000;
     }
     else if (5 == facename) {
@@ -838,7 +872,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
       value = 0.;
     }
   }
-  else if (!strcmp(name, "V")){
+  else if (!strcmp(name, "V")) {
     if (2 == facename || 3 == facename || 7 == facename) {
       test = 0;
       value = 0.;
@@ -858,7 +892,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
   return test;
 }
 
-void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
+void GetSolutionNorm(MultiLevelSolution & mlSol, const unsigned & group, std::vector <double> &data)
 {
 
   int  iproc, nprocs;
@@ -1052,7 +1086,7 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
 
 }
 
-void UpdateMeshCoordinates(MultiLevelMesh &mlMesh, MultiLevelSolution& mlSol)
+void UpdateMeshCoordinates(MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol)
 {
 
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
@@ -1087,7 +1121,7 @@ void UpdateMeshCoordinates(MultiLevelMesh &mlMesh, MultiLevelSolution& mlSol)
 
 }
 
-void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material)
+void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material)
 {
 
   //infinitely long wire with a current I flowing modelled by the line identified by x and v
@@ -1117,25 +1151,60 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN geometric parameters
 
-  double D =  1.5e-6;       //diameter of the particle //rule con partSim
+  double D =  (partSim + 1.) * 0.1 * 1.e-6;       //diameter of the particle //rule con partSim
 
   std::vector <double> v(3);    //direction vector of the line that identifies the infinite wire
-
-  v[0] = 0.;
-  v[1] = 0.;
-  v[2] = -1.;
-
-
   std::vector <double> x(3);   //point that with v identifies the line of the wire
 
-  x[0] = 0.006788225;
-  x[1] = 0.006788225;
-  x[2] = 0.;
+  if (configuration == 0 ) {
+
+    x[0] = 0.02093036072;
+    x[1] = 0.02093036072;
+    x[2] = 0.;
+
+    v[0] = 0.;
+    v[1] = 0.;
+    v[2] = -1.;
+
+  }
+
+  else if ( configuration == 1 ) {
+
+    x[0] = 0.006788225;
+    x[1] = 0.006788225;
+    x[2] = 0.;
+
+    v[0] = 0.;
+    v[1] = 0.;
+    v[2] = -1.;
+
+  }
+
+  else if ( configuration == 2 ) {
+
+    x[0] = 0.0196 * sqrt(2) / 2;
+    x[1] = 0.0196 * sqrt(2) / 2;
+    x[2] = 0.01;
+
+    v[0] = sqrt(2) / 2.;
+    v[1] = sqrt(2) / 2.;
+    v[2] = 0.;
+
+  }
 
 
-//   x[0] = 0.;
-//   x[1] = -0.015;
-//   x[2] = 0.;
+  else if ( configuration == 3 ) {
+
+    x[0] = 0.0196 * sqrt(2) / 2;
+    x[1] = 0.0196 * sqrt(2) / 2;
+    x[2] = 0.01;
+
+    v[0] = - sqrt(2) / 2.;
+    v[1] = sqrt(2) / 2.;
+    v[2] = 0.;
+
+  }
+
 
   //END
 
@@ -1192,7 +1261,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   else {
 
-    
+
     double C2 = (PI * D * D * D * mu0 * Msat) / 6;
 
     //printf("%g\n",C2);
@@ -1223,7 +1292,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 }
 
 
-void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material)
+void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material)
 {
 
   //current loop of radius a, center x and for z-axis the line identified by x and v
