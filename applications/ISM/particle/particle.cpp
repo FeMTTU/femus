@@ -471,13 +471,14 @@ int main(int argc, char **args)
     system.MGsolve();
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
 
-    if (time_step >= itPeriod) {
-      for (configuration = 0; configuration < confNumber; configuration++) {
-        efficiencyVector[configuration].resize(21);
-        for (partSim = 0; partSim < 21; partSim++) {
+    //if (time_step >= itPeriod) {
+    for (configuration = 0; configuration < confNumber; configuration++) {
+      efficiencyVector[configuration].resize(21);
+      for (partSim = 0; partSim < 21; partSim++) {
 
-          count_out = 0;
+        count_out = 0;
 
+        if (time_step >= itPeriod) {
           for (int i = 0; i < linea[configuration][partSim].size(); i++) {
             if (simulation == 6) {
               linea[configuration][partSim][i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
@@ -487,47 +488,48 @@ int main(int argc, char **args)
             }
             count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
           }
+        }
+
 //           if (time_step < 4 * itPeriod + itPeriod) {
 //             count_tot += pSize;
 //             linea.resize(time_step - itPeriod + 2);
 //             linea[time_step - itPeriod + 1] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
 //           }
 
+        count_inside = count_tot - count_out;
 
-          count_inside = count_tot - count_out;
+        efficiencyVector[configuration][partSim] =  static_cast< double >(count_inside) / count_tot;
 
-          efficiencyVector[configuration][partSim] =  static_cast< double >(count_inside) / count_tot;
+        double diam = (partSim + 1.) * 0.1 * 1.e-6;
 
-          double diam = (partSim + 1.) * 0.1 * 1.e-6;
+        std::cout << "configuration = " << configuration << std::endl;
+        std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
+        std::cout << "time_step = " << time_step << std::endl;
+        std::cout << "particle inside = " << count_inside << std::endl;
+        std::cout << "particle outside = " << count_out << std::endl;
+        std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
 
-          std::cout << "configuration = " << configuration << std::endl;
-          std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
-          std::cout << "time_step = " << time_step << std::endl;
-          std::cout << "particle inside = " << count_inside << std::endl;
-          std::cout << "particle outside = " << count_out << std::endl;
-          std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
+        linea[configuration][partSim][0]->GetStreamLine(streamline, 0);
+        for (int i = 0; i < linea[configuration][partSim].size(); i++) {
+          linea[configuration][partSim][i]->GetStreamLine(streamline, i + 1);
+        }
 
-          linea[configuration][partSim][0]->GetStreamLine(streamline, 0);
-          for (int i = 0; i < linea[configuration][partSim].size(); i++) {
-            linea[configuration][partSim][i]->GetStreamLine(streamline, i + 1);
-          }
+        std::ostringstream output_path;
+        output_path << "./output/particles-" << configuration << "-" << diam;
 
-          std::ostringstream output_path;
-          output_path << "./output/particles-" << configuration << "-" << diam;
+        PrintLine(output_path.str(), streamline, true, time_step + 1);
 
-          PrintLine(output_path.str(), streamline, true, time_step + 1);
-
-          data[time_step][0] = time_step / 32.;
-          //data[time_step][0] = time_step / (64*1.4);
-          if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
-            GetSolutionNorm(ml_sol, 9, data[time_step]);
-          }
-          else if (simulation == 4) {   //AAA_thrombus, 15=thrombus
-            GetSolutionNorm(ml_sol, 7, data[time_step]);
-          }
+        data[time_step][0] = time_step / 32.;
+        //data[time_step][0] = time_step / (64*1.4);
+        if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
+          GetSolutionNorm(ml_sol, 9, data[time_step]);
+        }
+        else if (simulation == 4) {   //AAA_thrombus, 15=thrombus
+          GetSolutionNorm(ml_sol, 7, data[time_step]);
         }
       }
     }
+    //}
 
   }
 
