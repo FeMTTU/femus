@@ -449,7 +449,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 192;
+  const unsigned int n_timesteps = 284;
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -478,7 +478,7 @@ int main(int argc, char **args)
 
         count_out = 0;
 
-        if (time_step >= itPeriod) {
+        if (time_step >= 2 * itPeriod) {
           for (int i = 0; i < linea[configuration][partSim].size(); i++) {
             if (simulation == 6) {
               linea[configuration][partSim][i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
@@ -805,7 +805,7 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
     double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     if (2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
-      value = 0.1 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
       //value = 2 * 0.1 * (1. - r2) * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
