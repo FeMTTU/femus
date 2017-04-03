@@ -150,7 +150,8 @@ int main(int argc, char **args)
     E = 1000000 * 1.e1;
   }
   else if (simulation == 6) {
-    E = 100000;
+    //E = 100000; 
+    E = 10000;
   }
   else if (simulation == 7) {
     E = 1000000 * 1.e0;
