@@ -504,7 +504,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 //                  Res[ (nDof_u + i_vol) ] 
 // 			+=   control_node_flag[i_vol] * penalty_strong_bdry * 17.;
-                 Res[ (nDof_u + i_vol) ] 
+                 Res[ (nDof_u + nDof_adj+ i_vol) ] 
 			+=   control_node_flag[i_vol] *  weight_bdry * (phi_ctrl_bdry[i_bdry]* 1.);
 		    
 
@@ -529,10 +529,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl ) {
               Jac[  
-		    (nDof_u + i_vol) * nDof_AllVars +
-	            (nDof_u + j_vol) ] 
-			+=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]);
-	      }
+		 (nDof_u + nDof_adj + i_vol) * nDof_AllVars +
+	         (nDof_u + nDof_adj + j_vol) ] 
+	         +=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]);
+	      
 
 //   std::cout << "====== phi values on boundary for gauss point " << ig_bdry << std::endl;
 //   
@@ -549,12 +549,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //      }
 //   }
               double lap_bdry = 0.;
-		      for (unsigned d = 0; d < dim; d++) { lap_bdry += phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * phi_ctrl_x_bdry[j_bdry + d*nve_bdry];    }
+	      for (unsigned d = 0; d < dim; d++) { lap_bdry += phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * phi_ctrl_x_bdry[j_bdry + d*nve_bdry];    }
 	         Jac[
-		    (nDof_u + i_vol) * nDof_AllVars +
-	            (nDof_u + j_vol) ] 
-	                += control_node_flag[i_vol] * weight_bdry * beta * lap_bdry;
-			
+		    (nDof_u + nDof_adj + i_vol) * nDof_AllVars +
+	            (nDof_u + nDof_adj + j_vol) ] 
+	            += control_node_flag[i_vol] * weight_bdry * beta * lap_bdry;
+	             }	// end of if
 		   }
 				  
 		  }  //end i loop
@@ -591,7 +591,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
           if (i < nDof_u)     Res[0                   + i] += 0.;
   
           // SECOND ROW - adjoint
-	  if (i < nDof_adj)   Res[nDof_u              + i] += weight * ( alpha * target_flag * u_des * phi_u[i] );
+	  if (i < nDof_adj)   Res[nDof_u              + i] += weight * ( target_flag * u_des * phi_u[i] );
          	      
 	  // THIRD ROW - control
 	  if (i < nDof_ctrl)  Res[nDof_u + nDof_adj   + i] += penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * 0. /*+ control_node_flag[i]*19.*/ );
@@ -657,7 +657,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		(nDof_u + nDof_adj + i) * nDof_AllVars  +
 		(nDof_u + nDof_adj + j)      ]  += penalty_outside_control_boundary * (1 - control_node_flag[i]); //enforce control zero outside the control boundary (Gamma\Gamma_c)
 	      }
-  	      
+  	    //---------------------------------------------------------------------------------------------------------
 	    } // end phi_j loop
           
 	  } // endif assemble_matrix
