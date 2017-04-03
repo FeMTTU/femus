@@ -587,16 +587,16 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
  
-          // FIRST ROW - adj
-          if (i < nDof_u)      Res[0                  + i] += weight * ( alpha * target_flag * u_des * phi_u[i] );
+          // FIRST ROW - state
+          if (i < nDof_u)     Res[0                   + i] += 0.;
   
-          // SECOND ROW - ctrl
-           if (i < nDof_ctrl)  Res[nDof_u             + i] += penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * 0. /*+ control_node_flag[i]*19.*/ );
-	      
-	  // THIRD ROW - state
-	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += 0.;
-	      
-	      
+          // SECOND ROW - adjoint
+	  if (i < nDof_adj)   Res[nDof_u              + i] += weight * ( alpha * target_flag * u_des * phi_u[i] );
+         	      
+	  // THIRD ROW - control
+	  if (i < nDof_ctrl)  Res[nDof_u + nDof_adj   + i] += penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * 0. /*+ control_node_flag[i]*19.*/ );
+	   
+	  //-----------------------------------------------------------------------------------------------------------  
           if (assembleMatrix) {
 	    
             // *** phi_j loop ***
@@ -605,61 +605,62 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               double laplace_mat_adj = 0.;
 
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_adj && j < nDof_u )         laplace_mat_u      += (phi_adj_x   [i * dim + kdim] * phi_u_x   [j * dim + kdim]);
-              if ( i < nDof_u   && j < nDof_adj )   laplace_mat_adj        += (phi_u_x     [i * dim + kdim] * phi_adj_x [j * dim + kdim]);
+              if ( i < nDof_u && j < nDof_u )         laplace_mat_u      += (phi_u_x   [i * dim + kdim] * phi_u_x   [j * dim + kdim]);
+              if ( i < nDof_adj   && j < nDof_adj )   laplace_mat_adj    += (phi_adj_x [i * dim + kdim] * phi_adj_x [j * dim + kdim]);
 		
 	      }
 
-              //adjoint row ==================
-              // BLOCK delta_state / state	      
-              if ( i < nDof_u && j < nDof_u )   Jac[ i * nDof_AllVars +
-		                                         (0 + j)                      ]       += weight * 1. * target_flag *  phi_u[i] * phi_u[j];   
-//               //BLOCK delta_state / adjoint
-              if ( i < nDof_u && j < nDof_adj )   Jac[ i * nDof_AllVars +
-							 (nDof_u + nDof_ctrl + j)                 ]  += weight * laplace_mat_adj;
 	      
-	      
-              //control row ==================
-             //enforce control zero outside the control boundary
-	      if ( i < nDof_ctrl && j < nDof_ctrl && i==j)
+	     //===========================================First row====================================================
+	      // BLOCK state / state
+	      if ( i < nDof_u && j < nDof_u ) {
 		Jac[    
-		(nDof_u + i) * nDof_AllVars  +
-		(nDof_u + j)                                ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]) /*+ control_node_flag[i]*/ )/*weight * phi_adj[i]*phi_adj[j]*/;
-	      
-              //state row ======================================================
-	      
-              // BLOCK delta_adjoint / state
-	      if ( i < nDof_adj && j < nDof_u ) {
-		Jac[    
-		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
-		(0 + j)                                ]  += weight * laplace_mat_u;
-
+		(0 + i) * nDof_AllVars  +
+		(0 + j)                       ]  += weight * laplace_mat_u;  //laplace of state
 	      }
 	      
-		if (i < nDof_adj && j < nDof_u && i==j)  {
-		  Jac[    
-		(/*nDof_u + nDof_ctrl*/ + i) * nDof_AllVars  +
-		(0 + j)                                ]  +=  penalty_ctrl * ( control_node_flag[i]);
-		  
-		}
-
-               // BLOCK delta_adjoint / control
-	      if ( i < nDof_adj && j < nDof_ctrl && i==j) {
+	      if (i < nDof_u && j < nDof_u && i==j)  {
 		Jac[    
-		(/*nDof_u + nDof_ctrl*/ + i) * nDof_AllVars  +
-		(nDof_u + j)                                ]  += penalty_ctrl * ( control_node_flag[i]) * (-1.);
-	
+		(0 + i) * nDof_AllVars  +
+		(0 + j)                      ]  +=  penalty_ctrl * ( control_node_flag[i]); //T on diagonal for T - g = 0
+	      }
+
+	      
+              // BLOCK state / control
+	      if ( i < nDof_u && j < nDof_ctrl && i==j) {
+		Jac[    
+		(0 + i) * nDof_AllVars  +
+		(nDof_u + nDof_adj + j)      ]  += penalty_ctrl * ( control_node_flag[i]) * (-1.); //-g on diagonal for T - g = 0
 	      }
 	      
-//               // BLOCK delta_adjoint / adjoint
-// 	      if ( i < nDof_adj && j < nDof_adj )
-// 		Jac[    
-// 		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
-// 		(nDof_u + nDof_ctrl + j)                                ]  += weight * phi_adj[i]*phi_adj[j];
-// 	      
 	      
+             //===========================================Second row====================================================
+              // BLOCK adjoint / state      
+              if ( i < nDof_adj && j < nDof_u ) {
+		Jac[ 
+		(nDof_u + i) * nDof_AllVars +
+                (0 + j)                      ]   += weight * 1. * target_flag *  phi_adj[i] * phi_u[j]; //T on domain
+	      }
+	      
+//            //BLOCK adjoint / adjoint
+              if ( i < nDof_adj && j < nDof_ctrl ) {
+		Jac[ 
+		(nDof_u + i) * nDof_AllVars +
+		(nDof_u + j)                 ]   += weight * laplace_mat_adj * (-1);  //negative laplace of adjoint
+	      }
+	      
+	      
+             //===========================================Third row====================================================
+              //BLOCK control / control
+              if ( i < nDof_ctrl && j < nDof_ctrl && i==j) {
+		Jac[    
+		(nDof_u + nDof_adj + i) * nDof_AllVars  +
+		(nDof_u + nDof_adj + j)      ]  += penalty_outside_control_boundary * (1 - control_node_flag[i]); //enforce control zero outside the control boundary (Gamma\Gamma_c)
+	      }
+  	      
 	    } // end phi_j loop
-          } // endif assemble_matrix
+          
+	  } // endif assemble_matrix
 
         } // end phi_i loop
         
