@@ -402,38 +402,58 @@ int main(int argc, char **args)
   }
 
   if (simulation == 7) { //for carotidBifurcation
-    unsigned theta_intervals = 10;
+    unsigned theta_intervals = 100;
     unsigned radius_intervals = 9;
     pSize = radius_intervals * theta_intervals;
     x.resize(pSize);
     markerType.resize(pSize);
-
-    unsigned counter = 0;
-    for (unsigned k = 1; k < radius_intervals + 1 ; k++) {
-      for (unsigned j = 0; j < theta_intervals; j++) {
-        x[counter].resize(3);
-        x[counter][0] = 0.00033 * k * sin(2.*PI / theta_intervals * j);
-        x[counter][1] = 0.006 + 0.00033 * k * cos(2.*PI / theta_intervals * j);
-        x[counter][2] = -0.06;
-        counter++;
-      }
+    srand(2);
+    for (unsigned j = 0; j < pSize; j++) {
+      double r_rad = static_cast <double> (rand()) / RAND_MAX;
+      r_rad = 0.0034 * sqrt(r_rad);
+      double r_theta = static_cast <double> (rand()) / RAND_MAX * 2 * PI;
+      x[j].resize(3);
+      x[j][0] = r_rad * cos(r_theta);
+      x[j][1] = 0.006 + r_rad * sin(r_theta);
+      x[j][2] = -0.06;
     }
+//     unsigned counter = 0;
+//     for (unsigned k = 1; k < radius_intervals + 1 ; k++) {
+//       for (unsigned j = 0; j < theta_intervals; j++) {
+//         x[counter].resize(3);
+//         x[counter][0] = 0.00033 * k * sin(2.*PI / theta_intervals * j);
+//         x[counter][1] = 0.006 + 0.00033 * k * cos(2.*PI / theta_intervals * j);
+//         x[counter][2] = -0.06;
+//         counter++;
+//       }
+//     }
   }
 
   //END INITIALIZE PARTICLES
 
   unsigned itPeriod = 32;
   unsigned confNumber;
-  if (simulation == 6) confNumber = 4;
-  else if (simulation == 7) confNumber = 2;
-  else confNumber = 1;
+  unsigned partSimMax;
+  if (simulation == 6) {
+    confNumber = 4;
+    partSimMax = 21;
+  }
+  else if (simulation == 7) {
+    confNumber = 2;
+    partSimMax = 8;
+  }
+  else {
+    confNumber = 1;
+    partSimMax = 1;
+  }
+  
 
   std::vector < std::vector < std::vector < double > > > streamline(pSize);
   std::vector < std::vector < std::vector < Line* > > > linea(confNumber);
 
   for (configuration = 0; configuration < confNumber; configuration++) {
-    linea[configuration].resize(21);
-    for (partSim = 0; partSim < 21; partSim++) {
+    linea[configuration].resize(partSimMax);
+    for (partSim = 0; partSim < partSimMax; partSim++) {
       linea[configuration][partSim].resize(1);
       linea[configuration][partSim][0] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
       linea[configuration][partSim][0]->GetStreamLine(streamline, 0);
@@ -449,7 +469,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 284;
+  const unsigned int n_timesteps = 352;//284
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -473,8 +493,8 @@ int main(int argc, char **args)
 
     //if (time_step >= itPeriod) {
     for (configuration = 0; configuration < confNumber; configuration++) {
-      efficiencyVector[configuration].resize(21);
-      for (partSim = 0; partSim < 21; partSim++) {
+      efficiencyVector[configuration].resize(partSimMax);
+      for (partSim = 0; partSim < partSimMax; partSim++) {
 
         count_out = 0;
 
@@ -569,7 +589,7 @@ int main(int argc, char **args)
 
   // ******* Clear all systems *******
   for (configuration = 0; configuration < confNumber; configuration++) {
-    for (partSim = 0; partSim < 21; partSim++) {
+    for (partSim = 0; partSim < partSimMax; partSim++) {
       for (unsigned i = 0; i < linea[configuration][partSim].size(); i++) {
         delete linea[configuration][partSim][i];
       }
@@ -579,7 +599,7 @@ int main(int argc, char **args)
 
   for (unsigned j = 0; j < confNumber; j++) {
     std::cout << " CONFIGURATION " << j << std::endl;
-    for (unsigned i = 0; i < 21; i++) {
+    for (unsigned i = 0; i < partSimMax; i++) {
       std::cout << efficiencyVector[j][i] * 100 << std::endl;
     }
     std::cout << " ---------------------------------------------------------------------------- " << std::endl;
@@ -852,7 +872,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
   if (!strcmp(name, "W")) {
     if (1 == facename) {
       double r2 = ((x[0] * x[0]) + (x[1] - 0.006) * (x[1] - 0.006)) / (0.0035 * 0.0035);
-      value = 0.18 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = 2 * 0.194 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
 //       double q;
 //       double t = time - floor(time);
 //       if (t >= 0. || t < 0.15) {
@@ -1333,25 +1353,31 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   //BEGIN geometric parameters
 
-  double D = 4 * 1.e-6;       //diameter of the particle
+  double D = (partSim + 1) * 0.5 * 1.e-6;       //diameter of the particle
 
   double a = 0.04; //radius of the circular current loop in m
 
-  std::vector <double> v(3);   //case 0: direction vector of the line that identifies the infinite wire
-
-  v[0] = 0.;
-  v[1] = -1.;
-  v[2] = 0.;
-
-  std::vector <double> x(3);   //case 0: point that with v identifies the line of the wire
-
-//   x[0] = 0.;
-//   x[1] = -0.015;
-//   x[2] = 1.75;
-
-  x[0] = -0.002065;
-  x[1] = -0.019932;
-  x[2] = 0.000169;
+  std::vector <double> v(3); 
+  std::vector <double> x(3);
+  
+  if (configuration == 0){
+    v[0] = 0.;
+    v[1] = -1.;
+    v[2] = 0.;
+    
+    x[0] = -0.002065;
+    x[1] = -0.019932;
+    x[2] = 0.000169;
+  }
+  else if (configuration == 1){
+    v[0] = -1;
+    v[1] = 0.;
+    v[2] = 0.;
+    
+    x[0] = 0.0175;
+    x[1] = 0.0045;
+    x[2] = 0.;
+  }
 
   //END
 
