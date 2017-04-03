@@ -10,9 +10,8 @@ using namespace femus;
 
 #define NSUB_X  16
 #define NSUB_Y  16
-#define ALPHA_CTRL 1.
-#define BETA_CTRL  1.e-3
-#define GAMMA_CTRL 1.e-3
+#define ALPHA_CTRL 1.e-3
+#define BETA_CTRL  0.
 
 
 int ElementTargetFlag(const std::vector<double> & elem_center) {
@@ -93,9 +92,9 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 
   
   
-//     if(!strcmp(name,"adjoint")) {  //"adjoint" corresponds to the third block row
-//     value = 7.;
-//   }
+    if(!strcmp(name,"adjoint")) {  //"adjoint" corresponds to the third block row
+  if (faceName == 3)    value = 1.;
+  }
 
   
   return dirichlet;
@@ -321,7 +320,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   double u_des = DesiredTarget();
   double alpha = ALPHA_CTRL;
   double beta  = BETA_CTRL;
-  double gamma = GAMMA_CTRL;
   double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
   double penalty_strong_bdry = 1.e20;  // penalty for boundary equation on Gamma_c
   double penalty_ctrl = 1.e10;         //penalty for u=q
@@ -408,7 +406,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
  
  //********** ALL VARS ***************** 
-    unsigned nDof_AllVars = nDof_u + nDof_adj + nDof_ctrl; 
+    unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj; 
     int nDof_max    =  nDof_u;   // AAAAAAAAAAAAAAAAAAAAAAAAAAA TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
     if(nDof_adj > nDof_max) 
@@ -515,15 +513,15 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 
 // block delta_control/adjoint ========
-// 		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj)   Jac[ 
-// 			(nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj)  +
-// 		        (nDof_u + nDof_ctrl + j_vol)             ]  += - control_node_flag[i_vol] * weight_bdry *  phi_ctrl_bdry[i_bdry] * phi_adj_bdry[j_bdry];      
+// 		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj && i_vol == j_vol)   Jac[ 
+// 			(nDof_u + i_vol) * nDof_AllVars  +
+// 		        (nDof_u + nDof_ctrl + j_vol)             ]  += - control_node_flag[i_vol] * /*penalty_strong_bdry * 1.; //*/weight_bdry * phi_ctrl_bdry[i_bdry] * phi_adj_bdry[j_bdry];      
 		    
 // block delta_control / control ========
    
 //    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl && i_vol == j_vol) {
 //               Jac[  
-// 		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
+// 		    (nDof_u + i_vol) * nDof_AllVars +
 // 	            (nDof_u + j_vol) ] 
 // 			+=   control_node_flag[i_vol] * penalty_strong_bdry;
 // 	      }
@@ -531,7 +529,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl ) {
               Jac[  
-		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
+		    (nDof_u + i_vol) * nDof_AllVars +
 	            (nDof_u + j_vol) ] 
 			+=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]);
 	      }
@@ -553,7 +551,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               double lap_bdry = 0.;
 		      for (unsigned d = 0; d < dim; d++) { lap_bdry += phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * phi_ctrl_x_bdry[j_bdry + d*nve_bdry];    }
 	         Jac[
-		    (nDof_u + i_vol) * (nDof_u + nDof_ctrl + nDof_adj) +
+		    (nDof_u + i_vol) * nDof_AllVars +
 	            (nDof_u + j_vol) ] 
 	                += control_node_flag[i_vol] * weight_bdry * beta * lap_bdry;
 			
@@ -614,10 +612,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
               //adjoint row ==================
               // BLOCK delta_state / state	      
-              if ( i < nDof_u && j < nDof_u )   Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) +
+              if ( i < nDof_u && j < nDof_u )   Jac[ i * nDof_AllVars +
 		                                         (0 + j)                      ]       += weight * 1. * target_flag *  phi_u[i] * phi_u[j];   
 //               //BLOCK delta_state / adjoint
-              if ( i < nDof_u && j < nDof_adj )   Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) +
+              if ( i < nDof_u && j < nDof_adj )   Jac[ i * nDof_AllVars +
 							 (nDof_u + nDof_ctrl + j)                 ]  += weight * laplace_mat_adj;
 	      
 	      
@@ -625,7 +623,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
              //enforce control zero outside the control boundary
 	      if ( i < nDof_ctrl && j < nDof_ctrl && i==j)
 		Jac[    
-		(nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+		(nDof_u + i) * nDof_AllVars  +
 		(nDof_u + j)                                ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]) /*+ control_node_flag[i]*/ )/*weight * phi_adj[i]*phi_adj[j]*/;
 	      
               //state row ======================================================
@@ -633,14 +631,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               // BLOCK delta_adjoint / state
 	      if ( i < nDof_adj && j < nDof_u ) {
 		Jac[    
-		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
 		(0 + j)                                ]  += weight * laplace_mat_u;
 
 	      }
 	      
 		if (i < nDof_adj && j < nDof_u && i==j)  {
 		  Jac[    
-		(/*nDof_u + nDof_ctrl*/ + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+		(/*nDof_u + nDof_ctrl*/ + i) * nDof_AllVars  +
 		(0 + j)                                ]  +=  penalty_ctrl * ( control_node_flag[i]);
 		  
 		}
@@ -648,7 +646,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                // BLOCK delta_adjoint / control
 	      if ( i < nDof_adj && j < nDof_ctrl && i==j) {
 		Jac[    
-		(/*nDof_u + nDof_ctrl*/ + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+		(/*nDof_u + nDof_ctrl*/ + i) * nDof_AllVars  +
 		(nDof_u + j)                                ]  += penalty_ctrl * ( control_node_flag[i]) * (-1.);
 	
 	      }
@@ -656,7 +654,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //               // BLOCK delta_adjoint / adjoint
 // 	      if ( i < nDof_adj && j < nDof_adj )
 // 		Jac[    
-// 		(nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj)  +
+// 		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
 // 		(nDof_u + nDof_ctrl + j)                                ]  += weight * phi_adj[i]*phi_adj[j];
 // 	      
 	      
@@ -671,18 +669,21 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	  
          for (unsigned i = 0; i < nDof_max; i++) {
             for (unsigned j = 0; j < nDof_max; j++) {
-// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) +j ] << " " << std::endl;
-// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ] << " " << std::endl;
-	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ];
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + j) ] << " " << std::endl;
-// 	      std::cout << Jac[ i * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
-//       std::cout << Jac[ (nDof_u + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * (nDof_u + nDof_ctrl + nDof_adj) + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
+	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + j) ];
+// 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + nDof_ctrl + j) ];
 	    }
 	      std::cout << std::endl;
 	 }
+
+    std::cout << " ========== " << iel << " ================== " << std::endl;      
+         for (unsigned i = 0; i < nDof_max; i++) {
+            for (unsigned j = 0; j < nDof_max; j++) {
+// 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + j) ];
+	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + nDof_ctrl + j) ];
+	    }
+	      std::cout << std::endl;
+	 }
+	 
 	 
 	}
     std::cout << " ========== " << iel << " ================== " << std::endl;      
