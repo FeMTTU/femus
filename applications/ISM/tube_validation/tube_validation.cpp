@@ -268,7 +268,6 @@ int main(int argc, char **args)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    zeroSolidVelocity(ml_sol);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
 
