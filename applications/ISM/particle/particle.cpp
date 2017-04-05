@@ -181,7 +181,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -440,14 +440,14 @@ int main(int argc, char **args)
     partSimMax = 21;
   }
   else if (simulation == 7) {
-    confNumber = 2;
+    confNumber = 4;
     partSimMax = 8;
   }
   else {
     confNumber = 1;
     partSimMax = 1;
   }
-  
+
 
   std::vector < std::vector < std::vector < double > > > streamline(pSize);
   std::vector < std::vector < std::vector < Line* > > > linea(confNumber);
@@ -521,7 +521,10 @@ int main(int argc, char **args)
 
         efficiencyVector[configuration][partSim] =  static_cast< double >(count_inside) / count_tot;
 
-        double diam = (partSim + 1.) * 0.1 * 1.e-6;
+        double diam;
+        if (simulation == 6) diam = (partSim + 1.) * 0.1 * 1.e-6;
+        else if (simulation == 7) diam = (partSim + 1.) * 0.5 * 1.e-6;
+        else diam = 0;
 
         std::cout << "configuration = " << configuration << std::endl;
         std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
@@ -873,7 +876,8 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
   if (!strcmp(name, "W")) {
     if (1 == facename) {
       double r2 = ((x[0] * x[0]) + (x[1] - 0.006) * (x[1] - 0.006)) / (0.0035 * 0.0035);
-      value = 2 * 0.194 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      value = 1.3 * 0.194 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
 //       double q;
 //       double t = time - floor(time);
 //       if (t >= 0. || t < 0.15) {
@@ -885,7 +889,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
 //       else if (t >= 0.45 || t < 1.) {
 //         q = - 601.31  * t * t * t * t * t * t + 3582.2 * t * t * t * t * t - 8384.8 * t * t * t * t + 10028 * t * t * t - 6510.4 * t * t + 2177.1 * t - 286.61;
 //       }
-//       value = /*2 * */ q * 1.e-6 * (1. - r2) / (PI * 0.0035 * 0.0035) * ramp; //inflow
+//       value = 2 * q * 1.e-6 * (1. - r2) / (PI * 0.0035 * 0.0035) * ramp; //inflow
       //std::cout << "velocity we would like to have = " << value1 << " " << "time t is : " << t << std::endl;
     }
     else if (2 == facename || 3 == facename || 7 == facename) {
@@ -896,8 +900,8 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
   else if (!strcmp(name, "U")) {
     if (2 == facename || 3 == facename) {
       test = 0;
-      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
-      //value = 0. /*13332 * ramp*/;
+      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      value = 0. /*13332 * ramp*/;
     }
     else if (7 == facename) {
       test = 0;
@@ -1358,24 +1362,42 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   double a = 0.04; //radius of the circular current loop in m
 
-  std::vector <double> v(3); 
+  std::vector <double> v(3);
   std::vector <double> x(3);
-  
-  if (configuration == 0){
+
+  if (configuration == 0) {
     v[0] = 0.;
     v[1] = -1.;
     v[2] = 0.;
-    
+
     x[0] = -0.002065;
     x[1] = -0.019932;
     x[2] = 0.000169;
   }
-  else if (configuration == 1){
+  else if (configuration == 1) {
     v[0] = -1;
     v[1] = 0.;
     v[2] = 0.;
-    
+
     x[0] = 0.0175;
+    x[1] = 0.0045;
+    x[2] = 0.;
+  }
+  else if (configuration == 2) {
+    v[0] = 0.;
+    v[1] = -1.;
+    v[2] = 0.;
+
+    x[0] = -0.002065;
+    x[1] = -0.029932;
+    x[2] = 0.000169;
+  }
+  else if (configuration == 3) {
+    v[0] = -1;
+    v[1] = 0.;
+    v[2] = 0.;
+
+    x[0] = 0.0275;
     x[1] = 0.0045;
     x[2] = 0.;
   }
