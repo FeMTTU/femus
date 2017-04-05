@@ -469,7 +469,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 352;//284
+  const unsigned int n_timesteps = 384;//284
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -872,7 +872,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
   if (!strcmp(name, "W")) {
     if (1 == facename) {
       double r2 = ((x[0] * x[0]) + (x[1] - 0.006) * (x[1] - 0.006)) / (0.0035 * 0.0035);
-      value = 2 * 0.194 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
 //       double q;
 //       double t = time - floor(time);
 //       if (t >= 0. || t < 0.15) {
@@ -884,7 +884,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
 //       else if (t >= 0.45 || t < 1.) {
 //         q = - 601.31  * t * t * t * t * t * t + 3582.2 * t * t * t * t * t - 8384.8 * t * t * t * t + 10028 * t * t * t - 6510.4 * t * t + 2177.1 * t - 286.61;
 //       }
-//       value = /*2 * */ q * 1.e-6 * (1. - r2) / (PI * 0.0035 * 0.0035) * ramp; //inflow
+//       value = 2 * q * 1.e-6 * (1. - r2) / (PI * 0.0035 * 0.0035) * ramp; //inflow
       //std::cout << "velocity we would like to have = " << value1 << " " << "time t is : " << t << std::endl;
     }
     else if (2 == facename || 3 == facename || 7 == facename) {
