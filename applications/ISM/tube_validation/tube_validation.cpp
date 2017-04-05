@@ -43,6 +43,8 @@ void UpdateMeshCoordinates(MultiLevelMesh &mlMesh, MultiLevelSolution& mlSol);
 
 void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material);
 void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material);
+
+void zeroSolidVelocity(MultiLevelSolution& mlSol);
 //------------------------------------------------------------------------------------------------------------------
 
 unsigned partSim;
@@ -82,7 +84,8 @@ int main(int argc, char **args)
   muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  E = 10 * 1.e6;
+  //E = 10 * 1.e6;
+  E = 10000;
   E1 = 100000;
 
   Parameter par(Lref, Uref);
@@ -268,6 +271,8 @@ int main(int argc, char **args)
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
 
+  zeroSolidVelocity(ml_sol);
+  
 // ml_sol.SaveSolution("steady_tube");
 // ml_sol.LoadSolution("http://www.math.ttu.edu/~eaulisa/Benchmarks/Tube/Steady/steady_tube_time0.000000");
 // system.CopySolutionToOldSolution();
@@ -356,7 +361,7 @@ int main(int argc, char **args)
 	count_out = 0;
 
 	for (int i = 0; i < linea.size(); i++) {
-          linea[i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
+          linea[i]->AdvectionParallel(40, 1. / itPeriod, 4, MagneticForceWire);
           count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
         }
         
@@ -1302,6 +1307,40 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
 }
 
+
+void zeroSolidVelocity(MultiLevelSolution& mlSol){
+
+  int  iproc, nprocs;
+  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+  
+  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+
+  Solution* solution  = mlSol.GetSolutionLevel(level);
+  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+
+  const unsigned dim = msh->GetDimension();
+
+  vector < unsigned > solVIndex(dim);
+  solVIndex[0] = mlSol.GetIndex("U");    // get the position of "U" in the ml_sol object
+  solVIndex[1] = mlSol.GetIndex("V");    // get the position of "V" in the ml_sol object
+  if (dim == 3) solVIndex[2] = mlSol.GetIndex("W");      // get the position of "V" in the ml_sol object
+
+  unsigned solVType = mlSol.GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
+
+  for(unsigned idof = msh->_dofOffset[solVType][iproc]; idof < msh->_dofOffset[solVType][iproc+1]; idof++){
+    bool solidmark = msh->GetSolidMark ( idof ); // to check
+    if(solidmark){
+      for(unsigned k=0;k<dim;k++){
+	solution->_Sol[solVIndex[k]]->set(idof, 0.);
+      }
+    }
+  }
+  
+  for(unsigned k=0;k<dim;k++){
+    solution->_Sol[solVIndex[k]]->close();
+  }  
+  solution->CopySolutionToOldSolution();
+}
 
 
 
