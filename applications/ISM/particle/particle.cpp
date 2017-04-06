@@ -150,7 +150,7 @@ int main(int argc, char **args)
     E = 1000000 * 1.e1;
   }
   else if (simulation == 6) {
-    //E = 100000; 
+    //E = 100000;
     E = 10 * 1.e6 ;
   }
   else if (simulation == 7) {
@@ -461,7 +461,12 @@ int main(int argc, char **args)
       linea[configuration][partSim][0]->GetStreamLine(streamline, 1);
 
       std::ostringstream output_path;
-      double diam = (partSim + 1.) * 0.1 * 1.e-6;
+
+      double diam;
+      if (simulation == 6) diam = (partSim + 1.) * 0.1 * 1.e-6;
+      else if (simulation == 7) diam = (partSim + 1.) * 0.5 * 1.e-6;
+      else diam = 1.;
+
       output_path << "./output/particles-" << configuration << "-" << diam;
 
       PrintLine(output_path.str(), streamline, true, 0);
@@ -470,7 +475,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 284; //352
+  const unsigned int n_timesteps = 288; //352
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -901,7 +906,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
     if (2 == facename || 3 == facename) {
       test = 0;
       //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
-      value = 0. /*13332 * ramp*/;
+      value = 13332 * ramp; // 0. * ramp;
     }
     else if (7 == facename) {
       test = 0;
