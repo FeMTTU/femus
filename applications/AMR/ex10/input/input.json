@@ -60,7 +60,7 @@
 		   "AMR" : "yes",
 		   "maxAMRlevels" : 15,
 		   "AMRnorm" : "l2",
-		   "AMRthreshold": 0.05,
+		   "AMRthreshold": 0.000005,
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,
                    "smoother_type" : "gmres",

@@ -813,7 +813,7 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1)
         ml_sol._mlMesh->_finiteElement[ielt][SolOrder]->Jacobian(coordinates, ig, weight, phi, gradphi, nablaphi);
         //current solution
         double SolT = 0;
-        vector < double > gradSolT(dim, 0.);
+        vector < double > gradSolT(3, 0.);
 
         for (unsigned ivar = 0; ivar < dim; ivar++) {
           gradSolT[ivar] = 0;
@@ -838,6 +838,8 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1)
           }
         }
 
+       // std::cout << SolT <<" " << gradSolT[0]<< " "<<gradSolT[1]<<" "<<gradSolT[2]<<" ";
+        
         double SolExact, dSolExactdx, dSolExactdy, dSolExactdz;
 #ifdef HAVE_FPARSER
 
@@ -856,7 +858,7 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1)
         dSolExactdy = fp_dsoldy(x);
         dSolExactdz = fp_dsoldz(x);
 
-        if ( test ) {
+	if ( test ) {
           double temp;
           temp = -dSolExactdx;
           dSolExactdx = -dSolExactdy;
@@ -864,6 +866,8 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1)
         }
 
 #endif
+
+
         /*
         	if(test ){
         // 	std::cout <<SolExact - SolT<<std::endl;
@@ -872,14 +876,15 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1)
         // 	std::cout <<dSolExactdz -gradSolT[2]<<std::endl;
         // 	std::cout <<std::endl;
         	}*/
-        error_vec->add(iproc, ((SolT - SolExact) * (SolT - SolExact) +
-                               H1 * ((gradSolT[0] - dSolExactdx) * (gradSolT[0] - dSolExactdx) +
-                                     (gradSolT[1] - dSolExactdy) * (gradSolT[1] - dSolExactdy) +
-                                     (gradSolT[2] - dSolExactdz) * (gradSolT[2] - dSolExactdz))
+        error_vec->add(iproc, ((SolT - SolExact) * (SolT - SolExact) 
+				+ H1 * ((gradSolT[0] - dSolExactdx) * (gradSolT[0] - dSolExactdx) +
+					(gradSolT[1] - dSolExactdy) * (gradSolT[1] - dSolExactdy) +
+					(gradSolT[2] - dSolExactdz) * (gradSolT[2] - dSolExactdz))
                               )*weight);
 
-        solution_vec->add(iproc, (SolExact * SolExact +
-                                  H1 * (dSolExactdx * dSolExactdx + dSolExactdy * dSolExactdy + dSolExactdz * dSolExactdz))*weight);
+        solution_vec->add(iproc, (SolExact * SolExact 
+				+ H1 * (dSolExactdx * dSolExactdx + dSolExactdy * dSolExactdy + dSolExactdz * dSolExactdz)
+				 )*weight);
       }
     }
 
@@ -891,6 +896,9 @@ double GetRelativeError(MultiLevelSolution& ml_sol, const bool& H1)
   double l2_error = error_vec->l1_norm();
   double l2_solution = solution_vec->l1_norm();
 
+  std::cout << l2_error <<" "<<l2_solution <<std::endl;
+  
+  
   delete error_vec;
   delete solution_vec;
 
