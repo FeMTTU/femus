@@ -534,16 +534,16 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //=============== construct control node flag field on the go  ==============================    
 
 //============ Bdry Residuals ==================	
-// FIRST BLOCK ROW
+// THIRD BLOCK ROW
                  Res[ (0 + i_vol) ]                    +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
 //                  Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_ctrl[i_vol] - sol_adj[i_vol] );   // q = lambda for testing
 // SECOND BLOCK ROW
                  Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] *  weight_bdry *
                                                               (    alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							         +  beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
-							         +         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss
+							         -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss
 							        );  //boundary optimality condition
-// THIRD BLOCK ROW
+// FIRST BLOCK ROW
                  Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += 0.; 
 //============ Bdry Residuals ==================    
 		    
@@ -592,7 +592,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj && i_vol == j_vol)   
 		     Jac[ 
 			(nDof_u + i_vol) * nDof_AllVars  +
-		        (nDof_u + nDof_ctrl + j_vol)             ]  += control_node_flag[i_vol] * (weight_bdry * phi_adj_bdry[j_bdry] * phi_ctrl_bdry[i_bdry]);      
+		        (nDof_u + nDof_ctrl + j_vol)             ]  += control_node_flag[i_vol] * (-1) * (weight_bdry * phi_adj_bdry[j_bdry] * phi_ctrl_bdry[i_bdry]);      
 		    
 
 //============ boundary control eqn ==================	    
@@ -672,7 +672,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
 	
 	for (unsigned i = 0; i < nDof_u; i++) {
-	                                                  sol_u_gss    += sol_u[i] * phi_u[i];
+	                                                sol_u_gss      += sol_u[i] * phi_u[i];
                    for (unsigned d = 0; d < dim; d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * dim + d];
           }
 	
@@ -697,8 +697,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      
 //============ Volume residuals ==================	    
           if (i < nDof_u)      Res[0                  + i] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)
-	                                                                  + laplace_rhs_du_adj_i); 
-           if (i < nDof_ctrl)  Res[nDof_u             + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_ctrl[i] - 0.)  );
+	                                                                  - laplace_rhs_du_adj_i); 
+          if (i < nDof_ctrl)  Res[nDof_u              + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_ctrl[i] - 0.)  );
 	      
 	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += - weight * (laplace_rhs_dadj_u_i);
 //============  Volume Residuals ==================	    
@@ -712,18 +712,20 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               double laplace_mat_du_adj = 0.;
 
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_adj && j < nDof_u )         laplace_mat_dadj_u    +=  (phi_adj_x [i * dim + kdim] * phi_u_x   [j * dim + kdim]);
+              if ( i < nDof_adj && j < nDof_u )     laplace_mat_dadj_u        +=  (phi_adj_x [i * dim + kdim] * phi_u_x   [j * dim + kdim]);
               if ( i < nDof_u   && j < nDof_adj )   laplace_mat_du_adj        +=  (phi_u_x   [i * dim + kdim] * phi_adj_x [j * dim + kdim]);
 		
 	      }
 
               //adjoint row ==================
               // BLOCK delta_state / state	      
-              if ( i < nDof_u && j < nDof_u )   Jac[ i * nDof_AllVars +
-		                                         (0 + j)                      ]       += weight  * target_flag *  phi_u[i] * phi_u[j];   
+              if ( i < nDof_u && j < nDof_u )   
+		Jac[ i * nDof_AllVars +
+		(0 + j)                                ]  += weight  * target_flag *  phi_u[i] * phi_u[j];   
 //               //BLOCK delta_state / adjoint
-              if ( i < nDof_u && j < nDof_adj )   Jac[ i * nDof_AllVars +
-							 (nDof_u + nDof_ctrl + j)                 ]  += weight * laplace_mat_du_adj;
+              if ( i < nDof_u && j < nDof_adj )   
+		Jac[ i * nDof_AllVars +
+		(nDof_u + nDof_ctrl + j)               ]  += weight * (-1) * laplace_mat_du_adj;
 	      
 	      
               //control row ==================
@@ -731,7 +733,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      if ( i < nDof_ctrl && j < nDof_ctrl && i==j)
 		Jac[    
 		(nDof_u + i) * nDof_AllVars  +
-		(nDof_u + j)                                ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    /*weight * phi_adj[i]*phi_adj[j]*/
+		(nDof_u + j)                           ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    /*weight * phi_adj[i]*phi_adj[j]*/
               //state row ======================================================
 	      
               // BLOCK delta_adjoint / state
@@ -744,10 +746,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      
 
               // BLOCK delta_adjoint / adjoint
-	      if ( i < nDof_adj && j < nDof_adj )
-		Jac[    
-		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
-		(nDof_u + nDof_ctrl + j)                                ]  += 0.;     //weight * phi_adj[i]*phi_adj[j];
+// 	      if ( i < nDof_adj && j < nDof_adj )
+// 		Jac[    
+// 		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
+// 		(nDof_u + nDof_ctrl + j)               ]  += 0.;     //weight * phi_adj[i]*phi_adj[j];
 	      
 	      
 	    } // end phi_j loop
