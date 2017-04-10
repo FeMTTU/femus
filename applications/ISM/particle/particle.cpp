@@ -149,11 +149,11 @@ int main(int argc, char **args)
   if (simulation == 5) {
     E = 1000000 * 1.e1;
   }
-  else if (simulation == 6) {
+  else if (simulation == 6) { //tubo
     //E = 100000; 
-    E = 10 * 1.e6 ;
+    E = 1000;
   }
-  else if (simulation == 7) {
+  else if (simulation == 7) { //carotide
     E = 1000000 * 1.e0;
   }
   else {
@@ -181,7 +181,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 1;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -470,7 +470,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 284; //352
+  const unsigned int n_timesteps = 352; //284
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -502,7 +502,7 @@ int main(int argc, char **args)
         if (time_step >= 2 * itPeriod) {
           for (int i = 0; i < linea[configuration][partSim].size(); i++) {
             if (simulation == 6) {
-              linea[configuration][partSim][i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceWire);
+              linea[configuration][partSim][i]->AdvectionParallel(40, 1. / itPeriod, 4, MagneticForceWire);
             }
             else if (simulation == 5 || simulation == 7) {
               linea[configuration][partSim][i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceSC);
@@ -829,15 +829,15 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
     double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     if (2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
-      value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
-      //value = 2 * 0.1 * (1. - r2) * ramp; //inflow
+      //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      value = 2 * 0.1 * (1. - r2) * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
     }
     else if (1 == facename) {
       test = 0;
-      //value = 11335 * ramp;
-      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      value = 11335 * ramp;
+      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
       //value = 10000;
     }
     else if (5 == facename) {
