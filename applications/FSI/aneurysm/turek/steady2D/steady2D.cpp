@@ -20,6 +20,9 @@ using namespace femus;
 bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[],
                                  double &value, const int facename, const double time);
 
+bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char name[],
+                                   double &value, const int facename, const double time);
+
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 //------------------------------------------------------------------------------------------------------------------
 
@@ -43,6 +46,9 @@ int main(int argc, char **args)
     }
     else if(!strcmp("3", args[1])) {   /** FSI Turek 11 stents 60 micron */
       simulation = 3;
+    }
+    else if(!strcmp("4", args[1])) {   /** FSI vein valve */
+      simulation = 4;
     }
   }
 
@@ -72,6 +78,9 @@ int main(int argc, char **args)
   else if(simulation == 3) {
     infile = "./input/Turek_11stents_60micron.neu";
   }
+  else if(simulation == 4) {
+    infile = "./input/vein_valve.neu";
+  }
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -79,12 +88,22 @@ int main(int argc, char **args)
   Lref = 1.;
   Uref = 1.;
 
-  rhof = 1035.;
-  muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
-  rhos = 1120;
-  ni = 0.5;
-  E = 1000000; //turek:120000*1.e1;
-  E1 = 100000;
+  if (simulation == 4){
+    rhof = 1060.;
+    muf = 2.2 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
+    rhos = 960;
+    ni = 0.5;
+    E = 3.3 * 1.0e6; //vein young modulus
+    E1 = 15 * 1.0e6; //leaflet young modulus
+  }
+  else {
+    rhof = 1035.;
+    muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
+    rhos = 1120;
+    ni = 0.5;
+    E = 1000000; //turek:120000*1.e1;
+    E1 = 100000;  
+  }
 
   Parameter par(Lref, Uref);
 
@@ -141,7 +160,8 @@ int main(int argc, char **args)
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek2D);
+  if (simulation == 4) ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionVeinValve);
+  else ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek2D);
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
@@ -235,10 +255,12 @@ int main(int argc, char **args)
   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
     SetLambda(ml_sol, level , SECOND, ELASTICITY);
   }
-  data.resize(5);
   system.MGsolve();
-  data[0]=0;
-  GetSolutionNorm(ml_sol, 9, data);
+  if (simulation==0 || simulation ==1 || simulation ==2 || simulation ==3) {
+    data.resize(5);
+    data[0]=0;
+    GetSolutionNorm(ml_sol, 9, data);
+  }
 
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1);
   
@@ -319,6 +341,49 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 
 }
 
+bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+{
+  bool test = 1; //dirichlet
+  value = 0.;
+
+  if ( !strcmp(name, "U") ) {
+
+    if (1 == facename) {
+      value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8); //inflow
+    }
+    else if ( 2 == facename ) {
+      test = 0;
+      value = 0.;
+    }
+  }
+  else if ( !strcmp(name, "V") ) {
+    if ( 2 == facename ) {
+      test = 0;
+      value = 0.;
+    }
+  }
+  else if (!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+  }
+  else if (!strcmp(name, "DX") ) {
+    //if(2 == facename || 4 == facename || 5 == facename || 6 == facename) {
+    if (5 == facename || 6 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "DY") ) {
+    //if(1 == facename || 3 == facename || 5 == facename || 6 == facename) {
+    if ( 5 == facename || 6 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+
+  return test;
+
+}
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
 {
