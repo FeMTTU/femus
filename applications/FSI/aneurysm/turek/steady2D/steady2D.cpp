@@ -256,7 +256,7 @@ int main(int argc, char **args)
     SetLambda(ml_sol, level , SECOND, ELASTICITY);
   }
   system.MGsolve();
-  if (simulation==0 || simulation ==1 || simulation ==2 || simulation ==3) {
+  if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
     data.resize(5);
     data[0]=0;
     GetSolutionNorm(ml_sol, 9, data);
@@ -347,19 +347,20 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   value = 0.;
 
   if ( !strcmp(name, "U") ) {
-
-    if (1 == facename) {
-      value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8); //inflow
-    }
-    else if ( 2 == facename ) {
+    if ( 2 == facename ) {
       test = 0;
       value = 0.;
     }
   }
   else if ( !strcmp(name, "V") ) {
-    if ( 2 == facename ) {
-      test = 0;
+    if (1 == facename) {
+      //double r2 = (x[0] + 0.002) * (x[0] + 0.002);
+      //value = 2 * 0.1387 * (4.0e-6 - r2)/(4.0e-6); //inflow
       value = 0.;
+    }
+    else if ( 2 == facename ) {
+      test = 0;
+      value = 1000;
     }
   }
   else if (!strcmp(name, "P")) {
@@ -367,15 +368,13 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     value = 0.;
   }
   else if (!strcmp(name, "DX") ) {
-    //if(2 == facename || 4 == facename || 5 == facename || 6 == facename) {
-    if (5 == facename || 6 == facename) {
+    if (5 == facename) {
       test = 0;
       value = 0;
     }
   }
   else if (!strcmp(name, "DY") ) {
-    //if(1 == facename || 3 == facename || 5 == facename || 6 == facename) {
-    if ( 5 == facename || 6 == facename) {
+    if ( 5 == facename) {
       test = 0;
       value = 0;
     }
