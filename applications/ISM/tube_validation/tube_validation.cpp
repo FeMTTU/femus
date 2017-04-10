@@ -85,7 +85,7 @@ int main(int argc, char **args)
   rhos = 1120;
   ni = 0.5;
   //E = 10 * 1.e6;
-  E = 10000;
+  E = 1000;
   E1 = 100000;
 
   Parameter par(Lref, Uref);
@@ -342,7 +342,7 @@ int main(int argc, char **args)
   for (configuration = 0; configuration < confNumber; configuration++) {
     efficiencyVector[configuration].resize(21);
     for (partSim = 0; partSim < 21; partSim++) {
-      const unsigned int n_timesteps = 120;
+      const unsigned int n_timesteps = 200;
       std::vector < std::vector < std::vector < double > > > streamline(pSize);
       std::vector< Line* > linea(1);
 
@@ -361,7 +361,7 @@ int main(int argc, char **args)
 	count_out = 0;
 
 	for (int i = 0; i < linea.size(); i++) {
-          linea[i]->AdvectionParallel(40, 1. / itPeriod, 4, MagneticForceWire);
+          linea[i]->AdvectionParallel(30, 1. / itPeriod, 4, MagneticForceWire);
           count_out += linea[i]->NumberOfParticlesOutsideTheDomain();
         }
         
