@@ -328,7 +328,7 @@ namespace femus
           }
 
           jacobianOverArea = jacobian_hat / area * rapresentative_area;
-	  if(elementGroup == 9) jacobianOverArea *= 1.e06;
+	  if(elementGroup == 16) jacobianOverArea *= 1.e06;
         }
 
         // ---------------------------------------------------------------------------

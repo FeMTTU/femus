@@ -90,7 +90,7 @@ int main(int argc, char **args)
 
   if (simulation == 4){
     rhof = 1060.;
-    muf = 2.2 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
+    muf = 2.2 * 1.0e-3;
     rhos = 960;
     ni = 0.5;
     E = 3.3 * 1.0e6; //vein young modulus

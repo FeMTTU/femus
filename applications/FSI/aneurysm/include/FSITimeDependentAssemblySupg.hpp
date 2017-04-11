@@ -397,6 +397,7 @@ namespace femus {
           }
 
           Weight_nojac = Weight / area * rapresentative_area;
+	  if(elementGroup == 16) Weight_nojac *= 1.e06;
         }
 
         // ---------------------------------------------------------------------------

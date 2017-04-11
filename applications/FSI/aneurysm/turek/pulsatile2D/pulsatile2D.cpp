@@ -31,6 +31,9 @@ bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, co
 bool SetBoundaryConditionThrombus2DPorous ( const std::vector < double >& x, const char name[],
                                             double &value, const int facename, const double time );
 
+bool SetBoundaryConditionVeinValve ( const std::vector < double >& x, const char name[],
+                                     double &value, const int facename, const double time );
+
 void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data );
 //------------------------------------------------------------------------------------------------------------------
 
@@ -60,8 +63,11 @@ int main ( int argc, char **args ) {
     else if ( !strcmp ( "5", args[1] ) ) { /** FSI Aortic Bifurcation */
       simulation = 5;
     }
-    else if ( !strcmp ( "6", args[1] ) ) { /** FSI Aortic Bifurcation */
+    else if ( !strcmp ( "6", args[1] ) ) { /** FSI AAA thrombus 2D Porous */
       simulation = 6;
+    }
+    else if ( !strcmp ( "7", args[1] ) ) { /** FSI Vein Valve */
+      simulation = 7;
     }
   }
 
@@ -99,6 +105,9 @@ int main ( int argc, char **args ) {
   else if ( simulation == 6 ) {
     infile = "./input/AAA_thrombus_2D_porous.neu";
   }
+  else if ( simulation == 7 ) {
+    infile = "./input/vein_valve.neu";
+  }
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -106,12 +115,23 @@ int main ( int argc, char **args ) {
   Lref = 1.;
   Uref = 1.;
 
-  rhof = 1035.;
-  muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
-  rhos = 1120;
-  ni = 0.5;
-  E = 5000000 * 1.e0; //turek:120000*1.e0;
-  E1 = 50000;
+  
+  if (simulation == 7){
+    rhof = 1060.;
+    muf = 2.2 * 1.0e-3;
+    rhos = 960;
+    ni = 0.5;
+    E = 3.3 * 1.0e6; //vein young modulus
+    E1 = 15 * 1.0e6; //leaflet young modulus
+  }
+  else {
+    rhof = 1035.;
+    muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
+    rhos = 1120;
+    ni = 0.5;
+    E = 5000000 * 1.e0; //turek:120000*1.e0;
+    E1 = 50000;
+  }
 
   Parameter par ( Lref, Uref );
 
@@ -173,20 +193,23 @@ int main ( int argc, char **args ) {
   ml_sol.Initialize ( "All" );
 
   if ( simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3 ) {
-    ml_sol.AttachSetBoundaryConditionFunction ( SetBoundaryConditionTurek2D );
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek2D);
   }
   else if ( simulation == 4 || simulation == 6 ) {
-    ml_sol.AttachSetBoundaryConditionFunction ( SetBoundaryConditionThrombus2D );
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus2D);
   }
   else if ( simulation == 5 ) {
-    ml_sol.AttachSetBoundaryConditionFunction ( SetBoundaryConditionAorticBifurcation );
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorticBifurcation);
+  }
+  else if ( simulation == 7 ) {
+    ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionVeinValve);
   }
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc ( "DX", "Steady" );
   ml_sol.GenerateBdc ( "DY", "Steady" );
 
-  if ( simulation == 4 || simulation == 5 || simulation == 6 ) {
+  if ( simulation == 4 || simulation == 5 || simulation == 6 || simulation == 7) {
     ml_sol.GenerateBdc ( "U", "Steady" );
     ml_sol.GenerateBdc ( "V", "Time_dependent" );
   }
@@ -281,7 +304,7 @@ int main ( int argc, char **args ) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 300;
+  const unsigned int n_timesteps = 160;
 
 
   std::vector < std::vector <double> > data ( n_timesteps );
@@ -303,7 +326,7 @@ int main ( int argc, char **args ) {
     else if ( simulation == 4 ) { //AAA_thrombus, 15=thrombus
       GetSolutionNorm ( ml_sol, 7, data[time_step] );
     }
-    else if ( simulation == 6 ) { //AAA_thrombus, 15=thrombus
+    else if ( simulation == 6 ) { //AAA_thrombus_porous, 15=thrombus
       GetSolutionNorm ( ml_sol, 7, data[time_step] );
     }
     ml_sol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1 );
@@ -551,6 +574,57 @@ bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, co
   return test;
 }
 
+bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+{
+  bool test = 1; //dirichlet
+  value = 0.;
+
+  if ( !strcmp(name, "V") ) {
+    if ( 1 == facename || 2 == facename ) {
+      test = 0;
+      value = 0.;
+    }
+    else if ( 6 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if ( !strcmp(name, "U") ) { //TODO
+    if (1 == facename) {
+      //double r2 = (x[0] + 0.002) * (x[0] + 0.002);
+      //value = 2 * 0.1387 * (4.0e-6 - r2)/(4.0e-6); //inflow
+      test = 0.;
+      value = -0.5;
+    }
+    else if ( 2 == facename ) {
+      test = 0;
+      value = 0.5;
+    }
+  }
+  else if (!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+  }
+  else if (!strcmp(name, "DX") ) {
+    if (5 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "DY") ) {
+    if ( 5 == facename) {
+      test = 0;
+      value = 0;
+    }
+    else if ( 6 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+
+  return test;
+
+}
 
 void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data ) {
 
