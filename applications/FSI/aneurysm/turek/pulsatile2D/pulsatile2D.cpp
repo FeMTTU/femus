@@ -116,7 +116,7 @@ int main ( int argc, char **args ) {
   Uref = 1.;
 
   
-  if (simulation == 7){
+  if (simulation == 7) {
     rhof = 1060.;
     muf = 2.2 * 1.0e-3;
     rhos = 960;
@@ -304,7 +304,7 @@ int main ( int argc, char **args ) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 160;
+  const unsigned int n_timesteps = 140;
 
 
   std::vector < std::vector <double> > data ( n_timesteps );
@@ -318,7 +318,8 @@ int main ( int argc, char **args ) {
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step / 32.;
+    data[time_step][0] = time_step / 20.;
+    //data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / ( 64 * 1.4 );
     if ( simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3 ) {
       GetSolutionNorm ( ml_sol, 9, data[time_step] );
@@ -376,7 +377,8 @@ int main ( int argc, char **args ) {
 
 double SetVariableTimeStep ( const double time ) {
   //double dt = 1. / ( 64 * 1.4 );
-  double dt = 1./32;
+  //double dt = 1./32;
+  double dt = 1./20;
 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
@@ -578,27 +580,27 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 {
   bool test = 1; //dirichlet
   value = 0.;
+  
+  double PI = acos ( -1. );
 
   if ( !strcmp(name, "V") ) {
-    if ( 1 == facename || 2 == facename ) {
+    if ( 1 == facename || 2 == facename || 6 == facename) {
       test = 0;
       value = 0.;
     }
-    else if ( 6 == facename ) {
-      test = 0;
-      value = 0;
-    }
   }
-  else if ( !strcmp(name, "U") ) { //TODO
+  else if ( !strcmp(name, "U") ) {
     if (1 == facename) {
       //double r2 = (x[0] + 0.002) * (x[0] + 0.002);
       //value = 2 * 0.1387 * (4.0e-6 - r2)/(4.0e-6); //inflow
       test = 0.;
-      value = -0.5;
+      //value = -0.5;
+      value = ( 60 + 60 * sin ( 2 * PI * time ) );
     }
-    else if ( 2 == facename ) {
+    else if (2 == facename) {
       test = 0;
-      value = 0.5;
+      //value = 0.5;
+      value = ( 60 - 60 * sin ( 2 * PI * time ) );
     }
   }
   else if (!strcmp(name, "P")) {
@@ -612,11 +614,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     }
   }
   else if (!strcmp(name, "DY") ) {
-    if ( 5 == facename) {
-      test = 0;
-      value = 0;
-    }
-    else if ( 6 == facename ) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
