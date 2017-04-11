@@ -199,9 +199,13 @@ int main(int argc, char **args)
   system.SetMgType(F_CYCLE);
 
   system.SetNonLinearConvergenceTolerance(1.e-9);
-  system.SetResidualUpdateConvergenceTolerance(1.e-15);
-  system.SetMaxNumberOfNonLinearIterations(4);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
+  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
+  system.SetMaxNumberOfNonLinearIterations(8);
+  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
+  
+  system.SetMaxNumberOfLinearIterations ( 2 );
+  system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
+
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
@@ -264,30 +268,30 @@ int main(int argc, char **args)
 
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1);
   
-  int  iproc;
-  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  if(iproc == 0){
-    std::ofstream outf;
-    if(simulation == 0) {
-      outf.open("DataPrint_Turek_steady.txt");
-    }
-    else if(simulation == 1) {
-      outf.open("DataPrint_TurekPorous_steady.txt");
-    }
-    else if(simulation == 2){
-      outf.open("DataPrint_TurekStents_steady.txt");
-    }
-    else if(simulation == 3){
-      outf.open("DataPrint_Turek11Stents_steady.txt");
-    }
-        
-    if (!outf) {
-      std::cout<<"Error in opening file DataPrint.txt";
-      return 1;
-    }
-    outf<<data[0]<<"\t"<<data[1]<<"\t"<<data[2]<<"\t"<<data[3]<<"\t"<<data[4]<<std::endl;
-    outf.close();
-  }
+//   int  iproc;
+//   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+//   if(iproc == 0){
+//     std::ofstream outf;
+//     if(simulation == 0) {
+//       outf.open("DataPrint_Turek_steady.txt");
+//     }
+//     else if(simulation == 1) {
+//       outf.open("DataPrint_TurekPorous_steady.txt");
+//     }
+//     else if(simulation == 2){
+//       outf.open("DataPrint_TurekStents_steady.txt");
+//     }
+//     else if(simulation == 3){
+//       outf.open("DataPrint_Turek11Stents_steady.txt");
+//     }
+//         
+//     if (!outf) {
+//       std::cout<<"Error in opening file DataPrint.txt";
+//       return 1;
+//     }
+//     outf<<data[0]<<"\t"<<data[1]<<"\t"<<data[2]<<"\t"<<data[3]<<"\t"<<data[4]<<std::endl;
+//     outf.close();
+//   }
 
   // ******* Clear all systems *******
   ml_prob.clear();
@@ -347,7 +351,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   value = 0.;
 
   if ( !strcmp(name, "U") ) {
-    if ( 2 == facename ) {
+    if ( 1 == facename || 2 == facename ) {
       test = 0;
       value = 0.;
     }
@@ -356,11 +360,16 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     if (1 == facename) {
       //double r2 = (x[0] + 0.002) * (x[0] + 0.002);
       //value = 2 * 0.1387 * (4.0e-6 - r2)/(4.0e-6); //inflow
-      value = 0.;
+      test = 0.;
+      value = -0.5;
     }
     else if ( 2 == facename ) {
       test = 0;
-      value = 1000;
+      value = 0.5;
+    }
+    else if ( 6 == facename ) {
+      test = 0;
+      value = 0;
     }
   }
   else if (!strcmp(name, "P")) {
@@ -375,6 +384,10 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   }
   else if (!strcmp(name, "DY") ) {
     if ( 5 == facename) {
+      test = 0;
+      value = 0;
+    }
+    else if ( 6 == facename ) {
       test = 0;
       value = 0;
     }
