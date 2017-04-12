@@ -692,7 +692,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      
               double laplace_rhs_dadj_u_i = 0.;
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_u )         laplace_rhs_dadj_u_i      +=  (phi_adj_x   [i * dim + kdim] * sol_u_x_gss[kdim]);
+              if ( i < nDof_adj )         laplace_rhs_dadj_u_i      +=  (phi_adj_x   [i * dim + kdim] * sol_u_x_gss[kdim]);
 	      }
 	      
 //============ Volume residuals ==================	    
