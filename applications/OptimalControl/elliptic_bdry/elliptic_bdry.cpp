@@ -835,17 +835,16 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //*************************** 
   double weight; // gauss point weight
   
-
+ //*************************** 
+  double alpha = ALPHA_CTRL;
+  double beta  = BETA_CTRL;
+  
  //******** state ******************* 
  //*************************** 
   vector <double> phi_u;     phi_u.reserve(maxSize);             // local test function
   vector <double> phi_u_x;   phi_u_x.reserve(maxSize * dim);     // local test function first order partial derivatives
   vector <double> phi_u_xx;  phi_u_xx.reserve(maxSize * dim2);   // local test function second order partial derivatives
 
- 
-  
- 
-  
  
   unsigned solIndex_u;
   solIndex_u = mlSol->GetIndex("state");    // get the position of "state" in the ml_sol object
@@ -859,7 +858,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //*************************** 
 
   
- //************ adjoint *************** 
+ //************ adjoint ******
  //*************************** 
   vector <double> phi_udes;  // local test function
   vector <double> phi_udes_x; // local test function first order partial derivatives
@@ -879,19 +878,26 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   vector< int > l2GMap_Tdes;
   l2GMap_Tdes.reserve(maxSize);
   double udes_gss = 0.;
-  //*************************** 
+ //*************************** 
  //*************************** 
 
- //************ cont *************** 
-
+ //************ cont *********
+ //***************************
+  vector <double> phi_ctrl;     phi_ctrl.reserve(maxSize);             // local test function
+  vector <double> phi_ctrl_x;   phi_ctrl_x.reserve(maxSize * dim);     // local test function first order partial derivatives
+  vector <double> phi_ctrl_xx;  phi_ctrl_xx.reserve(maxSize * dim2);   // local test function second order partial derivatives
+    
   unsigned solIndex_ctrl = mlSol->GetIndex("control");
   unsigned solType_ctrl = mlSol->GetSolutionType(solIndex_ctrl);
 
+  vector < double >  sol_ctrl; // local solution
+  sol_ctrl.reserve(maxSize);
   vector< int > l2GMap_ctrl;
-    l2GMap_ctrl.reserve(maxSize);
+  l2GMap_ctrl.reserve(maxSize);
   
   double ctrl_gss = 0.;
-  //*************************** 
+  double ctrl_x_gss = 0.;
+ //*************************** 
  //*************************** 
   
 
@@ -967,12 +973,17 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
  //*********** cont **************************** 
     unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);    // number of solution element dofs
- //*********** Tcont **************************** 
+    sol_ctrl    .resize(nDof_ctrl);
+    for (unsigned i = 0; i < sol_ctrl.size(); i++) {
+      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);    // global to global mapping between solution node and solution dof
+      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);      // global extraction and local storage for the solution
+    }
+ //*********** cont **************************** 
  
  
  //*********** udes **************************** 
     unsigned nDof_udes  = msh->GetElementDofNumber(iel, solType_u);    // number of solution element dofs
-        sol_udes    .resize(nDof_udes);
+    sol_udes    .resize(nDof_udes);
     for (unsigned i = 0; i < sol_udes.size(); i++) {
             sol_udes[i] = u_des;  //dof value
     } 
@@ -1006,8 +1017,16 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
 	u_gss = 0.;  for (unsigned i = 0; i < nDof_u; i++) u_gss += sol_u[i] * phi_u[i];		
 	udes_gss  = 0.; for (unsigned i = 0; i < nDof_udes; i++)  udes_gss  += sol_udes[i]  * phi_udes[i];  
+	ctrl_gss = 0.; for (unsigned i = 0; i < nDof_ctrl; i++) ctrl_gss += sol_ctrl[i] * phi_ctrl[i];  
+	ctrl_x_gss  = 0.; for (unsigned i = 0; i < nDof_ctrl; i++)  
+        {
+          for (unsigned idim = 0; idim < dim; idim ++) ctrl_x_gss  += sol_ctrl[i] * phi_ctrl_x[i + idim * nDof_ctrl];
+        }
 
-               integral += target_flag * weight * (u_gss  - udes_gss) * (u_gss - udes_gss);
+
+               integral += target_flag * weight * (u_gss  - udes_gss) * (u_gss - udes_gss)
+	                               + alpha * weight * ctrl_gss * ctrl_gss 
+                                       + beta * weight * ctrl_x_gss * ctrl_x_gss;
 	  
       } // end gauss point loop
       
