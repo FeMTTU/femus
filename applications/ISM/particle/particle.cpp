@@ -881,8 +881,8 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
   if (!strcmp(name, "W")) {
     if (1 == facename) {
       double r2 = ((x[0] * x[0]) + (x[1] - 0.006) * (x[1] - 0.006)) / (0.0035 * 0.0035);
-      //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
-      value = 1.3 * 0.194 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      //value = 1.3 * 0.194 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
 //       double q;
 //       double t = time - floor(time);
 //       if (t >= 0. || t < 0.15) {
@@ -905,8 +905,8 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
   else if (!strcmp(name, "U")) {
     if (2 == facename || 3 == facename) {
       test = 0;
-      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
-      value = 13332 * ramp; // 0. * ramp;
+      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      //value = 13332 * ramp; // 0. * ramp;
     }
     else if (7 == facename) {
       test = 0;
@@ -1652,7 +1652,10 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
     }
   }
 
-
+  for (unsigned i = 0 ; i < Fm.size(); i++) {
+    Fm[i] = - Fm[i] ;
+    //printf("%g ",Fm[i]);
+  }
 //           gradHSquared[0] = 2 * vectorH[0] * jacobianVectorH[0][0] + 2 * vectorH[1] * jacobianVectorH[1][0] + 2 * vectorH[2] * jacobianVectorH[2][0];
 //           gradHSquared[1] = 2 * vectorH[0] * jacobianVectorH[0][1] + 2 * vectorH[1] * jacobianVectorH[1][1] + 2 * vectorH[2] * jacobianVectorH[2][1];
 //           gradHSquared[2] = 2 * vectorH[0] * jacobianVectorH[0][2] + 2 * vectorH[1] * jacobianVectorH[1][2] + 2 * vectorH[2] * jacobianVectorH[2][2];
@@ -1703,10 +1706,10 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   //BEGIN cheating to have attractive force
 
-  for (unsigned i = 0 ; i < Fm.size(); i++) {
-    Fm[i] = - Fm[i] ;
-    //printf("%g ",Fm[i]);
-  }
+//   for (unsigned i = 0 ; i < Fm.size(); i++) {
+//     Fm[i] = - Fm[i] ;
+//     //printf("%g ",Fm[i]);
+//   }
 
 
   //END cheating
