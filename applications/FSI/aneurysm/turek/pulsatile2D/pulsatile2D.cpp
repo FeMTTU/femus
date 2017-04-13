@@ -121,7 +121,7 @@ int main ( int argc, char **args ) {
     muf = 2.2 * 1.0e-3;
     rhos = 960;
     ni = 0.5;
-    E = 3.3 * 1.0e6; //vein young modulus
+    E = 3.3 * 1.0e6; //vein young modulus, E obtained from calculations = 4.38749515 * 1.0e13
     E1 = 15 * 1.0e6; //leaflet young modulus
   }
   else {
