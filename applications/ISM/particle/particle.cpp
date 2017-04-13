@@ -440,7 +440,7 @@ int main(int argc, char **args)
     partSimMax = 21;
   }
   else if (simulation == 7) {
-    confNumber = 4;
+    confNumber = 6;
     partSimMax = 8;
   }
   else {
@@ -1370,7 +1370,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   std::vector <double> v(3);
   std::vector <double> x(3);
 
-  if (configuration == 0) {
+  if (configuration == 0) { //conf1 with z = 1.75 cm
     v[0] = 0.;
     v[1] = -1.;
     v[2] = 0.;
@@ -1379,7 +1379,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
     x[1] = -0.019932;
     x[2] = 0.000169;
   }
-  else if (configuration == 1) {
+  else if (configuration == 1) { //conf2 with z =1.75 cm
     v[0] = -1;
     v[1] = 0.;
     v[2] = 0.;
@@ -1388,7 +1388,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
     x[1] = 0.0045;
     x[2] = 0.;
   }
-  else if (configuration == 2) {
+  else if (configuration == 2) { //conf1 with z = 2.75 cm
     v[0] = 0.;
     v[1] = -1.;
     v[2] = 0.;
@@ -1397,7 +1397,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
     x[1] = -0.029932;
     x[2] = 0.000169;
   }
-  else if (configuration == 3) {
+  else if (configuration == 3) { //conf2 with z = 2.75 cm
     v[0] = -1;
     v[1] = 0.;
     v[2] = 0.;
@@ -1406,6 +1406,28 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
     x[1] = 0.0045;
     x[2] = 0.;
   }
+  
+    else if (configuration == 4) { //conf 3 with z = 1.75 cm
+    v[0] = 1;
+    v[1] = 0.;
+    v[2] = 0.;
+
+    x[0] = -0.0285;
+    x[1] = -0.001;
+    x[2] = 0.;
+  }
+  
+    else if (configuration == 5) { //conf 3 with z = 2.75 cm
+    v[0] = 1;
+    v[1] = 0.;
+    v[2] = 0.;
+
+    x[0] = -0.0385;
+    x[1] = -0.001;
+    x[2] = 0.;
+  }
+  
+  
 
   //END
 
