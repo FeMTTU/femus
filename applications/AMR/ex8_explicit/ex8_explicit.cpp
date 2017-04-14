@@ -64,7 +64,7 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/quadAMR01.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square_tri.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -251,18 +251,18 @@ int main(int argc, char** args) {
 
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return exp(10. * x[0]) * sin(4. * pi * x[0]) * sin(4. * pi * x[1]);
+  return (x[0] - x[0] * x[0])*(x[1] - x[1] * x[1]) * atan(10 * sqrt(2) * (x[0] + x[1]) - 16);
 };
 
 void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
   double pi = acos(-1.);
-  solGrad[0]  = exp(10. * x[0]) * (10. * sin(4. * pi * x[0]) + 4. * pi * cos(4 * pi * x[0])) * sin( 4 * pi * x[1]);
-  solGrad[1]  = exp(10. * x[0]) * sin(4. * pi * x[0]) * 4. * pi * cos(4. * pi * x[1]);
+  solGrad[0]  = (1 - 2 * x[0]) * (x[1] - x[1] * x[1]) * atan(10 * sqrt(2) * (x[0] + x[1]) - 16) + 10 * sqrt(2) * (x[0] - x[0] * x[0]) * (x[1] - x[1] * x[1])/(1 + (10 * sqrt(2) * (x[0] + x[1]) - 16) * (10 * sqrt(2) * (x[0] + x[1]) - 16));
+  solGrad[1]  = (x[0] - x[0] * x[0]) * (1-2 * x[1]) * atan(10 * sqrt(2) * (x[0] + x[1]) - 16)+10 * sqrt(2) * (x[0] - x[0] * x[0]) * (x[1] - x[1] * x[1])/(1 + (10 * sqrt(2) * (x[0] + x[1]) - 16) * (10 * sqrt(2) * (x[0] + x[1]) - 16));
 };
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return - 2 * exp(10 *x[0]) * (-10. * 4. * pi * cos(4. * pi * x[0]) + (4. * pi * 4. * pi- 50.) * sin(4. * pi * x[0])) * sin(4. * pi * x[1]);
+  return -2*(x[1] - x[1] * x[1] + x[0] - x[0] * x[0]) * atan(10 * sqrt(2) * (x[0] + x[1]) - 16) - 10 * sqrt(2) * ((1-2 * x[0]) * (x[1] - x[1] * x[1]) + (x[0] - x[0] * x[0]) * (1 - 2 * x[1]))/(1 + (10 * sqrt(2) * (x[0] + x[1]) - 16) * (10 * sqrt(2) * (x[0] + x[1]) - 16)) - 10 * sqrt(2) * ((1 - 2 * x[0]) * (x[1] - x[1] * x[1]) + (x[0] - x[0] * x[0]) * (1-2 * x[1]))/(1 + (10 * sqrt(2) * (x[0] + x[1])-16) * (10 * sqrt(2) * (x[0] + x[1]) - 16)) + 800. * (x[0] - x[0] * x[0]) * (x[1] - x[1] * x[1]) * (10 * sqrt(2) * (x[0] + x[1]) - 16)/(1 + (10 * sqrt(2) * (x[0] + x[1]) - 16) * (10 * sqrt(2) * (x[0] + x[1]) - 16))/(1 + (10 * sqrt(2) * (x[0] + x[1]) - 16) * (10 * sqrt(2) * (x[0] + x[1]) - 16));
 };
 
 
@@ -640,15 +640,15 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
    
   //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << (2.*sqrt(N)) / ( 3.*H1norm ) <<std::endl;
  
-  *sol->_Sol[errorIndex] *= (2.*sqrt(N)) / ( 3.*L2norm );
+  *sol->_Sol[errorIndex] *= (2.*sqrt(N)) / ( 3.*H1norm );
   
   std::pair < double, double > norm;
   norm.first  = H1normE;
   norm.second = H1norm;
   
-//   std::pair < double, double > norm;
-//   norm.first  = L2normE;
-//   norm.second = L2norm;
+  //std::pair < double, double > norm;
+  //norm.first  = L2normE;
+  //norm.second = L2norm;
   
   sol->_Sol[errorIndex]->close();
   
