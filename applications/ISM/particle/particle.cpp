@@ -151,7 +151,7 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = 1. * 1.e6 ;
+    E = 0.5 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
     E = 1000000 * 1.e0;
@@ -475,7 +475,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 288; //352
+  const unsigned int n_timesteps = 352; //288
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -507,7 +507,7 @@ int main(int argc, char **args)
         if (time_step >= 2 * itPeriod) {
           for (int i = 0; i < linea[configuration][partSim].size(); i++) {
             if (simulation == 6) {
-              linea[configuration][partSim][i]->AdvectionParallel(40, 1. / itPeriod, 4, MagneticForceWire);
+              linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceWire);
             }
             else if (simulation == 5 || simulation == 7) {
               linea[configuration][partSim][i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceSC);
