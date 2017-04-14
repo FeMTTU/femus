@@ -444,7 +444,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	  // loop on faces of the current element
 
 	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
-            std::vector < double > xx(3,0.);  //not being used, because the boundaries are identified by the face numbers
+            std::vector < double > xyz_bdc(3,0.);  //not being used, because the boundaries are identified by the face numbers
 	    // look for boundary faces
 	    if(el->GetFaceElementIndex(iel,jface) < 0) {
 	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
@@ -455,7 +455,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 // ==================================
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-	      bool  dir_bool = mlSol->GetBdcFunction()(xx,ctrl_name.c_str(),tau,face,0.);
+	      bool  dir_bool = mlSol->GetBdcFunction()(xyz_bdc,ctrl_name.c_str(),tau,face,0.);
 
 // ==================================
 
@@ -825,16 +825,19 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
    //*************************** 
-  vector < vector < double > > x(dim);    // local coordinates
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+   const int xType = 2;
+  vector < vector < double > > x(dim);
+  vector < vector < double> >  x_bdry(dim);
   for (unsigned i = 0; i < dim; i++) {
-    x[i].reserve(maxSize);
+         x[i].reserve(maxSize);
+	 x_bdry[i].reserve(maxSize);
   }
  //*************************** 
 
  //*************************** 
   double weight; // gauss point weight
-  
+  double weight_bdry = 0.; // gauss point weight on the boundary
+
  //*************************** 
   double alpha = ALPHA_CTRL;
   double beta  = BETA_CTRL;
@@ -858,7 +861,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //*************************** 
 
   
- //************ adjoint ******
+ //************ desired ******
  //*************************** 
   vector <double> phi_udes;  // local test function
   vector <double> phi_udes_x; // local test function first order partial derivatives
@@ -875,28 +878,23 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
   vector < double >  sol_udes; // local solution
   sol_udes.reserve(maxSize);
-  vector< int > l2GMap_Tdes;
-  l2GMap_Tdes.reserve(maxSize);
+
   double udes_gss = 0.;
  //*************************** 
  //*************************** 
 
  //************ cont *********
  //***************************
-  vector <double> phi_ctrl;     phi_ctrl.reserve(maxSize);             // local test function
-  vector <double> phi_ctrl_x;   phi_ctrl_x.reserve(maxSize * dim);     // local test function first order partial derivatives
-  vector <double> phi_ctrl_xx;  phi_ctrl_xx.reserve(maxSize * dim2);   // local test function second order partial derivatives
-    
+  vector <double> phi_ctrl_bdry;  
+  vector <double> phi_ctrl_x_bdry; 
+
+  phi_ctrl_bdry.reserve(maxSize);
+  phi_ctrl_x_bdry.reserve(maxSize * dim);
+
   unsigned solIndex_ctrl = mlSol->GetIndex("control");
   unsigned solType_ctrl = mlSol->GetSolutionType(solIndex_ctrl);
 
-  vector < double >  sol_ctrl; // local solution
-  sol_ctrl.reserve(maxSize);
-  vector< int > l2GMap_ctrl;
-  l2GMap_ctrl.reserve(maxSize);
-  
-  double ctrl_gss = 0.;
-  double ctrl_x_gss = 0.;
+   vector < double >  sol_ctrl;   sol_ctrl.reserve(maxSize);
  //*************************** 
  //*************************** 
   
@@ -907,9 +905,6 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
   const int n_vars = 3;
  
-  vector< int > l2GMap_AllVars; // local to global mapping
-  l2GMap_AllVars.reserve(n_vars*maxSize);
-  
   vector< double > Res; // local redidual vector
   Res.reserve(n_vars*maxSize);
 
@@ -977,7 +972,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
     for (unsigned i = 0; i < sol_ctrl.size(); i++) {
       unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl);    // global to global mapping between solution node and solution dof
       sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);      // global extraction and local storage for the solution
-    }
+    } 
+
  //*********** cont **************************** 
  
  
@@ -1005,6 +1001,94 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
     
   //*************************** 
 
+// ===========================================
+  //***** set control flag ********************************** 
+  int control_el_flag = 0;
+        control_el_flag = ControlDomainFlag(elem_center);
+  std::vector<int> control_node_flag(nDofx,0);
+//   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
+  //*************************************** 
+
+  
+  	if (control_el_flag == 1) {
+	  
+	  double tau=0.;
+	  vector<double> normal(dim,0);
+	       
+	  // loop on faces of the current element
+
+	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+            std::vector < double > xyz_bdc(3,0.);  //not being used, because the boundaries are identified by the face numbers
+	    // look for boundary faces
+	    if(el->GetFaceElementIndex(iel,jface) < 0) {
+	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+	      
+		
+// 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
+	      if(  face == 3) { //control face
+
+		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
+		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
+		for(unsigned i=0; i < nve_bdry; i++) {
+		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
+                  unsigned iDof = msh->GetSolutionDof(i_vol, iel, xType);
+		  for(unsigned idim=0; idim<dim; idim++) {
+		      x_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
+		  }
+		}
+		
+		//========= initialize gauss quantities on the boundary ===================
+                double sol_ctrl_bdry_gss = 0.;
+                std::vector<double> sol_ctrl_x_bdry_gss;  sol_ctrl_x_bdry_gss.reserve(dim);
+		//========= initialize gauss quantities on the boundary ===================
+		
+		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
+		  
+		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
+
+		  //========== temporary soln for surface gradient on a face parallel to the X axis ===================
+		  double dx_dxi = 0.;
+		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
+		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
+		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dxi += myptr[inode] * x_bdry[0][inode];
+  
+		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) {
+                            for (int d = 0; d < dim; d++) {
+                              if (d==0 ) phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = myptr[inode]* (1./ dx_dxi);
+                              else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
+                         }
+                     }
+		  //========== temporary soln for surface gradient on a face parallel to the X axis ===================
+		  
+		  //========= compute gauss quantities on the boundary ===================
+		  sol_ctrl_bdry_gss = 0.;
+                  std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
+		      for (int i_bdry = 0; i_bdry < nve_bdry/*_nc*/; i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+			
+			sol_ctrl_bdry_gss +=  sol_ctrl[i_vol] * phi_ctrl_bdry[i_bdry];
+                            for (int d = 0; d < dim; d++) {
+			      sol_ctrl_x_bdry_gss[d] += sol_ctrl[i_vol] * phi_ctrl_x_bdry[i_bdry + d*nve_bdry];
+			    }
+		      }  
+
+                 //========= compute gauss quantities on the boundary ===================
+                  integral +=         + alpha * weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss 
+                                       + beta * weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
+                 
+		}
+	      } //end face == 3
+	      
+	    } //end if boundary faces
+	  }  // loop over element faces   
+	  
+	} //end if control element flag
+
+//================================================================  
+//================================================================  
+//================================================================  
+  
+  
    
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
@@ -1017,24 +1101,18 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
 	u_gss = 0.;  for (unsigned i = 0; i < nDof_u; i++) u_gss += sol_u[i] * phi_u[i];		
 	udes_gss  = 0.; for (unsigned i = 0; i < nDof_udes; i++)  udes_gss  += sol_udes[i]  * phi_udes[i];  
-	ctrl_gss = 0.; for (unsigned i = 0; i < nDof_ctrl; i++) ctrl_gss += sol_ctrl[i] * phi_ctrl[i];  
-	ctrl_x_gss  = 0.; for (unsigned i = 0; i < nDof_ctrl; i++)  
-        {
-          for (unsigned idim = 0; idim < dim; idim ++) ctrl_x_gss  += sol_ctrl[i] * phi_ctrl_x[i + idim * nDof_ctrl];
-        }
 
-
-               integral += target_flag * weight * (u_gss  - udes_gss) * (u_gss - udes_gss)
-	                               + alpha * weight * ctrl_gss * ctrl_gss 
-                                       + beta * weight * ctrl_x_gss * ctrl_x_gss;
+               integral += target_flag * weight * (u_gss  - udes_gss) * (u_gss - udes_gss);
 	  
       } // end gauss point loop
       
   } //end element loop
 
   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
-  
-return integral;
+//   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
+//   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
+ 
+return integral /*integral_target + integral_alpha + integral_beta*/;
   
 }
   
