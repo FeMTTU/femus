@@ -751,7 +751,9 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   double u_des = DesiredTarget();
   //*************************** 
   
-  double integral = 0.;
+  double integral_target = 0.;
+  double integral_alpha  = 0.;
+  double integral_beta   = 0.;
 
     
   // element loop: each process loops only on the elements that owns
@@ -853,16 +855,19 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
           for (unsigned idim = 0; idim < dim; idim ++) ctrl_x_gss  += sol_ctrl[i] * phi_ctrl_x[i + idim * nDof_ctrl];
         }
 
-               integral += target_flag * (alpha * weight * (u_gss +  ctrl_gss - udes_gss) * (u_gss +  ctrl_gss - udes_gss)
-                                        + beta * weight * ctrl_gss * ctrl_gss 
-                                        + gamma * weight * ctrl_x_gss * ctrl_x_gss);
+               integral_target += target_flag * alpha * weight * (u_gss +  ctrl_gss - udes_gss) * (u_gss +  ctrl_gss - udes_gss);
+               integral_alpha  += target_flag * beta * weight * ctrl_gss * ctrl_gss;
+               integral_beta   += target_flag *gamma * weight * ctrl_x_gss * ctrl_x_gss;
 	  
       } // end gauss point loop
   } //end element loop
 
-  std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
+  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
+  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
+  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << integral_target + integral_alpha + integral_beta << std::endl;
   
-return integral;
+return integral_target + integral_alpha + integral_beta;
   
 }
   

@@ -917,7 +917,9 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   double u_des = DesiredTarget();
   //*************************** 
   
-  double integral = 0.;
+  double integral_target = 0.;
+  double integral_alpha  = 0.;
+  double integral_beta   = 0.;
 
     
   // element loop: each process loops only on the elements that owns
@@ -1073,8 +1075,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 		      }  
 
                  //========= compute gauss quantities on the boundary ===================
-                  integral +=         + alpha * weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss 
-                                       + beta * weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
+                  integral_alpha += alpha * weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
+                  integral_beta  += beta * weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
                  
 		}
 	      } //end face == 3
@@ -1102,17 +1104,20 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 	u_gss = 0.;  for (unsigned i = 0; i < nDof_u; i++) u_gss += sol_u[i] * phi_u[i];		
 	udes_gss  = 0.; for (unsigned i = 0; i < nDof_udes; i++)  udes_gss  += sol_udes[i]  * phi_udes[i];  
 
-               integral += target_flag * weight * (u_gss  - udes_gss) * (u_gss - udes_gss);
+               integral_target += target_flag * weight * (u_gss  - udes_gss) * (u_gss - udes_gss);
 	  
       } // end gauss point loop
       
   } //end element loop
 
-  std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
+  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
+  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
+  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << integral_target + integral_alpha + integral_beta << std::endl;
 //   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
 //   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
  
-return integral /*integral_target + integral_alpha + integral_beta*/;
+return /*integral*/ integral_target + integral_alpha + integral_beta ;
   
 }
   
