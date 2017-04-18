@@ -151,7 +151,7 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = 0.5 * 1.e6 ;
+    E = 0.1 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
     E = 1000000 * 1.e0;
@@ -432,7 +432,7 @@ int main(int argc, char **args)
 
   //END INITIALIZE PARTICLES
 
-  unsigned itPeriod = 32;
+  unsigned itPeriod = 64;
   unsigned confNumber;
   unsigned partSimMax;
   if (simulation == 6) {
@@ -475,7 +475,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 352; //288
+  const unsigned int n_timesteps = 2*352; //288
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -621,7 +621,9 @@ int main(int argc, char **args)
 double SetVariableTimeStep(const double time)
 {
   //double dt = 1./(64*1.4);
-  double dt = 1. / 32;
+  //double dt = 1. / 32;
+  
+  double dt = 1. / 64;
   //double dt = 60;
 
 //   if( turek_FSI == 2 ){
