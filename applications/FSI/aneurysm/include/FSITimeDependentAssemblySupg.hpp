@@ -330,11 +330,10 @@ namespace femus {
             unsigned int face = - ( mymsh->el->GetFaceElementIndex ( iel, jface ) + 1 );
             double tau = 0.;
             double tau_old = 0.;
-            if ( ( !ml_sol->GetBdcFunction() ( xx, "U", tau, face, time ) &&
-                   !ml_sol->GetBdcFunction() ( xx, "U", tau_old, face, time - dt ) )
+            if ( ( !ml_sol->GetBdcFunction() ( xx, "P", tau, face, time ) &&
+                   !ml_sol->GetBdcFunction() ( xx, "P", tau_old, face, time - dt ) )
                  && ( tau != 0. || tau_old != 0. ) ) {
-              //tau /= rhof;
-              //tau_old /= rhof;
+	             
               unsigned nve = mymsh->GetElementFaceDofNumber ( iel, jface, SolType2 );
               const unsigned felt = mymsh->GetElementFaceType ( iel, jface );
 
@@ -504,8 +503,8 @@ namespace femus {
 // 	  tauSupg_old=0;
           for ( unsigned i = 0; i < nve; i++ ) {
             for ( unsigned j = 0; j < dim; j++ ) {
-              phiSupg[i] += ( ( SolVAR[j + dim] - meshVel[j] ) * gradphi[i * dim + j] ) * tauSupg;
-              phiSupg_old[i] += ( ( SolVAR_old[j + dim] - meshVel[j] ) * gradphi_old[i * dim + j] ) * tauSupg_old;
+              phiSupg[i] += ( ( SolVAR[j + dim] - meshVel[j] ) * gradphi[i * dim + j] ) * tauSupg * (!solidmark[i]) ;
+              phiSupg_old[i] += ( ( SolVAR_old[j + dim] - meshVel[j] ) * gradphi_old[i * dim + j] ) * tauSupg_old * (!solidmark[i]);
             }
           }
 
@@ -573,14 +572,14 @@ namespace femus {
                                             - AdvaleVAR[idim]      	             // advection term
                                             - IRe * LapvelVAR[idim]	             // viscous dissipation
                                             + IRe * LapStrong[idim]
-                                            + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
+                                            + 1. / rhof * SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
 
                   adept::adouble value_old = ( 1. - theta ) * dt * (
                                                - AdvaleVAR_old[idim]               	         // advection term
                                                - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
                                                + IRe * LapStrong_old[idim]
-                                               + SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
+                                               + 1. / rhof * SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
                                              ) * Weight_old;			                 // at time t-dt
 
                   if ( !solidmark[i] ) {
@@ -653,7 +652,7 @@ namespace femus {
 // 					    - IRe * LapvelVAR[idim]	             // viscous dissipation
                                             //- SolVAR[dim + idim] * ( IRe / K + 0.5 * C2 * speed ) * phi[i]
 					    - (SolVAR[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi[i] + phiSupg[i])
-                                            + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
+                                            + 1. / rhof * SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
 
                   adept::adouble value_old = ( 1. - theta ) * dt * (
@@ -661,7 +660,7 @@ namespace femus {
 // 					      - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
                                                //- SolVAR_old[dim + idim] * ( IRe / K + 0.5 * C2 * speed_old ) * phi_old[i]
 					       - (SolVAR_old[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi_old[i] + phiSupg_old[i])
-                                               + SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
+                                               + 1. / rhof * SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
                                              ) * Weight_old;			                 // at time t-dt
 
                   if ( !solidmark[i] ) {
@@ -855,11 +854,11 @@ namespace femus {
                 for ( int J = 0; J < 3; ++J ) {
                   Cauchy[I][J] =  2.* ( C1 * B[I][J] - C2 * invB[I][J] )
                                   //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR[2 * dim] * Id2th[I][J];
-                                  - SolVAR[2 * dim] * Id2th[I][J];
+                                  - 1. / rhof * SolVAR[2 * dim] * Id2th[I][J];
 
                   Cauchy_old[I][J] =  2.* ( C1 * B_old[I][J] - C2 * invB_old[I][J] )
                                       //- (2. / 3.) * (C1 * I1_B_old - C2 * I2_B_old) * SolVAR[2 * dim] * Id2th[I][J];
-                                      - SolVAR[2 * dim] * Id2th[I][J];
+                                      - 1. / rhof * SolVAR[2 * dim] * Id2th[I][J];
 
                 }
               }
