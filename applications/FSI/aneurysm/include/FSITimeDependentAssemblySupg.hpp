@@ -330,11 +330,10 @@ namespace femus {
             unsigned int face = - ( mymsh->el->GetFaceElementIndex ( iel, jface ) + 1 );
             double tau = 0.;
             double tau_old = 0.;
-            if ( ( !ml_sol->GetBdcFunction() ( xx, "U", tau, face, time ) &&
-                   !ml_sol->GetBdcFunction() ( xx, "U", tau_old, face, time - dt ) )
+            if ( ( !ml_sol->GetBdcFunction() ( xx, "P", tau, face, time ) &&
+                   !ml_sol->GetBdcFunction() ( xx, "P", tau_old, face, time - dt ) )
                  && ( tau != 0. || tau_old != 0. ) ) {
-              //tau /= rhof;
-              //tau_old /= rhof;
+	             
               unsigned nve = mymsh->GetElementFaceDofNumber ( iel, jface, SolType2 );
               const unsigned felt = mymsh->GetElementFaceType ( iel, jface );
 
@@ -504,8 +503,8 @@ namespace femus {
 // 	  tauSupg_old=0;
           for ( unsigned i = 0; i < nve; i++ ) {
             for ( unsigned j = 0; j < dim; j++ ) {
-              phiSupg[i] += ( ( SolVAR[j + dim] - meshVel[j] ) * gradphi[i * dim + j] ) * tauSupg;
-              phiSupg_old[i] += ( ( SolVAR_old[j + dim] - meshVel[j] ) * gradphi_old[i * dim + j] ) * tauSupg_old;
+              phiSupg[i] += ( ( SolVAR[j + dim] - meshVel[j] ) * gradphi[i * dim + j] ) * tauSupg * (!solidmark[i]) ;
+              phiSupg_old[i] += ( ( SolVAR_old[j + dim] - meshVel[j] ) * gradphi_old[i * dim + j] ) * tauSupg_old * (!solidmark[i]);
             }
           }
 

@@ -151,7 +151,7 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = 0.1 * 1.e6 ;
+    E = .5 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
     E = 1000000 * 1.e0;
@@ -192,7 +192,8 @@ int main(int argc, char **args)
 //   MultiLevelMesh ml_msh1(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
 //                          infile.c_str(), "fifth", Lref, NULL);
 
-  //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 2);
+//   ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
+//   numberOfUniformRefinedMeshes = 1;
 
   ml_msh.PrintInfo();
 
@@ -432,7 +433,7 @@ int main(int argc, char **args)
 
   //END INITIALIZE PARTICLES
 
-  unsigned itPeriod = 64;
+  unsigned itPeriod = 32;
   unsigned confNumber;
   unsigned partSimMax;
   if (simulation == 6) {
@@ -475,7 +476,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 2*352; //288
+  const unsigned int n_timesteps = 352; //288
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -486,6 +487,22 @@ int main(int argc, char **args)
 
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
+    
+    
+//     Solid solid;
+//     E = 5.0e6;
+//     if(time_step >= 6){
+//       for(unsigned i=6; i<= time_step; i++){
+// 	E /= 1.5;
+//       }
+//     }
+//     if(E <= 0.5e6) E = 0.5e6;
+//     std::cout << "time_step" << time_step << " E= " << E << std::endl;
+//     
+//     solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
+//     ml_prob.parameters.set<Solid>("Solid") = solid;
+    
+    
     data[time_step].resize(5);
 
     for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
@@ -531,12 +548,12 @@ int main(int argc, char **args)
         else if (simulation == 7) diam = (partSim + 1.) * 0.5 * 1.e-6;
         else diam = 0;
 
-        std::cout << "configuration = " << configuration << std::endl;
-        std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
-        std::cout << "time_step = " << time_step << std::endl;
-        std::cout << "particle inside = " << count_inside << std::endl;
-        std::cout << "particle outside = " << count_out << std::endl;
-        std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
+//         std::cout << "configuration = " << configuration << std::endl;
+//         std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
+//         std::cout << "time_step = " << time_step << std::endl;
+//         std::cout << "particle inside = " << count_inside << std::endl;
+//         std::cout << "particle outside = " << count_out << std::endl;
+//         std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
 
         linea[configuration][partSim][0]->GetStreamLine(streamline, 0);
         for (int i = 0; i < linea[configuration][partSim].size(); i++) {
@@ -621,9 +638,10 @@ int main(int argc, char **args)
 double SetVariableTimeStep(const double time)
 {
   //double dt = 1./(64*1.4);
-  //double dt = 1. / 32;
-  
-  double dt = 1. / 64;
+
+  double dt = 1. / 32;
+  //double dt = 1. / 4;
+
   //double dt = 60;
 
 //   if( turek_FSI == 2 ){
@@ -838,29 +856,29 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
       //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
       value = 2 * 0.1 * (1. - r2) * ramp; //inflow
-      //std::cout << value << " " << time << " " << ramp << std::endl;
-      //value=25;
-    }
-    else if (1 == facename) {
-      test = 0;
-      value = 11335 * ramp;
-      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
-      //value = 10000;
     }
     else if (5 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if (!strcmp(name, "V") || !strcmp(name, "W")) {
+  else if (!strcmp(name, "V") ){
     if (1 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
+  else if (!strcmp(name, "W") ){
+    if (5 == facename) {
+      test = 0;
+      value = 0.;
+    }
+  }
   else if (!strcmp(name, "P")) {
+    double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     test = 0;
-    value = 0.;
+    value = (1 == facename)? 11335 * ramp : 0.;
+    //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
   }
   else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
     if (5 == facename) {
