@@ -77,7 +77,7 @@ int main(int argc, char **args) {
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
    std::string infile;
   if(simulation == 0) {
-    infile = "./input/Turek_3D_D.neu";
+    infile = "./input/Turek_3D_F2.neu"; //Turek_3D_version2.neu gruppi 9 e 10 uniti
   }
   else if(simulation == 1) {
     infile = "./input/aneurysm_omino.neu";
@@ -108,7 +108,7 @@ int main(int argc, char **args) {
   muf = 3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 100000; //E = 6000;
+  E = 10000; //E = 6000;
   E1 = 2000; 
   
   // Maximum aneurysm_omino deformation (velocity = 0.1)
@@ -180,6 +180,8 @@ int main(int argc, char **args) {
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 1);
   ml_sol.AssociatePropertyToSolution("P", "Pressure", false); // Add this line
+  
+  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -295,6 +297,9 @@ int main(int argc, char **args) {
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
   
   std::vector <double> data;
+  for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
+    SetLambda(ml_sol, level , SECOND, ELASTICITY);
+  }
   data.resize(5);
   system.MGsolve();
   data[0]=0;
@@ -586,7 +591,7 @@ bool SetBoundaryConditionAorta(const std::vector < double >& x, const char name[
 //       test = 0;
 //       value = 0.5 *1.e-01; //Pressure value/rhof
       double r2 = ((x[0] + 0.075563)/0.0104) * ((x[0] + 0.075563)/0.0104) + (x[2] /0.0104) * (x[2] /0.0104);
-      value = 0.03 * (1. - r2); //inflow
+      value = 0.05 * (1. - r2); //inflow
     }
   }
   

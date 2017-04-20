@@ -20,6 +20,9 @@ using namespace femus;
 bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[],
                                  double &value, const int facename, const double time);
 
+bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char name[],
+                                   double &value, const int facename, const double time);
+
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 //------------------------------------------------------------------------------------------------------------------
 
@@ -43,6 +46,9 @@ int main(int argc, char **args)
     }
     else if(!strcmp("3", args[1])) {   /** FSI Turek 11 stents 60 micron */
       simulation = 3;
+    }
+    else if(!strcmp("4", args[1])) {   /** FSI vein valve */
+      simulation = 4;
     }
   }
 
@@ -72,24 +78,41 @@ int main(int argc, char **args)
   else if(simulation == 3) {
     infile = "./input/Turek_11stents_60micron.neu";
   }
+  else if(simulation == 4) {
+    infile = "./input/vein_valve.neu";
+  }
 
   // ******* Set physics parameters *******
-  double Lref, Uref, rhof, muf, rhos, ni, E;
+  double Lref, Uref, rhof, muf, rhos, ni, E, E1;
 
   Lref = 1.;
   Uref = 1.;
 
-  rhof = 1035.;
-  muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
-  rhos = 1120;
-  ni = 0.5;
-  E = 1000000; //turek:120000*1.e1;
+  if (simulation == 4){
+    rhof = 1060.;
+    muf = 2.2 * 1.0e-3;
+    rhos = 960;
+    ni = 0.5;
+    E = 3.3 * 1.0e6; //vein young modulus
+    E1 = 15 * 1.0e6; //leaflet young modulus
+  }
+  else {
+    rhof = 1035.;
+    muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
+    rhos = 1120;
+    ni = 0.5;
+    E = 1000000; //turek:120000*1.e1;
+    E1 = 100000;  
+  }
 
   Parameter par(Lref, Uref);
 
   // Generate Solid Object
   Solid solid;
   solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
+  
+  Solid solid1;
+  solid1 = Solid(par, E1, ni, rhos, "Mooney-Rivlin");
 
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -131,11 +154,14 @@ int main(int argc, char **args)
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 1);
   ml_sol.AssociatePropertyToSolution("P", "Pressure", false); // Add this line
+  
+  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek2D);
+  if (simulation == 4) ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionVeinValve);
+  else ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek2D);
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
@@ -154,6 +180,7 @@ int main(int argc, char **args)
   ml_prob.parameters.set<Fluid>("Fluid") = fluid;
   // Add Solid Object
   ml_prob.parameters.set<Solid>("Solid") = solid;
+  ml_prob.parameters.set<Solid>("Solid1") = solid1;
 
   // ******* Add FSI system to the MultiLevel problem *******
   MonolithicFSINonLinearImplicitSystem & system = ml_prob.add_system<MonolithicFSINonLinearImplicitSystem> ("Fluid-Structure-Interaction");
@@ -172,9 +199,13 @@ int main(int argc, char **args)
   system.SetMgType(F_CYCLE);
 
   system.SetNonLinearConvergenceTolerance(1.e-9);
-  system.SetResidualUpdateConvergenceTolerance(1.e-15);
-  system.SetMaxNumberOfNonLinearIterations(4);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
+  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
+  system.SetMaxNumberOfNonLinearIterations(8);
+  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
+  
+  system.SetMaxNumberOfLinearIterations ( 2 );
+  system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
+
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
@@ -225,37 +256,42 @@ int main(int argc, char **args)
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
   
   std::vector <double> data;
-  data.resize(5);
+  for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
+    SetLambda(ml_sol, level , SECOND, ELASTICITY);
+  }
   system.MGsolve();
-  data[0]=0;
-  GetSolutionNorm(ml_sol, 9, data);
+  if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
+    data.resize(5);
+    data[0]=0;
+    GetSolutionNorm(ml_sol, 9, data);
+  }
 
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1);
   
-  int  iproc;
-  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  if(iproc == 0){
-    std::ofstream outf;
-    if(simulation == 0) {
-      outf.open("DataPrint_Turek_steady.txt");
-    }
-    else if(simulation == 1) {
-      outf.open("DataPrint_TurekPorous_steady.txt");
-    }
-    else if(simulation == 2){
-      outf.open("DataPrint_TurekStents_steady.txt");
-    }
-    else if(simulation == 3){
-      outf.open("DataPrint_Turek11Stents_steady.txt");
-    }
-        
-    if (!outf) {
-      std::cout<<"Error in opening file DataPrint.txt";
-      return 1;
-    }
-    outf<<data[0]<<"\t"<<data[1]<<"\t"<<data[2]<<"\t"<<data[3]<<"\t"<<data[4]<<std::endl;
-    outf.close();
-  }
+//   int  iproc;
+//   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+//   if(iproc == 0){
+//     std::ofstream outf;
+//     if(simulation == 0) {
+//       outf.open("DataPrint_Turek_steady.txt");
+//     }
+//     else if(simulation == 1) {
+//       outf.open("DataPrint_TurekPorous_steady.txt");
+//     }
+//     else if(simulation == 2){
+//       outf.open("DataPrint_TurekStents_steady.txt");
+//     }
+//     else if(simulation == 3){
+//       outf.open("DataPrint_Turek11Stents_steady.txt");
+//     }
+//         
+//     if (!outf) {
+//       std::cout<<"Error in opening file DataPrint.txt";
+//       return 1;
+//     }
+//     outf<<data[0]<<"\t"<<data[1]<<"\t"<<data[2]<<"\t"<<data[3]<<"\t"<<data[4]<<std::endl;
+//     outf.close();
+//   }
 
   // ******* Clear all systems *******
   ml_prob.clear();
@@ -309,6 +345,57 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 
 }
 
+bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+{
+  bool test = 1; //dirichlet
+  value = 0.;
+
+  if ( !strcmp(name, "U") ) {
+    if ( 1 == facename || 2 == facename ) {
+      test = 0;
+      value = 0.;
+    }
+  }
+  else if ( !strcmp(name, "V") ) {
+    if (1 == facename) {
+      //double r2 = (x[0] + 0.002) * (x[0] + 0.002);
+      //value = 2 * 0.1387 * (4.0e-6 - r2)/(4.0e-6); //inflow
+      test = 0.;
+      value = -0.5;
+    }
+    else if ( 2 == facename ) {
+      test = 0;
+      value = 0.5;
+    }
+    else if ( 6 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+  }
+  else if (!strcmp(name, "DX") ) {
+    if (5 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "DY") ) {
+    if ( 5 == facename) {
+      test = 0;
+      value = 0;
+    }
+    else if ( 6 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+
+  return test;
+
+}
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
 {

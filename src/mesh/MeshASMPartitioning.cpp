@@ -95,21 +95,23 @@ void MeshASMPartitioning::DoPartition( const unsigned *block_size, vector < vect
     unsigned OwnedElements = ElemOffsetp1 - ElemOffset;
 
     unsigned counter[3] = {0, 0, 0};
+    unsigned flag_block[3] = {4, 3, 2};
+    
     for (unsigned iel = ElemOffset; iel < ElemOffsetp1; iel++) {
       unsigned flag_mat   = _mesh.GetElementMaterial(iel);
 
-      if (flag_mat == 2) {
-        counter[2]++;
+      if (flag_mat == flag_block[0]) {
+        counter[0]++;
       }
-      else if (flag_mat == 3) {
+      else if (flag_mat == flag_block[1]) {
         counter[1]++;
       }
     }
-    counter[0] = OwnedElements - counter[1] - counter[2];
+    counter[2] = OwnedElements - counter[0] - counter[1];
 
     block_type_range.resize(3);
 
-    unsigned flag_block[3] = {4, 3, 2};
+  
 
     unsigned block_start = 0;
     unsigned iMaterial = 0;
