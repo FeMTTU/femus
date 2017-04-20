@@ -66,6 +66,10 @@ set(OPTCONTROL_FOLDER OptimalControl/)
 # boundary_SAC
   set(OPT_APPLICATION elliptic_bdry_SAC)
   ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)
+
+# boundary Neumann
+  set(OPT_APPLICATION elliptic_bdry_neum)
+  ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)
   
   unset(OPT_APPLICATION)  
 
