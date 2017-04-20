@@ -11,16 +11,16 @@ using namespace femus;
 #define NSUB_X  16
 #define NSUB_Y  16
 #define ALPHA_CTRL 1.e-3
-#define BETA_CTRL  0.
+#define BETA_CTRL 0.
 
 
 int ElementTargetFlag(const std::vector<double> & elem_center) {
 
  //***** set target domain flag ********************************** 
-  int target_flag = 1; //set 0 to 1 to get the entire domain
+  int target_flag = 0; //set 0 to 1 to get the entire domain
   
-   if ( elem_center[0] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > 0.5 - (1./16. + 1./64.) - 1.e-5  && 
-        elem_center[1] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[1] > 0.5 - (1./16. + 1./64.) - 1.e-5 
+   if ( /*elem_center[0] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > 0.5 - (1./16. + 1./64.) - 1.e-5  &&*/ 
+        /*elem_center[1] < 0.5 + (1./16. + 1./64.)  + 1.e-5  &&*/ elem_center[1] > 0.9 - (1./16. + 1./64.) - 1.e-5 
   ) {
      
      target_flag = 1;

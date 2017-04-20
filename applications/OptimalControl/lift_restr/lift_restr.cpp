@@ -6,20 +6,20 @@
 
 using namespace femus;
 
-#define NSUB_X  16
-#define NSUB_Y  16
+#define NSUB_X  64
+#define NSUB_Y  64
 #define ALPHA_CTRL 1.
-#define BETA_CTRL  1.e-3
-#define GAMMA_CTRL 1.e-3
+#define BETA_CTRL  1.e-7
+#define GAMMA_CTRL 0.
 
 
 int ElementTargetFlag(const std::vector<double> & elem_center) {
 
  //***** set target domain flag ********************************** 
-  int target_flag = 1; //set 0 to 1 to get the entire domain
+  int target_flag = 0; //set 0 to 1 to get the entire domain
   
-   if ( elem_center[0] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > 0.5 - (1./16. + 1./64.) - 1.e-5  && 
-        elem_center[1] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[1] > 0.5 - (1./16. + 1./64.) - 1.e-5 
+   if ( /*elem_center[0] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > 0.5 - (1./16. + 1./64.) - 1.e-5  && */
+       /* elem_center[1] < 0.5 + (1./16. + 1./64.)  + 1.e-5  &&*/ elem_center[1] > 0.9 - (1./64. + 1./64.) - 1.e-5 
   ) {
      
      target_flag = 1;
@@ -35,7 +35,7 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ********************************** 
   // flag = 1: we are in the lifting nonzero domain
   int control_el_flag = 0;
-   if ( elem_center[1] >  0.7 ) { control_el_flag = 1; }
+   if ( elem_center[1] >  0.6 ) { control_el_flag = 1; }
 
      return control_el_flag;
 
@@ -535,7 +535,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               //BLOCK delta_control - control
               if ( i < nDof_ctrl   && j < nDof_ctrl   )
 		Jac[ (nDof_u + i) * nDof_AllVars +
-		(nDof_u + j)                     ]  += /*(1 - control_node_flag[i]) **/ weight * ( gamma * control_el_flag  * laplace_mat_dctrl_ctrl + beta * control_el_flag * phi_ctrl[i] * phi_ctrl[j] + alpha  * target_flag  * phi_ctrl[i] * phi_ctrl[j]);
+		(nDof_u + j)                     ]  += /*(1 - control_node_flag[i]) **/ weight * ( - gamma * control_el_flag  * laplace_mat_dctrl_ctrl + beta * control_el_flag * phi_ctrl[i] * phi_ctrl[j] + alpha  * target_flag  * phi_ctrl[i] * phi_ctrl[j]);
               
 	      //BLOCK delta_control - state
               if ( i < nDof_ctrl   && j < nDof_u   ) 
