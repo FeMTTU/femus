@@ -192,7 +192,8 @@ int main(int argc, char **args)
 //   MultiLevelMesh ml_msh1(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
 //                          infile.c_str(), "fifth", Lref, NULL);
 
-  //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 2);
+  ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
+  numberOfUniformRefinedMeshes = 1;
 
   ml_msh.PrintInfo();
 
@@ -834,15 +835,15 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
     double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     if (2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
-      //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
-      value = 2 * 0.1 * (1. - r2) * ramp; //inflow
+      value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      //value = 2 * 0.1 * (1. - r2) * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
     }
     else if (1 == facename) {
       test = 0;
-      value = 11335 * ramp;
-      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      //value = 11335 * ramp;
+      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
       //value = 10000;
     }
     else if (5 == facename) {
