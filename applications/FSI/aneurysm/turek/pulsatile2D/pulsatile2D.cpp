@@ -26,10 +26,10 @@ bool SetBoundaryConditionThrombus2D ( const std::vector < double >& x, const cha
                                       double &value, const int facename, const double time );
 
 bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, const char name[],
-                                             double &value, const int facename, const double time );
+    double &value, const int facename, const double time );
 
 bool SetBoundaryConditionThrombus2DPorous ( const std::vector < double >& x, const char name[],
-                                            double &value, const int facename, const double time );
+    double &value, const int facename, const double time );
 
 bool SetBoundaryConditionVeinValve ( const std::vector < double >& x, const char name[],
                                      double &value, const int facename, const double time );
@@ -37,7 +37,8 @@ bool SetBoundaryConditionVeinValve ( const std::vector < double >& x, const char
 void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data );
 //------------------------------------------------------------------------------------------------------------------
 
-int main ( int argc, char **args ) {
+int main ( int argc, char **args )
+{
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit ( argc, args, MPI_COMM_WORLD );
@@ -115,7 +116,7 @@ int main ( int argc, char **args ) {
   Lref = 1.;
   Uref = 1.;
 
-  
+
   if (simulation == 7) {
     rhof = 1060.;
     muf = 2.2 * 1.0e-3;
@@ -123,7 +124,7 @@ int main ( int argc, char **args ) {
     ni = 0.5;
     //E = 3.3 * 1.0e6; //vein young modulus
     E = 4.3874951 * 1.0e8;
-    E1 = 1.5 * 1.0e6; //leaflet young modulus
+    E1 = 15 * 1.0e6; //leaflet young modulus
   }
   else {
     rhof = 1035.;
@@ -210,17 +211,26 @@ int main ( int argc, char **args ) {
   ml_sol.GenerateBdc ( "DX", "Steady" );
   ml_sol.GenerateBdc ( "DY", "Steady" );
 
-  if ( simulation == 4 || simulation == 5 || simulation == 6 || simulation == 7) {
+  if ( simulation == 4 || simulation == 5 || simulation == 6) {
     ml_sol.GenerateBdc ( "U", "Steady" );
     ml_sol.GenerateBdc ( "V", "Time_dependent" );
+  }
+  else if (simulation == 7){
+    ml_sol.GenerateBdc ( "U", "Steady" );
+    ml_sol.GenerateBdc ( "V", "Steady" ); 
   }
   else {
     ml_sol.GenerateBdc ( "U", "Time_dependent" );
     ml_sol.GenerateBdc ( "V", "Steady" );
   }
 
-  ml_sol.GenerateBdc ( "P", "Steady" );
-
+  if (simulation == 7){
+    ml_sol.GenerateBdc ( "P", "Steady" );
+  }
+  else {
+    ml_sol.GenerateBdc ( "P", "Steady" );
+  }
+  
 //   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
 //     SetLambda(ml_sol, level , SECOND, ELASTICITY);
 //   }
@@ -305,7 +315,7 @@ int main ( int argc, char **args ) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 200;
+  const unsigned int n_timesteps = 100;
 
 
   std::vector < std::vector <double> > data ( n_timesteps );
@@ -376,10 +386,11 @@ int main ( int argc, char **args ) {
   return 0;
 }
 
-double SetVariableTimeStep ( const double time ) {
+double SetVariableTimeStep ( const double time )
+{
   //double dt = 1. / ( 64 * 1.4 );
   //double dt = 1./32;
-  double dt = 1./20;
+  double dt = 1. / 20;
 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
@@ -406,7 +417,8 @@ double SetVariableTimeStep ( const double time ) {
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTurek2D ( const std::vector < double >& x, const char name[], double &value, const int facename, const double time ) {
+bool SetBoundaryConditionTurek2D ( const std::vector < double >& x, const char name[], double &value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -478,7 +490,8 @@ bool SetBoundaryConditionTurek2D ( const std::vector < double >& x, const char n
 }
 
 
-bool SetBoundaryConditionThrombus2D ( const std::vector < double >& x, const char name[], double &value, const int facename, const double time ) {
+bool SetBoundaryConditionThrombus2D ( const std::vector < double >& x, const char name[], double &value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -528,7 +541,8 @@ bool SetBoundaryConditionThrombus2D ( const std::vector < double >& x, const cha
 }
 
 
-bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, const char name[], double &value, const int facename, const double time ) {
+bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, const char name[], double &value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -581,32 +595,27 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 {
   bool test = 1; //dirichlet
   value = 0.;
-  
+
   double PI = acos ( -1. );
+  double ramp = ( time < 1 ) ? sin ( PI / 2 * time ) : 1.;
 
   if ( !strcmp(name, "V") ) {
-    if ( 1 == facename || 2 == facename || 6 == facename) {
+    if (1 == facename || 2 == facename || 6 == facename) {
       test = 0;
-      value = 0.;
-    }
-  }
-  else if ( !strcmp(name, "U") ) {
-    if (1 == facename) {
-      //double r2 = (x[0] + 0.002) * (x[0] + 0.002);
-      //value = 2 * 0.1387 * (4.0e-6 - r2)/(4.0e-6); //inflow
-      test = 0.;
-      //value = -0.5;
-      value = ( 500 + 500 * sin ( 2 * PI * time ) );
-    }
-    else if (2 == facename) {
-      test = 0;
-      //value = 0.5;
-      value = ( 500 - 500 * sin ( 2 * PI * time ) );
+      value = 0;
     }
   }
   else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
+    if (1 == facename) {
+      //value = -1;
+      value = ( 1 + 1 * sin ( 2 * PI * time ) ) * ramp;
+    }
+    else if (2 == facename) {
+      //value = 1;
+      value = ( 1 - 1 * sin ( 2 * PI * time ) ) * ramp;
+    }
   }
   else if (!strcmp(name, "DX") ) {
     if (5 == facename) {
@@ -625,7 +634,8 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 
 }
 
-void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data ) {
+void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data )
+{
 
   int  iproc, nprocs;
   MPI_Comm_rank ( MPI_COMM_WORLD, &iproc );
@@ -817,3 +827,4 @@ void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::v
   delete vol;
 
 }
+
