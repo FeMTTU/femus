@@ -270,7 +270,7 @@ namespace femus
           if (myel->GetFaceElementIndex(iel, jface) < 0) {
             unsigned int face = -(mymsh->el->GetFaceElementIndex(iel, jface) + 1);
 
-            if ( !ml_sol->GetBdcFunction()(xx, "V", tau, face, 0.) && tau != 0.) {
+            if ( !ml_sol->GetBdcFunction()(xx, "P", tau, face, 0.) && tau != 0.) {
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
               const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
@@ -328,6 +328,19 @@ namespace femus
           }
 
           jacobianOverArea = jacobian_hat / area * rapresentative_area;
+	  
+	  std::vector<double> xc(dim,0.);
+	  xc[0] = -0.001013;
+	  xc[1] = 0.07000;
+	  double distance = 0.;
+	  for (unsigned k = 0; k<dim; k++){
+	    distance += ( vx_hat[k][ nve - 1] - xc[k] ) * ( vx_hat[k][nve - 1] - xc[k] );
+	  }
+	  distance =sqrt(distance);
+	  jacobianOverArea *= 1./(1 + 10000 * distance);
+	  //jacobianOverArea *= exp(-100. * distance);
+	  
+	  
 	  if(elementGroup == 16) jacobianOverArea *= 1.e06;
         }
 
@@ -411,7 +424,7 @@ namespace femus
 
               for (int idim = 0; idim < dim; idim++) {
                 for (int jdim = 0; jdim < dim; jdim++) {
-                  LapmapVAR[idim] += (GradSolhatVAR[idim][jdim] * gradphi_hat[i * dim + jdim]) ;
+                  LapmapVAR[idim] += ( GradSolVAR[idim][jdim] + 0.* GradSolVAR[jdim][idim] ) * gradphi_hat[i * dim + jdim] ;
                 }
               }
 

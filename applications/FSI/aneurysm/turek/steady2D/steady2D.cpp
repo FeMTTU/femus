@@ -93,7 +93,8 @@ int main(int argc, char **args)
     muf = 2.2 * 1.0e-3;
     rhos = 960;
     ni = 0.5;
-    E = 3.3 * 1.0e6; //vein young modulus
+    E = 4.3874951 * 1.0e8;
+    //E = 3.3 * 1.0e6; //vein young modulus
     E1 = 15 * 1.0e6; //leaflet young modulus
   }
   else {
@@ -350,24 +351,8 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   bool test = 1; //dirichlet
   value = 0.;
 
-  if ( !strcmp(name, "U") ) {
-    if ( 1 == facename || 2 == facename ) {
-      test = 0;
-      value = 0.;
-    }
-  }
-  else if ( !strcmp(name, "V") ) {
-    if (1 == facename) {
-      //double r2 = (x[0] + 0.002) * (x[0] + 0.002);
-      //value = 2 * 0.1387 * (4.0e-6 - r2)/(4.0e-6); //inflow
-      test = 0.;
-      value = -0.5;
-    }
-    else if ( 2 == facename ) {
-      test = 0;
-      value = 0.5;
-    }
-    else if ( 6 == facename ) {
+  if ( !strcmp(name, "V") ) {
+    if (1 == facename || 2 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
@@ -375,6 +360,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
+    if (1 == facename) {
+      test = 0.;
+      value = -1;
+    }
+    else if ( 2 == facename ) {
+      test = 0;
+      value = 1;
+    }
   }
   else if (!strcmp(name, "DX") ) {
     if (5 == facename) {
@@ -383,11 +376,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     }
   }
   else if (!strcmp(name, "DY") ) {
-    if ( 5 == facename) {
-      test = 0;
-      value = 0;
-    }
-    else if ( 6 == facename ) {
+    if ( 5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
