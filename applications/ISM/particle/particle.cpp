@@ -154,7 +154,7 @@ int main(int argc, char **args)
     E = .5 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
-    E = 1000000 * 1.e0;
+    E = 1. * 1.e6;
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
@@ -476,7 +476,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 352; //288
+  const unsigned int n_timesteps = 288; //352
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -486,22 +486,6 @@ int main(int argc, char **args)
   std::vector < std::vector <  double > > efficiencyVector(confNumber);
 
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-
-    
-    
-//     Solid solid;
-//     E = 5.0e6;
-//     if(time_step >= 6){
-//       for(unsigned i=6; i<= time_step; i++){
-// 	E /= 1.5;
-//       }
-//     }
-//     if(E <= 0.5e6) E = 0.5e6;
-//     std::cout << "time_step" << time_step << " E= " << E << std::endl;
-//     
-//     solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
-//     ml_prob.parameters.set<Solid>("Solid") = solid;
-    
     
     data[time_step].resize(5);
 
@@ -527,7 +511,7 @@ int main(int argc, char **args)
               linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceWire);
             }
             else if (simulation == 5 || simulation == 7) {
-              linea[configuration][partSim][i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceSC);
+              linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceSC);
             }
             count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
           }
@@ -548,12 +532,12 @@ int main(int argc, char **args)
         else if (simulation == 7) diam = (partSim + 1.) * 0.5 * 1.e-6;
         else diam = 0;
 
-//         std::cout << "configuration = " << configuration << std::endl;
-//         std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
-//         std::cout << "time_step = " << time_step << std::endl;
-//         std::cout << "particle inside = " << count_inside << std::endl;
-//         std::cout << "particle outside = " << count_out << std::endl;
-//         std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
+        std::cout << "configuration = " << configuration << std::endl;
+        std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
+        std::cout << "time_step = " << time_step + 1 << std::endl;
+        std::cout << "particle inside = " << count_inside << std::endl;
+        std::cout << "particle outside = " << count_out << std::endl;
+        std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
 
         linea[configuration][partSim][0]->GetStreamLine(streamline, 0);
         for (int i = 0; i < linea[configuration][partSim].size(); i++) {
@@ -923,18 +907,13 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
     }
   }
   else if (!strcmp(name, "U")) {
-    if (2 == facename || 3 == facename) {
-      test = 0;
-      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
-      //value = 13332 * ramp; // 0. * ramp;
-    }
-    else if (7 == facename) {
+    if (7 == facename) {
       test = 0;
       value = 0.;
     }
   }
   else if (!strcmp(name, "V")) {
-    if (2 == facename || 3 == facename || 7 == facename) {
+    if (7 == facename) {
       test = 0;
       value = 0.;
     }
@@ -942,6 +921,10 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
   else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
+    if (2 == facename || 3 == facename) {
+      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      value = 5000 * ramp;//13332
+    }
   }
   else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
     if (7 == facename) {
