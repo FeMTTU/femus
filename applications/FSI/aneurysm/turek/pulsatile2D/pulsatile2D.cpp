@@ -132,7 +132,7 @@ int main ( int argc, char **args )
     rhos = 1120;
     ni = 0.5;
     //E = 100 * 1.e6; //simulation=5
-    E = 120 * 1.e9; //simulation=0,1,2,3
+    E = 1000000; //simulation=0,1,2,3
     E1 = 50000;
   }
 
@@ -156,7 +156,7 @@ int main ( int argc, char **args )
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 3;
+  numberOfUniformRefinedMeshes = 4;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -316,7 +316,7 @@ int main ( int argc, char **args )
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 200;
+  const unsigned int n_timesteps = 50;
 
 
   std::vector < std::vector <double> > data ( n_timesteps );
@@ -330,7 +330,8 @@ int main ( int argc, char **args )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step / 20.;
+    data[time_step][0] = time_step*10;
+    //data[time_step][0] = time_step / 20.;
     //data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / ( 64 * 1.4 );
     if ( simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3 ) {
@@ -391,7 +392,8 @@ double SetVariableTimeStep ( const double time )
 {
   //double dt = 1. / ( 64 * 1.4 );
   //double dt = 1./32;
-  double dt = 1. / 20;
+  //double dt = 1. / 20;
+  double dt = 10;
 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
@@ -453,17 +455,18 @@ bool SetBoundaryConditionTurek2D ( const std::vector < double >& x, const char n
   
   if ( !strcmp ( name, "U" ) ) {
     if ( 1 == facename ) {
-      value = 0.005 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1.+ 0.75 * sin(2. * PI * time)) * ramp; //inflow
+      value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8); //inflow
       //value = 0.05 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1.+ 0.75 * sin(2. * PI * time)) * ramp; //inflow
       //value = ( x[1] * 1000 - 6 ) * ( x[1] * 1000 - 8 ) * vel[j] * ramp; //inflow
     }
-    else if ( 2 == facename || 5 == facename ) {
+    else if ( 2 == facename /*|| 5 == facename*/ ) {
       test = 0;
       value = 0.;
     }
   }
   else if ( !strcmp ( name, "V" ) ) {
-    if ( 5 == facename ) {
+    if ( 2 == facename ) {
+    //if ( 5 == facename ) {
     //if ( 2 == facename || 5 == facename ) {
       test = 0;
       value = 0.;
