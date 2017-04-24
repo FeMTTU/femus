@@ -290,7 +290,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   if (assembleMatrix)  KK->zero();
 
     
-  // element loop: each process loops only on the elements that owns
+ // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
@@ -319,12 +319,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
    for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
  //*************************************************** 
   
-  //************* set target domain flag *************
+ //************* set target domain flag **************
    int target_flag = 0;
    target_flag = ElementTargetFlag(elem_center);
-  //*************************************** 
+ //*************************************************** 
    
-  //************* set control flag *******************
+ //************** set control flag *******************
   int control_el_flag = 0;
         control_el_flag = ControlDomainFlag(elem_center);
   std::vector<int> control_node_flag(nDofx,0);
@@ -630,7 +630,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                    for (unsigned d = 0; d < dim; d++)   sol_adj_x_gss[d] += sol_adj[i] * phi_adj_x[i * dim + d];
         }
 
-       //FILLING WITH THE EQUATIONS ===========
+//==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
 	  

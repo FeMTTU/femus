@@ -496,7 +496,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //=============== construct control node flag field on the go  =========================================    
 
 //============ Bdry Residuals ==================	
-// THIRD BLOCK ROW
+// FIRST BLOCK ROW
                  Res[ (0 + i_vol) ]                    +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
 //                  Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_ctrl[i_vol] - sol_adj[i_vol] );   // q = lambda for testing
 // SECOND BLOCK ROW
@@ -505,7 +505,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 							         +  beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							         -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss
 							        );  //boundary optimality condition
-// FIRST BLOCK ROW
+// THIRD BLOCK ROW
                  Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += 0.; 
 //============ Bdry Residuals ==================    
 		    
@@ -644,7 +644,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                    for (unsigned d = 0; d < dim; d++)   sol_adj_x_gss[d] += sol_adj[i] * phi_adj_x[i * dim + d];
         }
 
-       //FILLING WITH THE EQUATIONS ===========
+//==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
 	  
