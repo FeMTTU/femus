@@ -315,7 +315,7 @@ int main ( int argc, char **args )
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 100;
+  const unsigned int n_timesteps = 200;
 
 
   std::vector < std::vector <double> > data ( n_timesteps );
@@ -562,11 +562,11 @@ bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, co
     }
   }
   else if ( !strcmp ( name, "U" ) ) {
-    if ( 2 == facename || 3 == facename ) {
-      test = 0;
-      value = ( 12500 + 2500 * sin ( 2 * PI * time ) ) * ramp;;
-    }
-    else if ( 7 == facename ) {
+//     if ( 2 == facename || 3 == facename ) {
+//       test = 0;
+//       value = ( 12500 + 2500 * sin ( 2 * PI * time ) ) * ramp;
+//     }
+    if ( 7 == facename ) {
       test = 0;
       value = 0;
     }
@@ -574,6 +574,10 @@ bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, co
   else if ( !strcmp ( name, "P" ) ) {
     test = 0;
     value = 0.;
+    if ( 2 == facename || 3 == facename ) {
+      //value = ( 12500 + 2500 * sin ( 2 * PI * time ) ) * ramp;
+      value = 50 * ramp;
+    }
   }
   else if ( !strcmp ( name, "DX" ) ) {
     if ( 7 == facename ) {
