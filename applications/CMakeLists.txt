@@ -60,7 +60,7 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)
   
 # boundary
-  set(OPT_APPLICATION elliptic_bdry)
+  set(OPT_APPLICATION elliptic_bdry_dir)
   ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)
   
 # boundary_SAC
