@@ -56,7 +56,7 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   FILE(COPY ${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/)
   
 # lift_restr
-  set(OPT_APPLICATION lift_restr)
+  set(OPT_APPLICATION elliptic_lift_restr)
   ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)
   
 # boundary
