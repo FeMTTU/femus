@@ -529,7 +529,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	                += control_node_flag[i_vol] * weight_bdry * beta *  lap_mat_dctrl_ctrl_bdry_gss;
                 }
 //========== block delta_control/adjoint ========
-		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj && i_vol == j_vol)   
+		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj )   
 		     Jac[ 
 			(nDof_u + i_vol) * nDof_AllVars  +
 		        (nDof_u + nDof_ctrl + j_vol)             ]  += control_node_flag[i_vol] * (-1) * (weight_bdry * phi_adj_bdry[j_bdry] * phi_ctrl_bdry[i_bdry]);      
