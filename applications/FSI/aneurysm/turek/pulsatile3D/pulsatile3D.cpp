@@ -10,7 +10,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
-#include "../../include/FSITimeDependentAssemblySupg.hpp"
+#include "../../include/FSITimeDependentAssembly.hpp"
 #include <cmath>
 
 double scale = 1000.;
@@ -196,7 +196,7 @@ int main ( int argc, char ** args )
   ml_sol.AddSolution ( "P", DISCONTINOUS_POLYNOMIAL, FIRST, 2 );
   ml_sol.AssociatePropertyToSolution ( "P", "Pressure", false ); // Add this line
 
-  ml_sol.AddSolution ( "lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false );
+  //ml_sol.AddSolution ( "lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false );
 
   // ******* Initialize solution *******
   ml_sol.Initialize ( "All" );
@@ -263,7 +263,7 @@ int main ( int argc, char ** args )
   system.AddSolutionToSystemPDE ( "P" );
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction ( FSITimeDependentAssemblySupg );
+  system.SetAssembleFunction ( FSITimeDependentAssembly );
 
   // ******* set MG-Solver *******
   system.SetMgType ( F_CYCLE );
@@ -336,9 +336,9 @@ int main ( int argc, char ** args )
   std::vector < std::vector <double> > data ( n_timesteps );
 
   for ( unsigned time_step = 0; time_step < n_timesteps; time_step++ ) {
-    for ( unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ) {
-      SetLambda ( ml_sol, level , SECOND, ELASTICITY );
-    }
+//     for ( unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ) {
+//       SetLambda ( ml_sol, level , SECOND, ELASTICITY );
+//     }
     data[time_step].resize ( 5 );
     if ( time_step > 0 )
       system.SetMgType ( V_CYCLE );
