@@ -11,7 +11,7 @@ using namespace femus;
 #define NSUB_X  16
 #define NSUB_Y  16
 #define ALPHA_CTRL 1.e-3
-#define BETA_CTRL  0.
+#define BETA_CTRL  1.e-8
 
 
 int ElementTargetFlag(const std::vector<double> & elem_center) {
@@ -19,8 +19,8 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ********************************** 
   int target_flag = 1; //set 0 to 1 to get the entire domain
   
-   if ( elem_center[0] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > 0.5 - (1./16. + 1./64.) - 1.e-5  && 
-        elem_center[1] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[1] > 0.5 - (1./16. + 1./64.) - 1.e-5 
+   if (   elem_center[0] < 0.75 + 1.e-5    && elem_center[0] > 0.25  - 1.e-5  && 
+        /*elem_center[1] <  1.  + 1.e-5  &&*/ elem_center[1] > 0.7 - (1./16. + 1./64.) - 1.e-5 
   ) {
      
      target_flag = 1;
@@ -534,42 +534,21 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //=============== construct control node flag field on the go  ==============================    
 
 //============ Bdry Residuals ==================	
-// THIRD BLOCK ROW
-                 Res[ (0 + i_vol) ]                    +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
-//                  Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_ctrl[i_vol] - sol_adj[i_vol] );   // q = lambda for testing
-// SECOND BLOCK ROW
-                 Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] *  weight_bdry *
+
+                 Res[ (0 + i_vol) ]                    += 0.;
+
+		 Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] *  weight_bdry *
                                                               (    alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							         +  beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
 							         -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss
 							        );  //boundary optimality condition
-// FIRST BLOCK ROW
-                 Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += 0.; 
+
+                 Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += - control_node_flag[i_vol] *  weight_bdry * phi_adj_bdry[i_bdry]*sol_ctrl_bdry_gss; 
 //============ Bdry Residuals ==================    
 		    
 		    for(unsigned j_bdry=0; j_bdry < nve_bdry; j_bdry ++) {
 		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
 
-// FIRST BLOCK ROW
-//============ u = q ==================	    
-// block delta_state/state ========
-		if (i_vol < nDof_adj && j_vol < nDof_u && i_vol == j_vol)  {
-		  Jac[    
-		(0 + i_vol) * nDof_AllVars  +
-		(0 + j_vol)                                ]  +=  penalty_ctrl * ( control_node_flag[i_vol]);
-		  
-		}
-
-// block delta_state/control ========
-	      if ( i_vol < nDof_adj && j_vol < nDof_ctrl && i_vol == j_vol) {
-		Jac[    
-		(0     + i_vol) * nDof_AllVars  +
-		(nDof_u + j_vol)                           ]  += penalty_ctrl * ( control_node_flag[i_vol]) * (-1.);
-	
-	      }
-//============ u = q ==================
-
-		    
 
 // SECOND BLOCK ROW
 //============ boundary control eqn ==================	    
@@ -597,6 +576,15 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
 //============ boundary control eqn ==================	    
 
+// THIRD BLOCK ROW
+// ================== block delta_adjoint/control ========
+		   if ( i_vol < nDof_adj    && j_vol < nDof_ctrl )   
+		     Jac[ 
+			(nDof_u + nDof_ctrl + i_vol) * nDof_AllVars  +
+		        (nDof_u + j_vol)             ]  += control_node_flag[i_vol] * (weight_bdry * phi_ctrl_bdry[j_bdry] * phi_adj_bdry[i_bdry]);      
+			
+			
+			
 //============ q = lambda for testing ==================	    
 
 //      // block delta_control / control ========
@@ -696,8 +684,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      }
 	      
 //============ Volume residuals ==================	    
-          if (i < nDof_u)      Res[0                  + i] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)
-	                                                                  - laplace_rhs_du_adj_i); 
+          if (i < nDof_u)      Res[0                  + i] += - weight * ( (-1.) * target_flag * phi_u[i] * ( sol_u_gss - u_des)
+	                                                                  + laplace_rhs_du_adj_i); 
           if (i < nDof_ctrl)  Res[nDof_u              + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_ctrl[i] - 0.)  );
 	      
 	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += - weight * (laplace_rhs_dadj_u_i);
@@ -717,24 +705,25 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		
 	      }
 
-              //adjoint row ==================
+              //delta_state row ==================
               // BLOCK delta_state / state	      
               if ( i < nDof_u && j < nDof_u )   
 		Jac[ i * nDof_AllVars +
-		(0 + j)                                ]  += weight  * target_flag *  phi_u[i] * phi_u[j];   
+		(0 + j)                                ]  += weight  * (-1.) * target_flag *  phi_u[i] * phi_u[j];   
 //               //BLOCK delta_state / adjoint
               if ( i < nDof_u && j < nDof_adj )   
 		Jac[ i * nDof_AllVars +
-		(nDof_u + nDof_ctrl + j)               ]  += weight * (-1) * laplace_mat_du_adj;
+		(nDof_u + nDof_ctrl + j)               ]  += weight  * laplace_mat_du_adj;
 	      
 	      
-              //control row ==================
+              //delta_control row ==================
              //enforce control zero outside the control boundary
 	      if ( i < nDof_ctrl && j < nDof_ctrl && i==j)
 		Jac[    
 		(nDof_u + i) * nDof_AllVars  +
 		(nDof_u + j)                           ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    /*weight * phi_adj[i]*phi_adj[j]*/
-              //state row ======================================================
+
+		//delta_adjoint row ======================================================
 	      
               // BLOCK delta_adjoint / state
 	      if ( i < nDof_adj && j < nDof_u ) {
