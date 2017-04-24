@@ -132,7 +132,7 @@ int main ( int argc, char **args )
     rhos = 1120;
     ni = 0.5;
     //E = 100 * 1.e6; //simulation=5
-    E = 1. * 1.e6; //simulation=0,1,2,3
+    E = 120 * 1.e9; //simulation=0,1,2,3
     E1 = 50000;
   }
 
@@ -453,6 +453,7 @@ bool SetBoundaryConditionTurek2D ( const std::vector < double >& x, const char n
   
   if ( !strcmp ( name, "U" ) ) {
     if ( 1 == facename ) {
+      //value = 0.025 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1.+ 0.75 * sin(2. * PI * time)) * ramp; //inflow
       value = 0.05 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1.+ 0.75 * sin(2. * PI * time)) * ramp; //inflow
       //value = ( x[1] * 1000 - 6 ) * ( x[1] * 1000 - 8 ) * vel[j] * ramp; //inflow
     }
@@ -462,7 +463,7 @@ bool SetBoundaryConditionTurek2D ( const std::vector < double >& x, const char n
     }
   }
   else if ( !strcmp ( name, "V" ) ) {
-    if (5 == facename ) {
+    if ( 5 == facename ) {
     //if ( 2 == facename || 5 == facename ) {
       test = 0;
       value = 0.;
