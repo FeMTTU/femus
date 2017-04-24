@@ -923,7 +923,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
     value = 0.;
     if (2 == facename || 3 == facename) {
       //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
-      value = 5000 * ramp;//13332
+      value = 7000 * ramp;//5000
     }
   }
   else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
