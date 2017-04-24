@@ -453,8 +453,8 @@ bool SetBoundaryConditionTurek2D ( const std::vector < double >& x, const char n
   
   if ( !strcmp ( name, "U" ) ) {
     if ( 1 == facename ) {
-      //value = 0.025 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1.+ 0.75 * sin(2. * PI * time)) * ramp; //inflow
-      value = 0.05 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1.+ 0.75 * sin(2. * PI * time)) * ramp; //inflow
+      value = 0.005 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1.+ 0.75 * sin(2. * PI * time)) * ramp; //inflow
+      //value = 0.05 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1.+ 0.75 * sin(2. * PI * time)) * ramp; //inflow
       //value = ( x[1] * 1000 - 6 ) * ( x[1] * 1000 - 8 ) * vel[j] * ramp; //inflow
     }
     else if ( 2 == facename || 5 == facename ) {
