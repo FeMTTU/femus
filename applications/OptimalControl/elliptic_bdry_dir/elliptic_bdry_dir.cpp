@@ -6,49 +6,10 @@
 
 #include "ElemType.hpp"
 
+#include "../elliptic_bdry_param.hpp"
+
 using namespace femus;
 
-#define NSUB_X  16
-#define NSUB_Y  16
-#define ALPHA_CTRL 1.e-3
-#define BETA_CTRL 0.
-
-
-int ElementTargetFlag(const std::vector<double> & elem_center) {
-
- //***** set target domain flag ********************************** 
-  int target_flag = 0; //set 0 to 1 to get the entire domain
-  
-   if ( /*elem_center[0] < 0.5 + (1./16. + 1./64.)  + 1.e-5  && elem_center[0] > 0.5 - (1./16. + 1./64.) - 1.e-5  &&*/ 
-        /*elem_center[1] < 0.5 + (1./16. + 1./64.)  + 1.e-5  &&*/ elem_center[1] > 0.9 - (1./16. + 1./64.) - 1.e-5 
-  ) {
-     
-     target_flag = 1;
-     
-  }
-  
-     return target_flag;
-
-}
-
-// find volume elements that contain a control face element
-int ControlDomainFlag(const std::vector<double> & elem_center) {
-
- //***** set flag ********************************** 
-
-  double mesh_size = 1./NSUB_Y;
-  int control_el_flag = 0;
-   if ( elem_center[1] >  1. - mesh_size ) { control_el_flag = 1; }
-
-     return control_el_flag;
-
-}
-
-
-double DesiredTarget() {
- 
-  return 1.;
-}
 
 double InitialValueContReg(const std::vector < double >& x) {
   return ControlDomainFlag(x);
@@ -214,7 +175,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
-   //*************************** 
+ //*************************************************** 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
   vector < vector < double > > x(dim);
   vector < vector < double> >  x_bdry(dim);
@@ -222,16 +183,15 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
          x[i].reserve(maxSize);
 	 x_bdry[i].reserve(maxSize);
   }
+ //*************************************************** 
 
- //*************************** 
-
- //*************************** 
+ //*************************************************** 
   double weight = 0.; // gauss point weight
   double weight_bdry = 0.; // gauss point weight on the boundary
 
 
- //******** state ******************* 
- //*************************** 
+ //********************* state *********************** 
+ //*************************************************** 
   vector <double> phi_u;  // local test function
   vector <double> phi_u_x; // local test function first order partial derivatives
   vector <double> phi_u_xx; // local test function second order partial derivatives
@@ -246,12 +206,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   vector < double >  sol_u;     sol_u.reserve(maxSize);
   vector< int > l2GMap_u;    l2GMap_u.reserve(maxSize);
- //*************************** 
- //*************************** 
+ //***************************************************  
+ //***************************************************  
 
   
- //************ adjoint **********
- //*******************************
+ //********************** adjoint ********************
+ //*************************************************** 
   vector <double> phi_adj;  // local test function
   vector <double> phi_adj_x; // local test function first order partial derivatives
   vector <double> phi_adj_xx; // local test function second order partial derivatives
@@ -273,13 +233,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   phi_adj_bdry.reserve(maxSize);
   phi_adj_x_bdry.reserve(maxSize * dim);
-
-  //*************************** 
- //*************************** 
+ //*************************************************** 
+ //*************************************************** 
 
   
- //************ bdry cont *********
- //******************************** 
+ //********************* bdry cont *******************
+ //*************************************************** 
   vector <double> phi_ctrl_bdry;  
   vector <double> phi_ctrl_x_bdry; 
 
@@ -295,12 +254,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
  vector < double >  sol_ctrl;   sol_ctrl.reserve(maxSize);
  vector< int > l2GMap_ctrl;   l2GMap_ctrl.reserve(maxSize);
-  //*************************** 
- //*************************** 
+ //*************************************************** 
+ //*************************************************** 
   
 
- //*************************** 
-  //********* WHOLE SET OF VARIABLES ****************** 
+ //*************************************************** 
+ //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
 
   const int n_vars = 3;
@@ -313,17 +272,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   vector < double > Jac;
   Jac.reserve( n_vars*maxSize * n_vars*maxSize);
- //*************************** 
+ //*************************************************** 
 
-  
- //********** DATA ***************** 
+ 
+ //********************* DATA ************************ 
   double u_des = DesiredTarget();
   double alpha = ALPHA_CTRL;
   double beta  = BETA_CTRL;
   double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
   double penalty_strong_bdry = 1.e20;  // penalty for boundary equation on Gamma_c
   double penalty_ctrl = 1.e10;         //penalty for u=q
- //*************************** 
+ //*************************************************** 
   
   
   if (assembleMatrix)  KK->zero();
@@ -334,7 +293,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
     short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
 
- //********* GEOMETRY ******************
+ //********************* GEOMETRY *********************
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
     
@@ -345,8 +304,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
+    
 
-   // elem average point 
+ //*******************elem average point**************
     vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
   for (unsigned j = 0; j < dim; j++) {  
@@ -356,21 +316,23 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     }
     
    for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
-  //*************************************** 
+ //*************************************************** 
   
-  //***** set target domain flag ********************************** 
+  
+ //************* set target domain flag **************
    int target_flag = 0;
    target_flag = ElementTargetFlag(elem_center);
-  //*************************************** 
+ //*************************************************** 
    
-  //***** set control flag ********************************** 
+   
+ //************ set control flag *********************
   int control_el_flag = 0;
         control_el_flag = ControlDomainFlag(elem_center);
   std::vector<int> control_node_flag(nDofx,0);
 //   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
-  //*************************************** 
+ //*************************************************** 
     
- //*********** state **********************
+ //********************** state **********************
     unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);    // number of solution element dofs
     sol_u   .resize(nDof_u);
     l2GMap_u.resize(nDof_u);
@@ -380,9 +342,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);      // global extraction and local storage for the solution
       l2GMap_u[i] = pdeSys->GetSystemDof(solIndex_u, solPdeIndex_u, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
- //*********** state **************************** 
+ //***************************************************
 
- //*********** bdry cont *************************** 
+ //********************* bdry cont *******************
     unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);    // number of solution element dofs
     sol_ctrl    .resize(nDof_ctrl);
     l2GMap_ctrl.resize(nDof_ctrl);
@@ -391,9 +353,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);      // global extraction and local storage for the solution
       l2GMap_ctrl[i] = pdeSys->GetSystemDof(solIndex_ctrl, solPdeIndex_ctrl, i, iel);    // global to global mapping between solution node and pdeSys dof
     } 
- //*********************************************** 
+ //*************************************************** 
 
- //*********** adjoint **************************
+ //******************* adjoint ***********************
     unsigned nDof_adj  = msh->GetElementDofNumber(iel, solType_adj);    
     sol_adj    .resize(nDof_adj);
     l2GMap_adj.resize(nDof_adj);
@@ -402,10 +364,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       sol_adj[i] = (*sol->_Sol[solIndex_adj])(solDof_adj);
       l2GMap_adj[i] = pdeSys->GetSystemDof(solIndex_adj, solPdeIndex_adj, i, iel);
     } 
- //*********** adjoint **************************** 
+ //*************************************************** 
 
  
- //********** ALL VARS ***************** 
+ //********************* ALL VARS ******************** 
     unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj; 
     int nDof_max    =  nDof_u;   // AAAAAAAAAAAAAAAAAAAAAAAAAAA TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
@@ -430,10 +392,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_u.begin(),l2GMap_u.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_ctrl.begin(),l2GMap_ctrl.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_adj.begin(),l2GMap_adj.end());
- //*************************** 
+ //***************************************************
 
     
- //===========================   
+ //===================================================   
 
 	// Perform face loop over elements that contain some control face
 	if (control_el_flag == 1) {
@@ -453,11 +415,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
 	      if(  face == 3) { //control face
 
-// ==================================
+ //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
 	      bool  dir_bool = mlSol->GetBdcFunction()(xyz_bdc,ctrl_name.c_str(),tau,face,0.);
 
-// ==================================
+ //=================================================== 
 
 		
 		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
@@ -470,18 +432,18 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  }
 		}
 		
-		//========= initialize gauss quantities on the boundary ===================
+//========= initialize gauss quantities on the boundary ============================================
                 double sol_ctrl_bdry_gss = 0.;
                 double sol_adj_bdry_gss = 0.;
                 std::vector<double> sol_ctrl_x_bdry_gss;  sol_ctrl_x_bdry_gss.reserve(dim);
-		//========= initialize gauss quantities on the boundary ===================
+//========= initialize gauss quantities on the boundary ============================================
 		
 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
 		  
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
 
-		  //========== temporary soln for surface gradient on a face parallel to the X axis ===================
+//========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  double dx_dxi = 0.;
 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
 		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
@@ -493,9 +455,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                               else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
                          }
                      }
-		  //========== temporary soln for surface gradient on a face parallel to the X axis ===================
+//========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  
-		  //========= compute gauss quantities on the boundary ===================
+//========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_bdry_gss = 0.;
 		  sol_adj_bdry_gss = 0.;
                   std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
@@ -509,7 +471,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 			    }
 		      }  
 
-                 //========= compute gauss quantities on the boundary ===================
+//========== compute gauss quantities on the boundary ================================================
 
 		  // *** phi_i loop ***
 		  for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
@@ -521,7 +483,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                        if ( i_vol < nDof_ctrl )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * sol_ctrl_x_bdry_gss[d];
                  }
                  
-//=============== construct control node flag field on the go  ==============================    
+//=============== construct control node flag field on the go  =========================================    
 	      /* (control_node_flag[i])       picks nodes on \Gamma_c
 	         (1 - control_node_flag[i])   picks nodes on \Omega \setminus \Gamma_c
 	       */
@@ -531,7 +493,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 				  control_node_flag[i_vol] = 1;
 			}
               }
-//=============== construct control node flag field on the go  ==============================    
+//=============== construct control node flag field on the go  =========================================    
 
 //============ Bdry Residuals ==================	
 // THIRD BLOCK ROW
@@ -551,8 +513,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
 
 // FIRST BLOCK ROW
-//============ u = q ==================	    
-// block delta_state/state ========
+//============ u = q ===========================	    
+// block delta_state/state =====================
 		if (i_vol < nDof_adj && j_vol < nDof_u && i_vol == j_vol)  {
 		  Jac[    
 		(0 + i_vol) * nDof_AllVars  +
@@ -560,21 +522,21 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  
 		}
 
-// block delta_state/control ========
+// block delta_state/control ===================
 	      if ( i_vol < nDof_adj && j_vol < nDof_ctrl && i_vol == j_vol) {
 		Jac[    
 		(0     + i_vol) * nDof_AllVars  +
 		(nDof_u + j_vol)                           ]  += penalty_ctrl * ( control_node_flag[i_vol]) * (-1.);
 	
 	      }
-//============ u = q ==================
+//============ u = q ===========================
 
 		    
 
 // SECOND BLOCK ROW
-//============ boundary control eqn ==================	    
+//=========== boundary control eqn =============	    
 
-//      // block delta_control / control ========
+//========block delta_control / control ========
    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl ) {
               Jac[  
 		    (nDof_u + i_vol) * nDof_AllVars +
@@ -588,16 +550,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	            (nDof_u + j_vol) ] 
 	                += control_node_flag[i_vol] * weight_bdry * beta *  lap_mat_dctrl_ctrl_bdry_gss;
                 }
-     // block delta_control/adjoint ========
+
+//==========block delta_control/adjoint ========
 		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj)   
 		     Jac[ 
 			(nDof_u + i_vol) * nDof_AllVars  +
 		        (nDof_u + nDof_ctrl + j_vol)             ]  += control_node_flag[i_vol] * (-1) * (weight_bdry * phi_adj_bdry[j_bdry] * phi_ctrl_bdry[i_bdry]);      
 		    
 
-//============ boundary control eqn ==================	    
+//============ boundary control eqn ============	    
 
-//============ q = lambda for testing ==================	    
+//============ q = lambda for testing ==========	    
 
 //      // block delta_control / control ========
 //    
@@ -613,12 +576,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // 			(nDof_u + i_vol) * nDof_AllVars  +
 // 		        (nDof_u + nDof_ctrl + j_vol)             ]  += - control_node_flag[i_vol] * penalty_strong_bdry; //weight_bdry * phi_ctrl_bdry[i_bdry] * phi_adj_bdry[j_bdry];      
 // 		    
-//============ q = lambda for testing ==================	    
+//============ q = lambda for testing ==========	    
 		   
 				
 	      }  //end j loop
 
-//===== debugging ==========================    
+//========= debugging ==========================    
 //   std::cout << "====== phi values on boundary for gauss point " << ig_bdry << std::endl;
 //   
 //      for(unsigned i=0; i < nve_bdry; i ++) {
@@ -633,7 +596,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //      std::cout << phi_ctrl_x_bdry[i_bdry + d*nve_bdry] << " ";
 //      }
 //   }
-//===== debugging ==========================    
+//========== debugging ==========================    
 
 		  }  //end i loop
 		}
@@ -648,13 +611,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	  
 	  
 	}
-    
- //========= gauss value quantities ==================   
+
+//========= gauss value quantities ==============  
 	double sol_u_gss = 0.;
 	double sol_adj_gss = 0.;
 	std::vector<double> sol_u_x_gss;     sol_u_x_gss.reserve(dim);
 	std::vector<double> sol_adj_x_gss;   sol_adj_x_gss.reserve(dim);
- //===========================   
+//=============================================== 
  
  
       // *** Gauss point loop ***
@@ -717,7 +680,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		
 	      }
 
-              //adjoint row ==================
+              //============ delta_state row ============================
               // BLOCK delta_state / state	      
               if ( i < nDof_u && j < nDof_u )   
 		Jac[ i * nDof_AllVars +
@@ -728,15 +691,16 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		(nDof_u + nDof_ctrl + j)               ]  += weight * (-1) * laplace_mat_du_adj;
 	      
 	      
-              //control row ==================
-             //enforce control zero outside the control boundary
+              //=========== delta_control row ===========================
+              //enforce control zero outside the control boundary
 	      if ( i < nDof_ctrl && j < nDof_ctrl && i==j)
 		Jac[    
 		(nDof_u + i) * nDof_AllVars  +
 		(nDof_u + j)                           ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    /*weight * phi_adj[i]*phi_adj[j]*/
-              //state row ======================================================
-	      
-              // BLOCK delta_adjoint / state
+              
+		
+	      //=========== delta_adjoint row ===========================
+	      // BLOCK delta_adjoint / state
 	      if ( i < nDof_adj && j < nDof_u ) {
 		Jac[    
 		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
@@ -824,7 +788,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
-   //*************************** 
+ //***************************************************
    const int xType = 2;
   vector < vector < double > > x(dim);
   vector < vector < double> >  x_bdry(dim);
@@ -832,18 +796,18 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
          x[i].reserve(maxSize);
 	 x_bdry[i].reserve(maxSize);
   }
- //*************************** 
+ //*************************************************** 
 
- //*************************** 
+ //*************************************************** 
   double weight; // gauss point weight
   double weight_bdry = 0.; // gauss point weight on the boundary
 
- //*************************** 
+ //***************************************************
   double alpha = ALPHA_CTRL;
   double beta  = BETA_CTRL;
   
- //******** state ******************* 
- //*************************** 
+ //*************** state ***************************** 
+ //*************************************************** 
   vector <double> phi_u;     phi_u.reserve(maxSize);             // local test function
   vector <double> phi_u_x;   phi_u_x.reserve(maxSize * dim);     // local test function first order partial derivatives
   vector <double> phi_u_xx;  phi_u_xx.reserve(maxSize * dim2);   // local test function second order partial derivatives
@@ -857,12 +821,12 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   sol_u.reserve(maxSize);
   
   double u_gss = 0.;
- //*************************** 
- //*************************** 
+ //*************************************************** 
+ //***************************************************
 
   
- //************ desired ******
- //*************************** 
+ //************** desired ****************************
+ //***************************************************
   vector <double> phi_udes;  // local test function
   vector <double> phi_udes_x; // local test function first order partial derivatives
   vector <double> phi_udes_xx; // local test function second order partial derivatives
@@ -880,11 +844,11 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   sol_udes.reserve(maxSize);
 
   double udes_gss = 0.;
- //*************************** 
- //*************************** 
+ //***************************************************
+ //***************************************************
 
- //************ cont *********
- //***************************
+ //************** cont *******************************
+ //***************************************************
   vector <double> phi_ctrl_bdry;  
   vector <double> phi_ctrl_x_bdry; 
 
@@ -895,12 +859,12 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   unsigned solType_ctrl = mlSol->GetSolutionType(solIndex_ctrl);
 
    vector < double >  sol_ctrl;   sol_ctrl.reserve(maxSize);
- //*************************** 
- //*************************** 
+ //***************************************************
+ //*************************************************** 
   
 
- //*************************** 
-  //********* WHOLE SET OF VARIABLES ****************** 
+ //***************************************************
+ //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
 
   const int n_vars = 3;
@@ -910,12 +874,12 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
   vector < double > Jac;
   Jac.reserve( n_vars*maxSize * n_vars*maxSize);
- //*************************** 
+ //***************************************************
 
   
- //********** DATA ***************** 
+ //********** DATA *********************************** 
   double u_des = DesiredTarget();
-  //*************************** 
+ //*************************************************** 
   
   double integral_target = 0.;
   double integral_alpha  = 0.;
@@ -927,7 +891,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
     short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
     
- //********* GEOMETRY ****************** 
+ //********* GEOMETRY ********************************* 
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
     for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
     // local storage of coordinates
@@ -949,15 +913,15 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
     }
     
    for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofx; }
-  //*************************************** 
+ //***************************************************
   
-  //***** set target domain flag ********************************** 
+ //****** set target domain flag ********************* 
    int target_flag = 0;
    target_flag = ElementTargetFlag(elem_center);
-  //*************************************** 
+ //***************************************************
 
    
- //*********** state **************************** 
+ //*********** state ********************************* 
     unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);    // number of solution element dofs
     sol_u    .resize(nDof_u);
    // local storage of global mapping and solution
@@ -965,10 +929,10 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
       unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);    // global to global mapping between solution node and solution dof
       sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);      // global extraction and local storage for the solution
     }
- //*********** state **************************** 
+ //*********** state ********************************* 
 
 
- //*********** cont **************************** 
+ //*********** cont ********************************** 
     unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);    // number of solution element dofs
     sol_ctrl    .resize(nDof_ctrl);
     for (unsigned i = 0; i < sol_ctrl.size(); i++) {
@@ -976,20 +940,20 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
       sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);      // global extraction and local storage for the solution
     } 
 
- //*********** cont **************************** 
+ //*********** cont ********************************** 
  
  
- //*********** udes **************************** 
+ //*********** udes ********************************** 
     unsigned nDof_udes  = msh->GetElementDofNumber(iel, solType_u);    // number of solution element dofs
     sol_udes    .resize(nDof_udes);
     for (unsigned i = 0; i < sol_udes.size(); i++) {
             sol_udes[i] = u_des;  //dof value
     } 
- //*********** udes **************************** 
+ //*********** udes ********************************** 
 
  
- //********** ALL VARS ***************** 
-    int nDof_max    =  nDof_u;   // AAAAAAAAAAAAAAAAAAAAAAAAAAA TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
+ //********** ALL VARS ******************************* 
+    int nDof_max    =  nDof_u;   //  TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
     if(nDof_udes > nDof_max) 
     {
@@ -1001,15 +965,15 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
       nDof_max = nDof_ctrl;
     }
     
-  //*************************** 
+ //***************************************************
 
-// ===========================================
-  //***** set control flag ********************************** 
+ // ==================================================
+ //****** set control flag ***************************
   int control_el_flag = 0;
         control_el_flag = ControlDomainFlag(elem_center);
   std::vector<int> control_node_flag(nDofx,0);
 //   if (control_el_flag == 0) std::fill(control_node_flag.begin(), control_node_flag.end(), 0);
-  //*************************************** 
+ //***************************************************
 
   
   	if (control_el_flag == 1) {
@@ -1039,17 +1003,17 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 		  }
 		}
 		
-		//========= initialize gauss quantities on the boundary ===================
+		//============ initialize gauss quantities on the boundary ==========================================
                 double sol_ctrl_bdry_gss = 0.;
                 std::vector<double> sol_ctrl_x_bdry_gss;  sol_ctrl_x_bdry_gss.reserve(dim);
-		//========= initialize gauss quantities on the boundary ===================
+		//============ initialize gauss quantities on the boundary ==========================================
 		
 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
 		  
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 
-		  //========== temporary soln for surface gradient on a face parallel to the X axis ===================
-		  double dx_dxi = 0.;
+		 //========== temporary soln for surface gradient on a face parallel to the X axis ==================
+		 double dx_dxi = 0.;
 		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][solType_ctrl]);
 		 const double * myptr = myeltype->GetDPhiDXi(ig_bdry);
 		      for (int inode = 0; inode < nve_bdry/*_nc*/; inode++) dx_dxi += myptr[inode] * x_bdry[0][inode];
@@ -1060,9 +1024,9 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
                               else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
                          }
                      }
-		  //========== temporary soln for surface gradient on a face parallel to the X axis ===================
+		 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  
-		  //========= compute gauss quantities on the boundary ===================
+		 //========== compute gauss quantities on the boundary ===============================================
 		  sol_ctrl_bdry_gss = 0.;
                   std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
 		      for (int i_bdry = 0; i_bdry < nve_bdry/*_nc*/; i_bdry++)  {
@@ -1074,7 +1038,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 			    }
 		      }  
 
-                 //========= compute gauss quantities on the boundary ===================
+                 //========= compute gauss quantities on the boundary ================================================
                   integral_alpha += alpha * weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
                   integral_beta  += beta * weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
                  
@@ -1086,9 +1050,9 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 	  
 	} //end if control element flag
 
-//================================================================  
-//================================================================  
-//================================================================  
+//=====================================================================================================================  
+//=====================================================================================================================  
+//=====================================================================================================================  
   
   
    
