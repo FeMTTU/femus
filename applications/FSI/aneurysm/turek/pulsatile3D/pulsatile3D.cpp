@@ -88,7 +88,7 @@ int main ( int argc, char ** args )
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
   std::string infile;
   if ( simulation == 0 ) {
-    infile = "./input/Turek_3D_D.neu";
+    infile = "./input/Turek_3D_F2.neu"; //Turek_3D_D.neu non ha gruppo 10
   }
   else if ( simulation == 1 ) {
     infile = "./input/aneurysm_omino.neu";
@@ -117,11 +117,10 @@ int main ( int argc, char ** args )
   Uref = 1.;
 
   rhof = 1035.;
-  muf = 3.38 * 1.0e-6 * rhof;
+  muf = 3.5 * 1.0e-3; //3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 1. * 1.e6;
-  //E = 12000; //E=6000;
+  E = 12000; //E=6000;
   E1 = 3000;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
@@ -332,7 +331,7 @@ int main ( int argc, char ** args )
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 288;
+  const unsigned int n_timesteps = 50;
 
   std::vector < std::vector <double> > data ( n_timesteps );
 
@@ -345,7 +344,8 @@ int main ( int argc, char ** args )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step / 32.;
+    data[time_step][0] = time_step*100;
+    //data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / (64*1.4);
     if ( simulation == 0 || simulation == 4 ) {
       GetSolutionNorm ( ml_sol, 9, data[time_step] );
@@ -400,7 +400,8 @@ int main ( int argc, char ** args )
 
 double SetVariableTimeStep ( const double time )
 {
-  double dt = 1. / 32;
+  double dt = 100;
+  //double dt = 1. / 32;
   //double dt = 1./(64*1.4);
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
@@ -506,19 +507,21 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
     //double ramp = ( time < period ) ? sin ( PI / 2 * time / period ) : 1.;
     if ( 1 == facename ) {
       double r2 = ( ( x[1] * 1000. ) - 7. ) * ( ( x[1] * 1000. ) - 7. ) + ( x[2] * 1000. ) * ( x[2] * 1000. );
-      value = -0.2 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = -0.3 * (1. - r2); //inflow
+      //value = -0.2 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
       //value = - ( 1. - r2 ) * vel[j] * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
     }
-    else if ( 2 == facename || 5 == facename ) {
+    else if ( 2 == facename /*|| 5 == facename*/ ) {
       test = 0;
       value = 0.;
     }
   }
   else if ( !strcmp ( name, "V" ) || !strcmp ( name, "W" ) ) {
-    //if ( 2 == facename || 5 == facename ) {
-    if ( 5 == facename ) {
+    //if ( 2 == facename || 5 == facename ) { //vecchio assembly
+    //if ( 5 == facename ) { //nuovo assembly
+    if ( 2 == facename ) { //come in steady3D  
       test = 0;
       value = 0.;
     }
@@ -526,11 +529,11 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
   else if ( !strcmp ( name, "P" ) ) {
     test = 0;
     value = 0.;
-    if ( 2 == facename ) {
-      //value = pressure[j] * ramp;
-      //value = 11335 * ramp;
-      value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
-    }
+//     if ( 2 == facename ) {
+//       //value = pressure[j] * ramp;
+//       //value = 11335 * ramp;
+//       value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
+//     }
   }
   else if ( !strcmp ( name, "DX" ) ) {
     if ( 5 == facename || 6 == facename ) {
