@@ -336,7 +336,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
   }
   else if (!strcmp(name, "DY") ) {
     //if(1 == facename || 3 == facename || 5 == facename || 6 == facename) {
-    if ( 5 == facename || 6 == facename) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
