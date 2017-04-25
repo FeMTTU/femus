@@ -506,7 +506,7 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
     //double ramp = ( time < period ) ? sin ( PI / 2 * time / period ) : 1.;
     if ( 1 == facename ) {
       double r2 = ( ( x[1] * 1000. ) - 7. ) * ( ( x[1] * 1000. ) - 7. ) + ( x[2] * 1000. ) * ( x[2] * 1000. );
-      value = -0.2 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = -0.2 * (1. - r2) * (1. + 0.75 * sin(2.*PI*time)) * ramp; //inflow
       //value = - ( 1. - r2 ) * vel[j] * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
@@ -526,11 +526,11 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
   else if ( !strcmp ( name, "P" ) ) {
     test = 0;
     value = 0.;
-    if ( 2 == facename ) {
-      //value = pressure[j] * ramp;
-      //value = 11335 * ramp;
-      value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
-    }
+//     if ( 2 == facename ) {
+//       //value = pressure[j] * ramp;
+//       value = 100 * ramp;
+//       //value = (4500 + 500 * sin(2 * PI * time)) * ramp;
+//     }
   }
   else if ( !strcmp ( name, "DX" ) ) {
     if ( 5 == facename || 6 == facename ) {
