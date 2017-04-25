@@ -330,7 +330,7 @@ int main ( int argc, char **args )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step*100;
+    data[time_step][0] = time_step*1000000;
     //data[time_step][0] = time_step / 20.;
     //data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / ( 64 * 1.4 );
@@ -393,7 +393,7 @@ double SetVariableTimeStep ( const double time )
   //double dt = 1. / ( 64 * 1.4 );
   //double dt = 1./32;
   //double dt = 1. / 20;
-  double dt = 100;
+  double dt = 1000000;
 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
@@ -459,15 +459,15 @@ bool SetBoundaryConditionTurek2D ( const std::vector < double >& x, const char n
       //value = 0.05 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1.+ 0.75 * sin(2. * PI * time)) * ramp; //inflow
       //value = ( x[1] * 1000 - 6 ) * ( x[1] * 1000 - 8 ) * vel[j] * ramp; //inflow
     }
-    else if ( 2 == facename /*|| 5 == facename*/ ) {
+    else if ( 2 == facename || 5 == facename ) {
       test = 0;
       value = 0.;
     }
   }
   else if ( !strcmp ( name, "V" ) ) {
-    if ( 2 == facename ) {
+    //if ( 2 == facename ) {
     //if ( 5 == facename ) {
-    //if ( 2 == facename || 5 == facename ) {
+    if ( 2 == facename || 5 == facename ) {
       test = 0;
       value = 0.;
     }

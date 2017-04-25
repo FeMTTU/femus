@@ -329,19 +329,19 @@ namespace femus
 
           jacobianOverArea = jacobian_hat / area * rapresentative_area;
 	  
-	  std::vector<double> xc(dim,0.);
-	  xc[0] = -0.001013;
-	  xc[1] = 0.07000;
-	  double distance = 0.;
-	  for (unsigned k = 0; k<dim; k++){
-	    distance += ( vx_hat[k][ nve - 1] - xc[k] ) * ( vx_hat[k][nve - 1] - xc[k] );
-	  }
-	  distance =sqrt(distance);
-	  jacobianOverArea *= 1./(1 + 10000 * distance);
-	  //jacobianOverArea *= exp(-100. * distance);
-	  
-	  
-	  if(elementGroup == 16) jacobianOverArea *= 1.e06;
+// 	  std::vector<double> xc(dim,0.);
+// 	  xc[0] = -0.001013;
+// 	  xc[1] = 0.07000;
+// 	  double distance = 0.;
+// 	  for (unsigned k = 0; k<dim; k++){
+// 	    distance += ( vx_hat[k][ nve - 1] - xc[k] ) * ( vx_hat[k][nve - 1] - xc[k] );
+// 	  }
+// 	  distance =sqrt(distance);
+// 	  jacobianOverArea *= 1./(1 + 10000 * distance);
+// 	  //jacobianOverArea *= exp(-100. * distance);
+// 	  
+// 	  
+// 	  if(elementGroup == 16) jacobianOverArea *= 1.e06;
         }
 
         // ---------------------------------------------------------------------------
@@ -459,7 +459,7 @@ namespace femus
                   adept::adouble value = (-AdvaleVAR[idim]      	           // advection term
                                           - IRe * LapvelVAR[idim]	   	 // viscous dissipation
                                           + IRe * LapStrong[idim]
-                                          + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
+                                          + SolVAR[2 * dim] / rhof * gradphi[i * dim + idim] // pressure gradient
                                          ) * jacobian;
                   if ((!solidmark[i])) {
                     aRhs[indexVAR[dim + idim]][i] += value;
@@ -504,7 +504,7 @@ namespace femus
                   adept::adouble value = (- SolVAR[dim + idim] * (IRe / K + 0.5 * C2 * speed) * (phi[i] + phiSupg[i])
 // 					                - 0*AdvaleVAR[idim]
 //                                                      - 0*IRe * LapvelVAR[idim]	   	 // viscous dissipation
-                                          + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
+                                          + SolVAR[2 * dim] / rhof * gradphi[i * dim + idim] // pressure gradient
                                          ) * jacobian;
                   if ((!solidmark[i])) {
                     aRhs[indexVAR[dim + idim]][i] += value;
@@ -644,7 +644,7 @@ namespace femus
                 for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.*(C1 * B[I][J] - C2 * invB[I][J])
                                   //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR[2 * dim] * Id2th[I][J];
-                                  - SolVAR[2 * dim] * Id2th[I][J];
+                                  - SolVAR[2 * dim] / rhof * Id2th[I][J];
                 }
               }
 

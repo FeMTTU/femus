@@ -38,7 +38,7 @@ namespace femus {
     const unsigned nabla_dim = 3 * ( dim - 1 );
     const unsigned max_size = static_cast< unsigned > ( ceil ( pow ( 3, dim ) ) );
 
-    double theta = 0.5;
+    double theta = 1.;
 
     // local objects
     vector<adept::adouble> SolVAR ( 2 * dim + 1 );
