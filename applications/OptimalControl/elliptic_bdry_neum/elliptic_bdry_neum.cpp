@@ -36,7 +36,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   bool dirichlet = true; //dirichlet
   value = 0;
 
-  if(!strcmp(name,"control")) {
+  if(!strcmp(name,"control")) { //To enforce Neumann condition of control on Gamma_c
   if (faceName == 3)
     dirichlet = false;
   }
@@ -46,7 +46,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
     dirichlet = false;
   }
 
-    if(!strcmp(name,"adjoint")) { 
+  if(!strcmp(name,"adjoint")) { //To enforce Neumann condition of adjoint on Gamma_c
   if (faceName == 3)
     dirichlet = false;
   }
@@ -310,7 +310,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
    // elem average point 
     vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
-  for (unsigned j = 0; j < dim; j++) {  
+    for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofx; i++) {
          elem_center[j] += x[j][i];
        }
@@ -431,11 +431,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  }
 		}
 		
-//========= initialize gauss quantities on the boundary ============================================
+//========= initialize gauss quantities on the boundary =============================================
                 double sol_ctrl_bdry_gss = 0.;
                 double sol_adj_bdry_gss = 0.;
                 std::vector<double> sol_ctrl_x_bdry_gss;  sol_ctrl_x_bdry_gss.reserve(dim);
-//========= initialize gauss quantities on the boundary ============================================
+//========= initialize gauss quantities on the boundary =============================================
 		
 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
 		  
@@ -454,9 +454,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                               else  phi_ctrl_x_bdry[inode + d*nve_bdry/*_nc*/] = 0.;
                          }
                      }
-//========== temporary soln for surface gradient on a face parallel to the X axis ===================
+//========== temporary soln for surface gradient on a face parallel to the X axis ====================
 		  
-//========== compute gauss quantities on the boundary ===============================================
+//========== compute gauss quantities on the boundary ================================================
 		  sol_ctrl_bdry_gss = 0.;
 		  sol_adj_bdry_gss = 0.;
                   std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
@@ -470,7 +470,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 			    }
 		      }  
 
-//========== compute gauss quantities on the boundary ===============================================
+//========== compute gauss quantities on the boundary =================================================
 
 		  // *** phi_i loop ***
 		  for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
@@ -499,95 +499,54 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                  Res[ (0 + i_vol) ]                    += 0.;
 
 		 Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] *  weight_bdry *
-                                                              (    alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
+                                                              (     alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							         +  beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
-							         -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss
+							         +  phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss
 							        );  //boundary optimality condition
 
-                 Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += - control_node_flag[i_vol] *  weight_bdry * phi_adj_bdry[i_bdry]*sol_ctrl_bdry_gss; 
+                 Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += - control_node_flag[i_vol] *  weight_bdry * (-1.) * phi_adj_bdry[i_bdry]*sol_ctrl_bdry_gss; 
 //============ Bdry Residuals ==================    
 		    
 		    for(unsigned j_bdry=0; j_bdry < nve_bdry; j_bdry ++) {
 		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
 
-
+		    
+//============ boundary control eqns ===========
+		    
 // SECOND BLOCK ROW
-//============ boundary control eqn ============
-
 //========block delta_control / control ========
-   	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl ) {
-              Jac[  
-		    (nDof_u + i_vol) * nDof_AllVars +
-	            (nDof_u + j_vol) ] 
-			+=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]);
+   	           if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl ) {
+                     Jac[  
+		        (nDof_u + i_vol) * nDof_AllVars +
+	                (nDof_u + j_vol)             ]  +=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]);
 
-              double  lap_mat_dctrl_ctrl_bdry_gss = 0.;
-		      for (unsigned d = 0; d < dim; d++) {  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * phi_ctrl_x_bdry[j_bdry + d*nve_bdry];    }
-	         Jac[
-		    (nDof_u + i_vol) * nDof_AllVars +
-	            (nDof_u + j_vol) ] 
-	                += control_node_flag[i_vol] * weight_bdry * beta *  lap_mat_dctrl_ctrl_bdry_gss;
+                     double  lap_mat_dctrl_ctrl_bdry_gss = 0.;
+		     for (unsigned d = 0; d < dim; d++) {  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * phi_ctrl_x_bdry[j_bdry + d*nve_bdry];   }
+		     
+	             Jac[
+		        (nDof_u + i_vol) * nDof_AllVars +
+	                (nDof_u + j_vol)             ]  += control_node_flag[i_vol] * weight_bdry * beta *  lap_mat_dctrl_ctrl_bdry_gss;
                 }
 //========== block delta_control/adjoint ========
 		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj )   
 		     Jac[ 
-			(nDof_u + i_vol) * nDof_AllVars  +
-		        (nDof_u + nDof_ctrl + j_vol)             ]  += control_node_flag[i_vol] * (-1) * (weight_bdry * phi_adj_bdry[j_bdry] * phi_ctrl_bdry[i_bdry]);      
-		    
-
-//============ boundary control eqn =============	    
+			(nDof_u + i_vol) * nDof_AllVars +
+		        (nDof_u + nDof_ctrl + j_vol) ]  += control_node_flag[i_vol] * (weight_bdry * phi_adj_bdry[j_bdry] * phi_ctrl_bdry[i_bdry]);      
+		      
 
 // THIRD BLOCK ROW
 //========= block delta_adjoint/control =========
 		   if ( i_vol < nDof_adj    && j_vol < nDof_ctrl )   
 		     Jac[ 
 			(nDof_u + nDof_ctrl + i_vol) * nDof_AllVars  +
-		        (nDof_u + j_vol)             ]  += control_node_flag[i_vol] * (weight_bdry * phi_ctrl_bdry[j_bdry] * phi_adj_bdry[i_bdry]);      
+		        (nDof_u + j_vol)             ]  += control_node_flag[i_vol] * (weight_bdry * (-1.) * phi_ctrl_bdry[j_bdry] * phi_adj_bdry[i_bdry]);      
 			
-			
-			
-//============ q = lambda for testing ===========	    
-
-//      // block delta_control / control ========
-//    
-//    	      if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl && i_vol == j_vol) {
-//               Jac[  
-// 		    (nDof_u + i_vol) * nDof_AllVars +
-// 	            (nDof_u + j_vol) ] 
-// 			+=   control_node_flag[i_vol] * penalty_strong_bdry;
-// 	      }
-//      // block delta_control/adjoint ========
-// 		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj && i_vol == j_vol)   
-// 		     Jac[ 
-// 			(nDof_u + i_vol) * nDof_AllVars  +
-// 		        (nDof_u + nDof_ctrl + j_vol)             ]  += - control_node_flag[i_vol] * penalty_strong_bdry; //weight_bdry * phi_ctrl_bdry[i_bdry] * phi_adj_bdry[j_bdry];      
-// 		    
-//============ q = lambda for testing ===========	    
-		   
-				
-	      }  //end j loop
-
-//========== debugging ==========================    
-//   std::cout << "====== phi values on boundary for gauss point " << ig_bdry << std::endl;
-//   
-//      for(unsigned i=0; i < nve_bdry; i ++) {
-//      std::cout << phi_ctrl_bdry[i] << " ";
-//      }
-//    std::cout << std::endl;
- 
-//   std::cout << "====== phi derivatives on boundary for gauss point " << ig_bdry << std::endl;
-//   
-//   for (unsigned d = 0; d < dim; d++) {
-//      for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry ++) {
-//      std::cout << phi_ctrl_x_bdry[i_bdry + d*nve_bdry] << " ";
-//      }
-//   }
-//========== debugging ==========================    
- 
-		  }  //end i loop
+//============ boundary control eqn =============			 
+		   				
+		    }  //end j loop
+		  } //end i loop
 		}
 	      }
-	      
 	    }
 	  }    
 	  
@@ -645,11 +604,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      }
 	      
 //============ Volume residuals ==================	    
-          if (i < nDof_u)      Res[0                  + i] += - weight * ( (-1.) * target_flag * phi_u[i] * ( sol_u_gss - u_des)
+          if (i < nDof_u)     Res[0                  + i] += - weight * ( (-1.) * target_flag * phi_u[i] * ( sol_u_gss - u_des)
 	                                                                  + laplace_rhs_du_adj_i); 
-          if (i < nDof_ctrl)  Res[nDof_u              + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_ctrl[i] - 0.)  );
+          if (i < nDof_ctrl)  Res[nDof_u             + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_ctrl[i] - 0.)  );
 	      
-	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += - weight * (laplace_rhs_dadj_u_i);
+	  if (i < nDof_adj)   Res[nDof_u + nDof_ctrl + i] += - weight * (laplace_rhs_dadj_u_i);
 //============  Volume Residuals ==================	    
 	      
 	      
@@ -670,39 +629,33 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               // BLOCK delta_state / state	      
               if ( i < nDof_u && j < nDof_u )   
 		Jac[ i * nDof_AllVars +
-		(0 + j)                                ]  += weight  * (-1.) * target_flag *  phi_u[i] * phi_u[j];   
-//               //BLOCK delta_state / adjoint
+		   (0 + j)                                ]  += weight  * (-1.) * target_flag *  phi_u[i] * phi_u[j];   
+		   
+	      //BLOCK delta_state / adjoint
               if ( i < nDof_u && j < nDof_adj )   
 		Jac[ i * nDof_AllVars +
-		(nDof_u + nDof_ctrl + j)               ]  += weight  * laplace_mat_du_adj;
+		   (nDof_u + nDof_ctrl + j)               ]  += weight  * laplace_mat_du_adj;
 	      
 	      
               //=========== delta_control row ===========================
               //enforce control zero outside the control boundary
 	      if ( i < nDof_ctrl && j < nDof_ctrl && i==j)
 		Jac[    
-		(nDof_u + i) * nDof_AllVars  +
-		(nDof_u + j)                           ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));    /*weight * phi_adj[i]*phi_adj[j]*/
+		   (nDof_u + i) * nDof_AllVars  +
+		   (nDof_u + j)                           ]  += penalty_outside_control_boundary * ( (1 - control_node_flag[i]));
 
 		
 	      //=========== delta_adjoint row ===========================
 	      // BLOCK delta_adjoint / state
 	      if ( i < nDof_adj && j < nDof_u ) {
 		Jac[    
-		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
-		(0 + j)                                ]  += weight * laplace_mat_dadj_u;
+		   (nDof_u + nDof_ctrl + i) * nDof_AllVars  +
+		   (0 + j)                                ]  += weight * laplace_mat_dadj_u;
 
 	      }
-	      
-
-              // BLOCK delta_adjoint / adjoint
-// 	      if ( i < nDof_adj && j < nDof_adj )
-// 		Jac[    
-// 		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
-// 		(nDof_u + nDof_ctrl + j)               ]  += 0.;     //weight * phi_adj[i]*phi_adj[j];
-	      
-	      
+	    
 	    } // end phi_j loop
+	    
           } // endif assemble_matrix
 
         } // end phi_i loop
