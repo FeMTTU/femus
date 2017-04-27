@@ -37,6 +37,16 @@ namespace femus {
 //   Constructor
   elem_type::elem_type(const char* geom_elem, const char* order_gauss) : _gauss(geom_elem, order_gauss) {
     isMpGDAllocated = false;
+    
+      if ( !strcmp(geom_elem, "quad") /*&&  strcmp(geom_elem, "line")*/ ) { //QUAD
+           _gauss_bdry = new  Gauss("line",order_gauss);
+       }
+//       else {
+//         cout << " Boundary gauss points for " << geom_elem << " is not implemented yet" << endl;
+//         abort();
+//       }
+    
+    
   }
 
 
@@ -692,6 +702,24 @@ namespace femus {
       _d2phidxideta[i]  = &_d2phidxideta_memory[i * _nc];
 
     }
+    
+    // boundary 
+    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    _phi_bdry = new double*[n_gauss_bdry];
+    _dphidxi_bdry  = new double*[n_gauss_bdry];
+    _dphideta_bdry = new double*[n_gauss_bdry];
+    _phi_memory_bdry = new double [n_gauss_bdry * _nc];
+    _dphidxi_memory_bdry  = new double [n_gauss_bdry * _nc];
+    _dphideta_memory_bdry = new double [n_gauss_bdry * _nc];
+    
+     for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      _phi_bdry[i] = &_phi_memory_bdry[i * _nc];
+      _dphidxi_bdry[i]  = &_dphidxi_memory_bdry[i * _nc];
+      _dphideta_bdry[i] = &_dphideta_memory_bdry[i * _nc];
+     }
+
+
 
     const double* ptx[2] = {_gauss.GetGaussWeightsPointer() + n_gauss, _gauss.GetGaussWeightsPointer() + 2 * n_gauss};
     for (unsigned i = 0; i < n_gauss; i++) {
