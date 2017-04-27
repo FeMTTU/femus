@@ -174,6 +174,9 @@ protected:
 //  Gauss
   const Gauss _gauss;
 
+  //  Gauss boundary
+  Gauss* _gauss_bdry;
+
   /**  @deprecated */
   bool isMpGDAllocated;
   double**      _phi_mapGD;
@@ -262,6 +265,13 @@ public:
 
     delete [] _d2phidxideta;
     delete [] _d2phidxideta_memory;
+    
+    delete [] _phi_bdry;
+    delete [] _phi_memory_bdry;
+    delete [] _dphidxi_bdry;
+    delete [] _dphidxi_memory_bdry;
+    delete [] _dphideta_bdry;
+    delete [] _dphideta_memory_bdry;
 
   };
 
@@ -312,6 +322,14 @@ private:
 
   double **_d2phidxideta;
   double *_d2phidxideta_memory;
+  
+  // values at boundary gauss points
+  double **_phi_bdry;
+  double *_phi_memory_bdry;
+  double **_dphidxi_bdry;
+  double *_dphidxi_memory_bdry;
+  double **_dphideta_bdry;
+  double *_dphideta_memory_bdry;
 };
 
 class elem_type_3D : public elem_type {
