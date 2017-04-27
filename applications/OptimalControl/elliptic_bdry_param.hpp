@@ -38,16 +38,26 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 
 //*********************** Find volume elements that contain a Control Face element *********************************
 
+// int ControlDomainFlag(const std::vector<double> & elem_center) {
+// 
+//  //***** set control domain flag ***** 
+//   double mesh_size = 1./NSUB_Y;
+//   int control_el_flag = 0; //set 0 to 1 to get the entire domain
+//    if ( elem_center[1] >  1. - mesh_size ) { control_el_flag = 1; }
+// 
+//      return control_el_flag;
+// }
+
 int ControlDomainFlag(const std::vector<double> & elem_center) {
 
- //***** set control domain flag ***** 
-  double mesh_size = 1./NSUB_Y;
-  int control_el_flag = 0; //set 0 to 1 to get the entire domain
-   if ( elem_center[1] >  1. - mesh_size ) { control_el_flag = 1; }
+ //***** set target domain flag ******
+ // flag = 1: we are in the lifting nonzero domain
+  int control_el_flag = 0;
+   if ( elem_center[1] >  0.4 ) { control_el_flag = 1; }
 
      return control_el_flag;
-}
 
+}
 
 
 //******************************************* Desired Target *******************************************************
