@@ -307,7 +307,7 @@ namespace femus
 
       // *** Gauss point loop ***
       double area = 1.;
-      adept::adouble supg_tau;
+      //adept::adouble supg_tau;
 
       for (unsigned ig = 0; ig  <  mymsh->_finiteElement[ielt][SolType2]->GetGaussPointNumber(); ig++) {
         // *** get Jacobian and test function and test function derivatives in the moving frame***
@@ -408,7 +408,7 @@ namespace femus
           }
 
           vector < adept::adouble > phiSupg ( nve, 0. );
-          //tauSupg=0;
+          //tauSupg = 0;
           for ( unsigned i = 0; i < nve; i++ ) {
             for ( unsigned j = 0; j < dim; j++ ) {
               phiSupg[i] += ( SolVAR[j + dim] * gradphi[i * dim + j] ) * tauSupg;
@@ -456,7 +456,7 @@ namespace femus
                 }
 
                 for (int idim = 0; idim < dim; idim++) {
-                  adept::adouble value = (-AdvaleVAR[idim]      	           // advection term
+                  adept::adouble value = (-AdvaleVAR[idim]     	           // advection term
                                           - IRe * LapvelVAR[idim]	   	 // viscous dissipation
                                           + IRe * LapStrong[idim]
                                           + 1. / rhof * SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient

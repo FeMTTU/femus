@@ -108,7 +108,8 @@ int main(int argc, char **args) {
   muf = 3.5 * 1.0e-3; //3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 12000; //E = 6000;
+  E = 1000000;
+  //E = 12000; //E = 6000;
   E1 = 2000; 
   
   // Maximum aneurysm_omino deformation (velocity = 0.1)
@@ -241,7 +242,7 @@ int main(int argc, char **args) {
 
   system.SetNonLinearConvergenceTolerance(1.e-9);
   system.SetResidualUpdateConvergenceTolerance(1.e-15);
-  system.SetMaxNumberOfNonLinearIterations(4);
+  system.SetMaxNumberOfNonLinearIterations(10);
   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(1);
 
   system.SetNumberPreSmoothingStep(0);
@@ -399,7 +400,7 @@ bool SetBoundaryConditionTurek(const std::vector < double >& x, const char name[
     if(1 == facename) {
       double r2 = ((x[1] * 1000.) - 7.) * ((x[1] * 1000.) - 7.) + (x[2] * 1000.) * (x[2] * 1000.);
       value = -0.3 * (1. - r2); //inflow
-      //value=25;
+      //value=0.;
     }
     else if(2 == facename) {
       test = 0;
@@ -421,6 +422,11 @@ bool SetBoundaryConditionTurek(const std::vector < double >& x, const char name[
   else if(!strcmp(name, "P")) {
     test = 0;
     value = 0.;
+    if ( 2 == facename ) {
+      //value = pressure[j] * ramp;
+      value = 5000;
+      //value = (4500 + 500 * sin(2 * PI * time)) * ramp;
+    }
   }
   else if(!strcmp(name, "DX")) {
     if(5 == facename || 6 == facename) {

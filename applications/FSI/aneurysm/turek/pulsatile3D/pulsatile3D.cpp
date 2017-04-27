@@ -10,8 +10,8 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
-//#include "../../include/FSITimeDependentAssemblySupg.hpp"
-#include "../../include/FSISteadyStateAssembly.hpp"
+#include "../../include/FSITimeDependentAssemblySupg.hpp"
+//#include "../../include/FSISteadyStateAssembly.hpp"
 #include <cmath>
 
 double scale = 1000.;
@@ -121,7 +121,8 @@ int main ( int argc, char ** args )
   muf = 3.5 * 1.0e-3; //3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 12000; //E=6000;
+  E = 1000000;
+  //E = 12000; //E=6000;
   E1 = 3000;
 
   // Maximum aneurysm_omino deformation (velocity = 0.1)
@@ -264,21 +265,28 @@ int main ( int argc, char ** args )
   system.AddSolutionToSystemPDE ( "P" );
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSISteadyStateAssembly);
-//  system.SetAssembleFunction ( FSITimeDependentAssemblySupg );
+//system.SetAssembleFunction(FSISteadyStateAssembly);
+  system.SetAssembleFunction ( FSITimeDependentAssemblySupg );
 
   // ******* set MG-Solver *******
   system.SetMgType ( F_CYCLE );
 
-  system.SetNonLinearConvergenceTolerance ( 1.e-9 );
-  //system.SetResidualUpdateConvergenceTolerance(1.e-13);
-  system.SetMaxNumberOfNonLinearIterations ( 4 );
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
+//   system.SetNonLinearConvergenceTolerance ( 1.e-9 );
+//   //system.SetResidualUpdateConvergenceTolerance(1.e-13);
+//   system.SetMaxNumberOfNonLinearIterations ( 4 );
+//   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
+// 
+// 
+//   system.SetMaxNumberOfLinearIterations ( 4 );
+//   system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
 
-
-  system.SetMaxNumberOfLinearIterations ( 4 );
-  system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
-
+  
+    system.SetNonLinearConvergenceTolerance(1.e-9);
+  system.SetResidualUpdateConvergenceTolerance(1.e-15);
+  system.SetMaxNumberOfNonLinearIterations(4);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(1);
+  
+  
   system.SetNumberPreSmoothingStep ( 0 );
   system.SetNumberPostSmoothingStep ( 2 );
 
@@ -402,7 +410,7 @@ int main ( int argc, char ** args )
 
 double SetVariableTimeStep ( const double time )
 {
-  double dt = 1000;
+  double dt = 1./16.;
   //double dt = 1. / 32;
   //double dt = 1./(64*1.4);
 //   if( turek_FSI == 2 ){
@@ -509,8 +517,8 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
     //double ramp = ( time < period ) ? sin ( PI / 2 * time / period ) : 1.;
     if ( 1 == facename ) {
       double r2 = ( ( x[1] * 1000. ) - 7. ) * ( ( x[1] * 1000. ) - 7. ) + ( x[2] * 1000. ) * ( x[2] * 1000. );
-      value = -0.3 * (1. - r2); //inflow
-      //value = -0.2 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      //value = -0.3 * (1. - r2); //inflow
+      value = -0.3 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
       //value = - ( 1. - r2 ) * vel[j] * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
@@ -531,11 +539,11 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
   else if ( !strcmp ( name, "P" ) ) {
     test = 0;
     value = 0.;
-//     if ( 2 == facename ) {
-//       //value = pressure[j] * ramp;
-//       value = 100 * ramp;
-//       //value = (4500 + 500 * sin(2 * PI * time)) * ramp;
-//     }
+    if ( 2 == facename ) {
+      //value = pressure[j] * ramp;
+      value = 5000 * ramp;
+      //value = (4500 + 500 * sin(2 * PI * time)) * ramp;
+    }
   }
   else if ( !strcmp ( name, "DX" ) ) {
     if ( 5 == facename || 6 == facename ) {
