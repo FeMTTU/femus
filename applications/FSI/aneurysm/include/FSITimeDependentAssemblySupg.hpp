@@ -478,8 +478,8 @@ namespace femus
           vector < adept::adouble > a ( dim );
           vector < adept::adouble > a_old ( dim );
           for ( int i = 0; i < dim; i++ ) {
-            a[i] = SolVAR[i + dim] - 0*meshVel[i]; // TODO maybe we subtract meshVel[i] maybe not
-            a_old[i] = SolVAR_old[i + dim] - 0*meshVel[i];
+            a[i] = SolVAR[i + dim] - 0.*meshVel[i]; // TODO maybe we subtract meshVel[i] maybe not
+            a_old[i] = SolVAR_old[i + dim] - 0.*meshVel[i];
           }
 
           // speed
