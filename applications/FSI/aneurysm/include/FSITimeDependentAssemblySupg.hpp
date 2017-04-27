@@ -364,10 +364,10 @@ namespace femus
 
                   for ( unsigned idim = 0; idim < dim; idim++ ) {
                     if ( ( !solidmark[ilocal] ) ) {
-                      aRhs[indexVAR[dim + idim]][ilocal]   += dt * ( theta * value + ( 1. - theta ) * value_old ) * normal[idim];
+                      aRhs[indexVAR[dim + idim]][ilocal]   += ( theta * value + ( 1. - theta ) * value_old ) * normal[idim];
                     }
                     else {   //if interface node it goes to solid
-                      aRhs[indexVAR[idim]][ilocal]   += dt * ( theta * value + ( 1. - theta ) * value_old ) * normal[idim];
+                      aRhs[indexVAR[idim]][ilocal]   += ( theta * value + ( 1. - theta ) * value_old ) * normal[idim];
                     }
                   }
                 }
