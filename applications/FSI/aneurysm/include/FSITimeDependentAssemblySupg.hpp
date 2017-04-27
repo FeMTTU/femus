@@ -406,8 +406,8 @@ namespace femus {
 // 	  }
 // 	  distance =sqrt(distance);
 // 	  Weight_nojac *= 1./(1 + 10000 * distance);
-	  
-	  if(elementGroup == 16) Weight_nojac *= 1.e06;
+// 	  
+// 	  if(elementGroup == 16) Weight_nojac *= 1.e06;
         }
 
         // ---------------------------------------------------------------------------
@@ -470,14 +470,14 @@ namespace femus {
         }
 
         // ---------------------------------------------------------------------------
-        //BEGIN FLUID ASSEMBLY ============
+        //BEGIN FLUID and POROUS MEDIA ASSEMBLY ============
         if ( flag_mat == 2 || flag_mat == 3 ) {
 
           vector < adept::adouble > a ( dim );
           vector < adept::adouble > a_old ( dim );
           for ( int i = 0; i < dim; i++ ) {
             a[i] = SolVAR[i + dim] - meshVel[i]; // maybe we subtract meshVel[i]
-            a_old[i] = SolVAR_old[i + dim] - meshVel[i]; // maybe we subtract something??
+            a_old[i] = SolVAR_old[i + dim] - meshVel[i]; 
           }
 
           // speed
@@ -880,7 +880,7 @@ namespace femus {
             }
           }
 
-          //END build Chauchy Stress in moving domain
+          //END build Cauchy Stress in moving domain
 
           //BEGIN v=0 + Momentum (Solid)
           {

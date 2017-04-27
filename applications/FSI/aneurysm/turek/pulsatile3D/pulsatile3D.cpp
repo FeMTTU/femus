@@ -346,7 +346,7 @@ int main ( int argc, char ** args )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step*1000000;
+    data[time_step][0] = time_step*1000;
     //data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / (64*1.4);
     if ( simulation == 0 || simulation == 4 ) {
@@ -402,7 +402,7 @@ int main ( int argc, char ** args )
 
 double SetVariableTimeStep ( const double time )
 {
-  double dt = 1000000;
+  double dt = 1000;
   //double dt = 1. / 32;
   //double dt = 1./(64*1.4);
 //   if( turek_FSI == 2 ){

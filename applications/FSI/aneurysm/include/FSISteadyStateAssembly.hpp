@@ -459,7 +459,7 @@ namespace femus
                   adept::adouble value = (-AdvaleVAR[idim]      	           // advection term
                                           - IRe * LapvelVAR[idim]	   	 // viscous dissipation
                                           + IRe * LapStrong[idim]
-                                          + SolVAR[2 * dim] / rhof * gradphi[i * dim + idim] // pressure gradient
+                                          + 1. / rhof * SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                          ) * jacobian;
                   if ((!solidmark[i])) {
                     aRhs[indexVAR[dim + idim]][i] += value;
@@ -504,7 +504,7 @@ namespace femus
                   adept::adouble value = (- SolVAR[dim + idim] * (IRe / K + 0.5 * C2 * speed) * (phi[i] + phiSupg[i])
 // 					                - 0*AdvaleVAR[idim]
 //                                                      - 0*IRe * LapvelVAR[idim]	   	 // viscous dissipation
-                                          + SolVAR[2 * dim] / rhof * gradphi[i * dim + idim] // pressure gradient
+                                          + 1. / rhof * SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                          ) * jacobian;
                   if ((!solidmark[i])) {
                     aRhs[indexVAR[dim + idim]][i] += value;
@@ -644,14 +644,14 @@ namespace femus
                 for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.*(C1 * B[I][J] - C2 * invB[I][J])
                                   //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR[2 * dim] * Id2th[I][J];
-                                  - SolVAR[2 * dim] / rhof * Id2th[I][J];
+                                  - 1. / rhof * SolVAR[2 * dim] * Id2th[I][J];
                 }
               }
 
             }
           }
 
-          //END build Chauchy Stress in moving domain
+          //END build Cauchy Stress in moving domain
 
           //BEGIN v=0 + Momentum (Solid)
           {
