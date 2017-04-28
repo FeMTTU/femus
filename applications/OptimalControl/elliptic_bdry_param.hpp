@@ -15,7 +15,7 @@
 
 
 
-//*********************** Find volume elements that contain a  Target element **************************************
+//*********************** Find volume elements that contain a  Target domain element **************************************
 
 int ElementTargetFlag(const std::vector<double> & elem_center) {
 
