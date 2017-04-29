@@ -151,7 +151,7 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = 10. * 1.e6 ;
+    E = 0.1 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
     E = 1000000 * 1.e0;
