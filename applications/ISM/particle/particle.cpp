@@ -151,7 +151,7 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = 0.5 * 1.e6 ;
+    E = 0.1 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
     E = 1000000 * 1.e0;
@@ -534,7 +534,7 @@ int main(int argc, char **args)
 
         std::cout << "configuration = " << configuration << std::endl;
         std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
-        std::cout << "time_step = " << time_step << std::endl;
+        std::cout << "time_step = " << time_step + 1<< std::endl;
         std::cout << "particle inside = " << count_inside << std::endl;
         std::cout << "particle outside = " << count_out << std::endl;
         std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
@@ -843,7 +843,7 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
     else if (1 == facename) {
       test = 0;
       //value = 11335 * ramp;
-      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
       //value = 10000;
     }
     else if (5 == facename) {
