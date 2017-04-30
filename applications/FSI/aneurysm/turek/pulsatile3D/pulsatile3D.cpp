@@ -341,7 +341,7 @@ int main ( int argc, char ** args )
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 50;
+  const unsigned int n_timesteps = 128;
 
   std::vector < std::vector <double> > data ( n_timesteps );
 
@@ -354,7 +354,7 @@ int main ( int argc, char ** args )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step*1000;
+    data[time_step][0] = time_step/16.;
     //data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / (64*1.4);
     if ( simulation == 0 || simulation == 4 ) {
@@ -541,8 +541,8 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
     value = 0.;
     if ( 2 == facename ) {
       //value = pressure[j] * ramp;
-      //value = 5000 * ramp;
-      value = (5000 + 1000 * sin(2 * PI * time)) * ramp;
+      value = 5000 * ramp;
+      //value = (5000 + 1000 * sin(2 * PI * time)) * ramp;
     }
   }
   else if ( !strcmp ( name, "DX" ) ) {
