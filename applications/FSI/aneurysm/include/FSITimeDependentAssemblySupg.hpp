@@ -401,17 +401,20 @@ namespace femus
 
           Weight_nojac = Weight / area * rapresentative_area;
 
-// 	  std::vector<double> xc(dim,0.);
-// 	  xc[0] = -0.001013;
-// 	  xc[1] = 0.07000;
-// 	  double distance = 0.;
-// 	  for (unsigned k = 0; k<dim; k++){
-// 	    distance += ( vx_hat[k][ nve - 1] - xc[k] ) * ( vx_hat[k][nve - 1] - xc[k] );
-// 	  }
-// 	  distance =sqrt(distance);
-// 	  Weight_nojac *= 1./(1 + 10000 * distance);
-//
-// 	  if(elementGroup == 16) Weight_nojac *= 1.e06;
+	  //-----------------------------------------------------------------------//
+	  // for vein_valve mesh
+	  std::vector<double> xc(dim,0.);
+	  xc[0] = -0.001013;
+	  xc[1] = 0.07000;
+	  double distance = 0.;
+	  for (unsigned k = 0; k<dim; k++){
+	    distance += ( vx_hat[k][ nve - 1] - xc[k] ) * ( vx_hat[k][nve - 1] - xc[k] );
+	  }
+	  distance =sqrt(distance);
+	  Weight_nojac *= 1./(1 + 10000 * distance);
+
+	  if(elementGroup == 16) Weight_nojac *= 1.e06;
+	  //-----------------------------------------------------------------------//
         }
 
         // ---------------------------------------------------------------------------

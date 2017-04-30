@@ -156,7 +156,7 @@ int main ( int argc, char **args )
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 3;
+  numberOfUniformRefinedMeshes = 4;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -224,8 +224,12 @@ int main ( int argc, char **args )
     ml_sol.GenerateBdc ( "U", "Time_dependent" );
     ml_sol.GenerateBdc ( "V", "Steady" );
   }
-
+  if ( simulation == 7) {
     ml_sol.GenerateBdc ( "P", "Steady" );
+  }
+  else {
+    ml_sol.GenerateBdc ( "P", "Time_dependent" );  
+  }
   
 //   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
 //     SetLambda(ml_sol, level , SECOND, ELASTICITY);
@@ -257,9 +261,12 @@ int main ( int argc, char **args )
   system.SetMgType ( F_CYCLE );
 
   system.SetNonLinearConvergenceTolerance ( 1.e-9 );
-  system.SetResidualUpdateConvergenceTolerance ( 1.e-15 );
+  //system.SetResidualUpdateConvergenceTolerance ( 1.e-15 );
   system.SetMaxNumberOfNonLinearIterations ( 4 );
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
+  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
+  
+  system.SetMaxNumberOfLinearIterations ( 2 );
+  system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
 
   system.SetNumberPreSmoothingStep ( 0 );
   system.SetNumberPostSmoothingStep ( 2 );
