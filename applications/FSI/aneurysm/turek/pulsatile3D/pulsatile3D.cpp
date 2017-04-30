@@ -161,7 +161,7 @@ int main ( int argc, char ** args )
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 1;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -341,7 +341,7 @@ int main ( int argc, char ** args )
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 50;
+  const unsigned int n_timesteps = 200;
 
   std::vector < std::vector <double> > data ( n_timesteps );
 
@@ -354,7 +354,7 @@ int main ( int argc, char ** args )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step/8.;
+    data[time_step][0] = time_step/16.;
     //data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / (64*1.4);
     if ( simulation == 0 || simulation == 4 ) {
@@ -410,7 +410,7 @@ int main ( int argc, char ** args )
 
 double SetVariableTimeStep ( const double time )
 {
-  double dt = 1./8.;
+  double dt = 1./16.;
   //double dt = 1. / 32;
   //double dt = 1./(64*1.4);
 //   if( turek_FSI == 2 ){
@@ -518,7 +518,7 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
     if ( 1 == facename ) {
       double r2 = ( ( x[1] * 1000. ) - 7. ) * ( ( x[1] * 1000. ) - 7. ) + ( x[2] * 1000. ) * ( x[2] * 1000. );
       //value = -0.3 * (1. - r2); //inflow
-      value = -0.2 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = -0.3 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
       //value = - ( 1. - r2 ) * vel[j] * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
