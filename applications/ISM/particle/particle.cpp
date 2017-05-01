@@ -473,8 +473,8 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 352; //288
-
+  const unsigned int n_timesteps = (simulation == 6) ? 352 : 288 ;
+  
   std::vector < std::vector <double> > data(n_timesteps);
 
   unsigned count_inside;
