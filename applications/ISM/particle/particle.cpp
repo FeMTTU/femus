@@ -151,7 +151,7 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = 0.5 * 1.e6 ;
+    E = 1. * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
     E = 1000000 * 1.e0;
@@ -430,7 +430,7 @@ int main(int argc, char **args)
 
   //END INITIALIZE PARTICLES
 
-  unsigned itPeriod = 32;
+  unsigned itPeriod = 32 /*for steady state with dt =100*/ /* for unsteady with dt =1/32, itPeriod = 32*/;
   unsigned confNumber;
   unsigned partSimMax;
   if (simulation == 6) {
@@ -832,8 +832,8 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
   if (!strcmp(name, "U")) {
     if (2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
-      value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
-      //value = 2 * 0.1 * (1. - r2) * ramp; //inflow
+      //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      value = 2 * 0.1 * (1. - r2) * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
     }
@@ -852,9 +852,8 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
     test = 0;
     value = 0.;
     if (1 == facename) {
-      //value = 11335 * ramp;
-      value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
-      //value = 10000;
+      //value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
+      value = 13335 * ramp;
     }
   }
   else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
