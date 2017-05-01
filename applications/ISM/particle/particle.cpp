@@ -154,7 +154,7 @@ int main(int argc, char **args)
     E = 1. * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
-    E = 1000000 * 1.e0;
+    E = 1. * 1.e6;
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
@@ -191,6 +191,9 @@ int main(int argc, char **args)
 
 //   MultiLevelMesh ml_msh1(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
 //                          infile.c_str(), "fifth", Lref, NULL);
+
+//   ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
+//   numberOfUniformRefinedMeshes = 1;
 
   ml_msh.PrintInfo();
 
@@ -473,8 +476,9 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
+
   const unsigned int n_timesteps = (simulation == 6) ? 352 : 288 ;
-  
+
   std::vector < std::vector <double> > data(n_timesteps);
 
   unsigned count_inside;
@@ -483,7 +487,7 @@ int main(int argc, char **args)
   std::vector < std::vector <  double > > efficiencyVector(confNumber);
 
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-
+    
     data[time_step].resize(5);
 
     for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
@@ -508,7 +512,7 @@ int main(int argc, char **args)
               linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceWire);
             }
             else if (simulation == 5 || simulation == 7) {
-              linea[configuration][partSim][i]->AdvectionParallel(10, 1. / itPeriod, 4, MagneticForceSC);
+              linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceSC);
             }
             count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
           }
@@ -531,7 +535,7 @@ int main(int argc, char **args)
 
         std::cout << "configuration = " << configuration << std::endl;
         std::cout << "diameter = " << std::setw(11) << std::setprecision(12) << std::fixed << diam << std::endl;
-        std::cout << "time_step = " << time_step + 1<< std::endl;
+        std::cout << "time_step = " << time_step + 1 << std::endl;
         std::cout << "particle inside = " << count_inside << std::endl;
         std::cout << "particle outside = " << count_out << std::endl;
         std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
@@ -619,7 +623,10 @@ int main(int argc, char **args)
 double SetVariableTimeStep(const double time)
 {
   //double dt = 1./(64*1.4);
+
   double dt = 1. / 32;
+  //double dt = 1. / 4;
+
   //double dt = 60;
 
 //   if( turek_FSI == 2 ){
@@ -834,16 +841,20 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
       //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
       value = 2 * 0.1 * (1. - r2) * ramp; //inflow
-      //std::cout << value << " " << time << " " << ramp << std::endl;
-      //value=25;
     }
     else if (1 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if (!strcmp(name, "V") || !strcmp(name, "W")) {
+  else if (!strcmp(name, "V") ){
     if (1 == facename || 5 == facename) {
+      test = 0;
+      value = 0.;
+    }
+  }
+  else if (!strcmp(name, "W") ){
+    if (5 == facename) {
       test = 0;
       value = 0.;
     }
@@ -899,18 +910,13 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
     }
   }
   else if (!strcmp(name, "U")) {
-    if (2 == facename || 3 == facename) {
-      test = 0;
-      value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
-      //value = 13332 * ramp; // 0. * ramp;
-    }
-    else if (7 == facename) {
+    if (7 == facename) {
       test = 0;
       value = 0.;
     }
   }
   else if (!strcmp(name, "V")) {
-    if (2 == facename || 3 == facename || 7 == facename) {
+    if (7 == facename) {
       test = 0;
       value = 0.;
     }
@@ -918,6 +924,10 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
   else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
+    if (2 == facename || 3 == facename) {
+      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      value = 5000 * ramp;//13332
+    }
   }
   else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
     if (7 == facename) {
