@@ -123,7 +123,7 @@ int main ( int argc, char **args )
     rhos = 960;
     ni = 0.5;
     //E = 3.3 * 1.0e6; //vein young modulus
-    E = 4.3874951 * 1.0e8;
+    E = 4.3874951 * 1.0e12;
     E1 = 15 * 1.0e6; //leaflet young modulus
   }
   else {
@@ -332,9 +332,9 @@ int main ( int argc, char **args )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step / 16.;
+    //data[time_step][0] = time_step / 16.;
     //data[time_step][0] = time_step / 20.;
-    //data[time_step][0] = time_step / 32.;
+    data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / ( 64 * 1.4 );
     if ( simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3 ) {
       GetSolutionNorm ( ml_sol, 9, data[time_step] );
@@ -393,9 +393,9 @@ int main ( int argc, char **args )
 double SetVariableTimeStep ( const double time )
 {
   //double dt = 1. / ( 64 * 1.4 );
-  //double dt = 1./32;
+  double dt = 1./32;
   //double dt = 1. / 20;
-  double dt = 1./16.;
+  //double dt = 1./16.;
   //double dt = 1.0e6;
 
 //   if( turek_FSI == 2 ){
@@ -619,11 +619,11 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     value = 0.;
     if (1 == facename) {
       //value = -1;
-      value = ( 1 + 1 * sin ( 2 * PI * time ) ) * ramp;
+      value = ( 2.5 + 2.5 * sin ( 2 * PI * time ) ) * ramp;
     }
     else if (2 == facename) {
       //value = 1;
-      value = ( 1 - 1 * sin ( 2 * PI * time ) ) * ramp;
+      value = ( 2.5 - 2.5 * sin ( 2 * PI * time ) ) * ramp;
     }
   }
   else if (!strcmp(name, "DX") ) {

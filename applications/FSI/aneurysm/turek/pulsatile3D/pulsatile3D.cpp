@@ -121,7 +121,7 @@ int main ( int argc, char ** args )
   muf = 3.5 * 1.0e-3; //3.38 * 1.0e-6 * rhof;
   rhos = 1120;
   ni = 0.5;
-  E = 1000000;
+  E = 1. * 1.0e6;
   //E = 12000; //E=6000;
   E1 = 3000;
 
@@ -281,7 +281,7 @@ int main ( int argc, char ** args )
 //   system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
 
   
-    system.SetNonLinearConvergenceTolerance(1.e-9);
+  system.SetNonLinearConvergenceTolerance(1.e-9);
   system.SetResidualUpdateConvergenceTolerance(1.e-15);
   system.SetMaxNumberOfNonLinearIterations(4);
   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(1);
@@ -341,7 +341,7 @@ int main ( int argc, char ** args )
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 200;
+  const unsigned int n_timesteps = 360;
 
   std::vector < std::vector <double> > data ( n_timesteps );
 
@@ -354,9 +354,9 @@ int main ( int argc, char ** args )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step/16.;
+    //data[time_step][0] = time_step/16.;
     //data[time_step][0] = time_step / 32.;
-    //data[time_step][0] = time_step / (64*1.4);
+    data[time_step][0] = time_step / (64*1.4);
     if ( simulation == 0 || simulation == 4 ) {
       GetSolutionNorm ( ml_sol, 9, data[time_step] );
     }
@@ -410,9 +410,9 @@ int main ( int argc, char ** args )
 
 double SetVariableTimeStep ( const double time )
 {
-  double dt = 1./16.;
-  //double dt = 1. / 32;
-  //double dt = 1./(64*1.4);
+  //double dt = 1./16.;
+  //double dt = 1. / 32.;
+  double dt = 1./(64*1.4);
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
 //     else dt = 0.025;
@@ -480,46 +480,46 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
   bool test = 1; //dirichlet
   value = 0.;
 
-//   std::ifstream inf;
-//   inf.open ( "./input/womersleyProfile_velMax65cms.txt" );
-//   if ( !inf ) {
-//     std::cout << "velocity file ./input/womersleyProfile_velMax65cms.txt can not be opened\n";
-//     exit ( 0 );
-//   }
-//   std::ifstream inf2;
-//   inf2.open ( "./input/OutflowResistence_velMax65cms.txt" );
-//   if ( !inf2 ) {
-//     std::cout << "pressure file ./input/OutflowResistence_velMax65cms.txt can not be opened\n";
-//     exit ( 0 );
-//   }
-//
-//   std::vector<double> vel ( 64 );
-//   std::vector<double> pressure ( 64 );
-//
-//   for ( unsigned i = 0; i < 64; i++ ) {
-//     inf >> vel[i];
-//     inf2 >> pressure[i];
-//   }
-//   inf.close();
-//   inf2.close();
-//
-//   double period = 1. / 1.4;
-//   double dt = period / 64;
-//
-//   double time1 = time - floor ( time / period ) * period;
-//
-//   unsigned j = static_cast < unsigned > ( floor ( time1 / dt ) );
+  std::ifstream inf;
+  inf.open ( "./input/womersleyProfile_velMax65cms.txt" );
+  if ( !inf ) {
+    std::cout << "velocity file ./input/womersleyProfile_velMax65cms.txt can not be opened\n";
+    exit ( 0 );
+  }
+  std::ifstream inf2;
+  inf2.open ( "./input/OutflowResistence_velMax65cms.txt" );
+  if ( !inf2 ) {
+    std::cout << "pressure file ./input/OutflowResistence_velMax65cms.txt can not be opened\n";
+    exit ( 0 );
+  }
+
+  std::vector<double> vel ( 64 );
+  std::vector<double> pressure ( 64 );
+
+  for ( unsigned i = 0; i < 64; i++ ) {
+    inf >> vel[i];
+    inf2 >> pressure[i];
+  }
+  inf.close();
+  inf2.close();
+
+  double period = 1. / 1.4;
+  double dt = period / 64;
+
+  double time1 = time - floor ( time / period ) * period;
+
+  unsigned j = static_cast < unsigned > ( floor ( time1 / dt ) );
 
   double PI = acos ( -1. );
-  double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
+  //double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
+  double ramp = ( time < period ) ? sin ( PI / 2 * time / period ) : 1.;
 
   if ( !strcmp ( name, "U" ) ) {
-    //double ramp = ( time < period ) ? sin ( PI / 2 * time / period ) : 1.;
     if ( 1 == facename ) {
       double r2 = ( ( x[1] * 1000. ) - 7. ) * ( ( x[1] * 1000. ) - 7. ) + ( x[2] * 1000. ) * ( x[2] * 1000. );
       //value = -0.3 * (1. - r2); //inflow
-      value = -0.3 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
-      //value = - ( 1. - r2 ) * vel[j] * ramp; //inflow
+      //value = -0.3 * (1. - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp; //inflow
+      value = - ( 1. - r2 ) * vel[j] * ramp; //inflow
       //std::cout << value << " " << time << " " << ramp << std::endl;
       //value=25;
     }
@@ -529,9 +529,7 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
     }
   }
   else if ( !strcmp ( name, "V" ) || !strcmp ( name, "W" ) ) {
-    if ( 2 == facename || 5 == facename ) { //vecchio assembly
-    //if ( 5 == facename ) { //nuovo assembly
-    //if ( 2 == facename ) { //come in steady3D  
+    if ( 2 == facename || 5 == facename ) {
       test = 0;
       value = 0.;
     }
@@ -540,8 +538,8 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
     test = 0;
     value = 0.;
     if ( 2 == facename ) {
-      //value = pressure[j] * ramp;
-      value = 5000 * ramp;
+      value = pressure[j] * ramp;
+      //value = 5000 * ramp;
       //value = (5000 + 1000 * sin(2 * PI * time)) * ramp;
     }
   }
