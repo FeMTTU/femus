@@ -89,7 +89,7 @@ int main ( int argc, char ** args )
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
   std::string infile;
   if ( simulation == 0 ) {
-    infile = "./input/Turek_3D_F2.neu"; //Turek_3D_D.neu non ha gruppo 10
+    infile = "./input/Turek_3D_D.neu"; //Turek_3D_F2.neu ha gruppo 10
   }
   else if ( simulation == 1 ) {
     infile = "./input/aneurysm_omino.neu";
@@ -481,15 +481,15 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
   value = 0.;
 
   std::ifstream inf;
-  inf.open ( "./input/womersleyProfile_velMax65cms.txt" );
+  inf.open ( "./input/womersleyProfile_velMax40cms.txt" );
   if ( !inf ) {
-    std::cout << "velocity file ./input/womersleyProfile_velMax65cms.txt can not be opened\n";
+    std::cout << "velocity file ./input/womersleyProfile_velMax40cms.txt can not be opened\n";
     exit ( 0 );
   }
   std::ifstream inf2;
-  inf2.open ( "./input/OutflowResistence_velMax65cms.txt" );
+  inf2.open ( "./input/OutflowResistence64_R0p001_f84.txt" );
   if ( !inf2 ) {
-    std::cout << "pressure file ./input/OutflowResistence_velMax65cms.txt can not be opened\n";
+    std::cout << "pressure file ./input/OutflowResistence64_R0p001_f84.txt can not be opened\n";
     exit ( 0 );
   }
 
