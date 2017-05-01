@@ -46,10 +46,10 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
     dirichlet = false;
   }
 
-    if(!strcmp(name,"adjoint")) { 
-  if (faceName == 3)
-    dirichlet = false;
-  }
+//     if(!strcmp(name,"adjoint")) { 
+//   if (faceName == 3)
+//     dirichlet = false;
+//   }
 
   
   
@@ -233,6 +233,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   phi_adj_bdry.reserve(maxSize);
   phi_adj_x_bdry.reserve(maxSize * dim);
+  
+  vector <double> phi_adj_vol_at_bdry;  // local test function
+  vector <double> phi_adj_x_vol_at_bdry; // local test function first order partial derivatives
+  phi_adj_vol_at_bdry.reserve(maxSize);
+  phi_adj_x_vol_at_bdry.reserve(maxSize * dim);
+  vector <double> sol_adj_x_vol_at_bdry_gss;
+  sol_adj_x_vol_at_bdry_gss.reserve(dim);
  //*************************************************** 
  //*************************************************** 
 
@@ -402,6 +409,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	  
 	  double tau=0.;
 	  vector<double> normal(dim,0);
+// 	  double normal_fixed[3] = {0.,1.,0};
 	       
 	  // loop on faces of the current element
 
@@ -442,6 +450,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		  
 		  msh->_finiteElement[felt_bdry][solType_ctrl]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_ctrl_bdry,phi_ctrl_x_bdry,normal);
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
+		  msh->_finiteElement[kelGeom][solType_adj]->ShapeAtBoundary(x,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  double dx_dxi = 0.;
@@ -469,7 +478,25 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                             for (int d = 0; d < dim; d++) {
 			      sol_ctrl_x_bdry_gss[d] += sol_ctrl[i_vol] * phi_ctrl_x_bdry[i_bdry + d*nve_bdry];
 			    }
+		      }
+		      
+//=============== grad dot n for residual ========================================= 
+//     compute gauss quantities on the boundary through VOLUME interpolation
+           std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
+		      for (int iv = 0; iv < nDof_adj; iv++)  {
+			
+                            for (int d = 0; d < dim; d++) {
+   std::cout << " ivol " << iv << std::endl;
+   std::cout << " adj dofs " << sol_adj[iv] << std::endl;
+			      sol_adj_x_vol_at_bdry_gss[d] += sol_adj[iv] * phi_adj_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
+			    }
 		      }  
+		      
+    double grad_dot_n_adj_res = 0.;
+        for(unsigned d=0; d<dim; d++) {
+	  grad_dot_n_adj_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
+	}
+//=============== grad dot n  for residual =========================================       
 
 //========== compute gauss quantities on the boundary ================================================
 
@@ -495,6 +522,13 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               }
 //=============== construct control node flag field on the go  =========================================    
 
+   std::cout << " graddotn_res " << grad_dot_n_adj_res << std::endl;
+//    std::cout << " normal " << sol_adj[0] << std::endl;
+//    std::cout << " normal " << sol_adj[1] << std::endl;
+//    std::cout << " normal " << sol_adj[2] << std::endl;
+//    std::cout << " normal " << sol_adj[3] << std::endl;
+  
+		 
 //============ Bdry Residuals ==================	
 // FIRST BLOCK ROW
                  Res[ (0 + i_vol) ]                    +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
@@ -503,7 +537,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
                  Res[ (nDof_u + i_vol) ]               +=  - control_node_flag[i_vol] *  weight_bdry *
                                                               (    alpha * phi_ctrl_bdry[i_bdry] * sol_ctrl_bdry_gss
 							         +  beta * lap_rhs_dctrl_ctrl_bdry_gss_i 
-							         -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss
+							         - grad_dot_n_adj_res * phi_ctrl_bdry[i_bdry]
+// 							         -         phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss // for Neumann control
 							        );  //boundary optimality condition
 // THIRD BLOCK ROW
                  Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += 0.; 
@@ -511,6 +546,15 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		    
 		    for(unsigned j_bdry=0; j_bdry < nve_bdry; j_bdry ++) {
 		    unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
+		    
+//=============== grad dot n  =========================================    
+    double grad_dot_n = 0.;
+        for(unsigned d=0; d<dim; d++) {
+	  grad_dot_n += phi_adj_x_vol_at_bdry[j_vol * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
+	}
+//=============== grad dot n  =========================================    
+
+  std::cout << " graddotn " << grad_dot_n << std::endl;
 
 // FIRST BLOCK ROW
 //============ u = q ===========================	    
@@ -555,7 +599,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		   if ( i_vol < nDof_ctrl    && j_vol < nDof_adj)   
 		     Jac[ 
 			(nDof_u + i_vol) * nDof_AllVars  +
-		        (nDof_u + nDof_ctrl + j_vol)             ]  += control_node_flag[i_vol] * (-1) * (weight_bdry * phi_adj_bdry[j_bdry] * phi_ctrl_bdry[i_bdry]);      
+		        (nDof_u + nDof_ctrl + j_vol)             ]  += control_node_flag[i_vol] * (-1) *
+		        (
+			  weight_bdry * grad_dot_n * phi_ctrl_bdry[i_bdry]
+// 			  weight_bdry * phi_adj_bdry[j_bdry] * phi_ctrl_bdry[i_bdry]  // for neumann boundary condition
+			  
+			);      
 		    
 
 //============ boundary control eqn ============	    

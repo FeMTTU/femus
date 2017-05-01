@@ -154,6 +154,11 @@ public:
   static const unsigned _fe_old_to_new[QL];
 
   static const unsigned _fe_new_to_old[NFE_FAMS];
+  
+  virtual void ShapeAtBoundary(const vector < vector < double > > &vt,const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const {
+	 std::cout << "Implemented only for quad4 now" << std::endl; abort(); 
+  };
+
 
 protected:
 
@@ -306,7 +311,9 @@ public:
   inline double* GetPhi(const unsigned &ig) const { return _phi[ig]; }
   inline double* GetDPhiDXi(const unsigned &ig) const { return _dphidxi[ig]; }
   inline double* GetDPhiDEta(const unsigned &ig) const { return _dphideta[ig]; }
-
+  
+  void ShapeAtBoundary(const vector < vector < double > >& vt_vol, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+  
 private:
   double **_phi;
   double *_phi_memory;
