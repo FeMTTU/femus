@@ -132,7 +132,7 @@ int main ( int argc, char **args )
     rhos = 1120;
     ni = 0.5;
     //E = 100 * 1.e6; //simulation=5
-    E = 1000000; //simulation=0,1,2,3
+    E = 1. * 1.0e6; //simulation=0,1,2,3
     E1 = 50000;
   }
 
@@ -156,7 +156,7 @@ int main ( int argc, char **args )
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 4;
+  numberOfUniformRefinedMeshes = 3;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -224,12 +224,11 @@ int main ( int argc, char **args )
     ml_sol.GenerateBdc ( "U", "Time_dependent" );
     ml_sol.GenerateBdc ( "V", "Steady" );
   }
-
-  if (simulation == 7){
+  if ( simulation == 7) {
     ml_sol.GenerateBdc ( "P", "Steady" );
   }
   else {
-    ml_sol.GenerateBdc ( "P", "Steady" );
+    ml_sol.GenerateBdc ( "P", "Time_dependent" );  
   }
   
 //   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
@@ -262,9 +261,12 @@ int main ( int argc, char **args )
   system.SetMgType ( F_CYCLE );
 
   system.SetNonLinearConvergenceTolerance ( 1.e-9 );
-  system.SetResidualUpdateConvergenceTolerance ( 1.e-15 );
+  //system.SetResidualUpdateConvergenceTolerance ( 1.e-15 );
   system.SetMaxNumberOfNonLinearIterations ( 4 );
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
+  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
+  
+  system.SetMaxNumberOfLinearIterations ( 2 );
+  system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
 
   system.SetNumberPreSmoothingStep ( 0 );
   system.SetNumberPostSmoothingStep ( 2 );
@@ -316,7 +318,7 @@ int main ( int argc, char **args )
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 50;
+  const unsigned int n_timesteps = 192;
 
 
   std::vector < std::vector <double> > data ( n_timesteps );
@@ -330,7 +332,7 @@ int main ( int argc, char **args )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    data[time_step][0] = time_step*1000000;
+    data[time_step][0] = time_step / 16.;
     //data[time_step][0] = time_step / 20.;
     //data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / ( 64 * 1.4 );
@@ -393,7 +395,8 @@ double SetVariableTimeStep ( const double time )
   //double dt = 1. / ( 64 * 1.4 );
   //double dt = 1./32;
   //double dt = 1. / 20;
-  double dt = 1000000;
+  double dt = 1./16.;
+  //double dt = 1.0e6;
 
 //   if( turek_FSI == 2 ){
 //     if ( time < 9 ) dt = 0.05;
@@ -455,8 +458,8 @@ bool SetBoundaryConditionTurek2D ( const std::vector < double >& x, const char n
   
   if ( !strcmp ( name, "U" ) ) {
     if ( 1 == facename ) {
-      value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8); //inflow
-      //value = 0.05 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1.+ 0.75 * sin(2. * PI * time)) * ramp; //inflow
+      //value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8); //inflow
+      value = 0.05 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1.+ 0.75 * sin(2. * PI * time)) * ramp; //inflow
       //value = ( x[1] * 1000 - 6 ) * ( x[1] * 1000 - 8 ) * vel[j] * ramp; //inflow
     }
     else if ( 2 == facename || 5 == facename ) {
@@ -560,7 +563,7 @@ bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, co
     if ( 1 == facename ) {
       double r2 = ( x[0] * 100. ) * ( x[0] * 100. );
       //value = -0.01/.9 * (.9 - r2); //inflow
-      value = -0.2 / .81 * ( .81 - r2 ) * ( 1. + 0.25 * sin ( 2.*PI * time ) ) * ramp; //inflow
+      value = -0.1 / .81 * ( .81 - r2 ) * ( 1. + 0.25 * sin ( 2.*PI * time ) ) * ramp; //inflow
     }
     if ( 2 == facename || 3 == facename || 7 == facename ) {
       test = 0;
@@ -568,11 +571,7 @@ bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, co
     }
   }
   else if ( !strcmp ( name, "U" ) ) {
-//     if ( 2 == facename || 3 == facename ) {
-//       test = 0;
-//       value = ( 12500 + 2500 * sin ( 2 * PI * time ) ) * ramp;
-//     }
-    if ( 7 == facename ) {
+    if ( 2 == facename || 3 == facename || 7 == facename ) {
       test = 0;
       value = 0;
     }
@@ -580,10 +579,10 @@ bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, co
   else if ( !strcmp ( name, "P" ) ) {
     test = 0;
     value = 0.;
-    if ( 2 == facename || 3 == facename ) {
-      //value = ( 12500 + 2500 * sin ( 2 * PI * time ) ) * ramp;
-      value = 50 * ramp;
-    }
+//     if ( 2 == facename || 3 == facename ) {
+//       //value = ( 12500 + 2500 * sin ( 2 * PI * time ) ) * ramp;
+//       value = 50 * ramp;
+//     }
   }
   else if ( !strcmp ( name, "DX" ) ) {
     if ( 7 == facename ) {

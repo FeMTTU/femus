@@ -161,7 +161,7 @@ int main ( int argc, char ** args )
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 1;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -341,7 +341,7 @@ int main ( int argc, char ** args )
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 128;
+  const unsigned int n_timesteps = 200;
 
   std::vector < std::vector <double> > data ( n_timesteps );
 

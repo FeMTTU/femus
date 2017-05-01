@@ -42,7 +42,8 @@ namespace femus
     const unsigned nabla_dim = 3 * ( dim - 1 );
     const unsigned max_size = static_cast< unsigned > ( ceil ( pow ( 3, dim ) ) );
 
-    double theta = 0.5;
+    //double theta = 0.5;
+    double theta = 1.;
 
     // local objects
     vector<adept::adouble> SolVAR ( 2 * dim + 1 );
@@ -401,17 +402,20 @@ namespace femus
 
           Weight_nojac = Weight / area * rapresentative_area;
 
-// 	  std::vector<double> xc(dim,0.);
-// 	  xc[0] = -0.001013;
-// 	  xc[1] = 0.07000;
-// 	  double distance = 0.;
-// 	  for (unsigned k = 0; k<dim; k++){
-// 	    distance += ( vx_hat[k][ nve - 1] - xc[k] ) * ( vx_hat[k][nve - 1] - xc[k] );
-// 	  }
-// 	  distance =sqrt(distance);
-// 	  Weight_nojac *= 1./(1 + 10000 * distance);
-//
-// 	  if(elementGroup == 16) Weight_nojac *= 1.e06;
+	  //-----------------------------------------------------------------------//
+	  // for vein_valve mesh
+	  std::vector<double> xc(dim,0.);
+	  xc[0] = -0.001013;
+	  xc[1] = 0.07000;
+	  double distance = 0.;
+	  for (unsigned k = 0; k<dim; k++){
+	    distance += ( vx_hat[k][ nve - 1] - xc[k] ) * ( vx_hat[k][nve - 1] - xc[k] );
+	  }
+	  distance =sqrt(distance);
+	  Weight_nojac *= 1./(1 + 10000 * distance);
+
+	  if(elementGroup == 16) Weight_nojac *= 1.e06;
+	  //-----------------------------------------------------------------------//
         }
 
         // ---------------------------------------------------------------------------
@@ -478,8 +482,8 @@ namespace femus
           vector < adept::adouble > a ( dim );
           vector < adept::adouble > a_old ( dim );
           for ( int i = 0; i < dim; i++ ) {
-            a[i] = SolVAR[i + dim] - 0*meshVel[i]; // TODO maybe we subtract meshVel[i] maybe not
-            a_old[i] = SolVAR_old[i + dim] - 0*meshVel[i];
+            a[i] = SolVAR[i + dim] - 0.*meshVel[i]; // TODO maybe we subtract meshVel[i] maybe not
+            a_old[i] = SolVAR_old[i + dim] - 0.*meshVel[i];
           }
 
           // speed
