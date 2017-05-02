@@ -324,9 +324,9 @@ namespace femus {
     //BEGIN from here
     if(_preconditioner == FIELDSPLIT_PRECOND) {
       PetscPreconditioner::set_petsc_preconditioner_type(_preconditioner, pc);
-      PCFieldSplitSetType(pc, PC_COMPOSITE_ADDITIVE);
+ //     PCFieldSplitSetType(pc, PC_COMPOSITE_ADDITIVE);
 
-      //PCFieldSplitSetType( pc, PC_COMPOSITE_MULTIPLICATIVE );
+      PCFieldSplitSetType( pc, PC_COMPOSITE_MULTIPLICATIVE );
       for(unsigned i = 0; i < _numberOfSplits; i++) {
         PCFieldSplitSetIS(pc, NULL, _isSplit[level - 1][i]);
       }
