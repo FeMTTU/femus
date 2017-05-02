@@ -79,7 +79,8 @@ int main(int argc, char **args)
     infile = "./input/Turek_11stents_60micron.neu";
   }
   else if(simulation == 4) {
-    infile = "./input/vein_valve.neu";
+    //infile = "./input/vein_valve.neu";
+    infile = "./input/vein_valve_closed.neu";
   }
 
   // ******* Set physics parameters *******
@@ -126,7 +127,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 4;
+  numberOfUniformRefinedMeshes = 3;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -362,11 +363,11 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     value = 0.;
     if (1 == facename) {
       test = 0.;
-      value = -1;
+      value = 8;
     }
     else if ( 2 == facename ) {
       test = 0;
-      value = 1;
+      value = -8;
     }
   }
   else if (!strcmp(name, "DX") ) {

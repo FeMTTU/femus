@@ -2,9 +2,9 @@
 ** GAMBIT NEUTRAL FILE
 vein_valve
 PROGRAM:                Gambit     VERSION:  2.3.16
-11 Apr 2017    14:59:57 
+ 2 May 2017    11:41:37 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
-      1305       304         4         6         2         2
+      1305       304         4         7         2         2
 ENDOFSECTION
    NODAL COORDINATES 2.3.16
          1  -1.02500000000e-03   7.00000000000e-02
@@ -1928,7 +1928,7 @@ GROUP:          1 ELEMENTS:         12 MATERIAL:          4 NFLAGS:          1
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
 GROUP:          2 ELEMENTS:         48 MATERIAL:          4 NFLAGS:          1
-                               8
+                               9
        0
      295     296     297     298     299     300     301     302     303     304
      227     228     277     278     279     280     281     282     283     284
@@ -1938,7 +1938,7 @@ GROUP:          2 ELEMENTS:         48 MATERIAL:          4 NFLAGS:          1
 ENDOFSECTION
        ELEMENT GROUP 2.3.16
 GROUP:          3 ELEMENTS:        232 MATERIAL:          2 NFLAGS:          1
-                               7
+                               8
        0
      209     210     211     212     213     214     215     216     217     218
      219     220     221     222     223     224     225     226     285     286
@@ -2085,4 +2085,9 @@ ENDOFSECTION
        134    2    4
        133    2    4
        132    2    4
+ENDOFSECTION
+ BOUNDARY CONDITIONS 2.3.16
+                               7       1       2       0       6
+        13    2    3
+       168    2    1
 ENDOFSECTION

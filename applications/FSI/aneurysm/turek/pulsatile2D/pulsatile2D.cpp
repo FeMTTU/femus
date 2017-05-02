@@ -107,7 +107,8 @@ int main ( int argc, char **args )
     infile = "./input/AAA_thrombus_2D_porous.neu";
   }
   else if ( simulation == 7 ) {
-    infile = "./input/vein_valve.neu";
+    //infile = "./input/vein_valve.neu";
+    infile = "./input/vein_valve_closed.neu";
   }
 
   // ******* Set physics parameters *******
@@ -318,7 +319,7 @@ int main ( int argc, char **args )
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 192;
+  const unsigned int n_timesteps = 256;
 
 
   std::vector < std::vector <double> > data ( n_timesteps );
@@ -619,11 +620,13 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     value = 0.;
     if (1 == facename) {
       //value = -1;
-      value = ( 2.5 + 2.5 * sin ( 2 * PI * time ) ) * ramp;
+      //value = ( 2.5 + 2.5 * sin ( 2 * PI * time ) ) * ramp;
+      value = ( 4.5 + 4.5 * sin ( 2 * PI * time ) ) * ramp;
     }
     else if (2 == facename) {
       //value = 1;
-      value = ( 2.5 - 2.5 * sin ( 2 * PI * time ) ) * ramp;
+      //value = ( 2.5 - 2.5 * sin ( 2 * PI * time ) ) * ramp;
+      value = ( 4.5 - 4.5 * sin ( 2 * PI * time ) ) * ramp;
     }
   }
   else if (!strcmp(name, "DX") ) {
