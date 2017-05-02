@@ -888,20 +888,20 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
   if (!strcmp(name, "W")) {
     if (1 == facename) {
       double r2 = ((x[0] * x[0]) + (x[1] - 0.006) * (x[1] - 0.006)) / (0.0035 * 0.0035);
-      value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
       //value = 1.3 * 0.194 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
-//       double q;
-//       double t = time - floor(time);
-//       if (t >= 0. || t < 0.15) {
-//         q = 946.67 * t * t * t + 130 * t * t + 0.9333 * t + 3.94;
-//       }
-//       else if (t >= 0.15 || t < 0.45) {
-//         q = - 424889 * t * t * t * t * t * t + 876000 * t * t * t * t * t - 732289 * t * t * t * t + 317210 * t * t * t - 74927 * t * t + 9100.3 * t - 430.54;
-//       }
-//       else if (t >= 0.45 || t < 1.) {
-//         q = - 601.31  * t * t * t * t * t * t + 3582.2 * t * t * t * t * t - 8384.8 * t * t * t * t + 10028 * t * t * t - 6510.4 * t * t + 2177.1 * t - 286.61;
-//       }
-//       value = 2 * q * 1.e-6 * (1. - r2) / (PI * 0.0035 * 0.0035) * ramp; //inflow
+      double q;
+      double t = time - floor(time);
+      if (t >= 0. || t < 0.15) {
+        q = 946.67 * t * t * t + 130 * t * t + 0.9333 * t + 3.94;
+      }
+      else if (t >= 0.15 || t < 0.45) {
+        q = - 424889 * t * t * t * t * t * t + 876000 * t * t * t * t * t - 732289 * t * t * t * t + 317210 * t * t * t - 74927 * t * t + 9100.3 * t - 430.54;
+      }
+      else if (t >= 0.45 || t < 1.) {
+        q = - 601.31  * t * t * t * t * t * t + 3582.2 * t * t * t * t * t - 8384.8 * t * t * t * t + 10028 * t * t * t - 6510.4 * t * t + 2177.1 * t - 286.61;
+      }
+      value = 2 * q * 1.e-6 * (1. - r2) / (PI * 0.0035 * 0.0035) * ramp; //inflow
       //std::cout << "velocity we would like to have = " << value1 << " " << "time t is : " << t << std::endl;
     }
     else if (2 == facename || 3 == facename || 7 == facename) {
@@ -925,7 +925,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
     test = 0;
     value = 0.;
     if (2 == facename || 3 == facename) {
-      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+      //value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
       value = 5000 * ramp;//13332
     }
   }
