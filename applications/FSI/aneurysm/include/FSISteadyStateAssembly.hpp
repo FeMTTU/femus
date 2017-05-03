@@ -332,7 +332,9 @@ namespace femus {
 	  //-----------------------------------------------------------------------//
 	  // for vein_valve mesh
 	  std::vector<double> xc(dim,0.);
-	  xc[0] = -0.001013;
+	  //xc[0] = -0.001013;
+	  //xc[1] = 0.07000;
+	  xc[0] = -0.000286; // vein_valve_closed
 	  xc[1] = 0.07000;
 	  double distance = 0.;
 	  for (unsigned k = 0; k<dim; k++){
