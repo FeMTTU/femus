@@ -1,14 +1,17 @@
 #ifndef __femus_include_IncompressibleFSIAssemblySupg_hpp__
 #define __femus_include_IncompressibleFSIAssemblySupg_hpp__
+#endif
 
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "adept.h"
 
 #include "OprtrTypeEnum.hpp"
 
-namespace femus {
+namespace femus
+{
 
-  void FSITimeDependentAssemblySupg ( MultiLevelProblem & ml_prob ) {
+  void FSITimeDependentAssemblySupg ( MultiLevelProblem & ml_prob )
+  {
 
     clock_t AssemblyTime = 0;
     clock_t start_time, end_time;
@@ -28,12 +31,13 @@ namespace femus {
     SparseMatrix	* myKK		=  myLinEqSolver->_KK;
     NumericVector	* myRES		=  myLinEqSolver->_RES;
 
-    
+
     bool assembleMatrix = my_nnlin_impl_sys.GetAssembleMatrix();
     // call the adept stack object
     adept::Stack& s = FemusInit::_adeptStack;
-    if(assembleMatrix) s.continue_recording();
-    
+    if (assembleMatrix) s.continue_recording();
+    else s.pause_recording();
+
     const unsigned dim = mymsh->GetDimension();
     const unsigned nabla_dim = 3 * ( dim - 1 );
     const unsigned max_size = static_cast< unsigned > ( ceil ( pow ( 3, dim ) ) );
@@ -42,7 +46,7 @@ namespace femus {
 
     // local objects
     vector<adept::adouble> SolVAR ( 2 * dim + 1 );
-    vector<double> SolVAR_old ( 2 * dim + 1 );
+    vector<double> SolVAR_old ( 2 * dim );
 
     vector<vector < adept::adouble > > GradSolVAR ( 2 * dim );
     vector<vector < double > > GradSolVAR_old ( 2 * dim );
@@ -134,8 +138,8 @@ namespace femus {
     vector < int > dofsAll;
     dofsAll.reserve ( max_size * ( 2 + dim + 1 ) );
 
-    vector < double > KKloc;
-    KKloc.reserve ( dim * max_size * ( 2 * dim + 1 ) *dim * max_size * ( 2 * dim + 1 ) );
+    //vector < double > KKloc;
+    //KKloc.reserve ( dim * max_size * ( 2 * dim + 1 ) *dim * max_size * ( 2 * dim + 1 ) );
 
     vector < double > Jac;
     Jac.reserve ( dim * max_size * ( 2 * dim + 1 ) *dim * max_size * ( 2 * dim + 1 ) );
@@ -216,7 +220,7 @@ namespace femus {
 
     start_time = clock();
 
-    if (assembleMatrix) myKK->zero();
+    if ( assembleMatrix ) myKK->zero();
 
     // *** element loop ***
     for ( int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++ ) {
@@ -238,18 +242,18 @@ namespace femus {
         Soli_old[indexVAR[i]].resize ( nve );
 
         aRhs[indexVAR[i]].resize ( nve );
-        Rhs[indexVAR[i]].resize ( nve );
+    //    Rhs[indexVAR[i]].resize ( nve );
       }
 
       dofsVAR[2 * dim].resize ( nve1 );
       Soli[indexVAR[2 * dim]].resize ( nve1 );
       Soli_old[indexVAR[2 * dim]].resize ( nve1 );
       aRhs[indexVAR[2 * dim]].resize ( nve1 );
-      Rhs[indexVAR[2 * dim]].resize ( nve1 );
+    //  Rhs[indexVAR[2 * dim]].resize ( nve1 );
 
       dofsAll.resize ( 0 );
 
-      KKloc.resize ( ( 2 * dim * nve + nve1 ) * ( 2 * dim * nve + nve1 ) );
+    //  KKloc.resize ( ( 2 * dim * nve + nve1 ) * ( 2 * dim * nve + nve1 ) );
       Jac.resize ( ( 2 * dim * nve + nve1 ) * ( 2 * dim * nve + nve1 ) );
 
       // ----------------------------------------------------------------------------------------
@@ -305,7 +309,7 @@ namespace femus {
 
       //if (igrid==gridn || !myel->GetRefinedElementIndex(iel) ) {
 
-      if(assembleMatrix) s.new_recording();
+      if ( assembleMatrix ) s.new_recording();
 
       for ( unsigned idim = 0; idim < dim; idim++ ) {
         for ( int j = 0; j < nve; j++ ) {
@@ -314,7 +318,7 @@ namespace femus {
         }
       }
 
-      // Boundary integral
+      //Boundary integral
       {
 
         vector < adept::adouble> normal ( dim, 0 );
@@ -333,7 +337,7 @@ namespace femus {
             if ( ( !ml_sol->GetBdcFunction() ( xx, "P", tau, face, time ) &&
                    !ml_sol->GetBdcFunction() ( xx, "P", tau_old, face, time - dt ) )
                  && ( tau != 0. || tau_old != 0. ) ) {
-	             
+
               unsigned nve = mymsh->GetElementFaceDofNumber ( iel, jface, SolType2 );
               const unsigned felt = mymsh->GetElementFaceType ( iel, jface );
 
@@ -355,15 +359,15 @@ namespace femus {
                 // *** phi_i loop ***
                 for ( unsigned i = 0; i < nve; i++ ) {
                   adept::adouble value = - phi[i] * tau / rhof * Weight;
-                  double value_old = - phi[i] * tau_old / rhof * Weight_old;
+                  double value_old = - phi_old[i] * tau_old / rhof * Weight_old;
                   unsigned int ilocal = mymsh->GetLocalFaceVertexIndex ( iel, jface, i );
 
                   for ( unsigned idim = 0; idim < dim; idim++ ) {
                     if ( ( !solidmark[ilocal] ) ) {
-                      aRhs[indexVAR[dim + idim]][ilocal]   += dt * ( theta * value + ( 1. - theta ) * value_old ) * normal[idim];
+                      aRhs[indexVAR[dim + idim]][ilocal]   += ( theta * value + ( 1. - theta ) * value_old ) * normal[idim];
                     }
                     else {   //if interface node it goes to solid
-                      aRhs[indexVAR[idim]][ilocal]   += dt * ( theta * value + ( 1. - theta ) * value_old ) * normal[idim];
+                      aRhs[indexVAR[idim]][ilocal]   += ( theta * value + ( 1. - theta ) * value_old ) * normal[idim];
                     }
                   }
                 }
@@ -383,7 +387,7 @@ namespace femus {
         mymsh->_finiteElement[ielt][SolType2]->Jacobian ( vx_old, ig, Weight_old, phi_old, gradphi_old, nablaphi_old );
         phi1 = mymsh->_finiteElement[ielt][SolType1]->GetPhi ( ig );
 
-        if ( flag_mat == 2 || iel == mymsh->_elementOffset[iproc] ) {
+        if ( flag_mat == 2 || flag_mat == 3  || iel == mymsh->_elementOffset[iproc] ) {
           if ( ig == 0 ) {
             double GaussWeight = mymsh->_finiteElement[ielt][SolType2]->GetGaussWeight ( ig );
             area = Weight_hat / GaussWeight;
@@ -396,6 +400,18 @@ namespace femus {
           }
 
           Weight_nojac = Weight / area * rapresentative_area;
+
+// 	  std::vector<double> xc(dim,0.);
+// 	  xc[0] = -0.001013;
+// 	  xc[1] = 0.07000;
+// 	  double distance = 0.;
+// 	  for (unsigned k = 0; k<dim; k++){
+// 	    distance += ( vx_hat[k][ nve - 1] - xc[k] ) * ( vx_hat[k][nve - 1] - xc[k] );
+// 	  }
+// 	  distance =sqrt(distance);
+// 	  Weight_nojac *= 1./(1 + 10000 * distance);
+//
+// 	  if(elementGroup == 16) Weight_nojac *= 1.e06;
         }
 
         // ---------------------------------------------------------------------------
@@ -437,11 +453,9 @@ namespace femus {
 
         // pressure
         SolVAR[2 * dim] = 0.;
-        SolVAR_old[2 * dim] = 0.;
 
         for ( unsigned inode = 0; inode < nve1; inode++ ) {
           SolVAR[2 * dim]    += phi1[inode] * Soli[indexVAR[2 * dim]][inode];
-          SolVAR_old[2 * dim] += phi1[inode] * Soli_old[indexVAR[2 * dim]][inode];
         }
 
         // Lagrangian mesh velocity at t = time + dt/2
@@ -458,14 +472,14 @@ namespace femus {
         }
 
         // ---------------------------------------------------------------------------
-        //BEGIN FLUID ASSEMBLY ============
+        //BEGIN FLUID and POROUS MEDIA ASSEMBLY ============
         if ( flag_mat == 2 || flag_mat == 3 ) {
 
           vector < adept::adouble > a ( dim );
           vector < adept::adouble > a_old ( dim );
           for ( int i = 0; i < dim; i++ ) {
-            a[i] = SolVAR[i + dim] - meshVel[i]; // maybe we subtract meshVel[i]
-            a_old[i] = SolVAR_old[i + dim] - meshVel[i]; // maybe we subtract something??
+            a[i] = SolVAR[i + dim] - 0.*meshVel[i]; // TODO maybe we subtract meshVel[i] maybe not
+            a_old[i] = SolVAR_old[i + dim] - 0.*meshVel[i];
           }
 
           // speed
@@ -499,12 +513,12 @@ namespace femus {
 
           vector < adept::adouble > phiSupg ( nve, 0. );
           vector < adept::adouble > phiSupg_old ( nve, 0. );
-// 	  tauSupg=0;
-// 	  tauSupg_old=0;
+ 	  //tauSupg=0;
+ 	  //tauSupg_old=0;
           for ( unsigned i = 0; i < nve; i++ ) {
             for ( unsigned j = 0; j < dim; j++ ) {
-              phiSupg[i] += ( ( SolVAR[j + dim] - meshVel[j] ) * gradphi[i * dim + j] ) * tauSupg * (!solidmark[i]) ;
-              phiSupg_old[i] += ( ( SolVAR_old[j + dim] - meshVel[j] ) * gradphi_old[i * dim + j] ) * tauSupg_old * (!solidmark[i]);
+              phiSupg[i] += ( ( SolVAR[j + dim] - meshVel[j] ) * gradphi[i * dim + j] ) * tauSupg;// * (!solidmark[i]) ;
+              phiSupg_old[i] += ( ( SolVAR_old[j + dim] - meshVel[j] ) * gradphi_old[i * dim + j] ) * tauSupg_old;// * (!solidmark[i]);
             }
           }
 
@@ -518,7 +532,8 @@ namespace femus {
 
               for ( int idim = 0; idim < dim; idim++ ) {
                 for ( int jdim = 0; jdim < dim; jdim++ ) {
-                  LapmapVAR[idim] += ( GradSolVAR[idim][jdim] + GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
+                  LapmapVAR[idim] += ( GradSolVAR[idim][jdim] ) * gradphi_hat[i * dim + jdim];
+                  //LapmapVAR[idim] += ( GradSolVAR[idim][jdim] + 0.*GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
                 }
               }
 
@@ -552,12 +567,12 @@ namespace femus {
                     LapStrong_old[idim] += ( NablaSolVAR_old[dim + idim][jdim] + NablaSolVAR_old[dim + jdim][kdim] ) * phiSupg_old[i];
 
                     AdvaleVAR[idim]	+= ( ( SolVAR[dim + jdim] - meshVel[jdim] ) * GradSolVAR[dim + idim][jdim]
-                                         + ( GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim] ) * SolVAR[dim + idim]
+                                         + ( 0.*GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim] ) * SolVAR[dim + idim]
                                          //) * phi[i];
                                        ) * ( phi[i] + phiSupg[i] );
 
                     AdvaleVAR_old[idim]	+= ( ( SolVAR_old[dim + jdim] - meshVel[jdim] ) * GradSolVAR_old[dim + idim][jdim]
-                                             + ( GradSolVAR_old[dim + jdim][jdim] - GradMeshVel[jdim][jdim] ) * SolVAR_old[dim + idim]
+                                             + (0.*GradSolVAR_old[dim + jdim][jdim] - GradMeshVel[jdim][jdim] ) * SolVAR_old[dim + idim]
                                              //) * phi_old[i];
                                            ) * ( phi_old[i] + phiSupg_old[i] );
                   }
@@ -566,16 +581,16 @@ namespace femus {
                 for ( int idim = 0; idim < dim; idim++ ) {
 
                   adept::adouble timeDerivative = - ( SolVAR[dim + idim] * ( phi[i] + phiSupg[i] ) * Weight
-                                                      - SolVAR_old[dim + idim] * ( phi_old[i] + phiSupg_old[i] ) * Weight_old );
+                                                      - SolVAR_old[dim + idim] * ( phi_old[i] + phiSupg_old[i] ) * Weight_old )/dt;
 
-                  adept::adouble value =  theta * dt * (
+                  adept::adouble value =  theta * (
                                             - AdvaleVAR[idim]      	             // advection term
                                             - IRe * LapvelVAR[idim]	             // viscous dissipation
                                             + IRe * LapStrong[idim]
                                             + 1. / rhof * SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
 
-                  adept::adouble value_old = ( 1. - theta ) * dt * (
+                  adept::adouble value_old = ( 1. - theta ) * (
                                                - AdvaleVAR_old[idim]               	         // advection term
                                                - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
                                                + IRe * LapStrong_old[idim]
@@ -607,7 +622,8 @@ namespace femus {
                 speed_old = sqrt ( speed_old + eps );
                 double DE = 0.;
                 if ( dim == 2 ) {
-                  DE = 0.00006; // turek2D
+                  DE = 0.0002; // AAA_thrombus_2D
+                  //DE = 0.00006; // turek2D
                 }
                 else if ( dim == 3 ) {
                   DE = 0.000112; // porous3D
@@ -647,7 +663,7 @@ namespace femus {
 // 		  adept::adouble timeDerivative = -(SolVAR[dim + idim] * phi[i] * Weight
 //                                                   - SolVAR_old[dim + idim] * phi_old[i] * Weight_old);
 
-                  adept::adouble value =  theta * dt * (
+                  adept::adouble value =  theta * (
 // 					    - AdvaleVAR[idim]      	             // advection term
 // 					    - IRe * LapvelVAR[idim]	             // viscous dissipation
                                             //- SolVAR[dim + idim] * ( IRe / K + 0.5 * C2 * speed ) * phi[i]
@@ -655,7 +671,7 @@ namespace femus {
                                             + 1. / rhof * SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
 
-                  adept::adouble value_old = ( 1. - theta ) * dt * (
+                  adept::adouble value_old = ( 1. - theta ) * (
 // 					      - AdvaleVAR_old[idim]               	         // advection term
 // 					      - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
                                                //- SolVAR_old[dim + idim] * ( IRe / K + 0.5 * C2 * speed_old ) * phi_old[i]
@@ -866,7 +882,7 @@ namespace femus {
             }
           }
 
-          //END build Chauchy Stress in moving domain
+          //END build Cauchy Stress in moving domain
 
           //BEGIN v=0 + Momentum (Solid)
           {
@@ -874,9 +890,9 @@ namespace femus {
 
               //BEGIN redidual d_t - v = 0 in fixed domain
               for ( int idim = 0; idim < dim; idim++ ) {
-                aRhs[indexVAR[dim + idim]][i] +=  - phi[i] * ( -SolVAR[idim] + SolVAR_old[idim] +
-                                                  dt * ( theta * SolVAR[dim + idim] + ( 1. - theta ) * SolVAR_old[dim + idim] )
-                                                             ) * Weight_hat;
+                aRhs[indexVAR[dim + idim]][i] +=  - phi[i] * ( (-SolVAR[idim] + SolVAR_old[idim])/dt +
+                                                  ( theta * SolVAR[dim + idim] + ( 1. - theta ) * SolVAR_old[dim + idim] )
+                                                   ) * Weight_hat;
               }
 
               //END redidual d_t - v = 0 in fixed domain
@@ -895,13 +911,13 @@ namespace femus {
               for ( int idim = 0; idim < dim; idim++ ) {
 
                 adept::adouble timeDerivative = - ( rhos * SolVAR[dim + idim] * phi[i] * Weight
-                                                    - rhos * SolVAR_old[dim + idim] * phi_old[i] * Weight_old );
+                                                    - rhos * SolVAR_old[dim + idim] * phi_old[i] * Weight_old )/dt;
 
-                adept::adouble value =  theta * dt * ( rhos * phi[i] * _gravity[idim]     // body force
+                adept::adouble value =  theta * ( rhos * phi[i] * _gravity[idim]     // body force
                                                        - CauchyDIR[idim]			  // stress
                                                      ) * Weight;                         // at time t
 
-                adept::adouble value_old = ( 1. - theta ) * dt * ( rhos * phi_old[i] * _gravity[idim]   // body force
+                adept::adouble value_old = ( 1. - theta ) * ( rhos * phi_old[i] * _gravity[idim]   // body force
                                            - CauchyDIR_old[idim]			 // stress
                                                                  ) * Weight_old;                         // at time t-dt
 
@@ -944,50 +960,95 @@ namespace femus {
 
       //BEGIN local to global assembly
       //copy adouble aRhs into double Rhs
-      for ( unsigned i = 0; i < 2 * dim; i++ ) {
-        for ( int j = 0; j < nve; j++ ) {
-          Rhs[indexVAR[i]][j] = aRhs[indexVAR[i]][j].value();
+      for (unsigned i = 0; i < 2 * dim; i++) {
+        Rhs[indexVAR[i]].resize(nve);
+
+        for (int j = 0; j < nve; j++) {
+          Rhs[indexVAR[i]][j] = -aRhs[indexVAR[i]][j].value();
         }
       }
 
-      for ( unsigned j = 0; j < nve1; j++ ) {
-        Rhs[indexVAR[2 * dim]][j] = aRhs[indexVAR[2 * dim]][j].value();
+      Rhs[indexVAR[2 * dim]].resize(nve1);
+
+      for (unsigned j = 0; j < nve1; j++) {
+        Rhs[indexVAR[2 * dim]][j] = -aRhs[indexVAR[2 * dim]][j].value();
       }
 
-      for ( int i = 0; i < 2 * dim + 1; i++ ) {
-        myRES->add_vector_blocked ( Rhs[indexVAR[i]], dofsVAR[i] );
+      for (int i = 0; i < 2 * dim + 1; i++) {
+        myRES->add_vector_blocked(Rhs[indexVAR[i]], dofsVAR[i]);
       }
 
-      if (assembleMatrix){
-	//Store equations
-	for ( int i = 0; i < 2 * dim; i++ ) {
-	  s.dependent ( &aRhs[indexVAR[i]][0], nve );
-	  s.independent ( &Soli[indexVAR[i]][0], nve );
-	}
+      if (assembleMatrix) {
+        //Store equations
+        for (int i = 0; i < 2 * dim; i++) {
+          s.dependent(&aRhs[indexVAR[i]][0], nve);
+          s.independent(&Soli[indexVAR[i]][0], nve);
+        }
 
-	s.dependent ( &aRhs[indexVAR[2 * dim]][0], nve1 );
-	s.independent ( &Soli[indexVAR[2 * dim]][0], nve1 );
-	s.jacobian ( &Jac[0] );
-	unsigned nveAll = ( 2 * dim * nve + nve1 );
+        s.dependent(&aRhs[indexVAR[2 * dim]][0], nve1);
+        s.independent(&Soli[indexVAR[2 * dim]][0], nve1);
 
-	for ( int inode = 0; inode < nveAll; inode++ ) {
-	  for ( int jnode = 0; jnode < nveAll; jnode++ ) {
-	    KKloc[inode * nveAll + jnode] = -Jac[jnode * nveAll + inode];
-	  }
-	}
-      
+        Jac.resize((2 * dim * nve + nve1) * (2 * dim * nve + nve1));
 
-	myKK->add_matrix_blocked ( KKloc, dofsAll, dofsAll );
-	s.clear_independents();
-	s.clear_dependents();
+        s.jacobian(&Jac[0], true);
 
+        myKK->add_matrix_blocked(Jac, dofsAll, dofsAll);
+        s.clear_independents();
+        s.clear_dependents();
 
+        //END local to global assembly
       }
-      //END local to global assembly
     } //end list of elements loop
 
-    if (assembleMatrix) myKK->close();
-    
+
+
+
+//       //BEGIN local to global assembly
+//       //copy adouble aRhs into double Rhs
+//       for ( unsigned i = 0; i < 2 * dim; i++ ) {
+//         for ( int j = 0; j < nve; j++ ) {
+//           Rhs[indexVAR[i]][j] = aRhs[indexVAR[i]][j].value();
+//         }
+//       }
+//
+//       for ( unsigned j = 0; j < nve1; j++ ) {
+//         Rhs[indexVAR[2 * dim]][j] = aRhs[indexVAR[2 * dim]][j].value();
+//       }
+//
+//       for ( int i = 0; i < 2 * dim + 1; i++ ) {
+//         myRES->add_vector_blocked ( Rhs[indexVAR[i]], dofsVAR[i] );
+//       }
+//
+//       if ( assembleMatrix ) {
+//         //Store equations
+//         for ( int i = 0; i < 2 * dim; i++ ) {
+//           s.dependent ( &aRhs[indexVAR[i]][0], nve );
+//           s.independent ( &Soli[indexVAR[i]][0], nve );
+//         }
+//
+//         s.dependent ( &aRhs[indexVAR[2 * dim]][0], nve1 );
+//         s.independent ( &Soli[indexVAR[2 * dim]][0], nve1 );
+//         s.jacobian ( &Jac[0] );
+//         unsigned nveAll = ( 2 * dim * nve + nve1 );
+//
+//         for ( int inode = 0; inode < nveAll; inode++ ) {
+//           for ( int jnode = 0; jnode < nveAll; jnode++ ) {
+//             KKloc[inode * nveAll + jnode] = -Jac[jnode * nveAll + inode];
+//           }
+//         }
+//
+//
+//         myKK->add_matrix_blocked ( KKloc, dofsAll, dofsAll );
+//         s.clear_independents();
+//         s.clear_dependents();
+//
+//
+//       }
+//       //END local to global assembly
+//    } //end list of elements loop
+
+    if ( assembleMatrix ) myKK->close();
+
     myRES->close();
 
     delete area_elem_first;
@@ -997,11 +1058,12 @@ namespace femus {
     AssemblyTime += ( end_time - start_time );
     // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
   }
-  
-  
-  
-  
-  void FSITimeDependentAssemblySupgNP ( MultiLevelProblem & ml_prob ) {
+
+
+
+
+  void FSITimeDependentAssemblySupgNP ( MultiLevelProblem & ml_prob )
+  {
 
     clock_t AssemblyTime = 0;
     clock_t start_time, end_time;
@@ -1021,12 +1083,12 @@ namespace femus {
     SparseMatrix	* myKK		=  myLinEqSolver->_KK;
     NumericVector	* myRES		=  myLinEqSolver->_RES;
 
-    
+
     bool assembleMatrix = my_nnlin_impl_sys.GetAssembleMatrix();
     // call the adept stack object
     adept::Stack& s = FemusInit::_adeptStack;
-    if(assembleMatrix) s.continue_recording();
-    
+    if (assembleMatrix) s.continue_recording();
+
     const unsigned dim = mymsh->GetDimension();
     const unsigned nabla_dim = 3 * ( dim - 1 );
     const unsigned max_size = static_cast< unsigned > ( ceil ( pow ( 3, dim ) ) );
@@ -1298,7 +1360,7 @@ namespace femus {
 
       //if (igrid==gridn || !myel->GetRefinedElementIndex(iel) ) {
 
-      if(assembleMatrix) s.new_recording();
+      if (assembleMatrix) s.new_recording();
 
       for ( unsigned idim = 0; idim < dim; idim++ ) {
         for ( int j = 0; j < nve; j++ ) {
@@ -1354,7 +1416,7 @@ namespace femus {
 
                   for ( unsigned idim = 0; idim < dim; idim++ ) {
                     //if ( ( !solidmark[ilocal] ) ) {
-                      aRhs[indexVAR[dim + idim]][ilocal]   += dt * ( theta * value + ( 1. - theta ) * value_old ) * normal[idim];
+                    aRhs[indexVAR[dim + idim]][ilocal]   += dt * ( theta * value + ( 1. - theta ) * value_old ) * normal[idim];
                     //}
                     //else {   //if interface node it goes to solid
                     //  aRhs[indexVAR[idim]][ilocal]   += dt * ( theta * value + ( 1. - theta ) * value_old ) * normal[idim];
@@ -1577,11 +1639,11 @@ namespace femus {
                                              ) * Weight_old;			                 // at time t-dt
 
                   //if ( !solidmark[i] ) {
-                    aRhs[indexVAR[dim + idim]][i] += timeDerivative + value + value_old;
+                  aRhs[indexVAR[dim + idim]][i] += timeDerivative + value + value_old;
                   //}
                   //else {
                   //  aRhs[indexVAR[idim]][i] += timeDerivative + value + value_old;
-                 // }
+                  // }
 
                 }
                 //END redidual Navier-Stokes in moving domain
@@ -1645,7 +1707,7 @@ namespace femus {
 // 					    - AdvaleVAR[idim]      	             // advection term
 // 					    - IRe * LapvelVAR[idim]	             // viscous dissipation
                                             //- SolVAR[dim + idim] * ( IRe / K + 0.5 * C2 * speed ) * phi[i]
-					    - (SolVAR[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi[i] + phiSupg[i])
+                                            - (SolVAR[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi[i] + phiSupg[i])
                                             + SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
 
@@ -1653,16 +1715,16 @@ namespace femus {
 // 					      - AdvaleVAR_old[idim]               	         // advection term
 // 					      - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
                                                //- SolVAR_old[dim + idim] * ( IRe / K + 0.5 * C2 * speed_old ) * phi_old[i]
-					       - (SolVAR_old[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi_old[i] + phiSupg_old[i])
+                                               - (SolVAR_old[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi_old[i] + phiSupg_old[i])
                                                + SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
                                              ) * Weight_old;			                 // at time t-dt
 
                   //if ( !solidmark[i] ) {
-                    aRhs[indexVAR[dim + idim]][i] += value + value_old;
+                  aRhs[indexVAR[dim + idim]][i] += value + value_old;
                   //}
                   //else {
-                    //aRhs[indexVAR[idim]][i] += value + value_old;
-                 // }
+                  //aRhs[indexVAR[idim]][i] += value + value_old;
+                  // }
 
                 }
                 //END redidual Porous Media in moving domain
@@ -1868,9 +1930,9 @@ namespace femus {
 
               //BEGIN redidual d_t - v = 0 in fixed domain
               for ( int idim = 0; idim < dim; idim++ ) {
-                aRhs[indexVAR[0*dim + idim]][i] +=  - phi[i] * ( -SolVAR[idim] + SolVAR_old[idim] +
-                                                  dt * ( theta * SolVAR[dim + idim] + ( 1. - theta ) * SolVAR_old[dim + idim] )
-                                                             ) * Weight_hat;
+                aRhs[indexVAR[0 * dim + idim]][i] +=  - phi[i] * ( -SolVAR[idim] + SolVAR_old[idim] +
+                                                      dt * ( theta * SolVAR[dim + idim] + ( 1. - theta ) * SolVAR_old[dim + idim] )
+                                                                 ) * Weight_hat;
               }
 
               //END redidual d_t - v = 0 in fixed domain
@@ -1900,7 +1962,7 @@ namespace femus {
                                                                  ) * Weight_old;                         // at time t-dt
 
                 //aRhs[indexVAR[idim]][i] += timeDerivative + value + value_old;
-		aRhs[indexVAR[dim+idim]][i] += timeDerivative + value + value_old;
+                aRhs[indexVAR[dim + idim]][i] += timeDerivative + value + value_old;
               }
 
               //END redidual Solid Momentum in moving domain
@@ -1953,28 +2015,28 @@ namespace femus {
         myRES->add_vector_blocked ( Rhs[indexVAR[i]], dofsVAR[i] );
       }
 
-      if (assembleMatrix){
-	//Store equations
-	for ( int i = 0; i < 2 * dim; i++ ) {
-	  s.dependent ( &aRhs[indexVAR[i]][0], nve );
-	  s.independent ( &Soli[indexVAR[i]][0], nve );
-	}
+      if (assembleMatrix) {
+        //Store equations
+        for ( int i = 0; i < 2 * dim; i++ ) {
+          s.dependent ( &aRhs[indexVAR[i]][0], nve );
+          s.independent ( &Soli[indexVAR[i]][0], nve );
+        }
 
-	s.dependent ( &aRhs[indexVAR[2 * dim]][0], nve1 );
-	s.independent ( &Soli[indexVAR[2 * dim]][0], nve1 );
-	s.jacobian ( &Jac[0] );
-	unsigned nveAll = ( 2 * dim * nve + nve1 );
+        s.dependent ( &aRhs[indexVAR[2 * dim]][0], nve1 );
+        s.independent ( &Soli[indexVAR[2 * dim]][0], nve1 );
+        s.jacobian ( &Jac[0] );
+        unsigned nveAll = ( 2 * dim * nve + nve1 );
 
-	for ( int inode = 0; inode < nveAll; inode++ ) {
-	  for ( int jnode = 0; jnode < nveAll; jnode++ ) {
-	    KKloc[inode * nveAll + jnode] = -Jac[jnode * nveAll + inode];
-	  }
-	}
-      
+        for ( int inode = 0; inode < nveAll; inode++ ) {
+          for ( int jnode = 0; jnode < nveAll; jnode++ ) {
+            KKloc[inode * nveAll + jnode] = -Jac[jnode * nveAll + inode];
+          }
+        }
 
-	myKK->add_matrix_blocked ( KKloc, dofsAll, dofsAll );
-	s.clear_independents();
-	s.clear_dependents();
+
+        myKK->add_matrix_blocked ( KKloc, dofsAll, dofsAll );
+        s.clear_independents();
+        s.clear_dependents();
 
 
       }
@@ -1982,7 +2044,7 @@ namespace femus {
     } //end list of elements loop
 
     if (assembleMatrix) myKK->close();
-    
+
     myRES->close();
 
     delete area_elem_first;
@@ -1992,12 +2054,13 @@ namespace femus {
     AssemblyTime += ( end_time - start_time );
     // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
   }
-  
-  
-  
 
 
-  void SetLambda ( MultiLevelSolution &mlSol, const unsigned &level, const  FEOrder &order, Operator operatorType ) {
+
+
+
+  void SetLambda ( MultiLevelSolution &mlSol, const unsigned &level, const  FEOrder &order, Operator operatorType )
+  {
 
     unsigned SolType;
     if ( order < FIRST || order > SECOND ) {
@@ -2340,6 +2403,5 @@ namespace femus {
 
 }
 
-#endif
 
 

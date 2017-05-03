@@ -151,7 +151,7 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = .5 * 1.e6 ;
+    E = 10. * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
     E = 1. * 1.e6;
@@ -192,8 +192,6 @@ int main(int argc, char **args)
 //   MultiLevelMesh ml_msh1(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
 //                          infile.c_str(), "fifth", Lref, NULL);
 
-//   ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
-//   numberOfUniformRefinedMeshes = 1;
 
   ml_msh.PrintInfo();
 
@@ -476,7 +474,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 288; //352
+  const unsigned int n_timesteps = 352; //288
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -833,36 +831,32 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
   value = 0.;
 
   double PI = acos(-1.);
+  double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
 
   if (!strcmp(name, "U")) {
-    double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     if (2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
-      //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
-      value = 2 * 0.1 * (1. - r2) * ramp; //inflow
+      value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      //value = 2 * 0.1 * (1. - r2) * ramp; //inflow
     }
-    else if (5 == facename) {
+    else if (1 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if (!strcmp(name, "V") ){
+  else if (!strcmp(name, "V") || !strcmp(name, "W")){
     if (1 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if (!strcmp(name, "W") ){
-    if (5 == facename) {
-      test = 0;
-      value = 0.;
-    }
-  }
   else if (!strcmp(name, "P")) {
-    double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
     test = 0;
-    value = (1 == facename)? 11335 * ramp : 0.;
-    //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
+    value = 0.;
+    if (1 == facename) {
+      //value = 13335 * ramp;
+      value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
+    }
   }
   else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
     if (5 == facename) {
