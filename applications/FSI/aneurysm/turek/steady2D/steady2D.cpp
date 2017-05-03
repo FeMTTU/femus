@@ -94,7 +94,7 @@ int main(int argc, char **args)
     muf = 2.2 * 1.0e-3;
     rhos = 960;
     ni = 0.5;
-    E = 4.3874951 * 1.0e8; 
+    E = 4.3874951 * 1.0e12; 
     //E = 3.3 * 1.0e6; //vein young modulus
     E1 = 15 * 1.0e6; //leaflet young modulus
   }
@@ -363,11 +363,11 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     value = 0.;
     if (1 == facename) {
       test = 0.;
-      value = 8;
+      value = 15;
     }
     else if ( 2 == facename ) {
       test = 0;
-      value = -8;
+      value = -15;
     }
   }
   else if (!strcmp(name, "DX") ) {
