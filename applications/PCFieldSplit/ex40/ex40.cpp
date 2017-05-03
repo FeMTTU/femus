@@ -18,7 +18,7 @@
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "LinearImplicitSystem.hpp"
 #include "adept.h"
 #include "FieldSplitTree.hpp"
 #include <stdlib.h>
@@ -33,6 +33,36 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   value = 0.;
   return dirichlet;
 }
+
+bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
+
+  bool refine = false;
+
+// //   if (elemgroupnumber == 6 && level < 3) refine = 1;
+// //   if (elemgroupnumber == 7 && level < 4) refine = 1;
+// //   if (elemgroupnumber == 8 && level < 5) refine = 1;
+// 
+//   //if (elemgroupnumber == 6 && level < 4) refine = 1;
+//   //if (elemgroupnumber == 7 && level < 5) refine = 1;
+//   //if (elemgroupnumber == 8 && level < 6) refine = 1;
+// 
+//   if(elemgroupnumber == 6 && level < numberOfUniformLevels) refine = 1;
+//   if(elemgroupnumber == 7 && level < numberOfUniformLevels + 1) refine = 1;
+//   if(elemgroupnumber == 8 && level < numberOfUniformLevels + 2) refine = 1;
+// 
+// 
+// 
+// //   if (elemgroupnumber==6 && level<2) refine=1;
+// //   if (elemgroupnumber==7 && level<3) refine=1;
+// //   if (elemgroupnumber==8 && level<4) refine=1;
+
+  double a = static_cast<double>(rand())/RAND_MAX;
+  if ( a < 0.25) refine	= true;
+  
+  return refine;
+
+}
+
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 unsigned preconditioner = 0;
@@ -52,12 +82,15 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   unsigned numberOfUniformLevels = 3;
-  unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  unsigned numberOfSelectiveLevels = 3;
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(1);
   //numberOfUniformLevels -= 1;
   // print mesh info
+  
+  
+  
   mlMsh.PrintInfo();
   MultiLevelSolution mlSol(&mlMsh);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
@@ -70,7 +103,7 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
   // add system Poisson in mlProb as a Linear Implicit System  
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Poisson");
+  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Poisson");
 
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
@@ -80,8 +113,8 @@ int main(int argc, char** args) {
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
   
-  system.SetMaxNumberOfNonLinearIterations(1);
-  system.SetNonLinearConvergenceTolerance(1.e-8);
+  //system.SetMaxNumberOfNonLinearIterations(1);
+  //system.SetNonLinearConvergenceTolerance(1.e-8);
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
   //system.SetResidualUpdateConvergenceTolerance(1.e-15);
   
@@ -110,11 +143,11 @@ int main(int argc, char** args) {
   unsigned solUIndex;
   solUIndex = mlSol.GetIndex("U");	// get the position of "U" in the ml_sol object
   unsigned solUType = mlSol.GetSolutionType(solUIndex);		// get the finite element type for "U"
-  Mesh* msh = mlMsh.GetLevel(numberOfUniformLevels-1);
+  Mesh* msh = mlMsh.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
   
   unsigned nprocs = msh->n_processors();
   unsigned sizeU = msh->_dofOffset[solUType][nprocs];;  
-  Solution* sol = mlSol.GetLevel(numberOfUniformLevels-1);
+  Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
     
   for(unsigned i = 0; i< sizeU; i++){
     system.MLsolve();
@@ -145,17 +178,17 @@ int main(int argc, char** args) {
 
     VTKWriter vtkIO(&mlSol);
     vtkIO.SetDebugOutput( true );
-    vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, counter);
+    vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, counter-1);
   }
   /////////////////////////////////////ultiLevelProb/////////////////////////
   
-  // print solutions
-  std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("All");
-
-  VTKWriter vtkIO(&mlSol);
-  vtkIO.SetDebugOutput( true );
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+//   // print solutions
+//   std::vector < std::string > variablesToBePrinted;
+//   variablesToBePrinted.push_back("All");
+// 
+//   VTKWriter vtkIO(&mlSol);
+//   vtkIO.SetDebugOutput( true );
+//   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
   mlMsh.PrintInfo();
   
   return 0;
@@ -168,7 +201,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
   //  extract pointers to the several objects that we are going to use
-  NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
+  LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*           msh         = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -247,9 +280,15 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   unsigned nprocs = msh->n_processors();  
   unsigned sizeU = msh->_dofOffset[solUType][nprocs];
   if (counter < sizeU){
-    sol->_Sol[solUIndex]->set(counter, 1.);
-    sol->_Sol[solUIndex]->close();
+    if( (*sol->_Bdc[solUIndex])(counter) > 0.5){
+      sol->_Sol[solUIndex]->set(counter, 1.);
+      sol->_Sol[solUIndex]->close();
+    }
   }
+  
+  (sol->_Eps[solUIndex])->matrix_mult( *sol->_Sol[solUIndex], *mlPdeSys->_PPamr[level]);
+  *(sol->_Sol[solUIndex]) = *(sol->_Eps[solUIndex]);
+  
   
   //BEGIN element loop
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
