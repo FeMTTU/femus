@@ -620,13 +620,13 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     value = 0.;
     if (1 == facename) {
       //value = -1;
-      //value = ( 2.5 + 2.5 * sin ( 2 * PI * time ) ) * ramp;
-      value = ( 4 - 2.5 * sin ( 2 * PI * time ) ) * ramp; //+
+      value = ( 2.5 + 2.5 * sin ( 2 * PI * time ) ) * ramp;
+      //value = ( 4 + 2.5 * sin ( 2 * PI * time ) ) * ramp; //+
     }
     else if (2 == facename) {
       //value = 1;
-      //value = ( 2.5 - 2.5 * sin ( 2 * PI * time ) ) * ramp;
-      value = ( 4 + 2.5 * sin ( 2 * PI * time ) ) * ramp; //-
+      value = ( 2.5 - 2.5 * sin ( 2 * PI * time ) ) * ramp;
+      //value = ( 4 - 2.5 * sin ( 2 * PI * time ) ) * ramp; //-
     }
   }
   else if (!strcmp(name, "DX") ) {

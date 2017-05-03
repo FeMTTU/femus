@@ -404,19 +404,19 @@ namespace femus
 
 	  //-----------------------------------------------------------------------//
 	  // for vein_valve mesh
-// 	  std::vector<double> xc(dim,0.);
-// 	  //xc[0] = -0.001013; // vein_valve
-// 	  //xc[1] = 0.07000;
-// 	  xc[0] = -0.000286; // vein_valve_closed
-// 	  xc[1] = 0.07000;
-// 	  double distance = 0.;
-// 	  for (unsigned k = 0; k<dim; k++){
-// 	    distance += ( vx_hat[k][ nve - 1] - xc[k] ) * ( vx_hat[k][nve - 1] - xc[k] );
-// 	  }
-// 	  distance =sqrt(distance);
-// 	  Weight_nojac *= 1./(1 + 10000 * distance);
-// 
-// 	  if(elementGroup == 16) Weight_nojac *= 1.e06;
+	  std::vector<double> xc(dim,0.);
+	  //xc[0] = -0.001013; // vein_valve
+	  //xc[1] = 0.07000;
+	  xc[0] = -0.000286; // vein_valve_closed
+	  xc[1] = 0.07000;
+	  double distance = 0.;
+	  for (unsigned k = 0; k<dim; k++){
+	    distance += ( vx_hat[k][ nve - 1] - xc[k] ) * ( vx_hat[k][nve - 1] - xc[k] );
+	  }
+	  distance =sqrt(distance);
+	  Weight_nojac *= 1./(1 + 10000 * distance);
+
+	  if(elementGroup == 16) Weight_nojac *= 1.e06;
 	  //-----------------------------------------------------------------------//
         }
 
