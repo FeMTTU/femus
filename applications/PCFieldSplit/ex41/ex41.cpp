@@ -58,14 +58,12 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   double a = static_cast<double>(rand())/RAND_MAX;
   if ( a < 0.25) refine	= true;
-  
   return refine;
 
 }
 
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
-unsigned preconditioner = 0;
 
 int main(int argc, char** args) {
   
@@ -83,7 +81,7 @@ int main(int argc, char** args) {
 
   unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(1);
   //numberOfUniformLevels -= 1;
@@ -277,12 +275,12 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   
   unsigned nprocs = msh->n_processors();  
   unsigned sizeU = msh->_dofOffset[solUType][nprocs];
-  if (counter < sizeU){
-//     if( (*sol->_Bdc[solUIndex])(counter) > 0.5){
-      sol->_Sol[solUIndex]->set(counter, 1.);
-      sol->_Sol[solUIndex]->close();
-//     }
-  }
+//   if (counter < sizeU){
+// //     if( (*sol->_Bdc[solUIndex])(counter) > 0.5){
+//       sol->_Sol[solUIndex]->set(counter, 1.);
+//       sol->_Sol[solUIndex]->close();
+// //     }
+//   }
   
 //   (sol->_Eps[solUIndex])->matrix_mult( *sol->_Sol[solUIndex], *mlPdeSys->_PPamr[level]);
 //   *(sol->_Sol[solUIndex]) = *(sol->_Eps[solUIndex]);
@@ -313,7 +311,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       solU[i] = (*sol->_Sol[solUIndex])(solUDof);  //global to local solution value
       sysDof[i] = pdeSys->GetSystemDof(solUIndex, solUPdeIndex, i, iel);  //local to global system dof
       if(sysDof[i]==counter) {
-	fU[i]=0.;
+	fU[i] = 1.;
 	std::cout<<counter<<" "<<"U"<<std::endl;
       }
     }

@@ -27,8 +27,8 @@ aij = full(aij);
 % spy(aij)
 % return
 
-realJ = real(1.-eig(aij*pre));
-imagJ = imag(1.-eig(aij*pre));
+realJ = real(eig(aij*pre));
+imagJ = imag(eig(aij*pre));
 figure
 plot(realJ, imagJ, 'b*')
 
