@@ -215,6 +215,8 @@ public:
     /** Print  to the text file */
     virtual void print_personal(std::ostream& os=std::cout) const = 0;
 
+    virtual void print_matlab(const std::string& name, const std::string& format) const = 0;
+    
     /** @deprecated print to hdf5 files */
     virtual void print_hdf5(const std::string name="NULL") const=0;
 
