@@ -80,6 +80,8 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   unsigned numberOfUniformLevels = 3;
+  //unsigned numberOfSelectiveLevels = 3;
+  //mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
   // erase all the coarse mesh levels
@@ -161,7 +163,7 @@ int main(int argc, char** args) {
       std::cout << std::endl << " The output file preconditioner cannot be opened.\n";
       abort();
     }
-    
+    fout.precision(20);
     for(unsigned j = 0; j < sizeU; j++ ){
       fout << (*sol->_Sol[solUIndex])(j)<< " ";
     }  
@@ -310,10 +312,6 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       unsigned solUDof = msh->GetSolutionDof(i, iel, solUType);  //local to global solution dof
       solU[i] = (*sol->_Sol[solUIndex])(solUDof);  //global to local solution value
       sysDof[i] = pdeSys->GetSystemDof(solUIndex, solUPdeIndex, i, iel);  //local to global system dof
-      if(sysDof[i]==counter) {
-	fU[i] = 1.;
-	std::cout<<counter<<" "<<"U"<<std::endl;
-      }
     }
 
     for(unsigned i = 0; i < nDofsX; i++) { //coordinates
@@ -368,6 +366,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   }
 
   //END element loop
+  RES->add(counter,1.);
   RES->close();
 
   if(assembleMatrix) {
