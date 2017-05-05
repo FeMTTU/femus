@@ -254,7 +254,7 @@ int main(int argc, char** args) {
   
   
   std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::endl;
-  Prandtl = 0.005;
+ // Prandtl = 0.005;
   
   ///////////////////////////////////////////////////////////////
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NST");
