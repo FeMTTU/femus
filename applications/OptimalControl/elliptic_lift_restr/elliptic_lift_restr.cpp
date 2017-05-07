@@ -445,7 +445,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	  if (i < nDof_ctrl)  {
 	      if ( control_el_flag == 1)       Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight *  (target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
-		                                                                                              + laplace_rhs_dctrl_adj_i 
+		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_adj_i);
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.); ////////////Check this/////////////////////////////////
 	  }
@@ -487,7 +487,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               // BLOCK  delta_state - adjoint
               if ( i < nDof_u && j < nDof_adj )  
 		Jac[  (0 + i) * nDof_AllVars  +
-                (nDof_u + nDof_ctrl + j)        ]  += weight * laplace_mat_du_adj;
+                (nDof_u + nDof_ctrl + j)        ]  += weight * (-1) * laplace_mat_du_adj;
               
 	      //=========== delta_control row ===========================     
 	      if ( control_el_flag == 1)  {
@@ -495,7 +495,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               //BLOCK delta_control - control
               if ( i < nDof_ctrl   && j < nDof_ctrl   )
 		Jac[ (nDof_u + i) * nDof_AllVars +
-		(nDof_u + j)                     ]  += ( control_node_flag[i]) * weight * ( - beta * control_el_flag  * laplace_mat_dctrl_ctrl + alpha * control_el_flag * phi_ctrl[i] * phi_ctrl[j] + target_flag  * phi_ctrl[i] * phi_ctrl[j]);
+		(nDof_u + j)                     ]  += ( control_node_flag[i]) * weight * ( beta * control_el_flag  * laplace_mat_dctrl_ctrl + alpha * control_el_flag * phi_ctrl[i] * phi_ctrl[j] + target_flag  * phi_ctrl[i] * phi_ctrl[j]);
               
 	      //BLOCK delta_control - state
               if ( i < nDof_ctrl   && j < nDof_u   ) 
@@ -505,7 +505,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      //BLOCK delta_control - adjoint
               if ( i < nDof_ctrl   && j < nDof_adj  ) 
 		Jac[ (nDof_u + i) * nDof_AllVars  + 
-		(nDof_u + nDof_ctrl + j)         ]  +=  ( control_node_flag[i]) * weight * laplace_mat_dctrl_adj;
+		(nDof_u + nDof_ctrl + j)         ]  +=  ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj;
 	      }
 	      
 	      else if ( control_el_flag == 0)  {  
