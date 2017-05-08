@@ -37,6 +37,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = false;
+  unsigned level0 = 1;
 
 // //   if (elemgroupnumber == 6 && level < 3) refine = 1;
 // //   if (elemgroupnumber == 7 && level < 4) refine = 1;
@@ -59,9 +60,13 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //   double a = static_cast<double>(rand())/RAND_MAX;
 //   if ( a < 0.25) refine	= true;
 //   return refine;
-if (x[0] + 0.25 >= 1.0e-6 &&  x[0]-0.25 <= 1.0e-6 && x[1]+0.25 >= 1.0e-6 && x[1]-0.25 <= 1.0e-6){
-   refine	= true;
-} 
+//  std::cout<<level<<std::endl;
+  double radius = 0.35 / (level-level0);
+  double radius2 = radius * radius;
+  
+  if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
+    refine	= true;
+  }	 
   return refine;  
 
 }
@@ -219,6 +224,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
   // call the adept stack object
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  
+  SparseMatrix*   KKamr          = pdeSys->_KKamr;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
@@ -269,11 +276,11 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
 
   if(counter == 10){ 
-    KK->print_matlab("matrix.txt", "ascii");
-    Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
-    PetscViewer    viewer;
-    PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
-    MatView(KKp,viewer);
+    KKamr->print_matlab("matrix.txt", "ascii");
+//     Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
+//     PetscViewer    viewer;
+//     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+//     MatView(KKp,viewer);
   }   
   
   if(assembleMatrix) KK->zero(); // Set to zero all the entries of the Global Matrix    
