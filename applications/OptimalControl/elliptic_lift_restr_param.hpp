@@ -10,8 +10,8 @@
 
 //*********************** Sets the regularization parameters *******************************************************
 
-#define ALPHA_CTRL 1.e-6
-#define BETA_CTRL 1.e-6
+#define ALPHA_CTRL 1.e-3
+#define BETA_CTRL 0.
 
 
 
@@ -43,7 +43,7 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ******
  // flag = 1: we are in the lifting nonzero domain
   int control_el_flag = 0;
-   if ( elem_center[1] >  0.6) { control_el_flag = 1; }
+   if ( elem_center[1] >  0.9) { control_el_flag = 1; }
 
      return control_el_flag;
 
