@@ -56,9 +56,13 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 // //   if (elemgroupnumber==7 && level<3) refine=1;
 // //   if (elemgroupnumber==8 && level<4) refine=1;
 
-  double a = static_cast<double>(rand())/RAND_MAX;
-  if ( a < 0.25) refine	= true;
-  return refine;
+//   double a = static_cast<double>(rand())/RAND_MAX;
+//   if ( a < 0.25) refine	= true;
+//   return refine;
+if (x[0] + 0.25 >= 1.0e-6 &&  x[0]-0.25 <= 1.0e-6 && x[1]+0.25 >= 1.0e-6 && x[1]-0.25 <= 1.0e-6){
+   refine	= true;
+} 
+  return refine;  
 
 }
 
@@ -80,13 +84,13 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   unsigned numberOfUniformLevels = 3;
-  //unsigned numberOfSelectiveLevels = 3;
-  //mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-  unsigned numberOfSelectiveLevels = 0;
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+  unsigned numberOfSelectiveLevels = 3;
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
+//   unsigned numberOfSelectiveLevels = 0;
+//   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(1);
-  //numberOfUniformLevels -= 1;
+  //numberOfUniformLevels -= 1;		
   // print mesh info
   
   
