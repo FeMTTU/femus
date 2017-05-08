@@ -147,6 +147,9 @@ namespace femus {
       std::cout << "wrong " << _solverType << " type for this solver " << std::endl;
       abort();
     }
+    
+    std::cout << "COARSE GRID = "<<grid0<<std::endl;
+    std::cout << "FINE GRID = "<<_gridn<<std::endl;
 
     unsigned AMRCounter = 0;
 
