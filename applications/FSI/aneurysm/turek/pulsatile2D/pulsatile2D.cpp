@@ -107,8 +107,8 @@ int main ( int argc, char **args )
     infile = "./input/AAA_thrombus_2D_porous.neu";
   }
   else if ( simulation == 7 ) {
-    //infile = "./input/vein_valve.neu";
-    infile = "./input/vein_valve_closed.neu";
+    //infile = "./input/vein_valve_closed.neu";
+    infile = "./input/vein_valve_thiner.neu";
   }
 
   // ******* Set physics parameters *******
@@ -622,8 +622,8 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = -1;
       //value = ( /*2.5*/ + 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 + 1 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
-      //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5 //runna
-      value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
+      //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
+      value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; 
     }
     else if (2 == facename) {
       //value = 1;
