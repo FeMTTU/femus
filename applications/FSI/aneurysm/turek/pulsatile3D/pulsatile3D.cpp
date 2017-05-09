@@ -89,7 +89,7 @@ int main ( int argc, char ** args )
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
   std::string infile;
   if ( simulation == 0 ) {
-    infile = "./input/Turek_3D_D.neu"; //Turek_3D_F2.neu ha gruppo 10
+    infile = "./input/Turek_3D_F2.neu"; //Turek_3D_D.neu non ha gruppo 10
   }
   else if ( simulation == 1 ) {
     infile = "./input/aneurysm_omino.neu";
@@ -537,11 +537,11 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
   else if ( !strcmp ( name, "P" ) ) {
     test = 0;
     value = 0.;
-    if ( 2 == facename ) {
-      value = pressure[j] * ramp;
-      //value = 5000 * ramp;
-      //value = (5000 + 1000 * sin(2 * PI * time)) * ramp;
-    }
+//     if ( 2 == facename ) {
+//       value = pressure[j] * ramp;
+//       //value = 5000 * ramp;
+//       //value = (5000 + 1000 * sin(2 * PI * time)) * ramp;
+//     }
   }
   else if ( !strcmp ( name, "DX" ) ) {
     if ( 5 == facename || 6 == facename ) {
@@ -1045,9 +1045,7 @@ void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::v
   vol->close();
 
   double p2_l2 = p2->l1_norm();
-  p2_l2 = sqrt ( p2_l2 );
   double v2_l2 = v2->l1_norm();
-  v2_l2 = sqrt ( v2_l2 );
   double VOL0 = vol0->l1_norm();
   double VOL = vol->l1_norm();
 
@@ -1056,13 +1054,13 @@ void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::v
   std::cout << " vol0 = " << VOL0 << std::endl;
   std::cout << " vol = " << VOL << std::endl;
   std::cout << " (vol-vol0)/vol0 = " << ( VOL - VOL0 ) / VOL0 << std::endl;
-  std::cout << " p_l2 norm / vol = " << p2_l2 / VOL  << std::endl;
-  std::cout << " v_l2 norm / vol = " << v2_l2 / VOL  << std::endl;
+  std::cout << " p_l2 norm / vol = " << sqrt(p2_l2 / VOL)  << std::endl;
+  std::cout << " v_l2 norm / vol = " << sqrt(v2_l2 / VOL)  << std::endl;
 
-  data[1] = VOL0;
+  data[1] = ( VOL - VOL0 ) / VOL0;
   data[2] = VOL;
-  data[3] = p2_l2;
-  data[4] = v2_l2;
+  data[3] = sqrt(p2_l2 / VOL);
+  data[4] = sqrt(v2_l2 / VOL);
 
   delete p2;
   delete v2;
