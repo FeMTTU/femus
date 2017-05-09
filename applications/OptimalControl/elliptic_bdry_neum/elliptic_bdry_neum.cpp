@@ -504,7 +504,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 							         +  phi_ctrl_bdry[i_bdry]*sol_adj_bdry_gss
 							        );  //boundary optimality condition
 
-                 Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += - control_node_flag[i_vol] *  weight_bdry * (-1.) * phi_adj_bdry[i_bdry]*sol_ctrl_bdry_gss; 
+                 Res[ (nDof_u + nDof_ctrl +  i_vol) ]  += - control_node_flag[i_vol] *  weight_bdry * phi_adj_bdry[i_bdry]*sol_ctrl_bdry_gss; 
 //============ Bdry Residuals ==================    
 		    
 		    for(unsigned j_bdry=0; j_bdry < nve_bdry; j_bdry ++) {
@@ -518,7 +518,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
    	           if ( i_vol < nDof_ctrl && j_vol < nDof_ctrl ) {
                      Jac[  
 		        (nDof_u + i_vol) * nDof_AllVars +
-	                (nDof_u + j_vol)             ]  +=  control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]);
+	                (nDof_u + j_vol)             ]  += control_node_flag[i_vol] *  weight_bdry * (alpha * phi_ctrl_bdry[i_bdry] * phi_ctrl_bdry[j_bdry]);
 
                      double  lap_mat_dctrl_ctrl_bdry_gss = 0.;
 		     for (unsigned d = 0; d < dim; d++) {  lap_mat_dctrl_ctrl_bdry_gss += phi_ctrl_x_bdry[i_bdry + d*nve_bdry] * phi_ctrl_x_bdry[j_bdry + d*nve_bdry];   }
@@ -539,7 +539,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		   if ( i_vol < nDof_adj    && j_vol < nDof_ctrl )   
 		     Jac[ 
 			(nDof_u + nDof_ctrl + i_vol) * nDof_AllVars  +
-		        (nDof_u + j_vol)             ]  += control_node_flag[i_vol] * (weight_bdry * (-1.) * phi_ctrl_bdry[j_bdry] * phi_adj_bdry[i_bdry]);      
+		        (nDof_u + j_vol)             ]  += control_node_flag[i_vol] * (weight_bdry * phi_ctrl_bdry[j_bdry] * phi_adj_bdry[i_bdry]);      
 			
 //============ boundary control eqn =============			 
 		   				
@@ -604,11 +604,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      }
 	      
 //============ Volume residuals ==================	    
-          if (i < nDof_u)     Res[0                  + i] += - weight * ( (-1.) * target_flag * phi_u[i] * ( sol_u_gss - u_des)
-	                                                                  + laplace_rhs_du_adj_i); 
+          if (i < nDof_u)     Res[0                  + i] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)
+	                                                                  - laplace_rhs_du_adj_i); 
           if (i < nDof_ctrl)  Res[nDof_u             + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_ctrl[i] - 0.)  );
 	      
-	  if (i < nDof_adj)   Res[nDof_u + nDof_ctrl + i] += - weight * (laplace_rhs_dadj_u_i);
+	  if (i < nDof_adj)   Res[nDof_u + nDof_ctrl + i] += - weight * (-1) * (laplace_rhs_dadj_u_i);
 //============  Volume Residuals ==================	    
 	      
 	      
@@ -629,12 +629,12 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               // BLOCK delta_state / state	      
               if ( i < nDof_u && j < nDof_u )   
 		Jac[ i * nDof_AllVars +
-		   (0 + j)                                ]  += weight  * (-1.) * target_flag *  phi_u[i] * phi_u[j];   
+		   (0 + j)                                ]  += weight * target_flag *  phi_u[i] * phi_u[j];   
 		   
 	      //BLOCK delta_state / adjoint
               if ( i < nDof_u && j < nDof_adj )   
 		Jac[ i * nDof_AllVars +
-		   (nDof_u + nDof_ctrl + j)               ]  += weight  * laplace_mat_du_adj;
+		   (nDof_u + nDof_ctrl + j)               ]  += weight * (-1) * laplace_mat_du_adj;
 	      
 	      
               //=========== delta_control row ===========================
@@ -650,7 +650,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      if ( i < nDof_adj && j < nDof_u ) {
 		Jac[    
 		   (nDof_u + nDof_ctrl + i) * nDof_AllVars  +
-		   (0 + j)                                ]  += weight * laplace_mat_dadj_u;
+		   (0 + j)                                ]  += weight * (-1) * laplace_mat_dadj_u;
 
 	      }
 	    
