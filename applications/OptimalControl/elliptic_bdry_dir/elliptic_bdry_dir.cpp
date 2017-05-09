@@ -728,7 +728,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	                                                                  - laplace_rhs_du_adj_i); 
           if (i < nDof_ctrl)  Res[nDof_u              + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_ctrl[i] - 0.)  );
 	      
-	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += - weight * (laplace_rhs_dadj_u_i);
+	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += - weight * (-1) * (laplace_rhs_dadj_u_i);
 //============  Volume Residuals ==================	    
 	      
 	      
@@ -769,7 +769,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      if ( i < nDof_adj && j < nDof_u ) {
 		Jac[    
 		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
-		(0 + j)                                ]  += weight * laplace_mat_dadj_u;
+		(0 + j)                                ]  += weight * (-1) * laplace_mat_dadj_u;
 
 	      }
 	      
