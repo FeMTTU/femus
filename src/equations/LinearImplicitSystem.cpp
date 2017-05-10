@@ -147,6 +147,9 @@ namespace femus {
       std::cout << "wrong " << _solverType << " type for this solver " << std::endl;
       abort();
     }
+    
+    std::cout << "COARSE GRID = "<<grid0<<std::endl;
+    std::cout << "FINE GRID = "<<_gridn<<std::endl;
 
     unsigned AMRCounter = 0;
 
@@ -298,8 +301,8 @@ namespace femus {
       for( unsigned ig = gridn - 1u; ig > 0; ig-- ) {
         // ============== Presmoothing ==============
         for( unsigned k = 0; k < _npre; k++ ) {
-          //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
-	  Solve(ig + 1, ksp_clean * ( !k ), 0, 1);
+          _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
+	  //Solve(ig + 1, ksp_clean * ( !k ), 0, 1);
         }
 
         // ============== Restriction ==============
@@ -315,8 +318,8 @@ namespace femus {
 
         // ============== PostSmoothing ==============
         for( unsigned k = 0; k < _npost; k++ ) {
-          //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
-	  Solve(ig + 1, ksp_clean * ( !_npre ) * ( !k ), 0, 1);
+          _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
+	  //Solve(ig + 1, ksp_clean * ( !_npre ) * ( !k ), 0, 1);
         }
       }
 
