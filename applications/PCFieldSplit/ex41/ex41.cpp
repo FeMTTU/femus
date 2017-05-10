@@ -64,6 +64,8 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //  std::cout<<level<<std::endl;
 //   double radius = 1.0 / 8.0 /pi / (level-level0);
 // 0.35 / (level-level0);
+  std::cout << "AAAAAAAAAAAAAA" << std::endl;
+  std::cout << level << std::endl;
   double radius = pi / 4.0 /(level - level0);
   double radius2 = radius * radius;
   
@@ -71,7 +73,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
     refine	= true;
   }	 
   return refine;  
-
 }
 
 
@@ -92,7 +93,7 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   unsigned numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 5;
+  unsigned numberOfSelectiveLevels = 1;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
