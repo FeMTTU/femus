@@ -108,7 +108,8 @@ int main ( int argc, char **args )
   }
   else if ( simulation == 7 ) {
     //infile = "./input/vein_valve_closed.neu";
-    infile = "./input/vein_valve_thiner.neu";
+    //infile = "./input/vein_valve_thiner.neu";
+    infile = "./input/vein_valve_thinest.neu";
   }
 
   // ******* Set physics parameters *******
@@ -266,7 +267,7 @@ int main ( int argc, char **args )
   system.SetMaxNumberOfNonLinearIterations ( 4 );
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
   
-  system.SetMaxNumberOfLinearIterations ( 2 );
+  system.SetMaxNumberOfLinearIterations ( 6 );
   system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
 
   system.SetNumberPreSmoothingStep ( 0 );
@@ -319,7 +320,7 @@ int main ( int argc, char **args )
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 256;
+  const unsigned int n_timesteps = 1024;
 
 
   std::vector < std::vector <double> > data ( n_timesteps );
@@ -395,6 +396,10 @@ double SetVariableTimeStep ( const double time )
 {
   //double dt = 1. / ( 64 * 1.4 );
   double dt = 1./32;
+  
+//   double PI = acos(-1.);
+//   double dt = 1./32.*(1.25 + 0.75 * sin(2.*PI*time - 3./4. * PI));
+//   std::cout << "time = " << time <<  " dt * 32 = " << dt * 32<<std::endl;
   //double dt = 1. / 20;
   //double dt = 1./16.;
   //double dt = 1.0e6;
@@ -621,15 +626,18 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     if (1 == facename) {
       //value = -1;
       //value = ( /*2.5*/ + 2.5 * sin ( 2 * PI * time ) ) * ramp;
-      value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
+//       value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
+        value = ( 0 + 2 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
     }
     else if (2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
-      value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
+//       value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
+      
+      value = ( 0 - 2 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
     }
   }
   else if (!strcmp(name, "DX") ) {
