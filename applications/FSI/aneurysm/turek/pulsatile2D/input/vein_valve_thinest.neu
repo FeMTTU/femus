@@ -1,8 +1,8 @@
         CONTROL INFO 2.3.16
 ** GAMBIT NEUTRAL FILE
-vein_valve_thiner
+vein_valve_thinest
 PROGRAM:                Gambit     VERSION:  2.3.16
-11 May 2017    11:52:57 
+11 May 2017    18:33:12 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
       1305       304         4         6         2         2
 ENDOFSECTION
@@ -1989,9 +1989,7 @@ ENDOFSECTION
         11    2    1
 ENDOFSECTION
  BOUNDARY CONDITIONS 2.3.16
-                               5       1      50       0       6
-        46    2    4
-       248    2    2
+                               5       1      48       0       6
        297    2    2
        298    2    2
        299    2    2
