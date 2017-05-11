@@ -139,7 +139,9 @@ int main(int argc, char** args) {
   //system.SetSolverFineGrids(GMRES);
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
+  
+  
   system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
