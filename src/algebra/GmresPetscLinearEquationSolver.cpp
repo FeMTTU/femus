@@ -445,6 +445,9 @@ namespace femus {
   void GmresPetscLinearEquationSolver::SetPetscSolverType(KSP& ksp) {
     int ierr = 0;
 
+    unsigned level;
+    double scale;
+    
     switch(this->_solver_type) {
       case CG:
         ierr = KSPSetType(ksp, (char*) KSPCG);
@@ -503,7 +506,16 @@ namespace femus {
 
       case RICHARDSON:
         KSPSetType(ksp, (char*) KSPRICHARDSON);
-        KSPRichardsonSetScale(ksp, -0.1);
+	
+	level = _msh->GetLevel();
+	
+	
+	
+	scale = -0.5/pow(4,level-1)/level;
+	
+	std::cout<<"level = "<<level<<" scale = "<<scale<<std::endl;
+	
+	KSPRichardsonSetScale(ksp, scale);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
         return;
 
