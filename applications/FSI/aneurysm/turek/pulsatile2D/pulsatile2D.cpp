@@ -109,7 +109,7 @@ int main ( int argc, char **args )
   else if ( simulation == 7 ) {
     //infile = "./input/vein_valve_closed.neu";
     //infile = "./input/vein_valve_thiner.neu";
-    infile = "./input/vein_valve_thinest.neu";
+    infile = "./input/vein_valve_modifiedFluid.neu";
   }
 
   // ******* Set physics parameters *******
@@ -397,6 +397,11 @@ double SetVariableTimeStep ( const double time )
 {
   //double dt = 1. / ( 64 * 1.4 );
   double dt = 1./32;
+  double shiftedTime = time - floor(time);
+  if( time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25){
+    dt = 1./256;
+  }
+  std::cout << " Shifted Time = " << shiftedTime << " dt = " << dt<< std::endl; 
   
 //   double PI = acos(-1.);
 //   double dt = 1./32.*(1.25 + 0.75 * sin(2.*PI*time - 3./4. * PI));
