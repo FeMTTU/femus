@@ -627,7 +627,8 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     if (1 == facename) {
       //value = -1;
       //value = ( /*2.5*/ + 2.5 * sin ( 2 * PI * time ) ) * ramp;
-//       value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
+      //value = ( 5 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
+      //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
         value = ( 0 + 2 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
@@ -635,9 +636,8 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     else if (2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
-//       value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
-      //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      
+      //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
+      //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna      
       value = ( 0 - 2 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
     }
   }
@@ -827,9 +827,7 @@ void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::v
   vol->close();
 
   double p2_l2 = p2->l1_norm();
-  p2_l2 = sqrt ( p2_l2 );
   double v2_l2 = v2->l1_norm();
-  v2_l2 = sqrt ( v2_l2 );
   double VOL0 = vol0->l1_norm();
   double VOL = vol->l1_norm();
 
@@ -838,13 +836,13 @@ void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::v
   std::cout << " vol0 = " << VOL0 << std::endl;
   std::cout << " vol = " << VOL << std::endl;
   std::cout << " (vol-vol0)/vol0 = " << ( VOL - VOL0 ) / VOL0 << std::endl;
-  std::cout << " p_l2 norm / vol = " << p2_l2 / VOL  << std::endl;
-  std::cout << " v_l2 norm / vol = " << v2_l2 / VOL  << std::endl;
+  std::cout << " p_l2 norm / vol = " << sqrt(p2_l2 / VOL)  << std::endl;
+  std::cout << " v_l2 norm / vol = " << sqrt(v2_l2 / VOL)  << std::endl;
 
-  data[1] = VOL0;
+  data[1] = ( VOL - VOL0 ) / VOL0;
   data[2] = VOL;
-  data[3] = p2_l2;
-  data[4] = v2_l2;
+  data[3] = sqrt(p2_l2 / VOL);
+  data[4] = sqrt(v2_l2 / VOL);
 
   delete p2;
   delete v2;
