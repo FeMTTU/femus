@@ -35,49 +35,50 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
+
+
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = false;
-   unsigned level0 = 0;
-   
-// //   if (elemgroupnumber == 6 && level < 3) refine = 1;
-// //   if (elemgroupnumber == 7 && level < 4) refine = 1;
-// //   if (elemgroupnumber == 8 && level < 5) refine = 1;
-// 
-//   //if (elemgroupnumber == 6 && level < 4) refine = 1;
-//   //if (elemgroupnumber == 7 && level < 5) refine = 1;
-//   //if (elemgroupnumber == 8 && level < 6) refine = 1;
-// 
-//   if(elemgroupnumber == 6 && level < numberOfUniformLevels) refine = 1;
-//   if(elemgroupnumber == 7 && level < numberOfUniformLevels + 1) refine = 1;
-//   if(elemgroupnumber == 8 && level < numberOfUniformLevels + 2) refine = 1;
-// 
-// 
-// 
-// //   if (elemgroupnumber==6 && level<2) refine=1;
-// //   if (elemgroupnumber==7 && level<3) refine=1;
-// //   if (elemgroupnumber==8 && level<4) refine=1;
+  unsigned level0 = 0;
 
-//   double a = static_cast<double>(rand())/RAND_MAX;
-//   if ( a < 0.25) refine	= true;  
+//   if (elemgroupnumber == 6 && level < 3) refine = 1;
+
+
+  double a = static_cast<double>(rand())/RAND_MAX;
+  if ( a < 0.5) refine	= true;
+  return refine;
+
+//  std::cout<<level<<std::endl;
+// double radius = pi / 8.0 /(level - level0);
+
+//  double radius = sqrt(2.0)/2.0/pow(2.0,level - level0);
   
-//   double radius = sqrt(2.0)/2.0/pow(2.0,level - level0);
-  unsigned powindex;
-  powindex = level -level0;
-  if (powindex % 2 == 0) powindex = powindex - 1;
-  double radius = sqrt(2.0)/2.0/pow(2.0,powindex);
-  double radius2 = radius * radius;
+//   unsigned powindex;
+//   powindex = level -level0;
+//   if (powindex % 2 == 0) powindex = powindex - 1;
+//   double radius = sqrt(2.0)/2.0/pow(2.0,powindex);
   
-  if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
-    refine	= true;
-  }	 
-  return refine;       
+ // double radius2 = radius * radius;
+  
+//   if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
+//     refine	= true;
+//   }	 
+//   return refine;  
+  
+  
+//   if( fabs(x[0]) < 0.5/ pow(2,level) && fabs(x[1]) < 0.5/ pow(2,level) ){
+//     refine = true;
+//   }
+//   return refine;
 }
 
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
+  
+  srand(1);
   
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
@@ -92,7 +93,7 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   unsigned numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 6;
+  unsigned numberOfSelectiveLevels = 5;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
