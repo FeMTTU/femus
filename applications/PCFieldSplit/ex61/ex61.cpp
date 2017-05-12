@@ -27,7 +27,7 @@
 
 using namespace femus;
 unsigned counter = 0;
-const double pi = acos(0.0);
+const double pi = 2.0 * acos(0.0);
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
@@ -59,16 +59,19 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 // //   if (elemgroupnumber==8 && level<4) refine=1;
 
 //   double a = static_cast<double>(rand())/RAND_MAX;
-//   if ( a < 0.25) refine	= true;
-
-  double radius = pi / 4.0 /(level - level0);
-//   return refine;
-//  std::cout<<level<<std::endl;
+//   if ( a < 0.25) refine	= true;  
+  
+//   double radius = sqrt(2.0)/2.0/pow(2.0,level - level0);
+  unsigned powindex;
+  powindex = level -level0;
+  if (powindex % 2 == 0) powindex = powindex - 1;
+  double radius = sqrt(2.0)/2.0/pow(2.0,powindex);
   double radius2 = radius * radius;
+  
   if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
     refine	= true;
   }	 
-  return refine;  
+  return refine;       
 }
 
 
@@ -89,7 +92,7 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   unsigned numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 5;
+  unsigned numberOfSelectiveLevels = 6;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
