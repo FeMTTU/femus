@@ -138,8 +138,8 @@ int main(int argc, char** args) {
 
   //system.SetSolverFineGrids(GMRES);
   system.SetSolverFineGrids(RICHARDSON);
-  system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  //system.SetPreconditionerFineGrids(ILU_PRECOND);
+  //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
   
   
   system.SetTolerances(1.e-5, 1.e-20, 1.e+50, 20, 20);
@@ -316,7 +316,7 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
           Temp +=  phiT_x[i * dim + j] * gradSolT_gss[j];
         }
 
-        aResT[i] += (phiT[i] - Temp) * weight;
+        aResT[i] -= (phiT[i] - Temp) * weight;
       } // end phiT_i loop
 
     } // end gauss point loop
