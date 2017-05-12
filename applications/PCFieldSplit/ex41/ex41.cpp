@@ -40,44 +40,37 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
   bool refine = false;
   unsigned level0 = 0;
 
-// //   if (elemgroupnumber == 6 && level < 3) refine = 1;
-// //   if (elemgroupnumber == 7 && level < 4) refine = 1;
-// //   if (elemgroupnumber == 8 && level < 5) refine = 1;
-// 
-//   //if (elemgroupnumber == 6 && level < 4) refine = 1;
-//   //if (elemgroupnumber == 7 && level < 5) refine = 1;
-//   //if (elemgroupnumber == 8 && level < 6) refine = 1;
-// 
-//   if(elemgroupnumber == 6 && level < numberOfUniformLevels) refine = 1;
-//   if(elemgroupnumber == 7 && level < numberOfUniformLevels + 1) refine = 1;
-//   if(elemgroupnumber == 8 && level < numberOfUniformLevels + 2) refine = 1;
-// 
-// 
-// 
-// //   if (elemgroupnumber==6 && level<2) refine=1;
-// //   if (elemgroupnumber==7 && level<3) refine=1;
-// //   if (elemgroupnumber==8 && level<4) refine=1;
+//   if (elemgroupnumber == 6 && level < 3) refine = 1;
+
 
 //   double a = static_cast<double>(rand())/RAND_MAX;
 //   if ( a < 0.25) refine	= true;
 //   return refine;
+
 //  std::cout<<level<<std::endl;
-//   double radius = 1.0 / 8.0 /pi / (level-level0);
-// 0.35 / (level-level0);
 //   double radius = pi / 8.0 /(level - level0);
- double radius = sqrt(2.0)/2.0/pow(2.0,level - level0);
+
+//  double radius = sqrt(2.0)/2.0/pow(2.0,level - level0);
   
 //   unsigned powindex;
 //   powindex = level -level0;
 //   if (powindex % 2 == 0) powindex = powindex - 1;
 //   double radius = sqrt(2.0)/2.0/pow(2.0,powindex);
   
-  double radius2 = radius * radius;
+//  double radius2 = radius * radius;
   
-  if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
+ /* if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
     refine	= true;
   }	 
   return refine;  
+ */ 
+  
+  if( fabs(x[1]) < 0.25 ){
+    if( fabs(x[0]) < 0.5/ pow(2,level) ){
+      refine = true;
+    }
+  }
+  return refine;
 }
 
 
@@ -98,7 +91,7 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   unsigned numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 3;
+  unsigned numberOfSelectiveLevels = 5;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
