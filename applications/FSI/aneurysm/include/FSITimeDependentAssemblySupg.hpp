@@ -416,7 +416,7 @@ namespace femus
 	  distance =sqrt(distance);
 	  Weight_nojac *= 1./(1 + 10000 * distance);
 
-	  if(elementGroup == 16) Weight_nojac *= 1.e06;
+	  if(elementGroup == 16) Weight_nojac *= 100;
 	  //-----------------------------------------------------------------------//
         }
 
@@ -538,8 +538,8 @@ namespace femus
 
               for ( int idim = 0; idim < dim; idim++ ) {
                 for ( int jdim = 0; jdim < dim; jdim++ ) {
-                  LapmapVAR[idim] += ( GradSolVAR[idim][jdim] ) * gradphi_hat[i * dim + jdim];
-                  //LapmapVAR[idim] += ( GradSolVAR[idim][jdim] + 0.*GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
+                  //LapmapVAR[idim] += ( GradSolVAR[idim][jdim] ) * gradphi_hat[i * dim + jdim];
+                  LapmapVAR[idim] += ( GradSolVAR[idim][jdim] + 0.*GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
                 }
               }
 

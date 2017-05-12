@@ -262,9 +262,9 @@ int main ( int argc, char **args )
   // ******* set MG-Solver *******
   system.SetMgType ( F_CYCLE );
 
-  system.SetNonLinearConvergenceTolerance ( 1.e-9 );
+  system.SetNonLinearConvergenceTolerance ( 1.e-7 );
   //system.SetResidualUpdateConvergenceTolerance ( 1.e-15 );
-  system.SetMaxNumberOfNonLinearIterations ( 4 );
+  system.SetMaxNumberOfNonLinearIterations ( 10 );
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
   
   system.SetMaxNumberOfLinearIterations ( 6 );
@@ -333,6 +333,7 @@ int main ( int argc, char **args )
     if ( time_step > 0 )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
+    
     system.MGsolve();
     //data[time_step][0] = time_step / 16.;
     //data[time_step][0] = time_step / 20.;
