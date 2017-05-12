@@ -43,12 +43,12 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //   if (elemgroupnumber == 6 && level < 3) refine = 1;
 
 
-//   double a = static_cast<double>(rand())/RAND_MAX;
-//   if ( a < 0.25) refine	= true;
-//   return refine;
+  double a = static_cast<double>(rand())/RAND_MAX;
+  if ( a < 0.5) refine	= true;
+  return refine;
 
 //  std::cout<<level<<std::endl;
-//   double radius = pi / 8.0 /(level - level0);
+// double radius = pi / 8.0 /(level - level0);
 
 //  double radius = sqrt(2.0)/2.0/pow(2.0,level - level0);
   
@@ -57,26 +57,26 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //   if (powindex % 2 == 0) powindex = powindex - 1;
 //   double radius = sqrt(2.0)/2.0/pow(2.0,powindex);
   
-//  double radius2 = radius * radius;
+ // double radius2 = radius * radius;
   
- /* if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
-    refine	= true;
-  }	 
-  return refine;  
- */ 
+//   if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
+//     refine	= true;
+//   }	 
+//   return refine;  
   
-  if( fabs(x[1]) < 0.25 ){
-    if( fabs(x[0]) < 0.5/ pow(2,level) ){
-      refine = true;
-    }
-  }
-  return refine;
+  
+//   if( fabs(x[0]) < 0.5/ pow(2,level) && fabs(x[1]) < 0.5/ pow(2,level) ){
+//     refine = true;
+//   }
+//   return refine;
 }
 
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
+  
+  srand(1);
   
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
