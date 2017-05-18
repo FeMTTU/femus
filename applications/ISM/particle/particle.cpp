@@ -126,7 +126,8 @@ int main(int argc, char **args)
     infile = "./input/aortic_bifurcation.neu";
   }
   else if (simulation == 6) {
-    infile = "./input/tubo3D.neu";
+    //infile = "./input/tubo3D.neu";
+    infile = "./input/tubo3D_thick.neu";
     dimension2D = false;
   }
   else if (simulation == 7) {
@@ -151,7 +152,7 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = 1.e6 * 1.e6 ;
+    E = 0.1 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
     E = 1.e6 * 1.e6; 
