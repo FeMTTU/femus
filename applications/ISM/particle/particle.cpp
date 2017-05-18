@@ -151,10 +151,10 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = 10. * 1.e6 ;
+    E = 1.e6 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
-    E = 1. * 1.e6;
+    E = 1.e6 * 1.e6; 
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
@@ -191,6 +191,9 @@ int main(int argc, char **args)
 
 //   MultiLevelMesh ml_msh1(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
 //                          infile.c_str(), "fifth", Lref, NULL);
+
+//   ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
+//   numberOfUniformRefinedMeshes = 1;
 
 
   ml_msh.PrintInfo();
@@ -431,7 +434,7 @@ int main(int argc, char **args)
 
   //END INITIALIZE PARTICLES
 
-  unsigned itPeriod = 32;
+  unsigned itPeriod = 32 /*for steady state with dt =100*/ /* for unsteady with dt =1/32, itPeriod = 32*/;
   unsigned confNumber;
   unsigned partSimMax;
   if (simulation == 6) {
@@ -474,7 +477,9 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 352; //288
+
+  const unsigned int n_timesteps = (simulation == 6) ? 352 : 288 ;
+
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -506,10 +511,10 @@ int main(int argc, char **args)
         if (time_step >= 2 * itPeriod) {
           for (int i = 0; i < linea[configuration][partSim].size(); i++) {
             if (simulation == 6) {
-              linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceWire);
+              linea[configuration][partSim][i]->AdvectionParallel(15, 1. / itPeriod, 4, MagneticForceWire);
             }
             else if (simulation == 5 || simulation == 7) {
-              linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceSC);
+              linea[configuration][partSim][i]->AdvectionParallel(15, 1. / itPeriod, 4, MagneticForceSC);
             }
             count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
           }
@@ -836,8 +841,8 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
   if (!strcmp(name, "U")) {
     if (2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
-      value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
-      //value = 2 * 0.1 * (1. - r2) * ramp; //inflow
+      //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      value = 2 * 0.1 * (1. - r2) * ramp; //inflow
     }
     else if (1 == facename || 5 == facename) {
       test = 0;
@@ -854,8 +859,8 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
     test = 0;
     value = 0.;
     if (1 == facename) {
-      //value = 13335 * ramp;
-      value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
+      //value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
+      value = 13335 * ramp;
     }
   }
   else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
@@ -916,8 +921,8 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
     test = 0;
     value = 0.;
     if (2 == facename || 3 == facename) {
-      //value = (10000 + 2500 * sin(2 * PI * time)) * ramp;
-      value = 7000 * ramp;//5000
+      //value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
+      value = 5000 * ramp;//13332
     }
   }
   else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
