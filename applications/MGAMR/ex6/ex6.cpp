@@ -35,42 +35,24 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
-
+unsigned numberOfUniformLevels;
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = false;
-  unsigned level0 = 0;
 
-//   if (elemgroupnumber == 6 && level < 3) refine = 1;
-
-
-  double a = static_cast<double>(rand())/RAND_MAX;
-  if ( a < 0.5) refine	= true;
+  if(elemgroupnumber == 7 && level < numberOfUniformLevels){
+    refine = true;
+  }
+  else if(elemgroupnumber == 8 && level < numberOfUniformLevels + 1){
+    refine = true;
+  }
+  else if(elemgroupnumber == 9 && level < numberOfUniformLevels + 2){
+    refine = true;
+  }
+  
   return refine;
 
-//  std::cout<<level<<std::endl;
-// double radius = pi / 8.0 /(level - level0);
-
-//  double radius = sqrt(2.0)/2.0/pow(2.0,level - level0);
-  
-//   unsigned powindex;
-//   powindex = level -level0;
-//   if (powindex % 2 == 0) powindex = powindex - 1;
-//   double radius = sqrt(2.0)/2.0/pow(2.0,powindex);
-  
- // double radius2 = radius * radius;
-  
-//   if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
-//     refine	= true;
-//   }	 
-//   return refine;  
-  
-  
-//   if( fabs(x[0]) < 0.5/ pow(2,level) && fabs(x[1]) < 0.5/ pow(2,level) ){
-//     refine = true;
-//   }
-//   return refine;
 }
 
 
@@ -87,22 +69,15 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
+   mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 4;
+  numberOfUniformLevels = 2;
+  unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
-//   unsigned numberOfSelectiveLevels = 0;
-//   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
-  // erase all the coarse mesh levels
-  //mlMsh.EraseCoarseLevels(1);
-  //numberOfUniformLevels -= 1;
-  // print mesh info
-  
-  
+ 
   
   mlMsh.PrintInfo();
   MultiLevelSolution mlSol(&mlMsh);
@@ -121,8 +96,8 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(ASM_SMOOTHER);
+  system.SetMgSmoother(GMRES_SMOOTHER);
+  // system.SetMgSmoother(ASM_SMOOTHER);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
   
@@ -148,8 +123,8 @@ int main(int argc, char** args) {
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   
-  system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(2);
+  //system.SetNumberOfSchurVariables(1);
+  //system.SetElementBlockNumber(2);
  
   //////////////////////////////////////////////////////////////////////
   //solution variable
