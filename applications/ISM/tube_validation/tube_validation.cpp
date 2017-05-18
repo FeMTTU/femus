@@ -127,7 +127,8 @@ int main(int argc, char **args)
     infile = "./input/aortic_bifurcation.neu";
   }
   else if (simulation == 6) {
-    infile = "./input/tubo3D.neu";
+    //infile = "./input/tubo3D.neu";
+    infile = "./input/tubo3D_CFD.neu";
     dimension2D = false;
   }
   else if (simulation == 7) {
@@ -301,7 +302,7 @@ int main(int argc, char **args)
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
 
-  system.SetNonLinearConvergenceTolerance(1.e-9);
+  system.SetNonLinearConvergenceTolerance(1.e-10);
   system.SetMaxNumberOfNonLinearIterations(4);
   if (dimension2D) {
     system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
@@ -860,19 +861,19 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
       //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
       value = 2 * 0.1 * (1. - r2); //inflow
     }
-    else if (1 == facename /*|| 5 == facename*/) {
+    else if (1 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
   else if (!strcmp(name, "V") ){
-    if (1 == facename /*|| 5 == facename*/) {
+    if (1 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
   else if (!strcmp(name, "W") ){
-    if (1 == facename /*5 == facename*/) {
+    if (5 == facename) {
       test = 0;
       value = 0.;
     }
