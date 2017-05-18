@@ -513,6 +513,8 @@ namespace femus {
 	
 	std::cout<<"level = "<<level<<" scale = "<<scale<<std::endl;
 	
+	//scale = 0.6;
+	
 	KSPRichardsonSetScale(ksp, scale);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
         return;

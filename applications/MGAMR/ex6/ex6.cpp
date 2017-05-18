@@ -111,15 +111,19 @@ int main(int argc, char** args) {
   
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(1);
-  system.SetNumberPostSmoothingStep(1);
+  system.SetNumberPreSmoothingStep(9);
+  system.SetNumberPostSmoothingStep(9);
   // initilaize and solve the system
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
-  //system.SetRichardsonScaleFactor(.6);
-  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 1, 1); //GMRES tolerances
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
+  
+  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 500, 500); //GMRES tolerances
+  
+  
+  
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   
@@ -254,10 +258,10 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
   if(counter == 10){ 
     KK->print_matlab("matrix.txt", "ascii");
-    Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
-    PetscViewer    viewer;
-    PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
-    MatView(KKp,viewer);
+//     Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
+//     PetscViewer    viewer;
+//     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+//     MatView(KKp,viewer);
   }   
   
   if(assembleMatrix) KK->zero(); // Set to zero all the entries of the Global Matrix    
