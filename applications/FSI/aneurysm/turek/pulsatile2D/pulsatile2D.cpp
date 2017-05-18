@@ -180,7 +180,7 @@ int main(int argc, char **args)
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("DY", LAGRANGE, SECOND, 2);
-
+ 
   ml_sol.AddSolution("U", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("V", LAGRANGE, SECOND, 2);
 
@@ -194,6 +194,10 @@ int main(int argc, char **args)
 
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
+  ml_sol.AddSolution("DX1", LAGRANGE, SECOND, 2);
+  ml_sol.AddSolution("DY1", LAGRANGE, SECOND, 2);
+  
+  
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 

@@ -10,6 +10,8 @@
 namespace femus
 {
 
+  bool meshIsCurrupted = false;
+  
   void FSIConstrainLeaflet(MultiLevelSolution& mlSol);
 
   void FSITimeDependentAssemblySupg(MultiLevelProblem & ml_prob)
@@ -192,12 +194,15 @@ namespace femus
     //----------------------------------------------------------------------------------
     //variable-name handling
     const char varname[7][3] = {"DX", "DY", "DZ", "U", "V", "W", "P"};
+    const char varname1[3][4] = {"DX1", "DY1", "DZ1"};
     vector <unsigned> indexVAR(2 * dim + 1);
     vector <unsigned> indVAR(2 * dim + 1);
+    vector <unsigned> indVAR1(dim);
     vector <unsigned> SolType(2 * dim + 1);
 
     for(unsigned ivar = 0; ivar < dim; ivar++) {
       indVAR[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
+      indVAR1[ivar] = ml_sol->GetIndex(&varname1[ivar][0]);
       indVAR[ivar + dim] = ml_sol->GetIndex(&varname[ivar + 3][0]);
       SolType[ivar] = ml_sol->GetSolutionType(&varname[ivar][0]);
       SolType[ivar + dim] = ml_sol->GetSolutionType(&varname[ivar + 3][0]);
@@ -317,10 +322,13 @@ namespace femus
 
       if(assembleMatrix) s.new_recording();
 
-      for(unsigned idim = 0; idim < dim; idim++) {
-        for(int j = 0; j < nve; j++) {
-          vx[idim][j]    = vx_hat[idim][j] + Soli[indexVAR[idim]][j];
-          vx_old[idim][j] = vx_hat[idim][j] + Soli_old[indexVAR[idim]][j];
+      
+       for(int j = 0; j < nve; j++) {
+	 unsigned idof = mymsh->GetSolutionDof(j, iel, SolType2);
+	 for(unsigned idim = 0; idim < dim; idim++) {
+	   vx[idim][j] = vx_hat[idim][j] + (!meshIsCurrupted) * Soli[indexVAR[idim]][j];
+			   + meshIsCurrupted * (*mysolution->_Sol[indVAR1[idim]])(idof);
+	   vx_old[idim][j] = vx_hat[idim][j] + Soli_old[indexVAR[idim]][j];
         }
       }
 
@@ -352,7 +360,7 @@ namespace femus
                 unsigned idof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for(unsigned idim = 0; idim < dim; idim++) {
-                  vx_face[idim][i]    = (*mymsh->_topology->_Sol[idim])(idof) + Soli[indexVAR[idim]][ilocal];
+                  vx_face[idim][i]    = (*mymsh->_topology->_Sol[idim])(idof) + Soli[indexVAR[idim]][ilocal]; //TODO
                   vx_face_old[idim][i] = (*mymsh->_topology->_Sol[idim])(idof) + Soli_old[indexVAR[idim]][ilocal];
                 }
               }
@@ -1111,9 +1119,13 @@ namespace femus
 
     const char varname[3][3] = {"DX", "DY", "DZ"};
     vector <unsigned> indVAR(geoDim);
+    
+    const char varname1[3][4] = {"DX1", "DY1", "DZ1"};
+    vector <unsigned> indVAR1(geoDim);
 
     for(unsigned ivar = 0; ivar < geoDim; ivar++) {
       indVAR[ivar] = mlSol.GetIndex(&varname[ivar][0]);
+      indVAR1[ivar] = mlSol.GetIndex(&varname1[ivar][0]);
     }
 
 
@@ -1203,7 +1215,8 @@ namespace femus
         for(int j = 0; j < geoDim; j++) {
           //coordinates
           vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) +
-                     (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis);
+                     (!meshIsCurrupted)*(*mysolution->_Sol[indVAR[j]])(inodeVx_Metis) +
+		     meshIsCurrupted*(*mysolution->_Sol[indVAR1[j]])(inodeVx_Metis);
         }
       }
       // ------------------------------------
@@ -1454,9 +1467,9 @@ namespace femus
     {   -0.000503576   ,	0.073701      }
   };
 
-  bool MoveNode(const std::vector < double >& x, std::vector < double >& dX) {
+  bool MeshIsCurrupted(const std::vector < double >& x, const std::vector < double >& dX) {
     bool movedNode = false;
-    double epsilon = 1.0e-5; // maximum leaflet colsing
+    double epsilon = .0; // maximum leaflet colsing
     double  delta = 7.1e-05; //leaflet thicknes;
     unsigned N = 128;
     if(x[1] >= leaflet[0][1] && x[1] <= leaflet[N][1]) {
@@ -1477,21 +1490,21 @@ namespace femus
 
       if(x[0] - xl >= 0) {  //on the right of the lealflet
         if(x[0] + dX[0] > -epsilon * x[0] / xl) {
-          dX[0] = -epsilon * x[0] / xl - x[0] ;
+          //dX[0] = -epsilon * x[0] / xl - x[0] ;
           movedNode = true;
         }
       }
-      else if(x[0] - xl >= -delta) {  //inside the lealflet
-        if(x[0] + dX[0] > -epsilon + (x[0] - xl)) {
-          dX[0] = -epsilon - (xl - x[0]) - x[0];
-          movedNode = true;
-        }
-      }
-      else { //on the left of the lealflet
-        if(x[0] + dX[0] > -epsilon - delta - 3.* epsilon * (xl - delta - x[0]) / 0.001) {
-          dX[0] = -epsilon - delta - 3.* epsilon * (xl - delta - x[0]) / 0.001 - x[0];
-        }
-      }
+//       else if(x[0] - xl >= -delta) {  //inside the lealflet
+//         if(x[0] + dX[0] > -epsilon + (x[0] - xl)) {
+//           dX[0] = -epsilon - (xl - x[0]) - x[0];
+//           movedNode = true;
+//         }
+//       }
+//       else { //on the left of the lealflet
+//         if(x[0] + dX[0] > -epsilon - delta - 3.* epsilon * (xl - delta - x[0]) / 0.001) {
+//           dX[0] = -epsilon - delta - 3.* epsilon * (xl - delta - x[0]) / 0.001 - x[0];
+//         }
+//       }
     }
     return movedNode;
   }
@@ -1511,11 +1524,14 @@ namespace femus
     //----------------------------------------------------------------------------------
     //variable-name handling
     const char varname[3][3] = {"DX", "DY", "DZ"};
+    const char varname1[3][4] = {"DX1", "DY1", "DZ1"};
     vector <unsigned> indVAR(dim);
+    vector <unsigned> indVAR1(dim);
     unsigned SolType;
 
     for(unsigned k = 0; k < dim; k++) {
       indVAR[k] = mlSol.GetIndex(&varname[k][0]);
+      indVAR1[k] = mlSol.GetIndex(&varname1[k][0]);
       SolType = mlSol.GetSolutionType(&varname[k][0]);
     }
 
@@ -1549,48 +1565,56 @@ namespace femus
         dxOld[k] = (*sol->_SolOld[indVAR[k]])(idof);
       }
       bool movedNode;
-      movedNode = MoveNode(x, dx);
+      movedNode = MeshIsCurrupted(x, dx);
       if(movedNode) {
-        for(unsigned k = 0; k < dim; k++) {
-          sol->_Sol[indVAR[k]]->set(idof, dx[k]);
-        }
+        //for(unsigned k = 0; k < dim; k++) {
+          //sol->_Sol[indVAR[k]]->set(idof, dx[k]);
+        //}
         meshMoved->set(iproc, 1.);
       }
-      movedNode = MoveNode(x, dxOld);
+      movedNode = MeshIsCurrupted(x, dxOld);
       if(movedNode) {
-        for(unsigned k = 0; k < dim; k++) {
-          sol->_SolOld[indVAR[k]]->set(idof, dxOld[k]);
-        }
-        meshOldMoved->set(iproc, 1.);
+//         for(unsigned k = 0; k < dim; k++) {
+//           sol->_SolOld[indVAR[k]]->set(idof, dxOld[k]);
+//         }
+	meshOldMoved->set(iproc, 1.);	
       }
     }
 
     meshMoved->close();
     meshOldMoved->close();
 
-    if(meshMoved->l1_norm() > 0.5) {
-      std::cout << "Warning the Mesh Constrained Function has been calle for DX" << std::endl;
+    if(meshMoved->l1_norm() < 0.5) {
+      meshIsCurrupted = false;
       for(unsigned k = 0; k < dim; k++) {
-        sol->_Sol[indVAR[k]]->close();
+	*(sol->_Sol[indVAR1[k]]) = *(sol->_Sol[indVAR[k]]);
       }
     }
-
-    if(meshOldMoved->l1_norm() > 0.5) {
-      std::cout << "Warning the Mesh Constrained Function has been calle for DXOld" << std::endl;
+    else{
+      std::cout << "Warning the Mesh Constrained Function has been called for DX" << std::endl;
       for(unsigned k = 0; k < dim; k++) {
-        sol->_SolOld[indVAR[k]]->close();
+	meshIsCurrupted = true;
+        //*(sol->_Sol[indVAR[k]]) = *(sol->_Sol[indVAR1[k]]);
       }
     }
     
-    if( meshOldMoved->l1_norm() || meshMoved->l1_norm() ){
-      
+    
+    if(meshOldMoved->l1_norm() > 0.5) {
+      std::cout << "Warning the Mesh Constrained Function has been called for DXOld" << std::endl;
+      for(unsigned k = 0; k < dim; k++) {
+        *(sol->_SolOld[indVAR[k]]) = *(sol->_Sol[indVAR1[k]]);
+      }
+    }
+
+
+    //if( meshMoved->l1_norm() ){
       std::vector<std::string> print_vars;
       print_vars.push_back("All");
       
       mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1000 + counter);
       
       counter++;
-    }
+    //}
 
   }
 
