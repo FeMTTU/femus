@@ -74,8 +74,8 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 3;
+  numberOfUniformLevels = 5;
+  unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
  
   
@@ -111,8 +111,8 @@ int main(int argc, char** args) {
   
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(9);
-  system.SetNumberPostSmoothingStep(9);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
   system.init();
 
@@ -120,7 +120,7 @@ int main(int argc, char** args) {
   //system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
   
-  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 500, 500); //GMRES tolerances
+  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 10, 10); //GMRES tolerances
   
   
   
@@ -256,13 +256,13 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
 
-  if(counter == 10){ 
-    KK->print_matlab("matrix.txt", "ascii");
-//     Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
-//     PetscViewer    viewer;
-//     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
-//     MatView(KKp,viewer);
-  }   
+//   if(counter == 10){ 
+//     KK->print_matlab("matrix.txt", "ascii");
+// //     Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
+// //     PetscViewer    viewer;
+// //     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+// //     MatView(KKp,viewer);
+//   }   
   
   if(assembleMatrix) KK->zero(); // Set to zero all the entries of the Global Matrix    
   sol->_Sol[solUIndex]->zero();  
@@ -366,6 +366,15 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   }
 
   counter++;
+  
+  if(counter == 10){ 
+    KK->print_matlab("matrix.txt", "ascii");
+//     Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
+//     PetscViewer    viewer;
+//     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+//     MatView(KKp,viewer);
+  }   
+  
   
   // ***************** END ASSEMBLY *******************
 }

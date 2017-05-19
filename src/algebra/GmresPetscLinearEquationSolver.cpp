@@ -507,13 +507,13 @@ namespace femus {
       case RICHARDSON:
         KSPSetType(ksp, (char*) KSPRICHARDSON);
 	
-	level = _msh->GetLevel();
-			
-	scale = 0.2/pow(4,level-1)/level;
+// 	level = _msh->GetLevel();
+// 			
+// 	scale = 0.2/pow(4,level-1)/level;
 	
-	std::cout<<"level = "<<level<<" scale = "<<scale<<std::endl;
+//	std::cout<<"level = "<<level<<" scale = "<<scale<<std::endl;
 	
-	//scale = 0.6;
+	scale = 0.2;
 	
 	KSPRichardsonSetScale(ksp, scale);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
