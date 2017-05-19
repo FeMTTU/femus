@@ -133,15 +133,15 @@ int main(int argc, char** args) {
   
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(2);
-  system.SetNumberPostSmoothingStep(2);
+  system.SetNumberPreSmoothingStep(10);
+  system.SetNumberPostSmoothingStep(10);
   // initilaize and solve the system
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetRichardsonScaleFactor(.6);
-  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 1, 1); //GMRES tolerances
+  system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 1, 1); //GMRES tolerances
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   
