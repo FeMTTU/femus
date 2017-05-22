@@ -26,7 +26,7 @@
 
 
 using namespace femus;
-unsigned counter = 0;
+unsigned counter = 810;
 const double pi = 2.0 * acos(0.0); 
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -159,7 +159,7 @@ int main(int argc, char** args) {
   unsigned sizeU = msh->_dofOffset[solUType][nprocs];;  
   Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
     
-  for(unsigned i = 0; i< sizeU; i++){
+  for(unsigned i = 810; i < 811; i++){
     system.MLsolve();
     mlSol.GenerateBdc("All");
     std::ofstream fout;
