@@ -41,13 +41,28 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = false;
 
-  if(elemgroupnumber == 7 && level < numberOfUniformLevels){
+  if(elemgroupnumber == 8 && level < numberOfUniformLevels){
     refine = true;
   }
-  else if(elemgroupnumber == 8 && level < numberOfUniformLevels + 1){
+  else if(elemgroupnumber == 9 && level < numberOfUniformLevels ){
     refine = true;
   }
-  else if(elemgroupnumber == 9 && level < numberOfUniformLevels + 2){
+  else if(elemgroupnumber == 10 && level < numberOfUniformLevels + 1){
+    refine = true;
+  }
+  else if(elemgroupnumber == 11 && level < numberOfUniformLevels + 1){
+    refine = true;
+  }
+  else if(elemgroupnumber == 12 && level < numberOfUniformLevels + 2){
+    refine = true;
+  }
+  else if(elemgroupnumber == 13 && level < numberOfUniformLevels + 2){
+    refine = true;
+  }
+  else if(elemgroupnumber == 14 && level < numberOfUniformLevels + 3){
+    refine = true;
+  }
+  else if(elemgroupnumber == 15 && level < numberOfUniformLevels + 3){
     refine = true;
   }
   
@@ -69,13 +84,14 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-   mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "seventh", scalingFactor);
+   //mlMsh.ReadCoarseMesh("./input/adaptiveRef4Tri.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  numberOfUniformLevels = 5;
-  unsigned numberOfSelectiveLevels = 0;
+  numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
  
   
