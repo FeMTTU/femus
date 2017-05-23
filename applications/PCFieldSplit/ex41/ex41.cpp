@@ -26,7 +26,7 @@
 
 
 using namespace femus;
-unsigned counter = 810;
+unsigned counter = 0;
 const double pi = 2.0 * acos(0.0); 
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -91,7 +91,7 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 4;
+  unsigned numberOfSelectiveLevels = 1;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 //   unsigned numberOfSelectiveLevels = 0;
 //  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
@@ -133,8 +133,8 @@ int main(int argc, char** args) {
   
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(10);
-  system.SetNumberPostSmoothingStep(10);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
   system.init();
 
@@ -159,7 +159,7 @@ int main(int argc, char** args) {
   unsigned sizeU = msh->_dofOffset[solUType][nprocs];;  
   Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
     
-  for(unsigned i = 810; i < 811; i++){
+  for(unsigned i = 0; i < sizeU; i++){
     system.MLsolve();
     mlSol.GenerateBdc("All");
     std::ofstream fout;

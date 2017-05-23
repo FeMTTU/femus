@@ -894,106 +894,115 @@ namespace femus
       }
       delete pvector;
 
-      for (std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
-        unsigned inode = it1->first;
-        if (restriction[soltype][inode][inode] > 5.) {
-          if (restriction[soltype][inode].size() > 1) {
-            for (std::map<unsigned, std::map<unsigned, double> >::iterator it2 = restriction[soltype].begin(); it2 != restriction[soltype].end(); it2++) {
-              unsigned jnode = it2->first;
-              if (jnode != inode && restriction[soltype][jnode].find(inode) != restriction[soltype][jnode].end()) {
-                double value =  restriction[soltype][jnode][inode];
-                for (std::map<unsigned, double> ::iterator it3 = restriction[soltype][inode].begin(); it3 != restriction[soltype][inode].end(); it3++) {
-                  unsigned knode = it3->first;
-                  if (knode != inode) {
-                    restriction[soltype][jnode][knode] = it3->second * value;
-                  }
-                }
-              }
-            }
-          }
-          restriction[soltype][inode].clear();
-          restriction[soltype][inode][inode] = 0.;
-        }
-      }
-
-
-      
-//       std::vector<std::vector < unsigned > > genealogy;
-//       std::vector<std::vector < double > > heredity;
-//       std::vector< unsigned > index;
-//       std::map < unsigned,  std::map < unsigned, double  > >  restriction1 = restriction[soltype];
-// 
-// 
-// 
-//       for (std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction1.begin(); it1 != restriction1.end(); it1++) {
+//       for (std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
 //         unsigned inode = it1->first;
-// 
-//         unsigned level = 0;
-//         genealogy.resize(level + 1);
-//         heredity.resize(level + 1);
-//         index.resize(level + 1);
-// 
-//         genealogy[level].resize(1);
-//         heredity[level].resize(1);
-//         if (restriction1[inode][inode] < 5.) {
-// 
-//           restriction[soltype][inode].clear();
-//           restriction[soltype][inode][inode] = 1.;
-// 
-//           genealogy[level][0] = inode;
-//           heredity[level][0] = 1.;
-//           index[level] = 0;
-// 
-//           level = 1;
-//           bool test = true;
-//           while ( index[level-1] < index[level-1].size() ) {
-// 
-// 	    unsigned fatherNode = genealogy[level - 1][index[level - 1]];
-// 	    
-//             genealogy.resize(level + 1);
-// 	    genealogy[level].reserve( restriction1[ fatherNode ].size() - 1 );
-// 	    
-//             heredity.resize(level + 1);
-// 	     heredity[level].reserve( restriction1[ fatherNode ].size() - 1 );
-// 	     
-//             index.resize(level + 1);
-//             
-// 	    index[level] = 0;
-//             unsigned cnt  = 0;
-// 	    for (std::map <unsigned, double>::iterator it2 = restriction1[ fatherNode ].begin(); it2 != restriction1[ fatherNode ].end(); it2++) {
-//               unsigned sonNode = it2->first;
-//               bool alreadyFound = false;
-//               for (unsigned klevel = 0; klevel < level; klevel++) {
-//                 for (unsigned k = 0; k < genealogy[klevel].size(); k++) {
-//                   if ( genealogy[klevel][k] == sonNode ) alreadyFound = true;
+//         if (restriction[soltype][inode][inode] > 5.) {
+//           if (restriction[soltype][inode].size() > 1) {
+//             for (std::map<unsigned, std::map<unsigned, double> >::iterator it2 = restriction[soltype].begin(); it2 != restriction[soltype].end(); it2++) {
+//               unsigned jnode = it2->first;
+//               if (jnode != inode && restriction[soltype][jnode].find(inode) != restriction[soltype][jnode].end()) {
+//                 double value =  restriction[soltype][jnode][inode];
+//                 for (std::map<unsigned, double> ::iterator it3 = restriction[soltype][inode].begin(); it3 != restriction[soltype][inode].end(); it3++) {
+//                   unsigned knode = it3->first;
+//                   if (knode != inode) {
+//                     restriction[soltype][jnode][knode] = it3->second * value;
+//                   }
 //                 }
 //               }
-//               if (!alreadyFound ) {
-//                 genealogy[level].resize( genealogy[level].size() + 1);
-//                 heredity[level].resize(genealogy[level].size() + 1);
-// 
-//                 genealogy[level][cnt] = sonNode;
-//                 heredity[level][cnt] = it2->second * heredity[level - 1][index[level - 1]];
-// 
-//                 restriction[soltype][inode][sonNode] += heredity[level][cnt];
-//                 cnt++;
-// 
-//                 restriction[soltype][sonNode].clear();
-//                 restriction[soltype][sonNode][sonNode] = 0.;
-//               }
 //             }
-//             if( cnt > 0){
-// 	      
-// 	    }
-//             
-//             
-//             
-//             index[level-1]++;
 //           }
+//           restriction[soltype][inode].clear();
+//           restriction[soltype][inode][inode] = 0.;
 //         }
 //       }
 
 
+
+      std::vector<std::vector < unsigned > > genealogy;
+      std::vector<std::vector < double > > heredity;
+      std::vector< unsigned > index;
+      std::map < unsigned,  std::map < unsigned, double  > >  restrictionCopy = restriction[soltype];
+
+      for (std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restrictionCopy.begin(); it1 != restrictionCopy.end(); it1++) { // loop all over master, hanging and master+hanging nodes
+
+        genealogy.resize(1);
+        heredity.resize(1);
+        index.resize(1);
+
+        genealogy[0].resize(1);
+        heredity[0].resize(1);
+
+        unsigned inode = it1->first;
+
+        if (restrictionCopy[inode][inode] < 5.) { // only if a real master node
+
+          // initialize master node genealogy and heredity at level 0
+          genealogy[0][0] = inode;
+          heredity[0][0] = 1.;
+          index[0] = 0;
+
+          restriction[soltype][inode].clear();
+          restriction[soltype][inode][inode] = 1.;
+
+          unsigned level = 1;
+          while ( level > 0 ) {
+
+            // initialize master node genealogy and heredity at genemeric level
+
+            unsigned father = genealogy[level - 1][index[level - 1]];
+
+            genealogy.resize(level + 1);
+            genealogy[level].reserve( restrictionCopy[ father ].size() - 1 );
+            genealogy[level].resize(0);
+
+            heredity.resize(level + 1);
+            heredity[level].reserve( restrictionCopy[ father ].size() - 1 );
+            heredity[level].resize(0);
+
+            index.resize(level + 1);
+            index[level] = 0;
+
+            unsigned cnt  = 0;
+            for (std::map <unsigned, double>::iterator it1 = restrictionCopy[ father ].begin(); it1 != restrictionCopy[ father ].end(); it1++) { // loop on all the father sons
+              unsigned son = it1->first;
+              bool alreadyFound = false;
+              for (unsigned klevel = 0; klevel < level; klevel++) { // check if the son is in the previous genealogy
+                for (unsigned k = 0; k < genealogy[klevel].size(); k++) {
+                  if ( genealogy[klevel][k] == son ) alreadyFound = true;
+                }
+              }
+              if (!alreadyFound ) { // if never found add the the restionction value in the master node line and zero the hanging node line
+                genealogy[level].resize( genealogy[level].size() + 1);
+                heredity[level].resize(heredity[level].size() + 1);
+
+                genealogy[level][cnt] = son;
+                heredity[level][cnt] = it1->second * heredity[level - 1][index[level - 1]];
+
+                restriction[soltype][inode][son] += heredity[level][cnt];
+                cnt++;
+
+                restriction[soltype][son].clear();
+                restriction[soltype][son][son] = 0.;
+              }
+            }
+
+            if ( cnt > 0) {
+              level++;
+            }
+            else {
+              bool test = true;
+              while ( test && level > 0) {
+                index[level - 1]++;
+                test = false;
+                if ( index[level - 1] == genealogy[level - 1].size() ) {
+                  level--;
+                  test = true;
+                }
+              }
+            }
+          }
+        }
+      }
 
       MyVector <unsigned> InterfaceSolidMarkNode(interfaceSolidMark[soltype].size());
       MyVector <short unsigned> InterfaceSolidMarkValue(interfaceSolidMark[soltype].size());
