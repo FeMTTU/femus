@@ -33,6 +33,7 @@ namespace femus {
 
   using namespace std;
 
+    
 // ==============================================
 // ----------------------- functions ------
 // ==============================================
@@ -447,6 +448,7 @@ namespace femus {
 
     unsigned level;
     double scale;
+    unsigned numberOfUniformLevels;
     
     switch(this->_solver_type) {
       case CG:
@@ -507,13 +509,27 @@ namespace femus {
       case RICHARDSON:
         KSPSetType(ksp, (char*) KSPRICHARDSON);
 	
-// 	level = _msh->GetLevel();
-// 			
-// 	scale = 0.2/pow(4,level-1)/level;
-	
-//	std::cout<<"level = "<<level<<" scale = "<<scale<<std::endl;
+ 	
 	
 	scale = 0.2;
+	
+	//BEGIN da commentare
+	level = _msh->GetLevel();
+	numberOfUniformLevels = 1; // deve corrispondere a numberOfUniformLevels nel main
+	
+	if(numberOfUniformLevels == 1){
+	  if(level > numberOfUniformLevels ){
+	    scale /= (1 + level- numberOfUniformLevels );
+	  }
+	}
+	else{
+	  if (level >= numberOfUniformLevels ){
+	    scale /= (2 + level - numberOfUniformLevels);
+	  }
+	}
+	//END da commentare
+	
+	std::cout << "level = " << level << "scale = "<< scale << std::endl;
 	
 	KSPRichardsonSetScale(ksp, scale);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);

@@ -41,30 +41,38 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = false;
 
-  if(elemgroupnumber == 8 && level < numberOfUniformLevels){
+//   if(elemgroupnumber == 8 && level < numberOfUniformLevels){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 9 && level < numberOfUniformLevels ){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 10 && level < numberOfUniformLevels + 1){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 11 && level < numberOfUniformLevels + 1){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 12 && level < numberOfUniformLevels + 2){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 13 && level < numberOfUniformLevels + 2){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 14 && level < numberOfUniformLevels + 3){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 15 && level < numberOfUniformLevels + 3){
+//     refine = true;
+//   }
+  
+  if(elemgroupnumber == 7 && level < numberOfUniformLevels){
     refine = true;
   }
-  else if(elemgroupnumber == 9 && level < numberOfUniformLevels ){
+  else if(elemgroupnumber == 8 && level < numberOfUniformLevels + 1){
     refine = true;
   }
-  else if(elemgroupnumber == 10 && level < numberOfUniformLevels + 1){
-    refine = true;
-  }
-  else if(elemgroupnumber == 11 && level < numberOfUniformLevels + 1){
-    refine = true;
-  }
-  else if(elemgroupnumber == 12 && level < numberOfUniformLevels + 2){
-    refine = true;
-  }
-  else if(elemgroupnumber == 13 && level < numberOfUniformLevels + 2){
-    refine = true;
-  }
-  else if(elemgroupnumber == 14 && level < numberOfUniformLevels + 3){
-    refine = true;
-  }
-  else if(elemgroupnumber == 15 && level < numberOfUniformLevels + 3){
-    refine = true;
-  }
+  
   
   return refine;
 
@@ -85,13 +93,14 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
    //mlMsh.ReadCoarseMesh("./input/adaptiveRef4Tri.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
+   mlMsh.ReadCoarseMesh("./input/Lshape3D.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 3;
+  unsigned numberOfSelectiveLevels = 1;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
  
   
@@ -122,12 +131,12 @@ int main(int argc, char** args) {
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
   //system.SetResidualUpdateConvergenceTolerance(1.e-15);
   
-  system.SetMaxNumberOfLinearIterations(1);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);	
+  system.SetMaxNumberOfLinearIterations(1); // number of Vcycles
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-50);	
   
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
   system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
   system.init();
@@ -136,7 +145,7 @@ int main(int argc, char** args) {
   //system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
   
-  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 10, 10); //GMRES tolerances
+  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 10, 10); //GMRES tolerances // 10 number of richardson iterations
   
   
   
