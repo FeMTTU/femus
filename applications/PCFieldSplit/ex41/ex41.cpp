@@ -85,14 +85,15 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
+  //mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);
   mlMsh.ReadCoarseMesh("./input/cube_mixed.neu","seventh",scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 2;
+  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 //   unsigned numberOfSelectiveLevels = 0;
 //  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, NULL);
@@ -134,8 +135,8 @@ int main(int argc, char** args) {
   
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(5);
-  system.SetNumberPostSmoothingStep(5);
+  system.SetNumberPreSmoothingStep(3);
+  system.SetNumberPostSmoothingStep(3);
   // initilaize and solve the system
   system.init();
 
@@ -383,7 +384,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   }
 
   //END element loop
-  RES->add(counter,1.);
+  RES->add(counter,1./nprocs);
   RES->close();
 
   if(assembleMatrix) {
