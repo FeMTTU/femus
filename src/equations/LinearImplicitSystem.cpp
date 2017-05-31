@@ -288,6 +288,7 @@ namespace femus {
 
     clock_t start_mg_time = clock();
 
+    
     _LinSolver[gridn - 1u]->SetEpsZero();
 
     bool linearIsConverged;
@@ -299,8 +300,27 @@ namespace femus {
       bool ksp_clean = !linearIterator * _assembleMatrix;
 
       for( unsigned ig = gridn - 1u; ig > 0; ig-- ) {
+	
+	
+	unsigned factor = 1;
+	//BEGIN da commentare
+	if(_gridr == 1){
+	  if(ig > _gridr ){
+	    factor = (1 + ig - _gridr );
+	  }
+	}
+	else{
+	  if (ig >= _gridr ){
+	    factor = (2 + ig - _gridr);
+	  }
+	}
+	factor *= factor;
+	//END da commentare
+	std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;
+	
+	
         // ============== Presmoothing ==============
-        for( unsigned k = 0; k < _npre; k++ ) {
+        for( unsigned k = 0; k < _npre * factor; k++ ) {
           //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
 	  Solve(ig + 1, ksp_clean * ( !k ), 1, 1);
         }
@@ -316,10 +336,27 @@ namespace femus {
         // ============== Standard Prolongation ==============
         Prolongator( ig );
 
+	unsigned factor = 1;
+	//BEGIN da commentare
+	if(_gridr == 1){
+	  if(ig > _gridr ){
+	    factor = (1 + ig - _gridr );
+	  }
+	}
+	else{
+	  if (ig >= _gridr ){
+	    factor = (2 + ig - _gridr);
+	  }
+	}
+	factor *= factor;
+	//END da commentare
+    	std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;
+	
+	
         // ============== PostSmoothing ==============
-        for( unsigned k = 0; k < _npost; k++ ) {
+        for( unsigned k = 0; k < _npost * factor; k++ ) {
           //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
-	  Solve(ig + 1, ksp_clean * ( !_npre ) * ( !k ), 1, 1);
+	  Solve(ig + 1, ksp_clean * ( !(_npre * factor) ) * ( !k ), 1, 1);
         }
       }
 
