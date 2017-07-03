@@ -85,7 +85,9 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -156,36 +158,48 @@ int main(int argc, char** args) {
   Mesh* msh = mlMsh.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
   
   unsigned nprocs = msh->n_processors();
+  unsigned iproc = msh->processor_id();
   unsigned sizeU = msh->_dofOffset[solUType][nprocs];;  
   Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
-    
+  
   for(unsigned i = 0; i < sizeU; i++){
     system.MLsolve();
     mlSol.GenerateBdc("All");
-    std::ofstream fout;
-    if(i==0){
-      fout.open( "preconditioner.txt");
-    }
-    else{
-       fout.open( "preconditioner.txt",  std::ofstream::app);
-    }
-    if( !fout.is_open() ) {
-      std::cout << std::endl << " The output file preconditioner cannot be opened.\n";
-      abort();
-    }
-    fout.precision(20);
-    for(unsigned j = 0; j < sizeU; j++ ){
-      fout << (*sol->_Sol[solUIndex])(j)<< " ";
-    }  
+
+
+    //BEGIN print solution vector
+    std::vector<double> solLocal;
+    sol->_Sol[solUIndex]->localize_to_one (solLocal, 0);
       
-// std::cout << sizeT <<"AAA" << sizeU <<"BBB"<<sizeV<<"CCC" << sizeP<<"DDD"<<std::endl;   
-    fout<<std::endl;
-    fout.close();
+    if(iproc == 0){
+      std::ofstream fout;
+      if(i==0){
+	fout.open( "preconditioner.txt");
+      }
+      else{
+	fout.open( "preconditioner.txt",  std::ofstream::app);
+      }
+      if( !fout.is_open() ) {
+	std::cout << std::endl << " The output file preconditioner cannot be opened.\n";
+	abort();
+      }
+      fout.precision(20);
+    
+      for(unsigned j = 0; j < sizeU; j++ ){
+	fout << solLocal[j]<< " ";
+	//fout << (*sol->_Sol[solUIndex])(j)<< " ";
+      }  
+      fout<<std::endl;
+      fout.close();
+    }
+    //BEGIN print solution vector
+
     
     // print solutions
     std::vector < std::string > variablesToBePrinted;
     variablesToBePrinted.push_back("All");
-
+  
+    
     VTKWriter vtkIO(&mlSol);
     vtkIO.SetDebugOutput( true );
     vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, counter-1);
@@ -276,15 +290,6 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
 
-  if(counter == 10){ 
-    //KKamr->print_matlab("matrix.txt", "ascii");
-    KK->print_matlab("matrix.txt", "ascii");
- //   Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
-//     PetscViewer    viewer;
-//     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
-//     MatView(KKp,viewer);
-  }   
-  
   if(assembleMatrix) KK->zero(); // Set to zero all the entries of the Global Matrix    
   sol->_Sol[solUIndex]->zero();  
   
@@ -379,13 +384,23 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   }
 
   //END element loop
-  RES->add(counter,1.);
+  RES->add(counter,1./nprocs);
   RES->close();
 
   if(assembleMatrix) {
     KK->close();
   }
 
+  if(counter == 10){ 
+    //KKamr->print_matlab("matrix.txt", "ascii");
+    KK->print_matlab("matrix.txt", "ascii");
+ //   Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
+//     PetscViewer    viewer;
+//     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+//     MatView(KKp,viewer);
+  }   
+  
+  
   counter++;
   
   // ***************** END ASSEMBLY *******************

@@ -963,8 +963,8 @@ namespace femus
             index[level] = 0;
 
             unsigned cnt  = 0;
-            for (std::map <unsigned, double>::iterator it1 = restrictionCopy[ father ].begin(); it1 != restrictionCopy[ father ].end(); it1++) { // loop on all the father sons
-              unsigned son = it1->first;
+            for (std::map <unsigned, double>::iterator it2 = restrictionCopy[ father ].begin(); it2 != restrictionCopy[ father ].end(); it2++) { // loop on all the father sons
+              unsigned son = it2->first;
               bool alreadyFound = false;
               for (unsigned klevel = 0; klevel < level; klevel++) { // check if the son is in the previous genealogy
                 for (unsigned k = 0; k < genealogy[klevel].size(); k++) {
@@ -976,7 +976,7 @@ namespace femus
                 heredity[level].resize(heredity[level].size() + 1);
 
                 genealogy[level][cnt] = son;
-                heredity[level][cnt] = it1->second * heredity[level - 1][index[level - 1]];
+                heredity[level][cnt] = it2->second * heredity[level - 1][index[level - 1]];
 
                 restriction[soltype][inode][son] += heredity[level][cnt];
                 cnt++;
@@ -1002,6 +1002,10 @@ namespace femus
             }
           }
         }
+	else{
+	  restriction[soltype][inode].clear();
+	  restriction[soltype][inode][inode] = 0.;
+	}
       }
 
       MyVector <unsigned> InterfaceSolidMarkNode(interfaceSolidMark[soltype].size());
@@ -1050,6 +1054,7 @@ namespace femus
 
 
 } //end namespace femus
+
 
 
 
