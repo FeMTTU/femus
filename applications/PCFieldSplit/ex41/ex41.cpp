@@ -135,8 +135,8 @@ int main(int argc, char** args) {
   
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(2);
-  system.SetNumberPostSmoothingStep(2);
+  system.SetNumberPreSmoothingStep(4);
+  system.SetNumberPostSmoothingStep(4);
   // initilaize and solve the system
   system.init();
 
