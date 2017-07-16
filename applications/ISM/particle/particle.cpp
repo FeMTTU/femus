@@ -126,8 +126,8 @@ int main(int argc, char **args)
     infile = "./input/aortic_bifurcation.neu";
   }
   else if (simulation == 6) {
-    //infile = "./input/tubo3D.neu";
-    infile = "./input/tubo3D_thick.neu";
+    infile = "./input/tubo3D.neu";
+    //infile = "./input/tubo3D_thick.neu"; //used only once, not important
     dimension2D = false;
   }
   else if (simulation == 7) {
@@ -152,7 +152,7 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = 1. * 1.e6 ;
+    E = 0.5 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
     E = 1.e6 * 1.e6; 
@@ -842,8 +842,8 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
   if (!strcmp(name, "U")) {
     if (2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
-      //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
-      value = 2 * 0.1 * (1. - r2) * ramp; //inflow
+      value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      //value = 2 * 0.1 * (1. - r2) * ramp; //inflow
     }
     else if (1 == facename || 5 == facename) {
       test = 0;
@@ -860,8 +860,8 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
     test = 0;
     value = 0.;
     if (1 == facename) {
-      //value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
-      value = 13335 * ramp;
+      value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
+      //value = 13335 * ramp;
     }
   }
   else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
@@ -1174,6 +1174,8 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   double PI = acos(-1.);
   double I = 1.e5; // electric current intensity
+  //double I = 0.25 * 1.e5; 
+  //double I = 4 * 1.e5;  
   double Msat = 1.e6;  //  magnetic saturation
   double  chi = 3.; //magnetic susceptibility
   double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum

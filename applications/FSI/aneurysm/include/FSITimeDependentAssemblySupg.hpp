@@ -532,8 +532,8 @@ namespace femus
 
               for ( int idim = 0; idim < dim; idim++ ) {
                 for ( int jdim = 0; jdim < dim; jdim++ ) {
-                  LapmapVAR[idim] += ( GradSolVAR[idim][jdim] ) * gradphi_hat[i * dim + jdim];
-                  //LapmapVAR[idim] += ( GradSolVAR[idim][jdim] + 0.*GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
+                  //LapmapVAR[idim] += ( GradSolVAR[idim][jdim] ) * gradphi_hat[i * dim + jdim];
+                  LapmapVAR[idim] += ( GradSolVAR[idim][jdim] + 0.*GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
                 }
               }
 
