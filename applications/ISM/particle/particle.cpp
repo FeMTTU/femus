@@ -1174,7 +1174,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   double PI = acos(-1.);
   //double I = 1.e5; // electric current intensity
-  //double I = 0.5 * 1.e5; 
+  double I = 0.5 * 1.e5; 
   //double I = 2 * 1.e5;  
   double Msat = 1.e6;  //  magnetic saturation
   double  chi = 3.; //magnetic susceptibility
