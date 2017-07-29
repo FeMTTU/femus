@@ -152,7 +152,7 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = 0.5 * 1.e6 ;
+    E = 1. * 1.e12 ;
   }
   else if (simulation == 7) { //carotide
     E = 1.e6 * 1.e6; 
@@ -1173,9 +1173,9 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
   //BEGIN magnetic and electric parameters
 
   double PI = acos(-1.);
-  double I = 1.e5; // electric current intensity
-  //double I = 0.25 * 1.e5; 
-  //double I = 4 * 1.e5;  
+  //double I = 1.e5; // electric current intensity
+  //double I = 0.5 * 1.e5; 
+  //double I = 2 * 1.e5;  
   double Msat = 1.e6;  //  magnetic saturation
   double  chi = 3.; //magnetic susceptibility
   double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
