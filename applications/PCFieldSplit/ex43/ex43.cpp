@@ -103,13 +103,14 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
   system.SetMgSmoother(GMRES_SMOOTHER);
+  system.SetOuterKSPSolver("cg"); 
  // system.SetMgSmoother(ASM_SMOOTHER);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
   
-  system.SetMaxNumberOfLinearIterations(20);
+  system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);	
-  system.SetMgType(F_CYCLE);
+  system.SetMgType(V_CYCLE);
 
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
@@ -119,7 +120,7 @@ int main(int argc, char** args) {
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetRichardsonScaleFactor(.6);
-  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 20, 20); //GMRES tolerances
+  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 200, 200); //GMRES tolerances
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetElementBlockNumber("All");
