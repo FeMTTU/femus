@@ -36,14 +36,22 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = false;
+  unsigned level0 = 0;
 //   double a = static_cast<double>(rand())/RAND_MAX;
 //   if ( a < 0.25) refine	= true;
 
-  if( fabs(x[0]-1.0) < 0.5/ pow(2,level) && fabs(x[1]-1.0) < 0.5/ pow(2,level) ){
-    refine = true;
-  }
+//   if( fabs(x[0] - 0.5) < 0.5/ pow(2,level) && fabs(x[1] - 0.5) < 0.5/ pow(2,level) ){
+//     refine = true;
+//   }
+  
+  double pi = acos(-1.);
+  double radius = pi / 8.0 /(level - level0);
+ double radius2 = radius * radius;
+  
+  if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
+    refine	= true;
+  }	  
   return refine;
-
 }
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
@@ -68,11 +76,11 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 6;
-  unsigned numberOfSelectiveLevels = 0;
+  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels = 8;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
   // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+ // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
   //mlMsh.EraseCoarseLevels(1);
   //numberOfUniformLevels -= 1;
   // print mesh info
@@ -94,7 +102,7 @@ int main(int argc, char** args) {
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
 
-  //system.SetMgSmoother(GMRES_SMOOTHER);
+  system.SetMgSmoother(GMRES_SMOOTHER);
   //system.SetMgSmoother(ASM_SMOOTHER);
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
@@ -211,26 +219,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
   vector < double > Jac;
   Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
-
-/*  if(counter == 10){ 
-    KK->print_matlab("matrix.txt", "ascii");
-    Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
-    PetscViewer    viewer;
-    PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
-    MatView(KKp,viewer);
-  }  */ 
   
   if(assembleMatrix) KK->zero(); // Set to zero all the entries of the Global Matrix    
-//  sol->_Sol[solUIndex]->zero();  
-  
-//   unsigned nprocs = msh->n_processors();  
-//   unsigned sizeU = msh->_dofOffset[solUType][nprocs];
-//   if (counter < sizeU){
-// //     if( (*sol->_Bdc[solUIndex])(counter) > 0.5){
-//       sol->_Sol[solUIndex]->set(counter, 1.);
-//       sol->_Sol[solUIndex]->close();
-// //     }
-//   }
   
   //BEGIN element loop
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -251,16 +241,12 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     //END memory allocation
     fU.assign(nDofsU,1.);
     
-//     //BEGIN global to local extraction
-//     for(unsigned i = 0; i < nDofsU; i++) { //velocity
-//       unsigned solUDof = msh->GetSolutionDof(i, iel, solUType);  //local to global solution dof
-//       solU[i] = (*sol->_Sol[solUIndex])(solUDof);  //global to local solution value
-//       sysDof[i] = pdeSys->GetSystemDof(solUIndex, solUPdeIndex, i, iel);  //local to global system dof
-//       if(sysDof[i]==counter) {
-// 	fU[i]=0.;
-// 	std::cout<<counter<<" "<<"U"<<std::endl;
-//       }
-//     }
+    //BEGIN global to local extraction
+    for(unsigned i = 0; i < nDofsU; i++) { //velocity
+      unsigned solUDof = msh->GetSolutionDof(i, iel, solUType);  //local to global solution dof
+      solU[i] = (*sol->_Sol[solUIndex])(solUDof);  //global to local solution value
+      sysDof[i] = pdeSys->GetSystemDof(solUIndex, solUPdeIndex, i, iel);  //local to global system dof
+    }
     
     for (unsigned i = 0; i < dim; i++){
       coordX[i].resize(nDofsX);
