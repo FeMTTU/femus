@@ -171,11 +171,12 @@ namespace femus {
     KSPCreate(PETSC_COMM_WORLD, &_ksp);
 
     KSPSetType(_ksp, outer_ksp_solver);
-
+    
     KSPGetPC(_ksp, &_pc);
+    
     PCSetType(_pc, PCMG);
     PCMGSetLevels(_pc, levelMax, NULL);
-
+           
     if(mg_smoother_type == FULL) {
       PCMGSetType(_pc, PC_MG_FULL);
     }
