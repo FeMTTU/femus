@@ -44,7 +44,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //   }
   
   double pi = acos(-1.);
-  double radius = pi / 8.0 /(level - level0);
+  double radius = pi / 4.0 /(level - level0);
  double radius2 = radius * radius;
   
   if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
@@ -71,13 +71,14 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu","seventh",scalingFactor);
+ // mlMsh.ReadCoarseMesh("./input/quad2_square.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/quad2_square.neu","seventh",scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 8;
+  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfSelectiveLevels = 5;
   // mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
   // erase all the coarse mesh levels
