@@ -42,6 +42,34 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
       if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = 1.;
     }
   }
+  system.SetAssembleFunction(AssembleBoussinesqAppoximation);
+
+  system.SetMaxNumberOfNonLinearIterations(20);
+  system.SetNonLinearConvergenceTolerance(1.e-8);
+  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
+  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
+
+  system.SetMaxNumberOfLinearIterations(1);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+
+
+  system.SetMgType(V_CYCLE);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
+  // initilaize and solve the system
+  system.init();
+
+  system.SetSolverFineGrids(RICHARDSON);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
+
+  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 30, 30); //GMRES tolerances
+
+  system.ClearVariablesToBeSolved();
+  system.AddVariableToBeSolved("All");
+  system.SetNumberOfSchurVariables(1);
+  system.SetElementBlockNumber("All");
+
+  system.MGsolve();
   else if(!strcmp(SolName, "P")) {
     dirichlet = false;
   }
