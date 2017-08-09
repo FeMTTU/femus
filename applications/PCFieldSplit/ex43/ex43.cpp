@@ -120,8 +120,8 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  system.SetRichardsonScaleFactor(.6);
-  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 200, 200); //GMRES tolerances
+  system.SetRichardsonScaleFactor(.8);
+  system.SetTolerances(1.e-15, 1.e-20, 1.e+50, 200, 200); //GMRES tolerances
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetElementBlockNumber("All");
