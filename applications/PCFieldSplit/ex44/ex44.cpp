@@ -25,8 +25,19 @@
 #include "Marker.hpp"
 #include "MyVector.hpp"
 
-double Miu = 0.005;
-unsigned counter = 0 ;
+//double Miu = 0.01;   int c0=-1; int cn=-1; //Re=100;
+//double Miu = 0.002;  int c0=-1; int cn=-1; //Re=500;
+double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
+
+//unsigned numberOfUniformLevels = 7; unsigned numberOfSelectiveLevels = 0; //uniform
+//unsigned numberOfUniformLevels = 8; unsigned numberOfSelectiveLevels = 0; //uniform
+//unsigned numberOfUniformLevels = 9; unsigned numberOfSelectiveLevels = 0; //uniform
+
+//unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 3; //non-uniform
+//unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 4; //non-uniform
+unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 5; //non-uniform
+
+int counter = 0 ;
 
 using namespace femus;
 
@@ -106,8 +117,8 @@ int main(int argc, char** args)
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 7;
-  unsigned numberOfSelectiveLevels = 0;
+  //unsigned numberOfUniformLevels = 9;
+  //unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
  // mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
@@ -204,16 +215,16 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   //  extract pointers to the several objects that we are going to use
 
   double Mu;
-  Mu = Miu;
-//   if (counter < 8) {
-//     Mu = Miu;
-//   }
-//   else {
-//     Mu = 0.5 * Miu;
-//   }
-//   counter++;
-
-//   std::cout << counter << " " << Mu;
+  
+  if(counter < c0 ) Mu = 2. * Miu;
+  else if ( counter <= cn ) {
+    Mu = 2*Miu*(cn-counter)/(cn-c0) + Miu*(counter-c0)/(cn-c0);
+  }
+  else{
+    Mu = Miu;
+  }
+  std::cout << counter << " " << Mu;
+  counter++;
 
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();

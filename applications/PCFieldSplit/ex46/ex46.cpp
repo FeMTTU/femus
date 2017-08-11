@@ -26,7 +26,7 @@
 #include "MyVector.hpp"
 
 double Prandtl = 1.0;
-double Rayleigh = 10000.;
+double Rayleigh = 1000.;
 
 using namespace femus;
 
@@ -69,7 +69,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
   double radius = pi / 32.0 * (level - level0);
   double radius2 = radius * radius;
 
-  if ( (x[0]*x[0] + x[1] * x[1] + x[2] * x[2]) > radius2) {
+  if ( (x[0]*x[0] + x[1] * x[1] ) > radius2) {
     refine	= true;
   }
   return refine;
