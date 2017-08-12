@@ -155,7 +155,9 @@ int main(int argc, char **args)
     E = 1. * 1.e12 ;
   }
   else if (simulation == 7) { //carotide
-    E = 1.e6 * 1.e6; 
+    E = 1.e6 * 1.e6; //CFD case
+    //E = 1 * 1.e6; // FSI with E = 1 MPa
+    //E = 0.5 * 1.e6; // FSI with E = 0.5 MPa
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
@@ -1370,7 +1372,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   double D = (partSim + 1) * 0.5 * 1.e-6;       //diameter of the particle
 
-  double a = 0.04; //radius of the circular current loop in m
+  double a = 0.02; //radius of the circular current loop in m
 
   std::vector <double> v(3);
   std::vector <double> x(3);
