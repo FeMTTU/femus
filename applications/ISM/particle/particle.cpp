@@ -154,7 +154,7 @@ int main(int argc, char **args)
     E = 1.e6 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
-    E = 1.e6 * 1.e6; 
+    E = 0.5 * 1.e6; 
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
@@ -512,7 +512,7 @@ int main(int argc, char **args)
               linea[configuration][partSim][i]->AdvectionParallel(15, 1. / itPeriod, 4, MagneticForceWire);
             }
             else if (simulation == 5 || simulation == 7) {
-              linea[configuration][partSim][i]->AdvectionParallel(15, 1. / itPeriod, 4, MagneticForceSC);
+              linea[configuration][partSim][i]->AdvectionParallel(30, 1. / itPeriod, 4, MagneticForceSC);
             }
             count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
           }
@@ -925,8 +925,8 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
     test = 0;
     value = 0.;
     if (2 == facename || 3 == facename) {
-      //value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
-      value = 5000 * ramp;//13332
+      value = (5000 + 2500 * sin(2 * PI * time)) * ramp;
+      //value = 5000 * ramp;//13332
     }
   }
   else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
