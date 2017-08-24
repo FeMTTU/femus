@@ -127,6 +127,7 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     infile = "./input/tubo3D.neu";
+    //infile = "./input/tubo3D_thick.neu"; //used only once, not important
     dimension2D = false;
   }
   else if (simulation == 7) {
@@ -151,10 +152,16 @@ int main(int argc, char **args)
   }
   else if (simulation == 6) {
     //E = 1000;
-    E = 1.e6 * 1.e6 ;
+    E = 0.5 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
+<<<<<<< HEAD
     E = 0.5 * 1.e6; 
+=======
+    E = 1.e6 * 1.e6; //CFD case
+    //E = 1 * 1.e6; // FSI with E = 1 MPa
+    //E = 0.5 * 1.e6; // FSI with E = 0.5 MPa
+>>>>>>> 1e7f19e56c9f9532a7272f383216266699bb8456
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
@@ -194,6 +201,7 @@ int main(int argc, char **args)
 
 //   ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 1);
 //   numberOfUniformRefinedMeshes = 1;
+
 
   ml_msh.PrintInfo();
 
@@ -479,6 +487,7 @@ int main(int argc, char **args)
 
   const unsigned int n_timesteps = (simulation == 6) ? 352 : 288 ;
 
+
   std::vector < std::vector <double> > data(n_timesteps);
 
   unsigned count_inside;
@@ -509,10 +518,14 @@ int main(int argc, char **args)
         if (time_step >= 2 * itPeriod) {
           for (int i = 0; i < linea[configuration][partSim].size(); i++) {
             if (simulation == 6) {
-              linea[configuration][partSim][i]->AdvectionParallel(15, 1. / itPeriod, 4, MagneticForceWire);
+              linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceWire);
             }
             else if (simulation == 5 || simulation == 7) {
+<<<<<<< HEAD
               linea[configuration][partSim][i]->AdvectionParallel(30, 1. / itPeriod, 4, MagneticForceSC);
+=======
+              linea[configuration][partSim][i]->AdvectionParallel(45, 1. / itPeriod, 4, MagneticForceSC);
+>>>>>>> 1e7f19e56c9f9532a7272f383216266699bb8456
             }
             count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
           }
@@ -839,22 +852,16 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
   if (!strcmp(name, "U")) {
     if (2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
-      //value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
-      value = 2 * 0.1 * (1. - r2) * ramp; //inflow
+      value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
+      //value = 2 * 0.1 * (1. - r2) * ramp; //inflow
     }
     else if (1 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if (!strcmp(name, "V") ){
+  else if (!strcmp(name, "V") || !strcmp(name, "W")){
     if (1 == facename || 5 == facename) {
-      test = 0;
-      value = 0.;
-    }
-  }
-  else if (!strcmp(name, "W") ){
-    if (5 == facename) {
       test = 0;
       value = 0.;
     }
@@ -863,8 +870,8 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
     test = 0;
     value = 0.;
     if (1 == facename) {
-      //value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
-      value = 13335 * ramp;
+      value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
+      //value = 13335 * ramp;
     }
   }
   else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
@@ -1177,6 +1184,8 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   double PI = acos(-1.);
   double I = 1.e5; // electric current intensity
+  //double I = 0.25 * 1.e5; 
+  //double I = 4 * 1.e5;  
   double Msat = 1.e6;  //  magnetic saturation
   double  chi = 3.; //magnetic susceptibility
   double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
@@ -1371,7 +1380,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   double D = (partSim + 1) * 0.5 * 1.e-6;       //diameter of the particle
 
-  double a = 0.04; //radius of the circular current loop in m
+  double a = 0.02; //radius of the circular current loop in m
 
   std::vector <double> v(3);
   std::vector <double> x(3);

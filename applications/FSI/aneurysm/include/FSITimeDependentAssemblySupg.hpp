@@ -337,7 +337,7 @@ namespace femus
             if ( ( !ml_sol->GetBdcFunction() ( xx, "P", tau, face, time ) &&
                    !ml_sol->GetBdcFunction() ( xx, "P", tau_old, face, time - dt ) )
                  && ( tau != 0. || tau_old != 0. ) ) {
-	      
+
               unsigned nve = mymsh->GetElementFaceDofNumber ( iel, jface, SolType2 );
               const unsigned felt = mymsh->GetElementFaceType ( iel, jface );
 
@@ -532,8 +532,8 @@ namespace femus
 
               for ( int idim = 0; idim < dim; idim++ ) {
                 for ( int jdim = 0; jdim < dim; jdim++ ) {
-                  LapmapVAR[idim] += ( GradSolVAR[idim][jdim] ) * gradphi_hat[i * dim + jdim];
-                  //LapmapVAR[idim] += ( GradSolVAR[idim][jdim] + 0.*GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
+                  //LapmapVAR[idim] += ( GradSolVAR[idim][jdim] ) * gradphi_hat[i * dim + jdim];
+                  LapmapVAR[idim] += ( GradSolVAR[idim][jdim] + 0.*GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
                 }
               }
 
@@ -586,7 +586,7 @@ namespace femus
                   adept::adouble value =  theta * (
                                             - AdvaleVAR[idim]      	             // advection term
                                             - IRe * LapvelVAR[idim]	             // viscous dissipation
-                                            + IRe * LapStrong[idim] 
+                                            + IRe * LapStrong[idim]
                                             + 1. / rhof * SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
 
@@ -667,7 +667,7 @@ namespace femus
 // 					    - AdvaleVAR[idim]      	             // advection term
 // 					    - IRe * LapvelVAR[idim]	             // viscous dissipation
                                             //- SolVAR[dim + idim] * ( IRe / K + 0.5 * C2 * speed ) * phi[i]
-                                            - (SolVAR[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi[i] + phiSupg[i])
+					    - (SolVAR[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi[i] + phiSupg[i])
                                             + 1. / rhof * SolVAR[2 * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
 
@@ -675,8 +675,7 @@ namespace femus
 // 					      - AdvaleVAR_old[idim]               	         // advection term
 // 					      - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
                                                //- SolVAR_old[dim + idim] * ( IRe / K + 0.5 * C2 * speed_old ) * phi_old[i]
-                                               - (SolVAR_old[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi_old[i] + phiSupg_old[i])
-
+					       - (SolVAR_old[dim + idim] - meshVel[idim]) * ( IRe / K + 0.5 * C2 * speed ) * (phi_old[i] + phiSupg_old[i])
                                                + 1. / rhof * SolVAR[2 * dim] * gradphi_old[i * dim + idim]  // pressure gradient
                                              ) * Weight_old;			                 // at time t-dt
 
