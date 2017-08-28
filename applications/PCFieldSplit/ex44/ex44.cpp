@@ -91,7 +91,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 }
 
 void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numofrefinements);
-//void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args)

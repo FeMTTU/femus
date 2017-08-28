@@ -26,7 +26,7 @@
 #include "MyVector.hpp"
 
 double Prandtl = 1.0;
-double Rayleigh = 1000.;
+double Rayleigh = 10000.;
 
 using namespace femus;
 
@@ -66,10 +66,10 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 //  std::cout << level << std::endl;
   double pi = acos(-1.);
-  double radius = pi / 32.0 * (level - level0);
+  double radius = 1.0 / 2.0 * (1.0 - pow(0.5,level - level0 + 1));
   double radius2 = radius * radius;
 
-  if ( (x[0]*x[0] + x[1] * x[1] ) > radius2) {
+  if ( (x[0]*x[0] + x[1] * x[1] ) > radius2 + 1.0e-6) {
     refine	= true;
   }
   return refine;
@@ -103,18 +103,18 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
+ // mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/hex_cube.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 3;
- // mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  //mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
   // erase all the coarse mesh levels
-  mlMsh.EraseCoarseLevels(1);
+  // mlMsh.EraseCoarseLevels(1);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -122,14 +122,13 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("T", LAGRANGE, SECOND);
+  mlSol.AddSolution("T", LAGRANGE, FIRST);
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
 
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
   mlSol.AddSolution("P",  DISCONTINOUS_POLYNOMIAL, FIRST);
-
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
   mlSol.Initialize("T", InitalValueT);
@@ -173,9 +172,10 @@ int main(int argc, char** args) {
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
+  system.SetRichardsonScaleFactor(.6);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
-  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 30, 30); //GMRES tolerances
+  system.SetTolerances(1.e-8, 1.e-15, 1.e+50, 30, 30); //GMRES tolerances
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
