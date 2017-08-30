@@ -84,12 +84,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
   else if(elemgroupnumber == 12 && level < numberOfUniformLevels + 5){
     refine = true;
   }
-  else if(elemgroupnumber == 13 && level < numberOfUniformLevels + 6){
-    refine = true;
-  }
-   else if(elemgroupnumber == 14 && level < numberOfUniformLevels + 7){
-    refine = true;
-  }
   
   return refine;
 
@@ -109,15 +103,15 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/adaptiveRef9.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/adaptiveRef9.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/Lshape3D.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 7;
+  unsigned numberOfSelectiveLevels = 6;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
  
   
@@ -159,8 +153,10 @@ int main(int argc, char** args) {
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
-  //system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
+  //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
+  //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 10, 10); //GMRES tolerances // 10 number of richardson iterations
   

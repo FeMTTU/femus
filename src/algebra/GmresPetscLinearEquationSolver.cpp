@@ -514,19 +514,19 @@ namespace femus {
 	scale = 0.2;
 	
 	//BEGIN da commentare
-// 	level = _msh->GetLevel();
-// 	numberOfUniformLevels = 1; // deve corrispondere a numberOfUniformLevels nel main
-// 	
-// 	if(numberOfUniformLevels == 1){
-// 	  if(level > numberOfUniformLevels ){
-// 	    scale /= (1 + level- numberOfUniformLevels );
-// 	  }
-// 	}
-// 	else{
-// 	  if (level >= numberOfUniformLevels ){
-// 	    scale /= (2 + level - numberOfUniformLevels);
-// 	  }
-// 	}
+	level = _msh->GetLevel();
+	numberOfUniformLevels = 1; // deve corrispondere a numberOfUniformLevels nel main
+	
+	if(numberOfUniformLevels == 1){
+	  if(level > numberOfUniformLevels ){
+	    scale /= (1 + level- numberOfUniformLevels );
+	  }
+	}
+	else{
+	  if (level >= numberOfUniformLevels ){
+	    scale /= (2 + level - numberOfUniformLevels);
+	  }
+	}
 	//END da commentare
 	
 	std::cout << "level = " << level << "scale = "<< scale << std::endl;
