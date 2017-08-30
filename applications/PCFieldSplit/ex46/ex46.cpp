@@ -70,6 +70,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
   double radius2 = radius * radius;
 
   if ( (x[0]*x[0] + x[1] * x[1] ) > radius2 + 1.0e-6) {
+    std::cout << level << std::endl;
     refine	= true;
   }
   return refine;
@@ -110,7 +111,7 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 3;
+  unsigned numberOfSelectiveLevels = 1;
   //mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
   // erase all the coarse mesh levels
@@ -175,7 +176,7 @@ int main(int argc, char** args) {
   system.SetRichardsonScaleFactor(.6);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
-  system.SetTolerances(1.e-8, 1.e-15, 1.e+50, 30, 30); //GMRES tolerances
+  system.SetTolerances(1.e-8, 1.e-15, 1.e+50, 100, 100);//GMRES tolerances
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
