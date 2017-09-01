@@ -114,7 +114,7 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 2;
+  unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
  
   
@@ -158,9 +158,9 @@ int main(int argc, char** args) {
   system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(CG);
   //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
-  //system.SetPreconditionerFineGrids(SOR_PRECOND);
+  system.SetPreconditionerFineGrids(SOR_PRECOND);
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 10, 10); //GMRES tolerances // 10 number of richardson iterations
   
