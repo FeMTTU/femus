@@ -311,7 +311,7 @@ namespace femus {
 // 	}
 // 	else{
 // 	  if (ig >= _gridr ){
-// 	    factor = (2 + ig - _gridr); //da controllare qnd _gridr lo mettiamo >1
+// 	    factor = (2 + ig - _gridr);
 // 	  }
 // 	}
 // 	factor *= factor;

@@ -87,7 +87,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //   else if(elemgroupnumber == 13 && level < numberOfUniformLevels + 6){
 //     refine = true;
 //   }
-  
+ 
   return refine;
 
 }
@@ -106,15 +106,16 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/adaptiveRef4Tri.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 3;
+  unsigned numberOfSelectiveLevels = 1;
+
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
  
   
@@ -157,12 +158,12 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(CG);
-  //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
+  system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
   //system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
-  system.SetPreconditionerFineGrids(SOR_PRECOND);
+  //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
-  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 10, 10); //GMRES tolerances // 10 number of richardson iterations
+  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances // 10 number of richardson iterations
   
   
   
@@ -184,6 +185,11 @@ int main(int argc, char** args) {
   Solution* sol = mlSol.GetLevel(numberOfUniformLevels+numberOfSelectiveLevels-1);
     
   for(unsigned i = 0; i< sizeU; i++){
+    
+    
+    
+    //mlSol.Initialize("All");
+    
     system.MLsolve();
     mlSol.GenerateBdc("All");
     std::ofstream fout;
@@ -207,7 +213,7 @@ int main(int argc, char** args) {
     fout.close();
 
 
-    if(counter == 1){
+    if(counter == counter){
     
       // print solutions
       std::vector < std::string > variablesToBePrinted;

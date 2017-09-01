@@ -170,7 +170,7 @@ namespace femus {
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
 
       if(_solver_type != PREONLY) {
-        KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
+        //KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
         KSPSetNormType(_ksp, KSP_NORM_NONE);
       }
 
@@ -519,17 +519,17 @@ namespace femus {
 // 	
 // 	if(numberOfUniformLevels == 1){
 // 	  if(level > numberOfUniformLevels ){
-// 	    scale /= (1 + level- numberOfUniformLevels);
+// 	    scale /= (1 + level- numberOfUniformLevels );
 // 	  }
 // 	}
 // 	else{
 // 	  if (level >= numberOfUniformLevels ){
-// 	    scale /= (2 + level - numberOfUniformLevels); //da controllare qnd numberOfUniformLevels lo mettiamo >1
+// 	    scale /= (2 + level - numberOfUniformLevels);
 // 	  }
 // 	}
 	//END da commentare
 	
-	std::cout << "level = " << level << "scale = "<< scale << std::endl;
+	//std::cout << "level = " << level << "scale = "<< scale << std::endl;
 	
 	KSPRichardsonSetScale(ksp, scale);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
