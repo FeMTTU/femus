@@ -170,7 +170,7 @@ namespace femus {
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
 
       if(_solver_type != PREONLY) {
-        KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
+        //KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
         KSPSetNormType(_ksp, KSP_NORM_NONE);
       }
 
@@ -529,7 +529,7 @@ namespace femus {
 	}
 	//END da commentare
 	
-	std::cout << "level = " << level << "scale = "<< scale << std::endl;
+	//std::cout << "level = " << level << "scale = "<< scale << std::endl;
 	
 	KSPRichardsonSetScale(ksp, scale);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
