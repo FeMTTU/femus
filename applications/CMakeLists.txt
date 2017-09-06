@@ -59,6 +59,10 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   set(OPT_APPLICATION elliptic_lift_restr)
   ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)
   
+# lift_restr_neum
+  set(OPT_APPLICATION elliptic_lift_restr_neum)
+  ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)
+  
 # boundary
   set(OPT_APPLICATION elliptic_bdry_dir)
   ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)

@@ -42,7 +42,7 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
 
  //***** set target domain flag ******
  // flag = 1: we are in the lifting nonzero domain
-  int control_el_flag = 1;
+  int control_el_flag = 0;
    if ( elem_center[1] >  0.4) { control_el_flag = 1; }
 
      return control_el_flag;
