@@ -304,17 +304,18 @@ namespace femus {
 	
 	unsigned factor = 1;
 	//BEGIN da commentare
-// 	if(_gridr == 1){
-// 	  if(ig > _gridr ){
-// 	    factor = (1 + ig - _gridr );
-// 	  }
-// 	}
-// 	else{
-// 	  if (ig >= _gridr ){
-// 	    factor = (2 + ig - _gridr);
-// 	  }
-// 	}
-// 	factor *= factor;
+	if(_gridr == 1){
+	  if(ig > _gridr ){
+	    factor = (1 + ig - _gridr );
+	  }
+	}
+	else{
+	  if (ig >= _gridr ){
+	    factor = (2 + ig - _gridr); //da controllare qnd _gridr lo mettiamo >1
+	  }
+	}
+	factor *= factor;
+	factor = factor + 1;
 	//END da commentare
 	std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;
 	
@@ -338,17 +339,18 @@ namespace femus {
 
 	unsigned factor = 1;
 	//BEGIN da commentare
-// 	if(_gridr == 1){
-// 	  if(ig > _gridr ){
-// 	    factor = (1 + ig - _gridr );
-// 	  }
-// 	}
-// 	else{
-// 	  if (ig >= _gridr ){
-// 	    factor = (2 + ig - _gridr);
-// 	  }
-// 	}
-// 	factor *= factor;
+	if(_gridr == 1){
+	  if(ig > _gridr ){
+	    factor = (1 + ig - _gridr );
+	  }
+	}
+	else{
+	  if (ig >= _gridr ){
+	    factor = (2 + ig - _gridr);
+	  }
+	}
+	factor *= factor;
+	factor = factor + 1;
 	//END da commentare
     	std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;
 	
