@@ -315,6 +315,7 @@ namespace femus {
 	  }
 	}
 	factor *= factor;
+	factor = factor + 1;
 	//END da commentare
 	std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;
 	
@@ -349,6 +350,7 @@ namespace femus {
 	  }
 	}
 	factor *= factor;
+	factor = factor + 1;
 	//END da commentare
     	std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;
 	

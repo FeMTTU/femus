@@ -511,7 +511,7 @@ namespace femus {
 	
  	
 	
-	scale = 0.2;
+	scale = 1.;
 	
 	//BEGIN da commentare
 	level = _msh->GetLevel();
