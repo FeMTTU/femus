@@ -8,4 +8,4 @@ ADD_SUBDIRECTORY(./testNS)
 ADD_SUBDIRECTORY(./Stokes_dist_adj)
 
 #testOPT - Stokes equation with distributed control - lifting - 3x3 block
-ADD_SUBDIRECTORY(./testOPT)
+ADD_SUBDIRECTORY(./opt_lift)
