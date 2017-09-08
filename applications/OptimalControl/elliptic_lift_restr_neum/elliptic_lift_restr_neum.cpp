@@ -229,7 +229,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector <double> phi_adj_vol_at_bdry;  // local test function
   phi_adj_vol_at_bdry.reserve(maxSize);
   vector <double> sol_ctrl_x_vol_at_bdry_gss;
-    sol_ctrl_x_vol_at_bdry_gss.reserve(dim);
+  sol_ctrl_x_vol_at_bdry_gss.reserve(dim);
  //*************************************************** 
   
   vector <double> phi_ctrl_x_vol_at_bdry; // local test function first order partial derivatives
@@ -289,7 +289,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   double alpha = ALPHA_CTRL;
   double beta  = BETA_CTRL;
   double penalty_strong = 10e+14;
-  double penalty_ctrl = 1.e10;         //penalty for u=q
+  //double penalty_ctrl = 1.e10;         //penalty for u=q
  //***************************************************  
   
   
@@ -512,20 +512,20 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 // FIRST BLOCK ROW
 //============ u = q ===========================	    
 // block delta_state/state =====================
-		if (i_vol < nDof_u && j_vol < nDof_u && i_vol == j_vol)  {
-		  Jac[    
-		(0 + i_vol) * nDof_AllVars  +
-		(0 + j_vol)                                ]  +=  penalty_ctrl * ( control_node_flag[i_vol]);
-		  
-		}
+// 		if (i_vol < nDof_u && j_vol < nDof_u && i_vol == j_vol)  {
+// 		  Jac[    
+// 		(0 + i_vol) * nDof_AllVars  +
+// 		(0 + j_vol)                                ]  +=  penalty_ctrl * ( control_node_flag[i_vol]);
+// 		  
+// 		}
 
 // block delta_state/control ===================
-	      if ( i_vol < nDof_u && j_vol < nDof_ctrl && i_vol == j_vol) {
-		Jac[    
-		(0     + i_vol) * nDof_AllVars  +
-		(nDof_u + j_vol)                           ]  += penalty_ctrl * ( control_node_flag[i_vol]) * (-1.);
-	
-	      }
+// 	      if ( i_vol < nDof_u && j_vol < nDof_ctrl && i_vol == j_vol) {
+// 		Jac[    
+// 		(0     + i_vol) * nDof_AllVars  +
+// 		(nDof_u + j_vol)                           ]  += penalty_ctrl * ( control_node_flag[i_vol]) * (-1.);
+// 	
+// 	      }
 //============ u = q ===========================
 
 		    
