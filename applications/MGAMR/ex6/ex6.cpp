@@ -35,6 +35,17 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
+bool SetBoundaryCondition2(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  bool dirichlet = true; //dirichlet
+  value = 0.;
+  
+  if (facename == 3 ){
+    dirichlet = false;
+  }
+  
+  return dirichlet;
+}
+
 unsigned numberOfUniformLevels;
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
@@ -92,6 +103,18 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 }
 
+bool SetRefinementFlag2(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
+
+  bool refine = false;
+  double radious = 0.25/(level*level);
+  
+  if(x[0]*x[0]+x[1]*x[1] < radious*radious) refine=true;
+  
+  std::cout << level <<" ";
+
+  return refine;
+
+}
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
@@ -106,16 +129,17 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/adaptiveRef6Tri.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/adaptiveRef6Tri.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/Lshape3DMixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/Lshape3DMixed_mini.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 5;
+  unsigned numberOfSelectiveLevels = 2;
+  
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
  
   
@@ -159,8 +183,8 @@ int main(int argc, char** args) {
   system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(CG);
   //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  //system.SetPreconditionerFineGrids(ILU_PRECOND);
-  system.SetPreconditionerFineGrids(JACOBI_PRECOND);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
   //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances // 10 number of richardson iterations
