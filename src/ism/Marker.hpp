@@ -244,6 +244,7 @@ namespace femus {
 
       unsigned GetNextElement2D(const unsigned &iel, const unsigned &previousElem, Solution *sol, const double &s);
       unsigned GetNextElement3D(const unsigned &iel, const unsigned &previousElem, Solution *sol, const double &s);
+      unsigned GetNextElement3D(const unsigned &iel, const std::vector< unsigned > &searchHistory, Solution *sol, const double &s);
       int FastForward(const unsigned &currentElem, const unsigned &previousElem, Solution *sol, const double &s);
 
       std::vector < double > _x;
