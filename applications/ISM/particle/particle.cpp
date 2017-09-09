@@ -155,13 +155,9 @@ int main(int argc, char **args)
     E = 0.5 * 1.e6 ;
   }
   else if (simulation == 7) { //carotide
-<<<<<<< HEAD
-    E = 0.5 * 1.e6; 
-=======
-    E = 1.e6 * 1.e6; //CFD case
-    //E = 1 * 1.e6; // FSI with E = 1 MPa
+    //E = 1.e6 * 1.e6; //CFD case
+    E = 1 * 1.e6; // FSI with E = 1 MPa
     //E = 0.5 * 1.e6; // FSI with E = 0.5 MPa
->>>>>>> 1e7f19e56c9f9532a7272f383216266699bb8456
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
@@ -515,17 +511,13 @@ int main(int argc, char **args)
 
         count_out = 0;
 
-        if (time_step >= 2 * itPeriod) {
+        if (time_step >= 2.5 * itPeriod) {
           for (int i = 0; i < linea[configuration][partSim].size(); i++) {
             if (simulation == 6) {
               linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceWire);
             }
             else if (simulation == 5 || simulation == 7) {
-<<<<<<< HEAD
-              linea[configuration][partSim][i]->AdvectionParallel(30, 1. / itPeriod, 4, MagneticForceSC);
-=======
-              linea[configuration][partSim][i]->AdvectionParallel(45, 1. / itPeriod, 4, MagneticForceSC);
->>>>>>> 1e7f19e56c9f9532a7272f383216266699bb8456
+              linea[configuration][partSim][i]->AdvectionParallel(150, 1. / itPeriod, 4, MagneticForceSC);
             }
             count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
           }
@@ -1343,7 +1335,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
   }
 
 
-  //END cheating
+  //END c/*h*/eating
 
 }
 
