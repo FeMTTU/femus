@@ -155,9 +155,9 @@ int main(int argc, char **args)
     E = 1. * 1.e12 ;
   }
   else if (simulation == 7) { //carotide
-    E = 1.e6 * 1.e6; //CFD case
+    //E = 1.e6 * 1.e6; //CFD case
     //E = 1 * 1.e6; // FSI with E = 1 MPa
-    //E = 0.5 * 1.e6; // FSI with E = 0.5 MPa
+    E = 0.5 * 1.e6; // FSI with E = 0.5 MPa
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
@@ -517,7 +517,7 @@ int main(int argc, char **args)
               linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceWire);
             }
             else if (simulation == 5 || simulation == 7) {
-              linea[configuration][partSim][i]->AdvectionParallel(250, 1. / itPeriod, 4, MagneticForceSC);
+              linea[configuration][partSim][i]->AdvectionParallel(50, 1. / itPeriod, 4, MagneticForceSC);
             }
             count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
           }
