@@ -27,8 +27,27 @@ using namespace femus;
  double force[3] = {1.,0.,0.};
  double Vel_desired[3] = {0.125,0.,0.};
  double alpha_val = 1.;
- double beta_val = 1e-7;
- double gamma_val = 1e-7;
+ double beta_val = 1.;
+ double gamma_val = 1.;
+ 
+ 
+ int ElementTargetFlag(const std::vector<double> & elem_center) {
+
+ //***** set target domain flag ********************************** 
+  int target_flag = 0;
+  
+   if ( elem_center[0] > 0.   - 1.e-5  &&  elem_center[0] < 0.5   + 1.e-5  && 
+        elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5 
+  ) {
+     
+     target_flag = 1;
+     
+  }
+  
+     return target_flag;
+
+}
+
  
 bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
@@ -55,16 +74,17 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
   
   
 // LEFT ==========================  
-//       if (facename == 4) {
-//        if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
-//   else if (!strcmp(SolName, "VCTRL"))    {      value = 0.; } 
-// 	
-//       }
+      if (facename == 4) { 
+	if(x[1] > 0.3  && x[1] < 0.7){
+		if (!strcmp(SolName, "UCTRL"))    { /*value = 0.; */dirichlet = false; }
+	    else if (!strcmp(SolName, "VCTRL"))    { /* dirichlet = false;  */  value = 0.; } 
+	}
+      }
       
 // RIGHT ==========================  
      if (facename == 2) {
        if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
-  else if (!strcmp(SolName, "VCTRL"))    { dirichlet = false; } 
+  else if (!strcmp(SolName, "VCTRL"))    { value = 0.; } 
       }
       
 //       if (!strcmp(SolName, "P"))  { 
@@ -122,7 +142,7 @@ int main(int argc, char** args) {
 
 //   MultiLevelMesh mlMsh;
 //  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
-    mlMsh.GenerateCoarseBoxMesh(8,8,0,-0.5,0.5,-0.5,0.5,0.,0.,QUAD9,"seventh");
+    mlMsh.GenerateCoarseBoxMesh(32,32,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
     
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
@@ -508,7 +528,26 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
         coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
-  //STATE###################################################################  
+    
+     // elem average point 
+    vector < double > elem_center(dim);   
+    for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
+  for (unsigned j = 0; j < dim; j++) {  
+      for (unsigned i = 0; i < nDofsX; i++) {
+         elem_center[j] += coordX[j][i];
+       }
+    }
+    
+   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofsX; }
+  //*************************************** 
+  
+  //***** set target domain flag ********************************** 
+   int target_flag = 0;
+   target_flag = ElementTargetFlag(elem_center);
+//***************************************   
+    
+    
+   //STATE###################################################################  
     // velocity ************
     for (unsigned i = 0; i < nDofsV; i++) {
       unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof // via local to global solution node
@@ -703,21 +742,21 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
             
 	      NSVadj_gss[kdim]   	+=  IRe*phiVadj_x_gss[i * dim + jdim]*gradSolVadj_gss[kdim][jdim];  
 
-	      NSVctrl_gss[kdim]   	+=  -(alpha_val + beta_val) * solVctrl_gss[kdim] * phiVctrl_gss[i] 
+	      NSVctrl_gss[kdim]   	+=  -(alpha_val * target_flag + beta_val) * solVctrl_gss[kdim] * phiVctrl_gss[i] 
 					    - gamma_val * phiVctrl_x_gss[i * dim + jdim] * gradSolVctrl_gss[kdim][jdim];
 				      
-						    //(-alpha_val*solVctrl_gss[jdim]*phiVctrl_gss[i * dim + jdim]) + 
+						    //(-alpha_val* target_flag *solVctrl_gss[jdim]*phiVctrl_gss[i * dim + jdim]) + 
 						    //(-beta_val*solVctrl_gss[jdim]*phiVctrl_gss[i * dim + jdim])
 						    //+ (-gamma_val*phiVctrl_x_gss[i * dim + jdim]*gradSolVctrl_gss[kdim][jdim])
 						    //+IRe*phiVadj_x_gss[i * dim + jdim]*phiVctrl_x_gss[i * dim + jdim]; 
 					
 	      V_Vctrl_gss[kdim] 	+= IRe*phiV_x_gss[i * dim + jdim]*gradSolVctrl_gss[kdim][jdim];	
 	      
-	      Vadj_V_gss[kdim] 		+=  - (alpha_val* solV_gss[kdim]*phiVadj_gss[i]);
+	      Vadj_V_gss[kdim] 		+=  - (alpha_val * target_flag * solV_gss[kdim]*phiVadj_gss[i]);
 	      
-	      Vadj_Vctrl_gss[kdim] 	+= -(alpha_val* solVctrl_gss[kdim]*phiVadj_gss[i]);
+	      Vadj_Vctrl_gss[kdim] 	+= -(alpha_val* target_flag * solVctrl_gss[kdim]*phiVadj_gss[i]);
 	      
-	      Vctrl_V_gss[kdim] 	+= -(alpha_val* solV_gss[kdim]*phiVctrl_gss[i]);
+	      Vctrl_V_gss[kdim] 	+= -(alpha_val* target_flag * solV_gss[kdim]*phiVctrl_gss[i]);
 	      
 	      Vctrl_Vadj_gss[kdim] 	+= IRe*phiVctrl_x_gss[i * dim + jdim]*gradSolVadj_gss[kdim][jdim]; 
 						    //phiVadj_x_gss[i * dim + jdim]/*gradSolVctrl_gss[kdim][jdim]*/;	
@@ -735,12 +774,12 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 
           for (unsigned  kdim = 0; kdim < dim; kdim++) {
             aResV[kdim][i] 		+=  (force[kdim] * phiV_gss[i] - NSV_gss[kdim] -V_Vctrl_gss[kdim]) * weight;
-	    aResVadj[kdim][i]   	+=  (-alpha_val* Vel_desired[kdim]* phiVadj_gss[i]  - Vadj_V_gss[kdim] - Vadj_Vctrl_gss[kdim] - NSVadj_gss[kdim] )* weight;
-							    ///*+ alpha_val*(solV_gss[kdim]+solVctrl_gss[kdim])*phiVadj_gss[i] - NSVadj_gss[kdim] */
+	    aResVadj[kdim][i]   	+=  (-alpha_val* target_flag * Vel_desired[kdim]* phiVadj_gss[i]  - Vadj_V_gss[kdim] - Vadj_Vctrl_gss[kdim] - NSVadj_gss[kdim] )* weight;
+							    ///*+ alpha_val* target_flag *(solV_gss[kdim]+solVctrl_gss[kdim])*phiVadj_gss[i] - NSVadj_gss[kdim] */
 							    //- Vadj_V_gss[kdim] - Vadj_Vctrl_gss[kdim] - NSVadj_gss[kdim] )* weight;
-            aResVctrl[kdim][i]    	+=  (-alpha_val* Vel_desired[kdim]* phiVctrl_gss[i] - Vctrl_V_gss[kdim] - Vctrl_Vadj_gss[kdim]  - NSVctrl_gss[kdim])* weight;
+            aResVctrl[kdim][i]    	+=  (-alpha_val* target_flag * Vel_desired[kdim]* phiVctrl_gss[i] - Vctrl_V_gss[kdim] - Vctrl_Vadj_gss[kdim]  - NSVctrl_gss[kdim])* weight;
 							    /*solV_gss[kdim]*phiVctrl_gss[i]* weight;*/ 
-							    //(-alpha_val* Vel_desired[kdim]* phiVctrl_gss[i] + alpha_val* solV_gss[kdim]*phiVctrl_gss[i] 
+							    //(-alpha_val* target_flag * Vel_desired[kdim]* phiVctrl_gss[i] + alpha_val* target_flag * solV_gss[kdim]*phiVctrl_gss[i] 
 							    ///*-  Vctrl_Vadj_gss[kdim]*/ - NSVctrl_gss[kdim] /*- ( Vctrl_V_gss[kdim] + Vctrl_Vadj_gss[kdim]  
 							    //+ NSVctrl_gss[kdim])*/)* weight;
 	    
@@ -992,6 +1031,25 @@ double integralval = 0.;
         coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
+    
+     // elem average point 
+    vector < double > elem_center(dim);   
+    for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
+  for (unsigned j = 0; j < dim; j++) {  
+      for (unsigned i = 0; i < nDofsX; i++) {
+         elem_center[j] += coordX[j][i];
+       }
+    }
+    
+   for (unsigned j = 0; j < dim; j++) { elem_center[j] = elem_center[j]/nDofsX; }
+  //*************************************** 
+  
+  //***** set target domain flag ********************************** 
+   int target_flag = 0;
+   target_flag = ElementTargetFlag(elem_center);
+//***************************************       
+    
+    
  //STATE###################################################################  
     // velocity ************
     for (unsigned i = 0; i < nDofsV; i++) {
@@ -1071,7 +1129,7 @@ double integralval = 0.;
 	
       for (unsigned  k = 0; k < dim; k++) {
 // 	for (unsigned  j = 0; j < dim; k++) {
-	 integralval/* integral[k]*/ +=(/* (alpha_val/2 )**/(V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k])*weight)
+	 integralval/* integral[k]*/ +=( (alpha_val* target_flag /2 )*(V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k])*weight)
 // 					  + ((beta_val/2)*(Vctrl_gss[k])*(Vctrl_gss[k])*weight)
 					 /* + ((gamma_val/2)*(gradVctrl_gss[k][j])*(gradVctrl_gss[k][j])*weight)*/;
 // 	}
