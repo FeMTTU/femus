@@ -451,12 +451,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 //=============== grad dot n for residual ========================================= 
 //     compute gauss quantities on the boundary through VOLUME interpolation
            std::fill(sol_ctrl_x_vol_at_bdry_gss.begin(), sol_ctrl_x_vol_at_bdry_gss.end(), 0.);
-		      for (int iv = 0; iv < nDof_adj; iv++)  {
+		      for (int iv = 0; iv < nDof_ctrl; iv++)  {
 			
                             for (int d = 0; d < dim; d++) {
 //    std::cout << " ivol " << iv << std::endl;
 //    std::cout << " adj dofs " << sol_adj[iv] << std::endl;
-			      sol_ctrl_x_vol_at_bdry_gss[d] += sol_adj[iv] * phi_ctrl_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
+			      sol_ctrl_x_vol_at_bdry_gss[d] += sol_ctrl[iv] * phi_ctrl_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
 			    }
 		      }  
 		      
@@ -495,10 +495,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 //============ Bdry Residuals ==================	
                 if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  0.; 
 		
-                if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=  0.;  
+                if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=   - control_node_flag[i_vol] *  weight_bdry *
+                                                                                ( grad_dot_n_ctrl_res * phi_adj_bdry[i_bdry]/*phi_adj_vol_at_bdry[i_vol??]*/
+							                         );  // optimality condition;   
 		
                 if (i_vol < nDof_adj)   Res[ (nDof_u + nDof_ctrl +  i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
-                                                                                (   - grad_dot_n_ctrl_res * phi_adj_bdry[i_bdry]/*phi_adj_vol_at_bdry[i_vol??]*/
+                                                                                ( grad_dot_n_ctrl_res * phi_adj_bdry[i_bdry]/*phi_adj_vol_at_bdry[i_vol??]*/
 							                         );  // optimality condition; 
 //============ Bdry Residuals ==================    
 		    
@@ -559,7 +561,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	                                       grad_ctrl_dot_n_mat += phi_ctrl_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
 	}
 //=============== grad dot n  =========================================    
-
+//=============== grad phi dot n  =======================================edit==========
+    double grad_phi_ctrl_dot_n_mat = 0.;
+        for(unsigned d=0; d<dim; d++) {
+	                                       grad_phi_ctrl_dot_n_mat += phi_ctrl_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
+	}
+//=============== grad phi dot n  =================================================
   std::cout << " gradadjdotn " << grad_ctrl_dot_n_mat << std::endl;
   
 		      
@@ -567,16 +574,22 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		   if ( i_vol < nDof_adj    && j < nDof_ctrl)   
 		     Jac[ 
 			(nDof_u+ nDof_ctrl + i_vol) * nDof_AllVars  +
-		        (nDof_u  + j)             ]  += control_node_flag[i_vol] * (-1) *
+		        (nDof_u  + j)             ]  += control_node_flag[i_vol] *
 		        (
 			  weight_bdry * grad_ctrl_dot_n_mat * phi_adj_bdry[i_bdry]
 			);    		      
 		      
-		      
+//==========block delta_control\adjoint==================================edit=======
+              if ( i_vol < nDof_ctrl   && j < nDof_adj  ) 
+		Jac[ 
+		   (nDof_u + i_vol) * nDof_AllVars  + 
+		   (nDof_u + nDof_ctrl + j)         ]  +=  control_node_flag[i_vol] * 
+		         weight_bdry * grad_phi_ctrl_dot_n_mat * phi_adj_bdry[i_bdry];		      
 		      
 		    }   //end loop i_bdry // j_vol
 	      
-	      
+
+
 
 //========= debugging ==========================    
 //   std::cout << "====== phi values on boundary for gauss point " << ig_bdry << std::endl;
