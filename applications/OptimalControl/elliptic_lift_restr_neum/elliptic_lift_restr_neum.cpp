@@ -6,7 +6,7 @@
 
 #include "../elliptic_lift_restr_param.hpp"
 
-#define SERVICE 0.
+#define SERVICE 1.
 
 using namespace femus;
 
@@ -36,6 +36,11 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   value = 0;
   
   if(!strcmp(name,"state")) {
+  if (faceName == 3)
+    dirichlet = false;
+  }
+    
+   if(!strcmp(name,"adjoint")) {
   if (faceName == 3)
     dirichlet = false;
   }
@@ -564,11 +569,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	                                       grad_ctrl_dot_n_mat += phi_ctrl_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
 	}
 //=============== grad dot n  =========================================    
-//=============== grad phi dot n  =======================================edit==========
-    double grad_phi_ctrl_dot_n_mat = 0.;
-        for(unsigned d=0; d<dim; d++) {
-	                                       grad_phi_ctrl_dot_n_mat += phi_ctrl_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
-	}
+// //=============== grad phi dot n  =======================================edit==========
+//     double grad_phi_ctrl_dot_n_mat = 0.;
+//         for(unsigned d=0; d<dim; d++) {
+// 	                                       grad_phi_ctrl_dot_n_mat += phi_ctrl_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
+// 	}
 //=============== grad phi dot n  =================================================
   std::cout << " gradcontroldotn " << grad_ctrl_dot_n_mat << std::endl;
   
@@ -587,7 +592,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		Jac[ 
 		   (nDof_u + i_vol) * nDof_AllVars  + 
 		   (nDof_u + nDof_ctrl + j)         ]  +=  control_node_flag[i_vol] * 
-		         weight_bdry * grad_phi_ctrl_dot_n_mat * phi_adj_bdry[i_bdry]*SERVICE;		      
+		         weight_bdry * grad_ctrl_dot_n_mat * phi_adj_bdry[i_bdry]*SERVICE;		      
 		      
 		    }   //end loop i_bdry // j_vol
 	      
