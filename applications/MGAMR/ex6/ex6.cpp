@@ -133,7 +133,7 @@ int main(int argc, char** args) {
   //mlMsh.ReadCoarseMesh("./input/adaptiveRef6Tri.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/Lshape3DMixed_mini.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/Lshape3DMixed_mini.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/Lshape3DTeT_mini.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -184,13 +184,13 @@ int main(int argc, char** args) {
   system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(CG);
   //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
-  //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetPreconditionerFineGrids(JACOBI_PRECOND);
   //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances // 10 number of richardson iterations
   
-  system.SetFactorAndScale(true, 1.0);
+  system.SetFactorAndScale(true, 0.9);
   
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
