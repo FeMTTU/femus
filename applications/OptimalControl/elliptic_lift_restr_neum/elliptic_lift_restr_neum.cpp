@@ -6,6 +6,8 @@
 
 #include "../elliptic_lift_restr_param.hpp"
 
+#define SERVICE 0.
+
 using namespace femus;
 
 double InitialValueContReg(const std::vector < double >& x) {
@@ -225,12 +227,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   phi_adj_bdry.reserve(maxSize);
   phi_adj_x_bdry.reserve(maxSize * dim);
-  
-  vector <double> phi_adj_vol_at_bdry;  // local test function
-  phi_adj_vol_at_bdry.reserve(maxSize);
+
   vector <double> sol_ctrl_x_vol_at_bdry_gss;
   sol_ctrl_x_vol_at_bdry_gss.reserve(dim);
  //*************************************************** 
+   
+  vector <double> phi_ctrl_vol_at_bdry;  // local test function
+  phi_ctrl_vol_at_bdry.reserve(maxSize);
   
   vector <double> phi_ctrl_x_vol_at_bdry; // local test function first order partial derivatives
   phi_ctrl_x_vol_at_bdry.reserve(maxSize * dim);
@@ -444,7 +447,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
 		  
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
-// 		  msh->_finiteElement[kelGeom][solType_adj]->ShapeAtBoundary(x,ig_bdry,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+		  msh->_finiteElement[kelGeom][solType_ctrl]->ShapeAtBoundary(x,ig_bdry,phi_ctrl_vol_at_bdry,phi_ctrl_x_vol_at_bdry);
 
 		 
 		      
@@ -497,11 +500,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		
                 if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=   - control_node_flag[i_vol] *  weight_bdry *
                                                                                 ( grad_dot_n_ctrl_res * phi_adj_bdry[i_bdry]/*phi_adj_vol_at_bdry[i_vol??]*/
-							                         );  // optimality condition;   
+							                         )*SERVICE;    
 		
                 if (i_vol < nDof_adj)   Res[ (nDof_u + nDof_ctrl +  i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
                                                                                 ( grad_dot_n_ctrl_res * phi_adj_bdry[i_bdry]/*phi_adj_vol_at_bdry[i_vol??]*/
-							                         );  // optimality condition; 
+							                         ); 
 //============ Bdry Residuals ==================    
 		    
 		    for(unsigned j_bdry=0; j_bdry < nve_bdry; j_bdry ++) {
@@ -567,7 +570,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	                                       grad_phi_ctrl_dot_n_mat += phi_ctrl_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
 	}
 //=============== grad phi dot n  =================================================
-  std::cout << " gradadjdotn " << grad_ctrl_dot_n_mat << std::endl;
+  std::cout << " gradcontroldotn " << grad_ctrl_dot_n_mat << std::endl;
   
 		      
 //==========block delta_adjoint\control ========
@@ -584,7 +587,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		Jac[ 
 		   (nDof_u + i_vol) * nDof_AllVars  + 
 		   (nDof_u + nDof_ctrl + j)         ]  +=  control_node_flag[i_vol] * 
-		         weight_bdry * grad_phi_ctrl_dot_n_mat * phi_adj_bdry[i_bdry];		      
+		         weight_bdry * grad_phi_ctrl_dot_n_mat * phi_adj_bdry[i_bdry]*SERVICE;		      
 		      
 		    }   //end loop i_bdry // j_vol
 	      
@@ -699,9 +702,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	  if (i < nDof_u)                      Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss + sol_ctrl_gss - u_des) - laplace_rhs_du_adj_i - 0.);
           // SECOND ROW
 	  if (i < nDof_ctrl)  {
-	      if ( control_el_flag == 1)       Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight *  (target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
+	      if ( control_el_flag == 1)       Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight *  (target_flag * phi_ctrl[i] * ( sol_u_gss*SERVICE + sol_ctrl_gss - u_des) 
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
-		                                                                                              - laplace_rhs_dctrl_adj_i 
+		                                                                                              - laplace_rhs_dctrl_adj_i * SERVICE
 		                                                                                              + beta * laplace_rhs_dctrl_adj_i);
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
@@ -756,12 +759,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      //BLOCK delta_control - state
               if ( i < nDof_ctrl   && j < nDof_u   ) 
 		Jac[ (nDof_u + i) * nDof_AllVars  +
-		(0 + j)                          ]  += ( control_node_flag[i]) * weight * target_flag * phi_u[j] * phi_ctrl[i];
+		(0 + j)                          ]  += ( control_node_flag[i]) * weight * target_flag * phi_u[j] * phi_ctrl[i]*SERVICE;
 	      
 	      //BLOCK delta_control - adjoint
               if ( i < nDof_ctrl   && j < nDof_adj  ) 
 		Jac[ (nDof_u + i) * nDof_AllVars  + 
-		(nDof_u + nDof_ctrl + j)         ]  +=  ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj;
+		(nDof_u + nDof_ctrl + j)         ]  +=  ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj*SERVICE;
 	      }
 	      
 	      else if ( control_el_flag == 0)  {  
