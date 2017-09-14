@@ -42,7 +42,9 @@ namespace femus {
     _MGmatrixFineReuse( false ),
     _MGmatrixCoarseReuse( false ),
     _printSolverInfo( false ),
-    _assembleMatrix( true )
+    _assembleMatrix( true ),
+    _factorTest( false ),
+    _scale( 1.0 )
   {
     _SparsityPattern.resize( 0 );
     _outer_ksp_solver = "gmres";
@@ -304,25 +306,28 @@ namespace femus {
 	
 	unsigned factor = 1;
 	//BEGIN da commentare
-// 	if(_gridr == 1){
-// 	  if(ig > _gridr ){
-// 	    factor = (1 + ig - _gridr );
-// 	  }
-// 	}
-// 	else{
-// 	  if (ig >= _gridr ){
-// 	    factor = (2 + ig - _gridr); //da controllare qnd _gridr lo mettiamo >1
-// 	  }
-// 	}
-// 	factor *= factor;
-// 	factor = factor + 1;
+	if(_factorTest){
+	  if(_gridr == 1){
+	    if(ig >= _gridr ){
+	      factor = (1 + ig - _gridr );
+	    }
+	  }
+	  else{
+	    if (ig >= _gridr ){
+	      factor = (2 + ig - _gridr); //da controllare qnd _gridr lo mettiamo >1
+	    }
+	  }
+	  factor *= factor;
+	  factor = factor + 1;
+	}
 	//END da commentare
-	std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;
+	//std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;
 	
+	std::cout << "pre-smoothing level = " << ig << " 1 + level^2 = " << factor <<std::endl;
 	
         // ============== Presmoothing ==============
         for( unsigned k = 0; k < _npre * factor; k++ ) {
-          //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
+	  //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
 	  Solve(ig + 1, ksp_clean * ( !k ), 1, 1);
         }
 
@@ -338,23 +343,25 @@ namespace femus {
         Prolongator( ig );
 
 	unsigned factor = 1;
-	//BEGIN da commentare
-// 	if(_gridr == 1){
-// 	  if(ig > _gridr ){
-// 	    factor = (1 + ig - _gridr );
-// 	  }
-// 	}
-// 	else{
-// 	  if (ig >= _gridr ){
-// 	    factor = (2 + ig - _gridr);
-// 	  }
-// 	}
-// 	factor *= factor;
-// 	factor = factor + 1;
+	if(_factorTest){
+	  //BEGIN da commentare
+	  if(_gridr == 1){
+	    if(ig >= _gridr ){
+	      factor = (1 + ig - _gridr );
+	    }
+	  }
+	  else{
+	    if (ig >= _gridr ){
+	      factor = (2 + ig - _gridr);
+	    }
+	  }
+	  factor *= factor;
+	  factor = factor + 1;
+	}
 	//END da commentare
-    	std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;
+    	//std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;
 	
-	
+	std::cout << "post-smoothing level = " << ig << " 1 + level^2 = " << factor <<std::endl;
         // ============== PostSmoothing ==============
         for( unsigned k = 0; k < _npost * factor; k++ ) {
           //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
@@ -391,6 +398,12 @@ namespace femus {
     unsigned grid0 = ( gridn <= _gridr ) ? gridn : _gridr;
     
     for( unsigned ig = gridn - 1u; ig > grid0 - 1u; ig-- ) {
+      
+      if(_factorTest) 
+	_LinSolver[ig]->SetScale(_scale/(gridn-1u));
+      else
+	_LinSolver[ig]->SetScale(_scale);
+      
       for( unsigned k = 0; k < npre; k++ ) {
 	_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, kspClean );
       }

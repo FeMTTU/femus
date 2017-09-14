@@ -46,9 +46,12 @@ namespace femus {
       ~GmresPetscLinearEquationSolver();
 
     protected:
+      
+      double _scale;
 
       /// Release all memory and clear data structures.
       void Clear();
+      void SetScale(const double &scale){ _scale = scale;};
 
       void SetTolerances(const double &rtol, const double &atol, const double &divtol,
                          const unsigned &maxits, const unsigned &restart);
@@ -128,7 +131,7 @@ namespace femus {
 
   inline GmresPetscLinearEquationSolver::GmresPetscLinearEquationSolver(const unsigned &igrid, Solution *other_solution)
     : LinearEquationSolver(igrid, other_solution) {
-
+    
     if(igrid == 0) {
       this->_preconditioner_type = MLU_PRECOND;
       this->_solver_type         = PREONLY;
@@ -138,6 +141,7 @@ namespace femus {
       this->_solver_type         = GMRES;
     }
 
+    _scale = 1;
     _rtol   = 1.e-5;
     _abstol = 1.e-50;
     _dtol   = 1.e+5;

@@ -112,6 +112,7 @@ bool SetRefinementFlag2(const std::vector < double >& x, const int& elemgroupnum
   
   std::cout << level <<" ";
 
+  //refine= true;
   return refine;
 
 }
@@ -130,9 +131,9 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/adaptiveRef6Tri.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/Lshape3DMixed.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/Lshape3DMixed_mini.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/Lshape3DMixed_mini.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -140,7 +141,7 @@ int main(int argc, char** args) {
   numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 2;
   
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag2);
  
   
   mlMsh.PrintInfo();
@@ -149,7 +150,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition2);
   mlSol.GenerateBdc("All");
 
   // define the multilevel problem attach the mlSol object to it
@@ -189,7 +190,7 @@ int main(int argc, char** args) {
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances // 10 number of richardson iterations
   
-  
+  system.SetFactorAndScale(true, 1.0);
   
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
@@ -210,7 +211,7 @@ int main(int argc, char** args) {
     
   for(unsigned i = 0; i< sizeU; i++){
     
-    
+    std::cout << "iteration = " <<i<<std::endl;
     
     //mlSol.Initialize("All");
     

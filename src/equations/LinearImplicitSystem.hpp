@@ -178,8 +178,17 @@ public:
 
     bool GetAssembleMatrix(){ return _assembleMatrix;}
 
+    
+    void SetFactorAndScale(const bool &factorTest, const double &scale){
+      _factorTest = factorTest;
+      _scale = scale; 
+    };
+    
 protected:
 
+    bool _factorTest;
+    double _scale;
+  
     bool _printSolverInfo;
     bool _assembleMatrix;
     void AddAMRLevel( unsigned &AMRCounter);
