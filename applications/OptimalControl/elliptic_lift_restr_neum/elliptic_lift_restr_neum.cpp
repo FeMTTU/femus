@@ -226,12 +226,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   std::string ctrl_name = "control";
   
  //*************************************************** 
-  //boundary adjoint shape functions  
-  vector <double> phi_adj_bdry;  
-  vector <double> phi_adj_x_bdry; 
-
-  phi_adj_bdry.reserve(maxSize);
-  phi_adj_x_bdry.reserve(maxSize * dim);
 
   vector <double> sol_ctrl_x_vol_at_bdry_gss;
   sol_ctrl_x_vol_at_bdry_gss.reserve(dim);
@@ -243,6 +237,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector <double> phi_ctrl_x_vol_at_bdry; // local test function first order partial derivatives
   phi_ctrl_x_vol_at_bdry.reserve(maxSize * dim);
 
+ 
  //***************************************************  
  //***************************************************  
   
@@ -264,10 +259,21 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   unsigned solPdeIndex_adj;
   solPdeIndex_adj = mlPdeSys->GetSolPdeIndex("adjoint");    // get the position of "state" in the pdeSys object
 
-  vector < double >  sol_adj; // local solution
+   //boundary adjoint shape functions  
+  vector <double> phi_adj_bdry;  
+  vector <double> phi_adj_x_bdry; 
+
+  phi_adj_bdry.reserve(maxSize);
+  phi_adj_x_bdry.reserve(maxSize * dim);
+  
+  //***************************************************  
+vector < double >  sol_adj; // local solution
     sol_adj.reserve(maxSize);
   vector< int > l2GMap_adj;
     l2GMap_adj.reserve(maxSize);
+    
+    vector < double > sol_adj_bdry;
+     sol_adj.reserve(maxSize);
  //***************************************************  
  //***************************************************  
 
@@ -439,48 +445,68 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
 		
 		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
-		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
+		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);
+
+ //*****************x dofs on the boundary ********************************** 
 		for(unsigned i=0; i < nve_bdry; i++) {
 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
                   unsigned iDof = msh->GetSolutionDof(i_vol, iel, xType);
 		  for(unsigned idim=0; idim<dim; idim++) {
-		      x_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
+		      x_bdry[idim][i] = (*msh->_topology->_Sol[idim])(iDof);
 		  }
 		}
+ //*****************x dofs on the boundary, end********************************** 
 		
-		
+ //***************** adj dofs on the boundary ********************************** 
+		sol_adj_bdry    .resize(nve_bdry/*nDof_adj_bdry*/);
+                 for (unsigned i = 0; i < sol_adj_bdry.size(); i++) {
+		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
+                     unsigned solDof_adj_vol = msh->GetSolutionDof(i_vol, iel, solType_adj);   // global to global mapping between solution node and solution dof
+                          sol_adj_bdry[i] = (*sol->_Sol[solIndex_adj])(solDof_adj_vol);      // global extraction and local storage for the solution
+		 }
+ //***************** adj dofs on the boundary, end ********************************** 
+      
 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
 		  
 		  msh->_finiteElement[felt_bdry][solType_adj]->JacobianSur(x_bdry,ig_bdry,weight_bdry,phi_adj_bdry,phi_adj_x_bdry,normal);
 		  msh->_finiteElement[kelGeom][solType_ctrl]->ShapeAtBoundary(x,ig_bdry,phi_ctrl_vol_at_bdry,phi_ctrl_x_vol_at_bdry);
-
-		 
+		  
 		      
 //=============== grad dot n for residual ========================================= 
 //     compute gauss quantities on the boundary through VOLUME interpolation
-           std::fill(sol_ctrl_x_vol_at_bdry_gss.begin(), sol_ctrl_x_vol_at_bdry_gss.end(), 0.);
+//            std::fill(sol_ctrl_x_vol_at_bdry_gss.begin(), sol_ctrl_x_vol_at_bdry_gss.end(), 0.);
+		  for (int d = 0; d < dim; d++) {sol_ctrl_x_vol_at_bdry_gss[d]=0.;}
 		      for (int iv = 0; iv < nDof_ctrl; iv++)  {
 			
                             for (int d = 0; d < dim; d++) {
 //    std::cout << " ivol " << iv << std::endl;
-//    std::cout << " adj dofs " << sol_adj[iv] << std::endl;
+//   std::cout << " ctrl dofs " << sol_ctrl[iv] << std::endl;
 			      sol_ctrl_x_vol_at_bdry_gss[d] += sol_ctrl[iv] * phi_ctrl_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
 			    }
 		      }  
 		      
-    double grad_dot_n_ctrl_res = 0.;
+    double grad_ctrl_dot_n_res = 0.;
         for(unsigned d=0; d<dim; d++) {
-	  grad_dot_n_ctrl_res += sol_ctrl_x_vol_at_bdry_gss[d]*normal[d];  
+	  grad_ctrl_dot_n_res += sol_ctrl_x_vol_at_bdry_gss[d]*normal[d];  
 	}
+		
 //=============== grad dot n  for residual =========================================       
 
 //========== compute gauss quantities on the boundary ================================================
+	double sol_adj_bdry_gss=0.;
+            for (int ib = 0; ib < nve_bdry/*nDof_adj_bdry*/; ib++){ sol_adj_bdry_gss  +=     sol_adj_bdry[ib]*phi_adj_bdry[ib]    ;}
 
 		  // *** phi_i loop ***
 		  for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 
-              
+ //=============== grad phi dot n  for residual =========================================       
+      double grad_phi_ctrl_dot_n_res = 0.;
+        for(unsigned d=0; d<dim; d++) {
+	  grad_phi_ctrl_dot_n_res += phi_ctrl_x_vol_at_bdry[i_vol * dim + d]*normal[d];  
+	}
+ //=============== grad phi dot n  for residual =========================================       
+
 //=============== construct control node flag field on the go  =========================================    
 	      /* (control_node_flag[i])       picks nodes on \Gamma_c
 	         (1 - control_node_flag[i])   picks nodes on \Omega \setminus \Gamma_c
@@ -493,22 +519,26 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               }
 //=============== construct control node flag field on the go  =========================================    
 
-//    std::cout << " graddotn_res " << grad_dot_n_ctrl_res << std::endl;
+//   std::cout << " graddotn_res " << grad_ctrl_dot_n_res << std::endl;
 //    std::cout << " normal " << sol_adj[0] << std::endl;
-//    std::cout << " normal " << sol_adj[1] << std::endl;
-//    std::cout << " normal " << sol_adj[2] << std::endl;
-//    std::cout << " normal " << sol_adj[3] << std::endl;
+//    std::cout << " sol_ctrl_x_vol_at_bdry_gss_0 " << sol_ctrl_x_vol_at_bdry_gss[0] << std::endl;
+//     std::cout << " sol_ctrl_x_vol_at_bdry_gss_1 " << sol_ctrl_x_vol_at_bdry_gss[1] << std::endl;
+// 
+//    std::cout << " phi_ctrl_x_vol_at_bdry " << phi_ctrl_x_vol_at_bdry[2] << std::endl;
+//    std::cout << " sol_ctrl " << sol_ctrl[0] << std::endl;
   
+   std::cout << " sol_adj " << sol_adj_bdry_gss << std::endl;
 		 
 //============ Bdry Residuals ==================	
                 if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  0.; 
 		
                 if (i_vol < nDof_ctrl)  Res[ (nDof_u + i_vol) ]               +=   - control_node_flag[i_vol] *  weight_bdry *
-                                                                                ( grad_dot_n_ctrl_res * phi_adj_bdry[i_bdry]/*phi_adj_vol_at_bdry[i_vol??]*/
+                                                                                (    grad_phi_ctrl_dot_n_res * sol_adj_bdry_gss
+// wrong                                                                                grad_ctrl_dot_n_res * phi_adj_bdry[i_bdry]/*phi_adj_vol_at_bdry[i_vol??]*/
 							                         )*SERVICE;    
 		
                 if (i_vol < nDof_adj)   Res[ (nDof_u + nDof_ctrl +  i_vol) ]  +=  - control_node_flag[i_vol] *  weight_bdry *
-                                                                                ( grad_dot_n_ctrl_res * phi_adj_bdry[i_bdry]/*phi_adj_vol_at_bdry[i_vol??]*/
+                                                                                ( grad_ctrl_dot_n_res * phi_adj_bdry[i_bdry]
 							                         ); 
 //============ Bdry Residuals ==================    
 		    
@@ -575,7 +605,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 // 	                                       grad_phi_ctrl_dot_n_mat += phi_ctrl_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
 // 	}
 //=============== grad phi dot n  =================================================
-  std::cout << " gradcontroldotn " << grad_ctrl_dot_n_mat << std::endl;
+//  std::cout << " gradcontroldotn " << grad_ctrl_dot_n_mat << std::endl;
   
 		      
 //==========block delta_adjoint\control ========
