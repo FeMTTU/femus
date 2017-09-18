@@ -647,14 +647,12 @@ namespace femus
 
             //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
-            if (force == NULL) {
-
-            } 
+            if (force != NULL) {
             //else if (_sol->GetIfFSI()) {
               unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
 //               MagneticForce(x, Fm, material, 0);
               force(x, Fm, material);
-            //}
+            }
 
             //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::flush;
 
@@ -698,7 +696,7 @@ namespace femus
             //std::cout << step <<" "<< istep<< " AAAAAAAAAAAAA"<<std::endl<<std::flush;
             unsigned previousElem = currentElem;
             localTime = clock();
-            _particles[iMarker]->GetElementSerial(previousElem, _sol, s);
+	    _particles[iMarker]->GetElementSerial(previousElem, _sol, s);
             _time[4] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
             localTime = clock();
             // std::cout << step <<" "<< istep<< " BBBBBBBBBBBBB"<<std::endl<<std::flush;
