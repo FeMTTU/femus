@@ -41,8 +41,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   }
     
    if(!strcmp(name,"adjoint")) {
-  if (faceName == 3)
-    dirichlet = false;
+  if (faceName == 3) { value = 0.;   dirichlet = false; }
   }
   
   return dirichlet;
@@ -528,6 +527,7 @@ vector < double >  sol_adj; // local solution
 //    std::cout << " sol_ctrl " << sol_ctrl[0] << std::endl;
   
    std::cout << " sol_adj " << sol_adj_bdry_gss << std::endl;
+   std::cout << " grad_phi_ctrl_dot_n_res " << grad_phi_ctrl_dot_n_res << std::endl;
 		 
 //============ Bdry Residuals ==================	
                 if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  0.; 
@@ -607,7 +607,15 @@ vector < double >  sol_adj; // local solution
 //=============== grad phi dot n  =================================================
 //  std::cout << " gradcontroldotn " << grad_ctrl_dot_n_mat << std::endl;
   
-		      
+
+//==========block delta_control\adjoint==================================edit=======
+              if ( i_vol < nDof_ctrl   && j < nDof_adj  ) 
+		Jac[ 
+		   (nDof_u + i_vol) * nDof_AllVars  + 
+		   (nDof_u + nDof_ctrl + j)         ]  +=  control_node_flag[i_vol] * 
+		         weight_bdry * grad_ctrl_dot_n_mat * phi_adj_bdry[i_bdry]*SERVICE;
+			 
+  
 //==========block delta_adjoint\control ========
 		   if ( i_vol < nDof_adj    && j < nDof_ctrl)   
 		     Jac[ 
@@ -615,14 +623,7 @@ vector < double >  sol_adj; // local solution
 		        (nDof_u  + j)             ]  += control_node_flag[i_vol] *
 		        (
 			  weight_bdry * grad_ctrl_dot_n_mat * phi_adj_bdry[i_bdry]
-			);    		      
-		      
-//==========block delta_control\adjoint==================================edit=======
-              if ( i_vol < nDof_ctrl   && j < nDof_adj  ) 
-		Jac[ 
-		   (nDof_u + i_vol) * nDof_AllVars  + 
-		   (nDof_u + nDof_ctrl + j)         ]  +=  control_node_flag[i_vol] * 
-		         weight_bdry * grad_ctrl_dot_n_mat * phi_adj_bdry[i_bdry]*SERVICE;		      
+			);    		      		      
 		      
 		    }   //end loop i_bdry // j_vol
 	      
@@ -740,7 +741,7 @@ vector < double >  sol_adj; // local solution
 	      if ( control_el_flag == 1)       Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight *  (target_flag * phi_ctrl[i] * ( sol_u_gss*SERVICE + sol_ctrl_gss - u_des) 
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              - laplace_rhs_dctrl_adj_i * SERVICE
-		                                                                                              + beta * laplace_rhs_dctrl_adj_i);
+		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i);
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
           // THIRD ROW

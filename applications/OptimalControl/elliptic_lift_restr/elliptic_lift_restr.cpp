@@ -446,7 +446,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      if ( control_el_flag == 1)       Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight *  (target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              - laplace_rhs_dctrl_adj_i 
-		                                                                                              + beta * laplace_rhs_dctrl_adj_i);
+		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i);
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
           // THIRD ROW
