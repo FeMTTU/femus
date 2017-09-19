@@ -156,8 +156,8 @@ int main(int argc, char **args)
   }
   else if (simulation == 7) { //carotide
     //E = 1.e6 * 1.e6; //CFD case
-    E = 1 * 1.e6; // FSI with E = 1 MPa
-    //E = 0.5 * 1.e6; // FSI with E = 0.5 MPa
+    //E = 1 * 1.e6; // FSI with E = 1 MPa
+    E = 0.5 * 1.e6; // FSI with E = 0.5 MPa
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
