@@ -31,11 +31,11 @@ double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
 
 //unsigned numberOfUniformLevels = 7; unsigned numberOfSelectiveLevels = 0; //uniform
 //unsigned numberOfUniformLevels = 8; unsigned numberOfSelectiveLevels = 0; //uniform
-//unsigned numberOfUniformLevels = 9; unsigned numberOfSelectiveLevels = 0; //uniform
+unsigned numberOfUniformLevels = 9; unsigned numberOfSelectiveLevels = 0; //uniform
 
 //unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 3; //non-uniform
-//unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 4; //non-uniform
-unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 5; //non-uniform
+// unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 4; //non-uniform
+//unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 5; //non-uniform
 
 int counter = 0 ;
 
@@ -79,12 +79,13 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //     refine = true;
 //   }
 
-//  std::cout << level << std::endl;
+
   double pi = acos(-1.);
   double radius = pi / 32.0 * (level - level0 - 2.0);
   double radius2 = radius * radius;
 
   if ( (x[0]*x[0] + x[1] * x[1]) > radius2) {
+   std::cout << level << std::endl;
     refine	= true;
   }
   return refine;
@@ -116,8 +117,8 @@ int main(int argc, char** args)
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  //unsigned numberOfUniformLevels = 9;
-  //unsigned numberOfSelectiveLevels = 0;
+  //unsigned numberOfUniformLevels = 4;
+  //unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
  // mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
