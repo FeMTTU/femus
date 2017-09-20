@@ -31,10 +31,10 @@ double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
 
 //unsigned numberOfUniformLevels = 7; unsigned numberOfSelectiveLevels = 0; //uniform
 //unsigned numberOfUniformLevels = 8; unsigned numberOfSelectiveLevels = 0; //uniform
-//unsigned numberOfUniformLevels = 9; unsigned numberOfSelectiveLevels = 0; //uniform
+unsigned numberOfUniformLevels = 9; unsigned numberOfSelectiveLevels = 0; //uniform
 
 //unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 3; //non-uniform
- unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 4; //non-uniform
+// unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 4; //non-uniform
 //unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 5; //non-uniform
 
 int counter = 0 ;
