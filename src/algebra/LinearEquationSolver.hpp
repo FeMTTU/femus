@@ -96,6 +96,8 @@ namespace femus {
                               ) = 0;
 
       virtual void MGSolve(const bool ksp_clean) = 0;
+      
+      virtual void SetScale(const double &scale) = 0;
 
       /** Sets the type of solver to use. */
       void set_solver_type(const SolverType st)  {
@@ -167,7 +169,7 @@ namespace femus {
         std::cout << "If I call this it's wrong" << std::endl;
         abort();
       }
-
+      
     protected:
 
       /** Enum stating which type of iterative solver to use. */
@@ -186,7 +188,8 @@ namespace femus {
       bool same_preconditioner;
 
       bool _printSolverInfo;
-
+      
+    
   };
 
   /**

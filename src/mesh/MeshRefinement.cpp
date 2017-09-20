@@ -425,21 +425,21 @@ namespace femus {
     _mesh.el->ScatterElementDof();
     _mesh.el->ScatterElementNearFace();
 
-    if(AMR) {
-      std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& restriction = _mesh.GetAmrRestriction();
-      _mesh.el->GetAMRRestriction(&_mesh, restriction);
-//       for(unsigned soltype = 0; soltype < 3; soltype++) {
-//         std::cout << "solution type = " << soltype << std::endl;
-//         for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
-//           std::cout << it1->first << "\t";
-//           for(std::map<unsigned, double> ::iterator it2 = restriction[soltype][it1->first].begin(); it2 != restriction[soltype][it1->first].end(); it2++) {
-//             std::cout << it2->first << " (" << it2->second << ")  ";
-// 
-//           }
-//           std::cout << std::endl;
-//         }
-//       }
-    }
+//     if(AMR) {
+//       std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& restriction = _mesh.GetAmrRestriction();
+//       _mesh.el->GetAMRRestriction(&_mesh, restriction);
+// //       for(unsigned soltype = 0; soltype < 3; soltype++) {
+// //         std::cout << "solution type = " << soltype << std::endl;
+// //         for(std::map<unsigned, std::map<unsigned, double> >::iterator it1 = restriction[soltype].begin(); it1 != restriction[soltype].end(); it1++) {
+// //           std::cout << it1->first << "\t";
+// //           for(std::map<unsigned, double> ::iterator it2 = restriction[soltype][it1->first].begin(); it2 != restriction[soltype][it1->first].end(); it2++) {
+// //             std::cout << it2->first << " (" << it2->second << ")  ";
+// // 
+// //           }
+// //           std::cout << std::endl;
+// //         }
+// //       }
+//     }
   }
 
 

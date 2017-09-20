@@ -447,7 +447,7 @@ namespace femus {
     int ierr = 0;
 
     unsigned level;
-    double scale;
+    //double scale;
     unsigned numberOfUniformLevels;
     
     switch(this->_solver_type) {
@@ -511,27 +511,27 @@ namespace femus {
 	
  	
 	
-	scale = 0.2;
-	
-	//BEGIN da commentare
+// 	scale = 0.2;
+// 	
+// 	//BEGIN da commentare
 // 	level = _msh->GetLevel();
 // 	numberOfUniformLevels = 1; // deve corrispondere a numberOfUniformLevels nel main
 // 	
 // 	if(numberOfUniformLevels == 1){
 // 	  if(level > numberOfUniformLevels ){
-// 	    scale /= (1 + level- numberOfUniformLevels );
+// 	    scale /= (1 + level- numberOfUniformLevels);
 // 	  }
 // 	}
 // 	else{
 // 	  if (level >= numberOfUniformLevels ){
-// 	    scale /= (2 + level - numberOfUniformLevels);
+// 	    scale /= (2 + level - numberOfUniformLevels); //da controllare qnd numberOfUniformLevels lo mettiamo >1
 // 	  }
 // 	}
-	//END da commentare
+// 	//END da commentare
 	
-	//std::cout << "level = " << level << "scale = "<< scale << std::endl;
+	std::cout << "richardson level = " << level << "delta/MGlevel = "<< _scale << std::endl;
 	
-	KSPRichardsonSetScale(ksp, scale);
+	KSPRichardsonSetScale(ksp, _scale);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
         return;
 

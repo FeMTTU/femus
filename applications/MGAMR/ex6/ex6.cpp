@@ -35,6 +35,17 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
+bool SetBoundaryCondition2(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  bool dirichlet = true; //dirichlet
+  value = 0.;
+  
+  if (facename == 3 ){
+    dirichlet = false;
+  }
+  
+  return dirichlet;
+}
+
 unsigned numberOfUniformLevels;
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
@@ -81,14 +92,30 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
   else if(elemgroupnumber == 11 && level < numberOfUniformLevels + 4){
     refine = true;
   }
-  else if(elemgroupnumber == 12 && level < numberOfUniformLevels + 5){
-    refine = true;
-  }
+//   else if(elemgroupnumber == 12 && level < numberOfUniformLevels + 5){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 13 && level < numberOfUniformLevels + 6){
+//     refine = true;
+//   }
 
   return refine;
 
 }
 
+bool SetRefinementFlag2(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
+
+  bool refine = false;
+  double radious = 0.25/(level*level);
+  
+  if(x[0]*x[0]+x[1]*x[1] < radious*radious) refine=true;
+  
+  std::cout << level <<" ";
+
+  //refine= true;
+  return refine;
+
+}
 
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
 
@@ -103,18 +130,18 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  //mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/adaptiveRef6Tri.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/Lshape3DMixed_mini.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/Lshape3DTeT_mini.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
   numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 4;
-
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
- 
+  
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag2); 
   
   mlMsh.PrintInfo();
   MultiLevelSolution mlSol(&mlMsh);
@@ -122,7 +149,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition2);
   mlSol.GenerateBdc("All");
 
   // define the multilevel problem attach the mlSol object to it
@@ -154,15 +181,15 @@ int main(int argc, char** args) {
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
-  //system.SetSolverFineGrids(CG);
-  system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
+
+  //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
   //system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
-  //system.SetPreconditionerFineGrids(SOR_PRECOND);
+  system.SetPreconditionerFineGrids(SOR_PRECOND);
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances // 10 number of richardson iterations
   
-  
+  system.SetFactorAndScale(true, 0.9);
   
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
@@ -183,7 +210,7 @@ int main(int argc, char** args) {
     
   for(unsigned i = 0; i< sizeU; i++){
     
-    
+    std::cout << "iteration = " <<i<<std::endl;
     
     //mlSol.Initialize("All");
     
@@ -210,7 +237,7 @@ int main(int argc, char** args) {
     fout.close();
 
 
-    if(counter == counter){
+    if(counter == 1){
     
       // print solutions
       std::vector < std::string > variablesToBePrinted;
