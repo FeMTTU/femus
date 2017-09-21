@@ -71,6 +71,8 @@ int main(int argc, char **args)
       simulation = 7;
     }
   }
+  
+   simulation = 7;
 
   //Files files;
   //files.CheckIODirectories();
@@ -112,6 +114,8 @@ int main(int argc, char **args)
     infile = "./input/vein_valve_modifiedFluid.neu";
   }
 
+ 
+  
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
 
@@ -158,7 +162,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 3;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
