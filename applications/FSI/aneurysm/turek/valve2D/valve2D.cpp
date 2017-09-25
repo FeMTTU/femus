@@ -281,7 +281,7 @@ int main(int argc, char **args)
 
   system.SetNonLinearConvergenceTolerance(1.e-7);
   //system.SetResidualUpdateConvergenceTolerance ( 1.e-15 );
-  system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetMaxNumberOfNonLinearIterations(20);
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
 
   system.SetMaxNumberOfLinearIterations(6);
@@ -318,19 +318,27 @@ int main(int argc, char **args)
   ml_sol.SetWriter(VTK);
 
 
+  std::vector<std::string> print_vars;
+  print_vars.push_back("All");
+  
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  //mov_vars.push_back("DZ");
-  ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-
-  std::vector<std::string> print_vars;
-  print_vars.push_back("All");
+  
+  std::vector<std::string> mov_vars1;
+  mov_vars1.push_back("DX1");
+  mov_vars1.push_back("DY1");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
+  
+  //mov_vars.push_back("DZ");
+  ml_sol.GetWriter()->SetMovingMesh(mov_vars);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
+  ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
+  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, 0);
 
+  
   // ******* Solve *******
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
@@ -340,68 +348,115 @@ int main(int argc, char **args)
   const unsigned int n_timesteps = 1024;
 
 
-  std::vector < std::vector <double> > data(n_timesteps);
+  //std::vector < std::vector <double> > data(n_timesteps);
 
-  for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+  for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
+    
+    if(time_step <= 37) {
+      meshIsCurrupted = false;
+      std::cout <<time_step<<" mesh is not corrupted"<< std::endl;
+    }
+    else if (time_step <= 40){
+      meshIsCurrupted = true;
+      std::cout <<time_step<<" mesh is corrupted"<< std::endl;
+    }
+    else if (time_step <= 69){
+      meshIsCurrupted = false;
+      std::cout <<time_step<<" mesh is not corrupted"<< std::endl;
+    }
+    else if (time_step <= 73){
+      meshIsCurrupted = true;
+      std::cout <<time_step<<" mesh is corrupted"<< std::endl;
+    }
+    else if (time_step <= 101){
+      meshIsCurrupted = false;
+      std::cout <<time_step<<" mesh is not corrupted"<< std::endl;
+    }
+    else if (time_step <= 105){
+      meshIsCurrupted = true;
+      std::cout <<time_step<<" mesh is corrupted"<< std::endl;
+    }
+    else if (time_step <= 133){
+      meshIsCurrupted = false;
+      std::cout <<time_step<<" mesh is not corrupted"<< std::endl;
+    }
+    else if (time_step <= 137){
+      meshIsCurrupted = true;
+      std::cout <<time_step<<" mesh is corrupted"<< std::endl;
+    }
+    else {
+      meshIsCurrupted = false;
+      std::cout <<time_step<<" mesh is not corrupted"<< std::endl;
+    }
+    
+    
+    
     for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
     }
-    data[time_step].resize(5);
-    if(time_step > 0)
+        
+   // data[time_step].resize(5);
+    if(time_step > 1)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
 
     system.MGsolve();
-    //data[time_step][0] = time_step / 16.;
-    //data[time_step][0] = time_step / 20.;
-    data[time_step][0] = time_step / 32.;
-    //data[time_step][0] = time_step / ( 64 * 1.4 );
-    if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
-      GetSolutionNorm(ml_sol, 9, data[time_step]);
-    }
-    else if(simulation == 4) {    //AAA_thrombus, 15=thrombus
-      GetSolutionNorm(ml_sol, 7, data[time_step]);
-    }
-    else if(simulation == 6) {    //AAA_thrombus_porous, 15=thrombus
-      GetSolutionNorm(ml_sol, 7, data[time_step]);
-    }
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+//     //data[time_step][0] = time_step / 16.;
+//     //data[time_step][0] = time_step / 20.;
+//     data[time_step][0] = time_step / 32.;
+//     //data[time_step][0] = time_step / ( 64 * 1.4 );
+//     if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
+//       GetSolutionNorm(ml_sol, 9, data[time_step]);
+//     }
+//     else if(simulation == 4) {    //AAA_thrombus, 15=thrombus
+//       GetSolutionNorm(ml_sol, 7, data[time_step]);
+//     }
+//     else if(simulation == 6) {    //AAA_thrombus_porous, 15=thrombus
+//       GetSolutionNorm(ml_sol, 7, data[time_step]);
+//     }
+    
+    ml_sol.GetWriter()->SetMovingMesh(mov_vars);
+    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+
+    ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
+    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step);
+    
   }
 
 
-  int  iproc;
-  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  if(iproc == 0) {
-    std::ofstream outf;
-    if(simulation == 0) {
-      outf.open("DataPrint_Turek.txt");
-    }
-    else if(simulation == 1) {
-      outf.open("DataPrint_TurekPorous.txt");
-    }
-    else if(simulation == 2) {
-      outf.open("DataPrint_TurekStents.txt");
-    }
-    else if(simulation == 3) {
-      outf.open("DataPrint_Turek11Stents.txt");
-    }
-    else if(simulation == 4) {
-      outf.open("DataPrint_AAA_thrombus_2D.txt");
-    }
-    else if(simulation == 6) {
-      outf.open("DataPrint_AAA_thrombus_2D_porous.txt");
-    }
-
-
-    if(!outf) {
-      std::cout << "Error in opening file DataPrint.txt";
-      return 1;
-    }
-    for(unsigned k = 0; k < n_timesteps; k++) {
-      outf << data[k][0] << "\t" << data[k][1] << "\t" << data[k][2] << "\t" << data[k][3] << "\t" << data[k][4] << std::endl;
-    }
-    outf.close();
-  }
+//   int  iproc;
+//   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+//   if(iproc == 0) {
+//     std::ofstream outf;
+//     if(simulation == 0) {
+//       outf.open("DataPrint_Turek.txt");
+//     }
+//     else if(simulation == 1) {
+//       outf.open("DataPrint_TurekPorous.txt");
+//     }
+//     else if(simulation == 2) {
+//       outf.open("DataPrint_TurekStents.txt");
+//     }
+//     else if(simulation == 3) {
+//       outf.open("DataPrint_Turek11Stents.txt");
+//     }
+//     else if(simulation == 4) {
+//       outf.open("DataPrint_AAA_thrombus_2D.txt");
+//     }
+//     else if(simulation == 6) {
+//       outf.open("DataPrint_AAA_thrombus_2D_porous.txt");
+//     }
+// 
+// 
+//     if(!outf) {
+//       std::cout << "Error in opening file DataPrint.txt";
+//       return 1;
+//     }
+//     for(unsigned k = 0; k < n_timesteps; k++) {
+//       outf << data[k][0] << "\t" << data[k][1] << "\t" << data[k][2] << "\t" << data[k][3] << "\t" << data[k][4] << std::endl;
+//     }
+//     outf.close();
+//   }
 
 
 
@@ -664,8 +719,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       value = (0 - 2 * sin(2 * PI * time)) * ramp;      //- 4.5
     }
   }
-  else if(!strcmp(name, "DX") || !strcmp(name, "DX1")) {
+  else if(!strcmp(name, "DX")) {
     if(5 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if(!strcmp(name, "DX1") ) {
+    if(5 == facename ) {
       test = 0;
       value = 0;
     }

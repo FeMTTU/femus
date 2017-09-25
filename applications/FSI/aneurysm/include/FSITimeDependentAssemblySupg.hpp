@@ -1091,7 +1091,7 @@ namespace femus
 
     bool auxDisp = true;
     unsigned nBlocks = (auxDisp) ? 3 : 2;
-    meshIsCurrupted = true;
+    //meshIsCurrupted = true;
     //pointers and references
 
     //MonolithicFSINonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<MonolithicFSINonLinearImplicitSystem>("Fluid-Structure-Interaction");
@@ -1378,7 +1378,7 @@ namespace femus
         unsigned idof = mymsh->GetSolutionDof(j, iel, SolType2);
         for (unsigned idim = 0; idim < dim; idim++) {
           vx[idim][j] = vx_hat[idim][j] +  Soli[indexVAR[idim + meshIsCurrupted * 2 * dim]][j];
-          vx_old[idim][j] = vx_hat[idim][j] + Soli_old[indexVAR[idim]][j];
+          vx_old[idim][j] = vx_hat[idim][j] + Soli_old[indexVAR[idim + meshIsCurrupted * 2 * dim]][j];
         }
       }
 
@@ -1411,7 +1411,7 @@ namespace femus
 
                 for (unsigned idim = 0; idim < dim; idim++) {
                   vx_face[idim][i]    = (*mymsh->_topology->_Sol[idim])(idof) + Soli[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal]; //TODO
-                  vx_face_old[idim][i] = (*mymsh->_topology->_Sol[idim])(idof) + Soli_old[indexVAR[idim]][ilocal];
+                  vx_face_old[idim][i] = (*mymsh->_topology->_Sol[idim])(idof) + Soli_old[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal];
                 }
               }
 
@@ -1769,8 +1769,11 @@ namespace femus
                   }
                 }
 
-                for (int idim = 0; idim < dim; idim++) {
-                  aRhs[indexVAR[idim + 2 * dim]][i] += (  1.0e-10 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi_hat[i] ) * Weight;
+                for (int idim = 0; idim < 1; idim++) {
+                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted*1.0e-10 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
+                }
+                for (int idim = 1; idim < dim; idim++) {
+                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted*1.0e-11 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
                 }
 
 
@@ -2042,8 +2045,15 @@ namespace femus
                   }
                 }
 
-                for (int idim = 0; idim < dim; idim++) {
-                  aRhs[indexVAR[idim + 2 * dim]][i] += (  1.0e-8 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi_hat[i] ) * Weight;
+//                 for (int idim = 0; idim < dim; idim++) {
+//                   aRhs[indexVAR[idim + 2 * dim]][i] += (  1.0e-8 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi_hat[i] ) * Weight;
+//                 }
+                
+                for (int idim = 0; idim < 1; idim++) {
+                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted*1.0e-8 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
+                }
+                for (int idim = 1; idim < dim; idim++) {
+                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted*1.0e-9 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
                 }
 
 
