@@ -874,6 +874,7 @@ void PetscVector::create_subvector(
     PetscViewerBinaryOpen(MPI_COMM_WORLD,fileName, FILE_MODE_WRITE, &binv);
     VecView(_vec, binv);
     PetscViewerDestroy(&binv);
+   
     
   }
   
@@ -883,7 +884,7 @@ void PetscVector::create_subvector(
     PetscViewerBinaryOpen(MPI_COMM_WORLD,fileName, FILE_MODE_READ, &binv);
     VecLoad(_vec, binv);
     PetscViewerDestroy(&binv);
-    
+    this->close();
   }
 
 } //end namespace femus

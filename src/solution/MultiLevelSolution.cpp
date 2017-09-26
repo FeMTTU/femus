@@ -604,13 +604,24 @@ namespace femus
 
   }
 
-  void MultiLevelSolution::SaveSolution(const char* filename, const double time)
+  void MultiLevelSolution::SaveSolution(const char* filename, const double &time)
   {
 
     char composedFileName[100];
 
     for(int i = 0; i < _solName.size(); i++) {
       sprintf(composedFileName, "./save/%s_time%f_sol%s_level%d", filename, time, _solName[i], _gridn);
+      _solution[_gridn - 1]->_Sol[i]->BinaryPrint(composedFileName);
+    }
+  }
+  
+  void MultiLevelSolution::SaveSolution(const char* filename, const unsigned &iteration)
+  {
+
+    char composedFileName[100];
+
+    for(int i = 0; i < _solName.size(); i++) {
+      sprintf(composedFileName, "./save/%s_iteration%d_sol%s_level%d", filename, iteration, _solName[i], _gridn);
       _solution[_gridn - 1]->_Sol[i]->BinaryPrint(composedFileName);
     }
   }
@@ -653,6 +664,9 @@ namespace femus
 
 
   }
+  
+  
+  
 
 
   void MultiLevelSolution::RefineSolution(const unsigned &gridf)
