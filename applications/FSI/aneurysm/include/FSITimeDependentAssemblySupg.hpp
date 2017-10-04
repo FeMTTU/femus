@@ -10,9 +10,11 @@
 namespace femus
 {
 
-  bool meshIsCurrupted = false;
-  double factor = 1e-8;
-
+  bool meshIsCurrupted = true;
+  double factordx = .1e7;
+  double factordy = .1e8;
+  
+  
   void FSIConstrainLeaflet(MultiLevelSolution& mlSol);
 
   void FSITimeDependentAssemblySupg(MultiLevelProblem & ml_prob)
@@ -1294,12 +1296,22 @@ namespace femus
       area_elem_first->init(nprocs, 1, false, PARALLEL);
     }
 
-    area_elem_first->zero();
+
     double rapresentative_area = 1.;
 
     start_time = clock();
 
     if (assembleMatrix) myKK->zero();
+
+    NumericVector* setIfCorrupted;
+    setIfCorrupted = NumericVector::build().release();
+    setIfCorrupted->init(mymsh->n_processors(), 1 , false, AUTOMATIC);
+
+
+  begin:
+
+    area_elem_first->zero();
+    setIfCorrupted->zero();
 
     // *** element loop ***
     for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
@@ -1453,9 +1465,8 @@ namespace femus
         mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_old, ig, Weight_old, phi_old, gradphi_old, nablaphi_old);
         phi1 = mymsh->_finiteElement[ielt][SolType1]->GetPhi(ig);
 
-	
-	if( Weight <= 0. ) std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
-	
+        if ( Weight.value() < 0. ) setIfCorrupted->set(iproc, 1.);
+
         if (flag_mat == 2 || flag_mat == 3  || iel == mymsh->_elementOffset[iproc]) {
           if (ig == 0) {
             double GaussWeight = mymsh->_finiteElement[ielt][SolType2]->GetGaussWeight(ig);
@@ -1468,15 +1479,19 @@ namespace femus
             }
           }
 
-          Weight_nojac = Weight / area * rapresentative_area;
+          Weight_nojac = Weight;// / area * 1.e-10;// * rapresentative_area;
 
           //-----------------------------------------------------------------------//
           // for vein_valve mesh
           std::vector<double> xc(dim, 0.);
           //xc[0] = -0.001013; // vein_valve
           //xc[1] = 0.07000;
-          xc[0] = -0.000286; // vein_valve_closed
+//           xc[0] = -0.000286; // vein_valve_closed
+//           xc[1] = 0.07000;
+//
+          xc[0] = -0.00025; // vein_valve_closed
           xc[1] = 0.07000;
+
           double distance = 0.;
           for (unsigned k = 0; k < dim; k++) {
             distance += (vx_hat[k][ nve - 1] - xc[k]) * (vx_hat[k][nve - 1] - xc[k]);
@@ -1602,17 +1617,20 @@ namespace femus
             for (unsigned i = 0; i < nve; i++) {
 
               //BEGIN redidual Laplacian ALE map in the reference domain
-              adept::adouble LapmapVAR[3] = {0., 0., 0.};
 
-              for (int idim = 0; idim < dim; idim++) {
-                for (int jdim = 0; jdim < dim; jdim++) {
-                  //LapmapVAR[idim] += ( GradSolVAR[idim][jdim] ) * gradphi_hat[i * dim + jdim];
-                  LapmapVAR[idim] += (GradSolVAR[idim][jdim] + 0.*GradSolVAR[jdim][idim]) * gradphi[i * dim + jdim];
+
+              if (!solidmark[i]) {
+                adept::adouble LapmapVAR[3] = {0., 0., 0.};
+                for (int idim = 0; idim < dim; idim++) {
+                  for (int jdim = 0; jdim < dim; jdim++) {
+                    //LapmapVAR[idim] += ( GradSolVAR[idim][jdim] ) * gradphi_hat[i * dim + jdim];
+                    LapmapVAR[idim] += (GradSolVAR[idim][jdim] + 0.*GradSolVAR[jdim][idim]) * gradphi[i * dim + jdim];
+                  }
                 }
-              }
 
-              for (int idim = 0; idim < dim; idim++) {
-                aRhs[indexVAR[idim]][i] += (!solidmark[i]) * (- LapmapVAR[idim] * Weight_nojac);
+                for (int idim = 0; idim < dim; idim++) {
+                  aRhs[indexVAR[idim]][i] +=  (- LapmapVAR[idim] * Weight_nojac);
+                }
               }
 
               //END residual Laplacian ALE map in reference domain
@@ -1775,10 +1793,10 @@ namespace femus
                 }
 
                 for (int idim = 0; idim < 1; idim++) {
-                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * factor * 1.0e-2 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
+                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * 1.0e-1 * LapAuxVAR[idim] +  0 * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight_nojac;
                 }
                 for (int idim = 1; idim < dim; idim++) {
-                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * factor * 1.0e-3 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
+                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * 1.0e-1 * LapAuxVAR[idim] +  0 * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight_nojac;
                 }
 
 
@@ -2061,10 +2079,10 @@ namespace femus
 //                 }
 
                 for (int idim = 0; idim < 1; idim++) {
-                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * factor * 1.0e-0 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
+                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * LapAuxVAR[idim] +  factordx * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
                 }
                 for (int idim = 1; idim < dim; idim++) {
-                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * factor * 1.0e-1 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
+                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * LapAuxVAR[idim] +  factordy * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
                 }
 
 
@@ -2164,12 +2182,43 @@ namespace femus
 
     myRES->close();
 
+    setIfCorrupted->close();
+    double setIfCorruptedNorm = setIfCorrupted->l1_norm();
+
+//     std::cout << "I am in Assembly and I belived the mesh is ";
+//
+//     if (!meshIsCurrupted) {
+//       std::cout << " not corrupted";
+//       if (setIfCorruptedNorm > 0) {
+//         meshIsCurrupted = true;
+//         std::cout << ", but I am wrong!!!!!!!!!!!!!!!!!!!!!!!!";
+// 	if (assembleMatrix) myKK->zero();
+// 	myRES->zero();
+// 	mysolution->ResetSolutionToOldSolution();
+//         goto begin;
+//       }
+//       std::cout << std::endl;
+//     }
+//     else {
+//       std::cout << " corrupted \n";
+//       if (setIfCorruptedNorm > 0) {
+// 	std::cout << ", but I am wrong!!!!!!!!!!!!!!!!!!!!!!!!";
+//         //play with the factor TODO
+//       }
+//     }
+
+    meshIsCurrupted = true;
+
+    delete setIfCorrupted;
     delete area_elem_first;
 
     // *************************************
     end_time = clock();
     AssemblyTime += (end_time - start_time);
     // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
+
+
+
   }
 
 //****************************************************************************************
@@ -2550,7 +2599,6 @@ namespace femus
     Mesh *mymsh	=  mlSol._mlMesh->GetLevel(level);
     elem *myel	=  mymsh->el;
 
-
     unsigned indLmbd = mlSol.GetIndex("lmbd");
 
     const unsigned geoDim = mymsh->GetDimension();
@@ -2558,12 +2606,15 @@ namespace femus
     const unsigned max_size = static_cast< unsigned >(ceil(pow(3, geoDim)));
 
 
-    const char varname[3][4] = {"DX1", "DY1", "DZ1"};
+    const char varname[3][4] = {"DX", "DY", "DZ"};
     vector <unsigned> indVAR(geoDim);
+    const char varname1[3][4] = {"DX1", "DY1", "DZ1"};
+    vector <unsigned> indVAR1(geoDim);
 
 
     for (unsigned ivar = 0; ivar < geoDim; ivar++) {
       indVAR[ivar] = mlSol.GetIndex(&varname[ivar][0]);
+      indVAR1[ivar] = mlSol.GetIndex(&varname1[ivar][0]);
     }
 
 
@@ -2603,8 +2654,10 @@ namespace femus
     nablaphi.reserve(max_size * nablaGoeDim);
 
     vector <vector < adept::adouble> > vx(geoDim);
+    vector <vector < adept::adouble> > vx1(geoDim);
     for (int ivar = 0; ivar < geoDim; ivar++) {
       vx[ivar].reserve(max_size);
+      vx1[ivar].reserve(max_size);
     }
     unsigned SolTypeVx = 2.;
 
@@ -2624,6 +2677,11 @@ namespace femus
     // mesh and procs
     unsigned nel    = mymsh->GetNumberOfElements();
     unsigned iproc  = mymsh->processor_id();
+
+    NumericVector* setIfCorrupted;
+    setIfCorrupted = NumericVector::build().release();
+    setIfCorrupted->init(mymsh->n_processors(), 1 , false, AUTOMATIC);
+    setIfCorrupted->set(iproc, 0.);
 
     // *** element loop ***
     for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
@@ -2647,14 +2705,18 @@ namespace femus
       // ------------ get coordinates -------
       for (int i = 0; i < geoDim; i++) {
         vx[i].resize(nveVx);
+        vx1[i].resize(nveVx);
       }
       for (unsigned i = 0; i < nveVx; i++) {
         unsigned inodeVx_Metis = mymsh->GetSolutionDof(i, iel, SolTypeVx);
         for (int j = 0; j < geoDim; j++) {
           //coordinates
-          vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) +
-                     (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis);
 
+          vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis);
+
+          if (meshIsCurrupted) {
+            vx1[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR1[j]])(inodeVx_Metis);
+          }
         }
       }
       // ------------------------------------
@@ -2674,6 +2736,16 @@ namespace femus
       for (unsigned ig = 0; ig < mymsh->_finiteElement[kelt][SolType]->GetGaussPointNumber(); ig++) {
         // *** get Jacobian and test function and test function derivatives in the moving frame***
         mymsh->_finiteElement[kelt][SolType]->Jacobian(vx, ig, Weight, phi, gradphi, nablaphi);
+        if (!meshIsCurrupted) {
+          //check if current mesh is really not corrupted
+          if (Weight < 0.) setIfCorrupted->set(iproc, 1.);
+        }
+        else {
+          // check if the current mesh is really corrupted
+          if ( Weight < 0.) setIfCorrupted->set(iproc, 1.);
+          mymsh->_finiteElement[kelt][SolType]->Jacobian(vx1, ig, Weight, phi, gradphi, nablaphi);
+        }
+
         if (ig == 0) {
           double referenceElementScale[6] = {8., 1. / 6., 1., 4., 1., 2.};
           double GaussWeight = mymsh->_finiteElement[kelt][SolType]->GetGaussWeight(ig);
@@ -2866,6 +2938,35 @@ namespace femus
     GetLambdaTime += (end_time - start_time);
 
     std::cout << "GetLambda Time = " << GetLambdaTime / CLOCKS_PER_SEC << std::endl;
+
+
+    setIfCorrupted->close();
+    double setIfCorruptedNorm = setIfCorrupted->l1_norm();
+
+
+//     std::cout << "I am in Set Lambda and I belived the mesh is ";
+//     if (!meshIsCurrupted) {
+//       std::cout << " not corrupted";
+//       if (setIfCorruptedNorm > 0) {
+//         meshIsCurrupted = true;
+//         std::cout << ", but I am wrong!!!!!!!!!!!!!!!!!!!!!!!!";
+//       }
+//       std::cout << std::endl;
+//     }
+//     else {
+//       std::cout << " corrupted";
+//       if (setIfCorruptedNorm < 1.0e-10) {
+//         meshIsCurrupted = false;
+//         std::cout << ", but I am wrong!!!!!!!!!!!!!!!!!!!!!!!!";
+//       }
+//       std::cout << std::endl;
+//     }
+
+    meshIsCurrupted = true;
+
+    delete setIfCorrupted;
+
+
     //abort();
   }
 

@@ -111,7 +111,9 @@ int main(int argc, char **args)
   else if (simulation == 7) {
     //infile = "./input/vein_valve_closed.neu";
     //infile = "./input/vein_valve_thiner.neu";
-    infile = "./input/vein_valve_modifiedFluid.neu";
+    //infile = "./input/vein_valve_modifiedFluid.neu";
+//     infile = "./input/vein_valve1.neu";
+    infile = "./input/valve2.neu";
   }
 
 
@@ -130,7 +132,7 @@ int main(int argc, char **args)
     ni = 0.5;
     //E = 3.3 * 1.0e6; //vein young modulus
     E = 4.3874951 * 1.0e12;
-    E1 = 0.5 * 1.0e6; //leaflet young modulus
+    E1 = 0.1 * 1.0e6; //leaflet young modulus
   }
   else {
     rhof = 1035.;
@@ -162,7 +164,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 1;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -318,12 +320,12 @@ int main(int argc, char **args)
 
   unsigned time_step_start = 1;
 
-  //char restart_file_name[256] = "./save/valve2D_iteration36";
+  //char restart_file_name[256] = "./save/valve2D_iteration40";
   char restart_file_name[256] = "";
 
   if (strcmp (restart_file_name, "") != 0) {
     ml_sol.LoadSolution(restart_file_name);
-    time_step_start = 37;
+    time_step_start = 41;
     system.SetTime( (time_step_start - 1) * 1. / 32);
   }
 
@@ -367,9 +369,11 @@ int main(int argc, char **args)
 
   for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
+    
+    
 //     meshIsCurrupted = false;
-//     if (time_step >= 37 && time_step <= 45) {
-//       double factor = 5.e-8;
+//     if (time_step >= 36 && time_step <= 45) {
+//       double factor = 1.e-8;
 //       meshIsCurrupted = true;
 //       std::cout << time_step << " mesh is corrupted, factor = " << factor << std::endl;
 //     }
@@ -456,6 +460,10 @@ int main(int argc, char **args)
       SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
     }
 
+//     if (time_step == 36) {
+//       meshIsCurrupted = true; 
+//     }
+    
     // data[time_step].resize(5);
     if (time_step > 1)
       system.SetMgType(V_CYCLE);
@@ -772,14 +780,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
-      value = (0 + 3 * sin(2 * PI * time)) * ramp;      //+ 4.5
+      value = (0 + 5 * sin(2 * PI * time)) * ramp;      //+ 4.5
     }
     else if (2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      value = (0 - 3 * sin(2 * PI * time)) * ramp;      //- 4.5
+      value = (0 - 5 * sin(2 * PI * time)) * ramp;      //- 4.5
     }
   }
   else if (!strcmp(name, "DX")) {
