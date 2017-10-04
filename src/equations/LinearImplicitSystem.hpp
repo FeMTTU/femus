@@ -184,6 +184,10 @@ public:
       _scale = scale; 
     };
     
+    void SetSscLevelSmoother(const bool &value){
+      _sscLevelSmoother = value;
+    };
+    
 protected:
 
     bool _factorTest;
@@ -233,6 +237,8 @@ protected:
 
     /** To be Added */
     int _npost;
+    
+    bool _sscLevelSmoother;
 
     /** To be Added */
     MgSmoother _SmootherType;

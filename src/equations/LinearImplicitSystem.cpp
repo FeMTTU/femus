@@ -44,7 +44,8 @@ namespace femus {
     _printSolverInfo( false ),
     _assembleMatrix( true ),
     _factorTest( false ),
-    _scale( 1.0 )
+    _scale( 1.0 ),
+    _sscLevelSmoother(true)
   {
     _SparsityPattern.resize( 0 );
     _outer_ksp_solver = "gmres";
@@ -327,8 +328,10 @@ namespace femus {
 	
         // ============== Presmoothing ==============
         for( unsigned k = 0; k < _npre * factor; k++ ) {
-	  //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
-	  Solve(ig + 1, ksp_clean * ( !k ), 1, 1);
+	  if (!_sscLevelSmoother)
+	    _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
+	  else 
+	    Solve(ig + 1, ksp_clean * ( !k ), 1, 1);
         }
 
         // ============== Restriction ==============
@@ -364,8 +367,11 @@ namespace femus {
 	std::cout << "post-smoothing level = " << ig << " 1 + level^2 = " << factor <<std::endl;
         // ============== PostSmoothing ==============
         for( unsigned k = 0; k < _npost * factor; k++ ) {
-          //_LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
-	  Solve(ig + 1, ksp_clean * ( !(_npre * factor) ) * ( !k ), 1, 1);
+	  if (!_sscLevelSmoother)
+	    _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
+	  else 
+	    Solve(ig + 1, ksp_clean * ( !(_npre * factor) ) * ( !k ), 1, 1);
+	  
         }
       }
 
