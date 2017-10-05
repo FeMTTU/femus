@@ -318,12 +318,16 @@ namespace femus {
 	      factor = (2 + ig - _gridr); //da controllare qnd _gridr lo mettiamo >1
 	    }
 	  }
+	  if(_sscLevelSmoother==true){
 	  factor *= factor;
 	  factor = factor + 1;
+	  }
+	  else{
+	    factor = 2 * (6 - factor );
+	  }
 	}
 	//END da commentare
 	//std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;
-	
 	std::cout << "pre-smoothing level = " << ig << " 1 + level^2 = " << factor <<std::endl;
 	
         // ============== Presmoothing ==============
@@ -358,8 +362,13 @@ namespace femus {
 	      factor = (2 + ig - _gridr);
 	    }
 	  }
+	  if(_sscLevelSmoother==true){
 	  factor *= factor;
 	  factor = factor + 1;
+	  }
+	  else{
+	    factor = 2 * (6 - factor);
+	  }
 	}
 	//END da commentare
     	//std::cout<< "ig = "<< ig << " factor =  " <<factor<<std::endl;

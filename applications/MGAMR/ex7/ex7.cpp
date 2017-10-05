@@ -130,7 +130,7 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/adaptiveRef6.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/adaptiveRef6Tri.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/Lshape3DTeT_mini.neu", "seventh", scalingFactor);
@@ -188,7 +188,7 @@ int main(int argc, char** args) {
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
   
-  system.SetFactorAndScale(false, 1.);
+  system.SetFactorAndScale(false, 0.9);
   system.SetSscLevelSmoother(false);
   system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
   system.SetNumberPostSmoothingStep(1);
