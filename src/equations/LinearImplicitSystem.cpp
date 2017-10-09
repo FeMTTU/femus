@@ -312,6 +312,9 @@ namespace femus
 
       bool ksp_clean = !linearIterator * _assembleMatrix;
 
+      _solution[gridn - 1]->UpdateRes( _SolSystemPdeIndex, _LinSolver[gridn - 1]->_RES, _LinSolver[gridn - 1]->KKoffset );
+      linearIsConverged = IsLinearConverged( gridn - 1 );
+      
       for ( unsigned ig = gridn - 1u; ig > 0; ig-- ) {
 
 

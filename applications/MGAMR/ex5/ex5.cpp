@@ -47,15 +47,15 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = false;
 
-  if(elemgroupnumber == 7 && level < numberOfUniformLevels){
+  if(elemgroupnumber == 7 ){
     refine = true;
   }
-  else if(elemgroupnumber == 8 && level < numberOfUniformLevels + 1){
-    refine = true;
-  }
-  else if(elemgroupnumber == 9 && level < numberOfUniformLevels + 2){
-    refine = true;
-  }
+//   else if(elemgroupnumber == 8 && level < numberOfUniformLevels + 1){
+//     refine = true;
+//   }
+//   else if(elemgroupnumber == 9 && level < numberOfUniformLevels + 2){
+//     refine = true;
+//   }
   
   return refine;
 
@@ -77,6 +77,7 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/adaptiveRef4Tri.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/triAMR.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -88,7 +89,7 @@ int main(int argc, char** args) {
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 3;
+  unsigned numberOfSelectiveLevels = 6;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   // erase all the coarse mesh levels
@@ -98,7 +99,7 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("T", LAGRANGE, SECOND);//FIRST);;
+  mlSol.AddSolution("T", LAGRANGE, FIRST);//FIRST);;
 
   mlSol.Initialize("All");
 
@@ -121,8 +122,8 @@ int main(int argc, char** args) {
   system.SetAssembleFunction(AssembleTemperature_AD);
 
 //   
-  system.SetMaxNumberOfLinearIterations(10);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
+  system.SetMaxNumberOfLinearIterations(20);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-20);
 
 
 //   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
@@ -136,17 +137,24 @@ int main(int argc, char** args) {
 
   system.init();
 
-  //system.SetSolverFineGrids(GMRES);
   system.SetSolverFineGrids(RICHARDSON);
-  //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  //system.SetPreconditionerFineGrids(ILU_PRECOND);
-  system.SetPreconditionerFineGrids(JACOBI_PRECOND);
-  
-  
-  system.SetTolerances(1.e-50, 1.e-50, 1.e+50, 10, 10);
 
+  //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
+  //system.SetPreconditionerFineGrids(SOR_PRECOND);
+  
+  system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
+  
+  //system.SetFactorAndScale(true, 1.); //Timo
+  system.SetFactorAndScale(false, 1.); //our and BMX
+  //system.SetSscLevelSmoother(false); //BMX and Timo
+  system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
+  system.SetNumberPostSmoothingStep(1);
+  
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
+  
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
 
@@ -258,6 +266,11 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
+    
+    short unsigned ielGroup = msh->GetElementGroup(iel);
+    //double K = ( ielGroup == 7 || ielGroup == 9 )?  1:0.1;
+    
+    double K = ( ielGroup != 7 ) ?  1. * ( rand() + 1.) /(1. +  RAND_MAX) : 10. * ( rand() + 1.) /(1. +  RAND_MAX) ;
 
     unsigned nDofsT = msh->GetElementDofNumber(iel, solTType);    // number of solution element dofs
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
@@ -311,13 +324,15 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
 
       // *** phiT_i loop ***
       for(unsigned i = 0; i < nDofsT; i++) {
-        adept::adouble Temp = 0.;
+        adept::adouble gradTgradphiT = 0.;
 
         for(unsigned j = 0; j < dim; j++) {
-          Temp +=  phiT_x[i * dim + j] * gradSolT_gss[j];
+          gradTgradphiT +=  phiT_x[i * dim + j] * gradSolT_gss[j];
         }
 
-        aResT[i] -= (phiT[i] - Temp) * weight;
+        
+        
+        aResT[i] -= (phiT[i] - K * gradTgradphiT) * weight;
       } // end phiT_i loop
 
     } // end gauss point loop
