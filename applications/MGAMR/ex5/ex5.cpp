@@ -270,8 +270,15 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
     short unsigned ielGroup = msh->GetElementGroup(iel);
     //double K = ( ielGroup == 7 || ielGroup == 9 )?  1:0.1;
     
-    double K = ( ielGroup != 7 ) ?  1. * ( rand() + 1.) /(1. +  RAND_MAX) : 10. * ( rand() + 1.) /(1. +  RAND_MAX) ;
+  
+    double K = ( ielGroup != 7 ) ?  1. + ( rand() + 1.) /(1. +  RAND_MAX) :  0.1 * (rand()%((15 - 5) + 1) + 5) ;
 
+
+    
+    if(ielGroup == 7){
+      std::cout << K <<" ";
+    }
+    
     unsigned nDofsT = msh->GetElementDofNumber(iel, solTType);    // number of solution element dofs
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
 
