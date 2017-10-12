@@ -51,7 +51,16 @@ namespace femus {
 
       /// Release all memory and clear data structures.
       void Clear();
-      void SetScale(const double &scale){ _scale = scale;};
+      void SetScale(const double &scale){ 
+	_scale = scale;
+	
+      if(this->_solver_type == RICHARDSON && _kspRichardsonIsInitialized) {
+	//KSPSetType(_ksp, (char*) KSPRICHARDSON);
+	KSPRichardsonSetScale(_ksp, _scale);
+	//std::cout << "1 richardson level = " << _msh->GetLevel()<< " delta/MGlevel = "<< _scale << std::endl;
+      }
+	
+      };
 
       void SetTolerances(const double &rtol, const double &atol, const double &divtol,
                          const unsigned &maxits, const unsigned &restart);
@@ -86,6 +95,7 @@ namespace femus {
 
       inline void MGClear() {
         KSPDestroy(&_ksp);
+	_kspRichardsonIsInitialized = false;
       }
 
       inline KSP* GetKSP() {
@@ -121,6 +131,7 @@ namespace femus {
 
       Mat _pmat;
 
+      bool _kspRichardsonIsInitialized;
 
       bool _pmatIsInitialized;
       bool _samePreconditioner;
@@ -154,6 +165,7 @@ namespace femus {
     _printSolverInfo = false;
 
     _samePreconditioner = false;
+    _kspRichardsonIsInitialized = false;
 
   }
 
@@ -175,6 +187,7 @@ namespace femus {
     if(this->initialized()) {
       this->_is_initialized = false;
       KSPDestroy(&_ksp);
+      _kspRichardsonIsInitialized = false;
     }
 
 

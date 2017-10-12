@@ -314,7 +314,7 @@ namespace femus
 
       _solution[gridn - 1]->UpdateRes( _SolSystemPdeIndex, _LinSolver[gridn - 1]->_RES, _LinSolver[gridn - 1]->KKoffset );
       linearIsConverged = IsLinearConverged( gridn - 1 );
-      
+
       for ( unsigned ig = gridn - 1u; ig > 0; ig-- ) {
 
 
@@ -336,7 +336,7 @@ namespace femus
             factor = factor + 1;
           }
           else {
-            factor = pow(2,gridn - factor);
+            factor = pow(2, gridn - factor);
           }
         }
         //END da commentare
@@ -345,10 +345,12 @@ namespace femus
 
         // ============== Presmoothing ==============
         for ( unsigned k = 0; k < _npre * factor; k++ ) {
-          if (!_sscLevelSmoother)
+          if (!_sscLevelSmoother) { //Timo and BMX
+            _LinSolver[ig]->SetScale(_scale);
             _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
-          else
-            Solve(ig + 1, ksp_clean * ( !k ), 1, 1);
+          }
+          else//our
+            Solve(ig + 1, ksp_clean * ( !k ), 0, 1);
         }
 
         // ============== Restriction ==============
@@ -380,7 +382,7 @@ namespace femus
             factor = factor + 1;
           }
           else {
-            factor = pow(2,gridn - factor);
+            factor = pow(2, gridn - factor);
           }
         }
         //END da commentare
@@ -389,10 +391,14 @@ namespace femus
         std::cout << "post-smoothing level = " << ig << " 1 + level^2 = " << factor << std::endl;
         // ============== PostSmoothing ==============
         for ( unsigned k = 0; k < _npost * factor; k++ ) {
-          if (!_sscLevelSmoother)
+          if (!_sscLevelSmoother) { //timo and bmx
+            _LinSolver[ig]->SetScale(_scale);
             _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
-          else
-            Solve(ig + 1, ksp_clean * ( !(_npre * factor) ) * ( !k ), 1, 1);
+          }
+          else { //our
+	    //Solve(ig + 1, ksp_clean * ( !(_npre * factor) ) * ( !k ), 1, 1);
+            Solve(ig + 1, ksp_clean * ( !(_npre * factor) ) * ( !k ), 0, 1);
+          }
 
         }
       }
@@ -429,15 +435,11 @@ namespace femus
     for ( unsigned ig = gridn - 1u; ig > grid0 - 1u; ig-- ) {
 
       if (_factorTest) {
-        if (_sscLevelSmoother == true) {
-          _LinSolver[ig]->SetScale(_scale / (gridn - 1u));
-        }
-      else
-        _LinSolver[ig]->SetScale(_scale);
+        _LinSolver[ig]->SetScale(_scale / (gridn - 1u));
       }
       else
         _LinSolver[ig]->SetScale(_scale);
-      
+
       for ( unsigned k = 0; k < npre; k++ ) {
         _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, kspClean );
       }

@@ -47,7 +47,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
   bool refine = false;
 
-  if(elemgroupnumber == 7 ){
+  if(elemgroupnumber == 7 || elemgroupnumber == 9 ){
     refine = true;
   }
 //   else if(elemgroupnumber == 8 && level < numberOfUniformLevels + 1){
@@ -76,8 +76,8 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/adaptiveRef4Tri.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/adaptiveRef4Mixed.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/triAMR.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/quadAMR.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -89,7 +89,7 @@ int main(int argc, char** args) {
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 6;
+  unsigned numberOfSelectiveLevels = 7;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   // erase all the coarse mesh levels
@@ -148,6 +148,7 @@ int main(int argc, char** args) {
   
   //system.SetFactorAndScale(true, 1.); //Timo
   system.SetFactorAndScale(false, 1.); //our and BMX
+  //system.SetFactorAndScale(true, 1.); //our theory
   //system.SetSscLevelSmoother(false); //BMX and Timo
   system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
   system.SetNumberPostSmoothingStep(1);
@@ -271,13 +272,13 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
     //double K = ( ielGroup == 7 || ielGroup == 9 )?  1:0.1;
     
   
-    double K = ( ielGroup != 7 ) ?  1. + ( rand() + 1.) /(1. +  RAND_MAX) :  0.1 * (rand()%((15 - 5) + 1) + 5) ;
+    double K = ( ielGroup == 6 || ielGroup == 8 ) ?  0.1 * (rand()%((15 - 5) + 1) + 5) :  (rand()%((15 - 5) + 1) + 5) ;
 
 
     
-    if(ielGroup == 7){
-      std::cout << K <<" ";
-    }
+//     if(ielGroup == 7){
+//       std::cout << K <<" ";
+//     }
     
     unsigned nDofsT = msh->GetElementDofNumber(iel, solTType);    // number of solution element dofs
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
