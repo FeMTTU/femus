@@ -337,7 +337,7 @@ namespace femus
             factor = factor + 1;
           }
           else {
-            factor = pow(2, gridn - factor);
+            factor = pow(2, gridn - _gridr -  factor);
           }
         }
         //END da commentare
@@ -383,7 +383,7 @@ namespace femus
             factor = factor + 1;
           }
           else {
-            factor = pow(2, gridn - factor);
+            factor = pow(2, gridn - _gridr - factor);
           }
         }
         //END da commentare

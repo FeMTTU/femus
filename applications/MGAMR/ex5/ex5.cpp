@@ -89,7 +89,7 @@ int main(int argc, char** args) {
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 0;
+  unsigned numberOfSelectiveLevels = 1;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   // erase all the coarse mesh levels
@@ -122,7 +122,7 @@ int main(int argc, char** args) {
   system.SetAssembleFunction(AssembleTemperature_AD);
 
 //   
-  system.SetMaxNumberOfLinearIterations(20);
+  system.SetMaxNumberOfLinearIterations(26);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-20);
 
 
@@ -131,8 +131,6 @@ int main(int argc, char** args) {
 
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(1);
-  system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
 
   system.init();
@@ -146,7 +144,7 @@ int main(int argc, char** args) {
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
   
-  unsigned simulation = 4;
+  unsigned simulation = 3;
   double scale = 1.;
   
   if (simulation  == 0){ //our theory
