@@ -88,8 +88,8 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 1;
+  numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   // erase all the coarse mesh levels
