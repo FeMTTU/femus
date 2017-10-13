@@ -50,6 +50,7 @@ namespace femus
   {
     _SparsityPattern.resize( 0 );
     _outer_ksp_solver = "gmres";
+    _sscType[0]=1; _sscType[1]=1; _sscType[2]=1; _sscType[3]=1;
   }
 
   // ********************************************
@@ -345,12 +346,12 @@ namespace femus
 
         // ============== Presmoothing ==============
         for ( unsigned k = 0; k < _npre * factor; k++ ) {
-          if (!_sscLevelSmoother) { //Timo and BMX
+          if (!_sscLevelSmoother) { //JK and BPWX
             _LinSolver[ig]->SetScale(_scale);
             _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !k ) );
           }
           else//our
-            Solve(ig + 1, ksp_clean * ( !k ), 0, 1);
+            Solve(ig + 1, ksp_clean * ( !k ), _sscType[0], _sscType[1]);
         }
 
         // ============== Restriction ==============
@@ -391,13 +392,13 @@ namespace femus
         std::cout << "post-smoothing level = " << ig << " 1 + level^2 = " << factor << std::endl;
         // ============== PostSmoothing ==============
         for ( unsigned k = 0; k < _npost * factor; k++ ) {
-          if (!_sscLevelSmoother) { //timo and bmx
+          if (!_sscLevelSmoother) { //JK and BPWX
             _LinSolver[ig]->SetScale(_scale);
             _LinSolver[ig]->Solve( _VariablesToBeSolvedIndex, ksp_clean * ( !_npre ) * ( !k ) );
           }
           else { //our
 	    //Solve(ig + 1, ksp_clean * ( !(_npre * factor) ) * ( !k ), 1, 1);
-            Solve(ig + 1, ksp_clean * ( !(_npre * factor) ) * ( !k ), 0, 1);
+            Solve(ig + 1, ksp_clean * ( !(_npre * factor) ) * ( !k ), _sscType[2], _sscType[3]);
           }
 
         }

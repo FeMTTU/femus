@@ -88,8 +88,8 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  numberOfUniformLevels = 2;
-  unsigned numberOfSelectiveLevels = 7;
+  numberOfUniformLevels = 1;
+  unsigned numberOfSelectiveLevels = 1;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   // erase all the coarse mesh levels
@@ -146,10 +146,34 @@ int main(int argc, char** args) {
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
   
-  //system.SetFactorAndScale(true, 1.); //Timo
-  system.SetFactorAndScale(false, 1.); //our and BMX
-  //system.SetFactorAndScale(true, 1.); //our theory
-  //system.SetSscLevelSmoother(false); //BMX and Timo
+  unsigned simulation = 0;
+  double scale = 1.;
+  
+  if (simulation  == 0){ //our theory
+    system.SetSscLevelSmoother(true); 
+    system.SetFactorAndScale(true, scale); 
+    system.SetSSCType(SYMMETRIC1111);
+  }
+  else if (simulation  == 1){ //our reduced symmetric
+    system.SetSscLevelSmoother(true); 
+    system.SetFactorAndScale(false, scale); 
+    system.SetSSCType(SYMMETRIC1111);
+  }
+  else if (simulation  == 2){ //our reduced asymmetric
+    system.SetSscLevelSmoother(true); 
+    system.SetFactorAndScale(false, scale); 
+    system.SetSSCType(ASYMMETRIC0101);
+  }
+  else  if(simulation == 3) { //JK
+    system.SetSscLevelSmoother(false); 
+    system.SetFactorAndScale(true, scale); 
+  }
+  else if (simulation  == 4){ //BPWX
+    system.SetSscLevelSmoother(false); 
+    system.SetFactorAndScale(false, scale);
+  }
+  
+  
   system.SetNumberPreSmoothingStep(1); //number of pre and post smoothing
   system.SetNumberPostSmoothingStep(1);
   
