@@ -131,17 +131,17 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/adaptiveRef6.neu", "seventh", scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/Lshape.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/adaptiveCube8.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/Lshape3DMixed_mini.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/Lshape3DMixed_mini.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 4;
+  unsigned numberOfSelectiveLevels = 5;
   
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag2); 
+  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag); 
   
   mlMsh.PrintInfo();
   MultiLevelSolution mlSol(&mlMsh);
@@ -149,7 +149,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition2);
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("All");
 
   // define the multilevel problem attach the mlSol object to it
@@ -181,15 +181,15 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(RICHARDSON);
 
-  //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
   //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
   
   unsigned simulation = 0;
-  double scale = 1.;
+  double scale = 0.2;
   
   if (simulation  == 0){ //our theory
     system.SetSscLevelSmoother(true); 
