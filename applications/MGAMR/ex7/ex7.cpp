@@ -181,15 +181,15 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(RICHARDSON);
 
-  system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
-  //system.SetPreconditionerFineGrids(ILU_PRECOND);
+  //system.SetPreconditionerFineGrids(IDENTITY_PRECOND);
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
   //system.SetPreconditionerFineGrids(JACOBI_PRECOND);
   //system.SetPreconditionerFineGrids(SOR_PRECOND);
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
   
   unsigned simulation = 0;
-  double scale = 0.2;
+  double scale = 1.0;
   
   if (simulation  == 0){ //our theory
     system.SetSscLevelSmoother(true); 
