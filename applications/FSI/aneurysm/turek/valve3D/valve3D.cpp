@@ -35,10 +35,11 @@ int main(int argc, char **args)
   //files.CheckIODirectories();
   //files.RedirectCout();
 
+  bool dimension2D = false;
 
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 
-  std::string infile = "./input/valve2.neu";
+  std::string infile = "./input/valve_coarsemesh.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -74,7 +75,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -94,24 +95,29 @@ int main(int argc, char **args)
   MultiLevelSolution ml_sol(&ml_msh);
 
   // ******* Add solution variables to multilevel solution and pair them *******
-  ml_sol.AddSolution("DX", LAGRANGE, SECOND, 2);
-  ml_sol.AddSolution("DY", LAGRANGE, SECOND, 2);
 
-  ml_sol.AddSolution("U", LAGRANGE, SECOND, 2);
-  ml_sol.AddSolution("V", LAGRANGE, SECOND, 2);
+  ml_sol.AddSolution ( "DX", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "DY", LAGRANGE, SECOND, 2 );
+  if ( !dimension2D ) ml_sol.AddSolution ( "DZ", LAGRANGE, SECOND, 2 );
 
-  // Pair each velocity variable with the corresponding displacement variable
-  ml_sol.PairSolution("U", "DX");    // Add this line
-  ml_sol.PairSolution("V", "DY");    // Add this line
+  ml_sol.AddSolution ( "U", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "V", LAGRANGE, SECOND, 2 );
+  if ( !dimension2D ) ml_sol.AddSolution ( "W", LAGRANGE, SECOND, 2 );
 
   ml_sol.AddSolution("DX1", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("DY1", LAGRANGE, SECOND, 2);
+  if ( !dimension2D ) ml_sol.AddSolution ( "DZ1", LAGRANGE, SECOND, 2 );
+
+  // Pair each velocity variable with the corresponding displacement variable
+  ml_sol.PairSolution ( "U", "DX" ); // Add this line
+  ml_sol.PairSolution ( "V", "DY" ); // Add this line
+  if ( !dimension2D ) ml_sol.PairSolution ( "W", "DZ" ); // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
-  ml_sol.AssociatePropertyToSolution("P", "Pressure", false);    // Add this line
+  ml_sol.AddSolution ( "P", DISCONTINOUS_POLYNOMIAL, FIRST, 2 );
+  ml_sol.AssociatePropertyToSolution ( "P", "Pressure", false ); // Add this line
 
-  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+  ml_sol.AddSolution ( "lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false );
 
 
 
@@ -123,12 +129,15 @@ int main(int argc, char **args)
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
+  if ( !dimension2D ) ml_sol.GenerateBdc("DZ", "Steady");
 
   ml_sol.GenerateBdc("U", "Steady");
   ml_sol.GenerateBdc("V", "Steady");
+  if ( !dimension2D ) ml_sol.GenerateBdc("W", "Steady");
 
   ml_sol.GenerateBdc("DX1", "Steady");
   ml_sol.GenerateBdc("DY1", "Steady");
+  if ( !dimension2D ) ml_sol.GenerateBdc("DZ1", "Steady");
 
   ml_sol.GenerateBdc("P", "Steady");
 
@@ -146,12 +155,16 @@ int main(int argc, char **args)
 
   system.AddSolutionToSystemPDE("DX");
   system.AddSolutionToSystemPDE("DY");
+  if ( !dimension2D ) system.AddSolutionToSystemPDE("DZ");
 
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
+  if ( !dimension2D ) system.AddSolutionToSystemPDE("W");
 
   system.AddSolutionToSystemPDE("DX1");
   system.AddSolutionToSystemPDE("DY1");
+  if ( !dimension2D ) system.AddSolutionToSystemPDE("DZ1");
+
 
   system.AddSolutionToSystemPDE("P");
 
@@ -200,12 +213,12 @@ int main(int argc, char **args)
 
   unsigned time_step_start = 1;
 
-  //char restart_file_name[256] = "./save/valve2D_iteration40";
-  char restart_file_name[256] = "";
+  char restart_file_name[256] = "./save/valve2D_iteration30";
+  //char restart_file_name[256] = "";
 
   if (strcmp (restart_file_name, "") != 0) {
     ml_sol.LoadSolution(restart_file_name);
-    time_step_start = 41;
+    time_step_start = 31;
     system.SetTime( (time_step_start - 1) * 1. / 32);
   }
 
@@ -219,14 +232,15 @@ int main(int argc, char **args)
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
+  if ( !dimension2D ) mov_vars.push_back("DZ");
 
   std::vector<std::string> mov_vars1;
   mov_vars1.push_back("DX1");
   mov_vars1.push_back("DY1");
+  if ( !dimension2D ) mov_vars1.push_back("DZ1");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
 
-  //mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step_start - 1);
 
@@ -251,7 +265,7 @@ int main(int argc, char **args)
     for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
     }
-    
+
     if (time_step > 1)
       system.SetMgType(V_CYCLE);
 
@@ -264,7 +278,7 @@ int main(int argc, char **args)
     ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step);
 
-    if ( time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
+    if ( time_step % 1 == 0) ml_sol.SaveSolution("valve3D", time_step);
 
   }
 
@@ -295,10 +309,22 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   value = 0.;
 
   double PI = acos(-1.);
-  double ramp = (time < 2) ? sin(PI / 2 * time/2.) : 1.;
+  double ramp = (time < 2) ? sin(PI / 2 * time / 2.) : 1.;
 
-  if (!strcmp(name, "V")) {
-    if (1 == facename || 2 == facename || 6 == facename) {
+  if (!strcmp(name, "U")) {
+    if (7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "V")) {
+    if (1 == facename || 2 == facename || 6 == facename || 7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  if (!strcmp(name, "W")) {
+    if (6 == facename) {
       test = 0;
       value = 0;
     }
@@ -307,35 +333,25 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     test = 0;
     value = 0.;
     if (1 == facename) {
-      //value = -1;
-      //value = ( /*2.5*/ + 2.5 * sin ( 2 * PI * time ) ) * ramp;
-      //value = ( 5 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
-      //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
-      //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
-      //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
       value = (0 + 5 * sin(2 * PI * time)) * ramp;      //+ 4.5
     }
     else if (2 == facename) {
-      //value = 1;
-      //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
-      //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
-      //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
       value = (0 - 5 * sin(2 * PI * time)) * ramp;      //- 4.5
     }
   }
-  else if (!strcmp(name, "DX")) {
-    if (5 == facename) {
+  else if ( (!strcmp(name, "DX")) || (!strcmp(name, "DX1")) ) {
+    if (5 == facename || 7 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if (!strcmp(name, "DX1") ) {
-    if (5 == facename ) {
+  else if ( (!strcmp(name, "DY")) || (!strcmp(name, "DY1")) ) {
+    if (5 == facename || 6 == facename || 7 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if (!strcmp(name, "DY") || !strcmp(name, "DY1")) {
+  else if ( (!strcmp(name, "DZ")) || (!strcmp(name, "DZ1")) ) {
     if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
