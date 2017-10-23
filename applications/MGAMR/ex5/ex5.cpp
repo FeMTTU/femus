@@ -167,7 +167,7 @@ int main(int argc, char** args) {
   
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
   
-  unsigned simulation = 4;
+  unsigned simulation = 3;
   double scale = 1.;
   
   if (simulation  == 0){ //our theory
