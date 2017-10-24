@@ -156,8 +156,8 @@ int main(int argc, char **args)
   }
   else if (simulation == 7) { //carotide
     //E = 1.e6 * 1.e6; //CFD case
-    //E = 1 * 1.e6; // FSI with E = 1 MPa
-    E = 0.5 * 1.e6; // FSI with E = 0.5 MPa
+    E = 1 * 1.e6; // FSI with E = 1 MPa
+    //E = 0.5 * 1.e6; // FSI with E = 0.5 MPa
   }
   else {
     E = 1000000 * 1.e0; //turek: 1000000 * 1.e0;
@@ -184,7 +184,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -437,7 +437,7 @@ int main(int argc, char **args)
 
   //END INITIALIZE PARTICLES
 
-  unsigned itPeriod = 32 /*for steady state with dt =100*/ /* for unsteady with dt =1/32, itPeriod = 32*/;
+  unsigned itPeriod = 16 /*for steady state with dt =100*/ /* for unsteady with dt =1/32, itPeriod = 32*/;
   unsigned confNumber;
   unsigned partSimMax;
   if (simulation == 6) {
@@ -511,13 +511,14 @@ int main(int argc, char **args)
 
         count_out = 0;
 
-        if (time_step >= 2 * itPeriod) {
+        if (time_step >= 2.5 * itPeriod) {
           for (int i = 0; i < linea[configuration][partSim].size(); i++) {
             if (simulation == 6) {
               linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceWire);
             }
             else if (simulation == 5 || simulation == 7) {
-              linea[configuration][partSim][i]->AdvectionParallel(150, 1. / itPeriod, 4, MagneticForceSC);
+              //linea[configuration][partSim][i]->AdvectionParallel(150, 1. / itPeriod, 4, MagneticForceSC);
+	      linea[configuration][partSim][i]->AdvectionParallel(75, 1. / itPeriod, 4, MagneticForceSC);
             }
             count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
           }
@@ -555,7 +556,7 @@ int main(int argc, char **args)
 
         PrintLine(output_path.str(), streamline, true, time_step + 1);
 
-        data[time_step][0] = time_step / 32.;
+        data[time_step][0] = time_step / 16.;
         //data[time_step][0] = time_step / (64*1.4);
         if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
           GetSolutionNorm(ml_sol, 9, data[time_step]);
@@ -629,7 +630,7 @@ double SetVariableTimeStep(const double time)
 {
   //double dt = 1./(64*1.4);
 
-  double dt = 1. / 32;
+  double dt = 1. / 16;
   //double dt = 1. / 4;
 
   //double dt = 60;
@@ -1335,7 +1336,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
   }
 
 
-  //END cheating
+  //END c/*h*/eating
 
 }
 
