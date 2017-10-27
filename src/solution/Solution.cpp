@@ -811,7 +811,8 @@ namespace femus {
             ielVolume[iel-offset] += weight;
           }
 
-          if(ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset]  || (*AMR->_Sol[AMRIndex])(iel) == 2.) {
+          if(ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset]  || 
+	    ( (*AMR->_Sol[AMRIndex])(iel) == 2. && ielErrNorm2[iel-offset] > 0.*eps2 * ielVolume[iel-offset] ) ) {
             AMR->_Sol[AMRIndex]->set(iel, 1.);
             volumeTestFalse += ielVolume[iel-offset];
 
@@ -823,7 +824,7 @@ namespace femus {
 		    if(jel > iel) {
                       AMR->_Sol[AMRIndex]->set(jel, 2.);
                     }
-                    else if( (*AMR->_Sol[AMRIndex])(jel) == 0. ) {
+                    else if( (*AMR->_Sol[AMRIndex])(jel) == 0. &&  ielErrNorm2[jel-offset] > 0. * eps2 * ielVolume[jel-offset] ) {
 		      errTestTrue2 -= ielErrNorm2[jel-offset];
 		      AMR->_Sol[AMRIndex]->set(jel, 1.);
 		      volumeTestFalse += ielVolume[jel-offset];
@@ -835,6 +836,7 @@ namespace femus {
 
           }
           else {
+	    AMR->_Sol[AMRIndex]->set(iel, 0.);
             errTestTrue2 += ielErrNorm2[iel-offset];
           }
         }

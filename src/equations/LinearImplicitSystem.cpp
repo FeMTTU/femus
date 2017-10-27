@@ -528,7 +528,7 @@ namespace femus {
     _AMRthreshold.resize(1);
     _AMRthreshold[0] = AMRthreshold;
 
-    if(!strcmp("l2", AMRnorm.c_str())  || !strcmp("h0", AMRnorm.c_str()) || !strcmp("H0", AMRnorm.c_str())) {
+    if( !strcmp("L2", AMRnorm.c_str()) || !strcmp("l2", AMRnorm.c_str())  || !strcmp("h0", AMRnorm.c_str()) || !strcmp("H0", AMRnorm.c_str())) {
       _AMRnorm = 0;
     }
     else if(!strcmp("H1", AMRnorm.c_str()) || !strcmp("h1", AMRnorm.c_str())) {
