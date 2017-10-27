@@ -88,9 +88,11 @@ namespace femus {
 /// print Mesh info
   void Mesh::PrintInfo() {
 
-    std::cout << " Mesh Level        : " << _level  << std::endl;
-    std::cout << " Number of elements: " << _nelem  << std::endl;
-    std::cout << " Number of nodes   : " << _nnodes << std::endl;
+    std::cout << " Mesh Level                  : " << _level  << std::endl;
+    std::cout << " Number of elements          : " << _nelem  << std::endl;
+    std::cout << " Number of linear nodes      : " << _dofOffset[0][_nprocs] << std::endl;
+    std::cout << " Number of quadratic nodes   : " << _dofOffset[1][_nprocs] << std::endl;
+    std::cout << " Number of biquadratic nodes : " << _dofOffset[2][_nprocs] << std::endl;
 
   }
 
