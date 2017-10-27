@@ -39,6 +39,7 @@ namespace femus {
     _maxAMRlevels(0),
     _AMRnorm(0),
     _AMRthreshold(0.01),
+    _AMReighborThresholdValue(0.),
     _SmootherType(smoother_type),
     _MGmatrixFineReuse(false),
     _MGmatrixCoarseReuse(false),
@@ -429,7 +430,7 @@ namespace femus {
       conv_test = false;
     }
     else{
-      conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnErroNormAdaptive(_SolSystemPdeIndex, _AMRthreshold, _AMRnorm);
+      conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnErroNormAdaptive(_SolSystemPdeIndex, _AMRthreshold, _AMRnorm, _AMReighborThresholdValue);
     }
 
     //     if( _AMRnorm == 0 ) {
