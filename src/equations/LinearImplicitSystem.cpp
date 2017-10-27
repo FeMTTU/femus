@@ -19,6 +19,7 @@
 #include "NumericVector.hpp"
 #include "ElemType.hpp"
 #include <iomanip>
+#include "MeshRefinement.hpp"
 
 namespace femus {
 
@@ -128,13 +129,13 @@ namespace femus {
     for(unsigned ig = 1; ig < _gridn; ig++) {
       if(!_ml_msh->GetLevel(ig - 1)->GetIfHomogeneous()) {
         _PP[ig]->matrix_RightMatMult(*_PPamr[ig - 1]);
-	if(_RR[ig]) _RR[ig]->matrix_LeftMatMult(*_RRamr[ig - 1]);
+        if(_RR[ig]) _RR[ig]->matrix_LeftMatMult(*_RRamr[ig - 1]);
       }
     }
     for(unsigned ig = 1; ig < _gridn; ig++) {
       ZeroInterpolatorDirichletNodes(ig);
     }
-    
+
 
     _NSchurVar_test = 0;
     _numblock_test = 0;
@@ -184,18 +185,18 @@ namespace femus {
       _assemble_system_function(_equation_systems);
 
       if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
-	if(!_RRamr[igridn]) {
-	  (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
-	  *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
-	  _LinSolver[igridn]->SwapMatrices();
-	  _LinSolver[igridn]->_KK->matrix_PtAP(*_PPamr[igridn], *_LinSolver[igridn]->_KKamr, false);
-	}
-	else{
-	  (_LinSolver[igridn]->_RESC)->matrix_mult(*_LinSolver[igridn]->_RES, *_RRamr[igridn]);
-	  *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
-	  _LinSolver[igridn]->SwapMatrices();
-	  _LinSolver[igridn]->_KK->matrix_ABC(*_RRamr[igridn], *_LinSolver[igridn]->_KKamr, *_PPamr[igridn], false);
-	}
+        if(!_RRamr[igridn]) {
+          (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
+          *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
+          _LinSolver[igridn]->SwapMatrices();
+          _LinSolver[igridn]->_KK->matrix_PtAP(*_PPamr[igridn], *_LinSolver[igridn]->_KKamr, false);
+        }
+        else {
+          (_LinSolver[igridn]->_RESC)->matrix_mult(*_LinSolver[igridn]->_RES, *_RRamr[igridn]);
+          *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
+          _LinSolver[igridn]->SwapMatrices();
+          _LinSolver[igridn]->_KK->matrix_ABC(*_RRamr[igridn], *_LinSolver[igridn]->_KKamr, *_PPamr[igridn], false);
+        }
       }
 
 
@@ -205,24 +206,24 @@ namespace femus {
         if(_RR[i]) {
           if(i == igridn)
             _LinSolver[i - 1u]->_KK->matrix_ABC(*_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixFineReuse);
-          else{
+          else {
             _LinSolver[i - 1u]->_KK->matrix_ABC(*_RR[i], *_LinSolver[i]->_KK, *_PP[i], _MGmatrixCoarseReuse);
-	    if(_LinSolver[i - 1u]->_KKamr){
-	      delete _LinSolver[i - 1u]->_KKamr;
-	      _LinSolver[i - 1u]->_KKamr = NULL;
-	    }
-	  }
+            if(_LinSolver[i - 1u]->_KKamr) {
+              delete _LinSolver[i - 1u]->_KKamr;
+              _LinSolver[i - 1u]->_KKamr = NULL;
+            }
+          }
         }
         else {
           if(i == igridn)
             _LinSolver[i - 1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixFineReuse);
           else {
             _LinSolver[i - 1u]->_KK->matrix_PtAP(*_PP[i], *_LinSolver[i]->_KK, _MGmatrixCoarseReuse);
-	    if(_LinSolver[i - 1u]->_KKamr){
-	      delete _LinSolver[i - 1u]->_KKamr;
-	      _LinSolver[i - 1u]->_KKamr = NULL;
-	    }
-	  }
+            if(_LinSolver[i - 1u]->_KKamr) {
+              delete _LinSolver[i - 1u]->_KKamr;
+              _LinSolver[i - 1u]->_KKamr = NULL;
+            }
+          }
         }
       }
 
@@ -248,11 +249,12 @@ namespace femus {
         _LinSolver[igridn]->SwapMatrices();
       }
 
-      if(ThisIsAMR) AddAMRLevel(AMRCounter);
-
       if(igridn + 1 < _gridn) ProlongatorSol(igridn + 1);
 
-      std::cout << std::endl << " ****** End Level Max " << igridn + 1 << " ******" << std::endl;
+      if(ThisIsAMR) AddAMRLevel(AMRCounter);
+
+      std::cout << std::endl << " ****** End Level Max " << igridn << " ******" << std::endl;
+
     }
 
     std::cout << std::endl << " *** Linear " << _solverType << " TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
@@ -419,9 +421,16 @@ namespace femus {
   // ********************************************
 
   void LinearImplicitSystem::AddAMRLevel(unsigned& AMRCounter) {
-    bool conv_test = 0;
+    bool conv_test = true;
 
-    conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnErroNormAdaptive(_SolSystemPdeIndex, _AMRthreshold, _AMRnorm);
+    if(_gridn == 1){
+      MeshRefinement meshcoarser(*_msh[0]);
+      meshcoarser.FlagAllElementsToBeRefined();
+      conv_test = false;
+    }
+    else{
+      conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnErroNormAdaptive(_SolSystemPdeIndex, _AMRthreshold, _AMRnorm);
+    }
 
     //     if( _AMRnorm == 0 ) {
 //       conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnl2( _SolSystemPdeIndex, _AMRthreshold );
@@ -430,7 +439,7 @@ namespace femus {
 //       conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnSemiNorm( _SolSystemPdeIndex, _AMRthreshold );
 //     }
 
-    if(conv_test == 0) {
+    if(conv_test == false) {
       _ml_msh->AddAMRMeshLevel();
       _ml_sol->AddSolutionLevel();
       AddSystemLevel();
@@ -481,9 +490,9 @@ namespace femus {
     if(!_ml_msh->GetLevel(_gridn)->GetIfHomogeneous()) {
       BuildAmrProlongatorMatrix(_gridn);
     }
-    
+
     ZeroInterpolatorDirichletNodes(_gridn);
-        
+
     _LinSolver[_gridn]->set_solver_type(_finegridsolvertype);
     _LinSolver[_gridn]->SetTolerances(_rtol, _atol, _divtol, _maxits, _restart);
     _LinSolver[_gridn]->set_preconditioner_type(_finegridpreconditioner);
@@ -527,7 +536,7 @@ namespace femus {
     _AMRthreshold.resize(1);
     _AMRthreshold[0] = AMRthreshold;
 
-    if(!strcmp("l2", AMRnorm.c_str())  || !strcmp("h0", AMRnorm.c_str()) || !strcmp("H0", AMRnorm.c_str())) {
+    if( !strcmp("L2", AMRnorm.c_str()) || !strcmp("l2", AMRnorm.c_str())  || !strcmp("h0", AMRnorm.c_str()) || !strcmp("H0", AMRnorm.c_str())) {
       _AMRnorm = 0;
     }
     else if(!strcmp("H1", AMRnorm.c_str()) || !strcmp("h1", AMRnorm.c_str())) {
@@ -738,14 +747,14 @@ namespace femus {
 
     int iproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-    
-    // Delete the Dirichlet nodes of the fine level (level): 
+
+    // Delete the Dirichlet nodes of the fine level (level):
     // set to zero all the corresponding rows for _PP[level] and columns for _RR[level]
-    
+
     LinearEquationSolver* LinSol = _LinSolver[level];
     Mesh* mesh = _msh[level];
     Solution* solution = _solution[level];
-    
+
     unsigned BDCIndexSize = LinSol->KKoffset[LinSol->KKIndex.size() - 1][iproc] - LinSol->KKoffset[0][iproc];
     std::vector < int > dirichletNodeIndex(BDCIndexSize);
 
@@ -770,22 +779,22 @@ namespace femus {
     std::vector < PetscInt >(dirichletNodeIndex).swap(dirichletNodeIndex);
     std::sort(dirichletNodeIndex.begin(), dirichletNodeIndex.end());
     _PP[level]->mat_zero_rows(dirichletNodeIndex, 0);
-    
-    if(_RR[level]){
+
+    if(_RR[level]) {
       SparseMatrix *RRt;
       RRt = SparseMatrix::build().release();
       _RR[level]->get_transpose(*RRt);
-      RRt->mat_zero_rows(dirichletNodeIndex, 0); 
+      RRt->mat_zero_rows(dirichletNodeIndex, 0);
       RRt->get_transpose(*_RR[level]);
       delete RRt;
     }
-    
-    // Delete the Dirichlet nodes of the coarse level (level-1): 
+
+    // Delete the Dirichlet nodes of the coarse level (level-1):
     // set to zero all the corresponding columns for _PP[level] and rows for _RR[level]
-        
-    LinSol = _LinSolver[level-1];
-    mesh = _msh[level-1];
-    solution = _solution[level-1];
+
+    LinSol = _LinSolver[level - 1];
+    mesh = _msh[level - 1];
+    solution = _solution[level - 1];
 
     BDCIndexSize = LinSol->KKoffset[LinSol->KKIndex.size() - 1][iproc] - LinSol->KKoffset[0][iproc];
     dirichletNodeIndex.resize(BDCIndexSize);
@@ -814,14 +823,14 @@ namespace femus {
     SparseMatrix *PPt;
     PPt = SparseMatrix::build().release();
     _PP[level]->get_transpose(*PPt);
-    PPt->mat_zero_rows(dirichletNodeIndex, 0); 
+    PPt->mat_zero_rows(dirichletNodeIndex, 0);
     PPt->get_transpose(*_PP[level]);
     delete PPt;
-    
-    if(_RR[level]){
-      _RR[level]->mat_zero_rows(dirichletNodeIndex, 0); 
+
+    if(_RR[level]) {
+      _RR[level]->mat_zero_rows(dirichletNodeIndex, 0);
     }
-        
+
   }
 
   // ********************************************

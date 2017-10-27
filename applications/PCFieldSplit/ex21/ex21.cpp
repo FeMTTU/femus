@@ -262,12 +262,12 @@ int main(int argc, char** args) {
   system.SetIntervalTime(dt);
   unsigned n_timesteps =20000;
  
-  Marker marker1(x1, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+  Marker marker1(x1, VOLUME, mlSol.GetLevel(numberOfUniformLevels - 1), 2, true);
   unsigned elem1 = marker1.GetMarkerElement();
   std::vector<double> xi1;
   marker1.GetMarkerLocalCoordinates(xi1);
   
-  Marker marker2(x2, VOLUME, mlMsh.GetLevel(numberOfUniformLevels - 1), 2, true);
+  Marker marker2(x2, VOLUME,  mlSol.GetLevel(numberOfUniformLevels - 1), 2, true);
   unsigned elem2 = marker2.GetMarkerElement();
   std::vector<double> xi2;
   marker2.GetMarkerLocalCoordinates(xi2);

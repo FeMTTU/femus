@@ -52,6 +52,7 @@ fe/Triangle.cpp
 fe/Wedge.cpp
 ism/Marker.cpp
 ism/PolynomialBases.cpp
+ism/Line.cpp
 meshGencase/Box.cpp
 meshGencase/Domain.cpp
 meshGencase/ElemSto.cpp

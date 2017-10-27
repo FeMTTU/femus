@@ -41,6 +41,7 @@ namespace femus {
   void AsmPetscLinearEquationSolver::SetElementBlockNumber(const char all[], const unsigned& overlap) {
     _elementBlockNumber[0] = _msh->GetNumberOfElements();
     _elementBlockNumber[1] = _msh->GetNumberOfElements();
+    _elementBlockNumber[2] = _msh->GetNumberOfElements();
     _standardASM = 1;
     _overlap = overlap;
   }
@@ -50,6 +51,7 @@ namespace femus {
   void AsmPetscLinearEquationSolver::SetElementBlockNumber(const unsigned& block_elemet_number) {
     _elementBlockNumber[0] = block_elemet_number;
     _elementBlockNumber[1] = block_elemet_number;
+    _elementBlockNumber[2] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
   }
@@ -66,6 +68,13 @@ namespace femus {
   // =================================================
 
   void AsmPetscLinearEquationSolver::SetElementBlockNumberFluid(const unsigned& block_elemet_number, const unsigned& overlap) {
+    _elementBlockNumber[2] = block_elemet_number;
+    _bdcIndexIsInitialized = 0;
+    _standardASM = 0;
+    _overlap = overlap;
+  }
+  
+  void AsmPetscLinearEquationSolver::SetElementBlockNumberPorous(const unsigned& block_elemet_number, const unsigned& overlap) {
     _elementBlockNumber[1] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
@@ -276,7 +285,7 @@ namespace femus {
     PetscReal epsilon = 1.e-16;
 
     if(!_standardASM) {
-      for(int i = 0; i < _blockTypeRange[0]; i++) {
+      for(int i = 0; i < _blockTypeRange[1]; i++) {
         PC subpcs;
         KSPGetPC(subksps[i], &subpcs);
         KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
@@ -286,7 +295,7 @@ namespace femus {
         PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
       }
 
-      for(int i = _blockTypeRange[0]; i < _blockTypeRange[1]; i++) {
+      for(int i = _blockTypeRange[1]; i < _blockTypeRange[2]; i++) {
         PC subpcs;
         KSPGetPC(subksps[i], &subpcs);
         KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);

@@ -768,6 +768,11 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 	    // ********************************* Tau_Supg FRANCA and FREY **************************
 	    // Computer Methods in Applied Mechanics and Engineering 99 (1992) 209-233 North-Holland
 	    // *************************************************************************************
+	    
+	    // Element diameter free stability parameters for stabilized methods applied to fluids
+	    // by Leopoldo P. Franca and Alexandre L. Madureira,
+	    // Computer Methods in Applied Mechanics and Engineering, Vol. 105 (1993) 395-403
+  
 	    // velocity
 	    // double Ck[6][3]={{1.,1.,1.},{1.,1.,1.},{1.,1.,1.},{0.5, 11./270., 11./270.},{0.,1./42.,1./42.},{1.,1.,1.}};
 
@@ -818,9 +823,10 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 		  else if (1 == ivar + jvar ) kvar = dim;   // xy
 		  else if (2 == ivar + jvar ) kvar = dim+2; // xz
 		  else if (3 == ivar + jvar ) kvar = dim+1; // yz
-		  Res[ivar] += - SolVAR[jvar]*GradSolVAR[ivar][jvar]
-			       + IRe * ( NablaSolVAR[ivar][jvar] + NablaSolVAR[jvar][kvar] );
+		  Res[ivar] += - SolVAR[jvar]*GradSolVAR[ivar][jvar] // inconsistent
+			       + IRe * ( NablaSolVAR[ivar][jvar] + NablaSolVAR[jvar][kvar] ); //consistent
 		}
+		
 	      }
 
 	      adept::adouble div_vel=0.;
@@ -846,8 +852,8 @@ void AssembleMatrixResNS(MultiLevelProblem &ml_prob){
 		    Laplacian += IRe*gradphi[i*dim+jvar]*(GradSolVAR[ivar][jvar]+GradSolVAR[jvar][ivar]);
 		    phiSupg   += ( SolVAR[jvar]*gradphi[i*dim+jvar] ) * tauSupg;
 
-		    aRhs[indexVAR[ivar]][i] += 	 Res[ivar] * (-IRe * nablaphi[i*nabla_dim+jvar])* tauSupg * Weight;
-		    aRhs[indexVAR[jvar]][i] += 	 Res[ivar] * (-IRe * nablaphi[i*nabla_dim+kvar])* tauSupg * Weight;
+		    aRhs[indexVAR[ivar]][i] += 	 Res[ivar] * (-IRe * nablaphi[i*nabla_dim+jvar])* tauSupg * Weight; //only in least square
+		    aRhs[indexVAR[jvar]][i] += 	 Res[ivar] * (-IRe * nablaphi[i*nabla_dim+kvar])* tauSupg * Weight; //only in least square
 		  }
 		  aRhs[indexVAR[ivar]][i]+= ( - Advection - Laplacian
 					      + ( SolVAR[dim] - deltaSupg * div_vel) * gradphi[i*dim+ivar]

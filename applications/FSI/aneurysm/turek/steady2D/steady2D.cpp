@@ -20,7 +20,7 @@ using namespace femus;
 bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char name[],
                                  double &value, const int facename, const double time);
 
-void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group);
+void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, char **args)
@@ -29,6 +29,22 @@ int main(int argc, char **args)
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  unsigned simulation = 0;
+
+  if(argc >= 2) {
+    if(!strcmp("0", args[1])) {    /** FSI Turek2D no stent */
+      simulation = 0;
+    }
+    else if(!strcmp("1", args[1])) {     /** FSI Turek porous */
+      simulation = 1;
+    }
+    else if(!strcmp("2", args[1])) {   /** FSI Turek stents 60 micron */
+      simulation = 2;
+    }
+    else if(!strcmp("3", args[1])) {   /** FSI Turek 11 stents 60 micron */
+      simulation = 3;
+    }
+  }
 
   //Files files;
   //files.CheckIODirectories();
@@ -39,10 +55,23 @@ int main(int argc, char **args)
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
 //   std::string infile = "./input/aneurysm_Sara_5.neu";
-  std::string infile = "./input/Turek_porous_60micron.neu";
+  //std::string infile = "./input/Turek_porous_60micron.neu";
   //std::string infile = "./input/Turek_stents_60micron.neu";
   //std::string infile = "./input/Turek_11stents_60micron.neu";
   //std::string infile = "./input/Turek.neu";
+  std::string infile;
+  if(simulation == 0) {
+    infile = "./input/Turek.neu";
+  }
+  else if(simulation == 1) {
+    infile = "./input/Turek_porous_60micron.neu";
+  }
+  else if(simulation == 2) {
+    infile = "./input/Turek_stents_60micron.neu";
+  }
+  else if(simulation == 3) {
+    infile = "./input/Turek_11stents_60micron.neu";
+  }
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E;
@@ -54,7 +83,7 @@ int main(int argc, char **args)
   muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  E = 120000 * 1.e1; //turek:120000*1.e6;
+  E = 1000000; //turek:120000*1.e1;
 
   Parameter par(Lref, Uref);
 
@@ -195,10 +224,38 @@ int main(int argc, char **args)
   std::cout << std::endl;
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
   
+  std::vector <double> data;
+  data.resize(5);
   system.MGsolve();
-  GetSolutionNorm(ml_sol, 9);
+  data[0]=0;
+  GetSolutionNorm(ml_sol, 9, data);
 
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1);
+  
+  int  iproc;
+  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+  if(iproc == 0){
+    std::ofstream outf;
+    if(simulation == 0) {
+      outf.open("DataPrint_Turek_steady.txt");
+    }
+    else if(simulation == 1) {
+      outf.open("DataPrint_TurekPorous_steady.txt");
+    }
+    else if(simulation == 2){
+      outf.open("DataPrint_TurekStents_steady.txt");
+    }
+    else if(simulation == 3){
+      outf.open("DataPrint_Turek11Stents_steady.txt");
+    }
+        
+    if (!outf) {
+      std::cout<<"Error in opening file DataPrint.txt";
+      return 1;
+    }
+    outf<<data[0]<<"\t"<<data[1]<<"\t"<<data[2]<<"\t"<<data[3]<<"\t"<<data[4]<<std::endl;
+    outf.close();
+  }
 
   // ******* Clear all systems *******
   ml_prob.clear();
@@ -253,7 +310,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 }
 
 
-void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
+void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
 {
 
   int  iproc, nprocs;
@@ -422,7 +479,9 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
   vol->close();
 
   double p2_l2 = p2->l1_norm();
+  p2_l2 = sqrt(p2_l2);
   double v2_l2 = v2->l1_norm();
+  v2_l2 = sqrt(v2_l2);
   double VOL0 = vol0->l1_norm();
   double VOL = vol->l1_norm();
 
@@ -431,8 +490,13 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group)
   std::cout << " vol0 = " << VOL0 << std::endl;
   std::cout << " vol = " << VOL << std::endl;
   std::cout << " (vol-vol0)/vol0 = " << (VOL-VOL0) / VOL0 << std::endl;
-  std::cout << " p_l2 norm / sqrt(vol) = " << sqrt(p2_l2/VOL)  << std::endl;
-  std::cout << " v_l2 norm / sqrt(vol) = " << sqrt(v2_l2/VOL)  << std::endl;
+  std::cout << " p_l2 norm / vol = " << p2_l2/VOL  << std::endl;
+  std::cout << " v_l2 norm / vol = " << v2_l2/VOL  << std::endl;
+  
+  data[1] = VOL0;
+  data[2] = VOL;
+  data[3] = p2_l2;
+  data[4] = v2_l2;
 
   delete p2;
   delete v2;

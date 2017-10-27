@@ -138,6 +138,13 @@ namespace femus {
 	return _SolType[index];
       }
       
+      void SetIfFSI(const bool &FSI = true){
+	_FSI = FSI; 
+      }
+      
+      bool GetIfFSI(){
+	return _FSI; 
+      }
       
     private:
       //member data
@@ -148,6 +155,7 @@ namespace femus {
       vector <FEOrder> _order;
       Mesh *_msh;
       vector <bool> _removeNullSpace;
+      bool _FSI;
 
   };
 
