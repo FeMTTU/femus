@@ -19,6 +19,7 @@
 #include "NumericVector.hpp"
 #include "ElemType.hpp"
 #include <iomanip>
+#include "MeshRefinement.hpp"
 
 namespace femus {
 
@@ -420,9 +421,16 @@ namespace femus {
   // ********************************************
 
   void LinearImplicitSystem::AddAMRLevel(unsigned& AMRCounter) {
-    bool conv_test = 0;
+    bool conv_test = true;
 
-    conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnErroNormAdaptive(_SolSystemPdeIndex, _AMRthreshold, _AMRnorm);
+    if(_gridn == 1){
+      MeshRefinement meshcoarser(*_msh[0]);
+      meshcoarser.FlagAllElementsToBeRefined();
+      conv_test = false;
+    }
+    else{
+      conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnErroNormAdaptive(_SolSystemPdeIndex, _AMRthreshold, _AMRnorm);
+    }
 
     //     if( _AMRnorm == 0 ) {
 //       conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnl2( _SolSystemPdeIndex, _AMRthreshold );
@@ -431,7 +439,7 @@ namespace femus {
 //       conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnSemiNorm( _SolSystemPdeIndex, _AMRthreshold );
 //     }
 
-    if(conv_test == 0) {
+    if(conv_test == false) {
       _ml_msh->AddAMRMeshLevel();
       _ml_sol->AddSolutionLevel();
       AddSystemLevel();
