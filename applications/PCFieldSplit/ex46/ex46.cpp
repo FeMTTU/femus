@@ -66,11 +66,11 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 //  std::cout << level << std::endl;
   double pi = acos(-1.);
-  double radius = 1.0 / 2.0 * (1.0 - pow(0.5,level - level0 + 1));
+  double radius = 1.0 / 2.0 * (1.0 - pow(0.5,level - level0));
   double radius2 = radius * radius;
 
   if ( (x[0]*x[0] + x[1] * x[1] ) > radius2 + 1.0e-6) {
-    std::cout << level << std::endl;
+//    std::cout << level << std::endl;
     refine	= true;
   }
   return refine;
@@ -110,8 +110,8 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 4;
+  unsigned numberOfUniformLevels = 5;
+  unsigned numberOfSelectiveLevels = 0;
   //mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
   // erase all the coarse mesh levels
