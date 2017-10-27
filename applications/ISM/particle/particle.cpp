@@ -517,8 +517,8 @@ int main(int argc, char **args)
               linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceWire);
             }
             else if (simulation == 5 || simulation == 7) {
-              //linea[configuration][partSim][i]->AdvectionParallel(150, 1. / itPeriod, 4, MagneticForceSC);
-	      linea[configuration][partSim][i]->AdvectionParallel(75, 1. / itPeriod, 4, MagneticForceSC);
+              linea[configuration][partSim][i]->AdvectionParallel(150, 1. / itPeriod, 4, MagneticForceSC);
+	      //linea[configuration][partSim][i]->AdvectionParallel(75, 1. / itPeriod, 4, MagneticForceSC);
             }
             count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
           }

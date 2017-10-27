@@ -416,7 +416,7 @@ namespace femus
     bool pointIsOutsideThisProcess = false;
     bool pointIsOutsideTheDomain = false;
     unsigned counter = 0;
-    std::vector <unsigned> searchHistory(counter+1);
+    std::vector <unsigned> searchHistory(counter + 1);
     searchHistory[counter] = previousElem; //previousElem is always searchHistory[searchHistory.size()-1]
 
     //BEGIN next element search
@@ -425,13 +425,12 @@ namespace femus
       if (_dim == 2) {
         _elem = GetNextElement2D(currentElem, previousElem, sol, s);
       }
-
-      else if(_dim == 3) {
+      else if (_dim == 3) {
         _elem = GetNextElement3D(currentElem, searchHistory, sol, s);
 
       }
       counter++;
-      searchHistory.resize(counter+1);
+      searchHistory.resize(counter + 1);
       searchHistory[counter] = currentElem;
 
       //previousElem = currentElem; commented after adding searchHistory
@@ -439,6 +438,8 @@ namespace femus
       // std::cout << previousElem << " " << currentElem << std::endl << std::flush;
 
       // std::cout << previousElem << std::cout << std::flush;
+
+      //std::cout << "previousElem = " << searchHistory[counter] << " " << " nextElem = " << _elem <<  std::endl << std::flush;
 
       if (_elem == currentElem) {
         elementHasBeenFound = true;
@@ -1126,7 +1127,8 @@ namespace femus
 
 
 
-  unsigned Marker::GetNextElement3D(const unsigned & currentElem, const std::vector <unsigned> &searchHistory, Solution* sol, const double &s) {
+  unsigned Marker::GetNextElement3D(const unsigned & currentElem, const std::vector <unsigned> &searchHistory, Solution* sol, const double &s)
+  {
 
     unsigned nDofs = sol->GetMesh()->GetElementDofNumber(currentElem, _solType);
     unsigned nFaceDofs = (_solType == 2) ? nDofs - 1 : nDofs;
@@ -1141,13 +1143,13 @@ namespace femus
     std::vector<double> xc(_dim, 0); //stores the coordinates of the central node of currentElem
     unsigned centralNodeLocalIndex;
 
-    if(currentElementType == 0) centralNodeLocalIndex = 26;
-    else if(currentElementType == 1) centralNodeLocalIndex = 14;
-    else if(currentElementType == 2) centralNodeLocalIndex = 20;
+    if (currentElementType == 0) centralNodeLocalIndex = 26;
+    else if (currentElementType == 1) centralNodeLocalIndex = 14;
+    else if (currentElementType == 2) centralNodeLocalIndex = 20;
 
     unsigned centralNodeDof = sol->GetMesh()->GetSolutionDof(centralNodeLocalIndex, currentElem, 2);
 
-    for(unsigned k = 0; k < _dim; k++) {
+    for (unsigned k = 0; k < _dim; k++) {
       xc[k] = GetCoordinates(sol, k, centralNodeDof, s)  - _x[k]; // coordinates are translated so that the marker is the new origin
       //std::cout << " xc[" << k << "]= " <<xc[k] <<std::endl;
     }
@@ -1188,7 +1190,7 @@ namespace femus
 
 
 
-    if(xc[0]*xc[0] < epsilon2 && xc[1]*xc[1] < epsilon2 && xc[2]*xc[2] < epsilon2) {
+    if (xc[0]*xc[0] < epsilon2 && xc[1]*xc[1] < epsilon2 && xc[2]*xc[2] < epsilon2) {
       //   std::cout << "the marker is the central element node" << std::endl;
       markerIsInElement = true; //the marker is xc
     }
@@ -1199,18 +1201,18 @@ namespace femus
 
       std::vector< std::vector < double > > xvv(_dim);
 
-      for(unsigned k = 0; k < _dim; k++) {
+      for (unsigned k = 0; k < _dim; k++) {
         xvv[k].reserve(nFaceDofs);
       }
 
-      for(unsigned k = 0; k < _dim; k++) {
+      for (unsigned k = 0; k < _dim; k++) {
         xvv[k].resize(nFaceDofs);
       }
 
-      for(unsigned i = 0; i < nFaceDofs; i++) {
+      for (unsigned i = 0; i < nFaceDofs; i++) {
         unsigned inodeDof  = sol->GetMesh()->GetSolutionDof(i, currentElem, _solType);
 
-        for(unsigned k = 0; k < _dim; k++) {
+        for (unsigned k = 0; k < _dim; k++) {
           xvv[k][i] = GetCoordinates(sol, k, inodeDof, s) - _x[k];
         }
       }
@@ -1223,21 +1225,21 @@ namespace femus
 
       double radius2 = radius * radius;
       double d2 = 0.;
-      for(int d = 0; d < _dim; d++) {
+      for (int d = 0; d < _dim; d++) {
         d2 += xcs[d] * xcs[d];
       }
       bool insideHull = true;
-      if(d2 > radius2) {
+      if (d2 > radius2) {
         insideHull = false;
       }
-      for(unsigned k = 0; k < _dim; k++) {
-        if(xe[k][0] * xe[k][1] > 0.) {
+      for (unsigned k = 0; k < _dim; k++) {
+        if (xe[k][0] * xe[k][1] > 0.) {
           insideHull = false;
         }
       }
-      if(!insideHull) {
+      if (!insideHull) {
         nextElem = FastForward(currentElem, searchHistory[searchHistory.size() - 1], sol, s);
-        if(nextElem >= 0) {
+        if (nextElem >= 0) {
           nextElementFound = true;
         }
         else {
@@ -1245,15 +1247,15 @@ namespace femus
         }
       }
 
-      if(insideHull) {
+      if (insideHull) {
 
 // 	std::cout<<"I am in...."<<std::flush;
 
-        for(unsigned iface = 0; iface < sol->GetMesh()->GetElementFaceNumber(currentElem); iface++) {
+        for (unsigned iface = 0; iface < sol->GetMesh()->GetElementFaceNumber(currentElem); iface++) {
 
           // std::cout << "iface = " << iface << std::endl;
 
-          for(unsigned itri = 0; itri < trianglesPerFace[currentElementType][_solType][iface]; itri ++) {
+          for (unsigned itri = 0; itri < trianglesPerFace[currentElementType][_solType][iface]; itri ++) {
 
             //  std::cout << "itri = " << itri << std::endl;
 
@@ -1264,17 +1266,17 @@ namespace femus
             std::vector< std::vector < double > > xv(_dim);   //stores the coordinates of the nodes of the triangle itri
 
             // fill in the coordinates of the vertices of itri
-            for(unsigned k = 0; k < _dim; k++) {
+            for (unsigned k = 0; k < _dim; k++) {
               xv[k].reserve(4);
             }
-            for(unsigned k = 0; k < _dim; k++) {
+            for (unsigned k = 0; k < _dim; k++) {
               xv[k].resize(4);
             }
 
-            for(unsigned i = 0; i < 4; i++) {
+            for (unsigned i = 0; i < 4; i++) {
               unsigned itriDof  = sol->GetMesh()->GetSolutionDof(faceTriangleNodes[currentElementType][_solType][iface][itri][i], currentElem, 2);
               // std::cout << "itriDof = " << itriDof << std::endl;
-              for(unsigned k = 0; k < _dim; k++) {
+              for (unsigned k = 0; k < _dim; k++) {
                 xv[k][i] = GetCoordinates(sol, k, itriDof, s)  - _x[k];  // coordinates are translated so that the marker is the new origin
               }
             }
@@ -1282,8 +1284,8 @@ namespace femus
             // rescaling coordinates to properly handle different scales of meshes
             double length = 0.;
             double sum = 0.;
-            for(unsigned i = 0; i < 3; i++) {
-              for(unsigned k = 0; k < _dim; k++) {
+            for (unsigned i = 0; i < 3; i++) {
+              for (unsigned k = 0; k < _dim; k++) {
                 sum += (xv[k][i + 1] - xv[k][i]) * (xv[k][i + 1] - xv[k][i]);
               }
               length += sqrt(sum);
@@ -1291,10 +1293,10 @@ namespace femus
 
             length /= 4;
 
-            for(unsigned k = 0; k < _dim; k++) {
+            for (unsigned k = 0; k < _dim; k++) {
               xcc[k] = xc[k] / length;
               //std::cout << " xcc[" << k << "]= " <<xcc[k] <<std::endl;
-              for(unsigned i = 0; i < 4; i++) {
+              for (unsigned i = 0; i < 4; i++) {
                 xv[k][i] /= length;
               }
             }
@@ -1313,7 +1315,7 @@ namespace femus
             //std::cout << " tTop = " << tTop <<std::endl;
             //std::cout << " tBottom = " << tBottom <<std::endl;
 
-            if(fabs(tBottom) < epsilon && fabs(tTop) >= epsilon) {
+            if (fabs(tBottom) < epsilon && fabs(tTop) >= epsilon) {
               // std::cout << "The plane of face" << itri << "does not intersect the line" <<std::endl;
               break; // must exit the loop on itri
             }
@@ -1322,20 +1324,20 @@ namespace femus
               t = tTop / tBottom ;
               //std::cout << "t = " << t << std::endl;
 
-              for(unsigned k = 0; k < _dim; k++) {
+              for (unsigned k = 0; k < _dim; k++) {
                 r[k] = t * xcc[k];
                 // std::cout << "r[" << k << "] = " << r[k] <<std::endl;
               }
 
-              if(t < 1) {   //if not, it means the point r is far away from the marker, and we don't want to go in that direction
+              if (t < 1) {  //if not, it means the point r is far away from the marker, and we don't want to go in that direction
 
-                for(unsigned i = 0; i < 4; i++) {  //now we have to determine if r is inside itri
-                  for(unsigned k = 0; k < _dim; k++) {
+                for (unsigned i = 0; i < 4; i++) { //now we have to determine if r is inside itri
+                  for (unsigned k = 0; k < _dim; k++) {
                     xv[k][i] = xv[k][i] - r[k];     //translate again the reference frame so that the origin is r
                   }
                 }
 
-                for(unsigned i = 0; i < 3; i++) {
+                for (unsigned i = 0; i < 3; i++) {
                   double q0 = xv[1][i] * (xv[2][i] - xv[2][i + 1]) + xv[2][i] * (xv[1][i + 1] - xv[1][i]);
                   double q1 = xv[2][i] * (xv[0][i] - xv[0][i + 1]) + xv[0][i] * (xv[2][i + 1] - xv[2][i]);
                   double q2 = xv[0][i] * (xv[1][i] - xv[1][i + 1]) + xv[1][i] * (xv[0][i + 1] - xv[0][i]);
@@ -1346,17 +1348,17 @@ namespace femus
 
                   //   std::cout << "fabs(scalarProduct) = " << fabs(scalarProduct) << std::endl;
 
-                  if(scalarProduct > epsilon) {
+                  if (scalarProduct > epsilon) {
                     //   std::cout << "r is outside triangle " << itri <<  std::endl;
                     break;
 
                   }
-                  else if(fabs(scalarProduct) < epsilon) {    //scalarProduct == 0
+                  else if (fabs(scalarProduct) < epsilon) {   //scalarProduct == 0
 
-                    if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
+                    if ((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
                         (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
                       //    std::cout << "intersection on a vertex of itri" << std::endl;
-                      if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the faces
+                      if (fabs(t) < epsilon || t < 0) {  //this means the marker is on one of the faces
 
                         //     if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is one vertex of triangle " << itri << std::endl;
                         //     if(t < 0) std::cout << "setting markerIsInElement = true because r is one vertex of triangle " << itri << std::endl;
@@ -1368,14 +1370,14 @@ namespace femus
                         //     std::cout << "r is in triangle " << itri << std::endl;
                         nextElem = (sol->GetMesh()->el->GetFaceElementIndex(currentElem, iface) - 1);
                         unsigned historyCounter = 0;
-                        for(unsigned i = 0; i < searchHistory.size(); i++) {
-			 // std::cout << "searchHistory[" << i<< "]"<< searchHistory[i] <<std::endl;
-			  if(nextElem != searchHistory[i]) {
+                        for (unsigned i = 0; i < searchHistory.size(); i++) {
+                          // std::cout << "searchHistory[" << i<< "]"<< searchHistory[i] <<std::endl;
+                          if (nextElem != searchHistory[i]) {
                             historyCounter++;
                           }
-                          if(historyCounter == searchHistory.size()) {
-                            nextElementFound = true;
-                          }
+                        }
+                        if (historyCounter == searchHistory.size()) {
+                          nextElementFound = true;
                         }
                         break;
                       }
@@ -1383,9 +1385,9 @@ namespace femus
                     }
 
 
-                    else if(xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
+                    else if (xv[0][i]*xv[0][i + 1] < 0 || xv[1][i]*xv[1][i + 1] < 0 || xv[2][i]*xv[2][i + 1] < 0) {
                       //   std::cout << "intersection on an edge of itri" << std::endl;
-                      if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the faces
+                      if (fabs(t) < epsilon || t < 0) {  //this means the marker is on one of the faces
 
                         //    if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
                         //    if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
@@ -1397,20 +1399,20 @@ namespace femus
                         //     std::cout << "r is in triangle " << itri << std::endl;
                         nextElem = (sol->GetMesh()->el->GetFaceElementIndex(currentElem, iface) - 1);
                         unsigned historyCounter = 0;
-			for(unsigned i = 0; i < searchHistory.size(); i++) {
-			//  std::cout << "searchHistory[" << i<< "]"<< searchHistory[i] <<std::endl;
-                          if(nextElem != searchHistory[i]) {
+                        for (unsigned i = 0; i < searchHistory.size(); i++) {
+                          //  std::cout << "searchHistory[" << i<< "]"<< searchHistory[i] <<std::endl;
+                          if (nextElem != searchHistory[i]) {
                             historyCounter++;
                           }
-                          if(historyCounter == searchHistory.size()) {
-                            nextElementFound = true;
-                          }
+                        }
+                        if (historyCounter == searchHistory.size()) {
+                          nextElementFound = true;
                         }
                         break;
                       }
                     }
                   }
-                  else if(scalarProduct < 0) {
+                  else if (scalarProduct < 0) {
                     //    std::cout << " scalarProduct = " << scalarProduct << std::endl;
                     scalarCount++;
                   }
@@ -1419,8 +1421,8 @@ namespace femus
             } // closes the "else" on tBottom = 0
 
 
-            if(scalarCount == 3) {
-              if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the faces
+            if (scalarCount == 3) {
+              if (fabs(t) < epsilon || t < 0) {  //this means the marker is on one of the faces
 
                 //   if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
                 //  if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
@@ -1432,44 +1434,44 @@ namespace femus
                 //    std::cout << "r is in triangle " << itri << std::endl;
                 nextElem = (sol->GetMesh()->el->GetFaceElementIndex(currentElem, iface) - 1);
                 unsigned historyCounter = 0;
-		for(unsigned i = 0; i < searchHistory.size(); i++) {
-		//  std::cout << "searchHistory[" << i<< "]"<< searchHistory[i] <<std::endl;
-                  if(nextElem != searchHistory[i]) {
+                for (unsigned i = 0; i < searchHistory.size(); i++) {
+                  //  std::cout << "searchHistory[" << i<< "]"<< searchHistory[i] <<std::endl;
+                  if (nextElem != searchHistory[i]) {
                     historyCounter++;
                   }
-                  if(historyCounter == searchHistory.size()) {
-                    nextElementFound = true;
-                  }
+                }
+                if (historyCounter == searchHistory.size()) {
+                  nextElementFound = true;
                 }
                 break;
               }
             }
 
-            if(nextElementFound == true) {
+            if (nextElementFound == true) {
               break;
             }
 
-            if(markerIsInElement == true) {
+            if (markerIsInElement == true) {
               break;
             }
           } //end for on itri
 
-          if(nextElementFound == true) {
+          if (nextElementFound == true) {
             break;
           }
 
-          if(markerIsInElement == true) {
+          if (markerIsInElement == true) {
             break;
           }
         } //end for on iface
       } //end of else before for on iface
     } // end of the first else
 
-    if(markerIsInElement == true) {
+    if (markerIsInElement == true) {
       nextElem = currentElem;
       //  std::cout << "The marker belongs to element " << currentElem << std::endl;
     }
-    if(nextElementFound == true) {
+    if (nextElementFound == true) {
       //   std::cout << "The marker does not belong to element " << currentElem << std::endl;
     }
     //  std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
