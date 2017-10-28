@@ -615,7 +615,8 @@ namespace femus {
 
 
 
-  bool Solution::FlagAMRRegionBasedOnErroNormAdaptive(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType) {
+  bool Solution::FlagAMRRegionBasedOnErroNormAdaptive(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, 
+						      const unsigned& normType, const double &neighborThresholdValue) {
 
     const double scale2[3][2] = {{0.111111, 1.}, {0.0204081632653, 0.111111}, {0.0204081632653, 0.111111} };
     //const double scale2[3][2] = {{1., 1.}, {1., 1.}, {1., 1.} };
@@ -811,7 +812,8 @@ namespace femus {
             ielVolume[iel-offset] += weight;
           }
 
-          if(ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset]  || (*AMR->_Sol[AMRIndex])(iel) == 2.) {
+          if(ielErrNorm2[iel-offset] > eps2 * ielVolume[iel-offset]  || 
+	    ( (*AMR->_Sol[AMRIndex])(iel) == 2. && ielErrNorm2[iel-offset] > neighborThresholdValue * eps2 * ielVolume[iel-offset] ) ) {
             AMR->_Sol[AMRIndex]->set(iel, 1.);
             volumeTestFalse += ielVolume[iel-offset];
 
@@ -823,7 +825,7 @@ namespace femus {
 		    if(jel > iel) {
                       AMR->_Sol[AMRIndex]->set(jel, 2.);
                     }
-                    else if( (*AMR->_Sol[AMRIndex])(jel) == 0. ) {
+                    else if( (*AMR->_Sol[AMRIndex])(jel) == 0. &&  ielErrNorm2[jel-offset] > neighborThresholdValue * eps2 * ielVolume[jel-offset] ) {
 		      errTestTrue2 -= ielErrNorm2[jel-offset];
 		      AMR->_Sol[AMRIndex]->set(jel, 1.);
 		      volumeTestFalse += ielVolume[jel-offset];
@@ -835,6 +837,7 @@ namespace femus {
 
           }
           else {
+	    AMR->_Sol[AMRIndex]->set(iel, 0.);
             errTestTrue2 += ielErrNorm2[iel-offset];
           }
         }
