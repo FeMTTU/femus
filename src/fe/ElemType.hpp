@@ -154,6 +154,11 @@ public:
   static const unsigned _fe_old_to_new[QL];
 
   static const unsigned _fe_new_to_old[NFE_FAMS];
+  
+  virtual void ShapeAtBoundary(const vector < vector < double > > &vt,const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const {
+	 std::cout << "Implemented only for quad4 now" << std::endl; abort(); 
+  };
+
 
 protected:
 
@@ -173,6 +178,9 @@ protected:
 
 //  Gauss
   const Gauss _gauss;
+
+  //  Gauss boundary
+  Gauss* _gauss_bdry;
 
   /**  @deprecated */
   bool isMpGDAllocated;
@@ -262,6 +270,13 @@ public:
 
     delete [] _d2phidxideta;
     delete [] _d2phidxideta_memory;
+    
+    delete [] _phi_bdry;
+    delete [] _phi_memory_bdry;
+    delete [] _dphidxi_bdry;
+    delete [] _dphidxi_memory_bdry;
+    delete [] _dphideta_bdry;
+    delete [] _dphideta_memory_bdry;
 
   };
 
@@ -296,7 +311,9 @@ public:
   inline double* GetPhi(const unsigned &ig) const { return _phi[ig]; }
   inline double* GetDPhiDXi(const unsigned &ig) const { return _dphidxi[ig]; }
   inline double* GetDPhiDEta(const unsigned &ig) const { return _dphideta[ig]; }
-
+  
+  void ShapeAtBoundary(const vector < vector < double > >& vt_vol, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+  
 private:
   double **_phi;
   double *_phi_memory;
@@ -312,6 +329,14 @@ private:
 
   double **_d2phidxideta;
   double *_d2phidxideta_memory;
+  
+  // values at boundary gauss points
+  double **_phi_bdry;
+  double *_phi_memory_bdry;
+  double **_dphidxi_bdry;
+  double *_dphidxi_memory_bdry;
+  double **_dphideta_bdry;
+  double *_dphideta_memory_bdry;
 };
 
 class elem_type_3D : public elem_type {
