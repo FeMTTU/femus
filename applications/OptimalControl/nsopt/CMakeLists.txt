@@ -12,3 +12,7 @@ ADD_SUBDIRECTORY(./opt_lift)
 
 #control is with p
 ADD_SUBDIRECTORY(./control_p)
+
+
+#compatibility condition on boundary _boundary integral
+ADD_SUBDIRECTORY(./opt_bdry_ctrl)
