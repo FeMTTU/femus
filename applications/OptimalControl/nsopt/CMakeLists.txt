@@ -9,3 +9,6 @@ ADD_SUBDIRECTORY(./Stokes_dist_adj)
 
 #testOPT - Stokes equation with distributed control - lifting - 3x3 block
 ADD_SUBDIRECTORY(./opt_lift)
+
+#control is with p
+ADD_SUBDIRECTORY(./control_p)
