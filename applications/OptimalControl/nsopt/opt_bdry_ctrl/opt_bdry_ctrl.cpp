@@ -21,6 +21,8 @@
 #include <stdio.h>
 
 
+#define DOUBLE_VAR adept::adouble
+
 
 using namespace femus;
 
@@ -306,8 +308,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 
   if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
   
-  vector < vector < adept::adouble > >  solV(dim);    // local solution
-   vector< vector < adept::adouble > > aResV(dim);    // local redidual vector
+  vector < vector < DOUBLE_VAR > >  solV(dim);    // local solution
+   vector< vector < DOUBLE_VAR > > aResV(dim);    // local redidual vector
    
  for (unsigned  k = 0; k < dim; k++) {
     solV[k].reserve(maxSize);
@@ -334,8 +336,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
-  vector < adept::adouble >  solP; // local solution
-  vector< adept::adouble > aResP; // local redidual vector
+  vector < DOUBLE_VAR >  solP; // local solution
+  vector< DOUBLE_VAR > aResP; // local redidual vector
   
   solP.reserve(maxSize);
   aResP.reserve(maxSize);
@@ -359,8 +361,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 
   if (dim == 3) solVPdeadjIndex[2] = mlPdeSys->GetSolPdeIndex("WADJ");
   
-  vector < vector < adept::adouble > >  solVadj(dim);    // local solution
-   vector< vector < adept::adouble > > aResVadj(dim);    // local redidual vector
+  vector < vector < DOUBLE_VAR > >  solVadj(dim);    // local solution
+   vector< vector < DOUBLE_VAR > > aResVadj(dim);    // local redidual vector
    
  for (unsigned  k = 0; k < dim; k++) {
     solVadj[k].reserve(maxSize);
@@ -386,8 +388,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   unsigned solPPdeadjIndex;
   solPPdeadjIndex = mlPdeSys->GetSolPdeIndex("PADJ");    // get the position of "P" in the pdeSys object
 
-  vector < adept::adouble >  solPadj; // local solution
-  vector< adept::adouble > aResPadj; // local redidual vector
+  vector < DOUBLE_VAR >  solPadj; // local solution
+  vector< DOUBLE_VAR > aResPadj; // local redidual vector
   
   solPadj.reserve(maxSize);
   aResPadj.reserve(maxSize);
@@ -412,8 +414,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 
   if (dim == 3) solVPdectrlIndex[2] = mlPdeSys->GetSolPdeIndex("WCTRL");
   
-  vector < vector < adept::adouble > >  solVctrl(dim);    // local solution
-   vector< vector < adept::adouble > > aResVctrl(dim);    // local redidual vector
+  vector < vector < DOUBLE_VAR > >  solVctrl(dim);    // local solution
+   vector< vector < DOUBLE_VAR > > aResVctrl(dim);    // local redidual vector
    
  for (unsigned  k = 0; k < dim; k++) {
     solVctrl[k].reserve(maxSize);
@@ -440,8 +442,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   unsigned solPPdectrlIndex;
   solPPdectrlIndex = mlPdeSys->GetSolPdeIndex("PCTRL");    // get the position of "P" in the pdeSys object
 
-  vector < adept::adouble >  solPctrl; // local solution
-  vector< adept::adouble > aResPctrl; // local redidual vector
+  vector < DOUBLE_VAR >  solPctrl; // local solution
+  vector< DOUBLE_VAR > aResPctrl; // local redidual vector
   
   solPctrl.reserve(maxSize);
   aResPctrl.reserve(maxSize);
@@ -621,11 +623,297 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 //CTRL###################################################################
 
 
+      
+//       // ********************** Gauss point loop *******************************
+//       for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[kelGeom][SolFEType[vel_type_pos]]->GetGaussPointNumber(); ig++) {
+// 	
+// 	// *** get Jacobian and test function and test function derivatives ***
+//       for(int fe=0; fe < NFE_FAMS; fe++) {
+// 	ml_prob._ml_msh->_finiteElement[kelGeom][fe]->Jacobian(coordX,ig,weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
+//       }
+//          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
+//   	ml_prob._ml_msh->_finiteElement[kelGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+// 
+// 
+//  //begin unknowns eval at gauss points ********************************
+// 	for(unsigned unk = 0; unk < /*n_vars*/ n_unknowns; unk++) {
+// 	  SolVAR[unk]=0;
+// 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
+// 	    gradSolVAR[unk][ivar2]=0; 
+// 	  }
+// 	  unsigned SolIndex = mlSol->GetIndex       (Solname[unk].c_str());
+// 	  unsigned SolType  = mlSol->GetSolutionType(Solname[unk].c_str());
+// 	  
+// 	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
+// 	    double soli   = (*sol->_Sol[SolIndex])(node_pos_sol[ SolFEType[unk] ][i]);
+// // 	    double soli = (*sol->_Sol[SolIndex])(msh->GetMetisDof(node_pos_sol[ SolFEType[press_type_pos] ][i],SolType));
+// 	    SolVAR[unk] += phi_gss_fe[ SolFEType[unk] ][i]*soli;
+// 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
+// 	      gradSolVAR[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2]*soli; 
+// 	    }
+// 	  }
+// 	  
+// 	}  
+//  //end unknowns eval at gauss points ********************************
+// 	
+// 	
+// 	
+// 	
+// 	
+//   //begin NS block row *********************************
+//      for(unsigned ivar_block=0; ivar_block<dim; ivar_block++) {  //1st row blocks A B' 
+// 	// *** phi_i loop ***
+// 	for(unsigned i_u=0; i_u < Sol_n_el_dofs[vel_type_pos]; i_u++) { //1st row
+// 	
+// 	  //*************************************************
+// // 	  double Lap_rhs_i=0;
+// // 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) { //RHS column Velocity values
+// // 	      Lap_rhs_i += phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar2]*gradSolVAR[ivar_block][ivar2];
+// // 	    }
+// // 	    
+// // 	    Res[SolPdeIndex[ivar_block]][i_u] += ( -IRe*Lap_rhs_i + /*Picard iteration*/SolVAR[dim]*phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_block] + force[ivar_block] * phi_gss_fe[SolFEType[vel_type_pos]][i_u])*weight;
+// 	  //***************************************************
+// 	  Res[SolPdeIndex[ivar_block]][i_u] = 5.; // testing with identity
+// 	   
+// 	   
+// 	   
+// 	   // *** phi_j loop *** 
+// 	   for(unsigned j_u=0; j_u < Sol_n_el_dofs[vel_type_pos]; j_u++) { // Matrix 4x4 block 1st row vel values of 3x3 block, especially A
+// 
+// 	     //**************************************************
+// // 	    double Lap_ij=0;
+// // 	      for(unsigned ivar_lap=0; ivar_lap<dim; ivar_lap++) {
+// // 		Lap_ij  += phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_lap]*phi_x_gss_fe[SolFEType[vel_type_pos]][j_u*dim+ivar_lap];
+// // 	      }
+// // 
+// // 		Jac[ SolPdeIndex[ivar_block] ][ SolPdeIndex[ivar_block] ][ i_u*Sol_n_el_dofs[vel_type_pos]+j_u ] += ( IRe*Lap_ij)*weight;
+// 	      //**************************************************
+// 	     Jac[ SolPdeIndex[ivar_block] ][ SolPdeIndex[ivar_block] ][ i_u*Sol_n_el_dofs[vel_type_pos]+j_u ] = 1.; // reserving Identity values
+// 	      
+// 	    }//end phij loop
+// 	      
+// 	      
+// 	      
+// 	      //************************************************************
+// // 	    // *** phiP_j loop ***
+// // 	      for(unsigned j_p = 0; j_p < Sol_n_el_dofs[press_type_pos]; j_p++){ // Matrix block 1st row's last col values, especially B' 
+// // 		Jac[ SolPdeIndex[ivar_block] ][ SolPdeIndex[press_type_pos] ][ i_u*Sol_n_el_dofs[press_type_pos]+j_p ]  -=  phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_block]*phi_gss_fe[SolFEType[press_type_pos]][j_p]*weight;
+// // 	      }//end phiP_j loop
+// 	      //************************************************************
+// 	      
+// 	      
+// 	    }  //end phii loop
+// 	    
+//         }  //end ivar_block
+//    //end NS block row *********************************
+// 
+//    
+//    
+//    
+//    
+//    
+//    //begin div u block row *********************************
+//     for(unsigned ivar_block=0; ivar_block<1; ivar_block++) { // Matrix block 2nd row values, B and null
+//       
+// 	  //*******************************************************************
+// // 	  double div = 0;
+// // 	  for(unsigned ivar=0; ivar<dim; ivar++) {
+// // 	    div += gradSolVAR[ivar][ivar];
+// // 	  }
+// 	  //********************************************************************
+//       
+// 	for(unsigned i_p=0; i_p < Sol_n_el_dofs[press_type_pos]; i_p++) { //RHS column Pressure values
+// 
+// 	    //************************************************************************
+// // 	  //RESIDUALS B block ===========================
+// // 	  Res[SolPdeIndex[press_type_pos]][i_p] += phi_gss_fe[SolFEType[press_type_pos]][i_p]*div*weight;
+// // // 	  Res[SolPdeIndex[press_type_pos]][i_p] += (phiP_gss[i]*div + /*penalty*ILambda*phiP_gss[i]*SolVAR[dim]*/ 
+// // // 	                             + 0.*((hk*hk)/(4.*IRe))*alpha*(GradSolP[0]*phiV_x_gss[i*dim + 0] + GradSolP[1]*phiV_x_gss[i*dim + 1]) )*weight; //REMOVED !!
+// 	  //*********************************************************************
+// 	  
+// 	  Res[SolPdeIndex[press_type_pos]][i_p]=2.;
+// 	  
+// 	}  //end phiP_i loop
+// 
+// 	    // *** phi_j loop ***
+//     for(unsigned jvar_block=0; jvar_block<dim; jvar_block++) {
+//      for(unsigned i_p=0; i_p<Sol_n_el_dofs[press_type_pos]; i_p++) {
+// 	 for(unsigned j_u = 0; j_u < Sol_n_el_dofs[press_type_pos/*vel_type_pos*/]; j_u++) { // Matrix block 2nd row values, especially B
+// 		Jac[ SolPdeIndex[press_type_pos] ][ SolPdeIndex[press_type_pos/*jvar_block*/] ][ i_p*Sol_n_el_dofs[press_type_pos/*vel_type_pos*/]+j_u ] =1.;
+// 	
+// 		//***************************************************
+// // 	   Jac[ SolPdeIndex[press_type_pos] ][ SolPdeIndex[jvar_block] ][ i_p*Sol_n_el_dofs[vel_type_pos]+j_u ] -= phi_gss_fe[SolFEType[press_type_pos]][i_p]*phi_x_gss_fe[SolFEType[vel_type_pos]][j_u*dim+jvar_block]*weight;
+// 	        //********************************************************
+// 	   
+// 		}  //end phij loop
+// 	     }//end phiP_i loop
+// 	     
+// // 	if(assembleMatrix * penalty){  //block nDofsP
+// // 	  // *** phi_i loop ***
+// // 	  for(unsigned i=0; i<nDofsP; i++){
+// // 	    // *** phi_j loop ***
+// // 	    for(unsigned j=0; j<nDofsP; j++){
+// // 	      //Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j]-= ILambda*phiP_gss[i]*phiP_gss[j]*weight;
+// // 	      for(unsigned ivar=0; ivar<dim; ivar++) {
+// // // 	        Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j] -= ((hk*hk)/(4.*IRe))*alpha*(phiV_x_gss[i*dim + ivar]*phiV_x_gss[j*dim + ivar])*weight; //REMOVED !!
+// // 		Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j] -= 0.;
+// // 	      }
+// // 	    }
+// // 	  }
+// // 	}   //end if penalty	     
+// 	     
+//          } //end column u jvar 
+//  
+//        }  
+//    //end div u block row *********************************
+//    
+//    double vel_desired[2] = {10.,0.};
+// 
+//    
+//    
+// // /*   
+// // //     //begin NSADJ block row *********************************
+// //      for(unsigned ivar_block=0; ivar_block<dim; ivar_block++) {  //3rd row blocks I 
+// //        unsigned ivar_block_adj=ivar_block+adj_pos_begin;
+// // 	// *** phi_i loop ***
+// // 	for(unsigned i_u=0; i_u < Sol_n_el_dofs[adj_vel_type_pos]; i_u++) { //RHS 2nd group vel
+// // 	    
+// // 	    //*********************************************************************
+// // // 	    double Lap_rhs_i=0;
+// // // 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) { //RHS column Velocity values
+// // // 	      Lap_rhs_i += phi_x_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar2]*gradSolVAR[ivar_block_adj][ivar2];
+// // // 	    }
+// // 	    
+// // // 	    Res[SolPdeIndex[ivar_block_adj]][i_u] += 0.*( -IRe*Lap_rhs_i + /*Picard iteration*/SolVAR[dim]*phi_x_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block] +(/*SolVAR[ivar_block]*/- vel_desired[ivar_block])* phi_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block] )*weight;
+// // 
+// // 
+// // 	    
+// // // // 	     Res[SolPdeIndex[ivar_block]][i_u] -=/* fRHS[ivar_block-adj_pos_begin] */0. *phi_gss_fe[SolFEType[ivar_block]][i_u] *weight;
+// // 
+// // 	  //*************************************************************************************
+// // 	  Res[SolPdeIndex[ivar_block_adj]][i_u]=7.;
+// // 	  
+// // 	  
+// // 	    // *** phi_j loop ***
+// // 	    for(unsigned j_u=0; j_u < Sol_n_el_dofs[adj_vel_type_pos]; j_u++) { // Matrix 3x3 block 3rd row vel values, I
+// // 
+// // 		//***************************************************************************
+// // // 	    double Lap_ij=0;
+// // // 	      for(unsigned ivar_lap=0; ivar_lap<dim; ivar_lap++) {
+// // // 		Lap_ij  += phi_gss_fe[SolFEType[adj_pos_begin]][i_u*dim+ivar_lap]*phi_gss_fe[SolFEType[adj_pos_begin]][j_u*dim+ivar_lap];
+// // // 	      }
+// // 
+// // // 		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[ivar_block_adj] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos]+j_u ] += (IRe* Lap_ij)*weight;
+// // // 		
+// // // // 		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[ivar_block] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos]+j_u ] -=SolVAR[ivar_block]* phi_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block]*weight;
+// // 
+// // 		//***********************************************************************************
+// // 		
+// // 		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[ivar_block_adj] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos]+j_u ] = 1.;
+// // 		
+// // 	      }//end phij loop
+// // 	      
+// // 	      
+// // 	      
+// // 	     	    
+// // 	  
+// // // 	      	    // *** phiP_j loop ***
+// // // 	      for(unsigned j_p = 0; j_p < Sol_n_el_dofs[press_type_pos]; j_p++){ // Matrix block 1st row's last col values, especially B' 
+// // // // 		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[adj_vel_type_pos] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos]+j_p ]  -= SolVAR[ivar_block]* phi_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block]*weight;
+// // // 
+// // // 		Jac[ SolPdeIndex[ivar_block_adj] ][ SolPdeIndex[press_type_pos] ][ i_u*Sol_n_el_dofs[adj_vel_type_pos+press_type_pos]+j_p]  -=  phi_x_gss_fe[SolFEType[adj_vel_type_pos]][i_u*dim+ivar_block]*phi_gss_fe[SolFEType[press_type_pos]][j_p]*weight;
+// // // 	      }//end phiP_j loop
+// // 
+// // 
+// // 
+// // 
+// // 
+// // 	      
+// // 	    }  //end phii loop
+// // 	    
+// //         }  //end ivar_block
+// //     //end NSADJ block row **********************************/
+// 
+//     //begin DIV LAMBDA block row *********************************
+// //         for(unsigned ivar_block=0; ivar_block<1; ivar_block++) { // Matrix block 2nd row values, B and null
+// //       
+// // 	  double div = 0;
+// // 	  for(unsigned ivar=0; ivar<dim; ivar++) {
+// // 	    div += gradSolVAR[ivar][ivar];
+// // 	  }
+// // 	  
+// // 	for(unsigned i_p=0; i_p < Sol_n_el_dofs[press_type_pos]; i_p++) { //RHS column Pressure values
+// // 
+// // 	  //RESIDUALS B block ===========================
+// // 	  Res[SolPdeIndex[press_type_pos]][i_p] += phi_gss_fe[SolFEType[press_type_pos]][i_p]*div*weight;
+// // // 	  Res[SolPdeIndex[press_type_pos]][i_p] += (phiP_gss[i]*div + /*penalty*ILambda*phiP_gss[i]*SolVAR[dim]*/ 
+// // // 	                             + 0.*((hk*hk)/(4.*IRe))*alpha*(GradSolP[0]*phiV_x_gss[i*dim + 0] + GradSolP[1]*phiV_x_gss[i*dim + 1]) )*weight; //REMOVED !!
+// // 	  	}  //end phiP_i loop
+// // 
+// // 	    // *** phi_j loop ***
+// //     for(unsigned jvar_block=0; jvar_block<dim; jvar_block++) {
+// //      for(unsigned i_p=0; i_p<Sol_n_el_dofs[press_type_pos]; i_p++) {
+// // 	 for(unsigned j_u = 0; j_u < Sol_n_el_dofs[vel_type_pos]; j_u++) { // Matrix block 2nd row values, especially B
+// // 		Jac[ SolPdeIndex[press_type_pos] ][ SolPdeIndex[jvar_block] ][ i_p*Sol_n_el_dofs[vel_type_pos]+j_u ] -= phi_gss_fe[SolFEType[press_type_pos]][i_p]*phi_x_gss_fe[SolFEType[vel_type_pos]][j_u*dim+jvar_block]*weight;
+// // 	        }  //end phij loop
+// // 	     }//end phiP_i loop
+// // 	          
+// //          } //end column u jvar 
+// //  
+// //        }  
+// 
+//    //end DIV LAMBDA block row *********************************
+// 
+//  
+//  
+//       }  // end gauss point loop
+//       
+//       
+// //       //***************************boundary loop ************************************************************************
+// //       unsigned nfaces = el->GetElementFaceNumber(kel);
+// //       
+// // 	std::vector< double > xx_bd(dim,0.);
+// // 	vector < double > normal_bd(dim,0);   
+// // 	// loop on faces
+// // 
+// // 	
+// // 	for(unsigned jface=0; jface < nfaces; jface++) {
+// // 	  // look for boundary faces
+// // 	  if(el->GetFaceElementIndex(kel,jface)<0) {
+// // 	    unsigned int face = -(msh->el->GetFaceElementIndex(kel,jface)+1);
+// //              double tau=0.;
+// // 	     
+// // 	     bool flag_bd = mlSol->_SetBoundaryConditionFunction(xx_bd,"P",tau,face,0.);
+// // 	    if( ! flag_bd /*&& tau!=0.*/){
+// // 	      unsigned nDofsV_bd      = msh->el->GetElementFaceDofNumber(kel,jface,SolFEType[vel_type_pos]);
+// // 	      unsigned nDofsX_bd = msh->el->GetElementFaceDofNumber(kel,jface,coordXType);
+// //                 phiV_gss_bd.resize(nDofsV_bd);
+// //                 phiV_x_gss_bd.resize(nDofsV_bd*dim);
+// // 	      const unsigned felt = msh->el->GetElementFaceType(kel, jface);
+// // 	      for(unsigned i=0; i < nDofsX_bd; i++) {
+// // 		unsigned inode = msh->el->GetFaceVertexIndex(kel,jface,i)-1u;
+// // 		unsigned inode_Metis = msh->GetMetisDof(inode,coordXType);
+// // 		for(unsigned idim=0; idim<dim; idim++) {
+// // 		  coordX_bd[idim][i] = (*msh->_coordinate->_Sol[idim])(inode_Metis);
+// // 		}
+// // 	      }
+// // 	      for(unsigned igs=0; igs < msh->_finiteElement[felt][SolFEType[vel_type_pos]]->GetGaussPointNumber(); igs++) {
+// // 		msh->_finiteElement[felt][SolFEType[vel_type_pos]]->JacobianSur(coordX_bd,igs,weight_bd,phiV_gss_bd,phiV_x_gss_bd,normal_bd);
+// // 		// *** phi_i loop ***
+// // 		for(unsigned i_bd=0; i_bd < nDofsV_bd; i_bd++) {
+// // 		  unsigned int i_vol = msh->el->GetLocalFaceVertexIndex(kel, jface, i_bd);
+// // 		for(unsigned idim=0; idim<dim; idim++) {
+// // 		  Res[idim][i_vol]   += -1. * weight_bd *  tau *phiV_gss_bd[i_bd]* normal_bd[idim];
+// //  		 }//velocity blocks
+// // 		}
+// // 	      }
+// // 	    } //flag_bd
+// // 	  }
+// // 	}    
+// 
+//       //***************************************************************************************************************
 
-
-      // start a new recording of all the operations involving adept::adouble variables
-      s.new_recording();
-
+      
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
 
@@ -635,8 +923,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
         phiP_gss = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 
 	
-        vector < adept::adouble > solV_gss(dim, 0);
-        vector < vector < adept::adouble > > gradSolV_gss(dim);
+        vector < DOUBLE_VAR > solV_gss(dim, 0);
+        vector < vector < DOUBLE_VAR > > gradSolV_gss(dim);
 
         for (unsigned  k = 0; k < dim; k++) {
           gradSolV_gss[k].resize(dim);
@@ -655,7 +943,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
           }
         }
 
-        adept::adouble solP_gss = 0;
+        DOUBLE_VAR solP_gss = 0;
 
         for (unsigned i = 0; i < nDofsP; i++) {
           solP_gss += phiP_gss[i] * solP[i];
@@ -669,8 +957,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
         phiPadj_gss = msh->_finiteElement[ielGeom][solPadjType]->GetPhi(ig);
 
 	
-        vector < adept::adouble > solVadj_gss(dim, 0);
-        vector < vector < adept::adouble > > gradSolVadj_gss(dim);
+        vector < DOUBLE_VAR > solVadj_gss(dim, 0);
+        vector < vector < DOUBLE_VAR > > gradSolVadj_gss(dim);
 
         for (unsigned  k = 0; k < dim; k++) {
           gradSolVadj_gss[k].resize(dim);
@@ -689,7 +977,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
           }
         }
 
-        adept::adouble solPadj_gss = 0;
+        DOUBLE_VAR solPadj_gss = 0;
 
         for (unsigned i = 0; i < nDofsPadj; i++) {
           solPadj_gss += phiPadj_gss[i] * solPadj[i];
@@ -705,8 +993,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
         phiPctrl_gss = msh->_finiteElement[ielGeom][solPctrlType]->GetPhi(ig);
 
 	
-        vector < adept::adouble > solVctrl_gss(dim, 0);
-        vector < vector < adept::adouble > > gradSolVctrl_gss(dim);
+        vector < DOUBLE_VAR > solVctrl_gss(dim, 0);
+        vector < vector < DOUBLE_VAR > > gradSolVctrl_gss(dim);
 
         for (unsigned  k = 0; k < dim; k++) {
           gradSolVctrl_gss[k].resize(dim);
@@ -725,7 +1013,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
           }
         }
 
-        adept::adouble solPctrl_gss = 0;
+        DOUBLE_VAR solPctrl_gss = 0;
 
         for (unsigned i = 0; i < nDofsPctrl; i++) {
           solPctrl_gss += phiPctrl_gss[i] * solPctrl[i];
@@ -736,14 +1024,14 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 
         // *** phiV_i loop ***
         for (unsigned i = 0; i < nDofsV; i++) {
-          vector < adept::adouble > NSV_gss(dim, 0.);
-	  vector < adept::adouble > NSVadj_gss(dim, 0.);
-	  vector < adept::adouble > NSVctrl_gss(dim, 0.);
-	  vector < adept::adouble > V_Vctrl_gss(dim, 0.);
-	  vector < adept::adouble > Vadj_V_gss(dim, 0.);
-	  vector < adept::adouble > Vadj_Vctrl_gss(dim, 0.);
-	  vector < adept::adouble > Vctrl_V_gss(dim, 0.);
-	  vector < adept::adouble > Vctrl_Vadj_gss(dim, 0.);
+          vector < DOUBLE_VAR > NSV_gss(dim, 0.);
+	  vector < DOUBLE_VAR > NSVadj_gss(dim, 0.);
+	  vector < DOUBLE_VAR > NSVctrl_gss(dim, 0.);
+	  vector < DOUBLE_VAR > V_Vctrl_gss(dim, 0.);
+	  vector < DOUBLE_VAR > Vadj_V_gss(dim, 0.);
+	  vector < DOUBLE_VAR > Vadj_Vctrl_gss(dim, 0.);
+	  vector < DOUBLE_VAR > Vctrl_V_gss(dim, 0.);
+	  vector < DOUBLE_VAR > Vctrl_Vadj_gss(dim, 0.);
 	  
           for (unsigned  kdim = 0; kdim < dim; kdim++) { // velocity block row
 	      
@@ -1008,8 +1296,6 @@ double ComputeIntegral_AD(MultiLevelProblem& ml_prob) {
 // Vel_desired##################################################################
 
 
-
-// vector<adept::adouble> integralval;
 vector<double> integral(dim);
 
 double  integral_target_alpha = 0.;
@@ -1102,9 +1388,6 @@ double	integral_gamma  = 0.;
 //     }
  //DESIRED VEL###################################################################
 
-
-      // start a new recording of all the operations involving adept::adouble variables
-      s.new_recording();
 
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
