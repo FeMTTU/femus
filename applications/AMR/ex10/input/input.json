@@ -2,7 +2,7 @@
 {
     // mesh
    "mesh" : {
-                "filename" : "./input/lshape_quad.neu"
+                "filename" : "./input/lshape_tri.neu"
              },
 
     // Properties
@@ -58,9 +58,9 @@
     // MG Solver properties
     "mgsolver" : { "nlevels" : 1,
 		   "AMR" : "yes",
-		   "maxAMRlevels" : 15,
+		   "maxAMRlevels" : 100,
 		   "AMRnorm" : "l2",
-		   "AMRthreshold": 0.001,
+		   "AMRthreshold": 0.00001,
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,
                    "smoother_type" : "gmres",
