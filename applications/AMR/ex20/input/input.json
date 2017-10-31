@@ -3,6 +3,7 @@
     // mesh
     "mesh" : {
                 "filename" : "./input/square_quad.neu"
+                // square_quad.neu or square_tri.neu
              },
 
     // Properties
@@ -38,7 +39,7 @@
     "mgsolver" : { "nlevels" : 1,
 		   "AMR" : "yes",
 		   "maxAMRlevels" : 15,
-		   "AMRnorm" : "H1",
+		   "AMRnorm" : "H1", // H1 or l2
 		   "AMRthreshold": 0.001,
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,

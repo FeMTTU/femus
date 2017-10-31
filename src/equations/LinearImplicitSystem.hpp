@@ -164,6 +164,10 @@ namespace femus {
                             bool (* SetRefinementFlag)(const std::vector < double > &x,
                                 const int &ElemGroupNumber, const int &level) = NULL);
      
+      void SetAMRghborThresholdValue(const double &neighborThresholdValue){
+	_AMReighborThresholdValue = neighborThresholdValue;
+      }
+      
       /** Set the options of the Schur-Vanka smoother */
       //void SetVankaSchurOptions(bool Schur, short unsigned NSchurVar);
       void SetNumberOfSchurVariables(const unsigned short &NSchurVar);
@@ -272,6 +276,7 @@ namespace femus {
       bool _AMRtest;
       unsigned _maxAMRlevels;
       short _AMRnorm;
+      double _AMReighborThresholdValue;
       std::vector <double> _AMRthreshold;
 
       vector <bool> _SparsityPattern;

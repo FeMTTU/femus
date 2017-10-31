@@ -2,7 +2,7 @@
 {
     // mesh
     "mesh" : {
-                "filename" : "./input/square_quad.neu"
+                "filename" : "./input/square_tri.neu"
              },
 
     // Properties

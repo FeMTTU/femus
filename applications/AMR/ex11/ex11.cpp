@@ -403,8 +403,11 @@ int main(int argc, char** argv)
   system2.init();
 
   //system2.SetAMRSetOptions(AMR,AMRlevels,AMRnorm,AMRthreshold,SetRefinementFlag);
+  
   system2.SetAMRSetOptions(AMR, maxAMRlevels, AMRnorm, AMRthreshold);
-
+  double neighborThresholdValue = .0;
+  system2.SetAMRghborThresholdValue(neighborThresholdValue);
+  
   //common smoother option
   //system2.SetSolverFineGrids(GMRES);
   system2.SetSolverFineGrids(RICHARDSON);
