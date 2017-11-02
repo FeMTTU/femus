@@ -84,7 +84,7 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
 
 void AssembleStokesOpt(MultiLevelProblem& ml_prob);    
 
-double ComputeIntegral_AD(MultiLevelProblem& ml_prob);
+double ComputeIntegral(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
 
@@ -198,7 +198,7 @@ int main(int argc, char** args) {
   system_opt.init();
   system_opt.MLsolve();
 
-    ComputeIntegral_nonAD(mlProb);
+    ComputeIntegral(mlProb);
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -1139,7 +1139,7 @@ void AssembleStokesOpt(MultiLevelProblem& ml_prob) {
 }
 
 
-double ComputeIntegral_nonAD(MultiLevelProblem& ml_prob) {
+double ComputeIntegral(MultiLevelProblem& ml_prob) {
 
 
    LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("SOpt");   // pointer to the linear implicit system named "Poisson"

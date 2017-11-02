@@ -99,15 +99,11 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
 
 
 
-
-
-
-
 // void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob);
 
 void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
-double ComputeIntegral_AD(MultiLevelProblem& ml_prob);
+double ComputeIntegral(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
 
@@ -233,7 +229,7 @@ int main(int argc, char** args) {
   system_opt.init();
   system_opt.MLsolve();
 
-    ComputeIntegral_AD(mlProb);
+    ComputeIntegral(mlProb);
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -882,8 +878,7 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 }
 
 
-double ComputeIntegral_AD(MultiLevelProblem& ml_prob) {
-    adept::Stack& s = FemusInit::_adeptStack;
+double ComputeIntegral(MultiLevelProblem& ml_prob) {
 
    NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the linear implicit system named "Poisson"
    const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -1101,10 +1096,6 @@ double	integral_gamma  = 0.;
       }
 //     }
  //DESIRED VEL###################################################################
-
-
-      // start a new recording of all the operations involving adept::adouble variables
-      s.new_recording();
 
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
