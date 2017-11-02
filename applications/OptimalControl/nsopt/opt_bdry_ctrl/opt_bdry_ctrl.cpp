@@ -9,14 +9,14 @@
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+// #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 // #include "MultiLevelMesh.hpp"
-// #include "LinearImplicitSystem.hpp"
+#include "LinearImplicitSystem.hpp"
 // #include "WriterEnum.hpp"
 
-#include "Fluid.hpp"
-#include "Parameter.hpp"
+// #include "Fluid.hpp"
+// #include "Parameter.hpp"
 #include "Files.hpp"
 #include <stdio.h>
 
@@ -29,7 +29,7 @@ using namespace femus;
  double force[3] = {0./*1.*/,0.,0.};
  double Vel_desired[3] = {0.125,0.,0.};
  double alpha_val = 1.;
- double beta_val = 1.e-5;
+ double beta_val = 1.;
  double gamma_val = 1.;
  
   
@@ -57,37 +57,17 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
   bool dirichlet = true;
    value = 0.;
 
-//       if (facename == 4) {  //left
-// 	  if (!strcmp(SolName, "V"))    { 
-// 	      if (x[1] < 0.5 && x[1] > -0.5 ) value = 1.; } 
-//       }
-// 
-//       
-// //       if (!strcmp(SolName, "P"))  { value = 0.;      }
-  
-
-   
-// // TOP ==========================  
-//       if (facename == 3) {
-//        if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
-//   else if (!strcmp(SolName, "VCTRL"))    {      value = 0.; } 
-// 	
-//       }   
-  
+ 
   
 // LEFT ==========================  
       if (facename == 4) { 
 	if(x[1] > 0.3  && x[1] < 0.7){
-		if (!strcmp(SolName, "UCTRL"))    { /*value = 0.; */dirichlet = false; }
-	    else if (!strcmp(SolName, "VCTRL"))    { /* dirichlet = false;  */  value = 0.; } 
+		if (!strcmp(SolName, "U"))    { dirichlet = false; }	//state	
+	    else if (!strcmp(SolName, "V"))    {  value = 0.; } 	//state
+	    else if (!strcmp(SolName, "g")) 	{dirichlet = false; }	//control g on boundary
 	}
       }
-      
-// RIGHT ==========================  
-     if (facename == 2) {
-       if (!strcmp(SolName, "UCTRL"))    { dirichlet = false; }
-  else if (!strcmp(SolName, "VCTRL"))    { value = 0.; } 
-      }
+
       
       if (!strcmp(SolName, "P"))  { 
 	 dirichlet = false;
@@ -102,12 +82,7 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
 
 
 
-
-
-
-// void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob);
-
-void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+void AssembleStokesOpt(MultiLevelProblem& ml_prob);    
 
 double ComputeIntegral_AD(MultiLevelProblem& ml_prob);
 
@@ -115,32 +90,25 @@ int main(int argc, char** args) {
 
 
 
-  // init Petsc-MPI communicator
-  FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
+  FemusInit mpinit(argc, args, MPI_COMM_WORLD); 	// init Petsc-MPI communicator
 
-  // define multilevel mesh
-  MultiLevelMesh mlMsh;
-  // read coarse level mesh and generate finers level meshes
-  double scalingFactor = 1.;
+  MultiLevelMesh mlMsh;			// define multilevel mesh
+  double scalingFactor = 1.;		// read coarse level mesh and generate finers level meshes
+
+//    //Adimensional quantity (Lref,Uref)
+//   double Lref = 1.;
+//   double Uref = 1.;
+//  // *** apparently needed by non-AD assemble only **********************
+//   // add fluid material
+//   Parameter parameter(Lref,Uref);
 //   
-//   std::string med_file = "RectFracWithGroup.med";
-//   std::ostringstream mystream; 
-//   mystream << "./" << DEFAULT_INPUTDIR << "/" << med_file;
-//   const std::string infile = mystream.str();
-//  
-   //Adimensional quantity (Lref,Uref)
-  double Lref = 1.;
-  double Uref = 1.;
- // *** apparently needed by non-AD assemble only **********************
-  // add fluid material
-  Parameter parameter(Lref,Uref);
-  
-  // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,1,1,"Newtonian");
-  std::cout << "Fluid properties: " << std::endl;
-  std::cout << fluid << std::endl;
-  
-// *************************
+//   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
+//   Fluid fluid(parameter,1,1,"Newtonian");
+//   std::cout << "Fluid properties: " << std::endl;
+//   std::cout << fluid << std::endl;
+//   
+// // *************************
   
   
   
@@ -185,11 +153,9 @@ int main(int argc, char** args) {
   mlSol.AddSolution("VADJ", LAGRANGE, SECOND);
   if (dim == 3) mlSol.AddSolution("WADJ", LAGRANGE, SECOND);
   mlSol.AddSolution("PADJ", LAGRANGE, FIRST);
-  // control =====================  
-  mlSol.AddSolution("UCTRL", LAGRANGE, SECOND);
-  mlSol.AddSolution("VCTRL", LAGRANGE, SECOND);
-  if (dim == 3) mlSol.AddSolution("WCTRL", LAGRANGE, SECOND);
-  mlSol.AddSolution("PCTRL", LAGRANGE, FIRST);
+  // boundary condition =====================  
+  mlSol.AddSolution("g", LAGRANGE, FIRST);
+  mlSol.AddSolution("theta", LAGRANGE, ZERO);
   // control ===================== 
   
   
@@ -203,39 +169,36 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
 
-  mlProb.parameters.set<Fluid>("Fluid") = fluid;
+//   mlProb.parameters.set<Fluid>("Fluid") = fluid;
 
   // add system Poisson in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOpt");
+  LinearImplicitSystem& system_opt    = mlProb.add_system < LinearImplicitSystem > ("SOpt");
 
-  // NS ===================
+  // ST ===================
   system_opt.AddSolutionToSystemPDE("U");
   system_opt.AddSolutionToSystemPDE("V");
   if (dim == 3) system_opt.AddSolutionToSystemPDE("W");
   system_opt.AddSolutionToSystemPDE("P");
-//   // NSADJ ===================
+//   ADJ ===================
   system_opt.AddSolutionToSystemPDE("UADJ");
   system_opt.AddSolutionToSystemPDE("VADJ");
   if (dim == 3) system_opt.AddSolutionToSystemPDE("WADJ");
   system_opt.AddSolutionToSystemPDE("PADJ");
-  // NSCTRL ===================
-  system_opt.AddSolutionToSystemPDE("UCTRL");
-  system_opt.AddSolutionToSystemPDE("VCTRL");
-  if (dim == 3) system_opt.AddSolutionToSystemPDE("WCTRL");
-  system_opt.AddSolutionToSystemPDE("PCTRL");
+  // BD ===================
+  system_opt.AddSolutionToSystemPDE("g");
+  system_opt.AddSolutionToSystemPDE("theta");
   
   
   
   
   // attach the assembling function to system
-  system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
-//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
+   system_opt.SetAssembleFunction(AssembleStokesOpt);
     
   // initilaize and solve the system
   system_opt.init();
   system_opt.MLsolve();
 
-    ComputeIntegral_AD(mlProb);
+    ComputeIntegral_nonAD(mlProb);
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -251,29 +214,28 @@ int main(int argc, char** args) {
 }
 
 
-void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
+void AssembleStokesOpt(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
-  // call the adept stack object
-  adept::Stack& s = FemusInit::_adeptStack;
 
   //  extract pointers to the several objects that we are going to use
-  NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the linear implicit system named "NSOpt" which is actually StokesOpt
+  LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("SOpt");   // pointer to the linear implicit system named "NSOpt" which is actually StokesOpt
   const unsigned level = mlPdeSys->GetLevelToAssemble();
+  const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
   
-  Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
+  Mesh*          		msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  elem*          		 el = msh->el;  // pointer to the elem object in msh (level)
 
-  MultiLevelSolution*  mlSol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution*  	      mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution*    			sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
 
-  LinearEquationSolver* pdeSys  = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix*    JAC         	= pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
-  NumericVector*   RES          = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  LinearEquationSolver*     pdeSys  = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
+  SparseMatrix*    		JAC = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  NumericVector*   		RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   
@@ -283,15 +245,23 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
+  
+  
   //geometry *******************************
+   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+ 
   vector < vector < double > > coordX(dim);    // local coordinates
-
-  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE TENSOR-PRODUCT-QUADRATIC)
+  vector < vector < double > > coordX_bd(dim);    // local coordinates for boundary
 
   for (unsigned  k = 0; k < dim; k++) { 
     coordX[k].reserve(maxSize);
+    coordX_bd[k].reserve(maxSize);
   }
   //geometry *******************************
+  
+  
+  
+  
 
 //STATE######################################################################
   //velocity *******************************
@@ -309,11 +279,11 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   if (dim == 3) solVPdeIndex[2] = mlPdeSys->GetSolPdeIndex("W");
   
   vector < vector < DOUBLE_VAR > >  solV(dim);    // local solution
-   vector< vector < DOUBLE_VAR > > aResV(dim);    // local redidual vector
+//    vector< vector < DOUBLE_VAR > > aResV(dim);    // local redidual vector
    
  for (unsigned  k = 0; k < dim; k++) {
     solV[k].reserve(maxSize);
-    aResV[k].reserve(maxSize);
+//     aResV[k].reserve(maxSize);
   }
 
   
@@ -337,10 +307,10 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
   vector < DOUBLE_VAR >  solP; // local solution
-  vector< DOUBLE_VAR > aResP; // local redidual vector
+//   vector< DOUBLE_VAR > aResP; // local redidual vector
   
   solP.reserve(maxSize);
-  aResP.reserve(maxSize);
+//   aResP.reserve(maxSize);
   
   double* phiP_gss;
   //pressure *******************************
@@ -362,11 +332,11 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   if (dim == 3) solVPdeadjIndex[2] = mlPdeSys->GetSolPdeIndex("WADJ");
   
   vector < vector < DOUBLE_VAR > >  solVadj(dim);    // local solution
-   vector< vector < DOUBLE_VAR > > aResVadj(dim);    // local redidual vector
+//    vector< vector < DOUBLE_VAR > > aResVadj(dim);    // local redidual vector
    
  for (unsigned  k = 0; k < dim; k++) {
     solVadj[k].reserve(maxSize);
-    aResVadj[k].reserve(maxSize);
+//     aResVadj[k].reserve(maxSize);
   }
 
   
@@ -389,30 +359,30 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   solPPdeadjIndex = mlPdeSys->GetSolPdeIndex("PADJ");    // get the position of "P" in the pdeSys object
 
   vector < DOUBLE_VAR >  solPadj; // local solution
-  vector< DOUBLE_VAR > aResPadj; // local redidual vector
+//   vector< DOUBLE_VAR > aResPadj; // local redidual vector
   
   solPadj.reserve(maxSize);
-  aResPadj.reserve(maxSize);
+//   aResPadj.reserve(maxSize);
   
   double* phiPadj_gss;
   //pressure *******************************
 //ADJOINT######################################################################
 
   
-//CONTROL######################################################################
+//BOUNDARY######################################################################
   //velocity *******************************
   vector < unsigned > solVctrlIndex(dim);
   solVctrlIndex[0] = mlSol->GetIndex("UCTRL");    // get the position of "U" in the ml_sol object
   solVctrlIndex[1] = mlSol->GetIndex("VCTRL");    // get the position of "V" in the ml_sol object
 
-  if (dim == 3) solVctrlIndex[2] = mlSol->GetIndex("WCTRL");      // get the position of "V" in the ml_sol object
+ 
 
   unsigned solVctrlType = mlSol->GetSolutionType(solVctrlIndex[0]);    // get the finite element type for "u"
  vector < unsigned > solVPdectrlIndex(dim);
   solVPdectrlIndex[0] = mlPdeSys->GetSolPdeIndex("UCTRL");    // get the position of "U" in the pdeSys object
   solVPdectrlIndex[1] = mlPdeSys->GetSolPdeIndex("VCTRL");    // get the position of "V" in the pdeSys object
 
-  if (dim == 3) solVPdectrlIndex[2] = mlPdeSys->GetSolPdeIndex("WCTRL");
+ 
   
   vector < vector < DOUBLE_VAR > >  solVctrl(dim);    // local solution
    vector< vector < DOUBLE_VAR > > aResVctrl(dim);    // local redidual vector
@@ -423,18 +393,17 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   }
 
   
-  vector <double> phiVctrl_gss;  // local test function
-  vector <double> phiVctrl_x_gss; // local test function first order partial derivatives
-  vector <double> phiVctrl_xx_gss; // local test function second order partial derivatives
-
-  phiVctrl_gss.reserve(maxSize);
-  phiVctrl_x_gss.reserve(maxSize * dim);
-  phiVctrl_xx_gss.reserve(maxSize * dim2);
+  vector <double> phi_g_gss;  // local test function
+  vector <double> phi_g_x_gss; // local test function first order partial derivatives
+ 
+  phi_g_gss.reserve(maxSize);
+  phi_g_x_gss.reserve(maxSize * dim);
+ 
   
 
   //velocity *******************************
 
-  //pressure *******************************
+  //theta *******************************
   unsigned solPctrlIndex;
   solPctrlIndex = mlSol->GetIndex("PCTRL");    // get the position of "P" in the ml_sol object
   unsigned solPctrlType = mlSol->GetSolutionType(solPctrlIndex);    // get the finite element type for "u"
@@ -449,8 +418,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   aResPctrl.reserve(maxSize);
   
   double* phiPctrl_gss;
-  //pressure *******************************
-//CONTROL######################################################################
+  //theta *******************************
+//BOUNDARY######################################################################
 
 
   
@@ -458,12 +427,12 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
   //Nondimensional values ******************
   
-  double weight; // gauss point weight
-//   double weight_bd;
+  double weight	= 0.; // gauss point weight
+  double weight_bd = 0.;
   
   
   vector< int > JACDof; // local to global pdeSys dofs
-  JACDof.reserve(3 *(dim + 1) *maxSize);
+  JACDof.reserve(3 *(dim + 1) *maxSize);         //****NEED TO ADJUST THE SIZE*******
 
   vector< double > Res; // local redidual vector
   Res.reserve(3 *(dim + 1) *maxSize);
@@ -1170,10 +1139,10 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 }
 
 
-double ComputeIntegral_AD(MultiLevelProblem& ml_prob) {
-    adept::Stack& s = FemusInit::_adeptStack;
+double ComputeIntegral_nonAD(MultiLevelProblem& ml_prob) {
 
-   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the linear implicit system named "Poisson"
+
+   LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("SOpt");   // pointer to the linear implicit system named "Poisson"
    const unsigned level = mlPdeSys->GetLevelToAssemble();
  
 
@@ -1480,7 +1449,7 @@ double	integral_gamma  = 0.;
 
 
 // nonAD is in the old PETSc, edit this for the new PETSc
-// void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
+// void AssembleStokesOpt(MultiLevelProblem &ml_prob){
 //      
 //   //pointers
 //   LinearImplicitSystem& mlPdeSys  = ml_prob.get_system<LinearImplicitSystem>("NSOPT");
