@@ -248,22 +248,40 @@ int main(int argc, char** args) {
 
 
 
-
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return exp(10. * x[0]) * sin(pi * x[0]) * sin(pi * x[1]);
+  return exp(10. * x[0]) * sin(4. * pi * x[0]) * sin(4. * pi * x[1]);
 };
 
 void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
   double pi = acos(-1.);
-  solGrad[0]  = exp(10. * x[0]) * (10. * sin(pi * x[0]) + pi * cos(pi * x[0])) * sin(pi * x[1]);
-  solGrad[1]  = exp(10. * x[0]) * sin(pi * x[0]) * pi * cos(pi * x[1]);
+  solGrad[0]  = exp(10. * x[0]) * (10. * sin(4. * pi * x[0]) + 4. * pi * cos(4 * pi * x[0])) * sin( 4 * pi * x[1]);
+  solGrad[1]  = exp(10. * x[0]) * sin(4. * pi * x[0]) * 4. * pi * cos(4. * pi * x[1]);
 };
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return - 2. * exp(10. *x[0]) * (-10. * pi * cos(pi * x[0]) + (pi * pi- 50.) * sin(pi * x[0])) * sin(pi * x[1]);
+  return - 2 * exp(10 *x[0]) * (-10. * 4. * pi * cos(4. * pi * x[0]) + (4. * pi * 4. * pi- 50.) * sin(4. * pi * x[0])) * sin(4. * pi * x[1]);
 };
+
+
+
+
+// double GetExactSolutionValue(const std::vector < double >& x) {
+//   double pi = acos(-1.);
+//   return exp(10. * x[0]) * sin(pi * x[0]) * sin(pi * x[1]);
+// };
+// 
+// void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+//   double pi = acos(-1.);
+//   solGrad[0]  = exp(10. * x[0]) * (10. * sin(pi * x[0]) + pi * cos(pi * x[0])) * sin(pi * x[1]);
+//   solGrad[1]  = exp(10. * x[0]) * sin(pi * x[0]) * pi * cos(pi * x[1]);
+// };
+// 
+// double GetExactSolutionLaplace(const std::vector < double >& x) {
+//   double pi = acos(-1.);
+//   return - 2. * exp(10. *x[0]) * (-10. * pi * cos(pi * x[0]) + (pi * pi- 50.) * sin(pi * x[0])) * sin(pi * x[1]);
+// };
 
 
 
