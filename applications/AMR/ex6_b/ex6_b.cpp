@@ -64,7 +64,8 @@ int main(int argc, char** args) {
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/square_tri.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+//   mlMsh.ReadCoarseMesh("./input/square_tri.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -159,8 +160,8 @@ int main(int argc, char** args) {
     GetError(&mlSol);
     
     std::pair< double , double > norm = GetError (&mlSol);
-      H1normE[i][0]  = norm.first;
-      H1norm[i][0] = norm.second;
+      H1normE[i][2]  = norm.first;
+      H1norm[i][2] = norm.second;
     
     // print solutions
     std::vector < std::string > variablesToBePrinted;
@@ -171,7 +172,7 @@ int main(int argc, char** args) {
     
     //refine the mesh
     MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
-    bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(0.005, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));  //non-uniform
+    bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(5, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));  //non-uniform
     
     //bool elementsHaveBeenRefined = true; //uniform
     //meshcoarser.FlagAllElementsToBeRefined();//uniform
