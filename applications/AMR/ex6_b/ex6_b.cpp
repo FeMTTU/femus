@@ -640,7 +640,7 @@ std::pair < double, double > GetError(MultiLevelSolution* mlSol) {
    
   //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << (2.*sqrt(N)) / ( 3.*H1norm ) <<std::endl;
  
-  *sol->_Sol[errorIndex] *= (2.*sqrt(N)) / ( 3.*L2norm );
+  *sol->_Sol[errorIndex] *= (2.*sqrt(N)) / ( 3.*H1norm );
   
   std::pair < double, double > norm;
   norm.first  = H1normE;
