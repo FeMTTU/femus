@@ -25,7 +25,7 @@
 
 using namespace femus;
 
- double force[3] = {0./*1.*/,0.,0.};
+ double force[3] = {/*0.*/1.,0.,0.};
  double Vel_desired[3] = {0.125,0.,0.};
  double alpha_val = 1.;
  double beta_val = 1.e-5;
@@ -1228,14 +1228,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
   double normal_bd[3] = {0.,0.,0.};
   // geometry *******************************************
 
-  vector < vector < int > > node_pos_sol(NFE_FAMS); 
-  for(int i=0; i < NFE_FAMS; i++) { node_pos_sol[i].reserve(maxSize); }   
-//   vector < int > node_pos_sol_u; //2 
-//   vector < int > node_pos_sol_p; //0
-    // reserve
-//   node_pos_sol_u.reserve(maxSize);
-//   node_pos_sol_p.reserve( static_cast< unsigned > (ceil(pow(2,dim))));
-  
+ 
   
   // solution variables *******************************************
   const int n_vars = dim+1;
@@ -1321,12 +1314,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
   }
   
   //----------- dofs ------------------------------
-  vector < vector < double > > SolVAR(n_unknowns);
-  vector < vector < double > > gradSolVAR(n_unknowns);
+  vector < vector < double > > SolVAR_eldofs(n_unknowns);
+  vector < vector < double > > gradSolVAR_eldofs(n_unknowns);
   
   for(int k=0; k<n_unknowns; k++) {
-    SolVAR[k].reserve(maxSize);
-    gradSolVAR[k].reserve(maxSize*dim);    
+    SolVAR_eldofs[k].reserve(maxSize);
+    gradSolVAR_eldofs[k].reserve(maxSize*dim);    
   }
 
   //------------ at quadrature points ---------------------
@@ -1397,11 +1390,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
    //STATE###################################################################  
   for (unsigned  k = 0; k < n_unknowns; k++) {
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-       SolVAR[k].resize(ndofs_unk);
+	Sol_n_el_dofs[k]=ndofs_unk;
+       SolVAR_eldofs[k].resize(ndofs_unk);
        JACDof[k].resize(ndofs_unk); 
     for (unsigned i = 0; i < ndofs_unk; i++) {
        unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);    // global to global mapping between solution node and solution dof // via local to global solution node
-       SolVAR[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);      // global extraction and local storage for the solution
+       SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);      // global extraction and local storage for the solution
        JACDof[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
@@ -1409,6 +1403,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 
        
     for(int ivar=0; ivar<n_unknowns; ivar++) {
+      
       Res[SolPdeIndex[ivar]].resize(Sol_n_el_dofs[ivar]);
       memset(&Res[SolPdeIndex[ivar]][0],0.,Sol_n_el_dofs[ivar]*sizeof(double));
     }
@@ -1440,17 +1435,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	for(unsigned unk = 0; unk < /*n_vars*/ n_unknowns; unk++) {
 	  SolVAR_qp[unk] = 0.;
 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
-	    gradSolVAR[unk][ivar2] = 0.; 
+	    gradSolVAR_qp[unk][ivar2] = 0.; 
 	  }
-	  unsigned SolIndex = mlSol->GetIndex       (Solname[unk].c_str());
-	  unsigned SolType  = mlSol->GetSolutionType(Solname[unk].c_str());
 	  
 	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
-	    double soli   = (*sol->_Sol[SolIndex])(node_pos_sol[ SolFEType[unk] ][i]);
-// 	    double soli = (*sol->_Sol[SolIndex])(msh->GetMetisDof(node_pos_sol[ SolFEType[press_type_pos] ][i],SolType));
-	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i]*soli;
+	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i]*SolVAR_eldofs[unk][i];
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
-	      gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2]*soli; 
+	      gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2]*SolVAR_eldofs[unk][i]; 
 	    }
 	  }
 	  
@@ -1458,117 +1449,112 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
  //end unknowns eval at gauss points ********************************
 	
 	
+ // I x = 5 test ********************************
+	for(unsigned i_unk=0; i_unk<n_unknowns; i_unk++) { 
+	for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
+   	    Res[SolPdeIndex[i_unk]][i_dof] += - (  SolVAR_qp[i_unk]*phi_gss_fe[SolFEType[i_unk]][i_dof] - 5. * phi_gss_fe[SolFEType[i_unk]][i_dof])*weight;
+		for(unsigned j_unk=0; j_unk<n_unknowns; j_unk++) {
+		  	for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_unk]; j_dof++) {
+		              if (i_unk==j_unk)  Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i_dof*Sol_n_el_dofs[i_unk] + j_dof ] += ( phi_gss_fe[SolFEType[i_unk]][i_dof]*phi_gss_fe[SolFEType[j_unk]][j_dof] )*weight;
+			} //j_dof
+		}  //j_unk
+	  }  //i_dof
+	}  //i_unk
+ // I x = 5 test ********************************
 	
 	
-	
-  //begin NS block row *********************************
-     for(unsigned ivar_block=0; ivar_block<dim; ivar_block++) {  //1st row blocks A B' 
-	// *** phi_i loop ***
-	for(unsigned i_u=0; i_u < Sol_n_el_dofs[vel_type_pos]; i_u++) { //1st row
-	
-	  //*************************************************
-// 	  double Lap_rhs_i=0;
-// 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) { //RHS column Velocity values
-// 	      Lap_rhs_i += phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar2]*gradSolVAR[ivar_block][ivar2];
-// 	    }
-// 	    
-// 	    Res[SolPdeIndex[ivar_block]][i_u] += ( -IRe*Lap_rhs_i + /*Picard iteration*/SolVAR[dim]*phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_block] + force[ivar_block] * phi_gss_fe[SolFEType[vel_type_pos]][i_u])*weight;
-	  //***************************************************
-	  Res[SolPdeIndex[ivar_block]][i_u] = 5.; // testing with identity
-	   
-	   
-	   
-	   // *** phi_j loop *** 
-	   for(unsigned j_u=0; j_u < Sol_n_el_dofs[vel_type_pos]; j_u++) { // Matrix 4x4 block 1st row vel values of 3x3 block, especially A
+// // //   //begin NS block row *********************************
+// // //      for(unsigned ivar_block=0; ivar_block<dim; ivar_block++) {  //1st row blocks A B' 
+// // // 	// *** phi_i loop ***
+// // // 	for(unsigned i_u=0; i_u < Sol_n_el_dofs[vel_type_pos]; i_u++) { //1st row
+// // // 	
+// // // 	  //*************************************************
+// // // 	  double Lap_rhs_i=0;
+// // // 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) { //RHS column Velocity values
+// // // 	      Lap_rhs_i += phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar2]*gradSolVAR_qp[ivar_block][ivar2];
+// // // 	    }
+// // // 	    
+// // // 	    Res[SolPdeIndex[ivar_block]][i_u] += ( -IRe*Lap_rhs_i + /*Picard iteration*/SolVAR_qp[dim]*phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_block] + force[ivar_block] * phi_gss_fe[SolFEType[vel_type_pos]][i_u])*weight;
+// // // 	  //***************************************************
+// // // 	   
+// // // 	   
+// // // 	   
+// // // 	   // *** phi_j loop *** 
+// // // 	   for(unsigned j_u=0; j_u < Sol_n_el_dofs[vel_type_pos]; j_u++) { // Matrix 4x4 block 1st row vel values of 3x3 block, especially A
+// // // 
+// // // 	     //**************************************************
+// // // 	    double Lap_ij=0;
+// // // 	      for(unsigned ivar_lap=0; ivar_lap<dim; ivar_lap++) {
+// // // 		Lap_ij  += phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_lap]*phi_x_gss_fe[SolFEType[vel_type_pos]][j_u*dim+ivar_lap];
+// // // 	      }
+// // // 
+// // // 		Jac[ SolPdeIndex[ivar_block] ][ SolPdeIndex[ivar_block] ][ i_u*Sol_n_el_dofs[vel_type_pos]+j_u ] += ( IRe*Lap_ij)*weight;
+// // // 	      //**************************************************
+// // // 	      
+// // // 	    }//end phij loop
+// // // 	      
+// // // 	      
+// // // 	      
+// // // 	      //************************************************************
+// // // 	    // *** phiP_j loop ***
+// // // 	      for(unsigned j_p = 0; j_p < Sol_n_el_dofs[press_type_pos]; j_p++){ // Matrix block 1st row's last col values, especially B' 
+// // // 		Jac[ SolPdeIndex[ivar_block] ][ SolPdeIndex[press_type_pos] ][ i_u*Sol_n_el_dofs[press_type_pos]+j_p ]  -=  phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_block]*phi_gss_fe[SolFEType[press_type_pos]][j_p]*weight;
+// // // 	      }//end phiP_j loop
+// // // 	      //************************************************************
+// // // 	      
+// // // 	      
+// // // 	    }  //end phii loop
+// // // 	    
+// // //         }  //end ivar_block
+// // //    //end NS block row *********************************
 
-	     //**************************************************
-// 	    double Lap_ij=0;
-// 	      for(unsigned ivar_lap=0; ivar_lap<dim; ivar_lap++) {
-// 		Lap_ij  += phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_lap]*phi_x_gss_fe[SolFEType[vel_type_pos]][j_u*dim+ivar_lap];
-// 	      }
-// 
-// 		Jac[ SolPdeIndex[ivar_block] ][ SolPdeIndex[ivar_block] ][ i_u*Sol_n_el_dofs[vel_type_pos]+j_u ] += ( IRe*Lap_ij)*weight;
-	      //**************************************************
-	     Jac[ SolPdeIndex[ivar_block] ][ SolPdeIndex[ivar_block] ][ i_u*Sol_n_el_dofs[vel_type_pos]+j_u ] = 1.; // reserving Identity values
-	      
-	    }//end phij loop
-	      
-	      
-	      
-	      //************************************************************
-// 	    // *** phiP_j loop ***
-// 	      for(unsigned j_p = 0; j_p < Sol_n_el_dofs[press_type_pos]; j_p++){ // Matrix block 1st row's last col values, especially B' 
-// 		Jac[ SolPdeIndex[ivar_block] ][ SolPdeIndex[press_type_pos] ][ i_u*Sol_n_el_dofs[press_type_pos]+j_p ]  -=  phi_x_gss_fe[SolFEType[vel_type_pos]][i_u*dim+ivar_block]*phi_gss_fe[SolFEType[press_type_pos]][j_p]*weight;
-// 	      }//end phiP_j loop
-	      //************************************************************
-	      
-	      
-	    }  //end phii loop
-	    
-        }  //end ivar_block
-   //end NS block row *********************************
-
    
    
    
    
    
-   //begin div u block row *********************************
-    for(unsigned ivar_block=0; ivar_block<1; ivar_block++) { // Matrix block 2nd row values, B and null
-      
-	  //*******************************************************************
-// 	  double div = 0;
-// 	  for(unsigned ivar=0; ivar<dim; ivar++) {
-// 	    div += gradSolVAR[ivar][ivar];
-// 	  }
-	  //********************************************************************
-      
-	for(unsigned i_p=0; i_p < Sol_n_el_dofs[press_type_pos]; i_p++) { //RHS column Pressure values
-
-	    //************************************************************************
-// 	  //RESIDUALS B block ===========================
-// 	  Res[SolPdeIndex[press_type_pos]][i_p] += phi_gss_fe[SolFEType[press_type_pos]][i_p]*div*weight;
-// // 	  Res[SolPdeIndex[press_type_pos]][i_p] += (phiP_gss[i]*div + /*penalty*ILambda*phiP_gss[i]*SolVAR[dim]*/ 
-// // 	                             + 0.*((hk*hk)/(4.*IRe))*alpha*(GradSolP[0]*phiV_x_gss[i*dim + 0] + GradSolP[1]*phiV_x_gss[i*dim + 1]) )*weight; //REMOVED !!
-	  //*********************************************************************
-	  
-	  Res[SolPdeIndex[press_type_pos]][i_p]=2.;
-	  
-	}  //end phiP_i loop
-
-	    // *** phi_j loop ***
-    for(unsigned jvar_block=0; jvar_block<dim; jvar_block++) {
-     for(unsigned i_p=0; i_p<Sol_n_el_dofs[press_type_pos]; i_p++) {
-	 for(unsigned j_u = 0; j_u < Sol_n_el_dofs[press_type_pos/*vel_type_pos*/]; j_u++) { // Matrix block 2nd row values, especially B
-		Jac[ SolPdeIndex[press_type_pos] ][ SolPdeIndex[press_type_pos/*jvar_block*/] ][ i_p*Sol_n_el_dofs[press_type_pos/*vel_type_pos*/]+j_u ] =1.;
-	
-		//***************************************************
-// 	   Jac[ SolPdeIndex[press_type_pos] ][ SolPdeIndex[jvar_block] ][ i_p*Sol_n_el_dofs[vel_type_pos]+j_u ] -= phi_gss_fe[SolFEType[press_type_pos]][i_p]*phi_x_gss_fe[SolFEType[vel_type_pos]][j_u*dim+jvar_block]*weight;
-	        //********************************************************
-	   
-		}  //end phij loop
-	     }//end phiP_i loop
-	     
-// 	if(assembleMatrix * penalty){  //block nDofsP
-// 	  // *** phi_i loop ***
-// 	  for(unsigned i=0; i<nDofsP; i++){
-// 	    // *** phi_j loop ***
-// 	    for(unsigned j=0; j<nDofsP; j++){
-// 	      //Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j]-= ILambda*phiP_gss[i]*phiP_gss[j]*weight;
-// 	      for(unsigned ivar=0; ivar<dim; ivar++) {
-// // 	        Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j] -= ((hk*hk)/(4.*IRe))*alpha*(phiV_x_gss[i*dim + ivar]*phiV_x_gss[j*dim + ivar])*weight; //REMOVED !!
-// 		Jac[SolPdeIndex[dim]][SolPdeIndex[dim]][i*nDofsP+j] -= 0.;
-// 	      }
-// 	    }
-// 	  }
-// 	}   //end if penalty	     
-	     
-         } //end column u jvar 
- 
-       }  
-   //end div u block row *********************************
+// // //    //begin div u block row *********************************
+// // //     for(unsigned ivar_block=0; ivar_block<1; ivar_block++) { // Matrix block 2nd row values, B and null
+// // //       
+// // // 	  //*******************************************************************
+// // // 	  double div = 0;
+// // // 	  for(unsigned ivar=0; ivar<dim; ivar++) {
+// // // 	    div += gradSolVAR_qp[ivar][ivar];
+// // // 	  }
+// // // 	  //********************************************************************
+// // //       
+// // // 	for(unsigned i_p=0; i_p < Sol_n_el_dofs[press_type_pos]; i_p++) { //RHS column Pressure values
+// // // 
+// // // 	    //************************************************************************
+// // // // 	  //RESIDUALS B block ===========================
+// // // 	  Res[SolPdeIndex[press_type_pos]][i_p] += phi_gss_fe[SolFEType[press_type_pos]][i_p]*div*weight;
+// // // 	  //*********************************************************************
+// // // 	  
+// // // // 	  Res[SolPdeIndex[press_type_pos]][i_p]=2.;
+// // // 	  
+// // // 	}  //end phiP_i loop
+// // // 
+// // // 	    // *** phi_j loop ***
+// // //     for(unsigned jvar_block=0; jvar_block<dim; jvar_block++) {
+// // //      for(unsigned i_p=0; i_p<Sol_n_el_dofs[press_type_pos]; i_p++) {
+// // // 	 for(unsigned j_u = 0; j_u < Sol_n_el_dofs[press_type_pos/*vel_type_pos*/]; j_u++) { // Matrix block 2nd row values, especially B
+// // // // 		Jac[ SolPdeIndex[press_type_pos] ][ SolPdeIndex[press_type_pos/*jvar_block*/] ][ i_p*Sol_n_el_dofs[press_type_pos/*vel_type_pos*/]+j_u ] =1.;
+// // // 	
+// // // 		//***************************************************
+// // // 	   Jac[ SolPdeIndex[press_type_pos] ][ SolPdeIndex[jvar_block] ][ i_p*Sol_n_el_dofs[vel_type_pos]+j_u ] -= phi_gss_fe[SolFEType[press_type_pos]][i_p]*phi_x_gss_fe[SolFEType[vel_type_pos]][j_u*dim+jvar_block]*weight;
+// // // 	        //********************************************************
+// // // 	   
+// // // 		}  //end phij loop
+// // // 	     }//end phiP_i loop
+// // // 	     
+// // // 
+// // // 	     
+// // //          } //end column u jvar 
+// // //  
+// // //        }  
+// // //    //end div u block row *********************************
    
-   double vel_desired[2] = {10.,0.};
+//    double vel_desired[2] = {10.,0.};
 
    
    
@@ -1716,10 +1702,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
       
 
     //Sum the local matrices/vectors into the Global Matrix/Vector
-    for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-      RES->add_vector_blocked(Res[SolPdeIndex[ivar]],JACDof[ivar]);
-        for(unsigned jvar=0; jvar < n_unknowns; jvar++) {
-	  if(assembleMatrix) JAC->add_matrix_blocked( Jac[ SolPdeIndex[ivar] ][ SolPdeIndex[jvar] ], JACDof[ivar], JACDof[jvar]);
+    for(unsigned i_unk=0; i_unk < n_unknowns; i_unk++) {
+      RES->add_vector_blocked(Res[SolPdeIndex[i_unk]],JACDof[i_unk]);
+        for(unsigned j_unk=0; j_unk < n_unknowns; j_unk++) {
+	  if(assembleMatrix) JAC->add_matrix_blocked( Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ], JACDof[i_unk], JACDof[j_unk]);
         }
     }
  
