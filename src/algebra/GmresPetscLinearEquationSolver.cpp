@@ -286,6 +286,13 @@ namespace femus {
       KSPGMRESSetRestart(_ksp, _restart);
       KSPSetUp(_ksp);
 
+//       PetscViewer    viewer;
+//       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+//       PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+//       PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//       MatView(KK,viewer);
+//       double a;
+//       std::cin>>a;
     }
 
     ZerosBoundaryResiduals();

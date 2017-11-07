@@ -77,6 +77,8 @@ namespace femus {
 
       /** Update the solution */
       void CopySolutionToOldSolution();
+      
+      void ResetSolutionToOldSolution();
 
       /** Get a const solution (Numeric Vector) by name */
       const NumericVector& GetSolutionName(const char* var) const {

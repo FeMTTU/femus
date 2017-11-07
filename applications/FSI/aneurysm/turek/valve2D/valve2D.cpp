@@ -45,32 +45,34 @@ int main(int argc, char **args)
 
   unsigned simulation = 0;
 
-  if(argc >= 2) {
-    if(!strcmp("0", args[1])) {       /** FSI Turek2D no stent */
+  if (argc >= 2) {
+    if (!strcmp("0", args[1])) {      /** FSI Turek2D no stent */
       simulation = 0;
     }
-    else if(!strcmp("1", args[1])) {       /** FSI Turek porous */
+    else if (!strcmp("1", args[1])) {      /** FSI Turek porous */
       simulation = 1;
     }
-    else if(!strcmp("2", args[1])) {       /** FSI Turek stents 60 micron */
+    else if (!strcmp("2", args[1])) {      /** FSI Turek stents 60 micron */
       simulation = 2;
     }
-    else if(!strcmp("3", args[1])) {       /** FSI Turek 11 stents 60 micron */
+    else if (!strcmp("3", args[1])) {      /** FSI Turek 11 stents 60 micron */
       simulation = 3;
     }
-    else if(!strcmp("4", args[1])) {       /** FSI AAA thrombus 2D */
+    else if (!strcmp("4", args[1])) {      /** FSI AAA thrombus 2D */
       simulation = 4;
     }
-    else if(!strcmp("5", args[1])) {       /** FSI Aortic Bifurcation */
+    else if (!strcmp("5", args[1])) {      /** FSI Aortic Bifurcation */
       simulation = 5;
     }
-    else if(!strcmp("6", args[1])) {       /** FSI AAA thrombus 2D Porous */
+    else if (!strcmp("6", args[1])) {      /** FSI AAA thrombus 2D Porous */
       simulation = 6;
     }
-    else if(!strcmp("7", args[1])) {       /** FSI Vein Valve */
+    else if (!strcmp("7", args[1])) {      /** FSI Vein Valve */
       simulation = 7;
     }
   }
+
+  simulation = 7;
 
   //Files files;
   //files.CheckIODirectories();
@@ -85,33 +87,36 @@ int main(int argc, char **args)
   //std::string infile = "./input/Turek_stents_60micron.neu";
   //std::string infile = "./input/Turek_11stents_60micron.neu";
   std::string infile;
-  if(simulation == 0) {
+  if (simulation == 0) {
     infile = "./input/Turek.neu";
   }
-  else if(simulation == 1) {
+  else if (simulation == 1) {
     infile = "./input/Turek_porous_60micron.neu";
   }
-  else if(simulation == 2) {
+  else if (simulation == 2) {
     infile = "./input/Turek_stents_60micron.neu";
   }
-  else if(simulation == 3) {
+  else if (simulation == 3) {
     infile = "./input/Turek_11stents_60micron.neu";
   }
-  else if(simulation == 4) {
+  else if (simulation == 4) {
     infile = "./input/AAA_thrombus_2D.neu";
   }
-  else if(simulation == 5) {
+  else if (simulation == 5) {
     infile = "./input/aortic_bifurcation.neu";
   }
-  else if(simulation == 6) {
+  else if (simulation == 6) {
     infile = "./input/AAA_thrombus_2D_porous.neu";
   }
-  else if(simulation == 7) {
+  else if (simulation == 7) {
     //infile = "./input/vein_valve_closed.neu";
     //infile = "./input/vein_valve_thiner.neu";
-    infile = "./input/vein_valve_modifiedFluid.neu";
-    //infile = "./input/vein_valve_new.neu";
+    //infile = "./input/vein_valve_modifiedFluid.neu";
+//     infile = "./input/vein_valve1.neu";
+    infile = "./input/valve2.neu";
   }
+
+
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -120,14 +125,14 @@ int main(int argc, char **args)
   Uref = 1.;
 
 
-  if(simulation == 7) {
+  if (simulation == 7) {
     rhof = 1060.;
     muf = 2.2 * 1.0e-3;
     rhos = 960;
     ni = 0.5;
     //E = 3.3 * 1.0e6; //vein young modulus
     E = 4.3874951 * 1.0e12;
-    E1 = 15 * 1.0e6; //leaflet young modulus
+    E1 = 0.1 * 1.0e6; //leaflet young modulus
   }
   else {
     rhof = 1035.;
@@ -181,7 +186,7 @@ int main(int argc, char **args)
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("DY", LAGRANGE, SECOND, 2);
- 
+
   ml_sol.AddSolution("U", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("V", LAGRANGE, SECOND, 2);
 
@@ -189,29 +194,30 @@ int main(int argc, char **args)
   ml_sol.PairSolution("U", "DX");    // Add this line
   ml_sol.PairSolution("V", "DY");    // Add this line
 
+  ml_sol.AddSolution("DX1", LAGRANGE, SECOND, 2);
+  ml_sol.AddSolution("DY1", LAGRANGE, SECOND, 2);
+
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("P", "Pressure", false);    // Add this line
 
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
-  ml_sol.AddSolution("DX1", LAGRANGE, SECOND, 2);
-  ml_sol.AddSolution("DY1", LAGRANGE, SECOND, 2);
-  
-  
+
+
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
-  if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
+  if (simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek2D);
   }
-  else if(simulation == 4 || simulation == 6) {
+  else if (simulation == 4 || simulation == 6) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus2D);
   }
-  else if(simulation == 5) {
+  else if (simulation == 5) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorticBifurcation);
   }
-  else if(simulation == 7) {
+  else if (simulation == 7) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionVeinValve);
   }
 
@@ -219,11 +225,11 @@ int main(int argc, char **args)
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
 
-  if(simulation == 4 || simulation == 5 || simulation == 6) {
+  if (simulation == 4 || simulation == 5 || simulation == 6) {
     ml_sol.GenerateBdc("U", "Steady");
     ml_sol.GenerateBdc("V", "Time_dependent");
   }
-  else if(simulation == 7) {
+  else if (simulation == 7) {
     ml_sol.GenerateBdc("U", "Steady");
     ml_sol.GenerateBdc("V", "Steady");
   }
@@ -231,7 +237,11 @@ int main(int argc, char **args)
     ml_sol.GenerateBdc("U", "Time_dependent");
     ml_sol.GenerateBdc("V", "Steady");
   }
-  if(simulation == 7) {
+
+  ml_sol.GenerateBdc("DX1", "Steady");
+  ml_sol.GenerateBdc("DY1", "Steady");
+
+  if (simulation == 7) {
     ml_sol.GenerateBdc("P", "Steady");
   }
   else {
@@ -253,28 +263,31 @@ int main(int argc, char **args)
 
   // ******* Add FSI system to the MultiLevel problem *******
   TransientMonolithicFSINonlinearImplicitSystem & system = ml_prob.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
+
   system.AddSolutionToSystemPDE("DX");
   system.AddSolutionToSystemPDE("DY");
 
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
 
+  system.AddSolutionToSystemPDE("DX1");
+  system.AddSolutionToSystemPDE("DY1");
+
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSITimeDependentAssemblySupg);
+  system.SetAssembleFunction(FSITimeDependentAssemblySupgNew);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
 
   system.SetNonLinearConvergenceTolerance(1.e-7);
   //system.SetResidualUpdateConvergenceTolerance ( 1.e-15 );
-
-  system.SetMaxNumberOfNonLinearIterations ( 5 ); //10
+  system.SetMaxNumberOfNonLinearIterations(20);
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
-  
-  system.SetMaxNumberOfLinearIterations ( 3 ); //6
-  system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
+
+  system.SetMaxNumberOfLinearIterations(6);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-13);
 
   system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(2);
@@ -303,21 +316,44 @@ int main(int argc, char **args)
   // ******* Set block size for the ASM smoothers *******
   system.SetElementBlockNumber(2);
 
+
+
+  unsigned time_step_start = 1;
+
+  //char restart_file_name[256] = "./save/valve2D_iteration40";
+  char restart_file_name[256] = "";
+
+  if (strcmp (restart_file_name, "") != 0) {
+    ml_sol.LoadSolution(restart_file_name);
+    time_step_start = 41;
+    system.SetTime( (time_step_start - 1) * 1. / 32);
+  }
+
+
+
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
 
 
-  std::vector<std::string> mov_vars;
-  mov_vars.push_back("DX");
-  mov_vars.push_back("DY");
-  //mov_vars.push_back("DZ");
-  ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back("DX");
+  mov_vars.push_back("DY");
+
+  std::vector<std::string> mov_vars1;
+  mov_vars1.push_back("DX1");
+  mov_vars1.push_back("DY1");
+
   ml_sol.GetWriter()->SetDebugOutput(true);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+
+  //mov_vars.push_back("DZ");
+  ml_sol.GetWriter()->SetMovingMesh(mov_vars);
+  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step_start - 1);
+
+  ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
+  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step_start - 1);
 
 
   // ******* Solve *******
@@ -325,71 +361,173 @@ int main(int argc, char **args)
   std::cout << " *********** Fluid-Structure-Interaction ************  " << std::endl;
 
   // time loop parameter
-  system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 512;
+  system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
+  const unsigned int n_timesteps = 1024;
 
-  std::vector < std::vector <double> > data(n_timesteps);
 
-  for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-    for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
-      SetLambda(ml_sol, level , SECOND, ELASTICITY);
-    }
-    data[time_step].resize(5);
-    if(time_step > 0)
-      system.SetMgType(V_CYCLE);
+  //std::vector < std::vector <double> > data(n_timesteps);
+
+  for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
+
+    
+    
+//     meshIsCurrupted = false;
+//     if (time_step >= 36 && time_step <= 45) {
+//       double factor = 1.e-8;
+//       meshIsCurrupted = true;
+//       std::cout << time_step << " mesh is corrupted, factor = " << factor << std::endl;
+//     }
+    
+    
+//       // level 0, E 1.0E06 upt to 400 iterations
+//       meshIsCurrupted = false;
+//       if (time_step >= 47 && time_step <= 49) {
+// 	double factor = 1.e-8;
+// 	meshIsCurrupted = true;
+// 	std::cout << time_step << " mesh is corrupted" << std::endl;
+//       }
+//       if (time_step >= 144 && time_step <= 146) {
+// 	double factor = 1.e-8;
+// 	meshIsCurrupted = true;
+// 	std::cout << time_step << " mesh is corrupted" << std::endl;
+//       }
+//       if (time_step >= 304 && time_step <= 306) {
+// 	double factor = 1.e-8;
+// 	meshIsCurrupted = true;
+// 	std::cout << time_step << " mesh is corrupted" << std::endl;
+//       }
+    
+    
+//       // level 1, E 15.0E06 upt to 70 iterations
+//     if (time_step > 37 && time_step <= 39) {
+//       double factor = 1.e-9;
+//       meshIsCurrupted = true;
+//       std::cout << time_step << " mesh is corrupted" << std::endl;
+//     }
+//     else if (time_step > 37 && time_step <= 41) {
+//       double factor = 5.e-10;
+//       meshIsCurrupted = true;
+//       std::cout << time_step << " mesh is corrupted" << std::endl;
+//     }
+//     else if (time_step > 70 && time_step <= 74) {
+//       double factor = 1.e-10;
+//       meshIsCurrupted = true;
+//       std::cout << time_step << " mesh is corrupted" << std::endl;
+//     }
+
+
+     // level 0, E 15.0E06 upt to 200-250 iterations
+//     if(time_step <= 37) {
+//       meshIsCurrupted = false;
+//       std::cout <<time_step<<" mesh is not corrupted"<< std::endl;
+//     }
+//     else if (time_step <= 40){
+//       meshIsCurrupted = true;
+//       std::cout <<time_step<<" mesh is corrupted"<< std::endl;
+//     }
+//     else if (time_step <= 69){
+//       meshIsCurrupted = false;
+//       std::cout <<time_step<<" mesh is not corrupted"<< std::endl;
+//     }
+//     else if (time_step <= 73){
+//       meshIsCurrupted = true;
+//       std::cout <<time_step<<" mesh is corrupted"<< std::endl;
+//     }
+//     else if (time_step <= 101){
+//       meshIsCurrupted = false;
+//       std::cout <<time_step<<" mesh is not corrupted"<< std::endl;
+//     }
+//     else if (time_step <= 105){
+//       meshIsCurrupted = true;
+//       std::cout <<time_step<<" mesh is corrupted"<< std::endl;
+//     }
+//     else if (time_step <= 133){
+//       meshIsCurrupted = false;
+//       std::cout <<time_step<<" mesh is not corrupted"<< std::endl;
+//     }
+//     else if (time_step <= 137){
+//       meshIsCurrupted = true;
+//       std::cout <<time_step<<" mesh is corrupted"<< std::endl;
+//     }
+//     else {
+//       meshIsCurrupted = false;
+//       std::cout <<time_step<<" mesh is not corrupted"<< std::endl;
+//     }
+
     system.CopySolutionToOldSolution();
 
+    for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
+      SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
+    }
+
+//     if (time_step == 36) {
+//       meshIsCurrupted = true; 
+//     }
+    
+    // data[time_step].resize(5);
+    if (time_step > 1)
+      system.SetMgType(V_CYCLE);
+
+
     system.MGsolve();
-    //data[time_step][0] = time_step / 16.;
-    //data[time_step][0] = time_step / 20.;
-    data[time_step][0] = time_step / 32.;
-    //data[time_step][0] = time_step / ( 64 * 1.4 );
-    if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
-      GetSolutionNorm(ml_sol, 9, data[time_step]);
-    }
-    else if(simulation == 4) {    //AAA_thrombus, 15=thrombus
-      GetSolutionNorm(ml_sol, 7, data[time_step]);
-    }
-    else if(simulation == 6) {    //AAA_thrombus_porous, 15=thrombus
-      GetSolutionNorm(ml_sol, 7, data[time_step]);
-    }
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+//     //data[time_step][0] = time_step / 16.;
+//     //data[time_step][0] = time_step / 20.;
+//     data[time_step][0] = time_step / 32.;
+//     //data[time_step][0] = time_step / ( 64 * 1.4 );
+//     if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
+//       GetSolutionNorm(ml_sol, 9, data[time_step]);
+//     }
+//     else if(simulation == 4) {    //AAA_thrombus, 15=thrombus
+//       GetSolutionNorm(ml_sol, 7, data[time_step]);
+//     }
+//     else if(simulation == 6) {    //AAA_thrombus_porous, 15=thrombus
+//       GetSolutionNorm(ml_sol, 7, data[time_step]);
+//     }
+
+    ml_sol.GetWriter()->SetMovingMesh(mov_vars);
+    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+
+    ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
+    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step);
+
+    if ( time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
+
   }
 
 
-  int  iproc;
-  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  if(iproc == 0) {
-    std::ofstream outf;
-    if(simulation == 0) {
-      outf.open("DataPrint_Turek.txt");
-    }
-    else if(simulation == 1) {
-      outf.open("DataPrint_TurekPorous.txt");
-    }
-    else if(simulation == 2) {
-      outf.open("DataPrint_TurekStents.txt");
-    }
-    else if(simulation == 3) {
-      outf.open("DataPrint_Turek11Stents.txt");
-    }
-    else if(simulation == 4) {
-      outf.open("DataPrint_AAA_thrombus_2D.txt");
-    }
-    else if(simulation == 6) {
-      outf.open("DataPrint_AAA_thrombus_2D_porous.txt");
-    }
-
-
-    if(!outf) {
-      std::cout << "Error in opening file DataPrint.txt";
-      return 1;
-    }
-    for(unsigned k = 0; k < n_timesteps; k++) {
-      outf << data[k][0] << "\t" << data[k][1] << "\t" << data[k][2] << "\t" << data[k][3] << "\t" << data[k][4] << std::endl;
-    }
-    outf.close();
-  }
+//   int  iproc;
+//   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+//   if(iproc == 0) {
+//     std::ofstream outf;
+//     if(simulation == 0) {
+//       outf.open("DataPrint_Turek.txt");
+//     }
+//     else if(simulation == 1) {
+//       outf.open("DataPrint_TurekPorous.txt");
+//     }
+//     else if(simulation == 2) {
+//       outf.open("DataPrint_TurekStents.txt");
+//     }
+//     else if(simulation == 3) {
+//       outf.open("DataPrint_Turek11Stents.txt");
+//     }
+//     else if(simulation == 4) {
+//       outf.open("DataPrint_AAA_thrombus_2D.txt");
+//     }
+//     else if(simulation == 6) {
+//       outf.open("DataPrint_AAA_thrombus_2D_porous.txt");
+//     }
+//
+//
+//     if(!outf) {
+//       std::cout << "Error in opening file DataPrint.txt";
+//       return 1;
+//     }
+//     for(unsigned k = 0; k < n_timesteps; k++) {
+//       outf << data[k][0] << "\t" << data[k][1] << "\t" << data[k][2] << "\t" << data[k][3] << "\t" << data[k][4] << std::endl;
+//     }
+//     outf.close();
+//   }
 
 
 
@@ -401,13 +539,14 @@ int main(int argc, char **args)
 double SetVariableTimeStep(const double time)
 {
   //double dt = 1. / ( 64 * 1.4 );
-  double dt = 1./32;
+  double dt = 1. / 32;
   double shiftedTime = time - floor(time);
-  if( time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25){
-    dt = 1./256;
+  if (time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25) {
+//     dt = 1./256;
+    dt = 1. / 32;
   }
-  std::cout << " Shifted Time = " << shiftedTime << " dt = " << dt<< std::endl; 
-  
+  std::cout << " Shifted Time = " << shiftedTime << " dt = " << dt << std::endl;
+
 //   double PI = acos(-1.);
 //   double dt = 1./32.*(1.25 + 0.75 * sin(2.*PI*time - 3./4. * PI));
 //   std::cout << "time = " << time <<  " dt * 32 = " << dt * 32<<std::endl;
@@ -473,39 +612,39 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
   double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
   //double ramp = ( time < period ) ? sin ( PI / 2 * time / period ) : 1.;
 
-  if(!strcmp(name, "U")) {
-    if(1 == facename) {
+  if (!strcmp(name, "U")) {
+    if (1 == facename) {
       //value = 0.05 * (x[1] * 1000 - 6) * ( x[1] * 1000 - 8); //inflow
       value = 0.05 * (x[1] * 1000 - 6) * (x[1] * 1000 - 8) * (1. + 0.75 * sin(2. * PI * time)) * ramp; //inflow
       //value = ( x[1] * 1000 - 6 ) * ( x[1] * 1000 - 8 ) * vel[j] * ramp; //inflow
     }
-    else if(2 == facename || 5 == facename) {
+    else if (2 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if(!strcmp(name, "V")) {
+  else if (!strcmp(name, "V")) {
     //if ( 2 == facename ) {
     //if ( 5 == facename ) {
-    if(2 == facename || 5 == facename) {
+    if (2 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if(!strcmp(name, "P")) {
+  else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
   }
-  else if(!strcmp(name, "DX")) {
+  else if (!strcmp(name, "DX")) {
     //if(2 == facename || 4 == facename || 5 == facename || 6 == facename) {
-    if(5 == facename || 6 == facename) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "DY")) {
+  else if (!strcmp(name, "DY")) {
     //if(1 == facename || 3 == facename || 5 == facename || 6 == facename) {
-    if(5 == facename || 6 == facename) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
@@ -525,39 +664,39 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
 
   double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
 
-  if(!strcmp(name, "V")) {
-    if(1 == facename) {
+  if (!strcmp(name, "V")) {
+    if (1 == facename) {
       double r2 = (x[0] * 100.) * (x[0] * 100.);
       //value = -0.01/.9 * (.9 - r2); //inflow
       value = -0.05 / .81 * (.81 - r2) * (1. + 0.75 * sin(2.*PI * time)) * ramp;        //inflow
     }
-    if(2 == facename || 5 == facename) {
+    if (2 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if(!strcmp(name, "U")) {
-    if(2 == facename) {
+  else if (!strcmp(name, "U")) {
+    if (2 == facename) {
       test = 0;
       value = (10000 + 2500 * sin(2 * PI * time)) * ramp;;
     }
-    else if(5 == facename) {
+    else if (5 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "P")) {
+  else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
   }
-  else if(!strcmp(name, "DX")) {
-    if(5 == facename) {
+  else if (!strcmp(name, "DX")) {
+    if (5 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "DY")) {
-    if(5 == facename) {
+  else if (!strcmp(name, "DY")) {
+    if (5 == facename) {
       test = 0;
       value = 0;
     }
@@ -576,24 +715,24 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
 
   double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
 
-  if(!strcmp(name, "V")) {
-    if(1 == facename) {
+  if (!strcmp(name, "V")) {
+    if (1 == facename) {
       double r2 = (x[0] * 100.) * (x[0] * 100.);
       //value = -0.01/.9 * (.9 - r2); //inflow
       value = -0.1 / .81 * (.81 - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp;        //inflow
     }
-    if(2 == facename || 3 == facename || 7 == facename) {
+    if (2 == facename || 3 == facename || 7 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if(!strcmp(name, "U")) {
-    if(2 == facename || 3 == facename || 7 == facename) {
+  else if (!strcmp(name, "U")) {
+    if (2 == facename || 3 == facename || 7 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "P")) {
+  else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
 //     if ( 2 == facename || 3 == facename ) {
@@ -601,14 +740,14 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
 //       value = 50 * ramp;
 //     }
   }
-  else if(!strcmp(name, "DX")) {
-    if(7 == facename) {
+  else if (!strcmp(name, "DX")) {
+    if (7 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "DY")) {
-    if(7 == facename) {
+  else if (!strcmp(name, "DY")) {
+    if (7 == facename) {
       test = 0;
       value = 0;
     }
@@ -625,40 +764,46 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   double PI = acos(-1.);
   double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
 
-  if(!strcmp(name, "V")) {
-    if(1 == facename || 2 == facename || 6 == facename) {
+  if (!strcmp(name, "V")) {
+    if (1 == facename || 2 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "P")) {
+  else if (!strcmp(name, "P")) {
     test = 0;
     value = 0.;
-    if(1 == facename) {
+    if (1 == facename) {
       //value = -1;
       //value = ( /*2.5*/ + 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 5 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
-      value = (0 + 2 * sin(2 * PI * time)) * ramp;      //+ 4.5
+      value = (0 + 5 * sin(2 * PI * time)) * ramp;      //+ 4.5
     }
-    else if(2 == facename) {
+    else if (2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      value = (0 - 2 * sin(2 * PI * time)) * ramp;      //- 4.5
+      value = (0 - 5 * sin(2 * PI * time)) * ramp;      //- 4.5
     }
   }
-  else if(!strcmp(name, "DX")) {
-    if(5 == facename) {
+  else if (!strcmp(name, "DX")) {
+    if (5 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "DY")) {
-    if(5 == facename || 6 == facename) {
+  else if (!strcmp(name, "DX1") ) {
+    if (5 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "DY") || !strcmp(name, "DY1")) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
@@ -684,7 +829,7 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   vol = NumericVector::build().release();
   vol0 = NumericVector::build().release();
 
-  if(nprocs == 1) {
+  if (nprocs == 1) {
     p2->init(nprocs, 1, false, SERIAL);
     v2->init(nprocs, 1, false, SERIAL);
     vol->init(nprocs, 1, false, SERIAL);
@@ -719,7 +864,7 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   vector< vector < double> > x(dim);
 
   solP.reserve(max_size);
-  for(unsigned d = 0; d < dim; d++) {
+  for (unsigned d = 0; d < dim; d++) {
     solV[d].reserve(max_size);
     x0[d].reserve(max_size);
     x[d].reserve(max_size);
@@ -740,14 +885,14 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol.GetIndex("U");    // get the position of "U" in the ml_sol object
   solVIndex[1] = mlSol.GetIndex("V");    // get the position of "V" in the ml_sol object
-  if(dim == 3) solVIndex[2] = mlSol.GetIndex("W");       // get the position of "V" in the ml_sol object
+  if (dim == 3) solVIndex[2] = mlSol.GetIndex("W");      // get the position of "V" in the ml_sol object
 
   unsigned solVType = mlSol.GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
   vector < unsigned > solDIndex(dim);
   solDIndex[0] = mlSol.GetIndex("DX");    // get the position of "U" in the ml_sol object
   solDIndex[1] = mlSol.GetIndex("DY");    // get the position of "V" in the ml_sol object
-  if(dim == 3) solDIndex[2] = mlSol.GetIndex("DZ");       // get the position of "V" in the ml_sol object
+  if (dim == 3) solDIndex[2] = mlSol.GetIndex("DZ");      // get the position of "V" in the ml_sol object
 
   unsigned solDType = mlSol.GetSolutionType(solDIndex[0]);
 
@@ -755,8 +900,8 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   solPIndex = mlSol.GetIndex("P");
   unsigned solPType = mlSol.GetSolutionType(solPIndex);
 
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    if(msh->GetElementGroup(iel) == group) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    if (msh->GetElementGroup(iel) == group) {
       short unsigned ielt = msh->GetElementType(iel);
       unsigned ndofV = msh->GetElementDofNumber(iel, solVType);
       unsigned ndofP = msh->GetElementDofNumber(iel, solPType);
@@ -768,15 +913,15 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
       nablaphiV.resize(ndofV * (3 * (dim - 1) + !(dim - 1)));
 
       solP.resize(ndofP);
-      for(int d = 0; d < dim; d++) {
+      for (int d = 0; d < dim; d++) {
         solV[d].resize(ndofV);
         x0[d].resize(ndofD);
         x[d].resize(ndofD);
       }
       // get local to global mappings
-      for(unsigned i = 0; i < ndofD; i++) {
+      for (unsigned i = 0; i < ndofD; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solDType);
-        for(unsigned d = 0; d < dim; d++) {
+        for (unsigned d = 0; d < dim; d++) {
           x0[d][i] = (*msh->_topology->_Sol[d])(idof);
 
           x[d][i] = (*msh->_topology->_Sol[d])(idof) +
@@ -784,22 +929,22 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
         }
       }
 
-      for(unsigned i = 0; i < ndofV; i++) {
+      for (unsigned i = 0; i < ndofV; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
-        for(unsigned  d = 0; d < dim; d++) {
+        for (unsigned  d = 0; d < dim; d++) {
           solV[d][i] = (*solution->_Sol[solVIndex[d]])(idof);      // global extraction and local storage for the solution
         }
       }
 
 
 
-      for(unsigned i = 0; i < ndofP; i++) {
+      for (unsigned i = 0; i < ndofP; i++) {
         unsigned idof = msh->GetSolutionDof(i, iel, solPType);
         solP[i] = (*solution->_Sol[solPIndex])(idof);
       }
 
 
-      for(unsigned ig = 0; ig < mlSol._mlMesh->_finiteElement[ielt][solVType]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < mlSol._mlMesh->_finiteElement[ielt][solVType]->GetGaussPointNumber(); ig++) {
         // *** get Jacobian and test function and test function derivatives ***
         msh->_finiteElement[ielt][solVType]->Jacobian(x0, ig, weight0, phiV, gradphiV, nablaphiV);
         msh->_finiteElement[ielt][solVType]->Jacobian(x, ig, weight, phiV, gradphiV, nablaphiV);
@@ -809,20 +954,20 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
         vol->add(iproc, weight);
 
         std::vector < double> SolV2(dim, 0.);
-        for(unsigned i = 0; i < ndofV; i++) {
-          for(unsigned d = 0; d < dim; d++) {
+        for (unsigned i = 0; i < ndofV; i++) {
+          for (unsigned d = 0; d < dim; d++) {
             SolV2[d] += solV[d][i] * phiV[i];
           }
         }
 
         double V2 = 0.;
-        for(unsigned d = 0; d < dim; d++) {
+        for (unsigned d = 0; d < dim; d++) {
           V2 += SolV2[d] * SolV2[d];
         }
         v2->add(iproc, V2 * weight);
 
         double P2 = 0;
-        for(unsigned i = 0; i < ndofP; i++) {
+        for (unsigned i = 0; i < ndofP; i++) {
           P2 += solP[i] * phiP[i];
         }
         P2 *= P2;
