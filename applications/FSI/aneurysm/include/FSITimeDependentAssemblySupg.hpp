@@ -11,8 +11,7 @@ namespace femus
 {
 
   bool meshIsCurrupted = true;
-  double factordx = .1e7;
-  double factordy = .1e8;
+  double factordxi[3] =  {1.e7, 1.e7, 1.e7};
   
   
   void FSIConstrainLeaflet(MultiLevelSolution& mlSol);
@@ -1489,8 +1488,14 @@ namespace femus
 //           xc[0] = -0.000286; // vein_valve_closed
 //           xc[1] = 0.07000;
 //
-          xc[0] = -0.00025; // vein_valve_closed
-          xc[1] = 0.07000;
+	  if(dim == 2){
+	    xc[0] = -0.00025; // vein_valve_closed
+	    xc[1] = 0.07000;
+	  }
+	  else if (dim == 3){
+	    xc[0] = -0.008; // vein_valve_closed
+	    xc[1] = 0.0;
+	  }
 
           double distance = 0.;
           for (unsigned k = 0; k < dim; k++) {
@@ -1792,13 +1797,15 @@ namespace femus
                   }
                 }
 
-                for (int idim = 0; idim < 1; idim++) {
+                for (int idim = 0; idim < dim; idim++) {
                   aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * 1.0e-1 * LapAuxVAR[idim] +  0 * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight_nojac;
                 }
-                for (int idim = 1; idim < dim; idim++) {
-                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * 1.0e-1 * LapAuxVAR[idim] +  0 * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight_nojac;
-                }
-
+//                 for (int idim = 1; idim < dim; idim++) {
+//                   aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * 1.0e-1 * LapAuxVAR[idim] +  0 * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight_nojac;
+//                 }
+//                 for (int idim = 1; idim < dim; idim++) {
+//                   aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * 1.0e-1 * LapAuxVAR[idim] +  0 * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight_nojac;
+//                 }
 
 //                 adept::adouble LapAuxVAR[3] = {0., 0., 0.};
 //
@@ -2078,12 +2085,12 @@ namespace femus
 //                   aRhs[indexVAR[idim + 2 * dim]][i] += (  1.0e-8 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi_hat[i] ) * Weight;
 //                 }
 
-                for (int idim = 0; idim < 1; idim++) {
-                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * LapAuxVAR[idim] +  factordx * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
+                for (int idim = 0; idim < dim; idim++) {
+                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * LapAuxVAR[idim] +  factordxi[idim] * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
                 }
-                for (int idim = 1; idim < dim; idim++) {
-                  aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * LapAuxVAR[idim] +  factordy * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
-                }
+//                 for (int idim = 1; idim < dim; idim++) {
+//                   aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * LapAuxVAR[idim] +  factordy * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
+//                 }
 
 
 
