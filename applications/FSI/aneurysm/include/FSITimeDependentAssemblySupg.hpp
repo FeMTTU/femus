@@ -1492,9 +1492,14 @@ namespace femus
 	    xc[0] = -0.00025; // vein_valve_closed
 	    xc[1] = 0.07000;
 	  }
+// 	  else if (dim == 3){
+// 	    xc[0] = -0.008; // vein_valve_closed
+// 	    xc[1] = 0.0;
+// 	  }
 	  else if (dim == 3){
-	    xc[0] = -0.008; // vein_valve_closed
+	    xc[0] = 0.0015; // vein_valve_closed
 	    xc[1] = 0.0;
+	    xc[2] = 0.01;
 	  }
 
           double distance = 0.;
