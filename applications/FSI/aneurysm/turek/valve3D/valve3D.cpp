@@ -43,7 +43,7 @@ int main(int argc, char **args)
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 
   //std::string infile = "./input/valve_coarsemesh.neu";
-  std::string infile = "./input/mindcraft_valve.neu";
+  std::string infile = "./input/mindcraft_valve_1.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -56,8 +56,8 @@ int main(int argc, char **args)
   rhos = 960;
   ni = 0.5;
   //E = 3.3 * 1.0e6; //vein young modulus
-  E = 2.0 * 1.0e6;
-  E1 = 0.1 * 1.0e6; //leaflet young modulus
+  E = 1.0 * 1.0e6;
+  E1 = 0.02 * 1.0e6; //leaflet young modulus
 
   Parameter par(Lref, Uref);
 
