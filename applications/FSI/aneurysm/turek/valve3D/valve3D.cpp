@@ -22,6 +22,9 @@ double SetVariableTimeStep(const double time);
 bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char name[],
                                    double &value, const int facename, const double time);
 
+bool SetBoundaryConditionVeinValve2(const std::vector < double >& x, const char name[],
+                                   double &value, const int facename, const double time);
+
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 //------------------------------------------------------------------------------------------------------------------
 
@@ -39,7 +42,8 @@ int main(int argc, char **args)
 
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 
-  std::string infile = "./input/valve_coarsemesh.neu";
+  //std::string infile = "./input/valve_coarsemesh.neu";
+  std::string infile = "./input/mindcraft_valve.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -52,7 +56,7 @@ int main(int argc, char **args)
   rhos = 960;
   ni = 0.5;
   //E = 3.3 * 1.0e6; //vein young modulus
-  E = 4.3874951 * 1.0e12;
+  E = 2.0 * 1.0e6;
   E1 = 0.1 * 1.0e6; //leaflet young modulus
 
   Parameter par(Lref, Uref);
@@ -124,7 +128,7 @@ int main(int argc, char **args)
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionVeinValve);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionVeinValve2);
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
@@ -213,8 +217,8 @@ int main(int argc, char **args)
 
   unsigned time_step_start = 1;
 
-  char restart_file_name[256] = "./save/valve2D_iteration30";
-  //char restart_file_name[256] = "";
+  //char restart_file_name[256] = "./save/valve2D_iteration30";
+  char restart_file_name[256] = "";
 
   if (strcmp (restart_file_name, "") != 0) {
     ml_sol.LoadSolution(restart_file_name);
@@ -254,7 +258,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 1024;
+  const unsigned int n_timesteps =1024;
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
@@ -361,6 +365,69 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   return test;
 
 }
+
+//----------------------------------------------------------------//
+
+bool SetBoundaryConditionVeinValve2(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+{
+  bool test = 1; //dirichlet
+  value = 0.;
+
+  double PI = acos(-1.);
+  double ramp = (time < 2) ? sin(PI / 2 * time / 2.) : 1.;
+
+  if (!strcmp(name, "U")) {
+    if (5 == facename || 6 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "V")) {
+    if (5 == facename || 7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "W")) {
+    if (1 == facename || 2 == facename || 5 == facename || 6 == facename || 7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+    if (1 == facename) {
+      value = (0 + 5 * sin(2 * PI * time)) * ramp;      //+ 4.5
+    }
+    else if (2 == facename) {
+      value = (0 - 5 * sin(2 * PI * time)) * ramp;      //- 4.5
+    }
+  }
+  else if ( (!strcmp(name, "DX")) || (!strcmp(name, "DX1")) ) {
+    if (5 == facename || 6 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if ( (!strcmp(name, "DY")) || (!strcmp(name, "DY1")) ) {
+    if (5 == facename || 7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if ( (!strcmp(name, "DZ")) || (!strcmp(name, "DZ1")) ) {
+    if (5 == facename || 6 == facename || 7 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+
+  return test;
+
+}
+
+//-------------------------------------------------------------------------//
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
 {
