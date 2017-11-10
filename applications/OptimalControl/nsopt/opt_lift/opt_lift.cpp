@@ -25,7 +25,7 @@
 
 using namespace femus;
 
- double force[3] = {/*0.*/1.,0.,0.};
+ double force[3] = {0.,0.,0.};
  double Vel_desired[3] = {0.125,0.,0.};
  double alpha_val = 1.;
  double beta_val = 1.e-5;
@@ -224,8 +224,8 @@ int main(int argc, char** args) {
   
   
   // attach the assembling function to system
+//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
   system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
-//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
     
   // initilaize and solve the system
   system_opt.init();
@@ -237,9 +237,9 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
-  VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, ordertobeprinted /*"biquadratic"*/, variablesToBePrinted);
-//   vtkIO.Write(files.GetOutputPath(),ordertobeprinted , variablesToBePrinted);
+ mlSol.SetWriter(VTK);
+ mlSol.GetWriter()->SetDebugOutput(true);
+ mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, ordertobeprinted /*"biquadratic"*/, variablesToBePrinted);
 
   
 
@@ -1451,16 +1451,192 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
 	
  // I x = 5 test ********************************
 	for(unsigned i_unk=0; i_unk<n_unknowns; i_unk++) { 
-	for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
-   	    Res[SolPdeIndex[i_unk]][i_dof] += - (  SolVAR_qp[i_unk]*phi_gss_fe[SolFEType[i_unk]][i_dof] - 5. * phi_gss_fe[SolFEType[i_unk]][i_dof])*weight;
-		for(unsigned j_unk=0; j_unk<n_unknowns; j_unk++) {
+	    for(unsigned i_dof=0; i_dof < Sol_n_el_dofs[i_unk]; i_dof++) {
+		if ( i_unk!=0 && i_unk!=1) Res[SolPdeIndex[i_unk]][i_dof] +=  (               0.* phi_gss_fe[SolFEType[i_unk]][i_dof] 
+		                                    - SolVAR_qp[i_unk]*phi_gss_fe[SolFEType[i_unk]][i_dof] )*weight;
+		  for(unsigned j_unk=0; j_unk<n_unknowns; j_unk++) {
 		  	for(unsigned j_dof=0; j_dof < Sol_n_el_dofs[j_unk]; j_dof++) {
-		              if (i_unk==j_unk)  Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i_dof*Sol_n_el_dofs[i_unk] + j_dof ] += ( phi_gss_fe[SolFEType[i_unk]][i_dof]*phi_gss_fe[SolFEType[j_unk]][j_dof] )*weight;
+			  
+		              if (i_unk==j_unk && i_unk!=0 && i_unk!=1)   {
+				Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i_dof*Sol_n_el_dofs[i_unk] + j_dof ] += 
+				        ( phi_gss_fe[SolFEType[i_unk]][i_dof]*phi_gss_fe[SolFEType[j_unk]][j_dof] )*weight;
+			      }
+			  
 			} //j_dof
-		}  //j_unk
-	  }  //i_dof
+		  }  //j_unk
+	    }  //i_dof
 	}  //i_unk
  // I x = 5 test ********************************
+ 
+ 
+ 
+ 
+ 
+// // //  //residuals------------------------------------------------------------------------------------------------
+// // //  
+// // //  
+// // //          // *** phiV_i loop ***
+        for (unsigned i = 0; i < nDofsV; i++) {
+// // // 	  vector < double > NSVadj_gss(dim, 0.);
+// // // 	  vector < double > NSVctrl_gss(dim, 0.);
+// // // 	  vector < double > V_Vctrl_gss(dim, 0.);
+// // // 	  vector < double > Vadj_V_gss(dim, 0.);
+// // // 	  vector < double > Vadj_Vctrl_gss(dim, 0.);
+// // // 	  vector < double > Vctrl_V_gss(dim, 0.);
+// // // 	  vector < double > Vctrl_Vadj_gss(dim, 0.);
+// // // 	  
+
+        for (unsigned j = 0; j < nDofsV; j++) {
+	  
+	  
+	  for (unsigned  kdim = 0; kdim < dim; kdim++) { // velocity block row
+// // // 	      
+            double Lap_res = 0.; 
+	    double Lap_mat = 0.;
+	    
+	    for (unsigned jdim = 0; jdim < dim; jdim++) {
+	      Lap_res += gradSolVAR_qp[SolFEType[kdim]][jdim]*phi_x_gss_fe[SolFEType[kdim]][i * dim + jdim];
+	      Lap_mat += phi_x_gss_fe[SolFEType[kdim]][i * dim + jdim]*phi_x_gss_fe[SolFEType[kdim]][j * dim + jdim];
+	    }
+	    
+	    Res[kdim][i]   +=  (         + 1. * phi_gss_fe[SolFEType[kdim]][i]
+                                           - IRe*Lap_res ) * weight; 
+	      
+	      Jac[kdim][kdim][i*nDofsV + j] += ( + IRe*Lap_mat ) * weight; 
+
+	      
+	      for (unsigned jdim = 0; jdim < dim; jdim++) { //focus on single partial derivative
+	   
+
+// // // 	    
+// // //         
+// // //             
+// // // 	      NSVadj_gss[kdim]   	+=  IRe*phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + jdim]*gradSolVAR_qp[SolFEType[kdim + adj_pos_begin]][jdim];  
+// // // 
+// // // 	      NSVctrl_gss[kdim]   	+=  -(alpha_val * target_flag + beta_val) *SolVAR_qp[SolFEType[kdim + ctrl_pos_begin]]  * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
+// // // 					    - gamma_val * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + jdim] * gradSolVAR_qp[SolFEType[kdim + ctrl_pos_begin]][jdim];
+// // // 					
+// // // 	      V_Vctrl_gss[kdim] 	+= IRe*phi_x_gss_fe[SolFEType[kdim]][i * dim + jdim]*gradSolVAR_qp[SolFEType[kdim + ctrl_pos_begin]][jdim];	
+// // // 	      
+// // // 	      Vadj_V_gss[kdim] 		+=  - (alpha_val * target_flag * SolVAR_qp[SolFEType[kdim]]*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]);
+// // // 	      
+// // // 	      Vadj_Vctrl_gss[kdim] 	+= -(alpha_val* target_flag * SolVAR_qp[SolFEType[kdim + ctrl_pos_begin]]*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]);
+// // // 	      
+// // // 	      Vctrl_V_gss[kdim] 	+= -(alpha_val* target_flag * SolVAR_qp[SolFEType[kdim]]*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]);
+// // // 	      
+// // // 	      Vctrl_Vadj_gss[kdim] 	+= IRe*phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + jdim]*gradSolVAR_qp[SolFEType[kdim + adj_pos_begin]][jdim]; 
+// // // 	       
+	  
+	   
+	}  //jdim loop
+// // //             
+// // //             //velocity-pressure block
+// // //           NSV_gss[kdim] 	+= - SolVAR_qp[SolFEType[press_type_pos]] * phi_x_gss_fe[SolFEType[kdim]][i * dim + kdim];
+// // // 	  NSVadj_gss[kdim] 	+= - SolVAR_qp[SolFEType[press_type_pos + adj_pos_begin]] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + kdim];
+// // //           NSVctrl_gss[kdim] 	+= - SolVAR_qp[SolFEType[press_type_pos + ctrl_pos_begin]] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + kdim];
+// // // 	    
+
+// // //             Res[kdim][i] 			+=  (force[kdim] * phi_gss_fe[SolFEType[kdim]][i] - NSV_gss[kdim] /*-V_Vctrl_gss[kdim]*/) * weight;
+// // // 	    Res[kdim + adj_pos_begin][i]   	+=  (-alpha_val* target_flag * Vel_desired[kdim]* phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]  - Vadj_V_gss[kdim] - Vadj_Vctrl_gss[kdim] - NSVadj_gss[kdim] )* weight;		
+// // //             Res[kdim + ctrl_pos_begin][i]    	+=  (-alpha_val* target_flag * Vel_desired[kdim]* phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] - Vctrl_V_gss[kdim] - Vctrl_Vadj_gss[kdim]  - NSVctrl_gss[kdim])* weight;
+
+	    
+	  } //kdim loop
+	  
+	}//j loop
+      }//i loop
+	
+	
+// // // 
+// // // 
+// // // 
+
+// // //         } // end phiV_i loop
+// // // 
+// // //         // *** phiP_i loop ***
+// // //         for (unsigned i = 0; i < nDofsP; i++) {
+// // //           for (int kdim = 0; kdim < dim; kdim++) {
+// // //             Res[press_type_pos][i] 			+= - (gradSolVAR_qp[SolFEType[kdim]][kdim]) * phi_gss_fe[SolFEType[press_type_pos]][i]  * weight;
+// // // 	    Res[press_type_pos + adj_pos_begin][i]  	+= - (gradSolVAR_qp[SolFEType[kdim + adj_pos_begin]][kdim]) * phi_gss_fe[SolFEType[press_type_pos + adj_pos_begin]][i]  * weight;
+// // // 	    Res[press_type_pos + ctrl_pos_begin][i]   	+= - (gradSolVAR_qp[SolFEType[kdim + ctrl_pos_begin]][kdim]) * phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][i]  * weight;
+// // // 	    
+// // //           }
+// // //         } // end phiP_i loop
+// // // 
+// // //      
+// // //   //residuals------------------------------------------------------------------------------------------------
+// // // 
+// // //   
+// // //   // assembling the Jac matrix---------------------------------------------------------------------------------
+// // //       for (unsigned i = 0; i < nDofsV; i++) {
+// // //           vector < double > NSV_Jac(dim, 0.);
+// // // 	  vector < double > NSVadj_Jac(dim, 0.);
+// // // 	  vector < double > NSVctrl_Jac(dim, 0.);
+// // // 	  vector < double > V_Vctrl_Jac(dim, 0.);
+// // // 	  vector < double > Vadj_V_Jac(dim, 0.);
+// // // 	  vector < double > Vadj_Vctrl_Jac(dim, 0.);
+// // // 	  vector < double > Vctrl_V_Jac(dim, 0.);
+// // // 	  vector < double > Vctrl_Vadj_Jac(dim, 0.);
+// // // 	  
+// // //           for (unsigned  kdim = 0; kdim < dim; kdim++) { // velocity block row
+// // // 	      
+// // //           for (unsigned jdim = 0; jdim < dim; jdim++) { //focus on single partial derivative
+// // // 	    
+// // //         
+// // // 	      NSV_Jac[kdim]   	 	+=  IRe*phi_x_gss_fe[SolFEType[kdim]][i * dim + jdim]*phi_x_gss_fe[SolFEType[kdim]][jdim]; 
+// // //             
+// // // 	      NSVadj_Jac[kdim]   	+=  IRe*phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + jdim]*phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][jdim];  
+// // // 
+// // // 	      NSVctrl_Jac[kdim]   	+=  -(alpha_val * target_flag + beta_val) *phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]  * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
+// // // 					    - gamma_val * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + jdim] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][jdim];
+// // // 					
+// // // 	      V_Vctrl_Jac[kdim] 	+= IRe*phi_x_gss_fe[SolFEType[kdim]][i * dim + jdim]*phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][jdim];	
+// // // 	      
+// // // 	      Vadj_V_Jac[kdim] 		+=  - (alpha_val * target_flag * phi_gss_fe[SolFEType[kdim]][i]*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]);
+// // // 	      
+// // // 	      Vadj_Vctrl_Jac[kdim] 	+= -(alpha_val* target_flag * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]);
+// // // 	      
+// // // 	      Vctrl_V_Jac[kdim] 	+= -(alpha_val* target_flag * phi_gss_fe[SolFEType[kdim]][i]*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]);
+// // // 	      
+// // // 	      Vctrl_Vadj_Jac[kdim] 	+= IRe*phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + jdim]*phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][jdim]; 
+// // // 	       
+// // // 	  }  //jdim loop
+// // //             
+// // //             //velocity-pressure block
+// // //           NSV_Jac[kdim] 	+= - phi_gss_fe[SolFEType[press_type_pos]][kdim] * phi_x_gss_fe[SolFEType[kdim]][i * dim + kdim];
+// // // 	  NSVadj_Jac[kdim] 	+= - phi_gss_fe[SolFEType[press_type_pos + adj_pos_begin]][kdim] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + kdim];
+// // //           NSVctrl_Jac[kdim] 	+= - phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][kdim] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + kdim];
+// // // 	    
+// // // 	  } //kdim loop
+// // // 
+// // // 
+// // // 
+// // //           for (unsigned  kdim = 0; kdim < dim; kdim++) {
+// // // 	    for (unsigned  jdim = 0; jdim < dim; jdim++) {
+// // //             Jac[kdim][jdim][i] 			+=  ( NSV_Jac[kdim] + V_Vctrl_Jac[kdim]) * weight;
+// // // 	    Jac[kdim + adj_pos_begin][jdim + adj_pos_begin][i]   	+=  ( Vadj_V_Jac[kdim] + Vadj_Vctrl_Jac[kdim] + NSVadj_Jac[kdim] )* weight;		
+// // //             Jac[kdim + ctrl_pos_begin][jdim + ctrl_pos_begin][i]    	+=  ( Vctrl_V_Jac[kdim] + Vctrl_Vadj_Jac[kdim]  + NSVctrl_Jac[kdim])* weight;
+// // // 	    }					
+// // // 	  }
+// // //         } // end phiV_i loop
+// // // 
+// // //         // *** phiP_i loop ***
+// // //         for (unsigned i = 0; i < nDofsP; i++) {
+// // //           for (int kdim = 0; kdim < dim; kdim++) {
+// // //             Jac[press_type_pos][kdim][i] 			+=  (phi_x_gss_fe[SolFEType[kdim]][kdim]) * phi_gss_fe[SolFEType[press_type_pos]][i]  * weight;
+// // // 	    Jac[press_type_pos + adj_pos_begin][kdim + adj_pos_begin][i]  	+=  (phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][kdim]) * phi_gss_fe[SolFEType[press_type_pos + adj_pos_begin]][i]  * weight;
+// // // 	    Jac[press_type_pos + ctrl_pos_begin][kdim + ctrl_pos_begin][i]   	+=  (phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][kdim]) * phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][i]  * weight;
+// // // 	    
+// // //           }
+// // //         } // end phiP_i loop
+
+  
+  
+  
+  
+  
+   // assembling the Jac matrix---------------------------------------------------------------------------------
+ 
 	
 	
 // // //   //begin NS block row *********************************
@@ -1654,49 +1830,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem &ml_prob){
  
  
       }  // end gauss point loop
-      
-      
-//       //***************************boundary loop ************************************************************************
-//       unsigned nfaces = el->GetElementFaceNumber(iel);
-//       
-// 	std::vector< double > xx_bd(dim,0.);
-// 	vector < double > normal_bd(dim,0);   
-// 	// loop on faces
-// 
-// 	
-// 	for(unsigned jface=0; jface < nfaces; jface++) {
-// 	  // look for boundary faces
-// 	  if(el->GetFaceElementIndex(iel,jface)<0) {
-// 	    unsigned int face = -(msh->el->GetFaceElementIndex(iel,jface)+1);
-//              double tau=0.;
-// 	     
-// 	     bool flag_bd = mlSol->_SetBoundaryConditionFunction(xx_bd,"P",tau,face,0.);
-// 	    if( ! flag_bd /*&& tau!=0.*/){
-// 	      unsigned nDofsV_bd      = msh->el->GetElementFaceDofNumber(iel,jface,SolFEType[vel_type_pos]);
-// 	      unsigned nDofsX_bd = msh->el->GetElementFaceDofNumber(iel,jface,coordXType);
-//                 phiV_gss_bd.resize(nDofsV_bd);
-//                 phiV_x_gss_bd.resize(nDofsV_bd*dim);
-// 	      const unsigned felt = msh->el->GetElementFaceType(iel, jface);
-// 	      for(unsigned i=0; i < nDofsX_bd; i++) {
-// 		unsigned inode = msh->el->GetFaceVertexIndex(iel,jface,i)-1u;
-// 		unsigned inode_Metis = msh->GetMetisDof(inode,coordXType);
-// 		for(unsigned idim=0; idim<dim; idim++) {
-// 		  coordX_bd[idim][i] = (*msh->_coordinate->_Sol[idim])(inode_Metis);
-// 		}
-// 	      }
-// 	      for(unsigned igs=0; igs < msh->_finiteElement[felt][SolFEType[vel_type_pos]]->GetGaussPointNumber(); igs++) {
-// 		msh->_finiteElement[felt][SolFEType[vel_type_pos]]->JacobianSur(coordX_bd,igs,weight_bd,phiV_gss_bd,phiV_x_gss_bd,normal_bd);
-// 		// *** phi_i loop ***
-// 		for(unsigned i_bd=0; i_bd < nDofsV_bd; i_bd++) {
-// 		  unsigned int i_vol = msh->el->GetLocalFaceVertexIndex(iel, jface, i_bd);
-// 		for(unsigned idim=0; idim<dim; idim++) {
-// 		  Res[idim][i_vol]   += -1. * weight_bd *  tau *phiV_gss_bd[i_bd]* normal_bd[idim];
-//  		 }//velocity blocks
-// 		}
-// 	      }
-// 	    } //flag_bd
-// 	  }
-// 	}    
+ 
 
       //***************************************************************************************************************
       
