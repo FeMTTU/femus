@@ -13,8 +13,8 @@ namespace femus
   bool meshIsCurrupted = true;
   //double factordxi[3] =  {1.e7, 1.e7, 1.e7};
   double factordxi[3] =  {1.e13, 1.e13, 1.e13};
-  
-  
+
+
   void FSIConstrainLeaflet(MultiLevelSolution& mlSol);
 
   void FSITimeDependentAssemblySupg(MultiLevelProblem & ml_prob)
@@ -1489,19 +1489,19 @@ namespace femus
 //           xc[0] = -0.000286; // vein_valve_closed
 //           xc[1] = 0.07000;
 //
-	  if(dim == 2){
-	    xc[0] = -0.00025; // vein_valve_closed
-	    xc[1] = 0.07000;
-	  }
+          if (dim == 2) {
+            xc[0] = -0.00025; // vein_valve_closed
+            xc[1] = 0.07000;
+          }
 // 	  else if (dim == 3){
 // 	    xc[0] = -0.008; // vein_valve_closed
 // 	    xc[1] = 0.0;
 // 	  }
-	  else if (dim == 3){
-	    xc[0] = 0.0015; // vein_valve_closed
-	    xc[1] = 0.0;
-	    xc[2] = 0.01;
-	  }
+          else if (dim == 3) {
+            xc[0] = 0.0015; // vein_valve_closed
+            xc[1] = 0.0;
+            xc[2] = 0.01;
+          }
 
           double distance = 0.;
           for (unsigned k = 0; k < dim; k++) {
@@ -3246,7 +3246,7 @@ namespace femus
       NablaSolVAR_old[i].resize(nabla_dim);
     }
     for (int i = 0; i < dim; i++) {
-       GradSolVAR_oldest[i].resize(dim);
+      GradSolVAR_oldest[i].resize(dim);
     }
 
     vector < bool> solidmark;
@@ -3302,8 +3302,8 @@ namespace femus
     vector< vector< int > > dofsVAR(nBlocks * dim + 1);
     vector< vector< double > > Soli_oldest(dim);
 
-    
-    
+
+
     for (int i = 0; i < nBlocks * dim + 1; i++) {
       Soli[i].reserve(max_size);
       Soli_old[i].reserve(max_size);
@@ -3370,16 +3370,16 @@ namespace femus
     //----------------------------------------------------------------------------------
     //variable-name handling
     const char varname[10][4] = {"DX", "DY", "DZ", "U", "V", "W", "DX1", "DY1", "DZ1", "P"};
-    
+
     const char varname2[10][4] = {"DX2", "DY2", "DZ2"};
 
     vector <unsigned> indexVAR(nBlocks * dim + 1);
     vector <unsigned> indVAR(nBlocks * dim + 1);
     vector <unsigned> SolType(nBlocks * dim + 1);
-    
-   
+
+
     vector <unsigned> indVAR2(dim);
-    
+
     for (unsigned ivar = 0; ivar < dim; ivar++) {
       for (unsigned k = 0; k < nBlocks; k++) {
         indVAR[ivar + k * dim] = ml_sol->GetIndex(&varname[ivar + k * 3][0]);
@@ -3443,7 +3443,7 @@ namespace femus
         aRhs[indexVAR[i]].resize(nve);
       }
       for (int i = 0; i < dim; i++) {
-	Soli_oldest[i].resize(nve);
+        Soli_oldest[i].resize(nve);
       }
 
       dofsVAR[nBlocks * dim].resize(nve1);
@@ -3472,7 +3472,7 @@ namespace femus
         solidmark[i] = mymsh->GetSolidMark(idof);    // to check
 
         for (int j = 0; j < dim; j++) {
-	  for (unsigned k = 0; k < nBlocks; k++) {
+          for (unsigned k = 0; k < nBlocks; k++) {
             Soli[indexVAR[j + k * dim]][i] = (*mysolution->_Sol[indVAR[j + k * dim]])(idof);
             Soli_old[indexVAR[j + k * dim]][i] = (*mysolution->_SolOld[indVAR[j + k * dim]])(idof);
             aRhs[indexVAR[j + k * dim]][i] = 0.;
@@ -3602,19 +3602,19 @@ namespace femus
 //           xc[0] = -0.000286; // vein_valve_closed
 //           xc[1] = 0.07000;
 //
-	  if(dim == 2){
-	    xc[0] = -0.00025; // vein_valve_closed
-	    xc[1] = 0.07000;
-	  }
+          if (dim == 2) {
+            xc[0] = -0.00025; // vein_valve_closed
+            xc[1] = 0.07000;
+          }
 // 	  else if (dim == 3){
 // 	    xc[0] = -0.008; // vein_valve_closed
 // 	    xc[1] = 0.0;
 // 	  }
-	  else if (dim == 3){
-	    xc[0] = 0.0015; // vein_valve_closed
-	    xc[1] = 0.0;
-	    xc[2] = 0.01;
-	  }
+          else if (dim == 3) {
+            xc[0] = 0.0015; // vein_valve_closed
+            xc[1] = 0.0;
+            xc[2] = 0.01;
+          }
 
           double distance = 0.;
           for (unsigned k = 0; k < dim; k++) {
@@ -3663,22 +3663,22 @@ namespace femus
             }
           }
         }
-        
-        
+
+
         for (int i = 0; i < dim; i++) {
           SolVAR_oldest[i] = 0.;
-	   for (int j = 0; j < dim; j++) {
-             GradSolVAR_oldest[i][j] = 0.;
-	   }
+          for (int j = 0; j < dim; j++) {
+            GradSolVAR_oldest[i][j] = 0.;
+          }
 
           for (unsigned inode = 0; inode < nve; inode++) {
             SolVAR_oldest[i] += phi[inode] * Soli_oldest[i][inode];
-	     for (int j = 0; j < dim; j++) {
-               GradSolVAR_oldest[i][j] += gradphi_old[inode * dim + j] * Soli_oldest[i][inode];//TODO
-	     }
-	  }
-	}
-        
+            for (int j = 0; j < dim; j++) {
+              GradSolVAR_oldest[i][j] += gradphi_old[inode * dim + j] * Soli_oldest[i][inode];//TODO
+            }
+          }
+        }
+
 
         // pressure
         SolVAR[nBlocks * dim] = 0.;
@@ -3689,20 +3689,19 @@ namespace femus
 
         // Lagrangian mesh velocity at t = time + dt/2
         vector < adept::adouble > meshVel(dim);
-	vector < adept::adouble > meshVel_old(dim);
+        vector < adept::adouble > meshVel_old(dim);
         vector < vector < adept::adouble > > GradMeshVel(dim);
-	vector < vector < adept::adouble > > GradMeshVel_old(dim);
+        vector < vector < adept::adouble > > GradMeshVel_old(dim);
 
         for (unsigned i = 0; i < dim; i++) {
-	  meshVel_old[i] = (SolVAR[i] - SolVAR_oldest[i]) / (2. * dt);
+          meshVel_old[i] = (SolVAR[i] - SolVAR_oldest[i]) / (2. * dt);
           meshVel[i] = meshVel_old[i] + (SolVAR[i] - 2.* SolVAR_old[i] + SolVAR_oldest[i] ) / dt;
           GradMeshVel[i].resize(dim);
-	  GradMeshVel_old[i].resize(dim);
+          GradMeshVel_old[i].resize(dim);
 
           for (unsigned j = 0; j < dim; j++) {
             GradMeshVel_old[i][j] = (GradSolVAR[i][j] - GradSolVAR_oldest[i][j]) / (2.*dt);
-	    GradMeshVel[i][j] = GradMeshVel_old[i][j] + (GradSolVAR[i][j] - 2.* GradSolVAR_old[i][j] + GradSolVAR_oldest[i][j] ) / dt;
-	    
+            GradMeshVel[i][j] = GradMeshVel_old[i][j] + (GradSolVAR[i][j] - 2.* GradSolVAR_old[i][j] + GradSolVAR_oldest[i][j] ) / dt;
           }
         }
 
