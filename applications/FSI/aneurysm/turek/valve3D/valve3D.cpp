@@ -26,6 +26,9 @@ bool SetBoundaryConditionVeinValve2(const std::vector < double >& x, const char 
                                    double &value, const int facename, const double time);
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
+
+void StoreOldDispcacement(MultiLevelSolution& mlSol);
+  
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, char **args)
@@ -57,7 +60,7 @@ int main(int argc, char **args)
   ni = 0.5;
   //E = 3.3 * 1.0e6; //vein young modulus
   E = 1.0 * 1.0e6;
-  E1 = 0.02 * 1.0e6; //leaflet young modulus
+  E1 = 0.2 * 1.0e6; //leaflet young modulus
 
   Parameter par(Lref, Uref);
 
@@ -123,7 +126,9 @@ int main(int argc, char **args)
 
   ml_sol.AddSolution ( "lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false );
 
-
+  ml_sol.AddSolution ( "DX2", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "DY2", LAGRANGE, SECOND, 2 );
+  if ( !dimension2D ) ml_sol.AddSolution ( "DZ2", LAGRANGE, SECOND, 2 );
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -264,8 +269,9 @@ int main(int argc, char **args)
 
   for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
+    StoreOldDispcacement(ml_sol);
     system.CopySolutionToOldSolution();
-
+    
     for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
     }
@@ -291,6 +297,39 @@ int main(int argc, char **args)
   ml_prob.clear();
   return 0;
 }
+
+
+void StoreOldDispcacement(MultiLevelSolution& mlSol){
+  
+  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+
+  Solution* solution  = mlSol.GetSolutionLevel(level);
+  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  
+  //const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  const unsigned dim = msh->GetDimension();
+  const char varname[6][4] = {"DX", "DY", "DZ", "DX2", "DY2", "DZ2"};
+
+  vector <unsigned> indexVAR(2 * dim);
+  vector <unsigned> indVAR(2 * dim);
+  vector <unsigned> SolType(2 * dim);
+
+  for (unsigned ivar = 0; ivar < 2 * dim; ivar++) {
+      indVAR[ivar] = mlSol.GetIndex(&varname[ivar][0]);
+  }
+  
+  for (unsigned ig=0; ig< level; ig++) {
+    Solution* solution  = mlSol.GetSolutionLevel(ig);
+    solution->CopySolutionToOldSolution();
+    
+    for(unsigned ivar = 0; ivar < dim; ivar++) {
+    // Copy the old vector
+      *(solution->_Sol[indVAR[dim + ivar]]) = *(solution->_SolOld[indVAR[ivar]]);
+    }
+  }
+  
+}
+
 
 double SetVariableTimeStep(const double time)
 {
@@ -398,10 +437,10 @@ bool SetBoundaryConditionVeinValve2(const std::vector < double >& x, const char 
     test = 0;
     value = 0.;
     if (1 == facename) {
-      value = (0 + 5 * sin(2 * PI * time)) * ramp;      //+ 4.5
+      value = (0 + 50 * sin(2 * PI * time)) * ramp;      //+ 4.5
     }
     else if (2 == facename) {
-      value = (0 - 5 * sin(2 * PI * time)) * ramp;      //- 4.5
+      value = (0 - 50 * sin(2 * PI * time)) * ramp;      //- 4.5
     }
   }
   else if ( (!strcmp(name, "DX")) || (!strcmp(name, "DX1")) ) {

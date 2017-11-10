@@ -25,6 +25,37 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 //------------------------------------------------------------------------------------------------------------------
 
+void StoreOldDispcacement(MultiLevelSolution& mlSol){
+  
+  unsigned gridn = mlSol._mlMesh->GetNumberOfLevels();
+
+  Solution* solution  = mlSol.GetSolutionLevel(gridn-1);
+  Mesh* msh = mlSol._mlMesh->GetLevel(gridn-1);
+  
+  //const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  const unsigned dim = msh->GetDimension();
+  const char varname[6][4] = {"DX", "DX2", "DY", "DY2", "DZ", "DZ2"};
+
+  vector <unsigned> indexVAR(2 * dim);
+  vector <unsigned> indVAR(2 * dim);
+  vector <unsigned> SolType(2 * dim);
+
+  for (unsigned ivar = 0; ivar < 2 * dim; ivar++) {
+      indVAR[ivar] = mlSol.GetIndex(&varname[ivar][0]);
+  }
+  
+  for (unsigned level = 0; level< gridn; level++) {
+    Solution* solution  = mlSol.GetSolutionLevel(level);
+      
+    for(unsigned ivar = 0; ivar < dim; ivar++) {
+    // Copy the old vector
+      *(solution->_Sol[indVAR[2 * ivar + 1]]) = *(solution->_SolOld[indVAR[2 * ivar]]);
+    }
+  }
+  
+}
+
+
 int main(int argc, char **args)
 {
 
@@ -50,9 +81,9 @@ int main(int argc, char **args)
   muf = 2.2 * 1.0e-3;
   rhos = 960;
   ni = 0.5;
-  //E = 3.3 * 1.0e6; //vein young modulus
-  E = 4.3874951 * 1.0e12;
-  E1 = 0.1 * 1.0e6; //leaflet young modulus
+  E = 5 * 1.0e6; //vein young modulus
+  //E = 4.3874951 * 1.0e12;
+  E1 = 0.2 * 1.0e6; //leaflet young modulus
 
   Parameter par(Lref, Uref);
 
@@ -113,7 +144,10 @@ int main(int argc, char **args)
 
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
-
+  ml_sol.AddSolution ( "DX2", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "DY2", LAGRANGE, SECOND, 2 );
+  
+  
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -131,6 +165,8 @@ int main(int argc, char **args)
   ml_sol.GenerateBdc("DY1", "Steady");
 
   ml_sol.GenerateBdc("P", "Steady");
+  
+
 
   // ******* Define the FSI Multilevel Problem *******
 
@@ -156,7 +192,7 @@ int main(int argc, char **args)
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSITimeDependentAssemblySupgNew);
+  system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
@@ -246,6 +282,8 @@ int main(int argc, char **args)
 
   for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
+    StoreOldDispcacement(ml_sol);
+    
     system.CopySolutionToOldSolution();
 
     for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
