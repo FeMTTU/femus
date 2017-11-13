@@ -3629,6 +3629,7 @@ namespace femus
 
         // ---------------------------------------------------------------------------
         // displacement and velocity
+        
         for (int i = 0; i < nBlocks * dim; i++) {
           SolVAR[i] = 0.;
           SolVAR_old[i] = 0.;
@@ -3670,13 +3671,20 @@ namespace femus
           SolVAR[nBlocks * dim]    += phi1[inode] * Soli[indexVAR[nBlocks * dim]][inode];
         }
 
+        vector < adept::adouble > vx_ig(dim);
+	vector < double > vxOld_ig(dim);
+        
         // mesh velocity OLD
         for (int i = 0; i < dim; i++) {
+	  vx_ig[i]=0.;
+	  vxOld_ig[i]=0.;
           meshVel_old[i] = 0.;
           for (int j = 0; j < dim; j++) {
             GradMeshVel_old[i][j] = 0.;
           }
           for (unsigned inode = 0; inode < nve; inode++) {
+	    vx_ig[i]+=phi[inode] * vx[i][inode];
+	    vxOld_ig[i]+=phi[inode] * vx_old[i][inode];
             meshVel_old[i] += phi[inode] * meshVelOldNode[i][inode];
             for (int j = 0; j < dim; j++) {
               GradMeshVel_old[i][j] += gradphi_old[inode * dim + j] * meshVelOldNode[i][inode];//TODO
@@ -3818,7 +3826,7 @@ namespace femus
                   adept::adouble value =  theta * (
                                             - AdvaleVAR[idim]      	             // advection term
                                             - IRe * LapvelVAR[idim]	             // viscous dissipation
-                                            - Lapdisp[idim] * 1.0e-3// * exp( (vx[0][nve - 1] + 2.5e-5)/1.0e-5)
+                                            - Lapdisp[idim] * .5e-3 * exp( (vx_ig[0] + 2.5e-5)/0.0001)
                                             + IRe * LapStrong[idim]
                                             + 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
@@ -3826,7 +3834,7 @@ namespace femus
                   adept::adouble value_old = (1. - theta) * (
                                                - AdvaleVAR_old[idim]               	         // advection term
                                                - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
-                                               - Lapdisp_old[idim]* 1.0e-3// * exp( (vx_old[0][nve - 1] + 2.5e-5)/1.0e-5)
+                                               - Lapdisp_old[idim] * .5e-3 * exp( (vxOld_ig[0] + 2.5e-5)/0.0001)
                                                + IRe * LapStrong_old[idim]
                                                + 1. / rhof * SolVAR[nBlocks * dim] * gradphi_old[i * dim + idim]  // pressure gradient
                                              ) * Weight_old;			                 // at time t-dt
