@@ -534,21 +534,21 @@ namespace femus
     //std::vector < unsigned > ().swap(elementList);
 
 
-    std::cout << "-----------------------------------------  UPDATE LINE  BY ELEMENTS-----------------------------------------" << std::endl;
-    for(unsigned i = 0; i < _size; i++) {
-      unsigned proc;
-      unsigned elem;
-      //std::vector <double> chiappe;
-      //chiappe = _particles[_printList[i]]->GetIprocMarkerCoordinates();
-      proc = _particles[i]->GetMarkerProc(_sol);
-      elem = _particles[i]->GetMarkerElement();
-      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
-                << "Element: " << elem << " " <<  " "  ;
-//       for(unsigned j = 0; j < _dim; j++) {
-//         std::cout << "x[" << j << "]=" << chiappe[j] << " " ;
-//       }
-      std::cout << std::endl;
-    }
+//     std::cout << "-----------------------------------------  UPDATE LINE  BY ELEMENTS-----------------------------------------" << std::endl;
+//     for(unsigned i = 0; i < _size; i++) {
+//       unsigned proc;
+//       unsigned elem;
+//       //std::vector <double> chiappe;
+//       //chiappe = _particles[_printList[i]]->GetIprocMarkerCoordinates();
+//       proc = _particles[i]->GetMarkerProc(_sol);
+//       elem = _particles[i]->GetMarkerElement();
+//       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+//                 << "Element: " << elem << " " <<  " "  ;
+// //       for(unsigned j = 0; j < _dim; j++) {
+// //         std::cout << "x[" << j << "]=" << chiappe[j] << " " ;
+// //       }
+//       std::cout << std::endl;
+//     }
 
 
   }
