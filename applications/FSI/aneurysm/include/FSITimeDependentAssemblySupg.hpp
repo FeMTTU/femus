@@ -3826,7 +3826,7 @@ namespace femus
                   adept::adouble value =  theta * (
                                             - AdvaleVAR[idim]      	             // advection term
                                             - IRe * LapvelVAR[idim]	             // viscous dissipation
-                                            - Lapdisp[idim] * .5e-3 * exp( (vx_ig[0] + 2.5e-5)/0.0001)
+                                            - (idim == 0) * Lapdisp[idim] * 1.e-3 * exp( (vx_ig[0] + 2.5e-5)/0.0001)
                                             + IRe * LapStrong[idim]
                                             + 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
@@ -3834,7 +3834,7 @@ namespace femus
                   adept::adouble value_old = (1. - theta) * (
                                                - AdvaleVAR_old[idim]               	         // advection term
                                                - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
-                                               - Lapdisp_old[idim] * .5e-3 * exp( (vxOld_ig[0] + 2.5e-5)/0.0001)
+                                               - (idim == 0) * Lapdisp_old[idim] * 1.e-3 * exp( (vxOld_ig[0] + 2.5e-5)/0.0001)
                                                + IRe * LapStrong_old[idim]
                                                + 1. / rhof * SolVAR[nBlocks * dim] * gradphi_old[i * dim + idim]  // pressure gradient
                                              ) * Weight_old;			                 // at time t-dt

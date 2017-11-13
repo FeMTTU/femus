@@ -51,7 +51,7 @@ int main(int argc, char **args)
   muf = 2.2 * 1.0e-3;
   rhos = 960;
   ni = 0.5;
-  E = 5 * 1.0e6; //vein young modulus
+  E = 10 * 1.0e6; //vein young modulus
   //E = 4.3874951 * 1.0e12;
   E1 = 0.2 * 1.0e6; //leaflet young modulus
 
