@@ -3223,11 +3223,11 @@ namespace femus
     // local objects
     vector<adept::adouble> SolVAR(nBlocks * dim + 1);
     vector<double> SolVAR_old(nBlocks * dim);
-    vector<double> SolVAR_oldest(dim);
+    vector<double> meshVel_old(dim);
 
     vector<vector < adept::adouble > > GradSolVAR(nBlocks * dim);
     vector<vector < double > > GradSolVAR_old(nBlocks * dim);
-    vector<vector < double > > GradSolVAR_oldest(dim);
+    vector<vector < double > > GradMeshVel_old(dim);
 
     vector<vector < adept::adouble > > GradSolhatVAR(nBlocks * dim);
     vector<vector < double > > GradSolhatVAR_old(nBlocks * dim);
@@ -3246,7 +3246,7 @@ namespace femus
       NablaSolVAR_old[i].resize(nabla_dim);
     }
     for (int i = 0; i < dim; i++) {
-      GradSolVAR_oldest[i].resize(dim);
+      GradMeshVel_old[i].resize(dim);
     }
 
     vector < bool> solidmark;
@@ -3300,7 +3300,7 @@ namespace femus
     vector< vector< adept::adouble > > Soli(nBlocks * dim + 1);
     vector< vector< double > > Soli_old(nBlocks * dim + 1);
     vector< vector< int > > dofsVAR(nBlocks * dim + 1);
-    vector< vector< double > > Soli_oldest(dim);
+    vector< vector< double > > meshVelOldNode(dim);
 
 
 
@@ -3310,7 +3310,7 @@ namespace femus
       dofsVAR[i].reserve(max_size);
     }
     for (int i = 0; i < dim; i++) {
-      Soli_oldest[i].reserve(max_size);
+      meshVelOldNode[i].reserve(max_size);
     }
 
     vector< vector< double > > Rhs(nBlocks * dim + 1);
@@ -3371,7 +3371,7 @@ namespace femus
     //variable-name handling
     const char varname[10][4] = {"DX", "DY", "DZ", "U", "V", "W", "DX1", "DY1", "DZ1", "P"};
 
-    const char varname2[10][4] = {"DX2", "DY2", "DZ2"};
+    const char varname2[10][4] = {"Um", "Vm", "Wm"};
 
     vector <unsigned> indexVAR(nBlocks * dim + 1);
     vector <unsigned> indVAR(nBlocks * dim + 1);
@@ -3443,7 +3443,7 @@ namespace femus
         aRhs[indexVAR[i]].resize(nve);
       }
       for (int i = 0; i < dim; i++) {
-        Soli_oldest[i].resize(nve);
+        meshVelOldNode[i].resize(nve);
       }
 
       dofsVAR[nBlocks * dim].resize(nve1);
@@ -3478,7 +3478,7 @@ namespace femus
             aRhs[indexVAR[j + k * dim]][i] = 0.;
             dofsVAR[j + k * dim][i] = myLinEqSolver->GetSystemDof(indVAR[j + k * dim], indexVAR[j + k * dim], i, iel);
           }
-          Soli_oldest[j][i] = (*mysolution->_SolOld[indVAR2[j]])(idof);
+          meshVelOldNode[j][i] = (*mysolution->_SolOld[indVAR2[j]])(idof);
           vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idof);
         }
       }
@@ -3664,44 +3664,35 @@ namespace femus
           }
         }
 
-
-        for (int i = 0; i < dim; i++) {
-          SolVAR_oldest[i] = 0.;
-          for (int j = 0; j < dim; j++) {
-            GradSolVAR_oldest[i][j] = 0.;
-          }
-
-          for (unsigned inode = 0; inode < nve; inode++) {
-            SolVAR_oldest[i] += phi[inode] * Soli_oldest[i][inode];
-            for (int j = 0; j < dim; j++) {
-              GradSolVAR_oldest[i][j] += gradphi_old[inode * dim + j] * Soli_oldest[i][inode];//TODO
-            }
-          }
-        }
-
-
         // pressure
         SolVAR[nBlocks * dim] = 0.;
-
         for (unsigned inode = 0; inode < nve1; inode++) {
           SolVAR[nBlocks * dim]    += phi1[inode] * Soli[indexVAR[nBlocks * dim]][inode];
         }
 
-        // Lagrangian mesh velocity at t = time + dt/2
+        // mesh velocity OLD
+        for (int i = 0; i < dim; i++) {
+          meshVel_old[i] = 0.;
+          for (int j = 0; j < dim; j++) {
+            GradMeshVel_old[i][j] = 0.;
+          }
+          for (unsigned inode = 0; inode < nve; inode++) {
+            meshVel_old[i] += phi[inode] * meshVelOldNode[i][inode];
+            for (int j = 0; j < dim; j++) {
+              GradMeshVel_old[i][j] += gradphi_old[inode * dim + j] * meshVelOldNode[i][inode];//TODO
+            }
+          }
+        }
+        
+        // mesh velocity NEW
         vector < adept::adouble > meshVel(dim);
-        vector < adept::adouble > meshVel_old(dim);
         vector < vector < adept::adouble > > GradMeshVel(dim);
-        vector < vector < adept::adouble > > GradMeshVel_old(dim);
-
+	unsigned dBlock = ( meshIsCurrupted ) ? (nBlocks-1)*dim : 0;
         for (unsigned i = 0; i < dim; i++) {
-          meshVel_old[i] = (SolVAR[i] - SolVAR_oldest[i]) / (2. * dt);
-          meshVel[i] = meshVel_old[i] + (SolVAR[i] - 2.* SolVAR_old[i] + SolVAR_oldest[i] ) / dt;
+          meshVel[i] = 2./dt * (SolVAR[dBlock + i] - SolVAR_old[dBlock + i]) - meshVel_old[i];
           GradMeshVel[i].resize(dim);
-          GradMeshVel_old[i].resize(dim);
-
-          for (unsigned j = 0; j < dim; j++) {
-            GradMeshVel_old[i][j] = (GradSolVAR[i][j] - GradSolVAR_oldest[i][j]) / (2.*dt);
-            GradMeshVel[i][j] = GradMeshVel_old[i][j] + (GradSolVAR[i][j] - 2.* GradSolVAR_old[i][j] + GradSolVAR_oldest[i][j] ) / dt;
+          for (unsigned j = 0; j < dim; j++) {	    
+	    GradMeshVel[i][j] = 2./dt * (GradSolVAR[dBlock + i][j] - GradSolVAR_old[dBlock + i][j]) - GradMeshVel_old[i][j];
           }
         }
 
@@ -3710,15 +3701,15 @@ namespace femus
         if (flag_mat == 2 || flag_mat == 3) {
 
           vector < adept::adouble > a(dim);
-          vector < adept::adouble > a_old(dim);
+          vector < double > a_old(dim);
           for (int i = 0; i < dim; i++) {
-            a[i] = SolVAR[i + dim] - 0.*meshVel[i]; // TODO maybe we subtract meshVel[i] maybe not
-            a_old[i] = SolVAR_old[i + dim] - 0.*meshVel[i];
+            a[i] = SolVAR[i + dim];// - 0.*meshVel[i]; // TODO maybe we subtract meshVel[i] maybe not
+            a_old[i] = SolVAR_old[i + dim];// - 0.*meshVel[i];
           }
 
           // speed
           adept::adouble aL2Norm = 0.;
-          adept::adouble a_oldL2Norm = 0.;
+          double a_oldL2Norm = 0.;
           for (int i = 0; i < dim; i++) {
             aL2Norm += a[i] * a[i];
             a_oldL2Norm += a_old[i] * a_old[i];
@@ -3728,9 +3719,9 @@ namespace femus
 
           double sqrtlambdak = (*mysolution->_Sol[indLmbd])(iel);
           adept::adouble tauSupg = 1. / (sqrtlambdak * sqrtlambdak * 4.*IRe);
-          adept::adouble tauSupg_old = 1. / (sqrtlambdak * sqrtlambdak * 4.*IRe);
+          double tauSupg_old = 1. / (sqrtlambdak * sqrtlambdak * 4.*IRe);
           adept::adouble Rek = aL2Norm / (4.*sqrtlambdak * IRe);
-          adept::adouble Rek_old = a_oldL2Norm / (4.*sqrtlambdak * IRe);
+          double Rek_old = a_oldL2Norm / (4.*sqrtlambdak * IRe);
 
           if (Rek > 1.0e-15) {
             adept::adouble xiRek = (Rek >= 1.) ? 1. : Rek;
@@ -3738,7 +3729,7 @@ namespace femus
           }
 
           if (Rek_old > 1.0e-15) {
-            adept::adouble xiRek_old = (Rek_old >= 1.) ? 1. : Rek_old;
+            double xiRek_old = (Rek_old >= 1.) ? 1. : Rek_old;
             tauSupg_old   = xiRek_old / (a_oldL2Norm * sqrtlambdak);
           }
 
@@ -3746,7 +3737,7 @@ namespace femus
 
 
           vector < adept::adouble > phiSupg(nve, 0.);
-          vector < adept::adouble > phiSupg_old(nve, 0.);
+          vector < double > phiSupg_old(nve, 0.);
           //tauSupg=0;
           //tauSupg_old=0;
           for (unsigned i = 0; i < nve; i++) {
@@ -3782,12 +3773,14 @@ namespace femus
 
               if (flag_mat == 2) {
                 //BEGIN residual Navier-Stokes in moving domain
-                adept::adouble LapvelVAR[3] = {0., 0., 0.};
-                adept::adouble LapvelVAR_old[3] = {0., 0., 0.};
+                adept::adouble Lapdisp[3] = {0., 0., 0.};
+		adept::adouble Lapdisp_old[3] = {0., 0., 0.};
+		adept::adouble LapvelVAR[3] = {0., 0., 0.};
+	        double LapvelVAR_old[3] = {0., 0., 0.};
                 adept::adouble LapStrong[3] = {0., 0., 0.};
-                adept::adouble LapStrong_old[3] = {0., 0., 0.};
+                double LapStrong_old[3] = {0., 0., 0.};
                 adept::adouble AdvaleVAR[3] = {0., 0., 0.};
-                adept::adouble AdvaleVAR_old[3] = {0., 0., 0.};
+                double AdvaleVAR_old[3] = {0., 0., 0.};
 
                 for (int idim = 0.; idim < dim; idim++) {
                   for (int jdim = 0.; jdim < dim; jdim++) {
@@ -3799,18 +3792,20 @@ namespace femus
                     //laplaciano debole
                     LapvelVAR[idim]     += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
                     LapvelVAR_old[idim] += (GradSolVAR_old[dim + idim][jdim] + GradSolVAR_old[dim + jdim][idim]) * gradphi_old[i * dim + jdim];
+		    
+		    Lapdisp[idim]     += (GradSolVAR[idim][jdim] + GradSolVAR[jdim][idim]) * gradphi[i * dim + jdim];
+                    Lapdisp_old[idim] += (GradSolVAR_old[idim][jdim] + GradSolVAR_old[jdim][idim]) * gradphi_old[i * dim + jdim];
+		    
                     //laplaciano strong
                     LapStrong[idim]     += (NablaSolVAR[dim + idim][jdim] + NablaSolVAR[dim + jdim][kdim]) * phiSupg[i];
                     LapStrong_old[idim] += (NablaSolVAR_old[dim + idim][jdim] + NablaSolVAR_old[dim + jdim][kdim]) * phiSupg_old[i];
 
                     AdvaleVAR[idim]	+= ((SolVAR[dim + jdim] - meshVel[jdim]) * GradSolVAR[dim + idim][jdim]
-                                        + (0.*GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim]
-                                        //) * phi[i];
-                                       ) * (phi[i] + phiSupg[i]);
+					    + (GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim]
+					   ) * (phi[i] + phiSupg[i]);
 
                     AdvaleVAR_old[idim]	+= ((SolVAR_old[dim + jdim] - meshVel_old[jdim]) * GradSolVAR_old[dim + idim][jdim]
-                                            + (0.*GradSolVAR_old[dim + jdim][jdim] - GradMeshVel_old[jdim][jdim]) * SolVAR_old[dim + idim]
-                                            //) * phi_old[i];
+                                            + (GradSolVAR_old[dim + jdim][jdim] - GradMeshVel_old[jdim][jdim]) * SolVAR_old[dim + idim]
                                            ) * (phi_old[i] + phiSupg_old[i]);
                   }
                 }
@@ -3823,6 +3818,7 @@ namespace femus
                   adept::adouble value =  theta * (
                                             - AdvaleVAR[idim]      	             // advection term
                                             - IRe * LapvelVAR[idim]	             // viscous dissipation
+                                            - Lapdisp[idim] * 1.0e-3// * exp( (vx[0][nve - 1] + 2.5e-5)/1.0e-5)
                                             + IRe * LapStrong[idim]
                                             + 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
@@ -3830,6 +3826,7 @@ namespace femus
                   adept::adouble value_old = (1. - theta) * (
                                                - AdvaleVAR_old[idim]               	         // advection term
                                                - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
+                                               - Lapdisp_old[idim]* 1.0e-3// * exp( (vx_old[0][nve - 1] + 2.5e-5)/1.0e-5)
                                                + IRe * LapStrong_old[idim]
                                                + 1. / rhof * SolVAR[nBlocks * dim] * gradphi_old[i * dim + idim]  // pressure gradient
                                              ) * Weight_old;			                 // at time t-dt
@@ -4367,6 +4364,61 @@ namespace femus
 
 
   }
+  
+  void StoreMeshVelocity(MultiLevelProblem & ml_prob){
+  
+  TransientNonlinearImplicitSystem & my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem> ("Fluid-Structure-Interaction");
+  const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  
+  MultiLevelSolution *ml_sol = ml_prob._ml_sol;
+  
+  Solution *solution = ml_sol->GetSolutionLevel(level);
+  Mesh *msh = ml_prob._ml_msh->GetLevel(level);
+  
+  //const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  const unsigned dim = msh->GetDimension();
+  const char varname[9][4] = {"DX", "U", "Um", "DY", "V", "Vm", "DZ", "W", "Wm"};
+  const char varname1[9][4] = {"DX1", "U", "Um", "DY1", "V", "Vm", "DZ1", "W", "Wm"};
+
+  vector <unsigned> indVAR(3 * dim);
+  
+  for (unsigned ivar = 0; ivar < 3 * dim; ivar++) {
+    if(!meshIsCurrupted){
+      indVAR[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
+    }
+    else{
+      indVAR[ivar] = ml_sol->GetIndex(&varname1[ivar][0]);
+    }
+  }
+  
+  double dt =  my_nnlin_impl_sys.GetIntervalTime();
+  
+  
+  int  iproc;
+  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+    
+  for(unsigned idim = 0; idim < dim; idim++) {
+    unsigned ivar = idim * 3; 
+    for(unsigned jdof = msh->_dofOffset[2][iproc]; jdof < msh->_dofOffset[2][iproc + 1]; jdof++) {
+      bool solidmark = msh->GetSolidMark(jdof);
+      double vnew;
+      if(solidmark != solidmark){
+	vnew = (*solution->_Sol[indVAR[ivar + 1]])(jdof); // solid: mesh velocity equals solid velocity
+      }
+      else{
+	double unew = (*solution->_Sol[indVAR[ivar]])(jdof);
+	double uold = (*solution->_SolOld[indVAR[ivar]])(jdof);
+	double vold = (*solution->_SolOld[indVAR[ivar + 2]])(jdof);
+	vnew = 2./dt*(unew-uold) - vold;
+	
+      }
+      solution->_Sol[indVAR[ivar + 2]]->set(jdof,vnew);
+    }
+    solution->_Sol[indVAR[ivar + 2]]->close();
+  }
+  
+  }
+  
 }
 
 

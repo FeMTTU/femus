@@ -25,36 +25,6 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 //------------------------------------------------------------------------------------------------------------------
 
-void StoreOldDispcacement(MultiLevelSolution& mlSol){
-  
-  unsigned gridn = mlSol._mlMesh->GetNumberOfLevels();
-
-  Solution* solution  = mlSol.GetSolutionLevel(gridn-1);
-  Mesh* msh = mlSol._mlMesh->GetLevel(gridn-1);
-  
-  //const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
-  const unsigned dim = msh->GetDimension();
-  const char varname[6][4] = {"DX", "DX2", "DY", "DY2", "DZ", "DZ2"};
-
-  vector <unsigned> indexVAR(2 * dim);
-  vector <unsigned> indVAR(2 * dim);
-  vector <unsigned> SolType(2 * dim);
-
-  for (unsigned ivar = 0; ivar < 2 * dim; ivar++) {
-      indVAR[ivar] = mlSol.GetIndex(&varname[ivar][0]);
-  }
-  
-  for (unsigned level = 0; level< gridn; level++) {
-    Solution* solution  = mlSol.GetSolutionLevel(level);
-      
-    for(unsigned ivar = 0; ivar < dim; ivar++) {
-    // Copy the old vector
-      *(solution->_Sol[indVAR[2 * ivar + 1]]) = *(solution->_SolOld[indVAR[2 * ivar]]);
-    }
-  }
-  
-}
-
 
 int main(int argc, char **args)
 {
@@ -144,10 +114,9 @@ int main(int argc, char **args)
 
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
-  ml_sol.AddSolution ( "DX2", LAGRANGE, SECOND, 2 );
-  ml_sol.AddSolution ( "DY2", LAGRANGE, SECOND, 2 );
-  
-  
+  ml_sol.AddSolution ( "Um", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "Vm", LAGRANGE, SECOND, 2 );
+    
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -236,12 +205,12 @@ int main(int argc, char **args)
 
   unsigned time_step_start = 1;
 
-  //char restart_file_name[256] = "./save/valve2D_iteration40";
+  //char restart_file_name[256] = "./save/valve2D_iteration28";
   char restart_file_name[256] = "";
 
   if (strcmp (restart_file_name, "") != 0) {
     ml_sol.LoadSolution(restart_file_name);
-    time_step_start = 41;
+    time_step_start = 29;
     system.SetTime( (time_step_start - 1) * 1. / 32);
   }
 
@@ -282,8 +251,6 @@ int main(int argc, char **args)
 
   for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
-    StoreOldDispcacement(ml_sol);
-    
     system.CopySolutionToOldSolution();
 
     for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
@@ -295,6 +262,9 @@ int main(int argc, char **args)
 
 
     system.MGsolve();
+    
+    StoreMeshVelocity(ml_prob);
+    
 
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
@@ -335,8 +305,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   double PI = acos(-1.);
   double ramp = (time < 2) ? sin(PI / 2 * time/2.) : 1.;
 
-  if (!strcmp(name, "V")) {
-    if (1 == facename || 2 == facename || 6 == facename) {
+  if (!strcmp(name, "U")) {
+    if (5 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "V")) {
+    if (1 == facename || 2 == facename || 5==facename || 6 == facename) {
       test = 0;
       value = 0;
     }
@@ -351,14 +327,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
-      value = (0 + 5 * sin(2 * PI * time)) * ramp;      //+ 4.5
+      value = (0 + 7 * sin(2 * PI * time)) * ramp;      //+ 4.5
     }
     else if (2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      value = (0 - 5 * sin(2 * PI * time)) * ramp;      //- 4.5
+      value = (0 - 7 * sin(2 * PI * time)) * ramp;      //- 4.5
     }
   }
   else if (!strcmp(name, "DX")) {
