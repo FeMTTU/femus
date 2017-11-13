@@ -313,7 +313,6 @@ namespace femus
 
     for (unsigned j = 0; j < _size; j++) {
       particles[j] = _particles[j];
-//       printList[j] = _printList[j];
     }
 
     printList = _printList;
@@ -430,97 +429,99 @@ namespace femus
 
 
 
-//     //BEGIN reorder markers also by element
-//
-//     for(unsigned j = 0; j < _size; j++) {
-//       particles[j] = _particles[j];
-//       //printList[j] = _printList[j];
-//     }
-//
-//     printList = _printList;
-//
-//     unsigned meshElements;
-//     particles[0]->GetNumberOfMeshElements(meshElements);
-//     unsigned* elementList = new unsigned [meshElements];
-//     bool someMarkersOutsideDomain = false;
-//
-//     //flags to see if we already ordered by that element, 0 = not considered yet
+    //BEGIN reorder markers also by element
+
+    for(unsigned j = 0; j < _size; j++) {
+      particles[j] = _particles[j];
+    }
+    printList = _printList;
+
+    unsigned meshElements = _mesh->GetNumberOfElements();
+    std::vector< bool > elementList (meshElements,false);
+   
+
+    //flags to see if we already ordered by that element, 0 = not considered yet
 //     for(unsigned iFlag = 0; iFlag < meshElements; iFlag++) {
 //       elementList[iFlag] = 0;
 //     }
-//
-//     for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
-//
-//       counter = 0;
-//
-//       for(unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc + 1]; jp++) {
-//
-//         unsigned jel;
-//         jel = particles[jp]->GetMarkerElement();
-//
-//         if(jel != UINT_MAX) {
-//
-//           if(elementList[jel] == 0) {
-//
-//             elementList[jel] = 1;
-//
-//             _particles[_markerOffset[iproc] + counter] = particles[jp];
-//             for(unsigned iList = 0; iList < _size; iList++) {
-//               if(printList[iList] == jp) {
-//                 _printList[iList] = _markerOffset[iproc] + counter;
-//                 break;
-//               }
-//             }
-//             counter++;
-//
-//
-//             for(unsigned ip = _markerOffset[iproc]; ip < _markerOffset[iproc + 1]; ip++) {
-//               unsigned iel;
-//               iel = particles[ip]->GetMarkerElement();
-//               if(ip != jp && iel == jel) {
-//                 elementList[iel] = 1;
-//
-//                 _particles[_markerOffset[iproc] + counter] = particles[ip];
-//                 for(unsigned iList = 0; iList < _size; iList++) {
-//                   if(printList[iList] == ip) {
-//                     _printList[iList] = _markerOffset[iproc] + counter;
-//                     break;
-//                   }
-//                 }
-//                 counter++;
-//               }
-//             }
-//           }
-//         }
-//         else {
-//           someMarkersOutsideDomain = true;
-//         }
-//       }
-//
-//       if(someMarkersOutsideDomain == true) {
-//         for(unsigned i = 0; i < _size; i++) {
-//           unsigned jel;
-//           jel = particles[i]->GetMarkerElement();
-//           if(jel == UINT_MAX) {
-//
-//             _particles[_markerOffset[0] + counter] = particles[i];
-//             for(unsigned iList = 0; iList < _size; iList++) {
-//               if(printList[iList] == i) {
-//                 _printList[iList] = _markerOffset[0] + counter;
-//                 break;
-//               }
-//             }
-//             counter++;
-//           }
-//         }
-//         someMarkersOutsideDomain = false;
-//       }
-//     }
-//
-//
-//
-//
-//     //END reorder markers also by element
+
+    for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+
+      bool someMarkersOutsideDomain = false;
+      counter = 0;
+
+      for(unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc + 1]; jp++) {
+
+        unsigned jel;
+        jel = particles[jp]->GetMarkerElement();
+
+        if(jel != UINT_MAX) {
+
+          if(elementList[jel] == false) {
+
+            elementList[jel] = true;
+
+            _particles[_markerOffset[iproc] + counter] = particles[jp];
+            for(unsigned iList = 0; iList < _size; iList++) {
+              if(printList[iList] == jp) {
+                _printList[iList] = _markerOffset[iproc] + counter;
+                break;
+              }
+            }
+            counter++;
+
+
+            for(unsigned ip = jp+1; ip < _markerOffset[iproc + 1]; ip++) {
+              unsigned iel;
+              iel = particles[ip]->GetMarkerElement();
+              if(iel == jel) {
+                _particles[_markerOffset[iproc] + counter] = particles[ip];
+                for(unsigned iList = 0; iList < _size; iList++) {
+                  if(printList[iList] == ip) {
+                    _printList[iList] = _markerOffset[iproc] + counter;
+                    break;
+                  }
+                }
+                counter++;
+              }
+            }
+          }
+        }
+        else {
+          someMarkersOutsideDomain = true;
+        }
+      }
+
+      if(someMarkersOutsideDomain == true){
+	if ( iproc == 0 ) {
+	  for(unsigned i = 0; i < _size; i++) {
+	    unsigned iel = particles[i]->GetMarkerElement();
+	    if(iel == UINT_MAX) {
+
+	      _particles[_markerOffset[0] + counter] = particles[i];
+	      for(unsigned iList = 0; iList < _size; iList++) {
+		if(printList[iList] == i) {
+		  _printList[iList] = _markerOffset[0] + counter;
+		  break;
+		}
+	      }
+	      counter++;
+	    }
+	  }
+	}
+	else{
+	  std::cout << "warning" <<std::endl;
+	  std::cout << "the marker is outside the domain but not in iproc 0" <<std::endl;
+	  abort();
+	}
+      }
+      
+    }
+
+
+
+
+    //END reorder markers also by element
 
     for (unsigned j = 0; j < _size; j++) {
 
@@ -529,24 +530,25 @@ namespace femus
     _particles[_printList[0]]->GetMarkerCoordinates(_line[_size]);
 
     //delete[] elementList;
-    std::vector < unsigned > ().swap(printList);
+    //std::vector < unsigned > ().swap(printList);
+    //std::vector < unsigned > ().swap(elementList);
 
 
-//     std::cout << "-----------------------------------------  UPDATE LINE  BY ELEMENTS-----------------------------------------" << std::endl;
-//     for(unsigned i = 0; i < _size; i++) {
-//       unsigned proc;
-//       unsigned elem;
-//       //std::vector <double> chiappe;
-//       //chiappe = _particles[_printList[i]]->GetIprocMarkerCoordinates();
-//       proc = _particles[i]->GetMarkerProc();
-//       elem = _particles[i]->GetMarkerElement();
-//       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
-//                 << "Element: " << elem << " " <<  " "  ;
-// //       for(unsigned j = 0; j < _dim; j++) {
-// //         std::cout << "x[" << j << "]=" << chiappe[j] << " " ;
-// //       }
-//       std::cout << std::endl;
-//     }
+    std::cout << "-----------------------------------------  UPDATE LINE  BY ELEMENTS-----------------------------------------" << std::endl;
+    for(unsigned i = 0; i < _size; i++) {
+      unsigned proc;
+      unsigned elem;
+      //std::vector <double> chiappe;
+      //chiappe = _particles[_printList[i]]->GetIprocMarkerCoordinates();
+      proc = _particles[i]->GetMarkerProc(_sol);
+      elem = _particles[i]->GetMarkerElement();
+      std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
+                << "Element: " << elem << " " <<  " "  ;
+//       for(unsigned j = 0; j < _dim; j++) {
+//         std::cout << "x[" << j << "]=" << chiappe[j] << " " ;
+//       }
+      std::cout << std::endl;
+    }
 
 
   }

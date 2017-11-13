@@ -234,28 +234,28 @@ int main(int argc, char** args)
   for (unsigned j = 0; j < size; j++) {
 
     //BEGIN random initialization
-    double r_rad = static_cast <double> (rand()) / RAND_MAX;
-    r_rad = 0.4 * (1. - r_rad * r_rad * r_rad);
-    double r_theta = static_cast <double> (rand()) / RAND_MAX * 2 * pi;
-    double r_phi = static_cast <double> (rand()) / RAND_MAX * pi;
-
-    
-    
-    x[j][0] = r_rad * sin(r_phi) * cos(r_theta);
-    x[j][1] = r_rad * sin(r_phi) * sin(r_theta);
-    if (dim == 3) {
-      x[j][2] = r_rad * cos(r_phi);
-    }
+//     double r_rad = static_cast <double> (rand()) / RAND_MAX;
+//     r_rad = 0.4 * (1. - r_rad * r_rad * r_rad);
+//     double r_theta = static_cast <double> (rand()) / RAND_MAX * 2 * pi;
+//     double r_phi = static_cast <double> (rand()) / RAND_MAX * pi;
+// 
+//     
+//     
+//     x[j][0] = r_rad * sin(r_phi) * cos(r_theta);
+//     x[j][1] = r_rad * sin(r_phi) * sin(r_theta);
+//     if (dim == 3) {
+//       x[j][2] = r_rad * cos(r_phi);
+//     }
     //END
  
  //  if(j==1012) std::cout<< std::setprecision(14)<<x[j][0] <<" "<< x[j][1]<<" "<<x[j][2]<<std::endl;
 
 //BEGIN ordered initialization
-//     x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
-//     x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
-//     if (dim == 3) {
-//       x[j][2] = 0.;
-//     }
+    x[j][0] = 0. + 0.125 * cos(2.*pi / size * j);
+    x[j][1] = .25 + 0.125 * sin(2.*pi / size * j);
+    if (dim == 3) {
+      x[j][2] = 0.;
+    }
 //END 
     
     
