@@ -3606,9 +3606,13 @@ namespace femus
 //             xc[0] = -0.00025; // vein_valve_closed in valve2.neu
 //             xc[1] = 0.07000;
 //           }
-          if (dim == 2) {
-            xc[0] = -0.000220; // vein_valve_closed valve2_corta.neu
-            xc[1] = 0.068718;
+//           if (dim == 2) {
+//             xc[0] = -0.000220; // vein_valve_closed valve2_corta.neu
+//             xc[1] = 0.068718;
+//           }
+           if (dim == 2) {
+            xc[0] = -0.000193; // vein_valve_closed valve2_corta2.neu
+            xc[1] = 0.067541;
           }
 // 	  else if (dim == 3){
 // 	    xc[0] = -0.008; // vein_valve_closed
