@@ -25,6 +25,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 //------------------------------------------------------------------------------------------------------------------
 
+
 int main(int argc, char **args)
 {
 
@@ -50,9 +51,9 @@ int main(int argc, char **args)
   muf = 2.2 * 1.0e-3;
   rhos = 960;
   ni = 0.5;
-  //E = 3.3 * 1.0e6; //vein young modulus
-  E = 4.3874951 * 1.0e12;
-  E1 = 0.1 * 1.0e6; //leaflet young modulus
+  E = 10 * 1.0e6; //vein young modulus
+  //E = 4.3874951 * 1.0e12;
+  E1 = 0.2 * 1.0e6; //leaflet young modulus
 
   Parameter par(Lref, Uref);
 
@@ -113,7 +114,9 @@ int main(int argc, char **args)
 
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
-
+  ml_sol.AddSolution ( "Um", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "Vm", LAGRANGE, SECOND, 2 );
+    
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -131,6 +134,8 @@ int main(int argc, char **args)
   ml_sol.GenerateBdc("DY1", "Steady");
 
   ml_sol.GenerateBdc("P", "Steady");
+  
+
 
   // ******* Define the FSI Multilevel Problem *******
 
@@ -156,7 +161,7 @@ int main(int argc, char **args)
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSITimeDependentAssemblySupgNew);
+  system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
@@ -200,12 +205,12 @@ int main(int argc, char **args)
 
   unsigned time_step_start = 1;
 
-  //char restart_file_name[256] = "./save/valve2D_iteration40";
+  //char restart_file_name[256] = "./save/valve2D_iteration28";
   char restart_file_name[256] = "";
 
   if (strcmp (restart_file_name, "") != 0) {
     ml_sol.LoadSolution(restart_file_name);
-    time_step_start = 41;
+    time_step_start = 29;
     system.SetTime( (time_step_start - 1) * 1. / 32);
   }
 
@@ -257,6 +262,9 @@ int main(int argc, char **args)
 
 
     system.MGsolve();
+    
+    StoreMeshVelocity(ml_prob);
+    
 
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
@@ -297,8 +305,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   double PI = acos(-1.);
   double ramp = (time < 2) ? sin(PI / 2 * time/2.) : 1.;
 
-  if (!strcmp(name, "V")) {
-    if (1 == facename || 2 == facename || 6 == facename) {
+  if (!strcmp(name, "U")) {
+    if (5 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "V")) {
+    if (1 == facename || 2 == facename || 5==facename || 6 == facename) {
       test = 0;
       value = 0;
     }
@@ -313,14 +327,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
-      value = (0 + 5 * sin(2 * PI * time)) * ramp;      //+ 4.5
+      value = (0 + 6 * sin(2 * PI * time)) * ramp;      //+ 4.5
     }
     else if (2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      value = (0 - 5 * sin(2 * PI * time)) * ramp;      //- 4.5
+      value = (0 - 6 * sin(2 * PI * time)) * ramp;      //- 4.5
     }
   }
   else if (!strcmp(name, "DX")) {
