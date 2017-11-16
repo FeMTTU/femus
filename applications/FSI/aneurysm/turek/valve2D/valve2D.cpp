@@ -54,7 +54,7 @@ int main(int argc, char **args)
   ni = 0.5;
   E = 15 * 1.0e6; //vein young modulus
   //E = 4.3874951 * 1.0e12;
-  E1 = 1 * 1.0e6; //leaflet young modulus
+  E1 = 0.5 * 1.0e6; //leaflet young modulus
 
   Parameter par(Lref, Uref);
 
