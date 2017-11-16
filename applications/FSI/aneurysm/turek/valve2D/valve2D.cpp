@@ -52,7 +52,7 @@ int main(int argc, char **args)
   muf = 2.2 * 1.0e-3;
   rhos = 960;
   ni = 0.5;
-  E = 15 * 1.0e6; //vein young modulus
+  E = 30 * 1.0e6; //vein young modulus
   //E = 4.3874951 * 1.0e12;
   E1 = 1 * 1.0e6; //leaflet young modulus
 
@@ -285,12 +285,12 @@ int main(int argc, char **args)
 
 double SetVariableTimeStep(const double time)
 {
-  double dt = 1. / 32;
-  double shiftedTime = time - floor(time);
-  if (time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25) {
-    dt = 1. / 32;
-  }
-  std::cout << " Shifted Time = " << shiftedTime << " dt = " << dt << std::endl;
+  double dt = 1. / 64;
+//   double shiftedTime = time - floor(time);
+//   if (time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25) {
+//     dt = 1. / 64;
+//   }
+//   std::cout << " Shifted Time = " << shiftedTime << " dt = " << dt << std::endl;
 
   return dt;
 }
@@ -328,14 +328,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
-      value = (0 + 5 * sin(2 * PI * time)) * ramp;      //+ 4.5
+      value = (0 + 7 * sin(2 * PI * time)) * ramp;      //+ 4.5
     }
     else if (2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      value = (0 - 5 * sin(2 * PI * time)) * ramp;      //- 4.5
+      value = (0 - 7 * sin(2 * PI * time)) * ramp;      //- 4.5
     }
   }
   else if (!strcmp(name, "DX")) {
