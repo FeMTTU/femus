@@ -14,7 +14,7 @@
 #include "XDMFWriter.hpp"
 #include "Line.hpp"
 #include "adept.h"
-#include "../../FSI/aneurysm/include/FSITimeDependentAssemblySupg.hpp"
+#include "../../FSI/aneurysm/include/FSITimeDependentAssemblySupg_OLD.hpp"
 #include <cmath>
 
 

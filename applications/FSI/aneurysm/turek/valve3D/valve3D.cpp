@@ -27,7 +27,7 @@ bool SetBoundaryConditionVeinValve2(const std::vector < double >& x, const char 
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
 
-void StoreOldDispcacement(MultiLevelSolution& mlSol);
+// void StoreOldDispcacement(MultiLevelSolution& mlSol);
   
 //------------------------------------------------------------------------------------------------------------------
 
@@ -125,11 +125,17 @@ int main(int argc, char **args)
   ml_sol.AssociatePropertyToSolution ( "P", "Pressure", false ); // Add this line
 
   ml_sol.AddSolution ( "lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false );
-
+/*
   ml_sol.AddSolution ( "DX2", LAGRANGE, SECOND, 2 );
   ml_sol.AddSolution ( "DY2", LAGRANGE, SECOND, 2 );
-  if ( !dimension2D ) ml_sol.AddSolution ( "DZ2", LAGRANGE, SECOND, 2 );
+  if ( !dimension2D ) ml_sol.AddSolution ( "DZ2", LAGRANGE, SECOND, 2 );*/
 
+  
+  ml_sol.AddSolution ( "Um", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "Vm", LAGRANGE, SECOND, 2 );
+  if ( !dimension2D ) ml_sol.AddSolution ( "Wm", LAGRANGE, SECOND, 2 );
+
+  
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
@@ -178,7 +184,7 @@ int main(int argc, char **args)
   system.AddSolutionToSystemPDE("P");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSITimeDependentAssemblySupgNew);
+  system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
@@ -269,7 +275,7 @@ int main(int argc, char **args)
 
   for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
-    StoreOldDispcacement(ml_sol);
+//     StoreOldDispcacement(ml_sol);
     system.CopySolutionToOldSolution();
     
     for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
@@ -281,6 +287,8 @@ int main(int argc, char **args)
 
 
     system.MGsolve();
+    
+    StoreMeshVelocity(ml_prob);
 
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
@@ -298,7 +306,7 @@ int main(int argc, char **args)
   return 0;
 }
 
-
+/*
 void StoreOldDispcacement(MultiLevelSolution& mlSol){
   
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
@@ -328,7 +336,7 @@ void StoreOldDispcacement(MultiLevelSolution& mlSol){
     }
   }
   
-}
+}*/
 
 
 double SetVariableTimeStep(const double time)
@@ -437,10 +445,10 @@ bool SetBoundaryConditionVeinValve2(const std::vector < double >& x, const char 
     test = 0;
     value = 0.;
     if (1 == facename) {
-      value = (0 + 50 * sin(2 * PI * time)) * ramp;      //+ 4.5
+      value = (0 + 20 * sin(2 * PI * time)) * ramp;      //+ 5
     }
     else if (2 == facename) {
-      value = (0 - 50 * sin(2 * PI * time)) * ramp;      //- 4.5
+      value = (0 - 20 * sin(2 * PI * time)) * ramp;      //- 5
     }
   }
   else if ( (!strcmp(name, "DX")) || (!strcmp(name, "DX1")) ) {

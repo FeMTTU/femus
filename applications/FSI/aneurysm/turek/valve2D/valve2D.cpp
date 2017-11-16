@@ -39,7 +39,8 @@ int main(int argc, char **args)
 
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 
-  std::string infile = "./input/valve2.neu";
+  //std::string infile = "./input/valve2.neu";
+  std::string infile = "./input/valve2_corta2.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -51,9 +52,10 @@ int main(int argc, char **args)
   muf = 2.2 * 1.0e-3;
   rhos = 960;
   ni = 0.5;
-  E = 10 * 1.0e6; //vein young modulus
+  E = 30 * 1.0e6; //vein young modulus \\15
   //E = 4.3874951 * 1.0e12;
-  E1 = 0.6 * 1.0e6; //leaflet young modulus
+  E1 = 0.8 * 1.0e6; //leaflet young modulus \\0.5
+
 
   Parameter par(Lref, Uref);
 
@@ -327,14 +329,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
-      value = (0 + 5 * sin(2 * PI * time)) * ramp;      //+ 4.5
+      value = (0 + 5 * sin(2 * PI * time)) * ramp;      //+ 3.5
     }
     else if (2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      value = (0 - 5 * sin(2 * PI * time)) * ramp;      //- 4.5
+      value = (0 - 5 * sin(2 * PI * time)) * ramp;      //- 3.5
     }
   }
   else if (!strcmp(name, "DX")) {
