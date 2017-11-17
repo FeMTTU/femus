@@ -71,6 +71,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("state", LAGRANGE, FIRST);
   mlSol.AddSolution("control", LAGRANGE, FIRST);
   mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
+  mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
@@ -98,6 +99,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
   system.AddSolutionToSystemPDE("adjoint");  
+  system.AddSolutionToSystemPDE("mu");  
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleLiftRestrProblem);
@@ -110,11 +112,7 @@ int main(int argc, char** args) {
  
   // print solutions
   std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("state");
-  variablesToBePrinted.push_back("control");
-  variablesToBePrinted.push_back("adjoint");
-  variablesToBePrinted.push_back("TargReg");
-  variablesToBePrinted.push_back("ContReg");
+     variablesToBePrinted.push_back("all");
 
     // ******* Print solution *******
   mlSol.SetWriter(VTK);
@@ -241,7 +239,18 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
  //***************************************************  
 
+ //****************** mu ******************************  
+ //***************************************************  
+  unsigned solIndex_mu;
+  solIndex_mu = mlSol->GetIndex("mu");    // get the position of "mu" in the ml_sol object
+   
+  unsigned solPdeIndex_mu;
+  solPdeIndex_mu = mlPdeSys->GetSolPdeIndex("mu");
   
+  unsigned solType_mu = mlSol->GetSolutionType(solIndex_mu);    // get the finite element type for "mu"
+  vector< int > l2GMap_mu;
+  l2GMap_mu.reserve(maxSize);
+
  //***************************************************  
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
@@ -339,9 +348,16 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       l2GMap_adj[i] = pdeSys->GetSystemDof(solIndex_adj, solPdeIndex_adj, i, iel);   // global to global mapping between solution node and pdeSys dof
     } 
  //***************************************************  
+ 
+ //************** mu **************************** 
+    unsigned nDof_mu  = msh->GetElementDofNumber(iel, solType_mu);    // number of solution element dofs
+    l2GMap_mu.resize(nDof_mu);
+    for (unsigned i = 0; i < l2GMap_mu.size(); i++) {
+       l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
+    }
 
  //******************** ALL VARS ********************* 
-    unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj; 
+    unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
     int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
     if(nDof_adj > nDof_max) 
@@ -365,6 +381,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_u.begin(),l2GMap_u.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_ctrl.begin(),l2GMap_ctrl.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_adj.begin(),l2GMap_adj.end());
+    l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_mu.begin(),l2GMap_mu.end());
  //*************************************************** 
     
  //***** set control flag ****************************
@@ -528,6 +545,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               if ( i < nDof_adj && j < nDof_ctrl )  
 		Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
 		(nDof_u  + j)                     ] += weight * (-1) * laplace_mat_dadj_ctrl; 
+	      
+	      
+	      //=========== delta_mu row ===========================
+              // BLOCK delta_mu - mu	      
+              if ( i < nDof_mu && j < nDof_mu && i==j)   
+		Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+		     (nDof_u + nDof_ctrl + nDof_adj + j)] = 1;   
 
 	      
             } // end phi_j loop
