@@ -658,11 +658,11 @@ namespace femus
                     LapStrong_old[idim] += (NablaSolVAR_old[dim + idim][jdim] + NablaSolVAR_old[dim + jdim][kdim]) * phiSupg_old[i];
 
                     AdvaleVAR[idim]	+= ((SolVAR[dim + jdim] - meshVel[jdim]) * GradSolVAR[dim + idim][jdim]
-					    + (GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim]
+					    + ((dim==2)*GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim]
 					   ) * (phi[i] + phiSupg[i]);
 
                     AdvaleVAR_old[idim]	+= ((SolVAR_old[dim + jdim] - meshVel_old[jdim]) * GradSolVAR_old[dim + idim][jdim]
-                                            + (GradSolVAR_old[dim + jdim][jdim] - GradMeshVel_old[jdim][jdim]) * SolVAR_old[dim + idim]
+                                            + ((dim==2)*GradSolVAR_old[dim + jdim][jdim] - GradMeshVel_old[jdim][jdim]) * SolVAR_old[dim + idim]
                                            ) * (phi_old[i] + phiSupg_old[i]);
                   }
                 }
