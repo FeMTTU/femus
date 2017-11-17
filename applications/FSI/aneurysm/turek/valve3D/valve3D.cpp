@@ -111,9 +111,9 @@ int main(int argc, char **args)
   ml_sol.AddSolution ( "V", LAGRANGE, SECOND, 2 );
   if ( !dimension2D ) ml_sol.AddSolution ( "W", LAGRANGE, SECOND, 2 );
 
-  ml_sol.AddSolution("DX1", LAGRANGE, SECOND, 2);
-  ml_sol.AddSolution("DY1", LAGRANGE, SECOND, 2);
-  if ( !dimension2D ) ml_sol.AddSolution ( "DZ1", LAGRANGE, SECOND, 2 );
+  //ml_sol.AddSolution("DX1", LAGRANGE, SECOND, 2);
+  //ml_sol.AddSolution("DY1", LAGRANGE, SECOND, 2);
+  //if ( !dimension2D ) ml_sol.AddSolution ( "DZ1", LAGRANGE, SECOND, 2 );
 
   // Pair each velocity variable with the corresponding displacement variable
   ml_sol.PairSolution ( "U", "DX" ); // Add this line
@@ -150,9 +150,9 @@ int main(int argc, char **args)
   ml_sol.GenerateBdc("V", "Steady");
   if ( !dimension2D ) ml_sol.GenerateBdc("W", "Steady");
 
-  ml_sol.GenerateBdc("DX1", "Steady");
-  ml_sol.GenerateBdc("DY1", "Steady");
-  if ( !dimension2D ) ml_sol.GenerateBdc("DZ1", "Steady");
+  //ml_sol.GenerateBdc("DX1", "Steady");
+  //ml_sol.GenerateBdc("DY1", "Steady");
+  //if ( !dimension2D ) ml_sol.GenerateBdc("DZ1", "Steady");
 
   ml_sol.GenerateBdc("P", "Steady");
 
@@ -176,9 +176,9 @@ int main(int argc, char **args)
   system.AddSolutionToSystemPDE("V");
   if ( !dimension2D ) system.AddSolutionToSystemPDE("W");
 
-  system.AddSolutionToSystemPDE("DX1");
-  system.AddSolutionToSystemPDE("DY1");
-  if ( !dimension2D ) system.AddSolutionToSystemPDE("DZ1");
+  //system.AddSolutionToSystemPDE("DX1");
+  //system.AddSolutionToSystemPDE("DY1");
+  //if ( !dimension2D ) system.AddSolutionToSystemPDE("DZ1");
 
 
   system.AddSolutionToSystemPDE("P");
@@ -249,18 +249,18 @@ int main(int argc, char **args)
   mov_vars.push_back("DY");
   if ( !dimension2D ) mov_vars.push_back("DZ");
 
-  std::vector<std::string> mov_vars1;
-  mov_vars1.push_back("DX1");
-  mov_vars1.push_back("DY1");
-  if ( !dimension2D ) mov_vars1.push_back("DZ1");
+  //std::vector<std::string> mov_vars1;
+  //mov_vars1.push_back("DX1");
+  //mov_vars1.push_back("DY1");
+  //if ( !dimension2D ) mov_vars1.push_back("DZ1");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
 
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step_start - 1);
 
-  ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step_start - 1);
+  //ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
+  //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step_start - 1);
 
 
   // ******* Solve *******
@@ -293,8 +293,8 @@ int main(int argc, char **args)
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
-    ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step);
+    //ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
+    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step);
 
     if ( time_step % 1 == 0) ml_sol.SaveSolution("valve3D", time_step);
 
@@ -451,19 +451,19 @@ bool SetBoundaryConditionVeinValve2(const std::vector < double >& x, const char 
       value = (0 - 20 * sin(2 * PI * time)) * ramp;      //- 5
     }
   }
-  else if ( (!strcmp(name, "DX")) || (!strcmp(name, "DX1")) ) {
+  else if ( (!strcmp(name, "DX")) /*|| (!strcmp(name, "DX1"))*/ ) {
     if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if ( (!strcmp(name, "DY")) || (!strcmp(name, "DY1")) ) {
+  else if ( (!strcmp(name, "DY")) /*|| (!strcmp(name, "DY1"))*/ ) {
     if (5 == facename || 7 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if ( (!strcmp(name, "DZ")) || (!strcmp(name, "DZ1")) ) {
+  else if ( (!strcmp(name, "DZ")) /*|| (!strcmp(name, "DZ1"))*/ ) {
     if (5 == facename || 6 == facename || 7 == facename ) {
       test = 0;
       value = 0;
