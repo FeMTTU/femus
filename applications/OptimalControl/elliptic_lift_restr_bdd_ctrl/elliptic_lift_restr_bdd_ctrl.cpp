@@ -89,6 +89,7 @@ int main(int argc, char** args) {
   mlSol.GenerateBdc("state");
   mlSol.GenerateBdc("control");
   mlSol.GenerateBdc("adjoint");
+  mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work...
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
@@ -248,8 +249,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   solPdeIndex_mu = mlPdeSys->GetSolPdeIndex("mu");
   
   unsigned solType_mu = mlSol->GetSolutionType(solIndex_mu);    // get the finite element type for "mu"
-  vector< int > l2GMap_mu;
-  l2GMap_mu.reserve(maxSize);
+  vector < double >  sol_mu;   sol_mu.reserve(maxSize);
+  vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
  //***************************************************  
  //********* WHOLE SET OF VARIABLES ****************** 
@@ -351,9 +352,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  
  //************** mu **************************** 
     unsigned nDof_mu  = msh->GetElementDofNumber(iel, solType_mu);    // number of solution element dofs
+    sol_mu   .resize(nDof_mu);
     l2GMap_mu.resize(nDof_mu);
-    for (unsigned i = 0; i < l2GMap_mu.size(); i++) {
-       l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
+    for (unsigned i = 0; i < sol_mu.size(); i++) {
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solType_mu);   // global to global mapping between solution node and solution dof
+      sol_mu[i] = (*sol->_Sol[solIndex_mu])(solDof_mu);      // global extraction and local storage for the solution 
+      l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
     }
 
  //******************** ALL VARS ********************* 
@@ -468,6 +472,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	  }
           // THIRD ROW
           if (i < nDof_adj) Res[nDof_u + nDof_ctrl + i] += - weight * ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i - 0.) ;
+	  // FOURTH ROW
+          if (i < nDof_mu) {
+	    Res[nDof_u + nDof_ctrl + nDof_adj + i] = 5. -  sol_mu[i];
+	  }
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -551,7 +559,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               // BLOCK delta_mu - mu	      
               if ( i < nDof_mu && j < nDof_mu && i==j)   
 		Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-		     (nDof_u + nDof_ctrl + nDof_adj + j)] = 1;   
+		     (nDof_u + nDof_ctrl + nDof_adj + j)] = 1.;   
 
 	      
             } // end phi_j loop
@@ -568,13 +576,14 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	if (control_el_flag == 0) {  //elements that should have zero control
 	  
          for (unsigned i = 0; i < nDof_max; i++) {
+	      std::cout << Res[nDof_u + nDof_ctrl + nDof_adj + i ] << " " << std::endl;
             for (unsigned j = 0; j < nDof_max; j++) {
 // 	      std::cout << Jac[ i * nDof_AllVars +j ] << " " << std::endl;
 // 	      std::cout << Jac[ (nDof_u + i) * nDof_AllVars +j ] << " " << std::endl;
 // 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars +j ] << " " << std::endl;
 // 	      std::cout << Jac[ i * nDof_AllVars + (nDof_u + j) ] << " " << std::endl;
 // 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + j) ];
-	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + nDof_adj + i) * nDof_AllVars + (nDof_u + nDof_adj + j) ];
+// 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + nDof_adj + i) * nDof_AllVars + (nDof_u + nDof_adj + j) ];
 // 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars + (nDof_u + j) ] << " " << std::endl;
 // 	      std::cout << Jac[ i * nDof_AllVars + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
 //       std::cout << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
