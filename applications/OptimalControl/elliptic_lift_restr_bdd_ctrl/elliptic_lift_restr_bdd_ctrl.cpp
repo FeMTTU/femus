@@ -72,6 +72,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("control", LAGRANGE, FIRST);
   mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
+  mlSol.AddSolution("actflag", LAGRANGE, FIRST); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
@@ -152,6 +153,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
+  
  //***************************************************  
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -252,6 +254,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < double >  sol_mu;   sol_mu.reserve(maxSize);
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
+  //********* variables for ineq constraints *****************
+  double contr_lower = -100.;
+  double contr_upper =  100.;
+    double c_compl = 1.;
+   vector < int >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
+  //***************************************************  
+
  //***************************************************  
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
@@ -275,7 +284,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   double beta  = BETA_CTRL;
   double penalty_strong = 10e+14;
  //***************************************************  
-  
+
   
   if (assembleMatrix)  KK->zero();
 
@@ -359,6 +368,19 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       sol_mu[i] = (*sol->_Sol[solIndex_mu])(solDof_mu);      // global extraction and local storage for the solution 
       l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
     }
+    
+    
+ //************** update active set flag for current nonlinear iteration **************************** 
+ // 0: inactive; 1: active_a; 2: active_b
+    sol_actflag.resize(nDof_mu);
+     std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+   
+    for (unsigned i = 0; i < sol_actflag.size(); i++) {  
+    if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - contr_lower )) < 0 )  sol_actflag[i] = 1;
+    else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - contr_upper )) > 0 )  sol_actflag[i] = 2;
+    }
+ 
+ 
 
  //******************** ALL VARS ********************* 
     unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
