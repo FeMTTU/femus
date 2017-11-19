@@ -497,7 +497,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
           if (i < nDof_adj) Res[nDof_u + nDof_ctrl + i] += - weight * ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i - 0.) ;
 	  // FOURTH ROW
           if (i < nDof_mu) {
-	    Res[nDof_u + nDof_ctrl + nDof_adj + i] = 5. -  sol_mu[i];
+	    if (sol_actflag[i]==0)  
+	       Res[nDof_u + nDof_ctrl + nDof_adj + i] = - 1. * sol_mu[i]  ; 
+	    else
+	       Res[nDof_u + nDof_ctrl + nDof_adj + i] = - ( sol_actflag[i] * sol_ctrl[i] +  (1 - sol_actflag[i]) * (2 - sol_actflag[i]) * sol_mu[i] 
+	                                                   - c_compl * ((2 - sol_actflag[i]) * ctrl_lower + (sol_actflag[i]-1) * ctrl_upper)) ; 					  
 	  }
 //======================Residuals=======================
 	      
@@ -588,12 +592,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      // BLOCK delta_mu - ctrl	      
               if ( i < nDof_mu && j < nDof_ctrl)   
 		Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-		     (nDof_u + j)                       ] = 1.; 
+		     (nDof_u + j)                       ] = 1. * sol_actflag[i] ; 
 	      
               // BLOCK delta_mu - mu	      
               if ( i < nDof_mu && j < nDof_mu && i==j)   
 		Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-		     (nDof_u + nDof_ctrl + nDof_adj + j)] = 1.;   
+		     (nDof_u + nDof_ctrl + nDof_adj + j)] = 1. ;   
 
 	      
             } // end phi_j loop
