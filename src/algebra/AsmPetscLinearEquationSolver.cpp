@@ -267,7 +267,7 @@ namespace femus {
     }
 
     PCASMSetOverlap(subpc, _overlap);
-    //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
+    PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
 
     KSPSetUp(subksp);
 
