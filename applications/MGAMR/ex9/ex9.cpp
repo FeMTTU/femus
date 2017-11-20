@@ -108,7 +108,7 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 4;
+  unsigned numberOfSelectiveLevels = 5;
   
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag); 
   

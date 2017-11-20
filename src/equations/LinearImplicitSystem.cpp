@@ -350,7 +350,7 @@ namespace femus {
 
       for(unsigned ig = level; ig > 0; ig--) {
         // ============== Presmoothing ==============
-        for(unsigned k = 0; k < _npre; k++) {
+        for(unsigned k = 0; k < _npre*(0*ig*ig+1); k++) {
           _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, ksp_clean * (!k));
         }
         // ============== Restriction ==============
@@ -365,7 +365,7 @@ namespace femus {
         Prolongator(ig);
 
         // ============== PostSmoothing ==============
-        for(unsigned k = 0; k < _npost; k++) {
+        for(unsigned k = 0; k < _npost*(0*ig*ig+1); k++) {
           _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
         }
       }
