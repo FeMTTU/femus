@@ -255,8 +255,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower = -100.;
-  double ctrl_upper =  100.;
+  double ctrl_lower = -100;
+  double ctrl_upper =  100;
   double c_compl = 1.;
    vector < int >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
   //***************************************************  
@@ -494,14 +494,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
           // THIRD ROW
-          if (i < nDof_adj) Res[nDof_u + nDof_ctrl + i] += - weight * ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i - 0.) ;
+          if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += - weight * ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i - 0.) ;
 	  // FOURTH ROW
           if (i < nDof_mu) {
-	    if (sol_actflag[i]==0)  
-	       Res[nDof_u + nDof_ctrl + nDof_adj + i] = - 1. * sol_mu[i]  ; 
-	    else
-	       Res[nDof_u + nDof_ctrl + nDof_adj + i] = - ( sol_actflag[i] * sol_ctrl[i] +  (1 - sol_actflag[i]) * (2 - sol_actflag[i]) * sol_mu[i] 
-	                                                   - c_compl * ((2 - sol_actflag[i]) * ctrl_lower + (sol_actflag[i]-1) * ctrl_upper)) ; 					  
+	     if (sol_actflag[i] == 0)  //inactive
+	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
+	     else  //active
+	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_ctrl[i] - c_compl * ((2 - sol_actflag[i]) * ctrl_lower + (sol_actflag[i]-1) * ctrl_upper)) ; 					  
 	  }
 //======================Residuals=======================
 	      
@@ -563,7 +562,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      //BLOCK delta_control - mu
               if ( i < nDof_ctrl   && j < nDof_mu ) 
 		Jac[ (nDof_u + i) * nDof_AllVars  + 
-		     (nDof_u + nDof_ctrl + nDof_adj + j)] =  1. * phi_ctrl[i];
+		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  1. * phi_ctrl[i];
 	      }
 	      
 	      else if ( control_el_flag == 0)  {  
@@ -571,34 +570,36 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               //BLOCK delta_control - control
                if ( i < nDof_ctrl   && j < nDof_ctrl &&  i==j ) {
 		 Jac[ (nDof_u + i) * nDof_AllVars +
-		      (nDof_u + j)                      ] += (1-control_node_flag[i]) * penalty_strong;
+		      (nDof_u + j)                      ]  += (1-control_node_flag[i]) * penalty_strong;
 		}
 	      
-	   }
+	      }
 	      
 	      //=========== delta_adjoint row ===========================
               // BLOCK delta_adjoint - state	      
               if ( i < nDof_adj && j < nDof_u )   
 		Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars +
-		     (0 + j)                            ] += weight * (-1) * laplace_mat_dadj_u;   
+		     (0 + j)                            ]  += weight * (-1) * laplace_mat_dadj_u;   
 	      
               // BLOCK delta_adjoint - control   
               if ( i < nDof_adj && j < nDof_ctrl )  
 		Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
-		     (nDof_u  + j)                      ] += weight * (-1) * laplace_mat_dadj_ctrl; 
+		     (nDof_u  + j)                      ]  += weight * (-1) * laplace_mat_dadj_ctrl; 
 	      
 	      
 	      //============= delta_mu row ===============================
-	      // BLOCK delta_mu - ctrl	      
-              if ( i < nDof_mu && j < nDof_ctrl)   
-		Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-		     (nDof_u + j)                       ] = 1. * sol_actflag[i] ; 
-	      
-              // BLOCK delta_mu - mu	      
-              if ( i < nDof_mu && j < nDof_mu && i==j)   
-		Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-		     (nDof_u + nDof_ctrl + nDof_adj + j)] = 1. ;   
-
+	      if (sol_actflag[i] == 0) //inactive
+	      { // BLOCK delta_mu - mu	      
+	        if ( i < nDof_mu && j < nDof_mu )   
+		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+		       (nDof_u + nDof_ctrl + nDof_adj + j)]  = 1. ;  
+	      }
+	      else //active
+	      { // BLOCK delta_mu - ctrl	      
+                if ( i < nDof_mu && j < nDof_ctrl )   
+		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+		       (nDof_u + j)                       ]  = 1. ; 
+	      }
 	      
             } // end phi_j loop
           } // endif assemble_matrix
