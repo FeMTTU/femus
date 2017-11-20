@@ -22,7 +22,7 @@ double SetVariableTimeStep(const double time);
 bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char name[],
                                    double &value, const int facename, const double time);
 
-void GetSolutionFluxes(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
+void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double> &fluxes);
 //------------------------------------------------------------------------------------------------------------------
 
 
@@ -52,9 +52,9 @@ int main(int argc, char **args)
   muf = 2.2 * 1.0e-3;
   rhos = 960;
   ni = 0.5;
-  E = 60 * 1.0e6; //vein young modulus \\15, 30, 30, 40
+  E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60
   //E = 4.3874951 * 1.0e12;
-  E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5
+  E1 = 2.2 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5
 
   Parameter par(Lref, Uref);
 
@@ -250,6 +250,21 @@ int main(int argc, char **args)
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
+  int  iproc;
+  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+  
+  std::ofstream outf;
+  if(iproc == 0) {
+    outf.open("fluxes.txt");
+    if(!outf) {
+      std::cout << "Error in opening file DataPrint.txt";
+      return 1;
+    }
+  }
+  
+  std::vector < double > Qtot(3,0.);   
+   std::vector<double> fluxes(2,0.);    
+  
   for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
@@ -266,7 +281,27 @@ int main(int argc, char **args)
     
     StoreMeshVelocity(ml_prob);
     
+    double dt = system.GetIntervalTime();
+    
+    Qtot[0] += 0.5 * dt * fluxes[0];
+    Qtot[1] += 0.5 * dt * fluxes[1];
+    
+    GetSolutionFluxes(ml_sol,fluxes);
+    
+    Qtot[0] += 0.5 * dt * fluxes[0];
+    Qtot[1] += 0.5 * dt * fluxes[1];
+    Qtot[2] = Qtot[0] + Qtot[1];
+    
+    
+    std::cout<< fluxes[0] <<" "<<fluxes[1] << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
 
+    
+    
+    
+    if(iproc == 0) {
+      outf << time_step <<" "<< system.GetTime() <<" "<< fluxes[0] <<" "<<fluxes[1]<<" " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
+    }
+    
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
@@ -277,7 +312,10 @@ int main(int argc, char **args)
 
   }
 
-
+  if(iproc == 0) {
+    outf.close();
+  }
+  
   // ******* Clear all systems *******
   ml_prob.clear();
   return 0;
@@ -328,14 +366,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
-      value = (0 + 10 * sin(2 * PI * time)) * ramp;      //+ 3.5, 6, 7, 10
+      value = (0 + 15 * sin(2 * PI * time)) * ramp;      //+ 3.5, 6, 7, 10, 10
     }
     else if (2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      value = (0 - 10 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10
+      value = (0 - 15 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10
     }
   }
   else if (!strcmp(name, "DX")) {
@@ -363,7 +401,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 
 #include "MyVector.hpp"
 
-void GetSolutionFluxes(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
+void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double> &fluxes)
 {
 
   int  iproc, nprocs;
@@ -452,12 +490,13 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, const unsigned & group, std::v
     }
   }
   
-  double fluxB = 0, fluxT=0.;
+  fluxes[0] = 0.; 
+  fluxes[1] = 0.;
   for(int j = 0; j < nprocs; j++) {
     qBottom.broadcast(j);
     qTop.broadcast(j);
-    fluxB += qBottom[j]; 
-    fluxT += qTop[j]; 
+    fluxes[0] += qBottom[j]; 
+    fluxes[1] += qTop[j]; 
     qBottom.clearBroadcast();
     qTop.clearBroadcast();
   } 

@@ -9,27 +9,16 @@
 
 namespace femus
 {
-
-  //bool meshIsCurrupted = true;
-  //double factordxi[3] =  {1.e7, 1.e7, 1.e7};
-  //double factordxi[3] =  {1.e13, 1.e13, 1.e13};
-
-
-  //void FSIConstrainLeaflet(MultiLevelSolution& mlSol);
   
-//****************************************************************************************
-
     void FSITimeDependentAssemblySupgNew2(MultiLevelProblem & ml_prob)
   {
 
     clock_t AssemblyTime = 0;
     clock_t start_time, end_time;
 
-    //bool auxDisp = false;
-    //unsigned nBlocks = (auxDisp) ? 3 : 2;
+
     unsigned nBlocks = 2;
 
-    //meshIsCurrupted = true;
     //pointers and references
 
     //MonolithicFSINonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<MonolithicFSINonLinearImplicitSystem>("Fluid-Structure-Interaction");
@@ -231,10 +220,6 @@ namespace femus
       indVAR2[ivar] = ml_sol->GetIndex(&varname2[ivar][0]);
     }
 
-//     indexVAR[nBlocks * dim] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[9][0]);
-//     indVAR[nBlocks * dim] = ml_sol->GetIndex(&varname[9][0]);
-//     SolType[nBlocks * dim] = ml_sol->GetSolutionType(&varname[9][0]);
-    
     indexVAR[nBlocks * dim] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[6][0]);
     indVAR[nBlocks * dim] = ml_sol->GetIndex(&varname[6][0]);
     SolType[nBlocks * dim] = ml_sol->GetSolutionType(&varname[6][0]);
@@ -257,11 +242,6 @@ namespace femus
     start_time = clock();
 
     if (assembleMatrix) myKK->zero();
-
-    //NumericVector* setIfCorrupted;
-    //setIfCorrupted = NumericVector::build().release();
-    //setIfCorrupted->init(mymsh->n_processors(), 1 , false, AUTOMATIC);
-
 
   begin:
 
@@ -351,9 +331,7 @@ namespace femus
       for (int j = 0; j < nve; j++) {
         unsigned idof = mymsh->GetSolutionDof(j, iel, SolType2);
         for (unsigned idim = 0; idim < dim; idim++) {
-          //vx[idim][j] = vx_hat[idim][j] +  Soli[indexVAR[idim + meshIsCurrupted * 2 * dim]][j];
 	  vx[idim][j] = vx_hat[idim][j] +  Soli[indexVAR[idim]][j];
-          //vx_old[idim][j] = vx_hat[idim][j] + Soli_old[indexVAR[idim + meshIsCurrupted * 2 * dim]][j];
 	  vx_old[idim][j] = vx_hat[idim][j] + Soli_old[indexVAR[idim]][j];
 	}
       }
@@ -386,9 +364,7 @@ namespace femus
                 unsigned idof = mymsh->GetSolutionDof(ilocal, iel, 2);
 
                 for (unsigned idim = 0; idim < dim; idim++) {
-                  //vx_face[idim][i]    = (*mymsh->_topology->_Sol[idim])(idof) + Soli[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal]; 
 		  vx_face[idim][i]    = (*mymsh->_topology->_Sol[idim])(idof) + Soli[indexVAR[idim]][ilocal];
-                  //vx_face_old[idim][i] = (*mymsh->_topology->_Sol[idim])(idof) + Soli_old[indexVAR[idim + meshIsCurrupted * 2 * dim]][ilocal];
 		  vx_face_old[idim][i] = (*mymsh->_topology->_Sol[idim])(idof) + Soli_old[indexVAR[idim]][ilocal];
                 }
               }
@@ -429,8 +405,6 @@ namespace femus
         mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_hat, ig, Weight_hat, phi_hat, gradphi_hat, nablaphi_hat);
         mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_old, ig, Weight_old, phi_old, gradphi_old, nablaphi_old);
         phi1 = mymsh->_finiteElement[ielt][SolType1]->GetPhi(ig);
-
-        //if ( Weight.value() < 0. ) setIfCorrupted->set(iproc, 1.);
 
         if (flag_mat == 2 || flag_mat == 3  || iel == mymsh->_elementOffset[iproc]) {
           if (ig == 0) {
@@ -555,13 +529,11 @@ namespace femus
         // mesh velocity NEW
         vector < adept::adouble > meshVel(dim);
         vector < vector < adept::adouble > > GradMeshVel(dim);
-	//unsigned dBlock = ( meshIsCurrupted ) ? (nBlocks-1)*dim : 0;
-	unsigned dBlock = 0;
         for (unsigned i = 0; i < dim; i++) {
-          meshVel[i] = 2./dt * (SolVAR[dBlock + i] - SolVAR_old[dBlock + i]) - meshVel_old[i];
+          meshVel[i] = 2./dt * (SolVAR[i] - SolVAR_old[i]) - meshVel_old[i];
           GradMeshVel[i].resize(dim);
           for (unsigned j = 0; j < dim; j++) {	    
-	    GradMeshVel[i][j] = 2./dt * (GradSolVAR[dBlock + i][j] - GradSolVAR_old[dBlock + i][j]) - GradMeshVel_old[i][j];
+	    GradMeshVel[i][j] = 2./dt * (GradSolVAR[i][j] - GradSolVAR_old[i][j]) - GradMeshVel_old[i][j];
           }
         }
 
@@ -688,7 +660,7 @@ namespace femus
                                             - AdvaleVAR[idim]      	             // advection term
                                             - IRe * LapvelVAR[idim]	             // viscous dissipation
                                             - (idim == 0) * Lapdisp[idim] * 1.e-3 * exp( (vx_ig[0] + 2.5e-5)/0.0001)*(dim==2)
-					    - (idim == 0) * Lapdisp[idim] * 1.e-3 * exp(-(vx_ig[0] - 1e-4)/0.00004)*(dim==3)
+					    - (idim == 0) * Lapdisp[idim] * 1.e-1 * exp(-(vx_ig[0] - 1e-4)/0.00004)*(dim==3)
                                             + IRe * LapStrong[idim]
                                             + 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
                                           ) * Weight;                                // at time t
@@ -697,7 +669,7 @@ namespace femus
                                                - AdvaleVAR_old[idim]               	         // advection term
                                                - IRe * LapvelVAR_old[idim]	       	         // viscous dissipation
                                                - (idim == 0) * Lapdisp_old[idim] * 1.e-3 * exp( (vxOld_ig[0] + 2.5e-5)/0.0001)*(dim==2)
-					       - (idim == 0) * Lapdisp_old[idim] * 1.e-3 * exp(-(vxOld_ig[0] - 1.e-4)/0.0004)*(dim==3)
+					       - (idim == 0) * Lapdisp_old[idim] * 1.e-1 * exp(-(vxOld_ig[0] - 1.e-4)/0.0004)*(dim==3)
                                                + IRe * LapStrong_old[idim]
                                                + 1. / rhof * SolVAR[nBlocks * dim] * gradphi_old[i * dim + idim]  // pressure gradient
                                              ) * Weight_old;			                 // at time t-dt
@@ -738,31 +710,6 @@ namespace femus
                 double K = DE * IRe * rhof / b; // alpha = mu/b * De
                 double C2 = 2 * a / (rhof * DE);
 
-
-
-
-
-// 		adept::adouble LapvelVAR[3] = {0., 0., 0.};
-// 		adept::adouble LapvelVAR_old[3] = {0., 0., 0.};
-// 		adept::adouble AdvaleVAR[3] = {0., 0., 0.};
-// 		adept::adouble AdvaleVAR_old[3] = {0., 0., 0.};
-//
-// 		for(int idim = 0.; idim < dim; idim++) {
-// 		  for(int jdim = 0.; jdim < dim; jdim++) {
-//
-// 		    LapvelVAR[idim]     += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
-// 		    LapvelVAR_old[idim] += (GradSolVAR_old[dim + idim][jdim] + GradSolVAR_old[dim + jdim][idim]) * gradphi_old[i * dim + jdim];
-//
-// 		    AdvaleVAR[idim]	+= ((SolVAR[dim + jdim] - meshVel[jdim]) * GradSolVAR[dim + idim][jdim]
-// 					+ (GradSolVAR[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR[dim + idim]
-// 				      ) * phi[i];
-//
-// 		    AdvaleVAR_old[idim]	+= ((SolVAR_old[dim + jdim] - meshVel[jdim]) * GradSolVAR_old[dim + idim][jdim]
-// 					    + (GradSolVAR_old[dim + jdim][jdim] - GradMeshVel[jdim][jdim]) * SolVAR_old[dim + idim]
-// 					  ) * phi_old[i];
-// 		  }
-// 		}
-
                 for (int idim = 0; idim < dim; idim++) {
 
 // 		  adept::adouble timeDerivative = -(SolVAR[dim + idim] * phi[i] * Weight
@@ -795,48 +742,9 @@ namespace femus
                 //END redidual Porous Media in moving domain
               }
 
-              //if (auxDisp) { //NON SERVE PIU'
-                //BEGIN auxiliary displacement equation
-                //adept::adouble LapAuxVAR[3] = {0., 0., 0.};
-
-                //for (int idim = 0; idim < dim; idim++) {
-                  //for (int jdim = 0; jdim < dim; jdim++) {
-                    //LapAuxVAR[idim] += ( GradSolVAR[idim + 2 * dim][jdim] +  0. * GradSolVAR[jdim + 2 * dim][idim] ) * gradphi[i * dim + jdim];
-                  //}
-                //}
-
-                //for (int idim = 0; idim < dim; idim++) {
-                  //aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * 1.0e-1 * LapAuxVAR[idim] +  0 * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight_nojac;
-                //}
-//                 for (int idim = 1; idim < dim; idim++) {
-//                   aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * 1.0e-1 * LapAuxVAR[idim] +  0 * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight_nojac;
-//                 }
-//                 for (int idim = 1; idim < dim; idim++) {
-//                   aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * 1.0e-1 * LapAuxVAR[idim] +  0 * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight_nojac;
-//                 }
-
-//                 adept::adouble LapAuxVAR[3] = {0., 0., 0.};
-//
-//                 for (int idim = 0; idim < dim; idim++) {
-//                   for (int jdim = 0; jdim < dim; jdim++) {
-//                      LapAuxVAR[idim] += GradSolhatVAR[idim + 2 * dim][jdim] * gradphi_hat[i * dim + jdim];
-//                   }
-//                 }
-//
-//                 for (int idim = 0; idim < dim; idim++) {
-//                   aRhs[indexVAR[idim + 2 * dim]][i] += (  1.0e-10 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi_hat[i] ) * Weight_hat;
-//                 }
-
-
-                //END auxiliary displacement equation
-              //}
-
             }
           }
           //END ALE + Momentum (Navier-Stokes)
-
-
-
 
 
           //BEGIN continuity block
@@ -871,8 +779,7 @@ namespace femus
           double Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
 
 
-
-
+	  
           if (solid_model == 0) {   // Saint-Venant
             adept::adouble e[3][3];
             double e_old[3][3];
@@ -921,16 +828,12 @@ namespace femus
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
                 F[i][j] += GradSolhatVAR[i][j];
-                //F1[i][j] += GradSolhatVAR[i + 2 * dim][j];
                 F_old[i][j] += GradSolhatVAR_old[i][j];
               }
             }
 
             J_hat =   F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
                       - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
-
-//             J_hat1 =   F1[0][0] * F1[1][1] * F1[2][2] + F1[0][1] * F1[1][2] * F1[2][0] + F1[0][2] * F1[1][0] * F1[2][1]
-//                        - F1[2][0] * F1[1][1] * F1[0][2] - F1[2][1] * F1[1][2] * F1[0][0] - F1[2][2] * F1[1][0] * F1[0][1];
 
             J_hat_old =    F_old[0][0] * F_old[1][1] * F_old[2][2] + F_old[0][1] * F_old[1][2] * F_old[2][0]
                            + F_old[0][2] * F_old[1][0] * F_old[2][1] - F_old[2][0] * F_old[1][1] * F_old[0][2]
@@ -967,7 +870,6 @@ namespace femus
 // 							      + lambda/J_hat*log(J_hat)*Id2th[I][J]; 	//Wood-Bonet penalty
 // 		    else if ( 4 == solid_model ) Cauchy[I][J] = mus*(B[I][J] - I1_B*Id2th[I][J]/3.)/pow(J_hat,5./3.)
 // 						              + lambda*(J_hat-1.)*Id2th[I][J];  	  //Allan-Bower
-//
                 }
               }
             }
@@ -1078,45 +980,7 @@ namespace femus
 
               //END redidual Solid Momentum in moving domain
 
-
-              //if (auxDisp) { //NON SERVE PIU'
-                //BEGIN auxiliary displacement equation
-                //adept::adouble LapAuxVAR[3] = {0., 0., 0.};
-
-                //for (int idim = 0; idim < dim; idim++) {
-                  //for (int jdim = 0; jdim < dim; jdim++) {
-                    //LapAuxVAR[idim] += ( GradSolVAR[idim + 2 * dim][jdim] + 0 * GradSolVAR[jdim + 2 * dim][idim] ) * gradphi[i * dim + jdim];
-                  //}
-                //}
-
-//                 for (int idim = 0; idim < dim; idim++) {
-//                   aRhs[indexVAR[idim + 2 * dim]][i] += (  1.0e-8 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi_hat[i] ) * Weight;
-//                 }
-
-                //for (int idim = 0; idim < dim; idim++) {
-                  //aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * LapAuxVAR[idim] +  factordxi[idim] * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
-                //}
-//                 for (int idim = 1; idim < dim; idim++) {
-//                   aRhs[indexVAR[idim + 2 * dim]][i] += (  meshIsCurrupted * LapAuxVAR[idim] +  factordy * ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi[i] ) * Weight;
-//                 }
-
-
-
-
-//                 adept::adouble LapAuxVAR[3] = {0., 0., 0.};
-//
-//                 for (int idim = 0; idim < dim; idim++) {
-//                   for (int jdim = 0; jdim < dim; jdim++) {
-//                      LapAuxVAR[idim] += GradSolhatVAR[idim + 2 * dim][jdim] * gradphi_hat[i * dim + jdim];
-//                   }
-//                 }
-//
-//                 for (int idim = 0; idim < dim; idim++) {
-//                   aRhs[indexVAR[idim + 2 * dim]][i] += (  1.0e-8 * LapAuxVAR[idim] +  ( SolVAR[idim + 2 * dim] - SolVAR[idim] ) * phi_hat[i] ) * Weight_hat;
-//                 }
-                //END auxiliary displacement equation
-              //}
-
+              
             }
           }
           //END v=0 + Momentum (Solid)
@@ -1197,9 +1061,6 @@ namespace femus
 
     myRES->close();
 
-    //setIfCorrupted->close();
-    //double setIfCorruptedNorm = setIfCorrupted->l1_norm();
-
 //     std::cout << "I am in Assembly and I belived the mesh is ";
 //
 //     if (!meshIsCurrupted) {
@@ -1222,9 +1083,6 @@ namespace femus
 //       }
 //     }
 
-    //meshIsCurrupted = true;
-
-    //delete setIfCorrupted;
     delete area_elem_first;
 
     // *************************************
@@ -1241,8 +1099,6 @@ namespace femus
 
   void SetLambdaNew(MultiLevelSolution &mlSol, const unsigned &level, const  FEOrder &order, Operator operatorType)
   {
-
-    //FSIConstrainLeaflet(mlSol);
 
     unsigned SolType;
     if (order < FIRST || order > SECOND) {
@@ -1274,13 +1130,9 @@ namespace femus
 
     const char varname[3][4] = {"DX", "DY", "DZ"};
     vector <unsigned> indVAR(geoDim);
-    //const char varname1[3][4] = {"DX1", "DY1", "DZ1"};
-    //vector <unsigned> indVAR1(geoDim);
-
 
     for (unsigned ivar = 0; ivar < geoDim; ivar++) {
       indVAR[ivar] = mlSol.GetIndex(&varname[ivar][0]);
-      //indVAR1[ivar] = mlSol.GetIndex(&varname1[ivar][0]);
     }
 
 
@@ -1320,10 +1172,8 @@ namespace femus
     nablaphi.reserve(max_size * nablaGoeDim);
 
     vector <vector < adept::adouble> > vx(geoDim);
-    //vector <vector < adept::adouble> > vx1(geoDim);
     for (int ivar = 0; ivar < geoDim; ivar++) {
       vx[ivar].reserve(max_size);
-      //vx1[ivar].reserve(max_size);
     }
     unsigned SolTypeVx = 2.;
 
@@ -1343,11 +1193,6 @@ namespace femus
     // mesh and procs
     unsigned nel    = mymsh->GetNumberOfElements();
     unsigned iproc  = mymsh->processor_id();
-
-//     NumericVector* setIfCorrupted;
-//     setIfCorrupted = NumericVector::build().release();
-//     setIfCorrupted->init(mymsh->n_processors(), 1 , false, AUTOMATIC);
-//     setIfCorrupted->set(iproc, 0.);
 
     // *** element loop ***
     for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
@@ -1377,12 +1222,7 @@ namespace femus
         unsigned inodeVx_Metis = mymsh->GetSolutionDof(i, iel, SolTypeVx);
         for (int j = 0; j < geoDim; j++) {
           //coordinates
-
           vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis);
-
-          //if (meshIsCurrupted) {
-            //vx1[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR1[j]])(inodeVx_Metis);
-          //}
         }
       }
       // ------------------------------------
@@ -1402,16 +1242,6 @@ namespace femus
       for (unsigned ig = 0; ig < mymsh->_finiteElement[kelt][SolType]->GetGaussPointNumber(); ig++) {
         // *** get Jacobian and test function and test function derivatives in the moving frame***
         mymsh->_finiteElement[kelt][SolType]->Jacobian(vx, ig, Weight, phi, gradphi, nablaphi);
-	
-//         if (!meshIsCurrupted) {
-//           //check if current mesh is really not corrupted
-//           if (Weight < 0.) setIfCorrupted->set(iproc, 1.);
-//         }
-//         else {
-//           check if the current mesh is really corrupted
-//           if ( Weight < 0.) setIfCorrupted->set(iproc, 1.);
-//          mymsh->_finiteElement[kelt][SolType]->Jacobian(vx1, ig, Weight, phi, gradphi, nablaphi);
-//         }
 
         if (ig == 0) {
           double referenceElementScale[6] = {8., 1. / 6., 1., 4., 1., 2.};
@@ -1637,197 +1467,7 @@ namespace femus
     //abort();
   }
 
-
-
-//   const double leaflet[129][2] = {
-//     {   -0.00402782    ,  0.0601179     },  {   -0.00391292    ,	0.0601527     },  {   -0.00379967    ,	0.0601912     },  {   -0.00368805    ,	0.0602334     },
-//     {   -0.00357807    ,	0.0602794     },  {   -0.00346973    ,	0.0603291     },  {   -0.00336303    ,	0.0603826     },  {   -0.00325798    ,	0.0604397     },
-//     {   -0.00315456    ,	0.0605006     },  {   -0.00305329    ,	0.0605649     },  {   -0.00295415    ,	0.0606319     },  {   -0.00285713    ,	0.0607016     },
-//     {   -0.00276223    ,	0.060774      },  {   -0.00266945    ,	0.060849      },  {   -0.00257879    ,	0.0609268     },  {   -0.00249026    ,	0.0610072     },
-//     {   -0.00240385    ,	0.0610904     },  {   -0.00231958    ,	0.0611756     },  {   -0.00223735    ,	0.0612626     },  {   -0.00215715    ,	0.0613513     },
-//     {   -0.00207899    ,	0.0614417     },  {   -0.00200286    ,	0.0615339     },  {   -0.00192876    ,	0.0616277     },  {   -0.0018567     ,  0.0617232     },
-//     {   -0.00178666    ,	0.0618205     },  {   -0.00171853    ,	0.061919      },  {   -0.00165215    ,	0.0620186     },  {   -0.00158754    ,	0.0621193     },
-//     {   -0.00152469    ,	0.062221      },  {   -0.00146361    ,	0.0623238     },  {   -0.00140429    ,	0.0624276     },  {   -0.00134673    ,	0.0625325     },
-//     {   -0.00129093    ,	0.0626385     },  {   -0.00123672    ,	0.0627453     },  {   -0.00118402    ,	0.0628528     },  {   -0.00113285    ,	0.062961      },
-//     {   -0.00108319    ,	0.0630698     },  {   -0.00103505    ,  0.0631794     },  {   -0.000988434   ,	0.0632896     },  {   -0.000943336   ,	0.0634005     },
-//     {   -0.000899757   ,	0.063512      },  {   -0.000857621   ,	0.0636239     },  {   -0.000816835   ,	0.0637363     },  {   -0.000777398   ,	0.0638492     },
-//     {   -0.000739311   ,	0.0639624     },  {   -0.000702573   ,	0.0640761     },  {   -0.000667185   ,	0.0641903     },  {   -0.000633146   ,	0.0643049     },
-//     {   -0.000600456   ,	0.0644199     },  {   -0.000568998   ,	0.0645354     },  {   -0.000538812   ,	0.0646513     },  {   -0.000509899   ,	0.0647674     },
-//     {   -0.000482258   ,	0.0648837     },  {   -0.00045589    ,  0.0650004     },  {   -0.000430794   ,	0.0651174     },  {   -0.000406971   ,	0.0652347     },
-//     {   -0.00038442    ,  0.0653523     },  {   -0.000363115   ,	0.06547       },  {   -0.000343096   ,	0.0655879     },  {   -0.000324363   ,	0.0657059     },
-//     {   -0.000306917   ,	0.0658242     },  {   -0.000290758   ,	0.0659426     },  {   -0.000275886   ,	0.0660612     },  {   -0.000262299   ,	0.06618       },
-//     {   -0.00025	     ,  0.066299      },  {   -0.000239534   ,	0.0664144     },  {   -0.000230166   ,	0.0665298     },  {   -0.000221896   ,	0.0666454     },
-//     {   -0.000214725   ,	0.0667609     },  {   -0.000208652   ,	0.0668766     },  {   -0.000203678   ,	0.0669923     },  {   -0.000199802   ,	0.067108      },
-//     {   -0.000197024   ,	0.0672238     },  {   -0.000195205   ,	0.0673395     },  {   -0.000194055   ,	0.0674552     },  {   -0.000193574   ,	0.0675708     },
-//     {   -0.000193763   ,	0.0676864     },  {   -0.000194621   ,	0.0678021     },  {   -0.000196148   ,	0.0679177     },  {   -0.000198345   ,	0.0680334     },
-//     {   -0.000201211   ,	0.068149      },  {   -0.000204526   ,	0.0682648     },  {   -0.000207968   ,	0.0683806     },  {   -0.000211535   ,	0.0684963     },
-//     {   -0.000215229   ,	0.0686121     },  {   -0.000219049   ,	0.0687279     },  {   -0.000222994   ,	0.0688437     },  {   -0.000227066   ,	0.0689594     },
-//     {   -0.000231264   ,	0.0690752     },  {   -0.000235294   ,	0.0691908     },  {   -0.000238841   ,	0.0693063     },  {   -0.000241906   ,	0.0694219     },
-//     {   -0.000244489   ,	0.0695375     },  {   -0.00024659    ,  0.0696531     },  {   -0.000248209   ,	0.0697687     },  {   -0.000249345   ,	0.0698844     },
-//     {   -0.00025       ,  0.07          },  {   -0.000255613   ,	0.0701159     },  {   -0.000261276   ,	0.0702317     },  {   -0.00026699    ,  0.0703476     },
-//     {   -0.000272754   ,	0.0704635     },  {   -0.000278569   ,	0.0705793     },  {   -0.000284435   ,	0.0706952     },  {   -0.00029035    ,  0.070811      },
-//     {   -0.000296317   ,	0.0709269     },  {   -0.000302377   ,	0.0710426     },  {   -0.000308591   ,	0.0711583     },  {   -0.000314961   ,	0.0712741     },
-//     {   -0.000321485   ,	0.0713898     },  {   -0.000328164   ,	0.0715055     },  {   -0.000334998   ,	0.0716212     },  {   -0.000341987   ,	0.0717368     },
-//     {   -0.000349131   ,	0.0718525     },  {   -0.000356484   ,	0.0719682     },  {   -0.000364109   ,	0.072084      },  {   -0.000372005   ,	0.0721997     },
-//     {   -0.000380173   ,	0.0723154     },  {   -0.000388611   ,	0.072431      },  {   -0.000397321   ,	0.0725467     },  {   -0.000406302   ,	0.0726623     },
-//     {   -0.000415554   ,	0.0727779     },  {   -0.000425128   ,	0.0728934     },  {   -0.00043511    ,  0.0730089     },  {   -0.0004455     ,  0.0731244     },
-//     {   -0.000456299   ,	0.0732398     },  {   -0.000467505   ,	0.0733551     },  {   -0.000479121   ,	0.0734705     },  {   -0.000491144   ,	0.0735857     },
-//     {   -0.000503576   ,	0.073701      }
-//   };
-
-//   bool MeshIsCurrupted(const std::vector < double >& x, const std::vector < double >& dX)
-//   {
-//     bool movedNode = false;
-//     double epsilon = .0; // maximum leaflet colsing
-//     double  delta = 7.1e-05; //leaflet thicknes;
-//     unsigned N = 128;
-//     if (x[1] >= leaflet[0][1] && x[1] <= leaflet[N][1]) {
-//       unsigned i0 = 0;
-//       unsigned i1 = N;
-//       while (i1 - i0 > 1) {
-//         unsigned i2 = i0 + (i1 - i0) / 2;
-//         if (leaflet[i2][1] > x[1]) {
-//           i1 = i2;
-//         }
-//         else {
-//           i0 = i2;
-//         }
-//       }
-// 
-//       double s = (x[1] - leaflet[i0][1]) / (leaflet[i1][1] - leaflet[i0][1]);
-//       double xl = leaflet[i0][0] * (1. - s) + leaflet[i1][0] * s;
-// 
-//       if (x[0] - xl >= 0) { //on the right of the lealflet
-//         if (x[0] + dX[0] > -epsilon * x[0] / xl) {
-//           //dX[0] = -epsilon * x[0] / xl - x[0] ;
-//           movedNode = true;
-//         }
-//       }
-// //       else if(x[0] - xl >= -delta) {  //inside the lealflet
-// //         if(x[0] + dX[0] > -epsilon + (x[0] - xl)) {
-// //           dX[0] = -epsilon - (xl - x[0]) - x[0];
-// //           movedNode = true;
-// //         }
-// //       }
-// //       else { //on the left of the lealflet
-// //         if(x[0] + dX[0] > -epsilon - delta - 3.* epsilon * (xl - delta - x[0]) / 0.001) {
-// //           dX[0] = -epsilon - delta - 3.* epsilon * (xl - delta - x[0]) / 0.001 - x[0];
-// //         }
-// //       }
-//     }
-//     return movedNode;
-//   }
-
-
-//   unsigned counter = 0;
-// 
-//   void FSIConstrainLeaflet(MultiLevelSolution& mlSol)
-//   {
-// 
-//     unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
-// 
-//     Solution* sol  = mlSol.GetSolutionLevel(level);
-//     Mesh* msh = mlSol._mlMesh->GetLevel(level);
-// 
-//     const unsigned dim = msh->GetDimension();
-// 
-//     //----------------------------------------------------------------------------------
-//     //variable-name handling
-//     const char varname[3][3] = {"DX", "DY", "DZ"};
-//     const char varname1[3][4] = {"DX1", "DY1", "DZ1"};
-//     vector <unsigned> indVAR(dim);
-//     vector <unsigned> indVAR1(dim);
-//     unsigned SolType;
-// 
-//     for (unsigned k = 0; k < dim; k++) {
-//       indVAR[k] = mlSol.GetIndex(&varname[k][0]);
-//       indVAR1[k] = mlSol.GetIndex(&varname1[k][0]);
-//       SolType = mlSol.GetSolutionType(&varname[k][0]);
-//     }
-// 
-//     std::vector < double > x(dim);
-//     std::vector < double > dx(dim);
-//     std::vector < double > dxOld(dim);
-// 
-//     unsigned iproc  = msh->processor_id();
-// 
-//     int nprocs = msh->n_processors();
-//     NumericVector* meshMoved;
-//     NumericVector* meshOldMoved;
-//     meshMoved = NumericVector::build().release();
-//     meshOldMoved = NumericVector::build().release();
-// 
-//     if (nprocs == 1) {
-//       meshMoved->init(nprocs, 1, false, SERIAL);
-//       meshOldMoved->init(nprocs, 1, false, SERIAL);
-//     }
-//     else {
-//       meshMoved->init(nprocs, 1, false, PARALLEL);
-//       meshOldMoved->init(nprocs, 1, false, PARALLEL);
-//     }
-//     meshMoved->zero();
-//     meshOldMoved->zero();
-// 
-//     for (unsigned idof = msh->_dofOffset[SolType][iproc]; idof < msh->_dofOffset[SolType][iproc + 1]; idof++) {
-//       for (unsigned k = 0; k < dim; k++) {
-//         x[k] = (*msh->_topology->_Sol[k])(idof);
-//         dx[k] = (*sol->_Sol[indVAR[k]])(idof);
-//         dxOld[k] = (*sol->_SolOld[indVAR[k]])(idof);
-//       }
-//       bool movedNode;
-//       movedNode = MeshIsCurrupted(x, dx);
-//       if (movedNode) {
-//         //for(unsigned k = 0; k < dim; k++) {
-//         //sol->_Sol[indVAR[k]]->set(idof, dx[k]);
-//         //}
-//         meshMoved->set(iproc, 1.);
-//       }
-//       movedNode = MeshIsCurrupted(x, dxOld);
-//       if (movedNode) {
-// //         for(unsigned k = 0; k < dim; k++) {
-// //           sol->_SolOld[indVAR[k]]->set(idof, dxOld[k]);
-// //         }
-//         meshOldMoved->set(iproc, 1.);
-//       }
-//     }
-// 
-//     meshMoved->close();
-//     meshOldMoved->close();
-// 
-//     if (meshMoved->l1_norm() < 0.5) {
-//       meshIsCurrupted = false;
-//       for (unsigned k = 0; k < dim; k++) {
-//         *(sol->_Sol[indVAR1[k]]) = *(sol->_Sol[indVAR[k]]);
-//       }
-//     }
-//     else {
-//       std::cout << "Warning the Mesh Constrained Function has been called for DX" << std::endl;
-//       for (unsigned k = 0; k < dim; k++) {
-//         meshIsCurrupted = true;
-//         //*(sol->_Sol[indVAR[k]]) = *(sol->_Sol[indVAR1[k]]);
-//       }
-//     }
-// 
-// 
-//     if (meshOldMoved->l1_norm() > 0.5) {
-//       std::cout << "Warning the Mesh Constrained Function has been called for DXOld" << std::endl;
-//       for (unsigned k = 0; k < dim; k++) {
-//         *(sol->_SolOld[indVAR[k]]) = *(sol->_Sol[indVAR1[k]]);
-//       }
-//     }
-// 
-// 
-//     //if( meshMoved->l1_norm() ){
-//     std::vector<std::string> print_vars;
-//     print_vars.push_back("All");
-// 
-//     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 1000 + counter);
-// 
-//     counter++;
-//     //}
-// 
-//   }
-
+//***************************************************************************************************************
   
   void StoreMeshVelocity(MultiLevelProblem & ml_prob){
   
@@ -1842,17 +1482,11 @@ namespace femus
   //const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
   const unsigned dim = msh->GetDimension();
   const char varname[9][4] = {"DX", "U", "Um", "DY", "V", "Vm", "DZ", "W", "Wm"};
-  //const char varname1[9][4] = {"DX1", "U", "Um", "DY1", "V", "Vm", "DZ1", "W", "Wm"};
 
   vector <unsigned> indVAR(3 * dim);
   
   for (unsigned ivar = 0; ivar < 3 * dim; ivar++) {
-    //if(!meshIsCurrupted){
       indVAR[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
-    //}
-    //else{
-      //indVAR[ivar] = ml_sol->GetIndex(&varname1[ivar][0]);
-    //}
   }
   
   double dt =  my_nnlin_impl_sys.GetIntervalTime();
