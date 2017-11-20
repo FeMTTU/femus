@@ -255,8 +255,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower = -100;
-  double ctrl_upper =  100;
+  double ctrl_lower = -10.;
+  double ctrl_upper =  10.;
   double c_compl = 1.;
    vector < int >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
   //***************************************************  
