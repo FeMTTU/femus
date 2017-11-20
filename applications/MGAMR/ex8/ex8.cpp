@@ -108,7 +108,7 @@ int main(int argc, char** args) {
   unsigned dim = mlMsh.GetDimension();
 
   numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 5;
+  unsigned numberOfSelectiveLevels = 4;
   
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag); 
   
@@ -158,7 +158,7 @@ int main(int argc, char** args) {
   system.SetTolerances(1.e-50, 1.e-80, 1.e+50, 1, 1); //GMRES tolerances 
   
   unsigned simulation = 4;
-  double scale = 1;
+  double scale = 0.5;
   
   if (simulation  == 0){ //our theory
     system.SetSscLevelSmoother(true); 
