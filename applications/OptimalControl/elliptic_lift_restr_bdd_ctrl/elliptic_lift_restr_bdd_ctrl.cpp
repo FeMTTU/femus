@@ -255,8 +255,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower = -10.;
-  double ctrl_upper =  10.;
+  double ctrl_lower = 0.4;
+  double ctrl_upper =  0.5;
   double c_compl = 1.;
    vector < int >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
   //***************************************************  
@@ -490,7 +490,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
-													      + phi_ctrl[i] * sol_mu[i]);
+													      + 1. * sol_mu[i]);
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
           // THIRD ROW
@@ -498,9 +498,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	  // FOURTH ROW
           if (i < nDof_mu) {
 	     if (sol_actflag[i] == 0)  //inactive
-	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
+	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( /*1. * sol_mu[i]*/ - 0. ) ; 
 	     else  //active
-	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_ctrl[i] - c_compl * ((2 - sol_actflag[i]) * ctrl_lower + (sol_actflag[i]-1) * ctrl_upper)) ; 					  
+	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( /*1. * sol_ctrl[i]*/ - c_compl * ((2 - sol_actflag[i]) * ctrl_lower + (sol_actflag[i]-1) * ctrl_upper)) ; 					  
 	  }
 //======================Residuals=======================
 	      
@@ -559,10 +559,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		Jac[ (nDof_u + i) * nDof_AllVars  + 
 		     (nDof_u + nDof_ctrl + j)           ]  += ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj;
 	      	      
-	      //BLOCK delta_control - mu
-              if ( i < nDof_ctrl   && j < nDof_mu ) 
-		Jac[ (nDof_u + i) * nDof_AllVars  + 
-		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  1. * phi_ctrl[i];
 	      }
 	      
 	      else if ( control_el_flag == 0)  {  
@@ -575,6 +571,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      
 	      }
 	      
+	      //BLOCK delta_control - mu
+              if ( i < nDof_ctrl   && j < nDof_mu && i==j ) 
+		Jac[ (nDof_u + i) * nDof_AllVars  + 
+		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  1.;
+		     
 	      //=========== delta_adjoint row ===========================
               // BLOCK delta_adjoint - state	      
               if ( i < nDof_adj && j < nDof_u )   
@@ -590,15 +591,15 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      //============= delta_mu row ===============================
 	      if (sol_actflag[i] == 0) //inactive
 	      { // BLOCK delta_mu - mu	      
-	        if ( i < nDof_mu && j < nDof_mu )   
+	        if ( i < nDof_mu && j < nDof_mu && i==j )   
 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
 		       (nDof_u + nDof_ctrl + nDof_adj + j)]  = 1. ;  
 	      }
 	      else //active
 	      { // BLOCK delta_mu - ctrl	      
-                if ( i < nDof_mu && j < nDof_ctrl )   
+                if ( i < nDof_mu && j < nDof_ctrl && i==j )   
 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-		       (nDof_u + j)                       ]  = 1. ; 
+		       (nDof_u + j)                       ]  = c_compl * 1. ; 
 	      }
 	      
             } // end phi_j loop
@@ -615,11 +616,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	if (control_el_flag == 0) {  //elements that should have zero control
 	  
          for (unsigned i = 0; i < nDof_max; i++) {
-	      std::cout << Res[nDof_u + nDof_ctrl + nDof_adj + i ] << " " << std::endl;
+// 	      std::cout << Res[nDof_u + nDof_ctrl + nDof_adj + i ] << " " << std::endl;
             for (unsigned j = 0; j < nDof_max; j++) {
 // 	      std::cout << Jac[ i * nDof_AllVars +j ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + i) * nDof_AllVars +j ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars +j ] << " " << std::endl;
+	      if (i==j) {std::cout << Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars + (nDof_u +j) ] << " mu-c " << std::endl;}
+	      if (i==j) {std::cout << Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars + ( nDof_u + nDof_ctrl + nDof_adj + j ) ] << " mu-mu " << std::endl;}
 // 	      std::cout << Jac[ i * nDof_AllVars + (nDof_u + j) ] << " " << std::endl;
 // 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + j) ];
 // 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + nDof_adj + i) * nDof_AllVars + (nDof_u + nDof_adj + j) ];
