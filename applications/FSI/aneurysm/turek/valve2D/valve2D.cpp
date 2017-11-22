@@ -10,7 +10,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
-#include "../../include/FSITimeDependentAssemblySupg.hpp"
+#include "../../include/FSITimeDependentAssemblySupgGCL.hpp"
 #include <cmath>
 double scale = 1000.;
 
