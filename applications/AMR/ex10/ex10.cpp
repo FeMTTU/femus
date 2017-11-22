@@ -338,9 +338,6 @@ int main(int argc, char** argv)
   ml_msh.PrintInfo();
 
   MultiLevelSolution ml_sol(&ml_msh);
-
-  std::count << fe_order<<std::endl;
-  return 0;
   
   // generate solution vector
   ml_sol.AddSolution("Sol", LAGRANGE, fe_order);

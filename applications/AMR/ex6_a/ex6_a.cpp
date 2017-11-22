@@ -63,10 +63,11 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/quadAMR01.neu", "seventh", scalingFactor);
+ //mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+   mlMsh.ReadCoarseMesh("./input/square_tri.neu", "seventh", scalingFactor);
+ // mlMsh.ReadCoarseMesh("./input/quadAMR01.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-     probably in the furure it is not going to be an argument of this function   */
+   probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
   unsigned numberOfUniformLevels = 3;
   unsigned numberOfSelectiveLevels = 0;
@@ -159,8 +160,8 @@ int main(int argc, char** args) {
     GetError(&mlSol);
     
     std::pair< double , double > norm = GetError (&mlSol);
-      H1normE[i][0]  = norm.first;
-      H1norm[i][0] = norm.second;
+    H1normE[i][0]  = norm.first;
+    H1norm[i][0] = norm.second;
     
     // print solutions
     std::vector < std::string > variablesToBePrinted;
@@ -171,7 +172,7 @@ int main(int argc, char** args) {
     
     //refine the mesh
     MeshRefinement meshcoarser(*mlMsh.GetLevel(numberOfUniformLevels-1));
-    bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(2, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));  //non-uniform
+    bool elementsHaveBeenRefined = meshcoarser.FlagElementsToBeRefined(0.0001, mlSol.GetSolutionLevel(numberOfUniformLevels-1)->GetSolutionName("Error"));  //non-uniform
     
     //bool elementsHaveBeenRefined = true; //uniform
     //meshcoarser.FlagAllElementsToBeRefined();//uniform
@@ -185,9 +186,6 @@ int main(int argc, char** args) {
     mlSol.RefineSolution(numberOfUniformLevels);
     //}
     numberOfUniformLevels += 1;
-    
-    
-
   }
   
   
@@ -248,40 +246,40 @@ int main(int argc, char** args) {
 
 
 
-double GetExactSolutionValue(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return exp(10. * x[0]) * sin(4. * pi * x[0]) * sin(4. * pi * x[1]);
-};
-
-void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
-  double pi = acos(-1.);
-  solGrad[0]  = exp(10. * x[0]) * (10. * sin(4. * pi * x[0]) + 4. * pi * cos(4 * pi * x[0])) * sin( 4 * pi * x[1]);
-  solGrad[1]  = exp(10. * x[0]) * sin(4. * pi * x[0]) * 4. * pi * cos(4. * pi * x[1]);
-};
-
-double GetExactSolutionLaplace(const std::vector < double >& x) {
-  double pi = acos(-1.);
-  return - 2 * exp(10 *x[0]) * (-10. * 4. * pi * cos(4. * pi * x[0]) + (4. * pi * 4. * pi- 50.) * sin(4. * pi * x[0])) * sin(4. * pi * x[1]);
-};
-
-
-
-
 // double GetExactSolutionValue(const std::vector < double >& x) {
 //   double pi = acos(-1.);
-//   return exp(10. * x[0]) * sin(pi * x[0]) * sin(pi * x[1]);
+//   return exp(10. * x[0]) * sin(4. * pi * x[0]) * sin(4. * pi * x[1]);
 // };
 // 
 // void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
 //   double pi = acos(-1.);
-//   solGrad[0]  = exp(10. * x[0]) * (10. * sin(pi * x[0]) + pi * cos(pi * x[0])) * sin(pi * x[1]);
-//   solGrad[1]  = exp(10. * x[0]) * sin(pi * x[0]) * pi * cos(pi * x[1]);
+//   solGrad[0]  = exp(10. * x[0]) * (10. * sin(4. * pi * x[0]) + 4. * pi * cos(4 * pi * x[0])) * sin( 4 * pi * x[1]);
+//   solGrad[1]  = exp(10. * x[0]) * sin(4. * pi * x[0]) * 4. * pi * cos(4. * pi * x[1]);
 // };
 // 
 // double GetExactSolutionLaplace(const std::vector < double >& x) {
 //   double pi = acos(-1.);
-//   return - 2. * exp(10. *x[0]) * (-10. * pi * cos(pi * x[0]) + (pi * pi- 50.) * sin(pi * x[0])) * sin(pi * x[1]);
+//   return - 2 * exp(10 *x[0]) * (-10. * 4. * pi * cos(4. * pi * x[0]) + (4. * pi * 4. * pi- 50.) * sin(4. * pi * x[0])) * sin(4. * pi * x[1]);
 // };
+
+
+
+
+double GetExactSolutionValue(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return exp(10. * x[0]) * sin(pi * x[0]) * sin(pi * x[1]);
+};
+
+void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+  double pi = acos(-1.);
+  solGrad[0]  = exp(10. * x[0]) * (10. * sin(pi * x[0]) + pi * cos(pi * x[0])) * sin(pi * x[1]);
+  solGrad[1]  = exp(10. * x[0]) * sin(pi * x[0]) * pi * cos(pi * x[1]);
+};
+
+double GetExactSolutionLaplace(const std::vector < double >& x) {
+  double pi = acos(-1.);
+  return - 2. * exp(10. *x[0]) * (-10. * pi * cos(pi * x[0]) + (pi * pi- 50.) * sin(pi * x[0])) * sin(pi * x[1]);
+};
 
 
 

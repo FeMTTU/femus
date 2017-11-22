@@ -79,7 +79,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //     refine = true;
 //   }
 
-
   double pi = acos(-1.);
   double radius = pi / 32.0 * (level - level0 - 2.0);
   double radius2 = radius * radius;
