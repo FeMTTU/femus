@@ -38,6 +38,7 @@ namespace femus {
         _solType = solType;
         _dim = sol->GetMesh()->GetDimension();
         _step = 0;
+	_mass = 1.;
 
         GetElement(1, UINT_MAX, sol, s1);
 
@@ -87,6 +88,10 @@ namespace femus {
       void SetMarkerProc(const unsigned &mproc) {
         _mproc = mproc;
       }
+      
+      void SetMarkerMass(const double &mass){
+	_mass = mass;
+      }
 
 
       void GetNumberOfMeshElements(unsigned &elements, Solution *sol) {
@@ -120,6 +125,10 @@ namespace femus {
         elem = _elem;
       }
 
+      void GetMarkerMass( double &mass){
+	mass = _mass;
+      }
+      
       std::vector<double> GetMarkerLocalCoordinates() {
         return _xi;
       }
@@ -256,6 +265,7 @@ namespace femus {
       unsigned _elem;
       unsigned _previousElem; //for advection reasons
       unsigned _dim;
+      double _mass;
 
       unsigned _mproc; //processor who has the marker
       //std::vector < std::vector < std::vector < double > > > _aX;

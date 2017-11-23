@@ -58,6 +58,8 @@ namespace femus {
       
       unsigned NumberOfParticlesOutsideTheDomain();
 
+      void GetGridMass();
+      
     private:
       std::vector < std::vector < double > > _line;
 

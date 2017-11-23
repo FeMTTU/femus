@@ -160,6 +160,8 @@ OPTION(BUILD_AMR "Build the AMR apps" ON)
 
 OPTION(BUILD_ISM "Build the Intersection Marker apps" ON)
 
+OPTION(BUILD_MPM_FEM "Build the MPM FEM apps" ON)
+
 OPTION(BUILD_REFINEMENT "Build the Refiniment apps" ON)
 
 #############################################################################################

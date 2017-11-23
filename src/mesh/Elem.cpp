@@ -889,14 +889,14 @@ namespace femus {
   }
 
 
-  void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel) {
+  void Mesh::GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType) {
     xv.resize(_dimension);
-    unsigned ndofs = el->GetElementDofNumber(iel, 2);
+    unsigned ndofs = el->GetElementDofNumber(iel, solType);
     for(int d = 0; d < _dimension; d++) {
       xv[d].resize(ndofs);
     }
     for(unsigned j = 0; j < ndofs; j++) {
-      unsigned xdof  = GetSolutionDof(j, iel, 2);
+      unsigned xdof  = GetSolutionDof(j, iel, solType);
       for(int d = 0; d < _dimension; d++) {
         xv[d][j] = (*_topology->_Sol[d])(xdof);
       }
