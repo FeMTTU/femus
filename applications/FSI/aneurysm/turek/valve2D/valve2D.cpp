@@ -10,6 +10,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
+#include "MyVector.hpp"
 #include "../../include/FSITimeDependentAssemblySupgNonConservative.hpp"
 //#include "../../include/FSITimeDependentAssemblySupgGCL.hpp"
 //#include "../../include/FSITimeDependentAssemblySupg.hpp"
@@ -54,9 +55,9 @@ int main(int argc, char **args)
   muf = 2.2 * 1.0e-3;
   rhos = 960;
   ni = 0.5;
-  E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60
+  E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
-  E1 = 2.2 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5
+  E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
 
   Parameter par(Lref, Uref);
 
@@ -368,14 +369,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
-      value = (0 + 15 * sin(2 * PI * time)) * ramp;      //+ 3.5, 6, 7, 10, 10
+      value = (0 + 15 * sin(2 * PI * time)) * ramp;      //+ 3.5, 6, 7, 10, 10, 15, 15
     }
     else if (2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      value = (0 - 15 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10
+      value = (0 - 15 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10, 15, 15
     }
   }
   else if (!strcmp(name, "DX")) {
@@ -401,7 +402,6 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 
 }
 
-#include "MyVector.hpp"
 
 void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double> &fluxes)
 {
