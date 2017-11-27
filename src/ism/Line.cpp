@@ -955,23 +955,33 @@ namespace femus
   }
 
 
-  void Line::GetGridMass()
+  void Line::GetPointsToGridProjections()
   {
 
-    //BEGIN  Initialize the parameters for all processors
     double s = 0;
-    double PI = acos( -1. );
-    unsigned  solIndex = _sol->GetIndex( "M" );
-    unsigned solType = _sol->GetSolutionType( solIndex );
 
-    std::vector < double > phi;
-     std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
+    unsigned  solIndexM = _sol->GetIndex( "M" );
+    std::vector<unsigned>  solIndexVel(_dim);
 
-    //END
+    solIndexVel[0] = _sol->GetIndex( "U" );
+    if ( _dim > 1 ) solIndexVel[1] = _sol->GetIndex( "V" );
+    if ( _dim > 2 ) solIndexVel[2] = _sol->GetIndex( "W" );
 
+    unsigned solType = _sol->GetSolutionType( solIndexM );
+    for (int d = 0; d <  _dim; d++) {
+      if ( solType != _sol->GetSolutionType( solIndexVel[d] ) ) {
+        std::cout << " Error in Line::GetPointsToGridProjections()," << std::endl
+                  << "the mass and velocity should have the same solution type" << std::endl;
+        abort();
+      }
+    }
 
+    std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
 
-    clock_t startTime = clock();
+    _sol->_Sol[solIndexM]->zero();
+    for (int d = 0; d <  _dim; d++) {
+      _sol->_Sol[solIndexVel[d]]->zero();
+    }
 
     std::vector < std::vector <double > > xv;
     for ( unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++ ) {
@@ -979,13 +989,46 @@ namespace femus
       unsigned iel = _particles[iMarker]->GetMarkerElement();
       unsigned ielType =  _mesh->GetElementType(iel);
       bool elementUpdate = ( aX.find( iel ) != aX.end() ) ? false : true; //update if iel was never updated
-      
-     _particles[iMarker]->FindLocalCoordinates( solType, aX[iel], elementUpdate, _sol, s );
 
+      _particles[iMarker]->FindLocalCoordinates( solType, aX[iel], elementUpdate, _sol, s );
+     
+      std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
+      double mass = _particles[iMarker]->GetMarkerMass();
+      std::vector< double > velocity = _particles[iMarker]->GetMarkerVelocity();
 
+      basis* base = _mesh->GetBasis(ielType, solType);
+      for (unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solType); j++) {
+        double value = base->eval_phi(j, xi);
+        unsigned jdof = _mesh->GetSolutionDof ( j, iel, solType );
+        _sol->_Sol[solIndexM]->add(jdof, value * mass);
+        for (int d = 0; d <  _dim; d++) {
+          _sol->_Sol[solIndexVel[d]]->add(jdof, value * mass * velocity[d]);
+        }
+      }
+    }
+    _sol->_Sol[solIndexM]->close();
 
-            
+    for (int d = 0; d <  _dim; d++) {
+      _sol->_Sol[solIndexVel[d]]->close();
+    }
 
+    for(unsigned i = _mesh->_dofOffset[solType][_iproc]; i < _mesh->_dofOffset[solType][_iproc + 1]; i++){
+      double mass = (*_sol->_Sol[solIndexM])(i);
+      if( fabs(mass) > 1.0e-20){
+	for (int d = 0; d <  _dim; d++) {
+	  double value = (*_sol->_Sol[solIndexVel[d]])(i);
+	  _sol->_Sol[solIndexVel[d]]->set(i, value / mass);
+	}
+      }
+      else {
+	for (int d = 0; d <  _dim; d++) {
+	  _sol->_Sol[solIndexVel[d]]->set(i, 0.);
+	}
+      }
+    }
+    
+    for (int d = 0; d <  _dim; d++) {
+      _sol->_Sol[solIndexVel[d]]->close();
     }
 
   }

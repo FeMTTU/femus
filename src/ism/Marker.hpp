@@ -39,6 +39,10 @@ namespace femus {
         _dim = sol->GetMesh()->GetDimension();
         _step = 0;
 	_mass = 1.;
+	_velocity.resize(_dim);
+	for(unsigned d = 0; d<_dim; d++){
+	  _velocity[d] = ( d + 1);
+	}
 
         GetElement(1, UINT_MAX, sol, s1);
 
@@ -125,8 +129,12 @@ namespace femus {
         elem = _elem;
       }
 
-      void GetMarkerMass( double &mass){
-	mass = _mass;
+      double GetMarkerMass(){
+	return _mass;
+      }
+      
+      std::vector < double > GetMarkerVelocity(){
+	return _velocity;
       }
       
       std::vector<double> GetMarkerLocalCoordinates() {
@@ -276,6 +284,8 @@ namespace femus {
       static const double _a[4][4][4];
       static const double _b[4][4];
       static const double _c[4][4];
+      
+      std::vector <double> _velocity;
 
   };
 } //end namespace femus

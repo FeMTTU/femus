@@ -118,7 +118,7 @@ int main(int argc, char** args)
   unsigned numberOfUniformLevels = 3; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
-  std::vector < std::string > variablesToBePrinted;
+  
 
   /* element types
   0 = HEX
@@ -179,12 +179,7 @@ int main(int argc, char** args)
   //std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
   //std::cout << " The marker type is " <<  a1Quad.GetMarkerType() << std::endl;
 
-  variablesToBePrinted.push_back("All");
-
-  VTKWriter vtkIO(&mlSol);
-  vtkIO.SetDebugOutput(true);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
-
+  
   clock_t start_time = clock();
   clock_t init_time = clock();
 
@@ -232,9 +227,21 @@ int main(int argc, char** args)
 
   Line linea(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
 
+  linea.GetPointsToGridProjections();
+  
   linea.GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
+  std::vector < std::string > variablesToBePrinted;
+  variablesToBePrinted.push_back("All");
+
+  VTKWriter vtkIO(&mlSol);
+  vtkIO.SetDebugOutput(true);
+  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+
+  
+  
+  
   double T = 2 * acos(-1.);
 
   unsigned n = 4;
