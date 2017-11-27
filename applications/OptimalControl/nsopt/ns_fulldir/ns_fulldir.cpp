@@ -11,7 +11,7 @@
 
 using namespace femus;
 
-  double force[3] = {10.,0.,0.}; 
+  double force[3] = {0.,0.,0.}; 
 
 
 bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -20,28 +20,12 @@ bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName
   bool dirichlet = true;
    value = 0.;
   
-// LEFT ==========================  
-      if (facename == 4) {
-       if (!strcmp(SolName, "U"))    { dirichlet = false; }
-  else if (!strcmp(SolName, "V"))    {      value = 0.; } 
+// TOP ==========================  
+      if (facename == 3) {
+       if (!strcmp(SolName, "U"))    { value = 70.; }
+  else if (!strcmp(SolName, "V"))    { value = 0.; } 
   	
       }
-      
-// RIGHT ==========================  
-     if (facename == 2) {
-       if (!strcmp(SolName, "U"))    {  dirichlet = false; }
-  else if (!strcmp(SolName, "V"))    {   value = 0.;  } 
-  
-  
-      }
-      
-//if the boundary integral is implemented below, you need to use these conditions on pressure to retrieve the Poiseuille flow (and set the volume force to zero)      
-//       if (!strcmp(SolName, "P"))  { 
-// 	 dirichlet = false;
-//            if (facename == 4)  value = 1.; 
-//            if (facename == 2)  value = 0.;
-//    
-//       }
       
   return dirichlet;
 }
