@@ -600,7 +600,7 @@ namespace femus
 
                       //laplaciano debole
                       LapvelVAR[idim]     += ( GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim] ) * gradphi[i * dim + jdim];
-                      Lapdisp[idim]     += ( GradSolVAR[idim][jdim] + GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
+                      Lapdisp[idim]     += ( idim == 0 ) * ( GradSolVAR[idim][jdim] + GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
                       //laplaciano strong
                       LapStrong[idim]     += ( NablaSolVAR[dim + idim][jdim] + NablaSolVAR[dim + jdim][kdim] ) * phiSupg[i];
                       AdvaleVAR[idim]	+= ( ( SolVAR[dim + jdim] - meshVel[jdim] ) * GradSolVAR[dim + idim][jdim]
@@ -626,8 +626,9 @@ namespace femus
                     value =  theta[tip] * (
                                + AdvaleVAR[idim]      	             // advection term
                                + IRe * LapvelVAR[idim]	             // viscous dissipation
-                               + ( idim == 0 ) * Lapdisp[idim] * 5.e-4 * exp( ( vx_ig[0] + 1e-5 ) / 0.0001 ) * ( dim == 2 )
-                               + ( idim == 0 ) * Lapdisp[idim] * 1.e-1 * exp( -( vx_ig[0] - 1e-4 ) / 0.00004 ) * ( dim == 3 )
+                               + ( idim == 0 ) * Lapdisp[idim] * 5.e-4 * exp( ( vx_ig[0] - (- 1e-5) ) / 0.0001 ) * ( dim == 2 )
+                               //+ ( idim == 0 ) * Lapdisp[idim] * 1.e-1 * exp( -( vx_ig[0] - 1e-4 ) / 0.00004 ) * ( dim == 3 )
+			       + ( idim == 0 ) * Lapdisp[idim] * 5.e-4 * exp( -( vx_ig[0] - 1e-5 ) / 0.0001 ) * ( dim == 3 )
                                - IRe * LapStrong[idim]
                                - 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
                              ) * Weight;          
