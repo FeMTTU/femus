@@ -10,7 +10,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
-#include "../../include/FSITimeDependentAssemblySupg.hpp"
+#include "../../include/FSITimeDependentAssemblySupgNonConservative.hpp"
 #include <cmath>
 double scale = 1000.;
 
@@ -25,7 +25,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 bool SetBoundaryConditionVeinValve2(const std::vector < double >& x, const char name[],
                                    double &value, const int facename, const double time);
 
-void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
+void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double> &fluxes);
 
 // void StoreOldDispcacement(MultiLevelSolution& mlSol);
   
@@ -272,6 +272,21 @@ int main(int argc, char **args)
   const unsigned int n_timesteps =1024;
 
   //std::vector < std::vector <double> > data(n_timesteps);
+  
+  int  iproc;
+  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+  
+  std::ofstream outf;
+  if(iproc == 0) {
+    outf.open("fluxes.txt");
+    if(!outf) {
+      std::cout << "Error in opening file DataPrint.txt";
+      return 1;
+    }
+  }
+  
+  std::vector < double > Qtot(4,0.);   
+  std::vector<double> fluxes(3,0.);
 
   for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
@@ -289,6 +304,25 @@ int main(int argc, char **args)
     system.MGsolve();
     
     StoreMeshVelocity(ml_prob);
+    
+    double dt = system.GetIntervalTime();
+    
+    Qtot[0] += 0.5 * dt * fluxes[0];
+    Qtot[1] += 0.5 * dt * fluxes[1];
+    Qtot[2] += 0.5 * dt * fluxes[2];
+    
+    GetSolutionFluxes(ml_sol,fluxes);
+    
+    Qtot[0] += 0.5 * dt * fluxes[0];
+    Qtot[1] += 0.5 * dt * fluxes[1];
+    Qtot[2] += 0.5 * dt * fluxes[2];
+    Qtot[3] = Qtot[0] + Qtot[1] + Qtot[2];
+    
+    std::cout<< fluxes[0] <<" "<<fluxes[1] << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << " " << Qtot[3] << std::endl;
+    
+    if(iproc == 0) {
+      outf << time_step <<" "<< system.GetTime() <<" "<< fluxes[0] <<" "<<fluxes[1]<<" " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << " " << Qtot[3] << std::endl;
+    }
 
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
@@ -300,7 +334,10 @@ int main(int argc, char **args)
 
   }
 
-
+  if(iproc == 0) {
+    outf.close();
+  }
+  
   // ******* Clear all systems *******
   ml_prob.clear();
   return 0;
@@ -476,195 +513,104 @@ bool SetBoundaryConditionVeinValve2(const std::vector < double >& x, const char 
 
 //-------------------------------------------------------------------------//
 
-void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
+void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double> &fluxes)
 {
 
   int  iproc, nprocs;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-  NumericVector* p2;
-  NumericVector* v2;
-  NumericVector* vol;
-  NumericVector* vol0;
-  p2 = NumericVector::build().release();
-  v2 = NumericVector::build().release();
-  vol = NumericVector::build().release();
-  vol0 = NumericVector::build().release();
-
-  if (nprocs == 1) {
-    p2->init(nprocs, 1, false, SERIAL);
-    v2->init(nprocs, 1, false, SERIAL);
-    vol->init(nprocs, 1, false, SERIAL);
-    vol0->init(nprocs, 1, false, SERIAL);
-  }
-  else {
-    p2->init(nprocs, 1, false, PARALLEL);
-    v2->init(nprocs, 1, false, PARALLEL);
-    vol->init(nprocs, 1, false, PARALLEL);
-    vol0->init(nprocs, 1, false, PARALLEL);
-  }
-
-  p2->zero();
-  v2->zero();
-  vol->zero();
-  vol0->zero();
-
+  MyVector<double> qTop(1,0);
+  qTop.stack();
+  
+  MyVector<double> qBottom(1,0);
+  qBottom.stack();
+  
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
 
   Solution* solution  = mlSol.GetSolutionLevel(level);
   Mesh* msh = mlSol._mlMesh->GetLevel(level);
-
-
+  elem* myel =  msh->el;
+  
   const unsigned dim = msh->GetDimension();
-
-
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
 
-  vector< double > solP;
-  vector< vector < double> >  solV(dim);
-  vector< vector < double> > x0(dim);
+  vector< vector < double> >  sol(dim);
   vector< vector < double> > x(dim);
+ 
+  const char varname[6][3] = {"U", "V", "W","DX", "DY", "DZ"};
+  vector <unsigned> indVar(2 * dim);
+  unsigned solType;
 
-  solP.reserve(max_size);
-  for (unsigned d = 0; d < dim; d++) {
-    solV[d].reserve(max_size);
-    x0[d].reserve(max_size);
-    x[d].reserve(max_size);
+  for (unsigned ivar = 0; ivar < dim; ivar++) {
+    for (unsigned k = 0; k < 2; k++) {
+      indVar[ivar + k * dim] = mlSol.GetIndex(&varname[ivar + k * 3][0]);
+    }
   }
-  double weight;
-  double weight0;
-
-  vector <double> phiV;
-  vector <double> gradphiV;
-  vector <double> nablaphiV;
-
-  double *phiP;
-
-  phiV.reserve(max_size);
-  gradphiV.reserve(max_size * dim);
-  nablaphiV.reserve(max_size * (3 * (dim - 1) + !(dim - 1)));
-
-  vector < unsigned > solVIndex(dim);
-  solVIndex[0] = mlSol.GetIndex("U");    // get the position of "U" in the ml_sol object
-  solVIndex[1] = mlSol.GetIndex("V");    // get the position of "V" in the ml_sol object
-  if (dim == 3) solVIndex[2] = mlSol.GetIndex("W");      // get the position of "V" in the ml_sol object
-
-  unsigned solVType = mlSol.GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
-
-  vector < unsigned > solDIndex(dim);
-  solDIndex[0] = mlSol.GetIndex("DX");    // get the position of "U" in the ml_sol object
-  solDIndex[1] = mlSol.GetIndex("DY");    // get the position of "V" in the ml_sol object
-  if (dim == 3) solDIndex[2] = mlSol.GetIndex("DZ");      // get the position of "V" in the ml_sol object
-
-  unsigned solDType = mlSol.GetSolutionType(solDIndex[0]);
-
-  unsigned solPIndex;
-  solPIndex = mlSol.GetIndex("P");
-  unsigned solPType = mlSol.GetSolutionType(solPIndex);
-
+  solType = mlSol.GetSolutionType(&varname[0][0]);
+    
+  
+   std::vector < double > phi;
+   std::vector < double > gradphi;
+   std::vector< double > xx(dim, 0.);
+   double weight;
+  
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-    if (msh->GetElementGroup(iel) == group) {
-      short unsigned ielt = msh->GetElementType(iel);
-      unsigned ndofV = msh->GetElementDofNumber(iel, solVType);
-      unsigned ndofP = msh->GetElementDofNumber(iel, solPType);
-      unsigned ndofD = msh->GetElementDofNumber(iel, solDType);
-      // resize
+    vector < double> normal(dim, 0);
+    
+    // loop on faces
+    for (unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+      
 
-      phiV.resize(ndofV);
-      gradphiV.resize(ndofV * dim);
-      nablaphiV.resize(ndofV * (3 * (dim - 1) + !(dim - 1)));
-
-      solP.resize(ndofP);
-      for (int d = 0; d < dim; d++) {
-        solV[d].resize(ndofV);
-        x0[d].resize(ndofD);
-        x[d].resize(ndofD);
-      }
-      // get local to global mappings
-      for (unsigned i = 0; i < ndofD; i++) {
-        unsigned idof = msh->GetSolutionDof(i, iel, solDType);
-        for (unsigned d = 0; d < dim; d++) {
-          x0[d][i] = (*msh->_topology->_Sol[d])(idof);
-
-          x[d][i] = (*msh->_topology->_Sol[d])(idof) +
-                    (*solution->_Sol[solDIndex[d]])(idof);
-        }
-      }
-
-      for (unsigned i = 0; i < ndofV; i++) {
-        unsigned idof = msh->GetSolutionDof(i, iel, solVType);    // global to global mapping between solution node and solution dof
-        for (unsigned  d = 0; d < dim; d++) {
-          solV[d][i] = (*solution->_Sol[solVIndex[d]])(idof);      // global extraction and local storage for the solution
-        }
-      }
-
-
-
-      for (unsigned i = 0; i < ndofP; i++) {
-        unsigned idof = msh->GetSolutionDof(i, iel, solPType);
-        solP[i] = (*solution->_Sol[solPIndex])(idof);
-      }
-
-
-      for (unsigned ig = 0; ig < mlSol._mlMesh->_finiteElement[ielt][solVType]->GetGaussPointNumber(); ig++) {
-        // *** get Jacobian and test function and test function derivatives ***
-        msh->_finiteElement[ielt][solVType]->Jacobian(x0, ig, weight0, phiV, gradphiV, nablaphiV);
-        msh->_finiteElement[ielt][solVType]->Jacobian(x, ig, weight, phiV, gradphiV, nablaphiV);
-        phiP = msh->_finiteElement[ielt][solPType]->GetPhi(ig);
-
-        vol0->add(iproc, weight0);
-        vol->add(iproc, weight);
-
-        std::vector < double> SolV2(dim, 0.);
-        for (unsigned i = 0; i < ndofV; i++) {
+      int faceNumber = myel->GetBoundaryIndex(iel, jface);
+      // look for boundary faces
+      if ( faceNumber == 1 || faceNumber ==2) {
+       
+        unsigned nve = msh->GetElementFaceDofNumber(iel, jface, solType);
+        const unsigned felt = msh->GetElementFaceType(iel, jface);
+	
+	for (unsigned d = 0; d < dim; d++) {
+	  x[d].resize(nve);
+	  sol[d].resize(nve);
+	}
+	
+        for (unsigned i = 0; i < nve; i++) {
+          unsigned int ilocal = msh->GetLocalFaceVertexIndex(iel, jface, i);
+          unsigned idof = msh->GetSolutionDof(ilocal, iel, 2);
           for (unsigned d = 0; d < dim; d++) {
-            SolV2[d] += solV[d][i] * phiV[i];
+            x[d][i] = (*msh->_topology->_Sol[d])(idof) + (*solution->_Sol[indVar[d+dim]])(idof);;
+	    sol[d][i] = (*solution->_Sol[indVar[d]])(idof);;
           }
         }
 
-        double V2 = 0.;
-        for (unsigned d = 0; d < dim; d++) {
-          V2 += SolV2[d] * SolV2[d];
-        }
-        v2->add(iproc, V2 * weight);
-
-        double P2 = 0;
-        for (unsigned i = 0; i < ndofP; i++) {
-          P2 += solP[i] * phiP[i];
-        }
-        P2 *= P2;
-        p2->add(iproc, P2 * weight);
-      }
+        double flux = 0.;
+        for (unsigned igs = 0; igs < msh->_finiteElement[felt][solType]->GetGaussPointNumber(); igs++) {
+          msh->_finiteElement[felt][solType]->JacobianSur(x, igs, weight, phi, gradphi, normal);
+          double value;
+	  for (unsigned i = 0; i < nve; i++) {
+	    value = 0.;
+	    for (unsigned d = 0; d < dim; d++) {
+	      value += normal[d] * sol[d][i];
+	    }
+	    value *= phi[i];
+	  }
+	  flux += value * weight;
+	}
+	if(faceNumber == 1) qBottom[iproc] += flux;
+	else qTop[iproc] += flux;
+      }     
     }
   }
-
-  p2->close();
-  v2->close();
-  vol0->close();
-  vol->close();
-
-  double p2_l2 = p2->l1_norm();
-  double v2_l2 = v2->l1_norm();
-  double VOL0 = vol0->l1_norm();
-  double VOL = vol->l1_norm();
-
-  std::cout.precision(14);
-  std::scientific;
-  std::cout << " vol0 = " << VOL0 << std::endl;
-  std::cout << " vol = " << VOL << std::endl;
-  std::cout << " (vol-vol0)/vol0 = " << (VOL - VOL0) / VOL0 << std::endl;
-  std::cout << " p_l2 norm / vol = " << sqrt(p2_l2 / VOL)  << std::endl;
-  std::cout << " v_l2 norm / vol = " << sqrt(v2_l2 / VOL)  << std::endl;
-
-  data[1] = (VOL - VOL0) / VOL0;
-  data[2] = VOL;
-  data[3] = sqrt(p2_l2 / VOL);
-  data[4] = sqrt(v2_l2 / VOL);
-
-  delete p2;
-  delete v2;
-  delete vol;
-
+  
+  fluxes[0] = 0.; 
+  fluxes[1] = 0.;
+  for(int j = 0; j < nprocs; j++) {
+    qBottom.broadcast(j);
+    qTop.broadcast(j);
+    fluxes[0] += qBottom[j]; 
+    fluxes[1] += qTop[j]; 
+    qBottom.clearBroadcast();
+    qTop.clearBroadcast();
+  } 
 }
 
