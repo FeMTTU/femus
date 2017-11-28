@@ -667,7 +667,7 @@ namespace femus
                   //END redidual Porous Media in moving domain
                 }
               }
-              //END ALE + Momentum (Navier-Stokes)
+              //END Momentum (Navier-Stokes)
             }
             else {
               //BEGIN redidual Laplacian ALE map in the reference domain
