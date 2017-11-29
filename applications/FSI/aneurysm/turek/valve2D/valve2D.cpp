@@ -118,8 +118,8 @@ int main(int argc, char **args)
 
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
-  ml_sol.AddSolution ( "Um", LAGRANGE, SECOND, 2 );
-  ml_sol.AddSolution ( "Vm", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "Um", LAGRANGE, SECOND, 0, false );
+  ml_sol.AddSolution ( "Vm", LAGRANGE, SECOND, 0, false );
     
 
   // ******* Initialize solution *******

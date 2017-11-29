@@ -82,7 +82,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -131,9 +131,9 @@ int main(int argc, char **args)
   if ( !dimension2D ) ml_sol.AddSolution ( "DZ2", LAGRANGE, SECOND, 2 );*/
 
   
-  ml_sol.AddSolution ( "Um", LAGRANGE, SECOND, 2 );
-  ml_sol.AddSolution ( "Vm", LAGRANGE, SECOND, 2 );
-  if ( !dimension2D ) ml_sol.AddSolution ( "Wm", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "Um", LAGRANGE, SECOND, 0, false );
+  ml_sol.AddSolution ( "Vm", LAGRANGE, SECOND, 0, false );
+  if ( !dimension2D ) ml_sol.AddSolution ( "Wm", LAGRANGE, SECOND, 0, false );
 
   
   // ******* Initialize solution *******

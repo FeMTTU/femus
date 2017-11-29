@@ -304,7 +304,7 @@ namespace femus
             dofsVAR[j + k * dim][i] = myLinEqSolver->GetSystemDof( indVAR[j + k * dim], indexVAR[j + k * dim], i, iel );
           }
 
-          meshVelOldNode[j][i] = ( *mysolution->_SolOld[indVAR2[j]] )( idof );
+          meshVelOldNode[j][i] = ( *mysolution->_Sol[indVAR2[j]] )( idof );
           vx_hat[j][i] = ( *mymsh->_topology->_Sol[j] )( idof );
         }
       }
@@ -448,15 +448,15 @@ namespace femus
                    - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
           //END Jacobian in the undeformed configuration
 
-//           //BEGIN redidual d_t - v = 0 in fixed domain
-//           for ( unsigned i = 0; i < nve; i++ ) {
-//             for ( int idim = 0; idim < dim; idim++ ) {
-//               aRhs[indexVAR[dim + idim]][i] +=  - ( - ( SolVARNew[idim] - SolVAROld[idim] ) / dt +
-//                                                     0.5 * ( SolVARNew[dim + idim] + SolVAROld[dim + idim] )
-//                                                   ) * phi_hat[i] * Weight_hat;
-//             }
-//           }
-//           //END redidual d_t - v = 0 in fixed domain
+          //BEGIN redidual d_t - v = 0 in fixed domain
+          for ( unsigned i = 0; i < nve; i++ ) {
+            for ( int idim = 0; idim < dim; idim++ ) {
+              aRhs[indexVAR[dim + idim]][i] +=  ( ( SolVARNew[idim] - SolVAROld[idim] ) / dt -
+                                                     ( 1. * SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim] )
+                                                  ) * phi_hat[i] * Weight_hat;
+            }
+          }
+          //END redidual d_t - v = 0 in fixed domain
 
           //BEGIN continuity block
           for ( unsigned i = 0; i < nve1; i++ ) {
@@ -550,7 +550,8 @@ namespace femus
 
               // get mesh velocity and gradient at current time
               for ( unsigned i = 0; i < dim; i++ ) {
-                meshVel[i] = meshVelOld[i] + 2. * s[tip] * ( ( SolVARNew[i] - SolVAROld[i] ) / dt - meshVelOld[i] );
+               // meshVel[i] = meshVelOld[i] + 2. * s[tip] * ( ( SolVARNew[i] - SolVAROld[i] ) / dt - meshVelOld[i] );
+		 meshVel[i] = (1.-s[tip]) * meshVelOld[i]  + s[tip] * ( SolVARNew[i] - SolVAROld[i] ) / dt ;
               }
 
               // speed
@@ -628,7 +629,7 @@ namespace femus
                                + IRe * LapvelVAR[idim]	             // viscous dissipation
                                + ( idim == 0 ) * Lapdisp[idim] * 5.e-4 * exp( ( vx_ig[0] - (- 1e-5) ) / 0.0001 ) * ( dim == 2 )
                                //+ ( idim == 0 ) * Lapdisp[idim] * 1.e-1 * exp( -( vx_ig[0] - 1e-4 ) / 0.00004 ) * ( dim == 3 )
-			       + ( idim == 0 ) * Lapdisp[idim] * 5.e-4 * exp( -( vx_ig[0] - 1e-5 ) / 0.0001 ) * ( dim == 3 )
+			       + ( idim == 0 ) * Lapdisp[idim] * 5.e-2 * exp( -( vx_ig[0] - 1e-5 ) / 0.0001 ) * ( dim == 3 )
                                - IRe * LapStrong[idim]
                                - 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
                              ) * Weight;          
@@ -774,18 +775,18 @@ namespace femus
               //END build Cauchy Stress in moving domain
               
               
-               //BEGIN redidual d_t - v = 0 in fixed domain
-	      for ( unsigned i = 0; i < nve; i++ ) {
-		for ( int idim = 0; idim < dim; idim++ ) {
-// 		  aRhs[indexVAR[dim + idim]][i] +=  - theta[tip]* ( - ( SolVARNew[idim] - SolVAROld[idim] ) / dt + 0.*SolVAR[dim+idim]
-// 							+1. * ( SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim] )
-// 						      ) * phi[i] * Weight;
-		  aRhs[indexVAR[dim + idim]][i] +=  theta[tip]* ( ( SolVARNew[idim] - SolVAROld[idim] ) / dt - 0.*SolVAR[dim+idim]
-						   -1. * ( SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim] )
-					          ) * phi[i] * Weight;
-		}
-	      }
-	      //END redidual d_t - v = 0 in fixed domain
+//                //BEGIN redidual d_t - v = 0 in fixed domain
+// 	      for ( unsigned i = 0; i < nve; i++ ) {
+// 		for ( int idim = 0; idim < dim; idim++ ) {
+// // 		  aRhs[indexVAR[dim + idim]][i] +=  - theta[tip]* ( - ( SolVARNew[idim] - SolVAROld[idim] ) / dt + 0.*SolVAR[dim+idim]
+// // 							+1. * ( SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim] )
+// // 						      ) * phi[i] * Weight;
+// 		  aRhs[indexVAR[dim + idim]][i] +=  theta[tip]* ( ( SolVARNew[idim] - SolVAROld[idim] ) / dt - 0.*SolVAR[dim+idim]
+// 						   -1. * ( SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim] )
+// 					          ) * phi[i] * Weight;
+// 		}
+// 	      }
+// 	      //END redidual d_t - v = 0 in fixed domain
               
               
 
@@ -1323,8 +1324,8 @@ namespace femus
         else {
           double unew = ( *solution->_Sol[indVAR[ivar]] )( jdof );
           double uold = ( *solution->_SolOld[indVAR[ivar]] )( jdof );
-          double vold = ( *solution->_SolOld[indVAR[ivar + 2]] )( jdof );
-          vnew = 2. / dt * ( unew - uold ) - vold;
+          double vold = ( *solution->_Sol[indVAR[ivar + 2]] )( jdof );
+          vnew = 1 / dt * ( unew - uold ) - 0 * vold;
 
         }
 
