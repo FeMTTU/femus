@@ -312,7 +312,7 @@ namespace femus
       index++;
 
       if(index == _solType.size()) {
-        cout << "error! invalid solution name " << name << "entry GetIndex(...)" << endl;
+        cout << "error! invalid solution name: " << name << " in entry GetIndex(...)" << endl;
         abort();
       }
     }

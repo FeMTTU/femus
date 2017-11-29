@@ -195,11 +195,11 @@ namespace femus {
       vector < SparseMatrix* > &GetRestrictionMatrix() {
         return _RR;
       }
-
+      vector < SparseMatrix* > _PPamr, _RRamr; 
     protected:
 
       vector < SparseMatrix* > _PP, _RR; 
-      vector < SparseMatrix* > _PPamr, _RRamr; 
+//       vector < SparseMatrix* > _PPamr, _RRamr; 
 
       bool _printSolverInfo;
       bool _assembleMatrix;
