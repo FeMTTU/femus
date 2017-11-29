@@ -38,10 +38,10 @@ namespace femus {
         _solType = solType;
         _dim = sol->GetMesh()->GetDimension();
         _step = 0;
-	_mass = 1.;
+	_mass = 1.; 
 	_velocity.resize(_dim);
 	for(unsigned d = 0; d<_dim; d++){
-	  _velocity[d] = ( d + 1);
+	  _velocity[d] = ( d + 1); // fix this initialization
 	}
 
         GetElement(1, UINT_MAX, sol, s1);

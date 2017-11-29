@@ -1014,7 +1014,7 @@ namespace femus
 
     for(unsigned i = _mesh->_dofOffset[solType][_iproc]; i < _mesh->_dofOffset[solType][_iproc + 1]; i++){
       double mass = (*_sol->_Sol[solIndexM])(i);
-      if( fabs(mass) > 1.0e-20){
+      if( fabs(mass) > 1.0e-20){ //if on the mass at grid node i
 	for (int d = 0; d <  _dim; d++) {
 	  double value = (*_sol->_Sol[solIndexVel[d]])(i);
 	  _sol->_Sol[solIndexVel[d]]->set(i, value / mass);
