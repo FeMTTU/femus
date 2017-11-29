@@ -304,7 +304,7 @@ namespace femus
             dofsVAR[j + k * dim][i] = myLinEqSolver->GetSystemDof( indVAR[j + k * dim], indexVAR[j + k * dim], i, iel );
           }
 
-          meshVelOldNode[j][i] = ( *mysolution->_SolOld[indVAR2[j]] )( idof );
+          meshVelOldNode[j][i] = ( *mysolution->_Sol[indVAR2[j]] )( idof );
           vx_hat[j][i] = ( *mymsh->_topology->_Sol[j] )( idof );
         }
       }
@@ -448,20 +448,20 @@ namespace femus
                    - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
           //END Jacobian in the undeformed configuration
 
-//           //BEGIN redidual d_t - v = 0 in fixed domain
-//           for ( unsigned i = 0; i < nve; i++ ) {
-//             for ( int idim = 0; idim < dim; idim++ ) {
-//               aRhs[indexVAR[dim + idim]][i] +=  - ( - ( SolVARNew[idim] - SolVAROld[idim] ) / dt +
-//                                                     0.5 * ( SolVARNew[dim + idim] + SolVAROld[dim + idim] )
-//                                                   ) * phi_hat[i] * Weight_hat;
-//             }
-//           }
-//           //END redidual d_t - v = 0 in fixed domain
+          //BEGIN redidual d_t - v = 0 in fixed domain
+          for ( unsigned i = 0; i < nve; i++ ) {
+            for ( int idim = 0; idim < dim; idim++ ) {
+              aRhs[indexVAR[dim + idim]][i] +=  ( ( SolVARNew[idim] - SolVAROld[idim] ) / dt -
+                                                     ( 1. * SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim] )
+                                                  ) * phi_hat[i] * Weight_hat;
+            }
+          }
+          //END redidual d_t - v = 0 in fixed domain
 
           //BEGIN continuity block
           for ( unsigned i = 0; i < nve1; i++ ) {
-            aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * ( J_hat  -  1. ) * Weight_hat;
-	    //aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * ( 1. - J_hat ) * Weight_hat;
+            //aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * ( J_hat  -  1. ) * Weight_hat;
+	    aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * ( 1. - J_hat ) * Weight_hat / rhof;
           }
           //END continuity block
         }
@@ -550,7 +550,8 @@ namespace femus
 
               // get mesh velocity and gradient at current time
               for ( unsigned i = 0; i < dim; i++ ) {
-                meshVel[i] = meshVelOld[i] + 2. * s[tip] * ( ( SolVARNew[i] - SolVAROld[i] ) / dt - meshVelOld[i] );
+               // meshVel[i] = meshVelOld[i] + 2. * s[tip] * ( ( SolVARNew[i] - SolVAROld[i] ) / dt - meshVelOld[i] );
+		 meshVel[i] = (1.-s[tip]) * meshVelOld[i]  + s[tip] * ( SolVARNew[i] - SolVAROld[i] ) / dt ;
               }
 
               // speed
@@ -575,7 +576,7 @@ namespace femus
 
               for ( unsigned i = 0; i < nve; i++ ) {
                 for ( unsigned j = 0; j < dim; j++ ) {
-                  phiSupg[i] += ( ( SolVAR[j + dim] - meshVel[j] ) * gradphi[i * dim + j] ) * tauSupg; // * (!solidmark[i]) ;
+                  phiSupg[i] += ( ( SolVAR[j + dim] - meshVel[j] ) * gradphi[i * dim + j] ) * tauSupg; 
                 }
               }
 
@@ -600,7 +601,7 @@ namespace femus
 
                       //laplaciano debole
                       LapvelVAR[idim]     += ( GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim] ) * gradphi[i * dim + jdim];
-                      Lapdisp[idim]     += ( GradSolVAR[idim][jdim] + GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
+                      Lapdisp[idim]     += ( idim == 0 ) * ( GradSolVAR[idim][jdim] + GradSolVAR[jdim][idim] ) * gradphi[i * dim + jdim];
                       //laplaciano strong
                       LapStrong[idim]     += ( NablaSolVAR[dim + idim][jdim] + NablaSolVAR[dim + jdim][kdim] ) * phiSupg[i];
                       AdvaleVAR[idim]	+= ( ( SolVAR[dim + jdim] - meshVel[jdim] ) * GradSolVAR[dim + idim][jdim]
@@ -612,25 +613,26 @@ namespace femus
                     adept::adouble timeDerivative = 0.;
                     adept::adouble value = 0.;
 
-                    timeDerivative = theta[tip] * ( SolVAROld[dim + idim] - SolVARNew[dim + idim] ) * ( phi[i] + phiSupg[i] ) * Weight / dt;
-		    //timeDerivative = theta[tip] * ( SolVARNew[dim + idim] - SolVAROld[dim + idim] ) * ( phi[i] + phiSupg[i] ) * Weight / dt;
+                    //timeDerivative = theta[tip] * ( SolVAROld[dim + idim] - SolVARNew[dim + idim] ) * ( phi[i] + phiSupg[i] ) * Weight / dt;
+		    timeDerivative = theta[tip] * ( SolVARNew[dim + idim] - SolVAROld[dim + idim] ) * ( phi[i] + phiSupg[i] ) * Weight / dt;
 
+//                     value =  theta[tip] * (
+//                                - AdvaleVAR[idim]      	             // advection term
+//                                - IRe * LapvelVAR[idim]	             // viscous dissipation
+//                                - ( idim == 0 ) * Lapdisp[idim] * 1.e-3 * exp( ( vx_ig[0] + 2.5e-5 ) / 0.0001 ) * ( dim == 2 )
+//                                - ( idim == 0 ) * Lapdisp[idim] * 1.e-1 * exp( -( vx_ig[0] - 1e-4 ) / 0.00004 ) * ( dim == 3 )
+//                                + IRe * LapStrong[idim]
+//                                + 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
+//                              ) * Weight;                                // at time t
                     value =  theta[tip] * (
-                               - AdvaleVAR[idim]      	             // advection term
-                               - IRe * LapvelVAR[idim]	             // viscous dissipation
-                               - ( idim == 0 ) * Lapdisp[idim] * 1.e-3 * exp( ( vx_ig[0] + 2.5e-5 ) / 0.0001 ) * ( dim == 2 )
-                               - ( idim == 0 ) * Lapdisp[idim] * 1.e-1 * exp( -( vx_ig[0] - 1e-4 ) / 0.00004 ) * ( dim == 3 )
-                               + IRe * LapStrong[idim]
-                               + 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
-                             ) * Weight;                                // at time t
-/*                  value =  theta[tip] * (
                                + AdvaleVAR[idim]      	             // advection term
                                + IRe * LapvelVAR[idim]	             // viscous dissipation
-                               + ( idim == 0 ) * Lapdisp[idim] * 1.e-3 * exp( ( vx_ig[0] + 2.5e-5 ) / 0.0001 ) * ( dim == 2 )
-                               + ( idim == 0 ) * Lapdisp[idim] * 1.e-1 * exp( -( vx_ig[0] - 1e-4 ) / 0.00004 ) * ( dim == 3 )
+                               + ( idim == 0 ) * Lapdisp[idim] * 5.e-4 * exp( ( vx_ig[0] - (- 1e-5) ) / 0.0001 ) * ( dim == 2 )
+                               //+ ( idim == 0 ) * Lapdisp[idim] * 1.e-1 * exp( -( vx_ig[0] - 1e-4 ) / 0.00004 ) * ( dim == 3 )
+			       + ( idim == 0 ) * Lapdisp[idim] * 5.e-2 * exp( -( vx_ig[0] - 1e-5 ) / 0.0001 ) * ( dim == 3 )
                                - IRe * LapStrong[idim]
                                - 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
-                             ) * Weight;*/          
+                             ) * Weight;          
 
 
                     if ( !solidmark[i] ) {
@@ -663,12 +665,12 @@ namespace femus
                     adept::adouble value = 0.;
 
 
-                    value = theta[tip] * ( - ( SolVAR[dim + idim] - meshVel[idim] ) * ( IRe / K + 0.5 * C2 * speed ) * ( phi[i] + phiSupg[i] )
-                                           + 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
-                                         ) * Weight;                                // at time t
-//                  value = theta[tip] * ( ( SolVAR[dim + idim] - meshVel[idim] ) * ( IRe / K + 0.5 * C2 * speed ) * ( phi[i] + phiSupg[i] )
-//                                         - 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
-//                                       ) * Weight;                                // at time t
+//                     value = theta[tip] * ( - ( SolVAR[dim + idim] - meshVel[idim] ) * ( IRe / K + 0.5 * C2 * speed ) * ( phi[i] + phiSupg[i] )
+//                                            + 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
+//                                          ) * Weight;                                // at time t
+		    value = theta[tip] * ( ( SolVAR[dim + idim] - meshVel[idim] ) * ( IRe / K + 0.5 * C2 * speed ) * ( phi[i] + phiSupg[i] )
+                                        - 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
+                                      ) * Weight;                                // at time t
 
 
                     if ( !solidmark[i] ) {
@@ -697,8 +699,8 @@ namespace femus
                   }
 
                   for ( int idim = 0; idim < dim; idim++ ) {
-                    aRhs[indexVAR[idim]][i] += ( - LapmapVAR[idim] * Weight_nojac );
-		    //aRhs[indexVAR[idim]][i] += ( LapmapVAR[idim] * Weight_nojac );
+                    //aRhs[indexVAR[idim]][i] += ( - LapmapVAR[idim] * Weight_nojac );
+		    aRhs[indexVAR[idim]][i] += ( LapmapVAR[idim] * Weight_nojac );
                   }
                 }
               }
@@ -712,8 +714,8 @@ namespace femus
               }
 
               for ( unsigned i = 0; i < nve1; i++ ) {
-                aRhs[indexVAR[nBlocks * dim]][i] += -  1. * ( -phi1[i] * div_vel ) * Weight;
-		//aRhs[indexVAR[nBlocks * dim]][i] += ( -phi1[i] * div_vel ) * Weight;
+                //aRhs[indexVAR[nBlocks * dim]][i] += -  1. * ( -phi1[i] * div_vel ) * Weight;
+		aRhs[indexVAR[nBlocks * dim]][i] += ( -phi1[i] * div_vel ) * Weight / rhof;
               }
               //END continuity block ===========================
             }
@@ -773,18 +775,18 @@ namespace femus
               //END build Cauchy Stress in moving domain
               
               
-               //BEGIN redidual d_t - v = 0 in fixed domain
-	      for ( unsigned i = 0; i < nve; i++ ) {
-		for ( int idim = 0; idim < dim; idim++ ) {
-		  aRhs[indexVAR[dim + idim]][i] +=  - theta[tip]* ( - ( SolVARNew[idim] - SolVAROld[idim] ) / dt + 0.*SolVAR[dim+idim]
-							+1. * ( SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim] )
-						      ) * phi[i] * Weight;
-/*		aRhs[indexVAR[dim + idim]][i] +=  theta[tip]* ( ( SolVARNew[idim] - SolVAROld[idim] ) / dt - 0.*SolVAR[dim+idim]
-						   -1. * ( SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim] )
-					          ) * phi[i] * Weight;	*/			      
-		}
-	      }
-	      //END redidual d_t - v = 0 in fixed domain
+//                //BEGIN redidual d_t - v = 0 in fixed domain
+// 	      for ( unsigned i = 0; i < nve; i++ ) {
+// 		for ( int idim = 0; idim < dim; idim++ ) {
+// // 		  aRhs[indexVAR[dim + idim]][i] +=  - theta[tip]* ( - ( SolVARNew[idim] - SolVAROld[idim] ) / dt + 0.*SolVAR[dim+idim]
+// // 							+1. * ( SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim] )
+// // 						      ) * phi[i] * Weight;
+// 		  aRhs[indexVAR[dim + idim]][i] +=  theta[tip]* ( ( SolVARNew[idim] - SolVAROld[idim] ) / dt - 0.*SolVAR[dim+idim]
+// 						   -1. * ( SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim] )
+// 					          ) * phi[i] * Weight;
+// 		}
+// 	      }
+// 	      //END redidual d_t - v = 0 in fixed domain
               
               
 
@@ -799,15 +801,15 @@ namespace femus
                 for ( int idim = 0; idim < dim; idim++ ) {
                   adept::adouble timeDerivative = 0.;
                   adept::adouble value = 0.;
-                  timeDerivative = theta[tip] * rhos * ( SolVAROld[dim + idim] - SolVARNew[dim + idim] ) * phi[i] * Weight / dt;
-		  //timeDerivative = theta[tip] * rhos * (SolVARNew[dim + idim] - SolVAROld[dim + idim] ) * phi[i] * Weight / dt;
+                  //timeDerivative = theta[tip] * rhos * ( SolVAROld[dim + idim] - SolVARNew[dim + idim] ) * phi[i] * Weight / dt;
+		  timeDerivative = theta[tip] * rhos * (SolVARNew[dim + idim] - SolVAROld[dim + idim] ) * phi[i] * Weight / dt;
 
-                  value =  theta[tip] * ( rhos * phi[i] * _gravity[idim]     // body force
+/*                  value =  theta[tip] * ( rhos * phi[i] * _gravity[idim]     // body force
                                           - CauchyDIR[idim]		     // stress
-                                        ) * Weight;                          // at time t
-/*                  value =  theta[tip] * (- rhos * phi[i] * _gravity[idim]     // body force
+                                        ) * Weight;   */                       // at time t
+                  value =  theta[tip] * (- rhos * phi[i] * _gravity[idim]     // body force
                                           + CauchyDIR[idim]		     // stress
-                                        ) * Weight;   */                       
+                                        ) * Weight;                          
                   aRhs[indexVAR[idim]][i] += timeDerivative + value;
                 }
               }
@@ -1322,8 +1324,8 @@ namespace femus
         else {
           double unew = ( *solution->_Sol[indVAR[ivar]] )( jdof );
           double uold = ( *solution->_SolOld[indVAR[ivar]] )( jdof );
-          double vold = ( *solution->_SolOld[indVAR[ivar + 2]] )( jdof );
-          vnew = 2. / dt * ( unew - uold ) - vold;
+          double vold = ( *solution->_Sol[indVAR[ivar + 2]] )( jdof );
+          vnew = 1 / dt * ( unew - uold ) - 0 * vold;
 
         }
 

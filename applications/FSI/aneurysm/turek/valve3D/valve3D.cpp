@@ -60,7 +60,7 @@ int main(int argc, char **args)
   ni = 0.5;
   //E = 3.3 * 1.0e6; //vein young modulus
   E = 1.0 * 1.0e6;
-  E1 = 0.08 * 1.0e6; //leaflet young modulus
+  E1 = 0.2 * 1.0e6; //leaflet young modulus
 
   Parameter par(Lref, Uref);
 
@@ -82,7 +82,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -131,9 +131,9 @@ int main(int argc, char **args)
   if ( !dimension2D ) ml_sol.AddSolution ( "DZ2", LAGRANGE, SECOND, 2 );*/
 
   
-  ml_sol.AddSolution ( "Um", LAGRANGE, SECOND, 2 );
-  ml_sol.AddSolution ( "Vm", LAGRANGE, SECOND, 2 );
-  if ( !dimension2D ) ml_sol.AddSolution ( "Wm", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "Um", LAGRANGE, SECOND, 0, false );
+  ml_sol.AddSolution ( "Vm", LAGRANGE, SECOND, 0, false );
+  if ( !dimension2D ) ml_sol.AddSolution ( "Wm", LAGRANGE, SECOND, 0, false );
 
   
   // ******* Initialize solution *******
@@ -270,8 +270,6 @@ int main(int argc, char **args)
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
   const unsigned int n_timesteps =1024;
-
-  //std::vector < std::vector <double> > data(n_timesteps);
   
   int  iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
@@ -285,8 +283,8 @@ int main(int argc, char **args)
     }
   }
   
-  std::vector < double > Qtot(4,0.);   
-  std::vector<double> fluxes(3,0.);
+  std::vector < double > Qtot(3,0.);   
+  std::vector<double> fluxes(2,0.);
 
   for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
@@ -309,19 +307,17 @@ int main(int argc, char **args)
     
     Qtot[0] += 0.5 * dt * fluxes[0];
     Qtot[1] += 0.5 * dt * fluxes[1];
-    Qtot[2] += 0.5 * dt * fluxes[2];
     
     GetSolutionFluxes(ml_sol,fluxes);
     
     Qtot[0] += 0.5 * dt * fluxes[0];
     Qtot[1] += 0.5 * dt * fluxes[1];
-    Qtot[2] += 0.5 * dt * fluxes[2];
-    Qtot[3] = Qtot[0] + Qtot[1] + Qtot[2];
+    Qtot[2] = Qtot[0] + Qtot[1];
     
-    std::cout<< fluxes[0] <<" "<<fluxes[1] << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << " " << Qtot[3] << std::endl;
+    std::cout<< fluxes[0] <<" "<<fluxes[1] << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
     
     if(iproc == 0) {
-      outf << time_step <<" "<< system.GetTime() <<" "<< fluxes[0] <<" "<<fluxes[1]<<" " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << " " << Qtot[3] << std::endl;
+      outf << time_step <<" "<< system.GetTime() <<" "<< fluxes[0] <<" "<<fluxes[1]<<" " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
     }
 
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
