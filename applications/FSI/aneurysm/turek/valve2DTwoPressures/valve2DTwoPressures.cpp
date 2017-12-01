@@ -79,7 +79,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 1;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -180,7 +180,7 @@ int main(int argc, char **args)
 
   system.SetNonLinearConvergenceTolerance(1.e-7);
   //system.SetResidualUpdateConvergenceTolerance ( 1.e-15 );
-  system.SetMaxNumberOfNonLinearIterations(4); //20
+  system.SetMaxNumberOfNonLinearIterations(20); //20
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
 
   system.SetMaxNumberOfLinearIterations(6);
