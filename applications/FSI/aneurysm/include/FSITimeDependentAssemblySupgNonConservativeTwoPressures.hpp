@@ -218,7 +218,7 @@ namespace femus
       indVAR2[ivar] = ml_sol->GetIndex( &varname2[ivar][0] );
     }
 
-    for ( unsigned ivar = 0; ivar < dim; ivar++ ) {
+    for ( unsigned ivar = 0; ivar < 2; ivar++ ) {
       indexVAR[nBlocks * dim + ivar] = my_nnlin_impl_sys.GetSolPdeIndex( &varname[6 + ivar][0] );
       indVAR[nBlocks * dim + ivar] = ml_sol->GetIndex( &varname[6 + ivar][0] );
       SolType[nBlocks * dim + ivar] = ml_sol->GetSolutionType( &varname[6 + ivar][0] );
@@ -467,8 +467,8 @@ namespace femus
 
           //BEGIN continuity block
           for ( unsigned i = 0; i < nve1; i++ ) {
-	    aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * ( J_hat  -  1. ) * Weight_hat;
-	    aRhs[indexVAR[nBlocks * dim + 1]][i] +=  phi1[i] * SolVAR[nBlocks * dim + 1] * Weight_hat;  // fake continuity of the fluid in the solid 
+	    aRhs[indexVAR[nBlocks * dim + 1]][i] += phi1[i] * ( J_hat  -  1. ) * Weight_hat;
+	    aRhs[indexVAR[nBlocks * dim ]][i] +=  phi1[i] * SolVAR[nBlocks * dim ] * Weight_hat;  // fake continuity of the fluid in the solid 
 	    //aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * ( 1. - J_hat ) * Weight_hat;
           }
           //END continuity block
@@ -629,7 +629,7 @@ namespace femus
                                - ( idim == 0 ) * Lapdisp[idim] * 1.e-3 * exp( ( vx_ig[0] + 2.5e-5 ) / 0.0001 ) * ( dim == 2 )
                                - ( idim == 0 ) * Lapdisp[idim] * 1.e-1 * exp( -( vx_ig[0] - 1e-4 ) / 0.00004 ) * ( dim == 3 )
                                + IRe * LapStrong[idim]
-                               + 1. / rhof * SolVAR[nBlocks * dim + 1] * gradphi[i * dim + idim] // pressure gradient
+                               + 1. / rhof * SolVAR[nBlocks * dim +1] * gradphi[i * dim + idim] // pressure gradient
                              ) * Weight;                                // at time t
 /*                  value =  theta[tip] * (
                                + AdvaleVAR[idim]      	             // advection term
@@ -672,7 +672,7 @@ namespace femus
 
 
                     value = theta[tip] * ( - ( SolVAR[dim + idim] - meshVel[idim] ) * ( IRe / K + 0.5 * C2 * speed ) * ( phi[i] + phiSupg[i] )
-                                           + 1. / rhof * SolVAR[nBlocks * dim + 1] * gradphi[i * dim + idim] // pressure gradient
+                                           + 1. / rhof * SolVAR[nBlocks * dim +1] * gradphi[i * dim + idim] // pressure gradient
                                          ) * Weight;                                // at time t
 //                  value = theta[tip] * ( ( SolVAR[dim + idim] - meshVel[idim] ) * ( IRe / K + 0.5 * C2 * speed ) * ( phi[i] + phiSupg[i] )
 //                                         - 1. / rhof * SolVAR[nBlocks * dim] * gradphi[i * dim + idim] // pressure gradient
@@ -720,7 +720,7 @@ namespace femus
               }
 
               for ( unsigned i = 0; i < nve1; i++ ) {
-		aRhs[indexVAR[nBlocks * dim]][i] +=  phi1[i] * SolVAR[nBlocks * dim] * Weight_hat; // fake continuity of the solid in the fluid 
+		aRhs[indexVAR[nBlocks * dim] ][i] +=  phi1[i] * SolVAR[nBlocks * dim ] * Weight_hat; // fake continuity of the solid in the fluid 
                 aRhs[indexVAR[nBlocks * dim + 1]][i] += -  1. * ( -phi1[i] * div_vel ) * Weight;
 		//aRhs[indexVAR[nBlocks * dim]][i] += ( -phi1[i] * div_vel ) * Weight;
               }
@@ -774,7 +774,7 @@ namespace femus
               for ( int I = 0; I < 3; ++I ) {
                 for ( int J = 0; J < 3; ++J ) {
                   Cauchy[I][J] =  2.* ( C1 * B[I][J] - C2 * invB[I][J] )
-                                  - 1. / rhof * SolVAR[nBlocks * dim] * Id2th[I][J];
+                                  - 1. / rhof * SolVAR[nBlocks * dim + 1] * Id2th[I][J];
 
                 }
               }
