@@ -38,11 +38,12 @@ namespace femus {
         _solType = solType;
         _dim = sol->GetMesh()->GetDimension();
         _step = 0;
-	_mass = 1.; 
-	_velocity.resize(_dim);
-	for(unsigned d = 0; d<_dim; d++){
-	  _velocity[d] = ( d + 1); // fix this initialization
-	}
+        _mass = 1.;
+        _velocity.resize(_dim);
+        for(unsigned d = 0; d < _dim; d++) {
+          _velocity[d] = (d + 1);  // fix this initialization
+          _displacement[d] = 0.;
+        }
 
         GetElement(1, UINT_MAX, sol, s1);
 
@@ -92,9 +93,9 @@ namespace femus {
       void SetMarkerProc(const unsigned &mproc) {
         _mproc = mproc;
       }
-      
-      void SetMarkerMass(const double &mass){
-	_mass = mass;
+
+      void SetMarkerMass(const double &mass) {
+        _mass = mass;
       }
 
 
@@ -129,14 +130,18 @@ namespace femus {
         elem = _elem;
       }
 
-      double GetMarkerMass(){
-	return _mass;
+      double GetMarkerMass() {
+        return _mass;
       }
-      
-      std::vector < double > GetMarkerVelocity(){
-	return _velocity;
+
+      std::vector < double > GetMarkerVelocity() {
+        return _velocity;
       }
-      
+
+      std::vector < double > GetMarkerDisplacement() {
+        return _displacement;
+      }
+
       std::vector<double> GetMarkerLocalCoordinates() {
         return _xi;
       }
@@ -245,7 +250,7 @@ namespace femus {
                                        const unsigned &ielType, std::vector < std::vector < std::vector < double > > > &a, Solution *sol);
 
       void GetMarkerS(const unsigned &n, const unsigned &order, double &s) {
-	unsigned step = (_step == UINT_MAX) ? n * order : _step; 
+        unsigned step = (_step == UINT_MAX) ? n * order : _step;
         unsigned tstep = step / order;
         unsigned istep = step % order;
         s = (tstep + _c[order - 1][istep]) / n;
@@ -284,8 +289,9 @@ namespace femus {
       static const double _a[4][4][4];
       static const double _b[4][4];
       static const double _c[4][4];
-      
+
       std::vector <double> _velocity;
+      std::vector <double> _displacement;
 
   };
 } //end namespace femus

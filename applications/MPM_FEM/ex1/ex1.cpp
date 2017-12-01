@@ -8,6 +8,7 @@
 #include "VTKWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "MyVector.hpp"
+#include "ParallelObject.hpp"
 
 #include "OprtrTypeEnum.hpp"
 
@@ -165,7 +166,9 @@ int main(int argc, char** args) {
   if(dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND, 2);
 
   mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
-
+  mlSol.AddSolution("DX", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
 
 //   mlSol.Initialize("U" , InitalValueU);
 //   mlSol.Initialize("V" , InitalValueV);
@@ -297,7 +300,4 @@ int main(int argc, char** args) {
   return 0;
 }
 
-void MPMFEMAssembly(MultiLevelProblem & ml_prob) {
 
-
-}
