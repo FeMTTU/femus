@@ -112,14 +112,14 @@ int main(int argc, char **args)
   //ml_sol.AddSolution("DX1", LAGRANGE, SECOND, 2);
   //ml_sol.AddSolution("DY1", LAGRANGE, SECOND, 2);
 
+  
+  ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AssociatePropertyToSolution("PS", "Pressure", false);    // Add this line
+  
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("PF", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PF", "Pressure", false);    // Add this line
   
-  ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
-  ml_sol.AssociatePropertyToSolution("PS", "Pressure", false);    // Add this line
-
-
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   ml_sol.AddSolution ( "Um", LAGRANGE, SECOND, 2 );
@@ -137,16 +137,9 @@ int main(int argc, char **args)
 
   ml_sol.GenerateBdc("U", "Steady");
   ml_sol.GenerateBdc("V", "Steady");
-
-  //ml_sol.GenerateBdc("DX1", "Steady");
-  //ml_sol.GenerateBdc("DY1", "Steady");
-
+  
   ml_sol.GenerateBdc("PF", "Steady");
   ml_sol.GenerateBdc("PS", "Steady");
-  
-
-  
-  
   
   // ******* Define the FSI Multilevel Problem *******
 
@@ -170,7 +163,9 @@ int main(int argc, char **args)
   //system.AddSolutionToSystemPDE("DY1");
 
   system.AddSolutionToSystemPDE("PS");
-  system.AddSolutionToSystemPDE("PF");
+  
+  //twoPressure = false;
+  if (twoPressure) system.AddSolutionToSystemPDE("PF");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
@@ -237,18 +232,11 @@ int main(int argc, char **args)
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
 
-  //std::vector<std::string> mov_vars1;
-  //mov_vars1.push_back("DX1");
-  //mov_vars1.push_back("DY1");
-
   ml_sol.GetWriter()->SetDebugOutput(true);
 
   //mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step_start - 1);
-
-  //ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
-  //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step_start - 1);
 
 
   // ******* Solve *******
@@ -304,10 +292,8 @@ int main(int argc, char **args)
     Qtot[2] = Qtot[0] + Qtot[1];
     
     
-    std::cout<< fluxes[0] <<" "<<fluxes[1] << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
+    std::cout<< fluxes[0] <<" "<<fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
 
-    
-    
     
     if(iproc == 0) {
       outf << time_step <<" "<< system.GetTime() <<" "<< fluxes[0] <<" "<<fluxes[1]<<" " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
@@ -315,9 +301,6 @@ int main(int argc, char **args)
     
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
-
-    //ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
-    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step);
 
     if ( time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
 
@@ -370,10 +353,6 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   else if (!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
-  }
-  else if (!strcmp(name, "PF")) {
-    test = 0;
-    value = 0.;
     if (1 == facename) {
       //value = -1;
       //value = ( /*2.5*/ + 2.5 * sin ( 2 * PI * time ) ) * ramp;
@@ -390,6 +369,10 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
       value = (0 - 15 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10, 15, 15
     }
+  }
+  else if (!strcmp(name, "PF")) {
+    test = 0;
+    value = 0.;
   }
   else if (!strcmp(name, "DX")) {
     if (5 == facename) {
