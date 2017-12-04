@@ -210,7 +210,7 @@ int main(int argc, char **args)
   system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(GMRES);
 
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetPreconditionerFineGrids(MLU_PRECOND);
 
   system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 

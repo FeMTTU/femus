@@ -79,6 +79,7 @@ namespace femus
     vector<vector<adept::adouble> > NablaSolVAR(nBlocks * dim);
 
     vector<double> meshVelOld(dim);
+    vector<double> VelOldest(dim);
     vector < adept::adouble > meshVel(dim);
 
     for(int i = 0; i < nBlocks * dim; i++) {
@@ -110,7 +111,7 @@ namespace femus
     vector< vector< double > > Soli_old(nBlocks * dim);
     vector< vector< int > > dofsVAR(nBlocks * dim + nP);
     vector< vector< double > > meshVelOldNode(dim);
-
+    
     vector< vector< double > > Rhs(nBlocks * dim + nP);
     vector< vector< adept::adouble > > aRhs(nBlocks * dim + nP);
 
@@ -214,7 +215,7 @@ namespace femus
    
       for(int i = 0; i < dim; i++) {
 	meshVelOldNode[i].resize(nve);
-        vx_hat[i].resize(nve);
+	vx_hat[i].resize(nve);
         vx[i].resize(nve);
         vxOld[i].resize(nve);
         vxNew[i].resize(nve);
@@ -230,7 +231,7 @@ namespace femus
             Soli_old[indexVAR[j + k * dim]][i] = (*mysolution->_SolOld[indVAR[j + k * dim]])(idof);
             aRhs[indexVAR[j + k * dim]][i] = 0.;
           }
-          meshVelOldNode[j][i] = (*mysolution->_SolOld[indVAR2[j]])(idof);
+          meshVelOldNode[j][i] = (*mysolution->_Sol[indVAR2[j]])(idof);
           vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idof);
         }
       }
@@ -482,8 +483,10 @@ namespace femus
                 vx_ig[i] = vxOld_ig[i] * (1. - s[tip]) +  vxNew_ig[i] * s[tip];
               }
               
-              adept::adouble springStiffness = 	5.e-4 * exp((vx_ig[0] - (- 1e-5)) / 0.0001) * (dim == 2) + // if 2D
-						5.e-2 * exp(-(vx_ig[0] - 1e-5) / 0.0001) * (dim == 3); //if 3D
+	      adept::adouble springStiffness = 	5.e-4 * exp((vx_ig[0] - (- 1e-5)) / 0.0001) * (dim == 2) + // if 2D
+ 						5.e-4 * exp((vx_ig[0] - (- 1e-5)) / 0.0001) * (dim == 3); //if 3D
+				
+        
 
               // get mesh velocity and gradient at current time
               for(unsigned i = 0; i < dim; i++) {
@@ -550,8 +553,8 @@ namespace femus
                     adept::adouble value = 0.;
 
 
-                    timeDerivative = theta[tip] * (SolVARNew[dim + idim] - SolVAROld[dim + idim]) * (phi[i] + phiSupg[i]) * Weight / dt;
-
+		    timeDerivative = theta[tip] * (SolVARNew[dim + idim] - SolVAROld[dim + idim]) * (phi[i] + phiSupg[i]) * Weight / dt;
+		    
                     value =  theta[tip] * (
                                + AdvaleVAR[idim]      	             // advection term
                                + IRe * LapvelVAR[idim]	             // viscous dissipation
@@ -1191,11 +1194,9 @@ namespace femus
         else {
           double unew = (*solution->_Sol[indVAR[ivar]])(jdof);
           double uold = (*solution->_SolOld[indVAR[ivar]])(jdof);
-          double vold = (*solution->_SolOld[indVAR[ivar + 2]])(jdof);
-          vnew = 1. / dt * (unew - uold) - 0 * vold;
-
+	  double vold = (*solution->_Sol[indVAR[ivar + 2]])(jdof);
+          vnew = 1. / dt * (unew - uold) - 0. * vold;
         }
-
         solution->_Sol[indVAR[ivar + 2]]->set(jdof, vnew);
       }
 
