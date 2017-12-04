@@ -204,7 +204,7 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
   //pointers and references
 
   //TODO fix the one below for our case
-  TransientNonlinearImplicitSystem & my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem> ("Fluid-Structure-Interaction");
+  NonLinearImplicitSystem & my_nnlin_impl_sys = ml_prob.get_system<NonLinearImplicitSystem> ("MPM_FEM");
   const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
   MultiLevelSolution * ml_sol = ml_prob._ml_sol; // pointer to the multilevel solution object
   Solution * mysolution = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
@@ -222,173 +222,76 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
   else s.pause_recording();
 
   const unsigned dim = mymsh->GetDimension();
-  const unsigned nabla_dim = 3 * (dim - 1);   //TODO don't know if we need it
-
+ 
   // reserve memory for the local standar vectors
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   // data
   unsigned nel    = mymsh->GetNumberOfElements();
   unsigned iproc  = mymsh->processor_id();
-  double dt =  my_nnlin_impl_sys.GetIntervalTime();
-  double time =  my_nnlin_impl_sys.GetTime();
 
   // local objects
-  vector<adept::adouble> SolVAR(3 * dim);
-  vector<double> SolVAR_old(3 * dim);
+  vector<adept::adouble> SolDp(dim);
+  vector<double> SolVp(dim);
+  vector<double> SolAp(dim);
+  
 
-  vector<vector < adept::adouble > > GradSolVAR(3 * dim);
-  vector<vector < double > > GradSolVAR_old(3 * dim);
+  vector<vector < adept::adouble > > GradSolDp(dim);
 
-  vector<vector < adept::adouble > > GradSolhatVAR(3 * dim);    //TODO what is this?
-  vector<vector < double > > GradSolhatVAR_old(3 * dim);
-
-  vector<vector<adept::adouble> > NablaSolVAR(3 * dim);    //TODO what is this?
-  vector<vector < double > > NablaSolVAR_old(3 * dim);
-
-  for(int i = 0; i < 3 * dim; i++) {
-    GradSolVAR[i].resize(dim);
-    GradSolVAR_old[i].resize(dim);
-
-    GradSolhatVAR[i].resize(dim);
-    GradSolhatVAR_old[i].resize(dim);
-
-    NablaSolVAR[i].resize(nabla_dim);
-    NablaSolVAR_old[i].resize(nabla_dim);
+  for(int i = 0; i < dim; i++) {
+    GradSolDp[i].resize(dim);
   }
 
   //BEGIN do we need these since our phi's are evaluated at the particle local coordinates?
   vector < double > phi;
   vector < double > phi_hat;
-  vector < double > phi_old; //TODO I don't think we need this
   vector < adept::adouble> gradphi;
   vector < double > gradphi_hat;
-  vector < double > gradphi_old; //TODO I don't think we need this
   vector < adept::adouble> nablaphi;
   vector < double > nablaphi_hat;
-  vector < double > nablaphi_old; //TODO I don't think we need this
 
   phi.reserve(max_size);
   phi_hat.reserve(max_size);
-  phi_old.reserve(max_size);
 
   gradphi.reserve(max_size * dim);
   gradphi_hat.reserve(max_size * dim);
-  gradphi_old.reserve(max_size * dim);
 
-  nablaphi.reserve(max_size * 3 * (dim - 1));
-  nablaphi_hat.reserve(max_size * 3 * (dim - 1));
-  nablaphi_old.reserve(max_size * 3 * (dim - 1));
   //END
 
   vector <vector < adept::adouble> > vx(dim); //vx is coordX in assembly of ex30
   vector <vector < double> > vx_hat(dim);
-  vector <vector < double> > vx_old(dim);
 
-  //TODO what is this?
-  vector <vector < adept::adouble > > vx_face(dim);
-  vector <vector < double > > vx_face_old(dim);
+  vector< vector< adept::adouble > > SolDd(dim);      // local solution
+  vector< vector< double > > SolVd(dim);      // local solution
+  vector< vector< double > > SolAd(dim);      // local solution
+  
+  vector< vector< int > > dofsVAR(dim);
 
-  for(int i = 0; i < dim; i++) {
-    vx[i].reserve(max_size);
-    vx_hat[i].reserve(max_size);
-    vx_old[i].reserve(max_size);
-
-    vx_face[i].resize(9);
-    vx_face_old[i].resize(9);
-  }
-
-  vector< vector< adept::adouble > > Soli(3 * dim);      // local solution
-  vector< vector< double > > Soli_old(3 * dim);      // local solution old
-  vector< vector< int > > dofsVAR(3 * dim);
-
-  for(int i = 0; i < 3 * dim ; i++) {
-    Soli[i].reserve(max_size);
-    Soli_old[i].reserve(max_size);
-    dofsVAR[i].reserve(max_size);
-  }
-
-  vector< vector< double > > Rhs(3 * dim);     // local redidual vector
-  vector< vector< adept::adouble > > aRhs(3 * dim);     // local redidual vector
-
-  for(int i = 0; i < 3 * dim; i++) {
-    aRhs[i].reserve(max_size);
-    Rhs[i].reserve(max_size);
-  }
+  vector< vector< double > > Rhs(dim);     // local redidual vector
+  vector< vector< adept::adouble > > aRhs(dim);     // local redidual vector
 
   vector < int > dofsAll;
-  dofsAll.reserve(max_size * (3 * dim));
 
   vector < double > Jac;
-  Jac.reserve(dim * max_size * (3 * dim) *dim * max_size * (3 * dim));
-
 
   // gravity
-  double _gravity[3] = {0., 0., 0.};
-
-
-  // space discretization parameters
-  unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex("DX"));
-
-
+  double _gravity[3] = {0., -1., 0.};
+  
   //variable-name handling
   const char varname[9][3] = {"DX", "DY", "DZ", "U", "V", "W", "AU", "AV", "AW"};
-  vector <unsigned> indexVAR(3 * dim);
-  vector <unsigned> indVAR(3 * dim);
-  vector <unsigned> SolType(3 * dim);
-
+  vector <unsigned> indexSolD(dim);
+  vector <unsigned> indexSolV(dim);
+  vector <unsigned> indexSolA(dim);
+  vector <unsigned> indexPdeD(dim);
+  unsigned solType = ml_sol->GetSolutionType(&varname[0][0]);
+  
   for(unsigned ivar = 0; ivar < dim; ivar++) {
-    indVAR[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
-    indVAR[ivar + dim] = ml_sol->GetIndex(&varname[ivar + 3][0]);
-    indVAR[ivar + 2 * dim] = ml_sol->GetIndex(&varname[ivar + 6][0]);
-    SolType[ivar] = ml_sol->GetSolutionType(&varname[ivar][0]);
-    SolType[ivar + dim] = ml_sol->GetSolutionType(&varname[ivar + 3][0]);
-    SolType[ivar + 2 * dim] = ml_sol->GetSolutionType(&varname[ivar + 6][0]);
-    indexVAR[ivar] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar][0]);
-    indexVAR[ivar + dim] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar + 3][0]);
-    indexVAR[ivar + 2 * dim] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar + 6][0]);
+    indexSolD[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
+    indexPdeD[ivar] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar][0]);
+    indexSolV[ivar] = ml_sol->GetIndex(&varname[3 + ivar][0]);
+    indexSolA[ivar] = ml_sol->GetIndex(&varname[6 + ivar][0]);
   }
-
-  //BEGIN buliding Cauchy stress (using Saint Venant)
-  //physical quantity
-  adept::adouble J_hat;
-  double J_hat_old;
-  adept::adouble I_e;
-  double I_e_old;
-  adept::adouble Cauchy[3][3];
-  adept::adouble Cauchy_old[3][3]; //TODO do we need this
-  double Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
-  double mus = 1.; //TODO a real initialization
-
-  adept::adouble e[3][3];
-  double e_old[3][3];
-
-  //computation of the stress tensor
-  for(int i = 0; i < dim; i++) {
-    for(int j = 0; j < dim; j++) {
-      e[i][j]    = 0.5 * (GradSolhatVAR[i][j]    + GradSolhatVAR[j][i]);
-      e_old[i][j] = 0.5 * (GradSolhatVAR_old[i][j] + GradSolhatVAR_old[j][i]);
-    }
-  }
-
-  I_e = 0;
-  I_e_old = 0;
-
-  for(int i = 0; i < dim; i++) {
-    I_e     += e[i][i];
-    I_e_old += e_old[i][i];
-  }
-
-  for(int i = 0; i < dim; i++) {
-    for(int j = 0; j < dim; j++) {
-      //incompressible
-      Cauchy[i][j]     = 2 * mus * e[i][j] - 2 * mus * I_e * SolVAR[2 * dim] * Id2th[i][j];
-      Cauchy_old[i][j] = 2 * mus * e_old[i][j] - 2 * mus * I_e_old * SolVAR[2 * dim] * Id2th[i][j];
-      //+(penalty)*lambda*I_e*Id2th[i][j];
-    }
-  }
-//END building Cauchy stress
-
+  
   start_time = clock();
 
   if(assembleMatrix) myKK->zero();
@@ -401,215 +304,147 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
   std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
 
   //initialization of iel
-  unsigned ielOld = particles[markerOffset2]->GetMarkerElement();
+  unsigned ielOld = UINT_MAX;
   //declaration of element instances
-  short unsigned ielt;
-  unsigned nve;
+
 
 //BEGIN loop on particles (used as Gauss points)
   for(unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
-
     //element of particle iMarker
     unsigned iel = particles[iMarker]->GetMarkerElement();
+    if(iel != UINT_MAX) {
+      short unsigned ielt;
+      unsigned nve;  
+      //update element related quantities only if we are in a different element
+      if(iel != ielOld) {
 
-    //update element related quantities only if we are in a different element
-    if(iel != ielOld) {
+	ielt = mymsh->GetElementType(iel);
+	nve = mymsh->GetElementDofNumber(iel, solType);
+        //initialization of everything is in common fluid and solid
 
-      ielt = mymsh->GetElementType(iel);
-      nve = mymsh->GetElementDofNumber(iel, SolType2);
+	//Rhs
+	for(int i = 0; i < dim; i++) {
+	  dofsVAR[i].resize(nve);
+	  SolDd[indexPdeD[i]].resize(nve);
+	  SolVd[i].resize(nve);
+	  SolAd[i].resize(nve);
+	  aRhs[indexSolD[i]].resize(nve);
+	}
 
-      //initialization of everything is in common fluid and solid
+	dofsAll.resize(0);
 
-      //Rhs
-      for(int i = 0; i < 3 * dim; i++) {
-        dofsVAR[i].resize(nve);
-        Soli[indexVAR[i]].resize(nve);
-        Soli_old[indexVAR[i]].resize(nve);
+	// ----------------------------------------------------------------------------------------
+	// coordinates, solutions, displacement, velocity dofs
 
-        aRhs[indexVAR[i]].resize(nve);
-        //  Rhs[indexVAR[i]].resize ( nve );
+	for(int i = 0; i < dim; i++) {
+	  vx[i].resize(nve);
+	  vx_hat[i].resize(nve);
+	}
+
+	//BEGIN copy of the value of Sol at idof in the local vector
+	for(unsigned i = 0; i < nve; i++) {
+	  unsigned idof = mymsh->GetSolutionDof(i, iel, solType); //local 2 global solution
+	  for(int j = 0; j < dim; j++) {
+	    SolDd[indexPdeD[j]][i] = (*mysolution->_Sol[indexSolD[j]])(idof);
+	    dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indexSolD[j], indexPdeD[j], i, iel); //local 2 global Pde
+	    aRhs[indexPdeD[j]][i] = 0.;
+         
+	    //Fixed coordinates (Reference frame) //TODO do we need this?
+	    vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idof);
+               
+	    SolVd[j][i] = (*mysolution->_Sol[indexSolV[j]])(idof);
+	    SolAd[j][i] = (*mysolution->_Sol[indexSolA[j]])(idof);  
+	  }
+	}
+	//END
+
+	// build dof composition
+	for(int idim = 0; idim < dim; idim++) {
+	  dofsAll.insert(dofsAll.end(), dofsVAR[idim].begin(), dofsVAR[idim].end());
+	}
+
+	if(assembleMatrix) s.new_recording();
+
+	//TODO do we need this?
+	for(unsigned idim = 0; idim < dim; idim++) {
+	  for(int j = 0; j < nve; j++) {
+	    vx[idim][j]    = vx_hat[idim][j] + SolDd[indexPdeD[idim]][j];
+	  }
+	}
+	// start a new recording of all the operations involving adept::adouble variables 
+	if(assembleMatrix) s.new_recording();
       }
+    
 
-      dofsAll.resize(0);
+      bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
+      particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, ml_sol->GetLevel(numberOfUniformLevels - 1), 0);
 
-      Jac.resize((3 * dim * nve) * (3 * dim * nve));
+      // the local coordinates of the particles are the Gauss points in this context
+      std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
+      // the mass of the particle acts as weight
+      double mass = particles[iMarker]->GetMarkerMass();
+      adept::adouble massAdept;
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, 0, massAdept, phi, gradphi, nablaphi);
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, 0, mass, phi_hat, gradphi_hat, nablaphi_hat); //TODO do we need this?
 
-      // ----------------------------------------------------------------------------------------
-      // coordinates, solutions, displacement, velocity dofs
-
+      // displacement and velocity
+      //BEGIN evaluates SolVAR at idof of element iel
+      //TODO maybe we don't need this for the displacement
       for(int i = 0; i < dim; i++) {
-        vx[i].resize(nve);
-        vx_hat[i].resize(nve);
-        vx_old[i].resize(nve);
+	SolDp[i] = 0.;
+
+	for(int j = 0; j < dim; j++) {
+	  GradSolDp[i][j] = 0.;
+	}
+
+	for(unsigned inode = 0; inode < nve; inode++) {
+	  SolDp[i] += phi[inode] * SolDd[indexPdeD[i]][inode];
+
+	  for(int j = 0; j < dim; j++) {
+	    GradSolDp[i][j] += gradphi[inode * dim + j] * SolDd[indexPdeD[i]][inode];
+	  }
+	}
       }
+      //END evaluates SolVar at idof of element iel
+    
+      if( iMarker == markerOffset2 - 1 || iel != particles[iMarker + 1]->GetMarkerElement()) {
 
-      //BEGIN copy of the value of Sol at idof in the local vector
-      for(unsigned i = 0; i < nve; i++) {
-        unsigned idof = mymsh->GetSolutionDof(i, iel, SolType2);
-        for(int j = 0; j < dim; j++) {
-          Soli[indexVAR[j]][i]     = (*mysolution->_Sol[indVAR[j]])(idof);
-          Soli[indexVAR[j + dim]][i] = (*mysolution->_Sol[indVAR[j + dim]])(idof);
-          Soli[indexVAR[j + 2 * dim]][i] = (*mysolution->_Sol[indVAR[j + 2 * dim]])(idof);
+	//copy adouble aRhs into double Rhs
+	for(unsigned i = 0; i < dim; i++) {
+	  Rhs[indexPdeD[i]].resize(nve);
 
-          Soli_old[indexVAR[j]][i]     = (*mysolution->_SolOld[indVAR[j]])(idof);
-          Soli_old[indexVAR[j + dim]][i] = (*mysolution->_SolOld[indVAR[j + dim]])(idof);
-          Soli_old[indexVAR[j + 2 * dim]][i] = (*mysolution->_SolOld[indVAR[j + 2 * dim]])(idof);
+	  for(int j = 0; j < nve; j++) {
+	    Rhs[indexPdeD[i]][j] = -aRhs[indexPdeD[i]][j].value();
+	  }
+	}
 
-          aRhs[indexVAR[j]][i]     = 0.;
-          aRhs[indexVAR[j + dim]][i] = 0.; //TODO maybe we don't need this
-          aRhs[indexVAR[j + 2 * dim]][i] = 0.;  //TODO maybe we don't need this
+	for(int i = 0; i < dim; i++) {
+	  myRES->add_vector_blocked(Rhs[indexPdeD[i]], dofsVAR[i]);
+	}
 
-          //Fixed coordinates (Reference frame) //TODO do we need this?
-          vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idof);
-          // displacement dofs
-          dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indVAR[j], indexVAR[j], i, iel);
-          // velocity dofs
-          dofsVAR[j + dim][i] = myLinEqSolver->GetSystemDof(indVAR[j + dim], indexVAR[j + dim], i, iel);
-          // acceleration dofs
-          dofsVAR[j + 2 * dim][i] = myLinEqSolver->GetSystemDof(indVAR[j + 2 * dim], indexVAR[j + 2 * dim], i, iel);
-        }
+	if(assembleMatrix) {
+	  //Store equations
+	  for(int i = 0; i < dim; i++) {
+	    s.dependent(&aRhs[indexPdeD[i]][0], nve);
+	    s.independent(&SolDd[indexPdeD[i]][0], nve);
+	  }
+
+	  Jac.resize((dim * nve) * (dim * nve));
+
+	  s.jacobian(&Jac[0], true);
+
+	  myKK->add_matrix_blocked(Jac, dofsAll, dofsAll);
+	  s.clear_independents();
+	  s.clear_dependents();
+
+	  //END local to global assembly
+	}
       }
-      //END
-
-      // build dof composition
-      for(int idim = 0; idim < 3 * dim; idim++) {
-        dofsAll.insert(dofsAll.end(), dofsVAR[idim].begin(), dofsVAR[idim].end());
-      }
-
-      dofsAll.insert(dofsAll.end(), dofsVAR[2 * dim].begin(), dofsVAR[2 * dim].end());
-
-      if(assembleMatrix) s.new_recording();
-
-      //TODO do we need this?
-      for(unsigned idim = 0; idim < dim; idim++) {
-        for(int j = 0; j < nve; j++) {
-          vx[idim][j]    = vx_hat[idim][j] + Soli[indexVAR[idim]][j];
-          vx_old[idim][j] = vx_hat[idim][j] + Soli_old[indexVAR[idim]][j];
-        }
-      }
-    }
-
-    // start a new recording of all the operations involving adept::adouble variables //TODO not sure if this should be here
-    if(assembleMatrix) s.new_recording();
-
-    bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
-    particles[iMarker]->FindLocalCoordinates(SolType2, aX[iel], elementUpdate, ml_sol->GetLevel(numberOfUniformLevels - 1), 0);
-
-
-    // the local coordinates of the particles are the Gauss points in this context
-    std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
-    // the mass of the particle acts as weight
-    double mass = particles[iMarker]->GetMarkerMass();
-    adept::adouble massAdept = mass;
-    mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx, iMarker, massAdept, phi, gradphi, nablaphi);
-    mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_hat, iMarker, mass, phi_hat, gradphi_hat, nablaphi_hat); //TODO do we need this?
-
-    // displacement and velocity
-    //BEGIN evaluates SolVAR at idof of element iel
-    //TODO maybe we don't need this for the displacement
-    for(int i = 0; i < 3 * dim; i++) {
-      SolVAR[i] = 0.;
-      SolVAR_old[i] = 0.;
-
-      for(int j = 0; j < dim; j++) {
-        GradSolVAR[i][j] = 0.;
-        GradSolVAR_old[i][j] = 0.;
-
-        GradSolhatVAR[i][j] = 0.;
-        GradSolhatVAR_old[i][j] = 0.;
-      }
-
-      for(int j = 0; j < nabla_dim; j++) {
-        NablaSolVAR[i][j] = 0.;
-        NablaSolVAR_old[i][j] = 0.;
-      }
-
-      for(unsigned inode = 0; inode < nve; inode++) {
-        SolVAR[i] += phi[inode] * Soli[indexVAR[i]][inode];
-        SolVAR_old[i] += phi_old[inode] * Soli_old[indexVAR[i]][inode];
-
-        for(int j = 0; j < dim; j++) {
-          GradSolVAR[i][j]     += gradphi[inode * dim + j]    * Soli[indexVAR[i]][inode];
-          GradSolVAR_old[i][j] += gradphi_old[inode * dim + j] * Soli_old[indexVAR[i]][inode];
-
-          GradSolhatVAR[i][j]     += gradphi_hat[inode * dim + j] * Soli[indexVAR[i]][inode];
-          GradSolhatVAR_old[i][j] += gradphi_hat[inode * dim + j] * Soli_old[indexVAR[i]][inode];
-        }
-        for(int j = 0; j < nabla_dim; j++) {
-          NablaSolVAR[i][j]     += nablaphi[inode * nabla_dim + j] * Soli[indexVAR[i]][inode];
-          NablaSolVAR_old[i][j] += nablaphi_old[inode * nabla_dim + j] * Soli_old[indexVAR[i]][inode];
-        }
-      }
-    }
-    //END evaluates SolVar at idof of element iel
-
-
-    //TODO i only goes up to dim because we only care about displacement here
-
-    //contribution from the mass of particles
-    basis* base = mymsh->GetBasis(ielt, SolType2);
-    for(unsigned i = 0; i <  dim; i++) {
-      for(int j = 0; j < nve; j++) {
-        for(int k = 0; k < nve; k++) {
-          double value = base->eval_phi(k, xi);
-          aRhs[indexVAR[i]][j] -= mass * value;
-        }
-        aRhs[indexVAR[i]][j] *= (4 / (dt * dt)) * SolVAR[i] - (4 / dt) * SolVAR_old[i + dim] - SolVAR_old[i + 2 * dim] ;
-      }
-    }
-
-    //contirbution from f_int //TODO
-    //need to evaluate the Cauchy stress at the particles
-
-    //contribution from f_ext //TODO
-    double body_prtcl = 0.; // value of the body force at the particle
-    for(int j = 0; j < nve; j++) {
-      double value = base->eval_phi(j, xi);
-      body_prtcl += value; //TODO we have to evaluate the body force at the node j
-    }
-    for(unsigned i = 0; i <  dim; i++) {
-      for(int j = 0; j < nve; j++) {
-        double value = base->eval_phi(j, xi);
-        aRhs[indexVAR[i]][j] -= mass * value * body_prtcl;
-      }
-    }
-
-    if(iel != ielOld) {
-
-      //copy adouble aRhs into double Rhs
-      for(unsigned i = 0; i < 3 * dim; i++) {
-        Rhs[indexVAR[i]].resize(nve);
-
-        for(int j = 0; j < nve; j++) {
-          Rhs[indexVAR[i]][j] = -aRhs[indexVAR[i]][j].value();
-        }
-      }
-
-      for(int i = 0; i < 3 * dim + 1; i++) {
-        myRES->add_vector_blocked(Rhs[indexVAR[i]], dofsVAR[i]);
-      }
-
-      if(assembleMatrix) {
-        //Store equations
-        for(int i = 0; i < 3 * dim; i++) {
-          s.dependent(&aRhs[indexVAR[i]][0], nve);
-          s.independent(&Soli[indexVAR[i]][0], nve);
-        }
-
-        Jac.resize((3 * dim * nve) * (3 * dim * nve));
-
-        s.jacobian(&Jac[0], true);
-
-        myKK->add_matrix_blocked(Jac, dofsAll, dofsAll);
-        s.clear_independents();
-        s.clear_dependents();
-
-        //END local to global assembly
-      }
-
       ielOld = iel;
     }
-
+    else{
+      break;
+    }
   }
   //END loop on particles
 
