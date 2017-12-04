@@ -109,9 +109,6 @@ int main(int argc, char **args)
   ml_sol.PairSolution("U", "DX");    // Add this line
   ml_sol.PairSolution("V", "DY");    // Add this line
 
-  //ml_sol.AddSolution("DX1", LAGRANGE, SECOND, 2);
-  //ml_sol.AddSolution("DY1", LAGRANGE, SECOND, 2);
-
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("P", "Pressure", false);    // Add this line
@@ -134,9 +131,6 @@ int main(int argc, char **args)
   ml_sol.GenerateBdc("U", "Steady");
   ml_sol.GenerateBdc("V", "Steady");
 
-  //ml_sol.GenerateBdc("DX1", "Steady");
-  //ml_sol.GenerateBdc("DY1", "Steady");
-
   ml_sol.GenerateBdc("P", "Steady");
   
 
@@ -158,9 +152,6 @@ int main(int argc, char **args)
 
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-
-  //system.AddSolutionToSystemPDE("DX1");
-  //system.AddSolutionToSystemPDE("DY1");
 
   system.AddSolutionToSystemPDE("P");
 
@@ -229,19 +220,12 @@ int main(int argc, char **args)
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
 
-  //std::vector<std::string> mov_vars1;
-  //mov_vars1.push_back("DX1");
-  //mov_vars1.push_back("DY1");
-
   ml_sol.GetWriter()->SetDebugOutput(true);
 
   //mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step_start - 1);
-
-  //ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
-  //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step_start - 1);
-
+  
 
   // ******* Solve *******
   std::cout << std::endl;
@@ -307,9 +291,7 @@ int main(int argc, char **args)
     
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
-
-    //ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
-    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step);
+    
 
     if ( time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
 
@@ -385,13 +367,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       value = 0;
     }
   }
-//   else if (!strcmp(name, "DX1") ) {
-//     if (5 == facename ) {
-//       test = 0;
-//       value = 0;
-//     }
-//   }
-  else if (!strcmp(name, "DY") /*|| !strcmp(name, "DY1")*/) {
+  else if (!strcmp(name, "DY")) {
     if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;

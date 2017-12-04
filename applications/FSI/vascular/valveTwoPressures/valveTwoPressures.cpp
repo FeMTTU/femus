@@ -387,13 +387,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       value = 0;
     }
   }
-//   else if (!strcmp(name, "DX1") ) {
-//     if (5 == facename ) {
-//       test = 0;
-//       value = 0;
-//     }
-//   }
-  else if(!strcmp(name, "DY") /*|| !strcmp(name, "DY1")*/) {
+  else if(!strcmp(name, "DY")) {
     if(5 == facename || 6 == facename || 7 == facename) {
       test = 0;
       value = 0;
