@@ -196,6 +196,7 @@ int main(int argc, char** args)
   //system.SetSolverFineGrids(GMRES);
 
   system.SetPreconditionerFineGrids(ILU_PRECOND);
+  if(dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
 
   system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 
