@@ -1025,64 +1025,7 @@ namespace femus {
 
   }
 
-  void Line:: AssembleMPMSys(std::vector< std::vector < double > > &Rhs, const double &dt) {
 
-    double s = 0;
-
-    std::vector<unsigned>  solIndexVel(_dim);
-    std::vector<unsigned>  solIndexAcc(_dim);
-    std::vector<unsigned>  solIndexDisp(_dim);
-
-    solIndexVel[0] = _sol->GetIndex("U");
-    if(_dim > 1) solIndexVel[1] = _sol->GetIndex("V");
-    if(_dim > 2) solIndexVel[2] = _sol->GetIndex("W");
-
-    solIndexAcc[0] = _sol->GetIndex("AU");
-    if(_dim > 1) solIndexAcc[1] = _sol->GetIndex("AV");
-    if(_dim > 2) solIndexAcc[2] = _sol->GetIndex("AW");
-
-    solIndexDisp[0] = _sol->GetIndex("DX");
-    if(_dim > 1) solIndexDisp[1] = _sol->GetIndex("DY");
-    if(_dim > 2) solIndexDisp[2] = _sol->GetIndex("DZ");
-
-    unsigned solType = _sol->GetSolutionType(solIndexVel[0]);
-
-    std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
-
-    for(int d = 0; d <  _dim; d++) {
-      _sol->_Sol[solIndexVel[d]]->zero();
-      _sol->_Sol[solIndexDisp[d]]->zero();
-    }
-
-    for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
-
-      unsigned iel = _particles[iMarker]->GetMarkerElement();
-      unsigned ielType =  _mesh->GetElementType(iel);
-      bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
-
-      _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, s);
-
-      std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
-      double mass = _particles[iMarker]->GetMarkerMass();
-
-      basis* base = _mesh->GetBasis(ielType, solType);
-      for(unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solType); j++) {
-        double phi = base->eval_phi(j, xi);
-        unsigned jdof = _mesh->GetSolutionDof(j, iel, solType);
-        for(int d = 0; d <  _dim; d++) {
-          double ugOld;
-// 	  _sol->_Sol[solIndexDisp[d]]->get(jdof, ugOld); \\TODO understand out to get the values
-          double vg;
-// 	  _sol->_Sol[solIndexVel[d]]->get(jdof, vg);
-          double ag;
-// 	  _sol->_Sol[solIndexAcc[d]]->get(jdof, ag);
-          Rhs[jdof][d] += mass * phi * (4 / (dt * dt) * ugOld - 4 / dt * vg - ag);
-        }
-      }
-    }
-
-
-  }
 
 
 

@@ -52,6 +52,14 @@ namespace femus {
         }
       }
 
+      std::vector <unsigned> GetMarkerOffset() {
+        return _markerOffset;
+      }
+      
+      std::vector <Marker*> GetParticles() {
+        return _particles;
+      }
+
       void AdvectionParallel(const unsigned &n, const double& T, const unsigned &order, ForceFunction Force = NULL);
 
       void UpdateLine();
@@ -60,9 +68,7 @@ namespace femus {
 
       void GetPointsToGridProjections();
 
-      void AssembleMPMSys(std::vector< std::vector < double > > &Rhs, const double &dt);
-  
-  private:
+    private:
       std::vector < std::vector < double > > _line;
       std::vector < Marker*> _particles;
       std::vector < unsigned > _markerOffset;
