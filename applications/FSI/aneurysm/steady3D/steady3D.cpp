@@ -8,7 +8,7 @@
 #include "FElemTypeEnum.hpp"
 #include "Files.hpp"
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
-#include "../../include/FSISteadyStateAssembly.hpp"
+#include "../include/FSISteadyStateAssembly.hpp"
 #include "VTKWriter.hpp"
 
 double scale = 1000.;

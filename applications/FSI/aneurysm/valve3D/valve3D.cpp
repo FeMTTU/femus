@@ -10,10 +10,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
-#include "MyVector.hpp"
-#include "../../include/FSITimeDependentAssemblySupgNonConservative.hpp"
-//#include "../../include/FSITimeDependentAssemblySupgGCL.hpp"
-//#include "../../include/FSITimeDependentAssemblySupg.hpp"
+#include "../include/FSITimeDependentAssemblySupgNonConservative.hpp"
 #include <cmath>
 double scale = 1000.;
 
@@ -25,9 +22,14 @@ double SetVariableTimeStep(const double time);
 bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char name[],
                                    double &value, const int facename, const double time);
 
-void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double> &fluxes);
-//------------------------------------------------------------------------------------------------------------------
+bool SetBoundaryConditionVeinValve2(const std::vector < double >& x, const char name[],
+                                   double &value, const int facename, const double time);
 
+void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double> &fluxes);
+
+// void StoreOldDispcacement(MultiLevelSolution& mlSol);
+  
+//------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, char **args)
 {
@@ -39,11 +41,12 @@ int main(int argc, char **args)
   //files.CheckIODirectories();
   //files.RedirectCout();
 
+  bool dimension2D = false;
 
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 
-  //std::string infile = "./input/valve2.neu";
-  std::string infile = "./input/valve2_corta2bis.neu";
+  //std::string infile = "./input/valve_coarsemesh.neu";
+  std::string infile = "./input/mindcraft_valve_1.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -55,9 +58,9 @@ int main(int argc, char **args)
   muf = 2.2 * 1.0e-3;
   rhos = 960;
   ni = 0.5;
-  E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
-  //E = 4.3874951 * 1.0e12;
-  E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
+  //E = 3.3 * 1.0e6; //vein young modulus
+  E = 1.0 * 1.0e6;
+  E1 = 0.2 * 1.0e6; //leaflet young modulus
 
   Parameter par(Lref, Uref);
 
@@ -79,7 +82,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 1;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -99,47 +102,59 @@ int main(int argc, char **args)
   MultiLevelSolution ml_sol(&ml_msh);
 
   // ******* Add solution variables to multilevel solution and pair them *******
-  ml_sol.AddSolution("DX", LAGRANGE, SECOND, 2);
-  ml_sol.AddSolution("DY", LAGRANGE, SECOND, 2);
 
-  ml_sol.AddSolution("U", LAGRANGE, SECOND, 2);
-  ml_sol.AddSolution("V", LAGRANGE, SECOND, 2);
+  ml_sol.AddSolution ( "DX", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "DY", LAGRANGE, SECOND, 2 );
+  if ( !dimension2D ) ml_sol.AddSolution ( "DZ", LAGRANGE, SECOND, 2 );
 
-  // Pair each velocity variable with the corresponding displacement variable
-  ml_sol.PairSolution("U", "DX");    // Add this line
-  ml_sol.PairSolution("V", "DY");    // Add this line
+  ml_sol.AddSolution ( "U", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "V", LAGRANGE, SECOND, 2 );
+  if ( !dimension2D ) ml_sol.AddSolution ( "W", LAGRANGE, SECOND, 2 );
 
   //ml_sol.AddSolution("DX1", LAGRANGE, SECOND, 2);
   //ml_sol.AddSolution("DY1", LAGRANGE, SECOND, 2);
+  //if ( !dimension2D ) ml_sol.AddSolution ( "DZ1", LAGRANGE, SECOND, 2 );
+
+  // Pair each velocity variable with the corresponding displacement variable
+  ml_sol.PairSolution ( "U", "DX" ); // Add this line
+  ml_sol.PairSolution ( "V", "DY" ); // Add this line
+  if ( !dimension2D ) ml_sol.PairSolution ( "W", "DZ" ); // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
-  ml_sol.AssociatePropertyToSolution("P", "Pressure", false);    // Add this line
+  ml_sol.AddSolution ( "P", DISCONTINOUS_POLYNOMIAL, FIRST, 2 );
+  ml_sol.AssociatePropertyToSolution ( "P", "Pressure", false ); // Add this line
 
-  ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+  ml_sol.AddSolution ( "lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false );
+/*
+  ml_sol.AddSolution ( "DX2", LAGRANGE, SECOND, 2 );
+  ml_sol.AddSolution ( "DY2", LAGRANGE, SECOND, 2 );
+  if ( !dimension2D ) ml_sol.AddSolution ( "DZ2", LAGRANGE, SECOND, 2 );*/
 
+  
   ml_sol.AddSolution ( "Um", LAGRANGE, SECOND, 0, false );
   ml_sol.AddSolution ( "Vm", LAGRANGE, SECOND, 0, false );
-    
+  if ( !dimension2D ) ml_sol.AddSolution ( "Wm", LAGRANGE, SECOND, 0, false );
 
+  
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
-  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionVeinValve);
+  ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionVeinValve2);
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
+  if ( !dimension2D ) ml_sol.GenerateBdc("DZ", "Steady");
 
   ml_sol.GenerateBdc("U", "Steady");
   ml_sol.GenerateBdc("V", "Steady");
+  if ( !dimension2D ) ml_sol.GenerateBdc("W", "Steady");
 
   //ml_sol.GenerateBdc("DX1", "Steady");
   //ml_sol.GenerateBdc("DY1", "Steady");
+  //if ( !dimension2D ) ml_sol.GenerateBdc("DZ1", "Steady");
 
   ml_sol.GenerateBdc("P", "Steady");
-  
-
 
   // ******* Define the FSI Multilevel Problem *******
 
@@ -155,12 +170,16 @@ int main(int argc, char **args)
 
   system.AddSolutionToSystemPDE("DX");
   system.AddSolutionToSystemPDE("DY");
+  if ( !dimension2D ) system.AddSolutionToSystemPDE("DZ");
 
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
+  if ( !dimension2D ) system.AddSolutionToSystemPDE("W");
 
   //system.AddSolutionToSystemPDE("DX1");
   //system.AddSolutionToSystemPDE("DY1");
+  //if ( !dimension2D ) system.AddSolutionToSystemPDE("DZ1");
+
 
   system.AddSolutionToSystemPDE("P");
 
@@ -191,7 +210,7 @@ int main(int argc, char **args)
   system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(GMRES);
 
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetPreconditionerFineGrids(MLU_PRECOND);
 
   system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 
@@ -209,12 +228,12 @@ int main(int argc, char **args)
 
   unsigned time_step_start = 1;
 
-  //char restart_file_name[256] = "./save/valve2D_iteration28";
+  //char restart_file_name[256] = "./save/valve2D_iteration30";
   char restart_file_name[256] = "";
 
   if (strcmp (restart_file_name, "") != 0) {
     ml_sol.LoadSolution(restart_file_name);
-    time_step_start = 29;
+    time_step_start = 31;
     system.SetTime( (time_step_start - 1) * 1. / 32);
   }
 
@@ -228,14 +247,15 @@ int main(int argc, char **args)
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
+  if ( !dimension2D ) mov_vars.push_back("DZ");
 
   //std::vector<std::string> mov_vars1;
   //mov_vars1.push_back("DX1");
   //mov_vars1.push_back("DY1");
+  //if ( !dimension2D ) mov_vars1.push_back("DZ1");
 
   ml_sol.GetWriter()->SetDebugOutput(true);
 
-  //mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step_start - 1);
 
@@ -249,10 +269,8 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 1024;
-
-  //std::vector < std::vector <double> > data(n_timesteps);
-
+  const unsigned int n_timesteps =1024;
+  
   int  iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
   
@@ -266,16 +284,17 @@ int main(int argc, char **args)
   }
   
   std::vector < double > Qtot(3,0.);   
-   std::vector<double> fluxes(2,0.);    
-  
+  std::vector<double> fluxes(2,0.);
+
   for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
+//     StoreOldDispcacement(ml_sol);
     system.CopySolutionToOldSolution();
-
+    
     for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
     }
-    
+
     if (time_step > 1)
       system.SetMgType(V_CYCLE);
 
@@ -295,23 +314,19 @@ int main(int argc, char **args)
     Qtot[1] += 0.5 * dt * fluxes[1];
     Qtot[2] = Qtot[0] + Qtot[1];
     
-    
     std::cout<< fluxes[0] <<" "<<fluxes[1] << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
-
-    
-    
     
     if(iproc == 0) {
       outf << time_step <<" "<< system.GetTime() <<" "<< fluxes[0] <<" "<<fluxes[1]<<" " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
     }
-    
+
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
     //ml_sol.GetWriter()->SetMovingMesh(mov_vars1);
     //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "quadratic", print_vars, time_step);
 
-    if ( time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
+    if ( time_step % 1 == 0) ml_sol.SaveSolution("valve3D", time_step);
 
   }
 
@@ -324,14 +339,47 @@ int main(int argc, char **args)
   return 0;
 }
 
+/*
+void StoreOldDispcacement(MultiLevelSolution& mlSol){
+  
+  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+
+  Solution* solution  = mlSol.GetSolutionLevel(level);
+  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  
+  //const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  const unsigned dim = msh->GetDimension();
+  const char varname[6][4] = {"DX", "DY", "DZ", "DX2", "DY2", "DZ2"};
+
+  vector <unsigned> indexVAR(2 * dim);
+  vector <unsigned> indVAR(2 * dim);
+  vector <unsigned> SolType(2 * dim);
+
+  for (unsigned ivar = 0; ivar < 2 * dim; ivar++) {
+      indVAR[ivar] = mlSol.GetIndex(&varname[ivar][0]);
+  }
+  
+  for (unsigned ig=0; ig< level; ig++) {
+    Solution* solution  = mlSol.GetSolutionLevel(ig);
+    solution->CopySolutionToOldSolution();
+    
+    for(unsigned ivar = 0; ivar < dim; ivar++) {
+    // Copy the old vector
+      *(solution->_Sol[indVAR[dim + ivar]]) = *(solution->_SolOld[indVAR[ivar]]);
+    }
+  }
+  
+}*/
+
+
 double SetVariableTimeStep(const double time)
 {
-  double dt = 1. / 64;
-//   double shiftedTime = time - floor(time);
-//   if (time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25) {
-//     dt = 1. / 64;
-//   }
-//   std::cout << " Shifted Time = " << shiftedTime << " dt = " << dt << std::endl;
+  double dt = 1. / 32;
+  double shiftedTime = time - floor(time);
+  if (time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25) {
+    dt = 1. / 32;
+  }
+  std::cout << " Shifted Time = " << shiftedTime << " dt = " << dt << std::endl;
 
   return dt;
 }
@@ -345,16 +393,22 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   value = 0.;
 
   double PI = acos(-1.);
-  double ramp = (time < 2) ? sin(PI / 2 * time/2.) : 1.;
+  double ramp = (time < 2) ? sin(PI / 2 * time / 2.) : 1.;
 
   if (!strcmp(name, "U")) {
-    if (5 == facename) {
+    if (7 == facename) {
       test = 0;
       value = 0;
     }
   }
   else if (!strcmp(name, "V")) {
-    if (1 == facename || 2 == facename || 5==facename || 6 == facename) {
+    if (1 == facename || 2 == facename || 6 == facename || 7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  if (!strcmp(name, "W")) {
+    if (6 == facename) {
       test = 0;
       value = 0;
     }
@@ -363,35 +417,25 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
     test = 0;
     value = 0.;
     if (1 == facename) {
-      //value = -1;
-      //value = ( /*2.5*/ + 2.5 * sin ( 2 * PI * time ) ) * ramp;
-      //value = ( 5 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
-      //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
-      //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
-      //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
-      value = (0 + 15 * sin(2 * PI * time)) * ramp;      //+ 3.5, 6, 7, 10, 10, 15, 15
+      value = (0 + 5 * sin(2 * PI * time)) * ramp;      //+ 4.5
     }
     else if (2 == facename) {
-      //value = 1;
-      //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
-      //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
-      //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      value = (0 - 15 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10, 15, 15
+      value = (0 - 5 * sin(2 * PI * time)) * ramp;      //- 4.5
     }
   }
-  else if (!strcmp(name, "DX")) {
-    if (5 == facename) {
+  else if ( (!strcmp(name, "DX")) || (!strcmp(name, "DX1")) ) {
+    if (5 == facename || 7 == facename) {
       test = 0;
       value = 0;
     }
   }
-//   else if (!strcmp(name, "DX1") ) {
-//     if (5 == facename ) {
-//       test = 0;
-//       value = 0;
-//     }
-//   }
-  else if (!strcmp(name, "DY") /*|| !strcmp(name, "DY1")*/) {
+  else if ( (!strcmp(name, "DY")) || (!strcmp(name, "DY1")) ) {
+    if (5 == facename || 6 == facename || 7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if ( (!strcmp(name, "DZ")) || (!strcmp(name, "DZ1")) ) {
     if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
@@ -402,6 +446,68 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 
 }
 
+//----------------------------------------------------------------//
+
+bool SetBoundaryConditionVeinValve2(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+{
+  bool test = 1; //dirichlet
+  value = 0.;
+
+  double PI = acos(-1.);
+  double ramp = (time < 2) ? sin(PI / 2 * time / 2.) : 1.;
+
+  if (!strcmp(name, "U")) {
+    if (5 == facename || 6 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "V")) {
+    if (5 == facename || 7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "W")) {
+    if (1 == facename || 2 == facename || 5 == facename || 6 == facename || 7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "P")) {
+    test = 0;
+    value = 0.;
+    if (1 == facename) {
+      value = (0 + 20 * sin(2 * PI * time)) * ramp;      //+ 5
+    }
+    else if (2 == facename) {
+      value = (0 - 20 * sin(2 * PI * time)) * ramp;      //- 5
+    }
+  }
+  else if ( (!strcmp(name, "DX")) /*|| (!strcmp(name, "DX1"))*/ ) {
+    if (5 == facename || 6 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if ( (!strcmp(name, "DY")) /*|| (!strcmp(name, "DY1"))*/ ) {
+    if (5 == facename || 7 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if ( (!strcmp(name, "DZ")) /*|| (!strcmp(name, "DZ1"))*/ ) {
+    if (5 == facename || 6 == facename || 7 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+
+  return test;
+
+}
+
+//-------------------------------------------------------------------------//
 
 void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double> &fluxes)
 {

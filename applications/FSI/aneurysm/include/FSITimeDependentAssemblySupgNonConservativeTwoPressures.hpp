@@ -75,7 +75,7 @@ namespace femus
     vector < adept::adouble > vx_ig(dim);
 
     vector<vector < adept::adouble > > GradSolVAR(nBlocks * dim);
-    vector<vector < adept::adouble > > GradSolhatVAR(nBlocks * dim);
+    vector<vector < adept::adouble > > GradSolhatVAR(dim);
     vector<vector<adept::adouble> > NablaSolVAR(nBlocks * dim);
 
     vector<double> meshVelOld(dim);
@@ -84,7 +84,7 @@ namespace femus
 
     for(int i = 0; i < nBlocks * dim; i++) {
       GradSolVAR[i].resize(dim);
-      GradSolhatVAR[i].resize(dim);
+      if(i < dim) GradSolhatVAR[i].resize(dim);
       NablaSolVAR[i].resize(nabla_dim);
     }
 
@@ -117,7 +117,6 @@ namespace femus
 
     vector < int > dofsAll;
     vector < double > Jac;
-
 
     // ------------------------------------------------------------------------
     // Physical parameters
@@ -262,7 +261,7 @@ namespace femus
       for(int j = 0; j < nve; j++) {
         for(unsigned idim = 0; idim < dim; idim++) {
           vxOld[idim][j] = vx_hat[idim][j] + Soli_old[indexVAR[idim]][j];
-          vxNew[idim][j] = vx_hat[idim][j] +  Soli[indexVAR[idim]][j];
+          vxNew[idim][j] = vx_hat[idim][j] + Soli[indexVAR[idim]][j];
         }
       }
 
@@ -331,8 +330,8 @@ namespace femus
         phi1 = mymsh->_finiteElement[ielt][SolType1]->GetPhi(ig);
 
         // ---------------------------------------------------------------------------
-        // displacement and velocity
-        for(int i = 0; i < nBlocks * dim; i++) {
+        // store displacenet gradient
+        for(int i = 0; i < dim; i++) {
           for(int j = 0; j < dim; j++) {
             GradSolhatVAR[i][j] = 0.;
           }
