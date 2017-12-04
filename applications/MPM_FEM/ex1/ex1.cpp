@@ -349,6 +349,46 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
     indexVAR[ivar + 2 * dim] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar + 6][0]);
   }
 
+  //BEGIN buliding Cauchy stress (using Saint Venant)
+  //physical quantity
+  adept::adouble J_hat;
+  double J_hat_old;
+  adept::adouble I_e;
+  double I_e_old;
+  adept::adouble Cauchy[3][3];
+  adept::adouble Cauchy_old[3][3]; //TODO do we need this
+  double Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
+  double mus = 1.; //TODO a real initialization
+
+  adept::adouble e[3][3];
+  double e_old[3][3];
+
+  //computation of the stress tensor
+  for(int i = 0; i < dim; i++) {
+    for(int j = 0; j < dim; j++) {
+      e[i][j]    = 0.5 * (GradSolhatVAR[i][j]    + GradSolhatVAR[j][i]);
+      e_old[i][j] = 0.5 * (GradSolhatVAR_old[i][j] + GradSolhatVAR_old[j][i]);
+    }
+  }
+
+  I_e = 0;
+  I_e_old = 0;
+
+  for(int i = 0; i < dim; i++) {
+    I_e     += e[i][i];
+    I_e_old += e_old[i][i];
+  }
+
+  for(int i = 0; i < dim; i++) {
+    for(int j = 0; j < dim; j++) {
+      //incompressible
+      Cauchy[i][j]     = 2 * mus * e[i][j] - 2 * mus * I_e * SolVAR[2 * dim] * Id2th[i][j];
+      Cauchy_old[i][j] = 2 * mus * e_old[i][j] - 2 * mus * I_e_old * SolVAR[2 * dim] * Id2th[i][j];
+      //+(penalty)*lambda*I_e*Id2th[i][j];
+    }
+  }
+//END building Cauchy stress
+
   start_time = clock();
 
   if(assembleMatrix) myKK->zero();
@@ -371,46 +411,6 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
 
     //element of particle iMarker
     unsigned iel = particles[iMarker]->GetMarkerElement();
-
-    //BEGIN buliding Cauchy stress (using Saint Venant)
-    //physical quantity
-    adept::adouble J_hat;
-    double J_hat_old;
-    adept::adouble I_e;
-    double I_e_old;
-    adept::adouble Cauchy[3][3];
-    adept::adouble Cauchy_old[3][3]; //TODO do we need this
-    double Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
-    double mus = 1.; //TODO a real initialization
-
-    adept::adouble e[3][3];
-    double e_old[3][3];
-
-    //computation of the stress tensor
-    for(int i = 0; i < dim; i++) {
-      for(int j = 0; j < dim; j++) {
-        e[i][j]    = 0.5 * (GradSolhatVAR[i][j]    + GradSolhatVAR[j][i]);
-        e_old[i][j] = 0.5 * (GradSolhatVAR_old[i][j] + GradSolhatVAR_old[j][i]);
-      }
-    }
-
-    I_e = 0;
-    I_e_old = 0;
-
-    for(int i = 0; i < dim; i++) {
-      I_e     += e[i][i];
-      I_e_old += e_old[i][i];
-    }
-
-    for(int i = 0; i < dim; i++) {
-      for(int j = 0; j < dim; j++) {
-        //incompressible
-        Cauchy[i][j]     = 2 * mus * e[i][j] - 2 * mus * I_e * SolVAR[2 * dim] * Id2th[i][j];
-        Cauchy_old[i][j] = 2 * mus * e_old[i][j] - 2 * mus * I_e_old * SolVAR[2 * dim] * Id2th[i][j];
-        //+(penalty)*lambda*I_e*Id2th[i][j];
-      }
-    }
-//END building Cauchy stress
 
     //update element related quantities only if we are in a different element
     if(iel != ielOld) {
@@ -498,14 +498,14 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
 
     // the local coordinates of the particles are the Gauss points in this context
     std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
-    // the mass of the particles acts as weight
+    // the mass of the particle acts as weight
     double mass = particles[iMarker]->GetMarkerMass();
     adept::adouble massAdept = mass;
     mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx, iMarker, massAdept, phi, gradphi, nablaphi);
-    mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_hat, iMarker, mass, phi_hat, gradphi_hat, nablaphi_hat);
+    mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_hat, iMarker, mass, phi_hat, gradphi_hat, nablaphi_hat); //TODO do we need this?
 
     // displacement and velocity
-    //BEGIN evaluates SolVar at idof of element iel
+    //BEGIN evaluates SolVAR at idof of element iel
     //TODO maybe we don't need this for the displacement
     for(int i = 0; i < 3 * dim; i++) {
       SolVAR[i] = 0.;
@@ -554,7 +554,7 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
           double value = base->eval_phi(k, xi);
           aRhs[indexVAR[i]][j] -= mass * value;
         }
-        aRhs[indexVAR[i]][j] *= (4 / (dt * dt)) * SolVAR[i] - (4 / dt) * SolVAR[i + dim] - SolVAR[i + 2 * dim] ;
+        aRhs[indexVAR[i]][j] *= (4 / (dt * dt)) * SolVAR[i] - (4 / dt) * SolVAR_old[i + dim] - SolVAR_old[i + 2 * dim] ;
       }
     }
 
@@ -564,11 +564,12 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
     //contribution from f_ext //TODO
     double body_prtcl = 0.; // value of the body force at the particle
     for(int j = 0; j < nve; j++) {
-      body_prtcl += phi[j] ;
+      double value = base->eval_phi(j, xi);
+      body_prtcl += value; //TODO we have to evaluate the body force at the node j
     }
     for(unsigned i = 0; i <  dim; i++) {
       for(int j = 0; j < nve; j++) {
-	  double value = base->eval_phi(j, xi);
+        double value = base->eval_phi(j, xi);
         aRhs[indexVAR[i]][j] -= mass * value * body_prtcl;
       }
     }
