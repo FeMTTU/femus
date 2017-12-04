@@ -10,5 +10,5 @@ ADD_SUBDIRECTORY(valve2D/)
 ADD_SUBDIRECTORY(valveTwoPressures/)
 ADD_SUBDIRECTORY(valve3D/)
 
-FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI/aneurysm/input/)
-FILE(COPY           ${PROJECT_SOURCE_DIR}/applications/FSI/aneurysm/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/FSI/aneurysm/input/)
+FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/FSI/vascular/input/)
+FILE(COPY           ${PROJECT_SOURCE_DIR}/applications/FSI/vascular/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/FSI/vascular/input/)
