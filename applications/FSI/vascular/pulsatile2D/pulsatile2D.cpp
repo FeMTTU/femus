@@ -80,37 +80,33 @@ int main(int argc, char **args)
 
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
-//   std::string infile = "./input/aneurysm_Sara_5.neu";
-  //std::string infile = "./input/Turek_porous_60micron.neu";
-  //std::string infile = "./input/Turek_stents_60micron.neu";
-  //std::string infile = "./input/Turek_11stents_60micron.neu";
   std::string infile;
   if(simulation == 0) {
-    infile = "./input/Turek.neu";
+    infile = "./../input/steady&pulsatile/2D/Turek.neu";
   }
   else if(simulation == 1) {
-    infile = "./input/Turek_porous_60micron.neu";
+    infile = "./../input/steady&pulsatile/2D/Turek_porous_60micron.neu";
   }
   else if(simulation == 2) {
-    infile = "./input/Turek_stents_60micron.neu";
+    infile = "./../input/steady&pulsatile/2D/Turek_stents_60micron.neu";
   }
   else if(simulation == 3) {
-    infile = "./input/Turek_11stents_60micron.neu";
+    infile = "./../input/steady&pulsatile/2D/Turek_11stents_60micron.neu";
   }
   else if(simulation == 4) {
-    infile = "./input/AAA_thrombus_2D.neu";
+    infile = "./../input/steady&pulsatile/2D/AAA_thrombus_2D.neu";
   }
   else if(simulation == 5) {
-    infile = "./input/aortic_bifurcation.neu";
+    infile = "./../input/steady&pulsatile/2D/aortic_bifurcation.neu";
   }
   else if(simulation == 6) {
-    infile = "./input/AAA_thrombus_2D_porous.neu";
+    infile = "./../input/steady&pulsatile/2D/AAA_thrombus_2D_porous.neu";
   }
   else if(simulation == 7) {
-    //infile = "./input/vein_valve_closed.neu";
-    //infile = "./input/vein_valve_thiner.neu";
-    infile = "./input/vein_valve_modifiedFluid.neu";
-    //infile = "./input/vein_valve_new.neu";
+    //infile = "./../input/valve/valveOld/vein_valve_closed.neu";
+    //infile = "./../input/valve/valveOld/vein_valve_thiner.neu";
+    infile = "./../input/valve/valveOld/vein_valve_modifiedFluid.neu";
+    //infile = "./../input/valve/valveOld/vein_valve_new.neu";
   }
 
   // ******* Set physics parameters *******

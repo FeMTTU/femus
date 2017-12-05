@@ -60,27 +60,22 @@ int main(int argc, char **args)
 
 
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
-//   std::string infile = "./input/aneurysm_Sara_5.neu";
-  //std::string infile = "./input/Turek_porous_60micron.neu";
-  //std::string infile = "./input/Turek_stents_60micron.neu";
-  //std::string infile = "./input/Turek_11stents_60micron.neu";
-  //std::string infile = "./input/Turek.neu";
   std::string infile;
   if(simulation == 0) {
-    infile = "./input/Turek.neu";
+    infile = "./../input/steady&pulsatile/2D/Turek.neu";
   }
   else if(simulation == 1) {
-    infile = "./input/Turek_porous_60micron.neu";
+    infile = "./../input/steady&pulsatile/2D/Turek_porous_60micron.neu";
   }
   else if(simulation == 2) {
-    infile = "./input/Turek_stents_60micron.neu";
+    infile = "./../input/steady&pulsatile/2D/Turek_stents_60micron.neu";
   }
   else if(simulation == 3) {
-    infile = "./input/Turek_11stents_60micron.neu";
+    infile = "./../input/steady&pulsatile/2D/Turek_11stents_60micron.neu";
   }
   else if(simulation == 4) {
     //infile = "./input/vein_valve.neu";
-    infile = "./input/vein_valve_closed.neu";
+    infile = "./../input/valve/valveOld/vein_valve_closed.neu";
   }
 
   // ******* Set physics parameters *******
