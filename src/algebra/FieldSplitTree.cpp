@@ -684,7 +684,7 @@ namespace femus {
 
     MeshASMPartitioning meshasmpartitioning(*msh);
 
-    meshasmpartitioning.DoPartition(elementBlockNumber, block_elements, _asmBlockMaterialRange[level - 1]);
+    meshasmpartitioning.DoPartitionOld(elementBlockNumber, block_elements, _asmBlockMaterialRange[level - 1]);
 
     vector <bool> ThisVaribaleIsNonSchur(_solutionType.size(), true);
 
