@@ -39,6 +39,7 @@ namespace femus {
         _dim = sol->GetMesh()->GetDimension();
         _step = 0;
         _mass = 1.;
+        _density = 1.;
         _velocity.resize(_dim);
         for(unsigned d = 0; d < _dim; d++) {
           _velocity[d] = (d + 1);  // fix this initialization
@@ -132,6 +133,10 @@ namespace femus {
 
       double GetMarkerMass() {
         return _mass;
+      }
+
+      double GetMarkerDensity() {
+        return _density;
       }
 
       std::vector < double > GetMarkerVelocity() {
@@ -279,6 +284,7 @@ namespace femus {
       unsigned _previousElem; //for advection reasons
       unsigned _dim;
       double _mass;
+      double _density;
 
       unsigned _mproc; //processor who has the marker
       //std::vector < std::vector < std::vector < double > > > _aX;
