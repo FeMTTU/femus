@@ -238,9 +238,8 @@ namespace femus {
 
       std::sort(_localIsIndex[vb_index].begin(), _localIsIndex[vb_index].end());
       std::sort(_overlappingIsIndex[vb_index].begin(), _overlappingIsIndex[vb_index].end());
-
-
     }
+    
 
     //BEGIN Generate std::vector<IS> for ASM PC ***********
     _localIs.resize(_localIsIndex.size());
@@ -250,6 +249,10 @@ namespace femus {
       ISCreateGeneral(MPI_COMM_SELF, _localIsIndex[vb_index].size(), &_localIsIndex[vb_index][0], PETSC_USE_POINTER, &_localIs[vb_index]);
       ISCreateGeneral(MPI_COMM_SELF, _overlappingIsIndex[vb_index].size(), &_overlappingIsIndex[vb_index][0], PETSC_USE_POINTER, &_overlappingIs[vb_index]);
     }
+    
+   
+    
+    
 
     //END Generate std::vector<IS> for ASM PC ***********
 
@@ -260,19 +263,30 @@ namespace femus {
 
   void AsmPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc) {
 
-    PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, subpc);
-
-    if(!_standardASM) {
-      PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
+    //     PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, subpc);
+    //     if(!_standardASM) {
+    //       PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
+    //     }
+    
+    PetscPreconditioner::set_petsc_preconditioner_type(FIELDSPLIT_PRECOND, subpc);
+    for(unsigned i =0 ; i < _overlappingIs.size();i++){
+      PCFieldSplitSetIS(subpc,NULL,_overlappingIs[i]);
     }
+    
+    //     PCASMSetOverlap(subpc, _overlap);
+    //     PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
+    //     PCASMSetType(subpc, PC_ASM_NONE);
 
-    PCASMSetOverlap(subpc, _overlap);
-    PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
-
+    PCFieldSplitSetType(subpc,  PC_COMPOSITE_SYMMETRIC_MULTIPLICATIVE);
+        
     KSPSetUp(subksp);
 
     KSP* subksps;
-    PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULL, &subksps);
+    
+    //PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULL, &subksps);
+    
+    PCFieldSplitGetSubKSP(subpc, &_nlocal, &subksps);
+    
     PetscReal epsilon = 1.e-16;
 
     if(!_standardASM) {
