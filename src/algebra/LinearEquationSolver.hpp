@@ -132,10 +132,13 @@ namespace femus {
         std::cout << "Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
       };
       virtual void SetElementBlockNumberFluid(const unsigned & block_elemet_number, const unsigned &overlap) {
-        std::cout << "Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
+        std::cout << "Warning SetElementBlockNumberFluid(const unsigned &) is not available for this smoother\n";
       };
       virtual void SetElementBlockNumberSolid(const unsigned & block_elemet_number, const unsigned &overlap) {
-        std::cout << "Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
+        std::cout << "Warning SetElementBlockNumberSolid(const unsigned &) is not available for this smoother\n";
+      };
+      virtual void SetElementBlockNumberPorous(const unsigned & block_elemet_number, const unsigned &overlap) {
+        std::cout << "Warning SetElementBlockNumberPorous(const unsigned &) is not available for this smoother\n";
       };
 
       virtual void SetFieldSplitTree(FieldSplitTree * fieldSplitTree) {

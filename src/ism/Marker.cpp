@@ -1,10 +1,10 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: Mesh
+ Module: Marker
  Authors: Eugenio Aulisa, Giacomo Capodaglio
 
- Copyright (c) FEMTTU
+ Copyright (c) FEMuS
  All rights reserved.
 
  This software is distributed WITHOUT ANY WARRANTY; without even
@@ -17,6 +17,7 @@
 // includes :
 //----------------------------------------------------------------------------
 #include "Marker.hpp"
+#include "Line.hpp"
 #include "NumericVector.hpp"
 #include <math.h>
 
@@ -172,14 +173,14 @@ namespace femus {
     {0.}
   };
 
-  void Marker::GetElement(const bool &useInitialSearch, const unsigned &initialElem) {
+  void Marker::GetElement(const bool &useInitialSearch, const unsigned &initialElem, Solution* sol, const double &s) {
 
     std::vector < unsigned > processorMarkerFlag(_nprocs, 3);
 
     unsigned iel = initialElem;
 
-    unsigned ielProc = (initialElem < _mesh->_elementOffset[_nprocs]) ?
-                       _mesh->IsdomBisectionSearch(iel, 3) : _nprocs;
+    unsigned ielProc = (initialElem < sol->GetMesh()->_elementOffset[_nprocs]) ?
+                       sol->GetMesh()->IsdomBisectionSearch(iel, 3) : _nprocs;
 
     if(useInitialSearch || _iproc != ielProc) {
 
@@ -190,15 +191,15 @@ namespace femus {
 
       double modulus = 1.e10;
 
-      for(int jel = _mesh->_elementOffset[_iproc]; jel < _mesh->_elementOffset[_iproc + 1]; jel += 25) {
+      for(int jel = sol->GetMesh()->_elementOffset[_iproc]; jel < sol->GetMesh()->_elementOffset[_iproc + 1]; jel += 25) {
 
-        unsigned interiorNode = _mesh->GetElementDofNumber(jel, 2) - 1;
-        unsigned jDof  = _mesh->GetSolutionDof(interiorNode, jel, 2);    // global to global mapping between coordinates node and coordinate dof
+        unsigned interiorNode = sol->GetMesh()->GetElementDofNumber(jel, 2) - 1;
+        unsigned jDof  = sol->GetMesh()->GetSolutionDof(interiorNode, jel, 2);    // global to global mapping between coordinates node and coordinate dof
 
         double distance2 = 0;
 
         for(unsigned k = 0; k < _dim; k++) {
-          double dk = (*_mesh->_topology->_Sol[k])(jDof) - _x[k];     // global extraction and local storage for the element coordinates
+          double dk = GetCoordinates(sol, k, jDof, s) - _x[k];   // global extraction and local storage for the element coordinates
           distance2 += dk * dk;
         }
 
@@ -210,12 +211,11 @@ namespace femus {
         }
       }
 
-
       if(iel == UINT_MAX) {
-        std::cout << "Warning the marker is located on unreasonable distance from the mesh >= 1.e10" << std::endl;
+        //  std::cout << "Warning the marker is located on unreasonable distance from the mesh >= 1.e10" << std::endl;
       }
       else {
-        std::cout << "the smart search starts from element " << iel << std::endl;
+        //  std::cout << "the smart search starts from element " << iel << std::endl;
       }
 
 
@@ -237,10 +237,10 @@ namespace femus {
       //BEGIN next element search
       while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
         if(_dim == 2) {
-          nextElem[_iproc] = GetNextElement2D(iel, previousElem[_iproc]);
+          nextElem[_iproc] = GetNextElement2D(iel, previousElem[_iproc], sol, s);
         }
         else if(_dim == 3) {
-          nextElem[_iproc] = GetNextElement3D(iel, previousElem[_iproc]);
+          nextElem[_iproc] = GetNextElement3D(iel, previousElem[_iproc], sol, s);
         }
 
         previousElem[_iproc] = iel;
@@ -255,7 +255,7 @@ namespace femus {
           processorMarkerFlag[_iproc] = 0;
         }
         else {
-          nextProc = _mesh->IsdomBisectionSearch(nextElem[_iproc], 3);
+          nextProc = sol->GetMesh()->IsdomBisectionSearch(nextElem[_iproc], 3);
 
           if(nextProc != _iproc) {
             pointIsOutsideThisProcess = true;
@@ -272,13 +272,13 @@ namespace femus {
 
 
       if(elementHasBeenFound) {
-        std::cout << " The marker belongs to element " << _elem << std::endl;
+        //  std::cout << " The marker belongs to element " << _elem << std::endl;
       }
       else if(pointIsOutsideTheDomain) {
-        std::cout << " The marker does not belong to this domain" << std::endl;
+        //  std::cout << " The marker does not belong to this domain" << std::endl;
       }
       else if(pointIsOutsideThisProcess) {
-        std::cout << "proc " << _iproc << " believes the marker is in proc = " << nextProc << std::endl;
+        //  std::cout << "proc " << _iproc << " believes the marker is in proc = " << nextProc << std::endl;
       }
 
 
@@ -300,6 +300,7 @@ namespace femus {
         }
       }
 
+
       // check if any process found the element
       unsigned sumFlag = 0;
 
@@ -314,7 +315,7 @@ namespace femus {
       }
 
       if(sumFlag == 0) {   // all the processes beleive that the marker is outside the domain
-        std::cout << "Marker is outside the domain" << std::endl;
+        // std::cout << "Marker is outside the domain" << std::endl;
         _mproc = _nprocs;
         _elem = UINT_MAX;
 
@@ -350,19 +351,19 @@ namespace femus {
 
         //BEGIN SMART search among all the elements received by _iproc and sent from jprocs
         double modulus = 1.e10;
-        iel = _mesh->_elementOffset[_iproc + 1] ;
+        iel = sol->GetMesh()->_elementOffset[_iproc + 1] ;
 
         for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
           if(processorMarkerFlag[jproc] == 3) {
 
             unsigned jel = nextElem[jproc];
-            unsigned interiorNode = _mesh->GetElementDofNumber(jel, 2) - 1;
+            unsigned interiorNode = sol->GetMesh()->GetElementDofNumber(jel, 2) - 1;
 
-            unsigned jDof  = _mesh->GetSolutionDof(interiorNode, jel, 2);    // global to global mapping between coordinates node and coordinate dof
+            unsigned jDof  = sol->GetMesh()->GetSolutionDof(interiorNode, jel, 2);    // global to global mapping between coordinates node and coordinate dof
             double distance2 = 0;
 
             for(unsigned k = 0; k < _dim; k++) {
-              double dk = (*_mesh->_topology->_Sol[k])(jDof) - _x[k];     // global extraction and local storage for the element coordinates
+              double dk = GetCoordinates(sol, k, jDof, s) - _x[k];   // global extraction and local storage for the element coordinates
               distance2 += dk * dk;
             }
 
@@ -379,8 +380,8 @@ namespace femus {
           //END SMART search
         }
 
-        if(iel != _mesh->_elementOffset[_iproc + 1]) {
-          std::cout << "start element= " << iel << std::endl;
+        if(iel != sol->GetMesh()->_elementOffset[_iproc + 1]) {
+          //   std::cout << "start element= " << iel << std::endl;
           pointIsOutsideTheDomain = false;
           pointIsOutsideThisProcess = false;
           nextProc = _iproc;
@@ -397,15 +398,15 @@ namespace femus {
 
     }
 
-
-
     MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _mproc, PETSC_COMM_WORLD);
-    std::cout << "The marker belongs to process " << _mproc << " and is in element " << _elem  << std::endl;
+    //  std::cout << "The marker belongs to process " << _mproc << " and is in element " << _elem  << std::endl;
 
   }
 
 
-  void Marker::GetElementSerial(unsigned &previousElem) {
+  void Marker::GetElementSerial(unsigned &previousElem, Solution* sol, const double &s) {
+
+    //std::cout << " SERIALE " << std::endl << std::flush;
 
     unsigned currentElem = _elem;
     bool elementHasBeenFound = false;
@@ -414,14 +415,17 @@ namespace femus {
 
     //BEGIN next element search
     while(elementHasBeenFound + pointIsOutsideThisProcess + pointIsOutsideTheDomain == 0) {
-
+      //std::cout << previousElem << " " << currentElem << std::endl << std::flush;
       if(_dim == 2) {
-        _elem = GetNextElement2D(currentElem, previousElem);
+        _elem = GetNextElement2D(currentElem, previousElem, sol, s);
       }
       else if(_dim == 3) {
-        _elem = GetNextElement3D(currentElem, previousElem);
+        _elem = GetNextElement3D(currentElem, previousElem, sol, s);
       }
       previousElem = currentElem;
+      // std::cout << previousElem << " " << currentElem << std::endl << std::flush;
+
+      // std::cout << previousElem << std::cout << std::flush;
 
       if(_elem == currentElem) {
         elementHasBeenFound = true;
@@ -431,7 +435,7 @@ namespace femus {
         break;
       }
       else {
-        _mproc = _mesh->IsdomBisectionSearch(_elem , 3);
+        _mproc = sol->GetMesh()->IsdomBisectionSearch(_elem , 3);
         if(_mproc != _iproc) {
           pointIsOutsideThisProcess = true;
           break;
@@ -441,27 +445,30 @@ namespace femus {
         }
       }
     }
+    //previousElem = _elem;
 
+//     if(elementHasBeenFound) {
+//       //  std::cout << " The marker belongs to element " << _elem << std::endl;
+//     }
+//     else if(pointIsOutsideTheDomain) {
+//       //  std::cout << " The marker does not belong to this domain" << std::endl;
+//     }
+//     else if(pointIsOutsideThisProcess) {
+//       //  std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
+//     }
 
-    if(elementHasBeenFound) {
-      std::cout << " The marker belongs to element " << _elem << std::endl;
-    }
-    else if(pointIsOutsideTheDomain) {
-      std::cout << " The marker does not belong to this domain" << std::endl;
-    }
-    else if(pointIsOutsideThisProcess) {
-      std::cout << "proc " << _iproc << " believes the marker is in proc = " << _mproc << std::endl;
-    }
+    // std::cout << "FINE SERIALE " << std::endl;
+
     //END next element search
   }
 
 
-  int Marker::FastForward(const unsigned &iel, const unsigned &previousElem) {
+  int Marker::FastForward(const unsigned &iel, const unsigned &previousElem, Solution* sol, const double &s) {
 
     short unsigned linear = 0;
-    
-    unsigned nDofs = _mesh->GetElementDofNumber(iel, linear);
-    short unsigned ielType = _mesh->GetElementType(iel);
+
+    unsigned nDofs = sol->GetMesh()->GetElementDofNumber(iel, linear);
+    short unsigned ielType = sol->GetMesh()->GetElementType(iel);
 
     //BEGIN extraction nodal coordinate values
     std::vector< std::vector < double > > xv(_dim);
@@ -471,10 +478,10 @@ namespace femus {
     }
 
     for(unsigned i = 0; i < nDofs; i++) {
-      unsigned iDof  = _mesh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
+      unsigned iDof  = sol->GetMesh()->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
 
       for(unsigned k = 0; k < _dim; k++) {
-        xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof) - _x[k];   // global extraction and local storage for the element coordinates
+        xv[k][i] = GetCoordinates(sol, k, iDof, s) - _x[k]; // global extraction and local storage for the element coordinates
       }
     }
     //END extraction
@@ -531,7 +538,7 @@ namespace femus {
       for(unsigned k = 0; k < _dim; k++) {
         projection += vt[k] * faceNormal[ielType][jface][k];
       }
-      int jelement = (_mesh->el->GetFaceElementIndex(iel, jface) - 1);
+      int jelement = (sol->GetMesh()->el->GetFaceElementIndex(iel, jface) - 1);
       if(projection > maxProjection && jelement != previousElem) {
         maxProjection = projection;
         faceIndex = jface;
@@ -544,25 +551,26 @@ namespace femus {
 
 
 
-  unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &previousElem) {
+  unsigned Marker::GetNextElement2D(const unsigned &currentElem, const unsigned &previousElem, Solution* sol, const double &s) {
+
 
     int nextElem ;
     bool markerIsInElement = false;
     bool nextElementFound = false;
-    short unsigned currentElementType = _mesh->GetElementType(currentElem);
+    short unsigned currentElementType = sol->GetMesh()->GetElementType(currentElem);
     double epsilon  = 10.e-10;
     double epsilon2  = epsilon * epsilon;
     double t;
 
     std::vector<double> xc(_dim, 0); //stores the coordinates of the face node of currentElem
     unsigned faceNodeLocalIndex = (currentElementType == 3) ? 8 : 6;
-    unsigned faceNodeDof = _mesh->GetSolutionDof(faceNodeLocalIndex, currentElem, 2);
+    unsigned faceNodeDof = sol->GetMesh()->GetSolutionDof(faceNodeLocalIndex, currentElem, 2);
     for(unsigned k = 0; k < _dim; k++) {
-      xc[k] = (*_mesh->_topology->_Sol[k])(faceNodeDof) - _x[k];    // coordinates are translated so that the marker is the new origin
+      xc[k] = GetCoordinates(sol, k, faceNodeDof, s) - _x[k]; // coordinates are translated so that the marker is the new origin
     }
 
     if(xc[0]*xc[0] < epsilon2 && xc[1]*xc[1] < epsilon2) {
-      std::cout << "the marker is the central face node" << std::endl;
+      //   std::cout << "the marker is the central face node" << std::endl;
       markerIsInElement = true; //the marker is xc
     }
     else {
@@ -573,9 +581,9 @@ namespace femus {
         xv[k].resize(faceNodeNumber - 1);
       }
       for(unsigned i = 0; i < faceNodeNumber - 1; i++) {
-        unsigned inodeDof  = _mesh->GetSolutionDof(facePoints[currentElementType][_solType][i], currentElem, 2);
+        unsigned inodeDof  = sol->GetMesh()->GetSolutionDof(facePoints[currentElementType][_solType][i], currentElem, 2);
         for(unsigned k = 0; k < _dim; k++) {
-          xv[k][i] = (*_mesh->_topology->_Sol[k])(inodeDof) - _x[k];
+          xv[k][i] = GetCoordinates(sol, k, inodeDof, s) - _x[k];
         }
       }
 
@@ -599,12 +607,21 @@ namespace femus {
           insideHull = false;
         }
       }
+//       if(!insideHull) {
+//         nextElem = FastForward(currentElem, previousElem);
+//         nextElementFound = true;
+//       }
+//
       if(!insideHull) {
-        nextElem = FastForward(currentElem, previousElem);
-        nextElementFound = true;
+        nextElem = FastForward(currentElem, previousElem, sol, s);
+        if(nextElem >= 0) {
+          nextElementFound = true;
+        }
+        else {
+          insideHull = true;
+        }
       }
-
-      else {
+      if(insideHull) {
         std::vector<double> r(_dim, 0);   //coordinates of the intersection point between the line of the edges and the line that connects the marker and the face node
         for(unsigned k = 0; k < _dim; k++) {
           xv[k].resize(faceNodeNumber);
@@ -695,8 +712,10 @@ namespace femus {
                 else {
                   unsigned nodeIndex = (_solType == 0) ? i : i / 2;
 
-                  nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
-                  nextElementFound = true;
+                  nextElem = (sol->GetMesh()->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
+                  if(nextElem != previousElem) {
+                    nextElementFound = true;
+                  }
                   break;
                 }
 
@@ -719,8 +738,10 @@ namespace femus {
 
                   unsigned nodeIndex = (_solType == 0) ? i : i / 2;
 
-                  nextElem = (_mesh->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
-                  nextElementFound = true;
+                  nextElem = (sol->GetMesh()->el->GetFaceElementIndex(currentElem, nodeIndex) - 1);
+                  if(nextElem != previousElem) {
+                    nextElementFound = true;
+                  }
                   break;
                 }
               }
@@ -736,29 +757,29 @@ namespace femus {
 
     if(markerIsInElement == true) {
       nextElem = currentElem;
-      std::cout << "The marker belongs to element " << currentElem << std::endl;
+      // std::cout << "The marker belongs to element " << currentElem << std::endl;
     }
 
     if(nextElementFound == true) {
-      std::cout << "The marker does not belong to element " << currentElem << std::endl;
+      // std::cout << "The marker does not belong to element " << currentElem << std::endl;
     }
 
 
-    std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
+    // std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
 
-    return (nextElem >= 0) ? nextElem : UINT_MAX;
+    return (nextElem >= 0) ? nextElem : UINT_MAX; 
 
   }
 
 
-  unsigned Marker::GetNextElement3D(const unsigned & currentElem, const unsigned &previousElem) {
+  unsigned Marker::GetNextElement3D(const unsigned & currentElem, const unsigned &previousElem, Solution* sol, const double &s) {
 
-    unsigned nDofs = _mesh->GetElementDofNumber(currentElem, _solType);
+    unsigned nDofs = sol->GetMesh()->GetElementDofNumber(currentElem, _solType);
     unsigned nFaceDofs = (_solType == 2) ? nDofs - 1 : nDofs;
     int nextElem ;
     bool markerIsInElement = false;
     bool nextElementFound = false;
-    short unsigned currentElementType = _mesh->GetElementType(currentElem);
+    short unsigned currentElementType = sol->GetMesh()->GetElementType(currentElem);
     double epsilon  = 10.e-10;
     double epsilon2  = epsilon * epsilon;
     double t;
@@ -770,23 +791,57 @@ namespace femus {
     else if(currentElementType == 1) centralNodeLocalIndex = 14;
     else if(currentElementType == 2) centralNodeLocalIndex = 20;
 
-    unsigned centralNodeDof = _mesh->GetSolutionDof(centralNodeLocalIndex, currentElem, 2);
+    unsigned centralNodeDof = sol->GetMesh()->GetSolutionDof(centralNodeLocalIndex, currentElem, 2);
 
     for(unsigned k = 0; k < _dim; k++) {
-      xc[k] = (*_mesh->_topology->_Sol[k])(centralNodeDof) - _x[k];    // coordinates are translated so that the marker is the new origin
+      xc[k] = GetCoordinates(sol, k, centralNodeDof, s)  - _x[k]; // coordinates are translated so that the marker is the new origin
       //std::cout << " xc[" << k << "]= " <<xc[k] <<std::endl;
     }
 
+
+    //BEGIN ONLY FOR TESTING (TO BE REMOVED ONCE FIXED THE PROBLEM)
+
+//     if(currentElem == 2057){
+//       std::cout<<std::endl<<std::flush;
+//       for(unsigned iface = 0; iface < sol->GetMesh()->GetElementFaceNumber(currentElem); iface++) {
+//         for(unsigned itri = 0; itri < trianglesPerFace[currentElementType][_solType][iface]; itri ++) {
+// 	  for(unsigned i = 0; i < 4; i++) {
+// 	    unsigned itriDof  = sol->GetMesh()->GetSolutionDof(faceTriangleNodes[currentElementType][_solType][iface][itri][i], currentElem, 2);
+// 	    for(unsigned k = 0; k < _dim; k++) {
+// 	      std::cout << GetCoordinates(mesh,k,itriDof) <<" ";
+// 	    }
+// 	    std::cout<<std::endl<<std::flush;
+// 	  }
+// 	  std::cout<<std::endl<<std::flush;
+// 	}
+// 	std::cout<<std::endl<<std::flush;
+//       }
+//
+//       unsigned centralNodeDof = sol->GetMesh()->GetSolutionDof(centralNodeLocalIndex, currentElem, 2);
+//
+//       for(unsigned k = 0; k < _dim; k++) {
+// 	std::cout << GetCoordinates(mesh,k,centralNodeDof) <<" ";     // coordinates are translated so that the marker is the new origin
+//       }
+//       std::cout<<std::endl<<std::flush;
+//       for(unsigned k = 0; k < _dim; k++) {
+// 	std::cout << _x[k] << " ";    // coordinates are translated so that the marker is the new origin
+//       }
+//       std::cout<<std::endl<<std::flush;
+//       exit(1);
+//     }
+
+    //END ONLY FOR TESTING (TO BE REMOVED ONCE FIXED THE PROBLEM)
+
+
+
     if(xc[0]*xc[0] < epsilon2 && xc[1]*xc[1] < epsilon2 && xc[2]*xc[2] < epsilon2) {
-      std::cout << "the marker is the central element node" << std::endl;
+      //   std::cout << "the marker is the central element node" << std::endl;
       markerIsInElement = true; //the marker is xc
     }
 
     else {
 
       //BEGIN Setting up the fast FastForward
-
-
 
       std::vector< std::vector < double > > xvv(_dim);
 
@@ -796,22 +851,21 @@ namespace femus {
 
       for(unsigned k = 0; k < _dim; k++) {
         xvv[k].resize(nFaceDofs);
-
       }
 
       for(unsigned i = 0; i < nFaceDofs; i++) {
-        unsigned inodeDof  = _mesh->GetSolutionDof(i, currentElem, _solType);
+        unsigned inodeDof  = sol->GetMesh()->GetSolutionDof(i, currentElem, _solType);
 
         for(unsigned k = 0; k < _dim; k++) {
-          xvv[k][i] = (*_mesh->_topology->_Sol[k])(inodeDof) - _x[k];
+          xvv[k][i] = GetCoordinates(sol, k, inodeDof, s) - _x[k];
         }
       }
 
       std::vector < double >  xcs;
       double radius;
-      GetConvexHullSphere(xvv, xcs, radius, 0.1);
+      GetConvexHullSphere(xvv, xcs, radius, 0.5);
       std::vector< std::vector < double > > xe;
-      GetBoundingBox(xvv, xe, 0.1);
+      GetBoundingBox(xvv, xe, 0.5);
 
       double radius2 = radius * radius;
       double d2 = 0.;
@@ -828,15 +882,20 @@ namespace femus {
         }
       }
       if(!insideHull) {
-        nextElem = FastForward(currentElem, previousElem);
-        nextElementFound = true;
+        nextElem = FastForward(currentElem, previousElem, sol, s);
+        if(nextElem >= 0) {
+          nextElementFound = true;
+        }
+        else {
+          insideHull = true;
+        }
       }
 
-      //if(true) {
-      else {
+      if(insideHull) {
 
+// 	std::cout<<"I am in...."<<std::flush;
 
-        for(unsigned iface = 0; iface < _mesh->GetElementFaceNumber(currentElem); iface++) {
+        for(unsigned iface = 0; iface < sol->GetMesh()->GetElementFaceNumber(currentElem); iface++) {
 
           // std::cout << "iface = " << iface << std::endl;
 
@@ -859,10 +918,10 @@ namespace femus {
             }
 
             for(unsigned i = 0; i < 4; i++) {
-              unsigned itriDof  = _mesh->GetSolutionDof(faceTriangleNodes[currentElementType][_solType][iface][itri][i], currentElem, 2);
+              unsigned itriDof  = sol->GetMesh()->GetSolutionDof(faceTriangleNodes[currentElementType][_solType][iface][itri][i], currentElem, 2);
               // std::cout << "itriDof = " << itriDof << std::endl;
               for(unsigned k = 0; k < _dim; k++) {
-                xv[k][i] = (*_mesh->_topology->_Sol[k])(itriDof) - _x[k];     // coordinates are translated so that the marker is the new origin
+                xv[k][i] = GetCoordinates(sol, k, itriDof, s)  - _x[k];  // coordinates are translated so that the marker is the new origin
               }
             }
 
@@ -916,9 +975,9 @@ namespace femus {
 
               if(t < 1) {   //if not, it means the point r is far away from the marker, and we don't want to go in that direction
 
-                for(unsigned i = 0; i < 4; i++) { //now we have to determine if r is inside itri
+                for(unsigned i = 0; i < 4; i++) {  //now we have to determine if r is inside itri
                   for(unsigned k = 0; k < _dim; k++) {
-                    xv[k][i] = xv[k][i] - r[k];     //transate again the reference frame so that the origin is r
+                    xv[k][i] = xv[k][i] - r[k];     //translate again the reference frame so that the origin is r
                   }
                 }
 
@@ -938,7 +997,7 @@ namespace femus {
                     break;
 
                   }
-                  else if(fabs(scalarProduct) < epsilon) {  //scalarProduct == 0
+                  else if(fabs(scalarProduct) < epsilon) {    //scalarProduct == 0
 
                     if((xv[0][i] * xv[0][i]  + xv[1][i] * xv[1][i] + xv[2][i] * xv[2][i]) < epsilon2 ||
                         (xv[0][i + 1]*xv[0][i + 1] + xv[1][i + 1]*xv[1][i + 1] + xv[2][i + 1]*xv[2][i + 1]) < epsilon2) {
@@ -953,8 +1012,10 @@ namespace femus {
                       }
                       else {
                         //     std::cout << "r is in triangle " << itri << std::endl;
-                        nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
-                        nextElementFound = true;
+                        nextElem = (sol->GetMesh()->el->GetFaceElementIndex(currentElem, iface) - 1);
+                        if(nextElem != previousElem) {
+                          nextElementFound = true;
+                        }
                         break;
                       }
 
@@ -973,8 +1034,10 @@ namespace femus {
                       }
                       else {
                         //     std::cout << "r is in triangle " << itri << std::endl;
-                        nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
-                        nextElementFound = true;
+                        nextElem = (sol->GetMesh()->el->GetFaceElementIndex(currentElem, iface) - 1);
+                        if(nextElem != previousElem) {
+                          nextElementFound = true;
+                        }
                         break;
                       }
                     }
@@ -991,16 +1054,18 @@ namespace femus {
             if(scalarCount == 3) {
               if(fabs(t) < epsilon || t < 0) {   //this means the marker is on one of the faces
 
-                if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
-                if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
+                //   if(fabs(t) < epsilon) std::cout << "setting markerIsInElement = true because the marker is on one of the edges of triangle " << itri << std::endl;
+                //  if(t < 0) std::cout << "setting markerIsInElement = true because r is on one of the edges of triangle " << itri << std::endl;
 
                 markerIsInElement = true;
                 break;
               }
               else {
                 //    std::cout << "r is in triangle " << itri << std::endl;
-                nextElem = (_mesh->el->GetFaceElementIndex(currentElem, iface) - 1);
-                nextElementFound = true;
+                nextElem = (sol->GetMesh()->el->GetFaceElementIndex(currentElem, iface) - 1);
+                if(nextElem != previousElem) {
+                  nextElementFound = true;
+                }
                 break;
               }
             }
@@ -1027,24 +1092,25 @@ namespace femus {
 
     if(markerIsInElement == true) {
       nextElem = currentElem;
-      std::cout << "The marker belongs to element " << currentElem << std::endl;
+      //  std::cout << "The marker belongs to element " << currentElem << std::endl;
     }
     if(nextElementFound == true) {
-      std::cout << "The marker does not belong to element " << currentElem << std::endl;
+      //   std::cout << "The marker does not belong to element " << currentElem << std::endl;
     }
-    std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
+    //  std::cout << "markerIsInElement = " << markerIsInElement << " , " << "nextElementFound= " << nextElementFound << ", " << "nextElem = " << nextElem << std::endl;
 
-    return (nextElem >= 0) ? nextElem : UINT_MAX;
+    
+    return (nextElem >= 0) ? nextElem : UINT_MAX;  
 
   }
 
   void Marker::InverseMapping(const unsigned & iel, const unsigned & solType,
-                              const std::vector< double > &x, std::vector< double > &xi) {
+                              const std::vector< double > &x, std::vector< double > &xi, Solution* sol, const double &s) {
 
     //std::cout << " ----------------------  Outputs of the inverse mapping ---------------------- " << std::endl;
 
-    unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
-    short unsigned ielType = _mesh->GetElementType(iel);
+    unsigned nDofs = sol->GetMesh()->GetElementDofNumber(iel, solType);
+    short unsigned ielType = sol->GetMesh()->GetElementType(iel);
 
     //std::cout << "solType = " << solType << " , " << "nDofs =" <<  nDofs << std::endl;
 
@@ -1056,10 +1122,10 @@ namespace femus {
     }
 
     for(unsigned i = 0; i < nDofs; i++) {
-      unsigned iDof  = _mesh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
+      unsigned iDof  = sol->GetMesh()->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
 
       for(unsigned k = 0; k < _dim; k++) {
-        xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
+        xv[k][i] = GetCoordinates(sol, k, iDof, s) ;  // global extraction and local storage for the element coordinates
       }
     }
     //END extraction
@@ -1074,9 +1140,9 @@ namespace femus {
     //BEGIN inverse mapping search
     bool convergence = false;
     for(unsigned k = 0; k < _dim; k++) {
-      std::cout << "xi[" << k << "] = " << xi[k] << " ";
+      //   std::cout << "xi[" << k << "] = " << xi[k] << " ";
     }
-    std::cout << std::endl;
+    // std::cout << std::endl;
 
     while(!convergence) {
 
@@ -1096,9 +1162,9 @@ namespace femus {
         convergence = GetNewLocalCoordinatesHess(xi, x, phi, gradPhi, hessPhi, a);
       }
       for(unsigned k = 0; k < _dim; k++) {
-        std::cout << "xi[" << k << "] = " << xi[k] << " ";
+        //   std::cout << "xi[" << k << "] = " << xi[k] << " ";
       }
-      std::cout << std::endl;
+      // std::cout << std::endl;
     }
     //END inverse mapping search
 
@@ -1107,28 +1173,28 @@ namespace femus {
 
   }
 
-  void Marker::InverseMappingTEST(std::vector < double > &x) {
+  void Marker::InverseMappingTEST(std::vector < double > &x, Solution* sol, const double &s) {
 
     for(int solType = 0; solType < 3; solType++) {
-      std::cout << "\n\n--------------------------------------------------" << std::endl;
-      std::cout << "solType = " << solType << std::endl;
+      // std::cout << "\n\n--------------------------------------------------" << std::endl;
+      // std::cout << "solType = " << solType << std::endl;
 
-      for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+      for(int iel = sol->GetMesh()->_elementOffset[_iproc]; iel < sol->GetMesh()->_elementOffset[_iproc + 1]; iel++) {
         //for(int iel = 494; iel < 495; iel++) {
-        std::cout << "iel = " << iel << std::endl;
-        std::cout << "--------------------------------------------------\n" << std::endl;
+        //  std::cout << "iel = " << iel << std::endl;
+        //  std::cout << "--------------------------------------------------\n" << std::endl;
 
-        unsigned nDofs = _mesh->GetElementDofNumber(iel, solType);
-        short unsigned ielType = _mesh->GetElementType(iel);
+        unsigned nDofs = sol->GetMesh()->GetElementDofNumber(iel, solType);
+        short unsigned ielType = sol->GetMesh()->GetElementType(iel);
 
         std::vector < std::vector < double > > xv(nDofs);
 
         for(unsigned i = 0; i < nDofs; i++) {
           xv[i].resize(_dim);
-          unsigned iDof  = _mesh->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
+          unsigned iDof  = sol->GetMesh()->GetSolutionDof(i, iel, 2);    // global to global mapping between coordinates node and coordinate dof
 
           for(unsigned k = 0; k < _dim; k++) {
-            xv[i][k] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
+            xv[i][k] = GetCoordinates(sol, k, iDof, s);  // global extraction and local storage for the element coordinates
           }
           //std::cout <<"x"<< i+1 <<"="<< xv[i][2]<<"; " << std::endl;
 
@@ -1136,21 +1202,21 @@ namespace femus {
 
         //exit(0);
         for(int j = 0; j < nDofs; j++) {
-          std::cout << j << std::endl;
+          //   std::cout << j << std::endl;
           std::vector < double > xiT(_dim);
 
           for(unsigned k = 0; k < _dim; k++) {
-            xiT[k] = *(_mesh->_finiteElement[ielType][0]->GetBasis()->GetXcoarse(j) + k);
+            xiT[k] = *(sol->GetMesh()->_finiteElement[ielType][0]->GetBasis()->GetXcoarse(j) + k);
           }
 
           // This is the test
 
 
           for(int k = 0; k < _dim; k++) {
-            std::cout << "xv[" << k << "]= " << xv[j][k] <<  " ";
+            //   std::cout << "xv[" << k << "]= " << xv[j][k] <<  " ";
           }
 
-          std::cout << std::endl;
+          //  std::cout << std::endl;
 
 
           std::vector < double > xi;
@@ -1163,8 +1229,8 @@ namespace femus {
 //           }
 
           for(int itype = 0; itype <= solType; itype++) {
-            InverseMapping(iel, itype, xv[j], xi);
-            std::cout << std::endl;
+            InverseMapping(iel, itype, xv[j], xi, sol, s);
+            //  std::cout << std::endl;
           }
 
 // 	  InverseMapping(iel, 0, xv[j], xi);
@@ -1176,27 +1242,29 @@ namespace femus {
 
           bool test = true;
           for(int k = 0; k < _dim; k++) {
-            std::cout << "xiT[" << k << "]= " << xiT[k] <<  " xi[" << k << "]= " << xi[k];
-            std::cout << " error: " << xiT[k] - xi[k] << std::endl;
+            //    std::cout << "xiT[" << k << "]= " << xiT[k] <<  " xi[" << k << "]= " << xi[k];
+            //    std::cout << " error: " << xiT[k] - xi[k] << std::endl;
             if(fabs(xiT[k] - xi[k]) > 1.0e-3) {
               test = false;
             }
           }
           if(test == false) {
-            std::cout << "Inverse map test failed " << std::endl;
+            //   std::cout << "Inverse map test failed " << std::endl;
             abort();
           }
-          std::cout << "--------------------------------------------------\n" << std::endl;
+          //   std::cout << "--------------------------------------------------\n" << std::endl;
         }
       }
     }
 
-    std::cout << "total number of calls= " << counter << std::endl;
+    // std::cout << "total number of calls= " << counter << std::endl;
   }
 
 
   //this function returns the position of the marker at time T given the position at time T0 = 0, given the function f and the stepsize h
-  void Marker::Advection(Solution* sol, const unsigned &n, const double& T) {
+  void Marker::Advection(const unsigned &n, const double& T, Solution* sol) {
+
+    double s1 = 0.;
 
     //BEGIN  Initialize the parameters for all processors, to be used when awake
 
@@ -1209,6 +1277,7 @@ namespace femus {
     std::vector < double > phi;
     std::vector < std::vector<double > > V(2);
     std::vector < std::vector < std::vector < double > > > aV;
+    std::vector < std::vector < std::vector < std::vector < double > > > > aX;
     //END
 
     //BEGIN Numerical integration scheme
@@ -1216,10 +1285,13 @@ namespace femus {
     double h = T / n;
     bool integrationIsOver = (_elem != UINT_MAX) ? false : true;
 
-    unsigned order = 4;
+    unsigned order = 1;
     unsigned step = 0.;
 
     if(_iproc == _mproc) {
+      if(_elem != UINT_MAX) {
+        FindLocalCoordinates(solVType, aX, true, sol, s1);
+      }
       _K.resize(order);
       for(unsigned k = 0; k < order; k++) {
         _K[k].resize(_dim);
@@ -1228,8 +1300,13 @@ namespace femus {
 
     while(integrationIsOver == false) {
       unsigned mprocOld = _mproc;
+
+
+      // std::cout << "INIZIA UN CICLO DI INTEGRAZIONE " << " " << " _elem da cui si parte = " << _elem << " " << " mprocOld = " << mprocOld << " " << "_mproc = " << _mproc <<  std::endl;
+
+
       unsigned previousElem;
-      if(_iproc == _mproc) { //single process
+      if(_iproc == _mproc) {  //single process
         bool pcElemUpdate = true ;
         while(step < n * order) {
 
@@ -1243,10 +1320,10 @@ namespace femus {
             }
           }
 
-          std::cout << " -----------------------------" << "step = " <<  step << " tstep = " << tstep << " istep = " << istep << " -----------------------------" << std::endl;
-          std::cout << " _iproc = " << _iproc << std::endl;
+          //  std::cout << " -----------------------------" << "step = " <<  step << " tstep = " << tstep << " istep = " << istep << " -----------------------------" << std::endl;
+          //  std::cout << " _iproc = " << _iproc << std::endl;
 
-          updateVelocity(V, sol, solVIndex, solVType, aV, phi, pcElemUpdate); //send xk
+          updateVelocity(V, solVIndex, solVType, aV, phi, pcElemUpdate, sol); //send xk
 
           double s = (tstep + _c[order - 1][istep]) / n;
 
@@ -1278,96 +1355,116 @@ namespace femus {
 
 
           //BEGIN TO BE REMOVED
-          for(unsigned i = 0; i < _dim; i++) {
-            std::cout << "_x[" << i << "] = " << _x[i] ;
-            std::cout << " " ;
-          }
-          std::cout << std::endl;
+//           for(unsigned i = 0; i < _dim; i++) {
+//             //    std::cout << "_x[" << i << "] = " << _x[i] ;
+//             //    std::cout << " " ;
+//           }
+          //  std::cout << std::endl;
           //END TO BE REMOVED
-
 
           pcElemUpdate = false;
           unsigned iel = _elem;
           previousElem = _elem;
-          GetElementSerial(previousElem);
+          GetElementSerial(previousElem, sol, s1);
 
-          if(_elem == UINT_MAX) { //out of the domain
-            std::cout << " the marker has been advected outside the domain " << std::endl;
+          if(_elem == UINT_MAX) {  //out of the domain
+            //    std::cout << " the marker has been advected outside the domain " << std::endl;
             break;
           }
-          else if(iel != _elem && _iproc != _mproc) { //different element different process
+          else if(iel != _elem && _iproc != _mproc) {    //different element different process
             break;
           }
-          else if(iel != _elem) { //different element same process
+          else if(iel != _elem) {    //different element same process
             pcElemUpdate = true;
-            FindLocalCoordinates(solVType, _aX, pcElemUpdate);
+            FindLocalCoordinates(solVType, aX, pcElemUpdate, sol, s1);
           }
-          else { //same element same process
-            FindLocalCoordinates(solVType, _aX, pcElemUpdate);
+          else {   //same element same process
+            FindLocalCoordinates(solVType, aX, pcElemUpdate, sol, s1);
           }
         }
       }
-      std::cout << step;
+      //   std::cout << step;
+
+      //  std::cout << "prima del bcast _elem = " << _elem << std::endl;
 
       // all processes
       MPI_Bcast(& _elem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
       MPI_Bcast(& step, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
 
+
+      // std::cout << "dopo il bcast _elem = " << _elem << std::endl;
+
       if(_elem == UINT_MAX) {
-        std::cout << " the marker has been advected outside the domain " << std::endl;
+        //   std::cout << " the marker has been advected outside the domain " << std::endl;
         break;
       }
       else {
-        _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
+        _mproc = sol->GetMesh()->IsdomBisectionSearch(_elem, 3);
+
+        //  std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
+
         if(_mproc != mprocOld) {
-          GetElement(previousElem, mprocOld);
-          if(mprocOld == _iproc) {
-            unsigned istep = step % order;
-            if(istep != 0) {
-              for(int i = 0; i < order; i++) {
-                MPI_Send(&_K[i][0], _dim, MPI_DOUBLE, _mproc, i , PETSC_COMM_WORLD);
+
+          //   std::cout << "SON QUA previousElem = " << previousElem << std::endl;
+
+          GetElement(previousElem, mprocOld, sol, s1);  //fissato, WARNING QUESTO e' il problema, dovrebbe dire 724 invece dice 716
+
+          //  std::cout << "_elem = " << _elem << std::endl;
+          //  std::cout << "_mproc = " << _mproc << " " << " mprocOld = " << mprocOld << std::endl;
+
+          if(_elem == UINT_MAX) break;
+
+          if(_mproc != mprocOld) {
+            if(mprocOld == _iproc) {
+              unsigned istep = step % order;
+              if(istep != 0) {
+                for(int i = 0; i < order; i++) {
+                  MPI_Send(&_K[i][0], _dim, MPI_DOUBLE, _mproc, i , PETSC_COMM_WORLD);
+                }
+                MPI_Send(&_x0[0], _dim, MPI_DOUBLE, _mproc, order , PETSC_COMM_WORLD);
               }
-              MPI_Send(&_x0[0], _dim, MPI_DOUBLE, _mproc, order , PETSC_COMM_WORLD);
+              std::vector < double > ().swap(_xi);
+              std::vector < double > ().swap(_x0);
+              std::vector < std::vector < double > > ().swap(_K);
+              std::vector < std::vector < std::vector < std::vector < double > > > >().swap(aX);
             }
-            std::vector < double > ().swap(_xi);
-            std::vector < double > ().swap(_x0);
-            std::vector < std::vector < double > > ().swap(_K);
-            std::vector < std::vector < std::vector < double > > >().swap(_aX);
+            else if(_mproc == _iproc) {
+              _x0.resize(_dim);
+              _K.resize(order);
+              for(unsigned i = 0; i < order; i++) {
+                _K[i].resize(_dim);
+              }
+              unsigned istep = step % order;
+              if(istep != 0) {
+                for(int i = 0; i < order; i++) {
+                  MPI_Recv(&_K[i][0], _dim, MPI_DOUBLE, mprocOld, i , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+                }
+                MPI_Recv(&_x0[0], _dim, MPI_DOUBLE, mprocOld, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+              }
+            }
           }
-          else if(_mproc == _iproc) {
-            _x0.resize(_dim);
-            _K.resize(order);
-            for(unsigned i = 0; i < order; i++) {
-              _K[i].resize(_dim);
-            }
-            unsigned istep = step % order;
-            if(istep != 0) {
-              for(int i = 0; i < order; i++) {
-                MPI_Recv(&_K[i][0], _dim, MPI_DOUBLE, mprocOld, i , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-              }
-              MPI_Recv(&_x0[0], _dim, MPI_DOUBLE, mprocOld, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-            }
-            FindLocalCoordinates(solVType, _aX, true);
+          if(_mproc == _iproc) {  //WARNING this now should be outside and was causing the problem with different processes
+            FindLocalCoordinates(solVType, aX, true, sol, s1);
           }
         }
       }
-      std::cout << "step = " << step << std::endl;
+//     std::cout << "step = " << step << std::endl;
       if(step == n * order) {
         integrationIsOver = true;
-        std::cout << "Integration is over, point in proc " << _mproc << std::endl;
+        //     std::cout << "Integration is over, point in proc " << _mproc << std::endl;
       }
     }
   }
 
 
-  void Marker::GetElement(unsigned &previousElem, const unsigned &previousMproc) {
+  void Marker::GetElement(unsigned &previousElem, const unsigned &previousMproc, Solution* sol, const double &s) {
 
     unsigned mprocOld = previousMproc;
 
     if(mprocOld == _iproc) {
       MPI_Send(&previousElem, 1, MPI_UNSIGNED, _mproc, 1 , PETSC_COMM_WORLD);
       MPI_Send(&_x[0], _dim, MPI_DOUBLE, _mproc, 2 , PETSC_COMM_WORLD);
-      std::vector < double > ().swap(_x);      
+      std::vector < double > ().swap(_x);
     }
     else if(_mproc == _iproc) {
       MPI_Recv(&previousElem, 1, MPI_UNSIGNED, mprocOld, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -1376,31 +1473,30 @@ namespace femus {
     }
 
     mprocOld = _mproc;
-    bool found = false;
-    while(found) {
+    while(true) {     //Corretto ora dovrebbe funzionare. WARNING credo debba essere while(!found) perche' senno' non fa mai GetElementSerial e non cambia mai 716 in 724, pero' se si mette !found non ranna piu niente
       if(_mproc == _iproc) {
-        GetElementSerial(previousElem);
+        GetElementSerial(previousElem, sol, s);
       }
-      MPI_Bcast(& _elem, 1, MPI_UNSIGNED, _mproc, PETSC_COMM_WORLD);
+      MPI_Bcast(& _elem, 1, MPI_UNSIGNED, mprocOld, PETSC_COMM_WORLD);
       if(_elem == UINT_MAX) {
-        std::cout << " the marker has been advected outside the domain " << std::endl;
+        //   std::cout << " the marker has been advected outside the domain " << std::endl;
         break;
       }
       else {
-        _mproc = _mesh->IsdomBisectionSearch(_elem, 3);
+        _mproc = sol->GetMesh()->IsdomBisectionSearch(_elem, 3);
         if(_mproc == mprocOld) {
-          found = true;
+          break;
         }
         else {
           if(mprocOld == _iproc) {
             MPI_Send(&previousElem, 1, MPI_UNSIGNED, _mproc, 1 , PETSC_COMM_WORLD);
-	    MPI_Send(&_x[0], _dim, MPI_DOUBLE, _mproc, 2 , PETSC_COMM_WORLD);
-	    std::vector < double > ().swap(_x);  
+            MPI_Send(&_x[0], _dim, MPI_DOUBLE, _mproc, 2 , PETSC_COMM_WORLD);
+            std::vector < double > ().swap(_x);
           }
           else if(_mproc == _iproc) {
             MPI_Recv(&previousElem, 1, MPI_UNSIGNED, mprocOld, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-	    _x.resize(_dim);
-	    MPI_Recv(&_x[0], _dim, MPI_DOUBLE, mprocOld, 2 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+            _x.resize(_dim);
+            MPI_Recv(&_x[0], _dim, MPI_DOUBLE, mprocOld, 2 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
           }
           mprocOld = _mproc;
         }
@@ -1410,9 +1506,9 @@ namespace femus {
 
 
 
-  void Marker::ProjectVelocityCoefficients(Solution * sol, const std::vector<unsigned> &solVIndex,
+  void Marker::ProjectVelocityCoefficients(const std::vector<unsigned> &solVIndex,
       const unsigned & solVType,  const unsigned & nDofsV,
-      const unsigned & ielType, std::vector < std::vector < std::vector < double > > > &a) {
+      const unsigned & ielType, std::vector < std::vector < std::vector < double > > > &a, Solution* sol) {
 
     bool timeDependent = true;
     for(unsigned  k = 0; k < _dim; k++) {
@@ -1431,7 +1527,7 @@ namespace femus {
       }
     }
     for(unsigned i = 0; i < nDofsV; i++) {
-      unsigned solVDof = _mesh->GetSolutionDof(i, _elem, solVType);    // global to global mapping between solution node and solution dof
+      unsigned solVDof = sol->GetMesh()->GetSolutionDof(i, _elem, solVType);    // global to global mapping between solution node and solution dof
       for(unsigned  k = 0; k < _dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);      // global extraction and local storage for the solution
         if(timeDependent) {
@@ -1452,17 +1548,17 @@ namespace femus {
   }
 
 
-  void Marker::updateVelocity(std::vector< std::vector <double> > & V, Solution * sol,
+  void Marker::updateVelocity(std::vector< std::vector <double> > & V,
                               const vector < unsigned > &solVIndex, const unsigned & solVType,
                               std::vector < std::vector < std::vector < double > > > &a,  std::vector < double > &phi,
-                              const bool & pcElemUpdate) {
+                              const bool & pcElemUpdate, Solution* sol) {
 
 
-    unsigned nDofsV = _mesh->GetElementDofNumber(_elem, solVType);
-    short unsigned ielType = _mesh->GetElementType(_elem);
+    unsigned nDofsV = sol->GetMesh()->GetElementDofNumber(_elem, solVType);
+    short unsigned ielType = sol->GetMesh()->GetElementType(_elem);
 
     if(pcElemUpdate) {
-      ProjectVelocityCoefficients(sol, solVIndex, solVType, nDofsV, ielType, a);
+      ProjectVelocityCoefficients(solVIndex, solVType, nDofsV, ielType, a, sol);
     }
 
     GetPolynomialShapeFunction(phi, _xi, ielType, solVType);
@@ -1480,62 +1576,104 @@ namespace femus {
 
   }
 
-  void Marker::FindLocalCoordinates(const unsigned & solType, std::vector < std::vector < std::vector < double > > > &aX, const bool & pcElemUpdate) {
+  void Marker::FindLocalCoordinates(const unsigned & solType, std::vector < std::vector < std::vector < std::vector < double > > > > &aX, const bool & pcElemUpdate, Solution* sol, const double &s) {
 
-    short unsigned elemType = _mesh->GetElementType(_elem);
+    //BEGIN TO BE REMOVED
+//     std::cout << "ENTRIAMO NELL' INVERSE MAPPING, _elem =" << _elem << std::endl;
+//     for(unsigned i = 0; i < 3; i++) {
+//      std::cout << "_x[" << i << "]= " << _x[i] << std::endl;
+//     }
+    //END TO BE REMOVED
+
+    short unsigned elemType = sol->GetMesh()->GetElementType(_elem);
+    unsigned nDofs = sol->GetMesh()->GetElementDofNumber(_elem, solType);
+
     if(pcElemUpdate) {
-      unsigned nDofs = _mesh->GetElementDofNumber(_elem, solType);
 
       //BEGIN extraction nodal coordinate values
-      std::vector< std::vector < double > > xv(_dim);
+      std::vector <std::vector< std::vector < double > > >xv;
 
-      for(unsigned k = 0; k < _dim; k++) {
-        xv[k].resize(nDofs);
+
+
+      if(!sol->GetIfFSI()) {
+        aX.resize(1);
+        xv.resize(1);
+      }
+      else {
+        aX.resize(2);
+        xv.resize(2);
       }
 
-      for(unsigned i = 0; i < nDofs; i++) {
-        unsigned iDof  = _mesh->GetSolutionDof(i, _elem, 2);    // global to global mapping between coordinates node and coordinate dof
+      for(unsigned i1 = 0; i1 < aX.size(); i1++) {
+        xv[i1].resize(_dim);
         for(unsigned k = 0; k < _dim; k++) {
-          xv[k][i] = (*_mesh->_topology->_Sol[k])(iDof);     // global extraction and local storage for the element coordinates
+          xv[i1][k].resize(nDofs);
         }
-      }
-      //END extraction
+        double s1 = static_cast<double>(i1);
+        for(unsigned i = 0; i < nDofs; i++) {
+          unsigned iDof  = sol->GetMesh()->GetSolutionDof(i, _elem, 2);    // global to global mapping between coordinates node and coordinate dof
+          for(unsigned k = 0; k < _dim; k++) {
+            xv[i1][k][i] = GetCoordinates(sol, k, iDof, s1);  // global extraction and local storage for the element coordinates
+          }
+        }
+        //END extraction
 
-      //BEGIN projection nodal to polynomial coefficients
-      aX.resize(solType + 1);
-      for(unsigned j = 0; j < solType + 1; j++) {
-        ProjectNodalToPolynomialCoefficients(aX[j], xv, elemType, j);
+
+        //BEGIN projection nodal to polynomial coefficients
+        aX[i1].resize(solType + 1);
+        for(unsigned j = 0; j < solType + 1; j++) {
+          ProjectNodalToPolynomialCoefficients(aX[i1][j], xv[i1], elemType, j);
+        }
+        //END projection nodal to polynomial coefficients
       }
-      //END projection nodal to polynomial coefficients
+
 
       //BEGIN find initial guess
-
-      GetClosestPointInReferenceElement(xv, _x, elemType, _xi);
-
-      /*
-      _xi.resize(_dim);
-      for(int k = 0; k < _mesh->GetDimension(); k++) {
-        _xi[k] = _localCentralNode[elemType][k];
-      }*/
-      //END find initial guess
+      if(sol->GetIfFSI()) {
+        for(unsigned i = 0; i < nDofs; i++) {
+          for(unsigned k = 0; k < _dim; k++) {
+            xv[0][k][i] = (1. - s) * xv[0][k][i] + s * xv[1][k][i];
+          }
+        }
+      }
+      GetClosestPointInReferenceElement(xv[0], _x, elemType, _xi);
     }
+
+
+    std::vector < std::vector < std::vector < double > > > aXs;
+    if(sol->GetIfFSI()) {
+      InterpolatePolynomialCoefficients(aXs, aX[0], aX[1], s);
+    }
+
 
     //BEGIN Inverse mapping loop
     for(unsigned j = 0; j < solType; j++) {
+
       std::vector < double > phi;
       std::vector < std::vector < double > > gradPhi;
       bool convergence = false;
       while(!convergence) {
         GetPolynomialShapeFunctionGradient(phi, gradPhi, _xi, elemType, solType);
-        convergence = GetNewLocalCoordinates(_xi, _x, phi, gradPhi, aX[solType]);
+        if(!sol->GetIfFSI()) {
+          convergence = GetNewLocalCoordinates(_xi, _x, phi, gradPhi, aX[0][solType]);
+        }
+        else {
+          convergence = GetNewLocalCoordinates(_xi, _x, phi, gradPhi, aXs[solType]);
+        }
       }
     }
     //END Inverse mapping loop
 
+
+//    std::cout << "ED USCIAMO" << std::endl;
+
   }
 
 
+
 }
+
+
 
 
 

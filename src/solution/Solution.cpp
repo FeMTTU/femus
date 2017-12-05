@@ -43,6 +43,7 @@ namespace femus {
       _GradMat[i].resize(_msh->GetDimension());
       _AMR_flag = 0;
     }
+    _FSI = false;
   }
 
   /**
@@ -617,6 +618,8 @@ namespace femus {
   bool Solution::FlagAMRRegionBasedOnErroNormAdaptive(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType) {
 
     const double scale2[3][2] = {{0.111111, 1.}, {0.0204081632653, 0.111111}, {0.0204081632653, 0.111111} };
+    //const double scale2[3][2] = {{1., 1.}, {1., 1.}, {1., 1.} };
+
 
     unsigned    iproc = _msh->processor_id(); // get the process_id (for parallel computation)
     const unsigned  dim = _msh->GetDimension();
@@ -1138,6 +1141,15 @@ namespace femus {
       // Copy the old vector
       if(_SolTmOrder[i] == 2) {
         *(_SolOld[i]) = *(_Sol[i]);
+      }
+    }
+  }
+  
+  void Solution::ResetSolutionToOldSolution() {
+    for(unsigned i = 0; i < _Sol.size(); i++) {
+      // Copy the old vector
+      if(_SolTmOrder[i] == 2) {
+        *(_Sol[i]) = *(_SolOld[i]);
       }
     }
   }

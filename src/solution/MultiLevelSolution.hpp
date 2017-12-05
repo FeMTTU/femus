@@ -210,7 +210,8 @@ public:
 
     bool _useParsedBCFunction;
 
-    void SaveSolution(const char* filename, const double time=0.);
+    void SaveSolution(const char* filename, const double &time=0.);
+    void SaveSolution(const char* filename, const unsigned &iteration);
     void LoadSolution(const char* filename);
     void LoadSolution(const unsigned &level, const char* filename);
     
@@ -228,6 +229,19 @@ public:
     void UpdateSolution(const char name[], InitFunc func, const double& time);
     
     void CopySolutionToOldSolution();
+    
+    void SetIfFSI(const bool &FSI = true){
+	_FSI = FSI; 
+	for(unsigned i=0;i<_gridn;i++){
+	  _solution[i]->SetIfFSI(FSI);
+	}
+    }
+      
+    bool GetIfFSI(){
+      return _FSI; 
+    }
+    
+    
 private:
     /** boundary condition function pointer */
 
@@ -275,6 +289,7 @@ private:
     Writer* _writer;
 
     const MultiLevelProblem* _mlBCProblem;
+    bool _FSI;
 
 };
 

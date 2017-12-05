@@ -101,16 +101,24 @@ int main(int argc, char** args) {
         }
         mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
-        Marker mrk(x, VOLUME, mlMsh.GetLevel(0), solType, true);
-        std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
-        std::cout << " The marker type is " <<  mrk.GetMarkerType() << std::endl;
-
-
-        mrk.InverseMappingTEST(x);
+        
 
 
         //print mesh
         MultiLevelSolution mlSol(&mlMsh);
+	
+	
+	
+	Marker mrk(x, VOLUME, mlSol.GetLevel(0), solType, true);
+        std::cout << " The coordinates of the marker are " << x[0] << " ," << x[1] << " ," << x[2] << std::endl;
+        std::cout << " The marker type is " <<  mrk.GetMarkerType() << std::endl;
+
+
+       // mrk.InverseMappingTEST(x, mlSol.GetLevel(0));
+	
+	
+	
+	
         variablesToBePrinted.push_back("All");
 
         VTKWriter vtkIO(&mlSol);

@@ -52,6 +52,7 @@ namespace femus {
       void SetElementBlockNumber(const unsigned & block_elemet_number);
       void SetElementBlockNumberSolid(const unsigned & block_elemet_number, const unsigned & overlap);
       void SetElementBlockNumberFluid(const unsigned & block_elemet_number, const unsigned & overlap);
+      void SetElementBlockNumberPorous(const unsigned& block_elemet_number, const unsigned& overlap) ;
 
       /** To be Added */
       void SetElementBlockNumber(const char all[], const unsigned & overlap = 1);
@@ -75,7 +76,7 @@ namespace femus {
 
       // data member
     private:
-      unsigned _elementBlockNumber[2];
+      unsigned _elementBlockNumber[3];
       unsigned short _NSchurVar;
 
       vector< vector <PetscInt> > _overlappingIsIndex;
