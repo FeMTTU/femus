@@ -33,8 +33,13 @@ unsigned numberOfUniformLevels = 7; unsigned numberOfSelectiveLevels = 0; //unif
 //unsigned numberOfUniformLevels = 8; unsigned numberOfSelectiveLevels = 0; //uniform
 //unsigned numberOfUniformLevels = 9; unsigned numberOfSelectiveLevels = 0; //uniform
 
+<<<<<<< HEAD
 //unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 3; //non-uniform
 //unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 4; //non-uniform
+=======
+unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 3; //non-uniform
+// unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 4; //non-uniform
+>>>>>>> guoyi
 //unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 5; //non-uniform
 
 int counter = 0 ;

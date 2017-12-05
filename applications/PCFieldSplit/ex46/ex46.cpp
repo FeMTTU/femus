@@ -110,8 +110,13 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
+<<<<<<< HEAD
   unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 3;
+=======
+  unsigned numberOfUniformLevels = 5;
+  unsigned numberOfSelectiveLevels = 0;
+>>>>>>> guoyi
   //mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
   // erase all the coarse mesh levels
