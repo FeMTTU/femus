@@ -41,6 +41,7 @@ namespace femus {
         _mass = 1.;
         _density = 1.;
         _velocity.resize(_dim);
+	_displacement.resize(_dim);
         for(unsigned d = 0; d < _dim; d++) {
           _velocity[d] = (d + 1);  // fix this initialization
           _displacement[d] = 0.;

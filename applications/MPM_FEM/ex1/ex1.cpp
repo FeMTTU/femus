@@ -29,6 +29,16 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 }
 
+bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
+{
+  bool test = 1; //dirichlet
+  value = 0.;
+  return test;
+}
+
+ void AssembleMPMSys(MultiLevelProblem & ml_prob);
+
+ Line *linea;
 
 int main(int argc, char** args) {
 
@@ -64,20 +74,61 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
   // add variables to mlSol
   mlSol.AddSolution("DX", LAGRANGE, SECOND, 2);
-  if(dim > 2) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
-  if(dim > 3) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
+  if(dim > 1) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
+  if(dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
 
   mlSol.AddSolution("U", LAGRANGE, SECOND, 2);
-  if(dim > 2) mlSol.AddSolution("V", LAGRANGE, SECOND, 2);
-  if(dim > 3) mlSol.AddSolution("W", LAGRANGE, SECOND, 2);
+  if(dim > 1) mlSol.AddSolution("V", LAGRANGE, SECOND, 2);
+  if(dim > 2) mlSol.AddSolution("W", LAGRANGE, SECOND, 2);
 
   mlSol.AddSolution("AU", LAGRANGE, SECOND, 2);
-  if(dim > 2) mlSol.AddSolution("AV", LAGRANGE, SECOND, 2);
-  if(dim > 3) mlSol.AddSolution("AW", LAGRANGE, SECOND, 2);
+  if(dim > 1) mlSol.AddSolution("AV", LAGRANGE, SECOND, 2);
+  if(dim > 2) mlSol.AddSolution("AW", LAGRANGE, SECOND, 2);
 
   mlSol.Initialize("All");
+  
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
 
-  std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+  // ******* Set boundary conditions *******
+  mlSol.GenerateBdc("DX", "Steady");
+  if(dim > 1) mlSol.GenerateBdc("DY", "Steady");
+  if(dim > 2) mlSol.GenerateBdc("DZ", "Steady");
+    
+  MultiLevelProblem ml_prob(&mlSol);
+  
+  // ******* Add FSI system to the MultiLevel problem *******
+  NonLinearImplicitSystem & system = ml_prob.add_system<NonLinearImplicitSystem> ("MPM_FEM");
+  system.AddSolutionToSystemPDE("DX");
+  if(dim > 1)system.AddSolutionToSystemPDE("DY");
+  if(dim > 2) system.AddSolutionToSystemPDE("DZ");
+  
+  // ******* System Fluid-Structure-Interaction Assembly *******
+  system.SetAssembleFunction(AssembleMPMSys);
+
+  // ******* set MG-Solver *******
+  system.SetMgType(F_CYCLE);
+
+  system.SetNonLinearConvergenceTolerance(1.e-9);
+  system.SetResidualUpdateConvergenceTolerance(1.e-15);
+  system.SetMaxNumberOfNonLinearIterations(4);
+  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
+
+  system.SetNumberPreSmoothingStep(0);
+  system.SetNumberPostSmoothingStep(2);
+
+  // ******* Set Preconditioner *******
+
+  system.SetMgSmoother(GMRES_SMOOTHER);
+
+  system.init();
+
+  // ******* Set Smoother *******
+  system.SetSolverFineGrids(RICHARDSON);
+  //system.SetSolverFineGrids(GMRES);
+
+  system.SetPreconditionerFineGrids(ILU_PRECOND);
+
+  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 
 
   unsigned rows = 20;
@@ -116,11 +167,11 @@ int main(int argc, char** args) {
   //END
 
 
-  Line linea(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
+  linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
 
   //linea.GetPointsToGridProjections();
 
-  linea.GetLine(line0[0]);
+  linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
   std::vector < std::string > variablesToBePrinted;
@@ -130,6 +181,30 @@ int main(int argc, char** args) {
   vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
+ 
+
+  
+  
+  
+  delete linea;
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 //BEGIN stuff for the advection that we will have to remove
 //   double T = 2 * acos(-1.);
@@ -191,7 +266,7 @@ int main(int argc, char** args) {
 
 
 
-void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &numberOfUniformLevels) {
+void AssembleMPMSys(MultiLevelProblem & ml_prob) {
 
   // ml_prob is the global object from/to where get/set all the data
   // level is the level of the PDE system to be assembled
@@ -203,9 +278,8 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
 
   //pointers and references
 
-  //TODO fix the one below for our case
   NonLinearImplicitSystem & my_nnlin_impl_sys = ml_prob.get_system<NonLinearImplicitSystem> ("MPM_FEM");
-  const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
+  const unsigned  level = my_nnlin_impl_sys.GetLevelToAssemble();
   MultiLevelSolution * ml_sol = ml_prob._ml_sol; // pointer to the multilevel solution object
   Solution * mysolution = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
   LinearEquationSolver * myLinEqSolver = my_nnlin_impl_sys._LinSolver[level]; // pointer to the equation (level) object
@@ -275,7 +349,7 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
   vector < double > Jac;
 
   // gravity
-  double _gravity[3] = {0., -1., 0.};
+  double gravity[3] = {0., -1., 0.};
 
   //variable-name handling
   const char varname[9][3] = {"DX", "DY", "DZ", "U", "V", "W", "AU", "AV", "AW"}; //TODO is there a reason why varname[9][3] and not just varname[9] ?
@@ -297,10 +371,10 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
   if(assembleMatrix) myKK->zero();
 
   //line instances
-  std::vector<unsigned> markerOffset = linea.GetMarkerOffset();
+  std::vector<unsigned> markerOffset = linea->GetMarkerOffset();
   unsigned markerOffset1 = markerOffset[iproc];
   unsigned markerOffset2 = markerOffset[iproc + 1];
-  std::vector<Marker*> particles = linea.GetParticles();
+  std::vector<Marker*> particles = linea->GetParticles();
   std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
 
   //initialization of iel
@@ -365,7 +439,6 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
 
         if(assembleMatrix) s.new_recording();
 
-        //TODO do we need this?
         for(unsigned idim = 0; idim < dim; idim++) {
           for(int j = 0; j < nve; j++) {
             vx[idim][j]    = vx_hat[idim][j] + SolDd[indexPdeD[idim]][j];
@@ -377,20 +450,20 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
 
 
       bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
-      particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, ml_sol->GetLevel(numberOfUniformLevels - 1), 0);
+      particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, ml_sol->GetLevel(level), 0);
 
       // the local coordinates of the particles are the Gauss points in this context
       std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
       // the mass of the particle acts as weight
       double mass = particles[iMarker]->GetMarkerMass();
       double density = particles[iMarker]->GetMarkerDensity();
-      adept::adouble massAdept;
-      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, 0, massAdept, phi, gradphi, nablaphi);
-      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, 0, mass, phi_hat, gradphi_hat, nablaphi_hat); //TODO do we need this?
+      adept::adouble weight;
+      double weight_hat;
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradphi, nablaphi);
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, xi, weight_hat, phi_hat, gradphi_hat, nablaphi_hat); //TODO do we need this?
 
       // displacement and velocity
       //BEGIN evaluates SolDp at the particle iMarker
-      //TODO maybe we don't need this for the displacement
       for(int i = 0; i < dim; i++) {
         SolDp[i] = 0.;
 
@@ -417,7 +490,7 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
           for(unsigned j = 0; j < dim; j++) {
             Laplacian += mu * gradphi[k * dim + j] * (GradSolDp[i][j] + GradSolDp[j][i]);
           }
-          aRhs[indexPdeD[i]][k] += - (Laplacian * mass) / density;
+          aRhs[indexPdeD[i]][k] += - (Laplacian/density - gravity[i] * phi[k]) * mass;
         }
       }
 
@@ -476,6 +549,5 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob, Line &linea, const unsigned &nu
   // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
 
 }
-
 
 
