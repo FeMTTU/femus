@@ -29,13 +29,19 @@
 //double Miu = 0.002;  int c0=-1; int cn=-1; //Re=500;
 double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
 
-unsigned numberOfUniformLevels = 7; unsigned numberOfSelectiveLevels = 0; //uniform
+//unsigned numberOfUniformLevels = 7; unsigned numberOfSelectiveLevels = 0; //uniform
 //unsigned numberOfUniformLevels = 8; unsigned numberOfSelectiveLevels = 0; //uniform
 //unsigned numberOfUniformLevels = 9; unsigned numberOfSelectiveLevels = 0; //uniform
-
+//<<<<<<< HEAD
 //unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 3; //non-uniform
 //unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 4; //non-uniform
+
+
+//unsigned numberOfUniformLevels = 7; unsigned numberOfSelectiveLevels = 0; //non-uniform
+// unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 4; //non-uniform
+
 //unsigned numberOfUniformLevels = 4; unsigned numberOfSelectiveLevels = 5; //non-uniform
+
 
 int counter = 0 ;
 
@@ -117,8 +123,8 @@ int main(int argc, char** args)
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  //unsigned numberOfUniformLevels = 4;
-  //unsigned numberOfSelectiveLevels = 3;
+  unsigned numberOfUniformLevels = 8;
+  unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels, SetRefinementFlag);
  // mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
@@ -223,7 +229,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
   else{
     Mu = Miu;
   }
-  std::cout << counter << " " << Mu;
+  std::cout << counter << " " << Mu <<std::endl;
   counter++;
 
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"

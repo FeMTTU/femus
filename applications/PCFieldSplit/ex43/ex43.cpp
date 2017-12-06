@@ -39,16 +39,16 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 //   double a = static_cast<double>(rand())/RAND_MAX;
 //   if ( a < 0.25) refine	= true;
 
-//   if(x[0] > -1.0e-8 && x[1] > -1.0e-8 ){
-//     refine = true;
-//   }
+  if(x[0] > -1.0e-8 && x[1] > -1.0e-8 ){
+    refine = true;
+  }
   
- double pi = acos(-1.);
+/* double pi = acos(-1.);
  double radius = pi / 4.0 /(level - level0);
  double radius2 = radius * radius;  
   if ( (x[0]*x[0] + x[1] * x[1]) < radius2){
     refine	= true;
-  }	  
+  }	*/  
   return refine;
 }
 
@@ -85,7 +85,7 @@ int main(int argc, char** args) {
   
   mlMsh.PrintInfo();
   MultiLevelSolution mlSol(&mlMsh);
-  mlSol.AddSolution("U", LAGRANGE, SECOND);
+  mlSol.AddSolution("U", LAGRANGE, SERENDIPITY);
   mlSol.Initialize("All");
 
   // attach the boundary condition function and generate boundary data
@@ -117,7 +117,7 @@ int main(int argc, char** args) {
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetRichardsonScaleFactor(.8);
-  system.SetTolerances(1.e-15, 1.e-20, 1.e+50, 200, 200); //GMRES tolerances
+  system.SetTolerances(1.e-15, 1.e-20, 1.e+50, 200, 200); //GMRES tolerances (1.e-15, 1.e-20, 1.e+50, 200, 200);
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetElementBlockNumber("All");
