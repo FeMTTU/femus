@@ -89,22 +89,22 @@ int main ( int argc, char ** args )
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
   std::string infile;
   if ( simulation == 0 ) {
-    infile = "./input/Turek_3D_F2.neu"; //Turek_3D_D.neu non ha gruppo 10
+    infile = "./../input/steady&pulsatile/3D/Turek_3D_F2.neu"; //Turek_3D_D.neu non ha gruppo 10
   }
   else if ( simulation == 1 ) {
-    infile = "./input/aneurysm_omino.neu";
+    infile = "./../input/steady&pulsatile/3D/aneurysm_omino.neu";
   }
   else if ( simulation == 2 ) {
-    infile = "./input/aneurisma_aorta.neu";
+    infile = "./../input/steady&pulsatile/3D/aneurisma_aorta.neu";
   }
   else if ( simulation == 3 ) {
-    infile = "./input/AAA_thrombus.neu";
+    infile = "./../input/steady&pulsatile/3D/AAA_thrombus.neu";
   }
   else if ( simulation == 4 ) {
-    infile = "./input/Turek_3D_porous.neu";
+    infile = "./../input/steady&pulsatile/3D/Turek_3D_porous.neu";
   }
   else if ( simulation == 5 ) {
-    infile = "./input/tubo3D.neu";
+    infile = "./../input/steady&pulsatile/3D/tubo3D.neu";
   }
 
   //std::string infile = "./input/turek_porous_scaled.neu";
@@ -481,15 +481,15 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
   value = 0.;
 
   std::ifstream inf;
-  inf.open ( "./input/womersleyProfile_velMax40cms.txt" );
+  inf.open ( "./../input/steady&pulsatile/3D/womersleyProfile_velMax40cms.txt" );
   if ( !inf ) {
-    std::cout << "velocity file ./input/womersleyProfile_velMax40cms.txt can not be opened\n";
+    std::cout << "velocity file ./../input/steady&pulsatile/3D/womersleyProfile_velMax40cms.txt can not be opened\n";
     exit ( 0 );
   }
   std::ifstream inf2;
-  inf2.open ( "./input/OutflowResistence64_R0p001_f84.txt" );
+  inf2.open ( "./../input/steady&pulsatile/3D/OutflowResistence64_R0p001_f84.txt" );
   if ( !inf2 ) {
-    std::cout << "pressure file ./input/OutflowResistence64_R0p001_f84.txt can not be opened\n";
+    std::cout << "pressure file ./../input/steady&pulsatile/3D/OutflowResistence64_R0p001_f84.txt can not be opened\n";
     exit ( 0 );
   }
 
