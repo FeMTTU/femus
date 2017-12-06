@@ -185,7 +185,7 @@ namespace femus
     // -----------------------------------------------------------------
     // space discretization parameters
     unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));
-    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("P"));
+    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("PS"));
 
     // mesh and procs
     unsigned nel    = mymsh->GetNumberOfElements();
@@ -196,7 +196,7 @@ namespace femus
 
     //----------------------------------------------------------------------------------
     //variable-name handling
-    const char varname[7][3] = {"DX", "DY", "DZ", "U", "V", "W", "P"};
+    const char varname[7][3] = {"DX", "DY", "DZ", "U", "V", "W", "PS"};
     //const char varname1[3][4] = {"DX1", "DY1", "DZ1"};
     vector <unsigned> indexVAR(2 * dim + 1);
     vector <unsigned> indVAR(2 * dim + 1);
@@ -352,8 +352,8 @@ namespace femus
             unsigned int face = - (mymsh->el->GetFaceElementIndex(iel, jface) + 1);
             double tau = 0.;
             double tau_old = 0.;
-            if ((!ml_sol->GetBdcFunction()(xx, "P", tau, face, time) &&
-                 !ml_sol->GetBdcFunction()(xx, "P", tau_old, face, time - dt))
+            if ((!ml_sol->GetBdcFunction()(xx, "PS", tau, face, time) &&
+                 !ml_sol->GetBdcFunction()(xx, "PS", tau_old, face, time - dt))
                 && (tau != 0. || tau_old != 0.)) {
 
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
@@ -411,7 +411,7 @@ namespace femus
             area = Weight_hat / GaussWeight;
 
             if (iel == mymsh->_elementOffset[iproc]) {
-              area_elem_first->add(mymsh->processor_id(), area);
+              area_elem_first->set(mymsh->processor_id(), area);
               area_elem_first->close();
               rapresentative_area = area_elem_first->l1_norm() / nprocs;
             }
@@ -1256,7 +1256,7 @@ namespace femus
     // -----------------------------------------------------------------
     // space discretization parameters
     unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));
-    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("P"));
+    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("PS"));
 
     // mesh and procs
     unsigned nel    = mymsh->GetNumberOfElements();
@@ -1267,7 +1267,7 @@ namespace femus
 
     //----------------------------------------------------------------------------------
     //variable-name handling
-    const char varname[10][4] = {"DX", "DY", "DZ", "U", "V", "W", "DX1", "DY1", "DZ1", "P"};
+    const char varname[10][4] = {"DX", "DY", "DZ", "U", "V", "W", "DX1", "DY1", "DZ1", "PS"};
 
     vector <unsigned> indexVAR(nBlocks * dim + 1);
     vector <unsigned> indVAR(nBlocks * dim + 1);
@@ -1413,8 +1413,8 @@ namespace femus
             unsigned int face = - (mymsh->el->GetFaceElementIndex(iel, jface) + 1);
             double tau = 0.;
             double tau_old = 0.;
-            if ((!ml_sol->GetBdcFunction()(xx, "P", tau, face, time) &&
-                 !ml_sol->GetBdcFunction()(xx, "P", tau_old, face, time - dt))
+            if ((!ml_sol->GetBdcFunction()(xx, "PS", tau, face, time) &&
+                 !ml_sol->GetBdcFunction()(xx, "PS", tau_old, face, time - dt))
                 && (tau != 0. || tau_old != 0.)) {
 
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
@@ -3360,7 +3360,7 @@ namespace femus
     // -----------------------------------------------------------------
     // space discretization parameters
     unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));
-    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("P"));
+    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("PS"));
 
     // mesh and procs
     unsigned nel    = mymsh->GetNumberOfElements();
@@ -3371,7 +3371,7 @@ namespace femus
 
     //----------------------------------------------------------------------------------
     //variable-name handling
-    const char varname[10][4] = {"DX", "DY", "DZ", "U", "V", "W", "DX1", "DY1", "DZ1", "P"};
+    const char varname[10][4] = {"DX", "DY", "DZ", "U", "V", "W", "DX1", "DY1", "DZ1", "PS"};
 
     const char varname2[10][4] = {"Um", "Vm", "Wm"};
 
@@ -3527,8 +3527,8 @@ namespace femus
             unsigned int face = - (mymsh->el->GetFaceElementIndex(iel, jface) + 1);
             double tau = 0.;
             double tau_old = 0.;
-            if ((!ml_sol->GetBdcFunction()(xx, "P", tau, face, time) &&
-                 !ml_sol->GetBdcFunction()(xx, "P", tau_old, face, time - dt))
+            if ((!ml_sol->GetBdcFunction()(xx, "PS", tau, face, time) &&
+                 !ml_sol->GetBdcFunction()(xx, "PS", tau_old, face, time - dt))
                 && (tau != 0. || tau_old != 0.)) {
 
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);

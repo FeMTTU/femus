@@ -29,6 +29,8 @@ namespace femus
 
   bool twoPressure = true;
 
+  bool valve = true;
+
   void FSITimeDependentAssemblySupgNew2(MultiLevelProblem& ml_prob)
   {
 
@@ -58,7 +60,7 @@ namespace femus
     // call the adept stack object
     adept::Stack& stack = FemusInit::_adeptStack;
 
-    if(assembleMatrix) stack.continue_recording();
+    if (assembleMatrix) stack.continue_recording();
     else stack.pause_recording();
 
     const unsigned dim = mymsh->GetDimension();
@@ -82,9 +84,9 @@ namespace femus
     vector<double> VelOldest(dim);
     vector < adept::adouble > meshVel(dim);
 
-    for(int i = 0; i < nBlocks * dim; i++) {
+    for (int i = 0; i < nBlocks * dim; i++) {
       GradSolVAR[i].resize(dim);
-      if(i < dim) GradSolhatVAR[i].resize(dim);
+      if (i < dim) GradSolhatVAR[i].resize(dim);
       NablaSolVAR[i].resize(nabla_dim);
     }
 
@@ -98,7 +100,6 @@ namespace femus
 
     const double* phi1;
     adept::adouble Weight = 0.;
-    adept::adouble Weight_nojac = 0.;
     double Weight_hat = 0.;
 
     vector <vector < double> > vx_hat(dim);
@@ -111,7 +112,7 @@ namespace femus
     vector< vector< double > > Soli_old(nBlocks * dim);
     vector< vector< int > > dofsVAR(nBlocks * dim + nP);
     vector< vector< double > > meshVelOldNode(dim);
-    
+
     vector< vector< double > > Rhs(nBlocks * dim + nP);
     vector< vector< adept::adouble > > aRhs(nBlocks * dim + nP);
 
@@ -132,7 +133,7 @@ namespace femus
     double betans	= 1.;
     int    solid_model	= ml_prob.parameters.get<Solid> ("Solid").get_physical_model();
 
-    if(solid_model >= 2 && solid_model <= 4) {
+    if (solid_model >= 2 && solid_model <= 4) {
       std::cout << "Error! Solid Model " << solid_model << "not implemented\n";
       abort();
     }
@@ -169,8 +170,8 @@ namespace femus
 
     vector <unsigned> indVAR2(dim);
 
-    for(unsigned ivar = 0; ivar < dim; ivar++) {
-      for(unsigned k = 0; k < nBlocks; k++) {
+    for (unsigned ivar = 0; ivar < dim; ivar++) {
+      for (unsigned k = 0; k < nBlocks; k++) {
         indVAR[ivar + k * dim] = ml_sol->GetIndex(&varname[ivar + k * 3][0]);
         SolType[ivar + k * dim] = ml_sol->GetSolutionType(&varname[ivar + k * 3][0]);
         indexVAR[ivar + k * dim] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar + k * 3][0]);
@@ -179,7 +180,7 @@ namespace femus
       indVAR2[ivar] = ml_sol->GetIndex(&varname2[ivar][0]);
     }
 
-    for(unsigned ivar = 0; ivar < nP; ivar++) {
+    for (unsigned ivar = 0; ivar < nP; ivar++) {
       indexVAR[nBlocks * dim + ivar] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[6 + ivar][0]);
       indVAR[nBlocks * dim + ivar] = ml_sol->GetIndex(&varname[6 + ivar][0]);
       SolType[nBlocks * dim + ivar] = ml_sol->GetSolutionType(&varname[6 + ivar][0]);
@@ -189,10 +190,23 @@ namespace femus
 
     start_time = clock();
 
-    if(assembleMatrix) myKK->zero();
+    if (assembleMatrix) myKK->zero();
+
+
+    int nprocs = mymsh->n_processors();
+    NumericVector * area_elem_first;
+    area_elem_first = NumericVector::build().release();
+    if (nprocs == 1) {
+      area_elem_first->init(nprocs, 1, false, SERIAL);
+    }
+    else {
+      area_elem_first->init(nprocs, 1, false, PARALLEL);
+    }
+    area_elem_first->zero();
+    double rapresentative_area = 1.;
 
     // *** element loop ***
-    for(int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
+    for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
       short unsigned ielt = mymsh->GetElementType(iel);
       unsigned nve        = mymsh->GetElementDofNumber(iel, SolType2);
@@ -203,30 +217,30 @@ namespace femus
       // *******************************************************************************************************
 
       // displacement, velocity, mesh dof values
-   
+
       solidmark.resize(nve);
-      for(int i = 0; i < nBlocks * dim; i++) {
+      for (int i = 0; i < nBlocks * dim; i++) {
         dofsVAR[i].resize(nve);
         Soli[indexVAR[i]].resize(nve);
         Soli_old[indexVAR[i]].resize(nve);
         aRhs[indexVAR[i]].resize(nve);
       }
-   
-      for(int i = 0; i < dim; i++) {
-	meshVelOldNode[i].resize(nve);
-	vx_hat[i].resize(nve);
+
+      for (int i = 0; i < dim; i++) {
+        meshVelOldNode[i].resize(nve);
+        vx_hat[i].resize(nve);
         vx[i].resize(nve);
         vxOld[i].resize(nve);
         vxNew[i].resize(nve);
       }
-      
-      for(unsigned i = 0; i < nve; i++) {
+
+      for (unsigned i = 0; i < nve; i++) {
         unsigned idof = mymsh->GetSolutionDof(i, iel, SolType2);
         solidmark[i] = mymsh->GetSolidMark(idof);    // flag to know if the node "idof" lays on the fluid-solid interface
-        for(int j = 0; j < dim; j++) {
-          for(unsigned k = 0; k < nBlocks; k++) {
+        for (int j = 0; j < dim; j++) {
+          for (unsigned k = 0; k < nBlocks; k++) {
             dofsVAR[j + k * dim][i] = myLinEqSolver->GetSystemDof(indVAR[j + k * dim], indexVAR[j + k * dim], i, iel);
-	    Soli[indexVAR[j + k * dim]][i] = (*mysolution->_Sol[indVAR[j + k * dim]])(idof);
+            Soli[indexVAR[j + k * dim]][i] = (*mysolution->_Sol[indVAR[j + k * dim]])(idof);
             Soli_old[indexVAR[j + k * dim]][i] = (*mysolution->_SolOld[indVAR[j + k * dim]])(idof);
             aRhs[indexVAR[j + k * dim]][i] = 0.;
           }
@@ -236,30 +250,30 @@ namespace femus
       }
 
       // pressure dof values
-      for(int i = 0; i < nP; i++) {
+      for (int i = 0; i < nP; i++) {
         dofsVAR[nBlocks * dim + i].resize(nve1);
         Soli[indexVAR[nBlocks * dim + i]].resize(nve1);
         aRhs[indexVAR[nBlocks * dim + i]].resize(nve1);
       }
-      for(unsigned i = 0; i < nve1; i++) {
-	unsigned idof = mymsh->GetSolutionDof(i, iel, SolType[nBlocks * dim ]);
-        for(int j = nBlocks * dim; j < nBlocks * dim + nP; j++) {
+      for (unsigned i = 0; i < nve1; i++) {
+        unsigned idof = mymsh->GetSolutionDof(i, iel, SolType[nBlocks * dim ]);
+        for (int j = nBlocks * dim; j < nBlocks * dim + nP; j++) {
           dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indVAR[j], indexVAR[j], i, iel);
           Soli[indexVAR[j]][i] = (*mysolution->_Sol[indVAR[j]])(idof);
           aRhs[indexVAR[j]][i] = 0.;
         }
       }
-      
+
       // stuck all dofs
       dofsAll.resize(0);
-      for(int i = 0; i < nBlocks * dim + nP; i++) {
+      for (int i = 0; i < nBlocks * dim + nP; i++) {
         dofsAll.insert(dofsAll.end(), dofsVAR[i].begin(), dofsVAR[i].end());
       }
-      
-      if(assembleMatrix) stack.new_recording();
 
-      for(int j = 0; j < nve; j++) {
-        for(unsigned idim = 0; idim < dim; idim++) {
+      if (assembleMatrix) stack.new_recording();
+
+      for (int j = 0; j < nve; j++) {
+        for (unsigned idim = 0; idim < dim; idim++) {
           vxOld[idim][j] = vx_hat[idim][j] + Soli_old[indexVAR[idim]][j];
           vxNew[idim][j] = vx_hat[idim][j] + Soli[indexVAR[idim]][j];
         }
@@ -270,50 +284,74 @@ namespace femus
         vector < adept::adouble> normal(dim, 0);
 
         // loop on faces
-        for(unsigned jface = 0; jface < mymsh->GetElementFaceNumber(iel); jface++) {
+        for (unsigned jface = 0; jface < mymsh->GetElementFaceNumber(iel); jface++) {
           std::vector< double > xx(dim, 0.);
 
           // look for boundary faces
-          if(myel->GetFaceElementIndex(iel, jface) < 0) {
+          if (myel->GetFaceElementIndex(iel, jface) < 0) {
 
             unsigned int face = - (mymsh->el->GetFaceElementIndex(iel, jface) + 1);
 
-            for(unsigned tip = 0; tip < TimeIntPoints; tip++) {
+            for (unsigned tip = 0; tip < TimeIntPoints; tip++) {
 
               double tau = 0.;
 
-              if(!ml_sol->GetBdcFunction()(xx, "PS", tau, face, time + (-1. + s[tip]) * dt) && tau != 0.) {
+              if (!ml_sol->GetBdcFunction()(xx, "PS", tau, face, time + (-1. + s[tip]) * dt) && tau != 0.) {
 
+		bool friction = (tau == 123456789)? false : false;
                 unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
                 const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
-                for(unsigned idim = 0; idim < dim; idim++) {
+		vector <vector < adept::adouble > > sol_face(dim);
+                for (unsigned idim = 0; idim < dim; idim++) {
                   vx_face[idim].resize(nve);
+		  sol_face[idim].resize(nve);
                 }
-
-                for(unsigned i = 0; i < nve; i++) {
+                
+                unsigned shift = (flag_mat == 4) ? 0:1;
+                
+                for (unsigned i = 0; i < nve; i++) {
                   unsigned int ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
 
-                  for(unsigned idim = 0; idim < dim; idim++) {
-                    vx_face[idim][i]    = vx_hat[idim][ilocal] +
+                  for (unsigned idim = 0; idim < dim; idim++) {
+                    vx_face[idim][i]  = vx_hat[idim][ilocal] +
                                           ((1. - s[tip]) * Soli_old[indexVAR[idim]][ilocal] + s[tip] * Soli[indexVAR[idim]][ilocal]);
+		    sol_face[idim][i] = ((1. - s[tip]) * Soli_old[indexVAR[dim * shift + idim]][ilocal] + s[tip] * Soli[indexVAR[dim * shift + idim]][ilocal]); 
                   }
+                  
                 }
 
-                for(unsigned igs = 0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
+                for (unsigned igs = 0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
                   mymsh->_finiteElement[felt][SolType2]->JacobianSur(vx_face, igs, Weight, phi, gradphi, normal);
 
+		  vector < adept::adouble > solVAR_face(dim);
+		  for (unsigned idim = 0; idim < dim; idim++) {
+		    solVAR_face[idim] = 0.;
+		    for (unsigned i = 0; i < nve; i++) {
+		      solVAR_face[idim] += phi[i] * sol_face[idim][i];
+		    }
+		  }
+		  double k=0.001;
                   // *** phi_i loop ***
-                  for(unsigned i = 0; i < nve; i++) {
-                    adept::adouble value = - theta[tip] * phi[i] * tau / rhof * Weight;
+                  for (unsigned i = 0; i < nve; i++) {
+                    std::vector < adept::adouble> value(dim);
+		    for(unsigned idim = 0; idim < dim; idim++){
+		      value[idim] = 0.;
+		      if( !friction ){
+		        value[idim] = - theta[tip] * phi[i] * tau * normal[idim] / rhof * Weight;
+		      }
+		      else{
+		        value[idim] = - theta[tip] * phi[i] * solVAR_face[idim] * k / rhof * Weight;
+		      }
+		    }
                     unsigned int ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
 
-                    for(unsigned idim = 0; idim < dim; idim++) {
-                      if((!solidmark[ilocal])) {
-                        aRhs[indexVAR[dim + idim]][ilocal]   +=  value * normal[idim];
+                    for (unsigned idim = 0; idim < dim; idim++) {
+                      if ((!solidmark[ilocal])) {
+                        aRhs[indexVAR[dim + idim]][ilocal]   +=  value[idim];
                       }
                       else {   //if interface node it goes to solid
-                        aRhs[indexVAR[idim]][ilocal]   += value * normal[idim];
+                        aRhs[indexVAR[idim]][ilocal]   += value[idim];
                       }
                     }
                   }
@@ -324,31 +362,32 @@ namespace femus
         }
       }
 
+      double area = 1.;
       // *** Volume integral ***
-      for(unsigned ig = 0; ig < mymsh->_finiteElement[ielt][SolType2]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < mymsh->_finiteElement[ielt][SolType2]->GetGaussPointNumber(); ig++) {
         mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_hat, ig, Weight_hat, phi_hat, gradphi_hat, nablaphi_hat);
         phi1 = mymsh->_finiteElement[ielt][SolType1]->GetPhi(ig);
 
         // ---------------------------------------------------------------------------
         // store displacenet gradient
-        for(int i = 0; i < dim; i++) {
-          for(int j = 0; j < dim; j++) {
+        for (int i = 0; i < dim; i++) {
+          for (int j = 0; j < dim; j++) {
             GradSolhatVAR[i][j] = 0.;
           }
 
-          for(unsigned inode = 0; inode < nve; inode++) {
-            for(int j = 0; j < dim; j++) {
+          for (unsigned inode = 0; inode < nve; inode++) {
+            for (int j = 0; j < dim; j++) {
               GradSolhatVAR[i][j]     += gradphi_hat[inode * dim + j] * Soli[indexVAR[i]][inode];
             }
           }
         }
 
         // store displacenet and velocity solution old and New
-        for(int i = 0; i < dim * nBlocks; i++) {
+        for (int i = 0; i < dim * nBlocks; i++) {
           SolVAROld[i] = 0.;
           SolVARNew[i] = 0.;
 
-          for(unsigned inode = 0; inode < nve; inode++) {
+          for (unsigned inode = 0; inode < nve; inode++) {
             SolVAROld[i] += phi_hat[inode] * Soli_old[indexVAR[i]][inode];
             SolVARNew[i] += phi_hat[inode] * Soli[indexVAR[i]][inode];
           }
@@ -356,9 +395,9 @@ namespace femus
 
         // store pressure (we use only one pressure in the time interval)
 
-        for(unsigned i = 0; i < nP; i++) {
+        for (unsigned i = 0; i < nP; i++) {
           SolVAR[nBlocks * dim + i] = 0.;
-          for(unsigned inode = 0; inode < nve1; inode++) {
+          for (unsigned inode = 0; inode < nve1; inode++) {
             SolVAR[nBlocks * dim + i] += phi1[inode] * Soli[indexVAR[nBlocks * dim + i]][inode];
           }
         }
@@ -368,11 +407,11 @@ namespace femus
         double scaleWeightNoJacobian = 1.;
 
         //BEGIN SOLID ASSEMBLY ============
-        if(flag_mat == 4) {
-          
+        if (flag_mat == 4) {
+
           //BEGIN redidual d_t - v = 0 in fixed domain
-          for(unsigned i = 0; i < nve; i++) {
-            for(int idim = 0; idim < dim; idim++) {
+          for (unsigned i = 0; i < nve; i++) {
+            for (int idim = 0; idim < dim; idim++) {
               aRhs[indexVAR[dim + idim]][i] += ((SolVARNew[idim] - SolVAROld[idim]) / dt -
                                                 (1. * SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim])
                                                ) * phi_hat[i] * Weight_hat;
@@ -382,8 +421,8 @@ namespace femus
 
           //BEGIN Jacobian in the undeformed configuration
           //physical quantity
-          for(int i = 0; i < dim; i++) {
-            for(int j = 0; j < dim; j++) {
+          for (int i = 0; i < dim; i++) {
+            for (int j = 0; j < dim; j++) {
               F[i][j] += GradSolhatVAR[i][j];
             }
           }
@@ -391,23 +430,23 @@ namespace femus
           J_hat =  F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
                    - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
           //END Jacobian in the undeformed configuration
-                    
+
           //BEGIN continuity block
-          for(unsigned i = 0; i < nve1; i++) {
+          for (unsigned i = 0; i < nve1; i++) {
             aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * (1. - J_hat) * Weight_hat / rhof;
-            if(twoPressure) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * SolVAR[nBlocks * dim + jP] * Weight_hat;    // fake continuity of the fluid in the solid
+            if (twoPressure) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * SolVAR[nBlocks * dim + jP] * Weight_hat;   // fake continuity of the fluid in the solid
           }
           //END continuity block
         }
         //END SOLID ASSEMBLY ============
         else {
           // store gauss point coordinates old and new and mesh velocity old
-          for(int i = 0; i < dim; i++) {
+          for (int i = 0; i < dim; i++) {
             vxOld_ig[i] = 0.;
             vxNew_ig[i] = 0.;
             meshVelOld[i] = 0.;
 
-            for(unsigned inode = 0; inode < nve; inode++) {
+            for (unsigned inode = 0; inode < nve; inode++) {
               vxOld_ig[i] += phi_hat[inode] * vxOld[i][inode];
               vxNew_ig[i] += phi_hat[inode] * vxNew[i][inode];
               meshVelOld[i] += phi_hat[inode] * meshVelOldNode[i][inode];
@@ -416,40 +455,59 @@ namespace femus
           // get scaling factor for Weight_nojac
           std::vector<double> xc(dim, 0.);
 
-          if(dim == 2) {
-            xc[0] = -0.000193; // vein_valve_closed valve2_corta2.neu
-            xc[1] = 0.067541 * 0;
+          if (valve) {
+            if (dim == 2) {
+              xc[0] = -0.000193; // vein_valve_closed valve2_corta2.neu
+              xc[1] = 0.067541 * 0;
+            }
+            else if (dim == 3) {
+              xc[0] = 0.0015; // vein_valve_closed
+              xc[1] = 0.0;
+              xc[2] = 0.01;
+            }
+
+            double distance = 0.;
+
+            for (unsigned k = 0; k < dim; k++) {
+              distance += (vx_hat[k][ nve - 1] - xc[k]) * (vx_hat[k][nve - 1] - xc[k]);
+            }
+
+            distance = sqrt(distance);
+            scaleWeightNoJacobian = 1. / (1 + 10000 * distance);
+
+            if (elementGroup == 16) scaleWeightNoJacobian *= 100;
           }
-          else if(dim == 3) {
-            xc[0] = 0.0015; // vein_valve_closed
-            xc[1] = 0.0;
-            xc[2] = 0.01;
-          }
-
-          double distance = 0.;
-
-          for(unsigned k = 0; k < dim; k++) {
-            distance += (vx_hat[k][ nve - 1] - xc[k]) * (vx_hat[k][nve - 1] - xc[k]);
-          }
-
-          distance = sqrt(distance);
-          scaleWeightNoJacobian = 1. / (1 + 10000 * distance);
-
-          if(elementGroup == 16) scaleWeightNoJacobian *= 100;
         }
 
-        for(unsigned tip = 0; tip <= TimeIntPoints; tip++) {
+        if(!valve){
+	  if (flag_mat == 2 || flag_mat == 3  || iel == mymsh->_elementOffset[iproc]) {
+            if (ig == 0) {
+              double GaussWeight = mymsh->_finiteElement[ielt][SolType2]->GetGaussWeight(ig);
+              area = Weight_hat / GaussWeight;
+
+              if (iel == mymsh->_elementOffset[iproc]) {
+                area_elem_first->set(mymsh->processor_id(), area);
+                area_elem_first->close();
+                rapresentative_area = area_elem_first->l1_norm() / nprocs;
+              }
+            }
+            scaleWeightNoJacobian = rapresentative_area / area;
+          }
+	}
+        
+        
+        for (unsigned tip = 0; tip <= TimeIntPoints; tip++) {
 
           bool end = (tip == TimeIntPoints) ? true : false;
           bool middle = (!end) ? true : false;
 
           // store displacenet and velocity at the current time
-          for(int i = 0; i < dim * nBlocks; i++) {
+          for (int i = 0; i < dim * nBlocks; i++) {
             SolVAR[i] = SolVAROld[i] * (1. - s[tip]) +  SolVARNew[i] * s[tip];
           }
           // store nodes coordinates and Gauss point coordinates at the current time
-          for(unsigned i = 0; i < dim; i++) {
-            for(int j = 0; j < nve; j++) {
+          for (unsigned i = 0; i < dim; i++) {
+            for (int j = 0; j < nve; j++) {
               vx[i][j] = vxOld[i][j] * (1. - s[tip]) +  vxNew[i][j] * s[tip];
             }
           }
@@ -457,54 +515,54 @@ namespace femus
           mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx, ig, Weight, phi, gradphi, nablaphi);
 
           // store solution gradient and laplace at the current time
-          for(int i = 0; i < nBlocks * dim; i++) {
-            for(int j = 0; j < dim; j++) {
+          for (int i = 0; i < nBlocks * dim; i++) {
+            for (int j = 0; j < dim; j++) {
               GradSolVAR[i][j] = 0.;
             }
-            for(int j = 0; j < nabla_dim; j++) {
+            for (int j = 0; j < nabla_dim; j++) {
               NablaSolVAR[i][j] = 0.;
             }
-            for(unsigned inode = 0; inode < nve; inode++) {
-              for(int j = 0; j < dim; j++) {
+            for (unsigned inode = 0; inode < nve; inode++) {
+              for (int j = 0; j < dim; j++) {
                 GradSolVAR[i][j]     += gradphi[inode * dim + j]  * (s[tip] * Soli[indexVAR[i]][inode] + (1. - s[tip]) * Soli_old[indexVAR[i]][inode]);
               }
-              for(int j = 0; j < nabla_dim; j++) {
+              for (int j = 0; j < nabla_dim; j++) {
                 NablaSolVAR[i][j]     += nablaphi[inode * nabla_dim + j] * (s[tip] * Soli[indexVAR[i]][inode] + (1. - s[tip]) * Soli_old[indexVAR[i]][inode]);
               }
             }
           }
 
           //BEGIN FLUID and POROUS MEDIA ASSEMBLY ============
-          if(flag_mat != 4) {
-            if(middle) {
+          if (flag_mat != 4) {
+            if (middle) {
               // get Gauss point coordinates at the current time
-              for(unsigned i = 0; i < dim; i++) {
+              for (unsigned i = 0; i < dim; i++) {
                 vx_ig[i] = vxOld_ig[i] * (1. - s[tip]) +  vxNew_ig[i] * s[tip];
               }
-              
-	      adept::adouble springStiffness = 	5.e-4 * exp((vx_ig[0] - (- 1e-5)) / 0.0001) * (dim == 2) + // if 2D
- 						5.e-4 * exp((vx_ig[0] - (- 1e-5)) / 0.0001) * (dim == 3); //if 3D
-				
-        
+
+              adept::adouble springStiffness = 0.;
+              if ( valve ) springStiffness = 5.e-4 * exp((vx_ig[0] - (- 1e-5)) / 0.0001) * (dim == 2) + // if 2D
+                                               5.e-4 * exp((vx_ig[0] - (- 1e-5)) / 0.0001) * (dim == 3); //if 3D
+
 
               // get mesh velocity and gradient at current time
-              for(unsigned i = 0; i < dim; i++) {
+              for (unsigned i = 0; i < dim; i++) {
                 meshVel[i] = (1. - s[tip]) * meshVelOld[i]  + s[tip] * (SolVARNew[i] - SolVAROld[i]) / dt ;
               }
 
               // speed
-              adept::adouble speed = 0.;
-              for(int i = 0; i < dim; i++) {
-                speed += SolVAR[i + dim] * SolVAR[i + dim];
+              adept::adouble speed2 = 0.;
+              for (int i = 0; i < dim; i++) {
+                speed2 += SolVAR[i + dim] * SolVAR[i + dim];
               }
-              speed = sqrt(speed);
+              adept::adouble speed = sqrt(speed2);
 
               // phiSupg evaluation
               double sqrtlambdak = (*mysolution->_Sol[indLmbd])(iel);
               adept::adouble tauSupg = 1. / (sqrtlambdak * sqrtlambdak * 4.*IRe);
               adept::adouble Rek = speed / (4.*sqrtlambdak * IRe);
 
-              if(Rek > 1.0e-15) {
+              if (Rek > 1.0e-15) {
                 adept::adouble xiRek = (Rek >= 1.) ? 1. : Rek;
                 tauSupg   = xiRek / (speed * sqrtlambdak);
               }
@@ -512,15 +570,15 @@ namespace femus
               //tauSupg=0;
               vector < adept::adouble > phiSupg(nve, 0.);
 
-              for(unsigned i = 0; i < nve; i++) {
-                for(unsigned j = 0; j < dim; j++) {
+              for (unsigned i = 0; i < nve; i++) {
+                for (unsigned j = 0; j < dim; j++) {
                   phiSupg[i] += ((SolVAR[j + dim] - meshVel[j]) * gradphi[i * dim + j]) * tauSupg;
                 }
               }
 
               //BEGIN ALE + Momentum (Navier-Stokes)
-              for(unsigned i = 0; i < nve; i++) {
-                if(flag_mat == 2) {
+              for (unsigned i = 0; i < nve; i++) {
+                if (flag_mat == 2) {
                   //BEGIN residual Navier-Stokes in moving domain
                   adept::adouble Lapdisp[3] = {0., 0., 0.};
                   adept::adouble LapvelVAR[3] = {0., 0., 0.};
@@ -528,14 +586,14 @@ namespace femus
                   adept::adouble AdvaleVAR[3] = {0., 0., 0.};
 
 
-                  for(int idim = 0.; idim < dim; idim++) {
-                    for(int jdim = 0.; jdim < dim; jdim++) {
+                  for (int idim = 0.; idim < dim; idim++) {
+                    for (int jdim = 0.; jdim < dim; jdim++) {
                       unsigned kdim;
 
-                      if(idim == jdim) kdim = jdim;
-                      else if(1 == idim + jdim) kdim = dim;       // xy
-                      else if(2 == idim + jdim) kdim = dim + 2;   // xz
-                      else if(3 == idim + jdim) kdim = dim + 1;   // yz
+                      if (idim == jdim) kdim = jdim;
+                      else if (1 == idim + jdim) kdim = dim;      // xy
+                      else if (2 == idim + jdim) kdim = dim + 2;  // xz
+                      else if (3 == idim + jdim) kdim = dim + 1;  // yz
 
                       //laplaciano debole
                       LapvelVAR[idim]     += (GradSolVAR[dim + idim][jdim] + GradSolVAR[dim + jdim][idim]) * gradphi[i * dim + jdim];
@@ -547,22 +605,22 @@ namespace femus
                     }
                   }
 
-                  for(int idim = 0; idim < dim; idim++) {
+                  for (int idim = 0; idim < dim; idim++) {
                     adept::adouble timeDerivative = 0.;
                     adept::adouble value = 0.;
 
 
-		    timeDerivative = theta[tip] * (SolVARNew[dim + idim] - SolVAROld[dim + idim]) * (phi[i] + phiSupg[i]) * Weight / dt;
-		    
+                    timeDerivative = theta[tip] * (SolVARNew[dim + idim] - SolVAROld[dim + idim]) * (phi[i] + phiSupg[i]) * Weight / dt;
+
                     value =  theta[tip] * (
                                + AdvaleVAR[idim]      	             // advection term
                                + IRe * LapvelVAR[idim]	             // viscous dissipation
                                + (idim == 0) * springStiffness * Lapdisp[idim] // penalty spring
                                - IRe * LapStrong[idim]
                                - 1. / rhof * SolVAR[nBlocks * dim + jP] * gradphi[i * dim + idim] // pressure gradient
-                             ) * Weight;   
-			     
-                    if(!solidmark[i]) {
+                             ) * Weight;
+
+                    if (!solidmark[i]) {
                       aRhs[indexVAR[dim + idim]][i] += timeDerivative + value;
                     }
                     else {
@@ -571,15 +629,19 @@ namespace femus
                   }
                   //END redidual Navier-Stokes in moving domain
                 }
-                else if(flag_mat == 3) {
+                else if (flag_mat == 3) {
+		  
+		  double eps = 1.0e-20;
+		  speed = sqrt(speed2 + eps);
+		  
                   //BEGIN redidual Porous Media in moving domain
                   double DE = 0.;
 
-                  if(dim == 2) {
+                  if (dim == 2) {
                     DE = 0.0002; // AAA_thrombus_2D
                     //DE = 0.00006; // turek2D
                   }
-                  else if(dim == 3) {
+                  else if (dim == 3) {
                     DE = 0.000112; // porous3D
                   }
 
@@ -588,7 +650,7 @@ namespace femus
                   double K = DE * IRe * rhof / b; // alpha = mu/b * De
                   double C2 = 2 * a / (rhof * DE);
 
-                  for(int idim = 0; idim < dim; idim++) {
+                  for (int idim = 0; idim < dim; idim++) {
                     adept::adouble value = 0.;
 
 
@@ -596,7 +658,7 @@ namespace femus
                                           - 1. / rhof * SolVAR[nBlocks * dim + jP] * gradphi[i * dim + idim] // pressure gradient
                                          ) * Weight;
 
-                    if(!solidmark[i]) {
+                    if (!solidmark[i]) {
                       aRhs[indexVAR[dim + idim]][i] += value;
                     }
                     else {
@@ -610,18 +672,18 @@ namespace femus
             }
             else {
               //BEGIN redidual Laplacian ALE map in the reference domain
-              for(unsigned i = 0; i < nve; i++) {
-                if(!solidmark[i]) {
+              for (unsigned i = 0; i < nve; i++) {
+                if (!solidmark[i]) {
                   adept::adouble LapmapVAR[3] = {0., 0., 0.};
-                  Weight_nojac = Weight * scaleWeightNoJacobian;
+                  adept::adouble Weight_nojac = Weight * scaleWeightNoJacobian;
 
-                  for(int idim = 0; idim < dim; idim++) {
-                    for(int jdim = 0; jdim < dim; jdim++) {
+                  for (int idim = 0; idim < dim; idim++) {
+                    for (int jdim = 0; jdim < dim; jdim++) {
                       LapmapVAR[idim] += (GradSolVAR[idim][jdim] + 0.*GradSolVAR[jdim][idim]) * gradphi[i * dim + jdim];
                     }
                   }
 
-                  for(int idim = 0; idim < dim; idim++) {
+                  for (int idim = 0; idim < dim; idim++) {
                     aRhs[indexVAR[idim]][i] += (LapmapVAR[idim] * Weight_nojac);
                   }
                 }
@@ -631,12 +693,12 @@ namespace femus
               //BEGIN continuity block
               adept::adouble div_vel = 0.;
 
-              for(int i = 0; i < dim; i++) {
+              for (int i = 0; i < dim; i++) {
                 div_vel += GradSolVAR[dim + i][i];
               }
 
-              for(unsigned i = 0; i < nve1; i++) {
-                if(twoPressure) aRhs[indexVAR[nBlocks * dim] ][i] +=  phi1[i] * SolVAR[nBlocks * dim ] * Weight_hat;    // fake continuity of the solid in the fluid
+              for (unsigned i = 0; i < nve1; i++) {
+                if (twoPressure) aRhs[indexVAR[nBlocks * dim] ][i] +=  phi1[i] * SolVAR[nBlocks * dim ] * Weight_hat;   // fake continuity of the solid in the fluid
                 aRhs[indexVAR[nBlocks * dim + jP]][i] += (-phi1[i] * div_vel) * Weight / rhof;
               }
               //END continuity block ===========================
@@ -646,7 +708,7 @@ namespace femus
 
           //BEGIN SOLID ASSEMBLY ============
           else {
-            if(middle) {
+            if (middle) {
               //BEGIN build Chauchy Stress in moving domain
               adept::adouble Cauchy[3][3];
               double Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
@@ -654,11 +716,11 @@ namespace femus
               // hyperelastic non linear material
               adept::adouble B[3][3];
 
-              for(int I = 0; I < 3; ++I) {
-                for(int J = 0; J < 3; ++J) {
+              for (int I = 0; I < 3; ++I) {
+                for (int J = 0; J < 3; ++J) {
                   B[I][J] = 0.;
 
-                  for(int K = 0; K < 3; ++K) {
+                  for (int K = 0; K < 3; ++K) {
                     //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
                     B[I][J] += F[I][K] * F[J][K];
                   }
@@ -686,8 +748,8 @@ namespace femus
               double C1 = (elementGroup == 15) ? mus1 / 3. : mus / 3.;
               double C2 = C1 / 2.;
 
-              for(int I = 0; I < 3; ++I) {
-                for(int J = 0; J < 3; ++J) {
+              for (int I = 0; I < 3; ++I) {
+                for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.* (C1 * B[I][J] - C2 * invB[I][J])
                                   - 1. / rhof * SolVAR[nBlocks * dim ] * Id2th[I][J];
 
@@ -697,14 +759,14 @@ namespace femus
 
 
               //BEGIN Momentum (Solid)
-              for(unsigned i = 0; i < nve; i++) {
+              for (unsigned i = 0; i < nve; i++) {
                 adept::adouble CauchyDIR[3] = {0., 0., 0.};
-                for(int idim = 0.; idim < dim; idim++) {
-                  for(int jdim = 0.; jdim < dim; jdim++) {
+                for (int idim = 0.; idim < dim; idim++) {
+                  for (int jdim = 0.; jdim < dim; jdim++) {
                     CauchyDIR[idim] += gradphi[i * dim + jdim] * Cauchy[idim][jdim];
                   }
                 }
-                for(int idim = 0; idim < dim; idim++) {
+                for (int idim = 0; idim < dim; idim++) {
                   adept::adouble timeDerivative = 0.;
                   adept::adouble value = 0.;
                   timeDerivative = theta[tip] * rhos * (SolVARNew[dim + idim] - SolVAROld[dim + idim]) * phi[i] * Weight / dt;
@@ -724,29 +786,29 @@ namespace femus
 
       //BEGIN local to global assembly
       //copy adouble -aRhs into double Rhs
-      for(unsigned i = 0; i < nBlocks * dim; i++) {
+      for (unsigned i = 0; i < nBlocks * dim; i++) {
         Rhs[indexVAR[i]].resize(nve);
-        for(int j = 0; j < nve; j++) {
+        for (int j = 0; j < nve; j++) {
           Rhs[indexVAR[i]][j] = -aRhs[indexVAR[i]][j].value();
         }
       }
-      for(unsigned i = 0; i < nP; i++) {
+      for (unsigned i = 0; i < nP; i++) {
         Rhs[indexVAR[nBlocks * dim + i]].resize(nve1);
-        for(unsigned j = 0; j < nve1; j++) {
+        for (unsigned j = 0; j < nve1; j++) {
           Rhs[indexVAR[nBlocks * dim + i]][j] = -aRhs[indexVAR[nBlocks * dim + i]][j].value();
         }
       }
-      for(int i = 0; i < nBlocks * dim + nP; i++) {
+      for (int i = 0; i < nBlocks * dim + nP; i++) {
         myRES->add_vector_blocked(Rhs[indexVAR[i]], dofsVAR[i]);
       }
 
-      if(assembleMatrix) {
+      if (assembleMatrix) {
         //Store equations
-        for(int i = 0; i < nBlocks * dim; i++) {
+        for (int i = 0; i < nBlocks * dim; i++) {
           stack.dependent(&aRhs[indexVAR[i]][0], nve);
           stack.independent(&Soli[indexVAR[i]][0], nve);
         }
-        for(int i = 0; i < nP; i++) {
+        for (int i = 0; i < nP; i++) {
           stack.dependent(&aRhs[indexVAR[nBlocks * dim + i]][0], nve1);
           stack.independent(&Soli[indexVAR[nBlocks * dim + i]][0], nve1);
         }
@@ -762,10 +824,11 @@ namespace femus
       }
     } //end list of elements loop
 
-    if(assembleMatrix) myKK->close();
+    if (assembleMatrix) myKK->close();
 
     myRES->close();
 
+    delete area_elem_first;
     // *************************************
     end_time = clock();
     AssemblyTime += (end_time - start_time);
@@ -775,18 +838,18 @@ namespace femus
 //****************************************************************************************
 
 
-  void SetLambdaNew(MultiLevelSolution& mlSol, const unsigned& level, const  FEOrder& order, Operator operatorType)
+  void SetLambdaNew(MultiLevelSolution & mlSol, const unsigned & level, const  FEOrder & order, Operator operatorType)
   {
 
     unsigned SolType;
 
-    if(order < FIRST || order > SECOND) {
+    if (order < FIRST || order > SECOND) {
       std::cout << "Wong Solution Order" << std::endl;
       exit(0);
     }
-    else if(order == FIRST) SolType = 0;
-    else if(order == SERENDIPITY) SolType = 1;
-    else if(order == SECOND) SolType = 2;
+    else if (order == FIRST) SolType = 0;
+    else if (order == SERENDIPITY) SolType = 1;
+    else if (order == SECOND) SolType = 2;
 
 
 
@@ -810,19 +873,19 @@ namespace femus
     const char varname[3][4] = {"DX", "DY", "DZ"};
     vector <unsigned> indVAR(geoDim);
 
-    for(unsigned ivar = 0; ivar < geoDim; ivar++) {
+    for (unsigned ivar = 0; ivar < geoDim; ivar++) {
       indVAR[ivar] = mlSol.GetIndex(&varname[ivar][0]);
     }
 
 
     bool diffusion, elasticity;
 
-    if(operatorType == DIFFUSION) {
+    if (operatorType == DIFFUSION) {
       diffusion  = true;
       elasticity = false;
     }
 
-    if(operatorType == ELASTICITY) {
+    if (operatorType == ELASTICITY) {
       diffusion  = false;
       elasticity = true;
     }
@@ -838,7 +901,7 @@ namespace femus
     vector<vector<adept::adouble> > GradSolVAR(varDim);
     vector<vector<adept::adouble> > NablaSolVAR(varDim);
 
-    for(int ivar = 0; ivar < varDim; ivar++) {
+    for (int ivar = 0; ivar < varDim; ivar++) {
       GradSolVAR[ivar].resize(geoDim);
       NablaSolVAR[ivar].resize(nablaGoeDim);
     }
@@ -854,7 +917,7 @@ namespace femus
 
     vector <vector < adept::adouble> > vx(geoDim);
 
-    for(int ivar = 0; ivar < geoDim; ivar++) {
+    for (int ivar = 0; ivar < geoDim; ivar++) {
       vx[ivar].reserve(max_size);
     }
 
@@ -864,7 +927,7 @@ namespace femus
     vector< vector< adept::adouble > > aRhs(varDim);
     vector< vector< adept::adouble > > aLhs(varDim);
 
-    for(int ivar = 0; ivar < varDim; ivar++) {
+    for (int ivar = 0; ivar < varDim; ivar++) {
       Soli[ivar].reserve(max_size);
       aRhs[ivar].reserve(max_size);
       aLhs[ivar].reserve(max_size);
@@ -880,7 +943,7 @@ namespace femus
     unsigned iproc  = mymsh->processor_id();
 
     // *** element loop ***
-    for(int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
+    for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
 
       unsigned kel        = iel;
       short unsigned kelt = mymsh->GetElementType(kel);
@@ -888,7 +951,7 @@ namespace femus
       unsigned nveVx      = mymsh->GetElementDofNumber(kel, SolTypeVx);
 
       // -------------- resize --------------
-      for(int ivar = 0; ivar < varDim; ivar++) {
+      for (int ivar = 0; ivar < varDim; ivar++) {
         Soli[ivar].resize(nve);
         aRhs[ivar].resize(nve);
         aLhs[ivar].resize(nve);
@@ -899,15 +962,15 @@ namespace femus
       // ------------------------------------
 
       // ------------ get coordinates -------
-      for(int i = 0; i < geoDim; i++) {
+      for (int i = 0; i < geoDim; i++) {
         vx[i].resize(nveVx);
         //vx1[i].resize(nveVx);
       }
 
-      for(unsigned i = 0; i < nveVx; i++) {
+      for (unsigned i = 0; i < nveVx; i++) {
         unsigned inodeVx_Metis = mymsh->GetSolutionDof(i, iel, SolTypeVx);
 
-        for(int j = 0; j < geoDim; j++) {
+        for (int j = 0; j < geoDim; j++) {
           //coordinates
           vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis);
         }
@@ -916,8 +979,8 @@ namespace femus
       // ------------------------------------
 
       // ------------ init ------------------
-      for(unsigned i = 0; i < nve; i++) {
-        for(int ivar = 0; ivar < varDim; ivar++) {
+      for (unsigned i = 0; i < nve; i++) {
+        for (int ivar = 0; ivar < varDim; ivar++) {
           Soli[ivar][i] = 1.;
           aRhs[ivar][i] = 0.;
           aLhs[ivar][i] = 0.;
@@ -929,37 +992,37 @@ namespace femus
       adeptStack.new_recording();
       double hk = 1.;
 
-      for(unsigned ig = 0; ig < mymsh->_finiteElement[kelt][SolType]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < mymsh->_finiteElement[kelt][SolType]->GetGaussPointNumber(); ig++) {
         // *** get Jacobian and test function and test function derivatives in the moving frame***
         mymsh->_finiteElement[kelt][SolType]->Jacobian(vx, ig, Weight, phi, gradphi, nablaphi);
 
-        if(ig == 0) {
+        if (ig == 0) {
           double referenceElementScale[6] = {8., 1. / 6., 1., 4., 1., 2.};
           double GaussWeight = mymsh->_finiteElement[kelt][SolType]->GetGaussWeight(ig);
           double area = referenceElementScale[kelt] * Weight.value() / GaussWeight;
           hk = pow(area, 1. / geoDim);
 
           //cout<<hk<<endl;
-          if(0 == SolType) break;
+          if (0 == SolType) break;
         }
 
-        for(int ivar = 0; ivar < varDim; ivar++) {
-          for(int jvar = 0; jvar < geoDim; jvar++) {
+        for (int ivar = 0; ivar < varDim; ivar++) {
+          for (int jvar = 0; jvar < geoDim; jvar++) {
             GradSolVAR[ivar][jvar] = 0.;
           }
 
-          for(int jvar = 0; jvar < nablaGoeDim; jvar++) {
+          for (int jvar = 0; jvar < nablaGoeDim; jvar++) {
             NablaSolVAR[ivar][jvar] = 0.;
           }
 
-          for(unsigned inode = 0; inode < nve; inode++) {
+          for (unsigned inode = 0; inode < nve; inode++) {
             adept::adouble soli = Soli[ivar][inode];
 
-            for(int jvar = 0; jvar < geoDim; jvar++) {
+            for (int jvar = 0; jvar < geoDim; jvar++) {
               GradSolVAR[ivar][jvar] += gradphi[inode * geoDim + jvar] * soli;
             }
 
-            for(int jvar = 0; jvar < nablaGoeDim; jvar++) {
+            for (int jvar = 0; jvar < nablaGoeDim; jvar++) {
               NablaSolVAR[ivar][jvar] += nablaphi[inode * nablaGoeDim + jvar] * soli;
             }
           }
@@ -968,18 +1031,18 @@ namespace femus
 
         vector < adept::adouble > divGradSol(varDim, 0.);
 
-        for(unsigned ivar = 0; ivar < varDim; ivar++) {
-          for(unsigned jvar = 0; jvar < geoDim; jvar++) {
-            if(diffusion) {
+        for (unsigned ivar = 0; ivar < varDim; ivar++) {
+          for (unsigned jvar = 0; jvar < geoDim; jvar++) {
+            if (diffusion) {
               divGradSol[ivar] += NablaSolVAR[ivar][jvar];
             }
-            else if(elasticity) {
+            else if (elasticity) {
               unsigned kvar;
 
-              if(ivar == jvar) kvar = jvar;
-              else if(1 == ivar + jvar) kvar = geoDim;     // xy
-              else if(2 == ivar + jvar) kvar = geoDim + 2;    // xz
-              else if(3 == ivar + jvar) kvar = geoDim + 1;    // yz
+              if (ivar == jvar) kvar = jvar;
+              else if (1 == ivar + jvar) kvar = geoDim;    // xy
+              else if (2 == ivar + jvar) kvar = geoDim + 2;   // xz
+              else if (3 == ivar + jvar) kvar = geoDim + 1;   // yz
 
               divGradSol[ivar]   += 0.5 * (NablaSolVAR[ivar][jvar] + NablaSolVAR[jvar][kvar]);
             }
@@ -987,22 +1050,22 @@ namespace femus
         }
 
         //BEGIN local assembly
-        for(unsigned i = 0; i < nve; i++) {
-          for(unsigned ivar = 0; ivar < varDim; ivar++) {
-            for(unsigned jvar = 0; jvar < geoDim; jvar++) {
+        for (unsigned i = 0; i < nve; i++) {
+          for (unsigned ivar = 0; ivar < varDim; ivar++) {
+            for (unsigned jvar = 0; jvar < geoDim; jvar++) {
               aRhs[ivar][i] += gradphi[i * geoDim + jvar] * (GradSolVAR[ivar][jvar]) * Weight;
 
-              if(diffusion) {
+              if (diffusion) {
                 aLhs[ivar][i] +=  divGradSol[ivar] * nablaphi[i * nablaGoeDim + jvar] * Weight;
                 //aRhs[ivar][i] += gradphi[i*geoDim+jvar]*(GradSolVAR[ivar][jvar]) * Weight;
               }
-              else if(elasticity) {
+              else if (elasticity) {
                 unsigned kvar;
 
-                if(ivar == jvar) kvar = jvar;
-                else if(1 == ivar + jvar) kvar = geoDim;     // xy
-                else if(2 == ivar + jvar) kvar = geoDim + 2;    // xz
-                else if(3 == ivar + jvar) kvar = geoDim + 1;    // yz
+                if (ivar == jvar) kvar = jvar;
+                else if (1 == ivar + jvar) kvar = geoDim;    // xy
+                else if (2 == ivar + jvar) kvar = geoDim + 2;   // xz
+                else if (3 == ivar + jvar) kvar = geoDim + 1;   // yz
 
                 aLhs[ivar][i] +=  divGradSol[ivar] * 0.5 * nablaphi[i * nablaGoeDim + jvar] * Weight;
                 aLhs[jvar][i] +=  divGradSol[ivar] * 0.5 * nablaphi[i * nablaGoeDim + kvar] * Weight;
@@ -1019,13 +1082,13 @@ namespace femus
       //std::cout<<hk<<std::endl;
       double lambdak = 6. / (hk * hk);   //if SolType is linear
 
-      if(SolType == 1 || SolType == 2) {    // only if solType is quadratic or biquadratic
-        for(int ivar = 0; ivar < varDim; ivar++) {
+      if (SolType == 1 || SolType == 2) {   // only if solType is quadratic or biquadratic
+        for (int ivar = 0; ivar < varDim; ivar++) {
           adeptStack.independent(&Soli[ivar][0], nve);
         }
 
         //Store RHS in M
-        for(int ivar = 0; ivar < varDim; ivar++) {
+        for (int ivar = 0; ivar < varDim; ivar++) {
           adeptStack.dependent(&aRhs[ivar][0], nve);
         }
 
@@ -1033,7 +1096,7 @@ namespace femus
         adeptStack.clear_dependents();
 
         //Store LHS in K
-        for(int ivar = 0; ivar < varDim; ivar++) {
+        for (int ivar = 0; ivar < varDim; ivar++) {
           adeptStack.dependent(&aLhs[ivar][0], nve);
         }
 
@@ -1063,11 +1126,11 @@ namespace femus
 //      }
 
         // LU = M factorization
-        for(int k = 0 ; k < indSize - 1 ; k++) {
-          for(int i = k + 1 ; i < indSize ; i++) {
+        for (int k = 0 ; k < indSize - 1 ; k++) {
+          for (int i = k + 1 ; i < indSize ; i++) {
             M[i * matSize + k] /= M[k * matSize + k];
 
-            for(int j = k + 1 ; j < indSize ; j++) {
+            for (int j = k + 1 ; j < indSize ; j++) {
               M[i * matSize + j] -=  M[i * matSize + k] * M[k * matSize + j] ;
             }
           }
@@ -1088,22 +1151,22 @@ namespace femus
         lambdak = 1.;
         double error = 1.;
 
-        while(error > 1.0e-10) {
+        while (error > 1.0e-10) {
           double phikm1 = phik;
           double lambdakm1 = lambdak;
 
           // y = K x
-          for(int i = 0; i < indSize; i++) {
+          for (int i = 0; i < indSize; i++) {
             y[i] = 0.;
 
-            for(int j = 0; j < indSize; j++) {
+            for (int j = 0; j < indSize; j++) {
               y[i] += K[ i * matSize + j ] * x[j];
             }
           }
 
           // y = L^(-1) y
-          for(int i = 0; i < indSize; i++) {
-            for(int j = 0; j < i; j++) {
+          for (int i = 0; i < indSize; i++) {
+            for (int j = 0; j < i; j++) {
               y[i] -= M[i * matSize + j] * y[j];
             }
           }
@@ -1111,10 +1174,10 @@ namespace femus
           // x <--  y = U^(-1) y
           double l2norm = 0.;
 
-          for(int i = indSize - 1; i >= 0; i--) {
+          for (int i = indSize - 1; i >= 0; i--) {
             x[i] = y[i];
 
-            for(int j = i + 1; j < indSize; j++) {
+            for (int j = i + 1; j < indSize; j++) {
               x[i] -= M[ i * matSize + j] * x[j];
             }
 
@@ -1127,7 +1190,7 @@ namespace femus
           phik = (x[0] + x[1]);
           lambdak =  phik / phikm1;
 
-          for(int i = 0; i < indSize; i++) {
+          for (int i = 0; i < indSize; i++) {
             x[i] /= l2norm;
           }
 
@@ -1153,7 +1216,7 @@ namespace femus
 
 //***************************************************************************************************************
 
-  void StoreMeshVelocity(MultiLevelProblem& ml_prob)
+  void StoreMeshVelocity(MultiLevelProblem & ml_prob)
   {
 
     TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem> ("Fluid-Structure-Interaction");
@@ -1170,7 +1233,7 @@ namespace femus
 
     vector <unsigned> indVAR(3 * dim);
 
-    for(unsigned ivar = 0; ivar < 3 * dim; ivar++) {
+    for (unsigned ivar = 0; ivar < 3 * dim; ivar++) {
       indVAR[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
     }
 
@@ -1180,20 +1243,20 @@ namespace femus
     int  iproc;
     MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
 
-    for(unsigned idim = 0; idim < dim; idim++) {
+    for (unsigned idim = 0; idim < dim; idim++) {
       unsigned ivar = idim * 3;
 
-      for(unsigned jdof = msh->_dofOffset[2][iproc]; jdof < msh->_dofOffset[2][iproc + 1]; jdof++) {
+      for (unsigned jdof = msh->_dofOffset[2][iproc]; jdof < msh->_dofOffset[2][iproc + 1]; jdof++) {
         bool solidmark = msh->GetSolidMark(jdof);
         double vnew;
 
-        if(solidmark != solidmark) {
+        if (solidmark != solidmark) {
           vnew = (*solution->_Sol[indVAR[ivar + 1]])(jdof);     // solid: mesh velocity equals solid velocity
         }
         else {
           double unew = (*solution->_Sol[indVAR[ivar]])(jdof);
           double uold = (*solution->_SolOld[indVAR[ivar]])(jdof);
-	  double vold = (*solution->_Sol[indVAR[ivar + 2]])(jdof);
+          double vold = (*solution->_Sol[indVAR[ivar + 2]])(jdof);
           vnew = 1. / dt * (unew - uold) - 0. * vold;
         }
         solution->_Sol[indVAR[ivar + 2]]->set(jdof, vnew);

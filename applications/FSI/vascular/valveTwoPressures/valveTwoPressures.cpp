@@ -29,7 +29,7 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes);
 
 int main(int argc, char** args)
 {
-
+  
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
@@ -40,9 +40,12 @@ int main(int argc, char** args)
 
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 
+  valve = true;
+  twoPressure = false;
+  
   //std::string infile = "./../input/valve/2D/valve2.neu";
-  std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
-  //std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
+  //std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
+  std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -80,8 +83,6 @@ int main(int argc, char** args)
 
   numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
-
-  std::cout << 0 << std::endl;
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
                         infile.c_str(), "fifth", Lref, NULL);
@@ -163,7 +164,6 @@ int main(int argc, char** args)
 
   system.AddSolutionToSystemPDE("PS");
 
-  //twoPressure = false;
   if (twoPressure) system.AddSolutionToSystemPDE("PF");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
@@ -373,6 +373,13 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
       value = (0 - 15 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10, 15, 15
+    }
+    else if(7 == facename) {
+      //value = 1;
+      //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
+      //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
+      //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
+      value = 123456789;      //- 3.5, 6, 7, 10, 10, 15, 15
     }
   }
   else if(!strcmp(name, "PF")) {

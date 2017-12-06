@@ -10,7 +10,7 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
-#include "../include/FSITimeDependentAssemblySupg_OLD.hpp"
+#include "../include/FSITimeDependentAssemblySupgNonConservativeTwoPressures.hpp"
 #include <cmath>
 double scale = 1000.;
 
@@ -40,9 +40,14 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
 int main(int argc, char **args)
 {
 
+  
+  
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  valve = false;
+  twoPressure = false;
+  
   unsigned simulation = 0;
 
   if(argc >= 2) {
@@ -186,15 +191,14 @@ int main(int argc, char **args)
   ml_sol.PairSolution("V", "DY");    // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
-  ml_sol.AssociatePropertyToSolution("P", "Pressure", false);    // Add this line
+  ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AssociatePropertyToSolution("PS", "Pressure", false);    // Add this line
 
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
-  ml_sol.AddSolution("DX1", LAGRANGE, SECOND, 2);
-  ml_sol.AddSolution("DY1", LAGRANGE, SECOND, 2);
-  
-  
+  ml_sol.AddSolution("Um", LAGRANGE, SECOND, 0, false);
+  ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
+    
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
@@ -228,10 +232,10 @@ int main(int argc, char **args)
     ml_sol.GenerateBdc("V", "Steady");
   }
   if(simulation == 7) {
-    ml_sol.GenerateBdc("P", "Steady");
+    ml_sol.GenerateBdc("PS", "Steady");
   }
   else {
-    ml_sol.GenerateBdc("P", "Time_dependent");
+    ml_sol.GenerateBdc("PS", "Time_dependent");
   }
 
 //   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
@@ -255,10 +259,10 @@ int main(int argc, char **args)
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
 
-  system.AddSolutionToSystemPDE("P");
+  system.AddSolutionToSystemPDE("PS");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
-  system.SetAssembleFunction(FSITimeDependentAssemblySupg);
+  system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
@@ -328,7 +332,7 @@ int main(int argc, char **args)
 
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
     for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
-      SetLambda(ml_sol, level , SECOND, ELASTICITY);
+      SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
     }
     data[time_step].resize(5);
     if(time_step > 0)
@@ -336,6 +340,8 @@ int main(int argc, char **args)
     system.CopySolutionToOldSolution();
 
     system.MGsolve();
+    StoreMeshVelocity(ml_prob);
+    
     //data[time_step][0] = time_step / 16.;
     //data[time_step][0] = time_step / 20.;
     data[time_step][0] = time_step / 32.;
@@ -488,7 +494,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
       value = 0.;
     }
   }
-  else if(!strcmp(name, "P")) {
+  else if(!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
   }
@@ -542,7 +548,7 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
       value = 0;
     }
   }
-  else if(!strcmp(name, "P")) {
+  else if(!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
   }
@@ -589,7 +595,7 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
       value = 0;
     }
   }
-  else if(!strcmp(name, "P")) {
+  else if(!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
 //     if ( 2 == facename || 3 == facename ) {
@@ -627,7 +633,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       value = 0;
     }
   }
-  else if(!strcmp(name, "P")) {
+  else if(!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
     if(1 == facename) {
@@ -748,7 +754,7 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
   unsigned solDType = mlSol.GetSolutionType(solDIndex[0]);
 
   unsigned solPIndex;
-  solPIndex = mlSol.GetIndex("P");
+  solPIndex = mlSol.GetIndex("PS");
   unsigned solPType = mlSol.GetSolutionType(solPIndex);
 
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
