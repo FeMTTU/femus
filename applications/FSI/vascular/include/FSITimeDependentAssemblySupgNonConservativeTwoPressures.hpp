@@ -30,6 +30,8 @@ namespace femus
   bool twoPressure = true;
 
   bool valve = true;
+  
+  double Kslip = 0.;
 
   void FSITimeDependentAssemblySupgNew2(MultiLevelProblem& ml_prob)
   {
@@ -296,10 +298,9 @@ namespace femus
 
               double tau = 0.;
 
-              if (!ml_sol->GetBdcFunction()(xx, "PS", tau, face, time + (-1. + s[tip]) * dt) && tau != 0.) {
+              if ( !ml_sol->GetBdcFunction()(xx, "PS", tau, face, time + (-1. + s[tip]) * dt)  &&  ( tau != 0. || Kslip != 0.) ) {
 
-		bool friction = (tau == 123456789)? false : false;
-                unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
+		unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
                 const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
 		vector <vector < adept::adouble > > sol_face(dim);
@@ -308,17 +309,18 @@ namespace femus
 		  sol_face[idim].resize(nve);
                 }
                 
+                std::vector < unsigned > ilocal(nve); 
+                
                 unsigned shift = (flag_mat == 4) ? 0:1;
                 
                 for (unsigned i = 0; i < nve; i++) {
-                  unsigned int ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
+                  ilocal[i] = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
 
                   for (unsigned idim = 0; idim < dim; idim++) {
-                    vx_face[idim][i]  = vx_hat[idim][ilocal] +
-                                          ((1. - s[tip]) * Soli_old[indexVAR[idim]][ilocal] + s[tip] * Soli[indexVAR[idim]][ilocal]);
-		    sol_face[idim][i] = ((1. - s[tip]) * Soli_old[indexVAR[dim * shift + idim]][ilocal] + s[tip] * Soli[indexVAR[dim * shift + idim]][ilocal]); 
-                  }
-                  
+                    vx_face[idim][i]  = vx_hat[idim][ilocal[i]] +
+                                          ((1. - s[tip]) * Soli_old[indexVAR[idim]][ilocal[i]] + s[tip] * Soli[indexVAR[idim]][ilocal[i]]);
+		    sol_face[idim][i] = ((1. - s[tip]) * Soli_old[indexVAR[dim * shift + idim]][ilocal[i]] + s[tip] * Soli[indexVAR[dim * shift + idim]][ilocal[i]]); 
+                  }              
                 }
 
                 for (unsigned igs = 0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
@@ -331,31 +333,25 @@ namespace femus
 		      solVAR_face[idim] += phi[i] * sol_face[idim][i];
 		    }
 		  }
-		  double k=0.001;
+		 
                   // *** phi_i loop ***
                   for (unsigned i = 0; i < nve; i++) {
                     std::vector < adept::adouble> value(dim);
 		    for(unsigned idim = 0; idim < dim; idim++){
-		      value[idim] = 0.;
-		      if( !friction ){
-		        value[idim] = - theta[tip] * phi[i] * tau * normal[idim] / rhof * Weight;
-		      }
-		      else{
-		        value[idim] = - theta[tip] * phi[i] * solVAR_face[idim] * k / rhof * Weight;
-		      }
+		      value[idim] =  - theta[tip] * phi[i] * ( tau * normal[idim] +  Kslip * solVAR_face[idim] ) / rhof * Weight;
 		    }
-                    unsigned int ilocal = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
 
                     for (unsigned idim = 0; idim < dim; idim++) {
-                      if ((!solidmark[ilocal])) {
-                        aRhs[indexVAR[dim + idim]][ilocal]   +=  value[idim];
+                      if ((!solidmark[ilocal[i]])) {
+                        aRhs[indexVAR[dim + idim]][ilocal[i]] += value[idim];
                       }
                       else {   //if interface node it goes to solid
-                        aRhs[indexVAR[idim]][ilocal]   += value[idim];
+                        aRhs[indexVAR[idim]][ilocal[i]] += value[idim];
                       }
                     }
                   }
                 }
+                Kslip = 0.;
               }
             }
           }
