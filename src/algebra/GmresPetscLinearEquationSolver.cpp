@@ -106,6 +106,15 @@ namespace femus {
     }
     //END ASSEMBLE
 
+//     PetscViewer    viewer;
+//     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+//     PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+//     PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//     MatView(KK,viewer);
+//     double a;
+//     std::cin>>a;
+    
+    
     //BEGIN SOLVE and UPDATE
     ZerosBoundaryResiduals();
     KSPSolve(_ksp, (static_cast< PetscVector* >(_RES))->vec(), (static_cast< PetscVector* >(_EPSC))->vec());
@@ -159,8 +168,9 @@ namespace femus {
 
       KSPSetFromOptions(_ksp);
       KSPGMRESSetRestart(_ksp, _restart);
-
+      
       SetPreconditioner(_ksp, _pc);
+      
     }
   }
 
