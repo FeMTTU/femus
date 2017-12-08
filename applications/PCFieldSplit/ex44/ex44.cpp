@@ -159,8 +159,9 @@ int main(int argc, char** args)
   system.AddSolutionToSystemPDE("V");
   if (dim == 3) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("P");
-  system.SetMgSmoother(GMRES_SMOOTHER);
-
+  //system.SetMgSmoother(GMRES_SMOOTHER);
+  system.SetMgSmoother(ASM_SMOOTHER);
+  
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
 
@@ -180,7 +181,7 @@ int main(int argc, char** args)
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetPreconditionerFineGrids(MLU_PRECOND);
 
   system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 30, 30); //GMRES tolerances
 
@@ -510,7 +511,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       unsigned irow =  i * nDofsVP;
       for(unsigned j = 0; j < nDofsP; j++){
 	unsigned jcol = (dim * nDofsV) + j;
-	BtMinv[i][j] = 0.01 * Jac[ irow +  jcol] / M[j];
+	BtMinv[i][j] = .1 * Jac[ irow +  jcol] / M[j];
       }
     }
     
