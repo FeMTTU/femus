@@ -479,9 +479,11 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
               Jac[ irowMat + jcol ] -= phiP[i] * phiV_x[j * dim + k] * weight;
             }
             
-            for (unsigned j = 0; j < nDofsP; j++) {
-              M[i] = phiP[i] * phiP[j] * weight;
-            }
+            M[i] += phiP[i] * phiP[i] * weight;
+            
+//             for (unsigned j = 0; j < nDofsP; j++) {
+//               M[i] += phiP[i] * phiP[j] * weight;
+//             }
             
           }
 
@@ -508,7 +510,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       unsigned irow =  i * nDofsVP;
       for(unsigned j = 0; j < nDofsP; j++){
 	unsigned jcol = (dim * nDofsV) + j;
-	BtMinv[i][j] = Jac[ irow +  jcol] / M[j];
+	BtMinv[i][j] = 0.01 * Jac[ irow +  jcol] / M[j];
       }
     }
     
@@ -545,11 +547,14 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
      for(unsigned i = 0; i < dim * nDofsV; i++){
 	unsigned irow =  i * nDofsVP;
 	for(unsigned j = 0; j < dim * nDofsV; j++){
-	  //std::cout<< Jac[irow + j] <<" "<< Mu * Jg[i][j]<<"\t";
+	  Jac[irow + j] += Jg[i][j];
+	  //std::cout<< Jg[i][j]<<" ";
+	  //std::cout<< Jac[irow + j]<<" ";
 	}
-	//Res[i] += 0*fg[i];
+	//std::cout<<"\n";
+	Res[i] += fg[i];
      }
-    
+    //std::cout<<"\n";
     
     
     
