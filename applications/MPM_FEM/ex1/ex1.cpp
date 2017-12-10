@@ -63,7 +63,7 @@ int main(int argc, char** args) {
 
   std::cout << " --------------------------------------------------     TEST     --------------------------------------------------" << std::endl;
 
-  mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "first", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   unsigned dim = mlMsh.GetDimension();
@@ -521,20 +521,20 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
       std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
       // the mass of the particle acts as weight
       double mass = particles[iMarker]->GetMarkerMass();
-      mass = 0.79012345679012; //WARNING remove after testing, this is the central Gauss point weight with 9 Gauss points
+      mass = 4 * 0.125; //WARNING remove after testing, this is the weight of the gauss points times the area of the element
       double density = particles[iMarker]->GetMarkerDensity();
       adept::adouble weight;
       adept::adouble weightFake; //WARNING remove after testing
       double weight_hat;
 
-//       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, 0, weight, phi, gradphi, nablaphi); // function to evaluate at the gauss points
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, 0, weight, phi, gradphi, nablaphi); // function to evaluate at the gauss points
 //       std::cout << "basis functions evaluated at the gauss point" << std::endl;
 //       std::cout << "total number of Gauss points = " << mymsh->_finiteElement[ielt][solType]->GetGaussPointNumber() << std::endl;
 //       for(unsigned i = 0; i < phi.size(); i++) {
 //         std::cout << "phi[" << i << "]=" << phi[i] << std::endl;
 //       }
 
-      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weightFake, phi, gradphi, nablaphi); //function to evaluate at the particles
+//      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weightFake, phi, gradphi, nablaphi); //function to evaluate at the particles
 //       std::cout << "basis functions evaluated at the particle" << " " << "iel = " << iel << std::endl;
 //       for(unsigned i = 0; i < phi.size() ; i++) {
 //         std::cout << "phi[" << i << "]=" << phi[i] << std::endl;
@@ -572,7 +572,7 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
           for(unsigned j = 0; j < dim; j++) {
             Laplacian += mu * gradphi[k * dim + j] * (GradSolDp[i][j] + GradSolDp[j][i]);
           }
-          aRhs[indexPdeD[i]][k] += - (Laplacian / density - gravityP[i] * phi[k]) * mass;
+          aRhs[indexPdeD[i]][k] += - (Laplacian / density - gravity[i] * phi[k]) * weight;
         }
       }
       //END
