@@ -534,7 +534,7 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
 //         std::cout << "phi[" << i << "]=" << phi[i] << std::endl;
 //       }
 
-//      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weightFake, phi, gradphi, nablaphi); //function to evaluate at the particles
+     mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weightFake, phi, gradphi, nablaphi); //function to evaluate at the particles
 //       std::cout << "basis functions evaluated at the particle" << " " << "iel = " << iel << std::endl;
 //       for(unsigned i = 0; i < phi.size() ; i++) {
 //         std::cout << "phi[" << i << "]=" << phi[i] << std::endl;
@@ -572,7 +572,7 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
           for(unsigned j = 0; j < dim; j++) {
             Laplacian += mu * gradphi[k * dim + j] * (GradSolDp[i][j] + GradSolDp[j][i]);
           }
-          aRhs[indexPdeD[i]][k] += - (Laplacian / density - gravity[i] * phi[k]) * weight;
+          aRhs[indexPdeD[i]][k] += - (Laplacian / density - gravityP[i] * phi[k]) * mass;
         }
       }
       //END
