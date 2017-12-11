@@ -27,7 +27,8 @@ using std::cout;
 using std::endl;
 
 
-namespace femus {
+namespace femus
+{
 
   const unsigned elem_type::_fe_old_to_new[QL] = {2, 0, 3};
   const unsigned elem_type::_fe_new_to_old[NFE_FAMS] = {1, -7, 0, 2, -7};
@@ -35,12 +36,14 @@ namespace femus {
   unsigned elem_type::_refindex = 1;
 
 //   Constructor
-  elem_type::elem_type(const char* geom_elem, const char* order_gauss) : _gauss(geom_elem, order_gauss) {
+  elem_type::elem_type(const char* geom_elem, const char* order_gauss) : _gauss(geom_elem, order_gauss)
+  {
     isMpGDAllocated = false;
   }
 
 
-  elem_type::~elem_type() {
+  elem_type::~elem_type()
+  {
     delete [] _X;
     delete [] _KVERT_IND;
     delete [] _IND;
@@ -71,7 +74,8 @@ namespace femus {
 // evaluate shape functions at all quadrature points  TODO DEALLOCATE at destructor TODO FEFamilies TODO change HEX27 connectivity
 //-----------------------------------------------------------------------------------------------------
 
-  void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in, const std::string fe_in) {
+  void elem_type::EvaluateShapeAtQP(const std::string geomel_id_in, const std::string fe_in)
+  {
 
 // if (  (!strcmp(fe_in.c_str(),"disc_linear"))  || (!strcmp(fe_in.c_str(),"quadratic")) ) {  std::cout << "BEWARE, family not supported yet" << std::endl; return; }
 
@@ -163,7 +167,8 @@ namespace femus {
 
   void elem_type::GetSparsityPatternSize(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc,
                                          NumericVector* NNZ_d, NumericVector* NNZ_o,
-                                         const unsigned& index_sol, const unsigned& kkindex_sol) const {
+                                         const unsigned& index_sol, const unsigned& kkindex_sol) const
+  {
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       for(int i = 0; i < _nf; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
@@ -210,7 +215,8 @@ namespace femus {
 
 
   void elem_type::BuildProlongation(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc, SparseMatrix* Projmat,
-                                    const unsigned& index_sol, const unsigned& kkindex_sol) const {
+                                    const unsigned& index_sol, const unsigned& kkindex_sol) const
+  {
 
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       vector<int> cols(_nc);
@@ -247,7 +253,8 @@ namespace femus {
 
   void elem_type::BuildRestrictionTranspose(const LinearEquation& lspdef, const LinearEquation& lspdec, const int& ielc, SparseMatrix* Projmat,
       const unsigned& index_sol, const unsigned& kkindex_sol,
-      const unsigned& index_pair_sol, const unsigned& kkindex_pair_sol) const {
+      const unsigned& index_pair_sol, const unsigned& kkindex_pair_sol) const
+  {
 
     if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
 
@@ -326,7 +333,8 @@ namespace femus {
 //BEGIN  build matrix sparsity pattern size and build prolungator matrix for single solution
 //-----------------------------------------------------------------------------------------------------
 
-  void elem_type::GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const {
+  void elem_type::GetSparsityPatternSize(const Mesh& meshf, const Mesh& meshc, const int& ielc, NumericVector* NNZ_d, NumericVector* NNZ_o) const
+  {
 
     if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       for(int i = 0; i < _nf; i++) {
@@ -367,7 +375,8 @@ namespace femus {
   }
 
   void elem_type::BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc,
-                                    SparseMatrix* Projmat) const {
+                                    SparseMatrix* Projmat) const
+  {
     if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
       vector<int> jcols(_nc);
 
@@ -407,7 +416,8 @@ namespace femus {
 //BEGIN prolungator for solution printing
 //----------------------------------------------------------------------------------------------------
 
-  void elem_type::GetSparsityPatternSize(const Mesh& mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const {
+  void elem_type::GetSparsityPatternSize(const Mesh& mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const
+  {
     bool identity = (_nlag[itype] <= _nc) ? true : false;
     for(int i = 0; i < _nlag[itype]; i++) {
       int irow = mesh.GetSolutionDof(i, iel, itype);
@@ -428,7 +438,8 @@ namespace femus {
     }
   }
 
-  void elem_type::BuildProlongation(const Mesh& mesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const {
+  void elem_type::BuildProlongation(const Mesh& mesh, const int& iel, SparseMatrix* Projmat, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const
+  {
     vector<int> cols(_nc);
     vector<double> value(_nc);
     bool identity = (_nlag[itype] <= _nc) ? true : false;
@@ -460,9 +471,10 @@ namespace femus {
 
 
   elem_type_1D::elem_type_1D(const char* geom_elem, const char* order, const char* order_gauss) :
-    elem_type(geom_elem, order_gauss) {
+    elem_type(geom_elem, order_gauss)
+  {
 
-    basis *linearElement;
+    basis* linearElement;
 
     _dim = 1;
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -557,7 +569,7 @@ namespace femus {
         double phi = _pt_basis->eval_phi(_IND[j], _X[i]);
 
 
-	//std::cout << j << " "<< phi << std::endl;
+        //std::cout << j << " "<< phi << std::endl;
 
         if(_SolType == 4 && i / 2 == 1) { //if piece_wise_linear derivatives
           phi = jac[j];
@@ -655,32 +667,32 @@ namespace femus {
       _gradPhiFace.resize(nFaces);
       _hessianPhiFace.resize(nFaces);
 
-       double xv[2]={-1,1};
+      double xv[2] = { -1, 1};
 
       for(int iface = 0; iface < nFaces; iface++) {
         _phiFace[iface].resize(1);
         _gradPhiFace[iface].resize(1);
         _hessianPhiFace[iface].resize(1);
 
-	_phiFace[iface][0].resize(_nc);
+        _phiFace[iface][0].resize(_nc);
         _gradPhiFace[iface][0].resize(_nc);
         _hessianPhiFace[iface][0].resize(_nc);
 
-	for(int j = 0; j < _nc; j++) {
-         _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xv[iface]);
+        for(int j = 0; j < _nc; j++) {
+          _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xv[iface]);
 
-	 //std::cout <<  _phiFace[iface][0][j] << " ";
+          //std::cout <<  _phiFace[iface][0][j] << " ";
 
-         _gradPhiFace[iface][0][j].resize(1);
-         _gradPhiFace[iface][0][j][0] = _pt_basis->eval_dphidx(_IND[j], &xv[iface]);
+          _gradPhiFace[iface][0][j].resize(1);
+          _gradPhiFace[iface][0][j][0] = _pt_basis->eval_dphidx(_IND[j], &xv[iface]);
 
-	 //std::cout <<  _gradPhiFace[iface][0][j][0] << " ";
+          //std::cout <<  _gradPhiFace[iface][0][j][0] << " ";
 
           _hessianPhiFace[iface][0][j].resize(1);
           _hessianPhiFace[iface][0][j][0].resize(1);
           _hessianPhiFace[iface][0][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], &xv[iface]);
 
-	  //std::cout <<  _hessianPhiFace[iface][0][j][0][0] << " ";
+          //std::cout <<  _hessianPhiFace[iface][0][j][0][0] << " ";
         }
         //std::cout << std::endl;
       }
@@ -702,9 +714,10 @@ namespace femus {
 
 
   elem_type_2D::elem_type_2D(const char* geom_elem, const char* order, const char* order_gauss):
-    elem_type(geom_elem, order_gauss) {
+    elem_type(geom_elem, order_gauss)
+  {
 
-    basis *linearElement;
+    basis* linearElement;
 
     _dim = 2;
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -945,12 +958,12 @@ namespace femus {
 
     //std::cout << std::endl;
     if(_SolType < 3) {
-      basis *linearLine = new LineLinear;
+      basis* linearLine = new LineLinear;
 
       Gauss faceGaussPoint = Gauss("line", order_gauss);
       const double* xi = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
 
-      basis *faceBasis = linearLine;
+      basis* faceBasis = linearLine;
 
       unsigned nFaces = _pt_basis->faceNumber[2];
       _phiFace.resize(nFaces);
@@ -1011,7 +1024,8 @@ namespace femus {
   }
 
   elem_type_3D::elem_type_3D(const char* geom_elem, const char* order, const char* order_gauss) :
-    elem_type(geom_elem, order_gauss)  {
+    elem_type(geom_elem, order_gauss)
+  {
 
     _dim = 3;
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -1019,7 +1033,7 @@ namespace femus {
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
     _DPhiXiEtaZetaPtr[2] = &elem_type::GetDPhiDZeta;
 
-    basis *linearElement;
+    basis* linearElement;
 
     //************ BEGIN FE and MG SETUP ******************
     if(!strcmp(order, "linear")) 	 _SolType = 0;
@@ -1328,13 +1342,13 @@ namespace femus {
 
     //std::cout << std::endl;
     if(_SolType < 3) {
-      basis *linearQuad = new QuadLinear;
-      basis *linearTri = new TriLinear;
+      basis* linearQuad = new QuadLinear;
+      basis* linearTri = new TriLinear;
 
       Gauss quadGaussPoint = Gauss("quad", order_gauss);
       Gauss triGaussPoint = Gauss("tri", order_gauss);
 
-      Gauss *faceGauss[2];
+      Gauss* faceGauss[2];
       faceGauss[0] = &quadGaussPoint;
       faceGauss[1] = &triGaussPoint;
 
@@ -1346,7 +1360,7 @@ namespace femus {
                               faceGauss[1]->GetGaussWeightsPointer() + 2 * (faceGauss[1]->GetGaussPointsNumber())
                             };
 
-      basis *faceBasis[2];
+      basis* faceBasis[2];
       faceBasis[0] = linearQuad;
       faceBasis[1] = linearTri;
 
@@ -1367,10 +1381,10 @@ namespace femus {
             zv[jnode] = *(_pt_basis->GetXcoarse(iDof) + 2);
           }
 
-	  unsigned nGaussPts = faceGauss[type]->GetGaussPointsNumber();
-	  _phiFace[iface].resize(nGaussPts);
-	  _gradPhiFace[iface].resize(nGaussPts);
-	  _hessianPhiFace[iface].resize(nGaussPts);
+          unsigned nGaussPts = faceGauss[type]->GetGaussPointsNumber();
+          _phiFace[iface].resize(nGaussPts);
+          _gradPhiFace[iface].resize(nGaussPts);
+          _hessianPhiFace[iface].resize(nGaussPts);
 
           for(unsigned i = 0; i < nGaussPts; i++) {
             double x[3] = {0., 0., 0.};
@@ -1381,33 +1395,33 @@ namespace femus {
               x[2] += faceBasis[type]->eval_phi(faceBasis[type]->GetIND(j), vertex) * zv[j] ;
             }
 
-	    _phiFace[iface][i].resize(_nc);
-	    _gradPhiFace[iface][i].resize(_nc);
-	    _hessianPhiFace[iface][i].resize(_nc);
+            _phiFace[iface][i].resize(_nc);
+            _gradPhiFace[iface][i].resize(_nc);
+            _hessianPhiFace[iface][i].resize(_nc);
             for(int j = 0; j < _nc; j++) {
               _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x);
 
-	      _gradPhiFace[iface][i][j].resize(3);
+              _gradPhiFace[iface][i][j].resize(3);
               _gradPhiFace[iface][i][j][0] = _pt_basis->eval_dphidx(_IND[j], x);
               _gradPhiFace[iface][i][j][1] = _pt_basis->eval_dphidy(_IND[j], x);
               _gradPhiFace[iface][i][j][2] = _pt_basis->eval_dphidz(_IND[j], x);
 
-	      _hessianPhiFace[iface][i][j].resize(3);
-	      _hessianPhiFace[iface][i][j][0].resize(3);
-	      _hessianPhiFace[iface][i][j][1].resize(3);
-	      _hessianPhiFace[iface][i][j][2].resize(3);
+              _hessianPhiFace[iface][i][j].resize(3);
+              _hessianPhiFace[iface][i][j][0].resize(3);
+              _hessianPhiFace[iface][i][j][1].resize(3);
+              _hessianPhiFace[iface][i][j][2].resize(3);
 
-	      _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x);
+              _hessianPhiFace[iface][i][j][0][0] = _pt_basis->eval_d2phidx2(_IND[j], x);
               _hessianPhiFace[iface][i][j][0][1] = _pt_basis->eval_d2phidxdy(_IND[j], x);
-	      _hessianPhiFace[iface][i][j][0][2] = _pt_basis->eval_d2phidzdx(_IND[j], x);
+              _hessianPhiFace[iface][i][j][0][2] = _pt_basis->eval_d2phidzdx(_IND[j], x);
 
-	      _hessianPhiFace[iface][i][j][1][0] =  _hessianPhiFace[iface][i][j][0][1];
-	      _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x);
+              _hessianPhiFace[iface][i][j][1][0] =  _hessianPhiFace[iface][i][j][0][1];
+              _hessianPhiFace[iface][i][j][1][1] = _pt_basis->eval_d2phidy2(_IND[j], x);
               _hessianPhiFace[iface][i][j][1][2] = _pt_basis->eval_d2phidydz(_IND[j], x);
 
-	      _hessianPhiFace[iface][i][j][2][0] = _hessianPhiFace[iface][i][j][0][2];
-	      _hessianPhiFace[iface][i][j][2][1] = _hessianPhiFace[iface][i][j][1][2];
-	      _hessianPhiFace[iface][i][j][2][2] = _pt_basis->eval_d2phidz2(_IND[j], x);
+              _hessianPhiFace[iface][i][j][2][0] = _hessianPhiFace[iface][i][j][0][2];
+              _hessianPhiFace[iface][i][j][2][1] = _hessianPhiFace[iface][i][j][1][2];
+              _hessianPhiFace[iface][i][j][2][2] = _pt_basis->eval_d2phidz2(_IND[j], x);
             }
           }
         }
@@ -1429,11 +1443,17 @@ namespace femus {
 
   template <class type>
   void elem_type_1D::Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const {
+                                   vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const
+  {
 
+    bool hermitianMatrix = true;
+    if(&nablaphi == NULL) {
+      hermitianMatrix = false;
+    }
+    
     phi.resize(_nc);
     gradphi.resize(_nc * 1);
-    nablaphi.resize(_nc * 1);
+    if(hermitianMatrix) nablaphi.resize(_nc * 1);
 
     type Jac = 0.;
     type JacI;
@@ -1454,7 +1474,7 @@ namespace femus {
     for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
       phi[inode] = _phi[ig][inode];
       gradphi[inode] = (*dxi) * JacI;
-      nablaphi[inode] = (*dxi2) * JacI * JacI;
+      if(hermitianMatrix) nablaphi[inode] = (*dxi2) * JacI * JacI;
     }
 
   }
@@ -1463,7 +1483,8 @@ namespace femus {
 
   template <class type>
   void elem_type_1D::JacobianSur_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                      vector < double >& phi, vector < type >& gradphi, vector < type >& normal) const {
+                                      vector < double >& phi, vector < type >& gradphi, vector < type >& normal) const
+  {
 
     phi.resize(_nc);
     normal.resize(2);
@@ -1512,11 +1533,17 @@ namespace femus {
 
   template <class type>
   void elem_type_2D::Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const {
+                                   vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const
+  {
 
+    bool hermitianMatrix = true;
+    if(&nablaphi == NULL) {
+      hermitianMatrix = false;
+    }
+    
     phi.resize(_nc);
     gradphi.resize(_nc * 2);
-    nablaphi.resize(_nc * 3);
+    if(hermitianMatrix) nablaphi.resize(_nc * 3);
 
     type Jac[2][2] = {{0, 0}, {0, 0}};
     type JacI[2][2];
@@ -1553,16 +1580,17 @@ namespace femus {
       gradphi[2 * inode + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1];
       gradphi[2 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1];
 
-      nablaphi[3 * inode + 0] =
-        ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[0][0] +
-        ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[0][1];
-      nablaphi[3 * inode + 1] =
-        ((*dxi2)   * JacI[1][0] + (*dxideta) * JacI[1][1]) * JacI[1][0] +
-        ((*dxideta) * JacI[1][0] + (*deta2)  * JacI[1][1]) * JacI[1][1];
-      nablaphi[3 * inode + 2] =
-        ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[1][0] +
-        ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[1][1];
-
+      if(hermitianMatrix){
+	nablaphi[3 * inode + 0] =
+	  ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[0][0] +
+	  ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[0][1];
+	nablaphi[3 * inode + 1] =
+	  ((*dxi2)   * JacI[1][0] + (*dxideta) * JacI[1][1]) * JacI[1][0] +
+	  ((*dxideta) * JacI[1][0] + (*deta2)  * JacI[1][1]) * JacI[1][1];
+	nablaphi[3 * inode + 2] =
+	  ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[1][0] +
+	  ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[1][1];
+      }
     }
   }
 
@@ -1570,7 +1598,8 @@ namespace femus {
 
   template <class type>
   void elem_type_2D::JacobianSur_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                      vector < double >& phi, vector < type >& gradphi, vector < type >& normal) const {
+                                      vector < double >& phi, vector < type >& gradphi, vector < type >& normal) const
+  {
     phi.resize(_nc);
     normal.resize(3);
 
@@ -1621,11 +1650,18 @@ namespace femus {
 //---------------------------------------------------------------------------------------------------------
   template <class type>
   void elem_type_3D::Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const {
+                                   vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const
+  {
+
+
+    bool hermitianMatrix = true;
+    if(&nablaphi == NULL) {
+      hermitianMatrix = false;
+    }
 
     phi.resize(_nc);
     gradphi.resize(_nc * 3);
-    nablaphi.resize(_nc * 6);
+    if(hermitianMatrix) nablaphi.resize(_nc * 6);
 
 
     type Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
@@ -1682,30 +1718,32 @@ namespace femus {
       gradphi[3 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1] + (*dzeta) * JacI[1][2];
       gradphi[3 * inode + 2] = (*dxi) * JacI[2][0] + (*deta) * JacI[2][1] + (*dzeta) * JacI[2][2];
 
-      nablaphi[6 * inode + 0] =
-        ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[0][0] +
-        ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[0][1] +
-        ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[0][2];
-      nablaphi[6 * inode + 1] =
-        ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[1][0] +
-        ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[1][1] +
-        ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[1][2];
-      nablaphi[6 * inode + 2] =
-        ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[2][0] +
-        ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[2][1] +
-        ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[2][2];
-      nablaphi[6 * inode + 3] =
-        ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[1][0] +
-        ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[1][1] +
-        ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[1][2];
-      nablaphi[6 * inode + 4] =
-        ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[2][0] +
-        ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[2][1] +
-        ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[2][2];
-      nablaphi[6 * inode + 5] =
-        ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[0][0] +
-        ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[0][1] +
-        ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[0][2];
+      if(hermitianMatrix) {
+        nablaphi[6 * inode + 0] =
+          ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[0][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[0][1] +
+          ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[0][2];
+        nablaphi[6 * inode + 1] =
+          ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[1][0] +
+          ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[1][1] +
+          ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[1][2];
+        nablaphi[6 * inode + 2] =
+          ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[2][0] +
+          ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[2][1] +
+          ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[2][2];
+        nablaphi[6 * inode + 3] =
+          ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[1][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[1][1] +
+          ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[1][2];
+        nablaphi[6 * inode + 4] =
+          ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[2][0] +
+          ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[2][1] +
+          ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[2][2];
+        nablaphi[6 * inode + 5] =
+          ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[0][0] +
+          ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[0][1] +
+          ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[0][2];
+      }
     }
 
   }

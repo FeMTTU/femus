@@ -71,7 +71,7 @@ namespace femus {
                 "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << std::endl;
       nonLinearEps = (nonLinearEps > L2normEpsDividedSol) ? nonLinearEps : L2normEpsDividedSol;
       
-      if((L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol /*|| ( (k+1) % 3 == 0 )*/) && conv == true) {
+      if((L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol || ( (k+1) % 3 == 0 )) && conv == true) {
         conv = true;
       }
       else {
