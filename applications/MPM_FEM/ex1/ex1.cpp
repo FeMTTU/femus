@@ -104,7 +104,7 @@ int main(int argc, char** args) {
 
   // ******* System MPM Assembly *******
   system.SetAssembleFunction(AssembleMPMSys);
-
+  //system.SetAssembleFunction(AssembleFEM);
   // ******* set MG-Solver *******
   system.SetMgType(V_CYCLE);
 
@@ -158,8 +158,8 @@ int main(int argc, char** args) {
     for(unsigned j = 0; j < columns; j++) {
 
 
-      x[i * columns + j][0] = -0.5 + (0.625 / (columns - 1)) * j;
-      x[i * columns + j][1] = -0.125 + (0.25 / (rows - 1)) * i;
+      x[i * columns + j][0] = -0.5 + ((0.625-0.0001) / (columns - 1)) * j;
+      x[i * columns + j][1] = -(0.03125)/7+0.00000001 + ((0.25-0.0001) / (rows - 1)) * i;
       if(dim == 3) {
         x[j][2] = 0.;
       }
@@ -378,19 +378,19 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
   
     std::map<unsigned, unsigned > dofCrisi; //WARNING to erase when we found the mistake
   dofCrisi[45] = 1;
-  dofCrisi[46] = 1;
-  dofCrisi[47] = 1;
-  dofCrisi[65] = 1;
-  dofCrisi[66] = 1;
-  dofCrisi[67] = 1;
-  dofCrisi[71] = 1;
-  dofCrisi[366] = 1;
-  dofCrisi[369] = 1;
-  dofCrisi[402] = 1;
-  dofCrisi[405] = 1;
-  dofCrisi[412] = 1;
-  dofCrisi[413] = 1;
-  dofCrisi[561] = 1;
+//   dofCrisi[46] = 1;
+//   dofCrisi[47] = 1;
+//   dofCrisi[65] = 1;
+//   dofCrisi[66] = 1;
+//   dofCrisi[67] = 1;
+//   dofCrisi[71] = 1;
+//   dofCrisi[366] = 1;
+//   dofCrisi[369] = 1;
+//   dofCrisi[402] = 1;
+//   dofCrisi[405] = 1;
+//   dofCrisi[412] = 1;
+//   dofCrisi[413] = 1;
+//   dofCrisi[561] = 1;
   bool printCrisi = false;
   unsigned indexCrisi = UINT_MAX;
 
@@ -461,6 +461,8 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
       //update element related quantities only if we are in a different element
       if(iel != ielOld) {
 
+	printCrisi = false;
+	
         ielt = mymsh->GetElementType(iel);
         nve = mymsh->GetElementDofNumber(iel, solType);
         //initialization of everything is in common fluid and solid
@@ -490,19 +492,19 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
           unsigned idof = mymsh->GetSolutionDof(i, iel, solType); //local 2 global solution
 
 
-          printCrisi = (dofCrisi.find(idof) != dofCrisi.end()) ? true : false; //WARNING to erase when we found the mistake
-          if(printCrisi == true) {
-            indexCrisi = i;
-            std::cout << " -------------------------------- We are looking at critical dof " << idof << " -------------------- " << std::endl;
-            std::cout << " -------------------------------- Local dof " << indexCrisi << " -------------------- " << std::endl;
-          }
+          printCrisi = (dofCrisi.find(idof) != dofCrisi.end() || printCrisi) ? true : false; //WARNING to erase when we found the mistake
+//           if(printCrisi == true) {
+//             indexCrisi = i;
+//             std::cout << " -------------------------------- We are looking at critical dof " << idof << " -------------------- " << std::endl;
+//             std::cout << " -------------------------------- Local dof " << indexCrisi << " -------------------- " << std::endl;
+//           }
 
           for(int j = 0; j < dim; j++) {
             SolDd[indexPdeD[j]][i] = (*mysolution->_Sol[indexSolD[j]])(idof);
 
-            if(printCrisi == true) { //WARNING to erase when we found the mistake
-              std::cout <<   "SolDd[indexPdeD[" << j << "]][" << i << "]=" << SolDd[indexPdeD[j]][i] << std::endl;
-            }
+//             if(printCrisi == true) { //WARNING to erase when we found the mistake
+//               std::cout <<   "SolDd[indexPdeD[" << j << "]][" << i << "]=" << SolDd[indexPdeD[j]][i] << std::endl;
+//             }
 
             dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indexSolD[j], indexPdeD[j], i, iel); //local 2 global Pde
             aRhs[indexPdeD[j]][i] = 0.;
@@ -525,7 +527,7 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
 
         for(unsigned idim = 0; idim < dim; idim++) {
           for(int j = 0; j < nve; j++) {
-            vx[idim][j]    = vx_hat[idim][j] + SolDd[indexPdeD[idim]][j]; //TODO now it runs also with this additional term
+            vx[idim][j]    = vx_hat[idim][j] ;//+ SolDd[indexPdeD[idim]][j]; //TODO now it runs also with this additional term
           }
         }
         // start a new recording of all the operations involving adept::adouble variables
@@ -556,9 +558,9 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weightFake, phi, gradphi, nablaphi); //function to evaluate at the particles
 //          std::cout << "basis functions evaluated at the particle in element " << " " << "iel = " << iel << std::endl;
 //       for(unsigned i = 0; i < phi.size() ; i++) {
-      if( indexCrisi != UINT_MAX){ //WARNING remove after testing
-        std::cout << "phi[" << indexCrisi << "]=" << phi[indexCrisi] << std::endl;
-      }
+//       if( indexCrisi != UINT_MAX){ //WARNING remove after testing
+//         std::cout << "phi[" << indexCrisi << "]=" << phi[indexCrisi] << std::endl;
+//       }
 //       }
 
 
@@ -627,15 +629,17 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
 
           Jac.resize((dim * nve) * (dim * nve));
 
-// 	  //print of the local Jacobian
-// 	  for(unsigned i = 0; i<nve;i++){
-// 	    std::cout<<i<<" ";
-// 	    for(unsigned j = 0; j<nve;j++){
-// 	      std::cout<< Jac[i*(nve*dim)+j] << " ";
-// 	    }
-// 	    std::cout<<std::endl;
-// 	  }
-
+	  if(printCrisi){
+	    //print of the local Jacobian
+	    for(unsigned i = 0; i<nve;i++){
+	      std::cout<<dofsAll[i]<<" ";
+	      for(unsigned j = 0; j<nve;j++){
+		std::cout<< Jac[i*(nve*dim)+j] << " ";
+	      }
+	      std::cout<<std::endl;
+	    }
+	  }
+	  
           s.jacobian(&Jac[0], true);
 
           myKK->add_matrix_blocked(Jac, dofsAll, dofsAll);
@@ -851,7 +855,7 @@ void AssembleFEM(MultiLevelProblem& ml_prob) {
       double x = coordX[0][nDofsV - 1];
       double y = coordX[1][nDofsV - 1];
 
-      double nu = (x < 0.0625 * 2 && y < 0.0625 && y > -0.0625) ?  1. : 0.000000001;
+      double nu = (x < 0.0625 * 2 && y < 0.0625 && y > -0.0625) ?  1. : 0;
 
       double gravity[3] = {0, 0, 0};
 
