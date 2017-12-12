@@ -137,7 +137,7 @@ int main(int argc, char** args)
 
   unsigned rows = 60;
   unsigned columns = 120;
-  unsigned size = rows * columns;
+  unsigned size = rows * columns + 110;
 
   std::vector < std::vector < double > > x; // marker
   std::vector < MarkerType > markerType;
@@ -161,13 +161,14 @@ int main(int argc, char** args)
     for (unsigned j = 0; j < columns; j++) {
 
 
-      x[i * columns + j][0] = -0.5 + 0.00001 + ((0.625 + 0.00001) / (columns - 1)) * j;
-      x[i * columns + j][1] = -0.0625 + 0.00001 + ((0.25 + 0.00001) / (rows - 1)) * i;
+      x[i * columns + j][0] = -0.5 + 0.0001 + ((0.625 + 0.0001) / (columns - 1)) * j;
+      x[i * columns + j][1] = -0.0625 + 0.0001 + ((0.25 + 0.0001) / (rows - 1)) * i;
       if (dim == 3) {
         x[j][2] = 0.;
       }
     }
   }
+
 
 //   for(unsigned i = 0; i < rows; i++) {
 //     for(unsigned j = 0; j < columns; j++) {
