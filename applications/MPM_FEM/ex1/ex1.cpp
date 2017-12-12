@@ -106,8 +106,8 @@ int main(int argc, char** args)
   if(dim > 2) system.AddSolutionToSystemPDE("DZ");
 
   // ******* System MPM Assembly *******
-  //system.SetAssembleFunction(AssembleMPMSys);
-  system.SetAssembleFunction(AssembleFEM);
+  system.SetAssembleFunction(AssembleMPMSys);
+  //system.SetAssembleFunction(AssembleFEM);
   // ******* set MG-Solver *******
   system.SetMgType(V_CYCLE);
 
