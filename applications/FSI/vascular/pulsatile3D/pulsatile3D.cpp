@@ -10,7 +10,8 @@
 #include "MonolithicFSINonLinearImplicitSystem.hpp"
 #include "TransientSystem.hpp"
 #include "VTKWriter.hpp"
-#include "../include/FSITimeDependentAssemblySupg_OLD.hpp"
+#include "../include/FSITimeDependentAssemblySupgNonConservativeTwoPressures.hpp"
+//#include "../include/FSITimeDependentAssemblySupg_OLD.hpp"
 //#include "../../include/FSISteadyStateAssembly.hpp"
 #include <cmath>
 
@@ -53,6 +54,9 @@ int main ( int argc, char ** args )
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit ( argc, args, MPI_COMM_WORLD );
+  
+  valve = false;
+  twoPressure = false;
 
   unsigned simulation = 0;
 
@@ -195,10 +199,14 @@ int main ( int argc, char ** args )
   if ( !dimension2D ) ml_sol.PairSolution ( "W", "DZ" ); // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution ( "P", DISCONTINOUS_POLYNOMIAL, FIRST, 2 );
-  ml_sol.AssociatePropertyToSolution ( "P", "Pressure", false ); // Add this line
+  ml_sol.AddSolution ( "PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2 );
+  ml_sol.AssociatePropertyToSolution ( "PS", "Pressure", false ); // Add this line
 
   ml_sol.AddSolution ( "lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false );
+  
+  ml_sol.AddSolution("Um", LAGRANGE, SECOND, 0, false);
+  ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
+  if ( !dimension2D ) ml_sol.AddSolution("Wm", LAGRANGE, SECOND, 0, false);
 
   // ******* Initialize solution *******
   ml_sol.Initialize ( "All" );
@@ -239,7 +247,7 @@ int main ( int argc, char ** args )
   }
 
   if ( !dimension2D ) ml_sol.GenerateBdc ( "W", "Steady" );
-  ml_sol.GenerateBdc ( "P", "Steady" );
+  ml_sol.GenerateBdc ( "PS", "Steady" );
 
 //   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
 //     SetLambda(ml_sol, level , SECOND, ELASTICITY);
@@ -262,11 +270,11 @@ int main ( int argc, char ** args )
   system.AddSolutionToSystemPDE ( "U" );
   system.AddSolutionToSystemPDE ( "V" );
   if ( !dimension2D ) system.AddSolutionToSystemPDE ( "W" );
-  system.AddSolutionToSystemPDE ( "P" );
+  system.AddSolutionToSystemPDE ( "PS" );
 
   // ******* System Fluid-Structure-Interaction Assembly *******
 //system.SetAssembleFunction(FSISteadyStateAssembly);
-  system.SetAssembleFunction ( FSITimeDependentAssemblySupg );
+  system.SetAssembleFunction ( FSITimeDependentAssemblySupgNew2 );
 
   // ******* set MG-Solver *******
   system.SetMgType ( F_CYCLE );
@@ -347,7 +355,7 @@ int main ( int argc, char ** args )
 
   for ( unsigned time_step = 0; time_step < n_timesteps; time_step++ ) {
     for ( unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ) {
-      SetLambda ( ml_sol, level , SECOND, ELASTICITY );
+      SetLambdaNew ( ml_sol, level , SECOND, ELASTICITY );
     }
     data[time_step].resize ( 5 );
     if ( time_step > 0 )
@@ -459,7 +467,7 @@ bool SetBoundaryCondition ( const std::vector < double > & x, const char name[],
     }
   }
 
-  else if ( !strcmp ( name, "P" ) ) {
+  else if ( !strcmp ( name, "PS" ) ) {
     test = 0;
     value = 0.;
   }
@@ -534,7 +542,7 @@ bool SetBoundaryConditionTurek ( const std::vector < double > & x, const char na
       value = 0.;
     }
   }
-  else if ( !strcmp ( name, "P" ) ) {
+  else if ( !strcmp ( name, "PS" ) ) {
     test = 0;
     value = 0.;
 //     if ( 2 == facename ) {
@@ -587,7 +595,7 @@ bool SetBoundaryConditionPorous ( const std::vector < double > & x, const char n
       value = 0.;
     }
   }
-  else if ( !strcmp ( name, "P" ) ) {
+  else if ( !strcmp ( name, "PS" ) ) {
     test = 0;
     value = 0.;
   }
@@ -634,7 +642,7 @@ bool SetBoundaryConditionOminoPorous ( const std::vector < double > & x, const c
       value = 0.;
     }
   }
-  else if ( !strcmp ( name, "P" ) ) {
+  else if ( !strcmp ( name, "PS" ) ) {
     test = 0;
     value = 0.;
   }
@@ -695,7 +703,7 @@ bool SetBoundaryConditionOmino ( const std::vector < double > & x, const char na
       value = 0;
     }
   }
-  else if ( !strcmp ( name, "P" ) ) {
+  else if ( !strcmp ( name, "PS" ) ) {
     if ( 1 == facename || 2 == facename ) {
       test = 0;
       value = 0;
@@ -754,7 +762,7 @@ bool SetBoundaryConditionAorta ( const std::vector < double > & x, const char na
   }
 
 
-  else if ( !strcmp ( name, "P" ) ) {
+  else if ( !strcmp ( name, "PS" ) ) {
     test = 0;
     value = 0.;
   }
@@ -803,7 +811,7 @@ bool SetBoundaryConditionThrombus ( const std::vector < double > & x, const char
       value = 0.;
     }
   }
-  else if ( !strcmp ( name, "P" ) ) {
+  else if ( !strcmp ( name, "PS" ) ) {
     test = 0;
     value = 0.;
   }
@@ -861,7 +869,7 @@ bool SetBoundaryConditionTubo ( const std::vector < double > & x, const char nam
       value = 0.;
     }
   }
-  else if ( !strcmp ( name, "P" ) ) {
+  else if ( !strcmp ( name, "PS" ) ) {
     test = 0;
     value = 0.;
   }
@@ -960,7 +968,7 @@ void GetSolutionNorm ( MultiLevelSolution& mlSol, const unsigned & group, std::v
   unsigned solDType = mlSol.GetSolutionType ( solDIndex[0] );
 
   unsigned solPIndex;
-  solPIndex = mlSol.GetIndex ( "P" );
+  solPIndex = mlSol.GetIndex ( "PS" );
   unsigned solPType = mlSol.GetSolutionType ( solPIndex );
 
   for ( int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++ ) {
