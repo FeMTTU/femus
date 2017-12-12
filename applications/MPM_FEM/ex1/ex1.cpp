@@ -17,7 +17,8 @@
 using namespace femus;
 
 
-bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
+bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level)
+{
 
   bool refine = 0;
 
@@ -29,18 +30,20 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 }
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double &value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int facename, const double time)
+{
   bool test = 1; //dirichlet
   value = 0.;
   return test;
 }
 
-void AssembleMPMSys(MultiLevelProblem & ml_prob);
+void AssembleMPMSys(MultiLevelProblem& ml_prob);
 void AssembleFEM(MultiLevelProblem& ml_prob);
 
-Line *linea;
+Line* linea;
 
-int main(int argc, char** args) {
+int main(int argc, char** args)
+{
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
@@ -97,14 +100,14 @@ int main(int argc, char** args) {
   MultiLevelProblem ml_prob(&mlSol);
 
   // ******* Add MPM system to the MultiLevel problem *******
-  NonLinearImplicitSystem & system = ml_prob.add_system<NonLinearImplicitSystem> ("MPM_FEM");
+  NonLinearImplicitSystem& system = ml_prob.add_system<NonLinearImplicitSystem> ("MPM_FEM");
   system.AddSolutionToSystemPDE("DX");
   if(dim > 1)system.AddSolutionToSystemPDE("DY");
   if(dim > 2) system.AddSolutionToSystemPDE("DZ");
 
   // ******* System MPM Assembly *******
-  system.SetAssembleFunction(AssembleMPMSys);
-  //system.SetAssembleFunction(AssembleFEM);
+  //system.SetAssembleFunction(AssembleMPMSys);
+  system.SetAssembleFunction(AssembleFEM);
   // ******* set MG-Solver *******
   system.SetMgType(V_CYCLE);
 
@@ -158,8 +161,8 @@ int main(int argc, char** args) {
     for(unsigned j = 0; j < columns; j++) {
 
 
-      x[i * columns + j][0] = -0.5 + ((0.625-0.0001) / (columns - 1)) * j;
-      x[i * columns + j][1] = -(0.03125)/7+0.00000001 + ((0.25-0.0001) / (rows - 1)) * i;
+      x[i * columns + j][0] = -0.5 + 0. + ((0.625-0.) / (columns - 1)) * j;
+      x[i * columns + j][1] = 0.0625 + 0.0 + ((0.25-0.) / (rows - 1)) * i;
       if(dim == 3) {
         x[j][2] = 0.;
       }
@@ -267,7 +270,8 @@ int main(int argc, char** args) {
 
 
 
-void AssembleMPMSys(MultiLevelProblem & ml_prob) {
+void AssembleMPMSys(MultiLevelProblem& ml_prob)
+{
 
   // ml_prob is the global object from/to where get/set all the data
   // level is the level of the PDE system to be assembled
@@ -279,16 +283,16 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
 
   //pointers and references
 
-  NonLinearImplicitSystem & my_nnlin_impl_sys = ml_prob.get_system<NonLinearImplicitSystem> ("MPM_FEM");
+  NonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<NonLinearImplicitSystem> ("MPM_FEM");
   const unsigned  level = my_nnlin_impl_sys.GetLevelToAssemble();
-  MultiLevelSolution * ml_sol = ml_prob._ml_sol; // pointer to the multilevel solution object
-  Solution * mysolution = ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
-  LinearEquationSolver * myLinEqSolver = my_nnlin_impl_sys._LinSolver[level]; // pointer to the equation (level) object
+  MultiLevelSolution* ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution* mysolution = ml_sol->GetSolutionLevel(level);     // pointer to the solution (level) object
+  LinearEquationSolver* myLinEqSolver = my_nnlin_impl_sys._LinSolver[level];  // pointer to the equation (level) object
 
-  Mesh * mymsh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem * myel = mymsh->el;  // pointer to the elem object in msh (level)
-  SparseMatrix * myKK = myLinEqSolver->_KK; // pointer to the global stifness matrix object in pdeSys (level)
-  NumericVector * myRES =  myLinEqSolver->_RES; // pointer to the global residual vector object in pdeSys (level)
+  Mesh* mymsh = ml_prob._ml_msh->GetLevel(level);     // pointer to the mesh (level) object
+  elem* myel = mymsh->el;   // pointer to the elem object in msh (level)
+  SparseMatrix* myKK = myLinEqSolver->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  NumericVector* myRES =  myLinEqSolver->_RES;  // pointer to the global residual vector object in pdeSys (level)
   bool assembleMatrix = my_nnlin_impl_sys.GetAssembleMatrix();
 
 // call the adept stack object
@@ -375,8 +379,8 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
   unsigned markerOffset2 = markerOffset[iproc + 1];
   std::vector<Marker*> particles = linea->GetParticles();
   std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
-  
-    std::map<unsigned, unsigned > dofCrisi; //WARNING to erase when we found the mistake
+
+  std::map<unsigned, unsigned > dofCrisi; //WARNING to erase when we found the mistake
   dofCrisi[45] = 1;
 //   dofCrisi[46] = 1;
 //   dofCrisi[47] = 1;
@@ -461,8 +465,8 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
       //update element related quantities only if we are in a different element
       if(iel != ielOld) {
 
-	printCrisi = false;
-	
+        printCrisi = false;
+
         ielt = mymsh->GetElementType(iel);
         nve = mymsh->GetElementDofNumber(iel, solType);
         //initialization of everything is in common fluid and solid
@@ -582,7 +586,7 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
           gravityP[i] += phi[inode] * gravity[i];   //TODO added this, the value of gravity at the particle
 
           for(int j = 0; j < dim; j++) {
-            GradSolDp[i][j] += gradphi[inode * dim + j] * SolDd[indexPdeD[i]][inode];
+            GradSolDp[i][j] +=  gradphi[inode * dim + j] * SolDd[indexPdeD[i]][inode];
           }
         }
       }
@@ -597,9 +601,13 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
         for(unsigned i = 0; i < dim; i++) {
           adept::adouble Laplacian = 0.;
           for(unsigned j = 0; j < dim; j++) {
-            Laplacian += mu * gradphi[k * dim + j] * (GradSolDp[i][j] + GradSolDp[j][i]);
+            Laplacian += mu * 2 * phi[k] * gradphi[k * dim + j] * (GradSolDp[i][j] + GradSolDp[j][i]);
+	    //Laplacian += mu * gradphi[k * dim + j] * (GradSolDp[i][j] + GradSolDp[j][i]);
           }
-          aRhs[indexPdeD[i]][k] += - (Laplacian / density - gravityP[i] * phi[k]) * mass;
+//           if(phi[k] != 0) {
+            aRhs[indexPdeD[i]][k] += - (Laplacian / density - gravityP[i] * phi[k] * phi[k]) * mass;
+	    //aRhs[indexPdeD[i]][k] += - (Laplacian / density - gravityP[i] * phi[k] ) * mass;
+//           }
         }
       }
       //END
@@ -629,17 +637,17 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
 
           Jac.resize((dim * nve) * (dim * nve));
 
-	  if(printCrisi){
-	    //print of the local Jacobian
-	    for(unsigned i = 0; i<nve;i++){
-	      std::cout<<dofsAll[i]<<" ";
-	      for(unsigned j = 0; j<nve;j++){
-		std::cout<< Jac[i*(nve*dim)+j] << " ";
-	      }
-	      std::cout<<std::endl;
-	    }
-	  }
-	  
+          if(printCrisi) {
+            //print of the local Jacobian
+            for(unsigned i = 0; i < nve; i++) {
+              std::cout << dofsAll[i] << " ";
+              for(unsigned j = 0; j < nve; j++) {
+                std::cout << Jac[i * (nve * dim) + j] << " ";
+              }
+              std::cout << std::endl;
+            }
+          }
+
           s.jacobian(&Jac[0], true);
 
           myKK->add_matrix_blocked(Jac, dofsAll, dofsAll);
@@ -671,7 +679,8 @@ void AssembleMPMSys(MultiLevelProblem & ml_prob) {
 }
 
 
-void AssembleFEM(MultiLevelProblem& ml_prob) {
+void AssembleFEM(MultiLevelProblem& ml_prob)
+{
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
