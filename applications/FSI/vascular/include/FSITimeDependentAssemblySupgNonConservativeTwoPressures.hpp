@@ -99,6 +99,9 @@ namespace femus
     vector < double > gradphi_hat;
     vector < adept::adouble> nablaphi;
     vector < double > nablaphi_hat;
+    
+    vector < double > *nullDoublePointer = NULL;
+    vector < adept::adouble > *nullAdoublePointer = NULL;
 
     const double* phi1;
     adept::adouble Weight = 0.;
@@ -361,7 +364,7 @@ namespace femus
       double area = 1.;
       // *** Volume integral ***
       for (unsigned ig = 0; ig < mymsh->_finiteElement[ielt][SolType2]->GetGaussPointNumber(); ig++) {
-        mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_hat, ig, Weight_hat, phi_hat, gradphi_hat, nablaphi_hat);
+        mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx_hat, ig, Weight_hat, phi_hat, gradphi_hat, *nullDoublePointer);
         phi1 = mymsh->_finiteElement[ielt][SolType1]->GetPhi(ig);
 
         // ---------------------------------------------------------------------------
@@ -507,23 +510,21 @@ namespace femus
               vx[i][j] = vxOld[i][j] * (1. - s[tip]) +  vxNew[i][j] * s[tip];
             }
           }
-
-          mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx, ig, Weight, phi, gradphi, nablaphi);
+	  if(middle && flag_mat != 4){
+	    mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx, ig, Weight, phi, gradphi, nablaphi);
+	  }
+	  else{
+	    mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx, ig, Weight, phi, gradphi, *nullAdoublePointer);
+	  }
 
           // store solution gradient and laplace at the current time
           for (int i = 0; i < nBlocks * dim; i++) {
             for (int j = 0; j < dim; j++) {
               GradSolVAR[i][j] = 0.;
             }
-            for (int j = 0; j < nabla_dim; j++) {
-              NablaSolVAR[i][j] = 0.;
-            }
             for (unsigned inode = 0; inode < nve; inode++) {
               for (int j = 0; j < dim; j++) {
                 GradSolVAR[i][j]     += gradphi[inode * dim + j]  * (s[tip] * Soli[indexVAR[i]][inode] + (1. - s[tip]) * Soli_old[indexVAR[i]][inode]);
-              }
-              for (int j = 0; j < nabla_dim; j++) {
-                NablaSolVAR[i][j]     += nablaphi[inode * nabla_dim + j] * (s[tip] * Soli[indexVAR[i]][inode] + (1. - s[tip]) * Soli_old[indexVAR[i]][inode]);
               }
             }
           }
@@ -531,10 +532,25 @@ namespace femus
           //BEGIN FLUID and POROUS MEDIA ASSEMBLY ============
           if (flag_mat != 4) {
             if (middle) {
+	      
+	        // store solution gradient and laplace at the current time
+              for(int i = dim; i < nBlocks * dim; i++) {
+
+                for(int j = 0; j < nabla_dim; j++) {
+                  NablaSolVAR[i][j] = 0.;
+                }
+                for(unsigned inode = 0; inode < nve; inode++) {
+
+                  for(int j = 0; j < nabla_dim; j++) {
+                    NablaSolVAR[i][j]     += nablaphi[inode * nabla_dim + j] * (s[tip] * Soli[indexVAR[i]][inode] + (1. - s[tip]) * Soli_old[indexVAR[i]][inode]);
+                  }
+                }
+              }
+	      
               // get Gauss point coordinates at the current time
               for (unsigned i = 0; i < dim; i++) {
                 vx_ig[i] = vxOld_ig[i] * (1. - s[tip]) +  vxNew_ig[i] * s[tip];
-              }
+	      }
 
               adept::adouble springStiffness = 0.;
               if ( valve ) springStiffness = 5.e-4 * exp((vx_ig[0] - (- 1e-5)) / 0.0001) * (dim == 2) + // if 2D
@@ -810,7 +826,7 @@ namespace femus
         }
         Jac.resize((nBlocks * dim * nve + nP * nve1) * (nBlocks * dim * nve + nP * nve1));
 
-        stack.jacobian(&Jac[0], true);
+        stack.jacobian_reverse(&Jac[0], true);
 
         myKK->add_matrix_blocked(Jac, dofsAll, dofsAll);
         stack.clear_independents();
