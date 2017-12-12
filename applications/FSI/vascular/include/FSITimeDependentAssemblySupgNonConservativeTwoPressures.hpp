@@ -36,8 +36,8 @@ namespace femus
   void FSITimeDependentAssemblySupgNew2(MultiLevelProblem& ml_prob)
   {
 
-    clock_t AssemblyTime = 0;
-    clock_t start_time, end_time;
+    clock_t AdeptTime = 0;
+    clock_t start_time;
 
     unsigned nBlocks = 2;
     unsigned nP = (twoPressure) ? 2 : 1;
@@ -192,8 +192,6 @@ namespace femus
     }
 
     //----------------------------------------------------------------------------------
-
-    start_time = clock();
 
     if (assembleMatrix) myKK->zero();
 
@@ -828,7 +826,8 @@ namespace femus
 
         stack.jacobian_reverse(&Jac[0], true);
 
-        myKK->add_matrix_blocked(Jac, dofsAll, dofsAll);
+        myKK->add_matrix_blocked(Jac, dofsAll, dofsAll); 
+	
         stack.clear_independents();
         stack.clear_dependents();
 
@@ -842,8 +841,8 @@ namespace femus
 
     delete area_elem_first;
     // *************************************
-    end_time = clock();
-    AssemblyTime += (end_time - start_time);
+    std::cout << "   ********* Level Max " << igrid + 1 << " ADEPT TIME:\t" << \
+              static_cast<double>(AdeptTime) / CLOCKS_PER_SEC << std::endl;
     // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
   }
 
