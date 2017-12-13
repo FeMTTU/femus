@@ -661,7 +661,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       }
 
 
-      bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
+      bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO to be removed after we include FindLocalCoordinates in the advection
       particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, mysolution, 0);
 
       // the local coordinates of the particles are the Gauss points in this context
