@@ -68,7 +68,7 @@ namespace femus {
 
       void GetParticlesToGridProjections();
       
-      void GetGridsToParticlesProjections();
+      void GetGridToParticlesProjections();
 
     private:
       std::vector < std::vector < double > > _line;

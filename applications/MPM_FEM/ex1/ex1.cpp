@@ -191,7 +191,7 @@ int main(int argc, char** args)
   
   system.MLsolve();
 
-  linea->GetGridsToParticlesProjections();
+  linea->GetGridToParticlesProjections();
 
   linea->GetLine(line[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 1);
@@ -359,7 +359,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   double weight_hat;
 
   // gravity
-  double gravity[3] = {0., -9.81, 0.};
+  double gravity[3] = {0., -9.81 * 200., 0.};
   std::vector <double> gravityP(dim);
 
   //variable-name handling
