@@ -986,7 +986,8 @@ namespace femus {
 
       std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
       double mass = _particles[iMarker]->GetMarkerMass();
-      std::vector< double > velocity = _particles[iMarker]->GetMarkerVelocity();
+      std::vector< double > velocity(_dim);
+      _particles[iMarker]->GetMarkerVelocity(velocity);
 
       basis* base = _mesh->GetBasis(ielType, solType);
       for(unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solType); j++) {
@@ -1107,7 +1108,7 @@ namespace femus {
         }
 
         ielOld = iel;
-        
+
       }
 
     }
@@ -1139,47 +1140,30 @@ namespace femus {
             if(mproc != jproc) {
               if(jproc == _iproc) {
 
-//                   unsigned step =  _particles[iMarker]->GetIprocMarkerStep();
-//                   MPI_Send(& step, 1, MPI_UNSIGNED, mproc, order + 1, PETSC_COMM_WORLD);
-//
-//                   unsigned istep = step % order;
+                unsigned order = 0;
+                std::vector <double> MPMQuantities = _particles[iMarker]->GetMPMQuantities();
+                unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
 
-//                   if (istep != 0) {
-//                     K = _particles[iMarker]->GetIprocMarkerK();
-//
-//                     for (int i = 0; i < order; i++) {
-//                       MPI_Send(&K[i][0], _dim, MPI_DOUBLE, mproc, i , PETSC_COMM_WORLD);
-//                     }
-//
-//                     x0 = _particles[iMarker]->GetIprocMarkerOldCoordinates();
-//                     MPI_Send(&x0[0], _dim, MPI_DOUBLE, mproc, order , PETSC_COMM_WORLD);
-//                   }
+                MPI_Send(& MPMQuantities, MPMsize, MPI_DOUBLE, mproc, order + 1, PETSC_COMM_WORLD);
 
                 _particles[iMarker]->FreeVariables();
 
               }
               else if(mproc == _iproc) {
+
                 unsigned order = 0;
                 _particles[iMarker]->InitializeVariables(order);
 
                 bool elementUpdate = (aX.find(elem) != aX.end()) ? false : true;
                 _particles[iMarker]->FindLocalCoordinates(solType, aX[elem], elementUpdate, _sol, 0.);
-//                   unsigned step;
-//                   MPI_Recv(& step, 1, MPI_UNSIGNED, jproc, order + 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-//                   _particles[iMarker]->SetIprocMarkerStep(step);
-//
-//                   unsigned istep = step % order;
-//
-//                   if (istep != 0) {
-//                     for (int i = 0; i < order; i++) {
-//                       MPI_Recv(&K[i][0], _dim, MPI_DOUBLE, jproc, i , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-//                       _particles[iMarker]->SetIprocMarkerK(K);
-//                     }
-//
-//                     MPI_Recv(&x0[0], _dim, MPI_DOUBLE, jproc, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-//                     _particles[iMarker]->SetIprocMarkerOldCoordinates(x0);
-//
-//                   }
+
+                unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
+                std::vector <double> MPMQuantities(MPMsize);
+
+                MPI_Recv(& MPMQuantities, MPMsize, MPI_DOUBLE, jproc, order + 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+
+                _particles[iMarker]->SetMPMQuantities(MPMQuantities);
+
               }
             }
           }
