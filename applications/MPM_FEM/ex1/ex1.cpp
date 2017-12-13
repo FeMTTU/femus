@@ -137,7 +137,7 @@ int main(int argc, char** args)
 
   unsigned rows = 60;
   unsigned columns = 120;
-  unsigned size = rows * columns + 110;
+  unsigned size = rows * columns;
 
   std::vector < std::vector < double > > x; // marker
   std::vector < MarkerType > markerType;
@@ -186,15 +186,15 @@ int main(int argc, char** args)
 
   linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
 
-
-  system.MLsolve();
-
-
-
-  //linea.GetPointsToGridProjections();
-
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
+  
+  system.MLsolve();
+
+  linea->GetGridsToParticlesProjections();
+
+  linea->GetLine(line[0]);
+  PrintLine(DEFAULT_OUTPUTDIR, line, false, 1);
 
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
@@ -653,7 +653,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
         for (unsigned idim = 0; idim < dim; idim++) {
           for (int j = 0; j < nve; j++) {
-            vx[idim][j]    = vx_hat[idim][j] ;//+ SolDd[indexPdeD[idim]][j]; //TODO now it runs also with this additional term
+            vx[idim][j]    = vx_hat[idim][j] + SolDd[indexPdeD[idim]][j]; //TODO now it runs also with this additional term
           }
         }
         // start a new recording of all the operations involving adept::adouble variables

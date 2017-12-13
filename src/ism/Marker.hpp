@@ -41,9 +41,11 @@ namespace femus {
         _mass = 1.;
         _density = 1.;
         _velocity.resize(_dim);
-	_displacement.resize(_dim);
+        _acceleration.resize(_dim);
+        _displacement.resize(_dim);
         for(unsigned d = 0; d < _dim; d++) {
-          _velocity[d] = (d + 1);  // fix this initialization
+          _velocity[d] = 0.;  // fix this initialization
+          _acceleration[d] = 0.;
           _displacement[d] = 0.;
         }
 
@@ -100,6 +102,17 @@ namespace femus {
         _mass = mass;
       }
 
+      void SetMarkerVelocity(const std::vector <double>  &velocity) {
+        _velocity = velocity;
+      }
+
+      void SetMarkerAcceleration(const std::vector <double>  &acceleration) {
+        _acceleration = acceleration;
+      }
+
+      void SetMarkerDisplacement(const std::vector <double>  &displacement) {
+        _displacement = displacement;
+      }
 
       void GetNumberOfMeshElements(unsigned &elements, Solution *sol) {
         elements = sol->GetMesh()->GetNumberOfElements();
@@ -142,6 +155,10 @@ namespace femus {
 
       std::vector < double > GetMarkerVelocity() {
         return _velocity;
+      }
+
+      std::vector < double > GetMarkerAcceleration() {
+        return _acceleration;
       }
 
       std::vector < double > GetMarkerDisplacement() {
@@ -231,6 +248,12 @@ namespace femus {
         _previousElem = previousElem;
       }
 
+      void UpdateParticleCoordinates() {
+	 for(unsigned i = 0; i < _dim; i++) {
+	   _x[i] += _displacement[i];
+	}
+      }
+
       void GetElement(const bool &useInitialSearch, const unsigned &initialElem, Solution *sol, const double &s);
       void GetElementSerial(unsigned &initialElem, Solution *sol, const double &s);
       void GetElement(unsigned &previousElem, const unsigned &previousMproc, Solution *sol, const double &s);
@@ -298,6 +321,7 @@ namespace femus {
       static const double _c[4][4];
 
       std::vector <double> _velocity;
+      std::vector <double> _acceleration;
       std::vector <double> _displacement;
 
   };

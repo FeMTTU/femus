@@ -734,7 +734,7 @@ namespace femus {
             currentElem = _particles[iMarker]->GetMarkerElement();
             unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
 
-            if(currentElem == UINT_MAX) {    // the marker has been advected outise the domain
+            if(currentElem == UINT_MAX) {    // the marker has been advected outside the domain
               markerOutsideDomain = true;
               step = UINT_MAX;
               _particles[iMarker]->SetIprocMarkerStep(step);
@@ -949,7 +949,7 @@ namespace femus {
   }
 
 
-  void Line::GetPointsToGridProjections() {
+  void Line::GetParticlesToGridProjections() {
 
     double s = 0;
 
@@ -1026,12 +1026,113 @@ namespace femus {
   }
 
 
+  void Line::GetGridsToParticlesProjections() {
+
+    double s = 0;
+
+    std::vector<unsigned>  solIndexDisp(_dim);
+    std::vector<unsigned>  solIndexAcc(_dim);
+
+    solIndexDisp[0] = _sol->GetIndex("DX");
+    if(_dim > 1) solIndexDisp[1] = _sol->GetIndex("DY");
+    if(_dim > 2) solIndexDisp[2] = _sol->GetIndex("DW");
+
+    solIndexAcc[0] = _sol->GetIndex("AU");
+    if(_dim > 1) solIndexAcc[1] = _sol->GetIndex("AV");
+    if(_dim > 2) solIndexAcc[2] = _sol->GetIndex("AW");
+
+    unsigned solType = _sol->GetSolutionType(solIndexDisp[0]);
+
+    std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
+
+    std::vector< vector< double > > SolDd(_dim); // solution at the nodes
+    std::vector< vector< double > > SolAd(_dim); // solution at the nodes
+
+    std::vector <double> particleDisp(_dim, 0.);
+    std::vector <double> particleAcc(_dim, 0.);
+
+    for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
+
+      unsigned iel = _particles[iMarker]->GetMarkerElement();
+      unsigned ielType =  _mesh->GetElementType(iel);
+      unsigned nve = _mesh->GetElementDofNumber(iel, solType);
+      bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
+
+      _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, s);
+
+      std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
+
+      for(int i = 0; i < _dim; i++) {
+        SolDd[i].resize(nve);
+        SolAd[i].resize(nve);
+      }
+
+      for(unsigned inode = 0; inode < nve; inode++) {
+        unsigned idof = _mesh->GetSolutionDof(inode, iel, solType); //local 2 global solution
+        for(int i = 0; i < _dim; i++) {
+          SolDd[i][inode] = (*_sol->_Sol[solIndexDisp[i]])(idof);
+          SolAd[i][inode] = (*_sol->_Sol[solIndexAcc[i]])(idof);
+        }
+      }
+
+      for(int i = 0; i < _dim; i++) {
+        basis* base = _mesh->GetBasis(ielType, solType);
+        for(unsigned inode = 0; inode < nve; inode++) {
+          double phiP = base->eval_phi(inode, xi);
+          particleDisp[i] += phiP * SolDd[i][inode];
+          particleAcc[i] += phiP * SolAd[i][inode];
+        }
+      }
+
+      _particles[iMarker]->SetMarkerDisplacement(particleDisp);
+      _particles[iMarker]->SetMarkerAcceleration(particleAcc);
+
+      //store the element we are in before moving
+      unsigned currentElem = _particles[iMarker]->GetMarkerElement();
+      _particles[iMarker]->SetIprocMarkerPreviousElement(currentElem);
+
+      //movement of the particles
+      _particles[iMarker]->UpdateParticleCoordinates();
+      currentElem = _particles[iMarker]->GetMarkerElement();
+      _particles[iMarker]->SetMarkerElement(currentElem);
+    }
+
+    //BEGIN find new _elem and _mproc
+
+    //std::cout << " ----------------------------------PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
+    for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
+      for(unsigned iMarker = _markerOffset[jproc]; iMarker < _markerOffset[jproc + 1]; iMarker++) {
+        unsigned elem =  _particles[iMarker]->GetMarkerElement();
+        MPI_Bcast(& elem, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
+        _particles[iMarker]->SetMarkerElement(elem);
+
+        if(elem != UINT_MAX) {    // if it is outside jproc, ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but not outside the domain
+          unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
+          _particles[iMarker]->SetMarkerProc(mproc);
+
+          if(mproc != jproc) {
+            unsigned prevElem = _particles[iMarker]->GetIprocMarkerPreviousElement();
+            _particles[iMarker]->GetElement(prevElem, jproc, _sol, s);
+            _particles[iMarker]->SetIprocMarkerPreviousElement(prevElem);
+          }
+        }
+      }
+    }
+
+    //std::cout << " ----------------------------------END PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
+
+    //END find new _elem and _mproc
+
+
+    UpdateLine();
+
+
+  }
+
 
 
 
 }
-
-
 
 
 

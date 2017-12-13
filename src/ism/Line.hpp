@@ -59,14 +59,16 @@ namespace femus {
       std::vector <Marker*> GetParticles() {
         return _particles;
       }
-
+      
       void AdvectionParallel(const unsigned &n, const double& T, const unsigned &order, ForceFunction Force = NULL);
 
       void UpdateLine();
 
       unsigned NumberOfParticlesOutsideTheDomain();
 
-      void GetPointsToGridProjections();
+      void GetParticlesToGridProjections();
+      
+      void GetGridsToParticlesProjections();
 
     private:
       std::vector < std::vector < double > > _line;
