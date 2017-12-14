@@ -39,14 +39,13 @@ namespace femus {
         _dim = sol->GetMesh()->GetDimension();
         _step = 0;
 
-
+        _MPMSize = 3 * _dim + 2;
         GetElement(1, UINT_MAX, sol, s1);
 
         if(_iproc == _mproc) {
           std::vector < std::vector < std::vector < std::vector < double > > > >aX;
           FindLocalCoordinates(_solType, aX, true, sol, s1);
-
-          _MPMSize = 3 * _dim + 2;
+         
           _MPMQuantities.resize(_MPMSize);
           _MPMQuantities[3 * _dim ] = 1.;  //mass
           _MPMQuantities[3 * _dim + 1] = 1.;  //density

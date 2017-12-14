@@ -111,10 +111,12 @@ int main(int argc, char** args)
   // ******* set MG-Solver *******
   system.SetMgType(V_CYCLE);
 
+  
+  system.SetAbsoluteLinearConvergenceTolerance(1.0e-10);
+  system.SetMaxNumberOfLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-9);
-  system.SetResidualUpdateConvergenceTolerance(1.e-15);
-  system.SetMaxNumberOfNonLinearIterations(4);
-  system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
+  system.SetMaxNumberOfNonLinearIterations(20);
+  
 
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
@@ -132,7 +134,7 @@ int main(int argc, char** args)
 
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
-  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
+  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 20);
 
 
   unsigned rows = 60;
@@ -189,19 +191,27 @@ int main(int argc, char** args)
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
   
-  system.MLsolve();
+  system.MGsolve();
 
   linea->GetGridToParticlesProjections();
 
   linea->GetLine(line[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 1);
 
-  std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("All");
+  // ******* Print solution *******
+  mlSol.SetWriter(VTK);
 
-  VTKWriter vtkIO(&mlSol);
-  vtkIO.SetDebugOutput(true);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  std::vector<std::string> mov_vars;
+  mov_vars.push_back("DX");
+  mov_vars.push_back("DY");
+  mov_vars.push_back("DZ");
+  mlSol.GetWriter()->SetMovingMesh(mov_vars);
+
+  std::vector<std::string> print_vars;
+  print_vars.push_back("All");
+
+  mlSol.GetWriter()->SetDebugOutput(true);
+  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
 
 
@@ -359,9 +369,16 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   double weight_hat;
 
   // gravity
-  double gravity[3] = {0., -9.81 * 100, 0.};
+  double gravity[3] = {0., -9.81*3, 0.};
   std::vector <double> gravityP(dim);
-
+  
+  double E = 1000000;
+  double nu = 0.3;
+  
+  double K = E/(3.*(1.-2.*nu));
+  double lambda = E * nu/( (1.+nu)*(1.-2*nu) );
+  double mu = 1.5*( K - lambda);
+  
   //variable-name handling
   const char varname[9][3] = {"DX", "DY", "DZ", "U", "V", "W", "AU", "AV", "AW"}; //TODO is there a reason why varname[9][3] and not just varname[9] ?
   vector <unsigned> indexSolD(dim);
@@ -501,7 +518,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned  k = 0; k < dim; k++) {
-            NSV[k]   +=  0.01 * gradphi[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
+            NSV[k]   +=  0.0001 * mu * gradphi[i * dim + j] * (gradSolV_gss[k][j] + gradSolV_gss[j][k]);
             // NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
           }
         }
@@ -511,7 +528,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 //         }
 
         for (unsigned  k = 0; k < dim; k++) {
-          aRhs[k][i] += - ( NSV[k] )  * weight;
+          aRhs[k][i] += - ( NSV[k])  * weight;
         }
       } // end phiV_i loop
 
@@ -667,9 +684,14 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       // the local coordinates of the particles are the Gauss points in this context
       std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
       // the mass of the particle acts as weight
-      double mass = particles[iMarker]->GetMarkerMass();
-      mass = 0.125 / 180; //WARNING remove after testing, this is the weight of the gauss points times the area of the element
-      double density = particles[iMarker]->GetMarkerDensity();
+//       double mass = particles[iMarker]->GetMarkerMass();
+//       mass = 0.125 / 180; //WARNING remove after testing, this is the weight of the gauss points times the area of the element
+//       double density = particles[iMarker]->GetMarkerDensity();
+      
+	double mass = 0.0217013888889;
+	double density = 1000;
+
+      
 
 //       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, 0, weight, phi, gradphi, nablaphi); // function to evaluate at the gauss points
 //       std::cout << "basis functions evaluated at the gauss point" << std::endl;
@@ -715,17 +737,21 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
 
       //BEGIN computation of local residual
-      double mu = 500.; //dynamic viscosity
+      adept::adouble divergence = 0.;
+      for (unsigned i = 0; i < dim; i++) {
+	divergence += GradSolDp[i][i];
+      }
+      
       for (unsigned k = 0; k < nve; k++) {
         for (unsigned i = 0; i < dim; i++) {
           adept::adouble Laplacian = 0.;
           for (unsigned j = 0; j < dim; j++) {
             //Laplacian += mu * 2 * phi[k] * gradphi[k * dim + j] * (GradSolDp[i][j] + GradSolDp[j][i]);
-            Laplacian += mu * gradphi[k * dim + j] * (GradSolDp[i][j] + GradSolDp[j][i]);
+            Laplacian += 0.5 * (GradSolDp[i][j] + GradSolDp[j][i]) * gradphi[k * dim + j] ;
           }
 //           if(phi[k] != 0) {
           //aRhs[indexPdeD[i]][k] += - (Laplacian / density - gravityP[i] * phi[k] * phi[k]) * mass;
-          aRhs[indexPdeD[i]][k] += - (Laplacian / density - gravityP[i] * phi[k]) * mass;
+          aRhs[indexPdeD[i]][k] += - ( ( 2. * mu * Laplacian + lambda * divergence * gradphi[k * dim + i] )/ density - gravityP[i] * phi[k]) * mass;
 //           }
         }
       }

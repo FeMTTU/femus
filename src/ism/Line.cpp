@@ -1146,10 +1146,14 @@ namespace femus {
                 unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
                 MPI_Send(&MPMQuantities[0], MPMsize, MPI_DOUBLE, mproc, order, PETSC_COMM_WORLD);
 
-                std::vector<double> x(_dim);
-                x = _particles[iMarker]->GetIprocMarkerCoordinates();
-		
-                MPI_Send(&x[0], MPMsize, MPI_DOUBLE, mproc, order + 1, PETSC_COMM_WORLD);
+// 		std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAA "<< MPMsize <<std::endl;
+// 		
+//                 std::vector<double> x;
+//                 x = _particles[iMarker]->GetIprocMarkerCoordinates();
+// 		
+// 		std::cout<<" "<< x[0] << " "<< x[1] <<std::endl;
+// 		
+//                 MPI_Send(&x[0], MPMsize, MPI_DOUBLE, mproc, order + 1, PETSC_COMM_WORLD);
 
                 _particles[iMarker]->FreeVariables();
 
@@ -1166,13 +1170,18 @@ namespace femus {
                 unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
                 std::vector <double> MPMQuantities(MPMsize);
 
+		std::cout<<"BBBBBBBBBBBBBBBBBBBBB "<< MPMsize <<std::endl;
+		
                 MPI_Recv(&MPMQuantities[0], MPMsize, MPI_DOUBLE, jproc, order, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                 _particles[iMarker]->SetMPMQuantities(MPMQuantities);
 
-                std::vector<double> x(_dim);
-                _particles[iMarker]->InitializeX();
-                MPI_Recv(&x[0], _dim, MPI_DOUBLE, jproc, order + 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-                _particles[iMarker]->SetIprocMarkerCoordinates(x);
+//                 std::vector<double> x(_dim);
+//                 _particles[iMarker]->InitializeX();
+//                 MPI_Recv(&x[0], _dim, MPI_DOUBLE, jproc, order + 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+// 		
+// 		std::cout<<" "<< x[0] << " "<< x[1] <<std::endl;
+// 		
+//                 _particles[iMarker]->SetIprocMarkerCoordinates(x);
 
 
               }
