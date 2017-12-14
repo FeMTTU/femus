@@ -1079,6 +1079,8 @@ namespace femus {
 
         }
 
+        bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO we actually want to remove this
+        _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, 0.);
         std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
 
         for(int i = 0; i < _dim; i++) {
@@ -1099,13 +1101,12 @@ namespace femus {
         _particles[iMarker]->GetElementSerial(iel, _sol, 0.);
         _particles[iMarker]->SetIprocMarkerPreviousElement(iel);
 
-        unsigned currentElem = _particles[iMarker]->GetMarkerElement();
-        unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
+//         unsigned currentElem = _particles[iMarker]->GetMarkerElement();  //WARNING I removed this
+//         unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
 
-        if(mproc == _iproc) {
-          bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
-          _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, 0.);
-        }
+//         if(mproc == _iproc) {//WARNING I removed this
+//           _particles[iMarker]->FindLocalCoordinates(solType, aX[currentElem], true, _sol, 0.); //WARNING e' qui che strippa
+//         }
 
         ielOld = iel;
 
@@ -1122,31 +1123,35 @@ namespace femus {
         MPI_Bcast(& elem, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
         _particles[iMarker]->SetMarkerElement(elem);
 
-        if(elem != UINT_MAX) {    // if it is outside jproc, ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but not outside the domain
-          unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
+        if(elem != UINT_MAX) {
+          unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol); //WARNING you don't know if this is your real process
           _particles[iMarker]->SetMarkerProc(mproc);
 
-          if(mproc != jproc) {
+          if(mproc != jproc) { //this means, if we think the particle moved from jproc (which means element serial shouldn't have found the actual element)
             unsigned prevElem = _particles[iMarker]->GetIprocMarkerPreviousElement();
             _particles[iMarker]->GetElement(prevElem, jproc, _sol, 0.);
             _particles[iMarker]->SetIprocMarkerPreviousElement(prevElem);
           }
 
-          elem = _particles[iMarker]->GetMarkerElement();
+          elem = _particles[iMarker]->GetMarkerElement(); //TODO shouldn't this be inside the if ? If we don't go in the if I think we already know who elem is
 
           if(elem != UINT_MAX) {    // if it is not outside the domain
-            unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
+            unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);  //actual mproc
 
-            if(mproc != jproc) {
+            if(mproc != jproc) { //there is no need to send/receive if the particle didn't change process (which is when mproc == jproc)
               if(jproc == _iproc) {
 
                 unsigned order = 0;
                 std::vector <double> MPMQuantities = _particles[iMarker]->GetMPMQuantities();
                 unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
+                MPI_Send(&MPMQuantities[0], MPMsize, MPI_DOUBLE, mproc, order, PETSC_COMM_WORLD);
 
-                MPI_Send(& MPMQuantities, MPMsize, MPI_DOUBLE, mproc, order + 1, PETSC_COMM_WORLD);
+                std::vector<double> x(_dim);
+                x = _particles[iMarker]->GetIprocMarkerCoordinates();
+                MPI_Send(&x[0], MPMsize, MPI_DOUBLE, mproc, order + 1, PETSC_COMM_WORLD);
 
                 _particles[iMarker]->FreeVariables();
+
 
               }
               else if(mproc == _iproc) {
@@ -1154,15 +1159,20 @@ namespace femus {
                 unsigned order = 0;
                 _particles[iMarker]->InitializeVariables(order);
 
-                bool elementUpdate = (aX.find(elem) != aX.end()) ? false : true;
-                _particles[iMarker]->FindLocalCoordinates(solType, aX[elem], elementUpdate, _sol, 0.);
+//                 bool elementUpdate = (aX.find(elem) != aX.end()) ? false : true;
+//                 _particles[iMarker]->FindLocalCoordinates(solType, aX[elem], true, _sol, 0.);
 
                 unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
                 std::vector <double> MPMQuantities(MPMsize);
 
-                MPI_Recv(& MPMQuantities, MPMsize, MPI_DOUBLE, jproc, order + 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-
+                MPI_Recv(&MPMQuantities[0], MPMsize, MPI_DOUBLE, jproc, order, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                 _particles[iMarker]->SetMPMQuantities(MPMQuantities);
+
+                std::vector<double> x(_dim);
+                _particles[iMarker]->InitializeX();
+                MPI_Recv(&x[0], _dim, MPI_DOUBLE, jproc, order + 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+                _particles[iMarker]->SetIprocMarkerCoordinates(x);
+
 
               }
             }

@@ -359,7 +359,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   double weight_hat;
 
   // gravity
-  double gravity[3] = {0., -9.81 * 200., 0.};
+  double gravity[3] = {0., -9.81 * 150, 0.};
   std::vector <double> gravityP(dim);
 
   //variable-name handling
