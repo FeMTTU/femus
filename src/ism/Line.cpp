@@ -1148,6 +1148,7 @@ namespace femus {
 
                 std::vector<double> x(_dim);
                 x = _particles[iMarker]->GetIprocMarkerCoordinates();
+		
                 MPI_Send(&x[0], MPMsize, MPI_DOUBLE, mproc, order + 1, PETSC_COMM_WORLD);
 
                 _particles[iMarker]->FreeVariables();
