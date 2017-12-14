@@ -39,6 +39,8 @@ int main(int argc, char** args)
 
 
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
+  
+  clock_t start_time;
 
   valve = true;
   twoPressure = false;
@@ -312,6 +314,8 @@ int main(int argc, char** args)
 
   //******* Clear all systems *******
   ml_prob.clear();
+  std::cout << " TOTAL TIME:\t" << \
+           static_cast<double>(clock()-start_time) / CLOCKS_PER_SEC << std::endl;
   return 0;
 }
 

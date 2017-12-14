@@ -824,7 +824,9 @@ namespace femus
         }
         Jac.resize((nBlocks * dim * nve + nP * nve1) * (nBlocks * dim * nve + nP * nve1));
 
+	start_time = clock();
         stack.jacobian_reverse(&Jac[0], true);
+	AdeptTime += clock() - start_time; 
 
         myKK->add_matrix_blocked(Jac, dofsAll, dofsAll); 
 	
