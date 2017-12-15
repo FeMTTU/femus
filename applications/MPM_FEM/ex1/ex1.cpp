@@ -214,67 +214,7 @@ int main(int argc, char** args)
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars);
 
 
-
-
-
-
   delete linea;
-
-
-//BEGIN stuff for the advection that we will have to remove
-//   double T = 2 * acos(-1.);
-//
-//   unsigned n = 4;
-
-//   std::cout << std::endl << " init in  " << std::setw(11) << std::setprecision(6) << std::fixed
-//             << static_cast<double>((clock() - init_time)) / CLOCKS_PER_SEC << " s" << std::endl;
-//
-//
-//   clock_t advection_time = clock();
-
-//   for (unsigned k = 1; k <= n; k++) {
-//     std::cout << "Iteration = " << k << std::endl;
-//     //uncomment for  vortex test
-//     mlSol.CopySolutionToOldSolution();
-//     mlSol.UpdateSolution("U" , InitalValueU, pi * k / n);
-//     mlSol.UpdateSolution("V" , InitalValueV, pi * k / n);
-//     if (dim == 3) mlSol.UpdateSolution("W" , InitalValueW, pi * k / n);
-//     linea.AdvectionParallel(40, T / n, 4);
-//     linea.GetLine(line[0]);
-//     PrintLine(DEFAULT_OUTPUTDIR, line, false, k);
-//   }
-
-
-//   std::cout << std::endl << " advection in: " << std::setw(11) << std::setprecision(6) << std::fixed
-//             << static_cast<double>((clock() - advection_time)) / CLOCKS_PER_SEC << " s" << std::endl;
-//
-//   std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
-//             << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
-
-  //computing the geometric error
-//   double error = 0.;
-//   for (unsigned j = 0; j < size + 1; j++) {
-//     double tempError = 0.;
-//     for (unsigned i = 0; i < dim; i++) {
-//       tempError += (line0[0][j][i] - line[0][j][i]) * (line0[0][j][i] - line[0][j][i]);
-//     }
-//     error += sqrt(tempError);
-//   }
-  /*
-    error = error / size;*/
-  /*
-    std::cout << " ERROR = " << std::setprecision(15) << error << std::endl;*/
-
-//   for(unsigned j = 0; j < size; j++) {
-//     std::vector <double> trial(dim);
-//     trial = linea._particles[linea._printList[j]]->GetIprocMarkerCoordinates();
-//     for(unsigned i=0; i<dim; i++){
-//       std::cout << " x[" << j << "][" << i << "]=" << trial[i] << std::endl;
-//     }
-//   }
-//END stuff for the advection that we will have to remove
-
-
   return 0;
 
 } //end main
@@ -405,23 +345,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   std::vector<Marker*> particles = linea->GetParticles();
   std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
 
-  std::map<unsigned, unsigned > dofCrisi; //WARNING to erase when we found the mistake
-  dofCrisi[45] = 1;
-//   dofCrisi[46] = 1;
-//   dofCrisi[47] = 1;
-//   dofCrisi[65] = 1;
-//   dofCrisi[66] = 1;
-//   dofCrisi[67] = 1;
-//   dofCrisi[71] = 1;
-//   dofCrisi[366] = 1;
-//   dofCrisi[369] = 1;
-//   dofCrisi[402] = 1;
-//   dofCrisi[405] = 1;
-//   dofCrisi[412] = 1;
-//   dofCrisi[413] = 1;
-//   dofCrisi[561] = 1;
-  bool printCrisi = false;
-  unsigned indexCrisi = UINT_MAX;
 
   //BEGIN loop on elements (to initialize the "soft" stiffness matrix)
   for (int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
@@ -604,8 +527,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       //update element related quantities only if we are in a different element
       if (iel != ielOld) {
 
-        printCrisi = false;
-
         ielt = mymsh->GetElementType(iel);
         nve = mymsh->GetElementDofNumber(iel, solType);
         //initialization of everything is in common fluid and solid
@@ -635,19 +556,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
           unsigned idof = mymsh->GetSolutionDof(i, iel, solType); //local 2 global solution
 
 
-          printCrisi = (dofCrisi.find(idof) != dofCrisi.end() || printCrisi) ? true : false; //WARNING to erase when we found the mistake
-//           if(printCrisi == true) {
-//             indexCrisi = i;
-//             std::cout << " -------------------------------- We are looking at critical dof " << idof << " -------------------- " << std::endl;
-//             std::cout << " -------------------------------- Local dof " << indexCrisi << " -------------------- " << std::endl;
-//           }
+
 
           for (int j = 0; j < dim; j++) {
             SolDd[indexPdeD[j]][i] = (*mysolution->_Sol[indexSolD[j]])(idof);
-
-//             if(printCrisi == true) { //WARNING to erase when we found the mistake
-//               std::cout <<   "SolDd[indexPdeD[" << j << "]][" << i << "]=" << SolDd[indexPdeD[j]][i] << std::endl;
-//             }
 
             dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indexSolD[j], indexPdeD[j], i, iel); //local 2 global Pde
             aRhs[indexPdeD[j]][i] = 0.;
@@ -693,23 +605,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
       
 
-//       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, 0, weight, phi, gradphi, nablaphi); // function to evaluate at the gauss points
-//       std::cout << "basis functions evaluated at the gauss point" << std::endl;
-//       std::cout << "total number of Gauss points = " << mymsh->_finiteElement[ielt][solType]->GetGaussPointNumber() << std::endl;
-//       for(unsigned i = 0; i < phi.size(); i++) {
-//         std::cout << "phi[" << i << "]=" << phi[i] << std::endl;
-//       }
+
 
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weightFake, phi, gradphi, nablaphi); //function to evaluate at the particles
-//          std::cout << "basis functions evaluated at the particle in element " << " " << "iel = " << iel << std::endl;
-//       for(unsigned i = 0; i < phi.size() ; i++) {
-//       if( indexCrisi != UINT_MAX){ //WARNING remove after testing
-//         std::cout << "phi[" << indexCrisi << "]=" << phi[indexCrisi] << std::endl;
-//       }
-//       }
 
-
-//      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, xi, weight_hat, phi_hat, gradphi_hat, nablaphi_hat); //TODO do we need this?
 
       // displacement and velocity
       //BEGIN evaluates SolDp at the particle iMarker
@@ -744,15 +643,11 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       
       for (unsigned k = 0; k < nve; k++) {
         for (unsigned i = 0; i < dim; i++) {
-          adept::adouble Laplacian = 0.;
+          adept::adouble weakLaplace = 0.;
           for (unsigned j = 0; j < dim; j++) {
-            //Laplacian += mu * 2 * phi[k] * gradphi[k * dim + j] * (GradSolDp[i][j] + GradSolDp[j][i]);
-            Laplacian += 0.5 * (GradSolDp[i][j] + GradSolDp[j][i]) * gradphi[k * dim + j] ;
+            weakLaplace += 0.5 * (GradSolDp[i][j] + GradSolDp[j][i]) * gradphi[k * dim + j] ;
           }
-//           if(phi[k] != 0) {
-          //aRhs[indexPdeD[i]][k] += - (Laplacian / density - gravityP[i] * phi[k] * phi[k]) * mass;
-          aRhs[indexPdeD[i]][k] += - ( ( 2. * mu * Laplacian + lambda * divergence * gradphi[k * dim + i] )/ density - gravityP[i] * phi[k]) * mass;
-//           }
+          aRhs[indexPdeD[i]][k] += - ( ( 2. * mu * weakLaplace + lambda * divergence * gradphi[k * dim + i] )/ density - gravityP[i] * phi[k]) * mass;
         }
       }
       //END
@@ -781,17 +676,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
           }
 
           Jac.resize((dim * nve) * (dim * nve));
-
-//           if (printCrisi) {
-//             //print of the local Jacobian
-//             for (unsigned i = 0; i < nve; i++) {
-//               std::cout << dofsAll[i] << " ";
-//               for (unsigned j = 0; j < nve; j++) {
-//                 std::cout << Jac[i * (nve * dim) + j] << " ";
-//               }
-//               std::cout << std::endl;
-//             }
-//           }
 
           s.jacobian(&Jac[0], true);
 
@@ -822,6 +706,147 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   // ***************** END ASSEMBLY RESIDUAL + MATRIX *******************
 
 }
+
+
+void UpdateParticleGradient(MultiLevelProblem& ml_prob)
+{
+
+  // ml_prob is the global object from/to where get/set all the data
+  // level is the level of the PDE system to be assembled
+  // levelMax is the Maximum level of the MultiLevelProblem
+  // assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
+
+  clock_t AssemblyTime = 0;
+  clock_t start_time, end_time;
+
+  //pointers and references
+
+  NonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<NonLinearImplicitSystem> ("MPM_FEM");
+  const unsigned  level = my_nnlin_impl_sys.GetLevelToAssemble();
+  MultiLevelSolution* ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution* mysolution = ml_sol->GetSolutionLevel(level);     // pointer to the solution (level) object
+  
+  Mesh* mymsh = ml_prob._ml_msh->GetLevel(level);     // pointer to the mesh (level) object
+  elem* myel = mymsh->el;   // pointer to the elem object in msh (level)
+  
+  const unsigned dim = mymsh->GetDimension();
+
+  // data
+  unsigned nel    = mymsh->GetNumberOfElements();
+  unsigned iproc  = mymsh->processor_id();
+
+  // local objects
+   
+  vector< vector < double > > SolDd(dim);
+  vector< vector < double > > GradSolDp(dim);
+  
+  for (int i = 0; i < dim; i++) {
+    GradSolDp[i].resize(dim);
+  }
+
+  vector < double > phi;
+  vector < double > gradphi;
+  vector < double > nablaphi;
+
+  vector <vector < double> > vx(dim); //vx is coordX in assembly of ex30
+  
+  double weight;
+  
+  
+  //variable-name handling
+  const char varname[3][3] = {"DX", "DY", "DZ"};
+  vector <unsigned> indexSolD(dim);
+  unsigned solType = ml_sol->GetSolutionType(&varname[0][0]);
+
+  for (unsigned ivar = 0; ivar < dim; ivar++) {
+    indexSolD[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
+  }
+
+  //line instances
+  std::vector<unsigned> markerOffset = linea->GetMarkerOffset();
+  unsigned markerOffset1 = markerOffset[iproc];
+  unsigned markerOffset2 = markerOffset[iproc + 1];
+  std::vector<Marker*> particles = linea->GetParticles();
+  std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
+  
+  //initialization of iel
+  unsigned ielOld = UINT_MAX;
+  //declaration of element instances
+
+  //BEGIN loop on particles (used as Gauss points)
+  for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
+
+    //element of particle iMarker
+    unsigned iel = particles[iMarker]->GetMarkerElement();
+    if (iel != UINT_MAX) {
+      short unsigned ielt;
+      unsigned nve;
+      //update element related quantities only if we are in a different element
+      if (iel != ielOld) {
+
+        ielt = mymsh->GetElementType(iel);
+        nve = mymsh->GetElementDofNumber(iel, solType);
+        //initialization of everything is in common fluid and solid
+
+        //Rhs
+        for (int i = 0; i < dim; i++) {
+          SolDd[i].resize(nve);
+        }
+
+        // ----------------------------------------------------------------------------------------
+        // coordinates, solutions, displacement, velocity dofs
+
+        for (int i = 0; i < dim; i++) {
+          vx[i].resize(nve);
+        }
+
+        //BEGIN copy of the value of Sol at the dofs idof of the element iel
+        for (unsigned i = 0; i < nve; i++) {
+          unsigned idof = mymsh->GetSolutionDof(i, iel, solType); //local 2 global solution
+
+          for (int j = 0; j < dim; j++) {
+            SolDd[j][i] = (*mysolution->_Sol[indexSolD[j]])(idof);
+           
+            //Fixed coordinates (Reference frame)
+            vx[j][i] = (*mymsh->_topology->_Sol[j])(idof) + SolDd[j][i];
+          }
+        }
+        //END
+
+      }
+
+
+      bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO to be removed after we include FindLocalCoordinates in the advection
+      particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, mysolution, 0);
+
+      // the local coordinates of the particles are the Gauss points in this context
+      std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
+
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradphi, nablaphi); //function to evaluate at the particles
+
+      // displacement and velocity
+      //BEGIN evaluates SolDp at the particle iMarker
+      for (int i = 0; i < dim; i++) {
+        for (int j = 0; j < dim; j++) {
+          GradSolDp[i][j] = 0.;
+        }
+        for (unsigned inode = 0; inode < nve; inode++) {
+          for (int j = 0; j < dim; j++) {
+            GradSolDp[i][j] +=  gradphi[inode * dim + j] * SolDd[i][inode];
+          }
+        }
+      }
+      ielOld = iel;
+    }
+    else {
+      break;
+    }
+  }
+  //END loop on particles
+
+
+}
+
 
 
 
