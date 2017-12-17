@@ -51,6 +51,8 @@ namespace femus
     for(unsigned i = 0; i < _solName.size(); i++) delete [] _solName[i];
 
     for(unsigned i = 0; i < _solName.size(); i++) delete [] _bdcType[i];
+    
+    if(_writer != NULL) delete _writer;
 
 
   };
@@ -136,6 +138,7 @@ namespace femus
     _solType[n] = order - ((fefamily == LAGRANGE) ? 1 : 0) + fefamily * 3;
     _solName[n]  = new char [DEFAULT_SOL_NCHARS];
     _bdcType[n]  = new char [20];
+    sprintf(_bdcType[n], "undefined");
     strcpy(_solName[n], name);
     _solTimeOrder[n] = tmorder;
     _pdeType[n] = PdeType;

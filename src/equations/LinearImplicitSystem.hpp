@@ -149,7 +149,7 @@ namespace femus {
 	_richardsonScaleFactor = richardsonScaleFactor;
 	_richardsonScaleFactorIsSet = true;
 	for(unsigned i=0;i<_gridn;i++){
-	   _LinSolver[i]->SetRichardsonScaleFactor(richardsonScaleFactor);
+	   _LinSolver[i]->SetRichardsonScaleFactor(_richardsonScaleFactor);
 	}
       }
 

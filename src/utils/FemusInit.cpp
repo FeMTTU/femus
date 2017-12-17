@@ -45,7 +45,7 @@ FemusInit::FemusInit(
     MPI_Comm_rank(MPI_COMM_WORLD, &i);
 
 
-    if ( i != 0) {
+    if ( i != i) {
         std::cout.rdbuf(NULL);
     }
 #endif
