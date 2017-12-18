@@ -31,7 +31,7 @@ namespace femus
 
     MultiLevelSolution	* ml_sol		= ml_prob._ml_sol;
 
-    FSIConstrainLeaflet(*ml_sol);
+    //FSIConstrainLeaflet(*ml_sol);
 
     Solution	* mysolution		= ml_sol->GetSolutionLevel(level);
 
@@ -185,7 +185,7 @@ namespace femus
     // -----------------------------------------------------------------
     // space discretization parameters
     unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));
-    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("P"));
+    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("PS"));
 
     // mesh and procs
     unsigned nel    = mymsh->GetNumberOfElements();
@@ -196,16 +196,16 @@ namespace femus
 
     //----------------------------------------------------------------------------------
     //variable-name handling
-    const char varname[7][3] = {"DX", "DY", "DZ", "U", "V", "W", "P"};
-    const char varname1[3][4] = {"DX1", "DY1", "DZ1"};
+    const char varname[7][3] = {"DX", "DY", "DZ", "U", "V", "W", "PS"};
+    //const char varname1[3][4] = {"DX1", "DY1", "DZ1"};
     vector <unsigned> indexVAR(2 * dim + 1);
     vector <unsigned> indVAR(2 * dim + 1);
-    vector <unsigned> indVAR1(dim);
+    //vector <unsigned> indVAR1(dim);
     vector <unsigned> SolType(2 * dim + 1);
 
     for (unsigned ivar = 0; ivar < dim; ivar++) {
       indVAR[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
-      indVAR1[ivar] = ml_sol->GetIndex(&varname1[ivar][0]);
+      //indVAR1[ivar] = ml_sol->GetIndex(&varname1[ivar][0]);
       indVAR[ivar + dim] = ml_sol->GetIndex(&varname[ivar + 3][0]);
       SolType[ivar] = ml_sol->GetSolutionType(&varname[ivar][0]);
       SolType[ivar + dim] = ml_sol->GetSolutionType(&varname[ivar + 3][0]);
@@ -329,8 +329,9 @@ namespace femus
       for (int j = 0; j < nve; j++) {
         unsigned idof = mymsh->GetSolutionDof(j, iel, SolType2);
         for (unsigned idim = 0; idim < dim; idim++) {
-          vx[idim][j] = vx_hat[idim][j] + (!meshIsCurrupted) * Soli[indexVAR[idim]][j]
-                        + meshIsCurrupted * (*mysolution->_Sol[indVAR1[idim]])(idof);
+//           vx[idim][j] = vx_hat[idim][j] + (!meshIsCurrupted) * Soli[indexVAR[idim]][j]
+//                         + meshIsCurrupted * (*mysolution->_Sol[indVAR1[idim]])(idof);
+	  vx[idim][j] = vx_hat[idim][j] + Soli[indexVAR[idim]][j];
           vx_old[idim][j] = vx_hat[idim][j] + Soli_old[indexVAR[idim]][j];
         }
       }
@@ -351,8 +352,8 @@ namespace femus
             unsigned int face = - (mymsh->el->GetFaceElementIndex(iel, jface) + 1);
             double tau = 0.;
             double tau_old = 0.;
-            if ((!ml_sol->GetBdcFunction()(xx, "P", tau, face, time) &&
-                 !ml_sol->GetBdcFunction()(xx, "P", tau_old, face, time - dt))
+            if ((!ml_sol->GetBdcFunction()(xx, "PS", tau, face, time) &&
+                 !ml_sol->GetBdcFunction()(xx, "PS", tau_old, face, time - dt))
                 && (tau != 0. || tau_old != 0.)) {
 
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
@@ -410,7 +411,7 @@ namespace femus
             area = Weight_hat / GaussWeight;
 
             if (iel == mymsh->_elementOffset[iproc]) {
-              area_elem_first->add(mymsh->processor_id(), area);
+              area_elem_first->set(mymsh->processor_id(), area);
               area_elem_first->close();
               rapresentative_area = area_elem_first->l1_norm() / nprocs;
             }
@@ -1255,7 +1256,7 @@ namespace femus
     // -----------------------------------------------------------------
     // space discretization parameters
     unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));
-    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("P"));
+    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("PS"));
 
     // mesh and procs
     unsigned nel    = mymsh->GetNumberOfElements();
@@ -1266,7 +1267,7 @@ namespace femus
 
     //----------------------------------------------------------------------------------
     //variable-name handling
-    const char varname[10][4] = {"DX", "DY", "DZ", "U", "V", "W", "DX1", "DY1", "DZ1", "P"};
+    const char varname[10][4] = {"DX", "DY", "DZ", "U", "V", "W", "DX1", "DY1", "DZ1", "PS"};
 
     vector <unsigned> indexVAR(nBlocks * dim + 1);
     vector <unsigned> indVAR(nBlocks * dim + 1);
@@ -1412,8 +1413,8 @@ namespace femus
             unsigned int face = - (mymsh->el->GetFaceElementIndex(iel, jface) + 1);
             double tau = 0.;
             double tau_old = 0.;
-            if ((!ml_sol->GetBdcFunction()(xx, "P", tau, face, time) &&
-                 !ml_sol->GetBdcFunction()(xx, "P", tau_old, face, time - dt))
+            if ((!ml_sol->GetBdcFunction()(xx, "PS", tau, face, time) &&
+                 !ml_sol->GetBdcFunction()(xx, "PS", tau_old, face, time - dt))
                 && (tau != 0. || tau_old != 0.)) {
 
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
@@ -2273,12 +2274,12 @@ namespace femus
     const char varname[3][3] = {"DX", "DY", "DZ"};
     vector <unsigned> indVAR(geoDim);
 
-    const char varname1[3][4] = {"DX1", "DY1", "DZ1"};
-    vector <unsigned> indVAR1(geoDim);
+    //const char varname1[3][4] = {"DX1", "DY1", "DZ1"};
+    //vector <unsigned> indVAR1(geoDim);
 
     for (unsigned ivar = 0; ivar < geoDim; ivar++) {
       indVAR[ivar] = mlSol.GetIndex(&varname[ivar][0]);
-      indVAR1[ivar] = mlSol.GetIndex(&varname1[ivar][0]);
+      //indVAR1[ivar] = mlSol.GetIndex(&varname1[ivar][0]);
     }
 
 
@@ -2367,9 +2368,10 @@ namespace femus
         unsigned inodeVx_Metis = mymsh->GetSolutionDof(i, iel, SolTypeVx);
         for (int j = 0; j < geoDim; j++) {
           //coordinates
-          vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) +
-                     (!meshIsCurrupted) * (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis) +
-                     meshIsCurrupted * (*mysolution->_Sol[indVAR1[j]])(inodeVx_Metis);
+//           vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) +
+//                      (!meshIsCurrupted) * (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis) +
+//                      meshIsCurrupted * (*mysolution->_Sol[indVAR1[j]])(inodeVx_Metis);
+          vx[j][i] = (*mymsh->_topology->_Sol[j])(inodeVx_Metis) + (*mysolution->_Sol[indVAR[j]])(inodeVx_Metis);
         }
       }
       // ------------------------------------
@@ -3358,7 +3360,7 @@ namespace femus
     // -----------------------------------------------------------------
     // space discretization parameters
     unsigned SolType2 = ml_sol->GetSolutionType(ml_sol->GetIndex("U"));
-    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("P"));
+    unsigned SolType1 = ml_sol->GetSolutionType(ml_sol->GetIndex("PS"));
 
     // mesh and procs
     unsigned nel    = mymsh->GetNumberOfElements();
@@ -3369,7 +3371,7 @@ namespace femus
 
     //----------------------------------------------------------------------------------
     //variable-name handling
-    const char varname[10][4] = {"DX", "DY", "DZ", "U", "V", "W", "DX1", "DY1", "DZ1", "P"};
+    const char varname[10][4] = {"DX", "DY", "DZ", "U", "V", "W", "DX1", "DY1", "DZ1", "PS"};
 
     const char varname2[10][4] = {"Um", "Vm", "Wm"};
 
@@ -3525,8 +3527,8 @@ namespace femus
             unsigned int face = - (mymsh->el->GetFaceElementIndex(iel, jface) + 1);
             double tau = 0.;
             double tau_old = 0.;
-            if ((!ml_sol->GetBdcFunction()(xx, "P", tau, face, time) &&
-                 !ml_sol->GetBdcFunction()(xx, "P", tau_old, face, time - dt))
+            if ((!ml_sol->GetBdcFunction()(xx, "PS", tau, face, time) &&
+                 !ml_sol->GetBdcFunction()(xx, "PS", tau_old, face, time - dt))
                 && (tau != 0. || tau_old != 0.)) {
 
               unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);

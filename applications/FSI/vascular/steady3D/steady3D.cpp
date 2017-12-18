@@ -77,27 +77,20 @@ int main(int argc, char **args) {
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
    std::string infile;
   if(simulation == 0) {
-    infile = "./input/Turek_3D_F2.neu"; //Turek_3D_version2.neu gruppi 9 e 10 uniti
+    infile = "./../input/steady&pulsatile/3D/Turek_3D_F2.neu"; //Turek_3D_version2.neu gruppi 9 e 10 uniti
   }
   else if(simulation == 1) {
-    infile = "./input/aneurysm_omino.neu";
+    infile = "./../input/steady&pulsatile/3D/aneurysm_omino.neu";
   }
   else if(simulation == 2) {
-    infile = "./input/aneurisma_aorta.neu";
+    infile = "./../input/steady&pulsatile/3D/aneurisma_aorta.neu";
   }
   else if(simulation == 3) {
-    infile = "./input/AAA_thrombus.neu";
+    infile = "./../input/steady&pulsatile/3D/AAA_thrombus.neu";
   }
   else if(simulation == 4) {
-    infile = "./input/Turek_3D_porous.neu";
+    infile = "./../input/steady&pulsatile/3D/Turek_3D_porous.neu";
   }
-  //std::string infile = "./input/aneurysm_omino.neu";
-  //std::string infile = "./input/aneurisma_aorta.neu";
-  // std::string infile = "./input/turek_porous_scaled.neu";
-  //std::string infile = "./input/turek_porous_omino.neu";
-  //std::string infile = "./input/Turek_3D_D.neu";
-  //std::string infile = "./input/AAA_thrombus.neu";
-  //std::string infile = "./input/AAA.neu";
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
 
@@ -198,12 +191,6 @@ int main(int argc, char **args) {
   else if(simulation == 3) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus);
   }
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorta);
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOmino);
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTurek);
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionPorous);
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOminoPorous);
-  //ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionThrombus);
   
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");

@@ -12,8 +12,6 @@
 #include "VTKWriter.hpp"
 #include "MyVector.hpp"
 #include "../include/FSITimeDependentAssemblySupgNonConservativeTwoPressures.hpp"
-//#include "../../include/FSITimeDependentAssemblySupgGCL.hpp"
-//#include "../../include/FSITimeDependentAssemblySupg.hpp"
 #include <cmath>
 double scale = 1000.;
 
@@ -42,9 +40,16 @@ int main(int argc, char** args)
 
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 
-  //std::string infile = "./input/valve2.neu";
-  std::string infile = "./../input/valve2_corta2bis.neu";
-  //std::string infile = "./input/valve3D_corta2bis.neu";
+  clock_t start_time = clock();
+
+  valve = true;
+  twoPressure = false;
+
+  //std::string infile = "./../input/valve/2D/valve2.neu";
+  std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
+  //std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
+  //std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
+  //std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -82,8 +87,6 @@ int main(int argc, char** args)
 
   numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
-
-  std::cout << 0 << std::endl;
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
                         infile.c_str(), "fifth", Lref, NULL);
@@ -153,20 +156,19 @@ int main(int argc, char** args)
   ml_prob.parameters.set<Solid> ("Solid1") = solid1;
 
   // ******* Add FSI system to the MultiLevel problem *******
-  TransientMonolithicFSINonlinearImplicitSystem & system = ml_prob.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
+  TransientMonolithicFSINonlinearImplicitSystem& system = ml_prob.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
 
   system.AddSolutionToSystemPDE("DX");
   system.AddSolutionToSystemPDE("DY");
-  if( dim == 3 ) system.AddSolutionToSystemPDE("DZ");
+  if(dim == 3) system.AddSolutionToSystemPDE("DZ");
 
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-  if( dim == 3 ) system.AddSolutionToSystemPDE("W");
+  if(dim == 3) system.AddSolutionToSystemPDE("W");
 
   system.AddSolutionToSystemPDE("PS");
 
-  //twoPressure = false;
-  if (twoPressure) system.AddSolutionToSystemPDE("PF");
+  if(twoPressure) system.AddSolutionToSystemPDE("PF");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
@@ -217,10 +219,10 @@ int main(int argc, char** args)
   //char restart_file_name[256] = "./save/valve2D_iteration28";
   char restart_file_name[256] = "";
 
-  if (strcmp (restart_file_name, "") != 0) {
+  if(strcmp(restart_file_name, "") != 0) {
     ml_sol.LoadSolution(restart_file_name);
     time_step_start = 29;
-    system.SetTime( (time_step_start - 1) * 1. / 32);
+    system.SetTime((time_step_start - 1) * 1. / 32);
   }
 
   // ******* Print solution *******
@@ -233,7 +235,7 @@ int main(int argc, char** args)
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  if( dim == 3)mov_vars.push_back("DZ");
+  if(dim == 3)mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step_start - 1);
@@ -261,18 +263,18 @@ int main(int argc, char** args)
     }
   }
 
-  std::vector < double > Qtot(3,0.);
-   std::vector<double> fluxes(2,0.);
+  std::vector < double > Qtot(3, 0.);
+  std::vector<double> fluxes(2, 0.);
 
-  for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
+  for(unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
 
-    for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
+    for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
     }
 
-    if (time_step > 1)
+    if(time_step > 1)
       system.SetMgType(V_CYCLE);
 
 
@@ -285,24 +287,24 @@ int main(int argc, char** args)
     Qtot[0] += 0.5 * dt * fluxes[0];
     Qtot[1] += 0.5 * dt * fluxes[1];
 
-    GetSolutionFluxes(ml_sol,fluxes);
+    GetSolutionFluxes(ml_sol, fluxes);
 
     Qtot[0] += 0.5 * dt * fluxes[0];
     Qtot[1] += 0.5 * dt * fluxes[1];
     Qtot[2] = Qtot[0] + Qtot[1];
 
 
-    std::cout<< fluxes[0] <<" "<<fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
+    std::cout << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
 
 
     if(iproc == 0) {
-      outf << time_step <<" "<< system.GetTime() <<" "<< fluxes[0] <<" "<<fluxes[1]<<" " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
+      outf << time_step << " " << system.GetTime() << " " << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
     }
 
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
-    if ( time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
+    if(time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
 
   }
 
@@ -312,6 +314,8 @@ int main(int argc, char** args)
 
   //******* Clear all systems *******
   ml_prob.clear();
+  std::cout << " TOTAL TIME:\t" << \
+            static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
   return 0;
 }
 
@@ -375,6 +379,9 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
       value = (0 - 15 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10, 15, 15
+    }
+    else if(7 == facename) {
+      Kslip = 0.;
     }
   }
   else if(!strcmp(name, "PF")) {
@@ -505,4 +512,5 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
     qTop.clearBroadcast();
   }
 }
+
 

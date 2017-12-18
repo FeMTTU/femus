@@ -47,6 +47,8 @@ MultiLevelMesh::~MultiLevelMesh() {
 	delete _finiteElement[i][j];
       }
     }
+    
+    if(_writer != NULL) delete _writer;
 
 }
 
@@ -61,6 +63,7 @@ MultiLevelMesh::MultiLevelMesh(): _gridn0(0)
       _finiteElement[i][j] = NULL;
     }
   }
+  _writer = NULL;
 
 }
 
@@ -170,6 +173,8 @@ MultiLevelMesh::MultiLevelMesh(const unsigned short &igridn,const unsigned short
     _level.resize(_gridn);
     for(int i=0; i<_gridn; i++)
         _level[i]=_level0[i];
+    
+    _writer = NULL;
 
 }
 

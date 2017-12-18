@@ -42,8 +42,8 @@ int main(int argc, char **args)
 
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 
-  //std::string infile = "./input/valve2.neu";
-  std::string infile = "./input/valve2_corta2bis.neu";
+  //std::string infile = "./../input/valve/2D/valve2.neu";
+  std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
