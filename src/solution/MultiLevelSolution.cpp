@@ -75,6 +75,8 @@ namespace femus
     _mlBCProblem = NULL;
 
     _FSI = false;
+    
+    _writer = NULL;
 
   }
 
