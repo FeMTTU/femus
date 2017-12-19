@@ -85,7 +85,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 4;
   numberOfAMRLevels = 0;
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
@@ -186,7 +186,10 @@ int main(int argc, char** args)
   solutionTypeVelPf[dim] = ml_sol.GetSolutionType("PF");
 
   FieldSplitTree VelPf(PREONLY, ASM_PRECOND, fieldVelPf, solutionTypeVelPf, "VelPf");
-  VelPf.SetAsmBlockSize(2);
+  VelPf.SetAsmStandard(false);
+  VelPf.SetAsmBlockSize(10);
+  VelPf.SetAsmBlockPreconditionerSolid(MLU_PRECOND);
+  VelPf.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
   VelPf.SetAsmNumeberOfSchurVariables(1);
 
   
@@ -203,10 +206,12 @@ int main(int argc, char** args)
   solutionTypeDispPs[dim] = ml_sol.GetSolutionType("PS");
 
   FieldSplitTree DispPs(PREONLY, ASM_PRECOND, fieldDispPs, solutionTypeDispPs, "DispPs");
-  DispPs.SetAsmBlockSize(2);
+  DispPs.SetAsmStandard(false);
+  DispPs.SetAsmBlockSize(10);
+  DispPs.SetAsmBlockPreconditionerSolid(MLU_PRECOND);
+  DispPs.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
   DispPs.SetAsmNumeberOfSchurVariables(1);
-   
-
+  
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
 
@@ -218,6 +223,7 @@ int main(int argc, char** args)
   //END buid fieldSplitTree
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
   
+  system.SetOuterKSPSolver("fgmres");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
@@ -230,8 +236,8 @@ int main(int argc, char** args)
   system.SetMaxNumberOfNonLinearIterations(20); //20
   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
 
-  system.SetMaxNumberOfLinearIterations(6);
-  system.SetAbsoluteLinearConvergenceTolerance(1.e-13);
+  system.SetMaxNumberOfLinearIterations(1);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-50);
 
  
   system.SetNumberPreSmoothingStep(1);
@@ -251,7 +257,8 @@ int main(int argc, char** args)
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   if (dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
 
-  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
+  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 40, 10);
+  //system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
