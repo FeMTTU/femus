@@ -949,6 +949,7 @@ namespace femus {
   }
 
 
+  //TODO this function may be useless for our implementation eventually
   void Line::GetParticlesToGridProjections() {
 
     double s = 0;
@@ -1027,96 +1028,94 @@ namespace femus {
   }
 
 
-  void Line::GetGridToParticlesProjections() {
+  void Line::UpdateLineMPM() {
 
-    std::vector<unsigned>  solIndexDisp(_dim);
-    std::vector<unsigned>  solIndexAcc(_dim);
+    //BEGIN remove when everything is OK
 
-    solIndexDisp[0] = _sol->GetIndex("DX");
-    if(_dim > 1) solIndexDisp[1] = _sol->GetIndex("DY");
-    if(_dim > 2) solIndexDisp[2] = _sol->GetIndex("DW");
-
-    solIndexAcc[0] = _sol->GetIndex("AU");
-    if(_dim > 1) solIndexAcc[1] = _sol->GetIndex("AV");
-    if(_dim > 2) solIndexAcc[2] = _sol->GetIndex("AW");
-
-    unsigned solType = _sol->GetSolutionType(solIndexDisp[0]);
-
-    std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
-
-    std::vector< vector< double > > SolDd(_dim); // solution at the nodes
-    std::vector< vector< double > > SolAd(_dim); // solution at the nodes
-
-    unsigned ielOld = UINT_MAX;
-    unsigned nve;
-    unsigned ielType;
-
-    for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
-
-      unsigned iel = _particles[iMarker]->GetMarkerElement();
-
-      if(iel != UINT_MAX) {
-
-        std::vector <double> particleDisp(_dim, 0.);
-        std::vector <double> particleAcc(_dim, 0.);
-
-        if(iel != ielOld) {
-          ielType =  _mesh->GetElementType(iel);
-          nve = _mesh->GetElementDofNumber(iel, solType);
-
-          for(int i = 0; i < _dim; i++) {
-            SolDd[i].resize(nve);
-            SolAd[i].resize(nve);
-          }
-
-          for(unsigned inode = 0; inode < nve; inode++) {
-            unsigned idof = _mesh->GetSolutionDof(inode, iel, solType); //local 2 global solution
-            for(int i = 0; i < _dim; i++) {
-              SolDd[i][inode] = (*_sol->_Sol[solIndexDisp[i]])(idof);
-              SolAd[i][inode] = (*_sol->_Sol[solIndexAcc[i]])(idof);
-            }
-          }
-
-        }
-
-        bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO we actually want to remove this
-        _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, 0.);
-        std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
-
-        for(int i = 0; i < _dim; i++) {
-          basis* base = _mesh->GetBasis(ielType, solType);
-          for(unsigned inode = 0; inode < nve; inode++) {
-            double phiP = base->eval_phi(inode, xi);
-            particleDisp[i] += phiP * SolDd[i][inode];
-            particleAcc[i] += phiP * SolAd[i][inode];
-          }
-        }
-
-        _particles[iMarker]->SetMarkerDisplacement(particleDisp);
-        _particles[iMarker]->SetMarkerAcceleration(particleAcc);
-
-        //movement of the particles
-        _particles[iMarker]->UpdateParticleCoordinates();
-
-        _particles[iMarker]->GetElementSerial(iel, _sol, 0.);
-        _particles[iMarker]->SetIprocMarkerPreviousElement(iel);
-
-//         unsigned currentElem = _particles[iMarker]->GetMarkerElement();  //WARNING I removed this
-//         unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
-
-//         if(mproc == _iproc) {//WARNING I removed this
-//           _particles[iMarker]->FindLocalCoordinates(solType, aX[currentElem], true, _sol, 0.); //WARNING e' qui che strippa
+//     std::vector<unsigned>  solIndexDisp(_dim);
+//     std::vector<unsigned>  solIndexAcc(_dim);
+//
+//     solIndexDisp[0] = _sol->GetIndex("DX");
+//     if(_dim > 1) solIndexDisp[1] = _sol->GetIndex("DY");
+//     if(_dim > 2) solIndexDisp[2] = _sol->GetIndex("DW");
+//
+//     solIndexAcc[0] = _sol->GetIndex("AU");
+//     if(_dim > 1) solIndexAcc[1] = _sol->GetIndex("AV");
+//     if(_dim > 2) solIndexAcc[2] = _sol->GetIndex("AW");
+//
+//     unsigned solType = _sol->GetSolutionType(solIndexDisp[0]);
+//
+//     std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
+//
+//     std::vector< vector< double > > SolDd(_dim); // solution at the nodes
+//     std::vector< vector< double > > SolAd(_dim); // solution at the nodes
+//
+//     unsigned ielOld = UINT_MAX;
+//     unsigned nve;
+//     unsigned ielType;
+//
+//     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
+//
+//       unsigned iel = _particles[iMarker]->GetMarkerElement();
+//
+//       if(iel != UINT_MAX) {
+//
+//         std::vector <double> particleDisp(_dim, 0.);
+//         std::vector <double> particleAcc(_dim, 0.);
+//
+//         if(iel != ielOld) {
+//           ielType =  _mesh->GetElementType(iel);
+//           nve = _mesh->GetElementDofNumber(iel, solType);
+//
+//           for(int i = 0; i < _dim; i++) {
+//             SolDd[i].resize(nve);
+//             SolAd[i].resize(nve);
+//           }
+//
+//           for(unsigned inode = 0; inode < nve; inode++) {
+//             unsigned idof = _mesh->GetSolutionDof(inode, iel, solType); //local 2 global solution
+//             for(int i = 0; i < _dim; i++) {
+//               SolDd[i][inode] = (*_sol->_Sol[solIndexDisp[i]])(idof);
+//               SolAd[i][inode] = (*_sol->_Sol[solIndexAcc[i]])(idof);
+//             }
+//           }
+//
 //         }
+//
+//         bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO we actually want to remove this
+//         _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, 0.);
+//         std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
+//
+//         for(int i = 0; i < _dim; i++) {
+//           basis* base = _mesh->GetBasis(ielType, solType);
+//           for(unsigned inode = 0; inode < nve; inode++) {
+//             double phiP = base->eval_phi(inode, xi);
+//             particleDisp[i] += phiP * SolDd[i][inode];
+//             particleAcc[i] += phiP * SolAd[i][inode];
+//           }
+//         }
+//
+//         _particles[iMarker]->SetMarkerDisplacement(particleDisp);
+//         _particles[iMarker]->SetMarkerAcceleration(particleAcc);
+//
+//         //movement of the particles
+//         _particles[iMarker]->UpdateParticleCoordinates();
+//
+//         _particles[iMarker]->GetElementSerial(iel, _sol, 0.);
+//         _particles[iMarker]->SetIprocMarkerPreviousElement(iel);
+//
+//
+//         ielOld = iel;
+//
+//       }
+//
+//     }
 
-        ielOld = iel;
+    //END remove when everything is OK
 
-      }
-
-    }
 
     //BEGIN find new _elem and _mproc
 
-    //std::cout << " ----------------------------------PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
     for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
       for(unsigned iMarker = _markerOffset[jproc]; iMarker < _markerOffset[jproc + 1]; iMarker++) {
         unsigned elem =  _particles[iMarker]->GetMarkerElement();
@@ -1146,17 +1145,7 @@ namespace femus {
                 unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
                 MPI_Send(&MPMQuantities[0], MPMsize, MPI_DOUBLE, mproc, order, PETSC_COMM_WORLD);
 
-// 		std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAA "<< MPMsize <<std::endl;
-// 		
-//                 std::vector<double> x;
-//                 x = _particles[iMarker]->GetIprocMarkerCoordinates();
-// 		
-// 		std::cout<<" "<< x[0] << " "<< x[1] <<std::endl;
-// 		
-//                 MPI_Send(&x[0], MPMsize, MPI_DOUBLE, mproc, order + 1, PETSC_COMM_WORLD);
-
                 _particles[iMarker]->FreeVariables();
-
 
               }
               else if(mproc == _iproc) {
@@ -1170,19 +1159,8 @@ namespace femus {
                 unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
                 std::vector <double> MPMQuantities(MPMsize);
 
-		std::cout<<"BBBBBBBBBBBBBBBBBBBBB "<< MPMsize <<std::endl;
-		
                 MPI_Recv(&MPMQuantities[0], MPMsize, MPI_DOUBLE, jproc, order, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                 _particles[iMarker]->SetMPMQuantities(MPMQuantities);
-
-//                 std::vector<double> x(_dim);
-//                 _particles[iMarker]->InitializeX();
-//                 MPI_Recv(&x[0], _dim, MPI_DOUBLE, jproc, order + 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
-// 		
-// 		std::cout<<" "<< x[0] << " "<< x[1] <<std::endl;
-// 		
-//                 _particles[iMarker]->SetIprocMarkerCoordinates(x);
-
 
               }
             }
@@ -1206,14 +1184,9 @@ namespace femus {
       }
     }
 
-
-    //std::cout << " ----------------------------------END PROCESSES EXCHANGE INFO ---------------------------------- " << std::endl;
-
     //END find new _elem and _mproc
 
-
     UpdateLine();
-
 
   }
 

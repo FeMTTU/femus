@@ -53,17 +53,22 @@ namespace femus {
             _MPMQuantities[d] = 0.;
           }
 
-//           _physicalQuantities.resize(2);
-//           _physicalQuantities[0] = 1.; //mass
-//           _physicalQuantities[1] = 1.; //density
-//           _velocity.resize(_dim);
-//           _acceleration.resize(_dim);
-//           _displacement.resize(_dim);
-//           for (unsigned d = 0; d < _dim; d++) {
-//             _velocity[d] = 0.;  // fix this initialization
-//             _acceleration[d] = 0.;
-//             _displacement[d] = 0.;
-//           }
+          //unitialization of the deformation gradient of the particle to the identity matrix
+          _Fp.resize(_dim);
+          for(unsigned i=0; i< _dim; i++){
+	    _Fp[i].resize(_dim);
+	  }
+	  
+	  for(unsigned i=0; i< _dim; i++){
+	    for(unsigned j=0; j<_dim; j++){
+	      if(i==j){
+		_Fp[i][i] = 1.;
+	      }
+	      else{
+		_Fp[i][j] = 0.;
+	      }
+	    }
+	  }
 
         }
         else {
@@ -138,6 +143,10 @@ namespace femus {
       void SetMPMQuantities(const std::vector <double>  &MPMQuantities) {
         _MPMQuantities = MPMQuantities;
       }
+      
+      void SetDeformationGradient(const std::vector < std::vector < double > > Fp){
+	_Fp = Fp;
+      }
 
       void GetNumberOfMeshElements(unsigned &elements, Solution *sol) {
         elements = sol->GetMesh()->GetNumberOfElements();
@@ -204,6 +213,10 @@ namespace femus {
 
       unsigned GetMPMSize() {
         return _MPMSize;
+      }
+      
+      std::vector < std::vector < double > > GetDeformationGradient() {
+	return _Fp;
       }
 
       std::vector<double> GetMarkerLocalCoordinates() {
@@ -372,6 +385,8 @@ namespace femus {
 
       std::vector <double> _MPMQuantities; // _displacement[_dim] + _velocity[_dim] + _acceleration[_dim] + mass + density
       unsigned _MPMSize;
+      
+      std::vector < std::vector <double> > _Fp; //deformation gradient of the particle
 
 //       std::vector <double> _velocity;
 //       std::vector <double> _acceleration;
