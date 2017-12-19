@@ -264,7 +264,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   vector<adept::adouble> SolDgss(dim);
   vector<double> SolVp(dim);
   vector<double> SolAp(dim);
-
+  vector < vector < double > > Fp(dim);
 
   vector<vector < adept::adouble > > GradSolDp(dim);
   vector<vector < adept::adouble > > GradSolDgss(dim);
@@ -429,7 +429,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         for(unsigned  k = 0; k < dim; k++) {
           aRhs[k][i] += - (NSV[k])  * weight;
         }
-      } 
+      }
 
     } // end gauss point loop
 
@@ -468,7 +468,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   }
   //END building "soft" stiffness matrix
 
-  
+
   //initialization of iel
   unsigned ielOld = UINT_MAX;
 
@@ -534,7 +534,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
         for(unsigned idim = 0; idim < dim; idim++) {
           for(int j = 0; j < nve; j++) {
-            vx[idim][j]    = vx_hat[idim][j] + SolDd[indexPdeD[idim]][j]; 
+            vx[idim][j]    = vx_hat[idim][j] + SolDd[indexPdeD[idim]][j];
           }
         }
         // start a new recording of all the operations involving adept::adouble variables
@@ -546,7 +546,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
       // the local coordinates of the particles are the Gauss points in this context
       std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
-     
+
       // the mass of the particle acts as weight
       double mass = 0.0217013888889; //TODO write this better
       double density = 1000;
@@ -577,6 +577,70 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       //END evaluates SolDp at the particle iMarker
 
 
+      //BEGIN computation of the Cauchy Stress
+
+      adept::adouble Cauchy[dim][dim];
+      adept::adouble J_hat; //det of the deformation gradient
+      adept::adouble B[dim][dim]; //left Cauchy-Green deformation tensor
+      adept::adouble devB[dim][dim]; //deviatoric part of B
+      adept::adouble C[dim][dim]; //right Cauchy-Green deformation tensor
+      std::vector < std::vector <double> > I(dim);
+      adept::adouble I_1 = 0.; //trace of the right Cauchy-Green deformation tensor
+      adept::adouble shear; //shear modulus
+      adept::adouble bulk; //bulk modulus
+
+      Fp = particles[iMarker]->GetDeformationGradient(); //extraction of the deformation gradient
+
+      if(dim == 1) {
+        J_hat = Fp[0][0];
+      }
+
+      else if(dim == 2) {
+        J_hat = (Fp[0][0] * Fp[1][1]) - (Fp[0][1] * Fp[1][0]);
+      }
+
+      else {
+        J_hat =   Fp[0][0] * Fp[1][1] * Fp[2][2] + Fp[0][1] * Fp[1][2] * Fp[2][0] + Fp[0][2] * Fp[1][0] * Fp[2][1]
+                  - Fp[2][0] * Fp[1][1] * Fp[0][2] - Fp[2][1] * Fp[1][2] * Fp[0][0] - Fp[2][2] * Fp[1][0] * Fp[0][1];
+      }
+
+      for(int i = 0; i < dim; i++) {
+
+        I[i].resize(dim);
+
+        for(int j = 0; j < dim; j++) {
+
+          if(i == j) {
+            I[i][i] = 1.;
+          }
+          else {
+            I[i][j] = 0.;
+          }
+
+          B[i][j] = 0.;
+          C[i][j] = 0.;
+
+          for(int k = 0; k < dim; k++) {
+            B[i][j]     += Fp[i][k] * Fp[j][k];
+            C[i][j]     += Fp[k][i] * Fp[k][j];
+          }
+        }
+      }
+
+      for(unsigned i = 0 ; i < dim; i++) {
+        I_1 += C[i][i];
+      }
+      
+       for(unsigned i = 0 ; i < dim; i++) {
+	 for(unsigned j = 0 ; j < dim; j++) {
+	   devB[i][j] = B[i][j]  - (1/3) * I_1 * I[i][j];
+	}
+      }
+
+      //END computation of the Cauchy Stress
+
+      
+      
       //BEGIN computation of local residual
       adept::adouble divergence = 0.;
       for(unsigned i = 0; i < dim; i++) {
@@ -680,8 +744,8 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob) {
   vector< vector < double > > SolDd(dim);
   vector< vector < double > > SolAd(dim);
   vector< vector < double > > GradSolDp(dim);
-  std::vector < std::vector < double > > Fp(dim); //deformation vector
-  std::vector < std::vector < double > > FpOld;
+  vector < vector < double > > Fp(dim); //deformation vector
+  vector < vector < double > > FpOld;
 
   for(int i = 0; i < dim; i++) {
     GradSolDp[i].resize(dim);
