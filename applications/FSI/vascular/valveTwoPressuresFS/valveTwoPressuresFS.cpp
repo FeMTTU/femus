@@ -187,8 +187,8 @@ int main(int argc, char** args)
 
   FieldSplitTree VelPf(PREONLY, ASM_PRECOND, fieldVelPf, solutionTypeVelPf, "VelPf");
   VelPf.SetAsmStandard(false);
-  VelPf.SetAsmBlockSize(10);
-  VelPf.SetAsmBlockPreconditionerSolid(MLU_PRECOND);
+  VelPf.SetAsmBlockSize(3);
+  VelPf.SetAsmBlockPreconditionerSolid(ILU_PRECOND);
   VelPf.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
   VelPf.SetAsmNumeberOfSchurVariables(1);
 
@@ -207,7 +207,7 @@ int main(int argc, char** args)
 
   FieldSplitTree DispPs(PREONLY, ASM_PRECOND, fieldDispPs, solutionTypeDispPs, "DispPs");
   DispPs.SetAsmStandard(false);
-  DispPs.SetAsmBlockSize(10);
+  DispPs.SetAsmBlockSize(3);
   DispPs.SetAsmBlockPreconditionerSolid(MLU_PRECOND);
   DispPs.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
   DispPs.SetAsmNumeberOfSchurVariables(1);
@@ -223,7 +223,7 @@ int main(int argc, char** args)
   //END buid fieldSplitTree
   system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
   
-  system.SetOuterKSPSolver("fgmres");
+  system.SetOuterKSPSolver("lgmres");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
@@ -238,7 +238,6 @@ int main(int argc, char** args)
 
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-50);
-
  
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
@@ -246,18 +245,19 @@ int main(int argc, char** args)
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetRichardsonScaleFactor(0.5);
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
   
   system.SetFieldSplitTree(&FSI);
   
   // ******* Set Smoother *******
-  system.SetSolverFineGrids(RICHARDSON);
+ // system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(GMRES);
   
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
-  if (dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
+  //if (dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
 
-  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 40, 10);
+  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 100, 10);
   //system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 
   // ******* Add variables to be solved *******

@@ -210,7 +210,7 @@ int main(int argc, char** args)
   //   // ******* Set block size for the ASM smoothers *******
   
   // ******* Set block size for the ASM smoothers *******
-  system.SetElementBlockNumber(10);
+  system.SetElementBlockNumber(2);
   if(twoPressure)
     system.SetNumberOfSchurVariables(2);
   else 

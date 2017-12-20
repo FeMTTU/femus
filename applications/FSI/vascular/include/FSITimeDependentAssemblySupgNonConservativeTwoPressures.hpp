@@ -762,6 +762,7 @@ namespace femus
                 for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.* (C1 * B[I][J] - C2 * invB[I][J])
                                   - 1. / rhof * SolVAR[nBlocks * dim ] * Id2th[I][J];
+				//- 2./3. * (C1 - C2) * SolVAR[nBlocks * dim ] * Id2th[I][J];
 
                 }
               }
