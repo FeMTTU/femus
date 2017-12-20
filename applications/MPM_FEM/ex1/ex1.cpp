@@ -586,9 +586,11 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       adept::adouble C[dim][dim]; //right Cauchy-Green deformation tensor
       std::vector < std::vector <double> > I(dim);
       adept::adouble I_1 = 0.; //trace of the right Cauchy-Green deformation tensor
-      adept::adouble shear; //shear modulus
-      adept::adouble bulk; //bulk modulus
-
+      adept::adouble shear = 52.5 * 1.e9 ; //shear modulus of iron, in GPa
+      adept::adouble bulk = 170. * 1.e9 ; //bulk modulus of iron, in GPa
+      adept::adouble C1 = shear * 0.5;
+      adept::adouble D1 = bulk * 0.5;
+      
       Fp = particles[iMarker]->GetDeformationGradient(); //extraction of the deformation gradient
 
       if(dim == 1) {
@@ -634,9 +636,12 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
        for(unsigned i = 0 ; i < dim; i++) {
 	 for(unsigned j = 0 ; j < dim; j++) {
 	   devB[i][j] = B[i][j]  - (1/3) * I_1 * I[i][j];
+	   Cauchy[i][j] = (1 / J_hat) * (2. * D1 * J_hat * (J_hat - 1.) * I[i][j] + 2. * C1 * devB[i][j] / ( pow(J_hat , (2/3)) ) );
 	}
       }
 
+      
+      
       //END computation of the Cauchy Stress
 
       
