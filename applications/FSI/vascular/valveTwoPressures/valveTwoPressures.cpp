@@ -200,7 +200,7 @@ int main(int argc, char** args)
   system.SetPreconditionerFineGrids(MLU_PRECOND);
   if(dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
 
-  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 40, 10);
+  system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 10);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
@@ -210,7 +210,7 @@ int main(int argc, char** args)
   //   // ******* Set block size for the ASM smoothers *******
   
   // ******* Set block size for the ASM smoothers *******
-  system.SetElementBlockNumber(2);
+  system.SetElementBlockNumber(3);
   if(twoPressure)
     system.SetNumberOfSchurVariables(2);
   else 

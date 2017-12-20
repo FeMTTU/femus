@@ -412,6 +412,11 @@ namespace femus
               aRhs[indexVAR[dim + idim]][i] += ((SolVARNew[idim] - SolVAROld[idim]) / dt -
                                                 (1. * SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim])
                                                ) * phi_hat[i] * Weight_hat;
+	      
+// 	       aRhs[indexVAR[dim + idim]][i] += ((Soli[idim][i] - Soli_old[idim][i]) / dt -
+// 						  Soli[idim+dim][i]
+// 						 ) * phi_hat[i] * Weight_hat;
+// 	      
             }
           }
           //END redidual d_t - v = 0 in fixed domain
