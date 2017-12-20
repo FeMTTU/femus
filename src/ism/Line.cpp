@@ -1145,6 +1145,11 @@ namespace femus {
                 unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
                 MPI_Send(&MPMQuantities[0], MPMsize, MPI_DOUBLE, mproc, order, PETSC_COMM_WORLD);
 
+                std::vector < std::vector < double > > Fp = _particles[iMarker]->GetDeformationGradient();
+                for(unsigned i = 0; i < _dim; i++) {
+                  MPI_Send(&Fp[i][0], _dim, MPI_DOUBLE, mproc, order + 1, PETSC_COMM_WORLD);
+                }
+
                 _particles[iMarker]->FreeVariables();
 
               }
@@ -1153,14 +1158,21 @@ namespace femus {
                 unsigned order = 0;
                 _particles[iMarker]->InitializeVariables(order);
 
-//                 bool elementUpdate = (aX.find(elem) != aX.end()) ? false : true;
-//                 _particles[iMarker]->FindLocalCoordinates(solType, aX[elem], true, _sol, 0.);
-
                 unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
                 std::vector <double> MPMQuantities(MPMsize);
 
                 MPI_Recv(&MPMQuantities[0], MPMsize, MPI_DOUBLE, jproc, order, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                 _particles[iMarker]->SetMPMQuantities(MPMQuantities);
+
+                std::vector < std::vector < double > > Fp(_dim);
+                for(unsigned i = 0; i < _dim; i++) {
+                  Fp[i].resize(_dim);
+                }
+
+                for(unsigned i = 0; i < _dim; i++) {
+                  MPI_Recv(&Fp[i][0], _dim, MPI_DOUBLE, jproc, order + 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+                }
+                _particles[iMarker]->SetDeformationGradient(Fp);
 
               }
             }

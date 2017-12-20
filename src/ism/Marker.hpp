@@ -268,7 +268,10 @@ namespace femus {
 //         _acceleration.resize(_dim);
 //         _displacement.resize(_dim);
         _MPMQuantities.resize(3 * _dim + 2);
-
+	_Fp.resize(_dim);
+	for(unsigned i=0; i<_dim; i++){
+	  _Fp[i].resize(_dim);
+	}
       }
 
       void InitializeX() {
@@ -284,6 +287,7 @@ namespace femus {
 //         std::vector < double > ().swap(_acceleration);
 //         std::vector < double > ().swap(_displacement);
         std::vector < double > ().swap(_MPMQuantities);
+	std::vector <  std::vector < double > > ().swap(_Fp);
       }
 
 
