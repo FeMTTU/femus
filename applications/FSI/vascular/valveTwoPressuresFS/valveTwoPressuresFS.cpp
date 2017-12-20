@@ -103,16 +103,16 @@ int main(int argc, char** args)
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("DY", LAGRANGE, SECOND, 2);
-  if(dim == 3) ml_sol.AddSolution("DZ", LAGRANGE, SECOND, 2);
+  if (dim == 3) ml_sol.AddSolution("DZ", LAGRANGE, SECOND, 2);
 
   ml_sol.AddSolution("U", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("V", LAGRANGE, SECOND, 2);
-  if(dim == 3) ml_sol.AddSolution("W", LAGRANGE, SECOND, 2);
+  if (dim == 3) ml_sol.AddSolution("W", LAGRANGE, SECOND, 2);
 
   // Pair each velocity variable with the corresponding displacement variable
   ml_sol.PairSolution("U", "DX");    // Add this line
   ml_sol.PairSolution("V", "DY");    // Add this line
-  if(dim == 3) ml_sol.PairSolution("W", "DZ");    // Add this line
+  if (dim == 3) ml_sol.PairSolution("W", "DZ");   // Add this line
 
   ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PS", "Pressure", false);    // Add this line
@@ -125,7 +125,7 @@ int main(int argc, char** args)
 
   ml_sol.AddSolution("Um", LAGRANGE, SECOND, 0, false);
   ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
-  if(dim == 3)  ml_sol.AddSolution("Wm", LAGRANGE, SECOND, 0, false);
+  if (dim == 3)  ml_sol.AddSolution("Wm", LAGRANGE, SECOND, 0, false);
 
 
 //   // ******* Initialize solution *******
@@ -137,11 +137,11 @@ int main(int argc, char** args)
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
-  if(dim == 3) ml_sol.GenerateBdc("DZ", "Steady");
+  if (dim == 3) ml_sol.GenerateBdc("DZ", "Steady");
 
   ml_sol.GenerateBdc("U", "Steady");
   ml_sol.GenerateBdc("V", "Steady");
-  if(dim == 3) ml_sol.GenerateBdc("W", "Steady");
+  if (dim == 3) ml_sol.GenerateBdc("W", "Steady");
 
   ml_sol.GenerateBdc("PF", "Steady");
   ml_sol.GenerateBdc("PS", "Steady");
@@ -160,15 +160,70 @@ int main(int argc, char** args)
 
   system.AddSolutionToSystemPDE("DX");
   system.AddSolutionToSystemPDE("DY");
-  if(dim == 3) system.AddSolutionToSystemPDE("DZ");
+  if (dim == 3) system.AddSolutionToSystemPDE("DZ");
 
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-  if(dim == 3) system.AddSolutionToSystemPDE("W");
+  if (dim == 3) system.AddSolutionToSystemPDE("W");
 
   system.AddSolutionToSystemPDE("PS");
 
-  if(twoPressure) system.AddSolutionToSystemPDE("PF");
+  if (twoPressure) system.AddSolutionToSystemPDE("PF");
+
+
+
+  //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
+  std::vector < unsigned > fieldVelPf(dim + 1);
+  fieldVelPf[0] = system.GetSolPdeIndex("U");
+  fieldVelPf[1] = system.GetSolPdeIndex("V");
+  if (dim == 3) fieldVelPf[2] = system.GetSolPdeIndex("W");
+  fieldVelPf[dim] = system.GetSolPdeIndex("PF");
+
+  std::vector < unsigned > solutionTypeVelPf(dim + 1);
+  solutionTypeVelPf[0] = ml_sol.GetSolutionType("U");
+  solutionTypeVelPf[1] = ml_sol.GetSolutionType("V");
+  if (dim == 3) solutionTypeVelPf[2] = ml_sol.GetSolutionType("W");
+  solutionTypeVelPf[dim] = ml_sol.GetSolutionType("PF");
+
+  FieldSplitTree VelPf(PREONLY, ASM_PRECOND, fieldVelPf, solutionTypeVelPf, "VelPf");
+  VelPf.SetAsmStandard(false);
+  VelPf.SetAsmBlockSize(3);
+  VelPf.SetAsmBlockPreconditionerSolid(ILU_PRECOND);
+  VelPf.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
+  VelPf.SetAsmNumeberOfSchurVariables(1);
+
+  
+  std::vector < unsigned > fieldDispPs(dim + 1);
+  fieldDispPs[0] = system.GetSolPdeIndex("DX");
+  fieldDispPs[1] = system.GetSolPdeIndex("DY");
+  if (dim == 3) fieldDispPs[2] = system.GetSolPdeIndex("DZ");
+  fieldDispPs[dim] = system.GetSolPdeIndex("PS");
+
+  std::vector < unsigned > solutionTypeDispPs(dim + 1);
+  solutionTypeDispPs[0] = ml_sol.GetSolutionType("DX");
+  solutionTypeDispPs[1] = ml_sol.GetSolutionType("DY");
+  if (dim == 3) solutionTypeDispPs[2] = ml_sol.GetSolutionType("DZ");
+  solutionTypeDispPs[dim] = ml_sol.GetSolutionType("PS");
+
+  FieldSplitTree DispPs(PREONLY, ASM_PRECOND, fieldDispPs, solutionTypeDispPs, "DispPs");
+  DispPs.SetAsmStandard(false);
+  DispPs.SetAsmBlockSize(3);
+  DispPs.SetAsmBlockPreconditionerSolid(MLU_PRECOND);
+  DispPs.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
+  DispPs.SetAsmNumeberOfSchurVariables(1);
+  
+  std::vector < FieldSplitTree *> FS2;
+  FS2.reserve(2);
+
+  FS2.push_back(&DispPs);  //displacement first
+  FS2.push_back(&VelPf);  // velocity second
+
+  FieldSplitTree FSI(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "FSI");
+
+  //END buid fieldSplitTree
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
+  
+  system.SetOuterKSPSolver("lgmres");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
@@ -183,45 +238,48 @@ int main(int argc, char** args)
 
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-50);
-
+ 
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
-
-  // ******* Set Preconditioner *******
-
-  system.SetMgSmoother(ASM_SMOOTHER);
-
+  // initilaize and solve the system
   system.init();
 
-  // ******* Set Smoother *******
   system.SetSolverFineGrids(RICHARDSON);
+  system.SetRichardsonScaleFactor(0.5);
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
+  
+  system.SetFieldSplitTree(&FSI);
+  
+  // ******* Set Smoother *******
+ // system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(GMRES);
+  
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
+  //if (dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
 
-  system.SetPreconditionerFineGrids(MLU_PRECOND);
-  if(dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
-
-  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 40, 10);
+  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 100, 10);
+  //system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
 
-  // ******* Set the last (1) variables in system (i.e. P) to be a schur variable *******
-  //   // ******* Set block size for the ASM smoothers *******
-  
-  // ******* Set block size for the ASM smoothers *******
-  system.SetElementBlockNumber(2);
-  if(twoPressure)
-    system.SetNumberOfSchurVariables(2);
-  else 
-    system.SetNumberOfSchurVariables(1);
+//   // ******* Set the last (1) variables in system (i.e. P) to be a schur variable *******
+//   system.SetNumberOfSchurVariables(2);
+// 
+//   // ******* Set block size for the ASM smoothers *******
+//   if(twoPressure)
+//     system.SetElementBlockNumber(2);
+//   else 
+//     system.SetElementBlockNumber(1); 
+
 
   unsigned time_step_start = 1;
 
   //char restart_file_name[256] = "./save/valve2D_iteration28";
   char restart_file_name[256] = "";
 
-  if(strcmp(restart_file_name, "") != 0) {
+  if (strcmp(restart_file_name, "") != 0) {
     ml_sol.LoadSolution(restart_file_name);
     time_step_start = 29;
     system.SetTime((time_step_start - 1) * 1. / 32);
@@ -237,7 +295,7 @@ int main(int argc, char** args)
   std::vector<std::string> mov_vars;
   mov_vars.push_back("DX");
   mov_vars.push_back("DY");
-  if(dim == 3)mov_vars.push_back("DZ");
+  if (dim == 3)mov_vars.push_back("DZ");
   ml_sol.GetWriter()->SetDebugOutput(true);
   ml_sol.GetWriter()->SetMovingMesh(mov_vars);
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step_start - 1);
@@ -257,9 +315,9 @@ int main(int argc, char** args)
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
 
   std::ofstream outf;
-  if(iproc == 0) {
+  if (iproc == 0) {
     outf.open("fluxes.txt");
-    if(!outf) {
+    if (!outf) {
       std::cout << "Error in opening file DataPrint.txt";
       return 1;
     }
@@ -268,15 +326,15 @@ int main(int argc, char** args)
   std::vector < double > Qtot(3, 0.);
   std::vector<double> fluxes(2, 0.);
 
-  for(unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
+  for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
 
-    for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
+    for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
     }
 
-    if(time_step > 1)
+    if (time_step > 1)
       system.SetMgType(V_CYCLE);
 
 
@@ -299,18 +357,18 @@ int main(int argc, char** args)
     std::cout << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
 
 
-    if(iproc == 0) {
+    if (iproc == 0) {
       outf << time_step << " " << system.GetTime() << " " << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
     }
 
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
-    if(time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
+    if (time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
 
   }
 
-  if(iproc == 0) {
+  if (iproc == 0) {
     outf.close();
   }
 
@@ -344,29 +402,29 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   double PI = acos(-1.);
   double ramp = (time < 2) ? sin(PI / 2 * time / 2.) : 1.;
 
-  if(!strcmp(name, "U")) {
-    if(5 == facename || 7 == facename) {
+  if (!strcmp(name, "U")) {
+    if (5 == facename || 7 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "V")) {
-    if(1 == facename || 2 == facename || 5 == facename || 6 == facename || 7 == facename) {
+  else if (!strcmp(name, "V")) {
+    if (1 == facename || 2 == facename || 5 == facename || 6 == facename || 7 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "W")) {
-    if(5 == facename || 6 == facename) {
+  else if (!strcmp(name, "W")) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
   }
 
-  else if(!strcmp(name, "PS")) {
+  else if (!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
-    if(1 == facename) {
+    if (1 == facename) {
       //value = -1;
       //value = ( /*2.5*/ + 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 5 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
@@ -375,35 +433,35 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
       value = (0 + 15 * sin(2 * PI * time)) * ramp;      //+ 3.5, 6, 7, 10, 10, 15, 15
     }
-    else if(2 == facename) {
+    else if (2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
       value = (0 - 15 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10, 15, 15
     }
-    else if(7 == facename) {
+    else if (7 == facename) {
       Kslip = 0.;
     }
   }
-  else if(!strcmp(name, "PF")) {
+  else if (!strcmp(name, "PF")) {
     test = 0;
     value = 0.;
   }
-  else if(!strcmp(name, "DX")) {
-    if(5 == facename || 7 == facename) {
+  else if (!strcmp(name, "DX")) {
+    if (5 == facename || 7 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "DY")) {
-    if(5 == facename || 6 == facename || 7 == facename) {
+  else if (!strcmp(name, "DY")) {
+    if (5 == facename || 6 == facename || 7 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if(!strcmp(name, "DZ")) {
-    if(5 == facename || 6 == facename) {
+  else if (!strcmp(name, "DZ")) {
+    if (5 == facename || 6 == facename) {
       test = 0;
       value = 0;
     }
@@ -443,8 +501,8 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
   vector <unsigned> indVar(2 * dim);
   unsigned solType;
 
-  for(unsigned ivar = 0; ivar < dim; ivar++) {
-    for(unsigned k = 0; k < 2; k++) {
+  for (unsigned ivar = 0; ivar < dim; ivar++) {
+    for (unsigned k = 0; k < 2; k++) {
       indVar[ivar + k * dim] = mlSol.GetIndex(&varname[ivar + k * 3][0]);
     }
   }
@@ -456,48 +514,48 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
   std::vector< double > xx(dim, 0.);
   double weight;
 
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
     vector < double> normal(dim, 0);
 
     // loop on faces
-    for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+    for (unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
 
 
       int faceNumber = myel->GetBoundaryIndex(iel, jface);
       // look for boundary faces
-      if(faceNumber == 1 || faceNumber == 2) {
+      if (faceNumber == 1 || faceNumber == 2) {
 
         unsigned nve = msh->GetElementFaceDofNumber(iel, jface, solType);
         const unsigned felt = msh->GetElementFaceType(iel, jface);
 
-        for(unsigned d = 0; d < dim; d++) {
+        for (unsigned d = 0; d < dim; d++) {
           x[d].resize(nve);
           sol[d].resize(nve);
         }
 
-        for(unsigned i = 0; i < nve; i++) {
+        for (unsigned i = 0; i < nve; i++) {
           unsigned int ilocal = msh->GetLocalFaceVertexIndex(iel, jface, i);
           unsigned idof = msh->GetSolutionDof(ilocal, iel, 2);
-          for(unsigned d = 0; d < dim; d++) {
+          for (unsigned d = 0; d < dim; d++) {
             x[d][i] = (*msh->_topology->_Sol[d])(idof) + (*solution->_Sol[indVar[d + dim]])(idof);;
             sol[d][i] = (*solution->_Sol[indVar[d]])(idof);;
           }
         }
 
         double flux = 0.;
-        for(unsigned igs = 0; igs < msh->_finiteElement[felt][solType]->GetGaussPointNumber(); igs++) {
+        for (unsigned igs = 0; igs < msh->_finiteElement[felt][solType]->GetGaussPointNumber(); igs++) {
           msh->_finiteElement[felt][solType]->JacobianSur(x, igs, weight, phi, gradphi, normal);
           double value;
-          for(unsigned i = 0; i < nve; i++) {
+          for (unsigned i = 0; i < nve; i++) {
             value = 0.;
-            for(unsigned d = 0; d < dim; d++) {
+            for (unsigned d = 0; d < dim; d++) {
               value += normal[d] * sol[d][i];
             }
             value *= phi[i];
           }
           flux += value * weight;
         }
-        if(faceNumber == 1) qBottom[iproc] += flux;
+        if (faceNumber == 1) qBottom[iproc] += flux;
         else qTop[iproc] += flux;
       }
     }
@@ -505,7 +563,7 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
 
   fluxes[0] = 0.;
   fluxes[1] = 0.;
-  for(int j = 0; j < nprocs; j++) {
+  for (int j = 0; j < nprocs; j++) {
     qBottom.broadcast(j);
     qTop.broadcast(j);
     fluxes[0] += qBottom[j];

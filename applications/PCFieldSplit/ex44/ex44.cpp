@@ -159,8 +159,9 @@ int main(int argc, char** args)
   system.AddSolutionToSystemPDE("V");
   if (dim == 3) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("P");
-  system.SetMgSmoother(GMRES_SMOOTHER);
-
+  //system.SetMgSmoother(GMRES_SMOOTHER);
+  system.SetMgSmoother(ASM_SMOOTHER);
+  
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation);
 
@@ -180,7 +181,7 @@ int main(int argc, char** args)
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
+  system.SetPreconditionerFineGrids(MLU_PRECOND);
 
   system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 30, 30); //GMRES tolerances
 
@@ -334,6 +335,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       solV[k].resize(nDofsV);
       coordX[k].resize(nDofsX);
     }
+    
+    std::vector <double> M(nDofsP);
 
     solP.resize(nDofsP);
     //END memory allocation
@@ -467,15 +470,22 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
         unsigned irow = dim * nDofsV + i;
 
         for (int k = 0; k < dim; k++) {
-          Res[irow] += -(gradSolV_gss[k][k]) * phiP[i]  * weight;
+          Res[irow] += +(gradSolV_gss[k][k]) * phiP[i]  * weight;
 
           if (assembleMatrix) {
             unsigned irowMat = nDofsVP * irow;
 
             for (unsigned j = 0; j < nDofsV; j++) {
               unsigned jcol = ( k * nDofsV + j);
-              Jac[ irowMat + jcol ] += phiP[i] * phiV_x[j * dim + k] * weight;
+              Jac[ irowMat + jcol ] -= phiP[i] * phiV_x[j * dim + k] * weight;
             }
+            
+            M[i] += phiP[i] * phiP[i] * weight;
+            
+//             for (unsigned j = 0; j < nDofsP; j++) {
+//               M[i] += phiP[i] * phiP[j] * weight;
+//             }
+            
           }
 
         }
@@ -484,9 +494,73 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob)
       //END phiP_i loop
 
     }
-
     //END Gauss point loop
 
+    
+    std::vector<std::vector<double> > BtMinv (dim * nDofsV);
+    for(unsigned i=0; i< dim * nDofsV; i++){
+      BtMinv[i].resize(nDofsP);
+    }
+    
+    std::vector<std::vector<double> > B(nDofsP);
+    for(unsigned i=0; i< nDofsP; i++){
+      B[i].resize(dim * nDofsV);
+    }
+    
+    for(unsigned i = 0; i < dim * nDofsV; i++){
+      unsigned irow =  i * nDofsVP;
+      for(unsigned j = 0; j < nDofsP; j++){
+	unsigned jcol = (dim * nDofsV) + j;
+	BtMinv[i][j] = .1 * Jac[ irow +  jcol] / M[j];
+      }
+    }
+    
+    for(unsigned i = 0; i < nDofsP; i++){
+      unsigned irow = ( (dim * nDofsV) + i) * nDofsVP;
+      for(unsigned j = 0; j < dim * nDofsV; j++){
+	B[i][j] = Jac[irow + j];
+      }
+    }
+    
+    std::vector<std::vector<double> > Jg (dim * nDofsV);
+    for(unsigned i=0; i< dim * nDofsV; i++){
+      Jg[i].resize(dim * nDofsV);
+    }
+        
+    for(unsigned i = 0; i < dim * nDofsV; i++){
+      for(unsigned j = 0; j < dim * nDofsV; j++){
+	Jg[i][j] = 0.;
+	for(unsigned k = 0; k < nDofsP; k++){
+	  Jg[i][j] += BtMinv[i][k] * B[k][j];
+	}
+      }
+    }
+   
+    std::vector<double> fg (dim * nDofsV);
+    for(unsigned i = 0; i < dim * nDofsV; i++){
+      fg[i] = 0;
+      for(unsigned j = 0; j < nDofsP; j++){
+	fg[i] += BtMinv[i][j] * Res[dim * nDofsV + j];
+      }
+    }
+    
+    
+     for(unsigned i = 0; i < dim * nDofsV; i++){
+	unsigned irow =  i * nDofsVP;
+	for(unsigned j = 0; j < dim * nDofsV; j++){
+	  Jac[irow + j] += Jg[i][j];
+	  //std::cout<< Jg[i][j]<<" ";
+	  //std::cout<< Jac[irow + j]<<" ";
+	}
+	//std::cout<<"\n";
+	Res[i] += fg[i];
+     }
+    //std::cout<<"\n";
+    
+    
+    
+    
+    
     //BEGIN local to global Matrix/Vector assembly
     RES->add_vector_blocked(Res, sysDof);
 
