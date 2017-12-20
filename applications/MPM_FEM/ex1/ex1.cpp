@@ -987,9 +987,12 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob) {
 
       FpOld = particles[iMarker]->GetDeformationGradient();
 
+      
+      
       for(int i = 0; i < dim; i++) {
         for(int j = 0; j < dim; j++) {
-          Fp[i][j] = (GradSolDp[i][j] + 1.) * FpOld[i][j];
+	  unsigned delta = (i == j) ?  1 : 0;
+          Fp[i][j] = (GradSolDp[i][j] + delta) * FpOld[i][j];
         }
       }
 
