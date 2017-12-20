@@ -169,8 +169,8 @@ namespace femus
                                          NumericVector* NNZ_d, NumericVector* NNZ_o,
                                          const unsigned& index_sol, const unsigned& kkindex_sol) const
   {
-    if (lspdec._msh->GetRefinedElementIndex(ielc)) { // coarse2fine prolongation
-      for (int i = 0; i < _nf; i++) {
+    if(lspdec._msh->GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+      for(int i = 0; i < _nf; i++) {
         int i0 = _KVERT_IND[i][0]; //id of the subdivision of the fine element
         int i1 = _KVERT_IND[i][1]; //local id node on the subdivision of the fine element
         int irow = lspdef.GetSystemDof(index_sol, kkindex_sol, ielc, i0, i1, lspdec._msh); //  local-id to dof
@@ -377,7 +377,8 @@ namespace femus
   void elem_type::BuildProlongation(const Mesh& meshf, const Mesh& meshc, const int& ielc,
                                     SparseMatrix* Projmat) const
   {
-    if (meshc.GetRefinedElementIndex(ielc)) { // coarse2fine prolongation
+    if(meshc.GetRefinedElementIndex(ielc)) {  // coarse2fine prolongation
+
       vector<int> jcols(_nc);
 
       for (int i = 0; i < _nf; i++) {
@@ -474,7 +475,7 @@ namespace femus
     elem_type(geom_elem, order_gauss)
   {
 
-    basis *linearElement;
+    basis* linearElement;
 
     _dim = 1;
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -678,7 +679,8 @@ namespace femus
         _gradPhiFace[iface][0].resize(_nc);
         _hessianPhiFace[iface][0].resize(_nc);
 
-        for (int j = 0; j < _nc; j++) {
+        for(int j = 0; j < _nc; j++) {
+
           _phiFace[iface][0][j] = _pt_basis->eval_phi(_IND[j], &xv[iface]);
 
           //std::cout <<  _phiFace[iface][0][j] << " ";
@@ -717,7 +719,7 @@ namespace femus
     elem_type(geom_elem, order_gauss)
   {
 
-    basis *linearElement;
+    basis* linearElement;
 
     _dim = 2;
     _DPhiXiEtaZetaPtr.resize(_dim);
@@ -957,13 +959,15 @@ namespace femus
     }
 
     //std::cout << std::endl;
-    if (_SolType < 3) {
-      basis *linearLine = new LineLinear;
+
+    if(_SolType < 3) {
+      basis* linearLine = new LineLinear;
+
 
       Gauss faceGaussPoint = Gauss("line", order_gauss);
       const double* xi = {faceGaussPoint.GetGaussWeightsPointer() + faceGaussPoint.GetGaussPointsNumber()};
 
-      basis *faceBasis = linearLine;
+      basis* faceBasis = linearLine;
 
       unsigned nFaces = _pt_basis->faceNumber[2];
       _phiFace.resize(nFaces);
@@ -1033,7 +1037,7 @@ namespace femus
     _DPhiXiEtaZetaPtr[1] = &elem_type::GetDPhiDEta;
     _DPhiXiEtaZetaPtr[2] = &elem_type::GetDPhiDZeta;
 
-    basis *linearElement;
+    basis* linearElement;
 
     //************ BEGIN FE and MG SETUP ******************
     if (!strcmp(order, "linear")) 	 _SolType = 0;
@@ -1341,14 +1345,15 @@ namespace femus
     }
 
     //std::cout << std::endl;
-    if (_SolType < 3) {
-      basis *linearQuad = new QuadLinear;
-      basis *linearTri = new TriLinear;
+    if(_SolType < 3) {
+      basis* linearQuad = new QuadLinear;
+      basis* linearTri = new TriLinear;
+
 
       Gauss quadGaussPoint = Gauss("quad", order_gauss);
       Gauss triGaussPoint = Gauss("tri", order_gauss);
 
-      Gauss *faceGauss[2];
+      Gauss* faceGauss[2];
       faceGauss[0] = &quadGaussPoint;
       faceGauss[1] = &triGaussPoint;
 
@@ -1360,7 +1365,7 @@ namespace femus
                               faceGauss[1]->GetGaussWeightsPointer() + 2 * (faceGauss[1]->GetGaussPointsNumber())
                             };
 
-      basis *faceBasis[2];
+      basis* faceBasis[2];
       faceBasis[0] = linearQuad;
       faceBasis[1] = linearTri;
 
@@ -1398,7 +1403,9 @@ namespace femus
             _phiFace[iface][i].resize(_nc);
             _gradPhiFace[iface][i].resize(_nc);
             _hessianPhiFace[iface][i].resize(_nc);
-            for (int j = 0; j < _nc; j++) {
+
+	    for(int j = 0; j < _nc; j++) {
+
               _phiFace[iface][i][j] = _pt_basis->eval_phi(_IND[j], x);
 
               _gradPhiFace[iface][i][j].resize(3);
@@ -1446,9 +1453,14 @@ namespace femus
                                    vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const
   {
 
+    bool hermitianMatrix = true;
+    if(&nablaphi == NULL) {
+      hermitianMatrix = false;
+    }
+    
     phi.resize(_nc);
     gradphi.resize(_nc * 1);
-    nablaphi.resize(_nc * 1);
+    if(hermitianMatrix) nablaphi.resize(_nc * 1);
 
     type Jac = 0.;
     type JacI;
@@ -1469,7 +1481,7 @@ namespace femus
     for (int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
       phi[inode] = _phi[ig][inode];
       gradphi[inode] = (*dxi) * JacI;
-      nablaphi[inode] = (*dxi2) * JacI * JacI;
+      if(hermitianMatrix) nablaphi[inode] = (*dxi2) * JacI * JacI;
     }
 
   }
@@ -1577,9 +1589,14 @@ namespace femus
                                    vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const
   {
 
+    bool hermitianMatrix = true;
+    if(&nablaphi == NULL) {
+      hermitianMatrix = false;
+    }
+    
     phi.resize(_nc);
     gradphi.resize(_nc * 2);
-    nablaphi.resize(_nc * 3);
+    if(hermitianMatrix) nablaphi.resize(_nc * 3);
 
     type Jac[2][2] = {{0, 0}, {0, 0}};
     type JacI[2][2];
@@ -1616,16 +1633,17 @@ namespace femus
       gradphi[2 * inode + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1];
       gradphi[2 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1];
 
-      nablaphi[3 * inode + 0] =
-        ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[0][0] +
-        ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[0][1];
-      nablaphi[3 * inode + 1] =
-        ((*dxi2)   * JacI[1][0] + (*dxideta) * JacI[1][1]) * JacI[1][0] +
-        ((*dxideta) * JacI[1][0] + (*deta2)  * JacI[1][1]) * JacI[1][1];
-      nablaphi[3 * inode + 2] =
-        ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[1][0] +
-        ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[1][1];
-
+      if(hermitianMatrix){
+	nablaphi[3 * inode + 0] =
+	  ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[0][0] +
+	  ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[0][1];
+	nablaphi[3 * inode + 1] =
+	  ((*dxi2)   * JacI[1][0] + (*dxideta) * JacI[1][1]) * JacI[1][0] +
+	  ((*dxideta) * JacI[1][0] + (*deta2)  * JacI[1][1]) * JacI[1][1];
+	nablaphi[3 * inode + 2] =
+	  ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[1][0] +
+	  ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[1][1];
+      }
     }
   }
 
@@ -1762,9 +1780,14 @@ namespace femus
                                    vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const
   {
 
+    bool hermitianMatrix = true;
+    if(&nablaphi == NULL) {
+      hermitianMatrix = false;
+    }
+
     phi.resize(_nc);
     gradphi.resize(_nc * 3);
-    nablaphi.resize(_nc * 6);
+    if(hermitianMatrix) nablaphi.resize(_nc * 6);
 
 
     type Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
@@ -1821,30 +1844,32 @@ namespace femus
       gradphi[3 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1] + (*dzeta) * JacI[1][2];
       gradphi[3 * inode + 2] = (*dxi) * JacI[2][0] + (*deta) * JacI[2][1] + (*dzeta) * JacI[2][2];
 
-      nablaphi[6 * inode + 0] =
-        ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[0][0] +
-        ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[0][1] +
-        ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[0][2];
-      nablaphi[6 * inode + 1] =
-        ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[1][0] +
-        ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[1][1] +
-        ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[1][2];
-      nablaphi[6 * inode + 2] =
-        ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[2][0] +
-        ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[2][1] +
-        ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[2][2];
-      nablaphi[6 * inode + 3] =
-        ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[1][0] +
-        ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[1][1] +
-        ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[1][2];
-      nablaphi[6 * inode + 4] =
-        ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[2][0] +
-        ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[2][1] +
-        ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[2][2];
-      nablaphi[6 * inode + 5] =
-        ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[0][0] +
-        ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[0][1] +
-        ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[0][2];
+      if(hermitianMatrix) {
+        nablaphi[6 * inode + 0] =
+          ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[0][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[0][1] +
+          ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[0][2];
+        nablaphi[6 * inode + 1] =
+          ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[1][0] +
+          ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[1][1] +
+          ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[1][2];
+        nablaphi[6 * inode + 2] =
+          ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[2][0] +
+          ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[2][1] +
+          ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[2][2];
+        nablaphi[6 * inode + 3] =
+          ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[1][0] +
+          ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[1][1] +
+          ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[1][2];
+        nablaphi[6 * inode + 4] =
+          ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[2][0] +
+          ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[2][1] +
+          ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[2][2];
+        nablaphi[6 * inode + 5] =
+          ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[0][0] +
+          ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[0][1] +
+          ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[0][2];
+      }
     }
 
   }

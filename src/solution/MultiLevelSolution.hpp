@@ -210,7 +210,8 @@ public:
 
     bool _useParsedBCFunction;
 
-    void SaveSolution(const char* filename, const double time=0.);
+    void SaveSolution(const char* filename, const double &time=0.);
+    void SaveSolution(const char* filename, const unsigned &iteration);
     void LoadSolution(const char* filename);
     void LoadSolution(const unsigned &level, const char* filename);
     

@@ -152,9 +152,19 @@ namespace femus {
         elements = sol->GetMesh()->GetNumberOfElements();
       }
 
+
       unsigned GetMarkerProc(Solution *sol) {
         _mproc = (_elem == UINT_MAX) ? 0 : sol->GetMesh()->IsdomBisectionSearch(_elem , 3);
         return _mproc;
+      }
+      
+      void GetMarkerLocalCoordinates( std::vector< double > &xi ){
+	
+	xi.resize(_dim);
+	if(_mproc == _iproc){
+	  xi = _xi;
+	}
+	MPI_Bcast(&xi[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
       }
 
 //       void GetMarker_x0Line(std::vector<double> &x0) {

@@ -149,7 +149,7 @@ namespace femus {
 	_richardsonScaleFactor = richardsonScaleFactor;
 	_richardsonScaleFactorIsSet = true;
 	for(unsigned i=0;i<_gridn;i++){
-	   _LinSolver[i]->SetRichardsonScaleFactor(richardsonScaleFactor);
+	   _LinSolver[i]->SetRichardsonScaleFactor(_richardsonScaleFactor);
 	}
       }
 
@@ -195,11 +195,11 @@ namespace femus {
       vector < SparseMatrix* > &GetRestrictionMatrix() {
         return _RR;
       }
-
+      vector < SparseMatrix* > _PPamr, _RRamr; 
     protected:
 
       vector < SparseMatrix* > _PP, _RR; 
-      vector < SparseMatrix* > _PPamr, _RRamr; 
+//       vector < SparseMatrix* > _PPamr, _RRamr; 
 
       bool _printSolverInfo;
       bool _assembleMatrix;

@@ -70,8 +70,8 @@ namespace femus {
                 std::scientific << _ml_sol->GetSolutionName(indexSol) << "= " << L2normEpsDividedSol << \
                 "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << std::endl;
       nonLinearEps = (nonLinearEps > L2normEpsDividedSol) ? nonLinearEps : L2normEpsDividedSol;
-
-      if((L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol) && conv == true) {
+      
+      if((L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol || ( (k+1) % 3 == 0 )) && conv == true) {
         conv = true;
       }
       else {
@@ -119,12 +119,15 @@ namespace femus {
 
         std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
+	clock_t start_preparation_time = clock();
         clock_t start_assembly_time = clock();
         _levelToAssemble = igridn; //Be carefull!!!! this is needed in the _assemble_function
         _LinSolver[igridn]->SetResZero();
         _assembleMatrix = _buildSolver;
         _assemble_system_function(_equation_systems);
-
+        std::cout << "   ********* Level Max " << igridn + 1 << " ASSEMBLY TIME:\t" << \
+                  static_cast<double>((clock() - start_assembly_time)) / CLOCKS_PER_SEC << std::endl;
+	
         if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
           if(!_RRamr[igridn]) {
             (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
@@ -193,8 +196,8 @@ namespace femus {
                     << static_cast<double>((clock() - mg_init_time)) / CLOCKS_PER_SEC << std::endl;
         }
         totalAssembyTime += static_cast<double>((clock() - start_assembly_time)) / CLOCKS_PER_SEC;
-        std::cout << "   ********* Level Max " << igridn + 1 << " ASSEMBLY TIME:\t" << \
-                  static_cast<double>((clock() - start_assembly_time)) / CLOCKS_PER_SEC << std::endl;
+        std::cout << "   ********* Level Max " << igridn + 1 << " PREPARATION TIME:\t" << \
+                  static_cast<double>((clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
         clock_t startUpdateResidualTime = clock();
 
         for(unsigned updateResidualIterator = 0; updateResidualIterator < _maxNumberOfResidualUpdateIterations; updateResidualIterator++) {

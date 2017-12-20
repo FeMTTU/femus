@@ -324,9 +324,9 @@ namespace femus {
     //BEGIN from here
     if(_preconditioner == FIELDSPLIT_PRECOND) {
       PetscPreconditioner::set_petsc_preconditioner_type(_preconditioner, pc);
-      PCFieldSplitSetType(pc, PC_COMPOSITE_ADDITIVE);
+ //     PCFieldSplitSetType(pc, PC_COMPOSITE_ADDITIVE);
 
-      //PCFieldSplitSetType( pc, PC_COMPOSITE_MULTIPLICATIVE );
+      PCFieldSplitSetType( pc, PC_COMPOSITE_MULTIPLICATIVE );
       for(unsigned i = 0; i < _numberOfSplits; i++) {
         PCFieldSplitSetIS(pc, NULL, _isSplit[level - 1][i]);
       }
@@ -346,6 +346,23 @@ namespace femus {
     else if(_preconditioner == ASM_PRECOND) {
       SetPetscSolverType(ksp);
       KSPSetTolerances(ksp, _rtol, _abstol, _dtol, _maxits);
+      
+//       PetscPreconditioner::set_petsc_preconditioner_type(FIELDSPLIT_PRECOND, pc);
+//       
+//       if(!_asmStandard) {
+// 	for(unsigned i=0;i<_asmLocalIsIndex[level - 1].size();i++){
+// 	  PCFieldSplitSetIS(pc,NULL,_asmOverlappingIs[level - 1][i]);
+// 	}
+//       }
+// 
+//       //PCFieldSplitSetType(pc, PC_COMPOSITE_ADDITIVE);
+//       KSPSetUp(ksp);
+// 
+//       KSP* subksps;
+//       PetscInt nlocal;
+//       PCFieldSplitGetSubKSP(pc, &nlocal, &subksps);
+      
+      
       PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, pc);
 
       if(!_asmStandard) {
@@ -660,14 +677,14 @@ namespace femus {
     elementBlockNumber[1] = pow(base, _asmBlockSize);
 
 
-    elementBlockNumber[0] = 256;
-    elementBlockNumber[1] = 256;
+    //elementBlockNumber[0] = 16;
+    //elementBlockNumber[1] = 16;
 
     _asmBlockMaterialRange.resize(level);
 
     MeshASMPartitioning meshasmpartitioning(*msh);
 
-    meshasmpartitioning.DoPartition(elementBlockNumber, block_elements, _asmBlockMaterialRange[level - 1]);
+    meshasmpartitioning.DoPartitionOld(elementBlockNumber, block_elements, _asmBlockMaterialRange[level - 1]);
 
     vector <bool> ThisVaribaleIsNonSchur(_solutionType.size(), true);
 
