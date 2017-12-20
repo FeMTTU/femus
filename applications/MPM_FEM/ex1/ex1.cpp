@@ -433,8 +433,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       adept::adouble C[dim][dim]; //right Cauchy-Green deformation tensor
       std::vector < std::vector <double> > I(dim);
       adept::adouble I_1 = 0.; //trace of the right Cauchy-Green deformation tensor
-      adept::adouble shear = 52.5 * 1.e9 ; //shear modulus of iron, in GPa
-      adept::adouble bulk = 170. * 1.e9 ; //bulk modulus of iron, in GPa
+      adept::adouble shear = 6. * 1.e5 ; //shear modulus in Pascal for an hyperelastic material
+      adept::adouble bulk = 6. * 1.e6 ; //bulk modulus in Pascal for an hyperelastic material
       adept::adouble C1 = shear * 0.5;
       adept::adouble D1 = bulk * 0.5;
 
@@ -527,7 +527,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           for(unsigned  k = 0; k < dim; k++) {
             softStiffness[k]   +=  0.0001 * mu * gradphi[i * dim + j] * (GradSolDgss[k][j] + GradSolDgss[j][k]);
             //softStiffness[k]   +=  0.0001 * Cauchy[k][j] * gradphi[i * dim + j];
-            //std::cout << "soft stiffness " << " " << softStiffness[k] << std::endl;
           }
         }
 
@@ -654,8 +653,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
 
       // the mass of the particle acts as weight
-      double mass = 0.0217013888889; //TODO write this better
-      double density = 1000;
+      //double mass = 0.217013888889; //TODO use this with the Cauchy stress formulation
+      //double density = 10000.;
+      double mass = 0.0217013888889;
+      double density = 1000.;
 
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weightFake, phi, gradphi, nablaphi); //function to evaluate at the particles
 
@@ -692,13 +693,13 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       adept::adouble C[dim][dim]; //right Cauchy-Green deformation tensor
       std::vector < std::vector <double> > I(dim);
       adept::adouble I_1 = 0.; //trace of the right Cauchy-Green deformation tensor
-      adept::adouble shear = 52.5 * 1.e9 ; //shear modulus of iron, in GPa
-      adept::adouble bulk = 170. * 1.e9 ; //bulk modulus of iron, in GPa
+      adept::adouble shear = 6. * 1.e5 ; //shear modulus in Pascal for an hyperelastic material
+      adept::adouble bulk = 6. * 1.e6 ; //bulk modulus in Pascal for an hyperelastic material
       adept::adouble C1 = shear * 0.5;
       adept::adouble D1 = bulk * 0.5;
 
       Fp = particles[iMarker]->GetDeformationGradient(); //extraction of the deformation gradient
-      
+
       if(dim == 1) {
         J_hat = Fp[0][0];
       }
@@ -746,13 +747,13 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         }
       }
 
-      std::cout << "--------------------  Cauchy Stress Tensor --------------------" << std::endl;
-      for(unsigned i = 0 ; i < dim; i++) {
-        for(unsigned j = 0 ; j < dim; j++) {
-          std::cout << Cauchy[i][j] << " " ;
-        }
-        std::cout << std::endl;
-      }
+//       std::cout << "--------------------  Cauchy Stress Tensor --------------------" << std::endl;
+//       for(unsigned i = 0 ; i < dim; i++) {
+//         for(unsigned j = 0 ; j < dim; j++) {
+//           std::cout << Cauchy[i][j] << " " ;
+//         }
+//         std::cout << std::endl;
+//       }
 
 
       //END computation of the Cauchy Stress
@@ -770,7 +771,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           for(unsigned j = 0; j < dim; j++) {
             weakLaplace += 0.5 * (GradSolDp[i][j] + GradSolDp[j][i]) * gradphi[k * dim + j] ;
             //weakLaplace += Cauchy[i][j] * gradphi[k * dim + j] ;
-            //    std::cout << "weakLaplace " << weakLaplace << " " << gradphi[k * dim + j] << std::endl;
           }
           aRhs[indexPdeD[i]][k] += - ((2. * mu * weakLaplace + lambda * divergence * gradphi[k * dim + i]) / density - gravityP[i] * phi[k]) * mass;
           //aRhs[indexPdeD[i]][k] += - (weakLaplace / density - gravityP[i] * phi[k]) * mass;
