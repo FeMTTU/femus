@@ -21,7 +21,7 @@
 #include "NumericVector.hpp"
 #include <cmath>
 #include "PolynomialBases.hpp"
-
+#include "adept.h"
 #include <boost/math/special_functions/ellint_1.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
 
@@ -1145,7 +1145,7 @@ namespace femus {
                 unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
                 MPI_Send(&MPMQuantities[0], MPMsize, MPI_DOUBLE, mproc, order, PETSC_COMM_WORLD);
 
-                std::vector < std::vector < double > > Fp = _particles[iMarker]->GetDeformationGradient();
+                std::vector < std::vector < adept::adouble > > Fp = _particles[iMarker]->GetDeformationGradient();
                 for(unsigned i = 0; i < _dim; i++) {
                   MPI_Send(&Fp[i][0], _dim, MPI_DOUBLE, mproc, order + 1, PETSC_COMM_WORLD);
                 }
@@ -1164,7 +1164,7 @@ namespace femus {
                 MPI_Recv(&MPMQuantities[0], MPMsize, MPI_DOUBLE, jproc, order, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                 _particles[iMarker]->SetMPMQuantities(MPMQuantities);
 
-                std::vector < std::vector < double > > Fp(_dim);
+                std::vector < std::vector < adept::adouble > > Fp(_dim);
                 for(unsigned i = 0; i < _dim; i++) {
                   Fp[i].resize(_dim);
                 }

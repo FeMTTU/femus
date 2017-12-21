@@ -264,7 +264,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   vector<adept::adouble> SolDgss(dim);
   vector<double> SolVp(dim);
   vector<double> SolAp(dim);
-  vector < vector < double > > Fp(dim);
+  vector < vector < adept::adouble > > Fp(dim);
 
   vector<vector < adept::adouble > > GradSolDp(dim);
 
@@ -426,7 +426,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       //BEGIN computation of the Cauchy Stress
 
       adept::adouble Cauchy[dim][dim];
-      std::vector < std::vector <adept::adouble> > Fp(dim);
       adept::adouble J_hat; //det of the deformation gradient
       adept::adouble B[dim][dim]; //left Cauchy-Green deformation tensor
       adept::adouble devB[dim][dim]; //deviatoric part of B
@@ -525,8 +524,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
         for(unsigned j = 0; j < dim; j++) {
           for(unsigned  k = 0; k < dim; k++) {
-            softStiffness[k]   +=  0.0001 * mu * gradphi[i * dim + j] * (GradSolDgss[k][j] + GradSolDgss[j][k]);
-            //softStiffness[k]   +=  0.0001 * Cauchy[k][j] * gradphi[i * dim + j];
+            //softStiffness[k]   +=  0.0001 * mu * gradphi[i * dim + j] * (GradSolDgss[k][j] + GradSolDgss[j][k]);
+            softStiffness[k]   +=  0.0001 * Cauchy[k][j] * gradphi[i * dim + j];
           }
         }
 
@@ -698,7 +697,23 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       adept::adouble C1 = shear * 0.5;
       adept::adouble D1 = bulk * 0.5;
 
-      Fp = particles[iMarker]->GetDeformationGradient(); //extraction of the deformation gradient
+      std::vector < std::vector < adept::adouble > > FpOld;
+
+      FpOld = particles[iMarker]->GetDeformationGradient(); //extraction of the deformation gradient
+
+      Fp.resize(dim);
+      for(int i = 0; i < dim; i++) {
+        Fp[i].resize(dim);
+      }
+      
+      for(int i = 0; i < dim; i++) {
+        for(int j = 0; j < dim; j++) {
+          unsigned delta = (i == j) ?  1 : 0;
+          Fp[i][j] += (GradSolDp[i][j] + delta) * FpOld[i][j];
+        }
+      }
+
+      particles[iMarker]->SetDeformationGradient(Fp); //TODO I removed this from the function GridToParticlesProjection
 
       if(dim == 1) {
         J_hat = Fp[0][0];
@@ -804,6 +819,18 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
           s.jacobian(&Jac[0], true);
 
+	  //BEGIN Jacobian print
+	  std::cout << " -------------------------------------- " <<std::endl;
+	  for(unsigned i=0; i< dim * nve; i++){
+	    for(unsigned j=0; j< dim * nve; j++){
+	       std::cout<< Jac[i]<< " " ;
+	    }
+	    std::cout << std::endl;
+	  }
+	  std::cout << " -------------------------------------- " <<std::endl;
+	  //END
+	  
+	  
           myKK->add_matrix_blocked(Jac, dofsAll, dofsAll);
           s.clear_independents();
           s.clear_dependents();
@@ -864,12 +891,12 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob) {
   vector< vector < double > > SolDd(dim);
   vector< vector < double > > SolAd(dim);
   vector< vector < double > > GradSolDp(dim);
-  vector < vector < double > > Fp(dim); //deformation vector
-  vector < vector < double > > FpOld;
+  //vector < vector < double > > Fp(dim); //deformation vector
+  //vector < vector < double > > FpOld;
 
   for(int i = 0; i < dim; i++) {
     GradSolDp[i].resize(dim);
-    Fp[i].resize(dim);
+    //Fp[i].resize(dim);
   }
 
   vector < double > phi;
@@ -973,30 +1000,29 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob) {
       particles[iMarker]->SetIprocMarkerPreviousElement(iel);
 
       // update the deformation gradient
-      //BEGIN evaluates SolDp at the particle iMarker
-      for(int i = 0; i < dim; i++) {
-        for(int j = 0; j < dim; j++) {
-          GradSolDp[i][j] = 0.;
-        }
-        for(unsigned inode = 0; inode < nve; inode++) {
-          for(int j = 0; j < dim; j++) {
-            GradSolDp[i][j] +=  gradphi[inode * dim + j] * SolDd[i][inode];
-          }
-        }
-      }
-
-      FpOld = particles[iMarker]->GetDeformationGradient();
-
-      
-      
-      for(int i = 0; i < dim; i++) {
-        for(int j = 0; j < dim; j++) {
-	  unsigned delta = (i == j) ?  1 : 0;
-          Fp[i][j] = (GradSolDp[i][j] + delta) * FpOld[i][j];
-        }
-      }
-
-      particles[iMarker]->SetDeformationGradient(Fp);
+//       for(int i = 0; i < dim; i++) {
+//         for(int j = 0; j < dim; j++) {
+//           GradSolDp[i][j] = 0.;
+//         }
+//         for(unsigned inode = 0; inode < nve; inode++) {
+//           for(int j = 0; j < dim; j++) {
+//             GradSolDp[i][j] +=  gradphi[inode * dim + j] * SolDd[i][inode];
+//           }
+//         }
+//       }
+//
+//       FpOld = particles[iMarker]->GetDeformationGradient();
+//
+//
+//
+//       for(int i = 0; i < dim; i++) {
+//         for(int j = 0; j < dim; j++) {
+// 	  unsigned delta = (i == j) ?  1 : 0;
+//           Fp[i][j] = (GradSolDp[i][j] + delta) * FpOld[i][j];
+//         }
+//       }
+//
+//       particles[iMarker]->SetDeformationGradient(Fp);
 
       ielOld = iel;
     }

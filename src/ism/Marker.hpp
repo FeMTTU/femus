@@ -22,7 +22,7 @@
 #include "MarkerTypeEnum.hpp"
 #include "ParallelObject.hpp"
 #include "Mesh.hpp"
-
+#include "adept.h"
 #include "vector"
 #include "map"
 #include "MyVector.hpp"
@@ -144,7 +144,7 @@ namespace femus {
         _MPMQuantities = MPMQuantities;
       }
       
-      void SetDeformationGradient(const std::vector < std::vector < double > > Fp){
+      void SetDeformationGradient(const std::vector < std::vector < adept::adouble > > Fp){
 	_Fp = Fp;
       }
 
@@ -215,7 +215,7 @@ namespace femus {
         return _MPMSize;
       }
       
-      std::vector < std::vector < double > > GetDeformationGradient() {
+      std::vector < std::vector < adept::adouble > > GetDeformationGradient() {
 	return _Fp;
       }
 
@@ -287,7 +287,7 @@ namespace femus {
 //         std::vector < double > ().swap(_acceleration);
 //         std::vector < double > ().swap(_displacement);
         std::vector < double > ().swap(_MPMQuantities);
-	std::vector <  std::vector < double > > ().swap(_Fp);
+	std::vector <  std::vector < adept::adouble > > ().swap(_Fp);
       }
 
 
@@ -390,7 +390,7 @@ namespace femus {
       std::vector <double> _MPMQuantities; // _displacement[_dim] + _velocity[_dim] + _acceleration[_dim] + mass + density
       unsigned _MPMSize;
       
-      std::vector < std::vector <double> > _Fp; //deformation gradient of the particle
+      std::vector < std::vector <adept::adouble> > _Fp; //deformation gradient of the particle
 
 //       std::vector <double> _velocity;
 //       std::vector <double> _acceleration;
