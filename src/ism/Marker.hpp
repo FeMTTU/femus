@@ -22,7 +22,6 @@
 #include "MarkerTypeEnum.hpp"
 #include "ParallelObject.hpp"
 #include "Mesh.hpp"
-
 #include "vector"
 #include "map"
 #include "MyVector.hpp"

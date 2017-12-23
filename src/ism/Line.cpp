@@ -21,7 +21,6 @@
 #include "NumericVector.hpp"
 #include <cmath>
 #include "PolynomialBases.hpp"
-
 #include <boost/math/special_functions/ellint_1.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
 
