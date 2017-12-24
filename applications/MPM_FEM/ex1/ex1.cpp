@@ -311,12 +311,12 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   double gravity[3] = {0., -9.81 * 3, 0.}; //TODO use the actual value for gravity
   std::vector <double> gravityP(dim);
 
-  double E = 1000000;
-  double nu = 0.3;
+  double E = 1000000; // Young's modulus
+  double nu = 0.3; // Poisson's ratio
 
-  double K = E / (3.*(1. - 2.*nu));
-  double lambda = E * nu / ((1. + nu) * (1. - 2 * nu));
-  double mu = 1.5 * (K - lambda);
+  double K = E / (3.*(1. - 2.*nu)); //bulk modulus
+  double lambda = E * nu / ((1. + nu) * (1. - 2 * nu)); //Lame' first parameter
+  double mu = 1.5 * (K - lambda); //shear modulus
 
   //variable-name handling
   const char varname[9][3] = {"DX", "DY", "DZ", "U", "V", "W", "AU", "AV", "AW"}; //TODO is there a reason why varname[9][3] and not just varname[9] ?
@@ -591,12 +591,16 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       adept::adouble B[dim][dim]; //left Cauchy-Green deformation tensor
       adept::adouble devB[dim][dim]; //deviatoric part of B
       adept::adouble C[dim][dim]; //right Cauchy-Green deformation tensor
-      std::vector < std::vector <double> > I(dim);
       adept::adouble I_1 = 0.; //trace of the right Cauchy-Green deformation tensor
+      adept::adouble YoungModulus = 1.74 * 1.e6;
+      adept::adouble PoissonRatio = 0.45;
+      adept::adouble  Lame = YoungModulus * PoissonRatio / ((1. + PoissonRatio) * (1. - 2 * PoissonRatio));
       adept::adouble shear = 6. * 1.e5 ; //shear modulus in Pascal for an hyperelastic material
       adept::adouble bulk = 6. * 1.e6 ; //bulk modulus in Pascal for an hyperelastic material
       adept::adouble C1 = shear * 0.5;
       adept::adouble D1 = bulk * 0.5;
+      //adept::adouble D1 = Lame * 0.5;
+       
       std::vector < std::vector < double > > FpOld;
 
       FpOld = particles[iMarker]->GetDeformationGradient(); //extraction of the deformation gradient
@@ -634,17 +638,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       }
 
       for(int i = 0; i < dim; i++) {
-
-        I[i].resize(dim);
-
         for(int j = 0; j < dim; j++) {
-
-          if(i == j) {
-            I[i][i] = 1.;
-          }
-          else {
-            I[i][j] = 0.;
-          }
 
           B[i][j] = 0.;
           C[i][j] = 0.;
@@ -662,8 +656,9 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
       for(unsigned i = 0 ; i < dim; i++) {
         for(unsigned j = 0 ; j < dim; j++) {
-          devB[i][j] = B[i][j]  - (1. / 3.) * I_1 * I[i][j];
-          Cauchy[i][j] = (1 / J_hat) * (2. * D1 * J_hat * (J_hat - 1.) * I[i][j] + 2. * C1 * devB[i][j] / (pow(J_hat , (2. / 3.))));
+	  unsigned delta = (i == j) ?  1 : 0;
+          devB[i][j] = B[i][j]  - (1. / 3.) * I_1 * delta;
+          Cauchy[i][j] = (1. / J_hat) * (2. * D1 * J_hat * (J_hat - 1.) * delta + 2. * C1 * devB[i][j] / (pow(J_hat , (2. / 3.))));
         }
       }
 
