@@ -290,7 +290,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   vector < double > phi_hat;
   vector < adept::adouble> gradphi;
   vector < double > gradphi_hat;
-  
+
   phi.reserve(max_size);
   phi_hat.reserve(max_size);
 
@@ -315,7 +315,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
   adept::adouble weight;
   double weight_hat = 0.;
-  
+
   // gravity
   double gravity[3] = {0., -9.81, 0.}; //TODO use the actual value for gravity
   std::vector <double> gravityP(dim);
@@ -495,23 +495,23 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
           adept::adouble J_hat =  F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
                                   - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
 
-          for(int I = 0; I < 3; ++I) {
-            for(int J = 0; J < 3; ++J) {
-              B[I][J] = 0.;
+          for(int i = 0; i < 3; i++) {
+            for(int j = 0; j < 3; j++) {
+              B[i][j] = 0.;
 
-              for(int K = 0; K < 3; ++K) {
+              for(int k = 0; k < 3; k++) {
                 //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
-                B[I][J] += F[I][K] * F[J][K];
+                B[i][j] += F[i][k] * F[j][k];
               }
             }
           }
 
           adept::adouble I1_B = B[0][0] + B[1][1] + B[2][2];
 
-          for(int I = 0; I < 3; ++I) {
-            for(int J = 0; J < 3; ++J) {
-              Cauchy[I][J] = mu * (B[I][J] - I1_B * Id2th[I][J] / 3.) / pow(J_hat, 5. / 3.)
-                             + lambda * (J_hat - 1.) * Id2th[I][J];  	   //Allan-Bower
+          for(int i = 0; i < 3; i++) {
+            for(int j = 0; j < 3; j++) {
+              Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
+                             + lambda * (J_hat - 1.) * Id2th[i][j];  	   //Allan-Bower
 
             }
           }
@@ -720,23 +720,23 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
         adept::adouble J_hat =  F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
                                 - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
 
-        for(int I = 0; I < 3; ++I) {
-          for(int J = 0; J < 3; ++J) {
-            B[I][J] = 0.;
+        for(int i = 0; i < 3; i++) {
+          for(int j = 0; j < 3; j++) {
+            B[i][j] = 0.;
 
-            for(int K = 0; K < 3; ++K) {
+            for(int k = 0; k < 3; k++) {
               //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
-              B[I][J] += F[I][K] * F[J][K];
+              B[i][j] += F[i][k] * F[j][k];
             }
           }
         }
 
         adept::adouble I1_B = B[0][0] + B[1][1] + B[2][2];
 
-        for(int I = 0; I < 3; ++I) {
-          for(int J = 0; J < 3; ++J) {
-            Cauchy[I][J] = mu * (B[I][J] - I1_B * Id2th[I][J] / 3.) / pow(J_hat, 5. / 3.)
-                           + lambda * (J_hat - 1.) * Id2th[I][J];  	   //Allan-Bower
+        for(int i = 0; i < 3; i++) {
+          for(int j = 0; j < 3; j++) {
+            Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
+                           + lambda * (J_hat - 1.) * Id2th[i][j];  	   //Allan-Bower
 
           }
         }
