@@ -550,10 +550,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
 
       // the mass of the particle acts as weight
-      double mass = 0.217013888889; //TODO use this with the Cauchy stress formulation
-      double density = 10000.;
-      //double mass = 0.0217013888889;
-      //double density = 1000.;
+      //double mass = 0.217013888889; //TODO use this with the Cauchy stress formulation
+      //double density = 10000.;
+      double mass = 0.0217013888889;
+      double density = 1000.;
 
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weightFake, phi, gradphi, nablaphi); //function to evaluate at the particles
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, xi, weight_hat, phi_hat, gradphi_hat, nablaphi_hat);
@@ -684,11 +684,11 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         for(unsigned i = 0; i < dim; i++) {
           adept::adouble weakLaplace = 0.;
           for(unsigned j = 0; j < dim; j++) {
-            //  weakLaplace += 0.5 * (GradSolDp[i][j] + GradSolDp[j][i]) * gradphi[k * dim + j] ;
-            weakLaplace += Cauchy[i][j] * gradphi[k * dim + j] ;
+              weakLaplace += 0.5 * (GradSolDp[i][j] + GradSolDp[j][i]) * gradphi[k * dim + j] ;
+            //weakLaplace += Cauchy[i][j] * gradphi[k * dim + j] ;
           }
-          //aRhs[indexPdeD[i]][k] += - ((2. * mu * weakLaplace + lambda * divergence * gradphi[k * dim + i]) / density - gravityP[i] * phi[k]) * mass;
-          aRhs[indexPdeD[i]][k] += - (weakLaplace / density - gravityP[i] * phi[k]) * mass;
+          aRhs[indexPdeD[i]][k] += - ((2. * mu * weakLaplace + lambda * divergence * gradphi[k * dim + i]) / density - gravityP[i] * phi[k]) * mass;
+          //aRhs[indexPdeD[i]][k] += - (weakLaplace / density - gravityP[i] * phi[k]) * mass;
         }
       }
       //END
