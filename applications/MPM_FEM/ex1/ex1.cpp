@@ -181,8 +181,8 @@ int main(int argc, char** args)
     for(unsigned j = 0; j < columns; j++) {
 
 
-      x[i * columns + j][0] = -0.5 + 0.0001 + ((0.625 + 0.0001) / (columns - 1)) * j;
-      x[i * columns + j][1] = -0.0625 + 0.0001 + ((0.25 + 0.0001) / (rows - 1)) * i;
+      x[i * columns + j][0] = -0.5 + 0.000 + ((0.625 - 0.000001) / (columns - 1)) * j;
+      x[i * columns + j][1] = -0.0625 + 0.000 + ((0.25 - 0.000001) / (rows - 1)) * i;
       if(dim == 3) {
         x[j][2] = 0.;
       }
@@ -528,7 +528,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
             }
 
             for(int idim = 0; idim < dim; idim++) {
-              aRhs[indexPdeD[idim]][i] += (phi[i] * density * gravity[idim] - CauchyDIR[idim]) * weight;
+              aRhs[indexPdeD[idim]][i] += (phi[i] * density / J_hat * gravity[idim] - CauchyDIR[idim]) * weight;
             }
           }
         }
@@ -753,7 +753,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
           }
 
           for(int idim = 0; idim < dim; idim++) {
-            aRhs[indexPdeD[idim]][i] += (phi[i] * gravity[idim] - CauchyDIR[idim] / density) * mass;
+            aRhs[indexPdeD[idim]][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density) * mass;
           }
         }
         //END redidual Solid Momentum in moving domain
