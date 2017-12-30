@@ -2,9 +2,9 @@
 ** GAMBIT NEUTRAL FILE
 adaptiveRef4
 PROGRAM:                Gambit     VERSION:  2.3.16
-14 Dec 2017    11:59:04 
+26 Dec 2017    09:39:45 
      NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
-        25         4         4         2         2         2
+        25         4         4         4         2         2
 ENDOFSECTION
    NODAL COORDINATES 2.3.16
          1  -5.00000000000e-01   5.00000000000e-01
@@ -73,11 +73,17 @@ ENDOFSECTION
          1    2    2
 ENDOFSECTION
  BOUNDARY CONDITIONS 2.3.16
-                               2       1       6       0       6
-         4    2    3
+                               2       1       2       0       6
          3    2    4
-         3    2    1
+         4    2    3
+ENDOFSECTION
+ BOUNDARY CONDITIONS 2.3.16
+                               3       1       2       0       6
          2    2    1
-         2    2    2
+         3    2    1
+ENDOFSECTION
+ BOUNDARY CONDITIONS 2.3.16
+                               4       1       2       0       6
          1    2    1
+         2    2    2
 ENDOFSECTION

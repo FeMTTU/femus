@@ -13,6 +13,8 @@
  *  \author Eugenio Aulisa
  */
 
+ 
+#include "PetscMatrix.hpp"
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
@@ -22,18 +24,22 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
 #include "FieldSplitTree.hpp"
+#include "Marker.hpp"
 
+double Prandtl = 0.71;
+double Rayleigh = 340000.;
 
+using namespace std;
 using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
   if(!strcmp(SolName, "T")) {
-    if(facename == 1) {
+    if(facename == 2) {
       value = 0.5 * (1.0 - exp(-10.0 * time));
     }
-    else if(facename == 2) {
+    else if(facename == 1) {
       value = -0.5 * (1.0 - exp(-10.0 * time));
     }
     else {
@@ -49,12 +55,54 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 double InitalValueT(const std::vector < double >& x) {
   return sin(4.0 * x[0]);
 };
-
+void PrintConvergenceInfo(unsigned n_timesteps, char *stdOutfile, char* outfile, const unsigned &numofrefinements);
+void PrintNonlinearTime(unsigned n_timesteps,char *stdOutfile, char* outfile, const unsigned &numofrefinements);
 void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
-
-
+std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem1, 
+							      const unsigned &elem2, const std::vector<double>&xi1, const std::vector<double>&xi2);
+enum PrecType {
+  FS_VTp = 1,
+  FS_TVp,
+  ASM_VTp,
+  ASM_TVp,
+  ILU_VTp,
+  ILU_TVp
+};
 int main(int argc, char** args) {
+  
+  unsigned precType = 0;
 
+  if(argc >= 2) {
+    if(!strcmp("FS_VT", args[1])) precType = FS_VTp;
+    else if(!strcmp("FS_TV", args[1])) precType = FS_TVp;
+    else if(!strcmp("ASM_VT", args[1])) precType = ASM_VTp;
+    else if(!strcmp("ASM_TV", args[1])) precType = ASM_TVp;
+    else if(!strcmp("ILU_VT", args[1])) precType = ILU_VTp;
+
+    if(!strcmp("ILU_TV", args[1])) precType = ILU_TVp;
+
+    if(precType == 0) {
+      std::cout << "wrong input arguments!" << std::endl;
+      abort();
+    }
+  }
+  else {
+    std::cout << "No input argument set default preconditioner = NS+T" << std::endl;
+    precType = FS_VTp;
+  }
+
+  if(argc >= 3) {
+    Prandtl = strtod(args[2], NULL);
+    std::cout << Prandtl << std::endl;
+  }
+
+
+  if(argc >= 4) {
+    Rayleigh = strtod(args[3], NULL);
+    std::cout << Rayleigh << std::endl;
+  }
+  
+  
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   // define multilevel mesh
@@ -63,7 +111,8 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/rectangle_w1_h8.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/rectangle_w1_h8.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/rectangle8x64.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -74,6 +123,7 @@ int main(int argc, char** args) {
 
   // erase all the coarse mesh levels
   //mlMsh.EraseCoarseLevels(numberOfUniformLevels - 3);
+  //mlMsh.EraseCoarseLevels(3);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -91,7 +141,6 @@ int main(int argc, char** args) {
 
   mlSol.AssociatePropertyToSolution("P", "Pressure");
   mlSol.Initialize("All");
-
   mlSol.Initialize("T", InitalValueT);
 
   // attach the boundary condition function and generate boundary data
@@ -108,16 +157,21 @@ int main(int argc, char** args) {
   // add system Poisson in mlProb as a Linear Implicit System
   TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("NS");
 
+  
+  if(precType == FS_TVp || precType == ASM_TVp || precType == ILU_TVp) system.AddSolutionToSystemPDE("T");
   // add solution "u" to system
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-  system.AddSolutionToSystemPDE("P");
-
+  
+  if(precType == ASM_VTp) system.AddSolutionToSystemPDE("T");
+  
   if(dim == 3) system.AddSolutionToSystemPDE("W");
+  
+  system.AddSolutionToSystemPDE("P");
+  
+  if(precType == FS_VTp || precType == ILU_VTp) system.AddSolutionToSystemPDE("T");
 
-  system.AddSolutionToSystemPDE("T");
-
-
+  //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
   std::vector < unsigned > fieldUVP(3);
   fieldUVP[0] = system.GetSolPdeIndex("U");
   fieldUVP[1] = system.GetSolPdeIndex("V");
@@ -132,109 +186,70 @@ int main(int argc, char** args) {
   FS_NS.SetAsmBlockSize(4);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
 
-
-//   std::vector < unsigned > fieldUV(2);
-//   fieldUV[0] = system.GetSolPdeIndex("U");
-//   fieldUV[1] = system.GetSolPdeIndex("V");
-//
-//   FieldSplitTree FS_UV( PREONLY, ILU_PRECOND, fieldUV, "Velocity");
-//
-//   std::vector < unsigned > fieldP(1);
-//   fieldP[0] = system.GetSolPdeIndex("P");
-//
-//   FieldSplitTree FS_P( PREONLY, ILU_PRECOND, fieldP, "pressure");
-//
-//    std::vector < FieldSplitTree *> FS1;
-//
-//   FS1.reserve(2);
-//   FS1.push_back(&FS_UV);
-//   FS1.push_back(&FS_P);
-//   FieldSplitTree FS_NS( GMRES, FS_SCHUR_PRECOND, FS1, "Navier-Stokes");
-
-
-
   std::vector < unsigned > fieldT(1);
   fieldT[0] = system.GetSolPdeIndex("T");
 
   std::vector < unsigned > solutionTypeT(1);
   solutionTypeT[0] = mlSol.GetSolutionType("T");
 
-
   FieldSplitTree FS_T(PREONLY, ASM_PRECOND, fieldT, solutionTypeT, "Temperature");
   FS_T.SetAsmBlockSize(4);
-  FS_T.SetAsmNumeberOfSchurVariables(1);
-
+  FS_T.SetAsmNumeberOfSchurVariables(0); // why here change 1 to 0
 
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
-  FS2.push_back(&FS_NS);
+  
+  if(precType == FS_VTp) FS2.push_back(&FS_NS);   //Navier-Stokes block first
+
   FS2.push_back(&FS_T);
-  FieldSplitTree FS_NST(GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
-  //FieldSplitTree FS_NST( GMRES, FS_SCHUR_PRECOND, FS2, "Benard");
 
-//   std::vector < unsigned > fieldUV(2);
-//   fieldUV[0] = system.GetSolPdeIndex("U");
-//   fieldUV[1] = system.GetSolPdeIndex("V");
-//   FieldSpliTreeStructure FS_UV( GMRES, ILU_PRECOND, fieldUV , "Velocity");
-//
-//   std::vector < unsigned > fieldP(1);
-//   fieldP[0] = system.GetSolPdeIndex("P");
-//   FieldSpliTreeStructure FS_P( GMRES, ILU_PRECOND, fieldP, "Pressure");
-//
-//   std::vector < FieldSpliTreeStructure *> FS1;
-//
-//   FS1.reserve(2);
-//   FS1.push_back(&FS_UV);
-//   FS1.push_back(&FS_P);
-//
-//   FieldSpliTreeStructure FS_NS( GMRES, ILU_PRECOND, FS1, "Navier-Stokes");
-//
-//   std::vector < unsigned > fieldT(1);
-//   fieldT[0] = system.GetSolPdeIndex("T");
-//   FieldSpliTreeStructure FS_T( PREONLY, ILU_PRECOND, fieldT, "Temperature");
-//
-//   std::vector < FieldSpliTreeStructure *> FS2;
-//
-//   FS2.reserve(2);
-//   FS2.push_back(&FS_NS);
-//   FS2.push_back(&FS_T);
-//   FieldSpliTreeStructure FS_NST( GMRES, FIELDSPLIT_PRECOND, FS2, "Benard");
+  if(precType == FS_TVp) FS2.push_back(&FS_NS);   //Navier-Stokes block last
 
-
-
-
-  //system.SetMgSmoother(GMRES_SMOOTHER);
-  system.SetMgSmoother(FIELDSPLIT_SMOOTHER); // Additive Swartz preconditioner
-  //system.SetMgSmoother(ASM_SMOOTHER); // Field-Split preconditioned
+  FieldSplitTree FS_NST(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "Benard");
+  
+  //END buid fieldSplitTree
+  if(precType == FS_VTp || precType == FS_TVp) system.SetMgSmoother(FIELDSPLIT_SMOOTHER);    // Field-Split preconditioned
+  else if(precType == ASM_VTp || precType == ASM_TVp) system.SetMgSmoother(ASM_SMOOTHER);  // Additive Swartz preconditioner
+  else if(precType == ILU_VTp || precType == ILU_TVp) system.SetMgSmoother(GMRES_SMOOTHER);
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleBoussinesqAppoximation_AD);
 
   system.SetMaxNumberOfNonLinearIterations(10);
   system.SetNonLinearConvergenceTolerance(1.e-8);
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(10);
-  //system.SetResidualUpdateConvergenceTolerance(1.e-15);
+  
+  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
+  //system.SetResidualUpdateConvergenceTolerance(1.e-12);
 
-  system.SetMaxNumberOfLinearIterations(10);
+  system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-15);
 
   system.SetMgType(F_CYCLE);
 
-  system.SetNumberPreSmoothingStep(2);
-  system.SetNumberPostSmoothingStep(2);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
   // initilaize and solve the system
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
   system.SetFieldSplitTree(&FS_NST);
-  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 20, 20);
+  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 20, 20);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
   system.SetElementBlockNumber(4);
 
+  std::vector< double > x1(3);
+  x1[0] = 0.819; //the marker is in element 117 (proc 1)
+  x1[1] = 7.370;
+  x1[2] = 0.;
+  
+  std::vector< double > x2(3);
+  x2[0] = 0.181; //the marker is in element 117 (proc 1)
+  x2[1] = 7.370;
+  x2[2] = 0.;
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -243,20 +258,69 @@ int main(int argc, char** args) {
   VTKWriter vtkIO(&mlSol);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
 
-  system.SetIntervalTime(0.5);
-  unsigned n_timesteps = 2000;
+  double dt = 0.05;
+  system.SetIntervalTime(dt);
+  unsigned n_timesteps =20000;
+ 
+  Marker marker1(x1, VOLUME, mlSol.GetLevel(numberOfUniformLevels - 1), 2, true);
+  unsigned elem1 = marker1.GetMarkerElement();
+  std::vector<double> xi1;
+  marker1.GetMarkerLocalCoordinates(xi1);
+  
+  Marker marker2(x2, VOLUME, mlSol.GetLevel(numberOfUniformLevels - 1), 2, true);
+  unsigned elem2 = marker2.GetMarkerElement();
+  std::vector<double> xi2;
+  marker2.GetMarkerLocalCoordinates(xi2);
+  
+  std::cout<<elem1<<" "<<xi1[0]<< " "<<xi1[1]<<std::endl;
+  std::cout<<elem1<<" "<<xi2[0]<< " "<<xi2[1]<<std::endl;
+  
+  char out_file1[100]="";
+  strcpy(out_file1,"Uvelocity.dat");
+  ofstream outfile1(out_file1,ios::out|ios::trunc|ios::binary);
 
+  char out_file2[100]="";
+  strcpy(out_file2,"Vvelocity.dat");
+  ofstream outfile2(out_file2,ios::out|ios::trunc|ios::binary);
+  
+  char out_file3[100]="";
+  strcpy(out_file3,"Pressure.dat");
+  ofstream outfile3(out_file3,ios::out|ios::trunc|ios::binary);
+  
+  char out_file4[100]="";
+  strcpy(out_file4,"Temperature.dat");
+  ofstream outfile4(out_file4,ios::out|ios::trunc|ios::binary);
+  
+  vector <double> solV_pt(2);
+  vector <double> solPT_pt(2);
+  std::pair < vector <double>, vector <double> > out_value;
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-
-    if(time_step > 0)
-      system.SetMgType(V_CYCLE);
-
-    system.MGsolve();
-    system.CopySolutionToOldSolution();
-    if ((time_step + 1) % 5 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
-  }
-
+ 
+     if(time_step > 0) system.SetMgType(V_CYCLE);
+ 
+     system.MGsolve();
+     system.CopySolutionToOldSolution();
+     out_value = GetVaribleValues(mlProb, elem1, elem2,xi1,xi2);
+     solV_pt = out_value.first;
+     solPT_pt = out_value.second;
+     
+     outfile1 << (time_step + 1) * dt <<"  "<< solV_pt[0] << std::endl;
+     outfile2 << (time_step + 1) * dt <<"  "<< solV_pt[1] << std::endl;
+     outfile3 << (time_step + 1) * dt <<"  "<< solPT_pt[0] << std::endl;
+     outfile4 << (time_step + 1) * dt <<"  "<< solPT_pt[1] << std::endl;
+     if ((time_step + 1) % 100 ==0)  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+   }
+  outfile1.close();
+  outfile2.close();
+  outfile3.close();
+  outfile4.close();
   mlMsh.PrintInfo();
+    
+  char *stdOutfile1 = new char[100];
+  char *outfile6 = new char[100];
+  sprintf(stdOutfile1, "%sprintout_infoPr=%sRa=%s_time.txt", args[1], args[2], args[3]);
+  sprintf(outfile6, "%scomputational_timePr=%sRa=%s_time.txt", args[1], args[2], args[3]);
+  PrintNonlinearTime(n_timesteps,stdOutfile1, outfile6, numberOfUniformLevels);  
 
   return 0;
 }
@@ -529,8 +593,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       double alpha = 1.;
       double beta = 1.;//40000.;
 
-      double Pr = 0.71;
-      double Ra = 340000;
+      double Pr = Prandtl;
+      double Ra = Rayleigh;
 
       double dt = mlPdeSys -> GetIntervalTime();
       // *** phiT_i loop ***
@@ -568,8 +632,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         }
 
         for(unsigned  k = 0; k < dim; k++) {
-          NSV[k] += -solP_gss * phiV_x[i * dim + k];
-          NSVold[k] += -solPold_gss * phiV_x[i * dim + k];
+          NSV[k] += -2.*solP_gss * phiV_x[i * dim + k];
+          NSVold[k] += -0.*solPold_gss * phiV_x[i * dim + k];
         }
 
         NSV[1] += -beta * solT_gss * phiV[i];
@@ -646,6 +710,247 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   if(assembleMatrix) {
     KK->close();
   }
-
+  
+  /*
+  Mat KKp = (static_cast< PetscMatrix* >(KK))->mat();  
+  PetscViewer    viewer;
+  PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,300,300,&viewer);
+  MatView(KKp,viewer);
+  */
   // ***************** END ASSEMBLY *******************
+}
+
+// double GetTemperatureValue(MultiLevelProblem& ml_prob, const unsigned &elem, const std::vector<double>&xi) {
+// 
+//   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
+//   const unsigned level = mlPdeSys->GetLevelToAssemble();
+// 
+//   Mesh* msh = ml_prob._ml_msh->GetLevel(level);
+// 
+//   MultiLevelSolution* mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+//   Solution* sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+// 
+//   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
+// 
+//   //solution variable
+//   unsigned solTIndex;
+//   solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
+//   unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
+//   vector < double >  solT; // local solution
+// 
+//   //BEGIN local dof number extraction
+//   unsigned nDofsT = msh->GetElementDofNumber(elem, solTType);  //temperature
+//   solT.resize(nDofsT);
+// 
+//   //BEGIN global to local extraction
+//   for(unsigned i = 0; i < nDofsT; i++) { //temperature
+//     unsigned solTDof = msh->GetSolutionDof(i, elem, solTType);  //local to global solution dof
+//     solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
+//   }
+// 
+//   short unsigned ielGeom = msh->GetElementType(elem);
+//   double solTXi = 0.;
+//   for(unsigned i = 0; i < nDofsT; i++) {
+//     basis *base = msh->_finiteElement[ielGeom][solTType]->GetBasis();
+//     double phi = base->eval_phi(base->GetIND(i), &xi[0]);
+//     solTXi += phi * solT[i];
+//   }
+//   // ***************** END ASSEMBLY *******************
+// 
+//   return solTXi;
+// }
+
+std::pair <vector<double>, vector <double> > GetVaribleValues(MultiLevelProblem& ml_prob, const unsigned &elem1, 
+							      const unsigned &elem2, const std::vector<double>&xi1,const std::vector<double>&xi2) {
+  
+  NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
+
+  Mesh* msh = ml_prob._ml_msh->GetLevel(level);
+
+  MultiLevelSolution* mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution* sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  
+  //solution variable
+  unsigned solTIndex;
+  solTIndex = mlSol->GetIndex("T");    // get the position of "T" in the ml_sol object
+  unsigned solTType = mlSol->GetSolutionType(solTIndex);    // get the finite element type for "T"
+  vector < double >  solT; // local solution
+  
+  vector <unsigned> solVIndex(dim);
+  solVIndex[0] = mlSol->GetIndex("U");
+  solVIndex[1] = mlSol->GetIndex("V");
+  if (dim==3) solVIndex[2] = mlSol->GetIndex("W");
+  unsigned solVType = mlSol->GetSolutionType(solVIndex[0]);
+  vector < vector <double> > solV(dim);
+  
+  unsigned solPIndex;
+  solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
+  unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "P"
+  vector < double >  solP1; // local solution
+  vector < double >  solP2; // local solution
+  
+  unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  MyVector <double> solTXi(1, 0.);
+  solTXi.stack();
+  MyVector <double> solUXi(1, 0.);
+  solUXi.stack();
+  MyVector <double> solVXi(1, 0.);
+  solVXi.stack();
+  MyVector <double> solPXi1(1, 0.);
+  solPXi1.stack();
+  MyVector <double> solPXi2(1, 0.);
+  solPXi2.stack();
+  /*
+  if (dim==3) {
+  	MyVector <double> solWXi(1, 0.);
+    solWXi.stack();
+  }
+  */
+  //BEGIN local dof number extraction
+  if(elem1 >= msh->_elementOffset[iproc] && elem1  < msh->_elementOffset[iproc + 1]) {
+    unsigned nDofsT = msh->GetElementDofNumber(elem1, solTType);  //temperature
+    solT.reserve(nDofsT);
+  
+    unsigned nDofsV = msh->GetElementDofNumber(elem1, solVType); //velocity
+    for(unsigned  k = 0; k < dim; k++) solV[k].reserve(nDofsV);
+    
+    unsigned nDofsP1 = msh->GetElementDofNumber(elem1, solPType);  //temperature
+    solP1.reserve(nDofsP1);
+    
+  	//BEGIN global to local extraction
+    for(unsigned i = 0; i < nDofsT; i++) { //temperature
+      unsigned solTDof = msh->GetSolutionDof(i, elem1, solTType);  //local to global solution dof
+      solT[i] = (*sol->_Sol[solTIndex])(solTDof);  //global to local solution value
+    }
+
+    for(unsigned i = 0; i < nDofsV; i++){ //velocity
+      unsigned solVDof = msh->GetSolutionDof(i, elem1, solVType);
+      for(unsigned  k = 0; k < dim; k++) {
+      solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof); // global extraction and local storage for the solution
+      }
+    }
+   
+    for(unsigned i = 0; i < nDofsP1; i++) { //temperature
+      unsigned solPDof1 = msh->GetSolutionDof(i, elem1, solPType);  //local to global solution dof
+      solP1[i] = (*sol->_Sol[solPIndex])(solPDof1);  //global to local solution value
+    }
+  
+    short unsigned ielGeom = msh->GetElementType(elem1);
+    for(unsigned i = 0; i < nDofsT; i++) {
+      basis *base = msh->_finiteElement[ielGeom][solTType]->GetBasis();
+      double phiT = base->eval_phi(base->GetIND(i), &xi1[0]);
+      solTXi[iproc] += phiT * solT[i];
+    }
+   
+    for(unsigned i = 0; i < nDofsV; i++) {
+      basis *base = msh->_finiteElement[ielGeom][solVType]->GetBasis();
+      double phiV = base->eval_phi(base->GetIND(i), &xi1[0]);
+      solUXi[iproc] += phiV * solV[0][i];
+      solVXi[iproc] += phiV * solV[1][i];
+ //   if(dim==3) solWXi[iproc] += phiV * solV[2][i];
+    }
+    
+    for(unsigned i = 0; i < nDofsP1; i++) {
+      basis *base = msh->_finiteElement[ielGeom][solPType]->GetBasis();
+      double phiP1 = base->eval_phi(base->GetIND(i), &xi1[0]);
+      solPXi1[iproc] += phiP1 * solP1[i];
+    }
+  }
+  
+   //BEGIN local dof number extraction
+  if(elem2 >= msh->_elementOffset[iproc] && elem2  < msh->_elementOffset[iproc + 1]) {
+    unsigned nDofsP2 = msh->GetElementDofNumber(elem2, solPType);  //temperature
+    solP2.reserve(nDofsP2); 
+    //BEGIN global to local extraction
+    for(unsigned i = 0; i < nDofsP2; i++) { //temperature
+      unsigned solPDof2 = msh->GetSolutionDof(i, elem2, solPType);  //local to global solution dof
+      solP2[i] = (*sol->_Sol[solPIndex])(solPDof2);  //global to local solution value
+    }
+     short unsigned ielGeom = msh->GetElementType(elem2);
+    for(unsigned i = 0; i < nDofsP2; i++) {
+      basis *base = msh->_finiteElement[ielGeom][solPType]->GetBasis();
+      double phiP2 = base->eval_phi(base->GetIND(i), &xi2[0]);
+      solPXi2[iproc] += phiP2 * solP2[i];
+    }
+  }
+  
+  std::pair <vector <double>, vector <double> > out_value;
+  unsigned mproc1 = msh->IsdomBisectionSearch(elem1, 3);
+  unsigned mproc2 = msh->IsdomBisectionSearch(elem2, 3);
+  solUXi.broadcast(mproc1);
+  solVXi.broadcast(mproc1);
+  solPXi1.broadcast(mproc1);
+  solPXi2.broadcast(mproc2);
+  solTXi.broadcast(mproc1);
+  
+  vector <double> solV_pt(dim);
+  solV_pt[0] = solUXi[mproc1];
+  solV_pt[1] = solVXi[mproc1];
+  out_value.first = solV_pt;
+  
+  vector <double> solPT_pt(2);
+  solPT_pt[0] = solPXi1[mproc1]-solPXi2[mproc2];
+  solPT_pt[1] = solTXi[mproc1];
+  out_value.second = solPT_pt;
+  
+  solUXi.clearBroadcast();
+  solVXi.clearBroadcast();
+  solPXi1.clearBroadcast();
+  solPXi2.clearBroadcast();
+  solTXi.clearBroadcast();
+  return out_value;
+}
+
+
+void PrintNonlinearTime(unsigned n_timesteps, char *stdOutfile, char* outfile, const unsigned &numofrefinements) {
+
+  std::cout << "END_COMPUTATION\n" << std::flush;
+
+  std::ifstream inf;
+  inf.open(stdOutfile);
+  if(!inf) {
+    std::cout << "Redirected standard output file not found\n";
+    std::cout << "add option -std_output std_out_filename > std_out_filename\n";
+    return;
+  }
+
+  std::ofstream outf;
+  outf.open(outfile, std::ofstream::app);
+ // outf << std::endl;
+ // outf << "\nLevel_Max, Assembly Time, Solver Time, Nonlinear Time";
+
+  unsigned counter = 0;
+  std::vector <double> Assembly_Time(n_timesteps, 0.);
+  std::vector <double> Solver_Time(n_timesteps, 0.);
+  std::string str1;
+  inf >> str1;
+  while(str1.compare("END_COMPUTATION") != 0) {
+    if(str1.compare("assembly") == 0) {
+      inf >> str1;
+      if(str1.compare("TIME(") == 0) {
+         double value;
+         inf >> value;
+	 Assembly_Time[counter] = value; 
+      }
+    }
+    else if(str1.compare("solver") == 0) {
+      inf >> str1;
+      if(str1.compare("TIME(") == 0) {
+        double value1;
+        inf >> value1;
+        Solver_Time[counter]  = value1;
+	counter ++;
+      }
+    }
+    inf >> str1;
+  }
+
+  for(unsigned i = 0; i < n_timesteps; i++) {
+    outf << Assembly_Time[i] <<" "<<Solver_Time[i]<< std::endl;
+  }
+  outf.close();
+  inf.close();
 }
