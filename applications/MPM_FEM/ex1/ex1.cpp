@@ -18,6 +18,7 @@ using namespace femus;
 
 bool NeoHookean = true;
 bool MPMF = true;
+bool gravityTest = true;
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level)
 {
@@ -217,6 +218,18 @@ int main(int argc, char** args)
 
   linea->GetLine(line[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line, false, 1);
+  
+  gravityTest = false;  
+  
+  system.MGsolve();
+
+  GridToParticlesProjection(ml_prob);
+
+  linea->UpdateLineMPM();
+
+  linea->GetLine(line[0]);
+  PrintLine(DEFAULT_OUTPUTDIR, line, false, 2);
+  
 
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
@@ -317,7 +330,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   double weight_hat = 0.;
 
   // gravity
-  double gravity[3] = {0., -9.81, 0.}; //TODO use the actual value for gravity
+  double gravity[3] = {0., -9.81 * gravityTest, 0.}; //TODO use the actual value for gravity
   std::vector <double> gravityP(dim);
 
   //double E = 1000000; // Young's modulus
@@ -461,7 +474,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
         distance += (Xgss[k] - xc[k]) * (Xgss[k] - xc[k]);
       }
       distance = sqrt(distance);
-      double scalingFactor = 0.001 / (1. + 10. * distance);
+      double scalingFactor = 0.001 / (1. + 100. * distance);
       double densityGss = 0.;
 
       for(unsigned i = 0; i < nDofsD; i++) {
@@ -864,12 +877,12 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob)
   vector< vector < double > > SolDd(dim);
   vector< vector < double > > SolAd(dim);
   vector< vector < double > > GradSolDp(dim);
-  vector < vector < double > > Fp(dim); //deformation vector
-  vector < vector < double > > FpOld;
+  //vector < vector < double > > Fp(dim); //deformation vector
+  //vector < vector < double > > FpOld;
 
   for(int i = 0; i < dim; i++) {
     GradSolDp[i].resize(dim);
-    Fp[i].resize(dim);
+    //Fp[i].resize(dim);
   }
 
   vector < double > phi;
@@ -942,7 +955,7 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob)
             SolAd[i][inode] = (*mysolution->_Sol[indexSolA[i]])(idof);
 
             //Fixed coordinates (Reference frame)
-            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof) + SolDd[i][inode];
+            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof);// + SolDd[i][inode];
           }
         }
         //END
@@ -984,15 +997,29 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob)
         }
       }
 
-      FpOld = particles[iMarker]->GetDeformationGradient();
+      
+      std::vector < std::vector < double > > FpOld;
+      FpOld = particles[iMarker]->GetDeformationGradient(); //extraction of the deformation gradient
 
-      for(int i = 0; i < dim; i++) {
-        for(int j = 0; j < dim; j++) {
-          unsigned delta = (i == j) ?  1 : 0;
-          Fp[i][j] = (GradSolDp[i][j] + delta) * FpOld[i][j];
+      double FpNew[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
+      std::vector < std::vector < double > > Fp(dim);
+      
+      for(unsigned i = 0; i < dim; i++) {
+        for(unsigned j = 0; j < dim; j++) {
+          FpNew[i][j] += GradSolDp[i][j];
         }
       }
 
+      for(unsigned i = 0; i < dim; i++) {
+	Fp[i].resize(dim);
+        for(unsigned j = 0; j < dim; j++) {
+	  Fp[i][j] = 0.;
+          for(unsigned k = 0; k < dim; k++) {
+            Fp[i][j] += FpNew[i][k] * FpOld[k][j];
+          }
+        }
+      }
+            
       particles[iMarker]->SetDeformationGradient(Fp);
 
       ielOld = iel;
@@ -1002,4 +1029,11 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob)
     }
   }
   //END loop on particles
+  
+  for(unsigned i=0;i<dim;i++){
+    for(unsigned j=0;j<dim;j++){
+      mysolution->_Sol[indexSolD[i]]->zero();
+      mysolution->_Sol[indexSolD[i]]->close();
+    }
+  }
 }
