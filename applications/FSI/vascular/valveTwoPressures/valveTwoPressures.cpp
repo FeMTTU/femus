@@ -195,6 +195,7 @@ int main(int argc, char** args)
 
   // ******* Set Smoother *******
   system.SetSolverFineGrids(RICHARDSON);
+  system.SetRichardsonScaleFactor(0.5);
   //system.SetSolverFineGrids(GMRES);
 
   system.SetPreconditionerFineGrids(MLU_PRECOND);
