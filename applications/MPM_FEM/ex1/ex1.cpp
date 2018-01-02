@@ -6,6 +6,7 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "XDMFWriter.hpp"
+#include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"
 #include "adept.h"
@@ -18,7 +19,7 @@ using namespace femus;
 
 bool NeoHookean = true;
 bool MPMF = true;
-bool gravityTest = true;
+double gravityfactor;
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level)
 {
@@ -119,7 +120,7 @@ int main(int argc, char** args)
   MultiLevelProblem ml_prob(&mlSol);
 
   // ******* Add MPM system to the MultiLevel problem *******
-  NonLinearImplicitSystem& system = ml_prob.add_system<NonLinearImplicitSystem> ("MPM_FEM");
+  TransientNonlinearImplicitSystem & system = ml_prob.add_system < TransientNonlinearImplicitSystem >  ("MPM_FEM");
   system.AddSolutionToSystemPDE("DX");
   if(dim > 1)system.AddSolutionToSystemPDE("DY");
   if(dim > 2) system.AddSolutionToSystemPDE("DZ");
@@ -210,25 +211,20 @@ int main(int argc, char** args)
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
-  system.MGsolve();
-
-  GridToParticlesProjection(ml_prob);
-
-  linea->UpdateLineMPM();
-
-  linea->GetLine(line[0]);
-  PrintLine(DEFAULT_OUTPUTDIR, line, false, 1);
+  unsigned n_timesteps = 100;
+  for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
   
-  gravityTest = false;  
+    gravityfactor = (time_step <= n_timesteps/2) ? 2./n_timesteps * time_step: 2./n_timesteps * (n_timesteps - time_step);
+    system.MGsolve();
+
+    GridToParticlesProjection(ml_prob);
+
+    linea->UpdateLineMPM();
+
+    linea->GetLine(line[0]);
+    PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
   
-  system.MGsolve();
-
-  GridToParticlesProjection(ml_prob);
-
-  linea->UpdateLineMPM();
-
-  linea->GetLine(line[0]);
-  PrintLine(DEFAULT_OUTPUTDIR, line, false, 2);
+  }
   
 
   // ******* Print solution *******
@@ -267,7 +263,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
   //pointers and references
 
-  NonLinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<NonLinearImplicitSystem> ("MPM_FEM");
+  TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem> ("MPM_FEM");
   const unsigned  level = my_nnlin_impl_sys.GetLevelToAssemble();
   MultiLevelSolution* ml_sol = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution* mysolution = ml_sol->GetSolutionLevel(level);     // pointer to the solution (level) object
@@ -330,7 +326,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   double weight_hat = 0.;
 
   // gravity
-  double gravity[3] = {0., -9.81 * gravityTest, 0.}; //TODO use the actual value for gravity
+  double gravity[3] = {0., -9.81 * gravityfactor, 0.}; //TODO use the actual value for gravity
   std::vector <double> gravityP(dim);
 
   //double E = 1000000; // Young's modulus
@@ -474,7 +470,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
         distance += (Xgss[k] - xc[k]) * (Xgss[k] - xc[k]);
       }
       distance = sqrt(distance);
-      double scalingFactor = 0.001 / (1. + 100. * distance);
+      double scalingFactor = 0.0001;// / (1. + 100. * distance);
       double densityGss = 0.;
 
       for(unsigned i = 0; i < nDofsD; i++) {
