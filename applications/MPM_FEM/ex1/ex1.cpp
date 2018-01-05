@@ -21,8 +21,7 @@ bool NeoHookean = true;
 bool MPMF = true;
 double gravityfactor;
 
-bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level)
-{
+bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = 0;
 
@@ -35,8 +34,7 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 }
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int facename, const double time)
-{
+bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int facename, const double time) {
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -62,8 +60,7 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob);
 
 Line* linea;
 
-int main(int argc, char** args)
-{
+int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
@@ -120,7 +117,7 @@ int main(int argc, char** args)
   MultiLevelProblem ml_prob(&mlSol);
 
   // ******* Add MPM system to the MultiLevel problem *******
-  TransientNonlinearImplicitSystem & system = ml_prob.add_system < TransientNonlinearImplicitSystem >  ("MPM_FEM");
+  TransientNonlinearImplicitSystem & system = ml_prob.add_system < TransientNonlinearImplicitSystem > ("MPM_FEM");
   system.AddSolutionToSystemPDE("DX");
   if(dim > 1)system.AddSolutionToSystemPDE("DY");
   if(dim > 2) system.AddSolutionToSystemPDE("DZ");
@@ -213,8 +210,8 @@ int main(int argc, char** args)
 
   unsigned n_timesteps = 100;
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
-  
-    gravityfactor = (time_step <= n_timesteps/2) ? 2./n_timesteps * time_step: 2./n_timesteps * (n_timesteps - time_step);
+
+    gravityfactor = (time_step <= n_timesteps / 2) ? 2. / n_timesteps * time_step : 2. / n_timesteps * (n_timesteps - time_step);
     system.MGsolve();
 
     GridToParticlesProjection(ml_prob);
@@ -223,9 +220,9 @@ int main(int argc, char** args)
 
     linea->GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
-  
+
   }
-  
+
 
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
@@ -250,8 +247,7 @@ int main(int argc, char** args)
 
 
 
-void AssembleMPMSys(MultiLevelProblem& ml_prob)
-{
+void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
   // ml_prob is the global object from/to where get/set all the data
   // level is the level of the PDE system to be assembled
@@ -286,14 +282,11 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   // data
-  unsigned nel    = mymsh->GetNumberOfElements();
   unsigned iproc  = mymsh->processor_id();
 
   // local objects
-
   vector<double> SolVp(dim);
   vector<double> SolAp(dim);
-
 
   vector < double > phi;
   vector < double > phi_hat;
@@ -327,7 +320,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
   // gravity
   double gravity[3] = {0., -9.81 * gravityfactor, 0.}; //TODO use the actual value for gravity
-  std::vector <double> gravityP(dim);
 
   //double E = 1000000; // Young's modulus
   //double nu = 0.3; // Poisson's ratio
@@ -424,7 +416,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
       for(unsigned k = 0; k < dim; k++) {
         vx_hat[k][i] = (*mymsh->_topology->_Sol[k])(coordXDof);
-        vx[k][i] = vx_hat[k][i] + SolDd[k][i];     // TODO should we add also SolDd ???
+        vx[k][i] = vx_hat[k][i] + SolDd[k][i];
       }
     }
 
@@ -509,7 +501,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
               B[i][j] = 0.;
 
               for(int k = 0; k < 3; k++) {
-                //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
+                //left Cauchy-Green deformation tensor or Finger tensor (B = F*F^T)
                 B[i][j] += F[i][k] * F[j][k];
               }
             }
@@ -520,14 +512,14 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
           for(int i = 0; i < 3; i++) {
             for(int j = 0; j < 3; j++) {
               Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
-                             + lambda * (J_hat - 1.) * Id2th[i][j];  	   //Allan-Bower
+                             + K * (J_hat - 1.) * Id2th[i][j];  //Generalized Neo-Hookean solid, in Allan-Bower's book, for rubbers with very limited compressibility and K >> mu
+
+              Cauchy[i][j] = lambda * log(J_hat) / J_hat * Id2th[i][j] + mu / J_hat * (B[i][j] - Id2th[i][j]); //alternative formulation
 
             }
           }
 
           for(unsigned i = 0; i < nDofsD; i++) {
-
-            //BEGIN redidual Solid Momentum in moving domain
             adept::adouble CauchyDIR[3] = {0., 0., 0.};
 
             for(int idim = 0.; idim < dim; idim++) {
@@ -736,7 +728,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
             B[i][j] = 0.;
 
             for(int k = 0; k < 3; k++) {
-              //left Cauchy-Green deformation tensor or Finger tensor (b = F*F^T)
+              //left Cauchy-Green deformation tensor or Finger tensor (B = F*F^T)
               B[i][j] += F[i][k] * F[j][k];
             }
           }
@@ -746,8 +738,11 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
         for(int i = 0; i < 3; i++) {
           for(int j = 0; j < 3; j++) {
-            Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
-                           + lambda * (J_hat - 1.) * Id2th[i][j];  	   //Allan-Bower
+//             Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
+//                            + K * (J_hat - 1.) * Id2th[i][j];  //Generalized Neo-Hookean solid, in Allan-Bower's book, for rubbers with very limited compressibility and K >> mu
+
+            Cauchy[i][j] = lambda * log(J_hat) / J_hat * Id2th[i][j] + mu / J_hat * (B[i][j] - Id2th[i][j]); //alternative formulation
+
 
           }
         }
@@ -843,8 +838,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 }
 
 
-void GridToParticlesProjection(MultiLevelProblem& ml_prob)
-{
+void GridToParticlesProjection(MultiLevelProblem& ml_prob) {
 
   // ml_prob is the global object from/to where get/set all the data
   // level is the level of the PDE system to be assembled
@@ -867,7 +861,6 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob)
   const unsigned dim = mymsh->GetDimension();
 
   // data
-  unsigned nel    = mymsh->GetNumberOfElements();
   unsigned iproc  = mymsh->processor_id();
 
   // local objects
@@ -995,13 +988,13 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob)
         }
       }
 
-      
+
       std::vector < std::vector < double > > FpOld;
       FpOld = particles[iMarker]->GetDeformationGradient(); //extraction of the deformation gradient
 
       double FpNew[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
       std::vector < std::vector < double > > Fp(dim);
-      
+
       for(unsigned i = 0; i < dim; i++) {
         for(unsigned j = 0; j < dim; j++) {
           FpNew[i][j] += GradSolDp[i][j];
@@ -1009,15 +1002,15 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob)
       }
 
       for(unsigned i = 0; i < dim; i++) {
-	Fp[i].resize(dim);
+        Fp[i].resize(dim);
         for(unsigned j = 0; j < dim; j++) {
-	  Fp[i][j] = 0.;
+          Fp[i][j] = 0.;
           for(unsigned k = 0; k < dim; k++) {
             Fp[i][j] += FpNew[i][k] * FpOld[k][j];
           }
         }
       }
-            
+
       particles[iMarker]->SetDeformationGradient(Fp);
 
       ielOld = iel;
@@ -1027,9 +1020,9 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob)
     }
   }
   //END loop on particles
-  
-  for(unsigned i=0;i<dim;i++){
-    for(unsigned j=0;j<dim;j++){
+
+  for(unsigned i = 0; i < dim; i++) {
+    for(unsigned j = 0; j < dim; j++) {
       mysolution->_Sol[indexSolD[i]]->zero();
       mysolution->_Sol[indexSolD[i]]->close();
     }

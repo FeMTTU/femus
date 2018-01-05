@@ -1029,89 +1029,6 @@ namespace femus {
 
   void Line::UpdateLineMPM() {
 
-    //BEGIN remove when everything is OK
-
-//     std::vector<unsigned>  solIndexDisp(_dim);
-//     std::vector<unsigned>  solIndexAcc(_dim);
-//
-//     solIndexDisp[0] = _sol->GetIndex("DX");
-//     if(_dim > 1) solIndexDisp[1] = _sol->GetIndex("DY");
-//     if(_dim > 2) solIndexDisp[2] = _sol->GetIndex("DW");
-//
-//     solIndexAcc[0] = _sol->GetIndex("AU");
-//     if(_dim > 1) solIndexAcc[1] = _sol->GetIndex("AV");
-//     if(_dim > 2) solIndexAcc[2] = _sol->GetIndex("AW");
-//
-//     unsigned solType = _sol->GetSolutionType(solIndexDisp[0]);
-//
-//     std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
-//
-//     std::vector< vector< double > > SolDd(_dim); // solution at the nodes
-//     std::vector< vector< double > > SolAd(_dim); // solution at the nodes
-//
-//     unsigned ielOld = UINT_MAX;
-//     unsigned nve;
-//     unsigned ielType;
-//
-//     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
-//
-//       unsigned iel = _particles[iMarker]->GetMarkerElement();
-//
-//       if(iel != UINT_MAX) {
-//
-//         std::vector <double> particleDisp(_dim, 0.);
-//         std::vector <double> particleAcc(_dim, 0.);
-//
-//         if(iel != ielOld) {
-//           ielType =  _mesh->GetElementType(iel);
-//           nve = _mesh->GetElementDofNumber(iel, solType);
-//
-//           for(int i = 0; i < _dim; i++) {
-//             SolDd[i].resize(nve);
-//             SolAd[i].resize(nve);
-//           }
-//
-//           for(unsigned inode = 0; inode < nve; inode++) {
-//             unsigned idof = _mesh->GetSolutionDof(inode, iel, solType); //local 2 global solution
-//             for(int i = 0; i < _dim; i++) {
-//               SolDd[i][inode] = (*_sol->_Sol[solIndexDisp[i]])(idof);
-//               SolAd[i][inode] = (*_sol->_Sol[solIndexAcc[i]])(idof);
-//             }
-//           }
-//
-//         }
-//
-//         bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO we actually want to remove this
-//         _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, 0.);
-//         std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
-//
-//         for(int i = 0; i < _dim; i++) {
-//           basis* base = _mesh->GetBasis(ielType, solType);
-//           for(unsigned inode = 0; inode < nve; inode++) {
-//             double phiP = base->eval_phi(inode, xi);
-//             particleDisp[i] += phiP * SolDd[i][inode];
-//             particleAcc[i] += phiP * SolAd[i][inode];
-//           }
-//         }
-//
-//         _particles[iMarker]->SetMarkerDisplacement(particleDisp);
-//         _particles[iMarker]->SetMarkerAcceleration(particleAcc);
-//
-//         //movement of the particles
-//         _particles[iMarker]->UpdateParticleCoordinates();
-//
-//         _particles[iMarker]->GetElementSerial(iel, _sol, 0.);
-//         _particles[iMarker]->SetIprocMarkerPreviousElement(iel);
-//
-//
-//         ielOld = iel;
-//
-//       }
-//
-//     }
-
-    //END remove when everything is OK
-
 
     //BEGIN find new _elem and _mproc
 
@@ -1200,8 +1117,6 @@ namespace femus {
     UpdateLine();
 
   }
-
-
 
 
 }

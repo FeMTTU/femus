@@ -114,26 +114,22 @@ namespace femus {
       }
 
       void SetMarkerMass(const double &mass) {
-        //_physicalQuantities[0] = mass;
         _MPMQuantities[3 * _dim] = mass;
       }
 
       void SetMarkerVelocity(const std::vector <double>  &velocity) {
-        //_velocity = velocity;
         for(unsigned d = 0; d < velocity.size(); d++) {
           _MPMQuantities[_dim + d] = velocity[d];
         }
       }
 
       void SetMarkerAcceleration(const std::vector <double>  &acceleration) {
-        //_acceleration = acceleration;
         for(unsigned d = 0; d < acceleration.size(); d++) {
           _MPMQuantities[2 * _dim + d] = acceleration[d];
         }
       }
 
       void SetMarkerDisplacement(const std::vector <double>  &displacement) {
-        //_displacement = displacement;
         for(unsigned d = 0; d < displacement.size(); d++) {
           _MPMQuantities[d] = displacement[d];
         }
@@ -189,12 +185,10 @@ namespace femus {
       }
 
       double GetMarkerMass() {
-        //return _physicalQuantities[0];
         return _MPMQuantities[3 * _dim];
       }
 
       double GetMarkerDensity() {
-//         return _physicalQuantities[1];
         return _MPMQuantities[3 * _dim + 1];
       }
 
@@ -272,10 +266,6 @@ namespace femus {
         for(unsigned j = 0; j < order; j++) {
           _K[j].assign(_dim, 0.);
         }
-//         _physicalQuantities.resize(2);
-//         _velocity.resize(_dim);
-//         _acceleration.resize(_dim);
-//         _displacement.resize(_dim);
         _MPMQuantities.resize(3 * _dim + 2);
 	_Fp.resize(_dim);
 	for(unsigned i=0; i<_dim; i++){
@@ -291,10 +281,6 @@ namespace femus {
         std::vector < double > ().swap(_xi);
         std::vector < double > ().swap(_x0);
         std::vector < std::vector < double > > ().swap(_K);
-//         std::vector < double > ().swap(_physicalQuantities);
-//         std::vector < double > ().swap(_velocity);
-//         std::vector < double > ().swap(_acceleration);
-//         std::vector < double > ().swap(_displacement);
         std::vector < double > ().swap(_MPMQuantities);
 	std::vector <  std::vector < double > > ().swap(_Fp);
       }
@@ -387,7 +373,6 @@ namespace femus {
       unsigned _dim;
 
       unsigned _mproc; //processor who has the marker
-      //std::vector < std::vector < std::vector < double > > > _aX;
       std::vector < std::vector < double > > _K;
       unsigned _step; //added for line
 
@@ -401,10 +386,6 @@ namespace femus {
       
       std::vector < std::vector <double> > _Fp; //deformation gradient of the particle
 
-//       std::vector <double> _velocity;
-//       std::vector <double> _acceleration;
-//       std::vector <double> _displacement;
-//       std::vector < double > _physicalQuantities;
 
   };
 } //end namespace femus
