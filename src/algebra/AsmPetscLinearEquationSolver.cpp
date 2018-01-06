@@ -269,86 +269,86 @@ namespace femus {
 
   void AsmPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc) {
 
-    PetscPreconditioner::set_petsc_preconditioner_type(FIELDSPLIT_PRECOND, subpc);
-
-    if(!_standardASM) {
-      unsigned currentSize = _overlappingIs.size();
-      
-      //std::cout << currentSize <<std::endl<<std::flush;
-      
-      NumericVector *NumberOfSplits;
-      NumberOfSplits = NumericVector::build().release();
-      if (_nprocs == 1) {
-	NumberOfSplits->init(_nprocs, 1, false, SERIAL);
-      }
-      else {
-	NumberOfSplits->init(_nprocs, 1, false, PARALLEL);
-      }
-      NumberOfSplits->set(_iproc, _overlappingIs.size());
-      NumberOfSplits->close();
-      unsigned maxNumberOfSplits = static_cast <unsigned> (floor(NumberOfSplits->linfty_norm() + 0.5));
-      
-       //std::cout << maxNumberOfSplits <<std::endl<<std::flush;
-      
-      delete NumberOfSplits;
-       
-      //BEGIN Generate std::vector<IS> for ASM PC ***********
-      _localIsIndex.resize(maxNumberOfSplits);
-      _overlappingIsIndex.resize(maxNumberOfSplits);
-      _localIs.resize(maxNumberOfSplits);
-      _overlappingIs.resize(maxNumberOfSplits);
-
-      for(unsigned i = currentSize; i < maxNumberOfSplits; i++) {
-	_localIsIndex[i] = _localIsIndex[i-currentSize];
-	_overlappingIsIndex[i] = _overlappingIsIndex[i-currentSize];
-	ISCreateGeneral(MPI_COMM_SELF, _localIsIndex[i].size(), &_localIsIndex[i][0], PETSC_COPY_VALUES , &_localIs[i]);
-	ISCreateGeneral(MPI_COMM_SELF, _overlappingIsIndex[i].size(), &_overlappingIsIndex[i][0], PETSC_COPY_VALUES , &_overlappingIs[i]);
-      }
-
-    //END Generate std::vector<IS> for ASM PC ***********
-      
-      
-      
-      //std::cout << "["<<_iproc<<"] " << "Number of Splits "<<maxNumberOfSplits <<std::endl<<std::flush;
-      for(unsigned i = 0; i<_overlappingIs.size();i++){
-	
-// 	PetscInt size;
-// 	ISGetSize(_overlappingIs[i],&size);
-// 	std::cout << "["<<_iproc<<"] " << "split "<< i <<" "<<" size "<<size<<std::endl<<std::flush;
-	
-	//ISView(_overlappingIs[i],PETSC_VIEWER_STDOUT_SELF);
-
-	
-	PCFieldSplitSetIS(subpc, NULL, _overlappingIs[i]);
-      }
-    }
-    //double a;
-    //std::cin>>a;
-    PCFieldSplitSetType(subpc, PC_COMPOSITE_ADDITIVE);
-
-    KSPSetUp(subksp);
-    
-    std::cout << "["<<_iproc<<"] " <<"I am out"<<std::endl<<std::flush;
-
-    KSP* subksps;
-    PCFieldSplitGetSubKSP(subpc, &_nlocal, &subksps);
-    PetscReal epsilon = 1.e-16;
-    
-    
-//     PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, subpc);
+//     PetscPreconditioner::set_petsc_preconditioner_type(FIELDSPLIT_PRECOND, subpc);
 // 
 //     if(!_standardASM) {
-//       PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
-//     }
+//       unsigned currentSize = _overlappingIs.size();
+//       
+//       //std::cout << currentSize <<std::endl<<std::flush;
+//       
+//       NumericVector *NumberOfSplits;
+//       NumberOfSplits = NumericVector::build().release();
+//       if (_nprocs == 1) {
+// 	NumberOfSplits->init(_nprocs, 1, false, SERIAL);
+//       }
+//       else {
+// 	NumberOfSplits->init(_nprocs, 1, false, PARALLEL);
+//       }
+//       NumberOfSplits->set(_iproc, _overlappingIs.size());
+//       NumberOfSplits->close();
+//       unsigned maxNumberOfSplits = static_cast <unsigned> (floor(NumberOfSplits->linfty_norm() + 0.5));
+//       
+//        //std::cout << maxNumberOfSplits <<std::endl<<std::flush;
+//       
+//       delete NumberOfSplits;
+//        
+//       //BEGIN Generate std::vector<IS> for ASM PC ***********
+//       _localIsIndex.resize(maxNumberOfSplits);
+//       _overlappingIsIndex.resize(maxNumberOfSplits);
+//       _localIs.resize(maxNumberOfSplits);
+//       _overlappingIs.resize(maxNumberOfSplits);
 // 
-//     PCASMSetOverlap(subpc, _overlap);
-//     //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
+//       for(unsigned i = currentSize; i < maxNumberOfSplits; i++) {
+// 	_localIsIndex[i] = _localIsIndex[i-currentSize];
+// 	_overlappingIsIndex[i] = _overlappingIsIndex[i-currentSize];
+// 	ISCreateGeneral(MPI_COMM_SELF, _localIsIndex[i].size(), &_localIsIndex[i][0], PETSC_COPY_VALUES , &_localIs[i]);
+// 	ISCreateGeneral(MPI_COMM_SELF, _overlappingIsIndex[i].size(), &_overlappingIsIndex[i][0], PETSC_COPY_VALUES , &_overlappingIs[i]);
+//       }
+// 
+//     //END Generate std::vector<IS> for ASM PC ***********
+//       
+//       
+//       
+//       //std::cout << "["<<_iproc<<"] " << "Number of Splits "<<maxNumberOfSplits <<std::endl<<std::flush;
+//       for(unsigned i = 0; i<_overlappingIs.size();i++){
+// 	
+// // 	PetscInt size;
+// // 	ISGetSize(_overlappingIs[i],&size);
+// // 	std::cout << "["<<_iproc<<"] " << "split "<< i <<" "<<" size "<<size<<std::endl<<std::flush;
+// 	
+// 	//ISView(_overlappingIs[i],PETSC_VIEWER_STDOUT_SELF);
+// 
+// 	
+// 	PCFieldSplitSetIS(subpc, NULL, _overlappingIs[i]);
+//       }
+//     }
+//     //double a;
+//     //std::cin>>a;
+//     PCFieldSplitSetType(subpc, PC_COMPOSITE_ADDITIVE);
 // 
 //     KSPSetUp(subksp);
+//     
+//     std::cout << "["<<_iproc<<"] " <<"I am out"<<std::endl<<std::flush;
 // 
 //     KSP* subksps;
-//     PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULL, &subksps);
+//     PCFieldSplitGetSubKSP(subpc, &_nlocal, &subksps);
 //     PetscReal epsilon = 1.e-16;
+    
+    
+    PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, subpc);
+
+    if(!_standardASM) {
+      PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
+    }
+
+    PCASMSetOverlap(subpc, _overlap);
+    //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
+
+    KSPSetUp(subksp);
+
+    KSP* subksps;
+    PCASMGetSubKSP(subpc, &_nlocal, PETSC_NULL, &subksps);
+    PetscReal epsilon = 1.e-16;
 
     if(!_standardASM) {
       for(int i = 0; i < _blockTypeRange[1]; i++) {

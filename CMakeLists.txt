@@ -164,6 +164,8 @@ OPTION(BUILD_MPM_FEM "Build the MPM FEM apps" ON)
 
 OPTION(BUILD_REFINEMENT "Build the Refiniment apps" ON)
 
+OPTION(BUILD_PETSC_DEBUG "Build the PETSC debug apps" ON)
+
 #############################################################################################
 ### Build documentation (Doxygen)
 #############################################################################################
