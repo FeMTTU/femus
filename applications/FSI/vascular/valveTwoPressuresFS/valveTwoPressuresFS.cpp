@@ -187,7 +187,7 @@ int main(int argc, char** args)
 
   FieldSplitTree VelPf(PREONLY, ASM_PRECOND, fieldVelPf, solutionTypeVelPf, "VelPf");
   VelPf.SetAsmStandard(false);
-  VelPf.SetAsmBlockSize(3);
+  VelPf.SetAsmBlockSize(4);
   VelPf.SetAsmBlockPreconditionerSolid(ILU_PRECOND);
   VelPf.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
   VelPf.SetAsmNumeberOfSchurVariables(1);
@@ -207,7 +207,7 @@ int main(int argc, char** args)
 
   FieldSplitTree DispPs(PREONLY, ASM_PRECOND, fieldDispPs, solutionTypeDispPs, "DispPs");
   DispPs.SetAsmStandard(false);
-  DispPs.SetAsmBlockSize(3);
+  DispPs.SetAsmBlockSize(4);
   DispPs.SetAsmBlockPreconditionerSolid(MLU_PRECOND);
   DispPs.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
   DispPs.SetAsmNumeberOfSchurVariables(1);
@@ -245,7 +245,9 @@ int main(int argc, char** args)
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
-  system.SetRichardsonScaleFactor(0.5);
+  //system.SetRichardsonScaleFactor(.8);
+  
+  system.SetRichardsonScaleFactor(.7, .8);
   //system.SetPreconditionerFineGrids(ILU_PRECOND);
   
   system.SetFieldSplitTree(&FSI);

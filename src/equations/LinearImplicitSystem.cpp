@@ -507,6 +507,7 @@ namespace femus {
 
     if(_richardsonScaleFactorIsSet) {
       _LinSolver[_gridn]->SetRichardsonScaleFactor(_richardsonScaleFactor);
+      //_LinSolver[_gridn]->SetRichardsonScaleFactor(_richardsonScaleFactor + _richardsonScaleFactorDecrease * (_gridn - 1));
     }
 
     _gridn++;

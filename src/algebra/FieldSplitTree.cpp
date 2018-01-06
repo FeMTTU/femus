@@ -398,6 +398,8 @@ namespace femus {
       if(!_asmStandard) {
 	for(unsigned j = 0;j < 2; j++){//loop on the material
 	  unsigned istart = (j == 0) ? 0 : _asmBlockMaterialRange[level - 1][j - 1];
+	  
+	  //std::cout << " number of blocks in split "<< j <<" = "<< _asmBlockMaterialRange[level - 1][j] << std::endl;
 	  for(int i = istart; i < _asmBlockMaterialRange[level - 1][j]; i++) {
 	    PC subpcs;
 	    KSPGetPC(subksps[i], &subpcs);
