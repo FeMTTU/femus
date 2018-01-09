@@ -21,6 +21,9 @@ bool NeoHookean = true;
 bool MPMF = true;
 double gravityfactor;
 
+//time-step size
+double dt =  0.08;
+
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = 0;
@@ -208,14 +211,35 @@ int main(int argc, char** args) {
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
-  system.CopySolutionToOldSolution();
+  //BEGIN fake time dependent
+  
+//  system.CopySolutionToOldSolution();
+//   unsigned n_timesteps = 100;
+//   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
+// 
+//     gravityfactor = (time_step <= n_timesteps / 2) ? 2. / n_timesteps * time_step : 2. / n_timesteps * (n_timesteps - time_step);
+// 
+// 
+//     system.MGsolve();
+// 
+//     GridToParticlesProjection(ml_prob);
+// 
+//     linea->UpdateLineMPM();
+// 
+//     linea->GetLine(line[0]);
+//     PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
+// 
+//   }
 
-  unsigned n_timesteps = 100;
+//END fake time dependent
+  
+  
+  gravityfactor = 1.;
+  
+  unsigned n_timesteps = 200;
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
-    gravityfactor = (time_step <= n_timesteps / 2) ? 2. / n_timesteps * time_step : 2. / n_timesteps * (n_timesteps - time_step);
-
-
+    system.CopySolutionToOldSolution();
     system.MGsolve();
 
     GridToParticlesProjection(ml_prob);
@@ -226,9 +250,8 @@ int main(int argc, char** args) {
     PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
 
   }
-
-
-  // ******* Print solution *******
+  
+        // ******* Print solution *******
   mlSol.SetWriter(VTK);
 
   std::vector<std::string> mov_vars;
@@ -242,8 +265,7 @@ int main(int argc, char** args) {
 
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars);
-
-
+  
   delete linea;
   return 0;
 
@@ -317,9 +339,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
   adept::adouble weight;
   double weight_hat = 0.;
-
-  //size of the time-step
-  double dt =  0.5   /*my_nnlin_impl_sys.GetIntervalTime()*/;
 
   // gravity
   double gravity[3] = {0., -9.81 * gravityfactor, 0.}; //TODO use the actual value for gravity
@@ -879,16 +898,14 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob) {
   unsigned iproc  = mymsh->processor_id();
 
   // local objects
-
   vector< vector < double > > SolDd(dim);
+  vector< vector < double > > SolVdOld(dim);
+  vector< vector < double > > SolAdOld(dim);
   vector< vector < double > > SolAd(dim);
   vector< vector < double > > GradSolDp(dim);
-  //vector < vector < double > > Fp(dim); //deformation vector
-  //vector < vector < double > > FpOld;
 
   for(int i = 0; i < dim; i++) {
     GradSolDp[i].resize(dim);
-    //Fp[i].resize(dim);
   }
 
   vector < double > phi;
@@ -900,15 +917,18 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob) {
   double weight;
 
   //variable-name handling
-  const char varname[6][3] = {"DX", "DY", "DZ", "AU", "AV", "AW"};
+  const char varname[9][3] = {"DX", "DY", "DZ", "U", "V", "W", "AU", "AV", "AW"};
   vector <unsigned> indexSolD(dim);
+  vector <unsigned> indexSolV(dim);
   vector <unsigned> indexSolA(dim);
   unsigned solType = ml_sol->GetSolutionType(&varname[0][0]);
 
   for(unsigned ivar = 0; ivar < dim; ivar++) {
     indexSolD[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
-    indexSolA[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
+    indexSolV[ivar] = ml_sol->GetIndex(&varname[3 + ivar][0]);
+    indexSolA[ivar] = ml_sol->GetIndex(&varname[6 + ivar][0]);
   }
+
 
   //line instances
   std::vector<unsigned> markerOffset = linea->GetMarkerOffset();
@@ -942,6 +962,8 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob) {
 
         for(int i = 0; i < dim; i++) {
           SolDd[i].resize(nve);
+          SolVdOld[i].resize(nve);
+          SolAdOld[i].resize(nve);
           SolAd[i].resize(nve);
         }
 
@@ -958,7 +980,9 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob) {
 
           for(int i = 0; i < dim; i++) {
             SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof);
-            SolAd[i][inode] = (*mysolution->_Sol[indexSolA[i]])(idof);
+            SolVdOld[i][inode] = (*mysolution->_SolOld[indexSolV[i]])(idof);
+            SolAdOld[i][inode] = (*mysolution->_SolOld[indexSolA[i]])(idof);
+            SolAd[i][inode] = ((4 / (dt * dt)) * SolDd[i][inode] - (4 / dt) * SolVdOld[i][inode] -  SolAdOld[i][inode]);
 
             //Fixed coordinates (Reference frame)
             vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof);// + SolDd[i][inode];
@@ -983,6 +1007,10 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob) {
       }
 
       particles[iMarker]->SetMarkerDisplacement(particleDisp);
+      
+      //velocity update
+      particles[iMarker]->UpdateParticleVelocities(particleAcc, dt);
+      
       particles[iMarker]->SetMarkerAcceleration(particleAcc);
 
       //movement of the particles
@@ -1036,10 +1064,10 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob) {
   }
   //END loop on particles
 
-  for(unsigned i = 0; i < dim; i++) {
-    for(unsigned j = 0; j < dim; j++) {
-      mysolution->_Sol[indexSolD[i]]->zero();
-      mysolution->_Sol[indexSolD[i]]->close();
-    }
-  }
+//   for(unsigned i = 0; i < dim; i++) {        // this was added for the fake time dependent
+//     for(unsigned j = 0; j < dim; j++) {
+//       mysolution->_Sol[indexSolD[i]]->zero();
+//       mysolution->_Sol[indexSolD[i]]->close();
+//     }
+//   }
 }

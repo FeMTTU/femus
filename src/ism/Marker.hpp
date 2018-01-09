@@ -44,7 +44,7 @@ namespace femus {
         if(_iproc == _mproc) {
           std::vector < std::vector < std::vector < std::vector < double > > > >aX;
           FindLocalCoordinates(_solType, aX, true, sol, s1);
-         
+
           _MPMQuantities.resize(_MPMSize);
           _MPMQuantities[3 * _dim ] = 1.;  //mass
           _MPMQuantities[3 * _dim + 1] = 1.;  //density
@@ -54,20 +54,20 @@ namespace femus {
 
           //unitialization of the deformation gradient of the particle to the identity matrix
           _Fp.resize(_dim);
-          for(unsigned i=0; i< _dim; i++){
-	    _Fp[i].resize(_dim);
-	  }
-	  
-	  for(unsigned i=0; i< _dim; i++){
-	    for(unsigned j=0; j<_dim; j++){
-	      if(i==j){
-		_Fp[i][i] = 1.;
-	      }
-	      else{
-		_Fp[i][j] = 0.;
-	      }
-	    }
-	  }
+          for(unsigned i = 0; i < _dim; i++) {
+            _Fp[i].resize(_dim);
+          }
+
+          for(unsigned i = 0; i < _dim; i++) {
+            for(unsigned j = 0; j < _dim; j++) {
+              if(i == j) {
+                _Fp[i][i] = 1.;
+              }
+              else {
+                _Fp[i][j] = 0.;
+              }
+            }
+          }
 
         }
         else {
@@ -138,9 +138,9 @@ namespace femus {
       void SetMPMQuantities(const std::vector <double>  &MPMQuantities) {
         _MPMQuantities = MPMQuantities;
       }
-      
-      void SetDeformationGradient(const std::vector < std::vector < double > > Fp){
-	_Fp = Fp;
+
+      void SetDeformationGradient(const std::vector < std::vector < double > > Fp) {
+        _Fp = Fp;
       }
 
       void GetNumberOfMeshElements(unsigned &elements, Solution *sol) {
@@ -152,14 +152,14 @@ namespace femus {
         _mproc = (_elem == UINT_MAX) ? 0 : sol->GetMesh()->IsdomBisectionSearch(_elem , 3);
         return _mproc;
       }
-      
-      void GetMarkerLocalCoordinates( std::vector< double > &xi ){
-	
-	xi.resize(_dim);
-	if(_mproc == _iproc){
-	  xi = _xi;
-	}
-	MPI_Bcast(&xi[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
+
+      void GetMarkerLocalCoordinates(std::vector< double > &xi) {
+
+        xi.resize(_dim);
+        if(_mproc == _iproc) {
+          xi = _xi;
+        }
+        MPI_Bcast(&xi[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
       }
 
 //       void GetMarker_x0Line(std::vector<double> &x0) {
@@ -217,9 +217,9 @@ namespace femus {
       unsigned GetMPMSize() {
         return _MPMSize;
       }
-      
+
       std::vector < std::vector < double > > GetDeformationGradient() {
-	return _Fp;
+        return _Fp;
       }
 
       std::vector<double> GetMarkerLocalCoordinates() {
@@ -267,10 +267,10 @@ namespace femus {
           _K[j].assign(_dim, 0.);
         }
         _MPMQuantities.resize(3 * _dim + 2);
-	_Fp.resize(_dim);
-	for(unsigned i=0; i<_dim; i++){
-	  _Fp[i].resize(_dim);
-	}
+        _Fp.resize(_dim);
+        for(unsigned i = 0; i < _dim; i++) {
+          _Fp[i].resize(_dim);
+        }
       }
 
       void InitializeX() {
@@ -282,7 +282,7 @@ namespace femus {
         std::vector < double > ().swap(_x0);
         std::vector < std::vector < double > > ().swap(_K);
         std::vector < double > ().swap(_MPMQuantities);
-	std::vector <  std::vector < double > > ().swap(_Fp);
+        std::vector <  std::vector < double > > ().swap(_Fp);
       }
 
 
@@ -315,6 +315,12 @@ namespace femus {
       void UpdateParticleCoordinates() {
         for(unsigned i = 0; i < _dim; i++) {
           _x[i] += _MPMQuantities[i];
+        }
+      }
+
+      void UpdateParticleVelocities(const std::vector <double> newParticleAcceleration, const double dt) {
+        for(unsigned i = _dim; i < 2 * _dim; i++) {
+          _MPMQuantities[i] = _MPMQuantities[i] + 0.5 * (_MPMQuantities[i + _dim] + newParticleAcceleration[i]) * dt ;
         }
       }
 
@@ -383,7 +389,7 @@ namespace femus {
 
       std::vector <double> _MPMQuantities; // _displacement[_dim] + _velocity[_dim] + _acceleration[_dim] + mass + density
       unsigned _MPMSize;
-      
+
       std::vector < std::vector <double> > _Fp; //deformation gradient of the particle
 
 
