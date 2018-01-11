@@ -45,7 +45,7 @@ int main(int argc, char** args)
   unsigned maxNumberOfMeshes;
 
   
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -77,7 +77,7 @@ int main(int argc, char** args)
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-13);
 
-  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPreSmoothingStep(0);
   system.SetNumberPostSmoothingStep(1);
 
   // ******* Set Preconditioner *******
@@ -87,11 +87,11 @@ int main(int argc, char** args)
   system.init();
 
   // ******* Set Smoother *******
-  system.SetSolverFineGrids(RICHARDSON);
-  
+  system.SetSolverFineGrids(GMRES);
+  system.SetRichardsonScaleFactor(1.0);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
-  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
+  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 100, 100);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
@@ -104,7 +104,7 @@ int main(int argc, char** args)
   system.SetElementBlockNumber(1);
 
   system.SetMgType(V_CYCLE);
-  system.MGsolve();
+  system.MLsolve();
 
   // print solutions
   std::vector < std::string > variablesToBePrinted;

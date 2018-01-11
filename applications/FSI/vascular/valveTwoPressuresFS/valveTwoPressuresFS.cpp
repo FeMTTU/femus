@@ -245,9 +245,9 @@ int main(int argc, char** args)
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
-  //system.SetRichardsonScaleFactor(.8);
+  system.SetRichardsonScaleFactor(.4);
   
-  system.SetRichardsonScaleFactor(.7, .8);
+  //system.SetRichardsonScaleFactor(.7, .8);
   //system.SetPreconditionerFineGrids(ILU_PRECOND);
   
   system.SetFieldSplitTree(&FSI);
@@ -261,7 +261,7 @@ int main(int argc, char** args)
 
   //system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 100, 10);
   
-  system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 10);
+  system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
   //system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 
   // ******* Add variables to be solved *******

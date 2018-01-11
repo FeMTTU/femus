@@ -498,8 +498,7 @@ namespace femus
         return;
 
       case RICHARDSON:
-
-        std::cout << " level " << _msh->GetLevel() << " Richardson Scaling Factor = " << _richardsonScaleFactor << std::endl;
+        //std::cout << " level " << _msh->GetLevel() << " Richardson Scaling Factor = " << _richardsonScaleFactor << std::endl;
         KSPSetType(ksp, (char*) KSPRICHARDSON);
         KSPRichardsonSetScale(ksp, _richardsonScaleFactor);
         //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);

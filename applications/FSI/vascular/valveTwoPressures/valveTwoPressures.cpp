@@ -195,14 +195,14 @@ int main(int argc, char** args)
 
   // ******* Set Smoother *******
   system.SetSolverFineGrids(RICHARDSON);
-  //system.SetRichardsonScaleFactor(0.8);
-  system.SetRichardsonScaleFactor(.7, .8);
+  system.SetRichardsonScaleFactor(0.7);
+  //system.SetRichardsonScaleFactor(.5, .5);
   //system.SetSolverFineGrids(GMRES);
 
   system.SetPreconditionerFineGrids(MLU_PRECOND);
   if(dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
 
-  system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 10);
+  system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();

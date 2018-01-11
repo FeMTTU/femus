@@ -341,8 +341,9 @@ namespace femus {
       PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
     }
 
-    PCASMSetOverlap(subpc, _overlap);
-    //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
+    //PCASMSetOverlap(subpc, _overlap);
+    PCASMSetType(subpc,  PC_ASM_BASIC );
+    PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
 
     KSPSetUp(subksp);
 
