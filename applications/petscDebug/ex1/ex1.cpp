@@ -87,7 +87,7 @@ int main(int argc, char** args)
   system.init();
 
   // ******* Set Smoother *******
-  system.SetSolverFineGrids(GMRES);
+  system.SetSolverFineGrids(CG);
   system.SetRichardsonScaleFactor(1.0);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
@@ -111,7 +111,7 @@ int main(int argc, char** args)
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
-  vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  vtkIO.Write(DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted);
   return 0;
 }
 

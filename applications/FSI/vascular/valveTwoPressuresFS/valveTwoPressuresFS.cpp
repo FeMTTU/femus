@@ -187,7 +187,8 @@ int main(int argc, char** args)
 
   FieldSplitTree VelPf(PREONLY, ASM_PRECOND, fieldVelPf, solutionTypeVelPf, "VelPf");
   VelPf.SetAsmStandard(false);
-  VelPf.SetAsmBlockSize(4);
+  VelPf.SetAsmBlockSizeSolid(10);
+  VelPf.SetAsmBlockSizeFluid(4);
   VelPf.SetAsmBlockPreconditionerSolid(ILU_PRECOND);
   VelPf.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
   VelPf.SetAsmNumeberOfSchurVariables(1);
