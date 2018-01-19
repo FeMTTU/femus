@@ -28,16 +28,22 @@ double InitialValueControl(const std::vector < double >& x) {
   return 0.;
 }
 
+//   double ctrl_lower = -0.8;
+//   double ctrl_upper = -0.2;
+
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
   bool dirichlet = true; //dirichlet
   value = 0;
+//   if (value > ctrl_upper) value = ctrl_upper; ////////////////////////
   
   if(!strcmp(name,"control")) {
   if (faceName == 3)
     dirichlet = false;
   }
   
+//     if(!strcmp(name,"mu")) {    dirichlet = false; } //what are the boundary conditions on mu?
+
   return dirichlet;
 }
 
@@ -181,8 +187,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   solIndex_u = mlSol->GetIndex("state");    // get the position of "state" in the ml_sol object
   unsigned solType_u = mlSol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
 
-  unsigned solPdeIndexThom;
-  solPdeIndexThom = mlPdeSys->GetSolPdeIndex("state");    // get the position of "state" in the pdeSys object
+  unsigned solPdeIndex_u;
+  solPdeIndex_u = mlPdeSys->GetSolPdeIndex("state");    // get the position of "state" in the pdeSys object
 
   vector < double >  sol_u; // local solution
   sol_u.reserve(maxSize);
@@ -229,11 +235,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  
   
   unsigned solIndex_adj;
-  solIndex_adj = mlSol->GetIndex("adjoint");    // get the position of "state" in the ml_sol object
-  unsigned solType_adj = mlSol->GetSolutionType(solIndex_adj);    // get the finite element type for "state"
+  solIndex_adj = mlSol->GetIndex("adjoint");    // get the position of "adjoint" in the ml_sol object
+  unsigned solType_adj = mlSol->GetSolutionType(solIndex_adj);    // get the finite element type for "adjoint"
 
   unsigned solPdeIndex_adj;
-  solPdeIndex_adj = mlPdeSys->GetSolPdeIndex("adjoint");    // get the position of "state" in the pdeSys object
+  solPdeIndex_adj = mlPdeSys->GetSolPdeIndex("adjoint");    // get the position of "adjoint" in the pdeSys object
 
   vector < double >  sol_adj; // local solution
     sol_adj.reserve(maxSize);
@@ -255,10 +261,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower = 0.4;
-  double ctrl_upper =  0.5;
+  double ctrl_lower = 0.3;
+  double ctrl_upper = 0.4;
   double c_compl = 1.;
-   vector < int >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
+  vector < int >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
   //***************************************************  
 
  //***************************************************  
@@ -332,7 +338,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < sol_u.size(); i++) {
      unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);  // global to global mapping between solution node and solution dof
       sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);            // global extraction and local storage for the solution
-      l2GMap_u[i] = pdeSys->GetSystemDof(solIndex_u, solPdeIndexThom, i, iel);  // global to global mapping between solution node and pdeSys dof
+      l2GMap_u[i] = pdeSys->GetSystemDof(solIndex_u, solPdeIndex_u, i, iel);  // global to global mapping between solution node and pdeSys dof
     }
  //***************************************************  
  
@@ -498,9 +504,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	  // FOURTH ROW
           if (i < nDof_mu) {
 	     if (sol_actflag[i] == 0)  //inactive
-	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( /*1. * sol_mu[i]*/ - 0. ) ; 
+	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
 	     else  //active
-	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( /*1. * sol_ctrl[i]*/ - c_compl * ((2 - sol_actflag[i]) * ctrl_lower + (sol_actflag[i]-1) * ctrl_upper)) ; 					  
+	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_ctrl[i] - c_compl * ((2 - sol_actflag[i]) * ctrl_lower + (sol_actflag[i]-1) * ctrl_upper)) ; 					  
 	  }
 //======================Residuals=======================
 	      
@@ -727,8 +733,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 
   vector < double >  sol_ctrl; // local solution
   sol_ctrl.reserve(maxSize);
-  vector< int > l2GMap_ctrl;
-  l2GMap_ctrl.reserve(maxSize);
+//   vector< int > l2GMap_ctrl;
+//   l2GMap_ctrl.reserve(maxSize);
   
   double ctrl_gss = 0.;
   double ctrl_x_gss = 0.;
@@ -747,15 +753,15 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
     phi_udes_xx.reserve(maxSize * dim2);
  
   
-//  unsigned solIndexTdes;
-//   solIndexTdes = mlSol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
-//   unsigned solTypeTdes = mlSol->GetSolutionType(solIndexTdes);    // get the finite element type for "state"
+//  unsigned solIndex_udes;
+//   solIndex_udes = mlSol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
+//   unsigned solType_udes = mlSol->GetSolutionType(solIndex_udes);    // get the finite element type for "state"
 
   vector < double >  sol_udes; // local solution
   sol_udes.reserve(maxSize);
-  vector< int > l2GMap_Tdes;
-  l2GMap_Tdes.reserve(maxSize);
-  double udes_gss = 0.;
+//   vector< int > l2GMap_udes;
+//   l2GMap_udes.reserve(maxSize);
+   double udes_gss = 0.;
  //*************************************************** 
  //*************************************************** 
 
