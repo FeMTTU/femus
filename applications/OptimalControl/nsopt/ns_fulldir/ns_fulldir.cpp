@@ -13,7 +13,7 @@
 #include "Files.hpp"
 
 
-#define PRESS 1
+// #define PRESS 1
 
 
 using namespace femus;
@@ -100,9 +100,9 @@ int main(int argc, char** args) {
 
   if (dim == 3) mlSol.AddSolution("W", LAGRANGE, SECOND);
 
-#if PRESS == 1
+// #if PRESS == 1
   mlSol.AddSolution("P", LAGRANGE, FIRST);
-#endif
+// #endif
 
   mlSol.Initialize("All");
 
@@ -124,9 +124,9 @@ int main(int argc, char** args) {
 
   if (dim == 3) system.AddSolutionToSystemPDE("W");
 
-#if PRESS == 1
+// #if PRESS == 1
   system.AddSolutionToSystemPDE("P");
-#endif
+// #endif
 
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleNS_AD);
@@ -191,11 +191,11 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
 // total number of variables
-  unsigned n_unknowns = dim;
+  unsigned n_unknowns = dim + 1;
 
-#if PRESS == 1
-  n_unknowns += 1;
-#endif  
+// #if PRESS == 1
+//   n_unknowns += 1;
+// #endif  
 
   //solution variable
   vector < unsigned > solVIndex(dim);
@@ -213,14 +213,14 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
   if (dim == 3) solVPdeIndex[2] = mlPdeSys.GetSolPdeIndex("W");
 
-#if PRESS == 1
+// #if PRESS == 1
   unsigned solPIndex;
   solPIndex = mlSol->GetIndex("P");    // get the position of "P" in the ml_sol object
   unsigned solPType = mlSol->GetSolutionType(solPIndex);    // get the finite element type for "u"
   
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys.GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
-#endif
+// #endif
 
 //   const int n_unknowns = n_vars;  //state velocity terms and one pressure term
   const int vel_type_pos = 0;
@@ -231,9 +231,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   Solname              [state_pos_begin+0] =                "U";
   Solname              [state_pos_begin+1] =                "V";
   if (dim == 3) Solname[state_pos_begin+2] =                "W";
-#if PRESS == 1
+// #if PRESS == 1
   Solname              [state_pos_begin + press_type_pos] = "P";
-#endif  
+// #endif  
   
   vector < unsigned > SolPdeIndex(n_unknowns);
   vector < unsigned > SolIndex(n_unknowns);  
@@ -260,12 +260,12 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     coordX[k].reserve(maxSize);
   }
 
-#if PRESS == 1
+// #if PRESS == 1
   vector < adept::adouble >  solP; // local solution
   vector< adept::adouble > aResP; // local redidual vector
   solP.reserve(maxSize);
   aResP.reserve(maxSize);
-#endif
+// #endif
 
 
   double weight; // gauss point weight
@@ -278,9 +278,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   phiV_x.reserve(maxSize * dim);
   phiV_xx.reserve(maxSize * dim2);
 
-#if PRESS == 1
+// #if PRESS == 1
   double* phiP;
-#endif
+// #endif
 
   //Nondimensional values ******************
   double IRe 		= ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
@@ -298,12 +298,12 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   RES->zero(); // Set to zero all the entries of the Global Matrix
   if (assembleMatrix) KK->zero(); // Set to zero all the entries of the Global Matrix
 
-#if PRESS == 1
-    for (unsigned  k = 0; k < n_unknowns; k++) {
-  std::cout << "******************" << std::endl;
-        sol->_Sol[ SolIndex[k]]->print();
-    }
-#endif  
+// #if PRESS == 1
+//     for (unsigned  k = 0; k < n_unknowns; k++) {
+//   std::cout << "******************" << std::endl;
+//         sol->_Sol[ SolIndex[k]]->print();
+//     }
+// #endif  
   
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -313,15 +313,15 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
 
     unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
-#if PRESS == 1
+// #if PRESS == 1
     unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);    // number of solution element dofs
-#endif
+// #endif
     
-    unsigned nDofsVP = dim * nDofsV;
+    unsigned nDofsVP = dim * nDofsV + nDofsP;
 
-#if PRESS == 1
-    nDofsVP += nDofsP;
-#endif
+// #if PRESS == 1
+//     nDofsVP += nDofsP;
+// #endif
 
     // resize local arrays
     sysDof.resize(nDofsVP);
@@ -331,19 +331,19 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       coordX[k].resize(nDofsX);
     }
 
-#if PRESS == 1
+// #if PRESS == 1
     solP.resize(nDofsP);
-#endif
+// #endif
 
     for (unsigned  k = 0; k < dim; k++) {
       aResV[k].resize(nDofsV);    //resize
       std::fill(aResV[k].begin(), aResV[k].end(), 0);    //set aRes to zero
     }
 
-#if PRESS == 1
+// #if PRESS == 1
     aResP.resize(nDofsP);    //resize
     std::fill(aResP.begin(), aResP.end(), 0);    //set aRes to zero
-#endif
+// #endif
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofsV; i++) {
@@ -355,13 +355,13 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       }
     }
 
-#if PRESS == 1
+// #if PRESS == 1
     for (unsigned i = 0; i < nDofsP; i++) {
       unsigned solPDof = msh->GetSolutionDof(i, iel, solPType);    // global to global mapping between solution node and solution dof
       solP[i] = (*sol->_Sol[solPIndex])(solPDof);      // global extraction and local storage for the solution
       sysDof[i + dim * nDofsV] = pdeSys->GetSystemDof(solPIndex, solPPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
-#endif
+// #endif
 
     // local storage of coordinates
     for (unsigned i = 0; i < nDofsX; i++) {
@@ -379,9 +379,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV, phiV_x, phiV_xx);
-#if PRESS == 1
+// #if PRESS == 1
       phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
-#endif
+// #endif
       
       vector < adept::adouble > solV_gss(dim, 0);
       vector < vector < adept::adouble > > gradSolV_gss(dim);
@@ -403,12 +403,12 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
         }
       }
 
-#if PRESS == 1
+// #if PRESS == 1
       adept::adouble solP_gss = 0;
       for (unsigned i = 0; i < nDofsP; i++) {
         solP_gss += phiP[i] * solP[i];
       }
-#endif
+// #endif
 
       // *** phiV_i loop ***
       for (unsigned i = 0; i < nDofsV; i++) {
@@ -421,25 +421,25 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
           }
         }
 
-#if PRESS == 1
+// #if PRESS == 1
         for (unsigned  k = 0; k < dim; k++) {
           NSV[k] += -solP_gss * phiV_x[i * dim + k];
         }
-#endif
+// #endif
 
         for (unsigned  k = 0; k < dim; k++) {
           aResV[k][i] += ( force[k] * phiV[i] - NSV[k] ) * weight;
         }
       } // end phiV_i loop
 
-#if PRESS == 1
+// #if PRESS == 1
       // *** phiP_i loop ***
       for (unsigned i = 0; i < nDofsP; i++) {
         for (int k = 0; k < dim; k++) {
           aResP[i] +=  (gradSolV_gss[k][k]) * phiP[i]  * weight;
         }
       } // end phiP_i loop
-#endif
+// #endif
 
     } // end gauss point loop
 
@@ -455,11 +455,11 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       }
     }
 
-#if PRESS == 1
+// #if PRESS == 1
     for (int i = 0; i < nDofsP; i++) {
       Res[ i + dim * nDofsV ] = -aResP[i].value();
     }
-#endif
+// #endif
 
     RES->add_vector_blocked(Res, sysDof);
 
@@ -472,18 +472,18 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       s.dependent(&aResV[k][0], nDofsV);
     }
 
-#if PRESS == 1
+// #if PRESS == 1
     s.dependent(&aResP[0], nDofsP);
-#endif
+// #endif
     
     // define the independent variables
     for (unsigned  k = 0; k < dim; k++) {
       s.independent(&solV[k][0], nDofsV);
     }
 
-#if PRESS == 1
+// #if PRESS == 1
     s.independent(&solP[0], nDofsP);
-#endif
+// #endif
     
     // get the and store jacobian matrix (row-major)
     s.jacobian(&Jac[0] , true);
@@ -499,19 +499,19 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
  if (assembleMatrix){   //Extarct and store the Jacobian
   KK->close();
-  std::ostringstream mat_out; mat_out << "matrix_ad" << mlPdeSys._nonliniteration  << ".txt";
-  KK->print_matlab(mat_out.str(),"ascii");
+//   std::ostringstream mat_out; mat_out << "matrix_ad" << mlPdeSys._nonliniteration  << ".txt";
+//   KK->print_matlab(mat_out.str(),"ascii");
   }
  
   RES->close();
-  RES->print();
-   std::cout << "solution iterate RESC" << std::endl;
-  pdeSys->_RESC->print();
-
-  std::cout << "solution iterate EPS" << std::endl;
-  pdeSys->_EPS->print();
-  std::cout << "solution iterate EPSC" << std::endl;
-  pdeSys->_EPSC->print();
+//   RES->print();
+//    std::cout << "solution iterate RESC" << std::endl;
+//   pdeSys->_RESC->print();
+// 
+//   std::cout << "solution iterate EPS" << std::endl;
+//   pdeSys->_EPS->print();
+//   std::cout << "solution iterate EPSC" << std::endl;
+//   pdeSys->_EPSC->print();
   // ***************** END ASSEMBLY *******************
 }
 
@@ -554,10 +554,10 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
  
   
   // solution variables *******************************************
-  int n_vars = dim;
-#if PRESS == 1
-  n_vars += 1;
-#endif  
+  int n_vars = dim + 1;
+// #if PRESS == 1
+//   n_vars += 1;
+// #endif  
   const int n_unknowns = n_vars;  //state velocity terms and one pressure term
   const int vel_type_pos = 0;
   const int press_type_pos = dim;
@@ -567,9 +567,9 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
   Solname              [state_pos_begin+0] =                "U";
   Solname              [state_pos_begin+1] =                "V";
   if (dim == 3) Solname[state_pos_begin+2] =                "W";
-#if PRESS == 1
+// #if PRESS == 1
   Solname              [state_pos_begin + press_type_pos] = "P";
-#endif  
+// #endif  
   
   vector < unsigned > SolPdeIndex(n_unknowns);
   vector < unsigned > SolIndex(n_unknowns);  
@@ -642,12 +642,12 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
     RES->zero();
     if(assembleMatrix) JAC->zero();
   
-#if PRESS == 1
-    for (unsigned  k = 0; k < n_unknowns; k++) {
-  std::cout << "******************" << std::endl;
-  sol->_Sol[SolIndex[k]]->print();
-    }
-#endif  
+// #if PRESS == 1
+//     for (unsigned  k = 0; k < n_unknowns; k++) {
+//   std::cout << "******************" << std::endl;
+//   sol->_Sol[SolIndex[k]]->print();
+//     }
+// #endif  
   
     // ****************** element loop *******************
  
@@ -685,14 +685,14 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
   
   // equation *****************************
     unsigned nDofsV = msh->GetElementDofNumber(iel, SolFEType[vel_type_pos]);    // number of solution element dofs
-#if PRESS == 1
+// #if PRESS == 1
     unsigned nDofsP = msh->GetElementDofNumber(iel, SolFEType[state_pos_begin + press_type_pos]);    // number of solution element dofs
-#endif
+// #endif
     
-    unsigned nDofsVP = dim * nDofsV;
-#if PRESS == 1
-    nDofsVP += nDofsP;
-#endif
+    unsigned nDofsVP = dim * nDofsV + nDofsP;
+// #if PRESS == 1
+//     nDofsVP += nDofsP;
+// #endif
     // equation end *****************************
   
   
@@ -756,122 +756,131 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
 	}  
  //end unknowns eval at gauss points ********************************
 
- //residuals and Jac------------------------------------------------------------------------------------------------
-//==========FILLING WITH THE EQUATIONS =========================================================================================================
-for(unsigned i_unk=0; i_unk<n_unknowns; i_unk++) { 
-    for (unsigned i = 0; i < Sol_n_el_dofs[i_unk]; i++) {
-	    double div_u_du_qp = 0.;
-	    double lap_res_du_u = 0.; 
-	    double p_div_du_qp = 0.;
-// 	    double adv_rhs = 0.;
-	    
-	for (unsigned jdim = 0; jdim < dim; jdim++) {
-	  if ( i_unk==0 || i_unk==1 ){	      lap_res_du_u  +=  gradSolVAR_qp[i_unk][jdim]*phi_x_gss_fe[ SolFEType[i_unk] ][i * dim + jdim];
-// 						adv_rhs	+= SolVAR_qp[jdim] * gradSolVAR_qp[i_unk][j_dim];
+// // //  //residuals and Jac------------------------------------------------------------------------------------------------
+// // // //==========FILLING WITH THE EQUATIONS =========================================================================================================
+// // // for(unsigned i_unk=0; i_unk<n_unknowns; i_unk++) { 
+// // //     for (unsigned i = 0; i < Sol_n_el_dofs[i_unk]; i++) {
+// // // 	    double div_u_du_qp = 0.;
+// // // 	    double lap_res_du_u = 0.; 
+// // // 	    double p_div_du_qp = 0.;
+// // // // 	    double adv_rhs = 0.;
+// // // 	    
+// // // 	for (unsigned jdim = 0; jdim < dim; jdim++) {
+// // // 	  if ( i_unk==0 || i_unk==1 ){	      lap_res_du_u  +=  gradSolVAR_qp[i_unk][jdim]*phi_x_gss_fe[ SolFEType[i_unk] ][i * dim + jdim];
+// // // // 						adv_rhs	+= SolVAR_qp[jdim] * gradSolVAR_qp[i_unk][j_dim];
+// // // 	  }
+// // // #if PRESS == 1
+// // //                 p_div_du_qp += SolVAR_qp[SolIndex[press_type_pos]] * phi_x_gss_fe[ SolFEType[i_unk] ][i * dim + jdim];
+// // // //div--------------------------
+// // // 	  	div_u_du_qp += gradSolVAR_qp[SolPdeIndex[jdim]][jdim] ;  //kdims are with jdims  
+// // // #endif
+// // // 	}//jdim 
+// // // 
+// // //         
+// // // //======================Residuals===================================================================================================================
+// // //     // FIRST ROW
+// // // 	  if (i_unk==0 || i_unk==1)       	   	  	 Res[i_unk][i]  -=  (   + force[i_unk] * phi_gss_fe[ SolFEType[i_unk] ][i]
+// // // 										    - IRe*lap_res_du_u 
+// // // // 										    - adv_rhs * phi_gss_fe[ SolFEType[i_unk] ][i]
+// // // #if PRESS == 1
+// // // 										    + /*p_div_du_qp*/SolVAR_qp[SolIndex[press_type_pos]] * phi_x_gss_fe[ SolFEType[i_unk] ][i * dim + i_unk] 
+// // // #endif
+// // // 	  ) * weight; 
+// // //   
+// // // #if PRESS == 1
+// // // 	  if (i_unk==2)       	       				 Res[i_unk][i]  -=  ( (div_u_du_qp) * phi_gss_fe[ SolFEType[i_unk] ][i] ) * weight;
+// // // #endif
+// // //  
+// // //     
+// // // // // //       }//kdim_Res
+// // // 
+// // // 	 
+// // // 	 
+// // // //======================Jacobian========================================================================================================================
+// // // 	      
+// // //    if (assembleMatrix) {
+// // //     for(unsigned j_unk=0; j_unk< n_unknowns; j_unk++) { 
+// // // 	for (unsigned j = 0; j < Sol_n_el_dofs[j_unk]; j++) {
+// // // 	            double lap_jac_du_u = 0.;
+// // // 	      
+// // // 		for (unsigned kdim = 0; kdim < dim; kdim++) {
+// // // 		  if ( i_unk==j_unk && (i_unk==0 ||i_unk==1) ) 	lap_jac_du_u += phi_x_gss_fe[ SolFEType[i_unk] ][i * dim + kdim]*phi_x_gss_fe[ SolFEType[j_unk] ][j * dim + kdim];
+// // // 		}//kdim
+// // // 	     
+// // //     //============ delta_state row ============================================================================================
+// // //        //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
+// // //     // FIRST ROW
+// // // 		  if ( i_unk==j_unk && (i_unk==0 ||i_unk==1))          Jac[i_unk][j_unk][i*nDofsV + j] -=  (  IRe*lap_jac_du_u ) * weight; 
+// // // #if PRESS == 1
+// // // 		  if ((i_unk==0 ||i_unk==1) && j_unk==2)               Jac[i_unk][j_unk][i*nDofsP + j] -= -( phi_gss_fe[ SolFEType[j_unk] ][j] * phi_x_gss_fe[ SolFEType[i_unk] ][i * dim + i_unk] ) * weight;
+// // // 		  if ( i_unk==2  && (j_unk==0 ||j_unk==1))             Jac[i_unk][j_unk][i*nDofsV + j] -= -( phi_gss_fe[ SolFEType[i_unk] ][i] * phi_x_gss_fe[ SolFEType[j_unk] ][j * dim + j_unk] ) * weight;
+// // // #endif
+// // // 	} //end j loop
+// // //     } //end j_unk loop
+// // //   } // endif assemble_matrix
+// // // 
+// // //     } // end i loop
+// // // } // end i_unk loop
+
+ 
+//good old method for filling residuals and Jac  
+//============ delta_state row ============================================================================================
+
+  for (unsigned i = 0; i < nDofsV; i++) {
+// FIRST ROW
+	for (unsigned  kdim = 0; kdim < dim; kdim++) { // velocity block row 
+	              double lap_res_du_u = 0.; 
+		      double adv_res = 0.;
+	      for (unsigned jdim = 0; jdim < dim; jdim++) {
+		    lap_res_du_u += gradSolVAR_qp[SolPdeIndex[kdim]][jdim]*phi_x_gss_fe[ SolFEType[kdim] ][i * dim + jdim];
+			adv_res	+= SolVAR_qp[jdim] * gradSolVAR_qp[kdim][jdim];
+	      }      
+	      Res[kdim][i]   +=  (         + force[kdim] * phi_gss_fe[ SolFEType[kdim] ][i]
+                                           - IRe*lap_res_du_u 
+                                           - adv_res * phi_gss_fe[ SolFEType[kdim] ][i]
+					    + SolVAR_qp[SolPdeIndex[press_type_pos]] * phi_x_gss_fe[ SolFEType[kdim] ][i * dim + kdim]) * weight; 
+	}	    
+//DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
+	for (unsigned j = 0; j < nDofsV; j++) {
+		      double lap_jac_du_u = 0.;
+		      double adv_unew_uold = 0.;
+		      double adv_uold_unew = 0.;
+	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+		    lap_jac_du_u += phi_x_gss_fe[ SolFEType[kdim] ][i * dim + kdim]*phi_x_gss_fe[ SolFEType[kdim] ][j * dim + kdim];
+		    adv_uold_unew += SolVAR_qp[SolIndex[kdim]]*phi_x_gss_fe[ SolFEType[kdim] ][j * dim + kdim] * phi_gss_fe[ SolFEType[kdim] ][i];
+		    adv_unew_uold += phi_gss_fe[ SolFEType[kdim] ][i] * gradSolVAR_qp[SolIndex[kdim]][kdim] * phi_gss_fe[ SolFEType[kdim] ][j];
+	      }
+	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+		Jac[kdim][kdim][i*nDofsV + j] += (   IRe*lap_jac_du_u 
+						    + adv_uold_unew 
+						    + adv_unew_uold ) * weight; 
+	      }
+	} //j_du_u loop
+
+
+     
+//BLOCK Pressure
+      for (unsigned j = 0; j < nDofsP; j++) {
+	    for (unsigned  kdim = 0; kdim < dim; kdim++) {
+	      Jac[kdim][press_type_pos][i*nDofsP + j] += -( phi_gss_fe[ SolFEType[press_type_pos] ][j] * phi_x_gss_fe[ SolFEType[kdim] ][i * dim + kdim] ) * weight;
+	    }
+      }//j_press loop
+   }//i_state loop
+
+//DIV_state
+  for (unsigned i = 0; i < nDofsP; i++) {
+		    double div_u_du_qp =0.;
+      for (unsigned  kdim = 0; kdim < dim; kdim++) {
+	      div_u_du_qp += gradSolVAR_qp[SolPdeIndex[kdim]][kdim] ;
+      }
+      Res[press_type_pos][i]  +=  ( (div_u_du_qp) * phi_gss_fe[ SolFEType[press_type_pos] ][i] ) * weight;
+      for (unsigned j = 0; j < nDofsV; j++) {
+	  for (unsigned  kdim = 0; kdim < dim; kdim++) {
+	      Jac[press_type_pos][kdim][i*nDofsV + j] += -( phi_gss_fe[ SolFEType[press_type_pos] ][i] * phi_x_gss_fe[ SolFEType[kdim] ][j * dim + kdim] ) * weight;
 	  }
-#if PRESS == 1
-                p_div_du_qp += SolVAR_qp[SolIndex[press_type_pos]] * phi_x_gss_fe[ SolFEType[i_unk] ][i * dim + jdim];
-//div--------------------------
-	  	div_u_du_qp += gradSolVAR_qp[SolPdeIndex[jdim]][jdim] ;  //kdims are with jdims  
-#endif
-	}//jdim 
-
-        
-//======================Residuals===================================================================================================================
-    // FIRST ROW
-	  if (i_unk==0 || i_unk==1)       	   	  	 Res[i_unk][i]  -=  (   + force[i_unk] * phi_gss_fe[ SolFEType[i_unk] ][i]
-										    - IRe*lap_res_du_u 
-// 										    - adv_rhs * phi_gss_fe[ SolFEType[i_unk] ][i]
-#if PRESS == 1
-										    + /*p_div_du_qp*/SolVAR_qp[SolIndex[press_type_pos]] * phi_x_gss_fe[ SolFEType[i_unk] ][i * dim + i_unk] 
-#endif
-	  ) * weight; 
-  
-#if PRESS == 1
-	  if (i_unk==2)       	       				 Res[i_unk][i]  -=  ( (div_u_du_qp) * phi_gss_fe[ SolFEType[i_unk] ][i] ) * weight;
-#endif
- 
-    
-// // //       }//kdim_Res
-
-	 
-	 
-//======================Jacobian========================================================================================================================
-	      
-   if (assembleMatrix) {
-    for(unsigned j_unk=0; j_unk< n_unknowns; j_unk++) { 
-	for (unsigned j = 0; j < Sol_n_el_dofs[j_unk]; j++) {
-	            double lap_jac_du_u = 0.;
-	      
-		for (unsigned kdim = 0; kdim < dim; kdim++) {
-		  if ( i_unk==j_unk && (i_unk==0 ||i_unk==1) ) 	lap_jac_du_u += phi_x_gss_fe[ SolFEType[i_unk] ][i * dim + kdim]*phi_x_gss_fe[ SolFEType[j_unk] ][j * dim + kdim];
-		}//kdim
-	     
+      } //j loop
+   }//i_div_state
     //============ delta_state row ============================================================================================
-       //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
-    // FIRST ROW
-		  if ( i_unk==j_unk && (i_unk==0 ||i_unk==1))          Jac[i_unk][j_unk][i*nDofsV + j] -=  (  IRe*lap_jac_du_u ) * weight; 
-#if PRESS == 1
-		  if ((i_unk==0 ||i_unk==1) && j_unk==2)               Jac[i_unk][j_unk][i*nDofsP + j] -= -( phi_gss_fe[ SolFEType[j_unk] ][j] * phi_x_gss_fe[ SolFEType[i_unk] ][i * dim + i_unk] ) * weight;
-		  if ( i_unk==2  && (j_unk==0 ||j_unk==1))             Jac[i_unk][j_unk][i*nDofsV + j] -= -( phi_gss_fe[ SolFEType[i_unk] ][i] * phi_x_gss_fe[ SolFEType[j_unk] ][j * dim + j_unk] ) * weight;
-#endif
-	} //end j loop
-    } //end j_unk loop
-  } // endif assemble_matrix
-
-    } // end i loop
-} // end i_unk loop
-
- 
-// // //good old method for filling residuals and Jac  
-// // //============ delta_state row ============================================================================================
-// // 
-// //   for (unsigned i = 0; i < nDofsV; i++) {
-// // // FIRST ROW
-// // 	for (unsigned  kdim = 0; kdim < dim; kdim++) { // velocity block row 
-// // 	              double lap_res_du_u = 0.; 
-// // 	      for (unsigned jdim = 0; jdim < dim; jdim++) {
-// // 		    lap_res_du_u += gradSolVAR_qp[SolPdeIndex[kdim]][jdim]*phi_x_gss[i * dim + jdim];
-// // 	      }      
-// // 	      Res[kdim][i]   +=  (         + force[kdim] * phi_gss[i]
-// //                                            - IRe*lap_res_du_u 
-// // 					    + SolVAR_qp[SolPdeIndex[press_type_pos]] * phi_x_gss[i * dim + kdim]) * weight; 
-// // 	}	    
-// // //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
-// // 	for (unsigned j = 0; j < nDofsV; j++) {
-// // 		      double lap_jac_du_u = 0.;
-// // 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
-// // 		    lap_jac_du_u += phi_x_gss[i * dim + kdim]*phi_x_gss[j * dim + kdim];
-// // 	      }
-// // 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
-// // 		Jac[kdim][kdim][i*nDofsV + j] += (   IRe*lap_jac_du_u ) * weight; 
-// // 	      }
-// // 	} //j_du_u loop
-// // 
-// // 
-// //      
-// // //BLOCK Pressure
-// //       for (unsigned j = 0; j < nDofsP; j++) {
-// // 	    for (unsigned  kdim = 0; kdim < dim; kdim++) {
-// // 	      Jac[kdim][press_type_pos][i*nDofsP + j] += -( phiP[j] * phi_x_gss[i * dim + kdim] ) * weight;
-// // 	    }
-// //       }//j_press loop
-// //    }//i_state loop
-// // 
-// // //DIV_state
-// //   for (unsigned i = 0; i < nDofsP; i++) {
-// // 		    double div_u_du_qp =0.;
-// //       for (unsigned  kdim = 0; kdim < dim; kdim++) {
-// // 	      div_u_du_qp += gradSolVAR_qp[SolPdeIndex[kdim]][kdim] ;
-// //       }
-// //       Res[press_type_pos][i]  +=  ( (div_u_du_qp) * phiP[i] ) * weight;
-// //       for (unsigned j = 0; j < nDofsV; j++) {
-// // 	  for (unsigned  kdim = 0; kdim < dim; kdim++) {
-// // 	      Jac[press_type_pos][kdim][i*nDofsV + j] += -( phiP[i] * phi_x_gss[j * dim + kdim] ) * weight;
-// // 	  }
-// //       } //j loop
-// //    }//i_div_state
-// //     //============ delta_state row ============================================================================================
 
  
  
@@ -896,17 +905,17 @@ for(unsigned i_unk=0; i_unk<n_unknowns; i_unk++) {
   
   
   JAC->close();
-  std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
-  JAC->print_matlab(mat_out.str(),"ascii");
+//   std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
+//   JAC->print_matlab(mat_out.str(),"ascii");
   RES->close();
-  RES->print();
-  std::cout << "solution iterate RESC" << std::endl;
-  pdeSys->_RESC->print();
-
-  std::cout << "solution iterate EPS" << std::endl;
-  pdeSys->_EPS->print();
-  std::cout << "solution iterate EPSC" << std::endl;
-  pdeSys->_EPSC->print();
+//   RES->print();
+//   std::cout << "solution iterate RESC" << std::endl;
+//   pdeSys->_RESC->print();
+// 
+//   std::cout << "solution iterate EPS" << std::endl;
+//   pdeSys->_EPS->print();
+//   std::cout << "solution iterate EPSC" << std::endl;
+//   pdeSys->_EPSC->print();
 // ***************** END ASSEMBLY *******************
 }
 
