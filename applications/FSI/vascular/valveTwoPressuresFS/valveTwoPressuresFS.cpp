@@ -331,6 +331,8 @@ int main(int argc, char** args)
   std::vector < double > Qtot(3, 0.);
   std::vector<double> fluxes(2, 0.);
 
+  system.ResetComputationalTime();
+  
   for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
@@ -366,16 +368,17 @@ int main(int argc, char** args)
       outf << time_step << " " << system.GetTime() << " " << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
     }
 
-    ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+    //ml_sol.GetWriter()->SetMovingMesh(mov_vars);
+    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
-    if (time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
+    //if (time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
 
   }
 
   if (iproc == 0) {
     outf.close();
   }
+  system.PrintComputationalTime();
 
   //******* Clear all systems *******
   ml_prob.clear();

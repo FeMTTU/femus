@@ -261,6 +261,8 @@ namespace femus {
               << totalSolverTime <<  " = assembly TIME( " << totalAssembyTime << " ) + "
               << " solver TIME( " << totalSolverTime - totalAssembyTime << " ) " << std::endl;
 
+    _totalAssemblyTime += totalAssembyTime;
+    _totalSolverTime += totalSolverTime - totalAssembyTime;
   }
 
 
