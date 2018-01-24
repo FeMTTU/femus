@@ -188,7 +188,13 @@ int main(int argc, char** args)
   FieldSplitTree VelPf(PREONLY, ASM_PRECOND, fieldVelPf, solutionTypeVelPf, "VelPf");
   VelPf.SetAsmStandard(false);
   VelPf.SetAsmBlockSizeSolid(10);
-  VelPf.SetAsmBlockSizeFluid(4);
+  if(dim == 2){
+    VelPf.SetAsmBlockSizeFluid(4);
+  }
+  else{
+    VelPf.SetAsmBlockSizeFluid(3);
+  }
+    
   VelPf.SetAsmBlockPreconditionerSolid(ILU_PRECOND);
   VelPf.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
   VelPf.SetAsmNumeberOfSchurVariables(1);
@@ -208,7 +214,12 @@ int main(int argc, char** args)
 
   FieldSplitTree DispPs(PREONLY, ASM_PRECOND, fieldDispPs, solutionTypeDispPs, "DispPs");
   DispPs.SetAsmStandard(false);
-  DispPs.SetAsmBlockSize(4);
+  if(dim == 2){
+    DispPs.SetAsmBlockSize(4);
+  }
+  else{
+    DispPs.SetAsmBlockSize(3);
+  }
   DispPs.SetAsmBlockPreconditionerSolid(MLU_PRECOND);
   DispPs.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
   DispPs.SetAsmNumeberOfSchurVariables(1);
