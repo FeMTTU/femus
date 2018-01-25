@@ -261,7 +261,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower = 0.3;
+  double ctrl_lower = -0.3;
   double ctrl_upper = 0.4;
   double c_compl = 1.;
   vector < int >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
@@ -496,7 +496,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
-													      + 1. * sol_mu[i]);
+													      + 1. * sol_mu[i] - 0.);
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
           // THIRD ROW
@@ -565,6 +565,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		Jac[ (nDof_u + i) * nDof_AllVars  + 
 		     (nDof_u + nDof_ctrl + j)           ]  += ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj;
 	      	      
+	      //BLOCK delta_control - mu
+              if ( i < nDof_ctrl   && j < nDof_mu && i==j ) 
+		Jac[ (nDof_u + i) * nDof_AllVars  + 
+		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  control_node_flag[i] * 1.;
+		     
 	      }
 	      
 	      else if ( control_el_flag == 0)  {  
@@ -577,10 +582,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      
 	      }
 	      
-	      //BLOCK delta_control - mu
-              if ( i < nDof_ctrl   && j < nDof_mu && i==j ) 
-		Jac[ (nDof_u + i) * nDof_AllVars  + 
-		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  1.;
+
 		     
 	      //=========== delta_adjoint row ===========================
               // BLOCK delta_adjoint - state	      
