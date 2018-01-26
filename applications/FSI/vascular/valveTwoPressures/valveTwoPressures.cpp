@@ -85,7 +85,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 3;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
@@ -202,7 +202,12 @@ int main(int argc, char** args)
   system.SetPreconditionerFineGrids(MLU_PRECOND);
   if(dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
 
-  system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
+  if(dim==2){
+    system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
+  }
+  else{
+    system.SetTolerances(1.e-10, 1.e-12, 1.e+50, 40, 40);
+  }
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
