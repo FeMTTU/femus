@@ -46,9 +46,9 @@ int main(int argc, char** args)
   twoPressure = true;
 
   //std::string infile = "./../input/valve/2D/valve2.neu";
-  std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
+  //std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
   //std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
-  //std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
+  std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
   //std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
 
   // ******* Set physics parameters *******
@@ -85,7 +85,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 4;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
@@ -187,7 +187,14 @@ int main(int argc, char** args)
 
   FieldSplitTree VelPf(PREONLY, ASM_PRECOND, fieldVelPf, solutionTypeVelPf, "VelPf");
   VelPf.SetAsmStandard(false);
-  VelPf.SetAsmBlockSize(3);
+  VelPf.SetAsmBlockSizeSolid(10);
+  if(dim == 2){
+    VelPf.SetAsmBlockSizeFluid(4);
+  }
+  else{
+    VelPf.SetAsmBlockSizeFluid(3);
+  }
+    
   VelPf.SetAsmBlockPreconditionerSolid(ILU_PRECOND);
   VelPf.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
   VelPf.SetAsmNumeberOfSchurVariables(1);
@@ -207,7 +214,12 @@ int main(int argc, char** args)
 
   FieldSplitTree DispPs(PREONLY, ASM_PRECOND, fieldDispPs, solutionTypeDispPs, "DispPs");
   DispPs.SetAsmStandard(false);
-  DispPs.SetAsmBlockSize(3);
+  if(dim == 2){
+    DispPs.SetAsmBlockSize(4);
+  }
+  else{
+    DispPs.SetAsmBlockSize(3);
+  }
   DispPs.SetAsmBlockPreconditionerSolid(MLU_PRECOND);
   DispPs.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
   DispPs.SetAsmNumeberOfSchurVariables(1);
@@ -245,7 +257,9 @@ int main(int argc, char** args)
   system.init();
 
   system.SetSolverFineGrids(RICHARDSON);
-  system.SetRichardsonScaleFactor(0.5);
+  system.SetRichardsonScaleFactor(.4);
+  
+  //system.SetRichardsonScaleFactor(.7, .8);
   //system.SetPreconditionerFineGrids(ILU_PRECOND);
   
   system.SetFieldSplitTree(&FSI);
@@ -257,7 +271,13 @@ int main(int argc, char** args)
   //system.SetPreconditionerFineGrids(ILU_PRECOND);
   //if (dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
 
-  system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 100, 10);
+  //system.SetTolerances(1.e-10, 1.e-20, 1.e+50, 100, 10);
+  if(dim==2){
+    system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
+  }
+  else{
+    system.SetTolerances(1.e-10, 1.e-12, 1.e+50, 40, 40);
+  }
   //system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 
   // ******* Add variables to be solved *******
@@ -307,7 +327,7 @@ int main(int argc, char** args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 1024;
+  const unsigned int n_timesteps = 128;
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
@@ -326,6 +346,8 @@ int main(int argc, char** args)
   std::vector < double > Qtot(3, 0.);
   std::vector<double> fluxes(2, 0.);
 
+  system.ResetComputationalTime();
+  
   for (unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
@@ -361,16 +383,17 @@ int main(int argc, char** args)
       outf << time_step << " " << system.GetTime() << " " << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
     }
 
-    ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+    //ml_sol.GetWriter()->SetMovingMesh(mov_vars);
+    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
-    if (time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
+    //if (time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
 
   }
 
   if (iproc == 0) {
     outf.close();
   }
+  system.PrintComputationalTime();
 
   //******* Clear all systems *******
   ml_prob.clear();

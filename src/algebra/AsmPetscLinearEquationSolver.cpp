@@ -309,21 +309,21 @@ namespace femus {
 //       
 //       
 //       
-//       std::cout << "["<<_iproc<<"] " << "Number of Splits "<<maxNumberOfSplits <<std::endl<<std::flush;
+//       //std::cout << "["<<_iproc<<"] " << "Number of Splits "<<maxNumberOfSplits <<std::endl<<std::flush;
 //       for(unsigned i = 0; i<_overlappingIs.size();i++){
 // 	
 // // 	PetscInt size;
 // // 	ISGetSize(_overlappingIs[i],&size);
 // // 	std::cout << "["<<_iproc<<"] " << "split "<< i <<" "<<" size "<<size<<std::endl<<std::flush;
 // 	
-// 	ISView(_overlappingIs[i],PETSC_VIEWER_STDOUT_SELF);
+// 	//ISView(_overlappingIs[i],PETSC_VIEWER_STDOUT_SELF);
 // 
 // 	
 // 	PCFieldSplitSetIS(subpc, NULL, _overlappingIs[i]);
 //       }
 //     }
-//     double a;
-//     std::cin>>a;
+//     //double a;
+//     //std::cin>>a;
 //     PCFieldSplitSetType(subpc, PC_COMPOSITE_ADDITIVE);
 // 
 //     KSPSetUp(subksp);
@@ -341,8 +341,9 @@ namespace femus {
       PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
     }
 
-    PCASMSetOverlap(subpc, _overlap);
-    //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
+    //PCASMSetOverlap(subpc, _overlap);
+    PCASMSetType(subpc,  PC_ASM_BASIC );
+    PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
 
     KSPSetUp(subksp);
 

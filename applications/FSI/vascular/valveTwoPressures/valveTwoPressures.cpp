@@ -46,9 +46,9 @@ int main(int argc, char** args)
   twoPressure = true;
 
   //std::string infile = "./../input/valve/2D/valve2.neu";
-  std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
+  //std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
   //std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
-  //std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
+  std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
   //std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
 
   // ******* Set physics parameters *******
@@ -85,7 +85,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 4;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
@@ -195,12 +195,19 @@ int main(int argc, char** args)
 
   // ******* Set Smoother *******
   system.SetSolverFineGrids(RICHARDSON);
+  system.SetRichardsonScaleFactor(0.4);
+  //system.SetRichardsonScaleFactor(.5, .5);
   //system.SetSolverFineGrids(GMRES);
 
   system.SetPreconditionerFineGrids(MLU_PRECOND);
   if(dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
 
-  system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 10);
+  if(dim==2){
+    system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
+  }
+  else{
+    system.SetTolerances(1.e-10, 1.e-12, 1.e+50, 40, 40);
+  }
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
@@ -210,7 +217,10 @@ int main(int argc, char** args)
   //   // ******* Set block size for the ASM smoothers *******
   
   // ******* Set block size for the ASM smoothers *******
+  
   system.SetElementBlockNumber(3);
+  
+  
   if(twoPressure)
     system.SetNumberOfSchurVariables(2);
   else 
@@ -249,7 +259,7 @@ int main(int argc, char** args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 1024;
+  const unsigned int n_timesteps = 128;
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
@@ -268,6 +278,8 @@ int main(int argc, char** args)
   std::vector < double > Qtot(3, 0.);
   std::vector<double> fluxes(2, 0.);
 
+  system.ResetComputationalTime();
+  
   for(unsigned time_step = time_step_start; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
@@ -303,10 +315,10 @@ int main(int argc, char** args)
       outf << time_step << " " << system.GetTime() << " " << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
     }
 
-    ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+    //ml_sol.GetWriter()->SetMovingMesh(mov_vars);
+    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
-    if(time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
+    //if(time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
 
   }
 
@@ -314,6 +326,8 @@ int main(int argc, char** args)
     outf.close();
   }
 
+  system.PrintComputationalTime();
+  
   //******* Clear all systems *******
   ml_prob.clear();
   std::cout << " TOTAL TIME:\t" << \

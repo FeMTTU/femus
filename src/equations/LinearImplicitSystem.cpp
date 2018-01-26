@@ -45,6 +45,8 @@ namespace femus {
     _assembleMatrix(true) {
     _SparsityPattern.resize(0);
     _outer_ksp_solver = "gmres";
+    _totalAssemblyTime = 0.;
+    _totalSolverTime =0.;
   }
 
   // ********************************************
@@ -261,6 +263,9 @@ namespace femus {
 
     std::cout << std::endl << " *** Linear " << _solverType << " TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
               << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+	      
+    _totalAssemblyTime += 0.;
+    _totalSolverTime += static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC;     
   }
 
   // ********************************************
@@ -507,6 +512,7 @@ namespace femus {
 
     if(_richardsonScaleFactorIsSet) {
       _LinSolver[_gridn]->SetRichardsonScaleFactor(_richardsonScaleFactor);
+      //_LinSolver[_gridn]->SetRichardsonScaleFactor(_richardsonScaleFactor + _richardsonScaleFactorDecrease * (_gridn - 1));
     }
 
     _gridn++;

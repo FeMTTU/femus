@@ -338,9 +338,9 @@ namespace femus {
     //BEGIN from here
     if(_preconditioner == FIELDSPLIT_PRECOND) {
       PetscPreconditioner::set_petsc_preconditioner_type(_preconditioner, pc);
-      //PCFieldSplitSetType(pc, PC_COMPOSITE_ADDITIVE);
+      PCFieldSplitSetType(pc, PC_COMPOSITE_ADDITIVE);
 
-      PCFieldSplitSetType( pc, PC_COMPOSITE_MULTIPLICATIVE );
+      //PCFieldSplitSetType( pc, PC_COMPOSITE_MULTIPLICATIVE );
       
       for(unsigned i = 0; i < _numberOfSplits; i++) {
         PCFieldSplitSetIS(pc, NULL, _isSplit[level - 1][i]);
@@ -385,9 +385,11 @@ namespace femus {
       }
 
       PCASMSetOverlap(pc, _asmOverlapping);
-      KSPSetUp(ksp);
+      
+      PCASMSetType(pc,  PC_ASM_BASIC );
+      PCASMSetLocalType(pc, PC_COMPOSITE_MULTIPLICATIVE);
 
-      //PCASMSetLocalType(pc, PC_COMPOSITE_MULTIPLICATIVE);
+      KSPSetUp(ksp);
 
       KSP* subksps;
       PetscInt nlocal;
@@ -398,6 +400,8 @@ namespace femus {
       if(!_asmStandard) {
 	for(unsigned j = 0;j < 2; j++){//loop on the material
 	  unsigned istart = (j == 0) ? 0 : _asmBlockMaterialRange[level - 1][j - 1];
+	  
+	  //std::cout << " number of blocks in split "<< j <<" = "<< _asmBlockMaterialRange[level - 1][j] << std::endl;
 	  for(int i = istart; i < _asmBlockMaterialRange[level - 1][j]; i++) {
 	    PC subpcs;
 	    KSPGetPC(subksps[i], &subpcs);
