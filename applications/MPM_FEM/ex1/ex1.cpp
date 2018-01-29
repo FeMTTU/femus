@@ -995,7 +995,7 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
             SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof);
 
             //Fixed coordinates (Reference frame)
-            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof);// + SolDd[i][inode];
+            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof) + SolDd[i][inode]; //TODO questo l'ho gia' cambiato cosi' e' corretto
           }
         }
         //END
@@ -1010,16 +1010,16 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
 
       //update displacement and acceleration
       for (int i = 0; i < dim; i++) {
+	particleDisp[i] = 0.;
         for (unsigned inode = 0; inode < nve; inode++) {
           particleDisp[i] += phi[inode] * SolDd[i][inode];
         }
       }
 
+      
       particles[iMarker]->SetMarkerDisplacement(particleDisp);
-
-      //movement of the particles
+      //movement of the particles // TODO moveit down in UpdateLineMPM
       particles[iMarker]->UpdateParticleCoordinates();
-
       particles[iMarker]->GetElementSerial(iel, mysolution, 0.);
       particles[iMarker]->SetIprocMarkerPreviousElement(iel);
 
@@ -1071,10 +1071,12 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
 
   linea.UpdateLineMPM();
 
+  //project the old velocity and acceleration from the moved particles to the new grid
+  bool old = true;
+  linea.ParticlesToGridProjection(old);
 
-  linea.ParticlesToGridProjection(true);
 
-
+  // update the grid velocity and acceleration
   for (unsigned idim = 0; idim < dim; idim++) {
     for (unsigned jdof = mymsh->_dofOffset[solType][iproc]; jdof < mymsh->_dofOffset[solType][iproc + 1]; jdof++) {
 
@@ -1146,6 +1148,7 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
 
       //update displacement and acceleration
       for (int i = 0; i < dim; i++) {
+	particleAcc[i] = 0.;
         for (unsigned inode = 0; inode < nve; inode++) {
           particleAcc[i] += phi[inode] * SolAd[i][inode];
         }
