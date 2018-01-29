@@ -237,22 +237,31 @@ int main(int argc, char** args)
 //END fake time dependent
 
 
-  gravityfactor = 0.25;
+  gravityfactor = 1.;
 
+       // ******* Print solution *******
+    mlSol.SetWriter(VTK);
+
+    std::vector<std::string> mov_vars;
+    mov_vars.push_back("DX");
+    mov_vars.push_back("DY");
+    mov_vars.push_back("DZ");
+    mlSol.GetWriter()->SetMovingMesh(mov_vars);
+
+    std::vector<std::string> print_vars;
+    print_vars.push_back("All");
+
+    mlSol.GetWriter()->SetDebugOutput(true);
+    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
+   
+  
   unsigned n_timesteps = 100;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
     system.MGsolve();
 
-    GridToParticlesProjection(ml_prob);
-
-    linea->UpdateLineMPM();
-
-    linea->GetLine(line[0]);
-    PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
-
-    // ******* Print solution *******
+        // ******* Print solution *******
     mlSol.SetWriter(VTK);
 
     std::vector<std::string> mov_vars;
@@ -266,6 +275,13 @@ int main(int argc, char** args)
 
     mlSol.GetWriter()->SetDebugOutput(true);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+    
+    GridToParticlesProjection(ml_prob);
+
+    linea->UpdateLineMPM();
+
+    linea->GetLine(line[0]);
+    PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
 
   }
 
@@ -770,10 +786,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
         for (int i = 0; i < 3; i++) {
           for (int j = 0; j < 3; j++) {
-	    Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
-                            + lambda * (J_hat - 1.) * Id2th[i][j];  //Generalized Neo-Hookean solid, in Allan-Bower's book, for rubbers with very limited compressibility and K >> mu
+// 	    Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
+//                             + lambda * (J_hat - 1.) * Id2th[i][j];  //Generalized Neo-Hookean solid, in Allan-Bower's book, for rubbers with very limited compressibility and K >> mu
 
-            //Cauchy[i][j] = lambda * log(J_hat) / J_hat * Id2th[i][j] + mu / J_hat * (B[i][j] - Id2th[i][j]); //alternative formulation
+            Cauchy[i][j] = lambda * log(J_hat) / J_hat * Id2th[i][j] + mu / J_hat * (B[i][j] - Id2th[i][j]); //alternative formulation
 
 
           }
@@ -939,8 +955,10 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob)
   unsigned ielOld = UINT_MAX;
   //declaration of element instances
 
-
-
+  
+  
+//BEGIN this is what gives problems
+/*
   for (unsigned idim = 0; idim < dim; idim++) {
     for (unsigned jdof = mymsh->_dofOffset[solType][iproc]; jdof < mymsh->_dofOffset[solType][iproc + 1]; jdof++) {
 
@@ -956,7 +974,9 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob)
 
     mysolution->_Sol[indexSolV[idim]]->close();
     mysolution->_Sol[indexSolA[idim]]->close();
-  }
+  }*/
+//END this is what gives problems
+
 
 
   //BEGIN loop on particles (used as Gauss points)
