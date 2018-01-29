@@ -253,6 +253,7 @@ int main(int argc, char** args)
  
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
+  
   // initilaize and solve the system
   system.init();
 
