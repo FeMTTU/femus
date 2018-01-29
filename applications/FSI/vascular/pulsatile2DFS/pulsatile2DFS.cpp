@@ -77,6 +77,9 @@ int main(int argc, char **args)
     else if(!strcmp("7", args[1])) {       /** FSI Vein Valve */
       simulation = 7;
     }
+    else{
+      simulation = 0;
+    }
   }
 
   //Files files;
@@ -162,7 +165,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 4;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -372,7 +375,7 @@ int main(int argc, char **args)
   //system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
   
   //if(dim==2){
-    system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
+    system.SetTolerances(1.e-10, 1.e-9, 1.e+50, 40, 40);
   //}
   //else{
     //system.SetTolerances(1.e-10, 1.e-12, 1.e+50, 40, 40);
@@ -411,7 +414,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 512;
+  const unsigned int n_timesteps = 128;
 
   std::vector < std::vector <double> > data(n_timesteps);
   

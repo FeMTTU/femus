@@ -435,7 +435,8 @@ namespace femus
           //BEGIN continuity block
           for (unsigned i = 0; i < nve1; i++) {
             aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * (1. - J_hat) * Weight_hat / rhof;
-            if (twoPressure) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * SolVAR[nBlocks * dim + jP] * Weight_hat;   // fake continuity of the fluid in the solid
+            //if (twoPressure) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * SolVAR[nBlocks * dim + jP] * Weight_hat;   // fake continuity of the fluid in the solid
+	    if (twoPressure) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * Soli[indexVAR[nBlocks * dim + jP]][i] * Weight_hat;   // fake continuity of the fluid in the solid
           }
           //END continuity block
         }
@@ -712,7 +713,8 @@ namespace femus
               }
 
               for (unsigned i = 0; i < nve1; i++) {
-                if (twoPressure) aRhs[indexVAR[nBlocks * dim] ][i] +=  phi1[i] * SolVAR[nBlocks * dim ] * Weight_hat;   // fake continuity of the solid in the fluid
+                //if (twoPressure) aRhs[indexVAR[nBlocks * dim] ][i] +=  phi1[i] * SolVAR[nBlocks * dim ] * Weight_hat;   // fake continuity of the solid in the fluid
+		if (twoPressure) aRhs[indexVAR[nBlocks * dim] ][i] +=  phi1[i] * Soli[indexVAR[nBlocks * dim]][i] * Weight_hat;   // fake continuity of the solid in the fluid
                 aRhs[indexVAR[nBlocks * dim + jP]][i] += (-phi1[i] * div_vel) * Weight / rhof;
               }
               //END continuity block ===========================

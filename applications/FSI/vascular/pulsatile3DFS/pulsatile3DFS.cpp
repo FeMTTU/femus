@@ -81,7 +81,7 @@ int main ( int argc, char ** args )
     else if ( !strcmp ( "5", args[1] ) ) {   /** FSI tubo 3D */
       simulation = 5;
     }
-    else {
+    else{
       simulation = 0;
     }
   }
@@ -246,6 +246,7 @@ int main ( int argc, char ** args )
   ml_sol.GenerateBdc ( "DX", "Steady" );
   ml_sol.GenerateBdc ( "DY", "Steady" );
   if ( !dimension2D ) ml_sol.GenerateBdc ( "DZ", "Steady" );
+
   if ( simulation == 0 || simulation == 4 || simulation == 5 ) {
     ml_sol.GenerateBdc ( "U", "Time_dependent" );
     ml_sol.GenerateBdc ( "V", "Steady" );
@@ -254,9 +255,10 @@ int main ( int argc, char ** args )
     ml_sol.GenerateBdc ( "U", "Steady" );
     ml_sol.GenerateBdc ( "V", "Time_dependent" );
   }
+
   if ( !dimension2D ) ml_sol.GenerateBdc ( "W", "Steady" );
   ml_sol.GenerateBdc ( "PS", "Steady" );
-  ml_sol.GenerateBdc ( "PF", "Steady" );
+  ml_sol.GenerateBdc ("PF", "Steady");
 
 //   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
 //     SetLambda(ml_sol, level , SECOND, ELASTICITY);
@@ -280,83 +282,125 @@ int main ( int argc, char ** args )
   system.AddSolutionToSystemPDE ( "V" );
   if ( !dimension2D ) system.AddSolutionToSystemPDE ( "W" );
   system.AddSolutionToSystemPDE ( "PS" );
-  if (twoPressure) system.AddSolutionToSystemPDE ( "PF" );
+  if (twoPressure) system.AddSolutionToSystemPDE("PF");
+  
+  //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
+  std::vector < unsigned > fieldVelPf(dim + 1);
+  fieldVelPf[0] = system.GetSolPdeIndex("U");
+  fieldVelPf[1] = system.GetSolPdeIndex("V");
+  fieldVelPf[2] = system.GetSolPdeIndex("W");
+  fieldVelPf[dim] = system.GetSolPdeIndex("PF");
+
+  std::vector < unsigned > solutionTypeVelPf(dim + 1);
+  solutionTypeVelPf[0] = ml_sol.GetSolutionType("U");
+  solutionTypeVelPf[1] = ml_sol.GetSolutionType("V");
+  solutionTypeVelPf[2] = ml_sol.GetSolutionType("W");
+  solutionTypeVelPf[dim] = ml_sol.GetSolutionType("PF");
+
+  FieldSplitTree VelPf(PREONLY, ASM_PRECOND, fieldVelPf, solutionTypeVelPf, "VelPf");
+  VelPf.SetAsmStandard(false);
+  VelPf.SetAsmBlockSizeSolid(10);
+  //if(dim == 2){
+   // VelPf.SetAsmBlockSizeFluid(4);
+  //}
+  //else{
+    VelPf.SetAsmBlockSizeFluid(3);
+  //}
+    
+  VelPf.SetAsmBlockPreconditionerSolid(ILU_PRECOND);
+  VelPf.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
+  VelPf.SetAsmNumeberOfSchurVariables(1);
+
+  
+  std::vector < unsigned > fieldDispPs(dim + 1);
+  fieldDispPs[0] = system.GetSolPdeIndex("DX");
+  fieldDispPs[1] = system.GetSolPdeIndex("DY");
+  fieldDispPs[2] = system.GetSolPdeIndex("DZ");
+  fieldDispPs[dim] = system.GetSolPdeIndex("PS");
+
+  std::vector < unsigned > solutionTypeDispPs(dim + 1);
+  solutionTypeDispPs[0] = ml_sol.GetSolutionType("DX");
+  solutionTypeDispPs[1] = ml_sol.GetSolutionType("DY");
+  solutionTypeDispPs[2] = ml_sol.GetSolutionType("DZ");
+  solutionTypeDispPs[dim] = ml_sol.GetSolutionType("PS");
+
+  FieldSplitTree DispPs(PREONLY, ASM_PRECOND, fieldDispPs, solutionTypeDispPs, "DispPs");
+  DispPs.SetAsmStandard(false);
+  //if(dim == 2){
+    //DispPs.SetAsmBlockSize(4);
+  //}
+  //else{
+    DispPs.SetAsmBlockSize(3);
+  //}
+  DispPs.SetAsmBlockPreconditionerSolid(MLU_PRECOND);
+  DispPs.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
+  DispPs.SetAsmNumeberOfSchurVariables(1);
+  
+  std::vector < FieldSplitTree *> FS2;
+  FS2.reserve(2);
+
+  FS2.push_back(&DispPs);  //displacement first
+  FS2.push_back(&VelPf);  // velocity second
+
+  FieldSplitTree FSI(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "FSI");
+
+  //END buid fieldSplitTree
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction ( FSITimeDependentAssemblySupgNew2 );
 
   // ******* set MG-Solver *******
-  system.SetMgType ( F_CYCLE );
+  system.SetMgType ( F_CYCLE );  
+  
+  system.SetNonLinearConvergenceTolerance(1.e-7);
+  system.SetMaxNumberOfNonLinearIterations(20);
+  system.SetMaxNumberOfLinearIterations(1);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-50);
+ 
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(1);
+  
+//   old parameters   
+//   system.SetNonLinearConvergenceTolerance(1.e-9);
+//   system.SetResidualUpdateConvergenceTolerance(1.e-15);
+//   system.SetMaxNumberOfNonLinearIterations(4);
+//   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(1);
+//   
+//   system.SetNumberPreSmoothingStep ( 0 );
+//   system.SetNumberPostSmoothingStep ( 2 );
 
-//   system.SetNonLinearConvergenceTolerance ( 1.e-9 );
-//   //system.SetResidualUpdateConvergenceTolerance(1.e-13);
-//   system.SetMaxNumberOfNonLinearIterations ( 4 );
-//   //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
-// 
-// 
-//   system.SetMaxNumberOfLinearIterations ( 4 );
-//   system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
-
-  if (twoPressure){
-    system.SetNonLinearConvergenceTolerance(1.e-7);
-    system.SetMaxNumberOfNonLinearIterations(20); 
-
-    system.SetMaxNumberOfLinearIterations(1);
-    system.SetAbsoluteLinearConvergenceTolerance(1.e-50);
-
-    system.SetNumberPreSmoothingStep(1);
-    system.SetNumberPostSmoothingStep(1);
-  }
-  else{
-    system.SetNonLinearConvergenceTolerance(1.e-9);
-    system.SetResidualUpdateConvergenceTolerance(1.e-15);
-    
-    system.SetMaxNumberOfNonLinearIterations(4);
-    system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(1);  
-    
-    system.SetNumberPreSmoothingStep (0);
-    system.SetNumberPostSmoothingStep (2);
-  }
   // ******* Set Preconditioner *******
 
-  system.SetMgSmoother ( ASM_SMOOTHER );
+  //system.SetMgSmoother ( ASM_SMOOTHER );
 
   system.init();
 
   // ******* Set Smoother *******
   system.SetSolverFineGrids ( RICHARDSON );
-  if(twoPressure) system.SetRichardsonScaleFactor(0.4);
+  system.SetRichardsonScaleFactor(.4);
 
-  if (twoPressure){
-    system.SetPreconditionerFineGrids(MLU_PRECOND);
-    if(dim == 3) system.SetPreconditionerFineGrids(MLU_PRECOND);
-    //if(dim==2) {
-      //system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
-    //}
-    //else{
-      system.SetTolerances(1.e-10, 1.e-12, 1.e+50, 40, 40);
-    //}
-  }
-  else{
-    system.SetPreconditionerFineGrids ( ILU_PRECOND );
-    system.SetTolerances ( 1.e-12, 1.e-20, 1.e+50, 20, 10 );
-  }
+  //system.SetPreconditionerFineGrids ( ILU_PRECOND );
+  
+  system.SetFieldSplitTree(&FSI);
+
+  //system.SetTolerances ( 1.e-12, 1.e-20, 1.e+50, 20, 10 );
+  
+  //if(dim==2){
+    //system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
+  //}
+  //else{
+    system.SetTolerances(1.e-10, 1.e-12, 1.e+50, 40, 40);
+  //}
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved ( "All" );
 
   // ******* Set the last (1) variables in system (i.e. P) to be a schur variable *******
-  if(twoPressure)
-    system.SetNumberOfSchurVariables(2);
-  else 
-    system.SetNumberOfSchurVariables(1);
+  //system.SetNumberOfSchurVariables ( 1 );
 
   // ******* Set block size for the ASM smoothers *******
-  if(twoPressure)
-    system.SetElementBlockNumber(3);
-  else
-    system.SetElementBlockNumber(2);
+  //system.SetElementBlockNumber ( 2 );
 
   // ******* For Gmres Preconditioner only *******
   //system.SetDirichletBCsHandling(ELIMINATION);
@@ -364,6 +408,7 @@ int main ( int argc, char ** args )
 
   // ******* Print solution *******
   ml_sol.SetWriter ( VTK );
+
 
   std::vector<std::string> mov_vars;
   mov_vars.push_back ( "DX" );
@@ -445,13 +490,13 @@ int main ( int argc, char ** args )
     }
     outf.close();
   }
-  
-  system.PrintComputationalTime();
 
+  system.PrintComputationalTime();
+  
   // ******* Clear all systems *******
   ml_prob.clear();
   std::cout << " TOTAL TIME:\t" << \
-        static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
+          static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
   return 0;
 }
 
