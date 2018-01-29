@@ -345,6 +345,10 @@ int main ( int argc, char ** args )
   FieldSplitTree FSI(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "FSI");
 
   //END buid fieldSplitTree
+  
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
+  
+  system.SetOuterKSPSolver("lgmres");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction ( FSITimeDependentAssemblySupgNew2 );
