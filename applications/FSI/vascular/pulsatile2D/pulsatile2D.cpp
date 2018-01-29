@@ -44,9 +44,11 @@ int main(int argc, char **args)
   
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
+  clock_t start_time = clock();
 
   valve = false;
-  twoPressure = false;
+  twoPressure = true;
   
   unsigned simulation = 0;
 
@@ -193,6 +195,9 @@ int main(int argc, char **args)
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PS", "Pressure", false);    // Add this line
+  
+  ml_sol.AddSolution("PF", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AssociatePropertyToSolution("PF", "Pressure", false);    // Add this line
 
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
@@ -218,6 +223,7 @@ int main(int argc, char **args)
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
+  ml_sol.GenerateBdc("PF", "Steady");
 
   if(simulation == 4 || simulation == 5 || simulation == 6) {
     ml_sol.GenerateBdc("U", "Steady");
@@ -260,24 +266,38 @@ int main(int argc, char **args)
   system.AddSolutionToSystemPDE("V");
 
   system.AddSolutionToSystemPDE("PS");
+  
+  if(twoPressure) system.AddSolutionToSystemPDE("PF");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
-
+  
   system.SetNonLinearConvergenceTolerance(1.e-7);
   //system.SetResidualUpdateConvergenceTolerance ( 1.e-15 );
 
-  system.SetMaxNumberOfNonLinearIterations ( 5 ); //10
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
-  
-  system.SetMaxNumberOfLinearIterations ( 3 ); //6
-  system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
+  if(twoPressure){
+    system.SetMaxNumberOfNonLinearIterations(20); //20
+    //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
 
-  system.SetNumberPreSmoothingStep(0);
-  system.SetNumberPostSmoothingStep(2);
+    system.SetMaxNumberOfLinearIterations(1);
+    system.SetAbsoluteLinearConvergenceTolerance(1.e-50);
+
+    system.SetNumberPreSmoothingStep(1);
+    system.SetNumberPostSmoothingStep(1);
+  }
+  else{
+    system.SetMaxNumberOfNonLinearIterations(5); //10
+    //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
+  
+    system.SetMaxNumberOfLinearIterations(3); //6
+    system.SetAbsoluteLinearConvergenceTolerance(1.e-13);
+
+    system.SetNumberPreSmoothingStep(0);
+    system.SetNumberPostSmoothingStep(2);
+  }
 
   // ******* Set Preconditioner *******
 
@@ -288,20 +308,33 @@ int main(int argc, char **args)
   // ******* Set Smoother *******
   system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(GMRES);
+  if(twoPressure) system.SetRichardsonScaleFactor(0.4);
 
+  if(twoPressure)
+    system.SetPreconditionerFineGrids(MLU_PRECOND);
+  else
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-
-  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
+  
+  if(twoPressure)
+    system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
+  else
+    system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
 
   // ******* Set the last (1) variables in system (i.e. P) to be a schur variable *******
-  system.SetNumberOfSchurVariables(1);
+  if(twoPressure)
+    system.SetNumberOfSchurVariables(2);
+  else 
+    system.SetNumberOfSchurVariables(1);
 
   // ******* Set block size for the ASM smoothers *******
-  system.SetElementBlockNumber(2);
+  if(twoPressure)
+    system.SetElementBlockNumber(3);
+  else
+    system.SetElementBlockNumber(2);
 
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
@@ -330,6 +363,8 @@ int main(int argc, char **args)
 
   std::vector < std::vector <double> > data(n_timesteps);
 
+  system.ResetComputationalTime();
+  
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
     for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
@@ -393,10 +428,12 @@ int main(int argc, char **args)
     outf.close();
   }
 
-
+  system.PrintComputationalTime();
 
   // ******* Clear all systems *******
   ml_prob.clear();
+  std::cout << " TOTAL TIME:\t" << \
+          static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
   return 0;
 }
 
@@ -404,11 +441,11 @@ double SetVariableTimeStep(const double time)
 {
   //double dt = 1. / ( 64 * 1.4 );
   double dt = 1./32;
-  double shiftedTime = time - floor(time);
-  if( time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25){
-    dt = 1./256;
-  }
-  std::cout << " Shifted Time = " << shiftedTime << " dt = " << dt<< std::endl; 
+//   double shiftedTime = time - floor(time);
+//   if( time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25){
+//     dt = 1./256;
+//   }
+//   std::cout << " Shifted Time = " << shiftedTime << " dt = " << dt<< std::endl; 
   
 //   double PI = acos(-1.);
 //   double dt = 1./32.*(1.25 + 0.75 * sin(2.*PI*time - 3./4. * PI));
@@ -495,6 +532,10 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
     }
   }
   else if(!strcmp(name, "PS")) {
+    test = 0;
+    value = 0.;
+  }
+  else if(!strcmp(name, "PF")) {
     test = 0;
     value = 0.;
   }
