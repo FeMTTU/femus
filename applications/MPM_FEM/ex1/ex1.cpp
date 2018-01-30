@@ -509,7 +509,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
         distance += (Xgss[k] - xc[k]) * (Xgss[k] - xc[k]);
       }
       distance = sqrt(distance);
-      double scalingFactor = 0.001;// / (1. + 100. * distance);
+      double scalingFactor = 0.01;// / (1. + 100. * distance);
 
       for (unsigned i = 0; i < nDofsD; i++) {
         vector < adept::adouble > softStiffness(dim, 0.);
@@ -946,6 +946,26 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
     indexSolA[ivar] = ml_sol->GetIndex(&varname[6 + ivar][0]);
   }
 
+  
+  
+    // update the grid velocity and acceleration
+  for (unsigned idim = 0; idim < dim; idim++) {
+    for (unsigned jdof = mymsh->_dofOffset[solType][iproc]; jdof < mymsh->_dofOffset[solType][iproc + 1]; jdof++) {
+
+      double dNew = (*mysolution->_Sol[indexSolD[idim]])(jdof);
+      double vOld = (*mysolution->_SolOld[indexSolV[idim]])(jdof);
+      double aOld = (*mysolution->_SolOld[indexSolA[idim]])(jdof);
+      double vNew = 2. / dt * dNew - vOld;
+      double aNew = 4. / (dt * dt) * dNew - 4. / dt * vOld - aOld;
+
+      mysolution->_Sol[indexSolV[idim]]->set(jdof, vNew);
+      mysolution->_Sol[indexSolA[idim]]->set(jdof, aNew);
+    }
+
+    mysolution->_Sol[indexSolV[idim]]->close();
+    mysolution->_Sol[indexSolA[idim]]->close();
+  }
+  
 
   //line instances
   std::vector<unsigned> markerOffset = linea.GetMarkerOffset();
@@ -957,8 +977,7 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
   //initialization of iel
   unsigned ielOld = UINT_MAX;
   //declaration of element instances
-
-
+  
   //BEGIN first loop on particles 
   for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
 
@@ -969,7 +988,8 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
       short unsigned ielt;
       unsigned nve;
       std::vector <double> particleDisp(dim, 0.);
-
+      std::vector <double> particleAcc(dim, 0.);
+      
       //update element related quantities only if we are in a different element
       if (iel != ielOld) {
 
@@ -978,13 +998,8 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
 
         for (int i = 0; i < dim; i++) {
           SolDd[i].resize(nve);
-        }
-
-        // ----------------------------------------------------------------------------------------
-        // coordinates, solutions, displacement, velocity dofs
-
-        for (int i = 0; i < dim; i++) {
-          vx[i].resize(nve);
+	  SolAd[i].resize(nve);
+	  vx[i].resize(nve);
         }
 
         //BEGIN copy of the value of Sol at the dofs idof of the element iel
@@ -993,9 +1008,9 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
 
           for (int i = 0; i < dim; i++) {
             SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof);
-
-            //Fixed coordinates (Reference frame)
-            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof) + SolDd[i][inode]; //TODO questo l'ho gia' cambiato cosi' e' corretto
+            SolAd[i][inode] = (*mysolution->_Sol[indexSolA[i]])(idof);
+            //moving domain
+            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof) + SolDd[i][inode]; 
           }
         }
         //END
@@ -1011,15 +1026,19 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
       //update displacement and acceleration
       for (int i = 0; i < dim; i++) {
 	particleDisp[i] = 0.;
+	particleAcc[i] = 0.;
         for (unsigned inode = 0; inode < nve; inode++) {
           particleDisp[i] += phi[inode] * SolDd[i][inode];
+	  particleAcc[i] += phi[inode] * SolAd[i][inode];
         }
       }
 
-      
-      particles[iMarker]->SetMarkerDisplacement(particleDisp);
-      //movement of the particles // TODO moveit down in UpdateLineMPM
+      particles[iMarker]->SetMarkerDisplacement(particleDisp); //TODO da eliminare e mettere nella funzione che segue
       particles[iMarker]->UpdateParticleCoordinates();
+      particles[iMarker]->UpdateParticleVelocities(particleAcc, dt);
+      particles[iMarker]->SetMarkerAcceleration(particleAcc);
+      
+      // TODO da muovere dentro la funzione UpdateLineMPM
       particles[iMarker]->GetElementSerial(iel, mysolution, 0.);
       particles[iMarker]->SetIprocMarkerPreviousElement(iel);
 
@@ -1027,9 +1046,7 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
       for (int i = 0; i < dim; i++) {
         for (int j = 0; j < dim; j++) {
           GradSolDp[i][j] = 0.;
-        }
-        for (unsigned inode = 0; inode < nve; inode++) {
-          for (int j = 0; j < dim; j++) {
+          for (unsigned inode = 0; inode < nve; inode++) {
             GradSolDp[i][j] +=  gradphi[inode * dim + j] * SolDd[i][inode];
           }
         }
@@ -1068,110 +1085,90 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
   }
   //END first loop on particles
 
-
-  linea.UpdateLineMPM();
-
-  //project the old velocity and acceleration from the moved particles to the new grid
-  bool old = true;
-  linea.ParticlesToGridProjection(old);
-
-
-  // update the grid velocity and acceleration
-  for (unsigned idim = 0; idim < dim; idim++) {
-    for (unsigned jdof = mymsh->_dofOffset[solType][iproc]; jdof < mymsh->_dofOffset[solType][iproc + 1]; jdof++) {
-
-      double dNew = (*mysolution->_Sol[indexSolD[idim]])(jdof);
-      double vOld = (*mysolution->_SolOld[indexSolV[idim]])(jdof);
-      double aOld = (*mysolution->_SolOld[indexSolA[idim]])(jdof);
-      double vNew = 2. / dt * dNew - vOld;
-      double aNew = 4. / (dt * dt) * dNew - 4. / dt * vOld - aOld;
-
-      mysolution->_Sol[indexSolV[idim]]->set(jdof, vNew);
-      mysolution->_Sol[indexSolA[idim]]->set(jdof, aNew);
-    }
-
-    mysolution->_Sol[indexSolV[idim]]->close();
-    mysolution->_Sol[indexSolA[idim]]->close();
-  }
-
-
-  
-  //BEGIN second loop on particles (used as Gauss points)
-  for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
-
-    //element of particle iMarker
-    unsigned iel = particles[iMarker]->GetMarkerElement();
-    if (iel != UINT_MAX) {
-
-      short unsigned ielt;
-      unsigned nve;
-      std::vector <double> particleAcc(dim, 0.);
-
-      //update element related quantities only if we are in a different element
-      if (iel != ielOld) {
-
-        ielt = mymsh->GetElementType(iel);
-        nve = mymsh->GetElementDofNumber(iel, solType);
-        //initialization of everything is in common fluid and solid
-
-        for (int i = 0; i < dim; i++) {
-          SolAd[i].resize(nve);
-        }
-
-        // ----------------------------------------------------------------------------------------
-        // coordinates, solutions, displacement, velocity dofs
-
-        for (int i = 0; i < dim; i++) {
-          vx[i].resize(nve);
-        }
-
-        //BEGIN copy of the value of Sol at the dofs idof of the element iel
-        for (unsigned inode = 0; inode < nve; inode++) {
-          unsigned idof = mymsh->GetSolutionDof(inode, iel, solType); //local 2 global solution
-
-          for (int i = 0; i < dim; i++) {
-             SolAd[i][inode] = (*mysolution->_Sol[indexSolA[i]])(idof);
-
-            //Fixed coordinates (Reference frame)
-            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof);// + SolDd[i][inode];
-          }
-        }
-        //END
-
-      }
-
-      bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO to be removed after we include FindLocalCoordinates in the advection
-      particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, mysolution, 0);
-      std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
-
-      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradphi, nablaphi); //function to evaluate at the particles
-
-      //update displacement and acceleration
-      for (int i = 0; i < dim; i++) {
-	particleAcc[i] = 0.;
-        for (unsigned inode = 0; inode < nve; inode++) {
-          particleAcc[i] += phi[inode] * SolAd[i][inode];
-        }
-      }
-
-      //velocity update
-      particles[iMarker]->UpdateParticleVelocities(particleAcc, dt);
-
-      particles[iMarker]->SetMarkerAcceleration(particleAcc);
-
-      ielOld = iel;
-    }
-    else {
-      break;
-    }
-  }
-  //END second loop on particles
-
-
   for (unsigned i = 0; i < dim; i++) {
     for (unsigned j = 0; j < dim; j++) {
       mysolution->_Sol[indexSolD[i]]->zero();
       mysolution->_Sol[indexSolD[i]]->close();
     }
   }
+    
+  linea.UpdateLineMPM();
+    
+  //project the old velocity and acceleration from the moved particles to the new grid
+  //linea.ParticlesToGridProjection();
+
+  
+//   //BEGIN second loop on particles (used as Gauss points)
+//   for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
+// 
+//     //element of particle iMarker
+//     unsigned iel = particles[iMarker]->GetMarkerElement();
+//     if (iel != UINT_MAX) {
+// 
+//       short unsigned ielt;
+//       unsigned nve;
+//       std::vector <double> particleAcc(dim, 0.);
+// 
+//       //update element related quantities only if we are in a different element
+//       if (iel != ielOld) {
+// 
+//         ielt = mymsh->GetElementType(iel);
+//         nve = mymsh->GetElementDofNumber(iel, solType);
+//         //initialization of everything is in common fluid and solid
+// 
+//         for (int i = 0; i < dim; i++) {
+//           SolAd[i].resize(nve);
+//         }
+// 
+//         // ----------------------------------------------------------------------------------------
+//         // coordinates, solutions, displacement, velocity dofs
+// 
+//         for (int i = 0; i < dim; i++) {
+//           vx[i].resize(nve);
+//         }
+// 
+//         //BEGIN copy of the value of Sol at the dofs idof of the element iel
+//         for (unsigned inode = 0; inode < nve; inode++) {
+//           unsigned idof = mymsh->GetSolutionDof(inode, iel, solType); //local 2 global solution
+// 
+//           for (int i = 0; i < dim; i++) {
+//              SolAd[i][inode] = (*mysolution->_Sol[indexSolA[i]])(idof);
+// 
+//             //Fixed coordinates (Reference frame)
+//             vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof);// + SolDd[i][inode];
+//           }
+//         }
+//         //END
+// 
+//       }
+// 
+//       bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO to be removed after we include FindLocalCoordinates in the advection
+//       particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, mysolution, 0);
+//       std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
+// 
+//       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradphi, nablaphi); //function to evaluate at the particles
+// 
+//       //update displacement and acceleration
+//       for (int i = 0; i < dim; i++) {
+// 	particleAcc[i] = 0.;
+//         for (unsigned inode = 0; inode < nve; inode++) {
+//           particleAcc[i] += phi[inode] * SolAd[i][inode];
+//         }
+//       }
+// 
+//       //velocity update
+//       particles[iMarker]->UpdateParticleVelocities(particleAcc, dt);
+// 
+//       particles[iMarker]->SetMarkerAcceleration(particleAcc);
+// 
+//       ielOld = iel;
+//     }
+//     else {
+//       break;
+//     }
+//   }
+//   //END second loop on particles
+
+
+ 
 }

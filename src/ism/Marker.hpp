@@ -26,9 +26,11 @@
 #include "map"
 #include "MyVector.hpp"
 
-namespace femus {
+namespace femus
+{
 
-  class Marker : public ParallelObject {
+  class Marker : public ParallelObject
+  {
     public:
       Marker(std::vector < double > x, const MarkerType &markerType, Solution *sol, const unsigned & solType, const bool &debug = false) {
         double s1 = 0.;
@@ -41,26 +43,26 @@ namespace femus {
         _MPMSize = 3 * _dim + 2;
         GetElement(1, UINT_MAX, sol, s1);
 
-        if(_iproc == _mproc) {
+        if (_iproc == _mproc) {
           std::vector < std::vector < std::vector < std::vector < double > > > >aX;
           FindLocalCoordinates(_solType, aX, true, sol, s1);
 
           _MPMQuantities.resize(_MPMSize);
-          _MPMQuantities[3 * _dim ] = 1.;  //mass
-          _MPMQuantities[3 * _dim + 1] = 1.;  //density
-          for(unsigned d = 0; d < 3 * _dim; d++) {
+          _MPMQuantities[3 * _dim ] = 0.217013888889;  //mass
+          _MPMQuantities[3 * _dim + 1] = 10000.;  //density
+          for (unsigned d = 0; d < 3 * _dim; d++) {
             _MPMQuantities[d] = 0.;
           }
 
           //unitialization of the deformation gradient of the particle to the identity matrix
           _Fp.resize(_dim);
-          for(unsigned i = 0; i < _dim; i++) {
+          for (unsigned i = 0; i < _dim; i++) {
             _Fp[i].resize(_dim);
           }
 
-          for(unsigned i = 0; i < _dim; i++) {
-            for(unsigned j = 0; j < _dim; j++) {
-              if(i == j) {
+          for (unsigned i = 0; i < _dim; i++) {
+            for (unsigned j = 0; j < _dim; j++) {
+              if (i == j) {
                 _Fp[i][i] = 1.;
               }
               else {
@@ -76,7 +78,7 @@ namespace femus {
       };
 
       double GetCoordinates(Solution *sol, const unsigned &k, const unsigned &i , const double &s) {
-        if(!sol->GetIfFSI()) {
+        if (!sol->GetIfFSI()) {
           return (*sol->GetMesh()->_topology->_Sol[k])(i);
         }
         else {
@@ -113,34 +115,10 @@ namespace femus {
         _mproc = mproc;
       }
 
-      void SetMarkerMass(const double &mass) {
-        _MPMQuantities[3 * _dim] = mass;
-      }
 
-      void SetMarkerVelocity(const std::vector <double>  &velocity) {
-        for(unsigned d = 0; d < velocity.size(); d++) {
-          _MPMQuantities[_dim + d] = velocity[d];
-        }
-      }
 
-      void SetMarkerAcceleration(const std::vector <double>  &acceleration) {
-        for(unsigned d = 0; d < acceleration.size(); d++) {
-          _MPMQuantities[2 * _dim + d] = acceleration[d];
-        }
-      }
-
-      void SetMarkerDisplacement(const std::vector <double>  &displacement) {
-        for(unsigned d = 0; d < displacement.size(); d++) {
-          _MPMQuantities[d] = displacement[d];
-        }
-      }
-
-      void SetMPMQuantities(const std::vector <double>  &MPMQuantities) {
-        _MPMQuantities = MPMQuantities;
-      }
-
-      void SetDeformationGradient(const std::vector < std::vector < double > > Fp) {
-        _Fp = Fp;
+      void SetIprocMarkerPreviousElement(const unsigned &previousElem) {
+        _previousElem = previousElem;
       }
 
       void GetNumberOfMeshElements(unsigned &elements, Solution *sol) {
@@ -156,7 +134,7 @@ namespace femus {
       void GetMarkerLocalCoordinates(std::vector< double > &xi) {
 
         xi.resize(_dim);
-        if(_mproc == _iproc) {
+        if (_mproc == _iproc) {
           xi = _xi;
         }
         MPI_Bcast(&xi[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
@@ -184,6 +162,10 @@ namespace femus {
         elem = _elem;
       }
 
+      void SetMarkerMass(const double &mass) {
+        _MPMQuantities[3 * _dim] = mass;
+      }
+
       double GetMarkerMass() {
         return _MPMQuantities[3 * _dim];
       }
@@ -192,22 +174,60 @@ namespace femus {
         return _MPMQuantities[3 * _dim + 1];
       }
 
+      void SetMarkerVelocity(const std::vector <double>  &velocity) {
+        for (unsigned d = 0; d < velocity.size(); d++) {
+          _MPMQuantities[_dim + d] = velocity[d];
+        }
+      }
+
       void GetMarkerVelocity(std::vector <double> & velocity) {
-        for(unsigned d = 0; d < velocity.size(); d++) {
-          velocity[d] = _MPMQuantities[_dim * d];
+        for (unsigned d = 0; d < velocity.size(); d++) {
+          velocity[d] = _MPMQuantities[_dim + d];
+        }
+      }
+
+      void UpdateParticleVelocities(const std::vector <double> newParticleAcceleration, const double dt) {
+        for (unsigned d = 0; d < _dim; d++) {
+          _MPMQuantities[_dim + d] += 0.5 * (_MPMQuantities[2 * _dim + d] + newParticleAcceleration[d]) * dt ;
+        }
+      }
+
+      void SetMarkerAcceleration(const std::vector <double>  &acceleration) {
+        for (unsigned d = 0; d < acceleration.size(); d++) {
+          _MPMQuantities[2 * _dim + d] = acceleration[d];
         }
       }
 
       void GetMarkerAcceleration(std::vector <double> & acceleration) {
-        for(unsigned d = 0; d < acceleration.size(); d++) {
-          acceleration[d] = _MPMQuantities[_dim * d];
+        for (unsigned d = 0; d < acceleration.size(); d++) {
+          acceleration[d] = _MPMQuantities[2 * _dim + d];
+        }
+      }
+
+      void SetMarkerDisplacement(const std::vector <double>  &displacement) {
+        for (unsigned d = 0; d < displacement.size(); d++) {
+          _MPMQuantities[d] = displacement[d];
         }
       }
 
       void GetMarkerDisplacement(std::vector <double> & displacement) {
-        for(unsigned d = 0; d < displacement.size(); d++) {
-          displacement[d] = _MPMQuantities[_dim * d];
+        for (unsigned d = 0; d < displacement.size(); d++) {
+          displacement[d] = _MPMQuantities[d];
         }
+      }
+
+      void UpdateParticleCoordinates() {
+        for (unsigned i = 0; i < _dim; i++) {
+          _x[i] += _MPMQuantities[i];
+        }
+      }
+
+      void SetMPMQuantities(const std::vector <double>  &MPMQuantities) {
+        _MPMQuantities = MPMQuantities;
+      }
+
+      void SetDeformationGradient(const std::vector < std::vector < double > > Fp) {
+        _Fp = Fp;
       }
 
       std::vector <double> GetMPMQuantities() {
@@ -228,7 +248,7 @@ namespace femus {
 
       void GetMarkerLocalCoordinatesLine(std::vector<double> &xi) {
         xi.resize(_dim);
-        if(_mproc == _iproc) {
+        if (_mproc == _iproc) {
           xi = _xi;
         }
         MPI_Bcast(&xi[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
@@ -250,11 +270,33 @@ namespace femus {
         return _K;
       }
 
+      void GetMarkerCoordinates(std::vector< double > &xn) {
+        xn.resize(_dim);
+        if (_mproc == _iproc) {
+          xn = _x;
+        }
+        MPI_Bcast(&xn[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
+      }
+
+      void GetMarkerCoordinates(std::vector< MyVector <double > > &xn) {
+        if (_mproc == _iproc) {
+          for (unsigned d = 0; d < _dim; d++) {
+            unsigned size = xn[d].size();
+            xn[d].resize(size + 1);
+            xn[d][size] = _x[d];
+          }
+        }
+      }
+
+      unsigned GetIprocMarkerPreviousElement() {
+        return _previousElem;
+      }
+
       void InitializeMarkerForAdvection(const unsigned &order) {
         _x0 = _x;
         _step = 0;
         _K.resize(order);
-        for(unsigned j = 0; j < order; j++) {
+        for (unsigned j = 0; j < order; j++) {
           _K[j].assign(_dim, 0.);
         }
       }
@@ -263,12 +305,12 @@ namespace femus {
         _xi.resize(_dim);
         _x0.resize(_dim);
         _K.resize(order);
-        for(unsigned j = 0; j < order; j++) {
+        for (unsigned j = 0; j < order; j++) {
           _K[j].assign(_dim, 0.);
         }
         _MPMQuantities.resize(3 * _dim + 2);
         _Fp.resize(_dim);
-        for(unsigned i = 0; i < _dim; i++) {
+        for (unsigned i = 0; i < _dim; i++) {
           _Fp[i].resize(_dim);
         }
       }
@@ -283,45 +325,6 @@ namespace femus {
         std::vector < std::vector < double > > ().swap(_K);
         std::vector < double > ().swap(_MPMQuantities);
         std::vector <  std::vector < double > > ().swap(_Fp);
-      }
-
-
-      void GetMarkerCoordinates(std::vector< double > &xn) {
-        xn.resize(_dim);
-        if(_mproc == _iproc) {
-          xn = _x;
-        }
-        MPI_Bcast(&xn[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
-      }
-
-      void GetMarkerCoordinates(std::vector< MyVector <double > > &xn) {
-        if(_mproc == _iproc) {
-          for(unsigned d = 0; d < _dim; d++) {
-            unsigned size = xn[d].size();
-            xn[d].resize(size + 1);
-            xn[d][size] = _x[d];
-          }
-        }
-      }
-
-      unsigned GetIprocMarkerPreviousElement() {
-        return _previousElem;
-      }
-
-      void SetIprocMarkerPreviousElement(const unsigned &previousElem) {
-        _previousElem = previousElem;
-      }
-
-      void UpdateParticleCoordinates() {
-        for(unsigned i = 0; i < _dim; i++) {
-          _x[i] += _MPMQuantities[i];
-        }
-      }
-
-      void UpdateParticleVelocities(const std::vector <double> newParticleAcceleration, const double dt) {
-        for(unsigned i = _dim; i < 2 * _dim; i++) {
-          _MPMQuantities[i] = _MPMQuantities[i] + 0.5 * (_MPMQuantities[i + _dim] + newParticleAcceleration[i]) * dt ;
-        }
       }
 
       void GetElement(const bool &useInitialSearch, const unsigned &initialElem, Solution *sol, const double &s);

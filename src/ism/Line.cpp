@@ -948,7 +948,7 @@ namespace femus {
   }
 
 
-  void Line::ParticlesToGridProjection(bool old) {
+  void Line::ParticlesToGridProjection() {
 
     double s = 0;
 
@@ -1004,68 +1004,39 @@ namespace femus {
         unsigned jdof = _mesh->GetSolutionDof(j, iel, solType);
         _sol->_Sol[solIndexM]->add(jdof, value * mass);
         for(int d = 0; d <  _dim; d++) {
-	  if(old){
-	    _sol->_SolOld[solIndexVel[d]]->add(jdof, value * mass * velocity[d]);
-	    _sol->_SolOld[solIndexAcc[d]]->add(jdof, value * mass * acceleration[d]);
-	  }
-	  else{
-	    _sol->_Sol[solIndexVel[d]]->add(jdof, value * mass * velocity[d]);
-	    _sol->_Sol[solIndexAcc[d]]->add(jdof, value * mass * acceleration[d]);
-	  }
+	  _sol->_Sol[solIndexVel[d]]->add(jdof, value * mass * velocity[d]);
+	  _sol->_Sol[solIndexAcc[d]]->add(jdof, value * mass * acceleration[d]);
         }
       }
     }
     _sol->_Sol[solIndexM]->close();
 
     for(int d = 0; d <  _dim; d++) {
-      if(old){
-	_sol->_SolOld[solIndexVel[d]]->close();
-	_sol->_SolOld[solIndexAcc[d]]->close();
-      }
-      else{
-	_sol->_Sol[solIndexVel[d]]->close();
-	_sol->_Sol[solIndexAcc[d]]->close();
-      }
+      _sol->_Sol[solIndexVel[d]]->close();
+      _sol->_Sol[solIndexAcc[d]]->close();
     }
 
     for(unsigned i = _mesh->_dofOffset[solType][_iproc]; i < _mesh->_dofOffset[solType][_iproc + 1]; i++) {
       double mass = (*_sol->_Sol[solIndexM])(i);
       if(fabs(mass) > 1.0e-20) {  //if on the mass at grid node i
         for(int d = 0; d <  _dim; d++) {
-          double value = (*_sol->_Sol[solIndexVel[d]])(i);
-	  if(old){
-	    _sol->_SolOld[solIndexVel[d]]->set(i, value / mass);
-	    _sol->_SolOld[solIndexAcc[d]]->set(i, value / mass);
-	  }
-	  else{
-	    _sol->_Sol[solIndexVel[d]]->set(i, value / mass);
-	    _sol->_Sol[solIndexAcc[d]]->set(i, value / mass);
-	  }
+          double vel = (*_sol->_Sol[solIndexVel[d]])(i);
+	  _sol->_Sol[solIndexVel[d]]->set(i, vel / mass);
+	  double acc = (*_sol->_Sol[solIndexAcc[d]])(i);
+	  _sol->_Sol[solIndexAcc[d]]->set(i, acc / mass);
         }
       }
       else {
         for(int d = 0; d <  _dim; d++) {
-	  if(old){
-	    _sol->_SolOld[solIndexVel[d]]->set(i, 0.);
-	    _sol->_SolOld[solIndexAcc[d]]->set(i, 0.);
-	  }
-	  else{
-	    _sol->_Sol[solIndexVel[d]]->set(i, 0.);
-	    _sol->_Sol[solIndexAcc[d]]->set(i, 0.);
-	  }
+	  _sol->_Sol[solIndexVel[d]]->set(i, 0.);
+	  _sol->_Sol[solIndexAcc[d]]->set(i, 0.);
         }
       }
     }
 
     for(int d = 0; d <  _dim; d++) {
-      if(old){
-	_sol->_SolOld[solIndexVel[d]]->close();
-	_sol->_SolOld[solIndexAcc[d]]->close();
-      }
-      else{
-	_sol->_Sol[solIndexVel[d]]->close();
-	_sol->_Sol[solIndexAcc[d]]->close();
-      }
+      _sol->_Sol[solIndexVel[d]]->close();
+      _sol->_Sol[solIndexAcc[d]]->close();
     }
 
   }
