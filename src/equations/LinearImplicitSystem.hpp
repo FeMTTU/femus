@@ -307,6 +307,9 @@ namespace femus {
       double _totalSolverTime;
       double _totalAssemblyTime;
       
+      bool _bitFlipOccurred;
+      unsigned _bitFlipCounter;
+      
   };
 
 } //end namespace femus
