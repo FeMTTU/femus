@@ -55,6 +55,30 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
       value = 0;
     }
   }
+  else if (!strcmp(name, "U")) {
+    if (3 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "V")) {
+    if (3 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "AU")) {
+    if (3 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "AV")) {
+    if (3 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
 
   return test;
 
@@ -118,9 +142,15 @@ int main(int argc, char** args)
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
 
   // ******* Set boundary conditions *******
-  mlSol.GenerateBdc("DX", "Steady");
-  if (dim > 1) mlSol.GenerateBdc("DY", "Steady");
-  if (dim > 2) mlSol.GenerateBdc("DZ", "Steady");
+  mlSol.GenerateBdc("DX", "Time_dependent");
+  if (dim > 1) mlSol.GenerateBdc("DY", "Time_dependent");
+  if (dim > 2) mlSol.GenerateBdc("DZ", "Time_dependent");
+   mlSol.GenerateBdc("U", "Time_dependent");
+  if (dim > 1) mlSol.GenerateBdc("V", "Time_dependent");
+  if (dim > 2) mlSol.GenerateBdc("W", "Time_dependent");
+  mlSol.GenerateBdc("AU", "Time_dependent");
+  if (dim > 1) mlSol.GenerateBdc("AV", "Time_dependent");
+  if (dim > 2) mlSol.GenerateBdc("AW", "Time_dependent");
 
   MultiLevelProblem ml_prob(&mlSol);
 
@@ -960,6 +990,8 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
       double vNew = 2. / dt * dNew - vOld;
       double aNew = 4. / (dt * dt) * dNew - 4. / dt * vOld - aOld;
 
+     // double vNew = vOld + 0.5* (aOld + aNew) * dt;
+      
       mysolution->_Sol[indexSolV[idim]]->set(jdof, vNew);
       mysolution->_Sol[indexSolA[idim]]->set(jdof, aNew);
     }
@@ -1012,7 +1044,8 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
             SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof);
             SolAd[i][inode] = (*mysolution->_Sol[indexSolA[i]])(idof);
             //moving domain
-            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof) + 0.*SolDd[i][inode]; 
+            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof); 
+
           }
         }
         //END
