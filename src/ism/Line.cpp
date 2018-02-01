@@ -954,33 +954,33 @@ namespace femus {
 
     unsigned  solIndexM = _sol->GetIndex("M");
 
-    std::vector<unsigned>  solIndexVel(_dim);
-    solIndexVel[0] = _sol->GetIndex("U");
-    if(_dim > 1) solIndexVel[1] = _sol->GetIndex("V");
-    if(_dim > 2) solIndexVel[2] = _sol->GetIndex("W");
-
-    std::vector<unsigned>  solIndexAcc(_dim);
-    solIndexAcc[0] = _sol->GetIndex("AU");
-    if(_dim > 1) solIndexAcc[1] = _sol->GetIndex("AV");
-    if(_dim > 2) solIndexAcc[2] = _sol->GetIndex("AW");
+//     std::vector<unsigned>  solIndexVel(_dim);
+//     solIndexVel[0] = _sol->GetIndex("U");
+//     if(_dim > 1) solIndexVel[1] = _sol->GetIndex("V");
+//     if(_dim > 2) solIndexVel[2] = _sol->GetIndex("W");
+// 
+//     std::vector<unsigned>  solIndexAcc(_dim);
+//     solIndexAcc[0] = _sol->GetIndex("AU");
+//     if(_dim > 1) solIndexAcc[1] = _sol->GetIndex("AV");
+//     if(_dim > 2) solIndexAcc[2] = _sol->GetIndex("AW");
 
     
     unsigned solType = _sol->GetSolutionType(solIndexM);
-    for(int d = 0; d <  _dim; d++) {
-      if(solType != _sol->GetSolutionType(solIndexVel[d]) || solType != _sol->GetSolutionType(solIndexAcc[d]) ) {
-        std::cout << " Error in Line::GetPointsToGridProjections()," << std::endl
-                  << "the mass, the velocity and the acceleration should have the same solution type" << std::endl;
-        abort();
-      }
-    }
+//     for(int d = 0; d <  _dim; d++) {
+//       if(solType != _sol->GetSolutionType(solIndexVel[d]) || solType != _sol->GetSolutionType(solIndexAcc[d]) ) {
+//         std::cout << " Error in Line::GetPointsToGridProjections()," << std::endl
+//                   << "the mass, the velocity and the acceleration should have the same solution type" << std::endl;
+//         abort();
+//       }
+//     }
 
     std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
 
     _sol->_Sol[solIndexM]->zero();
-    for(int d = 0; d <  _dim; d++) {
-      _sol->_Sol[solIndexVel[d]]->zero();
-      _sol->_Sol[solIndexAcc[d]]->zero();
-    }
+//     for(int d = 0; d <  _dim; d++) {
+//       _sol->_Sol[solIndexVel[d]]->zero();
+//       _sol->_Sol[solIndexAcc[d]]->zero();
+//     }
 
     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
@@ -992,52 +992,52 @@ namespace femus {
 
       std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
       double mass = _particles[iMarker]->GetMarkerMass();
-      std::vector< double > velocity(_dim);
-      _particles[iMarker]->GetMarkerVelocity(velocity);
-      
-      std::vector< double > acceleration(_dim);
-      _particles[iMarker]->GetMarkerAcceleration(acceleration);
+//       std::vector< double > velocity(_dim);
+//       _particles[iMarker]->GetMarkerVelocity(velocity);
+//       
+//       std::vector< double > acceleration(_dim);
+//       _particles[iMarker]->GetMarkerAcceleration(acceleration);
 
       basis* base = _mesh->GetBasis(ielType, solType);
       for(unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solType); j++) {
         double value = base->eval_phi(j, xi);
         unsigned jdof = _mesh->GetSolutionDof(j, iel, solType);
         _sol->_Sol[solIndexM]->add(jdof, value * mass);
-        for(int d = 0; d <  _dim; d++) {
-	  _sol->_Sol[solIndexVel[d]]->add(jdof, value * mass * velocity[d]);
-	  _sol->_Sol[solIndexAcc[d]]->add(jdof, value * mass * acceleration[d]);
-        }
+//         for(int d = 0; d <  _dim; d++) {
+// 	  _sol->_Sol[solIndexVel[d]]->add(jdof, value * mass * velocity[d]);
+// 	  _sol->_Sol[solIndexAcc[d]]->add(jdof, value * mass * acceleration[d]);
+//         }
       }
     }
     _sol->_Sol[solIndexM]->close();
 
-    for(int d = 0; d <  _dim; d++) {
-      _sol->_Sol[solIndexVel[d]]->close();
-      _sol->_Sol[solIndexAcc[d]]->close();
-    }
-
-    for(unsigned i = _mesh->_dofOffset[solType][_iproc]; i < _mesh->_dofOffset[solType][_iproc + 1]; i++) {
-      double mass = (*_sol->_Sol[solIndexM])(i);
-      if(fabs(mass) > 1.0e-20) {  //if on the mass at grid node i
-        for(int d = 0; d <  _dim; d++) {
-          double vel = (*_sol->_Sol[solIndexVel[d]])(i);
-	  _sol->_Sol[solIndexVel[d]]->set(i, vel / mass);
-	  double acc = (*_sol->_Sol[solIndexAcc[d]])(i);
-	  _sol->_Sol[solIndexAcc[d]]->set(i, acc / mass);
-        }
-      }
-      else {
-        for(int d = 0; d <  _dim; d++) {
-	  _sol->_Sol[solIndexVel[d]]->set(i, 0.);
-	  _sol->_Sol[solIndexAcc[d]]->set(i, 0.);
-        }
-      }
-    }
-
-    for(int d = 0; d <  _dim; d++) {
-      _sol->_Sol[solIndexVel[d]]->close();
-      _sol->_Sol[solIndexAcc[d]]->close();
-    }
+//     for(int d = 0; d <  _dim; d++) {
+//       _sol->_Sol[solIndexVel[d]]->close();
+//       _sol->_Sol[solIndexAcc[d]]->close();
+//     }
+// 
+//     for(unsigned i = _mesh->_dofOffset[solType][_iproc]; i < _mesh->_dofOffset[solType][_iproc + 1]; i++) {
+//       double mass = (*_sol->_Sol[solIndexM])(i);
+//       if(fabs(mass) > 1.0e-20) {  //if on the mass at grid node i
+//         for(int d = 0; d <  _dim; d++) {
+//           double vel = (*_sol->_Sol[solIndexVel[d]])(i);
+// 	  _sol->_Sol[solIndexVel[d]]->set(i, vel / mass);
+// 	  double acc = (*_sol->_Sol[solIndexAcc[d]])(i);
+// 	  _sol->_Sol[solIndexAcc[d]]->set(i, acc / mass);
+//         }
+//       }
+//       else {
+//         for(int d = 0; d <  _dim; d++) {
+// 	  _sol->_Sol[solIndexVel[d]]->set(i, 0.);
+// 	  _sol->_Sol[solIndexAcc[d]]->set(i, 0.);
+//         }
+//       }
+//     }
+// 
+//     for(int d = 0; d <  _dim; d++) {
+//       _sol->_Sol[solIndexVel[d]]->close();
+//       _sol->_Sol[solIndexAcc[d]]->close();
+//     }
 
   }
 

@@ -104,6 +104,7 @@ int main(int argc, char** args)
   if(dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
 
   mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   mlSol.Initialize("All");
 
@@ -253,6 +254,8 @@ int main(int argc, char** args)
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
+    
+    linea->ParticlesToGridProjection();
     system.MGsolve();
 
     
@@ -384,16 +387,23 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   vector < double >* nullDoublePointer = NULL;
 
   //variable-name handling
-  const char varname[9][3] = {"DX", "DY", "DZ"}; //TODO is there a reason why varname[9][3] and not just varname[9] ?
+  const char varname[5][5] = {"DX", "DY", "DZ","M","Mat"}; //TODO is there a reason why varname[9][3] and not just varname[9] ?
   vector <unsigned> indexSolD(dim);
   vector <unsigned> indexPdeD(dim);
   unsigned solType = ml_sol->GetSolutionType(&varname[0][0]);
+  
 
   for(unsigned ivar = 0; ivar < dim; ivar++) {
     indexSolD[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
     indexPdeD[ivar] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar][0]);
   }
+  
+  unsigned indexSolM = ml_sol->GetIndex(&varname[3][0]);
+  unsigned solTypeM = ml_sol->GetSolutionType(&varname[3][0]);
 
+  unsigned indexSolMat = ml_sol->GetIndex(&varname[4][0]);
+  unsigned solTypeMat = ml_sol->GetSolutionType(&varname[4][0]);
+  
   start_time = clock();
 
   if(assembleMatrix) myKK->zero();
@@ -413,11 +423,28 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
     unsigned nDofsD = mymsh->GetElementDofNumber(iel, solType);    // number of solution element dofs
     unsigned nDofsX = mymsh->GetElementDofNumber(iel, 2);    // number of coordinate element dofs
+    unsigned nDofsM = mymsh->GetElementDofNumber(iel, solTypeM);    // number of coordinate element dofs
 
     unsigned nDofs = dim * nDofsD ;//+ nDofsP;
     // resize local arrays
     std::vector <int> sysDof(nDofs);
 
+    unsigned  material = 0;  // solid = 0, interface =1, fluid =2;
+    unsigned counter = 0;
+    for(unsigned i = 0; i < nDofsM; i++) {
+      unsigned idof = mymsh->GetSolutionDof(i, iel, solTypeM);    // global to global mapping between solution node and solution dof
+      double value = (*mysolution->_Sol[indexSolM])(idof);  
+      if (fabs(value) > 1.0e-12) {
+	material = 2;
+	counter++;
+      }
+    }
+    if ( material == 2 && counter != nDofsM)  material = 1;  
+    
+    unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat); 
+    mysolution->_Sol[indexSolMat]->set(idofMat,material);
+    
+    
     for(unsigned  k = 0; k < dim; k++) {
       SolDd[k].resize(nDofsD);
       vx[k].resize(nDofsX);
@@ -494,7 +521,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       }
       distance = sqrt(distance);
       double scalingFactor = 0.0005;// / (1. + 100. * distance);
-
+      if(material == 2) scalingFactor *= 0.001;
       for(unsigned i = 0; i < nDofsD; i++) {
         vector < adept::adouble > softStiffness(dim, 0.);
 
@@ -859,6 +886,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   //END loop on particles
 
   myRES->close();
+  mysolution->_Sol[indexSolM]->close();
 
   if(assembleMatrix) {
     myKK->close();
