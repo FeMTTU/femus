@@ -22,7 +22,7 @@ bool MPMF = true;
 double gravityfactor;
 
 //time-step size
-double dt =  0.08;
+double dt =  0.008;
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level)
 {
@@ -102,8 +102,12 @@ int main(int argc, char** args)
   mlSol.AddSolution("DX", LAGRANGE, SECOND, 2);
   if(dim > 1) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
   if(dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
+  
+//     mlSol.AddSolution("DX", LAGRANGE, FIRST, 2);
+//   if(dim > 1) mlSol.AddSolution("DY", LAGRANGE, FIRST, 2);
+//   if(dim > 2) mlSol.AddSolution("DZ", LAGRANGE, FIRST, 2);
 
-  mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution("M", LAGRANGE, FIRST, 2);
   mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   mlSol.Initialize("All");
@@ -250,7 +254,7 @@ int main(int argc, char** args)
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
 
-  unsigned n_timesteps = 100;
+  unsigned n_timesteps = 200;
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
@@ -422,7 +426,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
     short unsigned ielt = mymsh->GetElementType(iel);
 
     unsigned nDofsD = mymsh->GetElementDofNumber(iel, solType);    // number of solution element dofs
-    unsigned nDofsX = mymsh->GetElementDofNumber(iel, 2);    // number of coordinate element dofs
     unsigned nDofsM = mymsh->GetElementDofNumber(iel, solTypeM);    // number of coordinate element dofs
 
     unsigned nDofs = dim * nDofsD ;//+ nDofsP;
@@ -447,8 +450,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
     
     for(unsigned  k = 0; k < dim; k++) {
       SolDd[k].resize(nDofsD);
-      vx[k].resize(nDofsX);
-      vx_hat[k].resize(nDofsX);
+      vx[k].resize(nDofsD);
+      vx_hat[k].resize(nDofsD);
     }
 
     for(unsigned  k = 0; k < dim; k++) {
@@ -459,24 +462,18 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
     // local storage of global mapping and solution
     for(unsigned i = 0; i < nDofsD; i++) {
       unsigned idof = mymsh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
-
+      unsigned idofX = mymsh->GetSolutionDof(i, iel, 2);    // global to global mapping between solution node and solution dof
+      
       for(unsigned  k = 0; k < dim; k++) {
         SolDd[k][i] = (*mysolution->_Sol[indexSolD[k]])(idof);      // global extraction and local storage for the solution
         sysDof[i + k * nDofsD] = myLinEqSolver->GetSystemDof(indexSolD[k], indexPdeD[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+	vx_hat[k][i] = (*mymsh->_topology->_Sol[k])(idofX);
+        vx[k][i] = vx_hat[k][i] + SolDd[k][i];
       }
     }
 
     // start a new recording of all the operations involving adept::adouble variables
     if(assembleMatrix) s.new_recording();
-    // local storage of coordinates
-    for(unsigned i = 0; i < nDofsX; i++) {
-      unsigned coordXDof  = mymsh->GetSolutionDof(i, iel, 2);   // global to global mapping between coordinates node and coordinate dof
-
-      for(unsigned k = 0; k < dim; k++) {
-        vx_hat[k][i] = (*mymsh->_topology->_Sol[k])(coordXDof);
-        vx[k][i] = vx_hat[k][i] + SolDd[k][i];
-      }
-    }
 
     // *** Gauss point loop ***
     for(unsigned ig = 0; ig < mymsh->_finiteElement[ielt][solType]->GetGaussPointNumber(); ig++) {
@@ -666,20 +663,16 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
           dofsVAR[i].resize(nDofsD);
           SolDd[indexPdeD[i]].resize(nDofsD);
           aRhs[indexPdeD[i]].resize(nDofsD);
-        }
-
-        dofsAll.resize(0);
-
-
-        for(int i = 0; i < dim; i++) {
-          vx[i].resize(nDofsD);
+	  vx[i].resize(nDofsD);
           vx_hat[i].resize(nDofsD);
         }
+        dofsAll.resize(0);
 
 
         //BEGIN copy of the value of Sol at the dofs idof of the element iel
         for(unsigned i = 0; i < nDofsD; i++) {
           unsigned idof = mymsh->GetSolutionDof(i, iel, solType); //local 2 global solution
+	  unsigned idofX = mymsh->GetSolutionDof(i, iel, 2); //local 2 global coordinates
 
           for(int j = 0; j < dim; j++) {
             SolDd[indexPdeD[j]][i] = (*mysolution->_Sol[indexSolD[j]])(idof);
@@ -688,7 +681,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
             aRhs[indexPdeD[j]][i] = 0.;
 
             //Fixed coordinates (Reference frame)
-            vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idof);
+            vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idofX);
+	    vx[j][i]    = vx_hat[j][i] + SolDd[indexPdeD[j]][i];
           }
         }
         //END
@@ -700,11 +694,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
         if(assembleMatrix) s.new_recording();
 
-        for(unsigned idim = 0; idim < dim; idim++) {
-          for(int j = 0; j < nDofsD; j++) {
-            vx[idim][j]    = vx_hat[idim][j] + SolDd[indexPdeD[idim]][j];
-          }
-        }
         // start a new recording of all the operations involving adept::adouble variables
       }
 
@@ -986,11 +975,12 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line& linea)
         //BEGIN copy of the value of Sol at the dofs idof of the element iel
         for(unsigned inode = 0; inode < nve; inode++) {
           unsigned idof = mymsh->GetSolutionDof(inode, iel, solType); //local 2 global solution
+	  unsigned idofX = mymsh->GetSolutionDof(inode, iel, 2); //local 2 global solution
 
           for(int i = 0; i < dim; i++) {
             SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof);
             //moving domain
-            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idof);
+            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idofX);
           }
         }
         //END
