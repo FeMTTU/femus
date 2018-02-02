@@ -270,7 +270,7 @@ int main(int argc, char** args)
     mov_vars.push_back("DX");
     mov_vars.push_back("DY");
     mov_vars.push_back("DZ");
-   // mlSol.GetWriter()->SetMovingMesh(mov_vars);
+    mlSol.GetWriter()->SetMovingMesh(mov_vars);
 
     std::vector<std::string> print_vars;
     print_vars.push_back("All");
@@ -430,9 +430,11 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
     bool particlesInElement = false;
     for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
       //element of particle iMarker
-      int iel2 = particles[iMarker]->GetMarkerElement();
-      if (iel == iel2) particlesInElement = true;
+      unsigned iel2 = particles[iMarker]->GetMarkerElement();
+      if (iel == iel2) {
+	particlesInElement = true;
       break;
+      }
     }
 //END
 
@@ -446,16 +448,16 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
     std::vector <int> sysDof(nDofs);
 
     unsigned  material = 0;  // solid = 2, interface =1, fluid =0;
-//     unsigned counter = 0;
-//     for(unsigned i = 0; i < nDofsM; i++) {
-//       unsigned idof = mymsh->GetSolutionDof(i, iel, solTypeM);    // global to global mapping between solution node and solution dof
-//       double value = (*mysolution->_Sol[indexSolM])(idof);  
-//       if (fabs(value) > 1.0e-14) {
-// 	material = 2;
-// 	counter++;
-//       }
-//     }
-    //if ( material == 2 && counter != nDofsM)  material = 1;  
+    unsigned counter = 0;
+    for(unsigned i = 0; i < nDofsM; i++) {
+      unsigned idof = mymsh->GetSolutionDof(i, iel, solTypeM);    // global to global mapping between solution node and solution dof
+      double value = (*mysolution->_Sol[indexSolM])(idof);  
+      if (fabs(value) > 1.0e-14) {
+	material = 2;
+	counter++;
+      }
+    }
+    if ( material == 2 && counter != nDofsM)  material = 1;  
     
  //BEGIN to remove    
     if (particlesInElement == true) material = 2;
@@ -536,7 +538,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       distance = sqrt(distance);
       double scalingFactor;// / (1. + 100. * distance);
       if(material == 0) scalingFactor = 0.00001;
-   //   if(material == 1) scalingFactor = 0.001;
+      if(material == 1) scalingFactor = 0.01;
       if(material == 2) scalingFactor = 0.01;
       for(unsigned i = 0; i < nDofsD; i++) {
         vector < adept::adouble > softStiffness(dim, 0.);
