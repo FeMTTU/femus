@@ -88,7 +88,7 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
 
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob);    
 
-double ComputeIntegral(MultiLevelProblem& ml_prob);
+// double ComputeIntegral(MultiLevelProblem& ml_prob);
 
 
 int main(int argc, char** args) {
@@ -207,7 +207,7 @@ int main(int argc, char** args) {
   system_opt.init();
   system_opt.MLsolve();
 
-    ComputeIntegral(mlProb);
+//     ComputeIntegral(mlProb);
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -324,11 +324,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
    
    
   //boundary adjoint shape functions  
-   
-//   vector < double > phiV_bd_gss;
-//   vector < double > phiV_x_bd_gss;
-//   phiV_bd_gss.reserve(maxSize);
-//   phiV_x_bd_gss.reserve(maxSize*dim);
   vector < vector < double > > phi_bd_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_x_bd_gss_fe(NFE_FAMS);
  
@@ -337,8 +332,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
       phi_x_bd_gss_fe[fe].reserve(maxSize*dim);
    }
    
-   vector <double> phi_adj_vol_at_bdry;  // local test function
-  vector <double> phi_adj_x_vol_at_bdry; // local test function first order partial derivatives
+  //bdry vol adj  evaluated at bdry points
+  vector <double> phi_adj_vol_at_bdry;  
+  vector <double> phi_adj_x_vol_at_bdry; 
   phi_adj_vol_at_bdry.reserve(maxSize);
   phi_adj_x_vol_at_bdry.reserve(maxSize * dim);
   vector <double> sol_adj_x_vol_at_bdry_gss;
@@ -380,7 +376,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   }
 
   //------------ at quadrature points ---------------------
-  vector < double > SolVAR_qp(n_unknowns);
+  vector < double > SolVAR_qp(n_unknowns);  //sol_V,P_gss_of_st,adj,ctrl
     vector < vector < double > > gradSolVAR_qp(n_unknowns);
     for(int k=0; k<n_unknowns; k++) {  gradSolVAR_qp[k].resize(dim);  }
       
@@ -414,7 +410,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
      // elem average point 
     vector < double > elem_center(dim);   
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
-  for (unsigned j = 0; j < dim; j++) {  
+    for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofsX; i++) {
          elem_center[j] += coordX[j][i];
        }
@@ -453,9 +449,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   
    //STATE###################################################################  
   for (unsigned  k = 0; k < n_unknowns; k++) {
-    unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+    unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);	//nDofs_V,P_of_st,adj,ctrl
 	Sol_n_el_dofs[k]=ndofs_unk;
-       SolVAR_eldofs[k].resize(ndofs_unk);
+       SolVAR_eldofs[k].resize(ndofs_unk);	//sol_V,P_of_st,adj,ctrl
        JACDof[k].resize(ndofs_unk); 
     for (unsigned i = 0; i < ndofs_unk; i++) {
        unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);    // global to global mapping between solution node and solution dof // via local to global solution node
@@ -464,8 +460,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
       }
     }
   //CTRL###################################################################
-
-       
+    
     for(int ivar=0; ivar<n_unknowns; ivar++) {
       
       Res[SolPdeIndex[ivar]].resize(Sol_n_el_dofs[ivar]);
@@ -481,168 +476,210 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     }
   }
   
-    //=============================================================================
+ 
+//========BoundaryLoop=====================================================================
 
-	// Perform face loop over elements that contain some control face
-	if (control_el_flag == 1) {
+  // Perform face loop over elements that contain some control face
+  if (control_el_flag == 1) {
 	  
-	  double tau=0.;
-	  vector<double> normal(dim,0);
+    double tau=0.;
+    vector<double> normal(dim,0);
 	  
-	  	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
-            std::vector < double > xyz_bdc(3,0.);  //not being used, because the boundaries are identified by the face numbers
-	    // look for boundary faces
-	    if(el->GetFaceElementIndex(iel,jface) < 0) {
-	      unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
-	      if(  face == CTRL_FACE_IDX) { //control face
+    for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+	std::vector < double > xyz_bdc(3,0.);  //not being used, because the boundaries are identified by the face numbers
+	// look for boundary faces
+	if(el->GetFaceElementIndex(iel,jface) < 0) {
+	   unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
 
+	   if(  face == CTRL_FACE_IDX) { //control face
 //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
-          std::vector<bool> dir_bool; dir_bool.resize(dim);
-		  for(unsigned idim=0; idim<dim; idim++) {
-		    dir_bool[idim] = mlSol->GetBdcFunction()(xyz_bdc,ctrl_name[idim].c_str(),tau,face,0.);
-		  }
+	    std::vector<bool> dir_bool; dir_bool.resize(dim);
+	    for(unsigned idim=0; idim<dim; idim++) {
+		dir_bool[idim] = mlSol->GetBdcFunction()(xyz_bdc,ctrl_name[idim].c_str(),tau,face,0.);
+	    }
 	  
- //=================================================== 
-		
-		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface, SolFEType[ctrl_pos_begin] ); //AAAAAAAAAAAAAAAAA
-		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
-		for(unsigned i=0; i < nve_bdry; i++) {
-		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
-                  unsigned iDof = msh->GetSolutionDof(i_vol, iel, coordXType);
-		  for(unsigned idim=0; idim<dim; idim++) {
-		      coordX_bd[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
-		  }
+//=================================================== 
+	    unsigned nve_bd = msh->GetElementFaceDofNumber(iel,jface, SolFEType[ctrl_pos_begin] ); //AAAAAAAAAAAAAAAAA
+	    const unsigned felt_bd = msh->GetElementFaceType(iel, jface);    
+	    for(unsigned i=0; i < nve_bd; i++) {
+		unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
+                unsigned iDof = msh->GetSolutionDof(i_vol, iel, coordXType);
+		for(unsigned idim=0; idim<dim; idim++) {
+		    coordX_bd[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
 		}
+	    }
 		
-
 //========= initialize gauss quantities on the boundary ============================================
-	vector < double > SolVAR_bd_qp(n_unknowns);
-	vector < vector < double > > gradSolVAR_bd_qp(n_unknowns);
-	for(int k=0; k<n_unknowns; k++) {  gradSolVAR_bd_qp[k].resize(dim);  }
-//========= initialize gauss quantities on the boundary ============================================
-	
-	
-  for(unsigned ig_bd=0; ig_bd < msh->_finiteElement[felt_bdry][SolFEType[ctrl_pos_begin]]->GetGaussPointNumber(); ig_bd++) {
-	for(int fe=0; fe < NFE_FAMS; fe++) {
-	ml_prob._ml_msh->_finiteElement[felt_bdry][fe]->JacobianSur(coordX_bd,ig_bd,weight_bd,phi_bd_gss_fe[fe],phi_x_bd_gss_fe[fe],normal);
-	}
-	msh->_finiteElement[ielGeom][SolFEType[adj_pos_begin]]->ShapeAtBoundary(coordX,ig_bd,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+	    vector < double > SolVAR_bd_qp(n_unknowns);
+	    vector < vector < double > > gradSolVAR_bd_qp(n_unknowns);
+	    for(int k=0; k<n_unknowns; k++) {  gradSolVAR_bd_qp[k].resize(dim);  }
 
+//========= gauss_loop boundary===============================================================
+	    for(unsigned ig_bd=0; ig_bd < msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]->GetGaussPointNumber(); ig_bd++) {
+		for(int fe=0; fe < NFE_FAMS; fe++) {
+		     ml_prob._ml_msh->_finiteElement[felt_bd][fe]->JacobianSur(coordX_bd,ig_bd,weight_bd,phi_bd_gss_fe[fe],phi_x_bd_gss_fe[fe],normal);
+		}
+// 		ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]->JacobianSur(coordX_bd,ig_bd,weight_bd,phi_bd_gss_fe[SolFEType[ctrl_pos_begin]],phi_x_bd_gss_fe[SolFEType[ctrl_pos_begin]],normal);
+// 		ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[adj_pos_begin]]->JacobianSur(coordX_bd,ig_bd,weight_bd,phi_bd_gss_fe[SolFEType[adj_pos_begin]],phi_x_bd_gss_fe[SolFEType[adj_pos_begin]],normal);
+		ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[adj_pos_begin]]->ShapeAtBoundary(coordX,ig_bd,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
 		  
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
-		  double dx_dxi = 0.;
-		 const elem_type_1D * myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bdry][SolFEType[ctrl_pos_begin]]);
-		 const double * myptr = myeltype->GetDPhiDXi(ig_bd);
-		      for (int inode = 0; inode < nve_bdry; inode++) dx_dxi += myptr[inode] * coordX_bd[0][inode];
-  
-		      for (int inode = 0; inode < nve_bdry; inode++) {
-                            for (int d = 0; d < dim; d++) {
-                              if (d==0 ) phi_x_bd_gss_fe[ctrl_pos_begin][inode + d*nve_bdry] = myptr[inode]* (1./ dx_dxi);
-                              else  phi_x_bd_gss_fe[ctrl_pos_begin][inode + d*nve_bdry] = 0.;
-                         }
+		double dx_dxi = 0.;
+		const elem_type_1D* myeltype = static_cast<const elem_type_1D*>(msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]);
+		const double* myptr = myeltype->GetDPhiDXi(ig_bd);
+		for (int inode = 0; inode < nve_bd; inode++) {
+		      dx_dxi += myptr[inode] * coordX_bd[0][inode];
+		}  
+		for (int inode = 0; inode < nve_bd; inode++) {
+                     for (int d = 0; d < dim; d++) {
+                          if (d == 0 ) phi_x_bd_gss_fe[SolFEType[ctrl_pos_begin]][inode + d*nve_bd] = myptr[inode]* (1./ dx_dxi);
+                          else  phi_x_bd_gss_fe[SolFEType[ctrl_pos_begin]][inode + d*nve_bd] = 0.;
                      }
+                }
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  
 //========== compute gauss quantities on the boundary ===============================================
-	for(unsigned unk = 0; unk < n_unknowns; unk++) {
-	  SolVAR_bd_qp[unk] = 0.;
-	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
-	    gradSolVAR_bd_qp[unk][ivar2] = 0.; 
-	  }
+	       int unk_bd[2] = {adj_pos_begin,ctrl_pos_begin};
+	       for(unsigned unk = 0; unk < 2/*unk_bd.size()*/; unk++) {
+		   SolVAR_bd_qp[unk_bd[unk]] = 0.;
+		   for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
+		       gradSolVAR_bd_qp[unk_bd[unk]][ivar2] = 0.; 
+		   }
 	  
-	  for(int i_bd = 0; i_bd < nve_bdry; i_bd++/*unsigned i = 0; i < Sol_n_el_dofs[unk]; i++*/) {
-		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
-	    SolVAR_bd_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i_bd] * SolVAR_eldofs[unk][i_vol];
-	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
-	      gradSolVAR_bd_qp[unk][ivar2] += phi_x_bd_gss_fe[ SolFEType[unk] ][i_bd + ivar2 * nve_bdry] * SolVAR_eldofs[unk][i_vol]; 
-	    }
-	  }
-	  
-	}  
+		   for(int i_bd = 0; i_bd < nve_bd; i_bd++/*unsigned i = 0; i < Sol_n_el_dofs[unk]; i++*/) {
+		       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
+		       SolVAR_bd_qp[unk_bd[unk]] += phi_bd_gss_fe[ SolFEType[unk_bd[unk]] ][i_bd] * SolVAR_eldofs[unk_bd[unk]][i_vol];
+		       for(unsigned ivar2=0; ivar2<dim; ivar2++) {
+			   gradSolVAR_bd_qp[ctrl_pos_begin/*unk_bd[unk]*/][ivar2] += phi_x_bd_gss_fe[ SolFEType[ctrl_pos_begin/*unk_bd[unk]*/] ][i_bd + ivar2 * nve_bd] * SolVAR_eldofs[ctrl_pos_begin/*unk_bd[unk]*/][i_vol]; 
+		       }
+		   }
+		}  
  //end unknowns eval at gauss points ********************************
 		      
 //=============== grad dot n for residual ========================================= 
 //     compute gauss quantities on the boundary through VOLUME interpolation
-           std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
-		      for (int iv = 0; iv < nDofsVadj; iv++)  {
-                            for (int d = 0; d < dim; d++) {
-			      sol_adj_x_vol_at_bdry_gss[d] += SolVAR_eldofs[adj_pos_begin][iv] * phi_adj_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
-			    }
-		      }  
+		std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
+		for (int iv = 0; iv < nDofsVadj; iv++)  {
+                     for (int d = 0; d < dim; d++) {
+			   sol_adj_x_vol_at_bdry_gss[d] += SolVAR_eldofs[adj_pos_begin][iv] * phi_adj_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
+		     }
+		}  
 		      
-    double grad_dot_n_adj_res = 0.;
-        for(unsigned d=0; d<dim; d++) {
-	  grad_dot_n_adj_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
-	}
+		double grad_dot_n_adj_res = 0.;
+		for(unsigned d=0; d<dim; d++) {
+		    grad_dot_n_adj_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
+		}
 //=============== grad dot n  for residual =========================================       
 		  
 //========== compute gauss quantities on the boundary ================================================
 
-		  // *** phi_i loop ***
-		  for(unsigned i_bdry=0; i_bdry < nve_bdry; i_bdry++) {
+		
+		
+  // *** phi_i loop ***
+		for(unsigned i_bdry=0; i_bdry < nve_bd; i_bdry++) {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-
-                 double lap_rhs_dctrl_ctrl_bdry_gss_i = 0.;
-                 for (unsigned d = 0; d < dim; d++) {
-                       if ( i_vol < nDofsVctrl )  lap_rhs_dctrl_ctrl_bdry_gss_i +=  phi_x_bd_gss_fe[SolPdeIndex[ctrl_pos_begin]][i_bdry + d*nve_bdry] * gradSolVAR_bd_qp[ctrl_pos_begin][d];
-                 }
                  
 //=============== construct control node flag field on the go  =========================================    
 	      /* (control_node_flag[i])       picks nodes on \Gamma_c
 	         (1 - control_node_flag[i])   picks nodes on \Omega \setminus \Gamma_c
 	       */
-		  for(unsigned idim=0; idim<dim; idim++) {
-	      if (dir_bool[idim] == false) { 
+		    for(unsigned idim=0; idim<dim; idim++) {
+			if (dir_bool[idim] == false) { 
 // 		std::cout << " found boundary control nodes ==== " << std::endl;
-			for(unsigned k=0; k<control_node_flag.size(); k++) {
+			    for(unsigned k=0; k<control_node_flag.size(); k++) {
 				  control_node_flag[i_vol] = 1;
+			    }
 			}
-              }
-		  }
+		    }
 //=============== construct control node flag field on the go  =========================================    
-		vector <double>  SolU; SolU.resize(nDofsV);
-		for (unsigned i = 0; i< SolU.size(); i++){
-		SolU[i] = SolVAR_qp[SolPdeIndex[state_pos_begin]]; }
-		vector <double>  Solg; Solg.resize(nDofsVctrl);
-		for (unsigned i = 0; i< Solg.size(); i++){
-		Solg[i] = SolVAR_qp[SolPdeIndex[ctrl_pos_begin]]; }
 		
 		  
 //Boundary Residuals  and Jacobians ==================	
+
 //============ delta_state row ============================================================================================
 //   for (unsigned i_vol = 0; i_vol < nDofsV; i_vol++) {
-	for (unsigned  kdim = 0; kdim < dim; kdim++) { // velocity block row 
-	if(i_vol<nDofsV) Res[kdim][i_vol]  += - control_node_flag[i_vol] * (SolU[i_vol] - Solg[i_vol]);	    //u-g
-	}		  
+		  if(i_vol<nDofsV){
+		      for (unsigned  kdim = 0; kdim < dim; kdim++) { // velocity block row 
+			    Res[kdim][i_vol]  += - control_node_flag[i_vol] * (SolVAR_eldofs[SolPdeIndex[state_pos_begin]][i_vol] - SolVAR_eldofs[SolPdeIndex[ctrl_pos_begin]][i_vol]);	    //u-g
+		      }		  
 //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
-		    for(unsigned j_bdry=0; j_bdry < nve_bdry; j_bdry ++) {
-		         unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
+		  for(unsigned j_bdry=0; j_bdry < nve_bd; j_bdry ++) {
+		      unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
+		      if(i_vol==j_vol){
 //  for (unsigned j_vol = 0; j_vol < nDofsV; j_vol++) {
-     for (unsigned  kdim = 0; kdim < dim; kdim++) { 
-	if(i_vol==j_vol && i_vol<nDofsV) Jac[kdim][kdim][i_vol*nDofsV + j_vol]	+= control_node_flag[i_vol];  
-      }
+			 for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+			      Jac[kdim][kdim][i_vol*nDofsV + j_vol]	+= control_node_flag[i_vol];  
+			 }
 //BLOCK delta_state - control------------------------------------------------------------------------------------
-     for (unsigned  kdim = 0; kdim < dim; kdim++) { 
-	if(i_vol==j_vol && i_vol<nDofsV && j_vol<nDofsVctrl) Jac[kdim][kdim + ctrl_pos_begin][i_vol*nDofsV + j_vol]	+= (-1.) * control_node_flag[i_vol];  
-      }
+			if(j_vol<nDofsVctrl){
+			  for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+				Jac[kdim][kdim + ctrl_pos_begin][i_vol*nDofsV + j_vol]	+= (-1.) * control_node_flag[i_vol];  
+			  }
+			}
+		      }
+		    }//end j_bdry loop
+		  }  
+//============ delta_state row ============================================================================================
 
-		      
-		    }  //end j loop
-      
+
+//============ delta_adjoint row =============================================================================================
+		  if(i_vol<nDofsVadj){
+		      for (unsigned  kdim = 0; kdim < dim; kdim++) {  
+			    Res[kdim +adj_pos_begin][i_vol]  += 0.;	   
+		      }
+		  }
+//SSSSSSSSSSSSSSSS======traceOperator to be implemented========================================
+
+//============ delta_adjoint row =============================================================================================
+
+
+//============ delta_control row ==================================================================================================
+		  if(i_vol<nDofsVctrl){
+		      for (unsigned  kdim = 0; kdim < dim; kdim++) {  
+			    double lap_res_dctrl_ctrl_bd = 0.;
+			    for (unsigned jdim = 0; jdim < dim; jdim++) {
+				  lap_res_dctrl_ctrl_bd += gradSolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]][jdim]*phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + jdim*nve_bd];
+			    }
+			    Res[kdim + ctrl_pos_begin][i_vol]  += - control_node_flag[i_vol] * weight_bd *
+								   ( beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolPdeIndex[kdim +  ctrl_pos_begin]][i_bdry]
+								     + gamma_val* lap_res_dctrl_ctrl_bd
+								     //-traceOperator to be implemented
+								  );	    
+		      }		  
+//DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
+		    for(unsigned j_bdry=0; j_bdry < nve_bd; j_bdry ++) {
+		      unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
+		      if(j_vol < nDofsVctrl){
+			  double lap_jac_dctrl_ctrl_bd = 0.;
+			  for (unsigned kdim = 0; kdim < dim; kdim++) {
+			      lap_jac_dctrl_ctrl_bd += phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + kdim*nve_bd]*phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j_bdry + kdim*nve_bd];
+			  }
+			  for (unsigned kdim = 0; kdim < dim; kdim++) {
+			      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsVctrl + j_vol] += control_node_flag[i_vol] * weight_bd *
+													     (beta_val * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry]*phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j_bdry]
+													      + gamma_val * lap_jac_dctrl_ctrl_bd
+													      );
+			  }
+		      }
+		    }//end j_bdry loop
+		  }
+//============ delta_control row ==================================================================================================
+
 //Boundary Residuals  and Jacobians ==================	
 
-				}//end i loop		  
-                	    }  //end ig_bdry loop
+		    }//end i loop		  
+                }  //end ig_bdry loop
 	  
-                        }    //end if control face
-	            }  //end if boundary faces
-	  	  }  // loop over element faces   
-               } //end if control element flag
+             }    //end if control face
+	 }  //end if boundary faces
+      }  // loop over element faces //jface   
+  } //end if control element flag
     
     
-      // ********************** Gauss point loop *******************************
-      for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[vel_type_pos]]->GetGaussPointNumber(); ig++) {
+//=======================VolumeLoop=====================================================    
+// ********************** Gauss point loop *******************************
+ for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[vel_type_pos]]->GetGaussPointNumber(); ig++) {
 	
 	// *** get Jacobian and test function and test function derivatives ***
       for(int fe=0; fe < NFE_FAMS; fe++) {
@@ -727,18 +764,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 						    + adv_unew_uold*/) * weight; 
 	      }
 	} //j_du_u loop
-
-//BLOCK delta_state - control------------------------------------------------------------------------------------
-// 	for (unsigned j = 0; j < nDofsVctrl; j++) {
-// 		      double lap_jac_du_ctrl = 0.;
-// 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
-// 		    lap_jac_du_ctrl += phi_x_gss_fe[SolFEType[kdim]][i * dim + kdim]*phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j * dim + kdim];
-// 	      }
-// 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
-// 		Jac[kdim][kdim + ctrl_pos_begin ][i*nDofsVctrl + j] += ( IRe*lap_jac_du_ctrl ) * weight;
-// 	      }
-// 	} //j_du_ctrl loop
-
      
 //BLOCK Pressure
       for (unsigned j = 0; j < nDofsP; j++) {
@@ -789,12 +814,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  }
      }//j_dadj_u loop
 
-//BLOCK delta_adjoint - control-----------------------------------------------------------------------------------------
-//      for (unsigned j = 0; j < nDofsVctrl; j++) {
-// 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-// 	     Jac[kdim + adj_pos_begin][kdim + ctrl_pos_begin][i*nDofsVadj + j] += ( -alpha_val*target_flag*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j] ) * weight;
-// 	  }
-//      }//j_dadj_ctrl loop
 
 //DIAG BLOCK delta_adjoint - adjoint---------------------------------------------------------------------------------
      for (unsigned j = 0; j < nDofsVadj; j++) {
@@ -834,66 +853,66 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 //============ delta_control row ==================================================================================================
 // THIRD ROW
-  for (unsigned i = 0; i < nDofsVctrl; i++) {
-      for (unsigned kdim = 0; kdim < dim; kdim++) { 
-		    double lap_res_dctrl_ctrl = 0.;
-		    double lap_res_dctrl_adj = 0.;
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-	  lap_res_dctrl_ctrl += gradSolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]][jdim]*phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + jdim];
-	   lap_res_dctrl_adj += gradSolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]][jdim]*phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + jdim];
-      }
-      Res[kdim + ctrl_pos_begin][i] += (+ beta_val* SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-					+ gamma_val * lap_res_dctrl_ctrl
-					) * weight;
-      }
-
-//BLOCK delta_control - state------------------------------------------------------------------------------------------------
-      for (unsigned j = 0; j < nDofsV; j++) {
-	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + ctrl_pos_begin][kdim][i*nDofsVctrl + j] += 0.;
-	  }
-      }//j_dctrl_u loop
-      
-//BLOCK delta_control - adjoint------------------------------------------------------------------------------------------------
-      for (unsigned j = 0; j < nDofsVadj; j++) {
-	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i*nDofsVctrl + j] += 0.;
-	  }
-      }//j_dctrl_adj loop
-
-//DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
-      for (unsigned j = 0; j < nDofsVctrl; j++) {
-		      double lap_jac_dctrl_ctrl = 0.;
-	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-		lap_jac_dctrl_ctrl += phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + kdim]*phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j * dim + kdim];
-	  }
-	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += (  - beta_val * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j]
-											- gamma_val*lap_jac_dctrl_ctrl ) * weight;
-	  }
-      }//j_dctrl_ctrl loop
-
-// // //BLOCK Pressure_ctrl
-// //       for (unsigned j = 0; j < nDofsPctrl; j++) {
-// // 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-// // 	      Jac[kdim + ctrl_pos_begin][press_type_pos + ctrl_pos_begin][i*nDofsPctrl + j] += -( phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][j] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + kdim] ) * weight;
-// // 	  }
-// //       }//j_press_ctrl
-  }//i_ctrl loop
-
-// // //DIV_ctrl
-// //   for (unsigned i = 0; i < nDofsPctrl; i++) {
-// // 		  double div_ctrl_dctrl_qp = 0.;
-// // 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-// // 		div_ctrl_dctrl_qp += gradSolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]][kdim] ;
-// // 	  }
-// // 	  Res[press_type_pos + ctrl_pos_begin][i] += ( (div_ctrl_dctrl_qp) * phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][i] ) * weight;
-// // 	  for (unsigned j = 0; j < nDofsVctrl; j++) {
-// // 	      for (unsigned kdim = 0; kdim < dim; kdim++) {
-// // 		Jac[press_type_pos + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += - ( phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][i] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + kdim] ) * weight;
-// // 	      }
-// // 	  }//j loop
-// //   }//i_div_ctrl
+//   for (unsigned i = 0; i < nDofsVctrl; i++) {
+//       for (unsigned kdim = 0; kdim < dim; kdim++) { 
+// 		    double lap_res_dctrl_ctrl = 0.;
+// 		    double lap_res_dctrl_adj = 0.;
+//       for (unsigned jdim = 0; jdim < dim; jdim++) {
+// 	  lap_res_dctrl_ctrl += gradSolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]][jdim]*phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + jdim];
+// 	   lap_res_dctrl_adj += gradSolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]][jdim]*phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + jdim];
+//       }
+//       Res[kdim + ctrl_pos_begin][i] += (+ beta_val* SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+// 					+ gamma_val * lap_res_dctrl_ctrl
+// 					) * weight;
+//       }
+// 
+// //BLOCK delta_control - state------------------------------------------------------------------------------------------------
+//       for (unsigned j = 0; j < nDofsV; j++) {
+// 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
+// 	      Jac[kdim + ctrl_pos_begin][kdim][i*nDofsVctrl + j] += 0.;
+// 	  }
+//       }//j_dctrl_u loop
+//       
+// //BLOCK delta_control - adjoint------------------------------------------------------------------------------------------------
+//       for (unsigned j = 0; j < nDofsVadj; j++) {
+// 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
+// 	      Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i*nDofsVctrl + j] += 0.;
+// 	  }
+//       }//j_dctrl_adj loop
+// 
+// //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
+//       for (unsigned j = 0; j < nDofsVctrl; j++) {
+// 		      double lap_jac_dctrl_ctrl = 0.;
+// 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
+// 		lap_jac_dctrl_ctrl += phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + kdim]*phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j * dim + kdim];
+// 	  }
+// 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
+// 	      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += (  - beta_val * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j]
+// 											- gamma_val*lap_jac_dctrl_ctrl ) * weight;
+// 	  }
+//       }//j_dctrl_ctrl loop
+// 
+// // // //BLOCK Pressure_ctrl
+// // //       for (unsigned j = 0; j < nDofsPctrl; j++) {
+// // // 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
+// // // 	      Jac[kdim + ctrl_pos_begin][press_type_pos + ctrl_pos_begin][i*nDofsPctrl + j] += -( phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][j] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + kdim] ) * weight;
+// // // 	  }
+// // //       }//j_press_ctrl
+//   }//i_ctrl loop
+// 
+// // // //DIV_ctrl
+// // //   for (unsigned i = 0; i < nDofsPctrl; i++) {
+// // // 		  double div_ctrl_dctrl_qp = 0.;
+// // // 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
+// // // 		div_ctrl_dctrl_qp += gradSolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]][kdim] ;
+// // // 	  }
+// // // 	  Res[press_type_pos + ctrl_pos_begin][i] += ( (div_ctrl_dctrl_qp) * phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][i] ) * weight;
+// // // 	  for (unsigned j = 0; j < nDofsVctrl; j++) {
+// // // 	      for (unsigned kdim = 0; kdim < dim; kdim++) {
+// // // 		Jac[press_type_pos + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += - ( phi_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][i] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + kdim] ) * weight;
+// // // 	      }
+// // // 	  }//j loop
+// // //   }//i_div_ctrl
  
    //============ delta_control row ==================================================================================================
  
