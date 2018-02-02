@@ -30,7 +30,7 @@ namespace femus
   bool twoPressure = true;
 
   bool valve = true;
-  
+
   double Kslip = 0.;
 
   void FSITimeDependentAssemblySupgNew2(MultiLevelProblem& ml_prob)
@@ -99,7 +99,7 @@ namespace femus
     vector < double > gradphi_hat;
     vector < adept::adouble> nablaphi;
     vector < double > nablaphi_hat;
-    
+
     vector < double > *nullDoublePointer = NULL;
     vector < adept::adouble > *nullAdoublePointer = NULL;
 
@@ -301,46 +301,46 @@ namespace femus
 
               if ( !ml_sol->GetBdcFunction()(xx, "PS", tau, face, time + (-1. + s[tip]) * dt)  &&  ( tau != 0. || Kslip != 0.) ) {
 
-		unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
+                unsigned nve = mymsh->GetElementFaceDofNumber(iel, jface, SolType2);
                 const unsigned felt = mymsh->GetElementFaceType(iel, jface);
 
-		vector <vector < adept::adouble > > sol_face(dim);
+                vector <vector < adept::adouble > > sol_face(dim);
                 for (unsigned idim = 0; idim < dim; idim++) {
                   vx_face[idim].resize(nve);
-		  sol_face[idim].resize(nve);
+                  sol_face[idim].resize(nve);
                 }
-                
-                std::vector < unsigned > ilocal(nve); 
-                
-                unsigned shift = (flag_mat == 4) ? 0:1;
-                
+
+                std::vector < unsigned > ilocal(nve);
+
+                unsigned shift = (flag_mat == 4) ? 0 : 1;
+
                 for (unsigned i = 0; i < nve; i++) {
                   ilocal[i] = mymsh->GetLocalFaceVertexIndex(iel, jface, i);
 
                   for (unsigned idim = 0; idim < dim; idim++) {
                     vx_face[idim][i]  = vx_hat[idim][ilocal[i]] +
-                                          ((1. - s[tip]) * Soli_old[indexVAR[idim]][ilocal[i]] + s[tip] * Soli[indexVAR[idim]][ilocal[i]]);
-		    sol_face[idim][i] = ((1. - s[tip]) * Soli_old[indexVAR[dim * shift + idim]][ilocal[i]] + s[tip] * Soli[indexVAR[dim * shift + idim]][ilocal[i]]); 
-                  }              
+                                        ((1. - s[tip]) * Soli_old[indexVAR[idim]][ilocal[i]] + s[tip] * Soli[indexVAR[idim]][ilocal[i]]);
+                    sol_face[idim][i] = ((1. - s[tip]) * Soli_old[indexVAR[dim * shift + idim]][ilocal[i]] + s[tip] * Soli[indexVAR[dim * shift + idim]][ilocal[i]]);
+                  }
                 }
 
                 for (unsigned igs = 0; igs < mymsh->_finiteElement[felt][SolType2]->GetGaussPointNumber(); igs++) {
                   mymsh->_finiteElement[felt][SolType2]->JacobianSur(vx_face, igs, Weight, phi, gradphi, normal);
 
-		  vector < adept::adouble > solVAR_face(dim);
-		  for (unsigned idim = 0; idim < dim; idim++) {
-		    solVAR_face[idim] = 0.;
-		    for (unsigned i = 0; i < nve; i++) {
-		      solVAR_face[idim] += phi[i] * sol_face[idim][i];
-		    }
-		  }
-		 
+                  vector < adept::adouble > solVAR_face(dim);
+                  for (unsigned idim = 0; idim < dim; idim++) {
+                    solVAR_face[idim] = 0.;
+                    for (unsigned i = 0; i < nve; i++) {
+                      solVAR_face[idim] += phi[i] * sol_face[idim][i];
+                    }
+                  }
+
                   // *** phi_i loop ***
                   for (unsigned i = 0; i < nve; i++) {
                     std::vector < adept::adouble> value(dim);
-		    for(unsigned idim = 0; idim < dim; idim++){
-		      value[idim] =  - theta[tip] * phi[i] * ( tau * normal[idim] +  Kslip * solVAR_face[idim] ) / rhof * Weight;
-		    }
+                    for (unsigned idim = 0; idim < dim; idim++) {
+                      value[idim] =  - theta[tip] * phi[i] * ( tau * normal[idim] +  Kslip * solVAR_face[idim] ) / rhof * Weight;
+                    }
 
                     for (unsigned idim = 0; idim < dim; idim++) {
                       if ((!solidmark[ilocal[i]])) {
@@ -412,10 +412,10 @@ namespace femus
 //               aRhs[indexVAR[dim + idim]][i] += ((SolVARNew[idim] - SolVAROld[idim]) / dt -
 //                                                 (1. * SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim])
 //                                                ) * phi_hat[i] * Weight_hat;
-	      
-	       aRhs[indexVAR[dim + idim]][i] += ((Soli[idim][i] - Soli_old[idim][i]) / dt -
-						  Soli[idim+dim][i]
-						 ) * phi_hat[i] * Weight_hat;	      
+
+              aRhs[indexVAR[dim + idim]][i] += ((Soli[idim][i] - Soli_old[idim][i]) / dt -
+                                                Soli[idim + dim][i]
+                                               ) * phi_hat[i] * Weight_hat;
             }
           }
           //END redidual d_t - v = 0 in fixed domain
@@ -436,7 +436,7 @@ namespace femus
           for (unsigned i = 0; i < nve1; i++) {
             aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * (1. - J_hat) * Weight_hat / rhof;
             //if (twoPressure) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * SolVAR[nBlocks * dim + jP] * Weight_hat;   // fake continuity of the fluid in the solid
-	    if (twoPressure) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * Soli[indexVAR[nBlocks * dim + jP]][i] * Weight_hat;   // fake continuity of the fluid in the solid
+            if (twoPressure) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * Soli[indexVAR[nBlocks * dim + jP]][i] * Weight_hat;   // fake continuity of the fluid in the solid
           }
           //END continuity block
         }
@@ -481,8 +481,8 @@ namespace femus
           }
         }
 
-        if(!valve){
-	  if (flag_mat == 2 || flag_mat == 3  || iel == mymsh->_elementOffset[iproc]) {
+        if (!valve) {
+          if (flag_mat == 2 || flag_mat == 3  || iel == mymsh->_elementOffset[iproc]) {
             if (ig == 0) {
               double GaussWeight = mymsh->_finiteElement[ielt][SolType2]->GetGaussWeight(ig);
               area = Weight_hat / GaussWeight;
@@ -495,9 +495,9 @@ namespace femus
             }
             scaleWeightNoJacobian = rapresentative_area / area;
           }
-	}
-        
-        
+        }
+
+
         for (unsigned tip = 0; tip <= TimeIntPoints; tip++) {
 
           bool end = (tip == TimeIntPoints) ? true : false;
@@ -513,12 +513,12 @@ namespace femus
               vx[i][j] = vxOld[i][j] * (1. - s[tip]) +  vxNew[i][j] * s[tip];
             }
           }
-	  if(middle && flag_mat != 4){
-	    mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx, ig, Weight, phi, gradphi, nablaphi);
-	  }
-	  else{
-	    mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx, ig, Weight, phi, gradphi, *nullAdoublePointer);
-	  }
+          if (middle && flag_mat != 4) {
+            mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx, ig, Weight, phi, gradphi, nablaphi);
+          }
+          else {
+            mymsh->_finiteElement[ielt][SolType2]->Jacobian(vx, ig, Weight, phi, gradphi, *nullAdoublePointer);
+          }
 
           // store solution gradient and laplace at the current time
           for (int i = 0; i < nBlocks * dim; i++) {
@@ -535,25 +535,35 @@ namespace femus
           //BEGIN FLUID and POROUS MEDIA ASSEMBLY ============
           if (flag_mat != 4) {
             if (middle) {
-	      
-	        // store solution gradient and laplace at the current time
-              for(int i = dim; i < nBlocks * dim; i++) {
+              vector < adept::adouble > gradPf(dim, 0.);
+              std::vector <std::vector <adept::adouble> > jacobianMatrix;
+              mymsh->_finiteElement[ielt][SolType2]->GetJacobian(vx, ig, Weight, jacobianMatrix);
 
-                for(int j = 0; j < nabla_dim; j++) {
+              for (unsigned i = 0; i < dim; i++) {
+                for (unsigned j = 0; j < dim; j++) {
+                  gradPf[i] +=  Soli[indexVAR[nBlocks * dim + jP]][ 1 + j ] * jacobianMatrix[j][i];
+                }
+              }
+
+
+              // store solution gradient and laplace at the current time
+              for (int i = dim; i < nBlocks * dim; i++) {
+
+                for (int j = 0; j < nabla_dim; j++) {
                   NablaSolVAR[i][j] = 0.;
                 }
-                for(unsigned inode = 0; inode < nve; inode++) {
+                for (unsigned inode = 0; inode < nve; inode++) {
 
-                  for(int j = 0; j < nabla_dim; j++) {
+                  for (int j = 0; j < nabla_dim; j++) {
                     NablaSolVAR[i][j]     += nablaphi[inode * nabla_dim + j] * (s[tip] * Soli[indexVAR[i]][inode] + (1. - s[tip]) * Soli_old[indexVAR[i]][inode]);
                   }
                 }
               }
-	      
+
               // get Gauss point coordinates at the current time
               for (unsigned i = 0; i < dim; i++) {
                 vx_ig[i] = vxOld_ig[i] * (1. - s[tip]) +  vxNew_ig[i] * s[tip];
-	      }
+              }
 
               adept::adouble springStiffness = 0.;
               if ( valve ) springStiffness = 5.e-4 * exp((vx_ig[0] - (- 1e-5)) / 0.0001) * (dim == 2) + // if 2D
@@ -632,7 +642,8 @@ namespace femus
                                + IRe * LapvelVAR[idim]	             // viscous dissipation
                                + (idim == 0) * springStiffness * Lapdisp[idim] // penalty spring
                                - IRe * LapStrong[idim]
-                               - 1. / rhof * SolVAR[nBlocks * dim + jP] * gradphi[i * dim + idim] // pressure gradient
+                               - 1. / rhof * SolVAR[nBlocks * dim + jP] * gradphi[i * dim + idim] // pressure gradient weak
+                               + 1. / rhof * gradPf[idim] * phiSupg[i] // pressure gradient supg
                              ) * Weight;
 
                     if (!solidmark[i]) {
@@ -645,10 +656,10 @@ namespace femus
                   //END redidual Navier-Stokes in moving domain
                 }
                 else if (flag_mat == 3) {
-		  
-		  double eps = 1.0e-20;
-		  speed = sqrt(speed2 + eps);
-		  
+
+                  double eps = 1.0e-20;
+                  speed = sqrt(speed2 + eps);
+
                   //BEGIN redidual Porous Media in moving domain
                   double DE = 0.;
 
@@ -671,6 +682,7 @@ namespace femus
 
                     value = theta[tip] * ((SolVAR[dim + idim] - meshVel[idim]) * (IRe / K + 0.5 * C2 * speed) * (phi[i] + phiSupg[i])
                                           - 1. / rhof * SolVAR[nBlocks * dim + jP] * gradphi[i * dim + idim] // pressure gradient
+                                          + 1. / rhof * gradPf[idim] * phiSupg[i] // pressure gradient supg
                                          ) * Weight;
 
                     if (!solidmark[i]) {
@@ -714,7 +726,7 @@ namespace femus
 
               for (unsigned i = 0; i < nve1; i++) {
                 //if (twoPressure) aRhs[indexVAR[nBlocks * dim] ][i] +=  phi1[i] * SolVAR[nBlocks * dim ] * Weight_hat;   // fake continuity of the solid in the fluid
-		if (twoPressure) aRhs[indexVAR[nBlocks * dim] ][i] +=  phi1[i] * Soli[indexVAR[nBlocks * dim]][i] * Weight_hat;   // fake continuity of the solid in the fluid
+                if (twoPressure) aRhs[indexVAR[nBlocks * dim] ][i] +=  phi1[i] * Soli[indexVAR[nBlocks * dim]][i] * Weight_hat;   // fake continuity of the solid in the fluid
                 aRhs[indexVAR[nBlocks * dim + jP]][i] += (-phi1[i] * div_vel) * Weight / rhof;
               }
               //END continuity block ===========================
@@ -768,7 +780,7 @@ namespace femus
                 for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.* (C1 * B[I][J] - C2 * invB[I][J])
                                   - 1. / rhof * SolVAR[nBlocks * dim ] * Id2th[I][J];
-				//- 2./3. * (C1 - C2) * SolVAR[nBlocks * dim ] * Id2th[I][J];
+                  //- 2./3. * (C1 - C2) * SolVAR[nBlocks * dim ] * Id2th[I][J];
 
                 }
               }
@@ -831,12 +843,12 @@ namespace femus
         }
         Jac.resize((nBlocks * dim * nve + nP * nve1) * (nBlocks * dim * nve + nP * nve1));
 
-	start_time = clock();
+        start_time = clock();
         stack.jacobian_reverse(&Jac[0], true);
-	AdeptTime += clock() - start_time; 
+        AdeptTime += clock() - start_time;
 
-        myKK->add_matrix_blocked(Jac, dofsAll, dofsAll); 
-	
+        myKK->add_matrix_blocked(Jac, dofsAll, dofsAll);
+
         stack.clear_independents();
         stack.clear_dependents();
 
