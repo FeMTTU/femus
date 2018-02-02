@@ -539,13 +539,13 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       double scalingFactor;// / (1. + 100. * distance);
       if(material == 0) scalingFactor = 0.00001;
       if(material == 1) scalingFactor = 0.01;
-      if(material == 2) scalingFactor = 0.01;
+      if(material == 2) scalingFactor = 0.0001;
       for(unsigned i = 0; i < nDofsD; i++) {
         vector < adept::adouble > softStiffness(dim, 0.);
 
         for(unsigned j = 0; j < dim; j++) {
           for(unsigned  k = 0; k < dim; k++) {
-            softStiffness[k]   +=  mu * gradphi[i * dim + j] * (GradSolDgss[k][j] + 0.*GradSolDgss[j][k]);
+            softStiffness[k]   +=  (density/(dt*dt) + mu) * gradphi[i * dim + j] * (GradSolDgss[k][j] + 0.*GradSolDgss[j][k]);
           }
         }
         for(unsigned  k = 0; k < dim; k++) {
