@@ -103,7 +103,7 @@ int main(int argc, char** args)
   if(dim > 1) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
   if(dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
   
-//     mlSol.AddSolution("DX", LAGRANGE, FIRST, 2);
+//   mlSol.AddSolution("DX", LAGRANGE, FIRST, 2);
 //   if(dim > 1) mlSol.AddSolution("DY", LAGRANGE, FIRST, 2);
 //   if(dim > 2) mlSol.AddSolution("DZ", LAGRANGE, FIRST, 2);
 
@@ -270,7 +270,7 @@ int main(int argc, char** args)
     mov_vars.push_back("DX");
     mov_vars.push_back("DY");
     mov_vars.push_back("DZ");
-    mlSol.GetWriter()->SetMovingMesh(mov_vars);
+   // mlSol.GetWriter()->SetMovingMesh(mov_vars);
 
     std::vector<std::string> print_vars;
     print_vars.push_back("All");
@@ -278,11 +278,13 @@ int main(int argc, char** args)
     mlSol.GetWriter()->SetDebugOutput(true);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
-    GridToParticlesProjection(ml_prob, *linea);
+   
     
     linea->GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
 
+    GridToParticlesProjection(ml_prob, *linea);
+    
   }
 
 
@@ -422,6 +424,17 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
   //BEGIN loop on elements (to initialize the "soft" stiffness matrix)
   for(int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
+    
+    
+ //BEGIN to remove 
+    bool particlesInElement = false;
+    for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
+      //element of particle iMarker
+      int iel2 = particles[iMarker]->GetMarkerElement();
+      if (iel == iel2) particlesInElement = true;
+      break;
+    }
+//END
 
     short unsigned ielt = mymsh->GetElementType(iel);
 
@@ -432,18 +445,22 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
     // resize local arrays
     std::vector <int> sysDof(nDofs);
 
-    unsigned  material = 0;  // solid = 0, interface =1, fluid =2;
-    unsigned counter = 0;
-    for(unsigned i = 0; i < nDofsM; i++) {
-      unsigned idof = mymsh->GetSolutionDof(i, iel, solTypeM);    // global to global mapping between solution node and solution dof
-      double value = (*mysolution->_Sol[indexSolM])(idof);  
-      if (fabs(value) > 1.0e-12) {
-	material = 2;
-	counter++;
-      }
-    }
-    if ( material == 2 && counter != nDofsM)  material = 1;  
+    unsigned  material = 0;  // solid = 2, interface =1, fluid =0;
+//     unsigned counter = 0;
+//     for(unsigned i = 0; i < nDofsM; i++) {
+//       unsigned idof = mymsh->GetSolutionDof(i, iel, solTypeM);    // global to global mapping between solution node and solution dof
+//       double value = (*mysolution->_Sol[indexSolM])(idof);  
+//       if (fabs(value) > 1.0e-14) {
+// 	material = 2;
+// 	counter++;
+//       }
+//     }
+    //if ( material == 2 && counter != nDofsM)  material = 1;  
     
+ //BEGIN to remove    
+    if (particlesInElement == true) material = 2;
+     //END
+   
     unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat); 
     mysolution->_Sol[indexSolMat]->set(idofMat,material);
     
@@ -517,8 +534,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
         distance += (Xgss[k] - xc[k]) * (Xgss[k] - xc[k]);
       }
       distance = sqrt(distance);
-      double scalingFactor = 0.0005;// / (1. + 100. * distance);
-      if(material == 2) scalingFactor *= 0.001;
+      double scalingFactor;// / (1. + 100. * distance);
+      if(material == 0) scalingFactor = 0.00001;
+   //   if(material == 1) scalingFactor = 0.001;
+      if(material == 2) scalingFactor = 0.01;
       for(unsigned i = 0; i < nDofsD; i++) {
         vector < adept::adouble > softStiffness(dim, 0.);
 
@@ -1021,9 +1040,9 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line& linea)
       particles[iMarker]->SetMarkerVelocity(particleVel);
       particles[iMarker]->SetMarkerAcceleration(particleAcc);
 
-      // TODO da muovere dentro la funzione UpdateLineMPM
-      particles[iMarker]->GetElementSerial(iel, mysolution, 0.);
-      particles[iMarker]->SetIprocMarkerPreviousElement(iel);
+//       // TODO da muovere dentro la funzione UpdateLineMPM, DONE
+//       particles[iMarker]->GetElementSerial(iel, mysolution, 0.);
+//       particles[iMarker]->SetIprocMarkerPreviousElement(iel);
 
       //   update the deformation gradient
       for(int i = 0; i < dim; i++) {
