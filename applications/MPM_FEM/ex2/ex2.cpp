@@ -102,7 +102,7 @@ int main(int argc, char** args)
   mlSol.AddSolution("DX", LAGRANGE, SECOND, 2);
   if(dim > 1) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
   if(dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
-  
+
 //   mlSol.AddSolution("DX", LAGRANGE, FIRST, 2);
 //   if(dim > 1) mlSol.AddSolution("DY", LAGRANGE, FIRST, 2);
 //   if(dim > 2) mlSol.AddSolution("DZ", LAGRANGE, FIRST, 2);
@@ -250,19 +250,20 @@ int main(int argc, char** args)
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
+
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
 
-  unsigned n_timesteps = 200;
+  unsigned n_timesteps = 400;
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
-    
+
     linea->ParticlesToGridProjection();
     system.MGsolve();
 
-    
+
     // ******* Print solution *******
     mlSol.SetWriter(VTK);
 
@@ -278,13 +279,13 @@ int main(int argc, char** args)
     mlSol.GetWriter()->SetDebugOutput(true);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
-   
-    
+    GridToParticlesProjection(ml_prob, *linea);
+
     linea->GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
 
-    GridToParticlesProjection(ml_prob, *linea);
-    
+
+
   }
 
 
@@ -393,23 +394,23 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   vector < double >* nullDoublePointer = NULL;
 
   //variable-name handling
-  const char varname[5][5] = {"DX", "DY", "DZ","M","Mat"}; //TODO is there a reason why varname[9][3] and not just varname[9] ?
+  const char varname[5][5] = {"DX", "DY", "DZ", "M", "Mat"}; //TODO is there a reason why varname[9][3] and not just varname[9] ?
   vector <unsigned> indexSolD(dim);
   vector <unsigned> indexPdeD(dim);
   unsigned solType = ml_sol->GetSolutionType(&varname[0][0]);
-  
+
 
   for(unsigned ivar = 0; ivar < dim; ivar++) {
     indexSolD[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
     indexPdeD[ivar] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar][0]);
   }
-  
+
   unsigned indexSolM = ml_sol->GetIndex(&varname[3][0]);
   unsigned solTypeM = ml_sol->GetSolutionType(&varname[3][0]);
 
   unsigned indexSolMat = ml_sol->GetIndex(&varname[4][0]);
   unsigned solTypeMat = ml_sol->GetSolutionType(&varname[4][0]);
-  
+
   start_time = clock();
 
   if(assembleMatrix) myKK->zero();
@@ -422,51 +423,45 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
 
 
+  mysolution->_Sol[indexSolMat]->zero();
+  for(unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
+    //element of particle iMarker
+    unsigned iel = particles[iMarker]->GetMarkerElement();
+    unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat);
+    mysolution->_Sol[indexSolMat]->set(idofMat, 2.);
+
+  }
+  mysolution->_Sol[indexSolMat]->close();
+
+
+
   //BEGIN loop on elements (to initialize the "soft" stiffness matrix)
   for(int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
-    
-    
- //BEGIN to remove 
-    bool particlesInElement = false;
-    for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
-      //element of particle iMarker
-      unsigned iel2 = particles[iMarker]->GetMarkerElement();
-      if (iel == iel2) {
-	particlesInElement = true;
-      break;
-      }
-    }
-//END
 
     short unsigned ielt = mymsh->GetElementType(iel);
 
-    unsigned nDofsD = mymsh->GetElementDofNumber(iel, solType);    // number of solution element dofs
-    unsigned nDofsM = mymsh->GetElementDofNumber(iel, solTypeM);    // number of coordinate element dofs
+    unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat);
+    unsigned  material = (*mysolution->_Sol[indexSolMat])(idofMat);
+    if((*mysolution->_Sol[indexSolMat])(idofMat) == 0) {
+      unsigned nDofsM = mymsh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+      for(unsigned i = 0; i < nDofsM; i++) {
+        unsigned idof = mymsh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
+        double value = (*mysolution->_Sol[indexSolM])(idof);
+        if(fabs(value) > 1.0e-14) {
+          material = 1;
+          mysolution->_Sol[indexSolMat]->set(idofMat, 1.);
+          break;
+        }
+      }
+    }
 
+
+    unsigned nDofsD = mymsh->GetElementDofNumber(iel, solType);    // number of solution element dofs
     unsigned nDofs = dim * nDofsD ;//+ nDofsP;
     // resize local arrays
     std::vector <int> sysDof(nDofs);
 
-    unsigned  material = 0;  // solid = 2, interface =1, fluid =0;
-    unsigned counter = 0;
-    for(unsigned i = 0; i < nDofsM; i++) {
-      unsigned idof = mymsh->GetSolutionDof(i, iel, solTypeM);    // global to global mapping between solution node and solution dof
-      double value = (*mysolution->_Sol[indexSolM])(idof);  
-      if (fabs(value) > 1.0e-14) {
-	material = 2;
-	counter++;
-      }
-    }
-    if ( material == 2 && counter != nDofsM)  material = 1;  
-    
- //BEGIN to remove    
-    if (particlesInElement == true) material = 2;
-     //END
-   
-    unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat); 
-    mysolution->_Sol[indexSolMat]->set(idofMat,material);
-    
-    
+
     for(unsigned  k = 0; k < dim; k++) {
       SolDd[k].resize(nDofsD);
       vx[k].resize(nDofsD);
@@ -482,12 +477,12 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
     for(unsigned i = 0; i < nDofsD; i++) {
       unsigned idof = mymsh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
       unsigned idofX = mymsh->GetSolutionDof(i, iel, 2);    // global to global mapping between solution node and solution dof
-      
+
       for(unsigned  k = 0; k < dim; k++) {
         SolDd[k][i] = (*mysolution->_Sol[indexSolD[k]])(idof);      // global extraction and local storage for the solution
         sysDof[i + k * nDofsD] = myLinEqSolver->GetSystemDof(indexSolD[k], indexPdeD[k], i, iel);    // global to global mapping between solution node and pdeSys dof
-	vx_hat[k][i] = (*mymsh->_topology->_Sol[k])(idofX);
-        vx[k][i] = vx_hat[k][i] + SolDd[k][i];
+        vx_hat[k][i] = (*mymsh->_topology->_Sol[k])(idofX);
+        vx[k][i] = vx_hat[k][i];// + SolDd[k][i];
       }
     }
 
@@ -537,19 +532,19 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       }
       distance = sqrt(distance);
       double scalingFactor;// / (1. + 100. * distance);
-      if(material == 0) scalingFactor = 0.00001;
-      if(material == 1) scalingFactor = 0.01;
+      if(material == 0) scalingFactor = 0.0001;
+      if(material == 1) scalingFactor = 0.0001;
       if(material == 2) scalingFactor = 0.0001;
       for(unsigned i = 0; i < nDofsD; i++) {
         vector < adept::adouble > softStiffness(dim, 0.);
 
         for(unsigned j = 0; j < dim; j++) {
           for(unsigned  k = 0; k < dim; k++) {
-            softStiffness[k]   +=  (density/(dt*dt) + mu) * gradphi[i * dim + j] * (GradSolDgss[k][j] + 0.*GradSolDgss[j][k]);
+            softStiffness[k]   +=  mu * gradphi[i * dim + j] * (GradSolDgss[k][j] + 0.* GradSolDgss[j][k]);
           }
         }
         for(unsigned  k = 0; k < dim; k++) {
-          aRhs[k][i] += - (softStiffness[k])  * weight * scalingFactor;
+          aRhs[k][i] += - softStiffness[k] * weight * scalingFactor;
         }
       }
 
@@ -684,7 +679,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
           dofsVAR[i].resize(nDofsD);
           SolDd[indexPdeD[i]].resize(nDofsD);
           aRhs[indexPdeD[i]].resize(nDofsD);
-	  vx[i].resize(nDofsD);
+          vx[i].resize(nDofsD);
           vx_hat[i].resize(nDofsD);
         }
         dofsAll.resize(0);
@@ -693,7 +688,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
         //BEGIN copy of the value of Sol at the dofs idof of the element iel
         for(unsigned i = 0; i < nDofsD; i++) {
           unsigned idof = mymsh->GetSolutionDof(i, iel, solType); //local 2 global solution
-	  unsigned idofX = mymsh->GetSolutionDof(i, iel, 2); //local 2 global coordinates
+          unsigned idofX = mymsh->GetSolutionDof(i, iel, 2); //local 2 global coordinates
 
           for(int j = 0; j < dim; j++) {
             SolDd[indexPdeD[j]][i] = (*mysolution->_Sol[indexSolD[j]])(idof);
@@ -703,7 +698,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
             //Fixed coordinates (Reference frame)
             vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idofX);
-	    vx[j][i]    = vx_hat[j][i] + SolDd[indexPdeD[j]][i];
+            vx[j][i]    = vx_hat[j][i] + SolDd[indexPdeD[j]][i];
           }
         }
         //END
@@ -748,7 +743,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
         for(unsigned inode = 0; inode < nDofsD; inode++) {
           SolDp[i] += phi[inode] * SolDd[indexPdeD[i]][inode];
           for(int j = 0; j < dim; j++) {
-            GradSolDp[i][j] +=  gradphi[inode * dim + j] * SolDd[indexPdeD[i]][inode];
+            GradSolDp[i][j] +=  gradphi[inode * dim + j] * 0.5 * SolDd[indexPdeD[i]][inode];
             GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * SolDd[indexPdeD[i]][inode];
           }
         }
@@ -787,6 +782,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
             }
           }
         }
+                
         if(dim == 2) F[2][2] = 1.;
 
         adept::adouble J_hat =  F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
@@ -807,8 +803,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
         for(int i = 0; i < 3; i++) {
           for(int j = 0; j < 3; j++) {
- 	    Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
-                             + K * (J_hat - 1.) * Id2th[i][j];  //Generalized Neo-Hookean solid, in Allan-Bower's book, for rubbers with very limited compressibility and K >> mu
+            Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
+                           + K * (J_hat - 1.) * Id2th[i][j];  //Generalized Neo-Hookean solid, in Allan-Bower's book, for rubbers with very limited compressibility and K >> mu
 
 //            Cauchy[i][j] = lambda * log(J_hat) / J_hat * Id2th[i][j] + mu / J_hat * (B[i][j] - Id2th[i][j]); //alternative formulation
 
@@ -829,7 +825,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
           for(int idim = 0; idim < dim; idim++) {
             aRhs[indexPdeD[idim]][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density
-                                         -  phi[i] * (4. / (dt * dt) * SolDp[idim] - (4. / dt) * SolVpOld[idim] -  SolApOld[idim])
+//                                          -  phi[i] * (4. / (dt * dt) * SolDp[idim] - (4. / dt) * SolVpOld[idim] -  SolApOld[idim])
+					-  phi[i] * (2. / (dt * dt) * SolDp[idim] - (2. / dt) * SolVpOld[idim])
                                         ) * mass;
           }
         }
@@ -896,7 +893,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   //END loop on particles
 
   myRES->close();
-  mysolution->_Sol[indexSolM]->close();
+  mysolution->_Sol[indexSolMat]->close();
 
   if(assembleMatrix) {
     myKK->close();
@@ -996,7 +993,7 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line& linea)
         //BEGIN copy of the value of Sol at the dofs idof of the element iel
         for(unsigned inode = 0; inode < nve; inode++) {
           unsigned idof = mymsh->GetSolutionDof(inode, iel, solType); //local 2 global solution
-	  unsigned idofX = mymsh->GetSolutionDof(inode, iel, 2); //local 2 global solution
+          unsigned idofX = mymsh->GetSolutionDof(inode, iel, 2); //local 2 global solution
 
           for(int i = 0; i < dim; i++) {
             SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof);
@@ -1037,8 +1034,14 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line& linea)
       for(unsigned i = 0; i < dim; i++) {
         particleAcc[i] = 4. / (dt * dt) * particleDisp[i] - (4. / dt) * particleVelOld[i] -  particleAccOld[i];
         particleVel[i] = 2. / dt * particleDisp[i] - particleVelOld[i];
+	
+	
+	//particleVel[i] = 0.5 * (particleVel[i] + particleVelOld[i]);
+	
       }
 
+      
+      
       particles[iMarker]->SetMarkerVelocity(particleVel);
       particles[iMarker]->SetMarkerAcceleration(particleAcc);
 
