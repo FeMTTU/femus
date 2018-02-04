@@ -23,6 +23,7 @@ double gravityfactor;
 
 //time-step size
 double dt =  0.008;
+double beta = 0.325;
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level)
 {
@@ -135,7 +136,7 @@ int main(int argc, char** args)
 
 
   system.SetAbsoluteLinearConvergenceTolerance(1.0e-10);
-  system.SetMaxNumberOfLinearIterations(10);
+  system.SetMaxNumberOfLinearIterations(1);
   system.SetNonLinearConvergenceTolerance(1.e-9);
   system.SetMaxNumberOfNonLinearIterations(20);
 
@@ -156,7 +157,7 @@ int main(int argc, char** args)
 
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
-  system.SetTolerances(1.e-15, 1.e-20, 1.e+50, 40, 10);
+  system.SetTolerances(1.e-10, 1.e-15, 1.e+50, 40, 40);
 
 
   unsigned rows = 60;
@@ -532,8 +533,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       }
       distance = sqrt(distance);
       double scalingFactor;// / (1. + 100. * distance);
-      if(material == 0) scalingFactor = 0.0001;
-      if(material == 1) scalingFactor = 0.0001;
+      if(material == 0) scalingFactor = 0.00001;
+      if(material == 1) scalingFactor = 0.001;
       if(material == 2) scalingFactor = 0.0001;
       for(unsigned i = 0; i < nDofsD; i++) {
         vector < adept::adouble > softStiffness(dim, 0.);
@@ -825,8 +826,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
           for(int idim = 0; idim < dim; idim++) {
             aRhs[indexPdeD[idim]][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density
-//                                          -  phi[i] * (4. / (dt * dt) * SolDp[idim] - (4. / dt) * SolVpOld[idim] -  SolApOld[idim])
-					-  phi[i] * (2. / (dt * dt) * SolDp[idim] - (2. / dt) * SolVpOld[idim])
+					    -  phi[i] * ( 1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta)/(2. * beta) * SolApOld[idim]) 
                                         ) * mass;
           }
         }
@@ -1032,12 +1032,8 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line& linea)
       std::vector <double> particleAcc(dim);
       std::vector <double> particleVel(dim);
       for(unsigned i = 0; i < dim; i++) {
-        particleAcc[i] = 4. / (dt * dt) * particleDisp[i] - (4. / dt) * particleVelOld[i] -  particleAccOld[i];
-        particleVel[i] = 2. / dt * particleDisp[i] - particleVelOld[i];
-	
-	
-	//particleVel[i] = 0.5 * (particleVel[i] + particleVelOld[i]);
-	
+        particleAcc[i] = 1. / (beta * dt * dt) * particleDisp[i] - 1. /(beta * dt) * particleVelOld[i] -  (1. - 2.* beta)/(2. * beta) * particleAccOld[i];
+        particleVel[i] = 2. / dt * particleDisp[i] - particleVelOld[i];	
       }
 
       
