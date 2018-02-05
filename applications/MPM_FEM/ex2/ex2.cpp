@@ -23,7 +23,8 @@ double gravityfactor;
 
 //time-step size
 double dt =  0.008;
-double beta = 0.325;
+double beta = 0.35;
+double Gamma = 0.5;
 
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level)
 {
@@ -534,7 +535,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       distance = sqrt(distance);
       double scalingFactor;// / (1. + 100. * distance);
       if(material == 0) scalingFactor = 0.00001;
-      if(material == 1) scalingFactor = 0.001;
+      if(material == 1) scalingFactor = 0.005;
       if(material == 2) scalingFactor = 0.0001;
       for(unsigned i = 0; i < nDofsD; i++) {
         vector < adept::adouble > softStiffness(dim, 0.);
@@ -1033,7 +1034,8 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line& linea)
       std::vector <double> particleVel(dim);
       for(unsigned i = 0; i < dim; i++) {
         particleAcc[i] = 1. / (beta * dt * dt) * particleDisp[i] - 1. /(beta * dt) * particleVelOld[i] -  (1. - 2.* beta)/(2. * beta) * particleAccOld[i];
-        particleVel[i] = 2. / dt * particleDisp[i] - particleVelOld[i];	
+        //particleVel[i] = 2. / dt * particleDisp[i] - particleVelOld[i];	
+	particleVel[i] = particleVelOld[i] + dt * ( (1. - Gamma) * particleAccOld[i] + Gamma * particleAcc[i]);	
       }
 
       
