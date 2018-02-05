@@ -448,6 +448,8 @@ int main ( int argc, char ** args )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
     system.MGsolve();
+    system.PrintComputationalTime();
+    
     StoreMeshVelocity(ml_prob);
     //data[time_step][0] = time_step/16.;
     data[time_step][0] = time_step / 32.;
@@ -495,7 +497,7 @@ int main ( int argc, char ** args )
     outf.close();
   }
 
-  system.PrintComputationalTime();
+  
   
   // ******* Clear all systems *******
   ml_prob.clear();

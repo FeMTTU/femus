@@ -92,7 +92,7 @@ int main(int argc, char **args)
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
   std::string infile;
   if(simulation == 0) {
-    infile = "./../input/steady&pulsatile/2D/Turek.neu";
+    infile = "./../input/steady&pulsatile/2D/Turek_moreElem.neu";
   }
   else if(simulation == 1) {
     infile = "./../input/steady&pulsatile/2D/Turek_porous_60micron.neu";
@@ -165,7 +165,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 5;
+  numberOfUniformRefinedMeshes = 4;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -291,7 +291,7 @@ int main(int argc, char **args)
   VelPf.SetAsmStandard(false);
   VelPf.SetAsmBlockSizeSolid(10);
   //if(dim == 2){
-    VelPf.SetAsmBlockSizeFluid(4);
+  VelPf.SetAsmBlockSizeFluid(4);
   //}
   //else{
     //VelPf.SetAsmBlockSizeFluid(3);
@@ -317,7 +317,7 @@ int main(int argc, char **args)
   FieldSplitTree DispPs(PREONLY, ASM_PRECOND, fieldDispPs, solutionTypeDispPs, "DispPs");
   DispPs.SetAsmStandard(false);
   //if(dim == 2){
-    DispPs.SetAsmBlockSize(4);
+  DispPs.SetAsmBlockSize(4);
   //}
   //else{
     //DispPs.SetAsmBlockSize(3);
@@ -430,6 +430,8 @@ int main(int argc, char **args)
     system.CopySolutionToOldSolution();
 
     system.MGsolve();
+    system.PrintComputationalTime();
+    
     StoreMeshVelocity(ml_prob);
     
     //data[time_step][0] = time_step / 16.;
@@ -483,7 +485,7 @@ int main(int argc, char **args)
     outf.close();
   }
 
-  system.PrintComputationalTime();
+  
 
   // ******* Clear all systems *******
   ml_prob.clear();

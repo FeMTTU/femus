@@ -362,6 +362,7 @@ int main(int argc, char** args)
 
 
     system.MGsolve();
+    system.PrintComputationalTime();
 
     StoreMeshVelocity(ml_prob);
 
@@ -394,7 +395,7 @@ int main(int argc, char** args)
   if (iproc == 0) {
     outf.close();
   }
-  system.PrintComputationalTime();
+  
 
   //******* Clear all systems *******
   ml_prob.clear();
