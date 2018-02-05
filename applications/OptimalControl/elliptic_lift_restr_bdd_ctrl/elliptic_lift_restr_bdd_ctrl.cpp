@@ -281,6 +281,27 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   vector < double > Jac;
   Jac.reserve( n_vars*maxSize * n_vars*maxSize);
+  
+  const int n_unknowns = 4;
+
+  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
+  Solname[0] = "state";
+  Solname[1] = "control";
+  Solname[2] = "adjoint";
+  Solname[3] = "mu";
+  
+  vector < unsigned > SolPdeIndex(n_unknowns);
+  vector < unsigned > SolIndex(n_unknowns);  
+  vector < unsigned > SolFEType(n_unknowns);  
+
+
+  for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
+    SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
+    SolIndex[ivar]	= mlSol->GetIndex        (Solname[ivar].c_str());
+    SolFEType[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
+  }
+
+    vector < unsigned > Sol_n_el_dofs(n_unknowns);
  //***************************************************  
 
   
@@ -414,6 +435,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_ctrl.begin(),l2GMap_ctrl.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_adj.begin(),l2GMap_adj.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_mu.begin(),l2GMap_mu.end());
+    
+  for (unsigned  k = 0; k < n_unknowns; k++) {
+    unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
+	Sol_n_el_dofs[k]=ndofs_unk;
+  }
+    
  //*************************************************** 
     
  //***** set control flag ****************************
@@ -565,11 +592,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		Jac[ (nDof_u + i) * nDof_AllVars  + 
 		     (nDof_u + nDof_ctrl + j)           ]  += ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj;
 	      	      
-	      //BLOCK delta_control - mu
-              if ( i < nDof_ctrl   && j < nDof_mu && i==j ) 
-		Jac[ (nDof_u + i) * nDof_AllVars  + 
-		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  control_node_flag[i] * 1.;
-		     
 	      }
 	      
 	      else if ( control_el_flag == 0)  {  
@@ -582,7 +604,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      
 	      }
 	      
-
+	      	      //BLOCK delta_control - mu
+              if ( i < nDof_ctrl   && j < nDof_mu && i==j ) 
+		Jac[ (nDof_u + i) * nDof_AllVars  + 
+		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  /*control_node_flag[i] **/ 1.;
+		     
 		     
 	      //=========== delta_adjoint row ===========================
               // BLOCK delta_adjoint - state	      
@@ -621,14 +647,24 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
-	if (control_el_flag == 0) {  //elements that should have zero control
+    std::cout << " ************* Element ************** " << iel << " **************************************** " << std::endl;     
+
+// // //     if (control_el_flag == 0) {  //elements that should have zero control
+         for (unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) {
+    std::cout << " ======= Row === " << i_unk << " =================================================== " << std::endl;     
+        unsigned int row_block_offset = 0;
+	         for (unsigned k = 0; k < i_unk; k++) row_block_offset += Sol_n_el_dofs[k];
+         for (unsigned j_unk = 0; j_unk < n_unknowns; j_unk++) {
+    std::cout << " ======= Column === " << j_unk << " ================== " << std::endl;     
+        unsigned int column_block_offset = 0;
+	         for (unsigned k = 0; k < j_unk; k++) column_block_offset += Sol_n_el_dofs[k];
 	  
-         for (unsigned i = 0; i < nDof_max; i++) {
+         for (unsigned i = 0; i < Sol_n_el_dofs[i_unk]; i++) {
 // 	      std::cout << Res[nDof_u + nDof_ctrl + nDof_adj + i ] << " " << std::endl;
-            for (unsigned j = 0; j < nDof_max; j++) {
-// 	      std::cout << Jac[ i * nDof_AllVars +j ] << " " << std::endl;
-	      if (i==j) {std::cout << Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars + (nDof_u +j) ] << " mu-c " << std::endl;}
-	      if (i==j) {std::cout << Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars + ( nDof_u + nDof_ctrl + nDof_adj + j ) ] << " mu-mu " << std::endl;}
+	   for (unsigned j = 0; j < Sol_n_el_dofs[j_unk]; j++) {
+	      std::cout <<  " " << std::setfill(' ') << std::setw(10) << Jac[ (row_block_offset + i) * nDof_AllVars + ( column_block_offset + j) ] << " ";
+// 	      if (i==j) {std::cout << Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars + (nDof_u +j) ] << " mu-c " << std::endl;}
+// 	      if (i==j) {std::cout << Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars + ( nDof_u + nDof_ctrl + nDof_adj + j ) ] << " mu-mu " << std::endl;}
 // 	      std::cout << Jac[ i * nDof_AllVars + (nDof_u + j) ] << " " << std::endl;
 // 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + j) ];
 // 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + nDof_adj + i) * nDof_AllVars + (nDof_u + nDof_adj + j) ];
@@ -639,9 +675,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	    }
 	      std::cout << std::endl;
 	 }
+
+	 } //j_unk
+	} //i_unk
 	 
-	}
-    std::cout << " ========== " << iel << " ================== " << std::endl;     
+	 
+// // // 	}
     
     //copy the value of the adept::adoube aRes in double Res and store
     RES->add_vector_blocked(Res, l2GMap_AllVars);
@@ -655,7 +694,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
-
+  KK->print();
   // ***************** END ASSEMBLY *******************
 
   return;
