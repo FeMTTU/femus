@@ -980,7 +980,7 @@ namespace femus
       _particles[iMarker]->FindLocalCoordinates(solTypeM, aX[iel], elementUpdate, _sol, s);
 
       std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
-      double mass = _particles[iMarker]->GetMarkerMass();
+      double mass = 1.;
 
       basis* base = _mesh->GetBasis(ielType, solTypeM);
       for (unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solTypeM); j++) {
