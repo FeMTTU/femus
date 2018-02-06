@@ -89,7 +89,7 @@ Line* linea;
   
   double K = E / (3.*(1. - 2. * nu)); //bulk modulus
   
-  double mass = 0.217013888889; //TODO use this with the Cauchy stress formulation
+//   double mass = 0.217013888889; //TODO use this with the Cauchy stress formulation
   // gravity
   
  
@@ -480,6 +480,8 @@ Line* linea;
 
       std::vector <double> SolApOld(dim, 0.);
       particles[iMarker]->GetMarkerAcceleration(SolApOld);
+      
+      double mass = particles[iMarker]->GetMarkerMass();
 
 
       if(NeoHookean) {

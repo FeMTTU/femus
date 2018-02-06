@@ -60,9 +60,9 @@ int main(int argc, char** args)
 
   double Lref = 1.;
   double Uref = 1.;
-  double rhos = 10000;
+  double rhos = 1000;
   double nu = 0.4;
-  double E = 1.74 * 1.e6;
+  double E = 4.2 * 1.e6;
 
   Parameter par(Lref, Uref);
 
@@ -146,14 +146,14 @@ int main(int argc, char** args)
   for (unsigned i = 0; i < NL; i++) {
     double  r = R - i * DL;
     unsigned Nr = static_cast <unsigned> (ceil(NR * r / R ));
-    std::cout << r << " " << Nr << " ";
+//     std::cout << r << " " << Nr << " ";
     double dtheta = 2 * PI / Nr;
     unsigned sizeOld = x.size();
     x.resize(sizeOld + Nr);
     for (unsigned s = sizeOld; s < x.size(); s++) {
       x[s].resize(dim);
     }
-    std::cout << x.size() << " ";
+//     std::cout << x.size() << " ";
     for (unsigned j = 0; j < Nr; j++) {
       x[sizeOld + j][0] = r * cos(j * dtheta);
       x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
@@ -173,6 +173,9 @@ int main(int argc, char** args)
 
   unsigned solType = 2;
   linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
+  
+  double diskArea = PI * R * R;
+  linea->SetParticlesMass(diskArea, rhos);
 
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);

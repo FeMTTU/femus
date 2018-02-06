@@ -69,6 +69,8 @@ namespace femus {
       void ParticlesToGridProjection();
       
       void UpdateLineMPM();
+      
+      void SetParticlesMass(const double &volume, const double &density);
 
     private:
       std::vector < std::vector < double > > _line;
