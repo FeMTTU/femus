@@ -183,7 +183,7 @@ int main(int argc, char** args)
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
 
-  linea->GetParticleToGridMaterial();
+  linea->GetParticlesToGridMaterial();
   
   // ******* Print solution *******
   mlSol.SetWriter(VTK);

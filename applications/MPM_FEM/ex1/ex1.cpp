@@ -1130,7 +1130,7 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line &linea)
   linea.UpdateLineMPM();
     
   //project the old velocity and acceleration from the moved particles to the new grid
-  linea.GetParticleToGridMaterial();
+  linea.GetParticlesToGridMaterial();
 
   
 //   //BEGIN second loop on particles (used as Gauss points)
