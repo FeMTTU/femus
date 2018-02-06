@@ -954,40 +954,20 @@ namespace femus
   }
 
 
-  void Line::ParticlesToGridProjection()
-  {
+  void Line::GetParticleToGridMaterial(){
 
     double s = 0;
 
-    unsigned  solIndexM = _sol->GetIndex("M");
+    unsigned solIndexM = _sol->GetIndex("M");
+    unsigned solTypeM = _sol->GetSolutionType(solIndexM);
 
-//     std::vector<unsigned>  solIndexVel(_dim);
-//     solIndexVel[0] = _sol->GetIndex("U");
-//     if(_dim > 1) solIndexVel[1] = _sol->GetIndex("V");
-//     if(_dim > 2) solIndexVel[2] = _sol->GetIndex("W");
-//
-//     std::vector<unsigned>  solIndexAcc(_dim);
-//     solIndexAcc[0] = _sol->GetIndex("AU");
-//     if(_dim > 1) solIndexAcc[1] = _sol->GetIndex("AV");
-//     if(_dim > 2) solIndexAcc[2] = _sol->GetIndex("AW");
-
-
-    unsigned solType = _sol->GetSolutionType(solIndexM);
-//     for(int d = 0; d <  _dim; d++) {
-//       if(solType != _sol->GetSolutionType(solIndexVel[d]) || solType != _sol->GetSolutionType(solIndexAcc[d]) ) {
-//         std::cout << " Error in Line::GetPointsToGridProjections()," << std::endl
-//                   << "the mass, the velocity and the acceleration should have the same solution type" << std::endl;
-//         abort();
-//       }
-//     }
+    unsigned solIndexMat = _sol->GetIndex("Mat");
+    unsigned solTypeMat = _sol->GetSolutionType(solIndexMat);
 
     std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
 
     _sol->_Sol[solIndexM]->zero();
-//     for(int d = 0; d <  _dim; d++) {
-//       _sol->_Sol[solIndexVel[d]]->zero();
-//       _sol->_Sol[solIndexAcc[d]]->zero();
-//     }
+    _sol->_Sol[solIndexMat]->zero();
 
     for (unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
@@ -995,56 +975,81 @@ namespace femus
       unsigned ielType =  _mesh->GetElementType(iel);
       bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
 
-      _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, s);
+      _particles[iMarker]->FindLocalCoordinates(solTypeM, aX[iel], elementUpdate, _sol, s);
 
       std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
-      double mass = _particles[iMarker]->GetMarkerMass();
-//       std::vector< double > velocity(_dim);
-//       _particles[iMarker]->GetMarkerVelocity(velocity);
-//
-//       std::vector< double > acceleration(_dim);
-//       _particles[iMarker]->GetMarkerAcceleration(acceleration);
+      double mass = 1.;
 
-      basis* base = _mesh->GetBasis(ielType, solType);
-      for (unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solType); j++) {
+      basis* base = _mesh->GetBasis(ielType, solTypeM);
+      for (unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solTypeM); j++) {
         double value = base->eval_phi(j, xi);
-        unsigned jdof = _mesh->GetSolutionDof(j, iel, solType);
+        unsigned jdof = _mesh->GetSolutionDof(j, iel, solTypeM);
         _sol->_Sol[solIndexM]->add(jdof, value * mass);
-//         for(int d = 0; d <  _dim; d++) {
-// 	  _sol->_Sol[solIndexVel[d]]->add(jdof, value * mass * velocity[d]);
-// 	  _sol->_Sol[solIndexAcc[d]]->add(jdof, value * mass * acceleration[d]);
-//         }
+      }
+
+      unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
+      _sol->_Sol[solIndexMat]->set(idofMat, 3.);
+
+    }
+    _sol->_Sol[solIndexM]->close();
+    _sol->_Sol[solIndexMat]->close();
+
+
+    for (int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+
+      short unsigned ielt = _mesh->GetElementType(iel);
+
+      unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
+      unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
+      if ((*_sol->_Sol[solIndexMat])(idofMat) == 0) {
+        unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+        for (unsigned i = 0; i < nDofsM; i++) {
+          unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
+          double value = (*_sol->_Sol[solIndexM])(idof);
+          if (fabs(value) > 1.0e-14) {
+            material = 1;
+            _sol->_Sol[solIndexMat]->set(idofMat, 1.);
+            break;
+          }
+        }
+      }
+    }
+    _sol->_Sol[solIndexMat]->close();
+
+
+    for (int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+      short unsigned ielt = _mesh->GetElementType(iel);
+      unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
+      unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
+      if (fabs((*_sol->_Sol[solIndexMat])(idofMat) - 1.) < 1.0e-14) {
+	unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+        for (unsigned i = 0; i < nDofsM; i++) {
+	  unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
+          _sol->_Sol[solIndexM]->set(idof, 0.);
+        }
       }
     }
     _sol->_Sol[solIndexM]->close();
 
-//     for(int d = 0; d <  _dim; d++) {
-//       _sol->_Sol[solIndexVel[d]]->close();
-//       _sol->_Sol[solIndexAcc[d]]->close();
-//     }
-//
-//     for(unsigned i = _mesh->_dofOffset[solType][_iproc]; i < _mesh->_dofOffset[solType][_iproc + 1]; i++) {
-//       double mass = (*_sol->_Sol[solIndexM])(i);
-//       if(fabs(mass) > 1.0e-20) {  //if on the mass at grid node i
-//         for(int d = 0; d <  _dim; d++) {
-//           double vel = (*_sol->_Sol[solIndexVel[d]])(i);
-// 	  _sol->_Sol[solIndexVel[d]]->set(i, vel / mass);
-// 	  double acc = (*_sol->_Sol[solIndexAcc[d]])(i);
-// 	  _sol->_Sol[solIndexAcc[d]]->set(i, acc / mass);
-//         }
-//       }
-//       else {
-//         for(int d = 0; d <  _dim; d++) {
-// 	  _sol->_Sol[solIndexVel[d]]->set(i, 0.);
-// 	  _sol->_Sol[solIndexAcc[d]]->set(i, 0.);
-//         }
-//       }
-//     }
-//
-//     for(int d = 0; d <  _dim; d++) {
-//       _sol->_Sol[solIndexVel[d]]->close();
-//       _sol->_Sol[solIndexAcc[d]]->close();
-//     }
+    for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+
+      short unsigned ielt = _mesh->GetElementType(iel);
+
+      unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
+      unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
+      if((*_sol->_Sol[solIndexMat])(idofMat) == 3) {
+	unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+	for(unsigned i = 0; i < nDofsM; i++) {
+	  unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
+	  double value = (*_sol->_Sol[solIndexM])(idof);
+	  if(fabs(value) < 1.0e-14 || (*_sol->_Bdc[solIndexM])(idof) == 0.) {
+	    _sol->_Sol[solIndexMat]->set(idofMat, 2.);
+	    break;
+	  }
+	}
+      }
+    }
+    _sol->_Sol[solIndexMat]->close();
 
   }
 
@@ -1052,14 +1057,14 @@ namespace femus
   void Line::UpdateLineMPM()
   {
 
-    
-      for (unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
-        unsigned elem =  _particles[iMarker]->GetMarkerElement();
-        _particles[iMarker]->GetElementSerial(elem, _sol, 0.);
-        _particles[iMarker]->SetIprocMarkerPreviousElement(elem);
-      }
-      
-    
+
+    for (unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
+      unsigned elem =  _particles[iMarker]->GetMarkerElement();
+      _particles[iMarker]->GetElementSerial(elem, _sol, 0.);
+      _particles[iMarker]->SetIprocMarkerPreviousElement(elem);
+    }
+
+
     //BEGIN find new _elem and _mproc
 
     for (unsigned jproc = 0; jproc < _nprocs; jproc++) {

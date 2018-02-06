@@ -41,6 +41,12 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
       value = 0;
     }
   }
+  else if (!strcmp(name, "M")) {
+    if (1 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
 
   return test;
 
@@ -92,6 +98,7 @@ int main(int argc, char** args)
   mlSol.GenerateBdc("DX", "Steady");
   if (dim > 1) mlSol.GenerateBdc("DY", "Steady");
   if (dim > 2) mlSol.GenerateBdc("DZ", "Steady");
+  mlSol.GenerateBdc("M", "Steady");
 
   MultiLevelProblem ml_prob(&mlSol);
 
@@ -190,7 +197,7 @@ int main(int argc, char** args)
 
     system.CopySolutionToOldSolution();
 
-    linea->ParticlesToGridProjection();
+    linea->GetParticleToGridMaterial();
     system.MGsolve();
 
 

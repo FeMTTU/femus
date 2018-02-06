@@ -66,7 +66,7 @@ namespace femus {
 
       unsigned NumberOfParticlesOutsideTheDomain();
 
-      void ParticlesToGridProjection();
+      void GetParticleToGridMaterial();
       
       void UpdateLineMPM();
 

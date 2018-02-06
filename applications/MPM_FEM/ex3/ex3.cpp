@@ -20,7 +20,7 @@ using namespace femus;
 
 double SetVariableTimeStep(const double time)
 {
-  double dt =  0.008;
+  double dt =  0.01;
   return dt;
 }
 
@@ -30,13 +30,13 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   value = 0.;
 
   if (!strcmp(name, "DY")) {
-    if (2 == facename || 4 == facename) {
+    if (3 == facename || 4 == facename) {
       test = 0;
       value = 0;
     }
   }
   else if (!strcmp(name, "DX")) {
-    if (3 == facename) {
+    if (2 == facename) {
       test = 0;
       value = 0;
     }
@@ -62,7 +62,7 @@ int main(int argc, char** args)
   double Uref = 1.;
   double rhos = 10000;
   double nu = 0.4;
-  double E = 1.74 * 1.e6;
+  double E = 1.74 * 1.e7;
 
   Parameter par(Lref, Uref);
 
@@ -92,6 +92,7 @@ int main(int argc, char** args)
   mlSol.GenerateBdc("DX", "Steady");
   if (dim > 1) mlSol.GenerateBdc("DY", "Steady");
   if (dim > 2) mlSol.GenerateBdc("DZ", "Steady");
+  mlSol.GenerateBdc("M", "Steady");
 
   MultiLevelProblem ml_prob(&mlSol);
 
@@ -139,7 +140,7 @@ int main(int argc, char** args)
 
   double R = 1.6;
   double PI = acos(-1.);
-  unsigned NR = 300;
+  unsigned NR = 600;
   unsigned NL = NR / (2 * PI);
   double DL = R / NL;
 
@@ -202,7 +203,7 @@ int main(int argc, char** args)
 
     system.CopySolutionToOldSolution();
 
-    linea->ParticlesToGridProjection();
+    linea->GetParticleToGridMaterial();
     system.MGsolve();
 
 
@@ -226,11 +227,7 @@ int main(int argc, char** args)
     linea->GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
 
-
-
   }
-
-
 
   delete linea;
   return 0;
