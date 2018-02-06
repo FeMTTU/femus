@@ -62,8 +62,8 @@ int main(int argc, char** args)
   double Uref = 1.;
   double rhos = 1000;
   double nu = 0.4;
+  double E = 4.2 * 1.e6;
 
-  double E = 1.74 * 1.e7;
 
   Parameter par(Lref, Uref);
 
