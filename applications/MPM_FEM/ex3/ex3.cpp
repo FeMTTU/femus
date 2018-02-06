@@ -178,6 +178,9 @@ int main(int argc, char** args)
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
+
+  linea->GetParticleToGridMaterial();
+  
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
 
@@ -203,23 +206,9 @@ int main(int argc, char** args)
 
     system.CopySolutionToOldSolution();
 
-    linea->GetParticleToGridMaterial();
     system.MGsolve();
 
-
     // ******* Print solution *******
-    mlSol.SetWriter(VTK);
-
-    std::vector<std::string> mov_vars;
-    mov_vars.push_back("DX");
-    mov_vars.push_back("DY");
-    mov_vars.push_back("DZ");
-    mlSol.GetWriter()->SetMovingMesh(mov_vars);
-
-    std::vector<std::string> print_vars;
-    print_vars.push_back("All");
-
-    mlSol.GetWriter()->SetDebugOutput(true);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
     GridToParticlesProjection(ml_prob, *linea);
