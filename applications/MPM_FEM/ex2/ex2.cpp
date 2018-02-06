@@ -159,8 +159,8 @@ int main(int argc, char** args)
   for (unsigned i = 0; i < rows; i++) {
     for (unsigned j = 0; j < columns; j++) {
 
-      x[i * columns + j][0] = -0.5 + 0.000 + ((0.625 - 0.000001) / (columns - 1)) * j;
-      x[i * columns + j][1] = -0.0625 + 0.000 + ((0.25 - 0.000001) / (rows - 1)) * i;
+      x[i * columns + j][0] = -0.5 + ((0.625 - 0.000001) / (columns - 1)) * j;
+      x[i * columns + j][1] = -0.0625 + ((0.25 - 0.000001) / (rows - 1)) * i;
       if (dim == 3) {
         x[j][2] = 0.;
       }
@@ -170,6 +170,9 @@ int main(int argc, char** args)
 
   unsigned solType = 2;
   linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
+  
+  double beamArea = ( -0.5 + (0.625 - 0.000001) ) * (-0.0625 + (0.25 - 0.000001) );
+  linea->SetParticlesMass(beamArea, rhos);
 
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);

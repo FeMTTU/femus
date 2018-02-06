@@ -954,7 +954,9 @@ namespace femus
   }
 
 
-  void Line::GetParticleToGridMaterial(){
+
+  void Line::GetParticleToGridMaterial()
+  {
 
     double s = 0;
 
@@ -982,6 +984,7 @@ namespace femus
 
       basis* base = _mesh->GetBasis(ielType, solTypeM);
       for (unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solTypeM); j++) {
+
         double value = base->eval_phi(j, xi);
         unsigned jdof = _mesh->GetSolutionDof(j, iel, solTypeM);
         _sol->_Sol[solIndexM]->add(jdof, value * mass);
@@ -1022,31 +1025,31 @@ namespace femus
       unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
       unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
       if (fabs((*_sol->_Sol[solIndexMat])(idofMat) - 1.) < 1.0e-14) {
-	unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+        unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
         for (unsigned i = 0; i < nDofsM; i++) {
-	  unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
+          unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
           _sol->_Sol[solIndexM]->set(idof, 0.);
         }
       }
     }
     _sol->_Sol[solIndexM]->close();
 
-    for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+    for (int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
 
       short unsigned ielt = _mesh->GetElementType(iel);
 
       unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
       unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
-      if((*_sol->_Sol[solIndexMat])(idofMat) == 3) {
-	unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
-	for(unsigned i = 0; i < nDofsM; i++) {
-	  unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
-	  double value = (*_sol->_Sol[solIndexM])(idof);
-	  if(fabs(value) < 1.0e-14 || (*_sol->_Bdc[solIndexM])(idof) == 0.) {
-	    _sol->_Sol[solIndexMat]->set(idofMat, 2.);
-	    break;
-	  }
-	}
+      if ((*_sol->_Sol[solIndexMat])(idofMat) == 3) {
+        unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+        for (unsigned i = 0; i < nDofsM; i++) {
+          unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
+          double value = (*_sol->_Sol[solIndexM])(idof);
+          if (fabs(value) < 1.0e-14 || (*_sol->_Bdc[solIndexM])(idof) == 0.) {
+            _sol->_Sol[solIndexMat]->set(idofMat, 2.);
+            break;
+          }
+        }
       }
     }
     _sol->_Sol[solIndexMat]->close();
@@ -1063,9 +1066,6 @@ namespace femus
       _particles[iMarker]->GetElementSerial(elem, _sol, 0.);
       _particles[iMarker]->SetIprocMarkerPreviousElement(elem);
     }
-
-
-    //BEGIN find new _elem and _mproc
 
     for (unsigned jproc = 0; jproc < _nprocs; jproc++) {
       for (unsigned iMarker = _markerOffset[jproc]; iMarker < _markerOffset[jproc + 1]; iMarker++) {
@@ -1152,6 +1152,16 @@ namespace femus
 
     UpdateLine();
 
+  }
+
+  void Line::SetParticlesMass(const double &volume, const double &density)
+  {
+
+    double particlesMass = density * volume / _size;
+
+    for (unsigned i = _markerOffset[_iproc]; i < _markerOffset[_iproc  + 1]; i++) {
+      _particles[i]->SetMarkerMass(particlesMass);
+    }
   }
 
 

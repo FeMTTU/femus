@@ -86,33 +86,9 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   double mu = ml_prob.parameters.get<Solid> ("Solid").get_lame_shear_modulus();
   double nu = ml_prob.parameters.get<Solid> ("Solid").get_poisson_coeff();
   double lambda	= ml_prob.parameters.get<Solid> ("Solid").get_lame_lambda();
-
   double K = E / (3.*(1. - 2. * nu)); //bulk modulus
 
-  double mass = 0.217013888889; //TODO use this with the Cauchy stress formulation
-  // gravity
-
-
   double dt =  my_nnlin_impl_sys.GetIntervalTime();
-
-
-//   double E = 1.74 * 1.e6; // Young's modulus
-//   double nu = 0.4; // Poisson's ratio
-//
-//   double K = E / (3.*(1. - 2. * nu)); //bulk modulus
-//   double lambda = E * nu / ((1. + nu) * (1. - 2 * nu)); //Lame' first parameter
-//   double mu = 1.5 * (K - lambda); //shear modulus
-
-  // the mass of the particle acts as weight
-
-// double density = 10000.;
-  //double mass = 0.0217013888889;
-  //double density = 1000.;
-
-
-  std::cout << density << " " << E << " " << nu << " " << mu << std::endl;
-
-
 
   vector < adept::adouble >* nullAdoublePointer = NULL;
   vector < double >* nullDoublePointer = NULL;
@@ -451,6 +427,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
       std::vector <double> SolApOld(dim, 0.);
       particles[iMarker]->GetMarkerAcceleration(SolApOld);
+      
+      double mass = particles[iMarker]->GetMarkerMass();
 
 
       if (NeoHookean) {
