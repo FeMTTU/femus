@@ -20,7 +20,7 @@ using namespace femus;
 
 double SetVariableTimeStep(const double time)
 {
-  double dt =  0.05;
+  double dt =  0.02;
   return dt;
 }
 
@@ -71,7 +71,7 @@ int main(int argc, char** args)
   Solid solid;
   solid = Solid(par, E, nu, rhos, "Neo-Hookean");
 
-  mlMsh.ReadCoarseMesh("./input/inclined_plane_2D.neu", "fifth", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   unsigned dim = mlMsh.GetDimension();

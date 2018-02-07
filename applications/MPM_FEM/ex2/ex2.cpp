@@ -76,7 +76,7 @@ int main(int argc, char** args)
   Solid solid;
   solid = Solid(par, E, nu, rhos, "Neo-Hookean");
 
-  mlMsh.ReadCoarseMesh("./input/adaptiveRef4.neu", "fifth", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/square.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   unsigned dim = mlMsh.GetDimension();

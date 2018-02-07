@@ -204,7 +204,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       distance = sqrt(distance);
       double scalingFactor = 0.;// / (1. + 100. * distance);
       if (material == 0) scalingFactor = 1.e-05;
-      else if (material == 1) scalingFactor = 1e-03;
+      else if (material == 1) scalingFactor = 5e-03;
       else if (material == 2) scalingFactor = 1e-04;
       for (unsigned i = 0; i < nDofsD; i++) {
         vector < adept::adouble > softStiffness(dim, 0.);
