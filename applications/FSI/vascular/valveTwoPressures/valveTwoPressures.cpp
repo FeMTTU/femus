@@ -63,7 +63,7 @@ int main(int argc, char** args)
   ni = 0.5;
   E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
-  E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
+  E1 = 1. * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
 
   Parameter par(Lref, Uref);
 
@@ -259,7 +259,7 @@ int main(int argc, char** args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 128;
+  const unsigned int n_timesteps = 512;
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
@@ -316,8 +316,8 @@ int main(int argc, char** args)
       outf << time_step << " " << system.GetTime() << " " << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
     }
 
-    //ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+    ml_sol.GetWriter()->SetMovingMesh(mov_vars);
+    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
     //if(time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
 
@@ -338,7 +338,7 @@ int main(int argc, char** args)
 
 double SetVariableTimeStep(const double time)
 {
-  double dt = 1. / 64;
+  double dt = 1. / 32;
 //   double shiftedTime = time - floor(time);
 //   if (time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25) {
 //     dt = 1. / 64;
