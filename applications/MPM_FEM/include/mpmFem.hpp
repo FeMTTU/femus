@@ -3,11 +3,6 @@
 
 using namespace femus;
 
-bool NeoHookean = true;
-bool MPMF = true;
-
-//time-step size
-
 double beta = 0.25;
 double Gamma = 0.5;
 
@@ -124,8 +119,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
     short unsigned ielt = mymsh->GetElementType(iel);
 
-    unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat);
-    unsigned material = (*mysolution->_Sol[indexSolMat])(idofMat);
+    int material = mymsh->GetElementMaterial(iel);
+
+
+
 
     unsigned nDofsD = mymsh->GetElementDofNumber(iel, solType);    // number of solution element dofs
     unsigned nDofs = dim * nDofsD ;//+ nDofsP;
@@ -193,102 +190,80 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
         }
       }
 
-      double xc[2];
-      xc[0] = 0.125; // vein_valve_closed valve2_corta2.neu
-      xc[1] = 0.;
 
-      double distance = 0.;
-      for (unsigned k = 1; k < dim; k++) {
-        distance += (Xgss[k] - xc[k]) * (Xgss[k] - xc[k]);
-      }
-      distance = sqrt(distance);
-      double scalingFactor = 0.;// / (1. + 100. * distance);
-      if (material == 0) scalingFactor = 1.e-05;
-      else if (material == 1) scalingFactor = 5e-03;
-      else if (material == 2) scalingFactor = 1e-04;
-      for (unsigned i = 0; i < nDofsD; i++) {
-        vector < adept::adouble > softStiffness(dim, 0.);
+      if (material == 2) {
+        unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat);
+        unsigned  MPMmaterial = (*mysolution->_Sol[indexSolMat])(idofMat);
+        double scalingFactor = 0.;// / (1. + 100. * distance);
+        if (MPMmaterial == 0) scalingFactor = 1.e-05;
+        else if (MPMmaterial == 1) scalingFactor = 5e-03;
+        else if (MPMmaterial == 2) scalingFactor = 1e-04;
+        for (unsigned i = 0; i < nDofsD; i++) {
+          vector < adept::adouble > softStiffness(dim, 0.);
 
-        for (unsigned j = 0; j < dim; j++) {
+          for (unsigned j = 0; j < dim; j++) {
+            for (unsigned  k = 0; k < dim; k++) {
+              softStiffness[k]   +=  mu * gradphi[i * dim + j] * (GradSolDgss[k][j] + 0.* GradSolDgss[j][k]);
+            }
+          }
           for (unsigned  k = 0; k < dim; k++) {
-            softStiffness[k]   +=  mu * gradphi[i * dim + j] * (GradSolDgss[k][j] + 0.* GradSolDgss[j][k]);
+            aRhs[k][i] += - softStiffness[k] * weight * scalingFactor;
           }
         }
-        for (unsigned  k = 0; k < dim; k++) {
-          aRhs[k][i] += - softStiffness[k] * weight * scalingFactor;
+      }
+      else {
+
+        adept::adouble F[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
+        adept::adouble B[3][3];
+        adept::adouble Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
+        adept::adouble Cauchy[3][3];
+
+        for (int i = 0; i < dim; i++) {
+          for (int j = 0; j < dim; j++) {
+            F[i][j] += GradSolDgssHat[i][j];
+          }
+        }
+
+        adept::adouble J_hat =  F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
+                                - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
+
+        for (int i = 0; i < 3; i++) {
+          for (int j = 0; j < 3; j++) {
+            B[i][j] = 0.;
+
+            for (int k = 0; k < 3; k++) {
+              //left Cauchy-Green deformation tensor or Finger tensor (B = F*F^T)
+              B[i][j] += F[i][k] * F[j][k];
+            }
+          }
+        }
+
+        adept::adouble I1_B = B[0][0] + B[1][1] + B[2][2];
+
+        for (int i = 0; i < 3; i++) {
+          for (int j = 0; j < 3; j++) {
+            //  Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
+            //                 + K * (J_hat - 1.) * Id2th[i][j];  //Generalized Neo-Hookean solid, in Allan-Bower's book, for rubbers with very limited compressibility and K >> mu
+
+            Cauchy[i][j] = lambda * log(J_hat) / J_hat * Id2th[i][j] + 1000 * mu / J_hat * (B[i][j] - Id2th[i][j]); //alternative formulation
+
+          }
+        }
+
+        for (unsigned i = 0; i < nDofsD; i++) {
+          adept::adouble CauchyDIR[3] = {0., 0., 0.};
+
+          for (int idim = 0.; idim < dim; idim++) {
+            for (int jdim = 0.; jdim < dim; jdim++) {
+              CauchyDIR[idim] += gradphi[i * dim + jdim] * Cauchy[idim][jdim];
+            }
+          }
+
+          for (int idim = 0; idim < dim; idim++) {
+            aRhs[indexPdeD[idim]][i] += (phi[i] * density / J_hat * gravity[idim] - CauchyDIR[idim]) * weight;
+          }
         }
       }
-
-//       if(!MPMF && Xgss[0] < 0.125  && Xgss[1] > -0.0625 && Xgss[1] < -0.0625 + 0.25) {
-//         if(NeoHookean) {
-//           adept::adouble F[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
-//           adept::adouble B[3][3];
-//           adept::adouble Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
-//           adept::adouble Cauchy[3][3];
-//
-//           for(int i = 0; i < dim; i++) {
-//             for(int j = 0; j < dim; j++) {
-//               F[i][j] += GradSolDgssHat[i][j];
-//             }
-//           }
-//
-//           adept::adouble J_hat =  F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
-//                                   - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
-//
-//           for(int i = 0; i < 3; i++) {
-//             for(int j = 0; j < 3; j++) {
-//               B[i][j] = 0.;
-//
-//               for(int k = 0; k < 3; k++) {
-//                 //left Cauchy-Green deformation tensor or Finger tensor (B = F*F^T)
-//                 B[i][j] += F[i][k] * F[j][k];
-//               }
-//             }
-//           }
-//
-//           adept::adouble I1_B = B[0][0] + B[1][1] + B[2][2];
-//
-//           for(int i = 0; i < 3; i++) {
-//             for(int j = 0; j < 3; j++) {
-//               //  Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
-//               //                 + K * (J_hat - 1.) * Id2th[i][j];  //Generalized Neo-Hookean solid, in Allan-Bower's book, for rubbers with very limited compressibility and K >> mu
-//
-//               Cauchy[i][j] = lambda * log(J_hat) / J_hat * Id2th[i][j] + mu / J_hat * (B[i][j] - Id2th[i][j]); //alternative formulation
-//
-//             }
-//           }
-//
-//           for(unsigned i = 0; i < nDofsD; i++) {
-//             adept::adouble CauchyDIR[3] = {0., 0., 0.};
-//
-//             for(int idim = 0.; idim < dim; idim++) {
-//               for(int jdim = 0.; jdim < dim; jdim++) {
-//                 CauchyDIR[idim] += gradphi[i * dim + jdim] * Cauchy[idim][jdim];
-//               }
-//             }
-//
-//             for(int idim = 0; idim < dim; idim++) {
-//               aRhs[indexPdeD[idim]][i] += (phi[i] * density / J_hat * gravity[idim] - CauchyDIR[idim]) * weight;
-//             }
-//           }
-//         }
-//         else {
-//           adept::adouble divergence = 0.;
-//           for(unsigned i = 0; i < dim; i++) {
-//             divergence += GradSolDgss[i][i];
-//           }
-//
-//           for(unsigned k = 0; k < nDofsD; k++) {
-//             for(unsigned i = 0; i < dim; i++) {
-//               adept::adouble weakLaplace = 0.;
-//               for(unsigned j = 0; j < dim; j++) {
-//                 weakLaplace += 0.5 * (GradSolDgss[i][j] + GradSolDgss[j][i]) * gradphi[k * dim + j] ;
-//               }
-//               aRhs[indexPdeD[i]][k] += - ((2. * mu * weakLaplace + lambda * divergence * gradphi[k * dim + i]) - density * gravity[i] * phi[k]) * weight;
-//             }
-//           }
-//         }
-//       }
     } // end gauss point loop
 
 
@@ -331,7 +306,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
   unsigned ielOld = UINT_MAX;
 
   //BEGIN loop on particles (used as Gauss points)
-  for (unsigned iMarker = markerOffset1; iMarker < MPMF * markerOffset2; iMarker++) {
+  for (unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
 
     //element of particle iMarker
     unsigned iel = particles[iMarker]->GetMarkerElement();
@@ -427,102 +402,82 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
       std::vector <double> SolApOld(dim, 0.);
       particles[iMarker]->GetMarkerAcceleration(SolApOld);
-      
+
       double mass = particles[iMarker]->GetMarkerMass();
 
+      //BEGIN computation of the Cauchy Stress
+      std::vector < std::vector < double > > FpOld;
+      FpOld = particles[iMarker]->GetDeformationGradient(); //extraction of the deformation gradient
 
-      if (NeoHookean) {
-        //BEGIN computation of the Cauchy Stress
-        std::vector < std::vector < double > > FpOld;
-        FpOld = particles[iMarker]->GetDeformationGradient(); //extraction of the deformation gradient
+      adept::adouble FpNew[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
+      adept::adouble F[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+      adept::adouble B[3][3];
+      adept::adouble Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
+      adept::adouble Cauchy[3][3];
 
-        adept::adouble FpNew[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
-        adept::adouble F[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-        adept::adouble B[3][3];
-        adept::adouble Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
-        adept::adouble Cauchy[3][3];
+      for (int i = 0; i < dim; i++) {
+        for (int j = 0; j < dim; j++) {
+          FpNew[i][j] += GradSolDpHat[i][j];
+        }
+      }
 
-        for (int i = 0; i < dim; i++) {
-          for (int j = 0; j < dim; j++) {
-            FpNew[i][j] += GradSolDpHat[i][j];
+      for (int i = 0; i < dim; i++) {
+        for (int j = 0; j < dim; j++) {
+          for (int k = 0; k < dim; k++) {
+            F[i][j] += FpNew[i][k] * FpOld[k][j];
           }
         }
+      }
 
-        for (int i = 0; i < dim; i++) {
-          for (int j = 0; j < dim; j++) {
-            for (int k = 0; k < dim; k++) {
-              F[i][j] += FpNew[i][k] * FpOld[k][j];
-            }
+      if (dim == 2) F[2][2] = 1.;
+
+      adept::adouble J_hat =  F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
+                              - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
+
+      for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+          B[i][j] = 0.;
+
+          for (int k = 0; k < 3; k++) {
+            //left Cauchy-Green deformation tensor or Finger tensor (B = F*F^T)
+            B[i][j] += F[i][k] * F[j][k];
           }
         }
+      }
 
-        if (dim == 2) F[2][2] = 1.;
+      adept::adouble I1_B = B[0][0] + B[1][1] + B[2][2];
 
-        adept::adouble J_hat =  F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
-                                - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
-
-        for (int i = 0; i < 3; i++) {
-          for (int j = 0; j < 3; j++) {
-            B[i][j] = 0.;
-
-            for (int k = 0; k < 3; k++) {
-              //left Cauchy-Green deformation tensor or Finger tensor (B = F*F^T)
-              B[i][j] += F[i][k] * F[j][k];
-            }
-          }
-        }
-
-        adept::adouble I1_B = B[0][0] + B[1][1] + B[2][2];
-
-        for (int i = 0; i < 3; i++) {
-          for (int j = 0; j < 3; j++) {
-            Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
-                           + K * (J_hat - 1.) * Id2th[i][j];  //Generalized Neo-Hookean solid, in Allan-Bower's book, for rubbers with very limited compressibility and K >> mu
+      for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+          Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
+                         + K * (J_hat - 1.) * Id2th[i][j];  //Generalized Neo-Hookean solid, in Allan-Bower's book, for rubbers with very limited compressibility and K >> mu
 
 //            Cauchy[i][j] = lambda * log(J_hat) / J_hat * Id2th[i][j] + mu / J_hat * (B[i][j] - Id2th[i][j]); //alternative formulation
 
 
-          }
-        }
-        //END computation of the Cauchy Stress
-
-        //BEGIN redidual Solid Momentum in moving domain
-        for (unsigned i = 0; i < nDofsD; i++) {
-          adept::adouble CauchyDIR[3] = {0., 0., 0.};
-
-          for (int idim = 0.; idim < dim; idim++) {
-            for (int jdim = 0.; jdim < dim; jdim++) {
-              CauchyDIR[idim] += gradphi[i * dim + jdim] * Cauchy[idim][jdim];
-            }
-          }
-
-          for (int idim = 0; idim < dim; idim++) {
-            aRhs[indexPdeD[idim]][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density
-                                         //-  phi[i] * ( 1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
-                                         -  phi[i] * 0.5 * (SolApOld[idim] + 1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
-                                        ) * mass;
-          }
-        }
-        //END redidual Solid Momentum in moving domain
-      }
-      else {
-        //BEGIN computation of local residual
-        adept::adouble divergence = 0.;
-        for (unsigned i = 0; i < dim; i++) {
-          divergence += GradSolDp[i][i];
-        }
-
-        for (unsigned k = 0; k < nDofsD; k++) {
-          for (unsigned i = 0; i < dim; i++) {
-            adept::adouble weakLaplace = 0.;
-            for (unsigned j = 0; j < dim; j++) {
-              weakLaplace += 0.5 * (GradSolDp[i][j] + GradSolDp[j][i]) * gradphi[k * dim + j] ;
-            }
-            aRhs[indexPdeD[i]][k] += - ((2. * mu * weakLaplace + lambda * divergence * gradphi[k * dim + i]) / density - gravity[i] * phi[k]) * mass;
-          }
         }
       }
-      //END
+      //END computation of the Cauchy Stress
+
+      //BEGIN redidual Solid Momentum in moving domain
+      for (unsigned i = 0; i < nDofsD; i++) {
+        adept::adouble CauchyDIR[3] = {0., 0., 0.};
+
+        for (int idim = 0.; idim < dim; idim++) {
+          for (int jdim = 0.; jdim < dim; jdim++) {
+            CauchyDIR[idim] += gradphi[i * dim + jdim] * Cauchy[idim][jdim];
+          }
+        }
+
+        for (int idim = 0; idim < dim; idim++) {
+          aRhs[indexPdeD[idim]][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density
+                                       //-  phi[i] * ( 1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
+                                       -  phi[i] * 0.5 * (SolApOld[idim] + 1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
+                                      ) * mass;
+        }
+      }
+      //END redidual Solid Momentum in moving domain
+
 
       if (iMarker == markerOffset2 - 1 || iel != particles[iMarker + 1]->GetMarkerElement()) {
 
@@ -765,7 +720,8 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line& linea)
     }
   }
   linea.UpdateLineMPM();
-  
+
   linea.GetParticlesToGridMaterial();
 }
+
 
