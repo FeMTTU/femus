@@ -46,10 +46,10 @@ int main(int argc, char** args)
   twoPressure = true;
 
   //std::string infile = "./../input/valve/2D/valve2.neu";
-  //std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
+  std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
   //std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
   //std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
-  std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
+  //std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -63,7 +63,7 @@ int main(int argc, char** args)
   ni = 0.5;
   E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
-  E1 = 1. * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
+  E1 = 2. * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
 
   Parameter par(Lref, Uref);
 
@@ -338,7 +338,7 @@ int main(int argc, char** args)
 
 double SetVariableTimeStep(const double time)
 {
-  double dt = 1. / 32;
+  double dt = 1. / 64;
 //   double shiftedTime = time - floor(time);
 //   if (time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25) {
 //     dt = 1. / 64;
