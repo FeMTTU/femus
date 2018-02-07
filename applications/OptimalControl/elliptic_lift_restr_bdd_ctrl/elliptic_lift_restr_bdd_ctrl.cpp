@@ -604,10 +604,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      
 	      }
 	      
-	      	      //BLOCK delta_control - mu
-              if ( i < nDof_ctrl   && j < nDof_mu && i==j ) 
-		Jac[ (nDof_u + i) * nDof_AllVars  + 
-		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  /*control_node_flag[i] **/ 1.;
+// 	      	      //BLOCK delta_control - mu
+//               if ( i < nDof_ctrl   && j < nDof_mu && i==j ) 
+// 		Jac[ (nDof_u + i) * nDof_AllVars  + 
+// 		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  /*control_node_flag[i] **/ 1.;
 		     
 		     
 	      //=========== delta_adjoint row ===========================
@@ -690,6 +690,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
     }
   } //end element loop for each process
+
+  std::vector<int> index_rows(9);  for (unsigned i = 0; i < index_rows.size(); i++) index_rows[i] = 9+i;
+  std::vector<int> index_cols(9);  for (unsigned i = 0; i < index_cols.size(); i++) index_cols[i] = 27+i;
+  KK->matrix_set_off_diagonal_values_blocked(index_rows,index_cols,1.);
 
   RES->close();
 
