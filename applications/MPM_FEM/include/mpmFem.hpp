@@ -8,7 +8,7 @@ bool MPMF = true;
 
 //time-step size
 
-double beta = 0.35;
+double beta = 0.25;
 double Gamma = 0.5;
 
 double gravity[3] = {0., -9.81, 0.};
@@ -204,7 +204,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
       distance = sqrt(distance);
       double scalingFactor = 0.;// / (1. + 100. * distance);
       if (material == 0) scalingFactor = 1.e-05;
-      else if (material == 1) scalingFactor = 5e-03;
+      else if (material == 1) scalingFactor = 1e-03;
       else if (material == 2) scalingFactor = 1e-04;
       for (unsigned i = 0; i < nDofsD; i++) {
         vector < adept::adouble > softStiffness(dim, 0.);
@@ -369,7 +369,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
             //Fixed coordinates (Reference frame)
             vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idofX);
-            vx[j][i]    = vx_hat[j][i] + SolDd[indexPdeD[j]][i];
+            vx[j][i]    = vx_hat[j][i] + 0.5 * SolDd[indexPdeD[j]][i];
           }
         }
         //END
@@ -414,8 +414,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
         for (unsigned inode = 0; inode < nDofsD; inode++) {
           SolDp[i] += phi[inode] * SolDd[indexPdeD[i]][inode];
           for (int j = 0; j < dim; j++) {
-            GradSolDp[i][j] +=  gradphi[inode * dim + j] * 0.5 * SolDd[indexPdeD[i]][inode];
-            GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * SolDd[indexPdeD[i]][inode];
+            GradSolDp[i][j] +=  gradphi[inode * dim + j] * SolDd[indexPdeD[i]][inode];
+            GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * 0.5 * SolDd[indexPdeD[i]][inode];
           }
         }
       }
@@ -498,7 +498,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob)
 
           for (int idim = 0; idim < dim; idim++) {
             aRhs[indexPdeD[idim]][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density
-                                         -  phi[i] * ( 1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
+                                         //-  phi[i] * ( 1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
+                                         -  phi[i] * 0.5 * (SolApOld[idim] + 1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
                                         ) * mass;
           }
         }

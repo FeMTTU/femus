@@ -20,7 +20,7 @@ using namespace femus;
 
 double SetVariableTimeStep(const double time)
 {
-  double dt =  0.01;
+  double dt =  0.05;
   return dt;
 }
 
@@ -205,7 +205,7 @@ int main(int argc, char** args)
   gravity[1] = -9.81 * sqrt(2.) / 2.;
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 400;
+  unsigned n_timesteps = 100;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
