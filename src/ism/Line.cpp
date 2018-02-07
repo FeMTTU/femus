@@ -955,7 +955,7 @@ namespace femus
 
 
 
-  void Line::GetParticleToGridMaterial()
+  void Line::GetParticlesToGridMaterial()
   {
 
     double s = 0;
@@ -1000,11 +1000,9 @@ namespace femus
 
     for (int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
 
-      short unsigned ielt = _mesh->GetElementType(iel);
-
       unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
       unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
-      if ((*_sol->_Sol[solIndexMat])(idofMat) == 0) {
+      if (material == 0) {
         unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
         for (unsigned i = 0; i < nDofsM; i++) {
           unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
@@ -1021,10 +1019,9 @@ namespace femus
 
 
     for (int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
-      short unsigned ielt = _mesh->GetElementType(iel);
       unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
       unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
-      if (fabs((*_sol->_Sol[solIndexMat])(idofMat) - 1.) < 1.0e-14) {
+      if (fabs(material - 1.) < 1.0e-14) {
         unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
         for (unsigned i = 0; i < nDofsM; i++) {
           unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
@@ -1036,11 +1033,9 @@ namespace femus
 
     for (int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
 
-      short unsigned ielt = _mesh->GetElementType(iel);
-
       unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
       unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
-      if ((*_sol->_Sol[solIndexMat])(idofMat) == 3) {
+      if (material == 3) {
         unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
         for (unsigned i = 0; i < nDofsM; i++) {
           unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution

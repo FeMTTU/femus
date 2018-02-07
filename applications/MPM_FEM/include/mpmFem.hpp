@@ -766,6 +766,6 @@ void GridToParticlesProjection(MultiLevelProblem& ml_prob, Line& linea)
   }
   linea.UpdateLineMPM();
   
-  linea.GetParticleToGridMaterial();
+  linea.GetParticlesToGridMaterial();
 }
 
