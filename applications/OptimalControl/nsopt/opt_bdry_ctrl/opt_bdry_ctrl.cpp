@@ -116,16 +116,7 @@ int main(int argc, char** args) {
   std::cout << fluid << std::endl;
   
 // *************************
-  
-  
-  
-
 	
-  char ordertobeprinted[30];
-  int mix = sprintf(ordertobeprinted, "biquadratic alpha = %e beta = %e gamma = %e" , alpha_val,beta_val,gamma_val);
-    // ==================================================
-  
-
 //   MultiLevelMesh mlMsh;
 //  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
     mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
@@ -215,10 +206,6 @@ int main(int argc, char** args) {
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
-
-//   VTKWriter vtkIO(&mlSol);
-// //   vtkIO.Write(DEFAULT_OUTPUTDIR, ordertobeprinted /*"biquadratic"*/, variablesToBePrinted);
-//   vtkIO.Write(files.GetOutputPath(),ordertobeprinted , variablesToBePrinted);
 
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
