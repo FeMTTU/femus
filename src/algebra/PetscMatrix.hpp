@@ -158,7 +158,7 @@ public:
   void matrix_set_diagonal_values(const std::vector< int > &index, const double &value);
   void matrix_set_diagonal_values(const std::vector< int > &index, const std::vector<double> &value);
   void matrix_set_off_diagonal_values_blocked(const std::vector< int > &index_rows, const std::vector< int > &index_cols, const double &value);
-  void matrix_set_off_diagonal_values_binary_blocked(const std::vector< int > &index_rows, const std::vector< int > &index_cols, const double &value, const std::vector< int > &sol_actflag,  int flag);
+  void matrix_set_off_diagonal_values_blocked(const std::vector< int > &index_rows, const std::vector< int > &index_cols, const std::vector<double> &value);
   
   // functions ------------------------------------
   /// Return the l1-norm of the matrix

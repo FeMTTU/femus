@@ -264,27 +264,26 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   double ctrl_lower = -0.3;
   double ctrl_upper = 0.4;
   double c_compl = 1.;
-  vector < int >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
+  vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
   //***************************************************  
 
  //***************************************************  
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
 
-  const int n_vars = 4;
+  const int n_unknowns = 4;
  
   vector< int > l2GMap_AllVars; // local to global mapping
-  l2GMap_AllVars.reserve(n_vars*maxSize);
+  l2GMap_AllVars.reserve(n_unknowns*maxSize);
   
   vector< double > Res; // local redidual vector
-  Res.reserve(n_vars*maxSize);
+  Res.reserve(n_unknowns*maxSize);
 
   vector < double > Jac;
-  Jac.reserve( n_vars*maxSize * n_vars*maxSize);
+  Jac.reserve( n_unknowns*maxSize * n_unknowns*maxSize);
   
-  const int n_unknowns = 4;
 
-  vector < std::string > Solname(n_unknowns);  // const char Solname[4][8] = {"U","V","W","P"};
+  vector < std::string > Solname(n_unknowns);
   Solname[0] = "state";
   Solname[1] = "control";
   Solname[2] = "adjoint";
@@ -407,8 +406,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
     }
  
- 
-
  //******************** ALL VARS ********************* 
     unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
     int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
@@ -689,23 +686,18 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       //store K in the global matrix KK
       KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
     }
-  } //end element loop for each process
-  int no_of_nodes = (NSUB_X+1)*(NSUB_Y+1);
-  std::vector<int> index_rows(no_of_nodes);  for (unsigned i = 0; i < index_rows.size(); i++) index_rows[i] = no_of_nodes+i;
-  std::vector<int> index_cols(no_of_nodes);  for (unsigned i = 0; i < index_cols.size(); i++) index_cols[i] = 3*no_of_nodes+i;
-  KK->matrix_set_off_diagonal_values_blocked(index_rows, index_cols, 1.);
+    
+  KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
+  
+  for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = 1;    
+  
+  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
 
-  std::vector<int> index_rows_a(no_of_nodes);  for (unsigned i = 0; i < index_rows_a.size(); i++) index_rows_a[i] = 3*no_of_nodes+i; 
-  std::vector<int> index_cols_a(no_of_nodes);  for (unsigned i = 0; i < index_cols_a.size(); i++) index_cols_a[i] = no_of_nodes+i;
-  KK->matrix_set_off_diagonal_values_binary_blocked(index_rows_a, index_cols_a, c_compl*555., sol_actflag, 1);
-  
-  std::vector<int> index_rows_b(no_of_nodes);  for (unsigned i = 0; i < index_rows_b.size(); i++) index_rows_b[i] = 3*no_of_nodes+i; 
-  std::vector<int> index_cols_b(no_of_nodes);  for (unsigned i = 0; i < index_cols_b.size(); i++) index_cols_b[i] = no_of_nodes+i;
-  KK->matrix_set_off_diagonal_values_binary_blocked(index_rows_b, index_cols_b, 666., sol_actflag, 2);
-  
-  std::vector<int> index_rows_in(no_of_nodes);  for (unsigned i = 0; i < index_rows_b.size(); i++) index_rows_in[i] = 3*no_of_nodes+i; 
-  std::vector<int> index_cols_in(no_of_nodes);  for (unsigned i = 0; i < index_cols_b.size(); i++) index_cols_in[i] = 3*no_of_nodes+i;
-  KK->matrix_set_off_diagonal_values_binary_blocked(index_rows_in, index_cols_in, 777., sol_actflag, 0);
+  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] = 1 - sol_actflag[i];    
+
+  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag);
+
+  } //end element loop for each process
   
   RES->close();
 
@@ -827,16 +819,16 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
 
-  const int n_vars = 4;
+  const int n_unknowns = 4;
  
   vector< int > l2GMap_AllVars; // local to global mapping
-  l2GMap_AllVars.reserve(n_vars*maxSize);
+  l2GMap_AllVars.reserve(n_unknowns*maxSize);
   
   vector< double > Res; // local redidual vector
-  Res.reserve(n_vars*maxSize);
+  Res.reserve(n_unknowns*maxSize);
 
   vector < double > Jac;
-  Jac.reserve( n_vars*maxSize * n_vars*maxSize);
+  Jac.reserve( n_unknowns*maxSize * n_unknowns*maxSize);
  //*************************************************** 
 
   
