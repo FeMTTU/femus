@@ -7,7 +7,8 @@
 
 #include "OprtrTypeEnum.hpp"
 
-namespace femus {
+namespace femus
+{
 
   double sm[3][4] = {
     {0.5, 1.},
@@ -32,7 +33,8 @@ namespace femus {
 
   double Kslip = 0.;
 
-  void FSITimeDependentAssemblySupgNew2 ( MultiLevelProblem& ml_prob ) {
+  void FSITimeDependentAssemblySupgNew2 ( MultiLevelProblem& ml_prob )
+  {
 
     clock_t AdeptTime = 0;
     clock_t start_time;
@@ -786,8 +788,8 @@ namespace femus {
 
               double C1 = ( elementGroup == 15 ) ? mus1 / 3. : mus / 3.;
               double C2 = C1 / 2.;
-	      
-              //incompressible 
+
+              //incompressible
               for ( int I = 0; I < 3; ++I ) {
                 for ( int J = 0; J < 3; ++J ) {
                   Cauchy[I][J] =  2.* ( C1 * B[I][J] - C2 * invB[I][J] )
@@ -796,15 +798,27 @@ namespace femus {
 
                 }
               }
-	     
-	     //slightly compressible
-//              for (int I = 0; I < 3; ++I) {
-//                 for (int J = 0; J < 3; ++J) {
-//                   Cauchy[I][J] =  1./J_hat*( -SolVAR[nBlocks * dim ]*Id2th[I][J] + 2/pow(J_hat, 2./3.)*(C1 + pow(J_hat, -2./3.)*I1_B*C2)*B[I][J]
-//                                   - 2/pow(J_hat, 4./3.)*C2*B[I][J]*B[I][J] - 2./3.*(C1*pow(J_hat, -2./3.)*I1_B + 2*C2*pow(J_hat, -4./3.)*I1_B)*Id2th[I][J] );
-// 
-//                 }
-//               }
+
+              adept::adouble B2[3][3];
+	      for (int I = 0; I < 3; ++I) {
+                for (int J = 0; J < 3; ++J) {
+		  B2[I][J] = 0.;
+		  for (int k = 0; K < 3; ++K) {
+		    B2[I][J] += B[I][K]*B[K][J]; 
+		  }
+		}
+	      }
+
+	      adept::adouble I2_B = B2[0][0] + B2[1][1] + B2[2][2];
+	      
+              //slightly compressible
+              for (int I = 0; I < 3; ++I) {
+                for (int J = 0; J < 3; ++J) {
+                  Cauchy[I][J] =  1. / J_hat * ( -SolVAR[nBlocks * dim ] * Id2th[I][J] + 2 / pow(J_hat, 2. / 3.) * (C1 + pow(J_hat, -2. / 3.) * I1_B * C2) * B[I][J]
+                                                 - 2 / pow(J_hat, 4. / 3.) * C2 * B2[I][J] - 2. / 3.*(C1 * pow(J_hat, -2. / 3.) * I1_B + 2 * C2 * pow(J_hat, -4. / 3.) * I1_B) * Id2th[I][J] );
+
+                }
+              }
               //END build Cauchy Stress in moving domain
 
 
@@ -891,7 +905,8 @@ namespace femus {
 //****************************************************************************************
 
 
-  void SetLambdaNew ( MultiLevelSolution & mlSol, const unsigned & level, const  FEOrder & order, Operator operatorType ) {
+  void SetLambdaNew ( MultiLevelSolution & mlSol, const unsigned & level, const  FEOrder & order, Operator operatorType )
+  {
 
     unsigned SolType;
 
@@ -1268,7 +1283,8 @@ namespace femus {
 
 //***************************************************************************************************************
 
-  void StoreMeshVelocity ( MultiLevelProblem & ml_prob ) {
+  void StoreMeshVelocity ( MultiLevelProblem & ml_prob )
+  {
 
     TransientNonlinearImplicitSystem& my_nnlin_impl_sys = ml_prob.get_system<TransientNonlinearImplicitSystem> ( "Fluid-Structure-Interaction" );
     const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
