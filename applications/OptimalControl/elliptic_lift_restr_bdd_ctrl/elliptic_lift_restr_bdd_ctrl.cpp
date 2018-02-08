@@ -625,10 +625,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      //============= delta_mu row ===============================
 //	      if (sol_actflag[i] == 0) //inactive
 //	      { // BLOCK delta_mu - mu	      
-	        if ( i < nDof_mu && j < nDof_mu && i==j )   
-		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-		       (nDof_u + nDof_ctrl + nDof_adj + j)]  = 1. ;  
-	     // }
+// 	        if ( i < nDof_mu && j < nDof_mu && i==j )   
+// 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+// 		       (nDof_u + nDof_ctrl + nDof_adj + j)]  = 1. ;  
+// 	     // }
 // 	      else //active
 // 	      { // BLOCK delta_mu - ctrl	      
 //                 if ( i < nDof_mu && j < nDof_ctrl && i==j )   
@@ -690,14 +690,22 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
     }
   } //end element loop for each process
+  int no_of_nodes = (NSUB_X+1)*(NSUB_Y+1);
+  std::vector<int> index_rows(no_of_nodes);  for (unsigned i = 0; i < index_rows.size(); i++) index_rows[i] = no_of_nodes+i;
+  std::vector<int> index_cols(no_of_nodes);  for (unsigned i = 0; i < index_cols.size(); i++) index_cols[i] = 3*no_of_nodes+i;
+  KK->matrix_set_off_diagonal_values_blocked(index_rows, index_cols, 1.);
 
-  std::vector<int> index_rows(9);  for (unsigned i = 0; i < index_rows.size(); i++) index_rows[i] = 9+i;
-  std::vector<int> index_cols(9);  for (unsigned i = 0; i < index_cols.size(); i++) index_cols[i] = 27+i;
-  KK->matrix_set_off_diagonal_values_blocked(index_rows,index_cols,1.);
-
-  std::vector<int> index_rows_b(9);  for (unsigned i = 0; i < index_rows_b.size(); i++) index_rows_b[i] = 27+i; 
-  std::vector<int> index_cols_b(9);  for (unsigned i = 0; i < index_cols_b.size(); i++) index_cols_b[i] = 9+i;
-  KK->matrix_set_off_diagonal_values_binary_blocked(index_rows_b,index_cols_b,555.,sol_actflag, 1);
+  std::vector<int> index_rows_a(no_of_nodes);  for (unsigned i = 0; i < index_rows_a.size(); i++) index_rows_a[i] = 3*no_of_nodes+i; 
+  std::vector<int> index_cols_a(no_of_nodes);  for (unsigned i = 0; i < index_cols_a.size(); i++) index_cols_a[i] = no_of_nodes+i;
+  KK->matrix_set_off_diagonal_values_binary_blocked(index_rows_a, index_cols_a, c_compl*555., sol_actflag, 1);
+  
+  std::vector<int> index_rows_b(no_of_nodes);  for (unsigned i = 0; i < index_rows_b.size(); i++) index_rows_b[i] = 3*no_of_nodes+i; 
+  std::vector<int> index_cols_b(no_of_nodes);  for (unsigned i = 0; i < index_cols_b.size(); i++) index_cols_b[i] = no_of_nodes+i;
+  KK->matrix_set_off_diagonal_values_binary_blocked(index_rows_b, index_cols_b, 666., sol_actflag, 2);
+  
+  std::vector<int> index_rows_in(no_of_nodes);  for (unsigned i = 0; i < index_rows_b.size(); i++) index_rows_in[i] = 3*no_of_nodes+i; 
+  std::vector<int> index_cols_in(no_of_nodes);  for (unsigned i = 0; i < index_cols_b.size(); i++) index_cols_in[i] = 3*no_of_nodes+i;
+  KK->matrix_set_off_diagonal_values_binary_blocked(index_rows_in, index_cols_in, 777., sol_actflag, 0);
   
   RES->close();
 
