@@ -427,8 +427,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     unsigned nDofsVadj = msh->GetElementDofNumber(iel,SolFEType[adj_pos_begin]);    // number of solution element dofs
     unsigned nDofsPadj = msh->GetElementDofNumber(iel,SolFEType[adj_pos_begin + press_type_pos]);    // number of solution element dofs
 
-    unsigned nDofsVctrl = msh->GetElementDofNumber(iel,SolFEType[ctrl_pos_begin]);    // number of solution element dofs
-    unsigned nDofsPctrl = msh->GetElementDofNumber(iel,SolFEType[ctrl_pos_begin + press_type_pos] );    // number of solution element dofs
+    unsigned nDofsGctrl = msh->GetElementDofNumber(iel,SolFEType[ctrl_pos_begin]);    // number of solution element dofs
+    unsigned nDofsThetactrl = msh->GetElementDofNumber(iel,SolFEType[ctrl_pos_begin + press_type_pos] );    // number of solution element dofs
 
     unsigned nDofsVP = dim * nDofsV + nDofsP;
     unsigned nDofsVP_tot = 3*nDofsVP;
@@ -444,7 +444,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
         control_el_flag = ControlDomainFlag(elem_center);
   std::vector< std::vector<int> > control_node_flag(dim);
 	    for(unsigned idim=0; idim<dim; idim++) {
-	      control_node_flag[idim].resize(nDofsVctrl);
+	      control_node_flag[idim].resize(nDofsGctrl);
    /*if (control_el_flag == 0)*/ std::fill(control_node_flag[idim].begin(), control_node_flag[idim].end(), 0);
 	    }
  //*************************************************** 
@@ -614,7 +614,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 			      Jac[kdim][kdim][i_vol*nDofsV + j_vol]	+= control_node_flag[kdim][i_vol];  //u
 			 }
 //BLOCK delta_state - control------------------------------------------------------------------------------------
-			if(j_vol<nDofsVctrl){
+			if(j_vol<nDofsGctrl){
 			  for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 				Jac[kdim][kdim + ctrl_pos_begin][i_vol*nDofsV + j_vol]	+= (-1.) * control_node_flag[kdim][i_vol];  //-g
 			  }
@@ -636,7 +636,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 
 //============ delta_control row ==================================================================================================
-		  if(i_vol<nDofsVctrl){
+		  if(i_vol<nDofsGctrl){
 		      for (unsigned  kdim = 0; kdim < dim; kdim++) {  
 			    double lap_res_dctrl_ctrl_bd = 0.;
 			    double dctrl_dot_n_res = 0.;
@@ -665,66 +665,58 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 // 			  std::cout << " gradadjdotn " << grad_adj_dot_n << std::endl;
   
 			  for (unsigned kdim = 0; kdim < dim; kdim++) {
-				Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i_vol*nDofsVctrl + j] += control_node_flag[kdim][i_vol] * (-1) * (weight_bd * grad_adj_dot_n * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry]);    		      
+				Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i_vol*nDofsGctrl + j] += control_node_flag[kdim][i_vol] * (-1) * (weight_bd * grad_adj_dot_n * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry]);    		      
 			  }
 		      }   
 //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
 		    for(unsigned j_bdry=0; j_bdry < nve_bd; j_bdry ++) {
 		      unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
-		      if(j_vol < nDofsVctrl){
+		      if(j_vol < nDofsGctrl){
 			  double lap_jac_dctrl_ctrl_bd = 0.;
 			  for (unsigned kdim = 0; kdim < dim; kdim++) {
 			      lap_jac_dctrl_ctrl_bd += phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + kdim*nve_bd]*phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j_bdry + kdim*nve_bd];
 			  }
 			  for (unsigned kdim = 0; kdim < dim; kdim++) {
-			      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsVctrl + j_vol] += control_node_flag[kdim][i_vol] * weight_bd *
+			      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol] += control_node_flag[kdim][i_vol] * weight_bd *
 													     (beta_val * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry]*phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j_bdry]
 													      + gamma_val * lap_jac_dctrl_ctrl_bd
 													      );
 			  }
 		      }
 //COLUMN_BLOCK delta_control - theta -------------------------------------------------------------------------------------------------------
-		      if(j_vol < nDofsPctrl){
-			for (unsigned kdim = 0; kdim < dim; kdim++) {
-			      Jac[kdim + ctrl_pos_begin][press_type_pos + ctrl_pos_begin][i_vol*nDofsPctrl + j_vol] +=  phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * phi_bd_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][j_bdry] *normal[kdim]  * weight_bd;
-			}
-		      }
+// // // 		      if(j_vol < nDofsThetactrl){
+// // // 			for (unsigned kdim = 0; kdim < dim; kdim++) {
+// // // 			      Jac[kdim + ctrl_pos_begin][press_type_pos + ctrl_pos_begin][i_vol*nDofsPctrl + j_vol] +=  phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * phi_bd_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][j_bdry] *normal[kdim]  * weight_bd;
+// // // 			}
+// // // 		      }
+		      
 		    }//end j_bdry loop
 
 		  }
 //ROW_BLOCK delta_theta - control ---------------------------------------------------------------------------------------------------------------
-		  if(i_vol == 0 ){ /*first row of delta_theta*/
-		      for (unsigned  kdim = 0; kdim < dim; kdim++) {  
-// 			    double ctrl_dot_n_res = 0.;
-// 			    for (unsigned jdim = 0; jdim < dim; jdim++) {
-// 				  ctrl_dot_n_res += SolVAR_bd_qp[SolPdeIndex[jdim + ctrl_pos_begin]] * normal[jdim];
-// 			    }
-			    Res[press_type_pos + ctrl_pos_begin][i_vol] += - control_node_flag[kdim][i_vol] * weight_bd * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] /*ctrl_dot_n_res*/;
-		      }
-		      for(unsigned j_bdry=0; j_bdry < nve_bd; j_bdry ++) {
-			  unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
-			  if(j_vol < nDofsVctrl){
-			      for (unsigned kdim = 0; kdim < dim; kdim++) {
-				  Jac[press_type_pos + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsVctrl + j_vol] +=  control_node_flag[kdim][i_vol] * weight_bd * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]] [j_bdry]* normal[kdim];
-			      }
-			  }
-		      }
-		  }
-		  else{
+// // // 		  if(i_vol == 0 ){ /*first row of delta_theta*/
+// // // 		      for (unsigned  kdim = 0; kdim < dim; kdim++) {  
+// // // // 			    double ctrl_dot_n_res = 0.;
+// // // // 			    for (unsigned jdim = 0; jdim < dim; jdim++) {
+// // // // 				  ctrl_dot_n_res += SolVAR_bd_qp[SolPdeIndex[jdim + ctrl_pos_begin]] * normal[jdim];
+// // // // 			    }
+// // // 			    Res[press_type_pos + ctrl_pos_begin][i_vol] += - control_node_flag[kdim][i_vol] * weight_bd * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] /*ctrl_dot_n_res*/;
+// // // 		      }
+// // // 		      for(unsigned j_bdry=0; j_bdry < nve_bd; j_bdry ++) {
+// // // 			  unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
+// // // 			  if(j_vol < nDofsGctrl){
+// // // 			      for (unsigned kdim = 0; kdim < dim; kdim++) {
+// // // 				  Jac[press_type_pos + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol] +=  control_node_flag[kdim][i_vol] * weight_bd * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]] [j_bdry]* normal[kdim];
+// // // 			      }
+// // // 			  }
+// // // 		      }
+// // // 		  }
+		  
+// // // 		  else{
 		    
-		      for(unsigned j_bdry=0; j_bdry < nve_bd; j_bdry ++) {
-			  unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
- //  I on the diagonal  ********************************
-			  if(j_vol < nDofsPctrl && i_vol==j_vol){
-			      for (unsigned kdim = 0; kdim < dim; kdim++) {
-				  Jac[press_type_pos + ctrl_pos_begin /*+ 1*/][press_type_pos + ctrl_pos_begin /*+1*/ ][i_vol*nDofsPctrl + j_vol] = 1.;
-			      }
-			  }
-		      }
-//  I on the diagonal  ********************************
+	    
 		    
-		    
-		  }
+// // // 		  }
 		  
 		    
 //============ delta_control row ==================================================================================================
@@ -917,21 +909,33 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 //============ delta_control row ==================================================================================================
 // THIRD ROW
-  for (unsigned i = 0; i < nDofsVctrl; i++) {
+  for (unsigned i = 0; i < nDofsGctrl; i++) {
       for (unsigned kdim = 0; kdim < dim; kdim++) { 
       Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[kdim][i]) * (  SolVAR_eldofs[ctrl_pos_begin][i] - 0.)  );
       }
 
 // //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
-      for (unsigned j = 0; j < nDofsVctrl; j++) {
+      for (unsigned j = 0; j < nDofsGctrl; j++) {
 	    if (i==j) {
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += penalty_outside_control_boundary * ( (1 - control_node_flag[kdim][i])) ;
+	      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] += penalty_outside_control_boundary * ( (1 - control_node_flag[kdim][i])) ;
 	      }
 	    } //end i==j
       }//j_dctrl_ctrl loop
   }//i_ctrl loop
 //============ delta_control row ==================================================================================================
+ 
+ 
+ //============ delta_theta row ==================================================================================================
+  for (unsigned i = 0; i < nDofsThetactrl; i++) {
+      for (unsigned j = 0; j < nDofsThetactrl; j++) {
+			  if(i==j) {
+				  Jac[press_type_pos + ctrl_pos_begin /*+ 1*/][press_type_pos + ctrl_pos_begin /*+1*/ ][i*nDofsThetactrl + j] = 1.;
+			  }
+       }//j_theta loop
+    }//i_theta loop
+
+ //============ delta_theta row ==================================================================================================
  
       }  // end gauss point loop
       
@@ -975,6 +979,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   
   JAC->close();
   RES->close();
+  
+  JAC->print();
   // ***************** END ASSEMBLY *******************
 }
 
