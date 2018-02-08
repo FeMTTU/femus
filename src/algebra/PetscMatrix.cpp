@@ -724,7 +724,15 @@ void PetscMatrix::matrix_set_diagonal_values(const std::vector< int > &index, co
     int ierr = MatSetValuesBlocked(_mat,1,&index_rows[i],1,&index_cols[i],&value,INSERT_VALUES);  CHKERRABORT(MPI_COMM_WORLD,ierr);
     }
   }
-    
+
+// ===========================================================
+  void PetscMatrix::matrix_set_off_diagonal_values_binary_blocked(const std::vector< int > &index_rows, const std::vector< int > &index_cols, const double &value, const std::vector< int > &sol_actflag, int flag) {
+  assert ( index_rows.size() == index_cols.size());
+   for(int i=0;i<index_rows.size();i++){ 
+    if (sol_actflag[i]==flag){
+    int ierr = MatSetValuesBlocked(_mat,1,&index_rows[i],1,&index_cols[i],&value,ADD_VALUES);  CHKERRABORT(MPI_COMM_WORLD,ierr);}
+    }
+  }
 
 
 // ===========================================================

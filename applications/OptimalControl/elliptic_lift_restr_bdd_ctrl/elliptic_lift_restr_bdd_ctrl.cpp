@@ -271,7 +271,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
 
-  const int n_vars = 3;
+  const int n_vars = 4;
  
   vector< int > l2GMap_AllVars; // local to global mapping
   l2GMap_AllVars.reserve(n_vars*maxSize);
@@ -623,18 +623,18 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      
 	      
 	      //============= delta_mu row ===============================
-	      if (sol_actflag[i] == 0) //inactive
-	      { // BLOCK delta_mu - mu	      
+//	      if (sol_actflag[i] == 0) //inactive
+//	      { // BLOCK delta_mu - mu	      
 	        if ( i < nDof_mu && j < nDof_mu && i==j )   
 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
 		       (nDof_u + nDof_ctrl + nDof_adj + j)]  = 1. ;  
-	      }
-	      else //active
-	      { // BLOCK delta_mu - ctrl	      
-                if ( i < nDof_mu && j < nDof_ctrl && i==j )   
-		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-		       (nDof_u + j)                       ]  = c_compl * 1. ; 
-	      }
+	     // }
+// 	      else //active
+// 	      { // BLOCK delta_mu - ctrl	      
+//                 if ( i < nDof_mu && j < nDof_ctrl && i==j )   
+// 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+// 		       (nDof_u + j)                       ]  = c_compl * 1. ; 
+	     // }
 	      
             } // end phi_j loop
           } // endif assemble_matrix
@@ -695,6 +695,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   std::vector<int> index_cols(9);  for (unsigned i = 0; i < index_cols.size(); i++) index_cols[i] = 27+i;
   KK->matrix_set_off_diagonal_values_blocked(index_rows,index_cols,1.);
 
+  std::vector<int> index_rows_b(9);  for (unsigned i = 0; i < index_rows_b.size(); i++) index_rows_b[i] = 27+i; 
+  std::vector<int> index_cols_b(9);  for (unsigned i = 0; i < index_cols_b.size(); i++) index_cols_b[i] = 9+i;
+  KK->matrix_set_off_diagonal_values_binary_blocked(index_rows_b,index_cols_b,555.,sol_actflag, 1);
+  
   RES->close();
 
   if (assembleMatrix) KK->close();
@@ -815,7 +819,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
 
-  const int n_vars = 3;
+  const int n_vars = 4;
  
   vector< int > l2GMap_AllVars; // local to global mapping
   l2GMap_AllVars.reserve(n_vars*maxSize);
