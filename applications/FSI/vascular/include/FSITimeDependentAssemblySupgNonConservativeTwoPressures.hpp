@@ -130,21 +130,30 @@ namespace femus
     double rhos	 	= ml_prob.parameters.get<Fluid> ( "Solid" ).get_density() / rhof;
     double mu_lame 	= ml_prob.parameters.get<Solid> ( "Solid" ).get_lame_shear_modulus();
     double lambda_lame 	= ml_prob.parameters.get<Solid> ( "Solid" ).get_lame_lambda();
+    double lambda_lame1	= ml_prob.parameters.get<Solid> ( "Solid1" ).get_lame_lambda();
     double mus		= mu_lame / rhof;
     double mu_lame1 	= ml_prob.parameters.get < Solid> ( "Solid1" ).get_lame_shear_modulus();
     double mus1 	= mu_lame1 / rhof;
     double IRe 		= ml_prob.parameters.get<Fluid> ( "Fluid" ).get_IReynolds_number();
     double lambda	= lambda_lame / rhof;
+    double lambda1	= lambda_lame1 / rhof;
     double betans	= 1.;
     int    solid_model	= ml_prob.parameters.get<Solid> ( "Solid" ).get_physical_model();
 
+    double bulkModule = lambda + 2./3. * mus;
+    double bulkModule1 = lambda1 + 2./3. * mus1;
+    
+    bool incompressible = (0.5  ==  ml_prob.parameters.get < Solid>("Solid").get_poisson_coeff()) ? 1 : 0;
+    bool incompressible1 = (0.5  ==  ml_prob.parameters.get < Solid>("Solid1").get_poisson_coeff()) ? 1 : 0;
+    
     if ( solid_model >= 2 && solid_model <= 4 ) {
       std::cout << "Error! Solid Model " << solid_model << "not implemented\n";
       abort();
     }
 
-    bool incompressible = ( 0.5 == ml_prob.parameters.get<Solid> ( "Solid" ).get_poisson_coeff() ) ? 1 : 0;
-    const bool penalty = ml_prob.parameters.get<Solid> ( "Solid" ).get_if_penalty();
+//     bool incompressible = ( 0.5 == ml_prob.parameters.get<Solid> ( "Solid" ).get_poisson_coeff() ) ? 1 : 0;
+//     bool incompressible1 = (0.5  ==  ml_prob.parameters.get < Solid>("Solid1").get_poisson_coeff()) ? 1 : 0;
+    //const bool penalty = ml_prob.parameters.get<Solid> ( "Solid" ).get_if_penalty();
 
     // gravity
     double _gravity[3] = {0., 0., 0.};
@@ -432,9 +441,18 @@ namespace femus
                    - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
           //END Jacobian in the undeformed configuration
 
+	  double bkm = bulkModule;
+	  bool incpr  = incompressible;	   	    
+	  if( elementGroup == 15 ){
+	    bkm = bulkModule1;	   
+	    incpr = incompressible1;	   	    
+	  }
+	  	  
+		   
           //BEGIN continuity block
           for ( unsigned i = 0; i < nve1; i++ ) {
             aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * ( 1. - J_hat ) * Weight_hat / rhof;
+	    if(!incpr) aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * ( - bkm * SolVAR[nBlocks * dim + jP] ) * Weight_hat / rhof;
             //if (twoPressure) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * SolVAR[nBlocks * dim + jP] * Weight_hat;   // fake continuity of the fluid in the solid
             if ( twoPressure ) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * Soli[indexVAR[nBlocks * dim + jP]][i] * Weight_hat; // fake continuity of the fluid in the solid
           }
@@ -741,19 +759,8 @@ namespace femus
               adept::adouble Cauchy[3][3];
               double Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
 
-              // hyperelastic non linear material
-              adept::adouble F[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
               adept::adouble B[3][3];
               adept::adouble I1_B = 0.;
-
-              for ( int i = 0; i < dim; i++ ) {
-                for ( int j = 0; j < dim; j++ ) {
-                  F[i][j] += GradSolhatVAR[i][j];
-                }
-              }
-
-              J_hat =   F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
-                        - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
 
               for ( int I = 0; I < 3; ++I ) {
                 for ( int J = 0; J < 3; ++J ) {
@@ -767,57 +774,66 @@ namespace femus
               }
 
               I1_B = B[0][0] + B[1][1] + B[2][2];
+	      
+	      double C1 = mus / 3.;
+	      bool incpr  = incompressible;	   	    
+	      if( elementGroup == 15 ){
+		C1 = mus1 / 3.;
+		incpr = incompressible1;	   	    
+	      }
+              double C2 = C1 / 2.;
 
-              adept::adouble detB =   B[0][0] * ( B[1][1] * B[2][2] - B[2][1] * B[1][2] )
+	      if( incpr ){ //incompressible
+		adept::adouble detB =   B[0][0] * ( B[1][1] * B[2][2] - B[2][1] * B[1][2] )
                                       - B[0][1] * ( B[2][2] * B[1][0] - B[1][2] * B[2][0] )
                                       + B[0][2] * ( B[1][0] * B[2][1] - B[2][0] * B[1][1] );
 
-              adept::adouble invdetB = 1. / detB;
-              adept::adouble invB[3][3];
+		adept::adouble invdetB = 1. / detB;
+		adept::adouble invB[3][3];
 
-
-              invB[0][0] = ( B[1][1] * B[2][2] - B[1][2] * B[2][1] ) * invdetB;
-              invB[1][0] = - ( B[0][1] * B[2][2] - B[0][2] * B[2][1] ) * invdetB;
-              invB[2][0] = ( B[0][1] * B[1][2] - B[0][2] * B[1][1] ) * invdetB;
-              invB[0][1] = - ( B[1][0] * B[2][2] - B[1][2] * B[2][0] ) * invdetB;
-              invB[1][1] = ( B[0][0] * B[2][2] - B[0][2] * B[2][0] ) * invdetB;
-              invB[2][1] = - ( B[0][0] * B[1][2] - B[1][0] * B[0][2] ) * invdetB;
-              invB[0][2] = ( B[1][0] * B[2][1] - B[2][0] * B[1][1] ) * invdetB;
-              invB[1][2] = - ( B[0][0] * B[2][1] - B[2][0] * B[0][1] ) * invdetB;
-              invB[2][2] = ( B[0][0] * B[1][1] - B[1][0] * B[0][1] ) * invdetB;
-
-              double C1 = ( elementGroup == 15 ) ? mus1 / 3. : mus / 3.;
-              double C2 = C1 / 2.;
-
-              //incompressible
-              for ( int I = 0; I < 3; ++I ) {
-                for ( int J = 0; J < 3; ++J ) {
-                  Cauchy[I][J] =  2.* ( C1 * B[I][J] - C2 * invB[I][J] )
+		invB[0][0] = ( B[1][1] * B[2][2] - B[1][2] * B[2][1] ) * invdetB;
+		invB[1][0] = - ( B[0][1] * B[2][2] - B[0][2] * B[2][1] ) * invdetB;
+		invB[2][0] = ( B[0][1] * B[1][2] - B[0][2] * B[1][1] ) * invdetB;
+		invB[0][1] = - ( B[1][0] * B[2][2] - B[1][2] * B[2][0] ) * invdetB;
+		invB[1][1] = ( B[0][0] * B[2][2] - B[0][2] * B[2][0] ) * invdetB;
+		invB[2][1] = - ( B[0][0] * B[1][2] - B[1][0] * B[0][2] ) * invdetB;
+		invB[0][2] = ( B[1][0] * B[2][1] - B[2][0] * B[1][1] ) * invdetB;
+		invB[1][2] = - ( B[0][0] * B[2][1] - B[2][0] * B[0][1] ) * invdetB;
+		invB[2][2] = ( B[0][0] * B[1][1] - B[1][0] * B[0][1] ) * invdetB;
+		
+		for ( int I = 0; I < 3; ++I ) {
+		  for ( int J = 0; J < 3; ++J ) {
+		    Cauchy[I][J] =  2.* ( C1 * B[I][J] - C2 * invB[I][J] )
                                   - 1. / rhof * SolVAR[nBlocks * dim ] * Id2th[I][J];
-                  //- 2./3. * (C1 - C2) * SolVAR[nBlocks * dim ] * Id2th[I][J];
-
-                }
-              }
-
-              adept::adouble B2[3][3];
-	      for (int I = 0; I < 3; ++I) {
-                for (int J = 0; J < 3; ++J) {
-		  B2[I][J] = 0.;
-		  for (int k = 0; K < 3; ++K) {
-		    B2[I][J] += B[I][K]*B[K][J]; 
+           
 		  }
 		}
 	      }
+	      else { //slightly compressible
+		adept::adouble B2[3][3];
+		for (int I = 0; I < 3; ++I) {
+		  for (int J = 0; J < 3; ++J) {
+		    B2[I][J] = 0.;
+		    for (int K = 0; K < 3; ++K) {
+		      B2[I][J] += B[I][K] * B[K][J]; 
+		    }
+		  }
+		}
 
-	      adept::adouble I2_B = B2[0][0] + B2[1][1] + B2[2][2];
+		adept::adouble I2_B = B2[0][0] + B2[1][1] + B2[2][2];
 	      
-              //slightly compressible
-              for (int I = 0; I < 3; ++I) {
-                for (int J = 0; J < 3; ++J) {
-                  Cauchy[I][J] =  1. / J_hat * ( -SolVAR[nBlocks * dim ] * Id2th[I][J] + 2 / pow(J_hat, 2. / 3.) * (C1 + pow(J_hat, -2. / 3.) * I1_B * C2) * B[I][J]
-                                                 - 2 / pow(J_hat, 4. / 3.) * C2 * B2[I][J] - 2. / 3.*(C1 * pow(J_hat, -2. / 3.) * I1_B + 2 * C2 * pow(J_hat, -4. / 3.) * I1_B) * Id2th[I][J] );
-
-                }
+		adept::adouble J_hatm2over3 = pow(J_hat, -2. / 3.);
+		adept::adouble J_hatm4over3 = J_hatm2over3 * J_hatm2over3;
+	      
+		//slightly compressible
+		for (int I = 0; I < 3; ++I) {
+		  for (int J = 0; J < 3; ++J) {
+		    Cauchy[I][J] =  1. / J_hat * (   2. * J_hatm2over3 * (C1 + J_hatm2over3 * I1_B * C2) * B[I][J] - 2. * J_hatm4over3 * C2 * B2[I][J] 
+						  - 2. / 3. * (C1 * J_hatm2over3 * I1_B + 2 * C2 * J_hatm4over3 * I2_B) * Id2th[I][J] 
+						  - SolVAR[nBlocks * dim ] * Id2th[I][J] / rhof
+						);
+		  }
+		}
               }
               //END build Cauchy Stress in moving domain
 
