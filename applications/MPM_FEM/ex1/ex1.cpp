@@ -97,7 +97,8 @@ int main(int argc, char** args)
 
   MultiLevelProblem ml_prob(&mlSol);
 
-  ml_prob.parameters.set<Solid> ("Solid") = solid;
+  ml_prob.parameters.set<Solid> ("SolidMPM") = solid;
+  ml_prob.parameters.set<Solid> ("SolidFEM") = solid;
 
   // ******* Add MPM system to the MultiLevel problem *******
   TransientNonlinearImplicitSystem& system = ml_prob.add_system < TransientNonlinearImplicitSystem > ("MPM_FEM");
