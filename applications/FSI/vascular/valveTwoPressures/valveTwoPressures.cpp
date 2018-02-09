@@ -63,7 +63,7 @@ int main(int argc, char** args)
   ni = 0.50;
   E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
-  E1 = 3. * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
+  E1 = 4. * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
 
   Parameter par(Lref, Uref);
 
@@ -268,7 +268,7 @@ int main(int argc, char** args)
 
   std::ofstream outf;
   if(iproc == 0) {
-    outf.open("fluxes_E1=3.txt");
+    outf.open("fluxes_E1=4.txt");
     if(!outf) {
       std::cout << "Error in opening file DataPrint.txt";
       return 1;
