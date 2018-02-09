@@ -24,6 +24,10 @@ double InitialValueAdjoint(const std::vector < double >& x) {
   return 0.;
 }
 
+double InitialValueMu(const std::vector < double >& x) {
+  return 0.;
+}
+
 double InitialValueControl(const std::vector < double >& x) {
   return 0.;
 }
@@ -78,7 +82,6 @@ int main(int argc, char** args) {
   mlSol.AddSolution("control", LAGRANGE, FIRST);
   mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
-  mlSol.AddSolution("actflag", LAGRANGE, FIRST); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
@@ -88,6 +91,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("state", InitialValueState);
   mlSol.Initialize("control", InitialValueControl);
   mlSol.Initialize("adjoint", InitialValueAdjoint);
+  mlSol.Initialize("mu", InitialValueMu);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
 
@@ -262,7 +266,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   //********* variables for ineq constraints *****************
   double ctrl_lower = -0.3;
-  double ctrl_upper = 0.4;
+  double ctrl_upper = 0.1;
   double c_compl = 1.;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
   //***************************************************  
