@@ -268,7 +268,7 @@ int main(int argc, char** args)
 
   std::ofstream outf;
   if(iproc == 0) {
-    outf.open("fluxes_E1=2_comp.txt");
+    outf.open("fluxes_E1=2.txt");
     if(!outf) {
       std::cout << "Error in opening file DataPrint.txt";
       return 1;
