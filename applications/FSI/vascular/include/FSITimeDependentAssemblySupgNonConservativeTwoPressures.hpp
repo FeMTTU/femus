@@ -757,7 +757,7 @@ namespace femus
             if ( middle ) {
               //BEGIN build Chauchy Stress in moving domain
               adept::adouble Cauchy[3][3];
-              double Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
+              //double Id2th[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
 
               adept::adouble B[3][3];
               adept::adouble I1_B = 0.;
@@ -803,10 +803,9 @@ namespace femus
 		
 		for ( int I = 0; I < 3; ++I ) {
 		  for ( int J = 0; J < 3; ++J ) {
-		    Cauchy[I][J] =  2.* ( C1 * B[I][J] - C2 * invB[I][J] )
-                                  - 1. / rhof * SolVAR[nBlocks * dim ] * Id2th[I][J];
-           
+		    Cauchy[I][J] =  2.* ( C1 * B[I][J] - C2 * invB[I][J] );
 		  }
+		  Cauchy[I][I] -= 1. / rhof * SolVAR[nBlocks * dim ];
 		}
 	      }
 	      else { //slightly compressible
@@ -824,15 +823,26 @@ namespace femus
 	      
 		adept::adouble J_hatm2over3 = pow(J_hat, -2. / 3.);
 		adept::adouble J_hatm4over3 = J_hatm2over3 * J_hatm2over3;
-	      
-		//slightly compressible
+		
+// 		for (int I = 0; I < 3; ++I) {
+// 		  for (int J = 0; J < 3; ++J) {
+// 		    Cauchy[I][J] =  1. / J_hat * (   2. * J_hatm2over3 * (C1 + J_hatm2over3 * I1_B * C2) * B[I][J] - 2. * J_hatm4over3 * C2 * B2[I][J] 
+// 						  - 2. / 3. * (C1 * J_hatm2over3 * I1_B + 2 * C2 * J_hatm4over3 * I2_B) * Id2th[I][J] 
+// 						  - SolVAR[nBlocks * dim ] * Id2th[I][J] / rhof
+// 						);
+// 		  }
+// 		}
+		
+		adept::adouble twoC1 = 2. * J_hatm2over3 * (C1 + J_hatm2over3 * I1_B * C2) / J_hat;
+		adept::adouble twoC2 = 2. * J_hatm4over3 / J_hat;
+		adept::adouble C3 = 2. / 3. * (C1 * J_hatm2over3 * I1_B + 2 * C2 * J_hatm4over3 * I2_B) / J_hat;
+		adept::adouble C4 = 1. / ( J_hat * rhof); 
+		
 		for (int I = 0; I < 3; ++I) {
 		  for (int J = 0; J < 3; ++J) {
-		    Cauchy[I][J] =  1. / J_hat * (   2. * J_hatm2over3 * (C1 + J_hatm2over3 * I1_B * C2) * B[I][J] - 2. * J_hatm4over3 * C2 * B2[I][J] 
-						  - 2. / 3. * (C1 * J_hatm2over3 * I1_B + 2 * C2 * J_hatm4over3 * I2_B) * Id2th[I][J] 
-						  - SolVAR[nBlocks * dim ] * Id2th[I][J] / rhof
-						);
+		    Cauchy[I][J] =  twoC1 * B[I][J] - twoC2 * B2[I][J]; 
 		  }
+		  Cauchy[I][I] -= C3 + C4 * SolVAR[nBlocks * dim ];
 		}
               }
               //END build Cauchy Stress in moving domain
