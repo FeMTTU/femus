@@ -115,6 +115,7 @@ namespace femus
 
     vector< vector< adept::adouble > > Soli ( nBlocks * dim + nP );
     vector< vector< double > > Soli_old ( nBlocks * dim );
+    vector< vector< double > > aold ( dim );
     vector< vector< int > > dofsVAR ( nBlocks * dim + nP );
     vector< vector< double > > meshVelOldNode ( dim );
 
@@ -175,14 +176,15 @@ namespace femus
     //----------------------------------------------------------------------------------
     //variable-name handling
     const char varname[8][3] = {"DX", "DY", "DZ", "U", "V", "W", "PS", "PF"};
-
     const char varname2[10][4] = {"Um", "Vm", "Wm"};
+    const char varname3[3][4] = {"AX", "AY", "AZ"};
 
     vector <unsigned> indexVAR ( nBlocks * dim + nP );
     vector <unsigned> indVAR ( nBlocks * dim + nP );
     vector <unsigned> SolType ( nBlocks * dim + nP );
 
     vector <unsigned> indVAR2 ( dim );
+    vector <unsigned> indVAR3 ( dim );
 
     for ( unsigned ivar = 0; ivar < dim; ivar++ ) {
       for ( unsigned k = 0; k < nBlocks; k++ ) {
@@ -192,6 +194,7 @@ namespace femus
       }
 
       indVAR2[ivar] = ml_sol->GetIndex ( &varname2[ivar][0] );
+      indVAR3[ivar] = ml_sol->GetIndex ( &varname3[ivar][0] );
     }
 
     for ( unsigned ivar = 0; ivar < nP; ivar++ ) {
@@ -244,6 +247,7 @@ namespace femus
         vx[i].resize ( nve );
         vxOld[i].resize ( nve );
         vxNew[i].resize ( nve );
+	aold[i].resize ( nve );
       }
 
       for ( unsigned i = 0; i < nve; i++ ) {
@@ -258,6 +262,7 @@ namespace femus
           }
           meshVelOldNode[j][i] = ( *mysolution->_Sol[indVAR2[j]] ) ( idof );
           vx_hat[j][i] = ( *mymsh->_topology->_Sol[j] ) ( idof );
+	  aold[j][i] = ( *mysolution->_SolOld[indVAR3[j]] ) ( idof );
         }
       }
 
@@ -414,6 +419,8 @@ namespace femus
 
         //BEGIN SOLID ASSEMBLY ============
         if ( flag_mat == 4 ) {
+	  double gamma = 0.5;
+          double beta = 0.25;
 
           //BEGIN redidual d_t - v = 0 in fixed domain
           for ( unsigned i = 0; i < nve; i++ ) {
@@ -422,9 +429,16 @@ namespace femus
 //                                                 (1. * SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim])
 //                                                ) * phi_hat[i] * Weight_hat;
 
-              aRhs[indexVAR[dim + idim]][i] += ( ( Soli[idim][i] - Soli_old[idim][i] ) / dt -
-                                                 Soli[idim + dim][i]
-                                               ) * phi_hat[i] * Weight_hat;
+//               aRhs[indexVAR[dim + idim]][i] += ( ( Soli[idim][i] - Soli_old[idim][i] ) / dt -
+//                                                  Soli[idim + dim][i]
+//                                                ) * phi_hat[i] * Weight_hat;
+	      
+              adept::adouble anew = ( Soli[idim][i] - Soli_old[idim][i] )/( dt* dt * beta ) - Soli_old[idim + dim][i]/( dt * beta ) - (1 - 2. * beta)/(2. * beta) * aold[idim][i];
+              adept::adouble vnew = Soli_old[idim + dim][i] + dt * ( (1 - gamma) * aold[idim][i] + gamma * anew );
+	      
+	      aRhs[indexVAR[dim + idim]][i] += (vnew - Soli[idim + dim][i]) * phi_hat[i] * Weight_hat;
+
+	      
             }
           }
           //END redidual d_t - v = 0 in fixed domain
@@ -849,6 +863,7 @@ namespace femus
 
 
               //BEGIN Momentum (Solid)
+	      
               for ( unsigned i = 0; i < nve; i++ ) {
                 adept::adouble CauchyDIR[3] = {0., 0., 0.};
                 for ( int idim = 0.; idim < dim; idim++ ) {
@@ -1323,16 +1338,25 @@ namespace femus
     //const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
     const unsigned dim = msh->GetDimension();
     const char varname[9][4] = {"DX", "U", "Um", "DY", "V", "Vm", "DZ", "W", "Wm"};
+    const char varname2[3][4] = {"AX", "AY", "AZ"};
 
     vector <unsigned> indVAR ( 3 * dim );
+    vector <unsigned> indVAR2 ( dim );
+    
+    double gamma =0.5;
+    double beta=0.25;
 
     for ( unsigned ivar = 0; ivar < 3 * dim; ivar++ ) {
       indVAR[ivar] = ml_sol->GetIndex ( &varname[ivar][0] );
     }
+    
+    for ( unsigned ivar = 0; ivar < dim; ivar++ ) {
+      indVAR2[ivar] = ml_sol->GetIndex ( &varname2[ivar][0] );
+    }
 
     double dt =  my_nnlin_impl_sys.GetIntervalTime();
 
-
+    
     int  iproc;
     MPI_Comm_rank ( MPI_COMM_WORLD, &iproc );
 
@@ -1342,6 +1366,7 @@ namespace femus
       for ( unsigned jdof = msh->_dofOffset[2][iproc]; jdof < msh->_dofOffset[2][iproc + 1]; jdof++ ) {
         bool solidmark = msh->GetSolidMark ( jdof );
         double vnew;
+	double anew;
 
         if ( solidmark != solidmark ) {
           vnew = ( *solution->_Sol[indVAR[ivar + 1]] ) ( jdof ); // solid: mesh velocity equals solid velocity
@@ -1350,12 +1375,17 @@ namespace femus
           double unew = ( *solution->_Sol[indVAR[ivar]] ) ( jdof );
           double uold = ( *solution->_SolOld[indVAR[ivar]] ) ( jdof );
           double vold = ( *solution->_Sol[indVAR[ivar + 2]] ) ( jdof );
-          vnew = 1. / dt * ( unew - uold ) - 0. * vold;
+	  double aold = ( *solution->_SolOld[indVAR2[idim]] ) ( jdof );
+	  anew = (unew - uold)/(dt * dt * beta) - vold/(dt * beta) - (1 - 2. * beta)/(2. * beta) * aold;
+          //vnew = 1. / dt * ( unew - uold ) - 0. * vold;
+	  vnew = vold + dt * ( (1 - gamma) * aold + gamma * anew );
         }
         solution->_Sol[indVAR[ivar + 2]]->set ( jdof, vnew );
+	solution->_Sol[indVAR2[idim]]->set ( jdof, anew );
       }
 
       solution->_Sol[indVAR[ivar + 2]]->close();
+      solution->_Sol[indVAR2[idim]]->close();
     }
 
   }
