@@ -977,9 +977,20 @@ namespace femus
       unsigned ielType =  _mesh->GetElementType(iel);
       bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
 
-      _particles[iMarker]->FindLocalCoordinates(solTypeM, aX[iel], elementUpdate, _sol, s);
+      std::vector <double> xi1 = _particles[iMarker]->GetMarkerLocalCoordinates();
+      
+      //if(iMarker < 3){
+//	std::cout << iel <<" "<< iMarker << " " << xi1[0] << " " << xi1[1] <<std::endl;
+ //     }
+                
+      _particles[iMarker]->FindLocalCoordinates(2., aX[iel], elementUpdate, _sol, s);
 
       std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
+      
+      //if(iMarker < 3){
+      //std::cout << iel <<" "<< iMarker << " " << xi[0] << " " << xi[1] <<std::endl;
+     // }
+      
       double mass = 1.;
 
       basis* base = _mesh->GetBasis(ielType, solTypeM);

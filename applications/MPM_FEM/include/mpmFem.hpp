@@ -126,7 +126,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   unsigned markerOffset1 = markerOffset[iproc];
   unsigned markerOffset2 = markerOffset[iproc + 1];
   std::vector<Marker*> particles = linea->GetParticles();
-  std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
+  //std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
 
   //BEGIN loop on elements (to initialize the "soft" stiffness matrix)
   for(int iel = mymsh->_elementOffset[iproc]; iel < mymsh->_elementOffset[iproc + 1]; iel++) {
@@ -401,12 +401,15 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         // start a new recording of all the operations involving adept::adouble variables
       }
 
-      bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO to be removed after we include FindLocalCoordinates in the advection
-      particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, mysolution, 0);
+      //bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO to be removed after we include FindLocalCoordinates in the advection
+      //particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, mysolution, 0);
 
       // the local coordinates of the particles are the Gauss points in this context
       std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
 
+//       if(iMarker < 3){
+// 	std::cout << iel <<" "<< iMarker << " " << xi[0] << " " << xi[1] <<std::endl;
+//       }
 
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradphi, *nullAdoublePointer); //function to evaluate at the particles
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, xi, weight_hat, phi_hat, gradphi_hat, *nullDoublePointer);
@@ -608,6 +611,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
 
   // local objects
   vector< vector < double > > SolDd(dim);
+  vector< vector < double > > SolDdOld(dim);
   vector< vector < double > > GradSolDp(dim);
 
   for(int i = 0; i < dim; i++) {
@@ -640,7 +644,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
   unsigned markerOffset1 = markerOffset[iproc];
   unsigned markerOffset2 = markerOffset[iproc + 1];
   std::vector<Marker*> particles = linea.GetParticles();
-  std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
+  //std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
 
   //initialization of iel
   unsigned ielOld = UINT_MAX;
@@ -666,6 +670,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
 
         for(int i = 0; i < dim; i++) {
           SolDd[i].resize(nve);
+	  SolDdOld[i].resize(nve);
           vx[i].resize(nve);
         }
 
@@ -676,16 +681,18 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
 
           for(int i = 0; i < dim; i++) {
             SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof);
+	    SolDdOld[i][inode] = (*mysolution->_SolOld[indexSolD[i]])(idof);
             //moving domain
             vx[i][inode] = (*mymsh->_topology->_Sol[i])(idofX);
           }
         }
         //END
       }
-
-      bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO to be removed after we include FindLocalCoordinates in the advection
-      particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, mysolution, 0);
       std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
+      
+      //bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO to be removed after we include FindLocalCoordinates in the advection
+      //particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, mysolution, 0);
+      // xi = particles[iMarker]->GetMarkerLocalCoordinates();
 
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradphi, nablaphi); //function to evaluate at the particles
 
@@ -693,11 +700,11 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
       //update displacement and acceleration
       for(int i = 0; i < dim; i++) {
         for(unsigned inode = 0; inode < nve; inode++) {
-	  std::cout << SolDd[i][inode] << " ";
-          particleDisp[i] += phi[inode] * SolDd[i][inode];
+	  //std::cout << SolDd[i][inode] << " ";
+          particleDisp[i] += phi[inode] * (SolDd[i][inode]-SolDdOld[i][inode]);
 	  //std::cout<<std::endl;
         }
-        std::cout << particleDisp[i] <<std::endl;
+        //std::cout << particleDisp[i] <<std::endl;
       }
       
 
@@ -727,7 +734,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
         for(int j = 0; j < dim; j++) {
           GradSolDp[i][j] = 0.;
           for(unsigned inode = 0; inode < nve; inode++) {
-            GradSolDp[i][j] +=  gradphi[inode * dim + j] * SolDd[i][inode];
+            GradSolDp[i][j] +=  gradphi[inode * dim + j] * (SolDd[i][inode]-SolDdOld[i][inode]);
           }
         }
       }
@@ -782,12 +789,15 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
     }
     else{
       for(int i = 0; i < dim; i++) {
+// 	double x = (*mymsh->_topology->_Sol[i])(idof);
+// 	mymsh->_topology->_Sol[i]->set(idof, x + (*mysolution->_Sol[indexSolD[i]])(idof));
 	mysolution->_Sol[indexSolD[i]]->set(idof, 0.);
       }
     }
   }
   
   for(int i = 0; i < dim; i++) {
+    mymsh->_topology->_Sol[i]->close();
     mysolution->_Sol[indexSolD[i]]->close();
     mysolution->_Sol[indexSolV[i]]->close();
     mysolution->_Sol[indexSolA[i]]->close();
