@@ -416,17 +416,17 @@ namespace femus
           }
         }
         
-        vector < double > accVAROld(nve,0.);
-	vector < adept::adouble > accVARNew(nve,0.);
+        vector < double > accVAROld(dim,0.);
+	vector < adept::adouble > accVARNew(dim,0.);
         
         //store acceleration old and new in the gauss point
         for ( int i = 0; i < dim; i++ ) {
 	  for ( unsigned inode = 0; inode < nve; inode++ ) {
-	    accVAROld[i] += phi_hat[inode] * aold[indVAR3[i]][inode];
+	    accVAROld[i] += phi_hat[inode] * aold[i][inode];
 	  }
 	  accVARNew[i] =  ( SolVARNew[i] - SolVAROld[i] )/( dt* dt * beta ) 
 			- SolVAROld[i + dim]/( dt * beta ) 
-			- (1 - 2. * beta)/(2. * beta) * accVAROld[i];
+			- (1. - 2. * beta)/(2. * beta) * accVAROld[i];
 	}
           
         
@@ -446,14 +446,14 @@ namespace femus
 //                                                 (1. * SolVARNew[dim + idim] + 0 * SolVAROld[dim + idim])
 //                                                ) * phi_hat[i] * Weight_hat;
 
-//               aRhs[indexVAR[dim + idim]][i] += ( ( Soli[idim][i] - Soli_old[idim][i] ) / dt -
-//                                                  Soli[idim + dim][i]
-//                                                ) * phi_hat[i] * Weight_hat;
+              aRhs[indexVAR[dim + idim]][i] += ( ( Soli[idim][i] - Soli_old[idim][i] ) / dt -
+                                                 Soli[idim + dim][i]
+                                               ) * phi_hat[i] * Weight_hat;
 	      
-              adept::adouble anew = ( Soli[idim][i] - Soli_old[idim][i] )/( dt* dt * beta ) - Soli_old[idim + dim][i]/( dt * beta ) - (1 - 2. * beta)/(2. * beta) * aold[idim][i];
-              adept::adouble vnew = Soli_old[idim + dim][i] + dt * ( (1 - Gamma) * aold[idim][i] + Gamma * anew );
-	      
-	      aRhs[indexVAR[dim + idim]][i] += (vnew - Soli[idim + dim][i]) * phi_hat[i] * Weight_hat;
+//               adept::adouble anew = ( Soli[idim][i] - Soli_old[idim][i] )/( dt* dt * beta ) - Soli_old[idim + dim][i]/( dt * beta ) - (1 - 2. * beta)/(2. * beta) * aold[idim][i];
+//               adept::adouble vnew = Soli_old[idim + dim][i] + dt * ( (1 - Gamma) * aold[idim][i] + Gamma * anew );
+// 	      
+// 	      aRhs[indexVAR[dim + idim]][i] += (vnew - Soli[idim + dim][i]) * phi_hat[i] * Weight_hat;
 
 	      
             }
@@ -559,7 +559,7 @@ namespace femus
           
           // store acceleration at the current time
           std::vector <adept::adouble> accVAR(dim,0.);
-          for ( int i = 0; i < dim * nBlocks; i++ ) {
+          for ( int i = 0; i < dim; i++ ) {
             accVAR[i] = accVAROld[i] * ( 1. - s[tip] ) +  accVARNew[i] * s[tip];
           }
           
@@ -623,14 +623,14 @@ namespace femus
 
               adept::adouble springStiffness = 0.;
               if ( valve ) springStiffness = 5.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 2 ) + // if 2D
-                                               5.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 3 ); //if 3D
+                                             5.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 3 ); //if 3D
 
 
               // get mesh velocity and gradient at current time
               for ( unsigned i = 0; i < dim; i++ ) {
-                //meshVel[i] = ( 1. - s[tip] ) * meshVelOld[i]  + s[tip] * ( SolVARNew[i] - SolVAROld[i] ) / dt ;
-		meshVel[i] = ( 1. - s[tip] ) * meshVelOld[i]  
-			    + s[tip] * ( meshVelOld[i] + dt * ( (1 - Gamma) * accVAROld[i] + Gamma * accVARNew[i] ) );
+                meshVel[i] = ( 1. - s[tip] ) * meshVelOld[i]  + s[tip] * ( SolVARNew[i] - SolVAROld[i] ) / dt ;
+// 		meshVel[i] = ( 1. - s[tip] ) * meshVelOld[i]  
+// 			    + s[tip] * ( meshVelOld[i] + dt * ( (1. - Gamma) * accVAROld[i] + Gamma * accVARNew[i] ) );
               }
 
               // speed
@@ -900,9 +900,9 @@ namespace femus
                 for ( int idim = 0; idim < dim; idim++ ) {
                   adept::adouble timeDerivative = 0.;
                   adept::adouble value = 0.;
-                  //timeDerivative = theta[tip] * rhos * ( SolVARNew[dim + idim] - SolVAROld[dim + idim] ) * phi[i] * Weight / dt;
+                  timeDerivative = theta[tip] * rhos * ( SolVARNew[dim + idim] - SolVAROld[dim + idim] ) * phi[i] * Weight / dt;
 
-		  timeDerivative = theta[tip] * rhos * accVARNew[idim] * phi[i] * Weight;
+		  //timeDerivative = theta[tip] * rhos * accVAR[idim] * phi[i] * Weight;
 		  
                   value =  theta[tip] * ( - rhos * phi[i] * _gravity[idim]    // body force
                                           + CauchyDIR[idim]		     // stress
@@ -1395,15 +1395,16 @@ namespace femus
 
         if ( solidmark != solidmark ) {
           vnew = ( *solution->_Sol[indVAR[ivar + 1]] ) ( jdof ); // solid: mesh velocity equals solid velocity
+	  anew = 0.;
         }
         else {
           double unew = ( *solution->_Sol[indVAR[ivar]] ) ( jdof );
           double uold = ( *solution->_SolOld[indVAR[ivar]] ) ( jdof );
           double vold = ( *solution->_Sol[indVAR[ivar + 2]] ) ( jdof );
 	  double aold = ( *solution->_SolOld[indVAR2[idim]] ) ( jdof );
-	  anew = (unew - uold)/(dt * dt * beta) - vold/(dt * beta) - (1 - 2. * beta)/(2. * beta) * aold;
-          //vnew = 1. / dt * ( unew - uold ) - 0. * vold;
-	  vnew = vold + dt * ( (1 - Gamma) * aold + Gamma * anew );
+	  anew = (unew - uold)/(dt * dt * beta) - vold/(dt * beta) - (1. - 2. * beta)/(2. * beta) * aold;
+          vnew = 1. / dt * ( unew - uold ) - 0. * vold;
+	  //vnew = vold + dt * ( (1. - Gamma) * aold + Gamma * anew );
         }
         solution->_Sol[indVAR[ivar + 2]]->set ( jdof, vnew );
 	solution->_Sol[indVAR2[idim]]->set ( jdof, anew );
