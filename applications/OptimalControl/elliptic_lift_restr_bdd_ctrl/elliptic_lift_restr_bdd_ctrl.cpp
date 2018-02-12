@@ -402,12 +402,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
  //************** update active set flag for current nonlinear iteration **************************** 
  // 0: inactive; 1: active_a; 2: active_b
-    sol_actflag.resize(nDof_mu);
+   assert(nDof_mu == nDof_ctrl);
+   sol_actflag.resize(nDof_mu);
      std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
    
     for (unsigned i = 0; i < sol_actflag.size(); i++) {  
-    if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
-    else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
+    if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  { sol_actflag[i] = 1; sol_ctrl[i] = ctrl_lower; }
+    else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  { sol_actflag[i] = 2; sol_ctrl[i] = ctrl_upper; }
     }
  
  //******************** ALL VARS ********************* 
@@ -534,7 +535,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	     if (sol_actflag[i] == 0)  //inactive
 	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
 	     else  //active
-	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_ctrl[i] - c_compl * ((2 - sol_actflag[i]) * ctrl_lower + (sol_actflag[i]-1) * ctrl_upper)) ; 					  
+	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( c_compl * sol_ctrl[i] - c_compl * ((2 - sol_actflag[i]) * ctrl_lower + (sol_actflag[i]-1) * ctrl_upper)) ; 					  
 	  }
 //======================Residuals=======================
 	      
@@ -717,7 +718,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
   
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
