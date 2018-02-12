@@ -1164,7 +1164,7 @@ namespace femus
   {
 
     double particlesMass = density * volume / _size;
-
+    std::cout <<"AAAAAAAAAAAAAAAAAAAAA "<< particlesMass <<" " << _size <<std::endl;
     for (unsigned i = _markerOffset[_iproc]; i < _markerOffset[_iproc  + 1]; i++) {
       _particles[i]->SetMarkerMass(particlesMass);
     }

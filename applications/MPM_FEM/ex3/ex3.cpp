@@ -193,7 +193,7 @@ int main(int argc, char** args) {
   unsigned solType = 2;
   linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
 
-  double diskArea = PI * R * R;
+  double diskArea = PI * (R + DL/2) * (R+DL/2);
   linea->SetParticlesMass(diskArea, rho_MPM);
 
   linea->GetLine(line0[0]);
@@ -222,7 +222,7 @@ int main(int argc, char** args) {
   gravity[1] = -9.81 * sqrt(2.) / 2.;
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 300;
+  unsigned n_timesteps = 180;
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
