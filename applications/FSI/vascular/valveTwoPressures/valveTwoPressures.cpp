@@ -60,7 +60,7 @@ int main(int argc, char** args)
   rhof = 1060.;
   muf = 2.2 * 1.0e-3;
   rhos = 960;
-  ni = 0.50;
+  ni = 0.45;
   E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
   E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
