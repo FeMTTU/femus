@@ -7,6 +7,9 @@
 
 #include "OprtrTypeEnum.hpp"
 
+double Gamma = 0.5;
+double beta = 0.25;
+
 namespace femus
 {
 
@@ -412,6 +415,22 @@ namespace femus
             SolVAR[nBlocks * dim + i] += phi1[inode] * Soli[indexVAR[nBlocks * dim + i]][inode];
           }
         }
+        
+        vector < double > accVAROld(nve,0.);
+	vector < adept::adouble > accVARNew(nve,0.);
+        
+        //store acceleration old and new in the gauss point
+        for ( int i = 0; i < dim; i++ ) {
+	  for ( unsigned inode = 0; inode < nve; inode++ ) {
+	    accVAROld[i] += phi_hat[inode] * aold[indVAR3[i]][inode];
+	  }
+	  accVARNew[i] =  ( SolVARNew[i] - SolVAROld[i] )/( dt* dt * beta ) 
+			- SolVAROld[i + dim]/( dt * beta ) 
+			- (1 - 2. * beta)/(2. * beta) * accVAROld[i];
+	}
+          
+        
+        
 
         adept::adouble J_hat;
         adept::adouble F[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
@@ -419,9 +438,7 @@ namespace femus
 
         //BEGIN SOLID ASSEMBLY ============
         if ( flag_mat == 4 ) {
-	  double gamma = 0.5;
-          double beta = 0.25;
-
+	  
           //BEGIN redidual d_t - v = 0 in fixed domain
           for ( unsigned i = 0; i < nve; i++ ) {
             for ( int idim = 0; idim < dim; idim++ ) {
@@ -434,7 +451,7 @@ namespace femus
 //                                                ) * phi_hat[i] * Weight_hat;
 	      
               adept::adouble anew = ( Soli[idim][i] - Soli_old[idim][i] )/( dt* dt * beta ) - Soli_old[idim + dim][i]/( dt * beta ) - (1 - 2. * beta)/(2. * beta) * aold[idim][i];
-              adept::adouble vnew = Soli_old[idim + dim][i] + dt * ( (1 - gamma) * aold[idim][i] + gamma * anew );
+              adept::adouble vnew = Soli_old[idim + dim][i] + dt * ( (1 - Gamma) * aold[idim][i] + Gamma * anew );
 	      
 	      aRhs[indexVAR[dim + idim]][i] += (vnew - Soli[idim + dim][i]) * phi_hat[i] * Weight_hat;
 
@@ -539,6 +556,13 @@ namespace femus
           for ( int i = 0; i < dim * nBlocks; i++ ) {
             SolVAR[i] = SolVAROld[i] * ( 1. - s[tip] ) +  SolVARNew[i] * s[tip];
           }
+          
+          // store acceleration at the current time
+          std::vector <adept::adouble> accVAR(dim,0.);
+          for ( int i = 0; i < dim * nBlocks; i++ ) {
+            accVAR[i] = accVAROld[i] * ( 1. - s[tip] ) +  accVARNew[i] * s[tip];
+          }
+          
           // store nodes coordinates and Gauss point coordinates at the current time
           for ( unsigned i = 0; i < dim; i++ ) {
             for ( int j = 0; j < nve; j++ ) {
@@ -563,7 +587,7 @@ namespace femus
               }
             }
           }
-
+      
           //BEGIN FLUID and POROUS MEDIA ASSEMBLY ============
           if ( flag_mat != 4 ) {
             if ( middle ) {
@@ -604,7 +628,9 @@ namespace femus
 
               // get mesh velocity and gradient at current time
               for ( unsigned i = 0; i < dim; i++ ) {
-                meshVel[i] = ( 1. - s[tip] ) * meshVelOld[i]  + s[tip] * ( SolVARNew[i] - SolVAROld[i] ) / dt ;
+                //meshVel[i] = ( 1. - s[tip] ) * meshVelOld[i]  + s[tip] * ( SolVARNew[i] - SolVAROld[i] ) / dt ;
+		meshVel[i] = ( 1. - s[tip] ) * meshVelOld[i]  
+			    + s[tip] * ( meshVelOld[i] + dt * ( (1 - Gamma) * accVAROld[i] + Gamma * accVARNew[i] ) );
               }
 
               // speed
@@ -874,8 +900,10 @@ namespace femus
                 for ( int idim = 0; idim < dim; idim++ ) {
                   adept::adouble timeDerivative = 0.;
                   adept::adouble value = 0.;
-                  timeDerivative = theta[tip] * rhos * ( SolVARNew[dim + idim] - SolVAROld[dim + idim] ) * phi[i] * Weight / dt;
+                  //timeDerivative = theta[tip] * rhos * ( SolVARNew[dim + idim] - SolVAROld[dim + idim] ) * phi[i] * Weight / dt;
 
+		  timeDerivative = theta[tip] * rhos * accVARNew[idim] * phi[i] * Weight;
+		  
                   value =  theta[tip] * ( - rhos * phi[i] * _gravity[idim]    // body force
                                           + CauchyDIR[idim]		     // stress
                                         ) * Weight;
@@ -1342,9 +1370,6 @@ namespace femus
 
     vector <unsigned> indVAR ( 3 * dim );
     vector <unsigned> indVAR2 ( dim );
-    
-    double gamma =0.5;
-    double beta=0.25;
 
     for ( unsigned ivar = 0; ivar < 3 * dim; ivar++ ) {
       indVAR[ivar] = ml_sol->GetIndex ( &varname[ivar][0] );
@@ -1378,7 +1403,7 @@ namespace femus
 	  double aold = ( *solution->_SolOld[indVAR2[idim]] ) ( jdof );
 	  anew = (unew - uold)/(dt * dt * beta) - vold/(dt * beta) - (1 - 2. * beta)/(2. * beta) * aold;
           //vnew = 1. / dt * ( unew - uold ) - 0. * vold;
-	  vnew = vold + dt * ( (1 - gamma) * aold + gamma * anew );
+	  vnew = vold + dt * ( (1 - Gamma) * aold + Gamma * anew );
         }
         solution->_Sol[indVAR[ivar + 2]]->set ( jdof, vnew );
 	solution->_Sol[indVAR2[idim]]->set ( jdof, anew );
