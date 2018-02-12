@@ -230,13 +230,14 @@ int main(int argc, char** args) {
     system.MGsolve();
 
     // ******* Print solution *******
+    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
    
     GridToParticlesProjection(ml_prob, *linea);
 
     linea->GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
     
-    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+   
 
 
   }
