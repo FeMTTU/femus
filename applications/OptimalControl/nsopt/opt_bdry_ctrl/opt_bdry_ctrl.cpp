@@ -827,14 +827,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   
   for (unsigned i = 0; i < nDofsVadj; i++) {
 // SECOND ROW
+		    double res_dadj_u = 0.;
      for (unsigned kdim = 0; kdim < dim; kdim++) { 
 		    double lap_res_dadj_adj = 0.;
-		    double res_dadj_u = 0.;
 // 		  double adv_res_dadj_uold = 0.;
 // 		  double adv_res_uold_dadj = 0.;
+		  res_dadj_u += SolVAR_qp[SolPdeIndex[kdim]]*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i];
 	   for (unsigned jdim = 0; jdim < dim; jdim++) {
 		lap_res_dadj_adj += gradSolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]][jdim]*phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + jdim];
-		  res_dadj_u += SolVAR_qp[SolPdeIndex[kdim]]*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i];
 // 		   adv_res_dadj_uold += phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] * gradSolVAR_qp[SolPdeIndex[kdim]][jdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]];
 // 		  adv_res_uold_dadj += SolVAR_qp[SolPdeIndex[kdim]] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + jdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]];
 	   }
