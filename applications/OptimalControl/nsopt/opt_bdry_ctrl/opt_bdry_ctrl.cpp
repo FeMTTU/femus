@@ -881,7 +881,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
       Res[press_type_pos + adj_pos_begin][i] += ( (div_adj_dadj_qp) * phi_gss_fe[SolFEType[press_type_pos + adj_pos_begin]][i] ) * weight;
       for (unsigned j = 0; j < nDofsVadj; j++) {
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	    Jac[press_type_pos + adj_pos_begin][kdim + adj_pos_begin][i*nDofsVadj + j] += - ( phi_gss_fe[SolFEType[press_type_pos + adj_pos_begin]][i] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + kdim] ) * weight;
+	    Jac[press_type_pos + adj_pos_begin][kdim + adj_pos_begin][i*nDofsVadj + j] += - ( phi_gss_fe[SolFEType[press_type_pos + adj_pos_begin]][i] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][j * dim + kdim] ) * weight;
 	  }
       }//j loop
   }//i_div_adj
@@ -912,7 +912,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   for (unsigned i = 0; i < nDofsThetactrl; i++) {
       for (unsigned j = 0; j < nDofsThetactrl; j++) {
 			  if(i==j) {
-				  Jac[press_type_pos + ctrl_pos_begin /*+ 1*/][press_type_pos + ctrl_pos_begin /*+1*/ ][i*nDofsThetactrl + j] = 1.;
+				  Jac[press_type_pos + ctrl_pos_begin ][press_type_pos + ctrl_pos_begin ][i*nDofsThetactrl + j] = 1.;
 			  }
        }//j_theta loop
     }//i_theta loop
