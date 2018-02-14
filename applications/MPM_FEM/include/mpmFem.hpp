@@ -110,8 +110,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
   for(unsigned ivar = 0; ivar < dim; ivar++) {
     indexSolD[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
-    indexSolV[ivar] = ml_sol->GetIndex(&varname[ivar + 3][0]);
-    indexSolA[ivar] = ml_sol->GetIndex(&varname[ivar + 6][0]);
+    if(ml_sol->GetIfFSI()){
+      indexSolV[ivar] = ml_sol->GetIndex(&varname[ivar + 3][0]);
+      indexSolA[ivar] = ml_sol->GetIndex(&varname[ivar + 6][0]);
+    }
     indexPdeD[ivar] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar][0]);
   }
 
@@ -147,7 +149,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       SolDdOld[k].resize(nDofsD);
       vx[k].resize(nDofsD);
       vx_hat[k].resize(nDofsD);
-      if(material == 4) {
+      if( material == 4 ) {
         SolVdOld[k].resize(nDofsD);
         SolAdOld[k].resize(nDofsD);
       }
@@ -160,18 +162,22 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       std::fill(aRhs[k].begin(), aRhs[k].end(), 0);    //set aRes to zero
     }
 
+    bool oneNodeIsSolid = false;
+    
     // local storage of global mapping and solution
     for(unsigned i = 0; i < nDofsD; i++) {
       unsigned idof = mymsh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
       unsigned idofX = mymsh->GetSolutionDof(i, iel, 2);    // global to global mapping between solution node and solution dof
 
+      if( mymsh->GetSolidMark(idof) ) oneNodeIsSolid = true;
+      
       for(unsigned  k = 0; k < dim; k++) {
         SolDd[k][i] = (*mysolution->_Sol[indexSolD[k]])(idof);      // global extraction and local storage for the solution
 	SolDdOld[k][i] = (*mysolution->_SolOld[indexSolD[k]])(idof);      // global extraction and local storage for the solution
         sysDof[i + k * nDofsD] = myLinEqSolver->GetSystemDof(indexSolD[k], indexPdeD[k], i, iel);    // global to global mapping between solution node and pdeSys dof
         vx_hat[k][i] = (*mymsh->_topology->_Sol[k])(idofX);
         vx[k][i] = vx_hat[k][i] + SolDd[k][i];
-	if(material == 4) {
+	if( material == 4 ) {
           SolVdOld[k][i] = (*mysolution->_Sol[indexSolV[k]])(idof);
 	  SolAdOld[k][i] = (*mysolution->_Sol[indexSolA[k]])(idof);
 	}
@@ -206,7 +212,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat);
         unsigned  MPMmaterial = (*mysolution->_Sol[indexSolMat])(idofMat);
         double scalingFactor = 0.;// / (1. + 100. * distance);
-        if(MPMmaterial == 0) scalingFactor = 1.e-05;
+        if(MPMmaterial == 0) scalingFactor = 1.e-08;
         else if(MPMmaterial == 1) scalingFactor = 5e-03;
         else if(MPMmaterial == 2) scalingFactor = 1e-05;
         for(unsigned i = 0; i < nDofsD; i++) {
@@ -643,8 +649,10 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
 
   for(unsigned ivar = 0; ivar < dim; ivar++) {
     indexSolD[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
-    indexSolV[ivar] = ml_sol->GetIndex(&varname[ivar + 3][0]);
-    indexSolA[ivar] = ml_sol->GetIndex(&varname[ivar + 6][0]);
+    if(ml_sol->GetIfFSI()){
+      indexSolV[ivar] = ml_sol->GetIndex(&varname[ivar + 3][0]);
+      indexSolA[ivar] = ml_sol->GetIndex(&varname[ivar + 6][0]);
+    }
   }
 
   //line instances
@@ -799,18 +807,17 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
     }
     else{
       for(int i = 0; i < dim; i++) {
-// 	double x = (*mymsh->_topology->_Sol[i])(idof);
-// 	mymsh->_topology->_Sol[i]->set(idof, x + (*mysolution->_Sol[indexSolD[i]])(idof));
 	mysolution->_Sol[indexSolD[i]]->set(idof, 0.);
       }
     }
   }
   
   for(int i = 0; i < dim; i++) {
-    mymsh->_topology->_Sol[i]->close();
     mysolution->_Sol[indexSolD[i]]->close();
-    mysolution->_Sol[indexSolV[i]]->close();
-    mysolution->_Sol[indexSolA[i]]->close();
+    if( ml_sol->GetIfFSI() ){    
+      mysolution->_Sol[indexSolV[i]]->close();
+      mysolution->_Sol[indexSolA[i]]->close();
+    }
   }
   //END loop on elements to update grid velocity and acceleration
   
