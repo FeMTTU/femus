@@ -129,7 +129,7 @@ int main ( int argc, char ** args )
   rhof = 1035.;
   muf = 3.5 * 1.0e-3; //3.38 * 1.0e-6 * rhof;
   rhos = 1120;
-  ni = 0.4;
+  ni = 0.5;
   E = 1. * 1.0e6;
   //E = 12000; //E=6000;
   E1 = 3000;
