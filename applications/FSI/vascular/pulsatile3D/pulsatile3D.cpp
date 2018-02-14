@@ -338,7 +338,7 @@ int main ( int argc, char ** args )
       //system.SetTolerances(1.e-10, 1.e-8, 1.e+50, 40, 40);
     //}
     //else{
-      system.SetTolerances(1.e-10, 1.e-12, 1.e+50, 40, 40);
+      system.SetTolerances(1.e-10, 1.e-50, 1.e+50, 40, 40);
     //}
   }
   else{
