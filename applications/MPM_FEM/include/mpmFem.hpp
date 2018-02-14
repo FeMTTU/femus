@@ -162,14 +162,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       std::fill(aRhs[k].begin(), aRhs[k].end(), 0);    //set aRes to zero
     }
 
-    bool oneNodeIsSolid = false;
-    
-    // local storage of global mapping and solution
+      // local storage of global mapping and solution
     for(unsigned i = 0; i < nDofsD; i++) {
       unsigned idof = mymsh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
       unsigned idofX = mymsh->GetSolutionDof(i, iel, 2);    // global to global mapping between solution node and solution dof
-
-      if( mymsh->GetSolidMark(idof) ) oneNodeIsSolid = true;
       
       for(unsigned  k = 0; k < dim; k++) {
         SolDd[k][i] = (*mysolution->_Sol[indexSolD[k]])(idof);      // global extraction and local storage for the solution
@@ -365,6 +361,15 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
     if(iel != UINT_MAX) {
       short unsigned ielt;
       unsigned nDofsD;
+      
+      //BEGIN considering traction
+      
+      double traction[3] = {0., 0., 0.};
+      double boundaryLayer = 0.0542;
+      
+      //END
+      
+      
       //update element related quantities only if we are in a different element
       if(iel != ielOld) {
 
@@ -389,6 +394,9 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           unsigned idof = mymsh->GetSolutionDof(i, iel, solType); //local 2 global solution
           unsigned idofX = mymsh->GetSolutionDof(i, iel, 2); //local 2 global coordinates
 
+	  if( mymsh->GetSolidMark(idof) ) traction[0] = gravity[0];
+	  
+	  
           for(int j = 0; j < dim; j++) {
             SolDd[indexPdeD[j]][i] = (*mysolution->_Sol[indexSolD[j]])(idof);
 	    SolDdOld[indexPdeD[j]][i] = (*mysolution->_SolOld[indexSolD[j]])(idof);
@@ -530,7 +538,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         }
 
         for(int idim = 0; idim < dim; idim++) {
-          aRhs[indexPdeD[idim]][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density_MPM
+          aRhs[indexPdeD[idim]][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density_MPM + phi[i] * 1. / (boundaryLayer * 3. * density_MPM) * traction[dim] 
 //                                     -  phi[i] * 0.5 * (SolApOld[idim] + 1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
                                        -  phi[i] * (1. / (beta * dt * dt) * (SolDp[idim]-SolDpOld[idim]) - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
                                       ) * mass;
@@ -825,6 +833,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
 
   linea.GetParticlesToGridMaterial();
 }
+
 
 
 
