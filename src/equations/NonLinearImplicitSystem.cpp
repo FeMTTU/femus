@@ -70,8 +70,8 @@ namespace femus {
                 std::scientific << _ml_sol->GetSolutionName(indexSol) << "= " << L2normEpsDividedSol << \
                 "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << std::endl;
       nonLinearEps = (nonLinearEps > L2normEpsDividedSol) ? nonLinearEps : L2normEpsDividedSol;
-
-      if((L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol) && conv == true) {
+      
+      if((L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol || ( (k+1) % 3 == 0 )) && conv == true) {
         conv = true;
       }
       else {
@@ -86,6 +86,8 @@ namespace femus {
 
   void NonLinearImplicitSystem::solve(const MgSmootherType& mgSmootherType) {
 
+    _bitFlipCounter = 0;
+    
     clock_t start_mg_time = clock();
 
     double totalAssembyTime = 0.;
@@ -112,19 +114,22 @@ namespace femus {
       clock_t start_nl_time = clock();
 
       bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn - 1u) ? 1 : 0;
-
+restart:
       if(ThisIsAMR) _solution[igridn]->InitAMREps();
 
       for(unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++) {
 
         std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
+	clock_t start_preparation_time = clock();
         clock_t start_assembly_time = clock();
         _levelToAssemble = igridn; //Be carefull!!!! this is needed in the _assemble_function
         _LinSolver[igridn]->SetResZero();
         _assembleMatrix = _buildSolver;
         _assemble_system_function(_equation_systems);
-
+        std::cout << "   ********* Level Max " << igridn + 1 << " ASSEMBLY TIME:\t" << \
+                  static_cast<double>((clock() - start_assembly_time)) / CLOCKS_PER_SEC << std::endl;
+	
         if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
           if(!_RRamr[igridn]) {
             (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
@@ -193,8 +198,8 @@ namespace femus {
                     << static_cast<double>((clock() - mg_init_time)) / CLOCKS_PER_SEC << std::endl;
         }
         totalAssembyTime += static_cast<double>((clock() - start_assembly_time)) / CLOCKS_PER_SEC;
-        std::cout << "   ********* Level Max " << igridn + 1 << " ASSEMBLY TIME:\t" << \
-                  static_cast<double>((clock() - start_assembly_time)) / CLOCKS_PER_SEC << std::endl;
+        std::cout << "   ********* Level Max " << igridn + 1 << " PREPARATION TIME:\t" << \
+                  static_cast<double>((clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
         clock_t startUpdateResidualTime = clock();
 
         for(unsigned updateResidualIterator = 0; updateResidualIterator < _maxNumberOfResidualUpdateIterations; updateResidualIterator++) {
@@ -220,7 +225,7 @@ namespace femus {
             }
             *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
           }
-
+          if(_bitFlipOccurred) break;
         }
 
         if(_buildSolver) {
@@ -238,10 +243,14 @@ namespace femus {
         std::cout << "     ********* Linear Cycle + Residual Update-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
                   << static_cast<double>((clock() - startUpdateResidualTime)) / CLOCKS_PER_SEC << std::endl;
 
-        if(nonLinearIsConverged) break;
+        if(nonLinearIsConverged || _bitFlipOccurred) break;
 
       }
-
+      
+      if(_bitFlipOccurred && _bitFlipCounter == 1){
+	goto restart;
+      }
+      
       if(igridn + 1 < _gridn) ProlongatorSol(igridn + 1);
 
       if(ThisIsAMR) AddAMRLevel(AMRCounter);
@@ -258,6 +267,8 @@ namespace femus {
               << totalSolverTime <<  " = assembly TIME( " << totalAssembyTime << " ) + "
               << " solver TIME( " << totalSolverTime - totalAssembyTime << " ) " << std::endl;
 
+    _totalAssemblyTime += totalAssembyTime;
+    _totalSolverTime += totalSolverTime - totalAssembyTime;
   }
 
 

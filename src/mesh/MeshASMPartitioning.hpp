@@ -48,6 +48,8 @@ public:
     /** To be added */
     void DoPartition(const unsigned *block_size, vector < vector< unsigned > > &block_elements,
 					vector <unsigned> &block_type_range);
+     void DoPartitionOld(const unsigned *block_size, vector < vector< unsigned > > &block_elements,
+					vector <unsigned> &block_type_range);
     
     
 private:

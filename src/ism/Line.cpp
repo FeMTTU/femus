@@ -19,9 +19,13 @@
 #include "Marker.hpp"
 #include "Line.hpp"
 #include "NumericVector.hpp"
-#include <math.h>
-
+#include <cmath>
 #include "PolynomialBases.hpp"
+#include <boost/math/special_functions/ellint_1.hpp>
+#include <boost/math/special_functions/ellint_2.hpp>
+
+using boost::math::ellint_1;
+using boost::math::ellint_2;
 
 namespace femus {
 
@@ -58,8 +62,8 @@ namespace femus {
 
 
   Line::Line(const std::vector < std::vector < double > > x,
-             const std::vector <MarkerType> &markerType,
-             Solution *sol, const unsigned & solType) {
+             const std::vector <MarkerType>& markerType,
+             Solution* sol, const unsigned& solType) {
 
     _sol = sol;
     _mesh = _sol->GetMesh();
@@ -150,11 +154,14 @@ namespace femus {
 
     //BEGIN reorder the markers by proc
     unsigned counter = 0;
+
     for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
       _markerOffset[iproc] = counter;
+
       //unsigned  offsetCounter = counter;
       for(unsigned j = 0; j < _size; j++) {
         unsigned markerProc = particles[j]->GetMarkerProc(_sol);
+
         if(markerProc == iproc) {
           _particles[counter] = particles[j];
           _printList[j] = counter;
@@ -162,6 +169,7 @@ namespace femus {
         }
       }
     }
+
     //END reorder the markers by proc
 
 
@@ -275,6 +283,7 @@ namespace femus {
     for(unsigned j = 0; j < _size; j++) {
       _particles[_printList[j]]->GetMarkerCoordinates(_line[j]);
     }
+
     _particles[_printList[0]]->GetMarkerCoordinates(_line[_size]);
 
     // delete[] elementList;
@@ -304,7 +313,6 @@ namespace femus {
 
     for(unsigned j = 0; j < _size; j++) {
       particles[j] = _particles[j];
-//       printList[j] = _printList[j];
     }
 
     printList = _printList;
@@ -387,22 +395,28 @@ namespace femus {
 
     //BEGIN reorder the markers by proc
     unsigned counter = 0;
+
     for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
       _markerOffset[iproc] = counter;
+
       for(unsigned j = 0; j < _size; j++) {
         unsigned markerProc = particles[j]->GetMarkerProc(_sol);
+
         if(markerProc == iproc) {
           _particles[counter] = particles[j];
+
           for(unsigned iList = 0; iList < _size; iList++) {
             if(printList[iList] == j) {
               _printList[iList] = counter;
               break;
             }
           }
+
           counter++;
         }
       }
     }
+
     //END reorder the markers by proc
 
 //     for(unsigned iproc = 0; iproc <= _nprocs; iproc++) {
@@ -421,106 +435,119 @@ namespace femus {
 
 
 
-//     //BEGIN reorder markers also by element
-//
-//     for(unsigned j = 0; j < _size; j++) {
-//       particles[j] = _particles[j];
-//       //printList[j] = _printList[j];
-//     }
-//
-//     printList = _printList;
-//
-//     unsigned meshElements;
-//     particles[0]->GetNumberOfMeshElements(meshElements);
-//     unsigned* elementList = new unsigned [meshElements];
-//     bool someMarkersOutsideDomain = false;
-//
-//     //flags to see if we already ordered by that element, 0 = not considered yet
+    //BEGIN reorder markers also by element
+
+    for(unsigned j = 0; j < _size; j++) {
+      particles[j] = _particles[j];
+    }
+
+    printList = _printList;
+
+    unsigned meshElements = _mesh->GetNumberOfElements();
+    std::vector< bool > elementList(meshElements, false);
+
+
+    //flags to see if we already ordered by that element, 0 = not considered yet
 //     for(unsigned iFlag = 0; iFlag < meshElements; iFlag++) {
 //       elementList[iFlag] = 0;
 //     }
-//
-//     for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
-//
-//       counter = 0;
-//
-//       for(unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc + 1]; jp++) {
-//
-//         unsigned jel;
-//         jel = particles[jp]->GetMarkerElement();
-//
-//         if(jel != UINT_MAX) {
-//
-//           if(elementList[jel] == 0) {
-//
-//             elementList[jel] = 1;
-//
-//             _particles[_markerOffset[iproc] + counter] = particles[jp];
-//             for(unsigned iList = 0; iList < _size; iList++) {
-//               if(printList[iList] == jp) {
-//                 _printList[iList] = _markerOffset[iproc] + counter;
-//                 break;
-//               }
-//             }
-//             counter++;
-//
-//
-//             for(unsigned ip = _markerOffset[iproc]; ip < _markerOffset[iproc + 1]; ip++) {
-//               unsigned iel;
-//               iel = particles[ip]->GetMarkerElement();
-//               if(ip != jp && iel == jel) {
-//                 elementList[iel] = 1;
-//
-//                 _particles[_markerOffset[iproc] + counter] = particles[ip];
-//                 for(unsigned iList = 0; iList < _size; iList++) {
-//                   if(printList[iList] == ip) {
-//                     _printList[iList] = _markerOffset[iproc] + counter;
-//                     break;
-//                   }
-//                 }
-//                 counter++;
-//               }
-//             }
-//           }
-//         }
-//         else {
-//           someMarkersOutsideDomain = true;
-//         }
-//       }
-//
-//       if(someMarkersOutsideDomain == true) {
-//         for(unsigned i = 0; i < _size; i++) {
-//           unsigned jel;
-//           jel = particles[i]->GetMarkerElement();
-//           if(jel == UINT_MAX) {
-//
-//             _particles[_markerOffset[0] + counter] = particles[i];
-//             for(unsigned iList = 0; iList < _size; iList++) {
-//               if(printList[iList] == i) {
-//                 _printList[iList] = _markerOffset[0] + counter;
-//                 break;
-//               }
-//             }
-//             counter++;
-//           }
-//         }
-//         someMarkersOutsideDomain = false;
-//       }
-//     }
-//
-//
-//
-//
-//     //END reorder markers also by element
+
+    for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+
+      bool someMarkersOutsideDomain = false;
+      counter = 0;
+
+      for(unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc + 1]; jp++) {
+
+        unsigned jel;
+        jel = particles[jp]->GetMarkerElement();
+
+        if(jel != UINT_MAX) {
+
+          if(elementList[jel] == false) {
+
+            elementList[jel] = true;
+
+            _particles[_markerOffset[iproc] + counter] = particles[jp];
+
+            for(unsigned iList = 0; iList < _size; iList++) {
+              if(printList[iList] == jp) {
+                _printList[iList] = _markerOffset[iproc] + counter;
+                break;
+              }
+            }
+
+            counter++;
+
+
+            for(unsigned ip = jp + 1; ip < _markerOffset[iproc + 1]; ip++) {
+              unsigned iel;
+              iel = particles[ip]->GetMarkerElement();
+
+              if(iel == jel) {
+                _particles[_markerOffset[iproc] + counter] = particles[ip];
+
+                for(unsigned iList = 0; iList < _size; iList++) {
+                  if(printList[iList] == ip) {
+                    _printList[iList] = _markerOffset[iproc] + counter;
+                    break;
+                  }
+                }
+
+                counter++;
+              }
+            }
+          }
+        }
+        else {
+          someMarkersOutsideDomain = true;
+        }
+      }
+
+      if(someMarkersOutsideDomain == true) {
+        if(iproc == 0) {
+          for(unsigned i = 0; i < _size; i++) {
+            unsigned iel = particles[i]->GetMarkerElement();
+
+            if(iel == UINT_MAX) {
+
+              _particles[_markerOffset[0] + counter] = particles[i];
+
+              for(unsigned iList = 0; iList < _size; iList++) {
+                if(printList[iList] == i) {
+                  _printList[iList] = _markerOffset[0] + counter;
+                  break;
+                }
+              }
+
+              counter++;
+            }
+          }
+        }
+        else {
+          std::cout << "warning" << std::endl;
+          std::cout << "the marker is outside the domain but not in iproc 0" << std::endl;
+          abort();
+        }
+      }
+
+    }
+
+
+
+
+    //END reorder markers also by element
 
     for(unsigned j = 0; j < _size; j++) {
 
       _particles[_printList[j]]->GetMarkerCoordinates(_line[j]);
     }
+
     _particles[_printList[0]]->GetMarkerCoordinates(_line[_size]);
 
     //delete[] elementList;
-    std::vector < unsigned > ().swap(printList);
+    //std::vector < unsigned > ().swap(printList);
+    //std::vector < unsigned > ().swap(elementList);
 
 
 //     std::cout << "-----------------------------------------  UPDATE LINE  BY ELEMENTS-----------------------------------------" << std::endl;
@@ -529,7 +556,7 @@ namespace femus {
 //       unsigned elem;
 //       //std::vector <double> chiappe;
 //       //chiappe = _particles[_printList[i]]->GetIprocMarkerCoordinates();
-//       proc = _particles[i]->GetMarkerProc();
+//       proc = _particles[i]->GetMarkerProc(_sol);
 //       elem = _particles[i]->GetMarkerElement();
 //       std::cout << "Particle: " << i << " , " << "Processor: " << proc << " , "
 //                 << "Element: " << elem << " " <<  " "  ;
@@ -542,17 +569,19 @@ namespace femus {
 
   }
 
-  void Line::AdvectionParallel(const unsigned &n, const double& T, const unsigned &order) {
+  void Line::AdvectionParallel(const unsigned& n, const double& T, const unsigned& order, ForceFunction force) {
 
     //BEGIN  Initialize the parameters for all processors
 
     double s;
     double PI = acos(-1.);
-    std::vector <double> Fm(3, 0); // magnetic force initialization
+    std::vector <double> Fm(3, 0);   // magnetic force initialization
     vector < unsigned > solVIndex(_dim);
     solVIndex[0] = _sol->GetIndex("U");    // get the position of "U" in the ml_sol object
     solVIndex[1] = _sol->GetIndex("V");    // get the position of "V" in the ml_sol object
+
     if(_dim == 3) solVIndex[2] = _sol->GetIndex("W");      // get the position of "V" in the ml_sol object
+
     unsigned solVType = _sol->GetSolutionType(solVIndex[0]);    // get the finite element type for "u"
 
     std::vector < double > phi;
@@ -569,9 +598,11 @@ namespace femus {
     std::vector < double > x(_dim);
     std::vector < double > x0(_dim);
     std::vector < std::vector < double > > K(order);
+
     for(unsigned j = 0; j < order; j++) {
       K[j].resize(_dim);
     }
+
     //END
 
     unsigned integrationIsOverCounter = 0; // when integrationIsOverCounter = _size (which is the number of particles) it means all particles have been advected;
@@ -582,6 +613,7 @@ namespace femus {
     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
       _particles[iMarker]->InitializeMarkerForAdvection(order);
     }
+
 //     unsigned maxload = 0;
 //     for(unsigned jproc=0; jproc<_nprocs;jproc++){
 //       unsigned temp = (_markerOffset[jproc + 1] - _markerOffset[jproc]);
@@ -597,6 +629,7 @@ namespace femus {
       //BEGIN LOCAL ADVECTION INSIDE IPROC
       clock_t startTime = clock();
       unsigned counter = 0;
+
       for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
         //std::cout << _printList[iMarker] <<" "<<std::flush;
@@ -614,12 +647,12 @@ namespace femus {
             x0 = _particles[iMarker]->GetIprocMarkerOldCoordinates();
             K = _particles[iMarker]->GetIprocMarkerK();
 
-            bool elementUpdate = (aX.find(currentElem) != aX.end()) ? false : true; //update if currentElem was never updated
+            bool elementUpdate = (aX.find(currentElem) != aX.end()) ? false : true;     //update if currentElem was never updated
 
             clock_t localTime = clock();
             _particles[iMarker]->GetMarkerS(n, order, s);
             _particles[iMarker]->FindLocalCoordinates(solVType, aX[currentElem], elementUpdate, _sol, s);
-            _particles[iMarker]->updateVelocity(V, solVIndex, solVType, aV[currentElem], phi, elementUpdate, _sol); // we put pcElemUpdate instead of true but it wasn't running
+            _particles[iMarker]->updateVelocity(V, solVIndex, solVType, aV[currentElem], phi, elementUpdate, _sol);   // we put pcElemUpdate instead of true but it wasn't running
             _time[3] += static_cast<double>((clock() - localTime)) / CLOCKS_PER_SEC;
 
             unsigned tstep = step / order;
@@ -627,6 +660,7 @@ namespace femus {
 
             if(istep == 0) {
               x0 = x;
+
               for(unsigned j = 0; j < order; j++) {
                 K[j].assign(_dim, 0.);
               }
@@ -634,11 +668,17 @@ namespace femus {
 
             // double s = (tstep + _c[order - 1][istep]) / n;
 
-            
-            if(_sol->GetIfFSI()) {
-	      unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
-	      MagneticForceWire(x, Fm, material);
-	    }
+
+            //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
+            if(force != NULL) {
+              //else if (_sol->GetIfFSI()) {
+              unsigned material = _sol->GetMesh()->GetElementMaterial(currentElem);
+//               MagneticForce(x, Fm, material, 0);
+              force(x, Fm, material);
+            }
+
+            //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<std::flush;
 
 //             for(unsigned l = 0; l < Fm.size(); l++) {
 //               std::cout << "Fm[" << l << "]=" << Fm[l] << std::endl;
@@ -657,6 +697,7 @@ namespace femus {
             if(istep < order) {
               for(unsigned k = 0; k < _dim; k++) {
                 x[k] = x0[k];
+
                 for(unsigned j = 0; j < order; j++) {
                   x[k] +=  _a[order - 1][istep][j] * K[j][k];
                 }
@@ -665,6 +706,7 @@ namespace femus {
             else {
               for(unsigned i = 0; i < _dim; i++) {
                 x[i] = x0[i];
+
                 for(unsigned j = 0; j < order; j++) {
                   x[i] += _b[order - 1][j] * K[j][i];
                 }
@@ -691,22 +733,23 @@ namespace femus {
             currentElem = _particles[iMarker]->GetMarkerElement();
             unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
 
-            if(currentElem == UINT_MAX) { // the marker has been advected outise the domain
+            if(currentElem == UINT_MAX) {    // the marker has been advected outside the domain
               markerOutsideDomain = true;
               step = UINT_MAX;
               _particles[iMarker]->SetIprocMarkerStep(step);
               break;
             }
-            else if(_iproc != mproc) { // the marker has been advected outise the process
+            else if(_iproc != mproc) {    // the marker has been advected outise the process
               break;
             }
           }
+
           if(step == n * order) {
             step = UINT_MAX;
             _particles[iMarker]->SetIprocMarkerStep(step);
           }
         }
-        else { // the marker started outise the domain
+        else {   // the marker started outise the domain
           step = UINT_MAX;
           _particles[iMarker]->SetIprocMarkerStep(step);
         }
@@ -714,8 +757,10 @@ namespace femus {
         if(step == UINT_MAX || markerOutsideDomain) {
           integrationIsOverCounterProc[_iproc] += 1;
         }
+
         //if(counter > maxload) break;
       }
+
       _time[5] += static_cast<double>((clock() - startTime)) / CLOCKS_PER_SEC;
       MPI_Barrier(PETSC_COMM_WORLD);
       _time[0] += static_cast<double>((clock() - startTime)) / CLOCKS_PER_SEC;
@@ -723,6 +768,7 @@ namespace femus {
       //END LOCAL ADVECTION INSIDE IPROC
 
       integrationIsOverCounter = 0;
+
       for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
         integrationIsOverCounterProc.broadcast(jproc);
         integrationIsOverCounter += integrationIsOverCounterProc[jproc];
@@ -748,18 +794,22 @@ namespace femus {
           MPI_Bcast(& step, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
           _particles[iMarker]->SetIprocMarkerStep(step);
 
-          if(elem != UINT_MAX) {  // if it is outside jproc, ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but not outside the domain
+          if(elem != UINT_MAX) {    // if it is outside jproc, ACTUALLY IF WE ARE HERE IT COULD STILL BE IN JPROC but not outside the domain
             unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
             _particles[iMarker]->SetMarkerProc(mproc);
+
             if(mproc != jproc) {
               unsigned prevElem = _particles[iMarker]->GetIprocMarkerPreviousElement();
               _particles[iMarker]->GetMarkerS(n, order, s);
               _particles[iMarker]->GetElement(prevElem, jproc, _sol, s);
               _particles[iMarker]->SetIprocMarkerPreviousElement(prevElem);
             }
+
             elem = _particles[iMarker]->GetMarkerElement();
-            if(elem != UINT_MAX) {  // if it is not outside the domain
+
+            if(elem != UINT_MAX) {    // if it is not outside the domain
               unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);
+
               if(mproc != jproc) {
                 if(jproc == _iproc) {
 
@@ -767,31 +817,37 @@ namespace femus {
                   MPI_Send(& step, 1, MPI_UNSIGNED, mproc, order + 1, PETSC_COMM_WORLD);
 
                   unsigned istep = step % order;
+
                   if(istep != 0) {
                     K = _particles[iMarker]->GetIprocMarkerK();
+
                     for(int i = 0; i < order; i++) {
                       MPI_Send(&K[i][0], _dim, MPI_DOUBLE, mproc, i , PETSC_COMM_WORLD);
                     }
+
                     x0 = _particles[iMarker]->GetIprocMarkerOldCoordinates();
                     MPI_Send(&x0[0], _dim, MPI_DOUBLE, mproc, order , PETSC_COMM_WORLD);
                   }
-                  _particles[iMarker]->FreeXiX0andK();
+
+                  _particles[iMarker]->FreeVariables();
 
                 }
                 else if(mproc == _iproc) {
 
-                  _particles[iMarker]->InitializeX0andK(order);
+                  _particles[iMarker]->InitializeVariables(order);
 
                   unsigned step;
                   MPI_Recv(& step, 1, MPI_UNSIGNED, jproc, order + 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                   _particles[iMarker]->SetIprocMarkerStep(step);
 
                   unsigned istep = step % order;
+
                   if(istep != 0) {
                     for(int i = 0; i < order; i++) {
                       MPI_Recv(&K[i][0], _dim, MPI_DOUBLE, jproc, i , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                       _particles[iMarker]->SetIprocMarkerK(K);
                     }
+
                     MPI_Recv(&x0[0], _dim, MPI_DOUBLE, jproc, order , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
                     _particles[iMarker]->SetIprocMarkerOldCoordinates(x0);
 
@@ -800,11 +856,12 @@ namespace femus {
               }
             }
           }
-          if(elem == UINT_MAX && jproc != 0) { // elem = UINT_MAX, but not yet in jproc = 0
+
+          if(elem == UINT_MAX && jproc != 0) {    // elem = UINT_MAX, but not yet in jproc = 0
             if(jproc == _iproc) {
               x = _particles[iMarker]->GetIprocMarkerCoordinates();
               MPI_Send(&x[0], _dim, MPI_DOUBLE, 0, 1 , PETSC_COMM_WORLD);
-              _particles[iMarker]->FreeXiX0andK();
+              _particles[iMarker]->FreeVariables();
             }
             else if(_iproc == 0) {
               _particles[iMarker]->InitializeX();
@@ -875,104 +932,279 @@ namespace femus {
   }
 
 
-  void Line::MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material) {
+  unsigned Line::NumberOfParticlesOutsideTheDomain() {
 
-    double PI = acos(-1.);
+    unsigned counter = 0;
 
-    double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
+    for(unsigned iMarker = _markerOffset[0]; iMarker < _markerOffset[1]; iMarker++) {
+      unsigned elem =  _particles[iMarker]->GetMarkerElement();
 
-    double muf = (material == 2)? 3.5 * 1.0e-3 : 1.0e100; // fluid viscosity
-
-    double D = 500 * 1.e-9;       //diameter of the particle
-
-    std::vector <double> v(3);   //direction vector of the line that identifies the infinite wire
-
-//     aortic bifurcation
-    v[0] = 0.;
-    v[1] = 0.;
-    v[2] = 1.;
-
-    //bent tube no FSI
-//     v[0] = 0.;
-//     v[1] = 1.;
-//     v[2] = 0.;
-
-    std::vector <double> x(3);   //point that with v identifies the line
-
-//aortic bifurcation
-    x[0] = 0.015;
-    x[1] = 0.;
-    x[2] = 0.;
-
-//bent tube no FSI
-//     x[0] = 9.;
-//     x[1] = 0.;
-//     x[2] = 3.;
-
-    double I = 5.e5; // electric current intensity
-    double Msat = 1.e6;  //  magnetic saturation
-    double  chi = 3.; //magnetic susceptibility
-
-    std::vector <double> xM(3);
-    xM[0] = xMarker[0];
-    xM[1] = xMarker[1];
-    xM[2] = (xMarker.size() == 3) ? xMarker[2] : 0. ;
-
-    double Gamma = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    double Omega = (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) +
-                   (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) +
-                   (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) ;
-
-    std::vector<double> gradOmega(3);
-
-    gradOmega[0] = 2 * v[2] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) + 2 * v[1] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
-
-    gradOmega[1] = 2 * v[2] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
-
-    gradOmega[2] = - 2 * v[1] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2]));
-
-    double H = (I / (2 * PI)) * Gamma * (1 / sqrt(Omega)); //absolute value of the magnetic field at x = xMarker
-
-    double H0 = Msat / chi;
-
-    if(H < H0) {
-
-      double C1 = (PI * D * D * D * mu0 * chi) / 12;
-
-      Fm[0] = -C1 * I *  I * Gamma * Gamma * gradOmega[0] / (Omega * Omega * 4 * PI * PI);
-      Fm[1] = -C1 * I *  I * Gamma * Gamma * gradOmega[1] / (Omega * Omega * 4 * PI * PI);
-      Fm[2] = -C1 * I *  I * Gamma * Gamma * gradOmega[2] / (Omega * Omega * 4 * PI * PI);
-
+      if(elem == UINT_MAX) {
+        counter++;
+      }
     }
 
-    else {
+    return counter;
+  }
 
-      double C2 = (PI * D * D * D * mu0 * Msat) / 6;
 
-      Fm[0] = - 0.5 * C2 * I *  Gamma * gradOmega[0] / sqrt(Omega * Omega * Omega * 2 * PI);
-      Fm[1] = - 0.5 * C2 * I *  Gamma * gradOmega[1] / sqrt(Omega * Omega * Omega * 2 * PI);
-      Fm[2] = - 0.5 * C2 * I *  Gamma * gradOmega[2] / sqrt(Omega * Omega * Omega * 2 * PI);
+  //TODO this function may be useless for our implementation eventually
+  void Line::GetParticlesToGridProjections() {
 
+    double s = 0;
+
+    unsigned  solIndexM = _sol->GetIndex("M");
+    std::vector<unsigned>  solIndexVel(_dim);
+
+    solIndexVel[0] = _sol->GetIndex("U");
+    if(_dim > 1) solIndexVel[1] = _sol->GetIndex("V");
+    if(_dim > 2) solIndexVel[2] = _sol->GetIndex("W");
+
+    unsigned solType = _sol->GetSolutionType(solIndexM);
+    for(int d = 0; d <  _dim; d++) {
+      if(solType != _sol->GetSolutionType(solIndexVel[d])) {
+        std::cout << " Error in Line::GetPointsToGridProjections()," << std::endl
+                  << "the mass and velocity should have the same solution type" << std::endl;
+        abort();
+      }
     }
 
-    for(unsigned i = 0 ; i < Fm.size(); i++) {
-      Fm[i] = Fm[i] / (3 * PI * D * muf) ;
+    std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
+
+    _sol->_Sol[solIndexM]->zero();
+    for(int d = 0; d <  _dim; d++) {
+      _sol->_Sol[solIndexVel[d]]->zero();
     }
 
-    //BEGIN cheating to have attractive force
+    for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
-    for(unsigned i = 0 ; i < Fm.size(); i++) {
-      Fm[i] = - Fm[i] ;
+      unsigned iel = _particles[iMarker]->GetMarkerElement();
+      unsigned ielType =  _mesh->GetElementType(iel);
+      bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
+
+      _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, s);
+
+      std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
+      double mass = _particles[iMarker]->GetMarkerMass();
+      std::vector< double > velocity(_dim);
+      _particles[iMarker]->GetMarkerVelocity(velocity);
+
+      basis* base = _mesh->GetBasis(ielType, solType);
+      for(unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solType); j++) {
+        double value = base->eval_phi(j, xi);
+        unsigned jdof = _mesh->GetSolutionDof(j, iel, solType);
+        _sol->_Sol[solIndexM]->add(jdof, value * mass);
+        for(int d = 0; d <  _dim; d++) {
+          _sol->_Sol[solIndexVel[d]]->add(jdof, value * mass * velocity[d]);
+        }
+      }
+    }
+    _sol->_Sol[solIndexM]->close();
+
+    for(int d = 0; d <  _dim; d++) {
+      _sol->_Sol[solIndexVel[d]]->close();
     }
 
-    //END cheating
+    for(unsigned i = _mesh->_dofOffset[solType][_iproc]; i < _mesh->_dofOffset[solType][_iproc + 1]; i++) {
+      double mass = (*_sol->_Sol[solIndexM])(i);
+      if(fabs(mass) > 1.0e-20) {  //if on the mass at grid node i
+        for(int d = 0; d <  _dim; d++) {
+          double value = (*_sol->_Sol[solIndexVel[d]])(i);
+          _sol->_Sol[solIndexVel[d]]->set(i, value / mass);
+        }
+      }
+      else {
+        for(int d = 0; d <  _dim; d++) {
+          _sol->_Sol[solIndexVel[d]]->set(i, 0.);
+        }
+      }
+    }
 
+    for(int d = 0; d <  _dim; d++) {
+      _sol->_Sol[solIndexVel[d]]->close();
+    }
 
   }
 
 
-}
+  void Line::UpdateLineMPM() {
 
+    //BEGIN remove when everything is OK
+
+//     std::vector<unsigned>  solIndexDisp(_dim);
+//     std::vector<unsigned>  solIndexAcc(_dim);
+//
+//     solIndexDisp[0] = _sol->GetIndex("DX");
+//     if(_dim > 1) solIndexDisp[1] = _sol->GetIndex("DY");
+//     if(_dim > 2) solIndexDisp[2] = _sol->GetIndex("DW");
+//
+//     solIndexAcc[0] = _sol->GetIndex("AU");
+//     if(_dim > 1) solIndexAcc[1] = _sol->GetIndex("AV");
+//     if(_dim > 2) solIndexAcc[2] = _sol->GetIndex("AW");
+//
+//     unsigned solType = _sol->GetSolutionType(solIndexDisp[0]);
+//
+//     std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
+//
+//     std::vector< vector< double > > SolDd(_dim); // solution at the nodes
+//     std::vector< vector< double > > SolAd(_dim); // solution at the nodes
+//
+//     unsigned ielOld = UINT_MAX;
+//     unsigned nve;
+//     unsigned ielType;
+//
+//     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
+//
+//       unsigned iel = _particles[iMarker]->GetMarkerElement();
+//
+//       if(iel != UINT_MAX) {
+//
+//         std::vector <double> particleDisp(_dim, 0.);
+//         std::vector <double> particleAcc(_dim, 0.);
+//
+//         if(iel != ielOld) {
+//           ielType =  _mesh->GetElementType(iel);
+//           nve = _mesh->GetElementDofNumber(iel, solType);
+//
+//           for(int i = 0; i < _dim; i++) {
+//             SolDd[i].resize(nve);
+//             SolAd[i].resize(nve);
+//           }
+//
+//           for(unsigned inode = 0; inode < nve; inode++) {
+//             unsigned idof = _mesh->GetSolutionDof(inode, iel, solType); //local 2 global solution
+//             for(int i = 0; i < _dim; i++) {
+//               SolDd[i][inode] = (*_sol->_Sol[solIndexDisp[i]])(idof);
+//               SolAd[i][inode] = (*_sol->_Sol[solIndexAcc[i]])(idof);
+//             }
+//           }
+//
+//         }
+//
+//         bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO we actually want to remove this
+//         _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, 0.);
+//         std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
+//
+//         for(int i = 0; i < _dim; i++) {
+//           basis* base = _mesh->GetBasis(ielType, solType);
+//           for(unsigned inode = 0; inode < nve; inode++) {
+//             double phiP = base->eval_phi(inode, xi);
+//             particleDisp[i] += phiP * SolDd[i][inode];
+//             particleAcc[i] += phiP * SolAd[i][inode];
+//           }
+//         }
+//
+//         _particles[iMarker]->SetMarkerDisplacement(particleDisp);
+//         _particles[iMarker]->SetMarkerAcceleration(particleAcc);
+//
+//         //movement of the particles
+//         _particles[iMarker]->UpdateParticleCoordinates();
+//
+//         _particles[iMarker]->GetElementSerial(iel, _sol, 0.);
+//         _particles[iMarker]->SetIprocMarkerPreviousElement(iel);
+//
+//
+//         ielOld = iel;
+//
+//       }
+//
+//     }
+
+    //END remove when everything is OK
+
+
+    //BEGIN find new _elem and _mproc
+
+    for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
+      for(unsigned iMarker = _markerOffset[jproc]; iMarker < _markerOffset[jproc + 1]; iMarker++) {
+        unsigned elem =  _particles[iMarker]->GetMarkerElement();
+        MPI_Bcast(& elem, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
+        _particles[iMarker]->SetMarkerElement(elem);
+
+        if(elem != UINT_MAX) {
+          unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol); //WARNING you don't know if this is your real process
+          _particles[iMarker]->SetMarkerProc(mproc);
+
+          if(mproc != jproc) { //this means, if we think the particle moved from jproc (which means element serial shouldn't have found the actual element)
+            unsigned prevElem = _particles[iMarker]->GetIprocMarkerPreviousElement();
+            _particles[iMarker]->GetElement(prevElem, jproc, _sol, 0.);
+            _particles[iMarker]->SetIprocMarkerPreviousElement(prevElem);
+          }
+
+          elem = _particles[iMarker]->GetMarkerElement(); //TODO shouldn't this be inside the if ? If we don't go in the if I think we already know who elem is
+
+          if(elem != UINT_MAX) {    // if it is not outside the domain
+            unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);  //actual mproc
+
+            if(mproc != jproc) { //there is no need to send/receive if the particle didn't change process (which is when mproc == jproc)
+              if(jproc == _iproc) {
+
+                unsigned order = 0;
+                std::vector <double> MPMQuantities = _particles[iMarker]->GetMPMQuantities();
+                unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
+                MPI_Send(&MPMQuantities[0], MPMsize, MPI_DOUBLE, mproc, order, PETSC_COMM_WORLD);
+
+                std::vector < std::vector < double > > Fp = _particles[iMarker]->GetDeformationGradient();
+                for(unsigned i = 0; i < _dim; i++) {
+                  MPI_Send(&Fp[i][0], _dim, MPI_DOUBLE, mproc, order + 1, PETSC_COMM_WORLD);
+                }
+
+                _particles[iMarker]->FreeVariables();
+
+              }
+              else if(mproc == _iproc) {
+
+                unsigned order = 0;
+                _particles[iMarker]->InitializeVariables(order);
+
+                unsigned MPMsize =  _particles[iMarker]->GetMPMSize();
+                std::vector <double> MPMQuantities(MPMsize);
+
+                MPI_Recv(&MPMQuantities[0], MPMsize, MPI_DOUBLE, jproc, order, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+                _particles[iMarker]->SetMPMQuantities(MPMQuantities);
+
+                std::vector < std::vector < double > > Fp(_dim);
+                for(unsigned i = 0; i < _dim; i++) {
+                  Fp[i].resize(_dim);
+                }
+
+                for(unsigned i = 0; i < _dim; i++) {
+                  MPI_Recv(&Fp[i][0], _dim, MPI_DOUBLE, jproc, order + 1, PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+                }
+                _particles[iMarker]->SetDeformationGradient(Fp);
+
+              }
+            }
+          }
+        }
+
+        if(elem == UINT_MAX && jproc != 0) {    // elem = UINT_MAX, but not yet in jproc = 0
+          if(jproc == _iproc) {
+            std::vector<double> x(_dim);
+            x = _particles[iMarker]->GetIprocMarkerCoordinates();
+            MPI_Send(&x[0], _dim, MPI_DOUBLE, 0, 1 , PETSC_COMM_WORLD);
+            _particles[iMarker]->FreeVariables();
+          }
+          else if(_iproc == 0) {
+            std::vector<double> x(_dim);
+            _particles[iMarker]->InitializeX();
+            MPI_Recv(&x[0], _dim, MPI_DOUBLE, jproc, 1 , PETSC_COMM_WORLD, MPI_STATUS_IGNORE);
+            _particles[iMarker]->SetIprocMarkerCoordinates(x);
+          }
+        }
+      }
+    }
+
+    //END find new _elem and _mproc
+
+    UpdateLine();
+
+  }
+
+
+
+
+}
 
 
 

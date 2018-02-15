@@ -852,6 +852,7 @@ namespace femus {
       errTestTrue2 = parallelVec->l1_norm();
 
       if(volumeTestFalse != 0) {
+	cout.precision(14);
         std::cout  << errTestTrue2 << " " << solNorm2 << " " << volume << " " << volumeRefined << " " << volumeTestFalse << std::endl;
 	AMRthreshold[k] = sqrt(AMRthreshold[k] * AMRthreshold[k] * volumeRefined / volumeTestFalse - errTestTrue2 / solNorm2 * volume / volumeTestFalse);
         std::cout << AMRthreshold[k] << std::endl;  
@@ -1144,6 +1145,15 @@ namespace femus {
       // Copy the old vector
       if(_SolTmOrder[i] == 2) {
         *(_SolOld[i]) = *(_Sol[i]);
+      }
+    }
+  }
+  
+  void Solution::ResetSolutionToOldSolution() {
+    for(unsigned i = 0; i < _Sol.size(); i++) {
+      // Copy the old vector
+      if(_SolTmOrder[i] == 2) {
+        *(_Sol[i]) = *(_SolOld[i]);
       }
     }
   }

@@ -65,13 +65,13 @@ IF(PETSC_FOUND)
 ENDIF(PETSC_FOUND)
 
 # Find MPI (optional)
-FIND_PACKAGE(MPI)
-MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
-
-SET(HAVE_MPI 0)
-IF(MPI_FOUND)
-  SET(HAVE_MPI 1)
-ENDIF(MPI_FOUND)
+# FIND_PACKAGE(MPI)
+# MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
+# 
+# SET(HAVE_MPI 0)
+# IF(MPI_FOUND)
+SET(HAVE_MPI 1)
+# ENDIF(MPI_FOUND)
 
 # Find FParser
 FIND_PACKAGE(FParser)
@@ -81,23 +81,23 @@ IF(FPARSER_FOUND)
   SET(HAVE_FPARSER 1)
 ENDIF(FPARSER_FOUND)
 
-# Find HDF5 (optional)
-FIND_PACKAGE (HDF5)
-MESSAGE(STATUS "HDF5_FOUND = ${HDF5_FOUND}")
+# # Find HDF5 (optional)
+# FIND_PACKAGE (HDF5)
+# MESSAGE(STATUS "HDF5_FOUND = ${HDF5_FOUND}")
+# 
+# SET(HAVE_HDF5 0)
+# IF(HDF5_FOUND)
+SET(HAVE_HDF5 1)
+# ENDIF(HDF5_FOUND)
 
-SET(HAVE_HDF5 0)
-IF(HDF5_FOUND)
-  SET(HAVE_HDF5 1)
-ENDIF(HDF5_FOUND)
-
-# Find Metis (optional)
-FIND_PACKAGE(METIS)
-MESSAGE(STATUS "METIS_FOUND = ${METIS_FOUND}")
-
-SET (HAVE_METIS 0)
-IF(METIS_FOUND)
-  SET(HAVE_METIS 1)
-ENDIF(METIS_FOUND)
+# # Find Metis (optional)
+# FIND_PACKAGE(METIS)
+# MESSAGE(STATUS "METIS_FOUND = ${METIS_FOUND}")
+# 
+# SET (HAVE_METIS 0)
+# IF(METIS_FOUND)
+SET(HAVE_METIS 1)
+# ENDIF(METIS_FOUND)
 
 
 # Find Libmesh (optional)
@@ -160,7 +160,11 @@ OPTION(BUILD_AMR "Build the AMR apps" ON)
 
 OPTION(BUILD_ISM "Build the Intersection Marker apps" ON)
 
+OPTION(BUILD_MPM_FEM "Build the MPM FEM apps" ON)
+
 OPTION(BUILD_REFINEMENT "Build the Refiniment apps" ON)
+
+OPTION(BUILD_PETSC_DEBUG "Build the PETSC debug apps" ON)
 
 #############################################################################################
 ### Build documentation (Doxygen)
@@ -255,6 +259,8 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/ism)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+INCLUDE_DIRECTORIES(/opt/apps/local/mpi/gnu/openmpi/1.10.6/include/)
+INCLUDE_DIRECTORIES(/opt/apps/local/gnu/openmpi/boost/1.61.0/include/)
 
 # Include Fparser files
 IF(FPARSER_FOUND)
