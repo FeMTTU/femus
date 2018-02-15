@@ -630,7 +630,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 /*delta_adjoint row */     if(i_vol<nDofsVadj)   Res[kdim + adj_pos_begin] [i_vol]  += 0.;	   
 /*delta_control row */     if(i_vol<nDofsGctrl)  Res[kdim + ctrl_pos_begin][i_vol]  += - control_node_flag[kdim][i_vol] * weight_bd * (
                                                                         beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
-// 								     + gamma_val* lap_res_dctrl_ctrl_bd
+								     + gamma_val* lap_res_dctrl_ctrl_bd
 // 								     - grad_dot_n_adj_res[kdim] *  phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
 // 								     + SolVAR_bd_qp[SolPdeIndex[ctrl_pos_begin + press_type_pos]] * phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + kdim*nve_bd] * normal[kdim]  /*dctrl_dot_n_res*/     
 								  );	    
@@ -672,7 +672,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 			  for (unsigned kdim = 0; kdim < dim; kdim++) {
 			      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol] += control_node_flag[kdim][i_vol] * weight_bd *(
 				                                                                                beta_val * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][i_bdry] * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][j_bdry]
-//                                                                                                              + gamma_val * lap_jac_dctrl_ctrl_bd
+                                                                                                             + gamma_val * lap_jac_dctrl_ctrl_bd
 													      );
 //  std::cout <<"  jac for ctrl  " <<  Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol] << std::endl;
 			  }
