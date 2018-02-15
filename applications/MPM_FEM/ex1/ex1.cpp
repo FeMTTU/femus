@@ -36,7 +36,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
     }
   }
   else if (!strcmp(name, "DX")) {
-    if (1 == facename || 2 == facename) {
+    if (2 == facename) {
       test = 0;
       value = 0;
     }
@@ -62,7 +62,7 @@ int main(int argc, char** args)
   double Uref = 1.;
   double rhos = 1000;
   double nu = 0.4;
-  double E = 4.2 * 1.e8;
+  double E = 4.2 * 1.e6;
 
 
   Parameter par(Lref, Uref);
