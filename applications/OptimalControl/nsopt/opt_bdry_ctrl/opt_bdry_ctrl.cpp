@@ -327,19 +327,28 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   //boundary adjoint & ctrl shape functions  
   vector < vector < double > > phi_bd_gss_fe(NFE_FAMS);
   vector < vector < double > > phi_x_bd_gss_fe(NFE_FAMS);
- 
-  for(int fe=0; fe < NFE_FAMS; fe++) {  
+  
+  //bdry vol adj  evaluated at bdry points
+   vector < vector < double > > phi_vol_at_bdry_fe(NFE_FAMS);
+    vector < vector < double > > phi_x_vol_at_bdry_fe(NFE_FAMS);
+
+    for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_bd_gss_fe[fe].reserve(maxSize);
       phi_x_bd_gss_fe[fe].reserve(maxSize*dim);
-   }
-   
   //bdry vol adj  evaluated at bdry points
-  vector <double> phi_adj_vol_at_bdry;  
-  vector <double> phi_adj_x_vol_at_bdry; 
-  phi_adj_vol_at_bdry.reserve(maxSize);
-  phi_adj_x_vol_at_bdry.reserve(maxSize * dim);
-  vector <double> sol_adj_x_vol_at_bdry_gss;
-  sol_adj_x_vol_at_bdry_gss.reserve(dim);
+         phi_vol_at_bdry_fe[fe].reserve(maxSize);
+       phi_x_vol_at_bdry_fe[fe].reserve(maxSize*dim);
+
+      
+    }
+   
+
+  vector < vector < double > >  sol_adj_x_vol_at_bdry_gss(dim);
+  for (int ldim =0; ldim < dim; ldim++) sol_adj_x_vol_at_bdry_gss[ldim].reserve(dim);
+  vector < double > grad_dot_n_adj_res;
+  for (int ldim =0; ldim < dim; ldim++) grad_dot_n_adj_res.reserve(dim);
+  vector < double > grad_adj_dot_n;
+  for (int ldim =0; ldim < dim; ldim++) grad_adj_dot_n.reserve(dim);
   
   //=================================================================================================
   
@@ -449,7 +458,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
         control_el_flag = ControlDomainFlag(elem_center);
   std::vector< std::vector<int> > control_node_flag(dim);
 	    for(unsigned idim=0; idim<dim; idim++) {
-	      control_node_flag[idim].resize(nDofsX);
+	      control_node_flag[idim].resize(nDofsGctrl);
     std::fill(control_node_flag[idim].begin(), control_node_flag[idim].end(), 0);
 	    }
  //*************************************************** 
@@ -528,7 +537,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 // 		     ml_prob._ml_msh->_finiteElement[felt_bd][fe]->JacobianSur(coordX_bd,ig_bd,weight_bd,phi_bd_gss_fe[fe],phi_x_bd_gss_fe[fe],normal);
 // 		}
 		ml_prob._ml_msh->_finiteElement[felt_bd][SolFEType[ctrl_pos_begin]]->JacobianSur(coordX_bd,ig_bd,weight_bd,phi_bd_gss_fe[SolFEType[ctrl_pos_begin]],phi_x_bd_gss_fe[SolFEType[ctrl_pos_begin]],normal);
-		ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[adj_pos_begin]]->ShapeAtBoundary(coordX,ig_bd,phi_adj_vol_at_bdry,phi_adj_x_vol_at_bdry);
+		ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[adj_pos_begin]]->ShapeAtBoundary(coordX,ig_bd,phi_vol_at_bdry_fe[SolFEType[adj_pos_begin]],phi_x_vol_at_bdry_fe[SolFEType[adj_pos_begin]]);
 		  
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		double dx_dxi = 0.;
@@ -563,20 +572,22 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 // 	}
  //end unknowns eval at gauss points ********************************
 		      
-// // //=============== grad dot n for residual ========================================= 
-// // //     compute gauss quantities on the boundary through VOLUME interpolation
-// // 		std::fill(sol_adj_x_vol_at_bdry_gss.begin(), sol_adj_x_vol_at_bdry_gss.end(), 0.);
-// // 		for (int iv = 0; iv < nDofsVadj; iv++)  {
-// //                      for (int d = 0; d < dim; d++) {
-// // 			   sol_adj_x_vol_at_bdry_gss[d] += SolVAR_eldofs[SolPdeIndex[adj_pos_begin]][iv] * phi_adj_x_vol_at_bdry[iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
-// // 		     }
-// // 		}  
-// // 		      
-// // 		double grad_dot_n_adj_res = 0.;
-// // 		for(unsigned d=0; d<dim; d++) {
-// // 		    grad_dot_n_adj_res += sol_adj_x_vol_at_bdry_gss[d]*normal[d];  
-// // 		}
-// // //=============== grad dot n  for residual =========================================       
+// // // //=============== grad dot n for residual ========================================= 
+// // // //     compute gauss quantities on the boundary through VOLUME interpolation
+// // // 		for(unsigned ldim=0; ldim<dim; ldim++) {
+// // // 		    std::fill(sol_adj_x_vol_at_bdry_gss[ldim].begin(), sol_adj_x_vol_at_bdry_gss[ldim].end(), 0.);
+// // // 		  for (int iv = 0; iv < nDofsVadj; iv++)  {
+// // //                      for (int d = 0; d < dim; d++) {
+// // // 			   sol_adj_x_vol_at_bdry_gss[ldim][d] += SolVAR_eldofs[SolPdeIndex[adj_pos_begin]][iv] * phi_x_vol_at_bdry_fe[SolFEType[adj_pos_begin]][iv * dim + d];//notice that the convention of the orders x y z is different from vol to bdry
+// // // 		     }
+// // // 		  }  
+// // // 		      
+// // // 		  grad_dot_n_adj_res[ldim] = 0.;
+// // // 		  for(unsigned d=0; d<dim; d++) {
+// // // 		      grad_dot_n_adj_res[ldim] += sol_adj_x_vol_at_bdry_gss[ldim][d]*normal[d];  
+// // // 		  }
+// // // 		}
+// // // //=============== grad dot n  for residual =========================================       
 		  
 //========== compute gauss quantities on the boundary ================================================
 
@@ -607,19 +618,19 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 		      for (unsigned  kdim = 0; kdim < dim; kdim++) {
 			
-// // 			    double lap_res_dctrl_ctrl_bd = 0.;
-// // 			    double dctrl_dot_n_res = 0.;
-// // 			    for (unsigned jdim = 0; jdim < dim; jdim++) {
-// // 				  lap_res_dctrl_ctrl_bd += gradSolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]][jdim]*phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + jdim*nve_bd];
-// // 				  dctrl_dot_n_res +=  phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + jdim*nve_bd] * normal[jdim];
-// // 			    }
+			    double lap_res_dctrl_ctrl_bd = 0.;
+			    double dctrl_dot_n_res = 0.;
+			    for (unsigned jdim = 0; jdim < dim; jdim++) {
+				  lap_res_dctrl_ctrl_bd += gradSolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]][jdim]*phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + jdim*nve_bd];
+				  dctrl_dot_n_res +=  phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + jdim*nve_bd] * normal[jdim];
+			    }
 			
 /*delta_state row */	    if(i_vol<nDofsV)     Res[kdim]                 [i_vol]  += - control_node_flag[kdim][i_vol] * penalty_ctrl * (SolVAR_eldofs[SolPdeIndex[kdim + state_pos_begin]][i_vol] - SolVAR_eldofs[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
 /*delta_adjoint row */     if(i_vol<nDofsVadj)   Res[kdim + adj_pos_begin] [i_vol]  += 0.;	   
 /*delta_control row */     if(i_vol<nDofsGctrl)  Res[kdim + ctrl_pos_begin][i_vol]  += - control_node_flag[kdim][i_vol] * weight_bd * (
                                                                         beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
-// 								     + gamma_val* lap_res_dctrl_ctrl_bd
-// 								     - grad_dot_n_adj_res *  phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
+								     + gamma_val* lap_res_dctrl_ctrl_bd
+								     - grad_dot_n_adj_res[kdim] *  phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
 // 								     + SolVAR_bd_qp[SolPdeIndex[ctrl_pos_begin + press_type_pos]] * phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + kdim*nve_bd] * normal[kdim]  /*dctrl_dot_n_res*/     
 								  );	    
 //  std::cout << " res of ctrl "  << Res[kdim + ctrl_pos_begin][i_vol] ;
@@ -648,35 +659,19 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 			  }
 		      }		      
 
-//BLOCK delta_control - adjoint------------------------------------------------------------------------------------------------
-//===================loop over j in the VOLUME (while i is in the boundary)	      
-// // // 		      for(unsigned j=0; j < nDofsVadj; j ++) {
-// // // 			  //=============== grad dot n  =========================================    
-// // // 			  double grad_adj_dot_n = 0.;
-// // // 			  for(unsigned d=0; d<dim; d++) {
-// // // 			      grad_adj_dot_n += phi_adj_x_vol_at_bdry[j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
-// // // 			  }
-// // // 			  //=============== grad dot n  =========================================    
-// // // 
-// // // // 			  std::cout << " gradadjdotn " << grad_adj_dot_n << std::endl;
-// // //   
-// // // 			  for (unsigned kdim = 0; kdim < dim; kdim++) {
-// // // 				Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i_vol*nDofsGctrl + j] += control_node_flag[kdim][i_vol] * (-1) * (weight_bd * grad_adj_dot_n * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry]);    		      
-// // // 			  }
-// // // 		      }   
 
 //DIAG BLOCK delta_control - control  --------------------------------------------------------------------------------------
 		    if(i_vol < nDofsGctrl && j_vol < nDofsGctrl) {
 
 // // 			  std::cout << " EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ************** " << iel << " " << jface << " " << j_bdry << phi_bd_gss_fe[0][j_bdry] << std::endl;
 // // 
-// // 			  double lap_jac_dctrl_ctrl_bd = 0.;
-// // 			  for (unsigned ldim = 0; ldim < dim; ldim++) lap_jac_dctrl_ctrl_bd += phi_x_bd_gss_fe[SolFEType[ldim + ctrl_pos_begin]][i_bdry + ldim*nve_bd]*phi_x_bd_gss_fe[SolFEType[ldim + ctrl_pos_begin]][j_bdry + ldim*nve_bd];
+			  double lap_jac_dctrl_ctrl_bd = 0.;
+			  for (unsigned ldim = 0; ldim < dim; ldim++) lap_jac_dctrl_ctrl_bd += phi_x_bd_gss_fe[SolFEType[ldim + ctrl_pos_begin]][i_bdry + ldim*nve_bd]*phi_x_bd_gss_fe[SolFEType[ldim + ctrl_pos_begin]][j_bdry + ldim*nve_bd];
 
 			  for (unsigned kdim = 0; kdim < dim; kdim++) {
 			      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol] += control_node_flag[kdim][i_vol] * weight_bd *(
 				                                                                                beta_val * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][i_bdry] * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][j_bdry]
-//                                                                                                              + gamma_val * lap_jac_dctrl_ctrl_bd
+                                                                                                             + gamma_val * lap_jac_dctrl_ctrl_bd
 													      );
 //  std::cout <<"  jac for ctrl  " <<  Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol] << std::endl;
 			  }
@@ -713,6 +708,27 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 // // // 		  }
 
                          }//end j_bdry loop
+		    
+//BLOCK delta_control - adjoint------------------------------------------------------------------------------------------------
+//===================loop over j in the VOLUME (while i is in the boundary)	      
+		for(unsigned j=0; j < nDofsVadj; j ++) {
+			//=============== grad dot n  =========================================    
+		    for(unsigned ldim=0; ldim<dim; ldim++) {
+			    grad_adj_dot_n[ldim] = 0.;
+			    for(unsigned d=0; d<dim; d++) {
+				grad_adj_dot_n[ldim] += phi_x_vol_at_bdry_fe[SolFEType[adj_pos_begin]][j * dim + d]*normal[d];  //notice that the convention of the orders x y z is different from vol to bdry
+			    }
+		    }
+			
+			  //=============== grad dot n  =========================================    
+
+// 			  std::cout << " gradadjdotn " << grad_adj_dot_n << std::endl;
+  
+			  for (unsigned kdim = 0; kdim < dim; kdim++) {
+				Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i_vol*nDofsGctrl + j] += control_node_flag[kdim][i_vol] * (-1) * (weight_bd  * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry]* grad_adj_dot_n[kdim]);    		      
+			  }
+		} // end j loop for volume 
+		  
 		    }//end i_bdry loop
 
                 }  //end ig_bdry loop
@@ -899,26 +915,70 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
       //============ delta_adjoint row =============================================================================================
 
-
-//============ delta_control row ==================================================================================================
+      //============ delta_control row ==================================================================================================
 // THIRD ROW
-  for (unsigned i = 0; i < nDofsGctrl; i++) {
+ for (unsigned i = 0; i < nDofsGctrl; i++) {
       for (unsigned kdim = 0; kdim < dim; kdim++) { 
-      Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[kdim][i]) * (  SolVAR_eldofs[kdim + ctrl_pos_begin][i] - 0.)  );
+       /*if (i!=2 && i!=3) */Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[kdim][i]) * (  SolVAR_eldofs[kdim + ctrl_pos_begin][i] - 0.)  );
       }
 
-// //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
-      for (unsigned j = 0; j < nDofsGctrl; j++) {
+// //BLOCK delta_control - adjoint--------------------------------------------------------------------------------------
+     for (unsigned j = 0; j < nDofsVadj; j++) {
 	    if (i==j && i!=2 && i!=3) {
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] = (1 - control_node_flag[kdim][i]) * 1.;  /*penalty_outside_control_boundary;*/
+		Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i*nDofsGctrl + j] = (1 - control_node_flag[kdim][i]) * 1.;  /*penalty_outside_control_boundary;*/
+	      }
+	    } //end i==j
+      }//j_dctrl_ctrl loop
+
+// //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
+     for (unsigned j = 0; j < nDofsGctrl; j++) {
+	    if (i==j && i!=2 && i!=3) {
+	  for (unsigned kdim = 0; kdim < dim; kdim++) {
+		Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] = (1 - control_node_flag[kdim][i]) * 1.;  /*penalty_outside_control_boundary;*/
 //  std::cout <<"  jac for ctrl  in vol loop " <<  Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] << " for " << i*nDofsGctrl + j << std::endl;
 	      }
 	    } //end i==j
       }//j_dctrl_ctrl loop
   }//i_ctrl loop
-//============ delta_control row ==================================================================================================
- 
+
+//  if (control_el_flag == 1) {
+// // 		    for(unsigned idim=0; idim<dim; idim++) {
+// //     std::fill(control_node_flag[idim].begin(), control_node_flag[idim].end(), 0);
+// // 	    }
+//   
+//     for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+// 	if(el->GetFaceElementIndex(iel,jface) < 0) {
+// 	   unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
+// 	    if(face==CTRL_FACE_IDX){
+// 	    unsigned nve_bd = msh->GetElementFaceDofNumber(iel,jface, SolFEType[ctrl_pos_begin] ); //AAAAAAAAAAAAAAAAA
+// 		for(unsigned i_bdry=0; i_bdry < nve_bd; i_bdry++) {
+// 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+// // 		    for(unsigned idim=0; idim<dim; idim++) {
+// // 				  control_node_flag[idim][i_vol] = 0;
+// // 			    }
+//  for (unsigned i = 0; i < nDofsGctrl; i++) {
+//       for (unsigned kdim = 0; kdim < dim; kdim++) { 
+//      /* if(i!=i_vol)*/ Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[kdim][i]) * (  SolVAR_eldofs[kdim + ctrl_pos_begin][i] - 0.)  );
+//       }
+// 
+// 
+//       for (unsigned j = 0; j < nDofsGctrl; j++) {
+// 	    if (i==j && i!=i_vol /*&& i!=2 && i!=3*/) {
+// 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
+// 		/* if(i!=i_vol)*/ Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] = (1 - control_node_flag[kdim][i]) * 1.;  /*penalty_outside_control_boundary;*/
+// //  std::cout <<"  jac for ctrl  in vol loop " <<  Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] << " for " << i*nDofsGctrl + j << std::endl;
+// 	      }
+// 	    } //end i==j
+//       }//j_dctrl_ctrl loop
+//   }//i_ctrl loop
+//  			}
+// 		    }
+// 
+// 	}
+//       }
+// }
+ //============ delta_control row ==================================================================================================
  
  //============ delta_theta row ==================================================================================================
   for (unsigned i = 0; i < nDofsThetactrl; i++) {
