@@ -404,7 +404,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   // ****************** element loop *******************
  
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
+    
   // geometry *****************************
     short unsigned ielGeom = msh->GetElementType(iel);
 
@@ -477,6 +477,18 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
       }
     }
   //CTRL###################################################################
+    
+   //************ set fake theta flag *********************
+  std::vector<int> fake_theta_flag(nDofsThetactrl,0);
+    for (unsigned i = 0; i < nDofsThetactrl; i++) {
+      if ( JACDof[ SolPdeIndex[ctrl_pos_begin + press_type_pos] ] [i] == 72) { fake_theta_flag[i] = 1;
+//       std::cout << "#####################################################################################################" << std::endl; 
+      }
+    }
+    
+   
+ //************ end set fake theta flag *********************
+
     
     for(int ivar=0; ivar<n_unknowns; ivar++) {
       
@@ -632,7 +644,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
                                                                         beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
 								     + gamma_val* lap_res_dctrl_ctrl_bd
 // 								     - grad_dot_n_adj_res[kdim] *  phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
-// 								     + SolVAR_bd_qp[SolPdeIndex[ctrl_pos_begin + press_type_pos]] * phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + kdim*nve_bd] * normal[kdim]  /*dctrl_dot_n_res*/     
+// 								     + SolVAR_bd_qp[SolPdeIndex[ctrl_pos_begin + press_type_pos]] /** phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + kdim*nve_bd] */* normal[kdim]  /*dctrl_dot_n_res*/     
 								  );	    
 //  std::cout << " res of ctrl "  << Res[kdim + ctrl_pos_begin][i_vol] ;
 //  std::cout<< std::endl;
@@ -985,7 +997,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   for (unsigned i = 0; i < nDofsThetactrl; i++) {
       for (unsigned j = 0; j < nDofsThetactrl; j++) {
 			  if(i==j) {
-				  Jac[press_type_pos + ctrl_pos_begin ][press_type_pos + ctrl_pos_begin ][i*nDofsThetactrl + j] = 1.;
+				  Jac[press_type_pos + ctrl_pos_begin ][press_type_pos + ctrl_pos_begin ][i*nDofsThetactrl + j] = (1 - fake_theta_flag[i]) * 1.;
 			  }
        }//j_theta loop
     }//i_theta loop
