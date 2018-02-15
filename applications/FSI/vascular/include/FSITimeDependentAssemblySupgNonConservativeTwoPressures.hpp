@@ -424,7 +424,7 @@ namespace femus
 	  for ( unsigned inode = 0; inode < nve; inode++ ) {
 	    accVAROld[i] += phi_hat[inode] * aold[i][inode];
 	  }
-	  accVARNew[i] =  ( SolVARNew[i] - SolVAROld[i] )/( dt* dt * beta ) 
+	  accVARNew[i] =  ( SolVARNew[i] - SolVAROld[i] )/( dt * dt * beta ) 
 			- SolVAROld[i + dim]/( dt * beta ) 
 			- (1. - 2. * beta)/(2. * beta) * accVAROld[i];
 	}
@@ -482,8 +482,8 @@ namespace femus
 		   
           //BEGIN continuity block
           for ( unsigned i = 0; i < nve1; i++ ) {
-            aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * ( 1. - J_hat ) * Weight_hat / rhof;
-	    if(!incpr) aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * ( - bkm * SolVAR[nBlocks * dim + jP] ) * Weight_hat / rhof;
+            aRhs[indexVAR[nBlocks * dim]][i] += - phi1[i] * ( J_hat - 1.) * Weight_hat / rhof;
+	    if(!incpr) aRhs[indexVAR[nBlocks * dim]][i] += phi1[i] * ( - SolVAR[nBlocks * dim] / bkm ) * Weight_hat / rhof;
             //if (twoPressure) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * SolVAR[nBlocks * dim + jP] * Weight_hat;   // fake continuity of the fluid in the solid
             if ( twoPressure ) aRhs[indexVAR[nBlocks * dim + jP]][i] +=  phi1[i] * Soli[indexVAR[nBlocks * dim + jP]][i] * Weight_hat; // fake continuity of the fluid in the solid
           }
@@ -874,7 +874,7 @@ namespace femus
 // 		}
 		
 		adept::adouble twoC1 = 2. * J_hatm2over3 * (C1 + J_hatm2over3 * I1_B * C2) / J_hat;
-		adept::adouble twoC2 = 2. * J_hatm4over3 / J_hat;
+		adept::adouble twoC2 = 2. * J_hatm4over3 * C2 / J_hat;
 		adept::adouble C3 = 2. / 3. * (C1 * J_hatm2over3 * I1_B + 2 * C2 * J_hatm4over3 * I2_B) / J_hat;
 		adept::adouble C4 = 1. / ( J_hat * rhof); 
 		
