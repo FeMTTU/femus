@@ -36,7 +36,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
     }
   }
   else if (!strcmp(name, "DX")) {
-    if (2 == facename) {
+    if (1 == facename || 2 == facename) {
       test = 0;
       value = 0;
     }
@@ -62,7 +62,7 @@ int main(int argc, char** args)
   double Uref = 1.;
   double rhos = 1000;
   double nu = 0.4;
-  double E = 4.2 * 1.e6;
+  double E = 4.2 * 1.e8;
 
 
   Parameter par(Lref, Uref);
@@ -206,7 +206,7 @@ int main(int argc, char** args)
   gravity[1] = -9.81 * sqrt(2.) / 2.;
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 100;
+  unsigned n_timesteps = 200;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();

@@ -208,9 +208,9 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat);
         unsigned  MPMmaterial = (*mysolution->_Sol[indexSolMat])(idofMat);
         double scalingFactor = 0.;// / (1. + 100. * distance);
-        if(MPMmaterial == 0) scalingFactor = 1.e-08;
+        if(MPMmaterial == 0) scalingFactor = 1.e-06;
         else if(MPMmaterial == 1) scalingFactor = 5e-03;
-        else if(MPMmaterial == 2) scalingFactor = 1e-05;
+        else if(MPMmaterial == 2) scalingFactor = 1e-04;
         for(unsigned i = 0; i < nDofsD; i++) {
           vector < adept::adouble > softStiffness(dim, 0.);
 
@@ -458,7 +458,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           for(int j = 0; j < dim; j++) {
             GradSolDp[i][j] +=  gradphi[inode * dim + j] * SolDd[indexPdeD[i]][inode];
 //             GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * 0.5 * SolDd[indexPdeD[i]][inode];
-            GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * SolDd[indexPdeD[i]][inode];
+            GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * (SolDd[indexPdeD[i]][inode] - SolDdOld[indexPdeD[i]][inode]);
           }
         }
       }
