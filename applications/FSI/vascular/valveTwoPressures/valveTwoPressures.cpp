@@ -52,7 +52,7 @@ int main(int argc, char** args)
   //std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
 
   // ******* Set physics parameters *******
-  double Lref, Uref, rhof, muf, rhos, ni, E, E1;
+  double Lref, Uref, rhof, muf, rhos, ni, E, E1, ni1;
 
   Lref = 1.;
   Uref = 1.;
@@ -60,11 +60,14 @@ int main(int argc, char** args)
   rhof = 1060.;
   muf = 2.2 * 1.0e-3;
   rhos = 960;
-  ni = 0.5;
+
+  ni = 0.4999999999;
+
   E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
   E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
-
+  ni1 = 0.49999999999;
+  
   Parameter par(Lref, Uref);
 
   // Generate Solid Object
@@ -72,7 +75,7 @@ int main(int argc, char** args)
   solid = Solid(par, E, ni, rhos, "Mooney-Rivlin");
 
   Solid solid1;
-  solid1 = Solid(par, E1, ni, rhos, "Mooney-Rivlin");
+  solid1 = Solid(par, E1, ni1, rhos, "Mooney-Rivlin");
 
   cout << "Solid properties: " << endl;
   cout << solid << endl;
@@ -86,6 +89,7 @@ int main(int argc, char** args)
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
   numberOfUniformRefinedMeshes = 2;
+
   numberOfAMRLevels = 0;
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
@@ -262,7 +266,7 @@ int main(int argc, char** args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 512;
+  const unsigned int n_timesteps = 256;
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
@@ -271,7 +275,7 @@ int main(int argc, char** args)
 
   std::ofstream outf;
   if(iproc == 0) {
-    outf.open("fluxes_E1=3.txt");
+    outf.open("fluxes_E1=1.5.txt");
     if(!outf) {
       std::cout << "Error in opening file DataPrint.txt";
       return 1;
