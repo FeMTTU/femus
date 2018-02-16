@@ -852,8 +852,9 @@ namespace femus {
       errTestTrue2 = parallelVec->l1_norm();
 
       if(volumeTestFalse != 0) {
-	cout.precision(14);
-        std::cout  << errTestTrue2 << " " << solNorm2 << " " << volume << " " << volumeRefined << " " << volumeTestFalse << std::endl;
+	cout.precision(24);
+	printf("%e %e %e %e %e \n",errTestTrue2, solNorm2, volume, volumeRefined, volumeTestFalse);
+        //std::cout  << errTestTrue2 << " " << solNorm2 << " " << volume << " " << volumeRefined << " " << volumeTestFalse << std::endl;
 	AMRthreshold[k] = sqrt(AMRthreshold[k] * AMRthreshold[k] * volumeRefined / volumeTestFalse - errTestTrue2 / solNorm2 * volume / volumeTestFalse);
         std::cout << AMRthreshold[k] << std::endl;  
       }
