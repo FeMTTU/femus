@@ -123,11 +123,45 @@ namespace femus {
       
     //for ASM pourposes  
     public: 
+      
+      void SetAsmStandard(const bool &standard){
+	_asmStandard = standard;
+	if(standard) _asmOverlapping = 1;
+	else _asmOverlapping = 0;;
+      };
+      
       void SetAsmBlockSize(const unsigned &BlockSize){
-	_asmBlockSize = BlockSize;
+	_asmBlockSize[0] = BlockSize;
+	_asmBlockSize[1] = BlockSize;
 	_asmStandard = false;
 	_asmOverlapping = 0; 
       };
+      
+      void SetAsmBlockSizeSolid(const unsigned &BlockSize){
+	_asmBlockSize[0] = BlockSize;
+	_asmStandard = false;
+	_asmOverlapping = 0; 
+      };
+      
+      void SetAsmBlockSizeFluid(const unsigned &BlockSize){
+	_asmBlockSize[1] = BlockSize;
+	_asmStandard = false;
+	_asmOverlapping = 0; 
+      };
+      
+      void SetAsmBlockPreconditioner(const PreconditionerType &preconditioner){
+	_asmBlockPreconditioner[0] = preconditioner;
+	_asmBlockPreconditioner[1] = preconditioner;
+      };
+      
+      void SetAsmBlockPreconditionerSolid(const PreconditionerType &preconditioner){
+	_asmBlockPreconditioner[0] = preconditioner;
+      };
+      
+      void SetAsmBlockPreconditionerFluid(const PreconditionerType &preconditioner){
+	_asmBlockPreconditioner[1] = preconditioner;
+      };
+          
       void SetAsmNumeberOfSchurVariables(const unsigned &SchurVariableNumber){
 	_asmSchurVariableNumber = SchurVariableNumber;
       };
@@ -140,12 +174,15 @@ namespace femus {
       std::vector< std::vector <IS> > _asmOverlappingIs;
       std::vector< std::vector <IS> > _asmLocalIs;
       std::vector< std::vector <unsigned> > _asmBlockMaterialRange;
-      unsigned _asmBlockSize;
+      std::vector < unsigned > _asmBlockSize;
+      std::vector < PreconditionerType > _asmBlockPreconditioner;
       unsigned _asmSchurVariableNumber;
                  
       //std::vector< PetscInt >  _nlocal;
       bool _asmStandard;
       unsigned _asmOverlapping;  
+      
+      
       
       
       

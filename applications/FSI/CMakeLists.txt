@@ -4,5 +4,5 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
   ADD_SUBDIRECTORY(./TimeDependent/)
 # FSI SteadyState Benchmarks
   ADD_SUBDIRECTORY(./SteadyState/)
- # FSI aneurysm
- ADD_SUBDIRECTORY(./aneurysm/)
+ # FSI cardiovascular
+ ADD_SUBDIRECTORY(./vascular/)

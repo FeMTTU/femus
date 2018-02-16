@@ -1826,16 +1826,20 @@ namespace femus {
     // *********** open vtu files *************
     std::ofstream fout;
 
-    std::string dirnamePVTK = "./";
+    std::string dirnamePVTK = "";
     Files files;
     files.CheckDir(output_path, dirnamePVTK);
+    
+    
+    
 
     std::string filename_prefix = (streamline) ? "streamline" : "line";
 
     std::ostringstream filename;
-    filename << output_path << "./" << filename_prefix << "." << step << ".vtu";
+    filename << output_path << "/./" << filename_prefix << "." << step << ".vtu";
 
     fout.open(filename.str().c_str());
+    
     if(!fout.is_open()) {
       std::cout << std::endl << " The output file " << filename.str() << " cannot be opened.\n";
       abort();

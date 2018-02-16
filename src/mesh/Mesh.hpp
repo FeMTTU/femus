@@ -112,7 +112,7 @@ public:
     /** Only for parallel */
     unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const;
 
-    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel);
+    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType = 2);
 
     /** Set the grid number */
     void SetLevel(const unsigned &i) {

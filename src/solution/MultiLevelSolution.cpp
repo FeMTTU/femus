@@ -51,6 +51,8 @@ namespace femus
     for(unsigned i = 0; i < _solName.size(); i++) delete [] _solName[i];
 
     for(unsigned i = 0; i < _solName.size(); i++) delete [] _bdcType[i];
+    
+    if(_writer != NULL) delete _writer;
 
 
   };
@@ -73,6 +75,8 @@ namespace femus
     _mlBCProblem = NULL;
 
     _FSI = false;
+    
+    _writer = NULL;
 
   }
 
@@ -136,6 +140,7 @@ namespace femus
     _solType[n] = order - ((fefamily == LAGRANGE) ? 1 : 0) + fefamily * 3;
     _solName[n]  = new char [DEFAULT_SOL_NCHARS];
     _bdcType[n]  = new char [20];
+    sprintf(_bdcType[n], "undefined");
     strcpy(_solName[n], name);
     _solTimeOrder[n] = tmorder;
     _pdeType[n] = PdeType;
@@ -312,7 +317,7 @@ namespace femus
       index++;
 
       if(index == _solType.size()) {
-        cout << "error! invalid solution name " << name << "entry GetIndex(...)" << endl;
+        cout << "error! invalid solution name: " << name << " in entry GetIndex(...)" << endl;
         abort();
       }
     }
@@ -604,13 +609,24 @@ namespace femus
 
   }
 
-  void MultiLevelSolution::SaveSolution(const char* filename, const double time)
+  void MultiLevelSolution::SaveSolution(const char* filename, const double &time)
   {
 
     char composedFileName[100];
 
     for(int i = 0; i < _solName.size(); i++) {
       sprintf(composedFileName, "./save/%s_time%f_sol%s_level%d", filename, time, _solName[i], _gridn);
+      _solution[_gridn - 1]->_Sol[i]->BinaryPrint(composedFileName);
+    }
+  }
+  
+  void MultiLevelSolution::SaveSolution(const char* filename, const unsigned &iteration)
+  {
+
+    char composedFileName[100];
+
+    for(int i = 0; i < _solName.size(); i++) {
+      sprintf(composedFileName, "./save/%s_iteration%d_sol%s_level%d", filename, iteration, _solName[i], _gridn);
       _solution[_gridn - 1]->_Sol[i]->BinaryPrint(composedFileName);
     }
   }
@@ -653,6 +669,9 @@ namespace femus
 
 
   }
+  
+  
+  
 
 
   void MultiLevelSolution::RefineSolution(const unsigned &gridf)
