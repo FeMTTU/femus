@@ -217,9 +217,9 @@ int main ( int argc, char ** args )
   ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
   if ( !dimension2D ) ml_sol.AddSolution("Wm", LAGRANGE, SECOND, 0, false);
   
-  ml_sol.AddSolution("AX", LAGRANGE, SECOND, 2);
-  ml_sol.AddSolution("AY", LAGRANGE, SECOND, 2);
-  if(dim == 3) ml_sol.AddSolution("AZ", LAGRANGE, SECOND, 2);
+//   ml_sol.AddSolution("AX", LAGRANGE, SECOND, 2);
+//   ml_sol.AddSolution("AY", LAGRANGE, SECOND, 2);
+//   if(dim == 3) ml_sol.AddSolution("AZ", LAGRANGE, SECOND, 2);
 
   // ******* Initialize solution *******
   ml_sol.Initialize ( "All" );
