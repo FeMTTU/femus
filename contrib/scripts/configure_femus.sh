@@ -105,7 +105,7 @@ fi
 ############ MACHINE DEPENDENT ###################
        FM_BASEPATH_TO_PETSC=$EXTERNAL_BASEPATH
        FM_PETSC_FOLDER=petsc
-export PETSC_ARCH=linux-$PETSC_METHOD
+export PETSC_ARCH=arch-linux2-cxx-$PETSC_METHOD
 ############ END MACHINE DEPENDENT ###################
 
 export PETSC_DIR=$FM_BASEPATH_TO_PETSC/$FM_PETSC_FOLDER
@@ -172,7 +172,7 @@ fi
 FM_LIBMESH_DIR_REL=libmesh
 FM_LIBMESH_INSTALL=install
 export FM_BASEPATH_TO_LM=$EXTERNAL_BASEPATH                                                       #soon we'll avoid this export 
-export FM_LM_FOLDER=$FM_LIBMESH_DIR_REL/$FM_LIBMESH_INSTALL-petsc-linux-$PETSC_METHOD    #soon we'll avoid this export
+export FM_LM_FOLDER=$FM_LIBMESH_DIR_REL/$FM_LIBMESH_INSTALL-petsc-$PETSC_METHOD    #soon we'll avoid this export
 ############## END MACHINE DEPENDENT ###################
 
 
