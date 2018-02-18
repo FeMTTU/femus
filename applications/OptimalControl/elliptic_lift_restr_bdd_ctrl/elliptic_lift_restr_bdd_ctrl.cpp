@@ -268,7 +268,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   //********* variables for ineq constraints *****************
   double ctrl_lower = 0.3;
-  double ctrl_upper = 0.7;
+  double ctrl_upper = 0.5;
   double c_compl = 1.;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
   //***************************************************  
@@ -477,7 +477,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	
 	for (unsigned i = 0; i < nDof_u; i++) {
 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
-                   for (unsigned d = 0; d < dim; d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * dim + d];
+                   for (unsigned d = 0; d < dim; d++)   sol_u_x_gss[d] += 1./*sol_u[i] * phi_u_x[i * dim + d]*/;
           }
 	
 	for (unsigned i = 0; i < nDof_adj; i++) {
@@ -531,14 +531,14 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
           // THIRD ROW
-          if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += - weight * ( - laplace_rhs_dadj_u_i /*- laplace_rhs_dadj_ctrl_i*/ - 0.) ;
+          if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += - weight * ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i - 0.) ;
 	  // FOURTH ROW
-          if (i < nDof_mu) {
-	     if (sol_actflag[i] == 0)  //inactive
-	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
-	     else  //active
-	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ; 					  
-	  }
+//           if (i < nDof_mu) {
+// 	     if (sol_actflag[i] == 0)  //inactive
+// 	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
+// 	     else  //active
+// 	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ; 					  
+// 	  }
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -679,6 +679,19 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
     //copy the value of the adept::adoube aRes in double Res and store
     RES->add_vector_blocked(Res, l2GMap_AllVars);
+    std::vector<double> Res_mu (nDof_mu);
+    for (unsigned i = 0; i < sol_actflag.size(); i++){
+      if (sol_actflag[i] == 0){  //inactive
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
+	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+      }
+      else { //active
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ;
+         Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+      }
+    } 
+    
+    RES->insert(Res_mu, l2GMap_mu);
 
     if (assembleMatrix) {
       //store K in the global matrix KK
@@ -696,7 +709,19 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] = 1 - sol_actflag[i];    
 
   KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag);
-
+//   std::vector<double> Res_mu (nDof_mu);
+//   for (unsigned i = 0; i < sol_actflag.size(); i++){
+//    if (sol_actflag[i] == 0)  //inactive
+//    {  
+//      Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; Res_mu [i] = - ( 1. * sol_mu[i] - 0. ); 
+//    }
+//    else  //active
+//    {  
+//      Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ;
+//      Res_mu [i] =- c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ;}
+//    } 
+//     RES->insert(Res_mu, l2GMap_mu);
+  
   } //end element loop for each process
   
   RES->close();
