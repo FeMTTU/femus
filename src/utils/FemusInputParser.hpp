@@ -103,7 +103,7 @@ std::ifstream fin(filename.str().c_str());
   std::string cl_end   = "</" + _tag_name + ">";
   
   
-  if (fin != NULL) {
+  if (fin.is_open()) {
     while (!fin.eof() && buf != cl_begin ) {
       fin >> buf;
       } 

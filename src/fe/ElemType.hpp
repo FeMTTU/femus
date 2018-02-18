@@ -151,9 +151,9 @@ public:
 
   void GetSparsityPatternSize(const Mesh& Mesh,const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned &itype) const;
 
-  static const unsigned _fe_old_to_new[QL];
+  static const int _fe_old_to_new[QL];
 
-  static const unsigned _fe_new_to_old[NFE_FAMS];
+  static const int _fe_new_to_old[NFE_FAMS];
 
 protected:
 

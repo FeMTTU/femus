@@ -352,7 +352,7 @@ namespace femus {
       return _child[i];
     }
     else {
-      std::cout << "Wrong input (= " << i << ") in function FieldSplitTree::GetChildrenBranchstd" << std::cout;
+      std::cout << "Wrong input (= " << i << ") in function FieldSplitTree::GetChildrenBranchstd" << std::endl;
       std::cout << "Number of Splits = " << _numberOfSplits << std::endl;
       abort();
     }

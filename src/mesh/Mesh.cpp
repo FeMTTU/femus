@@ -675,7 +675,7 @@ SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& j
   }
   else{
     std::cout<<"Wrong argument range in function"
-	     <<"Mesh::GetLagrangeProjectionMatrix(const unsigned& itype, const unsigned& jtype)"<<std::cout;
+	     <<"Mesh::GetLagrangeProjectionMatrix(const unsigned& itype, const unsigned& jtype)"<<std::endl;
     abort();
   }
   return _ProjQitoQj[itype][jtype];
