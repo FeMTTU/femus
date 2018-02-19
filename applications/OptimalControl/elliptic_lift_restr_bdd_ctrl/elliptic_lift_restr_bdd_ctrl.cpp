@@ -24,6 +24,10 @@ double InitialValueAdjoint(const std::vector < double >& x) {
   return 0.;
 }
 
+double InitialValueMu(const std::vector < double >& x) {
+  return 0.;
+}
+
 double InitialValueControl(const std::vector < double >& x) {
   return 0.;
 }
@@ -78,7 +82,6 @@ int main(int argc, char** args) {
   mlSol.AddSolution("control", LAGRANGE, FIRST);
   mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
   mlSol.AddSolution("mu", LAGRANGE, FIRST);  
-  mlSol.AddSolution("actflag", LAGRANGE, FIRST); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
@@ -88,6 +91,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("state", InitialValueState);
   mlSol.Initialize("control", InitialValueControl);
   mlSol.Initialize("adjoint", InitialValueAdjoint);
+  mlSol.Initialize("mu", InitialValueMu);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
 
@@ -111,6 +115,8 @@ int main(int argc, char** args) {
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleLiftRestrProblem);
+  
+  system.SetMaxNumberOfNonLinearIterations(2);
 
   // initilaize and solve the system
   system.init();
@@ -261,8 +267,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower = -0.3;
-  double ctrl_upper = 0.4;
+  double ctrl_lower = 0.3;
+  double ctrl_upper = 0.5;
   double c_compl = 1.;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
   //***************************************************  
@@ -311,7 +317,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   double penalty_strong = 10e+14;
  //***************************************************  
 
-  
+  RES->zero();
   if (assembleMatrix)  KK->zero();
 
     
@@ -398,7 +404,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
  //************** update active set flag for current nonlinear iteration **************************** 
  // 0: inactive; 1: active_a; 2: active_b
-    sol_actflag.resize(nDof_mu);
+   assert(nDof_mu == nDof_ctrl);
+   sol_actflag.resize(nDof_mu);
      std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
    
     for (unsigned i = 0; i < sol_actflag.size(); i++) {  
@@ -470,7 +477,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	
 	for (unsigned i = 0; i < nDof_u; i++) {
 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
-                   for (unsigned d = 0; d < dim; d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * dim + d];
+                   for (unsigned d = 0; d < dim; d++)   sol_u_x_gss[d] += 1./*sol_u[i] * phi_u_x[i * dim + d]*/;
           }
 	
 	for (unsigned i = 0; i < nDof_adj; i++) {
@@ -526,12 +533,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
           // THIRD ROW
           if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += - weight * ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i - 0.) ;
 	  // FOURTH ROW
-          if (i < nDof_mu) {
-	     if (sol_actflag[i] == 0)  //inactive
-	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
-	     else  //active
-	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_ctrl[i] - c_compl * ((2 - sol_actflag[i]) * ctrl_lower + (sol_actflag[i]-1) * ctrl_upper)) ; 					  
-	  }
+//           if (i < nDof_mu) {
+// 	     if (sol_actflag[i] == 0)  //inactive
+// 	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
+// 	     else  //active
+// 	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ; 					  
+// 	  }
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -647,62 +654,82 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     std::cout << " ************* Element ************** " << iel << " **************************************** " << std::endl;     
 
 // // //     if (control_el_flag == 0) {  //elements that should have zero control
-         for (unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) {
-    std::cout << " ======= Row === " << i_unk << " =================================================== " << std::endl;     
-        unsigned int row_block_offset = 0;
-	         for (unsigned k = 0; k < i_unk; k++) row_block_offset += Sol_n_el_dofs[k];
-         for (unsigned j_unk = 0; j_unk < n_unknowns; j_unk++) {
-    std::cout << " ======= Column === " << j_unk << " ================== " << std::endl;     
-        unsigned int column_block_offset = 0;
-	         for (unsigned k = 0; k < j_unk; k++) column_block_offset += Sol_n_el_dofs[k];
-	  
-         for (unsigned i = 0; i < Sol_n_el_dofs[i_unk]; i++) {
-// 	      std::cout << Res[nDof_u + nDof_ctrl + nDof_adj + i ] << " " << std::endl;
-	   for (unsigned j = 0; j < Sol_n_el_dofs[j_unk]; j++) {
-	      std::cout <<  " " << std::setfill(' ') << std::setw(10) << Jac[ (row_block_offset + i) * nDof_AllVars + ( column_block_offset + j) ] << " ";
-// 	      if (i==j) {std::cout << Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars + (nDof_u +j) ] << " mu-c " << std::endl;}
-// 	      if (i==j) {std::cout << Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars + ( nDof_u + nDof_ctrl + nDof_adj + j ) ] << " mu-mu " << std::endl;}
-// 	      std::cout << Jac[ i * nDof_AllVars + (nDof_u + j) ] << " " << std::endl;
-// 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + j) ];
-// 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + nDof_adj + i) * nDof_AllVars + (nDof_u + nDof_adj + j) ];
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars + (nDof_u + j) ] << " " << std::endl;
-// 	      std::cout << Jac[ i * nDof_AllVars + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
-//       std::cout << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
-	    }
-	      std::cout << std::endl;
-	 }
-
-	 } //j_unk
-	} //i_unk
+// //          for (unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) {
+// //     std::cout << " ======= Row === " << i_unk << " =================================================== " << std::endl;     
+// //         unsigned int row_block_offset = 0;
+// // 	         for (unsigned k = 0; k < i_unk; k++) row_block_offset += Sol_n_el_dofs[k];
+// //          for (unsigned j_unk = 0; j_unk < n_unknowns; j_unk++) {
+// //     std::cout << " ======= Column === " << j_unk << " ================== " << std::endl;     
+// //         unsigned int column_block_offset = 0;
+// // 	         for (unsigned k = 0; k < j_unk; k++) column_block_offset += Sol_n_el_dofs[k];
+// // 	  
+// //          for (unsigned i = 0; i < Sol_n_el_dofs[i_unk]; i++) {
+// // // 	      std::cout << Res[nDof_u + nDof_ctrl + nDof_adj + i ] << " " << std::endl;
+// // 	   for (unsigned j = 0; j < Sol_n_el_dofs[j_unk]; j++) {
+// // 	      std::cout <<  " " << std::setfill(' ') << std::setw(10) << Jac[ (row_block_offset + i) * nDof_AllVars + ( column_block_offset + j) ] << " ";
+// // 	    }
+// // 	      std::cout << std::endl;
+// // 	 }
+// // 
+// // 	 } //j_unk
+// // 	} //i_unk
 	 
 	 
 // // // 	}
     
     //copy the value of the adept::adoube aRes in double Res and store
     RES->add_vector_blocked(Res, l2GMap_AllVars);
+    std::vector<double> Res_mu (nDof_mu);
+    for (unsigned i = 0; i < sol_actflag.size(); i++){
+      if (sol_actflag[i] == 0){  //inactive
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
+	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+      }
+      else { //active
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ;
+         Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+      }
+    } 
+    
+    RES->insert(Res_mu, l2GMap_mu);
 
     if (assembleMatrix) {
       //store K in the global matrix KK
       KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
     }
     
+    //========== dof-based part, without summation
+    
   KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
   
-  for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = 1;    
+  for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = c_compl*1;    
   
   KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
 
   for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] = 1 - sol_actflag[i];    
 
   KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag);
-
+//   std::vector<double> Res_mu (nDof_mu);
+//   for (unsigned i = 0; i < sol_actflag.size(); i++){
+//    if (sol_actflag[i] == 0)  //inactive
+//    {  
+//      Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; Res_mu [i] = - ( 1. * sol_mu[i] - 0. ); 
+//    }
+//    else  //active
+//    {  
+//      Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ;
+//      Res_mu [i] =- c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ;}
+//    } 
+//     RES->insert(Res_mu, l2GMap_mu);
+  
   } //end element loop for each process
   
   RES->close();
 
   if (assembleMatrix) KK->close();
   KK->print();
+  RES->print();
+  
   // ***************** END ASSEMBLY *******************
 
   return;
@@ -713,7 +740,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
   
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
