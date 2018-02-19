@@ -42,6 +42,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 //   if (value > ctrl_upper) value = ctrl_upper; ////////////////////////
   
   if(!strcmp(name,"control")) {
+      value = 0;
   if (faceName == 3)
     dirichlet = false;
   }
@@ -267,8 +268,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower = 0.3;
-  double ctrl_upper = 0.5;
+  double ctrl_lower = -0.3;
+  double ctrl_upper = -0.2;
+  assert(ctrl_lower < ctrl_upper);
   double c_compl = 1.;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
   //***************************************************  
@@ -532,13 +534,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	  }
           // THIRD ROW
           if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += - weight * ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i - 0.) ;
-	  // FOURTH ROW
-//           if (i < nDof_mu) {
-// 	     if (sol_actflag[i] == 0)  //inactive
-// 	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
-// 	     else  //active
-// 	                Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ; 					  
-// 	  }
+
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -677,50 +673,42 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	 
 // // // 	}
     
+ //========== sum-based part
+
     //copy the value of the adept::adoube aRes in double Res and store
     RES->add_vector_blocked(Res, l2GMap_AllVars);
-    std::vector<double> Res_mu (nDof_mu);
+      if (assembleMatrix)  KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
+    
+    
+ //========== dof-based part, without summation
+ 
+ //============= delta_mu row ===============================
+      std::vector<double> Res_mu (nDof_mu);
     for (unsigned i = 0; i < sol_actflag.size(); i++){
       if (sol_actflag[i] == 0){  //inactive
          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
       else { //active
-         Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ;
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  =    c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
       }
     } 
     
     RES->insert(Res_mu, l2GMap_mu);
-
-    if (assembleMatrix) {
-      //store K in the global matrix KK
-      KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
-    }
-    
-    //========== dof-based part, without summation
-    
-  KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
   
-  for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = c_compl*1;    
+ //============= delta_ctrl-delta_mu row ===============================
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
+  
+ //============= delta_mu-delta_ctrl row ===============================
+ for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = c_compl;    
   
   KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
 
-  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] = 1 - sol_actflag[i];    
+ //============= delta_mu-delta_mu row ===============================
+  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] = 1 - sol_actflag[i]/c_compl;  //can do better to avoid division, maybe use modulo operator 
 
   KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag);
-//   std::vector<double> Res_mu (nDof_mu);
-//   for (unsigned i = 0; i < sol_actflag.size(); i++){
-//    if (sol_actflag[i] == 0)  //inactive
-//    {  
-//      Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; Res_mu [i] = - ( 1. * sol_mu[i] - 0. ); 
-//    }
-//    else  //active
-//    {  
-//      Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ;
-//      Res_mu [i] =- c_compl * (  (2 - sol_actflag[i]) * (sol_ctrl[i] - ctrl_lower) + ( sol_actflag[i] - 1 ) * ( sol_ctrl[i] - ctrl_upper )  ) ;}
-//    } 
-//     RES->insert(Res_mu, l2GMap_mu);
   
   } //end element loop for each process
   
