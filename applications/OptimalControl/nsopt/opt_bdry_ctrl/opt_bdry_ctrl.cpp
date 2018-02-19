@@ -159,7 +159,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("GX", LAGRANGE, FIRST/*SECOND*/);
   mlSol.AddSolution("GY", LAGRANGE, FIRST/*SECOND*/);
   if (dim == 3) mlSol.AddSolution("GZ", LAGRANGE, FIRST/*SECOND*/);
-  mlSol.AddSolution("THETA", LAGRANGE, FIRST/*SECOND*/);
+  mlSol.AddSolution("THETA", DISCONTINOUS_POLYNOMIAL, ZERO/*SECOND*/);
   // control ===================== 
   
   
