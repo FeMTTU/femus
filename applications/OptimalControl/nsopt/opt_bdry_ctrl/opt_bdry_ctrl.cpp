@@ -1065,6 +1065,19 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  if(assembleMatrix) JAC->add_matrix_blocked( Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ], JACDof[i_unk], JACDof[j_unk]);
         }
     }
+    
+//      if (control_el_flag == 1) {
+//        std::vector<int>  bdry_int_constr_pos_vec(1,bdry_int_constr_pos);
+// 	  for (unsigned kdim = 0; kdim < dim; kdim++) { RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],JACDof[n_unknowns-2-kdim]); }
+//                                                         RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-1]],JACDof[n_unknowns-1]);
+// 	  if(assembleMatrix) {
+// 	    for (unsigned kdim = 0; kdim < dim; kdim++) {
+// 	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, JACDof[n_unknowns-2-kdim]);
+// 	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-2-kdim], bdry_int_constr_pos_vec);
+// 	    }
+// 	 }
+//      }  //add control boundary element contributions
+    
  
    //--------------------------------------------------------------------------------------------------------  
   } //end list of elements loop for each subdomain
