@@ -50,7 +50,7 @@ int main(int argc, char **args)
   valve = false;
   twoPressure = true;
   
-  unsigned simulation = 0;
+  unsigned simulation = 4;
 
   if(argc >= 2) {
     if(!strcmp("0", args[1])) {       /** FSI Turek2D no stent */
@@ -78,7 +78,7 @@ int main(int argc, char **args)
       simulation = 7;
     }
     else{
-      simulation = 0;
+      simulation = 4;
     }
   }
 
@@ -165,7 +165,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 5;
+  numberOfUniformRefinedMeshes = 3;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -206,6 +206,9 @@ int main(int argc, char **args)
 
   ml_sol.AddSolution("Um", LAGRANGE, SECOND, 0, false);
   ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
+  
+  ml_sol.AddSolution("AX", LAGRANGE, SECOND, 2);
+  ml_sol.AddSolution("AY", LAGRANGE, SECOND, 2);
     
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -362,7 +365,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 128;
+  const unsigned int n_timesteps = 256;
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -595,6 +598,10 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
     }
   }
   else if(!strcmp(name, "PS")) {
+    test = 0;
+    value = 0.;
+  }
+  else if(!strcmp(name, "PF")) {
     test = 0;
     value = 0.;
   }

@@ -59,7 +59,7 @@ int main ( int argc, char ** args )
   
   valve = false;
   twoPressure = true;
-  unsigned simulation = 0;
+  unsigned simulation = 1;
 
   if ( argc >= 2 ) {
     if ( !strcmp ( "0", args[1] ) ) { /** FSI Turek3D no stent */
@@ -81,7 +81,7 @@ int main ( int argc, char ** args )
       simulation = 5;
     }
     else {
-      simulation = 0;
+      simulation = 1;
     }
   }
 
@@ -291,6 +291,7 @@ int main ( int argc, char ** args )
   // ******* set MG-Solver *******
   system.SetMgType ( F_CYCLE );
 
+    
 //   system.SetNonLinearConvergenceTolerance ( 1.e-9 );
 //   //system.SetResidualUpdateConvergenceTolerance(1.e-13);
 //   system.SetMaxNumberOfNonLinearIterations ( 4 );
@@ -401,6 +402,9 @@ int main ( int argc, char ** args )
     if ( time_step > 0 )
       system.SetMgType ( V_CYCLE );
     system.CopySolutionToOldSolution();
+    
+    
+    
     system.MGsolve();
     system.PrintComputationalTime();
      
@@ -755,6 +759,12 @@ bool SetBoundaryConditionOmino ( const std::vector < double > & x, const char na
     }
   }
   else if ( !strcmp ( name, "PS" ) ) {
+    if ( 1 == facename || 2 == facename ) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if ( !strcmp ( name, "PF" ) ) {
     if ( 1 == facename || 2 == facename ) {
       test = 0;
       value = 0;
