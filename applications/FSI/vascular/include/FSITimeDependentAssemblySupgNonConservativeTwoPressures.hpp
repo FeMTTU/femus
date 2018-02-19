@@ -622,8 +622,9 @@ namespace femus
               }
 
               adept::adouble springStiffness = 0.;
-              if ( valve ) springStiffness = 2.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 2 ) + // if 2D 5.e-4
-                                             2.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 3 ); //if 3D 5.e-4
+
+              if ( valve ) springStiffness = 2.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 2 ) + // if 2D
+                                             2.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 3 ); //if 3D
 
 
               // get mesh velocity and gradient at current time

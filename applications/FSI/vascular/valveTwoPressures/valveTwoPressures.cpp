@@ -61,12 +61,12 @@ int main(int argc, char** args)
   muf = 2.2 * 1.0e-3;
   rhos = 960;
 
-  ni = 0.4999999999;
+  ni = 0.5;
 
   E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
   E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
-  ni1 = 0.49999999999;
+  ni1 = 0.5;
   
   Parameter par(Lref, Uref);
 
@@ -266,7 +266,7 @@ int main(int argc, char** args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 256;
+  const unsigned int n_timesteps = 512;
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
