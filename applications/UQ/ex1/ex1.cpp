@@ -4,8 +4,6 @@
 #include "VTKWriter.hpp"
 #include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "Marker.hpp"
-#include "Line.hpp"
 
 #include "Fluid.hpp"
 #include "Solid.hpp"
@@ -18,26 +16,12 @@
 
 using namespace femus;
 
+const double pi = 2.0 * acos(0.0);
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int facename, const double time) {
-  bool test = 1; //dirichlet
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  bool dirichlet = true; //dirichlet
   value = 0.;
-
-  if(!strcmp(name, "UX")) {
-    if(3 == facename || 4 == facename) {
-      test = 0;
-      value = 0;
-    }
-  }
-  else if(!strcmp(name, "UY")) {
-    if(2 == facename) {
-      test = 0;
-      value = 0;
-    }
-  }
-
-  return test;
-
+  return dirichlet;
 }
 
 int main(int argc, char** args) {
@@ -47,31 +31,8 @@ int main(int argc, char** args) {
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 4; //for refinement in 3D
-  //unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 6; //for refinement in 3D
   unsigned numberOfSelectiveLevels = 0;
-
-  double Lref = 1.;
-  double Uref = 1.;
-
-  //initialize parameters for rolling ball (MPM)
-  double rho_MPM = 1000.;
-  double nu_MPM = 0.4;
-  double E_MPM = 4.2 * 1.e6;
-
-  //initialize parameters for plate (FEM)
-  double rho_FEM = 10000.;
-  double nu_FEM = 0.4;
-  double E_FEM = 4.2 * 1.e7;
-
-  Parameter par(Lref, Uref);
-
-  // Generate Solid Object
-  Solid solidMPM;
-  Solid solidFEM;
-
-  solidMPM = Solid(par, E_MPM, nu_MPM, rho_MPM, "Neo-Hookean");
-  solidFEM = Solid(par, E_FEM, nu_FEM, rho_FEM, "Neo-Hookean");
 
   mlMsh.ReadCoarseMesh("../input/square.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
@@ -80,38 +41,33 @@ int main(int argc, char** args) {
 
   MultiLevelSolution mlSol(&mlMsh);
   // add variables to mlSol
-  mlSol.AddSolution("UX", LAGRANGE, SECOND, 2);
-  if(dim > 1) mlSol.AddSolution("UY", LAGRANGE, SECOND, 2);
-  if(dim > 2) mlSol.AddSolution("UZ", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution("u", LAGRANGE, SECOND, 2);
 
   mlSol.Initialize("All");
 
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
 
   // ******* Set boundary conditions *******
-  mlSol.GenerateBdc("UX", "Steady");
-  if(dim > 1) mlSol.GenerateBdc("UY", "Steady");
-  if(dim > 2) mlSol.GenerateBdc("UZ", "Steady");
+  mlSol.GenerateBdc("All");
 
   MultiLevelProblem ml_prob(&mlSol);
 
-  // ******* Add MPM system to the MultiLevel problem *******
-  TransientNonlinearImplicitSystem& system = ml_prob.add_system < TransientNonlinearImplicitSystem > ("UQ");
-  system.AddSolutionToSystemPDE("UX");
-  if(dim > 1)system.AddSolutionToSystemPDE("UY");
-  if(dim > 2) system.AddSolutionToSystemPDE("UZ");
+  // ******* Add FEM system to the MultiLevel problem *******
+  LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("UQ");
+  system.AddSolutionToSystemPDE("u");
 
-  // ******* System MPM Assembly *******
+
+  // ******* System FEM Assembly *******
   system.SetAssembleFunction(AssembleUQSys);
+  system.SetMaxNumberOfLinearIterations(1);
   //system.SetAssembleFunction(AssembleFEM);
   // ******* set MG-Solver *******
   system.SetMgType(V_CYCLE);
 
 
-  system.SetAbsoluteLinearConvergenceTolerance(1.0e-10);
-  system.SetMaxNumberOfLinearIterations(1);
-  system.SetNonLinearConvergenceTolerance(1.e-9);
-  system.SetMaxNumberOfNonLinearIterations(20);
+  system.SetAbsoluteLinearConvergenceTolerance(1.e-50);
+  //   system.SetNonLinearConvergenceTolerance(1.e-9);
+//   system.SetMaxNumberOfNonLinearIterations(20);
 
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
@@ -126,10 +82,11 @@ int main(int argc, char** args) {
 
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
-  system.SetTolerances(1.e-10, 1.e-15, 1.e+50, 40, 40);
+  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 4);
 
 
   system.MGsolve();
+
 
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
