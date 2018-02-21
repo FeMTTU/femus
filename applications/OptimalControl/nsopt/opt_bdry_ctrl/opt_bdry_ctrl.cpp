@@ -18,6 +18,7 @@
 #include "Files.hpp"
 #include <stdio.h>
 
+#include "PetscMatrix.hpp"
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
@@ -244,6 +245,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   elem*		 el	= msh->el;
   SparseMatrix*	 JAC	= pdeSys->_KK;
   NumericVector* RES 	= pdeSys->_RES;
+  
+  MatSetOption(static_cast< PetscMatrix* >(JAC)->mat(),MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+
     
   //data
   const unsigned dim 	= msh->GetDimension();
@@ -485,10 +489,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   //CTRL###################################################################
     
    //************ set fake theta flag *********************
-   unsigned int bdry_int_constr_pos = 72; /*KKoffset[SolPdeIndex[PADJ]][iproc]*/
+   std::vector<int>  bdry_int_constr_pos_vec(1,72); /*KKoffset[SolPdeIndex[PADJ]][iproc]*/
   std::vector<int> fake_theta_flag(nDofsThetactrl,0);
     for (unsigned i = 0; i < nDofsThetactrl; i++) {
-      if ( JACDof[ SolPdeIndex[ctrl_pos_begin + press_type_pos] ] [i] == bdry_int_constr_pos) { 
+      if ( JACDof[ SolPdeIndex[ctrl_pos_begin + press_type_pos] ] [i] == bdry_int_constr_pos_vec[0]) { 
 	fake_theta_flag[i] = 1;
       }
        std::cout << "##################################################################################################### " << i << " " << JACDof[ SolPdeIndex[ctrl_pos_begin + press_type_pos] ] [i] << " " << fake_theta_flag[i] <<  std::endl; 
@@ -675,8 +679,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 // 								     - grad_dot_n_adj_res[kdim] *  phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
 // 								     + SolVAR_bd_qp[SolPdeIndex[ctrl_pos_begin + press_type_pos]] /** phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + kdim*nve_bd] */* normal[kdim]  /*dctrl_dot_n_res*/     
 								  );	    
-//  std::cout << " res of ctrl "  << Res[kdim + ctrl_pos_begin][i_vol] ;
-//  std::cout<< std::endl;
 
 // /*delta_theta row */ 	if( i_vol < nDofsThetactrl ) Res[/*72*/press_type_pos + ctrl_pos_begin][i_vol] += - control_node_flag[kdim][i_vol] * weight_bd * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] /*ctrl_dot_n_res*/;
 			
@@ -1066,17 +1068,16 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
         }
     }
     
-//      if (control_el_flag == 1) {
-//        std::vector<int>  bdry_int_constr_pos_vec(1,bdry_int_constr_pos);
-// 	  for (unsigned kdim = 0; kdim < dim; kdim++) { RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],JACDof[n_unknowns-2-kdim]); }
-//                                                         RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-1]],JACDof[n_unknowns-1]);
-// 	  if(assembleMatrix) {
-// 	    for (unsigned kdim = 0; kdim < dim; kdim++) {
-// 	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, JACDof[n_unknowns-2-kdim]);
-// 	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-2-kdim], bdry_int_constr_pos_vec);
-// 	    }
-// 	 }
-//      }  //add control boundary element contributions
+     if (control_el_flag == 1) {
+	  for (unsigned kdim = 0; kdim < dim; kdim++) { RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],JACDof[n_unknowns-2-kdim]); }
+                                                        RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-1]],JACDof[n_unknowns-1]);
+	  if(assembleMatrix) {
+	    for (unsigned kdim = 0; kdim < dim; kdim++) {
+	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, JACDof[n_unknowns-2-kdim]);
+	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-2-kdim], bdry_int_constr_pos_vec);
+	    }
+	 }
+     }  //add control boundary element contributions
     
  
    //--------------------------------------------------------------------------------------------------------  
