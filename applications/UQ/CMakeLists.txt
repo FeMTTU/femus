@@ -6,6 +6,9 @@ IF(SLEPC_FOUND)
   ADD_SUBDIRECTORY(ex1/)
 ENDIF()
   
-FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/MPM_FEM/input/)
-FILE(COPY           ${PROJECT_SOURCE_DIR}/applications/MPM_FEM/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/MPM_FEM/input/)
+ADD_SUBDIRECTORY(ex2/)
+
+FILE(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/applications/UQ/input/)
+FILE(COPY           ${PROJECT_SOURCE_DIR}/applications/UQ/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/UQ/input/)
+
 
