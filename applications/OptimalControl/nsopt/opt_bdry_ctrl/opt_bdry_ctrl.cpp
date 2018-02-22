@@ -524,7 +524,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   
   //============ boundary integral constraint : delta_theta - control (here I first loop over boundary columns (with i_bdry/i_vol) and then over volume rows (with i) )============================================================================================
  if (iel == fake_iel_flag)   {
-
    //  for(unsigned i=0; i < nDofsThetactrl; i ++) {
 // // if (fake_theta_flag[i] == 1) {
 //     for (unsigned  kdim = 0; kdim < dim; kdim++) { 
@@ -535,7 +534,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 // //     } 
 // // 		    }
 // 	    }
- }
+ }//fake_iel_flag
  
  //============ boundary integral constraint ============================================================================================
 
@@ -640,6 +639,15 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 //========== compute gauss quantities on the boundary ================================================
 
 		
+//============ Res _ Boundary Integral Constraint ============================================================================================
+    for(unsigned i=0; i < nDofsThetactrl; i ++) {
+		      for (unsigned  kdim = 0; kdim < dim; kdim++) {
+/*delta_theta row */ 	 Res[/*72*/press_type_pos + ctrl_pos_begin][i] += - /*fake_theta_flag[i] **/ weight_bd * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
+  std::cout <<"  Res for ctrl constr  " <<  Res[/*72*/press_type_pos + ctrl_pos_begin][i]  <<  " res " << SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim]<< " fake "<< fake_theta_flag[i] <<std::endl;
+	      }  
+        }
+		  
+//============End of Res _ Boundary Integral Constraint ============================================================================================
 		
   // *** phi_i loop ***
 		for(unsigned i_bdry=0; i_bdry < nve_bd; i_bdry++) {
@@ -662,8 +670,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		  
 //Boundary Residuals  and Jacobians ==================	
 
-//============ ============================================================================================
-
+		  
+//============ Boundary Residuals============================================================================================
+		  
 		      for (unsigned  kdim = 0; kdim < dim; kdim++) {
 			
 			    double lap_res_dctrl_ctrl_bd = 0.;
@@ -672,6 +681,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 				  lap_res_dctrl_ctrl_bd += gradSolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]][jdim]*phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + jdim*nve_bd];
 				  dctrl_dot_n_res +=  phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + jdim*nve_bd] * normal[jdim];
 			    }
+    for(unsigned i=0; i < nDofsGctrl; i ++) {
+/*delta_control row */     Res[kdim + ctrl_pos_begin][i]  += - /*control_node_flag[kdim][i_vol] **/ weight_bd * (
+								     SolVAR_bd_qp[SolPdeIndex[ctrl_pos_begin + press_type_pos]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry] * normal[kdim]       
+								  );	
+    }
+
 			
 /*delta_state row */	    if(i_vol<nDofsV)     Res[kdim]                 [i_vol]  += - control_node_flag[kdim][i_vol] * penalty_ctrl * (SolVAR_eldofs[SolPdeIndex[kdim + state_pos_begin]][i_vol] - SolVAR_eldofs[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
 /*delta_adjoint row */     if(i_vol<nDofsVadj)   Res[kdim + adj_pos_begin] [i_vol]  += 0.;	   
@@ -679,12 +694,48 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
                                                                         beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
 								     + gamma_val* lap_res_dctrl_ctrl_bd
 // 								     - grad_dot_n_adj_res[kdim] *  phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
-// 								     + SolVAR_bd_qp[SolPdeIndex[ctrl_pos_begin + press_type_pos]] /** phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + kdim*nve_bd] */* normal[kdim]  /*dctrl_dot_n_res*/     
 								  );	    
 
-// /*delta_theta row */ 	if( i_vol < nDofsThetactrl ) Res[/*72*/press_type_pos + ctrl_pos_begin][i_vol] += - control_node_flag[kdim][i_vol] * weight_bd * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] /*ctrl_dot_n_res*/;
 			
 		  }  
+
+//============ Boundary Residuals  ==================================================================================================
+
+
+
+//============ Jac _ Boundary Integral Constraint ============================================================================================
+//ROW_BLOCK delta_theta - control ---------------------------------------------------------------------------------------------------------------
+ // //===================loop over i in the VOLUME (while j(/i_vol) is in the boundary)	      
+       for(unsigned i =0; i < nDofsThetactrl; i ++) {
+// if (fake_theta_flag[i] == 1) {
+	for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+	    if(i_vol < nDofsGctrl) {
+		    Jac[ctrl_pos_begin + press_type_pos][ctrl_pos_begin + kdim][i*nDofsGctrl + i_vol] +=  /*fake_theta_flag[i]  **/ weight_bd * ( phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);
+//   std::cout <<"  jac for ctrl constr " <<  Jac[ctrl_pos_begin + press_type_pos][ctrl_pos_begin + kdim][i*nDofsGctrl + i_vol]  <<  " phi " << phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry]<< " fake "<< fake_theta_flag[i] <<  " " << i_vol  << std::endl;
+            }
+	} 
+// 		    }
+}
+//ROW_BLOCK delta_theta - control ---------------------------------------------------------------------------------------------------------------
+
+
+// // //COLUMN_BLOCK delta_control - theta -------------------------------------------------------------------------------------------------------
+// //  // //===================loop over j in the VOLUME (while i(/i_vol) is in the boundary)	      
+// // if(i_vol < nDofsGctrl) {
+// //     for(unsigned j =0; j < nDofsThetactrl; j ++) {
+// // // if (fake_theta_flag[i] == 1) {
+// // 	for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+// // 		Jac[ctrl_pos_begin + kdim][ctrl_pos_begin + press_type_pos][i_vol*nDofsThetactrl + j] +=  /*fake_theta_flag[j]  * */weight_bd * ( phi_bd_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][j]*phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);
+// //   std::cout <<"  jac for ctrl constr " <<  Jac[ctrl_pos_begin + kdim][ctrl_pos_begin + press_type_pos][i_vol*nDofsThetactrl + j]  <<  " phi " << phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry]<< " fake "<< fake_theta_flag[j] <<  " " << i_vol  << std::endl;
+// //             }
+// // 	} 
+// // // 		    }
+// // }
+// // //COLUMN_BLOCK delta_control - theta -------------------------------------------------------------------------------------------------------
+
+//============ End of Jac _ Boundary Integral Constraint ============================================================================================
+
+
 
 //============  ==================================================================================================
 		  
@@ -725,30 +776,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
                    
 // std::cout << " &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& " << std::endl;
                    
-
-
-                   
-//BLOCK delta_control - theta -------------------------------------------------------------------------------------------------------
-// // // 		  if( i_vol < nDofsGctrl && j_vol == 72glob ) { /*first column of delta_theta*/
-// // // 			for (unsigned kdim = 0; kdim < dim; kdim++) {
-// // // 			      Jac[kdim + ctrl_pos_begin][press_type_pos + ctrl_pos_begin][i_vol*nDofsPctrl + j_vol] +=  phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * phi_bd_gss_fe[SolFEType[press_type_pos + ctrl_pos_begin]][j_bdry] *normal[kdim]  * weight_bd;
-// // // 			}
-// // // 		      }
-//ROW_BLOCK delta_theta - control ---------------------------------------------------------------------------------------------------------------
-// // // 		  if(i_vol == 72glob && j_vol < nDofsGctrl){ /*first row of delta_theta*/
-// // // 		      for (unsigned  kdim = 0; kdim < dim; kdim++) {  
-// // // // 			    double ctrl_dot_n_res = 0.;
-// // // // 			    for (unsigned jdim = 0; jdim < dim; jdim++) {
-// // // // 				  ctrl_dot_n_res += SolVAR_bd_qp[SolPdeIndex[jdim + ctrl_pos_begin]] * normal[jdim];
-// // // // 			    }
-// // // 		      }
-// // // 		      for(unsigned j_bdry=0; j_bdry < nve_bd; j_bdry ++) {
-// // // 			  unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
-// // // 			      for (unsigned kdim = 0; kdim < dim; kdim++) {
-// // // 				  Jac[press_type_pos + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol] +=  control_node_flag[kdim][i_vol] * weight_bd * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]] [j_bdry]* normal[kdim];
-// // // 			      }
-// // // 		      }
-// // // 		  }
 
                          }//end j_bdry loop
 		    
@@ -1027,20 +1054,22 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
       //***************************************************************************************************************
 
     //Sum the local matrices/vectors into the Global Matrix/Vector
-    for(unsigned i_unk=0; i_unk < n_unknowns; i_unk++) {
+    for(unsigned i_unk=0; i_unk < n_unknowns-1; i_unk++) {
       RES->add_vector_blocked(Res[SolPdeIndex[i_unk]],JACDof[i_unk]);
-        for(unsigned j_unk=0; j_unk < n_unknowns; j_unk++) {
+        for(unsigned j_unk=0; j_unk < n_unknowns-1; j_unk++) {
 	  if(assembleMatrix) JAC->add_matrix_blocked( Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ], JACDof[i_unk], JACDof[j_unk]);
         }
     }
     
+	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-1], JACDof[n_unknowns-1]); //delta_theta-theta
+	    
      if (control_el_flag == 1) {
 	  for (unsigned kdim = 0; kdim < dim; kdim++) { RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],JACDof[n_unknowns-2-kdim]); }
                                                         RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-1]],JACDof[n_unknowns-1]);
 	  if(assembleMatrix) {
 	    for (unsigned kdim = 0; kdim < dim; kdim++) {
-	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, JACDof[n_unknowns-2-kdim]);
-	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-2-kdim], bdry_int_constr_pos_vec);
+	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, JACDof[n_unknowns-2-kdim]); //delta_theta-control
+	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-2-kdim], bdry_int_constr_pos_vec); //delta_control-theta
 	    }
 	 }
      }  //add control boundary element contributions
