@@ -449,8 +449,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     unsigned nDofsGctrl = msh->GetElementDofNumber(iel,SolFEType[ctrl_pos_begin]);    // number of solution element dofs
     unsigned nDofsThetactrl = msh->GetElementDofNumber(iel,SolFEType[ctrl_pos_begin + press_type_pos] );    // number of solution element dofs
 
-    unsigned nDofsVP = dim * nDofsV + nDofsP;
-    unsigned nDofsVP_tot = 3*nDofsVP;
+    unsigned nDofsVP = dim * nDofsV + nDofsP; //same for state and adjoint
+    unsigned nDofsVPctrl = dim * nDofsGctrl + nDofsThetactrl; //control
+   
+    unsigned nDofsVP_tot = 2*nDofsVP + (nDofsVPctrl);
   // equation end *****************************
   
   //***** set target domain flag ********************************** 
@@ -983,42 +985,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
       }//j_dctrl_ctrl loop
   }//i_ctrl loop
 
-//  if (control_el_flag == 1) {
-// // 		    for(unsigned idim=0; idim<dim; idim++) {
-// //     std::fill(control_node_flag[idim].begin(), control_node_flag[idim].end(), 0);
-// // 	    }
-//   
-//     for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
-// 	if(el->GetFaceElementIndex(iel,jface) < 0) {
-// 	   unsigned int face = -( msh->el->GetFaceElementIndex(iel,jface)+1);
-// 	    if(face==CTRL_FACE_IDX){
-// 	    unsigned nve_bd = msh->GetElementFaceDofNumber(iel,jface, SolFEType[ctrl_pos_begin] ); //AAAAAAAAAAAAAAAAA
-// 		for(unsigned i_bdry=0; i_bdry < nve_bd; i_bdry++) {
-// 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
-// // 		    for(unsigned idim=0; idim<dim; idim++) {
-// // 				  control_node_flag[idim][i_vol] = 0;
-// // 			    }
-//  for (unsigned i = 0; i < nDofsGctrl; i++) {
-//       for (unsigned kdim = 0; kdim < dim; kdim++) { 
-//      /* if(i!=i_vol)*/ Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[kdim][i]) * (  SolVAR_eldofs[kdim + ctrl_pos_begin][i] - 0.)  );
-//       }
-// 
-// 
-//       for (unsigned j = 0; j < nDofsGctrl; j++) {
-// 	    if (i==j && i!=i_vol /*&& i!=2 && i!=3*/) {
-// 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-// 		/* if(i!=i_vol)*/ Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] = (1 - control_node_flag[kdim][i]) * 1.;  /*penalty_outside_control_boundary;*/
-// //  std::cout <<"  jac for ctrl  in vol loop " <<  Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsGctrl + j] << " for " << i*nDofsGctrl + j << std::endl;
-// 	      }
-// 	    } //end i==j
-//       }//j_dctrl_ctrl loop
-//   }//i_ctrl loop
-//  			}
-// 		    }
-// 
-// 	}
-//       }
-// }
  //============ delta_control row ==================================================================================================
  
  //============ delta_theta - theta row ==================================================================================================
