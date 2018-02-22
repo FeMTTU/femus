@@ -27,7 +27,7 @@ using namespace femus;
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
 {
   bool dirichlet = true; //dirichlet
-  //value = pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],1./3);
+//  value = pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],1./3);
   value = pow(x[0] * x[0] + x[1] * x[1] + x[2] * x[2], -1. / 8);
   return dirichlet;
 }
@@ -235,22 +235,22 @@ int main(int argc, char** argv)
 //   fpsource.SetExpression(function);
 //   fpsource.SetIndependentVariables(variables);
 //   fpsource.Parse();
-//
+// 
 //   function = root["func_sol5"].get("sol", "0.").asString();
 //   fp_sol.SetExpression(function);
 //   fp_sol.SetIndependentVariables(variables);
 //   fp_sol.Parse();
-//
+// 
 //   function = root["func_sol5"].get("dsoldx", "0.").asString();
 //   fp_dsoldx.SetExpression(function);
 //   fp_dsoldx.SetIndependentVariables(variables);
 //   fp_dsoldx.Parse();
-//
+// 
 //   function = root["func_sol5"].get("dsoldy", "0.").asString();
 //   fp_dsoldy.SetExpression(function);
 //   fp_dsoldy.SetIndependentVariables(variables);
 //   fp_dsoldy.Parse();
-//
+// 
 //   function = root["func_sol5"].get("dsoldz", "0.").asString();
 //   fp_dsoldz.SetExpression(function);
 //   fp_dsoldz.SetIndependentVariables(variables);

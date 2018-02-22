@@ -39,7 +39,7 @@
     "mgsolver" : { "nlevels" : 1,
 		   "AMR" : "yes",
 		   "maxAMRlevels" : 50,
-		   "AMRnorm" : "H1", // H1 or l2
+		   "AMRnorm" : "l2", // H1 or l2
 		   "AMRthreshold": 0.0005,
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,

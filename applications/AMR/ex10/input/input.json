@@ -2,7 +2,7 @@
 {
     // mesh
    "mesh" : {
-                "filename" : "./input/lshape_quad.neu"
+                "filename" : "./input/lshape_tri.neu"
              },
 
     // Properties
@@ -60,7 +60,7 @@
 		   "AMR" : "yes",
 		   "maxAMRlevels" : 100,
 		   "AMRnorm" : "H1",
-		   "AMRthreshold": 0.0001,
+		   "AMRthreshold": 0.00001,
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,
                    "smoother_type" : "gmres",
