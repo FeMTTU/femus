@@ -229,7 +229,16 @@ namespace femus {
       }
 
       void GetAMRRestriction(Mesh *msh);
-
+      
+      void SetMaterialElementCounter( std::vector<unsigned> materialElementCounter){
+        _materialElementCounter = materialElementCounter;
+      }
+      
+      std::vector<unsigned> GetMaterialElementCounter(){
+        return _materialElementCounter;
+      }
+      
+      
     private:
 
       elem* _coarseElem;
@@ -250,6 +259,7 @@ namespace femus {
       MyVector< short unsigned> _elementType;
       MyVector< short unsigned> _elementGroup;
       MyVector< short unsigned> _elementMaterial;
+      std::vector<unsigned> _materialElementCounter;
 
       MyMatrix <unsigned> _elementDof;
       MyMatrix <int> _elementNearFace;
