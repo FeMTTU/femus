@@ -359,14 +359,14 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
    
     
  //**************** state **************************** 
-    unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);    // number of solution element dofs
+    unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);
     sol_u    .resize(nDof_u);
     l2GMap_u.resize(nDof_u);
    // local storage of global mapping and solution
     for (unsigned i = 0; i < sol_u.size(); i++) {
-     unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);  // global to global mapping between solution node and solution dof
-      sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);            // global extraction and local storage for the solution
-      l2GMap_u[i] = pdeSys->GetSystemDof(solIndex_u, solPdeIndex_u, i, iel);  // global to global mapping between solution node and pdeSys dof
+     unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);
+      sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
+      l2GMap_u[i] = pdeSys->GetSystemDof(solIndex_u, solPdeIndex_u, i, iel);
     }
  //***************************************************  
  
@@ -460,9 +460,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	double sol_u_gss = 0.;
 	double sol_adj_gss = 0.;
 	double sol_ctrl_gss = 0.;
-	std::vector<double> sol_u_x_gss;     sol_u_x_gss.reserve(dim);
-	std::vector<double> sol_adj_x_gss;   sol_adj_x_gss.reserve(dim);
-	std::vector<double> sol_ctrl_x_gss;   sol_ctrl_x_gss.reserve(dim);
+	std::vector<double> sol_u_x_gss(dim);       std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
+	std::vector<double> sol_adj_x_gss(dim);     std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
+	std::vector<double> sol_ctrl_x_gss(dim);    std::fill(sol_ctrl_x_gss.begin(), sol_ctrl_x_gss.end(), 0.);
  //===================================================   
 
       // *** Gauss point loop ***
@@ -473,13 +473,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
         msh->_finiteElement[kelGeom][solType_ctrl]->Jacobian(x, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
         msh->_finiteElement[kelGeom][solType_adj] ->Jacobian(x, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
 	
-	std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
+	std::fill(sol_u_x_gss.begin(),sol_u_x_gss.end(), 0.);
 	std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
 	std::fill(sol_ctrl_x_gss.begin(), sol_ctrl_x_gss.end(), 0.);
 	
 	for (unsigned i = 0; i < nDof_u; i++) {
 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
-                   for (unsigned d = 0; d < dim; d++)   sol_u_x_gss[d] += 1./*sol_u[i] * phi_u_x[i * dim + d]*/;
+                   for (unsigned d = 0; d < dim; d++)   sol_u_x_gss[d] += sol_u[i] * phi_u_x[i * dim + d];
           }
 	
 	for (unsigned i = 0; i < nDof_adj; i++) {
@@ -496,7 +496,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	// *** phi_i loop ***
         for (unsigned i = 0; i < nDof_max; i++) {
 	  
-	      double laplace_rhs_du_adj_i = 0.;
+	      double laplace_rhs_du_adj_i = 0.; //
               for (unsigned kdim = 0; kdim < dim; kdim++) {
               if ( i < nDof_u )         laplace_rhs_du_adj_i             +=  (phi_u_x   [i * dim + kdim] * sol_adj_x_gss[kdim]);
 	      }
@@ -511,7 +511,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               if ( i < nDof_ctrl )         laplace_rhs_dctrl_adj_i       +=  (phi_ctrl_x   [i * dim + kdim] * sol_adj_x_gss[kdim]);
 	      }
 	      
-	      double laplace_rhs_dadj_u_i = 0.;
+	      double laplace_rhs_dadj_u_i = 0.;  //
               for (unsigned kdim = 0; kdim < dim; kdim++) {
               if ( i < nDof_adj )         laplace_rhs_dadj_u_i           +=  (phi_adj_x   [i * dim + kdim] * sol_u_x_gss[kdim]);
 	      }

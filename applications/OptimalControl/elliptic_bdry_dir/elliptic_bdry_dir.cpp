@@ -682,8 +682,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //========= gauss value quantities on the volume ==============  
 	double sol_u_gss = 0.;
 	double sol_adj_gss = 0.;
-	std::vector<double> sol_u_x_gss;     sol_u_x_gss.reserve(dim);
-	std::vector<double> sol_adj_x_gss;   sol_adj_x_gss.reserve(dim);
+	std::vector<double> sol_u_x_gss(dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
+	std::vector<double> sol_adj_x_gss(dim);   std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
 //=============================================== 
  
  
