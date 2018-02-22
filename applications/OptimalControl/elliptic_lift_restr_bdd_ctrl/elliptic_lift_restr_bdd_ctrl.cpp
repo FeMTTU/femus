@@ -29,7 +29,7 @@ double InitialValueMu(const std::vector < double >& x) {
 }
 
 double InitialValueControl(const std::vector < double >& x) {
-  return 0.;
+  return 4.;
 }
 
 //   double ctrl_lower = -0.8;
@@ -269,7 +269,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   //********* variables for ineq constraints *****************
   double ctrl_lower = -0.3;
-  double ctrl_upper = -0.2;
+  double ctrl_upper = 0.8;
   assert(ctrl_lower < ctrl_upper);
   double c_compl = 1.;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
@@ -686,11 +686,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       std::vector<double> Res_mu (nDof_mu);
     for (unsigned i = 0; i < sol_actflag.size(); i++){
       if (sol_actflag[i] == 0){  //inactive
-         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( /*1. * sol_mu[i]*/ - 0. ) ; 
 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
       else { //active
-         Res[nDof_u + nDof_ctrl + nDof_adj + i]  =    c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  =    c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower /*- sol_ctrl[i]*/) + ( sol_actflag[i] - 1 ) * (ctrl_upper /*- sol_ctrl[i]*/)  ) ;
          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
       }
     } 
