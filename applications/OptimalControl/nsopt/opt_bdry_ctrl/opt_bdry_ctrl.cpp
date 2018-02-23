@@ -93,6 +93,17 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
 }
 
 
+//============== initial conditions =========
+double InitialValueGX(const std::vector < double >& x) {
+  return 2.;
+}
+
+double InitialValueGY(const std::vector < double >& x) {
+  return 5.;
+}
+//============== initial conditions =========
+
+
 
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob);    
 
@@ -164,8 +175,12 @@ int main(int argc, char** args) {
   // control ===================== 
   
   
-  mlSol.Initialize("All");
+  mlSol.Initialize("All");    // initialize all varaibles to zero
 
+  mlSol.Initialize("GX", InitialValueGX);
+  mlSol.Initialize("GY", InitialValueGY);
+  
+  
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryConditionOpt);
   mlSol.GenerateBdc("All");
@@ -481,6 +496,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
        unsigned solDof = msh->GetSolutionDof(i, iel, SolFEType[k]);    // global to global mapping between solution node and solution dof // via local to global solution node
        SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);      // global extraction and local storage for the solution
        JACDof[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
+//        std::cout << "##################################################################################################### " << k << " " << i << " " << SolVAR_eldofs[k][i] <<  std::endl; 
 
     if (k == SolPdeIndex[ctrl_pos_begin + press_type_pos] && JACDof[k][i] == 72) {
       fake_iel_flag = iel;
@@ -490,14 +506,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     }
   //CTRL###################################################################
     
-   //************ set fake theta flag *********************
+   //************ set fake theta flag: this flag tells me what degrees of freedom of the current element are fake for the theta variable *********************
    std::vector<int>  bdry_int_constr_pos_vec(1,72); /*KKoffset[SolPdeIndex[PADJ]][iproc]*/
   std::vector<int> fake_theta_flag(nDofsThetactrl,0);
     for (unsigned i = 0; i < nDofsThetactrl; i++) {
       if ( JACDof[ SolPdeIndex[ctrl_pos_begin + press_type_pos] ] [i] == bdry_int_constr_pos_vec[0]) { 
 	fake_theta_flag[i] = 1;
       }
-       std::cout << "##################################################################################################### " << i << " " << JACDof[ SolPdeIndex[ctrl_pos_begin + press_type_pos] ] [i] << " " << fake_theta_flag[i] <<  std::endl; 
+//        std::cout << "##################################################################################################### " << i << " " << JACDof[ SolPdeIndex[ctrl_pos_begin + press_type_pos] ] [i] << " " << fake_theta_flag[i] <<  std::endl; 
    }
     
    
@@ -602,21 +618,18 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  
 //========== compute gauss quantities on the boundary ===============================================
-// 	for(unsigned unk = 0; unk < /*n_vars*/ n_unknowns; unk++) {
-// 	    unsigned ndofsface_unk = msh->GetElementFaceDofNumber(iel,jface, SolFEType[unk] );	//nDofs_V,P_of_st,adj,ctrl
-		/*unk*/ SolVAR_bd_qp[/*unk*/SolPdeIndex[ctrl_pos_begin]] = 0.;
-		   for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
-		      gradSolVAR_bd_qp[/*unk*/SolPdeIndex[ctrl_pos_begin]][ivar2] = 0.; 
-		   }
+    for (unsigned  kdim = 0; kdim < dim; kdim++) {
+               unsigned int ctrl_index = kdim + ctrl_pos_begin;
+		                                                   SolVAR_bd_qp[ SolPdeIndex[ctrl_index] ] = 0.;
+		   for(unsigned ivar2=0; ivar2<dim; ivar2++) { gradSolVAR_bd_qp[ SolPdeIndex[ctrl_index] ][ivar2] = 0.; }
 	  
-		   for(int i_bd = 0; i_bd < /*ndofsface_unk*/ nve_bd; i_bd++/*unsigned i = 0; i < Sol_n_el_dofs[unk]; i++*/) {
-		       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
-		        SolVAR_bd_qp[/*unk*/SolPdeIndex[ctrl_pos_begin]] += phi_bd_gss_fe[ SolFEType[/*unk*/ctrl_pos_begin] ][i_bd] * SolVAR_eldofs[/*unk*/SolPdeIndex[ctrl_pos_begin]][i_vol];
-		       for(unsigned ivar2=0; ivar2<dim; ivar2++) {
-			   gradSolVAR_bd_qp[/*unk*/SolPdeIndex[ctrl_pos_begin]][ivar2] += phi_x_bd_gss_fe[ SolFEType[ctrl_pos_begin] ][i_bd + ivar2 * nve_bd] * SolVAR_eldofs[/*unk*/SolPdeIndex[ctrl_pos_begin]][i_vol]; 
-		       }
+		   for(int i_bd = 0; i_bd < nve_bd; i_bd++/*unsigned i = 0; i < Sol_n_el_dofs[unk]; i++*/) {
+		                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
+                                                                        SolVAR_bd_qp[SolPdeIndex[ctrl_index]]        += phi_bd_gss_fe  [ SolFEType[ctrl_index] ][i_bd]                  * SolVAR_eldofs[ SolPdeIndex[ ctrl_index ] ][i_vol];
+//        std::cout << "#####################################################################################################  bd val gss " <<  SolVAR_bd_qp[SolPdeIndex[ctrl_index]] <<" " << SolVAR_eldofs[SolPdeIndex[ctrl_index]][i_vol]<<  std::endl; 
+		       for(unsigned ivar2=0; ivar2<dim; ivar2++) {  gradSolVAR_bd_qp[SolPdeIndex[ctrl_index]][ivar2] += phi_x_bd_gss_fe[ SolFEType[ctrl_index] ][i_bd + ivar2 * nve_bd] * SolVAR_eldofs[ SolPdeIndex[ ctrl_index ] ][i_vol]; }
 		   }
-// 	}
+  }//kdim
  //end unknowns eval at gauss points ********************************
 		      
 // // // //=============== grad dot n for residual ========================================= 
@@ -640,10 +653,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 		
 //============ Res _ Boundary Integral Constraint ============================================================================================
-    for(unsigned i=0; i < nDofsThetactrl; i ++) {
-		      for (unsigned  kdim = 0; kdim < dim; kdim++) {
+   for (unsigned  kdim = 0; kdim < dim; kdim++) {
+      for(unsigned i=0; i < nDofsThetactrl; i ++) {
 /*delta_theta row */ 	 Res[/*72*/press_type_pos + ctrl_pos_begin][i] += - /*fake_theta_flag[i] **/ weight_bd * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
-  std::cout <<"  Res for ctrl constr  " <<  Res[/*72*/press_type_pos + ctrl_pos_begin][i]  <<  " res " << SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim]<< " fake "<< fake_theta_flag[i] <<std::endl;
+  std::cout <<"  Res for ctrl constr  " <<  Res[/*72*/press_type_pos + ctrl_pos_begin][i]  <<  " res " << SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim]<< std::endl;
 	      }  
         }
 		  
@@ -705,9 +718,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 //============ Jac _ Boundary Integral Constraint ============================================================================================
  // //===================	      
-  if(i_vol < nDofsGctrl) {
        for(unsigned i =0; i < nDofsThetactrl; i ++) {
 	for (unsigned  kdim = 0; kdim < dim; kdim++) { 
+        if(i_vol < nDofsGctrl) {
 	   double temp = weight_bd * ( phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);
 //ROW_BLOCK delta_theta - control -- loop over i in the VOLUME (while j(/i_vol) is in the boundary) -------------------------------------------------------------------------------------------------------------
 		    Jac[ctrl_pos_begin + press_type_pos][ctrl_pos_begin + kdim][i*nDofsGctrl + i_vol]     += temp; /*weight_bd * ( phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim])*/
@@ -994,14 +1007,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
  
  //============ delta_theta - theta row ==================================================================================================
   for (unsigned i = 0; i < nDofsThetactrl; i++) {
-     Res[press_type_pos + ctrl_pos_begin ][i] = (1 - fake_theta_flag[i]) * ( 0. - SolVAR_eldofs[press_type_pos + ctrl_pos_begin][i]);
+           const unsigned int delta_theta_theta_index = press_type_pos + ctrl_pos_begin;
+                                           Res[ delta_theta_theta_index ][i]                                               = (1 - fake_theta_flag[i]) * ( 8. - SolVAR_eldofs[press_type_pos + ctrl_pos_begin][i]);
       for (unsigned j = 0; j < nDofsThetactrl; j++) {
-			  if(i==j) {
-				  Jac[press_type_pos + ctrl_pos_begin ][press_type_pos + ctrl_pos_begin ][i*nDofsThetactrl + j] = (1 - fake_theta_flag[i]) * 1.;
-			  }
-       }//j_theta loop
-    }//i_theta loop
-
+			         if(i==j)  Jac[ delta_theta_theta_index ][ delta_theta_theta_index ][i*nDofsThetactrl + j] = (1 - fake_theta_flag[i]) * 1.;
+             }//j_theta loop
+        }//i_theta loop
+   
  //============ delta_theta row ==================================================================================================
  
       }  // end gauss point loop
@@ -1009,30 +1021,31 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     
     
     
- //--------------------PRINTING------------------------------------------------------------------------------------
- // Add the local Matrix/Vector into the global Matrix/Vector
-  std::cout << " -------------------------Element = " << iel << " ----------------------Jac -------------------------- " << std::endl;      
-  for(unsigned i_unk=0; i_unk < n_unknowns; i_unk++) {
-    unsigned ndofs_unk_i = msh->GetElementDofNumber(iel, SolFEType[i_unk]);	//nDofs_V,P_of_st,adj,ctrl//Sol_n_el_dofs[k]
-    std::cout << " ======== Row ==== " << i_unk << " Unk_i ===================================== " << std::endl;      
-    for(unsigned j_unk=0; j_unk < n_unknowns; j_unk++) {
-	unsigned ndofs_unk_j = msh->GetElementDofNumber(iel, SolFEType[j_unk]);	//nDofs_V,P_of_st,adj,ctrl
-	std::cout << " ======= Column ==== " << j_unk << " Unk_j ================== " << std::endl;      
-	for (unsigned i = 0; i < ndofs_unk_i; i++) {
-// // // 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Res[SolPdeIndex[i_unk]][ i ];
-// // // 	      std::cout << std::endl;
-            for (unsigned j = 0; j < ndofs_unk_j; j++) {
-	    std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i*ndofs_unk_i + j ];
-	    }  //j end
-	    std::cout << std::endl;
-	 } //i end
-     } //j_unk end
-   } //i_unk end
- //--------------------PRINTING------------------------------------------------------------------------------------
+// // //  //--------------------PRINTING------------------------------------------------------------------------------------
+// // //  // Add the local Matrix/Vector into the global Matrix/Vector
+// // //   std::cout << " -------------------------Element = " << iel << " ----------------------Jac -------------------------- " << std::endl;      
+// // //   for(unsigned i_unk=0; i_unk < n_unknowns; i_unk++) {
+// // //     unsigned ndofs_unk_i = msh->GetElementDofNumber(iel, SolFEType[i_unk]);	//nDofs_V,P_of_st,adj,ctrl//Sol_n_el_dofs[k]
+// // //     std::cout << " ======== Row ==== " << i_unk << " Unk_i ===================================== " << std::endl;      
+// // //     for(unsigned j_unk=0; j_unk < n_unknowns; j_unk++) {
+// // // 	unsigned ndofs_unk_j = msh->GetElementDofNumber(iel, SolFEType[j_unk]);	//nDofs_V,P_of_st,adj,ctrl
+// // // 	std::cout << " ======= Column ==== " << j_unk << " Unk_j ================== " << std::endl;      
+// // // 	for (unsigned i = 0; i < ndofs_unk_i; i++) {
+// // // // // // 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Res[SolPdeIndex[i_unk]][ i ];
+// // // // // // 	      std::cout << std::endl;
+// // //             for (unsigned j = 0; j < ndofs_unk_j; j++) {
+// // // 	    std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i*ndofs_unk_i + j ];
+// // // 	    }  //j end
+// // // 	    std::cout << std::endl;
+// // // 	 } //i end
+// // //      } //j_unk end
+// // //    } //i_unk end
+// // //  //--------------------PRINTING------------------------------------------------------------------------------------
 
       //***************************************************************************************************************
 
     //Sum the local matrices/vectors into the Global Matrix/Vector
+    // FIRST ALL THE BLOCKS WITHOUT THETA ROW OR COLUMN 
     for(unsigned i_unk=0; i_unk < n_unknowns-1; i_unk++) {
       RES->add_vector_blocked(Res[SolPdeIndex[i_unk]],JACDof[i_unk]);
         for(unsigned j_unk=0; j_unk < n_unknowns-1; j_unk++) {
@@ -1040,21 +1053,23 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
         }
     }
     
-            RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       JACDof[n_unknowns-1]); //delta_theta
-	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-1], JACDof[n_unknowns-1]); //delta_theta-theta
+    // THEN THE BLOCKS WITH THETA ROW OR COLUMN 
+	/*delta_theta-theta*/    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-1], JACDof[n_unknowns-1]);
 	    
      if (control_el_flag == 1) {
-	  for (unsigned kdim = 0; kdim < dim; kdim++) { RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],JACDof[n_unknowns-2-kdim]); }
-//                                                         RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-1]],JACDof[n_unknowns-1]);
-	  if(assembleMatrix) {
-	    for (unsigned kdim = 0; kdim < dim; kdim++) {
-	    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, JACDof[n_unknowns-2-kdim]); //delta_theta-control
-	    JAC->add_matrix_blocked( Jac[ /*SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim]*/SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-2-kdim], bdry_int_constr_pos_vec); //delta_control-theta
+//           /*delta_theta(bdry constr)*/         RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-1]],bdry_int_constr_pos_vec);
+	   for (unsigned kdim = 0; kdim < dim; kdim++) {
+	    
+                          /*delta_control*/       RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],JACDof[n_unknowns-2-kdim]); 
+    if(assembleMatrix) {
+                          /*delta_theta-control*/ JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, JACDof[n_unknowns-2-kdim]);
+                          /*delta_control-theta*/ JAC->add_matrix_blocked( Jac[ /*SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim]*/SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-2-kdim], bdry_int_constr_pos_vec); 
 	    }
-	 }
+	 }  //kdim
      }  //add control boundary element contributions
-    
- 
+     
+      if (JACDof[n_unknowns-1][0] != bdry_int_constr_pos_vec[0])  /*delta_theta*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       JACDof[n_unknowns-1]);
+     
    //--------------------------------------------------------------------------------------------------------  
   } //end list of elements loop for each subdomain
   
@@ -1063,6 +1078,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   RES->close();
   
   JAC->print();
+  RES->print();
   // ***************** END ASSEMBLY *******************
 }
 
