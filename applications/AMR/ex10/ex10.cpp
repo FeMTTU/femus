@@ -338,7 +338,7 @@ int main(int argc, char** argv)
   ml_msh.PrintInfo();
 
   MultiLevelSolution ml_sol(&ml_msh);
-
+  
   // generate solution vector
   ml_sol.AddSolution("Sol", LAGRANGE, fe_order);
 

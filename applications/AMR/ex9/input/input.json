@@ -2,8 +2,8 @@
 {
     // mesh
     "mesh" : {
-                //"filename" : "./input/cubeMinusCube.neu"
-                "filename" : "./input/cube.neu"
+               // "filename" : "./input/cubeMinusCube.neu"
+                 "filename" : "./input/cube.neu"
              },
 
     // Properties
