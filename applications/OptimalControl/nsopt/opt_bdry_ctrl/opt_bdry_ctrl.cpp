@@ -1,8 +1,3 @@
-// Solving Navier-Stokes problem using automatic differentiation and/or Picards method
-// boundary conditions were set in 2D as, no slip in left,right of the box and top to bottom gravity is enforced
-// therefore, U=V=0 on left and right, U=0 on top and bottom, V is free 
-
-
 
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
@@ -70,8 +65,8 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
                 
 // TOP ==========================  
       if (facename == CTRL_FACE_IDX) {
-       if (!strcmp(SolName, "U"))    { value = 70.; } //lid - driven
-  else if (!strcmp(SolName, "V"))    { value = 0.; } 
+       if (!strcmp(SolName, "U"))    { value = 2.; } //lid - driven
+  else if (!strcmp(SolName, "V"))    { value = 5.; } 
   	
       }
       
@@ -98,9 +93,11 @@ double SetInitialCondition(const MultiLevelProblem * ml_prob, const std::vector 
 
   double value = 0.;
   
+  if (x[1] < 1+ 1.e-5 && x[1] > 1 - 1.e-5 ) {
                 if (!strcmp(SolName, "GX"))       { value = 2.; }
                 if (!strcmp(SolName, "GY"))       { value = 5.; }
-
+  }
+  
   return value;
 }
 //============== initial conditions =========
@@ -193,7 +190,7 @@ int main(int argc, char** args) {
 
  mlProb.parameters.set<Fluid>("Fluid") = fluid;
 
-  // add system Poisson in mlProb as a Linear Implicit System
+  // add system Poisson in mlProb as a NonLinear Implicit System
   NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOpt");
 
   // ST ===================
@@ -242,7 +239,6 @@ int main(int argc, char** args) {
 }
 
 
-// nonAD is in the old PETSc, edit this for the new PETSc
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
      
   //pointers
@@ -383,20 +379,29 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   vector < vector < int > > JACDof(n_unknowns); 
   vector < vector < double > > Res(n_unknowns); /*was F*/
   vector < vector < vector < double > > > Jac(n_unknowns); /*was B*/
- 
+  
+  vector < vector < double > > Jac_outer(dim);
+  vector < double > Res_outer(1);
+
+  
   for(int i = 0; i < n_unknowns; i++) {     
     JACDof[i].reserve(maxSize);
       Res[i].reserve(maxSize);
   }
    
-  if(assembleMatrix){
+  if (assembleMatrix) {
+    
     for(int i = 0; i < n_unknowns; i++) {
       Jac[i].resize(n_unknowns);    
       for(int j = 0; j < n_unknowns; j++) {
 	Jac[i][j].reserve(maxSize*maxSize);	
       }
     }
+
+         for(int i = 0; i < dim; i++) {  Jac_outer[i].reserve(maxSize); }
+    
   }
+
   
   //----------- dofs ------------------------------
   vector < vector < double > > SolVAR_eldofs(n_unknowns); //sol_V,P_of_st,adj,ctrl
@@ -530,8 +535,11 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	    }
 	}
      }
+     
+    for(int ivar = 0; ivar < dim; ivar++)     std::fill(Jac_outer[ivar].begin(), Jac_outer[ivar].end(), 0.);
+    Res_outer[0] = 0.;
  // setting Jac and Res to zero ******************************* 
-  
+
   
   
 //========BoundaryLoop=====================================================================
@@ -632,10 +640,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		
 //============ Res _ Boundary Integral Constraint ============================================================================================
 	  for (unsigned  kdim = 0; kdim < dim; kdim++) {
-		for(unsigned i=0; i < nDofsThetactrl; i ++) {
-/*delta_theta row */ 	 Res[/*72*/delta_theta_theta_index][i] += - /*fake_theta_flag[i] **/ weight_bd * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
-  std::cout <<"  Res for ctrl constr  @  ig_bd " << ig_bd<< " dim " << kdim<< " and val is "<< Res[/*72*/delta_theta_theta_index][i]  <<  " res " << SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim]<< std::endl;
-		}  
+// 		for(unsigned i=0; i < nDofsThetactrl; i ++) { avoid because it is an element dof
+/*delta_theta row */ 	/* Res[delta_theta_theta_index][i]*/ Res_outer[0] += - /*fake_theta_flag[i] **/ weight_bd * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
+//   std::cout <<"  Res for ctrl constr  @  ig_bd " << ig_bd<< " dim " << kdim<< " and val is "<< Res[/*72*/delta_theta_theta_index][i]  <<  " res " << SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim]<< std::endl;
+// 		}  
 	  }
 		  
 //============End of Res _ Boundary Integral Constraint ============================================================================================
@@ -672,11 +680,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 				  lap_res_dctrl_ctrl_bd += gradSolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]][jdim]*phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + jdim*nve_bd];
 				  dctrl_dot_n_res +=  phi_x_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry + jdim*nve_bd] * normal[jdim];
 			      }//jdim
-			    for(unsigned i=0; i < nDofsGctrl; i ++) {
-/*delta_control row */     			 Res[kdim + ctrl_pos_begin][i]  += - /*control_node_flag[kdim][i_vol] **/ weight_bd * (
-										  SolVAR_bd_qp[SolPdeIndex[delta_theta_theta_index]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry] * normal[kdim]       
-										  );	
-			    }//i
 
 			
 /*delta_state row */	    if(i_vol<nDofsV)     Res[kdim]                 [i_vol]  += - control_node_flag[kdim][i_vol] * penalty_ctrl * (SolVAR_eldofs[SolPdeIndex[kdim + state_pos_begin]][i_vol] - SolVAR_eldofs[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
@@ -685,7 +688,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 											beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
 											+ gamma_val* lap_res_dctrl_ctrl_bd
 // 								    			- grad_dot_n_adj_res[kdim] *  phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
-											);	    
+											+ SolVAR_bd_qp[SolPdeIndex[delta_theta_theta_index]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry] * normal[kdim]       
+	);	    
 
 			
 		      }//kdim  
@@ -702,7 +706,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 //ROW_BLOCK delta_theta - control -- loop over i in the VOLUME (while j(/i_vol) is in the boundary) -------------------------------------------------------------------------------------------------------------
 			      Jac[delta_theta_theta_index][ctrl_pos_begin + kdim][i*nDofsGctrl + i_vol]     += temp; /*weight_bd * ( phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim])*/
 //COLUMN_BLOCK delta_control - theta ---- loop over j in the VOLUME (while i(/i_vol) is in the boundary) ---------------------------------------------------------------------------------------------------
-			      Jac[ctrl_pos_begin + kdim][delta_theta_theta_index][i_vol*nDofsThetactrl + i] += temp; /*weight_bd * ( phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);*/
+			      Jac[ctrl_pos_begin + kdim][delta_theta_theta_index][i_vol*nDofsThetactrl + i] += control_node_flag[kdim][i_vol] *temp; /*weight_bd * ( phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);*/
 			    }//endif
 			  }// i 
 		    }//kdim
@@ -772,7 +776,28 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 //End Boundary Residuals  and Jacobians ==================	
     
     
-//=======================VolumeLoop=====================================================    
+    
+    
+//======================= Loop without Integration =====================================================    
+    
+        //============ delta_theta - theta row ==================================================================================================
+  for (unsigned i = 0; i < nDofsThetactrl; i++) {
+//              if(/*control_el_flag != 1*/ fake_theta_flag[i] == 1 )                              Res[ delta_theta_theta_index ][i]                                               += 0.  ;
+             /* if ( fake_theta_flag[i] != 1 ) */                             Res[ delta_theta_theta_index ][i]                       = -(1 - fake_theta_flag[i]) * ( 8. - SolVAR_eldofs[delta_theta_theta_index][i]);
+   std::cout <<"  Res for fake   @  iel " << iel<<  " i " << i<< " and val is "<< Res[/*72*/delta_theta_theta_index][i]  <<  " and fake theta val is " << fake_theta_flag[i]<< std::endl;
+     for (unsigned j = 0; j < nDofsThetactrl; j++) {
+			         if(i==j)  Jac[ delta_theta_theta_index ][ delta_theta_theta_index ][i*nDofsThetactrl + j] = (1 - fake_theta_flag[i]) * 1.;
+             }//j_theta loop
+        }//i_theta loop
+   
+ //============ delta_theta row ==================================================================================================
+ //======================= Loop without Integration =====================================================    
+
+ 
+ 
+ 
+ 
+//======================= VolumeLoop with Integration (and fake boundary) =====================================================    
 // ********************** Gauss point loop *******************************
  for(unsigned ig=0;ig < ml_prob._ml_msh->_finiteElement[ielGeom][SolFEType[vel_type_pos]]->GetGaussPointNumber(); ig++) {
 	
@@ -970,20 +995,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
  //============ delta_control row ==================================================================================================
  
- //============ delta_theta - theta row ==================================================================================================
-  for (unsigned i = 0; i < nDofsThetactrl; i++) {
-             if(/*control_el_flag != 1*/ fake_theta_flag[i] == 1 )                              Res[ delta_theta_theta_index ][i]                                               += -(1 - fake_theta_flag[i]) * 1./*( 8. - SolVAR_eldofs[delta_theta_theta_index][i])*/;
-             if(/*control_el_flag == 1 */ fake_theta_flag[i] != 1 )                             Res[ delta_theta_theta_index ][i]                                               = -(1 - fake_theta_flag[i]) * ( 8. - SolVAR_eldofs[delta_theta_theta_index][i]);
-      for (unsigned j = 0; j < nDofsThetactrl; j++) {
-			         if(i==j)  Jac[ delta_theta_theta_index ][ delta_theta_theta_index ][i*nDofsThetactrl + j] = (1 - fake_theta_flag[i]) * 1.;
-             }//j_theta loop
-        }//i_theta loop
-   
- //============ delta_theta row ==================================================================================================
  
       }  // end gauss point loop
       
-    
+
     
     
 // // //  //--------------------PRINTING------------------------------------------------------------------------------------
@@ -1022,9 +1037,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	/*delta_theta-theta*/    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-1], JACDof[n_unknowns-1]);
 	    
      if (control_el_flag == 1) {
-          /*delta_theta(bdry constr)*/         RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-1]],bdry_int_constr_pos_vec);
 	      for (unsigned kdim = 0; kdim < dim; kdim++) {
-	    
                           /*delta_control*/       RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],JACDof[n_unknowns-2-kdim]); 
 		if(assembleMatrix) {
                           /*delta_theta-control*/ JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, JACDof[n_unknowns-2-kdim]);
@@ -1033,8 +1046,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	      }  //kdim
      }  //add control boundary element contributions
      
-     /* if (JACDof[n_unknowns-1][0] != bdry_int_constr_pos_vec[0]) */ /*delta_theta*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       JACDof[n_unknowns-1]);
      
+          if (control_el_flag == 1) {
+          /*delta_theta(bdry constr)*/         RES->add_vector_blocked(Res_outer,bdry_int_constr_pos_vec);
+	  }
+	  
+     /* if (JACDof[n_unknowns-1][0] != bdry_int_constr_pos_vec[0]) */ /*delta_theta(fake)*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       JACDof[n_unknowns-1]);
+	  
    //--------------------------------------------------------------------------------------------------------  
   } //end list of elements loop for each subdomain
   
