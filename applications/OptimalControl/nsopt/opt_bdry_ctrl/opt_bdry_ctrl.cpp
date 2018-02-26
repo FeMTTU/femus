@@ -94,12 +94,14 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
 
 
 //============== initial conditions =========
-double InitialValueGX(const std::vector < double >& x) {
-  return 2.;
-}
+double SetInitialCondition(const MultiLevelProblem * ml_prob, const std::vector <double> &x, const char SolName[]) {
 
-double InitialValueGY(const std::vector < double >& x) {
-  return 5.;
+  double value = 0.;
+  
+                if (!strcmp(SolName, "GX"))       { value = 2.; }
+                if (!strcmp(SolName, "GY"))       { value = 5.; }
+
+  return value;
 }
 //============== initial conditions =========
 
@@ -175,10 +177,13 @@ int main(int argc, char** args) {
   // control ===================== 
   
   
-  mlSol.Initialize("All");    // initialize all varaibles to zero
+  // define the multilevel problem attach the mlSol object to it
+  MultiLevelProblem mlProb(&mlSol);
 
-  mlSol.Initialize("GX", InitialValueGX);
-  mlSol.Initialize("GY", InitialValueGY);
+   mlSol.Initialize("All");    // initialize all varaibles to zero
+
+  mlSol.Initialize("GX", SetInitialCondition,&mlProb);
+  mlSol.Initialize("GY", SetInitialCondition,&mlProb);
   
   
   // attach the boundary condition function and generate boundary data
@@ -186,14 +191,10 @@ int main(int argc, char** args) {
   mlSol.GenerateBdc("All");
   
 
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
-
-  mlProb.parameters.set<Fluid>("Fluid") = fluid;
+ mlProb.parameters.set<Fluid>("Fluid") = fluid;
 
   // add system Poisson in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOpt");
-//   LinearImplicitSystem& system_opt    = mlProb.add_system < LinearImplicitSystem > ("NSOpt");
 
   // ST ===================
   system_opt.AddSolutionToSystemPDE("U");
@@ -488,6 +489,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   
    //STATE###################################################################  
     unsigned int fake_iel_flag = 0;
+    unsigned int row_index_bdry_constr = 72;/*KKoffset[SolPdeIndex[PADJ]][iproc]*/
   for (unsigned  k = 0; k < n_unknowns; k++) {
 	unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);	//nDofs_V,P_of_st,adj,ctrl
 	Sol_n_el_dofs[k]=ndofs_unk;
@@ -498,13 +500,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  SolVAR_eldofs[k][i] = (*sol->_Sol[SolIndex[k]])(solDof);      // global extraction and local storage for the solution
 	  JACDof[k][i] = pdeSys->GetSystemDof(SolIndex[k], SolPdeIndex[k], i, iel);    // global to global mapping between solution node and pdeSys dof
 
-      if (k == SolPdeIndex[ctrl_pos_begin + press_type_pos] && JACDof[k][i] == 72) {       fake_iel_flag = iel;  }
+      if (k == SolPdeIndex[ctrl_pos_begin + press_type_pos] && JACDof[k][i] == row_index_bdry_constr) {       fake_iel_flag = iel;  }
     }
-   }
+  }
   //CTRL###################################################################
     
    //************ set fake theta flag: this flag tells me what degrees of freedom of the current element are fake for the theta variable *********************
-    std::vector<int>  bdry_int_constr_pos_vec(1,72); /*KKoffset[SolPdeIndex[PADJ]][iproc]*/
+    std::vector<int>  bdry_int_constr_pos_vec(1,row_index_bdry_constr); /*KKoffset[SolPdeIndex[PADJ]][iproc]*/
     std::vector<int> fake_theta_flag(nDofsThetactrl,0);
     for (unsigned i = 0; i < nDofsThetactrl; i++) {
       if ( JACDof[ SolPdeIndex[delta_theta_theta_index] ] [i] == bdry_int_constr_pos_vec[0]) { 	fake_theta_flag[i] = 1;       }
@@ -1021,14 +1023,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	    
      if (control_el_flag == 1) {
           /*delta_theta(bdry constr)*/         RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-1]],bdry_int_constr_pos_vec);
-	   for (unsigned kdim = 0; kdim < dim; kdim++) {
+	      for (unsigned kdim = 0; kdim < dim; kdim++) {
 	    
                           /*delta_control*/       RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],JACDof[n_unknowns-2-kdim]); 
-    if(assembleMatrix) {
+		if(assembleMatrix) {
                           /*delta_theta-control*/ JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim] ], bdry_int_constr_pos_vec, JACDof[n_unknowns-2-kdim]);
                           /*delta_control-theta*/ JAC->add_matrix_blocked( Jac[ /*SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-2-kdim]*/SolPdeIndex[n_unknowns-2-kdim] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-2-kdim], bdry_int_constr_pos_vec); 
-	    }
-	 }  //kdim
+		}
+	      }  //kdim
      }  //add control boundary element contributions
      
      /* if (JACDof[n_unknowns-1][0] != bdry_int_constr_pos_vec[0]) */ /*delta_theta*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       JACDof[n_unknowns-1]);
