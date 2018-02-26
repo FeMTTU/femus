@@ -344,10 +344,10 @@ int main(int argc, char** argv)
   MultiLevelMesh ml_msh;
 
   if (filename != "") {
-    ml_msh.ReadCoarseMesh(filename.c_str(), "seventh", Lref);
+    ml_msh.ReadCoarseMesh(filename.c_str(), "ninth", Lref);
   }
   else {
-    ml_msh.GenerateCoarseBoxMesh(numelemx, numelemy, numelemz, xa, xb, ya, yb, za, zb, elemtype, "seventh");
+    ml_msh.GenerateCoarseBoxMesh(numelemx, numelemy, numelemz, xa, xb, ya, yb, za, zb, elemtype, "ninth");
   }
 
   //ml_msh.RefineMesh(nm,nr, SetRefinementFlag);
