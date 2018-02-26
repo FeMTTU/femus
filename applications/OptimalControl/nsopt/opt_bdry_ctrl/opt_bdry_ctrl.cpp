@@ -970,7 +970,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
  
  //============ delta_theta - theta row ==================================================================================================
   for (unsigned i = 0; i < nDofsThetactrl; i++) {
-                                        Res[ delta_theta_theta_index ][i]                                               += -(1 - fake_theta_flag[i]) *( 8. - SolVAR_eldofs[delta_theta_theta_index][i]);
+             if(/*control_el_flag != 1*/ fake_theta_flag[i] == 1 )                              Res[ delta_theta_theta_index ][i]                                               += -(1 - fake_theta_flag[i]) * 1./*( 8. - SolVAR_eldofs[delta_theta_theta_index][i])*/;
+             if(/*control_el_flag == 1 */ fake_theta_flag[i] != 1 )                             Res[ delta_theta_theta_index ][i]                                               = -(1 - fake_theta_flag[i]) * ( 8. - SolVAR_eldofs[delta_theta_theta_index][i]);
       for (unsigned j = 0; j < nDofsThetactrl; j++) {
 			         if(i==j)  Jac[ delta_theta_theta_index ][ delta_theta_theta_index ][i*nDofsThetactrl + j] = (1 - fake_theta_flag[i]) * 1.;
              }//j_theta loop
@@ -1019,7 +1020,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	/*delta_theta-theta*/    JAC->add_matrix_blocked( Jac[ SolPdeIndex[n_unknowns-1] ][ SolPdeIndex[n_unknowns-1] ], JACDof[n_unknowns-1], JACDof[n_unknowns-1]);
 	    
      if (control_el_flag == 1) {
-//           /*delta_theta(bdry constr)*/         RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-1]],bdry_int_constr_pos_vec);
+          /*delta_theta(bdry constr)*/         RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-1]],bdry_int_constr_pos_vec);
 	   for (unsigned kdim = 0; kdim < dim; kdim++) {
 	    
                           /*delta_control*/       RES->add_vector_blocked(Res[SolPdeIndex[n_unknowns-2-kdim]],JACDof[n_unknowns-2-kdim]); 
@@ -1030,7 +1031,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	 }  //kdim
      }  //add control boundary element contributions
      
-      if (JACDof[n_unknowns-1][0] != bdry_int_constr_pos_vec[0])  /*delta_theta*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       JACDof[n_unknowns-1]);
+     /* if (JACDof[n_unknowns-1][0] != bdry_int_constr_pos_vec[0]) */ /*delta_theta*/          RES->add_vector_blocked( Res[ SolPdeIndex[n_unknowns-1]],       JACDof[n_unknowns-1]);
      
    //--------------------------------------------------------------------------------------------------------  
   } //end list of elements loop for each subdomain
