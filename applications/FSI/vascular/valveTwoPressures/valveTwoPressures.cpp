@@ -357,7 +357,6 @@ int main(int argc, char** args)
   int  nprocs;	    
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   if(iproc == 0){
-    
     char stdOutputName[100];
     sprintf(stdOutputName, "stdoutput_level%d_nprocs%d.txt",numberOfUniformRefinedMeshes, nprocs);
     PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
