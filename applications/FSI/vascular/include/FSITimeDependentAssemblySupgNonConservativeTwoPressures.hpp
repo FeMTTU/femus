@@ -586,6 +586,7 @@ namespace femus
               }
 
               adept::adouble springStiffness = 0.;
+
               if ( valve ) springStiffness = 2.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 2 ) + // if 2D
                                              2.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 3 ); //if 3D
 
@@ -942,7 +943,7 @@ namespace femus
     unsigned SolType;
 
     if ( order < FIRST || order > SECOND ) {
-      std::cout << "Wong Solution Order" << std::endl;
+      std::cout << "Wrong Solution Order" << std::endl;
       exit ( 0 );
     }
     else if ( order == FIRST ) SolType = 0;
@@ -1249,7 +1250,13 @@ namespace femus
         lambdak = 1.;
         double error = 1.;
 
-        while ( error > 1.0e-10 ) {
+	unsigned counter = 0;
+	unsigned counter_max = 1000;
+        while ( error > 1.0e-6 && counter < counter_max) {
+	  counter++;
+	  if (counter == counter_max){
+	    std::cout << "warning: elemment " <<iel<< " may be too skew and lambda cannot be found" << std::endl;
+	  }
           double phikm1 = phik;
           double lambdakm1 = lambdak;
 

@@ -46,8 +46,8 @@ int main(int argc, char** args)
   twoPressure = true;
 
   //std::string infile = "./../input/valve/2D/valve2.neu";
-  std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
-  //std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
+  //std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
+  std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
   //std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
   //std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
 
@@ -63,7 +63,7 @@ int main(int argc, char** args)
 
   ni = 0.5;
 
-  E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
+  E = 60 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
   E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
   ni1 = 0.5;
@@ -88,7 +88,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 4;
 
   numberOfAMRLevels = 0;
 
@@ -395,14 +395,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
-      value = (0 + 15 * sin(2 * PI * time)) * ramp;      //+ 3.5, 6, 7, 10, 10, 15, 15
+      value = (0 + 10 * sin(2 * PI * time)) * ramp;      //+ 3.5, 6, 7, 10, 10, 15, 15
     }
     else if(2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      value = (0 - 15 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10, 15, 15
+      value = (0 - 10 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10, 15, 15
     }
     else if(7 == facename) {
       Kslip = 0.;
