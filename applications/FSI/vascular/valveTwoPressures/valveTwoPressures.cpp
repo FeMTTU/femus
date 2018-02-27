@@ -38,17 +38,6 @@ int main(int argc, char** args)
   //Files files;
   //files.CheckIODirectories();
   //files.RedirectCout();
-  
-  // process options
-  char infileChar[256] = "";
-  char stdOutfile[256] = "";
-  
-  // ******* reading input parameters *******
-//   PetscOptionsString("-input", "The name of the input file", "fsiTimeDependent.cpp", "./mesh.neu", infileChar, len_infile_name, NULL);
-//   printf(" input: %s\n", infileChar);
-//   
-//   PetscOptionsString("-std_output", "The name of the redirected standard output file", "fsiTimeDependent.cpp", "", stdOutfile, len_infile_name, NULL);
-//   printf(" redirected standard output: %s\n", stdOutfile);
 
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 
@@ -59,8 +48,8 @@ int main(int argc, char** args)
 
   //std::string infile = "./../input/valve/2D/valve2.neu";
   //std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
-  std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
-  //std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
+  //std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
+  std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
   //std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
 
   // ******* Set physics parameters *******
@@ -100,7 +89,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 6;
+  numberOfUniformRefinedMeshes = 3;
 
   numberOfAMRLevels = 0;
 
@@ -358,7 +347,7 @@ int main(int argc, char** args)
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   if(iproc == 0){
     char stdOutputName[100];
-    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d.txt",numberOfUniformRefinedMeshes, nprocs);
+    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_vecchioMesh.txt",numberOfUniformRefinedMeshes, nprocs);
     PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
   }
     
@@ -578,7 +567,7 @@ void PrintConvergenceInfo(char *stdOutfile, const unsigned &level, const int &np
 
   std::ofstream outf;
   char outFileName[100];
-  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d.txt",level, nprocs);
+  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d_vecchioMesh.txt",level, nprocs);
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
