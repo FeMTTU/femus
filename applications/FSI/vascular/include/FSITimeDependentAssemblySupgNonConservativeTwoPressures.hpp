@@ -1251,7 +1251,7 @@ namespace femus
         double error = 1.;
 
 	unsigned counter = 0;
-	unsigned counter_max = 10000;
+	unsigned counter_max = 10000; //to improve
         while ( error > 1.0e-6 && counter < counter_max) {
 	  counter++;
 	  if (counter == counter_max){

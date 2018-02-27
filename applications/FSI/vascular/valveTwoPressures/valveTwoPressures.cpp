@@ -100,7 +100,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 3;
+  numberOfUniformRefinedMeshes = 4;
 
   numberOfAMRLevels = 0;
 
@@ -357,7 +357,7 @@ int main(int argc, char** args)
   int  nprocs;	    
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   if(iproc == 0){
-    PrintConvergenceInfo("a.txt", numberOfUniformRefinedMeshes, nprocs);
+    PrintConvergenceInfo("b.txt", numberOfUniformRefinedMeshes, nprocs);
   }
     
   return 0;
