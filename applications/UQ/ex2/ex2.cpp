@@ -43,7 +43,7 @@ int main() {
   EPSProblemType problemType = EPS_HEP;
   EPSWhich eigSorting = EPS_LARGEST_MAGNITUDE;
   PetscInt numberOfEigPairs = 1;
-  PetscInt dimWorkingSpace = 10 * numberOfEigPairs;
+  PetscInt dimWorkingSpace = 20 * numberOfEigPairs;
   PetscInt convergedSolns, numberOfIterations;
   PetscInt  maxIterations = 20;
   PetscReal  error = 1.e-10;
@@ -134,8 +134,8 @@ int main() {
   CHKERRQ(ierr);
 
 
-//   ierr = EPSSolve(eps);
-//   CHKERRQ(ierr);
+  ierr = EPSSolve(eps);
+  CHKERRQ(ierr);
 // 
 //   ierr = EPSGetIterationNumber(eps, &numberOfIterations);
 //   CHKERRQ(ierr);
