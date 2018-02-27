@@ -25,7 +25,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 
 void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes);
 
-void PrintConvergenceInfo(char *stdOutfile, const unsigned &numberOfUniformRefinedMeshes);
+void PrintConvergenceInfo(char *stdOutfile, const unsigned &numberOfUniformRefinedMeshes, const int &nprocs);
 //------------------------------------------------------------------------------------------------------------------
 
 
@@ -75,7 +75,7 @@ int main(int argc, char** args)
 
   ni = 0.5;
 
-  E = 60 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
+  E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
   E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
   ni1 = 0.5;
@@ -100,7 +100,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 4;
+  numberOfUniformRefinedMeshes = 3;
 
   numberOfAMRLevels = 0;
 
@@ -278,7 +278,7 @@ int main(int argc, char** args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 5;
+  const unsigned int n_timesteps = 128;
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
@@ -354,10 +354,11 @@ int main(int argc, char** args)
   std::cout << " TOTAL TIME:\t" << \
             static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
     
-  
-  
- PrintConvergenceInfo("a.txt", numberOfUniformRefinedMeshes);
-  
+  int  nprocs;	    
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  if(iproc == 0){
+    PrintConvergenceInfo("a.txt", numberOfUniformRefinedMeshes, nprocs);
+  }
     
   return 0;
 }
@@ -416,14 +417,14 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
       //value = ( 6 + 3 * sin ( 2 * PI * time ) ) * ramp; //+ 4.5
       //value = ( 12 + 9 * sin ( 2 * PI * time ) ) * ramp; //runna
       //value = ( 24 + 21 * sin ( 2 * PI * time ) ) * ramp; //runna
-      value = (0 + 10 * sin(2 * PI * time)) * ramp;      //+ 3.5, 6, 7, 10, 10, 15, 15
+      value = (0 + 15 * sin(2 * PI * time)) * ramp;      //+ 3.5, 6, 7, 10, 10, 15, 15
     }
     else if(2 == facename) {
       //value = 1;
       //value = ( /*2.5*/ - 2.5 * sin ( 2 * PI * time ) ) * ramp;
       //value = ( 4 - 1 * sin ( 2 * PI * time ) ) * ramp; //- 4.5
       //value = ( 5 - 3 * sin ( 2 * PI * time ) ) * ramp; //non runna
-      value = (0 - 10 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10, 15, 15
+      value = (0 - 15 * sin(2 * PI * time)) * ramp;      //- 3.5, 6, 7, 10, 10, 15, 15
     }
     else if(7 == facename) {
       Kslip = 0.;
@@ -561,7 +562,7 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PrintConvergenceInfo(char *stdOutfile, const unsigned &numberOfUniformRefinedMeshes){
+void PrintConvergenceInfo(char *stdOutfile, const unsigned &level, const int &nprocs){
 
   std::cout<<"END_COMPUTATION\n"<<std::flush;
 
@@ -575,11 +576,11 @@ void PrintConvergenceInfo(char *stdOutfile, const unsigned &numberOfUniformRefin
 
   std::ofstream outf;
   char outFileName[100];
-  sprintf(outFileName, "valve2D_convergence_info.txt");
+  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d.txt",level, nprocs);
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
-  outf << "Number_of_refinements="<<numberOfUniformRefinedMeshes<<std::endl;
+  outf << "Number_of_refinements="<<level<<std::endl;
   outf << "Simulation_Time,Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
 
   std::string str1;
