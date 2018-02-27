@@ -24,6 +24,8 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
                                    double& value, const int facename, const double time);
 
 void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes);
+
+void PrintConvergenceInfo(char *stdOutfile, char* infileChar, const unsigned &numberOfUniformRefinedMeshes);
 //------------------------------------------------------------------------------------------------------------------
 
 
@@ -36,7 +38,17 @@ int main(int argc, char** args)
   //Files files;
   //files.CheckIODirectories();
   //files.RedirectCout();
-
+  
+  // process options
+  char infileChar[256] = "";
+  char stdOutfile[256] = "";
+  
+  // ******* reading input parameters *******
+//   PetscOptionsString("-input", "The name of the input file", "fsiTimeDependent.cpp", "./mesh.neu", infileChar, len_infile_name, NULL);
+//   printf(" input: %s\n", infileChar);
+//   
+//   PetscOptionsString("-std_output", "The name of the redirected standard output file", "fsiTimeDependent.cpp", "", stdOutfile, len_infile_name, NULL);
+//   printf(" redirected standard output: %s\n", stdOutfile);
 
   // ******* Extract the problem dimension and simulation identifier based on the inline input *******
 
@@ -88,7 +100,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 4;
+  numberOfUniformRefinedMeshes = 2;
 
   numberOfAMRLevels = 0;
 
@@ -338,10 +350,20 @@ int main(int argc, char** args)
   
   //******* Clear all systems *******
   ml_prob.clear();
+  
   std::cout << " TOTAL TIME:\t" << \
             static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
+    
+  // close the library
+  //dlclose(handle);
+//   if(strcmp (stdOutfile,"") != 0){
+//     PrintConvergenceInfo(stdOutfile, infileChar, numberOfUniformRefinedMeshes);
+//   }
+    
   return 0;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
 
 double SetVariableTimeStep(const double time)
 {
@@ -435,6 +457,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 
 }
 
+//---------------------------------------------------------------------------------------------------------------------
 
 void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
 {
@@ -535,6 +558,88 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
     qBottom.clearBroadcast();
     qTop.clearBroadcast();
   }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void PrintConvergenceInfo(char *stdOutfile, char* infileChar, const unsigned &numberOfUniformRefinedMeshes){
+
+  std::cout<<"END_COMPUTATION\n"<<std::flush;
+
+  std::ifstream inf;
+  inf.open(stdOutfile);
+  if (!inf) {
+    std::cout<<"Redirected standard output file not found\n";
+    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+    return;
+  }
+
+  std::ofstream outf;
+  char outFileName[100];
+  sprintf(outFileName, "valve2D_convergence_info.txt");
+
+  outf.open(outFileName, std::ofstream::app);
+  outf << std::endl << std::endl;
+  outf << "Number_of_refinements="<<numberOfUniformRefinedMeshes<<std::endl;
+  outf << "Simulation_Time,Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
+
+  std::string str1;
+  inf >> str1;
+  double simulationTime=0.;
+  while (str1.compare("END_COMPUTATION") != 0) {
+
+    if (str1.compare("Simulation") == 0){
+      inf >> str1;
+      if (str1.compare("Time:") == 0){
+        inf >> simulationTime;
+      }
+    }
+    else if (str1.compare("Nonlinear") == 0) {
+      inf >> str1;
+      if (str1.compare("iteration") == 0) {
+        inf >> str1;
+        outf << std::endl << simulationTime<<","<<str1;
+      }
+    }
+    else if (str1.compare("KSP") == 0){
+      inf >> str1;
+      if (str1.compare("preconditioned") == 0){
+        inf >> str1;
+        if (str1.compare("resid") == 0){
+          inf >> str1;
+          if (str1.compare("norm") == 0){
+            double norm0 = 1.;
+            double normN = 1.;
+            unsigned counter = 0;
+            inf >> norm0;
+            outf <<","<< norm0;
+            for (unsigned i = 0; i < 11; i++){
+              inf >> str1;
+            }
+            while(str1.compare("norm") == 0){
+              inf >> normN;
+              counter++;
+              for (unsigned i = 0; i < 11; i++){
+                inf >> str1;
+              }
+            }
+            outf <<","<< normN;
+            if(counter != 0){
+              outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
+            }
+            else{
+              outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
+            }
+          }
+        }
+      }
+    }
+    inf >> str1;
+  }
+
+  outf.close();
+  inf.close();
+
 }
 
 
