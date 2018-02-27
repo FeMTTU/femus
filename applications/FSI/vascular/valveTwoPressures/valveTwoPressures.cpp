@@ -25,7 +25,7 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
 
 void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes);
 
-void PrintConvergenceInfo(char *stdOutfile, char* infileChar, const unsigned &numberOfUniformRefinedMeshes);
+void PrintConvergenceInfo(char *stdOutfile, const unsigned &numberOfUniformRefinedMeshes);
 //------------------------------------------------------------------------------------------------------------------
 
 
@@ -278,7 +278,7 @@ int main(int argc, char** args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 512;
+  const unsigned int n_timesteps = 5;
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
@@ -354,11 +354,10 @@ int main(int argc, char** args)
   std::cout << " TOTAL TIME:\t" << \
             static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
     
-  // close the library
-  //dlclose(handle);
-//   if(strcmp (stdOutfile,"") != 0){
-//     PrintConvergenceInfo(stdOutfile, infileChar, numberOfUniformRefinedMeshes);
-//   }
+  
+  
+ PrintConvergenceInfo("a.txt", numberOfUniformRefinedMeshes);
+  
     
   return 0;
 }
@@ -562,7 +561,7 @@ void GetSolutionFluxes(MultiLevelSolution& mlSol, std::vector <double>& fluxes)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-void PrintConvergenceInfo(char *stdOutfile, char* infileChar, const unsigned &numberOfUniformRefinedMeshes){
+void PrintConvergenceInfo(char *stdOutfile, const unsigned &numberOfUniformRefinedMeshes){
 
   std::cout<<"END_COMPUTATION\n"<<std::flush;
 
