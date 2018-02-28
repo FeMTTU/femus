@@ -30,25 +30,22 @@ unsigned numberOfUniformLevels = 2;
 double sigma = 0.4;
 double L = 0.4;
 
-int main() {
+int main(int argc, char** argv) {
 
   //BEGIN eigenvalue problem instances
 
-  int argc = 0;
-  char** argv = NULL;
-  char** args = NULL; //TODO  not sure about this
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   EPS eps;
-  EPSType eigSolverType = EPSKRYLOVSCHUR;
-  EPSProblemType problemType = EPS_HEP;
-  EPSWhich eigSorting = EPS_LARGEST_MAGNITUDE;
-  PetscInt numberOfEigPairs = 1;
-  PetscInt dimWorkingSpace = 20 * numberOfEigPairs;
+  //EPSType eigSolverType = EPSKRYLOVSCHUR;
+//   EPSProblemType problemType = EPS_HEP;
+  //EPSWhich eigSorting = EPS_LARGEST_MAGNITUDE;
+  PetscInt numberOfEigPairs = 4;
+  PetscInt dimWorkingSpace = 8 * numberOfEigPairs;
   PetscInt convergedSolns, numberOfIterations;
-  PetscInt  maxIterations = 20;
-  PetscReal  error = 1.e-10;
-  PetscReal  tol = 1.e-10;
+//   PetscInt  maxIterations = 100;
+//   PetscReal  error = 1.e-10;
+//   PetscReal  tol = 1.e-10;
   PetscScalar  kr, ki;
   Mat CCSLEPc;
   Mat MMSLEPc;
@@ -58,7 +55,7 @@ int main() {
 
 
   // init Petsc-MPI communicator
-  FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  FemusInit mpinit(argc, argv, MPI_COMM_WORLD);
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
@@ -123,41 +120,41 @@ int main() {
   CHKERRQ(ierr);
   ierr = EPSSetOperators(eps, CCSLEPc, MMSLEPc);
   CHKERRQ(ierr);
-  ierr = EPSSetProblemType(eps, problemType);
-  CHKERRQ(ierr);
+  ierr = EPSSetFromOptions(eps);
+  CHKERRQ(ierr);  
+  
+//   ierr = EPSSetProblemType(eps, problemType);
+//   CHKERRQ(ierr);
   ierr = EPSSetDimensions(eps, numberOfEigPairs, dimWorkingSpace, 600);
   CHKERRQ(ierr);
-  ierr = EPSSetWhichEigenpairs(eps, eigSorting);
+  ierr = EPSSetWhichEigenpairs(eps, EPS_LARGEST_MAGNITUDE);
   CHKERRQ(ierr);
-  ierr = EPSSetType(eps, eigSolverType);
-  CHKERRQ(ierr);
-  ierr = EPSSetTolerances(eps, tol, maxIterations);
-  CHKERRQ(ierr);
-
-//   ierr = EPSSolve(eps); //TODO this gives an error
+//   ierr = EPSSetTolerances(eps, tol, maxIterations);
 //   CHKERRQ(ierr);
+  
+  ierr = EPSSolve(eps); 
+  CHKERRQ(ierr);
 
-  PetscViewer viewer;
-  ierr = EPSView(eps, viewer);
+  ierr = EPSView(eps, PETSC_VIEWER_STDOUT_SELF);
 
 std::cout << " -----------------------------------------------------------------" << std::endl;
 
-  ierr = EPSGetIterationNumber(eps, &numberOfIterations);
-  CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of iterations of the method: %D\n", numberOfIterations);
-  CHKERRQ(ierr);
-  ierr = EPSGetType(eps, &eigSolverType);
-  CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD, " Solution method: %s\n\n", eigSolverType);
-  CHKERRQ(ierr);
-  ierr = EPSGetDimensions(eps, &numberOfEigPairs, NULL, NULL);
-  CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of requested eigenvalues: %D\n", numberOfEigPairs);
-  CHKERRQ(ierr);
-  ierr = EPSGetTolerances(eps, &tol, &maxIterations);
-  CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD, " Stopping condition: tol=%.4g, maxit=%D\n", (double)tol, maxIterations);
-  CHKERRQ(ierr);
+//   ierr = EPSGetIterationNumber(eps, &numberOfIterations);
+//   CHKERRQ(ierr);
+//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of iterations of the method: %D\n", numberOfIterations);
+//   CHKERRQ(ierr);
+//   ierr = EPSGetType(eps, &eigSolverType);
+//   CHKERRQ(ierr);
+//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Solution method: %s\n\n", eigSolverType);
+//   CHKERRQ(ierr);
+//   ierr = EPSGetDimensions(eps, &numberOfEigPairs, NULL, NULL);
+//   CHKERRQ(ierr);
+//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of requested eigenvalues: %D\n", numberOfEigPairs);
+//   CHKERRQ(ierr);
+//   ierr = EPSGetTolerances(eps, &tol, &maxIterations);
+//   CHKERRQ(ierr);
+//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Stopping condition: tol=%.4g, maxit=%D\n", (double)tol, maxIterations);
+//   CHKERRQ(ierr);
 
 // Display solution and clean up
 
@@ -168,6 +165,10 @@ std::cout << " -----------------------------------------------------------------
   CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of converged eigenpairs: %D\n\n", convergedSolns);
   CHKERRQ(ierr);
+  
+  ierr = MatCreateVecs(CCSLEPc,NULL,&xr);CHKERRQ(ierr);
+  ierr = MatCreateVecs(CCSLEPc,NULL,&xi);CHKERRQ(ierr);
+  
   if(convergedSolns > 0) {
 
 // Display eigenvalues and relative errors
@@ -182,18 +183,17 @@ std::cout << " -----------------------------------------------------------------
       ierr = EPSGetEigenpair(eps, i, &kr, &ki, xr, xi);
       CHKERRQ(ierr);
 
+      std::cout << kr <<" "<<ki<<std::endl;
+      
 // Compute the relative error associated to each eigenpair
 
-      ierr = EPSComputeError(eps, i, EPS_ERROR_RELATIVE, &error);
-      CHKERRQ(ierr);
+//       ierr = EPSComputeError(eps, i, EPS_ERROR_RELATIVE, &error);
+//       CHKERRQ(ierr);
 
     }
   }
 
-  ierr = EPSDestroy(&eps);
-  CHKERRQ(ierr);
-//   ierr = SlepcFinalize();
-//   CHKERRQ(ierr);
+ 
 
   //END
 
@@ -208,6 +208,16 @@ std::cout << " -----------------------------------------------------------------
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
+  
+  ierr = EPSDestroy(&eps); CHKERRQ(ierr);
+  ierr = MatDestroy(&CCSLEPc); CHKERRQ(ierr);
+  ierr = MatDestroy(&MMSLEPc); CHKERRQ(ierr);
+  ierr = VecDestroy(&xr); CHKERRQ(ierr);
+  ierr = VecDestroy(&xi); CHKERRQ(ierr);
+  
+  //ierr = SlepcFinalize();
+  //CHKERRQ(ierr);
+  
   return 0;
 
 } //end main
@@ -402,14 +412,24 @@ void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
   CC->close();
 
 
-  CCSLEPc = (static_cast<PetscMatrix*>(CC))->mat();
-  MMSLEPc = (static_cast<PetscMatrix*>(MM))->mat();
-
-//   PetscErrorCode ierr;
-//   PetscViewer viewer ;
-//   ierr = MatView(CCSLEPc, viewer);
-
-//   delete CC; //TODO with this delete it cannot read CCSLEPc anymore in the main
+  MatDuplicate((static_cast<PetscMatrix*>(CC))->mat(), MAT_COPY_VALUES, &CCSLEPc);
+  MatDuplicate((static_cast<PetscMatrix*>(MM))->mat(), MAT_COPY_VALUES, &MMSLEPc);
+  //MatDuplicate(CCSLEPc, MAT_COPY_VALUES, &MMSLEPc);
+  
+  
+  delete CC; 
+  
+  
+  PetscErrorCode ierr;
+  PetscViewer viewer ;
+  PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+  PetscObjectSetName((PetscObject)viewer,"UQ matrix");
+  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+  
+  ierr = MatView(CCSLEPc, viewer);
+  ierr = MatView(MMSLEPc, viewer);
+    
+  PetscViewerDestroy(&viewer);
 
   // ***************** END ASSEMBLY *******************
 }
