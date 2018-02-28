@@ -66,7 +66,7 @@ int main(int argc, char** args)
 
   E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
-  E1 = 3 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
+  E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
   ni1 = 0.49; //0.5
   
   Parameter par(Lref, Uref);
@@ -89,7 +89,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 3;
+  numberOfUniformRefinedMeshes = 5;
 
   numberOfAMRLevels = 0;
 
@@ -267,7 +267,7 @@ int main(int argc, char** args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 512;
+  const unsigned int n_timesteps = 128;
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
@@ -276,7 +276,7 @@ int main(int argc, char** args)
 
   std::ofstream outf;
   if(iproc == 0) {
-    outf.open("fluxes_E1=3.txt");
+    outf.open("fluxes_E1=1.5_ksp.txt");
     if(!outf) {
       std::cout << "Error in opening file DataPrint.txt";
       return 1;
@@ -343,13 +343,13 @@ int main(int argc, char** args)
   std::cout << " TOTAL TIME:\t" << \
             static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
     
-//   int  nprocs;	    
-//   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-//   if(iproc == 0){
-//     char stdOutputName[100];
-//     sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_stiffness5.txt",numberOfUniformRefinedMeshes, nprocs);
-//     PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
-//   }
+  int  nprocs;	    
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  if(iproc == 0){
+    char stdOutputName[100];
+    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_stiffness5_compressible.txt",numberOfUniformRefinedMeshes, nprocs);
+    PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
+  }
     
   return 0;
 }
