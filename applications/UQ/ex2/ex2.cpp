@@ -9,6 +9,7 @@
 #include "adept.h"
 
 #include "petsc.h"
+#include "petscmat.h"
 #include "PetscMatrix.hpp"
 
 #include "slepceps.h"
@@ -32,7 +33,7 @@ double L = 0.4;
 int main() {
 
   //BEGIN eigenvalue problem instances
-  
+
   int argc = 0;
   char** argv = NULL;
   char** args = NULL; //TODO  not sure about this
@@ -52,7 +53,7 @@ int main() {
   Mat CCSLEPc;
   Mat MMSLEPc;
   Vec  xr, xi;
-  
+
   //END
 
 
@@ -130,63 +131,67 @@ int main() {
   CHKERRQ(ierr);
   ierr = EPSSetType(eps, eigSolverType);
   CHKERRQ(ierr);
+  ierr = EPSSetTolerances(eps, tol, maxIterations);
+  CHKERRQ(ierr);
+
+//   ierr = EPSSolve(eps); //TODO this gives an error
+//   CHKERRQ(ierr);
+
+  PetscViewer viewer;
+  ierr = EPSView(eps, viewer);
+
+std::cout << " -----------------------------------------------------------------" << std::endl;
+
+  ierr = EPSGetIterationNumber(eps, &numberOfIterations);
+  CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of iterations of the method: %D\n", numberOfIterations);
+  CHKERRQ(ierr);
+  ierr = EPSGetType(eps, &eigSolverType);
+  CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD, " Solution method: %s\n\n", eigSolverType);
+  CHKERRQ(ierr);
+  ierr = EPSGetDimensions(eps, &numberOfEigPairs, NULL, NULL);
+  CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of requested eigenvalues: %D\n", numberOfEigPairs);
+  CHKERRQ(ierr);
+  ierr = EPSGetTolerances(eps, &tol, &maxIterations);
+  CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD, " Stopping condition: tol=%.4g, maxit=%D\n", (double)tol, maxIterations);
+  CHKERRQ(ierr);
+
+// Display solution and clean up
+
+
+// Get number of converged approximate eigenpairs
+
   ierr = EPSGetConverged(eps, &convergedSolns);
   CHKERRQ(ierr);
-
-
-  ierr = EPSSolve(eps);
+  ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of converged eigenpairs: %D\n\n", convergedSolns);
   CHKERRQ(ierr);
-// 
-//   ierr = EPSGetIterationNumber(eps, &numberOfIterations);
-//   CHKERRQ(ierr);
-//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of iterations of the method: %D\n", numberOfIterations);
-//   CHKERRQ(ierr);
-//   ierr = EPSGetType(eps, &eigSolverType);
-//   CHKERRQ(ierr);
-//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Solution method: %s\n\n", eigSolverType);
-//   CHKERRQ(ierr);
-//   ierr = EPSGetDimensions(eps, &numberOfEigPairs, NULL, NULL);
-//   CHKERRQ(ierr);
-//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of requested eigenvalues: %D\n", numberOfEigPairs);
-//   CHKERRQ(ierr);
-//   ierr = EPSGetTolerances(eps, &tol, &maxIterations);
-//   CHKERRQ(ierr);
-//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Stopping condition: tol=%.4g, maxit=%D\n", (double)tol, maxIterations);
-//   CHKERRQ(ierr);
-// 
-// // Display solution and clean up
-// 
-// 
-// // Get number of converged approximate eigenpairs
-// 
-//   ierr = EPSGetConverged(eps, &convergedSolns);
-//   CHKERRQ(ierr);
-//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of converged eigenpairs: %D\n\n", convergedSolns);
-//   CHKERRQ(ierr);
-//   if(convergedSolns > 0) {
-// 
-// // Display eigenvalues and relative errors
-// 
-//     ierr = PetscPrintf(PETSC_COMM_WORLD, " k ||Ax-kx||/||kx||\n" " ----------------- ------------------\n");
-//     CHKERRQ(ierr);
-// 
-//     for(unsigned i = 0; i < convergedSolns; i++) {
-// 
-// // Get converged eigenpairs: i-th eigenvalue is stored in kr (real part) and ki (imaginary part)
-// 
-//       ierr = EPSGetEigenpair(eps, i, &kr, &ki, xr, xi);
-//       CHKERRQ(ierr);
-// 
-// // Compute the relative error associated to each eigenpair
-// 
-//       ierr = EPSComputeError(eps, i, EPS_ERROR_RELATIVE, &error);
-//       CHKERRQ(ierr);
-// 
-//     }
-//   }
-// 
-//   ierr = EPSDestroy(&eps);
-//   CHKERRQ(ierr);
+  if(convergedSolns > 0) {
+
+// Display eigenvalues and relative errors
+
+    ierr = PetscPrintf(PETSC_COMM_WORLD, " k ||Ax-kx||/||kx||\n" " ----------------- ------------------\n");
+    CHKERRQ(ierr);
+
+    for(unsigned i = 0; i < convergedSolns; i++) {
+
+// Get converged eigenpairs: i-th eigenvalue is stored in kr (real part) and ki (imaginary part)
+
+      ierr = EPSGetEigenpair(eps, i, &kr, &ki, xr, xi);
+      CHKERRQ(ierr);
+
+// Compute the relative error associated to each eigenpair
+
+      ierr = EPSComputeError(eps, i, EPS_ERROR_RELATIVE, &error);
+      CHKERRQ(ierr);
+
+    }
+  }
+
+  ierr = EPSDestroy(&eps);
+  CHKERRQ(ierr);
 //   ierr = SlepcFinalize();
 //   CHKERRQ(ierr);
 
@@ -399,11 +404,16 @@ void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   CCSLEPc = (static_cast<PetscMatrix*>(CC))->mat();
   MMSLEPc = (static_cast<PetscMatrix*>(MM))->mat();
-  
+
+//   PetscErrorCode ierr;
+//   PetscViewer viewer ;
+//   ierr = MatView(CCSLEPc, viewer);
+
 //   delete CC; //TODO with this delete it cannot read CCSLEPc anymore in the main
 
   // ***************** END ASSEMBLY *******************
 }
+
 
 
 
