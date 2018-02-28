@@ -47,8 +47,8 @@ int main(int argc, char** args)
   twoPressure = true;
 
   //std::string infile = "./../input/valve/2D/valve2.neu";
-  std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
-  //std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
+  //std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
+  std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
   //std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
   //std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
 
@@ -89,7 +89,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 5;
+  numberOfUniformRefinedMeshes = 3;
 
   numberOfAMRLevels = 0;
 
@@ -347,7 +347,7 @@ int main(int argc, char** args)
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   if(iproc == 0){
     char stdOutputName[100];
-    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_vecchioMesh.txt",numberOfUniformRefinedMeshes, nprocs);
+    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_stiffness5.txt",numberOfUniformRefinedMeshes, nprocs);
     PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
   }
     
@@ -567,7 +567,7 @@ void PrintConvergenceInfo(char *stdOutfile, const unsigned &level, const int &np
 
   std::ofstream outf;
   char outFileName[100];
-  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d_vecchioMesh.txt",level, nprocs);
+  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d_stiffness5.txt",level, nprocs);
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
