@@ -18,38 +18,28 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
+{
   bool dirichlet = true; //dirichlet
   value = 0.;
   return dirichlet;
 }
 
-void GetEigenPair(MultiLevelProblem& ml_prob, Mat &CCSLEPc, Mat &MMSLEPc);
+void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::vector < std::pair<double, double> > &eigenvalues);
 
 unsigned numberOfUniformLevels = 2;
 double sigma = 0.4;
 double L = 0.4;
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 
   //BEGIN eigenvalue problem instances
 
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
-  EPS eps;
-  //EPSType eigSolverType = EPSKRYLOVSCHUR;
-//   EPSProblemType problemType = EPS_HEP;
-  //EPSWhich eigSorting = EPS_LARGEST_MAGNITUDE;
-  PetscInt numberOfEigPairs = 4;
-  PetscInt dimWorkingSpace = 8 * numberOfEigPairs;
-  PetscInt convergedSolns, numberOfIterations;
-//   PetscInt  maxIterations = 100;
-//   PetscReal  error = 1.e-10;
-//   PetscReal  tol = 1.e-10;
-  PetscScalar  kr, ki;
-  Mat CCSLEPc;
-  Mat MMSLEPc;
-  Vec  xr, xi;
+  int numberOfEigPairs = 4;
+  std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
   //END
 
@@ -112,90 +102,13 @@ int main(int argc, char** argv) {
   system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 4);
 
 
-  //BEGIN solve the eigenvalue problem
-
-  GetEigenPair(ml_prob, CCSLEPc, MMSLEPc);
-
-  ierr = EPSCreate(PETSC_COMM_WORLD, &eps);
-  CHKERRQ(ierr);
-  ierr = EPSSetOperators(eps, CCSLEPc, MMSLEPc);
-  CHKERRQ(ierr);
-  ierr = EPSSetFromOptions(eps);
-  CHKERRQ(ierr);  
-  
-//   ierr = EPSSetProblemType(eps, problemType);
-//   CHKERRQ(ierr);
-  ierr = EPSSetDimensions(eps, numberOfEigPairs, dimWorkingSpace, 600);
-  CHKERRQ(ierr);
-  ierr = EPSSetWhichEigenpairs(eps, EPS_LARGEST_MAGNITUDE);
-  CHKERRQ(ierr);
-//   ierr = EPSSetTolerances(eps, tol, maxIterations);
-//   CHKERRQ(ierr);
-  
-  ierr = EPSSolve(eps); 
-  CHKERRQ(ierr);
-
-  ierr = EPSView(eps, PETSC_VIEWER_STDOUT_SELF);
-
-std::cout << " -----------------------------------------------------------------" << std::endl;
-
-//   ierr = EPSGetIterationNumber(eps, &numberOfIterations);
-//   CHKERRQ(ierr);
-//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of iterations of the method: %D\n", numberOfIterations);
-//   CHKERRQ(ierr);
-//   ierr = EPSGetType(eps, &eigSolverType);
-//   CHKERRQ(ierr);
-//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Solution method: %s\n\n", eigSolverType);
-//   CHKERRQ(ierr);
-//   ierr = EPSGetDimensions(eps, &numberOfEigPairs, NULL, NULL);
-//   CHKERRQ(ierr);
-//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of requested eigenvalues: %D\n", numberOfEigPairs);
-//   CHKERRQ(ierr);
-//   ierr = EPSGetTolerances(eps, &tol, &maxIterations);
-//   CHKERRQ(ierr);
-//   ierr = PetscPrintf(PETSC_COMM_WORLD, " Stopping condition: tol=%.4g, maxit=%D\n", (double)tol, maxIterations);
-//   CHKERRQ(ierr);
-
-// Display solution and clean up
-
-
-// Get number of converged approximate eigenpairs
-
-  ierr = EPSGetConverged(eps, &convergedSolns);
-  CHKERRQ(ierr);
-  ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of converged eigenpairs: %D\n\n", convergedSolns);
-  CHKERRQ(ierr);
-  
-  ierr = MatCreateVecs(CCSLEPc,NULL,&xr);CHKERRQ(ierr);
-  ierr = MatCreateVecs(CCSLEPc,NULL,&xi);CHKERRQ(ierr);
-  
-  if(convergedSolns > 0) {
-
-// Display eigenvalues and relative errors
-
-    ierr = PetscPrintf(PETSC_COMM_WORLD, " k ||Ax-kx||/||kx||\n" " ----------------- ------------------\n");
-    CHKERRQ(ierr);
-
-    for(unsigned i = 0; i < convergedSolns; i++) {
-
-// Get converged eigenpairs: i-th eigenvalue is stored in kr (real part) and ki (imaginary part)
-
-      ierr = EPSGetEigenpair(eps, i, &kr, &ki, xr, xi);
-      CHKERRQ(ierr);
-
-      std::cout << kr <<" "<<ki<<std::endl;
-      
-// Compute the relative error associated to each eigenpair
-
-//       ierr = EPSComputeError(eps, i, EPS_ERROR_RELATIVE, &error);
-//       CHKERRQ(ierr);
-
-    }
-  }
-
- 
-
   //END
+
+  GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues);
+
+  for (int i = 0; i < numberOfEigPairs; i++) {
+    std::cout << eigenvalues[i].first << " " << eigenvalues[i].second << std::endl;
+  }
 
 
   //system.MGsolve();
@@ -208,21 +121,19 @@ std::cout << " -----------------------------------------------------------------
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
-  
-  ierr = EPSDestroy(&eps); CHKERRQ(ierr);
-  ierr = MatDestroy(&CCSLEPc); CHKERRQ(ierr);
-  ierr = MatDestroy(&MMSLEPc); CHKERRQ(ierr);
-  ierr = VecDestroy(&xr); CHKERRQ(ierr);
-  ierr = VecDestroy(&xi); CHKERRQ(ierr);
-  
+
+
+
   //ierr = SlepcFinalize();
   //CHKERRQ(ierr);
-  
+
   return 0;
 
 } //end main
 
-void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
+void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::vector < std::pair<double, double> > &eigenvalues)
+{
+//void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("UQ");   // pointer to the linear implicit system named "Poisson"
 
@@ -259,7 +170,7 @@ void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   vector < vector < double > > x1(dim);    // local coordinates
   vector < vector < double > > x2(dim);    // local coordinates
-  for(unsigned k = 0; k < dim; k++) {
+  for (unsigned k = 0; k < dim; k++) {
     x1[k].reserve(maxSize);
     x2[k].reserve(maxSize);
   }
@@ -297,7 +208,7 @@ void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
   CC->zero();
 
   // element loop: each process loops only on the elements that owns
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom1 = msh->GetElementType(iel);
     unsigned nDof1  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
@@ -306,7 +217,7 @@ void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
     // resize local arrays
     l2GMap1.resize(nDof1);
 
-    for(int k = 0; k < dim; k++) {
+    for (int k = 0; k < dim; k++) {
       x1[k].resize(nDofx1);
     }
 
@@ -314,14 +225,14 @@ void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
     std::fill(MMlocal.begin(), MMlocal.end(), 0);    //set Jac to zero
 
     // local storage of global mapping and solution
-    for(unsigned i = 0; i < nDof1; i++) {
+    for (unsigned i = 0; i < nDof1; i++) {
       l2GMap1[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
     // local storage of coordinates
-    for(unsigned i = 0; i < nDofx1; i++) {
+    for (unsigned i = 0; i < nDofx1; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-      for(unsigned k = 0; k < dim; k++) {
+      for (unsigned k = 0; k < dim; k++) {
         x1[k][i] = (*msh->_topology->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
@@ -329,26 +240,26 @@ void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
     vector < double > *nullDoublePointer = NULL;
 
     // *** Gauss point loop ***
-    for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x, *nullDoublePointer);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       vector < double > xg1(dim, 0.);
 
-      for(unsigned i = 0; i < nDof1; i++) {
-        for(unsigned k = 0; k < dim; k++) {
+      for (unsigned i = 0; i < nDof1; i++) {
+        for (unsigned k = 0; k < dim; k++) {
           xg1[k] += x1[k][i] * phi1[i];
         }
       }
 
       // *** phi_i loop ***
-      for(unsigned i = 0; i < nDof1; i++) {
-        for(unsigned i1 = 0; i1 < nDof1; i1++) {
+      for (unsigned i = 0; i < nDof1; i++) {
+        for (unsigned i1 = 0; i1 < nDof1; i1++) {
           MMlocal[ i * nDof1 + i1 ] += phi1[i] * phi1[i1] * weight1;
         }
 
-        for(int jel = msh->_elementOffset[iproc]; jel < msh->_elementOffset[iproc + 1]; jel++) {
+        for (int jel = msh->_elementOffset[iproc]; jel < msh->_elementOffset[iproc + 1]; jel++) {
 
           short unsigned ielGeom2 = msh->GetElementType(jel);
           unsigned nDof2  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
@@ -357,7 +268,7 @@ void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
           // resize local arrays
           l2GMap2.resize(nDof2);
 
-          for(int k = 0; k < dim; k++) {
+          for (int k = 0; k < dim; k++) {
             x2[k].resize(nDofx2);
           }
 
@@ -365,36 +276,36 @@ void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
           std::fill(CClocal.begin(), CClocal.end(), 0);    //set Jac to zero
 
           // local storage of global mapping and solution
-          for(unsigned j = 0; j < nDof2; j++) {
+          for (unsigned j = 0; j < nDof2; j++) {
             l2GMap2[j] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, j, jel);    // global to global mapping between solution node and pdeSys dof
           }
 
           // local storage of coordinates
-          for(unsigned j = 0; j < nDofx2; j++) {
+          for (unsigned j = 0; j < nDofx2; j++) {
             unsigned xDof  = msh->GetSolutionDof(j, jel, xType);    // global to global mapping between coordinates node and coordinate dof
-            for(unsigned k = 0; k < dim; k++) {
+            for (unsigned k = 0; k < dim; k++) {
               x2[k][j] = (*msh->_topology->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
             }
           }
 
-          for(unsigned jg = 0; jg < msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber(); jg++) {
+          for (unsigned jg = 0; jg < msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber(); jg++) {
             // *** get gauss point weight, test function and test function partial derivatives ***
             msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2, phi2, phi_x, *nullDoublePointer);
 
             // evaluate the solution, the solution derivatives and the coordinates in the gauss point
             vector < double > xg2(dim, 0.);
 
-            for(unsigned j = 0; j < nDof2; j++) {
-              for(unsigned k = 0; k < dim; k++) {
+            for (unsigned j = 0; j < nDof2; j++) {
+              for (unsigned k = 0; k < dim; k++) {
                 xg2[k] += x2[k][j] * phi2[j];
               }
             }
             double dist = 0.;
-            for(unsigned k = 0; k < dim; k++) {
+            for (unsigned k = 0; k < dim; k++) {
               dist += fabs(xg1[k] - xg2[k]);
             }
             double C = sigma2 * exp(-dist / L);
-            for(unsigned j = 0; j < nDof2; j++) {
+            for (unsigned j = 0; j < nDof2; j++) {
               CClocal[i * nDof2 + j] += weight1 * phi1[i] * C * phi2[j] * weight2;
             }
           }
@@ -412,24 +323,93 @@ void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
   CC->close();
 
 
-  MatDuplicate((static_cast<PetscMatrix*>(CC))->mat(), MAT_COPY_VALUES, &CCSLEPc);
-  MatDuplicate((static_cast<PetscMatrix*>(MM))->mat(), MAT_COPY_VALUES, &MMSLEPc);
-  //MatDuplicate(CCSLEPc, MAT_COPY_VALUES, &MMSLEPc);
-  
-  
-  delete CC; 
-  
-  
-  PetscErrorCode ierr;
-  PetscViewer viewer ;
-  PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-  PetscObjectSetName((PetscObject)viewer,"UQ matrix");
-  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-  
-  ierr = MatView(CCSLEPc, viewer);
-  ierr = MatView(MMSLEPc, viewer);
-    
-  PetscViewerDestroy(&viewer);
+//   MatDuplicate((static_cast<PetscMatrix*>(CC))->mat(), MAT_COPY_VALUES, &CCSLEPc);
+//   MatDuplicate((static_cast<PetscMatrix*>(MM))->mat(), MAT_COPY_VALUES, &MMSLEPc);
+//   //MatDuplicate(CCSLEPc, MAT_COPY_VALUES, &MMSLEPc);
+//
+//
+
+
+
+//   PetscErrorCode ierr;
+//   PetscViewer viewer ;
+//   PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+//   PetscObjectSetName((PetscObject)viewer,"UQ matrix");
+//   PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//
+//   ierr = MatView(CCSLEPc, viewer);
+//   ierr = MatView(MMSLEPc, viewer);
+//
+//   PetscViewerDestroy(&viewer);
+
+
+
+
+  //BEGIN solve the eigenvalue problem
+
+  int ierr;
+  EPS eps;
+  PetscInt convergedSolns, numberOfIterations;
+  PetscScalar  kr, ki;
+  Vec  xr, xi;
+
+  ierr = EPSCreate(PETSC_COMM_WORLD, &eps);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+  ierr = EPSSetOperators(eps, (static_cast<PetscMatrix*>(CC))->mat(), (static_cast<PetscMatrix*>(MM))->mat());
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+  ierr = EPSSetFromOptions(eps);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+  ierr = EPSSetDimensions(eps, numberOfEigPairs, 8 * numberOfEigPairs, 600);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+  ierr = EPSSetWhichEigenpairs(eps, EPS_LARGEST_MAGNITUDE);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+  ierr = EPSSolve(eps);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+  ierr = EPSView(eps, PETSC_VIEWER_STDOUT_SELF);
+
+  std::cout << " -----------------------------------------------------------------" << std::endl;
+
+  ierr = EPSGetConverged(eps, &convergedSolns);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of converged eigenpairs: %D\n\n", convergedSolns);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+  ierr = MatCreateVecs((static_cast<PetscMatrix*>(CC))->mat(), NULL, &xr);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+  ierr = MatCreateVecs((static_cast<PetscMatrix*>(CC))->mat(), NULL, &xi);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+  if (convergedSolns > 0) {
+
+// Display eigenvalues and relative errors
+
+    ierr = PetscPrintf(PETSC_COMM_WORLD, " k ||Ax-kx||/||kx||\n" " ----------------- ------------------\n");
+    CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+    for (unsigned i = 0; i < numberOfEigPairs; i++) {
+
+// Get converged eigenpairs: i-th eigenvalue is stored in kr (real part) and ki (imaginary part)
+
+      ierr = EPSGetEigenpair(eps, i, &kr, &ki, xr, xi);
+      CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+      eigenvalues[i].first = kr;
+      eigenvalues[i].second = ki;
+
+    }
+  }
+
+  ierr = EPSDestroy(&eps);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+  ierr = VecDestroy(&xr);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+  ierr = VecDestroy(&xi);
+  CHKERRABORT(MPI_COMM_WORLD, ierr);
+
+  delete CC;
 
   // ***************** END ASSEMBLY *******************
 }
