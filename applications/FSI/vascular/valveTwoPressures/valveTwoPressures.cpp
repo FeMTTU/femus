@@ -89,7 +89,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 6;
+  numberOfUniformRefinedMeshes = 3;
 
   numberOfAMRLevels = 0;
 
@@ -321,7 +321,7 @@ int main(int argc, char** args)
 
 
     if(iproc == 0) {
-      outf << time_step << " " << system.GetTime() << " " << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
+      outf << time_step << "," << system.GetTime() << "," << fluxes[0] << "," << fluxes[1] << "," << Qtot[0] << "," << Qtot[1] << "," << Qtot[2] << std::endl;
     }
 
     ml_sol.GetWriter()->SetMovingMesh(mov_vars);
@@ -343,13 +343,13 @@ int main(int argc, char** args)
   std::cout << " TOTAL TIME:\t" << \
             static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
     
-  int  nprocs;	    
-  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-  if(iproc == 0){
-    char stdOutputName[100];
-    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_stiffness5.txt",numberOfUniformRefinedMeshes, nprocs);
-    PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
-  }
+//   int  nprocs;	    
+//   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+//   if(iproc == 0){
+//     char stdOutputName[100];
+//     sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_stiffness5.txt",numberOfUniformRefinedMeshes, nprocs);
+//     PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
+//   }
     
   return 0;
 }
