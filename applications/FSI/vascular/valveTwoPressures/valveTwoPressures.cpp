@@ -47,9 +47,9 @@ int main(int argc, char** args)
   twoPressure = true;
 
   //std::string infile = "./../input/valve/2D/valve2.neu";
-  //std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
+  std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
   //std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
-  std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
+  //std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
   //std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
 
   // ******* Set physics parameters *******
@@ -89,7 +89,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 5;
+  numberOfUniformRefinedMeshes = 3;
 
   numberOfAMRLevels = 0;
 
