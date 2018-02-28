@@ -567,7 +567,7 @@ void PrintConvergenceInfo(char *stdOutfile, const unsigned &level, const int &np
 
   std::ofstream outf;
   char outFileName[100];
-  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d_stiffness5.txt",level, nprocs);
+  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d_stiffness5_compressible.txt",level, nprocs);
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
