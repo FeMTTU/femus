@@ -5,12 +5,14 @@ using namespace femus;
 //   double pi = acos(-1.);
 //   return cos(pi * x[0]) * cos(pi * x[1]);
 // };
-// 
+//
 // void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
 //   double pi = acos(-1.);
 //   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
 //   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
 // };
+
+double sigma = 0.4;  //standard deviation of the normal distribution (it is the same as the sigma of the covariance function in GetEigenPair)
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
@@ -63,7 +65,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  for (unsigned i = 0; i < dim; i++) {
+  for(unsigned i = 0; i < dim; i++) {
     x[i].reserve(maxSize);
   }
 
@@ -88,9 +90,13 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
+
+  //       double aCoeff = 1.; //coefficient function
+  double aCoeff = 0.1 * (rand() % ((15 - 5) + 1) + 5) ;
+
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-     
+  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
@@ -99,7 +105,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
     l2GMap.resize(nDofu);
     solu.resize(nDofu);
 
-    for (int i = 0; i < dim; i++) {
+    for(int i = 0; i < dim; i++) {
       x[i].resize(nDofx);
     }
 
@@ -107,17 +113,17 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
     std::fill(aRes.begin(), aRes.end(), 0);    //set aRes to zero
 
     // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofu; i++) {
+    for(unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
       l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
+    for(unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
+      for(unsigned jdim = 0; jdim < dim; jdim++) {
         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
@@ -127,31 +133,31 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
     s.new_recording();
 
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+    for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      adept::adouble solu_gss = 0;
+//       adept::adouble solu_gss = 0;
       vector < adept::adouble > gradSolu_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
-      for (unsigned i = 0; i < nDofu; i++) {
-        solu_gss += phi[i] * solu[i];
+      for(unsigned i = 0; i < nDofu; i++) {
+//         solu_gss += phi[i] * solu[i];
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
+        for(unsigned jdim = 0; jdim < dim; jdim++) {
           gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
           x_gss[jdim] += x[jdim][i] * phi[i];
         }
       }
 
       // *** phi_i loop ***
-      for (unsigned i = 0; i < nDofu; i++) {
+      for(unsigned i = 0; i < nDofu; i++) {
 
         adept::adouble laplace = 0.;
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+        for(unsigned jdim = 0; jdim < dim; jdim++) {
+          laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
         double srcTerm = - GetExactSolutionLaplace(x_gss);
@@ -166,7 +172,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
     //copy the value of the adept::adoube aRes in double Res and store
     Res.resize(nDofu);    //resize
 
-    for (int i = 0; i < nDofu; i++) {
+    for(int i = 0; i < nDofu; i++) {
       Res[i] = - aRes[i].value();
     }
 
