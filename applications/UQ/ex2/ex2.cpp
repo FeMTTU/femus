@@ -61,6 +61,12 @@ int main(int argc, char** argv)
   // add variables to mlSol
   mlSol.AddSolution("u", LAGRANGE, SECOND, 2);
 
+  for (unsigned i = 0; i < numberOfEigPairs; i++) {
+    char name[10];
+    sprintf(name, "egnf%d", i);
+    mlSol.AddSolution(name, LAGRANGE, SECOND, 0, false);
+  }
+
   mlSol.Initialize("All");
 
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -350,8 +356,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
   int ierr;
   EPS eps;
   PetscInt convergedSolns, numberOfIterations;
-  PetscScalar  kr, ki;
-  Vec  xr, xi;
+
 
   ierr = EPSCreate(PETSC_COMM_WORLD, &eps);
   CHKERRABORT(MPI_COMM_WORLD, ierr);
@@ -376,39 +381,31 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
   CHKERRABORT(MPI_COMM_WORLD, ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of converged eigenpairs: %D\n\n", convergedSolns);
   CHKERRABORT(MPI_COMM_WORLD, ierr);
-
-  ierr = MatCreateVecs((static_cast<PetscMatrix*>(CC))->mat(), NULL, &xr);
-  CHKERRABORT(MPI_COMM_WORLD, ierr);
-  ierr = MatCreateVecs((static_cast<PetscMatrix*>(CC))->mat(), NULL, &xi);
-  CHKERRABORT(MPI_COMM_WORLD, ierr);
-
+ 
   if (convergedSolns > 0) {
 
-// Display eigenvalues and relative errors
+    // Display eigenvalues and relative errors
 
     ierr = PetscPrintf(PETSC_COMM_WORLD, " k ||Ax-kx||/||kx||\n" " ----------------- ------------------\n");
     CHKERRABORT(MPI_COMM_WORLD, ierr);
 
     for (unsigned i = 0; i < numberOfEigPairs; i++) {
 
-// Get converged eigenpairs: i-th eigenvalue is stored in kr (real part) and ki (imaginary part)
+      char name[10];
+      sprintf(name, "egnf%d", i);
+      soluIndex = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
 
-      ierr = EPSGetEigenpair(eps, i, &kr, &ki, xr, xi);
+      // Get converged eigenpairs: i-th eigenvalue is stored in kr (real part) and ki (imaginary part)
+
+      ierr = EPSGetEigenpair(eps, i, &eigenvalues[i].first, &eigenvalues[i].second, (static_cast<PetscVector*>(sol->_Sol[soluIndex]))->vec(), NULL);
       CHKERRABORT(MPI_COMM_WORLD, ierr);
-
-      eigenvalues[i].first = kr;
-      eigenvalues[i].second = ki;
 
     }
   }
 
   ierr = EPSDestroy(&eps);
   CHKERRABORT(MPI_COMM_WORLD, ierr);
-  ierr = VecDestroy(&xr);
-  CHKERRABORT(MPI_COMM_WORLD, ierr);
-  ierr = VecDestroy(&xi);
-  CHKERRABORT(MPI_COMM_WORLD, ierr);
-
+  
   delete CC;
 
   // ***************** END ASSEMBLY *******************
