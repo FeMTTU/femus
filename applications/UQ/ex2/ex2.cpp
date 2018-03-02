@@ -41,7 +41,7 @@ double variance = 0.; //initialization
 unsigned M = 3000; //number of samples for the Monte Carlo
 //END
 
-unsigned numberOfUniformLevels = 3;
+unsigned numberOfUniformLevels = 4;
 
 int main(int argc, char** argv)
 {
@@ -336,6 +336,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
         }
       }
 
+      // here we need to exchange information between processes: ielGeom2, l2GMap2 and x2 
+      
       for (unsigned jg = 0; jg < msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber(); jg++) {
         // *** get gauss point weight, test function and test function partial derivatives ***
         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2, phi2, phi_x, *nullDoublePointer);
@@ -357,10 +359,10 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
           for (unsigned i = 0; i < nDof1; i++) {
             for (unsigned j = 0; j < nDof2; j++) {
               CClocal[i * nDof2 + j] += weight1[ig] * phi1[ig][i] * C * phi2[j] * weight2;
-            }
-          }
-        }
-      }
+            } //endl j loop
+          } //endl i loop
+        } //endl ig loop
+      } //endl jg loop
       CC->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
       
     } // end jel loop
@@ -404,7 +406,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
   ierr = EPSSetFromOptions(eps);
   CHKERRABORT(MPI_COMM_WORLD, ierr);
 
-  ierr = EPSSetDimensions(eps, numberOfEigPairs, 8 * numberOfEigPairs, 600);
+  //ierr = EPSSetDimensions(eps, numberOfEigPairs, 8 * numberOfEigPairs, 600);
+  ierr = EPSSetDimensions(eps, numberOfEigPairs, PETSC_DEFAULT, PETSC_DEFAULT);
   CHKERRABORT(MPI_COMM_WORLD, ierr);
   ierr = EPSSetWhichEigenpairs(eps, EPS_LARGEST_MAGNITUDE);
   CHKERRABORT(MPI_COMM_WORLD, ierr);
