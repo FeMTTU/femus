@@ -1,3 +1,5 @@
+#include <boost/random.hpp>
+#include <boost/random/normal_distribution.hpp>
 
 using namespace femus;
 
@@ -5,19 +7,37 @@ using namespace femus;
 //   double pi = acos(-1.);
 //   return cos(pi * x[0]) * cos(pi * x[1]);
 // };
-// 
+//
 // void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
 //   double pi = acos(-1.);
 //   solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
 //   solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
 // };
 
-double GetExactSolutionLaplace(const std::vector < double >& x) {
+
+int numberOfEigPairs = 1;
+std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
+
+double amin = 1. / 100;
+
+double sigma = 0.6;  //standard deviation of the normal distribution (it is the same as the sigma of the covariance function in GetEigenPair)
+
+boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
+
+boost::normal_distribution<> nd(0.0, sigma);
+
+boost::variate_generator < boost::mt19937&,
+
+boost::normal_distribution<> > var_nor(rng, nd);
+
+double GetExactSolutionLaplace(const std::vector < double >& x)
+{
   double pi = acos(-1.);
   return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
 };
 
-void AssembleUQSys(MultiLevelProblem& ml_prob) {
+void AssembleUQSys(MultiLevelProblem& ml_prob)
+{
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -54,11 +74,25 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
   soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
   unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
+  char name[10];
+  std::vector <unsigned> eigfIndex(numberOfEigPairs);
+  
+  for(unsigned i=0; i<numberOfEigPairs;i++){
+    sprintf(name, "egnf%d", i);
+    eigfIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
+  }
+    
+  
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex("u");    // get the position of "u" in the pdeSys object
 
   vector < adept::adouble >  solu; // local solution
   solu.reserve(maxSize);
+  
+  
+  vector < double > KLexpansion; // local solution
+  KLexpansion.reserve(maxSize);
+  
 
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -88,9 +122,11 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
+  double yOmega = var_nor();
+  
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-     
+
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
@@ -98,7 +134,8 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
     // resize local arrays
     l2GMap.resize(nDofu);
     solu.resize(nDofu);
-
+    KLexpansion.resize(nDofu);
+  
     for (int i = 0; i < dim; i++) {
       x[i].resize(nDofx);
     }
@@ -110,6 +147,10 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
+      KLexpansion[i] = 0.;
+      for(unsigned j=0; j<numberOfEigPairs;j++){
+	KLexpansion[i]+= sqrt(eigenvalues[j].first) * (*sol->_Sol[eigfIndex[j]])(solDof) * yOmega; 
+      }
       l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
@@ -132,12 +173,14 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      adept::adouble solu_gss = 0;
+      
+      double KLexpansion_gss = 0.;
       vector < adept::adouble > gradSolu_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
-        solu_gss += phi[i] * solu[i];
+
+	KLexpansion_gss += phi[i] * KLexpansion[i];
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
@@ -145,17 +188,19 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
         }
       }
 
+      double aCoeff = amin + exp(KLexpansion_gss);
+      
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofu; i++) {
 
         adept::adouble laplace = 0.;
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+          laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        double srcTerm = - GetExactSolutionLaplace(x_gss);
-        aRes[i] += (srcTerm * phi[i] - laplace) * weight;
+        double srcTerm = 1.;//- GetExactSolutionLaplace(x_gss);
+        aRes[i] += (srcTerm * phi[i] + laplace) * weight;
 
       } // end phi_i loop
     } // end gauss point loop
