@@ -267,7 +267,7 @@ int main(int argc, char** args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 128;
+  const unsigned int n_timesteps = 1024;
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
@@ -278,8 +278,8 @@ int main(int argc, char** args)
   if(iproc == 0) {
     //char *foutname;
     char foutname[100];
-    //sprintf(foutname, "fluxes_E1=%g_level=%d_incomp.txt",E1,numberOfUniformRefinedMeshes);
-    sprintf(foutname, "ksp_fluxes_E1=%g.txt",E1);
+    sprintf(foutname, "fluxes_E1=%g_level=%d_incomp_dt128.txt",E1,numberOfUniformRefinedMeshes);
+    //sprintf(foutname, "ksp_fluxes_E1=%g.txt",E1);
     outf.open(foutname);
     
     if(!outf) {
@@ -348,13 +348,13 @@ int main(int argc, char** args)
   std::cout << " TOTAL TIME:\t" << \
             static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
     
-  int  nprocs;	    
-  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-  if(iproc == 0){
-    char stdOutputName[100];
-    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_stiffness10.txt",numberOfUniformRefinedMeshes, nprocs);
-    PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
-  }
+//   int  nprocs;	    
+//   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+//   if(iproc == 0){
+//     char stdOutputName[100];
+//     sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_stiffness10.txt",numberOfUniformRefinedMeshes, nprocs);
+//     PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
+//   }
     
   return 0;
 }
@@ -363,7 +363,7 @@ int main(int argc, char** args)
 
 double SetVariableTimeStep(const double time)
 {
-  double dt = 1. / 64;
+  double dt = 1. / 128;
 //   double shiftedTime = time - floor(time);
 //   if (time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25) {
 //     dt = 1. / 64;
