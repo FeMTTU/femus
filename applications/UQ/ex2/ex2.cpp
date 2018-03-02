@@ -38,7 +38,7 @@ double domainMeasure = 1.; //measure of the domain
 unsigned totMoments = 6;
 std::vector <double> moments(totMoments, 0.); //initialization
 double variance = 0.; //initialization
-unsigned M = 3000; //number of samples for the Monte Carlo
+unsigned M = 1000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 3;
@@ -147,6 +147,7 @@ int main(int argc, char** argv)
   GetMoments(QoI);
 
   std::cout.precision(14);
+  std::cout << "the number of MC samples is " << M << std::endl;
   std::cout << "the variance is " << variance << std::endl;
 
   for (unsigned p = 0; p < totMoments; p++) {

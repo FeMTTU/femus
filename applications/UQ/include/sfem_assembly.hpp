@@ -20,7 +20,7 @@ std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
 double amin = 1. / 100;
 
-double sigma = 0.6;  //standard deviation of the normal distribution (it is the same as the sigma of the covariance function in GetEigenPair)
+double sigma = 0.2;  //standard deviation of the normal distribution (it is the same as the sigma of the covariance function in GetEigenPair)
 
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
 
@@ -122,7 +122,12 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
-  double yOmega = var_nor();
+  std::vector <double> yOmega(numberOfEigPairs,0.);
+  for(unsigned eig = 0; eig < numberOfEigPairs; eig++){
+
+    yOmega[eig] = var_nor();
+
+  }
   
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -149,7 +154,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
       KLexpansion[i] = 0.;
       for(unsigned j=0; j<numberOfEigPairs;j++){
-	KLexpansion[i]+= sqrt(eigenvalues[j].first) * (*sol->_Sol[eigfIndex[j]])(solDof) * yOmega; 
+	KLexpansion[i]+= sqrt(eigenvalues[j].first) * (*sol->_Sol[eigfIndex[j]])(solDof) * yOmega[j]; 
       }
       l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
@@ -189,6 +194,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
       }
 
       double aCoeff = amin + exp(KLexpansion_gss);
+//       std::cout << "COEEEEEEEEEEEEEEEEEEEEF" << aCoeff << std::endl;
       
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofu; i++) {
@@ -199,7 +205,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
           laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        double srcTerm = 1.;//- GetExactSolutionLaplace(x_gss);
+        double srcTerm = - GetExactSolutionLaplace(x_gss);
         aRes[i] += (srcTerm * phi[i] + laplace) * weight;
 
       } // end phi_i loop
