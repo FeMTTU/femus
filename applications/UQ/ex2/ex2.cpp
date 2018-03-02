@@ -38,7 +38,7 @@ double domainMeasure = 1.; //measure of the domain
 unsigned totMoments = 6;
 std::vector <double> moments(totMoments, 0.); //initialization
 double variance = 0.; //initialization
-unsigned M = 100; //number of samples for the Monte Carlo
+unsigned M = 3000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 3;
@@ -51,7 +51,7 @@ int main(int argc, char** argv)
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
-  numberOfEigPairs = 4; //number of eigenpairs desired
+  numberOfEigPairs = 100; //number of eigenpairs desired
 
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues
 
@@ -140,9 +140,9 @@ int main(int argc, char** argv)
     std::cout << eigenvalues[i].first << " " << eigenvalues[i].second << std::endl;
   }
 
-  for (unsigned m = 0; m < M; m++) {
-    std::cout << "QoI[" << m << "] = " << QoI[m] << std::endl;
-  }
+//   for (unsigned m = 0; m < M; m++) {
+//     std::cout << "QoI[" << m << "] = " << QoI[m] << std::endl;
+//   }
 
   GetMoments(QoI);
 
