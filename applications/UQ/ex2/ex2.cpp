@@ -663,17 +663,29 @@ void PlotStochasticData() {
 	edgeworth3Terms = edgeworth2Terms + 1. / M * ( 1. / 24 * lambda4 * d4gaussian + 1. / 72 * lambda3 * lambda3 * d6gaussian);
 
         if(totMoments > 3) {
-          gramCharlier4Terms = gramCharlier3Terms + cumulants[4] / (24 * 5 * variance * variance * sigmaSol) * gaussian * (t * t * t * t * t
-                               - 10 * t * t * t + 15 * t);
+	  
+	  double d5gaussian = (-1.) / ( pow(variance,2) * sigmaSol) * gaussian * ( pow(t,5) * - 10 * t * t * t + 15 * t);
+	  double d7gaussian = (-1.) / ( pow(variance,3) * sigmaSol) * gaussian * ( pow(t,7) * - 21 * pow(t,5) + 105 * t * t * t -  105 * t) ;
+	  double d9gaussian = (-1.) / ( pow(variance,4) * sigmaSol) * gaussian * ( pow(t,9) * - 36 * pow(t,7) + 378 * pow(t,5) - 1260 * t * t * t + 945 * t) ; 
+	  
+          gramCharlier4Terms = gramCharlier3Terms - cumulants[4] / 120 * d5gaussian;
+	  
+	  lambda5 = cumulants[4] / (variance * variance * sigmaSol);
+	  
+	  edgeworth4Terms = edgeworth3Terms - ( lambda5 * d5gaussian / 120 + lambda3 * lambda4 * d7gaussian / 144 + pow(lambda3,3) * d9gaussian / 1296) / pow(M, 1.5);
+	  
           if(totMoments > 4) {
-            gramCharlier5Terms = gramCharlier4Terms + (10 * cumulants[2] * cumulants[2] + cumulants[5]) / (24 * 30 * variance * variance * variance) * gaussian
-                                 * (pow(t, 6) - 15 * t * t * t * t + 45 * t * t - 15) ;
+	    
+	    double d6gaussian = (1.) / pow(variance,3) * gaussian * ( pow(t,6) * - 15 * pow(t,4) + 45 * t * t - 15) ;
+	    
+            gramCharlier5Terms = gramCharlier4Terms + (10 * cumulants[2] * cumulants[2] + cumulants[5]) / (120 * 6) * d6gaussian;
+	    
           }
         }
       }
     }
 
-    std::cout << edgeworth3Terms << std::endl; 
+    std::cout << edgeworth4Terms << std::endl; 
 
     x += 0.5;
   }
