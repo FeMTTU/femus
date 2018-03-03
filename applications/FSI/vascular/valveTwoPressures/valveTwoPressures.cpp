@@ -363,7 +363,7 @@ int main(int argc, char** args)
 
 double SetVariableTimeStep(const double time)
 {
-  double dt = 1. / 128;
+  double dt = 1. / 64;
 //   double shiftedTime = time - floor(time);
 //   if (time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25) {
 //     dt = 1. / 64;
