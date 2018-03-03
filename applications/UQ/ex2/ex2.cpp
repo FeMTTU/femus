@@ -19,8 +19,7 @@
 using namespace femus;
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
-{
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
   return dirichlet;
@@ -30,28 +29,31 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
 
 void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &QoI, const unsigned &m, const double &domainMeasure);
 
-void GetMoments(const std::vector <double> &QoI);
+void GetStochasticData(const std::vector <double> &QoI);
+
+void PlotStochasticData();
 
 //BEGIN stochastic data
-double L = 0.4; // correlation length of the covariance function
+double L = 4; // correlation length of the covariance function
 double domainMeasure = 1.; //measure of the domain
 unsigned totMoments = 6;
 std::vector <double> moments(totMoments, 0.); //initialization
+std::vector <double> cumulants(totMoments, 0.); //initialization
 double variance = 0.; //initialization
-unsigned M = 1000; //number of samples for the Monte Carlo
+double mean = 0.; //initialization
+unsigned M = 100; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
 
 
   //BEGIN eigenvalue problem instances
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
-  numberOfEigPairs = 100; //number of eigenpairs desired
+  numberOfEigPairs = 90; //number of eigenpairs desired
 
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues
 
@@ -76,7 +78,7 @@ int main(int argc, char** argv)
   // add variables to mlSol
   mlSol.AddSolution("u", LAGRANGE, SECOND, 2);
 
-  for (unsigned i = 0; i < numberOfEigPairs; i++) {
+  for(unsigned i = 0; i < numberOfEigPairs; i++) {
     char name[10];
     sprintf(name, "egnf%d", i);
     mlSol.AddSolution(name, LAGRANGE, SECOND, 0, false);
@@ -128,7 +130,7 @@ int main(int argc, char** argv)
 
   std::vector <double> QoI(M, 0.);
 
-  for (unsigned m = 0; m < M; m++) {
+  for(unsigned m = 0; m < M; m++) {
 
     system.MGsolve();
 
@@ -136,7 +138,7 @@ int main(int argc, char** argv)
 
   }
 
-  for (int i = 0; i < numberOfEigPairs; i++) {
+  for(int i = 0; i < numberOfEigPairs; i++) {
     std::cout << eigenvalues[i].first << " " << eigenvalues[i].second << std::endl;
   }
 
@@ -144,18 +146,11 @@ int main(int argc, char** argv)
 //     std::cout << "QoI[" << m << "] = " << QoI[m] << std::endl;
 //   }
 
-  GetMoments(QoI);
+  GetStochasticData(QoI);
 
-  std::cout.precision(14);
-  std::cout << "the number of MC samples is " << M << std::endl;
-  std::cout << "the variance is " << variance << std::endl;
-
-  for (unsigned p = 0; p < totMoments; p++) {
-    std::cout << p + 1 << "-th moment is " << moments[p] << std::endl;
-  }
-
-
-  // ******* Print solution *******
+  PlotStochasticData();
+  
+    // ******* Print solution *******
   mlSol.SetWriter(VTK);
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
@@ -172,8 +167,7 @@ int main(int argc, char** argv)
 
 } //end main
 
-void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::vector < std::pair<double, double> > &eigenvalues)
-{
+void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::vector < std::pair<double, double> > &eigenvalues) {
 //void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("UQ");   // pointer to the linear implicit system named "Poisson"
@@ -211,16 +205,16 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
 
   vector < vector < double > > x1(dim);    // local coordinates
   vector < vector < double > > x2(dim);    // local coordinates
-  for (unsigned k = 0; k < dim; k++) {
+  for(unsigned k = 0; k < dim; k++) {
     x1[k].reserve(maxSize);
     x2[k].reserve(maxSize);
   }
 
-  
+
   vector <double> phi2;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
 
-  
+
   double weight2; // gauss point weight
 
   phi2.reserve(maxSize);
@@ -248,7 +242,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
   CC->zero();
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom1 = msh->GetElementType(iel);
     unsigned nDof1  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
@@ -257,7 +251,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
     // resize local arrays
     l2GMap1.resize(nDof1);
 
-    for (int k = 0; k < dim; k++) {
+    for(int k = 0; k < dim; k++) {
       x1[k].resize(nDofx1);
     }
 
@@ -265,14 +259,14 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
     std::fill(MMlocal.begin(), MMlocal.end(), 0);    //set Jac to zero
 
     // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDof1; i++) {
+    for(unsigned i = 0; i < nDof1; i++) {
       l2GMap1[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofx1; i++) {
+    for(unsigned i = 0; i < nDofx1; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-      for (unsigned k = 0; k < dim; k++) {
+      for(unsigned k = 0; k < dim; k++) {
         x1[k][i] = (*msh->_topology->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
@@ -283,24 +277,24 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
     vector < vector < double > > xg1(igNumber);
     vector <double> weight1(igNumber);
     vector < vector <double> > phi1(igNumber);  // local test function
-    
+
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < igNumber; ig++) {
-      
+    for(unsigned ig = 0; ig < igNumber; ig++) {
+
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1[ig], phi1[ig], phi_x, *nullDoublePointer);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      xg1[ig].assign(dim,0.); 
-      for (unsigned i = 0; i < nDof1; i++) {
-        for (unsigned k = 0; k < dim; k++) {
+      xg1[ig].assign(dim, 0.);
+      for(unsigned i = 0; i < nDof1; i++) {
+        for(unsigned k = 0; k < dim; k++) {
           xg1[ig][k] += x1[k][i] * phi1[ig][i];
         }
       }
 
       // *** phi_i loop ***
-      for (unsigned i = 0; i < nDof1; i++) {
-        for (unsigned i1 = 0; i1 < nDof1; i1++) {
+      for(unsigned i = 0; i < nDof1; i++) {
+        for(unsigned i1 = 0; i1 < nDof1; i1++) {
           MMlocal[ i * nDof1 + i1 ] += phi1[ig][i] * phi1[ig][i1] * weight1[ig];
         }
       }
@@ -308,7 +302,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
     MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
 
 
-    for (int jel = msh->_elementOffset[iproc]; jel < msh->_elementOffset[iproc + 1]; jel++) {
+    for(int jel = msh->_elementOffset[iproc]; jel < msh->_elementOffset[iproc + 1]; jel++) {
 
       short unsigned ielGeom2 = msh->GetElementType(jel);
       unsigned nDof2  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
@@ -317,7 +311,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
       // resize local arrays
       l2GMap2.resize(nDof2);
 
-      for (int k = 0; k < dim; k++) {
+      for(int k = 0; k < dim; k++) {
         x2[k].resize(nDofx2);
       }
 
@@ -325,49 +319,49 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
       std::fill(CClocal.begin(), CClocal.end(), 0);    //set Jac to zero
 
       // local storage of global mapping and solution
-      for (unsigned j = 0; j < nDof2; j++) {
+      for(unsigned j = 0; j < nDof2; j++) {
         l2GMap2[j] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, j, jel);    // global to global mapping between solution node and pdeSys dof
       }
 
       // local storage of coordinates
-      for (unsigned j = 0; j < nDofx2; j++) {
+      for(unsigned j = 0; j < nDofx2; j++) {
         unsigned xDof  = msh->GetSolutionDof(j, jel, xType);    // global to global mapping between coordinates node and coordinate dof
-        for (unsigned k = 0; k < dim; k++) {
+        for(unsigned k = 0; k < dim; k++) {
           x2[k][j] = (*msh->_topology->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
         }
       }
 
-      // here we need to exchange information between processes: ielGeom2, l2GMap2 and x2 
-      
-      for (unsigned jg = 0; jg < msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber(); jg++) {
+      // here we need to exchange information between processes: ielGeom2, l2GMap2 and x2
+
+      for(unsigned jg = 0; jg < msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber(); jg++) {
         // *** get gauss point weight, test function and test function partial derivatives ***
         msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2, phi2, phi_x, *nullDoublePointer);
 
         // evaluate the solution, the solution derivatives and the coordinates in the gauss point
         vector < double > xg2(dim, 0.);
 
-        for (unsigned j = 0; j < nDof2; j++) {
-          for (unsigned k = 0; k < dim; k++) {
+        for(unsigned j = 0; j < nDof2; j++) {
+          for(unsigned k = 0; k < dim; k++) {
             xg2[k] += x2[k][j] * phi2[j];
           }
         }
-	for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber(); ig++) {
+        for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber(); ig++) {
           double dist = 0.;
-          for (unsigned k = 0; k < dim; k++) {
+          for(unsigned k = 0; k < dim; k++) {
             dist += fabs(xg1[ig][k] - xg2[k]);
           }
           double C = sigma2 * exp(-dist / L);
-          for (unsigned i = 0; i < nDof1; i++) {
-            for (unsigned j = 0; j < nDof2; j++) {
+          for(unsigned i = 0; i < nDof1; i++) {
+            for(unsigned j = 0; j < nDof2; j++) {
               CClocal[i * nDof2 + j] += weight1[ig] * phi1[ig][i] * C * phi2[j] * weight2;
             } //endl j loop
           } //endl i loop
         } //endl ig loop
       } //endl jg loop
       CC->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
-      
+
     } // end jel loop
-  
+
   } //end iel loop
 
   MM->close();
@@ -425,9 +419,9 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
   ierr = PetscPrintf(PETSC_COMM_WORLD, " Number of converged eigenpairs: %D\n\n", convergedSolns);
   CHKERRABORT(MPI_COMM_WORLD, ierr);
 
-  if (convergedSolns > 0) {
+  if(convergedSolns > 0) {
 
-    for (unsigned i = 0; i < numberOfEigPairs; i++) {
+    for(unsigned i = 0; i < numberOfEigPairs; i++) {
 
       char name[10];
       sprintf(name, "egnf%d", i);
@@ -450,8 +444,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
 }
 
 
-void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &QoI, const unsigned &m, const double &domainMeasure)
-{
+void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &QoI, const unsigned &m, const double &domainMeasure) {
 
   //  extract pointers to the several objects that we are going to use
 
@@ -486,7 +479,7 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  for (unsigned i = 0; i < dim; i++) {
+  for(unsigned i = 0; i < dim; i++) {
     x[i].reserve(maxSize);
   }
 
@@ -502,7 +495,7 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &
   double quantityOfInterest = 0;
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
@@ -511,27 +504,27 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &
     // resize local arrays
     solu.resize(nDofu);
 
-    for (int i = 0; i < dim; i++) {
+    for(int i = 0; i < dim; i++) {
       x[i].resize(nDofx);
     }
 
     // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofu; i++) {
+    for(unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
     }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
+    for(unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
+      for(unsigned jdim = 0; jdim < dim; jdim++) {
         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+    for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
@@ -539,7 +532,7 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &
       vector < double > gradSolu_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
-      for (unsigned i = 0; i < nDofu; i++) {
+      for(unsigned i = 0; i < nDofu; i++) {
         quantityOfInterest += phi[i] * solu[i] * weight / domainMeasure;
       }
 
@@ -551,10 +544,9 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &
 
 }
 
-void GetMoments(const std::vector <double> &QoI)
-{
+void GetStochasticData(const std::vector <double> &QoI) {
 
-  if (totMoments <= 0) {
+  if(totMoments <= 0) {
 
     std::cout << "ERROR: total number of moments has to be a positive integer" << std::endl;
 
@@ -562,10 +554,10 @@ void GetMoments(const std::vector <double> &QoI)
 
   else {
 
-    for (unsigned p = 0; p < totMoments; p++) {
-      for (unsigned m = 0; m < M; m++) {
+    for(unsigned p = 0; p < totMoments; p++) {
+      for(unsigned m = 0; m < M; m++) {
         double tempQ = 1.;
-        for (unsigned ip = 0; ip < p + 1; ip++) {
+        for(unsigned ip = 0; ip < p + 1; ip++) {
           tempQ *= QoI[m];
         }
         moments[p] += tempQ;
@@ -574,15 +566,118 @@ void GetMoments(const std::vector <double> &QoI)
     }
 
 
-    for (unsigned m = 0; m < M; m++) {
+    for(unsigned m = 0; m < M; m++) {
       variance += (QoI[m] - moments[0]) * (QoI[m] - moments[0]);
     }
 
     variance /= M;
 
+    mean = moments[0];
+
+    cumulants[0] = moments[0];
+
+    if(totMoments > 1) {
+      cumulants[1] = moments[1] - moments[0] * moments[0];
+      if(totMoments > 2) {
+        cumulants[2] = moments[2] -  3 * moments[1] * moments[0] + 2 * moments[0] * moments[0] * moments[0];
+        if(totMoments > 3) {
+          cumulants[3] = moments[3] - 4 * moments[2] * moments[0] - 3 * moments[1] * moments[1] + 12 * moments[1] * moments[0] * moments[0] - 6 * pow(moments[0], 4);
+        }
+        if(totMoments > 4) {
+          cumulants[4] = moments[4] - 5 * moments[3] * moments[0] - 10 * moments[2] * moments[1] + 20 * moments[2] * moments[0] * moments[0]
+                         + 30 * moments[1] * moments[1] * moments[0] - 60 * moments[1] * pow(moments[0], 3) + 24 * pow(moments[0], 5) ;
+          if(totMoments > 5) {
+            cumulants[5] = moments[5] - 6 * moments[4] * moments[0] - 15 * moments[3] * moments[1] + 30 * moments[3] * moments[0] * moments[0]
+                           - 10 * moments[2] * moments[2] + 120 * moments[2] * moments[1] * moments[0] - 120 * moments[2] * pow(moments[0], 3)
+                           + 30 * pow(moments[1], 3) - 270 * pow(moments[1], 2) * pow(moments[0], 2) + 360 * moments[1] * pow(moments[0], 4) - 120 * pow(moments[0], 6);
+          }
+        }
+      }
+    }
+
   }
 
 
+}
+
+
+void PlotStochasticData() {
+
+  std::cout.precision(14);
+  std::cout << " the number of MC samples is " << M << std::endl;
+  std::cout << " the mean is " << mean << std::endl;
+  std::cout << " the variance is " << variance << std::endl;
+
+  for(unsigned p = 0; p < totMoments; p++) {
+//     printf("%d-th moment is %g\n", p + 1, moments[p]);
+    std::cout << "the " << p + 1 << "-th moment is " << moments[p] << std::endl;
+  }
+
+  for(unsigned p = 0; p < totMoments; p++) {
+//     printf("%d-th cumulant is %g\n", p + 1, cumulants[p]);
+    std::cout << "the " << p + 1 << "-th cumulant is " << cumulants[p] << std::endl;
+  }
+
+
+  double x = -100;
+
+  double gramCharlier2Terms = 0.;
+  double gramCharlier3Terms = 0.;
+  double gramCharlier4Terms = 0.;
+  double gramCharlier5Terms = 0.;
+
+  double edgeworth2Terms = 0.;
+  double edgeworth3Terms = 0.;
+  double edgeworth4Terms = 0.;
+  double edgeworth5Terms = 0.;
+
+  double lambda3 = 0.;
+  double lambda4 = 0.;
+  double lambda5 = 0.;
+  double lambda6 = 0.;
+
+  double sigmaSol = sqrt(variance);
+
+  for(unsigned i = 0; i < 401; i++) {
+    double t = (x - mean) / sigmaSol;
+    double gaussian = 1. / (sqrt(2 * acos(-1) * variance)) * exp(- 0.5 * (t * t)) ;
+    if(totMoments > 1) {
+
+      double d3gaussian = (-1.) / (variance * sigmaSol) * gaussian * (t * t * t - 3 * t) ;
+
+      gramCharlier2Terms =  gaussian - cumulants[2] / 6 * d3gaussian ;
+
+      lambda3 = cumulants[2] / (sigmaSol * variance);
+
+      edgeworth2Terms = gaussian - lambda3 * d3gaussian / (6 * sqrt(M)) ;
+
+      if(totMoments > 2) {
+
+        double d4gaussian = (1.) / (variance * variance) * gaussian * (t * t * t * t - 6 * t * t + 3) ;
+	double d6gaussian = (1.) / (variance * variance * variance) * gaussian * (pow(t, 6) - 15 * t * t * t * t + 45 * t * t - 15);
+
+        gramCharlier3Terms = gramCharlier2Terms + cumulants[3] / 24 * d4gaussian ;
+
+        lambda4 = cumulants[3] / (variance * variance);
+	
+	edgeworth3Terms = edgeworth2Terms + 1. / M * ( 1. / 24 * lambda4 * d4gaussian + 1. / 72 * lambda3 * lambda3 * d6gaussian);
+
+        if(totMoments > 3) {
+          gramCharlier4Terms = gramCharlier3Terms + cumulants[4] / (24 * 5 * variance * variance * sigmaSol) * gaussian * (t * t * t * t * t
+                               - 10 * t * t * t + 15 * t);
+          if(totMoments > 4) {
+            gramCharlier5Terms = gramCharlier4Terms + (10 * cumulants[2] * cumulants[2] + cumulants[5]) / (24 * 30 * variance * variance * variance) * gaussian
+                                 * (pow(t, 6) - 15 * t * t * t * t + 45 * t * t - 15) ;
+          }
+        }
+      }
+    }
+
+    std::cout << edgeworth3Terms << std::endl; 
+
+    x += 0.5;
+  }
+  
 }
 
 
