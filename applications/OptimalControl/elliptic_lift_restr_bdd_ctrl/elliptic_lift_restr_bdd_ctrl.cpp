@@ -268,8 +268,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower = -0.3;
-  double ctrl_upper = 0.8;
+  double ctrl_lower = -0.6;
+  double ctrl_upper = 3.;
   assert(ctrl_lower < ctrl_upper);
   double c_compl = 1.;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
@@ -529,7 +529,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
-													      + 1. * sol_mu[i] - 0.);
+													      /*+ 1. * sol_mu[i] */- 0.);
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
           // THIRD ROW
@@ -672,7 +672,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	 
 	 
 // // // 	}
-    
+    std::vector<double> Res_ctrl (nDof_ctrl);
+    for (unsigned i = 0; i < sol_ctrl.size(); i++){
+	Res[nDof_u + i] = Res[nDof_u + i] - sol_mu[i];
+	Res_ctrl[i] = Res[nDof_u + i];
+    }
+
  //========== sum-based part
 
     //copy the value of the adept::adoube aRes in double Res and store
@@ -686,16 +691,17 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       std::vector<double> Res_mu (nDof_mu);
     for (unsigned i = 0; i < sol_actflag.size(); i++){
       if (sol_actflag[i] == 0){  //inactive
-         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( /*1. * sol_mu[i]*/ - 0. ) ; 
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
       else { //active
-         Res[nDof_u + nDof_ctrl + nDof_adj + i]  =    c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower /*- sol_ctrl[i]*/) + ( sol_actflag[i] - 1 ) * (ctrl_upper /*- sol_ctrl[i]*/)  ) ;
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  =    c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
       }
     } 
     
     RES->insert(Res_mu, l2GMap_mu);
+    RES->insert(Res_ctrl, l2GMap_ctrl);
   
  //============= delta_ctrl-delta_mu row ===============================
  KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
