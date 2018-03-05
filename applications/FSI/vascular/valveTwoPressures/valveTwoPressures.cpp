@@ -226,7 +226,7 @@ int main(int argc, char** args)
   
   // ******* Set block size for the ASM smoothers *******
   
-  system.SetElementBlockNumber(3);
+  system.SetElementBlockNumber(4);
   
   
   if(twoPressure)
@@ -568,7 +568,7 @@ void PrintConvergenceInfo(char *stdOutfile, const unsigned &level, const int &np
 
   std::ofstream outf;
   char outFileName[100];
-  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d_stiffness5_compressible.txt",level, nprocs);
+  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d_stiffness5.txt",level, nprocs);
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
