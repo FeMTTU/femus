@@ -44,7 +44,7 @@ double mean = 0.; //initialization
 unsigned M = 100; //number of samples for the Monte Carlo
 //END
 
-unsigned numberOfUniformLevels = 4;
+unsigned numberOfUniformLevels = 3;
 
 int main(int argc, char** argv) {
 
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
-  numberOfEigPairs = 90; //number of eigenpairs desired
+  numberOfEigPairs = 20; //number of eigenpairs desired
 
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues
 
@@ -96,7 +96,6 @@ int main(int argc, char** argv) {
   // ******* Add FEM system to the MultiLevel problem *******
   LinearImplicitSystem& system = ml_prob.add_system < LinearImplicitSystem > ("UQ");
   system.AddSolutionToSystemPDE("u");
-
 
   // ******* System FEM Assembly *******
   system.SetAssembleFunction(AssembleUQSys);
@@ -142,23 +141,20 @@ int main(int argc, char** argv) {
     std::cout << eigenvalues[i].first << " " << eigenvalues[i].second << std::endl;
   }
 
-//   for (unsigned m = 0; m < M; m++) {
+//   for(unsigned m = 0; m < M; m++) {
 //     std::cout << "QoI[" << m << "] = " << QoI[m] << std::endl;
 //   }
 
   GetStochasticData(QoI);
 
   PlotStochasticData();
-  
-    // ******* Print solution *******
+
+  // ******* Print solution *******
   mlSol.SetWriter(VTK);
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
-
-
-
 
   //ierr = SlepcFinalize();
   //CHKERRQ(ierr);
@@ -186,7 +182,6 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
   SparseMatrix*             MM = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
@@ -210,10 +205,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
     x2[k].reserve(maxSize);
   }
 
-
   vector <double> phi2;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
-
 
   double weight2; // gauss point weight
 
@@ -301,91 +294,85 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
     }
     MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
 
+    for(int kproc = 0; kproc < nprocs; kproc++) {
+      for(int jel = msh->_elementOffset[kproc]; jel < msh->_elementOffset[kproc + 1]; jel++) {
 
-    for(int jel = msh->_elementOffset[iproc]; jel < msh->_elementOffset[iproc + 1]; jel++) {
+        short unsigned ielGeom2;
+        unsigned nDof2;
+        unsigned nDofx2;
 
-      short unsigned ielGeom2 = msh->GetElementType(jel);
-      unsigned nDof2  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
-      unsigned nDofx2 = msh->GetElementDofNumber(jel, xType);    // number of coordinate element dofs
+        if(iproc == kproc) {
+          ielGeom2 = msh->GetElementType(jel);
+          nDof2  = msh->GetElementDofNumber(jel, solType);    // number of solution element dofs
+          nDofx2 = msh->GetElementDofNumber(jel, xType);    // number of coordinate element dofs
+        }
 
-      // resize local arrays
-      l2GMap2.resize(nDof2);
+        MPI_Bcast(&ielGeom2, 1, MPI_UNSIGNED_SHORT, kproc, MPI_COMM_WORLD);
+        MPI_Bcast(&nDof2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
+        MPI_Bcast(&nDofx2, 1, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
 
-      for(int k = 0; k < dim; k++) {
-        x2[k].resize(nDofx2);
-      }
+        // resize local arrays
+        l2GMap2.resize(nDof2);
 
-      CClocal.resize(nDof1 * nDof2);    //resize
-      std::fill(CClocal.begin(), CClocal.end(), 0);    //set Jac to zero
+        for(int k = 0; k < dim; k++) {
+          x2[k].resize(nDofx2);
+        }
 
-      // local storage of global mapping and solution
-      for(unsigned j = 0; j < nDof2; j++) {
-        l2GMap2[j] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, j, jel);    // global to global mapping between solution node and pdeSys dof
-      }
+        // local storage of global mapping and solution
+        if(iproc == kproc) {
+          for(unsigned j = 0; j < nDof2; j++) {
+            l2GMap2[j] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, j, jel);    // global to global mapping between solution node and pdeSys dof
+          }
+        }
+        MPI_Bcast(&l2GMap2[0], nDof2, MPI_UNSIGNED, kproc, MPI_COMM_WORLD);
 
-      // local storage of coordinates
-      for(unsigned j = 0; j < nDofx2; j++) {
-        unsigned xDof  = msh->GetSolutionDof(j, jel, xType);    // global to global mapping between coordinates node and coordinate dof
+        // local storage of coordinates
+        if(iproc == kproc) {
+          for(unsigned j = 0; j < nDofx2; j++) {
+            unsigned xDof  = msh->GetSolutionDof(j, jel, xType);    // global to global mapping between coordinates node and coordinate dof
+            for(unsigned k = 0; k < dim; k++) {
+              x2[k][j] = (*msh->_topology->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
+            }
+          }
+        }
         for(unsigned k = 0; k < dim; k++) {
-          x2[k][j] = (*msh->_topology->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
+          MPI_Bcast(& x2[k][0], nDofx2, MPI_DOUBLE, kproc, MPI_COMM_WORLD);
         }
-      }
 
-      // here we need to exchange information between processes: ielGeom2, l2GMap2 and x2
+        // here we need to exchange information between processes: ielGeom2, l2GMap2 and x2
+        CClocal.assign(nDof1 * nDof2, 0.);   //resize
+        for(unsigned jg = 0; jg < msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber(); jg++) {
+          // *** get gauss point weight, test function and test function partial derivatives ***
+          msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2, phi2, phi_x, *nullDoublePointer);
 
-      for(unsigned jg = 0; jg < msh->_finiteElement[ielGeom2][solType]->GetGaussPointNumber(); jg++) {
-        // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2, phi2, phi_x, *nullDoublePointer);
+          // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+          vector < double > xg2(dim, 0.);
 
-        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-        vector < double > xg2(dim, 0.);
-
-        for(unsigned j = 0; j < nDof2; j++) {
-          for(unsigned k = 0; k < dim; k++) {
-            xg2[k] += x2[k][j] * phi2[j];
+          for(unsigned j = 0; j < nDof2; j++) {
+            for(unsigned k = 0; k < dim; k++) {
+              xg2[k] += x2[k][j] * phi2[j];
+            }
           }
-        }
-        for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber(); ig++) {
-          double dist = 0.;
-          for(unsigned k = 0; k < dim; k++) {
-            dist += fabs(xg1[ig][k] - xg2[k]);
-          }
-          double C = sigma2 * exp(-dist / L);
-          for(unsigned i = 0; i < nDof1; i++) {
-            for(unsigned j = 0; j < nDof2; j++) {
-              CClocal[i * nDof2 + j] += weight1[ig] * phi1[ig][i] * C * phi2[j] * weight2;
-            } //endl j loop
-          } //endl i loop
-        } //endl ig loop
-      } //endl jg loop
-      CC->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
-
-    } // end jel loop
-
+          for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber(); ig++) {
+            double dist = 0.;
+            for(unsigned k = 0; k < dim; k++) {
+              dist += fabs(xg1[ig][k] - xg2[k]);
+            }
+            double C = sigma2 * exp(-dist / L);
+            for(unsigned i = 0; i < nDof1; i++) {
+              for(unsigned j = 0; j < nDof2; j++) {
+                CClocal[i * nDof2 + j] += weight1[ig] * phi1[ig][i] * C * phi2[j] * weight2;
+              }//endl j loop
+            } //endl i loop
+          } //endl ig loop
+        } //endl jg loop
+        CC->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
+      } // end jel loop
+    }
   } //end iel loop
 
   MM->close();
   CC->close();
-
-
-//   MatDuplicate((static_cast<PetscMatrix*>(CC))->mat(), MAT_COPY_VALUES, &CCSLEPc);
-//   MatDuplicate((static_cast<PetscMatrix*>(MM))->mat(), MAT_COPY_VALUES, &MMSLEPc);
-//   //MatDuplicate(CCSLEPc, MAT_COPY_VALUES, &MMSLEPc);
-//
-//
-//   PetscErrorCode ierr;
-//   PetscViewer viewer ;
-//   PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-//   PetscObjectSetName((PetscObject)viewer,"UQ matrix");
-//   PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-//
-//   ierr = MatView(CCSLEPc, viewer);
-//   ierr = MatView(MMSLEPc, viewer);
-//
-//   PetscViewerDestroy(&viewer);
-
-
-
 
   //BEGIN solve the eigenvalue problem
 
@@ -460,10 +447,10 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  unsigned    nprocs = msh->n_processors(); // get the process_id (for parallel computation)
 
   //solution variable
   unsigned soluIndex;
@@ -485,16 +472,15 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &
 
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
   double weight; // gauss point weight
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
-  phi_xx.reserve(maxSize * dim2);
 
-  double quantityOfInterest = 0;
+  double quantityOfInterest = 0.;
 
   // element loop: each process loops only on the elements that owns
+
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
@@ -523,10 +509,11 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &
       }
     }
 
+    vector < double > *nullDoublePointer = NULL;
     // *** Gauss point loop ***
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, *nullDoublePointer);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       vector < double > gradSolu_gss(dim, 0.);
@@ -537,11 +524,24 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &
       }
 
     } // end gauss point loop
-
+    
   } //end element loop for each process
 
-  QoI[m] = quantityOfInterest;
+  
+  // add the quantityOfInterest of all processes
+  NumericVector* norm_vec;
+  norm_vec = NumericVector::build().release();
+  norm_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
 
+  norm_vec->set (iproc, quantityOfInterest);
+  norm_vec->close();
+
+  quantityOfInterest = norm_vec->l1_norm();
+
+  delete norm_vec;
+
+  QoI[m] = quantityOfInterest;
+  
 }
 
 void GetStochasticData(const std::vector <double> &QoI) {
@@ -578,6 +578,9 @@ void GetStochasticData(const std::vector <double> &QoI) {
 
     if(totMoments > 1) {
       cumulants[1] = moments[1] - moments[0] * moments[0];
+      
+      if (fabs(variance - cumulants[1]) > 1.e-8) std::cout << "warning, there might be a mistake" << std::endl;
+      
       if(totMoments > 2) {
         cumulants[2] = moments[2] -  3 * moments[1] * moments[0] + 2 * moments[0] * moments[0] * moments[0];
         if(totMoments > 3) {
@@ -606,7 +609,7 @@ void PlotStochasticData() {
   std::cout.precision(14);
   std::cout << " the number of MC samples is " << M << std::endl;
   std::cout << " the mean is " << mean << std::endl;
-  std::cout << " the variance is " << variance << std::endl;
+  std::cout << " the standard deviation is " << sqrt(variance) << std::endl;
 
   for(unsigned p = 0; p < totMoments; p++) {
 //     printf("%d-th moment is %g\n", p + 1, moments[p]);
@@ -619,7 +622,7 @@ void PlotStochasticData() {
   }
 
 
-  double x = -100;
+  double x = -5;
 
   double gramCharlier2Terms = 0.;
   double gramCharlier3Terms = 0.;
@@ -638,7 +641,7 @@ void PlotStochasticData() {
 
   double sigmaSol = sqrt(variance);
 
-  for(unsigned i = 0; i < 401; i++) {
+  for(unsigned i = 0; i < 241; i++) {
     double t = (x - mean) / sigmaSol;
     double gaussian = 1. / (sqrt(2 * acos(-1) * variance)) * exp(- 0.5 * (t * t)) ;
     if(totMoments > 1) {
@@ -649,48 +652,49 @@ void PlotStochasticData() {
 
       lambda3 = cumulants[2] / (sigmaSol * variance);
 
-      edgeworth2Terms = gaussian - lambda3 * d3gaussian / (6 * sqrt(M)) ;
+      edgeworth2Terms = gaussian - lambda3 * d3gaussian / 6;
 
       if(totMoments > 2) {
 
-        double d4gaussian = (1.) / (variance * variance) * gaussian * (t * t * t * t - 6 * t * t + 3) ;
-	double d6gaussian = (1.) / (variance * variance * variance) * gaussian * (pow(t, 6) - 15 * t * t * t * t + 45 * t * t - 15);
+        double d4gaussian = (1.) / pow(sigmaSol, 4) * gaussian * (t * t * t * t - 6 * t * t + 3) ;
+        double d6gaussian = (1.) / pow(sigmaSol, 6) * gaussian * (pow(t, 6) - 15 * t * t * t * t + 45 * t * t - 15);
 
         gramCharlier3Terms = gramCharlier2Terms + cumulants[3] / 24 * d4gaussian ;
 
         lambda4 = cumulants[3] / (variance * variance);
-	
-	edgeworth3Terms = edgeworth2Terms + 1. / M * ( 1. / 24 * lambda4 * d4gaussian + 1. / 72 * lambda3 * lambda3 * d6gaussian);
+
+        edgeworth3Terms = edgeworth2Terms + (1. / 24 * lambda4 * d4gaussian + 1. / 72 * lambda3 * lambda3 * d6gaussian);
 
         if(totMoments > 3) {
-	  
-	  double d5gaussian = (-1.) / ( pow(variance,2) * sigmaSol) * gaussian * ( pow(t,5) * - 10 * t * t * t + 15 * t);
-	  double d7gaussian = (-1.) / ( pow(variance,3) * sigmaSol) * gaussian * ( pow(t,7) * - 21 * pow(t,5) + 105 * t * t * t -  105 * t) ;
-	  double d9gaussian = (-1.) / ( pow(variance,4) * sigmaSol) * gaussian * ( pow(t,9) * - 36 * pow(t,7) + 378 * pow(t,5) - 1260 * t * t * t + 945 * t) ; 
-	  
+
+          double d5gaussian = (-1.) / pow(sigmaSol, 5) * gaussian * (pow(t, 5) * - 10 * t * t * t + 15 * t);
+          double d7gaussian = (-1.) / pow(sigmaSol, 7) * gaussian * (pow(t, 7) * - 21 * pow(t, 5) + 105 * t * t * t -  105 * t) ;
+          double d9gaussian = (-1.) / pow(sigmaSol, 9) * gaussian * (pow(t, 9) * - 36 * pow(t, 7) + 378 * pow(t, 5) - 1260 * t * t * t + 945 * t) ;
+
           gramCharlier4Terms = gramCharlier3Terms - cumulants[4] / 120 * d5gaussian;
-	  
-	  lambda5 = cumulants[4] / (variance * variance * sigmaSol);
-	  
-	  edgeworth4Terms = edgeworth3Terms - ( lambda5 * d5gaussian / 120 + lambda3 * lambda4 * d7gaussian / 144 + pow(lambda3,3) * d9gaussian / 1296) / pow(M, 1.5);
-	  
+
+          lambda5 = cumulants[4] / (variance * variance * sigmaSol);
+
+          edgeworth4Terms = edgeworth3Terms - (lambda5 * d5gaussian / 120 + lambda3 * lambda4 * d7gaussian / 144 + pow(lambda3, 3) * d9gaussian / 1296) ;
+
           if(totMoments > 4) {
-	    
-	    double d6gaussian = (1.) / pow(variance,3) * gaussian * ( pow(t,6) * - 15 * pow(t,4) + 45 * t * t - 15) ;
-	    
+
+            double d6gaussian = (1.) / pow(sigmaSol, 6) * gaussian * (pow(t, 6) * - 15 * pow(t, 4) + 45 * t * t - 15) ;
+
             gramCharlier5Terms = gramCharlier4Terms + (10 * cumulants[2] * cumulants[2] + cumulants[5]) / (120 * 6) * d6gaussian;
-	    
+
           }
         }
       }
     }
 
-    std::cout << edgeworth4Terms << std::endl; 
+    std::cout << edgeworth4Terms << std::endl;
 
-    x += 0.5;
+    x += 0.05;
   }
-  
+
 }
+
 
 
 

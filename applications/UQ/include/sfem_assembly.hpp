@@ -20,7 +20,7 @@ std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
 double amin = 1. / 100;
 
-double sigma = 10;  //standard deviation of the normal distribution (it is the same as the sigma of the covariance function in GetEigenPair)
+double sigma = 20;  //standard deviation of the normal distribution (it is the same as the sigma of the covariance function in GetEigenPair)
 
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
 
@@ -205,7 +205,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
           laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        double srcTerm = - GetExactSolutionLaplace(x_gss);
+        double srcTerm = 1./*- GetExactSolutionLaplace(x_gss)*/ ;
         aRes[i] += (srcTerm * phi[i] + laplace) * weight;
 
       } // end phi_i loop
