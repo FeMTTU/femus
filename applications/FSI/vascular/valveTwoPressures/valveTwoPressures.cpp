@@ -67,7 +67,7 @@ int main(int argc, char** args)
   E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
   E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
-  ni1 = 0.49; //0.5
+  ni1 = 0.5; //0.49
   
   Parameter par(Lref, Uref);
 
@@ -89,7 +89,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 5;
+  numberOfUniformRefinedMeshes = 4;
 
   numberOfAMRLevels = 0;
 
@@ -274,17 +274,17 @@ int main(int argc, char** args)
   int  iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
 
-  std::ofstream outf;
-  if(iproc == 0) {
-    outf.open("fluxes_E1=1.5_ksp.txt");
-    if(!outf) {
-      std::cout << "Error in opening file DataPrint.txt";
-      return 1;
-    }
-  }
+//   std::ofstream outf;
+//   if(iproc == 0) {
+//     outf.open("fluxes_E1=1.5_ksp.txt");
+//     if(!outf) {
+//       std::cout << "Error in opening file DataPrint.txt";
+//       return 1;
+//     }
+//   }
 
-  std::vector < double > Qtot(3, 0.);
-  std::vector<double> fluxes(2, 0.);
+//   std::vector < double > Qtot(3, 0.);
+//   std::vector<double> fluxes(2, 0.);
 
   system.ResetComputationalTime();
   
@@ -305,35 +305,36 @@ int main(int argc, char** args)
 
     StoreMeshVelocity(ml_prob);
 
-    double dt = system.GetIntervalTime();
+    //fluxes
+//     double dt = system.GetIntervalTime();
+// 
+//     Qtot[0] += 0.5 * dt * fluxes[0];
+//     Qtot[1] += 0.5 * dt * fluxes[1];
+// 
+//     GetSolutionFluxes(ml_sol, fluxes);
+// 
+//     Qtot[0] += 0.5 * dt * fluxes[0];
+//     Qtot[1] += 0.5 * dt * fluxes[1];
+//     Qtot[2] = Qtot[0] + Qtot[1];
+// 
+// 
+//     std::cout << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
+// 
+// 
+//     if(iproc == 0) {
+//       outf << time_step << "," << system.GetTime() << "," << fluxes[0] << "," << fluxes[1] << "," << Qtot[0] << "," << Qtot[1] << "," << Qtot[2] << std::endl;
+//     }
 
-    Qtot[0] += 0.5 * dt * fluxes[0];
-    Qtot[1] += 0.5 * dt * fluxes[1];
-
-    GetSolutionFluxes(ml_sol, fluxes);
-
-    Qtot[0] += 0.5 * dt * fluxes[0];
-    Qtot[1] += 0.5 * dt * fluxes[1];
-    Qtot[2] = Qtot[0] + Qtot[1];
-
-
-    std::cout << fluxes[0] << " " << fluxes[1] << " " << Qtot[0] << " " << Qtot[1] << " " << Qtot[2] << std::endl;
-
-
-    if(iproc == 0) {
-      outf << time_step << "," << system.GetTime() << "," << fluxes[0] << "," << fluxes[1] << "," << Qtot[0] << "," << Qtot[1] << "," << Qtot[2] << std::endl;
-    }
-
-    ml_sol.GetWriter()->SetMovingMesh(mov_vars);
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
+    //ml_sol.GetWriter()->SetMovingMesh(mov_vars);
+    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
     //if(time_step % 1 == 0) ml_sol.SaveSolution("valve2D", time_step);
 
   }
 
-  if(iproc == 0) {
-    outf.close();
-  }
+//   if(iproc == 0) {
+//     outf.close();
+//   }
 
 
   
