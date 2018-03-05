@@ -106,7 +106,7 @@ double SetInitialCondition(const MultiLevelProblem * ml_prob, const std::vector 
 
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob);    
 
-// double ComputeIntegral(MultiLevelProblem& ml_prob);
+double ComputeIntegral(MultiLevelProblem& ml_prob);
 
 
 int main(int argc, char** args) {
@@ -218,10 +218,10 @@ int main(int argc, char** args) {
   system_opt.ClearVariablesToBeSolved();
   system_opt.AddVariableToBeSolved("All");
   
-  system_opt.SetMaxNumberOfNonLinearIterations(1);
+  system_opt.SetMaxNumberOfNonLinearIterations(3);
   system_opt.MLsolve();
 
-//     ComputeIntegral(mlProb);
+    ComputeIntegral(mlProb);
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -613,7 +613,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 			  for(int i_bd = 0; i_bd < nve_bd; i_bd++/*unsigned i = 0; i < Sol_n_el_dofs[unk]; i++*/) {
 		                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
 									      SolVAR_bd_qp[SolPdeIndex[ctrl_index]]        += phi_bd_gss_fe  [ SolFEType[ctrl_index] ][i_bd]                  * SolVAR_eldofs[ SolPdeIndex[ ctrl_index ] ][i_vol];
-									      SolVAR_bd_qp[SolPdeIndex[delta_theta_theta_index]]        += phi_bd_gss_fe  [ SolFEType[delta_theta_theta_index] ][i_bd] * SolVAR_eldofs[ SolPdeIndex[ delta_theta_theta_index ] ][i_vol];
+									      SolVAR_bd_qp[SolPdeIndex[delta_theta_theta_index]]        += phi_bd_gss_fe  [ SolFEType[delta_theta_theta_index] ][i_bd] * SolVAR_eldofs[ SolPdeIndex[ delta_theta_theta_index ] ][0/*i_vol*/];
 			      for(unsigned ivar2=0; ivar2<dim; ivar2++) {  gradSolVAR_bd_qp[SolPdeIndex[ctrl_index]][ivar2] += phi_x_bd_gss_fe[ SolFEType[ctrl_index] ][i_bd + ivar2 * nve_bd] * SolVAR_eldofs[ SolPdeIndex[ ctrl_index ] ][i_vol]; }
 			  }
 		    }//kdim
@@ -974,12 +974,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
          for (unsigned i = 0; i < nDofsGctrl; i++) {
        Res[kdim + ctrl_pos_begin][i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[kdim][i]) * (  SolVAR_eldofs[kdim + ctrl_pos_begin][i] - 0.)  );              //enforce control zero outside the control boundary
 
-// // //BLOCK delta_control - adjoint--------------------------probably not needed as 1 in the ctrl_ctrl diagonal takes care of singularity------------------------------------------------------------
-//      for (unsigned j = 0; j < nDofsVadj; j++) {
-//                 if (i==j) {
-// 		Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i*nDofsGctrl + j] += penalty_outside_control_boundary *(1 - control_node_flag[kdim][i]);  
-//       	    } //end i==j
-//       }//j_dctrl_ctrl loop
+// //BLOCK delta_control - adjoint--------------------------probably not needed as 1 in the ctrl_ctrl diagonal takes care of singularity------------------------------------------------------------
+     for (unsigned j = 0; j < nDofsVadj; j++) {
+                if (i==j) {
+		Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i*nDofsGctrl + j] += penalty_outside_control_boundary *(1 - control_node_flag[kdim][i]);  
+      	    } //end i==j
+      }//j_dctrl_ctrl loop
 
 // //DIAG BLOCK delta_control - control--------------------------------------------------------------------------------------
      for (unsigned j = 0; j < nDofsGctrl; j++) {
