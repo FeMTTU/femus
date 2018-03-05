@@ -41,7 +41,7 @@ std::vector <double> moments(totMoments, 0.); //initialization
 std::vector <double> cumulants(totMoments, 0.); //initialization
 double variance = 0.; //initialization
 double mean = 0.; //initialization
-unsigned M = 100; //number of samples for the Monte Carlo
+unsigned M = 3; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 3;
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
 
   // ******* System FEM Assembly *******
   system.SetAssembleFunction(AssembleUQSys);
-  system.SetMaxNumberOfLinearIterations(5);
+  system.SetMaxNumberOfLinearIterations(1);
   //system.SetAssembleFunction(AssembleFEM);
   // ******* set MG-Solver *******
   system.SetMgType(V_CYCLE);
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
 
   system.SetPreconditionerFineGrids(ILU_PRECOND);
 
-  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 4);
+  system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
   //END
 
 
@@ -514,33 +514,36 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >  &
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, *nullDoublePointer);
-
-      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      vector < double > gradSolu_gss(dim, 0.);
-      vector < double > x_gss(dim, 0.);
-
+      
+      double solu_gss = 0.;
       for(unsigned i = 0; i < nDofu; i++) {
-        quantityOfInterest += phi[i] * solu[i] * weight / domainMeasure;
+        solu_gss += phi[i] * solu[i];
       }
+      quantityOfInterest += solu_gss * weight / domainMeasure;
+      
 
     } // end gauss point loop
     
   } //end element loop for each process
 
+  QoI[m] = 0.;
+  MPI_Allreduce(&quantityOfInterest, &QoI[m], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
   
-  // add the quantityOfInterest of all processes
-  NumericVector* norm_vec;
-  norm_vec = NumericVector::build().release();
-  norm_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
-
-  norm_vec->set (iproc, quantityOfInterest);
-  norm_vec->close();
-
-  quantityOfInterest = norm_vec->l1_norm();
-
-  delete norm_vec;
-
-  QoI[m] = quantityOfInterest;
+  
+  
+//   // add the quantityOfInterest of all processes
+//   NumericVector* norm_vec;
+//   norm_vec = NumericVector::build().release();
+//   norm_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
+// 
+//   norm_vec->set (iproc, quantityOfInterest);
+//   norm_vec->close();
+// 
+//   quantityOfInterest = norm_vec->l1_norm();
+// 
+//   delete norm_vec;
+// 
+//   QoI[m] = quantityOfInterest;
   
 }
 

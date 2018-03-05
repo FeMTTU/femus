@@ -20,7 +20,7 @@ std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
 double amin = 1. / 100;
 
-double sigma = 20;  //standard deviation of the normal distribution (it is the same as the sigma of the covariance function in GetEigenPair)
+double sigma = 0.4;  //standard deviation of the normal distribution (it is the same as the sigma of the covariance function in GetEigenPair)
 
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
 
@@ -124,10 +124,14 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
 
   std::vector <double> yOmega(numberOfEigPairs,0.);
   for(unsigned eig = 0; eig < numberOfEigPairs; eig++){
-
-    yOmega[eig] = var_nor();
-
+    if(iproc == 0){
+      yOmega[eig] = var_nor();
+    }
+    MPI_Bcast(&yOmega[eig], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    std::cout << yOmega[eig] << " ";
   }
+  std::cout << std::endl;
+  
   
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
