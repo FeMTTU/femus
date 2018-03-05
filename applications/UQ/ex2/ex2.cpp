@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
-  numberOfEigPairs = 20; //number of eigenpairs desired
+  numberOfEigPairs = 1; //number of eigenpairs desired
 
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues
 
@@ -358,7 +358,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int &numberOfEigPairs, std::
             for(unsigned k = 0; k < dim; k++) {
               dist += fabs(xg1[ig][k] - xg2[k]);
             }
-            double C = sigma2 * exp(-dist / L);
+            double C = sigma2 * exp(- dist / L);
             for(unsigned i = 0; i < nDof1; i++) {
               for(unsigned j = 0; j < nDof2; j++) {
                 CClocal[i * nDof2 + j] += weight1[ig] * phi1[ig][i] * C * phi2[j] * weight2;
@@ -622,7 +622,7 @@ void PlotStochasticData() {
   }
 
 
-  double x = -5;
+  double x = - 6;
 
   double gramCharlier2Terms = 0.;
   double gramCharlier3Terms = 0.;
@@ -641,12 +641,12 @@ void PlotStochasticData() {
 
   double sigmaSol = sqrt(variance);
 
-  for(unsigned i = 0; i < 241; i++) {
+  for(unsigned i = 0; i < 301; i++) {
     double t = (x - mean) / sigmaSol;
-    double gaussian = 1. / (sqrt(2 * acos(-1) * variance)) * exp(- 0.5 * (t * t)) ;
+    double gaussian = 1. / (sqrt(2 * acos(- 1) * variance)) * exp(- 0.5 * (t * t)) ;
     if(totMoments > 1) {
 
-      double d3gaussian = (-1.) / (variance * sigmaSol) * gaussian * (t * t * t - 3 * t) ;
+      double d3gaussian = (- 1.) / (variance * sigmaSol) * gaussian * (t * t * t - 3 * t) ;
 
       gramCharlier2Terms =  gaussian - cumulants[2] / 6 * d3gaussian ;
 
@@ -667,9 +667,9 @@ void PlotStochasticData() {
 
         if(totMoments > 3) {
 
-          double d5gaussian = (-1.) / pow(sigmaSol, 5) * gaussian * (pow(t, 5) * - 10 * t * t * t + 15 * t);
-          double d7gaussian = (-1.) / pow(sigmaSol, 7) * gaussian * (pow(t, 7) * - 21 * pow(t, 5) + 105 * t * t * t -  105 * t) ;
-          double d9gaussian = (-1.) / pow(sigmaSol, 9) * gaussian * (pow(t, 9) * - 36 * pow(t, 7) + 378 * pow(t, 5) - 1260 * t * t * t + 945 * t) ;
+          double d5gaussian = (- 1.) / pow(sigmaSol, 5) * gaussian * (pow(t, 5) * - 10 * t * t * t + 15 * t);
+          double d7gaussian = (- 1.) / pow(sigmaSol, 7) * gaussian * (pow(t, 7) * - 21 * pow(t, 5) + 105 * t * t * t -  105 * t) ;
+          double d9gaussian = (- 1.) / pow(sigmaSol, 9) * gaussian * (pow(t, 9) * - 36 * pow(t, 7) + 378 * pow(t, 5) - 1260 * t * t * t + 945 * t) ;
 
           gramCharlier4Terms = gramCharlier3Terms - cumulants[4] / 120 * d5gaussian;
 
