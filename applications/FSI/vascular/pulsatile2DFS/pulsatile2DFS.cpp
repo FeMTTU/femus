@@ -35,6 +35,8 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
                                    double &value, const int facename, const double time);
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data);
+
+void PrintConvergenceInfo(char *stdOutfile, const unsigned &numberOfUniformRefinedMeshes, const int &nprocs);
 //------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, char **args)
@@ -491,8 +493,19 @@ int main(int argc, char **args)
   ml_prob.clear();
   std::cout << " TOTAL TIME:\t" << \
           static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
+	  
+  int  nprocs;	    
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  if(iproc == 0){
+    char stdOutputName[100];
+    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_turek2D.txt",numberOfUniformRefinedMeshes, nprocs);
+    PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
+  } 	  
+	  
   return 0;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
 
 double SetVariableTimeStep(const double time)
 {
@@ -615,6 +628,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
 
 }
 
+//---------------------------------------------------------------------------------------------------------------------
 
 bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
 {
@@ -666,6 +680,7 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
   return test;
 }
 
+//---------------------------------------------------------------------------------------------------------------------
 
 bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
 {
@@ -717,6 +732,8 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
   return test;
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+
 bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char name[], double &value, const int facename, const double time)
 {
   bool test = 1; //dirichlet
@@ -767,6 +784,8 @@ bool SetBoundaryConditionVeinValve(const std::vector < double >& x, const char n
   return test;
 
 }
+
+//---------------------------------------------------------------------------------------------------------------------
 
 void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vector <double> &data)
 {
@@ -960,3 +979,84 @@ void GetSolutionNorm(MultiLevelSolution& mlSol, const unsigned & group, std::vec
 
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+
+void PrintConvergenceInfo(char *stdOutfile, const unsigned &level, const int &nprocs){
+
+  std::cout<<"END_COMPUTATION\n"<<std::flush;
+
+  std::ifstream inf;
+  inf.open(stdOutfile);
+  if (!inf) {
+    std::cout<<"Redirected standard output file not found\n";
+    std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
+    return;
+  }
+
+  std::ofstream outf;
+  char outFileName[100];
+  sprintf(outFileName, "turek2D_convergence_level%d_nprocs%d.txt",level, nprocs);
+
+  outf.open(outFileName, std::ofstream::app);
+  outf << std::endl << std::endl;
+  outf << "Number_of_refinements="<<level<<std::endl;
+  outf << "Simulation_Time,Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
+
+  std::string str1;
+  inf >> str1;
+  double simulationTime=0.;
+  while (str1.compare("END_COMPUTATION") != 0) {
+
+    if (str1.compare("Simulation") == 0){
+      inf >> str1;
+      if (str1.compare("Time:") == 0){
+        inf >> simulationTime;
+      }
+    }
+    else if (str1.compare("Nonlinear") == 0) {
+      inf >> str1;
+      if (str1.compare("iteration") == 0) {
+        inf >> str1;
+        outf << std::endl << simulationTime<<","<<str1;
+      }
+    }
+    else if (str1.compare("KSP") == 0){
+      inf >> str1;
+      if (str1.compare("preconditioned") == 0){
+        inf >> str1;
+        if (str1.compare("resid") == 0){
+          inf >> str1;
+          if (str1.compare("norm") == 0){
+            double norm0 = 1.;
+            double normN = 1.;
+            unsigned counter = 0;
+            inf >> norm0;
+            outf <<","<< norm0;
+            for (unsigned i = 0; i < 11; i++){
+              inf >> str1;
+            }
+            while(str1.compare("norm") == 0){
+              inf >> normN;
+              counter++;
+              for (unsigned i = 0; i < 11; i++){
+                inf >> str1;
+              }
+            }
+            outf <<","<< normN;
+            if(counter != 0){
+              outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
+            }
+            else{
+              outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
+            }
+          }
+        }
+      }
+    }
+    inf >> str1;
+  }
+
+  outf.close();
+  inf.close();
+
+}
