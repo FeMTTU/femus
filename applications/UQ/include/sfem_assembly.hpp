@@ -20,11 +20,11 @@ std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
 double amin = 1. / 100;
 
-double sigma = 0.2;  //standard deviation of the normal distribution (it is the same as the sigma of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
 
-boost::normal_distribution<> nd(0.0, sigma);
+boost::normal_distribution<> nd(0.0, stdDeviationInput);
 
 boost::variate_generator < boost::mt19937&,
 
