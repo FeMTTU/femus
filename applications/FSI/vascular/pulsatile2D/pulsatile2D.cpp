@@ -52,7 +52,7 @@ int main(int argc, char **args)
   valve = false;
   twoPressure = true;
   
-  unsigned simulation = 4;
+  unsigned simulation = 0;
 
   if(argc >= 2) {
     if(!strcmp("0", args[1])) {       /** FSI Turek2D no stent */
@@ -80,7 +80,7 @@ int main(int argc, char **args)
       simulation = 7;
     }
     else{
-      simulation = 4;
+      simulation = 0;
     }
   }
 
@@ -167,7 +167,7 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 4;
   
   numberOfAMRLevels = 0;
 
@@ -210,8 +210,8 @@ int main(int argc, char **args)
   ml_sol.AddSolution("Um", LAGRANGE, SECOND, 0, false);
   ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
   
-  ml_sol.AddSolution("AX", LAGRANGE, SECOND, 2);
-  ml_sol.AddSolution("AY", LAGRANGE, SECOND, 2);
+//   ml_sol.AddSolution("AX", LAGRANGE, SECOND, 2);
+//   ml_sol.AddSolution("AY", LAGRANGE, SECOND, 2);
     
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -368,7 +368,7 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 256;
+  const unsigned int n_timesteps = 128;
 
   std::vector < std::vector <double> > data(n_timesteps);
 
@@ -390,54 +390,54 @@ int main(int argc, char **args)
     
     //data[time_step][0] = time_step / 16.;
     //data[time_step][0] = time_step / 20.;
-    data[time_step][0] = time_step / 32.;
+    //data[time_step][0] = time_step / 32.;
     //data[time_step][0] = time_step / ( 64 * 1.4 );
-    if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
-      GetSolutionNorm(ml_sol, 9, data[time_step]);
-    }
-    else if(simulation == 4) {    //AAA_thrombus, 15=thrombus
-      GetSolutionNorm(ml_sol, 7, data[time_step]);
-    }
-    else if(simulation == 6) {    //AAA_thrombus_porous, 15=thrombus
-      GetSolutionNorm(ml_sol, 7, data[time_step]);
-    }
-    ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
+//     if(simulation == 0 || simulation == 1 || simulation == 2 || simulation == 3) {
+//       GetSolutionNorm(ml_sol, 9, data[time_step]);
+//     }
+//     else if(simulation == 4) {    //AAA_thrombus, 15=thrombus
+//       GetSolutionNorm(ml_sol, 7, data[time_step]);
+//     }
+//     else if(simulation == 6) {    //AAA_thrombus_porous, 15=thrombus
+//       GetSolutionNorm(ml_sol, 7, data[time_step]);
+//     }
+    //ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
   }
 
 
   int  iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
-  if(iproc == 0) {
-    std::ofstream outf;
-    if(simulation == 0) {
-      outf.open("DataPrint_Turek.txt");
-    }
-    else if(simulation == 1) {
-      outf.open("DataPrint_TurekPorous.txt");
-    }
-    else if(simulation == 2) {
-      outf.open("DataPrint_TurekStents.txt");
-    }
-    else if(simulation == 3) {
-      outf.open("DataPrint_Turek11Stents.txt");
-    }
-    else if(simulation == 4) {
-      outf.open("DataPrint_AAA_thrombus_2D.txt");
-    }
-    else if(simulation == 6) {
-      outf.open("DataPrint_AAA_thrombus_2D_porous.txt");
-    }
+//   if(iproc == 0) {
+//     std::ofstream outf;
+//     if(simulation == 0) {
+//       outf.open("DataPrint_Turek.txt");
+//     }
+//     else if(simulation == 1) {
+//       outf.open("DataPrint_TurekPorous.txt");
+//     }
+//     else if(simulation == 2) {
+//       outf.open("DataPrint_TurekStents.txt");
+//     }
+//     else if(simulation == 3) {
+//       outf.open("DataPrint_Turek11Stents.txt");
+//     }
+//     else if(simulation == 4) {
+//       outf.open("DataPrint_AAA_thrombus_2D.txt");
+//     }
+//     else if(simulation == 6) {
+//       outf.open("DataPrint_AAA_thrombus_2D_porous.txt");
+//     }
 
 
-    if(!outf) {
-      std::cout << "Error in opening file DataPrint.txt";
-      return 1;
-    }
-    for(unsigned k = 0; k < n_timesteps; k++) {
-      outf << data[k][0] << "\t" << data[k][1] << "\t" << data[k][2] << "\t" << data[k][3] << "\t" << data[k][4] << std::endl;
-    }
-    outf.close();
-  }
+//     if(!outf) {
+//       std::cout << "Error in opening file DataPrint.txt";
+//       return 1;
+//     }
+//     for(unsigned k = 0; k < n_timesteps; k++) {
+//       outf << data[k][0] << "\t" << data[k][1] << "\t" << data[k][2] << "\t" << data[k][3] << "\t" << data[k][4] << std::endl;
+//     }
+//     outf.close();
+//   }
 
  
 
