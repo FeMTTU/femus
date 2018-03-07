@@ -19,8 +19,7 @@
 using namespace femus;
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
-{
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
   return dirichlet;
@@ -43,13 +42,12 @@ std::vector <double> cumulants(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 10; //number of samples for the Monte Carlo
+unsigned M = 1000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 3;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
 
 
   //BEGIN eigenvalue problem instances
@@ -169,8 +167,7 @@ int main(int argc, char** argv)
 
 } //end main
 
-void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues)
-{
+void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues) {
 //void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("UQ");   // pointer to the linear implicit system named "Poisson"
@@ -313,7 +310,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
         for(int k = 0; k < dim; k++) {
           x1[k].resize(nDofx1);
         }
-               
+
         // local storage of global mapping and solution
         for(unsigned i = 0; i < nDof1; i++) {
           l2GMap1[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
@@ -327,48 +324,48 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
           }
         }
 
-	if(iel == jel) MMlocal.assign(nDof1 * nDof1, 0.);  //resize
-	CClocal.assign(nDof1 * nDof2, 0.);   //resize
-        
-	// *** Gauss point loop ***
-	unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
-	double weight1;
+        if(iel == jel) MMlocal.assign(nDof1 * nDof1, 0.);  //resize
+        CClocal.assign(nDof1 * nDof2, 0.);   //resize
+
+        // *** Gauss point loop ***
+        unsigned igNumber = msh->_finiteElement[ielGeom1][solType]->GetGaussPointNumber();
+        double weight1;
         vector <double> phi1;  // local test function
-	for(unsigned ig = 0; ig < igNumber; ig++) {
+        for(unsigned ig = 0; ig < igNumber; ig++) {
 
           msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x, *nullDoublePointer);
 
           // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-          vector < double > xg1(dim,0.);
+          vector < double > xg1(dim, 0.);
           for(unsigned i = 0; i < nDof1; i++) {
             for(unsigned k = 0; k < dim; k++) {
               xg1[k] += x1[k][i] * phi1[i];
             }
           }
 
-          if(iel == jel) { 
-	    for(unsigned i = 0; i < nDof1; i++) {
-	      for(unsigned i1 = 0; i1 < nDof1; i1++) {
-		MMlocal[ i * nDof1 + i1 ] += phi1[i] * phi1[i1] * weight1;
-	      }
-	    }
-	  }
-	        
-	  for(unsigned jg = 0; jg < jgNumber; jg++) {
-	    double dist = 0.;
-	    for(unsigned k = 0; k < dim; k++) {
-	      dist += fabs(xg1[k] - xg2[jg][k]);
-	    }
-	    double C = varianceInput * exp(- dist / L);
-	    for(unsigned i = 0; i < nDof1; i++) {
-	      for(unsigned j = 0; j < nDof2; j++) {
-		CClocal[i * nDof2 + j] += weight1 * phi1[i] * C * phi2[jg][j] * weight2[jg];
-	      }//endl j loop
-	    } //endl i loop
-	  } //endl jg loop
-	} //endl ig loop
-	if(iel == jel) MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
-	CC->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
+          if(iel == jel) {
+            for(unsigned i = 0; i < nDof1; i++) {
+              for(unsigned i1 = 0; i1 < nDof1; i1++) {
+                MMlocal[ i * nDof1 + i1 ] += phi1[i] * phi1[i1] * weight1;
+              }
+            }
+          }
+
+          for(unsigned jg = 0; jg < jgNumber; jg++) {
+            double dist = 0.;
+            for(unsigned k = 0; k < dim; k++) {
+              dist += fabs(xg1[k] - xg2[jg][k]);
+            }
+            double C = varianceInput * exp(- dist / L);
+            for(unsigned i = 0; i < nDof1; i++) {
+              for(unsigned j = 0; j < nDof2; j++) {
+                CClocal[i * nDof2 + j] += weight1 * phi1[i] * C * phi2[jg][j] * weight2[jg];
+              }//endl j loop
+            } //endl i loop
+          } //endl jg loop
+        } //endl ig loop
+        if(iel == jel) MM->add_matrix_blocked(MMlocal, l2GMap1, l2GMap1);
+        CC->add_matrix_blocked(CClocal, l2GMap1, l2GMap2);
       } // end iel loop
     } //end jel loop
   } //end kproc loop
@@ -432,8 +429,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 }
 
 
-void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  QoI, const unsigned& m, const double& domainMeasure)
-{
+void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  QoI, const unsigned& m, const double& domainMeasure) {
 
   //  extract pointers to the several objects that we are going to use
 
@@ -549,8 +545,7 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  
 
 }
 
-void GetStochasticData(std::vector <double>& QoI)
-{
+void GetStochasticData(std::vector <double>& QoI) {
 
   //let's standardize the quantity of interest after finding moments and standard deviation
 
@@ -623,8 +618,7 @@ void GetStochasticData(std::vector <double>& QoI)
 }
 
 
-void PlotStochasticData()
-{
+void PlotStochasticData() {
 
   std::cout.precision(14);
   std::cout << " the number of MC samples is " << M << std::endl;
@@ -646,26 +640,46 @@ void PlotStochasticData()
   double gramCharlier4Terms = 0.;
   double gramCharlier5Terms = 0.;
 
+  double edgeworth1Term = 0.;
   double edgeworth2Terms = 0.;
   double edgeworth3Terms = 0.;
   double edgeworth4Terms = 0.;
   double edgeworth5Terms = 0.;
+  double edgeworth6Terms = 0.;
 
   double lambda3 = 0.;
   double lambda4 = 0.;
   double lambda5 = 0.;
   double lambda6 = 0.;
 
-  double t = meanQoI - stdDeviationQoI * 40000.;
-  double dt = (80000. * stdDeviationQoI) / 300.;
+  double d1gaussian;
+  double d2gaussian;
+  double d3gaussian;
+  double d4gaussian;
+  double d5gaussian;
+  double d6gaussian;
+  double d7gaussian;
+  double d8gaussian;
+  double d9gaussian;
+
+  double t = meanQoI - stdDeviationQoI * 50000.;
+  double dt = (100000. * stdDeviationQoI) / 300.;
 
   for(unsigned i = 0; i <= 300; i++) {
     std::cout << t << " ";
     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
     std::cout << gaussian << " ";
+
+    d1gaussian = (- 1.) * gaussian * t ;
+
+    edgeworth1Term = gaussian - cumulants[0] * d1gaussian;
+
+    std::cout << edgeworth1Term << " ";
+
     if(totMoments > 1) {
 
-      double d3gaussian = (- 1.) * gaussian * (t * t * t - 3. * t) ;
+      d2gaussian = (1.) * gaussian * (t * t - 1.) ;
+      d3gaussian = (- 1.) * gaussian * (t * t * t - 3. * t) ;
 
       gramCharlier2Terms =  gaussian - cumulants[2] / 6. * d3gaussian ;
 
@@ -675,14 +689,16 @@ void PlotStochasticData()
 
       lambda3 = cumulants[2] / pow(stdDeviationQoI, 3);
 
-      edgeworth2Terms = gaussian - 1. / sqrt(M) * lambda3 * d3gaussian / 6.;
+//       edgeworth2Terms = gaussian - 1. / sqrt(M) * lambda3 * d3gaussian / 6.;  //OLD
+
+      edgeworth2Terms = edgeworth1Term + 0.5 * ((cumulants[1] - 1.) + pow(cumulants[0], 2)) * d2gaussian ;
 
       std::cout << edgeworth2Terms << " ";
 
       if(totMoments > 2) {
 
-        double d4gaussian = (1.) * gaussian * (t * t * t * t - 6. * t * t + 3.) ;
-        double d6gaussian = (1.) * gaussian * (pow(t, 6) - 15 * t * t * t * t + 45 * t * t - 15);
+        d4gaussian = (1.) * gaussian * (t * t * t * t - 6. * t * t + 3.) ;
+        d6gaussian = (1.) * gaussian * (pow(t, 6) - 15 * pow(t, 4) + 45 * t * t - 15);
 
         gramCharlier3Terms = gramCharlier2Terms + cumulants[3] / 24. * d4gaussian ;
 
@@ -692,15 +708,17 @@ void PlotStochasticData()
 
         lambda4 = cumulants[3] / pow(stdDeviationQoI, 4);
 
-        edgeworth3Terms = edgeworth2Terms + 1. / M * (1. / 24 * lambda4 * d4gaussian + 1. / 72 * lambda3 * lambda3 * d6gaussian);
+//         edgeworth3Terms = edgeworth2Terms + 1. / M * (1. / 24 * lambda4 * d4gaussian + 1. / 72 * lambda3 * lambda3 * d6gaussian); //OLD
+
+        edgeworth3Terms = edgeworth2Terms - 1. / 6 * (cumulants[2] + 3 * (cumulants[1] - 1.) * cumulants[0] + pow(cumulants[0], 3)) * d3gaussian;
 
         std::cout << edgeworth3Terms << " ";
 
         if(totMoments > 3) {
 
-          double d5gaussian = (- 1.) * gaussian * (pow(t, 5) - 10. * t * t * t + 15. * t);
-          double d7gaussian = (- 1.) * gaussian * (pow(t, 7) - 21. * pow(t, 5) + 105. * t * t * t -  105. * t) ;
-          double d9gaussian = (- 1.) * gaussian * (pow(t, 9) - 36. * pow(t, 7) + 378. * pow(t, 5) - 1260. * t * t * t + 945. * t) ;
+          d5gaussian = (- 1.) * gaussian * (pow(t, 5) - 10. * t * t * t + 15. * t);
+          d7gaussian = (- 1.) * gaussian * (pow(t, 7) - 21. * pow(t, 5) + 105. * t * t * t -  105. * t) ;
+          d9gaussian = (- 1.) * gaussian * (pow(t, 9) - 36. * pow(t, 7) + 378. * pow(t, 5) - 1260. * t * t * t + 945. * t) ;
 
           gramCharlier4Terms = gramCharlier3Terms - cumulants[4] / 120. * d5gaussian;
 
@@ -710,17 +728,34 @@ void PlotStochasticData()
 
           lambda5 = cumulants[4] / pow(stdDeviationQoI, 5);
 
-          edgeworth4Terms = edgeworth3Terms - 1. / (pow(M, 1.5)) * (lambda5 * d5gaussian / 120. + lambda3 * lambda4 * d7gaussian / 144. + pow(lambda3, 3) * d9gaussian / 1296.) ;
+//           edgeworth4Terms = edgeworth3Terms - 1. / (pow(M, 1.5)) * (lambda5 * d5gaussian / 120. + lambda3 * lambda4 * d7gaussian / 144. + pow(lambda3, 3) * d9gaussian / 1296.) ;  //OLD
 
-          std::cout << edgeworth4Terms << "\n";
+          edgeworth4Terms = edgeworth3Terms + 1. / 24 * (cumulants[3] + 4. * cumulants[2] * cumulants[0] + 3. * pow((cumulants[1] - 1.), 2) + 6. * (cumulants[1] - 1.) + pow(cumulants[0], 4)) * d4gaussian;
+
+          std::cout << edgeworth4Terms << " ";
 
           if(totMoments > 4) {
-
-            double d6gaussian = (1.) * gaussian * (pow(t, 6) - 15. * pow(t, 4) + 45. * t * t - 15.) ;
 
             gramCharlier5Terms = gramCharlier4Terms + (10. * cumulants[2] * cumulants[2] + cumulants[5]) / (120. * 6.) * d6gaussian;
 
 // 	    std::cout << gramCharlier5Terms << "\n";
+
+            edgeworth5Terms = edgeworth4Terms - 1. / 120 * (cumulants[4] + 5. * cumulants[3] * cumulants[0] + 10. * cumulants[2] * (cumulants[1] - 1.)
+                              + 10. * cumulants[2] * pow(cumulants[0], 2) + 15. * pow((cumulants[1] - 1.), 2) * cumulants[0]
+                              + 10. * (cumulants[1] - 1.) * pow(cumulants[0], 3) + pow(cumulants[0], 5)) * d5gaussian;
+
+            std::cout << edgeworth5Terms << " ";
+
+            if(totMoments > 5) {
+
+              edgeworth6Terms = edgeworth5Terms + 1. / 720 * (cumulants[5] + 6. * cumulants[4] * cumulants[0] + 15. * cumulants[3] * (cumulants[1] - 1.)
+                                + 15. * cumulants[3] * pow(cumulants[0], 2) +  10. * pow(cumulants[2], 2) + 60. * cumulants[2] * (cumulants[1] - 1.) * cumulants[0] 
+                                + 20. * cumulants[2] * pow(cumulants[0], 3) + 15. * pow((cumulants[1] - 1.), 3) + 45. * pow((cumulants[1] - 1.), 2) * pow(cumulants[0], 2) 
+				+ 15. * (cumulants[1] - 1.) * pow(cumulants[0], 4) +  pow(cumulants[0], 6) ) * d6gaussian;
+
+              std::cout << edgeworth6Terms << " \n ";
+
+            }
 
           }
         }
