@@ -413,8 +413,10 @@ namespace femus
       _solution[gridn - 1]->UpdateRes( _SolSystemPdeIndex, _LinSolver[gridn - 1]->_RES, _LinSolver[gridn - 1]->KKoffset );
       linearIsConverged = IsLinearConverged( gridn - 1 );
 
+      std::cout << "\t ************** cumumative-iteration TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
+              << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
+      
       if ( linearIsConverged ) break;
-
     }
 
     // ============== Update Fine Solution ==============
