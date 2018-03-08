@@ -62,7 +62,7 @@ int main ( int argc, char ** args )
   valve = false;
   twoPressure = true;
 
-  unsigned simulation = 0;
+  unsigned simulation = 3;
 
   if ( argc >= 2 ) {
     if ( !strcmp ( "0", args[1] ) ) { /** FSI Turek3D no stent */
@@ -84,7 +84,7 @@ int main ( int argc, char ** args )
       simulation = 5;
     }
     else{
-      simulation = 0;
+      simulation = 3;
     }
   }
 
@@ -933,6 +933,10 @@ bool SetBoundaryConditionThrombus ( const std::vector < double > & x, const char
     }
   }
   else if ( !strcmp ( name, "PS" ) ) {
+    test = 0;
+    value = 0.;
+  }
+  else if ( !strcmp ( name, "PF" ) ) {
     test = 0;
     value = 0.;
   }
