@@ -218,7 +218,7 @@ int main(int argc, char** args) {
   system_opt.ClearVariablesToBeSolved();
   system_opt.AddVariableToBeSolved("All");
   
-  system_opt.SetMaxNumberOfNonLinearIterations(3);
+  system_opt.SetMaxNumberOfNonLinearIterations(1);
   system_opt.MLsolve();
 
     ComputeIntegral(mlProb);
@@ -1354,8 +1354,11 @@ double	integral_gamma  = 0.;
 //========== temporary soln for surface gradient on a face parallel to the X axis ===================
 		  
 //========== compute gauss quantities on the boundary ===============================================
-      for (unsigned i = 0; i < nDofsVctrl; i++) {
-	for (unsigned  k = 0; k < dim; k++) {
+    for (unsigned  k = 0; k < dim; k++) {
+	  Vctrl_bd_qp[k] = 0.;
+	  for(unsigned ivar2=0; ivar2<dim; ivar2++) { gradVctrl_bd_qp[k][ivar2] = 0.; }
+	  
+	  for (unsigned i = 0; i < nDofsVctrl; i++) {
 		   for(int i_bd = 0; i_bd < nve_bd; i_bd++) {
 		       unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
 		       Vctrl_bd_qp[k] += phiVctrl_gss_bd[i_bd] * solVctrl[k][i_vol];
@@ -1364,18 +1367,17 @@ double	integral_gamma  = 0.;
 		       }
 		   }
 	}
-      }
+    }
  //end unknowns eval at gauss points ********************************
 		      
 		  
 //========== compute gauss quantities on the boundary ================================================
       for (unsigned  k = 0; k < dim; k++) {
-	 integral_beta	+= ((beta_val/2)*(Vctrl_bd_qp[k])*(Vctrl_bd_qp[k])*weight);
-// 	integral_gamma	  += ((gamma_val/2)*(gradVctrl_bd_qp[k][0])*(gradVctrl_bd_qp[k][0])*weight);
+	 integral_beta	+= ((beta_val/2)*(Vctrl_bd_qp[k])*(Vctrl_bd_qp[k])*weight_bd);
       }
       for (unsigned  k = 0; k < dim; k++) {
 	for (unsigned  j = 0; j < dim; j++) {	
-		integral_gamma	  += ((gamma_val/2)*(gradVctrl_bd_qp[k][j])*(gradVctrl_bd_qp[k][j])*weight);
+		integral_gamma	  += ((gamma_val/2)*(gradVctrl_bd_qp[k][j])*(gradVctrl_bd_qp[k][j])*weight_bd);
 	}
       }
 
@@ -1390,19 +1392,21 @@ double	integral_gamma  = 0.;
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
 
-//STATE#############################################################################	
+//STATE######## VolumeLoop #####################################################################	
         // *** get gauss point weight, test function and test function partial derivatives ***
         msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV_gss, phiV_x_gss, phiV_xx_gss);
 	
 	msh->_finiteElement[ielGeom][solVType  /*solVdes*/]->Jacobian(coordX, ig, weight, phiVdes_gss, phiVdes_x_gss, phiVdes_xx_gss);
 
     
-      for (unsigned i = 0; i < nDofsV; i++) {
-	 for (unsigned  k = 0; k < dim; k++) {
+      for (unsigned  k = 0; k < dim; k++) {
+	V_gss[k] = 0.;
+	Vdes_gss[k] = 0.;
+	    for (unsigned i = 0; i < nDofsV; i++) {
 	   	V_gss[k] += solV[k][i] * phiV_gss[i];
 		Vdes_gss[k] += solVdes[k]/*[i]*/ * phiVdes_gss[i];
-		}
-      }
+	    }
+	}
 	
 
       for (unsigned  k = 0; k < dim; k++) {
@@ -1415,9 +1419,10 @@ double	integral_gamma  = 0.;
     std::cout << "The value of the integral of target is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
     std::cout << "The value of the integral of beta is " << std::setw(11) << std::setprecision(10) <<  integral_beta << std::endl;
     std::cout << "The value of the integral of gamma is " << std::setw(11) << std::setprecision(10) <<  integral_gamma << std::endl; 
+    std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha + integral_beta + integral_gamma << std::endl; 
     
     
-    return integral_target_alpha + integral_beta /*+ integral_gamma*/ ; 
+    return integral_target_alpha + integral_beta + integral_gamma ; 
 	  
   
 }
