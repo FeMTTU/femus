@@ -646,6 +646,14 @@ void PlotStochasticData() {
   double edgeworth4Terms = 0.;
   double edgeworth5Terms = 0.;
   double edgeworth6Terms = 0.;
+  
+  
+  double generalizedGC1Term = 0.;
+  double generalizedGC2Terms = 0.;
+  double generalizedGC3Terms = 0.;
+  double generalizedGC4Terms = 0.;
+  double generalizedGC5Terms = 0.;
+  double generalizedGC6Terms = 0.;
 
   double lambda3 = 0.;
   double lambda4 = 0.;
@@ -672,9 +680,9 @@ void PlotStochasticData() {
 
     d1gaussian = (- 1.) * gaussian * t ;
 
-    edgeworth1Term = gaussian - cumulants[0] * d1gaussian;
+    generalizedGC1Term = gaussian - cumulants[0] * d1gaussian;
 
-    std::cout << edgeworth1Term << " ";
+    std::cout << generalizedGC1Term << " ";
 
     if(totMoments > 1) {
 
@@ -691,9 +699,9 @@ void PlotStochasticData() {
 
 //       edgeworth2Terms = gaussian - 1. / sqrt(M) * lambda3 * d3gaussian / 6.;  //OLD
 
-      edgeworth2Terms = edgeworth1Term + 0.5 * ((cumulants[1] - 1.) + pow(cumulants[0], 2)) * d2gaussian ;
+      generalizedGC2Terms = generalizedGC1Term + 0.5 * ((cumulants[1] - 1.) + pow(cumulants[0], 2)) * d2gaussian ;
 
-      std::cout << edgeworth2Terms << " ";
+      std::cout << generalizedGC2Terms << " ";
 
       if(totMoments > 2) {
 
@@ -710,9 +718,9 @@ void PlotStochasticData() {
 
 //         edgeworth3Terms = edgeworth2Terms + 1. / M * (1. / 24 * lambda4 * d4gaussian + 1. / 72 * lambda3 * lambda3 * d6gaussian); //OLD
 
-        edgeworth3Terms = edgeworth2Terms - 1. / 6 * (cumulants[2] + 3 * (cumulants[1] - 1.) * cumulants[0] + pow(cumulants[0], 3)) * d3gaussian;
+        generalizedGC3Terms = generalizedGC2Terms - 1. / 6 * (cumulants[2] + 3 * (cumulants[1] - 1.) * cumulants[0] + pow(cumulants[0], 3)) * d3gaussian;
 
-        std::cout << edgeworth3Terms << " ";
+        std::cout << generalizedGC3Terms << " ";
 
         if(totMoments > 3) {
 
@@ -730,9 +738,9 @@ void PlotStochasticData() {
 
 //           edgeworth4Terms = edgeworth3Terms - 1. / (pow(M, 1.5)) * (lambda5 * d5gaussian / 120. + lambda3 * lambda4 * d7gaussian / 144. + pow(lambda3, 3) * d9gaussian / 1296.) ;  //OLD
 
-          edgeworth4Terms = edgeworth3Terms + 1. / 24 * (cumulants[3] + 4. * cumulants[2] * cumulants[0] + 3. * pow((cumulants[1] - 1.), 2) + 6. * (cumulants[1] - 1.) + pow(cumulants[0], 4)) * d4gaussian;
+          generalizedGC4Terms = generalizedGC3Terms + 1. / 24 * (cumulants[3] + 4. * cumulants[2] * cumulants[0] + 3. * pow((cumulants[1] - 1.), 2) + 6. * (cumulants[1] - 1.) + pow(cumulants[0], 4)) * d4gaussian;
 
-          std::cout << edgeworth4Terms << " ";
+          std::cout << generalizedGC4Terms << " ";
 
           if(totMoments > 4) {
 
@@ -740,20 +748,20 @@ void PlotStochasticData() {
 
 // 	    std::cout << gramCharlier5Terms << "\n";
 
-            edgeworth5Terms = edgeworth4Terms - 1. / 120 * (cumulants[4] + 5. * cumulants[3] * cumulants[0] + 10. * cumulants[2] * (cumulants[1] - 1.)
+            generalizedGC5Terms = generalizedGC4Terms - 1. / 120 * (cumulants[4] + 5. * cumulants[3] * cumulants[0] + 10. * cumulants[2] * (cumulants[1] - 1.)
                               + 10. * cumulants[2] * pow(cumulants[0], 2) + 15. * pow((cumulants[1] - 1.), 2) * cumulants[0]
                               + 10. * (cumulants[1] - 1.) * pow(cumulants[0], 3) + pow(cumulants[0], 5)) * d5gaussian;
 
-            std::cout << edgeworth5Terms << " ";
+            std::cout << generalizedGC5Terms << " ";
 
             if(totMoments > 5) {
 
-              edgeworth6Terms = edgeworth5Terms + 1. / 720 * (cumulants[5] + 6. * cumulants[4] * cumulants[0] + 15. * cumulants[3] * (cumulants[1] - 1.)
+              generalizedGC6Terms = generalizedGC5Terms + 1. / 720 * (cumulants[5] + 6. * cumulants[4] * cumulants[0] + 15. * cumulants[3] * (cumulants[1] - 1.)
                                 + 15. * cumulants[3] * pow(cumulants[0], 2) +  10. * pow(cumulants[2], 2) + 60. * cumulants[2] * (cumulants[1] - 1.) * cumulants[0] 
                                 + 20. * cumulants[2] * pow(cumulants[0], 3) + 15. * pow((cumulants[1] - 1.), 3) + 45. * pow((cumulants[1] - 1.), 2) * pow(cumulants[0], 2) 
 				+ 15. * (cumulants[1] - 1.) * pow(cumulants[0], 4) +  pow(cumulants[0], 6) ) * d6gaussian;
 
-              std::cout << edgeworth6Terms << " \n ";
+              std::cout << generalizedGC6Terms << " \n ";
 
             }
 
