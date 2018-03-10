@@ -510,13 +510,13 @@ int main ( int argc, char ** args )
   std::cout << " TOTAL TIME:\t" << \
           static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
 	  
-/*  int  nprocs;	    
+  int  nprocs;	    
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   if(iproc == 0){
     char stdOutputName[100];
-    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_turek3DFS.txt",numberOfUniformRefinedMeshes, nprocs);
+    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_AAA3DFS.txt",numberOfUniformRefinedMeshes, nprocs);
     PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
-  } */	  	  
+  } 	  	  
 	  
   return 0;
 }
@@ -1219,7 +1219,7 @@ void PrintConvergenceInfo(char *stdOutfile, const unsigned &level, const int &np
 
   std::ofstream outf;
   char outFileName[100];
-  sprintf(outFileName, "turek3D_convergence_level%d_nprocs%dFS.txt",level, nprocs);
+  sprintf(outFileName, "AAA3D_convergence_level%d_nprocs%dFS.txt",level, nprocs);
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
