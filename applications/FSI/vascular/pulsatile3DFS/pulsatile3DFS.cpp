@@ -62,7 +62,7 @@ int main ( int argc, char ** args )
   valve = false;
   twoPressure = true;
 
-  unsigned simulation = 3;
+  unsigned simulation = 0;
 
   if ( argc >= 2 ) {
     if ( !strcmp ( "0", args[1] ) ) { /** FSI Turek3D no stent */
@@ -84,7 +84,7 @@ int main ( int argc, char ** args )
       simulation = 5;
     }
     else{
-      simulation = 3;
+      simulation = 0;
     }
   }
 
@@ -514,7 +514,7 @@ int main ( int argc, char ** args )
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   if(iproc == 0){
     char stdOutputName[100];
-    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_AAA3DFS.txt",numberOfUniformRefinedMeshes, nprocs);
+    sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_turek3DFS.txt",numberOfUniformRefinedMeshes, nprocs);
     PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
   } 	  	  
 	  
@@ -1219,7 +1219,7 @@ void PrintConvergenceInfo(char *stdOutfile, const unsigned &level, const int &np
 
   std::ofstream outf;
   char outFileName[100];
-  sprintf(outFileName, "AAA3D_convergence_level%d_nprocs%dFS.txt",level, nprocs);
+  sprintf(outFileName, "turek3D_convergence_level%d_nprocs%dFS.txt",level, nprocs);
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
