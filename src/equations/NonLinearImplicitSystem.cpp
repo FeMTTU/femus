@@ -197,7 +197,12 @@ namespace femus {
        std::vector < std::string > variablesToBePrinted;
        variablesToBePrinted.push_back("All");
        std::ostringstream output_file_name_stream; output_file_name_stream << "biquadratic" << "." << std::setfill('0') << std::setw(2)   << nonLinearIterator; // the "." after biquadratic is needed to see the sequence of files in Paraview as "time steps"
-       this->GetMLProb()._ml_sol->GetWriter()->Write(/*files.GetOutputPath()*/DEFAULT_OUTPUTDIR,output_file_name_stream.str().c_str(),variablesToBePrinted);
+        if (this->GetMLProb().GetFilesHandler() != NULL) {
+           this->GetMLProb()._ml_sol->GetWriter()->Write(this->GetMLProb().GetFilesHandler()->GetOutputPath(),output_file_name_stream.str().c_str(),variablesToBePrinted);
+	  }
+	else {
+           this->GetMLProb()._ml_sol->GetWriter()->Write(DEFAULT_OUTPUTDIR,output_file_name_stream.str().c_str(),variablesToBePrinted);
+	}
     }
 	
         if( nonLinearIsConverged ) break;
