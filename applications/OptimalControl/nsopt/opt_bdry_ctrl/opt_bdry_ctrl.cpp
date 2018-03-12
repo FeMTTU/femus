@@ -218,8 +218,9 @@ int main(int argc, char** args) {
   system_opt.ClearVariablesToBeSolved();
   system_opt.AddVariableToBeSolved("All");
   
-//   system_opt.SetMaxNumberOfNonLinearIterations(1);
-  system_opt.MLsolve();
+  system_opt.SetMaxNumberOfNonLinearIterations(20);
+  system_opt.SetMaxNumberOfLinearIterations(6);
+  system_opt.MGsolve();
 
     ComputeIntegral(mlProb);
   
@@ -756,7 +757,6 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 			  //=============== grad dot n  =========================================    
 
 			  for (unsigned kdim = 0; kdim < dim; kdim++) {
-			    std::cout << " gradadjn " << grad_adj_dot_n[kdim] << " for kdim = " << kdim << std::endl;
 				Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i_vol*nDofsVadj + j] += control_node_flag[kdim][i_vol] * (-1) * (weight_bd  * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry]* grad_adj_dot_n[kdim]);    		      
 			  }
 		} // end j loop for volume 
@@ -984,10 +984,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 // // // 	for (unsigned i = 0; i < ndofs_unk_i; i++) {
 // // // 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Res[SolPdeIndex[i_unk]][ i ];
 // // // 	      std::cout << std::endl;
-// // // // //             for (unsigned j = 0; j < ndofs_unk_j; j++) {
-// // // // // 	    std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i*ndofs_unk_i + j ];
-// // // // // 	    }  //j end
-// // // 	    std::cout << std::endl;
+// // // // // //             for (unsigned j = 0; j < ndofs_unk_j; j++) {
+// // // // // // 	    std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ SolPdeIndex[i_unk] ][ SolPdeIndex[j_unk] ][ i*ndofs_unk_i + j ];
+// // // // // // 	    }  //j end
+// // // // // // 	    std::cout << std::endl;
 // // // 	 } //i end
 // // //      } //j_unk end
 // // //    } //i_unk end
