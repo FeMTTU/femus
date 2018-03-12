@@ -218,6 +218,10 @@ int main(int argc, char** args) {
   system_opt.ClearVariablesToBeSolved();
   system_opt.AddVariableToBeSolved("All");
   
+  mlSol.SetWriter(VTK);
+  mlSol.GetWriter()->SetDebugOutput(true);
+  
+  system_opt.SetDebugNonlinear(true);
   system_opt.SetMaxNumberOfNonLinearIterations(20);
   system_opt.SetMaxNumberOfLinearIterations(6);
   system_opt.MGsolve();
@@ -228,8 +232,6 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
-  mlSol.SetWriter(VTK);
-  mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,"biquadratic", variablesToBePrinted);
  
   //Destroy all the new systems
