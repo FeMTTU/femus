@@ -117,7 +117,11 @@ int main(int argc, char** args) {
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleLiftRestrProblem);
   
-//   system.SetMaxNumberOfNonLinearIterations(2);
+  mlSol.SetWriter(VTK);
+  mlSol.GetWriter()->SetDebugOutput(true);
+  
+  system.SetDebugNonlinear(true);
+//   system.SetMaxNumberOfNonLinearIterations(4);
 
   // initilaize and solve the system
   system.init();
@@ -130,8 +134,6 @@ int main(int argc, char** args) {
      variablesToBePrinted.push_back("all");
 
     // ******* Print solution *******
-  mlSol.SetWriter(VTK);
-  mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   return 0;
