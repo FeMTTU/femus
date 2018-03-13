@@ -102,6 +102,7 @@ int main(int argc, char** args) {
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleLiftRestrProblem);
 
+  system.SetMaxNumberOfLinearIterations(2);
   // initilaize and solve the system
   system.init();
   system.MGsolve();

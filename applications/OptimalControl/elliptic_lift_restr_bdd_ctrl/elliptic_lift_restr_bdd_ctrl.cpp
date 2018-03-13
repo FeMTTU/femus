@@ -29,7 +29,7 @@ double InitialValueMu(const std::vector < double >& x) {
 }
 
 double InitialValueControl(const std::vector < double >& x) {
-  return 4.;
+  return 0.;
 }
 
 //   double ctrl_lower = -0.8;
@@ -117,7 +117,7 @@ int main(int argc, char** args) {
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleLiftRestrProblem);
   
-  system.SetMaxNumberOfNonLinearIterations(2);
+//   system.SetMaxNumberOfNonLinearIterations(2);
 
   // initilaize and solve the system
   system.init();
@@ -268,8 +268,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower = -0.6;
-  double ctrl_upper = 3.;
+  double ctrl_lower = -10000000.;
+  double ctrl_upper = 100000000.;
   assert(ctrl_lower < ctrl_upper);
   double c_compl = 1.;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
@@ -674,8 +674,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 // // // 	}
     std::vector<double> Res_ctrl (nDof_ctrl);
     for (unsigned i = 0; i < sol_ctrl.size(); i++){
+      if ( control_el_flag == 1){
 	Res[nDof_u + i] = Res[nDof_u + i] - sol_mu[i];
 	Res_ctrl[i] = Res[nDof_u + i];
+      }
     }
 
  //========== sum-based part

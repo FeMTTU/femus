@@ -4,8 +4,8 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  16
-#define NSUB_Y  16
+#define NSUB_X 4
+#define NSUB_Y 4
 
 
 //*********************** Sets the regularization parameters *******************************************************
