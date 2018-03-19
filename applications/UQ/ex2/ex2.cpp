@@ -517,8 +517,8 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  
       for(unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];
       }
-      quantityOfInterest += solu_gss * weight / domainMeasure;
-
+//       quantityOfInterest += solu_gss * solu_gss *  weight ; // this is the integral of the square.
+      quantityOfInterest +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
 
     } // end gauss point loop
 
@@ -598,6 +598,8 @@ void GetStochasticData(std::vector <double>& QoI) {
 
     if(totMoments > 1) {
       cumulants[1] = moments[1] - moments[0] * moments[0];
+      std::cout.precision(14);
+      std::cout << "AAAAAAAAAAAAAAA" << cumulants[1] << std::endl;
       if(totMoments > 2) {
         cumulants[2] = moments[2] - 3. * moments[1] * moments[0] + 2. * pow(moments[0], 3);
         if(totMoments > 3) {
@@ -646,8 +648,8 @@ void PlotStochasticData() {
   double edgeworth4Terms = 0.;
   double edgeworth5Terms = 0.;
   double edgeworth6Terms = 0.;
-  
-  
+
+
   double generalizedGC1Term = 0.;
   double generalizedGC2Terms = 0.;
   double generalizedGC3Terms = 0.;
@@ -670,11 +672,14 @@ void PlotStochasticData() {
   double d8gaussian;
   double d9gaussian;
 
-  double t = meanQoI - stdDeviationQoI * 50000.;
-  double dt = (100000. * stdDeviationQoI) / 300.;
+  double t = meanQoI - stdDeviationQoI * 500000.;
+  double dt = (1000000. * stdDeviationQoI) / 300.;
+
+//   cumulants[0] = 0;
 
   for(unsigned i = 0; i <= 300; i++) {
     std::cout << t << " ";
+//     double t = x - meanQoI;
     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
     std::cout << gaussian << " ";
 
@@ -749,17 +754,17 @@ void PlotStochasticData() {
 // 	    std::cout << gramCharlier5Terms << "\n";
 
             generalizedGC5Terms = generalizedGC4Terms - 1. / 120 * (cumulants[4] + 5. * cumulants[3] * cumulants[0] + 10. * cumulants[2] * (cumulants[1] - 1.)
-                              + 10. * cumulants[2] * pow(cumulants[0], 2) + 15. * pow((cumulants[1] - 1.), 2) * cumulants[0]
-                              + 10. * (cumulants[1] - 1.) * pow(cumulants[0], 3) + pow(cumulants[0], 5)) * d5gaussian;
+                                  + 10. * cumulants[2] * pow(cumulants[0], 2) + 15. * pow((cumulants[1] - 1.), 2) * cumulants[0]
+                                  + 10. * (cumulants[1] - 1.) * pow(cumulants[0], 3) + pow(cumulants[0], 5)) * d5gaussian;
 
             std::cout << generalizedGC5Terms << " ";
 
             if(totMoments > 5) {
 
               generalizedGC6Terms = generalizedGC5Terms + 1. / 720 * (cumulants[5] + 6. * cumulants[4] * cumulants[0] + 15. * cumulants[3] * (cumulants[1] - 1.)
-                                + 15. * cumulants[3] * pow(cumulants[0], 2) +  10. * pow(cumulants[2], 2) + 60. * cumulants[2] * (cumulants[1] - 1.) * cumulants[0] 
-                                + 20. * cumulants[2] * pow(cumulants[0], 3) + 15. * pow((cumulants[1] - 1.), 3) + 45. * pow((cumulants[1] - 1.), 2) * pow(cumulants[0], 2) 
-				+ 15. * (cumulants[1] - 1.) * pow(cumulants[0], 4) +  pow(cumulants[0], 6) ) * d6gaussian;
+                                    + 15. * cumulants[3] * pow(cumulants[0], 2) +  10. * pow(cumulants[2], 2) + 60. * cumulants[2] * (cumulants[1] - 1.) * cumulants[0]
+                                    + 20. * cumulants[2] * pow(cumulants[0], 3) + 15. * pow((cumulants[1] - 1.), 3) + 45. * pow((cumulants[1] - 1.), 2) * pow(cumulants[0], 2)
+                                    + 15. * (cumulants[1] - 1.) * pow(cumulants[0], 4) +  pow(cumulants[0], 6)) * d6gaussian;
 
               std::cout << generalizedGC6Terms << " \n ";
 
