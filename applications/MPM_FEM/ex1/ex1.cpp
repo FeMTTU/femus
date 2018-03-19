@@ -202,11 +202,12 @@ int main(int argc, char** args)
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
-  gravity[0] = 9.81 * sqrt(2.) / 2.;
-  gravity[1] = -9.81 * sqrt(2.) / 2.;
+  double theta = PI/8;
+  gravity[0] = 9.81 * sin(theta);
+  gravity[1] = -9.81 * cos(theta);
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 200;
+  unsigned n_timesteps = 300;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
