@@ -36,7 +36,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
     }
   }
   else if (!strcmp(name, "DX")) {
-    if (1 == facename || 2 == facename) {
+    if (/*1 == facename ||*/ 2 == facename) {
       test = 0;
       value = 0;
     }
@@ -74,6 +74,8 @@ int main(int argc, char** args)
   mlMsh.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
+  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  
   unsigned dim = mlMsh.GetDimension();
 
   MultiLevelSolution mlSol(&mlMsh);
@@ -82,7 +84,7 @@ int main(int argc, char** args)
   if (dim > 1) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
   if (dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
 
-  mlSol.AddSolution("M", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
   mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   mlSol.Initialize("All");
@@ -175,8 +177,9 @@ int main(int argc, char** args)
   std::vector < std::vector < std::vector < double > > > line0(1);
 
   unsigned solType = 2;
-  linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
+  //linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
   
+  linea = new Line(x, markerType, mlSol.GetLevel(0), solType);
   double diskArea = PI * R * R;
   linea->SetParticlesMass(diskArea, rhos);
 
@@ -202,12 +205,12 @@ int main(int argc, char** args)
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
-  double theta = PI/8;
+  double theta = PI/4;
   gravity[0] = 9.81 * sin(theta);
   gravity[1] = -9.81 * cos(theta);
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 300;
+  unsigned n_timesteps = 600;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();

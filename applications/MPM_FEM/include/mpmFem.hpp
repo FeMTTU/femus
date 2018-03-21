@@ -107,6 +107,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   vector <unsigned> indexPdeD(dim);
   unsigned solType = ml_sol->GetSolutionType(&varname[0][0]);
 
+  unsigned indexSolM = ml_sol->GetIndex("M");
+  vector < bool > solidFlag;  
 
   for(unsigned ivar = 0; ivar < dim; ivar++) {
     indexSolD[ivar] = ml_sol->GetIndex(&varname[ivar][0]);
@@ -143,7 +145,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
     // resize local arrays
     std::vector <int> sysDof(nDofs);
 
-
+    solidFlag.resize(nDofsD);
     for(unsigned  k = 0; k < dim; k++) {
       SolDd[k].resize(nDofsD);
       SolDdOld[k].resize(nDofsD);
@@ -167,6 +169,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       unsigned idof = mymsh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
       unsigned idofX = mymsh->GetSolutionDof(i, iel, 2);    // global to global mapping between solution node and solution dof
       
+      solidFlag[i] = ( (*mysolution->_Sol[indexSolM])(idof) > 0.5) ? true:false;
+      
       for(unsigned  k = 0; k < dim; k++) {
         SolDd[k][i] = (*mysolution->_Sol[indexSolD[k]])(idof);      // global extraction and local storage for the solution
 	SolDdOld[k][i] = (*mysolution->_SolOld[indexSolD[k]])(idof);      // global extraction and local storage for the solution
@@ -189,6 +193,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, ig, weight_hat, phi_hat, gradphi_hat, *nullDoublePointer);
 
+      vector < double > Xg(dim, 0);
       vector < vector < adept::adouble > > GradSolDgssHat(dim);
 
       for(unsigned  k = 0; k < dim; k++) {
@@ -198,6 +203,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
       for(unsigned i = 0; i < nDofsD; i++) {
         for(unsigned j = 0; j < dim; j++) {
+	  Xg[j] += phi[i] * vx_hat[j][i];
           for(unsigned  k = 0; k < dim; k++) {
             GradSolDgssHat[k][j] += gradphi_hat[i * dim + j] * SolDd[k][i];
           }
@@ -207,28 +213,33 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       if(material == 2) {
         unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat);
         unsigned  MPMmaterial = (*mysolution->_Sol[indexSolMat])(idofMat);
-        double scalingFactor = 0.;// / (1. + 100. * distance);
-        if(MPMmaterial == 0) scalingFactor = 1.e-06;
-        else if(MPMmaterial == 1) scalingFactor = 5e-03;
-        else if(MPMmaterial == 2) scalingFactor = 1e-04;
+        double scalingFactor = 0;// / (1. + 100. * distance);
+        if(MPMmaterial == 2) scalingFactor = 1e-06; //runna 1e-04 con E=10^6
+	
+ 	double mu = (Xg[1] <= -1.1416 && ( MPMmaterial == 1 || MPMmaterial == 2 ) ) ? mu_MPM : mu_MPM; 
+	
         for(unsigned i = 0; i < nDofsD; i++) {
           vector < adept::adouble > softStiffness(dim, 0.);
 
           for(unsigned j = 0; j < dim; j++) {
             for(unsigned  k = 0; k < dim; k++) {
-              softStiffness[k]   +=  mu_MPM * gradphi_hat[i * dim + j] * (GradSolDgssHat[k][j] + 0.* GradSolDgssHat[j][k]);
+              softStiffness[k]   +=  mu * gradphi_hat[i * dim + j] * (GradSolDgssHat[k][j] + GradSolDgssHat[j][k]);
             }
           }
           for(unsigned  k = 0; k < dim; k++) {
-            aRhs[k][i] += - softStiffness[k] * weight_hat * scalingFactor;
+	    if(MPMmaterial >= 2){
+	      aRhs[k][i] += - softStiffness[k] * weight_hat * scalingFactor;
+	    }
+	    else if( !solidFlag[i] ){
+	      aRhs[k][i] += phi_hat[i] * SolDd[k][i] * weight_hat;
+	    }
           }
         }
       }
       else {
 	
 	mymsh->_finiteElement[ielt][solType]->Jacobian(vx, ig, weight, phi, gradphi, *nullAdoublePointer);
-	
-	
+		
 	vector < adept::adouble > SolDgss(dim, 0);
 	vector < double > SolDgssOld(dim, 0);
         vector < double > SolVgssOld(dim, 0);
@@ -283,7 +294,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         }
 
         adept::adouble I1_B = B[0][0] + B[1][1] + B[2][2];
-
+	
         for(int i = 0; i < 3; i++) {
           for(int j = 0; j < 3; j++) {
             //  Cauchy[i][j] = mu * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
@@ -444,6 +455,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       vector<vector < adept::adouble > > GradSolDpHat(dim);
       vector < vector < adept::adouble > > LocalFp(dim);
 
+      vector<double> Xp(dim,0.);
+      
       for(int i = 0; i < dim; i++) {
         GradSolDp[i].resize(dim);
         std::fill(GradSolDp[i].begin(), GradSolDp[i].end(), 0);
@@ -453,6 +466,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
       for(int i = 0; i < dim; i++) {
         for(unsigned inode = 0; inode < nDofsD; inode++) {
+	  Xp[i] +=  phi[inode] * phi_hat[inode];
           SolDp[i] += phi[inode] * SolDd[indexPdeD[i]][inode];
 	  SolDpOld[i] += phi[inode] * SolDdOld[indexPdeD[i]][inode];
           for(int j = 0; j < dim; j++) {
@@ -514,13 +528,16 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       }
 
       adept::adouble I1_B = B[0][0] + B[1][1] + B[2][2];
+      
+      double mu = (Xp[1] > -1.1416) ? mu_MPM: mu_MPM; 
+      double lambda = (Xp[1] > -1.1416) ? lambda_MPM: lambda_MPM; 
 
       for(int i = 0; i < 3; i++) {
         for(int j = 0; j < 3; j++) {
           //Cauchy[i][j] = mu_MPM * (B[i][j] - I1_B * Id2th[i][j] / 3.) / pow(J_hat, 5. / 3.)
             //             + K_MPM * (J_hat - 1.) * Id2th[i][j];  //Generalized Neo-Hookean solid, in Allan-Bower's book, for rubbers with very limited compressibility and K >> mu
 
-	  Cauchy[i][j] = lambda_MPM * log(J_hat) / J_hat * Id2th[i][j] + mu_MPM / J_hat * (B[i][j] - Id2th[i][j]); //alternative formulation
+	  Cauchy[i][j] = lambda * log(J_hat) / J_hat * Id2th[i][j] + mu / J_hat * (B[i][j] - Id2th[i][j]); //alternative formulation
 
 
         }

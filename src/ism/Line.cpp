@@ -978,27 +978,20 @@ namespace femus
       bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
 
       std::vector <double> xi1 = _particles[iMarker]->GetMarkerLocalCoordinates();
-      
-      //if(iMarker < 3){
-//	std::cout << iel <<" "<< iMarker << " " << xi1[0] << " " << xi1[1] <<std::endl;
- //     }
-                
+                 
       _particles[iMarker]->FindLocalCoordinates(2., aX[iel], elementUpdate, _sol, s);
 
       std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
-      
-      //if(iMarker < 3){
-      //std::cout << iel <<" "<< iMarker << " " << xi[0] << " " << xi[1] <<std::endl;
-     // }
-      
-      double mass = 1.;
+        
+      //double mass = 1.;
 
-      basis* base = _mesh->GetBasis(ielType, solTypeM);
+      //basis* base = _mesh->GetBasis(ielType, solTypeM);
       for (unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solTypeM); j++) {
 
-        double value = base->eval_phi(j, xi);
+        //double value = base->eval_phi(j, xi);
         unsigned jdof = _mesh->GetSolutionDof(j, iel, solTypeM);
-        _sol->_Sol[solIndexM]->add(jdof, value * mass);
+        //_sol->_Sol[solIndexM]->add(jdof, value * mass);
+	_sol->_Sol[solIndexM]->set(jdof, 1.);
       }
 
       unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
@@ -1059,6 +1052,19 @@ namespace femus
       }
     }
     _sol->_Sol[solIndexMat]->close();
+    
+    
+    for (unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
+
+      unsigned iel = _particles[iMarker]->GetMarkerElement();
+      unsigned ielType =  _mesh->GetElementType(iel);
+      for (unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solTypeM); j++) {
+
+       unsigned jdof = _mesh->GetSolutionDof(j, iel, solTypeM);
+	_sol->_Sol[solIndexM]->set(jdof, 1.);
+      }
+    }
+    _sol->_Sol[solIndexM]->close();
 
   }
 
