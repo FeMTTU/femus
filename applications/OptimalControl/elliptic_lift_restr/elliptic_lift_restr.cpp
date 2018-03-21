@@ -104,6 +104,8 @@ int main(int argc, char** args) {
 
 //   system.SetMaxNumberOfLinearIterations(2);
   // initilaize and solve the system
+  system.SetMgType(F_CYCLE/*F_CYCLE*//*M_CYCLE*/); //it doesn't matter if I use only 1 level
+  system.SetOuterKSPSolver("gmres");
   system.init();
   system.MGsolve();
   
@@ -542,26 +544,26 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
-	if (control_el_flag == 0) {  //elements that should have zero control
-	  
-         for (unsigned i = 0; i < nDof_max; i++) {
-            for (unsigned j = 0; j < nDof_max; j++) {
-// 	      std::cout << Jac[ i * nDof_AllVars +j ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + i) * nDof_AllVars +j ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars +j ] << " " << std::endl;
-// 	      std::cout << Jac[ i * nDof_AllVars + (nDof_u + j) ] << " " << std::endl;
-// 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + j) ];
-	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + nDof_adj + i) * nDof_AllVars + (nDof_u + nDof_adj + j) ];
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars + (nDof_u + j) ] << " " << std::endl;
-// 	      std::cout << Jac[ i * nDof_AllVars + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
-//       std::cout << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
-// 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
-	    }
-	      std::cout << std::endl;
-	 }
-	 
-	}
-    std::cout << " ========== " << iel << " ================== " << std::endl;     
+// 	if (control_el_flag == 0) {  //elements that should have zero control
+// 	  
+//          for (unsigned i = 0; i < nDof_max; i++) {
+//             for (unsigned j = 0; j < nDof_max; j++) {
+// // 	      std::cout << Jac[ i * nDof_AllVars +j ] << " " << std::endl;
+// // 	      std::cout << Jac[ (nDof_u + i) * nDof_AllVars +j ] << " " << std::endl;
+// // 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars +j ] << " " << std::endl;
+// // 	      std::cout << Jac[ i * nDof_AllVars + (nDof_u + j) ] << " " << std::endl;
+// // 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + j) ];
+// 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + nDof_adj + i) * nDof_AllVars + (nDof_u + nDof_adj + j) ];
+// // 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars + (nDof_u + j) ] << " " << std::endl;
+// // 	      std::cout << Jac[ i * nDof_AllVars + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
+// //       std::cout << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
+// // 	      std::cout << Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars + (nDof_u + nDof_ctrl + j) ] << " " << std::endl;
+// 	    }
+// 	      std::cout << std::endl;
+// 	 }
+// 	 
+// 	}
+//     std::cout << " ========== " << iel << " ================== " << std::endl;     
     
     //copy the value of the adept::adoube aRes in double Res and store
     RES->add_vector_blocked(Res, l2GMap_AllVars);
@@ -575,8 +577,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
-  KK->print();
-  RES->print();
+//   KK->print();
+//   RES->print();
 
   // ***************** END ASSEMBLY *******************
 
@@ -588,7 +590,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
   
-    LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+    NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
