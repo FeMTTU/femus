@@ -34,7 +34,7 @@ void GetStochasticData(std::vector <double>& QoI);
 void PlotStochasticData();
 
 //BEGIN stochastic data
-double L = 4; // correlation length of the covariance function
+double L = 4 ; // correlation length of the covariance function
 double domainMeasure = 1.; //measure of the domain
 unsigned totMoments = 6;
 std::vector <double> moments(totMoments, 0.); //initialization
@@ -42,7 +42,7 @@ std::vector <double> cumulants(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 1000; //number of samples for the Monte Carlo
+unsigned M = 500; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 3;
@@ -672,14 +672,14 @@ void PlotStochasticData() {
   double d8gaussian;
   double d9gaussian;
 
-  double t = meanQoI - stdDeviationQoI * 500000.;
-  double dt = (1000000. * stdDeviationQoI) / 300.;
+  double t = meanQoI - stdDeviationQoI * 7.5;
+  double dt = (15. * stdDeviationQoI) / 300.;
 
-//   cumulants[0] = 0;
+//   cumulants[0] = 0; //decomment for nonStdGaussian
 
   for(unsigned i = 0; i <= 300; i++) {
     std::cout << t << " ";
-//     double t = x - meanQoI;
+//     double t = x - meanQoI; //decomment for nonStdGaussian
     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
     std::cout << gaussian << " ";
 
