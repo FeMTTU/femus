@@ -18,9 +18,38 @@
 
 using namespace femus;
 
+double scale(const std::vector <double>& x)
+{
+  
+  double xc[3] = {0., 0.05, 0.};
+  double R = 1.6;
+
+  double PI = acos(-1.);
+  unsigned NR = 600;
+  unsigned NL = NR / (2 * PI);
+  double DL = R / NL;
+
+  double r = 0.;
+  for(unsigned k = 0; k < x.size(); k++) {
+    r += (x[k] - xc[k]) * (x[k] - xc[k]);
+  }
+  r = sqrt(r);
+
+  double r0 = R;
+  double dr = DL;
+  double scale = 1.;
+  while(r - r0 > 1.0e-10) {
+    scale /= 16.;
+    dr /= 2.;
+    r0 += dr;
+  }
+
+  return scale;
+}
+
 double SetVariableTimeStep(const double time)
 {
-  double dt =  0.02;
+  double dt =  0.01;
   return dt;
 }
 
@@ -29,14 +58,14 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   bool test = 1; //dirichlet
   value = 0.;
 
-  if (!strcmp(name, "DY")) {
-    if (3 == facename || 4 == facename) {
+  if(!strcmp(name, "DY")) {
+    if(3 == facename || 4 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if (!strcmp(name, "DX")) {
-    if (/*1 == facename ||*/ 2 == facename) {
+  else if(!strcmp(name, "DX")) {
+    if(/*1 == facename ||*/ 2 == facename) {
       test = 0;
       value = 0;
     }
@@ -54,7 +83,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 4; //for refinement in 3D
+  unsigned numberOfUniformLevels = 5; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -62,8 +91,10 @@ int main(int argc, char** args)
   double Uref = 1.;
   double rhos = 1000;
   double nu = 0.4;
-  double E = 4.2 * 1.e8;
+  double E = 4.2 * 1.e6;
 
+  bool boundaryLayer = false;
+  
 
   Parameter par(Lref, Uref);
 
@@ -75,14 +106,15 @@ int main(int argc, char** args)
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
-  
+  numberOfUniformLevels = 1;
+
   unsigned dim = mlMsh.GetDimension();
 
   MultiLevelSolution mlSol(&mlMsh);
   // add variables to mlSol
   mlSol.AddSolution("DX", LAGRANGE, SECOND, 2);
-  if (dim > 1) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
-  if (dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
+  if(dim > 1) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
+  if(dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
 
   mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
   mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
@@ -93,8 +125,8 @@ int main(int argc, char** args)
 
   // ******* Set boundary conditions *******
   mlSol.GenerateBdc("DX", "Steady");
-  if (dim > 1) mlSol.GenerateBdc("DY", "Steady");
-  if (dim > 2) mlSol.GenerateBdc("DZ", "Steady");
+  if(dim > 1) mlSol.GenerateBdc("DY", "Steady");
+  if(dim > 2) mlSol.GenerateBdc("DZ", "Steady");
   mlSol.GenerateBdc("M", "Steady");
 
   MultiLevelProblem ml_prob(&mlSol);
@@ -105,8 +137,8 @@ int main(int argc, char** args)
   // ******* Add MPM system to the MultiLevel problem *******
   TransientNonlinearImplicitSystem& system = ml_prob.add_system < TransientNonlinearImplicitSystem > ("MPM_FEM");
   system.AddSolutionToSystemPDE("DX");
-  if (dim > 1)system.AddSolutionToSystemPDE("DY");
-  if (dim > 2) system.AddSolutionToSystemPDE("DZ");
+  if(dim > 1)system.AddSolutionToSystemPDE("DY");
+  if(dim > 2) system.AddSolutionToSystemPDE("DZ");
 
   // ******* System MPM Assembly *******
   system.SetAssembleFunction(AssembleMPMSys);
@@ -136,6 +168,7 @@ int main(int argc, char** args)
   system.SetTolerances(1.e-10, 1.e-15, 1.e+50, 40, 40);
 
 
+  //BEGIN init particles
   unsigned size = 1;
   std::vector < std::vector < double > > x; // marker
   x.resize(size);
@@ -148,28 +181,50 @@ int main(int argc, char** args)
   unsigned NL = NR / (2 * PI);
   double DL = R / NL;
 
-  for (unsigned i = 0; i < NL; i++) {
+  for(unsigned i = 0; i < NL; i++) {
     double  r = R - i * DL;
-    unsigned Nr = static_cast <unsigned> (ceil(NR * r / R ));
-//     std::cout << r << " " << Nr << " ";
+    unsigned Nr = static_cast <unsigned>(ceil(NR * r / R));
     double dtheta = 2 * PI / Nr;
     unsigned sizeOld = x.size();
     x.resize(sizeOld + Nr);
-    for (unsigned s = sizeOld; s < x.size(); s++) {
+    for(unsigned s = sizeOld; s < x.size(); s++) {
       x[s].resize(dim);
     }
-//     std::cout << x.size() << " ";
-    for (unsigned j = 0; j < Nr; j++) {
+    for(unsigned j = 0; j < Nr; j++) {
       x[sizeOld + j][0] = r * cos(j * dtheta);
       x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
     }
   }
-
+  double diskArea = PI * R * R;
   size = x.size();
+  
+  if(boundaryLayer) {
+    double particlesMass = rhos * diskArea / x.size();
+    NL = 5;
+    double  r = R;
+    for(unsigned i = 1; i <= NL; i++) {
+      DL = DL / 2;
+      r += DL;
+      unsigned Nr = static_cast <unsigned>(ceil(NR * r / R));
+      double dtheta = 2 * PI / Nr;
+      unsigned sizeOld = x.size();
+      x.resize(sizeOld + Nr);
+      for(unsigned s = sizeOld; s < x.size(); s++) {
+        x[s].resize(dim);
+      }
+      for(unsigned j = 0; j < Nr; j++) {
+        x[sizeOld + j][0] = r * cos(j * dtheta);
+        x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
+      }
+    }
+    size = x.size();
+    diskArea = particlesMass * x.size() / rhos;
+  }
+
   std::vector < MarkerType > markerType;
   markerType.resize(size);
 
-  for (unsigned j = 0; j < size; j++) {
+  for(unsigned j = 0; j < size; j++) {
     markerType[j] = VOLUME;
   }
 
@@ -177,17 +232,16 @@ int main(int argc, char** args)
   std::vector < std::vector < std::vector < double > > > line0(1);
 
   unsigned solType = 2;
-  //linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
-  
-  linea = new Line(x, markerType, mlSol.GetLevel(0), solType);
-  double diskArea = PI * R * R;
+  linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
+      
   linea->SetParticlesMass(diskArea, rhos);
+  linea->ScaleParticleMass(scale);
 
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
-
-
   linea->GetParticlesToGridMaterial();
+
+  //END init particles 
   
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
@@ -205,13 +259,13 @@ int main(int argc, char** args)
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
-  double theta = PI/4;
+  double theta = PI / 4;
   gravity[0] = 9.81 * sin(theta);
   gravity[1] = -9.81 * cos(theta);
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 600;
-  for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
+  unsigned n_timesteps = 350;
+  for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
 

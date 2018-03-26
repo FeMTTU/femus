@@ -214,7 +214,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat);
         unsigned  MPMmaterial = (*mysolution->_Sol[indexSolMat])(idofMat);
         double scalingFactor = 0;// / (1. + 100. * distance);
-        if(MPMmaterial == 2) scalingFactor = 1e-06; //runna 1e-04 con E=10^6
+        if(MPMmaterial == 2) scalingFactor = 1e-02; //runna 1e-04 con E=10^6
 	
  	double mu = (Xg[1] <= -1.1416 && ( MPMmaterial == 1 || MPMmaterial == 2 ) ) ? mu_MPM : mu_MPM; 
 	
