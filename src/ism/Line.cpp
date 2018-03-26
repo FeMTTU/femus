@@ -960,10 +960,10 @@ namespace femus
 
     double s = 0;
 
-    unsigned solIndexM = _sol->GetIndex("M");
+    unsigned solIndexM = _sol->GetIndex("M"); // nodes
     unsigned solTypeM = _sol->GetSolutionType(solIndexM);
 
-    unsigned solIndexMat = _sol->GetIndex("Mat");
+    unsigned solIndexMat = _sol->GetIndex("Mat"); // element
     unsigned solTypeMat = _sol->GetSolutionType(solIndexMat);
 
     std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
@@ -971,6 +971,8 @@ namespace femus
     _sol->_Sol[solIndexM]->zero();
     _sol->_Sol[solIndexMat]->zero();
 
+    
+    // set all element with at least one marker to 3 and all nodes of the element to 1
     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
       unsigned iel = _particles[iMarker]->GetMarkerElement();
@@ -983,14 +985,8 @@ namespace femus
 
       std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
 
-      //double mass = 1.;
-
-      //basis* base = _mesh->GetBasis(ielType, solTypeM);
       for(unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solTypeM); j++) {
-
-        //double value = base->eval_phi(j, xi);
         unsigned jdof = _mesh->GetSolutionDof(j, iel, solTypeM);
-        //_sol->_Sol[solIndexM]->add(jdof, value * mass);
         _sol->_Sol[solIndexM]->set(jdof, 1.);
       }
 
@@ -1010,30 +1006,33 @@ namespace femus
         unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
         for(unsigned i = 0; i < nDofsM; i++) {
           unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
-          double value = (*_sol->_Sol[solIndexM])(idof);
-          if(fabs(value) > 1.0e-14) {
-            material = 1;
-            _sol->_Sol[solIndexMat]->set(idofMat, 1.);
-            break;
-          }
+	  
+	  _sol->_Sol[solIndexM]->set(idof, 0.);
+	  
+//           double value = (*_sol->_Sol[solIndexM])(idof);
+//           if(fabs(value) > 1.0e-14) {
+//             material = 1;
+//             _sol->_Sol[solIndexMat]->set(idofMat, 1.);
+//             break;
+//           }
         }
       }
     }
     _sol->_Sol[solIndexMat]->close();
 
 
-    for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
-      unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
-      unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
-      if(fabs(material - 1.) < 1.0e-14) {
-        unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
-        for(unsigned i = 0; i < nDofsM; i++) {
-          unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
-          _sol->_Sol[solIndexM]->set(idof, 0.);
-        }
-      }
-    }
-    _sol->_Sol[solIndexM]->close();
+//     for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+//       unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
+//       unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
+//       if(fabs(material - 1.) < 1.0e-14) {
+//         unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+//         for(unsigned i = 0; i < nDofsM; i++) {
+//           unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
+//           _sol->_Sol[solIndexM]->set(idof, 0.);
+//         }
+//       }
+//     }
+//     _sol->_Sol[solIndexM]->close();
 
     for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
 
@@ -1041,14 +1040,15 @@ namespace femus
       unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
       if(material == 3) {
         unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+	double counter = 0.;
         for(unsigned i = 0; i < nDofsM; i++) {
           unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
           double value = (*_sol->_Sol[solIndexM])(idof);
-          if(fabs(value) < 1.0e-14 || (*_sol->_Bdc[solIndexM])(idof) == 0.) {
-            _sol->_Sol[solIndexMat]->set(idofMat, 2.);
-            break;
-          }
+	  counter += value;
         }
+        //if(fabs((counter - nDofsM)/nDofsM) > .4 ) {
+        _sol->_Sol[solIndexMat]->set(idofMat, counter);
+        //}
       }
     }
     _sol->_Sol[solIndexMat]->close();
