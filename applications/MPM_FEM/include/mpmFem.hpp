@@ -3,7 +3,7 @@
 
 using namespace femus;
 
-double beta = 0.25;
+double beta = 0.45;
 double Gamma = 0.5;
 
 double gravity[3] = {0., -9.81, 0.};
@@ -215,7 +215,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         double  MPMmaterial = (*mysolution->_Sol[indexSolMat])(idofMat);
         double scalingFactor = 0;// / (1. + 100. * distance);
         if(MPMmaterial < 5) scalingFactor = 1e-02;
-	else if(MPMmaterial < 9) scalingFactor = 1e-06;
+	else if(MPMmaterial < 9) scalingFactor = 1e-04;
 	
  	double mu = (Xg[1] <= -1.1416 && ( MPMmaterial == 1 || MPMmaterial == 2 ) ) ? mu_MPM : mu_MPM; 
 	

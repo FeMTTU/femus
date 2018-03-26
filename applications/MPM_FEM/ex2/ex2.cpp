@@ -78,6 +78,9 @@ int main(int argc, char** args)
 
   mlMsh.ReadCoarseMesh("../input/square.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+  
+  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  numberOfUniformLevels = 1;
 
   unsigned dim = mlMsh.GetDimension();
 
@@ -87,7 +90,7 @@ int main(int argc, char** args)
   if (dim > 1) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
   if (dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
 
-  mlSol.AddSolution("M", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
   mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   mlSol.Initialize("All");
