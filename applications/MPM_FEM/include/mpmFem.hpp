@@ -1,13 +1,9 @@
 
-
-
 using namespace femus;
 
 double beta = 0.25;
 double Gamma = 0.5;
-
 double gravity[3] = {0., -9.81, 0.};
-
 Line* linea;
 
 void AssembleMPMSys(MultiLevelProblem& ml_prob) {

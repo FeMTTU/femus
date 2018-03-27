@@ -145,8 +145,8 @@ int main(int argc, char** args)
 
   system.SetTolerances(1.e-10, 1.e-15, 1.e+50, 40, 40);
 
-  unsigned rows = 60;
-  unsigned columns = 120;
+  unsigned rows = 2*60;
+  unsigned columns = 2*120;
   unsigned size = rows * columns;
 
   std::vector < std::vector < double > > x; // marker
