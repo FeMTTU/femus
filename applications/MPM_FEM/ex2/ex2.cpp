@@ -69,6 +69,10 @@ int main(int argc, char** args)
   double rhos = 10000;
   double nu = 0.4;
   double E = 1.74 * 1.e6;
+  
+  beta = 0.3;
+  Gamma = 0.5;
+
 
   Parameter par(Lref, Uref);
 
