@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
 
   GetStochasticData(QoI);
 
-  PlotStochasticData();
+  //PlotStochasticData();
 
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
