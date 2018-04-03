@@ -91,7 +91,7 @@ int main(int argc, char** args)
   double Uref = 1.;
   double rhos = 1000;
   double nu = 0.4;
-  double E = 4.2 * 1.e6;
+  double E = 4.2 * 1.e8;
 
   bool boundaryLayer = false;
   
@@ -177,7 +177,7 @@ int main(int argc, char** args)
 
   double R = 1.6;
   double PI = acos(-1.);
-  unsigned NR = 600;
+  unsigned NR = 1200;
   unsigned NL = NR / (2 * PI);
   double DL = R / NL;
 
