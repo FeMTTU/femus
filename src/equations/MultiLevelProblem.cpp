@@ -47,7 +47,8 @@ MultiLevelProblem::MultiLevelProblem( MultiLevelSolution *ml_sol):
 				      _ml_sol(ml_sol),
 				      _ml_msh(ml_sol->_mlMesh),
 				      _gridn(_ml_msh->GetNumberOfLevels()),
-				      _gridr(_ml_msh->GetNumberOfGridTotallyRefined())
+				      _gridr(_ml_msh->GetNumberOfGridTotallyRefined()),
+				      _files(NULL)
 {
 
 }
