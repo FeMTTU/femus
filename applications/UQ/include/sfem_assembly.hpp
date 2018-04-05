@@ -132,6 +132,8 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
   }
   std::cout << std::endl;
   
+  yOmega[0]=2.;
+  
   
   
   
@@ -211,7 +213,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
           laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        double srcTerm = 1./*- GetExactSolutionLaplace(x_gss)*/ ;
+        double srcTerm = 100./*- GetExactSolutionLaplace(x_gss)*/ ;
         aRes[i] += (srcTerm * phi[i] + laplace) * weight;
 
       } // end phi_i loop
