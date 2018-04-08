@@ -4,8 +4,8 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X 2
-#define NSUB_Y 2
+#define NSUB_X 32
+#define NSUB_Y 32
 
 
 //*********************** Sets the regularization parameters *******************************************************
@@ -42,7 +42,7 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
 
  //***** set target domain flag ******
  // flag = 1: we are in the lifting nonzero domain
-  int control_el_flag = 0;
+  int control_el_flag = 1.;
    if ( elem_center[1] >  0.7) { control_el_flag = 1; }
 
      return control_el_flag;

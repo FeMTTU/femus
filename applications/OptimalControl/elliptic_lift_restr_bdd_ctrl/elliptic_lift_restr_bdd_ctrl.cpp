@@ -17,11 +17,11 @@ double InitialValueTargReg(const std::vector < double >& x) {
 }
 
 double InitialValueState(const std::vector < double >& x) {
-  return 0.;
+  return 8.;
 }
 
 double InitialValueAdjoint(const std::vector < double >& x) {
-  return 0.;
+  return 7.;
 }
 
 double InitialValueMu(const std::vector < double >& x) {
@@ -29,7 +29,7 @@ double InitialValueMu(const std::vector < double >& x) {
 }
 
 double InitialValueControl(const std::vector < double >& x) {
-  return 0.;
+  return 5.;
 }
 
 //   double ctrl_lower = -0.8;
@@ -38,13 +38,16 @@ double InitialValueControl(const std::vector < double >& x) {
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
   bool dirichlet = true; //dirichlet
-  value = 0;
+  value = 0.;
 //   if (value > ctrl_upper) value = ctrl_upper; ////////////////////////
   
+  if(!strcmp(name,"state")) { value = 8.;}
+  if(!strcmp(name,"adjoint")) {value = 7.; }
+  
   if(!strcmp(name,"control")) {
-      value = 0;
-  if (faceName == 3)
-    dirichlet = false;
+      value = 5.;
+//   if (faceName == 3)
+//     dirichlet = false;
   }
   
 //     if(!strcmp(name,"mu")) {    dirichlet = false; } //what are the boundary conditions on mu?
@@ -677,7 +680,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     std::vector<double> Res_ctrl (nDof_ctrl);
     for (unsigned i = 0; i < sol_ctrl.size(); i++){
       if ( control_el_flag == 1){
-	Res[nDof_u + i] = Res[nDof_u + i] - sol_mu[i] - 5.;
+	Res[nDof_u + i] = Res[nDof_u + i] /*- sol_mu[i]*/ - 5.;
 	Res_ctrl[i] = Res[nDof_u + i];
       }
     }
@@ -732,12 +735,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  
   
  //============= delta_ctrl-delta_mu row ===============================
- KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
+ //KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
   
  //============= delta_mu-delta_ctrl row ===============================
  for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = c_compl;    
   
-  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
+  //KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
 
  //============= delta_mu-delta_mu row ===============================
   for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] = 1 - sol_actflag[i]/c_compl;  //can do better to avoid division, maybe use modulo operator 
