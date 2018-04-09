@@ -281,7 +281,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   //********* variables for ineq constraints *****************
   double ctrl_lower = 0.4;
-  double ctrl_upper =  100000000000;
+  double ctrl_upper = .8;
   assert(ctrl_lower < ctrl_upper);
   double c_compl = 1.;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
@@ -718,14 +718,21 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
     for (unsigned i = 0; i < sol_actflag.size(); i++){
       if (sol_actflag[i] == 0){  //inactive
-         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ); 
 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
-      else { //active
-         Res[nDof_u + nDof_ctrl + nDof_adj + i]  =    c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
+      else if (sol_actflag[i] == 1){  //active_a 
+	 Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
       }
-    } 
+      else if (sol_actflag[i] == 2){  //active_b 
+	Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
+	Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+      }
+    }
+//          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
+//          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+
     
     RES->insert(Res_mu, l2GMap_mu);
     RES->insert(Res_ctrl, l2GMap_ctrl);
@@ -740,7 +747,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  
  //============= delta_adj-delta_adj row ===============================
  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
- 
   
  //============= delta_ctrl-delta_mu row ===============================
  KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
