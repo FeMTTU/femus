@@ -652,7 +652,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
-    std::cout << " ************* Element ************** " << iel << " **************************************** " << std::endl;     
+   // std::cout << " ************* Element ************** " << iel << " **************************************** " << std::endl;     
 
 // // //     if (control_el_flag == 0) {  //elements that should have zero control
 // //          for (unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) {
@@ -679,10 +679,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 // // // 	}
     std::vector<double> Res_ctrl (nDof_ctrl);
     for (unsigned i = 0; i < sol_ctrl.size(); i++){
-      if ( control_el_flag == 1){
-	Res[nDof_u + i] = Res[nDof_u + i] /*- sol_mu[i]*/ - 5.;
+   //   if ( control_el_flag == 1){
+	Res[nDof_u + i] = sol_ctrl[i] - sol_mu[i] - 5.;
 	Res_ctrl[i] = Res[nDof_u + i];
-      }
+   //   }
     }
     
     std::vector<double> Res_u (nDof_u);
@@ -735,12 +735,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  
   
  //============= delta_ctrl-delta_mu row ===============================
- //KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
   
  //============= delta_mu-delta_ctrl row ===============================
  for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = c_compl;    
   
-  //KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
 
  //============= delta_mu-delta_mu row ===============================
   for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] = 1 - sol_actflag[i]/c_compl;  //can do better to avoid division, maybe use modulo operator 
@@ -752,8 +752,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
-  KK->print();
-  RES->print();
+  //KK->print();
+  //RES->print();
   
   // ***************** END ASSEMBLY *******************
 
