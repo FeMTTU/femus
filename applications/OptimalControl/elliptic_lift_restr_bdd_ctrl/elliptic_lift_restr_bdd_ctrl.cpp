@@ -29,7 +29,7 @@ double InitialValueMu(const std::vector < double >& x) {
 }
 
 double InitialValueControl(const std::vector < double >& x) {
-  return 5.;
+  return 0.;
 }
 
 //   double ctrl_lower = -0.8;
@@ -45,7 +45,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   if(!strcmp(name,"adjoint")) {value = 7.; }
   
   if(!strcmp(name,"control")) {
-      value = 5.;
+      value = 0.;
 //   if (faceName == 3)
 //     dirichlet = false;
   }
@@ -280,8 +280,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower = 6.;
-  double ctrl_upper = 100000000.;
+  double ctrl_lower = 0.4;
+  double ctrl_upper =  100000000000;
   assert(ctrl_lower < ctrl_upper);
   double c_compl = 1.;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
@@ -456,7 +456,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
   for (unsigned  k = 0; k < n_unknowns; k++) {
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
-	Sol_n_el_dofs[k]=ndofs_unk;
+	Sol_n_el_dofs[k] = ndofs_unk;
   }
     
  //*************************************************** 
@@ -684,23 +684,23 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	 
 	 
 // // // 	}
-    std::vector<double> Res_ctrl (nDof_ctrl);
+    std::vector<double> Res_ctrl (nDof_ctrl); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
     for (unsigned i = 0; i < sol_ctrl.size(); i++){
    //   if ( control_el_flag == 1){
-	Res[nDof_u + i] = sol_ctrl[i] - sol_mu[i] - 5.;
+	Res[nDof_u + i] = - ( sol_ctrl[i] /*+ sol_mu[i]*/ - /*5. **/ ( /*1. +*/ sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) ) );
 	Res_ctrl[i] = Res[nDof_u + i];
    //   }
     }
     
-    std::vector<double> Res_u (nDof_u);
+    std::vector<double> Res_u (nDof_u); std::fill(Res_u.begin(),Res_u.end(), 0.);
     for (unsigned i = 0; i < sol_u.size(); i++){
-	Res[0 + i] = sol_u[i] - 8.;
+	Res[0 + i] = - ( sol_u[i] - 8. );
 	Res_u[i] = Res[0 + i];
     }
     
-    std::vector<double> Res_adj (nDof_adj);
+    std::vector<double> Res_adj (nDof_adj); std::fill(Res_adj.begin(),Res_adj.end(), 0.);
     for (unsigned i = 0; i < sol_adj.size(); i++){
-	Res[nDof_u + nDof_ctrl + i] = sol_adj[i] - 7.;
+	Res[nDof_u + nDof_ctrl + i] = - (sol_adj[i] - 7.);
 	Res_adj[i] = Res[nDof_u + nDof_ctrl + i];
     }
     
@@ -715,7 +715,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //========== dof-based part, without summation
  
  //============= delta_mu row ===============================
-      std::vector<double> Res_mu (nDof_mu);
+      std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
     for (unsigned i = 0; i < sol_actflag.size(); i++){
       if (sol_actflag[i] == 0){  //inactive
          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ) ; 
@@ -731,6 +731,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     RES->insert(Res_ctrl, l2GMap_ctrl);
     RES->insert(Res_u, l2GMap_u);
     RES->insert(Res_adj, l2GMap_adj);
+    
  //============= delta_state-delta_state row ===============================
  KK->matrix_set_off_diagonal_values_blocked(l2GMap_u, l2GMap_u, 1.);
  
