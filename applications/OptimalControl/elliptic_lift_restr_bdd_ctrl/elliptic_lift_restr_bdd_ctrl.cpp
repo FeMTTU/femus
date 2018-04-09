@@ -65,6 +65,11 @@ int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
+    // ======= Files ========================
+  Files files; 
+        files.CheckIODirectories();
+	files.RedirectCout();
 
   // define multilevel mesh
   MultiLevelMesh mlMsh;
@@ -109,9 +114,11 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
   
+  mlProb.SetFilesHandler(&files);
+
  // add system  in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
- 
+
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
   system.AddSolutionToSystemPDE("adjoint");  
@@ -137,7 +144,7 @@ int main(int argc, char** args) {
      variablesToBePrinted.push_back("all");
 
     // ******* Print solution *******
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
 
   return 0;
 }
@@ -273,7 +280,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower = -10000000.;
+  double ctrl_lower = 6.;
   double ctrl_upper = 100000000.;
   assert(ctrl_lower < ctrl_upper);
   double c_compl = 1.;
