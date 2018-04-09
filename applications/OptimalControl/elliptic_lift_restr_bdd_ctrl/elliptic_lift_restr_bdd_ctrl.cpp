@@ -29,7 +29,7 @@ double InitialValueMu(const std::vector < double >& x) {
 }
 
 double InitialValueControl(const std::vector < double >& x) {
-  return 0.;
+  return 0.4;
 }
 
 //   double ctrl_lower = -0.8;
@@ -45,7 +45,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   if(!strcmp(name,"adjoint")) {value = 7.; }
   
   if(!strcmp(name,"control")) {
-      value = 0.;
+      value = 0.4;
 //   if (faceName == 3)
 //     dirichlet = false;
   }
@@ -687,7 +687,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     std::vector<double> Res_ctrl (nDof_ctrl); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
     for (unsigned i = 0; i < sol_ctrl.size(); i++){
    //   if ( control_el_flag == 1){
-	Res[nDof_u + i] = - ( sol_ctrl[i] /*+ sol_mu[i]*/ - /*5. **/ ( /*1. +*/ sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) ) );
+	Res[nDof_u + i] = - ( sol_ctrl[i] /*+ sol_mu[i]*/ - ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) ) );
 	Res_ctrl[i] = Res[nDof_u + i];
    //   }
     }
