@@ -43,10 +43,10 @@ std::vector <double> cumulants(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 1; //number of samples for the Monte Carlo
+unsigned M = 1000; //number of samples for the Monte Carlo
 //END
 
-unsigned numberOfUniformLevels = 4;
+unsigned numberOfUniformLevels = 3;
 
 int main(int argc, char** argv)
 {
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
-  numberOfEigPairs = 1; //number of eigenpairs desired
+  numberOfEigPairs = 2; //number of eigenpairs desired
 
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues
 
@@ -309,6 +309,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 
         // resize local arrays
         l2GMap1.resize(nDof1);
+        //std::vector<bool>bdcDirichlet(nDof1);
 
         for(int k = 0; k < dim; k++) {
           x1[k].resize(nDofx1);
@@ -317,6 +318,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
         // local storage of global mapping and solution
         for(unsigned i = 0; i < nDof1; i++) {
           l2GMap1[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+          //unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
+          //bdcDirichlet[i] = ( (*sol->_Bdc[soluIndex])(solDof) < 1.5)? false:false;
         }
 
         // local storage of coordinates
@@ -395,9 +398,9 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
   ierr = EPSSetWhichEigenpairs(eps, EPS_LARGEST_MAGNITUDE);
   CHKERRABORT(MPI_COMM_WORLD, ierr);
 
-  ierr = EPSSetTolerances(eps,1.0e-10,1000);
+  //ierr = EPSSetTolerances(eps,1.0e-10,1000);
   CHKERRABORT(MPI_COMM_WORLD, ierr);
-  
+
   ierr = EPSSolve(eps);
   CHKERRABORT(MPI_COMM_WORLD, ierr);
 
@@ -433,14 +436,14 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 
   std::vector <unsigned> eigfIndex(numberOfEigPairs);
   char name[10];
-  for(unsigned i=0; i<numberOfEigPairs;i++){
+  for(unsigned i = 0; i < numberOfEigPairs; i++) {
     sprintf(name, "egnf%d", i);
     eigfIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
   }
 
- 
-  std::vector < double > local_norm2(numberOfEigPairs,0.);
-  
+  std::vector < double > local_integral(numberOfEigPairs, 0.);
+  std::vector < double > local_norm2(numberOfEigPairs, 0.);
+
   vector < vector < double > > eigenFunction(numberOfEigPairs); // local solution
 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -480,19 +483,23 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
       for(unsigned j = 0; j < numberOfEigPairs; j++) {
-	double eigenFunction_gss = 0.;
-	for (unsigned i = 0; i < nDofu; i++) {
-	  eigenFunction_gss += phi[i] * eigenFunction[j][i];
-	}
-	local_norm2[j] += eigenFunction_gss * eigenFunction_gss * weight;
+        double eigenFunction_gss = 0.;
+        for (unsigned i = 0; i < nDofu; i++) {
+          eigenFunction_gss += phi[i] * eigenFunction[j][i];
+        }
+        local_integral[j] += eigenFunction_gss * weight;
+        local_norm2[j] += eigenFunction_gss * eigenFunction_gss * weight;
       }
     }
   }
   for(unsigned j = 0; j < numberOfEigPairs; j++) {
+    double integral = 0.;
+    MPI_Allreduce(&local_integral[j], &integral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    double sign = (integral >= 0) ? 1 : -1;
     double norm2 = 0.;
     MPI_Allreduce(&local_norm2[j], &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    double inorm = 0.01/sqrt(norm2);
-    std::cout << "BBBBBBBBBBBBBBBBBB  "<< inorm << std::endl;
+    double inorm = 0.01 * sign / sqrt(norm2);
+    std::cout << "BBBBBBBBBBBBBBBBBB  " << inorm << std::endl;
     sol->_Sol[eigfIndex[j]]->scale(inorm);
   }
 

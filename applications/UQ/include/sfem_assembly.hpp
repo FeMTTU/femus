@@ -28,7 +28,7 @@ boost::normal_distribution<> nd(0.0, stdDeviationInput);
 
 boost::variate_generator < boost::mt19937&,
 
-boost::normal_distribution<> > var_nor(rng, nd);
+      boost::normal_distribution<> > var_nor(rng, nd);
 
 double GetExactSolutionLaplace(const std::vector < double >& x)
 {
@@ -76,23 +76,23 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
 
   char name[10];
   std::vector <unsigned> eigfIndex(numberOfEigPairs);
-  
-  for(unsigned i=0; i<numberOfEigPairs;i++){
+
+  for(unsigned i = 0; i < numberOfEigPairs; i++) {
     sprintf(name, "egnf%d", i);
     eigfIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
   }
-    
-  
+
+
   unsigned soluPdeIndex;
   soluPdeIndex = mlPdeSys->GetSolPdeIndex("u");    // get the position of "u" in the pdeSys object
 
   vector < adept::adouble >  solu; // local solution
   solu.reserve(maxSize);
-  
-  
+
+
   vector < double > KLexpansion; // local solution
   KLexpansion.reserve(maxSize);
-  
+
 
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -122,21 +122,21 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
-  std::vector <double> yOmega(numberOfEigPairs,0.);
-  for(unsigned eig = 0; eig < numberOfEigPairs; eig++){
-    if(iproc == 0){
+  std::vector <double> yOmega(numberOfEigPairs, 0.);
+  for(unsigned eig = 0; eig < numberOfEigPairs; eig++) {
+    if(iproc == 0) {
       yOmega[eig] = var_nor();
     }
     MPI_Bcast(&yOmega[eig], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     std::cout << yOmega[eig] << " ";
   }
   std::cout << std::endl;
+
   
-  yOmega[0]=2.;
-  
-  
-  
-  
+
+
+
+
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
@@ -148,7 +148,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
     l2GMap.resize(nDofu);
     solu.resize(nDofu);
     KLexpansion.resize(nDofu);
-  
+
     for (int i = 0; i < dim; i++) {
       x[i].resize(nDofx);
     }
@@ -161,8 +161,8 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
       KLexpansion[i] = 0.;
-      for(unsigned j=0; j<numberOfEigPairs;j++){
-	KLexpansion[i]+= sqrt(eigenvalues[j].first) * (*sol->_Sol[eigfIndex[j]])(solDof) * yOmega[j]; 
+      for(unsigned j = 0; j < numberOfEigPairs; j++) {
+        KLexpansion[i] += sqrt(eigenvalues[j].first) * (*sol->_Sol[eigfIndex[j]])(solDof) * yOmega[j];
       }
       l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
     }
@@ -186,14 +186,14 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      
+
       double KLexpansion_gss = 0.;
       vector < adept::adouble > gradSolu_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
 
-	KLexpansion_gss += phi[i] * KLexpansion[i];
+        KLexpansion_gss += phi[i] * KLexpansion[i];
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
@@ -203,7 +203,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
 
       double aCoeff = amin + exp(KLexpansion_gss);
 //       std::cout << "COEEEEEEEEEEEEEEEEEEEEF" << aCoeff << std::endl;
-      
+
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofu; i++) {
 
