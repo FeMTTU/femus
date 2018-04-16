@@ -194,8 +194,8 @@ int main(int argc, char** args) {
  mlProb.SetFilesHandler(&files);
  
   // add system OptBdryCtrl in mlProb as a NonLinear Implicit System
-//   NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOpt");
-  LinearImplicitSystem& system_opt    = mlProb.add_system < LinearImplicitSystem > ("NSOpt");
+  NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOpt");
+//   LinearImplicitSystem& system_opt    = mlProb.add_system < LinearImplicitSystem > ("NSOpt");
 
   // ST ===================
   system_opt.AddSolutionToSystemPDE("U");
@@ -226,11 +226,12 @@ int main(int argc, char** args) {
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
   
-//   system_opt.SetDebugNonlinear(true);
-//   system_opt.SetMaxNumberOfNonLinearIterations(5);
-//   system_opt.SetNonLinearConvergenceTolerance(1.e-10);
-  system_opt.SetMaxNumberOfLinearIterations(5);
-  system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-10);
+  system_opt.SetDebugNonlinear(true);
+  system_opt.SetMaxNumberOfNonLinearIterations(3);
+  system_opt.SetNonLinearConvergenceTolerance(1.e-10);
+//   system_opt.SetDebugLinear(true);
+  system_opt.SetMaxNumberOfLinearIterations(6);
+//   system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-10);
   system_opt.MLsolve();
 
     ComputeIntegral(mlProb);
@@ -253,8 +254,8 @@ int main(int argc, char** args) {
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
      
   //pointers
-//   NonLinearImplicitSystem& mlPdeSys  = ml_prob.get_system<NonLinearImplicitSystem>("NSOpt");
- LinearImplicitSystem& mlPdeSys  = ml_prob.get_system<LinearImplicitSystem>("NSOpt");
+  NonLinearImplicitSystem& mlPdeSys  = ml_prob.get_system<NonLinearImplicitSystem>("NSOpt");
+//  LinearImplicitSystem& mlPdeSys  = ml_prob.get_system<LinearImplicitSystem>("NSOpt");
  const unsigned level = mlPdeSys.GetLevelToAssemble();
 
   bool assembleMatrix = mlPdeSys.GetAssembleMatrix(); 
@@ -851,13 +852,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 // 		      double adv_uold_unew = 0.;
 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 		    lap_jac_du_u += phi_x_gss_fe[SolFEType[kdim]][i * dim + kdim]*phi_x_gss_fe[SolFEType[kdim]][j * dim + kdim];
-// 		    adv_uold_unew += SolVAR_qp[SolPdeIndex[kdim]]*phi_x_gss_fe[ SolFEType[kdim] ][j * dim + kdim] * phi_gss_fe[ SolFEType[kdim] ][i];
 // 		    adv_unew_uold += phi_gss_fe[ SolFEType[kdim] ][i] * gradSolVAR_qp[SolPdeIndex[kdim]][kdim] * phi_gss_fe[ SolFEType[kdim] ][j];
+// 		    adv_uold_unew += SolVAR_qp[SolPdeIndex[kdim]]*phi_x_gss_fe[ SolFEType[kdim] ][j * dim + kdim] * phi_gss_fe[ SolFEType[kdim] ][i];
 	      }
 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 		Jac[kdim][kdim][i*nDofsV + j] += (   IRe*lap_jac_du_u 
-						    /*+ adv_uold_unew 
-						    + adv_unew_uold*/) * weight; 
+						    /*+ adv_unew_uold 
+						    + adv_uold_unew*/) * weight; 
 	      }
 	} //j_du_u loop
      
@@ -1030,7 +1031,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   
   JAC->close();
   RES->close();
-  
+ 
 //   JAC->print();
 //   RES->print();
   // ***************** END ASSEMBLY *******************
@@ -1040,8 +1041,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 double ComputeIntegral(MultiLevelProblem& ml_prob) {
 
-
    NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the linear implicit system named "Poisson"
+
+//    LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("NSOpt");   // pointer to the linear implicit system named "Poisson"
    const unsigned level = mlPdeSys->GetLevelToAssemble();
  
 
@@ -1170,10 +1172,11 @@ double  integral_target_alpha = 0.;
 
 double	integral_beta   = 0.;
 double	integral_gamma  = 0.;
+
+double integral_g_dot_n = 0.;
   
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
 // geometry
     short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
 
@@ -1348,6 +1351,7 @@ double	integral_gamma  = 0.;
 //========== compute gauss quantities on the boundary ================================================
       for (unsigned  k = 0; k < dim; k++) {
 	 integral_beta	+= (/*(beta_val/2)**/(Vctrl_bd_qp[k])*(Vctrl_bd_qp[k])*weight_bd);
+	 integral_g_dot_n += Vctrl_bd_qp[k]*normal[k]*weight_bd;
       }
       for (unsigned  k = 0; k < dim; k++) {
 	for (unsigned  j = 0; j < dim; j++) {	
@@ -1365,7 +1369,6 @@ double	integral_gamma  = 0.;
 
       // *** Gauss point loop ***
       for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
-
 //STATE######## VolumeLoop #####################################################################	
         // *** get gauss point weight, test function and test function partial derivatives ***
         msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV_gss, phiV_x_gss, phiV_xx_gss);
@@ -1384,12 +1387,13 @@ double	integral_gamma  = 0.;
 	
 
       for (unsigned  k = 0; k < dim; k++) {
-	 integral_target_alpha+=((/*alpha_val**/ target_flag/*/2*/ ) * (V_gss[k]  - Vdes_gss[k]) * (V_gss[k]  - Vdes_gss[k])*weight);
+	 integral_target_alpha+=((/*alpha_val**/ target_flag/*/2*/ ) *((V_gss[k]  - Vdes_gss[k]) * (V_gss[k]  - Vdes_gss[k]))*weight);
       }
-
+      
       }// end gauss point loop
     } //end element loop  
 
+    std::cout << "The value of the integral of g.n "<<   std::setw(11) << std::setprecision(10) << std::fixed<< integral_g_dot_n << std::endl;
     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<beta_val << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<gamma_val<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
