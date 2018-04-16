@@ -31,7 +31,7 @@ using namespace femus;
  double force[3] = {0.,0.,0.};
  double Vel_desired[3] = {0.125,0.,0.};
  double alpha_val = 1.;
- double beta_val = 1.e-1;
+ double beta_val = 1.e-3;
  double gamma_val = 1.e-2;
  double penalty_outside_control_boundary = 1.e50;       // penalty for zero control outside Gamma_c
  double penalty_ctrl = 1.e10;         //penalty for u=q
@@ -835,30 +835,30 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 // FIRST ROW
 	for (unsigned  kdim = 0; kdim < dim; kdim++) { // velocity block row 
 	              double lap_res_du_u = 0.; 
-// 		      double adv_res_uold_uold = 0.;
+		      double adv_res_uold_uold = 0.;
 	      for (unsigned jdim = 0; jdim < dim; jdim++) {
 		    lap_res_du_u += gradSolVAR_qp[SolPdeIndex[kdim]][jdim]*phi_x_gss_fe[SolFEType[kdim]][i * dim + jdim];
-// 		   adv_res_uold_uold += SolVAR_qp[SolPdeIndex[jdim]] * gradSolVAR_qp[SolPdeIndex[kdim]][jdim];
+		   adv_res_uold_uold += SolVAR_qp[SolPdeIndex[jdim]] * gradSolVAR_qp[SolPdeIndex[kdim]][jdim];
 	      }      
 	      Res[kdim][i]   +=  (         + force[kdim] * phi_gss_fe[SolFEType[kdim]][i]
                                            - IRe*lap_res_du_u 
-//                                            - adv_res_uold_uold * phi_gss_fe[ SolFEType[kdim] ][i]
+                                           - adv_res_uold_uold * phi_gss_fe[ SolFEType[kdim] ][i]
 					    + SolVAR_qp[SolPdeIndex[press_type_pos]] * phi_x_gss_fe[SolFEType[kdim]][i * dim + kdim]) * weight; 
 	}	    
 //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
 	for (unsigned j = 0; j < nDofsV; j++) {
 		      double lap_jac_du_u = 0.;
-// 		      double adv_unew_uold = 0.;
-// 		      double adv_uold_unew = 0.;
+		      double adv_unew_uold = 0.;
+		      double adv_uold_unew = 0.;
 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 		    lap_jac_du_u += phi_x_gss_fe[SolFEType[kdim]][i * dim + kdim]*phi_x_gss_fe[SolFEType[kdim]][j * dim + kdim];
-// 		    adv_unew_uold += phi_gss_fe[ SolFEType[kdim] ][i] * gradSolVAR_qp[SolPdeIndex[kdim]][kdim] * phi_gss_fe[ SolFEType[kdim] ][j];
-// 		    adv_uold_unew += SolVAR_qp[SolPdeIndex[kdim]]*phi_x_gss_fe[ SolFEType[kdim] ][j * dim + kdim] * phi_gss_fe[ SolFEType[kdim] ][i];
+		    adv_unew_uold += phi_gss_fe[ SolFEType[kdim] ][i] * gradSolVAR_qp[SolPdeIndex[kdim]][kdim] * phi_gss_fe[ SolFEType[kdim] ][j];
+		    adv_uold_unew += SolVAR_qp[SolPdeIndex[kdim]]*phi_x_gss_fe[ SolFEType[kdim] ][/*j*/ i * dim + kdim] * phi_gss_fe[ SolFEType[kdim] ][/*i*/ j];
 	      }
 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 		Jac[kdim][kdim][i*nDofsV + j] += (   IRe*lap_jac_du_u 
-						    /*+ adv_unew_uold 
-						    + adv_uold_unew*/) * weight; 
+						    + adv_unew_uold 
+						    + adv_uold_unew) * weight; 
 	      }
 	} //j_du_u loop
      
@@ -893,15 +893,17 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 // SECOND ROW
      for (unsigned kdim = 0; kdim < dim; kdim++) { 
 		    double lap_res_dadj_adj = 0.;
-// 		  double adv_res_dadj_uold = 0.;
-// 		  double adv_res_uold_dadj = 0.;
+		  double adv_res_adj_gradu = 0.;
+		  double adv_res_u_gradadj = 0.;
 	   for (unsigned jdim = 0; jdim < dim; jdim++) {
 		lap_res_dadj_adj += gradSolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]][jdim]*phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + jdim];
-// 		   adv_res_dadj_uold += phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] * gradSolVAR_qp[SolPdeIndex[kdim]][jdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]];
-// 		  adv_res_uold_dadj += SolVAR_qp[SolPdeIndex[kdim]] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + jdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]];
+		   adv_res_adj_gradu += SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]] *gradSolVAR_qp[SolPdeIndex[kdim]][jdim] ;
+		  adv_res_u_gradadj +=  SolVAR_qp[SolPdeIndex[kdim]] * gradSolVAR_qp[SolFEType[kdim + adj_pos_begin]][jdim] ;
 	   }
 	  Res[kdim + adj_pos_begin][i] += (   alpha_val * target_flag * (SolVAR_qp[SolPdeIndex[kdim]] - Vel_desired[kdim]) * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
 					    - IRe*lap_res_dadj_adj
+					    + adv_res_adj_gradu * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+					    - adv_res_u_gradadj * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
 					    + SolVAR_qp[SolPdeIndex[press_type_pos + adj_pos_begin]] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + kdim]
 					    ) * weight;
       }
@@ -917,11 +919,23 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 //DIAG BLOCK delta_adjoint - adjoint---------------------------------------------------------------------------------
      for (unsigned j = 0; j < nDofsVadj; j++) {
 		    double lap_jac_dadj_adj = 0.;
+		    double adv_adjnew_uold = 0.;
+		    double adv_adjold_unew = 0.;
+		    double adv_unew_adjold = 0.;
+		    double adv_uold_adjnew = 0.;
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
 		  lap_jac_dadj_adj += phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + kdim]*phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][j * dim + kdim];
+		   adv_adjnew_uold += phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] *gradSolVAR_qp[SolPdeIndex[kdim]][kdim] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][j];
+		   adv_adjold_unew += SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]] * phi_x_gss_fe[SolFEType[kdim ]][i * dim + kdim] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][j] ;
+		  adv_unew_adjold += phi_gss_fe[SolFEType[kdim]][i] * gradSolVAR_qp[SolFEType[kdim + adj_pos_begin]][kdim] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][j];
+		  adv_uold_adjnew += SolVAR_qp[SolPdeIndex[kdim]] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + kdim] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][j];
 	  }
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + adj_pos_begin][kdim + adj_pos_begin][i*nDofsVadj + j] += ( IRe*lap_jac_dadj_adj ) * weight;
+	      Jac[kdim + adj_pos_begin][kdim + adj_pos_begin][i*nDofsVadj + j] += ( IRe*lap_jac_dadj_adj 
+										   + adv_adjnew_uold 
+										   + adv_adjold_unew
+										   - adv_unew_adjold
+										   - adv_uold_adjnew ) * weight;
 	  }
       } //j_dadj_adj loop
       
@@ -1255,7 +1269,7 @@ double integral_g_dot_n = 0.;
 
       for (unsigned  k = 0; k < solVdes.size() /*dim*/; k++) {
         solVdes[k]/*[i]*/ = Vel_desired[k] /*(*sol->_Sol[solVIndex[k]])(solVdesDof)*/;      // global extraction and local storage for the solution
-      }
+     }
 //     }
  //DESIRED VEL###################################################################
 
@@ -1387,7 +1401,7 @@ double integral_g_dot_n = 0.;
 	
 
       for (unsigned  k = 0; k < dim; k++) {
-	 integral_target_alpha+=((/*alpha_val**/ target_flag/*/2*/ ) *((V_gss[k]  - Vdes_gss[k]) * (V_gss[k]  - Vdes_gss[k]))*weight);
+	  integral_target_alpha+=((/*alpha_val**/ target_flag/*/2*/ ) *((V_gss[k]  - Vdes_gss[k]) * (V_gss[k]  - Vdes_gss[k]))*weight);
       }
       
       }// end gauss point loop
