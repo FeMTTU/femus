@@ -32,6 +32,6 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   ADD_SUBDIRECTORY(./elliptic_bdry_neum/)
   ADD_SUBDIRECTORY(./elliptic_lift_restr_bdd_ctrl/)
   ADD_SUBDIRECTORY(./nsopt/)
-  ADD_SUBDIRECTORY(./solid_opt/)
+  ADD_SUBDIRECTORY(./solidopt/)
 
   
