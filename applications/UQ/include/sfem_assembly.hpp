@@ -124,6 +124,10 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
                         HermitePoly[9][j] = pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x;
                         if(numberOfEigPairs > 10) {
                           HermitePoly[10][j] = pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.;
+                          if(numberOfEigPairs > 11) {
+                            std::cout << "Stochastic dimension is too big. For now, it has to be not greater than 11." << std::endl;
+                            abort();
+                          }
                         }
                       }
                     }
