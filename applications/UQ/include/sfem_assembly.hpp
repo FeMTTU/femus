@@ -15,7 +15,7 @@ using namespace femus;
 // };
 
 
-const unsigned HermiteQuadrature[9][2][10] = { //order of integration (starts from 2), first row: weights, second row: coordinates
+const double HermiteQuadrature[9][2][10] = { //order of integration (starts from 2), first row: weights, second row: coordinates
 
   { {0.8862269254527577, 0.8862269254527577},
     { -0.7071067811865476, 0.7071067811865476}
@@ -85,8 +85,7 @@ boost::variate_generator < boost::mt19937&,
 
       boost::normal_distribution<> > var_nor(rng, nd);
 
-void EvaluateHermitePoly (std::vector < std::vector < double > >  & HermitePoly, const unsigned & orderOfIntegration)
-{
+void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & orderOfIntegration) {
 
   if(orderOfIntegration < 2 || orderOfIntegration > 10) {
     std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [2,1o]" << std::endl;
@@ -98,29 +97,56 @@ void EvaluateHermitePoly (std::vector < std::vector < double > >  & HermitePoly,
     for(unsigned i = 0; i < numberOfEigPairs; i++) {
       HermitePoly[i].resize(orderOfIntegration);
     }
-    
+
     for(unsigned j = 0; j < orderOfIntegration; j++) {
-    
+
+      double x = HermiteQuadrature[orderOfIntegration - 2][1][j];
+
       HermitePoly[0][j] = 1.;
-    
+
       if(numberOfEigPairs > 1) {
-	HermitePoly[0][j] = HermiteQuadrature[orderOfIntegration][1][j];
+        HermitePoly[1][j] = x;
+        if(numberOfEigPairs > 2) {
+          HermitePoly[2][j] = pow(x, 2) - 1.;
+          if(numberOfEigPairs > 3) {
+            HermitePoly[3][j] = pow(x, 3) - 3. * x;
+            if(numberOfEigPairs > 4) {
+              HermitePoly[4][j] = pow(x, 4) - 6. * x * x + 3.;
+              if(numberOfEigPairs > 5) {
+                HermitePoly[5][j] = pow(x, 5) - 10. * pow(x, 3) + 15. * x;
+                if(numberOfEigPairs > 6) {
+                  HermitePoly[6][j] = pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.;
+                  if(numberOfEigPairs > 7) {
+                    HermitePoly[7][j] =  pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x ;
+                    if(numberOfEigPairs > 8) {
+                      HermitePoly[8][j] = pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.;
+                      if(numberOfEigPairs > 9) {
+                        HermitePoly[9][j] = pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x;
+                        if(numberOfEigPairs > 10) {
+                          HermitePoly[10][j] = pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
-    
+
     }
-       
+
   }
 
 };
 
-double GetExactSolutionLaplace(const std::vector < double >& x)
-{
+double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
   return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
 };
 
-void AssembleUQSys(MultiLevelProblem& ml_prob)
-{
+void AssembleUQSys(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -180,7 +206,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  for (unsigned i = 0; i < dim; i++) {
+  for(unsigned i = 0; i < dim; i++) {
     x[i].reserve(maxSize);
   }
 
@@ -221,7 +247,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
 
 
   // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
@@ -232,7 +258,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
     solu.resize(nDofu);
     KLexpansion.resize(nDofu);
 
-    for (int i = 0; i < dim; i++) {
+    for(int i = 0; i < dim; i++) {
       x[i].resize(nDofx);
     }
 
@@ -240,7 +266,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
     std::fill(aRes.begin(), aRes.end(), 0);    //set aRes to zero
 
     // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofu; i++) {
+    for(unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
       KLexpansion[i] = 0.;
@@ -251,10 +277,10 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
     }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
+    for(unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
+      for(unsigned jdim = 0; jdim < dim; jdim++) {
         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
@@ -264,7 +290,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
     s.new_recording();
 
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+    for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
 
@@ -274,11 +300,11 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
       vector < adept::adouble > gradSolu_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
-      for (unsigned i = 0; i < nDofu; i++) {
+      for(unsigned i = 0; i < nDofu; i++) {
 
         KLexpansion_gss += phi[i] * KLexpansion[i];
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
+        for(unsigned jdim = 0; jdim < dim; jdim++) {
           gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
           x_gss[jdim] += x[jdim][i] * phi[i];
         }
@@ -288,11 +314,11 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
 //       std::cout << "COEEEEEEEEEEEEEEEEEEEEF" << aCoeff << std::endl;
 
       // *** phi_i loop ***
-      for (unsigned i = 0; i < nDofu; i++) {
+      for(unsigned i = 0; i < nDofu; i++) {
 
         adept::adouble laplace = 0.;
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
+        for(unsigned jdim = 0; jdim < dim; jdim++) {
           laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
@@ -308,7 +334,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
     //copy the value of the adept::adoube aRes in double Res and store
     Res.resize(nDofu);    //resize
 
-    for (int i = 0; i < nDofu; i++) {
+    for(int i = 0; i < nDofu; i++) {
       Res[i] = - aRes[i].value();
     }
 

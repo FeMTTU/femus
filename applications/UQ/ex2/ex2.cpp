@@ -19,8 +19,7 @@
 using namespace femus;
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
-{
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
   return dirichlet;
@@ -43,13 +42,12 @@ std::vector <double> cumulants(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 1000; //number of samples for the Monte Carlo
+unsigned M = 10; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 3;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
 
 
   //BEGIN eigenvalue problem instances
@@ -127,6 +125,13 @@ int main(int argc, char** argv)
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
   //END
 
+//   std::vector < std::vector < double > >  HermitePoly;
+//   unsigned orderOfIntegration = 10;
+//   EvaluateHermitePoly(HermitePoly, orderOfIntegration);
+//   for(unsigned j = 0; j < orderOfIntegration; j++) {
+//     std::cout << "Hermite =  " << std::setprecision (16) << HermitePoly[0][j] << "   ,   " ;
+//   }
+//   std::cout << std::endl;
 
   GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues); //solve the generalized eigenvalue problem and compute the eigenpairs
 
@@ -147,9 +152,9 @@ int main(int argc, char** argv)
 
 
 
-  for(unsigned m = 0; m < M; m++) {
-    std::cout << "QoI[" << m << "] = " << QoI[m] << std::endl;
-  }
+//   for(unsigned m = 0; m < M; m++) {
+//     std::cout << "QoI[" << m << "] = " << QoI[m] << std::endl;
+//   }
 
   GetStochasticData(QoI);
 
@@ -169,8 +174,7 @@ int main(int argc, char** argv)
 
 } //end main
 
-void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues)
-{
+void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues) {
 //void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("UQ");   // pointer to the linear implicit system named "Poisson"
@@ -446,23 +450,23 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 
   vector < vector < double > > eigenFunction(numberOfEigPairs); // local solution
 
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
     // resize local arrays
-    for(unsigned i = 0; i < numberOfEigPairs; i++ ) {
+    for(unsigned i = 0; i < numberOfEigPairs; i++) {
       eigenFunction[i].resize(nDofu);
     }
 
-    for (int i = 0; i < dim; i++) {
+    for(int i = 0; i < dim; i++) {
       x1[i].resize(nDofx);
     }
 
     // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofu; i++) {
+    for(unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
       for(unsigned j = 0; j < numberOfEigPairs; j++) {
         eigenFunction[j][i] = (*sol->_Sol[eigfIndex[j]])(solDof);
@@ -470,21 +474,21 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
     }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
+    for(unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
+      for(unsigned jdim = 0; jdim < dim; jdim++) {
         x1[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
     double weight;
     vector <double> phi;  // local test function
     // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+    for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
       for(unsigned j = 0; j < numberOfEigPairs; j++) {
         double eigenFunction_gss = 0.;
-        for (unsigned i = 0; i < nDofu; i++) {
+        for(unsigned i = 0; i < nDofu; i++) {
           eigenFunction_gss += phi[i] * eigenFunction[j][i];
         }
         local_integral[j] += eigenFunction_gss * weight;
@@ -507,8 +511,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 }
 
 
-void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  QoI, const unsigned& m, const double& domainMeasure)
-{
+void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  QoI, const unsigned& m, const double& domainMeasure) {
 
   //  extract pointers to the several objects that we are going to use
 
@@ -624,8 +627,7 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  
 
 }
 
-void GetStochasticData(std::vector <double>& QoI)
-{
+void GetStochasticData(std::vector <double>& QoI) {
 
   //let's standardize the quantity of interest after finding moments and standard deviation
 
@@ -700,8 +702,7 @@ void GetStochasticData(std::vector <double>& QoI)
 }
 
 
-void PlotStochasticData()
-{
+void PlotStochasticData() {
 
   std::cout.precision(14);
   std::cout << " the number of MC samples is " << M << std::endl;
