@@ -15,8 +15,8 @@ using namespace femus;
 // };
 
 
-const double HermiteQuadrature[9][2][10] = { //order of integration (starts from 2), first row: weights, second row: coordinates
-
+const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, first row: weights, second row: coordinates
+  {{1.77245385091},{0.}},
   { {0.8862269254527577, 0.8862269254527577},
     { -0.7071067811865476, 0.7071067811865476}
   },
@@ -75,7 +75,7 @@ std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
 double amin = 1. / 100;
 
-double stdDeviationInput = 10./*0.2*/;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 1./*0.2*/;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
 
@@ -85,47 +85,47 @@ boost::variate_generator < boost::mt19937&,
 
       boost::normal_distribution<> > var_nor(rng, nd);
 
-void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & orderOfIntegration) {
+void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints) {
 
-  if(orderOfIntegration < 2 || orderOfIntegration > 10) {
-    std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [2,1o]" << std::endl;
+  if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 10) {
+    std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [1,10]" << std::endl;
     abort();
   }
 
   else {
     HermitePoly.resize(numberOfEigPairs);
     for(unsigned i = 0; i < numberOfEigPairs; i++) {
-      HermitePoly[i].resize(orderOfIntegration);
+      HermitePoly[i].resize(numberOfQuadraturePoints);
     }
 
-    for(unsigned j = 0; j < orderOfIntegration; j++) {
+    for(unsigned j = 0; j < numberOfQuadraturePoints; j++) {
 
-      double x = HermiteQuadrature[orderOfIntegration - 2][1][j];
+      double x = HermiteQuadrature[numberOfQuadraturePoints - 1][1][j];
 
-      HermitePoly[0][j] = 1.;
+      HermitePoly[0][j] = 1. ;
 
       if(numberOfEigPairs > 1) {
-        HermitePoly[1][j] = x;
+        HermitePoly[1][j] = x ;
         if(numberOfEigPairs > 2) {
-          HermitePoly[2][j] = pow(x, 2) - 1.;
+          HermitePoly[2][j] = 0.5 * (pow(x, 2) - 1.) ;
           if(numberOfEigPairs > 3) {
-            HermitePoly[3][j] = pow(x, 3) - 3. * x;
+            HermitePoly[3][j] = (pow(x, 3) - 3. * x) / 6. ;
             if(numberOfEigPairs > 4) {
-              HermitePoly[4][j] = pow(x, 4) - 6. * x * x + 3.;
+              HermitePoly[4][j] = (pow(x, 4) - 6. * x * x + 3.) / 24. ;
               if(numberOfEigPairs > 5) {
-                HermitePoly[5][j] = pow(x, 5) - 10. * pow(x, 3) + 15. * x;
+                HermitePoly[5][j] = (pow(x, 5) - 10. * pow(x, 3) + 15. * x) / 120. ;
                 if(numberOfEigPairs > 6) {
-                  HermitePoly[6][j] = pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.;
+                  HermitePoly[6][j] = (pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.) / 720. ;
                   if(numberOfEigPairs > 7) {
-                    HermitePoly[7][j] =  pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x ;
+                    HermitePoly[7][j] =  (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / 5040. ;
                     if(numberOfEigPairs > 8) {
-                      HermitePoly[8][j] = pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.;
+                      HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.) / 40320. ;
                       if(numberOfEigPairs > 9) {
-                        HermitePoly[9][j] = pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x;
+                        HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / 362880.;
                         if(numberOfEigPairs > 10) {
-                          HermitePoly[10][j] = pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.;
+                          HermitePoly[10][j] = (pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.) / 3628800.;
                           if(numberOfEigPairs > 11) {
-                            std::cout << "Stochastic dimension is too big. For now, it has to be not greater than 11." << std::endl;
+                            std::cout << "Stochastic dimension is too big. For now, it has to be not greater than 10." << std::endl;
                             abort();
                           }
                         }
