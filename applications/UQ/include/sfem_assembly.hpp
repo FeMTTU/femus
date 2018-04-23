@@ -107,23 +107,23 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
       if(numberOfEigPairs > 1) {
         HermitePoly[1][j] = x ;
         if(numberOfEigPairs > 2) {
-          HermitePoly[2][j] = 0.5 * (pow(x, 2) - 1.) ;
+          HermitePoly[2][j] =  (pow(x, 2) - 1.) / sqrt(2) ;
           if(numberOfEigPairs > 3) {
-            HermitePoly[3][j] = (pow(x, 3) - 3. * x) / 6. ;
+            HermitePoly[3][j] = (pow(x, 3) - 3. * x) / sqrt(6) ;
             if(numberOfEigPairs > 4) {
-              HermitePoly[4][j] = (pow(x, 4) - 6. * x * x + 3.) / 24. ;
+              HermitePoly[4][j] = (pow(x, 4) - 6. * x * x + 3.) / sqrt(24) ;
               if(numberOfEigPairs > 5) {
-                HermitePoly[5][j] = (pow(x, 5) - 10. * pow(x, 3) + 15. * x) / 120. ;
+                HermitePoly[5][j] = (pow(x, 5) - 10. * pow(x, 3) + 15. * x) / sqrt(120) ;
                 if(numberOfEigPairs > 6) {
-                  HermitePoly[6][j] = (pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.) / 720. ;
+                  HermitePoly[6][j] = (pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.) / sqrt(720) ;
                   if(numberOfEigPairs > 7) {
-                    HermitePoly[7][j] =  (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / 5040. ;
+                    HermitePoly[7][j] =  (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / sqrt(5040) ;
                     if(numberOfEigPairs > 8) {
-                      HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.) / 40320. ;
+                      HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.) / sqrt(40320) ;
                       if(numberOfEigPairs > 9) {
-                        HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / 362880.;
+                        HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / sqrt(362880);
                         if(numberOfEigPairs > 10) {
-                          HermitePoly[10][j] = (pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.) / 3628800.;
+                          HermitePoly[10][j] = (pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.) / sqrt(3628800);
                           if(numberOfEigPairs > 11) {
                             std::cout << "Stochastic dimension is too big. For now, it has to be not greater than 10." << std::endl;
                             abort();
