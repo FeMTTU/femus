@@ -75,6 +75,10 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   set(OPT_APPLICATION elliptic_lift_restr_bdd_ctrl)
   ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)
   
+# lift_restr_bdd_ctrl_ext
+  set(OPT_APPLICATION elliptic_lift_restr_bdd_ctrl_ext)
+  ADD_SUBDIRECTORY(${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/)
+  
   unset(OPT_APPLICATION)  
 
 ENDIF(BUILD_OPTCONTROLAPPS)

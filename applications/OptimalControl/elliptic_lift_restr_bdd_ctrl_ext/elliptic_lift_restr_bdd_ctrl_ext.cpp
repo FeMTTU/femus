@@ -69,11 +69,14 @@ int main(int argc, char** args) {
         files.CheckIODirectories();
 	files.RedirectCout();
 
+  double Lref = 1.;
+  
   // define multilevel mesh
   MultiLevelMesh mlMsh;
+  mlMsh.ReadCoarseMesh("ext_box.neu","seventh",Lref);
   double scalingFactor = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+  //mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 1;
