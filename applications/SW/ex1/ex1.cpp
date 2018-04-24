@@ -169,6 +169,9 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
   vector < double > x;    // local coordinates
   vector< vector < adept::adouble > > solh(NLayers);    // local coordinates
   vector< vector < adept::adouble > > solv(NLayers);    // local coordinates
+  
+  vector< vector < bool > > bdch(NLayers);    // local coordinates
+  vector< vector < bool > > bdcv(NLayers);    // local coordinates
 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
@@ -191,6 +194,9 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
     for(unsigned i = 0; i < NLayers; i++) {
       solh[i].resize(nDofh);
       solv[i].resize(nDofv);
+      bdch[i].resize(nDofh);
+      bdcv[i].resize(nDofh);
+      
       aResh[i].resize(nDofh);    //resize
       std::fill(aResh[i].begin(), aResh[i].end(), 0);    //set aRes to zero
       aResv[i].resize(nDofv);    //resize
@@ -203,6 +209,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       unsigned solDofh = msh->GetSolutionDof(i, iel, solTypeh);    // global to global mapping between solution node and solution dof
       for(unsigned j = 0; j < NLayers; j++) {
         solh[j][i] = (*sol->_Sol[solIndexh[j]])(solDofh);      // global extraction and local storage for the solution
+	bdch[j][i] = ( (*sol->_Bdc[solIndexh[j]])(solDofh) < 1.5)? true:false;
         l2GMap[ j * (nDofh + nDofv) + i] = pdeSys->GetSystemDof(solIndexh[j], solPdeIndexh[j], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
@@ -210,6 +217,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       unsigned solDofv = msh->GetSolutionDof(i, iel, solTypev);    // global to global mapping between solution node and solution dof
       for(unsigned j = 0; j < NLayers; j++) {
         solv[j][i] = (*sol->_Sol[solIndexv[j]])(solDofv);      // global extraction and local storage for the solution
+	bdcv[j][i] = ( (*sol->_Bdc[solIndexv[j]])(solDofv) < 1.5)? true:false;
         l2GMap[ nDofh + j * (nDofh + nDofv) + i] = pdeSys->GetSystemDof(solIndexv[j], solPdeIndexv[j], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
@@ -225,17 +233,21 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
     
     for(unsigned k = 0; k < NLayers; k++){
       for (unsigned i = 0; i < nDofh; i++){
-	aResh[k][i] = dx;
-	for (unsigned j = 0; j < nDofh; j++){
-	  double sign = ( i == j)? 1.:-1;
-	  aResh[k][i] += sign * solh[k][j]/(dx*dx);
+	if(!bdch[k][i]){
+	  aResh[k][i] = dx;
+	  for (unsigned j = 0; j < nDofh; j++){
+	    double sign = ( i == j)? -1.:1;
+	    aResh[k][i] += sign * solh[k][j]/(dx*dx);
+	  }
 	}
       }
       for (unsigned i = 0; i < nDofv; i++){
-	aResv[k][i] = dx;
-	for (unsigned j = 0; j < nDofv; j++){
-	  double sign = ( i == j)? 1.:-1;
-	  aResv[k][i] += sign * solv[k][j]/(dx*dx);
+	if(!bdcv[k][i]){
+	  aResv[k][i] = dx;
+	  for (unsigned j = 0; j < nDofv; j++){
+	    double sign = ( i == j)? -1.:1;
+	    aResv[k][i] += sign * solv[k][j]/(dx*dx);
+	  }
 	}
       }       
     }
@@ -246,11 +258,11 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
     unsigned counter = 0;
     for(unsigned k = 0; k < NLayers; k++){
       for(int i = 0; i < nDofh; i++) {
-	Res[counter] = - aResh[k][i].value();
+	Res[counter] =  aResh[k][i].value();
 	counter++;
       }
       for(int i = 0; i < nDofv; i++) {
-	Res[counter] = - aResv[k][i].value();
+	Res[counter] =  aResv[k][i].value();
 	counter++;
       }
     }
@@ -285,13 +297,13 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
   RES->close();
   KK->close();
   
-  PetscViewer    viewer;
-  PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-  PetscObjectSetName((PetscObject)viewer,"FSI matrix");
-  PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-  MatView((static_cast<PetscMatrix*>(KK))->mat(),viewer);
-  double a;
-  std::cin>>a;
+//   PetscViewer    viewer;
+//   PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+//   PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+//   PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//   MatView((static_cast<PetscMatrix*>(KK))->mat(),viewer);
+//   double a;
+//   std::cin>>a;
 }
 
 
