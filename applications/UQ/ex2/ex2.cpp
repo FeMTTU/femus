@@ -125,13 +125,29 @@ int main(int argc, char** argv) {
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
   //END
 
+//   //BEGIN test Hermite Poly
 //   std::vector < std::vector < double > >  HermitePoly;
 //   unsigned orderOfIntegration = 10;
-//   EvaluateHermitePoly(HermitePoly, orderOfIntegration);
+//   unsigned maxPolyOrder = 2;
+//   EvaluateHermitePoly(HermitePoly, orderOfIntegration, maxPolyOrder);
 //   for(unsigned j = 0; j < orderOfIntegration; j++) {
 //     std::cout << "Hermite =  " << std::setprecision (16) << HermitePoly[0][j] << "   ,   " ;
 //   }
 //   std::cout << std::endl;
+//   //END test Hermite Poly
+  
+  //BEGIN stochastic index set test
+  std::vector < std::vector <unsigned> > Jp;
+  ComputeIndexSetJp(Jp, 3);
+  for(unsigned i=0; i<10;i++){
+    std::cout << "Jp[" << i << "]=( ";
+    for(unsigned j=0; j<numberOfEigPairs; j++){ 
+     std::cout << Jp[i][j] << " ";
+   }
+   std::cout << ")" << std::endl;
+  }
+  //END stochastic index set test
+  
 
   GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues); //solve the generalized eigenvalue problem and compute the eigenpairs
 

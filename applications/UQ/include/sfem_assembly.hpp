@@ -15,8 +15,13 @@ using namespace femus;
 // };
 
 
+int factorial(int n) {
+  return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
+}
+
+
 const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, first row: weights, second row: coordinates
-  {{1.77245385091},{0.}},
+  {{1.77245385091}, {0.}},
   { {0.8862269254527577, 0.8862269254527577},
     { -0.7071067811865476, 0.7071067811865476}
   },
@@ -85,7 +90,7 @@ boost::variate_generator < boost::mt19937&,
 
       boost::normal_distribution<> > var_nor(rng, nd);
 
-void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints) {
+void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
 
   if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 10) {
     std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [1,10]" << std::endl;
@@ -93,8 +98,8 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
   }
 
   else {
-    HermitePoly.resize(numberOfEigPairs);
-    for(unsigned i = 0; i < numberOfEigPairs; i++) {
+    HermitePoly.resize(maxPolyOrder);
+    for(unsigned i = 0; i < maxPolyOrder; i++) {
       HermitePoly[i].resize(numberOfQuadraturePoints);
     }
 
@@ -104,28 +109,28 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
 
       HermitePoly[0][j] = 1. ;
 
-      if(numberOfEigPairs > 1) {
+      if(maxPolyOrder > 1) {
         HermitePoly[1][j] = x ;
-        if(numberOfEigPairs > 2) {
-          HermitePoly[2][j] =  (pow(x, 2) - 1.) / sqrt(2) ;
-          if(numberOfEigPairs > 3) {
+        if(maxPolyOrder > 2) {
+          HermitePoly[2][j] = (pow(x, 2) - 1.) / sqrt(2) ;
+          if(maxPolyOrder > 3) {
             HermitePoly[3][j] = (pow(x, 3) - 3. * x) / sqrt(6) ;
-            if(numberOfEigPairs > 4) {
+            if(maxPolyOrder > 4) {
               HermitePoly[4][j] = (pow(x, 4) - 6. * x * x + 3.) / sqrt(24) ;
-              if(numberOfEigPairs > 5) {
+              if(maxPolyOrder > 5) {
                 HermitePoly[5][j] = (pow(x, 5) - 10. * pow(x, 3) + 15. * x) / sqrt(120) ;
-                if(numberOfEigPairs > 6) {
+                if(maxPolyOrder > 6) {
                   HermitePoly[6][j] = (pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.) / sqrt(720) ;
-                  if(numberOfEigPairs > 7) {
-                    HermitePoly[7][j] =  (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / sqrt(5040) ;
-                    if(numberOfEigPairs > 8) {
+                  if(maxPolyOrder > 7) {
+                    HermitePoly[7][j] = (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / sqrt(5040) ;
+                    if(maxPolyOrder > 8) {
                       HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.) / sqrt(40320) ;
-                      if(numberOfEigPairs > 9) {
+                      if(maxPolyOrder > 9) {
                         HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / sqrt(362880);
-                        if(numberOfEigPairs > 10) {
+                        if(maxPolyOrder > 10) {
                           HermitePoly[10][j] = (pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.) / sqrt(3628800);
-                          if(numberOfEigPairs > 11) {
-                            std::cout << "Stochastic dimension is too big. For now, it has to be not greater than 10." << std::endl;
+                          if(maxPolyOrder > 11) {
+                            std::cout << "Polynomial order is too big. For now, it has to be not greater than 11." << std::endl;
                             abort();
                           }
                         }
@@ -148,6 +153,122 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
   return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+};
+
+
+void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsigned & p) { //p is max poly degree
+
+  unsigned dimJp = factorial(numberOfEigPairs + p) / (factorial(numberOfEigPairs) * factorial(p));
+//   std::cout << dimJp <<std::endl;
+  Jp.resize(dimJp);
+  for(unsigned i = 0; i < dimJp; i++) {
+    Jp[i].resize(numberOfEigPairs);
+  }
+
+  unsigned index = 0;
+  unsigned int counters[numberOfEigPairs + 1];
+  memset(counters, 0, sizeof(counters));
+
+  while(!counters[numberOfEigPairs]) {
+    int i;
+//     char *sep = "";
+//     for(i = numberOfEigPairs; i-- > 0;) {
+//       printf("%s%d", sep, counters[i]);
+//       sep = ",";
+//     };
+//     printf("\n");
+
+    unsigned entrySum = 0;
+    for(unsigned j = 0; j < numberOfEigPairs; j++) {
+      entrySum += counters[j];
+    }
+
+    if(entrySum <= p) {
+      for(unsigned j = 0; j < numberOfEigPairs; j++) {
+        Jp[index][j] = counters[j];
+      }
+      std::cout << std::endl;
+      index++;
+    }
+    for(i = 0; counters[i] == p; i++) // inner loops that are at maxval restart at zero
+      counters[i] = 0;
+    ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
+  }
+
+
+};
+
+void EvaluateStochasticMassMatrices(const unsigned & q, const unsigned & p, std::vector < std::vector < std::vector < double > > > & G,
+                                    const unsigned & numberOfQuadraturePoints) {
+
+  unsigned maxPolyOrder = (q > p) ? q : p;
+
+  std::vector < std::vector < std::vector < double > > > integralsMatrix;
+  integralsMatrix.resize(q);
+  for(unsigned q1 = 0; q1 < q; q1++) {
+    integralsMatrix[q1].resize(p);
+    for(unsigned p1 = 0; p1 < p; p1++) {
+      integralsMatrix[q1][p1].resize(p);
+    }
+  }
+
+  std::vector < std::vector < double > >  HermitePoly;
+
+  EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
+
+  for(unsigned q1 = 0; q1 < q; q1++) {
+    for(unsigned p1 = 0; p1 < p; p1++) {
+      for(unsigned p2 = 0; p2 < p; p2++) {
+        unsigned quadratureIntegral = 0.;
+        for(unsigned i = 0; i < numberOfQuadraturePoints; i++) {
+
+          double w = HermiteQuadrature[numberOfQuadraturePoints - 1][0][i];
+
+          quadratureIntegral +=  w * HermitePoly[q1][i] * HermitePoly[p1][i] * HermitePoly[p2][i];
+
+        }
+
+        integralsMatrix[q1][p1][p2] = quadratureIntegral;
+
+      }
+    }
+  }
+
+  std::vector < std::vector <unsigned> > Jq;
+  std::vector < std::vector <unsigned> > Jp;
+
+  unsigned dimJq = factorial(numberOfEigPairs + q) / (factorial(numberOfEigPairs) * factorial(q));
+  unsigned dimJp = factorial(numberOfEigPairs + p) / (factorial(numberOfEigPairs) * factorial(p));
+
+  ComputeIndexSetJp(Jq, q);
+  ComputeIndexSetJp(Jp, p);
+
+  G.resize(dimJq);
+  for(unsigned j1 = 0; j1 < dimJp; j1++) {
+    G[j1].resize(dimJp);
+    for(unsigned j2 = 0; j2 < dimJp; j2++) {
+      G[j1][j2].resize(dimJp);
+    }
+  }
+
+  for(unsigned q1 = 0; q1 < q; q1++) {
+    for(unsigned p1 = 0; p1 < p; p1++) {
+      for(unsigned p2 = 0; p2 < p; p2++) {
+
+        unsigned entryG = 1.;
+
+        for(unsigned i = 0; i < numberOfEigPairs; i++) {
+
+          entryG *= integralsMatrix[Jq[q1][i]][Jp[p1][i]][Jp[p2][i]];
+
+        }
+
+        G[q1][p1][p2] = entryG;
+
+      }
+    }
+  }
+
 };
 
 void AssembleUQSys(MultiLevelProblem& ml_prob) {
@@ -370,5 +491,6 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
 
   // ***************** END ASSEMBLY *******************
 }
+
 
 
