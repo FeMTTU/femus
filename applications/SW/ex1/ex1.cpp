@@ -20,6 +20,7 @@
 #include "LinearImplicitSystem.hpp"
 
 #include "slepceps.h"
+#include <slepcmfn.h>
 
 using namespace femus;
 
@@ -104,13 +105,15 @@ int main(int argc, char** args)
   }
   system.init();
   
-  ETD(ml_prob,NumberOfLayers);
-
-  mlSol.SetWriter(VTK);
+   mlSol.SetWriter(VTK);
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
   mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars);
+  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars,0);
+  
+  ETD(ml_prob,NumberOfLayers);
+  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars,1);
+ 
 
 
   return 0;
@@ -136,6 +139,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 
   SparseMatrix* KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector* RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  NumericVector* EPS = pdeSys->_EPS; // pointer to the global residual vector object in pdeSys (level)
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
 
@@ -291,9 +295,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
     s.clear_dependents();
     
   }
-  
-  std::cout<<"BBBBBBBBBBBBBBBBBBBBBBBBBBB"<<std::endl;
-  
+      
   RES->close();
   KK->close();
   
@@ -304,6 +306,33 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 //   MatView((static_cast<PetscMatrix*>(KK))->mat(),viewer);
 //   double a;
 //   std::cin>>a;
+  
+  MFN mfn;
+  Mat A = (static_cast<PetscMatrix*>(KK))->mat();        
+  FN f;         
+  double dt = 1.;     
+  
+  Vec v = (static_cast< PetscVector* >(RES))->vec(); 
+  Vec y = (static_cast< PetscVector* >(EPS))->vec(); 
+    
+  MFNCreate( PETSC_COMM_WORLD, &mfn );
+    
+  MFNSetOperator( mfn, A );
+  MFNGetFN( mfn, &f );
+
+  FNPhiSetIndex(f,0);
+  FNSetType( f, FNPHI );
+  
+  
+  FNSetScale( f, dt, 1);
+  MFNSetFromOptions( mfn );
+ 
+  
+  MFNSolve( mfn, v, y); 
+  MFNDestroy( &mfn );
+  
+  sol->UpdateSol(mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset);
+   
 }
 
 
