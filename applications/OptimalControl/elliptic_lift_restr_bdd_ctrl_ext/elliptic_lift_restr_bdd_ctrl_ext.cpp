@@ -69,11 +69,14 @@ int main(int argc, char** args) {
         files.CheckIODirectories();
 	files.RedirectCout();
 
+  double Lref = 1.;
+  
   // define multilevel mesh
   MultiLevelMesh mlMsh;
+  mlMsh.ReadCoarseMesh("ext_box.neu","seventh",Lref);
   double scalingFactor = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+  //mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
   unsigned numberOfUniformLevels = 1;
@@ -466,6 +469,13 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 
   
+ //***** set state flag ****************************
+  int state_el_flag = 0;
+  state_el_flag = StateDomainFlag(elem_center);
+  std::vector<int> state_node_flag(nDof_ctrl,0);
+  if (state_el_flag == 1) std::fill(state_node_flag.begin(), state_node_flag.end(), 1);
+ //*************************************************** 
+  
  //========= gauss value quantities ==================   
 	double sol_u_gss = 0.;
 	double sol_adj_gss = 0.;
@@ -532,10 +542,14 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      }
 //======================Residuals=======================
           // FIRST ROW
-	  if (i < nDof_u)                      Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss + sol_ctrl_gss - u_des) - laplace_rhs_du_adj_i - 0.);
+	  if (i < nDof_u)  {
+	    if ( state_el_flag == 1)         Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss /*+ sol_ctrl_gss*/ - u_des) - laplace_rhs_du_adj_i - 0.);
+	  
+	    else if ( state_el_flag == 0)  Res[nDof_u + i] +=  (- penalty_strong) * (sol_u[i] - 0.);
+	  }
           // SECOND ROW
 	  if (i < nDof_ctrl)  {
-	     if ( control_el_flag == 1)        Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight * (target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
+	     if ( control_el_flag == 1)        Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight * (/*target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) */
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
@@ -543,7 +557,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
           // THIRD ROW
-          if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += -weight * phi_adj[i] * sol_adj_gss - 6.;//- weight *  ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i - 0.) ;
+          if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += /*-weight * phi_adj[i] * sol_adj_gss - 6.;*/- weight *  ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i - 0.) ;
 
 //======================Residuals=======================
 	      
@@ -568,34 +582,47 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      }
 
               //============ delta_state row ============================
+              if ( state_el_flag == 1){ 
+		
               //DIAG BLOCK delta_state - state
 	      if ( i < nDof_u && j < nDof_u )       
 		Jac[ (0 + i) * nDof_AllVars   +
 		     (0 + j)                            ]  += weight * target_flag * phi_u[j] *  phi_u[i];
               
-	      // BLOCK  delta_state - control
-              if ( i < nDof_u && j < nDof_ctrl )   
-		Jac[ (0 + i) * nDof_AllVars   +
-                     (nDof_u + j)                       ]  += weight * target_flag  * phi_ctrl[j] *  phi_u[i];
+// 	      // BLOCK  delta_state - control
+//               if ( i < nDof_u && j < nDof_ctrl )   
+// 		Jac[ (0 + i) * nDof_AllVars   +
+//                      (nDof_u + j)                       ]  += weight * target_flag  * phi_ctrl[j] *  phi_u[i];
 	      
               // BLOCK  delta_state - adjoint
               if ( i < nDof_u && j < nDof_adj )  
 		Jac[  (0 + i) * nDof_AllVars  +
                       (nDof_u + nDof_ctrl + j)          ]  += weight * (-1) * laplace_mat_du_adj;
+	      }
+		      
+	      else if ( state_el_flag == 0)  {  
+		
+              //BLOCK delta_state - state
+              if ( i < nDof_u   && j < nDof_u  &&  i==j ) {
+		 Jac[ (0 + i) * nDof_AllVars +
+		      (0 + j)                           ]  += (1-state_node_flag[i]) * penalty_strong;
+	        }
+	        
+	      }
               
 	      //=========== delta_control row ===========================     
 	      if ( control_el_flag == 1)  {
 
-	      //BLOCK delta_control - state
-              if ( i < nDof_ctrl   && j < nDof_u   ) 
-		Jac[ (nDof_u + i) * nDof_AllVars  +
-		     (0 + j)                            ]  += ( control_node_flag[i]) * weight * target_flag * phi_u[j] * phi_ctrl[i];
+// 	      //BLOCK delta_control - state
+//               if ( i < nDof_ctrl   && j < nDof_u   ) 
+// 		Jac[ (nDof_u + i) * nDof_AllVars  +
+// 		     (0 + j)                            ]  += ( control_node_flag[i]) * weight * target_flag * phi_u[j] * phi_ctrl[i];
 		
 	      //BLOCK delta_control - control
               if ( i < nDof_ctrl   && j < nDof_ctrl   )
 		Jac[ (nDof_u + i) * nDof_AllVars +
 		     (nDof_u + j)                       ]  += ( control_node_flag[i]) * weight * ( beta * control_el_flag  * laplace_mat_dctrl_ctrl 
-		                                           + alpha * control_el_flag * phi_ctrl[i] * phi_ctrl[j] + target_flag  * phi_ctrl[i] * phi_ctrl[j] );
+		                                           + alpha * control_el_flag * phi_ctrl[i] * phi_ctrl[j] /*+ target_flag  * phi_ctrl[i] * phi_ctrl[j]*/ );
               
 	      //BLOCK delta_control - adjoint
               if ( i < nDof_ctrl   && j < nDof_adj  ) 
@@ -621,21 +648,21 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		     
 		     
 	      //=========== delta_adjoint row ===========================
-//               // BLOCK delta_adjoint - state	      
-//               if ( i < nDof_adj && j < nDof_u )   
-// 		Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars +
-// 		     (0 + j)                            ]  += weight * (-1) * laplace_mat_dadj_u;   
-// 	      
-//               // BLOCK delta_adjoint - control   
-//               if ( i < nDof_adj && j < nDof_ctrl )  
-// 		Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
-// 		     (nDof_u  + j)                      ]  += weight * (-1) * laplace_mat_dadj_ctrl; 
-// 		     
-		     
-	      // BLOCK delta_adjoint - adjoint   
-              if ( i < nDof_adj && j < nDof_adj )  
+              // BLOCK delta_adjoint - state	      
+              if ( i < nDof_adj && j < nDof_u )   
+		Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars +
+		     (0 + j)                            ]  += weight * (-1) * laplace_mat_dadj_u;   
+	      
+              // BLOCK delta_adjoint - control   
+              if ( i < nDof_adj && j < nDof_ctrl )  
 		Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
-		     (nDof_u + nDof_ctrl + j)                      ]  += weight * phi_adj[j] *  phi_adj[i]; 
+		     (nDof_u  + j)                      ]  += weight * (-1) * laplace_mat_dadj_ctrl; 
+		     
+		     
+// 	      // BLOCK delta_adjoint - adjoint   
+//               if ( i < nDof_adj && j < nDof_adj )  
+// 		Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
+// 		     (nDof_u + nDof_ctrl + j)                      ]  += weight * phi_adj[j] *  phi_adj[i]; 
     
 	      
 	      //============= delta_mu row ===============================
