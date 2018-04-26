@@ -50,6 +50,17 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
 }
 
 
+//*********************** Find volume elements that contain a State/Adjoint domain element *********************************
+
+int StateDomainFlag(const std::vector<double> & elem_center) {
+
+   int state_el_flag = 0.;
+   if ( elem_center[1] <  1.1) { state_el_flag = 1; }
+
+     return state_el_flag;
+
+}
+
 
 //******************************************* Desired Target *******************************************************
 
