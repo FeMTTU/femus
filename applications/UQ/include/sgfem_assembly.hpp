@@ -3,18 +3,21 @@
 
 using namespace femus;
 
-int numberOfEigPairs = 2; //dimension of the stochastic variable
-std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
-unsigned pSize = 3;
-unsigned qSize = 4;
-
-double stdDeviationInput = 1./*0.2*/;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
-
-int factorial(int n)
-{
+int factorial(int n) {
   return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
 }
+
+
+//BEGIN Stochastic Input Parameters
+unsigned pIndex = 3;
+unsigned qIndex = 4;
+
+int numberOfEigPairs = 2; //dimension of the stochastic variable
+double stdDeviationInput = 1.;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double amin = 1. / 100; // for the KL expansion
+std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
+//END Stochastic Input Parameters
 
 
 const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, first row: weights, second row: coordinates
@@ -69,8 +72,7 @@ const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, fir
   }
 };
 
-void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder)
-{
+void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
 
   if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 10) {
     std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [1,10]" << std::endl;
@@ -130,8 +132,7 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
 
 };
 
-void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsigned & p, const unsigned & numberOfEigPairs)   //p is max poly degree
-{
+void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsigned & p, const unsigned & numberOfEigPairs) { //p is max poly degree
 
   unsigned dimJp = factorial(numberOfEigPairs + p) / (factorial(numberOfEigPairs) * factorial(p));
 //   std::cout << dimJp <<std::endl;
@@ -171,27 +172,27 @@ void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsign
 };
 
 void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, std::vector < std::vector < std::vector < double > > > & G,
-                                     const unsigned & numberOfEigPairs){
-  
+                                    const unsigned & numberOfEigPairs) {
+
   unsigned maxPolyOrder = (q0 > p0) ? q0 : p0;
-  
+
   std::vector < std::vector < double > >  HermitePoly;
 
   unsigned n1 = 2 * p0 + q0 + 1;
-  n1 = (n1 % 2 == 0 ) ? n1 / 2 : (n1 + 1) / 2;
+  n1 = (n1 % 2 == 0) ? n1 / 2 : (n1 + 1) / 2;
   unsigned numberOfQuadraturePoints = (n1 <= 10) ? n1 : 10;
 
   EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
 
   unsigned q = q0 + 1;
   unsigned p = p0 + 1;
-  
+
   std::vector < std::vector < std::vector < double > > > integralsMatrix;
   integralsMatrix.resize(q);
   for(unsigned q1 = 0; q1 < q; q1++) {
     integralsMatrix[q1].resize(p);
     for(unsigned p1 = 0; p1 < p; p1++) {
-      integralsMatrix[q1][p1].assign(p,0.);
+      integralsMatrix[q1][p1].assign(p, 0.);
       for(unsigned p2 = 0; p2 < p; p2++) {
         integralsMatrix[q1][p1][p2]  = 0.;
         for(unsigned i = 0; i < numberOfQuadraturePoints; i++) {
@@ -201,7 +202,7 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
       }
     }
   }
-  
+
   std::vector < std::vector <unsigned> > Jq;
   std::vector < std::vector <unsigned> > Jp;
 
@@ -217,7 +218,7 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
         for(unsigned i = 0; i < numberOfEigPairs; i++) {
           G[q1][p1][p2] *= integralsMatrix[Jq[q1][i]][Jp[p1][i]][Jp[p2][i]];
         }
-        G[q1][p1][p2] = ( fabs(G[q1][p1][p2]) < 1.e-14 ) ? 0. : G[q1][p1][p2];
+        G[q1][p1][p2] = (fabs(G[q1][p1][p2]) < 1.e-14) ? 0. : G[q1][p1][p2];
       }
     }
   }
@@ -225,31 +226,7 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
 };
 
 
-
-
-
-// 
-// double amin = 1. / 100;
-// 
-
-// 
-// boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
-// 
-// boost::normal_distribution<> nd(0.0, stdDeviationInput);
-// 
-// boost::variate_generator < boost::mt19937&,
-// 
-// boost::normal_distribution<> > var_nor(rng, nd);
-// 
-// double GetExactSolutionLaplace(const std::vector < double >& x)
-// {
-//   double pi = acos(-1.);
-//   return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
-// };
-// 
-// 
-void AssembleSysSG(MultiLevelProblem& ml_prob)
-{
+void AssembleSysSG(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -277,9 +254,25 @@ void AssembleSysSG(MultiLevelProblem& ml_prob)
 
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
+  std::vector < std::vector < std::vector < double > > >  G; //vector with stochastic mass matrices
+  EvaluateStochasticMassMatrices(qIndex, pIndex, G, numberOfEigPairs);
+
   std::vector < std::vector <unsigned> > Jp;
-  ComputeIndexSetJp(Jp, pSize, numberOfEigPairs);
-  
+  ComputeIndexSetJp(Jp, pIndex, numberOfEigPairs);
+  std::vector < std::vector <unsigned> > Jq;
+  ComputeIndexSetJp(Jq, qIndex, numberOfEigPairs);
+
+  unsigned maxPolyOrder = (qIndex > pIndex) ? qIndex : pIndex;
+
+  std::vector < std::vector < double > >  HermitePoly;
+
+  unsigned n1 = 2 * pIndex + qIndex + 1;
+  n1 = (n1 % 2 == 0) ? n1 / 2 : (n1 + 1) / 2;
+  unsigned numberOfQuadraturePoints = (n1 <= 10) ? n1 : 10;
+
+  EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
+
+  //solution Index
   std::vector <unsigned> soluIndex(Jp.size());
   for(unsigned i = 0; i < Jp.size(); i++) {
     char name[10];
@@ -288,138 +281,190 @@ void AssembleSysSG(MultiLevelProblem& ml_prob)
   }
   unsigned soluType = mlSol->GetSolutionType(soluIndex[0]);
 
+
+  //solution PdeIndex
   std::vector <unsigned> soluPdeIndex(Jp.size());
   for(unsigned i = 0; i < Jp.size(); i++) {
     char name[10];
     sprintf(name, "uSG%d", i);
     soluPdeIndex[i] = mlPdeSys->GetSolPdeIndex(name);    // get the position of "u" in the pdeSys object
   }
-   
+
+
+  //eigenfunction Index
+  std::vector <unsigned> eigfIndex(numberOfEigPairs);
+  for(unsigned i = 0; i < numberOfEigPairs; i++) {
+    char name[10];
+    sprintf(name, "egnf%d", i);
+    eigfIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
+  }
+
+  vector < double > KLexpansion; // local solution
+
   vector < vector < double > >  solu(Jp.size()); // local solution
-  
+
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
+  vector <double> phi_xx;
   double weight; // gauss point weight
- 
+
   vector< int > l2GMap; // local to global mapping
   vector< double > Res; // local redidual vector
   vector < double > Jac;
-  
+
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
-  // element loop: each process loops only on the elements that owns
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for(unsigned q1 = 0; q1 < Jq.size(); q1++) {
 
-    short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+    // element loop: each process loops only on the elements that owns
+    for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    // resize local arrays
-    for(unsigned j = 0; j < Jp.size(); j++){
-      solu[j].resize(nDofu);
-    }
-    
-    for(int i = 0; i < dim; i++) {
-      x[i].resize(nDofx);
-    }
-    
-    l2GMap.resize(nDofu * Jp.size());
-    Res.assign(nDofu *  Jp.size(), 0.); 
-    Jac.assign(nDofu *  Jp.size() * nDofu * Jp.size(), 0.);
+      short unsigned ielGeom = msh->GetElementType(iel);
+      unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+      unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
-    // local storage of global mapping and solution
-    for(unsigned i = 0; i < nDofu; i++) {
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-      for(unsigned j = 0; j < Jp.size(); j++){
-	solu[j][i] = (*sol->_Sol[soluIndex[j]])(solDof);      // global extraction and local storage for the solution
-        l2GMap[j * Jp.size() + i] = pdeSys->GetSystemDof(soluIndex[j], soluPdeIndex[j], i, iel);    // global to global mapping between solution node and pdeSys dof
+      // resize local arrays
+      for(unsigned j = 0; j < Jp.size(); j++) {
+        solu[j].resize(nDofu);
       }
-    }	
 
-    // local storage of coordinates
-    for(unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-
-      for(unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+      for(int i = 0; i < dim; i++) {
+        x[i].resize(nDofx);
       }
-    }
-  
-    // *** Gauss point loop ***
-//     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
-//   
-//       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
-// 
-//       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-// 
-//   
-//       vector < adept::adouble > gradSolu_gss(dim, 0.);
-// 
-//       for(unsigned i = 0; i < nDofu; i++) {
-//         for(unsigned jdim = 0; jdim < dim; jdim++) {
-//           gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
-// 
-//         }
-//       }
-// 
-//       double aCoeff = amin + exp(KLexpansion_gss);
-// //       std::cout << "COEEEEEEEEEEEEEEEEEEEEF" << aCoeff << std::endl;
-// 
-//       // *** phi_i loop ***
-//       for(unsigned i = 0; i < nDofu; i++) {
-// 
-//         adept::adouble laplace = 0.;
-// 
-//         for(unsigned jdim = 0; jdim < dim; jdim++) {
-//           laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
-//         }
-// 
-//         double srcTerm = 100./*- GetExactSolutionLaplace(x_gss)*/ ;
-//         aRes[i] += (srcTerm * phi[i] + laplace) * weight;
-// 
-//       } // end phi_i loop
-//     } // end gauss point loop
-// 
-//     //--------------------------------------------------------------------------------------------------------
-//     // Add the local Matrix/Vector into the global Matrix/Vector
-// 
-//     //copy the value of the adept::adoube aRes in double Res and store
-//     Res.resize(nDofu);    //resize
-// 
-//     for(int i = 0; i < nDofu; i++) {
-//       Res[i] = - aRes[i].value();
-//     }
-// 
-//     RES->add_vector_blocked(Res, l2GMap);
-// 
-// 
-// 
-//     // define the dependent variables
-//     s.dependent(&aRes[0], nDofu);
-// 
-//     // define the independent variables
-//     s.independent(&solu[0], nDofu);
-// 
-//     // get the jacobian matrix (ordered by row major )
-//     Jac.resize(nDofu * nDofu);    //resize
-//     s.jacobian(&Jac[0], true);
-// 
-//     //store K in the global matrix KK
-//     KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
 
-  
+      l2GMap.resize(nDofu * Jp.size());
+      Res.assign(nDofu *  Jp.size(), 0.);
+      Jac.assign(nDofu *  Jp.size() * nDofu * Jp.size(), 0.);
+      KLexpansion.resize(nDofu);
 
-  } //end element loop for each process
+      // local storage of global mapping and solution
+      for(unsigned i = 0; i < nDofu; i++) {
+        unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
+        for(unsigned j = 0; j < Jp.size(); j++) {
+          solu[j][i] = (*sol->_Sol[soluIndex[j]])(solDof);      // global extraction and local storage for the solution
+          l2GMap[j * Jp.size() + i] = pdeSys->GetSystemDof(soluIndex[j], soluPdeIndex[j], i, iel);    // global to global mapping between solution node and pdeSys dof
+        }
+      }
 
-  RES->close();
+      // local storage of coordinates
+      for(unsigned i = 0; i < nDofx; i++) {
+        unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-  KK->close();
+        for(unsigned jdim = 0; jdim < dim; jdim++) {
+          x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        }
+      }
 
+      std::vector <double> eigVectorGauss(numberOfEigPairs);
+
+      //  *** Gauss point loop ***
+      for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+
+        msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+
+        for(unsigned i = 0; i < numberOfEigPairs; i++) {
+          unsigned solDof = msh->GetSolutionDof(i, iel, soluType);
+          eigVectorGauss[i] = 0.;
+          for(unsigned j = 0; j < nDofu; j++) {
+            eigVectorGauss[i] += (*sol->_Sol[eigfIndex[i]])(solDof) * phi[i];
+          }
+        }
+
+        std::vector <double> aStochasticTerm1(numberOfEigPairs);
+        std::vector <double> aStochasticTerm2(numberOfEigPairs);
+
+        for(unsigned i = 0; i < numberOfEigPairs; i++) {
+          aStochasticTerm1[i] = 0.;
+          aStochasticTerm2[i] = 0.;
+          for(unsigned j = 0; j < numberOfQuadraturePoints; j++) {
+            aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
+            aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePoints - 1][1][j]) * HermitePoly[Jq[q1][i]][j];
+          }
+        }
+
+        double aS1 = 1.;
+        double aS2 = 1.;
+        for(unsigned i = 0; i < numberOfEigPairs; i++) {
+          aS1 *= aStochasticTerm1[i];
+          aS2 *= aStochasticTerm2[i];
+        }
+
+        double aStochasticGauss = amin * aS1 + aS2; //a_q(x_ig)
+
+        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+
+
+
+        for(unsigned p1 = 0; p1 < Jp.size(); p1++) {
+
+          vector < double > gradSolu_gss(dim, 0.);
+          for(unsigned i = 0; i < nDofu; i++) {
+            for(unsigned jdim = 0; jdim < dim; jdim++) {
+              gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[p1][i];
+            }
+          }
+
+          std::vector <double> srcTermStochastic(numberOfEigPairs, 0.);
+          for(unsigned i = 0; i < numberOfEigPairs; i++) {
+            srcTermStochastic[i] = 0.;
+            for(unsigned j = 0; j < numberOfQuadraturePoints; j++) {
+              srcTermStochastic[i] += HermitePoly[Jq[p1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
+            }
+          }
+
+          double srcTermStoch = 1.;
+          for(unsigned i = 0; i < numberOfEigPairs; i++) {
+            srcTermStoch *= srcTermStochastic[i];
+          }
+
+          for(unsigned p2 = 0; p2 < Jp.size(); p2++) {
+
+            // *** phi_i loop ***
+            for(unsigned i = 0; i < nDofu; i++) {
+              double laplace = 0.;
+              for(unsigned jdim = 0; jdim < dim; jdim++) {
+                laplace   +=  aStochasticGauss * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+              }
+
+              double srcTerm = 1.;
+              Res[i + p1 * Jp.size()] += (srcTerm * srcTermStoch * phi[i] + laplace) * weight;
+
+              // *** phi_j loop ***
+              for(unsigned j = 0; j < nDofu; j++) {
+                laplace = 0.;
+
+                for(unsigned kdim = 0; kdim < dim; kdim++) {
+                  laplace += aStochasticGauss * (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
+                }
+
+                Jac[i * nDofu + p1 * Jp.size() + j + p2 * Jp.size()] += laplace * G[q1][p1][p2];
+              } // end phi_j loop
+            } // end phi_i loop
+          } // end p2 loop
+        } // end p1 loop
+      } // end gauss point loop
+
+    //--------------------------------------------------------------------------------------------------------
+    // Add the local Matrix/Vector into the global Matrix/Vector
+
+    RES->add_vector_blocked(Res, l2GMap);
+
+    //store K in the global matrix KK
+    KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
+
+    } //end element loop for each process
+
+    RES->close();
+
+    KK->close();
+
+  }
   // ***************** END ASSEMBLY *******************
 }
+
 
 
 

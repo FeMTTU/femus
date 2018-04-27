@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
   }
  
   std::vector < std::vector <unsigned> > Jp;
-  ComputeIndexSetJp(Jp, pSize, numberOfEigPairs);
+  ComputeIndexSetJp(Jp, pIndex, numberOfEigPairs);
   for(unsigned i = 0; i < Jp.size(); i++) {
     char name[10];
     sprintf(name, "uSG%d", i);
@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
   }
   
   // ******* System FEM Assembly *******
-  //   systemSG.SetAssembleFunction(AssembleSysSG);
+  systemSG.SetAssembleFunction(AssembleSysSG);
   systemSG.SetMaxNumberOfLinearIterations(1);
    // ******* set MG-Solver *******
   systemSG.SetMgType(V_CYCLE);
@@ -160,6 +160,12 @@ int main(int argc, char** argv) {
 
   systemSG.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
    
+    
+  for(int i = 0; i < numberOfEigPairs; i++) {
+    std::cout << eigenvalues[i].first << " " << eigenvalues[i].second << std::endl;
+  }
+  
+  system.MGsolve();
   
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
