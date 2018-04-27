@@ -111,8 +111,11 @@ int main(int argc, char** args)
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars,0);
   
-  ETD(ml_prob,NumberOfLayers);
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars,1);
+  unsigned numberOfTimeSteps = 100;
+  for(unsigned i = 0; i<numberOfTimeSteps;i++){
+    ETD(ml_prob,NumberOfLayers);
+    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, i + 1);
+  }
  
 
 
@@ -309,29 +312,61 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
   
   MFN mfn;
   Mat A = (static_cast<PetscMatrix*>(KK))->mat();        
-  FN f;         
-  double dt = 1.;     
+  FN f, f1, f2, f3 , f4;         
+  double dt = 0.01;     
   
   Vec v = (static_cast< PetscVector* >(RES))->vec(); 
   Vec y = (static_cast< PetscVector* >(EPS))->vec(); 
     
   MFNCreate( PETSC_COMM_WORLD, &mfn );
-    
+  
   MFNSetOperator( mfn, A );
   MFNGetFN( mfn, &f );
-
-  FNPhiSetIndex(f,0);
-  FNSetType( f, FNPHI );
   
+    
+  FNCreate(PETSC_COMM_WORLD,&f1);
+  FNCreate(PETSC_COMM_WORLD,&f2);
+  FNCreate(PETSC_COMM_WORLD,&f3);
+  FNCreate(PETSC_COMM_WORLD,&f4);
   
-  FNSetScale( f, dt, 1);
+  FNSetType(f1, FNEXP);
+    
+  FNSetType(f2, FNRATIONAL);
+  double coeff1[1]={-1};
+  FNRationalSetNumerator(f2,1,coeff1);
+  FNRationalSetDenominator(f2,0,PETSC_NULL);
+      
+  FNSetType( f3, FNCOMBINE );
+  
+  FNCombineSetChildren(f3,FN_COMBINE_ADD,f1,f2);
+    
+  FNSetType(f4, FNRATIONAL);
+  double coeff2[2]={1.,0.};
+  FNRationalSetNumerator(f4,2,coeff2);
+  FNRationalSetDenominator(f4,0,PETSC_NULL);
+  
+  FNSetType( f, FNCOMBINE );
+  
+  FNCombineSetChildren(f,FN_COMBINE_DIVIDE,f3,f4);
+  
+  //FNPhiSetIndex(f,0);
+  //FNSetType( f, FNPHI );
+  //FNView(f,PETSC_VIEWER_STDOUT_WORLD);
+  
+  FNSetScale( f, dt, dt);
   MFNSetFromOptions( mfn );
- 
-  
+   
   MFNSolve( mfn, v, y); 
   MFNDestroy( &mfn );
   
+  FNDestroy(&f1);
+  FNDestroy(&f2);
+  FNDestroy(&f3);
+  FNDestroy(&f4);
+  
   sol->UpdateSol(mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset);
+  
+  
    
 }
 
