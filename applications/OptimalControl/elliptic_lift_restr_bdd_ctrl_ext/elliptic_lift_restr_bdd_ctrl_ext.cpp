@@ -69,12 +69,13 @@ int main(int argc, char** args) {
         files.CheckIODirectories();
 	files.RedirectCout();
 
-  double Lref = 1.;
+  double scalingFactor = 1.;
   
   // define multilevel mesh
   MultiLevelMesh mlMsh;
-  mlMsh.ReadCoarseMesh("ext_box.neu","seventh",Lref);
-  double scalingFactor = 1.;
+  // read coarse level mesh and generate finers level meshes
+  mlMsh.ReadCoarseMesh("./input/ext_box.neu", "seventh", scalingFactor);
+
 
   //mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -338,7 +339,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
+    int flag_mat           = msh->GetElementMaterial(iel);
     short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
 
  //******************** GEOMETRY ********************* 
@@ -543,9 +544,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 //======================Residuals=======================
           // FIRST ROW
 	  if (i < nDof_u)  {
-	    if ( state_el_flag == 1)         Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss /*+ sol_ctrl_gss*/ - u_des) - laplace_rhs_du_adj_i - 0.);
+	    if ( flag_mat == 12 )             Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss /*+ sol_ctrl_gss*/ - u_des) - laplace_rhs_du_adj_i - 0.);
 	  
-	    else if ( state_el_flag == 0)  Res[nDof_u + i] +=  (- penalty_strong) * (sol_u[i] - 0.);
+	    else if ( flag_mat == 13 )        Res[nDof_u + i] +=  (- penalty_strong) * (sol_u[i] - 0.);
 	  }
           // SECOND ROW
 	  if (i < nDof_ctrl)  {
@@ -557,8 +558,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
           // THIRD ROW
-          if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += /*-weight * phi_adj[i] * sol_adj_gss - 6.;*/- weight *  ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i - 0.) ;
-
+          if (i < nDof_adj)   
+	     if ( flag_mat == 12 )      Res[nDof_u + nDof_ctrl + i] += /*-weight * phi_adj[i] * sol_adj_gss - 6.;*/- weight *  ( - laplace_rhs_dadj_u_i /*- laplace_rhs_dadj_ctrl_i*/ - 0.) ;
+	     
+	     else if ( flag_mat == 13 ) Res[nDof_u + nDof_ctrl + i] += - weight *  (- laplace_rhs_dadj_ctrl_i - 0.) ;
 //======================Residuals=======================
 	      
           if (assembleMatrix) {
@@ -582,7 +585,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      }
 
               //============ delta_state row ============================
-              if ( state_el_flag == 1){ 
+              if (flag_mat == 12) { 
 		
               //DIAG BLOCK delta_state - state
 	      if ( i < nDof_u && j < nDof_u )       
@@ -600,7 +603,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
                       (nDof_u + nDof_ctrl + j)          ]  += weight * (-1) * laplace_mat_du_adj;
 	      }
 		      
-	      else if ( state_el_flag == 0)  {  
+	      else if (flag_mat == 13) {  
 		
               //BLOCK delta_state - state
               if ( i < nDof_u   && j < nDof_u  &&  i==j ) {
@@ -648,16 +651,18 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 		     
 		     
 	      //=========== delta_adjoint row ===========================
+	      if ( flag_mat == 12 ){
               // BLOCK delta_adjoint - state	      
               if ( i < nDof_adj && j < nDof_u )   
 		Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars +
 		     (0 + j)                            ]  += weight * (-1) * laplace_mat_dadj_u;   
-	      
+	      }
+	      else if ( flag_mat == 13 ){
               // BLOCK delta_adjoint - control   
               if ( i < nDof_adj && j < nDof_ctrl )  
 		Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
 		     (nDof_u  + j)                      ]  += weight * (-1) * laplace_mat_dadj_ctrl; 
-		     
+	      }
 		     
 // 	      // BLOCK delta_adjoint - adjoint   
 //               if ( i < nDof_adj && j < nDof_adj )  
