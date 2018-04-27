@@ -47,7 +47,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 double L = 4 ; // correlation length of the covariance function
 //END
 
-unsigned numberOfUniformLevels = 3;
+unsigned numberOfUniformLevels = 5;
 
 int main(int argc, char** argv) {
 
@@ -165,13 +165,13 @@ int main(int argc, char** argv) {
     std::cout << eigenvalues[i].first << " " << eigenvalues[i].second << std::endl;
   }
   
-  system.MGsolve();
+  systemSG.MGsolve();
   
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
-  mlSol.GetWriter()->SetDebugOutput(true);
+  //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
   return 0;
