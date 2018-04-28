@@ -4,15 +4,33 @@
 using namespace femus;
 
 
-int factorial(int n)
-{
-  return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
+unsigned factorial(unsigned n) {
+
+  unsigned fac = 1.;
+
+  if(n >= 0 && n < 13) {
+
+    if(n > 0) {
+      while(n > 1) {
+        fac *= n;
+        n--;
+      }
+    }
+  }
+
+  else {
+    std::cout << " input of factorial function must be an integer that is non-negative or less than 13" << std::endl;
+    abort();
+  }
+
+  return fac;
+
 }
 
 
 //BEGIN Stochastic Input Parameters
 unsigned pIndex = 3;
-unsigned qIndex = 4;
+unsigned qIndex = 2;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
 double stdDeviationInput = 1.;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
@@ -73,8 +91,7 @@ const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, fir
   }
 };
 
-void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder)
-{
+void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
 
   if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 10) {
     std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [1,10]" << std::endl;
@@ -134,11 +151,10 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
 
 };
 
-void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsigned & p, const unsigned & numberOfEigPairs)   //p is max poly degree
-{
+void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsigned & p, const unsigned & numberOfEigPairs) { //p is max poly degree
 
   unsigned dimJp = factorial(numberOfEigPairs + p) / (factorial(numberOfEigPairs) * factorial(p));
-//   std::cout << dimJp <<std::endl;
+
   Jp.resize(dimJp);
   for(unsigned i = 0; i < dimJp; i++) {
     Jp[i].resize(numberOfEigPairs);
@@ -151,7 +167,7 @@ void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsign
   while(!counters[numberOfEigPairs]) {
 
 //     for(unsigned i = numberOfEigPairs; i-- > 0;) {
-//       std::cout << counters[i] <<" ";
+//       std::cout << counters[i] << " ";
 //     }
 //     std::cout << std::endl;
 
@@ -174,9 +190,7 @@ void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsign
   }
 };
 
-void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, std::vector < std::vector < std::vector < double > > > & G,
-                                    const unsigned & numberOfEigPairs)
-{
+void EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, std::vector < std::vector < std::vector < double > > > &integralsMatrix) {
 
   unsigned maxPolyOrder = (q0 > p0) ? q0 : p0;
 
@@ -191,7 +205,6 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
   unsigned q = q0 + 1;
   unsigned p = p0 + 1;
 
-  std::vector < std::vector < std::vector < double > > > integralsMatrix;
   integralsMatrix.resize(q);
   for(unsigned q1 = 0; q1 < q; q1++) {
     integralsMatrix[q1].resize(p);
@@ -207,9 +220,13 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
     }
   }
 
+};
+
+void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, std::vector < std::vector < std::vector < double > > > & G,
+                                    const unsigned & numberOfEigPairs, const std::vector < std::vector < std::vector < double > > > & integralsMatrix) {
+
   std::vector < std::vector <unsigned> > Jq;
   std::vector < std::vector <unsigned> > Jp;
-
   ComputeIndexSetJp(Jq, q0, numberOfEigPairs);
   ComputeIndexSetJp(Jp, p0, numberOfEigPairs);
 
@@ -230,8 +247,7 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
 };
 
 
-void AssembleSysSG(MultiLevelProblem& ml_prob)
-{
+void AssembleSysSG(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -259,13 +275,17 @@ void AssembleSysSG(MultiLevelProblem& ml_prob)
 
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
-  std::vector < std::vector < std::vector < double > > >  G; //vector with stochastic mass matrices
-  EvaluateStochasticMassMatrices(qIndex, pIndex, G, numberOfEigPairs);
+  std::vector < std::vector < std::vector < double > > > integralsMatrix;
+  EvaluateIntegralsMatrix(qIndex, pIndex, integralsMatrix);
 
-  std::vector < std::vector <unsigned> > Jp;
-  ComputeIndexSetJp(Jp, pIndex, numberOfEigPairs);
+  std::vector < std::vector < std::vector < double > > >  G; //vector with stochastic mass matrices
+  EvaluateStochasticMassMatrices(qIndex, pIndex, G, numberOfEigPairs, integralsMatrix);
+
   std::vector < std::vector <unsigned> > Jq;
   ComputeIndexSetJp(Jq, qIndex, numberOfEigPairs);
+  std::vector < std::vector <unsigned> > Jp;
+  ComputeIndexSetJp(Jp, pIndex, numberOfEigPairs);
+
 
   unsigned maxPolyOrder = (qIndex > pIndex) ? qIndex : pIndex;
 
@@ -321,8 +341,6 @@ void AssembleSysSG(MultiLevelProblem& ml_prob)
   vector < double > Jac;
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
-
-
 
   // element loop: each process loops only on the elements that owns
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -385,19 +403,19 @@ void AssembleSysSG(MultiLevelProblem& ml_prob)
         std::vector <double> aStochasticTerm2(numberOfEigPairs);
 
         for(unsigned i = 0; i < numberOfEigPairs; i++) {
-          aStochasticTerm1[i] = 0.;
           aStochasticTerm2[i] = 0.;
           for(unsigned j = 0; j < numberOfQuadraturePoints; j++) {
-            aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
+//             aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
             aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePoints - 1][1][j])
                                    * HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
           }
         }
 
+
         double aS1 = 1.;
         double aS2 = 1.;
         for(unsigned i = 0; i < numberOfEigPairs; i++) {
-          aS1 *= aStochasticTerm1[i];
+          aS1 *= integralsMatrix[Jq[q1][i]][0][0];
           aS2 *= aStochasticTerm2[i];
         }
 
@@ -411,37 +429,29 @@ void AssembleSysSG(MultiLevelProblem& ml_prob)
         laplace[i].assign(nDofu, 0.);
         for(unsigned j = 0; j < nDofu; j++) {
           for(unsigned kdim = 0; kdim < dim; kdim++) {
-            laplace[i][j] +=  (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
+            laplace[i][j] += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
           }
         }
       }
 
 
       for(unsigned p1 = 0; p1 < Jp.size(); p1++) {
-	
-        std::vector <double> srcTermStochastic(numberOfEigPairs, 0.);
-        for(unsigned i = 0; i < numberOfEigPairs; i++) {
-          srcTermStochastic[i] = 0.;
-          for(unsigned j = 0; j < numberOfQuadraturePoints; j++) {
-            srcTermStochastic[i] += HermitePoly[Jp[p1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
-          }
-        }
 
         double srcTermStoch = 1.;
         for(unsigned i = 0; i < numberOfEigPairs; i++) {
-          srcTermStoch *= srcTermStochastic[i];
+          srcTermStoch *= integralsMatrix[0][Jp[p1][i]][0];
         }
-		
+
         for(unsigned i = 0; i < nDofu; i++) {
-	  double resU = 1. * phi[i] * srcTermStoch * weight;
+          double resU = 1. * phi[i] * srcTermStoch * weight;
           for(unsigned p2 = 0; p2 < Jp.size(); p2++) {
             for(unsigned j = 0; j < nDofu; j++) {
-	      double AG = 0;
+              double AG = 0;
               for(unsigned q1 = 0; q1 < Jq.size(); q1++) {
-		AG += aStochasticGauss[q1] * laplace[i][j] * G[q1][p1][p2];
+                AG += aStochasticGauss[q1] * laplace[i][j] * G[q1][p1][p2];
               }
-              Jac[ ( p1 * nDofu + i ) * ( Jp.size() * nDofu ) +  p2 * nDofu + j] += AG;
-	      resU -=  AG * solu[p2][j];
+              Jac[(p1 * nDofu + i) * (Jp.size() * nDofu) +  p2 * nDofu + j] += AG;
+              resU -=  AG * solu[p2][j];
             }
           }
           Res[ p1 * nDofu + i ] += resU;
@@ -464,15 +474,16 @@ void AssembleSysSG(MultiLevelProblem& ml_prob)
   KK->close();
 
 //   PetscViewer    viewer;
-//   PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-//   PetscObjectSetName((PetscObject)viewer,"SG matrix");
-//   PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-//   MatView( (static_cast<PetscMatrix*>(KK))->mat(),viewer);
+//   PetscViewerDrawOpen(PETSC_COMM_WORLD, NULL, NULL, 0, 0, 900, 900, &viewer);
+//   PetscObjectSetName((PetscObject)viewer, "SG matrix");
+//   PetscViewerPushFormat(viewer, PETSC_VIEWER_DRAW_LG);
+//   MatView((static_cast<PetscMatrix*>(KK))->mat(), viewer);
 //   double a;
-//   std::cin>>a;
+//   std::cin >> a;
 //  abort();
 // ***************** END ASSEMBLY *******************
 }
+
 
 
 
