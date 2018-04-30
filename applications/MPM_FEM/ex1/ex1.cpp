@@ -195,7 +195,7 @@ int main(int argc, char** args)
   double R0 = 1.5;
   bool boundaryLayer = ( fabs(R-R0) > 1.0e-10)? true: false;
   double PI = acos(-1.);
-  unsigned NR = 600;
+  unsigned NR = 300;
   unsigned NL = NR / (2 * PI);
   double DL = R0 / NL;
 
@@ -213,13 +213,13 @@ int main(int argc, char** args)
       x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
     }
   }
-  double diskArea = PI * R0 * R0;
+  double MASS = PI * R0 * R0 *rhos;
   size = x.size();
-  std::vector < double > vol(x.size(), diskArea / x.size()); // uniform marker volume
+  std::vector < double > mass(x.size(), MASS / x.size()); // uniform marker volume
   
   if(boundaryLayer) {
     
-    double factor = 1.075;
+    double factor = 1.3;
     unsigned NL = getNumberOfLayers((R-R0)/DL, factor);
     std::cout << NL <<std::endl;
       
@@ -238,19 +238,19 @@ int main(int argc, char** args)
         x[sizeOld + j][0] = r * cos(j * dtheta);
         x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
       }
-      vol.resize(x.size(), r * dtheta * DL);
+      mass.resize(x.size(), rhos * r * dtheta * DL);
     }
     size = x.size();
   }
   
-  double totalVol = 0;
-  for(unsigned i = 0; i < vol.size(); i++){
-    totalVol += vol[i];
+  double totalMass = 0;
+  for(unsigned i = 0; i < mass.size(); i++){
+    totalMass += mass[i];
   }
   
-  std::cout << totalVol<<" "<< PI * R * R << std::endl;
+  std::cout << totalMass<<" "<< rhos * PI * R * R << std::endl;
   
-  return 1;
+  //return 1;
 
   std::vector < MarkerType > markerType;
   markerType.resize(size);
@@ -265,7 +265,7 @@ int main(int argc, char** args)
   unsigned solType = 2;
   linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
       
-  linea->SetParticlesMass(diskArea, rhos);
+  linea->SetParticlesMass(MASS/rhos, rhos);
   linea->ScaleParticleMass(scale);
 
   linea->GetLine(line0[0]);
