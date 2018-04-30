@@ -50,7 +50,7 @@ int main(int argc, char **args)
   valve = false;
   twoPressure = true;
   
-  unsigned simulation = 4;
+  unsigned simulation = 0;
 
   if(argc >= 2) {
     if(!strcmp("0", args[1])) {       /** FSI Turek2D no stent */
@@ -78,7 +78,7 @@ int main(int argc, char **args)
       simulation = 7;
     }
     else{
-      simulation = 4;
+      simulation = 0;
     }
   }
 
@@ -165,14 +165,15 @@ int main(int argc, char **args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
-  
+  numberOfUniformRefinedMeshes = 5;
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
                         infile.c_str(), "fifth", Lref, NULL);
+  
+  unsigned dim = ml_msh.GetDimension();
 
   //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes - 2);
 
@@ -207,9 +208,6 @@ int main(int argc, char **args)
 
   ml_sol.AddSolution("Um", LAGRANGE, SECOND, 0, false);
   ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
-  
-  ml_sol.AddSolution("AX", LAGRANGE, SECOND, 2);
-  ml_sol.AddSolution("AY", LAGRANGE, SECOND, 2);
     
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -231,7 +229,7 @@ int main(int argc, char **args)
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
   ml_sol.GenerateBdc("PF", "Steady");
-
+  
   if(simulation == 4 || simulation == 5 || simulation == 6) {
     ml_sol.GenerateBdc("U", "Steady");
     ml_sol.GenerateBdc("V", "Time_dependent");
@@ -274,74 +272,124 @@ int main(int argc, char **args)
 
   system.AddSolutionToSystemPDE("PS");
   
-  if(twoPressure) system.AddSolutionToSystemPDE("PF");
+  if (twoPressure) system.AddSolutionToSystemPDE("PF");
 
+   //BEGIN buid fieldSplitTree (only for FieldSplitPreconditioner)
+  std::vector < unsigned > fieldVelPf(dim + 1);
+  fieldVelPf[0] = system.GetSolPdeIndex("U");
+  fieldVelPf[1] = system.GetSolPdeIndex("V");
+  //if (dim == 3) fieldVelPf[2] = system.GetSolPdeIndex("W");
+  fieldVelPf[dim] = system.GetSolPdeIndex("PF");
+
+  std::vector < unsigned > solutionTypeVelPf(dim + 1);
+  solutionTypeVelPf[0] = ml_sol.GetSolutionType("U");
+  solutionTypeVelPf[1] = ml_sol.GetSolutionType("V");
+  //if (dim == 3) solutionTypeVelPf[2] = ml_sol.GetSolutionType("W");
+  solutionTypeVelPf[dim] = ml_sol.GetSolutionType("PF");
+
+  FieldSplitTree VelPf(PREONLY, ASM_PRECOND, fieldVelPf, solutionTypeVelPf, "VelPf");
+  VelPf.SetAsmStandard(false);
+  VelPf.SetAsmBlockSizeSolid(10);
+  //if(dim == 2){
+  VelPf.SetAsmBlockSizeFluid(4);
+  //}
+  //else{
+    //VelPf.SetAsmBlockSizeFluid(3);
+  //}
+    
+  VelPf.SetAsmBlockPreconditionerSolid(ILU_PRECOND);
+  VelPf.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
+  VelPf.SetAsmNumeberOfSchurVariables(1);
+
+  
+  std::vector < unsigned > fieldDispPs(dim + 1);
+  fieldDispPs[0] = system.GetSolPdeIndex("DX");
+  fieldDispPs[1] = system.GetSolPdeIndex("DY");
+  //if (dim == 3) fieldDispPs[2] = system.GetSolPdeIndex("DZ");
+  fieldDispPs[dim] = system.GetSolPdeIndex("PS");
+
+  std::vector < unsigned > solutionTypeDispPs(dim + 1);
+  solutionTypeDispPs[0] = ml_sol.GetSolutionType("DX");
+  solutionTypeDispPs[1] = ml_sol.GetSolutionType("DY");
+  //if (dim == 3) solutionTypeDispPs[2] = ml_sol.GetSolutionType("DZ");
+  solutionTypeDispPs[dim] = ml_sol.GetSolutionType("PS");
+
+  FieldSplitTree DispPs(PREONLY, ASM_PRECOND, fieldDispPs, solutionTypeDispPs, "DispPs");
+  DispPs.SetAsmStandard(false);
+  //if(dim == 2){
+  DispPs.SetAsmBlockSize(4);
+  //}
+  //else{
+    //DispPs.SetAsmBlockSize(3);
+  //}
+  DispPs.SetAsmBlockPreconditionerSolid(MLU_PRECOND);
+  DispPs.SetAsmBlockPreconditionerFluid(MLU_PRECOND);
+  DispPs.SetAsmNumeberOfSchurVariables(1);
+  
+  std::vector < FieldSplitTree *> FS2;
+  FS2.reserve(2);
+
+  FS2.push_back(&DispPs);  //displacement first
+  FS2.push_back(&VelPf);  // velocity second
+
+  FieldSplitTree FSI(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "FSI");
+
+  //END buid fieldSplitTree
+  system.SetMgSmoother(FIELDSPLIT_SMOOTHER);   // Field-Split preconditioned
+  
+  system.SetOuterKSPSolver("lgmres");
+  
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
-  
+
   system.SetNonLinearConvergenceTolerance(1.e-7);
   //system.SetResidualUpdateConvergenceTolerance ( 1.e-15 );
 
-  if(twoPressure){
-    system.SetMaxNumberOfNonLinearIterations(20); //20
-    //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
-
-    system.SetMaxNumberOfLinearIterations(1);
-    system.SetAbsoluteLinearConvergenceTolerance(1.e-50);
-
-    system.SetNumberPreSmoothingStep(1);
-    system.SetNumberPostSmoothingStep(1);
-  }
-  else{
-    system.SetMaxNumberOfNonLinearIterations(5); //10
-    //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
+  system.SetMaxNumberOfNonLinearIterations (20); //5
+  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
   
-    system.SetMaxNumberOfLinearIterations(3); //6
-    system.SetAbsoluteLinearConvergenceTolerance(1.e-13);
+  system.SetMaxNumberOfLinearIterations (1); //3
+  system.SetAbsoluteLinearConvergenceTolerance (1.e-50); //1.e-13
 
-    system.SetNumberPreSmoothingStep(0);
-    system.SetNumberPostSmoothingStep(2);
-  }
+  system.SetNumberPreSmoothingStep(1); //0
+  system.SetNumberPostSmoothingStep(1); //2
 
   // ******* Set Preconditioner *******
 
-  system.SetMgSmoother(ASM_SMOOTHER);
+  //system.SetMgSmoother(ASM_SMOOTHER);
 
   system.init();
 
   // ******* Set Smoother *******
   system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(GMRES);
-  if(twoPressure) system.SetRichardsonScaleFactor(0.4);
+  system.SetRichardsonScaleFactor(.4);
 
-  if(twoPressure)
-    system.SetPreconditionerFineGrids(MLU_PRECOND);
-  else
-    system.SetPreconditionerFineGrids(ILU_PRECOND);
+  //system.SetPreconditionerFineGrids(ILU_PRECOND);
   
-  if(twoPressure)
+  system.SetFieldSplitTree(&FSI);
+  
+  //system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
+  
+  //if(dim==2){
     system.SetTolerances(1.e-10, 1.e-9, 1.e+50, 40, 40);
-  else
-    system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
+  //}
+  //else{
+    //system.SetTolerances(1.e-10, 1.e-12, 1.e+50, 40, 40);
+  //}
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
 
   // ******* Set the last (1) variables in system (i.e. P) to be a schur variable *******
-  if(twoPressure)
-    system.SetNumberOfSchurVariables(2);
-  else 
-    system.SetNumberOfSchurVariables(1);
+  //system.SetNumberOfSchurVariables(1);
 
   // ******* Set block size for the ASM smoothers *******
-  if(twoPressure)
-    system.SetElementBlockNumber(4);
-  else
-    system.SetElementBlockNumber(2);
+  //system.SetElementBlockNumber(2);
 
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
@@ -366,12 +414,12 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 256;
+  const unsigned int n_timesteps = 128;
 
   std::vector < std::vector <double> > data(n_timesteps);
-
-  system.ResetComputationalTime();
   
+  system.ResetComputationalTime();
+
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
     for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
@@ -437,7 +485,7 @@ int main(int argc, char **args)
     outf.close();
   }
 
- 
+  
 
   // ******* Clear all systems *******
   ml_prob.clear();
@@ -544,7 +592,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
     test = 0;
     value = 0.;
   }
-  else if(!strcmp(name, "PF")) {
+  else if (!strcmp(name, "PF")) {
     test = 0;
     value = 0.;
   }
@@ -599,10 +647,6 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
     }
   }
   else if(!strcmp(name, "PS")) {
-    test = 0;
-    value = 0.;
-  }
-  else if(!strcmp(name, "PF")) {
     test = 0;
     value = 0.;
   }
