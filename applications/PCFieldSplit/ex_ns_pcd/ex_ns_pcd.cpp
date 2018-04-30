@@ -260,6 +260,13 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
   Jac.reserve((dim + 1) *maxSize * (dim + 1) *maxSize);
 
+  //preconditioner blocks ================
+  vector < double > Mass_p;
+  vector< adept::adouble > aResMassP;
+  aResMassP.reserve(maxSize);
+  Mass_p.reserve(maxSize*maxSize);
+
+  
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
   // element loop: each process loops only on the elements that owns
@@ -314,6 +321,10 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
         coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
+    
+    //preconditioner
+    aResMassP.resize(nDofsP);    //resize
+    std::fill(aResMassP.begin(), aResMassP.end(), 0);    //set aRes to zero
 
 
       // start a new recording of all the operations involving adept::adouble variables
@@ -380,8 +391,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
         // *** phiP_i loop ***
         for (unsigned i = 0; i < nDofsP; i++) {
+            aResMassP[i] += phiP[i] * solP_gss * weight;
           for (int k = 0; k < dim; k++) {
-            aResP[i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
+            aResP[i]     += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
           }
         } // end phiP_i loop
 
@@ -407,7 +419,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
     //Extarct and store the Jacobian
 
-      Jac.resize(nDofsVP * nDofsVP);
+   //resize Jacobian
+     Jac.resize(nDofsVP * nDofsVP);
+
       // define the dependent variables
 
       for (unsigned  k = 0; k < dim; k++) {
@@ -428,8 +442,16 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       s.jacobian(&Jac[0] , true);
       KK->add_matrix_blocked(Jac, sysDof, sysDof);
 
+            
+   //preconditioner ==================
+     Mass_p.resize(nDofsP * nDofsP);
+      s.dependent(&aResMassP[0], nDofsP);
+      s.independent(&solP[0], nDofsP);
+      s.jacobian(&Mass_p[0] , true);
       s.clear_independents();
       s.clear_dependents();
+   //preconditioner ==================
+
 
   } //end element loop for each process
 
