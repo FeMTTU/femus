@@ -18,6 +18,24 @@
 
 using namespace femus;
 
+
+unsigned getNumberOfLayers(const double &a, const double &fac){
+  double da = 1./fac; 
+  double b =  da;
+  unsigned n = 1;
+  
+  while(b < a){
+    da /= fac;
+    b += da;
+    n++;
+    if(n >= 100){
+       std::cout<<"Error: number of layer is unbounded, try with a smaller factor\n";
+       abort();
+    }
+  }
+  return n;
+}
+
 double scale(const std::vector <double>& x)
 {
   
@@ -91,10 +109,7 @@ int main(int argc, char** args)
   double Uref = 1.;
   double rhos = 1000;
   double nu = 0.4;
-  double E = 4.2 * 1.e8;
-
-  bool boundaryLayer = false;
-  
+  double E = 4.2 * 1.e6;
 
   Parameter par(Lref, Uref);
 
@@ -171,19 +186,22 @@ int main(int argc, char** args)
   //BEGIN init particles
   unsigned size = 1;
   std::vector < std::vector < double > > x; // marker
+  
   x.resize(size);
   x[0].resize(dim, 0.);
   x[0][1] = 0.05;
-
+ 
   double R = 1.6;
+  double R0 = 1.5;
+  bool boundaryLayer = ( fabs(R-R0) > 1.0e-10)? true: false;
   double PI = acos(-1.);
-  unsigned NR = 1200;
+  unsigned NR = 600;
   unsigned NL = NR / (2 * PI);
-  double DL = R / NL;
+  double DL = R0 / NL;
 
   for(unsigned i = 0; i < NL; i++) {
-    double  r = R - i * DL;
-    unsigned Nr = static_cast <unsigned>(ceil(NR * r / R));
+    double  r = R0 - i * DL;
+    unsigned Nr = static_cast <unsigned>(ceil(NR * r / R0));
     double dtheta = 2 * PI / Nr;
     unsigned sizeOld = x.size();
     x.resize(sizeOld + Nr);
@@ -195,31 +213,44 @@ int main(int argc, char** args)
       x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
     }
   }
-  double diskArea = PI * R * R;
+  double diskArea = PI * R0 * R0;
   size = x.size();
+  std::vector < double > vol(x.size(), diskArea / x.size()); // uniform marker volume
   
   if(boundaryLayer) {
-    double particlesMass = rhos * diskArea / x.size();
-    NL = 5;
-    double  r = R;
+    
+    double factor = 1.075;
+    unsigned NL = getNumberOfLayers((R-R0)/DL, factor);
+    std::cout << NL <<std::endl;
+      
+    double  r = R0;
     for(unsigned i = 1; i <= NL; i++) {
-      DL = DL / 2;
+      DL = DL / factor;
       r += DL;
-      unsigned Nr = static_cast <unsigned>(ceil(NR * r / R));
-      double dtheta = 2 * PI / Nr;
+      NR = static_cast <unsigned>(ceil (NR * factor) );
+      double dtheta = 2 * PI / NR;
       unsigned sizeOld = x.size();
-      x.resize(sizeOld + Nr);
+      x.resize(sizeOld + NR);
       for(unsigned s = sizeOld; s < x.size(); s++) {
         x[s].resize(dim);
       }
-      for(unsigned j = 0; j < Nr; j++) {
+      for(unsigned j = 0; j < NR; j++) {
         x[sizeOld + j][0] = r * cos(j * dtheta);
         x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
       }
+      vol.resize(x.size(), r * dtheta * DL);
     }
     size = x.size();
-    diskArea = particlesMass * x.size() / rhos;
   }
+  
+  double totalVol = 0;
+  for(unsigned i = 0; i < vol.size(); i++){
+    totalVol += vol[i];
+  }
+  
+  std::cout << totalVol<<" "<< PI * R * R << std::endl;
+  
+  return 1;
 
   std::vector < MarkerType > markerType;
   markerType.resize(size);
