@@ -101,7 +101,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 5; //for refinement in 3D
+  unsigned numberOfUniformLevels = 4; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -192,7 +192,7 @@ int main(int argc, char** args)
   x[0][1] = 0.05;
  
   double R = 1.6;
-  double R0 = 1.5;
+  double R0 = 1.4;
   bool boundaryLayer = ( fabs(R-R0) > 1.0e-10)? true: false;
   double PI = acos(-1.);
   unsigned NR = 300;
@@ -213,13 +213,13 @@ int main(int argc, char** args)
       x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
     }
   }
-  double MASS = PI * R0 * R0 *rhos;
+  double MASS = PI * R0 * R0 * rhos;
   size = x.size();
   std::vector < double > mass(x.size(), MASS / x.size()); // uniform marker volume
   
   if(boundaryLayer) {
     
-    double factor = 1.3;
+    double factor = 1.14;
     unsigned NL = getNumberOfLayers((R-R0)/DL, factor);
     std::cout << NL <<std::endl;
       
@@ -263,10 +263,10 @@ int main(int argc, char** args)
   std::vector < std::vector < std::vector < double > > > line0(1);
 
   unsigned solType = 2;
-  linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
+  linea = new Line(x, mass, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
       
-  linea->SetParticlesMass(MASS/rhos, rhos);
-  linea->ScaleParticleMass(scale);
+  //linea->SetParticlesMass(MASS/rhos, rhos);
+  //linea->ScaleParticleMass(scale);
 
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);

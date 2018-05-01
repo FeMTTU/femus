@@ -62,6 +62,34 @@ namespace femus
   };
 
 
+  Line::Line(const std::vector < std::vector < double > > x, const std::vector < double > &mass,
+             const std::vector <MarkerType>& markerType,
+             Solution* sol, const unsigned& solType)
+  {
+    _sol = sol;
+    _mesh = _sol->GetMesh();
+
+    _time.assign(10, 0);
+
+    _size = x.size();
+
+    std::vector < Marker*> particles(_size);
+
+    _dim = _mesh->GetDimension();
+
+    _markerOffset.resize(_nprocs + 1);
+    _markerOffset[_nprocs] = _size;
+
+    _particles.resize(_size);
+    _printList.resize(_size);
+
+    for(unsigned j = 0; j < _size; j++) {
+      particles[j] = new Marker(x[j], mass[j], markerType[j], _sol, solType, true);
+    }
+    Reorder(particles);
+
+  }
+
   Line::Line(const std::vector < std::vector < double > > x,
              const std::vector <MarkerType>& markerType,
              Solution* sol, const unsigned& solType)
@@ -85,10 +113,13 @@ namespace femus
     _printList.resize(_size);
 
     for(unsigned j = 0; j < _size; j++) {
-      particles[j] = new Marker(x[j], markerType[j], _sol, solType, true);
+      particles[j] = new Marker(x[j], 0., markerType[j], _sol, solType, true);
     }
+    Reorder(particles);
+  }
 
-
+  void Line::Reorder(std::vector < Marker*> &particles)
+  {
 
     //BEGIN TEST ASSIGNATION
 
@@ -197,7 +228,7 @@ namespace femus
 //
 //
 //         std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
-   
+
 
     //BEGIN reorder markers also by element
 
@@ -1078,7 +1109,7 @@ namespace femus
     _sol->_Sol[solIndexM]->zero();
     _sol->_Sol[solIndexMat]->zero();
 
-    
+
     // set all element with at least one marker to 3 and all nodes of the element to 1
     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
@@ -1113,9 +1144,9 @@ namespace femus
         unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
         for(unsigned i = 0; i < nDofsM; i++) {
           unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
-	  
-	  _sol->_Sol[solIndexM]->set(idof, 0.);
-	  
+
+          _sol->_Sol[solIndexM]->set(idof, 0.);
+
 //           double value = (*_sol->_Sol[solIndexM])(idof);
 //           if(fabs(value) > 1.0e-14) {
 //             material = 1;
@@ -1147,11 +1178,11 @@ namespace femus
       unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
       if(material == 3) {
         unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
-	double counter = 0.;
+        double counter = 0.;
         for(unsigned i = 0; i < nDofsM; i++) {
           unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
           double value = (*_sol->_Sol[solIndexM])(idof);
-	  counter += value;
+          counter += value;
         }
         //if(fabs((counter - nDofsM)/nDofsM) > .4 ) {
         _sol->_Sol[solIndexMat]->set(idofMat, counter);
@@ -1289,8 +1320,8 @@ namespace femus
       x = _particles[i]->GetIprocMarkerCoordinates();
       double mass = _particles[i]->GetMarkerMass();
       _particles[i]->SetMarkerMass(mass * scale(x));
-    } 
-    
+    }
+
   }
 
 
