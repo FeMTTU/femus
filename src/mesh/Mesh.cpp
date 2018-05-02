@@ -32,7 +32,8 @@
 #include <algorithm>
 
 
-namespace femus {
+namespace femus
+{
 
   using std::cout;
   using std::endl;
@@ -47,7 +48,8 @@ namespace femus {
   unsigned Mesh::_face_index = 2; // 4*DIM[2]+2*DIM[1]+1*DIM[0];
 
 //------------------------------------------------------------------------------------------------------
-  Mesh::Mesh() {
+  Mesh::Mesh()
+  {
 
     _coarseMsh = NULL;
 
@@ -63,7 +65,8 @@ namespace femus {
   }
 
 
-  Mesh::~Mesh() {
+  Mesh::~Mesh()
+  {
     delete el;
     _topology->FreeSolutionVectors();
     delete _topology;
@@ -86,11 +89,14 @@ namespace femus {
   }
 
 /// print Mesh info
-  void Mesh::PrintInfo() {
+  void Mesh::PrintInfo()
+  {
 
-    std::cout << " Mesh Level        : " << _level  << std::endl;
-    std::cout << " Number of elements: " << _nelem  << std::endl;
-    std::cout << " Number of nodes   : " << _nnodes << std::endl;
+    std::cout << " Mesh Level                  : " << _level  << std::endl;
+    std::cout << " Number of elements          : " << _nelem  << std::endl;
+    std::cout << " Number of linear nodes      : " << _dofOffset[0][_nprocs] << std::endl;
+    std::cout << " Number of quadratic nodes   : " << _dofOffset[1][_nprocs] << std::endl;
+    std::cout << " Number of biquadratic nodes : " << _dofOffset[2][_nprocs] << std::endl;
 
   }
 
@@ -107,7 +113,8 @@ namespace femus {
     {
       { -1. / 9., -1. / 9., -1. / 9., 0.   ,  0.   ,  0.   , 4. / 9., 4. / 9., 4. / 9.},
       {  0.   ,  0.   ,  0.   , -1. / 9., -1. / 9., -1. / 9., 0.   , 0.   , 0.   , 4. / 9., 4. / 9., 4. / 9.},
-      { 0.   ,  0.   ,  0.   , 0.   ,  0.   ,  0.   , 0.   , 0.   , 0.   , 0.   , 0.   , 0.   ,
+      {
+        0.   ,  0.   ,  0.   , 0.   ,  0.   ,  0.   , 0.   , 0.   , 0.   , 0.   , 0.   , 0.   ,
         -1. / 9., -1. / 9., -1. / 9., 4. / 9.,  4. / 9.,  4. / 9.
       },
     },
@@ -118,7 +125,8 @@ namespace femus {
   /**
    *  This function generates the coarse Mesh level, $l_0$, from an input Mesh file (Now only the Gambit Neutral File)
    **/
-  void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool> &type_elem_flag) {
+  void Mesh::ReadCoarseMesh(const std::string& name, const double Lref, std::vector<bool>& type_elem_flag)
+  {
 
     SetIfHomogeneous(true);
 
@@ -126,15 +134,13 @@ namespace femus {
 
     _level = 0;
 
-    if(name.rfind(".neu") < name.size())
-    {
+    if(name.rfind(".neu") < name.size()) {
       GambitIO(*this).read(name, _coords, Lref, type_elem_flag);
     }
     else if(name.rfind(".med") < name.size()) {
       SalomeIO(*this).read(name, _coords, Lref, type_elem_flag);
     }
-    else
-    {
+    else {
       std::cerr << " ERROR: Unrecognized file extension: " << name
                 << "\n   I understand the following:\n\n"
                 << "     *.neu -- Gambit Neutral File\n"
@@ -204,7 +210,8 @@ namespace femus {
     const double xmin, const double xmax,
     const double ymin, const double ymax,
     const double zmin, const double zmax,
-    const ElemType elemType, std::vector<bool> &type_elem_flag) {
+    const ElemType elemType, std::vector<bool>& type_elem_flag)
+  {
 
     SetIfHomogeneous(true);
 
@@ -221,6 +228,10 @@ namespace femus {
 
     el->SetNodeNumber(_nnodes);
 
+    std::vector < unsigned > materialElementCounter(3,0);
+    materialElementCounter[0] = GetNumberOfElements();
+    el->SetMaterialElementCounter(materialElementCounter);
+    
 
     std::vector < int > partition;
     partition.reserve(GetNumberOfNodes());
@@ -269,7 +280,8 @@ namespace femus {
   /** This function stores the element adiacent to the element face (iel,iface)
    * and stores it in kel[iel][iface]
    **/
-  void Mesh::Buildkel() {
+  void Mesh::Buildkel()
+  {
     for(unsigned iel = 0; iel < el->GetElementNumber(); iel++) {
       for(unsigned iface = 0; iface < el->GetElementFaceNumber(iel); iface++) {
         if(el->GetFaceElementIndex(iel, iface) <= 0) { //TODO probably just == -1
@@ -311,11 +323,12 @@ namespace femus {
   }
 
 
-  void Mesh::AllocateAndMarkStructureNode() {
+  void Mesh::AllocateAndMarkStructureNode()
+  {
 
     _topology->ResizeSolutionVector("solidMrk");
 
-    NumericVector &NodeMaterial =  _topology->GetSolutionName("solidMrk");
+    NumericVector& NodeMaterial =  _topology->GetSolutionName("solidMrk");
 
     NodeMaterial.zero();
 
@@ -338,7 +351,8 @@ namespace femus {
   }
 
 
-  void Mesh::SetFiniteElementPtr(const elem_type * OtherFiniteElement[6][5]) {
+  void Mesh::SetFiniteElementPtr(const elem_type* OtherFiniteElement[6][5])
+  {
     for(int i = 0; i < 6; i++)
       for(int j = 0; j < 5; j++)
         _finiteElement[i][j] = OtherFiniteElement[i][j];
@@ -349,7 +363,8 @@ namespace femus {
 
 //dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
 
-  void Mesh::FillISvector(vector < int > &partition) {
+  void Mesh::FillISvector(vector < int >& partition)
+  {
 
     //BEGIN Initialization for k = 0,1,2,3,4
 
@@ -384,6 +399,64 @@ namespace femus {
 
     el->ReorderMeshElements(mapping);
 
+//     for(int isdom = 0; isdom < _nprocs; isdom++) {
+//       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
+//         std::cout << el->GetElementMaterial(iel) << " ";
+//       }
+//       std::cout << std::endl;
+//     }
+//     std::cout << std::endl;
+// 
+//     std::cout << GetNumberOfElements()<<std::endl;
+
+    std::vector < unsigned > imapping(GetNumberOfElements());
+    
+    for(unsigned iel = 0; iel < GetNumberOfElements(); iel++) {
+      imapping[iel] = iel;
+    }
+    for(int isdom = 0; isdom < _nprocs; isdom++) {
+      for(unsigned i = _elementOffset[isdom]; i < _elementOffset[isdom + 1] - 1; i++) {
+	unsigned iel = imapping[i];
+        unsigned ielMat = el->GetElementMaterial(iel);
+	unsigned ielGroup = el->GetElementGroup(iel);
+        for(unsigned j = i + 1; j < _elementOffset[isdom + 1]; j++) {
+	  unsigned jel = imapping[j];
+	  unsigned jelMat = el->GetElementMaterial(jel);
+	  unsigned jelGroup = el->GetElementGroup(jel);
+	  if(jelMat < ielMat || ( jelMat == ielMat && jelGroup < ielGroup || (jelGroup == ielGroup && iel > jel) ) ) {
+	    imapping[i] = jel;
+	    imapping[j] = iel;
+	    iel = jel;
+	    ielMat = jelMat;
+	    ielGroup = jelGroup;
+	  }
+	}
+      }
+    }	
+    
+    for(unsigned i=0;i< GetNumberOfElements();i++){
+      mapping[imapping[i]] = i;
+    }
+	
+    std::vector < unsigned > ().swap(imapping);
+ 
+    
+//     for(unsigned i = 0; i < GetNumberOfElements(); i++) {
+//       std::cout << mapping[i] << " ";
+//     }
+//     std::cout << std::endl;
+    
+    el->ReorderMeshElements(mapping);
+//     for(int isdom = 0; isdom < _nprocs; isdom++) {
+//       for(unsigned iel = _elementOffset[isdom]; iel < _elementOffset[isdom + 1]; iel++) {
+//         std::cout << "("<<el->GetElementMaterial(iel) << ", "<< el->GetElementGroup(iel)<<") ";
+//       }
+//       std::cout << std::endl;
+//     }
+//     std::cout << std::endl;
+
+    
+    
     // ghost vs owned nodes: 3 and 4 have no ghost nodes
     for(unsigned k = 3; k < 5; k++) {
       _ownSize[k].assign(_nprocs, 0);
@@ -566,7 +639,8 @@ namespace femus {
 
 
 // *******************************************************
-  unsigned Mesh::IsdomBisectionSearch(const unsigned &dof, const short unsigned &solType) const {
+  unsigned Mesh::IsdomBisectionSearch(const unsigned& dof, const short unsigned& solType) const
+  {
 
     unsigned isdom0 = 0;
     unsigned isdom1 = _nprocs ;
@@ -583,38 +657,37 @@ namespace femus {
   }
 // *******************************************************
 
-  unsigned Mesh::GetSolutionDof(const unsigned &i, const unsigned &iel, const short unsigned &solType) const {
+  unsigned Mesh::GetSolutionDof(const unsigned& i, const unsigned& iel, const short unsigned& solType) const
+  {
 
     unsigned dof;
 
     switch(solType) {
-      case 0: // linear Lagrange
-      {
-        unsigned iNode = el->GetElementDofIndex(iel, i); //GetMeshDof(iel, i, solType);
-        unsigned isdom = IsdomBisectionSearch(iNode, 2);
+      case 0: { // linear Lagrange
+          unsigned iNode = el->GetElementDofIndex(iel, i); //GetMeshDof(iel, i, solType);
+          unsigned isdom = IsdomBisectionSearch(iNode, 2);
 
-        if(iNode < _dofOffset[2][isdom] + _originalOwnSize[0][isdom]) {
-          dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
+          if(iNode < _dofOffset[2][isdom] + _originalOwnSize[0][isdom]) {
+            dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
+          }
+          else {
+            dof = _ownedGhostMap[0].find(iNode)->second;
+          }
         }
-        else {
-          dof = _ownedGhostMap[0].find(iNode)->second;
-        }
-      }
-      break;
+        break;
 
-      case 1: // quadratic Lagrange
-      {
-        unsigned iNode = el->GetElementDofIndex(iel, i); //GetMeshDof(iel, i, solType);
-        unsigned isdom = IsdomBisectionSearch(iNode, 2);
+      case 1: { // quadratic Lagrange
+          unsigned iNode = el->GetElementDofIndex(iel, i); //GetMeshDof(iel, i, solType);
+          unsigned isdom = IsdomBisectionSearch(iNode, 2);
 
-        if(iNode < _dofOffset[2][isdom] + _originalOwnSize[1][isdom]) {
-          dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
+          if(iNode < _dofOffset[2][isdom] + _originalOwnSize[1][isdom]) {
+            dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
+          }
+          else {
+            dof = _ownedGhostMap[1].find(iNode)->second;
+          }
         }
-        else {
-          dof = _ownedGhostMap[1].find(iNode)->second;
-        }
-      }
-      break;
+        break;
 
       case 2: // bi-quadratic Lagrange
         dof = el->GetElementDofIndex(iel, i); //GetMeshDof(iel, i, solType);
@@ -641,38 +714,37 @@ namespace femus {
 
 // *******************************************************
 
-  unsigned Mesh::GetSolutionDof(const unsigned &ielc, const unsigned &i0, const unsigned &i1, const short unsigned &solType, const Mesh* mshc) const {
+  unsigned Mesh::GetSolutionDof(const unsigned& ielc, const unsigned& i0, const unsigned& i1, const short unsigned& solType, const Mesh* mshc) const
+  {
 
     unsigned dof;
 
     switch(solType) {
-      case 0: // linear Lagrange
-      {
-        unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
-        unsigned isdom = IsdomBisectionSearch(iNode, 2);
+      case 0: { // linear Lagrange
+          unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
+          unsigned isdom = IsdomBisectionSearch(iNode, 2);
 
-        if(iNode < _dofOffset[2][isdom] + _originalOwnSize[0][isdom]) {
-          dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
+          if(iNode < _dofOffset[2][isdom] + _originalOwnSize[0][isdom]) {
+            dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[0][isdom];
+          }
+          else {
+            dof = _ownedGhostMap[0].find(iNode)->second;
+          }
         }
-        else {
-          dof = _ownedGhostMap[0].find(iNode)->second;
-        }
-      }
-      break;
+        break;
 
-      case 1: // quadratic Lagrange
-      {
-        unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
-        unsigned isdom = IsdomBisectionSearch(iNode, 2);
+      case 1: { // quadratic Lagrange
+          unsigned iNode = mshc->el->GetChildElementDof(ielc, i0, i1);
+          unsigned isdom = IsdomBisectionSearch(iNode, 2);
 
-        if(iNode < _dofOffset[2][isdom] + _originalOwnSize[1][isdom]) {
-          dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
+          if(iNode < _dofOffset[2][isdom] + _originalOwnSize[1][isdom]) {
+            dof = (iNode - _dofOffset[2][isdom]) + _dofOffset[1][isdom];
+          }
+          else {
+            dof = _ownedGhostMap[1].find(iNode)->second;
+          }
         }
-        else {
-          dof = _ownedGhostMap[1].find(iNode)->second;
-        }
-      }
-      break;
+        break;
 
       case 2: // bi-quadratic Lagrange
         dof = mshc->el->GetChildElementDof(ielc, i0, i1);
@@ -701,7 +773,8 @@ namespace femus {
 // *******************************************************
 
 
-  SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
+  SparseMatrix* Mesh::GetQitoQjProjection(const unsigned& itype, const unsigned& jtype)
+  {
     if(itype < 3 && jtype < 3) {
       if(!_ProjQitoQj[itype][jtype]) {
         BuildQitoQjProjection(itype, jtype);
@@ -716,7 +789,8 @@ namespace femus {
     return _ProjQitoQj[itype][jtype];
   }
 
-  void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype) {
+  void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype)
+  {
 
     unsigned ni = _dofOffset[itype][_nprocs];
     unsigned ni_loc = _ownSize[itype][_iproc];
@@ -724,7 +798,7 @@ namespace femus {
     unsigned nj = _dofOffset[jtype][_nprocs];
     unsigned nj_loc = _ownSize[jtype][_iproc];
 
-    NumericVector *NNZ_d = NumericVector::build().release();
+    NumericVector* NNZ_d = NumericVector::build().release();
 
     if(1 == _nprocs) { // IF SERIAL
       NNZ_d->init(ni, ni_loc, false, SERIAL);
@@ -735,7 +809,7 @@ namespace femus {
 
     NNZ_d->zero();
 
-    NumericVector *NNZ_o = NumericVector::build().release();
+    NumericVector* NNZ_o = NumericVector::build().release();
     NNZ_o->init(*NNZ_d);
     NNZ_o->zero();
 
@@ -777,7 +851,8 @@ namespace femus {
 
 
 
-  SparseMatrix* Mesh::GetCoarseToFineProjection(const unsigned& solType) {
+  SparseMatrix* Mesh::GetCoarseToFineProjection(const unsigned& solType)
+  {
 
     if(solType >= 5) {
       std::cout << "Wrong argument range in function \"GetCoarseToFineProjection\": "
@@ -793,7 +868,8 @@ namespace femus {
 
 
 
-  void Mesh::BuildCoarseToFineProjection(const unsigned& solType) {
+  void Mesh::BuildCoarseToFineProjection(const unsigned& solType)
+  {
 
     if(!_coarseMsh) {
       std::cout << "Error! In function \"BuildCoarseToFineProjection\": the coarse mesh has not been set" << std::endl;
@@ -808,7 +884,7 @@ namespace femus {
       int nc_loc = _coarseMsh->_ownSize[solType][_iproc];
 
       //build matrix sparsity pattern size
-      NumericVector *NNZ_d = NumericVector::build().release();
+      NumericVector* NNZ_d = NumericVector::build().release();
 
       if(n_processors() == 1) { // IF SERIAL
         NNZ_d->init(nf, nf_loc, false, SERIAL);
@@ -824,7 +900,7 @@ namespace femus {
 
       NNZ_d->zero();
 
-      NumericVector *NNZ_o = NumericVector::build().release();
+      NumericVector* NNZ_o = NumericVector::build().release();
       NNZ_o->init(*NNZ_d);
       NNZ_o->zero();
 
@@ -867,34 +943,41 @@ namespace femus {
   }
 
 
-  short unsigned Mesh::GetRefinedElementIndex(const unsigned &iel) const {
+  short unsigned Mesh::GetRefinedElementIndex(const unsigned& iel) const
+  {
     return static_cast <short unsigned>((*_topology->_Sol[_amrIndex])(iel) + 0.25);
   }
 
-  short unsigned Mesh::GetElementGroup(const unsigned int& iel) const {
+  short unsigned Mesh::GetElementGroup(const unsigned int& iel) const
+  {
     return el->GetElementGroup(iel);
   }
 
-  short unsigned Mesh::GetElementMaterial(const unsigned int& iel) const {
+  short unsigned Mesh::GetElementMaterial(const unsigned int& iel) const
+  {
     return el->GetElementMaterial(iel);
   }
 
-  short unsigned Mesh::GetElementType(const unsigned int& iel) const {
+  short unsigned Mesh::GetElementType(const unsigned int& iel) const
+  {
     return el->GetElementType(iel);
   }
 
-  bool Mesh::GetSolidMark(const unsigned int& inode) const {
+  bool Mesh::GetSolidMark(const unsigned int& inode) const
+  {
     return static_cast <short unsigned>((*_topology->_Sol[_solidMarkIndex])(inode) + 0.25);
   }
 
 
   /** Only for parallel */
-  unsigned Mesh::GetElementDofNumber(const unsigned &iel, const unsigned &type) const {
+  unsigned Mesh::GetElementDofNumber(const unsigned& iel, const unsigned& type) const
+  {
     return el->GetNVE(GetElementType(iel), type);
   }
 
   /** Only for parallel */
-  const unsigned Mesh::GetElementFaceType(const unsigned &kel, const unsigned &jface) const {
+  const unsigned Mesh::GetElementFaceType(const unsigned& kel, const unsigned& jface) const
+  {
     unsigned kelt = GetElementType(kel);
     const unsigned FELT[6][2] = {{3, 3}, {4, 4}, {3, 4}, {5, 5}, {5, 5}, {6, 6}};
     const unsigned felt = FELT[kelt][jface >= GetElementFaceNumber(kel, 0)];
@@ -902,25 +985,29 @@ namespace femus {
   }
 
   /** Only for parallel */
-  unsigned Mesh::GetLocalFaceVertexIndex(const unsigned &iel, const unsigned &iface, const unsigned &jnode) const {
+  unsigned Mesh::GetLocalFaceVertexIndex(const unsigned& iel, const unsigned& iface, const unsigned& jnode) const
+  {
     return el->GetIG(GetElementType(iel), iface, jnode);
   }
 
 
   /** Only for parallel */
-  unsigned Mesh::GetElementFaceDofNumber(const unsigned &iel, const unsigned jface, const unsigned &type) const {
+  unsigned Mesh::GetElementFaceDofNumber(const unsigned& iel, const unsigned jface, const unsigned& type) const
+  {
     assert(type < 3);
     return el->GetNFACENODES(GetElementType(iel), jface, type);
   }
 
   /** Only for parallel */
-  unsigned Mesh::GetElementFaceNumber(const unsigned &iel, const unsigned &type) const {
+  unsigned Mesh::GetElementFaceNumber(const unsigned& iel, const unsigned& type) const
+  {
     return el->GetNFC(GetElementType(iel), type);
   }
 
 // *******************************************************
 
-  void Mesh::BiquadraticNodesNotInGambit() {
+  void Mesh::BiquadraticNodesNotInGambit()
+  {
 
     unsigned int nnodes = GetNumberOfNodes();
 //     std::cout << " ********************************** "<< std::endl;
@@ -1033,7 +1120,8 @@ namespace femus {
     }
   }
 
-  basis * Mesh::GetBasis(const short unsigned &ielType, const short unsigned &solType) {
+  basis* Mesh::GetBasis(const short unsigned& ielType, const short unsigned& solType)
+  {
     return _finiteElement[ielType][solType]->GetBasis();
   }
 

@@ -45,6 +45,8 @@ namespace femus {
     _assembleMatrix(true) {
     _SparsityPattern.resize(0);
     _outer_ksp_solver = "gmres";
+    _totalAssemblyTime = 0.;
+    _totalSolverTime =0.;
   }
 
   // ********************************************
@@ -149,6 +151,8 @@ namespace femus {
 
   void LinearImplicitSystem::solve(const MgSmootherType& mgSmootherType) {
 
+    _bitFlipCounter = 0;
+    
     clock_t start_mg_time = clock();
 
     unsigned grid0;
@@ -173,16 +177,19 @@ namespace femus {
 
 
       bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn - 1) ? 1 : 0;
-
+restart:
       if(ThisIsAMR) _solution[igridn]->InitAMREps();
 
-      clock_t start_assembly_time = clock();
+      clock_t start_preparation_time = clock();
 
       _levelToAssemble = igridn; //Be carefull!!!! this is needed in the _assemble_function
       _LinSolver[igridn]->SetResZero();
       _assembleMatrix = true;
+      clock_t start_assembly_time = clock();
       _assemble_system_function(_equation_systems);
-
+      std::cout << std::endl << " ****** Level Max " << igridn + 1 << " ASSEMBLY TIME:\t" << static_cast<double>((clock() - start_assembly_time)) / CLOCKS_PER_SEC << std::endl;  
+      
+      
       if(!_ml_msh->GetLevel(igridn)->GetIfHomogeneous()) {
         if(!_RRamr[igridn]) {
           (_LinSolver[igridn]->_RESC)->matrix_mult_transpose(*_LinSolver[igridn]->_RES, *_PPamr[igridn]);
@@ -226,7 +233,7 @@ namespace femus {
         }
       }
 
-      std::cout << std::endl << " ****** Level Max " << igridn + 1 << " ASSEMBLY TIME:\t" << static_cast<double>((clock() - start_assembly_time)) / CLOCKS_PER_SEC << std::endl;
+      std::cout << std::endl << " ****** Level Max " << igridn + 1 << " PREPARATION TIME:\t" << static_cast<double>((clock() - start_preparation_time)) / CLOCKS_PER_SEC << std::endl;
 
       if(_MGsolver) {
         _LinSolver[igridn]->MGInit(mgSmootherType, igridn + 1, _outer_ksp_solver.c_str());
@@ -248,6 +255,10 @@ namespace femus {
         _LinSolver[igridn]->SwapMatrices();
       }
 
+      if(_bitFlipOccurred && _bitFlipCounter == 1){
+	goto restart;
+      }
+      
       if(igridn + 1 < _gridn) ProlongatorSol(igridn + 1);
 
       if(ThisIsAMR) AddAMRLevel(AMRCounter);
@@ -258,12 +269,17 @@ namespace femus {
 
     std::cout << std::endl << " *** Linear " << _solverType << " TIME: " << std::setw(11) << std::setprecision(6) << std::fixed
               << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
+	      
+    _totalAssemblyTime += 0.;
+    _totalSolverTime += static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC;     
   }
 
   // ********************************************
 
   bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
 
+    _bitFlipOccurred = false;
+    
     bool conv = true;
     double L2normRes;
 //     std::cout << std::endl;
@@ -272,7 +288,10 @@ namespace femus {
       unsigned indexSol = _SolSystemPdeIndex[k];
       L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
       std::cout << "       *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normRes << std::endl;
-
+      if(isnan(L2normRes)){
+	std::cout << "Warning a bit flip is probably occurred, lets try to restart the solver!" << std::endl;
+	_bitFlipOccurred = true;
+      }
       if(L2normRes < _linearAbsoluteConvergenceTolerance && conv == true) {
         conv = true;
       }
@@ -280,7 +299,14 @@ namespace femus {
         conv = false;
       }
     }
-
+  
+    if(_bitFlipOccurred){
+      _bitFlipCounter += 1;
+    }
+    else{
+      _bitFlipCounter = 0;
+    }
+    
     return conv;
 
   }
@@ -318,15 +344,16 @@ namespace femus {
       _solution[level]->UpdateRes(_SolSystemPdeIndex, _LinSolver[level]->_RES, _LinSolver[level]->KKoffset);
       linearIsConverged = IsLinearConverged(level);
 
-      if(linearIsConverged)  break;
+      if(linearIsConverged || _bitFlipOccurred)  break;
     }
 
-    if(!_ml_msh->GetLevel(level)->GetIfHomogeneous()) {
-      (_LinSolver[level]->_EPSC)->matrix_mult(*_LinSolver[level]->_EPS, *_PPamr[level]);
-      *(_LinSolver[level]->_EPS) = *(_LinSolver[level]->_EPSC);
+    if(!_bitFlipOccurred){
+      if(!_ml_msh->GetLevel(level)->GetIfHomogeneous()) {
+	(_LinSolver[level]->_EPSC)->matrix_mult(*_LinSolver[level]->_EPS, *_PPamr[level]);
+	*(_LinSolver[level]->_EPS) = *(_LinSolver[level]->_EPSC);
+      }
+      _solution[level]->UpdateSol(_SolSystemPdeIndex, _LinSolver[level]->_EPS, _LinSolver[level]->KKoffset);
     }
-    _solution[level]->UpdateSol(_SolSystemPdeIndex, _LinSolver[level]->_EPS, _LinSolver[level]->KKoffset);
-
     std::cout << "       *************** Linear-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
               << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
     return linearIsConverged;
@@ -350,7 +377,7 @@ namespace femus {
 
       for(unsigned ig = level; ig > 0; ig--) {
         // ============== Presmoothing ==============
-        for(unsigned k = 0; k < _npre; k++) {
+        for(unsigned k = 0; k < _npre*(0*ig*ig+1); k++) {
           _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, ksp_clean * (!k));
         }
         // ============== Restriction ==============
@@ -365,7 +392,7 @@ namespace femus {
         Prolongator(ig);
 
         // ============== PostSmoothing ==============
-        for(unsigned k = 0; k < _npost; k++) {
+        for(unsigned k = 0; k < _npost*(0*ig*ig+1); k++) {
           _LinSolver[ig]->Solve(_VariablesToBeSolvedIndex, ksp_clean * (!_npre) * (!k));
         }
       }
@@ -373,15 +400,17 @@ namespace femus {
       // ============== Update Fine Residual ==============
       _solution[level]->UpdateRes(_SolSystemPdeIndex, _LinSolver[level]->_RES, _LinSolver[level]->KKoffset);
       linearIsConverged = IsLinearConverged(level);
-      if(linearIsConverged) break;
+      if(linearIsConverged || _bitFlipOccurred) break;
     }
 
     // ============== Update Fine Solution ==============
-    if(!_ml_msh->GetLevel(level)->GetIfHomogeneous()) {
-      (_LinSolver[level]->_EPSC)->matrix_mult(*_LinSolver[level]->_EPS, *_PPamr[level]);
-      *(_LinSolver[level]->_EPS) = *(_LinSolver[level]->_EPSC);
+    if(!_bitFlipOccurred){
+      if(!_ml_msh->GetLevel(level)->GetIfHomogeneous()) {
+	(_LinSolver[level]->_EPSC)->matrix_mult(*_LinSolver[level]->_EPS, *_PPamr[level]);
+	*(_LinSolver[level]->_EPS) = *(_LinSolver[level]->_EPSC);
+      }
+      _solution[level]->UpdateSol(_SolSystemPdeIndex, _LinSolver[level]->_EPS, _LinSolver[level]->KKoffset);
     }
-    _solution[level]->UpdateSol(_SolSystemPdeIndex, _LinSolver[level]->_EPS, _LinSolver[level]->KKoffset);
 
     std::cout << "\n ************ Linear-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
               << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
@@ -504,6 +533,7 @@ namespace femus {
 
     if(_richardsonScaleFactorIsSet) {
       _LinSolver[_gridn]->SetRichardsonScaleFactor(_richardsonScaleFactor);
+      //_LinSolver[_gridn]->SetRichardsonScaleFactor(_richardsonScaleFactor + _richardsonScaleFactorDecrease * (_gridn - 1));
     }
 
     _gridn++;

@@ -147,12 +147,33 @@ namespace femus {
       
       void SetRichardsonScaleFactor(const double &richardsonScaleFactor){
 	_richardsonScaleFactor = richardsonScaleFactor;
+	_richardsonScaleFactorDecrease = 0;
 	_richardsonScaleFactorIsSet = true;
 	for(unsigned i=0;i<_gridn;i++){
-	   _LinSolver[i]->SetRichardsonScaleFactor(richardsonScaleFactor);
+	   _LinSolver[i]->SetRichardsonScaleFactor(_richardsonScaleFactor);
 	}
       }
+      
+      void SetRichardsonScaleFactor(const double &richardsonScaleFactorMin, const double &richardsonScaleFactorMax){
+	_richardsonScaleFactor = richardsonScaleFactorMax;
+	_richardsonScaleFactorDecrease = (_gridn > 1)?(richardsonScaleFactorMin - richardsonScaleFactorMax)/(_gridn - 2) : 0;
+	_richardsonScaleFactorIsSet = true;
+	_LinSolver[0]->SetRichardsonScaleFactor(_richardsonScaleFactor);
+	for(unsigned i=1;i<_gridn;i++){
+	   _LinSolver[i]->SetRichardsonScaleFactor(_richardsonScaleFactor + _richardsonScaleFactorDecrease * (i - 1));
+	}
+      }
+      
+      void ResetComputationalTime(){
+	_totalAssemblyTime = 0.;
+	_totalSolverTime = 0.;
+      }
 
+      void PrintComputationalTime(){
+	std::cout << "Total Assembly Time = " << _totalAssemblyTime <<std::endl;
+	std::cout << "Total Solver Time = " << _totalSolverTime <<std::endl;
+	std::cout << "Total Computational Time = " << _totalAssemblyTime + _totalSolverTime <<std::endl;
+      }
 
       void SetOuterKSPSolver(const std::string outer_ksp_solver) {
         _outer_ksp_solver = outer_ksp_solver;
@@ -195,11 +216,11 @@ namespace femus {
       vector < SparseMatrix* > &GetRestrictionMatrix() {
         return _RR;
       }
-
+      vector < SparseMatrix* > _PPamr, _RRamr; 
     protected:
 
       vector < SparseMatrix* > _PP, _RR; 
-      vector < SparseMatrix* > _PPamr, _RRamr; 
+//       vector < SparseMatrix* > _PPamr, _RRamr; 
 
       bool _printSolverInfo;
       bool _assembleMatrix;
@@ -280,8 +301,15 @@ namespace femus {
       virtual void solve(const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
             
       double _richardsonScaleFactor;
+      double _richardsonScaleFactorDecrease;
       bool _richardsonScaleFactorIsSet;
 
+      double _totalSolverTime;
+      double _totalAssemblyTime;
+      
+      bool _bitFlipOccurred;
+      unsigned _bitFlipCounter;
+      
   };
 
 } //end namespace femus

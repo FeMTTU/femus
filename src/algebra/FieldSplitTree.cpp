@@ -82,7 +82,13 @@ namespace femus {
     _asmOverlappingIs.reserve(10);
     _asmLocalIsIndex.reserve(10);
     _asmOverlappingIsIndex.reserve(10);
-    _asmBlockSize = 100;
+    _asmBlockSize.resize(2);
+    _asmBlockSize[0] = 100;
+    _asmBlockSize[1] = 100;
+    _asmBlockPreconditioner.resize(2);
+    _asmBlockPreconditioner[0] = ILU_PRECOND;
+    _asmBlockPreconditioner[1] = ILU_PRECOND;
+    
     _asmStandard = true;
     _asmOverlapping = 1;
     _asmSchurVariableNumber = 1;
@@ -142,7 +148,15 @@ namespace femus {
     _asmOverlappingIs.reserve(10);
     _asmLocalIsIndex.reserve(10);
     _asmOverlappingIsIndex.reserve(10);
-    _asmBlockSize = 100;
+    _asmBlockSize.resize(2);
+    _asmBlockSize[0] = 100;
+    _asmBlockSize[1] = 100;
+    
+    _asmBlockPreconditioner.resize(2);
+    _asmBlockPreconditioner[0] = ILU_PRECOND;
+    _asmBlockPreconditioner[1] = ILU_PRECOND;
+ 
+    
     _asmStandard = true;
     _asmOverlapping = 1;
     _asmSchurVariableNumber = 1;
@@ -327,6 +341,7 @@ namespace femus {
       PCFieldSplitSetType(pc, PC_COMPOSITE_ADDITIVE);
 
       //PCFieldSplitSetType( pc, PC_COMPOSITE_MULTIPLICATIVE );
+      
       for(unsigned i = 0; i < _numberOfSplits; i++) {
         PCFieldSplitSetIS(pc, NULL, _isSplit[level - 1][i]);
       }
@@ -346,6 +361,23 @@ namespace femus {
     else if(_preconditioner == ASM_PRECOND) {
       SetPetscSolverType(ksp);
       KSPSetTolerances(ksp, _rtol, _abstol, _dtol, _maxits);
+      
+//       PetscPreconditioner::set_petsc_preconditioner_type(FIELDSPLIT_PRECOND, pc);
+//       
+//       if(!_asmStandard) {
+// 	for(unsigned i=0;i<_asmLocalIsIndex[level - 1].size();i++){
+// 	  PCFieldSplitSetIS(pc,NULL,_asmOverlappingIs[level - 1][i]);
+// 	}
+//       }
+// 
+//       //PCFieldSplitSetType(pc, PC_COMPOSITE_ADDITIVE);
+//       KSPSetUp(ksp);
+// 
+//       KSP* subksps;
+//       PetscInt nlocal;
+//       PCFieldSplitGetSubKSP(pc, &nlocal, &subksps);
+      
+      
       PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, pc);
 
       if(!_asmStandard) {
@@ -353,9 +385,11 @@ namespace femus {
       }
 
       PCASMSetOverlap(pc, _asmOverlapping);
-      KSPSetUp(ksp);
+      
+      PCASMSetType(pc,  PC_ASM_BASIC );
+      PCASMSetLocalType(pc, PC_COMPOSITE_MULTIPLICATIVE);
 
-      //PCASMSetLocalType(pc, PC_COMPOSITE_MULTIPLICATIVE);
+      KSPSetUp(ksp);
 
       KSP* subksps;
       PetscInt nlocal;
@@ -364,25 +398,36 @@ namespace femus {
       PetscReal epsilon = 1.e-16;
 
       if(!_asmStandard) {
-        for(int i = 0; i < _asmBlockMaterialRange[level - 1][0]; i++) {
-          PC subpcs;
-          KSPGetPC(subksps[i], &subpcs);
-          KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
-          KSPSetFromOptions(subksps[i]);
-          PetscPreconditioner::set_petsc_preconditioner_type(MLU_PRECOND, subpcs);
-          PCFactorSetZeroPivot(subpcs, epsilon);
-          PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-        }
+	for(unsigned j = 0;j < 2; j++){//loop on the material
+	  unsigned istart = (j == 0) ? 0 : _asmBlockMaterialRange[level - 1][j - 1];
+	  
+	  //std::cout << " number of blocks in split "<< j <<" = "<< _asmBlockMaterialRange[level - 1][j] << std::endl;
+	  for(int i = istart; i < _asmBlockMaterialRange[level - 1][j]; i++) {
+	    PC subpcs;
+	    KSPGetPC(subksps[i], &subpcs);
+	    KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+	    KSPSetFromOptions(subksps[i]);
+	  
+	    if(_asmBlockPreconditioner[j] == ILU_PRECOND){
+	      PCSetType(subpcs, (char*) PCILU);
+	    }
+	    else{
+	      PetscPreconditioner::set_petsc_preconditioner_type(_asmBlockPreconditioner[j], subpcs);
+	    }
+	    PCFactorSetZeroPivot(subpcs, epsilon);
+	    PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+	  }
+	}
 
-        for(int i = _asmBlockMaterialRange[level - 1][0]; i < _asmBlockMaterialRange[level - 1][1]; i++) {
-          PC subpcs;
-          KSPGetPC(subksps[i], &subpcs);
-          KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
-          KSPSetFromOptions(subksps[i]);
-          PCSetType(subpcs, (char*) PCILU);
-          PCFactorSetZeroPivot(subpcs, epsilon);
-          PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
-        }
+//         for(int i = _asmBlockMaterialRange[level - 1][0]; i < _asmBlockMaterialRange[level - 1][1]; i++) {
+//           PC subpcs;
+//           KSPGetPC(subksps[i], &subpcs);
+//           KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+//           KSPSetFromOptions(subksps[i]);
+//           PCSetType(subpcs, (char*) PCILU);
+//           PCFactorSetZeroPivot(subpcs, epsilon);
+//           PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+//         }
       }
       else {
         for(int i = 0; i < nlocal; i++) {
@@ -656,18 +701,19 @@ namespace femus {
 
     unsigned base = pow(2, msh->GetDimension());
     unsigned elementBlockNumber[2];
-    elementBlockNumber[0] = pow(base, _asmBlockSize);
-    elementBlockNumber[1] = pow(base, _asmBlockSize);
+    
+    elementBlockNumber[0] = (_asmBlockSize[0] == 100) ? msh->GetNumberOfElements() : pow(base, _asmBlockSize[0]);
+    elementBlockNumber[1] = (_asmBlockSize[1] == 100) ? msh->GetNumberOfElements() : pow(base, _asmBlockSize[1]);
 
 
-    elementBlockNumber[0] = 256;
-    elementBlockNumber[1] = 256;
+    //elementBlockNumber[0] = 16;
+    //elementBlockNumber[1] = 16;
 
     _asmBlockMaterialRange.resize(level);
 
     MeshASMPartitioning meshasmpartitioning(*msh);
 
-    meshasmpartitioning.DoPartition(elementBlockNumber, block_elements, _asmBlockMaterialRange[level - 1]);
+    meshasmpartitioning.DoPartitionOld(elementBlockNumber, block_elements, _asmBlockMaterialRange[level - 1]);
 
     vector <bool> ThisVaribaleIsNonSchur(_solutionType.size(), true);
 

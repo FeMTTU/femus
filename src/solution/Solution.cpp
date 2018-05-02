@@ -1144,6 +1144,15 @@ namespace femus {
       }
     }
   }
+  
+  void Solution::ResetSolutionToOldSolution() {
+    for(unsigned i = 0; i < _Sol.size(); i++) {
+      // Copy the old vector
+      if(_SolTmOrder[i] == 2) {
+        *(_Sol[i]) = *(_SolOld[i]);
+      }
+    }
+  }
 
 
 } //end namespace femus

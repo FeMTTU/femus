@@ -1,0 +1,4 @@
+PCFieldSplit_ex11 FS_VT 0.1 10000 -ksp_monitor_true_residual >> FS_VTtrueResidualPr=0.1Ra=10000.txt
+
+
+PCFieldSplit_ex11 ASM_VT 0.1 10000 -ksp_monitor_true_residual >> ASM_VTtrueResidualPr=0.1Ra=10000.txt

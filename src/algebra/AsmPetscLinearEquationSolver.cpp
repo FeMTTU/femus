@@ -256,8 +256,8 @@ namespace femus {
     _overlappingIs.resize(_overlappingIsIndex.size());
 
     for(unsigned vb_index = 0; vb_index < _localIsIndex.size(); vb_index++) {
-      ISCreateGeneral(MPI_COMM_SELF, _localIsIndex[vb_index].size(), &_localIsIndex[vb_index][0], PETSC_USE_POINTER, &_localIs[vb_index]);
-      ISCreateGeneral(MPI_COMM_SELF, _overlappingIsIndex[vb_index].size(), &_overlappingIsIndex[vb_index][0], PETSC_USE_POINTER, &_overlappingIs[vb_index]);
+      ISCreateGeneral(MPI_COMM_SELF, _localIsIndex[vb_index].size(), &_localIsIndex[vb_index][0],  PETSC_USE_POINTER , &_localIs[vb_index]);
+      ISCreateGeneral(MPI_COMM_SELF, _overlappingIsIndex[vb_index].size(), &_overlappingIsIndex[vb_index][0],  PETSC_USE_POINTER , &_overlappingIs[vb_index]);
     }
 
     //END Generate std::vector<IS> for ASM PC ***********
@@ -268,15 +268,16 @@ namespace femus {
   // =================================================
 
   void AsmPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc) {
-
+    
     PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, subpc);
 
     if(!_standardASM) {
       PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
     }
 
-    PCASMSetOverlap(subpc, _overlap);
-    //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
+    //PCASMSetOverlap(subpc, _overlap);
+    PCASMSetType(subpc,  PC_ASM_BASIC );
+    PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
 
     KSPSetUp(subksp);
 
