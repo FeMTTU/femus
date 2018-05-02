@@ -62,7 +62,7 @@ int main(int argc, char** args)
 
 
 
-  unsigned numberOfUniformLevels = 2;
+  unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
 
   double length = 2. * 1465700.; 
@@ -123,7 +123,7 @@ int main(int argc, char** args)
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars,0);
   
-  unsigned numberOfTimeSteps = 2;
+  unsigned numberOfTimeSteps = 200;
   for(unsigned i = 0; i<numberOfTimeSteps;i++){
     ETD(ml_prob,NumberOfLayers);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, i + 1);
@@ -290,11 +290,12 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
     double dd = aa*acos((zz*z_c)/ (aa * aa));   // distance to center point on sphere [m]
     double hh = 1 - dd*dd/(bb*bb);
     std::vector < adept::adouble > b1(NLayers);
-    b1[NLayers - 1] = H_shelf + H_0/2*(1 + tanh(hh/phi));  // bottom topography
+    b1[NLayers - 1] = H_shelf + H_0/2*(1 + tanh(hh/phi))*0.;  // bottom topography
     for(unsigned i = NLayers - 1;i > 0; i--){
       b1[i - 1] = b1[i] + solh[i][0]; // bottom topography
     }
       
+    
     double dx = x[nDofx - 1] - x[0];
     
     for(unsigned k = 0; k < NLayers; k++){
@@ -302,26 +303,35 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 	if(!bdch[k][i]){
 	  for (unsigned j = 0; j < nDofv; j++){
 	    double sign = ( j == 0)? 1.:-1;
-	    aResh[k][i] += sign * solhe[k][j] * solv[k][j] / dx;
+	    //aResh[k][i] += sign * solhe[k][j] * solv[k][j] / dx;
+	    aResh[k][i] += sign * solh[k][i] * solv[k][j] / dx;
 	  }
 	}
       }
+      adept::adouble vMid = 0.5 * (solv[k][0] + solv[k][1]); 
+      adept::adouble fv = 0.5 * vMid * vMid + 9.81 * (solh[k][0] + b1[k]);
       for (unsigned i = 0; i < nDofv; i++){
 	if(!bdcv[k][i]){
-	  aResv[k][i] = dx;
-	  for (unsigned j = 0; j < nDofv; j++){
+	  for (unsigned j = 0; j < nDofh; j++){
 	    double sign = ( i == j)? -1.:1;
-	    aResv[k][i] += sign * solv[k][j]/(dx*dx);
+	    aResv[k][i] += sign * fv / dx;
 	  }
 	}
       }
       for (unsigned i = 0; i < nDofhe; i++){
 	if(!bdche[k][i]){
-	  double penalty = 1.e1;
-	  aReshe[k][i] -= 0.5 * solhe[k][i] * penalty;
-	  for (unsigned j = 0; j < nDofh; j++){
-	    aReshe[k][i] += 0.5 * solh[k][j] * penalty;
-	  }
+// 	  double penalty = 1.e5;
+// 	  aReshe[k][i] -= 0.5 * solhe[k][i] * penalty;
+// 	  for (unsigned j = 0; j < nDofh; j++){
+// 	    aReshe[k][i] += 0.5 * solh[k][j] * penalty;
+// 	  }
+	  aReshe[k][i] = dx;
+ 	  for (unsigned j = 0; j < nDofh; j++){
+	    double sign = ( i == j)? 1.:-1;
+ 	    aReshe[k][i] += sign * solhe[k][j]/(dx*dx);
+ 	  }
+	  
+	  
 	}
       }
     }
@@ -333,14 +343,17 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
     for(unsigned k = 0; k < NLayers; k++){
       for(int i = 0; i < nDofh; i++) {
 	Res[counter] =  aResh[k][i].value();
+	std::cout << Res[counter] <<" "<<std::flush;
 	counter++;
       }
       for(int i = 0; i < nDofv; i++) {
 	Res[counter] =  aResv[k][i].value();
+	std::cout << Res[counter] <<" "<<std::flush;
 	counter++;
       }
       for(int i = 0; i < nDofhe; i++) {
 	Res[counter] =  aReshe[k][i].value();
+	std::cout << Res[counter] <<" "<<std::flush;
 	counter++;
       }
     }
@@ -382,11 +395,11 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 //   MatView((static_cast<PetscMatrix*>(KK))->mat(),viewer);
 //   double a;
 //   std::cin>>a;
-  
+//   
   MFN mfn;
   Mat A = (static_cast<PetscMatrix*>(KK))->mat();        
   FN f, f1, f2, f3 , f4;         
-  double dt = 0.01;     
+  double dt = 0.1;     
   
   Vec v = (static_cast< PetscVector* >(RES))->vec(); 
   Vec y = (static_cast< PetscVector* >(EPS))->vec(); 

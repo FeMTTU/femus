@@ -50,7 +50,7 @@ int main(int argc, char **args)
   valve = false;
   twoPressure = true;
   
-  unsigned simulation = 4;
+  unsigned simulation = 5;
 
   if(argc >= 2) {
     if(!strcmp("0", args[1])) {       /** FSI Turek2D no stent */
@@ -78,7 +78,7 @@ int main(int argc, char **args)
       simulation = 7;
     }
     else{
-      simulation = 4;
+      simulation = 5;
     }
   }
 
@@ -140,8 +140,8 @@ int main(int argc, char **args)
     muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
     rhos = 1120;
     ni = 0.5;
-    //E = 100 * 1.e6; //simulation=5
-    E = 1. * 1.0e6; //simulation=0,1,2,3
+    E = 100 * 1.e6; //simulation=5
+    //E = 1. * 1.0e6; //simulation=0,1,2,3
     E1 = 50000;
   }
 
