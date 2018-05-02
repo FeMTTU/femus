@@ -32,7 +32,7 @@ double InitalValueV(const std::vector < double >& x)
 
 double InitalValueH(const std::vector < double >& x)
 {
-  return 2.* exp(-(x[0]/100000.)*(x[0]/100000.));
+  return 2.* exp(-(x[0] / 100000.) * (x[0] / 100000.));
 }
 
 
@@ -65,9 +65,9 @@ int main(int argc, char** args)
   unsigned numberOfUniformLevels = 5;
   unsigned numberOfSelectiveLevels = 0;
 
-  double length = 2. * 1465700.; 
-  
-  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, -length/2, length/2, 0., 0., 0., 0., EDGE3, "seventh");
+  double length = 2. * 1465700.;
+
+  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, -length / 2, length / 2, 0., 0., 0., 0., EDGE3, "seventh");
 
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
   mlMsh.PrintInfo();
@@ -90,13 +90,13 @@ int main(int argc, char** args)
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf(name, "h%d", i);
-    mlSol.Initialize(name,InitalValueH);
+    mlSol.Initialize(name, InitalValueH);
     sprintf(name, "v%d", i);
-    mlSol.Initialize(name,InitalValueV);
+    mlSol.Initialize(name, InitalValueV);
     sprintf(name, "he%d", i);
-    mlSol.Initialize(name,InitalValueH);
+    mlSol.Initialize(name, InitalValueH);
   }
-  
+
   //mlSol.Initialize("All");    // initialize all varaibles to zero
 
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -116,19 +116,19 @@ int main(int argc, char** args)
     system.AddSolutionToSystemPDE(name);
   }
   system.init();
-  
-   mlSol.SetWriter(VTK);
+
+  mlSol.SetWriter(VTK);
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
   mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars,0);
-  
-  unsigned numberOfTimeSteps = 200;
-  for(unsigned i = 0; i<numberOfTimeSteps;i++){
-    ETD(ml_prob,NumberOfLayers);
+  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
+
+  unsigned numberOfTimeSteps = 2000;
+  for(unsigned i = 0; i < numberOfTimeSteps; i++) {
+    ETD(ml_prob, NumberOfLayers);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, i + 1);
   }
- 
+
 
 
   return 0;
@@ -144,9 +144,9 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 
   double z_c = aa;      //z coordinate of center point
   double bb = 1250000;
- 
+
   double phi = 0.1;     //relative width of continental shelf: 10%
-  
+
   adept::Stack& s = FemusInit::_adeptStack;
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("SW");   // pointer to the linear implicit system named "Poisson"
@@ -177,7 +177,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 
   std::vector < unsigned > solIndexv(NLayers);
   std::vector < unsigned > solPdeIndexv(NLayers);
-  
+
   std::vector < unsigned > solIndexhe(NLayers);
   std::vector < unsigned > solPdeIndexhe(NLayers);
 
@@ -192,11 +192,11 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
     sprintf(name, "v%d", i);
     solIndexv[i] = mlSol->GetIndex(name); // get the position of "vi" in the sol object
     solPdeIndexv[i] = mlPdeSys->GetSolPdeIndex(name); // get the position of "vi" in the pdeSys object
-    
+
     sprintf(name, "he%d", i);
     solIndexhe[i] = mlSol->GetIndex(name); // get the position of "vi" in the sol object
     solPdeIndexhe[i] = mlPdeSys->GetSolPdeIndex(name); // get the position of "vi" in the pdeSys object
-    
+
   }
 
   unsigned solTypeh = mlSol->GetSolutionType(solIndexh[0]);    // get the finite element type for "hi"
@@ -207,7 +207,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
   vector< vector < adept::adouble > > solh(NLayers);    // local coordinates
   vector< vector < adept::adouble > > solv(NLayers);    // local coordinates
   vector< vector < adept::adouble > > solhe(NLayers);    // local coordinates
-  
+
   vector< vector < bool > > bdch(NLayers);    // local coordinates
   vector< vector < bool > > bdcv(NLayers);    // local coordinates
   vector< vector < bool > > bdche(NLayers);    // local coordinates
@@ -230,7 +230,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
     unsigned nDofs = nDofh + nDofv + nDofhe;
-    
+
     // resize local arrays
     l2GMap.resize(NLayers * (nDofs) );
 
@@ -241,7 +241,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       bdch[i].resize(nDofh);
       bdcv[i].resize(nDofh);
       bdche[i].resize(nDofhe);
-      
+
       aResh[i].resize(nDofh);    //resize
       std::fill(aResh[i].begin(), aResh[i].end(), 0);    //set aRes to zero
       aResv[i].resize(nDofv);    //resize
@@ -256,7 +256,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       unsigned solDofh = msh->GetSolutionDof(i, iel, solTypeh);    // global to global mapping between solution node and solution dof
       for(unsigned j = 0; j < NLayers; j++) {
         solh[j][i] = (*sol->_Sol[solIndexh[j]])(solDofh);      // global extraction and local storage for the solution
-	bdch[j][i] = ( (*sol->_Bdc[solIndexh[j]])(solDofh) < 1.5)? true:false;
+        bdch[j][i] = ( (*sol->_Bdc[solIndexh[j]])(solDofh) < 1.5) ? true : false;
         l2GMap[ j * nDofs + i] = pdeSys->GetSystemDof(solIndexh[j], solPdeIndexh[j], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
@@ -264,7 +264,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       unsigned solDofv = msh->GetSolutionDof(i, iel, solTypev);    // global to global mapping between solution node and solution dof
       for(unsigned j = 0; j < NLayers; j++) {
         solv[j][i] = (*sol->_Sol[solIndexv[j]])(solDofv);      // global extraction and local storage for the solution
-	bdcv[j][i] = ( (*sol->_Bdc[solIndexv[j]])(solDofv) < 1.5)? true:false;
+        bdcv[j][i] = ( (*sol->_Bdc[solIndexv[j]])(solDofv) < 1.5) ? true : false;
         l2GMap[ j * nDofs + nDofh + i] = pdeSys->GetSystemDof(solIndexv[j], solPdeIndexv[j], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
@@ -272,107 +272,110 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       unsigned solDofhe = msh->GetSolutionDof(i, iel, solTypehe);    // global to global mapping between solution node and solution dof
       for(unsigned j = 0; j < NLayers; j++) {
         solhe[j][i] = (*sol->_Sol[solIndexhe[j]])(solDofhe);      // global extraction and local storage for the solution
-	bdche[j][i] = ( (*sol->_Bdc[solIndexhe[j]])(solDofhe) < 1.5)? true:false;
+        bdche[j][i] = ( (*sol->_Bdc[solIndexhe[j]])(solDofhe) < 1.5) ? true : false;
         l2GMap[ j * nDofs + nDofh + nDofv + i] = pdeSys->GetSystemDof(solIndexhe[j], solPdeIndexhe[j], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
-        
+
 
     for(unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
       x[i] = (*msh->_topology->_Sol[0])(xDof);      // global extraction and local storage for the element coordinates
     }
-  
+
     s.new_recording();
-      
+
     double xmid = 0.5 * (x[0] + x[1]);
-    double zz = sqrt(aa * aa - xmid*xmid);   // z coordinate of points on sphere
-    double dd = aa*acos((zz*z_c)/ (aa * aa));   // distance to center point on sphere [m]
-    double hh = 1 - dd*dd/(bb*bb);
+    double zz = sqrt(aa * aa - xmid * xmid); // z coordinate of points on sphere
+    double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
+    double hh = 1 - dd * dd / (bb * bb);
     std::vector < adept::adouble > b1(NLayers);
-    b1[NLayers - 1] = H_shelf + H_0/2*(1 + tanh(hh/phi))*0.;  // bottom topography
-    for(unsigned i = NLayers - 1;i > 0; i--){
+    b1[NLayers - 1] = H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) * 0.; // bottom topography
+    for(unsigned i = NLayers - 1; i > 0; i--) {
       b1[i - 1] = b1[i] + solh[i][0]; // bottom topography
     }
-      
-    
+
+
     double dx = x[nDofx - 1] - x[0];
-    
-    for(unsigned k = 0; k < NLayers; k++){
-      for (unsigned i = 0; i < nDofh; i++){
-	if(!bdch[k][i]){
-	  for (unsigned j = 0; j < nDofv; j++){
-	    double sign = ( j == 0)? 1.:-1;
-	    //aResh[k][i] += sign * solhe[k][j] * solv[k][j] / dx;
-	    aResh[k][i] += sign * solh[k][i] * solv[k][j] / dx;
-	  }
-	}
+
+    for(unsigned k = 0; k < NLayers; k++) {
+      for (unsigned i = 0; i < nDofh; i++) {
+        if(!bdch[k][i]) {
+          for (unsigned j = 0; j < nDofv; j++) {
+            double sign = ( j == 0) ? 1. : -1;
+            //aResh[k][i] += sign * solhe[k][j] * solv[k][j] / dx;
+            aResh[k][i] += sign * solh[k][i] * solv[k][j] / dx;
+          }
+        }
       }
-      adept::adouble vMid = 0.5 * (solv[k][0] + solv[k][1]); 
+      adept::adouble vMid = 0.5 * (solv[k][0] + solv[k][1]);
       adept::adouble fv = 0.5 * vMid * vMid + 9.81 * (solh[k][0] + b1[k]);
-      for (unsigned i = 0; i < nDofv; i++){
-	if(!bdcv[k][i]){
-	  for (unsigned j = 0; j < nDofh; j++){
-	    double sign = ( i == j)? -1.:1;
-	    aResv[k][i] += sign * fv / dx;
-	  }
-	}
+      for (unsigned i = 0; i < nDofv; i++) {
+        if(!bdcv[k][i]) {
+          for (unsigned j = 0; j < nDofh; j++) {
+            double sign = ( i == j) ? -1. : 1;
+            aResv[k][i] += sign * fv / dx;
+          }
+        }
       }
-      for (unsigned i = 0; i < nDofhe; i++){
-	if(!bdche[k][i]){
+//      for (unsigned i = 0; i < nDofhe; i++){
+//	if(!bdche[k][i]){
 // 	  double penalty = 1.e5;
 // 	  aReshe[k][i] -= 0.5 * solhe[k][i] * penalty;
 // 	  for (unsigned j = 0; j < nDofh; j++){
 // 	    aReshe[k][i] += 0.5 * solh[k][j] * penalty;
 // 	  }
-	  aReshe[k][i] = dx;
- 	  for (unsigned j = 0; j < nDofh; j++){
-	    double sign = ( i == j)? 1.:-1;
- 	    aReshe[k][i] += sign * solhe[k][j]/(dx*dx);
- 	  }
-	  
-	  
-	}
+//	}
+//      }
+      for (unsigned i = 0; i < nDofhe; i++) {
+        if(!bdche[k][i]) {
+          aReshe[k][i] = dx;
+          for (unsigned j = 0; j < nDofhe; j++) {
+            double sign = ( i == j) ? -1. : 1;
+            aReshe[k][i] += sign * 1000000 *  solhe[k][j] / (dx * dx);
+          }
+        }
       }
     }
-    
+
+
     vector< double > Res(NLayers * nDofs); // local redidual vector
-    
-      
+
+
     unsigned counter = 0;
-    for(unsigned k = 0; k < NLayers; k++){
+    for(unsigned k = 0; k < NLayers; k++) {
       for(int i = 0; i < nDofh; i++) {
-	Res[counter] =  aResh[k][i].value();
-	std::cout << Res[counter] <<" "<<std::flush;
-	counter++;
+        Res[counter] =  aResh[k][i].value();
+        std::cout << Res[counter] << " " << std::flush;
+        counter++;
       }
       for(int i = 0; i < nDofv; i++) {
-	Res[counter] =  aResv[k][i].value();
-	std::cout << Res[counter] <<" "<<std::flush;
-	counter++;
+        Res[counter] =  aResv[k][i].value();
+        std::cout << Res[counter] << " " << std::flush;
+        counter++;
       }
       for(int i = 0; i < nDofhe; i++) {
-	Res[counter] =  aReshe[k][i].value();
-	std::cout << Res[counter] <<" "<<std::flush;
-	counter++;
+        Res[counter] =  aReshe[k][i].value();
+        std::cout << Res[counter] << " " << std::flush;
+        counter++;
       }
     }
 
     RES->add_vector_blocked(Res, l2GMap);
 
 
-    for(unsigned k = 0; k < NLayers; k++){
+    for(unsigned k = 0; k < NLayers; k++) {
       // define the dependent variables
       s.dependent(&aResh[k][0], nDofh);
       s.dependent(&aResv[k][0], nDofv);
       s.dependent(&aReshe[k][0], nDofhe);
-      
+
       // define the independent variables
       s.independent(&solh[k][0], nDofh);
       s.independent(&solv[k][0], nDofv);
       s.independent(&solhe[k][0], nDofhe);
     }
-    
+
     // get the jacobian matrix (ordered by row major )
     vector < double > Jac(NLayers * nDofs * NLayers * nDofs);
     s.jacobian(&Jac[0], true);
@@ -382,12 +385,12 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 
     s.clear_independents();
     s.clear_dependents();
-    
+
   }
-      
+
   RES->close();
   KK->close();
-  
+
 //   PetscViewer    viewer;
 //   PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
 //   PetscObjectSetName((PetscObject)viewer,"FSI matrix");
@@ -395,66 +398,67 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 //   MatView((static_cast<PetscMatrix*>(KK))->mat(),viewer);
 //   double a;
 //   std::cin>>a;
-//   
+//
   MFN mfn;
-  Mat A = (static_cast<PetscMatrix*>(KK))->mat();        
-  FN f, f1, f2, f3 , f4;         
-  double dt = 0.1;     
-  
-  Vec v = (static_cast< PetscVector* >(RES))->vec(); 
-  Vec y = (static_cast< PetscVector* >(EPS))->vec(); 
-    
+  Mat A = (static_cast<PetscMatrix*>(KK))->mat();
+  FN f, f1, f2, f3 , f4;
+  double dt = 100;
+
+  Vec v = (static_cast< PetscVector* >(RES))->vec();
+  Vec y = (static_cast< PetscVector* >(EPS))->vec();
+
   MFNCreate( PETSC_COMM_WORLD, &mfn );
-  
+
   MFNSetOperator( mfn, A );
   MFNGetFN( mfn, &f );
-  
-    
-  FNCreate(PETSC_COMM_WORLD,&f1);
-  FNCreate(PETSC_COMM_WORLD,&f2);
-  FNCreate(PETSC_COMM_WORLD,&f3);
-  FNCreate(PETSC_COMM_WORLD,&f4);
-  
+
+
+  FNCreate(PETSC_COMM_WORLD, &f1);
+  FNCreate(PETSC_COMM_WORLD, &f2);
+  FNCreate(PETSC_COMM_WORLD, &f3);
+  FNCreate(PETSC_COMM_WORLD, &f4);
+
   FNSetType(f1, FNEXP);
-    
+
   FNSetType(f2, FNRATIONAL);
-  double coeff1[1]={-1};
-  FNRationalSetNumerator(f2,1,coeff1);
-  FNRationalSetDenominator(f2,0,PETSC_NULL);
-      
+  double coeff1[1] = { -1};
+  FNRationalSetNumerator(f2, 1, coeff1);
+  FNRationalSetDenominator(f2, 0, PETSC_NULL);
+
   FNSetType( f3, FNCOMBINE );
-  
-  FNCombineSetChildren(f3,FN_COMBINE_ADD,f1,f2);
-    
+
+  FNCombineSetChildren(f3, FN_COMBINE_ADD, f1, f2);
+
   FNSetType(f4, FNRATIONAL);
-  double coeff2[2]={1.,0.};
-  FNRationalSetNumerator(f4,2,coeff2);
-  FNRationalSetDenominator(f4,0,PETSC_NULL);
-  
+  double coeff2[2] = {1., 0.};
+  FNRationalSetNumerator(f4, 2, coeff2);
+  FNRationalSetDenominator(f4, 0, PETSC_NULL);
+
   FNSetType( f, FNCOMBINE );
-  
-  FNCombineSetChildren(f,FN_COMBINE_DIVIDE,f3,f4);
-  
+
+  FNCombineSetChildren(f, FN_COMBINE_DIVIDE, f3, f4);
+
   //FNPhiSetIndex(f,0);
   //FNSetType( f, FNPHI );
   //FNView(f,PETSC_VIEWER_STDOUT_WORLD);
-  
+
   FNSetScale( f, dt, dt);
   MFNSetFromOptions( mfn );
-   
-  MFNSolve( mfn, v, y); 
+
+  MFNSolve( mfn, v, y);
   MFNDestroy( &mfn );
-  
+
   FNDestroy(&f1);
   FNDestroy(&f2);
   FNDestroy(&f3);
   FNDestroy(&f4);
-  
+
   sol->UpdateSol(mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset);
-  
-  
-   
+
+
+
 }
+
 
 
 
