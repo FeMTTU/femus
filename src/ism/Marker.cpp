@@ -1370,13 +1370,13 @@ namespace femus
                         //     std::cout << "r is in triangle " << itri << std::endl;
                         nextElem = (sol->GetMesh()->el->GetFaceElementIndex(currentElem, iface) - 1);
                         unsigned historyCounter = 0;
-                        for (unsigned i = 0; i < searchHistory.size(); i++) {
+                        for(unsigned i = 0; i < searchHistory.size(); i++) {
                           // std::cout << "searchHistory[" << i<< "]"<< searchHistory[i] <<std::endl;
-                          if (nextElem != searchHistory[i]) {
+                          if(nextElem != searchHistory[i]) {
                             historyCounter++;
                           }
                         }
-                        if (historyCounter == searchHistory.size()) {
+                        if(historyCounter == searchHistory.size()) {
                           nextElementFound = true;
                         }
                         break;
@@ -1399,13 +1399,13 @@ namespace femus
                         //     std::cout << "r is in triangle " << itri << std::endl;
                         nextElem = (sol->GetMesh()->el->GetFaceElementIndex(currentElem, iface) - 1);
                         unsigned historyCounter = 0;
-                        for (unsigned i = 0; i < searchHistory.size(); i++) {
+                        for(unsigned i = 0; i < searchHistory.size(); i++) {
                           //  std::cout << "searchHistory[" << i<< "]"<< searchHistory[i] <<std::endl;
-                          if (nextElem != searchHistory[i]) {
+                          if(nextElem != searchHistory[i]) {
                             historyCounter++;
                           }
                         }
-                        if (historyCounter == searchHistory.size()) {
+                        if(historyCounter == searchHistory.size()) {
                           nextElementFound = true;
                         }
                         break;
@@ -1434,13 +1434,13 @@ namespace femus
                 //    std::cout << "r is in triangle " << itri << std::endl;
                 nextElem = (sol->GetMesh()->el->GetFaceElementIndex(currentElem, iface) - 1);
                 unsigned historyCounter = 0;
-                for (unsigned i = 0; i < searchHistory.size(); i++) {
+                for(unsigned i = 0; i < searchHistory.size(); i++) {
                   //  std::cout << "searchHistory[" << i<< "]"<< searchHistory[i] <<std::endl;
-                  if (nextElem != searchHistory[i]) {
+                  if(nextElem != searchHistory[i]) {
                     historyCounter++;
                   }
                 }
-                if (historyCounter == searchHistory.size()) {
+                if(historyCounter == searchHistory.size()) {
                   nextElementFound = true;
                 }
                 break;
