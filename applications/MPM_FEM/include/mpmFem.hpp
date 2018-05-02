@@ -406,15 +406,14 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 	  
 	  
           for(int j = 0; j < dim; j++) {
-            SolDd[indexPdeD[j]][i] = (*mysolution->_Sol[indexSolD[j]])(idof);
 	    SolDdOld[indexPdeD[j]][i] = (*mysolution->_SolOld[indexSolD[j]])(idof);
-
+            SolDd[indexPdeD[j]][i] = (*mysolution->_Sol[indexSolD[j]])(idof) - SolDdOld[indexPdeD[j]][i];
+	   
             dofsVAR[j][i] = myLinEqSolver->GetSystemDof(indexSolD[j], indexPdeD[j], i, iel); //local 2 global Pde
             aRhs[indexPdeD[j]][i] = 0.;
 
             //Fixed coordinates (Reference frame)
-            vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idofX);
-            // vx[j][i]    = vx_hat[j][i] + 0.5 * SolDd[indexPdeD[j]][i];
+            vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idofX) + SolDdOld[indexPdeD[j]][i];
             vx[j][i]    = vx_hat[j][i] + SolDd[indexPdeD[j]][i];
           }
         }
@@ -465,11 +464,11 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         for(unsigned inode = 0; inode < nDofsD; inode++) {
 	  Xp[i] +=  phi[inode] * phi_hat[inode];
           SolDp[i] += phi[inode] * SolDd[indexPdeD[i]][inode];
-	  SolDpOld[i] += phi[inode] * SolDdOld[indexPdeD[i]][inode];
+	  //SolDpOld[i] += phi[inode] * SolDdOld[indexPdeD[i]][inode];
           for(int j = 0; j < dim; j++) {
             GradSolDp[i][j] +=  gradphi[inode * dim + j] * SolDd[indexPdeD[i]][inode];
 //             GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * 0.5 * SolDd[indexPdeD[i]][inode];
-            GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * (SolDd[indexPdeD[i]][inode] - SolDdOld[indexPdeD[i]][inode]);
+            GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * (SolDd[indexPdeD[i]][inode] - 0. * SolDdOld[indexPdeD[i]][inode]);
           }
         }
       }
@@ -552,10 +551,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         }
 
         for(int idim = 0; idim < dim; idim++) {
-          aRhs[indexPdeD[idim]][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density_MPM /*+ phi[i] * 1. / (boundaryLayer * 3. * density_MPM) * traction[idim]*/ 
-//                                     -  phi[i] * 0.5 * (SolApOld[idim] + 1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
-                                       -  phi[i] * (1. / (beta * dt * dt) * (SolDp[idim]-SolDpOld[idim]) - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
-                                      ) * mass;
+          aRhs[indexPdeD[idim]][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density_MPM /*+ phi[i] * 1. / (boundaryLayer * 3. * density_MPM) * traction[idim]*/ //                                  
+//                                        -  phi[i] * (1. / (beta * dt * dt) * (SolDp[idim]-SolDpOld[idim]) - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
+					-  phi[i] * (1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
+	  ) * mass;
         }
       }
       //END redidual Solid Momentum in moving domain
@@ -654,11 +653,11 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
     GradSolDp[i].resize(dim);
   }
 
-  vector < double > phi;
-  vector < double > gradphi;
-  vector < double > nablaphi;
+  vector < double > phi_hat;
+  vector < double > gradphi_hat;
+  vector < double > nablaphi_hat;
 
-  vector <vector < double> > vx(dim); //vx is coordX in assembly of ex30
+  vector <vector < double> > vx_hat(dim); //vx is coordX in assembly of ex30
 
   double weight;
 
@@ -709,7 +708,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
         for(int i = 0; i < dim; i++) {
           SolDd[i].resize(nve);
 	  SolDdOld[i].resize(nve);
-          vx[i].resize(nve);
+          vx_hat[i].resize(nve);
         }
 
         //BEGIN copy of the value of Sol at the dofs idof of the element iel
@@ -718,10 +717,11 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
           unsigned idofX = mymsh->GetSolutionDof(inode, iel, 2); //local 2 global solution
 
           for(int i = 0; i < dim; i++) {
-            SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof);
 	    SolDdOld[i][inode] = (*mysolution->_SolOld[indexSolD[i]])(idof);
+            SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof) - SolDdOld[i][inode];
+	    
             //moving domain
-            vx[i][inode] = (*mymsh->_topology->_Sol[i])(idofX);
+            vx_hat[i][inode] = (*mymsh->_topology->_Sol[i])(idofX) + SolDdOld[i][inode];
           }
         }
         //END
@@ -732,16 +732,16 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
       //particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, mysolution, 0);
       // xi = particles[iMarker]->GetMarkerLocalCoordinates();
 
-      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradphi, nablaphi); //function to evaluate at the particles
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, xi, weight, phi_hat, gradphi_hat, nablaphi_hat); //function to evaluate at the particles
 
       std::vector <double> particleDisp(dim, 0.);
-      std::vector <double> particleDispNew(dim, 0.);
+      //std::vector <double> particleDispNew(dim, 0.);
       //update displacement and acceleration
       for(int i = 0; i < dim; i++) {
         for(unsigned inode = 0; inode < nve; inode++) {
 	  //std::cout << SolDd[i][inode] << " ";
-          particleDisp[i] += phi[inode] * (SolDd[i][inode] - SolDdOld[i][inode]);
-	  particleDispNew[i] += phi[inode] * SolDd[i][inode];
+          particleDisp[i] += phi_hat[inode] * SolDd[i][inode];
+	  //particleDispNew[i] += phi_hat[inode] * SolDd[i][inode];
 	  //std::cout<<std::endl;
         }
         //std::cout << particleDisp[i] <<std::endl;
@@ -774,7 +774,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
         for(int j = 0; j < dim; j++) {
           GradSolDp[i][j] = 0.;
           for(unsigned inode = 0; inode < nve; inode++) {
-            GradSolDp[i][j] +=  gradphi[inode * dim + j] * (SolDd[i][inode] - SolDdOld[i][inode]);
+            GradSolDp[i][j] +=  gradphi_hat[inode * dim + j] * SolDd[i][inode];
           }
         }
       }

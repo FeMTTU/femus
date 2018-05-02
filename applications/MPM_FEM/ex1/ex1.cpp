@@ -18,6 +18,8 @@
 
 using namespace femus;
 
+// OLD BEST RESULT WITH E = 4.2 * 1.e6, 5 levels, dt= 0.01, NR = 300, R0 = 1.5, factor = 1.3
+// MOST BEST RESULT WITH E = 4.2 * 1.e6, 4 levels, dt= 0.01, NR = 300, R0 = 1.4, factor = 1.14,  beta = 0.3, Gamma = 0.5
 
 unsigned getNumberOfLayers(const double &a, const double &fac){
   double da = 1./fac; 
@@ -34,35 +36,6 @@ unsigned getNumberOfLayers(const double &a, const double &fac){
     }
   }
   return n;
-}
-
-double scale(const std::vector <double>& x)
-{
-  
-  double xc[3] = {0., 0.05, 0.};
-  double R = 1.6;
-
-  double PI = acos(-1.);
-  unsigned NR = 600;
-  unsigned NL = NR / (2 * PI);
-  double DL = R / NL;
-
-  double r = 0.;
-  for(unsigned k = 0; k < x.size(); k++) {
-    r += (x[k] - xc[k]) * (x[k] - xc[k]);
-  }
-  r = sqrt(r);
-
-  double r0 = R;
-  double dr = DL;
-  double scale = 1.;
-  while(r - r0 > 1.0e-10) {
-    scale /= 16.;
-    dr /= 2.;
-    r0 += dr;
-  }
-
-  return scale;
 }
 
 double SetVariableTimeStep(const double time)
@@ -110,6 +83,9 @@ int main(int argc, char** args)
   double rhos = 1000;
   double nu = 0.4;
   double E = 4.2 * 1.e6;
+  
+  beta = 0.3;
+  Gamma = 0.5;
 
   Parameter par(Lref, Uref);
 

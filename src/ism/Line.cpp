@@ -1135,16 +1135,16 @@ namespace femus
     _sol->_Sol[solIndexM]->close();
     _sol->_Sol[solIndexMat]->close();
 
-
+    //set all nodes M with element Mat = 0 to 0
     for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
 
       unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
       unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
-      if(material == 0) {
-        unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
-        for(unsigned i = 0; i < nDofsM; i++) {
-          unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
 
+      unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+      for(unsigned i = 0; i < nDofsM; i++) {
+        unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
+        if(material == 0 ||  (*_sol->_Bdc[solIndexM])(idof) == 0 ) {
           _sol->_Sol[solIndexM]->set(idof, 0.);
 
 //           double value = (*_sol->_Sol[solIndexM])(idof);
