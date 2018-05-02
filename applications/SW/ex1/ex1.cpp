@@ -62,7 +62,7 @@ int main(int argc, char** args)
 
 
 
-  unsigned numberOfUniformLevels = 4;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
 
   double length = 2. * 1465700.; 
@@ -75,7 +75,7 @@ int main(int argc, char** args)
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
 
-  unsigned NumberOfLayers = 2;
+  unsigned NumberOfLayers = 1;
 
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
@@ -265,7 +265,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       for(unsigned j = 0; j < NLayers; j++) {
         solv[j][i] = (*sol->_Sol[solIndexv[j]])(solDofv);      // global extraction and local storage for the solution
 	bdcv[j][i] = ( (*sol->_Bdc[solIndexv[j]])(solDofv) < 1.5)? true:false;
-        l2GMap[ nDofh + j * nDofs + i] = pdeSys->GetSystemDof(solIndexv[j], solPdeIndexv[j], i, iel);    // global to global mapping between solution node and pdeSys dof
+        l2GMap[ j * nDofs + nDofh + i] = pdeSys->GetSystemDof(solIndexv[j], solPdeIndexv[j], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
     for(unsigned i = 0; i < nDofhe; i++) {
@@ -273,7 +273,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       for(unsigned j = 0; j < NLayers; j++) {
         solhe[j][i] = (*sol->_Sol[solIndexhe[j]])(solDofhe);      // global extraction and local storage for the solution
 	bdche[j][i] = ( (*sol->_Bdc[solIndexhe[j]])(solDofhe) < 1.5)? true:false;
-        l2GMap[ nDofh + nDofv + j * nDofs + i] = pdeSys->GetSystemDof(solIndexhe[j], solPdeIndexhe[j], i, iel);    // global to global mapping between solution node and pdeSys dof
+        l2GMap[ j * nDofs + nDofh + nDofv + i] = pdeSys->GetSystemDof(solIndexhe[j], solPdeIndexhe[j], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
         
@@ -300,10 +300,9 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
     for(unsigned k = 0; k < NLayers; k++){
       for (unsigned i = 0; i < nDofh; i++){
 	if(!bdch[k][i]){
-	  aResh[k][i] = dx;
 	  for (unsigned j = 0; j < nDofv; j++){
 	    double sign = ( j == 0)? 1.:-1;
-	    aResh[k][i] += sign * solv[k][j] * solhe[k][j] / dx;
+	    aResh[k][i] += sign * solhe[k][j] * solv[k][j] / dx;
 	  }
 	}
       }
@@ -318,8 +317,8 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       }
       for (unsigned i = 0; i < nDofhe; i++){
 	if(!bdche[k][i]){
-	  double penalty = 1.e100;
-	  aReshe[k][i] = dx;
+	  double penalty = 1.e1;
+	  aReshe[k][i] -= 0.5 * solhe[k][i] * penalty;
 	  for (unsigned j = 0; j < nDofh; j++){
 	    aReshe[k][i] += 0.5 * solh[k][j] * penalty;
 	  }
