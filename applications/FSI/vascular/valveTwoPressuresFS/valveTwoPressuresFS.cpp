@@ -48,8 +48,8 @@ int main(int argc, char** args)
   //std::string infile = "./../input/valve/2D/valve2.neu";
   //std::string infile = "./../input/valve/2D/valve2_corta2bis.neu";
   //std::string infile = "./../input/valve/2D/valve2_corta2bis_moreElem.neu";
-  std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
-  //std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
+  //std::string infile = "./../input/valve/3D/valve3D_corta2bis.neu";
+  std::string infile = "./../input/valve/3D/valve3D_corta2bis_moreElem.neu";
 
   // ******* Set physics parameters *******
   double Lref, Uref, rhof, muf, rhos, ni, E, E1;
@@ -85,7 +85,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 2;
+  numberOfUniformRefinedMeshes = 3;
   numberOfAMRLevels = 0;
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
@@ -253,6 +253,7 @@ int main(int argc, char** args)
  
   system.SetNumberPreSmoothingStep(1);
   system.SetNumberPostSmoothingStep(1);
+  
   // initilaize and solve the system
   system.init();
 
@@ -361,6 +362,7 @@ int main(int argc, char** args)
 
 
     system.MGsolve();
+    system.PrintComputationalTime();
 
     StoreMeshVelocity(ml_prob);
 
@@ -393,7 +395,7 @@ int main(int argc, char** args)
   if (iproc == 0) {
     outf.close();
   }
-  system.PrintComputationalTime();
+  
 
   //******* Clear all systems *******
   ml_prob.clear();

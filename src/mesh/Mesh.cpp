@@ -228,6 +228,10 @@ namespace femus
 
     el->SetNodeNumber(_nnodes);
 
+    std::vector < unsigned > materialElementCounter(3,0);
+    materialElementCounter[0] = GetNumberOfElements();
+    el->SetMaterialElementCounter(materialElementCounter);
+    
 
     std::vector < int > partition;
     partition.reserve(GetNumberOfNodes());
