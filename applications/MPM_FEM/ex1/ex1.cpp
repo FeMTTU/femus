@@ -18,6 +18,8 @@
 
 using namespace femus;
 
+// OLD BEST RESULT WITH E = 4.2 * 1.e6, 5 levels, dt= 0.01, NR = 300, R0 = 1.5, factor = 1.3
+// MOST BEST RESULT WITH E = 4.2 * 1.e6, 4 levels, dt= 0.01, NR = 300, R0 = 1.4, factor = 1.14,  beta = 0.3, Gamma = 0.5
 
 unsigned getNumberOfLayers(const double &a, const double &fac){
   double da = 1./fac; 
@@ -34,35 +36,6 @@ unsigned getNumberOfLayers(const double &a, const double &fac){
     }
   }
   return n;
-}
-
-double scale(const std::vector <double>& x)
-{
-  
-  double xc[3] = {0., 0.05, 0.};
-  double R = 1.6;
-
-  double PI = acos(-1.);
-  unsigned NR = 600;
-  unsigned NL = NR / (2 * PI);
-  double DL = R / NL;
-
-  double r = 0.;
-  for(unsigned k = 0; k < x.size(); k++) {
-    r += (x[k] - xc[k]) * (x[k] - xc[k]);
-  }
-  r = sqrt(r);
-
-  double r0 = R;
-  double dr = DL;
-  double scale = 1.;
-  while(r - r0 > 1.0e-10) {
-    scale /= 16.;
-    dr /= 2.;
-    r0 += dr;
-  }
-
-  return scale;
 }
 
 double SetVariableTimeStep(const double time)
@@ -101,7 +74,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 5; //for refinement in 3D
+  unsigned numberOfUniformLevels = 4; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -110,6 +83,9 @@ int main(int argc, char** args)
   double rhos = 1000;
   double nu = 0.4;
   double E = 4.2 * 1.e6;
+  
+  beta = 0.3;
+  Gamma = 0.5;
 
   Parameter par(Lref, Uref);
 
@@ -192,7 +168,7 @@ int main(int argc, char** args)
   x[0][1] = 0.05;
  
   double R = 1.6;
-  double R0 = 1.5;
+  double R0 = 1.4;
   bool boundaryLayer = ( fabs(R-R0) > 1.0e-10)? true: false;
   double PI = acos(-1.);
   unsigned NR = 300;
@@ -213,13 +189,13 @@ int main(int argc, char** args)
       x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
     }
   }
-  double MASS = PI * R0 * R0 *rhos;
+  double MASS = PI * R0 * R0 * rhos;
   size = x.size();
   std::vector < double > mass(x.size(), MASS / x.size()); // uniform marker volume
   
   if(boundaryLayer) {
     
-    double factor = 1.3;
+    double factor = 1.14;
     unsigned NL = getNumberOfLayers((R-R0)/DL, factor);
     std::cout << NL <<std::endl;
       
@@ -263,10 +239,10 @@ int main(int argc, char** args)
   std::vector < std::vector < std::vector < double > > > line0(1);
 
   unsigned solType = 2;
-  linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
+  linea = new Line(x, mass, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
       
-  linea->SetParticlesMass(MASS/rhos, rhos);
-  linea->ScaleParticleMass(scale);
+  //linea->SetParticlesMass(MASS/rhos, rhos);
+  //linea->ScaleParticleMass(scale);
 
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);

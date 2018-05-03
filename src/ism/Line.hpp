@@ -39,6 +39,12 @@ namespace femus
       Line(const std::vector < std::vector < double > > x,
            const std::vector <MarkerType>& markerType,
            Solution* sol, const unsigned& solType);
+      
+      Line(const std::vector < std::vector < double > > x, const std::vector < double > &mass,
+           const std::vector <MarkerType>& markerType,
+           Solution* sol, const unsigned& solType);
+      
+      
       ~Line();
 
       typedef void (*ForceFunction)(const std::vector <double>& xMarker, std::vector <double>& Fm, const unsigned& material);
@@ -46,6 +52,7 @@ namespace femus
       void GetLine(std::vector < std::vector < double > >& line) {
         line = _line;
       }
+      
 
       void GetStreamLine(std::vector < std::vector < std::vector < double > > >& line, const unsigned& step) {
         for(unsigned i = 0; i < _size; i++) {
@@ -83,6 +90,8 @@ namespace femus
       std::vector < unsigned > _printList;
       unsigned _size;
       unsigned _dim;
+      
+      void Reorder(std::vector < Marker*> &particles);
 
       static const double _a[4][4][4];
       static const double _b[4][4];

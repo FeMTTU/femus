@@ -258,7 +258,7 @@ int main(int argc, char** args) {
   system.SetIntervalTime(dt);
   unsigned n_timesteps =20000;
  
-  Marker marker(x, VOLUME, mlSol.GetLevel(numberOfUniformLevels - 1), 2, true);
+  Marker marker(x, 0., VOLUME, mlSol.GetLevel(numberOfUniformLevels - 1), 2, true);
   unsigned elem = marker.GetMarkerElement();
   std::vector<double> xi;
   marker.GetMarkerLocalCoordinates(xi);

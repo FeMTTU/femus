@@ -24,19 +24,15 @@
 
 using namespace femus;
 
-double InitalValueU(const std::vector < double >& x)
+double InitalValueV(const std::vector < double >& x)
 {
-  return x[0] + x[1];
+  return 0;
 }
 
-double InitalValueP(const std::vector < double >& x)
-{
-  return x[0];
-}
 
-double InitalValueT(const std::vector < double >& x)
+double InitalValueH(const std::vector < double >& x)
 {
-  return x[1];
+  return 2.* exp(-(x[0]/100000.)*(x[0]/100000.));
 }
 
 
@@ -66,10 +62,12 @@ int main(int argc, char** args)
 
 
 
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
 
-  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, -1, 1, 0., 0., 0., 0., EDGE3, "seventh");
+  double length = 2. * 1465700.; 
+  
+  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, -length/2, length/2, 0., 0., 0., 0., EDGE3, "seventh");
 
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
   mlMsh.PrintInfo();
@@ -77,17 +75,29 @@ int main(int argc, char** args)
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
 
-  unsigned NumberOfLayers = 2;
+  unsigned NumberOfLayers = 1;
 
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf(name, "h%d", i);
-    mlSol.AddSolution(name, LAGRANGE, FIRST);
+    mlSol.AddSolution(name, DISCONTINOUS_POLYNOMIAL, ZERO);
     sprintf(name, "v%d", i);
+    mlSol.AddSolution(name, LAGRANGE, FIRST);
+    sprintf(name, "he%d", i);
     mlSol.AddSolution(name, LAGRANGE, FIRST);
   }
 
-  mlSol.Initialize("All");    // initialize all varaibles to zero
+  for(unsigned i = 0; i < NumberOfLayers; i++) {
+    char name[10];
+    sprintf(name, "h%d", i);
+    mlSol.Initialize(name,InitalValueH);
+    sprintf(name, "v%d", i);
+    mlSol.Initialize(name,InitalValueV);
+    sprintf(name, "he%d", i);
+    mlSol.Initialize(name,InitalValueH);
+  }
+  
+  //mlSol.Initialize("All");    // initialize all varaibles to zero
 
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
   mlSol.GenerateBdc("All");
@@ -102,6 +112,8 @@ int main(int argc, char** args)
     system.AddSolutionToSystemPDE(name);
     sprintf(name, "v%d", i);
     system.AddSolutionToSystemPDE(name);
+    sprintf(name, "he%d", i);
+    system.AddSolutionToSystemPDE(name);
   }
   system.init();
   
@@ -111,7 +123,7 @@ int main(int argc, char** args)
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars,0);
   
-  unsigned numberOfTimeSteps = 100;
+  unsigned numberOfTimeSteps = 2;
   for(unsigned i = 0; i<numberOfTimeSteps;i++){
     ETD(ml_prob,NumberOfLayers);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, i + 1);
@@ -126,6 +138,15 @@ int main(int argc, char** args)
 void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 {
 
+  double aa = 6371000;  //radius of earth [m]
+  double H_0 = 2400;    // max depth of ocean [m]
+  double H_shelf = 100; //depth of continental shelf [m]
+
+  double z_c = aa;      //z coordinate of center point
+  double bb = 1250000;
+ 
+  double phi = 0.1;     //relative width of continental shelf: 10%
+  
   adept::Stack& s = FemusInit::_adeptStack;
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("SW");   // pointer to the linear implicit system named "Poisson"
@@ -156,6 +177,9 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 
   std::vector < unsigned > solIndexv(NLayers);
   std::vector < unsigned > solPdeIndexv(NLayers);
+  
+  std::vector < unsigned > solIndexhe(NLayers);
+  std::vector < unsigned > solPdeIndexhe(NLayers);
 
   vector< int > l2GMap; // local to global mapping
 
@@ -168,22 +192,31 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
     sprintf(name, "v%d", i);
     solIndexv[i] = mlSol->GetIndex(name); // get the position of "vi" in the sol object
     solPdeIndexv[i] = mlPdeSys->GetSolPdeIndex(name); // get the position of "vi" in the pdeSys object
+    
+    sprintf(name, "he%d", i);
+    solIndexhe[i] = mlSol->GetIndex(name); // get the position of "vi" in the sol object
+    solPdeIndexhe[i] = mlPdeSys->GetSolPdeIndex(name); // get the position of "vi" in the pdeSys object
+    
   }
 
   unsigned solTypeh = mlSol->GetSolutionType(solIndexh[0]);    // get the finite element type for "hi"
   unsigned solTypev = mlSol->GetSolutionType(solIndexv[0]);    // get the finite element type for "vi"
+  unsigned solTypehe = mlSol->GetSolutionType(solIndexhe[0]);    // get the finite element type for "hi"
 
   vector < double > x;    // local coordinates
   vector< vector < adept::adouble > > solh(NLayers);    // local coordinates
   vector< vector < adept::adouble > > solv(NLayers);    // local coordinates
+  vector< vector < adept::adouble > > solhe(NLayers);    // local coordinates
   
   vector< vector < bool > > bdch(NLayers);    // local coordinates
   vector< vector < bool > > bdcv(NLayers);    // local coordinates
+  vector< vector < bool > > bdche(NLayers);    // local coordinates
 
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   vector < vector< adept::adouble > > aResh(NLayers);
   vector < vector< adept::adouble > > aResv(NLayers);
+  vector < vector< adept::adouble > > aReshe(NLayers);
 
   KK->zero();
   RES->zero();
@@ -193,21 +226,28 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofh  = msh->GetElementDofNumber(iel, solTypeh);    // number of solution element dofs
     unsigned nDofv  = msh->GetElementDofNumber(iel, solTypev);    // number of solution element dofs
+    unsigned nDofhe  = msh->GetElementDofNumber(iel, solTypehe);    // number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
+    unsigned nDofs = nDofh + nDofv + nDofhe;
+    
     // resize local arrays
-    l2GMap.resize(NLayers * (nDofh + nDofv) );
+    l2GMap.resize(NLayers * (nDofs) );
 
     for(unsigned i = 0; i < NLayers; i++) {
       solh[i].resize(nDofh);
       solv[i].resize(nDofv);
+      solhe[i].resize(nDofhe);
       bdch[i].resize(nDofh);
       bdcv[i].resize(nDofh);
+      bdche[i].resize(nDofhe);
       
       aResh[i].resize(nDofh);    //resize
       std::fill(aResh[i].begin(), aResh[i].end(), 0);    //set aRes to zero
       aResv[i].resize(nDofv);    //resize
       std::fill(aResv[i].begin(), aResv[i].end(), 0);    //set aRes to zero
+      aReshe[i].resize(nDofhe);    //resize
+      std::fill(aReshe[i].begin(), aReshe[i].end(), 0);    //set aRes to zero
     }
     x.resize(nDofx);
 
@@ -217,7 +257,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       for(unsigned j = 0; j < NLayers; j++) {
         solh[j][i] = (*sol->_Sol[solIndexh[j]])(solDofh);      // global extraction and local storage for the solution
 	bdch[j][i] = ( (*sol->_Bdc[solIndexh[j]])(solDofh) < 1.5)? true:false;
-        l2GMap[ j * (nDofh + nDofv) + i] = pdeSys->GetSystemDof(solIndexh[j], solPdeIndexh[j], i, iel);    // global to global mapping between solution node and pdeSys dof
+        l2GMap[ j * nDofs + i] = pdeSys->GetSystemDof(solIndexh[j], solPdeIndexh[j], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
     for(unsigned i = 0; i < nDofv; i++) {
@@ -225,26 +265,44 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       for(unsigned j = 0; j < NLayers; j++) {
         solv[j][i] = (*sol->_Sol[solIndexv[j]])(solDofv);      // global extraction and local storage for the solution
 	bdcv[j][i] = ( (*sol->_Bdc[solIndexv[j]])(solDofv) < 1.5)? true:false;
-        l2GMap[ nDofh + j * (nDofh + nDofv) + i] = pdeSys->GetSystemDof(solIndexv[j], solPdeIndexv[j], i, iel);    // global to global mapping between solution node and pdeSys dof
+        l2GMap[ j * nDofs + nDofh + i] = pdeSys->GetSystemDof(solIndexv[j], solPdeIndexv[j], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
+    for(unsigned i = 0; i < nDofhe; i++) {
+      unsigned solDofhe = msh->GetSolutionDof(i, iel, solTypehe);    // global to global mapping between solution node and solution dof
+      for(unsigned j = 0; j < NLayers; j++) {
+        solhe[j][i] = (*sol->_Sol[solIndexhe[j]])(solDofhe);      // global extraction and local storage for the solution
+	bdche[j][i] = ( (*sol->_Bdc[solIndexhe[j]])(solDofhe) < 1.5)? true:false;
+        l2GMap[ j * nDofs + nDofh + nDofv + i] = pdeSys->GetSystemDof(solIndexhe[j], solPdeIndexhe[j], i, iel);    // global to global mapping between solution node and pdeSys dof
+      }
+    }
+        
 
     for(unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
       x[i] = (*msh->_topology->_Sol[0])(xDof);      // global extraction and local storage for the element coordinates
     }
-
+  
     s.new_recording();
-    
+      
+    double xmid = 0.5 * (x[0] + x[1]);
+    double zz = sqrt(aa * aa - xmid*xmid);   // z coordinate of points on sphere
+    double dd = aa*acos((zz*z_c)/ (aa * aa));   // distance to center point on sphere [m]
+    double hh = 1 - dd*dd/(bb*bb);
+    std::vector < adept::adouble > b1(NLayers);
+    b1[NLayers - 1] = H_shelf + H_0/2*(1 + tanh(hh/phi));  // bottom topography
+    for(unsigned i = NLayers - 1;i > 0; i--){
+      b1[i - 1] = b1[i] + solh[i][0]; // bottom topography
+    }
+      
     double dx = x[nDofx - 1] - x[0];
     
     for(unsigned k = 0; k < NLayers; k++){
       for (unsigned i = 0; i < nDofh; i++){
 	if(!bdch[k][i]){
-	  aResh[k][i] = dx;
-	  for (unsigned j = 0; j < nDofh; j++){
-	    double sign = ( i == j)? -1.:1;
-	    aResh[k][i] += sign * solh[k][j]/(dx*dx);
+	  for (unsigned j = 0; j < nDofv; j++){
+	    double sign = ( j == 0)? 1.:-1;
+	    aResh[k][i] += sign * solhe[k][j] * solv[k][j] / dx;
 	  }
 	}
       }
@@ -256,10 +314,19 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 	    aResv[k][i] += sign * solv[k][j]/(dx*dx);
 	  }
 	}
-      }       
+      }
+      for (unsigned i = 0; i < nDofhe; i++){
+	if(!bdche[k][i]){
+	  double penalty = 1.e1;
+	  aReshe[k][i] -= 0.5 * solhe[k][i] * penalty;
+	  for (unsigned j = 0; j < nDofh; j++){
+	    aReshe[k][i] += 0.5 * solh[k][j] * penalty;
+	  }
+	}
+      }
     }
     
-    vector< double > Res(NLayers * (nDofh + nDofv)); // local redidual vector
+    vector< double > Res(NLayers * nDofs); // local redidual vector
     
       
     unsigned counter = 0;
@@ -272,6 +339,10 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 	Res[counter] =  aResv[k][i].value();
 	counter++;
       }
+      for(int i = 0; i < nDofhe; i++) {
+	Res[counter] =  aReshe[k][i].value();
+	counter++;
+      }
     }
 
     RES->add_vector_blocked(Res, l2GMap);
@@ -281,14 +352,16 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
       // define the dependent variables
       s.dependent(&aResh[k][0], nDofh);
       s.dependent(&aResv[k][0], nDofv);
+      s.dependent(&aReshe[k][0], nDofhe);
       
       // define the independent variables
       s.independent(&solh[k][0], nDofh);
       s.independent(&solv[k][0], nDofv);
+      s.independent(&solhe[k][0], nDofhe);
     }
     
     // get the jacobian matrix (ordered by row major )
-    vector < double > Jac(NLayers * (nDofh + nDofv) * NLayers * (nDofh + nDofv));
+    vector < double > Jac(NLayers * nDofs * NLayers * nDofs);
     s.jacobian(&Jac[0], true);
 
     //store K in the global matrix KK
