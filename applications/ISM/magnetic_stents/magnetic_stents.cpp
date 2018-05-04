@@ -1343,7 +1343,7 @@ void MagneticForceStents(const std::vector <double> & xMarker, std::vector <doub
 //   std::vector <double> gradHSquared(3);
 //   std::vector<double> vectorH(3);
   double H0 = 0.5 / mu0; //magnetic field intensity
-  double teta = PI * 0.5;
+  double theta = PI * 0.5;
   unsigned numberOfWires = 20;
   double fattore1 = chiWire/(2 + chiWire);
   double fattore2 = 0.5 * (MsatWire/H0);
@@ -1364,11 +1364,11 @@ void MagneticForceStents(const std::vector <double> & xMarker, std::vector <doub
   }
   //END
   
-  std::vector <std::vector<double> > relativePosition(numberOfWires);
-  for (unsigned i=0; i<relativePosition.size(); i++){
-    relativePosition[i].resize(2);  
+  std::vector <std::vector<double> > relPosition(numberOfWires); //relative position of the wires 
+  for (unsigned i=0; i<relPosition.size(); i++){
+    relPosition[i].resize(2);  
     for (unsigned j=0; j<2; j++){
-      relativePosition[i][j] = xMarker[j] - wiresCenter[i][j]; //particle position wrt the ith reference frame, i=1,...,numberOfWires
+      relPosition[i][j] = xMarker[j] - wiresCenter[i][j]; //particle position wrt the ith reference frame, i=1,...,numberOfWires
     }
   }
   
@@ -1377,8 +1377,27 @@ void MagneticForceStents(const std::vector <double> & xMarker, std::vector <doub
   for (unsigned i=0; i<gradPhi.size(); i++){
     gradPhi[i].resize(2);  
   }
-  //TODO
+  double value = H0*RWire*RWire*alphaWire;
+  for (unsigned i=0; i<numberOfWires; i++){
+    gradPhi[i][0] = value * ( cos(theta)*(-relPosition[i][0]*relPosition[i][0] + relPosition[i][1]*relPosition[i][1]) - 
+                     2*relPosition[i][0]*relPosition[i][1]*sin(theta) ) / 
+                     ((relPosition[i][0]*relPosition[i][0] + relPosition[i][1]*relPosition[i][1])*
+                     (relPosition[i][0]*relPosition[i][0] + relPosition[i][1]*relPosition[i][1]));
+    gradPhi[i][1] = value * ( sin(theta)*(relPosition[i][0]*relPosition[i][0] - relPosition[i][1]*relPosition[i][1]) - 
+                     2*relPosition[i][0]*relPosition[i][1]*cos(theta) ) / 
+                     ((relPosition[i][0]*relPosition[i][0] + relPosition[i][1]*relPosition[i][1])*
+                     (relPosition[i][0]*relPosition[i][0] + relPosition[i][1]*relPosition[i][1]));
+  }
   //END
+  
+  std::vector <std::vector<double> > B(numberOfWires);
+  for (unsigned i=0; i<B.size(); i++){
+    gradPhi[i].resize(2);  
+  }
+  for (unsigned i=0; i<numberOfWires; i++){
+    B[i][0] = mu0*(H0*cos(theta) - gradPhi[i][0]);
+    B[i][1] = mu0*(H0*sin(theta) - gradPhi[i][1]);
+  }
   
   //BEGIN fluid viscosity
 
