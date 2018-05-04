@@ -74,7 +74,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 4; //for refinement in 3D
+  unsigned numberOfUniformLevels = 3; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -165,7 +165,7 @@ int main(int argc, char** args)
   
   x.resize(size);
   x[0].resize(dim, 0.);
-  x[0][1] = 0.05;
+  x[0][1] = 0.1; //io ho messo 0.1., per essere sicuro invece di 0.075
  
   double R = 1.6;
   double R0 = 1.4;
