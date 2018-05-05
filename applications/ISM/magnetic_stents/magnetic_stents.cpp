@@ -1442,7 +1442,7 @@ void MagneticForceStents(const std::vector <double> & xMarker, std::vector <doub
 
 
   //BEGIN DIVERGENCE of MAGNETIC MOMENT
-  double Dp = (partSim + 1.) * 0.1 * 1.e-6;    //particle diameter //rule con partSim
+  double Dp = (partSim + 1.) * 0.43 * 1.e-6;    //particle diameter //rule con partSim
 
   double m_fm_p = 2.03 * 1.e-19; // magnitude of the magnetic moment of the magnetite in the particle
   double k = 1.38 * 1.e-23; //Boltzman constant
