@@ -44,31 +44,30 @@ void UpdateMeshCoordinates(MultiLevelMesh &mlMesh, MultiLevelSolution& mlSol);
 
 void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material);
 void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material);
-void MagneticStents(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material);
+void MagneticForceStents(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned &material);
 //------------------------------------------------------------------------------------------------------------------
 
 unsigned partSim;
 unsigned configuration;
 
-int main(int argc, char **args)
-{
+int main(int argc, char **args) {
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
   twoPressure = true;
   valve = false;
-  
+
   unsigned simulation = 0;
 
-  if (argc >= 2) {
-    if (!strcmp("0", args[1])) {   /** FSI Aortic Bifurcation 2D*/
+  if(argc >= 2) {
+    if(!strcmp("0", args[1])) {    /** FSI Aortic Bifurcation 2D*/
       simulation = 0;
     }
-    else if (!strcmp("1", args[1])) {   /** FSI Tubo 3D */
+    else if(!strcmp("1", args[1])) {    /** FSI Tubo 3D */
       simulation = 1;
     }
-    else if (!strcmp("2", args[1])) {   /** FSI Carotid Bifurcation 3D*/
+    else if(!strcmp("2", args[1])) {    /** FSI Carotid Bifurcation 3D*/
       simulation = 2;
     }
   }
@@ -84,15 +83,15 @@ int main(int argc, char **args)
   std::string infile;
   bool dimension2D = true;
 
-  if (simulation == 0) {
+  if(simulation == 0) {
     infile = "./input/aortic_bifurcation.neu";
   }
-  else if (simulation == 1) {
+  else if(simulation == 1) {
     infile = "./input/tubo3D.neu";
     //infile = "./input/tubo3D_thick.neu"; //used only once, not important
     dimension2D = false;
   }
-  else if (simulation == 2) {
+  else if(simulation == 2) {
     infile = "./input/carotid_bifurcation_3D.neu";
     dimension2D = false;
   }
@@ -108,14 +107,14 @@ int main(int argc, char **args)
   muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
   rhos = 1120;
   ni = 0.5;
-  if (simulation == 0) { //aortic_bifurcation
+  if(simulation == 0) {  //aortic_bifurcation
     E = 100 * 1.e6;
   }
-  else if (simulation == 1) { //tubo3D
+  else if(simulation == 1) {  //tubo3D
     //E = 1000;
     E = 1. * 1.e12 ;
   }
-  else if (simulation == 2) { //carotide
+  else if(simulation == 2) {  //carotide
     //E = 1.e6 * 1.e6; //CFD case
     E = 1 * 1.e6; // FSI with E = 1 MPa
     //E = 0.5 * 1.e6; // FSI with E = 0.5 MPa
@@ -171,65 +170,65 @@ int main(int argc, char **args)
   // ******* Add solution variables to multilevel solution and pair them *******
   ml_sol.AddSolution("DX", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("DY", LAGRANGE, SECOND, 2);
-  if (!dimension2D) ml_sol.AddSolution("DZ", LAGRANGE, SECOND, 2);
+  if(!dimension2D) ml_sol.AddSolution("DZ", LAGRANGE, SECOND, 2);
 
   ml_sol.AddSolution("U", LAGRANGE, SECOND, 2);
   ml_sol.AddSolution("V", LAGRANGE, SECOND, 2);
-  if (!dimension2D) ml_sol.AddSolution("W", LAGRANGE, SECOND, 2);
+  if(!dimension2D) ml_sol.AddSolution("W", LAGRANGE, SECOND, 2);
 
   // Pair each velocity variable with the corresponding displacement variable
   ml_sol.PairSolution("U", "DX"); // Add this line
   ml_sol.PairSolution("V", "DY"); // Add this line
-  if (!dimension2D) ml_sol.PairSolution("W", "DZ"); // Add this line
+  if(!dimension2D) ml_sol.PairSolution("W", "DZ");  // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PS", "Pressure", false);    // Add this line
-  
+
   ml_sol.AddSolution("PF", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PF", "Pressure", false);    // Add this line
 
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
-  
+
   ml_sol.AddSolution("Um", LAGRANGE, SECOND, 0, false);
   ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
-  if ( !dimension2D ) ml_sol.AddSolution("Wm", LAGRANGE, SECOND, 0, false);
+  if(!dimension2D) ml_sol.AddSolution("Wm", LAGRANGE, SECOND, 0, false);
 
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
 
- if (simulation == 0) {
+  if(simulation == 0) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionAorticBifurcation);
   }
-  else if (simulation == 1) {
+  else if(simulation == 1) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionTubo3D);
   }
-  else if (simulation == 2) {
+  else if(simulation == 2) {
     ml_sol.AttachSetBoundaryConditionFunction(SetBoundaryConditionCarotidBifurcation);
   }
 
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
-  if (!dimension2D) ml_sol.GenerateBdc("DZ", "Steady");
+  if(!dimension2D) ml_sol.GenerateBdc("DZ", "Steady");
 
-  if (simulation == 0) {
+  if(simulation == 0) {
     ml_sol.GenerateBdc("U", "Steady");
     ml_sol.GenerateBdc("V", "Time_dependent");
   }
-  else if (simulation == 1){
+  else if(simulation == 1) {
     ml_sol.GenerateBdc("U", "Time_dependent");
     ml_sol.GenerateBdc("V", "Steady");
     ml_sol.GenerateBdc("W", "Steady");
   }
-  else if (simulation == 2) {
+  else if(simulation == 2) {
     ml_sol.GenerateBdc("U", "Steady");
     ml_sol.GenerateBdc("V", "Steady");
     ml_sol.GenerateBdc("W", "Time_dependent");
   }
 
-  ml_sol.GenerateBdc ( "PS", "Steady" );
-  ml_sol.GenerateBdc ( "PF", "Steady" );
+  ml_sol.GenerateBdc("PS", "Steady");
+  ml_sol.GenerateBdc("PF", "Steady");
 
 
   // ******* Define the FSI Multilevel Problem *******
@@ -245,10 +244,10 @@ int main(int argc, char **args)
   TransientMonolithicFSINonlinearImplicitSystem & system = ml_prob.add_system<TransientMonolithicFSINonlinearImplicitSystem> ("Fluid-Structure-Interaction");
   system.AddSolutionToSystemPDE("DX");
   system.AddSolutionToSystemPDE("DY");
-  if (!dimension2D) system.AddSolutionToSystemPDE("DZ");
+  if(!dimension2D) system.AddSolutionToSystemPDE("DZ");
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
-  if (!dimension2D) system.AddSolutionToSystemPDE("W");
+  if(!dimension2D) system.AddSolutionToSystemPDE("W");
   system.AddSolutionToSystemPDE("PS");
   if(twoPressure) system.AddSolutionToSystemPDE("PF");
 
@@ -260,7 +259,7 @@ int main(int argc, char **args)
 
   system.SetNonLinearConvergenceTolerance(1.e-7);
   system.SetMaxNumberOfNonLinearIterations(20);
-  if (dimension2D) {
+  if(dimension2D) {
 //     system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(4);
 //     system.SetResidualUpdateConvergenceTolerance(1.e-15);
     system.SetMaxNumberOfLinearIterations(1);
@@ -330,9 +329,9 @@ int main(int argc, char **args)
   std::vector < std::vector < double > > x(pSize);
   std::vector < MarkerType > markerType(pSize);
 
-  if (simulation == 0) { //for aortic_bifurcation
+  if(simulation == 0) {  //for aortic_bifurcation
 
-    for (unsigned j = 0; j < pSize; j++) {
+    for(unsigned j = 0; j < pSize; j++) {
       x[j].resize(2);
       x[j][0] = -0.008 + 0.016 * j / (pSize - 1);
       x[j][1] = 0.11;
@@ -340,17 +339,17 @@ int main(int argc, char **args)
     }
   }
 
-  if (simulation == 1) { //for 3D tube
+  if(simulation == 1) {  //for 3D tube
     unsigned theta_intervals = 100;
     unsigned radius_intervals = 9;
     pSize = radius_intervals * theta_intervals;
     x.resize(pSize);
     markerType.resize(pSize);
     srand(2);
-    for (unsigned j = 0; j < pSize; j++) {
-      double r_rad = static_cast <double> (rand()) / RAND_MAX;
+    for(unsigned j = 0; j < pSize; j++) {
+      double r_rad = static_cast <double>(rand()) / RAND_MAX;
       r_rad = 0.0034 * sqrt(r_rad);
-      double r_theta = static_cast <double> (rand()) / RAND_MAX * 2 * PI;
+      double r_theta = static_cast <double>(rand()) / RAND_MAX * 2 * PI;
       x[j].resize(3);
       x[j][0] = -0.035;
       x[j][1] = 0.0196 + r_rad * sin(r_theta);
@@ -358,17 +357,17 @@ int main(int argc, char **args)
     }
   }
 
-  if (simulation == 2) { //for carotidBifurcation
+  if(simulation == 2) {  //for carotidBifurcation
     unsigned theta_intervals = 100;
     unsigned radius_intervals = 9;
     pSize = radius_intervals * theta_intervals;
     x.resize(pSize);
     markerType.resize(pSize);
     srand(2);
-    for (unsigned j = 0; j < pSize; j++) {
-      double r_rad = static_cast <double> (rand()) / RAND_MAX;
+    for(unsigned j = 0; j < pSize; j++) {
+      double r_rad = static_cast <double>(rand()) / RAND_MAX;
       r_rad = 0.0034 * sqrt(r_rad);
-      double r_theta = static_cast <double> (rand()) / RAND_MAX * 2 * PI;
+      double r_theta = static_cast <double>(rand()) / RAND_MAX * 2 * PI;
       x[j].resize(3);
       x[j][0] = r_rad * cos(r_theta);
       x[j][1] = 0.006 + r_rad * sin(r_theta);
@@ -391,11 +390,11 @@ int main(int argc, char **args)
   unsigned itPeriod = 32 /*for steady state with dt =100*/ /* for unsteady with dt =1/32, itPeriod = 32*/;
   unsigned confNumber;
   unsigned partSimMax;
-  if (simulation == 1) {
+  if(simulation == 1) {
     confNumber = 4;
     partSimMax = 21;
   }
-  else if (simulation == 2) {
+  else if(simulation == 2) {
     confNumber = 6;
     partSimMax = 8;
   }
@@ -408,9 +407,9 @@ int main(int argc, char **args)
   std::vector < std::vector < std::vector < double > > > streamline(pSize);
   std::vector < std::vector < std::vector < Line* > > > linea(confNumber);
 
-  for (configuration = 0; configuration < confNumber; configuration++) {
+  for(configuration = 0; configuration < confNumber; configuration++) {
     linea[configuration].resize(partSimMax);
-    for (partSim = 0; partSim < partSimMax; partSim++) {
+    for(partSim = 0; partSim < partSimMax; partSim++) {
       linea[configuration][partSim].resize(1);
       linea[configuration][partSim][0] =  new Line(x, markerType, ml_sol.GetLevel(numberOfUniformRefinedMeshes - 1), 2);
       linea[configuration][partSim][0]->GetStreamLine(streamline, 0);
@@ -419,8 +418,8 @@ int main(int argc, char **args)
       std::ostringstream output_path;
 
       double diam;
-      if (simulation == 1) diam = (partSim + 1.) * 0.1 * 1.e-6;
-      else if (simulation == 2) diam = (partSim + 1.) * 0.5 * 1.e-6;
+      if(simulation == 1) diam = (partSim + 1.) * 0.1 * 1.e-6;
+      else if(simulation == 2) diam = (partSim + 1.) * 0.5 * 1.e-6;
       else diam = 1.;
 
       output_path << "./output/particles-" << configuration << "-" << diam;
@@ -439,12 +438,12 @@ int main(int argc, char **args)
   unsigned count_tot = pSize;
   std::vector < std::vector <  double > > efficiencyVector(confNumber);
 
-  for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
+  for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
 
-    for (unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
+    for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
     }
-    if (time_step > 0)
+    if(time_step > 0)
       system.SetMgType(V_CYCLE);
     system.CopySolutionToOldSolution();
     system.MGsolve();
@@ -452,20 +451,24 @@ int main(int argc, char **args)
     ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step + 1);
 
     //if (time_step >= itPeriod) {
-    for (configuration = 0; configuration < confNumber; configuration++) {
+    for(configuration = 0; configuration < confNumber; configuration++) {
       efficiencyVector[configuration].resize(partSimMax);
-      for (partSim = 0; partSim < partSimMax; partSim++) {
+      for(partSim = 0; partSim < partSimMax; partSim++) {
 
         count_out = 0;
 
-        if (time_step >= 2.5 * itPeriod) {
-          for (int i = 0; i < linea[configuration][partSim].size(); i++) {
-            if (simulation == 1) {
+        if(time_step >= 1. / 8 /*2.5*/ * itPeriod) {
+          for(int i = 0; i < linea[configuration][partSim].size(); i++) {
+            if(simulation == 1) {
               linea[configuration][partSim][i]->AdvectionParallel(20, 1. / itPeriod, 4, MagneticForceWire);
             }
-            else if (simulation == 0 || simulation == 2) {
+            else if(simulation == 2) {
               linea[configuration][partSim][i]->AdvectionParallel(150, 1. / itPeriod, 4, MagneticForceSC);
-	      //linea[configuration][partSim][i]->AdvectionParallel(75, 1. / itPeriod, 4, MagneticForceSC);
+              //linea[configuration][partSim][i]->AdvectionParallel(75, 1. / itPeriod, 4, MagneticForceSC);
+            }
+            else if(simulation == 0) {
+              linea[configuration][partSim][i]->AdvectionParallel(150, 1. / itPeriod, 4, MagneticForceStents);
+              //linea[configuration][partSim][i]->AdvectionParallel(75, 1. / itPeriod, 4, MagneticForceSC);
             }
             count_out += linea[configuration][partSim][i]->NumberOfParticlesOutsideTheDomain();
           }
@@ -481,8 +484,8 @@ int main(int argc, char **args)
         efficiencyVector[configuration][partSim] =  static_cast< double >(count_inside) / count_tot;
 
         double diam;
-        if (simulation == 1) diam = (partSim + 1.) * 0.1 * 1.e-6;
-        else if (simulation == 2) diam = (partSim + 1.) * 0.5 * 1.e-6;
+        if(simulation == 1) diam = (partSim + 1.) * 0.1 * 1.e-6;
+        else if(simulation == 2) diam = (partSim + 1.) * 0.5 * 1.e-6;
         else diam = 0;
 
         std::cout << "configuration = " << configuration << std::endl;
@@ -493,7 +496,7 @@ int main(int argc, char **args)
         std::cout << "capture efficiency = " << efficiencyVector[configuration][partSim] << std::endl;
 
         linea[configuration][partSim][0]->GetStreamLine(streamline, 0);
-        for (int i = 0; i < linea[configuration][partSim].size(); i++) {
+        for(int i = 0; i < linea[configuration][partSim].size(); i++) {
           linea[configuration][partSim][i]->GetStreamLine(streamline, i + 1);
         }
 
@@ -509,18 +512,18 @@ int main(int argc, char **args)
 
 
   // ******* Clear all systems *******
-  for (configuration = 0; configuration < confNumber; configuration++) {
-    for (partSim = 0; partSim < partSimMax; partSim++) {
-      for (unsigned i = 0; i < linea[configuration][partSim].size(); i++) {
+  for(configuration = 0; configuration < confNumber; configuration++) {
+    for(partSim = 0; partSim < partSimMax; partSim++) {
+      for(unsigned i = 0; i < linea[configuration][partSim].size(); i++) {
         delete linea[configuration][partSim][i];
       }
     }
   }
 
 
-  for (unsigned j = 0; j < confNumber; j++) {
+  for(unsigned j = 0; j < confNumber; j++) {
     std::cout << " CONFIGURATION " << j << std::endl;
-    for (unsigned i = 0; i < partSimMax; i++) {
+    for(unsigned i = 0; i < partSimMax; i++) {
       std::cout << efficiencyVector[j][i] * 100 << std::endl;
     }
     std::cout << " ---------------------------------------------------------------------------- " << std::endl;
@@ -530,8 +533,7 @@ int main(int argc, char **args)
   return 0;
 }
 
-double SetVariableTimeStep(const double time)
-{
+double SetVariableTimeStep(const double time) {
   //double dt = 1./(64*1.4);
 
   double dt = 1. / 32; //1./16;
@@ -544,8 +546,7 @@ double SetVariableTimeStep(const double time)
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[], double & value, const int facename, const double time)
-{
+bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, const char name[], double & value, const int facename, const double time) {
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -553,18 +554,18 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
 
   double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
 
-  if (!strcmp(name, "V")) {
-    if (1 == facename) {
+  if(!strcmp(name, "V")) {
+    if(1 == facename) {
       double r2 = (x[0] * 100.) * (x[0] * 100.);
       value = -0.15 / .81 * (.81 - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
     }
-    if (2 == facename || 3 == facename || 7 == facename) {
+    if(2 == facename || 3 == facename || 7 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if (!strcmp(name, "U")) {
-    if (2 == facename || 3 == facename || 7 == facename) {
+  else if(!strcmp(name, "U")) {
+    if(2 == facename || 3 == facename || 7 == facename) {
 //       test = 0;
 //       value = (10000 + 2500 * sin(2 * PI * time)) * ramp;;
 //     }
@@ -573,22 +574,22 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
       value = 0;
     }
   }
-  else if (!strcmp(name, "PS")) {
+  else if(!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
   }
-  else if (!strcmp(name, "PF")) {
+  else if(!strcmp(name, "PF")) {
     test = 0;
     value = 0.;
   }
-  else if (!strcmp(name, "DX")) {
-    if (7 == facename) {
+  else if(!strcmp(name, "DX")) {
+    if(7 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if (!strcmp(name, "DY")) {
-    if (7 == facename) {
+  else if(!strcmp(name, "DY")) {
+    if(7 == facename) {
       test = 0;
       value = 0;
     }
@@ -598,45 +599,44 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
 }
 
 
-bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char name[], double & value, const int facename, const double time)
-{
+bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char name[], double & value, const int facename, const double time) {
   bool test = 1; //dirichlet
   value = 0.;
 
   double PI = acos(-1.);
   double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
 
-  if (!strcmp(name, "U")) {
-    if (2 == facename) {
+  if(!strcmp(name, "U")) {
+    if(2 == facename) {
       double r2 = ((x[1] - 0.0196) * (x[1] - 0.0196) + (x[2] * x[2])) / (0.0035 * 0.0035);
       value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
       //value = 2 * 0.1 * (1. - r2) * ramp; //inflow
     }
-    else if (1 == facename || 5 == facename) {
+    else if(1 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if (!strcmp(name, "V") || !strcmp(name, "W")){
-    if (1 == facename || 5 == facename) {
+  else if(!strcmp(name, "V") || !strcmp(name, "W")) {
+    if(1 == facename || 5 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if (!strcmp(name, "PS")) {
+  else if(!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
-    if (1 == facename) {
+    if(1 == facename) {
       value = (12500 + 2500 * sin(2 * PI * time)) * ramp;
       //value = 13335 * ramp;
     }
   }
-  else if (!strcmp(name, "PF")) {
+  else if(!strcmp(name, "PF")) {
     test = 0;
     value = 0.;
   }
-  else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
-    if (5 == facename) {
+  else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
+    if(5 == facename) {
       test = 0;
       value = 0;
     }
@@ -646,16 +646,15 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
 }
 
 
-bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, const char name[], double & value, const int facename, const double time)
-{
+bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, const char name[], double & value, const int facename, const double time) {
   bool test = 1; //dirichlet
   value = 0.;
 
   double PI = acos(-1.);
   double ramp = (time < 1) ? sin(PI / 2 * time) : 1.;
 
-  if (!strcmp(name, "W")) {
-    if (1 == facename) {
+  if(!strcmp(name, "W")) {
+    if(1 == facename) {
       double r2 = ((x[0] * x[0]) + (x[1] - 0.006) * (x[1] - 0.006)) / (0.0035 * 0.0035);
       value = 2 * 0.1 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
       //value = 1.3 * 0.194 * (1. - r2) * (1. + 0.25 * sin(2.*PI * time)) * ramp; //inflow
@@ -673,37 +672,37 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
 //       value = 2 * q * 1.e-6 * (1. - r2) / (PI * 0.0035 * 0.0035) * ramp; //inflow
       //std::cout << "velocity we would like to have = " << value1 << " " << "time t is : " << t << std::endl;
     }
-    else if (2 == facename || 3 == facename || 7 == facename) {
+    else if(2 == facename || 3 == facename || 7 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if (!strcmp(name, "U")) {
-    if (7 == facename) {
+  else if(!strcmp(name, "U")) {
+    if(7 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if (!strcmp(name, "V")) {
-    if (7 == facename) {
+  else if(!strcmp(name, "V")) {
+    if(7 == facename) {
       test = 0;
       value = 0.;
     }
   }
-  else if (!strcmp(name, "PS")) {
+  else if(!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
-    if (2 == facename || 3 == facename) {
+    if(2 == facename || 3 == facename) {
       value = (5000 + 2500 * sin(2 * PI * time)) * ramp;
       //value = 5000 * ramp;//13332
     }
   }
-  else if (!strcmp(name, "PF")) {
+  else if(!strcmp(name, "PF")) {
     test = 0;
     value = 0.;
   }
-  else if (!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
-    if (7 == facename) {
+  else if(!strcmp(name, "DX") || !strcmp(name, "DY") || !strcmp(name, "DZ")) {
+    if(7 == facename) {
       test = 0;
       value = 0;
     }
@@ -713,8 +712,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
 }
 
 
-void UpdateMeshCoordinates(MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol)
-{
+void UpdateMeshCoordinates(MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol) {
 
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
 
@@ -728,12 +726,12 @@ void UpdateMeshCoordinates(MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol)
   const char varname[3][3] = {"DX", "DY", "DZ"};
   vector <unsigned> indVAR(dim);
 
-  for (unsigned k = 0; k < dim; k++) {
+  for(unsigned k = 0; k < dim; k++) {
     indVAR[k] = mlSol.GetIndex(&varname[k][0]);
   }
 
 
-  for (unsigned k = 0; k < dim; k++) {
+  for(unsigned k = 0; k < dim; k++) {
 
     (*msh->_topology->_Sol[k]).zero();
     (*msh->_topology->_Sol[k]).close();
@@ -748,8 +746,7 @@ void UpdateMeshCoordinates(MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol)
 
 }
 
-void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material)
-{
+void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material) {
 
   //infinitely long wire with a current I flowing modelled by the line identified by x and v
 
@@ -757,8 +754,8 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   double PI = acos(-1.);
   //double I = 1.e5; // electric current intensity
-  //double I = 0.5 * 1.e5; 
-  double I = 2 * 1.e5;  
+  //double I = 0.5 * 1.e5;
+  double I = 2 * 1.e5;
   double Msat = 1.e6;  //  magnetic saturation
   double  chi = 3.; //magnetic susceptibility
   double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
@@ -767,7 +764,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
   std::vector <double> gradHSquared(3);
   std::vector<double> vectorH(3);
   double H0 = Msat / chi;
-  
+
   //END
 
 
@@ -780,12 +777,12 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN geometric parameters
 
-  double D =  (partSim + 1.) * 0.1 * 1.e-6;       //diameter of the particle //rule con partSim
+  double D = (partSim + 1.) * 0.1 * 1.e-6;        //diameter of the particle //rule con partSim
 
   std::vector <double> v(3);    //direction vector of the line that identifies the infinite wire
   std::vector <double> x(3);   //point that with v identifies the line of the wire
 
-  if (configuration == 0 ) {
+  if(configuration == 0) {
 
     x[0] = 0.02093036072;
     x[1] = 0.02093036072;
@@ -797,7 +794,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   }
 
-  else if ( configuration == 1 ) {
+  else if(configuration == 1) {
 
     x[0] = 0.006788225;
     x[1] = 0.006788225;
@@ -809,7 +806,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   }
 
-  else if ( configuration == 2 ) {
+  else if(configuration == 2) {
 
     x[0] = 0.0196 * sqrt(2) / 2;
     x[1] = 0.0196 * sqrt(2) / 2;
@@ -822,7 +819,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
   }
 
 
-  else if ( configuration == 3 ) {
+  else if(configuration == 3) {
 
     x[0] = 0.0196 * sqrt(2) / 2;
     x[1] = 0.0196 * sqrt(2) / 2;
@@ -878,7 +875,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN evaluate Fm
 
-  if (true || H < H0 ) {
+  if(true || H < H0) {
 
 
     double C1 = (PI * D * D * D * mu0 * chi) / 12;
@@ -901,7 +898,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
   }
 
 
-  for (unsigned i = 0 ; i < Fm.size(); i++) {
+  for(unsigned i = 0 ; i < Fm.size(); i++) {
     Fm[i] = Fm[i] / (3 * PI * D * muf) ;
   }
 
@@ -910,7 +907,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 
   //BEGIN cheating to have attractive force
 
-  for (unsigned i = 0 ; i < Fm.size(); i++) {
+  for(unsigned i = 0 ; i < Fm.size(); i++) {
     Fm[i] = - Fm[i] ;
     //printf("%g ",Fm[i]);
   }
@@ -921,8 +918,7 @@ void MagneticForceWire(const std::vector <double> & xMarker, std::vector <double
 }
 
 
-void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material)
-{
+void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material) {
 
   //current loop of radius a, center x and for z-axis the line identified by x and v
 
@@ -958,7 +954,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   std::vector <double> v(3);
   std::vector <double> x(3);
 
-  if (configuration == 0) { //conf1 with z = 1.75 cm
+  if(configuration == 0) {  //conf1 with z = 1.75 cm
     v[0] = 0.;
     v[1] = -1.;
     v[2] = 0.;
@@ -967,7 +963,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
     x[1] = -0.019932;
     x[2] = 0.000169;
   }
-  else if (configuration == 1) { //conf2 with z =1.75 cm
+  else if(configuration == 1) {  //conf2 with z =1.75 cm
     v[0] = -1;
     v[1] = 0.;
     v[2] = 0.;
@@ -976,7 +972,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
     x[1] = 0.0045;
     x[2] = 0.;
   }
-  else if (configuration == 2) { //conf1 with z = 2.75 cm
+  else if(configuration == 2) {  //conf1 with z = 2.75 cm
     v[0] = 0.;
     v[1] = -1.;
     v[2] = 0.;
@@ -985,7 +981,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
     x[1] = -0.029932;
     x[2] = 0.000169;
   }
-  else if (configuration == 3) { //conf2 with z = 2.75 cm
+  else if(configuration == 3) {  //conf2 with z = 2.75 cm
     v[0] = -1;
     v[1] = 0.;
     v[2] = 0.;
@@ -994,8 +990,8 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
     x[1] = 0.0045;
     x[2] = 0.;
   }
-  
-    else if (configuration == 4) { //conf 3 with z = 1.75 cm
+
+  else if(configuration == 4) {  //conf 3 with z = 1.75 cm
     v[0] = 1;
     v[1] = 0.;
     v[2] = 0.;
@@ -1004,8 +1000,8 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
     x[1] = -0.001;
     x[2] = 0.;
   }
-  
-    else if (configuration == 5) { //conf 3 with z = 2.75 cm
+
+  else if(configuration == 5) {  //conf 3 with z = 2.75 cm
     v[0] = 1;
     v[1] = 0.;
     v[2] = 0.;
@@ -1014,8 +1010,8 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
     x[1] = -0.001;
     x[2] = 0.;
   }
-  
-  
+
+
 
   //END
 
@@ -1044,8 +1040,8 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   unsigned imax = 0;
   double vmax = fabs(v[0]);
-  for (unsigned i = 1; i < 3; i++) {
-    if (fabs(v[i]) > vmax) {
+  for(unsigned i = 1; i < 3; i++) {
+    if(fabs(v[i]) > vmax) {
       imax = i;
       vmax = fabs(v[i]);
     }
@@ -1065,12 +1061,12 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   w[2] = v[0] * u[1] - v[1] * u[0];
 
   double w2 = sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]);
-  if (fabs(w2 - 1.) > 1.0e-12) {
+  if(fabs(w2 - 1.) > 1.0e-12) {
     std::cout << "ERRORE AAAAAAAAAAAAAAAAAAA" << std::endl;
   }
 
   std::vector< std::vector <double> > R(3);
-  for (unsigned i = 0; i < 3; i++) {
+  for(unsigned i = 0; i < 3; i++) {
     R[i].resize(3);
     R[i][0] = u[i];
     R[i][1] = w[i];
@@ -1088,7 +1084,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
 
   //BEGIN find marker local coordinates
-  for (unsigned i = 0; i < 3 ; i++) {
+  for(unsigned i = 0; i < 3 ; i++) {
     xM[i] -= x[i];
   }
 
@@ -1096,8 +1092,8 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
 
   std::vector<double> xM1(3, 0.);
-  for (unsigned i = 0; i < 3; i++) {
-    for (unsigned j = 0; j < 3; j++) {
+  for(unsigned i = 0; i < 3; i++) {
+    for(unsigned j = 0; j < 3; j++) {
       xM1[i] += R[j][i] * xM[j];
     }
   }
@@ -1118,7 +1114,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   std::vector < double > vectorHp(3);
   std::vector < std::vector < double > > jacobianVectorHp(3);
-  for (unsigned i = 0; i < 3; i++) {
+  for(unsigned i = 0; i < 3; i++) {
     jacobianVectorHp[i].resize(3);
   }
 
@@ -1192,28 +1188,28 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 //           std::cout<<std::endl;  std::cout<<std::endl;
 
   std::vector < std::vector <double> > jacobianVectorH(3);
-  for (unsigned i = 0; i < 3; i++) {
+  for(unsigned i = 0; i < 3; i++) {
     jacobianVectorH[i].resize(3);
   }
 
-  for (unsigned i = 0; i < 3; i++) {
+  for(unsigned i = 0; i < 3; i++) {
     vectorH[i] = 0.;
-    for (unsigned j = 0; j < 3; j++) {
+    for(unsigned j = 0; j < 3; j++) {
       vectorH[i] += R[i][j] * vectorHp[j];
       jacobianVectorH[i][j] = 0.;
       // std::cout << R[i][j] <<" ";
       // std::cout << jacobianVectorHp[i][j] <<" ";
-      for (unsigned k = 0; k < 3; k++) {
+      for(unsigned k = 0; k < 3; k++) {
         jacobianVectorH[i][j] += R[i][k] * jacobianVectorHp[k][j];
       }
     }
   }
 
 
-  for (unsigned i = 0; i < 3; i++) {
-    for (unsigned j = 0; j < 3; j++) {
+  for(unsigned i = 0; i < 3; i++) {
+    for(unsigned j = 0; j < 3; j++) {
       jacobianVectorHp[i][j] = 0. ;
-      for (unsigned k = 0; k < 3; k++) {
+      for(unsigned k = 0; k < 3; k++) {
         jacobianVectorHp[i][j] += jacobianVectorH[i][k] * R[j][k];
       }
     }
@@ -1250,19 +1246,19 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
 
   H = 0.;
-  for (unsigned  i = 0; i < 3; i++) {
+  for(unsigned  i = 0; i < 3; i++) {
     H += vectorH[i] * vectorH[i];
   }
   H = sqrt(H);
 
-  for (unsigned  i = 0; i < 3; i++) {
+  for(unsigned  i = 0; i < 3; i++) {
     gradHSquared[i] = 0.;
-    for (unsigned  j = 0; j < 3; j++) {
+    for(unsigned  j = 0; j < 3; j++) {
       gradHSquared[i] += 2 * vectorH[j] * jacobianVectorH[j][i];
     }
   }
 
-  for (unsigned i = 0 ; i < Fm.size(); i++) {
+  for(unsigned i = 0 ; i < Fm.size(); i++) {
     Fm[i] = - Fm[i] ;
     //printf("%g ",Fm[i]);
   }
@@ -1285,7 +1281,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 
   //BEGIN evaluate Fm
 
-  if (H < H0) {
+  if(H < H0) {
 
 
     double C1 = (PI * D * D * D * mu0 * chi) / 12;
@@ -1307,7 +1303,7 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
   }
 
 
-  for (unsigned i = 0 ; i < Fm.size(); i++) {
+  for(unsigned i = 0 ; i < Fm.size(); i++) {
     Fm[i] = Fm[i] / (3 * PI * D * muf) ;
   }
 
@@ -1327,216 +1323,165 @@ void MagneticForceSC(const std::vector <double> & xMarker, std::vector <double> 
 }
 
 
-void MagneticForceStents(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material){
-  
+void MagneticForceStents(const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material) {
+
   //magnetic force when there are magnezable stents and the magnetic field is constant
 
   //BEGIN magnetic parameters
-
   double PI = acos(-1.);
-//  double I = 2 * 1.e5; // electric current intensity
   double MsatWire = 1261 * 1.e3;  //  magnetic saturation
   double  chiWire = 1000.; //magnetic susceptibility
   double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
-//   double H;
-//   std::vector <double> gradH(3);
-//   std::vector <double> gradHSquared(3);
-//   std::vector<double> vectorH(3);
   double H0 = 0.5 / mu0; //magnetic field intensity
   double theta = PI * 0.5;
   unsigned numberOfWires = 20;
-  double fattore1 = chiWire/(2 + chiWire);
-  double fattore2 = 0.5 * (MsatWire/H0);
-  double alphaWire = (fattore1<fattore2)?fattore1:fattore2;
+  double fattore1 = chiWire / (2 + chiWire);
+  double fattore2 = 0.5 * (MsatWire / H0);
+  double alphaWire = (fattore1 < fattore2) ? fattore1 : fattore2;
   double RWire = 62.5 * 1.e-6;
   double wireSpace = 0.2 * 1.e-2;
   std::vector <std::vector<double> > wiresCenter(numberOfWires);
-  for (unsigned i=0; i<wiresCenter.size(); i++){
+  for(unsigned i = 0; i < wiresCenter.size(); i++) {
     wiresCenter[i].resize(2);
-    if (i < numberOfWires/2) {
-      wiresCenter[i][0] = (1.5 * wireSpace) + i * wireSpace;  
-      wiresCenter[i][1] = 0.035 * 1.e-2;
+    if(i < numberOfWires / 2) {
+      wiresCenter[i][0] = 0.15 * 1.e-2 + i * wireSpace;
+      wiresCenter[i][1] = 3 * 1.e-4;
     }
-    else{
-      wiresCenter[i][0] = wireSpace + (i - numberOfWires/2) * wireSpace;  
-      wiresCenter[i][1] = - 0.035 * 1.e-2;
+    else {
+      wiresCenter[i][0] = 0.05 * 1.e-2 + (i - numberOfWires / 2) * wireSpace;
+      wiresCenter[i][1] = - 3 * 1.e-4;
     }
   }
   //END
-  
-  std::vector <std::vector<double> > relPosition(numberOfWires); //relative position of the wires 
-  for (unsigned i=0; i<relPosition.size(); i++){
-    relPosition[i].resize(2);  
-    for (unsigned j=0; j<2; j++){
+
+  std::vector <std::vector<double> > relPosition(numberOfWires); //relative position of the wires
+  for(unsigned i = 0; i < relPosition.size(); i++) {
+    relPosition[i].resize(2);
+    for(unsigned j = 0; j < 2; j++) {
       relPosition[i][j] = xMarker[j] - wiresCenter[i][j]; //particle position wrt the ith reference frame, i=1,...,numberOfWires
     }
   }
-  
-  //BEGIN PHI FUNCTION DERIVATIVES
-  std::vector <std::vector<double> > gradPhi(numberOfWires);
-  for (unsigned i=0; i<gradPhi.size(); i++){
-    gradPhi[i].resize(2);  
-  }
-  double value = H0*RWire*RWire*alphaWire;
-  for (unsigned i=0; i<numberOfWires; i++){
-    gradPhi[i][0] = value * ( cos(theta)*(-relPosition[i][0]*relPosition[i][0] + relPosition[i][1]*relPosition[i][1]) - 
-                     2*relPosition[i][0]*relPosition[i][1]*sin(theta) ) / 
-                     ((relPosition[i][0]*relPosition[i][0] + relPosition[i][1]*relPosition[i][1])*
-                     (relPosition[i][0]*relPosition[i][0] + relPosition[i][1]*relPosition[i][1]));
-    gradPhi[i][1] = value * ( sin(theta)*(relPosition[i][0]*relPosition[i][0] - relPosition[i][1]*relPosition[i][1]) - 
-                     2*relPosition[i][0]*relPosition[i][1]*cos(theta) ) / 
-                     ((relPosition[i][0]*relPosition[i][0] + relPosition[i][1]*relPosition[i][1])*
-                     (relPosition[i][0]*relPosition[i][0] + relPosition[i][1]*relPosition[i][1]));
-  }
-  //END
-  
-  std::vector <std::vector<double> > B(numberOfWires);
-  for (unsigned i=0; i<B.size(); i++){
-    gradPhi[i].resize(2);  
-  }
-  for (unsigned i=0; i<numberOfWires; i++){
-    B[i][0] = mu0*(H0*cos(theta) - gradPhi[i][0]);
-    B[i][1] = mu0*(H0*sin(theta) - gradPhi[i][1]);
-  }
-  
-  //BEGIN fluid viscosity
 
+  //BEGIN GRADIENT PHI and HESSIAN
+  // we compute the gradient of each phi and then sum them up to obtain sumGradPhi
+  // sumHessPhi is the negative sum of the Hessian matrix of each phi
+  std::vector<double> sumGradPhi(2);
+  std::vector< std::vector <double> > sumHessPhi(2);
+  for(unsigned i = 0; i < 2; i++) {
+    sumGradPhi[i] = 0.;
+    sumHessPhi[i].resize(2);
+    for(unsigned j = 0; j < 2; j++) {
+      sumHessPhi[i][j] = 0.;
+    }
+  }
+
+  double value = H0 * RWire * RWire * alphaWire;
+
+  for(unsigned i = 0; i < numberOfWires; i++) {
+    sumGradPhi[0] += value * (cos(theta) * (-relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1]) -
+                              2 * relPosition[i][0] * relPosition[i][1] * sin(theta)) /
+                     ((relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1]) *
+                      (relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1]));
+    sumGradPhi[1] += value * (sin(theta) * (relPosition[i][0] * relPosition[i][0] - relPosition[i][1] * relPosition[i][1]) -
+                              2 * relPosition[i][0] * relPosition[i][1] * cos(theta)) /
+                     ((relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1]) *
+                      (relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1]));
+
+    sumHessPhi[0][0] += ((- 2. * relPosition[i][0] * cos(theta) - 2. * relPosition[i][1] * sin(theta)) *
+                         pow(relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 2) -
+                         (cos(theta) * (relPosition[i][1] * relPosition[i][1] - relPosition[i][0] * relPosition[i][0]) - 2. * relPosition[i][0] * relPosition[i][1] * sin(theta)) *
+                         (4. *  relPosition[i][0] * (relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1]))) /
+                        pow(relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 4) ;
+
+    sumHessPhi[1][1] += ((- 2. * relPosition[i][1] * sin(theta) - 2. * relPosition[i][0] * cos(theta)) *
+                         pow(relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 2) -
+                         (sin(theta) * (relPosition[i][0] * relPosition[i][0] - relPosition[i][1] * relPosition[i][1]) - 2. * relPosition[i][0] * relPosition[i][1] * cos(theta)) *
+                         (4. *  relPosition[i][1] * (relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1]))) /
+                        pow(relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 4) ;
+
+    sumHessPhi[0][1] += ((2. * relPosition[i][0] * sin(theta) - 2. * relPosition[i][1] * cos(theta)) *
+                         pow(relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 2) -
+                         (sin(theta) * (relPosition[i][0] * relPosition[i][0] - relPosition[i][1] * relPosition[i][1]) - 2. * relPosition[i][0] * relPosition[i][1] * cos(theta)) *
+                         (4. *  relPosition[i][0] * (relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1]))) /
+                        pow(relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 4) ;
+
+  }
+
+
+  sumHessPhi[0][0] = - 1. * sumHessPhi[0][0];
+  sumHessPhi[1][1] = - 1. * sumHessPhi[1][1];
+  sumHessPhi[0][1] = - 1. * sumHessPhi[0][1];
+  sumHessPhi[1][0] = sumHessPhi[0][1];
+  //END
+
+
+
+  //BEGIN B and JACOBIAN of B
+  std::vector<double> B(2, 0.);
+  B[0] = mu0 * (H0 * cos(theta) * numberOfWires - sumGradPhi[0]); //TODO still to understand if numberOfWires has to be there
+  B[1] = mu0 * (H0 * sin(theta) * numberOfWires - sumGradPhi[1]);
+
+  std::vector< std::vector <double> > JacB(2);
+  for(unsigned i = 0; i < 2; i++) {
+    JacB[i].resize(2);
+    for(unsigned j = 0; j < 2; j++) {
+      JacB[i][j] = mu0 * sumHessPhi[i][j];
+    }
+  }
+//END
+
+
+  //BEGIN MAGNITUDE of B and its GRADIENT
+  double magnitudeB = sqrt(B[0] * B[0] + B[1] * B[1]);
+
+  std::vector <double> gradMagnitudeB(2, 0.) ;
+
+  gradMagnitudeB[0] = mu0 * (B[0] * sumHessPhi[0][0] + B[1] * sumHessPhi[0][1]) / magnitudeB;
+  gradMagnitudeB[1] = mu0 * (B[0] * sumHessPhi[0][1] + B[1] * sumHessPhi[1][1]) / magnitudeB;
+//END
+
+
+  //BEGIN DIVERGENCE of MAGNETIC MOMENT
+  double Dp = (partSim + 1.) * 0.1 * 1.e-6;    //particle diameter //rule con partSim
+
+  double m_fm_p = 2.03 * 1.e-19; // magnitude of the magnetic moment of the magnetite in the particle
+  double k = 1.38 * 1.e-23; //Boltzman constant
+  double T = 300.; //absolute temperature
+  double C1 = m_fm_p / (k * T) ;
+
+  double beta = C1 * magnitudeB; //this is to highlight that beta depends on B and so on x and y
+
+  double cothBeta = (exp(beta) + exp(- beta)) / (exp(beta) - exp(- beta));
+  double Langevin = cothBeta - 1. / beta;
+
+  double w_fm_p = 6.4;
+  double Vp = (4. / 3) * PI * (Dp * 0.5) * (Dp * 0.5) * (Dp * 0.5);//particle volume
+  double M_fm_p_s = 351.9 * 1.e3;
+  double C2 = w_fm_p * Vp * M_fm_p_s;
+
+  double dMagnMom1_dx = C2 * ((1. - cothBeta * cothBeta) * C1 * gradMagnitudeB[0] * B[0] / magnitudeB +
+                              B[0] * gradMagnitudeB[0] / pow(magnitudeB, 3) +
+                              Langevin * ((JacB[0][0] * magnitudeB - B[0] * gradMagnitudeB[0]) / (magnitudeB * magnitudeB))
+                             );
+  double dMagnMom2_dy = C2 * ((1. - cothBeta * cothBeta) * C1 * gradMagnitudeB[1] * B[1] / magnitudeB +
+                              B[1] * gradMagnitudeB[1] / pow(magnitudeB, 3) +
+                              Langevin * ((JacB[1][1] * magnitudeB - B[1] * gradMagnitudeB[1]) / (magnitudeB * magnitudeB))
+                             );
+
+  double divMagnMom = dMagnMom1_dx + dMagnMom2_dy;
+//END
+
+
+
+//BEGIN MAGNETIC FORCE
   double muf = (material == 2) ? 3.5 * 1.0e-3 : 1.0e100; // fluid viscosity
 
-  //END
-
-
-  //BEGIN geometric parameters
-
-  double D =  (partSim + 1.) * 0.1 * 1.e-6;       //diameter of the particle //rule con partSim
-
-  std::vector <double> v(3);    //direction vector of the line that identifies the infinite wire
-  std::vector <double> x(3);   //point that with v identifies the line of the wire
-
-  if (configuration == 0 ) {
-
-    x[0] = 0.02093036072;
-    x[1] = 0.02093036072;
-    x[2] = 0.;
-
-    v[0] = 0.;
-    v[1] = 0.;
-    v[2] = -1.;
-
+  for(unsigned i = 0 ; i < 2; i++) {
+    Fm[i] = divMagnMom * B[i] / (3 * PI * Dp * muf);
   }
+  Fm[2] = 0.;
+//END
 
-  else if ( configuration == 1 ) {
-
-    x[0] = 0.006788225;
-    x[1] = 0.006788225;
-    x[2] = 0.;
-
-    v[0] = 0.;
-    v[1] = 0.;
-    v[2] = -1.;
-
-  }
-
-  else if ( configuration == 2 ) {
-
-    x[0] = 0.0196 * sqrt(2) / 2;
-    x[1] = 0.0196 * sqrt(2) / 2;
-    x[2] = 0.01;
-
-    v[0] = sqrt(2) / 2.;
-    v[1] = sqrt(2) / 2.;
-    v[2] = 0.;
-
-  }
-
-
-  else if ( configuration == 3 ) {
-
-    x[0] = 0.0196 * sqrt(2) / 2;
-    x[1] = 0.0196 * sqrt(2) / 2;
-    x[2] = 0.01;
-
-    v[0] = - sqrt(2) / 2.;
-    v[1] = sqrt(2) / 2.;
-    v[2] = 0.;
-
-  }
-
-
-  //END
-
-
-//   //BEGIN extraction of the coordinates of the particle
-// 
-//   std::vector <double> xM(3);
-//   xM[0] = xMarker[0];
-//   xM[1] = xMarker[1];
-//   xM[2] = (xMarker.size() == 3) ? xMarker[2] : 0. ;
-// 
-//   //END
-
-
-  //BEGIN evaluate H
-
-  //double Gamma;
-  //double Omega;
-  //std::vector<double> gradOmega(3);
-
-  //Gamma = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-  //Omega = (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) +
-          //(v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) +
-          //(v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1])) ;
-
-  //gradOmega[0] = 2 * v[2] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2])) + 2 * v[1] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
-
-  //gradOmega[1] = 2 * v[2] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[1] * (x[0] - xM[0]) - v[0] * (x[1] - xM[1]));
-
-  //gradOmega[2] = - 2 * v[1] * (v[2] * (x[1] - xM[1]) - v[1] * (x[2] - xM[2])) - 2 * v[0] * (v[2] * (x[0] - xM[0]) - v[0] * (x[2] - xM[2]));
-
-  //H = (I / (2 * PI)) * Gamma * (1 / sqrt(Omega));
-
-  //gradHSquared[0] = (I / (2 * PI)) * (I / (2 * PI)) * ((-1) * Gamma * Gamma * (1 / (Omega * Omega))) * gradOmega[0];
-  //gradHSquared[1] = (I / (2 * PI)) * (I / (2 * PI)) * ((-1) * Gamma * Gamma * (1 / (Omega * Omega))) * gradOmega[1];
-  //gradHSquared[2] = (I / (2 * PI)) * (I / (2 * PI)) * ((-1) * Gamma * Gamma * (1 / (Omega * Omega))) * gradOmega[2];
-
-  //gradH[0] = (I / (2 * PI)) * ((-0.5) * Gamma * gradOmega[0]) / sqrt(Omega * Omega * Omega);
-  //gradH[1] = (I / (2 * PI)) * ((-0.5) * Gamma * gradOmega[1]) / sqrt(Omega * Omega * Omega);
-  //gradH[2] = (I / (2 * PI)) * ((-0.5) * Gamma * gradOmega[2]) / sqrt(Omega * Omega * Omega);
-
-
-  //BEGIN evaluate Fm
-
-//   if (true || H < H0 ) {
-// 
-// 
-//     double C1 = (PI * D * D * D * mu0 * chi) / 12;
-//     // printf("%g\n",C1);
-//     Fm[0] = C1 * gradHSquared[0];
-//     Fm[1] = C1 * gradHSquared[1];
-//     Fm[2] = C1 * gradHSquared[2];
-//   }
-// 
-//   else {
-// 
-// 
-//     double C2 = (PI * D * D * D * mu0 * Msat) / 6;
-// 
-//     //printf("%g\n",C2);
-//     Fm[0] = C2 * gradH[0];
-//     Fm[1] = C2 * gradH[1];
-//     Fm[2] = C2 * gradH[2];
-// 
-//   }
-
-
-  for (unsigned i = 0 ; i < Fm.size(); i++) {
-    Fm[i] = Fm[i] / (3 * PI * D * muf) ;
-  }
-
-  //END
-
-
-  
 }
 
 
