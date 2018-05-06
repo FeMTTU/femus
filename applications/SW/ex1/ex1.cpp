@@ -319,13 +319,14 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
         }
       }
 //      for (unsigned i = 0; i < nDofhe; i++){
-//	if(!bdche[k][i]){
-// 	  double penalty = 1.e5;
-// 	  aReshe[k][i] -= 0.5 * solhe[k][i] * penalty;
-// 	  for (unsigned j = 0; j < nDofh; j++){
-// 	    aReshe[k][i] += 0.5 * solh[k][j] * penalty;
+// 	if(!bdche[k][i]){
+// 	  if( i == 0){
+// 	    aReshe[k][i] += -solhe[k][1] * solv[k][1] / ( 2 * dx) ;
 // 	  }
-//	}
+// 	  else if (i == 1){
+// 	    aReshe[k][i] += solhe[k][0] * solv[k][0] / ( 2 * dx) ;
+// 	  }
+// 	}
 //      }
       for (unsigned i = 0; i < nDofhe; i++) {
         if(!bdche[k][i]) {
