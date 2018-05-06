@@ -405,7 +405,7 @@ int main ( int argc, char **args ) {
   }
 
   if ( simulation == 3 ) { //for magnetic_stents
-    pSize = 4. * 1.e3;
+    pSize = 8. * 1.e3;
     x.resize ( pSize );
     double a = -0.0004 + 0.000001;
     double b = 0.0004 - 0.000001;
@@ -505,7 +505,7 @@ int main ( int argc, char **args ) {
               linea[configuration][partSim][i]->AdvectionParallel ( 20, 1. / itPeriod, 4, MagneticForceWire );
             }
             else if ( simulation == 0 || simulation == 2 ) {
-              linea[configuration][partSim][i]->AdvectionParallel ( 150, 1. / itPeriod, 4, MagneticForceSC );
+              linea[configuration][partSim][i]->AdvectionParallel ( 200, 1. / itPeriod, 4, MagneticForceSC );
               //linea[configuration][partSim][i]->AdvectionParallel(75, 1. / itPeriod, 4, MagneticForceSC);
             }
             else if ( simulation == 3 ) {
@@ -1524,7 +1524,7 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
 
   //BEGIN B and JACOBIAN of B
   std::vector<double> B ( 2, 0. );
-  B[0] = mu0 * ( H0 * cos ( theta ) * numberOfWires - sumGradPhi[0] ); //TODO still to understand if numberOfWires has to be there
+  B[0] = mu0 * ( H0 * cos ( theta ) * numberOfWires - sumGradPhi[0] ); 
   B[1] = mu0 * ( H0 * sin ( theta ) * numberOfWires - sumGradPhi[1] );
   
 //   std::cout << "B1 = " << B[0] << " , " << "B2 = " << B[1] << std::endl;
@@ -1563,7 +1563,7 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
   double Langevin = cothBeta - 1. / beta;
 
   double w_fm_p = 6.4;
-  double Vp = ( 4. / 3 ) * PI * ( Dp * 0.5 ) * ( Dp * 0.5 ) * ( Dp * 0.5 ); //particle volume
+  double Vp = ( 4. / 3 ) * PI * ( Dp * 0.5 ) * ( Dp * 0.5 ) * ( Dp * 0.5 ); //particle spherical volume
   double M_fm_p_s = 351.9 * 1.e3;
   double C2 = w_fm_p * Vp * M_fm_p_s;
 
@@ -1585,7 +1585,7 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
   double muf = ( material == 2 ) ? 3.5 * 1.0e-3 : 1.0e100; // fluid viscosity
 
   for ( unsigned i = 0 ; i < 2; i++ ) {
-    Fm[i] = 1.e-2 * divMagnMom * B[i] / ( 3 * PI * Dp * muf ); //TODO remove cheating
+    Fm[i] = 1.e-2 * divMagnMom * B[i] / ( 3 * PI * Dp * muf ); //TODO remove cheating factor 1.e-2
   }
   Fm[2] = 0.;
 //END
