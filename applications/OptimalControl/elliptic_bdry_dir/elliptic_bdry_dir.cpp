@@ -430,7 +430,9 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //=================================================== 
 
 		
+ //========= compute coordinates of boundary nodes on each element ========================================== 
 		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
+	        for (unsigned idim = 0; idim < dim; idim++) {  x_bdry[idim].resize(nve_bdry); }
 		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
 		for(unsigned i=0; i < nve_bdry; i++) {
 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
@@ -439,6 +441,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		      x_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
 		  }
 		}
+ //========================================================================================================== 
 		
 //========= initialize gauss quantities on the boundary ============================================
                 double sol_ctrl_bdry_gss = 0.;
@@ -1057,7 +1060,9 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
 	      if(  face == 3) { //control face
 
+ //========= compute coordinates of boundary nodes on each element ========================================== 
 		unsigned nve_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
+	        for (unsigned idim = 0; idim < dim; idim++) {  x_bdry[idim].resize(nve_bdry); }
 		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
 		for(unsigned i=0; i < nve_bdry; i++) {
 		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
@@ -1066,6 +1071,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 		      x_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
 		  }
 		}
+ //========================================================================================================== 
 		
 		//============ initialize gauss quantities on the boundary ==========================================
                 double sol_ctrl_bdry_gss = 0.;

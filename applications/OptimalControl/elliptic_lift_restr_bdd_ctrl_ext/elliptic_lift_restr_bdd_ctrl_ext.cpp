@@ -56,7 +56,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 
 double ComputeIntegral(MultiLevelProblem& ml_prob);
 
-void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob);
+void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob);
 
 
 int main(int argc, char** args) {
@@ -127,7 +127,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("mu");  
   
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleLiftRestrProblem);
+  system.SetAssembleFunction(AssembleLiftExternalProblem);
   
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
@@ -152,7 +152,7 @@ int main(int argc, char** args) {
 }
 
 
-void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
+void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
 
   //  level is the level of the PDE system to be assembled
@@ -182,10 +182,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   
  //***************************************************  
-  vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-  for (unsigned i = 0; i < dim; i++) {
-    x[i].reserve(maxSize);
+  vector < vector < double > > x(dim);    // local coordinates
+  vector < vector < double > > x_bdry(dim);    // local coordinates
+  for (unsigned idim = 0; idim < dim; idim++) {
+    x[idim].reserve(maxSize);
+    x_bdry[idim].reserve(maxSize);
   }
  //***************************************************   
 
@@ -331,6 +333,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   double alpha = ALPHA_CTRL;
   double beta  = BETA_CTRL;
   double penalty_strong = 10e+14;
+  double penalty_interface = 1.e10;         //penalty for u=q
  //***************************************************  
 
   RES->zero();
@@ -339,6 +342,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    
     int group_flag         = msh->GetElementGroup(iel);
     short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
     std::cout << " ======= grp_flag === " << group_flag << " ================== " << std::endl; 
@@ -462,7 +466,88 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     unsigned ndofs_unk = msh->GetElementDofNumber(iel, SolFEType[k]);
 	Sol_n_el_dofs[k] = ndofs_unk;
   }
+  
+  
+  //************ Boundary loops *************************************** 
+ 
+  	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
+
+ //========= compute coordinates of boundary nodes on each element ========================================== 
+		unsigned nDofx_bdry    = msh->GetElementFaceDofNumber(iel,jface,xType);
+		unsigned nDofu_bdry    = msh->GetElementFaceDofNumber(iel,jface,solType_u);
+		unsigned nDofctrl_bdry = msh->GetElementFaceDofNumber(iel,jface,solType_ctrl);
+		if (nDofu_bdry != nDofctrl_bdry) { std::cout << "State and control need to have the same FE space" << std::endl; abort(); }
+	        for (unsigned idim = 0; idim < dim; idim++) {  x_bdry[idim].resize(nDofx_bdry); }
+		const unsigned felt_bdry = msh->GetElementFaceType(iel, jface);    
+		for(unsigned i=0; i < nDofx_bdry; i++) {
+		  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i);
+                  unsigned iDof = msh->GetSolutionDof(i_vol, iel, xType);
+		  for(unsigned idim=0; idim<dim; idim++) {
+		      x_bdry[idim][i]=(*msh->_topology->_Sol[idim])(iDof);
+		  }
+		}
+ //===================================================   
+ 
+ //============== face elem average point =====================================   
+    vector < double > elem_center_bdry(dim);   
+    for (unsigned j = 0; j < dim; j++) {  elem_center_bdry[j] = 0.;  }
+    for (unsigned j = 0; j < dim; j++) {  
+      for (unsigned i = 0; i < nDofx_bdry; i++) {
+         elem_center_bdry[j] += x[j][i];
+       }
+    }
+   for (unsigned j = 0; j < dim; j++) { elem_center_bdry[j] = elem_center_bdry[j]/nDofx_bdry; }
+ //===================================================   
     
+    
+ //============ find interface nodes (now we do with coordinates, later we can do also with flag in gambit) ======================================= 
+ double my_eps = 1.e-6;
+    if (elem_center_bdry[0] > 1. - my_eps   && elem_center_bdry[0] < 1.   + my_eps  && 
+        elem_center_bdry[1] > 0.25 - my_eps && elem_center_bdry[1] < 0.75 + my_eps
+    ) {
+      
+      		      for (int i_bdry = 0; i_bdry < nDofu_bdry; i_bdry++)  {
+		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+//============ Bdry Residuals ==================	
+                if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  -  penalty_interface * (   sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
+//============ Bdry Residuals ==================	
+		    
+		    for(unsigned j_bdry=0; j_bdry < nDofu_bdry; j_bdry ++) {
+		         unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
+//============ Bdry Jacobians ==================	
+
+
+// FIRST BLOCK ROW
+//============ u = q ===========================	    
+// block delta_state/state =====================
+		if (i_vol < nDof_u && j_vol < nDof_u && i_vol == j_vol)  {
+		  Jac[    
+		(0 + i_vol) * nDof_AllVars  +
+		(0 + j_vol)                                ]  += penalty_interface * ( 1.);
+		  
+		         }
+
+// block delta_state/control ===================
+	      if ( i_vol < nDof_u && j_vol < nDof_ctrl && i_vol == j_vol) {
+		Jac[    
+		(0     + i_vol) * nDof_AllVars  +
+		(nDof_u + j_vol)                           ]  += penalty_interface  * (-1.);
+	
+	                 }
+//============ u = q ===========================		    
+		    
+		    } //end j_vol 
+	 }
+      
+      
+      
+       }
+    
+  
+ 	  }  //end face loop
+	  
+  //************ Boundary loops *************************************** 
+	    
  //*************************************************** 
     
 //  //***** set control flag ****************************
