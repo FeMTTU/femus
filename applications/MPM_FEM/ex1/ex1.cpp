@@ -21,23 +21,6 @@ using namespace femus;
 // OLD BEST RESULT WITH E = 4.2 * 1.e6, 5 levels, dt= 0.01, NR = 300, R0 = 1.5, factor = 1.3
 // MOST BEST RESULT WITH E = 4.2 * 1.e6, 4 levels, dt= 0.01, NR = 300, R0 = 1.4, factor = 1.14,  beta = 0.3, Gamma = 0.5
 
-unsigned getNumberOfLayers(const double &a, const double &fac){
-  double da = 1./fac; 
-  double b =  da;
-  unsigned n = 1;
-  
-  while(b < a){
-    da /= fac;
-    b += da;
-    n++;
-    if(n >= 100){
-       std::cout<<"Error: number of layer is unbounded, try with a smaller factor\n";
-       abort();
-    }
-  }
-  return n;
-}
-
 double SetVariableTimeStep(const double time)
 {
   double dt =  0.01;
@@ -74,7 +57,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 3; //for refinement in 3D
+  unsigned numberOfUniformLevels = 5; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -84,7 +67,7 @@ int main(int argc, char** args)
   double nu = 0.4;
   double E = 4.2 * 1.e6;
   
-  beta = 0.3;
+  beta = 0.25; // 0.3
   Gamma = 0.5;
 
   Parameter par(Lref, Uref);
@@ -162,14 +145,15 @@ int main(int argc, char** args)
   //BEGIN init particles
   unsigned size = 1;
   std::vector < std::vector < double > > x; // marker
+  double yc = 0.05;  //0.1. (for 3 refinements) 0.075 (for 4 and 5 refinements)
   
   x.resize(size);
   x[0].resize(dim, 0.);
-  x[0][1] = 0.1; //io ho messo 0.1., per essere sicuro invece di 0.075
+  x[0][1] = yc;
  
   double R = 1.6;
-  double R0 = 1.4;
-  bool boundaryLayer = ( fabs(R-R0) > 1.0e-10)? true: false;
+  double R0 = 1.5; //1.4
+  
   double PI = acos(-1.);
   unsigned NR = 300;
   unsigned NL = NR / (2 * PI);
@@ -186,16 +170,16 @@ int main(int argc, char** args)
     }
     for(unsigned j = 0; j < Nr; j++) {
       x[sizeOld + j][0] = r * cos(j * dtheta);
-      x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
+      x[sizeOld + j][1] = yc + r * sin(j * dtheta);
     }
   }
   double MASS = PI * R0 * R0 * rhos;
   size = x.size();
   std::vector < double > mass(x.size(), MASS / x.size()); // uniform marker volume
   
-  if(boundaryLayer) {
+  if( fabs(R-R0) > 1.0e-10 ) {
     
-    double factor = 1.14;
+    double factor = 1.3; //1.14
     unsigned NL = getNumberOfLayers((R-R0)/DL, factor);
     std::cout << NL <<std::endl;
       
@@ -212,7 +196,7 @@ int main(int argc, char** args)
       }
       for(unsigned j = 0; j < NR; j++) {
         x[sizeOld + j][0] = r * cos(j * dtheta);
-        x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
+        x[sizeOld + j][1] = yc + r * sin(j * dtheta);
       }
       mass.resize(x.size(), rhos * r * dtheta * DL);
     }

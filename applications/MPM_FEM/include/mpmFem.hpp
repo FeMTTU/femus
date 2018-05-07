@@ -849,5 +849,20 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
 }
 
 
-
+unsigned getNumberOfLayers(const double &a, const double &fac){
+  double da = 1./fac; 
+  double b =  da;
+  unsigned n = 1;
+  
+  while(b < a){
+    da /= fac;
+    b += da;
+    n++;
+    if(n >= 100){
+       std::cout<<"Error: number of layer is unbounded, try with a smaller factor\n";
+       abort();
+    }
+  }
+  return n;
+}
 
