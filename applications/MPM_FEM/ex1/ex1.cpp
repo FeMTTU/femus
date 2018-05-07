@@ -67,7 +67,7 @@ int main(int argc, char** args)
   double nu = 0.4;
   double E = 4.2 * 1.e6;
   
-  beta = 0.25; // 0.3
+  beta = 0.3; 
   Gamma = 0.5;
 
   Parameter par(Lref, Uref);
