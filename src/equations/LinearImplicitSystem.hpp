@@ -92,6 +92,10 @@ public:
         return _final_linear_residual;
     };
 
+    /** Flag to print fields to file after each linear iteration */
+    void SetDebugLinear(const bool my_value) {
+        _debug_linear = my_value;
+    };
     /** Get the absolute convergence tolerance for the linear problem Ax=b*/
     double GetAbsoluteConvergenceTolerance() const {
         return _linearAbsoluteConvergenceTolerance;
@@ -203,6 +207,9 @@ protected:
     // member data
     /** The number of linear iterations required to solve the linear system Ax=b. */
     //unsigned int _n_linear_iterations;
+
+    /** Flag for printing fields at each linear iteration */
+    bool _debug_linear;
 
     /** The final residual for the linear system Ax=b. */
     double _final_linear_residual;

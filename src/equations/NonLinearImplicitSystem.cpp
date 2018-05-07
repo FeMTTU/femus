@@ -55,6 +55,7 @@ namespace femus {
   bool NonLinearImplicitSystem::IsNonLinearConverged( const unsigned igridn, double &nonLinearEps ) {
     bool conv = true;
     double L2normEps, L2normSol, L2normEpsDividedSol;
+    double L2normRes;
 
     nonLinearEps = 0.;
     const double absMinNonlinearEps = 1.e-50;
@@ -63,16 +64,18 @@ namespace femus {
 
     for( unsigned k = 0; k < _SolSystemPdeIndex.size(); k++ ) {
       unsigned indexSol = _SolSystemPdeIndex[k];
+      L2normRes    = _solution[igridn]->_Res[indexSol]->l2_norm();
       L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
       L2normSol    = _solution[igridn]->_Sol[indexSol]->l2_norm();
       L2normEpsDividedSol = L2normEps/(L2normSol+mindeltaNormSol);
 
       std::cout << "     ********* Level Max " << igridn + 1 << " Nonlinear Eps_l2norm/Sol_l2norm " << \
         std::scientific << _ml_sol->GetSolutionName( indexSol ) << "= " << L2normEpsDividedSol << \
-        "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << std::endl;
+        "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol <<"  ** Res_l2norm= " << L2normRes << std::endl;
       nonLinearEps = ( nonLinearEps > L2normEpsDividedSol ) ? nonLinearEps : L2normEpsDividedSol;
+// _solution[igridn]->_Sol[indexSol]->print();
 
-      if( (L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol) && conv == true ) {
+      if( (/*L2normRes < _max_nonlinear_convergence_tolerance || */L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol) && conv == true ) {
         conv = true;
       }
       else {
