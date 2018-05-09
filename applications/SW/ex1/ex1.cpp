@@ -24,7 +24,7 @@
 
 using namespace femus;
 
-double rho[10]={1025,1027,1028};
+double rho[10]={1.025,1.027,1.028};
 
 double InitalValueV(const std::vector < double >& x)
 {
@@ -64,20 +64,22 @@ int main(int argc, char** args)
 
 
 
-  unsigned numberOfUniformLevels = 6;
+  unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
+  unsigned nx = static_cast<unsigned>(floor(pow(2.,3) + 0.5));
+  
   double length = 2. * 1465700.;
 
-  mlMsh.GenerateCoarseBoxMesh(2, 0, 0, -length / 2, length / 2, 0., 0., 0., 0., EDGE3, "seventh");
+  mlMsh.GenerateCoarseBoxMesh(nx, 0, 0, -length / 2, length / 2, 0., 0., 0., 0., EDGE3, "seventh");
 
-  mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
+  //mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
   mlMsh.PrintInfo();
 
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
 
-  unsigned NumberOfLayers = 3;
+  unsigned NumberOfLayers = 1;
 
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
@@ -284,33 +286,40 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 //     }
 
 
+   
+
+    s.new_recording();
+    
     for(unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
       x[i] = (*msh->_topology->_Sol[0])(xDof);      // global extraction and local storage for the element coordinates
     }
-    for(unsigned i = 0; i<NLayers; i++){
-      double celerity = sqrt( 9.81 * solh[i][0].value());
-      double vmid = 0.5 * ( solv[i][0].value() + solh[i][1].value() );
-      maxWaveSpeed = ( maxWaveSpeed> fabs(vmid) + fabs(celerity) )?  maxWaveSpeed : fabs(vmid) + fabs(celerity);
-    }
-
-    s.new_recording();
+    
 
     double xmid = 0.5 * (x[0] + x[1]);
+    //std::cout << xmid << std::endl;
     double zz = sqrt(aa * aa - xmid * xmid); // z coordinate of points on sphere
     double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
     double hh = 1 - dd * dd / (bb * bb);
     std::vector < adept::adouble > b1(NLayers);
     for(unsigned k = 0; k < NLayers; k++) {
-       b1[k] = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) ) * rho[k] * .000001; // bottom topography
+       b1[k] = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) ) * rho[k]; // bottom topography
+       
        for( unsigned j = 0; j < NLayers; j++){
 	 double rhoj = (j <= k) ? rho[j] : rho[k];
 	 b1[k] += rhoj * solh[j][0];
       }
       b1[k] /= rho[k];
-    
     }
+    //std::cout << b1[0] << std::endl;
     
+    for(unsigned i = 0; i<NLayers; i++){
+      //double celerity = sqrt( 9.81 * solh[i][0].value());
+      double celerity = sqrt( 9.81 * b1[NLayers-1].value());
+      double vmid = 0.5 * ( solv[i][0].value() + solv[i][1].value() );
+      maxWaveSpeed = ( maxWaveSpeed > fabs(vmid) + fabs(celerity) )?  maxWaveSpeed : fabs(vmid) + fabs(celerity);
+    }
+    std::cout<<maxWaveSpeed<<std::endl;
     
 //     b1[NLayers - 1] = H_shelf + H_0 / 2 * (1 + tanh(hh / phi))*0; // bottom topography
 //     for(unsigned i = NLayers - 1; i > 0; i--) {
@@ -318,7 +327,7 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 //     }
 
 
-    dx = x[nDofx - 1] - x[0];
+    dx = x[1] - x[0];
 
     for(unsigned k = 0; k < NLayers; k++) {
       for (unsigned i = 0; i < nDofh; i++) {
@@ -422,12 +431,17 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
 //   double a;
 //   std::cin>>a;
 //
+  
+//  abort();
   MFN mfn;
   Mat A = (static_cast<PetscMatrix*>(KK))->mat();
   FN f, f1, f2, f3 , f4;
-  double dt = dx / maxWaveSpeed;
   
-  std::cout << "AAAAAAAAAA " << dt << std::endl;
+  double dt = dx / maxWaveSpeed * 10;
+  
+  std::cout << "AAAAAAAAAA " << dt << " "<< dx << " "<<maxWaveSpeed << std::endl;
+  
+  //dt = 100.;
 
   Vec v = (static_cast< PetscVector* >(RES))->vec();
   Vec y = (static_cast< PetscVector* >(EPS))->vec();
