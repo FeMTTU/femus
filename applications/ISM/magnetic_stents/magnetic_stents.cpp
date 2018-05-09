@@ -506,7 +506,7 @@ int main ( int argc, char **args )
               linea[configuration][partSim][i]->AdvectionParallel ( 20, 1. / itPeriod, 4, MagneticForceWire );
             }
             else if ( simulation == 0 || simulation == 2 ) {
-              linea[configuration][partSim][i]->AdvectionParallel ( 200, 1. / itPeriod, 4, MagneticForceSC );
+              linea[configuration][partSim][i]->AdvectionParallel ( 150, 1. / itPeriod, 4, MagneticForceSC );
               //linea[configuration][partSim][i]->AdvectionParallel(75, 1. / itPeriod, 4, MagneticForceSC);
             }
             else if ( simulation == 3 ) {
@@ -1446,9 +1446,9 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
   double MsatWire = 1261 * 1.e3;  //  magnetic saturation
   double  chiWire = 1000.; //magnetic susceptibility
   double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
-  double H0 = 0.17 / mu0; //magnetic field intensity
+  double H0 = 0.15 / mu0; //magnetic field intensity
   double theta = PI * 0.5;
-  unsigned numberOfWires = 2;
+  unsigned numberOfWires = 20;
   double fattore1 = chiWire / ( 2 + chiWire );
   double fattore2 = 0.5 * ( MsatWire / H0 );
   double alphaWire = ( fattore1 < fattore2 ) ? fattore1 : fattore2;
@@ -1493,8 +1493,8 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
     
     double x = relPosition[i][0];
     double y = relPosition[i][1];
+
     double r2 =  x * x + y * y;
-    r2 *= r2;
     double r4 = r2 * r2;
     
     double phi = value * ( x * cos(theta) + y * sin(theta) ) / r2;
@@ -1510,6 +1510,7 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
     sumHessPhi[1][1] += value * sin(theta) * (- 2. * y ) / r4 - ( phi_y * 2. * y / r2 + phi * 2. / r2 + phi * 2. * y * (- 2. * y) / r4 );
     
     sumHessPhi[0][1] += value * cos(theta) * (- 2. * y ) / r4 - ( phi_y * 2. * x / r2 + phi * 2. * x * (- 2. * y) / r4 );
+    
   }
 
 
