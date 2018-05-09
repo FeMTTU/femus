@@ -60,7 +60,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 4; //for refinement in 3D
+  unsigned numberOfUniformLevels = 3; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -226,7 +226,7 @@ int main(int argc, char** args)
   
   if( fabs(H-H0) > 1.0e-10){
     
-    double factor = 1.1; //1.14
+    double factor = 1.2; //1.14
     unsigned NL = getNumberOfLayers( 0.5 * (H-H0) / DH, factor);
     std::cout << NL <<std::endl;
     
@@ -317,9 +317,13 @@ int main(int argc, char** args)
 
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 400;
+  unsigned n_timesteps = 1000;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
+    if(time_step >= 50){
+      gravity[1]  = 0.;
+    }
+    
     system.CopySolutionToOldSolution();
     
     system.MGsolve();

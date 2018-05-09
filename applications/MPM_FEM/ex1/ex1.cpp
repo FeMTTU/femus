@@ -57,7 +57,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 5; //for refinement in 3D
+  unsigned numberOfUniformLevels = 4; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -65,9 +65,9 @@ int main(int argc, char** args)
   double Uref = 1.;
   double rhos = 1000;
   double nu = 0.4;
-  double E = 4.2 * 1.e6;
+  double E = 4.2 * 1.e8;
   
-  beta = 0.3; 
+  beta = 0.3; //was 0.25 
   Gamma = 0.5;
 
   Parameter par(Lref, Uref);
@@ -145,14 +145,14 @@ int main(int argc, char** args)
   //BEGIN init particles
   unsigned size = 1;
   std::vector < std::vector < double > > x; // marker
-  double yc = 0.05;  //0.1. (for 3 refinements) 0.075 (for 4 and 5 refinements)
+  double yc = 0.09;  //0.1. (for 3 refinements) 0.075 (for 4) and 0.05  (for 5)
   
   x.resize(size);
   x[0].resize(dim, 0.);
   x[0][1] = yc;
  
   double R = 1.6;
-  double R0 = 1.5; //1.4
+  double R0 = 1.4; 
   
   double PI = acos(-1.);
   unsigned NR = 300;
@@ -179,7 +179,7 @@ int main(int argc, char** args)
   
   if( fabs(R-R0) > 1.0e-10 ) {
     
-    double factor = 1.3; //1.14
+    double factor = 1.14; 
     unsigned NL = getNumberOfLayers((R-R0)/DL, factor);
     std::cout << NL <<std::endl;
       
