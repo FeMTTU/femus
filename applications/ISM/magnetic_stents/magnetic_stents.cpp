@@ -1448,7 +1448,7 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
   double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
   double H0 = 0.17 / mu0; //magnetic field intensity
   double theta = PI * 0.5;
-  unsigned numberOfWires = 20;
+  unsigned numberOfWires = 2;
   double fattore1 = chiWire / ( 2 + chiWire );
   double fattore2 = 0.5 * ( MsatWire / H0 );
   double alphaWire = ( fattore1 < fattore2 ) ? fattore1 : fattore2;
@@ -1481,52 +1481,38 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
   //BEGIN GRADIENT PHI and HESSIAN
   // we compute the gradient of each phi and then sum them up to obtain sumGradPhi
   // sumHessPhi is the negative sum of the Hessian matrix of each phi
-  std::vector<double> sumGradPhi ( 2 );
+  std::vector<double> sumGradPhi ( 2, 0. );
   std::vector< std::vector <double> > sumHessPhi ( 2 );
   for ( unsigned i = 0; i < 2; i++ ) {
-    sumGradPhi[i] = 0.;
-    sumHessPhi[i].resize ( 2 );
-    for ( unsigned j = 0; j < 2; j++ ) {
-      sumHessPhi[i][j] = 0.;
-    }
+    sumHessPhi[i].assign ( 2, 0.);
   }
 
   double value = H0 * RWire * RWire * alphaWire;
 
   for ( unsigned i = 0; i < numberOfWires; i++ ) {
-    sumGradPhi[0] += value * ( cos ( theta ) * ( -relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1] ) -
-                               2 * relPosition[i][0] * relPosition[i][1] * sin ( theta ) ) /
-                     ( ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1] ) *
-                       ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1] ) );
-    sumGradPhi[1] += value * ( sin ( theta ) * ( relPosition[i][0] * relPosition[i][0] - relPosition[i][1] * relPosition[i][1] ) -
-                               2 * relPosition[i][0] * relPosition[i][1] * cos ( theta ) ) /
-                     ( ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1] ) *
-                       ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1] ) );
+    
+    double x = relPosition[i][0];
+    double y = relPosition[i][1];
+    double r2 =  x * x + y * y;
+    r2 *= r2;
+    double r4 = r2 * r2;
+    
+    double phi = value * ( x * cos(theta) + y * sin(theta) ) / r2;
+    double phi_x = value * cos ( theta ) / r2 - phi * 2. * x / r2;
+    double phi_y = value * sin ( theta ) / r2 - phi * 2. * y / r2;
+    
+    sumGradPhi[0] += phi_x;
+    
+    sumGradPhi[1] += phi_y;
+    
+    sumHessPhi[0][0] += value * cos(theta) * (- 2. * x ) / r4 - ( phi_x * 2. * x / r2 + phi * 2. / r2 + phi * 2. * x * (- 2. * x) / r4 );
 
-    sumHessPhi[0][0] += ( ( - 2. * relPosition[i][0] * cos ( theta ) - 2. * relPosition[i][1] * sin ( theta ) ) *
-                          pow ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 2 ) -
-                          ( cos ( theta ) * ( relPosition[i][1] * relPosition[i][1] - relPosition[i][0] * relPosition[i][0] ) - 2. * relPosition[i][0] * relPosition[i][1] * sin ( theta ) ) *
-                          ( 4. *  relPosition[i][0] * ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1] ) ) ) /
-                        pow ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 4 ) ;
-
-    sumHessPhi[1][1] += ( ( - 2. * relPosition[i][1] * sin ( theta ) - 2. * relPosition[i][0] * cos ( theta ) ) *
-                          pow ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 2 ) -
-                          ( sin ( theta ) * ( relPosition[i][0] * relPosition[i][0] - relPosition[i][1] * relPosition[i][1] ) - 2. * relPosition[i][0] * relPosition[i][1] * cos ( theta ) ) *
-                          ( 4. *  relPosition[i][1] * ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1] ) ) ) /
-                        pow ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 4 ) ;
-
-    sumHessPhi[0][1] += ( ( 2. * relPosition[i][0] * sin ( theta ) - 2. * relPosition[i][1] * cos ( theta ) ) *
-                          pow ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 2 ) -
-                          ( sin ( theta ) * ( relPosition[i][0] * relPosition[i][0] - relPosition[i][1] * relPosition[i][1] ) - 2. * relPosition[i][0] * relPosition[i][1] * cos ( theta ) ) *
-                          ( 4. *  relPosition[i][0] * ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1] ) ) ) /
-                        pow ( relPosition[i][0] * relPosition[i][0] + relPosition[i][1] * relPosition[i][1], 4 ) ;
-
+    sumHessPhi[1][1] += value * sin(theta) * (- 2. * y ) / r4 - ( phi_y * 2. * y / r2 + phi * 2. / r2 + phi * 2. * y * (- 2. * y) / r4 );
+    
+    sumHessPhi[0][1] += value * cos(theta) * (- 2. * y ) / r4 - ( phi_y * 2. * x / r2 + phi * 2. * x * (- 2. * y) / r4 );
   }
 
 
-  sumHessPhi[0][0] = - 1. * sumHessPhi[0][0];
-  sumHessPhi[1][1] = - 1. * sumHessPhi[1][1];
-  sumHessPhi[0][1] = - 1. * sumHessPhi[0][1];
   sumHessPhi[1][0] = sumHessPhi[0][1];
   //END
 
@@ -1543,7 +1529,7 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
   for ( unsigned i = 0; i < 2; i++ ) {
     JacB[i].resize ( 2 );
     for ( unsigned j = 0; j < 2; j++ ) {
-      JacB[i][j] = mu0 * sumHessPhi[i][j];
+      JacB[i][j] = - mu0 * sumHessPhi[i][j];
     }
   }
 //END
@@ -1553,7 +1539,7 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
   double magnitudeB = sqrt ( B[0] * B[0] + B[1] * B[1] );
 
 //   std::vector <double> gradMagnitudeB ( 2, 0. ) ;
-// 
+//
 //   gradMagnitudeB[0] = mu0 * ( B[0] * sumHessPhi[0][0] + B[1] * sumHessPhi[0][1] ) / magnitudeB;
 //   gradMagnitudeB[1] = mu0 * ( B[0] * sumHessPhi[0][1] + B[1] * sumHessPhi[1][1] ) / magnitudeB;
 //END
@@ -1569,7 +1555,7 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
 
   double beta = C1 * magnitudeB; //this is to highlight that beta depends on B and so on x and y
 
-  double cothBeta = ( exp ( beta ) + exp ( - beta ) ) / ( exp ( beta ) - exp ( - beta ) );
+  double cothBeta =  cosh(beta) / sinh(beta) /*( exp ( beta ) + exp ( - beta ) ) / ( exp ( beta ) - exp ( - beta ) )*/;
   double Langevin = cothBeta - 1. / beta;
 
   double w_fm_p = 6.4;
@@ -1605,7 +1591,7 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
     for ( unsigned j = 0 ; j < 2; j++ ) {
       Fm[i] += magnMom[j] * JacB[i][j] ;
     }
-    Fm[i] /= 1.e-3 * ( 3. * PI * Dp * muf );  //TODO cheating factor
+    Fm[i] /= ( 3. * PI * Dp * muf );
   }
   Fm[2] = 0.;
 //END
