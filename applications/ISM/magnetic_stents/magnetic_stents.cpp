@@ -53,7 +53,8 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
 unsigned partSim;
 unsigned configuration;
 
-int main ( int argc, char **args ) {
+int main ( int argc, char **args )
+{
 
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit ( argc, args, MPI_COMM_WORLD );
@@ -405,7 +406,7 @@ int main ( int argc, char **args ) {
   }
 
   if ( simulation == 3 ) { //for magnetic_stents
-    pSize = 8. * 1.e3;
+    pSize = 2. * 1.e6;
     x.resize ( pSize );
     double a = -0.0004 + 0.000001;
     double b = 0.0004 - 0.000001;
@@ -419,7 +420,7 @@ int main ( int argc, char **args ) {
   }
 
 //   std::cout << "SUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCA" <<std::endl;
-  
+
   //END INITIALIZE PARTICLES
 
   unsigned itPeriod = 32 /*for steady state with dt =100*/ /* for unsteady with dt =1/32, itPeriod = 32*/;
@@ -469,7 +470,7 @@ int main ( int argc, char **args ) {
   }
 
 //      std::cout << "SUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCA" <<std::endl;
-  
+
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
 
@@ -499,7 +500,7 @@ int main ( int argc, char **args ) {
 
         count_out = 0;
 
-        if ( time_step >= 1./ itPeriod /*2.5*/ * itPeriod ) {
+        if ( time_step >= 1. / itPeriod /*2.5*/ * itPeriod ) {
           for ( int i = 0; i < linea[configuration][partSim].size(); i++ ) {
             if ( simulation == 1 ) {
               linea[configuration][partSim][i]->AdvectionParallel ( 20, 1. / itPeriod, 4, MagneticForceWire );
@@ -578,7 +579,8 @@ int main ( int argc, char **args ) {
 
 //-------------------------------------------------------------------------------------------------------------------
 
-double SetVariableTimeStep ( const double time ) {
+double SetVariableTimeStep ( const double time )
+{
   //double dt = 1./(64*1.4);
 
   double dt = 1. / 32; //1./16;
@@ -590,7 +592,8 @@ double SetVariableTimeStep ( const double time ) {
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -644,7 +647,8 @@ bool SetBoundaryConditionAorticBifurcation ( const std::vector < double >& x, co
 
 //--------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionTubo3D ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryConditionTubo3D ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -692,7 +696,8 @@ bool SetBoundaryConditionTubo3D ( const std::vector < double > & x, const char n
 
 //----------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionCarotidBifurcation ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryConditionCarotidBifurcation ( const std::vector < double > & x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -759,7 +764,8 @@ bool SetBoundaryConditionCarotidBifurcation ( const std::vector < double > & x, 
 
 //---------------------------------------------------------------------------------------------------------------------
 
-bool SetBoundaryConditionMagneticStents ( const std::vector < double >& x, const char name[], double & value, const int facename, const double time ) {
+bool SetBoundaryConditionMagneticStents ( const std::vector < double >& x, const char name[], double & value, const int facename, const double time )
+{
   bool test = 1; //dirichlet
   value = 0.;
 
@@ -812,7 +818,8 @@ bool SetBoundaryConditionMagneticStents ( const std::vector < double >& x, const
 
 //-------------------------------------------------------------------------------
 
-void UpdateMeshCoordinates ( MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol ) {
+void UpdateMeshCoordinates ( MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol )
+{
 
   unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
 
@@ -848,7 +855,8 @@ void UpdateMeshCoordinates ( MultiLevelMesh & mlMesh, MultiLevelSolution & mlSol
 
 //-----------------------------------------------------------------------------------
 
-void MagneticForceWire ( const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material ) {
+void MagneticForceWire ( const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material )
+{
 
   //infinitely long wire with a current I flowing modelled by the line identified by x and v
 
@@ -1021,7 +1029,8 @@ void MagneticForceWire ( const std::vector <double> & xMarker, std::vector <doub
 
 //---------------------------------------------------------------------------------
 
-void MagneticForceSC ( const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material ) {
+void MagneticForceSC ( const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material )
+{
 
   //current loop of radius a, center x and for z-axis the line identified by x and v
 
@@ -1427,7 +1436,8 @@ void MagneticForceSC ( const std::vector <double> & xMarker, std::vector <double
 
 //-------------------------------------------------------------------------------------
 
-void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material ) {
+void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <double> &Fm, const unsigned & material )
+{
 
   //magnetic force when there are magnezable stents and the magnetic field is constant
 
@@ -1450,12 +1460,12 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
     if ( i < numberOfWires / 2 ) {
       wiresCenter[i][0] = 0.15 * 1.e-2 + i * wireSpace;
       wiresCenter[i][1] = 3 * 1.e-4;
-//       std::cout << "wire:" << i << " " << "x=" << wiresCenter[i][0] << " , " << wiresCenter[i][1] << std::endl;  
+//       std::cout << "wire:" << i << " " << "x=" << wiresCenter[i][0] << " , " << wiresCenter[i][1] << std::endl;
     }
     else {
       wiresCenter[i][0] = 0.05 * 1.e-2 + ( i - numberOfWires / 2 ) * wireSpace;
       wiresCenter[i][1] = - 3 * 1.e-4;
-//       std::cout << "wire:" << i << " " << "x=" << wiresCenter[i][0] << " , " << wiresCenter[i][1] << std::endl;  
+//       std::cout << "wire:" << i << " " << "x=" << wiresCenter[i][0] << " , " << wiresCenter[i][1] << std::endl;
     }
   }
   //END
@@ -1524,11 +1534,11 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
 
   //BEGIN B and JACOBIAN of B
   std::vector<double> B ( 2, 0. );
-  B[0] = mu0 * ( H0 * cos ( theta ) * numberOfWires - sumGradPhi[0] ); 
-  B[1] = mu0 * ( H0 * sin ( theta ) * numberOfWires - sumGradPhi[1] );
-  
+  B[0] = mu0 * ( H0 * cos ( theta )  - sumGradPhi[0] );
+  B[1] = mu0 * ( H0 * sin ( theta )  - sumGradPhi[1] );
+
 //   std::cout << "B1 = " << B[0] << " , " << "B2 = " << B[1] << std::endl;
-  
+
   std::vector< std::vector <double> > JacB ( 2 );
   for ( unsigned i = 0; i < 2; i++ ) {
     JacB[i].resize ( 2 );
@@ -1542,10 +1552,10 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
   //BEGIN MAGNITUDE of B and its GRADIENT
   double magnitudeB = sqrt ( B[0] * B[0] + B[1] * B[1] );
 
-  std::vector <double> gradMagnitudeB ( 2, 0. ) ;
-
-  gradMagnitudeB[0] = mu0 * ( B[0] * sumHessPhi[0][0] + B[1] * sumHessPhi[0][1] ) / magnitudeB;
-  gradMagnitudeB[1] = mu0 * ( B[0] * sumHessPhi[0][1] + B[1] * sumHessPhi[1][1] ) / magnitudeB;
+//   std::vector <double> gradMagnitudeB ( 2, 0. ) ;
+// 
+//   gradMagnitudeB[0] = mu0 * ( B[0] * sumHessPhi[0][0] + B[1] * sumHessPhi[0][1] ) / magnitudeB;
+//   gradMagnitudeB[1] = mu0 * ( B[0] * sumHessPhi[0][1] + B[1] * sumHessPhi[1][1] ) / magnitudeB;
 //END
 
 
@@ -1567,16 +1577,22 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
   double M_fm_p_s = 351.9 * 1.e3;
   double C2 = w_fm_p * Vp * M_fm_p_s;
 
-  double dMagnMom1_dx = C2 * ( ( 1. - cothBeta * cothBeta ) * C1 * gradMagnitudeB[0] * B[0] / magnitudeB +
-                               B[0] * gradMagnitudeB[0] / pow ( magnitudeB, 3 ) +
-                               Langevin * ( ( JacB[0][0] * magnitudeB - B[0] * gradMagnitudeB[0] ) / ( magnitudeB * magnitudeB ) )
-                             );
-  double dMagnMom2_dy = C2 * ( ( 1. - cothBeta * cothBeta ) * C1 * gradMagnitudeB[1] * B[1] / magnitudeB +
-                               B[1] * gradMagnitudeB[1] / pow ( magnitudeB, 3 ) +
-                               Langevin * ( ( JacB[1][1] * magnitudeB - B[1] * gradMagnitudeB[1] ) / ( magnitudeB * magnitudeB ) )
-                             );
+  std::vector<double> magnMom ( 2, 0. );
 
-  double divMagnMom = dMagnMom1_dx + dMagnMom2_dy;
+  magnMom[0] = C2 * Langevin * B[0] / magnitudeB;
+  magnMom[1] = C2 * Langevin * B[1] / magnitudeB;
+
+  /*
+    double dMagnMom1_dx = C2 * ( ( 1. - cothBeta * cothBeta ) * C1 * gradMagnitudeB[0] * B[0] / magnitudeB +
+                                 B[0] * gradMagnitudeB[0] / pow ( magnitudeB, 3 ) +
+                                 Langevin * ( ( JacB[0][0] * magnitudeB - B[0] * gradMagnitudeB[0] ) / ( magnitudeB * magnitudeB ) )
+                               );
+    double dMagnMom2_dy = C2 * ( ( 1. - cothBeta * cothBeta ) * C1 * gradMagnitudeB[1] * B[1] / magnitudeB +
+                                 B[1] * gradMagnitudeB[1] / pow ( magnitudeB, 3 ) +
+                                 Langevin * ( ( JacB[1][1] * magnitudeB - B[1] * gradMagnitudeB[1] ) / ( magnitudeB * magnitudeB ) )
+                               );
+
+    double divMagnMom = dMagnMom1_dx + dMagnMom2_dy;*/
 //END
 
 
@@ -1585,7 +1601,11 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
   double muf = ( material == 2 ) ? 3.5 * 1.0e-3 : 1.0e100; // fluid viscosity
 
   for ( unsigned i = 0 ; i < 2; i++ ) {
-    Fm[i] = 1.e-2 * divMagnMom * B[i] / ( 3 * PI * Dp * muf ); //TODO remove cheating factor 1.e-2
+    Fm[i] = 0.;
+    for ( unsigned j = 0 ; j < 2; j++ ) {
+      Fm[i] += magnMom[j] * JacB[i][j] ;
+    }
+    Fm[i] /= ( 3. * PI * Dp * muf );
   }
   Fm[2] = 0.;
 //END
