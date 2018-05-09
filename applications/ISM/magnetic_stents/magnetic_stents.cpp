@@ -406,7 +406,7 @@ int main ( int argc, char **args )
   }
 
   if ( simulation == 3 ) { //for magnetic_stents
-    pSize = 2. * 1.e6;
+    pSize = 8. * 1.e3;
     x.resize ( pSize );
     double a = -0.0004 + 0.000001;
     double b = 0.0004 - 0.000001;
@@ -1446,7 +1446,7 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
   double MsatWire = 1261 * 1.e3;  //  magnetic saturation
   double  chiWire = 1000.; //magnetic susceptibility
   double mu0 = 4 * PI * 1.e-7;  //magnetic permeability of the vacuum
-  double H0 = 0.5 / mu0; //magnetic field intensity
+  double H0 = 0.17 / mu0; //magnetic field intensity
   double theta = PI * 0.5;
   unsigned numberOfWires = 20;
   double fattore1 = chiWire / ( 2 + chiWire );
@@ -1605,7 +1605,7 @@ void MagneticForceStents ( const std::vector <double> & xMarker, std::vector <do
     for ( unsigned j = 0 ; j < 2; j++ ) {
       Fm[i] += magnMom[j] * JacB[i][j] ;
     }
-    Fm[i] /= ( 3. * PI * Dp * muf );
+    Fm[i] /= 1.e-3 * ( 3. * PI * Dp * muf );  //TODO cheating factor
   }
   Fm[2] = 0.;
 //END
