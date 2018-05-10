@@ -86,6 +86,8 @@ namespace femus {
 
   void NonLinearImplicitSystem::solve(const MgSmootherType& mgSmootherType) {
 
+    _bitFlipCounter = 0;
+    
     clock_t start_mg_time = clock();
 
     double totalAssembyTime = 0.;
@@ -112,7 +114,7 @@ namespace femus {
       clock_t start_nl_time = clock();
 
       bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn - 1u) ? 1 : 0;
-
+restart:
       if(ThisIsAMR) _solution[igridn]->InitAMREps();
 
       for(unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++) {
@@ -223,7 +225,7 @@ namespace femus {
             }
             *(_LinSolver[igridn]->_RES) = *(_LinSolver[igridn]->_RESC);
           }
-
+          if(_bitFlipOccurred) break;
         }
 
         if(_buildSolver) {
@@ -241,10 +243,14 @@ namespace femus {
         std::cout << "     ********* Linear Cycle + Residual Update-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
                   << static_cast<double>((clock() - startUpdateResidualTime)) / CLOCKS_PER_SEC << std::endl;
 
-        if(nonLinearIsConverged) break;
+        if(nonLinearIsConverged || _bitFlipOccurred) break;
 
       }
-
+      
+      if(_bitFlipOccurred && _bitFlipCounter == 1){
+	goto restart;
+      }
+      
       if(igridn + 1 < _gridn) ProlongatorSol(igridn + 1);
 
       if(ThisIsAMR) AddAMRLevel(AMRCounter);
@@ -261,6 +267,8 @@ namespace femus {
               << totalSolverTime <<  " = assembly TIME( " << totalAssembyTime << " ) + "
               << " solver TIME( " << totalSolverTime - totalAssembyTime << " ) " << std::endl;
 
+    _totalAssemblyTime += totalAssembyTime;
+    _totalSolverTime += totalSolverTime - totalAssembyTime;
   }
 
 

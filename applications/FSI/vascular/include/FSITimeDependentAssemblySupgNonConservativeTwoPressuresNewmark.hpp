@@ -7,6 +7,8 @@
 
 #include "OprtrTypeEnum.hpp"
 
+double Gamma = 0.5;
+double beta = 0.25;
 
 namespace femus
 {
@@ -116,6 +118,7 @@ namespace femus
 
     vector< vector< adept::adouble > > Soli ( nBlocks * dim + nP );
     vector< vector< double > > Soli_old ( nBlocks * dim );
+    vector< vector< double > > aold ( dim );
     vector< vector< int > > dofsVAR ( nBlocks * dim + nP );
     vector< vector< double > > meshVelOldNode ( dim );
 
@@ -177,12 +180,14 @@ namespace femus
     //variable-name handling
     const char varname[8][3] = {"DX", "DY", "DZ", "U", "V", "W", "PS", "PF"};
     const char varname2[10][4] = {"Um", "Vm", "Wm"};
+    const char varname3[3][4] = {"AX", "AY", "AZ"};
 
     vector <unsigned> indexVAR ( nBlocks * dim + nP );
     vector <unsigned> indVAR ( nBlocks * dim + nP );
     vector <unsigned> SolType ( nBlocks * dim + nP );
 
     vector <unsigned> indVAR2 ( dim );
+    vector <unsigned> indVAR3 ( dim );
 
     for ( unsigned ivar = 0; ivar < dim; ivar++ ) {
       for ( unsigned k = 0; k < nBlocks; k++ ) {
@@ -192,6 +197,7 @@ namespace femus
       }
 
       indVAR2[ivar] = ml_sol->GetIndex ( &varname2[ivar][0] );
+      indVAR3[ivar] = ml_sol->GetIndex ( &varname3[ivar][0] );
     }
 
     for ( unsigned ivar = 0; ivar < nP; ivar++ ) {
@@ -244,6 +250,7 @@ namespace femus
         vx[i].resize ( nve );
         vxOld[i].resize ( nve );
         vxNew[i].resize ( nve );
+	aold[i].resize ( nve );
       }
 
       for ( unsigned i = 0; i < nve; i++ ) {
@@ -258,6 +265,7 @@ namespace femus
           }
           meshVelOldNode[j][i] = ( *mysolution->_Sol[indVAR2[j]] ) ( idof );
           vx_hat[j][i] = ( *mymsh->_topology->_Sol[j] ) ( idof );
+	  aold[j][i] = ( *mysolution->_SolOld[indVAR3[j]] ) ( idof );
         }
       }
 
@@ -408,6 +416,21 @@ namespace femus
           }
         }
         
+        vector < double > accVAROld(dim,0.);
+	vector < adept::adouble > accVARNew(dim,0.);
+        
+        //store acceleration old and new in the gauss point
+        for ( int i = 0; i < dim; i++ ) {
+	  for ( unsigned inode = 0; inode < nve; inode++ ) {
+	    accVAROld[i] += phi_hat[inode] * aold[i][inode];
+	  }
+	  accVARNew[i] =  ( SolVARNew[i] - SolVAROld[i] )/( dt * dt * beta ) 
+			- SolVAROld[i + dim]/( dt * beta ) 
+			- (1. - 2. * beta)/(2. * beta) * accVAROld[i];
+	}
+          
+        
+        
 
         adept::adouble J_hat;
         adept::adouble F[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
@@ -425,7 +448,14 @@ namespace femus
 
               aRhs[indexVAR[dim + idim]][i] += ( ( Soli[idim][i] - Soli_old[idim][i] ) / dt -
                                                  Soli[idim + dim][i]
-                                               ) * phi_hat[i] * Weight_hat;	      
+                                               ) * phi_hat[i] * Weight_hat;
+	      
+//               adept::adouble anew = ( Soli[idim][i] - Soli_old[idim][i] )/( dt* dt * beta ) - Soli_old[idim + dim][i]/( dt * beta ) - (1 - 2. * beta)/(2. * beta) * aold[idim][i];
+//               adept::adouble vnew = Soli_old[idim + dim][i] + dt * ( (1 - Gamma) * aold[idim][i] + Gamma * anew );
+// 	      
+// 	      aRhs[indexVAR[dim + idim]][i] += (vnew - Soli[idim + dim][i]) * phi_hat[i] * Weight_hat;
+
+	      
             }
           }
           //END redidual d_t - v = 0 in fixed domain
@@ -527,6 +557,12 @@ namespace femus
             SolVAR[i] = SolVAROld[i] * ( 1. - s[tip] ) +  SolVARNew[i] * s[tip];
           }
           
+          // store acceleration at the current time
+          std::vector <adept::adouble> accVAR(dim,0.);
+          for ( int i = 0; i < dim; i++ ) {
+            accVAR[i] = accVAROld[i] * ( 1. - s[tip] ) +  accVARNew[i] * s[tip];
+          }
+          
           // store nodes coordinates and Gauss point coordinates at the current time
           for ( unsigned i = 0; i < dim; i++ ) {
             for ( int j = 0; j < nve; j++ ) {
@@ -586,14 +622,15 @@ namespace femus
               }
 
               adept::adouble springStiffness = 0.;
-
-              if ( valve ) springStiffness = /*2*/5.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 2 ) + // if 2D 
-                                             /*2*/5.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 3 ); //if 3D
+              if ( valve ) springStiffness = 2.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 2 ) + // if 2D
+                                             2.e-4 * exp ( ( vx_ig[0] - ( - 1e-5 ) ) / 0.0001 ) * ( dim == 3 ); //if 3D
 
 
               // get mesh velocity and gradient at current time
               for ( unsigned i = 0; i < dim; i++ ) {
                 meshVel[i] = ( 1. - s[tip] ) * meshVelOld[i]  + s[tip] * ( SolVARNew[i] - SolVAROld[i] ) / dt ;
+// 		meshVel[i] = ( 1. - s[tip] ) * meshVelOld[i]  
+// 			    + s[tip] * ( meshVelOld[i] + dt * ( (1. - Gamma) * accVAROld[i] + Gamma * accVARNew[i] ) );
               }
 
               // speed
@@ -943,7 +980,7 @@ namespace femus
     unsigned SolType;
 
     if ( order < FIRST || order > SECOND ) {
-      std::cout << "Wrong Solution Order" << std::endl;
+      std::cout << "Wong Solution Order" << std::endl;
       exit ( 0 );
     }
     else if ( order == FIRST ) SolType = 0;
@@ -1250,13 +1287,7 @@ namespace femus
         lambdak = 1.;
         double error = 1.;
 
-	unsigned counter = 0;
-	unsigned counter_max = 10000; //to improve
-        while ( error > 1.0e-6 && counter < counter_max) {
-	  counter++;
-	  if (counter == counter_max){
-	    std::cout << "warning: elemment " <<iel<< " may be too skew and lambda cannot be found" << std::endl;
-	  }
+        while ( error > 1.0e-10 ) {
           double phikm1 = phik;
           double lambdakm1 = lambdak;
 
@@ -1335,11 +1366,17 @@ namespace femus
     //const unsigned level = my_nnlin_impl_sys.GetLevelToAssemble();
     const unsigned dim = msh->GetDimension();
     const char varname[9][4] = {"DX", "U", "Um", "DY", "V", "Vm", "DZ", "W", "Wm"};
+    const char varname2[3][4] = {"AX", "AY", "AZ"};
 
     vector <unsigned> indVAR ( 3 * dim );
+    vector <unsigned> indVAR2 ( dim );
 
     for ( unsigned ivar = 0; ivar < 3 * dim; ivar++ ) {
       indVAR[ivar] = ml_sol->GetIndex ( &varname[ivar][0] );
+    }
+    
+    for ( unsigned ivar = 0; ivar < dim; ivar++ ) {
+      indVAR2[ivar] = ml_sol->GetIndex ( &varname2[ivar][0] );
     }
 
     double dt =  my_nnlin_impl_sys.GetIntervalTime();
@@ -1354,25 +1391,33 @@ namespace femus
       for ( unsigned jdof = msh->_dofOffset[2][iproc]; jdof < msh->_dofOffset[2][iproc + 1]; jdof++ ) {
         bool solidmark = msh->GetSolidMark ( jdof );
         double vnew;
+	double anew;
 
         if ( solidmark != solidmark ) {
           vnew = ( *solution->_Sol[indVAR[ivar + 1]] ) ( jdof ); // solid: mesh velocity equals solid velocity
+	  anew = 0.;
         }
         else {
           double unew = ( *solution->_Sol[indVAR[ivar]] ) ( jdof );
           double uold = ( *solution->_SolOld[indVAR[ivar]] ) ( jdof );
           double vold = ( *solution->_Sol[indVAR[ivar + 2]] ) ( jdof );
+	  double aold = ( *solution->_SolOld[indVAR2[idim]] ) ( jdof );
+	  anew = (unew - uold)/(dt * dt * beta) - vold/(dt * beta) - (1. - 2. * beta)/(2. * beta) * aold;
           vnew = 1. / dt * ( unew - uold ) - 0. * vold;
+	  //vnew = vold + dt * ( (1. - Gamma) * aold + Gamma * anew );
         }
         solution->_Sol[indVAR[ivar + 2]]->set ( jdof, vnew );
+	solution->_Sol[indVAR2[idim]]->set ( jdof, anew );
       }
 
       solution->_Sol[indVAR[ivar + 2]]->close();
+      solution->_Sol[indVAR2[idim]]->close();
     }
 
   }
 
 }
+
 
 
 

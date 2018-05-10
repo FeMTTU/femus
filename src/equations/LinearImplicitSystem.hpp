@@ -164,7 +164,16 @@ namespace femus {
 	}
       }
       
+      void ResetComputationalTime(){
+	_totalAssemblyTime = 0.;
+	_totalSolverTime = 0.;
+      }
 
+      void PrintComputationalTime(){
+	std::cout << "Total Assembly Time = " << _totalAssemblyTime <<std::endl;
+	std::cout << "Total Solver Time = " << _totalSolverTime <<std::endl;
+	std::cout << "Total Computational Time = " << _totalAssemblyTime + _totalSolverTime <<std::endl;
+      }
 
       void SetOuterKSPSolver(const std::string outer_ksp_solver) {
         _outer_ksp_solver = outer_ksp_solver;
@@ -295,6 +304,12 @@ namespace femus {
       double _richardsonScaleFactorDecrease;
       bool _richardsonScaleFactorIsSet;
 
+      double _totalSolverTime;
+      double _totalAssemblyTime;
+      
+      bool _bitFlipOccurred;
+      unsigned _bitFlipCounter;
+      
   };
 
 } //end namespace femus
