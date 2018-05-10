@@ -24,7 +24,7 @@
 
 using namespace femus;
 
-double rho[10]={1.025,1.027,1.028};
+double rho[10]={1025,1027,1028};
 
 double InitalValueV(const std::vector < double >& x)
 {
@@ -67,7 +67,7 @@ int main(int argc, char** args)
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = static_cast<unsigned>(floor(pow(2.,3) + 0.5));
+  unsigned nx = static_cast<unsigned>(floor(pow(2.,9) + 0.5));
   
   double length = 2. * 1465700.;
 
@@ -334,13 +334,14 @@ void ETD(MultiLevelProblem& ml_prob, const unsigned& NLayers)
         if(!bdch[k][i]) {
           for (unsigned j = 0; j < nDofv; j++) {
             double sign = ( j == 0) ? 1. : -1;
-            //aResh[k][i] += sign * solhe[k][j] * solv[k][j] / dx;
-            aResh[k][i] += sign * solh[k][i] * solv[k][j] / dx;
+            //aResh[k][i] += sign * solh[k][i] * solv[k][j] / dx;
+	    aResh[k][i] += sign * b1[k] * solv[k][j] / dx;
           }
         }
       }
       adept::adouble vMid = 0.5 * (solv[k][0] + solv[k][1]);
-      adept::adouble fv = 0.5 * vMid * vMid + 9.81 * b1[k];
+      //adept::adouble fv = 0.5 * vMid * vMid + 9.81 * b1[k];
+      adept::adouble fv = 0.5 * vMid * vMid + 9.81 * solh[k][0];
       for (unsigned i = 0; i < nDofv; i++) {
         if(!bdcv[k][i]) {
           for (unsigned j = 0; j < nDofh; j++) {
