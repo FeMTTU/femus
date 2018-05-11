@@ -103,7 +103,7 @@ int main ( int argc, char **args )
     dimension2D = false;
   }
   else if ( simulation == 3 ) {
-    infile = "./input/magnetic_stents.neu";
+    infile = "./input/magnetic_stents_solidWires.neu";
   }
 
 
