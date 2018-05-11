@@ -801,13 +801,13 @@ bool SetBoundaryConditionMagneticStents ( const std::vector < double >& x, const
     value = 0.;
   }
   else if ( !strcmp ( name, "DX" ) ) {
-    if ( 5 == facename ) {
+    if ( 5 == facename || 6 == facename ) {
       test = 0;
       value = 0;
     }
   }
   else if ( !strcmp ( name, "DY" ) ) {
-    if ( 5 == facename ) {
+    if ( 5 == facename || 6 == facename ) {
       test = 0;
       value = 0;
     }
