@@ -408,13 +408,13 @@ int main ( int argc, char **args )
   if ( simulation == 3 ) { //for magnetic_stents
     pSize = 8. * 1.e3;
     x.resize ( pSize );
-    double a = -0.0004 + 0.000001;
-    double b = 0.0004 - 0.000001;
+    double a = -0.0004 + 0.000002;
+    double b = 0.0004 - 0.000002;
     double h = ( b - a ) / pSize;
     markerType.resize ( pSize );
     for ( unsigned j = 0; j < pSize; j++ ) {
       x[j].resize ( 2 );
-      x[j][0] = 0.000001;
+      x[j][0] = 0.000002;
       x[j][1] = a + j * h;
     }
   }
@@ -773,7 +773,7 @@ bool SetBoundaryConditionMagneticStents ( const std::vector < double >& x, const
 
   double ramp = ( time < 1 ) ? sin ( PI / 2 * time ) : 1.;
 
-  double u0 = 0.58; //1.17, 2.34, 4.68, 11.7, 23.4, 52.6 cm/s
+  double u0 = 4.68; //0.58, 1.17, 2.34, 4.68, 11.7, 23.4, 52.6 cm/s
 
   if ( !strcmp ( name, "U" ) ) {
     if ( 1 == facename ) {
