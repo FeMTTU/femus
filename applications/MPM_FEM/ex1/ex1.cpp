@@ -76,7 +76,7 @@ int main(int argc, char** args)
   Solid solid;
   solid = Solid(par, E, nu, rhos, "Neo-Hookean");
 
-  mlMsh.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/inclined_plane_2D_bl.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -145,7 +145,7 @@ int main(int argc, char** args)
   //BEGIN init particles
   unsigned size = 1;
   std::vector < std::vector < double > > x; // marker
-  double yc = 0.3;  // FOR E = 4.2 * 1.e8 --> 0.115 (for 3 refinements) 0.09 (for 4) and 0.05  (for 5, this one maybe to be changed) 
+  double yc = 0.15	;  // FOR E = 4.2 * 1.e8 --> 0.115 (for 3 refinements) 0.09 (for 4) and 0.05  (for 5, this one maybe to be changed) 
                      // FOR E = 4.2 * 1.e6 --> 0.1. (for 3 refinements) 0.075 (for 4) and 0.05  (for 5)
   
   x.resize(size);
