@@ -183,9 +183,9 @@ int main(int argc, char** args)
   double xc = -0.5;
   double yc = -0.;
   
-  double H0 = 0.2;
+  double H0 = 0.225;
   double L0 = L - ( H - H0) / 2.;
-  unsigned rows = 40;
+  unsigned rows = 80;
   double DH = H0 / (rows - 1);
   unsigned columns = static_cast < unsigned > ( ceil(L0 / DH) ) + 1;
   double DL = L0 / (columns - 1);
@@ -226,7 +226,9 @@ int main(int argc, char** args)
   
   if( fabs(H-H0) > 1.0e-10){
     
-    double factor = 1.2; //1.14
+    double factor = 1.224; //1.14        
+    //level 5 H0 = 0.225, factor = 1.224 --> 21 layers.
+    //level 4 H0 = 0.2, factor = 1.2--> 21 layers.
     unsigned NL = getNumberOfLayers( 0.5 * (H-H0) / DH, factor);
     std::cout << NL <<std::endl;
     
