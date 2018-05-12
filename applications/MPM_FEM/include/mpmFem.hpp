@@ -210,8 +210,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat);
         double  MPMmaterial = (*mysolution->_Sol[indexSolMat])(idofMat);
         double scalingFactor = 0;// / (1. + 100. * distance);
-        if(MPMmaterial < 5) scalingFactor = 1e-02;
-	else if(MPMmaterial < 9) scalingFactor = 1e-06;
+        if(MPMmaterial < 5) scalingFactor = 1e-06;
+	else if(MPMmaterial < 9) scalingFactor = 1e-10;
 	
  	double mu = (Xg[1] <= -1.1416 && ( MPMmaterial == 1 || MPMmaterial == 2 ) ) ? mu_MPM : mu_MPM; 
 	
@@ -849,5 +849,20 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
 }
 
 
-
+unsigned getNumberOfLayers(const double &a, const double &fac){
+  double da = 1./fac; 
+  double b =  da;
+  unsigned n = 1;
+  
+  while(b < a){
+    da /= fac;
+    b += da;
+    n++;
+    if(n >= 100){
+       std::cout<<"Error: number of layer is unbounded, try with a smaller factor\n";
+       abort();
+    }
+  }
+  return n;
+}
 
