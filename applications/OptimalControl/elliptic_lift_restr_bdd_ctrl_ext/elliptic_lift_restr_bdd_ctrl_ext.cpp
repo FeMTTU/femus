@@ -333,7 +333,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   double alpha = ALPHA_CTRL;
   double beta  = BETA_CTRL;
   double penalty_strong = 10e+14;
-  double penalty_interface = 1.e10;         //penalty for u=q
+  double penalty_interface = 1.e+10;         //penalty for u=q
  //***************************************************  
 
   RES->zero();
@@ -505,7 +505,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     if (elem_center_bdry[0] > 1. - my_eps   && elem_center_bdry[0] < 1.   + my_eps  && 
         elem_center_bdry[1] > 0.25 - my_eps && elem_center_bdry[1] < 0.75 + my_eps
     ) {
-      
+       std::cout << " bdry_interface " <<"("<<elem_center_bdry[0]<<","<< elem_center_bdry[1]<<")"<< std::endl; 
       		      for (int i_bdry = 0; i_bdry < nDofu_bdry; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
 //============ Bdry Residuals ==================	
