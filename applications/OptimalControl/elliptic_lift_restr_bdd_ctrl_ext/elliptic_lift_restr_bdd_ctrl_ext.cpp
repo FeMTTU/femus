@@ -493,7 +493,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
     for (unsigned j = 0; j < dim; j++) {  elem_center_bdry[j] = 0.;  }
     for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofx_bdry; i++) {
-         elem_center_bdry[j] += x[j][i];
+         elem_center_bdry[j] += x_bdry[j][i];
        }
     }
    for (unsigned j = 0; j < dim; j++) { elem_center_bdry[j] = elem_center_bdry[j]/nDofx_bdry; }
@@ -637,12 +637,12 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 	  }
           // SECOND ROW
 	  if (i < nDof_ctrl)  {
-	     if ( group_flag == 12 )            Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight * (/*target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) */
+	     if ( group_flag == 13 )            Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight * (/*target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) */
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
 													      /*+ 1. * sol_mu[i]*/ - 0.);
-	     else if ( group_flag == 13 )       Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
+	     else if ( group_flag == 12 )       Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
           // THIRD ROW
           if (i < nDof_adj) {  
