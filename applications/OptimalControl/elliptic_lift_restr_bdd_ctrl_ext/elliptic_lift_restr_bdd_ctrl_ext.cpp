@@ -468,7 +468,9 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 	Sol_n_el_dofs[k] = ndofs_unk;
   }
   
-  
+   vector <double>  interface_flag;   interface_flag.reserve(nDof_u); //flag for boundary interface
+   std::fill(interface_flag.begin(), interface_flag.end(), 0.);
+   
   //************ Boundary loops *************************************** 
  
   	  for(unsigned jface=0; jface < msh->GetElementFaceNumber(iel); jface++) {
@@ -509,10 +511,10 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
        std::cout << " bdry_interface " <<"("<<elem_center_bdry[0]<<","<< elem_center_bdry[1]<<")"<< std::endl; 
       		      for (int i_bdry = 0; i_bdry < nDofu_bdry; i_bdry++)  {
 		    unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bdry);
+		    interface_flag[i_vol] = 1.;
 //============ Bdry Residuals ==================	
                 if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  -  penalty_interface * (   sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
 //============ Bdry Residuals ==================	
-		    
 		    for(unsigned j_bdry=0; j_bdry < nDofu_bdry; j_bdry ++) {
 		         unsigned int j_vol = msh->GetLocalFaceVertexIndex(iel, jface, j_bdry);
 //============ Bdry Jacobians ==================	
@@ -697,7 +699,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
               //BLOCK delta_state - state
               if ( i < nDof_u   && j < nDof_u  &&  i==j ) {
 		 Jac[ (0 + i) * nDof_AllVars +
-		      (0 + j)                           ]  += /*(1-state_node_flag[i])*/ 1. * penalty_strong;
+		      (0 + j)                           ]  += (1-interface_flag[i]) * 1. * penalty_strong;
 	        }
 	        
 	      }
@@ -728,7 +730,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
               //BLOCK delta_control - control
               if ( i < nDof_ctrl   && j < nDof_ctrl &&  i==j ) {
 		 Jac[ (nDof_u + i) * nDof_AllVars +
-		      (nDof_u + j)                      ]  += /*(1-control_node_flag[i])*/ 1. * penalty_strong;
+		      (nDof_u + j)                      ]  += (1-interface_flag[i]) * 1. * penalty_strong;
 		}
 	      
 	      }
