@@ -64,6 +64,7 @@ IF(PETSC_FOUND)
   SET(HAVE_PETSC 1)
 ENDIF(PETSC_FOUND)
 
+
 # Find MPI (optional)
 # FIND_PACKAGE(MPI)
 # MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
@@ -98,6 +99,14 @@ SET(HAVE_HDF5 1)
 # IF(METIS_FOUND)
 SET(HAVE_METIS 1)
 # ENDIF(METIS_FOUND)
+
+# Find Slepc Library (optional)
+FIND_PACKAGE(SLEPc)
+MESSAGE(STATUS "SLEPC_FOUND = ${SLEPC_FOUND}")
+SET(HAVE_SLEPC 0)
+IF(SLEPC_FOUND)
+  SET(HAVE_SLEPC 1)
+ENDIF(SLEPC_FOUND)
 
 
 # Find Libmesh (optional)
@@ -165,6 +174,10 @@ OPTION(BUILD_MPM_FEM "Build the MPM FEM apps" ON)
 OPTION(BUILD_REFINEMENT "Build the Refiniment apps" ON)
 
 OPTION(BUILD_PETSC_DEBUG "Build the PETSC debug apps" ON)
+
+OPTION(BUILD_UQ "Build the UQ apps" ON)
+
+OPTION(BUILD_SW "Build the Shallow Water apps" ON)
 
 #############################################################################################
 ### Build documentation (Doxygen)
@@ -244,6 +257,10 @@ CONFIGURE_FILE(
 # Include petsc files
 INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
 ADD_DEFINITIONS(${PETSC_DEFINITIONS})
+
+IF(SLEPC_FOUND)
+ INCLUDE_DIRECTORIES(${SLEPC_INCLUDE_DIRS})
+ENDIF(SLEPC_FOUND)
 
 #include femus include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/algebra)

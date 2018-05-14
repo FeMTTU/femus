@@ -66,9 +66,11 @@ namespace femus {
 
       unsigned NumberOfParticlesOutsideTheDomain();
 
-      void GetParticlesToGridProjections();
+      void GetParticlesToGridMaterial();
       
       void UpdateLineMPM();
+      
+      void SetParticlesMass(const double &volume, const double &density);
 
     private:
       std::vector < std::vector < double > > _line;

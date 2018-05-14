@@ -27,7 +27,8 @@
 #include "PetscVector.hpp"
 
 #include <mpi.h>
-
+#include "petscpc.h" 
+#include <petscksp.h>
 
 namespace femus {
 
@@ -122,10 +123,10 @@ namespace femus {
         else {
           ierr = PCSetType(pc, (char*) PCLU);
           CHKERRABORT(MPI_COMM_WORLD, ierr);
-
-          ierr = PCFactorSetMatSolverPackage(pc, MATSOLVERMUMPS);
+	  
+	  ierr = PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
           CHKERRABORT(MPI_COMM_WORLD, ierr);
-          ierr = PCFactorSetUpMatSolverPackage(pc);
+          ierr = PCFactorSetUpMatSolverType(pc);
           CHKERRABORT(MPI_COMM_WORLD, ierr);
           Mat       F;
           ierr = PCFactorGetMatrix(pc, &F);
@@ -139,7 +140,7 @@ namespace femus {
       case SLU_PRECOND:
         ierr = PCSetType(pc, (char*) PCLU);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
-        ierr = PCFactorSetMatSolverPackage(pc, MATSOLVERSUPERLU_DIST);
+        ierr = PCFactorSetMatSolverType(pc, MATSOLVERSUPERLU_DIST);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
         break;    //here we set the SuperLU_dist solver package
 
@@ -147,9 +148,9 @@ namespace femus {
         ierr = PCSetType(pc, (char*) PCLU);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
 
-        ierr = PCFactorSetMatSolverPackage(pc, MATSOLVERMUMPS);
+        ierr = PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
-        ierr = PCFactorSetUpMatSolverPackage(pc);
+        ierr = PCFactorSetUpMatSolverType(pc);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
         Mat       F;
         ierr = PCFactorGetMatrix(pc, &F);
@@ -162,16 +163,16 @@ namespace femus {
         ierr = PCSetType(pc, (char*) PCLU);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
 
-        ierr = PCFactorSetMatSolverPackage(pc, MATSOLVERUMFPACK);
+        ierr = PCFactorSetMatSolverType(pc, MATSOLVERUMFPACK);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
-        ierr = PCFactorSetUpMatSolverPackage(pc);
+        ierr = PCFactorSetUpMatSolverType(pc);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
         break;
 
       case MCC_PRECOND:
         ierr = PCSetType(pc, (char*) PCCHOLESKY);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
-        ierr = PCFactorSetMatSolverPackage(pc, MATSOLVERMUMPS);
+        ierr = PCFactorSetMatSolverType(pc, MATSOLVERMUMPS);
         CHKERRABORT(MPI_COMM_WORLD, ierr);                   //here we set the MUMPS parallel direct solver package
         break;
 

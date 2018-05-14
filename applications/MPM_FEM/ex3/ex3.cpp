@@ -18,25 +18,23 @@
 
 using namespace femus;
 
-double SetVariableTimeStep(const double time)
-{
+double SetVariableTimeStep(const double time) {
   double dt =  0.02;
   return dt;
 }
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int facename, const double time)
-{
+bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int facename, const double time) {
   bool test = 1; //dirichlet
   value = 0.;
 
-  if (!strcmp(name, "DY")) {
-    if (3 == facename || 4 == facename) {
+  if(!strcmp(name, "DY")) {
+    if(3 == facename || 4 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if (!strcmp(name, "DX")) {
-    if (1 == facename || 2 == facename) {
+  else if(!strcmp(name, "DX")) {
+    if(2 == facename) {
       test = 0;
       value = 0;
     }
@@ -46,8 +44,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 
 }
 
-int main(int argc, char** args)
-{
+int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
@@ -60,18 +57,27 @@ int main(int argc, char** args)
 
   double Lref = 1.;
   double Uref = 1.;
-  double rhos = 1000;
-  double nu = 0.4;
-  double E = 4.2 * 1.e8;
-
+  
+  //initialize parameters for rolling ball (MPM)
+  double rho_MPM = 1000.;
+  double nu_MPM = 0.4;
+  double E_MPM = 4.2 * 1.e6;
+  
+    //initialize parameters for plate (FEM)
+  double rho_FEM = 10000.;
+  double nu_FEM = 0.4;
+  double E_FEM = 4.2 * 1.e7;
 
   Parameter par(Lref, Uref);
 
   // Generate Solid Object
-  Solid solid;
-  solid = Solid(par, E, nu, rhos, "Neo-Hookean");
+  Solid solidMPM;
+  Solid solidFEM;
+  
+  solidMPM = Solid(par, E_MPM, nu_MPM, rho_MPM, "Neo-Hookean");
+  solidFEM = Solid(par, E_FEM, nu_FEM, rho_FEM, "Neo-Hookean");
 
-  mlMsh.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/inclined_plane_coupled_2D.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   unsigned dim = mlMsh.GetDimension();
@@ -79,8 +85,16 @@ int main(int argc, char** args)
   MultiLevelSolution mlSol(&mlMsh);
   // add variables to mlSol
   mlSol.AddSolution("DX", LAGRANGE, SECOND, 2);
-  if (dim > 1) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
-  if (dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
+  if(dim > 1) mlSol.AddSolution("DY", LAGRANGE, SECOND, 2);
+  if(dim > 2) mlSol.AddSolution("DZ", LAGRANGE, SECOND, 2);
+
+  mlSol.AddSolution("VX", LAGRANGE, SECOND, 2);
+  if(dim > 1) mlSol.AddSolution("VY", LAGRANGE, SECOND, 2);
+  if(dim > 2) mlSol.AddSolution("VZ", LAGRANGE, SECOND, 2);
+
+  mlSol.AddSolution("AX", LAGRANGE, SECOND, 2);
+  if(dim > 1) mlSol.AddSolution("AY", LAGRANGE, SECOND, 2);
+  if(dim > 2) mlSol.AddSolution("AZ", LAGRANGE, SECOND, 2);
 
   mlSol.AddSolution("M", LAGRANGE, FIRST, 2);
   mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
@@ -88,23 +102,25 @@ int main(int argc, char** args)
   mlSol.Initialize("All");
 
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  
+  mlSol.SetIfFSI(true);
 
   // ******* Set boundary conditions *******
   mlSol.GenerateBdc("DX", "Steady");
-  if (dim > 1) mlSol.GenerateBdc("DY", "Steady");
-  if (dim > 2) mlSol.GenerateBdc("DZ", "Steady");
+  if(dim > 1) mlSol.GenerateBdc("DY", "Steady");
+  if(dim > 2) mlSol.GenerateBdc("DZ", "Steady");
   mlSol.GenerateBdc("M", "Steady");
 
   MultiLevelProblem ml_prob(&mlSol);
 
-  ml_prob.parameters.set<Solid> ("SolidMPM") = solid;
-  ml_prob.parameters.set<Solid> ("SolidFEM") = solid;
+  ml_prob.parameters.set<Solid> ("SolidMPM") = solidMPM;
+  ml_prob.parameters.set<Solid> ("SolidFEM") = solidFEM;
 
   // ******* Add MPM system to the MultiLevel problem *******
   TransientNonlinearImplicitSystem& system = ml_prob.add_system < TransientNonlinearImplicitSystem > ("MPM_FEM");
   system.AddSolutionToSystemPDE("DX");
-  if (dim > 1)system.AddSolutionToSystemPDE("DY");
-  if (dim > 2) system.AddSolutionToSystemPDE("DZ");
+  if(dim > 1)system.AddSolutionToSystemPDE("DY");
+  if(dim > 2) system.AddSolutionToSystemPDE("DZ");
 
   // ******* System MPM Assembly *******
   system.SetAssembleFunction(AssembleMPMSys);
@@ -146,18 +162,18 @@ int main(int argc, char** args)
   unsigned NL = NR / (2 * PI);
   double DL = R / NL;
 
-  for (unsigned i = 0; i < NL; i++) {
+  for(unsigned i = 0; i < NL; i++) {
     double  r = R - i * DL;
-    unsigned Nr = static_cast <unsigned> (ceil(NR * r / R ));
+    unsigned Nr = static_cast <unsigned>(ceil(NR * r / R));
 //     std::cout << r << " " << Nr << " ";
     double dtheta = 2 * PI / Nr;
     unsigned sizeOld = x.size();
     x.resize(sizeOld + Nr);
-    for (unsigned s = sizeOld; s < x.size(); s++) {
+    for(unsigned s = sizeOld; s < x.size(); s++) {
       x[s].resize(dim);
     }
 //     std::cout << x.size() << " ";
-    for (unsigned j = 0; j < Nr; j++) {
+    for(unsigned j = 0; j < Nr; j++) {
       x[sizeOld + j][0] = r * cos(j * dtheta);
       x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
     }
@@ -167,7 +183,7 @@ int main(int argc, char** args)
   std::vector < MarkerType > markerType;
   markerType.resize(size);
 
-  for (unsigned j = 0; j < size; j++) {
+  for(unsigned j = 0; j < size; j++) {
     markerType[j] = VOLUME;
   }
 
@@ -176,16 +192,16 @@ int main(int argc, char** args)
 
   unsigned solType = 2;
   linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
-  
-  double diskArea = PI * R * R;
-  linea->SetParticlesMass(diskArea, rhos);
+
+  double diskArea = PI * (R + DL/2) * (R+DL/2);
+  linea->SetParticlesMass(diskArea, rho_MPM);
 
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
 
   linea->GetParticlesToGridMaterial();
-  
+
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
 
@@ -206,8 +222,8 @@ int main(int argc, char** args)
   gravity[1] = -9.81 * sqrt(2.) / 2.;
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 200;
-  for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
+  unsigned n_timesteps = 180;
+  for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
 
@@ -215,11 +231,14 @@ int main(int argc, char** args)
 
     // ******* Print solution *******
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
-
+   
     GridToParticlesProjection(ml_prob, *linea);
 
     linea->GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
+    
+   
+
 
   }
 

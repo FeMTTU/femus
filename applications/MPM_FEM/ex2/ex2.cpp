@@ -20,7 +20,7 @@ using namespace femus;
 
 double SetVariableTimeStep(const double time)
 {
-  double dt =  0.02;
+  double dt =  0.008;
   return dt;
 }
 
@@ -29,14 +29,20 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   bool test = 1; //dirichlet
   value = 0.;
 
-  if (!strcmp(name, "DY")) {
-    if (3 == facename || 4 == facename) {
+  if (!strcmp(name, "DX")) {
+    if (2 == facename || 4 == facename) {
       test = 0;
       value = 0;
     }
   }
-  else if (!strcmp(name, "DX")) {
-    if (1 == facename || 2 == facename) {
+  else if (!strcmp(name, "DY")) {
+    if (3 == facename) {
+      test = 0;
+      value = 0;
+    }
+  }
+  else if (!strcmp(name, "M")) {
+    if (1 == facename) {
       test = 0;
       value = 0;
     }
@@ -60,10 +66,9 @@ int main(int argc, char** args)
 
   double Lref = 1.;
   double Uref = 1.;
-  double rhos = 1000;
+  double rhos = 10000;
   double nu = 0.4;
-  double E = 4.2 * 1.e8;
-
+  double E = 1.74 * 1.e6;
 
   Parameter par(Lref, Uref);
 
@@ -71,7 +76,7 @@ int main(int argc, char** args)
   Solid solid;
   solid = Solid(par, E, nu, rhos, "Neo-Hookean");
 
-  mlMsh.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/square.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   unsigned dim = mlMsh.GetDimension();
@@ -133,57 +138,47 @@ int main(int argc, char** args)
 
   system.SetTolerances(1.e-10, 1.e-15, 1.e+50, 40, 40);
 
+  unsigned rows = 60;
+  unsigned columns = 120;
+  unsigned size = rows * columns;
 
-  unsigned size = 1;
   std::vector < std::vector < double > > x; // marker
-  x.resize(size);
-  x[0].resize(dim, 0.);
-  x[0][1] = 0.05;
-
-  double R = 1.6;
-  double PI = acos(-1.);
-  unsigned NR = 600;
-  unsigned NL = NR / (2 * PI);
-  double DL = R / NL;
-
-  for (unsigned i = 0; i < NL; i++) {
-    double  r = R - i * DL;
-    unsigned Nr = static_cast <unsigned> (ceil(NR * r / R ));
-//     std::cout << r << " " << Nr << " ";
-    double dtheta = 2 * PI / Nr;
-    unsigned sizeOld = x.size();
-    x.resize(sizeOld + Nr);
-    for (unsigned s = sizeOld; s < x.size(); s++) {
-      x[s].resize(dim);
-    }
-//     std::cout << x.size() << " ";
-    for (unsigned j = 0; j < Nr; j++) {
-      x[sizeOld + j][0] = r * cos(j * dtheta);
-      x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
-    }
-  }
-
-  size = x.size();
   std::vector < MarkerType > markerType;
-  markerType.resize(size);
 
-  for (unsigned j = 0; j < size; j++) {
-    markerType[j] = VOLUME;
-  }
+  x.resize(size);
+  markerType.resize(size);
 
   std::vector < std::vector < std::vector < double > > > line(1);
   std::vector < std::vector < std::vector < double > > > line0(1);
 
+  for (unsigned j = 0; j < size; j++) {
+    x[j].assign(dim, 0.);
+    markerType[j] = VOLUME;
+  }
+
+  //BEGIN initialization
+  for (unsigned i = 0; i < rows; i++) {
+    for (unsigned j = 0; j < columns; j++) {
+
+      x[i * columns + j][0] = -0.5 + ((0.625 - 0.000001) / (columns - 1)) * j;
+      x[i * columns + j][1] = -0.0625 + ((0.25 - 0.000001) / (rows - 1)) * i;
+      if (dim == 3) {
+        x[j][2] = 0.;
+      }
+    }
+  }
+  //END
+
   unsigned solType = 2;
   linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
   
-  double diskArea = PI * R * R;
-  linea->SetParticlesMass(diskArea, rhos);
+  double beamArea = ( -0.5 + (0.625 - 0.000001) ) * (-0.0625 + (0.25 - 0.000001) );
+  linea->SetParticlesMass(beamArea, rhos);
 
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
 
-
+  
   linea->GetParticlesToGridMaterial();
   
   // ******* Print solution *******
@@ -198,22 +193,18 @@ int main(int argc, char** args)
   std::vector<std::string> print_vars;
   print_vars.push_back("All");
 
-
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
-  gravity[0] = 9.81 * sqrt(2.) / 2.;
-  gravity[1] = -9.81 * sqrt(2.) / 2.;
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 200;
+  unsigned n_timesteps = 400;
   for (unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
-
+    
     system.MGsolve();
 
-    // ******* Print solution *******
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
 
     GridToParticlesProjection(ml_prob, *linea);
@@ -221,7 +212,11 @@ int main(int argc, char** args)
     linea->GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
 
+
+
   }
+
+
 
   delete linea;
   return 0;
