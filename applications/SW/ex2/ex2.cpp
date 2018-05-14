@@ -24,7 +24,8 @@
 
 using namespace femus;
 
-double rho[10]={1025,1027,1028};
+double rho[10]={1025,1027,1028}; // kg/m^3
+double mu = 1.5 * 1.0e-3; // pa s 
 
 double aa = 6371000;  //radius of earth [m]
 double H_0 = 2400;    // max depth of ocean [m]
@@ -35,7 +36,7 @@ double bb = 1250000;
 
 double phi = 0.1;     //relative width of continental shelf: 10%
 
-unsigned NumberOfLayers = 1;
+unsigned NumberOfLayers = 3;
 
 double InitalValueV(const std::vector < double >& x)
 {
@@ -43,14 +44,33 @@ double InitalValueV(const std::vector < double >& x)
 }
 
 
-double InitalValueH(const std::vector < double >& x)
+double InitalValueH0(const std::vector < double >& x)
+{
+//   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
+//   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
+//   double hh = 1 - dd * dd / (bb * bb);
+//   double b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
+  return 40 + ( 2.* exp(-(x[0] / 100000.) * (x[0] / 100000.))) / NumberOfLayers;
+}
+
+double InitalValueH1(const std::vector < double >& x)
+{
+//   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
+//   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
+//   double hh = 1 - dd * dd / (bb * bb);
+//   double b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
+  return 50 + (2.* exp(-(x[0] / 100000.) * (x[0] / 100000.))) / NumberOfLayers;
+}
+
+double InitalValueH2(const std::vector < double >& x)
 {
   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
   double hh = 1 - dd * dd / (bb * bb);
   double b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
-  return (b + 2.* exp(-(x[0] / 100000.) * (x[0] / 100000.))) / NumberOfLayers;
+  return b - 90 + ( 2.* exp(-(x[0] / 100000.) * (x[0] / 100000.))) / NumberOfLayers;
 }
+
 
 double InitalValueB(const std::vector < double >& x)
 {
@@ -90,7 +110,7 @@ int main(int argc, char** args)
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = static_cast<unsigned>(floor(pow(2.,9) + 0.5));
+  unsigned nx = static_cast<unsigned>(floor(pow(2.,11) + 0.5));
   
   double length = 2. * 1465700.;
 
@@ -112,10 +132,15 @@ int main(int argc, char** args)
   
   mlSol.AddSolution("b", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false);
 
+  
+  mlSol.Initialize("h0",InitalValueH0);
+  mlSol.Initialize("h1",InitalValueH1);
+  mlSol.Initialize("h2",InitalValueH2);
+  
+  
+  
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
-    sprintf(name, "h%d", i);
-    mlSol.Initialize(name, InitalValueH);
     sprintf(name, "v%d", i);
     mlSol.Initialize(name, InitalValueV);
   }
@@ -147,7 +172,7 @@ int main(int argc, char** args)
   unsigned numberOfTimeSteps = 2000;
   for(unsigned i = 0; i < numberOfTimeSteps; i++) {
     ETD(ml_prob);
-    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, i + 1);
+    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1)/1);
   }
   return 0;
 }
@@ -316,6 +341,7 @@ void ETD(MultiLevelProblem& ml_prob)
           for (unsigned j = 0; j < nDofh; j++) {
             double sign = ( i == j) ? -1. : 1;
             aResv[k][i] += sign * fv / dx;
+	    //aResv[k][i] -= sign * mu / rho[k] * (solv[k][1] - solv[k][0]) / (dx * dx);
           }
         }
       }
@@ -379,7 +405,7 @@ void ETD(MultiLevelProblem& ml_prob)
   Mat A = (static_cast<PetscMatrix*>(KK))->mat();
   FN f, f1, f2, f3 , f4;
   
-  double dt = dx / maxWaveSpeed * 10;
+  double dt= 100; //= dx / maxWaveSpeed * 0.85;
   
   std::cout << "dt = " << dt << " dx = "<< dx << " maxWaveSpeed = "<<maxWaveSpeed << std::endl;
   
