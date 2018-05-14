@@ -165,8 +165,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       unsigned idof = mymsh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
       unsigned idofX = mymsh->GetSolutionDof(i, iel, 2);    // global to global mapping between solution node and solution dof
       
-      solidFlag[i] = ( (*mysolution->_Sol[indexSolM])(idof) > 0.5) ? true:false;
-      
+      solidFlag[i] = ( (*mysolution->_Sol[indexSolM])(idof) > 0.5 || mymsh->GetSolidMark(idof) ) ? true:false;
+            
       for(unsigned  k = 0; k < dim; k++) {
         SolDd[k][i] = (*mysolution->_Sol[indexSolD[k]])(idof);      // global extraction and local storage for the solution
 	SolDdOld[k][i] = (*mysolution->_SolOld[indexSolD[k]])(idof);      // global extraction and local storage for the solution
@@ -210,8 +210,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat);
         double  MPMmaterial = (*mysolution->_Sol[indexSolMat])(idofMat);
         double scalingFactor = 0;// / (1. + 100. * distance);
-        if(MPMmaterial < 5) scalingFactor = 1e-06;
-	else if(MPMmaterial < 9) scalingFactor = 1e-10;
+        if(MPMmaterial < 5) scalingFactor = 1.e-02;
+	else if(MPMmaterial < 9) scalingFactor = 1.e-04;
 	
  	double mu = (Xg[1] <= -1.1416 && ( MPMmaterial == 1 || MPMmaterial == 2 ) ) ? mu_MPM : mu_MPM; 
 	
@@ -819,9 +819,10 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
     
       for(int i = 0; i < dim; i++) {
 	double disp = (*mysolution->_Sol[indexSolD[i]])(idof);
+	double dispOld = (*mysolution->_SolOld[indexSolD[i]])(idof);
 	double velOld = (*mysolution->_Sol[indexSolV[i]])(idof);
 	double accOld = (*mysolution->_Sol[indexSolA[i]])(idof);
-	double accNew = 1. / (beta * dt * dt) * disp - 1. / (beta * dt) * velOld - (1. - 2.* beta) / (2. * beta) * accOld;
+	double accNew = 1. / (beta * dt * dt) * (disp - dispOld) - 1. / (beta * dt) * velOld - (1. - 2.* beta) / (2. * beta) * accOld;
 	double velNew = velOld + dt * ((1. - Gamma) * accOld + Gamma * accNew);
 	mysolution->_Sol[indexSolV[i]]->set(idof, velNew);
 	mysolution->_Sol[indexSolA[i]]->set(idof, accNew);

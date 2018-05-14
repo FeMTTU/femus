@@ -57,7 +57,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 3; //for refinement in 3D
+  unsigned numberOfUniformLevels = 5; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
