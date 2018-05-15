@@ -44,11 +44,13 @@ int main(int argc, char **args)
   
   // ******* Init Petsc-MPI communicator *******
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
+  clock_t start_time = clock();
 
   valve = false;
-  twoPressure = false;
+  twoPressure = true;
   
-  unsigned simulation = 0;
+  unsigned simulation = 5;
 
   if(argc >= 2) {
     if(!strcmp("0", args[1])) {       /** FSI Turek2D no stent */
@@ -75,6 +77,9 @@ int main(int argc, char **args)
     else if(!strcmp("7", args[1])) {       /** FSI Vein Valve */
       simulation = 7;
     }
+    else{
+      simulation = 5;
+    }
   }
 
   //Files files;
@@ -87,7 +92,7 @@ int main(int argc, char **args)
   // ******* Extract the mesh.neu file name based on the simulation identifier *******
   std::string infile;
   if(simulation == 0) {
-    infile = "./../input/steady&pulsatile/2D/Turek.neu";
+    infile = "./../input/steady&pulsatile/2D/Turek_moreElem.neu";
   }
   else if(simulation == 1) {
     infile = "./../input/steady&pulsatile/2D/Turek_porous_60micron.neu";
@@ -135,8 +140,8 @@ int main(int argc, char **args)
     muf = 3.5 * 1.0e-3; //wrong=3.38*1.0e-4*rhof, note:3.38*1.0e-6*rhof=3.5*1.0e-3
     rhos = 1120;
     ni = 0.5;
-    //E = 100 * 1.e6; //simulation=5
-    E = 1. * 1.0e6; //simulation=0,1,2,3
+    E = 100 * 1.e6; //simulation=5
+    //E = 1. * 1.0e6; //simulation=0,1,2,3
     E1 = 50000;
   }
 
@@ -161,6 +166,7 @@ int main(int argc, char **args)
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
   numberOfUniformRefinedMeshes = 2;
+  
   numberOfAMRLevels = 0;
 
   std::cout << 0 << std::endl;
@@ -193,11 +199,17 @@ int main(int argc, char **args)
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
   ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
   ml_sol.AssociatePropertyToSolution("PS", "Pressure", false);    // Add this line
+  
+  ml_sol.AddSolution("PF", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AssociatePropertyToSolution("PF", "Pressure", false);    // Add this line
 
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   ml_sol.AddSolution("Um", LAGRANGE, SECOND, 0, false);
   ml_sol.AddSolution("Vm", LAGRANGE, SECOND, 0, false);
+  
+  ml_sol.AddSolution("AX", LAGRANGE, SECOND, 2);
+  ml_sol.AddSolution("AY", LAGRANGE, SECOND, 2);
     
   // ******* Initialize solution *******
   ml_sol.Initialize("All");
@@ -218,6 +230,7 @@ int main(int argc, char **args)
   // ******* Set boundary conditions *******
   ml_sol.GenerateBdc("DX", "Steady");
   ml_sol.GenerateBdc("DY", "Steady");
+  ml_sol.GenerateBdc("PF", "Steady");
 
   if(simulation == 4 || simulation == 5 || simulation == 6) {
     ml_sol.GenerateBdc("U", "Steady");
@@ -260,24 +273,38 @@ int main(int argc, char **args)
   system.AddSolutionToSystemPDE("V");
 
   system.AddSolutionToSystemPDE("PS");
+  
+  if(twoPressure) system.AddSolutionToSystemPDE("PF");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupgNew2);
 
   // ******* set MG-Solver *******
   system.SetMgType(F_CYCLE);
-
+  
   system.SetNonLinearConvergenceTolerance(1.e-7);
   //system.SetResidualUpdateConvergenceTolerance ( 1.e-15 );
 
-  system.SetMaxNumberOfNonLinearIterations ( 5 ); //10
-  //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
-  
-  system.SetMaxNumberOfLinearIterations ( 3 ); //6
-  system.SetAbsoluteLinearConvergenceTolerance ( 1.e-13 );
+  if(twoPressure){
+    system.SetMaxNumberOfNonLinearIterations(20); //20
+    //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
 
-  system.SetNumberPreSmoothingStep(0);
-  system.SetNumberPostSmoothingStep(2);
+    system.SetMaxNumberOfLinearIterations(1);
+    system.SetAbsoluteLinearConvergenceTolerance(1.e-50);
+
+    system.SetNumberPreSmoothingStep(1);
+    system.SetNumberPostSmoothingStep(1);
+  }
+  else{
+    system.SetMaxNumberOfNonLinearIterations(5); //10
+    //system.SetMaxNumberOfResidualUpdatesForNonlinearIteration ( 4 );
+  
+    system.SetMaxNumberOfLinearIterations(3); //6
+    system.SetAbsoluteLinearConvergenceTolerance(1.e-13);
+
+    system.SetNumberPreSmoothingStep(0);
+    system.SetNumberPostSmoothingStep(2);
+  }
 
   // ******* Set Preconditioner *******
 
@@ -288,20 +315,33 @@ int main(int argc, char **args)
   // ******* Set Smoother *******
   system.SetSolverFineGrids(RICHARDSON);
   //system.SetSolverFineGrids(GMRES);
+  if(twoPressure) system.SetRichardsonScaleFactor(0.4);
 
-  system.SetPreconditionerFineGrids(ILU_PRECOND);
-
-  system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
+  if(twoPressure)
+    system.SetPreconditionerFineGrids(MLU_PRECOND);
+  else
+    system.SetPreconditionerFineGrids(ILU_PRECOND);
+  
+  if(twoPressure)
+    system.SetTolerances(1.e-10, 1.e-9, 1.e+50, 40, 40);
+  else
+    system.SetTolerances(1.e-12, 1.e-20, 1.e+50, 20, 10);
 
   // ******* Add variables to be solved *******
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
 
   // ******* Set the last (1) variables in system (i.e. P) to be a schur variable *******
-  system.SetNumberOfSchurVariables(1);
+  if(twoPressure)
+    system.SetNumberOfSchurVariables(2);
+  else 
+    system.SetNumberOfSchurVariables(1);
 
   // ******* Set block size for the ASM smoothers *******
-  system.SetElementBlockNumber(2);
+  if(twoPressure)
+    system.SetElementBlockNumber(4);
+  else
+    system.SetElementBlockNumber(2);
 
   // ******* Print solution *******
   ml_sol.SetWriter(VTK);
@@ -326,10 +366,12 @@ int main(int argc, char **args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction ( SetVariableTimeStep );
-  const unsigned int n_timesteps = 512;
+  const unsigned int n_timesteps = 256;
 
   std::vector < std::vector <double> > data(n_timesteps);
 
+  system.ResetComputationalTime();
+  
   for(unsigned time_step = 0; time_step < n_timesteps; time_step++) {
     for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++) {
       SetLambdaNew(ml_sol, level , SECOND, ELASTICITY);
@@ -340,6 +382,8 @@ int main(int argc, char **args)
     system.CopySolutionToOldSolution();
 
     system.MGsolve();
+    system.PrintComputationalTime();
+    
     StoreMeshVelocity(ml_prob);
     
     //data[time_step][0] = time_step / 16.;
@@ -393,10 +437,12 @@ int main(int argc, char **args)
     outf.close();
   }
 
-
+ 
 
   // ******* Clear all systems *******
   ml_prob.clear();
+  std::cout << " TOTAL TIME:\t" << \
+          static_cast<double>(clock() - start_time) / CLOCKS_PER_SEC << std::endl;
   return 0;
 }
 
@@ -404,11 +450,11 @@ double SetVariableTimeStep(const double time)
 {
   //double dt = 1. / ( 64 * 1.4 );
   double dt = 1./32;
-  double shiftedTime = time - floor(time);
-  if( time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25){
-    dt = 1./256;
-  }
-  std::cout << " Shifted Time = " << shiftedTime << " dt = " << dt<< std::endl; 
+//   double shiftedTime = time - floor(time);
+//   if( time > 1 && shiftedTime >= 0.125 && shiftedTime < 0.25){
+//     dt = 1./256;
+//   }
+//   std::cout << " Shifted Time = " << shiftedTime << " dt = " << dt<< std::endl; 
   
 //   double PI = acos(-1.);
 //   double dt = 1./32.*(1.25 + 0.75 * sin(2.*PI*time - 3./4. * PI));
@@ -498,6 +544,10 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
     test = 0;
     value = 0.;
   }
+  else if(!strcmp(name, "PF")) {
+    test = 0;
+    value = 0.;
+  }
   else if(!strcmp(name, "DX")) {
     //if(2 == facename || 4 == facename || 5 == facename || 6 == facename) {
     if(5 == facename || 6 == facename) {
@@ -549,6 +599,10 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
     }
   }
   else if(!strcmp(name, "PS")) {
+    test = 0;
+    value = 0.;
+  }
+  else if(!strcmp(name, "PF")) {
     test = 0;
     value = 0.;
   }

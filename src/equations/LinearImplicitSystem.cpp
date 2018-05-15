@@ -151,6 +151,8 @@ namespace femus {
 
   void LinearImplicitSystem::solve(const MgSmootherType& mgSmootherType) {
 
+    _bitFlipCounter = 0;
+    
     clock_t start_mg_time = clock();
 
     unsigned grid0;
@@ -175,7 +177,7 @@ namespace femus {
 
 
       bool ThisIsAMR = (_mg_type == F_CYCLE && _AMRtest &&  AMRCounter < _maxAMRlevels && igridn == _gridn - 1) ? 1 : 0;
-
+restart:
       if(ThisIsAMR) _solution[igridn]->InitAMREps();
 
       clock_t start_preparation_time = clock();
@@ -253,6 +255,10 @@ namespace femus {
         _LinSolver[igridn]->SwapMatrices();
       }
 
+      if(_bitFlipOccurred && _bitFlipCounter == 1){
+	goto restart;
+      }
+      
       if(igridn + 1 < _gridn) ProlongatorSol(igridn + 1);
 
       if(ThisIsAMR) AddAMRLevel(AMRCounter);
@@ -272,6 +278,8 @@ namespace femus {
 
   bool LinearImplicitSystem::IsLinearConverged(const unsigned igridn) {
 
+    _bitFlipOccurred = false;
+    
     bool conv = true;
     double L2normRes;
 //     std::cout << std::endl;
@@ -280,7 +288,10 @@ namespace femus {
       unsigned indexSol = _SolSystemPdeIndex[k];
       L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
       std::cout << "       *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normRes << std::endl;
-
+      if(isnan(L2normRes)){
+	std::cout << "Warning a bit flip is probably occurred, lets try to restart the solver!" << std::endl;
+	_bitFlipOccurred = true;
+      }
       if(L2normRes < _linearAbsoluteConvergenceTolerance && conv == true) {
         conv = true;
       }
@@ -288,7 +299,14 @@ namespace femus {
         conv = false;
       }
     }
-
+  
+    if(_bitFlipOccurred){
+      _bitFlipCounter += 1;
+    }
+    else{
+      _bitFlipCounter = 0;
+    }
+    
     return conv;
 
   }
@@ -326,15 +344,16 @@ namespace femus {
       _solution[level]->UpdateRes(_SolSystemPdeIndex, _LinSolver[level]->_RES, _LinSolver[level]->KKoffset);
       linearIsConverged = IsLinearConverged(level);
 
-      if(linearIsConverged)  break;
+      if(linearIsConverged || _bitFlipOccurred)  break;
     }
 
-    if(!_ml_msh->GetLevel(level)->GetIfHomogeneous()) {
-      (_LinSolver[level]->_EPSC)->matrix_mult(*_LinSolver[level]->_EPS, *_PPamr[level]);
-      *(_LinSolver[level]->_EPS) = *(_LinSolver[level]->_EPSC);
+    if(!_bitFlipOccurred){
+      if(!_ml_msh->GetLevel(level)->GetIfHomogeneous()) {
+	(_LinSolver[level]->_EPSC)->matrix_mult(*_LinSolver[level]->_EPS, *_PPamr[level]);
+	*(_LinSolver[level]->_EPS) = *(_LinSolver[level]->_EPSC);
+      }
+      _solution[level]->UpdateSol(_SolSystemPdeIndex, _LinSolver[level]->_EPS, _LinSolver[level]->KKoffset);
     }
-    _solution[level]->UpdateSol(_SolSystemPdeIndex, _LinSolver[level]->_EPS, _LinSolver[level]->KKoffset);
-
     std::cout << "       *************** Linear-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
               << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
     return linearIsConverged;
@@ -381,15 +400,17 @@ namespace femus {
       // ============== Update Fine Residual ==============
       _solution[level]->UpdateRes(_SolSystemPdeIndex, _LinSolver[level]->_RES, _LinSolver[level]->KKoffset);
       linearIsConverged = IsLinearConverged(level);
-      if(linearIsConverged) break;
+      if(linearIsConverged || _bitFlipOccurred) break;
     }
 
     // ============== Update Fine Solution ==============
-    if(!_ml_msh->GetLevel(level)->GetIfHomogeneous()) {
-      (_LinSolver[level]->_EPSC)->matrix_mult(*_LinSolver[level]->_EPS, *_PPamr[level]);
-      *(_LinSolver[level]->_EPS) = *(_LinSolver[level]->_EPSC);
+    if(!_bitFlipOccurred){
+      if(!_ml_msh->GetLevel(level)->GetIfHomogeneous()) {
+	(_LinSolver[level]->_EPSC)->matrix_mult(*_LinSolver[level]->_EPS, *_PPamr[level]);
+	*(_LinSolver[level]->_EPS) = *(_LinSolver[level]->_EPSC);
+      }
+      _solution[level]->UpdateSol(_SolSystemPdeIndex, _LinSolver[level]->_EPS, _LinSolver[level]->KKoffset);
     }
-    _solution[level]->UpdateSol(_SolSystemPdeIndex, _LinSolver[level]->_EPS, _LinSolver[level]->KKoffset);
 
     std::cout << "\n ************ Linear-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
               << static_cast<double>((clock() - start_mg_time)) / CLOCKS_PER_SEC << std::endl;
