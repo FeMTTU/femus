@@ -224,8 +224,8 @@ int main(int argc, char **args)
   if (!dimension2D) ml_sol.PairSolution("W", "DZ"); // Add this line
 
   // Since the Pressure is a Lagrange multiplier it is used as an implicit variable
-  ml_sol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
-  ml_sol.AssociatePropertyToSolution("P", "Pressure", false); // Add this line
+  ml_sol.AddSolution("PS", DISCONTINOUS_POLYNOMIAL, FIRST, 2);
+  ml_sol.AssociatePropertyToSolution("PS", "Pressure", false); // Add this line
 
   ml_sol.AddSolution("lmbd", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
@@ -270,7 +270,7 @@ int main(int argc, char **args)
   if (simulation == 7) {
     ml_sol.GenerateBdc("W", "Time_dependent");
   }
-  ml_sol.GenerateBdc("P", "Steady");
+  ml_sol.GenerateBdc("PS", "Steady");
 
 //   for(unsigned level = 0; level < numberOfUniformRefinedMeshes; level++ ){
 //     SetLambda(ml_sol, level , SECOND, ELASTICITY);
@@ -293,7 +293,7 @@ int main(int argc, char **args)
   system.AddSolutionToSystemPDE("U");
   system.AddSolutionToSystemPDE("V");
   if (!dimension2D) system.AddSolutionToSystemPDE("W");
-  system.AddSolutionToSystemPDE("P");
+  system.AddSolutionToSystemPDE("PS");
 
   // ******* System Fluid-Structure-Interaction Assembly *******
   system.SetAssembleFunction(FSITimeDependentAssemblySupg);
@@ -709,7 +709,7 @@ bool SetBoundaryConditionTurek2D(const std::vector < double >& x, const char nam
       value = 0.;
     }
   }
-  else if (!strcmp(name, "P")) {
+  else if (!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
   }
@@ -763,7 +763,7 @@ bool SetBoundaryConditionThrombus2D(const std::vector < double >& x, const char 
       value = 0;
     }
   }
-  else if (!strcmp(name, "P")) {
+  else if (!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
   }
@@ -813,7 +813,7 @@ bool SetBoundaryConditionAorticBifurcation(const std::vector < double >& x, cons
       value = 0;
     }
   }
-  else if (!strcmp(name, "P")) {
+  else if (!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
   }
@@ -859,7 +859,7 @@ bool SetBoundaryConditionTubo3D(const std::vector < double > & x, const char nam
       value = 0.;
     }
   }
-  else if (!strcmp(name, "P")) {
+  else if (!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
     if (1 == facename) {
@@ -921,7 +921,7 @@ bool SetBoundaryConditionCarotidBifurcation(const std::vector < double > & x, co
       value = 0.;
     }
   }
-  else if (!strcmp(name, "P")) {
+  else if (!strcmp(name, "PS")) {
     test = 0;
     value = 0.;
     if (2 == facename || 3 == facename) {
@@ -1023,7 +1023,7 @@ void GetSolutionNorm(MultiLevelSolution & mlSol, const unsigned & group, std::ve
   unsigned solDType = mlSol.GetSolutionType(solDIndex[0]);
 
   unsigned solPIndex;
-  solPIndex = mlSol.GetIndex("P");
+  solPIndex = mlSol.GetIndex("PS");
   unsigned solPType = mlSol.GetSolutionType(solPIndex);
 
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
