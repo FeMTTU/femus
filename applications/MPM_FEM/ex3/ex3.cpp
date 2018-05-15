@@ -19,7 +19,7 @@
 using namespace femus;
 
 double SetVariableTimeStep(const double time) {
-  double dt =  0.02;
+  double dt =  0.01;
   return dt;
 }
 
@@ -51,7 +51,7 @@ int main(int argc, char** args) {
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 4; //for refinement in 3D
+  unsigned numberOfUniformLevels = 2; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -61,13 +61,16 @@ int main(int argc, char** args) {
   //initialize parameters for rolling ball (MPM)
   double rho_MPM = 1000.;
   double nu_MPM = 0.4;
-  double E_MPM = 4.2 * 1.e6;
+  double E_MPM = 4.2 * 1.e5;
   
     //initialize parameters for plate (FEM)
-  double rho_FEM = 10000.;
+  double rho_FEM = 1000.;
   double nu_FEM = 0.4;
-  double E_FEM = 4.2 * 1.e7;
+  double E_FEM = 4.2 * 1.e5;
 
+  beta = 0.3; //was 0.25 
+  Gamma = 0.5;
+  
   Parameter par(Lref, Uref);
 
   // Generate Solid Object
@@ -80,6 +83,9 @@ int main(int argc, char** args) {
   mlMsh.ReadCoarseMesh("../input/inclined_plane_coupled_2D.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
+  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  numberOfUniformLevels = 1;
+  
   unsigned dim = mlMsh.GetDimension();
 
   MultiLevelSolution mlSol(&mlMsh);
@@ -96,7 +102,7 @@ int main(int argc, char** args) {
   if(dim > 1) mlSol.AddSolution("AY", LAGRANGE, SECOND, 2);
   if(dim > 2) mlSol.AddSolution("AZ", LAGRANGE, SECOND, 2);
 
-  mlSol.AddSolution("M", LAGRANGE, FIRST, 2);
+  mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
   mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
   mlSol.Initialize("All");
@@ -150,58 +156,97 @@ int main(int argc, char** args) {
   system.SetTolerances(1.e-10, 1.e-15, 1.e+50, 40, 40);
 
 
+  //BEGIN init particles
   unsigned size = 1;
   std::vector < std::vector < double > > x; // marker
+  double yc = 0.15	;  //0.05 for 4 ref, 0.1 for 3 ref, 0.15 for 2 ref
+  
   x.resize(size);
   x[0].resize(dim, 0.);
-  x[0][1] = 0.05;
-
+  x[0][1] = yc;
+ 
   double R = 1.6;
+  double R0 = 1.4; 
+  
   double PI = acos(-1.);
-  unsigned NR = 600;
+  unsigned NR = 300;
   unsigned NL = NR / (2 * PI);
-  double DL = R / NL;
+  double DL = R0 / NL;
 
   for(unsigned i = 0; i < NL; i++) {
-    double  r = R - i * DL;
-    unsigned Nr = static_cast <unsigned>(ceil(NR * r / R));
-//     std::cout << r << " " << Nr << " ";
+    double  r = R0 - i * DL;
+    unsigned Nr = static_cast <unsigned>(ceil(NR * r / R0));
     double dtheta = 2 * PI / Nr;
     unsigned sizeOld = x.size();
     x.resize(sizeOld + Nr);
     for(unsigned s = sizeOld; s < x.size(); s++) {
       x[s].resize(dim);
     }
-//     std::cout << x.size() << " ";
     for(unsigned j = 0; j < Nr; j++) {
       x[sizeOld + j][0] = r * cos(j * dtheta);
-      x[sizeOld + j][1] = 0.05 + r * sin(j * dtheta);
+      x[sizeOld + j][1] = yc + r * sin(j * dtheta);
     }
   }
-
+  double MASS = PI * R0 * R0 * rho_MPM;
   size = x.size();
+  std::vector < double > mass(x.size(), MASS / x.size()); // uniform marker volume
+  
+  if( fabs(R-R0) > 1.0e-10 ) {
+    
+    double factor = 1.14; 
+    unsigned NL = getNumberOfLayers((R-R0)/DL, factor);
+    std::cout << NL <<std::endl;
+      
+    double  r = R0;
+    for(unsigned i = 1; i <= NL; i++) {
+      DL = DL / factor;
+      r += DL;
+      NR = static_cast <unsigned>(ceil (NR * factor) );
+      double dtheta = 2 * PI / NR;
+      unsigned sizeOld = x.size();
+      x.resize(sizeOld + NR);
+      for(unsigned s = sizeOld; s < x.size(); s++) {
+        x[s].resize(dim);
+      }
+      for(unsigned j = 0; j < NR; j++) {
+        x[sizeOld + j][0] = r * cos(j * dtheta);
+        x[sizeOld + j][1] = yc + r * sin(j * dtheta);
+      }
+      mass.resize(x.size(), rho_MPM * r * dtheta * DL);
+    }
+    size = x.size();
+  }
+  
+  double totalMass = 0;
+  for(unsigned i = 0; i < mass.size(); i++){
+    totalMass += mass[i];
+  }
+  
+  std::cout << totalMass<<" "<< rho_MPM * PI * R * R << std::endl;
+  
+  //return 1;
+
   std::vector < MarkerType > markerType;
   markerType.resize(size);
 
   for(unsigned j = 0; j < size; j++) {
     markerType[j] = VOLUME;
   }
-
-  std::vector < std::vector < std::vector < double > > > line(1);
+ std::vector < std::vector < std::vector < double > > > line(1);
   std::vector < std::vector < std::vector < double > > > line0(1);
 
   unsigned solType = 2;
-  linea = new Line(x, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
-
-  double diskArea = PI * (R + DL/2) * (R+DL/2);
-  linea->SetParticlesMass(diskArea, rho_MPM);
+  linea = new Line(x, mass, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
+      
+  //linea->SetParticlesMass(MASS/rhos, rhos);
+  //linea->ScaleParticleMass(scale);
 
   linea->GetLine(line0[0]);
   PrintLine(DEFAULT_OUTPUTDIR, line0, false, 0);
-
-
   linea->GetParticlesToGridMaterial();
 
+  //END init particles 
+  
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
 
@@ -218,11 +263,12 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
-  gravity[0] = 9.81 * sqrt(2.) / 2.;
-  gravity[1] = -9.81 * sqrt(2.) / 2.;
+  double theta = PI / 4;
+  gravity[0] = 9.81 * sin(theta);
+  gravity[1] = -9.81 * cos(theta);
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 180;
+  unsigned n_timesteps = 350;
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
@@ -231,14 +277,14 @@ int main(int argc, char** args) {
 
     // ******* Print solution *******
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, time_step);
-   
+
     GridToParticlesProjection(ml_prob, *linea);
+    
+   
+    
 
     linea->GetLine(line[0]);
     PrintLine(DEFAULT_OUTPUTDIR, line, false, time_step);
-    
-   
-
 
   }
 
