@@ -51,7 +51,7 @@ int main(int argc, char** args) {
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 3; //for refinement in 3D
+  unsigned numberOfUniformLevels = 4; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -159,7 +159,7 @@ int main(int argc, char** args) {
   //BEGIN init particles
   unsigned size = 1;
   std::vector < std::vector < double > > x; // marker
-  double yc = 0.1	;  //0.05 for 4 ref, 0.1 for 3 ref, 0.15 for 2 ref
+  double yc = 0.05	;  //0.05 for 4 ref, 0.1 for 3 ref, 0.15 for 2 ref
   
   x.resize(size);
   x[0].resize(dim, 0.);
