@@ -20,7 +20,7 @@ using namespace femus;
 
 double SetVariableTimeStep(const double time)
 {
-  double dt =  0.01;
+  double dt =  0.001;
   return dt;
 }
 
@@ -51,14 +51,14 @@ int main(int argc, char** args)
   double Uref = 1.;
 
   //initialize parameters for rolling ball (MPM)
-  double rho_MPM = 1000.;
+  double rho_MPM = 100.;
   double nu_MPM = 0.4;
-  double E_MPM = 4.2 * 1.e4;
+  double E_MPM = 5.91 * 1.e3;
 
   //initialize parameters for plate (FEM)
   double rho_FEM = 10000.;
   double nu_FEM = 0.4;
-  double E_FEM = 4.2 * 1.e8;
+  double E_FEM = 4.2 * 1.e7;
 
   beta = 0.3; //was 0.25
   Gamma = 0.5;
