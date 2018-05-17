@@ -39,7 +39,7 @@ std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 //END Stochastic Input Parameters
 
 
-const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, first row: weights, second row: coordinates
+ const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, first row: weights, second row: coordinates
   {{1.77245385091}, {0.}},
   { {0.8862269254527577, 0.8862269254527577},
     { -0.7071067811865476, 0.7071067811865476}
@@ -88,6 +88,38 @@ const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, fir
       -3.4361591188377374, -2.5327316742327897, -1.7566836492998819, -1.0366108297895136, -0.3429013272237046, 0.3429013272237046,
       1.0366108297895136, 1.7566836492998819, 2.5327316742327897, 3.4361591188377374
     }
+  }
+};
+
+void MultidimensionalHermiteQuadrature(std::vector < std::vector <unsigned> > & MultidimHermitePoints, const unsigned & numberOfQuadraturePoints,
+                                       const unsigned & numberOfEigPairs) {
+
+  unsigned tensorProductDim = pow(numberOfQuadraturePoints + 1, numberOfEigPairs);
+  
+  MultidimHermitePoints.resize(tensorProductDim);
+  for(unsigned i = 0; i < tensorProductDim; i++) {
+    MultidimHermitePoints[i].assign(1 + numberOfEigPairs, 1.); //first entry is weight, second is coordinate
+  }
+
+  unsigned index = 0;
+  unsigned counters[numberOfEigPairs + 1];
+  memset(counters, 0, sizeof(counters));
+
+  while(!counters[numberOfEigPairs]) {
+
+    for(unsigned j = 0; j < numberOfEigPairs; j++) {
+      unsigned indexx = counters[numberOfEigPairs - 1 - j];
+      MultidimHermitePoints[index][0] *= HermiteQuadrature[numberOfQuadraturePoints][0][indexx];
+      MultidimHermitePoints[index][j+1] =  HermiteQuadrature[numberOfQuadraturePoints][j+1][indexx];
+    }
+    index++;
+
+     unsigned i;
+    for(i = 0; counters[i] == numberOfQuadraturePoints; i++) { // inner loops that are at maxval restart at zero
+      counters[i] = 0;
+    }
+    ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
+    
   }
 };
 

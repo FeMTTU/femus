@@ -160,7 +160,23 @@ int main(int argc, char** argv) {
 
   systemSG.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
 
-
+//BEGIN testin multidim Hermite quadrature
+  
+  std::vector < std::vector <unsigned> > MultidimHermitePoints;
+  MultidimensionalHermiteQuadrature(MultidimHermitePoints, 3, numberOfEigPairs);
+  
+  for(unsigned i=0; i<MultidimHermitePoints.size(); i++){
+    std::cout << MultidimHermitePoints[i][0] << " " ;
+    for(unsigned j=1; j<numberOfEigPairs; j++){
+    std::cout << MultidimHermitePoints[i][j] << " " ;
+    }
+    std::cout << std::endl;
+  } 
+    
+  //END
+  
+  
+  
   for(int i = 0; i < numberOfEigPairs; i++) {
     std::cout << eigenvalues[i].first << " " << eigenvalues[i].second << std::endl;
   }
