@@ -162,16 +162,21 @@ int main(int argc, char** argv) {
 
 //BEGIN testin multidim Hermite quadrature
   
-  std::vector < std::vector <double> > MultidimHermitePoints;
-  MultidimensionalHermiteQuadrature(MultidimHermitePoints, 4, numberOfEigPairs);
+  unsigned numberOfQuadraturePoints = 4;
   
-  for(unsigned i=0; i<MultidimHermitePoints.size(); i++){
-    std::cout << MultidimHermitePoints[i][0] << " " ;
+  std::vector < std::vector <unsigned> > Tp;
+  ComputeTensorProductSet(Tp, numberOfQuadraturePoints, numberOfEigPairs);
+  
+  for(unsigned i=0; i<Tp.size(); i++){
     for(unsigned j=0; j<numberOfEigPairs; j++){
-    std::cout << MultidimHermitePoints[i][j+1] << " " ;
+    std::cout << Tp[i][j] << " " ;
     }
     std::cout << std::endl;
   } 
+    
+    std::vector < std::vector < double > >  MultivariateHermitePoly;
+
+    EvaluateMultivariateHermitePoly(MultivariateHermitePoly, numberOfQuadraturePoints, pIndex, Jp, Tp);
     
   //END
   

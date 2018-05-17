@@ -33,7 +33,7 @@ unsigned factorial(unsigned n)
 unsigned pIndex = 3;
 unsigned qIndex = 2;
 
-int numberOfEigPairs = 4; //dimension of the stochastic variable
+int numberOfEigPairs = 2; //dimension of the stochastic variable
 double stdDeviationInput = 1.;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double amin = 1. / 100; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
@@ -92,15 +92,49 @@ const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, fir
   }
 };
 
-void MultidimensionalHermiteQuadrature(std::vector < std::vector <double> > & MultidimHermitePoints, const unsigned & numberOfQuadraturePoints,
-                                       const unsigned & numberOfEigPairs)
+// void MultidimensionalHermiteQuadrature(std::vector < std::vector <double> > & MultidimHermitePoints, const unsigned & numberOfQuadraturePoints,
+//                                        const unsigned & numberOfEigPairs)
+// {
+//
+//   unsigned tensorProductDim = pow(numberOfQuadraturePoints, numberOfEigPairs);
+//
+//   MultidimHermitePoints.resize(tensorProductDim);
+//   for(unsigned i = 0; i < tensorProductDim; i++) {
+//     MultidimHermitePoints[i].assign(1 + numberOfEigPairs, 1.); //first entry is weight, second is coordinate
+//   }
+//
+//   unsigned index = 0;
+//   unsigned counters[numberOfEigPairs + 1];
+//   memset(counters, 0, sizeof(counters));
+//
+//   while(!counters[numberOfEigPairs]) {
+//
+//     for(unsigned j = 0; j < numberOfEigPairs; j++) {
+//       unsigned indexx = counters[numberOfEigPairs - 1 - j];
+//       MultidimHermitePoints[index][0] *= HermiteQuadrature[numberOfQuadraturePoints - 1][0][indexx];
+//       MultidimHermitePoints[index][j + 1] =  HermiteQuadrature[numberOfQuadraturePoints - 1][1][indexx];
+//     }
+//     index++;
+//
+//     unsigned i;
+//     for(i = 0; counters[i] == numberOfQuadraturePoints - 1; i++) { // inner loops that are at maxval restart at zero
+//       counters[i] = 0;
+//     }
+//     ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
+//
+//   }
+// };
+
+void ComputeTensorProductSet(std::vector < std::vector <unsigned> > & Tp, const unsigned & numberOfQuadraturePoints, const unsigned & numberOfEigPairs)   //p is max poly degree
 {
 
   unsigned tensorProductDim = pow(numberOfQuadraturePoints, numberOfEigPairs);
 
-  MultidimHermitePoints.resize(tensorProductDim);
+  std::cout << "tensorProductDim = " << tensorProductDim << std::endl;
+
+  Tp.resize(tensorProductDim);
   for(unsigned i = 0; i < tensorProductDim; i++) {
-    MultidimHermitePoints[i].assign(1 + numberOfEigPairs, 1.); //first entry is weight, second is coordinate
+    Tp[i].resize(numberOfEigPairs);
   }
 
   unsigned index = 0;
@@ -110,10 +144,10 @@ void MultidimensionalHermiteQuadrature(std::vector < std::vector <double> > & Mu
   while(!counters[numberOfEigPairs]) {
 
     for(unsigned j = 0; j < numberOfEigPairs; j++) {
-      unsigned indexx = counters[numberOfEigPairs - 1 - j];
-      MultidimHermitePoints[index][0] *= HermiteQuadrature[numberOfQuadraturePoints - 1][0][indexx];
-      MultidimHermitePoints[index][j + 1] =  HermiteQuadrature[numberOfQuadraturePoints - 1][1][indexx];
+      Tp[index][j] = counters[numberOfEigPairs - 1 - j];
+      std::cout << " Tp[" << index << "][" << j << "]= " << Tp[index][j] ;
     }
+    std::cout << std::endl;
     index++;
 
     unsigned i;
@@ -121,7 +155,6 @@ void MultidimensionalHermiteQuadrature(std::vector < std::vector <double> > & Mu
       counters[i] = 0;
     }
     ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
-
   }
 };
 
@@ -215,9 +248,9 @@ void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsign
     if(entrySum <= p) {
       for(unsigned j = 0; j < numberOfEigPairs; j++) {
         Jp[index][j] = counters[numberOfEigPairs - 1 - j];
-// 	std::cout << " Jp[" << index <<"][" << j <<"]= " << Jp[index][j] ;
+        std::cout << " Jp[" << index << "][" << j << "]= " << Jp[index][j] ;
       }
-//       std::cout << std::endl;
+      std::cout << std::endl;
       index++;
     }
     unsigned i;
@@ -286,27 +319,27 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
 
 };
 
-void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & MultivariateHermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder,
-				     const std::vector < std::vector <unsigned> > & Jp, const std::vector < std::vector <double> > & MultidimHermitePoints){
-  
+void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & MultivariateHermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & p,
+                                     const std::vector < std::vector <unsigned> > & Jp, const std::vector < std::vector <unsigned> > & Tp)
+{
+
   MultivariateHermitePoly.resize(Jp.size());
-  for(unsigned i=0; i< Jp.size(); i++){
-    MultivariateHermitePoly[i].assign(MultidimHermitePoints.size(), 1.);
+  for(unsigned i = 0; i < Jp.size(); i++) {
+    MultivariateHermitePoly[i].assign(Tp.size(), 1.);
   }
-  
+
   std::vector < std::vector < double > >  HermitePoly;
-  EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
-  
-  for(unsigned i=0; i < Jp.size(); i++){
-    for(unsigned j=0; j < MultidimHermitePoints.size(); j++){
-      MultivariateHermitePoly[i][j] *= MultidimHermitePoints[j][0];
-      for(unsigned k=0; k < numberOfEigPairs; k++){
-	double w = HermiteQuadrature[numberOfQuadraturePoints - 1][0][i];
-        MultivariateHermitePoly[i][j] *= w * HermitePoly[Jp[i][k]][MultidimHermitePoints[j][k+1]] ;
+  EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, p);
+
+  for(unsigned i = 0; i < Jp.size(); i++) {
+    for(unsigned j = 0; j < Tp.size(); j++) {
+      for(unsigned k = 0; k < numberOfEigPairs; k++) {
+        double w = HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]];
+        MultivariateHermitePoly[i][j] *= w * HermitePoly[Jp[i][k]][Tp[j][k]] ;
       }
     }
   }
-  
+
 };
 
 void AssembleSysSG(MultiLevelProblem& ml_prob)
