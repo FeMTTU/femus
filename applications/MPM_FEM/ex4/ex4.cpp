@@ -51,9 +51,9 @@ int main(int argc, char** args)
   double Uref = 1.;
 
   //initialize parameters for rolling ball (MPM)
-  double rho_MPM = 100.;
+  double rho_MPM = 1000.;
   double nu_MPM = 0.4;
-  double E_MPM = 5.91 * 1.e3;
+  double E_MPM = 5.91 * 1.e6;
 
   //initialize parameters for plate (FEM)
   double rho_FEM = 10000.;
@@ -72,7 +72,7 @@ int main(int argc, char** args)
   solidMPM = Solid(par, E_MPM, nu_MPM, rho_MPM, "Neo-Hookean");
   solidFEM = Solid(par, E_FEM, nu_FEM, rho_FEM, "Neo-Hookean");
 
-  mlMsh.ReadCoarseMesh("../input/basket.neu", "fifth", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/basket.Scaled.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -158,8 +158,8 @@ int main(int argc, char** args)
   x[0].resize(dim, 0.);
   x[0][1] = yc;
 
-  double R = 1.6;
-  double R0 = 1.4;
+  double R = 0.16;
+  double R0 = 0.14;
 
   double PI = acos(-1.);
   unsigned NR = 300;
