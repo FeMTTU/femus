@@ -286,6 +286,28 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
 
 };
 
+void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & MultivariateHermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder,
+				     const std::vector < std::vector <unsigned> > & Jp, const std::vector < std::vector <double> > & MultidimHermitePoints){
+  
+  MultivariateHermitePoly.resize(Jp.size());
+  for(unsigned i=0; i< Jp.size(); i++){
+    MultivariateHermitePoly[i].assign(MultidimHermitePoints.size(), 1.);
+  }
+  
+  std::vector < std::vector < double > >  HermitePoly;
+  EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
+  
+  for(unsigned i=0; i < Jp.size(); i++){
+    for(unsigned j=0; j < MultidimHermitePoints.size(); j++){
+      MultivariateHermitePoly[i][j] *= MultidimHermitePoints[j][0];
+      for(unsigned k=0; k < numberOfEigPairs; k++){
+	double w = HermiteQuadrature[numberOfQuadraturePoints - 1][0][i];
+        MultivariateHermitePoly[i][j] *= w * HermitePoly[Jp[i][k]][MultidimHermitePoints[j][k+1]] ;
+      }
+    }
+  }
+  
+};
 
 void AssembleSysSG(MultiLevelProblem& ml_prob)
 {
