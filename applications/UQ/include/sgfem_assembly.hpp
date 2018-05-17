@@ -4,7 +4,8 @@
 using namespace femus;
 
 
-unsigned factorial(unsigned n) {
+unsigned factorial(unsigned n)
+{
 
   unsigned fac = 1.;
 
@@ -32,14 +33,14 @@ unsigned factorial(unsigned n) {
 unsigned pIndex = 3;
 unsigned qIndex = 2;
 
-int numberOfEigPairs = 2; //dimension of the stochastic variable
+int numberOfEigPairs = 4; //dimension of the stochastic variable
 double stdDeviationInput = 1.;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double amin = 1. / 100; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 //END Stochastic Input Parameters
 
 
- const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, first row: weights, second row: coordinates
+const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, first row: weights, second row: coordinates
   {{1.77245385091}, {0.}},
   { {0.8862269254527577, 0.8862269254527577},
     { -0.7071067811865476, 0.7071067811865476}
@@ -91,11 +92,12 @@ std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
   }
 };
 
-void MultidimensionalHermiteQuadrature(std::vector < std::vector <unsigned> > & MultidimHermitePoints, const unsigned & numberOfQuadraturePoints,
-                                       const unsigned & numberOfEigPairs) {
+void MultidimensionalHermiteQuadrature(std::vector < std::vector <double> > & MultidimHermitePoints, const unsigned & numberOfQuadraturePoints,
+                                       const unsigned & numberOfEigPairs)
+{
 
-  unsigned tensorProductDim = pow(numberOfQuadraturePoints + 1, numberOfEigPairs);
-  
+  unsigned tensorProductDim = pow(numberOfQuadraturePoints, numberOfEigPairs);
+
   MultidimHermitePoints.resize(tensorProductDim);
   for(unsigned i = 0; i < tensorProductDim; i++) {
     MultidimHermitePoints[i].assign(1 + numberOfEigPairs, 1.); //first entry is weight, second is coordinate
@@ -109,21 +111,22 @@ void MultidimensionalHermiteQuadrature(std::vector < std::vector <unsigned> > & 
 
     for(unsigned j = 0; j < numberOfEigPairs; j++) {
       unsigned indexx = counters[numberOfEigPairs - 1 - j];
-      MultidimHermitePoints[index][0] *= HermiteQuadrature[numberOfQuadraturePoints][0][indexx];
-      MultidimHermitePoints[index][j+1] =  HermiteQuadrature[numberOfQuadraturePoints][j+1][indexx];
+      MultidimHermitePoints[index][0] *= HermiteQuadrature[numberOfQuadraturePoints - 1][0][indexx];
+      MultidimHermitePoints[index][j + 1] =  HermiteQuadrature[numberOfQuadraturePoints - 1][1][indexx];
     }
     index++;
 
-     unsigned i;
-    for(i = 0; counters[i] == numberOfQuadraturePoints; i++) { // inner loops that are at maxval restart at zero
+    unsigned i;
+    for(i = 0; counters[i] == numberOfQuadraturePoints - 1; i++) { // inner loops that are at maxval restart at zero
       counters[i] = 0;
     }
     ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
-    
+
   }
 };
 
-void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
+void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder)
+{
 
   if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 10) {
     std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [1,10]" << std::endl;
@@ -183,7 +186,8 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
 
 };
 
-void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsigned & p, const unsigned & numberOfEigPairs) { //p is max poly degree
+void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsigned & p, const unsigned & numberOfEigPairs)   //p is max poly degree
+{
 
   unsigned dimJp = factorial(numberOfEigPairs + p) / (factorial(numberOfEigPairs) * factorial(p));
 
@@ -211,7 +215,9 @@ void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsign
     if(entrySum <= p) {
       for(unsigned j = 0; j < numberOfEigPairs; j++) {
         Jp[index][j] = counters[numberOfEigPairs - 1 - j];
+// 	std::cout << " Jp[" << index <<"][" << j <<"]= " << Jp[index][j] ;
       }
+//       std::cout << std::endl;
       index++;
     }
     unsigned i;
@@ -222,7 +228,8 @@ void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsign
   }
 };
 
-void EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, std::vector < std::vector < std::vector < double > > > &integralsMatrix) {
+void EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, std::vector < std::vector < std::vector < double > > > &integralsMatrix)
+{
 
   unsigned maxPolyOrder = (q0 > p0) ? q0 : p0;
 
@@ -255,7 +262,8 @@ void EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, std::vect
 };
 
 void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, std::vector < std::vector < std::vector < double > > > & G,
-                                    const unsigned & numberOfEigPairs, const std::vector < std::vector < std::vector < double > > > & integralsMatrix) {
+                                    const unsigned & numberOfEigPairs, const std::vector < std::vector < std::vector < double > > > & integralsMatrix)
+{
 
   std::vector < std::vector <unsigned> > Jq;
   std::vector < std::vector <unsigned> > Jp;
@@ -279,7 +287,8 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
 };
 
 
-void AssembleSysSG(MultiLevelProblem& ml_prob) {
+void AssembleSysSG(MultiLevelProblem& ml_prob)
+{
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem

@@ -162,13 +162,13 @@ int main(int argc, char** argv) {
 
 //BEGIN testin multidim Hermite quadrature
   
-  std::vector < std::vector <unsigned> > MultidimHermitePoints;
-  MultidimensionalHermiteQuadrature(MultidimHermitePoints, 3, numberOfEigPairs);
+  std::vector < std::vector <double> > MultidimHermitePoints;
+  MultidimensionalHermiteQuadrature(MultidimHermitePoints, 4, numberOfEigPairs);
   
   for(unsigned i=0; i<MultidimHermitePoints.size(); i++){
     std::cout << MultidimHermitePoints[i][0] << " " ;
-    for(unsigned j=1; j<numberOfEigPairs; j++){
-    std::cout << MultidimHermitePoints[i][j] << " " ;
+    for(unsigned j=0; j<numberOfEigPairs; j++){
+    std::cout << MultidimHermitePoints[i][j+1] << " " ;
     }
     std::cout << std::endl;
   } 
