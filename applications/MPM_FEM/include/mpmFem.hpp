@@ -312,7 +312,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           }
 
           for(int idim = 0; idim < dim; idim++) {
-            aRhs[indexPdeD[idim]][i] += (phi[i] * density_FEM / J_hat * gravity[idim] - CauchyDIR[idim]
+            aRhs[indexPdeD[idim]][i] += (phi[i] * density_FEM / J_hat * gravity[idim] * 0. - CauchyDIR[idim] 
                                         -phi[i] * ( 1. / (beta * dt * dt) * (SolDgss[idim]-SolDgssOld[idim])
                                                    -1. / (beta * dt) * SolVgssOld[idim] 
                                                    -(1. - 2.* beta) / (2. * beta) * SolAgssOld[idim] ) 

@@ -20,7 +20,7 @@ using namespace femus;
 
 double SetVariableTimeStep(const double time)
 {
-  double dt =  0.01;
+  double dt =  0.001;
   return dt;
 }
 
@@ -43,7 +43,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 2; //for refinement in 3D
+  unsigned numberOfUniformLevels = 1; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -51,14 +51,14 @@ int main(int argc, char** args)
   double Uref = 1.;
 
   //initialize parameters for rolling ball (MPM)
-  double rho_MPM = 1000.;
+  double rho_MPM = 100.;
   double nu_MPM = 0.4;
-  double E_MPM = 4.2 * 1.e5;
+  double E_MPM = 5.91 * 1.e3;
 
   //initialize parameters for plate (FEM)
-  double rho_FEM = 1000.;
+  double rho_FEM = 10000.;
   double nu_FEM = 0.4;
-  double E_FEM = 4.2 * 1.e6;
+  double E_FEM = 4.2 * 1.e7;
 
   beta = 0.3; //was 0.25
   Gamma = 0.5;
@@ -261,7 +261,7 @@ int main(int argc, char** args)
   gravity[1] = -9.81 * cos(theta);
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 350;
+  unsigned n_timesteps = 3500;
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
