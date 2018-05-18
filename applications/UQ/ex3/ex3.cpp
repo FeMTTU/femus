@@ -27,11 +27,11 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 
 void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues);
 //
-// void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  QoI, const unsigned& m, const double& domainMeasure);
+void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector <double > &  alphas, const double& domainMeasure);
 //
-// void GetStochasticData(std::vector <double>& QoI);
+void GetStochasticData(std::vector <double>& alphas);
 //
-// void PlotStochasticData();
+void PlotStochasticData();
 
 //BEGIN stochastic data
 
@@ -122,8 +122,6 @@ int main(int argc, char** argv) {
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
   //END
 
-  GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues); //solve the generalized eigenvalue problem and compute the eigenpairs
-
   MultiLevelProblem ml_probSG(&mlSol);
 
   // ******* Add FEM system to the MultiLevel problem *******
@@ -161,32 +159,36 @@ int main(int argc, char** argv) {
 
 //BEGIN testin multidim Hermite quadrature
 
-  unsigned numberOfQuadraturePoints = 4;
-
-  std::vector < std::vector <unsigned> > Tp;
-  ComputeTensorProductSet(Tp, numberOfQuadraturePoints, numberOfEigPairs);
-
-  for(unsigned i = 0; i < Tp.size(); i++) {
-    for(unsigned j = 0; j < numberOfEigPairs; j++) {
-      std::cout << Tp[i][j] << " " ;
-    }
-    std::cout << std::endl;
-  }
-
-  std::vector < std::vector < double > >  MultivariateHermitePoly;
-  std::vector < double > MultivariateHermiteQuadratureWeights;
-
-  EvaluateMultivariateHermitePoly(MultivariateHermitePoly, MultivariateHermiteQuadratureWeights, numberOfQuadraturePoints, pIndex, Jp, Tp);
+//   unsigned numberOfQuadraturePoints = 4;
+// 
+//   std::vector < std::vector <unsigned> > Tp;
+//   ComputeTensorProductSet(Tp, numberOfQuadraturePoints, numberOfEigPairs);
+// 
+//   for(unsigned i = 0; i < Tp.size(); i++) {
+//     for(unsigned j = 0; j < numberOfEigPairs; j++) {
+//       std::cout << Tp[i][j] << " " ;
+//     }
+//     std::cout << std::endl;
+//   }
+// 
+//   std::vector < std::vector < double > >  MultivariateHermitePoly;
+//   std::vector < double > MultivariateHermiteQuadratureWeights;
+// 
+//   EvaluateMultivariateHermitePoly(MultivariateHermitePoly, MultivariateHermiteQuadratureWeights, numberOfQuadraturePoints, pIndex, Jp, Tp);
 
   //END
 
 
+  GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues); //solve the generalized eigenvalue problem and compute the eigenpairs
 
   for(int i = 0; i < numberOfEigPairs; i++) {
     std::cout << eigenvalues[i].first << " " << eigenvalues[i].second << std::endl;
   }
 
   systemSG.MGsolve();
+  
+  std::vector <double> alphas;
+  GetCoefficientsForQuantityOfInterest(ml_probSG, alphas, domainMeasure);
 
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
@@ -563,7 +565,7 @@ void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vecto
   std::vector <unsigned> soluIndex(Jp.size());
   for(unsigned i = 0; i < Jp.size(); i++) {
     char name[10];
-    //sprintf(name, "uSG%d", i);
+    sprintf(name, "uSG%d", i);
     soluIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
   }
   unsigned soluType = mlSol->GetSolutionType(soluIndex[0]);
@@ -595,8 +597,8 @@ void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vecto
       for(int i = 0; i < dim; i++) {
         x[i].resize(nDofx);
       }
-
-      // local storage of global mapping and solution
+      
+     // local storage of global mapping and solution
       for(unsigned i = 0; i < nDofu; i++) {
         unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
         solu[j][i] = (*sol->_Sol[soluIndex[j]])(solDof);      // global extraction and local storage for the solution
@@ -628,8 +630,12 @@ void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vecto
 
     } //end element loop for each process
 
+    std::cout<< "MUOOOOOOOOOOOREE" << std::endl;
+    
     alphas[j] = 0.;
     MPI_Allreduce(&alphasTemp[j], &alphas[j], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    
+    std::cout<< "QUIIIIIIIIIIIII" << std::endl;
 
   }
 

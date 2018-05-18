@@ -137,17 +137,17 @@ int main(int argc, char** argv) {
 //   //END test Hermite Poly
   
   //BEGIN stochastic index set test
-  std::vector < std::vector <unsigned> > Jp;
-  ComputeIndexSetJp(Jp, 3);
-  for(unsigned i=0; i<Jp.size();i++){
-    std::cout << "Jp[" << i << "]=( ";
-    for(unsigned j=0; j<numberOfEigPairs; j++){ 
-     std::cout << Jp[i][j] << " ";
-   }
-   std::cout << ")" << std::endl;
-  }
-  std::vector < std::vector < std::vector < double > > >  G;
-  EvaluateStochasticMassMatrices(5, 3, G);
+//   std::vector < std::vector <unsigned> > Jp;
+//   ComputeIndexSetJp(Jp, 3);
+//   for(unsigned i=0; i<Jp.size();i++){
+//     std::cout << "Jp[" << i << "]=( ";
+//     for(unsigned j=0; j<numberOfEigPairs; j++){ 
+//      std::cout << Jp[i][j] << " ";
+//    }
+//    std::cout << ")" << std::endl;
+//   }
+//   std::vector < std::vector < std::vector < double > > >  G;
+//   EvaluateStochasticMassMatrices(5, 3, G);
   
   //END stochastic index set test
   
