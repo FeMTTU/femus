@@ -337,7 +337,7 @@ void ETD(MultiLevelProblem& ml_prob)
     
      dx = x[1] - x[0];
      
-    for(unsigned k = NLayers; k>0; k--){
+    for(unsigned k = NLayers; k>1; k--){
       w[k-1] = w[k] -  solh[k-1][0].value() * (solv[k-1][1].value() - solv[k-1][0].value() )/dx- ( hALE[k-1] - solh[k-1][0].value()) / dt;
       //std::cout << hALE[k-1] << " " << w[k-1] << " ";
     }
@@ -360,7 +360,7 @@ void ETD(MultiLevelProblem& ml_prob)
           double sign = ( j == 0) ? 1. : -1;
           aResh[k][0] += sign * solh[k][0] * solv[k][j] / dx; 
 	}
-	//aResh[k][0] += w[k+1] - w[k];	    
+	aResh[k][0] += w[k+1] - w[k];	    
       }
       adept::adouble vMid = 0.5 * (solv[k][0] + solv[k][1]);
       adept::adouble fv = 0.5 * vMid * vMid + 9.81 * eta[k];
