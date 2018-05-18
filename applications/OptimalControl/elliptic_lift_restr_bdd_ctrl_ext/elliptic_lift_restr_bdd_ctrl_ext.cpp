@@ -468,7 +468,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 	Sol_n_el_dofs[k] = ndofs_unk;
   }
   
-   vector <double>  interface_flag;   interface_flag.reserve(nDof_u); //flag for boundary interface
+   vector <double> interface_flag;   interface_flag.reserve(nDof_u); //flag for boundary interface
    std::fill(interface_flag.begin(), interface_flag.end(), 0.);
    
   //************ Boundary loops *************************************** 
@@ -636,7 +636,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 	  if (i < nDof_u)  {
 	     if ( group_flag == 12 )            Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss /*+ sol_ctrl_gss*/ - u_des) - laplace_rhs_du_adj_i - 0.);
 	  
-	     else if ( group_flag == 13 )       Res[0      + i] +=  (- penalty_strong) * (sol_u[i] - 0.);
+	     else if ( group_flag == 13 )       Res[0      + i] +=  (1-interface_flag[i]) * (- penalty_strong) * (sol_u[i] - 0.);
 	  }
           // SECOND ROW
 	  if (i < nDof_ctrl)  {
@@ -645,7 +645,7 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
 													      /*+ 1. * sol_mu[i]*/ - 0.);
-	     else if ( group_flag == 12 )       Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
+	     else if ( group_flag == 12 )       Res[nDof_u + i] +=  (1-interface_flag[i]) * (- penalty_strong) * (sol_ctrl[i] - 0.);
 	  }
           // THIRD ROW
           if (i < nDof_adj) {  
