@@ -46,11 +46,15 @@ double InitalValueV(const std::vector < double >& x)
 
 double InitalValueH0(const std::vector < double >& x)
 {
-//   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
-//   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
-//   double hh = 1 - dd * dd / (bb * bb);
-//   double b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
-  return 40 + ( 2.* exp(-(x[0] / 100000.) * (x[0] / 100000.))) / NumberOfLayers;
+  double b = 40;
+  if(NumberOfLayers == 1){
+    double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
+    double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
+    double hh = 1 - dd * dd / (bb * bb);
+    b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
+  }
+  return b + ( 2.* exp(-(x[0] / 100000.) * (x[0] / 100000.))) / NumberOfLayers;
+  
 }
 
 double InitalValueH1(const std::vector < double >& x)
@@ -131,11 +135,17 @@ int main(int argc, char** args)
   }
   
   mlSol.AddSolution("b", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false);
+  mlSol.AddSolution("eta", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false);
 
+  mlSol.Initialize("All");
   
   mlSol.Initialize("h0",InitalValueH0);
-  mlSol.Initialize("h1",InitalValueH1);
-  mlSol.Initialize("h2",InitalValueH2);
+  if(NumberOfLayers > 1){	  
+    mlSol.Initialize("h1",InitalValueH1);
+    if (NumberOfLayers > 2){	  
+      mlSol.Initialize("h2",InitalValueH2);
+    }
+  }
   
   
   
@@ -461,8 +471,16 @@ void ETD(MultiLevelProblem& ml_prob)
   FNDestroy(&f4);
 
   sol->UpdateSol(mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset);
-
-
+  
+  unsigned solIndexeta = mlSol->GetIndex("eta");
+  unsigned solIndexb = mlSol->GetIndex("b");
+  sol->_Sol[solIndexeta]->zero();
+  for(unsigned k=0;k<NumberOfLayers;k++){
+    sol->_Sol[solIndexeta]->add(*sol->_Sol[solIndexh[k]]);
+  }
+  sol->_Sol[solIndexeta]->add(-1,*sol->_Sol[solIndexb]);
+  
+  
 
 }
 

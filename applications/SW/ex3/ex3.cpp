@@ -25,6 +25,7 @@
 using namespace femus;
 
 double rho[10]={1025,1027,1028}; // kg/m^3
+//double rho[10]={1025,1030,1035};
 double mu = 1.5 * 1.0e-3; // pa s 
 
 double aa = 6371000;  //radius of earth [m]
@@ -136,6 +137,10 @@ int main(int argc, char** args)
   
   mlSol.AddSolution("b", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false);
 
+  mlSol.AddSolution("eta", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false);
+
+  mlSol.Initialize("All");
+  
   
   mlSol.Initialize("h0",InitalValueH0);
   mlSol.Initialize("h1",InitalValueH1);
@@ -493,6 +498,13 @@ void ETD(MultiLevelProblem& ml_prob)
 
   sol->UpdateSol(mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset);
 
+  unsigned solIndexeta = mlSol->GetIndex("eta");
+  unsigned solIndexb = mlSol->GetIndex("b");
+  sol->_Sol[solIndexeta]->zero();
+  for(unsigned k=0;k<NumberOfLayers;k++){
+    sol->_Sol[solIndexeta]->add(*sol->_Sol[solIndexh[k]]);
+  }
+  sol->_Sol[solIndexeta]->add(-1,*sol->_Sol[solIndexb]);
 
 
 }
