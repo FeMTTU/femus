@@ -336,9 +336,8 @@ void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & M
   for(unsigned i = 0; i < Jp.size(); i++) {
     for(unsigned j = 0; j < Tp.size(); j++) {
       for(unsigned k = 0; k < numberOfEigPairs; k++) {
-        double w = HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]];
-        MultivariateHermiteQuadratureWeights[j] *= w ;
-	MultivariateHermitePoly[i][j] *= HermitePoly[Jp[i][k]][Tp[j][k]] ; //w has to stay out otherwise it would be raised to a power
+        MultivariateHermiteQuadratureWeights[j] *= HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]] ;
+	MultivariateHermitePoly[i][j] *= HermitePoly[Jp[i][k]][Tp[j][k]] ; 
       }
     }
   }

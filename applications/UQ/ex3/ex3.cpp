@@ -19,7 +19,8 @@
 using namespace femus;
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
+{
   bool dirichlet = true; //dirichlet
   value = 0.;
   return dirichlet;
@@ -48,7 +49,8 @@ double L = 4 ; // correlation length of the covariance function
 
 unsigned numberOfUniformLevels = 2;
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
@@ -160,20 +162,20 @@ int main(int argc, char** argv) {
 //BEGIN testin multidim Hermite quadrature
 
 //   unsigned numberOfQuadraturePoints = 4;
-// 
+//
 //   std::vector < std::vector <unsigned> > Tp;
 //   ComputeTensorProductSet(Tp, numberOfQuadraturePoints, numberOfEigPairs);
-// 
+//
 //   for(unsigned i = 0; i < Tp.size(); i++) {
 //     for(unsigned j = 0; j < numberOfEigPairs; j++) {
 //       std::cout << Tp[i][j] << " " ;
 //     }
 //     std::cout << std::endl;
 //   }
-// 
+//
 //   std::vector < std::vector < double > >  MultivariateHermitePoly;
 //   std::vector < double > MultivariateHermiteQuadratureWeights;
-// 
+//
 //   EvaluateMultivariateHermitePoly(MultivariateHermitePoly, MultivariateHermiteQuadratureWeights, numberOfQuadraturePoints, pIndex, Jp, Tp);
 
   //END
@@ -186,9 +188,13 @@ int main(int argc, char** argv) {
   }
 
   systemSG.MGsolve();
-  
+
   std::vector <double> alphas;
   GetCoefficientsForQuantityOfInterest(ml_probSG, alphas, domainMeasure);
+
+  GetStochasticData(alphas);
+  
+  PlotStochasticData();
 
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
@@ -201,7 +207,8 @@ int main(int argc, char** argv) {
 
 } //end main
 
-void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues) {
+void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues)
+{
 //void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("UQ");   // pointer to the linear implicit system named "Poisson"
@@ -538,7 +545,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 }
 //
 //
-void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector <double > &  alphas, const double& domainMeasure) {
+void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector <double > &  alphas, const double& domainMeasure)
+{
 
   //  extract pointers to the several objects that we are going to use
 
@@ -560,6 +568,7 @@ void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vecto
   ComputeIndexSetJp(Jp, pIndex, numberOfEigPairs);
 
   std::vector <double > alphasTemp(Jp.size(), 0.);
+  alphas.resize(Jp.size());
 
   //solution Index
   std::vector <unsigned> soluIndex(Jp.size());
@@ -584,65 +593,64 @@ void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vecto
 
   // element loop: each process loops only on the elements that owns
 
-  for(unsigned j = 0; j < Jp.size(); j++) {
+  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    short unsigned ielGeom = msh->GetElementType(iel);
+    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
-      short unsigned ielGeom = msh->GetElementType(iel);
-      unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-      unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-
+    for(unsigned j = 0; j < Jp.size(); j++) {
       solu[j].resize(nDofu);
+    }
 
-      for(int i = 0; i < dim; i++) {
-        x[i].resize(nDofx);
-      }
-      
-     // local storage of global mapping and solution
-      for(unsigned i = 0; i < nDofu; i++) {
-        unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
+    for(int i = 0; i < dim; i++) {
+      x[i].resize(nDofx);
+    }
+
+    // local storage of global mapping and solution
+    for(unsigned i = 0; i < nDofu; i++) {
+      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
+      for(unsigned j = 0; j < Jp.size(); j++) {
         solu[j][i] = (*sol->_Sol[soluIndex[j]])(solDof);      // global extraction and local storage for the solution
       }
+    }
 
-      // local storage of coordinates
-      for(unsigned i = 0; i < nDofx; i++) {
-        unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-
-        for(unsigned jdim = 0; jdim < dim; jdim++) {
-          x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
-        }
+    // local storage of coordinates
+    for(unsigned i = 0; i < nDofx; i++) {
+      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+      for(unsigned jdim = 0; jdim < dim; jdim++) {
+        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
+    }
 
-      vector < double >* nullDoublePointer = NULL;
-      // *** Gauss point loop ***
-      for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
-        // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, *nullDoublePointer);
+    vector < double >* nullDoublePointer = NULL;
+    // *** Gauss point loop ***
+    for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+      // *** get gauss point weight, test function and test function partial derivatives ***
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, *nullDoublePointer);
 
+      for(unsigned j = 0; j < Jp.size(); j++) {
         double solu_gss = 0.;
         for(unsigned i = 0; i < nDofu; i++) {
           solu_gss += phi[i] * solu[j][i];
         }
-//      alphasTemp[j] += solu_gss * solu_gss *  weight ; // this is the integral of the square.
+//      	alphasTemp[j] += solu_gss * solu_gss *  weight ; // this is the integral of the square.
         alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
+      }
+    } // end gauss point loop
 
-      } // end gauss point loop
+  } //end element loop for each process
 
-    } //end element loop for each process
 
-    std::cout<< "MUOOOOOOOOOOOREE" << std::endl;
-    
+  for(unsigned j = 0; j < Jp.size(); j++) {
     alphas[j] = 0.;
     MPI_Allreduce(&alphasTemp[j], &alphas[j], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    
-    std::cout<< "QUIIIIIIIIIIIII" << std::endl;
-
   }
-
 
 }
 //
-void GetStochasticData(std::vector <double>& alphas) {
+void GetStochasticData(std::vector <double>& alphas)
+{
 
   //let's standardize the quantity of interest after finding moments and standard deviation
 
@@ -654,7 +662,9 @@ void GetStochasticData(std::vector <double>& alphas) {
 
   else {
 
-    unsigned numberOfQuadraturePoints = ceil(totMoments * pIndex * 0.5);
+    unsigned desiredQuadraturePoints = static_cast<double> (ceil((totMoments * pIndex + 1) * 0.5));
+
+    unsigned numberOfQuadraturePoints = (desiredQuadraturePoints <= 10 ) ? desiredQuadraturePoints : 10;
 
     std::vector < std::vector <unsigned> > Tp;
     ComputeTensorProductSet(Tp, numberOfQuadraturePoints, numberOfEigPairs);
@@ -670,14 +680,16 @@ void GetStochasticData(std::vector <double>& alphas) {
     //BEGIN computation of the raw moments
     for(unsigned p = 0; p < totMoments; p++) {
       moments[p] = 0.;
-      double integrandFunction = 0.;
-
+      
       for(unsigned j = 0; j < Tp.size(); j++) {
+	double integrandFunction = 0.;
         for(unsigned i = 0; i < Jp.size(); i++) {
           integrandFunction += MultivariateHermitePoly[i][j] * alphas[i];
+	  //integrandFunction += alphas[i];
         }
-        integrandFunction = pow(integrandFunction, p);
-        moments[p] += integrandFunction;
+        integrandFunction = pow(integrandFunction, p + 1);
+        moments[p] += MultivariateHermiteQuadratureWeights[j] * integrandFunction;
+	//moments[p] += integrandFunction;
       }
     }
     //END
@@ -726,7 +738,8 @@ void GetStochasticData(std::vector <double>& alphas) {
 }
 //
 //
-void PlotStochasticData() {
+void PlotStochasticData()
+{
 
   std::cout.precision(14);
   std::cout << " the mean is " << meanQoI << std::endl;
@@ -759,8 +772,13 @@ void PlotStochasticData() {
   double d8gaussian;
   double d9gaussian;
 
-  double t = meanQoI - stdDeviationQoI * 7.5;
-  double dt = (15. * stdDeviationQoI) / 300.;
+  
+  
+//   double t = meanQoI - stdDeviationQoI * 7.5;
+//   double dt = (15. * stdDeviationQoI) / 300.;
+
+  double t = -  7.5;
+  double dt = (15.) / 300.;
 
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
