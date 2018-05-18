@@ -92,7 +92,7 @@ const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, fir
   }
 };
 
-// void MultidimensionalHermiteQuadrature(std::vector < std::vector <double> > & MultidimHermitePoints, const unsigned & numberOfQuadraturePoints,
+// void MultidimensionalHermiteQuadratureWeights(std::vector < std::vector <double> > & MultidimHermitePoints, const unsigned & numberOfQuadraturePoints,
 //                                        const unsigned & numberOfEigPairs)
 // {
 //
@@ -319,10 +319,12 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
 
 };
 
-void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & MultivariateHermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & p,
-                                     const std::vector < std::vector <unsigned> > & Jp, const std::vector < std::vector <unsigned> > & Tp)
+void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & MultivariateHermitePoly, std::vector < double > & MultivariateHermiteQuadratureWeights,
+				     const unsigned & numberOfQuadraturePoints, const unsigned & p, const std::vector < std::vector <unsigned> > & Jp, const std::vector < std::vector <unsigned> > & Tp)
 {
 
+  MultivariateHermiteQuadratureWeights.assign(Tp.size(), 1.);
+  
   MultivariateHermitePoly.resize(Jp.size());
   for(unsigned i = 0; i < Jp.size(); i++) {
     MultivariateHermitePoly[i].assign(Tp.size(), 1.);
@@ -335,7 +337,8 @@ void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & M
     for(unsigned j = 0; j < Tp.size(); j++) {
       for(unsigned k = 0; k < numberOfEigPairs; k++) {
         double w = HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]];
-        MultivariateHermitePoly[i][j] *= w * HermitePoly[Jp[i][k]][Tp[j][k]] ;
+        MultivariateHermiteQuadratureWeights[j] *= w ;
+	MultivariateHermitePoly[i][j] *= HermitePoly[Jp[i][k]][Tp[j][k]] ; //w has to stay out otherwise it would be raised to a power
       }
     }
   }

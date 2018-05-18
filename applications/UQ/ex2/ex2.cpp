@@ -556,8 +556,8 @@ void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  
   soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
   unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
 
-  unsigned soluPdeIndex;
-  soluPdeIndex = mlPdeSys->GetSolPdeIndex("u");    // get the position of "u" in the pdeSys object
+//   unsigned soluPdeIndex;
+//   soluPdeIndex = mlPdeSys->GetSolPdeIndex("u");    // get the position of "u" in the pdeSys object
 
   vector < double >  solu; // local solution
   solu.reserve(maxSize);
