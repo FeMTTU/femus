@@ -16,11 +16,22 @@
 
 #include "../include/mpmFem.hpp"
 
+double yMin;
+
 using namespace femus;
 
 double SetVariableTimeStep(const double time)
 {
-  double dt =  0.001;
+  double dt = 0.01;
+  if(time >= 0.5311 - 0.012 && time <= 0.5311 + 0.012) {
+    dt =  0.0001;
+  }
+  else if(time >= 3 * 0.5311 - 0.012 && time <= 3 * 0.5311 + 0.012) {
+    dt =  0.0001;
+  }
+  else if(time >= 5 * 0.5311 - 0.012 && time <= 5 * 0.5311 + 0.012) {
+    dt =  0.0001;
+  }
   return dt;
 }
 
@@ -43,7 +54,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 1; //for refinement in 3D
+  unsigned numberOfUniformLevels = 2; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -53,12 +64,12 @@ int main(int argc, char** args)
   //initialize parameters for rolling ball (MPM)
   double rho_MPM = 1000.;
   double nu_MPM = 0.4;
-  double E_MPM = 5.91 * 1.e6;
+  double E_MPM = 5.91 * 1.e8;
 
   //initialize parameters for plate (FEM)
   double rho_FEM = 10000.;
   double nu_FEM = 0.4;
-  double E_FEM = 4.2 * 1.e7;
+  double E_FEM = 4.2 * 1.e9;
 
   beta = 0.3; //was 0.25
   Gamma = 0.5;
@@ -264,6 +275,13 @@ int main(int argc, char** args)
   unsigned n_timesteps = 3500;
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
+    std::vector< double > xMin(3);
+    std::vector< double > xMax(3);
+
+    linea->GetExtrema(xMin, xMax);
+
+    yMin = xMin[1];
+    
     system.CopySolutionToOldSolution();
 
     system.MGsolve();

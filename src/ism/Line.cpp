@@ -1324,6 +1324,27 @@ namespace femus
 
   }
 
+  void Line::GetExtrema( std::vector <double>& xMin, std::vector <double>& xMax)
+  {
+    xMin.resize(_dim);
+    xMax.resize(_dim);
+    
+    std::vector < double > xMinLocal(_dim, 1.0e100);
+    std::vector < double > xMaxLocal(_dim, -1.0e100);
+    std::vector< double > x;
+    for(unsigned i = _markerOffset[_iproc]; i < _markerOffset[_iproc  + 1]; i++) {
+      x = _particles[i]->GetIprocMarkerCoordinates();
+      for(unsigned k = 0; k < _dim; k++) {
+	xMinLocal[k] = (x[k] < xMinLocal[k]) ? x[k] : xMinLocal[k];
+        xMaxLocal[k] = (x[k] > xMaxLocal[k]) ? x[k] : xMaxLocal[k];
+      }
+    }
+    for(unsigned k = 0; k < _dim; k++) {
+      MPI_Allreduce(&xMinLocal[0], &xMin[0], static_cast<int>(_dim), MPI_DOUBLE, MPI_MIN, PETSC_COMM_WORLD);
+      MPI_Allreduce(&xMaxLocal[0], &xMax[0], static_cast<int>(_dim), MPI_DOUBLE, MPI_MAX, PETSC_COMM_WORLD);
+    }
+  }
+
 
 }
 

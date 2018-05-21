@@ -82,6 +82,8 @@ namespace femus
       void SetParticlesMass(const double& volume, const double& density);
 
       void ScaleParticleMass(double scale(const std::vector <double>& x));
+      
+      void GetExtrema( std::vector <double>& xMin, std::vector <double>& xMax);
 
     private:
       std::vector < std::vector < double > > _line;
