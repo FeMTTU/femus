@@ -76,6 +76,21 @@ double InitalValueH2(const std::vector < double >& x)
   return b - hRest[2];
 }
 
+double InitalValueT0(const std::vector < double >& x)
+{
+  return 20;
+}
+
+double InitalValueT1(const std::vector < double >& x)
+{
+  return 15;
+}
+
+double InitalValueT2(const std::vector < double >& x)
+{
+  return 5;
+}
+
 
 double InitalValueB(const std::vector < double >& x)
 {
@@ -133,8 +148,8 @@ int main(int argc, char** args)
     mlSol.AddSolution(name, DISCONTINOUS_POLYNOMIAL, ZERO);
     sprintf(name, "v%d", i);
     mlSol.AddSolution(name, LAGRANGE, FIRST);
-    //sprintf(name, "tracer%d", i);
-    //mlSol.AddSolution(name, DISCONTINOUS_POLYNOMIAL, ZERO);
+    sprintf(name, "T%d", i);
+    mlSol.AddSolution(name, DISCONTINOUS_POLYNOMIAL, ZERO);
   }
   
   mlSol.AddSolution("b", DISCONTINOUS_POLYNOMIAL, ZERO, 1, false);
@@ -147,9 +162,9 @@ int main(int argc, char** args)
   mlSol.Initialize("h0",InitalValueH0);
   mlSol.Initialize("h1",InitalValueH1);
   mlSol.Initialize("h2",InitalValueH2);
-  //mlSol.Initialize("tracer0",InitalValueTracer1);
-  //mlSol.Initialize("tracer1",InitalValueTracer2);
-  //mlSol.Initialize("tracer2",InitalValueTracer3);
+  mlSol.Initialize("T0",InitalValueT0);
+  mlSol.Initialize("T1",InitalValueT1);
+  mlSol.Initialize("T2",InitalValueT2);
   
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
@@ -172,8 +187,8 @@ int main(int argc, char** args)
     system.AddSolutionToSystemPDE(name);
     sprintf(name, "v%d", i);
     system.AddSolutionToSystemPDE(name);
-    //sprintf(name, "tracer%d", i);
-    //system.AddSolutionToSystemPDE(name);
+    sprintf(name, "T%d", i);
+    system.AddSolutionToSystemPDE(name);
   }
   system.init();
 
@@ -228,8 +243,8 @@ void ETD(MultiLevelProblem& ml_prob)
   std::vector < unsigned > solIndexv(NLayers);
   std::vector < unsigned > solPdeIndexv(NLayers);
   
-//   std::vector < unsigned > solIndextracer(NLayers);
-//   std::vector < unsigned > solPdeIndextracer(NLayers);
+  std::vector < unsigned > solIndexT(NLayers);
+  std::vector < unsigned > solPdeIndexT(NLayers);
 
   vector< int > l2GMap; // local to global mapping
 
@@ -243,29 +258,29 @@ void ETD(MultiLevelProblem& ml_prob)
     solIndexv[i] = mlSol->GetIndex(name); // get the position of "vi" in the sol object
     solPdeIndexv[i] = mlPdeSys->GetSolPdeIndex(name); // get the position of "vi" in the pdeSys object
     
-//     sprintf(name, "tracer%d", i);
-//     solIndextracer[i] = mlSol->GetIndex(name); // get the position of "traceri" in the sol object
-//     solPdeIndextracer[i] = mlPdeSys->GetSolPdeIndex(name); // get the position of "traceri" in the pdeSys object
+    sprintf(name, "T%d", i);
+    solIndexT[i] = mlSol->GetIndex(name); // get the position of "Ti" in the sol object
+    solPdeIndexT[i] = mlPdeSys->GetSolPdeIndex(name); // get the position of "Ti" in the pdeSys object
   }
 
   unsigned solTypeh = mlSol->GetSolutionType(solIndexh[0]);    // get the finite element type for "hi"
   unsigned solTypev = mlSol->GetSolutionType(solIndexv[0]);    // get the finite element type for "vi"
-//  unsigned solTypetracer = mlSol->GetSolutionType(solIndextracer[0]);    // get the finite element type for "traceri"
+  unsigned solTypeT = mlSol->GetSolutionType(solIndexT[0]);    // get the finite element type for "Ti"
   
   vector < double > x;    // local coordinates
   vector< vector < adept::adouble > > solh(NLayers);    // local coordinates
   vector< vector < adept::adouble > > solv(NLayers);    // local coordinates
-//  vector< vector < adept::adouble > > soltracer(NLayers);    // local coordinates
+  vector< vector < adept::adouble > > solT(NLayers);    // local coordinates
   
   vector< vector < bool > > bdch(NLayers);    // local coordinates
   vector< vector < bool > > bdcv(NLayers);    // local coordinates
-//  vector< vector < bool > > bdctracer(NLayers);    // local coordinates
+  vector< vector < bool > > bdcT(NLayers);    // local coordinates
   
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   vector < vector< adept::adouble > > aResh(NLayers);
   vector < vector< adept::adouble > > aResv(NLayers);
-//  vector < vector< adept::adouble > > aRestracer(NLayers);
+  vector < vector< adept::adouble > > aResT(NLayers);
   
   KK->zero();
   RES->zero();
@@ -279,10 +294,10 @@ void ETD(MultiLevelProblem& ml_prob)
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofh  = msh->GetElementDofNumber(iel, solTypeh);    // number of solution element dofs
     unsigned nDofv  = msh->GetElementDofNumber(iel, solTypev);    // number of solution element dofs
-    //unsigned nDoftracer = msh->GetElementDofNumber(iel, solTypetracer);     // number of coordinate element dofs
+    unsigned nDofT = msh->GetElementDofNumber(iel, solTypeT);     // number of coordinate element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);        // number of coordinate element dofs
 
-    unsigned nDofs = nDofh + nDofv /*+ nDoftracer*/;
+    unsigned nDofs = nDofh + nDofv + nDofT;
 
     // resize local arrays
     l2GMap.resize(NLayers * (nDofs) );
@@ -290,16 +305,16 @@ void ETD(MultiLevelProblem& ml_prob)
     for(unsigned i = 0; i < NLayers; i++) {
       solh[i].resize(nDofh);
       solv[i].resize(nDofv);
-      //soltracer[i].resize(nDofvtracer);
+      solT[i].resize(nDofT);
       bdch[i].resize(nDofh);
       bdcv[i].resize(nDofv);
-      //bdctracer[i].resize(nDoftracer);
+      bdcT[i].resize(nDofT);
       aResh[i].resize(nDofh);    //resize
       std::fill(aResh[i].begin(), aResh[i].end(), 0);    //set aRes to zero
       aResv[i].resize(nDofv);    //resize
       std::fill(aResv[i].begin(), aResv[i].end(), 0);    //set aRes to zero
-      //aRestracer[i].resize(nDoftracer);    //resize
-      //std::fill(aRestracer[i].begin(), aRestracer[i].end(), 0);    //set aRes to zero
+      aResT[i].resize(nDofT);    //resize
+      std::fill(aResT[i].begin(), aResT[i].end(), 0);    //set aRes to zero
     }
     x.resize(nDofx);
 
@@ -320,14 +335,16 @@ void ETD(MultiLevelProblem& ml_prob)
         l2GMap[ j * nDofs + nDofh + i] = pdeSys->GetSystemDof(solIndexv[j], solPdeIndexv[j], i, iel);    // global to global mapping between solution node and pdeSys dof
       }
     }
-//     for(unsigned i = 0; i < nDoftracer; i++) {
-//       unsigned solDoftracer = msh->GetSolutionDof(i, iel, solTypetracer);    // global to global mapping between solution node and solution dof
-//       for(unsigned j = 0; j < NLayers; j++) {
-//         soltracer[j][i] = (*sol->_Sol[solIndextracer[j]])(solDoftracer);      // global extraction and local storage for the solution
-//         bdctracer[j][i] = ( (*sol->_Bdc[solIndextracer[j]])(solDoftracer) < 1.5) ? true : false;
-//         l2GMap[ j * nDofs + nDofh + nDofv + i] = pdeSys->GetSystemDof(solIndextracer[j], solPdeIndextracer[j], i, iel);    // global to global mapping between solution node and pdeSys dof
-//       }
-//     }
+    for(unsigned i = 0; i < nDofT; i++) {
+      unsigned solDofT = msh->GetSolutionDof(i, iel, solTypeT);    // global to global mapping between solution node and solution dof
+      unsigned solDofh = msh->GetSolutionDof(i, iel, solTypeh);
+      for(unsigned j = 0; j < NLayers; j++) {
+        solT[j][i] = (*sol->_Sol[solIndexT[j]])(solDofT) * (*sol->_Sol[solIndexh[j]])(solDofh);      // global extraction and local storage for the solution
+        bdcT[j][i] = ( (*sol->_Bdc[solIndexT[j]])(solDofT) < 1.5) ? true : false;
+        l2GMap[ j * nDofs + nDofh + nDofv + i] = pdeSys->GetSystemDof(solIndexT[j], solPdeIndexT[j], i, iel);    // global to global mapping between solution node and pdeSys dof
+	//std::cout << solT[j][i] << " ";
+      }
+    }
 
     s.new_recording();
     
@@ -419,13 +436,18 @@ void ETD(MultiLevelProblem& ml_prob)
 	  //aResv[k][i] += sign * 9.81 * rho[k] * zMid[k] / dx;
         }
       }
-//       if(!bdctracer[k][0]) {
-//         for (unsigned j = 0; j < nDofv; j++) {
-//           double sign = ( j == 0) ? 1. : -1;
-//           aRestracer[k][0] += sign * solh[k][0] * solv[k][j] * soltracer[k][0] / dx; 
-// 	}
-//         aRestracer[k][0] += w[k+1] * ((soltracer[k][0] + soltracer[k+1][0])/2) - w[k] * ((soltracer[k-1][0] + soltracer[k][0])/2);	    
-//       }
+      if(!bdcT[k][0]) {
+        for (unsigned j = 0; j < nDofv; j++) {
+          double sign = ( j == 0) ? 1. : -1;
+          aResT[k][0] += sign * solv[k][j] * solT[k][0] / dx; 
+	}
+	if(k<NLayers-1){
+	  //aResT[k][0] += w[k+1] * 0.5 * (solT[k][0]/solh[k][0] + solT[k+1][0]/solh[k+1][0]);
+	}
+	if( k > 0){
+	  //aResT[k][0] -= w[k] * 0.5 * (solT[k-1][0]/solh[k-1][0] + solT[k][0]/solh[k][0] );	    
+	}
+      }
     } 
 
 
@@ -442,6 +464,10 @@ void ETD(MultiLevelProblem& ml_prob)
         Res[counter] =  aResv[k][i].value();
         counter++;
       }
+      for(int i = 0; i < nDofT; i++) {
+        Res[counter] =  aResT[k][i].value();
+        counter++;
+      }
     }
 
     RES->add_vector_blocked(Res, l2GMap);
@@ -451,10 +477,12 @@ void ETD(MultiLevelProblem& ml_prob)
       // define the dependent variables
       s.dependent(&aResh[k][0], nDofh);
       s.dependent(&aResv[k][0], nDofv);
+      s.dependent(&aResT[k][0], nDofT);
 
       // define the independent variables
       s.independent(&solh[k][0], nDofh);
       s.independent(&solv[k][0], nDofv);
+      s.independent(&solT[k][0], nDofT);
     }
 
     // get the jacobian matrix (ordered by row major )
@@ -541,7 +569,8 @@ void ETD(MultiLevelProblem& ml_prob)
 //   FNDestroy(&f3);
 //   FNDestroy(&f4);
 
-  sol->UpdateSol(mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset);
+
+  sol->UpdateSol(mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset); //TODO fix eps HT
 
   unsigned solIndexeta = mlSol->GetIndex("eta");
   unsigned solIndexb = mlSol->GetIndex("b");
@@ -551,7 +580,20 @@ void ETD(MultiLevelProblem& ml_prob)
   }
   sol->_Sol[solIndexeta]->add(-1,*sol->_Sol[solIndexb]);
 
-
+  for(unsigned k=0; k<NumberOfLayers; k++){
+    for(unsigned i =  msh->_dofOffset[solTypeT][iproc]; i <  msh->_dofOffset[solTypeT][iproc + 1]; i++){
+      double valueHT = (*sol->_Sol[solIndexT[k]])(i);
+      double valueH = (*sol->_Sol[solIndexh[k]])(i);
+      
+      std::cout << valueHT << " "<< valueH << std::endl;
+      double valueT = valueHT/valueH;
+    
+      sol->_Sol[solIndexT[k]]->set(i, valueHT);
+    }
+    sol->_Sol[solIndexT[k]]->close();
+  }
+  
+  
 }
 
 
