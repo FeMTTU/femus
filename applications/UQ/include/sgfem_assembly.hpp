@@ -320,11 +320,11 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
 };
 
 void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & MultivariateHermitePoly, std::vector < double > & MultivariateHermiteQuadratureWeights,
-				     const unsigned & numberOfQuadraturePoints, const unsigned & p, const std::vector < std::vector <unsigned> > & Jp, const std::vector < std::vector <unsigned> > & Tp)
+                                     const unsigned & numberOfQuadraturePoints, const unsigned & p, const std::vector < std::vector <unsigned> > & Jp, const std::vector < std::vector <unsigned> > & Tp)
 {
 
   MultivariateHermiteQuadratureWeights.assign(Tp.size(), 1.);
-  
+
   MultivariateHermitePoly.resize(Jp.size());
   for(unsigned i = 0; i < Jp.size(); i++) {
     MultivariateHermitePoly[i].assign(Tp.size(), 1.);
@@ -333,11 +333,11 @@ void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & M
   std::vector < std::vector < double > >  HermitePoly;
   EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, p);
 
-  for(unsigned i = 0; i < Jp.size(); i++) {
-    for(unsigned j = 0; j < Tp.size(); j++) {
-      for(unsigned k = 0; k < numberOfEigPairs; k++) {
-        MultivariateHermiteQuadratureWeights[j] *= HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]] ;
-	MultivariateHermitePoly[i][j] *= HermitePoly[Jp[i][k]][Tp[j][k]] ; 
+  for(unsigned j = 0; j < Tp.size(); j++) {
+    for(unsigned k = 0; k < numberOfEigPairs; k++) {
+      MultivariateHermiteQuadratureWeights[j] *= HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]] ;
+      for(unsigned i = 0; i < Jp.size(); i++) {
+        MultivariateHermitePoly[i][j] *= HermitePoly[Jp[i][k]][Tp[j][k]] ;
       }
     }
   }
