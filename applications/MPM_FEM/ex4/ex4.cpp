@@ -23,15 +23,20 @@ using namespace femus;
 double SetVariableTimeStep(const double time)
 {
   double dt = 0.01;
-  if(time >= 0.5311 - 0.012 && time <= 0.5311 + 0.012) {
-    dt =  0.0001;
+//   if(time >= 0.5311 - 0.012 && time <= 0.5311 + 0.012) {
+//     dt =  0.0001;
+//   }
+//   else if(time >= 3 * 0.5311 - 0.012 && time <= 3 * 0.5311 + 0.012) {
+//     dt =  0.0001;
+//   }
+//   else if(time >= 5 * 0.5311 - 0.012 && time <= 5 * 0.5311 + 0.012) {
+//     dt =  0.0001;
+//   }
+//   
+  if( yMin <= -1.42533) {
+       dt =  0.0001;
   }
-  else if(time >= 3 * 0.5311 - 0.012 && time <= 3 * 0.5311 + 0.012) {
-    dt =  0.0001;
-  }
-  else if(time >= 5 * 0.5311 - 0.012 && time <= 5 * 0.5311 + 0.012) {
-    dt =  0.0001;
-  }
+  
   return dt;
 }
 
