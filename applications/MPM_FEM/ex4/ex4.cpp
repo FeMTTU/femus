@@ -69,12 +69,12 @@ int main(int argc, char** args)
   //initialize parameters for rolling ball (MPM)
   double rho_MPM = 1000.;
   double nu_MPM = 0.4;
-  double E_MPM = 5.91 * 1.e8;
+  double E_MPM = 5.91 * 1.e6;
 
   //initialize parameters for plate (FEM)
   double rho_FEM = 10000.;
   double nu_FEM = 0.4;
-  double E_FEM = 4.2 * 1.e10;
+  double E_FEM = 4.2 * 1.e8;
 
   beta = 0.3; //was 0.25
   Gamma = 0.5;
