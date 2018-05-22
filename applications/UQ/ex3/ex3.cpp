@@ -664,7 +664,7 @@ void GetStochasticData(std::vector <double>& alphas)
 
     unsigned desiredQuadraturePoints = static_cast<double> (ceil((totMoments * pIndex + 1) * 0.5));
 
-    unsigned numberOfQuadraturePoints = (desiredQuadraturePoints <= 10 ) ? desiredQuadraturePoints : 10;
+    unsigned numberOfQuadraturePoints = (desiredQuadraturePoints <= 15 ) ? desiredQuadraturePoints : 15;
 
     std::vector < std::vector <unsigned> > Tp;
     ComputeTensorProductSet(Tp, numberOfQuadraturePoints, numberOfEigPairs);
