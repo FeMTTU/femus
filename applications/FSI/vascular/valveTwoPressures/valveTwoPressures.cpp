@@ -66,8 +66,8 @@ int main(int argc, char** args)
 
   E = 260 * 1.0e6; //vein young modulus \\15, 30, 30, 40, 60, 260, 260
   //E = 4.3874951 * 1.0e12;
-  E1 = 1.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
-  ni1 = 0.5; //0.49
+  E1 = 7.5 * 1.0e6; //leaflet young modulus \\0.5, 0.8, 1, 1.5, 1.5, 2.2, 1.5
+  ni1 = 0.5; //0.4999
   
   Parameter par(Lref, Uref);
 
@@ -267,21 +267,27 @@ int main(int argc, char** args)
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  const unsigned int n_timesteps = 128;
+  const unsigned int n_timesteps = 512;
 
   //std::vector < std::vector <double> > data(n_timesteps);
 
   int  iproc;
   MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
 
-//   std::ofstream outf;
-//   if(iproc == 0) {
-//     outf.open("fluxes_E1=1.5_ksp.txt");
-//     if(!outf) {
-//       std::cout << "Error in opening file DataPrint.txt";
-//       return 1;
-//     }
-//   }
+
+  std::ofstream outf;
+  if(iproc == 0) {
+    //char *foutname;
+    char foutname[100];
+    sprintf(foutname, "fluxes_E1=%g_level=%d_incomp_dt128.txt",E1,numberOfUniformRefinedMeshes);
+    //sprintf(foutname, "ksp_fluxes_E1=%g.txt",E1);
+    outf.open(foutname);
+    
+    if(!outf) {
+      std::cout << "Error in opening file DataPrint.txt";
+      return 1;
+    }
+  }
 
 //   std::vector < double > Qtot(3, 0.);
 //   std::vector<double> fluxes(2, 0.);
@@ -348,10 +354,10 @@ int main(int argc, char** args)
 //   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 //   if(iproc == 0){
 //     char stdOutputName[100];
-//     sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_stiffness5.txt",numberOfUniformRefinedMeshes, nprocs);
+//     sprintf(stdOutputName, "stdoutput_level%d_nprocs%d_stiffness10.txt",numberOfUniformRefinedMeshes, nprocs);
 //     PrintConvergenceInfo(stdOutputName, numberOfUniformRefinedMeshes, nprocs);
 //   }
-    
+//     
   return 0;
 }
 
@@ -568,7 +574,7 @@ void PrintConvergenceInfo(char *stdOutfile, const unsigned &level, const int &np
 
   std::ofstream outf;
   char outFileName[100];
-  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d_stiffness5.txt",level, nprocs);
+  sprintf(outFileName, "valve2D_convergence_level%d_nprocs%d_stiffness10.txt",level, nprocs);
 
   outf.open(outFileName, std::ofstream::app);
   outf << std::endl << std::endl;
