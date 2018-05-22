@@ -30,17 +30,17 @@ unsigned factorial(unsigned n)
 
 
 //BEGIN Stochastic Input Parameters
-unsigned pIndex = 3;
-unsigned qIndex = 2;
+unsigned pIndex = 1;
+unsigned qIndex = 1;
 
-int numberOfEigPairs = 2; //dimension of the stochastic variable
+int numberOfEigPairs = 5; //dimension of the stochastic variable
 double stdDeviationInput = 1.;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double amin = 1. / 100; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 //END Stochastic Input Parameters
 
 
-const double HermiteQuadrature[15][2][15] = { //Number of quadrature points, first row: weights, second row: coordinates
+const double HermiteQuadrature[16][2][16] = { //Number of quadrature points, first row: weights, second row: coordinates
   {{1.77245385091}, {0.}},
   { {0.8862269254527577, 0.8862269254527577},
     { -0.7071067811865476, 0.7071067811865476}
@@ -140,8 +140,22 @@ const double HermiteQuadrature[15][2][15] = { //Number of quadrature points, fir
       -4.499990707309392, -3.6699503734044527, -2.967166927905603, -2.3257324861738575, -1.7199925751864888, -1.1361155852109206, -0.5650695832555758, 0,
       0.5650695832555758, 1.1361155852109206, 1.7199925751864888, 2.3257324861738575, 2.967166927905603, 3.6699503734044527, 4.499990707309392
     }
+  },
+  {
+    {
+      2.6548074740111647e-10, 2.3209808448652048e-7, 0.000027118600925378855, 0.0009322840086241808, 0.012880311535509979, 0.08381004139898578,
+      0.2806474585285336, 0.5079294790166136, 0.5079294790166136, 0.2806474585285336, 0.08381004139898578, 0.012880311535509979,
+      0.0009322840086241808, 0.000027118600925378855, 2.3209808448652048e-7, 2.6548074740111647e-10
+    },
+    {
+      -4.688738939305819, -3.869447904860123, -3.176999161979956, -2.5462021578474814, -1.9517879909162539, -1.3802585391988809,
+      -0.8229514491446559, -0.27348104613815244, 0.27348104613815244, 0.8229514491446559, 1.3802585391988809, 1.9517879909162539,
+      2.5462021578474814, 3.176999161979956, 3.869447904860123, 4.688738939305819
+    }
   }
 };
+
+double HermiteQuadratureWeight[16][16];
 
 // void MultidimensionalHermiteQuadratureWeights(std::vector < std::vector <double> > & MultidimHermitePoints, const unsigned & numberOfQuadraturePoints,
 //                                        const unsigned & numberOfEigPairs)
@@ -212,8 +226,8 @@ void ComputeTensorProductSet(std::vector < std::vector <unsigned> > & Tp, const 
 void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder)
 {
 
-  if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 15) {
-    std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [1,15]" << std::endl;
+  if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
+    std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [1,16]" << std::endl;
     abort();
   }
 
@@ -321,7 +335,7 @@ void EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, std::vect
 
   unsigned n1 = 2 * p0 + q0 + 1;
   n1 = (n1 % 2 == 0) ? n1 / 2 : (n1 + 1) / 2;
-  unsigned numberOfQuadraturePoints = (n1 <= 10) ? n1 : 10;
+  unsigned numberOfQuadraturePoints = (n1 <= 16) ? n1 : 16;
 
   EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
 
@@ -336,12 +350,20 @@ void EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, std::vect
       for(unsigned p2 = 0; p2 < p; p2++) {
         integralsMatrix[q1][p1][p2]  = 0.;
         for(unsigned i = 0; i < numberOfQuadraturePoints; i++) {
-          double w = HermiteQuadrature[numberOfQuadraturePoints - 1][0][i];
+          double w = HermiteQuadratureWeight[numberOfQuadraturePoints - 1][i];
           integralsMatrix[q1][p1][p2]  +=  w * HermitePoly[q1][i] * HermitePoly[p1][i] * HermitePoly[p2][i];
         }
       }
     }
   }
+
+//   for(unsigned q1 = 0; q1 < q; q1++) {
+//     for(unsigned p1 = 0; p1 < p; p1++) {
+//       for(unsigned p2 = 0; p2 < p; p2++) {
+//         std::cout << "integralsMatrix[" << q1 << "][" << p1 << "][" << p2 << "]=" << integralsMatrix[q1][p1][p2] << std::endl;
+//       }
+//     }
+//   }
 
 };
 
@@ -368,6 +390,14 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
     }
   }
 
+//   for(unsigned q1 = 0; q1 < Jq.size(); q1++) {
+//     for(unsigned p1 = 0; p1 < Jp.size(); p1++) {
+//       for(unsigned p2 = 0; p2 < Jp.size(); p2++) {
+//         std::cout << "G[" << q1 << "][" << p1 << "][" << p2 << "]=" << G[q1][p1][p2] << std::endl;
+//       }
+//     }
+//   }
+
 };
 
 void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & MultivariateHermitePoly, std::vector < double > & MultivariateHermiteQuadratureWeights,
@@ -386,7 +416,7 @@ void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & M
 
   for(unsigned j = 0; j < Tp.size(); j++) {
     for(unsigned k = 0; k < numberOfEigPairs; k++) {
-      MultivariateHermiteQuadratureWeights[j] *= HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]] ;
+      MultivariateHermiteQuadratureWeights[j] *= HermiteQuadratureWeight[numberOfQuadraturePoints - 1][Tp[j][k]] ;
       for(unsigned i = 0; i < Jp.size(); i++) {
         MultivariateHermitePoly[i][j] *= HermitePoly[Jp[i][k]][Tp[j][k]] ;
       }
@@ -442,7 +472,7 @@ void AssembleSysSG(MultiLevelProblem& ml_prob)
 
   unsigned n1 = 2 * pIndex + qIndex + 1;
   n1 = (n1 % 2 == 0) ? n1 / 2 : (n1 + 1) / 2;
-  unsigned numberOfQuadraturePoints = (n1 <= 15) ? n1 : 15;
+  unsigned numberOfQuadraturePoints = (n1 <= 16) ? n1 : 16;
 
   EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
 
@@ -556,7 +586,7 @@ void AssembleSysSG(MultiLevelProblem& ml_prob)
           for(unsigned j = 0; j < numberOfQuadraturePoints; j++) {
 //             aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
             aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePoints - 1][1][j])
-                                   * HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
+                                   * HermitePoly[Jq[q1][i]][j] * HermiteQuadratureWeight[numberOfQuadraturePoints - 1][j];
           }
         }
 
@@ -599,8 +629,8 @@ void AssembleSysSG(MultiLevelProblem& ml_prob)
               for(unsigned q1 = 0; q1 < Jq.size(); q1++) {
                 AG += aStochasticGauss[q1] * laplace[i][j] * G[q1][p1][p2];
               }
-              Jac[(p1 * nDofu + i) * (Jp.size() * nDofu) +  p2 * nDofu + j] += AG;
-              resU -=  AG * solu[p2][j];
+              Jac[(p1 * nDofu + i) * (Jp.size() * nDofu) +  p2 * nDofu + j] -= AG;
+              resU +=  AG * solu[p2][j];
             }
           }
           Res[ p1 * nDofu + i ] += resU;

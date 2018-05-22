@@ -42,10 +42,10 @@ std::vector <double> cumulants(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 10; //number of samples for the Monte Carlo
+unsigned M = 1000; //number of samples for the Monte Carlo
 //END
 
-unsigned numberOfUniformLevels = 3;
+unsigned numberOfUniformLevels = 2;
 
 int main(int argc, char** argv) {
 
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
-  numberOfEigPairs = 2; //number of eigenpairs desired
+  numberOfEigPairs = 5; //number of eigenpairs desired
 
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues
 
@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
 
   GetStochasticData(QoI);
 
-  //PlotStochasticData();
+  PlotStochasticData();
 
   // ******* Print solution *******
   mlSol.SetWriter(VTK);

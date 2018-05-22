@@ -54,6 +54,12 @@ int main(int argc, char** argv)
 
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
+  
+  for(unsigned i=0; i < 16; i++){
+    for(unsigned j=0; j < 16; j++){
+      HermiteQuadratureWeight[i][j] = HermiteQuadrature[i][0][j] * stdDeviationInput;
+    }
+  }
 
   //BEGIN deterministic FEM instances
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues
@@ -664,7 +670,7 @@ void GetStochasticData(std::vector <double>& alphas)
 
     unsigned desiredQuadraturePoints = static_cast<double> (ceil((totMoments * pIndex + 1) * 0.5));
 
-    unsigned numberOfQuadraturePoints = (desiredQuadraturePoints <= 15 ) ? desiredQuadraturePoints : 15;
+    unsigned numberOfQuadraturePoints = (desiredQuadraturePoints <= 16 ) ? desiredQuadraturePoints : 16;
 
     std::vector < std::vector <unsigned> > Tp;
     ComputeTensorProductSet(Tp, numberOfQuadraturePoints, numberOfEigPairs);
@@ -680,16 +686,14 @@ void GetStochasticData(std::vector <double>& alphas)
     //BEGIN computation of the raw moments
     for(unsigned p = 0; p < totMoments; p++) {
       moments[p] = 0.;
-      
       for(unsigned j = 0; j < Tp.size(); j++) {
+	std::vector<double> piecesLocal(Jp.size(),0.); 
 	double integrandFunction = 0.;
         for(unsigned i = 0; i < Jp.size(); i++) {
           integrandFunction += MultivariateHermitePoly[i][j] * alphas[i];
-	  //integrandFunction += alphas[i];
         }
         integrandFunction = pow(integrandFunction, p + 1);
         moments[p] += MultivariateHermiteQuadratureWeights[j] * integrandFunction;
-	//moments[p] += integrandFunction;
       }
     }
     //END
