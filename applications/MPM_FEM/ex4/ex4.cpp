@@ -74,7 +74,7 @@ int main(int argc, char** args)
   //initialize parameters for plate (FEM)
   double rho_FEM = 10000.;
   double nu_FEM = 0.4;
-  double E_FEM = 4.2 * 1.e10;
+  double E_FEM = 4.2 * 1.e8;
 
   beta = 0.3; //was 0.25
   Gamma = 0.5;
@@ -88,7 +88,7 @@ int main(int argc, char** args)
   solidMPM = Solid(par, E_MPM, nu_MPM, rho_MPM, "Neo-Hookean");
   solidFEM = Solid(par, E_FEM, nu_FEM, rho_FEM, "Neo-Hookean");
 
-  mlMsh.ReadCoarseMesh("../input/basket.Scaled.neu", "fifth", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/basketScaled2.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
