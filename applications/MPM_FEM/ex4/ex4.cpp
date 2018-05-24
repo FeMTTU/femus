@@ -34,7 +34,7 @@ double SetVariableTimeStep(const double time)
 //   }
 //   
   if( yMin <= -1.27) {
-       dt =  0.0005;
+       dt =  0.001;
   }
   
   return dt;
