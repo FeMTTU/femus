@@ -54,9 +54,9 @@ int main(int argc, char** argv)
 
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
-  
-  for(unsigned i=0; i < 16; i++){
-    for(unsigned j=0; j < 16; j++){
+
+  for(unsigned i = 0; i < 16; i++) {
+    for(unsigned j = 0; j < 16; j++) {
       HermiteQuadratureWeight[i][j] = HermiteQuadrature[i][0][j] * stdDeviationInput;
     }
   }
@@ -199,7 +199,7 @@ int main(int argc, char** argv)
   GetCoefficientsForQuantityOfInterest(ml_probSG, alphas, domainMeasure);
 
   GetStochasticData(alphas);
-  
+
   PlotStochasticData();
 
   // ******* Print solution *******
@@ -687,8 +687,7 @@ void GetStochasticData(std::vector <double>& alphas)
     for(unsigned p = 0; p < totMoments; p++) {
       moments[p] = 0.;
       for(unsigned j = 0; j < Tp.size(); j++) {
-	std::vector<double> piecesLocal(Jp.size(),0.); 
-	double integrandFunction = 0.;
+        double integrandFunction = 0.;
         for(unsigned i = 0; i < Jp.size(); i++) {
           integrandFunction += MultivariateHermitePoly[i][j] * alphas[i];
         }
@@ -704,7 +703,19 @@ void GetStochasticData(std::vector <double>& alphas)
 
 
     //BEGIN computation of the variance and standard deviation of QoI
-    varianceQoI = moments[1] - meanQoI * meanQoI;
+//     varianceQoI = moments[1] - meanQoI * meanQoI;
+
+    varianceQoI = 0;
+
+    for(unsigned j = 0; j < Tp.size(); j++) {
+      double integrandFunctionVariance = 0.;
+      for(unsigned i = 0; i < Jp.size(); i++) {
+        integrandFunctionVariance += MultivariateHermitePoly[i][j] * alphas[i];
+      }
+      integrandFunctionVariance = pow(integrandFunctionVariance - meanQoI, 2);
+      varianceQoI += MultivariateHermiteQuadratureWeights[j] * integrandFunctionVariance;
+    }
+
     stdDeviationQoI = sqrt(varianceQoI);
     //END
 
@@ -747,7 +758,7 @@ void PlotStochasticData()
 
   std::cout.precision(14);
   std::cout << " the mean is " << meanQoI << std::endl;
-  std::cout << " the standard deviation is " << sqrt(varianceQoI) << std::endl;
+  std::cout << " the standard deviation is " << stdDeviationQoI << std::endl;
 
   for(unsigned p = 0; p < totMoments; p++) {
 //     printf("%d-th moment is %g\n", p + 1, moments[p]);
@@ -776,8 +787,8 @@ void PlotStochasticData()
   double d8gaussian;
   double d9gaussian;
 
-  
-  
+
+
 //   double t = meanQoI - stdDeviationQoI * 7.5;
 //   double dt = (15. * stdDeviationQoI) / 300.;
 
