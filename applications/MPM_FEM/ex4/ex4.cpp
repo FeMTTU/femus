@@ -22,7 +22,7 @@ using namespace femus;
 
 double SetVariableTimeStep(const double time)
 {
-  double dt = 0.03;
+  double dt = 0.001;
 //   if(time >= 0.5311 - 0.012 && time <= 0.5311 + 0.012) {
 //     dt =  0.0001;
 //   }
@@ -277,7 +277,7 @@ int main(int argc, char** args)
   gravity[1] = -9.81 * cos(theta);
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 3500;
+  unsigned n_timesteps = 5000;
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     std::vector< double > xMin(3);
