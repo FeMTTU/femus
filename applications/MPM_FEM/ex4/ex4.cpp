@@ -22,7 +22,7 @@ using namespace femus;
 
 double SetVariableTimeStep(const double time)
 {
-  double dt = 0.01;
+  double dt = 0.03;
 //   if(time >= 0.5311 - 0.012 && time <= 0.5311 + 0.012) {
 //     dt =  0.0001;
 //   }
@@ -33,8 +33,8 @@ double SetVariableTimeStep(const double time)
 //     dt =  0.0001;
 //   }
 //   
-  if( yMin <= -1.42533) {
-       dt =  0.0001;
+  if( yMin <= -1.27) {
+       dt =  0.0005;
   }
   
   return dt;
@@ -59,7 +59,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 2; //for refinement in 3D
+  unsigned numberOfUniformLevels = 3; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -69,12 +69,12 @@ int main(int argc, char** args)
   //initialize parameters for rolling ball (MPM)
   double rho_MPM = 1000.;
   double nu_MPM = 0.4;
-  double E_MPM = 5.91 * 1.e8;
+  double E_MPM = 5.91 * 1.e6;
 
   //initialize parameters for plate (FEM)
   double rho_FEM = 10000.;
   double nu_FEM = 0.4;
-  double E_FEM = 4.2 * 1.e10;
+  double E_FEM = 4.2 * 1.e7;
 
   beta = 0.3; //was 0.25
   Gamma = 0.5;
@@ -88,7 +88,7 @@ int main(int argc, char** args)
   solidMPM = Solid(par, E_MPM, nu_MPM, rho_MPM, "Neo-Hookean");
   solidFEM = Solid(par, E_FEM, nu_FEM, rho_FEM, "Neo-Hookean");
 
-  mlMsh.ReadCoarseMesh("../input/basket.Scaled.neu", "fifth", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/basketScaled2.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
