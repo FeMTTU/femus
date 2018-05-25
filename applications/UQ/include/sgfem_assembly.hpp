@@ -33,8 +33,8 @@ unsigned factorial(unsigned n)
 unsigned pIndex = 3;
 unsigned qIndex = 3;
 
-int numberOfEigPairs = 1; //dimension of the stochastic variable
-double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+int numberOfEigPairs = 2; //dimension of the stochastic variable
+double stdDeviationInput = 1.;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double amin = 1. / 100; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 //END Stochastic Input Parameters

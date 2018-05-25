@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
-  numberOfEigPairs = 5; //number of eigenpairs desired
+//   numberOfEigPairs = 5; //number of eigenpairs desired
 
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues
 
