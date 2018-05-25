@@ -22,7 +22,7 @@ using namespace femus;
 
 double SetVariableTimeStep(const double time)
 {
-  double dt = 0.01;
+  double dt = 0.001;
 //   if(time >= 0.5311 - 0.012 && time <= 0.5311 + 0.012) {
 //     dt =  0.0001;
 //   }
@@ -33,8 +33,8 @@ double SetVariableTimeStep(const double time)
 //     dt =  0.0001;
 //   }
 //   
-  if( yMin <= -1.42533) {
-       dt =  0.0001;
+  if( yMin <= -1.27) {
+       dt =  0.001;
   }
   
   return dt;
@@ -59,7 +59,7 @@ int main(int argc, char** args)
 
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
-  unsigned numberOfUniformLevels = 2; //for refinement in 3D
+  unsigned numberOfUniformLevels = 3; //for refinement in 3D
   //unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
@@ -88,7 +88,7 @@ int main(int argc, char** args)
   solidMPM = Solid(par, E_MPM, nu_MPM, rho_MPM, "Neo-Hookean");
   solidFEM = Solid(par, E_FEM, nu_FEM, rho_FEM, "Neo-Hookean");
 
-  mlMsh.ReadCoarseMesh("../input/basket.Scaled.neu", "fifth", scalingFactor);
+  mlMsh.ReadCoarseMesh("../input/basketScaled2.neu", "fifth", scalingFactor);
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
   mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -277,7 +277,7 @@ int main(int argc, char** args)
   gravity[1] = -9.81 * cos(theta);
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 3500;
+  unsigned n_timesteps = 5000;
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     std::vector< double > xMin(3);
