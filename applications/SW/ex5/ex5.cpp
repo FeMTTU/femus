@@ -293,31 +293,31 @@ void ETD(MultiLevelProblem& ml_prob)
   unsigned solTypev = mlSol->GetSolutionType(solIndexv[0]);    // get the finite element type for "vi"
   unsigned solTypeHT = mlSol->GetSolutionType(solIndexHT[0]);    // get the finite element type for "Ti"
   
-  vector < double > x;    // local coordinates
-  vector < adept::adouble > solhm(NLayers); 
-  vector < adept::adouble > solh(NLayers);    // local coordinates
-  vector < adept::adouble > solhp(NLayers); 
-  vector < adept::adouble > solvm(NLayers);    // local coordinates
-  vector < adept::adouble > solv(NLayers);    // local coordinates
-  vector < adept::adouble > solvp(NLayers);    // local coordinates
-  vector < adept::adouble > solHTm(NLayers);    // local coordinates
-  vector < adept::adouble > solHT(NLayers);    // local coordinates
-  vector < adept::adouble > solHTp(NLayers);    // local coordinates
-      
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-
-  vector< adept::adouble > aResh(NLayers);
-  vector< adept::adouble > aResv(NLayers);
-  vector< adept::adouble > aResHT(NLayers);
-  
-  KK->zero();
-  RES->zero();
-
-  MatSetOption((static_cast<PetscMatrix*>(KK))->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
-  
-  double maxWaveSpeed = 0.;
-  
-  double dx;
+//   vector < double > x;    // local coordinates
+//   vector < adept::adouble > solhm(NLayers); 
+//   vector < adept::adouble > solh(NLayers);    // local coordinates
+//   vector < adept::adouble > solhp(NLayers); 
+//   vector < adept::adouble > solvm(NLayers);    // local coordinates
+//   vector < adept::adouble > solv(NLayers);    // local coordinates
+//   vector < adept::adouble > solvp(NLayers);    // local coordinates
+//   vector < adept::adouble > solHTm(NLayers);    // local coordinates
+//   vector < adept::adouble > solHT(NLayers);    // local coordinates
+//   vector < adept::adouble > solHTp(NLayers);    // local coordinates
+//       
+//   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+// 
+//   vector< adept::adouble > aResh(NLayers);
+//   vector< adept::adouble > aResv(NLayers);
+//   vector< adept::adouble > aResHT(NLayers);
+//   
+//   KK->zero();
+//   RES->zero();
+// 
+//   MatSetOption((static_cast<PetscMatrix*>(KK))->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+//   
+//   double maxWaveSpeed = 0.;
+//   
+//   double dx;
   
   for(unsigned k=0; k<NumberOfLayers; k++){
     for(unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++){
@@ -334,6 +334,32 @@ void ETD(MultiLevelProblem& ml_prob)
   unsigned start = msh->_dofOffset[solTypeHT][iproc];
   unsigned end = msh->_dofOffset[solTypeHT][iproc + 1];
   for(unsigned i =  start; i <  end; i++){
+    
+    vector < double > x;    // local coordinates
+    vector < adept::adouble > solhm(NLayers); 
+    vector < adept::adouble > solh(NLayers);    // local coordinates
+    vector < adept::adouble > solhp(NLayers); 
+    vector < adept::adouble > solvm(NLayers);    // local coordinates
+    vector < adept::adouble > solv(NLayers);    // local coordinates
+    vector < adept::adouble > solvp(NLayers);    // local coordinates
+    vector < adept::adouble > solHTm(NLayers);    // local coordinates
+    vector < adept::adouble > solHT(NLayers);    // local coordinates
+    vector < adept::adouble > solHTp(NLayers);    // local coordinates
+      
+    unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+    vector< adept::adouble > aResh(NLayers);
+    vector< adept::adouble > aResv(NLayers);
+    vector< adept::adouble > aResHT(NLayers);
+   
+    KK->zero();
+    RES->zero();
+
+    MatSetOption((static_cast<PetscMatrix*>(KK))->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+  
+    double maxWaveSpeed = 0.;
+  
+    double dx;
     
     unsigned bc1 = (i == start)? 0 : 1;
     unsigned bc2 = (i == end-1)? 0 : 1;
@@ -408,7 +434,7 @@ void ETD(MultiLevelProblem& ml_prob)
     std::vector < double > w(NLayers+1, 0.);
 	  
     for(unsigned k = NLayers; k>1; k--){
-      w[k-1] = w[k] -  solh[k-1].value() * (solvp[k-1].value() - solvm[k-1].value() )/dx - ( hALE[k-1] - solh[k-1].value()) / dt;
+      w[k-1] = w[k] -  solh[k-1].value() * (solvp[k-1].value() - solvm[k-1].value() )/dx - ( hALE[k-1] - solh[k-1].value()) / dt;//TODO
     }
       
       
@@ -480,6 +506,32 @@ void ETD(MultiLevelProblem& ml_prob)
   start = msh->_dofOffset[solTypev][iproc] + 1;
   end = msh->_dofOffset[solTypev][iproc + 1] - 1;
   for(unsigned i =  start; i <  end; i++){
+    
+    vector < double > x;    // local coordinates
+    vector < adept::adouble > solhm(NLayers); 
+    vector < adept::adouble > solh(NLayers);    // local coordinates
+    vector < adept::adouble > solhp(NLayers); 
+    vector < adept::adouble > solvm(NLayers);    // local coordinates
+    vector < adept::adouble > solv(NLayers);    // local coordinates
+    vector < adept::adouble > solvp(NLayers);    // local coordinates
+    vector < adept::adouble > solHTm(NLayers);    // local coordinates
+    vector < adept::adouble > solHT(NLayers);    // local coordinates
+    vector < adept::adouble > solHTp(NLayers);    // local coordinates
+      
+    unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+    vector< adept::adouble > aResh(NLayers);
+    vector< adept::adouble > aResv(NLayers);
+    vector< adept::adouble > aResHT(NLayers);
+  
+    KK->zero();
+    RES->zero();
+
+    MatSetOption((static_cast<PetscMatrix*>(KK))->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+  
+    double maxWaveSpeed = 0.;
+  
+    double dx;
         
     l2GMapRow.resize(NLayers);
     l2GMapColumn.resize( 7 * NLayers);
@@ -873,9 +925,8 @@ void ETD(MultiLevelProblem& ml_prob)
   Mat A = (static_cast<PetscMatrix*>(KK))->mat();
   FN f, f1, f2, f3 , f4;
   
- 
-  
-  std::cout << "dt = " << dt << " dx = "<< dx << " maxWaveSpeed = "<<maxWaveSpeed << std::endl;
+  //std::cout << "dt = " << dt << " dx = "<< dx << " maxWaveSpeed = "<<maxWaveSpeed << std::endl;
+  std::cout << "dt = " << dt << std::endl;
   
   //dt = 100.;
 
