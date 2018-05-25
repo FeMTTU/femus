@@ -1,40 +1,15 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
+#include <boost/math/special_functions/binomial.hpp>
 
 using namespace femus;
 
-
-unsigned factorial(unsigned n)
-{
-
-  unsigned fac = 1.;
-
-  if(n >= 0 && n < 13) {
-
-    if(n > 0) {
-      while(n > 1) {
-        fac *= n;
-        n--;
-      }
-    }
-  }
-
-  else {
-    std::cout << " input of factorial function must be an integer that is non-negative or less than 13" << std::endl;
-    abort();
-  }
-
-  return fac;
-
-}
-
-
 //BEGIN Stochastic Input Parameters
 unsigned pIndex = 3;
-unsigned qIndex = 3;
+unsigned qIndex = 7;
 
-int numberOfEigPairs = 2; //dimension of the stochastic variable
-double stdDeviationInput = 1.;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+int numberOfEigPairs = 4; //dimension of the stochastic variable
+double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double amin = 1. / 100; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 //END Stochastic Input Parameters
@@ -159,40 +134,6 @@ const double HermiteQuadrature[16][2][16] = { //Number of quadrature points, fir
   }
 };
 
-double HermiteQuadratureWeight[16][16];
-
-// void MultidimensionalHermiteQuadratureWeights(std::vector < std::vector <double> > & MultidimHermitePoints, const unsigned & numberOfQuadraturePoints,
-//                                        const unsigned & numberOfEigPairs)
-// {
-//
-//   unsigned tensorProductDim = pow(numberOfQuadraturePoints, numberOfEigPairs);
-//
-//   MultidimHermitePoints.resize(tensorProductDim);
-//   for(unsigned i = 0; i < tensorProductDim; i++) {
-//     MultidimHermitePoints[i].assign(1 + numberOfEigPairs, 1.); //first entry is weight, second is coordinate
-//   }
-//
-//   unsigned index = 0;
-//   unsigned counters[numberOfEigPairs + 1];
-//   memset(counters, 0, sizeof(counters));
-//
-//   while(!counters[numberOfEigPairs]) {
-//
-//     for(unsigned j = 0; j < numberOfEigPairs; j++) {
-//       unsigned indexx = counters[numberOfEigPairs - 1 - j];
-//       MultidimHermitePoints[index][0] *= HermiteQuadrature[numberOfQuadraturePoints - 1][0][indexx];
-//       MultidimHermitePoints[index][j + 1] =  HermiteQuadrature[numberOfQuadraturePoints - 1][1][indexx];
-//     }
-//     index++;
-//
-//     unsigned i;
-//     for(i = 0; counters[i] == numberOfQuadraturePoints - 1; i++) { // inner loops that are at maxval restart at zero
-//       counters[i] = 0;
-//     }
-//     ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
-//
-//   }
-// };
 
 void ComputeTensorProductSet(std::vector < std::vector <unsigned> > & Tp, const unsigned & numberOfQuadraturePoints, const unsigned & numberOfEigPairs)   //p is max poly degree
 {
@@ -291,7 +232,10 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
 void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsigned & p, const unsigned & numberOfEigPairs)   //p is max poly degree
 {
 
-  unsigned dimJp = factorial(numberOfEigPairs + p) / (factorial(numberOfEigPairs) * factorial(p));
+  
+  unsigned dimJp = static_cast <unsigned> (boost::math::binomial_coefficient<double>(numberOfEigPairs + p, p));
+  
+  //long unsigned dimJp = factorial(numberOfEigPairs + p) / (factorial(numberOfEigPairs) * factorial(p));
 
   Jp.resize(dimJp);
   for(unsigned i = 0; i < dimJp; i++) {
@@ -354,7 +298,7 @@ void EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, std::vect
       for(unsigned p2 = 0; p2 < p; p2++) {
         integralsMatrix[q1][p1][p2]  = 0.;
         for(unsigned i = 0; i < numberOfQuadraturePoints; i++) {
-          double w = HermiteQuadratureWeight[numberOfQuadraturePoints - 1][i];
+          double w = HermiteQuadrature[numberOfQuadraturePoints - 1][0][i];
           integralsMatrix[q1][p1][p2]  +=  w * HermitePoly[q1][i] * HermitePoly[p1][i] * HermitePoly[p2][i];
         }
       }
@@ -420,7 +364,7 @@ void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & M
 
   for(unsigned j = 0; j < Tp.size(); j++) {
     for(unsigned k = 0; k < numberOfEigPairs; k++) {
-      MultivariateHermiteQuadratureWeights[j] *= HermiteQuadratureWeight[numberOfQuadraturePoints - 1][Tp[j][k]] ;
+      MultivariateHermiteQuadratureWeights[j] *= HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]] ;
       for(unsigned i = 0; i < Jp.size(); i++) {
         MultivariateHermitePoly[i][j] *= HermitePoly[Jp[i][k]][Tp[j][k]] ;
       }
@@ -590,7 +534,7 @@ void AssembleSysSG(MultiLevelProblem& ml_prob)
           for(unsigned j = 0; j < numberOfQuadraturePoints; j++) {
 //             aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
             aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePoints - 1][1][j])
-                                   * HermitePoly[Jq[q1][i]][j] * HermiteQuadratureWeight[numberOfQuadraturePoints - 1][j];
+                                   * HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
           }
         }
 

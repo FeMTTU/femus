@@ -47,7 +47,7 @@ double stdDeviationQoI = 0.; //initialization
 double L = 4 ; // correlation length of the covariance function
 //END
 
-unsigned numberOfUniformLevels = 2;
+unsigned numberOfUniformLevels = 4;
 
 int main(int argc, char** argv)
 {
@@ -55,11 +55,6 @@ int main(int argc, char** argv)
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
-  for(unsigned i = 0; i < 16; i++) {
-    for(unsigned j = 0; j < 16; j++) {
-      HermiteQuadratureWeight[i][j] = HermiteQuadrature[i][0][j] * stdDeviationInput;
-    }
-  }
 
   //BEGIN deterministic FEM instances
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues

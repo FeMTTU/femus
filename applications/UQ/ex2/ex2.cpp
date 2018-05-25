@@ -42,10 +42,10 @@ std::vector <double> cumulants(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 1000; //number of samples for the Monte Carlo
+unsigned M = 10000; //number of samples for the Monte Carlo
 //END
 
-unsigned numberOfUniformLevels = 2;
+unsigned numberOfUniformLevels = 4;
 
 int main(int argc, char** argv) {
 
