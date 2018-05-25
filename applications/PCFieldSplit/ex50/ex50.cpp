@@ -26,7 +26,9 @@
 
 double Re = 5000.0;
 double Rm = 0.1;
-double coefS = -1.0; 
+double coefS = -1.0;
+
+double Mu = 0.01;
 
 using namespace femus;
 
@@ -57,8 +59,14 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   else if (!strcmp(SolName, "P")) {
     dirichlet = false;
   }
-  
-  
+  if (!strcmp(SolName, "B1")) {
+    if (facename == 4) {
+      if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = 1.;
+    }
+  }
+  else if (!strcmp(SolName, "R")) {
+    dirichlet = false;
+  }
   return dirichlet;
 }
 
@@ -117,7 +125,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu","seventh",scalingFactor); 
-  mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/quad_square.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -138,7 +146,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("B1", LAGRANGE, SECOND);
   mlSol.AddSolution("B2", LAGRANGE, SECOND);
   mlSol.AddSolution("R",  DISCONTINOUS_POLYNOMIAL, FIRST);
-  mlSol.AssociatePropertyToSolution("P", "Pressure");
+  mlSol.AssociatePropertyToSolution("R", "Pressure");
 
   mlSol.AddSolution("U", LAGRANGE, SECOND);
   mlSol.AddSolution("V", LAGRANGE, SECOND);
@@ -288,14 +296,14 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
   //solution variable
   
-  unsigned solBIndex(dim);
+  vector <unsigned> solBIndex(dim);
   solBIndex[0] = mlSol->GetIndex("B1");
   solBIndex[1] = mlSol->GetIndex("B2");
   unsigned solBType = mlSol -> GetSolutionType(solBIndex[0]);  
   
-  unsigned solRindex;
-  solRindex = mlSol -> GetIndex{"R"};
-  unsigned solRType = mlSol -> GetSolutionType(solRIndex);
+  unsigned solRIndex;
+  solRIndex = mlSol->GetIndex("R");
+  unsigned solRType = mlSol->GetSolutionType(solRIndex);
 
   vector < unsigned > solVIndex(dim);
   solVIndex[0] = mlSol->GetIndex("U");    // get the position of "U" in the ml_sol object
@@ -318,7 +326,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
-  vector <vector<double>> solB(dim);
+  vector <vector <double> > solB(dim);
   vector <double> solR; 
   vector < vector < double > >  solV(dim);    // local solution
   vector < double >  solP; // local solution
@@ -367,13 +375,13 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   double weight; // gauss point weight
 
   vector< int > sysDof; // local to global pdeSys dofs
-  sysDof.reserve((dim + 2) *maxSize);
+  sysDof.reserve((dim * 2 + 2) *maxSize);
 
   vector< double > Res; // local redidual vector
-  Res.reserve((dim + 2) *maxSize);
+  Res.reserve((dim * 2 + 2) *maxSize);
 
   vector < double > Jac; //local Jacobian 
-  Jac.reserve((dim + 2) *maxSize * (dim + 2) *maxSize);
+  Jac.reserve((dim * 2 + 2) *maxSize * (dim * 2 + 2) *maxSize);
 
   if(assembleMatrix)
     KK->zero(); // Set to zero all the entries of the Global Matrix
@@ -411,16 +419,15 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     //END memory allocation
 
     //BEGIN global to local extraction
-     for(unsigned i = 0; i < nDofsB; i++) { //velocity
-     unsigned solBDof = msh->GetSolutionDof(i, iel, solBType);  //local to global solution dof
-
-     for(unsigned  k = 0; k < dim; k++) {
+     for(unsigned i = 0; i < nDofsB; i++) { //Magnetic
+      unsigned solBDof = msh->GetSolutionDof(i, iel, solBType);  //local to global solution dof
+      for(unsigned  k = 0; k < dim; k++) {
 	solB[k][i] = (*sol->_Sol[solBIndex[k]])(solBDof);  //global to local solution value
 	sysDof[i + k * nDofsB] = pdeSys->GetSystemDof(solBIndex[k], solBPdeIndex[k], i, iel);  //local to global system dof
      }
     }
     
-    for(unsigned i = 0; i < nDofsR; i++) { //pressure
+    for(unsigned i = 0; i < nDofsR; i++) { //Lagrange
       unsigned solRDof = msh->GetSolutionDof(i, iel, solRType);  //local to global solution dof
       solR[i] = (*sol->_Sol[solRIndex])(solRDof);  //global to local solution value
       sysDof[i + dim * nDofsB] = pdeSys->GetSystemDof(solRIndex, solRPdeIndex, i, iel);  //local to global system dof
@@ -429,7 +436,6 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
     for(unsigned i = 0; i < nDofsV; i++) { //velocity
       unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);  //local to global solution dof
-
       for(unsigned  k = 0; k < dim; k++) {
         solV[k][i] = (*sol->_Sol[solVIndex[k]])(solVDof);  //global to local solution value
         sysDof[i + dim * nDofsB + nDofsR + k * nDofsV] = pdeSys->GetSystemDof(solVIndex[k], solVPdeIndex[k], i, iel);  //local to global system dof
@@ -466,185 +472,103 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       vector <double> solB_gss(dim,0);
       vector <vector <double> > gradSolB_gss(dim);
-      for(unsigned j=0; j<dim; j++){
+      for(unsigned j = 0; j < dim; j ++){
 	gradSolB_gss[j].resize(dim);
-	std::fill{gradSolB_gss(j).begin(), gradSolB_gss(j).end(), 0.0 };
+	std::fill(gradSolB_gss[j].begin(), gradSolB_gss[j].end(), 0.0);
       }
       
-      for(unsigned i=0; i<nDofsB; i++){
-	for(unsigned j=0; j<dim;j++){ // define the solutions B1, B2 for solB_gss
+      for(unsigned i = 0; i < nDofsB; i++){
+	for(unsigned j = 0; j< dim;j++){ // define the solutions B1, B2 for solB_gss
 	  solB_gss[j] += phiB[i] * solB[j][i]; 
 	}
 	
-	for(unsigned j=0; j<dim;j++){   // define the soluitons B1, B2 for gradSolB_gss
-	  for(unsigned k=0; k<dim; k++){ // define the direction of derivatives X, Y for gradSolB_gss
-	    gradSolB_gss[j][k] += phiB_x[i*dim+k]*solB[j][i];
+	for(unsigned j = 0; j< dim;j++){   // define the soluitons B1, B2 for gradSolB_gss
+	  for(unsigned k = 0; k < dim; k++){ // define the direction of derivatives X, Y for gradSolB_gss
+	    gradSolB_gss[j][k] += phiB_x[i*dim+k] * solB[j][i];
 	  }
 	}
       }
       
       double solR_gss = 0.0;
-      for(unsigned i=0; i<nDofsR;i++){
-	solR_gss += phiR[i]*solR[i]; 
+      for(unsigned i = 0; i < nDofsR; i++){
+	solR_gss += phiR[i] * solR[i]; 
       }
       
       vector < double > solV_gss(dim, 0);
       vector < vector < double > > gradSolV_gss(dim);
-
-      for(unsigned j=0; j<dim; j++){
+      for(unsigned j = 0; j < dim; j++){
 	gradSolV_gss[j].resize(dim);  
-	std::fill(gradSolV_gss[j].beign(), gradSolV_gss[j].end(),0.0);
+	std::fill(gradSolV_gss[j].begin(), gradSolV_gss[j].end(),0.0);
       }
      
-      for(unsigned i=0; i<nDofsV; i++){
-	for (unsigned j=0; j<dim; j++){  // define the solutions U,V for solV_gass
-	 solV_gss[j] += phiV[i] * solV[j][i]; 
+      for(unsigned i = 0; i < nDofsV; i++){
+	for (unsigned j = 0; j < dim; j++){  // define the solutions U,V for solV_gass
+	  solV_gss[j] += phiV[i] * solV[j][i]; 
 	}
 	
-	for(unsigned j=0; j<dim; j++){ // define the solutions U,V for gradSolV_gss 
-	  for(unsigned k=0; k<dim; k++){ // define the direction of derivatives X, Y for gradSolV_gss
+	for(unsigned j = 0; j < dim; j++){ // define the solutions U,V for gradSolV_gss 
+	  for(unsigned k = 0; k < dim; k++){ // define the direction of derivatives X, Y for gradSolV_gss
 	    gradSolV_gss[j][k] += phiV_x[i*dim+k] * solV[j][i];
 	  }
 	}
       }
 
       double solP_gss = 0;
-
       for(unsigned i = 0; i < nDofsP; i++) {
         solP_gss += phiP[i] * solP[i];
       }
-    // Begin phiV_i loop: Momentum balancd
-    for(unsigned i=0; i<nDofsV; i++){
-      for(unsigned k=0; k<dim; k++{
-	unsigned irow = k * dim + i;
-	for (unsigned l=0; l<dim; l++){
-	  Res[irow] + = -Mu * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) *phiV_x[i*dim + l] * weight;
-	}
-	Res[irow] + = solP_gss * phiV_x[i*dim + k];  
-	if(assembleMatrix){  
-	  unsigned irowMat = nDofsVP * irow;
-	  for (unsigned l=0; l<dim; l++){
-	   for (unsigned j=0; j<nDofsV;j++){
-	     unsigned jcol1 = k*dim+j;
-	     unsigned jcol2 = l*dim+j;
-	     Jac[irowMat+jcol1] += Mu * phiV_x[i*dim+l] * phiV_x[j*dim+l] * weight;
-	     Jac[irowMat+jcol2] += Mu * phiV_x[i*dim+l] * phiV_x[j*dim+k] * weight;
-	     Jac[irowMat+jcol1] += solV_gss[l] * phiV[i] * phiV_x[j*dim+l] * weight;
-	     Jac[irowMat+jcol2] += phiV[i*dim+l]*phiV[i]*phiV[j] * gradSolV_gss[k][l]*weight;  
-	   }
-	  }
-	  for (unsigned j=0;j<nDofsP;j++){
-	    unsigned jcol = dim * nDofsV + j
-	    Jac[irowMat+jcol] += -phiV_x[i*dim+k] * phiP[j]*weight;  
-	  }
-	}
-      }
-    }
-    //END phiV_i loop
-    
-    //Begin phiP_i loop: Mass Balance
-    for (unsigned i=0; i<nDofsP; i++){
-      for (unsigned k=0; k<dim; k++){
-	unsigned irow = nDofsV * dim + i;
-	Res[irow] += gradSolV_gss[k][k] * phiP[i]
-	if(assembleMatrx){
-	  unsigned irowMat = nDofsVP * irow; 
-	  for (unsigned j=0; j<nDofsV;j++){
-	    jcol = k * nDofsV + j; 
-	    Jac[irowMat+jcol] += -phiV_x[j*dim+k]*phiP[i]*weight; 
-	  }
+      
+    // Begin phiB_i loop: Momentum balance
+      for(unsigned i = 0; i < nDofsB; i ++){
+	for(unsigned k = 0; k < dim; k ++){
+	    unsigned irow = k * nDofsB + i;
+	    for (unsigned l = 0; l < dim; l++){
+		Res[irow] += -Mu * phiB_x[i*dim+l] * (gradSolB_gss[k][l] + gradSolB_gss[l][k]) * weight; 
+		Res[irow] += - phiB[i] * solB_gss[l] * gradSolB_gss[k][l] * weight;
+	    }
+	    Res[irow] += phiB_x[i*dim+k] * solR_gss;
+	    
+	    if (assembleMatrix){
+	       unsigned irowMat = irow * nDofsBRVP;
+	       for(unsigned l = 0; l < dim; l++){
+		for(unsigned j = 0; j < nDofsB; j++){
+		  unsigned jcol1 = k * nDofsB + j;
+		  unsigned jcol2 = l * nDofsB + j;
+		  Jac[irowMat+jcol1] += Mu * phiB_x[i*dim+l] * phiB_x[j*dim+l] * weight; 
+		  Jac[irowMat+jcol2] += Mu * phiB_x[i*dim+l] * phiB_x[j*dim+k] * weight;
+		  Jac[irowMat+jcol1] += phiB[i] * solB_gss[l] * phiB_x[j*dim+l] * weight;
+		  Jac[irowMat+jcol2] += phiB[i] * phiB[j] * gradSolB_gss[k][l] * weight;
+		} 
+	      }
+	      for (unsigned j = 0; j < nDofsR; j++){
+		unsigned jcol = dim * nDofsB + j;
+		Jac[irowMat+jcol] += - phiB_x[i*dim+k] * phiR[j] * weight;  
+	      } 
+	    } 
 	}
       }
-    }
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      //BEGIN phiB_i loop: Momentum balance
-      for (unsigned i = 0; i < nDofsV; i++) {
-        for (unsigned k = 0; k < dim; k++) {
-          unsigned irow =  k * nDofsV + i;
-          for (unsigned l = 0; l < dim; l++) {
-            Res[irow] +=  -Mu * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
-            Res[irow] +=  -phiV[i] * solV_gss[l] * gradSolV_gss[k][l] * weight;
-          }
-          Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
-
-          if (assembleMatrix) {
-            unsigned irowMat = nDofsVP * irow;
-
-            for (unsigned l = 0; l < dim; l++) {
-              for (unsigned j = 0; j < nDofsV; j++) {
-                unsigned jcol1 = (k * nDofsV + j);
-                unsigned jcol2 = (l * nDofsV + j);
-                Jac[ irowMat + jcol1] += Mu * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
-                Jac[ irowMat + jcol2] += Mu * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
-                Jac[ irowMat + jcol1] += phiV[i] * solV_gss[l] * phiV_x[j * dim + l] * weight;
-                Jac[ irowMat + jcol2] += phiV[i] * phiV[j] * gradSolV_gss[k][l] * weight;
-              }
-            }
-
-            for (unsigned j = 0; j < nDofsP; j++) {
-              unsigned jcol = (dim * nDofsV) + j;
-              Jac[ irowMat + jcol] += - phiV_x[i * dim + k] * phiP[j] * weight;
-            }
-          }
-        }
-      }
-
-      //END phiV_i loop
-
-      //BEGIN phiP_i loop: mass balance
-      for (unsigned i = 0; i < nDofsP; i++) {
-        unsigned irow = dim * nDofsV + i;
-
-        for (int k = 0; k < dim; k++) {
-          Res[irow] += +(gradSolV_gss[k][k]) * phiP[i]  * weight;
-
-          if (assembleMatrix) {
-            unsigned irowMat = nDofsVP * irow;
-
-            for (unsigned j = 0; j < nDofsV; j++) {
-              unsigned jcol = ( k * nDofsV + j);
-              Jac[ irowMat + jcol ] -= phiP[i] * phiV_x[j * dim + k] * weight;
-            }
-          }
-        }
-      }
-
-      //END phiB_i loop
+    //END phiB_i loop
  
+    // Begin phiR_i loop: Mass balance
+    for (unsigned i = 0; i < nDofsR; i++){
+      unsigned irow = dim * nDofsB + i;
+      for (unsigned k = 0; k<dim; k++){
+	  Res[irow] += phiR[i] * gradSolB_gss[k][k] * weight; 
+      if (assembleMatrix){
+	unsigned irowMat = irow * nDofsBRVP;
+	for (unsigned j = 0; j < nDofsB; j++){
+	 unsigned jcol = k * nDofsB + j;
+	 Jac[irowMat+jcol] += -phiR[i] * phiB_x[j*dim+k] * weight;
+	}
+      }
+      }
+    }
+    // END phiR_i loop
     
       //BEGIN phiV_i loop: Momentum balance
       for (unsigned i = 0; i < nDofsV; i++) {
         for (unsigned k = 0; k < dim; k++) {
-          unsigned irow =  k * nDofsV + i;
+          unsigned irow = dim * nDofsB + nDofsR + k * nDofsV + i;
           for (unsigned l = 0; l < dim; l++) {
             Res[irow] +=  -Mu * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
             Res[irow] +=  -phiV[i] * solV_gss[l] * gradSolV_gss[k][l] * weight;
@@ -652,7 +576,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
           Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
 
           if (assembleMatrix) {
-            unsigned irowMat = nDofsVP * irow;
+            unsigned irowMat = irow * nDofsBRVP;
 
             for (unsigned l = 0; l < dim; l++) {
               for (unsigned j = 0; j < nDofsV; j++) {
@@ -666,28 +590,27 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
             }
 
             for (unsigned j = 0; j < nDofsP; j++) {
-              unsigned jcol = (dim * nDofsV) + j;
+              unsigned jcol =  dim * nDofsB + nDofsR + dim * nDofsV + j;
               Jac[ irowMat + jcol] += - phiV_x[i * dim + k] * phiP[j] * weight;
             }
           }
         }
       }
-
       //END phiV_i loop
 
       //BEGIN phiP_i loop: mass balance
       for (unsigned i = 0; i < nDofsP; i++) {
-        unsigned irow = dim * nDofsV + i;
+        unsigned irow = dim * nDofsB + nDofsR + dim * nDofsV + i;
 
         for (int k = 0; k < dim; k++) {
-          Res[irow] += +(gradSolV_gss[k][k]) * phiP[i]  * weight;
+          Res[irow] += (gradSolV_gss[k][k]) * phiP[i]  * weight;
 
           if (assembleMatrix) {
-            unsigned irowMat = nDofsVP * irow;
+            unsigned irowMat = nDofsBRVP * irow;
 
             for (unsigned j = 0; j < nDofsV; j++) {
               unsigned jcol = ( k * nDofsV + j);
-              Jac[ irowMat + jcol ] -= phiP[i] * phiV_x[j * dim + k] * weight;
+              Jac[ irowMat + jcol ] += - phiP[i] * phiV_x[j * dim + k] * weight;
             }
           }
         }
@@ -695,223 +618,12 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
       //END phiP_i loop
     }
-    
-    
-    
-    
-    
     //END Gauss point loop
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-      //BEGIN phiB_i loop: Momentum balance
-      for(unsigned i = 0; i < nDofsV; i++) {
-
-        for(unsigned k = 0; k < dim; k++) {
-          unsigned irow = nDofsT + k * nDofsV + i;
-
-          for(unsigned l = 0; l < dim; l++) {
-            Res[irow] +=  -sqrt(Pr / Ra) * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
-            Res[irow] +=  -phiV[i] * solV_gss[l] * gradSolV_gss[k][l] * weight;
-          }
-
-          Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
-
-          if(k == 1) {
-            Res[irow] += beta * solT_gss * phiV[i] * weight;
-          }
-
-          if(assembleMatrix) {
-            unsigned irowMat = nDofsTVP * irow;
-
-            for(unsigned l = 0; l < dim; l++) {
-              for(unsigned j = 0; j < nDofsV; j++) {
-                unsigned jcol1 = (nDofsT + k * nDofsV + j);
-                unsigned jcol2 = (nDofsT + l * nDofsV + j);
-                Jac[ irowMat + jcol1] += sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
-                Jac[ irowMat + jcol2] += sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
-                Jac[ irowMat + jcol1] += phiV[i] * solV_gss[l] * phiV_x[j * dim + l] * weight;
-                Jac[ irowMat + jcol2] += phiV[i] * phiV[j] * gradSolV_gss[k][l] * weight;
-              }
-            }
-
-            for(unsigned j = 0; j < nDofsP; j++) {
-              unsigned jcol = (nDofsT + dim * nDofsV) + j;
-              Jac[ irowMat + jcol] += - phiV_x[i * dim + k] * phiP[j] * weight;
-            }
-
-            if(k == 1) {
-              for(unsigned j = 0; j < nDofsT; j++) {
-                Jac[ irowMat + j ] += -beta * phiV[i] * phiT[j] * weight;
-              }
-            }
-          }
-
-        }
-      }
-
-      //END phiB_i loop
-      
-      
-      
-      
-      
-      for(unsigned i = 0; i < nDofsT; i++) {
-        unsigned irow = i;
-
-        for(unsigned k = 0; k < dim; k++) {
-          Res[irow] +=  -alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * gradSolT_gss[k] * weight;
-          Res[irow] +=  -phiT[i] * solV_gss[k] * gradSolT_gss[k] * weight;
-
-          if(assembleMatrix) {
-            unsigned irowMat = irow * nDofsTVP;
-
-            for(unsigned j = 0; j < nDofsT; j++) {
-              Jac[ irowMat + j ] +=  alpha / sqrt(Ra * Pr) * phiT_x[i * dim + k] * phiT_x[j * dim + k] * weight;
-              Jac[ irowMat + j ] +=  phiT[i] * solV_gss[k] * phiT_x[j * dim + k] * weight;
-            }
-
-            for(unsigned j = 0; j < nDofsV; j++) {
-              unsigned jcol = nDofsT + k * nDofsV + j;
-              Jac[ irowMat + jcol ] += phiT[i] * phiV[j] * gradSolT_gss[k] * weight;
-            }
-          }
-
-        }
-      }
-
-      //END phiT_i loop
-
-      //BEGIN phiV_i loop: Momentum balance
-      for(unsigned i = 0; i < nDofsV; i++) {
-
-        for(unsigned k = 0; k < dim; k++) {
-          unsigned irow = nDofsT + k * nDofsV + i;
-
-          for(unsigned l = 0; l < dim; l++) {
-            Res[irow] +=  -sqrt(Pr / Ra) * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
-            Res[irow] +=  -phiV[i] * solV_gss[l] * gradSolV_gss[k][l] * weight;
-          }
-
-          Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
-
-          if(k == 1) {
-            Res[irow] += beta * solT_gss * phiV[i] * weight;
-          }
-
-          if(assembleMatrix) {
-            unsigned irowMat = nDofsTVP * irow;
-
-            for(unsigned l = 0; l < dim; l++) {
-              for(unsigned j = 0; j < nDofsV; j++) {
-                unsigned jcol1 = (nDofsT + k * nDofsV + j);
-                unsigned jcol2 = (nDofsT + l * nDofsV + j);
-                Jac[ irowMat + jcol1] += sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
-                Jac[ irowMat + jcol2] += sqrt(Pr / Ra) * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
-                Jac[ irowMat + jcol1] += phiV[i] * solV_gss[l] * phiV_x[j * dim + l] * weight;
-                Jac[ irowMat + jcol2] += phiV[i] * phiV[j] * gradSolV_gss[k][l] * weight;
-              }
-            }
-
-            for(unsigned j = 0; j < nDofsP; j++) {
-              unsigned jcol = (nDofsT + dim * nDofsV) + j;
-              Jac[ irowMat + jcol] += - phiV_x[i * dim + k] * phiP[j] * weight;
-            }
-
-            if(k == 1) {
-              for(unsigned j = 0; j < nDofsT; j++) {
-                Jac[ irowMat + j ] += -beta * phiV[i] * phiT[j] * weight;
-              }
-            }
-          }
-
-        }
-      }
-
-      //END phiV_i loop
-
-      //BEGIN phiP_i loop: mass balance
-      for(unsigned i = 0; i < nDofsP; i++) {
-        unsigned irow = nDofsT + dim * nDofsV + i;
-
-        for(int k = 0; k < dim; k++) {
-          Res[irow] += -(gradSolV_gss[k][k]) * phiP[i]  * weight;
-
-          if(assembleMatrix) {
-            unsigned irowMat = nDofsTVP * irow;
-
-            for(unsigned j = 0; j < nDofsV; j++) {
-              unsigned jcol = (nDofsT + k * nDofsV + j);
-              Jac[ irowMat + jcol ] += phiP[i] * phiV_x[j * dim + k] * weight;
-            }
-          }
-
-        }
-      }
-
-      //END phiP_i loop
-
-    }
-
-    //END Gauss point loop
-
     //BEGIN local to global Matrix/Vector assembly
     RES->add_vector_blocked(Res, sysDof);
 
-    if(assembleMatrix) {
+    if (assembleMatrix) {
       KK->add_matrix_blocked(Jac, sysDof, sysDof);
     }
 
@@ -923,82 +635,10 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 
   RES->close();
 
-  if(assembleMatrix) {
+  if (assembleMatrix) {
     KK->close();
   }
-
-  ***************** END ASSEMBLY *******************
+  // ***************** END ASSEMBLY *******************
 }
-
-// void PrintConvergenceInfo(char *stdOutfile, char* outfile, const unsigned &numofrefinements){
-// 
-//   std::cout<<"END_COMPUTATION\n"<<std::flush;
-// 
-//   std::ifstream inf;
-//   inf.open(stdOutfile);
-//   if (!inf) {
-//     std::cout<<"Redirected standard output file not found\n";
-//     std::cout<<"add option -std_output std_out_filename > std_out_filename\n";
-//     return;
-//   }
-// 
-//   std::ofstream outf;
-// 
-//   outf.open(outfile, std::ofstream::app);
-//   outf << std::endl << std::endl;
-//   outf << "Number_of_refinements="<<numofrefinements<<std::endl;
-//   outf << "Nonlinear_Iteration,resid_norm0,resid_normN,N,convergence";
-// 
-//   std::string str1;
-//   inf >> str1;
-//   while (str1.compare("END_COMPUTATION") != 0) {
-// 
-//     if (str1.compare("Nonlinear") == 0) {
-//       inf >> str1;
-//       if (str1.compare("iteration") == 0) {
-//         inf >> str1;
-//         outf << std::endl << str1;
-//       }
-//     }
-//     else if (str1.compare("KSP") == 0){
-//       inf >> str1;
-//       if (str1.compare("preconditioned") == 0){
-//         inf >> str1;
-//         if (str1.compare("resid") == 0){
-//           inf >> str1;
-//           if (str1.compare("norm") == 0){
-//             double norm0 = 1.;
-//             double normN = 1.;
-//             unsigned counter = 0;
-//             inf >> norm0;
-//             outf <<","<< norm0;
-//             for (unsigned i = 0; i < 11; i++){
-//               inf >> str1;
-//             }
-//             while(str1.compare("norm") == 0){
-//               inf >> normN;
-//               counter++;
-//               for (unsigned i = 0; i < 11; i++){
-//                 inf >> str1;
-//               }
-//             }
-//             outf <<","<< normN;
-//             if(counter != 0){
-//               outf << "," <<counter<< "," << pow(normN/norm0,1./counter);
-//             }
-//             else{
-//               outf << "Invalid solver, set -outer_ksp_solver \"gmres\"";
-//             }
-//           }
-//         }
-//       }
-//     }
-//     inf >> str1;
-//   }
-// 
-//   outf.close();
-//   inf.close();
-// 
-// }
 
 
