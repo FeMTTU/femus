@@ -25,29 +25,15 @@
 
 
 double Re = 5000.0;
-double Rm = 0.1;
-double coefS = -1.0;
-
+double Rem = 0.0;
+double coeffS = 1.0;
 double Mu = 0.01;
+// double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
+// int counter = 0 ;
 
 using namespace femus;
 
-double InitalValueT(const std::vector < double >& x){
-  return (x[0]+0.5);
-}
-
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-/*
-  if(!strcmp(SolName, "T")) {
-    if(facename == 2) {
-      value = 1.;
-    } else if(facename == 3) {
-      dirichlet = false; //Neumann
-    }
-  } else if(!strcmp(SolName, "P")) {
-    dirichlet = false;
-  }*/
-  
   bool dirichlet = true; //dirichlet
   value = 0.;
 
@@ -59,10 +45,11 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   else if (!strcmp(SolName, "P")) {
     dirichlet = false;
   }
-  if (!strcmp(SolName, "B1")) {
-    if (facename == 4) {
-      if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = 1.;
-    }
+  else if (!strcmp(SolName, "B1")) {
+    value = -1.0;
+//     if (facename == 4) {
+//       if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = 1.;
+//     }
   }
   else if (!strcmp(SolName, "R")) {
     dirichlet = false;
@@ -73,15 +60,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 
 void PrintConvergenceInfo(char *stdOutfile, char* infile, const unsigned &numofrefinements);
 void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob);
-
-// enum PrecType {
-//   FS_VTp = 1,
-//   FS_TVp,
-//   ASM_VTp,
-//   ASM_TVp,
-//   ILU_VTp,
-//   ILU_TVp
-// };
 
 int main(int argc, char** args) {
 
@@ -130,7 +108,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 6;
+  unsigned numberOfUniformLevels = 8;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
@@ -245,6 +223,8 @@ int main(int argc, char** args) {
   system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 30, 30); //GMRES tolerances
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
+  system.SetNumberOfSchurVariables(1);
+  system.SetElementBlockNumber(4);
   system.MGsolve();
 
   // print solutions
@@ -267,6 +247,18 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
+  
+  
+//   double Mu;
+//   if(counter < c0 ) Mu = 2. * Miu;
+//   else if ( counter <= cn ) {
+//     Mu = 2*Miu*(cn-counter)/(cn-c0) + Miu*(counter-c0)/(cn-c0);
+//   }
+//   else{
+//     Mu = Miu;
+//   }
+//   std::cout << counter << " " << Mu <<std::endl;
+//   counter++;
 
   //  extract pointers to the several objects that we are going to use
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
@@ -278,7 +270,6 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   MultiLevelSolution*   mlSol         = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*   sol         = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
 
-
   LinearEquationSolver* pdeSys        = mlPdeSys->_LinSolver[level];  // pointer to the equation (level) object
 
   bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
@@ -287,16 +278,15 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   SparseMatrix*   KK          = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector*  RES         = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  const unsigned  dim = msh->GetDimension(); 	// get the domain dimension of the problem
+  unsigned dim2 = (3 * (dim - 1) + !(dim - 1)); // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
   // reserve memory for the local standar vectors
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   //solution variable
-  
-  vector <unsigned> solBIndex(dim);
+  vector < unsigned > solBIndex(dim);
   solBIndex[0] = mlSol->GetIndex("B1");
   solBIndex[1] = mlSol->GetIndex("B2");
   unsigned solBType = mlSol -> GetSolutionType(solBIndex[0]);  
@@ -326,14 +316,13 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   unsigned solPPdeIndex;
   solPPdeIndex = mlPdeSys->GetSolPdeIndex("P");    // get the position of "P" in the pdeSys object
 
-  vector <vector <double> > solB(dim);
-  vector <double> solR; 
-  vector < vector < double > >  solV(dim);    // local solution
-  vector < double >  solP; // local solution
+  vector <vector <double> > solB(dim); // local solution for B1, B2
+  vector <double> solR; // local solution for langrange for r
+  vector < vector < double > >  solV(dim);    // local solution for U, V 
+  vector < double >  solP; // local solution for P
 
   vector < vector < double > > coordX(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-
 
   for(unsigned  k = 0; k < dim; k++) {
     solB[k].reserve(maxSize);
@@ -363,14 +352,6 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
   phiV_x.reserve(maxSize * dim);
   phiV_xx.reserve(maxSize * dim2);
 
-//   vector <double> phiT;  // local test function
-//   vector <double> phiT_x; // local test function first order partial derivatives
-//   vector <double> phiT_xx; // local test function second order partial derivatives
-// 
-//   phiT.reserve(maxSize);
-//   phiT_x.reserve(maxSize * dim);
-//   phiT_xx.reserve(maxSize * dim2);
-
   double* phiP;
   double weight; // gauss point weight
 
@@ -395,15 +376,16 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     
     unsigned nDofsV = msh->GetElementDofNumber(iel, solVType);  //velocity
     unsigned nDofsP = msh->GetElementDofNumber(iel, solPType);  //pressure
+    
     unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType); // coordinates
     unsigned nDofsBRVP = dim * nDofsB + nDofsR + dim * nDofsV + nDofsP; // all solutions
     //END local dof number extraction
 
     //BEGIN memory allocation
     Res.resize(nDofsBRVP);
-    std::fill(Res.begin(), Res.end(), 0);
+    std::fill(Res.begin(), Res.end(), 0.0);
     Jac.resize(nDofsBRVP * nDofsBRVP);
-    std::fill(Jac.begin(), Jac.end(), 0);
+    std::fill(Jac.begin(), Jac.end(), 0.0);
     sysDof.resize(nDofsBRVP);
 
     for(unsigned  k = 0; k < dim; k++) {
@@ -419,7 +401,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     //END memory allocation
 
     //BEGIN global to local extraction
-     for(unsigned i = 0; i < nDofsB; i++) { //Magnetic
+    for(unsigned i = 0; i < nDofsB; i++) { //Magnetic field
       unsigned solBDof = msh->GetSolutionDof(i, iel, solBType);  //local to global solution dof
       for(unsigned  k = 0; k < dim; k++) {
 	solB[k][i] = (*sol->_Sol[solBIndex[k]])(solBDof);  //global to local solution value
@@ -433,7 +415,6 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       sysDof[i + dim * nDofsB] = pdeSys->GetSystemDof(solRIndex, solRPdeIndex, i, iel);  //local to global system dof
     }
     
-
     for(unsigned i = 0; i < nDofsV; i++) { //velocity
       unsigned solVDof = msh->GetSolutionDof(i, iel, solVType);  //local to global solution dof
       for(unsigned  k = 0; k < dim; k++) {
@@ -519,30 +500,59 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       }
       
     // Begin phiB_i loop: Momentum balance
+    unsigned kk,ll;
+    double coeffSignk, coeffSignl;
       for(unsigned i = 0; i < nDofsB; i ++){
 	for(unsigned k = 0; k < dim; k ++){
 	    unsigned irow = k * nDofsB + i;
 	    for (unsigned l = 0; l < dim; l++){
-		Res[irow] += -Mu * phiB_x[i*dim+l] * (gradSolB_gss[k][l] + gradSolB_gss[l][k]) * weight; 
-		Res[irow] += - phiB[i] * solB_gss[l] * gradSolB_gss[k][l] * weight;
+	        if (k == 0){ 
+		  kk = 1;
+		  coeffSignk =-1.0;
+		}else{
+		  kk = 0;
+		  coeffSignk = 1.0;
+		} 
+		if (l == 0){ 
+		  ll = 1; 
+		  coeffSignl =-1.0;
+		}else{ 
+		  ll = 0;
+		  coeffSignl = 1.0;
+		}
+		Res[irow] -= 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl* gradSolB_gss[l][ll] * weight;  
+		Res[irow] += coeffSignk * phiB_x[i*dim+kk] * coeffSignl * solB_gss[l] * solV_gss[ll] * weight;
 	    }
-	    Res[irow] += phiB_x[i*dim+k] * solR_gss;
+	    Res[irow] += phiB_x[i*dim+k] * solR_gss * weight;
 	    
 	    if (assembleMatrix){
 	       unsigned irowMat = irow * nDofsBRVP;
 	       for(unsigned l = 0; l < dim; l++){
+		if (k == 0){ 
+		  kk = 1;
+		  coeffSignk =-1.0;
+		}else{
+		  kk = 0;
+		  coeffSignk = 1.0;
+		} 
+		if (l == 0){ 
+		  ll = 1; 
+		  coeffSignl =-1.0;
+		}else{ 
+		  ll = 0;
+		  coeffSignl = 1.0;
+		}
 		for(unsigned j = 0; j < nDofsB; j++){
-		  unsigned jcol1 = k * nDofsB + j;
-		  unsigned jcol2 = l * nDofsB + j;
-		  Jac[irowMat+jcol1] += Mu * phiB_x[i*dim+l] * phiB_x[j*dim+l] * weight; 
-		  Jac[irowMat+jcol2] += Mu * phiB_x[i*dim+l] * phiB_x[j*dim+k] * weight;
-		  Jac[irowMat+jcol1] += phiB[i] * solB_gss[l] * phiB_x[j*dim+l] * weight;
-		  Jac[irowMat+jcol2] += phiB[i] * phiB[j] * gradSolB_gss[k][l] * weight;
+		  unsigned jcol1 = l * nDofsB + j;
+		  unsigned jcol2 = dim * nDofsB + nDofsR + ll * nDofsV + j;
+		  Jac[irowMat+jcol1] += 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB_x[j*dim + ll] * weight;
+		  Jac[irowMat+jcol1] -= coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB[j] * solV_gss[ll] * weight;
+		  Jac[irowMat+jcol2] -= coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiV[j] * solB_gss[l] * weight; 
 		} 
 	      }
 	      for (unsigned j = 0; j < nDofsR; j++){
 		unsigned jcol = dim * nDofsB + j;
-		Jac[irowMat+jcol] += - phiB_x[i*dim+k] * phiR[j] * weight;  
+		Jac[irowMat+jcol] -= phiB_x[i*dim+k] * phiR[j] * weight;  
 	      } 
 	    } 
 	}
@@ -552,7 +562,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
     // Begin phiR_i loop: Mass balance
     for (unsigned i = 0; i < nDofsR; i++){
       unsigned irow = dim * nDofsB + i;
-      for (unsigned k = 0; k<dim; k++){
+      for (unsigned k = 0; k < dim; k++){
 	  Res[irow] += phiR[i] * gradSolB_gss[k][k] * weight; 
       if (assembleMatrix){
 	unsigned irowMat = irow * nDofsBRVP;
@@ -570,7 +580,22 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
         for (unsigned k = 0; k < dim; k++) {
           unsigned irow = dim * nDofsB + nDofsR + k * nDofsV + i;
           for (unsigned l = 0; l < dim; l++) {
-            Res[irow] +=  -Mu * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
+	    if (k == 0){ 
+	      kk = 1;
+	      coeffSignk =-1.0;
+	    }else{
+	      kk = 0;
+	      coeffSignk = 1.0;
+	    } 
+	    if (l == 0){ 
+	      ll = 1; 
+	      coeffSignl =-1.0;
+	    }else{ 
+	      ll = 0;
+	      coeffSignl = 1.0;
+	    }
+	    Res[irow] += coeffS * coeffSignk * phiV[i] * coeffSignl * gradSolB_gss[l][ll] * solB_gss[kk]* weight;    
+            Res[irow] +=  -1.0/Re * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
             Res[irow] +=  -phiV[i] * solV_gss[l] * gradSolV_gss[k][l] * weight;
           }
           Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
@@ -579,13 +604,31 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
             unsigned irowMat = irow * nDofsBRVP;
 
             for (unsigned l = 0; l < dim; l++) {
+	      if (k == 0){ 
+		kk = 1;
+		coeffSignk =-1.0;
+	      }else{
+		kk = 0;
+		coeffSignk = 1.0;
+	      } 
+	      if (l == 0){ 
+		ll = 1; 
+		coeffSignl =-1.0;
+	      }else{ 
+		ll = 0;
+		coeffSignl = 1.0;
+	      }
               for (unsigned j = 0; j < nDofsV; j++) {
-                unsigned jcol1 = (k * nDofsV + j);
-                unsigned jcol2 = (l * nDofsV + j);
-                Jac[ irowMat + jcol1] += Mu * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
-                Jac[ irowMat + jcol2] += Mu * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
+                unsigned jcol1 = dim * nDofsB + nDofsR + k * nDofsV + j;
+                unsigned jcol2 = dim * nDofsB + nDofsR + l * nDofsV + j;
+                unsigned jcol3 = ll * nDofsB + j;
+		unsigned jcol4 = l * nDofsB + j;
+		Jac[ irowMat + jcol1] += 1.0/Re * phiV_x[i * dim + l] * phiV_x[j * dim + l] * weight;
+                Jac[ irowMat + jcol2] += 1.0/Re * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
                 Jac[ irowMat + jcol1] += phiV[i] * solV_gss[l] * phiV_x[j * dim + l] * weight;
                 Jac[ irowMat + jcol2] += phiV[i] * phiV[j] * gradSolV_gss[k][l] * weight;
+		Jac[irowMat + jcol3] -= coeffS * coeffSignk * phiV[i] * phiB[j] * coeffSignl * gradSolB_gss[l][ll] * weight; 
+		Jac[irowMat + jcol4] -= coeffS * coeffSignk * phiV[i] * solB_gss[ll] * coeffSignl * phiB_x[j*dim+ll] * weight;
               }
             }
 
@@ -601,15 +644,14 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
       //BEGIN phiP_i loop: mass balance
       for (unsigned i = 0; i < nDofsP; i++) {
         unsigned irow = dim * nDofsB + nDofsR + dim * nDofsV + i;
-
+	
         for (int k = 0; k < dim; k++) {
-          Res[irow] += (gradSolV_gss[k][k]) * phiP[i]  * weight;
+          Res[irow] += gradSolV_gss[k][k] * phiP[i]  * weight;
 
           if (assembleMatrix) {
             unsigned irowMat = nDofsBRVP * irow;
-
             for (unsigned j = 0; j < nDofsV; j++) {
-              unsigned jcol = ( k * nDofsV + j);
+              unsigned jcol = dim * nDofsB + nDofsR + k * nDofsV + j;
               Jac[ irowMat + jcol ] += - phiP[i] * phiV_x[j * dim + k] * weight;
             }
           }
