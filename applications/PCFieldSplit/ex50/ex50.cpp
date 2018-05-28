@@ -24,12 +24,12 @@
 #include <stdlib.h>
 
 
-double Re = 5000.0;
-double Rem = 0.0;
+double Re = 0.01;
+double Rem = 0.1;
 double coeffS = 1.0;
-double Mu = 0.01;
-// double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
-// int counter = 0 ;
+// double Mu = 0.01;
+double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
+int counter = 0 ;
 
 using namespace femus;
 
@@ -47,9 +47,12 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   }
   else if (!strcmp(SolName, "B1")) {
     value = -1.0;
-//     if (facename == 4) {
-//       if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = 1.;
-//     }
+//      if (facename == 4) {
+//        if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = -1.;
+//      }
+  }
+  else if (!strcmp(SolName, "B2")){
+    value = 0.0;
   }
   else if (!strcmp(SolName, "R")) {
     dirichlet = false;
@@ -108,7 +111,7 @@ int main(int argc, char** args) {
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
-  unsigned numberOfUniformLevels = 8;
+  unsigned numberOfUniformLevels = 7;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   // erase all the coarse mesh levels
@@ -183,8 +186,8 @@ int main(int argc, char** args) {
 
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
-  FS2.push_back(&FS_NS); // Navier-stokes block first
-  FS2.push_back(&FS_MF); // Magnetic Field
+  FS2.push_back(&FS_MF); // Navier-stokes block first
+  FS2.push_back(&FS_NS); // Magnetic Field
 
   FieldSplitTree FS_MHD(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "MHD");
 
@@ -217,10 +220,10 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  system.SetRichardsonScaleFactor(.6);
+  system.SetRichardsonScaleFactor(.4);
   
   system.SetFieldSplitTree(&FS_MHD);
-  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 30, 30); //GMRES tolerances
+  system.SetTolerances(1.e-8, 1.e-10, 1.e+50, 30, 30); //GMRES tolerances
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(1);
@@ -259,7 +262,10 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 //   }
 //   std::cout << counter << " " << Mu <<std::endl;
 //   counter++;
-
+  
+//   Re = 1.0/Mu;
+//   
+  
   //  extract pointers to the several objects that we are going to use
   NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -594,9 +600,9 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 	      ll = 0;
 	      coeffSignl = 1.0;
 	    }
-	    Res[irow] += coeffS * coeffSignk * phiV[i] * coeffSignl * gradSolB_gss[l][ll] * solB_gss[kk]* weight;    
             Res[irow] +=  -1.0/Re * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
             Res[irow] +=  -phiV[i] * solV_gss[l] * gradSolV_gss[k][l] * weight;
+	    Res[irow] += coeffS * coeffSignk * phiV[i] * coeffSignl * gradSolB_gss[l][ll] * solB_gss[kk]* weight; 
           }
           Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
 
@@ -627,8 +633,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
                 Jac[ irowMat + jcol2] += 1.0/Re * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
                 Jac[ irowMat + jcol1] += phiV[i] * solV_gss[l] * phiV_x[j * dim + l] * weight;
                 Jac[ irowMat + jcol2] += phiV[i] * phiV[j] * gradSolV_gss[k][l] * weight;
-		Jac[irowMat + jcol3] -= coeffS * coeffSignk * phiV[i] * phiB[j] * coeffSignl * gradSolB_gss[l][ll] * weight; 
-		Jac[irowMat + jcol4] -= coeffS * coeffSignk * phiV[i] * solB_gss[ll] * coeffSignl * phiB_x[j*dim+ll] * weight;
+ 		Jac[irowMat + jcol3] -= coeffS * coeffSignk * phiV[i] * phiB[j] * coeffSignl * gradSolB_gss[l][ll] * weight; 
+ 		Jac[irowMat + jcol4] -= coeffS * coeffSignk * phiV[i] * solB_gss[ll] * coeffSignl * phiB_x[j*dim+ll] * weight;
               }
             }
 
