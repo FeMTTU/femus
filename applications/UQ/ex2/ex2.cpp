@@ -135,22 +135,22 @@ int main(int argc, char** argv) {
 //   }
 //   std::cout << std::endl;
 //   //END test Hermite Poly
-  
+
   //BEGIN stochastic index set test
 //   std::vector < std::vector <unsigned> > Jp;
 //   ComputeIndexSetJp(Jp, 3);
 //   for(unsigned i=0; i<Jp.size();i++){
 //     std::cout << "Jp[" << i << "]=( ";
-//     for(unsigned j=0; j<numberOfEigPairs; j++){ 
+//     for(unsigned j=0; j<numberOfEigPairs; j++){
 //      std::cout << Jp[i][j] << " ";
 //    }
 //    std::cout << ")" << std::endl;
 //   }
 //   std::vector < std::vector < std::vector < double > > >  G;
 //   EvaluateStochasticMassMatrices(5, 3, G);
-  
+
   //END stochastic index set test
-  
+
 
   GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues); //solve the generalized eigenvalue problem and compute the eigenpairs
 
@@ -773,8 +773,11 @@ void PlotStochasticData() {
   double d8gaussian;
   double d9gaussian;
 
-  double t = meanQoI - stdDeviationQoI * 7.5;
-  double dt = (15. * stdDeviationQoI) / 300.;
+//   double t = meanQoI - stdDeviationQoI * 7.5;
+//   double dt = (15. * stdDeviationQoI) / 300.;
+//
+  double t = -  7.5;
+  double dt = (15.) / 300.;
 
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 

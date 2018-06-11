@@ -19,8 +19,7 @@
 using namespace femus;
 
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time)
-{
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
   return dirichlet;
@@ -49,8 +48,7 @@ double L = 4 ; // correlation length of the covariance function
 
 unsigned numberOfUniformLevels = 4;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
 
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
@@ -160,7 +158,7 @@ int main(int argc, char** argv)
 
   systemSG.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
 
-//BEGIN testin multidim Hermite quadrature
+//BEGIN testing multidim Hermite quadrature
 
 //   unsigned numberOfQuadraturePoints = 4;
 //
@@ -178,8 +176,28 @@ int main(int argc, char** argv)
 //   std::vector < double > MultivariateHermiteQuadratureWeights;
 //
 //   EvaluateMultivariateHermitePoly(MultivariateHermitePoly, MultivariateHermiteQuadratureWeights, numberOfQuadraturePoints, pIndex, Jp, Tp);
-
   //END
+  
+  //BEGIN testing orthonormality of Hermite poly
+//   unsigned numberOfQuadraturePoints = 4;
+//   std::vector < std::vector < double > >  HermitePoly;
+//   unsigned maxPolyOrder = (qIndex > pIndex) ? qIndex : pIndex;
+//   EvaluateHermitePoly(HermitePoly,  numberOfQuadraturePoints, maxPolyOrder);
+//   std::vector < std::vector < double > > checkIntegrals(maxPolyOrder + 1);
+// 
+//   for(unsigned i = 0; i < maxPolyOrder + 1; i++) {
+//     checkIntegrals[i].assign(maxPolyOrder + 1, 0.);
+//     for(unsigned j = 0; j < maxPolyOrder + 1; j++) {
+//       for(unsigned k = 0; k < numberOfQuadraturePoints; k++) {
+//         double w = HermiteQuadrature[numberOfQuadraturePoints - 1][0][k];
+//         checkIntegrals[i][j] += w * HermitePoly[i][k] * HermitePoly[j][k];
+//       }
+//       std::cout << "i = " << i << " , " << "j = " << j << " , " << " integral = " << checkIntegrals[i][j] << std::endl; 
+//     }
+//   }
+  //END
+  
+
 
 
   GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues); //solve the generalized eigenvalue problem and compute the eigenpairs
@@ -208,8 +226,7 @@ int main(int argc, char** argv)
 
 } //end main
 
-void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues)
-{
+void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues) {
 //void GetEigenPair(MultiLevelProblem & ml_prob, Mat &CCSLEPc, Mat &MMSLEPc) {
 
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("UQ");   // pointer to the linear implicit system named "Poisson"
@@ -546,8 +563,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 }
 //
 //
-void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector <double > &  alphas, const double& domainMeasure)
-{
+void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector <double > &  alphas, const double& domainMeasure) {
 
   //  extract pointers to the several objects that we are going to use
 
@@ -650,8 +666,7 @@ void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vecto
 
 }
 //
-void GetStochasticData(std::vector <double>& alphas)
-{
+void GetStochasticData(std::vector <double>& alphas) {
 
   //let's standardize the quantity of interest after finding moments and standard deviation
 
@@ -663,9 +678,16 @@ void GetStochasticData(std::vector <double>& alphas)
 
   else {
 
-    unsigned desiredQuadraturePoints = static_cast<double> (ceil((totMoments * pIndex + 1) * 0.5));
+    unsigned desiredQuadraturePoints = static_cast<double>(ceil((totMoments * pIndex + 1) * 0.5));
 
-    unsigned numberOfQuadraturePoints = (desiredQuadraturePoints <= 16 ) ? desiredQuadraturePoints : 16;
+    unsigned numberOfQuadraturePoints = (desiredQuadraturePoints <= 16) ? desiredQuadraturePoints : 16;
+
+    if(desiredQuadraturePoints > 16) {
+      std::cout <<
+                "------------------------------- WARNING: less quadrature points than needed were employed in function GetStochasticData -------------------------------"
+                << std::endl;
+      std::cout << " Needed : " << desiredQuadraturePoints << " , " << " Used : " << 16 << std::endl;
+    }
 
     std::vector < std::vector <unsigned> > Tp;
     ComputeTensorProductSet(Tp, numberOfQuadraturePoints, numberOfEigPairs);
@@ -748,8 +770,7 @@ void GetStochasticData(std::vector <double>& alphas)
 }
 //
 //
-void PlotStochasticData()
-{
+void PlotStochasticData() {
 
   std::cout.precision(14);
   std::cout << " the mean is " << meanQoI << std::endl;
