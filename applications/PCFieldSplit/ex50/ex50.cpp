@@ -46,7 +46,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
     dirichlet = false;
   }
   else if (!strcmp(SolName, "B1")) {
-    value = -1.0;
+    value = 1.0;
 //      if (facename == 4) {
 //        if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = -1.;
 //      }
