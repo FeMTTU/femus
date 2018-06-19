@@ -186,8 +186,8 @@ int main(int argc, char** args) {
 
   std::vector < FieldSplitTree *> FS2;
   FS2.reserve(2);
-  FS2.push_back(&FS_MF); // Navier-stokes block first
-  FS2.push_back(&FS_NS); // Magnetic Field
+  FS2.push_back(&FS_MF); // Magnetic Field  First
+  FS2.push_back(&FS_NS); // Navier-stokes block Second 
 
   FieldSplitTree FS_MHD(RICHARDSON, FIELDSPLIT_PRECOND, FS2, "MHD");
 
@@ -220,14 +220,14 @@ int main(int argc, char** args) {
 
   system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(ILU_PRECOND);
-  system.SetRichardsonScaleFactor(.4);
+  system.SetRichardsonScaleFactor(.6);
   
   system.SetFieldSplitTree(&FS_MHD);
-  system.SetTolerances(1.e-8, 1.e-10, 1.e+50, 30, 30); //GMRES tolerances
+  system.SetTolerances(1.e-5, 1.e-8, 1.e+50, 10, 10); //GMRES tolerances
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
-  system.SetNumberOfSchurVariables(1);
-  system.SetElementBlockNumber(4);
+//   system.SetNumberOfSchurVariables(1);
+//   system.SetElementBlockNumber(4);
   system.MGsolve();
 
   // print solutions
