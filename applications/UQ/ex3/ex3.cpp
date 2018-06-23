@@ -493,11 +493,6 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 
   //BEGIN GRAM SCHMIDT ORTHONORMALIZATION
 
-  std::vector < std::vector < double > > coeffsGS(numberOfEigPairs);
-  for(unsigned i = 0; i < numberOfEigPairs; i++) {
-    coeffsGS[i].assign(numberOfEigPairs, 0.);
-  }
-
   std::vector <unsigned> eigfIndex(numberOfEigPairs);
   char name[10];
   for(unsigned i = 0; i < numberOfEigPairs; i++) {
@@ -568,15 +563,19 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 
           local_coeffsGS *= - 1.;
 
-          MPI_Allreduce(&local_coeffsGS, &coeffsGS[iGS][jGS], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+          std::cout << "local_coeffGS = " << local_coeffsGS << std::endl;
 
-          partialSum += coeffsGS[iGS][jGS] * (*sol->_Sol[eigfIndex[jGS]])(idof);
+          double global_coeffsGS = 0.;
+          MPI_Allreduce(&local_coeffsGS, &global_coeffsGS, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+          std::cout << "global_coeffsGS = " << global_coeffsGS << std::endl;
+
+          partialSum += global_coeffsGS * (*sol->_Sol[eigfIndex[jGS]])(idof);
 
         }
 
         double valueToSet = (*sol->_Sol[eigfIndex[iGS]])(idof) + partialSum;
         sol->_Sol[eigfIndex[iGS]]->set(idof, valueToSet);
-        sol->_Sol[eigfIndex[iGS]]->close();
       }
 
     }
@@ -623,9 +622,14 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 
     double norm2 = 0.;
     MPI_Allreduce(&local_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    std::cout << "norm2 = " << norm2 << std::endl;
-    sol->_Sol[eigfIndex[iGS]]->scale(norm2);
+    double norm = sqrt(norm2);
+    std::cout << "norm = " << norm << std::endl;
+    sol->_Sol[eigfIndex[iGS]]->scale(norm);
 
+  }
+
+  for(unsigned iGS = 0; iGS < numberOfEigPairs; iGS++) {
+    sol->_Sol[eigfIndex[iGS]]->close();
   }
 
   //END GRAM SCHMIDT ORTHONORMALIZATION
