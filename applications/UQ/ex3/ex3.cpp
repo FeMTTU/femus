@@ -555,25 +555,19 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
                 eigenFunction_gss += phi[i] * eigenFunction[i];
                 eigenFunction_gss_old += phi[i] * eigenFunctionOld[i];
               }
-              local_coeffsGS += eigenFunction_gss * eigenFunction_gss_old * weight;
+              local_coeffsGS -= eigenFunction_gss * eigenFunction_gss_old * weight;
             }
           }
 
           //END COMPUTE coeffsGS LOCAL
 
-          local_coeffsGS *= - 1.;
-
-          std::cout << "local_coeffGS = " << local_coeffsGS << std::endl;
-
           double global_coeffsGS = 0.;
           MPI_Allreduce(&local_coeffsGS, &global_coeffsGS, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-          std::cout << "global_coeffsGS = " << global_coeffsGS << std::endl;
 
           partialSum += global_coeffsGS * (*sol->_Sol[eigfIndex[jGS]])(idof);
 
         }
-
+        
         double valueToSet = (*sol->_Sol[eigfIndex[iGS]])(idof) + partialSum;
         sol->_Sol[eigfIndex[iGS]]->set(idof, valueToSet);
       }
@@ -624,12 +618,10 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
     MPI_Allreduce(&local_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     double norm = sqrt(norm2);
     std::cout << "norm = " << norm << std::endl;
-    sol->_Sol[eigfIndex[iGS]]->scale(norm);
-
-  }
-
-  for(unsigned iGS = 0; iGS < numberOfEigPairs; iGS++) {
+    sol->_Sol[eigfIndex[iGS]]->scale(1. / norm);
+    
     sol->_Sol[eigfIndex[iGS]]->close();
+
   }
 
   //END GRAM SCHMIDT ORTHONORMALIZATION
