@@ -8,7 +8,7 @@ using namespace femus;
 unsigned pIndex = 5;
 unsigned qIndex = 3;
 
-int numberOfEigPairs = 3; //dimension of the stochastic variable
+int numberOfEigPairs = 2; //dimension of the stochastic variable
 double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double amin = 1. / 100; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
