@@ -15,7 +15,7 @@ using namespace femus;
 // };
 
 
-int numberOfEigPairs = 2; //dimension of the stochastic variable
+int numberOfEigPairs = 3; //dimension of the stochastic variable
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
 double amin = 1. / 100;
