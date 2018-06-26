@@ -12,4 +12,6 @@ ADD_SUBDIRECTORY(ex4/)
 
 ADD_SUBDIRECTORY(ex5/)
 
-ADD_SUBDIRECTORY(lock_exchange/)
+ADD_SUBDIRECTORY(lock_exchange_isopycnal/)
+
+ADD_SUBDIRECTORY(lock_exchange_zlevel/)
