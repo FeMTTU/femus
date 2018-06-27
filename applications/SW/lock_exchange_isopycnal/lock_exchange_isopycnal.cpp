@@ -28,22 +28,11 @@ using namespace femus;
 // double rho1[10]={1029,1029,1029}; // kg/m^3
 double rho1[10]={1000,1000,1000}; //lock exchange
 
-double mu = 1.5 * 1.0e-3; // pa s 
+double ni = 100.; // 0.1, 1, 10, 100, 200
 
-double aa = 6371000;  //radius of earth [m]
-double H_0 = 2400;    // max depth of ocean [m]
-double H_shelf = 100; //depth of continental shelf [m]
-
-double z_c = aa;      //z coordinate of center point
-double bb = 1250000;
-
-double phi = 0.1;     //relative width of continental shelf: 10%
-
-double dt = 120.; //= dx / maxWaveSpeed * 0.85;
+double dt = 60.; //60 for ni=100, 120 for ni=1
 
 const unsigned NumberOfLayers = 2; 
-
-// const double hRest[3]={40,50,90};
 
 const double hRest[3]={10,10};
 
@@ -55,39 +44,14 @@ double InitalValueV(const std::vector < double >& x)
 
 double InitalValueH0(const std::vector < double >& x)
 {
-  double b = hRest[0];
-  if(NumberOfLayers == 1){
-    double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
-    double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
-    double hh = 1 - dd * dd / (bb * bb);
-    b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
-  }
-  //return b; //+ ( 2.* exp(-(x[0] / 100000.) * (x[0] / 100000.)))/5.; //10;
   if (x[0]<0) return 0.01;
   else return hRest[0]+hRest[1] - 0.01;
 }
 
 double InitalValueH1(const std::vector < double >& x)
 { 
-//   if(NumberOfLayers == 2){
-//     double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
-//     double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
-//     double hh = 1 - dd * dd / (bb * bb);
-//     double b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
-//     return b - hRest[1];
-//   }
-  //return hRest[1]; //10;
   if (x[0]<0) return hRest[0]+hRest[1] - 0.01;
   else return 0.01;
-}
-
-double InitalValueH2(const std::vector < double >& x)
-{
-  double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
-  double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
-  double hh = 1 - dd * dd / (bb * bb);
-  double b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
-  return b - hRest[2];
 }
 
 double InitalValueT0(const std::vector < double >& x)
@@ -104,17 +68,8 @@ double InitalValueT1(const std::vector < double >& x)
   return 5;
 }
 
-double InitalValueT2(const std::vector < double >& x)
-{
-  return 5;
-}
-
-
 double InitalValueB(const std::vector < double >& x)
 {
-  double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
-  double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
-  double hh = 1 - dd * dd / (bb * bb);
   return 20; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
 }
 
@@ -184,10 +139,6 @@ int main(int argc, char** args)
   if(NumberOfLayers > 1){
     mlSol.Initialize("h1",InitalValueH1);
     mlSol.Initialize("T1",InitalValueT1);
-    if(NumberOfLayers > 2){
-      mlSol.Initialize("h2",InitalValueH2);
-      mlSol.Initialize("T2",InitalValueT2);
-    }
   }
   
   for(unsigned i = 0; i < NumberOfLayers; i++) {
@@ -222,7 +173,7 @@ int main(int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 2000;
+  unsigned numberOfTimeSteps = 2800;
   for(unsigned i = 0; i < numberOfTimeSteps; i++) {
     ETD(ml_prob);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1)/1);
@@ -384,10 +335,6 @@ void ETD(MultiLevelProblem& ml_prob)
     }
     double dx = x[1] - x[0];
        
-    double xmid = 0.5 * (x[0] + x[1]);
-    double zz = sqrt(aa * aa - xmid * xmid); // z coordinate of points on sphere
-    double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
-    double hh = 1 - dd * dd / (bb * bb);
     double b = 20; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
         
     double hTot = 0.;
@@ -545,24 +492,15 @@ void ETD(MultiLevelProblem& ml_prob)
     }
     double dxm = xm[1] - xm[0];
     double dxp = xp[1] - xp[0];
-       
-    double xmidm = 0.5 * (xm[0] + xm[1]);
-    double zzm = sqrt(aa * aa - xmidm * xmidm); // z coordinate of points on sphere
-    double ddm = aa * acos((zzm * z_c) / (aa * aa)); // distance to center point on sphere [m]
-    double hhm = 1 - ddm * ddm / (bb * bb);
+    
     double bm = 20; //( H_shelf + H_0 / 2 * (1 + tanh(hhm / phi)) ); 
     
-    double xmidp = 0.5 * (xp[0] + xp[1]);
-    double zzp = sqrt(aa * aa - xmidp * xmidp); // z coordinate of points on sphere
-    double ddp = aa * acos((zzp * z_c) / (aa * aa)); // distance to center point on sphere [m]
-    double hhp = 1 - ddp * ddp / (bb * bb);
     double bp = 20; //( H_shelf + H_0 / 2 * (1 + tanh(hhp / phi)) ); 
         
     double hTotm = 0.;
     double hTotp = 0.;    
     
     double beta = 0.2;
-    //double TRef[2] = {30,5};
     double TRef = 5.;
     
     std::vector < adept::adouble > Pm(NLayers);
@@ -644,9 +582,7 @@ void ETD(MultiLevelProblem& ml_prob)
       w[k-1] = 0;
 		       //std::cout<<"w in u equation"<<w[k-1]<<std::endl;
       
-    }
-    
-    double ni = 1.; // 0.1, 1, 10, 100, 200  
+    }  
       
     for(unsigned k = 0; k < NLayers; k++) {
       adept::adouble vMidm = 0.5 * (solvm[k] + solv[k]);

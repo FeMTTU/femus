@@ -15,3 +15,5 @@ ADD_SUBDIRECTORY(ex5/)
 ADD_SUBDIRECTORY(lock_exchange_isopycnal/)
 
 ADD_SUBDIRECTORY(lock_exchange_zlevel/)
+
+ADD_SUBDIRECTORY(overflow_isopycnal/)

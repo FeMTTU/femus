@@ -28,11 +28,13 @@ using namespace femus;
 // double rho1[10]={1029,1029,1029}; // kg/m^3
 double rho1[10]={1000,1000,1000}; //lock exchange
 
-double dt = 100.; //= dx / maxWaveSpeed * 0.85;
+double ni = 1000; // 0.1, 1, 10, 100, 200
+
+double dt = 60.; //60 for ni=100, 120 for ni=1
 
 const unsigned NumberOfLayers = 2; 
 
-const double hRest[2]={10,10};
+const double hRest[2]={0.01,0.01};
 
 double InitalValueV(const std::vector < double >& x)
 {
@@ -41,51 +43,47 @@ double InitalValueV(const std::vector < double >& x)
 
 
 double InitalValueH0(const std::vector < double >& x)
-{ 
-  return hRest[0]; 
-  //if (x[0]<0) return 0.01;
-  //else return hRest[0]+hRest[1] - 0.01;
+{
+  double d1 = 500;
+  double d2 = 2000;
+  double x0 = 40000;
+  double b = d1 + 0.5*(d2-d1)*(1 + tanh((x[0]-x0)/7000));
+  if (x[0]<-80000) return hRest[0];
+  else return b - hRest[0];
+  //return hRest[0];
 }
 
 double InitalValueH1(const std::vector < double >& x)
 { 
-  return hRest[1]; 
-  //if (x[0]<0) return hRest[0]+hRest[1] - 0.01;
-  //else return 0.01;
+  double d1 = 500;
+  double d2 = 2000;
+  double x0 = 40000;
+  double b = d1 + 0.5*(d2-d1)*(1 + tanh((x[0]-x0)/7000));
+  if (x[0]<-80000) return b - hRest[0];
+  else return hRest[0];
+  //return b-hRest[1];
 }
-
-// double InitalValueH2(const std::vector < double >& x)
-// {
-//   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
-//   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
-//   double hh = 1 - dd * dd / (bb * bb);
-//   double b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
-//   return b - hRest[2];
-// }
 
 double InitalValueT0(const std::vector < double >& x)
 {
-  if (x[0]<0) return 5; 
-  else return 30;
-  return 30;
+  //if (x[0]<-80000) return 10; 
+  //else return 20;
+  return 20;
 }
 
 double InitalValueT1(const std::vector < double >& x)
 {
-  if (x[0]<0) return 5; 
-  else return 30; 
-  //return 5;
+//    if (x[0]<0) return 5; 
+//    else return 30; 
+  return 10;
 }
-
-// double InitalValueT2(const std::vector < double >& x)
-// {
-//   return 5;
-// }
-
 
 double InitalValueB(const std::vector < double >& x)
 {
-  return 20; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
+  double d1 = 500;
+  double d2 = 2000;
+  double x0 = 40000; 
+  return (d1 + 0.5*(d2-d1)*(1 + tanh((x[0]-x0)/7000)));
 }
 
 
@@ -116,9 +114,10 @@ int main(int argc, char** args)
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = static_cast<unsigned>(floor(pow(2.,/*11*/7) + 0.5)); //Grid cell size = 0.5km 
+  unsigned nx = static_cast<unsigned>(floor(pow(2.,8) + 0.5)); //Grid cell size = 0.5km 
+  nx -= 56;
   
-  double length = 64000; //2 * 1465700.; 
+  double length = 200000; //2 * 1465700.; 
 
   mlMsh.GenerateCoarseBoxMesh(nx, 0, 0, -length / 2, length / 2, 0., 0., 0., 0., EDGE3, "seventh");
 
@@ -152,10 +151,6 @@ int main(int argc, char** args)
   if(NumberOfLayers > 1){
     mlSol.Initialize("h1",InitalValueH1);
     mlSol.Initialize("T1",InitalValueT1);
-//     if(NumberOfLayers > 2){
-//       mlSol.Initialize("h2",InitalValueH2);
-//       mlSol.Initialize("T2",InitalValueT2);
-//     }
   }
   
   for(unsigned i = 0; i < NumberOfLayers; i++) {
@@ -190,7 +185,7 @@ int main(int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 2000;
+  unsigned numberOfTimeSteps = 3000;
   for(unsigned i = 0; i < numberOfTimeSteps; i++) {
     ETD(ml_prob);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1)/1);
@@ -351,8 +346,12 @@ void ETD(MultiLevelProblem& ml_prob)
       x[j] = (*msh->_topology->_Sol[0])(xDof);      // global extraction and local storage for the element coordinates
     }
     double dx = x[1] - x[0];
-       
-    double b = 20; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
+    
+    double xmid = 0.5*(x[1] + x[0]);
+    double d1 = 500;
+    double d2 = 2000;
+    double x0 = 40000;
+    double b = d1 + 0.5*(d2-d1)*(1 + tanh((xmid-x0)/7000));
         
     double hTot = 0.;
     for(unsigned k = 0; k < NLayers; k++) {
@@ -366,13 +365,18 @@ void ETD(MultiLevelProblem& ml_prob)
       hALE[k] = hRest[k];
     }
     hALE[NLayers - 1] = b - hRest[NLayers - 1];
+    
+//     for(unsigned k = 1; k < NLayers; k++){
+//       hALE[k] = hRest[k];
+//     }
        
     std::vector < double > w(NLayers+1, 0.);
 	  
     for(unsigned k = NLayers; k>1; k--){
       w[k-1] = w[k] - (  0.5 * ( solh[k-1].value() + solhp[k-1].value() ) * solvp[k-1].value() 
 		       - 0.5 * ( solh[k-1].value() + solhm[k-1].value() ) * solvm[k-1].value() )/dx 
-		    - ( hALE[k-1] - solh[k-1].value()) / dt;//TODO		    
+		    - ( hALE[k-1] - solh[k-1].value()) / dt;//TODO
+      w[k-1] = 0;		    
 		    //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<w[k-1]<<std::endl;
     }
       
@@ -504,16 +508,19 @@ void ETD(MultiLevelProblem& ml_prob)
     }
     double dxm = xm[1] - xm[0];
     double dxp = xp[1] - xp[0];
-
-    double bm = 20; //( H_shelf + H_0 / 2 * (1 + tanh(hhm / phi)) ); 
-  
-    double bp = 20; //( H_shelf + H_0 / 2 * (1 + tanh(hhp / phi)) ); 
+    
+    double xmidm = 0.5 * (xm[0] + xm[1]);
+    double xmidp = 0.5 * (xp[0] + xp[1]);
+    double d1 = 500;
+    double d2 = 2000;
+    double x0 = 40000;
+    double bm = d1 + 0.5*(d2-d1)*(1 + tanh((xmidm-x0)/7000));
+    double bp = d1 + 0.5*(d2-d1)*(1 + tanh((xmidp-x0)/7000));;
         
     double hTotm = 0.;
     double hTotp = 0.;    
     
     double beta = 0.2;
-    //double TRef[2] = {30,5};
     double TRef = 5.;
     
     std::vector < adept::adouble > Pm(NLayers);
@@ -526,27 +533,30 @@ void ETD(MultiLevelProblem& ml_prob)
       adept::adouble rhokm = rho1[k] - beta * (solHTm[k]/solhm[k] - TRef);
       adept::adouble rhokp = rho1[k] - beta * (solHTp[k]/solhp[k] - TRef);
       
+  //    adept::adouble rhokm = rho1[k];
+  //    adept::adouble rhokp = rho1[k];
+      
       Pm[k] = - rhokm * 9.81 * bm; // bottom topography
       Pp[k] = - rhokp * 9.81 * bp; // bottom topography
       for( unsigned j = 0; j < NLayers; j++){
  	 //adept::adouble rhojm = (j <= k) ? (rho1[j] - beta * solHTm[k]/solhm[k]) : rhokm;
  	 //adept::adouble rhojp = (j <= k) ? (rho1[j] - beta * solHTp[k]/solhp[k]) : rhokp;
-	 //adept::adouble rhojm = (j <= k) ? (rho1[j] - beta * (solHTm[j]/solhm[j] - TRef)) : rhokm;
- 	 //adept::adouble rhojp = (j <= k) ? (rho1[j] - beta * (solHTp[j]/solhp[j] - TRef)) : rhokp;
-	 adept::adouble rhojm;
-	 adept::adouble rhojp;
-	 if (j<k){
-	   rhojm = (rho1[j] - beta * solHTm[j]/solhm[j] - TRef) * rhokm/1024;
-	   rhojp = (rho1[j] - beta * solHTp[j]/solhp[j] - TRef) * rhokp/1024;
-	 }
-	 else if (j==k){
-	   rhojm = 0.5 * rhokm/1024 * (rhokm + (rhokm+rhokp)/2);  
-	   rhojp = 0.5 * rhokp/1024 * (rhokp + (rhokm+rhokp)/2);
-	 }
-	 else{
-	   rhojm = (rho1[j] - beta * solHTm[j]/solhm[j] - TRef) * rhokm/1024 * (rhokm+rhokp)/2;
-	   rhojp = (rho1[j] - beta * solHTp[j]/solhp[j] - TRef) * rhokp/1024 * (rhokm+rhokp)/2;   
-	 }
+	 adept::adouble rhojm = (j <= k) ? (rho1[j] - beta * (solHTm[j]/solhm[j] - TRef)) : rhokm;
+ 	 adept::adouble rhojp = (j <= k) ? (rho1[j] - beta * (solHTp[j]/solhp[j] - TRef)) : rhokp;
+// 	 adept::adouble rhojm;
+// 	 adept::adouble rhojp;
+// 	 if (j<k){
+// 	   rhojm = (rho1[j] - beta * solHTm[j]/solhm[j] - TRef[j]) * rhokm/1024;
+// 	   rhojp = (rho1[j] - beta * solHTp[j]/solhp[j] - TRef[j]) * rhokp/1024;
+// 	 }
+// 	 else if (j==k){
+// 	   rhojm = 0.5 * rhokm/1024 * (rhokm + (rhokm+rhokp)/2);  
+// 	   rhojp = 0.5 * rhokp/1024 * (rhokp + (rhokm+rhokp)/2);
+// 	 }
+// 	 else{
+// 	   rhojm = (rho1[j] - beta * solHTm[j]/solhm[j] - TRef[j]) * rhokm/1024 * (rhokm+rhokp)/2;
+// 	   rhojp = (rho1[j] - beta * solHTp[j]/solhp[j] - TRef[j]) * rhokp/1024 * (rhokm+rhokp)/2;   
+// 	 }
 	 Pm[k] += rhojm * 9.81 * solhm[j];
 	 Pp[k] += rhojp * 9.81 * solhp[j];
 	 //std::cout<<"HHHHHHHHHHHHHHHHHHH "<<j<<std::endl;
@@ -554,8 +564,8 @@ void ETD(MultiLevelProblem& ml_prob)
       }
       Pm[k] /= rhokm;
       Pp[k] /= rhokp;
-      //std::cout<<"BBBBBBBBBBBBBBBBBBB "<<k<<" , "<<rhokm<<" , "<<rhokp<<std::endl;
-      //std::cout<<"CCCCCCCCCCCCCCCCCCC "<<k<<" , "<<Pm[k]<<" , "<<Pp[k]<<std::endl;
+      //std::cout<<"BBBBBBBBBBBBBBBBBBB "<<rhokm<<" , "<<rhokp<<std::endl;
+      //std::cout<<"CCCCCCCCCCCCCCCCCCC "<<Pm[k]<<" , "<<Pp[k]<<std::endl;
     }
      
     std::vector < double > hALEm(NLayers, 0.); 
@@ -567,6 +577,10 @@ void ETD(MultiLevelProblem& ml_prob)
       hALEm[k] = hRest[k];
       hALEp[k] = hRest[k];      
     }
+//     for(unsigned k = 1; k < NLayers; k++){
+//       hALEm[k] = hRest[k];
+//       hALEp[k] = hRest[k];      
+//     }
     hALEm[NLayers - 1] = bm - hRest[NLayers - 1];
     hALEp[NLayers - 1] = bp - hRest[NLayers - 1];
        
@@ -585,11 +599,10 @@ void ETD(MultiLevelProblem& ml_prob)
       w[k-1] = w[k] -  ( solhp[k-1].value() * (0.5 * ( solv[k-1].value() + solvp[k-1].value() ) )
 		       - solhm[k-1].value() * (0.5 * ( solv[k-1].value() + solvm[k-1].value() ) ) ) / dx
 		       - ( 0.5 * ( hALEm[k-1] + hALEp[k-1] )  - 0.5 * ( solhm[k-1].value() + solhp[k-1].value() ) ) / dt;
+      w[k-1] = 0;
 		       //std::cout<<"w in u equation"<<w[k-1]<<std::endl;
       
-    }
-    
-    double ni = 100.; // 0.1, 1, 10, 100, 200  
+    }  
       
     for(unsigned k = 0; k < NLayers; k++) {
       adept::adouble vMidm = 0.5 * (solvm[k] + solv[k]);
@@ -608,13 +621,15 @@ void ETD(MultiLevelProblem& ml_prob)
       }
       
       aResv[k] += ni*(solvm[k] - solv[k])/(dxm*dxm);
-      aResv[k] += ni*(solvp[k] - solv[k])/(dxp*dxp);      
+      aResv[k] += ni*(solvp[k] - solv[k])/(dxp*dxp);     
+      
+      //aResv[k] += 0.01*sqrt(0.25*(solvm[k]+solvp[k])*(solvm[k]+solvp[k]) + 0.0025)*0.5*(solvm[k]+solvp[k]);//drag force
     }
       
     vector< double > Res(NLayers); // local redidual vector
     for(unsigned k = 0; k < NLayers; k++) {
       Res[k] =  aResv[k].value();
-      std::cout<< "Res["<<k<<"] = " << Res[k] <<std::endl;
+      //std::cout<< "Res["<<k<<"] = " << Res[k] <<std::endl;
     }
 
     RES->add_vector_blocked(Res, l2GMapRow);
