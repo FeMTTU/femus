@@ -26,33 +26,39 @@ using namespace femus;
 
 //double rho1[10]={1025,1027,1028}; // kg/m^3
 // double rho1[10]={1029,1029,1029}; // kg/m^3
-double rho1[10]={1000,1000,1000}; //lock exchange
+double rho1[10]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000}; //lock exchange
 
 double dt = 100.; //= dx / maxWaveSpeed * 0.85;
 
+double ni = 100.; // 0.1, 1, 10, 100, 200
+
 const unsigned NumberOfLayers = 2; 
 
-const double hRest[2]={10,10};
+const double hRest[10]={10,10,10,2,2,2,2,2,2,2};
 
 double InitalValueV(const std::vector < double >& x)
 {
   return 0;
 }
 
-
-double InitalValueH0(const std::vector < double >& x)
+double InitalValueH(const std::vector < double >& x)
 { 
   return hRest[0]; 
-  //if (x[0]<0) return 0.01;
-  //else return hRest[0]+hRest[1] - 0.01;
 }
 
-double InitalValueH1(const std::vector < double >& x)
-{ 
-  return hRest[1]; 
-  //if (x[0]<0) return hRest[0]+hRest[1] - 0.01;
-  //else return 0.01;
-}
+// double InitalValueH0(const std::vector < double >& x)
+// { 
+//   return hRest[0]; 
+//   //if (x[0]<0) return 0.01;
+//   //else return hRest[0]+hRest[1] - 0.01;
+// }
+
+// double InitalValueH1(const std::vector < double >& x)
+// { 
+//   return hRest[1]; 
+//   //if (x[0]<0) return hRest[0]+hRest[1] - 0.01;
+//   //else return 0.01;
+// }
 
 // double InitalValueH2(const std::vector < double >& x)
 // {
@@ -63,19 +69,25 @@ double InitalValueH1(const std::vector < double >& x)
 //   return b - hRest[2];
 // }
 
-double InitalValueT0(const std::vector < double >& x)
+double InitalValueT(const std::vector < double >& x)
 {
   if (x[0]<0) return 5; 
   else return 30;
-  return 30;
 }
 
-double InitalValueT1(const std::vector < double >& x)
-{
-  if (x[0]<0) return 5; 
-  else return 30; 
-  //return 5;
-}
+// double InitalValueT0(const std::vector < double >& x)
+// {
+//   if (x[0]<0) return 5; 
+//   else return 30;
+//   //return 30;
+// }
+
+// double InitalValueT1(const std::vector < double >& x)
+// {
+//   if (x[0]<0) return 5; 
+//   else return 30; 
+//   //return 5;
+// }
 
 // double InitalValueT2(const std::vector < double >& x)
 // {
@@ -147,21 +159,33 @@ int main(int argc, char** args)
   mlSol.Initialize("All");
   
   
-  mlSol.Initialize("h0",InitalValueH0);
-  mlSol.Initialize("T0",InitalValueT0);
-  if(NumberOfLayers > 1){
-    mlSol.Initialize("h1",InitalValueH1);
-    mlSol.Initialize("T1",InitalValueT1);
+//   mlSol.Initialize("h0",InitalValueH0);
+//   mlSol.Initialize("T0",InitalValueT0);
+//   if(NumberOfLayers > 1){
+//     mlSol.Initialize("h1",InitalValueH1);
+//     mlSol.Initialize("T1",InitalValueT1);
 //     if(NumberOfLayers > 2){
 //       mlSol.Initialize("h2",InitalValueH2);
 //       mlSol.Initialize("T2",InitalValueT2);
 //     }
-  }
+//   }
   
   for(unsigned i = 0; i < NumberOfLayers; i++) {
     char name[10];
     sprintf(name, "v%d", i);
     mlSol.Initialize(name, InitalValueV);
+  }
+  
+  for(unsigned i = 0; i < NumberOfLayers; i++) {
+    char name[10];
+    sprintf(name, "h%d", i);
+    mlSol.Initialize(name, InitalValueH);
+  }
+  
+  for(unsigned i = 0; i < NumberOfLayers; i++) {
+    char name[10];
+    sprintf(name, "T%d", i);
+    mlSol.Initialize(name, InitalValueT);
   }
 
   mlSol.Initialize("b", InitalValueB);
@@ -518,42 +542,61 @@ void ETD(MultiLevelProblem& ml_prob)
     
     std::vector < adept::adouble > Pm(NLayers);
     std::vector < adept::adouble > Pp(NLayers);
+    std::vector < adept::adouble > zMidm(NLayers);
+    std::vector < adept::adouble > zMidp(NLayers);
+    
     for(unsigned k = 0; k < NLayers; k++) {
       hTotm += solhm[k].value();
       hTotp += solhp[k].value();
-//       adept::adouble rhokm = rho1[k] - beta * solHTm[k]/solhm[k];
-//       adept::adouble rhokp = rho1[k] - beta * solHTp[k]/solhp[k];
+      
       adept::adouble rhokm = rho1[k] - beta * (solHTm[k]/solhm[k] - TRef);
       adept::adouble rhokp = rho1[k] - beta * (solHTp[k]/solhp[k] - TRef);
       
-      Pm[k] = - rhokm * 9.81 * bm; // bottom topography
-      Pp[k] = - rhokp * 9.81 * bp; // bottom topography
-      for( unsigned j = 0; j < NLayers; j++){
- 	 //adept::adouble rhojm = (j <= k) ? (rho1[j] - beta * solHTm[k]/solhm[k]) : rhokm;
- 	 //adept::adouble rhojp = (j <= k) ? (rho1[j] - beta * solHTp[k]/solhp[k]) : rhokp;
+      Pm[k] = 0.5 * 9.81 * rhokm * solhm[k];
+      Pp[k] = 0.5 * 9.81 * rhokp * solhp[k]; 
+      
+      zMidm[k] = -bm + solhm[k]/2;
+      zMidp[k] = -bp + solhp[k]/2;
+      for(unsigned i = k+1; i < NLayers; i++) {
+        zMidm[k] += solhm[i];
+	zMidp[k] += solhp[i];
+      }
+      
+      Pm[k] += rhokm * 9.81 * zMidm[k];
+      Pp[k] += rhokm * 9.81 * zMidp[k];
+      //Pm[k] = - rhokm * 9.81 * bm; // bottom topography
+      //Pp[k] = - rhokp * 9.81 * bp; // bottom topography
+      for( unsigned j = 0; j < k; j++){
+	 adept::adouble rhojm = rho1[j] - beta * (solHTm[j]/solhm[j] - TRef);
+	 adept::adouble rhojp = rho1[j] - beta * (solHTp[j]/solhp[j] - TRef);
+      //for( unsigned j = 0; j < NLayers; j++){
+	 //BEGIN Isopycnal Pressure
 	 //adept::adouble rhojm = (j <= k) ? (rho1[j] - beta * (solHTm[j]/solhm[j] - TRef)) : rhokm;
  	 //adept::adouble rhojp = (j <= k) ? (rho1[j] - beta * (solHTp[j]/solhp[j] - TRef)) : rhokp;
-	 adept::adouble rhojm;
-	 adept::adouble rhojp;
-	 if (j<k){
-	   rhojm = (rho1[j] - beta * solHTm[j]/solhm[j] - TRef) * rhokm/1024;
-	   rhojp = (rho1[j] - beta * solHTp[j]/solhp[j] - TRef) * rhokp/1024;
-	 }
-	 else if (j==k){
-	   rhojm = 0.5 * rhokm/1024 * (rhokm + (rhokm+rhokp)/2);  
-	   rhojp = 0.5 * rhokp/1024 * (rhokp + (rhokm+rhokp)/2);
-	 }
-	 else{
-	   rhojm = (rho1[j] - beta * solHTm[j]/solhm[j] - TRef) * rhokm/1024 * (rhokm+rhokp)/2;
-	   rhojp = (rho1[j] - beta * solHTp[j]/solhp[j] - TRef) * rhokp/1024 * (rhokm+rhokp)/2;   
-	 }
+	 //END
+	 //BEGIN Modified Isopycnal Pressure
+// 	 adept::adouble rhojm;
+// 	 adept::adouble rhojp;
+// 	 if (j<k){
+// 	   rhojm = (rho1[j] - beta * solHTm[j]/solhm[j] - TRef) * rhokm/1024;
+// 	   rhojp = (rho1[j] - beta * solHTp[j]/solhp[j] - TRef) * rhokp/1024;
+// 	 }
+// 	 else if (j==k){
+// 	   rhojm = 0.5 * rhokm/1024 * (rhokm + (rhokm+rhokp)/2);  
+// 	   rhojp = 0.5 * rhokp/1024 * (rhokp + (rhokm+rhokp)/2);
+// 	 }
+// 	 else{
+// 	   rhojm = (rho1[j] - beta * solHTm[j]/solhm[j] - TRef) * rhokm/1024 * (rhokm+rhokp)/2;
+// 	   rhojp = (rho1[j] - beta * solHTp[j]/solhp[j] - TRef) * rhokp/1024 * (rhokm+rhokp)/2;   
+// 	 }
+	 //END
 	 Pm[k] += rhojm * 9.81 * solhm[j];
 	 Pp[k] += rhojp * 9.81 * solhp[j];
 	 //std::cout<<"HHHHHHHHHHHHHHHHHHH "<<j<<std::endl;
 	 //std::cout<<"AAAAAAAAAAAAAAAAAAA "<<rhojm<<" , "<<rhojp<<std::endl;
       }
-      Pm[k] /= rhokm;
-      Pp[k] /= rhokp;
+      Pm[k] /= rho1[k];
+      Pp[k] /= rho1[k];
       //std::cout<<"BBBBBBBBBBBBBBBBBBB "<<k<<" , "<<rhokm<<" , "<<rhokp<<std::endl;
       //std::cout<<"CCCCCCCCCCCCCCCCCCC "<<k<<" , "<<Pm[k]<<" , "<<Pp[k]<<std::endl;
     }
@@ -587,9 +630,7 @@ void ETD(MultiLevelProblem& ml_prob)
 		       - ( 0.5 * ( hALEm[k-1] + hALEp[k-1] )  - 0.5 * ( solhm[k-1].value() + solhp[k-1].value() ) ) / dt;
 		       //std::cout<<"w in u equation"<<w[k-1]<<std::endl;
       
-    }
-    
-    double ni = 100.; // 0.1, 1, 10, 100, 200  
+    }  
       
     for(unsigned k = 0; k < NLayers; k++) {
       adept::adouble vMidm = 0.5 * (solvm[k] + solv[k]);
@@ -614,7 +655,7 @@ void ETD(MultiLevelProblem& ml_prob)
     vector< double > Res(NLayers); // local redidual vector
     for(unsigned k = 0; k < NLayers; k++) {
       Res[k] =  aResv[k].value();
-      std::cout<< "Res["<<k<<"] = " << Res[k] <<std::endl;
+      //std::cout<< "Res["<<k<<"] = " << Res[k] <<std::endl;
     }
 
     RES->add_vector_blocked(Res, l2GMapRow);
