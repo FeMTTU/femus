@@ -28,13 +28,15 @@ using namespace femus;
 // double rho1[10]={1029,1029,1029}; // kg/m^3
 double rho1[10]={1000,1000,1000}; //lock exchange
 
-double ni = 1000; // 0.1, 1, 10, 100, 200
+double ni_h = 0.01; // 0.1, 1, 10, 100, 200
+
+double ni_v = 0.0001;
 
 double dt = 60.; //60 for ni=100, 120 for ni=1
 
 const unsigned NumberOfLayers = 2; 
 
-const double hRest[2]={0.01,0.01};
+const double hRest[2]={1.,1.};
 
 double InitalValueV(const std::vector < double >& x)
 {
@@ -613,17 +615,23 @@ void ETD(MultiLevelProblem& ml_prob)
       adept::adouble fvp = 0.5 * vMidp * vMidp + Pp[k];      
       aResv[k] -=  fvp / dxp;
       
+      adept::adouble deltaZt_k;
+      adept::adouble deltaZt_kplus1;
       if ( k > 0 ){
-	aResv[k] -= 2. * w[k] * (solv[k-1]-solv[k]) / (solhm[k-1]+solhm[k]+solhp[k-1]+solhp[k] );
+	deltaZt_k = 4. * (solv[k-1]-solv[k]) / (solhm[k-1]+solhm[k]+solhp[k-1]+solhp[k]);
+	aResv[k] -= 0.5 * w[k] * deltaZt_k;
       }
       if (k < NLayers - 1) {
-	aResv[k] -= 2. * w[k+1] * (solv[k]-solv[k+1]) / (solhm[k]+solhm[k+1]+solhp[k]+solhp[k+1] ); 
+	deltaZt_kplus1 = 4. * (solv[k]-solv[k+1]) / (solhm[k]+solhm[k+1]+solhp[k]+solhp[k+1] );
+	aResv[k] -= 0.5 * w[k+1] * deltaZt_kplus1; 
       }
       
-      aResv[k] += ni*(solvm[k] - solv[k])/(dxm*dxm);
-      aResv[k] += ni*(solvp[k] - solv[k])/(dxp*dxp);     
+      aResv[k] += ni_h*(solvm[k] - solv[k])/(dxm*dxm); // horizontal diffusion
+      aResv[k] += ni_h*(solvp[k] - solv[k])/(dxp*dxp); // horizontal diffusion    
       
-      //aResv[k] += 0.01*sqrt(0.25*(solvm[k]+solvp[k])*(solvm[k]+solvp[k]) + 0.0025)*0.5*(solvm[k]+solvp[k]);//drag force
+      //aResv[k] += 2. * ni_v * (deltaZt_k - deltaZt_kplus1) / (solhm[k] + solhp[k]); // vertical diffusion
+      
+      //aResv[k] += 0.01*sqrt(solv[k]*solv[k])*solv[k];//drag force
     }
       
     vector< double > Res(NLayers); // local redidual vector

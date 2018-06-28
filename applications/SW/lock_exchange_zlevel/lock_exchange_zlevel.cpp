@@ -24,17 +24,19 @@
 
 using namespace femus;
 
-//double rho1[10]={1025,1027,1028}; // kg/m^3
-// double rho1[10]={1029,1029,1029}; // kg/m^3
-double rho1[10]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000}; //lock exchange
+//double rho1[10]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000};
+double rho1[20]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000};
 
 double dt = 100.; //= dx / maxWaveSpeed * 0.85;
 
-double ni = 100.; // 0.1, 1, 10, 100, 200
+double ni_h = 100.; // 0.1, 1, 10, 100, 200
 
-const unsigned NumberOfLayers = 2; 
+double ni_v = 0.0001;
 
-const double hRest[10]={10,10,10,2,2,2,2,2,2,2};
+const unsigned NumberOfLayers = 20; 
+
+//const double hRest[10]={2,2,2,2,2,2,2,2,2,2};
+const double hRest[20]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 
 double InitalValueV(const std::vector < double >& x)
 {
@@ -386,10 +388,9 @@ void ETD(MultiLevelProblem& ml_prob)
     std::vector < double > hALE(NLayers, 0.); 
       
     hALE[0] = hRest[0] + (hTot - b);
-    for(unsigned k = 1; k < NLayers - 1; k++){
+    for(unsigned k = 1; k < NLayers; k++){
       hALE[k] = hRest[k];
     }
-    hALE[NLayers - 1] = b - hRest[NLayers - 1];
        
     std::vector < double > w(NLayers+1, 0.);
 	  
@@ -606,12 +607,10 @@ void ETD(MultiLevelProblem& ml_prob)
       
     hALEm[0] = hRest[0] + (hTotm - bm);
     hALEp[0] = hRest[0] + (hTotp - bp);
-    for(unsigned k = 1; k < NLayers - 1; k++){
+    for(unsigned k = 1; k < NLayers; k++){
       hALEm[k] = hRest[k];
       hALEp[k] = hRest[k];      
     }
-    hALEm[NLayers - 1] = bm - hRest[NLayers - 1];
-    hALEp[NLayers - 1] = bp - hRest[NLayers - 1];
        
 //     std::vector < double > wm(NLayers+1, 0.);
 //     std::vector < double > wp(NLayers+1, 0.);
@@ -641,15 +640,21 @@ void ETD(MultiLevelProblem& ml_prob)
       adept::adouble fvp = 0.5 * vMidp * vMidp + Pp[k];      
       aResv[k] -=  fvp / dxp;
       
+      adept::adouble deltaZt_k;
+      adept::adouble deltaZt_kplus1;
       if ( k > 0 ){
-	aResv[k] -= 2. * w[k] * (solv[k-1]-solv[k]) / (solhm[k-1]+solhm[k]+solhp[k-1]+solhp[k] );
+	deltaZt_k = 4. * (solv[k-1]-solv[k]) / (solhm[k-1]+solhm[k]+solhp[k-1]+solhp[k]);
+	aResv[k] -= 0.5 * w[k] * deltaZt_k;
       }
       if (k < NLayers - 1) {
-	aResv[k] -= 2. * w[k+1] * (solv[k]-solv[k+1]) / (solhm[k]+solhm[k+1]+solhp[k]+solhp[k+1] ); 
+	deltaZt_kplus1 = 4. * (solv[k]-solv[k+1]) / (solhm[k]+solhm[k+1]+solhp[k]+solhp[k+1] );
+	aResv[k] -= 0.5 * w[k+1] * deltaZt_kplus1; 
       }
       
-      aResv[k] += ni*(solvm[k] - solv[k])/(dxm*dxm);
-      aResv[k] += ni*(solvp[k] - solv[k])/(dxp*dxp);      
+      aResv[k] += ni_h*(solvm[k] - solv[k])/(dxm*dxm); // horizontal diffusion
+      aResv[k] += ni_h*(solvp[k] - solv[k])/(dxp*dxp); // horizontal diffusion  
+      
+      aResv[k] += 2. * ni_v * (deltaZt_k - deltaZt_kplus1) / (solhm[k] + solhp[k]); // vertical diffusion
     }
       
     vector< double > Res(NLayers); // local redidual vector
