@@ -38,11 +38,13 @@ double L = 4 ; // correlation length of the covariance function
 double domainMeasure = 1.; //measure of the domain
 unsigned totMoments = 6;
 std::vector <double> moments(totMoments, 0.); //initialization
+std::vector <double> momentsStandardized(totMoments, 0.); //initialization
 std::vector <double> cumulants(totMoments, 0.); //initialization
+std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 10000; //number of samples for the Monte Carlo
+unsigned M = 1000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;
@@ -805,40 +807,64 @@ void GetStochasticData(std::vector <double>& QoI) {
     //END
 
 
+    std::vector < double > QoIStandardized(M, 0.);
     //BEGIN standardization of QoI before computing the moments
-//     for(unsigned m = 0; m < M; m++) {
-//       QoI[m] = (QoI[m] - meanQoI) / stdDeviationQoI ;
-//     }
+    for(unsigned m = 0; m < M; m++) {
+      QoIStandardized[m] = (QoI[m] - meanQoI) / stdDeviationQoI ;
+    }
     //END
 
 
     //BEGIN computation of the raw moments
     for(unsigned p = 0; p < totMoments; p++) {
       moments[p] = 0.;
+      momentsStandardized[p] = 0.;
       for(unsigned m = 0; m < M; m++) {
         moments[p] += pow(QoI[m], p + 1);
+        momentsStandardized[p] += pow(QoIStandardized[m], p + 1);
       }
       moments[p] /= M;
+      momentsStandardized[p] /= M;
     }
     //END
 
     cumulants[0] = moments[0];
+    cumulantsStandardized[0] = momentsStandardized[0];
 
     if(totMoments > 1) {
       cumulants[1] = moments[1] - moments[0] * moments[0];
-      std::cout.precision(14);
-      std::cout << "AAAAAAAAAAAAAAA" << cumulants[1] << std::endl;
+
+      cumulantsStandardized[1] = momentsStandardized[1] - momentsStandardized[0] * momentsStandardized[0];
+//       std::cout.precision(14);
+//       std::cout << "AAAAAAAAAAAAAAA" << cumulants[1] << std::endl;
       if(totMoments > 2) {
         cumulants[2] = moments[2] - 3. * moments[1] * moments[0] + 2. * pow(moments[0], 3);
+
+        cumulantsStandardized[2] = momentsStandardized[2] - 3. * momentsStandardized[1] * momentsStandardized[0] + 2. * pow(momentsStandardized[0], 3);
         if(totMoments > 3) {
           cumulants[3] = moments[3] - 4. * moments[2] * moments[0] - 3. * moments[1] * moments[1] + 12. * moments[1] * moments[0] * moments[0] - 6. * pow(moments[0], 4);
+
+          cumulantsStandardized[3] = momentsStandardized[3] - 4. * momentsStandardized[2] * momentsStandardized[0] - 3. * momentsStandardized[1] * momentsStandardized[1]
+                                     + 12. * momentsStandardized[1] * momentsStandardized[0] * momentsStandardized[0] - 6. * pow(momentsStandardized[0], 4);
           if(totMoments > 4) {
             cumulants[4] = moments[4] - 5. * moments[3] * moments[0] - 10. * moments[2] * moments[1] + 20. * moments[2] * moments[0] * moments[0]
                            + 30. * moments[1] * moments[1] * moments[0] - 60. * moments[1] * pow(moments[0], 3) + 24. * pow(moments[0], 5);
+
+            cumulantsStandardized[4] = momentsStandardized[4] - 5. * momentsStandardized[3] * momentsStandardized[0] - 10. * momentsStandardized[2] * momentsStandardized[1]
+                                       + 20. * momentsStandardized[2] * momentsStandardized[0] * momentsStandardized[0]
+                                       + 30. * momentsStandardized[1] * momentsStandardized[1] * momentsStandardized[0]
+                                       - 60. * momentsStandardized[1] * pow(momentsStandardized[0], 3) + 24. * pow(momentsStandardized[0], 5);
             if(totMoments > 5) {
               cumulants[5] = moments[5] - 6. * moments[4] * moments[0] - 15. * moments[3] * moments[1] + 30. * moments[3] * moments[0] * moments[0]
                              - 10. * moments[2] * moments[2] + 120. * moments[2] * moments[1] * moments[0] - 120. * moments[2] * pow(moments[0], 3)
                              + 30. * pow(moments[1], 3) - 270. * pow(moments[1], 2) * pow(moments[0], 2) + 360. * moments[1] * pow(moments[0], 4) - 120. * pow(moments[0], 6);
+
+              cumulantsStandardized[5] = momentsStandardized[5] - 6. * momentsStandardized[4] * momentsStandardized[0] - 15. * momentsStandardized[3] * momentsStandardized[1]
+                                         + 30. * momentsStandardized[3] * momentsStandardized[0] * momentsStandardized[0]
+                                         - 10. * momentsStandardized[2] * momentsStandardized[2] + 120. * momentsStandardized[2] * momentsStandardized[1] * momentsStandardized[0]
+                                         - 120. * momentsStandardized[2] * pow(momentsStandardized[0], 3) + 30. * pow(momentsStandardized[1], 3)
+                                         - 270. * pow(momentsStandardized[1], 2) * pow(momentsStandardized[0], 2) + 360. * momentsStandardized[1] * pow(momentsStandardized[0], 4)
+                                         - 120. * pow(momentsStandardized[0], 6);
             }
           }
         }
@@ -855,20 +881,12 @@ void PlotStochasticData() {
   std::cout << " the mean is " << meanQoI << std::endl;
   std::cout << " the standard deviation is " << sqrt(varianceQoI) << std::endl;
 
+  std::cout << "Moments - Standardized Moments - Cumulants - Standardized Cumulants" << std::endl;
   for(unsigned p = 0; p < totMoments; p++) {
 //     printf("%d-th moment is %g\n", p + 1, moments[p]);
-    std::cout << "the " << p + 1 << "-th moment is " << moments[p] << std::endl;
+    std::cout <<  moments[p] << "  " << momentsStandardized[p] << " " << cumulants[p] << " " << cumulantsStandardized[p] << std::endl;
   }
-
-  for(unsigned p = 0; p < totMoments; p++) {
-//     printf("%d-th cumulant is %g\n", p + 1, cumulants[p]);
-    std::cout << "the " << p + 1 << "-th cumulant is " << cumulants[p] << std::endl;
-  }
-
-  double gramCharlier2Terms = 0.;
-  double gramCharlier3Terms = 0.;
-  double gramCharlier4Terms = 0.;
-  double gramCharlier5Terms = 0.;
+  std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
 
   double edgeworth1Term = 0.;
   double edgeworth2Terms = 0.;
@@ -876,7 +894,6 @@ void PlotStochasticData() {
   double edgeworth4Terms = 0.;
   double edgeworth5Terms = 0.;
   double edgeworth6Terms = 0.;
-
 
   double generalizedGC1Term = 0.;
   double generalizedGC2Terms = 0.;
@@ -897,17 +914,14 @@ void PlotStochasticData() {
   double d5gaussian;
   double d6gaussian;
   double d7gaussian;
-  double d8gaussian;
   double d9gaussian;
 
-//   double t = meanQoI - stdDeviationQoI * 7.5;
-//   double dt = (15. * stdDeviationQoI) / 300.;
-//
   double t = -  7.5;
   double dt = (15.) / 300.;
 
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
+  //BEGIN GRAM CHARLIER PRINT
   for(unsigned i = 0; i <= 300; i++) {
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
@@ -916,7 +930,7 @@ void PlotStochasticData() {
 
     d1gaussian = (- 1.) * gaussian * t ;
 
-    generalizedGC1Term = gaussian - cumulants[0] * d1gaussian;
+    generalizedGC1Term = gaussian - cumulantsStandardized[0] * d1gaussian;
 
     std::cout << generalizedGC1Term << " ";
 
@@ -925,17 +939,7 @@ void PlotStochasticData() {
       d2gaussian = (1.) * gaussian * (t * t - 1.) ;
       d3gaussian = (- 1.) * gaussian * (t * t * t - 3. * t) ;
 
-      gramCharlier2Terms =  gaussian - cumulants[2] / 6. * d3gaussian ;
-
-//       std::cout << -1. / 6 * d3gaussian << " ";
-
-//       std::cout << gramCharlier2Terms << " ";
-
-      lambda3 = cumulants[2] / pow(stdDeviationQoI, 3);
-
-//       edgeworth2Terms = gaussian - 1. / sqrt(M) * lambda3 * d3gaussian / 6.;  //OLD
-
-      generalizedGC2Terms = generalizedGC1Term + 0.5 * ((cumulants[1] - 1.) + pow(cumulants[0], 2)) * d2gaussian ;
+      generalizedGC2Terms = generalizedGC1Term + 0.5 * ((cumulantsStandardized[1] - 1.) + pow(cumulantsStandardized[0], 2)) * d2gaussian ;
 
       std::cout << generalizedGC2Terms << " ";
 
@@ -944,17 +948,8 @@ void PlotStochasticData() {
         d4gaussian = (1.) * gaussian * (t * t * t * t - 6. * t * t + 3.) ;
         d6gaussian = (1.) * gaussian * (pow(t, 6) - 15 * pow(t, 4) + 45 * t * t - 15);
 
-        gramCharlier3Terms = gramCharlier2Terms + cumulants[3] / 24. * d4gaussian ;
-
-//         std::cout << 1. / 24. * d4gaussian << " ";
-
-//         std::cout << gramCharlier3Terms << " ";
-
-        lambda4 = cumulants[3] / pow(stdDeviationQoI, 4);
-
-//         edgeworth3Terms = edgeworth2Terms + 1. / M * (1. / 24 * lambda4 * d4gaussian + 1. / 72 * lambda3 * lambda3 * d6gaussian); //OLD
-
-        generalizedGC3Terms = generalizedGC2Terms - 1. / 6 * (cumulants[2] + 3 * (cumulants[1] - 1.) * cumulants[0] + pow(cumulants[0], 3)) * d3gaussian;
+        generalizedGC3Terms = generalizedGC2Terms - 1. / 6 * (cumulantsStandardized[2] + 3 * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
+                              + pow(cumulantsStandardized[0], 3)) * d3gaussian;
 
         std::cout << generalizedGC3Terms << " ";
 
@@ -964,38 +959,28 @@ void PlotStochasticData() {
           d7gaussian = (- 1.) * gaussian * (pow(t, 7) - 21. * pow(t, 5) + 105. * t * t * t -  105. * t) ;
           d9gaussian = (- 1.) * gaussian * (pow(t, 9) - 36. * pow(t, 7) + 378. * pow(t, 5) - 1260. * t * t * t + 945. * t) ;
 
-          gramCharlier4Terms = gramCharlier3Terms - cumulants[4] / 120. * d5gaussian;
-
-//           std::cout << - 1. / 120. * d5gaussian << " ";
-
-//           std::cout << gramCharlier4Terms << " " ;
-
-          lambda5 = cumulants[4] / pow(stdDeviationQoI, 5);
-
-//           edgeworth4Terms = edgeworth3Terms - 1. / (pow(M, 1.5)) * (lambda5 * d5gaussian / 120. + lambda3 * lambda4 * d7gaussian / 144. + pow(lambda3, 3) * d9gaussian / 1296.) ;  //OLD
-
-          generalizedGC4Terms = generalizedGC3Terms + 1. / 24 * (cumulants[3] + 4. * cumulants[2] * cumulants[0] + 3. * pow((cumulants[1] - 1.), 2) + 6. * (cumulants[1] - 1.) + pow(cumulants[0], 4)) * d4gaussian;
+          generalizedGC4Terms = generalizedGC3Terms + 1. / 24 * (cumulantsStandardized[3] + 4. * cumulantsStandardized[2] * cumulantsStandardized[0]
+                                + 3. * pow((cumulantsStandardized[1] - 1.), 2) + 6. * (cumulantsStandardized[1] - 1.) + pow(cumulantsStandardized[0], 4)) * d4gaussian;
 
           std::cout << generalizedGC4Terms << " ";
 
           if(totMoments > 4) {
 
-            gramCharlier5Terms = gramCharlier4Terms + (10. * cumulants[2] * cumulants[2] + cumulants[5]) / (120. * 6.) * d6gaussian;
-
-// 	    std::cout << gramCharlier5Terms << "\n";
-
-            generalizedGC5Terms = generalizedGC4Terms - 1. / 120 * (cumulants[4] + 5. * cumulants[3] * cumulants[0] + 10. * cumulants[2] * (cumulants[1] - 1.)
-                                  + 10. * cumulants[2] * pow(cumulants[0], 2) + 15. * pow((cumulants[1] - 1.), 2) * cumulants[0]
-                                  + 10. * (cumulants[1] - 1.) * pow(cumulants[0], 3) + pow(cumulants[0], 5)) * d5gaussian;
+            generalizedGC5Terms = generalizedGC4Terms - 1. / 120 * (cumulantsStandardized[4] + 5. * cumulantsStandardized[3] * cumulantsStandardized[0]
+                                  + 10. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) + 10. * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 2)
+                                  + 15. * pow((cumulantsStandardized[1] - 1.), 2) * cumulantsStandardized[0] + 10. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 3)
+                                  + pow(cumulantsStandardized[0], 5)) * d5gaussian;
 
             std::cout << generalizedGC5Terms << " ";
 
             if(totMoments > 5) {
 
-              generalizedGC6Terms = generalizedGC5Terms + 1. / 720 * (cumulants[5] + 6. * cumulants[4] * cumulants[0] + 15. * cumulants[3] * (cumulants[1] - 1.)
-                                    + 15. * cumulants[3] * pow(cumulants[0], 2) +  10. * pow(cumulants[2], 2) + 60. * cumulants[2] * (cumulants[1] - 1.) * cumulants[0]
-                                    + 20. * cumulants[2] * pow(cumulants[0], 3) + 15. * pow((cumulants[1] - 1.), 3) + 45. * pow((cumulants[1] - 1.), 2) * pow(cumulants[0], 2)
-                                    + 15. * (cumulants[1] - 1.) * pow(cumulants[0], 4) +  pow(cumulants[0], 6)) * d6gaussian;
+              generalizedGC6Terms = generalizedGC5Terms + 1. / 720 * (cumulantsStandardized[5] + 6. * cumulantsStandardized[4] * cumulantsStandardized[0]
+                                    + 15. * cumulantsStandardized[3] * (cumulantsStandardized[1] - 1.) + 15. * cumulantsStandardized[3] * pow(cumulantsStandardized[0], 2)
+                                    + 10. * pow(cumulantsStandardized[2], 2) + 60. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
+                                    + 20. * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 3) + 15. * pow((cumulantsStandardized[1] - 1.), 3)
+                                    + 45. * pow((cumulantsStandardized[1] - 1.), 2) * pow(cumulantsStandardized[0], 2) + 15. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 4)
+                                    +  pow(cumulantsStandardized[0], 6)) * d6gaussian;
 
               std::cout << generalizedGC6Terms << " \n ";
 
@@ -1008,6 +993,54 @@ void PlotStochasticData() {
 
     t += dt;
   }
+
+  t = -  7.5;
+  dt = (15.) / 300.;
+
+  //BEGIN EDGEWORTH PRINT
+  for(unsigned i = 0; i <= 300; i++) {
+    std::cout << t << " ";
+//     double t = x - meanQoI; //decomment for nonStdGaussian
+    double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
+    std::cout << gaussian << " ";
+
+    d3gaussian = (- 1.) * gaussian * (t * t * t - 3. * t) ;
+
+    lambda3 = cumulants[2] / pow(stdDeviationQoI, 3);
+
+    edgeworth1Term = gaussian - lambda3 / 6. * d3gaussian;
+
+    std::cout << edgeworth1Term << " ";
+
+    if(totMoments > 1) {
+
+      d4gaussian = (1.) * gaussian * (t * t * t * t - 6. * t * t + 3.) ;
+      d6gaussian = (1.) * gaussian * (pow(t, 6) - 15 * pow(t, 4) + 45 * t * t - 15);
+
+      lambda4 = cumulants[3] / pow(stdDeviationQoI, 4);
+
+      edgeworth2Terms = edgeworth1Term + lambda4 / 24. * d4gaussian + lambda3 * lambda3 / 72. * d6gaussian;
+
+      std::cout << edgeworth2Terms << " ";
+
+      if(totMoments > 2) {
+
+        d5gaussian = (- 1.) * gaussian * (pow(t, 5) - 10. * t * t * t + 15. * t);
+        d7gaussian = (- 1.) * gaussian * (pow(t, 7) - 21. * pow(t, 5) + 105. * t * t * t -  105. * t) ;
+        d9gaussian = (- 1.) * gaussian * (pow(t, 9) - 36. * pow(t, 7) + 378. * pow(t, 5) - 1260. * t * t * t + 945. * t) ;
+
+        lambda5 = cumulants[4] / pow(stdDeviationQoI, 5);
+
+        edgeworth3Terms = edgeworth2Terms - lambda5 / 120. * d5gaussian + lambda3 * lambda4 / 144. * d7gaussian + pow(lambda3, 3) / 1296. * d9gaussian;
+
+        std::cout << edgeworth3Terms << " ";
+
+      }
+    }
+
+    t += dt;
+  }
+  //END
 
 }
 
