@@ -922,6 +922,7 @@ void PlotStochasticData() {
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
   //BEGIN GRAM CHARLIER PRINT
+  std::cout<< " ------------------------- GRAM CHARLIER ------------------------- " <<std::endl;
   for(unsigned i = 0; i <= 300; i++) {
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
@@ -998,6 +999,7 @@ void PlotStochasticData() {
   dt = (15.) / 300.;
 
   //BEGIN EDGEWORTH PRINT
+    std::cout<< " ------------------------- EDGEWORTH ------------------------- " <<std::endl;
   for(unsigned i = 0; i <= 300; i++) {
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
@@ -1033,7 +1035,7 @@ void PlotStochasticData() {
 
         edgeworth3Terms = edgeworth2Terms - lambda5 / 120. * d5gaussian + lambda3 * lambda4 / 144. * d7gaussian + pow(lambda3, 3) / 1296. * d9gaussian;
 
-        std::cout << edgeworth3Terms << " ";
+        std::cout << edgeworth3Terms << " \n ";
 
       }
     }
