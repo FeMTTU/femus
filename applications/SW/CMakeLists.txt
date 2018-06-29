@@ -17,3 +17,5 @@ ADD_SUBDIRECTORY(lock_exchange_isopycnal/)
 ADD_SUBDIRECTORY(lock_exchange_zlevel/)
 
 ADD_SUBDIRECTORY(overflow_isopycnal/)
+
+ADD_SUBDIRECTORY(internal_waves_zlevel/)
