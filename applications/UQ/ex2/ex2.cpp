@@ -44,7 +44,7 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 1000; //number of samples for the Monte Carlo
+unsigned M = 10000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;
@@ -881,11 +881,16 @@ void PlotStochasticData() {
   std::cout << " the mean is " << meanQoI << std::endl;
   std::cout << " the standard deviation is " << sqrt(varianceQoI) << std::endl;
 
-  std::cout << "Moments - Standardized Moments - Cumulants - Standardized Cumulants" << std::endl;
+  std::cout << "Standardized Moments" << std::endl;
   for(unsigned p = 0; p < totMoments; p++) {
-//     printf("%d-th moment is %g\n", p + 1, moments[p]);
-    std::cout <<  moments[p] << "  " << momentsStandardized[p] << " " << cumulants[p] << " " << cumulantsStandardized[p] << std::endl;
+    std::cout << " & " << momentsStandardized[p] << "  ";
   }
+  std::cout << std::endl;
+  std::cout << "Standardized Cumulants" << std::endl;
+  for(unsigned p = 0; p < totMoments; p++) {
+    std::cout << " & " << cumulantsStandardized[p] << "  ";
+  }
+  std::cout << std::endl;
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
 
   double edgeworth1Term = 0.;
@@ -922,7 +927,7 @@ void PlotStochasticData() {
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
   //BEGIN GRAM CHARLIER PRINT
-  std::cout<< " ------------------------- GRAM CHARLIER ------------------------- " <<std::endl;
+  std::cout << " ------------------------- GRAM CHARLIER ------------------------- " << std::endl;
   for(unsigned i = 0; i <= 300; i++) {
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
@@ -999,7 +1004,7 @@ void PlotStochasticData() {
   dt = (15.) / 300.;
 
   //BEGIN EDGEWORTH PRINT
-    std::cout<< " ------------------------- EDGEWORTH ------------------------- " <<std::endl;
+  std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
   for(unsigned i = 0; i <= 300; i++) {
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian

@@ -15,10 +15,10 @@ using namespace femus;
 // };
 
 
-int numberOfEigPairs = 2; //dimension of the stochastic variable
+int numberOfEigPairs = 20; //dimension of the stochastic variable
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
-double amin = 1. / 100;
+double amin = 1. / 100.;
 
 double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 
