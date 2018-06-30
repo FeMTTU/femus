@@ -44,7 +44,7 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 10000; //number of samples for the Monte Carlo
+unsigned M = 1000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;
@@ -890,6 +890,17 @@ void PlotStochasticData() {
   for(unsigned p = 0; p < totMoments; p++) {
     std::cout << " & " << cumulantsStandardized[p] << "  ";
   }
+    std::cout << std::endl;
+      std::cout << " Moments " << std::endl;
+  for(unsigned p = 0; p < totMoments; p++) {
+    std::cout << " & " << moments[p] << "  ";
+  }
+  std::cout << std::endl;
+  std::cout << " Cumulants " << std::endl;
+  for(unsigned p = 0; p < totMoments; p++) {
+    std::cout << " & " << cumulants[p] << "  ";
+  }
+  
   std::cout << std::endl;
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
 
