@@ -24,18 +24,18 @@
 
 using namespace femus;
 
-double rho1[10]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000}; 
-//double rho1[20]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000};
+//double rho1[10]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000}; 
+double rho1[20]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000};
 
 double ni_h = 0.01; // 0.1, 1, 10, 100, 200
 double ni_v = 0.0001;
 
 double dt = 300.; //60 for ni=100, 120 for ni=1
 
-const unsigned NumberOfLayers = 10; 
+const unsigned NumberOfLayers = 20; 
 
-const double hRest[10]={50,50,50,50,50,50,50,50,50,50};
-//const double hRest[20]={25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25};
+//const double hRest[10]={50,50,50,50,50,50,50,50,50,50};
+const double hRest[20]={25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25};
 
 //values to create the initial condition for temperature
 double A = 2.;
@@ -189,6 +189,135 @@ double InitalValueT9(const std::vector < double >& x)
 }
 
 
+double InitalValueT10(const std::vector < double >& x)
+{
+ double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-11); 
+ double temperature;
+ temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
+ if(x[0]>-L && x[0]<L) {
+   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+ }
+ 
+ return temperature;
+}
+
+double InitalValueT11(const std::vector < double >& x)
+{
+ double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-12); 
+ double temperature;
+ temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
+ if(x[0]>-L && x[0]<L) {
+   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+ }
+ 
+ return temperature;
+}
+
+
+double InitalValueT12(const std::vector < double >& x)
+{
+ double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-13); 
+ double temperature;
+ temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
+ if(x[0]>-L && x[0]<L) {
+   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+ }
+ 
+ return temperature;
+}
+
+
+double InitalValueT13(const std::vector < double >& x)
+{
+ double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-14); 
+ double temperature;
+ temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
+ if(x[0]>-L && x[0]<L) {
+   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+ }
+ 
+ return temperature;
+}
+
+
+double InitalValueT14(const std::vector < double >& x)
+{
+ double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-15); 
+ double temperature;
+ temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
+ if(x[0]>-L && x[0]<L) {
+   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+ }
+ 
+ return temperature;
+}
+
+
+double InitalValueT15(const std::vector < double >& x)
+{
+ double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-16); 
+ double temperature;
+ temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
+ if(x[0]>-L && x[0]<L) {
+   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+ }
+ 
+ return temperature;
+}
+
+
+double InitalValueT16(const std::vector < double >& x)
+{
+ double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-17); 
+ double temperature;
+ temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
+ if(x[0]>-L && x[0]<L) {
+   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+ }
+ 
+ return temperature;
+}
+
+
+double InitalValueT17(const std::vector < double >& x)
+{
+ double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-18); 
+ double temperature;
+ temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
+ if(x[0]>-L && x[0]<L) {
+   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+ }
+ 
+ return temperature;
+}
+
+
+double InitalValueT18(const std::vector < double >& x)
+{
+ double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-19); 
+ double temperature;
+ temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
+ if(x[0]>-L && x[0]<L) {
+   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+ }
+ 
+ return temperature;
+}
+
+
+double InitalValueT19(const std::vector < double >& x)
+{
+ double z = -500 + hRest[0]/2 + hRest[0]*(NumberOfLayers-20); 
+ double temperature;
+ temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
+ if(x[0]>-L && x[0]<L) {
+   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+ }
+ 
+ return temperature;
+}
+
+
 double InitalValueB(const std::vector < double >& x)
 { 
   return 500;
@@ -275,6 +404,16 @@ int main(int argc, char** args)
   mlSol.Initialize("T7",InitalValueT7);
   mlSol.Initialize("T8",InitalValueT8);
   mlSol.Initialize("T9",InitalValueT9);
+  mlSol.Initialize("T10",InitalValueT10);
+  mlSol.Initialize("T11",InitalValueT11);
+  mlSol.Initialize("T12",InitalValueT12);
+  mlSol.Initialize("T13",InitalValueT13);
+  mlSol.Initialize("T14",InitalValueT14);
+  mlSol.Initialize("T15",InitalValueT15);
+  mlSol.Initialize("T16",InitalValueT16);
+  mlSol.Initialize("T17",InitalValueT17);
+  mlSol.Initialize("T18",InitalValueT18);
+  mlSol.Initialize("T19",InitalValueT19);
 
   mlSol.Initialize("b", InitalValueB);
   
@@ -302,7 +441,7 @@ int main(int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 58000;
+  unsigned numberOfTimeSteps = 58000; //200days = 57600 with dt=300s
   for(unsigned i = 0; i < numberOfTimeSteps; i++) {    
     ETD(ml_prob);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1)/1);
