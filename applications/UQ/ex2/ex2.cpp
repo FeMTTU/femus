@@ -44,7 +44,7 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 1000; //number of samples for the Monte Carlo
+unsigned M = 10000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;
@@ -161,7 +161,9 @@ int main(int argc, char** argv) {
   }
 
 
+
   std::vector <double> QoI(M, 0.);
+
 
   for(unsigned m = 0; m < M; m++) {
 
@@ -170,8 +172,6 @@ int main(int argc, char** argv) {
     GetQuantityOfInterest(ml_prob, QoI, m, domainMeasure);
 
   }
-
-
 
 //   for(unsigned m = 0; m < M; m++) {
 //     std::cout << "QoI[" << m << "] = " << QoI[m] << std::endl;
@@ -806,13 +806,50 @@ void GetStochasticData(std::vector <double>& QoI) {
     stdDeviationQoI = sqrt(varianceQoI);
     //END
 
+    int pdfHistogramSize = 501;
+    std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
+    double startPoint = - 9.5;
+    double endPoint = 9.5;
+    double lengthOfTheInterval = fabs(endPoint - startPoint);
+    double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
 
     std::vector < double > QoIStandardized(M, 0.);
     //BEGIN standardization of QoI before computing the moments
     for(unsigned m = 0; m < M; m++) {
       QoIStandardized[m] = (QoI[m] - meanQoI) / stdDeviationQoI ;
+//      std::cout<< "standardized QoI " << QoIStandardized[m] << std::endl;
+
+      //BEGIN estimation of the PDF
+      bool sampleCaptured = false;
+      for(unsigned i = 0; i < pdfHistogramSize; i++) {
+        double leftBound = startPoint + i * deltat - deltat * 0.5;
+        double rightBound = startPoint + i * deltat + deltat * 0.5;
+//       std::cout<< "leftBound = " << leftBound << " " << "rightBound = " << rightBound << " " << " standardized QoI = " << QoIStandardized[m] <<std::endl;
+        if(leftBound <=  QoIStandardized[m] && QoIStandardized[m] < rightBound) {
+          pdfHistogram[i]++;
+          sampleCaptured = true;
+          break;
+        }
+      }
+      if(sampleCaptured == false) {
+        std::cout << "WARNING: sample " << QoIStandardized[m] << "is not in any interval" << std::endl;
+      }
+      //END
     }
     //END
+
+
+    //BEGIN histogram check
+    double checkHistogram = 0;
+    for(unsigned i = 0; i < pdfHistogramSize; i++) {
+      double point = startPoint + i * deltat;
+//       pdfHistogram[i] /= M;
+      std::cout << point << "  " << pdfHistogram[i]  << std::endl;
+      checkHistogram += pdfHistogram[i];
+    }
+    std::cout << "checkHistogram = " << checkHistogram << std::endl;
+    //END
+
 
 
     //BEGIN computation of the raw moments
@@ -890,8 +927,8 @@ void PlotStochasticData() {
   for(unsigned p = 0; p < totMoments; p++) {
     std::cout << " & " << cumulantsStandardized[p] << "  ";
   }
-    std::cout << std::endl;
-      std::cout << " Moments " << std::endl;
+  std::cout << std::endl;
+  std::cout << " Moments " << std::endl;
   for(unsigned p = 0; p < totMoments; p++) {
     std::cout << " & " << moments[p] << "  ";
   }
@@ -900,7 +937,7 @@ void PlotStochasticData() {
   for(unsigned p = 0; p < totMoments; p++) {
     std::cout << " & " << cumulants[p] << "  ";
   }
-  
+
   std::cout << std::endl;
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
 
