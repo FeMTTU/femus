@@ -44,7 +44,7 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 10000; //number of samples for the Monte Carlo
+unsigned M = 25000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;
@@ -166,6 +166,8 @@ int main(int argc, char** argv) {
 
 
   for(unsigned m = 0; m < M; m++) {
+    
+    std::cout<< " --------------------------------------------------- m = " << m << " ---------------------------------------------------  " << std::endl;
 
     system.MGsolve();
 
@@ -824,9 +826,9 @@ void GetStochasticData(std::vector <double>& QoI) {
       for(unsigned i = 0; i < pdfHistogramSize; i++) {
         double leftBound = startPoint + i * deltat - deltat * 0.5;
         double rightBound = startPoint + i * deltat + deltat * 0.5;
-//       std::cout<< "leftBound = " << leftBound << " " << "rightBound = " << rightBound << " " << " standardized QoI = " << QoIStandardized[m] <<std::endl;
         if(leftBound <=  QoIStandardized[m] && QoIStandardized[m] < rightBound) {
           pdfHistogram[i]++;
+//           std::cout << "leftBound = " << leftBound << " " << "rightBound = " << rightBound << " " << " standardized QoI = " << QoIStandardized[m] << std::endl;
           sampleCaptured = true;
           break;
         }
@@ -843,7 +845,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     double checkHistogram = 0;
     for(unsigned i = 0; i < pdfHistogramSize; i++) {
       double point = startPoint + i * deltat;
-//       pdfHistogram[i] /= M;
+      pdfHistogram[i] /= M;
       std::cout << point << "  " << pdfHistogram[i]  << std::endl;
       checkHistogram += pdfHistogram[i];
     }
