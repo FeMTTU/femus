@@ -27,7 +27,7 @@ using namespace femus;
 //double rho1[10]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000};
 double rho1[20]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000};
 
-double dt = 100.; //= dx / maxWaveSpeed * 0.85;
+double dt = 60.; //= dx / maxWaveSpeed * 0.85;
 
 double ni_h = 100.; // 0.1, 1, 10, 100, 200
 
@@ -216,7 +216,7 @@ int main(int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 2000;
+  unsigned numberOfTimeSteps = 1800; //17h=1020 with dt=60
   for(unsigned i = 0; i < numberOfTimeSteps; i++) {
     ETD(ml_prob);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1)/1);

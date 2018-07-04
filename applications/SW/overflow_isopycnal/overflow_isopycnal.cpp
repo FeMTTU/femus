@@ -28,15 +28,15 @@ using namespace femus;
 // double rho1[10]={1029,1029,1029}; // kg/m^3
 double rho1[10]={1000,1000,1000}; //lock exchange
 
-double ni_h = 0.01; // 0.1, 1, 10, 100, 200
+double ni_h = 1000.; // 0.1, 1, 10, 100, 200
 
 double ni_v = 0.0001;
 
-double dt = 20.; //60 for ni=100, 120 for ni=1
+double dt = 5.; //60 for ni=100, 120 for ni=1
 
 const unsigned NumberOfLayers = 2; 
 
-const double hRest[2]={1.,1.};
+const double hRest[2]={0.01,0.01};
 
 double InitalValueV(const std::vector < double >& x)
 {
@@ -48,7 +48,7 @@ double InitalValueH0(const std::vector < double >& x)
 {
   double d1 = 500;
   double d2 = 2000;
-  double x0 = 40000;
+  double x0 = -60000;
   double b = d1 + 0.5*(d2-d1)*(1 + tanh((x[0]-x0)/7000));
   if (x[0]<-80000) return hRest[0];
   else return b - hRest[0];
@@ -59,7 +59,7 @@ double InitalValueH1(const std::vector < double >& x)
 { 
   double d1 = 500;
   double d2 = 2000;
-  double x0 = 40000;
+  double x0 = -60000;
   double b = d1 + 0.5*(d2-d1)*(1 + tanh((x[0]-x0)/7000));
   if (x[0]<-80000) return b - hRest[0];
   else return hRest[0];
@@ -84,7 +84,7 @@ double InitalValueB(const std::vector < double >& x)
 {
   double d1 = 500;
   double d2 = 2000;
-  double x0 = 40000; 
+  double x0 = -60000; 
   return (d1 + 0.5*(d2-d1)*(1 + tanh((x[0]-x0)/7000)));
 }
 
@@ -187,7 +187,7 @@ int main(int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 7200; //40h with dt=20s
+  unsigned numberOfTimeSteps = 7200; //40h with dt=20s, 6h = 1080, 3h = 540
   for(unsigned i = 0; i < numberOfTimeSteps; i++) {
     ETD(ml_prob);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1)/1);
@@ -352,7 +352,7 @@ void ETD(MultiLevelProblem& ml_prob)
     double xmid = 0.5*(x[1] + x[0]);
     double d1 = 500;
     double d2 = 2000;
-    double x0 = 40000;
+    double x0 = -60000;
     double b = d1 + 0.5*(d2-d1)*(1 + tanh((xmid-x0)/7000));
         
     double hTot = 0.;
@@ -515,7 +515,7 @@ void ETD(MultiLevelProblem& ml_prob)
     double xmidp = 0.5 * (xp[0] + xp[1]);
     double d1 = 500;
     double d2 = 2000;
-    double x0 = 40000;
+    double x0 = -60000;
     double bm = d1 + 0.5*(d2-d1)*(1 + tanh((xmidm-x0)/7000));
     double bp = d1 + 0.5*(d2-d1)*(1 + tanh((xmidp-x0)/7000));
         
@@ -629,8 +629,9 @@ void ETD(MultiLevelProblem& ml_prob)
       aResv[k] += ni_h*(solvm[k] - solv[k])/(dxm*dxm); // horizontal diffusion
       aResv[k] += ni_h*(solvp[k] - solv[k])/(dxp*dxp); // horizontal diffusion    
       
-      //aResv[k] += 2. * ni_v * (deltaZt_k - deltaZt_kplus1) / (solhm[k] + solhp[k]); // vertical diffusion
+      if(k==0) aResv[k] += 2. * ni_v * (deltaZt_k - deltaZt_kplus1) / (solhm[k] + solhp[k]); // vertical diffusion
       
+      //if(k==1) aResv[k] += 2. * 0.01 * sqrt(solv[k]*solv[k])*solv[k] / (solhm[k] + solhp[k]);
       //aResv[k] += 0.01*sqrt(solv[k]*solv[k])*solv[k];//drag force
     }
       
