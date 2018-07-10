@@ -15,12 +15,12 @@ using namespace femus;
 // };
 
 
-int numberOfEigPairs = 4; //dimension of the stochastic variable
+int numberOfEigPairs = 2; //dimension of the stochastic variable
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
 double amin = 1. / 100.;
 
-double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.8;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
 
@@ -203,7 +203,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
       }
 
       double aCoeff = amin + exp(KLexpansion_gss);
-//       std::cout << "COEEEEEEEEEEEEEEEEEEEEF" << aCoeff << std::endl;
+      std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
 
       // *** phi_i loop ***
       for(unsigned i = 0; i < nDofu; i++) {

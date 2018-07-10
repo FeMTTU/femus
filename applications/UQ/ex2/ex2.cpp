@@ -44,7 +44,7 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 25000; //number of samples for the Monte Carlo
+unsigned M = 5000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;

@@ -5,12 +5,12 @@
 using namespace femus;
 
 //BEGIN Stochastic Input Parameters
-unsigned pIndex = 5;
+unsigned pIndex = 4;
 unsigned qIndex = 3;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
-double stdDeviationInput = 0.3;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
-double amin = 1. / 100; // for the KL expansion
+double stdDeviationInput = 0.8;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double amin = 1. / 100.; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 //END Stochastic Input Parameters
 
@@ -552,7 +552,7 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
         }
 
         aStochasticGauss[q1] = amin * aS1 + aS2; //a_q(x_ig)
-        if(fabs(aStochasticGauss[q1]) > 10.) std::cout << aStochasticGauss[q1] << " ";
+        /*if(fabs(aStochasticGauss[q1]) > 10.)*/ std::cout << "coeff =  " << aStochasticGauss[q1] << std::endl;
       }
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
 
