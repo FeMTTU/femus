@@ -552,7 +552,7 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
         }
 
         aStochasticGauss[q1] = amin * aS1 + aS2; //a_q(x_ig)
-        /*if(fabs(aStochasticGauss[q1]) > 10.)*/ std::cout << "coeff =  " << aStochasticGauss[q1] << std::endl;
+        if(fabs(aStochasticGauss[q1]) > 10.) std::cout << "coeff =  " << aStochasticGauss[q1] << std::endl;
       }
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
 

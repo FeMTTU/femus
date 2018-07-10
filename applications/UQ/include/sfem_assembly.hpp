@@ -203,7 +203,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
       }
 
       double aCoeff = amin + exp(KLexpansion_gss);
-      std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
+//       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
 
       // *** phi_i loop ***
       for(unsigned i = 0; i < nDofu; i++) {
