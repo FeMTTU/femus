@@ -216,7 +216,7 @@ int main(int argc, char** args)
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, 0);
 
-  unsigned numberOfTimeSteps = 1800; //17h=1020 with dt=60
+  unsigned numberOfTimeSteps = 1800; //17h=1020 with dt=60, 17h=10200 with dt=6
   for(unsigned i = 0; i < numberOfTimeSteps; i++) {
     ETD(ml_prob);
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars, (i + 1)/1);
@@ -419,13 +419,44 @@ void ETD(MultiLevelProblem& ml_prob)
       if(i < end - 1){
 	aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; 
       }
-	
-      if(k<NLayers-1){
+
+      if( k < NLayers-1 ){
 	aResHT[k] += w[k+1] * 0.5 * (solHT[k]/solh[k] + solHT[k+1]/solh[k+1]);
       }
-      if( k > 0){
+      if( k > 0 ){
 	aResHT[k] -= w[k] * 0.5 * (solHT[k-1]/solh[k-1] + solHT[k]/solh[k] );
       }
+      
+//       if( k == 0 ){
+// 	aResHT[k] += w[k+1] * 0.5 * ( (solHT[k]/solh[k] - solHT[k+1]/solh[k+1])/solh[k] + (solHT[k+1]/solh[k+1] - solHT[k+2]/solh[k+2])/solh[k+1] );
+//       }
+//       if( k > 0 && k < NLayers - 2 ){
+// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] - solHT[k]/solh[k])/solh[k-1] + (solHT[k]/solh[k] - solHT[k+1]/solh[k+1])/solh[k] ) 
+// 	             + w[k+1] * 0.5 * ( (solHT[k]/solh[k] - solHT[k+1]/solh[k+1])/solh[k] + (solHT[k+1]/solh[k+1] - solHT[k+2]/solh[k+2])/solh[k+1] );
+//       }
+//       if( k == NLayers - 2){
+// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] - solHT[k]/solh[k])/solh[k-1] + (solHT[k]/solh[k] - solHT[k+1]/solh[k+1])/solh[k] ) 
+// 	             + w[k+1] * 0.5 * ( (solHT[k]/solh[k] - solHT[k+1]/solh[k+1])/solh[k] );
+//       }
+//       if( k == NLayers - 1){
+// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] - solHT[k]/solh[k])/solh[k-1] ) ;
+//       }
+
+//       if( k == 0 ){
+// 	aResHT[k] += w[k+1] * 0.5 * ( (solHT[k]/solh[k] + solHT[k+1]/solh[k+1])/2. + (solHT[k+1]/solh[k+1] + solHT[k+2]/solh[k+2])/2. );
+//       }
+//       if( k > 0 && k < NLayers - 2 ){
+// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] + solHT[k]/solh[k])/2. + (solHT[k]/solh[k] + solHT[k+1]/solh[k+1])/2. ) 
+// 	             + w[k+1] * 0.5 * ( (solHT[k]/solh[k] + solHT[k+1]/solh[k+1])/2. + (solHT[k+1]/solh[k+1] + solHT[k+2]/solh[k+2])/2. );
+//       }
+//       if( k == NLayers - 2){
+// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] + solHT[k]/solh[k])/2. + (solHT[k]/solh[k] + solHT[k+1]/solh[k+1])/2. ) 
+// 	             + w[k+1] * 0.5 * ( (solHT[k]/solh[k] + solHT[k+1]/solh[k+1])/2. );
+//       }
+//       if( k == NLayers - 1){
+// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] + solHT[k]/solh[k])/2. ) ;
+//       }
+      
     }
       
     vector< double > Res(NLayers * 2); // local redidual vector
@@ -563,8 +594,8 @@ void ETD(MultiLevelProblem& ml_prob)
 	zMidp[k] += solhp[i];
       }
       
-      Pm[k] += rhokm * 9.81 * zMidm[k];
-      Pp[k] += rhokm * 9.81 * zMidp[k];
+      Pm[k] += 0.5*(rhokm+rhokp) * 9.81 * zMidm[k];
+      Pp[k] += 0.5*(rhokm+rhokp) * 9.81 * zMidp[k];
       //Pm[k] = - rhokm * 9.81 * bm; // bottom topography
       //Pp[k] = - rhokp * 9.81 * bp; // bottom topography
       for( unsigned j = 0; j < k; j++){
