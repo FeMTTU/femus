@@ -9,7 +9,7 @@ unsigned pIndex = 4;
 unsigned qIndex = 3;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
-double stdDeviationInput = 0.8;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.6;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double amin = 1. / 100.; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 //END Stochastic Input Parameters
@@ -284,7 +284,7 @@ void EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, std::vect
     std::cout <<
               "------------------------------- WARNING: less quadrature points than needed were employed in function EvaluateIntegralsMatrix -------------------------------"
               << std::endl;
-    std::cout << " Needed : " << n1 << " , " << " Used : " << 16 << std::endl;       
+    std::cout << " Needed : " << n1 << " , " << " Used : " << 16 << std::endl;
   }
 
   EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
@@ -420,11 +420,11 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
   unsigned n1 = 2 * pIndex + qIndex + 1;
   n1 = (n1 % 2 == 0) ? n1 / 2 : (n1 + 1) / 2;
   unsigned numberOfQuadraturePoints = (n1 <= 16) ? n1 : 16;
-    if(n1 > 16) {
+  if(n1 > 16) {
     std::cout <<
               "------------------------------- WARNING: less quadrature points than needed were employed in function AssembleSysSG -------------------------------"
               << std::endl;
-    std::cout << " Needed : " << n1 << " , " << " Used : " << 16 << std::endl;       
+    std::cout << " Needed : " << n1 << " , " << " Used : " << 16 << std::endl;
   }
 
   EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
@@ -534,25 +534,30 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
         std::vector <double> aStochasticTerm1(numberOfEigPairs);
         std::vector <double> aStochasticTerm2(numberOfEigPairs);
 
+
+        unsigned numberOfQuadraturePointsForProjection = 16;
+        std::vector < std::vector < double > >  HermitePolyProjection;
+        EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex);
         for(unsigned i = 0; i < numberOfEigPairs; i++) {
           aStochasticTerm2[i] = 0.;
-          for(unsigned j = 0; j < numberOfQuadraturePoints; j++) {
+          for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
 //             aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
-            aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePoints - 1][1][j])
-                                   * HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
+            aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j])
+                                   * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
           }
         }
-
 
         double aS1 = 1.;
         double aS2 = 1.;
         for(unsigned i = 0; i < numberOfEigPairs; i++) {
+          std::cout << "------------------- " << Jq[q1][i] << " ";
           aS1 *= integralsMatrix[Jq[q1][i]][0][0];
           aS2 *= aStochasticTerm2[i];
         }
+        std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
 
         aStochasticGauss[q1] = amin * aS1 + aS2; //a_q(x_ig)
-        if(fabs(aStochasticGauss[q1]) > 10.) std::cout << "coeff =  " << aStochasticGauss[q1] << std::endl;
+        if(fabs(aStochasticGauss[q1]) > 10.) std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
       }
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
 
@@ -615,6 +620,7 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
 //  abort();
 // ***************** END ASSEMBLY *******************
 }
+
 
 
 
