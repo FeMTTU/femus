@@ -9,7 +9,7 @@ unsigned pIndex = 4;
 unsigned qIndex = 3;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
-double stdDeviationInput = 0.6;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.7;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double amin = 1. / 100.; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 //END Stochastic Input Parameters
@@ -224,6 +224,59 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
     }
 
   }
+
+};
+
+void EvaluateHermitePolyHistogram(std::vector < std::vector < double > >  & HermitePoly, const unsigned & pIndex, std::vector<double> & samplePoints) {
+
+    HermitePoly.resize(pIndex + 1);
+    for(unsigned i = 0; i < pIndex + 1; i++) {
+      HermitePoly[i].resize(samplePoints.size());
+    }
+
+    for(unsigned j = 0; j < numberOfEigPairs; j++) {
+
+      double x = samplePoints[j];
+
+      HermitePoly[0][j] = 1. ;
+
+      if(pIndex > 0) {
+        HermitePoly[1][j] = x ;
+        if(pIndex > 1) {
+          HermitePoly[2][j] = (pow(x, 2) - 1.) / sqrt(2) ;
+          if(pIndex > 2) {
+            HermitePoly[3][j] = (pow(x, 3) - 3. * x) / sqrt(6) ;
+            if(pIndex > 3) {
+              HermitePoly[4][j] = (pow(x, 4) - 6. * x * x + 3.) / sqrt(24) ;
+              if(pIndex > 4) {
+                HermitePoly[5][j] = (pow(x, 5) - 10. * pow(x, 3) + 15. * x) / sqrt(120) ;
+                if(pIndex > 5) {
+                  HermitePoly[6][j] = (pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.) / sqrt(720) ;
+                  if(pIndex > 6) {
+                    HermitePoly[7][j] = (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / sqrt(5040) ;
+                    if(pIndex > 7) {
+                      HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.) / sqrt(40320) ;
+                      if(pIndex > 8) {
+                        HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / sqrt(362880);
+                        if(pIndex > 9) {
+                          HermitePoly[10][j] = (pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.) / sqrt(3628800);
+                          if(pIndex > 10) {
+                            std::cout << "Polynomial order is too big. For now, it has to be not greater than 10." << std::endl;
+                            abort();
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+    }
+
 
 };
 
@@ -550,11 +603,11 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
         double aS1 = 1.;
         double aS2 = 1.;
         for(unsigned i = 0; i < numberOfEigPairs; i++) {
-          std::cout << "------------------- " << Jq[q1][i] << " ";
+//           std::cout << "------------------- " << Jq[q1][i] << " ";
           aS1 *= integralsMatrix[Jq[q1][i]][0][0];
           aS2 *= aStochasticTerm2[i];
         }
-        std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
+//         std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
 
         aStochasticGauss[q1] = amin * aS1 + aS2; //a_q(x_ig)
         if(fabs(aStochasticGauss[q1]) > 10.) std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
@@ -620,6 +673,7 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
 //  abort();
 // ***************** END ASSEMBLY *******************
 }
+
 
 
 

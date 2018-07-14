@@ -882,6 +882,69 @@ void GetStochasticData(std::vector <double>& alphas) {
     //END
 
 
+    //BEGIN estimation of the PDF
+    int pdfHistogramSize = 501;
+    std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
+    double startPoint = - 4.45;  //- 9.5;
+    double endPoint = 4.45;  //9.5;
+    double lengthOfTheInterval = fabs(endPoint - startPoint);
+    double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
+    boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
+    boost::normal_distribution<> nd(0.0, stdDeviationInput);
+    boost::variate_generator < boost::mt19937&,
+    boost::normal_distribution<> > var_nor(rng, nd);
+
+    unsigned numberOfSamples = 25000;
+    std::vector <double> sgmQoI(numberOfSamples, 0.);
+
+    for(unsigned m = 0; m < numberOfSamples; m++) {
+
+      std::vector<double> samplePoints(numberOfEigPairs, 0.);
+      for(unsigned k = 0; k < numberOfEigPairs; k++) {
+        samplePoints[k] = var_nor();
+      }
+      std::vector < std::vector <double> > HermitePolyHistogram;
+      EvaluateHermitePolyHistogram(HermitePolyHistogram, pIndex, samplePoints);
+
+      std::vector<double> MultivariateHermitePolyHistogram(Jp.size(), 1.);
+      for(unsigned i = 0; i < Jp.size(); i++) {
+        for(unsigned k = 0; k < numberOfEigPairs; k++) {
+          MultivariateHermitePolyHistogram[i] *= HermitePolyHistogram[Jp[i][k]][k];
+        }
+        sgmQoI[m] += alphas[i] * MultivariateHermitePolyHistogram[i];
+      }
+
+      sgmQoI[m] = (sgmQoI[m]- meanQoI) / stdDeviationQoI;
+      
+      bool sampleCaptured = false;
+      for(unsigned i = 0; i < pdfHistogramSize; i++) {
+        double leftBound = startPoint + i * deltat - deltat * 0.5;
+        double rightBound = startPoint + i * deltat + deltat * 0.5;
+        if(leftBound <=  sgmQoI[m] && sgmQoI[m] < rightBound) {
+          pdfHistogram[i]++;
+          std::cout << "sgmQoI[" << m << "] = " << sgmQoI[m] << std::endl;
+          sampleCaptured = true;
+          break;
+        }
+      }
+      if(sampleCaptured == false) {
+        std::cout << "WARNING: sample " << sgmQoI[m] << "is not in any interval" << std::endl;
+      }
+
+    }
+    //END
+
+    //BEGIN histogram check
+    double checkHistogram = 0;
+    for(unsigned i = 0; i < pdfHistogramSize; i++) {
+      double point = startPoint + i * deltat;
+      pdfHistogram[i] /= numberOfSamples;
+      std::cout << point << "  " << pdfHistogram[i]  << std::endl;
+      checkHistogram += pdfHistogram[i];
+    }
+    std::cout << "checkHistogram = " << checkHistogram << std::endl;
+    //END
+
     cumulants[0] = moments[0];
     cumulantsStandardized[0] = momentsStandardized[0];
 
@@ -943,8 +1006,8 @@ void PlotStochasticData() {
   for(unsigned p = 0; p < totMoments; p++) {
     std::cout << " & " << cumulantsStandardized[p] << "  ";
   }
-    std::cout << std::endl;
-    std::cout << " Moments " << std::endl;
+  std::cout << std::endl;
+  std::cout << " Moments " << std::endl;
   for(unsigned p = 0; p < totMoments; p++) {
     std::cout << " & " << moments[p] << "  ";
   }
@@ -953,7 +1016,7 @@ void PlotStochasticData() {
   for(unsigned p = 0; p < totMoments; p++) {
     std::cout << " & " << cumulants[p] << "  ";
   }
-  
+
   std::cout << std::endl;
   std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
 
@@ -1116,6 +1179,7 @@ void PlotStochasticData() {
 
 }
 //
+
 
 
 
