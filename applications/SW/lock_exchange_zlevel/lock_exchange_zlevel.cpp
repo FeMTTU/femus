@@ -33,9 +33,9 @@ double ni_h = 100.; // 0.1, 1, 10, 100, 200
 
 double ni_v = 0.0001;
 
-double k_h = 0.0001;
-
-double k_v = 0.00001;
+// double k_h = 0.0001;
+// 
+// double k_v = 0.00001;
 
 const unsigned NumberOfLayers = 20; 
 
@@ -79,7 +79,7 @@ double InitalValueT(const std::vector < double >& x)
 {
   double pi = acos(-1.);
   //return 17.5 + 25/pi * atan(x[0]/100.); 
-  if (x[0]<0) 5;
+  if (x[0]<0) return 5;
   else return 30;
 }
 
