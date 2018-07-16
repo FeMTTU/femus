@@ -77,7 +77,9 @@ double InitalValueH(const std::vector < double >& x)
 
 double InitalValueT(const std::vector < double >& x)
 {
-  if (x[0]<0) return 5; 
+  double pi = acos(-1.);
+  //return 17.5 + 25/pi * atan(x[0]/100.); 
+  if (x[0]<0) 5;
   else return 30;
 }
 
@@ -398,12 +400,19 @@ void ETD(MultiLevelProblem& ml_prob)
        
     std::vector < double > w(NLayers+1, 0.);
 	  
-    for(unsigned k = NLayers; k>1; k--){
+    for(unsigned k = NLayers; k > 1; k--){
       w[k-1] = w[k] - (  0.5 * ( solh[k-1].value() + solhp[k-1].value() ) * solvp[k-1].value() 
 		       - 0.5 * ( solh[k-1].value() + solhm[k-1].value() ) * solvm[k-1].value() )/dx 
 		    - ( hALE[k-1] - solh[k-1].value()) / dt;//TODO		    
 		    //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<w[k-1]<<std::endl;
     }
+    
+//     for(unsigned k = 1; k < NLayers; k++){
+//       w[k] = w[k-1] + (  0.5 * ( solh[k-1].value() + solhp[k-1].value() ) * solvp[k-1].value() 
+// 		       - 0.5 * ( solh[k-1].value() + solhm[k-1].value() ) * solvm[k-1].value() )/dx 
+// 		    + ( hALE[k-1] - solh[k-1].value()) / dt;//TODO		    
+// 		    //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<w[k-1]<<std::endl;
+//     }
       
       
     for(unsigned k = 0; k < NLayers; k++) {
@@ -418,10 +427,22 @@ void ETD(MultiLevelProblem& ml_prob)
       
 	
       if( i > start ){
-        aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; 
+	//aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; 
+	if(solvm[k] > 0){
+	  aResHT[k] += solHTm[k] * solvm[k]  / dx; 
+	}
+	else {
+	  aResHT[k] += solHT[k] * solvm[k]  / dx; 
+	}
       }
       if(i < end - 1){
-	aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; 
+	//aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; 
+	if(solvp[k] > 0){
+	  aResHT[k] -= solHT[k] * solvp[k]  / dx; 
+	}
+	else {
+	  aResHT[k] -= solHTp[k] * solvp[k]  / dx; 
+	}
       }
 
       if( k < NLayers-1 ){
@@ -562,11 +583,11 @@ void ETD(MultiLevelProblem& ml_prob)
       adept::adouble rhokm = rho1[k] - beta * (solHTm[k]/solhm[k] - TRef);
       adept::adouble rhokp = rho1[k] - beta * (solHTp[k]/solhp[k] - TRef);
       
-      Pm[k] = 0.5 * 9.81 * rhokm * solhm[k];
-      Pp[k] = 0.5 * 9.81 * rhokp * solhp[k]; 
+      Pm[k] = 9.81 * rhokm * solhm[k]/2.;
+      Pp[k] = 9.81 * rhokp * solhp[k]/2.; 
       
-      zMidm[k] = -bm + solhm[k]/2;
-      zMidp[k] = -bp + solhp[k]/2;
+      zMidm[k] = -bm + solhm[k]/2.;
+      zMidp[k] = -bp + solhp[k]/2.;
       for(unsigned i = k+1; i < NLayers; i++) {
         zMidm[k] += solhm[i];
 	zMidp[k] += solhp[i];
@@ -649,21 +670,33 @@ void ETD(MultiLevelProblem& ml_prob)
       adept::adouble fvp = 0.5 * vMidp * vMidp + Pp[k];      
       aResv[k] -=  fvp / dxp;
       
-      adept::adouble deltaZt_k;
-      adept::adouble deltaZt_kplus1;
+      adept::adouble deltaZt = 0.;
+      adept::adouble deltaZb = 0.;
+      adept::adouble ht = 0.;
+      adept::adouble hb = 0.;
       if ( k > 0 ){
-	deltaZt_k = 4. * (solv[k-1]-solv[k]) / (solhm[k-1]+solhm[k]+solhp[k-1]+solhp[k]);
-	aResv[k] -= 0.5 * w[k] * deltaZt_k;
+	ht = (solhm[k-1] + solhm[k] + solhp[k-1] + solhp[k]) / 4.;
+	deltaZt = ( solv[k-1] - solv[k] ) / ht;
+	aResv[k] -= 0.5 * w[k] * deltaZt;
+      }
+      else{
+	ht = 0.5 * (solhm[k] + solhp[k]);
+	deltaZt = 0.*( 0. - solv[k] ) / ht;
       }
       if (k < NLayers - 1) {
-	deltaZt_kplus1 = 4. * (solv[k]-solv[k+1]) / (solhm[k]+solhm[k+1]+solhp[k]+solhp[k+1] );
-	aResv[k] -= 0.5 * w[k+1] * deltaZt_kplus1; 
+	hb = (solhm[k] + solhm[k+1] + solhp[k] + solhp[k+1] ) / 4.;
+	deltaZb = (solv[k] - solv[k+1]) / hb;
+	aResv[k] -= 0.5 * w[k+1] * deltaZb; 
+      }
+      else{
+	hb = 0.5 * (solhm[k] + solhp[k]);
+	deltaZb = 0.*(solv[k] - 0.) / hb;
       }
       
-      aResv[k] += ni_h*(solvm[k] - solv[k])/(dxm*dxm); // horizontal diffusion
-      aResv[k] += ni_h*(solvp[k] - solv[k])/(dxp*dxp); // horizontal diffusion  
+      aResv[k] += ni_h*(solvm[k] - solv[k])/(dxm * 0.5 * (dxm+dxp) ); // horizontal diffusion
+      aResv[k] += ni_h*(solvp[k] - solv[k])/(dxp * 0.5 * (dxm+dxp) ); // horizontal diffusion  
       
-      aResv[k] += 2. * ni_v * (deltaZt_k - deltaZt_kplus1) / (solhm[k] + solhp[k]); // vertical diffusion
+      aResv[k] += ni_v * (deltaZt - deltaZb) / ( (ht + hb) / 2. ); // vertical diffusion
     }
       
     vector< double > Res(NLayers); // local redidual vector
