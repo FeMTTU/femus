@@ -33,6 +33,10 @@ double ni_h = 100.; // 0.1, 1, 10, 100, 200
 
 double ni_v = 0.0001;
 
+double k_h = 0.0001;
+
+double k_v = 0.00001;
+
 const unsigned NumberOfLayers = 20; 
 
 //const double hRest[10]={2,2,2,2,2,2,2,2,2,2};
@@ -427,35 +431,9 @@ void ETD(MultiLevelProblem& ml_prob)
 	aResHT[k] -= w[k] * 0.5 * (solHT[k-1]/solh[k-1] + solHT[k]/solh[k] );
       }
       
-//       if( k == 0 ){
-// 	aResHT[k] += w[k+1] * 0.5 * ( (solHT[k]/solh[k] - solHT[k+1]/solh[k+1])/solh[k] + (solHT[k+1]/solh[k+1] - solHT[k+2]/solh[k+2])/solh[k+1] );
-//       }
-//       if( k > 0 && k < NLayers - 2 ){
-// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] - solHT[k]/solh[k])/solh[k-1] + (solHT[k]/solh[k] - solHT[k+1]/solh[k+1])/solh[k] ) 
-// 	             + w[k+1] * 0.5 * ( (solHT[k]/solh[k] - solHT[k+1]/solh[k+1])/solh[k] + (solHT[k+1]/solh[k+1] - solHT[k+2]/solh[k+2])/solh[k+1] );
-//       }
-//       if( k == NLayers - 2){
-// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] - solHT[k]/solh[k])/solh[k-1] + (solHT[k]/solh[k] - solHT[k+1]/solh[k+1])/solh[k] ) 
-// 	             + w[k+1] * 0.5 * ( (solHT[k]/solh[k] - solHT[k+1]/solh[k+1])/solh[k] );
-//       }
-//       if( k == NLayers - 1){
-// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] - solHT[k]/solh[k])/solh[k-1] ) ;
-//       }
-
-//       if( k == 0 ){
-// 	aResHT[k] += w[k+1] * 0.5 * ( (solHT[k]/solh[k] + solHT[k+1]/solh[k+1])/2. + (solHT[k+1]/solh[k+1] + solHT[k+2]/solh[k+2])/2. );
-//       }
-//       if( k > 0 && k < NLayers - 2 ){
-// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] + solHT[k]/solh[k])/2. + (solHT[k]/solh[k] + solHT[k+1]/solh[k+1])/2. ) 
-// 	             + w[k+1] * 0.5 * ( (solHT[k]/solh[k] + solHT[k+1]/solh[k+1])/2. + (solHT[k+1]/solh[k+1] + solHT[k+2]/solh[k+2])/2. );
-//       }
-//       if( k == NLayers - 2){
-// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] + solHT[k]/solh[k])/2. + (solHT[k]/solh[k] + solHT[k+1]/solh[k+1])/2. ) 
-// 	             + w[k+1] * 0.5 * ( (solHT[k]/solh[k] + solHT[k+1]/solh[k+1])/2. );
-//       }
-//       if( k == NLayers - 1){
-// 	aResHT[k] += - w[k] * 0.5 * ( (solHT[k-1]/solh[k-1] + solHT[k]/solh[k])/2. ) ;
-//       }
+//       aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
+//       aResHT[k] += k_h * solh[k] * (solHTm[k] - solHT[k])/(dx*dx); // horizontal diffusion
+//       aResHT[k] += k_h * solh[k] * (solHTp[k] - solHT[k])/(dx*dx); // horizontal diffusion 
       
     }
       
