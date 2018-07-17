@@ -127,7 +127,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
       yOmega[eig] = var_nor();
     }
     MPI_Bcast(&yOmega[eig], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    std::cout << yOmega[eig] << " ";
+    std::cout << " ----------------------------- yOmega =" << yOmega[eig] << " ";
   }
   std::cout << std::endl;
 
@@ -207,7 +207,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
 
 //BEGIN a = KL expansion
 //       double aCoeff = 1. + KLexpansion_gss; //WARNING here it is assumed amin = 1
-// //       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
+//       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
       //END a = KL expansion
 
 

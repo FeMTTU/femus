@@ -5,11 +5,11 @@
 using namespace femus;
 
 //BEGIN Stochastic Input Parameters
-unsigned pIndex = 4;
-unsigned qIndex = 3;
+unsigned pIndex = 2;
+unsigned qIndex = 2;
 
-int numberOfEigPairs = 2; //dimension of the stochastic variable
-double stdDeviationInput = 0.4;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+int numberOfEigPairs = 4; //dimension of the stochastic variable
+double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double amin = 1. / 100.; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 //END Stochastic Input Parameters
@@ -528,34 +528,33 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
   KK->zero(); // Set to zero all the entries of the Global Matrix
 
   //BEGIN terms for the coefficient obtained projecting the KL (computation later)
-  std::vector < std::vector < double > > productTerms(Jq.size());
-  for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
-    
-    productTerms[q1].resize(numberOfEigPairs);
-
-    std::vector <double> termWithY(numberOfEigPairs);
-    unsigned numberOfQuadraturePointsForProjection = ((qIndex + 2) % 2 == 0) ? ((qIndex + 2) / 2) : ((qIndex + 3) / 2) ;
-    std::vector < std::vector < double > >  HermitePolyProjection;
-    EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex + 1);
-    for(unsigned i = 0; i < numberOfEigPairs; i++) {
-      termWithY[i] = 0.;
-      for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
-        termWithY[i] +=   HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j]
-                          * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
-      }
-
-      productTerms[q1][i] = termWithY[i];
-//       std::cout << " termWithY[" << i << "] = " << termWithY[i] << " ";
-
-      for(unsigned j = 0; j < numberOfEigPairs; j++) {
-        if(j != i) {
-          productTerms[q1][i] *= integralsMatrix[Jq[q1][j]][0][0];
-        }
-      }
-      std::cout << " productTerms[" << q1 << "][" << i << "] = " << productTerms[q1][i] << " ";
-    }
-        std::cout << "------------------" <<  std::endl;
-  }
+//   std::vector < std::vector < double > > productTerms(Jq.size());
+//   for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
+//     
+//     productTerms[q1].resize(numberOfEigPairs);
+// 
+//     unsigned numberOfQuadraturePointsForProjection = ((qIndex + 2) % 2 == 0) ? ((qIndex + 2) / 2) : ((qIndex + 3) / 2) ;
+//     std::vector < std::vector < double > >  HermitePolyProjection;
+//     EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex + 1);
+//     for(unsigned i = 0; i < numberOfEigPairs; i++) {
+//       double termWithY = 0.;
+//       for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
+//         termWithY +=  HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j]
+//                       * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
+//       }
+// 
+//       productTerms[q1][i] = termWithY;
+// //       std::cout << " termWithY = "  << termWithY << " ";
+// 
+//       for(unsigned j = 0; j < numberOfEigPairs; j++) {
+//         if(j != i) {
+//           productTerms[q1][i] *= integralsMatrix[Jq[q1][j]][0][0];
+//         }
+//       }
+// //       std::cout << " productTerms[" << q1 << "][" << i << "] = " << productTerms[q1][i] << " ";
+//     }
+// //         std::cout << "------------------" <<  std::endl;
+//   }
   //END terms for coefficient obtained projecting the KL (computation later)
 
   // element loop: each process loops only on the elements that owns
@@ -616,50 +615,50 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
       vector< double > aStochasticGauss(Jq.size());
 
 //BEGIN coefficient obtained projecting the exponential of the KL
-//       for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
-// //         std::vector <double> aStochasticTerm1(numberOfEigPairs);
-//         std::vector <double> aStochasticTerm2(numberOfEigPairs);
-//
-//
-//         unsigned numberOfQuadraturePointsForProjection = 16;
-//         std::vector < std::vector < double > >  HermitePolyProjection;
-//         EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex);
-//         for(unsigned i = 0; i < numberOfEigPairs; i++) {
-//           aStochasticTerm2[i] = 0.;
-//           for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
-// //             aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
-//             aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j])
-//                                    * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
-//           }
-//         }
-//
-//         double aS1 = 1.;
-//         double aS2 = 1.;
-//         for(unsigned i = 0; i < numberOfEigPairs; i++) {
-// //           std::cout << "------------------- " << Jq[q1][i] << " ";
-//           aS1 *= integralsMatrix[Jq[q1][i]][0][0];
-//           aS2 *= aStochasticTerm2[i];
-//         }
-// //         std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
-//
-//         aStochasticGauss[q1] = amin * aS1 + aS2; //a_q(x_ig)
-//         if(fabs(aStochasticGauss[q1]) > 10.) std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
-//       }
+      for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
+//         std::vector <double> aStochasticTerm1(numberOfEigPairs);
+        std::vector <double> aStochasticTerm2(numberOfEigPairs);
+
+
+        unsigned numberOfQuadraturePointsForProjection = 16;
+        std::vector < std::vector < double > >  HermitePolyProjection;
+        EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex);
+        for(unsigned i = 0; i < numberOfEigPairs; i++) {
+          aStochasticTerm2[i] = 0.;
+          for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
+//             aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
+            aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j])
+                                   * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
+          }
+        }
+
+        double aS1 = 1.;
+        double aS2 = 1.;
+        for(unsigned i = 0; i < numberOfEigPairs; i++) {
+//           std::cout << "------------------- " << Jq[q1][i] << " ";
+          aS1 *= integralsMatrix[Jq[q1][i]][0][0];
+          aS2 *= aStochasticTerm2[i];
+        }
+//         std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
+
+        aStochasticGauss[q1] = amin * aS1 + aS2; //a_q(x_ig)
+        if(fabs(aStochasticGauss[q1]) > 10.) std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
+      }
 //END coefficient obtained projecting the exponential of the KL
 
 //BEGIN coefficient obtained projecting the  KL
-      for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
-        double aS1 = 1.; //WARNING here it is assumed amin = 1
-        double aS2 = 0.;
-        for(unsigned i = 0; i < numberOfEigPairs; i++) {
-          aS1 *= integralsMatrix[Jq[q1][i]][0][0];
-          aS2 += sqrt(eigenvalues[i].first) * eigVectorGauss[i] * productTerms[q1][i];
-        }
-
-        aStochasticGauss[q1] = aS1 + aS2;
-        std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
-
-      }
+//       for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
+//         double aS1 = 1.; //WARNING here it is assumed amin = 1
+//         double aS2 = 0.;
+//         for(unsigned i = 0; i < numberOfEigPairs; i++) {
+//           aS1 *= integralsMatrix[Jq[q1][i]][0][0];
+//           aS2 += sqrt(eigenvalues[i].first) * eigVectorGauss[i] * productTerms[q1][i];
+//         }
+// 
+//         aStochasticGauss[q1] = aS1 + aS2;
+// //         std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
+// 
+//       }
 //END coefficient obtained projecting the  KL
 
 
