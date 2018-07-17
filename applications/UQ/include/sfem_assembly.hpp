@@ -30,15 +30,13 @@ boost::variate_generator < boost::mt19937&,
 
       boost::normal_distribution<> > var_nor(rng, nd);
 
-double GetExactSolutionLaplace(const std::vector < double >& x)
-{
+double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
   return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
 };
 
 
-void AssembleUQSys(MultiLevelProblem& ml_prob)
-{
+void AssembleUQSys(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -202,8 +200,17 @@ void AssembleUQSys(MultiLevelProblem& ml_prob)
         }
       }
 
+      //BEGIN log(a-amin) = KL expansion
       double aCoeff = amin + exp(KLexpansion_gss);
 //       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
+      //END log(a-amin) = KL expansion
+
+//BEGIN a = KL expansion
+//       double aCoeff = 1. + KLexpansion_gss; //WARNING here it is assumed amin = 1
+// //       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
+      //END a = KL expansion
+
+
 
       // *** phi_i loop ***
       for(unsigned i = 0; i < nDofu; i++) {

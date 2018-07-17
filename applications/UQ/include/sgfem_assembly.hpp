@@ -9,7 +9,7 @@ unsigned pIndex = 4;
 unsigned qIndex = 3;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
-double stdDeviationInput = 0.8;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.3;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double amin = 1. / 100.; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 //END Stochastic Input Parameters
@@ -229,41 +229,40 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
 
 void EvaluateHermitePolyHistogram(std::vector < std::vector < double > >  & HermitePoly, const unsigned & pIndex, std::vector<double> & samplePoints) {
 
-    HermitePoly.resize(pIndex + 1);
-    for(unsigned i = 0; i < pIndex + 1; i++) {
-      HermitePoly[i].resize(samplePoints.size());
-    }
+  HermitePoly.resize(pIndex + 1);
+  for(unsigned i = 0; i < pIndex + 1; i++) {
+    HermitePoly[i].resize(samplePoints.size());
+  }
 
-    for(unsigned j = 0; j < numberOfEigPairs; j++) {
+  for(unsigned j = 0; j < numberOfEigPairs; j++) {
 
-      double x = samplePoints[j];
+    double x = samplePoints[j];
 
-      HermitePoly[0][j] = 1. ;
+    HermitePoly[0][j] = 1. ;
 
-      if(pIndex > 0) {
-        HermitePoly[1][j] = x ;
-        if(pIndex > 1) {
-          HermitePoly[2][j] = (pow(x, 2) - 1.) / sqrt(2) ;
-          if(pIndex > 2) {
-            HermitePoly[3][j] = (pow(x, 3) - 3. * x) / sqrt(6) ;
-            if(pIndex > 3) {
-              HermitePoly[4][j] = (pow(x, 4) - 6. * x * x + 3.) / sqrt(24) ;
-              if(pIndex > 4) {
-                HermitePoly[5][j] = (pow(x, 5) - 10. * pow(x, 3) + 15. * x) / sqrt(120) ;
-                if(pIndex > 5) {
-                  HermitePoly[6][j] = (pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.) / sqrt(720) ;
-                  if(pIndex > 6) {
-                    HermitePoly[7][j] = (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / sqrt(5040) ;
-                    if(pIndex > 7) {
-                      HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.) / sqrt(40320) ;
-                      if(pIndex > 8) {
-                        HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / sqrt(362880);
-                        if(pIndex > 9) {
-                          HermitePoly[10][j] = (pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.) / sqrt(3628800);
-                          if(pIndex > 10) {
-                            std::cout << "Polynomial order is too big. For now, it has to be not greater than 10." << std::endl;
-                            abort();
-                          }
+    if(pIndex > 0) {
+      HermitePoly[1][j] = x ;
+      if(pIndex > 1) {
+        HermitePoly[2][j] = (pow(x, 2) - 1.) / sqrt(2) ;
+        if(pIndex > 2) {
+          HermitePoly[3][j] = (pow(x, 3) - 3. * x) / sqrt(6) ;
+          if(pIndex > 3) {
+            HermitePoly[4][j] = (pow(x, 4) - 6. * x * x + 3.) / sqrt(24) ;
+            if(pIndex > 4) {
+              HermitePoly[5][j] = (pow(x, 5) - 10. * pow(x, 3) + 15. * x) / sqrt(120) ;
+              if(pIndex > 5) {
+                HermitePoly[6][j] = (pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.) / sqrt(720) ;
+                if(pIndex > 6) {
+                  HermitePoly[7][j] = (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / sqrt(5040) ;
+                  if(pIndex > 7) {
+                    HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.) / sqrt(40320) ;
+                    if(pIndex > 8) {
+                      HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / sqrt(362880);
+                      if(pIndex > 9) {
+                        HermitePoly[10][j] = (pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.) / sqrt(3628800);
+                        if(pIndex > 10) {
+                          std::cout << "Polynomial order is too big. For now, it has to be not greater than 10." << std::endl;
+                          abort();
                         }
                       }
                     }
@@ -274,8 +273,9 @@ void EvaluateHermitePolyHistogram(std::vector < std::vector < double > >  & Herm
           }
         }
       }
-
     }
+
+  }
 
 
 };
@@ -583,36 +583,78 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
 
 
       vector< double > aStochasticGauss(Jq.size());
+
+//BEGIN coefficient obtained projecting the exponential of the KL
+//       for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
+// //         std::vector <double> aStochasticTerm1(numberOfEigPairs);
+//         std::vector <double> aStochasticTerm2(numberOfEigPairs);
+//
+//
+//         unsigned numberOfQuadraturePointsForProjection = 16;
+//         std::vector < std::vector < double > >  HermitePolyProjection;
+//         EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex);
+//         for(unsigned i = 0; i < numberOfEigPairs; i++) {
+//           aStochasticTerm2[i] = 0.;
+//           for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
+// //             aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
+//             aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j])
+//                                    * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
+//           }
+//         }
+//
+//         double aS1 = 1.;
+//         double aS2 = 1.;
+//         for(unsigned i = 0; i < numberOfEigPairs; i++) {
+// //           std::cout << "------------------- " << Jq[q1][i] << " ";
+//           aS1 *= integralsMatrix[Jq[q1][i]][0][0];
+//           aS2 *= aStochasticTerm2[i];
+//         }
+// //         std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
+//
+//         aStochasticGauss[q1] = amin * aS1 + aS2; //a_q(x_ig)
+//         if(fabs(aStochasticGauss[q1]) > 10.) std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
+//       }
+//END coefficient obtained projecting the exponential of the KL
+
+
+//BEGIN coefficient obtained projecting the KL
       for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
-        std::vector <double> aStochasticTerm1(numberOfEigPairs);
-        std::vector <double> aStochasticTerm2(numberOfEigPairs);
 
-
-        unsigned numberOfQuadraturePointsForProjection = 16;
+        std::vector <double> termWithY(numberOfEigPairs);
+        std::vector <double> productTerms(numberOfEigPairs);
+        unsigned numberOfQuadraturePointsForProjection = ((qIndex + 2) % 2 == 0) ? ((qIndex + 2) / 2) : ((qIndex + 3) / 2) ;
         std::vector < std::vector < double > >  HermitePolyProjection;
-        EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex);
+        EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex + 1);
         for(unsigned i = 0; i < numberOfEigPairs; i++) {
-          aStochasticTerm2[i] = 0.;
+          termWithY[i] = 0.;
           for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
-//             aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
-            aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j])
-                                   * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
+            termWithY[i] +=   HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j]
+                              * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
           }
+
+          productTerms[i] = termWithY[i];
+          for(unsigned j = 0; j < numberOfEigPairs; j++) {
+            if(j != i) {
+              productTerms[i] *= integralsMatrix[Jq[q1][j]][0][0];
+            }
+          }
+
         }
 
-        double aS1 = 1.;
-        double aS2 = 1.;
+        double aS1 = 1.; //WARNING here it is assumed amin = 1
+        double aS2 = 0.;
         for(unsigned i = 0; i < numberOfEigPairs; i++) {
-//           std::cout << "------------------- " << Jq[q1][i] << " ";
           aS1 *= integralsMatrix[Jq[q1][i]][0][0];
-          aS2 *= aStochasticTerm2[i];
+          aS2 += sqrt(eigenvalues[i].first) * eigVectorGauss[i] * productTerms[i];
         }
-//         std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
+        
+        aStochasticGauss[q1] = aS1 + aS2;
 
-        aStochasticGauss[q1] = amin * aS1 + aS2; //a_q(x_ig)
-        if(fabs(aStochasticGauss[q1]) > 10.) std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
+        if(fabs(aStochasticGauss[q1]) > 0.05) std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
+
       }
-      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+//END coefficient obtained projecting the  KL
+
 
       vector < vector < double > > laplace(nDofu);
       for(unsigned i = 0; i < nDofu; i++) {

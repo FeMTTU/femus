@@ -1048,8 +1048,8 @@ void PlotStochasticData() {
   double d7gaussian;
   double d9gaussian;
 
-  double t = -  7.5;
-  double dt = (15.) / 300.;
+  double t = - 4.45;
+  double dt = (8.9) / 300.;
 
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
@@ -1127,8 +1127,8 @@ void PlotStochasticData() {
     t += dt;
   }
 
-  t = -  7.5;
-  dt = (15.) / 300.;
+  t = -  4.45;
+  dt = (8.9) / 300.;
 
   //BEGIN EDGEWORTH PRINT
   std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
