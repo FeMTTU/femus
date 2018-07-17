@@ -24,8 +24,8 @@
 #include <stdlib.h>
 
 
-double Re = 0.01;
-double Rem = 0.1;
+double Re = 100;
+double Rem = 0.01;
 double coeffS = 1.0;
 // double Mu = 0.01;
 double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
@@ -168,6 +168,8 @@ int main(int argc, char** args) {
   
   FieldSplitTree FS_MF(PREONLY, ASM_PRECOND, fieldB1B2R, solutionTypeB1B2R, "Magnetic Field");
   FS_MF.SetAsmBlockSize(4);
+  
+  FS_MF.SetAsmBlockPreconditioner(MLU_PRECOND);
   FS_MF.SetAsmNumeberOfSchurVariables(1);
   
   std::vector < unsigned > fieldUVP(3);
@@ -182,6 +184,8 @@ int main(int argc, char** args) {
 
   FieldSplitTree FS_NS(PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
   FS_NS.SetAsmBlockSize(4);
+  
+  FS_NS.SetAsmBlockPreconditioner(MLU_PRECOND);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
 
   std::vector < FieldSplitTree *> FS2;
@@ -235,6 +239,10 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
+  
+  
+  vtkIO.SetDebugOutput(true);
+  
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   mlMsh.PrintInfo();
@@ -527,7 +535,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 		  coeffSignl = 1.0;
 		}
 		Res[irow] -= 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl* gradSolB_gss[l][ll] * weight;  
-		Res[irow] += coeffSignk * phiB_x[i*dim+kk] * coeffSignl * solB_gss[l] * solV_gss[ll] * weight;
+ 		Res[irow] += coeffSignk * phiB_x[i*dim+kk] * coeffSignl * solB_gss[l] * solV_gss[ll] * weight;
 	    }
 	    Res[irow] += phiB_x[i*dim+k] * solR_gss * weight;
 	    
@@ -553,7 +561,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 		  unsigned jcol2 = dim * nDofsB + nDofsR + ll * nDofsV + j;
 		  Jac[irowMat+jcol1] += 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB_x[j*dim + ll] * weight;
 		  Jac[irowMat+jcol1] -= coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB[j] * solV_gss[ll] * weight;
-		  Jac[irowMat+jcol2] -= coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiV[j] * solB_gss[l] * weight; 
+ 		  Jac[irowMat+jcol2] -= coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiV[j] * solB_gss[l] * weight; 
 		} 
 	      }
 	      for (unsigned j = 0; j < nDofsR; j++){
@@ -602,7 +610,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 	    }
             Res[irow] +=  -1.0/Re * phiV_x[i * dim + l] * (gradSolV_gss[k][l] + gradSolV_gss[l][k]) * weight;
             Res[irow] +=  -phiV[i] * solV_gss[l] * gradSolV_gss[k][l] * weight;
-	    Res[irow] += coeffS * coeffSignk * phiV[i] * coeffSignl * gradSolB_gss[l][ll] * solB_gss[kk]* weight; 
+ 	    Res[irow] += coeffS * coeffSignk * phiV[i] * coeffSignl * gradSolB_gss[l][ll] * solB_gss[kk]* weight; 
           }
           Res[irow] += solP_gss * phiV_x[i * dim + k] * weight;
 
@@ -633,8 +641,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
                 Jac[ irowMat + jcol2] += 1.0/Re * phiV_x[i * dim + l] * phiV_x[j * dim + k] * weight;
                 Jac[ irowMat + jcol1] += phiV[i] * solV_gss[l] * phiV_x[j * dim + l] * weight;
                 Jac[ irowMat + jcol2] += phiV[i] * phiV[j] * gradSolV_gss[k][l] * weight;
- 		Jac[irowMat + jcol3] -= coeffS * coeffSignk * phiV[i] * phiB[j] * coeffSignl * gradSolB_gss[l][ll] * weight; 
- 		Jac[irowMat + jcol4] -= coeffS * coeffSignk * phiV[i] * solB_gss[ll] * coeffSignl * phiB_x[j*dim+ll] * weight;
+  		Jac[irowMat + jcol3] -= coeffS * coeffSignk * phiV[i] * phiB[j] * coeffSignl * gradSolB_gss[l][ll] * weight; 
+  		Jac[irowMat + jcol4] -= coeffS * coeffSignk * phiV[i] * solB_gss[ll] * coeffSignl * phiB_x[j*dim+ll] * weight;
               }
             }
 
