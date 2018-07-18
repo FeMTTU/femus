@@ -965,7 +965,7 @@ void GetStochasticData(std::vector <double>& alphas) {
     double lengthOfTheInterval = fabs(endPoint - startPoint);
     double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
     boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
-    boost::normal_distribution<> nd(0.0, stdDeviationInput);
+    boost::normal_distribution<> nd(meanInput, stdDeviationInput);
     boost::variate_generator < boost::mt19937&,
           boost::normal_distribution<> > var_nor(rng, nd);
 
