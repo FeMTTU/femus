@@ -20,7 +20,7 @@ std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
 double amin = 1. / 100.;
 
-double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.4;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
 
@@ -206,7 +206,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
       //END log(a-amin) = KL expansion
 
 //BEGIN a = KL expansion
-//       double aCoeff = 1. + KLexpansion_gss; //WARNING here it is assumed amin = 1
+//       double aCoeff =  KLexpansion_gss; 
 //       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
       //END a = KL expansion
 

@@ -44,7 +44,7 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 1000; //number of samples for the Monte Carlo
+unsigned M = 15000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;
@@ -462,7 +462,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
   delete CC;
 
   //BEGIN OLD 
-/*  
+  
    std::vector <unsigned> eigfIndex(numberOfEigPairs);
   char name[10];
   for(unsigned i = 0; i < numberOfEigPairs; i++) {
@@ -527,155 +527,158 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
     double sign = (integral >= 0) ? 1 : -1;
     double norm2 = 0.;
     MPI_Allreduce(&local_norm2[j], &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    double inorm = 0.01 * sign / sqrt(norm2);
+    double inorm = /*0.01 * sign */ 1. / sqrt(norm2);
     std::cout << "BBBBBBBBBBBBBBBBBB  " << inorm << std::endl;
     sol->_Sol[eigfIndex[j]]->scale(inorm);
-  }*/
+  }
   //END OLD
   
   
   
   //BEGIN GRAM SCHMIDT ORTHONORMALIZATION
 
-  std::vector <unsigned> eigfIndex(numberOfEigPairs);
-  char name[10];
-  for(unsigned i = 0; i < numberOfEigPairs; i++) {
-    sprintf(name, "egnf%d", i);
-    eigfIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
-  }
+//   std::vector <unsigned> eigfIndex(numberOfEigPairs);
+//   char name[10];
+//   for(unsigned i = 0; i < numberOfEigPairs; i++) {
+//     sprintf(name, "egnf%d", i);
+//     eigfIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
+//   }
 
-  vector < double >  eigenFunction(numberOfEigPairs); // local solution
-  vector < double >  eigenFunctionOld(numberOfEigPairs); // local solution
-
-  std::vector < std::vector < double > > coeffsGS_local(numberOfEigPairs);
-  std::vector < std::vector < double > > coeffsGS_global(numberOfEigPairs);
-  for(unsigned i = 0; i < numberOfEigPairs; i++) {
-    coeffsGS_local[i].assign(numberOfEigPairs, 0.);
-    coeffsGS_global[i].assign(numberOfEigPairs, 0.);
-  }
-
-  for(unsigned iGS = 0; iGS < numberOfEigPairs; iGS++) {
-
-    if(iGS > 0) {
-
-      for(unsigned jGS = 0; jGS < iGS; jGS++) {
-
-        //BEGIN COMPUTE coeffsGS LOCAL
-
-        for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-          short unsigned ielGeom = msh->GetElementType(iel);
-          unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
-          unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-
-          eigenFunction.resize(nDofu);
-          eigenFunctionOld.resize(nDofu);
-
-          for(int i = 0; i < dim; i++) {
-            x1[i].resize(nDofx);
-          }
-
-          // local storage of global mapping and solution
-          for(unsigned i = 0; i < nDofu; i++) {
-            unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
-            eigenFunction[i] = (*sol->_Sol[eigfIndex[iGS]])(solDof);
-            eigenFunctionOld[i] = (*sol->_Sol[eigfIndex[jGS]])(solDof);
-          }
-
-          // local storage of coordinates
-          for(unsigned i = 0; i < nDofx; i++) {
-            unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-            for(unsigned jdim = 0; jdim < dim; jdim++) {
-              x1[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
-            }
-          }
-          double weight;
-          vector <double> phi;  // local test function
-          // *** Gauss point loop ***
-          for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
-            // *** get gauss point weight, test function and test function partial derivatives ***
-            msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
-            double eigenFunction_gss = 0.;
-            double eigenFunction_gss_old = 0.;
-            for(unsigned i = 0; i < nDofu; i++) {
-              eigenFunction_gss += phi[i] * eigenFunction[i];
-              eigenFunction_gss_old += phi[i] * eigenFunctionOld[i];
-            }
-            coeffsGS_local[iGS][jGS] += eigenFunction_gss * eigenFunction_gss_old * weight;
-          }
-        }
-
-        //END COMPUTE coeffsGS LOCAL
-
-        MPI_Allreduce(&coeffsGS_local[iGS][jGS], &coeffsGS_global[iGS][jGS], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-      }
-
-      for(unsigned idof = msh->_dofOffset[solType][iproc]; idof < msh->_dofOffset[solType][iproc + 1]; idof++) {
-        double sum = 0.;
-        for(unsigned jGS = 0; jGS < iGS; jGS++) {
-          sum += coeffsGS_global[iGS][jGS] * (*sol->_Sol[eigfIndex[jGS]])(idof);
-        }
-        double valueToSet = (*sol->_Sol[eigfIndex[iGS]])(idof) - sum;
-        sol->_Sol[eigfIndex[iGS]]->set(idof, valueToSet);
-      }
-
-    }
-
-    double local_norm2 = 0.;
-    for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-      short unsigned ielGeom = msh->GetElementType(iel);
-      unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
-      unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-
-      eigenFunction.resize(nDofu);
-
-      for(int i = 0; i < dim; i++) {
-        x1[i].resize(nDofx);
-      }
-
-      // local storage of global mapping and solution
-      for(unsigned i = 0; i < nDofu; i++) {
-        unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
-        eigenFunction[i] = (*sol->_Sol[eigfIndex[iGS]])(solDof);
-      }
-
-      // local storage of coordinates
-      for(unsigned i = 0; i < nDofx; i++) {
-        unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-        for(unsigned jdim = 0; jdim < dim; jdim++) {
-          x1[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
-        }
-      }
-      double weight;
-      vector <double> phi;  // local test function
-      // *** Gauss point loop ***
-      for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
-        // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
-        double eigenFunction_gss = 0.;
-        for(unsigned i = 0; i < nDofu; i++) {
-          eigenFunction_gss += phi[i] * eigenFunction[i];
-        }
-        local_norm2 += eigenFunction_gss * eigenFunction_gss * weight;
-      }
-    }
-
-    double norm2 = 0.;
-    MPI_Allreduce(&local_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    double norm = sqrt(norm2);
-    std::cout << "norm = " << norm << std::endl;
-    sol->_Sol[eigfIndex[iGS]]->scale(1. / norm);
-
-    sol->_Sol[eigfIndex[iGS]]->close();
-
-  }
+//   vector < double >  eigenFunction(numberOfEigPairs); // local solution
+//   vector < double >  eigenFunctionOld(numberOfEigPairs); // local solution
+// 
+//   std::vector < std::vector < double > > coeffsGS_local(numberOfEigPairs);
+//   std::vector < std::vector < double > > coeffsGS_global(numberOfEigPairs);
+//   for(unsigned i = 0; i < numberOfEigPairs; i++) {
+//     coeffsGS_local[i].assign(numberOfEigPairs, 0.);
+//     coeffsGS_global[i].assign(numberOfEigPairs, 0.);
+//   }
+// 
+//   for(unsigned iGS = 0; iGS < numberOfEigPairs; iGS++) {
+// 
+//     if(iGS > 0) {
+// 
+//       for(unsigned jGS = 0; jGS < iGS; jGS++) {
+// 
+//         //BEGIN COMPUTE coeffsGS LOCAL
+// 
+//         for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+// 
+//           short unsigned ielGeom = msh->GetElementType(iel);
+//           unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
+//           unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+// 
+//           eigenFunction.resize(nDofu);
+//           eigenFunctionOld.resize(nDofu);
+// 
+//           for(int i = 0; i < dim; i++) {
+//             x1[i].resize(nDofx);
+//           }
+// 
+//           // local storage of global mapping and solution
+//           for(unsigned i = 0; i < nDofu; i++) {
+//             unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
+//             eigenFunction[i] = (*sol->_Sol[eigfIndex[iGS]])(solDof);
+//             eigenFunctionOld[i] = (*sol->_Sol[eigfIndex[jGS]])(solDof);
+//           }
+// 
+//           // local storage of coordinates
+//           for(unsigned i = 0; i < nDofx; i++) {
+//             unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+//             for(unsigned jdim = 0; jdim < dim; jdim++) {
+//               x1[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+//             }
+//           }
+//           double weight;
+//           vector <double> phi;  // local test function
+//           // *** Gauss point loop ***
+//           for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+//             // *** get gauss point weight, test function and test function partial derivatives ***
+//             msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
+//             double eigenFunction_gss = 0.;
+//             double eigenFunction_gss_old = 0.;
+//             for(unsigned i = 0; i < nDofu; i++) {
+//               eigenFunction_gss += phi[i] * eigenFunction[i];
+//               eigenFunction_gss_old += phi[i] * eigenFunctionOld[i];
+//             }
+//             coeffsGS_local[iGS][jGS] += eigenFunction_gss * eigenFunction_gss_old * weight;
+//           }
+//         }
+// 
+//         //END COMPUTE coeffsGS LOCAL
+// 
+//         MPI_Allreduce(&coeffsGS_local[iGS][jGS], &coeffsGS_global[iGS][jGS], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+// 
+//       }
+// 
+//       for(unsigned idof = msh->_dofOffset[solType][iproc]; idof < msh->_dofOffset[solType][iproc + 1]; idof++) {
+//         double sum = 0.;
+//         for(unsigned jGS = 0; jGS < iGS; jGS++) {
+//           sum += coeffsGS_global[iGS][jGS] * (*sol->_Sol[eigfIndex[jGS]])(idof);
+//         }
+//         double valueToSet = (*sol->_Sol[eigfIndex[iGS]])(idof) - sum;
+//         sol->_Sol[eigfIndex[iGS]]->set(idof, valueToSet);
+//       }
+// 
+//     }
+// 
+//     double local_norm2 = 0.;
+//     for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+// 
+//       short unsigned ielGeom = msh->GetElementType(iel);
+//       unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
+//       unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+// 
+//       eigenFunction.resize(nDofu);
+// 
+//       for(int i = 0; i < dim; i++) {
+//         x1[i].resize(nDofx);
+//       }
+// 
+//       // local storage of global mapping and solution
+//       for(unsigned i = 0; i < nDofu; i++) {
+//         unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
+//         eigenFunction[i] = (*sol->_Sol[eigfIndex[iGS]])(solDof);
+//       }
+// 
+//       // local storage of coordinates
+//       for(unsigned i = 0; i < nDofx; i++) {
+//         unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+//         for(unsigned jdim = 0; jdim < dim; jdim++) {
+//           x1[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+//         }
+//       }
+//       double weight;
+//       vector <double> phi;  // local test function
+//       // *** Gauss point loop ***
+//       for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+//         // *** get gauss point weight, test function and test function partial derivatives ***
+//         msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
+//         double eigenFunction_gss = 0.;
+//         for(unsigned i = 0; i < nDofu; i++) {
+//           eigenFunction_gss += phi[i] * eigenFunction[i];
+//         }
+//         local_norm2 += eigenFunction_gss * eigenFunction_gss * weight;
+//       }
+//     }
+// 
+//     double norm2 = 0.;
+//     MPI_Allreduce(&local_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+//     double norm = sqrt(norm2);
+//     std::cout << "norm = " << norm << std::endl;
+//     sol->_Sol[eigfIndex[iGS]]->scale(1. / norm);
+// 
+//     sol->_Sol[eigfIndex[iGS]]->close();
+// 
+//   }
 
   //END GRAM SCHMIDT ORTHONORMALIZATION
 
   //BEGIN GRAM SCHMIDT CHECK
-
+  vector < double >  eigenFunctionCheck(numberOfEigPairs); // local solution
+  vector < double >  eigenFunctionOldCheck(numberOfEigPairs); // local solution
+  
+  
   for(unsigned i1 = 0; i1 < numberOfEigPairs; i1++) {
     for(unsigned j1 = 0; j1 < numberOfEigPairs; j1++) {
 
@@ -686,8 +689,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
         unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
         unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
-        eigenFunction.resize(nDofu);
-        eigenFunctionOld.resize(nDofu);
+        eigenFunctionCheck.resize(nDofu);
+        eigenFunctionOldCheck.resize(nDofu);
 
         for(int i = 0; i < dim; i++) {
           x1[i].resize(nDofx);
@@ -696,8 +699,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
         // local storage of global mapping and solution
         for(unsigned i = 0; i < nDofu; i++) {
           unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
-          eigenFunction[i] = (*sol->_Sol[eigfIndex[i1]])(solDof);
-          eigenFunctionOld[i] = (*sol->_Sol[eigfIndex[j1]])(solDof);
+          eigenFunctionCheck[i] = (*sol->_Sol[eigfIndex[i1]])(solDof);
+          eigenFunctionOldCheck[i] = (*sol->_Sol[eigfIndex[j1]])(solDof);
         }
 
         // local storage of coordinates
@@ -716,8 +719,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
           double eigenFunction_gss = 0.;
           double eigenFunction_gss_old = 0.;
           for(unsigned i = 0; i < nDofu; i++) {
-            eigenFunction_gss += phi[i] * eigenFunction[i];
-            eigenFunction_gss_old += phi[i] * eigenFunctionOld[i];
+            eigenFunction_gss += phi[i] * eigenFunctionCheck[i];
+            eigenFunction_gss_old += phi[i] * eigenFunctionOldCheck[i];
           }
           integral += eigenFunction_gss * eigenFunction_gss_old * weight;
         }
