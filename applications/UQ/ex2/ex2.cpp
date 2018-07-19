@@ -44,7 +44,7 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 10000; //number of samples for the Monte Carlo
+unsigned M = 50000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;
@@ -884,7 +884,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     unsigned varianceCounter = 0;
     for(unsigned m = 0; m < M; m++) {
      if (fabs(QoI[m]) <= 4.45){
-       varianceQoI += pow(QoI[m] - meanQoI, 2);
+       varianceQoI += (QoI[m] - meanQoI) * (QoI[m] - meanQoI);
        varianceCounter++;
      }
     }

@@ -20,16 +20,16 @@ std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
 double amin = 1. / 100.;
 
-double stdDeviationInput = 0.4;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double meanInput = 0.;
 
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
 
-boost::normal_distribution<> nd(meanInput, stdDeviationInput);
+boost::normal_distribution<> nd(0., 1.);
 
 boost::variate_generator < boost::mt19937&,
 
-      boost::normal_distribution<> > var_nor(rng, nd);
+boost::normal_distribution<> > var_nor(rng, nd);
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);

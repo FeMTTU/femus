@@ -5,11 +5,11 @@
 using namespace femus;
 
 //BEGIN Stochastic Input Parameters
-unsigned pIndex = 4;
-unsigned qIndex = 1;
+unsigned pIndex = 5;
+unsigned qIndex = 8;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
-double stdDeviationInput = 0.4;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double meanInput = 0.;
 double amin = 1. / 100.; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
@@ -540,7 +540,7 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
 //     for(unsigned i = 0; i < numberOfEigPairs; i++) {
 //       double termWithY = 0.;
 //       for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
-//         termWithY +=  (stdDeviationInput * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j] + meanInput)
+//         termWithY +=  HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j]
 //                       * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
 //       }
 // 
@@ -628,8 +628,7 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
           aStochasticTerm2[i] = 0.;
           for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
 //             aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
-            aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * 
-                                       (stdDeviationInput * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j] + meanInput))
+            aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j])
                                    * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
           }
         }
