@@ -34,7 +34,7 @@ void GetStochasticData(std::vector <double>& QoI);
 void PlotStochasticData();
 
 //BEGIN stochastic data
-double L = 4 ; // correlation length of the covariance function
+double L = 0.1 ; // correlation length of the covariance function
 double domainMeasure = 1.; //measure of the domain
 unsigned totMoments = 6;
 std::vector <double> moments(totMoments, 0.); //initialization
@@ -44,7 +44,7 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 50000; //number of samples for the Monte Carlo
+unsigned M = 10000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;

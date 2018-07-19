@@ -45,7 +45,7 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 
-double L = 4 ; // correlation length of the covariance function
+double L = 0.1 ; // correlation length of the covariance function
 //END
 
 unsigned numberOfUniformLevels = 4;

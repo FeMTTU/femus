@@ -6,7 +6,7 @@ using namespace femus;
 
 //BEGIN Stochastic Input Parameters
 unsigned pIndex = 5;
-unsigned qIndex = 8;
+unsigned qIndex = 5;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
 double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
