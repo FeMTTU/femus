@@ -24,6 +24,7 @@
 #include <memory>
 #include "ParallelObject.hpp"
 #include "WriterEnum.hpp"
+#include "iostream"
 
 namespace femus {
 
