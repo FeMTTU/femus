@@ -27,10 +27,10 @@ using namespace femus;
 //double rho1[10]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000}; 
 double rho1[20]={1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000};
 
-double ni_h = 0.01; // 0.1, 1, 10, 100, 200
+double ni_h = 0.01; 
 double ni_v = 0.0001;
 
-double dt = 300.; //60 for ni=100, 120 for ni=1
+double dt = 300.; 
 
 const unsigned NumberOfLayers = 20; 
 
@@ -65,7 +65,7 @@ double InitalValueT0(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -78,7 +78,7 @@ double InitalValueT1(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -91,7 +91,7 @@ double InitalValueT2(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -104,7 +104,7 @@ double InitalValueT3(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -117,7 +117,7 @@ double InitalValueT4(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -130,7 +130,7 @@ double InitalValueT5(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -143,7 +143,7 @@ double InitalValueT6(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -156,7 +156,7 @@ double InitalValueT7(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -169,7 +169,7 @@ double InitalValueT8(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -182,7 +182,7 @@ double InitalValueT9(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -195,7 +195,7 @@ double InitalValueT10(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -207,7 +207,7 @@ double InitalValueT11(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -220,7 +220,7 @@ double InitalValueT12(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -233,7 +233,7 @@ double InitalValueT13(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -246,7 +246,7 @@ double InitalValueT14(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -259,7 +259,7 @@ double InitalValueT15(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -272,7 +272,7 @@ double InitalValueT16(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -285,7 +285,7 @@ double InitalValueT17(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -298,7 +298,7 @@ double InitalValueT18(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -311,7 +311,7 @@ double InitalValueT19(const std::vector < double >& x)
  double temperature;
  temperature = Tbot+(Ttop-Tbot)*(zBot-z)/zBot;
  if(x[0]>-L && x[0]<L) {
-   temperature += -A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
+   temperature += A*cos(PI/(2*L)*(x[0]-x0))*sin(PI*(z+(deltaZ/2))/(zBot+(deltaZ/2)));
  }
  
  return temperature;
@@ -639,11 +639,24 @@ void ETD(MultiLevelProblem& ml_prob)
       
 	
       if( i > start ){
-        aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; 
+	//aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; 
+	if(solvm[k] > 0){
+	  aResHT[k] += solHTm[k] * solvm[k]  / dx; 
+	}
+	else {
+	  aResHT[k] += solHT[k] * solvm[k]  / dx; 
+	}
       }
       if(i < end - 1){
-	aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; 
+	//aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; 
+	if(solvp[k] > 0){
+	  aResHT[k] -= solHT[k] * solvp[k]  / dx; 
+	}
+	else {
+	  aResHT[k] -= solHTp[k] * solvp[k]  / dx; 
+	}
       }
+	
 	
       if(k<NLayers-1){
 	aResHT[k] += w[k+1] * 0.5 * (solHT[k]/solh[k] + solHT[k+1]/solh[k+1]);
@@ -862,21 +875,33 @@ void ETD(MultiLevelProblem& ml_prob)
       adept::adouble fvp = 0.5 * vMidp * vMidp + Pp[k];      
       aResv[k] -=  fvp / dxp;
       
-      adept::adouble deltaZt_k;
-      adept::adouble deltaZt_kplus1;
+      adept::adouble deltaZt = 0.;
+      adept::adouble deltaZb = 0.;
+      adept::adouble ht = 0.;
+      adept::adouble hb = 0.;
       if ( k > 0 ){
-	deltaZt_k = 4. * (solv[k-1]-solv[k]) / (solhm[k-1]+solhm[k]+solhp[k-1]+solhp[k]);
-	aResv[k] -= 0.5 * w[k] * deltaZt_k;
+	ht = (solhm[k-1] + solhm[k] + solhp[k-1] + solhp[k]) / 4.;
+	deltaZt = ( solv[k-1] - solv[k] ) / ht;
+	aResv[k] -= 0.5 * w[k] * deltaZt;
+      }
+      else{
+	ht = 0.5 * (solhm[k] + solhp[k]);
+	deltaZt = 0.*( 0. - solv[k] ) / ht;
       }
       if (k < NLayers - 1) {
-	deltaZt_kplus1 = 4. * (solv[k]-solv[k+1]) / (solhm[k]+solhm[k+1]+solhp[k]+solhp[k+1] );
-	aResv[k] -= 0.5 * w[k+1] * deltaZt_kplus1; 
+	hb = (solhm[k] + solhm[k+1] + solhp[k] + solhp[k+1] ) / 4.;
+	deltaZb = (solv[k] - solv[k+1]) / hb;
+	aResv[k] -= 0.5 * w[k+1] * deltaZb; 
+      }
+      else{
+	hb = 0.5 * (solhm[k] + solhp[k]);
+	deltaZb = 0.*(solv[k] - 0.) / hb;
       }
       
-      aResv[k] += ni_h*(solvm[k] - solv[k])/(dxm*dxm); // horizontal diffusion
-      aResv[k] += ni_h*(solvp[k] - solv[k])/(dxp*dxp); // horizontal diffusion    
+      aResv[k] += ni_h*(solvm[k] - solv[k])/(dxm * 0.5 * (dxm+dxp) ); // horizontal diffusion
+      aResv[k] += ni_h*(solvp[k] - solv[k])/(dxp * 0.5 * (dxm+dxp) ); // horizontal diffusion  
       
-      aResv[k] += 2. * ni_v * (deltaZt_k - deltaZt_kplus1) / (solhm[k] + solhp[k]); // vertical diffusion
+      aResv[k] += ni_v * (deltaZt - deltaZb) / ( (ht + hb) / 2. ); // vertical diffusion
       
       //aResv[k] += 0.01*sqrt(solv[k]*solv[k])*solv[k];//drag force
     }
