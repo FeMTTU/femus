@@ -31,8 +31,10 @@ namespace femus
 {
 
   const unsigned elem_type::_fe_old_to_new[QL] = {2, 0, 3};
-  const unsigned elem_type::_fe_new_to_old[NFE_FAMS] = {1, -7, 0, 2, -7};
-
+  //TODO const unsigned elem_type::_fe_new_to_old[NFE_FAMS] = {1, -7, 0, 2, -7};
+  const unsigned elem_type::_fe_new_to_old[NFE_FAMS] = {1, 7, 0, 2, 7};
+  
+  
   unsigned elem_type::_refindex = 1;
 
 //   Constructor

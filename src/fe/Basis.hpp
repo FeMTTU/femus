@@ -148,11 +148,11 @@ namespace femus {
       virtual const int* GetKVERT_IND(const int &i) const = 0;
 
       virtual const unsigned GetFine2CoarseVertexMapping(const int &i, const unsigned &j) const {
-        std::cout << "Warning this function in not implemented for const element type" << std::cout;
+        std::cout << "Warning this function in not implemented for const element type" << std::endl;
       };
 
       virtual const unsigned GetFaceDof(const unsigned &i, const unsigned &j) const {
-	std::cout << "Warning AAA this function in not yet implemented for this element type" << std::cout;
+	std::cout << "Warning AAA this function in not yet implemented for this element type" << std::endl;
       }
 
     protected:
