@@ -548,15 +548,22 @@ void ETD(MultiLevelProblem& ml_prob)
     vector < adept::adouble > solHT(NLayers);    // local coordinates
     vector < adept::adouble > solHTp(NLayers);    // local coordinates
     
-    vector< adept::adouble > aResh(NLayers);
-    vector< adept::adouble > aResv(NLayers);
-    vector< adept::adouble > aResHT(NLayers);
-   
-    unsigned bc1 = (i == start)? 0 : 1;
-    unsigned bc2 = (i == end-1)? 0 : 1;
+    vector < adept::adouble > solHTmm(NLayers);    // local coordinates
+    vector < adept::adouble > solHTpp(NLayers);    // local coordinates
+
+    vector< adept::adouble > aResh ( NLayers );
+    vector< adept::adouble > aResv ( NLayers );
+    vector< adept::adouble > aResHT ( NLayers );
+
+    unsigned bc1 = ( i == start ) ? 0 : 1;
+    unsigned bc2 = ( i == end - 1 ) ? 0 : 1;
+    
+    unsigned bc3 = ( i > start + 1) ? 1 : 0;
+    unsigned bc4 = ( i < end - 2 ) ? 1 : 0;
     
     l2GMapRow.resize(2 * NLayers);
-    l2GMapColumn.resize( 2 * ( 2 + bc1 + bc2) * NLayers);
+    //l2GMapColumn.resize( 2 * ( 2 + bc1 + bc2) * NLayers);
+    l2GMapColumn.resize ( ( 2 * ( 2 + bc1 + bc2 ) + bc3 + bc4 ) * NLayers );
     
     std::fill(aResh.begin(), aResh.end(), 0);    //set aRes to zero
     std::fill(aResHT.begin(), aResHT.end(), 0);  //set aRes to zero
@@ -593,7 +600,20 @@ void ETD(MultiLevelProblem& ml_prob)
 	l2GMapColumn[(4 + 2 * bc1) * NLayers + j] = pdeSys->GetSystemDof(solIndexh[j], solPdeIndexh[j], 0, i+1);   
 	l2GMapColumn[(5 + 2 * bc1) * NLayers + j] = pdeSys->GetSystemDof(solIndexHT[j], solPdeIndexHT[j], 0, i+1);   
       }
+      
+      if ( i > start + 1 ) {
+        solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
+        if (i == end - 1) l2GMapColumn[( 5 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+        else l2GMapColumn[( ( 5 + 2 * bc1) + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+      }
+    
+      if ( i < end - 2 ) {
+        solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
+        l2GMapColumn[( ( 5 + 2 * bc1 ) + bc3 + bc4 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
+      }
+      
     }
+    
     s.new_recording();
     
     vector < double > x(2);    // local coordinates
@@ -635,29 +655,58 @@ void ETD(MultiLevelProblem& ml_prob)
       if(i < end - 1){
 	aResh[k] -= 0.5 * (solh[k] + solhp[k]) * solvp[k] / dx; 
       }
-      aResh[k] += w[k+1] - w[k];	    
+      aResh[k] += w[k+1] - w[k];	   
+      	
+      //BEGIN FIRST ORDER
+//       if ( i > start ) {
+//         //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
+//         if ( solvm[k] > 0 ) {
+//           aResHT[k] += solHTm[k] * solvm[k]  / dx;
+//         }
+//         else {
+//           aResHT[k] += solHT[k] * solvm[k]  / dx;
+//         }
+//       }
+//       if ( i < end - 1 ) {
+//         //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
+//         if ( solvp[k] > 0 ) {
+//           aResHT[k] -= solHT[k] * solvp[k]  / dx; //first order upwind
+//         }
+//         else {
+//           aResHT[k] -= solHTp[k] * solvp[k]  / dx; //first order upwind
+//         }
+//       }
+      //END
       
-	
-      if( i > start ){
-	//aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; 
-	if(solvm[k] > 0){
-	  aResHT[k] += solHTm[k] * solvm[k]  / dx; 
-	}
-	else {
-	  aResHT[k] += solHT[k] * solvm[k]  / dx; 
-	}
+      //BEGIN THIRD ORDER
+      if ( i > start ) {
+        aResHT[k] += 0.5 * ( solHTm[k] + solHT[k] ) * solvm[k] / dx;
+        if ( solvm[k] > 0 ) {
+          if ( i > start + 1 ) {
+            aResHT[k] += - 1. / 6. * ( solHT[k] - 2.*solHTm[k] + solHTmm[k] ) * solvm[k]  / dx;
+          }
+        }
+        else {
+          if ( i < end - 1 ) {
+            aResHT[k] += - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvm[k]  / dx;
+          }
+        }
       }
-      if(i < end - 1){
-	//aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; 
-	if(solvp[k] > 0){
-	  aResHT[k] -= solHT[k] * solvp[k]  / dx; 
-	}
-	else {
-	  aResHT[k] -= solHTp[k] * solvp[k]  / dx; 
-	}
+      if ( i < end - 1 ) {
+        aResHT[k] -= 0.5 * ( solHTp[k] + solHT[k] ) * solvp[k] / dx;
+        if ( solvp[k] > 0 ) {
+          if (i > start) {
+            aResHT[k] -= - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvp[k]  / dx;
+          }
+        }
+        else {
+          if ( i < end - 2 ) {
+            aResHT[k] -= - 1. / 6. * ( solHTpp[k] - 2.*solHTp[k] + solHT[k] ) * solvp[k]  / dx;
+          }
+        }
       }
-	
-	
+      //END
+		
       if(k<NLayers-1){
 	aResHT[k] += w[k+1] * 0.5 * (solHT[k]/solh[k] + solHT[k+1]/solh[k+1]);
       }
@@ -692,9 +741,16 @@ void ETD(MultiLevelProblem& ml_prob)
       s.independent(&solhp[0], NLayers);
       s.independent(&solHTp[0], NLayers);
     }
+    if ( i > start + 1) {
+      s.independent ( &solHTmm[0], NLayers );
+    }
+    if ( i < end - 2 ) {
+      s.independent ( &solHTpp[0], NLayers );
+    }
     
     // get the jacobian matrix (ordered by row major )
-    vector < double > Jac(NLayers * 2 * NLayers * 2 * (2 + bc1 + bc2) ); 
+    //vector < double > Jac(NLayers * 2 * NLayers * 2 * (2 + bc1 + bc2) ); 
+    vector < double > Jac ( NLayers * 2 * NLayers * ( 2 * ( 2 + bc1 + bc2 ) + bc3 + bc4 ) );
     s.jacobian(&Jac[0], true);
     
     //store K in the global matrix KK

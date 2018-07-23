@@ -459,30 +459,58 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       //END
       
       //BEGIN THIRD ORDER
+//       if ( i > start ) {
+//         aResHT[k] += 0.5 * ( solHTm[k] + solHT[k] ) * solvm[k] / dx;
+//         if ( solvm[k] > 0 ) {
+//           if ( i > start + 1 ) {
+//             aResHT[k] += - 1. / 6. * ( solHT[k] - 2.*solHTm[k] + solHTmm[k] ) * solvm[k]  / dx;
+//           }
+//         }
+//         else {
+//           if ( i < end - 1 ) {
+//             aResHT[k] += - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvm[k]  / dx;
+//           }
+//         }
+//       }
+//       if ( i < end - 1 ) {
+//         aResHT[k] -= 0.5 * ( solHTp[k] + solHT[k] ) * solvp[k] / dx;
+//         if ( solvp[k] > 0 ) {
+//           if (i > start) {
+//             aResHT[k] -= - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvp[k]  / dx;
+//           }
+//         }
+//         else {
+//           if ( i < end - 2 ) {
+//             aResHT[k] -= - 1. / 6. * ( solHTpp[k] - 2.*solHTp[k] + solHT[k] ) * solvp[k]  / dx;
+//           }
+//         }
+//       }
+      //END
+      
+      double numb = 0.5;
+      //BEGIN GENERAL THIRD ORDER
       if ( i > start ) {
         aResHT[k] += 0.5 * ( solHTm[k] + solHT[k] ) * solvm[k] / dx;
-        if ( solvm[k] > 0 ) {
-          if ( i > start + 1 ) {
-            aResHT[k] += - 1. / 6. * ( solHT[k] - 2.*solHTm[k] + solHTmm[k] ) * solvm[k]  / dx;
-          }
-        }
-        else {
-          if ( i < end - 1 ) {
-            aResHT[k] += - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvm[k]  / dx;
-          }
+	if ( i > start + 1 ) {
+	  aResHT[k] += - 1./12. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] + solHT[k] - 2.*solHTm[k] + solHTmm[k] ) * solvm[k] / dx;
+	  if (solvm[k] > 0){
+	    aResHT[k] += numb/12. * (solHTp[k] - 2.*solHT[k] + solHTm[k] - (solHT[k] - 2.*solHTm[k] + solHTmm[k])) * solvm[k] / dx;
+	  }
+	  else{
+	    aResHT[k] += - numb/12. * (solHTp[k] - 2.*solHT[k] + solHTm[k] - (solHT[k] - 2.*solHTm[k] + solHTmm[k])) * solvm[k] / dx;
+	  }
         }
       }
       if ( i < end - 1 ) {
         aResHT[k] -= 0.5 * ( solHTp[k] + solHT[k] ) * solvp[k] / dx;
-        if ( solvp[k] > 0 ) {
-          if (i > start) {
-            aResHT[k] -= - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvp[k]  / dx;
-          }
-        }
-        else {
-          if ( i < end - 2 ) {
-            aResHT[k] -= - 1. / 6. * ( solHTpp[k] - 2.*solHTp[k] + solHT[k] ) * solvp[k]  / dx;
-          }
+	if (i < end - 2){
+	  aResHT[k] -= - 1./12. * (solHTpp[k] - 2.*solHTp[k] + solHT[k] + solHTp[k] - 2.*solHT[k] + solHTm[k]) * solvp[k] / dx;
+	  if (solvm[k] > 0){
+	    aResHT[k] -= numb/12. * (solHTpp[k] - 2.*solHTp[k] + solHT[k] - (solHTp[k] - 2.*solHT[k] + solHTm[k])) * solvp[k] / dx;
+	  }
+	  else{
+	    aResHT[k] -= - numb/12. * (solHTpp[k] - 2.*solHTp[k] + solHT[k] - (solHTp[k] - 2.*solHT[k] + solHTm[k])) * solvp[k] / dx;
+	  }
         }
       }
       //END
