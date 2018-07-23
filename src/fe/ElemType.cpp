@@ -1659,10 +1659,12 @@ template <class type>
   {
 
     bool hermitianMatrix = true;
-    if(&nablaphi == NULL) {
+    if( &nablaphi == NULL ) {
       hermitianMatrix = false;
     }
 
+    
+    
     phi.resize(_nc);
     gradphi.resize(_nc * 2);
     if(hermitianMatrix) nablaphi.resize(_nc * 3);

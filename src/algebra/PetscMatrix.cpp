@@ -415,10 +415,10 @@ namespace femus {
   ) const {// =========================================
     assert(this->initialized());
     std::cout << "\n PetscMatrix::print_personal \n";
-#ifndef NDEBUG
-    if(os != std::cout)
-      std::cerr << "Warning! PETSc can only print to std::cout!" << std::endl;
-#endif
+// #ifndef NDEBUG
+//     if(os != std::cout)
+//       std::cerr << "Warning! PETSc can only print to std::cout!" << std::endl;
+// #endif
     int ierr = 0;
     ierr = MatView(_mat, PETSC_VIEWER_STDOUT_WORLD);
     CHKERRABORT(MPI_COMM_WORLD, ierr);
