@@ -76,17 +76,19 @@ namespace femus
 
       virtual void Jacobian(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight,
                             vector < double > &phi, vector < adept::adouble > &gradphi, 
-			     boost::optional< vector < adept::adouble > & > nablaphi) const = 0;
+			     boost::optional < vector < adept::adouble > & > nablaphi = boost::none) const = 0;
 
       virtual void Jacobian(const vector < vector < double > > &vt, const unsigned &ig, double &Weight,
                             vector < double > &other_phi, vector < double > &gradphi, 
-			     boost::optional <vector < double > & > nablaphi) const = 0;
+			     boost::optional < vector < double > & > nablaphi = boost::none) const = 0;
 
       virtual void Jacobian(const vector < vector < adept::adouble > > &vt, const vector <double > &xi, adept::adouble &Weight,
-                            vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const = 0;
+                            vector < double > &phi, vector < adept::adouble > &gradphi, 
+			    boost::optional < vector < adept::adouble > & > nablaphi = boost::none) const = 0;
 
       virtual void Jacobian(const vector < vector < double > > &vt, const vector <double > &xi, double &Weight,
-                            vector < double > &other_phi, vector < double > &gradphi, vector < double > &nablaphi) const = 0;
+                            vector < double > &other_phi, vector < double > &gradphi, 
+			    boost::optional < vector < double > & > nablaphi = boost::none) const = 0;
 
       virtual void JacobianSur(const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight,
                                vector < double > &other_phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &normal) const = 0;
@@ -240,29 +242,32 @@ namespace femus
       template <class type>
       void Jacobian_type( const vector < vector < type > > &vt, const unsigned &ig, type &Weight,
                           vector < double > &phi, vector < type > &gradphi, 
-			   boost::optional < vector < type > & > nablaphi) const;
+			  boost::optional < vector < type > & > nablaphi) const;
 
       void Jacobian( const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight,
                      vector < double > &phi, vector < adept::adouble > &gradphi, 
-		      boost::optional < vector < adept::adouble > & > nablaphi) const {
+		     boost::optional < vector < adept::adouble > & > nablaphi = boost::none) const {
         Jacobian_type(vt, ig, Weight, phi, gradphi, nablaphi);
       }
       void Jacobian(const vector < vector < double > > &vt, const unsigned &ig, double &Weight,
                     vector < double > &phi, vector < double > &gradphi, 
-		    boost::optional < vector < double > & > nablaphi) const {
+		    boost::optional < vector < double > & > nablaphi = boost::none) const {
         Jacobian_type(vt, ig, Weight, phi, gradphi, nablaphi);
       }
 
       template <class type>
       void Jacobian_type( const vector < vector < type > > &vt, const vector < double > &xi, type &Weight,
-                          vector < double > &phi, vector < type > &gradphi, vector < type > &nablaphi) const;
+                          vector < double > &phi, vector < type > &gradphi, 
+			  boost::optional < vector < type > & > nablaphi) const;
 
       void Jacobian( const vector < vector < adept::adouble > > &vt, const vector < double > &xi, adept::adouble &Weight,
-                     vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const {
+                     vector < double > &phi, vector < adept::adouble > &gradphi, 
+		     boost::optional < vector < adept::adouble > & > nablaphi = boost::none) const {
         Jacobian_type(vt, xi, Weight, phi, gradphi, nablaphi);
       }
       void Jacobian(const vector < vector < double > > &vt, const vector < double > &xi, double &Weight,
-                    vector < double > &phi, vector < double > &gradphi, vector < double > &nablaphi) const {
+                    vector < double > &phi, vector < double > &gradphi, 
+		    boost::optional < vector < double > & > nablaphi = boost::none) const {
         Jacobian_type(vt, xi, Weight, phi, gradphi, nablaphi);
       }
 
@@ -349,26 +354,29 @@ namespace femus
 
       void Jacobian( const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight,
                      vector < double > &phi, vector < adept::adouble > &gradphi, 
-		      boost::optional< vector < adept::adouble > & > nablaphi) const {
+		      boost::optional< vector < adept::adouble > & > nablaphi = boost::none) const {
         Jacobian_type(vt, ig, Weight, phi, gradphi, nablaphi);
       }
 
       void Jacobian(const vector < vector < double > > &vt, const unsigned &ig, double &Weight,
                     vector < double > &phi, vector < double > &gradphi, 
-		    boost::optional< vector < double > & > nablaphi) const {
+		    boost::optional< vector < double > & > nablaphi = boost::none) const {
         Jacobian_type(vt, ig, Weight, phi, gradphi, nablaphi);
       }
 
       template <class type>
       void Jacobian_type( const vector < vector < type > > &vt, const vector < double > &xi, type &Weight,
-                          vector < double > &phi, vector < type > &gradphi, vector < type > &nablaphi) const;
+                          vector < double > &phi, vector < type > &gradphi, 
+			  boost::optional < vector < type > & > nablaphi) const;
 
       void Jacobian( const vector < vector < adept::adouble > > &vt, const vector < double > &xi, adept::adouble &Weight,
-                     vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const {
+                     vector < double > &phi, vector < adept::adouble > &gradphi, 
+		     boost::optional < vector < adept::adouble > & > nablaphi = boost::none) const {
         Jacobian_type(vt, xi, Weight, phi, gradphi, nablaphi);
       }
       void Jacobian(const vector < vector < double > > &vt, const vector < double > &xi, double &Weight,
-                    vector < double > &phi, vector < double > &gradphi, vector < double > &nablaphi) const {
+                    vector < double > &phi, vector < double > &gradphi, 
+		    boost::optional < vector < double > & > nablaphi = boost::none) const {
         Jacobian_type(vt, xi, Weight, phi, gradphi, nablaphi);
       }
 
@@ -470,26 +478,29 @@ namespace femus
 
       void Jacobian( const vector < vector < adept::adouble > > &vt, const unsigned &ig, adept::adouble &Weight,
                      vector < double > &phi, vector < adept::adouble > &gradphi, 
-		     boost::optional< vector < adept::adouble > & > nablaphi) const {
+		     boost::optional< vector < adept::adouble > & > nablaphi = boost::none) const {
         Jacobian_type(vt, ig, Weight, phi, gradphi, nablaphi);
       }
 
       void Jacobian(const vector < vector < double > > &vt, const unsigned &ig, double &Weight,
                     vector < double > &phi, vector < double > &gradphi, 
-		     boost::optional< vector < double > & > nablaphi) const {
+		     boost::optional< vector < double > & > nablaphi = boost::none) const {
         Jacobian_type(vt, ig, Weight, phi, gradphi, nablaphi);
       }
 
       template <class type>
       void Jacobian_type( const vector < vector < type > > &vt, const vector < double > &xi, type &Weight,
-                          vector < double > &phi, vector < type > &gradphi, vector < type > &nablaphi) const;
+                          vector < double > &phi, vector < type > &gradphi, 
+			  boost::optional < vector < type > & > nablaphi) const;
 
       void Jacobian( const vector < vector < adept::adouble > > &vt, const vector < double > &xi, adept::adouble &Weight,
-                     vector < double > &phi, vector < adept::adouble > &gradphi, vector < adept::adouble > &nablaphi) const {
+                     vector < double > &phi, vector < adept::adouble > &gradphi, 
+		     boost::optional < vector < adept::adouble > & > nablaphi = boost::none) const {
         Jacobian_type(vt, xi, Weight, phi, gradphi, nablaphi);
       }
       void Jacobian(const vector < vector < double > > &vt, const vector < double > &xi, double &Weight,
-                    vector < double > &phi, vector < double > &gradphi, vector < double > &nablaphi) const {
+                    vector < double > &phi, vector < double > &gradphi, 
+		    boost::optional < vector < double > & > nablaphi = boost::none) const {
         Jacobian_type(vt, xi, Weight, phi, gradphi, nablaphi);
       }
 

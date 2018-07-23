@@ -271,8 +271,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
   }
 
   vector <double> phi_x; // local test function first order partial derivatives
-  vector < double >* nullDoublePointer = NULL;
-
+  
   phi_x.reserve(maxSize * dim);
 
   vector< int > l2GMap1; // local to global mapping
@@ -347,7 +346,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
       vector < vector <double> > phi2(jgNumber);  // local test function
 
       for(unsigned jg = 0; jg < jgNumber; jg++) {
-        msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x, *nullDoublePointer);
+        msh->_finiteElement[ielGeom2][solType]->Jacobian(x2, jg, weight2[jg], phi2[jg], phi_x);
 
         xg2[jg].assign(dim, 0.);
 
@@ -397,7 +396,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
         vector <double> phi1;  // local test function
         for(unsigned ig = 0; ig < igNumber; ig++) {
 
-          msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x, *nullDoublePointer);
+          msh->_finiteElement[ielGeom1][solType]->Jacobian(x1, ig, weight1, phi1, phi_x);
 
           // evaluate the solution, the solution derivatives and the coordinates in the gauss point
           vector < double > xg1(dim, 0.);
@@ -624,7 +623,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
           // *** Gauss point loop ***
           for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
             // *** get gauss point weight, test function and test function partial derivatives ***
-            msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
+            msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x);
             double eigenFunction_gss = 0.;
             double eigenFunction_gss_old = 0.;
             for(unsigned i = 0; i < nDofu; i++) {
@@ -683,7 +682,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
       // *** Gauss point loop ***
       for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
         // *** get gauss point weight, test function and test function partial derivatives ***
-        msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
+        msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x);
         double eigenFunction_gss = 0.;
         for(unsigned i = 0; i < nDofu; i++) {
           eigenFunction_gss += phi[i] * eigenFunction[i];
@@ -745,7 +744,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
         //  *** Gauss point loop ***
         for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
           //    *** get gauss point weight, test function and test function partial derivatives ***
-          msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
+          msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x);
           double eigenFunction_gss = 0.;
           double eigenFunction_gss_old = 0.;
           for(unsigned i = 0; i < nDofu; i++) {
@@ -844,11 +843,11 @@ void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vecto
       }
     }
 
-    vector < double >* nullDoublePointer = NULL;
+    
     // *** Gauss point loop ***
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, *nullDoublePointer);
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x);
 
       for(unsigned j = 0; j < Jp.size(); j++) {
         double solu_gss = 0.;

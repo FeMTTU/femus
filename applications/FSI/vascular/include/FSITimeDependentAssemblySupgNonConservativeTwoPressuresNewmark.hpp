@@ -103,8 +103,8 @@ namespace femus
     vector < adept::adouble> nablaphi;
     vector < double > nablaphi_hat;
 
-    vector < double > *nullDoublePointer = NULL;
-    vector < adept::adouble > *nullAdoublePointer = NULL;
+    //vector < double > *nullDoublePointer = NULL;
+    //vector < adept::adouble > *nullAdoublePointer = NULL;
 
     const double* phi1;
     adept::adouble Weight = 0.;
@@ -379,7 +379,7 @@ namespace femus
       double area = 1.;
       // *** Volume integral ***
       for ( unsigned ig = 0; ig < mymsh->_finiteElement[ielt][SolType2]->GetGaussPointNumber(); ig++ ) {
-        mymsh->_finiteElement[ielt][SolType2]->Jacobian ( vx_hat, ig, Weight_hat, phi_hat, gradphi_hat, *nullDoublePointer );
+        mymsh->_finiteElement[ielt][SolType2]->Jacobian ( vx_hat, ig, Weight_hat, phi_hat, gradphi_hat);
         phi1 = mymsh->_finiteElement[ielt][SolType1]->GetPhi ( ig );
 
         // ---------------------------------------------------------------------------
@@ -573,7 +573,7 @@ namespace femus
             mymsh->_finiteElement[ielt][SolType2]->Jacobian ( vx, ig, Weight, phi, gradphi, nablaphi );
           }
           else {
-            mymsh->_finiteElement[ielt][SolType2]->Jacobian ( vx, ig, Weight, phi, gradphi, *nullAdoublePointer );
+            mymsh->_finiteElement[ielt][SolType2]->Jacobian ( vx, ig, Weight, phi, gradphi);
           }
 
           // store solution gradient and laplace at the current time

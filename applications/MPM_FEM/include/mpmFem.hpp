@@ -92,8 +92,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
   double dt =  my_nnlin_impl_sys.GetIntervalTime();
 
-  vector < adept::adouble >* nullAdoublePointer = NULL;
-  vector < double >* nullDoublePointer = NULL;
+  //vector < adept::adouble >* nullAdoublePointer = NULL;
+  // nullDoublePointer = NULL;
 
   //variable-name handling
   const char varname[10][5] = {"DX", "DY", "DZ", "VX", "VY", "VZ", "AX", "AY", "AZ", "Mat"};
@@ -187,7 +187,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
     for(unsigned ig = 0; ig < mymsh->_finiteElement[ielt][solType]->GetGaussPointNumber(); ig++) {
 
 
-      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, ig, weight_hat, phi_hat, gradphi_hat, *nullDoublePointer);
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, ig, weight_hat, phi_hat, gradphi_hat);
 
       vector < double > Xg(dim, 0);
       vector < vector < adept::adouble > > GradSolDgssHat(dim);
@@ -235,7 +235,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       }
       else {
 	
-	mymsh->_finiteElement[ielt][solType]->Jacobian(vx, ig, weight, phi, gradphi, *nullAdoublePointer);
+	mymsh->_finiteElement[ielt][solType]->Jacobian(vx, ig, weight, phi, gradphi);
 		
 	vector < adept::adouble > SolDgss(dim, 0);
 	vector < double > SolDgssOld(dim, 0);
@@ -439,8 +439,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 // 	std::cout << iel <<" "<< iMarker << " " << xi[0] << " " << xi[1] <<std::endl;
 //       }
 
-      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradphi, *nullAdoublePointer); //function to evaluate at the particles
-      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, xi, weight_hat, phi_hat, gradphi_hat, *nullDoublePointer);
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradphi); //function to evaluate at the particles
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, xi, weight_hat, phi_hat, gradphi_hat);
 
 
       // displacement and velocity

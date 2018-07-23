@@ -85,7 +85,7 @@ int main(int argc, char** args)
   // ******* Init multilevel mesh from mesh.neu file *******
   unsigned short numberOfUniformRefinedMeshes, numberOfAMRLevels;
 
-  numberOfUniformRefinedMeshes = 3;
+  numberOfUniformRefinedMeshes = 2;
   numberOfAMRLevels = 0;
 
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes + numberOfAMRLevels, numberOfUniformRefinedMeshes,
