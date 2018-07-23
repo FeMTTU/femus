@@ -18,6 +18,8 @@ ADD_SUBDIRECTORY(lock_exchange_zlevel/)
 
 ADD_SUBDIRECTORY(lock_exchange_zlevel_split/)
 
+ADD_SUBDIRECTORY(lock_exchange_zlevel_2matrices/)
+
 ADD_SUBDIRECTORY(overflow_isopycnal/)
 
 ADD_SUBDIRECTORY(internal_waves_zlevel/)
