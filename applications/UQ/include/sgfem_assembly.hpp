@@ -1,100 +1,177 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
+#include <boost/math/special_functions/binomial.hpp>
 
 using namespace femus;
 
-
-unsigned factorial(unsigned n) {
-
-  unsigned fac = 1.;
-
-  if(n >= 0 && n < 13) {
-
-    if(n > 0) {
-      while(n > 1) {
-        fac *= n;
-        n--;
-      }
-    }
-  }
-
-  else {
-    std::cout << " input of factorial function must be an integer that is non-negative or less than 13" << std::endl;
-    abort();
-  }
-
-  return fac;
-
-}
-
-
 //BEGIN Stochastic Input Parameters
-unsigned pIndex = 3;
-unsigned qIndex = 2;
+unsigned pIndex = 5;
+unsigned qIndex = 5;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
-double stdDeviationInput = 1.;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
-double amin = 1. / 100; // for the KL expansion
+double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double meanInput = 0.;
+double amin = 1. / 100.; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 //END Stochastic Input Parameters
 
 
-const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, first row: weights, second row: coordinates
-  {{1.77245385091}, {0.}},
-  { {0.8862269254527577, 0.8862269254527577},
-    { -0.7071067811865476, 0.7071067811865476}
+const double HermiteQuadrature[16][2][16] = { //Number of quadrature points, first row: weights, second row: coordinates
+  {{1.}, {0.}},
+  { {0.5000000000000002, 0.5000000000000002},
+    { -1., 1.}
   },
-  { {0.29540897515091946, 1.1816359006036772, 0.29540897515091946},
-    { -1.224744871391589, 0., 1.224744871391589}
+  { {0.1666666666666667, 0.6666666666666666, 0.1666666666666667},
+    { -1.7320508075688772, 0, 1.7320508075688772}
   },
-  { {0.08131283544724523, 0.8049140900055128, 0.8049140900055128, 0.08131283544724523},
-    { -1.6506801238857844, -0.5246476232752904, 0.5246476232752904, 1.6506801238857844}
+  { {0.04587585476806852, 0.4541241452319316, 0.4541241452319316, 0.04587585476806852},
+    { -2.3344142183389773, -0.7419637843027258, 0.7419637843027258, 2.3344142183389773}
   },
-  { {0.019953242059045917, 0.39361932315224113, 0.9453087204829418, 0.39361932315224113, 0.019953242059045917},
-    { -2.0201828704560856, -0.9585724646138185, 0., 0.9585724646138185, 2.0201828704560856}
+  { {0.011257411327720693, 0.22207592200561266, 0.5333333333333333, 0.22207592200561266, 0.011257411327720693},
+    { -2.8569700138728056, -1.355626179974266, 0, 1.355626179974266, 2.8569700138728056}
   },
-  { {0.004530009905508841, 0.15706732032285653, 0.7246295952243923, 0.7246295952243923, 0.15706732032285653, 0.004530009905508841},
-    { -2.3506049736744923, -1.335849074013697, -0.4360774119276165, 0.4360774119276165, 1.335849074013697, 2.3506049736744923}
+  { {0.0025557844020562544, 0.08861574604191463, 0.40882846955602936, 0.40882846955602936, 0.08861574604191463, 0.0025557844020562544},
+    { -3.324257433552119, -1.8891758777537107, -0.6167065901925941, 0.6167065901925941, 1.8891758777537107, 3.324257433552119}
   },
   { {
-      0.0009717812450995206, 0.05451558281912702, 0.4256072526101277, 0.8102646175568072, 0.4256072526101277, 0.05451558281912702,
-      0.0009717812450995206
+      0.0005482688559722186, 0.03075712396758655, 0.2401231786050128, 0.4571428571428571, 0.2401231786050128, 0.03075712396758655,
+      0.0005482688559722186
     },
-    { -2.6519613568352334, -1.6735516287674714, -0.8162878828589647, 0., 0.8162878828589647, 1.6735516287674714, 2.6519613568352334}
+    { -3.7504397177257425, -2.366759410734541, -1.1544053947399682, 0, 1.1544053947399682, 2.366759410734541, 3.7504397177257425}
   },
   { {
-      0.00019960407221136756, 0.017077983007413464, 0.20780232581489194, 0.6611470125582413, 0.6611470125582413, 0.20780232581489194,
-      0.017077983007413464, 0.00019960407221136756
+      0.00011261453837536777, 0.009635220120788286, 0.11723990766175918, 0.3730122576790776, 0.3730122576790776, 0.11723990766175918,
+      0.009635220120788286, 0.00011261453837536777
     },
     {
-      -2.930637420257244, -1.981656756695843, -1.1571937124467802, -0.3811869902073221, 0.3811869902073221, 1.1571937124467802,
-      1.981656756695843, 2.930637420257244
+      -4.1445471861258945, -2.8024858612875416, -1.636519042435108, -0.5390798113513751, 0.5390798113513751, 1.636519042435108,
+      2.8024858612875416, 4.1445471861258945
     }
   },
   { {
-      0.00003960697726326427, 0.004943624275536942, 0.08847452739437658, 0.4326515590025556, 0.7202352156060509, 0.4326515590025556,
-      0.08847452739437658, 0.004943624275536942, 0.00003960697726326427
+      0.00002234584400774667, 0.0027891413212317783, 0.04991640676521788, 0.2440975028949394, 0.40634920634920635, 0.2440975028949394,
+      0.04991640676521788, 0.0027891413212317783, 0.00002234584400774667
     },
     {
-      -3.1909932017815277, -2.266580584531843, -1.468553289216668, -0.7235510187528376, 0., 0.7235510187528376, 1.468553289216668,
-      2.266580584531843, 3.1909932017815277
+      -4.512745863399783, -3.20542900285647, -2.07684797867783, -1.0232556637891326, 0, 1.0232556637891326, 2.07684797867783,
+      3.20542900285647, 4.512745863399783
     }
   },
   { {
-      7.640432855232643e-6, 0.001343645746781235, 0.033874394455481044, 0.24013861108231477, 0.6108626337353258, 0.6108626337353258,
-      0.24013861108231477, 0.033874394455481044, 0.001343645746781235, 7.640432855232643e-6
+      4.3106526307183275e-6, 0.0007580709343122191, 0.019111580500770314, 0.13548370298026785, 0.34464233493201907, 0.34464233493201907,
+      0.13548370298026785, 0.019111580500770314, 0.0007580709343122191, 4.3106526307183275e-6
     },
     {
-      -3.4361591188377374, -2.5327316742327897, -1.7566836492998819, -1.0366108297895136, -0.3429013272237046, 0.3429013272237046,
-      1.0366108297895136, 1.7566836492998819, 2.5327316742327897, 3.4361591188377374
+      -4.859462828332312, -3.581823483551927, -2.4843258416389546, -1.4659890943911582, -0.48493570751549764, 0.48493570751549764,
+      1.4659890943911582, 2.4843258416389546, 3.581823483551927, 4.859462828332312
     }
+  },
+  {
+    {
+      8.121849790214966e-7, 0.00019567193027122425, 0.006720285235537278, 0.06613874607105787, 0.24224029987396994, 0.3694083694083694,
+      0.24224029987396994, 0.06613874607105787, 0.006720285235537278, 0.00019567193027122425, 8.121849790214966e-7
+    },
+    {
+      -5.1880012243748705, -3.936166607129977, -2.865123160643645, -1.876035020154846, -0.928868997381064, 0, 0.928868997381064,
+      1.876035020154846, 2.865123160643645, 3.936166607129977, 5.1880012243748705
+    }
+  },
+  {
+    {
+      1.4999271676371695e-7, 0.00004837184922590667, 0.0022033806875332014, 0.02911668791236416, 0.14696704804533003, 0.3216643615128302,
+      0.3216643615128302, 0.14696704804533003, 0.02911668791236416, 0.0022033806875332014, 0.00004837184922590667, 1.4999271676371695e-7
+    },
+    {
+      -5.500901704467748, -4.2718258479322815, -3.2237098287700974, -2.2594644510007993, -1.3403751971516167, -0.44440300194413895,
+      0.44440300194413895, 1.3403751971516167, 2.2594644510007993, 3.2237098287700974, 4.2718258479322815, 5.500901704467748
+    }
+  },
+  {
+    {
+      2.7226276428059343e-8, 0.000011526596527333888, 0.0006812363504429289, 0.01177056050599653, 0.07916895586045004, 0.23787152296413616,
+      0.34099234099234094, 0.23787152296413616, 0.07916895586045004, 0.01177056050599653, 0.0006812363504429289, 0.000011526596527333888,
+      2.7226276428059343e-8
+    },
+    {
+      -5.8001672523865, -4.591398448936521, -3.5634443802816342, -2.620689973432215, -1.7254183795882392, -0.85667949351945, 0,
+      0.85667949351945, 1.7254183795882392, 2.620689973432215, 3.5634443802816342, 4.591398448936521, 5.8001672523865
+    }
+  },
+  {
+    {
+      4.868161257748387e-9, 2.6609913440676444e-6, 0.0002003395537607452, 0.004428919106947417, 0.03865010882425344, 0.1540833398425136,
+      0.30263462681301934, 0.30263462681301934, 0.1540833398425136, 0.03865010882425344, 0.004428919106947417, 0.0002003395537607452,
+      2.6609913440676444e-6, 4.868161257748387e-9
+    },
+    {
+      -6.087409546901291, -4.896936397345565, -3.886924575059769, -2.9630365798386675, -2.088344745701944, -1.242688955485464,
+      -0.41259045795460186, 0.41259045795460186, 1.242688955485464, 2.088344745701944, 2.9630365798386675, 3.886924575059769,
+      4.896936397345565, 6.087409546901291
+    }
+  },
+  {
+    {
+      8.589649899633355e-10, 5.975419597920624e-7, 0.0000564214640518904, 0.001567357503549961, 0.01736577449213762, 0.08941779539984443,
+      0.23246229360973228, 0.31825951825951826, 0.23246229360973228, 0.08941779539984443, 0.01736577449213762, 0.001567357503549961,
+      0.0000564214640518904, 5.975419597920624e-7, 8.589649899633355e-10
+    },
+    {
+      -6.363947888829839, -5.190093591304781, -4.1962077112690155, -3.2890824243987664, -2.432436827009758, -1.6067100690287297,
+      -0.799129068324548, 0, 0.799129068324548, 1.6067100690287297, 2.432436827009758, 3.2890824243987664, 4.1962077112690155,
+      5.190093591304781, 6.363947888829839
+    }
+  },
+  {
+    {
+      1.4978147231618547e-10, 1.3094732162868277e-7, 0.000015300032162487367, 0.0005259849265739115, 0.0072669376011847515, 0.047284752354014054,
+      0.15833837275094978, 0.28656852123801213, 0.28656852123801213, 0.15833837275094978, 0.047284752354014054, 0.0072669376011847515,
+      0.0005259849265739115, 0.000015300032162487367, 1.3094732162868277e-7, 1.4978147231618547e-10
+    },
+    {
+      -6.630878198393129, -5.472225705949343, -4.492955302520011, -3.600873624171548, -2.7602450476307014, -1.9519803457163334,
+      -1.1638291005549648, -0.3867606045005573, 0.3867606045005573, 1.1638291005549648, 1.9519803457163334, 2.7602450476307014,
+      3.600873624171548, 4.492955302520011, 5.472225705949343, 6.630878198393129
+    }
+  }
+};
+
+
+void ComputeTensorProductSet(std::vector < std::vector <unsigned> > & Tp, const unsigned & numberOfQuadraturePoints, const unsigned & numberOfEigPairs) { //p is max poly degree
+
+  unsigned tensorProductDim = pow(numberOfQuadraturePoints, numberOfEigPairs);
+
+  std::cout << "tensorProductDim = " << tensorProductDim << std::endl;
+
+  Tp.resize(tensorProductDim);
+  for(unsigned i = 0; i < tensorProductDim; i++) {
+    Tp[i].resize(numberOfEigPairs);
+  }
+
+  unsigned index = 0;
+  unsigned counters[numberOfEigPairs + 1];
+  memset(counters, 0, sizeof(counters));
+
+  while(!counters[numberOfEigPairs]) {
+
+    for(unsigned j = 0; j < numberOfEigPairs; j++) {
+      Tp[index][j] = counters[numberOfEigPairs - 1 - j];
+      std::cout << " Tp[" << index << "][" << j << "]= " << Tp[index][j] ;
+    }
+    std::cout << std::endl;
+    index++;
+
+    unsigned i;
+    for(i = 0; counters[i] == numberOfQuadraturePoints - 1; i++) { // inner loops that are at maxval restart at zero
+      counters[i] = 0;
+    }
+    ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
   }
 };
 
 void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
 
-  if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 10) {
-    std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [1,10]" << std::endl;
+  if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
+    std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [1,16]" << std::endl;
     abort();
   }
 
@@ -125,7 +202,7 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
                   if(maxPolyOrder > 6) {
                     HermitePoly[7][j] = (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / sqrt(5040) ;
                     if(maxPolyOrder > 7) {
-                      HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.) / sqrt(40320) ;
+                      HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 2) + 105.) / sqrt(40320) ;
                       if(maxPolyOrder > 8) {
                         HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / sqrt(362880);
                         if(maxPolyOrder > 9) {
@@ -151,9 +228,65 @@ void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
 
 };
 
+void EvaluateHermitePolyHistogram(std::vector < std::vector < double > >  & HermitePoly, const unsigned & pIndex, std::vector<double> & samplePoints) {
+
+  HermitePoly.resize(pIndex + 1);
+  for(unsigned i = 0; i < pIndex + 1; i++) {
+    HermitePoly[i].resize(samplePoints.size());
+  }
+
+  for(unsigned j = 0; j < numberOfEigPairs; j++) {
+
+    double x = samplePoints[j];
+
+    HermitePoly[0][j] = 1. ;
+
+    if(pIndex > 0) {
+      HermitePoly[1][j] = x ;
+      if(pIndex > 1) {
+        HermitePoly[2][j] = (pow(x, 2) - 1.) / sqrt(2) ;
+        if(pIndex > 2) {
+          HermitePoly[3][j] = (pow(x, 3) - 3. * x) / sqrt(6) ;
+          if(pIndex > 3) {
+            HermitePoly[4][j] = (pow(x, 4) - 6. * x * x + 3.) / sqrt(24) ;
+            if(pIndex > 4) {
+              HermitePoly[5][j] = (pow(x, 5) - 10. * pow(x, 3) + 15. * x) / sqrt(120) ;
+              if(pIndex > 5) {
+                HermitePoly[6][j] = (pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.) / sqrt(720) ;
+                if(pIndex > 6) {
+                  HermitePoly[7][j] = (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / sqrt(5040) ;
+                  if(pIndex > 7) {
+                    HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.) / sqrt(40320) ;
+                    if(pIndex > 8) {
+                      HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / sqrt(362880);
+                      if(pIndex > 9) {
+                        HermitePoly[10][j] = (pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.) / sqrt(3628800);
+                        if(pIndex > 10) {
+                          std::cout << "Polynomial order is too big. For now, it has to be not greater than 10." << std::endl;
+                          abort();
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+
+};
+
 void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsigned & p, const unsigned & numberOfEigPairs) { //p is max poly degree
 
-  unsigned dimJp = factorial(numberOfEigPairs + p) / (factorial(numberOfEigPairs) * factorial(p));
+
+  unsigned dimJp = static_cast <unsigned>(boost::math::binomial_coefficient<double>(numberOfEigPairs + p, p));
+
+  //long unsigned dimJp = factorial(numberOfEigPairs + p) / (factorial(numberOfEigPairs) * factorial(p));
 
   Jp.resize(dimJp);
   for(unsigned i = 0; i < dimJp; i++) {
@@ -179,7 +312,9 @@ void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsign
     if(entrySum <= p) {
       for(unsigned j = 0; j < numberOfEigPairs; j++) {
         Jp[index][j] = counters[numberOfEigPairs - 1 - j];
+        std::cout << " Jp[" << index << "][" << j << "]= " << Jp[index][j] ;
       }
+      std::cout << std::endl;
       index++;
     }
     unsigned i;
@@ -198,7 +333,13 @@ void EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, std::vect
 
   unsigned n1 = 2 * p0 + q0 + 1;
   n1 = (n1 % 2 == 0) ? n1 / 2 : (n1 + 1) / 2;
-  unsigned numberOfQuadraturePoints = (n1 <= 10) ? n1 : 10;
+  unsigned numberOfQuadraturePoints = (n1 <= 16) ? n1 : 16;
+  if(n1 > 16) {
+    std::cout <<
+              "------------------------------- WARNING: less quadrature points than needed were employed in function EvaluateIntegralsMatrix -------------------------------"
+              << std::endl;
+    std::cout << " Needed : " << n1 << " , " << " Used : " << 16 << std::endl;
+  }
 
   EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
 
@@ -219,6 +360,14 @@ void EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, std::vect
       }
     }
   }
+
+//   for(unsigned q1 = 0; q1 < q; q1++) {
+//     for(unsigned p1 = 0; p1 < p; p1++) {
+//       for(unsigned p2 = 0; p2 < p; p2++) {
+//         std::cout << "integralsMatrix[" << q1 << "][" << p1 << "][" << p2 << "]=" << integralsMatrix[q1][p1][p2] << std::endl;
+//       }
+//     }
+//   }
 
 };
 
@@ -244,8 +393,39 @@ void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, st
     }
   }
 
+//   for(unsigned q1 = 0; q1 < Jq.size(); q1++) {
+//     for(unsigned p1 = 0; p1 < Jp.size(); p1++) {
+//       for(unsigned p2 = 0; p2 < Jp.size(); p2++) {
+//         std::cout << "G[" << q1 << "][" << p1 << "][" << p2 << "]=" << G[q1][p1][p2] << std::endl;
+//       }
+//     }
+//   }
+
 };
 
+void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & MultivariateHermitePoly, std::vector < double > & MultivariateHermiteQuadratureWeights,
+                                     const unsigned & numberOfQuadraturePoints, const unsigned & p, const std::vector < std::vector <unsigned> > & Jp, const std::vector < std::vector <unsigned> > & Tp) {
+
+  MultivariateHermiteQuadratureWeights.assign(Tp.size(), 1.);
+
+  MultivariateHermitePoly.resize(Jp.size());
+  for(unsigned i = 0; i < Jp.size(); i++) {
+    MultivariateHermitePoly[i].assign(Tp.size(), 1.);
+  }
+
+  std::vector < std::vector < double > >  HermitePoly;
+  EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, p);
+
+  for(unsigned j = 0; j < Tp.size(); j++) {
+    for(unsigned k = 0; k < numberOfEigPairs; k++) {
+      MultivariateHermiteQuadratureWeights[j] *= HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]] ;
+      for(unsigned i = 0; i < Jp.size(); i++) {
+        MultivariateHermitePoly[i][j] *= HermitePoly[Jp[i][k]][Tp[j][k]] ;
+      }
+    }
+  }
+
+};
 
 void AssembleSysSG(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
@@ -293,7 +473,13 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
 
   unsigned n1 = 2 * pIndex + qIndex + 1;
   n1 = (n1 % 2 == 0) ? n1 / 2 : (n1 + 1) / 2;
-  unsigned numberOfQuadraturePoints = (n1 <= 10) ? n1 : 10;
+  unsigned numberOfQuadraturePoints = (n1 <= 16) ? n1 : 16;
+  if(n1 > 16) {
+    std::cout <<
+              "------------------------------- WARNING: less quadrature points than needed were employed in function AssembleSysSG -------------------------------"
+              << std::endl;
+    std::cout << " Needed : " << n1 << " , " << " Used : " << 16 << std::endl;
+  }
 
   EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
 
@@ -341,6 +527,36 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
   vector < double > Jac;
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
+
+  //BEGIN terms for the coefficient obtained projecting the KL (computation later)
+//   std::vector < std::vector < double > > productTerms(Jq.size());
+//   for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
+//     
+//     productTerms[q1].resize(numberOfEigPairs);
+// 
+//     unsigned numberOfQuadraturePointsForProjection = ((qIndex + 2) % 2 == 0) ? ((qIndex + 2) / 2) : ((qIndex + 3) / 2) ;
+//     std::vector < std::vector < double > >  HermitePolyProjection;
+//     EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex + 1);
+//     for(unsigned i = 0; i < numberOfEigPairs; i++) {
+//       double termWithY = 0.;
+//       for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
+//         termWithY +=  HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j]
+//                       * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
+//       }
+// 
+//       productTerms[q1][i] = termWithY;
+// //       std::cout << " termWithY = "  << termWithY << " ";
+// 
+//       for(unsigned j = 0; j < numberOfEigPairs; j++) {
+//         if(j != i) {
+//           productTerms[q1][i] *= integralsMatrix[Jq[q1][j]][0][0];
+//         }
+//       }
+// //       std::cout << " productTerms[" << q1 << "][" << i << "] = " << productTerms[q1][i] << " ";
+//     }
+// //         std::cout << "------------------" <<  std::endl;
+//   }
+  //END terms for coefficient obtained projecting the KL (computation later)
 
   // element loop: each process loops only on the elements that owns
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -398,31 +614,54 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
 
 
       vector< double > aStochasticGauss(Jq.size());
+
+//BEGIN coefficient obtained projecting the exponential of the KL
       for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
-        std::vector <double> aStochasticTerm1(numberOfEigPairs);
+//         std::vector <double> aStochasticTerm1(numberOfEigPairs);
         std::vector <double> aStochasticTerm2(numberOfEigPairs);
 
+
+        unsigned numberOfQuadraturePointsForProjection = 16;
+        std::vector < std::vector < double > >  HermitePolyProjection;
+        EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex);
         for(unsigned i = 0; i < numberOfEigPairs; i++) {
           aStochasticTerm2[i] = 0.;
-          for(unsigned j = 0; j < numberOfQuadraturePoints; j++) {
+          for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
 //             aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
-            aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePoints - 1][1][j])
-                                   * HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
+            aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j])
+                                   * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
           }
         }
-
 
         double aS1 = 1.;
         double aS2 = 1.;
         for(unsigned i = 0; i < numberOfEigPairs; i++) {
+//           std::cout << "------------------- " << Jq[q1][i] << " ";
           aS1 *= integralsMatrix[Jq[q1][i]][0][0];
           aS2 *= aStochasticTerm2[i];
         }
+//         std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
 
         aStochasticGauss[q1] = amin * aS1 + aS2; //a_q(x_ig)
-        if(fabs(aStochasticGauss[q1]) > 10.) std::cout << aStochasticGauss[q1] << " ";
+        if(fabs(aStochasticGauss[q1]) > 10.) std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
       }
-      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+//END coefficient obtained projecting the exponential of the KL
+
+//BEGIN coefficient obtained projecting the  KL
+//       for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
+//         double aS1 = meanInput; 
+//         double aS2 = 0.;
+//         for(unsigned i = 0; i < numberOfEigPairs; i++) {
+//           aS1 *= integralsMatrix[Jq[q1][i]][0][0];
+//           aS2 += sqrt(eigenvalues[i].first) * eigVectorGauss[i] * productTerms[q1][i];
+//         }
+// 
+//         aStochasticGauss[q1] = aS1 + aS2;
+// //         std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
+// 
+//       }
+//END coefficient obtained projecting the  KL
+
 
       vector < vector < double > > laplace(nDofu);
       for(unsigned i = 0; i < nDofu; i++) {
@@ -450,8 +689,8 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
               for(unsigned q1 = 0; q1 < Jq.size(); q1++) {
                 AG += aStochasticGauss[q1] * laplace[i][j] * G[q1][p1][p2];
               }
-              Jac[(p1 * nDofu + i) * (Jp.size() * nDofu) +  p2 * nDofu + j] += AG;
-              resU -=  AG * solu[p2][j];
+              Jac[(p1 * nDofu + i) * (Jp.size() * nDofu) +  p2 * nDofu + j] -= AG;
+              resU +=  AG * solu[p2][j];
             }
           }
           Res[ p1 * nDofu + i ] += resU;
@@ -483,6 +722,8 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
 //  abort();
 // ***************** END ASSEMBLY *******************
 }
+
+
 
 
 

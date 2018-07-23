@@ -27,32 +27,34 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 
 void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::vector < std::pair<double, double> >& eigenvalues);
 //
-// void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  QoI, const unsigned& m, const double& domainMeasure);
+void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector <double > &  alphas, const double& domainMeasure);
 //
-// void GetStochasticData(std::vector <double>& QoI);
+void GetStochasticData(std::vector <double>& alphas);
 //
-// void PlotStochasticData();
+void PlotStochasticData();
 
 //BEGIN stochastic data
 
-// double domainMeasure = 1.; //measure of the domain
-// unsigned totMoments = 6;
-// std::vector <double> moments(totMoments, 0.); //initialization
-// std::vector <double> cumulants(totMoments, 0.); //initialization
-// double meanQoI = 0.; //initialization
-// double varianceQoI = 0.; //initialization
-// double stdDeviationQoI = 0.; //initialization
-// unsigned M = 10; //number of samples for the Monte Carlo
+double domainMeasure = 1.; //measure of the domain
+unsigned totMoments = 6;
+std::vector <double> moments(totMoments, 0.); //initialization
+std::vector <double> momentsStandardized(totMoments, 0.); //initialization
+std::vector <double> cumulants(totMoments, 0.); //initialization
+std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
+double meanQoI = 0.; //initialization
+double varianceQoI = 0.; //initialization
+double stdDeviationQoI = 0.; //initialization
 
-double L = 4 ; // correlation length of the covariance function
+double L = 0.1 ; // correlation length of the covariance function
 //END
 
-unsigned numberOfUniformLevels = 2;
+unsigned numberOfUniformLevels = 4;
 
 int main(int argc, char** argv) {
 
   PetscErrorCode ierr;
   ierr = SlepcInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
+
 
   //BEGIN deterministic FEM instances
   eigenvalues.resize(numberOfEigPairs); //this is where we store the eigenvalues
@@ -123,8 +125,6 @@ int main(int argc, char** argv) {
   system.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
   //END
 
-  GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues); //solve the generalized eigenvalue problem and compute the eigenpairs
-
   MultiLevelProblem ml_probSG(&mlSol);
 
   // ******* Add FEM system to the MultiLevel problem *******
@@ -160,12 +160,62 @@ int main(int argc, char** argv) {
 
   systemSG.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
 
+//BEGIN testing multidim Hermite quadrature
+
+//   unsigned numberOfQuadraturePoints = 4;
+//
+//   std::vector < std::vector <unsigned> > Tp;
+//   ComputeTensorProductSet(Tp, numberOfQuadraturePoints, numberOfEigPairs);
+//
+//   for(unsigned i = 0; i < Tp.size(); i++) {
+//     for(unsigned j = 0; j < numberOfEigPairs; j++) {
+//       std::cout << Tp[i][j] << " " ;
+//     }
+//     std::cout << std::endl;
+//   }
+//
+//   std::vector < std::vector < double > >  MultivariateHermitePoly;
+//   std::vector < double > MultivariateHermiteQuadratureWeights;
+//
+//   EvaluateMultivariateHermitePoly(MultivariateHermitePoly, MultivariateHermiteQuadratureWeights, numberOfQuadraturePoints, pIndex, Jp, Tp);
+  //END
+
+  //BEGIN testing orthonormality of Hermite poly
+//   unsigned numberOfQuadraturePoints = 4;
+//   std::vector < std::vector < double > >  HermitePoly;
+//   unsigned maxPolyOrder = (qIndex > pIndex) ? qIndex : pIndex;
+//   EvaluateHermitePoly(HermitePoly,  numberOfQuadraturePoints, maxPolyOrder);
+//   std::vector < std::vector < double > > checkIntegrals(maxPolyOrder + 1);
+//
+//   for(unsigned i = 0; i < maxPolyOrder + 1; i++) {
+//     checkIntegrals[i].assign(maxPolyOrder + 1, 0.);
+//     for(unsigned j = 0; j < maxPolyOrder + 1; j++) {
+//       for(unsigned k = 0; k < numberOfQuadraturePoints; k++) {
+//         double w = HermiteQuadrature[numberOfQuadraturePoints - 1][0][k];
+//         checkIntegrals[i][j] += w * HermitePoly[i][k] * HermitePoly[j][k];
+//       }
+//       std::cout << "i = " << i << " , " << "j = " << j << " , " << " integral = " << checkIntegrals[i][j] << std::endl;
+//     }
+//   }
+  //END
+
+
+
+
+  GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues); //solve the generalized eigenvalue problem and compute the eigenpairs
 
   for(int i = 0; i < numberOfEigPairs; i++) {
     std::cout << eigenvalues[i].first << " " << eigenvalues[i].second << std::endl;
   }
 
   systemSG.MGsolve();
+
+  std::vector <double> alphas;
+  GetCoefficientsForQuantityOfInterest(ml_probSG, alphas, domainMeasure);
+
+  GetStochasticData(alphas);
+
+  PlotStochasticData();
 
   // ******* Print solution *******
   mlSol.SetWriter(VTK);
@@ -442,6 +492,81 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 
   delete CC;
 
+  //BEGIN OLD
+//   std::vector <unsigned> eigfIndex(numberOfEigPairs);
+//   char name[10];
+//   for(unsigned i = 0; i < numberOfEigPairs; i++) {
+//     sprintf(name, "egnf%d", i);
+//     eigfIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
+//   }
+// 
+//   std::vector < double > local_integral(numberOfEigPairs, 0.);
+//   std::vector < double > local_norm2(numberOfEigPairs, 0.);
+// 
+//   vector < vector < double > > eigenFunction(numberOfEigPairs); // local solution
+// 
+//   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+// 
+//     short unsigned ielGeom = msh->GetElementType(iel);
+//     unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
+//     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+// 
+//     // resize local arrays
+//     for(unsigned i = 0; i < numberOfEigPairs; i++) {
+//       eigenFunction[i].resize(nDofu);
+//     }
+// 
+//     for(int i = 0; i < dim; i++) {
+//       x1[i].resize(nDofx);
+//     }
+// 
+//     // local storage of global mapping and solution
+//     for(unsigned i = 0; i < nDofu; i++) {
+//       unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
+//       for(unsigned j = 0; j < numberOfEigPairs; j++) {
+//         eigenFunction[j][i] = (*sol->_Sol[eigfIndex[j]])(solDof);
+//       }
+//     }
+// 
+//     // local storage of coordinates
+//     for(unsigned i = 0; i < nDofx; i++) {
+//       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+//       for(unsigned jdim = 0; jdim < dim; jdim++) {
+//         x1[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+//       }
+//     }
+//     double weight;
+//     vector <double> phi;  // local test function
+//     // *** Gauss point loop ***
+//     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+//       // *** get gauss point weight, test function and test function partial derivatives ***
+//       msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
+//       for(unsigned j = 0; j < numberOfEigPairs; j++) {
+//         double eigenFunction_gss = 0.;
+//         for(unsigned i = 0; i < nDofu; i++) {
+//           eigenFunction_gss += phi[i] * eigenFunction[j][i];
+//         }
+//         local_integral[j] += eigenFunction_gss * weight;
+//         local_norm2[j] += eigenFunction_gss * eigenFunction_gss * weight;
+//       }
+//     }
+//   }
+//   for(unsigned j = 0; j < numberOfEigPairs; j++) {
+//     double integral = 0.;
+//     MPI_Allreduce(&local_integral[j], &integral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+//     double sign = (integral >= 0) ? 1 : -1;
+//     double norm2 = 0.;
+//     MPI_Allreduce(&local_norm2[j], &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+//     double inorm = /*0.01 * sign*/ 1. / sqrt(norm2);
+//     std::cout << "BBBBBBBBBBBBBBBBBB  " << inorm << std::endl;
+//     sol->_Sol[eigfIndex[j]]->scale(inorm);
+//   }
+// 
+  //END OLD
+
+
+  //BEGIN GRAM SCHMIDT ORTHONORMALIZATION
+
   std::vector <unsigned> eigfIndex(numberOfEigPairs);
   char name[10];
   for(unsigned i = 0; i < numberOfEigPairs; i++) {
@@ -449,31 +574,265 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
     eigfIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
   }
 
-  std::vector < double > local_integral(numberOfEigPairs, 0.);
-  std::vector < double > local_norm2(numberOfEigPairs, 0.);
+  vector < double >  eigenFunction(numberOfEigPairs); // local solution
+  vector < double >  eigenFunctionOld(numberOfEigPairs); // local solution
 
-  vector < vector < double > > eigenFunction(numberOfEigPairs); // local solution
+  std::vector < std::vector < double > > coeffsGS_local(numberOfEigPairs);
+  std::vector < std::vector < double > > coeffsGS_global(numberOfEigPairs);
+  for(unsigned i = 0; i < numberOfEigPairs; i++) {
+    coeffsGS_local[i].assign(numberOfEigPairs, 0.);
+    coeffsGS_global[i].assign(numberOfEigPairs, 0.);
+  }
+
+  for(unsigned iGS = 0; iGS < numberOfEigPairs; iGS++) {
+
+    if(iGS > 0) {
+
+      for(unsigned jGS = 0; jGS < iGS; jGS++) {
+
+        //BEGIN COMPUTE coeffsGS LOCAL
+
+        for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+          short unsigned ielGeom = msh->GetElementType(iel);
+          unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
+          unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+
+          eigenFunction.resize(nDofu);
+          eigenFunctionOld.resize(nDofu);
+
+          for(int i = 0; i < dim; i++) {
+            x1[i].resize(nDofx);
+          }
+
+          // local storage of global mapping and solution
+          for(unsigned i = 0; i < nDofu; i++) {
+            unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
+            eigenFunction[i] = (*sol->_Sol[eigfIndex[iGS]])(solDof);
+            eigenFunctionOld[i] = (*sol->_Sol[eigfIndex[jGS]])(solDof);
+          }
+
+          // local storage of coordinates
+          for(unsigned i = 0; i < nDofx; i++) {
+            unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+            for(unsigned jdim = 0; jdim < dim; jdim++) {
+              x1[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+            }
+          }
+          double weight;
+          vector <double> phi;  // local test function
+          // *** Gauss point loop ***
+          for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+            // *** get gauss point weight, test function and test function partial derivatives ***
+            msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
+            double eigenFunction_gss = 0.;
+            double eigenFunction_gss_old = 0.;
+            for(unsigned i = 0; i < nDofu; i++) {
+              eigenFunction_gss += phi[i] * eigenFunction[i];
+              eigenFunction_gss_old += phi[i] * eigenFunctionOld[i];
+            }
+            coeffsGS_local[iGS][jGS] += eigenFunction_gss * eigenFunction_gss_old * weight;
+          }
+        }
+
+        //END COMPUTE coeffsGS LOCAL
+
+        MPI_Allreduce(&coeffsGS_local[iGS][jGS], &coeffsGS_global[iGS][jGS], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+      }
+
+      for(unsigned idof = msh->_dofOffset[solType][iproc]; idof < msh->_dofOffset[solType][iproc + 1]; idof++) {
+        double sum = 0.;
+        for(unsigned jGS = 0; jGS < iGS; jGS++) {
+          sum += coeffsGS_global[iGS][jGS] * (*sol->_Sol[eigfIndex[jGS]])(idof);
+        }
+        double valueToSet = (*sol->_Sol[eigfIndex[iGS]])(idof) - sum;
+        sol->_Sol[eigfIndex[iGS]]->set(idof, valueToSet);
+      }
+
+    }
+
+    double local_norm2 = 0.;
+    for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+      short unsigned ielGeom = msh->GetElementType(iel);
+      unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
+      unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+
+      eigenFunction.resize(nDofu);
+
+      for(int i = 0; i < dim; i++) {
+        x1[i].resize(nDofx);
+      }
+
+      // local storage of global mapping and solution
+      for(unsigned i = 0; i < nDofu; i++) {
+        unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
+        eigenFunction[i] = (*sol->_Sol[eigfIndex[iGS]])(solDof);
+      }
+
+      // local storage of coordinates
+      for(unsigned i = 0; i < nDofx; i++) {
+        unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+        for(unsigned jdim = 0; jdim < dim; jdim++) {
+          x1[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        }
+      }
+      double weight;
+      vector <double> phi;  // local test function
+      // *** Gauss point loop ***
+      for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+        // *** get gauss point weight, test function and test function partial derivatives ***
+        msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
+        double eigenFunction_gss = 0.;
+        for(unsigned i = 0; i < nDofu; i++) {
+          eigenFunction_gss += phi[i] * eigenFunction[i];
+        }
+        local_norm2 += eigenFunction_gss * eigenFunction_gss * weight;
+      }
+    }
+
+    double norm2 = 0.;
+    MPI_Allreduce(&local_norm2, &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    double norm = sqrt(norm2);
+    std::cout << "norm = " << norm << std::endl;
+    sol->_Sol[eigfIndex[iGS]]->scale(1. / norm);
+
+    sol->_Sol[eigfIndex[iGS]]->close();
+
+  }
+
+  //END GRAM SCHMIDT ORTHONORMALIZATION
+
+  //BEGIN GRAM SCHMIDT CHECK
+  vector < double >  eigenFunctionCheck(numberOfEigPairs); // local solution
+  vector < double >  eigenFunctionOldCheck(numberOfEigPairs); // local solution
+
+
+  for(unsigned i1 = 0; i1 < numberOfEigPairs; i1++) {
+    for(unsigned j1 = 0; j1 < numberOfEigPairs; j1++) {
+
+      double integral = 0.;
+      for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+
+        short unsigned ielGeom = msh->GetElementType(iel);
+        unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
+        unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+
+        eigenFunctionCheck.resize(nDofu);
+        eigenFunctionOldCheck.resize(nDofu);
+
+        for(int i = 0; i < dim; i++) {
+          x1[i].resize(nDofx);
+        }
+
+        // local storage of global mapping and solution
+        for(unsigned i = 0; i < nDofu; i++) {
+          unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
+          eigenFunctionCheck[i] = (*sol->_Sol[eigfIndex[i1]])(solDof);
+          eigenFunctionOldCheck[i] = (*sol->_Sol[eigfIndex[j1]])(solDof);
+        }
+
+        // local storage of coordinates
+        for(unsigned i = 0; i < nDofx; i++) {
+          unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+          for(unsigned jdim = 0; jdim < dim; jdim++) {
+            x1[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+          }
+        }
+        double weight;
+        vector <double> phi;  // local test function
+        //  *** Gauss point loop ***
+        for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+          //    *** get gauss point weight, test function and test function partial derivatives ***
+          msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
+          double eigenFunction_gss = 0.;
+          double eigenFunction_gss_old = 0.;
+          for(unsigned i = 0; i < nDofu; i++) {
+            eigenFunction_gss += phi[i] * eigenFunctionCheck[i];
+            eigenFunction_gss_old += phi[i] * eigenFunctionOldCheck[i];
+          }
+          integral += eigenFunction_gss * eigenFunction_gss_old * weight;
+        }
+      }
+
+      double globalIntegral = 0.;
+      MPI_Allreduce(&integral, &globalIntegral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      std::cout << "i = " << i1 << " , " << "j = " << j1 << " , " << "integral = " << globalIntegral << std::endl;
+    }
+  }
+
+  //END GRAM SCHMIDT CHECK
+
+}
+//
+//
+void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector <double > &  alphas, const double& domainMeasure) {
+
+  //  extract pointers to the several objects that we are going to use
+
+  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("SG");   // pointer to the linear implicit system named "Poisson"
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
+
+  Mesh* msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  elem* el = msh->el;  // pointer to the elem object in msh (level)
+
+  MultiLevelSolution* mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution* sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+
+  std::vector < std::vector <unsigned> > Jp;
+  ComputeIndexSetJp(Jp, pIndex, numberOfEigPairs);
+
+  std::vector <double > alphasTemp(Jp.size(), 0.);
+  alphas.resize(Jp.size());
+
+  //solution Index
+  std::vector <unsigned> soluIndex(Jp.size());
+  for(unsigned i = 0; i < Jp.size(); i++) {
+    char name[10];
+    sprintf(name, "uSG%d", i);
+    soluIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
+  }
+  unsigned soluType = mlSol->GetSolutionType(soluIndex[0]);
+
+  vector < vector < double > >  solu(Jp.size()); // local solution
+
+  vector < vector < double > > x(dim);    // local coordinates
+  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+
+  vector <double> phi;  // local test function
+  vector <double> phi_x; // local test function first order partial derivatives
+  double weight; // gauss point weight
+
+  phi.reserve(maxSize);
+  phi_x.reserve(maxSize * dim);
+
+  // element loop: each process loops only on the elements that owns
 
   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
+    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
-    // resize local arrays
-    for(unsigned i = 0; i < numberOfEigPairs; i++) {
-      eigenFunction[i].resize(nDofu);
+    for(unsigned j = 0; j < Jp.size(); j++) {
+      solu[j].resize(nDofu);
     }
 
     for(int i = 0; i < dim; i++) {
-      x1[i].resize(nDofx);
+      x[i].resize(nDofx);
     }
 
     // local storage of global mapping and solution
     for(unsigned i = 0; i < nDofu; i++) {
-      unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
-      for(unsigned j = 0; j < numberOfEigPairs; j++) {
-        eigenFunction[j][i] = (*sol->_Sol[eigfIndex[j]])(solDof);
+      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
+      for(unsigned j = 0; j < Jp.size(); j++) {
+        solu[j][i] = (*sol->_Sol[soluIndex[j]])(solDof);      // global extraction and local storage for the solution
       }
     }
 
@@ -481,391 +840,457 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
     for(unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
       for(unsigned jdim = 0; jdim < dim; jdim++) {
-        x1[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
-    double weight;
-    vector <double> phi;  // local test function
+
+    vector < double >* nullDoublePointer = NULL;
     // *** Gauss point loop ***
-    for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
+    for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][solType]->Jacobian(x1, ig, weight, phi, phi_x, *nullDoublePointer);
-      for(unsigned j = 0; j < numberOfEigPairs; j++) {
-        double eigenFunction_gss = 0.;
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, *nullDoublePointer);
+
+      for(unsigned j = 0; j < Jp.size(); j++) {
+        double solu_gss = 0.;
         for(unsigned i = 0; i < nDofu; i++) {
-          eigenFunction_gss += phi[i] * eigenFunction[j][i];
+          solu_gss += phi[i] * solu[j][i];
         }
-        local_integral[j] += eigenFunction_gss * weight;
-        local_norm2[j] += eigenFunction_gss * eigenFunction_gss * weight;
+//      	alphasTemp[j] += solu_gss * solu_gss *  weight ; // this is the integral of the square.
+        alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
       }
-    }
-  }
-  for(unsigned j = 0; j < numberOfEigPairs; j++) {
-    double integral = 0.;
-    MPI_Allreduce(&local_integral[j], &integral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    double sign = (integral >= 0) ? 1 : -1;
-    double norm2 = 0.;
-    MPI_Allreduce(&local_norm2[j], &norm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    double inorm = 0.01 * sign / sqrt(norm2);
-    std::cout << "inorm = " << inorm << std::endl;
-    sol->_Sol[eigfIndex[j]]->scale(inorm);
+    } // end gauss point loop
+
+  } //end element loop for each process
+
+
+  for(unsigned j = 0; j < Jp.size(); j++) {
+    alphas[j] = 0.;
+    MPI_Allreduce(&alphasTemp[j], &alphas[j], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   }
 
-  // ***************** END ASSEMBLY *******************
+}
+//
+void GetStochasticData(std::vector <double>& alphas) {
+
+  //let's standardize the quantity of interest after finding moments and standard deviation
+
+  if(totMoments <= 0) {
+
+    std::cout << "ERROR: total number of moments has to be a positive integer" << std::endl;
+
+  }
+
+  else {
+
+    unsigned desiredQuadraturePoints = static_cast<double>(ceil((totMoments * pIndex + 1) * 0.5));
+
+    unsigned numberOfQuadraturePoints = (desiredQuadraturePoints <= 16) ? desiredQuadraturePoints : 16;
+
+    if(desiredQuadraturePoints > 16) {
+      std::cout <<
+                "------------------------------- WARNING: less quadrature points than needed were employed in function GetStochasticData -------------------------------"
+                << std::endl;
+      std::cout << " Needed : " << desiredQuadraturePoints << " , " << " Used : " << 16 << std::endl;
+    }
+
+    std::vector < std::vector <unsigned> > Tp;
+    ComputeTensorProductSet(Tp, numberOfQuadraturePoints, numberOfEigPairs);
+
+    std::vector < std::vector <unsigned> > Jp;
+    ComputeIndexSetJp(Jp, pIndex, numberOfEigPairs);
+
+    std::vector < std::vector < double > >  MultivariateHermitePoly;
+    std::vector < double > MultivariateHermiteQuadratureWeights;
+
+    EvaluateMultivariateHermitePoly(MultivariateHermitePoly, MultivariateHermiteQuadratureWeights, numberOfQuadraturePoints, pIndex, Jp, Tp);
+
+    //BEGIN computation of the raw moments
+    for(unsigned p = 0; p < totMoments; p++) {
+      moments[p] = 0.;
+      for(unsigned j = 0; j < Tp.size(); j++) {
+        double integrandFunction = 0.;
+        for(unsigned i = 0; i < Jp.size(); i++) {
+          integrandFunction += MultivariateHermitePoly[i][j] * alphas[i];
+        }
+        integrandFunction = pow(integrandFunction, p + 1);
+        moments[p] += MultivariateHermiteQuadratureWeights[j] * integrandFunction;
+      }
+    }
+    //END
+
+    //BEGIN computation of the mean of QoI (AKA first moment)
+    meanQoI = moments[0];
+    //END
+
+
+    //BEGIN computation of the variance and standard deviation of QoI
+//     varianceQoI = moments[1] - meanQoI * meanQoI;
+
+    varianceQoI = 0;
+
+    for(unsigned j = 0; j < Tp.size(); j++) {
+      double integrandFunctionVariance = 0.;
+      for(unsigned i = 0; i < Jp.size(); i++) {
+        integrandFunctionVariance += MultivariateHermitePoly[i][j] * alphas[i];
+      }
+      integrandFunctionVariance = pow(integrandFunctionVariance - meanQoI, 2);
+      varianceQoI += MultivariateHermiteQuadratureWeights[j] * integrandFunctionVariance;
+    }
+
+    stdDeviationQoI = sqrt(varianceQoI);
+    //END
+
+
+    //BEGIN computation of the raw moments of the standardized variable
+    for(unsigned p = 0; p < totMoments; p++) {
+      momentsStandardized[p] = 0.;
+      for(unsigned j = 0; j < Tp.size(); j++) {
+        double integrandFunction = 0.;
+        for(unsigned i = 0; i < Jp.size(); i++) {
+          integrandFunction += MultivariateHermitePoly[i][j] * alphas[i];
+        }
+        integrandFunction = (integrandFunction - meanQoI) / stdDeviationQoI; //standardization of the QoI
+        integrandFunction = pow(integrandFunction, p + 1);
+        momentsStandardized[p] += MultivariateHermiteQuadratureWeights[j] * integrandFunction;
+      }
+    }
+    //END
+
+
+    //BEGIN estimation of the PDF
+    int pdfHistogramSize = 501;
+    std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
+    double startPoint = - 4.45;  //- 9.5;
+    double endPoint = 4.45;  //9.5;
+    double lengthOfTheInterval = fabs(endPoint - startPoint);
+    double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
+    boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
+    boost::normal_distribution<> nd(0., 1.);
+    boost::variate_generator < boost::mt19937&,
+    boost::normal_distribution<> > var_nor(rng, nd);
+
+    unsigned numberOfSamples = 150000;
+    std::vector <double> sgmQoI(numberOfSamples, 0.);
+    std::vector <double> sgmQoIStandardized(numberOfSamples, 0.);
+
+    for(unsigned m = 0; m < numberOfSamples; m++) {
+
+      std::vector<double> samplePoints(numberOfEigPairs, 0.);
+      for(unsigned k = 0; k < numberOfEigPairs; k++) {
+        samplePoints[k] = var_nor();
+      }
+      std::vector < std::vector <double> > HermitePolyHistogram;
+      EvaluateHermitePolyHistogram(HermitePolyHistogram, pIndex, samplePoints);
+
+      std::vector<double> MultivariateHermitePolyHistogram(Jp.size(), 1.);
+      for(unsigned i = 0; i < Jp.size(); i++) {
+        for(unsigned k = 0; k < numberOfEigPairs; k++) {
+          MultivariateHermitePolyHistogram[i] *= HermitePolyHistogram[Jp[i][k]][k];
+        }
+        sgmQoI[m] += alphas[i] * MultivariateHermitePolyHistogram[i];
+      }
+
+      sgmQoIStandardized[m] = (sgmQoI[m] - meanQoI) / stdDeviationQoI;
+
+      bool sampleCaptured = false;
+      for(unsigned i = 0; i < pdfHistogramSize; i++) {
+        double leftBound = startPoint + i * deltat - deltat * 0.5;
+        double rightBound = startPoint + i * deltat + deltat * 0.5;
+        if(leftBound <=  sgmQoIStandardized[m] && sgmQoIStandardized[m] < rightBound) {
+          pdfHistogram[i]++;
+          std::cout << "sgmQoIStandardized[" << m << "] = " << sgmQoIStandardized[m] << std::endl;
+          sampleCaptured = true;
+          break;
+        }
+      }
+      if(sampleCaptured == false) {
+        std::cout << "WARNING: sample " << sgmQoIStandardized[m] << "is not in any interval" << std::endl;
+      }
+
+    }
+    //END
+
+    //BEGIN computation of the moments via Monte Carlo integration
+    std::vector <double> momentsMonteCarlo(numberOfSamples);
+    std::vector <double> momentsStandardizedMonteCarlo(numberOfSamples);
+    for(unsigned p = 0; p < totMoments; p++) {
+      momentsMonteCarlo[p] = 0.;
+      momentsStandardizedMonteCarlo[p] = 0.;
+      unsigned momentsCounter = 0;
+      for(unsigned m = 0; m < numberOfSamples; m++) {
+        if(fabs(sgmQoI[m]) <= 4.45) {
+          momentsMonteCarlo[p] += pow(sgmQoI[m], p + 1);
+          momentsStandardizedMonteCarlo[p] += pow(sgmQoIStandardized[m], p + 1);
+          momentsCounter++;
+        }
+      }
+      momentsMonteCarlo[p] /= momentsCounter;
+      momentsStandardizedMonteCarlo[p] /= momentsCounter;
+
+    }
+    std::cout.precision(14);
+    std::cout << "Standardized Monte Carlo Moments" << std::endl;
+    for(unsigned p = 0; p < totMoments; p++) {
+      std::cout << " & " << momentsStandardizedMonteCarlo[p] << "  ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "Monte Carlo Moments" << std::endl;
+    for(unsigned p = 0; p < totMoments; p++) {
+      std::cout << " & " << momentsMonteCarlo[p] << "  ";
+    }
+    std::cout << std::endl;
+
+    //END
+
+
+    //BEGIN histogram check
+    double checkHistogram = 0;
+    for(unsigned i = 0; i < pdfHistogramSize; i++) {
+      double point = startPoint + i * deltat;
+      pdfHistogram[i] /= numberOfSamples;
+      std::cout << point << "  " << pdfHistogram[i]  << std::endl;
+      checkHistogram += pdfHistogram[i];
+    }
+    std::cout << "checkHistogram = " << checkHistogram << std::endl;
+    //END
+
+    cumulants[0] = moments[0];
+    cumulantsStandardized[0] = momentsStandardized[0];
+
+    if(totMoments > 1) {
+      cumulants[1] = moments[1] - moments[0] * moments[0];
+
+      cumulantsStandardized[1] = momentsStandardized[1] - momentsStandardized[0] * momentsStandardized[0];
+//       std::cout.precision(14);
+//       std::cout << "AAAAAAAAAAAAAAA" << cumulants[1] << std::endl;
+      if(totMoments > 2) {
+        cumulants[2] = moments[2] - 3. * moments[1] * moments[0] + 2. * pow(moments[0], 3);
+
+        cumulantsStandardized[2] = momentsStandardized[2] - 3. * momentsStandardized[1] * momentsStandardized[0] + 2. * pow(momentsStandardized[0], 3);
+        if(totMoments > 3) {
+          cumulants[3] = moments[3] - 4. * moments[2] * moments[0] - 3. * moments[1] * moments[1] + 12. * moments[1] * moments[0] * moments[0] - 6. * pow(moments[0], 4);
+
+          cumulantsStandardized[3] = momentsStandardized[3] - 4. * momentsStandardized[2] * momentsStandardized[0] - 3. * momentsStandardized[1] * momentsStandardized[1]
+                                     + 12. * momentsStandardized[1] * momentsStandardized[0] * momentsStandardized[0] - 6. * pow(momentsStandardized[0], 4);
+          if(totMoments > 4) {
+            cumulants[4] = moments[4] - 5. * moments[3] * moments[0] - 10. * moments[2] * moments[1] + 20. * moments[2] * moments[0] * moments[0]
+                           + 30. * moments[1] * moments[1] * moments[0] - 60. * moments[1] * pow(moments[0], 3) + 24. * pow(moments[0], 5);
+
+            cumulantsStandardized[4] = momentsStandardized[4] - 5. * momentsStandardized[3] * momentsStandardized[0] - 10. * momentsStandardized[2] * momentsStandardized[1]
+                                       + 20. * momentsStandardized[2] * momentsStandardized[0] * momentsStandardized[0]
+                                       + 30. * momentsStandardized[1] * momentsStandardized[1] * momentsStandardized[0]
+                                       - 60. * momentsStandardized[1] * pow(momentsStandardized[0], 3) + 24. * pow(momentsStandardized[0], 5);
+            if(totMoments > 5) {
+              cumulants[5] = moments[5] - 6. * moments[4] * moments[0] - 15. * moments[3] * moments[1] + 30. * moments[3] * moments[0] * moments[0]
+                             - 10. * moments[2] * moments[2] + 120. * moments[2] * moments[1] * moments[0] - 120. * moments[2] * pow(moments[0], 3)
+                             + 30. * pow(moments[1], 3) - 270. * pow(moments[1], 2) * pow(moments[0], 2) + 360. * moments[1] * pow(moments[0], 4) - 120. * pow(moments[0], 6);
+
+              cumulantsStandardized[5] = momentsStandardized[5] - 6. * momentsStandardized[4] * momentsStandardized[0] - 15. * momentsStandardized[3] * momentsStandardized[1]
+                                         + 30. * momentsStandardized[3] * momentsStandardized[0] * momentsStandardized[0]
+                                         - 10. * momentsStandardized[2] * momentsStandardized[2] + 120. * momentsStandardized[2] * momentsStandardized[1] * momentsStandardized[0]
+                                         - 120. * momentsStandardized[2] * pow(momentsStandardized[0], 3) + 30. * pow(momentsStandardized[1], 3)
+                                         - 270. * pow(momentsStandardized[1], 2) * pow(momentsStandardized[0], 2) + 360. * momentsStandardized[1] * pow(momentsStandardized[0], 4)
+                                         - 120. * pow(momentsStandardized[0], 6);
+            }
+          }
+        }
+      }
+    }
+  }
 }
 //
 //
-// void GetQuantityOfInterest(MultiLevelProblem& ml_prob, std::vector < double >&  QoI, const unsigned& m, const double& domainMeasure) {
-//
-//   //  extract pointers to the several objects that we are going to use
-//
-//   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("UQ");   // pointer to the linear implicit system named "Poisson"
-//   const unsigned level = mlPdeSys->GetLevelToAssemble();
-//
-//   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-//   elem*                     el = msh->el;  // pointer to the elem object in msh (level)
-//
-//   MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-//   Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
-//
-//   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-//
-//   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-//   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
-//
-//   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
-//   unsigned    nprocs = msh->n_processors(); // get the process_id (for parallel computation)
-//
-//   //solution variable
-//   unsigned soluIndex;
-//   soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-//   unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
-//
-//   unsigned soluPdeIndex;
-//   soluPdeIndex = mlPdeSys->GetSolPdeIndex("u");    // get the position of "u" in the pdeSys object
-//
-//   vector < double >  solu; // local solution
-//   solu.reserve(maxSize);
-//
-//   vector < vector < double > > x(dim);    // local coordinates
-//   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
-//
-//   for(unsigned i = 0; i < dim; i++) {
-//     x[i].reserve(maxSize);
-//   }
-//
-//   vector <double> phi;  // local test function
-//   vector <double> phi_x; // local test function first order partial derivatives
-//   double weight; // gauss point weight
-//
-//   phi.reserve(maxSize);
-//   phi_x.reserve(maxSize * dim);
-//
-//   double quantityOfInterest = 0.;
-//
-//   // element loop: each process loops only on the elements that owns
-//
-//   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-//
-//     short unsigned ielGeom = msh->GetElementType(iel);
-//     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-//     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-//
-//     // resize local arrays
-//     solu.resize(nDofu);
-//
-//     for(int i = 0; i < dim; i++) {
-//       x[i].resize(nDofx);
-//     }
-//
-//     // local storage of global mapping and solution
-//     for(unsigned i = 0; i < nDofu; i++) {
-//       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-//       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // global extraction and local storage for the solution
-//     }
-//
-//     // local storage of coordinates
-//     for(unsigned i = 0; i < nDofx; i++) {
-//       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-//
-//       for(unsigned jdim = 0; jdim < dim; jdim++) {
-//         x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
-//       }
-//     }
-//
-//     vector < double >* nullDoublePointer = NULL;
-//     // *** Gauss point loop ***
-//     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
-//       // *** get gauss point weight, test function and test function partial derivatives ***
-//       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, *nullDoublePointer);
-//
-//       double solu_gss = 0.;
-//       for(unsigned i = 0; i < nDofu; i++) {
-//         solu_gss += phi[i] * solu[i];
-//       }
-// //       quantityOfInterest += solu_gss * solu_gss *  weight ; // this is the integral of the square.
-//       quantityOfInterest +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
-//
-//     } // end gauss point loop
-//
-//   } //end element loop for each process
-//
-//   QoI[m] = 0.;
-//   MPI_Allreduce(&quantityOfInterest, &QoI[m], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-//
-//   //QoI[m] = quantityOfInterest;
-//
-// //   // add the quantityOfInterest of all processes
-// //   NumericVector* norm_vec;
-// //   norm_vec = NumericVector::build().release();
-// //   norm_vec->init (msh->n_processors(), 1 , false, AUTOMATIC);
-// //
-// //   norm_vec->set (iproc, quantityOfInterest);
-// //   norm_vec->close();
-// //
-// //   quantityOfInterest = norm_vec->l1_norm();
-// //
-// //   delete norm_vec;
-// //
-// //   QoI[m] = quantityOfInterest;
-//
-// }
-//
-// void GetStochasticData(std::vector <double>& QoI) {
-//
-//   //let's standardize the quantity of interest after finding moments and standard deviation
-//
-//   if(totMoments <= 0) {
-//
-//     std::cout << "ERROR: total number of moments has to be a positive integer" << std::endl;
-//
-//   }
-//
-//   else {
-//
-//     //BEGIN computation of the mean of QoI
-//     meanQoI = 0.;
-//     for(unsigned m = 0; m < M; m++) {
-//       meanQoI += QoI[m];
-//     }
-//     meanQoI /= M;
-//     //END
-//
-//
-//     //BEGIN computation of the variance and standard deviation of QoI
-//     varianceQoI = 0;
-//     for(unsigned m = 0; m < M; m++) {
-//       varianceQoI += pow(QoI[m] - meanQoI, 2);
-//     }
-//     varianceQoI /= M;
-//
-//     stdDeviationQoI = sqrt(varianceQoI);
-//     //END
-//
-//
-//     //BEGIN standardization of QoI before computing the moments
-// //     for(unsigned m = 0; m < M; m++) {
-// //       QoI[m] = (QoI[m] - meanQoI) / stdDeviationQoI ;
-// //     }
-//     //END
-//
-//
-//     //BEGIN computation of the raw moments
-//     for(unsigned p = 0; p < totMoments; p++) {
-//       moments[p] = 0.;
-//       for(unsigned m = 0; m < M; m++) {
-//         moments[p] += pow(QoI[m], p + 1);
-//       }
-//       moments[p] /= M;
-//     }
-//     //END
-//
-//     cumulants[0] = moments[0];
-//
-//     if(totMoments > 1) {
-//       cumulants[1] = moments[1] - moments[0] * moments[0];
-//       std::cout.precision(14);
-//       std::cout << "AAAAAAAAAAAAAAA" << cumulants[1] << std::endl;
-//       if(totMoments > 2) {
-//         cumulants[2] = moments[2] - 3. * moments[1] * moments[0] + 2. * pow(moments[0], 3);
-//         if(totMoments > 3) {
-//           cumulants[3] = moments[3] - 4. * moments[2] * moments[0] - 3. * moments[1] * moments[1] + 12. * moments[1] * moments[0] * moments[0] - 6. * pow(moments[0], 4);
-//           if(totMoments > 4) {
-//             cumulants[4] = moments[4] - 5. * moments[3] * moments[0] - 10. * moments[2] * moments[1] + 20. * moments[2] * moments[0] * moments[0]
-//                            + 30. * moments[1] * moments[1] * moments[0] - 60. * moments[1] * pow(moments[0], 3) + 24. * pow(moments[0], 5);
-//             if(totMoments > 5) {
-//               cumulants[5] = moments[5] - 6. * moments[4] * moments[0] - 15. * moments[3] * moments[1] + 30. * moments[3] * moments[0] * moments[0]
-//                              - 10. * moments[2] * moments[2] + 120. * moments[2] * moments[1] * moments[0] - 120. * moments[2] * pow(moments[0], 3)
-//                              + 30. * pow(moments[1], 3) - 270. * pow(moments[1], 2) * pow(moments[0], 2) + 360. * moments[1] * pow(moments[0], 4) - 120. * pow(moments[0], 6);
-//             }
-//           }
-//         }
-//       }
-//     }
-//   }
-// }
-//
-//
-// void PlotStochasticData() {
-//
-//   std::cout.precision(14);
-//   std::cout << " the number of MC samples is " << M << std::endl;
-//   std::cout << " the mean is " << meanQoI << std::endl;
-//   std::cout << " the standard deviation is " << sqrt(varianceQoI) << std::endl;
-//
-//   for(unsigned p = 0; p < totMoments; p++) {
-// //     printf("%d-th moment is %g\n", p + 1, moments[p]);
-//     std::cout << "the " << p + 1 << "-th moment is " << moments[p] << std::endl;
-//   }
-//
-//   for(unsigned p = 0; p < totMoments; p++) {
-// //     printf("%d-th cumulant is %g\n", p + 1, cumulants[p]);
-//     std::cout << "the " << p + 1 << "-th cumulant is " << cumulants[p] << std::endl;
-//   }
-//
-//   double gramCharlier2Terms = 0.;
-//   double gramCharlier3Terms = 0.;
-//   double gramCharlier4Terms = 0.;
-//   double gramCharlier5Terms = 0.;
-//
-//   double edgeworth1Term = 0.;
-//   double edgeworth2Terms = 0.;
-//   double edgeworth3Terms = 0.;
-//   double edgeworth4Terms = 0.;
-//   double edgeworth5Terms = 0.;
-//   double edgeworth6Terms = 0.;
-//
-//
-//   double generalizedGC1Term = 0.;
-//   double generalizedGC2Terms = 0.;
-//   double generalizedGC3Terms = 0.;
-//   double generalizedGC4Terms = 0.;
-//   double generalizedGC5Terms = 0.;
-//   double generalizedGC6Terms = 0.;
-//
-//   double lambda3 = 0.;
-//   double lambda4 = 0.;
-//   double lambda5 = 0.;
-//   double lambda6 = 0.;
-//
-//   double d1gaussian;
-//   double d2gaussian;
-//   double d3gaussian;
-//   double d4gaussian;
-//   double d5gaussian;
-//   double d6gaussian;
-//   double d7gaussian;
-//   double d8gaussian;
-//   double d9gaussian;
-//
-//   double t = meanQoI - stdDeviationQoI * 7.5;
-//   double dt = (15. * stdDeviationQoI) / 300.;
-//
-// //   cumulants[0] = 0; //decomment for nonStdGaussian
-//
-//   for(unsigned i = 0; i <= 300; i++) {
-//     std::cout << t << " ";
-// //     double t = x - meanQoI; //decomment for nonStdGaussian
-//     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
-//     std::cout << gaussian << " ";
-//
-//     d1gaussian = (- 1.) * gaussian * t ;
-//
-//     generalizedGC1Term = gaussian - cumulants[0] * d1gaussian;
-//
-//     std::cout << generalizedGC1Term << " ";
-//
-//     if(totMoments > 1) {
-//
-//       d2gaussian = (1.) * gaussian * (t * t - 1.) ;
-//       d3gaussian = (- 1.) * gaussian * (t * t * t - 3. * t) ;
-//
-//       gramCharlier2Terms =  gaussian - cumulants[2] / 6. * d3gaussian ;
-//
-// //       std::cout << -1. / 6 * d3gaussian << " ";
-//
-// //       std::cout << gramCharlier2Terms << " ";
-//
-//       lambda3 = cumulants[2] / pow(stdDeviationQoI, 3);
-//
-// //       edgeworth2Terms = gaussian - 1. / sqrt(M) * lambda3 * d3gaussian / 6.;  //OLD
-//
-//       generalizedGC2Terms = generalizedGC1Term + 0.5 * ((cumulants[1] - 1.) + pow(cumulants[0], 2)) * d2gaussian ;
-//
-//       std::cout << generalizedGC2Terms << " ";
-//
-//       if(totMoments > 2) {
-//
-//         d4gaussian = (1.) * gaussian * (t * t * t * t - 6. * t * t + 3.) ;
-//         d6gaussian = (1.) * gaussian * (pow(t, 6) - 15 * pow(t, 4) + 45 * t * t - 15);
-//
-//         gramCharlier3Terms = gramCharlier2Terms + cumulants[3] / 24. * d4gaussian ;
-//
-// //         std::cout << 1. / 24. * d4gaussian << " ";
-//
-// //         std::cout << gramCharlier3Terms << " ";
-//
-//         lambda4 = cumulants[3] / pow(stdDeviationQoI, 4);
-//
-// //         edgeworth3Terms = edgeworth2Terms + 1. / M * (1. / 24 * lambda4 * d4gaussian + 1. / 72 * lambda3 * lambda3 * d6gaussian); //OLD
-//
-//         generalizedGC3Terms = generalizedGC2Terms - 1. / 6 * (cumulants[2] + 3 * (cumulants[1] - 1.) * cumulants[0] + pow(cumulants[0], 3)) * d3gaussian;
-//
-//         std::cout << generalizedGC3Terms << " ";
-//
-//         if(totMoments > 3) {
-//
-//           d5gaussian = (- 1.) * gaussian * (pow(t, 5) - 10. * t * t * t + 15. * t);
-//           d7gaussian = (- 1.) * gaussian * (pow(t, 7) - 21. * pow(t, 5) + 105. * t * t * t -  105. * t) ;
-//           d9gaussian = (- 1.) * gaussian * (pow(t, 9) - 36. * pow(t, 7) + 378. * pow(t, 5) - 1260. * t * t * t + 945. * t) ;
-//
-//           gramCharlier4Terms = gramCharlier3Terms - cumulants[4] / 120. * d5gaussian;
-//
-// //           std::cout << - 1. / 120. * d5gaussian << " ";
-//
-// //           std::cout << gramCharlier4Terms << " " ;
-//
-//           lambda5 = cumulants[4] / pow(stdDeviationQoI, 5);
-//
-// //           edgeworth4Terms = edgeworth3Terms - 1. / (pow(M, 1.5)) * (lambda5 * d5gaussian / 120. + lambda3 * lambda4 * d7gaussian / 144. + pow(lambda3, 3) * d9gaussian / 1296.) ;  //OLD
-//
-//           generalizedGC4Terms = generalizedGC3Terms + 1. / 24 * (cumulants[3] + 4. * cumulants[2] * cumulants[0] + 3. * pow((cumulants[1] - 1.), 2) + 6. * (cumulants[1] - 1.) + pow(cumulants[0], 4)) * d4gaussian;
-//
-//           std::cout << generalizedGC4Terms << " ";
-//
-//           if(totMoments > 4) {
-//
-//             gramCharlier5Terms = gramCharlier4Terms + (10. * cumulants[2] * cumulants[2] + cumulants[5]) / (120. * 6.) * d6gaussian;
-//
-// // 	    std::cout << gramCharlier5Terms << "\n";
-//
-//             generalizedGC5Terms = generalizedGC4Terms - 1. / 120 * (cumulants[4] + 5. * cumulants[3] * cumulants[0] + 10. * cumulants[2] * (cumulants[1] - 1.)
-//                                   + 10. * cumulants[2] * pow(cumulants[0], 2) + 15. * pow((cumulants[1] - 1.), 2) * cumulants[0]
-//                                   + 10. * (cumulants[1] - 1.) * pow(cumulants[0], 3) + pow(cumulants[0], 5)) * d5gaussian;
-//
-//             std::cout << generalizedGC5Terms << " ";
-//
-//             if(totMoments > 5) {
-//
-//               generalizedGC6Terms = generalizedGC5Terms + 1. / 720 * (cumulants[5] + 6. * cumulants[4] * cumulants[0] + 15. * cumulants[3] * (cumulants[1] - 1.)
-//                                     + 15. * cumulants[3] * pow(cumulants[0], 2) +  10. * pow(cumulants[2], 2) + 60. * cumulants[2] * (cumulants[1] - 1.) * cumulants[0]
-//                                     + 20. * cumulants[2] * pow(cumulants[0], 3) + 15. * pow((cumulants[1] - 1.), 3) + 45. * pow((cumulants[1] - 1.), 2) * pow(cumulants[0], 2)
-//                                     + 15. * (cumulants[1] - 1.) * pow(cumulants[0], 4) +  pow(cumulants[0], 6)) * d6gaussian;
-//
-//               std::cout << generalizedGC6Terms << " \n ";
-//
-//             }
-//
-//           }
-//         }
-//       }
-//     }
-//
-//     t += dt;
-//   }
-//
-// }
-//
+void PlotStochasticData() {
+
+  std::cout.precision(14);
+  std::cout << " the mean is " << meanQoI << std::endl;
+  std::cout << " the standard deviation is " << stdDeviationQoI << std::endl;
+
+  std::cout << "Standardized Moments" << std::endl;
+  for(unsigned p = 0; p < totMoments; p++) {
+    std::cout << " & " << momentsStandardized[p] << "  ";
+  }
+  std::cout << std::endl;
+  std::cout << "Standardized Cumulants" << std::endl;
+  for(unsigned p = 0; p < totMoments; p++) {
+    std::cout << " & " << cumulantsStandardized[p] << "  ";
+  }
+  std::cout << std::endl;
+  std::cout << " Moments " << std::endl;
+  for(unsigned p = 0; p < totMoments; p++) {
+    std::cout << " & " << moments[p] << "  ";
+  }
+  std::cout << std::endl;
+  std::cout << " Cumulants " << std::endl;
+  for(unsigned p = 0; p < totMoments; p++) {
+    std::cout << " & " << cumulants[p] << "  ";
+  }
+
+  std::cout << std::endl;
+  std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
+
+  double edgeworth1Term = 0.;
+  double edgeworth2Terms = 0.;
+  double edgeworth3Terms = 0.;
+  double edgeworth4Terms = 0.;
+  double edgeworth5Terms = 0.;
+  double edgeworth6Terms = 0.;
+
+  double generalizedGC1Term = 0.;
+  double generalizedGC2Terms = 0.;
+  double generalizedGC3Terms = 0.;
+  double generalizedGC4Terms = 0.;
+  double generalizedGC5Terms = 0.;
+  double generalizedGC6Terms = 0.;
+
+  double lambda3 = 0.;
+  double lambda4 = 0.;
+  double lambda5 = 0.;
+  double lambda6 = 0.;
+
+  double d1gaussian;
+  double d2gaussian;
+  double d3gaussian;
+  double d4gaussian;
+  double d5gaussian;
+  double d6gaussian;
+  double d7gaussian;
+  double d9gaussian;
+
+  double t = - 4.45;
+  double dt = (8.9) / 300.;
+
+//   cumulants[0] = 0; //decomment for nonStdGaussian
+
+  //BEGIN GRAM CHARLIER PRINT
+  std::cout << " ------------------------- GRAM CHARLIER ------------------------- " << std::endl;
+  for(unsigned i = 0; i <= 300; i++) {
+    std::cout << t << " ";
+//     double t = x - meanQoI; //decomment for nonStdGaussian
+    double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
+    std::cout << gaussian << " ";
+
+    d1gaussian = (- 1.) * gaussian * t ;
+
+    generalizedGC1Term = gaussian - cumulantsStandardized[0] * d1gaussian;
+
+    std::cout << generalizedGC1Term << " ";
+
+    if(totMoments > 1) {
+
+      d2gaussian = (1.) * gaussian * (t * t - 1.) ;
+      d3gaussian = (- 1.) * gaussian * (t * t * t - 3. * t) ;
+
+      generalizedGC2Terms = generalizedGC1Term + 0.5 * ((cumulantsStandardized[1] - 1.) + pow(cumulantsStandardized[0], 2)) * d2gaussian ;
+
+      std::cout << generalizedGC2Terms << " ";
+
+      if(totMoments > 2) {
+
+        d4gaussian = (1.) * gaussian * (t * t * t * t - 6. * t * t + 3.) ;
+        d6gaussian = (1.) * gaussian * (pow(t, 6) - 15 * pow(t, 4) + 45 * t * t - 15);
+
+        generalizedGC3Terms = generalizedGC2Terms - 1. / 6 * (cumulantsStandardized[2] + 3 * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
+                              + pow(cumulantsStandardized[0], 3)) * d3gaussian;
+
+        std::cout << generalizedGC3Terms << " ";
+
+        if(totMoments > 3) {
+
+          d5gaussian = (- 1.) * gaussian * (pow(t, 5) - 10. * t * t * t + 15. * t);
+          d7gaussian = (- 1.) * gaussian * (pow(t, 7) - 21. * pow(t, 5) + 105. * t * t * t -  105. * t) ;
+          d9gaussian = (- 1.) * gaussian * (pow(t, 9) - 36. * pow(t, 7) + 378. * pow(t, 5) - 1260. * t * t * t + 945. * t) ;
+
+          generalizedGC4Terms = generalizedGC3Terms + 1. / 24 * (cumulantsStandardized[3] + 4. * cumulantsStandardized[2] * cumulantsStandardized[0]
+                                + 3. * pow((cumulantsStandardized[1] - 1.), 2) + 6. * (cumulantsStandardized[1] - 1.) + pow(cumulantsStandardized[0], 4)) * d4gaussian;
+
+          std::cout << generalizedGC4Terms << " ";
+
+          if(totMoments > 4) {
+
+            generalizedGC5Terms = generalizedGC4Terms - 1. / 120 * (cumulantsStandardized[4] + 5. * cumulantsStandardized[3] * cumulantsStandardized[0]
+                                  + 10. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) + 10. * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 2)
+                                  + 15. * pow((cumulantsStandardized[1] - 1.), 2) * cumulantsStandardized[0] + 10. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 3)
+                                  + pow(cumulantsStandardized[0], 5)) * d5gaussian;
+
+            std::cout << generalizedGC5Terms << " ";
+
+            if(totMoments > 5) {
+
+              generalizedGC6Terms = generalizedGC5Terms + 1. / 720 * (cumulantsStandardized[5] + 6. * cumulantsStandardized[4] * cumulantsStandardized[0]
+                                    + 15. * cumulantsStandardized[3] * (cumulantsStandardized[1] - 1.) + 15. * cumulantsStandardized[3] * pow(cumulantsStandardized[0], 2)
+                                    + 10. * pow(cumulantsStandardized[2], 2) + 60. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
+                                    + 20. * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 3) + 15. * pow((cumulantsStandardized[1] - 1.), 3)
+                                    + 45. * pow((cumulantsStandardized[1] - 1.), 2) * pow(cumulantsStandardized[0], 2) + 15. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 4)
+                                    +  pow(cumulantsStandardized[0], 6)) * d6gaussian;
+
+              std::cout << generalizedGC6Terms << " \n ";
+
+            }
+
+          }
+        }
+      }
+    }
+
+    t += dt;
+  }
+
+  t = -  4.45;
+  dt = (8.9) / 300.;
+
+  //BEGIN EDGEWORTH PRINT
+  std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
+  for(unsigned i = 0; i <= 300; i++) {
+    std::cout << t << " ";
+//     double t = x - meanQoI; //decomment for nonStdGaussian
+    double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
+    std::cout << gaussian << " ";
+
+    d3gaussian = (- 1.) * gaussian * (t * t * t - 3. * t) ;
+
+    lambda3 = cumulants[2] / pow(stdDeviationQoI, 3);
+
+    edgeworth1Term = gaussian - lambda3 / 6. * d3gaussian;
+
+    std::cout << edgeworth1Term << " ";
+
+    if(totMoments > 1) {
+
+      d4gaussian = (1.) * gaussian * (t * t * t * t - 6. * t * t + 3.) ;
+      d6gaussian = (1.) * gaussian * (pow(t, 6) - 15 * pow(t, 4) + 45 * t * t - 15);
+
+      lambda4 = cumulants[3] / pow(stdDeviationQoI, 4);
+
+      edgeworth2Terms = edgeworth1Term + lambda4 / 24. * d4gaussian + lambda3 * lambda3 / 72. * d6gaussian;
+
+      std::cout << edgeworth2Terms << " ";
+
+      if(totMoments > 2) {
+
+        d5gaussian = (- 1.) * gaussian * (pow(t, 5) - 10. * t * t * t + 15. * t);
+        d7gaussian = (- 1.) * gaussian * (pow(t, 7) - 21. * pow(t, 5) + 105. * t * t * t -  105. * t) ;
+        d9gaussian = (- 1.) * gaussian * (pow(t, 9) - 36. * pow(t, 7) + 378. * pow(t, 5) - 1260. * t * t * t + 945. * t) ;
+
+        lambda5 = cumulants[4] / pow(stdDeviationQoI, 5);
+
+        edgeworth3Terms = edgeworth2Terms - lambda5 / 120. * d5gaussian + lambda3 * lambda4 / 144. * d7gaussian + pow(lambda3, 3) / 1296. * d9gaussian;
+
+        std::cout << edgeworth3Terms << " \n ";
+
+      }
+    }
+
+    t += dt;
+  }
+  //END
+
+
+}
+//
+
+
 
 
 
