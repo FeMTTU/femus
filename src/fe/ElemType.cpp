@@ -1478,17 +1478,18 @@ namespace femus
 
   template <class type>
   void elem_type_1D::Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const
+                                   vector < double >& phi, vector < type >& gradphi, 
+				   boost::optional< vector < type > & > nablaphi) const
   {
 
-    bool hermitianMatrix = true;
-    if(&nablaphi == NULL) {
-      hermitianMatrix = false;
-    }
+//    bool hermitianMatrix = true;
+//     if(&nablaphi == NULL) {
+//       hermitianMatrix = false;
+//     }
 
     phi.resize(_nc);
     gradphi.resize(_nc * 1);
-    if(hermitianMatrix) nablaphi.resize(_nc * 1);
+    if(nablaphi) nablaphi->resize(_nc * 1);
 
     type Jac = 0.;
     type JacI;
@@ -1509,7 +1510,7 @@ namespace femus
     for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
       phi[inode] = _phi[ig][inode];
       gradphi[inode] = (*dxi) * JacI;
-      if(hermitianMatrix) nablaphi[inode] = (*dxi2) * JacI * JacI;
+      if(nablaphi) (*nablaphi)[inode] = (*dxi2) * JacI * JacI;
     }
 
   }
@@ -1655,19 +1656,20 @@ template <class type>
 
   template <class type>
   void elem_type_2D::Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const
+                                   vector < double >& phi, vector < type >& gradphi, 
+				   boost::optional< vector < type > & > nablaphi) const
   {
 
-    bool hermitianMatrix = true;
-    if( &nablaphi == NULL ) {
-      hermitianMatrix = false;
-    }
+//     bool hermitianMatrix = true;
+//     if( &nablaphi == NULL ) {
+//       hermitianMatrix = false;
+//     }
 
     
     
     phi.resize(_nc);
     gradphi.resize(_nc * 2);
-    if(hermitianMatrix) nablaphi.resize(_nc * 3);
+    if(nablaphi) nablaphi->resize(_nc * 3);
 
     type Jac[2][2] = {{0, 0}, {0, 0}};
     type JacI[2][2];
@@ -1704,14 +1706,14 @@ template <class type>
       gradphi[2 * inode + 0] = (*dxi) * JacI[0][0] + (*deta) * JacI[0][1];
       gradphi[2 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1];
 
-      if(hermitianMatrix) {
-        nablaphi[3 * inode + 0] =
+      if(nablaphi) {
+        (*nablaphi)[3 * inode + 0] =
           ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[0][0] +
           ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[0][1];
-        nablaphi[3 * inode + 1] =
+        (*nablaphi)[3 * inode + 1] =
           ((*dxi2)   * JacI[1][0] + (*dxideta) * JacI[1][1]) * JacI[1][0] +
           ((*dxideta) * JacI[1][0] + (*deta2)  * JacI[1][1]) * JacI[1][1];
-        nablaphi[3 * inode + 2] =
+        (*nablaphi)[3 * inode + 2] =
           ((*dxi2)   * JacI[0][0] + (*dxideta) * JacI[0][1]) * JacI[1][0] +
           ((*dxideta) * JacI[0][0] + (*deta2)  * JacI[0][1]) * JacI[1][1];
       }
@@ -1901,17 +1903,18 @@ template <class type>
 //---------------------------------------------------------------------------------------------------------
   template <class type>
   void elem_type_3D::Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, vector < type >& nablaphi) const
+                                   vector < double >& phi, vector < type >& gradphi, 
+				   boost::optional< vector < type > & > nablaphi) const
   {
 
-    bool hermitianMatrix = true;
-    if(&nablaphi == NULL) {
-      hermitianMatrix = false;
-    }
+//     bool hermitianMatrix = true;
+//     if(&nablaphi == NULL) {
+//       hermitianMatrix = false;
+//     }
 
     phi.resize(_nc);
     gradphi.resize(_nc * 3);
-    if(hermitianMatrix) nablaphi.resize(_nc * 6);
+    if(nablaphi) nablaphi->resize(_nc * 6);
 
 
     type Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
@@ -1968,28 +1971,28 @@ template <class type>
       gradphi[3 * inode + 1] = (*dxi) * JacI[1][0] + (*deta) * JacI[1][1] + (*dzeta) * JacI[1][2];
       gradphi[3 * inode + 2] = (*dxi) * JacI[2][0] + (*deta) * JacI[2][1] + (*dzeta) * JacI[2][2];
 
-      if(hermitianMatrix) {
-        nablaphi[6 * inode + 0] =
+      if(nablaphi) {
+        (*nablaphi)[6 * inode + 0] =
           ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[0][0] +
           ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[0][1] +
           ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[0][2];
-        nablaphi[6 * inode + 1] =
+        (*nablaphi)[6 * inode + 1] =
           ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[1][0] +
           ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[1][1] +
           ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[1][2];
-        nablaphi[6 * inode + 2] =
+        (*nablaphi)[6 * inode + 2] =
           ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[2][0] +
           ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[2][1] +
           ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[2][2];
-        nablaphi[6 * inode + 3] =
+        (*nablaphi)[6 * inode + 3] =
           ((*dxi2)    * JacI[0][0] + (*dxideta)  * JacI[0][1] + (*dzetadxi) * JacI[0][2]) * JacI[1][0] +
           ((*dxideta) * JacI[0][0] + (*deta2)    * JacI[0][1] + (*detadzeta) * JacI[0][2]) * JacI[1][1] +
           ((*dzetadxi) * JacI[0][0] + (*detadzeta) * JacI[0][1] + (*dzeta2)   * JacI[0][2]) * JacI[1][2];
-        nablaphi[6 * inode + 4] =
+        (*nablaphi)[6 * inode + 4] =
           ((*dxi2)    * JacI[1][0] + (*dxideta)  * JacI[1][1] + (*dzetadxi) * JacI[1][2]) * JacI[2][0] +
           ((*dxideta) * JacI[1][0] + (*deta2)    * JacI[1][1] + (*detadzeta) * JacI[1][2]) * JacI[2][1] +
           ((*dzetadxi) * JacI[1][0] + (*detadzeta) * JacI[1][1] + (*dzeta2)   * JacI[1][2]) * JacI[2][2];
-        nablaphi[6 * inode + 5] =
+        (*nablaphi)[6 * inode + 5] =
           ((*dxi2)    * JacI[2][0] + (*dxideta)  * JacI[2][1] + (*dzetadxi) * JacI[2][2]) * JacI[0][0] +
           ((*dxideta) * JacI[2][0] + (*deta2)    * JacI[2][1] + (*detadzeta) * JacI[2][2]) * JacI[0][1] +
           ((*dzetadxi) * JacI[2][0] + (*detadzeta) * JacI[2][1] + (*dzeta2)   * JacI[2][2]) * JacI[0][2];
