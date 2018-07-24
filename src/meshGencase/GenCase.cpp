@@ -2492,7 +2492,9 @@ void GenCase::ReadMatrix(const  std::string& namefile, SystemTwo * mysys) {
 //This function depends on _iproc
 void GenCase::ReadProl(const std::string& name, SystemTwo * mysys) {
 
-
+  
+    vector < SparseMatrix* > &_PP = mysys->GetProjectionMatrix(); //added by Eugenio TO BE TESTED
+    
     for (uint Level = 1; Level< mysys->GetGridn(); Level++) {
   
     uint Lev_c = Level-1;
@@ -2573,7 +2575,8 @@ void GenCase::ReadProl(const std::string& name, SystemTwo * mysys) {
    
     uint off_proc = mysys->GetMLProb().GetMeshTwo()._iproc*mysys->GetGridn();
 
-    mysys->_PP[Lev_f] = SparseMatrix::build().release();
+    //mysys->
+    _PP[Lev_f] = SparseMatrix::build().release();
 // // //     _Prl[ Lev_f ]->init(0,0,0,0); //TODO BACK TO A REASONABLE INIT
 
     // local matrix dimension
@@ -2650,7 +2653,8 @@ void GenCase::ReadProl(const std::string& name, SystemTwo * mysys) {
 
     std::cout << "Printing Prolongator ===========" << std::endl;
     pattern.print();
-    mysys->_PP[Lev_f]->update_sparsity_pattern_old(pattern);
+    //mysys->
+    _PP[Lev_f]->update_sparsity_pattern_old(pattern);
 
 //=========== VALUES ===================
     DenseMatrix *valmat;
@@ -2670,7 +2674,8 @@ void GenCase::ReadProl(const std::string& name, SystemTwo * mysys) {
             for (uint j=0; j<ind.size(); j++) ind[j] = pattern[irow][j];
             valmat = new DenseMatrix(1,ncol);
             for (uint j=0; j<ncol; j++)(*valmat)(0,j) = Prol_val[fe][j+len[fe][i]];
-            mysys->_PP[Lev_f]->add_matrix(*valmat,tmp,ind);
+            //mysys->
+	    _PP[Lev_f]->add_matrix(*valmat,tmp,ind);
             delete  valmat;
         }
      }
@@ -2691,7 +2696,8 @@ void GenCase::ReadProl(const std::string& name, SystemTwo * mysys) {
 
     pattern.clear();
 
-    mysys->_PP[Lev_f]->close();
+    //mysys->
+    _PP[Lev_f]->close();
 //     if (mysys->GetMLProb().GetMeshTwo()._iproc==0) _Prl[  Lev_f ]->print_personal();
 //     _Prl[  Lev_f ]->print_graphic(false); //TODO should pass this true or false as a parameter
    } //end levels
@@ -2729,6 +2735,7 @@ void GenCase::ReadProl(const std::string& name, SystemTwo * mysys) {
     //perche' sono legati ai DOF (devi pensare che la questione del mesh e' gia' risolta)
 void GenCase::ReadRest(const std::string& name, SystemTwo * mysys) {
  
+  vector < SparseMatrix* > &_RR = mysys->GetRestrictionMatrix(); //added by Eugenio TO BE TESTED
   
   for (uint Level = 0; Level< mysys->GetGridn() - 1; Level++) {
     
@@ -2809,7 +2816,8 @@ void GenCase::ReadRest(const std::string& name, SystemTwo * mysys) {
 
     uint off_proc=mysys->GetGridn()*mysys->GetMLProb().GetMeshTwo()._iproc;
 
-    mysys->_RR[Lev_c] = SparseMatrix::build().release();
+    //mysys->
+    _RR[Lev_c] = SparseMatrix::build().release();
 // // //     _Rst[Lev_c]->init(0,0,0,0);   //TODO BACK TO A REASONABLE INIT  //we have to do this before appropriately!!!
 
     int nrowt=0;int nclnt=0;
@@ -2873,7 +2881,8 @@ void GenCase::ReadRest(const std::string& name, SystemTwo * mysys) {
 
     std::cout << "Printing Restrictor ===========" << std::endl;
     pattern.print();
-    mysys->_RR[Lev_c]->update_sparsity_pattern_old(pattern);  //TODO see 
+    //mysys->
+    _RR[Lev_c]->update_sparsity_pattern_old(pattern);  //TODO see 
 //         _Rst[Lev_c]->close();
 //     if (mysys->GetMLProb().GetMeshTwo()._iproc==0) _Rst[Lev_c]->print_personal(); //there is no print function for rectangular matrices, and print_personal doesnt seem to be working...
 // la print stampa il contenuto, ma io voglio solo stampare lo sparsity pattern!
@@ -2901,7 +2910,8 @@ void GenCase::ReadRest(const std::string& name, SystemTwo * mysys) {
             for (uint i1=0;i1<ind.size();i1++) { ind[i1] = pattern[irow][i1]; /*std::cout << " " << ind[i1] << " ";*/}
             valmat = new DenseMatrix(1,ncol);  //TODO add a matrix row by row...
             for (uint j=0; j<ncol; j++) (*valmat)(0,j) = mysys->_bcond._bc[irow_top]*Rest_val[fe][ j+len[fe][i] ];
-            mysys->_RR[Lev_c]->add_matrix(*valmat,tmp,ind);
+            //mysys->
+	    _RR[Lev_c]->add_matrix(*valmat,tmp,ind);
             delete  valmat;
             }// end dof loop
          } // end var loop
@@ -2921,7 +2931,8 @@ void GenCase::ReadRest(const std::string& name, SystemTwo * mysys) {
 
     pattern.clear();
 
-    mysys->_RR[Lev_c]->close();
+    //mysys->
+    _RR[Lev_c]->close();
 //     if (mysys->GetMLProb().GetMeshTwo()._iproc==0)  _Rst[Lev_c]->print_personal(std::cout);
 //     _Rst[Lev_c]->print_graphic(false); // TODO should pass this true or false as a parameter
 

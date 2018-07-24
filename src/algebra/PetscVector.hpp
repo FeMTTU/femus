@@ -84,7 +84,7 @@ public:
 
 
   /// Creates a copy of this vector and returns it in an \p AutoPtr.
-  std::auto_ptr<NumericVector > clone () const;
+  std::unique_ptr<NumericVector > clone () const;
 
 
   /// Call the assemble functions
@@ -270,7 +270,7 @@ public:
 
   void BinaryPrint(const char* fileName);
   void BinaryLoad(const char* fileName);
-  
+
 protected:
 
   /// Queries the array (and the local form if the vector is ghosted) from Petsc.
@@ -633,8 +633,8 @@ inline void PetscVector::zero (){
 }
 
 
-inline std::auto_ptr<NumericVector > PetscVector::clone () const {
-  std::auto_ptr<NumericVector> cloned_vector (new PetscVector);
+inline std::unique_ptr<NumericVector > PetscVector::clone () const {
+  std::unique_ptr<NumericVector> cloned_vector (new PetscVector);
   cloned_vector->init(*this, true);
   *cloned_vector = *this;
   return cloned_vector;

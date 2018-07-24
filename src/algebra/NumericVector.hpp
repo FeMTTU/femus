@@ -75,11 +75,11 @@ public:
 
   /** Builds a \p NumericVector using the linear solver package */
   /** specified by \p solver_package */
-  static std::auto_ptr<NumericVector>
+  static std::unique_ptr<NumericVector>
   build(const SolverPackage solver_package = LSOLVER);
   
   /** Creates a copy of this vector and returns it in an \p AutoPtr. */
-  virtual std::auto_ptr<NumericVector > clone () const = 0;
+  virtual std::unique_ptr<NumericVector > clone () const = 0;
 
   /** Destructor, deallocates memory. */
   virtual ~NumericVector () {

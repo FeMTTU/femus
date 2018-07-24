@@ -65,15 +65,17 @@ public:
 
     void SetElementBlockNumberFluid(unsigned const &dim_vanka_block, unsigned const &overlap=0);
     void SetElementBlockNumberSolid(unsigned const &dim_vanka_block, unsigned const &overlap=0);
+    void SetElementBlockNumberPorous(unsigned const &dim_vanka_block, unsigned const &overlap=0);
     void SetElementBlockFluidAll();
     void SetElementBlockSolidAll();
+    void SetElementBlockPorousAll();
 
 protected:
 
     /** Create the Prolongator and Restrictor Operators for the Algebraic Multigrid Solver */
     void BuildProlongatorMatrix(unsigned gridf);
 
-
+    void BuildAmrProlongatorMatrix(unsigned level);
 
 
 private:

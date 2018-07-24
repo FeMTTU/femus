@@ -64,14 +64,15 @@ IF(PETSC_FOUND)
   SET(HAVE_PETSC 1)
 ENDIF(PETSC_FOUND)
 
-# Find MPI (optional)
-FIND_PACKAGE(MPI)
-MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
 
-SET(HAVE_MPI 0)
-IF(MPI_FOUND)
-  SET(HAVE_MPI 1)
-ENDIF(MPI_FOUND)
+# Find MPI (optional)
+# FIND_PACKAGE(MPI)
+# MESSAGE(STATUS "MPI_FOUND = ${MPI_FOUND}")
+# 
+# SET(HAVE_MPI 0)
+# IF(MPI_FOUND)
+SET(HAVE_MPI 1)
+# ENDIF(MPI_FOUND)
 
 # Find FParser
 FIND_PACKAGE(FParser)
@@ -81,23 +82,32 @@ IF(FPARSER_FOUND)
   SET(HAVE_FPARSER 1)
 ENDIF(FPARSER_FOUND)
 
-# Find HDF5 (optional)
-FIND_PACKAGE (HDF5)
-MESSAGE(STATUS "HDF5_FOUND = ${HDF5_FOUND}")
+# # Find HDF5 (optional)
+# FIND_PACKAGE (HDF5)
+# MESSAGE(STATUS "HDF5_FOUND = ${HDF5_FOUND}")
+# 
+# SET(HAVE_HDF5 0)
+# IF(HDF5_FOUND)
+SET(HAVE_HDF5 1)
+# ENDIF(HDF5_FOUND)
 
-SET(HAVE_HDF5 0)
-IF(HDF5_FOUND)
-  SET(HAVE_HDF5 1)
-ENDIF(HDF5_FOUND)
+# # Find Metis (optional)
+# FIND_PACKAGE(METIS)
+# MESSAGE(STATUS "METIS_FOUND = ${METIS_FOUND}")
+# 
+# SET (HAVE_METIS 0)
+# IF(METIS_FOUND)
+SET(HAVE_METIS 1)
+# ENDIF(METIS_FOUND)
 
-# Find Metis (optional)
-FIND_PACKAGE(METIS)
-MESSAGE(STATUS "METIS_FOUND = ${METIS_FOUND}")
+# Find Slepc Library (optional)
+FIND_PACKAGE(SLEPc)
+MESSAGE(STATUS "SLEPC_FOUND = ${SLEPC_FOUND}")
+SET(HAVE_SLEPC 0)
+IF(SLEPC_FOUND)
+  SET(HAVE_SLEPC 1)
+ENDIF(SLEPC_FOUND)
 
-SET (HAVE_METIS 0)
-IF(METIS_FOUND)
-  SET(HAVE_METIS 1)
-ENDIF(METIS_FOUND)
 
 # Find Libmesh (optional)
 FIND_PACKAGE(LIBMESH)
@@ -107,14 +117,7 @@ IF(LIBMESH_FOUND)
   SET(HAVE_LIBMESH 1)
 ENDIF(LIBMESH_FOUND)
 
-# Find Slepc (optional)
-FIND_PACKAGE(SLEPc)
-MESSAGE(STATUS "SLEPC_FOUND = ${SLEPC_FOUND}")
-SET (HAVE_SLEPC 0)
-IF(SLEPC_FOUND)
-  SET(HAVE_SLEPC 1)
-ENDIF(SLEPC_FOUND)
-
+set(CMAKE_CXX_STANDARD 11)
 
 #############################################################################################
 ### Build options
@@ -163,6 +166,18 @@ OPTION(BUILD_MGAMR "Build the MGAMR" ON)
 OPTION(BUILD_PCFIELDSPLIT "Build the PCFIELDSPLIT apps" ON)
 
 OPTION(BUILD_AMR "Build the AMR apps" ON)
+
+OPTION(BUILD_ISM "Build the Intersection Marker apps" ON)
+
+OPTION(BUILD_MPM_FEM "Build the MPM FEM apps" ON)
+
+OPTION(BUILD_REFINEMENT "Build the Refiniment apps" ON)
+
+OPTION(BUILD_PETSC_DEBUG "Build the PETSC debug apps" ON)
+
+OPTION(BUILD_UQ "Build the UQ apps" ON)
+
+OPTION(BUILD_SW "Build the Shallow Water apps" ON)
 
 #############################################################################################
 ### Build documentation (Doxygen)
@@ -230,8 +245,11 @@ CONFIGURE_FILE(
   "${PROJECT_BINARY_DIR}/include/FemusConfig.hpp" @ONLY IMMEDIATE
   )
 
-
-
+CONFIGURE_FILE(
+  "${PROJECT_SOURCE_DIR}/UseFemus.CMake.in"
+  "${PROJECT_BINARY_DIR}/UseFemus.CMake" @ONLY IMMEDIATE
+  )
+  
 #############################################################################################
 ### Include files
 #############################################################################################
@@ -239,6 +257,10 @@ CONFIGURE_FILE(
 # Include petsc files
 INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
 ADD_DEFINITIONS(${PETSC_DEFINITIONS})
+
+IF(SLEPC_FOUND)
+ INCLUDE_DIRECTORIES(${SLEPC_INCLUDE_DIRS})
+ENDIF(SLEPC_FOUND)
 
 #include femus include files
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/algebra)
@@ -251,18 +273,16 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/equations)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/solution)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/enums)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/fe)
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/ism)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/physics)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+INCLUDE_DIRECTORIES(/opt/apps/local/mpi/gnu/openmpi/1.10.6/include/)
+INCLUDE_DIRECTORIES(/opt/apps/local/gnu/openmpi/boost/1.61.0/include/)
 
 # Include Fparser files
 IF(FPARSER_FOUND)
   INCLUDE_DIRECTORIES(${FPARSER_INCLUDE_DIR})
 ENDIF(FPARSER_FOUND)
-
-# include slepc files
-IF(SLEPC_FOUND)
-  INCLUDE_DIRECTORIES(${SLEPC_INCLUDE_DIRS}) 
-ENDIF(SLEPC_FOUND)
 
 # add femus macro
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake-modules/femusMacroBuildApplication.cmake)

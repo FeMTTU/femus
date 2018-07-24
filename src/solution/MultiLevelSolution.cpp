@@ -32,14 +32,16 @@ PURPOSE.  See the above copyright notice for more information.
 #include <sstream>
 #include <sys/stat.h>
 
-namespace femus {
+namespace femus
+{
 
 
   using std::cout;
   using std::endl;
 
 //---------------------------------------------------------------------------------------------------
-  MultiLevelSolution::~MultiLevelSolution() {
+  MultiLevelSolution::~MultiLevelSolution()
+  {
 
     for(unsigned i = 0; i < _gridn; i++) {
       _solution[i]->FreeSolutionVectors();
@@ -49,6 +51,8 @@ namespace femus {
     for(unsigned i = 0; i < _solName.size(); i++) delete [] _solName[i];
 
     for(unsigned i = 0; i < _solName.size(); i++) delete [] _bdcType[i];
+    
+    if(_writer != NULL) delete _writer;
 
 
   };
@@ -56,7 +60,8 @@ namespace femus {
 //---------------------------------------------------------------------------------------------------
   MultiLevelSolution::MultiLevelSolution(MultiLevelMesh* ml_msh) :
     _gridn(ml_msh->GetNumberOfLevels()),
-    _mlMesh(ml_msh) {
+    _mlMesh(ml_msh)
+  {
     _solution.resize(_gridn);
 
     for(unsigned i = 0; i < _gridn; i++) {
@@ -69,9 +74,14 @@ namespace femus {
 
     _mlBCProblem = NULL;
 
+    _FSI = false;
+    
+    _writer = NULL;
+
   }
 
-  void MultiLevelSolution::AddSolutionLevel() {
+  void MultiLevelSolution::AddSolutionLevel()
+  {
     // add level solution
     _solution.resize(_gridn + 1);
     _solution[_gridn] = new Solution(_mlMesh->GetLevel(_gridn));
@@ -81,30 +91,31 @@ namespace femus {
       _solution[_gridn]->AddSolution(_solName[i], _family[i], _order[i], _solTimeOrder[i], _pdeType[i]);
     }
 
-    for(unsigned i = 0; i < _solName.size(); i++) {
-      _solution[_gridn]->ResizeSolutionVector(_solName[i]);
-
-      _solution[_gridn]->_Sol[i]->zero();
-
-      if(_solTimeOrder[i] == 2) {
-        _solution[_gridn]->_SolOld[i]->zero();
+    for(unsigned k = 0; k < _solName.size(); k++) {
+      _solution[_gridn]->ResizeSolutionVector(_solName[k]);
+      _solution[_gridn]->_Sol[k]->matrix_mult(*_solution[_gridn - 1]->_Sol[k],
+                                              *_mlMesh->GetLevel(_gridn)->GetCoarseToFineProjection(_solType[k]));
+      _solution[_gridn]->_Sol[k]->close();
+      if(_solTimeOrder[k] == 2) {
+        _solution[_gridn]->_SolOld[k]->matrix_mult(*_solution[_gridn - 1]->_SolOld[k],
+            *_mlMesh->GetLevel(_gridn)->GetCoarseToFineProjection(_solType[k]));
+        _solution[_gridn]->_SolOld[k]->close();
       }
     }
 
     _gridn++;
-    unsigned  grid0 = _gridn - 1;
 
     for(int k = 0; k < _solName.size(); k++) {
-      GenerateBdc(k, grid0, 0.);
+      GenerateBdc(k, _gridn - 1, 0.);
+
     }
-
-
 
   }
 
 //---------------------------------------------------------------------------------------------------
   void MultiLevelSolution::AddSolution(const char name[], const FEFamily fefamily, const FEOrder order,
-                                       unsigned tmorder, const bool& PdeType) {
+                                       unsigned tmorder, const bool& PdeType)
+  {
 
     unsigned n = _solType.size();
     _solType.resize(n + 1u);
@@ -118,6 +129,7 @@ namespace femus {
     _addAMRPressureStability.resize(n + 1u);
     _fixSolutionAtOnePoint.resize(n + 1u);
     _solPairIndex.resize(n + 1u);
+    _solPairInverseIndex.resize(n + 1u);
 
 
     _testIfPressure[n] = 0;
@@ -128,10 +140,13 @@ namespace femus {
     _solType[n] = order - ((fefamily == LAGRANGE) ? 1 : 0) + fefamily * 3;
     _solName[n]  = new char [DEFAULT_SOL_NCHARS];
     _bdcType[n]  = new char [20];
+    sprintf(_bdcType[n], "undefined");
     strcpy(_solName[n], name);
     _solTimeOrder[n] = tmorder;
     _pdeType[n] = PdeType;
     _solPairIndex[n] = n;
+    _solPairInverseIndex[n] = n;
+
 
     cout << " Add variable " << std::setw(3) << _solName[n] << " discretized with FE type "
          << std::setw(12) << order << " and time discretzation order " << tmorder << endl;
@@ -141,7 +156,8 @@ namespace femus {
     }
   }
 
-  void MultiLevelSolution::AddSolutionVector(const unsigned n_components, const std::string name, const FEFamily fefamily, const FEOrder order, unsigned tmorder, const bool& Pde_type) {
+  void MultiLevelSolution::AddSolutionVector(const unsigned n_components, const std::string name, const FEFamily fefamily, const FEOrder order, unsigned tmorder, const bool& Pde_type)
+  {
 
     for(unsigned i = 0; i < n_components; i++) {
       std::ostringstream name_cmp;
@@ -156,7 +172,8 @@ namespace femus {
 
 //---------------------------------------------------------------------------------------------------
   void MultiLevelSolution::AssociatePropertyToSolution(const char solution_name[], const char solution_property[],
-      const bool& bool_property) {
+      const bool& bool_property)
+  {
     unsigned index = GetIndex(solution_name);
 
     if(!strcmp(solution_property, "pressure") || !strcmp(solution_property, "Pressure")) {
@@ -176,22 +193,27 @@ namespace femus {
 // *******************************************************
 
 
-  void MultiLevelSolution::PairSolution(const char solution_name[], const char solution_pair[]) {
+  void MultiLevelSolution::PairSolution(const char solution_name[], const char solution_pair[])
+  {
     unsigned index = GetIndex(solution_name);
     unsigned indexPair = GetIndex(solution_pair);
     _solPairIndex[index] = indexPair;
+    _solPairInverseIndex[indexPair] = index;
   }
 
 // *******************************************************
-  void MultiLevelSolution::Initialize(const char name[], InitFunc func) {
+  void MultiLevelSolution::Initialize(const char name[], InitFunc func)
+  {
     Initialize(name, func, NULL, NULL);
   }
 
-  void MultiLevelSolution::Initialize(const char name[], InitFuncMLProb func, const MultiLevelProblem* ml_prob) {
+  void MultiLevelSolution::Initialize(const char name[], InitFuncMLProb func, const MultiLevelProblem* ml_prob)
+  {
     Initialize(name, NULL, func, ml_prob);
   }
 
-  void MultiLevelSolution::Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob) {
+  void MultiLevelSolution::Initialize(const char name[], InitFunc func, InitFuncMLProb funcMLProb, const MultiLevelProblem* ml_prob)
+  {
 
     unsigned i_start;
     unsigned i_end;
@@ -261,10 +283,12 @@ namespace femus {
 
                 value = (func) ? func(xx) : funcMLProb(ml_prob, xx, name);
 
-                _solution[ig]->_Sol[i]->set(iel, value);
+                unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(2, iel, sol_type);
+
+                _solution[ig]->_Sol[i]->set(solDof, value);
 
                 if(_solTimeOrder[i] == 2) {
-                  _solution[ig]->_SolOld[i]->set(iel, value);
+                  _solution[ig]->_SolOld[i]->set(solDof, value);
                 }
               }
             }
@@ -285,14 +309,15 @@ namespace femus {
 
 
 //---------------------------------------------------------------------------------------------------
-  unsigned MultiLevelSolution::GetIndex(const char name[]) const {
+  unsigned MultiLevelSolution::GetIndex(const char name[]) const
+  {
     unsigned index = 0;
 
     while(strcmp(_solName[index], name)) {
       index++;
 
       if(index == _solType.size()) {
-        cout << "error! invalid solution name " << name << "entry GetIndex(...)" << endl;
+        cout << "error! invalid solution name: " << name << " in entry GetIndex(...)" << endl;
         abort();
       }
     }
@@ -301,7 +326,8 @@ namespace femus {
   }
 
 // *******************************************************
-  unsigned MultiLevelSolution::GetSolutionType(const char name[]) {
+  unsigned MultiLevelSolution::GetSolutionType(const char name[])
+  {
     unsigned index = 0;
 
     while(strcmp(_solName[index], name)) {
@@ -317,7 +343,8 @@ namespace femus {
   }
 
 //---------------------------------------------------------------------------------------------------
-  void MultiLevelSolution::AttachSetBoundaryConditionFunction(BoundaryFuncMLProb SetBoundaryConditionFunction_in) {
+  void MultiLevelSolution::AttachSetBoundaryConditionFunction(BoundaryFuncMLProb SetBoundaryConditionFunction_in)
+  {
     _bdcFuncSetMLProb = true;
     _bdcFuncSet = false;
     _SetBoundaryConditionFunctionMLProb = SetBoundaryConditionFunction_in;
@@ -325,7 +352,8 @@ namespace femus {
   }
 
 //---------------------------------------------------------------------------------------------------
-  void MultiLevelSolution::AttachSetBoundaryConditionFunction(BoundaryFunc SetBoundaryConditionFunction) {
+  void MultiLevelSolution::AttachSetBoundaryConditionFunction(BoundaryFunc SetBoundaryConditionFunction)
+  {
     _bdcFuncSet = true;
     _bdcFuncSetMLProb = false;
     _SetBoundaryConditionFunction = SetBoundaryConditionFunction;
@@ -333,7 +361,8 @@ namespace femus {
   }
 
 //---------------------------------------------------------------------------------------------------
-  void MultiLevelSolution::InitializeBdc() {
+  void MultiLevelSolution::InitializeBdc()
+  {
     _useParsedBCFunction = true;
 
     int nvars = _solType.size();
@@ -357,7 +386,8 @@ namespace femus {
 
 //---------------------------------------------------------------------------------------------------
   void MultiLevelSolution::SetBoundaryCondition_new(const std::string name, const std::string facename,
-      const BDCType bdctype, const bool istimedependent, FunctionBase* func) {
+      const BDCType bdctype, const bool istimedependent, FunctionBase* func)
+  {
 
 
 
@@ -397,7 +427,8 @@ namespace femus {
 
 
 //---------------------------------------------------------------------------------------------------
-  void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, const MultiLevelProblem* ml_prob) {
+  void MultiLevelSolution::GenerateBdc(const char* name, const char* bdc_type, const MultiLevelProblem* ml_prob)
+  {
 
     if(_useParsedBCFunction == false && _bdcFuncSet == false && _bdcFuncSetMLProb == false) {
       cout << "Error: The boundary condition user-function is not set! Please call the AttachSetBoundaryConditionFunction routine"
@@ -467,7 +498,8 @@ namespace femus {
   }
 
 //---------------------------------------------------------------------------------------------------
-  void MultiLevelSolution::UpdateBdc(const double time) {
+  void MultiLevelSolution::UpdateBdc(const double time)
+  {
 
     for(int k = 0; k < _solName.size(); k++) {
       if(!strcmp(_bdcType[k], "Time_dependent")) {
@@ -476,8 +508,10 @@ namespace femus {
     }
   }
 
+
 //---------------------------------------------------------------------------------------------------
-  void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int grid0, const double time) {
+  void MultiLevelSolution::GenerateBdc(const unsigned int k, const unsigned int grid0, const double time)
+  {
 
     // 2 Default Neumann
     // 1 AMR artificial Dirichlet = 0 BC
@@ -485,6 +519,8 @@ namespace femus {
     for(unsigned igridn = grid0; igridn < _gridn; igridn++) {
       if(_solution[igridn]->_ResEpsBdcFlag[k]) {
         Mesh* msh = _mlMesh->GetLevel(igridn);
+
+        std::vector < std::map < unsigned,  std::map < unsigned, double  > > > &amrRestriction = msh->GetAmrRestrictionMap();
 
         // default Neumann
         for(unsigned j = msh->_dofOffset[_solType[k]][_iproc]; j < msh->_dofOffset[_solType[k]][_iproc + 1]; j++) {
@@ -496,14 +532,14 @@ namespace femus {
             for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
               if(msh->el->GetBoundaryIndex(iel, jface) == 0) {   // interior boundary (AMR) u = 0
                 short unsigned ielt = msh->GetElementType(iel);
-                unsigned nv1 = (_addAMRPressureStability[k] == true) ?
-                               msh->GetElementDofNumber(iel, _solType[k]) :  //all the dofs in the element
-                               msh->GetElementFaceDofNumber(iel, jface, _solType[k]);  // only the face dofs
-
+                unsigned nv1 = msh->GetElementFaceDofNumber(iel, jface, _solType[k]);  // only the face dofs
                 for(unsigned iv = 0; iv < nv1; iv++) {
-                  unsigned i = (_addAMRPressureStability[k] == true) ? iv : msh->GetLocalFaceVertexIndex(iel, jface, iv);
+                  unsigned i = msh->GetLocalFaceVertexIndex(iel, jface, iv);
                   unsigned idof = msh->GetSolutionDof(i, iel, _solType[k]);
-                  _solution[igridn]->_Bdc[k]->set(idof, 1.);
+                  if(amrRestriction[_solType[k]].find(idof) != amrRestriction[_solType[k]].end() &&
+                      amrRestriction[_solType[k]][idof][idof] == 0) {
+                    _solution[igridn]->_Bdc[k]->set(idof, 1.);
+                  }
                 }
               }
             }
@@ -561,52 +597,7 @@ namespace femus {
             }
           }
         }
-        else if(_addAMRPressureStability[k]) {  // interior boundary (AMR) for discontinuous elements u = 0
-          unsigned offset = msh->_elementOffset[_iproc];
-          unsigned offsetp1 = msh->_elementOffset[_iproc + 1];
-          unsigned owned = offsetp1 - offset;
-          std::vector < short unsigned > markedElement(owned, 0);
-          // Add all interior boundary elements
-          for(unsigned iel = offset; iel < offsetp1; iel++) {
-            short unsigned ielt = msh->GetElementType(iel);
-            for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
-              if(msh->el->GetBoundaryIndex(iel, jface) == 0) {
-                markedElement[iel - offset] = 1;
-              }
-            }
-          }
-          //remove adjacent interior boundary elements
-          for(unsigned i = 0; i < owned; i++) {
-            if( markedElement[i] == 1){
-              markedElement[i] = 2;
-              std::vector < unsigned > seed(1, offset + i);
-              while(seed.size() != 0){
-                bool testSeed = true;
-                unsigned iel = seed[ seed.size() - 1u];
-                short unsigned ielt = msh->GetElementType(iel);
-                for(unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
-                  int jel = msh->el->GetFaceElementIndex(seed[seed.size()-1], jface) - 1;
-                  if( jel >= offset && jel < offsetp1 && markedElement[jel - offset] == 1 ){
-                    markedElement[jel - offset] = 0;
-                    seed.resize(seed.size() + 1);
-                    seed[seed.size() - 1] = jel;
-                    testSeed = false;
-                  }
-                }
-                if(testSeed) seed.resize(seed.size() - 1);
-              }
-            }
-          }
-
-          for(unsigned i = 0; i < owned; i++) {
-            if( markedElement[i] > 0){
-              unsigned iel = offset + i;
-              unsigned idof = msh->GetSolutionDof(0, iel, _solType[k]);
-              _solution[igridn]->_Bdc[k]->set(idof, 1.);
-            }
-          }
-        }
-        if( _fixSolutionAtOnePoint[k] == true  && igridn == 0 && _iproc == 0 ){
+        if(_fixSolutionAtOnePoint[k] == true  && igridn == 0 && _iproc == 0) {
           _solution[igridn]->_Bdc[k]->set(0, 0.);
           _solution[igridn]->_Sol[k]->set(0, 0.);
         }
@@ -618,7 +609,8 @@ namespace femus {
 
   }
 
-  void MultiLevelSolution::SaveSolution(const char* filename, const double time) {
+  void MultiLevelSolution::SaveSolution(const char* filename, const double &time)
+  {
 
     char composedFileName[100];
 
@@ -627,16 +619,29 @@ namespace femus {
       _solution[_gridn - 1]->_Sol[i]->BinaryPrint(composedFileName);
     }
   }
+  
+  void MultiLevelSolution::SaveSolution(const char* filename, const unsigned &iteration)
+  {
 
-  void MultiLevelSolution::LoadSolution(const char* filename) {
+    char composedFileName[100];
+
+    for(int i = 0; i < _solName.size(); i++) {
+      sprintf(composedFileName, "./save/%s_iteration%d_sol%s_level%d", filename, iteration, _solName[i], _gridn);
+      _solution[_gridn - 1]->_Sol[i]->BinaryPrint(composedFileName);
+    }
+  }
+
+  void MultiLevelSolution::LoadSolution(const char* filename)
+  {
     LoadSolution(_gridn, filename);
   }
 
-  void MultiLevelSolution::LoadSolution(const unsigned &level, const char* filename) {
+  void MultiLevelSolution::LoadSolution(const unsigned &level, const char* filename)
+  {
 
-    if(level > _gridn){
-      std::cout<< "Error in MultiLevelSolution::LoadSolution function:"<<std::endl;
-      std::cout<< "the solution level = "<<level<<" is not available in this MultilevelSolution"<<std::endl;
+    if(level > _gridn) {
+      std::cout << "Error in MultiLevelSolution::LoadSolution function:" << std::endl;
+      std::cout << "the solution level = " << level << " is not available in this MultilevelSolution" << std::endl;
       abort();
     }
 
@@ -644,9 +649,9 @@ namespace femus {
     for(int i = 0; i < _solName.size(); i++) {
       sprintf(composedFileName, "%s_sol%s_level%d", filename, _solName[i], level);
       // check if the file really exists
-      if ( strncmp(filename, "http://", 7) && strncmp(filename, "ftp://", 6) ){
+      if(strncmp(filename, "http://", 7) && strncmp(filename, "ftp://", 6)) {
         struct stat buffer;
-        if(stat (composedFileName, &buffer) != 0) {
+        if(stat(composedFileName, &buffer) != 0) {
           std::cerr << "Error: cannot locate file " << composedFileName << std::endl;
           abort();
         }
@@ -664,6 +669,89 @@ namespace femus {
 
 
   }
+  
+  
+  
+
+
+  void MultiLevelSolution::RefineSolution(const unsigned &gridf)
+  {
+
+    Mesh *msh = _mlMesh->GetLevel(gridf);
+
+    for(unsigned k = 0; k < _solType.size(); k++) {
+
+      unsigned solType = _solType[k];
+      _solution[gridf]->_Sol[k]->matrix_mult(*_solution[gridf - 1]->_Sol[k],
+                                             *msh->GetCoarseToFineProjection(solType));
+      _solution[gridf]->_Sol[k]->close();
+    }
+  }
+
+
+  void MultiLevelSolution::CopySolutionToOldSolution()
+  {
+    for(unsigned short i = 0; i < _gridn; i++) {
+      _solution[i]->CopySolutionToOldSolution();
+    }
+  }
+
+  void MultiLevelSolution::UpdateSolution(const char name[], InitFunc func, const double& time) {
+    unsigned i = GetIndex(name);
+
+    unsigned sol_type = _solType[i];
+
+    for(unsigned ig = 0; ig < _gridn; ig++) {
+      if(sol_type < 3) {
+        for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
+          for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
+              iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
+            unsigned nloc_dof = _mlMesh->GetLevel(ig)->GetElementDofNumber(iel, sol_type);
+            for(int j = 0; j < nloc_dof; j++) {
+              unsigned inode_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, sol_type);
+              unsigned icoord_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
+              std::vector < double > xx(4);
+              xx[0] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
+              xx[1] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
+              xx[2] = (*_mlMesh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
+              xx[3] = time;
+              double value = func(xx);
+              _solution[ig]->_Sol[i]->set(inode_Metis, value);
+            }
+          }
+        }
+      }
+      else if(sol_type < 5) {
+        for(int isdom = _iproc; isdom < _iproc + 1; isdom++) {
+          for(int iel = _mlMesh->GetLevel(ig)->_elementOffset[isdom];
+              iel < _mlMesh->GetLevel(ig)->_elementOffset[isdom + 1]; iel++) {
+            unsigned nloc_dof = _mlMesh->GetLevel(ig)->GetElementDofNumber(iel, 0);
+            std::vector < double > xx(4, 0.);
+
+            for(int j = 0; j < nloc_dof; j++) {
+              unsigned icoord_Metis = _mlMesh->GetLevel(ig)->GetSolutionDof(j, iel, 2);
+              xx[0] += (*_mlMesh->GetLevel(ig)->_topology->_Sol[0])(icoord_Metis);
+              xx[1] += (*_mlMesh->GetLevel(ig)->_topology->_Sol[1])(icoord_Metis);
+              xx[2] += (*_mlMesh->GetLevel(ig)->_topology->_Sol[2])(icoord_Metis);
+            }
+            xx[0] /= nloc_dof;
+            xx[1] /= nloc_dof;
+            xx[2] /= nloc_dof;
+            xx[3] = time;
+
+            double value =  func(xx);
+            unsigned solDof = _mlMesh->GetLevel(ig)->GetSolutionDof(2, iel, sol_type);
+            _solution[ig]->_Sol[i]->set(solDof, value);
+          }
+        }
+      }
+      _solution[ig]->_Sol[i]->close();
+    }
+    return;
+  }
+
 
 
 } //end namespace femus
+
+

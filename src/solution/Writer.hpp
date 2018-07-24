@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <iostream>
 #include "ParallelObject.hpp"
 #include "WriterEnum.hpp"
 
@@ -55,10 +56,10 @@ namespace femus {
     void SetMovingMesh(std::vector<std::string>& movvars_in);
 
     /** runtime selection of writer for MLsol */
-    static std::auto_ptr<Writer> build(const WriterEnum format, MultiLevelSolution * ml_sol);
+    static std::unique_ptr<Writer> build(const WriterEnum format, MultiLevelSolution * ml_sol);
 
     /** runtime selection of writer for MLmesh */
-    static std::auto_ptr<Writer> build(const WriterEnum format, MultiLevelMesh * ml_mesh);
+    static std::unique_ptr<Writer> build(const WriterEnum format, MultiLevelMesh * ml_mesh);
 
     virtual void SetDebugOutput( bool value ){
       std::cout<<"Warning this writer type does not have debug printing"<<std::endl;

@@ -103,9 +103,9 @@ double TimeLoop::MGTimeStep(const uint iter, SystemTwo * eqn_in) const {
 
     std::cout  << std::endl << " Solving " << eqn_in->name() << " , step " << iter << std::endl;
 
-        std::auto_ptr<NumericVector> _x_oold = NumericVector::build();
+        std::unique_ptr<NumericVector> _x_oold = NumericVector::build();
         _x_oold->init(eqn_in->_dofmap._Dim[eqn_in->GetGridn()-1],false, SERIAL);
-        std::auto_ptr<NumericVector> _x_tmp = NumericVector::build();
+        std::unique_ptr<NumericVector> _x_tmp = NumericVector::build();
          _x_tmp->init(eqn_in->_dofmap._Dim[eqn_in->GetGridn()-1],false, SERIAL);
 
 

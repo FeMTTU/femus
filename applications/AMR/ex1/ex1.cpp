@@ -196,7 +196,7 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
 
 
   vector < adept::adouble >  solU; // local solution
-  vector< adept::adouble > aResU; // local redidual vector
+  vector< adept::adouble > aResU; // local residual vector
 
   vector < vector < double > > crdX(dim);    // local coordinates
   unsigned crdXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -334,7 +334,5 @@ void AssemblePoisson_AD(MultiLevelProblem& ml_prob) {
 
   // ***************** END ASSEMBLY *******************
 }
-
-
 
 

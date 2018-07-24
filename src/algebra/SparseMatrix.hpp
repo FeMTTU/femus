@@ -58,7 +58,7 @@ public:
     virtual void clear () = 0;
 
     /** Builds a \p SparseMatrix using the linear solver package specified by \p solver_package */
-    static std::auto_ptr<SparseMatrix>  build(const SolverPackage solver_package = LSOLVER);
+    static std::unique_ptr<SparseMatrix>  build(const SolverPackage solver_package = LSOLVER);
 
     /** Initialize */
     virtual void init (const int  m,  const int  n, const int  m_l,const int  n_l,
@@ -171,6 +171,11 @@ public:
     virtual void matrix_ABC(const SparseMatrix &mat_A,const SparseMatrix &mat_B, const SparseMatrix &mat_C, const bool &reuse) = 0;
 
     /** To be Addded */
+    virtual void matrix_RightMatMult(const SparseMatrix &mat_A) = 0;
+    
+    virtual void matrix_LeftMatMult(const SparseMatrix &mat_A) = 0;
+    
+    /** To be Addded */
     virtual void matrix_get_diagonal_values(const std::vector< int > &index, std::vector<double> &value)const=0;
 
     /** To be Addded */
@@ -202,6 +207,8 @@ public:
     /** Matrix transpose */
     virtual void get_transpose (SparseMatrix& dest) const = 0;
 
+    virtual void mat_zero_rows(const std::vector <int> &index, const double &diagonal_value) const = 0;
+    
     // Read - Print ------------------------------
     // print
     /** Print  to file */

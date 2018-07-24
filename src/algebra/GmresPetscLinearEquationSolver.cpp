@@ -29,7 +29,8 @@
 #include <iomanip>
 #include <sstream>
 
-namespace femus {
+namespace femus
+{
 
   using namespace std;
 
@@ -38,7 +39,8 @@ namespace femus {
 // ==============================================
 
   void GmresPetscLinearEquationSolver::SetTolerances(const double& rtol, const double& atol, const double& divtol,
-      const unsigned& maxits, const unsigned& restart) {
+      const unsigned& maxits, const unsigned& restart)
+  {
     _rtol    = static_cast<PetscReal>(rtol);
     _abstol  = static_cast<PetscReal>(atol);
     _dtol    = static_cast<PetscReal>(divtol);
@@ -48,13 +50,13 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::BuildBdcIndex(const vector <unsigned>& variable_to_be_solved) {
+  void GmresPetscLinearEquationSolver::BuildBdcIndex(const vector <unsigned>& variable_to_be_solved)
+  {
 
     _bdcIndexIsInitialized = 1;
 
     unsigned BDCIndexSize = KKoffset[KKIndex.size() - 1][processor_id()] - KKoffset[0][processor_id()];
     _bdcIndex.resize(BDCIndexSize);
-    _hangingNodesIndex.resize(BDCIndexSize);
 
     vector <bool> ThisSolutionIsIncluded(_SolPdeIndex.size(), false);
 
@@ -64,7 +66,6 @@ namespace femus {
     }
 
     unsigned count0 = 0;
-    unsigned count1 = 0;
 
     for(int k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
@@ -75,13 +76,9 @@ namespace femus {
         int local_mts = inode_mts - _msh->_dofOffset[soltype][processor_id()];
         int idof_kk = KKoffset[k][processor_id()] + local_mts;
 
-        if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 0.9) {
+        if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 1.5) {
           _bdcIndex[count0] = idof_kk;
           count0++;
-        }
-        else if(!ThisSolutionIsIncluded[k] || (* (*_Bdc) [indexSol])(inode_mts) < 1.9) {
-          _hangingNodesIndex[count1] = idof_kk;
-          count1++;
         }
       }
     }
@@ -90,17 +87,13 @@ namespace femus {
     std::vector < PetscInt >(_bdcIndex).swap(_bdcIndex);
     std::sort(_bdcIndex.begin(), _bdcIndex.end());
 
-    _hangingNodesIndex.resize(count1);
-    std::vector < PetscInt >(_hangingNodesIndex).swap(_hangingNodesIndex);
-    std::sort(_hangingNodesIndex.begin(), _hangingNodesIndex.end());
-
-
     return;
   }
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::Solve(const vector <unsigned>& variable_to_be_solved, const bool& ksp_clean) {
+  void GmresPetscLinearEquationSolver::Solve(const vector <unsigned>& variable_to_be_solved, const bool& ksp_clean)
+  {
 
     PetscLogDouble t1;
     PetscTime(&t1);
@@ -113,14 +106,18 @@ namespace femus {
       this->Clear();
       SetPenalty();
       RemoveNullSpace();
-      if( UseSamePreconditioner() ) {
-        this->Init(KK, KK);
-      }
-      else{
-        this->Init(KK, _pmat);
-      }
+      this->Init(KK, KK);
     }
     //END ASSEMBLE
+
+//     PetscViewer    viewer;
+//     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+//     PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+//     PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//     MatView(KK,viewer);
+//     double a;
+//     std::cin>>a;
+
 
     //BEGIN SOLVE and UPDATE
     ZerosBoundaryResiduals();
@@ -155,7 +152,8 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::Init(Mat& Amat, Mat& Pmat) {
+  void GmresPetscLinearEquationSolver::Init(Mat& Amat, Mat& Pmat)
+  {
 
     if(!this->initialized())    {
       this->_is_initialized = true;
@@ -170,19 +168,21 @@ namespace femus {
 
       if(_solver_type != PREONLY) {
         KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
-        KSPSetNormType(_ksp, KSP_NORM_NONE);
+        KSPSetNormType(_ksp, KSP_NORM_PRECONDITIONED);
       }
 
       KSPSetFromOptions(_ksp);
       KSPGMRESSetRestart(_ksp, _restart);
 
       SetPreconditioner(_ksp, _pc);
+
     }
   }
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::MGInit(const MgSmootherType & mg_smoother_type, const unsigned &levelMax, const char* outer_ksp_solver) {
+  void GmresPetscLinearEquationSolver::MGInit(const MgSmootherType& mg_smoother_type, const unsigned& levelMax, const char* outer_ksp_solver)
+  {
 
     KSPCreate(PETSC_COMM_WORLD, &_ksp);
 
@@ -215,7 +215,8 @@ namespace femus {
   void GmresPetscLinearEquationSolver::MGSetLevel(
     LinearEquationSolver* LinSolver, const unsigned& levelMax,
     const vector <unsigned>& variable_to_be_solved, SparseMatrix* PP, SparseMatrix* RR,
-    const unsigned& npre, const unsigned& npost) {
+    const unsigned& npre, const unsigned& npost)
+  {
 
     unsigned level = _msh->GetLevel();
 
@@ -243,18 +244,14 @@ namespace femus {
     KSPSetOptionsPrefix(subksp, levelName.str().c_str());
     KSPSetFromOptions(subksp);
 
-    ZerosBoundaryResiduals();
+    //ZerosBoundaryResiduals();
 
     SetPenalty();
     RemoveNullSpace();
 
     Mat KK = (static_cast< PetscMatrix* >(_KK))->mat();
-    if( UseSamePreconditioner() ) {
-      KSPSetOperators(subksp, KK, KK);
-    }
-    else{
-      KSPSetOperators(subksp, KK, _pmat);
-    }
+
+    KSPSetOperators(subksp, KK, KK);
 
     PC subpc;
     KSPGetPC(subksp, &subpc);
@@ -285,7 +282,8 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::MGSolve(const bool ksp_clean) {
+  void GmresPetscLinearEquationSolver::MGSolve(const bool ksp_clean)
+  {
 
     PetscLogDouble t1;
     PetscLogDouble t2;
@@ -294,12 +292,7 @@ namespace femus {
     if(ksp_clean) {
       Mat KK = (static_cast< PetscMatrix* >(_KK))->mat();
 
-      if( UseSamePreconditioner() ) {
-        KSPSetOperators(_ksp, KK, KK);
-      }
-      else {
-        KSPSetOperators(_ksp, KK, _pmat);
-      }
+      KSPSetOperators(_ksp, KK, KK);
 
       KSPSetTolerances(_ksp, _rtol, _abstol, _dtol, _maxits);
 
@@ -311,11 +304,16 @@ namespace femus {
       KSPGMRESSetRestart(_ksp, _restart);
       KSPSetUp(_ksp);
 
+//       PetscViewer    viewer;
+//       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+//       PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+//       PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//       MatView(KK,viewer);
+//       double a;
+//       std::cin>>a;
     }
 
     ZerosBoundaryResiduals();
-
-
     KSPSolve(_ksp, (static_cast< PetscVector* >(_RES))->vec(), (static_cast< PetscVector* >(_EPSC))->vec());
 
     _RESC->matrix_mult(*_EPSC, *_KK);
@@ -342,9 +340,10 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::RemoveNullSpace() {
+  void GmresPetscLinearEquationSolver::RemoveNullSpace()
+  {
 
-    if( _msh->GetLevel() != 0) {
+    if(_msh->GetLevel() != 0) {
       std::vector < Vec > nullspBase;
       GetNullSpaceBase(nullspBase);
       if(nullspBase.size() != 0) {
@@ -353,16 +352,10 @@ namespace femus {
 
         PetscBool  isNull;
         MatNullSpaceTest(nullsp, (static_cast< PetscMatrix* >(_KK))->mat(), &isNull);
-        if (!isNull) std::cout<<"The null space created for KK is not correct!"<<std::endl;
+        if(!isNull) std::cout << "The null space created for KK is not correct!" << std::endl;
 
-        MatSetNullSpace( (static_cast< PetscMatrix* >(_KK))->mat(), nullsp);
-        MatSetTransposeNullSpace( (static_cast< PetscMatrix* >(_KK))->mat(), nullsp);
-        if( !UseSamePreconditioner() ) {
-          MatNullSpaceTest(nullsp, _pmat, &isNull);
-          if (!isNull) std::cout<<"The null space created for _pmat is not correct!"<<std::endl;
-          MatSetNullSpace( _pmat, nullsp);
-          MatSetTransposeNullSpace( _pmat, nullsp);
-        }
+        MatSetNullSpace((static_cast< PetscMatrix* >(_KK))->mat(), nullsp);
+        MatSetTransposeNullSpace((static_cast< PetscMatrix* >(_KK))->mat(), nullsp);
         MatNullSpaceDestroy(&nullsp);
 
         for(unsigned i = 0; i < nullspBase.size(); i++) {
@@ -375,7 +368,8 @@ namespace femus {
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::GetNullSpaceBase(std::vector < Vec > &nullspBase) {
+  void GmresPetscLinearEquationSolver::GetNullSpaceBase(std::vector < Vec >& nullspBase)
+  {
     for(int k = 0; k < _SolPdeIndex.size(); k++) {
       unsigned indexSol = _SolPdeIndex[k];
 
@@ -386,10 +380,13 @@ namespace femus {
         VecDuplicate(EPS, &nullspBase[nullspSize]);
         unsigned soltype = _SolType[indexSol];
         unsigned owndofs = _msh->_dofOffset[soltype][processor_id() + 1] - _msh->_dofOffset[soltype][processor_id()];
-        if ( soltype == 4 ) owndofs /= ( _msh->GetDimension() + 1 );
+        if(soltype == 4) owndofs /= (_msh->GetDimension() + 1);
         for(unsigned i = 0; i < owndofs; i++) {
           int idof_kk = KKoffset[k][processor_id()] + i;
-          VecSetValue(nullspBase[nullspSize], idof_kk, 1., INSERT_VALUES);
+          unsigned inode_mts = _msh->_dofOffset[soltype][processor_id()] + i;
+          if((* (*_Bdc) [indexSol])(inode_mts) > 1.9) {
+            VecSetValue(nullspBase[nullspSize], idof_kk, 1., INSERT_VALUES);
+          }
         }
 
         VecAssemblyBegin(nullspBase[nullspSize]);
@@ -402,47 +399,46 @@ namespace femus {
   }
   // =================================================
 
-  void GmresPetscLinearEquationSolver::ZerosBoundaryResiduals() {
+  void GmresPetscLinearEquationSolver::ZerosBoundaryResiduals()
+  {
     std::vector< PetscScalar > value(_bdcIndex.size(), 0.);
     Vec RES = (static_cast< PetscVector* >(_RES))->vec();
     VecSetValues(RES, _bdcIndex.size(), &_bdcIndex[0], &value[0],  INSERT_VALUES);
+
     VecAssemblyBegin(RES);
     VecAssemblyEnd(RES);
   }
 
   // =================================================
 
-  void GmresPetscLinearEquationSolver::SetPenalty() {
+  void GmresPetscLinearEquationSolver::SetPenalty()
+  {
 
     Mat KK = (static_cast< PetscMatrix* >(_KK))->mat();
 
     MatSetOption(KK, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
     MatSetOption(KK, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
-    MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1.e100, 0, 0);
+    MatZeroRows(KK, _bdcIndex.size(), &_bdcIndex[0], 1., 0, 0);
 
-    if( !UseSamePreconditioner() ) {
-      if(_pmatIsInitialized) MatDestroy(&_pmat);
-      MatDuplicate(KK, MAT_COPY_VALUES, &_pmat);
-      if( _hangingNodesIndex.size() != 0){
-        MatSetOption(_pmat, MAT_NO_OFF_PROC_ZERO_ROWS, PETSC_TRUE);
-        MatZeroRows(_pmat, _hangingNodesIndex.size(), &_hangingNodesIndex[0], 1.e100, 0, 0);
-      }
-      _pmatIsInitialized = true;
-    }
   }
 
   // =================================================
 
-  void GmresPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc) {
-    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpc);
+  void GmresPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc)
+  {
+
+    int parallelOverlapping = (_msh->GetIfHomogeneous()) ? 0 : 0;
+    PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpc, parallelOverlapping);
     PetscReal zero = 1.e-16;
     PCFactorSetZeroPivot(subpc, zero);
     PCFactorSetShiftType(subpc, MAT_SHIFT_NONZERO);
+
   }
 
   // ================================================
 
-  void GmresPetscLinearEquationSolver::SetPetscSolverType(KSP& ksp) {
+  void GmresPetscLinearEquationSolver::SetPetscSolverType(KSP& ksp)
+  {
     int ierr = 0;
 
     switch(this->_solver_type) {
@@ -502,10 +498,10 @@ namespace femus {
         return;
 
       case RICHARDSON:
-        ierr = KSPSetType(ksp, (char*) KSPRICHARDSON);
-        ierr =  KSPRichardsonSetScale(ksp, 0.7);
-        CHKERRABORT(MPI_COMM_WORLD, ierr);
-//         ierr =  KSPRichardsonSetSelfScale(ksp, PETSC_TRUE); CHKERRABORT(MPI_COMM_WORLD, ierr);
+        //std::cout << " level " << _msh->GetLevel() << " Richardson Scaling Factor = " << _richardsonScaleFactor << std::endl;
+        KSPSetType(ksp, (char*) KSPRICHARDSON);
+        KSPRichardsonSetScale(ksp, _richardsonScaleFactor);
+        //KSPRichardsonSetSelfScale(ksp, PETSC_TRUE);
         return;
 
       case CHEBYSHEV:
@@ -532,7 +528,8 @@ namespace femus {
 
   std::pair<unsigned int, double> GmresPetscLinearEquationSolver::solve(SparseMatrix&  matrix_in,
       SparseMatrix&  precond_in,  NumericVector& solution_in,  NumericVector& rhs_in,
-      const double tol,   const unsigned int m_its) {
+      const double tol,   const unsigned int m_its)
+  {
 
 //   START_LOG("solve()", "PetscLinearSolverM");
     // Make sure the data passed in are really of Petsc types
@@ -566,7 +563,8 @@ namespace femus {
       //ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat(),SAME_NONZERO_PATTERN);
       ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat());    //PETSC3p5
       CHKERRABORT(MPI_COMM_WORLD, ierr);
-    } else  {
+    }
+    else  {
       //ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat(),SAME_PRECONDITIONER);
       ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat());    //PETSC3p5
       CHKERRABORT(MPI_COMM_WORLD, ierr);
@@ -602,7 +600,8 @@ namespace femus {
 
 
 // @deprecated ========================================================
-  PetscErrorCode __libmesh_petsc_preconditioner_setup(PC pc) {
+  PetscErrorCode __libmesh_petsc_preconditioner_setup(PC pc)
+  {
     void* ctx;
     PetscErrorCode ierr = PCShellGetContext(pc, &ctx);
     CHKERRQ(ierr);
@@ -613,7 +612,8 @@ namespace femus {
 
 
 // @deprecated ========================================================
-  PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y) {
+  PetscErrorCode __libmesh_petsc_preconditioner_apply(PC pc, Vec x, Vec y)
+  {
     void* ctx;
     PetscErrorCode ierr = PCShellGetContext(pc, &ctx);
     CHKERRQ(ierr);
@@ -626,7 +626,8 @@ namespace femus {
 
 
 // @deprecated ========================================================
-  void GmresPetscLinearEquationSolver::init(SparseMatrix* matrix) {
+  void GmresPetscLinearEquationSolver::init(SparseMatrix* matrix)
+  {
 
     PetscMatrix* matrix_two   = libmeshM_cast_ptr<PetscMatrix*> (matrix);
 
@@ -714,4 +715,5 @@ namespace femus {
 
 
 #endif
+
 

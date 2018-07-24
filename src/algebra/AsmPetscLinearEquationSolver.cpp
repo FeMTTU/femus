@@ -41,6 +41,7 @@ namespace femus {
   void AsmPetscLinearEquationSolver::SetElementBlockNumber(const char all[], const unsigned& overlap) {
     _elementBlockNumber[0] = _msh->GetNumberOfElements();
     _elementBlockNumber[1] = _msh->GetNumberOfElements();
+    _elementBlockNumber[2] = _msh->GetNumberOfElements();
     _standardASM = 1;
     _overlap = overlap;
   }
@@ -50,6 +51,7 @@ namespace femus {
   void AsmPetscLinearEquationSolver::SetElementBlockNumber(const unsigned& block_elemet_number) {
     _elementBlockNumber[0] = block_elemet_number;
     _elementBlockNumber[1] = block_elemet_number;
+    _elementBlockNumber[2] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
   }
@@ -66,6 +68,13 @@ namespace femus {
   // =================================================
 
   void AsmPetscLinearEquationSolver::SetElementBlockNumberFluid(const unsigned& block_elemet_number, const unsigned& overlap) {
+    _elementBlockNumber[2] = block_elemet_number;
+    _bdcIndexIsInitialized = 0;
+    _standardASM = 0;
+    _overlap = overlap;
+  }
+  
+  void AsmPetscLinearEquationSolver::SetElementBlockNumberPorous(const unsigned& block_elemet_number, const unsigned& overlap) {
     _elementBlockNumber[1] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
@@ -119,7 +128,7 @@ namespace femus {
     _localIsIndex.resize(block_elements.size());
     _overlappingIsIndex.resize(block_elements.size());
 
-    for(int vb_index = 0; vb_index < block_elements.size(); vb_index++) {
+    for(int vb_index = 0; vb_index < block_elements.size(); vb_index++) { //loop on the vanka-blocks
       _localIsIndex[vb_index].resize(DofOffsetSize);
       _overlappingIsIndex[vb_index].resize(DofOffsetSize);
 
@@ -129,23 +138,18 @@ namespace femus {
       PetscInt Csize = 0;
 
       // ***************** NODE/ELEMENT SERCH *******************
-      for(int kel = 0; kel < block_elements[vb_index].size(); kel++) {
+      for(int kel = 0; kel < block_elements[vb_index].size(); kel++) { //loop on the vanka-block elements
         unsigned iel = block_elements[vb_index][kel];
-
-        for(unsigned i = 0; i < _msh->GetElementDofNumber(iel, 0); i++) {
-          unsigned inode = _msh->el->GetElementDofIndex(iel, i);
-          const std::vector < unsigned > & localElementNearVertexNumber = _msh->el->GetLocalElementNearVertex(inode);
-          unsigned nve = (FastVankaBlock) ? 1 : localElementNearVertexNumber.size();
-
-          for(unsigned j = 0; j < nve; j++) {
-            unsigned jel = (!FastVankaBlock) ? localElementNearVertexNumber[j] : iel;
-
+	for(unsigned j = 0; j < _msh->el->GetElementNearElementSize(iel,!FastVankaBlock);j++){
+	  unsigned jel = _msh->el->GetElementNearElement(iel,j);
+	  if( jel >= ElemOffset && jel<ElemOffsetp1 ){
+	    
             //add elements for velocity to be solved
             if(indexc[jel - ElemOffset] == ElemOffsetSize) {
               indexci[Csize] = jel - ElemOffset;
               indexc[jel - ElemOffset] = Csize++;
 
-              //add non-schur node to be solved
+              //add non-schur variables to be solved
               for(int indexSol = 0; indexSol < _SolPdeIndex.size(); indexSol++) {
                 if(ThisVaribaleIsNonSchur[indexSol]) {
                   unsigned SolPdeIndex = _SolPdeIndex[indexSol];
@@ -237,8 +241,8 @@ namespace femus {
         _overlappingIsIndex[vb_index][PBsize + i] = it->first;
       }
       std::vector < PetscInt >(_overlappingIsIndex[vb_index]).swap(_overlappingIsIndex[vb_index]);
-      
-     
+
+
       mymap.clear();
 
       std::sort(_localIsIndex[vb_index].begin(), _localIsIndex[vb_index].end());
@@ -252,8 +256,8 @@ namespace femus {
     _overlappingIs.resize(_overlappingIsIndex.size());
 
     for(unsigned vb_index = 0; vb_index < _localIsIndex.size(); vb_index++) {
-      ISCreateGeneral(MPI_COMM_SELF, _localIsIndex[vb_index].size(), &_localIsIndex[vb_index][0], PETSC_USE_POINTER, &_localIs[vb_index]);
-      ISCreateGeneral(MPI_COMM_SELF, _overlappingIsIndex[vb_index].size(), &_overlappingIsIndex[vb_index][0], PETSC_USE_POINTER, &_overlappingIs[vb_index]);
+      ISCreateGeneral(MPI_COMM_SELF, _localIsIndex[vb_index].size(), &_localIsIndex[vb_index][0],  PETSC_USE_POINTER , &_localIs[vb_index]);
+      ISCreateGeneral(MPI_COMM_SELF, _overlappingIsIndex[vb_index].size(), &_overlappingIsIndex[vb_index][0],  PETSC_USE_POINTER , &_overlappingIs[vb_index]);
     }
 
     //END Generate std::vector<IS> for ASM PC ***********
@@ -264,15 +268,16 @@ namespace femus {
   // =================================================
 
   void AsmPetscLinearEquationSolver::SetPreconditioner(KSP& subksp, PC& subpc) {
-
+    
     PetscPreconditioner::set_petsc_preconditioner_type(ASM_PRECOND, subpc);
 
     if(!_standardASM) {
       PCASMSetLocalSubdomains(subpc, _localIsIndex.size(), &_overlappingIs[0], &_localIs[0]);
     }
 
-    PCASMSetOverlap(subpc, _overlap);
-    //PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
+    //PCASMSetOverlap(subpc, _overlap);
+    PCASMSetType(subpc,  PC_ASM_BASIC );
+    PCASMSetLocalType(subpc, PC_COMPOSITE_MULTIPLICATIVE);
 
     KSPSetUp(subksp);
 
@@ -281,7 +286,7 @@ namespace femus {
     PetscReal epsilon = 1.e-16;
 
     if(!_standardASM) {
-      for(int i = 0; i < _blockTypeRange[0]; i++) {
+      for(int i = 0; i < _blockTypeRange[1]; i++) {
         PC subpcs;
         KSPGetPC(subksps[i], &subpcs);
         KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
@@ -291,7 +296,7 @@ namespace femus {
         PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
       }
 
-      for(int i = _blockTypeRange[0]; i < _blockTypeRange[1]; i++) {
+      for(int i = _blockTypeRange[1]; i < _blockTypeRange[2]; i++) {
         PC subpcs;
         KSPGetPC(subksps[i], &subpcs);
         KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
