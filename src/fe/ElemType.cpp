@@ -29,12 +29,8 @@ using std::endl;
 
 namespace femus
 {
-
   const unsigned elem_type::_fe_old_to_new[QL] = {2, 0, 3};
-  //TODO const unsigned elem_type::_fe_new_to_old[NFE_FAMS] = {1, -7, 0, 2, -7};
-  const unsigned elem_type::_fe_new_to_old[NFE_FAMS] = {1, 7, 0, 2, 7};
-  
-  
+
   unsigned elem_type::_refindex = 1;
 
 //   Constructor
@@ -1455,10 +1451,10 @@ namespace femus
                                       vector < vector < type > >& jacobianMatrix) const
   {
 
-   jacobianMatrix.resize(1);
-   jacobianMatrix[1].resize(1);
+    jacobianMatrix.resize(1);
+    jacobianMatrix[1].resize(1);
 
-    
+
     type Jac = 0.;
 
     const double* dxi = _dphidxi[ig];
@@ -1467,19 +1463,19 @@ namespace femus
       Jac += (*dxi) * vt[0][inode];
     }
 
-    jacobianMatrix[0][0] = 1 / Jac; 
-    
+    jacobianMatrix[0][0] = 1 / Jac;
+
     Weight = Jac * _gauss.GetGaussWeightsPointer()[ig];
 
-  }  
-  
-  
+  }
+
+
 //---------------------------------------------------------------------------------------------------------
 
   template <class type>
   void elem_type_1D::Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, 
-				   boost::optional< vector < type > & > nablaphi) const
+                                   vector < double >& phi, vector < type >& gradphi,
+                                   boost::optional< vector < type > & > nablaphi) const
   {
 
 //    bool hermitianMatrix = true;
@@ -1510,7 +1506,7 @@ namespace femus
     for(int inode = 0; inode < _nc; inode++, dxi++, dxi2++) {
       phi[inode] = _phi[ig][inode];
       gradphi[inode] = (*dxi) * JacI;
-      if(nablaphi) (*nablaphi)[inode] = (*dxi2) * JacI * JacI;
+      if(nablaphi)(*nablaphi)[inode] = (*dxi2) * JacI * JacI;
     }
 
   }
@@ -1521,8 +1517,8 @@ namespace femus
 
   template <class type>
   void elem_type_1D::Jacobian_type(const vector < vector < type > >& vt, const vector<double>& xi, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, 
-				   boost::optional < vector < type > & > nablaphi) const
+                                   vector < double >& phi, vector < type >& gradphi,
+                                   boost::optional < vector < type > & > nablaphi) const
   {
 
     phi.resize(_nc);
@@ -1615,9 +1611,9 @@ namespace femus
 
   }
 
-//---------------------------------------------------------------------------------------------------------  
-  
-template <class type>
+//---------------------------------------------------------------------------------------------------------
+
+  template <class type>
   void elem_type_2D::GetJacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
                                       vector < vector < type > >& jacobianMatrix) const
   {
@@ -1625,7 +1621,7 @@ template <class type>
     jacobianMatrix.resize(2);
     jacobianMatrix[0].resize(2);
     jacobianMatrix[1].resize(2);
-    
+
     type Jac[2][2] = {{0, 0}, {0, 0}};
     const double* dxi = _dphidxi[ig];
     const double* deta = _dphideta[ig];
@@ -1645,15 +1641,15 @@ template <class type>
     jacobianMatrix[1][1] = Jac[0][0] / det;
 
     Weight = det * _gauss.GetGaussWeightsPointer()[ig];
-  
+
   }
-  
+
 //---------------------------------------------------------------------------------------------------------
 
   template <class type>
   void elem_type_2D::Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, 
-				   boost::optional< vector < type > & > nablaphi) const
+                                   vector < double >& phi, vector < type >& gradphi,
+                                   boost::optional< vector < type > & > nablaphi) const
   {
 
 //     bool hermitianMatrix = true;
@@ -1661,8 +1657,8 @@ template <class type>
 //       hermitianMatrix = false;
 //     }
 
-    
-    
+
+
     phi.resize(_nc);
     gradphi.resize(_nc * 2);
     if(nablaphi) nablaphi->resize(_nc * 3);
@@ -1720,8 +1716,8 @@ template <class type>
 
   template <class type>
   void elem_type_2D::Jacobian_type(const vector < vector < type > >& vt, const vector <double>& xi, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, 
-				   boost::optional < vector < type > & > nablaphi) const
+                                   vector < double >& phi, vector < type >& gradphi,
+                                   boost::optional < vector < type > & > nablaphi) const
   {
 
     phi.resize(_nc);
@@ -1855,7 +1851,7 @@ template <class type>
     jacobianMatrix[2].resize(3);
 
     type Jac[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
-   
+
     const double* dxi = _dphidxi[ig];
     const double* deta = _dphideta[ig];
     const double* dzeta = _dphidzeta[ig];
@@ -1887,7 +1883,7 @@ template <class type>
     jacobianMatrix[2][2] = (-Jac[0][1] * Jac[1][0] + Jac[0][0] * Jac[1][1]) / det;
 
     Weight = det * _gauss.GetGaussWeightsPointer()[ig];
-    
+
   }
 
 
@@ -1895,8 +1891,8 @@ template <class type>
 //---------------------------------------------------------------------------------------------------------
   template <class type>
   void elem_type_3D::Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, 
-				   boost::optional< vector < type > & > nablaphi) const
+                                   vector < double >& phi, vector < type >& gradphi,
+                                   boost::optional< vector < type > & > nablaphi) const
   {
 
 //     bool hermitianMatrix = true;
@@ -1999,8 +1995,8 @@ template <class type>
 
   template <class type>
   void elem_type_3D::Jacobian_type(const vector < vector < type > >& vt, const vector <double>& xi, type& Weight,
-                                   vector < double >& phi, vector < type >& gradphi, 
-				   boost::optional < vector < type > & > nablaphi) const
+                                   vector < double >& phi, vector < type >& gradphi,
+                                   boost::optional < vector < type > & > nablaphi) const
   {
 
     phi.resize(_nc);
