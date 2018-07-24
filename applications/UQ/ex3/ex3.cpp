@@ -960,8 +960,8 @@ void GetStochasticData(std::vector <double>& alphas) {
     //BEGIN estimation of the PDF
     int pdfHistogramSize = 501;
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
-    double startPoint = - 4.45;  //- 9.5;
-    double endPoint = 4.45;  //9.5;
+    double startPoint = - 5.5;  //- 9.5;
+    double endPoint = 5.5;  //9.5;
     double lengthOfTheInterval = fabs(endPoint - startPoint);
     double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
     boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -998,7 +998,7 @@ void GetStochasticData(std::vector <double>& alphas) {
         double rightBound = startPoint + i * deltat + deltat * 0.5;
         if(leftBound <=  sgmQoIStandardized[m] && sgmQoIStandardized[m] < rightBound) {
           pdfHistogram[i]++;
-          std::cout << "sgmQoIStandardized[" << m << "] = " << sgmQoIStandardized[m] << std::endl;
+//           std::cout << "sgmQoIStandardized[" << m << "] = " << sgmQoIStandardized[m] << std::endl;
           sampleCaptured = true;
           break;
         }
@@ -1018,7 +1018,7 @@ void GetStochasticData(std::vector <double>& alphas) {
       momentsStandardizedMonteCarlo[p] = 0.;
       unsigned momentsCounter = 0;
       for(unsigned m = 0; m < numberOfSamples; m++) {
-        if(fabs(sgmQoI[m]) <= 4.45) {
+        if(fabs(sgmQoI[m]) <= 5.5) {
           momentsMonteCarlo[p] += pow(sgmQoI[m], p + 1);
           momentsStandardizedMonteCarlo[p] += pow(sgmQoIStandardized[m], p + 1);
           momentsCounter++;
@@ -1158,8 +1158,8 @@ void PlotStochasticData() {
   double d7gaussian;
   double d9gaussian;
 
-  double t = - 4.45;
-  double dt = (8.9) / 300.;
+  double t = - 5.5;
+  double dt = (11.) / 300.;
 
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
@@ -1237,8 +1237,8 @@ void PlotStochasticData() {
     t += dt;
   }
 
-  t = -  4.45;
-  dt = (8.9) / 300.;
+  t = -  5.5;
+  dt = (11.) / 300.;
 
   //BEGIN EDGEWORTH PRINT
   std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;

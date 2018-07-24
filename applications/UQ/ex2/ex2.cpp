@@ -44,7 +44,7 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 10000; //number of samples for the Monte Carlo
+unsigned M = 50000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;
@@ -175,9 +175,9 @@ int main(int argc, char** argv) {
 
   }
 
-  for(unsigned m = 0; m < M; m++) {
-    std::cout << "QoI[" << m << "] = " << QoI[m] << std::endl;
-  }
+//   for(unsigned m = 0; m < M; m++) {
+//     std::cout << "QoI[" << m << "] = " << QoI[m] << std::endl;
+//   }
 
   GetStochasticData(QoI);
 
@@ -870,7 +870,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     meanQoI = 0.;
     unsigned meanCounter = 0;
     for(unsigned m = 0; m < M; m++) {
-      if (fabs(QoI[m]) <= 4.45){
+      if (fabs(QoI[m]) <= 5.5){
 	meanQoI += QoI[m];
 	meanCounter++;
       }
@@ -883,7 +883,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     varianceQoI = 0;
     unsigned varianceCounter = 0;
     for(unsigned m = 0; m < M; m++) {
-     if (fabs(QoI[m]) <= 4.45){
+     if (fabs(QoI[m]) <= 5.5){
        varianceQoI += (QoI[m] - meanQoI) * (QoI[m] - meanQoI);
        varianceCounter++;
      }
@@ -895,8 +895,8 @@ void GetStochasticData(std::vector <double>& QoI) {
 
     int pdfHistogramSize = 501;
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
-    double startPoint = - 4.45;
-    double endPoint = 4.45;
+    double startPoint = - 5.5;
+    double endPoint = 5.5;
     double lengthOfTheInterval = fabs(endPoint - startPoint);
     double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
 
@@ -913,7 +913,7 @@ void GetStochasticData(std::vector <double>& QoI) {
         double rightBound = startPoint + i * deltat + deltat * 0.5;
         if(leftBound <=  QoIStandardized[m] && QoIStandardized[m] < rightBound) {
           pdfHistogram[i]++;
-          std::cout << "leftBound = " << leftBound << " " << "rightBound = " << rightBound << " " << " standardized QoI = " << QoIStandardized[m] << std::endl;
+//           std::cout << "leftBound = " << leftBound << " " << "rightBound = " << rightBound << " " << " standardized QoI = " << QoIStandardized[m] << std::endl;
           sampleCaptured = true;
           break;
         }
@@ -945,7 +945,7 @@ void GetStochasticData(std::vector <double>& QoI) {
       momentsStandardized[p] = 0.;
       unsigned momentsCounter = 0;
       for(unsigned m = 0; m < M; m++) {
-	if (fabs(QoI[m]) <= 4.45){
+	if (fabs(QoI[m]) <= 5.5){
         moments[p] += pow(QoI[m], p + 1);
         momentsStandardized[p] += pow(QoIStandardized[m], p + 1);
 	momentsCounter++;
@@ -1060,8 +1060,8 @@ void PlotStochasticData() {
   double d7gaussian;
   double d9gaussian;
 
-  double t = -  4.45;
-  double dt = (8.9) / 300.;
+  double t = -  5.5;
+  double dt = (11.) / 300.;
 
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
@@ -1139,8 +1139,8 @@ void PlotStochasticData() {
     t += dt;
   }
 
-  t = -  4.45;
-  dt = (8.9) / 300.;
+  t = -  5.5;
+  dt = (11.) / 300.;
 
   //BEGIN EDGEWORTH PRINT
   std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
