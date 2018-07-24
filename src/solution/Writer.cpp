@@ -57,17 +57,17 @@ namespace femus {
   Writer::~Writer() { }
 
 
-  std::auto_ptr<Writer> Writer::build(const WriterEnum format, MultiLevelSolution * ml_sol)  {
+  std::unique_ptr<Writer> Writer::build(const WriterEnum format, MultiLevelSolution * ml_sol)  {
 
     switch (format) {
       case VTK: {
-	std::auto_ptr<Writer>   ap(new VTKWriter(ml_sol)); return ap;
+	std::unique_ptr<Writer>   ap(new VTKWriter(ml_sol)); return ap;
       }
       case GMV: {
-	std::auto_ptr<Writer>   ap(new GMVWriter(ml_sol)); return ap;
+	std::unique_ptr<Writer>   ap(new GMVWriter(ml_sol)); return ap;
       }
       case XDMF: {
-	std::auto_ptr<Writer>   ap(new XDMFWriter(ml_sol)); return ap;
+	std::unique_ptr<Writer>   ap(new XDMFWriter(ml_sol)); return ap;
       }
       default: {
 	std::cout << "Format not supported" << std::endl;
@@ -77,17 +77,17 @@ namespace femus {
 
   }
 
-    std::auto_ptr<Writer> Writer::build(const WriterEnum format, MultiLevelMesh * ml_mesh)  {
+    std::unique_ptr<Writer> Writer::build(const WriterEnum format, MultiLevelMesh * ml_mesh)  {
 
     switch (format) {
       case VTK: {
-	std::auto_ptr<Writer>   ap(new VTKWriter(ml_mesh)); return ap;
+	std::unique_ptr<Writer>   ap(new VTKWriter(ml_mesh)); return ap;
       }
       case GMV: {
-	std::auto_ptr<Writer>   ap(new GMVWriter(ml_mesh)); return ap;
+	std::unique_ptr<Writer>   ap(new GMVWriter(ml_mesh)); return ap;
       }
       case XDMF: {
-	std::auto_ptr<Writer>   ap(new XDMFWriter(ml_mesh)); return ap;
+	std::unique_ptr<Writer>   ap(new XDMFWriter(ml_mesh)); return ap;
       }
       default: {
 	std::cout << "Format not supported" << std::endl;

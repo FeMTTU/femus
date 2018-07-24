@@ -41,7 +41,7 @@ InputParser::~InputParser() {
 }  
 
 //----------------------------------------------------------------------------------------------
-std::auto_ptr<InputParser> InputParser::build(const std::string& infile) {
+std::unique_ptr<InputParser> InputParser::build(const std::string& infile) {
    
    int format = 0;
    
@@ -63,7 +63,7 @@ std::auto_ptr<InputParser> InputParser::build(const std::string& infile) {
    switch (format)  {
 
     case 0:  {
-      std::auto_ptr<InputParser> ap(new JsonInputParser(infile));
+      std::unique_ptr<InputParser> ap(new JsonInputParser(infile));
       return ap;
     }
     case 1:  {

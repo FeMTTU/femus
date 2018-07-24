@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
   //files.RedirectCout();
 
   // input parser pointer
-  std::auto_ptr<InputParser> inputparser = InputParser::build(path);
+  std::unique_ptr<InputParser> inputparser = InputParser::build(path);
 
   /// INIT MESH =================================
 

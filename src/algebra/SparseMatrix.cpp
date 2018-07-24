@@ -37,7 +37,7 @@ namespace femus
 // =====================================================================================
 /// This function builds a  SparseMatrix using the linear solver
 /// package specified by  solver_package
-  std::auto_ptr<SparseMatrix > SparseMatrix::build( // -----
+  std::unique_ptr<SparseMatrix > SparseMatrix::build( // -----
     const SolverPackage solver_package //  solver_package
   )   // =================================================================================
   {
@@ -45,13 +45,13 @@ namespace femus
     switch(solver_package) {
 #ifdef HAVE_PETSC // ------------------------------
       case PETSC_SOLVERS: {
-          std::auto_ptr<SparseMatrix > ap(new PetscMatrix);
+          std::unique_ptr<SparseMatrix > ap(new PetscMatrix);
           return ap;
         }
 #endif
 #ifdef HAVE_TRILINOS // ----------------------------
       case TRILINOS_SOLVERSM: {
-          std::auto_ptr<SparseMatrix > ap(new EpetraMatrix<double>);
+          std::unique_ptr<SparseMatrix > ap(new EpetraMatrix<double>);
           return ap;
         }
 #endif

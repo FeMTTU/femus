@@ -117,7 +117,7 @@ IF(LIBMESH_FOUND)
   SET(HAVE_LIBMESH 1)
 ENDIF(LIBMESH_FOUND)
 
-
+set(CMAKE_CXX_STANDARD 11)
 
 #############################################################################################
 ### Build options

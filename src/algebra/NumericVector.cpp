@@ -31,20 +31,20 @@ namespace femus
 
 //------------------------------------------------------------------
 // NumericVector methods
-  std::auto_ptr<NumericVector >
+  std::unique_ptr<NumericVector >
   NumericVector::build(const SolverPackage solver_package)
   {
     // Build the appropriate vector
     switch(solver_package) {
 #ifdef HAVE_PETSC
       case PETSC_SOLVERS: {
-          std::auto_ptr<NumericVector > ap(new PetscVector);
+          std::unique_ptr<NumericVector > ap(new PetscVector);
           return ap;
         }
 #endif
 #ifdef LIBMESH_HAVE_TRILINOS
       case TRILINOS_SOLVERS: {
-          std::auto_ptr<NumericVector > ap(new EpetraVector<double>);
+          std::unique_ptr<NumericVector > ap(new EpetraVector<double>);
           return ap;
         }
 #endif

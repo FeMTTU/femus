@@ -58,7 +58,7 @@ public:
     virtual void clear () = 0;
 
     /** Builds a \p SparseMatrix using the linear solver package specified by \p solver_package */
-    static std::auto_ptr<SparseMatrix>  build(const SolverPackage solver_package = LSOLVER);
+    static std::unique_ptr<SparseMatrix>  build(const SolverPackage solver_package = LSOLVER);
 
     /** Initialize */
     virtual void init (const int  m,  const int  n, const int  m_l,const int  n_l,

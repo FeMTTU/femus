@@ -33,7 +33,7 @@ namespace femus
 {
 
   // =============================================================
-  std::auto_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned& igrid, Solution* other_solution, const MgSmoother& smoother_type, const SolverPackage solver_package)
+  std::unique_ptr<LinearEquationSolver> LinearEquationSolver::build(const unsigned& igrid, Solution* other_solution, const MgSmoother& smoother_type, const SolverPackage solver_package)
   {
     // Build the appropriate solver
 
@@ -42,15 +42,15 @@ namespace femus
       case PETSC_SOLVERS:  {
           switch(smoother_type) {
             case ASM_SMOOTHER: {
-                std::auto_ptr<LinearEquationSolver> ap(new AsmPetscLinearEquationSolver(igrid, other_solution));
+                std::unique_ptr<LinearEquationSolver> ap(new AsmPetscLinearEquationSolver(igrid, other_solution));
                 return ap;
               }
             case GMRES_SMOOTHER: {
-                std::auto_ptr<LinearEquationSolver> ap(new GmresPetscLinearEquationSolver(igrid, other_solution));
+                std::unique_ptr<LinearEquationSolver> ap(new GmresPetscLinearEquationSolver(igrid, other_solution));
                 return ap;
               }
             case FIELDSPLIT_SMOOTHER: {
-                std::auto_ptr<LinearEquationSolver> ap(new FieldSplitPetscLinearEquationSolver(igrid, other_solution));
+                std::unique_ptr<LinearEquationSolver> ap(new FieldSplitPetscLinearEquationSolver(igrid, other_solution));
                 return ap;
               }
           }
@@ -58,7 +58,7 @@ namespace femus
 #endif
 #ifdef HAVE_TRILINOS
       case TRILINOS_SOLVERS:  {
-          std::auto_ptr<LinearEquationSolver> ap(new AztecLinearEquationSolver);
+          std::unique_ptr<LinearEquationSolver> ap(new AztecLinearEquationSolver);
           return ap;
         }
 #endif
