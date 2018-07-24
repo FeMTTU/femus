@@ -499,27 +499,27 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 //     sprintf(name, "egnf%d", i);
 //     eigfIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
 //   }
-// 
+//
 //   std::vector < double > local_integral(numberOfEigPairs, 0.);
 //   std::vector < double > local_norm2(numberOfEigPairs, 0.);
-// 
+//
 //   vector < vector < double > > eigenFunction(numberOfEigPairs); // local solution
-// 
+//
 //   for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-// 
+//
 //     short unsigned ielGeom = msh->GetElementType(iel);
 //     unsigned nDofu  = msh->GetElementDofNumber(iel, solType);    // number of solution element dofs
 //     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-// 
+//
 //     // resize local arrays
 //     for(unsigned i = 0; i < numberOfEigPairs; i++) {
 //       eigenFunction[i].resize(nDofu);
 //     }
-// 
+//
 //     for(int i = 0; i < dim; i++) {
 //       x1[i].resize(nDofx);
 //     }
-// 
+//
 //     // local storage of global mapping and solution
 //     for(unsigned i = 0; i < nDofu; i++) {
 //       unsigned solDof = msh->GetSolutionDof(i, iel, solType);    // global to global mapping between solution node and solution dof
@@ -527,7 +527,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 //         eigenFunction[j][i] = (*sol->_Sol[eigfIndex[j]])(solDof);
 //       }
 //     }
-// 
+//
 //     // local storage of coordinates
 //     for(unsigned i = 0; i < nDofx; i++) {
 //       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
@@ -561,7 +561,7 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
 //     std::cout << "BBBBBBBBBBBBBBBBBB  " << inorm << std::endl;
 //     sol->_Sol[eigfIndex[j]]->scale(inorm);
 //   }
-// 
+//
   //END OLD
 
 
@@ -1156,7 +1156,10 @@ void PlotStochasticData() {
   double d5gaussian;
   double d6gaussian;
   double d7gaussian;
+  double d8gaussian;
   double d9gaussian;
+  double d10gaussian;
+  double d12gaussian;
 
   double t = - 5.5;
   double dt = (11.) / 300.;
@@ -1277,7 +1280,23 @@ void PlotStochasticData() {
 
         edgeworth3Terms = edgeworth2Terms - lambda5 / 120. * d5gaussian + lambda3 * lambda4 / 144. * d7gaussian + pow(lambda3, 3) / 1296. * d9gaussian;
 
-        std::cout << edgeworth3Terms << " \n ";
+        std::cout << edgeworth3Terms << " ";
+
+      }
+      if(totMoments > 3) {
+
+        d8gaussian = (1.) * gaussian * (1. / 16. * (1680. - 6720. * t * t + 3360. * pow(t, 4) - 448. * pow(t, 6) + 16. * pow(t, 8)));
+        d10gaussian = (1.) * gaussian * (1. / 32. * (- 30240. + 151200. *  t * t - 100800. * pow(t, 4) + 20160. * pow(t, 6) - 1440. * pow(t, 8)
+                                         + 32. * pow(t, 10)));
+        d12gaussian = (1.) * gaussian * (1. / 64. * (665280. - 3991680. * t * t + 3326400. * pow(t, 4) - 887040. * pow(t, 6) + 95040. * pow(t, 8)
+                                         - 4224. * pow(t, 10) + 64. * pow(t, 12)));
+
+        lambda6 = cumulants[5] / pow(stdDeviationQoI, 6);
+
+        edgeworth4Terms = edgeworth3Terms + 1. / 720. * lambda6 * d6gaussian + (1. / 1152. * lambda4 * lambda4 + 1. / 720. * lambda3 * lambda5) * d8gaussian
+                          + 1. / 1728. * lambda3 * lambda3 * lambda4 * d10gaussian + 1. / 31104. * pow(lambda3, 4) * d12gaussian;
+
+        std::cout << edgeworth4Terms << " \n ";
 
       }
     }
