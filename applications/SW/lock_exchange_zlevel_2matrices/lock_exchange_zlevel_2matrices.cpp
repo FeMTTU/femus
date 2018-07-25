@@ -30,7 +30,7 @@ double rho1[20] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1
 
 double dt = 60.; //= dx / maxWaveSpeed * 0.85;
 
-double ni_h = 100.; // 0.1, 1, 10, 100, 200
+double ni_h = 1.; // 0.1, 1, 10, 100, 200
 
 double ni_v = 0.0001;
 
@@ -51,28 +51,6 @@ double InitalValueH ( const std::vector < double >& x ) {
   return hRest[0];
 }
 
-// double InitalValueH0(const std::vector < double >& x)
-// {
-//   return hRest[0];
-//   //if (x[0]<0) return 0.01;
-//   //else return hRest[0]+hRest[1] - 0.01;
-// }
-
-// double InitalValueH1(const std::vector < double >& x)
-// {
-//   return hRest[1];
-//   //if (x[0]<0) return hRest[0]+hRest[1] - 0.01;
-//   //else return 0.01;
-// }
-
-// double InitalValueH2(const std::vector < double >& x)
-// {
-//   double zz = sqrt(aa * aa - x[0] * x[0]); // z coordinate of points on sphere
-//   double dd = aa * acos((zz * z_c) / (aa * aa)); // distance to center point on sphere [m]
-//   double hh = 1 - dd * dd / (bb * bb);
-//   double b = ( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
-//   return b - hRest[2];
-// }
 
 double InitalValueT ( const std::vector < double >& x ) {
   double pi = acos ( -1. );
@@ -80,25 +58,6 @@ double InitalValueT ( const std::vector < double >& x ) {
   if ( x[0] < 0 ) return 5;
   else return 30;
 }
-
-// double InitalValueT0(const std::vector < double >& x)
-// {
-//   if (x[0]<0) return 5;
-//   else return 30;
-//   //return 30;
-// }
-
-// double InitalValueT1(const std::vector < double >& x)
-// {
-//   if (x[0]<0) return 5;
-//   else return 30;
-//   //return 5;
-// }
-
-// double InitalValueT2(const std::vector < double >& x)
-// {
-//   return 5;
-// }
 
 
 double InitalValueB ( const std::vector < double >& x ) {
@@ -792,32 +751,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
   MFNSetOperator ( mfn, A );
   MFNGetFN ( mfn, &f );
 
-
-//   FNCreate(PETSC_COMM_WORLD, &f1);
-//   FNCreate(PETSC_COMM_WORLD, &f2);
-//   FNCreate(PETSC_COMM_WORLD, &f3);
-//   FNCreate(PETSC_COMM_WORLD, &f4);
-//
-//   FNSetType(f1, FNEXP);
-//
-//   FNSetType(f2, FNRATIONAL);
-//   double coeff1[1] = { -1};
-//   FNRationalSetNumerator(f2, 1, coeff1);
-//   FNRationalSetDenominator(f2, 0, PETSC_NULL);
-//
-//   FNSetType( f3, FNCOMBINE );
-//
-//   FNCombineSetChildren(f3, FN_COMBINE_ADD, f1, f2);
-//
-//   FNSetType(f4, FNRATIONAL);
-//   double coeff2[2] = {1., 0.};
-//   FNRationalSetNumerator(f4, 2, coeff2);
-//   FNRationalSetDenominator(f4, 0, PETSC_NULL);
-//
-//   FNSetType( f, FNCOMBINE );
-//
-//   FNCombineSetChildren(f, FN_COMBINE_DIVIDE, f3, f4);
-
   FNPhiSetIndex ( f, 1 );
   FNSetType ( f, FNPHI );
 // FNView(f,PETSC_VIEWER_STDOUT_WORLD);
@@ -827,12 +760,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
   MFNSolve ( mfn, v, y );
   MFNDestroy ( &mfn );
-
-//   FNDestroy(&f1);
-//   FNDestroy(&f2);
-//   FNDestroy(&f3);
-//   FNDestroy(&f4);
-
 
   sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
 
@@ -959,6 +886,9 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
     vector < adept::adouble > solHTm ( NLayers ); // local coordinates
     vector < adept::adouble > solHT ( NLayers ); // local coordinates
     vector < adept::adouble > solHTp ( NLayers ); // local coordinates
+    
+    vector < adept::adouble > solHTmm(NLayers);    // local coordinates
+    vector < adept::adouble > solHTpp(NLayers);    // local coordinates
 
     //vector< adept::adouble > aResh ( NLayers );
     //vector< adept::adouble > aResv ( NLayers );
@@ -966,9 +896,13 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
 
     unsigned bc1 = ( i == start ) ? 0 : 1;
     unsigned bc2 = ( i == end - 1 ) ? 0 : 1;
+    
+    unsigned bc3 = ( i > start + 1) ? 1 : 0;
+    unsigned bc4 = ( i < end - 2 ) ? 1 : 0;
 
     l2GMapRow.resize ( NLayers );
     l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
+    //l2GMapColumn.resize ( ( 1 + bc1 + bc2 + bc3 + bc4) * NLayers );
 
     //std::fill ( aResh.begin(), aResh.end(), 0 ); //set aRes to zero
     std::fill ( aResHT.begin(), aResHT.end(), 0 ); //set aRes to zero
@@ -1005,7 +939,20 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
         //l2GMapColumn[ ( 4 + 2 * bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexh[j], solPdeIndexh[j], 0, i + 1 );
         l2GMapColumn[ ( 1 + bc1) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 1 );
       }
+      
+//       if ( i > start + 1 ) {
+//         solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
+//         if (i == end - 1) l2GMapColumn[( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+//         else l2GMapColumn[( (1 + bc1) + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+//       }
+//     
+//       if ( i < end - 2 ) {
+//         solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
+//         l2GMapColumn[( (1 + bc1) + bc3 + bc4 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
+//       }
+      
     }
+    
     s.new_recording();
 
     vector < double > x ( 2 ); // local coordinates
@@ -1076,6 +1023,7 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
         }
       }
 
+      //BEGIN THIRD ORDER
 //       if ( i > start ) {
 //         aResHT[k] += 0.5 * ( solHTm[k] + solHT[k] ) * solvm[k] / dx;
 //         if ( solvm[k] > 0 ) {
@@ -1089,7 +1037,6 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
 //           }
 //         }
 //       }
-
 //       if ( i < end - 1 ) {
 //         aResHT[k] -= 0.5 * ( solHTp[k] + solHT[k] ) * solvp[k] / dx;
 //         if ( solvp[k] > 0 ) {
@@ -1103,12 +1050,13 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
 //           }
 //         }
 //       }
+      //END
 
       if ( k < NLayers - 1 ) {
-        aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k]/*.value()*/ + solHT[k + 1] / solh[k + 1]/*.value()*/ );
+        aResHT[k] += w[k + 1] * 0.5 * ( solHT[k].value() / solh[k]/*.value()*/ + solHT[k + 1].value() / solh[k + 1]/*.value()*/ );
       }
       if ( k > 0 ) {
-        aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1] / solh[k - 1]/*.value()*/ + solHT[k] / solh[k]/*.value()*/ );
+        aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1].value() / solh[k - 1]/*.value()*/ + solHT[k].value() / solh[k]/*.value()*/ );
       }
 
 //       aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
