@@ -24,7 +24,7 @@
 #include <stdlib.h>
 
 
-double Re = 100;
+double Re = 500;
 double Rem = 0.01;
 double coeffS = 1.0;
 // double Mu = 0.01;
@@ -46,13 +46,24 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
     dirichlet = false;
   }
   else if (!strcmp(SolName, "B1")) {
-    value = 1.0;
+   if(facename == 1 || facename == 3){   
+     value = 0.0;
+     dirichlet = false;
+   }else if(facename == 2 || facename == 4){
+        value = 1.0;
+    }
+   
 //      if (facename == 4) {
 //        if (x[0] > -0.5 + 1.0e-8 && x[0] < 0.5 - 1.0e-8) value = -1.;
 //      }
   }
   else if (!strcmp(SolName, "B2")){
-    value = 0.0;
+  if(facename == 1 || facename == 3){
+      value = 0.0;
+   }else if(facename == 2 || facename == 4){
+      value = 0.0;
+      dirichlet = false;
+    }
   }
   else if (!strcmp(SolName, "R")) {
     dirichlet = false;
@@ -126,7 +137,7 @@ int main(int argc, char** args) {
   
   mlSol.AddSolution("B1", LAGRANGE, SECOND);
   mlSol.AddSolution("B2", LAGRANGE, SECOND);
-  mlSol.AddSolution("R",  DISCONTINOUS_POLYNOMIAL, FIRST);
+  mlSol.AddSolution("R",  LAGRANGE, FIRST);
   mlSol.AssociatePropertyToSolution("R", "Pressure");
 
   mlSol.AddSolution("U", LAGRANGE, SECOND);
@@ -138,7 +149,7 @@ int main(int argc, char** args) {
 //   mlSol.Initialize("T",InitalValueT);
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.FixSolutionAtOnePoint("R");
+//   mlSol.FixSolutionAtOnePoint("R");
   mlSol.FixSolutionAtOnePoint("P");
   mlSol.GenerateBdc("All");
 
@@ -185,7 +196,7 @@ int main(int argc, char** args) {
   FieldSplitTree FS_NS(PREONLY, ASM_PRECOND, fieldUVP, solutionTypeUVP, "Navier-Stokes");
   FS_NS.SetAsmBlockSize(4);
   
-  FS_NS.SetAsmBlockPreconditioner(MLU_PRECOND);
+//   FS_NS.SetAsmBlockPreconditioner(MLU_PRECOND);
   FS_NS.SetAsmNumeberOfSchurVariables(1);
 
   std::vector < FieldSplitTree *> FS2;
@@ -535,7 +546,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 		  coeffSignl = 1.0;
 		}
 		Res[irow] -= 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl* gradSolB_gss[l][ll] * weight;  
- 		Res[irow] += coeffSignk * phiB_x[i*dim+kk] * coeffSignl * solB_gss[l] * solV_gss[ll] * weight;
+//  		Res[irow] += coeffSignk * phiB_x[i*dim+kk] * coeffSignl * solB_gss[l] * solV_gss[ll] * weight;
 	    }
 	    Res[irow] += phiB_x[i*dim+k] * solR_gss * weight;
 	    
@@ -561,7 +572,7 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 		  unsigned jcol2 = dim * nDofsB + nDofsR + ll * nDofsV + j;
 		  Jac[irowMat+jcol1] += 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB_x[j*dim + ll] * weight;
 		  Jac[irowMat+jcol1] -= coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB[j] * solV_gss[ll] * weight;
- 		  Jac[irowMat+jcol2] -= coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiV[j] * solB_gss[l] * weight; 
+//  		  Jac[irowMat+jcol2] -= coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiV[j] * solB_gss[l] * weight; 
 		} 
 	      }
 	      for (unsigned j = 0; j < nDofsR; j++){
