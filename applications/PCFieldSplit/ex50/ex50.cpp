@@ -28,8 +28,8 @@ double Re = 500;
 double Rem = 0.01;
 double coeffS = 1.0;
 // double Mu = 0.01;
-double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
-int counter = 0 ;
+// double Miu = 0.001;  int c0=2; int cn=6; //Re=1000;
+// int counter = 0 ;
 
 using namespace femus;
 
@@ -545,8 +545,8 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 		  ll = 0;
 		  coeffSignl = 1.0;
 		}
-		Res[irow] -= 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl* gradSolB_gss[l][ll] * weight;  
-//  		Res[irow] += coeffSignk * phiB_x[i*dim+kk] * coeffSignl * solB_gss[l] * solV_gss[ll] * weight;
+		Res[irow] -= coeffS * 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl* gradSolB_gss[l][ll] * weight;  
+  		Res[irow] += coeffS * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * solB_gss[l] * solV_gss[ll] * weight;
 	    }
 	    Res[irow] += phiB_x[i*dim+k] * solR_gss * weight;
 	    
@@ -570,9 +570,9 @@ void AssembleBoussinesqAppoximation(MultiLevelProblem& ml_prob) {
 		for(unsigned j = 0; j < nDofsB; j++){
 		  unsigned jcol1 = l * nDofsB + j;
 		  unsigned jcol2 = dim * nDofsB + nDofsR + ll * nDofsV + j;
-		  Jac[irowMat+jcol1] += 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB_x[j*dim + ll] * weight;
-		  Jac[irowMat+jcol1] -= coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB[j] * solV_gss[ll] * weight;
-//  		  Jac[irowMat+jcol2] -= coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiV[j] * solB_gss[l] * weight; 
+		  Jac[irowMat+jcol1] += coeffS * 1.0/Rem * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB_x[j*dim + ll] * weight;
+		  Jac[irowMat+jcol1] -= coeffS * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiB[j] * solV_gss[ll] * weight;
+  		  Jac[irowMat+jcol2] -= coeffS * coeffSignk * phiB_x[i*dim+kk] * coeffSignl * phiV[j] * solB_gss[l] * weight; 
 		} 
 	      }
 	      for (unsigned j = 0; j < nDofsR; j++){
