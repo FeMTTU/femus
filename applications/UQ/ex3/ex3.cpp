@@ -958,7 +958,8 @@ void GetStochasticData(std::vector <double>& alphas) {
 
 
     //BEGIN estimation of the PDF
-    int pdfHistogramSize = 501;
+    unsigned numberOfSamples = 100000;
+    int pdfHistogramSize = static_cast <int>(1. + 3.3 * log(numberOfSamples));
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
     double startPoint = - 5.5;  //- 9.5;
     double endPoint = 5.5;  //9.5;
@@ -969,7 +970,6 @@ void GetStochasticData(std::vector <double>& alphas) {
     boost::variate_generator < boost::mt19937&,
     boost::normal_distribution<> > var_nor(rng, nd);
 
-    unsigned numberOfSamples = 150000;
     std::vector <double> sgmQoI(numberOfSamples, 0.);
     std::vector <double> sgmQoIStandardized(numberOfSamples, 0.);
 

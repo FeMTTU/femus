@@ -44,7 +44,7 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-unsigned M = 50000; //number of samples for the Monte Carlo
+unsigned M = 100000; //number of samples for the Monte Carlo
 //END
 
 unsigned numberOfUniformLevels = 4;
@@ -893,7 +893,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     stdDeviationQoI = sqrt(varianceQoI);
     //END
 
-    int pdfHistogramSize = 501;
+    int pdfHistogramSize = static_cast <int>(1. + 3.3 * log(M));;
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
     double startPoint = - 5.5;
     double endPoint = 5.5;
