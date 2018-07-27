@@ -25,3 +25,5 @@ ADD_SUBDIRECTORY(overflow_isopycnal/)
 ADD_SUBDIRECTORY(internal_waves_zlevel/)
 
 ADD_SUBDIRECTORY(overflow_zlevel/)
+
+ADD_SUBDIRECTORY(tracer/)
