@@ -855,8 +855,8 @@ void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vecto
         for(unsigned i = 0; i < nDofu; i++) {
           solu_gss += phi[i] * solu[j][i];
         }
-     	alphasTemp[j] += solu_gss * solu_gss * weight ; // this is the integral of the square.
-//         alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
+//      	alphasTemp[j] += solu_gss * solu_gss * weight ; // this is the integral of the square.
+        alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
       }
     } // end gauss point loop
 
