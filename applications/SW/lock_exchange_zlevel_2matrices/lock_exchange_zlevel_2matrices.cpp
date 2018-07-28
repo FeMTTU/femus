@@ -865,7 +865,7 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
   for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
     for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++ ) {
       double valueT = ( *sol->_Sol[solIndexT[k]] ) ( i );
-      double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
+      double valueH = ( *sol->_SolOld[solIndexh[k]] ) ( i );
 
       double valueHT = valueT * valueH;
 
