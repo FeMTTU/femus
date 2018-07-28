@@ -5,7 +5,7 @@
 using namespace femus;
 
 //BEGIN Stochastic Input Parameters
-unsigned pIndex = 5;
+unsigned pIndex = 4;
 unsigned qIndex = 5;
 
 int numberOfEigPairs = 2; //dimension of the stochastic variable
