@@ -901,8 +901,8 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
     unsigned bc4 = ( i < end - 2 ) ? 1 : 0;
 
     l2GMapRow.resize ( NLayers );
-    //l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
-    l2GMapColumn.resize ( ( 1 + bc1 + bc2 + bc3 + bc4) * NLayers );
+    l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
+    //l2GMapColumn.resize ( ( 1 + bc1 + bc2 + bc3 + bc4) * NLayers );
 
     //std::fill ( aResh.begin(), aResh.end(), 0 ); //set aRes to zero
     std::fill ( aResHT.begin(), aResHT.end(), 0 ); //set aRes to zero
@@ -940,16 +940,16 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
         l2GMapColumn[ ( 1 + bc1) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 1 );
       }
       
-      if ( i > start + 1 ) {
-        solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
-        if (i == end - 1) l2GMapColumn[( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
-        else l2GMapColumn[( (1 + bc1) + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
-      }
-    
-      if ( i < end - 2 ) {
-        solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
-        l2GMapColumn[( (1 + bc1) + bc3 + bc4 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
-      }
+//       if ( i > start + 1 ) {
+//         solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
+//         if (i == end - 1) l2GMapColumn[( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+//         else l2GMapColumn[( (1 + bc1) + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+//       }
+//     
+//       if ( i < end - 2 ) {
+//         solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
+//         l2GMapColumn[( (1 + bc1) + bc3 + bc4 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
+//       }
       
     }
     
@@ -1004,53 +1004,53 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
 //       aResh[k] += w[k + 1] - w[k];
 
       //BEGIN FIRST ORDER
-//       if ( i > start ) {
-//         //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
-//         if ( solvm[k] > 0 ) {
-//           aResHT[k] += solHTm[k] * solvm[k]/*.value()*/  / dx;
-//         }
-//         else {
-//           aResHT[k] += solHT[k] * solvm[k]/*.value()*/  / dx;
-//         }
-//       }
-//       if ( i < end - 1 ) {
-//         //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
-//         if ( solvp[k] > 0 ) {
-//           aResHT[k] -= solHT[k] * solvp[k]/*.value()*/  / dx; //first order upwind
-//         }
-//         else {
-//           aResHT[k] -= solHTp[k] * solvp[k]/*.value()*/  / dx; //first order upwind
-//         }
-//       }
-      //END
-
-      //BEGIN THIRD ORDER
       if ( i > start ) {
-        aResHT[k] += 0.5 * ( solHTm[k].value() + solHT[k].value() ) * solvm[k] / dx;
+        //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
         if ( solvm[k] > 0 ) {
-          if ( i > start + 1 ) {
-            aResHT[k] += - 1. / 6. * ( solHT[k].value() - 2.*solHTm[k].value() + solHTmm[k].value() ) * solvm[k]  / dx;
-          }
+          aResHT[k] += solHTm[k] * solvm[k]/*.value()*/  / dx;
         }
         else {
-          if ( i < end - 1 ) {
-            aResHT[k] += - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvm[k]  / dx;
-          }
+          aResHT[k] += solHT[k] * solvm[k]/*.value()*/  / dx;
         }
       }
       if ( i < end - 1 ) {
-        aResHT[k] -= 0.5 * ( solHTp[k].value() + solHT[k].value() ) * solvp[k] / dx;
+        //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
         if ( solvp[k] > 0 ) {
-          if (i > start) {
-            aResHT[k] -= - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvp[k]  / dx;
-          }
+          aResHT[k] -= solHT[k] * solvp[k]/*.value()*/  / dx; //first order upwind
         }
         else {
-          if ( i < end - 2 ) {
-            aResHT[k] -= - 1. / 6. * ( solHTpp[k].value() - 2.*solHTp[k].value() + solHT[k].value() ) * solvp[k]  / dx;
-          }
+          aResHT[k] -= solHTp[k] * solvp[k]/*.value()*/  / dx; //first order upwind
         }
       }
+      //END
+
+      //BEGIN THIRD ORDER
+//       if ( i > start ) {
+//         aResHT[k] += 0.5 * ( solHTm[k].value() + solHT[k].value() ) * solvm[k] / dx;
+//         if ( solvm[k] > 0 ) {
+//           if ( i > start + 1 ) {
+//             aResHT[k] += - 1. / 6. * ( solHT[k].value() - 2.*solHTm[k].value() + solHTmm[k].value() ) * solvm[k]  / dx;
+//           }
+//         }
+//         else {
+//           if ( i < end - 1 ) {
+//             aResHT[k] += - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvm[k]  / dx;
+//           }
+//         }
+//       }
+//       if ( i < end - 1 ) {
+//         aResHT[k] -= 0.5 * ( solHTp[k].value() + solHT[k].value() ) * solvp[k] / dx;
+//         if ( solvp[k] > 0 ) {
+//           if (i > start) {
+//             aResHT[k] -= - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvp[k]  / dx;
+//           }
+//         }
+//         else {
+//           if ( i < end - 2 ) {
+//             aResHT[k] -= - 1. / 6. * ( solHTpp[k].value() - 2.*solHTp[k].value() + solHT[k].value() ) * solvp[k]  / dx;
+//           }
+//         }
+//       }
       //END
 
       if ( k < NLayers - 1 ) {
@@ -1092,16 +1092,16 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
       //s.independent ( &solhp[0], NLayers );
       s.independent ( &solHTp[0], NLayers );
     }
-    if ( i > start + 1) {
+/*    if ( i > start + 1) {
       s.independent ( &solHTmm[0], NLayers );
     }
     if ( i < end - 2 ) {
       s.independent ( &solHTpp[0], NLayers );
-    }    
+    }*/    
     
     // get the jacobian matrix (ordered by row major )
-    //vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
-    vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 + bc3 +bc4 ) );
+    vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
+    //vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 + bc3 +bc4 ) );
     s.jacobian ( &Jac[0], true );
 
     //store K in the global matrix KK
