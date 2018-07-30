@@ -923,32 +923,29 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
       //l2GMapColumn[2 * NLayers + j] = pdeSys->GetSystemDof ( solIndexv[j], solPdeIndexv[j], 0, i );
       //l2GMapColumn[3 * NLayers + j] = pdeSys->GetSystemDof ( solIndexv[j], solPdeIndexv[j], 1, i );
 
-      if ( i > start ) {
+      if ( bc1) { 
         solhm[j] = ( *sol->_Sol[solIndexh[j]] ) ( i - 1 );
         solHTm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 1 );
-
-        //l2GMapColumn[4 * NLayers + j] = pdeSys->GetSystemDof ( solIndexh[j], solPdeIndexh[j], 0, i - 1 );
+       
         l2GMapColumn[NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 1 );
 
       }
 
-      if ( i < end - 1 ) {
+      if ( bc2 ) {
         solhp[j] = ( *sol->_Sol[solIndexh[j]] ) ( i + 1 );
         solHTp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 1 );
 
-        //l2GMapColumn[ ( 4 + 2 * bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexh[j], solPdeIndexh[j], 0, i + 1 );
         l2GMapColumn[ ( 1 + bc1) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 1 );
       }
       
-      if ( i > start + 1 ) {
+      if ( bc3 ) {
         solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
-        if (i == end - 1) l2GMapColumn[( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
-        else l2GMapColumn[( (1 + bc1) + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+        l2GMapColumn[( 1 + bc1 + bc2 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
       }
     
-      if ( i < end - 2 ) {
+      if ( bc4 ) {
         solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
-        l2GMapColumn[( (1 + bc1) + bc3 + bc4 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
+        l2GMapColumn[( 1 + bc1 + bc2 + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
       }
       
     }
