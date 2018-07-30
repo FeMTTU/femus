@@ -19,6 +19,7 @@
 #include "NumericVector.hpp"
 #include "ElemType.hpp"
 #include <iomanip>
+#include "MeshRefinement.hpp"
 
 namespace femus {
 
@@ -38,6 +39,7 @@ namespace femus {
     _maxAMRlevels(0),
     _AMRnorm(0),
     _AMRthreshold(0.01),
+    _AMReighborThresholdValue(0.),
     _SmootherType(smoother_type),
     _MGmatrixFineReuse(false),
     _MGmatrixCoarseReuse(false),
@@ -449,9 +451,16 @@ restart:
   // ********************************************
 
   void LinearImplicitSystem::AddAMRLevel(unsigned& AMRCounter) {
-    bool conv_test = 0;
+    bool conv_test = true;
 
-    conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnErroNormAdaptive(_SolSystemPdeIndex, _AMRthreshold, _AMRnorm);
+    if(_gridn == 1){
+      MeshRefinement meshcoarser(*_msh[0]);
+      meshcoarser.FlagAllElementsToBeRefined();
+      conv_test = false;
+    }
+    else{
+      conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnErroNormAdaptive(_SolSystemPdeIndex, _AMRthreshold, _AMRnorm, _AMReighborThresholdValue);
+    }
 
     //     if( _AMRnorm == 0 ) {
 //       conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnl2( _SolSystemPdeIndex, _AMRthreshold );
@@ -460,7 +469,7 @@ restart:
 //       conv_test = _solution[_gridn - 1]->FlagAMRRegionBasedOnSemiNorm( _SolSystemPdeIndex, _AMRthreshold );
 //     }
 
-    if(conv_test == 0) {
+    if(conv_test == false) {
       _ml_msh->AddAMRMeshLevel();
       _ml_sol->AddSolutionLevel();
       AddSystemLevel();
@@ -558,7 +567,7 @@ restart:
     _AMRthreshold.resize(1);
     _AMRthreshold[0] = AMRthreshold;
 
-    if(!strcmp("l2", AMRnorm.c_str())  || !strcmp("h0", AMRnorm.c_str()) || !strcmp("H0", AMRnorm.c_str())) {
+    if( !strcmp("L2", AMRnorm.c_str()) || !strcmp("l2", AMRnorm.c_str())  || !strcmp("h0", AMRnorm.c_str()) || !strcmp("H0", AMRnorm.c_str())) {
       _AMRnorm = 0;
     }
     else if(!strcmp("H1", AMRnorm.c_str()) || !strcmp("h1", AMRnorm.c_str())) {

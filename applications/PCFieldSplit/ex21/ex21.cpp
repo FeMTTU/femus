@@ -268,6 +268,7 @@ int main(int argc, char** args) {
   marker1.GetMarkerLocalCoordinates(xi1);
   
   Marker marker2(x2,0., VOLUME, mlSol.GetLevel(numberOfUniformLevels - 1), 2, true);
+  
   unsigned elem2 = marker2.GetMarkerElement();
   std::vector<double> xi2;
   marker2.GetMarkerLocalCoordinates(xi2);

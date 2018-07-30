@@ -98,7 +98,8 @@ namespace femus {
 
       /** Flag the elemets to be refined in the AMR alghorithm based on the solution gradient*/
       bool FlagAMRRegionBasedOnErroNorm(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType);
-      bool FlagAMRRegionBasedOnErroNormAdaptive(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, const unsigned& normType);
+      bool FlagAMRRegionBasedOnErroNormAdaptive(const vector <unsigned> &solIndex, std::vector <double> &AMRthreshold, 
+						const unsigned& normType, const double &neighborThresholdValue);
 
 
       /** Build Grad Matrix structure for SolType 0,1,2 */
