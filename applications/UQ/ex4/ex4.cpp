@@ -1,4 +1,3 @@
-
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
@@ -28,7 +27,7 @@ void PlotStochasticData();
 
 //BEGIN stochastic data
 
-unsigned totMoments = 6;
+unsigned totMoments = 7;
 std::vector <double> moments(totMoments, 0.); //initialization
 std::vector <double> momentsStandardized(totMoments, 0.); //initialization
 std::vector <double> cumulants(totMoments, 0.); //initialization
@@ -38,13 +37,13 @@ double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 unsigned M = 1000000;
 
+//FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
-boost::normal_distribution<> nd(0., 0.3);
+boost::normal_distribution<> nd(0., 0.1);
 boost::variate_generator < boost::mt19937&,
-      boost::normal_distribution<> > var_nor(rng, nd);
-//END
+boost::normal_distribution<> > var_nor(rng, nd);
 
-unsigned numberOfUniformLevels = 4;
+//END
 
 int main(int argc, char** argv) {
 
@@ -52,9 +51,10 @@ int main(int argc, char** argv) {
 
   for(unsigned m = 0; m < M; m++) {
 
-//     QoI[m] = var_nor() * var_nor();
-    QoI[m] = exp(var_nor());
+    QoI[m] = var_nor() * var_nor() * var_nor();
+//     QoI[m] = exp(var_nor());
 //         QoI[m] = var_nor();
+    
 //     std::cout << "QoI[" << m << "]=" << QoI[m] << std::endl;
 
   }
@@ -86,9 +86,9 @@ void GetStochasticData(std::vector <double>& QoI) {
     meanQoI = 0.;
     unsigned meanCounter = 0;
     for(unsigned m = 0; m < M; m++) {
-      if(QoI[m] < 5. || QoI[m] > - 5.) {
-      meanQoI += QoI[m];
-      meanCounter++;
+      if(QoI[m] < 3. || QoI[m] > - 3.) {
+        meanQoI += QoI[m];
+        meanCounter++;
       }
     }
     meanQoI /= meanCounter;
@@ -99,9 +99,9 @@ void GetStochasticData(std::vector <double>& QoI) {
     varianceQoI = 0;
     unsigned varianceCounter = 0;
     for(unsigned m = 0; m < M; m++) {
-      if(QoI[m] < 5. || QoI[m] > - 5.) {
-      varianceQoI += (QoI[m] - meanQoI) * (QoI[m] - meanQoI);
-      varianceCounter++;
+      if(QoI[m] < 3. || QoI[m] > - 3.) {
+        varianceQoI += (QoI[m] - meanQoI) * (QoI[m] - meanQoI);
+        varianceCounter++;
       }
     }
     varianceQoI /= varianceCounter;
@@ -111,8 +111,8 @@ void GetStochasticData(std::vector <double>& QoI) {
 
     int pdfHistogramSize = static_cast <int>(1. + 3.3 * log(M));
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
-    double startPoint = - 5.;
-    double endPoint = 5.;
+    double startPoint = - 3.;
+    double endPoint = 3.;
     double lengthOfTheInterval = fabs(endPoint - startPoint);
     double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
 
@@ -161,7 +161,7 @@ void GetStochasticData(std::vector <double>& QoI) {
       momentsStandardized[p] = 0.;
       unsigned momentsCounter = 0;
       for(unsigned m = 0; m < M; m++) {
-        if(QoI[m] < 5. || QoI[m] > - 5.) {
+        if(QoI[m] < 3. || QoI[m] > - 3.) {
           moments[p] += pow(QoI[m], p + 1);
           momentsStandardized[p] += pow(QoIStandardized[m], p + 1);
           momentsCounter++;
@@ -209,6 +209,20 @@ void GetStochasticData(std::vector <double>& QoI) {
                                          - 120. * momentsStandardized[2] * pow(momentsStandardized[0], 3) + 30. * pow(momentsStandardized[1], 3)
                                          - 270. * pow(momentsStandardized[1], 2) * pow(momentsStandardized[0], 2) + 360. * momentsStandardized[1] * pow(momentsStandardized[0], 4)
                                          - 120. * pow(momentsStandardized[0], 6);
+
+              if(totMoments > 6) {
+                cumulants[6] = 720. * pow(moments[0], 7) - 2520. * moments[1] * pow(moments[0], 5) + 840. * moments[2] * pow(moments[0], 4)
+                               + 2520. * pow(moments[1], 2) * pow(moments[0], 3) - 210. * moments[3] * pow(moments[0], 3) - 1260. * moments[1] * moments[2] * pow(moments[0], 2)
+                               + 42. * moments[4] * pow(moments[0], 2) - 630. * pow(moments[1], 3) * moments[0] + 140. * pow(moments[2], 2) * moments[0]
+                               + 210. * moments[1] * moments[3] * moments[0] - 7. * moments[5] * moments[0] + 210. * pow(moments[1], 2) * moments[2]
+                               - 35. * moments[2] * moments[3] - 21. * moments[1] * moments[4] + moments[6];
+
+                cumulantsStandardized[6] = 720. * pow(momentsStandardized[0], 7) - 2520. * momentsStandardized[1] * pow(momentsStandardized[0], 5) + 840. * momentsStandardized[2] * pow(momentsStandardized[0], 4)
+                               + 2520. * pow(momentsStandardized[1], 2) * pow(momentsStandardized[0], 3) - 210. * momentsStandardized[3] * pow(momentsStandardized[0], 3) - 1260. * momentsStandardized[1] * momentsStandardized[2] * pow(momentsStandardized[0], 2)
+                               + 42. * momentsStandardized[4] * pow(momentsStandardized[0], 2) - 630. * pow(momentsStandardized[1], 3) * momentsStandardized[0] + 140. * pow(momentsStandardized[2], 2) * momentsStandardized[0]
+                               + 210. * momentsStandardized[1] * momentsStandardized[3] * momentsStandardized[0] - 7. * momentsStandardized[5] * momentsStandardized[0] + 210. * pow(momentsStandardized[1], 2) * momentsStandardized[2]
+                               - 35. * momentsStandardized[2] * momentsStandardized[3] - 21. * momentsStandardized[1] * momentsStandardized[4] + momentsStandardized[6];
+              }
             }
           }
         }
@@ -260,6 +274,7 @@ void PlotStochasticData() {
   double generalizedGC4Terms = 0.;
   double generalizedGC5Terms = 0.;
   double generalizedGC6Terms = 0.;
+  double generalizedGC7Terms = 0.;
 
   double lambda3 = 0.;
   double lambda4 = 0.;
@@ -278,8 +293,8 @@ void PlotStochasticData() {
   double d10gaussian;
   double d12gaussian;
 
-  double t = - 5.;
-  double dt = (10.) / 500.;
+  double t = - 3.;
+  double dt = (6.) / 500.;
 
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
@@ -311,7 +326,7 @@ void PlotStochasticData() {
         d4gaussian = (1.) * gaussian * (t * t * t * t - 6. * t * t + 3.) ;
         d6gaussian = (1.) * gaussian * (pow(t, 6) - 15 * pow(t, 4) + 45 * t * t - 15);
 
-        generalizedGC3Terms = generalizedGC2Terms - 1. / 6 * (cumulantsStandardized[2] + 3 * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
+        generalizedGC3Terms = generalizedGC2Terms - 1. / 6. * (cumulantsStandardized[2] + 3 * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
                               + pow(cumulantsStandardized[0], 3)) * d3gaussian;
 
         std::cout << generalizedGC3Terms << " ";
@@ -322,15 +337,15 @@ void PlotStochasticData() {
           d7gaussian = (- 1.) * gaussian * (pow(t, 7) - 21. * pow(t, 5) + 105. * t * t * t -  105. * t) ;
           d9gaussian = (- 1.) * gaussian * (pow(t, 9) - 36. * pow(t, 7) + 378. * pow(t, 5) - 1260. * t * t * t + 945. * t) ;
 
-          generalizedGC4Terms = generalizedGC3Terms + 1. / 24 * (cumulantsStandardized[3] + 4. * cumulantsStandardized[2] * cumulantsStandardized[0]
+          generalizedGC4Terms = generalizedGC3Terms + 1. / 24. * (cumulantsStandardized[3] + 4. * cumulantsStandardized[2] * cumulantsStandardized[0]
                                 + 3. * pow((cumulantsStandardized[1] - 1.), 2) + 6. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 2)
-	                        + pow(cumulantsStandardized[0], 4)) * d4gaussian;
+                                + pow(cumulantsStandardized[0], 4)) * d4gaussian;
 
           std::cout << generalizedGC4Terms << " ";
 
           if(totMoments > 4) {
 
-            generalizedGC5Terms = generalizedGC4Terms - 1. / 120 * (cumulantsStandardized[4] + 5. * cumulantsStandardized[3] * cumulantsStandardized[0]
+            generalizedGC5Terms = generalizedGC4Terms - 1. / 120. * (cumulantsStandardized[4] + 5. * cumulantsStandardized[3] * cumulantsStandardized[0]
                                   + 10. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) + 10. * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 2)
                                   + 15. * pow((cumulantsStandardized[1] - 1.), 2) * cumulantsStandardized[0] + 10. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 3)
                                   + pow(cumulantsStandardized[0], 5)) * d5gaussian;
@@ -339,17 +354,30 @@ void PlotStochasticData() {
 
             if(totMoments > 5) {
 
-              generalizedGC6Terms = generalizedGC5Terms + 1. / 720 * (cumulantsStandardized[5] + 6. * cumulantsStandardized[4] * cumulantsStandardized[0]
+              generalizedGC6Terms = generalizedGC5Terms + 1. / 720. * (cumulantsStandardized[5] + 6. * cumulantsStandardized[4] * cumulantsStandardized[0]
                                     + 15. * cumulantsStandardized[3] * (cumulantsStandardized[1] - 1.) + 15. * cumulantsStandardized[3] * pow(cumulantsStandardized[0], 2)
                                     + 10. * pow(cumulantsStandardized[2], 2) + 60. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
                                     + 20. * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 3) + 15. * pow((cumulantsStandardized[1] - 1.), 3)
                                     + 45. * pow((cumulantsStandardized[1] - 1.), 2) * pow(cumulantsStandardized[0], 2) + 15. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 4)
                                     +  pow(cumulantsStandardized[0], 6)) * d6gaussian;
 
-              std::cout << generalizedGC6Terms << " \n ";
+              std::cout << generalizedGC6Terms << "  ";
 
+              if(totMoments > 6) {
+
+                generalizedGC7Terms = generalizedGC6Terms - 1. / 5040. * (pow(cumulantsStandardized[0], 7) + 21. * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 5)
+                                      + 35. * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 4) + 105. * (cumulantsStandardized[1] - 1.) * (cumulantsStandardized[1] - 1.) * pow(cumulantsStandardized[0], 3)
+                                      + 35. * cumulantsStandardized[3] * pow(cumulantsStandardized[0], 3) + 210. * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[2] * pow(cumulantsStandardized[0], 2)
+                                      + 21. * cumulantsStandardized[4] * pow(cumulantsStandardized[0], 2) + 105. * pow(cumulantsStandardized[1] - 1., 3) * cumulantsStandardized[0]
+                                      + 70. * pow(cumulantsStandardized[2], 2) * cumulantsStandardized[0] + 105. * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[3] * cumulantsStandardized[0]
+                                      + 7. * cumulantsStandardized[5] * cumulantsStandardized[0] + 105. * pow(cumulantsStandardized[1] - 1., 2) * cumulantsStandardized[2]
+                                      + 35. * cumulantsStandardized[2] * cumulantsStandardized[3] + 21. * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[4]
+                                      + cumulantsStandardized[6]) * d7gaussian;
+
+                std::cout << generalizedGC7Terms << " \n ";
+
+              }
             }
-
           }
         }
       }
@@ -358,8 +386,8 @@ void PlotStochasticData() {
     t += dt;
   }
 
-  t = - 5.;
-  dt = (10.) / 500.;
+  t = - 3.;
+  dt = (6.) / 500.;
 
   //BEGIN EDGEWORTH PRINT
   std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
@@ -426,6 +454,7 @@ void PlotStochasticData() {
 
 }
 //
+
 
 
 
