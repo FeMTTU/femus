@@ -39,9 +39,15 @@ unsigned M = 1000000;
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
-boost::normal_distribution<> nd(0., 0.1);
+boost::normal_distribution<> nd(0., 1.);
 boost::variate_generator < boost::mt19937&,
 boost::normal_distribution<> > var_nor(rng, nd);
+
+//FOR UNIFORM DISTRIBUTION
+boost::mt19937 rng1; // I don't seed it on purpouse (it's not relevant)
+boost::random::uniform_real_distribution<> un(- sqrt(3), sqrt(3));
+boost::variate_generator < boost::mt19937&,
+boost::random::uniform_real_distribution<> > var_unif(rng1, un);
 
 //END
 
@@ -53,8 +59,9 @@ int main(int argc, char** argv) {
 
     QoI[m] = var_nor() * var_nor() * var_nor();
 //     QoI[m] = exp(var_nor());
+//     QoI[m] = exp(var_unif());
 //         QoI[m] = var_nor();
-    
+
 //     std::cout << "QoI[" << m << "]=" << QoI[m] << std::endl;
 
   }
@@ -119,7 +126,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     std::vector < double > QoIStandardized(M, 0.);
     //BEGIN standardization of QoI before computing the moments
     for(unsigned m = 0; m < M; m++) {
-      QoIStandardized[m] = (QoI[m] - meanQoI) / stdDeviationQoI ;
+      QoIStandardized[m] = (QoI[m] /*- meanQoI*/) /*/ stdDeviationQoI */;
 //       std::cout << "standardized QoI " << QoIStandardized[m] << std::endl;
 
       //BEGIN estimation of the PDF
@@ -218,10 +225,10 @@ void GetStochasticData(std::vector <double>& QoI) {
                                - 35. * moments[2] * moments[3] - 21. * moments[1] * moments[4] + moments[6];
 
                 cumulantsStandardized[6] = 720. * pow(momentsStandardized[0], 7) - 2520. * momentsStandardized[1] * pow(momentsStandardized[0], 5) + 840. * momentsStandardized[2] * pow(momentsStandardized[0], 4)
-                               + 2520. * pow(momentsStandardized[1], 2) * pow(momentsStandardized[0], 3) - 210. * momentsStandardized[3] * pow(momentsStandardized[0], 3) - 1260. * momentsStandardized[1] * momentsStandardized[2] * pow(momentsStandardized[0], 2)
-                               + 42. * momentsStandardized[4] * pow(momentsStandardized[0], 2) - 630. * pow(momentsStandardized[1], 3) * momentsStandardized[0] + 140. * pow(momentsStandardized[2], 2) * momentsStandardized[0]
-                               + 210. * momentsStandardized[1] * momentsStandardized[3] * momentsStandardized[0] - 7. * momentsStandardized[5] * momentsStandardized[0] + 210. * pow(momentsStandardized[1], 2) * momentsStandardized[2]
-                               - 35. * momentsStandardized[2] * momentsStandardized[3] - 21. * momentsStandardized[1] * momentsStandardized[4] + momentsStandardized[6];
+                                           + 2520. * pow(momentsStandardized[1], 2) * pow(momentsStandardized[0], 3) - 210. * momentsStandardized[3] * pow(momentsStandardized[0], 3) - 1260. * momentsStandardized[1] * momentsStandardized[2] * pow(momentsStandardized[0], 2)
+                                           + 42. * momentsStandardized[4] * pow(momentsStandardized[0], 2) - 630. * pow(momentsStandardized[1], 3) * momentsStandardized[0] + 140. * pow(momentsStandardized[2], 2) * momentsStandardized[0]
+                                           + 210. * momentsStandardized[1] * momentsStandardized[3] * momentsStandardized[0] - 7. * momentsStandardized[5] * momentsStandardized[0] + 210. * pow(momentsStandardized[1], 2) * momentsStandardized[2]
+                                           - 35. * momentsStandardized[2] * momentsStandardized[3] - 21. * momentsStandardized[1] * momentsStandardized[4] + momentsStandardized[6];
               }
             }
           }
