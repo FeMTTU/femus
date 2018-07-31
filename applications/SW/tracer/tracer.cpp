@@ -371,70 +371,66 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
     }
 
     std::vector < double > w ( NLayers + 1, 0. );
-
-    for ( unsigned k = NLayers; k > 1; k-- ) {
-      w[k - 1] = w[k] - ( hALE[k - 1] - solh[k - 1]) / dt; 
-      if(bc2){ 
-        w[k - 1] -=   0.5 * ( solh[k - 1] + solhp[k - 1] ) * solvp[k - 1] /dx;
-      }
-      else{
-        w[k - 1] -=   solh[k - 1] * 1 /dx;  
-      }
-      if(bc1){
-        w[k - 1] +=   0.5 * ( solh[k - 1] + solhm[k - 1] ) * solvm[k - 1] /dx;
-      }
-      else{
-        w[k - 1] +=   solh[k - 1] * 1 /dx;   
-      }
-      //std::cout<< w[k-1] << " ";
-    }
-    //std::cout<<std::endl;
     
-    std::vector < double > zMidm ( NLayers );
-    std::vector < double > zMidp ( NLayers );
-    for ( unsigned k = 0; k < NLayers; k++ ) {
-      zMidm[k] = -b + solhm[k] / 2.;
-      zMidp[k] = -b + solhp[k] / 2.;
-      for ( unsigned i = k + 1; i < NLayers; i++ ) {
-        zMidm[k] += solhm[i];
-        zMidp[k] += solhp[i];
-      }
-    }
-
+//     NEW w
+//     for ( unsigned k = NLayers; k > 1; k-- ) {
+//       w[k - 1] = w[k] - ( hALE[k - 1] - solh[k - 1]) / dt; 
+//       if(bc2){ 
+//         w[k - 1] -=   0.5 * ( solh[k - 1] + solhp[k - 1] ) * solvp[k - 1] /dx;
+//       }
+//       else{
+//         w[k - 1] -=   solh[k - 1] * 1 /dx;  
+//       }
+//       if(bc1){
+//         w[k - 1] +=   0.5 * ( solh[k - 1] + solhm[k - 1] ) * solvm[k - 1] /dx;
+//       }
+//       else{
+//         w[k - 1] +=   solh[k - 1] * 1 /dx;   
+//       }
+//       //std::cout<< w[k-1] << " ";
+//     }
+//     //std::cout<<std::endl;
+    
+//     OLD w     
 //     for(unsigned k = 1; k < NLayers; k++){
 //       w[k] = w[k-1] + (  0.5 * ( solh[k-1].value() + solhp[k-1].value() ) * solvp[k-1].value()
 // 		       - 0.5 * ( solh[k-1].value() + solhm[k-1].value() ) * solvm[k-1].value() )/dx
 // 		    + ( hALE[k-1] - solh[k-1].value()) / dt;//TODO
 // 		    //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<w[k-1]<<std::endl;
 //     }
+    
+    std::vector < double > zMid ( NLayers );
+    for ( unsigned k = 0; k < NLayers; k++ ) {
+      zMid[k] = -b + solh[k] / 2.;
+      for ( unsigned i = k + 1; i < NLayers; i++ ) {
+        zMid[k] += solh[i];
+      }
+    }
+    
+    for ( unsigned k = NLayers; k > 1; k-- ) {
+      w[k-1] = 0.1 * zMid[k-1];
+    }
+    
 
     for ( unsigned k = 0; k < NLayers; k++ ) {
-
-//       if ( i > start ) {
-//         aResh[k] += 0.5 * ( solhm[k] + solh[k] ) * solvm[k] / dx;
-//       }
-//       if ( i < end - 1 ) {
-//         aResh[k] -= 0.5 * ( solh[k] + solhp[k] ) * solvp[k] / dx;
-//       }
-//       aResh[k] += w[k + 1] - w[k];
 
       //BEGIN FIRST ORDER
       if ( i > start ) {
         //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
         if ( solvm[k] > 0 ) {
-          aResHT[k] += solHTm[k] * solvm[k]/*.value()*/  / dx;
+          aResHT[k] += solHTm[k] * solvm[k] / dx;
         }
         else {
-          aResHT[k] += solHT[k] * solvm[k]/*.value()*/  / dx;
+          aResHT[k] += solHT[k] * solvm[k] / dx;
         }
       }
       if ( i < end - 1 ) {
         //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
         if ( solvp[k] > 0 ) {
-          aResHT[k] -= solHT[k] * solvp[k]/*.value()*/  / dx; //first order upwind
+          aResHT[k] -= solHT[k] * solvp[k] / dx; //first order upwind
         }
         else {
-          aResHT[k] -= solHTp[k] * solvp[k]/*.value()*/  / dx; //first order upwind
+          aResHT[k] -= solHTp[k] * solvp[k] / dx; //first order upwind
         }
       }
 //       else{
@@ -472,10 +468,10 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
       //END
 
       if ( k < NLayers - 1 ) {
-        aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k]/*.value()*/ + solHT[k + 1] / solh[k + 1]/*.value()*/ );
+        aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k] + solHT[k + 1] / solh[k + 1] );
       }
       if ( k > 0 ) {
-        aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1] / solh[k - 1]/*.value()*/ + solHT[k] / solh[k]/*.value()*/ );
+        aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1] / solh[k - 1] + solHT[k] / solh[k] );
       }
       
       adept::adouble deltaZt = 0.;
