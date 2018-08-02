@@ -39,16 +39,22 @@ unsigned M = 1000000;
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
-boost::normal_distribution<> nd(0., 1.);
+boost::normal_distribution<> nd(0., 0.3);
 boost::variate_generator < boost::mt19937&,
-boost::normal_distribution<> > var_nor(rng, nd);
+      boost::normal_distribution<> > var_nor(rng, nd);
 
 //FOR UNIFORM DISTRIBUTION
 boost::mt19937 rng1; // I don't seed it on purpouse (it's not relevant)
-boost::random::uniform_real_distribution<> un(- sqrt(3), sqrt(3));
+boost::random::uniform_real_distribution<> un(- 1., 1.);
 boost::variate_generator < boost::mt19937&,
-boost::random::uniform_real_distribution<> > var_unif(rng1, un);
+      boost::random::uniform_real_distribution<> > var_unif(rng1, un);
 
+//FOR LAPLACE DISTRIBUTION
+boost::mt19937 rng2; // I don't seed it on purpouse (it's not relevant)
+boost::random::uniform_real_distribution<> un1(- 0.5, 0.49999999999);
+boost::variate_generator < boost::mt19937&,
+      boost::random::uniform_real_distribution<> > var_unif1(rng2, un1);
+double b = 2.;
 //END
 
 int main(int argc, char** argv) {
@@ -57,10 +63,24 @@ int main(int argc, char** argv) {
 
   for(unsigned m = 0; m < M; m++) {
 
-    QoI[m] = var_nor() * var_nor() * var_nor();
-//     QoI[m] = exp(var_nor());
-//     QoI[m] = exp(var_unif());
-//         QoI[m] = var_nor();
+    double var = var_nor();
+    double varunif = var_unif();
+    double U = var_unif1();
+//     QoI[m] = var * var * var;
+//     QoI[m] = exp(var);
+    QoI[m] = exp(varunif);
+
+    //exp of truncated gaussian
+//     if(fabs(var) <= 1.) {
+//       QoI[m] = exp( var / (0.5 * ((1. + erf((1. / 0.3) / sqrt(2))) - (1. + erf((- 1. / 0.3) / sqrt(2))))) );    //truncated Gaussian
+//     }
+//     else QoI[m] = 1.;
+
+    //laplace distribution
+//     double signU = 0.;
+//     if(U < 0) signU = - 1.;
+//     else if(U > 0) signU = 1.;
+//     QoI[m] = 0. - b * signU * log(1. - 2. * fabs(U)) ;
 
 //     std::cout << "QoI[" << m << "]=" << QoI[m] << std::endl;
 
@@ -93,7 +113,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     meanQoI = 0.;
     unsigned meanCounter = 0;
     for(unsigned m = 0; m < M; m++) {
-      if(QoI[m] < 3. || QoI[m] > - 3.) {
+      if(QoI[m] < 3. && QoI[m] > - 1.5) {
         meanQoI += QoI[m];
         meanCounter++;
       }
@@ -106,7 +126,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     varianceQoI = 0;
     unsigned varianceCounter = 0;
     for(unsigned m = 0; m < M; m++) {
-      if(QoI[m] < 3. || QoI[m] > - 3.) {
+       if(QoI[m] < 3. && QoI[m] > - 1.5) {
         varianceQoI += (QoI[m] - meanQoI) * (QoI[m] - meanQoI);
         varianceCounter++;
       }
@@ -118,7 +138,7 @@ void GetStochasticData(std::vector <double>& QoI) {
 
     int pdfHistogramSize = static_cast <int>(1. + 3.3 * log(M));
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
-    double startPoint = - 3.;
+    double startPoint = - 1.5;
     double endPoint = 3.;
     double lengthOfTheInterval = fabs(endPoint - startPoint);
     double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
@@ -126,7 +146,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     std::vector < double > QoIStandardized(M, 0.);
     //BEGIN standardization of QoI before computing the moments
     for(unsigned m = 0; m < M; m++) {
-      QoIStandardized[m] = (QoI[m] /*- meanQoI*/) /*/ stdDeviationQoI */;
+      QoIStandardized[m] = (QoI[m] - meanQoI) / stdDeviationQoI ;
 //       std::cout << "standardized QoI " << QoIStandardized[m] << std::endl;
 
       //BEGIN estimation of the PDF
@@ -168,7 +188,7 @@ void GetStochasticData(std::vector <double>& QoI) {
       momentsStandardized[p] = 0.;
       unsigned momentsCounter = 0;
       for(unsigned m = 0; m < M; m++) {
-        if(QoI[m] < 3. || QoI[m] > - 3.) {
+              if(QoI[m] < 3. && QoI[m] > - 1.5) {
           moments[p] += pow(QoI[m], p + 1);
           momentsStandardized[p] += pow(QoIStandardized[m], p + 1);
           momentsCounter++;
@@ -300,8 +320,8 @@ void PlotStochasticData() {
   double d10gaussian;
   double d12gaussian;
 
-  double t = - 3.;
-  double dt = (6.) / 500.;
+  double t = - 1.5;
+  double dt = (4.5) / 500.;
 
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
@@ -393,8 +413,8 @@ void PlotStochasticData() {
     t += dt;
   }
 
-  t = - 3.;
-  dt = (6.) / 500.;
+   t = - 1.5;
+   dt = (4.5) / 500.;
 
   //BEGIN EDGEWORTH PRINT
   std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
@@ -461,6 +481,9 @@ void PlotStochasticData() {
 
 }
 //
+
+
+
 
 
 
