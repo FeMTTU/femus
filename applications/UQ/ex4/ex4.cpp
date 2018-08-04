@@ -36,6 +36,8 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 unsigned M = 1000000;
+double startPoint = - 8.;
+double endPoint = 8.;
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -68,7 +70,7 @@ int main(int argc, char** argv) {
     double U = var_unif1();
 //     QoI[m] = var * var * var;
 //     QoI[m] = exp(var);
-    QoI[m] = exp(varunif);
+//     QoI[m] = exp(varunif);
 
     //exp of truncated gaussian
 //     if(fabs(var) <= 1.) {
@@ -77,10 +79,10 @@ int main(int argc, char** argv) {
 //     else QoI[m] = 1.;
 
     //laplace distribution
-//     double signU = 0.;
-//     if(U < 0) signU = - 1.;
-//     else if(U > 0) signU = 1.;
-//     QoI[m] = 0. - b * signU * log(1. - 2. * fabs(U)) ;
+    double signU = 0.;
+    if(U < 0) signU = - 1.;
+    else if(U > 0) signU = 1.;
+    QoI[m] = 0. - b * signU * log(1. - 2. * fabs(U)) ;
 
 //     std::cout << "QoI[" << m << "]=" << QoI[m] << std::endl;
 
@@ -113,7 +115,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     meanQoI = 0.;
     unsigned meanCounter = 0;
     for(unsigned m = 0; m < M; m++) {
-      if(QoI[m] < 3. && QoI[m] > - 1.5) {
+      if(QoI[m] < endPoint && QoI[m] > startPoint) {
         meanQoI += QoI[m];
         meanCounter++;
       }
@@ -126,7 +128,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     varianceQoI = 0;
     unsigned varianceCounter = 0;
     for(unsigned m = 0; m < M; m++) {
-       if(QoI[m] < 3. && QoI[m] > - 1.5) {
+      if(QoI[m] < endPoint && QoI[m] > startPoint) {
         varianceQoI += (QoI[m] - meanQoI) * (QoI[m] - meanQoI);
         varianceCounter++;
       }
@@ -138,8 +140,6 @@ void GetStochasticData(std::vector <double>& QoI) {
 
     int pdfHistogramSize = static_cast <int>(1. + 3.3 * log(M));
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
-    double startPoint = - 1.5;
-    double endPoint = 3.;
     double lengthOfTheInterval = fabs(endPoint - startPoint);
     double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
 
@@ -147,6 +147,7 @@ void GetStochasticData(std::vector <double>& QoI) {
     //BEGIN standardization of QoI before computing the moments
     for(unsigned m = 0; m < M; m++) {
       QoIStandardized[m] = (QoI[m] - meanQoI) / stdDeviationQoI ;
+//          QoIStandardized[m] = QoI[m] ;
 //       std::cout << "standardized QoI " << QoIStandardized[m] << std::endl;
 
       //BEGIN estimation of the PDF
@@ -167,15 +168,22 @@ void GetStochasticData(std::vector <double>& QoI) {
       //END
     }
     //END
+    
+    double pdfIntegral = 0;
+    for(unsigned i = 0; i < pdfHistogramSize; i++) {
+      pdfIntegral += pdfHistogram[i] * deltat;
+    }
 
 
     //BEGIN histogram check
     double checkHistogram = 0;
     for(unsigned i = 0; i < pdfHistogramSize; i++) {
       double point = startPoint + i * deltat;
-      pdfHistogram[i] /= M;
+      double pdfCheck = pdfHistogram[i]/M;
+      pdfHistogram[i] /= pdfIntegral;
       std::cout << point << "  " << pdfHistogram[i]  << std::endl;
-      checkHistogram += pdfHistogram[i];
+//       std::cout << "{" << point << "," << pdfHistogram[i]  << "}," << std::endl;
+      checkHistogram += pdfCheck;
     }
     std::cout << "checkHistogram = " << checkHistogram << std::endl;
     //END
@@ -188,7 +196,7 @@ void GetStochasticData(std::vector <double>& QoI) {
       momentsStandardized[p] = 0.;
       unsigned momentsCounter = 0;
       for(unsigned m = 0; m < M; m++) {
-              if(QoI[m] < 3. && QoI[m] > - 1.5) {
+        if(QoI[m] < endPoint && QoI[m] > startPoint) {
           moments[p] += pow(QoI[m], p + 1);
           momentsStandardized[p] += pow(QoIStandardized[m], p + 1);
           momentsCounter++;
@@ -320,8 +328,8 @@ void PlotStochasticData() {
   double d10gaussian;
   double d12gaussian;
 
-  double t = - 1.5;
-  double dt = (4.5) / 500.;
+  double t = startPoint;
+  double dt = (fabs(endPoint - startPoint)) / 500.;
 
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
@@ -413,8 +421,8 @@ void PlotStochasticData() {
     t += dt;
   }
 
-   t = - 1.5;
-   dt = (4.5) / 500.;
+  t = startPoint;
+  dt = (fabs(endPoint - startPoint)) / 500.;
 
   //BEGIN EDGEWORTH PRINT
   std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
