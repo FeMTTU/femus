@@ -121,18 +121,6 @@ int main ( int argc, char** args ) {
 
   mlSol.Initialize ( "All" );
 
-
-//   mlSol.Initialize("h0",InitalValueH0);
-//   mlSol.Initialize("T0",InitalValueT0);
-//   if(NumberOfLayers > 1){
-//     mlSol.Initialize("h1",InitalValueH1);
-//     mlSol.Initialize("T1",InitalValueT1);
-//     if(NumberOfLayers > 2){
-//       mlSol.Initialize("h2",InitalValueH2);
-//       mlSol.Initialize("T2",InitalValueT2);
-//     }
-//   }
-
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "v%d", i );
