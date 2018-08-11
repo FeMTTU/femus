@@ -36,8 +36,8 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 unsigned M = 1000000;
-double startPoint = - 8.;
-double endPoint = 8.;
+double startPoint = 0.3678 + 0.051253826666667 * 0.5;
+double endPoint = 2.7;
 
 //FOR NORMAL DISTRIBUTION
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -70,19 +70,19 @@ int main(int argc, char** argv) {
     double U = var_unif1();
 //     QoI[m] = var * var * var;
 //     QoI[m] = exp(var);
-//     QoI[m] = exp(varunif);
+    QoI[m] = exp(varunif);
 
     //exp of truncated gaussian
 //     if(fabs(var) <= 1.) {
-//       QoI[m] = exp( var / (0.5 * ((1. + erf((1. / 0.3) / sqrt(2))) - (1. + erf((- 1. / 0.3) / sqrt(2))))) );    //truncated Gaussian
+//       QoI[m] = var / (0.5 * ((1. + erf((1. / 0.3) / sqrt(2))) - (1. + erf((- 1. / 0.3) / sqrt(2))))) ;    //truncated Gaussian
 //     }
-//     else QoI[m] = 1.;
+//     else QoI[m] = 0.;
 
     //laplace distribution
-    double signU = 0.;
-    if(U < 0) signU = - 1.;
-    else if(U > 0) signU = 1.;
-    QoI[m] = 0. - b * signU * log(1. - 2. * fabs(U)) ;
+//     double signU = 0.;
+//     if(U < 0) signU = - 1.;
+//     else if(U > 0) signU = 1.;
+//     QoI[m] = 0. - b * signU * log(1. - 2. * fabs(U)) ;
 
 //     std::cout << "QoI[" << m << "]=" << QoI[m] << std::endl;
 
@@ -146,8 +146,8 @@ void GetStochasticData(std::vector <double>& QoI) {
     std::vector < double > QoIStandardized(M, 0.);
     //BEGIN standardization of QoI before computing the moments
     for(unsigned m = 0; m < M; m++) {
-      QoIStandardized[m] = (QoI[m] - meanQoI) / stdDeviationQoI ;
-//          QoIStandardized[m] = QoI[m] ;
+//       QoIStandardized[m] = (QoI[m] - meanQoI) / stdDeviationQoI ;
+         QoIStandardized[m] = QoI[m] ;
 //       std::cout << "standardized QoI " << QoIStandardized[m] << std::endl;
 
       //BEGIN estimation of the PDF

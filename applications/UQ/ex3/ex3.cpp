@@ -44,6 +44,8 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
+double startPoint = - 5.5;  //- 9.5;
+double endPoint = 5.5;  //9.5;
 
 double L = 0.1 ; // correlation length of the covariance function
 //END
@@ -960,8 +962,6 @@ void GetStochasticData(std::vector <double>& alphas) {
     unsigned numberOfSamples = 100000;
     int pdfHistogramSize = static_cast <int>(1. + 3.3 * log(numberOfSamples));
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
-    double startPoint = - 5.5;  //- 9.5;
-    double endPoint = 5.5;  //9.5;
     double lengthOfTheInterval = fabs(endPoint - startPoint);
     double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
     boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
@@ -1017,7 +1017,7 @@ void GetStochasticData(std::vector <double>& alphas) {
       momentsStandardizedMonteCarlo[p] = 0.;
       unsigned momentsCounter = 0;
       for(unsigned m = 0; m < numberOfSamples; m++) {
-        if(fabs(sgmQoI[m]) <= 5.5) {
+        if(sgmQoI[m] < endPoint && sgmQoI[m] > startPoint) {
           momentsMonteCarlo[p] += pow(sgmQoI[m], p + 1);
           momentsStandardizedMonteCarlo[p] += pow(sgmQoIStandardized[m], p + 1);
           momentsCounter++;
@@ -1027,7 +1027,7 @@ void GetStochasticData(std::vector <double>& alphas) {
       momentsStandardizedMonteCarlo[p] /= momentsCounter;
 
     }
-    std::cout.precision(14);
+    std::cout.precision(10);
     std::cout << "Standardized Monte Carlo Moments" << std::endl;
     for(unsigned p = 0; p < totMoments; p++) {
       std::cout << " & " << momentsStandardizedMonteCarlo[p] << "  ";
@@ -1043,12 +1043,20 @@ void GetStochasticData(std::vector <double>& alphas) {
     //END
 
 
+    double pdfIntegral = 0;
+    for(unsigned i = 0; i < pdfHistogramSize; i++) {
+      pdfIntegral += pdfHistogram[i] * deltat;
+    }
+
+
     //BEGIN histogram check
     double checkHistogram = 0;
     for(unsigned i = 0; i < pdfHistogramSize; i++) {
       double point = startPoint + i * deltat;
-      pdfHistogram[i] /= numberOfSamples;
+      double pdfCheck = pdfHistogram[i] / numberOfSamples;
+      pdfHistogram[i] /= pdfIntegral;
       std::cout << point << "  " << pdfHistogram[i]  << std::endl;
+      //       std::cout << "{" << point << "," << pdfHistogram[i]  << "}," << std::endl;
       checkHistogram += pdfHistogram[i];
     }
     std::cout << "checkHistogram = " << checkHistogram << std::endl;
@@ -1175,8 +1183,8 @@ void PlotStochasticData() {
   double d10gaussian;
   double d12gaussian;
 
-  double t = - 5.5;
-  double dt = (11.) / 300.;
+  double t = startPoint;
+  double dt = (fabs(endPoint - startPoint)) / 300.;
 
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
@@ -1270,8 +1278,8 @@ void PlotStochasticData() {
     t += dt;
   }
 
-  t = -  5.5;
-  dt = (11.) / 300.;
+  t =  startPoint;
+  dt =  (fabs(endPoint - startPoint)) / 300.;
 
   //BEGIN EDGEWORTH PRINT
   std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
