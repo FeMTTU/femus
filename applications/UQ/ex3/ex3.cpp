@@ -44,8 +44,8 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-double startPoint = - 5.5;  //- 9.5;
-double endPoint = 5.5;  //9.5;
+double startPoint = - 3.5;  
+double endPoint = 3.5; 
 
 double L = 0.1 ; // correlation length of the covariance function
 //END
@@ -1057,7 +1057,7 @@ void GetStochasticData(std::vector <double>& alphas) {
       pdfHistogram[i] /= pdfIntegral;
       std::cout << point << "  " << pdfHistogram[i]  << std::endl;
       //       std::cout << "{" << point << "," << pdfHistogram[i]  << "}," << std::endl;
-      checkHistogram += pdfHistogram[i];
+      checkHistogram += pdfCheck;
     }
     std::cout << "checkHistogram = " << checkHistogram << std::endl;
     //END
