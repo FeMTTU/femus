@@ -44,8 +44,8 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-double startPoint = - 3.5;
-double endPoint = 3.5;
+double startPoint = - 3.8;
+double endPoint = 3.8;
 unsigned M = 100000; //number of samples for the Monte Carlo
 //END
 
@@ -1010,7 +1010,7 @@ void GetStochasticData(std::vector <double>& QoI) {
 
 void PlotStochasticData() {
 
-  std::cout.precision(14);
+  std::cout.precision(10);
   std::cout << " the number of MC samples is " << M << std::endl;
   std::cout << " the mean is " << meanQoI << std::endl;
   std::cout << " the standard deviation is " << sqrt(varianceQoI) << std::endl;
