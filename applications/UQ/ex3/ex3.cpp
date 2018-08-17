@@ -44,8 +44,10 @@ std::vector <double> cumulantsStandardized(totMoments, 0.); //initialization
 double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
-double startPoint = - 3.8;  
-double endPoint = 3.8; 
+double startPoint = - 2.5;  
+double endPoint = 5.0; 
+double deltat;
+int pdfHistogramSize;
 
 double L = 0.1 ; // correlation length of the covariance function
 //END
@@ -960,10 +962,10 @@ void GetStochasticData(std::vector <double>& alphas) {
 
     //BEGIN estimation of the PDF
     unsigned numberOfSamples = 100000;
-    int pdfHistogramSize = static_cast <int>(1. + 3.3 * log(numberOfSamples));
+    pdfHistogramSize = static_cast <int>(1. + 3.3 * log(numberOfSamples));
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
     double lengthOfTheInterval = fabs(endPoint - startPoint);
-    double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
+    deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
     boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
     boost::normal_distribution<> nd(0., 1.);
     boost::variate_generator < boost::mt19937&,
@@ -1183,14 +1185,12 @@ void PlotStochasticData() {
   double d10gaussian;
   double d12gaussian;
 
-  double t = startPoint;
-  double dt = (fabs(endPoint - startPoint)) / 300.;
-
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
   //BEGIN GRAM CHARLIER PRINT
   std::cout << " ------------------------- GRAM CHARLIER ------------------------- " << std::endl;
-  for(unsigned i = 0; i <= 300; i++) {
+  for(unsigned i = 0; i < pdfHistogramSize; i++) {
+    double t = startPoint + i * deltat;
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
@@ -1275,15 +1275,14 @@ void PlotStochasticData() {
       }
     }
 
-    t += dt;
   }
-
-  t =  startPoint;
-  dt =  (fabs(endPoint - startPoint)) / 300.;
 
   //BEGIN EDGEWORTH PRINT
   std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
-  for(unsigned i = 0; i <= 300; i++) {
+  for(unsigned i = 0; i < pdfHistogramSize; i++) {
+    
+    double t = startPoint + i * deltat;
+    
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
@@ -1339,7 +1338,6 @@ void PlotStochasticData() {
       }
     }
 
-    t += dt;
   }
   //END
 

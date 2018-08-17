@@ -47,6 +47,8 @@ double stdDeviationQoI = 0.; //initialization
 double startPoint = - 3.8;
 double endPoint = 3.8;
 unsigned M = 100000; //number of samples for the Monte Carlo
+double deltat;
+int pdfHistogramSize;
 //END
 
 unsigned numberOfUniformLevels = 4;
@@ -894,10 +896,10 @@ void GetStochasticData(std::vector <double>& QoI) {
     stdDeviationQoI = sqrt(varianceQoI);
     //END
 
-    int pdfHistogramSize = static_cast <int>(1. + 3.3 * log(M));;
+    pdfHistogramSize = static_cast <int>(1. + 3.3 * log(M));;
     std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
     double lengthOfTheInterval = fabs(endPoint - startPoint);
-    double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
+    deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
 
     std::vector < double > QoIStandardized(M, 0.);
     //BEGIN standardization of QoI before computing the moments
@@ -1069,14 +1071,12 @@ void PlotStochasticData() {
   double d10gaussian;
   double d12gaussian;
 
-  double t = startPoint;
-  double dt = (fabs(endPoint - startPoint)) / 300.;
-
 //   cumulants[0] = 0; //decomment for nonStdGaussian
 
   //BEGIN GRAM CHARLIER PRINT
   std::cout << " ------------------------- GRAM CHARLIER ------------------------- " << std::endl;
-  for(unsigned i = 0; i <= 300; i++) {
+  for(unsigned i = 0; i < pdfHistogramSize; i++) {
+    double t = startPoint + i * deltat;
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
@@ -1145,16 +1145,12 @@ void PlotStochasticData() {
         }
       }
     }
-
-    t += dt;
   }
-
-  t =  startPoint;
-  dt =  (fabs(endPoint - startPoint)) / 300.;
 
   //BEGIN EDGEWORTH PRINT
   std::cout << " ------------------------- EDGEWORTH ------------------------- " << std::endl;
-  for(unsigned i = 0; i <= 300; i++) {
+  for(unsigned i = 0; i < pdfHistogramSize; i++) {
+    double t = startPoint + i * deltat;
     std::cout << t << " ";
 //     double t = x - meanQoI; //decomment for nonStdGaussian
     double gaussian = 1. / (sqrt(2 * acos(- 1))) * exp(- 0.5 * (t * t)) ;
@@ -1209,8 +1205,6 @@ void PlotStochasticData() {
 
       }
     }
-
-    t += dt;
   }
   //END
 
