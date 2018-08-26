@@ -169,7 +169,7 @@ int main ( int argc, char** args ) {
 
   unsigned numberOfTimeSteps = 100; //17h=1020 with dt=60, 17h=10200 with dt=6
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
-//     system2.CopySolutionToOldSolution();
+    system.CopySolutionToOldSolution();
 //     dt = 60.;
     ETD ( ml_prob );
 //     dt = 60.;
@@ -361,46 +361,55 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     }
         
     for ( unsigned k = NLayers; k > 1; k-- ) {
-      w[k-1] = 0.1 * 0.5 * (zMidm[k-1]+zMidp[k-1]);
+      w[k-1] = - 0.1 * 0.5 * (zMidm[k-1]+zMidp[k-1]);
     }
     
 
     for ( unsigned k = 0; k < NLayers; k++ ) {
-      adept::adouble vMidm = 0.5 * ( solvm[k] + solv[k] );
-      adept::adouble fvm = 0.5 * vMidm * vMidm /*+ Pm[k]*/;
-      aResv[k] +=  fvm / dxm;
-
-      adept::adouble vMidp = 0.5 * ( solv[k] + solvp[k] );
-      adept::adouble fvp = 0.5 * vMidp * vMidp /*+ Pp[k]*/;
-      aResv[k] -=  fvp / dxp;
-
-      adept::adouble deltaZt = 0.;
-      adept::adouble deltaZb = 0.;
-      adept::adouble ht = 0.;
-      adept::adouble hb = 0.;
-      if ( k > 0 ) {
-        ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
-        deltaZt = ( solv[k - 1] - solv[k] ) / ht;
-        aResv[k] -= 0.5 * w[k] * deltaZt;
-      }
-      else {
-        ht = 0.5 * ( solhm[k] + solhp[k] );
-        deltaZt = 0.* ( 0. - solv[k] ) / ht;
-      }
+      aResv[k] += sin(solv[k]) /*- w[k]*solv[k]*/;    
+      
       if ( k < NLayers - 1 ) {
-        hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
-        deltaZb = ( solv[k] - solv[k + 1] ) / hb;
-        aResv[k] -= 0.5 * w[k + 1] * deltaZb;
+        aResv[k] += w[k + 1] * 0.5 * ( solv[k] + solv[k + 1] );
       }
-      else {
-        hb = 0.5 * ( solhm[k] + solhp[k] );
-        deltaZb = 0.* ( solv[k] - 0. ) / hb;
+      if ( k > 0 ) {
+        aResv[k] -= w[k] * 0.5 * ( solv[k - 1] + solv[k] );
       }
-
-      aResv[k] += ni_h * ( solvm[k] - solv[k] ) / ( dxm * 0.5 * ( dxm + dxp ) ); // horizontal diffusion
-      aResv[k] += ni_h * ( solvp[k] - solv[k] ) / ( dxp * 0.5 * ( dxm + dxp ) ); // horizontal diffusion
-
-      aResv[k] += ni_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
+      
+//       adept::adouble vMidm = 0.5 * ( solvm[k] + solv[k] );
+//       adept::adouble fvm = 0.5 * vMidm * vMidm /*+ Pm[k]*/;
+//       aResv[k] +=  fvm / dxm;
+// 
+//       adept::adouble vMidp = 0.5 * ( solv[k] + solvp[k] );
+//       adept::adouble fvp = 0.5 * vMidp * vMidp /*+ Pp[k]*/;
+//       aResv[k] -=  fvp / dxp;
+// 
+//       adept::adouble deltaZt = 0.;
+//       adept::adouble deltaZb = 0.;
+//       adept::adouble ht = 0.;
+//       adept::adouble hb = 0.;
+//       if ( k > 0 ) {
+//         ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+//         deltaZt = ( solv[k - 1] - solv[k] ) / ht;
+//         aResv[k] -= 0.5 * w[k] * deltaZt;
+//       }
+//       else {
+//         ht = 0.5 * ( solhm[k] + solhp[k] );
+//         deltaZt = 0.* ( 0. - solv[k] ) / ht;
+//       }
+//       if ( k < NLayers - 1 ) {
+//         hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+//         deltaZb = ( solv[k] - solv[k + 1] ) / hb;
+//         aResv[k] -= 0.5 * w[k + 1] * deltaZb;
+//       }
+//       else {
+//         hb = 0.5 * ( solhm[k] + solhp[k] );
+//         deltaZb = 0.* ( solv[k] - 0. ) / hb;
+//       }
+//       
+//       aResv[k] += ni_h * ( solvm[k] - solv[k] ) / ( dxm * 0.5 * ( dxm + dxp ) ); // horizontal diffusion
+//       aResv[k] += ni_h * ( solvp[k] - solv[k] ) / ( dxp * 0.5 * ( dxm + dxp ) ); // horizontal diffusion
+// 
+//       aResv[k] += ni_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
     }
 
     vector< double > Res ( NLayers ); // local redidual vector
