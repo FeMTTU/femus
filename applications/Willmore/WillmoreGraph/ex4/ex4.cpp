@@ -322,47 +322,47 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
 
       
       if(linear == 1){
-	// *** phi_i loop ***
-	for (unsigned i = 0; i < nDofs; i++) {
+        // *** phi_i loop ***
+        for (unsigned i = 0; i < nDofs; i++) {
 
-	  adept::adouble LinearLaplaceU = 0.;
-	  adept::adouble LinearLaplaceW = 0.;
+          adept::adouble LinearLaplaceU = 0.;
+          adept::adouble LinearLaplaceW = 0.;
 
-	  for (unsigned idim = 0; idim < dim; idim++) {
+          for (unsigned idim = 0; idim < dim; idim++) {
 
-	    LinearLaplaceU +=  soluGauss_x[idim] * phi_x[i * dim + idim];
+            LinearLaplaceU +=  soluGauss_x[idim] * phi_x[i * dim + idim];
 
-	    LinearLaplaceW +=  solWGauss_x[idim] * phi_x[i * dim + idim];;
+            LinearLaplaceW +=  solWGauss_x[idim] * phi_x[i * dim + idim];;
 
-	  }
+          }
 
-	  aResu[i] += LinearLaplaceU * weight;
-	  aResW[i] += LinearLaplaceW * weight;
-	
-	}	
+          aResu[i] += LinearLaplaceU * weight;
+          aResW[i] += LinearLaplaceW * weight;
+        
+        }        
       }
       else{
-	      
-	// *** phi_i loop ***
-	for (unsigned i = 0; i < nDofs; i++) {
+              
+        // *** phi_i loop ***
+        for (unsigned i = 0; i < nDofs; i++) {
 
-	  adept::adouble nonLinearLaplaceU = 0.;
-	  adept::adouble nonLinearLaplaceW = 0.;
+          adept::adouble nonLinearLaplaceU = 0.;
+          adept::adouble nonLinearLaplaceW = 0.;
 
-	  for (unsigned idim = 0; idim < dim; idim++) {
+          for (unsigned idim = 0; idim < dim; idim++) {
 
-	    nonLinearLaplaceU +=  - 1. / A  * soluGauss_x[idim] * phi_x[i * dim + idim];
+            nonLinearLaplaceU +=  - 1. / A  * soluGauss_x[idim] * phi_x[i * dim + idim];
 
-	    nonLinearLaplaceW +=   -1. / A * ((B[idim][0] * solWGauss_x[0] +
-					       B[idim][1] * solWGauss_x[1])
-					      - (solWGauss * solWGauss / A2 + c) *
+            nonLinearLaplaceW +=   -1. / A * ((B[idim][0] * solWGauss_x[0] +
+                                               B[idim][1] * solWGauss_x[1])
+                                              - (solWGauss * solWGauss / A2 + c) *
                                                 soluGauss_x[idim]) * phi_x[i * dim + idim];
 
-	  }
+          }
 
-	  aResu[i] += (2.*solWGauss / A * phi[i] - nonLinearLaplaceU) * weight;
-	  aResW[i] += nonLinearLaplaceW * weight;
-	}
+          aResu[i] += (2.*solWGauss / A * phi[i] - nonLinearLaplaceU) * weight;
+          aResW[i] += nonLinearLaplaceW * weight;
+        }
       } // end phi_i loop
     } // end gauss point loop
 
