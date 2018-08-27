@@ -104,6 +104,10 @@ public:
 
     /** Get the index of the Solution "solname" for this system */
     unsigned GetSolPdeIndex(const char solname[]);
+    
+    vector <unsigned> & GetSolPdeIndex(){
+      return _SolSystemPdeIndex;
+    }
 
     /** Get MultiLevelProblem */
     const MultiLevelProblem &  GetMLProb() const { return _equation_systems; }
@@ -140,9 +144,6 @@ protected:
 
     /** Number of Levels */
     unsigned _gridn;
-
-    /** Number of Totally Refined Levels */
-    unsigned _gridr;
 
     unsigned _levelToAssemble;
 

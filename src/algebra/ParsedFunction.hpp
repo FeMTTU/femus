@@ -29,40 +29,40 @@ PURPOSE.  See the above copyright notice for more information.
 
 namespace femus {
 
-class ParsedFunction : public FunctionBase {
+  class ParsedFunction : public FunctionBase {
 
-public:
+    public:
 
-    /** Constructor */
-    ParsedFunction();
+      /** Constructor */
+      ParsedFunction();
 
-    ParsedFunction(std::string expression, std::string independent_variables);
+      ParsedFunction(std::string expression, std::string independent_variables);
 
-    /** Destructor */
-    ~ParsedFunction() {};
+      /** Destructor */
+      ~ParsedFunction() {};
 
-    /** set the epression of the mathematical function */
-    void SetExpression(const std::string expression);
+      /** set the epression of the mathematical function */
+      void SetExpression(const std::string expression);
 
-    /** Set the independent_variables of the mathematical function */
-    void SetIndependentVariables(const std::string independent_variables);
+      /** Set the independent_variables of the mathematical function */
+      void SetIndependentVariables(const std::string independent_variables);
 
-    /** Parse the expression */
-    void Parse();
+      /** Parse the expression */
+      void Parse();
 
-    virtual double operator() (double* x)
-    {
+      virtual double operator()(double* x)
+      {
         return _pfunc.Eval(x);
-    }
+      }
 
-private:
+    private:
 
-    FunctionParserBase<double> _pfunc;
-    std::string _independent_variables;
-    std::string _expression;
+      FunctionParserBase<double> _pfunc;
+      std::string _independent_variables;
+      std::string _expression;
 
 
-};
+  };
 
 }
 
@@ -70,31 +70,32 @@ private:
 
 namespace femus {
 
-class ParsedFunction : public FunctionBase
+  class ParsedFunction : public FunctionBase
 
-{
+  {
 
-public:
+    public:
 
-    /** constructors */
-    ParsedFunction() : _dummy(0) {};
+      /** constructors */
+      ParsedFunction(){};
 
-    
-    ParsedFunction(std::string expression, std::string independent_variables) {};
+      ParsedFunction(std::string expression, std::string independent_variables) {
+        std::cout << "Error, fparser library has not been found" << std::endl;
+        std::cout << "Install libfparser-4.5.1, or later" << std::endl;
+        abort();
+      };
 
-    /** Destructor */
-    ~ParsedFunction() {};
+      /** Destructor */
+      ~ParsedFunction() {};
 
-    /** () operator */
-    virtual double operator() (double* x)
-    {
-        return _dummy;
-    }
-
-private:
-    double _dummy;
-
-};
+      /** () operator */
+      virtual double operator()(double* x)
+      {
+        std::cout << "Error, fparser library has not been found" << std::endl;
+        std::cout << "Install libfparser-4.5.1, or later" << std::endl;
+        abort();
+      }
+  };
 
 }
 

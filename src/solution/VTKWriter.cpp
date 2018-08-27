@@ -32,8 +32,8 @@
 namespace femus {
 
 
-  short unsigned int VTKWriter::femusToVtkCellType[3][6] = {{12, 10, 13, 9, 5, 3}, {25, 24, 26, 23, 22, 21}, {29, 24, 32, 28, 22, 21}};
-
+  short unsigned int VTKWriter::femusToVtkCellType[3][6] = {{12, 10, 13, 9, 5, 3}, {25, 24, 26, 23, 22, 21}, {29, 24, 32, 28, 34, 21}};
+  //http://www.vtk.org/doc/nightly/html/vtkCellType_8h.html#ab1d6fd1f3177b8a2a32bb018807151f8aff535f3b1a33b5e51d1ef1e3aed69447
 
   VTKWriter::VTKWriter( MultiLevelSolution* ml_sol ): Writer( ml_sol ) {
     _debugOutput = false;
@@ -43,7 +43,7 @@ namespace femus {
     _debugOutput = false;
   }
 
-  VTKWriter::~VTKWriter() {}
+  VTKWriter::~VTKWriter(){}
 
 
   void VTKWriter::Write( const std::string output_path, const char order[], const std::vector < std::string >& vars, const unsigned time_step ) {
@@ -115,8 +115,6 @@ namespace femus {
     unsigned nvt = mesh->_ownSize[index][_iproc];
 
     // count the ghost node dofs and the own element dofs element on all levels
-    unsigned gridOffset = 0;
-
     unsigned ghostMapCounter = 0;
     map < unsigned, unsigned > ghostMap;
     unsigned counter = 0;
@@ -129,7 +127,7 @@ namespace femus {
       for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
         counter++;
         unsigned jdof = mesh->GetSolutionDof( j, iel, index );
-        if( jdof < dofOffset ) { // check if jnodeMetis is a ghost node
+        if( jdof < dofOffset ) { // check if jdof is a ghost node
           if( ghostMap.find( jdof ) == ghostMap.end() ) {
             ghostMap[jdof] = ghostMapCounter;
             ghostMapCounter++;
@@ -138,17 +136,16 @@ namespace femus {
       }
     }
 
-
     unsigned nvtOwned = nvt;
     nvt += ghostMap.size(); // total node dofs (own + ghost)
 
-    const unsigned dim_array_coord [] = { nvt * 3 * sizeof( float ) };
-    const unsigned dim_array_conn[]   = { counter * sizeof( int ) };
-    const unsigned dim_array_off []   = { nel * sizeof( int ) };
-    const unsigned dim_array_type []  = { nel * sizeof( short unsigned ) };
-    const unsigned dim_array_reg []   = { nel * sizeof( short unsigned ) };
-    const unsigned dim_array_elvar [] = { nel * sizeof( float ) };
-    const unsigned dim_array_ndvar [] = { nvt * sizeof( float ) };
+    const unsigned dim_array_coord [] = { nvt * 3 * static_cast<unsigned>(sizeof( float )) };
+    const unsigned dim_array_conn[]   = { counter * static_cast<unsigned>(sizeof( int )) };
+    const unsigned dim_array_off []   = { nel * static_cast<unsigned>(sizeof( int )) };
+    const unsigned dim_array_type []  = { nel * static_cast<unsigned>(sizeof( short unsigned )) };
+    const unsigned dim_array_reg []   = { nel * static_cast<unsigned>(sizeof( short unsigned )) };
+    const unsigned dim_array_elvar [] = { nel * static_cast<unsigned>(sizeof( float )) };
+    const unsigned dim_array_ndvar [] = { nvt * static_cast<unsigned>(sizeof( float )) };
 
     // initialize common buffer_void memory
     unsigned buffer_size = ( dim_array_coord[0] > dim_array_conn[0] ) ? dim_array_coord[0] : dim_array_conn[0];
@@ -279,7 +276,7 @@ namespace femus {
     icount = 0;
     for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
       for( unsigned j = 0; j < mesh->GetElementDofNumber( iel, index ); j++ ) {
-        unsigned loc_vtk_conn = FemusToVTKorToXDMFConn[j];
+        unsigned loc_vtk_conn = (mesh->GetElementType( iel ) == 0)? FemusToVTKorToXDMFConn[j] : j;
         unsigned jdof = mesh->GetSolutionDof( loc_vtk_conn, iel, index );
         var_conn[icount] = ( jdof >= dofOffset ) ? jdof - dofOffset : nvtOwned + ghostMap[jdof];
         icount++;
@@ -411,7 +408,7 @@ namespace femus {
 
     //-------------------------------------------MATERIAL---------------------------------------------------------
 
-    NumericVector& material =  mesh->_topology->GetSolutionName( "Material" );
+    //NumericVector& material =  mesh->_topology->GetSolutionName( "Material" );
 
     fout  << "        <DataArray type=\"Float32\" Name=\"" << "Material" << "\" format=\"binary\">" << std::endl;
     Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Material" << "\" format=\"binary\"/>" << std::endl;
@@ -419,8 +416,7 @@ namespace femus {
     float* var_el = static_cast< float*>( buffer_void );
     icount = 0;
     for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      unsigned iel_Metis = mesh->GetSolutionDof( 0, iel, 3 );
-      var_el[icount] = ( material )( iel_Metis );
+      var_el[icount] = mesh->GetElementMaterial(iel); 
       icount++;
     }
 
@@ -439,7 +435,7 @@ namespace femus {
 
     //------------------------------------------------------GROUP-----------------------------------------------------------
 
-    NumericVector& group =  mesh->_topology->GetSolutionName( "Group" );
+    //NumericVector& group =  mesh->_topology->GetSolutionName( "Group" );
 
     fout  << "        <DataArray type=\"Float32\" Name=\"" << "Group" << "\" format=\"binary\">" << std::endl;
     Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Group" << "\" format=\"binary\"/>" << std::endl;
@@ -447,8 +443,7 @@ namespace femus {
     var_el = static_cast< float*>( buffer_void );
     icount = 0;
     for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      unsigned iel_Metis = mesh->GetSolutionDof( 0, iel, 3 );
-      var_el[icount] = ( group )( iel_Metis );
+      var_el[icount] = mesh->GetElementGroup(iel);
       icount++;
     }
     //print solution on element dimension
@@ -465,7 +460,7 @@ namespace femus {
     fout << "        </DataArray>" << std::endl;
 
     //-------------------------------------------------------TYPE--------------------------------------------------
-    NumericVector& type =  mesh->_topology->GetSolutionName( "Type" );
+   // NumericVector& type =  mesh->_topology->GetSolutionName( "Type" );
 
     fout  << "        <DataArray type=\"Float32\" Name=\"" << "TYPE" << "\" format=\"binary\">" << std::endl;
     Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "TYPE" << "\" format=\"binary\"/>" << std::endl;
@@ -473,8 +468,7 @@ namespace femus {
     var_el = static_cast< float*>( buffer_void );
     icount = 0;
     for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
-      unsigned iel_Metis = mesh->GetSolutionDof( 0, iel, 3 );
-      var_el[icount] = ( type )( iel_Metis );
+      var_el[icount] = mesh->GetElementType(iel);
       icount++;
     }
     //print solution on element dimension
@@ -490,6 +484,31 @@ namespace femus {
     fout << std::endl;
     fout << "        </DataArray>" << std::endl;
 
+    
+    //-------------------------------------------------------TYPE--------------------------------------------------
+    fout  << "      <DataArray type=\"Float32\" Name=\"" << "Level" << "\" format=\"binary\">" << std::endl;
+    Pfout << "      <PDataArray type=\"Float32\" Name=\"" << "Level" << "\" format=\"binary\"/>" << std::endl;
+    // point pointer to common memory area buffer of void type;
+    var_el = static_cast< float*>( buffer_void );
+    icount = 0;
+    for( int iel = elemetOffset; iel < elemetOffsetp1; iel++ ) {
+      var_el[icount] = mesh->el->GetElementLevel(iel);
+      icount++;
+    }
+    //print solution on element dimension
+    cch = b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), NULL, 0 );
+    b64::b64_encode( &dim_array_elvar[0], sizeof( dim_array_elvar ), &enc[0], cch );
+    pt_char = &enc[0];
+    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
+    //print solution on element array
+    cch = b64::b64_encode( &var_el[0], dim_array_elvar[0] , NULL, 0 );
+    b64::b64_encode( &var_el[0], dim_array_elvar[0], &enc[0], cch );
+    pt_char = &enc[0];
+    for( unsigned i = 0; i < cch; i++, pt_char++ ) fout << *pt_char;
+    fout << std::endl;
+    fout << "        </DataArray>" << std::endl;
+    
+    
     //END SARA&GIACOMO
 
     if( _ml_sol == NULL ) {
@@ -610,7 +629,7 @@ namespace femus {
             unsigned offset_ig = nvtOwned;
 
             for( std::map <unsigned, unsigned>::iterator it = ghostMap.begin(); it != ghostMap.end(); ++it ) {
-              var_nd[ offset_ig + it->second ] = ( *mysol )( it->first - gridOffset );
+              var_nd[ offset_ig + it->second ] = ( *mysol )( it->first );
             }
 
             cch = b64::b64_encode( &var_nd[0], dim_array_ndvar [0], NULL, 0 );

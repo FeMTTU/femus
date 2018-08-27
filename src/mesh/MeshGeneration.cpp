@@ -30,25 +30,29 @@
 
 
 
-namespace femus {
+namespace femus
+{
 
 
-namespace MeshTools {
-  namespace Generation {
-    namespace Private {
+  namespace MeshTools
+  {
+    namespace Generation
+    {
+      namespace Private
+      {
 
-      /**
-       * A useful inline function which replaces the #defines
-       * used previously.  Not private since this is a namespace,
-       * but would be if this were a class.  The first one returns
-       * the proper node number for 2D elements while the second
-       * one returns the node number for 3D elements.
-       */
-       inline
-       unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int i, const unsigned int j) {
+        /**
+         * A useful inline function which replaces the #defines
+         * used previously.  Not private since this is a namespace,
+         * but would be if this were a class.  The first one returns
+         * the proper node number for 2D elements while the second
+         * one returns the node number for 3D elements.
+         */
+        inline
+        unsigned int idx(const ElemType type, const unsigned int nx, const unsigned int i, const unsigned int j)
+        {
 
-          switch(type)
-	  {
+          switch(type) {
 // 	  case INVALID_ELEM:
 // 	  case QUAD4:
 // 	  case TRI3:
@@ -58,35 +62,32 @@ namespace MeshTools {
 // 	    }
 //
 // 	  case QUAD8:
-	  case QUAD9:
- 	  case TRI6:
-	    {
-	      return i + j*(2*nx+1);
-	      break;
-	    }
+            case QUAD9:
+            case TRI6: {
+                return i + j * (2 * nx + 1);
+                break;
+              }
 
-	  default:
-	    {
-	      std::cout << "ERROR: Unrecognized or Not Supported 2D element type." << std::endl;
-	      exit(1);
-	    }
-	  }
+            default: {
+                std::cout << "ERROR: Unrecognized or Not Supported 2D element type." << std::endl;
+                exit(1);
+              }
+          }
 
-	return -1; // invalid_uint
-}
+          return -1; // invalid_uint
+        }
 
 
-      // Same as the function above, but for 3D elements
-      inline
-      unsigned int idx(const ElemType type,
-		       const unsigned int nx,
-		       const unsigned int ny,
-		       const unsigned int i,
-		       const unsigned int j,
-		       const unsigned int k)
-      {
-	switch(type)
-	  {
+        // Same as the function above, but for 3D elements
+        inline
+        unsigned int idx(const ElemType type,
+                         const unsigned int nx,
+                         const unsigned int ny,
+                         const unsigned int i,
+                         const unsigned int j,
+                         const unsigned int k)
+        {
+          switch(type) {
 // 	  case INVALID_ELEM:
 // 	  case HEX8:
 // 	  case PRISM6:
@@ -96,99 +97,94 @@ namespace MeshTools {
 // 	    }
 
 // 	  case HEX20:
-	  case HEX27:
+            case HEX27:
 // 	  case TET4:  // TET4's are created from an initial HEX27 discretization
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
 // 	  case PRISM15:
 // 	  case PRISM18:
-	    {
-	      return i + (2*nx+1)*(j + k*(2*ny+1));
-	      break;
-	    }
+              {
+                return i + (2 * nx + 1) * (j + k * (2 * ny + 1));
+                break;
+              }
 
-	  default:
-	    {
-	      std::cout << "ERROR: Unrecognized element type." << std::endl;
-	      exit(1);
-	    }
-	  }
+            default: {
+                std::cout << "ERROR: Unrecognized element type." << std::endl;
+                exit(1);
+              }
+          }
 
-	return -1;
-  }
-}
+          return -1;
+        }
+      }
 
 // ------------------------------------------------------------
 // MeshTools::Generation function for mesh generation
-void BuildBox(      Mesh& mesh,
-		      vector < vector < double> > &vt,
-                      const unsigned int nx,
-	              const unsigned int ny,
-	              const unsigned int nz,
-		      const double xmin, const double xmax,
-		      const double ymin, const double ymax,
-		      const double zmin, const double zmax,
-		      const ElemType type,
-		      std::vector<bool> &type_elem_flag) {
+      void BuildBox(Mesh& mesh,
+                    vector < vector < double> >& vt,
+                    const unsigned int nx,
+                    const unsigned int ny,
+                    const unsigned int nz,
+                    const double xmin, const double xmax,
+                    const double ymin, const double ymax,
+                    const double zmin, const double zmax,
+                    const ElemType type,
+                    std::vector<bool>& type_elem_flag)
+      {
 
-  using namespace MeshTools::Generation::Private;
+        using namespace MeshTools::Generation::Private;
 
-  // Clear the mesh and start from scratch
-  //mesh.clear(); // to be added
+        // Clear the mesh and start from scratch
+        //mesh.clear(); // to be added
 
 //   vector <vector <double> > vt;
 //   vt.resize(3);
 
 //   mesh.SetGridNumber(0);
 
-  if (nz != 0)
-    mesh.SetDimension(3);
-  else if (ny != 0)
-    mesh.SetDimension(2);
-  else if (nx != 0)
-    mesh.SetDimension(1);
-  else
-    mesh.SetDimension(0);
+        if(nz != 0)
+          mesh.SetDimension(3);
+        else if(ny != 0)
+          mesh.SetDimension(2);
+        else if(nx != 0)
+          mesh.SetDimension(1);
+        else
+          mesh.SetDimension(0);
 
-  unsigned ngroup;
-  unsigned nbcd;
+        unsigned ngroup;
+        unsigned nbcd;
 
-   switch (mesh.GetDimension())
-     {
+        switch(mesh.GetDimension()) {
 
-      //---------------------------------------------------------------------
-       // Build a 1D line
-     case 1:
-       {
-        assert(nx!=0);
-	assert(ny==0);
-	assert(nz==0);
-	assert(xmin<xmax);
+            //---------------------------------------------------------------------
+            // Build a 1D line
+          case 1: {
+              assert(nx != 0);
+              assert(ny == 0);
+              assert(nz == 0);
+              assert(xmin < xmax);
 
-         // Reserve elements
-         switch (type)
-         {
+              // Reserve elements
+              switch(type) {
 //           case INVALID_ELEM:
 //           case EDGE2:
-           case EDGE3:
+                case EDGE3:
 //           case EDGE4:
-             {
-	       mesh.SetNumberOfElements(nx);
+                  {
+                    mesh.SetNumberOfElements(nx);
 
-	       ngroup = 1;
-	       nbcd   = 2;
- 	       break;
-             }
+                    ngroup = 1;
+                    nbcd   = 2;
+                    break;
+                  }
 //
-            default:
-            {
- 	      std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
- 	    }
- 	  }
+                default: {
+                    std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
+                  }
+              }
 
-         // Reserve nodes
-         switch (type)
-           {
+              // Reserve nodes
+              switch(type) {
 //           case INVALID_ELEM:
 //           case EDGE2:
 //             {
@@ -196,11 +192,10 @@ void BuildBox(      Mesh& mesh,
 //               break;
 //             }
 //
-           case EDGE3:
-             {
-	       mesh.SetNumberOfNodes((2*nx+1));
- 	       break;
-             }
+                case EDGE3: {
+                    mesh.SetNumberOfNodes((2 * nx + 1));
+                    break;
+                  }
 //
 //           case EDGE4:
 //             {
@@ -208,18 +203,16 @@ void BuildBox(      Mesh& mesh,
 //               break;
 //             }
 //
-           default:
-             {
-               std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
-             }
-           }
+                default: {
+                    std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
+                  }
+              }
 
 
-        // Build the nodes, depends on whether we're using linears,
-        // quadratics or cubics and whether using uniform grid or Gauss-Lobatto
-        unsigned int node_id = 0;
-         switch(type)
-         {
+              // Build the nodes, depends on whether we're using linears,
+              // quadratics or cubics and whether using uniform grid or Gauss-Lobatto
+              unsigned int node_id = 0;
+              switch(type) {
 //           case INVALID_ELEM:
 //           case EDGE2:
 //             {
@@ -237,14 +230,12 @@ void BuildBox(      Mesh& mesh,
 //               break;
 //             }
 //
-           case EDGE3:
-             {
-	      vt[0].resize(mesh.GetNumberOfNodes());
-              vt[1].resize(mesh.GetNumberOfNodes());
-              vt[2].resize(mesh.GetNumberOfNodes());
+                case EDGE3: {
+                    vt[0].resize(mesh.GetNumberOfNodes());
+                    vt[1].resize(mesh.GetNumberOfNodes());
+                    vt[2].resize(mesh.GetNumberOfNodes());
 
-               for (unsigned int i=0; i<=2*nx; i++)
-               {
+                    for(unsigned int i = 0; i <= 2 * nx; i++) {
 //                 if (gauss_lobatto_grid)
 //                 {
 //                   // The x location of the point.
@@ -271,30 +262,28 @@ void BuildBox(      Mesh& mesh,
 //                   mesh.add_point (Point(x,0.,0.), node_id++);
 //                 }
 //                 else
-		   vt[0][node_id] = (static_cast<double>(i)/static_cast<double>(2*nx))*(xmax-xmin) + xmin;
-                   vt[1][node_id] = 0.;
-                   vt[2][node_id] = 0.;
+                      vt[0][node_id] = (static_cast<double>(i) / static_cast<double>(2 * nx)) * (xmax - xmin) + xmin;
+                      vt[1][node_id] = 0.;
+                      vt[2][node_id] = 0.;
 
-                   node_id++;
+                      node_id++;
 
-               }
-               break;
-             }
+                    }
+                    break;
+                  }
 
-           default:
-             {
-               std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
-             }
+                default: {
+                    std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
+                  }
 
-         }
+              }
 
-         // Build the elements of the mesh
-       unsigned iel = 0;
-	 mesh.el= new elem(mesh.GetNumberOfElements());
-	 mesh.el->SetElementGroupNumber(1);
-         // Build the elements.  Each one is a bit different.
-         switch(type)
-           {
+              // Build the elements of the mesh
+              unsigned iel = 0;
+              mesh.el = new elem(mesh.GetNumberOfElements());
+              mesh.el->SetElementGroupNumber(1);
+              // Build the elements.  Each one is a bit different.
+              switch(type) {
 //             case INVALID_ELEM:
 //             case EDGE2:
 //               {
@@ -313,52 +302,49 @@ void BuildBox(      Mesh& mesh,
 //               break;
 //               }
 //
-             case EDGE3:
-               {
+                case EDGE3: {
 
 
-		unsigned LocalToGlobalNodePerElement[3];
+                    unsigned LocalToGlobalNodePerElement[3];
 
-		for (unsigned int i=0; i<nx; i++)
- 		  {
+                    for(unsigned int i = 0; i < nx; i++) {
 
-                  mesh.el->SetElementGroup(iel,1);
-		  mesh.el->SetElementMaterial(iel, 2);
- 		  type_elem_flag[5]=true;
-                  mesh.el->AddToElementNumber(1,"Line");
-                  mesh.el->SetElementType(iel,5);
+                      mesh.el->SetElementGroup(iel, 1);
+                      mesh.el->SetElementMaterial(iel, 2);
+                      type_elem_flag[5] = true;
+                      mesh.el->AddToElementNumber(1, "Line");
+                      mesh.el->SetElementType(iel, 5);
 
-		  LocalToGlobalNodePerElement[0] = 2*i   + 1;
-		  LocalToGlobalNodePerElement[1] = 2*i+2 + 1;
-		  LocalToGlobalNodePerElement[2] = 2*i+1 + 1;
+                      LocalToGlobalNodePerElement[0] = 2 * i   + 1;
+                      LocalToGlobalNodePerElement[1] = 2 * i + 2 + 1;
+                      LocalToGlobalNodePerElement[2] = 2 * i + 1 + 1;
 
-                  // connectivity
-                  for (unsigned iloc=0; iloc<3; iloc++) {
-                    mesh.el->SetElementDofIndex(iel,iloc,LocalToGlobalNodePerElement[iloc] - 1u);
+                      // connectivity
+                      for(unsigned iloc = 0; iloc < 3; iloc++) {
+                        mesh.el->SetElementDofIndex(iel, iloc, LocalToGlobalNodePerElement[iloc] - 1u);
+                      }
+
+                      if(i == 0) {
+                        mesh.el->SetFaceElementIndex(iel, 0, -2);
+                        mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(0, "left"));
+                      }
+
+                      if(i == (nx - 1)) {
+                        mesh.el->SetFaceElementIndex(iel, 1, -3);
+                        mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(1, "right"));
+                      }
+
+
+                      iel++;
+                    }
+
+                    break;
                   }
 
-                  if (i == 0) {
-		    mesh.el->SetFaceElementIndex(iel,0,-2);
-		    mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"left"));
-		  }
-
-		  if (i == (nx-1)) {
-		    mesh.el->SetFaceElementIndex(iel,1,-3);
-		    mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(1,"right"));
-		  }
-
-
-                  iel++;
-		  }
-
-               break;
-               }
-
-             default:
-               {
-                 std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
-               }
-           }
+                default: {
+                    std::cerr << "ERROR: Unrecognized 1D element type." << std::endl;
+                  }
+              }
 
 // 	// Scale the nodal positions
 // 	for (unsigned int p=0; p<mesh.n_nodes(); p++)
@@ -372,55 +358,49 @@ void BuildBox(      Mesh& mesh,
 //         mesh.boundary_info->nodeset_name(0) = "left";
 //         mesh.boundary_info->nodeset_name(1) = "right";
 
-	std::cout << "Error: NotImplemented " << std::endl;
-	break;
-      }
+              std::cout << "Error: NotImplemented " << std::endl;
+              break;
+            }
 
-      //---------------------------------------------------------------------
-      // Build a 2D quadrilateral
-     case 2:
-       {
- 	assert (nx != 0);
- 	assert (ny != 0);
- 	assert (nz == 0);
- 	assert (xmin < xmax);
- 	assert (ymin < ymax);
+            //---------------------------------------------------------------------
+            // Build a 2D quadrilateral
+          case 2: {
+              assert(nx != 0);
+              assert(ny != 0);
+              assert(nz == 0);
+              assert(xmin < xmax);
+              assert(ymin < ymax);
 
- 	switch (type)
- 	  {
+              switch(type) {
 // 	  case INVALID_ELEM:
 // 	  case QUAD4:
 // 	  case QUAD8:
- 	  case QUAD9:
- 	    {
- 	      mesh.SetNumberOfElements(nx*ny);
+                case QUAD9: {
+                    mesh.SetNumberOfElements(nx * ny);
 
-	      ngroup = 1;
-	      nbcd   = 4;
- 	      break;
- 	    }
+                    ngroup = 1;
+                    nbcd   = 4;
+                    break;
+                  }
 //
 // 	  case TRI3:
- 	  case TRI6:
- 	    {
-	      mesh.SetNumberOfElements(2*nx*ny);
+                case TRI6: {
+                    mesh.SetNumberOfElements(2 * nx * ny);
 
-	      ngroup = 1;
-	      nbcd   = 4;
- 	      break;
- 	    }
+                    ngroup = 1;
+                    nbcd   = 4;
+                    break;
+                  }
 //
- 	  default:
- 	    {
- 	      std::cout << "ERROR: Unrecognized or NotSupported 2D element type." << std::endl;
- 	      exit(1);
- 	    }
- 	  }
+                default: {
+                    std::cout << "ERROR: Unrecognized or NotSupported 2D element type." << std::endl;
+                    exit(1);
+                  }
+              }
 
 // 	// Reserve nodes.  The quadratic element types
 // 	// need to reserve more nodes than the linear types.
- 	switch (type)
- 	  {
+              switch(type) {
 // 	  case INVALID_ELEM:
 // 	  case QUAD4:
 // 	  case TRI3:
@@ -430,29 +410,26 @@ void BuildBox(      Mesh& mesh,
 // 	    }
 //
 // 	  case QUAD8:
- 	  case QUAD9:
-	  case TRI6:
- 	    {
- 	      mesh.SetNumberOfNodes((2*nx+1)*(2*ny+1));
- 	      break;
- 	    }
+                case QUAD9:
+                case TRI6: {
+                    mesh.SetNumberOfNodes((2 * nx + 1) * (2 * ny + 1));
+                    break;
+                  }
 
 
- 	  default:
- 	    {
- 	      std::cout << "ERROR: Unrecognized or not Supported 2D element type." << std::endl;
- 	      exit(1);
- 	    }
- 	  }
+                default: {
+                    std::cout << "ERROR: Unrecognized or not Supported 2D element type." << std::endl;
+                    exit(1);
+                  }
+              }
 
 
 
-	// Build the nodes. Depends on whether you are using a linear
-	// or quadratic element, and whether you are using a uniform
-	// grid [ or the Gauss-Lobatto grid points - NOTIMPLENTED ].
-        unsigned int node_id = 0;
-	switch (type)
-	  {
+              // Build the nodes. Depends on whether you are using a linear
+              // or quadratic element, and whether you are using a uniform
+              // grid [ or the Gauss-Lobatto grid points - NOTIMPLENTED ].
+              unsigned int node_id = 0;
+              switch(type) {
 // 	  case INVALID_ELEM:
 // 	  case QUAD4:
 // 	  case TRI3:
@@ -477,17 +454,15 @@ void BuildBox(      Mesh& mesh,
 // 	    }
 //
 // 	  case QUAD8:
- 	  case QUAD9:
- 	  case TRI6:
- 	    {
-	      vt[0].resize(mesh.GetNumberOfNodes());
-              vt[1].resize(mesh.GetNumberOfNodes());
-              vt[2].resize(mesh.GetNumberOfNodes());
+                case QUAD9:
+                case TRI6: {
+                    vt[0].resize(mesh.GetNumberOfNodes());
+                    vt[1].resize(mesh.GetNumberOfNodes());
+                    vt[2].resize(mesh.GetNumberOfNodes());
 
 
-	      for (unsigned int j=0; j<=(2*ny); j++)
-		for (unsigned int i=0; i<=(2*nx); i++)
-		  {
+                    for(unsigned int j = 0; j <= (2 * ny); j++)
+                      for(unsigned int i = 0; i <= (2 * nx); i++) {
 // 		    if (gauss_lobatto_grid) // NOT YET IMPLENTED
 // 		      {
 // 			// The x,y locations of the point.
@@ -523,33 +498,31 @@ void BuildBox(      Mesh& mesh,
 
 
 // 		    else
-		          vt[0][node_id] = (static_cast<double>(i)/static_cast<double>(2*nx))*(xmax-xmin) + xmin;
-                          vt[1][node_id] = (static_cast<double>(j)/static_cast<double>(2*ny))*(ymax-ymin) + ymin;
-                          vt[2][node_id] = 0.;
+                        vt[0][node_id] = (static_cast<double>(i) / static_cast<double>(2 * nx)) * (xmax - xmin) + xmin;
+                        vt[1][node_id] = (static_cast<double>(j) / static_cast<double>(2 * ny)) * (ymax - ymin) + ymin;
+                        vt[2][node_id] = 0.;
 
 //			  std::cout << "inode: " << node_id <<  " x: " << vt[0][node_id] << "   y: " << vt[1][node_id] << std::endl;
 
-			  node_id++;
+                        node_id++;
 
-		}
+                      }
 
- 	      break;
- 	    }
+                    break;
+                  }
 
- 	  default:
- 	    {
- 	      std::cout << "ERROR: Unrecognized or NotSupported 2D element type." << std::endl;
- 	      exit(1);
- 	    }
- 	  }
+                default: {
+                    std::cout << "ERROR: Unrecognized or NotSupported 2D element type." << std::endl;
+                    exit(1);
+                  }
+              }
 
 
-	unsigned iel = 0;
-	mesh.el= new elem(mesh.GetNumberOfElements());
-	mesh.el->SetElementGroupNumber(1);
- 	// Build the elements.  Each one is a bit different.
- 	switch (type)
- 	  {
+              unsigned iel = 0;
+              mesh.el = new elem(mesh.GetNumberOfElements());
+              mesh.el->SetElementGroupNumber(1);
+              // Build the elements.  Each one is a bit different.
+              switch(type) {
 //
 // 	  case INVALID_ELEM:
 // 	  case QUAD4:
@@ -619,147 +592,142 @@ void BuildBox(      Mesh& mesh,
 //
 //
 // 	  case QUAD8:
-	  case QUAD9:
-	    {
+                case QUAD9: {
 
-		unsigned LocalToGlobalNodePerElement[9];
+                    unsigned LocalToGlobalNodePerElement[9];
 
-		for (unsigned int j=0; j<(2*ny); j += 2)
- 		  for (unsigned int i=0; i<(2*nx); i += 2)
- 		  {
+                    for(unsigned int j = 0; j < (2 * ny); j += 2)
+                      for(unsigned int i = 0; i < (2 * nx); i += 2) {
 
-                  mesh.el->SetElementGroup(iel,1);
-		  mesh.el->SetElementMaterial(iel, 2);
- 		  type_elem_flag[3]=true;
-                  mesh.el->AddToElementNumber(1,"Quad");
-                  mesh.el->SetElementType(iel,3);
+                        mesh.el->SetElementGroup(iel, 1);
+                        mesh.el->SetElementMaterial(iel, 2);
+                        type_elem_flag[3] = true;
+                        mesh.el->AddToElementNumber(1, "Quad");
+                        mesh.el->SetElementType(iel, 3);
 
-		  LocalToGlobalNodePerElement[0] = idx(type,nx,i,j) + 1;
-		  LocalToGlobalNodePerElement[1] = idx(type,nx,i+2,j) + 1;
-		  LocalToGlobalNodePerElement[2] = idx(type,nx,i+2,j+2) + 1;
-		  LocalToGlobalNodePerElement[3] = idx(type,nx,i,j+2) + 1;
-		  LocalToGlobalNodePerElement[4] = idx(type,nx,i+1,j) + 1;
-		  LocalToGlobalNodePerElement[5] = idx(type,nx,i+2,j+1) + 1;
-		  LocalToGlobalNodePerElement[6] = idx(type,nx,i+1,j+2) + 1;
-		  LocalToGlobalNodePerElement[7] = idx(type,nx,i,j+1) + 1;
-		  LocalToGlobalNodePerElement[8] = idx(type,nx,i+1,j+1) + 1;
+                        LocalToGlobalNodePerElement[0] = idx(type, nx, i, j) + 1;
+                        LocalToGlobalNodePerElement[1] = idx(type, nx, i + 2, j) + 1;
+                        LocalToGlobalNodePerElement[2] = idx(type, nx, i + 2, j + 2) + 1;
+                        LocalToGlobalNodePerElement[3] = idx(type, nx, i, j + 2) + 1;
+                        LocalToGlobalNodePerElement[4] = idx(type, nx, i + 1, j) + 1;
+                        LocalToGlobalNodePerElement[5] = idx(type, nx, i + 2, j + 1) + 1;
+                        LocalToGlobalNodePerElement[6] = idx(type, nx, i + 1, j + 2) + 1;
+                        LocalToGlobalNodePerElement[7] = idx(type, nx, i, j + 1) + 1;
+                        LocalToGlobalNodePerElement[8] = idx(type, nx, i + 1, j + 1) + 1;
 
-                  // connectivity
-                  for (unsigned iloc=0; iloc<9; iloc++) {
-                    mesh.el->SetElementDofIndex(iel,iloc,LocalToGlobalNodePerElement[iloc] - 1u);
+                        // connectivity
+                        for(unsigned iloc = 0; iloc < 9; iloc++) {
+                          mesh.el->SetElementDofIndex(iel, iloc, LocalToGlobalNodePerElement[iloc] - 1u);
+                        }
+
+                        if(j == 0) {
+                          mesh.el->SetFaceElementIndex(iel, 0, -2);
+                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(0, "bottom"));
+                        }
+
+                        if(j == 2 * (ny - 1)) {
+                          mesh.el->SetFaceElementIndex(iel, 2, -4);
+                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(2, "top"));
+                        }
+
+                        if(i == 0) {
+                          mesh.el->SetFaceElementIndex(iel, 3, -5);
+                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(3, "left"));
+                        }
+
+                        if(i == 2 * (nx - 1)) {
+                          mesh.el->SetFaceElementIndex(iel, 1, -3);
+                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(1, "right"));
+                        }
+
+                        iel++;
+                      }
+
+                    break;
                   }
 
-                  if (j == 0) {
-		    mesh.el->SetFaceElementIndex(iel,0,-2);
-		    mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"bottom"));
-		  }
+                case TRI6: {
 
-                  if (j == 2*(ny-1)) {
-		    mesh.el->SetFaceElementIndex(iel,2,-4);
-		    mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(2,"top"));
-		  }
+                    unsigned LocalToGlobalNodePerElement[6];
 
-                  if (i == 0) {
-		    mesh.el->SetFaceElementIndex(iel,3,-5);
-		    mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(3,"left"));
-		  }
+                    for(unsigned int j = 0; j < (2 * ny); j += 2)
+                      for(unsigned int i = 0; i < (2 * nx); i += 2) {
 
-                  if (i == 2*(nx-1)) {
-		    mesh.el->SetFaceElementIndex(iel,1,-3);
-		    mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(1,"right"));
-		  }
-
-                  iel++;
-               }
-
-	      break;
-	    }
-
-	  case TRI6:
-	    {
-
-	      	unsigned LocalToGlobalNodePerElement[6];
-
-		for (unsigned int j=0; j<(2*ny); j += 2)
- 		  for (unsigned int i=0; i<(2*nx); i += 2)
- 		  {
-
-		  // Add first Tri6
-                  mesh.el->SetElementGroup(iel,1);
-		  mesh.el->SetElementMaterial(iel, 2); // 2 == fluid
- 		  type_elem_flag[4]=true;
-                  mesh.el->AddToElementNumber(1,"Triangle");
-                  mesh.el->SetElementType(iel,4);
+                        // Add first Tri6
+                        mesh.el->SetElementGroup(iel, 1);
+                        mesh.el->SetElementMaterial(iel, 2); // 2 == fluid
+                        type_elem_flag[4] = true;
+                        mesh.el->AddToElementNumber(1, "Triangle");
+                        mesh.el->SetElementType(iel, 4);
 
 
-		  LocalToGlobalNodePerElement[0] = idx(type,nx,i,j) + 1;
-		  LocalToGlobalNodePerElement[1] = idx(type,nx,i+2,j) + 1;
-		  LocalToGlobalNodePerElement[2] = idx(type,nx,i+2,j+2) + 1;
-		  LocalToGlobalNodePerElement[3] = idx(type,nx,i+1,j) + 1;
-		  LocalToGlobalNodePerElement[4] = idx(type,nx,i+2,j+1) + 1;
-		  LocalToGlobalNodePerElement[5] = idx(type,nx,i+1,j+1) + 1;
+                        LocalToGlobalNodePerElement[0] = idx(type, nx, i, j) + 1;
+                        LocalToGlobalNodePerElement[1] = idx(type, nx, i + 2, j) + 1;
+                        LocalToGlobalNodePerElement[2] = idx(type, nx, i + 2, j + 2) + 1;
+                        LocalToGlobalNodePerElement[3] = idx(type, nx, i + 1, j) + 1;
+                        LocalToGlobalNodePerElement[4] = idx(type, nx, i + 2, j + 1) + 1;
+                        LocalToGlobalNodePerElement[5] = idx(type, nx, i + 1, j + 1) + 1;
 
-                  // connectivity
-                  for (unsigned iloc=0; iloc<6; iloc++) {
-                    mesh.el->SetElementDofIndex(iel,iloc,LocalToGlobalNodePerElement[iloc] - 1u);
+                        // connectivity
+                        for(unsigned iloc = 0; iloc < 6; iloc++) {
+                          mesh.el->SetElementDofIndex(iel, iloc, LocalToGlobalNodePerElement[iloc] - 1u);
+                        }
+
+                        if(j == 0) {
+                          mesh.el->SetFaceElementIndex(iel, 0, -2);
+                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(0, "bottom"));
+                        }
+
+                        if(i == 2 * (nx - 1)) {
+                          mesh.el->SetFaceElementIndex(iel, 1, -3);
+                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(1, "right"));
+                        }
+
+                        iel++;
+
+                        // Add second Tri6
+
+                        mesh.el->SetElementGroup(iel, 1);
+                        mesh.el->SetElementMaterial(iel, 2); // 2 == fluid
+                        type_elem_flag[4] = true;
+                        mesh.el->AddToElementNumber(1, "Triangle");
+                        mesh.el->SetElementType(iel, 4);
+
+                        LocalToGlobalNodePerElement[0] = idx(type, nx, i, j) + 1;
+                        LocalToGlobalNodePerElement[1] = idx(type, nx, i + 2, j + 2) + 1;
+                        LocalToGlobalNodePerElement[2] = idx(type, nx, i, j + 2) + 1;
+                        LocalToGlobalNodePerElement[3] = idx(type, nx, i + 1, j + 1) + 1;
+                        LocalToGlobalNodePerElement[4] = idx(type, nx, i + 1, j + 2) + 1;
+                        LocalToGlobalNodePerElement[5] = idx(type, nx, i, j + 1) + 1;
+
+                        // connectivity
+                        for(unsigned iloc = 0; iloc < 6; iloc++) {
+                          mesh.el->SetElementDofIndex(iel, iloc, LocalToGlobalNodePerElement[iloc] - 1u);
+                        }
+
+                        if(j == 2 * (ny - 1)) {
+                          mesh.el->SetFaceElementIndex(iel, 1, -4);
+                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(2, "top"));
+                        }
+
+                        if(i == 0) {
+                          mesh.el->SetFaceElementIndex(iel, 2, -5);
+                          mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(3, "left"));
+                        }
+
+                        iel++;
+
+                      }
+
+                    break;
                   }
 
-                  if (j == 0) {
-		    mesh.el->SetFaceElementIndex(iel,0,-2);
-		    mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"bottom"));
-		  }
 
- 		  if (i == 2*(nx-1)) {
-		    mesh.el->SetFaceElementIndex(iel,1,-3);
-		    mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(1,"right"));
-		  }
-
-                  iel++;
-
-		    // Add second Tri6
-
-		    mesh.el->SetElementGroup(iel,1);
-		    mesh.el->SetElementMaterial(iel, 2); // 2 == fluid
- 		    type_elem_flag[4]=true;
-                    mesh.el->AddToElementNumber(1,"Triangle");
-                    mesh.el->SetElementType(iel,4);
-
-		    LocalToGlobalNodePerElement[0] = idx(type,nx,i,j) + 1;
-		    LocalToGlobalNodePerElement[1] = idx(type,nx,i+2,j+2) + 1;
-		    LocalToGlobalNodePerElement[2] = idx(type,nx,i,j+2) + 1;
-		    LocalToGlobalNodePerElement[3] = idx(type,nx,i+1,j+1) + 1;
-		    LocalToGlobalNodePerElement[4] = idx(type,nx,i+1,j+2) + 1;
-		    LocalToGlobalNodePerElement[5] = idx(type,nx,i,j+1) + 1;
-
-		    // connectivity
-                    for (unsigned iloc=0; iloc<6; iloc++) {
-                      mesh.el->SetElementDofIndex(iel,iloc,LocalToGlobalNodePerElement[iloc] - 1u);
-                    }
-
-		    if (j == 2*(ny-1)) {
-		      mesh.el->SetFaceElementIndex(iel,1,-4);
-		      mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(2,"top"));
-		    }
-
-                    if (i == 0) {
-		      mesh.el->SetFaceElementIndex(iel,2,-5);
-		      mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(3,"left"));
-		    }
-
-		    iel++;
-
-		  }
-
-	      break;
-	    }
-
-
-	  default:
-	    {
-	      std::cout << "ERROR: Unrecognized or Not Supported 2D element type." << std::endl;
-	      exit(1);
-	    }
-	  }
+                default: {
+                    std::cout << "ERROR: Unrecognized or Not Supported 2D element type." << std::endl;
+                    exit(1);
+                  }
+              }
 
 
 //         // Add sideset names to boundary info
@@ -774,13 +742,12 @@ void BuildBox(      Mesh& mesh,
 // 	mesh.boundary_info->nodeset_name(2) = "top";
 // 	mesh.boundary_info->nodeset_name(3) = "left";
 //
- 	break;
-       }
+              break;
+            }
 
-     //---------------------------------------------------------------------
-     // Build a 3D mesh using hexahedral or prismatic elements.
-     case 3:
-       {
+            //---------------------------------------------------------------------
+            // Build a 3D mesh using hexahedral or prismatic elements.
+          case 3: {
 // 	libmesh_assert_not_equal_to (nx, 0);
 // 	libmesh_assert_not_equal_to (ny, 0);
 // 	libmesh_assert_not_equal_to (nz, 0);
@@ -788,30 +755,29 @@ void BuildBox(      Mesh& mesh,
 // 	libmesh_assert_less (ymin, ymax);
 // 	libmesh_assert_less (zmin, zmax);
 
-	assert(nx!=0);
-	assert(ny!=0);
-	assert(nz!=0);
-	assert(xmin<xmax);
-	assert(ymin<ymax);
-	assert(zmin<zmax);
+              assert(nx != 0);
+              assert(ny != 0);
+              assert(nz != 0);
+              assert(xmin < xmax);
+              assert(ymin < ymax);
+              assert(zmin < zmax);
 
- 	// Reserve elements.  Meshes with prismatic elements require
- 	// twice as many elements.
- 	switch (type)
- 	  {
+              // Reserve elements.  Meshes with prismatic elements require
+              // twice as many elements.
+              switch(type) {
 // 	  case INVALID_ELEM:
 // 	  case HEX8:
 // 	  case HEX20:
- 	  case HEX27:
+                case HEX27:
 // 	  case TET4:  // TET4's are created from an initial HEX27 discretization
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
-	    {
-	      mesh.SetNumberOfElements(nx*ny*nz);
-	      ngroup = 1;
-	      nbcd   = 6;
-              break;
-            }
+                  {
+                    mesh.SetNumberOfElements(nx * ny * nz);
+                    ngroup = 1;
+                    nbcd   = 6;
+                    break;
+                  }
 //
 // 	  case PRISM6:
 // 	  case PRISM15:
@@ -821,17 +787,15 @@ void BuildBox(      Mesh& mesh,
 // 	      break;
 // 	    }
 //
- 	  default:
- 	    {
- 	      std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
- 	      exit(1);
- 	    }
- 	  }
+                default: {
+                    std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
+                    exit(1);
+                  }
+              }
 
 
- 	// Reserve nodes.  Quadratic elements need twice as many nodes as linear elements.
- 	switch (type)
- 	  {
+              // Reserve nodes.  Quadratic elements need twice as many nodes as linear elements.
+              switch(type) {
 // 	  case INVALID_ELEM:
 // 	  case HEX8:
 // 	  case PRISM6:
@@ -841,40 +805,38 @@ void BuildBox(      Mesh& mesh,
 // 	    }
 //
 // 	  case HEX20:
- 	  case HEX27:
+                case HEX27:
 // 	  case TET4: // TET4's are created from an initial HEX27 discretization
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
 // 	  case PRISM15:
 // 	  case PRISM18:
- 	    {
+                  {
 // 	      // FYI: The resulting TET4 mesh will have exactly
 // 	      // 5*(nx*ny*nz) + 2*(nx*ny + nx*nz + ny*nz) + (nx+ny+nz) + 1
 // 	      // nodes once the additional mid-edge nodes for the HEX27 discretization
 // 	      // have been deleted.
 
-	      //mesh.reserve_nodes( (2*nx+1)*(2*ny+1)*(2*nz+1) );
-	      mesh.SetNumberOfNodes((2*nx+1)*(2*ny+1)*(2*nz+1));
- 	      break;
- 	    }
+                    //mesh.reserve_nodes( (2*nx+1)*(2*ny+1)*(2*nz+1) );
+                    mesh.SetNumberOfNodes((2 * nx + 1) * (2 * ny + 1) * (2 * nz + 1));
+                    break;
+                  }
 
- 	  default:
- 	    {
- 	      std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
- 	      exit(1);
- 	    }
- 	  }
+                default: {
+                    std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
+                    exit(1);
+                  }
+              }
 
 
- 	// Build the nodes.
-        unsigned int node_id = 0;
+              // Build the nodes.
+              unsigned int node_id = 0;
 
-	vt[0].resize(mesh.GetNumberOfNodes());
-        vt[1].resize(mesh.GetNumberOfNodes());
-        vt[2].resize(mesh.GetNumberOfNodes());
+              vt[0].resize(mesh.GetNumberOfNodes());
+              vt[1].resize(mesh.GetNumberOfNodes());
+              vt[2].resize(mesh.GetNumberOfNodes());
 
- 	switch (type)
- 	  {
+              switch(type) {
 // 	  case INVALID_ELEM:
 // 	  case HEX8:
 // 	  case PRISM6:
@@ -899,17 +861,16 @@ void BuildBox(      Mesh& mesh,
 // 	    }
 //
 // 	  case HEX20:
- 	  case HEX27:
+                case HEX27:
 // 	  case TET4: // TET4's are created from an initial HEX27 discretization
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
 // 	  case PRISM15:
 // 	  case PRISM18:
- 	    {
-	      for (unsigned int k=0; k<=(2*nz); k++)
- 		for (unsigned int j=0; j<=(2*ny); j++)
- 		  for (unsigned int i=0; i<=(2*nx); i++)
- 		    {
+                  {
+                    for(unsigned int k = 0; k <= (2 * nz); k++)
+                      for(unsigned int j = 0; j <= (2 * ny); j++)
+                        for(unsigned int i = 0; i <= (2 * nx); i++) {
 // 		      if (gauss_lobatto_grid)
 // 			{
 // 			  // The x,y locations of the point.
@@ -959,34 +920,32 @@ void BuildBox(      Mesh& mesh,
 // 			mesh.add_point(Point(static_cast<double>(i)/static_cast<double>(2*nx),
 // 					     static_cast<double>(j)/static_cast<double>(2*ny),
 // 					     static_cast<double>(k)/static_cast<double>(2*nz)), node_id++);
-		          vt[0][node_id] = (static_cast<double>(i)/static_cast<double>(2*nx))*(xmax-xmin) + xmin;
-                          vt[1][node_id] = (static_cast<double>(j)/static_cast<double>(2*ny))*(ymax-ymin) + ymin;
-                          vt[2][node_id] = (static_cast<double>(k)/static_cast<double>(2*nz))*(zmax-zmin) + zmin;;
+                          vt[0][node_id] = (static_cast<double>(i) / static_cast<double>(2 * nx)) * (xmax - xmin) + xmin;
+                          vt[1][node_id] = (static_cast<double>(j) / static_cast<double>(2 * ny)) * (ymax - ymin) + ymin;
+                          vt[2][node_id] = (static_cast<double>(k) / static_cast<double>(2 * nz)) * (zmax - zmin) + zmin;;
 
 //			  std::cout << "inode: " << node_id <<  " x: " << vt[0][node_id] << "   y: " << vt[1][node_id] << std::endl;
 
-			  node_id++;
- 		    }
+                          node_id++;
+                        }
 
- 	      break;
- 	    }
-
-
- 	  default:
- 	    {
- 	      std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
- 	      exit(1);
- 	    }
- 	  }
+                    break;
+                  }
 
 
+                default: {
+                    std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
+                    exit(1);
+                  }
+              }
 
- 	// Build the elements.
-        unsigned iel = 0;
-	mesh.el= new elem(mesh.GetNumberOfElements());
-	mesh.el->SetElementGroupNumber(1);
- 	switch (type)
- 	  {
+
+
+              // Build the elements.
+              unsigned iel = 0;
+              mesh.el = new elem(mesh.GetNumberOfElements());
+              mesh.el->SetElementGroupNumber(1);
+              switch(type) {
 // 	  case INVALID_ELEM:
 // 	  case HEX8:
 // 	    {
@@ -1091,110 +1050,109 @@ void BuildBox(      Mesh& mesh,
 //
 //
 // 	  case HEX20:
- 	  case HEX27:
+                case HEX27:
 // 	  case TET4: // TET4's are created from an initial HEX27 discretization
 // 	  case TET10: // TET10's are created from an initial HEX27 discretization
 // 	  case PYRAMID5: // PYRAMID5's are created from an initial HEX27 discretization
- 	    {
-	      double LocalToGlobalNodePerElement[27];
+                  {
+                    double LocalToGlobalNodePerElement[27];
 
- 	      for (unsigned int k=0; k<(2*nz); k += 2)
- 		for (unsigned int j=0; j<(2*ny); j += 2)
- 		  for (unsigned int i=0; i<(2*nx); i += 2)
- 		    {
+                    for(unsigned int k = 0; k < (2 * nz); k += 2)
+                      for(unsigned int j = 0; j < (2 * ny); j += 2)
+                        for(unsigned int i = 0; i < (2 * nx); i += 2) {
 // 		      Elem* elem = (type == HEX20) ?
 // 			mesh.add_elem(new Hex20) :
 // 			mesh.add_elem(new Hex27);
 
-		      mesh.el->SetElementGroup(iel,1);
-		      mesh.el->SetElementMaterial(iel, 2);
- 		      type_elem_flag[0]=true; // hex
-		      type_elem_flag[3]=true; // quad face
-                      mesh.el->AddToElementNumber(1,"Hex");
-                      mesh.el->SetElementType(iel,0);
+                          mesh.el->SetElementGroup(iel, 1);
+                          mesh.el->SetElementMaterial(iel, 2);
+                          type_elem_flag[0] = true; // hex
+                          type_elem_flag[3] = true; // quad face
+                          mesh.el->AddToElementNumber(1, "Hex");
+                          mesh.el->SetElementType(iel, 0);
 
-		      LocalToGlobalNodePerElement[0] = idx(type,nx,ny,i,  j,  k) + 1;
-		      LocalToGlobalNodePerElement[1] = idx(type,nx,ny,i+2,j,  k) + 1;
-		      LocalToGlobalNodePerElement[2] = idx(type,nx,ny,i+2,j+2,k) + 1;
-		      LocalToGlobalNodePerElement[3] = idx(type,nx,ny,i,  j+2,k) + 1;
-		      LocalToGlobalNodePerElement[4] = idx(type,nx,ny,i,  j,  k+2) + 1;
-		      LocalToGlobalNodePerElement[5] = idx(type,nx,ny,i+2,j,  k+2) + 1;
-		      LocalToGlobalNodePerElement[6] = idx(type,nx,ny,i+2,j+2,k+2) + 1;
-		      LocalToGlobalNodePerElement[7] = idx(type,nx,ny,i,  j+2,k+2) + 1;
-		      LocalToGlobalNodePerElement[8] = idx(type,nx,ny,i+1,j,  k) + 1;
-		      LocalToGlobalNodePerElement[9] = idx(type,nx,ny,i+2,j+1,k) + 1;
-		      LocalToGlobalNodePerElement[10] = idx(type,nx,ny,i+1,j+2,k) + 1;
-		      LocalToGlobalNodePerElement[11] = idx(type,nx,ny,i,  j+1,k) + 1;
+                          LocalToGlobalNodePerElement[0] = idx(type, nx, ny, i,  j,  k) + 1;
+                          LocalToGlobalNodePerElement[1] = idx(type, nx, ny, i + 2, j,  k) + 1;
+                          LocalToGlobalNodePerElement[2] = idx(type, nx, ny, i + 2, j + 2, k) + 1;
+                          LocalToGlobalNodePerElement[3] = idx(type, nx, ny, i,  j + 2, k) + 1;
+                          LocalToGlobalNodePerElement[4] = idx(type, nx, ny, i,  j,  k + 2) + 1;
+                          LocalToGlobalNodePerElement[5] = idx(type, nx, ny, i + 2, j,  k + 2) + 1;
+                          LocalToGlobalNodePerElement[6] = idx(type, nx, ny, i + 2, j + 2, k + 2) + 1;
+                          LocalToGlobalNodePerElement[7] = idx(type, nx, ny, i,  j + 2, k + 2) + 1;
+                          LocalToGlobalNodePerElement[8] = idx(type, nx, ny, i + 1, j,  k) + 1;
+                          LocalToGlobalNodePerElement[9] = idx(type, nx, ny, i + 2, j + 1, k) + 1;
+                          LocalToGlobalNodePerElement[10] = idx(type, nx, ny, i + 1, j + 2, k) + 1;
+                          LocalToGlobalNodePerElement[11] = idx(type, nx, ny, i,  j + 1, k) + 1;
 
-		      // mid-point - up
-		      LocalToGlobalNodePerElement[12] = idx(type,nx,ny,i+1,j,  k+2) + 1;
-		      LocalToGlobalNodePerElement[13] = idx(type,nx,ny,i+2,j+1,k+2) + 1;
-		      LocalToGlobalNodePerElement[14] = idx(type,nx,ny,i+1,j+2,k+2) + 1;
-		      LocalToGlobalNodePerElement[15] = idx(type,nx,ny,i,  j+1,k+2) + 1 ;
+                          // mid-point - up
+                          LocalToGlobalNodePerElement[12] = idx(type, nx, ny, i + 1, j,  k + 2) + 1;
+                          LocalToGlobalNodePerElement[13] = idx(type, nx, ny, i + 2, j + 1, k + 2) + 1;
+                          LocalToGlobalNodePerElement[14] = idx(type, nx, ny, i + 1, j + 2, k + 2) + 1;
+                          LocalToGlobalNodePerElement[15] = idx(type, nx, ny, i,  j + 1, k + 2) + 1 ;
 
-		      // vertices - middle
-		      LocalToGlobalNodePerElement[16] = idx(type,nx,ny,i,  j,  k+1) + 1;
-		      LocalToGlobalNodePerElement[17] = idx(type,nx,ny,i+2,j,  k+1) + 1;
-		      LocalToGlobalNodePerElement[18] = idx(type,nx,ny,i+2,j+2,k+1) + 1;
-		      LocalToGlobalNodePerElement[19] = idx(type,nx,ny,i,  j+2,k+1) + 1;
+                          // vertices - middle
+                          LocalToGlobalNodePerElement[16] = idx(type, nx, ny, i,  j,  k + 1) + 1;
+                          LocalToGlobalNodePerElement[17] = idx(type, nx, ny, i + 2, j,  k + 1) + 1;
+                          LocalToGlobalNodePerElement[18] = idx(type, nx, ny, i + 2, j + 2, k + 1) + 1;
+                          LocalToGlobalNodePerElement[19] = idx(type, nx, ny, i,  j + 2, k + 1) + 1;
 
-		      // mid-point - middle
-		      LocalToGlobalNodePerElement[20] = idx(type,nx,ny,i+1,j,  k+1) + 1;
-		      LocalToGlobalNodePerElement[21] = idx(type,nx,ny,i+2,j+1,k+1) + 1;
-		      LocalToGlobalNodePerElement[22] = idx(type,nx,ny,i+1,j+2,k+1) + 1;
-		      LocalToGlobalNodePerElement[23] = idx(type,nx,ny,i,  j+1,k+1) + 1;
+                          // mid-point - middle
+                          LocalToGlobalNodePerElement[20] = idx(type, nx, ny, i + 1, j,  k + 1) + 1;
+                          LocalToGlobalNodePerElement[21] = idx(type, nx, ny, i + 2, j + 1, k + 1) + 1;
+                          LocalToGlobalNodePerElement[22] = idx(type, nx, ny, i + 1, j + 2, k + 1) + 1;
+                          LocalToGlobalNodePerElement[23] = idx(type, nx, ny, i,  j + 1, k + 1) + 1;
 
-		      // center - bottom
-		      LocalToGlobalNodePerElement[24] = idx(type,nx,ny,i+1,j+1,k) + 1;
+                          // center - bottom
+                          LocalToGlobalNodePerElement[24] = idx(type, nx, ny, i + 1, j + 1, k) + 1;
 
-		      // center - top
-		      LocalToGlobalNodePerElement[25] = idx(type,nx,ny,i+1,j+1,k+2) + 1;
+                          // center - top
+                          LocalToGlobalNodePerElement[25] = idx(type, nx, ny, i + 1, j + 1, k + 2) + 1;
 
-		      // center - middle
-		      LocalToGlobalNodePerElement[26] = idx(type,nx,ny,i+1,j+1,k+1) + 1;
+                          // center - middle
+                          LocalToGlobalNodePerElement[26] = idx(type, nx, ny, i + 1, j + 1, k + 1) + 1;
 
-                      // connectivity
-                      for (unsigned iloc=0; iloc<27; iloc++) {
-                        mesh.el->SetElementDofIndex(iel,iloc,LocalToGlobalNodePerElement[iloc] - 1u);
-                      }
+                          // connectivity
+                          for(unsigned iloc = 0; iloc < 27; iloc++) {
+                            mesh.el->SetElementDofIndex(iel, iloc, LocalToGlobalNodePerElement[iloc] - 1u);
+                          }
 
-                      if (k == 0) {
-			mesh.el->SetFaceElementIndex(iel,0,-2);
-			mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(0,"bottom"));
-		      }
-
-
- 		      if (k == 2*(nz-1)) {
-			mesh.el->SetFaceElementIndex(iel,5,-7);
-			mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(5,"top"));
-		      }
+                          if(k == 0) {
+                            mesh.el->SetFaceElementIndex(iel, 0, -2);
+                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(0, "bottom"));
+                          }
 
 
- 		      if (j == 0) {
-			mesh.el->SetFaceElementIndex(iel,1,-3);
-			mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(1,"front"));
-		      }
+                          if(k == 2 * (nz - 1)) {
+                            mesh.el->SetFaceElementIndex(iel, 5, -7);
+                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(5, "top"));
+                          }
 
 
- 		      if (j == 2*(ny-1)) {
-			mesh.el->SetFaceElementIndex(iel,3,-5);
-			mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(3,"behind"));
-		      }
+                          if(j == 0) {
+                            mesh.el->SetFaceElementIndex(iel, 1, -3);
+                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(1, "front"));
+                          }
 
 
- 		      if (i == 0) {
-			mesh.el->SetFaceElementIndex(iel,4,-6);
-			mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(4,"left"));
-		      }
+                          if(j == 2 * (ny - 1)) {
+                            mesh.el->SetFaceElementIndex(iel, 3, -5);
+                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(3, "behind"));
+                          }
 
 
- 		      if (i == 2*(nx-1)) {
-			mesh.el->SetFaceElementIndex(iel,2,-4);
-			mesh._boundaryinfo.insert( std::pair<unsigned int, std::string>(2,"right"));
-		      }
+                          if(i == 0) {
+                            mesh.el->SetFaceElementIndex(iel, 4, -6);
+                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(4, "left"));
+                          }
 
 
-		      iel++;
+                          if(i == 2 * (nx - 1)) {
+                            mesh.el->SetFaceElementIndex(iel, 2, -4);
+                            mesh._boundaryinfo.insert(std::pair<unsigned int, std::string>(2, "right"));
+                          }
+
+
+                          iel++;
 
 // 		      elem->set_node(0)  = mesh.node_ptr(idx(type,nx,ny,i,  j,  k)  );
 // 		      elem->set_node(1)  = mesh.node_ptr(idx(type,nx,ny,i+2,j,  k)  );
@@ -1248,9 +1206,9 @@ void BuildBox(      Mesh& mesh,
 //
 // 		      if (i == 2*(nx-1))
 // 			mesh.boundary_info->add_side(elem, 2, 2);
-  		    }
- 	      break;
- 	    }
+                        }
+                    break;
+                  }
 //
 //
 //
@@ -1349,12 +1307,11 @@ void BuildBox(      Mesh& mesh,
 //  	    }
 //
 
- 	  default:
- 	    {
- 	      std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
- 	      exit(1);
- 	    }
- 	  }
+                default: {
+                    std::cerr << "ERROR: Unrecognized 3D element type." << std::endl;
+                    exit(1);
+                  }
+              }
 
 // 	//.......................................
 // 	// Scale the nodal positions
@@ -1496,20 +1453,19 @@ void BuildBox(      Mesh& mesh,
 // 	mesh.boundary_info->nodeset_name(4) = "left";
 // 	mesh.boundary_info->nodeset_name(5) = "front";
 
-        break;
-      } // end case dim==3
+              break;
+            } // end case dim==3
 
-    default:
-      {
-	std::cout << " Error! " << std::endl;
+          default: {
+              std::cout << " Error! " << std::endl;
+            }
+        }
+
       }
-     }
 
-}
 
+    }
 
   }
-
-}
 
 }

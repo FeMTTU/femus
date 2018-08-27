@@ -1,9 +1,0 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-
-PROJECT(FSI_STEADY_MG)
-
-SET(MAIN_FILE "aneurysm")
-SET(EXEC_FILE "aneurysm")
-
-femusMacroBuildApplication(${MAIN_FILE} ${EXEC_FILE})
-

@@ -236,9 +236,7 @@ int main(int argc,char **args) {
   MultiLevelMesh ml_msh(numberOfUniformRefinedMeshes, numberOfUniformRefinedMeshes + numberOfAMRLevels,
 			infile.c_str(),"fifth",Lref,SetRefinementFlag);
   //ml_msh.EraseCoarseLevels(numberOfUniformRefinedMeshes-1);
-  // mark Solid nodes
-  ml_msh.MarkStructureNode();
-
+ 
   // ******* Init multilevel solution ******
   MultiLevelSolution ml_sol(&ml_msh);
 

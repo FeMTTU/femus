@@ -41,7 +41,7 @@ InputParser::~InputParser() {
 }  
 
 //----------------------------------------------------------------------------------------------
-std::auto_ptr<InputParser> InputParser::build(const std::string& infile) {
+std::unique_ptr<InputParser> InputParser::build(const std::string& infile) {
    
    int format = 0;
    
@@ -57,27 +57,24 @@ std::auto_ptr<InputParser> InputParser::build(const std::string& infile) {
 	      << "     *.json -- JSon File\n"
 	      << "     *.html -- HTML File (not yet implemented)\n"
               << std::endl;
-     exit(1);
+     abort();
    }
   
    switch (format)  {
 
     case 0:  {
-      std::auto_ptr<InputParser> ap(new JsonInputParser(infile));
+      std::unique_ptr<InputParser> ap(new JsonInputParser(infile));
       return ap;
     }
     case 1:  {
       std::cerr << "Error: HTMLInput parser not yet implemented! " << std::endl;
-      exit(1);
-//       std::auto_ptr<InputParser> ap(new HtmlInputParser(infile));
-//       return ap;
+      abort();
     } 
     default:
       std::cerr << "ERROR:  format not implemented: " << std::endl;
       abort();
     }
-    std::auto_ptr<InputParser> ap(NULL);
-    return ap;
+  
   }
 
 //----------------------------------------------------------------------------------------------

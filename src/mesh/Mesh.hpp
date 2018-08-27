@@ -29,6 +29,8 @@
 #include "vector"
 #include "map"
 
+
+
 namespace femus {
 
 
@@ -86,10 +88,8 @@ public:
 
     /** Get element group*/
     short unsigned GetElementGroup(const unsigned &iel) const;
-
     /** Get element material*/
     short unsigned GetElementMaterial(const unsigned &iel) const;
-
     /** Get element type*/
     short unsigned GetElementType(const unsigned &iel) const;
 
@@ -112,6 +112,7 @@ public:
     /** Only for parallel */
     unsigned GetElementFaceNumber(const unsigned &iel, const unsigned &type=1) const;
 
+    void GetElementNodeCoordinates(std::vector < std::vector <double > > &xv, const unsigned &iel, const unsigned &solType = 2);
 
     /** Set the grid number */
     void SetLevel(const unsigned &i) {
@@ -156,7 +157,6 @@ public:
     /** Allocate memory for adding fluid or solid mark */
     void AllocateAndMarkStructureNode();
 
-
     /** To be Added */
     void SetFiniteElementPtr(const elem_type* otheFiniteElement[6][5]);
 
@@ -175,12 +175,23 @@ public:
                                const ElemType type, std::vector<bool> &type_elem_flag);
 
     /** To be added */
-    void FillISvector(vector < int > &epart);
+    void FillISvector(vector < unsigned > &partition);
 
     /** To be added */
     void Buildkel();
+    
+    void BiquadraticNodesNotInGambit();
+    
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > >& GetAmrRestrictionMap(){
+      return _amrRestriction;
+    }
+    
+    std::vector < std::map < unsigned, bool > > & GetAmrSolidMark(){
+      return _amrSolidMark;
+    }
 
-
+    basis *GetBasis(const short unsigned &ielType, const short unsigned &solType);
+    
     // member data
     Solution* _topology;
     const elem_type *_finiteElement[6][5];
@@ -219,10 +230,7 @@ public:
     const unsigned GetYIndex()          const { return _yIndex; };
     const unsigned GetZIndex()          const { return _zIndex; };
     const unsigned GetAmrIndex()        const { return _amrIndex; };
-    const unsigned GetMaterialIndex()   const { return _materialIndex; };
-    const unsigned GetGroupIndex()      const { return _groupIndex; };
-    const unsigned GetTypeIndex()       const { return _typeIndex; };
-    const unsigned GetSolidMarkIndex()       const { return _solidMarkIndex; };
+    const unsigned GetSolidMarkIndex()  const { return _solidMarkIndex; };
 
 private:
     /** Coarser mesh from which this mesh is generated, it equals NULL if _level = 0 */
@@ -240,6 +248,10 @@ private:
     /** Build the coarse to the fine projection matrix */
     void BuildCoarseToFineProjection(const unsigned& solType);
 
+    /** Weights used to build the baricentric coordinate **/
+    static const double _baricentricWeight[6][5][18];
+    static const unsigned _numberOfMissedBiquadraticNodes[6];
+    
     //member-data
     int _nelem;                                //< number of elements
     unsigned _nnodes;                          //< number of nodes
@@ -247,7 +259,7 @@ private:
     static unsigned _dimension;                //< dimension of the problem
     static unsigned _ref_index;
     static unsigned _face_index;
-
+    
     std::map < unsigned, unsigned > _ownedGhostMap[2];
     vector < unsigned > _originalOwnSize[2];
 
@@ -260,11 +272,10 @@ private:
     static const unsigned _yIndex = 1;
     static const unsigned _zIndex = 2;
     static const unsigned _amrIndex = 3;
-    static const unsigned _materialIndex = 4;
-    static const unsigned _groupIndex = 5;
-    static const unsigned _typeIndex = 6;
-    static const unsigned _solidMarkIndex = 7;
-
+    static const unsigned _solidMarkIndex = 4;
+    
+    std::vector < std::map < unsigned,  std::map < unsigned, double  > > > _amrRestriction;
+    std::vector < std::map < unsigned, bool > > _amrSolidMark;
 
 };
 

@@ -66,7 +66,7 @@ namespace femus {
       virtual void Clear() {}
 
       /** Builds a \p LinearEquationSolver using the linear solver in \p solver_package */
-      static std::auto_ptr<LinearEquationSolver> build(const unsigned &igrid, Solution* other_solution,
+      static std::unique_ptr<LinearEquationSolver> build(const unsigned &igrid, Solution* other_solution,
           const MgSmoother & smoother_type, const SolverPackage solver_package = LSOLVER);
 
       /** Set the tolerance for the solver */
@@ -96,14 +96,13 @@ namespace femus {
                               ) = 0;
 
       virtual void MGSolve(const bool ksp_clean) = 0;
+      
+      virtual void SetRichardsonScaleFactor(const double & richardsonScaleFactor) = 0; 
 
       /** Sets the type of solver to use. */
       void set_solver_type(const SolverType st)  {
         _solver_type = st;
       }
-
-      // Use the same preconditioner Amat = Pmat
-      virtual void SetSamePreconditioner() = 0;
 
       /** Sets the type of preconditioner to use. */
       void set_preconditioner_type(const PreconditionerType pct);
@@ -133,10 +132,13 @@ namespace femus {
         std::cout << "Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
       };
       virtual void SetElementBlockNumberFluid(const unsigned & block_elemet_number, const unsigned &overlap) {
-        std::cout << "Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
+        std::cout << "Warning SetElementBlockNumberFluid(const unsigned &) is not available for this smoother\n";
       };
       virtual void SetElementBlockNumberSolid(const unsigned & block_elemet_number, const unsigned &overlap) {
-        std::cout << "Warning SetElementBlockNumber(const unsigned &) is not available for this smoother\n";
+        std::cout << "Warning SetElementBlockNumberSolid(const unsigned &) is not available for this smoother\n";
+      };
+      virtual void SetElementBlockNumberPorous(const unsigned & block_elemet_number, const unsigned &overlap) {
+        std::cout << "Warning SetElementBlockNumberPorous(const unsigned &) is not available for this smoother\n";
       };
 
       virtual void SetFieldSplitTree(FieldSplitTree * fieldSplitTree) {
