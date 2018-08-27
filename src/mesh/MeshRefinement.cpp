@@ -392,7 +392,7 @@ namespace femus {
 
     Buildkmid();
 
-    std::vector < int > partition;
+    std::vector < unsigned > partition;
     partition.reserve(_mesh.GetNumberOfNodes());
     partition.resize(_mesh.GetNumberOfElements());
 
