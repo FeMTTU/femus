@@ -31,6 +31,7 @@
 #include "Parallel.hpp"
 #include "PetscMacro.hpp"
 #include "Casts.hpp"
+#include <numeric>
 
 
 namespace femus {
@@ -509,7 +510,7 @@ void PetscVector::localize(
 
   // Create idx, idx[i] = i;
   std::vector<int> idx(n);
-  iota(idx.begin(), idx.end(), 0);
+  std::iota(idx.begin(), idx.end(), 0);
 //   Utility::iota (idx.begin(), idx.end(), 0);
 
   // Create the index set & scatter object
@@ -624,7 +625,7 @@ void PetscVector::localize(
     IS is;
     VecScatter scatter;
     std::vector<int> idx(local_size);
-    iota(idx.begin(), idx.end(), first_local_idx);
+    std::iota(idx.begin(), idx.end(), first_local_idx);
 
     // Create the index set & scatter object
     ierr = ISCreateGeneral(MPI_COMM_WORLD, local_size,
@@ -837,7 +838,7 @@ void PetscVector::create_subvector(
 
   // Use iota to fill an array with entries [0,1,2,3,4,...rows.size()]
   std::vector<int> idx(rows.size());
-  iota(idx.begin(), idx.end(), 0);
+  std::iota(idx.begin(), idx.end(), 0);
 //   Utility::iota (idx.begin(), idx.end(), 0);
 
   // Construct index sets

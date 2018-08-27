@@ -30,7 +30,7 @@ namespace femus {
 
   class Marker : public ParallelObject {
     public:
-      Marker(std::vector < double > x, const MarkerType &markerType, Solution *sol, const unsigned & solType, const bool &debug = false) {
+      Marker(std::vector < double > x, const double &mass, const MarkerType &markerType, Solution *sol, const unsigned & solType, const bool &debug = false) {
         double s1 = 0.;
         _x = x;
         _markerType = markerType;
@@ -46,7 +46,7 @@ namespace femus {
           FindLocalCoordinates(_solType, aX, true, sol, s1);
 
           _MPMQuantities.resize(_MPMSize);
-          _MPMQuantities[3 * _dim ] = 0. /*11.133 for the disk */ /*0.217013888889 for the beam */ ;  //mass //now it is computed in the main, zero is a default value
+          _MPMQuantities[3 * _dim ] = mass; /*11.133 for the disk */ /*0.217013888889 for the beam */ ;  //mass //now it is computed in the main, zero is a default value
 //           _MPMQuantities[3 * _dim + 1] = 10000.;  //density
           for(unsigned d = 0; d < 3 * _dim; d++) {
             _MPMQuantities[d] = 0.;

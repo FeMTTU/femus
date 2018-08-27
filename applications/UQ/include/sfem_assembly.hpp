@@ -15,140 +15,27 @@ using namespace femus;
 // };
 
 
-const double HermiteQuadrature[10][2][10] = { //Number of quadrature points, first row: weights, second row: coordinates
-  {{1.77245385091},{0.}},
-  { {0.8862269254527577, 0.8862269254527577},
-    { -0.7071067811865476, 0.7071067811865476}
-  },
-  { {0.29540897515091946, 1.1816359006036772, 0.29540897515091946},
-    { -1.224744871391589, 0., 1.224744871391589}
-  },
-  { {0.08131283544724523, 0.8049140900055128, 0.8049140900055128, 0.08131283544724523},
-    { -1.6506801238857844, -0.5246476232752904, 0.5246476232752904, 1.6506801238857844}
-  },
-  { {0.019953242059045917, 0.39361932315224113, 0.9453087204829418, 0.39361932315224113, 0.019953242059045917},
-    { -2.0201828704560856, -0.9585724646138185, 0., 0.9585724646138185, 2.0201828704560856}
-  },
-  { {0.004530009905508841, 0.15706732032285653, 0.7246295952243923, 0.7246295952243923, 0.15706732032285653, 0.004530009905508841},
-    { -2.3506049736744923, -1.335849074013697, -0.4360774119276165, 0.4360774119276165, 1.335849074013697, 2.3506049736744923}
-  },
-  { {
-      0.0009717812450995206, 0.05451558281912702, 0.4256072526101277, 0.8102646175568072, 0.4256072526101277, 0.05451558281912702,
-      0.0009717812450995206
-    },
-    { -2.6519613568352334, -1.6735516287674714, -0.8162878828589647, 0., 0.8162878828589647, 1.6735516287674714, 2.6519613568352334}
-  },
-  { {
-      0.00019960407221136756, 0.017077983007413464, 0.20780232581489194, 0.6611470125582413, 0.6611470125582413, 0.20780232581489194,
-      0.017077983007413464, 0.00019960407221136756
-    },
-    {
-      -2.930637420257244, -1.981656756695843, -1.1571937124467802, -0.3811869902073221, 0.3811869902073221, 1.1571937124467802,
-      1.981656756695843, 2.930637420257244
-    }
-  },
-  { {
-      0.00003960697726326427, 0.004943624275536942, 0.08847452739437658, 0.4326515590025556, 0.7202352156060509, 0.4326515590025556,
-      0.08847452739437658, 0.004943624275536942, 0.00003960697726326427
-    },
-    {
-      -3.1909932017815277, -2.266580584531843, -1.468553289216668, -0.7235510187528376, 0., 0.7235510187528376, 1.468553289216668,
-      2.266580584531843, 3.1909932017815277
-    }
-  },
-  { {
-      7.640432855232643e-6, 0.001343645746781235, 0.033874394455481044, 0.24013861108231477, 0.6108626337353258, 0.6108626337353258,
-      0.24013861108231477, 0.033874394455481044, 0.001343645746781235, 7.640432855232643e-6
-    },
-    {
-      -3.4361591188377374, -2.5327316742327897, -1.7566836492998819, -1.0366108297895136, -0.3429013272237046, 0.3429013272237046,
-      1.0366108297895136, 1.7566836492998819, 2.5327316742327897, 3.4361591188377374
-    }
-  }
-};
-
-
-
-
-int numberOfEigPairs = 1; //dimension of the stochastic variable
+int numberOfEigPairs = 2; //dimension of the stochastic variable
 std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
 
-double amin = 1. / 100;
+double amin = 1. / 100.;
 
-double stdDeviationInput = 1./*0.2*/;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double stdDeviationInput = 0.02;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
+double meanInput = 0.;
 
 boost::mt19937 rng; // I don't seed it on purpouse (it's not relevant)
 
-boost::normal_distribution<> nd(0.0, stdDeviationInput);
+boost::normal_distribution<> nd(0., 1.);
 
 boost::variate_generator < boost::mt19937&,
 
-      boost::normal_distribution<> > var_nor(rng, nd);
-
-void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, const unsigned & numberOfQuadraturePoints) {
-
-  if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 10) {
-    std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [1,10]" << std::endl;
-    abort();
-  }
-
-  else {
-    HermitePoly.resize(numberOfEigPairs);
-    for(unsigned i = 0; i < numberOfEigPairs; i++) {
-      HermitePoly[i].resize(numberOfQuadraturePoints);
-    }
-
-    for(unsigned j = 0; j < numberOfQuadraturePoints; j++) {
-
-      double x = HermiteQuadrature[numberOfQuadraturePoints - 1][1][j];
-
-      HermitePoly[0][j] = 1. ;
-
-      if(numberOfEigPairs > 1) {
-        HermitePoly[1][j] = x ;
-        if(numberOfEigPairs > 2) {
-          HermitePoly[2][j] = 0.5 * (pow(x, 2) - 1.) ;
-          if(numberOfEigPairs > 3) {
-            HermitePoly[3][j] = (pow(x, 3) - 3. * x) / 6. ;
-            if(numberOfEigPairs > 4) {
-              HermitePoly[4][j] = (pow(x, 4) - 6. * x * x + 3.) / 24. ;
-              if(numberOfEigPairs > 5) {
-                HermitePoly[5][j] = (pow(x, 5) - 10. * pow(x, 3) + 15. * x) / 120. ;
-                if(numberOfEigPairs > 6) {
-                  HermitePoly[6][j] = (pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.) / 720. ;
-                  if(numberOfEigPairs > 7) {
-                    HermitePoly[7][j] =  (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / 5040. ;
-                    if(numberOfEigPairs > 8) {
-                      HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.) / 40320. ;
-                      if(numberOfEigPairs > 9) {
-                        HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / 362880.;
-                        if(numberOfEigPairs > 10) {
-                          HermitePoly[10][j] = (pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.) / 3628800.;
-                          if(numberOfEigPairs > 11) {
-                            std::cout << "Stochastic dimension is too big. For now, it has to be not greater than 10." << std::endl;
-                            abort();
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-    }
-
-  }
-
-};
+boost::normal_distribution<> > var_nor(rng, nd);
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
   return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
 };
+
 
 void AssembleUQSys(MultiLevelProblem& ml_prob) {
   //  ml_prob is the global object from/to where get/set all the data
@@ -241,7 +128,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
       yOmega[eig] = var_nor();
     }
     MPI_Bcast(&yOmega[eig], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    std::cout << yOmega[eig] << " ";
+    std::cout << " ----------------------------- yOmega =" << yOmega[eig] << " ";
   }
   std::cout << std::endl;
 
@@ -296,7 +183,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
     // *** Gauss point loop ***
     for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, boost::none);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
 
@@ -314,8 +201,17 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
         }
       }
 
+      //BEGIN log(a-amin) = KL expansion
       double aCoeff = amin + exp(KLexpansion_gss);
-//       std::cout << "COEEEEEEEEEEEEEEEEEEEEF" << aCoeff << std::endl;
+//       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
+      //END log(a-amin) = KL expansion
+
+//BEGIN a = KL expansion
+//       double aCoeff = meanInput + KLexpansion_gss; 
+//       std::cout << "COEEEEEEEEEEEEEEEEEEEEF =  " << aCoeff << std::endl;
+      //END a = KL expansion
+
+
 
       // *** phi_i loop ***
       for(unsigned i = 0; i < nDofu; i++) {
@@ -326,7 +222,7 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
           laplace   +=  aCoeff * phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
 
-        double srcTerm = 100./*- GetExactSolutionLaplace(x_gss)*/ ;
+        double srcTerm = 1./*- GetExactSolutionLaplace(x_gss)*/ ;
         aRes[i] += (srcTerm * phi[i] + laplace) * weight;
 
       } // end phi_i loop
@@ -370,5 +266,6 @@ void AssembleUQSys(MultiLevelProblem& ml_prob) {
 
   // ***************** END ASSEMBLY *******************
 }
+
 
 

@@ -206,7 +206,7 @@ int main(int argc, char** args) {
     x[0] = 0. + 0.125 * cos(2.*pi / pSize * j);
     x[1] = .25 + 0.125 * sin(2.*pi / pSize * j);
     x[2] = 0.;
-    particle[j] = new Marker(x, VOLUME, mlSol.GetLevel(numberOfUniformLevels - 1), solType, true);
+    particle[j] = new Marker(x, 0., VOLUME, mlSol.GetLevel(numberOfUniformLevels - 1), solType, true);
   }
 
 
