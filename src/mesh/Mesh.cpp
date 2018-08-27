@@ -156,7 +156,7 @@ namespace femus
 
 
 
-    std::vector < int > partition;
+    std::vector < unsigned > partition;
     partition.reserve(GetNumberOfNodes());
     partition.resize(GetNumberOfElements());
     MeshMetisPartitioning meshMetisPartitioning(*this);
@@ -228,8 +228,12 @@ namespace femus
 
     el->SetNodeNumber(_nnodes);
 
+    std::vector < unsigned > materialElementCounter(3,0);
+    materialElementCounter[0] = GetNumberOfElements();
+    el->SetMaterialElementCounter(materialElementCounter);
+    
 
-    std::vector < int > partition;
+    std::vector < unsigned > partition;
     partition.reserve(GetNumberOfNodes());
     partition.resize(GetNumberOfElements());
     MeshMetisPartitioning meshMetisPartitioning(*this);
@@ -359,7 +363,7 @@ namespace femus
 
 //dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
 
-  void Mesh::FillISvector(vector < int >& partition)
+  void Mesh::FillISvector(vector < unsigned >& partition)
   {
 
     //BEGIN Initialization for k = 0,1,2,3,4
@@ -778,7 +782,7 @@ namespace femus
     }
     else {
       std::cout << "Wrong argument range in function"
-                << "Mesh::GetLagrangeProjectionMatrix(const unsigned& itype, const unsigned& jtype)" << std::cout;
+                << "Mesh::GetLagrangeProjectionMatrix(const unsigned& itype, const unsigned& jtype)" << std::endl;
       abort();
     }
 

@@ -66,7 +66,7 @@ namespace femus {
       virtual void Clear() {}
 
       /** Builds a \p LinearEquationSolver using the linear solver in \p solver_package */
-      static std::auto_ptr<LinearEquationSolver> build(const unsigned &igrid, Solution* other_solution,
+      static std::unique_ptr<LinearEquationSolver> build(const unsigned &igrid, Solution* other_solution,
           const MgSmoother & smoother_type, const SolverPackage solver_package = LSOLVER);
 
       /** Set the tolerance for the solver */

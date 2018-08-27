@@ -435,7 +435,7 @@ namespace femus {
     std::ofstream ftr_out;
     ftr_out.open( filename.str().c_str() );
     if( !ftr_out ) {
-      std::cout << "Transient Output mesh file " << filename << " cannot be opened.\n";
+      std::cout << "Transient Output mesh file " << filename.str().c_str() << " cannot be opened.\n";
       exit( 0 );
     }
 
@@ -448,7 +448,7 @@ namespace femus {
     for( unsigned time_step = time_step0; time_step < time_step0 + ntime_steps; time_step++ ) {
       if( !( time_step % print_step ) ) {
         filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << type << ".xmf";
-        ftr_out << "<xi:include href=\"" << filename << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid[" << 1 << "])\">\n";
+        ftr_out << "<xi:include href=\"" << filename.str().c_str() << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid[" << 1 << "])\">\n";
         ftr_out << "<xi:fallback/>\n";
         ftr_out << "</xi:include>\n";
       }

@@ -27,7 +27,8 @@
 using boost::math::ellint_1;
 using boost::math::ellint_2;
 
-namespace femus {
+namespace femus
+{
 
   const double Line::_a[4][4][4] = {
     { {} // first order
@@ -61,9 +62,38 @@ namespace femus {
   };
 
 
+  Line::Line(const std::vector < std::vector < double > > x, const std::vector < double > &mass,
+             const std::vector <MarkerType>& markerType,
+             Solution* sol, const unsigned& solType)
+  {
+    _sol = sol;
+    _mesh = _sol->GetMesh();
+
+    _time.assign(10, 0);
+
+    _size = x.size();
+
+    std::vector < Marker*> particles(_size);
+
+    _dim = _mesh->GetDimension();
+
+    _markerOffset.resize(_nprocs + 1);
+    _markerOffset[_nprocs] = _size;
+
+    _particles.resize(_size);
+    _printList.resize(_size);
+
+    for(unsigned j = 0; j < _size; j++) {
+      particles[j] = new Marker(x[j], mass[j], markerType[j], _sol, solType, true);
+    }
+    Reorder(particles);
+
+  }
+
   Line::Line(const std::vector < std::vector < double > > x,
              const std::vector <MarkerType>& markerType,
-             Solution* sol, const unsigned& solType) {
+             Solution* sol, const unsigned& solType)
+  {
 
     _sol = sol;
     _mesh = _sol->GetMesh();
@@ -83,10 +113,13 @@ namespace femus {
     _printList.resize(_size);
 
     for(unsigned j = 0; j < _size; j++) {
-      particles[j] = new Marker(x[j], markerType[j], _sol, solType, true);
+      particles[j] = new Marker(x[j], 0., markerType[j], _sol, solType, true);
     }
+    Reorder(particles);
+  }
 
-
+  void Line::Reorder(std::vector < Marker*> &particles)
+  {
 
     //BEGIN TEST ASSIGNATION
 
@@ -196,6 +229,113 @@ namespace femus {
 //
 //         std::cout << " ------------------------------------------------------------------------------------------------ " << std::endl;
 
+
+    //BEGIN reorder markers also by element
+
+    for(unsigned j = 0; j < _size; j++) {
+      particles[j] = _particles[j];
+    }
+
+    std::vector < unsigned> printList(_size);
+    printList = _printList;
+
+    unsigned meshElements = _mesh->GetNumberOfElements();
+    std::vector< bool > elementList(meshElements, false);
+
+
+    //flags to see if we already ordered by that element, 0 = not considered yet
+//     for(unsigned iFlag = 0; iFlag < meshElements; iFlag++) {
+//       elementList[iFlag] = 0;
+//     }
+
+    for(unsigned iproc = 0; iproc < _nprocs; iproc++) {
+
+      bool someMarkersOutsideDomain = false;
+      counter = 0;
+
+      for(unsigned jp = _markerOffset[iproc]; jp < _markerOffset[iproc + 1]; jp++) {
+
+        unsigned jel;
+        jel = particles[jp]->GetMarkerElement();
+
+        if(jel != UINT_MAX) {
+
+          if(elementList[jel] == false) {
+
+            elementList[jel] = true;
+
+            _particles[_markerOffset[iproc] + counter] = particles[jp];
+
+            for(unsigned iList = 0; iList < _size; iList++) {
+              if(printList[iList] == jp) {
+                _printList[iList] = _markerOffset[iproc] + counter;
+                break;
+              }
+            }
+
+            counter++;
+
+
+            for(unsigned ip = jp + 1; ip < _markerOffset[iproc + 1]; ip++) {
+              unsigned iel;
+              iel = particles[ip]->GetMarkerElement();
+
+              if(iel == jel) {
+                _particles[_markerOffset[iproc] + counter] = particles[ip];
+
+                for(unsigned iList = 0; iList < _size; iList++) {
+                  if(printList[iList] == ip) {
+                    _printList[iList] = _markerOffset[iproc] + counter;
+                    break;
+                  }
+                }
+
+                counter++;
+              }
+            }
+          }
+        }
+        else {
+          someMarkersOutsideDomain = true;
+        }
+      }
+
+      if(someMarkersOutsideDomain == true) {
+        if(iproc == 0) {
+          for(unsigned i = 0; i < _size; i++) {
+            unsigned iel = particles[i]->GetMarkerElement();
+
+            if(iel == UINT_MAX) {
+
+              _particles[_markerOffset[0] + counter] = particles[i];
+
+              for(unsigned iList = 0; iList < _size; iList++) {
+                if(printList[iList] == i) {
+                  _printList[iList] = _markerOffset[0] + counter;
+                  break;
+                }
+              }
+
+              counter++;
+            }
+          }
+        }
+        else {
+          std::cout << "warning" << std::endl;
+          std::cout << "the marker is outside the domain but not in iproc 0" << std::endl;
+          abort();
+        }
+      }
+
+    }
+
+
+
+
+    //END reorder markers also by element
+
+
+
 //     //BEGIN reorder markers also by element
 //
 //     for(unsigned j = 0; j < _size; j++) {
@@ -299,14 +439,16 @@ namespace femus {
 //     exit(0);
   };
 
-  Line::~Line() {
+  Line::~Line()
+  {
     for(unsigned j = 0; j < _size; j++) {
       //std::cout << j << " " << _particles[j] << std::endl<< std::flush;
       delete _particles[j];
     }
   }
 
-  void Line::UpdateLine() {
+  void Line::UpdateLine()
+  {
 
     std::vector < Marker*> particles(_size);
     std::vector < unsigned> printList(_size);
@@ -569,7 +711,8 @@ namespace femus {
 
   }
 
-  void Line::AdvectionParallel(const unsigned& n, const double& T, const unsigned& order, ForceFunction force) {
+  void Line::AdvectionParallel(const unsigned& n, const double& T, const unsigned& order, ForceFunction force)
+  {
 
     //BEGIN  Initialize the parameters for all processors
 
@@ -932,7 +1075,8 @@ namespace femus {
   }
 
 
-  unsigned Line::NumberOfParticlesOutsideTheDomain() {
+  unsigned Line::NumberOfParticlesOutsideTheDomain()
+  {
 
     unsigned counter = 0;
 
@@ -948,175 +1092,134 @@ namespace femus {
   }
 
 
-  //TODO this function may be useless for our implementation eventually
-  void Line::GetParticlesToGridProjections() {
+
+  void Line::GetParticlesToGridMaterial()
+  {
 
     double s = 0;
 
-    unsigned  solIndexM = _sol->GetIndex("M");
-    std::vector<unsigned>  solIndexVel(_dim);
+    unsigned solIndexM = _sol->GetIndex("M"); // nodes
+    unsigned solTypeM = _sol->GetSolutionType(solIndexM);
 
-    solIndexVel[0] = _sol->GetIndex("U");
-    if(_dim > 1) solIndexVel[1] = _sol->GetIndex("V");
-    if(_dim > 2) solIndexVel[2] = _sol->GetIndex("W");
-
-    unsigned solType = _sol->GetSolutionType(solIndexM);
-    for(int d = 0; d <  _dim; d++) {
-      if(solType != _sol->GetSolutionType(solIndexVel[d])) {
-        std::cout << " Error in Line::GetPointsToGridProjections()," << std::endl
-                  << "the mass and velocity should have the same solution type" << std::endl;
-        abort();
-      }
-    }
+    unsigned solIndexMat = _sol->GetIndex("Mat"); // element
+    unsigned solTypeMat = _sol->GetSolutionType(solIndexMat);
 
     std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
 
     _sol->_Sol[solIndexM]->zero();
-    for(int d = 0; d <  _dim; d++) {
-      _sol->_Sol[solIndexVel[d]]->zero();
-    }
+    _sol->_Sol[solIndexMat]->zero();
 
+
+    // set all element with at least one marker to 3 and all nodes of the element to 1
     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
 
       unsigned iel = _particles[iMarker]->GetMarkerElement();
       unsigned ielType =  _mesh->GetElementType(iel);
       bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;     //update if iel was never updated
 
-      _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, s);
+      std::vector <double> xi1 = _particles[iMarker]->GetMarkerLocalCoordinates();
+
+      _particles[iMarker]->FindLocalCoordinates(2., aX[iel], elementUpdate, _sol, s);
 
       std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
-      double mass = _particles[iMarker]->GetMarkerMass();
-      std::vector< double > velocity(_dim);
-      _particles[iMarker]->GetMarkerVelocity(velocity);
 
-      basis* base = _mesh->GetBasis(ielType, solType);
-      for(unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solType); j++) {
-        double value = base->eval_phi(j, xi);
-        unsigned jdof = _mesh->GetSolutionDof(j, iel, solType);
-        _sol->_Sol[solIndexM]->add(jdof, value * mass);
-        for(int d = 0; d <  _dim; d++) {
-          _sol->_Sol[solIndexVel[d]]->add(jdof, value * mass * velocity[d]);
+      for(unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solTypeM); j++) {
+        unsigned jdof = _mesh->GetSolutionDof(j, iel, solTypeM);
+        _sol->_Sol[solIndexM]->set(jdof, 1.);
+      }
+
+      unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
+      _sol->_Sol[solIndexMat]->set(idofMat, 3.);
+
+    }
+    _sol->_Sol[solIndexM]->close();
+    _sol->_Sol[solIndexMat]->close();
+
+    //set all nodes M with element Mat = 0 to 0
+    for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+
+      unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
+      unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
+
+      unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+      for(unsigned i = 0; i < nDofsM; i++) {
+        unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
+        if(material == 0 ||  (*_sol->_Bdc[solIndexM])(idof) == 0 ) {
+          _sol->_Sol[solIndexM]->set(idof, 0.);
+
+//           double value = (*_sol->_Sol[solIndexM])(idof);
+//           if(fabs(value) > 1.0e-14) {
+//             material = 1;
+//             _sol->_Sol[solIndexMat]->set(idofMat, 1.);
+//             break;
+//           }
         }
       }
     }
     _sol->_Sol[solIndexM]->close();
 
-    for(int d = 0; d <  _dim; d++) {
-      _sol->_Sol[solIndexVel[d]]->close();
-    }
 
-    for(unsigned i = _mesh->_dofOffset[solType][_iproc]; i < _mesh->_dofOffset[solType][_iproc + 1]; i++) {
-      double mass = (*_sol->_Sol[solIndexM])(i);
-      if(fabs(mass) > 1.0e-20) {  //if on the mass at grid node i
-        for(int d = 0; d <  _dim; d++) {
-          double value = (*_sol->_Sol[solIndexVel[d]])(i);
-          _sol->_Sol[solIndexVel[d]]->set(i, value / mass);
-        }
-      }
-      else {
-        for(int d = 0; d <  _dim; d++) {
-          _sol->_Sol[solIndexVel[d]]->set(i, 0.);
-        }
-      }
-    }
+//     for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+//       unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
+//       unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
+//       if(fabs(material - 1.) < 1.0e-14) {
+//         unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+//         for(unsigned i = 0; i < nDofsM; i++) {
+//           unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
+//           _sol->_Sol[solIndexM]->set(idof, 0.);
+//         }
+//       }
+//     }
+//     _sol->_Sol[solIndexM]->close();
 
-    for(int d = 0; d <  _dim; d++) {
-      _sol->_Sol[solIndexVel[d]]->close();
+    for(int iel = _mesh->_elementOffset[_iproc]; iel < _mesh->_elementOffset[_iproc + 1]; iel++) {
+
+      unsigned idofMat = _mesh->GetSolutionDof(0, iel, solTypeMat);
+      unsigned  material = (*_sol->_Sol[solIndexMat])(idofMat);
+      if(material == 3) {
+        unsigned nDofsM = _mesh->GetElementDofNumber(iel, solTypeM);   // number of mass dofs
+        double counter = 0.;
+        for(unsigned i = 0; i < nDofsM; i++) {
+          unsigned idof = _mesh->GetSolutionDof(i, iel, solTypeM);  // global to global mapping for mass solution
+          double value = (*_sol->_Sol[solIndexM])(idof);
+          counter += value;
+        }
+        //if(fabs((counter - nDofsM)/nDofsM) > .4 ) {
+        _sol->_Sol[solIndexMat]->set(idofMat, counter);
+        //}
+      }
     }
+    _sol->_Sol[solIndexMat]->close();
+
+
+    for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
+
+      unsigned iel = _particles[iMarker]->GetMarkerElement();
+      unsigned ielType =  _mesh->GetElementType(iel);
+      for(unsigned j = 0; j < _mesh->GetElementDofNumber(iel, solTypeM); j++) {
+
+        unsigned jdof = _mesh->GetSolutionDof(j, iel, solTypeM);
+        _sol->_Sol[solIndexM]->set(jdof, 1.);
+      }
+    }
+    _sol->_Sol[solIndexM]->close();
 
   }
 
 
-  void Line::UpdateLineMPM() {
-
-    //BEGIN remove when everything is OK
-
-//     std::vector<unsigned>  solIndexDisp(_dim);
-//     std::vector<unsigned>  solIndexAcc(_dim);
-//
-//     solIndexDisp[0] = _sol->GetIndex("DX");
-//     if(_dim > 1) solIndexDisp[1] = _sol->GetIndex("DY");
-//     if(_dim > 2) solIndexDisp[2] = _sol->GetIndex("DW");
-//
-//     solIndexAcc[0] = _sol->GetIndex("AU");
-//     if(_dim > 1) solIndexAcc[1] = _sol->GetIndex("AV");
-//     if(_dim > 2) solIndexAcc[2] = _sol->GetIndex("AW");
-//
-//     unsigned solType = _sol->GetSolutionType(solIndexDisp[0]);
-//
-//     std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
-//
-//     std::vector< vector< double > > SolDd(_dim); // solution at the nodes
-//     std::vector< vector< double > > SolAd(_dim); // solution at the nodes
-//
-//     unsigned ielOld = UINT_MAX;
-//     unsigned nve;
-//     unsigned ielType;
-//
-//     for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
-//
-//       unsigned iel = _particles[iMarker]->GetMarkerElement();
-//
-//       if(iel != UINT_MAX) {
-//
-//         std::vector <double> particleDisp(_dim, 0.);
-//         std::vector <double> particleAcc(_dim, 0.);
-//
-//         if(iel != ielOld) {
-//           ielType =  _mesh->GetElementType(iel);
-//           nve = _mesh->GetElementDofNumber(iel, solType);
-//
-//           for(int i = 0; i < _dim; i++) {
-//             SolDd[i].resize(nve);
-//             SolAd[i].resize(nve);
-//           }
-//
-//           for(unsigned inode = 0; inode < nve; inode++) {
-//             unsigned idof = _mesh->GetSolutionDof(inode, iel, solType); //local 2 global solution
-//             for(int i = 0; i < _dim; i++) {
-//               SolDd[i][inode] = (*_sol->_Sol[solIndexDisp[i]])(idof);
-//               SolAd[i][inode] = (*_sol->_Sol[solIndexAcc[i]])(idof);
-//             }
-//           }
-//
-//         }
-//
-//         bool elementUpdate = (aX.find(iel) != aX.end()) ? false : true;  //TODO we actually want to remove this
-//         _particles[iMarker]->FindLocalCoordinates(solType, aX[iel], elementUpdate, _sol, 0.);
-//         std::vector <double> xi = _particles[iMarker]->GetMarkerLocalCoordinates();
-//
-//         for(int i = 0; i < _dim; i++) {
-//           basis* base = _mesh->GetBasis(ielType, solType);
-//           for(unsigned inode = 0; inode < nve; inode++) {
-//             double phiP = base->eval_phi(inode, xi);
-//             particleDisp[i] += phiP * SolDd[i][inode];
-//             particleAcc[i] += phiP * SolAd[i][inode];
-//           }
-//         }
-//
-//         _particles[iMarker]->SetMarkerDisplacement(particleDisp);
-//         _particles[iMarker]->SetMarkerAcceleration(particleAcc);
-//
-//         //movement of the particles
-//         _particles[iMarker]->UpdateParticleCoordinates();
-//
-//         _particles[iMarker]->GetElementSerial(iel, _sol, 0.);
-//         _particles[iMarker]->SetIprocMarkerPreviousElement(iel);
-//
-//
-//         ielOld = iel;
-//
-//       }
-//
-//     }
-
-    //END remove when everything is OK
+  void Line::UpdateLineMPM()
+  {
 
 
-    //BEGIN find new _elem and _mproc
+    for(unsigned iMarker = _markerOffset[_iproc]; iMarker < _markerOffset[_iproc + 1]; iMarker++) {
+      unsigned elem =  _particles[iMarker]->GetMarkerElement();
+      _particles[iMarker]->GetElementSerial(elem, _sol, 0.);
+      _particles[iMarker]->SetIprocMarkerPreviousElement(elem);
+    }
 
     for(unsigned jproc = 0; jproc < _nprocs; jproc++) {
       for(unsigned iMarker = _markerOffset[jproc]; iMarker < _markerOffset[jproc + 1]; iMarker++) {
+
         unsigned elem =  _particles[iMarker]->GetMarkerElement();
         MPI_Bcast(& elem, 1, MPI_UNSIGNED, jproc, PETSC_COMM_WORLD);
         _particles[iMarker]->SetMarkerElement(elem);
@@ -1125,7 +1228,7 @@ namespace femus {
           unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol); //WARNING you don't know if this is your real process
           _particles[iMarker]->SetMarkerProc(mproc);
 
-          if(mproc != jproc) { //this means, if we think the particle moved from jproc (which means element serial shouldn't have found the actual element)
+          if(mproc != jproc) {  //this means, if we think the particle moved from jproc (which means element serial shouldn't have found the actual element)
             unsigned prevElem = _particles[iMarker]->GetIprocMarkerPreviousElement();
             _particles[iMarker]->GetElement(prevElem, jproc, _sol, 0.);
             _particles[iMarker]->SetIprocMarkerPreviousElement(prevElem);
@@ -1136,7 +1239,7 @@ namespace femus {
           if(elem != UINT_MAX) {    // if it is not outside the domain
             unsigned mproc = _particles[iMarker]->GetMarkerProc(_sol);  //actual mproc
 
-            if(mproc != jproc) { //there is no need to send/receive if the particle didn't change process (which is when mproc == jproc)
+            if(mproc != jproc) {  //there is no need to send/receive if the particle didn't change process (which is when mproc == jproc)
               if(jproc == _iproc) {
 
                 unsigned order = 0;
@@ -1201,7 +1304,46 @@ namespace femus {
 
   }
 
+  void Line::SetParticlesMass(const double& volume, const double& density)
+  {
+    double particlesMass = density * volume / _size;
+    for(unsigned i = _markerOffset[_iproc]; i < _markerOffset[_iproc  + 1]; i++) {
+      _particles[i]->SetMarkerMass(particlesMass);
+    }
+  }
 
+
+  void Line::ScaleParticleMass(double scale(const std::vector <double>& x))
+  {
+    for(unsigned i = _markerOffset[_iproc]; i < _markerOffset[_iproc  + 1]; i++) {
+      std::vector<double> x(_dim);
+      x = _particles[i]->GetIprocMarkerCoordinates();
+      double mass = _particles[i]->GetMarkerMass();
+      _particles[i]->SetMarkerMass(mass * scale(x));
+    }
+
+  }
+
+  void Line::GetExtrema( std::vector <double>& xMin, std::vector <double>& xMax)
+  {
+    xMin.resize(_dim);
+    xMax.resize(_dim);
+    
+    std::vector < double > xMinLocal(_dim, 1.0e100);
+    std::vector < double > xMaxLocal(_dim, -1.0e100);
+    std::vector< double > x;
+    for(unsigned i = _markerOffset[_iproc]; i < _markerOffset[_iproc  + 1]; i++) {
+      x = _particles[i]->GetIprocMarkerCoordinates();
+      for(unsigned k = 0; k < _dim; k++) {
+	xMinLocal[k] = (x[k] < xMinLocal[k]) ? x[k] : xMinLocal[k];
+        xMaxLocal[k] = (x[k] > xMaxLocal[k]) ? x[k] : xMaxLocal[k];
+      }
+    }
+    for(unsigned k = 0; k < _dim; k++) {
+      MPI_Allreduce(&xMinLocal[0], &xMin[0], static_cast<int>(_dim), MPI_DOUBLE, MPI_MIN, PETSC_COMM_WORLD);
+      MPI_Allreduce(&xMaxLocal[0], &xMax[0], static_cast<int>(_dim), MPI_DOUBLE, MPI_MAX, PETSC_COMM_WORLD);
+    }
+  }
 
 
 }

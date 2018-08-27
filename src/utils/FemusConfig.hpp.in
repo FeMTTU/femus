@@ -42,6 +42,9 @@
 
 #cmakedefine HAVE_LIBMESH
 
+//SLEPc library
+
+#cmakedefine HAVE_SLEPC
 
 #ifdef HAVE_PETSC
   #undef  LSOLVER
