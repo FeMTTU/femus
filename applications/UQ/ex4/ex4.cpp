@@ -28,7 +28,7 @@ void PlotStochasticData();
 
 //BEGIN stochastic data
 
-unsigned totMoments = 6;
+unsigned totMoments = 6; 
 std::vector <double> moments(totMoments, 0.); //initialization
 std::vector <double> momentsStandardized(totMoments, 0.); //initialization
 std::vector <double> cumulants(totMoments, 0.); //initialization
