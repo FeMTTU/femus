@@ -5,66 +5,122 @@
 
 using namespace femus;
 
-class uq{
-    
-public:  
-  void ComputeTensorProductSet(std::vector < std::vector <unsigned> > & Tp, 
-                          const unsigned & numberOfQuadraturePoints, 
-                          const unsigned & numberOfEigPairs);
-  
-  void EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
-                           const unsigned &numberOfQuadraturePoints, const unsigned & maxPolyOrder);
-    
-  void EvaluateHermitePolyHistogram(std::vector < std::vector < double > >  & HermitePoly, const unsigned & pIndex,
-                                      std::vector<double> & samplePoints, const unsigned & numberOfEigPairs);
-  
-  void ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsigned & p, 
-                         const unsigned & numberOfEigPairs);
-  
-  const std::vector < std::vector <unsigned> > & GetIndexSet(const unsigned & p, const unsigned & numberOfEigPairs){
-          
-    std::map<std::pair<int,int>, std::vector < std::vector <unsigned> > >::iterator it; 
-    it = _Jp.find(std::make_pair(p,numberOfEigPairs));
-    if (it == _Jp.end())
-      ComputeIndexSetJp( _Jp[std::make_pair(p,numberOfEigPairs)], p, numberOfEigPairs);  
-    
-    return _Jp[std::make_pair(p,numberOfEigPairs)];  
-  };
-  
-  void EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, 
-                               std::vector < std::vector < std::vector < double > > > &integralsMatrix);
-  
-  void EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, 
-                                      std::vector < std::vector < std::vector < double > > > & G,
-                                      const unsigned & numberOfEigPairs, 
-                                      const std::vector < std::vector < std::vector < double > > > & integralsMatrix);
+class uq {
 
-  void EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & MultivariateHermitePoly, 
-                                       std::vector < double > & MultivariateHermiteQuadratureWeights,
-                                       const unsigned & numberOfQuadraturePoints, const unsigned & p, 
-                                       const std::vector < std::vector <unsigned> > & Jp, 
-                                       const std::vector < std::vector <unsigned> > & Tp,
-                                       const unsigned & numberOfEigPairs);
-  const double * GetHermiteQuadraturePoints(const unsigned &numberOfQuadraturePoints){
-      if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16){
-        std::cout << "Wrong Number of Quadature points (= "<< numberOfQuadraturePoints<<" ) in function uq::GetHermiteQuadaturePoints(...)"<<std::endl;
-        abort();
-      }
-      return _HermiteQuadrature[numberOfQuadraturePoints - 1][1];
-    }
-  const double * GetHermiteQuadratureWeights(const unsigned &numberOfQuadraturePoints){
-      if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16){
-        std::cout << "Wrong Number of Quadature points (= "<< numberOfQuadraturePoints<<" ) in function uq::GetHermiteQuadatureWeights(...)"<<std::endl;
-        abort();
-      }
-      return _HermiteQuadrature[numberOfQuadraturePoints - 1][0];
-    }
-private:
-  static const double _HermiteQuadrature[16][2][16];
-  std::map<std::pair<int,int>, std::vector < std::vector <unsigned> > > _Jp;
-  
+  public:
+
+    /// Get Hermite quadrature point coordinates
+    const double* GetHermiteQuadraturePoints (const unsigned &numberOfQuadraturePoints);
+
+    /// Get Hermite quadrature weights
+    const double* GetHermiteQuadratureWeights (const unsigned &numberOfQuadraturePoints);
+
+    ////////////////////////////////////////////
+
+    /// Compute the tensor product at the key < numberOfQuadraturePoints,  numberOfEigPairs >
+    void ComputeTensorProductSet (std::vector < std::vector <unsigned> > & Tp,
+                                  const unsigned & numberOfQuadraturePoints,
+                                  const unsigned & numberOfEigPairs);
+
+    /// Return the tensor product set at the key < numberOfQuadraturePoints , numberOfEigPairs >
+    const std::vector < std::vector <unsigned> > & GetTensorProductSet (const unsigned & numberOfQuadraturePoints,
+        const unsigned & numberOfEigPairs);
+
+    /// Erase the tensor product set at the key < numberOfQuadraturePoints , numberOfEigPairs >, if stored
+    void EraseTensorProductSet (const unsigned & numberOfQuadraturePoints, const unsigned & numberOfEigPairs);
+
+    /// Clear all stored tensor product sets
+    void ClearTensorProductSet();
+
+    ////////////////////////////////////////////
+
+    /// Compute the Hermite Polynomial at the key < numberOfQuadraturePoints, maxPolyOrder >
+    void ComputeHermitePoly (std::vector < std::vector < double > >  & HermitePoly,
+                             const unsigned &numberOfQuadraturePoints, const unsigned & maxPolyOrder);
+
+
+    /// Return the Hermite polynomial at the key < numberOfQuadraturePoints , maxPolyOrder >
+    const std::vector < std::vector <double> > & GetHermitePolynomial (const unsigned & numberOfQuadraturePoints,
+                                                                       const unsigned & maxPolyOrder);
+
+    /// Erase the Hermite polynomial at the key < numberOfQuadraturePoints , maxPolyOrder >, if stored
+    void EraseHermitePolynomial (const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder);
+
+    /// Clear all stored Hermite polynomials
+    void ClearHermitePolynomial();
+
+    /////////////////////////////////////////////////
+
+    void ComputeHermitePolyHistogram (std::vector < std::vector < double > >  & HermitePoly, const unsigned & pIndex,
+                                       std::vector<double> & samplePoints, const unsigned & numberOfEigPairs);
+
+    /////////////////////////////////////////////////
+
+    /// Compute the Index Set Jp at the key < p, numberOfEigPairs>
+    void ComputeIndexSetJp (std::vector < std::vector <unsigned> > & Jp, const unsigned & p,
+                            const unsigned & numberOfEigPairs);
+
+    /// Return the Index Set at the key < p, numberOfEigPairs>
+    const std::vector < std::vector <unsigned> > & GetIndexSet (const unsigned & p, const unsigned & numberOfEigPairs);
+
+    /// Erase the Index Set at the key < p, numberOfEigPairs>, if stored
+    void EraseIndexSet (const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder);
+
+    /// Clear all Index Sets Jp
+    void ClearIndexSet();
+
+    /////////////////////////////////////////////////
+
+    /// Compute the Integral Matrix at the key < q0, p0>
+    void ComputeIntegralMatrix (std::vector < std::vector < std::vector < double > > > &integralMatrix,
+                                  const unsigned & q0, const unsigned & p0);
+    
+    /// Get the Integral Matrix at the key < q0, p0>
+    const std::vector < std::vector < std::vector < double > > > &GetIntegralMatrix(const unsigned & q0, const unsigned & p0);
+    
+    /// Erase the Integral Matrix at the key < q0, p0>
+    void EraseIntegralMatrix (const unsigned & q0, const unsigned & p0);;
+    
+    /// Clear all Integral Matrices
+    void ClearIntegralMatrix();
+    
+    /////////////////////////////////////////////////
+    
+    /// Compute the Integral Matrix at the key < q0, p0, numberOfEigPairs>
+    void ComputeStochasticMassMatrix (std::vector < std::vector < std::vector < double > > > & G, 
+                                      const unsigned & q0, const unsigned & p0, const unsigned & numberOfEigPairs);
+    
+    /// Return the Stochastic Mass Matrix at the key < q0, p0, numberOfEigPairs>
+    std::vector < std::vector < std::vector < double > > > & GetStochasticMassMatrix (const unsigned & q0, const unsigned & p0, 
+                                                                                      const unsigned & numberOfEigPairs);
+                                                                        
+    
+    /// Erase the Stochastic Mass Matrix at the key < q0, p0, numberOfEigPairs>
+    void EraseStochasticMassMatrix (const unsigned & q0, const unsigned & p0, 
+                                    const unsigned & numberOfEigPairs);
+    
+    /// Clear all stored Stochastic Mass Matrices 
+    void ClearStochasticMassMatrix();
+
+    /////////////////////////////////////////////////
+    
+    void ComputeMultivariateHermitePoly (std::vector < std::vector < double > >  & MultivariateHermitePoly,
+                                          std::vector < double > & MultivariateHermiteQuadratureWeights,
+                                          const unsigned & numberOfQuadraturePoints, const unsigned & p,
+                                          const std::vector < std::vector <unsigned> > & Jp,
+                                          const std::vector < std::vector <unsigned> > & Tp,
+                                          const unsigned & numberOfEigPairs);
+
+  private:
+    static const double _HermiteQuadrature[16][2][16];
+    std::map<std::pair<unsigned, unsigned>, std::vector < std::vector <unsigned> > > _Jp;
+    std::map<std::pair<unsigned, unsigned>, std::vector < std::vector <unsigned> > > _Tp;
+    std::map<std::pair<unsigned, unsigned>, std::vector < std::vector <double> > > _HermitePoly;
+    std::map<std::pair<unsigned, unsigned>, std::vector < std::vector < std::vector < double > > > > _integralMatrix;
+    std::map<std::pair < std::pair<unsigned, unsigned>, unsigned >, std::vector < std::vector < std::vector < double > > > > _stochasticMassMatrix;
 };
- 
+
+
 ////////////////////////////////////////////////
 
 const double uq::_HermiteQuadrature[16][2][16] = { //Number of quadrature points, first row: weights, second row: coordinates
@@ -186,29 +242,47 @@ const double uq::_HermiteQuadrature[16][2][16] = { //Number of quadrature points
   }
 };
 
+/// Get Hermite quadrature point coordinates
+const double* uq::GetHermiteQuadraturePoints (const unsigned &numberOfQuadraturePoints) {
+  if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
+    std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetHermiteQuadaturePoints(...)" << std::endl;
+    abort();
+  }
+  return _HermiteQuadrature[numberOfQuadraturePoints - 1][1];
+}
+
+/// Get Hermite quadrature weights
+const double* uq::GetHermiteQuadratureWeights (const unsigned &numberOfQuadraturePoints) {
+  if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
+    std::cout << "Wrong Number of Quadature points (= " << numberOfQuadraturePoints << " ) in function uq::GetHermiteQuadatureWeights(...)" << std::endl;
+    abort();
+  }
+  return _HermiteQuadrature[numberOfQuadraturePoints - 1][0];
+}
 
 ////////////////////////////////////////////////
 
-void uq::ComputeTensorProductSet(std::vector < std::vector <unsigned> > & Tp, 
-                                 const unsigned & numberOfQuadraturePoints, 
-                                 const unsigned & numberOfEigPairs) { //p is max poly degree
+/// Compute the tensor product set corresponding to the pair < numberOfQuadraturePoints, numberOfEigPairs >
+void uq::ComputeTensorProductSet (std::vector < std::vector <unsigned> > & Tp,
+                                  const unsigned & numberOfQuadraturePoints,
+                                  const unsigned & numberOfEigPairs) { //p is max poly degree
 
-  unsigned tensorProductDim = pow(numberOfQuadraturePoints, numberOfEigPairs);
+  unsigned tensorProductDim = pow (numberOfQuadraturePoints, numberOfEigPairs);
 
   std::cout << "tensorProductDim = " << tensorProductDim << std::endl;
 
-  Tp.resize(tensorProductDim);
-  for(unsigned i = 0; i < tensorProductDim; i++) {
-    Tp[i].resize(numberOfEigPairs);
+  Tp.resize (tensorProductDim);
+  for (unsigned i = 0; i < tensorProductDim; i++) {
+    Tp[i].resize (numberOfEigPairs);
   }
 
   unsigned index = 0;
   unsigned counters[numberOfEigPairs + 1];
-  memset(counters, 0, sizeof(counters));
+  memset (counters, 0, sizeof (counters));
 
-  while(!counters[numberOfEigPairs]) {
+  while (!counters[numberOfEigPairs]) {
 
-    for(unsigned j = 0; j < numberOfEigPairs; j++) {
+    for (unsigned j = 0; j < numberOfEigPairs; j++) {
       Tp[index][j] = counters[numberOfEigPairs - 1 - j];
       std::cout << " Tp[" << index << "][" << j << "]= " << Tp[index][j] ;
     }
@@ -216,58 +290,84 @@ void uq::ComputeTensorProductSet(std::vector < std::vector <unsigned> > & Tp,
     index++;
 
     unsigned i;
-    for(i = 0; counters[i] == numberOfQuadraturePoints - 1; i++) { // inner loops that are at maxval restart at zero
+    for (i = 0; counters[i] == numberOfQuadraturePoints - 1; i++) { // inner loops that are at maxval restart at zero
       counters[i] = 0;
     }
     ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
   }
 }
 
+/// Return the tensor product set in the key < numberOfQuadraturePoints , numberOfEigPairs >
+const std::vector < std::vector <unsigned> > & uq::GetTensorProductSet (const unsigned & numberOfQuadraturePoints,
+                                                                        const unsigned & numberOfEigPairs) {
+
+  std::pair<unsigned, unsigned> TpIndex = std::make_pair (numberOfQuadraturePoints, numberOfEigPairs);
+
+  std::map<std::pair<unsigned, unsigned>, std::vector < std::vector <unsigned> > >::iterator it;
+
+  it = _Tp.find (TpIndex);
+  if (it == _Tp.end()) {
+    ComputeTensorProductSet (_Tp[TpIndex], numberOfQuadraturePoints, numberOfEigPairs);
+  }
+  return _Tp[TpIndex];
+};
+
+/// Erase the tensor product set in the key < numberOfQuadraturePoints , numberOfEigPairs >
+void uq::EraseTensorProductSet (const unsigned & numberOfQuadraturePoints, const unsigned & numberOfEigPairs) {
+  _Tp.erase (std::make_pair (numberOfQuadraturePoints, numberOfEigPairs));
+}
+
+/// Clear all stored tensor product sets
+void uq::ClearTensorProductSet() {
+  _Tp.clear();
+}
+
 ////////////////////////////////////////////////
 
-void uq::EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePoly, 
+/// Compute the Hermite Polynomial corresponding corresponding to the pair < numberOfQuadraturePoints, maxPolyOrder >
+void uq::ComputeHermitePoly (std::vector < std::vector < double > >  & HermitePoly,
                              const unsigned &numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
 
-  if(numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
+  if (numberOfQuadraturePoints < 1 || numberOfQuadraturePoints > 16) {
     std::cout << "The selected order of integraiton has not been implemented yet, choose an integer in [1,16]" << std::endl;
     abort();
   }
 
   else {
-    HermitePoly.resize(maxPolyOrder + 1);
-    for(unsigned i = 0; i < maxPolyOrder + 1; i++) {
-      HermitePoly[i].resize(numberOfQuadraturePoints);
+    HermitePoly.resize (maxPolyOrder + 1);
+    for (unsigned i = 0; i < maxPolyOrder + 1; i++) {
+      HermitePoly[i].resize (numberOfQuadraturePoints);
     }
 
-    const double* HermiteQuadraturePoints = GetHermiteQuadraturePoints(numberOfQuadraturePoints);
-    
-    for(unsigned j = 0; j < numberOfQuadraturePoints; j++) {
+    const double* HermiteQuadraturePoints = GetHermiteQuadraturePoints (numberOfQuadraturePoints);
+
+    for (unsigned j = 0; j < numberOfQuadraturePoints; j++) {
 
       double x = HermiteQuadraturePoints[j];//_HermiteQuadrature[numberOfQuadraturePoints - 1][1][j];
 
       HermitePoly[0][j] = 1. ;
 
-      if(maxPolyOrder > 0) {
+      if (maxPolyOrder > 0) {
         HermitePoly[1][j] = x ;
-        if(maxPolyOrder > 1) {
-          HermitePoly[2][j] = (pow(x, 2) - 1.) / sqrt(2) ;
-          if(maxPolyOrder > 2) {
-            HermitePoly[3][j] = (pow(x, 3) - 3. * x) / sqrt(6) ;
-            if(maxPolyOrder > 3) {
-              HermitePoly[4][j] = (pow(x, 4) - 6. * x * x + 3.) / sqrt(24) ;
-              if(maxPolyOrder > 4) {
-                HermitePoly[5][j] = (pow(x, 5) - 10. * pow(x, 3) + 15. * x) / sqrt(120) ;
-                if(maxPolyOrder > 5) {
-                  HermitePoly[6][j] = (pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.) / sqrt(720) ;
-                  if(maxPolyOrder > 6) {
-                    HermitePoly[7][j] = (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / sqrt(5040) ;
-                    if(maxPolyOrder > 7) {
-                      HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 2) + 105.) / sqrt(40320) ;
-                      if(maxPolyOrder > 8) {
-                        HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / sqrt(362880);
-                        if(maxPolyOrder > 9) {
-                          HermitePoly[10][j] = (pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.) / sqrt(3628800);
-                          if(maxPolyOrder > 10) {
+        if (maxPolyOrder > 1) {
+          HermitePoly[2][j] = (pow (x, 2) - 1.) / sqrt (2) ;
+          if (maxPolyOrder > 2) {
+            HermitePoly[3][j] = (pow (x, 3) - 3. * x) / sqrt (6) ;
+            if (maxPolyOrder > 3) {
+              HermitePoly[4][j] = (pow (x, 4) - 6. * x * x + 3.) / sqrt (24) ;
+              if (maxPolyOrder > 4) {
+                HermitePoly[5][j] = (pow (x, 5) - 10. * pow (x, 3) + 15. * x) / sqrt (120) ;
+                if (maxPolyOrder > 5) {
+                  HermitePoly[6][j] = (pow (x, 6) - 15. * pow (x, 4) + 45. * pow (x, 2) - 15.) / sqrt (720) ;
+                  if (maxPolyOrder > 6) {
+                    HermitePoly[7][j] = (pow (x, 7) - 21. * pow (x, 5) + 105. * pow (x, 3) -  105. * x) / sqrt (5040) ;
+                    if (maxPolyOrder > 7) {
+                      HermitePoly[8][j] = (pow (x, 8) - 28. * pow (x, 6) + 210. * pow (x, 4) - 420. * pow (x, 2) + 105.) / sqrt (40320) ;
+                      if (maxPolyOrder > 8) {
+                        HermitePoly[9][j] = (pow (x, 9) - 36. * pow (x, 7) + 378. * pow (x, 5) - 1260. * pow (x, 3) + 945. * x) / sqrt (362880);
+                        if (maxPolyOrder > 9) {
+                          HermitePoly[10][j] = (pow (x, 10) - 45. * pow (x, 8) + 630. * pow (x, 6) - 3150. * pow (x, 4) + 4725. * pow (x, 2) - 945.) / sqrt (3628800);
+                          if (maxPolyOrder > 10) {
                             std::cout << "Polynomial order is too big. For now, it has to be not greater than 10." << std::endl;
                             abort();
                           }
@@ -281,50 +381,72 @@ void uq::EvaluateHermitePoly(std::vector < std::vector < double > >  & HermitePo
           }
         }
       }
-
     }
-
   }
+}
 
+/// Return the Hermite polynomial in the key < numberOfQuadraturePoints , maxPolyOrder >
+const std::vector < std::vector <double> > & uq::GetHermitePolynomial (const unsigned & numberOfQuadraturePoints,
+                                                                       const unsigned & maxPolyOrder) {
+
+  std::pair<unsigned, unsigned> HermitePolyIndex = std::make_pair (numberOfQuadraturePoints, maxPolyOrder);
+
+  std::map<std::pair<unsigned, unsigned>, std::vector < std::vector <double> > >::iterator it;
+
+  it = _HermitePoly.find (HermitePolyIndex);
+  if (it == _HermitePoly.end()) {
+    ComputeHermitePoly (_HermitePoly[HermitePolyIndex], numberOfQuadraturePoints, maxPolyOrder);
+  }
+  return _HermitePoly[HermitePolyIndex];
+};
+
+/// Erase the Hermite polynomial in the key < numberOfQuadraturePoints , maxPolyOrder >
+void uq::EraseHermitePolynomial (const unsigned & numberOfQuadraturePoints, const unsigned & maxPolyOrder) {
+  _HermitePoly.erase (std::make_pair (numberOfQuadraturePoints, maxPolyOrder));
+}
+
+/// Clear all stored Hermite polynomials
+void uq::ClearHermitePolynomial() {
+  _HermitePoly.clear();
 }
 
 ////////////////////////////////////////////////
 
-void uq::EvaluateHermitePolyHistogram(std::vector < std::vector < double > >  & HermitePoly, const unsigned & pIndex,
-                                      std::vector<double> & samplePoints, const unsigned & numberOfEigPairs) {
+void uq::ComputeHermitePolyHistogram (std::vector < std::vector < double > >  & HermitePoly, const unsigned & pIndex,
+                                       std::vector<double> & samplePoints, const unsigned & numberOfEigPairs) {
 
-  HermitePoly.resize(pIndex + 1);
-  for(unsigned i = 0; i < pIndex + 1; i++) {
-    HermitePoly[i].resize(samplePoints.size());
+  HermitePoly.resize (pIndex + 1);
+  for (unsigned i = 0; i < pIndex + 1; i++) {
+    HermitePoly[i].resize (samplePoints.size());
   }
 
-  for(unsigned j = 0; j < numberOfEigPairs; j++) {
+  for (unsigned j = 0; j < numberOfEigPairs; j++) {
 
     double x = samplePoints[j];
 
     HermitePoly[0][j] = 1. ;
 
-    if(pIndex > 0) {
+    if (pIndex > 0) {
       HermitePoly[1][j] = x ;
-      if(pIndex > 1) {
-        HermitePoly[2][j] = (pow(x, 2) - 1.) / sqrt(2) ;
-        if(pIndex > 2) {
-          HermitePoly[3][j] = (pow(x, 3) - 3. * x) / sqrt(6) ;
-          if(pIndex > 3) {
-            HermitePoly[4][j] = (pow(x, 4) - 6. * x * x + 3.) / sqrt(24) ;
-            if(pIndex > 4) {
-              HermitePoly[5][j] = (pow(x, 5) - 10. * pow(x, 3) + 15. * x) / sqrt(120) ;
-              if(pIndex > 5) {
-                HermitePoly[6][j] = (pow(x, 6) - 15. * pow(x, 4) + 45. * pow(x, 2) - 15.) / sqrt(720) ;
-                if(pIndex > 6) {
-                  HermitePoly[7][j] = (pow(x, 7) - 21. * pow(x, 5) + 105. * pow(x, 3) -  105. * x) / sqrt(5040) ;
-                  if(pIndex > 7) {
-                    HermitePoly[8][j] = (pow(x, 8) - 28. * pow(x, 6) + 210. * pow(x, 4) - 420. * pow(x, 4) + 105.) / sqrt(40320) ;
-                    if(pIndex > 8) {
-                      HermitePoly[9][j] = (pow(x, 9) - 36. * pow(x, 7) + 378. * pow(x, 5) - 1260. * pow(x, 3) + 945. * x) / sqrt(362880);
-                      if(pIndex > 9) {
-                        HermitePoly[10][j] = (pow(x, 10) - 45. * pow(x, 8) + 630. * pow(x, 6) - 3150. * pow(x, 4) + 4725. * pow(x, 2) - 945.) / sqrt(3628800);
-                        if(pIndex > 10) {
+      if (pIndex > 1) {
+        HermitePoly[2][j] = (pow (x, 2) - 1.) / sqrt (2) ;
+        if (pIndex > 2) {
+          HermitePoly[3][j] = (pow (x, 3) - 3. * x) / sqrt (6) ;
+          if (pIndex > 3) {
+            HermitePoly[4][j] = (pow (x, 4) - 6. * x * x + 3.) / sqrt (24) ;
+            if (pIndex > 4) {
+              HermitePoly[5][j] = (pow (x, 5) - 10. * pow (x, 3) + 15. * x) / sqrt (120) ;
+              if (pIndex > 5) {
+                HermitePoly[6][j] = (pow (x, 6) - 15. * pow (x, 4) + 45. * pow (x, 2) - 15.) / sqrt (720) ;
+                if (pIndex > 6) {
+                  HermitePoly[7][j] = (pow (x, 7) - 21. * pow (x, 5) + 105. * pow (x, 3) -  105. * x) / sqrt (5040) ;
+                  if (pIndex > 7) {
+                    HermitePoly[8][j] = (pow (x, 8) - 28. * pow (x, 6) + 210. * pow (x, 4) - 420. * pow (x, 4) + 105.) / sqrt (40320) ;
+                    if (pIndex > 8) {
+                      HermitePoly[9][j] = (pow (x, 9) - 36. * pow (x, 7) + 378. * pow (x, 5) - 1260. * pow (x, 3) + 945. * x) / sqrt (362880);
+                      if (pIndex > 9) {
+                        HermitePoly[10][j] = (pow (x, 10) - 45. * pow (x, 8) + 630. * pow (x, 6) - 3150. * pow (x, 4) + 4725. * pow (x, 2) - 945.) / sqrt (3628800);
+                        if (pIndex > 10) {
                           std::cout << "Polynomial order is too big. For now, it has to be not greater than 10." << std::endl;
                           abort();
                         }
@@ -338,32 +460,29 @@ void uq::EvaluateHermitePolyHistogram(std::vector < std::vector < double > >  & 
         }
       }
     }
-
   }
-
-
-};
+}
 
 ////////////////////////////////////////////////
 
- 
-void uq::ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const unsigned & p, const unsigned & numberOfEigPairs) { //p is max poly degree
+void uq::ComputeIndexSetJp (std::vector < std::vector <unsigned> > & Jp, 
+                            const unsigned & p, const unsigned & numberOfEigPairs) { //p is max poly degree
 
 
-  unsigned dimJp = static_cast <unsigned>(boost::math::binomial_coefficient<double>(numberOfEigPairs + p, p));
+  unsigned dimJp = static_cast <unsigned> (boost::math::binomial_coefficient<double> (numberOfEigPairs + p, p));
 
   //long unsigned dimJp = factorial(numberOfEigPairs + p) / (factorial(numberOfEigPairs) * factorial(p));
 
-  Jp.resize(dimJp);
-  for(unsigned i = 0; i < dimJp; i++) {
-    Jp[i].resize(numberOfEigPairs);
+  Jp.resize (dimJp);
+  for (unsigned i = 0; i < dimJp; i++) {
+    Jp[i].resize (numberOfEigPairs);
   }
 
   unsigned index = 0;
   unsigned counters[numberOfEigPairs + 1];
-  memset(counters, 0, sizeof(counters));
+  memset (counters, 0, sizeof (counters));
 
-  while(!counters[numberOfEigPairs]) {
+  while (!counters[numberOfEigPairs]) {
 
 //     for(unsigned i = numberOfEigPairs; i-- > 0;) {
 //       std::cout << counters[i] << " ";
@@ -371,12 +490,12 @@ void uq::ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const un
 //     std::cout << std::endl;
 
     unsigned entrySum = 0;
-    for(unsigned j = 0; j < numberOfEigPairs; j++) {
+    for (unsigned j = 0; j < numberOfEigPairs; j++) {
       entrySum += counters[j];
     }
 
-    if(entrySum <= p) {
-      for(unsigned j = 0; j < numberOfEigPairs; j++) {
+    if (entrySum <= p) {
+      for (unsigned j = 0; j < numberOfEigPairs; j++) {
         Jp[index][j] = counters[numberOfEigPairs - 1 - j];
         std::cout << " Jp[" << index << "][" << j << "]= " << Jp[index][j] ;
       }
@@ -384,49 +503,72 @@ void uq::ComputeIndexSetJp(std::vector < std::vector <unsigned> > & Jp, const un
       index++;
     }
     unsigned i;
-    for(i = 0; counters[i] == p; i++) { // inner loops that are at maxval restart at zero
+    for (i = 0; counters[i] == p; i++) { // inner loops that are at maxval restart at zero
       counters[i] = 0;
     }
     ++counters[i];  // the innermost loop that isn't yet at maxval, advances by 1
   }
-};
+}
 
+/// Return the Index Set corresponding to the pair < p, numberOfEigPairs>
+const std::vector < std::vector <unsigned> > & uq::GetIndexSet (const unsigned & p, const unsigned & numberOfEigPairs) {
+
+  std::pair<unsigned, unsigned> JpIndex = std::make_pair (p, numberOfEigPairs);
+
+  std::map<std::pair<unsigned, unsigned>, std::vector < std::vector <unsigned> > >::iterator it;
+
+  it = _Jp.find (JpIndex);
+  if (it == _Jp.end()) {
+    ComputeIndexSetJp (_Jp[JpIndex], p, numberOfEigPairs);
+  }
+  return _Jp[JpIndex];
+}
+
+/// Erase the Index Set corresponding to the pair < p, numberOfEigPairs>
+void uq::EraseIndexSet (const unsigned & p, const unsigned & numberOfEigPairs) {
+  _Jp.erase (std::make_pair (p, numberOfEigPairs));
+}
+
+/// Clear all Index Sets Jp
+void uq::ClearIndexSet() {
+  _Jp.clear();
+}
 
 ////////////////////////////////////////////////
 
- 
-void uq::EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0, 
-                                 std::vector < std::vector < std::vector < double > > > &integralsMatrix) {
+/// Compute the Integral Matrix at the key < q0, p0>
+void uq::ComputeIntegralMatrix (std::vector < std::vector < std::vector < double > > > &integralMatrix,
+                                  const unsigned & q0, const unsigned & p0) {
 
   unsigned maxPolyOrder = (q0 > p0) ? q0 : p0;
 
-  std::vector < std::vector < double > >  HermitePoly;
+
 
   unsigned n1 = 2 * p0 + q0 + 1;
   n1 = (n1 % 2 == 0) ? n1 / 2 : (n1 + 1) / 2;
   unsigned numberOfQuadraturePoints = (n1 <= 16) ? n1 : 16;
-  if(n1 > 16) {
+  if (n1 > 16) {
     std::cout <<
-              "------------------------------- WARNING: less quadrature points than needed were employed in function EvaluateIntegralsMatrix -------------------------------"
+              "------------------------------- WARNING: less quadrature points than needed were employed in function ComputeIntegralsMatrix -------------------------------"
               << std::endl;
     std::cout << " Needed : " << n1 << " , " << " Used : " << 16 << std::endl;
   }
 
-  EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
+  const std::vector < std::vector < double > >  &HermitePoly = GetHermitePolynomial (numberOfQuadraturePoints, maxPolyOrder);
 
   unsigned q = q0 + 1;
   unsigned p = p0 + 1;
 
-  integralsMatrix.resize(q);
-  for(unsigned q1 = 0; q1 < q; q1++) {
-    integralsMatrix[q1].resize(p);
-    for(unsigned p1 = 0; p1 < p; p1++) {
-      integralsMatrix[q1][p1].assign(p, 0.);
-      for(unsigned p2 = 0; p2 < p; p2++) {
-        integralsMatrix[q1][p1][p2]  = 0.;
-        for(unsigned i = 0; i < numberOfQuadraturePoints; i++) {
+  integralMatrix.resize (q);
+  for (unsigned q1 = 0; q1 < q; q1++) {
+    integralMatrix[q1].resize (p);
+    for (unsigned p1 = 0; p1 < p; p1++) {
+      integralMatrix[q1][p1].assign (p, 0.);
+      for (unsigned p2 = 0; p2 < p; p2++) {
+        integralMatrix[q1][p1][p2]  = 0.;
+        for (unsigned i = 0; i < numberOfQuadraturePoints; i++) {
           double w = _HermiteQuadrature[numberOfQuadraturePoints - 1][0][i];
-          integralsMatrix[q1][p1][p2]  +=  w * HermitePoly[q1][i] * HermitePoly[p1][i] * HermitePoly[p2][i];
+          integralMatrix[q1][p1][p2]  +=  w * HermitePoly[q1][i] * HermitePoly[p1][i] * HermitePoly[p2][i];
         }
       }
     }
@@ -435,37 +577,60 @@ void uq::EvaluateIntegralsMatrix(const unsigned & q0, const unsigned & p0,
 //   for(unsigned q1 = 0; q1 < q; q1++) {
 //     for(unsigned p1 = 0; p1 < p; p1++) {
 //       for(unsigned p2 = 0; p2 < p; p2++) {
-//         std::cout << "integralsMatrix[" << q1 << "][" << p1 << "][" << p2 << "]=" << integralsMatrix[q1][p1][p2] << std::endl;
+//         std::cout << "integralMatrix[" << q1 << "][" << p1 << "][" << p2 << "]=" << integralMatrix[q1][p1][p2] << std::endl;
 //       }
 //     }
 //   }
 
 };
 
-void uq::EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0, 
-                                        std::vector < std::vector < std::vector < double > > > & G,
-                                        const unsigned & numberOfEigPairs, 
-                                        const std::vector < std::vector < std::vector < double > > > & integralsMatrix) {
-
-//   std::vector < std::vector <unsigned> > Jq;
-//   std::vector < std::vector <unsigned> > Jp;
-//   ComputeIndexSetJp(Jq, q0, numberOfEigPairs);
-//   ComputeIndexSetJp(Jp, p0, numberOfEigPairs);
-
-  const std::vector < std::vector <unsigned> > &Jq = GetIndexSet(q0, numberOfEigPairs);
-  const std::vector < std::vector <unsigned> > &Jp = GetIndexSet(p0, numberOfEigPairs);
+/// Get the Integral Matrix at the key < q0, p0>
+const std::vector < std::vector < std::vector < double > > > & uq::GetIntegralMatrix(const unsigned & q0, 
+                                                                                     const unsigned & p0){
+  std::pair<unsigned, unsigned> integralMatrixIndex = std::make_pair (q0,p0);
   
+  std::map<std::pair<unsigned, unsigned>, std::vector < std::vector < std::vector <double> > > >::iterator it;
   
-  G.resize(Jq.size());
-  for(unsigned q1 = 0; q1 < Jq.size(); q1++) {
-    G[q1].resize(Jp.size());
-    for(unsigned p1 = 0; p1 < Jp.size(); p1++) {
-      G[q1][p1].assign(Jp.size(), 1.);
-      for(unsigned p2 = 0; p2 < Jp.size(); p2++) {
-        for(unsigned i = 0; i < numberOfEigPairs; i++) {
-          G[q1][p1][p2] *= integralsMatrix[Jq[q1][i]][Jp[p1][i]][Jp[p2][i]];
+  it = _integralMatrix.find (integralMatrixIndex);
+  if (it == _integralMatrix.end()) {
+    ComputeIntegralMatrix (_integralMatrix[integralMatrixIndex], q0, p0);
+  }
+  return _integralMatrix[integralMatrixIndex];
+}
+                                                                                    
+
+/// Erase the Integral Matrix at the key < q0, p0>
+void uq::EraseIntegralMatrix (const unsigned & q0, const unsigned & p0){
+  _integralMatrix.erase (std::make_pair (q0,p0));
+}
+
+/// Clear all Integral Matrices
+void uq::ClearIntegralMatrix(){
+  _integralMatrix.clear ();
+}
+
+///////////////////////////////////////////
+
+/// Compute the Integral Matrix at the key < q0, p0, numberOfEigPairs>
+void uq::ComputeStochasticMassMatrix (std::vector < std::vector < std::vector < double > > > & G, 
+                                        const unsigned & q0, const unsigned & p0, const unsigned & numberOfEigPairs) {
+  
+  const std::vector < std::vector < std::vector < double > > > & integralMatrix = GetIntegralMatrix(q0,p0);
+
+  const std::vector < std::vector <unsigned> > &Jq = GetIndexSet (q0, numberOfEigPairs);
+  const std::vector < std::vector <unsigned> > &Jp = GetIndexSet (p0, numberOfEigPairs);
+
+
+  G.resize (Jq.size());
+  for (unsigned q1 = 0; q1 < Jq.size(); q1++) {
+    G[q1].resize (Jp.size());
+    for (unsigned p1 = 0; p1 < Jp.size(); p1++) {
+      G[q1][p1].assign (Jp.size(), 1.);
+      for (unsigned p2 = 0; p2 < Jp.size(); p2++) {
+        for (unsigned i = 0; i < numberOfEigPairs; i++) {
+          G[q1][p1][p2] *= integralMatrix[Jq[q1][i]][Jp[p1][i]][Jp[p2][i]];
         }
-        G[q1][p1][p2] = (fabs(G[q1][p1][p2]) < 1.e-14) ? 0. : G[q1][p1][p2];
+        G[q1][p1][p2] = (fabs (G[q1][p1][p2]) < 1.e-14) ? 0. : G[q1][p1][p2];
       }
     }
   }
@@ -478,49 +643,66 @@ void uq::EvaluateStochasticMassMatrices(const unsigned & q0, const unsigned & p0
 //     }
 //   }
 
-};
+}
 
-void uq::EvaluateMultivariateHermitePoly(std::vector < std::vector < double > >  & MultivariateHermitePoly, 
-                                         std::vector < double > & MultivariateHermiteQuadratureWeights,
-                                         const unsigned & numberOfQuadraturePoints, const unsigned & p, 
-                                         const std::vector < std::vector <unsigned> > & Jp, 
-                                         const std::vector < std::vector <unsigned> > & Tp,
-                                         const unsigned & numberOfEigPairs) {
+/// Return the Stochastic Mass Matrix at the key < q0, p0, numberOfEigPairs>
+std::vector < std::vector < std::vector < double > > > & uq::GetStochasticMassMatrix (const unsigned & q0, const unsigned & p0, 
+                                                                                      const unsigned & numberOfEigPairs){
+                             
+  std::pair < std::pair<unsigned, unsigned>,unsigned> stochasticMassMatrixIndex = std::make_pair ( std::make_pair (q0, p0), numberOfEigPairs );
+  
+  std::map<std::pair < std::pair<unsigned, unsigned>,unsigned>, std::vector < std::vector < std::vector <double> > > >::iterator it;
+  
+  it = _stochasticMassMatrix.find (stochasticMassMatrixIndex);
+  if (it == _stochasticMassMatrix.end()) {
+    ComputeStochasticMassMatrix (_stochasticMassMatrix[stochasticMassMatrixIndex], q0, p0, numberOfEigPairs);
+  }
+  return _stochasticMassMatrix[stochasticMassMatrixIndex];
+  
+  
+                                                                                      }
 
-  MultivariateHermiteQuadratureWeights.assign(Tp.size(), 1.);
 
-  MultivariateHermitePoly.resize(Jp.size());
-  for(unsigned i = 0; i < Jp.size(); i++) {
-    MultivariateHermitePoly[i].assign(Tp.size(), 1.);
+/// Erase the Stochastic Mass Matrix at the key < q0, p0, numberOfEigPairs>
+void uq::EraseStochasticMassMatrix (const unsigned & q0, const unsigned & p0, 
+                                const unsigned & numberOfEigPairs){
+  _stochasticMassMatrix.erase( std::make_pair ( std::make_pair (q0, p0), numberOfEigPairs ) );
+}
+
+/// Clear all stored Stochastic Mass Matrices 
+void uq::ClearStochasticMassMatrix(){
+  _stochasticMassMatrix.clear();
+}
+
+
+///////////////////////////////////////////
+
+void uq::ComputeMultivariateHermitePoly (std::vector < std::vector < double > >  & MultivariateHermitePoly,
+    std::vector < double > & MultivariateHermiteQuadratureWeights,
+    const unsigned & numberOfQuadraturePoints, const unsigned & p,
+    const std::vector < std::vector <unsigned> > & Jp,
+    const std::vector < std::vector <unsigned> > & Tp,
+    const unsigned & numberOfEigPairs) {
+
+  MultivariateHermiteQuadratureWeights.assign (Tp.size(), 1.);
+
+  MultivariateHermitePoly.resize (Jp.size());
+  for (unsigned i = 0; i < Jp.size(); i++) {
+    MultivariateHermitePoly[i].assign (Tp.size(), 1.);
   }
 
-  std::vector < std::vector < double > >  HermitePoly;
-  EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, p);
+  const std::vector < std::vector < double > >  &HermitePoly = GetHermitePolynomial (numberOfQuadraturePoints, p);
 
-  for(unsigned j = 0; j < Tp.size(); j++) {
-    for(unsigned k = 0; k < numberOfEigPairs; k++) {
+  for (unsigned j = 0; j < Tp.size(); j++) {
+    for (unsigned k = 0; k < numberOfEigPairs; k++) {
       MultivariateHermiteQuadratureWeights[j] *= _HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]] ;
-      for(unsigned i = 0; i < Jp.size(); i++) {
+      for (unsigned i = 0; i < Jp.size(); i++) {
         MultivariateHermitePoly[i][j] *= HermitePoly[Jp[i][k]][Tp[j][k]] ;
       }
     }
   }
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -536,15 +718,15 @@ int numberOfEigPairs = 2; //dimension of the stochastic variable
 double stdDeviationInput = 0.2;  //standard deviation of the normal distribution (it is the same as the standard deviation of the covariance function in GetEigenPair)
 double meanInput = 0.;
 double amin = 1. / 100.; // for the KL expansion
-std::vector < std::pair<double, double> > eigenvalues(numberOfEigPairs);
+std::vector < std::pair<double, double> > eigenvalues (numberOfEigPairs);
 //END Stochastic Input Parameters
 
 uq myuq;
 
-void AssembleSysSG(MultiLevelProblem& ml_prob) {
-    
-  
-    
+void AssembleSysSG (MultiLevelProblem& ml_prob) {
+
+
+
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
@@ -556,82 +738,83 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("SG");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
-  Mesh* msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh* msh = ml_prob._ml_msh->GetLevel (level);   // pointer to the mesh (level) object
   elem* el = msh->el;  // pointer to the elem object in msh (level)
 
   MultiLevelSolution* mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution* sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  Solution* sol = ml_prob._ml_sol->GetSolutionLevel (level);   // pointer to the solution (level) object
 
   LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
   SparseMatrix* KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector* RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  unsigned dim2 = (3 * (dim - 1) + ! (dim - 1));       // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  const unsigned maxSize = static_cast< unsigned > (ceil (pow (3, dim)));       // conservative: based on line3, quad9, hex27
 
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
-  std::vector < std::vector < std::vector < double > > > integralsMatrix;
-  myuq.EvaluateIntegralsMatrix(qIndex, pIndex, integralsMatrix);
+//   std::vector < std::vector < std::vector < double > > > integralMatrix;
+//   myuq.ComputeIntegralMatrix (integralMatrix, qIndex, pIndex);
 
-  std::vector < std::vector < std::vector < double > > >  G; //vector with stochastic mass matrices
-  myuq.EvaluateStochasticMassMatrices(qIndex, pIndex, G, numberOfEigPairs, integralsMatrix);
+  const std::vector < std::vector < std::vector < double > > > & integralMatrix = myuq.GetIntegralMatrix (qIndex, pIndex);
 
-  std::vector < std::vector <unsigned> > Jq;
-  myuq.ComputeIndexSetJp(Jq, qIndex, numberOfEigPairs);
-  std::vector < std::vector <unsigned> > Jp;
-  myuq.ComputeIndexSetJp(Jp, pIndex, numberOfEigPairs);
+//   std::vector < std::vector < std::vector < double > > >  G; //vector with stochastic mass matrices
+//   myuq.ComputeStochasticMassMatrix (G, qIndex, pIndex, numberOfEigPairs);
+  
+  const std::vector < std::vector < std::vector < double > > >  &G = myuq.GetStochasticMassMatrix (qIndex, pIndex, numberOfEigPairs);
 
+  const std::vector < std::vector <unsigned> > &Jq = myuq.GetIndexSet (qIndex, numberOfEigPairs);
+  const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet (pIndex, numberOfEigPairs);
 
   unsigned maxPolyOrder = (qIndex > pIndex) ? qIndex : pIndex;
 
-  std::vector < std::vector < double > >  HermitePoly;
+
 
   unsigned n1 = 2 * pIndex + qIndex + 1;
   n1 = (n1 % 2 == 0) ? n1 / 2 : (n1 + 1) / 2;
   unsigned numberOfQuadraturePoints = (n1 <= 16) ? n1 : 16;
-  if(n1 > 16) {
+  if (n1 > 16) {
     std::cout <<
               "------------------------------- WARNING: less quadrature points than needed were employed in function AssembleSysSG -------------------------------"
               << std::endl;
     std::cout << " Needed : " << n1 << " , " << " Used : " << 16 << std::endl;
   }
 
-  myuq.EvaluateHermitePoly(HermitePoly, numberOfQuadraturePoints, maxPolyOrder);
+  const std::vector < std::vector < double > >  &HermitePoly = myuq.GetHermitePolynomial (numberOfQuadraturePoints, maxPolyOrder);
 
   //solution Index
-  std::vector <unsigned> soluIndex(Jp.size());
-  for(unsigned i = 0; i < Jp.size(); i++) {
+  std::vector <unsigned> soluIndex (Jp.size());
+  for (unsigned i = 0; i < Jp.size(); i++) {
     char name[10];
-    sprintf(name, "uSG%d", i);
-    soluIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
+    sprintf (name, "uSG%d", i);
+    soluIndex[i] = mlSol->GetIndex (name);   // get the position of "u" in the ml_sol object
   }
-  unsigned soluType = mlSol->GetSolutionType(soluIndex[0]);
+  unsigned soluType = mlSol->GetSolutionType (soluIndex[0]);
 
 
   //solution PdeIndex
-  std::vector <unsigned> soluPdeIndex(Jp.size());
-  for(unsigned i = 0; i < Jp.size(); i++) {
+  std::vector <unsigned> soluPdeIndex (Jp.size());
+  for (unsigned i = 0; i < Jp.size(); i++) {
     char name[10];
-    sprintf(name, "uSG%d", i);
-    soluPdeIndex[i] = mlPdeSys->GetSolPdeIndex(name);    // get the position of "u" in the pdeSys object
+    sprintf (name, "uSG%d", i);
+    soluPdeIndex[i] = mlPdeSys->GetSolPdeIndex (name);   // get the position of "u" in the pdeSys object
   }
 
 
   //eigenfunction Index
-  std::vector <unsigned> eigfIndex(numberOfEigPairs);
-  for(unsigned i = 0; i < numberOfEigPairs; i++) {
+  std::vector <unsigned> eigfIndex (numberOfEigPairs);
+  for (unsigned i = 0; i < numberOfEigPairs; i++) {
     char name[10];
-    sprintf(name, "egnf%d", i);
-    eigfIndex[i] = mlSol->GetIndex(name);    // get the position of "u" in the ml_sol object
+    sprintf (name, "egnf%d", i);
+    eigfIndex[i] = mlSol->GetIndex (name);   // get the position of "u" in the ml_sol object
   }
 
   vector < double > KLexpansion; // local solution
 
-  vector < vector < double > >  solu(Jp.size()); // local solution
+  vector < vector < double > >  solu (Jp.size()); // local solution
 
-  vector < vector < double > > x(dim);    // local coordinates
+  vector < vector < double > > x (dim);   // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   vector <double> phi;  // local test function
@@ -648,25 +831,25 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
   //BEGIN terms for the coefficient obtained projecting the KL (computation later)
 //   std::vector < std::vector < double > > productTerms(Jq.size());
 //   for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
-//     
+//
 //     productTerms[q1].resize(numberOfEigPairs);
-// 
+//
 //     unsigned numberOfQuadraturePointsForProjection = ((qIndex + 2) % 2 == 0) ? ((qIndex + 2) / 2) : ((qIndex + 3) / 2) ;
 //     std::vector < std::vector < double > >  HermitePolyProjection;
-//     EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex + 1);
+//     ComputeHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex + 1);
 //     for(unsigned i = 0; i < numberOfEigPairs; i++) {
 //       double termWithY = 0.;
 //       for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
 //         termWithY +=  HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][1][j]
 //                       * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePointsForProjection - 1][0][j];
 //       }
-// 
+//
 //       productTerms[q1][i] = termWithY;
 // //       std::cout << " termWithY = "  << termWithY << " ";
-// 
+//
 //       for(unsigned j = 0; j < numberOfEigPairs; j++) {
 //         if(j != i) {
-//           productTerms[q1][i] *= integralsMatrix[Jq[q1][j]][0][0];
+//           productTerms[q1][i] *= integralMatrix[Jq[q1][j]][0][0];
 //         }
 //       }
 // //       std::cout << " productTerms[" << q1 << "][" << i << "] = " << productTerms[q1][i] << " ";
@@ -676,141 +859,140 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
   //END terms for coefficient obtained projecting the KL (computation later)
 
   // element loop: each process loops only on the elements that owns
-  for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
+    short unsigned ielGeom = msh->GetElementType (iel);
+    unsigned nDofu  = msh->GetElementDofNumber (iel, soluType);   // number of solution element dofs
+    unsigned nDofx = msh->GetElementDofNumber (iel, xType);   // number of coordinate element dofs
 
     // resize local arrays
-    for(unsigned j = 0; j < Jp.size(); j++) {
-      solu[j].resize(nDofu);
+    for (unsigned j = 0; j < Jp.size(); j++) {
+      solu[j].resize (nDofu);
     }
 
-    for(int i = 0; i < dim; i++) {
-      x[i].resize(nDofx);
+    for (int i = 0; i < dim; i++) {
+      x[i].resize (nDofx);
     }
 
-    l2GMap.resize(nDofu * Jp.size());
-    Res.assign(nDofu *  Jp.size(), 0.);
-    Jac.assign(nDofu *  Jp.size() * nDofu * Jp.size(), 0.);
-    KLexpansion.resize(nDofu);
+    l2GMap.resize (nDofu * Jp.size());
+    Res.assign (nDofu *  Jp.size(), 0.);
+    Jac.assign (nDofu *  Jp.size() * nDofu * Jp.size(), 0.);
+    KLexpansion.resize (nDofu);
 
     // local storage of global mapping and solution
-    for(unsigned i = 0; i < nDofu; i++) {
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-      for(unsigned j = 0; j < Jp.size(); j++) {
-        solu[j][i] = (*sol->_Sol[soluIndex[j]])(solDof);      // global extraction and local storage for the solution
-        l2GMap[j * nDofu + i] = pdeSys->GetSystemDof(soluIndex[j], soluPdeIndex[j], i, iel);    // global to global mapping between solution node and pdeSys dof
+    for (unsigned i = 0; i < nDofu; i++) {
+      unsigned solDof = msh->GetSolutionDof (i, iel, soluType);   // global to global mapping between solution node and solution dof
+      for (unsigned j = 0; j < Jp.size(); j++) {
+        solu[j][i] = (*sol->_Sol[soluIndex[j]]) (solDof);     // global extraction and local storage for the solution
+        l2GMap[j * nDofu + i] = pdeSys->GetSystemDof (soluIndex[j], soluPdeIndex[j], i, iel);   // global to global mapping between solution node and pdeSys dof
       }
     }
 
     // local storage of coordinates
-    for(unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
+    for (unsigned i = 0; i < nDofx; i++) {
+      unsigned xDof  = msh->GetSolutionDof (i, iel, xType);   // global to global mapping between coordinates node and coordinate dof
 
-      for(unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+      for (unsigned jdim = 0; jdim < dim; jdim++) {
+        x[jdim][i] = (*msh->_topology->_Sol[jdim]) (xDof);     // global extraction and local storage for the element coordinates
       }
     }
 
-    std::vector <double> eigVectorGauss(numberOfEigPairs);
+    std::vector <double> eigVectorGauss (numberOfEigPairs);
 
     //  *** Gauss point loop ***
-    for(unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
 
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+      msh->_finiteElement[ielGeom][soluType]->Jacobian (x, ig, weight, phi, phi_x, phi_xx);
 
-      for(unsigned i = 0; i < numberOfEigPairs; i++) {
-        unsigned solDof = msh->GetSolutionDof(i, iel, soluType);
+      for (unsigned i = 0; i < numberOfEigPairs; i++) {
+        unsigned solDof = msh->GetSolutionDof (i, iel, soluType);
         eigVectorGauss[i] = 0.;
-        for(unsigned j = 0; j < nDofu; j++) {
-          eigVectorGauss[i] += (*sol->_Sol[eigfIndex[i]])(solDof) * phi[i];
+        for (unsigned j = 0; j < nDofu; j++) {
+          eigVectorGauss[i] += (*sol->_Sol[eigfIndex[i]]) (solDof) * phi[i];
         }
       }
 
 
-      vector< double > aStochasticGauss(Jq.size());
+      vector< double > aStochasticGauss (Jq.size());
 
 //BEGIN coefficient obtained projecting the exponential of the KL
-      for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
+      for (unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
 //         std::vector <double> aStochasticTerm1(numberOfEigPairs);
-        std::vector <double> aStochasticTerm2(numberOfEigPairs);
+        std::vector <double> aStochasticTerm2 (numberOfEigPairs);
 
         unsigned numberOfQuadraturePointsForProjection = 16;
-        
-        const double *HermiteQuadraturePoints = myuq.GetHermiteQuadraturePoints(numberOfQuadraturePointsForProjection);
-        const double *HermiteQuadratureWeights = myuq.GetHermiteQuadratureWeights(numberOfQuadraturePointsForProjection);
-        
-        
-        std::vector < std::vector < double > >  HermitePolyProjection;
-        myuq.EvaluateHermitePoly(HermitePolyProjection, numberOfQuadraturePointsForProjection, qIndex);
-        for(unsigned i = 0; i < numberOfEigPairs; i++) {
+
+        const double *HermiteQuadraturePoints = myuq.GetHermiteQuadraturePoints (numberOfQuadraturePointsForProjection);
+        const double *HermiteQuadratureWeights = myuq.GetHermiteQuadratureWeights (numberOfQuadraturePointsForProjection);
+
+        const std::vector < std::vector < double > >  &HermitePolyProjection = myuq.GetHermitePolynomial (numberOfQuadraturePointsForProjection, qIndex);
+
+        for (unsigned i = 0; i < numberOfEigPairs; i++) {
           aStochasticTerm2[i] = 0.;
-          for(unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
+          for (unsigned j = 0; j < numberOfQuadraturePointsForProjection; j++) {
 //             aStochasticTerm1[i] += HermitePoly[Jq[q1][i]][j] * HermiteQuadrature[numberOfQuadraturePoints - 1][0][j];
-            aStochasticTerm2[i] += exp(sqrt(eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadraturePoints[j])
+            aStochasticTerm2[i] += exp (sqrt (eigenvalues[i].first) * eigVectorGauss[i] * HermiteQuadraturePoints[j])
                                    * HermitePolyProjection[Jq[q1][i]][j] * HermiteQuadratureWeights[j];
           }
         }
 
         double aS1 = 1.;
         double aS2 = 1.;
-        for(unsigned i = 0; i < numberOfEigPairs; i++) {
+        for (unsigned i = 0; i < numberOfEigPairs; i++) {
 //           std::cout << "------------------- " << Jq[q1][i] << " ";
-          aS1 *= integralsMatrix[Jq[q1][i]][0][0];
+          aS1 *= integralMatrix[Jq[q1][i]][0][0];
           aS2 *= aStochasticTerm2[i];
         }
 //         std::cout << " stochastic term 1= " << aS1 << " " << "stochastic term 2= " << aS2 << std::endl;
 
         aStochasticGauss[q1] = amin * aS1 + aS2; //a_q(x_ig)
-        if(fabs(aStochasticGauss[q1]) > 10.) std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
+        if (fabs (aStochasticGauss[q1]) > 10.) std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
       }
 //END coefficient obtained projecting the exponential of the KL
 
 //BEGIN coefficient obtained projecting the  KL
 //       for(unsigned q1 = 0; q1 < Jq.size(); q1 ++) {
-//         double aS1 = meanInput; 
+//         double aS1 = meanInput;
 //         double aS2 = 0.;
 //         for(unsigned i = 0; i < numberOfEigPairs; i++) {
-//           aS1 *= integralsMatrix[Jq[q1][i]][0][0];
+//           aS1 *= integralMatrix[Jq[q1][i]][0][0];
 //           aS2 += sqrt(eigenvalues[i].first) * eigVectorGauss[i] * productTerms[q1][i];
 //         }
-// 
+//
 //         aStochasticGauss[q1] = aS1 + aS2;
 // //         std::cout << " coeff =  " << aStochasticGauss[q1] << std::endl;
-// 
+//
 //       }
 //END coefficient obtained projecting the  KL
 
 
-      vector < vector < double > > laplace(nDofu);
-      for(unsigned i = 0; i < nDofu; i++) {
-        laplace[i].assign(nDofu, 0.);
-        for(unsigned j = 0; j < nDofu; j++) {
-          for(unsigned kdim = 0; kdim < dim; kdim++) {
+      vector < vector < double > > laplace (nDofu);
+      for (unsigned i = 0; i < nDofu; i++) {
+        laplace[i].assign (nDofu, 0.);
+        for (unsigned j = 0; j < nDofu; j++) {
+          for (unsigned kdim = 0; kdim < dim; kdim++) {
             laplace[i][j] += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
           }
         }
       }
 
 
-      for(unsigned p1 = 0; p1 < Jp.size(); p1++) {
+      for (unsigned p1 = 0; p1 < Jp.size(); p1++) {
 
         double srcTermStoch = 1.;
-        for(unsigned i = 0; i < numberOfEigPairs; i++) {
-          srcTermStoch *= integralsMatrix[0][Jp[p1][i]][0];
+        for (unsigned i = 0; i < numberOfEigPairs; i++) {
+          srcTermStoch *= integralMatrix[0][Jp[p1][i]][0];
         }
 
-        for(unsigned i = 0; i < nDofu; i++) {
+        for (unsigned i = 0; i < nDofu; i++) {
           double resU = 1. * phi[i] * srcTermStoch * weight;
-          for(unsigned p2 = 0; p2 < Jp.size(); p2++) {
-            for(unsigned j = 0; j < nDofu; j++) {
+          for (unsigned p2 = 0; p2 < Jp.size(); p2++) {
+            for (unsigned j = 0; j < nDofu; j++) {
               double AG = 0;
-              for(unsigned q1 = 0; q1 < Jq.size(); q1++) {
+              for (unsigned q1 = 0; q1 < Jq.size(); q1++) {
                 AG += aStochasticGauss[q1] * laplace[i][j] * G[q1][p1][p2];
               }
-              Jac[(p1 * nDofu + i) * (Jp.size() * nDofu) +  p2 * nDofu + j] -= AG;
+              Jac[ (p1 * nDofu + i) * (Jp.size() * nDofu) +  p2 * nDofu + j] -= AG;
               resU +=  AG * solu[p2][j];
             }
           }
@@ -822,10 +1004,10 @@ void AssembleSysSG(MultiLevelProblem& ml_prob) {
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
-    RES->add_vector_blocked(Res, l2GMap);
+    RES->add_vector_blocked (Res, l2GMap);
 
     //store K in the global matrix KK
-    KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
+    KK->add_matrix_blocked (Jac, l2GMap, l2GMap);
 
   } //end element loop for each process
 
