@@ -104,11 +104,9 @@ class uq {
 
     /////////////////////////////////////////////////
     
-    void ComputeMultivariateHermitePoly (std::vector < std::vector < double > >  & MultivariateHermitePoly,
-                                          std::vector < double > & MultivariateHermiteQuadratureWeights,
+    void ComputeMultivariateHermitePoly (std::vector < std::vector < double > >  & multivariateHermitePoly,
+                                          std::vector < double > & multivariateHermiteQuadratureWeights,
                                           const unsigned & numberOfQuadraturePoints, const unsigned & p,
-                                          const std::vector < std::vector <unsigned> > & Jp,
-                                          const std::vector < std::vector <unsigned> > & Tp,
                                           const unsigned & numberOfEigPairs);
 
   private:
@@ -677,31 +675,33 @@ void uq::ClearStochasticMassMatrix(){
 
 ///////////////////////////////////////////
 
-void uq::ComputeMultivariateHermitePoly (std::vector < std::vector < double > >  & MultivariateHermitePoly,
-    std::vector < double > & MultivariateHermiteQuadratureWeights,
-    const unsigned & numberOfQuadraturePoints, const unsigned & p,
-    const std::vector < std::vector <unsigned> > & Jp,
-    const std::vector < std::vector <unsigned> > & Tp,
-    const unsigned & numberOfEigPairs) {
 
-  MultivariateHermiteQuadratureWeights.assign (Tp.size(), 1.);
+void uq::ComputeMultivariateHermitePoly (
+    std::vector < std::vector < double > >  & multivariateHermitePoly,
+    std::vector < double > & multivariateHermiteQuadratureWeights,
+    const unsigned & numberOfQuadraturePoints, const unsigned & p, const unsigned & numberOfEigPairs) {
+    
+  const std::vector < std::vector <unsigned> > & Jp = GetIndexSet (p,numberOfEigPairs);
+  const std::vector < std::vector <unsigned> > & Tp = GetTensorProductSet (numberOfQuadraturePoints, numberOfEigPairs);
 
-  MultivariateHermitePoly.resize (Jp.size());
+  multivariateHermiteQuadratureWeights.assign (Tp.size(), 1.);
+
+  multivariateHermitePoly.resize (Jp.size());
   for (unsigned i = 0; i < Jp.size(); i++) {
-    MultivariateHermitePoly[i].assign (Tp.size(), 1.);
+    multivariateHermitePoly[i].assign (Tp.size(), 1.);
   }
 
-  const std::vector < std::vector < double > >  &HermitePoly = GetHermitePolynomial (numberOfQuadraturePoints, p);
+  const std::vector < std::vector < double > >  &hermitePoly = GetHermitePolynomial (numberOfQuadraturePoints, p);
 
   for (unsigned j = 0; j < Tp.size(); j++) {
     for (unsigned k = 0; k < numberOfEigPairs; k++) {
-      MultivariateHermiteQuadratureWeights[j] *= _HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]] ;
+      multivariateHermiteQuadratureWeights[j] *= _HermiteQuadrature[numberOfQuadraturePoints - 1][0][Tp[j][k]] ;
       for (unsigned i = 0; i < Jp.size(); i++) {
-        MultivariateHermitePoly[i][j] *= HermitePoly[Jp[i][k]][Tp[j][k]] ;
+        multivariateHermitePoly[i][j] *= hermitePoly[Jp[i][k]][Tp[j][k]] ;
       }
     }
   }
-
+  
 };
 
 
@@ -754,14 +754,8 @@ void AssembleSysSG (MultiLevelProblem& ml_prob) {
 
   unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
-//   std::vector < std::vector < std::vector < double > > > integralMatrix;
-//   myuq.ComputeIntegralMatrix (integralMatrix, qIndex, pIndex);
-
   const std::vector < std::vector < std::vector < double > > > & integralMatrix = myuq.GetIntegralMatrix (qIndex, pIndex);
 
-//   std::vector < std::vector < std::vector < double > > >  G; //vector with stochastic mass matrices
-//   myuq.ComputeStochasticMassMatrix (G, qIndex, pIndex, numberOfEigPairs);
-  
   const std::vector < std::vector < std::vector < double > > >  &G = myuq.GetStochasticMassMatrix (qIndex, pIndex, numberOfEigPairs);
 
   const std::vector < std::vector <unsigned> > &Jq = myuq.GetIndexSet (qIndex, numberOfEigPairs);

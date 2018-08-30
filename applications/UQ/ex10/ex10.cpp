@@ -898,13 +898,11 @@ void GetStochasticData (std::vector <double>& alphas) {
 
     const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet (pIndex, numberOfEigPairs);
 
-    std::vector < std::vector < double > >  MultivariateHermitePoly;
-    std::vector < double > MultivariateHermiteQuadratureWeights;
-
-    myuq.ComputeMultivariateHermitePoly (MultivariateHermitePoly, MultivariateHermiteQuadratureWeights,
-                                          numberOfQuadraturePoints, pIndex, Jp, Tp, numberOfEigPairs);
-
-
+    std::vector < std::vector < double > >  multivariateHermitePoly;
+    std::vector < double > multivariateHermiteQuadratureWeights;
+    
+    myuq.ComputeMultivariateHermitePoly (multivariateHermitePoly, multivariateHermiteQuadratureWeights,
+                                         numberOfQuadraturePoints, pIndex, numberOfEigPairs);
 
     //BEGIN computation of the raw moments
     for (unsigned p = 0; p < totMoments; p++) {
@@ -912,10 +910,10 @@ void GetStochasticData (std::vector <double>& alphas) {
       for (unsigned j = 0; j < Tp.size(); j++) {
         double integrandFunction = 0.;
         for (unsigned i = 0; i < Jp.size(); i++) {
-          integrandFunction += MultivariateHermitePoly[i][j] * alphas[i];
+          integrandFunction += multivariateHermitePoly[i][j] * alphas[i];
         }
         integrandFunction = pow (integrandFunction, p + 1);
-        moments[p] += MultivariateHermiteQuadratureWeights[j] * integrandFunction;
+        moments[p] += multivariateHermiteQuadratureWeights[j] * integrandFunction;
       }
     }
     //END
@@ -933,10 +931,10 @@ void GetStochasticData (std::vector <double>& alphas) {
     for (unsigned j = 0; j < Tp.size(); j++) {
       double integrandFunctionVariance = 0.;
       for (unsigned i = 0; i < Jp.size(); i++) {
-        integrandFunctionVariance += MultivariateHermitePoly[i][j] * alphas[i];
+        integrandFunctionVariance += multivariateHermitePoly[i][j] * alphas[i];
       }
       integrandFunctionVariance = pow (integrandFunctionVariance - meanQoI, 2);
-      varianceQoI += MultivariateHermiteQuadratureWeights[j] * integrandFunctionVariance;
+      varianceQoI += multivariateHermiteQuadratureWeights[j] * integrandFunctionVariance;
     }
 
     stdDeviationQoI = sqrt (varianceQoI);
@@ -949,11 +947,11 @@ void GetStochasticData (std::vector <double>& alphas) {
       for (unsigned j = 0; j < Tp.size(); j++) {
         double integrandFunction = 0.;
         for (unsigned i = 0; i < Jp.size(); i++) {
-          integrandFunction += MultivariateHermitePoly[i][j] * alphas[i];
+          integrandFunction += multivariateHermitePoly[i][j] * alphas[i];
         }
         integrandFunction = (integrandFunction - meanQoI) / stdDeviationQoI; //standardization of the QoI
         integrandFunction = pow (integrandFunction, p + 1);
-        momentsStandardized[p] += MultivariateHermiteQuadratureWeights[j] * integrandFunction;
+        momentsStandardized[p] += multivariateHermiteQuadratureWeights[j] * integrandFunction;
       }
     }
     //END
