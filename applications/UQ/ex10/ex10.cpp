@@ -14,8 +14,7 @@
 
 #include "slepceps.h"
 
-//#include "../include/sgfem_assembly.hpp"
-#include "../include/uq.hpp"
+#include "../include/sgfem_assembly_uq.hpp"
 
 using namespace femus;
 
@@ -900,14 +899,14 @@ void GetStochasticData (std::vector <double>& alphas) {
 
 //     std::vector < std::vector < double > >  multivariateHermitePoly;
 //     std::vector < double > multivariateHermiteQuadratureWeights;
-//     
+//
 //     myuq.ComputeMultivariateHermite (multivariateHermitePoly, multivariateHermiteQuadratureWeights,
 //                                          numberOfQuadraturePoints, pIndex, numberOfEigPairs);
-    
-    
-    const std::vector < std::vector < double > >  & multivariateHermitePoly = myuq.GetMultivariateHermitePolynomial(numberOfQuadraturePoints, pIndex, numberOfEigPairs);
-    const std::vector < double > & multivariateHermiteQuadratureWeights = myuq.GetMultivariateHermiteWeights(numberOfQuadraturePoints, pIndex, numberOfEigPairs);
-    
+
+
+    const std::vector < std::vector < double > >  & multivariateHermitePoly = myuq.GetMultivariateHermitePolynomial (numberOfQuadraturePoints, pIndex, numberOfEigPairs);
+    const std::vector < double > & multivariateHermiteQuadratureWeights = myuq.GetMultivariateHermiteWeights (numberOfQuadraturePoints, pIndex, numberOfEigPairs);
+
 
     //BEGIN computation of the raw moments
     for (unsigned p = 0; p < totMoments; p++) {
@@ -985,7 +984,7 @@ void GetStochasticData (std::vector <double>& alphas) {
       for (unsigned k = 0; k < numberOfEigPairs; k++) {
         samplePoints[k] = var_nor();
       }
-      const std::vector < std::vector <double> > &HermitePolyHistogram = 
+      const std::vector < std::vector <double> > &HermitePolyHistogram =
         myuq.GetHermitePolyHistogram (pIndex, samplePoints, numberOfEigPairs);
 
       std::vector<double> MultivariateHermitePolyHistogram (Jp.size(), 1.);
@@ -1015,9 +1014,9 @@ void GetStochasticData (std::vector <double>& alphas) {
 
     }
     //END
-    
+
     myuq.ClearHermitePolynomialHistogram();
-    
+
     //BEGIN computation of the moments via Monte Carlo integration
     std::vector <double> momentsMonteCarlo (numberOfSamples);
     std::vector <double> momentsStandardizedMonteCarlo (numberOfSamples);
@@ -1203,7 +1202,7 @@ void PlotStochasticData() {
         d6gaussian = (1.) * gaussian * (pow (t, 6) - 15 * pow (t, 4) + 45 * t * t - 15);
 
         generalizedGC3Terms = generalizedGC2Terms - 1. / 6 * (cumulantsStandardized[2] + 3 * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
-                              + pow (cumulantsStandardized[0], 3)) * d3gaussian;
+                                                              + pow (cumulantsStandardized[0], 3)) * d3gaussian;
 
         std::cout << generalizedGC3Terms << " ";
 
@@ -1214,28 +1213,28 @@ void PlotStochasticData() {
           d9gaussian = (- 1.) * gaussian * (pow (t, 9) - 36. * pow (t, 7) + 378. * pow (t, 5) - 1260. * t * t * t + 945. * t) ;
 
           generalizedGC4Terms = generalizedGC3Terms + 1. / 24 * (cumulantsStandardized[3] + 4. * cumulantsStandardized[2] * cumulantsStandardized[0]
-                                + 3. * pow ( (cumulantsStandardized[1] - 1.), 2) + 6. * (cumulantsStandardized[1] - 1.) * pow (cumulantsStandardized[0], 2)
-                                + pow (cumulantsStandardized[0], 4)) * d4gaussian;
+                                                                 + 3. * pow ( (cumulantsStandardized[1] - 1.), 2) + 6. * (cumulantsStandardized[1] - 1.) * pow (cumulantsStandardized[0], 2)
+                                                                 + pow (cumulantsStandardized[0], 4)) * d4gaussian;
 
           std::cout << generalizedGC4Terms << " ";
 
           if (totMoments > 4) {
 
             generalizedGC5Terms = generalizedGC4Terms - 1. / 120 * (cumulantsStandardized[4] + 5. * cumulantsStandardized[3] * cumulantsStandardized[0]
-                                  + 10. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) + 10. * cumulantsStandardized[2] * pow (cumulantsStandardized[0], 2)
-                                  + 15. * pow ( (cumulantsStandardized[1] - 1.), 2) * cumulantsStandardized[0] + 10. * (cumulantsStandardized[1] - 1.) * pow (cumulantsStandardized[0], 3)
-                                  + pow (cumulantsStandardized[0], 5)) * d5gaussian;
+                                                                    + 10. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) + 10. * cumulantsStandardized[2] * pow (cumulantsStandardized[0], 2)
+                                                                    + 15. * pow ( (cumulantsStandardized[1] - 1.), 2) * cumulantsStandardized[0] + 10. * (cumulantsStandardized[1] - 1.) * pow (cumulantsStandardized[0], 3)
+                                                                    + pow (cumulantsStandardized[0], 5)) * d5gaussian;
 
             std::cout << generalizedGC5Terms << " ";
 
             if (totMoments > 5) {
 
               generalizedGC6Terms = generalizedGC5Terms + 1. / 720 * (cumulantsStandardized[5] + 6. * cumulantsStandardized[4] * cumulantsStandardized[0]
-                                    + 15. * cumulantsStandardized[3] * (cumulantsStandardized[1] - 1.) + 15. * cumulantsStandardized[3] * pow (cumulantsStandardized[0], 2)
-                                    + 10. * pow (cumulantsStandardized[2], 2) + 60. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
-                                    + 20. * cumulantsStandardized[2] * pow (cumulantsStandardized[0], 3) + 15. * pow ( (cumulantsStandardized[1] - 1.), 3)
-                                    + 45. * pow ( (cumulantsStandardized[1] - 1.), 2) * pow (cumulantsStandardized[0], 2) + 15. * (cumulantsStandardized[1] - 1.) * pow (cumulantsStandardized[0], 4)
-                                    +  pow (cumulantsStandardized[0], 6)) * d6gaussian;
+                                                                      + 15. * cumulantsStandardized[3] * (cumulantsStandardized[1] - 1.) + 15. * cumulantsStandardized[3] * pow (cumulantsStandardized[0], 2)
+                                                                      + 10. * pow (cumulantsStandardized[2], 2) + 60. * cumulantsStandardized[2] * (cumulantsStandardized[1] - 1.) * cumulantsStandardized[0]
+                                                                      + 20. * cumulantsStandardized[2] * pow (cumulantsStandardized[0], 3) + 15. * pow ( (cumulantsStandardized[1] - 1.), 3)
+                                                                      + 45. * pow ( (cumulantsStandardized[1] - 1.), 2) * pow (cumulantsStandardized[0], 2) + 15. * (cumulantsStandardized[1] - 1.) * pow (cumulantsStandardized[0], 4)
+                                                                      +  pow (cumulantsStandardized[0], 6)) * d6gaussian;
 
               std::cout << generalizedGC6Terms << " \n ";
 
@@ -1296,9 +1295,9 @@ void PlotStochasticData() {
 
         d8gaussian = (1.) * gaussian * (1. / 16. * (1680. - 6720. * t * t + 3360. * pow (t, 4) - 448. * pow (t, 6) + 16. * pow (t, 8)));
         d10gaussian = (1.) * gaussian * (1. / 32. * (- 30240. + 151200. *  t * t - 100800. * pow (t, 4) + 20160. * pow (t, 6) - 1440. * pow (t, 8)
-                                         + 32. * pow (t, 10)));
+                                                     + 32. * pow (t, 10)));
         d12gaussian = (1.) * gaussian * (1. / 64. * (665280. - 3991680. * t * t + 3326400. * pow (t, 4) - 887040. * pow (t, 6) + 95040. * pow (t, 8)
-                                         - 4224. * pow (t, 10) + 64. * pow (t, 12)));
+                                                     - 4224. * pow (t, 10) + 64. * pow (t, 12)));
 
         lambda6 = cumulants[5] / pow (stdDeviationQoI, 6);
 
