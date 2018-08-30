@@ -898,11 +898,16 @@ void GetStochasticData (std::vector <double>& alphas) {
 
     const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet (pIndex, numberOfEigPairs);
 
-    std::vector < std::vector < double > >  multivariateHermitePoly;
-    std::vector < double > multivariateHermiteQuadratureWeights;
+//     std::vector < std::vector < double > >  multivariateHermitePoly;
+//     std::vector < double > multivariateHermiteQuadratureWeights;
+//     
+//     myuq.ComputeMultivariateHermite (multivariateHermitePoly, multivariateHermiteQuadratureWeights,
+//                                          numberOfQuadraturePoints, pIndex, numberOfEigPairs);
     
-    myuq.ComputeMultivariateHermitePoly (multivariateHermitePoly, multivariateHermiteQuadratureWeights,
-                                         numberOfQuadraturePoints, pIndex, numberOfEigPairs);
+    
+    const std::vector < std::vector < double > >  & multivariateHermitePoly = myuq.GetMultivariateHermitePolynomial(numberOfQuadraturePoints, pIndex, numberOfEigPairs);
+    const std::vector < double > & multivariateHermiteQuadratureWeights = myuq.GetMultivariateHermiteWeights(numberOfQuadraturePoints, pIndex, numberOfEigPairs);
+    
 
     //BEGIN computation of the raw moments
     for (unsigned p = 0; p < totMoments; p++) {
@@ -980,8 +985,8 @@ void GetStochasticData (std::vector <double>& alphas) {
       for (unsigned k = 0; k < numberOfEigPairs; k++) {
         samplePoints[k] = var_nor();
       }
-      std::vector < std::vector <double> > HermitePolyHistogram;
-      myuq.ComputeHermitePolyHistogram (HermitePolyHistogram, pIndex, samplePoints, numberOfEigPairs);
+      const std::vector < std::vector <double> > &HermitePolyHistogram = 
+        myuq.GetHermitePolyHistogram (pIndex, samplePoints, numberOfEigPairs);
 
       std::vector<double> MultivariateHermitePolyHistogram (Jp.size(), 1.);
       for (unsigned i = 0; i < Jp.size(); i++) {
@@ -1010,7 +1015,9 @@ void GetStochasticData (std::vector <double>& alphas) {
 
     }
     //END
-
+    
+    myuq.ClearHermitePolynomialHistogram();
+    
     //BEGIN computation of the moments via Monte Carlo integration
     std::vector <double> momentsMonteCarlo (numberOfSamples);
     std::vector <double> momentsStandardizedMonteCarlo (numberOfSamples);
