@@ -24,9 +24,11 @@ using namespace femus;
 
 int simulation = 2; // =1 sphere (default) = 2 torus
 
+unsigned P = 3;
+
 //Sphere
 
-double thetaSphere = acos(-1.) / 6;
+double thetaSphere = acos(-1.) / 3;
 
 bool SetBoundaryConditionSphere(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
@@ -35,9 +37,11 @@ bool SetBoundaryConditionSphere(const std::vector < double >& x, const char SolN
     value = tan(thetaSphere);
   } 
   else if (!strcmp("H", SolName)) {
-    value = -1. / tan(thetaSphere);
+    //value = -1. / tan(thetaSphere);
+    value = -cos(thetaSphere);
   }
   else if (!strcmp("A", SolName)) {
+    dirichlet = false;
     value = 0;
   }
   return dirichlet;
@@ -48,12 +52,14 @@ double InitalValueUSphere(const std::vector < double >& x) {
 }
 
 double InitalValueHSphere(const std::vector < double >& x) {
-  return -1. / tan(thetaSphere);
+//   return -1. / tan(thetaSphere);
+  return -cos(thetaSphere);
 }
 
 double InitalValueASphere(const std::vector < double >& x) {
-  return 0.;
+  return 1. / sin(thetaSphere);
 }
+
 
 // Torus
 
@@ -205,6 +211,14 @@ int main(int argc, char** args) {
       
       // initilaize and solve the system
       system.init();
+      
+//       system.SetNonLinearConvergenceTolerance(1.e-7);
+//       system.SetMaxNumberOfNonLinearIterations(3); //20
+//       
+//       
+//       system.SetMaxNumberOfLinearIterations(1);
+//       system.SetAbsoluteLinearConvergenceTolerance(1.e-50);
+      
       system.MGsolve();
       
       std::pair< double , double > norm = GetErrorNorm(&mlSol);
@@ -216,6 +230,7 @@ int main(int argc, char** args) {
       
       VTKWriter vtkIO(&mlSol);
       vtkIO.SetGraphVariable("u");
+      vtkIO.SetDebugOutput(true);
       vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i + j * 10);
       
     }
@@ -457,68 +472,77 @@ void AssembleWillmoreProblem_AD(MultiLevelProblem& ml_prob) {
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x);
       
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      adept::adouble soluGauss = 0;
-      vector < adept::adouble > soluGauss_x(dim, 0.);
+      //adept::adouble soluGauss = 0;
       
-      adept::adouble solHGauss = 0;
-      vector < adept::adouble > solHGauss_x(dim, 0.);
+      vector < adept::adouble > u_x(dim, 0.);
       
-      adept::adouble solAGauss = 0;
-      vector < adept::adouble > solAGauss_x(dim, 0.);
+      adept::adouble H = 0;
+      vector < adept::adouble > H_x(dim, 0.);
       
-      vector < double > xGauss(dim, 0.);
+      adept::adouble A = 0;
+      vector < adept::adouble > A_x(dim, 0.);
       
       for (unsigned i = 0; i < nDofs; i++) {
-        soluGauss += phi[i] * solu[i];
-        solHGauss += phi[i] * solH[i];
-        solAGauss += phi[i] * solA[i];
-        
+        H += phi[i] * solH[i];
+        A += phi[i] * solA[i];
         for (unsigned idim = 0; idim < dim; idim++) {
-          soluGauss_x[idim] += phi_x[i * dim + idim] * solu[i];
-          solHGauss_x[idim] += phi_x[i * dim + idim] * solH[i];
-          solAGauss_x[idim] += phi_x[i * dim + idim] * solA[i];
-          xGauss[idim] += x[idim][i] * phi[i];
+          u_x[idim] += phi_x[i * dim + idim] * solu[i];
+          H_x[idim] += phi_x[i * dim + idim] * solH[i];
+          A_x[idim] += phi_x[i * dim + idim] * solA[i];
         }
       }
       
-      double c = 0.;
+      
+      adept::adouble A2 = A * A;
+      
       double Id[2][2] = {{1., 0.}, {0., 1.}};
-      adept::adouble A2 = 1.;
       vector < vector < adept::adouble> > B(dim);
       
       for (unsigned idim = 0; idim < dim; idim++) {
         B[idim].resize(dim);
-        A2 += soluGauss_x[idim] * soluGauss_x[idim];
       }
       
-      adept::adouble A = sqrt(A2);
-      
+      adept::adouble u_xNorm2 = 0;
       for (unsigned idim = 0; idim < dim; idim++) {
+        u_xNorm2 += u_x[idim] * u_x[idim];
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          B[idim][jdim] = Id[idim][jdim] - (soluGauss_x[idim] * soluGauss_x[jdim]) / A2;
+          B[idim][jdim] = Id[idim][jdim] - (u_x[idim] * u_x[jdim]) / A2;
+          
+          
         }
       }
+      
+      adept::adouble A1 = sqrt(1. + u_xNorm2);
+      
+      adept::adouble HPm2 = 1.;
+      for(unsigned i = 0; i < P - 2; i++){
+        HPm2 *= H;
+      }
+      
       
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofs; i++) {
         
         adept::adouble nonLinearLaplaceU = 0.;
         adept::adouble nonLinearLaplaceH = 0.;
-        adept::adouble nonLinearLaplaceA = 0.;
+       
         
         for (unsigned idim = 0; idim < dim; idim++) {
           
-          nonLinearLaplaceU +=  - 1. / A  * soluGauss_x[idim] * phi_x[i * dim + idim];
+          nonLinearLaplaceU +=  - 1. / A1  * u_x[idim] * phi_x[i * dim + idim];
           
-          nonLinearLaplaceH +=   -1. / A * (( B[idim][0] * solHGauss_x[0] + B[idim][1] * solHGauss_x[1])
-                                             - (solHGauss * solHGauss / A2 + c) * soluGauss_x[idim]) 
-                                            * phi_x[i * dim + idim];
-          nonLinearLaplaceA +=  - solAGauss_x[idim] * phi_x[i * dim + idim];
+          nonLinearLaplaceH +=   - HPm2 * ( P/2. * (  B[idim][0] * ( (P - 1.) * H_x[0] + H / A1 * A_x[0])
+                                                    + B[idim][1] * ( (P - 1.) * H_x[1] + H / A1 * A_x[1]) )
+                                            - ( H * H ) / A1 * u_x[idim]
+                                          ) * phi_x[i * dim + idim];
+          
         }
         
-        aResu[i] += (2.*solHGauss / A * phi[i] - nonLinearLaplaceU) * weight;
+        aResu[i] += (2. * H * phi[i] - nonLinearLaplaceU) * weight;
         aResH[i] += nonLinearLaplaceH * weight;
-        aResA[i] += (1. * phi[i] - nonLinearLaplaceA) * weight;
+        //aResA[i] += (A2 - (1. + u_xNorm2) ) * phi[i] * weight;
+        //aResA[i] += (A - sqrt(1. + u_xNorm2) ) * phi[i] * weight;
+        aResA[i] += ( A - A1 ) * phi[i] * weight;
         
       } // end phi_i loop
     } // end gauss point loop
