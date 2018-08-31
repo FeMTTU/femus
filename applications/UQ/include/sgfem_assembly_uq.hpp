@@ -14,11 +14,11 @@ double amin = 1. / 100.; // for the KL expansion
 std::vector < std::pair<double, double> > eigenvalues (numberOfEigPairs);
 //END Stochastic Input Parameters
 
-uq &myuq = FemusInit::_uq;
+
 
 void AssembleSysSG (MultiLevelProblem& ml_prob) {
 
-
+  uq &myuq = FemusInit::_uq;
 
   //  ml_prob is the global object from/to where get/set all the data
   //  level is the level of the PDE system to be assembled

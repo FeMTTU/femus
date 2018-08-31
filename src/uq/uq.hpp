@@ -138,6 +138,11 @@ namespace femus {
       void ClearMultivariateHermite();
 
       /////////////////////////////////////////////////
+      
+      /// Set the standard output for some of the objects;
+      void SetOutput(const bool & output);
+      
+      /////////////////////////////////////////////////
 
       void Clear() {
         ClearIndexSet();
@@ -159,6 +164,7 @@ namespace femus {
       std::map<std::pair < std::pair<unsigned, unsigned>, unsigned >, std::vector < std::vector < std::vector < double > > > > _stochasticMassMatrix;
       std::map<std::pair < std::pair<unsigned, unsigned>, unsigned >, std::vector < std::vector < double > > >  _multivariateHermitePoly;
       std::map<std::pair < std::pair<unsigned, unsigned>, unsigned >, std::vector < double > > _multivariateHermiteWeight;
+      bool _output = false;
   };
 
 }

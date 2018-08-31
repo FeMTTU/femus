@@ -149,7 +149,7 @@ namespace femus {
 
     unsigned tensorProductDim = pow (numberOfQuadraturePoints, numberOfEigPairs);
 
-    std::cout << "tensorProductDim = " << tensorProductDim << std::endl;
+    if(_output) std::cout << "tensorProductDim = " << tensorProductDim << std::endl;
 
     Tp.resize (tensorProductDim);
     for (unsigned i = 0; i < tensorProductDim; i++) {
@@ -164,9 +164,9 @@ namespace femus {
 
       for (unsigned j = 0; j < numberOfEigPairs; j++) {
         Tp[index][j] = counters[numberOfEigPairs - 1 - j];
-        std::cout << " Tp[" << index << "][" << j << "]= " << Tp[index][j] ;
+        if(_output) std::cout << " Tp[" << index << "][" << j << "]= " << Tp[index][j] ;
       }
-      std::cout << std::endl;
+      if(_output) std::cout << std::endl;
       index++;
 
       unsigned i;
@@ -379,9 +379,9 @@ namespace femus {
       if (entrySum <= p) {
         for (unsigned j = 0; j < numberOfEigPairs; j++) {
           Jp[index][j] = counters[numberOfEigPairs - 1 - j];
-          std::cout << " Jp[" << index << "][" << j << "]= " << Jp[index][j] ;
+          if(_output) std::cout << " Jp[" << index << "][" << j << "]= " << Jp[index][j] ;
         }
-        std::cout << std::endl;
+        if(_output) std::cout << std::endl;
         index++;
       }
       unsigned i;
@@ -637,6 +637,11 @@ namespace femus {
     _multivariateHermiteWeight.clear();
   }
 
+  /// Set the standard output for some of the objects;
+  void uq::SetOutput(const bool & output){
+    _output = output;
+  }
+  
 }
 
 

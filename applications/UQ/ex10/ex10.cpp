@@ -55,13 +55,16 @@ int main (int argc, char** argv) {
   PetscErrorCode ierr;
   ierr = SlepcInitialize (&argc, &argv, PETSC_NULL, PETSC_NULL);
 
-
-  //BEGIN deterministic FEM instances
-  eigenvalues.resize (numberOfEigPairs); //this is where we store the eigenvalues
-
   // init Petsc-MPI communicator
   FemusInit mpinit (argc, argv, MPI_COMM_WORLD);
 
+  uq &myuq = FemusInit::_uq;
+  
+  myuq.SetOutput(true);
+  
+  //BEGIN deterministic FEM instances
+  eigenvalues.resize (numberOfEigPairs); //this is where we store the eigenvalues
+  
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
   unsigned numberOfSelectiveLevels = 0;
@@ -79,7 +82,7 @@ int main (int argc, char** argv) {
     sprintf (name, "egnf%d", i);
     mlSol.AddSolution (name, LAGRANGE, SECOND, 0, false);
   }
-
+  
   const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet (pIndex, numberOfEigPairs);
 
   for (unsigned i = 0; i < Jp.size(); i++) {
@@ -772,6 +775,8 @@ void GetCoefficientsForQuantityOfInterest (MultiLevelProblem& ml_prob, std::vect
 
   //  extract pointers to the several objects that we are going to use
 
+  uq &myuq = FemusInit::_uq;
+  
   LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("SG");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
@@ -874,6 +879,8 @@ void GetStochasticData (std::vector <double>& alphas) {
 
   //let's standardize the quantity of interest after finding moments and standard deviation
 
+  uq &myuq = FemusInit::_uq;
+  
   if (totMoments <= 0) {
 
     std::cout << "ERROR: total number of moments has to be a positive integer" << std::endl;
