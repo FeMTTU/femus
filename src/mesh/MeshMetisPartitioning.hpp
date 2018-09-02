@@ -45,11 +45,11 @@ public:
 
     /** New Metis parallel partitioning:
      *  for coarse and AMR mesh */
-    void DoPartition( std::vector < int > &epart, const bool &AMR );
+    void DoPartition( std::vector < unsigned > &partition, const bool &AMR );
 
     /** Parallel partitioning imported from coarser mesh partition:
      *  for uniformed refined meshes */
-    void DoPartition( std::vector < int > &epart, const Mesh &meshc );
+    void DoPartition( std::vector < unsigned > &partition, const Mesh &meshc );
 
 private:
 

@@ -18,11 +18,12 @@
 
     // Properties
     "variable" : { "name" : "T",
-                   "fe_order" : "first",
+                   "fe_order" : "second",
                    "func_source1" : "2.*exp(10*x)*(-10.*pi*cos(pi*x)+(pi*pi-50.)*sin(pi*x))*sin(pi*y)",
 		   "func_source2" : "2.*exp(10*x)*(-10.*4.*pi*cos(4*pi*x)+(4.*pi*4.*pi-50.)*sin(4.*pi*x))*sin(4.*pi*y)",
 		   "func_source3" : "2*pi*pi*sin(pi*x)*sin(pi*y)",
 		   "func_source4" : "2*(y-y*y+x-x*x)*atan(10*sqrt(2)*(x+y)-16)-10*sqrt(2)*((1-2*x)*(y-y*y)+(x-x*x)*(1-2*y))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))-10*sqrt(2)*((1-2*x)*(y-y*y)+(x-x*x)*(1-2*y))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))+800.*(x-x*x)*(y-y*y)*(10*sqrt(2)*(x+y)-16)/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))"
+		   //"func_source5" : "-(-120*(5849 - 400*pi*pi + 1800*x*(-5 + 2*x) + 1800*y*(1 + 2*y)))/(sqrt(13/2 + 2*x*(-5 + 2*x) + 2*y + 4*y*y)*(5851 + 1800*x*(-5 + 2*x) + 1800*y*(1 + 2*y) + 200*pi*(2*pi - 3*sqrt(2)*sqrt(13 + 4*x*(-5 + 2*x) + 4*y + 8*y*y)))*(5851 + 1800*x*(-5 + 2*x) + 1800*y*(1 + 2*y) + 200*pi*(2*pi - 3*sqrt(2)*sqrt(13 + 4*x*(-5 + 2*x) + 4*y + 8*y*y))))"
                  },
 
     // Boundary conditions
@@ -58,12 +59,17 @@
                    "dsoldx" : "(1-2*x)*(y-y*y)*atan(10*sqrt(2)*(x+y)-16)+10*sqrt(2)*(x-x*x)*(y-y*y)/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))",
                    "dsoldy" : "(x-x*x)*(1-2*y)*atan(10*sqrt(2)*(x+y)-16)+10*sqrt(2)*(x-x*x)*(y-y*y)/(1+(10*sqrt(2)*(x+y)-16)*(10*sqrt(2)*(x+y)-16))"
                    },
+                   
+   // "func_sol5" : { "sol"   : "atan(60*(sqrt((x-5/4)*(x-5/4)+(y+1/4)*(y+1/4)) - pi/3))",
+   //                "dsoldx" : "(60*(-5/4 + x))/(sqrt((-5/4 + x)*(-5/4 + x) + (1/4 + y)*(1/4 + y))*(1 + 3600*(-pi/3 + sqrt((-5/4 + x)*(-5/4 + x) + (1/4 + y)*(1/4 + y)))*(-pi/3 + sqrt((-5/4 + x)*(-5/4 + x) + (1/4 + y)*(1/4 + y)))))",
+   //                "dsoldy" : "(60*(1/4 + y))/(sqrt((-5/4 + x)*(-5/4 + x) + (1/4 + y)*(1/4 + y))*(1 + 3600*(-pi/3 + sqrt((-5/4 + x)*(-5/4 + x) + (1/4 + y)*(1/4 + y)))*(-pi/3 + sqrt((-5/4 + x)*(-5/4 + x) + (1/4 + y)*(1/4 + y)))))"
+   //                },
 
     // MG Solver properties
     "mgsolver" : { "nlevels" : 1,
 		   "AMR" : "yes",
 		   "maxAMRlevels" : 15,
-		   "AMRnorm" : "H1",
+		   "AMRnorm" : "l2",
 		   "AMRthreshold": 0.005,
                    "npresmoothing" : 0,
                    "npostsmoothing" : 2,
