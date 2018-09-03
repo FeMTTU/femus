@@ -60,7 +60,7 @@ int main (int argc, char** argv) {
 
   uq &myuq = FemusInit::_uq;
   
-  myuq.SetOutput(true);
+  //myuq.SetOutput(true);
   
   //BEGIN deterministic FEM instances
   eigenvalues.resize (numberOfEigPairs); //this is where we store the eigenvalues
@@ -691,7 +691,9 @@ void GetEigenPair (MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std:
       }
 
     }
-
+    
+    sol->_Sol[eigfIndex[iGS]]->close();
+    
     double local_norm2 = 0.;
     for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
