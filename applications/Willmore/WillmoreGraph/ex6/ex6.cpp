@@ -62,9 +62,6 @@ double InitalValueUSphere(const std::vector < double >& x) {
 
 
 double InitalValueHSphere(const std::vector < double >& x) {
-//   double r = sqrt(x[0]*x[0]+x[1]*x[1]);
-//   double rho = 1./cos(thetaSphere);
-//   double theta = acos(r/rho);
   return -cos(thetaSphere);
 }
 
@@ -74,6 +71,7 @@ double InitalValueWSphere(const std::vector < double >& x) {
   double rho = 1./cos(thetaSphere);
   double theta = acos(r/rho);
   
+//  double A = 1. / sin(thetaSphere);
   double A = 1. / sin(theta);
   double H = -cos(thetaSphere);
     
