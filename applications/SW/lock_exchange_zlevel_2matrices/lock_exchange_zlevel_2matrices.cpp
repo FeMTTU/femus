@@ -370,9 +370,8 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       else{
         //w[k - 1] +=   solh[k - 1] * 0. /dx;   
       }
-      //std::cout<< w[k-1] << " ";
+      //std::cout<< w[k-1] << " " << std::endl;
     }
-    
     
 
 //     for(unsigned k = 1; k < NLayers; k++){

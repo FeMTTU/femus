@@ -30,5 +30,7 @@ IF(SLEPC_FOUND)
 
   ADD_SUBDIRECTORY(tracer/)
   
+  ADD_SUBDIRECTORY(tracer_circular/)
+  
   ADD_SUBDIRECTORY(tracer_and_velocity/)
 ENDIF(SLEPC_FOUND)

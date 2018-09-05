@@ -366,14 +366,16 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     
 
     for ( unsigned k = 0; k < NLayers; k++ ) {
+    //BEGIN SIN FOR VELOCITY  
       aResv[k] += sin(solv[k]) /*- w[k]*solv[k]*/;    
       
-      if ( k < NLayers - 1 ) {
-        aResv[k] += w[k + 1] * 0.5 * ( solv[k] + solv[k + 1] );
-      }
-      if ( k > 0 ) {
-        aResv[k] -= w[k] * 0.5 * ( solv[k - 1] + solv[k] );
-      }
+//       if ( k < NLayers - 1 ) {
+//         aResv[k] += w[k + 1] * 0.5 * ( solv[k] + solv[k + 1] );
+//       }
+//       if ( k > 0 ) {
+//         aResv[k] -= w[k] * 0.5 * ( solv[k - 1] + solv[k] );
+//       }
+      //END SIN FOR VELOCITY
       
 //       adept::adouble vMidm = 0.5 * ( solvm[k] + solv[k] );
 //       adept::adouble fvm = 0.5 * vMidm * vMidm /*+ Pm[k]*/;
@@ -382,30 +384,48 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 //       adept::adouble vMidp = 0.5 * ( solv[k] + solvp[k] );
 //       adept::adouble fvp = 0.5 * vMidp * vMidp /*+ Pp[k]*/;
 //       aResv[k] -=  fvp / dxp;
-// 
-//       adept::adouble deltaZt = 0.;
-//       adept::adouble deltaZb = 0.;
-//       adept::adouble ht = 0.;
-//       adept::adouble hb = 0.;
-//       if ( k > 0 ) {
-//         ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
-//         deltaZt = ( solv[k - 1] - solv[k] ) / ht;
-//         aResv[k] -= 0.5 * w[k] * deltaZt;
-//       }
-//       else {
-//         ht = 0.5 * ( solhm[k] + solhp[k] );
-//         deltaZt = 0.* ( 0. - solv[k] ) / ht;
-//       }
-//       if ( k < NLayers - 1 ) {
-//         hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
-//         deltaZb = ( solv[k] - solv[k + 1] ) / hb;
-//         aResv[k] -= 0.5 * w[k + 1] * deltaZb;
-//       }
-//       else {
-//         hb = 0.5 * ( solhm[k] + solhp[k] );
-//         deltaZb = 0.* ( solv[k] - 0. ) / hb;
-//       }
-//       
+ 
+      //if ( i > start ) {
+        //aResv[k] += solv[k] * solvm[k]  / dxm; //second order
+        if ( solvm[k] > 0 ) {
+          aResv[k] += solvm[k] / dxm;
+        }
+        else {
+          aResv[k] += solv[k] / dxm;
+        }
+      //}
+      //if ( i < end - 1 ) {
+        //aResv[k] -= solv[k] * solvp[k]  / dxp; //second order
+        if ( solvp[k] > 0 ) {
+          aResv[k] -= solv[k] / dxp; //first order upwind
+        }
+        else {
+          aResv[k] -= solvp[k] / dxp; //first order upwind
+        }
+      //}
+      adept::adouble deltaZt = 0.;
+      adept::adouble deltaZb = 0.;
+      adept::adouble ht = 0.;
+      adept::adouble hb = 0.;
+      if ( k > 0 ) {
+        ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+        deltaZt = ( solv[k - 1] - solv[k] ) / ht;
+        aResv[k] -= 0.5 * w[k] * deltaZt;
+      }
+      else {
+        ht = 0.5 * ( solhm[k] + solhp[k] );
+        deltaZt = 0.* ( 0. - solv[k] ) / ht;
+      }
+      if ( k < NLayers - 1 ) {
+        hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+        deltaZb = ( solv[k] - solv[k + 1] ) / hb;
+        aResv[k] -= 0.5 * w[k + 1] * deltaZb;
+      }
+      else {
+        hb = 0.5 * ( solhm[k] + solhp[k] );
+        deltaZb = 0.* ( solv[k] - 0. ) / hb;
+      }
+      
 //       aResv[k] += ni_h * ( solvm[k] - solv[k] ) / ( dxm * 0.5 * ( dxm + dxp ) ); // horizontal diffusion
 //       aResv[k] += ni_h * ( solvp[k] - solv[k] ) / ( dxp * 0.5 * ( dxm + dxp ) ); // horizontal diffusion
 // 
@@ -797,10 +817,10 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
       //END
 
       if ( k < NLayers - 1 ) {
-        aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k] + solHT[k + 1] / solh[k + 1] );
+        aResHT[k] += w[k + 1] * 0.5 * ( solHT[k].value() / solh[k] + solHT[k + 1].value() / solh[k + 1] );
       }
       if ( k > 0 ) {
-        aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1] / solh[k - 1] + solHT[k] / solh[k] );
+        aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1].value() / solh[k - 1] + solHT[k].value() / solh[k] );
       }
       
       adept::adouble deltaZt = 0.;
