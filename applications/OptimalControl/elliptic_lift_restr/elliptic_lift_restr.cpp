@@ -1,7 +1,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "LinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
 #include "../elliptic_lift_restr_param.hpp"
@@ -93,7 +93,7 @@ int main(int argc, char** args) {
   MultiLevelProblem mlProb(&mlSol);
   
  // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
+  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("LiftRestr");
  
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
@@ -137,7 +137,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -590,7 +590,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
   
-    NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
