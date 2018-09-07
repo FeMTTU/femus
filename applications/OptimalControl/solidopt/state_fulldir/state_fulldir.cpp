@@ -168,7 +168,7 @@ int main(int argc, char** args) {
   ml_sol.GetWriter()->SetDebugOutput(true);
   
 //   system.SetDebugNonlinear(true);
-  system.SetMaxNumberOfNonLinearIterations(1);
+//   system.SetMaxNumberOfNonLinearIterations(5);
 //   system.SetNonLinearConvergenceTolerance(1.e-30);
 //   system.SetDebugLinear(true);
 //   system.SetMaxNumberOfLinearIterations(4);
@@ -315,6 +315,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
   //------------ at quadrature points ---------------------
     vector < adept::adouble > SolVAR_qp(n_unknowns);
+    vector < adept::adouble > SolVAR_hat_qp(n_unknowns);
     vector < vector < adept::adouble > > gradSolVAR_qp(n_unknowns);
     vector < vector < adept::adouble > > gradSolVAR_hat_qp(n_unknowns);
     for(int k=0; k<n_unknowns; k++) { 
@@ -340,7 +341,6 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 
     // gravity
     double _gravity[3] = {0., 0., 0.};
-
     // -----------------------------------------------------------------
 
   // element loop: each process loops only on the elements that owns
@@ -349,7 +349,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   // geometry *****************************
     short unsigned ielGeom = msh->GetElementType(iel);
 
-   unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
+      unsigned nDofsX = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
     
     for(int ivar=0; ivar<dim; ivar++) {
       coordX[ivar].resize(nDofsX);
@@ -409,6 +409,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
         }
       }
 
+   
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][SolFEType[disp_type_pos]/*solDType*/]->GetGaussPointNumber(); ig++) {
 
@@ -419,11 +420,13 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
       }
          //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
   	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+  	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX_hat,ig,weight_hat,phi_hat_gss_fe[BIQUADR_FE],phi_x_hat_gss_fe[BIQUADR_FE],phi_xx_hat_gss_fe[BIQUADR_FE]);
 
 
- //begin unknowns eval at gauss points ********************************
+  //begin unknowns eval at gauss points ********************************
 	for(unsigned unk = 0; unk <  n_unknowns; unk++) {
 	  SolVAR_qp[unk] = 0.;
+	  SolVAR_hat_qp[unk] = 0.;
 	  for(unsigned ivar2=0; ivar2<dim; ivar2++){ 
 	    gradSolVAR_qp[unk][ivar2] = 0.; 
 	    gradSolVAR_hat_qp[unk][ivar2] = 0.; 
@@ -431,6 +434,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
 	  
 	  for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
 	    SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i] * SolVAR_eldofs[unk][i];
+	    SolVAR_hat_qp[unk] += phi_hat_gss_fe[ SolFEType[unk] ][i] * SolVAR_eldofs[unk][i];
 	    for(unsigned ivar2=0; ivar2<dim; ivar2++) {
 	      gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
 	      gradSolVAR_hat_qp[unk][ivar2] += phi_x_hat_gss_fe[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_eldofs[unk][i]; 
@@ -462,13 +466,12 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
  
 
  //*******************************************************************************************************
-
         //BEGIN SOLID ASSEMBLY
 
           //BEGIN build Cauchy Stress in moving domain
           //physical quantity
           adept::adouble J_hat;  //Jacobian wrt fixed domain
-          adept::adouble trace_e;    //trace of deformation tensor
+          adept::adouble trace_e_hat;    //trace of deformation tensor
           adept::adouble Cauchy[3][3];
           adept::adouble Identity[3][3] = {{ 1., 0., 0.}, { 0., 1., 0.}, { 0., 0., 1.}};
 
@@ -476,22 +479,24 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
           adept::adouble I2_B = 0.;
 
           if (solid_model == 0) { // Saint-Venant
+            adept::adouble e_hat[3][3];
             adept::adouble e[3][3];
 
             //computation of the stress tensor
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
-                e[i][j] = /*0.5 **/ (gradSolVAR_hat_qp[SolPdeIndex[i]][j] /*+ gradSolVAR_hat_qp[SolPdeIndex[j]][i]*/);
+                e_hat[i][j] = 0.5 * (gradSolVAR_hat_qp[SolPdeIndex[i]][j] + gradSolVAR_hat_qp[SolPdeIndex[j]][i]);
+                e[i][j] = 0.5 * (gradSolVAR_qp[SolPdeIndex[i]][j] + gradSolVAR_qp[SolPdeIndex[j]][i]);
               }
             }
 
-            trace_e = 0.;
-            for (int i = 0; i < dim; i++) {  trace_e += e[i][i];   }
+            trace_e_hat = 0.;
+            for (int i = 0; i < dim; i++) {  trace_e_hat += e_hat[i][i];   }
 
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
                 //incompressible
-                Cauchy[i][j] = /*2. **//* mus* */ e[i][j] -  SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[i][j];
+                Cauchy[i][j] = 2. * /*mus* */ e[i][j] -  SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[i][j];
                 //+(penalty)*lambda*trace_e*Identity[i][j];
               }
             }
@@ -507,7 +512,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
               }
             }
 
-            J_hat =   F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
+            J_hat =   	F[0][0] * F[1][1] * F[2][2] + F[0][1] * F[1][2] * F[2][0] + F[0][2] * F[1][0] * F[2][1]
                       - F[2][0] * F[1][1] * F[0][2] - F[2][1] * F[1][2] * F[0][0] - F[2][2] * F[1][0] * F[0][1];
 
             for (int I = 0; I < 3; ++I) {
@@ -539,25 +544,25 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
               }
             }
             else if (5  ==  solid_model) {  //Mooney-Rivlin
-              adept::adouble detB =   B[0][0] * (B[1][1] * B[2][2] - B[2][1] * B[1][2])
+              adept::adouble detB =   	B[0][0] * (B[1][1] * B[2][2] - B[2][1] * B[1][2])
                                       - B[0][1] * (B[2][2] * B[1][0] - B[1][2] * B[2][0])
                                       + B[0][2] * (B[1][0] * B[2][1] - B[2][0] * B[1][1]);
               adept::adouble invdetB = 1. / detB;
               adept::adouble invB[3][3];
 
-              invB[0][0] = (B[1][1] * B[2][2] - B[2][1] * B[1][2]) * invdetB;
+              invB[0][0] =  (B[1][1] * B[2][2] - B[2][1] * B[1][2]) * invdetB;
               invB[1][0] = -(B[0][1] * B[2][2] - B[0][2] * B[2][1]) * invdetB;
-              invB[2][0] = (B[0][1] * B[1][2] - B[0][2] * B[1][1]) * invdetB;
+              invB[2][0] =  (B[0][1] * B[1][2] - B[0][2] * B[1][1]) * invdetB;
               invB[0][1] = -(B[1][0] * B[2][2] - B[1][2] * B[2][0]) * invdetB;
-              invB[1][1] = (B[0][0] * B[2][2] - B[0][2] * B[2][0]) * invdetB;
+              invB[1][1] =  (B[0][0] * B[2][2] - B[0][2] * B[2][0]) * invdetB;
               invB[2][1] = -(B[0][0] * B[1][2] - B[1][0] * B[0][2]) * invdetB;
-              invB[0][2] = (B[1][0] * B[2][1] - B[2][0] * B[1][1]) * invdetB;
+              invB[0][2] =  (B[1][0] * B[2][1] - B[2][0] * B[1][1]) * invdetB;
               invB[1][2] = -(B[0][0] * B[2][1] - B[2][0] * B[0][1]) * invdetB;
-              invB[2][2] = (B[0][0] * B[1][1] - B[1][0] * B[0][1]) * invdetB;
+              invB[2][2] =  (B[0][0] * B[1][1] - B[1][0] * B[0][1]) * invdetB;
 
-              I1_B = B[0][0] + B[1][1] + B[2][2];
-              I2_B = B[0][0] * B[1][1] + B[1][1] * B[2][2] + B[2][2] * B[0][0]
-                     - B[0][1] * B[1][0] - B[1][2] * B[2][1] - B[2][0] * B[0][2];
+              I1_B = 	B[0][0] + B[1][1] + B[2][2];
+              I2_B = 	B[0][0] * B[1][1] + B[1][1] * B[2][2] + B[2][2] * B[0][0]
+		      - B[0][1] * B[1][0] - B[1][2] * B[2][1] - B[2][0] * B[0][2];
 
               double C1 = mus / 3.;
               double C2 = C1 / 2.;
@@ -566,8 +571,8 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
                 for (int J = 0; J < 3; ++J) {
                   Cauchy[I][J] =  2.*(C1 * B[I][J] - C2 * invB[I][J])
                                   //- (2. / 3.) * (C1 * I1_B - C2 * I2_B) * SolVAR[2 * dim] * Identity[I][J];
-                                  - SolVAR_qp[SolPdeIndex[press_type_pos]] * Identity[I][J];
-                }
+                                  - SolVAR_hat_qp[SolPdeIndex[press_type_pos]] * Identity[I][J];
+               }
               }
 
             }
@@ -600,22 +605,50 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
             for (unsigned i = 0; i < nDofsP; i++) {
               if (!penalty) {
                 if (0  ==  solid_model) {
-                  aResVAR[SolPdeIndex[press_type_pos]][i] += -(-phi_hat_gss_fe[SolFEType[press_type_pos]][i] * (trace_e + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
+                  aResVAR[SolPdeIndex[press_type_pos]][i] += -(-phi_hat_gss_fe[SolFEType[press_type_pos]][i] * (trace_e_hat + (!incompressible) / lambda * SolVAR_hat_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
                 }
                 else if (1  ==  solid_model || 5  ==  solid_model) {
-                  aResVAR[SolPdeIndex[press_type_pos]][i] += phi_gss_fe[SolFEType[press_type_pos]][i] * (J_hat - 1. + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]]) * weight_hat;
+                  aResVAR[SolPdeIndex[press_type_pos]][i] += phi_hat_gss_fe[SolFEType[press_type_pos]][i] * (J_hat - 1. + (!incompressible) / lambda * SolVAR_hat_qp[SolPdeIndex[press_type_pos]]) * weight_hat;
                 }
                 else if (2  ==  solid_model) {
-                  aResVAR[SolPdeIndex[press_type_pos]][i] +=  -(-phi_gss_fe[SolFEType[press_type_pos]][i] * (log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
+                  aResVAR[SolPdeIndex[press_type_pos]][i] +=  -(-phi_hat_gss_fe[SolFEType[press_type_pos]][i] * (log(J_hat) / J_hat + (!incompressible) / lambda * SolVAR_hat_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
                 }
               }
               else if (3  ==  solid_model || 4  ==  solid_model) { // pressure = 0 in the solid
-                aResVAR[SolPdeIndex[press_type_pos]][i] += -(-phi_gss_fe[SolFEType[press_type_pos]][i] * (SolVAR_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
+                aResVAR[SolPdeIndex[press_type_pos]][i] += -(-phi_hat_gss_fe[SolFEType[press_type_pos]][i] * (SolVAR_hat_qp[SolPdeIndex[press_type_pos]])) * weight_hat;
               }
             }
           //END continuity block
 
         //********************************************************************************************************
+ 
+ 
+// // //  // *** phi_i loop ***
+// // //       for (unsigned i = 0; i < nDofsD; i++) {
+// // //         vector < adept::adouble > NSD(dim, 0.);
+// // // 
+// // //         for (unsigned  k = 0; k < dim; k++) {
+// // //          for (unsigned j = 0; j < dim; j++) {
+// // //            NSD[k]   += /* nu*/  /*IRe **/  phi_x_hat_gss_fe[SolFEType[k]][i * dim + j] * (gradSolVAR_hat_qp[SolPdeIndex[k]][j] + gradSolVAR_hat_qp[SolPdeIndex[j]][k] );
+// // // //             NSV[k]   +=  phiD[i] * (solD_gss[j] * gradSolD_gss[k][j]);
+// // //           }
+// // //         }
+// // // 
+// // //         for (unsigned  k = 0; k < dim; k++) {
+// // //           NSD[k] += -SolVAR_hat_qp[SolPdeIndex[press_type_pos]]* phi_x_hat_gss_fe[SolFEType[k]][i * dim + k];
+// // //         }
+// // // 
+// // //         for (unsigned  k = 0; k < dim; k++) {
+// // //           aResVAR[k][i] += ( _gravity[k] * phi_hat_gss_fe[SolFEType[k]][i] - NSD[k] ) * weight_hat;
+// // //         }
+// // //       } // end phi_i loop
+// // // 
+// // //       // *** phiP_i loop ***
+// // //       for (unsigned i = 0; i < nDofsP; i++) {
+// // //         for (int k = 0; k < dim; k++) {
+// // //           aResVAR[dim][i] +=  (gradSolVAR_hat_qp[SolPdeIndex[k]][k]) * phi_hat_gss_fe[SolFEType[press_type_pos]][i]  * weight_hat;
+// // //         }
+// // //       } // end phiP_i loop
 
     } // end gauss point loop
 
@@ -671,6 +704,7 @@ void AssembleSolidMech_AD(MultiLevelProblem& ml_prob) {
   }
  
   RES->close();
+  
   // ***************** END ASSEMBLY *******************
 }
 
