@@ -654,6 +654,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
       }
 
     }
+    
+    sol->_Sol[eigfIndex[iGS]]->close();
 
     double local_norm2 = 0.;
     for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
