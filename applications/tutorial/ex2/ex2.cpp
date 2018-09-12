@@ -1,6 +1,6 @@
 /** tutorial/Ex2
  * This example shows how to set and solve the weak form of the Poisson problem
- *                    $$ \Delta u = 1 \text{ on }\Omega, $$
+ *                    $$ \Delta u = \Delta u_exact \text{ on }\Omega, $$
  *          $$ u=0 \text{ on } \Gamma, $$
  * on a square domain $\Omega$ with boundary $\Gamma$;
  * all the coarse-level meshes are removed;
@@ -241,7 +241,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   vector < double >  solu; // local solution
   solu.reserve(maxSize);
 
-  vector < vector < double > > x(dim);    // local coordinates
+  vector < vector < double > > x (dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE BI/TRIQUADRATIC)
 
   for (unsigned i = 0; i < dim; i++) {
@@ -275,15 +275,14 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
     short unsigned ielGeom = msh->GetElementType(iel);
     unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-
+    
     // resize local arrays
     solu.resize(nDofu);
     l2GMap.resize(nDofu);
     
 
     for (int i = 0; i < dim; i++) {
-      x[i].resize(nDofx);
+      x[i].resize(nDofu);
     }
 
     Res.assign(nDofu,0.);    //resize and set to zero
@@ -293,13 +292,13 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to local solution mapping
+      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // local to global solution mapping
       solu[i] = (*sol->_Sol[soluIndex])(solDof);      // local storage of solution
       l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);   // local to global system solution mapping
     }
 
     // local storage of coordinates
-    for (unsigned i = 0; i < nDofx; i++) {
+    for (unsigned i = 0; i < nDofu; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
@@ -317,13 +316,12 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
       //double* gradPhi[][2] = &phi_x[0];
       
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      double solu_gss = 0;
+    
       vector < double > gradSolu_gss(dim, 0.);
       vector < double > x_gss(dim, 0.);
 
       for (unsigned i = 0; i < nDofu; i++) {
-        solu_gss += phi[i] * solu[i];
-
+       
         for (unsigned jdim = 0; jdim < dim; jdim++) {
           gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
           x_gss[jdim] += x[jdim][i] * phi[i];
@@ -343,13 +341,13 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
         // *** phi_j loop ***
         for (unsigned j = 0; j < nDofu; j++) {
-          weakLaplace = 0.;
+          double weakLaplacej = 0.;
 
           for (unsigned kdim = 0; kdim < dim; kdim++) {
-            weakLaplace -= (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
+            weakLaplacej -= phi_x[i * dim + kdim] * phi_x[j * dim + kdim];
           }
 
-          Jac[i * nDofu + j] -= weakLaplace;
+          Jac[i * nDofu + j] -= weakLaplacej * weight;
         } // end phi_j loop
 
       } // end phi_i loop
