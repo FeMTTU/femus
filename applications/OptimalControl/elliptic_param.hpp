@@ -9,12 +9,18 @@
 
 
 //*********************** Sets the regularization parameters *******************************************************
-#define ALPHA_CTRL_BDRY 1.e-3
-#define BETA_CTRL_BDRY 1.e-10
+#define ALPHA_CTRL_BDRY 1.e-4
+#define BETA_CTRL_BDRY 1.e-4
 
 
 #define ALPHA_CTRL_VOL 1.e-2
 #define BETA_CTRL_VOL 1.e-2
+
+
+//*********************** Control box constraints *******************************************************
+#define  CTRL_BOX_LOWER   -0.5
+#define  CTRL_BOX_UPPER   1
+
 
 
 //*********************** Find volume elements that contain a  Target domain element **************************************
@@ -24,8 +30,8 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
  //***** set target domain flag ******
   int target_flag = 0; //set 0 to 1 to get the entire domain
   
-   if (   /*elem_center[0] < 0.75 + 1.e-5    && elem_center[0] > 0.25  - 1.e-5  && 
-        elem_center[1] <  1.  + 1.e-5  &&*/ elem_center[1] > 0.5 - /*(1./16. + 1./64.) -*/ 1.e-5 
+   if (   /*elem_center[0] < 0.75 + 1.e-5    && elem_center[0] > 0.25  - 1.e-5  && */ 
+        /*elem_center[1] <  0.5  + 1.e-5     && */    elem_center[1] > 0.5 -  1.e-5  /*(1./16. + 1./64.)*/
   ) {
      
      target_flag = 1;

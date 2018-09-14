@@ -933,14 +933,6 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //***************************************************
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
-
-  const int n_vars = 3;
- 
-  vector< double > Res; // local redidual vector
-  Res.reserve(n_vars*maxSize);
-
-  vector < double > Jac;
-  Jac.reserve( n_vars*maxSize * n_vars*maxSize);
  //***************************************************
 
   
@@ -1109,8 +1101,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 		      }  
 
                  //========= compute gauss quantities on the boundary ================================================
-                  integral_alpha += alpha * weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
-                  integral_beta  += beta * weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
+                  integral_alpha += /*alpha **/ weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
+                  integral_beta  += /*beta **/ weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
                  
 		}
 	      } //end face == 3
@@ -1144,14 +1136,14 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
       
   } //end element loop
 
-  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
-  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
-  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << integral_target + integral_alpha + integral_beta << std::endl;
-//   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
-//   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
+  double total_integral = integral_target + alpha * integral_alpha + beta * integral_beta;
+  
+  std::cout << "The value of the integral_target is                 " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
+  std::cout << "The value of the integral_alpha (without alpha)  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
+  std::cout << "The value of the integral_beta (without beta)    is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
+  std::cout << "The value of the total integral                  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
  
-return /*integral*/ integral_target + integral_alpha + integral_beta ;
+return total_integral;
   
 }
   

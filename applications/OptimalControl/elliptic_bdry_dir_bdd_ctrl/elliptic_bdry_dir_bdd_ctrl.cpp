@@ -291,8 +291,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower =  0.3 ;
-  double ctrl_upper =  0.5 ;
+  double ctrl_lower =  CTRL_BOX_LOWER;
+  double ctrl_upper =  CTRL_BOX_UPPER;
   assert(ctrl_lower < ctrl_upper);
   double c_compl = 1.;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
@@ -959,6 +959,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 }
 
 
+ 
+  
 double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
   
@@ -1057,14 +1059,6 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //***************************************************
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
-
-  const int n_unknowns = 4;
- 
-  vector< double > Res; // local residual vector
-  Res.reserve(n_unknowns*maxSize);
-
-  vector < double > Jac;
-  Jac.reserve( n_unknowns*maxSize * n_unknowns*maxSize);
  //***************************************************
 
   
@@ -1233,8 +1227,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 		      }  
 
                  //========= compute gauss quantities on the boundary ================================================
-                  integral_alpha += alpha * weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
-                  integral_beta  += beta * weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
+                  integral_alpha += /*alpha **/ weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
+                  integral_beta  += /*beta **/ weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
                  
 		}
 	      } //end face == 3
@@ -1268,16 +1262,14 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
       
   } //end element loop
 
-  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
-  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
-  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << integral_target + integral_alpha + integral_beta << std::endl;
-//   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
-//   std::cout << "The value of the integral is " << std::setw(11) << std::setprecision(10) << integral << std::endl;
+  double total_integral = integral_target + alpha * integral_alpha + beta * integral_beta;
+  
+  std::cout << "The value of the integral_target is                 " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
+  std::cout << "The value of the integral_alpha (without alpha)  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
+  std::cout << "The value of the integral_beta (without beta)    is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
+  std::cout << "The value of the total integral                  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
  
-return /*integral*/ integral_target + integral_alpha + integral_beta ;
+return total_integral;
   
 }
   
-  
-
