@@ -28,9 +28,9 @@ using namespace femus;
  double force[3] = {0.,0.,0.};
  double Vel_desired[3] = {0.125,0.,0.};
  double alpha_val = 1.;
- double beta_val = 1.;
- double gamma_val = 1.;
- 
+ double beta_val = 1.e-3;
+ double gamma_val = 1.e-3;
+ int advection_flag = 0;
   
  int ElementTargetFlag(const std::vector<double> & elem_center) {
 
@@ -154,7 +154,7 @@ int main(int argc, char** args) {
   Parameter parameter(Lref,Uref);
   
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,1,1,"Newtonian");
+  Fluid fluid(parameter,1,100,"Newtonian");
   std::cout << "Fluid properties: " << std::endl;
   std::cout << fluid << std::endl;
   
@@ -217,8 +217,8 @@ int main(int argc, char** args) {
   mlProb.SetFilesHandler(&files);
 
   // add system Poisson in mlProb as a Linear Implicit System
-//   NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOpt");
-  LinearImplicitSystem& system_opt    = mlProb.add_system < LinearImplicitSystem > ("NSOpt");
+  NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOpt");
+//   LinearImplicitSystem& system_opt    = mlProb.add_system < LinearImplicitSystem > ("NSOpt");
 
   // NS ===================
   system_opt.AddSolutionToSystemPDE("U");
@@ -240,8 +240,8 @@ int main(int argc, char** args) {
   
   
   // attach the assembling function to system
-//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
-  system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
+  system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
+//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
     
   // initilaize and solve the system
   system_opt.init();
@@ -252,9 +252,9 @@ int main(int argc, char** args) {
  mlSol.GetWriter()->SetDebugOutput(true);
   
  
-//   system_opt.SetDebugNonlinear(true);
-//   system_opt.SetMaxNumberOfNonLinearIterations(4);
-//   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
+  system_opt.SetDebugNonlinear(true);
+  system_opt.SetMaxNumberOfNonLinearIterations(4);
+  system_opt.SetNonLinearConvergenceTolerance(1.e-15);
   system_opt.SetDebugLinear(true);
   system_opt.SetMaxNumberOfLinearIterations(6);
   system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
@@ -286,8 +286,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   adept::Stack& s = FemusInit::_adeptStack;
 
   //  extract pointers to the several objects that we are going to use
-//   NonLinearImplicitSystem& mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the nonlinear implicit system named "NSOpt" 
-  LinearImplicitSystem& mlPdeSys  = ml_prob.get_system<LinearImplicitSystem>("NSOpt");
+  NonLinearImplicitSystem& mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the nonlinear implicit system named "NSOpt" 
+//   LinearImplicitSystem& mlPdeSys  = ml_prob.get_system<LinearImplicitSystem>("NSOpt");
    const unsigned level = mlPdeSys.GetLevelToAssemble();
  
   Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -773,44 +773,44 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 	      NSV_gss[kdim]   	 	+=  IRe*phiV_x_gss[i * dim + jdim]*gradSolV_gss[kdim][jdim]; 
 						    // /*deformation_tensor*//*IRe * phiV_x_gss[i * dim + jdim] * 
 						    // (gradSolV_gss[kdim][jdim] + gradSolV_gss[jdim][kdim])*/;  //diffusion
-	      NSV_gss[kdim]  		+=  phiV_gss[i] * (solV_gss[jdim] * gradSolV_gss[kdim][jdim]);                                  //advection u_hat.\nablau_hat
+	      NSV_gss[kdim]  		+= advection_flag * phiV_gss[i] * (solV_gss[jdim] * gradSolV_gss[kdim][jdim]);                                     //advection (u_hat . \nabla) u_hat
            
-	      NSV_gss[kdim] 		+= phiV_gss[i] * (solV_gss[jdim] * gradSolVctrl_gss[kdim][jdim]);                                   //advection u_hat.\nablau_0
+	      NSV_gss[kdim] 		+= advection_flag * phiV_gss[i] * (solV_gss[jdim] * gradSolVctrl_gss[kdim][jdim]);                                  //advection (u_hat . \nabla) u_0
 	      
-	      NSV_gss[kdim] 		+= phiV_gss[i] * (solVctrl_gss[jdim] * gradSolV_gss[kdim][jdim]);                                  //advection u_0.\nablau_hat 
+	      NSV_gss[kdim] 		+= advection_flag * phiV_gss[i] * (solVctrl_gss[jdim] * gradSolV_gss[kdim][jdim]);                                  //advection (u_0 . \nabla) u_hat 
 	      
-	      NSV_gss[kdim] 		+= phiV_gss[i] * (solVctrl_gss[jdim] * gradSolVctrl_gss[kdim][jdim]);                                   //advection u_0.\nablau_0
+	      NSV_gss[kdim] 		+= advection_flag * phiV_gss[i] * (solVctrl_gss[jdim] * gradSolVctrl_gss[kdim][jdim]);                              //advection (u_0 . \nabla) u_0
 	      
 	      NSV_gss[kdim] 		+= IRe*phiV_x_gss[i * dim + jdim]*gradSolVctrl_gss[kdim][jdim];	 //delta_state-control
 	      
 	      NSVadj_gss[kdim]   	+=  IRe*phiVadj_x_gss[i * dim + jdim]*gradSolVadj_gss[kdim][jdim];  
 
-	      NSVadj_gss[kdim]		+=  - (phiVadj_gss[i] * (solV_gss[jdim] * gradSolVadj_gss[kdim][jdim]));	//-c(u,lambda,deltau)
+	      NSVadj_gss[kdim]		+=  - advection_flag * phiVadj_gss[i] * solV_gss[jdim] * gradSolVadj_gss[kdim][jdim];           // -c(u,lambda,delta u)
 	      
-	      NSVadj_gss[kdim]		+=  - (phiVadj_gss[i] * (solVctrl_gss[jdim] * gradSolVadj_gss[kdim][jdim]));	//-c(u0,lambda,deltau)
+	      NSVadj_gss[kdim]		+=  - advection_flag * phiVadj_gss[i] * solVctrl_gss[jdim] * gradSolVadj_gss[kdim][jdim];       // -c(u0,lambda,delta u)
 	      
-	      NSVadj_gss[kdim]		+=  phiVadj_gss[i] * (gradSolV_gss[jdim][kdim] * solVadj_gss[jdim]);		//c(deltau,u,lambda)
+	      NSVadj_gss[kdim]		+=    advection_flag * phiVadj_gss[i] * gradSolV_gss[jdim][kdim] * solVadj_gss[jdim];           //  c(delta u,u,lambda)
 	      
-	      NSVadj_gss[kdim]		+=  phiVadj_gss[i] * (gradSolVctrl_gss[jdim][kdim] * solVadj_gss[jdim]);	//c(deltau,u0,lambda)
+	      NSVadj_gss[kdim]		+=    advection_flag * phiVadj_gss[i] * gradSolVctrl_gss[jdim][kdim] * solVadj_gss[jdim];       //  c(delta u,u0,lambda)
 	      
-	      NSVadj_gss[kdim] 		+=  - (alpha_val * target_flag * solV_gss[kdim]*phiVadj_gss[i]); //delta_adjoint-state
+	      NSVadj_gss[kdim] 		+=  - alpha_val * target_flag * solV_gss[kdim]*phiVadj_gss[i]; //delta_adjoint-state
 	      
-	      NSVadj_gss[kdim] 		+= -(alpha_val* target_flag * solVctrl_gss[kdim]*phiVadj_gss[i]); //delta_adjoint-control
+	      NSVadj_gss[kdim] 		+=  - alpha_val * target_flag * solVctrl_gss[kdim]*phiVadj_gss[i]; //delta_adjoint-control
 	      
-	      NSVctrl_gss[kdim]   	+=  -(alpha_val * target_flag + beta_val) * solVctrl_gss[kdim] * phiVctrl_gss[i] 
-					    - gamma_val * phiVctrl_x_gss[i * dim + jdim] * gradSolVctrl_gss[kdim][jdim];
+	      NSVctrl_gss[kdim]   	+=  - (alpha_val * target_flag + beta_val) * solVctrl_gss[kdim] * phiVctrl_gss[i] 
+					    -  gamma_val * phiVctrl_x_gss[i * dim + jdim] * gradSolVctrl_gss[kdim][jdim];
 				      
-	      NSVctrl_gss[kdim]		+=  - (phiVctrl_gss[i] * (solV_gss[jdim] * gradSolVadj_gss[kdim][jdim]));	//-c(u,lambda,deltau0)
+	      NSVctrl_gss[kdim]		+=  - advection_flag * phiVctrl_gss[i] * solV_gss[jdim] * gradSolVadj_gss[kdim][jdim];	// -c(u,lambda,delta u0)
 	      
-	      NSVctrl_gss[kdim]		+=  - (phiVctrl_gss[i] * (solVctrl_gss[jdim] * gradSolVadj_gss[kdim][jdim]));	//-c(u0,lambda,deltau0)
+	      NSVctrl_gss[kdim]		+=  - advection_flag * phiVctrl_gss[i] * solVctrl_gss[jdim] * gradSolVadj_gss[kdim][jdim];	// -c(u0,lambda,delta u0)
 	      
-	      NSVctrl_gss[kdim]		+=  phiVctrl_gss[i] * (gradSolV_gss[jdim][kdim] * solVadj_gss[jdim]);		//c(deltau0,u,lambda)
+	      NSVctrl_gss[kdim]		+=    advection_flag * phiVctrl_gss[i] * gradSolV_gss[jdim][kdim] * solVadj_gss[jdim];		// c(delta u0,u,lambda)
 	      
-	      NSVctrl_gss[kdim]		+=  phiVctrl_gss[i] * (gradSolVctrl_gss[jdim][kdim] * solVadj_gss[jdim]);	//c(deltau0,u0,lambda)
+	      NSVctrl_gss[kdim]		+=    advection_flag * phiVctrl_gss[i] * gradSolVctrl_gss[jdim][kdim] * solVadj_gss[jdim];	// c(delta u0,u0,lambda)
 	      
-	      NSVctrl_gss[kdim] 	+= -(alpha_val* target_flag * solV_gss[kdim]*phiVctrl_gss[i]); //delta_control-state
+	      NSVctrl_gss[kdim] 	+=  - alpha_val* target_flag * solV_gss[kdim]*phiVctrl_gss[i]; //delta_control-state
 	      
-	      NSVctrl_gss[kdim] 	+= IRe*phiVctrl_x_gss[i * dim + jdim]*gradSolVadj_gss[kdim][jdim];  //nabla_delta_control-nabla_adjoint
+	      NSVctrl_gss[kdim] 	+=   IRe*phiVctrl_x_gss[i * dim + jdim]*gradSolVadj_gss[kdim][jdim];  //nabla_delta_control-nabla_adjoint
 						  
 	  }  //jdim loop
             
@@ -825,8 +825,8 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
 
           for (unsigned  kdim = 0; kdim < dim; kdim++) {
             aResV[kdim][i] 		+=  (force[kdim] * phiV_gss[i] - NSV_gss[kdim]) * weight;
-	    aResVadj[kdim][i]   	+=  (-alpha_val* target_flag * Vel_desired[kdim]* phiVadj_gss[i] - NSVadj_gss[kdim] )* weight;
-            aResVctrl[kdim][i]    	+=  (-alpha_val* target_flag * Vel_desired[kdim]* phiVctrl_gss[i] - NSVctrl_gss[kdim])* weight;
+	    aResVadj[kdim][i]   	+=  (-alpha_val* target_flag * Vel_desired[kdim] * phiVadj_gss[i] - NSVadj_gss[kdim] )* weight;
+            aResVctrl[kdim][i]    	+=  (-alpha_val* target_flag * Vel_desired[kdim] * phiVctrl_gss[i] - NSVctrl_gss[kdim])* weight;
 							 	    
 	  }
         } // end phiV_i loop
@@ -1207,8 +1207,8 @@ double	integral_gamma  = 0.;
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
      
   //pointers
-//   NonLinearImplicitSystem& mlPdeSys  = ml_prob.get_system<NonLinearImplicitSystem>("NSOpt");
-  LinearImplicitSystem& mlPdeSys  = ml_prob.get_system<LinearImplicitSystem>("NSOpt");
+  NonLinearImplicitSystem& mlPdeSys  = ml_prob.get_system<NonLinearImplicitSystem>("NSOpt");
+//   LinearImplicitSystem& mlPdeSys  = ml_prob.get_system<LinearImplicitSystem>("NSOpt");
   const unsigned level = mlPdeSys.GetLevelToAssemble();
 
   bool assembleMatrix = mlPdeSys.GetAssembleMatrix(); 
@@ -1650,10 +1650,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	      Res[kdim][i]   +=  (         + force[kdim] * phi_gss_fe[SolFEType[kdim]][i]
                                            - IRe*lap_res_du_u 
                                            -IRe*lap_res_du_ctrl
-                                           - adv_res_uold_nablauold * phi_gss_fe[ SolFEType[kdim] ][i]
-                                           - adv_res_uold_nablauctrlold * phi_gss_fe[ SolFEType[kdim] ][i]
-                                           - adv_res_uctrlold_nablauold * phi_gss_fe[ SolFEType[kdim] ][i]
-					   - adv_res_uctrlold_nablauctrlold * phi_gss_fe[ SolFEType[kdim] ][i]
+                                           + advection_flag * adv_res_uold_nablauold * phi_gss_fe[ SolFEType[kdim] ][i]
+                                           + advection_flag * adv_res_uold_nablauctrlold * phi_gss_fe[ SolFEType[kdim] ][i]
+                                           + advection_flag * adv_res_uctrlold_nablauold * phi_gss_fe[ SolFEType[kdim] ][i]
+					   + advection_flag * adv_res_uctrlold_nablauctrlold * phi_gss_fe[ SolFEType[kdim] ][i]
 					    + SolVAR_qp[SolPdeIndex[press_type_pos]] * phi_x_gss_fe[SolFEType[kdim]][i * dim + kdim]) * weight; 
 	}	    
 //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
@@ -1676,12 +1676,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	      }
 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 		Jac[kdim][kdim][i*nDofsV + j] += (   IRe*lap_jac_du_u 
-						    + adv_uold_nablaunew  * phi_gss_fe[ SolFEType[kdim] ][i]
-						    + adv_unew_nablauold * phi_gss_fe[ SolFEType[kdim] ][i]
-// // 						    + adv_unew_nablauctrlnew * phi_gss_fe[ SolFEType[kdim] ][i]
-// // 						    + adv_uctrlnew_nablaunew * phi_gss_fe[ SolFEType[kdim] ][i]
-						    + adv_uctrlold_nablaunew  * phi_gss_fe[ SolFEType[kdim] ][i]
-						    + adv_unew_nablauctrlold * phi_gss_fe[ SolFEType[kdim] ][i]
+						    + advection_flag * adv_uold_nablaunew  * phi_gss_fe[ SolFEType[kdim] ][i]
+						    + advection_flag * adv_unew_nablauold * phi_gss_fe[ SolFEType[kdim] ][i]
+// // 						    + advection_flag * adv_unew_nablauctrlnew * phi_gss_fe[ SolFEType[kdim] ][i]
+// // 						    + advection_flag * adv_uctrlnew_nablaunew * phi_gss_fe[ SolFEType[kdim] ][i]
+						    + advection_flag * adv_uctrlold_nablaunew  * phi_gss_fe[ SolFEType[kdim] ][i]
+						    + advection_flag * adv_unew_nablauctrlold * phi_gss_fe[ SolFEType[kdim] ][i]
 						    ) * weight; 
 	      }
 	} //j_du_u loop
@@ -1702,10 +1702,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	      }
 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 		Jac[kdim][kdim + ctrl_pos_begin ][i*nDofsVctrl + j] += ( IRe*lap_jac_du_ctrl 
-									+ adv_uctrlold_nablauctrlnew * phi_gss_fe[ SolFEType[kdim] ][i]
-									+ adv_uctrlnew_nablauctrlold * phi_gss_fe[ SolFEType[kdim] ][i]
-									+ adv_uctrlnew_nablauold * phi_gss_fe[ SolFEType[kdim] ][i]
-									+ adv_uold_nablauctrlnew * phi_gss_fe[ SolFEType[kdim] ][i]
+									+ advection_flag * adv_uctrlold_nablauctrlnew * phi_gss_fe[ SolFEType[kdim] ][i]
+									+ advection_flag * adv_uctrlnew_nablauctrlold * phi_gss_fe[ SolFEType[kdim] ][i]
+									+ advection_flag * adv_uctrlnew_nablauold * phi_gss_fe[ SolFEType[kdim] ][i]
+									+ advection_flag * adv_uold_nablauctrlnew * phi_gss_fe[ SolFEType[kdim] ][i]
 									) * weight;
 	      }
 	} //j_du_ctrl loop
@@ -1770,14 +1770,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  Res[kdim + adj_pos_begin][i] += (   alpha_val*target_flag*(lap_res_dadj_u + lap_res_dadj_ctrl) 
 					    - alpha_val*target_flag*Vel_desired[kdim] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
 					    - IRe*lap_res_dadj_adj
-					    - adv_res_nablauoldt_uadjold* phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
-					    + adv_res_uold_nablauadjold* phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
-					    - adv_res_nablauctrloldt_uadjold* phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
-					    + adv_res_uctrlold_nablauadjold* phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
-// // // 					    - adv_res_phiadj_nablauold_uadjold
-// // // 					    - adv_res_uold_nablaphiadj_uadjold
-// // // 					    - adv_res_phiadj_nablauctrlold_uadjold
-// // // 					    - adv_res_uctrlold_nablaphiadj_uadjold
+					    + advection_flag * adv_res_nablauoldt_uadjold* phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+					    - advection_flag * adv_res_uold_nablauadjold* phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+					    + advection_flag * adv_res_nablauctrloldt_uadjold* phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+					    - advection_flag * adv_res_uctrlold_nablauadjold* phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+// // // 					    - advection_flag * adv_res_phiadj_nablauold_uadjold
+// // // 					    - advection_flag * adv_res_uold_nablaphiadj_uadjold
+// // // 					    - advection_flag * adv_res_phiadj_nablauctrlold_uadjold
+// // // 					    - advection_flag * adv_res_uctrlold_nablaphiadj_uadjold
 					    + SolVAR_qp[SolPdeIndex[press_type_pos + adj_pos_begin]] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + kdim]) * weight;
       }
       
@@ -1793,8 +1793,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  }	    
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
 	      Jac[kdim + adj_pos_begin][kdim][i*nDofsVadj + j] += ( -alpha_val*target_flag*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]*phi_gss_fe[SolFEType[kdim]][j] 
-								  + adv_nablaunewt_uadjold*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
-								  - adv_unew_nablauadjold *phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+								  + advection_flag * adv_nablaunewt_uadjold*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
+								  - advection_flag * adv_unew_nablauadjold *phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
 								     ) * weight;
 	  }
      }//j_dadj_u loop
@@ -1811,8 +1811,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  }	    
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
 	     Jac[kdim + adj_pos_begin][kdim + ctrl_pos_begin][i*nDofsVadj + j] += ( -alpha_val*target_flag*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j] 
-										    + adv_nablauctrlnewt_uadjold*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
-										    - adv_uctrlnew_nablauadjold *phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+										    + advection_flag * adv_nablauctrlnewt_uadjold*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
+										    - advection_flag * adv_uctrlnew_nablauadjold *phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
 										    ) * weight;
 	  }
      }//j_dadj_ctrl loop
@@ -1854,18 +1854,18 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  }
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
 	      Jac[kdim + adj_pos_begin][kdim + adj_pos_begin][i*nDofsVadj + j] += ( IRe*lap_jac_dadj_adj 
-// // 										    + adv_nablaunewt_uadjnew*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
-// // 										    - adv_unew_nablauadjnew *phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
-// // 										    + adv_nablauctrlnewt_uadjnew*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
-// // 										    - adv_uctrlnew_nablauadjnew*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
-										    + adv_nablauoldt_uadjnew*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
-										    - adv_uold_nablauadjnew *phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
-										    - adv_uctrlold_nablauadjnew *phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
-										    + adv_nablauctrloldt_uadjnew*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
-// // // 										    + adv_phiadj_nablaunew_uadjnew
-// // // 										    + adv_unew_nablaphiadj_uadjnew
-// // // 										    + adv_phiadj_nablauctrlnew_uadjnew
-// // // 										    + adv_uctrlnew_nablaphiadj_uadjnew
+// // 										    + advection_flag * adv_nablaunewt_uadjnew*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
+// // 										    - advection_flag * adv_unew_nablauadjnew *phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+// // 										    + advection_flag * adv_nablauctrlnewt_uadjnew*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+// // 										    - advection_flag * adv_uctrlnew_nablauadjnew*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
+										    + advection_flag * adv_nablauoldt_uadjnew*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
+										    - advection_flag * adv_uold_nablauadjnew *phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+										    - advection_flag * adv_uctrlold_nablauadjnew *phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+										    + advection_flag * adv_nablauctrloldt_uadjnew*phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] 
+// // // 										    + advection_flag * adv_phiadj_nablaunew_uadjnew
+// // // 										    + advection_flag * adv_unew_nablaphiadj_uadjnew
+// // // 										    + advection_flag * adv_phiadj_nablauctrlnew_uadjnew
+// // // 										    + advection_flag * adv_uctrlnew_nablaphiadj_uadjnew
 											) * weight;
 	  }
       } //j_dadj_adj loop
@@ -1930,14 +1930,14 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 					+ beta_val* SolVAR_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
 					+ gamma_val * lap_res_dctrl_ctrl
 					- IRe*lap_res_dctrl_adj
-					- adv_res_nablauoldt_uadjold * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-					+ adv_res_uold_nablauadjold * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-					- adv_res_nablauctrloldt_uadjold * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-					+ adv_res_uctrlold_nablauadjold * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
-// // // 					- adv_res_phictrl_nablauold_uadjold
-// // // 					- adv_res_uold_nablaphictrl_uadjold
-// // // 					- adv_res_phictrl_nablauctrlold_uadjold
-// // // 					- adv_res_uctrlold_nablaphictrl_uadjold				
+					+ advection_flag * adv_res_nablauoldt_uadjold * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+					- advection_flag * adv_res_uold_nablauadjold * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+					+ advection_flag * adv_res_nablauctrloldt_uadjold * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+					- advection_flag * adv_res_uctrlold_nablauadjold * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
+// // // 					- advection_flag * adv_res_phictrl_nablauold_uadjold
+// // // 					- advection_flag * adv_res_uold_nablaphictrl_uadjold
+// // // 					- advection_flag * adv_res_phictrl_nablauctrlold_uadjold
+// // // 					- advection_flag * adv_res_uctrlold_nablaphictrl_uadjold				
 					+ SolVAR_qp[SolPdeIndex[press_type_pos + ctrl_pos_begin]] * phi_x_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i * dim + kdim]) * weight;
       }
 
@@ -1953,8 +1953,8 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  }	    
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
 	      Jac[kdim + ctrl_pos_begin][kdim][i*nDofsVctrl + j] += ( -alpha_val*target_flag*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]*phi_gss_fe[SolFEType[kdim]][j] 
-								  + adv_nablaunewt_uadjold*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
-								  - adv_unew_nablauadjold *phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+								  + advection_flag * adv_nablaunewt_uadjold*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
+								  - advection_flag * adv_unew_nablauadjold *phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
 								    ) * weight;
 	  }
       }//j_dctrl_u loop
@@ -1977,10 +1977,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  }
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
 	      Jac[kdim + ctrl_pos_begin][kdim + adj_pos_begin][i*nDofsVctrl + j] += ( IRe*lap_jac_dctrl_adj 
-										    + adv_nablauoldt_uadjnew*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
-										    - adv_uold_nablauadjnew *phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-										    - adv_uctrlold_nablauadjnew *phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-										    + adv_nablauctrloldt_uadjnew*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
+										    + advection_flag * adv_nablauoldt_uadjnew*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
+										    - advection_flag * adv_uold_nablauadjnew *phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+										    - advection_flag * adv_uctrlold_nablauadjnew *phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+										    + advection_flag * adv_nablauctrloldt_uadjnew*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
 										      ) * weight;
 	  }
       }//j_dctrl_adj loop
@@ -2020,16 +2020,16 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
 	      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i*nDofsVctrl + j] += ( - (alpha_val * target_flag + beta_val)* phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][j]
 											- gamma_val*lap_jac_dctrl_ctrl 
-// // 											+ adv_nablaunewt_uadjnew * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
-// // 											- adv_unew_nablauadjnew * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-// // 											+ adv_nablauctrlnewt_uadjnew * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
-// // 											- adv_uctrlnew_nablauadjnew * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-										    + adv_nablauctrlnewt_uadjold*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
-										    - adv_uctrlnew_nablauadjold *phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
-// // // 										    + adv_phictrl_nablaunew_uadjnew
-// // // 										    + adv_unew_nablaphictrl_uadjnew
-// // // 										    + adv_phictrl_nablauctrlnew_uadjnew
-// // // 										    + adv_uctrlnew_nablaphictrl_uadjnew
+// // 											+ advection_flag * adv_nablaunewt_uadjnew * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
+// // 											- advection_flag * adv_unew_nablauadjnew * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+// // 											+ advection_flag * adv_nablauctrlnewt_uadjnew * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
+// // 											- advection_flag * adv_uctrlnew_nablauadjnew * phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+										    + advection_flag * adv_nablauctrlnewt_uadjold*phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i] 
+										    - advection_flag * adv_uctrlnew_nablauadjold *phi_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i]
+// // // 										    + advection_flag * adv_phictrl_nablaunew_uadjnew
+// // // 										    + advection_flag * adv_unew_nablaphictrl_uadjnew
+// // // 										    + advection_flag * adv_phictrl_nablauctrlnew_uadjnew
+// // // 										    + advection_flag * adv_uctrlnew_nablaphictrl_uadjnew
 											) * weight;
 	  }
       }//j_dctrl_ctrl loop
