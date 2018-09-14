@@ -1,5 +1,5 @@
-#ifndef ELLIPTIC_BDRY_PARAMETERS
-#define ELLIPTIC_BDRY_PARAMETERS
+#ifndef ELLIPTIC_PARAMETERS
+#define ELLIPTIC_PARAMETERS
 
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
@@ -9,10 +9,12 @@
 
 
 //*********************** Sets the regularization parameters *******************************************************
+#define ALPHA_CTRL_BDRY 1.e-3
+#define BETA_CTRL_BDRY 1.e-10
 
 
-#define ALPHA_CTRL 1.e-3
-#define BETA_CTRL 1.e-10
+#define ALPHA_CTRL_VOL 1.e-2
+#define BETA_CTRL_VOL 1.e-2
 
 
 //*********************** Find volume elements that contain a  Target domain element **************************************
@@ -35,10 +37,19 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 }
 
 
+//******************************************* Desired Target *******************************************************
+
+double DesiredTarget()
+{
+   return 1.;
+}
+
+
+
 
 //*********************** Find volume elements that contain a Control Face element *********************************
 
-int ControlDomainFlag(const std::vector<double> & elem_center) {
+int ControlDomainFlag_bdry(const std::vector<double> & elem_center) {
 
  //***** set control domain flag ***** 
   double mesh_size = 1./NSUB_Y;
@@ -50,12 +61,19 @@ int ControlDomainFlag(const std::vector<double> & elem_center) {
 
 
 
-//******************************************* Desired Target *******************************************************
+//*********************** Find volume elements that contain a Control domain element *********************************
 
-double DesiredTarget()
-{
-   return 1.;
+int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_center) {
+
+ //***** set target domain flag ******
+ // flag = 1: we are in the lifting nonzero domain
+  int control_el_flag = 1.;
+   if ( elem_center[1] >  0.7) { control_el_flag = 1; }
+
+     return control_el_flag;
+
 }
+
 
 
 

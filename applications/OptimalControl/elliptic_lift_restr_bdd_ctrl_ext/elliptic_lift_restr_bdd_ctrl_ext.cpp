@@ -4,12 +4,12 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
-#include "../elliptic_lift_restr_param.hpp"
+#include "../elliptic_param.hpp"
 
 using namespace femus;
 
 double InitialValueContReg(const std::vector < double >& x) {
-  return ControlDomainFlag(x);
+  return ControlDomainFlag_internal_restriction(x);
 }
 
 double InitialValueTargReg(const std::vector < double >& x) {
@@ -358,8 +358,8 @@ void AssembleLiftExternalProblem(MultiLevelProblem& ml_prob) {
   
  //********************* DATA ************************ 
   double u_des = DesiredTarget();
-  double alpha = ALPHA_CTRL;
-  double beta  = BETA_CTRL;
+  double alpha = ALPHA_CTRL_VOL;
+  double beta  = BETA_CTRL_VOL;
   double penalty_strong = 10e+14;
   double penalty_interface = 1.e+10;         //penalty for u=q
  //***************************************************  
@@ -1028,8 +1028,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   double weight; // gauss point weight
   
  //***************************************************  
-  double alpha = ALPHA_CTRL;
-  double beta  = BETA_CTRL;
+  double alpha = ALPHA_CTRL_VOL;
+  double beta  = BETA_CTRL_VOL;
 
  //******************** state ************************ 
  //*************************************************** 
