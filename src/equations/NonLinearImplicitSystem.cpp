@@ -122,7 +122,7 @@ namespace femus {
       if( ThisIsAMR ) _solution[igridn - 1]->InitAMREps();
 
       for( unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++ ) {
-
+_nonliniteration = nonLinearIterator;
         std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
         clock_t start_assembly_time = clock();
