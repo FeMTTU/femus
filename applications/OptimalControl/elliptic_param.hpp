@@ -13,13 +13,13 @@
 #define BETA_CTRL_BDRY 1.e-4
 
 
-#define ALPHA_CTRL_VOL 1.e-2
+#define ALPHA_CTRL_VOL 1.e-3
 #define BETA_CTRL_VOL 1.e-2
 
 
 //*********************** Control box constraints *******************************************************
-#define  CTRL_BOX_LOWER   -0.5
-#define  CTRL_BOX_UPPER   1
+#define  CTRL_BOX_LOWER   -1000
+#define  CTRL_BOX_UPPER   1000
 
 
 

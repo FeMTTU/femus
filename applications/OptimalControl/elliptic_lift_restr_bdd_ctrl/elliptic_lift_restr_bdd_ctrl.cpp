@@ -59,6 +59,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob);
 void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob);
 
 
+
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -149,6 +150,8 @@ int main(int argc, char** args) {
 
 
 void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
+
+  unsigned int ineq_flag = 0;
   //  ml_prob is the global object from/to where get/set all the data
 
   //  level is the level of the PDE system to be assembled
@@ -709,7 +712,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 //     }
     
 
- //========== sum-based part
+ //========== end of integral-based part
 
     //copy the value of the adept::adoube aRes in double Res and store
     RES->add_vector_blocked(Res, l2GMap_AllVars);
@@ -720,17 +723,18 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  
  //============= delta_mu row ===============================
       std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
-    for (unsigned i = 0; i < sol_actflag.size(); i++){
+      
+    for (unsigned i = 0; i < sol_actflag.size(); i++) {
       if (sol_actflag[i] == 0){  //inactive
-         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ); 
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ineq_flag * ( 1. * sol_mu[i] - 0. ); 
 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
       else if (sol_actflag[i] == 1){  //active_a 
-	 Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
+	 Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
       }
       else if (sol_actflag[i] == 2){  //active_b 
-	Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
+	Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
 	Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
       }
     }
@@ -753,17 +757,17 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
   
  //============= delta_ctrl-delta_mu row ===============================
- KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, ineq_flag * 1.);
   
  //============= delta_mu-delta_ctrl row ===============================
- for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = c_compl;    
+ for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
   
  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
 
  //============= delta_mu-delta_mu row ===============================
-  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] = 1 - sol_actflag[i]/c_compl;  //can do better to avoid division, maybe use modulo operator 
+  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =  ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
 
-  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag);
+  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );
   
   } //end element loop for each process
   
