@@ -89,6 +89,8 @@ public:
     void SetResidualUpdateConvergenceTolerance(const double & tolerance){
       _linearAbsoluteConvergenceTolerance = tolerance;
     }
+    
+    unsigned _nonliniteration;
 
 protected:
 
@@ -105,6 +107,7 @@ protected:
     double _max_nonlinear_convergence_tolerance;
 
     unsigned _maxNumberOfResidualUpdateIterations;
+    
 
     /** Solves the system. */
     virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
