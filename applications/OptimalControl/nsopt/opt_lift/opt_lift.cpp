@@ -21,6 +21,7 @@
 #include "Files.hpp"
 #include <stdio.h>
 
+#include   "../nsopt_params.hpp"
 
 
 using namespace femus;
@@ -154,7 +155,7 @@ int main(int argc, char** args) {
   Parameter parameter(Lref,Uref);
   
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,1,100,"Newtonian");
+  Fluid fluid(parameter,1,1,"Newtonian");
   std::cout << "Fluid properties: " << std::endl;
   std::cout << fluid << std::endl;
   
@@ -163,7 +164,7 @@ int main(int argc, char** args) {
 
 //   MultiLevelMesh mlMsh;
 //  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",Lref);
-    mlMsh.GenerateCoarseBoxMesh(32,32,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+    mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
     
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
@@ -240,8 +241,8 @@ int main(int argc, char** args) {
   
   
   // attach the assembling function to system
-  system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
-//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
+//   system_opt.SetAssembleFunction(AssembleNavierStokesOpt_AD);
+  system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
     
   // initilaize and solve the system
   system_opt.init();
@@ -904,8 +905,11 @@ void AssembleNavierStokesOpt_AD(MultiLevelProblem& ml_prob) {
   } //end element loop for each process
 
   RES->close();
+  RES->print();
 
   JAC->close();
+ std::ostringstream mat_out; mat_out << "matrix_ad" << mlPdeSys._nonliniteration  << ".txt";
+  JAC->print_matlab(mat_out.str(),"ascii");
 
   // ***************** END ASSEMBLY *******************
 }
@@ -1191,16 +1195,6 @@ double	integral_gamma  = 0.;
 	  
   
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2080,6 +2074,10 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   
   
   JAC->close();
+ std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
+  JAC->print_matlab(mat_out.str(),"ascii");
   RES->close();
+  RES->print();
   // ***************** END ASSEMBLY *******************
 }
+ 

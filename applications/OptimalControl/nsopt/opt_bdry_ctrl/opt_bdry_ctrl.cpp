@@ -17,8 +17,8 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  32
-#define NSUB_Y  32
+#include   "../nsopt_params.hpp"
+
 
 #define CTRL_FACE_IDX  3
 
