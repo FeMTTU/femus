@@ -577,8 +577,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
-//   KK->print();
-//   RES->print();
+  KK->print();
+  RES->print();
 
   // ***************** END ASSEMBLY *******************
 

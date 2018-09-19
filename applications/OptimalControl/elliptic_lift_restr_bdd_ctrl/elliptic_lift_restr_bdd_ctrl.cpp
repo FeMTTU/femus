@@ -535,18 +535,18 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      }
 //======================Residuals=======================
           // FIRST ROW
-	  if (i < nDof_u)                      Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss + sol_ctrl_gss - u_des) - laplace_rhs_du_adj_i - 0.);
+	  if (i < nDof_u)                      Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss + sol_ctrl_gss - u_des) - laplace_rhs_du_adj_i );
           // SECOND ROW
 	  if (i < nDof_ctrl)  {
 	     if ( control_el_flag == 1)        Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight * (target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
-													      /*+ 1. * sol_mu[i]*/ - 0.);
-	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i] - 0.);
+													       );
+	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i]);
 	  }
           // THIRD ROW
-          if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += /*-weight * phi_adj[i] * sol_adj_gss - 6.;*/- weight *  ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i - 0.) ;
+          if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += /*-weight * phi_adj[i] * sol_adj_gss - 6.;*/- weight *  ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i ) ;
 
 //======================Residuals=======================
 	      
@@ -693,9 +693,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 // // // 	}
     std::vector<double> Res_ctrl (nDof_ctrl); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
     for (unsigned i = 0; i < sol_ctrl.size(); i++){
-     if ( control_el_flag == 1){
-	Res[nDof_u + i] = - ( - Res[nDof_u + i] + sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
-	Res_ctrl[i] = Res[nDof_u + i];
+       unsigned n_els_that_node = 1;
+     if ( control_el_flag == 1) {
+	Res[nDof_u + i] += - ( + n_els_that_node * ineq_flag * sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
+// 	Res_ctrl[i] =  Res[nDof_u + i];
       }
     }
     
@@ -726,16 +727,14 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
       
     for (unsigned i = 0; i < sol_actflag.size(); i++) {
       if (sol_actflag[i] == 0){  //inactive
-         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ineq_flag * ( 1. * sol_mu[i] - 0. ); 
-	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+         Res_mu [i] = - ineq_flag * ( 1. * sol_mu[i] - 0. ); 
+// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
       else if (sol_actflag[i] == 1){  //active_a 
-	 Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
-         Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
       }
       else if (sol_actflag[i] == 2){  //active_b 
-	Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
-	Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
       }
     }
 //          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
@@ -743,7 +742,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
     
     RES->insert(Res_mu, l2GMap_mu);
-    RES->insert(Res_ctrl, l2GMap_ctrl);
+//     RES->insert(Res_ctrl, l2GMap_ctrl);
 //     RES->insert(Res_u, l2GMap_u);
 //     RES->insert(Res_adj, l2GMap_adj);
     
@@ -774,8 +773,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
-  //KK->print();
-  //RES->print();
+  KK->print();
+  RES->print();
   
   // ***************** END ASSEMBLY *******************
 
