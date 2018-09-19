@@ -375,9 +375,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   } //end element loop for each process
 
   RES->close();
-
   KK->close();
-
   // ***************** END ASSEMBLY *******************
 }
 
