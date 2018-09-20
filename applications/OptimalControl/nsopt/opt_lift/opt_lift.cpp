@@ -26,43 +26,6 @@
 
 using namespace femus;
 
- double force[3] = {0.,0.,0.};
- double Vel_desired[3] = {0.125,0.,0.};
- double alpha_val = 1.;
- double beta_val = 1.e-3;
- double gamma_val = 1.e-3;
- int advection_flag = 0;
-  
- int ElementTargetFlag(const std::vector<double> & elem_center) {
-
- //***** set target domain flag ********************************** 
-  int target_flag = 0;
-  
-//    if ( elem_center[0] > 0.   - 1.e-5  &&  elem_center[0] < 0.25  + 1.e-5  && 
-//         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
-//   ) //target on left 
-   
-    if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
-	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5
-  ) //target on top
-
-//    if ( elem_center[0] > 0.75  - 1.e-5  &&  elem_center[0] < 1.0   + 1.e-5  && 
-//         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
-//   ) //target on right 
-   
-//     if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
-// 	  elem_center[1] > 0.   - 1.e-5  &&  elem_center[1] < 0.25  + 1.e-5
-//   ) //target on bottom
-    {
-     
-     target_flag = 1;
-     
-  }
-  
-     return target_flag;
-
-}
-
  
 bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
@@ -105,6 +68,8 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
       
   return dirichlet;
 }
+
+
 
 //    //lid-driven problem----------------------------------------------------------------------
 // //============== initial conditions =========
