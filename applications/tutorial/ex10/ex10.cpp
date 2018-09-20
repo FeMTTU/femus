@@ -1,8 +1,8 @@
-/** tutorial/Ex2
+/** tutorial/Ex10
  * This example shows how to set and solve the weak form of the Poisson problem
- *                    $$ \Delta u = \Delta u_exact \text{ on }\Omega, $$
+ *                    $$ \Div.( a(u)\Delta u) = f \text{ on }\Omega, $$
  *          $$ u=0 \text{ on } \Gamma, $$
- * on a square domain $\Omega$ with boundary $\Gamma$;
+ * on a square domain [-1,1]^2 $\Omega$ with boundary $\Gamma$;
  * all the coarse-level meshes are removed;
  * a multilevel problem and an equation system are initialized;
  * a direct solver is used to solve the problem.
@@ -181,18 +181,22 @@ int main(int argc, char** args) {
 
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return cos(pi * x[0]) * cos(pi * x[1]);
+  return sin(pi * x[0]) * cos(0.5*pi * x[1]); // u(x,y)=sin(pi*x)cos(pi/2*y)
+  //return cos(pi * x[0]) * cos(pi * x[1]);
 };
 
 void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
   double pi = acos(-1.);
-  solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
-  solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
+  solGrad[0] =   pi*cos(pi*x[0])*cos(0.5*pi*x[1]);
+  solGrad[1] =  -0.5*sin(pi*x[0])*pi*sin(0.5*pi*x[1]);
+  //solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
+  //solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
 };
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+  //return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
+  return (1/4)*pi*pi*sin(pi*x[0])*cos((1/2)*pi*x[1])*(15*cos((1/2)*pi*x[1])*cos((1/2)*pi*x[1])*cos(pi*x[0])*cos(pi*x[0])-2*cos(pi*x[0])*cos(pi*x[0])-7*cos((1/2)*pi*x[1])*cos((1/2)*pi*x[1])-3);
 };
 
 /**
@@ -211,7 +215,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Poisson");   // pointer to the nonlinear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
