@@ -84,7 +84,7 @@ namespace femus {
     std::string str2;
     unsigned ngroup;
     unsigned nbcd;
-    unsigned dim;
+    unsigned dim, dimNodes;
     double x, y, z;
     unsigned nvt;
     unsigned nvt0;
@@ -99,7 +99,7 @@ namespace femus {
     }
     str2 = "0";
     while(str2.compare("NDFVL") != 0) inf >> str2;
-    inf >> nvt >> nel >>  ngroup >> nbcd >> dim >> str2 ;
+    inf >> nvt >> nel >>  ngroup >> nbcd >> dim >> dimNodes ;
     nvt0 = nvt;
     mesh.SetDimension(dim);
     mesh.SetNumberOfElements(nel);
@@ -198,7 +198,7 @@ namespace femus {
     coords[1].resize(nvt);
     coords[2].resize(nvt);
 
-    if(mesh.GetDimension() == 3) {
+    if(dimNodes == 3) {
       for(unsigned j = 0; j < nvt0; j++) {
         inf >> str2 >> x >> y >> z;
         coords[0][j] = x / Lref;
@@ -206,7 +206,7 @@ namespace femus {
         coords[2][j] = z / Lref;
       }
     }
-    else if(mesh.GetDimension() == 2) {
+    else if(dimNodes == 2) {
       for(unsigned j = 0; j < nvt0; j++) {
         inf >> str2 >> x >> y;
         coords[0][j] = x / Lref;
@@ -214,7 +214,7 @@ namespace femus {
         coords[2][j] = 0.;
       }
     }
-    else if(mesh.GetDimension() == 1) {
+    else if(dimNodes == 1) {
       for(unsigned j = 0; j < nvt0; j++) {
         inf >> str2 >> x;
         coords[0][j] = x / Lref;
