@@ -78,6 +78,7 @@ int main(int argc, char** args) {
   FemusInit mpinit(argc, args, MPI_COMM_WORLD); 	// init Petsc-MPI communicator
   
     // ======= Files ========================
+  
   Files files; 
         files.CheckIODirectories();
 	files.RedirectCout();
