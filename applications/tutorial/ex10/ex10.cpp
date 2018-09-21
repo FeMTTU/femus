@@ -21,7 +21,12 @@ using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
   bool dirichlet = true; //dirichlet
-  value = 0;
+  value = 0.;
+  if(faceName == 1){
+    dirichlet = false;
+    
+    value = 1.; 
+  }
 
   return dirichlet;
 }
@@ -114,6 +119,7 @@ int main(int argc, char** args) {
       VTKWriter vtkIO(&mlSol);
       
       vtkIO.SetGraphVariable ("u");
+      vtkIO.SetDebugOutput(true);
       vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, i);
 
     }
@@ -496,6 +502,64 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
+    
+    
+//      // Boundary integral
+//       {
+//         double tau = 0.;
+//         vector < adept::adouble> normal ( dim, 0 );
+//         vector  < vector  <  double> > vx_face ( dim );
+   
+
+//     for ( int i = 0; i < dim; i++ ) {
+//       
+//       vx_face[i].resize ( 9 );
+// 
+//         // loop on faces
+//         for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
+//           std::vector  <  double > xx ( 3, 0. );
+// 
+//           // look for boundary faces
+//           if ( el->GetFaceElementIndex ( iel, jface ) < 0 ) {
+//             unsigned int face = - ( msh->el->GetFaceElementIndex ( iel, jface ) + 1 );
+// 
+//             if ( !mlSol->GetBdcFunction() ( xx, "u", tau, face, 0. ) && tau != 0. ) {
+//               unsigned nve = msh->GetElementFaceDofNumber ( iel, jface, soluType );
+//               const unsigned felt = msh->GetElementFaceType ( iel, jface );
+// 
+//               for ( unsigned i = 0; i < nve; i++ ) {
+//                 unsigned int ilocal = msh->GetLocalFaceVertexIndex ( iel, jface, i );
+//                 unsigned iDof = msh->GetSolutionDof ( ilocal, iel, 2 );
+// 
+//                 for ( unsigned idim = 0; idim < dim; idim++ ) {
+//                   vx_face[idim][i] = ( *msh->_topology->_Sol[idim] ) ( iDof );
+//                 }
+//               }
+//               double jacobian;
+// //               for ( unsigned igs = 0; igs  <  msh->_finiteElement[felt][soluType]->GetGaussPointNumber(); igs++ ) {
+// //                 msh->_finiteElement[felt][soluType]->JacobianSur ( vx_face, igs, jacobian, phi, phi_x, normal );
+// // 
+// //                 // *** phi_i loop ***
+// //                 for ( unsigned i = 0; i < nve; i++ ) {
+// //                   adept::adouble value = -phi[i] * tau * jacobian;
+// //                   unsigned int ilocal = msh->GetLocalFaceVertexIndex ( iel, jface, i );
+// //                           
+// //                   aRhs[indexVAR[idim]][ilocal] +=  value;
+// //                     
+// //                   
+// //                 }
+// //               }
+// //             }
+//           }
+//         }
+//       }
+    
+    
+    
+    
+    
+    
+    
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
