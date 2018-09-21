@@ -181,14 +181,14 @@ int main(int argc, char** args) {
 
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
-  return sin(pi * x[0]) * cos(0.5*pi * x[1]); // u(x,y)=sin(pi*x)cos(pi/2*y)
+  return sin(pi * x[0]) * cos(0.5 * pi * x[1]); // u(x,y)=sin(pi*x)cos(pi/2*y)
   //return cos(pi * x[0]) * cos(pi * x[1]);
 };
 
 void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
   double pi = acos(-1.);
   solGrad[0] =   pi*cos(pi*x[0])*cos(0.5*pi*x[1]);
-  solGrad[1] =  -0.5*sin(pi*x[0])*pi*sin(0.5*pi*x[1]);
+  solGrad[1] =  -0.5 * sin(pi*x[0])*pi*sin(0.5*pi*x[1]);
   //solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
   //solGrad[1] = -pi * cos(pi * x[0]) * sin(pi * x[1]);
 };
@@ -196,7 +196,8 @@ void GetExactSolutionGradient(const std::vector < double >& x, vector < double >
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
   //return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
-  return (1/4)*pi*pi*sin(pi*x[0])*cos((1/2)*pi*x[1])*(15*cos((1/2)*pi*x[1])*cos((1/2)*pi*x[1])*cos(pi*x[0])*cos(pi*x[0])-2*cos(pi*x[0])*cos(pi*x[0])-7*cos((1/2)*pi*x[1])*cos((1/2)*pi*x[1])-3);
+  return (1./4.)*pi*pi*sin(pi*x[0])*cos((1./2.)*pi*x[1])*(15.*cos((1./2.)*pi*x[1])*cos((1./2.)*pi*x[1])*cos(pi*x[0])*cos(pi*x[0])
+  -2.*cos(pi*x[0])*cos(pi*x[0])-7.*cos((1./2.)*pi*x[1])*cos((1./2.)*pi*x[1])-3.);
 };
 
 /**
@@ -521,9 +522,9 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
         adept::adouble laplace = 0.;
 
         for (unsigned jdim = 0; jdim < dim; jdim++) {
-          laplace   +=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+          laplace   +=   phi_x[i * dim + jdim] * gradSolu_gss[jdim];
         }
-
+        laplace *= (1. + solu_gss * solu_gss);
         double srcTerm = - GetExactSolutionLaplace(x_gss);
         aRes[i] += (srcTerm * phi[i] - laplace) * weight;
 
