@@ -131,8 +131,8 @@ int main(int argc, char** args) {
 // #endif
 
   // attach the assembling function to system
-//   system.SetAssembleFunction(AssembleNS_AD);
-  system.SetAssembleFunction(AssembleNS_nonAD);
+  system.SetAssembleFunction(AssembleNS_AD);
+//   system.SetAssembleFunction(AssembleNS_nonAD);
 
   // initilaize and solve the system
   system.init();
@@ -453,13 +453,13 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
     for (int i = 0; i < nDofsV; i++) {
       for (unsigned  k = 0; k < dim; k++) {
-        Res[ i +  k * nDofsV ] = + aResV[k][i].value();
+        Res[ i +  k * nDofsV ] = - aResV[k][i].value();
       }
     }
 
 // #if PRESS == 1
     for (int i = 0; i < nDofsP; i++) {
-      Res[ i + dim * nDofsV ] = + aResP[i].value();
+      Res[ i + dim * nDofsV ] = - aResP[i].value();
     }
 // #endif
 
