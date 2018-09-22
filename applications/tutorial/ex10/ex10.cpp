@@ -19,13 +19,14 @@
 
 using namespace femus;
 
-bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceName, const double time) {
+bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceIndex, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
-  if(faceName == 1){
+  if(faceIndex == 1){
     dirichlet = false;
-    
-    value = 1.; 
+    // TODO here you need to put the analytic value for tau on face 1, i.e.
+    // tau = a(u) grad u dot n = - a(u) u_x at (-1,y), where y=x[1]
+    value = 10.; 
   }
 
   return dirichlet;
@@ -255,8 +256,8 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   vector < vector < double > > x (dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE BI/TRIQUADRATIC)
 
-  for (unsigned i = 0; i < dim; i++) {
-    x[i].reserve(maxSize);
+  for (unsigned k = 0; k < dim; k++) {
+    x[k].reserve(maxSize);
   }
 
   vector <double> phi;  // local test function
@@ -292,8 +293,8 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     l2GMap.resize(nDofu);
     
 
-    for (int i = 0; i < dim; i++) {
-      x[i].resize(nDofu);
+    for (int k = 0; k < dim; k++) {
+      x[k].resize(nDofu);
     }
 
     Res.assign(nDofu,0.);    //resize and set to zero
@@ -312,8 +313,8 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofu; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+      for (unsigned k = 0; k < dim; k++) {
+        x[k][i] = (*msh->_topology->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -333,9 +334,9 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
       for (unsigned i = 0; i < nDofu; i++) {
        
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
-          x_gss[jdim] += x[jdim][i] * phi[i];
+        for (unsigned k = 0; k < dim; k++) {
+          gradSolu_gss[k] += phi_x[i * dim + k] * solu[i];
+          x_gss[k] += x[k][i] * phi[i];
         }
       }
 
@@ -344,8 +345,8 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
 
         double weakLaplace = 0.;
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          weakLaplace   -=  phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+        for (unsigned k = 0; k < dim; k++) {
+          weakLaplace   -=  phi_x[i * dim + k] * gradSolu_gss[k];
         }
         
         Res[i] += ( - GetExactSolutionLaplace(x_gss) * phi[i] + weakLaplace) * weight;
@@ -354,8 +355,8 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
         for (unsigned j = 0; j < nDofu; j++) {
           double weakLaplacej = 0.;
 
-          for (unsigned kdim = 0; kdim < dim; kdim++) {
-            weakLaplacej -= phi_x[i * dim + kdim] * phi_x[j * dim + kdim];
+          for (unsigned k = 0; k < dim; k++) {
+            weakLaplacej -= phi_x[i * dim + k] * phi_x[j * dim + k];
           }
 
           Jac[i * nDofu + j] -= weakLaplacej * weight;
@@ -440,19 +441,17 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  for (unsigned i = 0; i < dim; i++) {
-    x[i].reserve(maxSize);
+  for (unsigned k = 0; k < dim; k++) {
+    x[k].reserve(maxSize);
   }
 
   vector <double> phi;  // local test function
   vector <double> phi_x; // local test function first order partial derivatives
-  vector <double> phi_xx; // local test function second order partial derivatives
+  
   double weight; // gauss point weight
-
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
-  phi_xx.reserve(maxSize * dim2);
-
+  
   vector< adept::adouble > aRes; // local redidual vector
   aRes.reserve(maxSize);
 
@@ -464,6 +463,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   Jac.reserve(maxSize * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
+  RES->zero(); // Set to zero all the entries of the Global Residual
 
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -476,8 +476,8 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     l2GMap.resize(nDofu);
     solu.resize(nDofu);
 
-    for (int i = 0; i < dim; i++) {
-      x[i].resize(nDofx);
+    for (int k = 0; k < dim; k++) {
+      x[k].resize(nDofx);
     }
 
     aRes.resize(nDofu);    //resize
@@ -494,77 +494,60 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+      for (unsigned k = 0; k < dim; k++) {
+        x[k][i] = (*msh->_topology->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
 
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
+           
+    // *** Face Gauss point loop (boundary Integral) ***
+    for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
+      int faceIndex = el->GetBoundaryIndex(iel, jface);
+      // look for boundary faces
+      if ( faceIndex == 1 ) {  
+        const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
+        unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, soluType);
+                    
+        vector  < vector  <  double> > faceCoordinates ( dim );
+        for ( int k = 0; k < dim; k++ ) {
+          faceCoordinates[k].resize (faceDofs);
+        }
+        for ( unsigned i = 0; i < faceDofs; i++ ) {
+          unsigned ilocal = msh->GetLocalFaceVertexIndex ( iel, jface, i );
+          unsigned iDof = msh->GetSolutionDof ( ilocal, iel, xType );
+          for ( unsigned k = 0; k < dim; k++ ) {
+            faceCoordinates[k][i] = ( *msh->_topology->_Sol[k] ) ( iDof );
+          }
+        }
+        for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][soluType]->GetGaussPointNumber(); ig++ ) {
+          vector < double> normal;
+          msh->_finiteElement[faceGeom][soluType]->JacobianSur ( faceCoordinates, ig, weight, phi, phi_x, normal );
+            
+          vector< double > xg(dim,0.);
+          for ( unsigned i = 0; i < faceDofs; i++ ) {
+            for( unsigned k=0; k<dim; k++){
+              xg[k] += phi[i] * faceCoordinates[k][i];      
+            }
+          }
+          double tau;
+          mlSol->GetBdcFunction() ( xg, "u", tau, faceIndex, 0. ); 
+          // *** phi_i loop ***
+          for ( unsigned i = 0; i < faceDofs; i++ ) {
+            double value = phi[i] * tau * weight;
+            unsigned ilocal = msh->GetLocalFaceVertexIndex ( iel, jface, i );
+            aRes[ilocal] +=  value;
+          }        
+        }
+      }
+    }   
     
-    
-//      // Boundary integral
-//       {
-//         double tau = 0.;
-//         vector < adept::adouble> normal ( dim, 0 );
-//         vector  < vector  <  double> > vx_face ( dim );
-   
-
-//     for ( int i = 0; i < dim; i++ ) {
-//       
-//       vx_face[i].resize ( 9 );
-// 
-//         // loop on faces
-//         for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
-//           std::vector  <  double > xx ( 3, 0. );
-// 
-//           // look for boundary faces
-//           if ( el->GetFaceElementIndex ( iel, jface ) < 0 ) {
-//             unsigned int face = - ( msh->el->GetFaceElementIndex ( iel, jface ) + 1 );
-// 
-//             if ( !mlSol->GetBdcFunction() ( xx, "u", tau, face, 0. ) && tau != 0. ) {
-//               unsigned nve = msh->GetElementFaceDofNumber ( iel, jface, soluType );
-//               const unsigned felt = msh->GetElementFaceType ( iel, jface );
-// 
-//               for ( unsigned i = 0; i < nve; i++ ) {
-//                 unsigned int ilocal = msh->GetLocalFaceVertexIndex ( iel, jface, i );
-//                 unsigned iDof = msh->GetSolutionDof ( ilocal, iel, 2 );
-// 
-//                 for ( unsigned idim = 0; idim < dim; idim++ ) {
-//                   vx_face[idim][i] = ( *msh->_topology->_Sol[idim] ) ( iDof );
-//                 }
-//               }
-//               double jacobian;
-// //               for ( unsigned igs = 0; igs  <  msh->_finiteElement[felt][soluType]->GetGaussPointNumber(); igs++ ) {
-// //                 msh->_finiteElement[felt][soluType]->JacobianSur ( vx_face, igs, jacobian, phi, phi_x, normal );
-// // 
-// //                 // *** phi_i loop ***
-// //                 for ( unsigned i = 0; i < nve; i++ ) {
-// //                   adept::adouble value = -phi[i] * tau * jacobian;
-// //                   unsigned int ilocal = msh->GetLocalFaceVertexIndex ( iel, jface, i );
-// //                           
-// //                   aRhs[indexVAR[idim]][ilocal] +=  value;
-// //                     
-// //                   
-// //                 }
-// //               }
-// //             }
-//           }
-//         }
-//       }
-    
-    
-    
-    
-    
-    
-    
-
-    // *** Gauss point loop ***
+    // *** Element Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x, phi_xx);
+      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x);
 
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       adept::adouble solu_gss = 0;
@@ -574,23 +557,23 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
-          x_gss[jdim] += x[jdim][i] * phi[i];
+        for (unsigned k = 0; k < dim; k++) {
+          gradSolu_gss[k] += phi_x[i * dim + k] * solu[i];
+          x_gss[k] += x[k][i] * phi[i];
         }
       }
 
       // *** phi_i loop ***
       for (unsigned i = 0; i < nDofu; i++) {
 
-        adept::adouble laplace = 0.;
+        adept::adouble auGradUGradv = 0.;
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          laplace   +=   phi_x[i * dim + jdim] * gradSolu_gss[jdim];
+        for (unsigned k = 0; k < dim; k++) {
+          auGradUGradv   +=   phi_x[i * dim + k] * gradSolu_gss[k];
         }
-        laplace *= (1. + solu_gss * solu_gss);
+        auGradUGradv *= (1. + solu_gss * solu_gss);
         double srcTerm = - GetExactSolutionLaplace(x_gss);
-        aRes[i] += (srcTerm * phi[i] - laplace) * weight;
+        aRes[i] += (srcTerm * phi[i] - auGradUGradv) * weight;
 
       } // end phi_i loop
     } // end gauss point loop
@@ -606,8 +589,6 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     }
 
     RES->add_vector_blocked(Res, l2GMap);
-
-
 
     // define the dependent variables
     s.dependent(&aRes[0], nDofu);
@@ -663,8 +644,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
   solu.reserve(maxSize);
 
-  for (unsigned i = 0; i < dim; i++)
-    x[i].reserve(maxSize);
+  for (unsigned k = 0; k < dim; k++)
+    x[k].reserve(maxSize);
 
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
@@ -685,8 +666,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
     // resize local arrays
     solu.resize(nDofu);
 
-    for (int i = 0; i < dim; i++) {
-      x[i].resize(nDofx);
+    for (int k = 0; k < dim; k++) {
+      x[k].resize(nDofx);
     }
 
     // local storage of global mapping and solution
@@ -699,8 +680,8 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
     for (unsigned i = 0; i < nDofx; i++) {
       unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
 
-      for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);  // global extraction and local storage for the element coordinates
+      for (unsigned k = 0; k < dim; k++) {
+        x[k][i] = (*msh->_topology->_Sol[k])(xDof);  // global extraction and local storage for the element coordinates
       }
     }
 
@@ -717,17 +698,17 @@ std::pair < double, double > GetErrorNorm(MultiLevelSolution* mlSol) {
       for (unsigned i = 0; i < nDofu; i++) {
         solu_gss += phi[i] * solu[i];
 
-        for (unsigned jdim = 0; jdim < dim; jdim++) {
-          gradSolu_gss[jdim] += phi_x[i * dim + jdim] * solu[i];
-          x_gss[jdim] += x[jdim][i] * phi[i];
+        for (unsigned k = 0; k < dim; k++) {
+          gradSolu_gss[k] += phi_x[i * dim + k] * solu[i];
+          x_gss[k] += x[k][i] * phi[i];
         }
       }
 
       vector <double> exactGradSol(dim);
       GetExactSolutionGradient(x_gss, exactGradSol);
 
-      for (unsigned j = 0; j < dim ; j++) {
-        seminorm   += ((gradSolu_gss[j] - exactGradSol[j]) * (gradSolu_gss[j] - exactGradSol[j])) * weight;
+      for (unsigned k = 0; k < dim ; k++) {
+        seminorm   += ((gradSolu_gss[k] - exactGradSol[k]) * (gradSolu_gss[k] - exactGradSol[k])) * weight;
       }
 
       double exactSol = GetExactSolutionValue(x_gss);
