@@ -19,14 +19,18 @@
 
 using namespace femus;
 
+double GetExactSolutionValue(const std::vector < double >& x);
+void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad);
+
 bool SetBoundaryCondition(const std::vector < double >& x, const char solName[], double& value, const int faceIndex, const double time) {
   bool dirichlet = true; //dirichlet
   value = 0.;
   if(faceIndex == 1){
     dirichlet = false;
-    // TODO here you need to put the analytic value for tau on face 1, i.e.
-    // tau = a(u) grad u dot n = - a(u) u_x at (-1,y), where y=x[1]
-    value = 10.; 
+    double u = GetExactSolutionValue(x);
+    vector < double > solGrad(2);
+    GetExactSolutionGradient(x, solGrad);       
+    value = -(1+u*u) * solGrad[0]; 
   }
 
   return dirichlet;
