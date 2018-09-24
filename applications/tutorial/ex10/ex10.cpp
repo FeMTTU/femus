@@ -28,7 +28,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
   if(faceIndex == 1){
     dirichlet = false;
     double u = GetExactSolutionValue(x);
-    vector < double > solGrad(2);
+    vector < double > solGrad;
     GetExactSolutionGradient(x, solGrad);       
     value = -(1+u*u) * solGrad[0]; 
   }
@@ -197,6 +197,7 @@ double GetExactSolutionValue(const std::vector < double >& x) {
 };
 
 void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
+  solGrad.resize(2);  
   double pi = acos(-1.);
   solGrad[0] =   pi*cos(pi*x[0])*cos(0.5*pi*x[1]);
   solGrad[1] =  -0.5 * sin(pi*x[0])*pi*sin(0.5*pi*x[1]);
@@ -211,182 +212,7 @@ double GetExactSolutionLaplace(const std::vector < double >& x) {
   -2.*cos(pi*x[0])*cos(pi*x[0])-7.*cos((1./2.)*pi*x[1])*cos((1./2.)*pi*x[1])-3.);
 };
 
-/**
- * This function assemble the stiffnes matrix Jac and the residual vector Res
- * such that
- *                  Jac w = RES = F - Jac u0,
- * and consequently
- *        u = u0 + w satisfies Jac u = F
- **/
-void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
-  //  ml_prob is the global object from/to where get/set all the data
 
-  //  level is the level of the PDE system to be assembled
-  //  levelMax is the Maximum level of the MultiLevelProblem
-  //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
-
-  //  extract pointers to the several objects that we are going to use
-
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Poisson");   // pointer to the nonlinear implicit system named "Poisson"
-  const unsigned level = mlPdeSys->GetLevelToAssemble();
-
-  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
-  elem*                     el = msh->el;  // pointer to the elem object in msh (level)
-
-  MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
-
-  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix*             KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
-  NumericVector*           RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
-
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));  // conservative: based on line3, quad9, hex27
-
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
-
-  //solution variable
-  unsigned soluIndex;
-  soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
-
-  unsigned soluPdeIndex;
-  soluPdeIndex = mlPdeSys->GetSolPdeIndex("u");    // get the position of "u" in the pdeSys object
-
-  vector < double >  solu; // local solution
-  solu.reserve(maxSize);
-
-  vector < vector < double > > x (dim);    // local coordinates
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE BI/TRIQUADRATIC)
-
-  for (unsigned k = 0; k < dim; k++) {
-    x[k].reserve(maxSize);
-  }
-
-  vector <double> phi;  // local test function
-  vector <double> phi_x; // local test function first order partial derivatives
-  
-  double weight; // gauss point weight
-
-  phi.reserve(maxSize);
-  phi_x.reserve(maxSize * dim);
-  
-
-  vector< double > Res; // local redidual vector
-  Res.reserve(maxSize);
-
-  vector < double > Jac; //local Jacobian matrix
-  Jac.reserve(maxSize * maxSize);
-  
-  vector< int > l2GMap; // local to global mapping
-  l2GMap.reserve(maxSize);
-  
-
-  KK->zero(); // Set to zero all the entries of the Global Matrix
-  RES->zero(); // Set to zero all the entries of the Global Residual Vector
-
-  // element loop: each process loops only on the elements that owns
-  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
-
-    short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-    
-    // resize local arrays
-    solu.resize(nDofu);
-    l2GMap.resize(nDofu);
-    
-
-    for (int k = 0; k < dim; k++) {
-      x[k].resize(nDofu);
-    }
-
-    Res.assign(nDofu,0.);    //resize and set to zero
-
-    Jac.resize(nDofu * nDofu, 0);    //resize and set to zero
-    
-
-    // local storage of global mapping and solution
-    for (unsigned i = 0; i < nDofu; i++) {
-      unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // local to global solution mapping
-      solu[i] = (*sol->_Sol[soluIndex])(solDof);      // local storage of solution
-      l2GMap[i] = pdeSys->GetSystemDof(soluIndex, soluPdeIndex, i, iel);   // local to global system solution mapping
-    }
-
-    // local storage of coordinates
-    for (unsigned i = 0; i < nDofu; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);    // global to global mapping between coordinates node and coordinate dof
-
-      for (unsigned k = 0; k < dim; k++) {
-        x[k][i] = (*msh->_topology->_Sol[k])(xDof);      // global extraction and local storage for the element coordinates
-      }
-    }
-
-
-
-    // *** Gauss point loop ***
-    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][soluType]->GetGaussPointNumber(); ig++) {
-      // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x);
-
-      //double* gradPhi[][2] = &phi_x[0];
-      
-      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-    
-      vector < double > gradSolu_gss(dim, 0.);
-      vector < double > x_gss(dim, 0.);
-
-      for (unsigned i = 0; i < nDofu; i++) {
-       
-        for (unsigned k = 0; k < dim; k++) {
-          gradSolu_gss[k] += phi_x[i * dim + k] * solu[i];
-          x_gss[k] += x[k][i] * phi[i];
-        }
-      }
-
-      // *** phi_i loop ***
-      for (unsigned i = 0; i < nDofu; i++) {
-
-        double weakLaplace = 0.;
-
-        for (unsigned k = 0; k < dim; k++) {
-          weakLaplace   -=  phi_x[i * dim + k] * gradSolu_gss[k];
-        }
-        
-        Res[i] += ( - GetExactSolutionLaplace(x_gss) * phi[i] + weakLaplace) * weight;
-
-        // *** phi_j loop ***
-        for (unsigned j = 0; j < nDofu; j++) {
-          double weakLaplacej = 0.;
-
-          for (unsigned k = 0; k < dim; k++) {
-            weakLaplacej -= phi_x[i * dim + k] * phi_x[j * dim + k];
-          }
-
-          Jac[i * nDofu + j] -= weakLaplacej * weight;
-        } // end phi_j loop
-
-      } // end phi_i loop
-    } // end gauss point loop
-
-
-    //--------------------------------------------------------------------------------------------------------
-    // Add the local Matrix/Vector into the global Matrix/Vector
-
-    //copy the value of the adept::adoube aRes in double Res and store
-    RES->add_vector_blocked(Res, l2GMap);
-
-    //store K in the global matrix KK
-    KK->add_matrix_blocked(Jac, l2GMap, l2GMap);
-
-  } //end element loop for each process
-
-  RES->close();
-
-  KK->close();
-
-  // ***************** END ASSEMBLY *******************
-}
 
 /**
  * This function assemble the stiffnes matrix KK and the residual vector Res
@@ -515,34 +341,33 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
         const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
         unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, soluType);
                     
-        vector  < vector  <  double> > faceCoordinates ( dim );
+        vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
         for ( int k = 0; k < dim; k++ ) {
           faceCoordinates[k].resize (faceDofs);
         }
         for ( unsigned i = 0; i < faceDofs; i++ ) {
-          unsigned ilocal = msh->GetLocalFaceVertexIndex ( iel, jface, i );
-          unsigned iDof = msh->GetSolutionDof ( ilocal, iel, xType );
+          unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i ); // face-to-element local node mapping.
           for ( unsigned k = 0; k < dim; k++ ) {
-            faceCoordinates[k][i] = ( *msh->_topology->_Sol[k] ) ( iDof );
+            faceCoordinates[k][i] =  x[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
           }
         }
-        for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][soluType]->GetGaussPointNumber(); ig++ ) {
+        for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][soluType]->GetGaussPointNumber(); ig++ ) { 
+            // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh. 
           vector < double> normal;
           msh->_finiteElement[faceGeom][soluType]->JacobianSur ( faceCoordinates, ig, weight, phi, phi_x, normal );
             
           vector< double > xg(dim,0.);
           for ( unsigned i = 0; i < faceDofs; i++ ) {
             for( unsigned k=0; k<dim; k++){
-              xg[k] += phi[i] * faceCoordinates[k][i];      
+              xg[k] += phi[i] * faceCoordinates[k][i]; // xg(ig)= \sum_{i=0}^faceDofs phi[i](xig) facecoordinates[i]     
             }
           }
-          double tau;
-          mlSol->GetBdcFunction() ( xg, "u", tau, faceIndex, 0. ); 
+          double tau; // a(u)*grad_u\cdot normal
+          SetBoundaryCondition( xg, "u", tau, faceIndex, 0. ); // return tau
           // *** phi_i loop ***
           for ( unsigned i = 0; i < faceDofs; i++ ) {
-            double value = phi[i] * tau * weight;
-            unsigned ilocal = msh->GetLocalFaceVertexIndex ( iel, jface, i );
-            aRes[ilocal] +=  value;
+            unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i );
+            aRes[inode] +=  phi[i] * tau * weight;
           }        
         }
       }
