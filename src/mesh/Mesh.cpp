@@ -156,7 +156,7 @@ namespace femus
 
 
 
-    std::vector < int > partition;
+    std::vector < unsigned > partition;
     partition.reserve(GetNumberOfNodes());
     partition.resize(GetNumberOfElements());
     MeshMetisPartitioning meshMetisPartitioning(*this);
@@ -233,7 +233,7 @@ namespace femus
     el->SetMaterialElementCounter(materialElementCounter);
     
 
-    std::vector < int > partition;
+    std::vector < unsigned > partition;
     partition.reserve(GetNumberOfNodes());
     partition.resize(GetNumberOfElements());
     MeshMetisPartitioning meshMetisPartitioning(*this);
@@ -363,7 +363,7 @@ namespace femus
 
 //dof map: piecewise liner 0, quadratic 1, bi-quadratic 2, piecewise constant 3, piecewise linear discontinuous 4
 
-  void Mesh::FillISvector(vector < int >& partition)
+  void Mesh::FillISvector(vector < unsigned >& partition)
   {
 
     //BEGIN Initialization for k = 0,1,2,3,4
