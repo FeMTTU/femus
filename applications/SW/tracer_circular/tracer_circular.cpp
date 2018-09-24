@@ -25,6 +25,8 @@
 
 using namespace femus;
 
+bool assembly = true;
+
 double dt = 1.; //= dx / maxWaveSpeed * 0.85;
 
 double k_v = 0.0001;
@@ -343,6 +345,8 @@ int main ( int argc, char** args ) {
 
   unsigned numberOfTimeSteps = 1000; //17h=1020 with dt=60, 17h=10200 with dt=6
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
+      
+    assembly = true;  
     system2.CopySolutionToOldSolution();
 //     dt = 60.;
 //     ETD ( ml_prob );
@@ -375,9 +379,14 @@ void ETDRosenbrock ( MultiLevelProblem& ml_prob ) {
 
   SparseMatrix* KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector* RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
-  NumericVector* RES2 = pdeSys->_RES;
+  
   NumericVector* EPS = pdeSys->_EPS; // pointer to the global residual vector object in pdeSys (level)
 
+  NumericVector* RES2; 
+  RES2 = NumericVector::build().release();
+  RES2->init(*RES);
+  
+  
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
@@ -422,7 +431,7 @@ void ETDRosenbrock ( MultiLevelProblem& ml_prob ) {
   unsigned solTypev = mlSol->GetSolutionType ( solIndexv[0] ); // get the finite element type for "vi"
   unsigned solTypeHT = mlSol->GetSolutionType ( solIndexHT[0] ); // get the finite element type for "Ti"
 
-  KK->zero();
+  if(assembly) KK->zero();
   RES->zero();
 
   MatSetOption ( ( static_cast<PetscMatrix*> ( KK ) )->mat(), MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE );
@@ -521,7 +530,7 @@ void ETDRosenbrock ( MultiLevelProblem& ml_prob ) {
 
     }
 
-    s.new_recording();
+    if(assembly) s.new_recording();
 
     vector < double > x ( 2 ); // local coordinates
     for ( unsigned j = 0; j < 2; j++ ) {
@@ -695,53 +704,57 @@ void ETDRosenbrock ( MultiLevelProblem& ml_prob ) {
     }
 
     vector< double > Res ( NLayers ); // local redidual vector
+    vector< double > solht ( NLayers ); // local redidual vector
     for ( unsigned k = 0; k < NLayers; k++ ) {
       //Res[k] =  aResh[k].value();
       Res[k] =  aResHT[k].value();
+      solht[k] = solHT[k].value();
       //std::cout<< "Res["<<k<<"] = " << Res[k] <<std::endl;
       //std::cout<< "Res["<<NLayers+k<<"] = " << Res[NLayers+k] <<std::endl;
     }
 
     RES->add_vector_blocked ( Res, l2GMapRow );
+    
+    if(assembly){
+      //s.dependent ( &aResh[0], NLayers );
+      s.dependent ( &aResHT[0], NLayers );
 
-    //s.dependent ( &aResh[0], NLayers );
-    s.dependent ( &aResHT[0], NLayers );
-
-    // define the independent variables
-    //s.independent ( &solh[0], NLayers );
-    s.independent ( &solHT[0], NLayers );
-    //s.independent ( &solvm[0], NLayers );
-    //s.independent ( &solvp[0], NLayers );
-    if ( i > start ) {
-      //s.independent ( &solhm[0], NLayers );
-      s.independent ( &solHTm[0], NLayers );
-    }
-    if ( i < end - 1 ) {
-      //s.independent ( &solhp[0], NLayers );
-      s.independent ( &solHTp[0], NLayers );
-    }
-    /*    if ( i > start + 1) {
-          s.independent ( &solHTmm[0], NLayers );
+      // define the independent variables
+      //s.independent ( &solh[0], NLayers );
+      s.independent ( &solHT[0], NLayers );
+      //s.independent ( &solvm[0], NLayers );
+      //s.independent ( &solvp[0], NLayers );
+      if ( i > start ) {
+        //s.independent ( &solhm[0], NLayers );
+        s.independent ( &solHTm[0], NLayers );
+      }
+      if ( i < end - 1 ) {
+        //s.independent ( &solhp[0], NLayers );
+        s.independent ( &solHTp[0], NLayers );
+      }
+      /*    if ( i > start + 1) {
+        s.independent ( &solHTmm[0], NLayers );
         }
         if ( i < end - 2 ) {
           s.independent ( &solHTpp[0], NLayers );
         } */
 
-    // get the jacobian matrix (ordered by row major )
-    vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
-    //vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 + bc3 +bc4 ) );
-    s.jacobian ( &Jac[0], true );
+      // get the jacobian matrix (ordered by row major )
+      vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
+      //vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 + bc3 +bc4 ) );
+      s.jacobian ( &Jac[0], true );
 
-    //store K in the global matrix KK
-    KK->add_matrix_blocked ( Jac, l2GMapRow, l2GMapColumn );
+      //store K in the global matrix KK
+      KK->add_matrix_blocked ( Jac, l2GMapRow, l2GMapColumn );
 
-    s.clear_independents();
-    s.clear_dependents();
-
+      s.clear_independents();
+      s.clear_dependents();
+    }
   }
 
   RES->close();
-  KK->close();
+  if(assembly) KK->close();
+ 
 
   for ( unsigned k = 0; k < NLayers; k++ ) {
     std::cout << "layer " << k << " " << maxW[k] << std::endl;
@@ -784,14 +797,12 @@ void ETDRosenbrock ( MultiLevelProblem& ml_prob ) {
   MFNSolve ( mfn, v, y );
   MFNDestroy ( &mfn );
 
-  Vec HTOld = ( static_cast< PetscVector* > ( sol->_Sol[solIndexHT[0]] ) )->vec() ; //TODO
-
   sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
-
-  if ( twostage == true ) {
     
-    Vec HTNew = ( static_cast< PetscVector* > ( sol->_Sol[solIndexHT[0]] ) )->vec() ; //TODO
+  if ( twostage == true ) {
 
+    RES2->zero();
+   
     for ( unsigned i =  start; i <  end; i++ ) {
 
       vector < double > solhm ( NLayers );
@@ -869,7 +880,7 @@ void ETDRosenbrock ( MultiLevelProblem& ml_prob ) {
 
       }
 
-      s.new_recording();
+     // s.new_recording();
 
       vector < double > x ( 2 ); // local coordinates
       for ( unsigned j = 0; j < 2; j++ ) {
@@ -1055,8 +1066,13 @@ void ETDRosenbrock ( MultiLevelProblem& ml_prob ) {
     }
     
     //come Konstantin fa su Matlab: R2 = F(U2) - fn - An*(U2 - u);
-    //noi dobbiamo fare: R2 = RES2 - RES - KK*(HTNew - HTOLd);
+    //noi dobbiamo fare: R2 = RES2 - RES - KK * EPS;
 
+    RES2->scale(-1.);
+    RES2->add(*RES);
+    RES2->add_vector(*EPS,*KK);
+    RES2->scale(-1.);
+    
   }
 
   //PARAVIEW
@@ -1085,6 +1101,9 @@ void ETDRosenbrock ( MultiLevelProblem& ml_prob ) {
 
   }
 
+  
+  
+   delete RES2;
 }
 
 
@@ -1253,7 +1272,7 @@ void RK4 ( MultiLevelProblem& ml_prob ) {
 
     }
 
-    s.new_recording();
+ //   s.new_recording();
 
     vector < double > x ( 2 ); // local coordinates
     for ( unsigned j = 0; j < 2; j++ ) {
