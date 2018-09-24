@@ -792,12 +792,19 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   if (assembleMatrix) KK->close();
   KK->print();
-  RES->print();
   
   // ***************** END ASSEMBLY *******************
-  std::vector<double> Vec_I (l2GMap_ctrl.size()); std::fill(Vec_I.begin(),Vec_I.end(), ineq_flag * 1.);
-//   for (unsigned i = 0; i < l2GMap_ctrl.size(); i++) {
-    RES->add_vector_blocked(Vec_I, l2GMap_ctrl);
+  unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
+
+  unsigned int global_ctrl_size = pdeSys->KKoffset[ctrl_index+1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
+  
+  std::vector<double>  all_ones(global_ctrl_size, ineq_flag * 1.);
+  std::vector<int>    positions(global_ctrl_size);
+  for (unsigned i = 0; i < positions.size(); i++)  positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
+   
+    RES->add_vector_blocked(all_ones, positions);
+    RES->print();
+    
   return;
 }
 
