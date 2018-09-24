@@ -270,6 +270,14 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
  //****************** mu ******************************  
  //***************************************************  
+  vector <double> phi_mu;  // local test function
+  vector <double> phi_mu_x; // local test function first order partial derivatives
+  vector <double> phi_mu_xx; // local test function second order partial derivatives
+
+  phi_mu.reserve(maxSize);
+  phi_mu_x.reserve(maxSize * dim);
+  phi_mu_xx.reserve(maxSize * dim2);
+    
   unsigned solIndex_mu;
   solIndex_mu = mlSol->GetIndex("mu");    // get the position of "mu" in the ml_sol object
    
@@ -473,9 +481,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	double sol_u_gss = 0.;
 	double sol_adj_gss = 0.;
 	double sol_ctrl_gss = 0.;
+	double sol_mu_gss = 0.;
 	std::vector<double> sol_u_x_gss(dim);       std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
 	std::vector<double> sol_adj_x_gss(dim);     std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
 	std::vector<double> sol_ctrl_x_gss(dim);    std::fill(sol_ctrl_x_gss.begin(), sol_ctrl_x_gss.end(), 0.);
+	std::vector<double> sol_mu_x_gss(dim);      std::fill(sol_mu_x_gss.begin(), sol_mu_x_gss.end(), 0.);
  //===================================================   
 
       // *** Gauss point loop ***
@@ -485,10 +495,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	msh->_finiteElement[kelGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
         msh->_finiteElement[kelGeom][solType_ctrl]->Jacobian(x, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
         msh->_finiteElement[kelGeom][solType_adj] ->Jacobian(x, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
+	msh->_finiteElement[kelGeom][solType_mu]  ->Jacobian(x, ig, weight, phi_mu, phi_mu_x, phi_mu_xx);
 	
 	std::fill(sol_u_x_gss.begin(),sol_u_x_gss.end(), 0.);
 	std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
 	std::fill(sol_ctrl_x_gss.begin(), sol_ctrl_x_gss.end(), 0.);
+	std::fill(sol_mu_x_gss.begin(), sol_mu_x_gss.end(), 0.);
 	
 	for (unsigned i = 0; i < nDof_u; i++) {
 	                                                sol_u_gss      += sol_u[i] * phi_u[i];
@@ -504,6 +516,12 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	                                                sol_ctrl_gss      += sol_ctrl[i] * phi_ctrl[i];
                    for (unsigned d = 0; d < dim; d++)   sol_ctrl_x_gss[d] += sol_ctrl[i] * phi_ctrl_x[i * dim + d];
         }
+        
+        for (unsigned i = 0; i < nDof_mu; i++) {
+	                                                sol_mu_gss      += sol_mu[i] * phi_mu[i];
+		   for (unsigned d = 0; d < dim; d++)   sol_mu_x_gss[d] += sol_mu[i] * phi_mu_x[i * dim + d];
+          
+	}
         
 //==========FILLING WITH THE EQUATIONS ===========
 	// *** phi_i loop ***
@@ -542,7 +560,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
-													       );
+													      /*+ ineq_flag * sol_mu_gss*/ );
 	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i]);
 	  }
           // THIRD ROW
@@ -618,9 +636,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	      }
 	      
 // 	      //BLOCK delta_control - mu
-//            if ( i < nDof_ctrl   && j < nDof_mu && i==j ) 
+//              if ( i < nDof_ctrl   && j < nDof_mu && i==j ) 
 // 		Jac[ (nDof_u + i) * nDof_AllVars  + 
-// 		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  /*control_node_flag[i] **/ 1.;
+// 		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  ineq_flag * control_node_flag[i] *  phi_mu[j] * phi_ctrl[i] ;
 		     
 		     
 	      //=========== delta_adjoint row ===========================
@@ -691,14 +709,14 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 	 
 	 
 // // // 	}
-    std::vector<double> Res_ctrl (nDof_ctrl); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
+    //std::vector<double> Res_ctrl (nDof_ctrl); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
     for (unsigned i = 0; i < sol_ctrl.size(); i++){
        unsigned n_els_that_node = 1;
      if ( control_el_flag == 1) {
 	Res[nDof_u + i] += - ( + n_els_that_node * ineq_flag * sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
 // 	Res_ctrl[i] =  Res[nDof_u + i];
       }
-    }
+    }//------------------------------->>>>>>
     
 //     std::vector<double> Res_u (nDof_u); std::fill(Res_u.begin(),Res_u.end(), 0.);
 //     for (unsigned i = 0; i < sol_u.size(); i++){
@@ -756,7 +774,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
   
  //============= delta_ctrl-delta_mu row ===============================
- KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, ineq_flag * 1.);
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, ineq_flag * 1.);//------------------------------->>>>>>
   
  //============= delta_mu-delta_ctrl row ===============================
  for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
@@ -777,7 +795,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   RES->print();
   
   // ***************** END ASSEMBLY *******************
-
+  std::vector<double> Vec_I (l2GMap_ctrl.size()); std::fill(Vec_I.begin(),Vec_I.end(), ineq_flag * 1.);
+//   for (unsigned i = 0; i < l2GMap_ctrl.size(); i++) {
+    RES->add_vector_blocked(Vec_I, l2GMap_ctrl);
   return;
 }
 
