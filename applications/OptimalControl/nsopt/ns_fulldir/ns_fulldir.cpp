@@ -430,7 +430,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 // #endif
 
         for (unsigned  k = 0; k < dim; k++) {
-          aResV[k][i] += ( - force[k] * phiV[i] + NSV[k] ) * weight;
+          aResV[k][i] += ( + NSV[k] - force[k] * phiV[i]  ) * weight;
         }
       } // end phiV_i loop
 
