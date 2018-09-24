@@ -34,6 +34,8 @@ double k_h = 1 / ( 10 * pi );
 
 const unsigned NumberOfLayers = 20;
 
+bool twostage = false;
+
 //const double hRest[10]={1,1,1,1,1,1,1,1,1,1};
 //const double hRest[10]={2,2,2,2,2,2,2,2,2,2};
 //const double hRest[20] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
@@ -221,7 +223,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 }
 
 
-void ETD2 ( MultiLevelProblem& ml_prob );
+void ETDRosenbrock ( MultiLevelProblem& ml_prob );
 
 void RK4 ( MultiLevelProblem& ml_prob );
 
@@ -345,7 +347,7 @@ int main ( int argc, char** args ) {
 //     dt = 60.;
 //     ETD ( ml_prob );
 //     dt = 60.;
-    ETD2 ( ml_prob );
+    ETDRosenbrock ( ml_prob );
     //RK4 ( ml_prob );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
@@ -353,7 +355,7 @@ int main ( int argc, char** args ) {
 }
 
 
-void ETD2 ( MultiLevelProblem& ml_prob ) {
+void ETDRosenbrock ( MultiLevelProblem& ml_prob ) {
 
   const unsigned& NLayers = NumberOfLayers;
 
@@ -373,6 +375,7 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
 
   SparseMatrix* KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
   NumericVector* RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  NumericVector* RES2 = pdeSys->_RES;
   NumericVector* EPS = pdeSys->_EPS; // pointer to the global residual vector object in pdeSys (level)
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
@@ -781,8 +784,282 @@ void ETD2 ( MultiLevelProblem& ml_prob ) {
   MFNSolve ( mfn, v, y );
   MFNDestroy ( &mfn );
 
+  Vec HTOld = ( static_cast< PetscVector* > ( sol->_Sol[solIndexHT[0]] ) )->vec() ; //TODO
+
   sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
 
+  if ( twostage == true ) {
+    
+    Vec HTNew = ( static_cast< PetscVector* > ( sol->_Sol[solIndexHT[0]] ) )->vec() ; //TODO
+
+    for ( unsigned i =  start; i <  end; i++ ) {
+
+      vector < double > solhm ( NLayers );
+      vector < double > solh ( NLayers ); // local coordinates
+      vector < double > solhp ( NLayers );
+      vector < double > solvm ( NLayers ); // local coordinates
+      vector < double > solvp ( NLayers ); // local coordinates
+      vector < adept::adouble > solHTm ( NLayers ); // local coordinates
+      vector < adept::adouble > solHT ( NLayers ); // local coordinates
+      vector < adept::adouble > solHTp ( NLayers ); // local coordinates
+
+      vector < adept::adouble > solHTmm ( NLayers ); // local coordinates
+      vector < adept::adouble > solHTpp ( NLayers ); // local coordinates
+
+      //vector< adept::adouble > aResh ( NLayers );
+      //vector< adept::adouble > aResv ( NLayers );
+      vector< adept::adouble > aResHT ( NLayers );
+
+      unsigned bc1 = ( i == start ) ? 0 : 1;
+      unsigned bc2 = ( i == end - 1 ) ? 0 : 1;
+
+      unsigned bc3 = ( i > start + 1 ) ? 1 : 0;
+      unsigned bc4 = ( i < end - 2 ) ? 1 : 0;
+
+      l2GMapRow.resize ( NLayers );
+      l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
+      //l2GMapColumn.resize ( ( 1 + bc1 + bc2 + bc3 + bc4) * NLayers );
+
+      //std::fill ( aResh.begin(), aResh.end(), 0 ); //set aRes to zero
+      std::fill ( aResHT.begin(), aResHT.end(), 0 ); //set aRes to zero
+
+      for ( unsigned j = 0; j < NLayers; j++ ) {
+
+        solh[j] = ( *sol->_Sol[solIndexh[j]] ) ( i );
+        solHT[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i );
+        //l2GMapRow[j] = pdeSys->GetSystemDof ( solIndexh[j], solPdeIndexh[j], 0, i );
+        l2GMapRow[/*NLayers +*/ j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i );
+
+        //l2GMapColumn[j] = pdeSys->GetSystemDof ( solIndexh[j], solPdeIndexh[j], 0, i );
+        l2GMapColumn[/*NLayers +*/ j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i );
+
+        solvm[j] = ( *sol->_Sol[solIndexv[j]] ) ( i );
+        solvp[j] = ( *sol->_Sol[solIndexv[j]] ) ( i + 1 );
+
+        //l2GMapColumn[2 * NLayers + j] = pdeSys->GetSystemDof ( solIndexv[j], solPdeIndexv[j], 0, i );
+        //l2GMapColumn[3 * NLayers + j] = pdeSys->GetSystemDof ( solIndexv[j], solPdeIndexv[j], 1, i );
+
+        if ( i > start ) {
+          solhm[j] = ( *sol->_Sol[solIndexh[j]] ) ( i - 1 );
+          solHTm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 1 );
+
+          //l2GMapColumn[4 * NLayers + j] = pdeSys->GetSystemDof ( solIndexh[j], solPdeIndexh[j], 0, i - 1 );
+          l2GMapColumn[NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 1 );
+
+        }
+
+        if ( i < end - 1 ) {
+          solhp[j] = ( *sol->_Sol[solIndexh[j]] ) ( i + 1 );
+          solHTp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 1 );
+
+          //l2GMapColumn[ ( 4 + 2 * bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexh[j], solPdeIndexh[j], 0, i + 1 );
+          l2GMapColumn[ ( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 1 );
+        }
+
+//       if ( i > start + 1 ) {
+//         solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
+//         if (i == end - 1) l2GMapColumn[( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+//         else l2GMapColumn[( (1 + bc1) + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+//       }
+//
+//       if ( i < end - 2 ) {
+//         solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
+//         l2GMapColumn[( (1 + bc1) + bc3 + bc4 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
+//       }
+
+      }
+
+      s.new_recording();
+
+      vector < double > x ( 2 ); // local coordinates
+      for ( unsigned j = 0; j < 2; j++ ) {
+        unsigned xDof  = msh->GetSolutionDof ( j, i, 2 ); // global to global mapping between coordinates node and coordinate dof
+        x[j] = ( *msh->_topology->_Sol[0] ) ( xDof ); // global extraction and local storage for the element coordinates
+      }
+      double dx = x[1] - x[0];
+
+      double b = 10.; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
+
+      double hTot = 0.;
+      for ( unsigned k = 0; k < NLayers; k++ ) {
+        hTot += solh[k]/*.value()*/;
+      }
+
+      std::vector < double > hALE ( NLayers, 0. );
+
+      hALE[0] = hRest[0] + ( hTot - b );
+      for ( unsigned k = 1; k < NLayers; k++ ) {
+        hALE[k] = hRest[k];
+      }
+
+      std::vector < double > w ( NLayers + 1, 0. );
+      w[0] = 1.;
+
+//     NEW w
+//     for ( unsigned k = NLayers; k > 1; k-- ) {
+//       w[k - 1] = w[k] - ( hALE[k - 1] - solh[k - 1]) / dt;
+//       if(bc2){
+//         w[k - 1] -=   0.5 * ( solh[k - 1] + solhp[k - 1] ) * solvp[k - 1] /dx;
+//       }
+//       else{
+//         w[k - 1] -=   solh[k - 1] * 1 /dx;
+//       }
+//       if(bc1){
+//         w[k - 1] +=   0.5 * ( solh[k - 1] + solhm[k - 1] ) * solvm[k - 1] /dx;
+//       }
+//       else{
+//         w[k - 1] +=   solh[k - 1] * 1 /dx;
+//       }
+//       //std::cout<< w[k-1] << " ";
+//     }
+//     //std::cout<<std::endl;
+
+//     OLD w
+//     for(unsigned k = 1; k < NLayers; k++){
+//       w[k] = w[k-1] + (  0.5 * ( solh[k-1].value() + solhp[k-1].value() ) * solvp[k-1].value()
+// 		       - 0.5 * ( solh[k-1].value() + solhm[k-1].value() ) * solvm[k-1].value() )/dx
+// 		    + ( hALE[k-1] - solh[k-1].value()) / dt;//TODO
+// 		    //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<w[k-1]<<std::endl;
+//     }
+
+      std::vector < double > zMid ( NLayers );
+      for ( unsigned k = 0; k < NLayers; k++ ) {
+        zMid[k] = -b + solh[k] / 2.;
+        for ( unsigned i = k + 1; i < NLayers; i++ ) {
+          zMid[k] += solh[i];
+        }
+      }
+
+      std::vector < double > psi2 ( NLayers );
+      for ( unsigned k = 0; k < NLayers; k++ ) {
+        psi2[k] = ( ( zMid[k] + 10 ) * zMid[k] ) * ( ( zMid[k] + 10 ) * zMid[k] ) / ( 25 * 25 );
+        //psi2[k] = (zMid[k] + 10.)*zMid[k]/(5*5);
+      }
+
+      for ( unsigned k = NLayers; k > 1; k-- ) {
+        //w[k-1] = - (10 - 2*x[0])/(5*5)*psi2[k];
+        w[k - 1] = 1.;
+        if ( maxW[k - 1] < w[k - 1] ) {
+          maxW[k - 1] = w[k - 1];
+        }
+      }
+
+
+      for ( unsigned k = 0; k < NLayers; k++ ) {
+
+        //BEGIN FIRST ORDER
+        if ( i > start ) {
+          //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
+          if ( solvm[k] > 0 ) {
+            aResHT[k] += solHTm[k].value() * solvm[k] / dx;
+          }
+          else {
+            aResHT[k] += solHT[k].value() * solvm[k] / dx;
+          }
+        }
+        if ( i < end - 1 ) {
+          //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
+          if ( solvp[k] > 0 ) {
+            aResHT[k] -= solHT[k].value() * solvp[k] / dx; //first order upwind
+          }
+          else {
+            aResHT[k] -= solHTp[k].value() * solvp[k] / dx; //first order upwind
+          }
+        }
+//       else{
+//         aResHT[k] -= solHT[k] /*.value()*/  / dx; //first order upwind
+//       }
+        //END
+
+        //BEGIN THIRD ORDER
+//       if ( i > start ) {
+//         aResHT[k] += 0.5 * ( solHTm[k].value() + solHT[k].value() ) * solvm[k] / dx;
+//         if ( solvm[k] > 0 ) {
+//           if ( i > start + 1 ) {
+//             aResHT[k] += - 1. / 6. * ( solHT[k].value() - 2.*solHTm[k].value() + solHTmm[k].value() ) * solvm[k]  / dx;
+//           }
+//         }
+//         else {
+//           if ( i < end - 1 ) {
+//             aResHT[k] += - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvm[k]  / dx;
+//           }
+//         }
+//       }
+//       if ( i < end - 1 ) {
+//         aResHT[k] -= 0.5 * ( solHTp[k].value() + solHT[k].value() ) * solvp[k] / dx;
+//         if ( solvp[k] > 0 ) {
+//           if (i > start) {
+//             aResHT[k] -= - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvp[k]  / dx;
+//           }
+//         }
+//         else {
+//           if ( i < end - 2 ) {
+//             aResHT[k] -= - 1. / 6. * ( solHTpp[k].value() - 2.*solHTp[k].value() + solHT[k].value() ) * solvp[k]  / dx;
+//           }
+//         }
+//       }
+        //END
+
+        if ( k < NLayers - 1 ) {
+          //aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k] + solHT[k + 1]/ solh[k + 1] );
+          aResHT[k] += w[k + 1] * ( solHT[k + 1] / solh[k + 1] );
+        }
+        if ( k >= 0 ) {
+          //aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1]/ solh[k - 1] + solHT[k] / solh[k] );
+          aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
+        }
+
+        adept::adouble deltaZt = 0.;
+        adept::adouble deltaZb = 0.;
+        adept::adouble ht = 0.;
+        adept::adouble hb = 0.;
+        if ( k > 0 ) {
+          ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+          deltaZt = ( solHT[k - 1] - solHT[k] ) / ht;
+          //aResv[k] -= 0.5 * w[k] * deltaZt;
+        }
+        else {
+          ht = 0.5 * ( solhm[k] + solhp[k] );
+          deltaZt = 0.* ( 0. - solHT[k] ) / ht;
+        }
+        if ( k < NLayers - 1 ) {
+          hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+          deltaZb = ( solHT[k] - solHT[k + 1] ) / hb;
+          //aResv[k] -= 0.5 * w[k+1] * deltaZb;
+        }
+        else {
+          hb = 0.5 * ( solhm[k] + solhp[k] );
+          deltaZb = 0.* ( solHT[k] - 0. ) / hb;
+        }
+
+        //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAA"<<deltaZt - deltaZb<<std::endl;
+
+//       aResHT[k] += solhm[k] * k_v * (deltaZt - deltaZb) / ( (ht + hb) / 2. ); // vertical diffusion
+//
+//       //aResHT[k] += ((solhp[k] - solhm[k]) * k_v * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
+//       aResHT[k] += k_h * solh[k] * (solHTm[k] - solHT[k])/(dx*dx); // horizontal diffusion
+//       aResHT[k] += k_h * solh[k] * (solHTp[k] - solHT[k])/(dx*dx); // horizontal diffusion
+
+      }
+
+      vector< double > Res ( NLayers ); // local redidual vector
+      for ( unsigned k = 0; k < NLayers; k++ ) {
+        //Res[k] =  aResh[k].value();
+        Res[k] =  aResHT[k].value();
+        //std::cout<< "Res["<<k<<"] = " << Res[k] <<std::endl;
+        //std::cout<< "Res["<<NLayers+k<<"] = " << Res[NLayers+k] <<std::endl;
+      }
+
+      RES2->add_vector_blocked ( Res, l2GMapRow );
+      
+    }
+    
+    //come Konstantin fa su Matlab: R2 = F(U2) - fn - An*(U2 - u);
+    //noi dobbiamo fare: R2 = RES2 - RES - KK*(HTNew - HTOLd);
+
+  }
+
+  //PARAVIEW
   unsigned solIndexeta = mlSol->GetIndex ( "eta" );
   unsigned solIndexb = mlSol->GetIndex ( "b" );
   sol->_Sol[solIndexeta]->zero();
@@ -1181,7 +1458,7 @@ void RK4 ( MultiLevelProblem& ml_prob ) {
       }
 
     }
-    
+
     for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
       double valueHT = solHT[k] + 1. / 6. * ( k1_RK[k] + 2.*k2_RK[k] + 2.*k3_RK[k] + k4_RK[k] );
       sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
