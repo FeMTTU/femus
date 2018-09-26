@@ -101,7 +101,7 @@ int main(int argc, char** args) {
       MultiLevelProblem mlProb(&mlSol); //
 
       // add system Poisson in mlProb as a Non Linear Implicit System
-      NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Poisson");
+      NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NonLinearPoisson");
 
       // add solution "u" to system
       system.AddSolutionToSystemPDE("u");
@@ -235,7 +235,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("NonLinearPoisson");   // pointer to the linear implicit system named "Poisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble(); // We have different level of meshes. we assemble the problem on the specified one.
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
