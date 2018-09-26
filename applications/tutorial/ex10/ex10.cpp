@@ -29,14 +29,13 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char solName[],
     dirichlet = false;
     double u = GetExactSolutionValue(x);
     vector < double > solGrad;
-    GetExactSolutionGradient(x, solGrad);       
-    value = -(1+u*u) * solGrad[0]; 
+    GetExactSolutionGradient(x, solGrad);// This is gonna return "solGrad" with input "x". Carefully note that this "x" must be the coordinates of the nodes related to face=1 where x = (-1,y).
+    value = -(1.+u*u) * solGrad[0]; // a(u)*u_x
   }
 
   return dirichlet;
 }
 
-void AssemblePoissonProblem(MultiLevelProblem& ml_prob);
 
 void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob);
 
@@ -47,19 +46,19 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  // define multilevel mesh
+  // define MultiLevel object "mlMsh". 
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   mlMsh.ReadCoarseMesh("./input/square_quad.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/cube_tet.neu", "seventh", scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-    probably in furure it is not going to be an argument of this function   */
-  unsigned dim = mlMsh.GetDimension();
-  unsigned maxNumberOfMeshes;
+    probably in future it is not going to be an argument of this function   */
+  unsigned dim = mlMsh.GetDimension(); // Domain dimension of the problem.
+  unsigned maxNumberOfMeshes; // The number of mesh levels.
 
   if (dim == 2) {
-    maxNumberOfMeshes = 7;
+    maxNumberOfMeshes = 7; 
   } else {
     maxNumberOfMeshes = 4;
   }
@@ -72,26 +71,26 @@ int main(int argc, char** args) {
 
   for (unsigned i = 0; i < maxNumberOfMeshes; i++) {   // loop on the mesh level
 
-    unsigned numberOfUniformLevels = i + 1;
-    unsigned numberOfSelectiveLevels = 0;
+    unsigned numberOfUniformLevels = i + 1; //We apply uniform refinement.
+    unsigned numberOfSelectiveLevels = 0; // We may want to see the solution on some levels.
     mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
     // erase all the coarse mesh levels
-    mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+    mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1); // We check the solution on the finest mesh.
 
     // print mesh info
     mlMsh.PrintInfo();
 
     FEOrder feOrder[3] = {FIRST, SERENDIPITY, SECOND};
-    l2Norm[i].resize(3);
+    l2Norm[i].resize(3); // This will resize l2norm as to be 3xm matrix.
     semiNorm[i].resize(3);
 
     for (unsigned j = 0; j < 3; j++) {   // loop on the FE Order
       // define the multilevel solution and attach the mlMsh object to it
-      MultiLevelSolution mlSol(&mlMsh);
+      MultiLevelSolution mlSol(&mlMsh); // Here we provide the mesh info to the problem.
 
       // add variables to mlSol
-      mlSol.AddSolution("u", LAGRANGE, feOrder[j]);
+      mlSol.AddSolution("u", LAGRANGE, feOrder[j]); // We may have more than one, add each of them as u,v,w with their apprx type.
       mlSol.Initialize("All");
 
       // attach the boundary condition function and generate boundary data
@@ -99,9 +98,9 @@ int main(int argc, char** args) {
       mlSol.GenerateBdc("u");
 
       // define the multilevel problem attach the mlSol object to it
-      MultiLevelProblem mlProb(&mlSol);
+      MultiLevelProblem mlProb(&mlSol); //
 
-      // add system Poisson in mlProb as a Linear Implicit System
+      // add system Poisson in mlProb as a Non Linear Implicit System
       NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("Poisson");
 
       // add solution "u" to system
@@ -193,12 +192,11 @@ int main(int argc, char** args) {
 double GetExactSolutionValue(const std::vector < double >& x) {
   double pi = acos(-1.);
   return sin(pi * x[0]) * cos(0.5 * pi * x[1]); // u(x,y)=sin(pi*x)cos(pi/2*y)
-  //return cos(pi * x[0]) * cos(pi * x[1]);
 };
 
 void GetExactSolutionGradient(const std::vector < double >& x, vector < double >& solGrad) {
   solGrad.resize(2);  
-  double pi = acos(-1.);
+  const double pi = acos(-1.);
   solGrad[0] =   pi*cos(pi*x[0])*cos(0.5*pi*x[1]);
   solGrad[1] =  -0.5 * sin(pi*x[0])*pi*sin(0.5*pi*x[1]);
   //solGrad[0]  = -pi * sin(pi * x[0]) * cos(pi * x[1]);
@@ -207,9 +205,8 @@ void GetExactSolutionGradient(const std::vector < double >& x, vector < double >
 
 double GetExactSolutionLaplace(const std::vector < double >& x) {
   double pi = acos(-1.);
-  //return -pi * pi * cos(pi * x[0]) * cos(pi * x[1]) - pi * pi * cos(pi * x[0]) * cos(pi * x[1]);
   return (1./4.)*pi*pi*sin(pi*x[0])*cos((1./2.)*pi*x[1])*(15.*cos((1./2.)*pi*x[1])*cos((1./2.)*pi*x[1])*cos(pi*x[0])*cos(pi*x[0])
-  -2.*cos(pi*x[0])*cos(pi*x[0])-7.*cos((1./2.)*pi*x[1])*cos((1./2.)*pi*x[1])-3.);
+  -2.*cos(pi*x[0])*cos(pi*x[0])-7.*cos((1./2.)*pi*x[1])*cos((1./2.)*pi*x[1])-3.); // This is the source term f which must be provided as part of the pde.
 };
 
 
@@ -239,7 +236,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   //  extract pointers to the several objects that we are going to use
 
   NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("Poisson");   // pointer to the linear implicit system named "Poisson"
-  const unsigned level = mlPdeSys->GetLevelToAssemble();
+  const unsigned level = mlPdeSys->GetLevelToAssemble(); // We have different level of meshes. we assemble the problem on the specified one.
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*                     el = msh->el;  // pointer to the elem object in msh (level)
@@ -253,7 +250,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
   unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
-  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
+  const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim))); // Return a value of unsigned // conservative: based on line3, quad9, hex27
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
 
@@ -268,11 +265,11 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   vector < adept::adouble >  solu; // local solution
   solu.reserve(maxSize);
 
-  vector < vector < double > > x(dim);    // local coordinates
+  vector < vector < double > > x(dim);    // local coordinates. x is now dim x m matrix.
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
-  for (unsigned k = 0; k < dim; k++) {
-    x[k].reserve(maxSize);
+  for (unsigned k = 0; k < dim; k++) { 
+    x[k].reserve(maxSize); // dim x maxsize is reserved for x.  
   }
 
   vector <double> phi;  // local test function
@@ -280,7 +277,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   
   double weight; // gauss point weight
   phi.reserve(maxSize);
-  phi_x.reserve(maxSize * dim);
+  phi_x.reserve(maxSize * dim); // This is probably gradient but he is doing the life difficult for me!
   
   vector< adept::adouble > aRes; // local redidual vector
   aRes.reserve(maxSize);
@@ -296,6 +293,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   RES->zero(); // Set to zero all the entries of the Global Residual
 
   // element loop: each process loops only on the elements that owns
+  // Adventure starts here!
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
      
     short unsigned ielGeom = msh->GetElementType(iel);
@@ -307,7 +305,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     solu.resize(nDofu);
 
     for (int k = 0; k < dim; k++) {
-      x[k].resize(nDofx);
+      x[k].resize(nDofx); // Now we 
     }
 
     aRes.resize(nDofu);    //resize
