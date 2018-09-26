@@ -1,7 +1,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "LinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
 #include "../elliptic_param.hpp"
@@ -45,8 +45,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   }
   
   if(!strcmp(name,"mu")) {
-      value = 0.;
-  if (faceName == 3)
+//       value = 0.;
+//   if (faceName == 3)
     dirichlet = false;
   }
   
@@ -116,7 +116,7 @@ int main(int argc, char** args) {
   mlProb.SetFilesHandler(&files);
 
  // add system  in mlProb as a Linear Implicit System
-  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("LiftRestr");
+  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
 
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
@@ -129,8 +129,8 @@ int main(int argc, char** args) {
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
   
-//   system.SetDebuglinear(true);
-//   system.SetMaxNumberOfNonLinearIterations(4);
+  system.SetDebugNonlinear(true);//   system.SetDebuglinear(true);
+  system.SetMaxNumberOfNonLinearIterations(3);
 
   // initilaize and solve the system
   system.init();
@@ -151,7 +151,7 @@ int main(int argc, char** args) {
 
 void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
-  unsigned int ineq_flag = 0;
+  unsigned int ineq_flag = 1;
   //  ml_prob is the global object from/to where get/set all the data
 
   //  level is the level of the PDE system to be assembled
@@ -160,7 +160,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -616,7 +616,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
               if ( i < nDof_ctrl   && j < nDof_ctrl   )
 		Jac[ (nDof_u + i) * nDof_AllVars +
 		     (nDof_u + j)                       ]  += ( control_node_flag[i]) * weight * ( beta * control_el_flag  * laplace_mat_dctrl_ctrl 
-		                                           + alpha * control_el_flag * phi_ctrl[i] * phi_ctrl[j] + target_flag  * phi_ctrl[i] * phi_ctrl[j] );
+		                                                                                + alpha * control_el_flag * phi_ctrl[i] * phi_ctrl[j] 
+		                                                                                            + target_flag * phi_ctrl[i] * phi_ctrl[j] );
               
 	      //BLOCK delta_control - adjoint
               if ( i < nDof_ctrl   && j < nDof_adj  ) 
@@ -791,7 +792,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
-  KK->print();
+ std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->_nonliniteration  << ".txt";
+  KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
   
   // ***************** END ASSEMBLY *******************
   unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
@@ -813,7 +815,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
   
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
