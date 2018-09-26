@@ -4,7 +4,7 @@
 int main(int argc, char** args) {
 
 
-  std::cout<<"Hello Erdi"<<std::endl;
+  std::cout<<"Hello Erdi, why is this time consuming?"<<std::endl;
 
   return 0;
 }
