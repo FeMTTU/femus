@@ -4,8 +4,8 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  2
-#define NSUB_Y  2
+#define NSUB_X  32
+#define NSUB_Y  32
 
 //******************************************* Desired Target  and RHS function*******************************************************
 
@@ -15,13 +15,13 @@
 //*********************** Sets the regularization parameters *******************************************************
 
  double alpha_val = 1.;
- double beta_val = 1.;
- double gamma_val = 1.;
+ double beta_val = 1.e-3;
+ double gamma_val = 1.e-3;
  
  
 //******************************** switch between stokes and navier stokes *********************************************
  
- int advection_flag = 0;
+ int advection_flag = 1;
  
 //*********************** Find volume elements that contain a  Target domain element ********************************
 
