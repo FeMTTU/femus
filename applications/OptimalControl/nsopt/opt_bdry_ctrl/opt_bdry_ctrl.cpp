@@ -1017,10 +1017,15 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   
   JAC->close();
   RES->close();
-//   if(mlPdeSys._nonliniteration == 0 || mlPdeSys._nonliniteration == 1){
-//     std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
-//   JAC->print_matlab(mat_out.str(),"ascii");
-//   }
+  if(mlPdeSys._nonliniteration == 0 || mlPdeSys._nonliniteration == 1){
+    std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
+  JAC->print_matlab(mat_out.str(),"ascii");
+    std::ostringstream res_out; res_out << "res_non_ad_" << mlPdeSys._nonliniteration  << ".txt";
+    std::filebuf res_fb;
+   res_fb.open (res_out.str().c_str(),std::ios::out);
+    std::ostream  res_file_stream(&res_fb);
+  RES->print(res_file_stream);
+ }
  
 //   JAC->print();
 //   RES->print();
