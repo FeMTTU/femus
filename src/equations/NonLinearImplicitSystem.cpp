@@ -28,8 +28,9 @@ namespace femus {
       const std::string& name_in,
       const unsigned int number_in, const MgSmoother& smoother_type ) :
     LinearImplicitSystem( ml_probl, name_in, number_in, smoother_type ),
-    _n_max_nonlinear_iterations( 15 ),
+    _debug_nonlinear(false),
     _final_nonlinear_residual( 1.e20 ),
+    _n_max_nonlinear_iterations( 15 ),
     _max_nonlinear_convergence_tolerance( 1.e-6 ),
     _maxNumberOfResidualUpdateIterations( 1 )
   {
@@ -54,6 +55,7 @@ namespace femus {
   bool NonLinearImplicitSystem::IsNonLinearConverged( const unsigned igridn, double &nonLinearEps ) {
     bool conv = true;
     double L2normEps, L2normSol, L2normEpsDividedSol;
+    double L2normRes;
 
     nonLinearEps = 0.;
     const double absMinNonlinearEps = 1.e-50;
@@ -62,16 +64,18 @@ namespace femus {
 
     for( unsigned k = 0; k < _SolSystemPdeIndex.size(); k++ ) {
       unsigned indexSol = _SolSystemPdeIndex[k];
+      L2normRes    = _solution[igridn]->_Res[indexSol]->l2_norm();
       L2normEps    = _solution[igridn]->_Eps[indexSol]->l2_norm();
       L2normSol    = _solution[igridn]->_Sol[indexSol]->l2_norm();
       L2normEpsDividedSol = L2normEps/(L2normSol+mindeltaNormSol);
 
       std::cout << "     ********* Level Max " << igridn + 1 << " Nonlinear Eps_l2norm/Sol_l2norm " << \
         std::scientific << _ml_sol->GetSolutionName( indexSol ) << "= " << L2normEpsDividedSol << \
-        "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol << std::endl;
+        "  ** Eps_l2norm= " << L2normEps << "  ** Sol_l2norm= " << L2normSol <<"  ** Res_l2norm= " << L2normRes << std::endl;
       nonLinearEps = ( nonLinearEps > L2normEpsDividedSol ) ? nonLinearEps : L2normEpsDividedSol;
+// _solution[igridn]->_Sol[indexSol]->print();
 
-      if( (L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol) && conv == true ) {
+      if( (/*L2normRes < _max_nonlinear_convergence_tolerance || */L2normEpsDividedSol < _max_nonlinear_convergence_tolerance || L2normEps < absMinNonlinearEps || L2normSol < absMinNormSol) && conv == true ) {
         conv = true;
       }
       else {
@@ -118,7 +122,7 @@ namespace femus {
       if( ThisIsAMR ) _solution[igridn - 1]->InitAMREps();
 
       for( unsigned nonLinearIterator = 0; nonLinearIterator < _n_max_nonlinear_iterations; nonLinearIterator++ ) {
-
+_nonliniteration = nonLinearIterator;
         std::cout << std::endl << "   ********* Nonlinear iteration " << nonLinearIterator + 1 << " *********" << std::endl;
 
         clock_t start_assembly_time = clock();
@@ -191,7 +195,19 @@ namespace femus {
 
         std::cout << "     ********* Linear Cycle + Residual Update-Cycle TIME:\t" << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
         << static_cast<double>( ( clock() - startUpdateResidualTime ) ) / CLOCKS_PER_SEC << std::endl;
-
+	
+    if (_debug_nonlinear)  {
+       std::vector < std::string > variablesToBePrinted;
+       variablesToBePrinted.push_back("All");
+       std::ostringstream output_file_name_stream; output_file_name_stream << "biquadratic" << "." << std::setfill('0') << std::setw(2)   << nonLinearIterator; // the "." after biquadratic is needed to see the sequence of files in Paraview as "time steps"
+        if (this->GetMLProb().GetFilesHandler() != NULL) {
+           this->GetMLProb()._ml_sol->GetWriter()->Write(this->GetMLProb().GetFilesHandler()->GetOutputPath(),output_file_name_stream.str().c_str(),variablesToBePrinted);
+	  }
+	else {
+           this->GetMLProb()._ml_sol->GetWriter()->Write(DEFAULT_OUTPUTDIR,output_file_name_stream.str().c_str(),variablesToBePrinted);
+	}
+    }
+	
         if( nonLinearIsConverged ) break;
 
       }
@@ -208,7 +224,9 @@ namespace femus {
 
     std::cout << std::endl << "   *** Nonlinear " << _solverType << " TIME: " << std::setw( 11 ) << std::setprecision( 6 ) << std::fixed
               << static_cast<double>( ( clock() - start_mg_time ) ) / CLOCKS_PER_SEC << std::endl;
-
+	      
+    
+    
   }
 
 

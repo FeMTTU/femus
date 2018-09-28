@@ -37,6 +37,16 @@ namespace femus {
 //   Constructor
   elem_type::elem_type(const char* geom_elem, const char* order_gauss) : _gauss(geom_elem, order_gauss) {
     isMpGDAllocated = false;
+    
+      if ( !strcmp(geom_elem, "quad") /*&&  strcmp(geom_elem, "line")*/ ) { //QUAD
+           _gauss_bdry = new  Gauss("line",order_gauss);
+       }
+//       else {
+//         cout << " Boundary gauss points for " << geom_elem << " is not implemented yet" << endl;
+//         abort();
+//       }
+    
+    
   }
 
 
@@ -692,6 +702,24 @@ namespace femus {
       _d2phidxideta[i]  = &_d2phidxideta_memory[i * _nc];
 
     }
+    
+    // boundary 
+    int n_gauss_bdry = _gauss_bdry->GetGaussPointsNumber();
+    
+    _phi_bdry = new double*[n_gauss_bdry];
+    _dphidxi_bdry  = new double*[n_gauss_bdry];
+    _dphideta_bdry = new double*[n_gauss_bdry];
+    _phi_memory_bdry = new double [n_gauss_bdry * _nc];
+    _dphidxi_memory_bdry  = new double [n_gauss_bdry * _nc];
+    _dphideta_memory_bdry = new double [n_gauss_bdry * _nc];
+    
+     for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      _phi_bdry[i] = &_phi_memory_bdry[i * _nc];
+      _dphidxi_bdry[i]  = &_dphidxi_memory_bdry[i * _nc];
+      _dphideta_bdry[i] = &_dphideta_memory_bdry[i * _nc];
+     }
+
+
 
     const double* ptx[2] = {_gauss.GetGaussWeightsPointer() + n_gauss, _gauss.GetGaussWeightsPointer() + 2 * n_gauss};
     for (unsigned i = 0; i < n_gauss; i++) {
@@ -710,6 +738,23 @@ namespace femus {
       }
     }
 
+    // boundary 
+    const double* ptx_bdry[1] = {_gauss_bdry->GetGaussWeightsPointer() + 1*n_gauss_bdry};
+    
+    for (unsigned i = 0; i < n_gauss_bdry; i++) {
+      double x_bdry[1];
+      for (unsigned j = 0; j < 1; j++) {
+        x_bdry[j] = *ptx_bdry[j];
+        ptx_bdry[j]++;
+      }
+      for (int j = 0; j < _nc; j++) {
+        _phi_bdry[i][j]      = _pt_basis->eval_phi(_IND[j], x_bdry);
+        _dphidxi_bdry[i][j]  = _pt_basis->eval_dphidx(_IND[j], x_bdry);
+        _dphideta_bdry[i][j] = _pt_basis->eval_dphidy(_IND[j], x_bdry);
+      }
+      
+    }
+    
 //=====================
     EvaluateShapeAtQP(geom_elem, order);
 
@@ -1106,6 +1151,46 @@ namespace femus {
   }
 
 
+//---------------------------------------------------------------------------------------------------------
+
+  void elem_type_2D::ShapeAtBoundary(const vector < vector < double > >& vt_vol, const unsigned& ig, 
+                                   vector < double >& phi, vector < double >& gradphi) const {
+
+    phi.resize(_nc);
+    gradphi.resize(_nc * 2);
+
+    double Jac[2][2] = {{0, 0}, {0, 0}};
+    double JacInv[2][2];
+    const double* dxi = _dphidxi_bdry[ig];
+    const double* deta = _dphideta_bdry[ig];
+    for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
+      Jac[0][0] += (*dxi) * vt_vol[0][inode];
+      Jac[0][1] += (*dxi) * vt_vol[1][inode];
+      Jac[1][0] += (*deta) * vt_vol[0][inode];
+      Jac[1][1] += (*deta) * vt_vol[1][inode];
+    }
+    double det = (Jac[0][0] * Jac[1][1] - Jac[0][1] * Jac[1][0]);
+
+    JacInv[0][0] = Jac[1][1] / det;
+    JacInv[0][1] = -Jac[0][1] / det;
+    JacInv[1][0] = -Jac[1][0] / det;
+    JacInv[1][1] = Jac[0][0] / det;
+
+    dxi  = _dphidxi_bdry[ig];
+    deta = _dphideta_bdry[ig];
+
+    for (int inode = 0; inode < _nc; inode++, dxi++, deta++) {
+
+      phi[inode] = _phi_bdry[ig][inode];
+
+      gradphi[2 * inode + 0] = (*dxi) * JacInv[0][0] + (*deta) * JacInv[0][1];
+      gradphi[2 * inode + 1] = (*dxi) * JacInv[1][0] + (*deta) * JacInv[1][1];
+
+    }
+    
+  }
+  
+  
 //---------------------------------------------------------------------------------------------------------
   template <class type>
   void elem_type_3D::Jacobian_type(const vector < vector < type > >& vt, const unsigned& ig, type& Weight,

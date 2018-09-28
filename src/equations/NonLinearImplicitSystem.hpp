@@ -64,6 +64,11 @@ public:
         return _final_nonlinear_residual;
     }
 
+    /** Flag to print fields to file after each nonlinear iteration */
+    void SetDebugNonlinear(const bool my_value) {
+        _debug_nonlinear = my_value;
+    };
+    
     /** Set the max number of non-linear iterations for the nonlinear system solve. */
     void SetMaxNumberOfNonLinearIterations(unsigned int max_nonlin_it) {
         _n_max_nonlinear_iterations = max_nonlin_it;
@@ -84,8 +89,13 @@ public:
     void SetResidualUpdateConvergenceTolerance(const double & tolerance){
       _linearAbsoluteConvergenceTolerance = tolerance;
     }
+    
+    unsigned _nonliniteration;
 
 protected:
+
+    /** Flag for printing fields at each nonlinear iteration */
+    bool _debug_nonlinear;
 
     /** The final residual for the nonlinear system R(x) */
     double _final_nonlinear_residual;
@@ -97,6 +107,7 @@ protected:
     double _max_nonlinear_convergence_tolerance;
 
     unsigned _maxNumberOfResidualUpdateIterations;
+    
 
     /** Solves the system. */
     virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
