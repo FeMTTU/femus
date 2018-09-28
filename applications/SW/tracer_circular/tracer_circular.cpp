@@ -339,14 +339,14 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 760; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 1. / 10.;
+  unsigned numberOfTimeSteps = 100; //17h=1020 with dt=60, 17h=10200 with dt=6
+  dt = 1.;
   //system.ResetComputationalTime();
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
-    //ETD ( ml_prob );
-    RK4 ( ml_prob );
+    ETD ( ml_prob );
+    //RK4 ( ml_prob );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
   //system.PrintComputationalTime();
@@ -1086,7 +1086,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
 
       double valueT = valueHT / valueH;
-      //if (i==10) std::cout<<"temperature "<<valueT<<std::endl;
+      if (i==10) std::cout<<"temperature "<<valueT<<std::endl;
       //if (i == 0) valueT = 0.;
       //if (i == msh->_dofOffset[solTypeHT][iproc + 1] - 1 ) valueT = 0.;
 
