@@ -120,7 +120,7 @@ int main(int argc, char** args) {
   Parameter parameter(Lref,Uref);
   
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,1,1,"Newtonian");
+  Fluid fluid(parameter,1,FLUID_DENSITY,"Newtonian");
   std::cout << "Fluid properties: " << std::endl;
   std::cout << fluid << std::endl;
   
@@ -219,8 +219,8 @@ int main(int argc, char** args) {
   
  
   system_opt.SetDebugNonlinear(true);
-  system_opt.SetMaxNumberOfNonLinearIterations(5);
-  system_opt.SetNonLinearConvergenceTolerance(1.e-15);
+//   system_opt.SetMaxNumberOfNonLinearIterations(5);
+  system_opt.SetNonLinearConvergenceTolerance(1.e-10);
   system_opt.SetDebugLinear(true);
   system_opt.SetMaxNumberOfLinearIterations(6);
   system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
