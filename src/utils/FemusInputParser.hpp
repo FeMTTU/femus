@@ -104,7 +104,7 @@ std::ifstream fin(filename.str().c_str());
   
   
   if (fin.is_open()) {
-  //if (fin != NULL) {
+      
     while (!fin.eof() && buf != cl_begin ) {
       fin >> buf;
       } 

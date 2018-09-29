@@ -307,7 +307,6 @@ namespace femus
   }
 
 
-
 //---------------------------------------------------------------------------------------------------
   unsigned MultiLevelSolution::GetIndex(const char name[]) const
   {
@@ -340,7 +339,8 @@ namespace femus
     }
 
     return _solType[index];
-  }
+  }  
+
 
 //---------------------------------------------------------------------------------------------------
   void MultiLevelSolution::AttachSetBoundaryConditionFunction(BoundaryFuncMLProb SetBoundaryConditionFunction_in)

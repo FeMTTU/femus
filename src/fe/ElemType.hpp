@@ -171,12 +171,20 @@ namespace femus
       void GetSparsityPatternSize(const Mesh& Mesh, const int& iel, NumericVector* NNZ_d, NumericVector* NNZ_o, const unsigned& itype) const;
 
       static const unsigned _fe_old_to_new[QL];
+ 
+      static const int _fe_new_to_old[NFE_FAMS];
+  
+      virtual void ShapeAtBoundary(const vector < vector < double > > &vt,const unsigned &ig, vector < double > &phi, vector < double > &gradphi) const {
+           std::cout << "Implemented only for quad4 now" << std::endl; abort(); 
+      };
 
+      
       basis* GetBasis() const {
         return _pt_basis;
       }
 
-    protected:
+
+   protected:
 
       // member data
       unsigned _dim; /*Spatial dimension of the geometric element*/
@@ -194,6 +202,7 @@ namespace femus
 
 //  Gauss
       const Gauss _gauss;
+            Gauss* _gauss_bdry;
 
       /**  @deprecated */
       bool isMpGDAllocated;
@@ -305,6 +314,7 @@ namespace femus
 
   };
 
+
   class elem_type_2D : public elem_type
   {
     public:
@@ -328,6 +338,13 @@ namespace femus
 
         delete [] _d2phidxideta;
         delete [] _d2phidxideta_memory;
+         
+        delete [] _phi_bdry;
+        delete [] _phi_memory_bdry;
+        delete [] _dphidxi_bdry;
+        delete [] _dphidxi_memory_bdry;
+        delete [] _dphideta_bdry;
+        delete [] _dphideta_memory_bdry;
 
       };
 
@@ -402,7 +419,9 @@ namespace femus
         return _dphideta[ig];
       }
 
-    private:
+  void ShapeAtBoundary(const vector < vector < double > >& vt_vol, const unsigned& ig, vector < double >& phi, vector < double >& gradphi) const;
+
+  private:
       double** _phi;
       double* _phi_memory;
       double** _dphidxi;
@@ -421,6 +440,15 @@ namespace femus
       std::vector < std::vector < std::vector < double > > > _phiFace;
       std::vector < std::vector < std::vector < std::vector < double > > > > _gradPhiFace;
       std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
+      
+        // values at boundary gauss points
+      double **_phi_bdry;
+      double *_phi_memory_bdry;
+      double **_dphidxi_bdry;
+      double *_dphidxi_memory_bdry;
+      double **_dphideta_bdry;
+      double *_dphideta_memory_bdry;
+
 
   };
 
@@ -558,6 +586,7 @@ namespace femus
       std::vector < std::vector < std::vector < std::vector < std::vector < double > > > > > _hessianPhiFace;
 
   };
+
 
 
 

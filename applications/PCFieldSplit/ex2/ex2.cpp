@@ -100,4 +100,3 @@ int main ()
 // cout << "rayleigh=" << rayleigh << endl; 
 // return 0;
 // }*/
-

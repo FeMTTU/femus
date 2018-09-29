@@ -789,6 +789,7 @@ namespace femus
     return _ProjQitoQj[itype][jtype];
   }
 
+
   void Mesh::BuildQitoQjProjection(const unsigned& itype, const unsigned& jtype)
   {
 

@@ -29,6 +29,8 @@
 #include <map>
 #include "GaussPoints.hpp"
 #include "FemusInputParser.hpp"
+#include "Files.hpp"
+
 
 namespace femus {
 
@@ -197,6 +199,9 @@ public:
 
   void SetInputParser(const FemusInputParser<double> * parser_in) { _phys = parser_in; return; }
 
+    /** Files Handler */
+  void SetFilesHandler(const Files * files_in) { _files = files_in; return; }
+  inline const Files * GetFilesHandler() const { return  _files; }
 
 private:
 
@@ -209,6 +214,8 @@ private:
     const FemusInputParser<double>        * _phys;
     const QuantityMap                     * _qtymap;
     const MultiLevelMeshTwo               * _mesh;
+
+    const Files                           * _files;
 
 
 };

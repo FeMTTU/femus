@@ -161,6 +161,12 @@ public:
                                     const std::vector< int> &rows,
                                     const std::vector< int> &cols) = 0;
 
+    /** To be Added */
+    virtual void matrix_set_off_diagonal_values_blocked(const std::vector< int > &index_rows, const std::vector< int > &index_cols, const double &value) = 0;
+
+    /** To be Added */
+    virtual void matrix_set_off_diagonal_values_blocked(const std::vector< int > &index_rows, const std::vector< int > &index_cols, const std::vector<double> &value) = 0;
+    
     /** To be Addded */
     virtual void matrix_add (const double a_in, SparseMatrix &X_in, const char pattern []) = 0;
 

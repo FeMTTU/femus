@@ -666,6 +666,7 @@ PetscErrorCode StokesCalcError(Stokes *s)
 
 int main(int argc, char **argv)
 {
+<<<<<<< HEAD
 //   Stokes         s;
 //   KSP            ksp;
 //   PetscErrorCode ierr;
@@ -749,5 +750,92 @@ int main(int argc, char **argv)
 //   
 //   ierr = PetscFinalize();CHKERRQ(ierr);
  
+=======
+  Stokes         s;
+  KSP            ksp;
+  PetscErrorCode ierr;
+  
+  Stokes         s1;
+  KSP            ksp1;
+
+  ierr     = PetscInitialize(&argc, &argv, NULL, help);CHKERRQ(ierr);
+  s.nx     = 4;
+  s.ny     = 6;
+  ierr     = PetscOptionsGetInt(NULL,NULL, "-nx", &s.nx, NULL);CHKERRQ(ierr);
+  ierr     = PetscOptionsGetInt(NULL,NULL, "-ny", &s.ny, NULL);CHKERRQ(ierr);
+  s.hx     = 2.0/s.nx;
+  s.hy     = 1.0/s.ny;
+  s.userPC = s.userKSP = PETSC_FALSE;
+  ierr     = PetscOptionsHasName(NULL, NULL,"-user_pc", &s.userPC);CHKERRQ(ierr);
+  ierr     = PetscOptionsHasName(NULL,NULL, "-user_ksp", &s.userKSP);CHKERRQ(ierr);
+  
+  ierr     = PetscInitialize(&argc, &argv, NULL, help);CHKERRQ(ierr);
+  s1.nx     = 4;
+  s1.ny     = 6;
+  ierr     = PetscOptionsGetInt(NULL,NULL, "-nx1", &s1.nx, NULL);CHKERRQ(ierr);
+  ierr     = PetscOptionsGetInt(NULL,NULL, "-ny1", &s1.ny, NULL);CHKERRQ(ierr);
+  s1.hx     = 2.0/s1.nx;
+  s1.hy     = 1.0/s1.ny;
+  s1.userPC = s1.userKSP = PETSC_FALSE;
+  ierr     = PetscOptionsHasName(NULL,NULL, "-user_pc1", &s1.userPC);CHKERRQ(ierr);
+  ierr     = PetscOptionsHasName(NULL, NULL,"-user_ksp1", &s1.userKSP);CHKERRQ(ierr);
+
+  ierr = StokesSetupMatrix(&s);CHKERRQ(ierr);
+  ierr = StokesSetupIndexSets(&s);CHKERRQ(ierr);
+  ierr = StokesSetupVectors(&s);CHKERRQ(ierr);
+
+  ierr = KSPCreate(PETSC_COMM_WORLD, &ksp);CHKERRQ(ierr);
+  ierr = KSPSetOperators(ksp, s.A, s.A);CHKERRQ(ierr);
+  ierr = KSPSetFromOptions(ksp);CHKERRQ(ierr);
+  ierr = StokesSetupPC(&s, ksp);CHKERRQ(ierr);
+  ierr = KSPSolve(ksp, s.b, s.x);CHKERRQ(ierr);
+  
+  ierr = StokesSetupMatrix(&s1);CHKERRQ(ierr);
+  ierr = StokesSetupIndexSets(&s1);CHKERRQ(ierr);
+  ierr = StokesSetupVectors(&s1);CHKERRQ(ierr);
+
+  ierr = KSPCreate(PETSC_COMM_WORLD, &ksp1);CHKERRQ(ierr);
+  ierr = KSPSetOperators(ksp1, s1.A, s1.A);CHKERRQ(ierr);
+  ierr = KSPSetFromOptions(ksp1);CHKERRQ(ierr);
+  ierr = StokesSetupPC(&s1, ksp1);CHKERRQ(ierr);
+  ierr = KSPSolve(ksp1, s1.b, s1.x);CHKERRQ(ierr);
+
+  /* don't trust, verify! */
+  ierr = StokesCalcResidual(&s);CHKERRQ(ierr);
+  ierr = StokesCalcError(&s);CHKERRQ(ierr);
+  ierr = StokesWriteSolution(&s);CHKERRQ(ierr);
+  
+    /* don't trust, verify! */
+  ierr = StokesCalcResidual(&s1);CHKERRQ(ierr);
+  ierr = StokesCalcError(&s1);CHKERRQ(ierr);
+  ierr = StokesWriteSolution(&s1);CHKERRQ(ierr);
+
+  ierr = KSPDestroy(&ksp);CHKERRQ(ierr);
+  ierr = MatDestroy(&s.subA[0]);CHKERRQ(ierr);
+  ierr = MatDestroy(&s.subA[1]);CHKERRQ(ierr);
+  ierr = MatDestroy(&s.subA[2]);CHKERRQ(ierr);
+  ierr = MatDestroy(&s.subA[3]);CHKERRQ(ierr);
+  ierr = MatDestroy(&s.A);CHKERRQ(ierr);
+  ierr = VecDestroy(&s.x);CHKERRQ(ierr);
+  ierr = VecDestroy(&s.b);CHKERRQ(ierr);
+  ierr = VecDestroy(&s.y);CHKERRQ(ierr);
+  ierr = MatDestroy(&s.myS);CHKERRQ(ierr);
+  
+  ierr = KSPDestroy(&ksp1);CHKERRQ(ierr);
+  ierr = MatDestroy(&s1.subA[0]);CHKERRQ(ierr);
+  ierr = MatDestroy(&s1.subA[1]);CHKERRQ(ierr);
+  ierr = MatDestroy(&s1.subA[2]);CHKERRQ(ierr);
+  ierr = MatDestroy(&s1.subA[3]);CHKERRQ(ierr);
+  ierr = MatDestroy(&s1.A);CHKERRQ(ierr);
+  ierr = VecDestroy(&s1.x);CHKERRQ(ierr);
+  ierr = VecDestroy(&s1.b);CHKERRQ(ierr);
+  ierr = VecDestroy(&s1.y);CHKERRQ(ierr);
+  ierr = MatDestroy(&s1.myS);CHKERRQ(ierr);
+  
+  ierr = PetscFinalize();CHKERRQ(ierr);
+  
+  
+  
+>>>>>>> master
   return 0;
 }

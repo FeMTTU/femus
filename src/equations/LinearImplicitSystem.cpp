@@ -28,6 +28,7 @@ namespace femus {
       const std::string& name_in,
       const unsigned int number_in, const MgSmoother& smoother_type) :
     ImplicitSystem(ml_probl, name_in, number_in, smoother_type),
+    _debug_linear(false),
     _n_max_linear_iterations(3),
     _final_linear_residual(1.e20),
     _linearAbsoluteConvergenceTolerance(1.e-08),
@@ -43,10 +44,12 @@ namespace femus {
     _MGmatrixCoarseReuse(false),
     _printSolverInfo(false),
     _assembleMatrix(true) {
+        
     _SparsityPattern.resize(0);
     _outer_ksp_solver = "gmres";
     _totalAssemblyTime = 0.;
     _totalSolverTime =0.;
+    
   }
 
   // ********************************************
@@ -289,8 +292,8 @@ restart:
       L2normRes       = _solution[igridn]->_Res[indexSol]->l2_norm();
       std::cout << "       *************** Level Max " << igridn + 1 << "  Linear Res  L2norm " << std::scientific << _ml_sol->GetSolutionName(indexSol) << " = " << L2normRes << std::endl;
       if(isnan(L2normRes)){
-	std::cout << "Warning a bit flip is probably occurred, lets try to restart the solver!" << std::endl;
-	_bitFlipOccurred = true;
+         std::cout << "Warning a bit flip is probably occurred, lets try to restart the solver!" << std::endl;
+	    _bitFlipOccurred = true;
       }
       if(L2normRes < _linearAbsoluteConvergenceTolerance && conv == true) {
         conv = true;
@@ -400,8 +403,23 @@ restart:
       // ============== Update Fine Residual ==============
       _solution[level]->UpdateRes(_SolSystemPdeIndex, _LinSolver[level]->_RES, _LinSolver[level]->KKoffset);
       linearIsConverged = IsLinearConverged(level);
+      
+        if (_debug_linear)  {
+        std::vector < std::string > variablesToBePrinted;
+        variablesToBePrinted.push_back("All");
+        std::ostringstream output_file_name_stream; output_file_name_stream << "biquadratic" << "." << std::setfill('0') << std::setw(2)   << linearIterator; // the "." after biquadratic is needed to see the sequence of files in Paraview as "time steps"
+        if (this->GetMLProb().GetFilesHandler() != NULL) {
+           this->GetMLProb()._ml_sol->GetWriter()->Write(this->GetMLProb().GetFilesHandler()->GetOutputPath(),output_file_name_stream.str().c_str(),variablesToBePrinted);
+	     }
+	    else {
+           this->GetMLProb()._ml_sol->GetWriter()->Write(DEFAULT_OUTPUTDIR,output_file_name_stream.str().c_str(),variablesToBePrinted);
+         }
+       }
+
+      
       if(linearIsConverged || _bitFlipOccurred) break;
     }
+
 
     // ============== Update Fine Solution ==============
     if(!_bitFlipOccurred){

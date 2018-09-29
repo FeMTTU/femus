@@ -25,7 +25,7 @@ FM_PETSC_DIR_REL=petsc
 FM_PETSC_DIR_ABS=$SOFTWARE_DIR/$FM_PETSC_DIR_REL
 export PETSC_DIR=$FM_PETSC_DIR_ABS
 
-export PETSC_ARCH=linux-opt  #let us only install libmesh with optimized petsc
+export PETSC_ARCH=arch-linux2-cxx-opt  #let us only install libmesh with optimized petsc
 
 
 #######################################################################

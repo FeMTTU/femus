@@ -449,6 +449,7 @@ namespace femus {
       if( !( time_step % print_step ) ) {
         filename << output_path << "/sol.level" << _gridn << "." << time_step << "." << type << ".xmf";
         ftr_out << "<xi:include href=\"" << filename.str().c_str() << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid[" << 1 << "])\">\n";
+        ftr_out << "<xi:include href=\"" << filename.str() << "\" xpointer=\"xpointer(//Xdmf/Domain/Grid[" << 1 << "])\">\n";
         ftr_out << "<xi:fallback/>\n";
         ftr_out << "</xi:include>\n";
       }
