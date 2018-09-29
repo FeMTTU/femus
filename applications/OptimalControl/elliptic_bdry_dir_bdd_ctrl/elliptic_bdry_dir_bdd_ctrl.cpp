@@ -27,6 +27,10 @@ double InitialValueAdjoint(const std::vector < double >& x) {
   return 0.;
 }
 
+double InitialValueMu(const std::vector < double >& x) {
+  return 0.;
+}
+
 double InitialValueControl(const std::vector < double >& x) {
   return 0.;
 }
@@ -46,6 +50,12 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
     dirichlet = false;
   }
 
+  if(!strcmp(name,"mu")) {
+      value = 0.;
+  if (faceName == 3)
+    dirichlet = false;
+  }
+  
 //     if(!strcmp(name,"adjoint")) { 
 //   if (faceName == 3)
 //     dirichlet = false;
@@ -93,6 +103,7 @@ int main(int argc, char** args) {
   mlSol.AddSolution("state", LAGRANGE, FIRST);
   mlSol.AddSolution("control", LAGRANGE, FIRST);
   mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
+  mlSol.AddSolution("mu", LAGRANGE, FIRST);  
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
@@ -102,6 +113,7 @@ int main(int argc, char** args) {
   mlSol.Initialize("state", InitialValueState);
   mlSol.Initialize("control", InitialValueControl);
   mlSol.Initialize("adjoint", InitialValueAdjoint);
+  mlSol.Initialize("mu", InitialValueMu);
   mlSol.Initialize("TargReg", InitialValueTargReg);
   mlSol.Initialize("ContReg", InitialValueContReg);
 
@@ -110,6 +122,7 @@ int main(int argc, char** args) {
   mlSol.GenerateBdc("state");
   mlSol.GenerateBdc("control");
   mlSol.GenerateBdc("adjoint");
+  mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work...
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
@@ -120,6 +133,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
   system.AddSolutionToSystemPDE("adjoint");  
+  system.AddSolutionToSystemPDE("mu");  
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleOptSys);
@@ -263,22 +277,41 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  vector< int > l2GMap_ctrl;   l2GMap_ctrl.reserve(maxSize);
  //*************************************************** 
  //*************************************************** 
+ 
+ //****************** mu ******************************  
+ //***************************************************  
+  unsigned solIndex_mu;
+  solIndex_mu = mlSol->GetIndex("mu");    // get the position of "mu" in the ml_sol object
+   
+  unsigned solPdeIndex_mu;
+  solPdeIndex_mu = mlPdeSys->GetSolPdeIndex("mu");
   
+  unsigned solType_mu = mlSol->GetSolutionType(solIndex_mu);    // get the finite element type for "mu"
+  vector < double >  sol_mu;   sol_mu.reserve(maxSize);
+  vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
+
+  //********* variables for ineq constraints *****************
+  double ctrl_lower =  CTRL_BOX_LOWER;
+  double ctrl_upper =  CTRL_BOX_UPPER;
+  assert(ctrl_lower < ctrl_upper);
+  double c_compl = 1.;
+  vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
+  //***************************************************  
 
  //*************************************************** 
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
 
-  const int n_vars = 3;
+  const int n_unknowns = 4;
  
   vector< int > l2GMap_AllVars; // local to global mapping
-  l2GMap_AllVars.reserve(n_vars*maxSize);
+  l2GMap_AllVars.reserve(n_unknowns*maxSize);
   
   vector< double > Res; // local redidual vector
-  Res.reserve(n_vars*maxSize);
+  Res.reserve(n_unknowns*maxSize);
 
   vector < double > Jac;
-  Jac.reserve( n_vars*maxSize * n_vars*maxSize);
+  Jac.reserve( n_unknowns*maxSize * n_unknowns*maxSize);
  //*************************************************** 
 
  
@@ -372,10 +405,30 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       l2GMap_adj[i] = pdeSys->GetSystemDof(solIndex_adj, solPdeIndex_adj, i, iel);
     } 
  //*************************************************** 
-
+ //************** mu **************************** 
+    unsigned nDof_mu  = msh->GetElementDofNumber(iel, solType_mu);    // number of solution element dofs
+    sol_mu   .resize(nDof_mu);
+    l2GMap_mu.resize(nDof_mu);
+    for (unsigned i = 0; i < sol_mu.size(); i++) {
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solType_mu);   // global to global mapping between solution node and solution dof
+      sol_mu[i] = (*sol->_Sol[solIndex_mu])(solDof_mu);      // global extraction and local storage for the solution 
+      l2GMap_mu[i] = pdeSys->GetSystemDof(solIndex_mu, solPdeIndex_mu, i, iel);   // global to global mapping between solution node and pdeSys dof
+    }
+    
+    
+ //************** update active set flag for current nonlinear iteration **************************** 
+ // 0: inactive; 1: active_a; 2: active_b
+   assert(nDof_mu == nDof_ctrl);
+   sol_actflag.resize(nDof_mu);
+     std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+   
+    for (unsigned i = 0; i < sol_actflag.size(); i++) {  
+    if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
+    else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
+    }
  
  //********************* ALL VARS ******************** 
-    unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj; 
+    unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
     int nDof_max    =  nDof_u;   // AAAAAAAAAAAAAAAAAAAAAAAAAAA TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
     if(nDof_adj > nDof_max) 
@@ -399,6 +452,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_u.begin(),l2GMap_u.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_ctrl.begin(),l2GMap_ctrl.end());
     l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_adj.begin(),l2GMap_adj.end());
+    l2GMap_AllVars.insert(l2GMap_AllVars.end(),l2GMap_mu.begin(),l2GMap_mu.end());
  //***************************************************
 
     
@@ -783,6 +837,19 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 // 		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
 // 		(nDof_u + nDof_ctrl + j)               ]  += 0.;     //weight * phi_adj[i]*phi_adj[j];
 	      
+	      //============= delta_mu row ===============================
+//	      if (sol_actflag[i] == 0) //inactive
+//	      { // BLOCK delta_mu - mu	      
+// 	        if ( i < nDof_mu && j < nDof_mu && i==j )   
+// 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+// 		       (nDof_u + nDof_ctrl + nDof_adj + j)]  = 1. ;  
+// 	     // }
+// 	      else //active
+// 	      { // BLOCK delta_mu - ctrl	      
+//                 if ( i < nDof_mu && j < nDof_ctrl && i==j )   
+// 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
+// 		       (nDof_u + j)                       ]  = c_compl * 1. ; 
+	     // }
 	      
 	    } // end phi_j loop
           } // endif assemble_matrix
@@ -813,6 +880,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	   
 	}
     
+    std::vector<double> Res_ctrl (nDof_ctrl); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
+    for (unsigned i = 0; i < sol_ctrl.size(); i++){
+     if ( control_el_flag == 1){
+	Res[nDof_u + i] = - ( - Res[nDof_u + i] + sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
+	Res_ctrl[i] = Res[nDof_u + i];
+      }
+    }
+    
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
@@ -823,8 +898,57 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       //store K in the global matrix KK
       KK->add_matrix_blocked(Jac, l2GMap_AllVars, l2GMap_AllVars);
     }
-  } //end element loop for each process
+    //========== dof-based part, without summation
+ 
+ //============= delta_mu row ===============================
+      std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
+    for (unsigned i = 0; i < sol_actflag.size(); i++){
+      if (sol_actflag[i] == 0){  //inactive
+         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ); 
+	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+      }
+      else if (sol_actflag[i] == 1){  //active_a 
+	 Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
+         Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+      }
+      else if (sol_actflag[i] == 2){  //active_b 
+	Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
+	Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+      }
+    }
+ //          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
+ //          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
 
+    
+    RES->insert(Res_mu, l2GMap_mu);
+    RES->insert(Res_ctrl, l2GMap_ctrl);
+ //     RES->insert(Res_u, l2GMap_u);
+ //     RES->insert(Res_adj, l2GMap_adj);
+    
+ //  //============= delta_state-delta_state row ===============================
+ //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_u, l2GMap_u, 1.);
+
+ //  //============= delta_ctrl-delta_ctrl row ===============================
+ //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_ctrl, 1.);
+ 
+ //  //============= delta_adj-delta_adj row ===============================
+ //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
+  
+ //============= delta_ctrl-delta_mu row ===============================
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
+  
+ //============= delta_mu-delta_ctrl row ===============================
+ for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = c_compl;    
+  
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
+
+ //============= delta_mu-delta_mu row ===============================
+  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] = 1 - sol_actflag[i]/c_compl;  //can do better to avoid division, maybe use modulo operator 
+
+  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag);
+  
+  } //end element loop for each process
+  
   RES->close();
 
   if (assembleMatrix) KK->close();
@@ -835,6 +959,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 }
 
 
+ 
+  
 double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
   
@@ -1147,5 +1273,3 @@ return total_integral;
   
 }
   
-  
-

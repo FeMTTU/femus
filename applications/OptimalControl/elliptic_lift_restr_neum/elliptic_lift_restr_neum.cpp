@@ -4,14 +4,14 @@
 #include "LinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
-#include "../elliptic_lift_restr_param.hpp"
+#include "../elliptic_param.hpp"
 
 #define SERVICE 1.
 
 using namespace femus;
 
 double InitialValueContReg(const std::vector < double >& x) {
-  return ControlDomainFlag(x);
+  return ControlDomainFlag_internal_restriction(x);
 }
 
 double InitialValueTargReg(const std::vector < double >& x) {
@@ -299,8 +299,8 @@ vector < double >  sol_adj; // local solution
   
  //********************* DATA ************************ 
   double u_des = DesiredTarget();
-  double alpha = ALPHA_CTRL;
-  double beta  = BETA_CTRL;
+  double alpha = ALPHA_CTRL_VOL;
+  double beta  = BETA_CTRL_VOL;
   double penalty_strong = 10e+14;
   //double penalty_ctrl = 1.e10;         //penalty for u=q
  //***************************************************  
@@ -409,7 +409,7 @@ vector < double >  sol_adj; // local solution
     
  //***** set control flag ****************************
   int control_el_flag = 0;
-  control_el_flag = ControlDomainFlag(elem_center);
+  control_el_flag = ControlDomainFlag_internal_restriction(elem_center);
   std::vector<int> control_node_flag(nDof_ctrl,0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 
@@ -911,8 +911,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   double weight_bdry = 0.; // gauss point weight on the boundary
   
  //***************************************************  
-  double alpha = ALPHA_CTRL;
-  double beta  = BETA_CTRL;
+  double alpha = ALPHA_CTRL_VOL;
+  double beta  = BETA_CTRL_VOL;
 
  //******************** state ************************ 
  //*************************************************** 
