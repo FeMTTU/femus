@@ -37,7 +37,7 @@ const unsigned NumberOfLayers = 20;
 clock_t start_time = clock();
 
 bool wave = false;
-bool twostage = false;
+bool twostage = true;
 bool assembly = true; //assembly must be left always true
 
 //const double hRest[10]={1,1,1,1,1,1,1,1,1,1};
@@ -779,6 +779,10 @@ void ETD ( MultiLevelProblem& ml_prob ) {
   MFNSolve ( mfn, v, y );
   MFNDestroy ( &mfn );
 
+  VecView(y,PETSC_VIEWER_STDOUT_WORLD);
+  
+  std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+  
   sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
 
   if ( twostage == true ) {
@@ -1017,7 +1021,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
         //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAA"<<deltaZt - deltaZb<<std::endl;
 
-//       aResHT[k] += solhm[k] * k_v * (deltaZt - deltaZb) / ( (ht + hb) / 2. ); // vertical diffusion
+        aResHT[k] += solhm[k] * k_v * (deltaZt - deltaZb) / ( (ht + hb) / 2. ); // vertical diffusion
 //
 //       //aResHT[k] += ((solhp[k] - solhm[k]) * k_v * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
 //       aResHT[k] += k_h * solh[k] * (solHTm[k] - solHT[k])/(dx*dx); // horizontal diffusion
@@ -1025,24 +1029,30 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
       }
 
-      vector< double > Res ( NLayers ); // local redidual vector
-      for ( unsigned k = 0; k < NLayers; k++ ) {
-        Res[k] =  aResHT[k];
-        //std::cout<< "Res["<<k<<"] = " << Res[k] <<std::endl;
-        //std::cout<< "Res["<<NLayers+k<<"] = " << Res[NLayers+k] <<std::endl;
-      }
+//       vector< double > Res ( NLayers ); // local redidual vector
+//       for ( unsigned k = 0; k < NLayers; k++ ) {
+//         Res[k] =  aResHT[k];
+//         //std::cout<< "Res["<<k<<"] = " << Res[k] <<std::endl;
+//         //std::cout<< "Res["<<NLayers+k<<"] = " << Res[NLayers+k] <<std::endl;
+//       }
 
-      RES2->add_vector_blocked ( Res, l2GMapRow );
+      RES2->add_vector_blocked ( aResHT, l2GMapRow );
 
     }
+    RES2->close();
 
-    //BEGIN ASSEMBLY: R2 = RES2 - RES - KK * EPS;
+    //BEGIN ASSEMBLY: R2 = RES2 - RES - KK * EPS = RESnew - RESold - KK * (Vnew - Vold) = (ResNew - KK * Vnew) - (ResOld - KK * Vold) = 0 - 0 ;
     RES2->scale ( -1. );
     RES2->add ( *RES );
     RES2->add_vector ( *EPS, *KK );
     RES2->scale ( -1. );
+    
+    
+    
     //END ASSEMBLY R2
 
+    EPS->zero();
+    
     //SLEPC
     MFN mfn;
     Mat A2 = ( static_cast<PetscMatrix*> ( KK ) )->mat();
@@ -1051,6 +1061,9 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     //std::cout << "dt = " << dt << std::endl;
 
     Vec v2 = ( static_cast< PetscVector* > ( RES2 ) )->vec();
+    
+    //VecView(v2,PETSC_VIEWER_STDOUT_WORLD);
+    
     Vec y2 = ( static_cast< PetscVector* > ( EPS ) )->vec();
 
     MFNCreate ( PETSC_COMM_WORLD, &mfn );
@@ -1068,6 +1081,8 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     MFNSolve ( mfn, v2, y2 );
     MFNDestroy ( &mfn );
 
+    VecView(y2,PETSC_VIEWER_STDOUT_WORLD);
+    
     sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
 
   }
