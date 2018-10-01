@@ -130,7 +130,7 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
   
   system.SetDebugNonlinear(true);//   system.SetDebuglinear(true);
-  system.SetMaxNumberOfNonLinearIterations(3);
+  system.SetMaxNumberOfNonLinearIterations(2);
 
   // initilaize and solve the system
   system.init();
@@ -151,7 +151,7 @@ int main(int argc, char** args) {
 
 void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
-  unsigned int ineq_flag = 1;
+ const double ineq_flag = 1.;
   //  ml_prob is the global object from/to where get/set all the data
 
   //  level is the level of the PDE system to be assembled
@@ -797,14 +797,20 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
   // ***************** END ASSEMBLY *******************
   unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
+  unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
 
   unsigned int global_ctrl_size = pdeSys->KKoffset[ctrl_index+1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
   
-  std::vector<double>  all_ones(global_ctrl_size, ineq_flag * 1.);
+  std::vector<double>  one_times_mu(global_ctrl_size, 0.);
   std::vector<int>    positions(global_ctrl_size);
-  for (unsigned i = 0; i < positions.size(); i++)  positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
-   
-    RES->add_vector_blocked(all_ones, positions);
+  double position_mu_i;
+  for (unsigned i = 0; i < positions.size(); i++) {
+    positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
+//     position_mu_i = pdeSys->KKoffset[mu_index][iproc] + i;
+//     std::cout << position_mu_i << std::endl;
+    one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[solIndex_mu])(i/*position_mu_i*/) ;
+  }
+    RES->add_vector_blocked(one_times_mu, positions);
     RES->print();
     
   return;
