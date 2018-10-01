@@ -2,6 +2,7 @@
  * This example shows how to set and solve the weak form of the Poisson problem
  *                    $$ \Div.( a(u)\Delta u) = f \text{ on }\Omega, $$
  *          $$ u=0 \text{ on } \Gamma, $$
+ *          $$ u=\Delta u.n \text{on the left} of \Omega  $$
  * on a square domain [-1,1]^2 $\Omega$ with boundary $\Gamma$;
  * all the coarse-level meshes are removed;
  * a multilevel problem and an equation system are initialized;
