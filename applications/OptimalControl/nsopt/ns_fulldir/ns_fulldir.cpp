@@ -13,12 +13,11 @@
 #include "Files.hpp"
 
 
-// #define PRESS 1
+#include   "../nsopt_params.hpp"
 
 
 using namespace femus;
 
-  double force[3] = {0.,0.,0.}; 
 
 bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   //1: bottom  //2: right  //3: top  //4: left
@@ -37,11 +36,10 @@ bool SetBoundaryConditionBox(const std::vector < double >& x, const char SolName
 }
 
 
-
-
 void AssembleNS_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
 void AssembleNS_nonAD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
+
 
 int main(int argc, char** args) {
 
@@ -53,7 +51,6 @@ int main(int argc, char** args) {
   Files files;
         files.CheckIODirectories();
         files.RedirectCout();
-
 
   // define multilevel mesh
   MultiLevelMesh mlMsh;
@@ -70,12 +67,12 @@ int main(int argc, char** args) {
   
  
   // Generate fluid Object (Adimensional quantities,viscosity,density,fluid-model)
-  Fluid fluid(parameter,1,1,"Newtonian");
+  Fluid fluid(parameter,1,FLUID_DENSITY,"Newtonian");
   std::cout << "Fluid properties: " << std::endl;
   std::cout << fluid << std::endl;
 
   
-  mlMsh.GenerateCoarseBoxMesh(2,2,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
 //   mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
 //   //mlMsh.ReadCoarseMesh ( "./input/square_quad.neu", "seventh", scalingFactor );
 //   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
@@ -114,8 +111,9 @@ int main(int argc, char** args) {
   MultiLevelProblem mlProb(&mlSol);
 
   mlProb.parameters.set<Fluid>("Fluid") = fluid;
+  mlProb.SetFilesHandler(&files);
 
-  // add system Poisson in mlProb as a Linear Implicit System
+  // add system NS_fulldir in mlProb as a NonLinear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("NS");
 
   // add solution "u" to system
@@ -129,14 +127,19 @@ int main(int argc, char** args) {
 // #endif
 
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleNS_AD);
-//   system.SetAssembleFunction(AssembleNS_nonAD);
+//   system.SetAssembleFunction(AssembleNS_AD);
+  system.SetAssembleFunction(AssembleNS_nonAD);
 
   // initilaize and solve the system
   system.init();
   
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
+
+//print the nonlinear iterations  
+  mlSol.SetWriter(VTK);
+  mlSol.GetWriter()->SetDebugOutput(true);
+  system.SetDebugNonlinear(true);
 
   system.MLsolve();
 //   system.MGsolve();
@@ -145,9 +148,7 @@ int main(int argc, char** args) {
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
 
-  mlSol.SetWriter(VTK);
-  mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,"biquadratic", variablesToBePrinted);
+ mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/,"biquadratic", variablesToBePrinted);
  
   //Destroy all the new systems
   mlProb.clear();
@@ -168,7 +169,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
   adept::Stack& s = FemusInit::_adeptStack;
 
   //  extract pointers to the several objects that we are going to use
-  NonLinearImplicitSystem& mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the linear implicit system named "Poisson"
+  NonLinearImplicitSystem& mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("NS");   // pointer to the nonlinear implicit system named "NS"
   const unsigned level = mlPdeSys.GetLevelToAssemble();
   bool assembleMatrix = mlPdeSys.GetAssembleMatrix(); 
 
@@ -416,19 +417,19 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
         for (unsigned j = 0; j < dim; j++) {
           for (unsigned  k = 0; k < dim; k++) {
-            NSV[k]   += /* nu*/ IRe * phiV_x[i * dim + j] * (gradSolV_gss[k][j] /*+ gradSolV_gss[j][k]*/);
-//             NSV[k]   +=  phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
+            NSV[k]   +=  IRe * phiV_x[i * dim + j] * (gradSolV_gss[k][j] /*+ gradSolV_gss[j][k]*/)
+                        + advection_flag * phiV[i] * (solV_gss[j] * gradSolV_gss[k][j]);
           }
         }
 
 // #if PRESS == 1
         for (unsigned  k = 0; k < dim; k++) {
-          NSV[k] += -solP_gss * phiV_x[i * dim + k];
+          NSV[k] += - solP_gss * phiV_x[i * dim + k];
         }
 // #endif
 
         for (unsigned  k = 0; k < dim; k++) {
-          aResV[k][i] += ( force[k] * phiV[i] - NSV[k] ) * weight;
+          aResV[k][i] += ( + NSV[k] - force[k] * phiV[i]  ) * weight;
         }
       } // end phiV_i loop
 
@@ -436,7 +437,7 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
       // *** phiP_i loop ***
       for (unsigned i = 0; i < nDofsP; i++) {
         for (int k = 0; k < dim; k++) {
-          aResP[i] +=  (gradSolV_gss[k][k]) * phiP[i]  * weight;
+          aResP[i] += - (gradSolV_gss[k][k]) * phiP[i]  * weight;
         }
       } // end phiP_i loop
 // #endif
@@ -451,13 +452,13 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
     for (int i = 0; i < nDofsV; i++) {
       for (unsigned  k = 0; k < dim; k++) {
-        Res[ i +  k * nDofsV ] = -aResV[k][i].value();
+        Res[ i +  k * nDofsV ] = - aResV[k][i].value();
       }
     }
 
 // #if PRESS == 1
     for (int i = 0; i < nDofsP; i++) {
-      Res[ i + dim * nDofsV ] = -aResP[i].value();
+      Res[ i + dim * nDofsV ] = - aResP[i].value();
     }
 // #endif
 
@@ -499,8 +500,9 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
  if (assembleMatrix){   //Extarct and store the Jacobian
   KK->close();
-//   std::ostringstream mat_out; mat_out << "matrix_ad" << mlPdeSys._nonliniteration  << ".txt";
-//   KK->print_matlab(mat_out.str(),"ascii");
+//   if(mlPdeSys._nonliniteration == 0){
+//     std::ostringstream mat_out; mat_out << "matrix_ad" << mlPdeSys._nonliniteration  << ".txt";
+//   KK->print_matlab(mat_out.str(),"ascii");}
   }
  
   RES->close();
@@ -837,23 +839,29 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
 	      }      
 	      Res[kdim][i]   +=  (         + force[kdim] * phi_gss_fe[ SolFEType[kdim] ][i]
                                            - IRe*lap_res_du_u 
-                                           - adv_res * phi_gss_fe[ SolFEType[kdim] ][i]
+                                           - advection_flag * adv_res * phi_gss_fe[ SolFEType[kdim] ][i]
 					    + SolVAR_qp[SolPdeIndex[press_type_pos]] * phi_x_gss_fe[ SolFEType[kdim] ][i * dim + kdim]) * weight; 
 	}	    
 //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
 	for (unsigned j = 0; j < nDofsV; j++) {
 		      double lap_jac_du_u = 0.;
-		      double adv_unew_uold = 0.;
-		      double adv_uold_unew = 0.;
+		      vector < double > adv_uold_nablaunew(dim,0.);
 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 		    lap_jac_du_u += phi_x_gss_fe[ SolFEType[kdim] ][i * dim + kdim]*phi_x_gss_fe[ SolFEType[kdim] ][j * dim + kdim];
-		    adv_uold_unew += SolVAR_qp[SolIndex[kdim]]*phi_x_gss_fe[ SolFEType[kdim] ][j * dim + kdim] * phi_gss_fe[ SolFEType[kdim] ][i];
-		    adv_unew_uold += phi_gss_fe[ SolFEType[kdim] ][i] * gradSolVAR_qp[SolIndex[kdim]][kdim] * phi_gss_fe[ SolFEType[kdim] ][j];
+		for (unsigned  jdim = 0; jdim < dim; jdim++) { 
+		    adv_uold_nablaunew[kdim] += SolVAR_qp[SolIndex[jdim]]*phi_x_gss_fe[ SolFEType[kdim] ][j * dim + jdim] * phi_gss_fe[ SolFEType[kdim] ][i];
+                }  //jdim
 	      }
+	      
 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 		Jac[kdim][kdim][i*nDofsV + j] += (   IRe*lap_jac_du_u 
-						    + adv_uold_unew 
-						    + adv_unew_uold ) * weight; 
+						    + advection_flag * adv_uold_nablaunew[kdim] //this part goes only in diagonal blocks
+						    + advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim] ][j] * gradSolVAR_qp[SolIndex[kdim]][kdim] * phi_gss_fe[ SolFEType[kdim] ][i] // diagonal blocks of adv_unew_nablauold
+						    ) * weight; 
+
+               unsigned int kdim_p1 = (kdim+1)%dim; //off-diagonal blocks of adv_unew_nablauold
+                Jac[kdim][kdim_p1][i*nDofsV + j] +=  + advection_flag * (1 - advection_Picard) * phi_gss_fe[ SolFEType[kdim_p1] ][j] * gradSolVAR_qp[SolIndex[kdim]][kdim_p1] * phi_gss_fe[ SolFEType[kdim] ][i]  * weight;
+						    
 	      }
 	} //j_du_u loop
 
@@ -862,21 +870,21 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
 //BLOCK Pressure
       for (unsigned j = 0; j < nDofsP; j++) {
 	    for (unsigned  kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim][press_type_pos][i*nDofsP + j] += -( phi_gss_fe[ SolFEType[press_type_pos] ][j] * phi_x_gss_fe[ SolFEType[kdim] ][i * dim + kdim] ) * weight;
+	      Jac[kdim][press_type_pos][i*nDofsP + j] += - ( phi_gss_fe[ SolFEType[press_type_pos] ][j] * phi_x_gss_fe[ SolFEType[kdim] ][i * dim + kdim] ) * weight;
 	    }
       }//j_press loop
    }//i_state loop
 
 //DIV_state
   for (unsigned i = 0; i < nDofsP; i++) {
-		    double div_u_du_qp =0.;
+		    double div_u_qp =0.;
       for (unsigned  kdim = 0; kdim < dim; kdim++) {
-	      div_u_du_qp += gradSolVAR_qp[SolPdeIndex[kdim]][kdim] ;
+	      div_u_qp += gradSolVAR_qp[SolPdeIndex[kdim]][kdim] ;
       }
-      Res[press_type_pos][i]  +=  ( (div_u_du_qp) * phi_gss_fe[ SolFEType[press_type_pos] ][i] ) * weight;
+      Res[press_type_pos][i]  +=  ( (div_u_qp) * phi_gss_fe[ SolFEType[press_type_pos] ][i] ) * weight;
       for (unsigned j = 0; j < nDofsV; j++) {
 	  for (unsigned  kdim = 0; kdim < dim; kdim++) {
-	      Jac[press_type_pos][kdim][i*nDofsV + j] += -( phi_gss_fe[ SolFEType[press_type_pos] ][i] * phi_x_gss_fe[ SolFEType[kdim] ][j * dim + kdim] ) * weight;
+	      Jac[press_type_pos][kdim][i*nDofsV + j] += - ( phi_gss_fe[ SolFEType[press_type_pos] ][i] * phi_x_gss_fe[ SolFEType[kdim] ][j * dim + kdim] ) * weight;
 	  }
       } //j loop
    }//i_div_state
@@ -905,8 +913,9 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
   
   
   JAC->close();
-//   std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
-//   JAC->print_matlab(mat_out.str(),"ascii");
+//    if(mlPdeSys._nonliniteration == 0){
+//      std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
+//   JAC->print_matlab(mat_out.str(),"ascii");}
   RES->close();
 //   RES->print();
 //   std::cout << "solution iterate RESC" << std::endl;
