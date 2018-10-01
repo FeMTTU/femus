@@ -229,7 +229,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 
 void ETD ( MultiLevelProblem& ml_prob );
 
-void RK4 ( MultiLevelProblem& ml_prob );
+void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler );
 
 
 int main ( int argc, char** args ) {
@@ -341,12 +341,13 @@ int main ( int argc, char** args ) {
 
   unsigned numberOfTimeSteps = 100; //17h=1020 with dt=60, 17h=10200 with dt=6
   dt = 1.;
+  bool implicitEuler = false;
   //system.ResetComputationalTime();
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
     ETD ( ml_prob );
-    //RK4 ( ml_prob );
+    //RK4 ( ml_prob, implicitEuler );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
   //system.PrintComputationalTime();
@@ -1086,7 +1087,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
 
       double valueT = valueHT / valueH;
-      if (i==10) std::cout<<"temperature "<<valueT<<std::endl;
+      if ( i == 10 ) std::cout << "temperature " << valueT << std::endl;
       //if (i == 0) valueT = 0.;
       //if (i == msh->_dofOffset[solTypeHT][iproc + 1] - 1 ) valueT = 0.;
 
@@ -1102,7 +1103,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 }
 
 
-void RK4 ( MultiLevelProblem& ml_prob ) {
+void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 
   const unsigned& NLayers = NumberOfLayers;
 
@@ -1433,60 +1434,147 @@ void RK4 ( MultiLevelProblem& ml_prob ) {
       sol->_Sol[solIndexHT[k]]->close();
     }
 
-    //BEGIN forward Euler for vertical diffusion
-    std::vector < double > vert_diff ( NLayers, 0. );
-    for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
-      double deltaZt = 0.;
-      double deltaZb = 0.;
-      double ht = 0.;
-      double hb = 0.;
-      if ( k > 0 ) {
-        ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
-        deltaZt = ( solHT[k - 1] - solHT[k] ) / ht;
+
+    if ( implicitEuler == false ) {
+      //BEGIN forward Euler for vertical diffusion
+      std::vector < double > vert_diff ( NLayers, 0. );
+      for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
+        double deltaZt = 0.;
+        double deltaZb = 0.;
+        double ht = 0.;
+        double hb = 0.;
+        if ( k > 0 ) {
+          ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+          deltaZt = ( solHT[k - 1] - solHT[k] ) / ht;
+        }
+        else {
+          ht = 0.5 * ( solhm[k] + solhp[k] );
+          deltaZt = 0.* ( 0. - solHT[k] ) / ht;
+        }
+        if ( k < NLayers - 1 ) {
+          hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+          deltaZb = ( solHT[k] - solHT[k + 1] ) / hb;
+        }
+        else {
+          hb = 0.5 * ( solhm[k] + solhp[k] );
+          deltaZb = 0.* ( solHT[k] - 0. ) / hb;
+        }
+        //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA" << deltaZt - deltaZb << std::endl;
+        vert_diff[k] = solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
       }
-      else {
-        ht = 0.5 * ( solhm[k] + solhp[k] );
-        deltaZt = 0.* ( 0. - solHT[k] ) / ht;
+
+      for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
+        double valueHT = ( *sol->_Sol[solIndexHT[k]] ) ( i );
+        double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
+
+        double valueT = valueHT / valueH;
+        valueT = valueT + dt * vert_diff[k];
+
+        sol->_Sol[solIndexT[k]]->set ( i, valueT );
+        sol->_Sol[solIndexT[k]]->close();
       }
-      if ( k < NLayers - 1 ) {
-        hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
-        deltaZb = ( solHT[k] - solHT[k + 1] ) / hb;
-      }
-      else {
-        hb = 0.5 * ( solhm[k] + solhp[k] );
-        deltaZb = 0.* ( solHT[k] - 0. ) / hb;
-      }
-      //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA" << deltaZt - deltaZb << std::endl;
-      vert_diff[k] = solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
+      //END
     }
 
-    for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
-      double valueHT = ( *sol->_Sol[solIndexHT[k]] ) ( i );
-      double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
+    else if ( implicitEuler == true ) {
 
-      double valueT = valueHT / valueH;
-      valueT = valueT + dt * vert_diff[k];
+      double Tk = 0.;
+      vector < vector < double > > sysMatrix ( NLayers );
+      
+      for ( unsigned k = 0; k << NLayers; k++ ) {
+        sysMatrix[k].assign ( NLayers, 0. );
 
-      sol->_Sol[solIndexT[k]]->set ( i, valueT );
-      sol->_Sol[solIndexT[k]]->close();
+        double A = 0.;
+	double C = 0.;
+	double ht = 0.;
+        double hb = 0.;
+
+	if ( k > 0 ) {
+          ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+	  A = solhm[k] * k_v / ht ;
+        }
+        else {
+          ht = 0.5 * ( solhm[k] + solhp[k] );
+        }
+        if ( k < NLayers - 1 ) {
+          hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+	  C = solhm[k] * k_v / hb;
+	  C /= (ht + hb) * 0.5 ;
+	  if(k > 0){
+	    A /= (ht + hb) * 0.5 ;
+	  }
+        }
+        else {
+          hb = 0.5 * ( solhm[k] + solhp[k] );
+	  A /= (ht + hb) * 0.5 ;
+        }
+	
+	double B = 1. - A - C;
+	
+	sysMatrix[k][k] = B;
+	if(k > 0) sysMatrix[k][k-1] = A;
+	if(k < NLayers - 1) sysMatrix[k][k+1] = C;
+	
+	Tk = ( *sol->_Sol[solIndexHT[k]] ) ( i )/( *sol->_Sol[solIndexh[k]] ) ( i );
+	
+      }
+      
+      //risolvere il sistema Nlayer X Nlayer
+      KSP                solver;
+      Mat                A;
+      Vec                b,x;
+      PetscScalar        v;
+      PetscInt           i,j,nlayers;
+      PetscErrorCode     ierr;
+      
+      nlayers = static_cast<PetscInt> (NLayers);
+      ierr = VecSetSizes(b,nlayers,nlayers);
+      ierr = VecSet(b,Tk);
+      ierr = MatCreate(PETSC_COMM_WORLD,&A);
+      ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE, nlayers, nlayers);
+      
+      for (i=0; i<nlayers; i++) {
+	v = static_cast<PetscScalar> ( sysMatrix[i][i] );
+        MatSetValues(A,1,&i,1,&i,&v,INSERT_VALUES);
+	if(i>0){
+	  v = static_cast<PetscScalar> ( sysMatrix[i-1][i] );
+	  j=i-1;
+	  MatSetValues(A,1,&i,1,&j,&v,INSERT_VALUES);
+	}
+	if(i<nlayers-1){
+	  v = static_cast<PetscScalar> ( sysMatrix[i][i+1] );
+	  j=i+1;
+	  MatSetValues(A,1,&i,1,&j,&v,INSERT_VALUES);
+	}
+      }
+      
+      ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+      ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+      
+      ierr = KSPCreate(PETSC_COMM_WORLD, &solver);
+      ierr = KSPSetOperators(solver,A,A);
+      ierr = KSPSolve(solver, b, x);
+      
+      //1. aggiornare solT con x 
+      //2. aggiornare solHT
+      //3. checkare che runni
     }
-    //END
 
-  } 
-  
+  }
+
   //BEGIN no vertical diffusion
 //   for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
 //     for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++ ) {
 //       double valueHT = ( *sol->_Sol[solIndexHT[k]] ) ( i );
 //       double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
-// 
+//
 //       double valueT = valueHT / valueH;
-// 
+//
 //       sol->_Sol[solIndexT[k]]->set ( i, valueT );
 //     }
-// 
+//
 //     sol->_Sol[solIndexT[k]]->close();
-// 
+//
 //   }
   //END
 
@@ -1510,6 +1598,7 @@ void RK4 ( MultiLevelProblem& ml_prob ) {
 
 
 }
+
 
 
 
