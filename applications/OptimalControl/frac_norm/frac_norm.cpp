@@ -35,6 +35,11 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  // ======= Files ========================
+  Files files; 
+        files.CheckIODirectories();
+        files.RedirectCout();
+
   // define multilevel mesh
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
@@ -64,6 +69,8 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
   
+  mlProb.SetFilesHandler(&files);
+  
  // add system  in mlProb as a Linear Implicit System
   LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Frac");
  
@@ -86,7 +93,7 @@ int main(int argc, char** args) {
     // ******* Print solution *******
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
+  mlSol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", variablesToBePrinted);
 
   return 0;
 }
