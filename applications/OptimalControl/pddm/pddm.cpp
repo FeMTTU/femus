@@ -44,9 +44,12 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+//   mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
+  std::string infile("./input/Mesh_1.med");
+  mlMsh.ReadCoarseMesh(infile.c_str(),"seventh",scalingFactor);
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
+ 
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
@@ -55,10 +58,13 @@ int main(int argc, char** args) {
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
 
+  
   // add variables to mlSol
   mlSol.AddSolution("state", LAGRANGE, FIRST);
   
   mlSol.Initialize("All");    // initialize all varaibles to zero
+  
+
 
   mlSol.Initialize("state", InitialValueState);
 
@@ -68,6 +74,22 @@ int main(int argc, char** args) {
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
+
+ // this problem is defined on an open boundary mesh, and the boundary mesh can change 
+ // as a function of the fracture propagation criterion.
+ // Therefore, all the structures may need to be re-allocated after that
+ // The workflow is:
+  
+ // Fill the dense matrix, and solve it
+  
+ // we may start from reading a mesh file 
+  
+ // check the propagation
+  
+ // if propagation occurs, re-dimensionalize all the arrays
+  
+  
+
   
   mlProb.SetFilesHandler(&files);
   
@@ -84,6 +106,13 @@ int main(int argc, char** args) {
   system.SetMgType(F_CYCLE/*F_CYCLE*//*M_CYCLE*/); //it doesn't matter if I use only 1 level
   system.SetOuterKSPSolver("gmres");
   system.init();
+  
+  mlMsh.SetWriter(VTK);
+  std::vector < std::string > meshToBePrinted;
+  meshToBePrinted.push_back("All");
+  mlMsh.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",meshToBePrinted);  
+  exit(0); 
+  
   system.MGsolve();
   
   // print solutions

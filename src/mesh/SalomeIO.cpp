@@ -193,7 +193,7 @@ namespace femus
       hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
       if(status == 0) std::cerr << "SalomeIO::read dims not found";
       // reading xyz_med
-      unsigned int n_nodes = dims[0] / mesh.GetDimension();
+      unsigned int n_nodes = dims[0] / 3; //mesh.GetDimension();
       double*   xyz_med = new double[dims[0]];
       std::cout << " Number of nodes in med file " <<  n_nodes << " " <<  std::endl;
 
