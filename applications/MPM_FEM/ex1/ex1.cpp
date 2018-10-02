@@ -145,11 +145,13 @@ int main(int argc, char** args)
   //BEGIN init particles
   unsigned size = 1;
   std::vector < std::vector < double > > x; // marker
-  double yc = 0.15	;  // FOR E = 4.2 * 1.e8 --> 0.115 (for 3 refinements) 0.09 (for 4) and 0.05  (for 5, this one maybe to be changed) 
+  double xc = 1.0;
+  double yc = 0.45	;  // FOR E = 4.2 * 1.e8 --> 0.115 (for 3 refinements) 0.09 (for 4) and 0.05  (for 5, this one maybe to be changed) 
                      // FOR E = 4.2 * 1.e6 --> 0.1. (for 3 refinements) 0.075 (for 4) and 0.05  (for 5)
   
   x.resize(size);
   x[0].resize(dim, 0.);
+  x[0][0] = xc;
   x[0][1] = yc;
  
   double R = 1.6;
@@ -170,7 +172,7 @@ int main(int argc, char** args)
       x[s].resize(dim);
     }
     for(unsigned j = 0; j < Nr; j++) {
-      x[sizeOld + j][0] = r * cos(j * dtheta);
+      x[sizeOld + j][0] = xc + r * cos(j * dtheta);
       x[sizeOld + j][1] = yc + r * sin(j * dtheta);
     }
   }
@@ -196,7 +198,7 @@ int main(int argc, char** args)
         x[s].resize(dim);
       }
       for(unsigned j = 0; j < NR; j++) {
-        x[sizeOld + j][0] = r * cos(j * dtheta);
+        x[sizeOld + j][0] = xc + r * cos(j * dtheta);
         x[sizeOld + j][1] = yc + r * sin(j * dtheta);
       }
       mass.resize(x.size(), rhos * r * dtheta * DL);
@@ -252,7 +254,7 @@ int main(int argc, char** args)
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
 
   double theta = PI / 4;
-  gravity[0] = 9.81 * sin(theta);
+  gravity[0] = 0*9.81 * sin(theta);
   gravity[1] = -9.81 * cos(theta);
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
