@@ -226,32 +226,23 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solxType]->GetGaussPointNumber(); ig++) {
       
-      double *phix[DIM];  // local test function
-      double *phix_uv[DIM][dim]; // local test function first order partial derivatives
+      double *phix;  // local test function
+      double *phix_uv[dim]; // local test function first order partial derivatives
             
-      double *phiY[DIM];  // local test function
-      double *phiY_uv[DIM][dim]; // local test function first order partial derivatives
+      double *phiY;  // local test function
+      double *phiY_uv[dim]; // local test function first order partial derivatives
       
       double weight; // gauss point weight
             
       // *** get gauss point weight, test function and test function partial derivatives ***
-      phix[0] = msh->_finiteElement[ielGeom][solxType]->GetPhi(ig);
-      phix_uv[0][0] = msh->_finiteElement[ielGeom][solxType]->GetDPhiDXi(ig); //derivative in u
-      phix_uv[0][1] = msh->_finiteElement[ielGeom][solxType]->GetDPhiDEta(ig); //derivative in v
+      phix = msh->_finiteElement[ielGeom][solxType]->GetPhi(ig);
+      phix_uv[0] = msh->_finiteElement[ielGeom][solxType]->GetDPhiDXi(ig); //derivative in u
+      phix_uv[1] = msh->_finiteElement[ielGeom][solxType]->GetDPhiDEta(ig); //derivative in v
       
-      phiY[0] = msh->_finiteElement[ielGeom][solYType]->GetPhi(ig);
-      phiY_uv[0][0] = msh->_finiteElement[ielGeom][solYType]->GetDPhiDXi(ig);
-      phiY_uv[0][1] = msh->_finiteElement[ielGeom][solYType]->GetDPhiDEta(ig);
-      
-      for(unsigned K = 1; K < DIM; K++){
-        phix[K] = phix[0];
-        phiY[K] = phiY[0];
-        for(unsigned j = 0; j<dim; j++){
-          phix_uv[K][j] = phix_uv[0][j];
-          phiY_uv[K][j] = phiY_uv[0][j];
-        }
-      }
-      
+      phiY = msh->_finiteElement[ielGeom][solYType]->GetPhi(ig);
+      phiY_uv[0] = msh->_finiteElement[ielGeom][solYType]->GetDPhiDXi(ig);
+      phiY_uv[1] = msh->_finiteElement[ielGeom][solYType]->GetDPhiDEta(ig);
+            
       weight = msh->_finiteElement[ielGeom][solxType]->GetGaussWeight(ig);
       
       adept::adouble solx_uv[3][2] = {{0.,0.},{0.,0.},{0.,0.}};
@@ -260,12 +251,12 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
       
       for(unsigned K=1; K < DIM; K++){
         for (unsigned i = 0; i < nxDofs; i++) {
-          solYg[K] += phiY[K][i] * solY[K][i];
+          solYg[K] += phiY[i] * solY[K][i];
         }
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
-            solx_uv[K][j] += phix_uv[K][j][i] * solx[K][i];
-            solY_uv[K][j] += phiY_uv[K][j][i] * solY[K][i];
+            solx_uv[K][j] += phix_uv[j][i] * solx[K][i];
+            solY_uv[K][j] += phiY_uv[j][i] * solY[K][i];
           }
         }
       }
@@ -303,8 +294,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
       
       adept::adouble solx_Xtan[DIM][DIM]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
       adept::adouble solY_Xtan[DIM][DIM]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
-      std::vector < adept::adouble > phiY_Xtan[DIM][DIM];
-      std::vector < adept::adouble > phix_Xtan[DIM][DIM];
+      
       
       for(unsigned I = 0; I < DIM; I++){
         for(unsigned J = 0; J < DIM; J++){
@@ -312,20 +302,29 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
             solY_Xtan[I][J] += solY_uv[I][k] * Jir[k][J];
           }
-          phiY_Xtan[I][J].assign(nYDofs,0.);
-          phix_Xtan[I][J].assign(nYDofs,0.);
-          for(unsigned inode  = 0; inode < nYDofs; inode++){
-            for(unsigned k = 0; k < dim; k++){
-              phiY_Xtan[I][J][inode] += phiY_uv[I][k][inode] * Jir[k][J];
-              phix_Xtan[I][J][inode] += phix_uv[I][k][inode] * Jir[k][J];
-            }
+        }
+      }
+      
+      
+      std::vector < adept::adouble > phiY_Xtan[DIM];
+      std::vector < adept::adouble > phix_Xtan[DIM];
+      
+      for(unsigned J = 0; J < DIM; J++){
+        phiY_Xtan[J].assign(nYDofs,0.);
+        phix_Xtan[J].assign(nYDofs,0.);
+        for(unsigned inode  = 0; inode < nYDofs; inode++){
+          for(unsigned k = 0; k < dim; k++){
+            phiY_Xtan[J][inode] += phiY_uv[k][inode] * Jir[k][J];
+            phix_Xtan[J][inode] += phix_uv[k][inode] * Jir[k][J];
           }
         }
       }
       
+      
+      
       for(unsigned K = 0; K < DIM; K++){
         for(unsigned i = 0; i < nxDofs; i++){
-          aResx[K][i] += (solYg[K] * phix[K][i] + phix_Xtan[K][K][i]) * Area; 
+          aResx[K][i] += (solYg[K] * phix[i] + phix_Xtan[K][i]) * Area; 
         }
         for(unsigned i = 0; i < nYDofs; i++){
           adept::adouble term1 = (1. - 2. * P) * solYnorm2;
@@ -333,162 +332,16 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
           adept::adouble term3 = 0.;
           for(unsigned J = 0; J < DIM; J++){
             term1 -= P * solY_Xtan[J][J];
-            term2 +=  solY_Xtan[K][J] * phiY_Xtan[K][J][i]; 
+            term2 +=  solY_Xtan[K][J] * phiY_Xtan[J][i]; 
             adept::adouble term4 = 0.;
             for(unsigned L = 0; L < DIM; L++){
               term4 += solx_Xtan[J][L] * solY_Xtan[K][L] + solx_Xtan[K][L] * solY_Xtan[J][L];
             }
-            term3 += phiY_Xtan[K][J][i] * term4;
+            term3 += phiY_Xtan[J][i] * term4;
           }
-          aResY[K][i] += (term1 * phiY_Xtan[K][K][i] - P * term2 + P * term3) * Area; 
+          aResY[K][i] += (term1 * phiY_Xtan[K][i] - P * term2 + P * term3 ) * Area; 
         }
       }
-      
-     /* 
-      
-      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      adept::adouble solRGauss[3];
-      double solRGaussOld[3];
-      adept::adouble solRGauss_x[3][2];
-      adept::adouble solRGauss_xx[3][2][2];
-      
-      adept::adouble sol_x[2];
-      sol_x[0] = sol_x[1] = 0.;
-      
-      for (int k = 0; k < 3; k++) {
-        solRGauss[k] = 0.;
-        solRGaussOld[k] = 0.;
-        
-        for (int i = 0; i < dim; i++) {
-          solRGauss_x[k][i] = 0.;
-          
-          for (int j = 0; j < dim; j++) {
-            solRGauss_xx[k][i][j] = 0.;
-          }
-        }
-      }
-      
-      adept::adouble solHGauss = 0;
-      adept::adouble solHGauss_x[2] = {0., 0.};
-      
-      for (unsigned i = 0; i < nDofs; i++) {
-        for (int k = 0; k < 3; k++) {
-          solRGauss[k] += phi[i] * solR[k][i];
-          solRGaussOld[k] += phi[i] * solR_old[k][i];
-        }
-        
-        solHGauss += phi[i] * solH[i];
-        
-        for (unsigned u = 0; u < dim; u++) {
-          sol_x[u] += phi[i] * x[u][i];
-        }
-        
-        for (unsigned u = 0; u < dim; u++) { // gradient
-          for (int k = 0; k < 3; k++) {
-            solRGauss_x[k][u] += phi_x[i * dim + u] * solR[k][i];
-          }
-          
-          solHGauss_x[u] += phi_x[i * dim + u] * solH[i];
-        }
-        
-        for (unsigned u = 0; u < dim; u++) {  // hessian
-          for (unsigned v = 0; v < dim; v++) {
-            unsigned uvindex = 0; //_uu
-            
-            if (u != v) uvindex = 2;  //_uv or _vu
-            else if (u == 1) uvindex = 1;  //_vv
-            
-            for (int k = 0; k < 3; k++) {
-              solRGauss_xx[k][u][v] += phi_xx[i * dim2 + uvindex] * solR[k][i];
-            }
-          }
-        }
-      }
-      
-      adept::adouble g[2][2];
-      
-      
-      g[0][0] = g[0][1] = g[1][0] = g[1][1] = 0.;
-      
-      for (int k = 0; k < 3; k++) {
-        for (int u = 0; u < dim; u++) {
-          for (int v = 0; v < dim; v++) {
-            g[u][v] += solRGauss_x[k][u] * solRGauss_x[k][v];
-          }
-        }
-      }
-      
-      adept::adouble detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
-      
-      adept::adouble  A = sqrt(detg);
-      
-      adept::adouble gI[2][2];
-      
-      gI[0][0] =  g[1][1] / detg;
-      gI[0][1] = -g[0][1] / detg;
-      gI[1][0] = -g[1][0] / detg;
-      gI[1][1] =  g[0][0] / detg;
-      
-      adept::adouble N[3];
-      
-      N[0] = (solRGauss_x[1][0] * solRGauss_x[2][1] - solRGauss_x[1][1] * solRGauss_x[2][0]) / A;
-      N[1] = (solRGauss_x[2][0] * solRGauss_x[0][1] - solRGauss_x[2][1] * solRGauss_x[0][0]) / A;
-      N[2] = (solRGauss_x[0][0] * solRGauss_x[1][1] - solRGauss_x[0][1] * solRGauss_x[1][0]) / A;
-      
-      adept::adouble h[2][2];
-      
-      h[0][0] = h[0][1] = h[1][0] = h[1][1] = 0.;
-      
-      for (int k = 0; k < 3; k++) {
-        for (int u = 0; u < dim; u++) {
-          for (int v = 0; v < dim; v++) {
-            h[u][v] += solRGauss_xx[k][u][v] * N[k];
-            
-          }
-        }
-      }
-      
-      //adept::adouble K = cos(sol_x[0])/(a+cos(sol_x[0]));//(h[0][0]*h[1][1]-h[0][1]*h[1][0])/detg;
-      
-      adept::adouble K = (h[0][0] * h[1][1] - h[0][1] * h[1][0]) / detg;
-      
-      adept::adouble H_exact = 1;
-      
-      // *** phi_i loop ***
-      for (unsigned i = 0; i < nDofs; i++) {
-        
-        for (int k = 0; k < 3; k++) {
-          for (int u = 0; u < dim; u++) {
-            adept::adouble AgIgradRgradPhi = 0;
-            
-            for (int v = 0; v < dim; v++) {
-              AgIgradRgradPhi += A * gI[u][v].value() * solRGauss_x[k][v];
-            }
-            
-            aResR[k][i] += AgIgradRgradPhi * phi_x[i * dim + u] * weight;
-          }
-          
-          aResR[k][i] += 2.* A * solHGauss.value() * N[k] * phi[i] * weight;
-        }
-        
-        
-        for (int u = 0; u < dim; u++) {
-          adept::adouble AgIgradHgradPhi = 0;
-          
-          for (int v = 0; v < dim; v++) {
-            AgIgradHgradPhi += A * gI[u][v].value() * solHGauss_x[v];
-          }
-          
-          aResH[i] -= AgIgradHgradPhi * phi_x[i * dim + u] * weight;
-        }
-        
-        aResH[i] += A * (-0 * (solRGauss[0] - solRGaussOld[0]) * N[0].value()
-        - 0 * (solRGauss[1] - solRGaussOld[1]) * N[1].value()
-        - 0 * (solRGauss[2] - solRGaussOld[2]) * N[2].value()
-        + 2. * solHGauss * (solHGauss * solHGauss  - K.value())) * phi[i] * weight;
-        
-      } // end phi_i loop*/
-     
     } // end gauss point loop
     
     //--------------------------------------------------------------------------------------------------------
