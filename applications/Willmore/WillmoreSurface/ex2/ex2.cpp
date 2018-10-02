@@ -19,6 +19,7 @@
 #include "TransientSystem.hpp"
 #include "adept.h"
 #include <cstdlib>
+#include "PetscMatrix.hpp"
 
 const unsigned P = 2.;
 using namespace femus;
@@ -392,6 +393,15 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   RES->close();
   
   KK->close();
+  
+//     PetscViewer    viewer;
+//     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+//     PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+//     PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//     MatView((static_cast<PetscMatrix*>(KK))->mat(),viewer);
+//     double a;
+//     std::cin>>a;
+  
   
   // ***************** END ASSEMBLY *******************
 }
