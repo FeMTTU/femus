@@ -14,7 +14,7 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
-#include "../include/mpmFem.hpp"
+#include "../include/mpmFem1.hpp"
 
 using namespace femus;
 

@@ -490,7 +490,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         for(unsigned inode = 0; inode < nDofsD; inode++) {
           SolDp[i] += phi[inode] * SolDd1[i][inode];
           for(int j = 0; j < dim; j++) {
-            double factor = (switchToNeumanncheck && j == 1)? 0.5 : 1;   
+            double factor = (switchToNeumanncheck && j == 1)? 0.6 : 1;   
             GradSolDpHat[i][j] +=  factor * gradphi_hat[inode * dim + j] * SolDd1[i][inode];
           }
         }
@@ -820,7 +820,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
       for(int i = 0; i < dim; i++) {
         for(int j = 0; j < dim; j++) {
           GradSolDpHat[i][j] = 0.;
-          double factor = (switchToNeumanncheck && j == 1)? 1. : 1.; 
+          double factor = (switchToNeumanncheck && j == 1)? .6 : 1.; 
           for(unsigned inode = 0; inode < nve; inode++) {
             GradSolDpHat[i][j] +=  factor * gradphi_hat[inode * dim + j] * SolDd1[i][inode];
           }

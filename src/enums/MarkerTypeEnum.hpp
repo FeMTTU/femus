@@ -4,7 +4,9 @@
 enum  MarkerType {
   VOLUME = 0,
   INTERSECTION,
-  FIXED 
+  FIXED,
+  BOUNDARY,
+  INTERIOR
 };
 
 
