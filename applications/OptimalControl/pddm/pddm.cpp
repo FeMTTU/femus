@@ -12,15 +12,22 @@
 using namespace femus;
 
 
-double InitialValueState(const std::vector < double >& x) {
+double InitialValueDS(const std::vector < double >& x) {
   return 0.;
 }
 
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
-  bool dirichlet = true; //dirichlet
+  bool dirichlet = false;
   value = 0;
+  
+  const double tolerance = 1.e-5;
+  
+  if( x[0] < 0. + tolerance || x[0] > 1. - tolerance) {
+      dirichlet = true;
+        value = 0;
+  }
   
   return dirichlet;
  }
@@ -50,31 +57,38 @@ int main(int argc, char** args) {
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
  
-  unsigned numberOfUniformLevels = 1;
+  unsigned numberOfUniformLevels = 4;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
+  mlMsh.EraseCoarseLevels(numberOfUniformLevels + numberOfSelectiveLevels - 1);
   mlMsh.PrintInfo();
 
   // define the multilevel solution and attach the mlMsh object to it
   MultiLevelSolution mlSol(&mlMsh);
 
+    // ******* Print mesh *******
+//   mlSol.SetWriter(VTK);  //   mlSol.GetWriter()->SetDebugOutput(true);
+//   mlSol.GetWriter()->Write(files.GetOutputPath(), "biquadratic");
+//   exit(0);
+//   mlMsh.SetWriter(VTK);  //this doesn't work and should be removed, no application uses it
+//   mlMsh.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic", meshToBePrinted);  
+    // ******* End print mesh *******
   
   // add variables to mlSol
-  mlSol.AddSolution("state", LAGRANGE, FIRST);
+  mlSol.AddSolution("d_s", LAGRANGE,SECOND/*DISCONTINOUS_POLYNOMIAL, ZERO*/);
   
-  mlSol.Initialize("All");    // initialize all varaibles to zero
+  mlSol.Initialize("All");    // initialize all variables to zero
   
-
-
-  mlSol.Initialize("state", InitialValueState);
+  mlSol.Initialize("d_s", InitialValueDS);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.GenerateBdc("state");
+  mlSol.GenerateBdc("d_s");
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
 
+// *************************************
  // this problem is defined on an open boundary mesh, and the boundary mesh can change 
  // as a function of the fracture propagation criterion.
  // Therefore, all the structures may need to be re-allocated after that
@@ -87,16 +101,15 @@ int main(int argc, char** args) {
  // check the propagation
   
  // if propagation occurs, re-dimensionalize all the arrays
-  
+// *************************************
   
 
-  
   mlProb.SetFilesHandler(&files);
   
  // add system  in mlProb as a Linear Implicit System
   LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("Frac");
  
-  system.AddSolutionToSystemPDE("state");
+  system.AddSolutionToSystemPDE("d_s");
  
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleProblem);
@@ -107,19 +120,11 @@ int main(int argc, char** args) {
   system.SetOuterKSPSolver("gmres");
   system.init();
   
-  mlMsh.SetWriter(VTK);
-  std::vector < std::string > meshToBePrinted;
-  meshToBePrinted.push_back("All");
-  mlMsh.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",meshToBePrinted);  
-  exit(0); 
-  
   system.MGsolve();
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("state");
-
-    // ******* Print solution *******
+  variablesToBePrinted.push_back("all");
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(files.GetOutputPath(), "biquadratic", variablesToBePrinted);
@@ -163,8 +168,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   double weight; 
   
 
- //********************* state *********************** 
+ //********************* unknowns *********************** 
  //***************************************************  
+  const int n_vars = mlPdeSys->GetSolPdeIndex().size();
+  std::cout << "************" << n_vars << "************";
+  const int solType_max = 2;  //biquadratic
   vector <double> phi_u;
   vector <double> phi_u_x; 
   vector <double> phi_u_xx;
@@ -175,11 +183,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   
  
   unsigned solIndex_u;
-  solIndex_u = mlSol->GetIndex("state"); 
+  solIndex_u = mlSol->GetIndex("d_s"); 
   unsigned solFEType_u = mlSol->GetSolutionType(solIndex_u); 
 
   unsigned solPdeIndex_u;
-  solPdeIndex_u = mlPdeSys->GetSolPdeIndex("state");
+  solPdeIndex_u = mlPdeSys->GetSolPdeIndex("d_s");
 
   vector < double >  sol_u; // local solution
   sol_u.reserve(maxSize);
@@ -191,10 +199,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   
  //***************************************************  
  //********* WHOLE SET OF VARIABLES ****************** 
-  const int solType_max = 2;  //biquadratic
 
-  const int n_vars = 1;
- 
   vector< int > l2GMap_AllVars; // local to global mapping
   l2GMap_AllVars.reserve(n_vars*maxSize);
   
@@ -271,8 +276,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     
  //========= gauss value quantities ==================   
 	double sol_u_gss = 0.;
-	double sol_adj_gss = 0.;
-	double sol_ctrl_gss = 0.;
 	std::vector<double> sol_u_x_gss(dim);     std::fill(sol_u_x_gss.begin(), sol_u_x_gss.end(), 0.);
  //===================================================   
 
