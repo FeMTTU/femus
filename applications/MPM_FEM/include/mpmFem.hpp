@@ -6,7 +6,7 @@ double Gamma = 0.5;
 double gravity[3] = {0., -9.81, 0.};
 Line* linea;
 
-double tuninig = 0.645;
+double tuninig = 0.;//0.645;
 
 void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
@@ -445,24 +445,27 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           SolDd1[k][inode] = SolDd[k][inode];
         }
       }
-           
+      bool switchToNeumanncheck = false;      
       for(unsigned iface = 0; iface < 4; iface++){
         int faceIndex = myel->GetBoundaryIndex(iel, iface);
         bool switchToNeumann = (faceIndex == 1 && SolVpOld[1] > 0 ) ? true : false;
         if(switchToNeumann){
-                 
-          for(unsigned inode = 0;inode < 3; inode++){
-            for(int k = 0; k < dim; k++) {
-              unsigned i0 = ii[iface][inode][0];
-              unsigned i1 = ii[iface][inode][1];
-              unsigned i2 = ii[iface][inode][2];
-//               SolDd1[k][i0] =  - ( gradphi_hat[i1 * dim + 1] * SolDd[k][ i1 ] 
-//                                 + gradphi_hat[i2 * dim + 1] * SolDd[k][ i2 ] )/gradphi_hat[i0 * dim + 1];  
-              //SolDd1[k][i0] = (1. - tuninig) * (- 1./3. * SolDd[k][i1] + 4./3. * SolDd[k][ i2 ]) + tuninig * SolDd[k][i0];
-              //SolDd1[k][i0] = (- SolDd[k][i1] + 2. * SolDd[k][i2]);
-              SolDd1[k][i0] = ( SolDd[k][i1] - SolDd[k][i2]);
-            }
-          }
+          std::cout<<"AAAAAAAAAAAAAAAAAAAAAAA "<< iel <<std::endl;  
+          switchToNeumanncheck = true;     
+//           for(unsigned inode = 0;inode < 3; inode++){
+//             for(int k = 0; k < dim; k++) {
+//               unsigned i0 = ii[iface][inode][0];
+//               unsigned i1 = ii[iface][inode][1];
+//               unsigned i2 = ii[iface][inode][2];
+// //               SolDd1[k][i0] =  - ( gradphi_hat[i1 * dim + 1] * SolDd[k][ i1 ] 
+// //                                 + gradphi_hat[i2 * dim + 1] * SolDd[k][ i2 ] )/gradphi_hat[i0 * dim + 1];  
+//               //SolDd1[k][i0] = (1. - tuninig) * (- 1./3. * SolDd[k][i1] + 4./3. * SolDd[k][ i2 ]) + tuninig * SolDd[k][i0];
+//               //SolDd1[k][i0] = (- SolDd[k][i1] + 2. * SolDd[k][i2]);
+//               //SolDd1[k][i0] = ( SolDd[k][i1] - SolDd[k][i2]);
+//               
+//               std::cout <<  SolDd1[k][i0] <<" "<< SolDd1[k][i1] <<" "<< SolDd1[k][i2] <<std::endl; 
+//             }
+//           }
         }
       }
       
@@ -478,26 +481,28 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       // displacement and velocity
       //BEGIN evaluates SolDp at the particle iMarker
       vector<adept::adouble> SolDp(dim,0.);
-      vector<double> SolDpOld(dim,0.);
       vector<vector < adept::adouble > > GradSolDpHat(dim);
-      vector < vector < adept::adouble > > LocalFp(dim);
-
-      vector<double> Xp(dim,0.);
-      
       for(int i = 0; i < dim; i++) {
-        GradSolDpHat[i].resize(dim);
-        std::fill(GradSolDpHat[i].begin(), GradSolDpHat[i].end(), 0);
+        GradSolDpHat[i].assign(dim,0.);
       }
 
       for(int i = 0; i < dim; i++) {
         for(unsigned inode = 0; inode < nDofsD; inode++) {
-          Xp[i] +=  phi[inode] * phi_hat[inode];
           SolDp[i] += phi[inode] * SolDd1[i][inode];
           for(int j = 0; j < dim; j++) {
-            GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * SolDd1[i][inode];
+            double factor = (switchToNeumanncheck && j == 1)? 0.5 : 1;   
+            GradSolDpHat[i][j] +=  factor * gradphi_hat[inode * dim + j] * SolDd1[i][inode];
           }
         }
       }
+      
+      if(switchToNeumanncheck){
+        for(int i = 0; i < dim; i++) {
+         std::cout<< GradSolDpHat[i][1] <<" ";
+        }
+        std::cout<<std::endl;
+      }
+      
       //END evaluates SolDp at the particle iMarker
 
       
@@ -767,23 +772,25 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
           SolDd1[k][inode] = SolDd[k][inode];
         }
       }
-        
+      bool switchToNeumanncheck = false;        
       for(unsigned iface = 0; iface < 4; iface++){
         int faceIndex = myel->GetBoundaryIndex(iel, iface);
         bool switchToNeumann = (faceIndex == 1 && particleVelOld[1] > 0 ) ? true : false;
         if(switchToNeumann){
-          for(unsigned inode = 0;inode < 3; inode++){
-            for(int k = 0; k < dim; k++) {
-              unsigned i0 = ii[iface][inode][0];
-              unsigned i1 = ii[iface][inode][1];
-              unsigned i2 = ii[iface][inode][2];
-                //               SolDd1[k][i0] =  - ( gradphi_hat[i1 * dim + 1] * SolDd[k][ i1 ] 
-                //                                 + gradphi_hat[i2 * dim + 1] * SolDd[k][ i2 ] )/gradphi_hat[i0 * dim + 1];  
-              //SolDd1[k][i0] = (1. - tuninig) * (- 1./3. * SolDd[k][i1] + 4./3. * SolDd[k][ i2 ]) + tuninig * SolDd[k][i0];
-              //SolDd1[k][i0] = (- SolDd[k][i1] + 2. * SolDd[k][i2]);
-              SolDd1[k][i0] = ( SolDd[k][i1] - SolDd[k][i2]);
-            }
-          }
+          switchToNeumanncheck = true;
+//           for(unsigned inode = 0;inode < 3; inode++){
+//             for(int k = 0; k < dim; k++) {
+//               unsigned i0 = ii[iface][inode][0];
+//               unsigned i1 = ii[iface][inode][1];
+//               unsigned i2 = ii[iface][inode][2];
+//                 //               SolDd1[k][i0] =  - ( gradphi_hat[i1 * dim + 1] * SolDd[k][ i1 ] 
+//                 //                                 + gradphi_hat[i2 * dim + 1] * SolDd[k][ i2 ] )/gradphi_hat[i0 * dim + 1];  
+//               //SolDd1[k][i0] = (1. - tuninig) * (- 1./3. * SolDd[k][i1] + 4./3. * SolDd[k][ i2 ]) + tuninig * SolDd[k][i0];
+//               //SolDd1[k][i0] = (- SolDd[k][i1] + 2. * SolDd[k][i2]);
+//               //SolDd1[k][i0] = ( SolDd[k][i1] - SolDd[k][i2]);
+//               //SolDd1[k][i0] = (- SolDd[k][i1] + 2. * SolDd[k][i2]);
+//             }
+//           }
         }
       }
            
@@ -809,11 +816,13 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
       particles[iMarker]->SetMarkerAcceleration(particleAcc);
 
       //   update the deformation gradient
+      
       for(int i = 0; i < dim; i++) {
         for(int j = 0; j < dim; j++) {
           GradSolDpHat[i][j] = 0.;
+          double factor = (switchToNeumanncheck && j == 1)? 1. : 1.; 
           for(unsigned inode = 0; inode < nve; inode++) {
-            GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * SolDd1[i][inode];
+            GradSolDpHat[i][j] +=  factor * gradphi_hat[inode * dim + j] * SolDd1[i][inode];
           }
         }
       }
