@@ -362,8 +362,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
   //initialization of iel
   unsigned ielOld = UINT_MAX;
-  std::vector < std::vector < std::vector <double > > > aP(3);
-  bool aPisInitialized = false;
   //BEGIN loop on particles (used as Gauss points)
   for(unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
     //element of particle iMarker
@@ -374,7 +372,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
            
       //update element related quantities only if we are in a different element
       if(iel != ielOld) {
-        aPisInitialized = false;  
         ielt = mymsh->GetElementType(iel);
         nDofsD = mymsh->GetElementDofNumber(iel, solType);
         //initialization of everything is in common fluid and solid
@@ -405,7 +402,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
             //Fixed coordinates (Reference frame)
             vx_hat[j][i] = (*mymsh->_topology->_Sol[j])(idofX) + SolDdOld[j][i];
-            //vx[j][i] = vx_hat[j][i] + SolDd[j][i];
+            vx[j][i] = vx_hat[j][i] + SolDd[j][i];
           }
         }
         //END
@@ -422,15 +419,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       
       ///////////////////////////////////////////
       
-      vector <vector < double> > vx_hat1(dim);
-      
-      for(int j = 0; j < dim; j++) {
-        vx_hat1[j].resize(nDofsD);
-        for(unsigned inode = 0; inode < nDofsD; inode++){
-          vx_hat1[j][inode] = vx_hat[j][inode];
-        }
-      }
-      
       std::vector <double> SolVpOld(dim);
       particles[iMarker]->GetMarkerVelocity(SolVpOld);
 
@@ -441,64 +429,9 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
       double mass = particles[iMarker]->GetMarkerMass();
       
-      unsigned ii[9][3][3] = { 
-        { {0,3,7}, {1,2,5}, {4,6,8}},
-        { {1,0,4}, {2,3,6}, {5,7,8}},
-        { {2,1,5}, {3,0,7}, {6,4,8}},
-        { {3,2,6}, {0,1,4}, {7,5,8}} };
-            
-      bool switchToNeumanncheck = false;      
-      for(unsigned iface = 0; iface < 4; iface++){
-        
-        int faceIndex = myel->GetBoundaryIndex(iel, iface);
-        bool switchToNeumann = (faceIndex == 1 && SolVpOld[1] > 0 ) ? true : false;
-        if(switchToNeumann){
-            
-          std::cout<<"AAAAAAAAAAAAAAAAAAAAAAA\n";  
-            
-          vx_hat1[1][ii[iface][0][0]] -= 5;
-          vx_hat1[1][ii[iface][1][0]] -= 5;
-          vx_hat1[1][ii[iface][2][0]] -= 5;
-          
-          vx_hat1[1][ii[iface][0][2]] -= 2.5;
-          vx_hat1[1][ii[iface][1][2]] -= 2.5;
-          vx_hat1[1][ii[iface][2][2]] -= 2.5;
-          
-          for(unsigned inode = 0; inode < nDofsD; inode++){
-            for(int j = 0; j < dim; j++) {  
-              std::cout << vx_hat1[j][inode] << " ";
-            }
-            std::cout << std::endl;
-          }
-          std::cout << std::endl;
-          
-          if(!aPisInitialized){
-            for (unsigned jtype = 0; jtype < 3; jtype++) {
-              ProjectNodalToPolynomialCoefficients(aP[jtype], vx_hat1, ielt, jtype) ;
-            }  
-            aPisInitialized = true;
-          }  
-          
-          std::vector <double> xp = particles[iMarker]->GetIprocMarkerCoordinates();
-          std::cout<<xp[0]<<" "<<xp[1]<<std::endl;
-          
-          std::cout<<xi [0]<<" "<<xi [1]<<std::endl;
-          
-          //GetClosestPointInReferenceElement(vx_hat1, xp, ielt, xi);
-          
-          GetInverseMapping(solType, ielt, aP, xp, xi);
-          std::cout<<xi [0]<<" "<<xi [1]<<std::endl;
-        }
-      }
       
-      for(int j = 0; j < dim; j++) {
-        for(unsigned inode = 0; inode < nDofsD; inode++){
-          vx[j][inode] = vx_hat1[j][inode] + SolDd[j][inode];
-        }
-      }
-            
       // the local coordinates of the particles are the Gauss points in this context
-      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat1, xi, weight_hat, phi_hat, gradphi_hat);
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, xi, weight_hat, phi_hat, gradphi_hat);
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradphi); //function to evaluate at the particles
       
   
@@ -724,8 +657,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
   //initialization of iel
   unsigned ielOld = UINT_MAX;
   //declaration of element instances
-  std::vector < std::vector < std::vector <double > > > aP(3);
-  bool aPisInitialized = false;
+ 
   //BEGIN loop on particles
   for(unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
 
@@ -740,7 +672,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
 
       //update element related quantities only if we are in a different element
       if(iel != ielOld) {
-        aPisInitialized = false;
+       
         ielt = mymsh->GetElementType(iel);
         nve = mymsh->GetElementDofNumber(iel, solType);
 
@@ -766,14 +698,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
         //END
       }
       
-      vector <vector < double> > vx_hat1(dim);
-      
-      for(int j = 0; j < dim; j++) {
-        vx_hat1[j].resize(nve);
-        for(unsigned inode = 0; inode < nve; inode++){
-          vx_hat1[j][inode] = vx_hat[j][inode];
-        }
-      }
+     
       
       std::vector <double> particleVelOld(dim);
       particles[iMarker]->GetMarkerVelocity(particleVelOld);
@@ -782,59 +707,9 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
       particles[iMarker]->GetMarkerAcceleration(particleAccOld);
            
       std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
-      
-      unsigned ii[9][3][3] = { 
-        { {0,3,7}, {1,2,5}, {4,6,8}},
-        { {1,0,4}, {2,3,6}, {5,7,8}},
-        { {2,1,5}, {3,0,7}, {6,4,8}},
-        { {3,2,6}, {0,1,4}, {7,5,8}} };
                 
-      bool switchToNeumanncheck = false;      
-      for(unsigned iface = 0; iface < 4; iface++){
-        
-        int faceIndex = myel->GetBoundaryIndex(iel, iface);
-        bool switchToNeumann = (faceIndex == 1 && particleVelOld[1] > 0 ) ? true : false;
-        if(switchToNeumann){
-          std::cout<<"BBBBBBBBBBBBBBBBBBBBB\n";  
-            
-          vx_hat1[1][ii[iface][0][0]] -= 5;
-          vx_hat1[1][ii[iface][1][0]] -= 5;
-          vx_hat1[1][ii[iface][2][0]] -= 5;
-         
-          vx_hat1[1][ii[iface][0][2]] -= 2.5;
-          vx_hat1[1][ii[iface][1][2]] -= 2.5;
-          vx_hat1[1][ii[iface][2][2]] -= 2.5;
-          
-          for(unsigned inode = 0; inode < nve; inode++){
-            for(int j = 0; j < dim; j++) {  
-              std::cout << vx_hat1[j][inode] << " ";
-            }
-            std::cout << std::endl;
-          }
-          std::cout << std::endl;
-          
-          if(!aPisInitialized){
-            for (unsigned jtype = 0; jtype < 3; jtype++) {
-              ProjectNodalToPolynomialCoefficients(aP[jtype], vx_hat1, ielt, jtype) ;
-            }  
-            aPisInitialized = true;
-          }  
-          
-          std::vector <double> xp = particles[iMarker]->GetIprocMarkerCoordinates();
-          std::cout<<xp[0]<<" "<<xp[1]<<std::endl;
-          
-          std::cout<<xi [0]<<" "<<xi [1]<<std::endl;
-          
-          //GetClosestPointInReferenceElement(vx_hat1, xp, ielt, xi);
-          
-          GetInverseMapping(solType, ielt, aP, xp, xi);
-          std::cout<<xi [0]<<" "<<xi [1]<<std::endl;
-        }
-      }
       
-                  
-      
-      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat1, xi, weight, phi_hat, gradphi_hat, nablaphi_hat); //function to evaluate at the particles
+      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, xi, weight, phi_hat, gradphi_hat, nablaphi_hat); //function to evaluate at the particles
       
            
       std::vector <double> particleDisp(dim, 0.);
