@@ -3,15 +3,23 @@
 #include <vector>
 #include "adept.h"
 #include <math.h>
- 
+#include "FemusInit.hpp"
+
 using namespace std;
 using namespace adept;
+using namespace femus;
 
 adouble f(const adouble x[2]);
 //double alg_and_grad(const double x[2]);
 
-int main() {
-    Stack s;
+int main(int argc, char** args)
+{
+
+    // init Petsc-MPI communicator
+    FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+    
+    adept::Stack& s = FemusInit::_adeptStack;
+    
     adouble x[2]={1.0,2.0};
     s.new_recording();
     adouble y=f(x);
