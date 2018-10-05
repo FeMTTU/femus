@@ -21,9 +21,12 @@ using namespace femus;
 // OLD BEST RESULT WITH E = 4.2 * 1.e6, 5 levels, dt= 0.01, NR = 300, R0 = 1.5, factor = 1.3
 // MOST BEST RESULT WITH E = 4.2 * 1.e6, 4 levels, dt= 0.01, NR = 300, R0 = 1.4, factor = 1.14,  beta = 0.3, Gamma = 0.5
 
+double DT0 = 0.1;
+double DT;
+
 double SetVariableTimeStep(const double time)
 {
-  double dt =  0.01;
+  double dt =  DT;
   return dt;
 }
 
@@ -146,7 +149,7 @@ int main(int argc, char** args)
   unsigned size = 1;
   std::vector < std::vector < double > > x; // marker
   double xc = 1.0;
-  double yc = 1.25;//0.45	;  // FOR E = 4.2 * 1.e8 --> 0.115 (for 3 refinements) 0.09 (for 4) and 0.05  (for 5, this one maybe to be changed) 
+  double yc = 1.0;//0.45	;  // FOR E = 4.2 * 1.e8 --> 0.115 (for 3 refinements) 0.09 (for 4) and 0.05  (for 5, this one maybe to be changed) 
                      // FOR E = 4.2 * 1.e6 --> 0.1. (for 3 refinements) 0.075 (for 4) and 0.05  (for 5)
   
   x.resize(size);
@@ -258,11 +261,19 @@ int main(int argc, char** args)
   gravity[1] = -9.81 * cos(theta);
 
   system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
-  unsigned n_timesteps = 350;
+  unsigned n_timesteps = 700;
   for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
     system.CopySolutionToOldSolution();
+    std::vector < double > xmin;
+    std::vector < double > xmax;
+    linea->GetExtrema(xmin,xmax);
+        
+    double x = 0.87 / (xmin[1] + 1.6);
+    DT = (  x < 1. ) ? DT0 : DT0 / pow( x , 1.1);
 
+    std::cout << xmin[1]<<" " << x << " " << DT << std::endl;
+    
     system.MGsolve();
 
     // ******* Print solution *******

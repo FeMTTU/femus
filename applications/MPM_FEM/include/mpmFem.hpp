@@ -450,7 +450,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         int faceIndex = myel->GetBoundaryIndex(iel, iface);
         bool switchToNeumann = (faceIndex == 1 && SolVpOld[1] > 0 ) ? true : false;
         if(switchToNeumann){
-          std::cout<<"AAAAAAAAAAAAAAAAAAAAAAA "<< iel <<std::endl;  
+          //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAA "<< iel <<std::endl;  
           switchToNeumanncheck = true;     
           for(unsigned inode = 0;inode < 3; inode++){
             for(int k = 0; k < dim; k++) {
@@ -464,11 +464,13 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
               double c = 0.75;
               double a = 10.;
               double G1 = 0.5 - PIi * atan( a * (1. - c) );
-              SolDd1[k][i0] = SolDd[k][i2] *  ( 0.5 - PIi * atan(a * (xi[1] - c)) - G1 ) / (1. - G1);
+              //SolDd1[k][i0] = SolDd[k][i2] *  ( 0.5 - PIi * atan(a * (xi[1] - c)) - G1 ) / (1. - G1);
               //SolDd1[k][i0] = (- SolDd[k][i1] + 2. * SolDd[k][i2]);
               //SolDd1[k][i0] = ( SolDd[k][i1] - SolDd[k][i2]);
               
-              std::cout <<  SolDd1[k][i0] <<" "<< SolDd1[k][i1] <<" "<< SolDd1[k][i2] <<std::endl; 
+              //SolDd1[k][i0] = - 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ];
+              SolDd1[k][i0] = SolDd[k][ i2 ];
+              //std::cout <<  SolDd1[k][i0] <<" "<< SolDd1[k][i1] <<" "<< SolDd1[k][i2] <<std::endl; 
             }
           }
         }
@@ -501,12 +503,12 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         }
       }
       
-      if(switchToNeumanncheck){
-        for(int i = 0; i < dim; i++) {
-         std::cout<< GradSolDpHat[i][1] <<" ";
-        }
-        std::cout<<std::endl;
-      }
+//       if(switchToNeumanncheck){
+//         for(int i = 0; i < dim; i++) {
+//          std::cout<< GradSolDpHat[i][1] <<" ";
+//         }
+//         std::cout<<std::endl;
+//       }
       
       //END evaluates SolDp at the particle iMarker
 
@@ -797,9 +799,12 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
               double c = 0.75;
               double a = 10.;
               double G1 = 0.5 - PIi * atan( a * (1. - c) );
-              SolDd1[k][i0] = SolDd[k][i2] *  ( 0.5 - PIi * atan(a * (xi[1] - c)) - G1 ) / (1. - G1);
+              //SolDd1[k][i0] = SolDd[k][i2] *  ( 0.5 - PIi * atan(a * (xi[1] - c)) - G1 ) / (1. - G1);
               //SolDd1[k][i0] = ( SolDd[k][i1] - SolDd[k][i2]);
               //SolDd1[k][i0] = (- SolDd[k][i1] + 2. * SolDd[k][i2]);
+              
+//               SolDd1[k][i0] = - 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ];
+              SolDd1[k][i0] = SolDd[k][ i2 ];
             }
           }
         }
