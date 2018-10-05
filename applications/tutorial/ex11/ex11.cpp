@@ -1,9 +1,7 @@
 
 #include <iostream>
+#include <adept.h>
 #include <vector>
-#include "adept.h"
-#include <math.h>
- 
 using namespace std;
 using namespace adept;
 
@@ -18,7 +16,6 @@ int main() {
     y.set_gradient(1.0);
     s.compute_adjoint();
     cout << y.value() << endl;
-    
     return 0;
 }
 
