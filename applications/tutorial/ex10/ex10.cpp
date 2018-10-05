@@ -1,9 +1,8 @@
 /** tutorial/Ex10
  * This example shows how to set and solve the weak form of the Poisson problem
- *                    $$ \Div.( a(u)\Delta u) = f \text{ on }\Omega, $$
- *          $$ u=0 \text{ on } \Gamma, $$
- *          $$ u=\Delta u.n \text{on the left} of \Omega  $$
- * on a square domain [-1,1]^2 $\Omega$ with boundary $\Gamma$;
+ *                  $\nabla \cdot (a(u)\nabla u)=f$,  $in\Omega= [-1,1]^{2} $ \\
+ *                  $a(u)\nabla u \cdot n=g_{N}$, on $\partial\Omega_{\text{left}}$ \\
+ *                  $u=0$,  on $\partial\Omega_{rest}$
  * all the coarse-level meshes are removed;
  * a multilevel problem and an equation system are initialized;
  * a direct solver is used to solve the problem.
@@ -236,7 +235,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("NonLinearPoisson");   // pointer to the linear implicit system named "Poisson"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("NonLinearPoisson");   // pointer to the linear implicit system named "NonLinearPoisson"
   const unsigned level = mlPdeSys->GetLevelToAssemble(); // We have different level of meshes. we assemble the problem on the specified one.
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -298,7 +297,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
      
     short unsigned ielGeom = msh->GetElementType(iel);
-    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
+    unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);// number of solution element dofs
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
     // resize local arrays
@@ -306,7 +305,7 @@ void AssemblePoissonProblem_AD(MultiLevelProblem& ml_prob) {
     solu.resize(nDofu);
 
     for (int k = 0; k < dim; k++) {
-      x[k].resize(nDofx); // Now we 
+      x[k].resize(nDofx); // 
     }
 
     aRes.resize(nDofu);    //resize
