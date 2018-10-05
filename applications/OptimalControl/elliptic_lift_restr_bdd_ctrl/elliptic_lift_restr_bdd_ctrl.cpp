@@ -130,9 +130,9 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
   
   system.SetDebugNonlinear(true);//   system.SetDebuglinear(true);
-  system.SetMaxNumberOfNonLinearIterations(2);
+//   system.SetMaxNumberOfNonLinearIterations(2);
 
-  // initilaize and solve the system
+  // initialize and solve the system
   system.init();
   system.MGsolve();
   
@@ -140,9 +140,7 @@ int main(int argc, char** args) {
  
   // print solutions
   std::vector < std::string > variablesToBePrinted;
-     variablesToBePrinted.push_back("all");
-
-    // ******* Print solution *******
+  variablesToBePrinted.push_back("all");
   mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
 
   return 0;
@@ -151,14 +149,9 @@ int main(int argc, char** args) {
 
 void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
- const double ineq_flag = 1.;
-  //  ml_prob is the global object from/to where get/set all the data
-
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
-
-  //  extract pointers to the several objects that we are going to use
 
   NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
@@ -289,10 +282,11 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
-  double ctrl_lower =  CTRL_BOX_LOWER;
-  double ctrl_upper =  CTRL_BOX_UPPER;
+  const int ineq_flag = INEQ_FLAG;
+  const double ctrl_lower =  CTRL_BOX_LOWER;
+  const double ctrl_upper =  CTRL_BOX_UPPER;
   assert(ctrl_lower < ctrl_upper);
-  double c_compl = 1.;
+  const double c_compl = C_COMPL;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
   //***************************************************  
 
@@ -803,7 +797,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   
   std::vector<double>  one_times_mu(global_ctrl_size, 0.);
   std::vector<int>    positions(global_ctrl_size);
-  double position_mu_i;
+//  double position_mu_i;
   for (unsigned i = 0; i < positions.size(); i++) {
     positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
 //     position_mu_i = pdeSys->KKoffset[mu_index][iproc] + i;

@@ -4,8 +4,8 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  4
-#define NSUB_Y  4
+#define NSUB_X  2
+#define NSUB_Y  2
 
 
 //*********************** Sets the regularization parameters *******************************************************
@@ -18,9 +18,10 @@
 
 
 //*********************** Control box constraints *******************************************************
-#define  CTRL_BOX_LOWER   -0.1
-#define  CTRL_BOX_UPPER   0.7
-
+#define  INEQ_FLAG 0
+#define  CTRL_BOX_LOWER   -1000
+#define  CTRL_BOX_UPPER   1000
+#define  C_COMPL 1.
 
 
 //*********************** Find volume elements that contain a  Target domain element **************************************
