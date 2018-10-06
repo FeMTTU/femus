@@ -1,10 +1,10 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "NonLinearImplicitSystem.hpp"
+#include "LinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
-#include "../elliptic_param.hpp"
+#include "./quench_param.hpp"
 
 using namespace femus;
 
@@ -56,7 +56,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 
 double ComputeIntegral(MultiLevelProblem& ml_prob);
 
-void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob);
+void AssembleProblem(MultiLevelProblem& ml_prob);
 
 
 
@@ -116,7 +116,7 @@ int main(int argc, char** args) {
   mlProb.SetFilesHandler(&files);
 
  // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
+  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("OptSys");
 
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
@@ -124,12 +124,13 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("mu");  
   
   // attach the assembling function to system
-  system.SetAssembleFunction(AssembleLiftRestrProblem);
+  system.SetAssembleFunction(AssembleProblem);
   
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
   
-  system.SetDebugNonlinear(true);//   system.SetDebuglinear(true);
+//   system.SetDebugNonlinear(true);
+    system.SetDebugLinear(true);
 //   system.SetMaxNumberOfNonLinearIterations(2);
 
   // initialize and solve the system
@@ -147,13 +148,13 @@ int main(int argc, char** args) {
 }
 
 
-void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
+void AssembleProblem(MultiLevelProblem& ml_prob) {
 
   //  level is the level of the PDE system to be assembled
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("OptSys");
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -174,17 +175,27 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   
  //***************************************************  
-  vector < vector < double > > x(dim);    // local coordinates
-  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+  vector < vector < double > > coordX(dim);    // local coordinates
+  unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
   for (unsigned i = 0; i < dim; i++) {
-    x[i].reserve(maxSize);
+    coordX[i].reserve(maxSize);
   }
  //***************************************************   
 
  //***************************************************  
   double weight; // gauss point weight
   
-
+  vector < vector < double > > phi_gss_fe(NFE_FAMS);
+  vector < vector < double > > phi_x_gss_fe(NFE_FAMS);
+  vector < vector < double > > phi_xx_gss_fe(NFE_FAMS);
+ 
+  for(int fe=0; fe < NFE_FAMS; fe++) {  
+        phi_gss_fe[fe].reserve(maxSize);
+      phi_x_gss_fe[fe].reserve(maxSize*dim);
+     phi_xx_gss_fe[fe].reserve(maxSize*(3*(dim-1)));
+   }
+   
+  
  //********************* state *********************** 
  //***************************************************  
   vector <double> phi_u;  // local test function
@@ -263,14 +274,6 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
  //****************** mu ******************************  
  //***************************************************  
-  vector <double> phi_mu;  // local test function
-  vector <double> phi_mu_x; // local test function first order partial derivatives
-  vector <double> phi_mu_xx; // local test function second order partial derivatives
-
-  phi_mu.reserve(maxSize);
-  phi_mu_x.reserve(maxSize * dim);
-  phi_mu_xx.reserve(maxSize * dim2);
-    
   unsigned solIndex_mu;
   solIndex_mu = mlSol->GetIndex("mu");    // get the position of "mu" in the ml_sol object
    
@@ -296,14 +299,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
   const int n_unknowns = 4;
  
-  vector< int > l2GMap_AllVars; // local to global mapping
-  l2GMap_AllVars.reserve(n_unknowns*maxSize);
-  
-  vector< double > Res; // local redidual vector
-  Res.reserve(n_unknowns*maxSize);
-
-  vector < double > Jac;
-  Jac.reserve( n_unknowns*maxSize * n_unknowns*maxSize);
+  vector< int > l2GMap_AllVars; l2GMap_AllVars.reserve( n_unknowns*maxSize );
+  vector< double >         Res;            Res.reserve( n_unknowns*maxSize );
+  vector< double >         Jac;            Jac.reserve( n_unknowns*maxSize * n_unknowns*maxSize);
   
 
   vector < std::string > Solname(n_unknowns);
@@ -311,6 +309,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   Solname[1] = "control";
   Solname[2] = "adjoint";
   Solname[3] = "mu";
+
+  enum Sol_pos{pos_state,pos_ctrl,pos_adj,pos_mu};
   
   vector < unsigned > SolPdeIndex(n_unknowns);
   vector < unsigned > SolIndex(n_unknowns);  
@@ -318,9 +318,9 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
-    SolPdeIndex[ivar]	= mlPdeSys->GetSolPdeIndex(Solname[ivar].c_str());
-    SolIndex[ivar]	= mlSol->GetIndex        (Solname[ivar].c_str());
-    SolFEType[ivar]	= mlSol->GetSolutionType(SolIndex[ivar]);
+    SolPdeIndex[ivar] = mlPdeSys->GetSolPdeIndex(  Solname[ivar].c_str() );
+       SolIndex[ivar] = mlSol->GetIndex         (  Solname[ivar].c_str() );
+      SolFEType[ivar] = mlSol->GetSolutionType  ( SolIndex[ivar]);
   }
 
     vector < unsigned > Sol_n_el_dofs(n_unknowns);
@@ -341,17 +341,17 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
+    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
 
  //******************** GEOMETRY ********************* 
-    unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-    for (int i = 0; i < dim; i++)  x[i].resize(nDofx);
+    unsigned nDofx = msh->GetElementDofNumber(iel, coordXType);    // number of coordinate element dofs
+    for (int i = 0; i < dim; i++)  coordX[i].resize(nDofx);
     // local storage of coordinates
     for (unsigned i = 0; i < nDofx; i++) {
-      unsigned xDof  = msh->GetSolutionDof(i, iel, xType);  // global to global mapping between coordinates node and coordinate dof
+      unsigned xDof  = msh->GetSolutionDof(i, iel, coordXType);  // global to global mapping between coordinates node and coordinate dof
 
       for (unsigned jdim = 0; jdim < dim; jdim++) {
-        x[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
+        coordX[jdim][i] = (*msh->_topology->_Sol[jdim])(xDof);      // global extraction and local storage for the element coordinates
       }
     }
 
@@ -360,7 +360,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
     for (unsigned j = 0; j < dim; j++) {  elem_center[j] = 0.;  }
     for (unsigned j = 0; j < dim; j++) {  
       for (unsigned i = 0; i < nDofx; i++) {
-         elem_center[j] += x[j][i];
+         elem_center[j] += coordX[j][i];
        }
     }
     
@@ -483,13 +483,18 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
  //===================================================   
 
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
-	msh->_finiteElement[kelGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
-        msh->_finiteElement[kelGeom][solType_ctrl]->Jacobian(x, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
-        msh->_finiteElement[kelGeom][solType_adj] ->Jacobian(x, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
-	msh->_finiteElement[kelGeom][solType_mu]  ->Jacobian(x, ig, weight, phi_mu, phi_mu_x, phi_mu_xx);
+      for(int fe=0; fe < NFE_FAMS; fe++) {
+	ml_prob._ml_msh->_finiteElement[ielGeom][fe]->Jacobian(coordX,ig,weight,phi_gss_fe[fe],phi_x_gss_fe[fe],phi_xx_gss_fe[fe]);
+      }
+         //HAVE TO RECALL IT TO HAVE BIQUADRATIC JACOBIAN
+  	ml_prob._ml_msh->_finiteElement[ielGeom][BIQUADR_FE]->Jacobian(coordX,ig,weight,phi_gss_fe[BIQUADR_FE],phi_x_gss_fe[BIQUADR_FE],phi_xx_gss_fe[BIQUADR_FE]);
+    
+    msh->_finiteElement[ielGeom][solType_u]   ->Jacobian(coordX, ig, weight, phi_u, phi_u_x, phi_u_xx);
+        msh->_finiteElement[ielGeom][solType_ctrl]->Jacobian(coordX, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
+        msh->_finiteElement[ielGeom][solType_adj] ->Jacobian(coordX, ig, weight, phi_adj, phi_adj_x, phi_adj_xx);
 	
 	std::fill(sol_u_x_gss.begin(),sol_u_x_gss.end(), 0.);
 	std::fill(sol_adj_x_gss.begin(), sol_adj_x_gss.end(), 0.);
@@ -512,8 +517,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
         }
         
         for (unsigned i = 0; i < nDof_mu; i++) {
-	                                                sol_mu_gss      += sol_mu[i] * phi_mu[i];
-		   for (unsigned d = 0; d < dim; d++)   sol_mu_x_gss[d] += sol_mu[i] * phi_mu_x[i * dim + d];
+	                                                sol_mu_gss      += sol_mu[i] * phi_gss_fe[pos_mu][i];
+		   for (unsigned d = 0; d < dim; d++)   sol_mu_x_gss[d] += sol_mu[i] * phi_x_gss_fe[pos_mu][i * dim + d];
           
 	}
         
@@ -786,8 +791,8 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
- std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->_nonliniteration  << ".txt";
-  KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
+//  std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->_nonliniteration  << ".txt";
+//   KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
   
   // ***************** END ASSEMBLY *******************
   unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
@@ -815,7 +820,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
   
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("OptSys");
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -946,7 +951,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
 
-    short unsigned kelGeom = msh->GetElementType(iel);    // element geometry type
+    short unsigned ielGeom = msh->GetElementType(iel);    // element geometry type
  
  //***************** GEOMETRY ************************ 
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
@@ -1024,15 +1029,15 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
  //*************************************************** 
    
       // *** Gauss point loop ***
-      for (unsigned ig = 0; ig < msh->_finiteElement[kelGeom][solType_max]->GetGaussPointNumber(); ig++) {
+      for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType_max]->GetGaussPointNumber(); ig++) {
 	
         // *** get gauss point weight, test function and test function partial derivatives ***
         //  ==== State 
-	msh->_finiteElement[kelGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
+	msh->_finiteElement[ielGeom][solType_u]   ->Jacobian(x, ig, weight, phi_u, phi_u_x, phi_u_xx);
         //  ==== Adjoint 
-        msh->_finiteElement[kelGeom][solType_u/*solTypeTdes*/]->Jacobian(x, ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
+        msh->_finiteElement[ielGeom][solType_u/*solTypeTdes*/]->Jacobian(x, ig, weight, phi_udes, phi_udes_x, phi_udes_xx);
         //  ==== Control 
-        msh->_finiteElement[kelGeom][solType_ctrl]  ->Jacobian(x, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
+        msh->_finiteElement[ielGeom][solType_ctrl]  ->Jacobian(x, ig, weight, phi_ctrl, phi_ctrl_x, phi_ctrl_xx);
 
 	u_gss = 0.;  for (unsigned i = 0; i < nDof_u; i++) u_gss += sol_u[i] * phi_u[i];		
 	ctrl_gss = 0.; for (unsigned i = 0; i < nDof_ctrl; i++) ctrl_gss += sol_ctrl[i] * phi_ctrl[i];  
