@@ -37,4 +37,5 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   ADD_SUBDIRECTORY(./elliptic_bdry_dir_bdd_ctrl/)
   ADD_SUBDIRECTORY(./frac_norm/)
   ADD_SUBDIRECTORY(./pddm/)
+  ADD_SUBDIRECTORY(./quench/)
   
