@@ -199,41 +199,24 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   
  //********************* state *********************** 
  //***************************************************  
-  unsigned solIndex_u = mlSol->GetIndex("state");    // get the position of "state" in the ml_sol object
-  unsigned solType_u = mlSol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
-  unsigned solPdeIndex_u;  solPdeIndex_u = mlPdeSys->GetSolPdeIndex("state");    // get the position of "state" in the pdeSys object
-
   vector < double >  sol_u;    sol_u.reserve(maxSize);
  //***************************************************  
  //***************************************************  
 
-  
  //******************** control ********************** 
  //***************************************************   
-  unsigned solIndex_ctrl = mlSol->GetIndex("control");
-  unsigned solType_ctrl = mlSol->GetSolutionType(solIndex_ctrl);
-  unsigned solPdeIndex_ctrl = mlPdeSys->GetSolPdeIndex("control");
-
   vector < double >  sol_ctrl;  sol_ctrl.reserve(maxSize);
  //***************************************************  
  //***************************************************  
   
-  
  //********************* adjoint ********************* 
  //***************************************************  
-  unsigned solIndex_adj    = mlSol->GetIndex("adjoint");
-  unsigned solType_adj     = mlSol->GetSolutionType(solIndex_adj);
-  unsigned solPdeIndex_adj = mlPdeSys->GetSolPdeIndex("adjoint");
-
   vector < double >  sol_adj;      sol_adj.reserve(maxSize);
  //***************************************************  
  //***************************************************  
 
  //****************** mu ******************************  
  //***************************************************  
-  unsigned solIndex_mu    = mlSol->GetIndex("mu");
-  unsigned solPdeIndex_mu = mlPdeSys->GetSolPdeIndex("mu");
-  unsigned solType_mu     = mlSol->GetSolutionType(solIndex_mu);
   vector < double >  sol_mu;   sol_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
@@ -359,16 +342,16 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //**************** state **************************** 
     sol_u    .resize(Sol_n_el_dofs[pos_state]);
     for (unsigned i = 0; i < sol_u.size(); i++) {
-     unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);
-      sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
+     unsigned solDof_u = msh->GetSolutionDof(i, iel, SolFEType[pos_state]);
+      sol_u[i] = (*sol->_Sol[SolIndex[pos_state]])(solDof_u);
     }
  //***************************************************  
  
  //***************** control ************************* 
     sol_ctrl    .resize(Sol_n_el_dofs[pos_ctrl]);
     for (unsigned i = 0; i < sol_ctrl.size(); i++) {
-      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl); 
-      sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);
+      unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, SolFEType[pos_ctrl]); 
+      sol_ctrl[i] = (*sol->_Sol[SolIndex[pos_ctrl]])(solDof_ctrl);
     } 
  //*************************************************** 
  
@@ -376,16 +359,16 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //************** adjoint **************************** 
         sol_adj    .resize(Sol_n_el_dofs[pos_adj]);
     for (unsigned i = 0; i < sol_adj.size(); i++) {
-      unsigned solDof_adj = msh->GetSolutionDof(i, iel, solType_adj);
-      sol_adj[i] = (*sol->_Sol[solIndex_adj])(solDof_adj);
+      unsigned solDof_adj = msh->GetSolutionDof(i, iel, SolFEType[pos_adj]);
+      sol_adj[i] = (*sol->_Sol[SolIndex[pos_adj]])(solDof_adj);
     } 
  //***************************************************  
  
  //************** mu **************************** 
     sol_mu   .resize(Sol_n_el_dofs[pos_mu]);
     for (unsigned i = 0; i < sol_mu.size(); i++) {
-      unsigned solDof_mu = msh->GetSolutionDof(i, iel, solType_mu);
-      sol_mu[i] = (*sol->_Sol[solIndex_mu])(solDof_mu);      
+      unsigned solDof_mu = msh->GetSolutionDof(i, iel, SolFEType[pos_mu]);
+      sol_mu[i] = (*sol->_Sol[SolIndex[pos_mu]])(solDof_mu);      
     }
     
     
@@ -763,7 +746,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
 //     position_mu_i = pdeSys->KKoffset[mu_index][iproc] + i;
 //     std::cout << position_mu_i << std::endl;
-    one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[solIndex_mu])(i/*position_mu_i*/) ;
+    one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[SolIndex[pos_mu]])(i/*position_mu_i*/) ;
   }
     RES->add_vector_blocked(one_times_mu, positions);
     RES->print();
