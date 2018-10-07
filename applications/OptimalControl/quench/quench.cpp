@@ -304,13 +304,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   vector < vector < double > > gradSolVAR_eldofs(n_unknowns);
   
   for(int k=0; k<n_unknowns; k++) {
-    SolVAR_eldofs[k].reserve(maxSize);
+        SolVAR_eldofs[k].reserve(maxSize);
     gradSolVAR_eldofs[k].reserve(maxSize*dim);    
   }
 
   //------------ at quadrature points ---------------------
-           vector < double > SolVAR_qp(n_unknowns);
-  vector < vector < double > > gradSolVAR_qp(n_unknowns);
+           vector < double >             SolVAR_qp(n_unknowns);
+  vector < vector < double > >       gradSolVAR_qp(n_unknowns);
   for(int k=0; k<n_unknowns; k++) {  gradSolVAR_qp[k].resize(dim);  }
 
   
@@ -374,8 +374,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   //CTRL###################################################################
     
  //**************** state **************************** 
-    unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);
-    sol_u    .resize(nDof_u);
+    sol_u    .resize(Sol_n_el_dofs[pos_state]);
     for (unsigned i = 0; i < sol_u.size(); i++) {
      unsigned solDof_u = msh->GetSolutionDof(i, iel, solType_u);
       sol_u[i] = (*sol->_Sol[solIndex_u])(solDof_u);
@@ -383,8 +382,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
  
  //***************** control ************************* 
-    unsigned nDof_ctrl  = msh->GetElementDofNumber(iel, solType_ctrl);
-    sol_ctrl    .resize(nDof_ctrl);
+    sol_ctrl    .resize(Sol_n_el_dofs[pos_ctrl]);
     for (unsigned i = 0; i < sol_ctrl.size(); i++) {
       unsigned solDof_ctrl = msh->GetSolutionDof(i, iel, solType_ctrl); 
       sol_ctrl[i] = (*sol->_Sol[solIndex_ctrl])(solDof_ctrl);
@@ -393,8 +391,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  
 
  //************** adjoint **************************** 
-    unsigned nDof_adj  = msh->GetElementDofNumber(iel, solType_adj);
-        sol_adj    .resize(nDof_adj);
+        sol_adj    .resize(Sol_n_el_dofs[pos_adj]);
     for (unsigned i = 0; i < sol_adj.size(); i++) {
       unsigned solDof_adj = msh->GetSolutionDof(i, iel, solType_adj);
       sol_adj[i] = (*sol->_Sol[solIndex_adj])(solDof_adj);
@@ -402,8 +399,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
  
  //************** mu **************************** 
-    unsigned nDof_mu  = msh->GetElementDofNumber(iel, solType_mu); 
-    sol_mu   .resize(nDof_mu);
+    sol_mu   .resize(Sol_n_el_dofs[pos_mu]);
     for (unsigned i = 0; i < sol_mu.size(); i++) {
       unsigned solDof_mu = msh->GetSolutionDof(i, iel, solType_mu);
       sol_mu[i] = (*sol->_Sol[solIndex_mu])(solDof_mu);      
@@ -412,8 +408,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     
  //************** update active set flag for current nonlinear iteration **************************** 
  // 0: inactive; 1: active_a; 2: active_b
-   assert(nDof_mu == nDof_ctrl);
-   sol_actflag.resize(nDof_mu);
+   assert(Sol_n_el_dofs[pos_mu] == Sol_n_el_dofs[pos_ctrl]);
+   sol_actflag.resize(Sol_n_el_dofs[pos_mu]);
      std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
    
     for (unsigned i = 0; i < sol_actflag.size(); i++) {  
@@ -422,17 +418,17 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     }
  
  //******************** ALL VARS ********************* 
-    unsigned nDof_AllVars = nDof_u + nDof_ctrl + nDof_adj + nDof_mu; 
-    int nDof_max    =  nDof_u;   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
+    unsigned nDof_AllVars = Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + Sol_n_el_dofs[pos_mu]; 
+    int nDof_max    =  Sol_n_el_dofs[pos_state];   // TODO COMPUTE MAXIMUM maximum number of element dofs for one scalar variable
     
-    if(nDof_adj > nDof_max) 
+    if(Sol_n_el_dofs[pos_adj] > nDof_max) 
     {
-      nDof_max = nDof_adj;
+      nDof_max = Sol_n_el_dofs[pos_adj];
       }
     
-    if(nDof_ctrl > nDof_max)
+    if(Sol_n_el_dofs[pos_ctrl] > nDof_max)
     {
-      nDof_max = nDof_ctrl;
+      nDof_max = Sol_n_el_dofs[pos_ctrl];
     }
     
     
@@ -447,7 +443,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //***** set control flag ****************************
   int control_el_flag = 0;
   control_el_flag = ControlDomainFlag_internal_restriction(elem_center);
-  std::vector<int> control_node_flag(nDof_ctrl,0);
+  std::vector<int> control_node_flag(Sol_n_el_dofs[pos_ctrl],0);
   if (control_el_flag == 1) std::fill(control_node_flag.begin(), control_node_flag.end(), 1);
  //*************************************************** 
   
@@ -480,22 +476,22 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	std::fill(sol_ctrl_x_gss.begin(), sol_ctrl_x_gss.end(), 0.);
 	std::fill(sol_mu_x_gss.begin(), sol_mu_x_gss.end(), 0.);
 	
-	for (unsigned i = 0; i < nDof_u; i++) {
+	for (unsigned i = 0; i < Sol_n_el_dofs[pos_state]; i++) {
 	                                                sol_u_gss          += sol_u[i] *   phi_gss_fe[pos_state][i];
                    for (unsigned d = 0; d < dim; d++)   sol_u_x_gss[d] += sol_u[i] * phi_x_gss_fe[pos_state][i * dim + d];
           }
 	
-	for (unsigned i = 0; i < nDof_adj; i++) {
+	for (unsigned i = 0; i < Sol_n_el_dofs[pos_adj]; i++) {
 	                                                sol_adj_gss          += sol_adj[i] *   phi_gss_fe[pos_adj][i];
                    for (unsigned d = 0; d < dim; d++)   sol_adj_x_gss[d] += sol_adj[i] * phi_x_gss_fe[pos_adj][i * dim + d];
         }
 	
-	for (unsigned i = 0; i < nDof_ctrl; i++) {
+	for (unsigned i = 0; i < Sol_n_el_dofs[pos_ctrl]; i++) {
 	                                                sol_ctrl_gss          += sol_ctrl[i] *   phi_gss_fe[pos_ctrl][i];
                    for (unsigned d = 0; d < dim; d++)   sol_ctrl_x_gss[d] += sol_ctrl[i] * phi_x_gss_fe[pos_ctrl][i * dim + d];
         }
         
-        for (unsigned i = 0; i < nDof_mu; i++) {
+        for (unsigned i = 0; i < Sol_n_el_dofs[pos_mu]; i++) {
 	                                                sol_mu_gss   += sol_mu[i] *   phi_gss_fe[pos_mu][i];
 		   for (unsigned d = 0; d < dim; d++)   sol_mu_x_gss[d]  += sol_mu[i] * phi_x_gss_fe[pos_mu][i * dim + d];
           
@@ -507,42 +503,42 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	  
 	      double laplace_rhs_du_adj_i = 0.; //
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_u )         laplace_rhs_du_adj_i             +=  (phi_u_x   [i * dim + kdim] * sol_adj_x_gss[kdim]);
+              if ( i < Sol_n_el_dofs[pos_state] )         laplace_rhs_du_adj_i             +=  (phi_u_x   [i * dim + kdim] * sol_adj_x_gss[kdim]);
 	      }
 	      
               double laplace_rhs_dctrl_ctrl_i = 0.;
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_ctrl )         laplace_rhs_dctrl_ctrl_i      +=  (phi_ctrl_x   [i * dim + kdim] * sol_ctrl_x_gss[kdim]);
+              if ( i < Sol_n_el_dofs[pos_ctrl] )         laplace_rhs_dctrl_ctrl_i      +=  (phi_ctrl_x   [i * dim + kdim] * sol_ctrl_x_gss[kdim]);
 	      }
 	      
 	      double laplace_rhs_dctrl_adj_i = 0.;
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_ctrl )         laplace_rhs_dctrl_adj_i       +=  (phi_ctrl_x   [i * dim + kdim] * sol_adj_x_gss[kdim]);
+              if ( i < Sol_n_el_dofs[pos_ctrl] )         laplace_rhs_dctrl_adj_i       +=  (phi_ctrl_x   [i * dim + kdim] * sol_adj_x_gss[kdim]);
 	      }
 	      
 	      double laplace_rhs_dadj_u_i = 0.;  //
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_adj )         laplace_rhs_dadj_u_i           +=  (phi_x_gss_fe[pos_adj][i * dim + kdim] * sol_u_x_gss[kdim]);
+              if ( i < Sol_n_el_dofs[pos_adj] )         laplace_rhs_dadj_u_i           +=  (phi_x_gss_fe[pos_adj][i * dim + kdim] * sol_u_x_gss[kdim]);
 	      }
 	      
 	      double laplace_rhs_dadj_ctrl_i = 0.;
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              if ( i < nDof_adj )         laplace_rhs_dadj_ctrl_i        +=  (phi_x_gss_fe[pos_adj][i * dim + kdim] * sol_ctrl_x_gss[kdim]);
+              if ( i < Sol_n_el_dofs[pos_adj] )         laplace_rhs_dadj_ctrl_i        +=  (phi_x_gss_fe[pos_adj][i * dim + kdim] * sol_ctrl_x_gss[kdim]);
 	      }
 //======================Residuals=======================
           // FIRST ROW
-	  if (i < nDof_u)                      Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss + sol_ctrl_gss - u_des) - laplace_rhs_du_adj_i );
+	  if (i < Sol_n_el_dofs[pos_state])                      Res[0      + i] += - weight * (target_flag * phi_u[i] * ( sol_u_gss + sol_ctrl_gss - u_des) - laplace_rhs_du_adj_i );
           // SECOND ROW
-	  if (i < nDof_ctrl)  {
-	     if ( control_el_flag == 1)        Res[nDof_u + i] +=  /*(control_node_flag[i]) **/ - weight * (target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
+	  if (i < Sol_n_el_dofs[pos_ctrl])  {
+	     if ( control_el_flag == 1)        Res[Sol_n_el_dofs[pos_state] + i] +=  /*(control_node_flag[i]) **/ - weight * (target_flag * phi_ctrl[i] * ( sol_u_gss + sol_ctrl_gss - u_des) 
 													      + alpha * phi_ctrl[i] * sol_ctrl_gss
 		                                                                                              - laplace_rhs_dctrl_adj_i 
 		                                                                                              + beta * laplace_rhs_dctrl_ctrl_i
 													      /*+ ineq_flag * sol_mu_gss*/ );
-	      else if ( control_el_flag == 0)  Res[nDof_u + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i]);
+	      else if ( control_el_flag == 0)  Res[Sol_n_el_dofs[pos_state] + i] +=  /*(1 - control_node_flag[i]) **/ (- penalty_strong) * (sol_ctrl[i]);
 	  }
           // THIRD ROW
-          if (i < nDof_adj)        Res[nDof_u + nDof_ctrl + i] += /*-weight * phi_adj[i] * sol_adj_gss - 6.;*/- weight *  ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i ) ;
+          if (i < Sol_n_el_dofs[pos_adj])        Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i] += /*-weight * phi_adj[i] * sol_adj_gss - 6.;*/- weight *  ( - laplace_rhs_dadj_u_i - laplace_rhs_dadj_ctrl_i ) ;
 
 //======================Residuals=======================
 	      
@@ -558,98 +554,98 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
               double laplace_mat_dctrl_ctrl = 0.;
 
               for (unsigned kdim = 0; kdim < dim; kdim++) {
-              //if ( i < nDof_u && j < nDof_u )           laplace_mat_du_u           += (phi_u_x   [i * dim + kdim] * phi_u_x   [j * dim + kdim]);
-              if ( i < nDof_u && j < nDof_adj )         laplace_mat_du_adj         += (phi_u_x   [i * dim + kdim] * phi_x_gss_fe[pos_adj][j * dim + kdim]);
-              if ( i < nDof_adj && j < nDof_u )         laplace_mat_dadj_u         += (phi_x_gss_fe[pos_adj][i * dim + kdim] * phi_u_x   [j * dim + kdim]);  //equal to the previous
-              if ( i < nDof_ctrl && j < nDof_adj )      laplace_mat_dctrl_adj      += (phi_ctrl_x[i * dim + kdim] * phi_x_gss_fe[pos_adj][j * dim + kdim]);
-              if ( i < nDof_adj && j < nDof_ctrl )      laplace_mat_dadj_ctrl      += (phi_x_gss_fe[pos_adj][i * dim + kdim] * phi_ctrl_x[j * dim + kdim]);  //equal to the previous
-              if ( i < nDof_ctrl && j < nDof_ctrl )     laplace_mat_dctrl_ctrl     += (phi_ctrl_x  [i * dim + kdim] * phi_ctrl_x  [j * dim + kdim]);
+              //if ( i < Sol_n_el_dofs[pos_state] && j < Sol_n_el_dofs[pos_state] )           laplace_mat_du_u           += (phi_u_x   [i * dim + kdim] * phi_u_x   [j * dim + kdim]);
+              if ( i < Sol_n_el_dofs[pos_state] && j < Sol_n_el_dofs[pos_adj] )         laplace_mat_du_adj         += (phi_u_x   [i * dim + kdim] * phi_x_gss_fe[pos_adj][j * dim + kdim]);
+              if ( i < Sol_n_el_dofs[pos_adj] && j < Sol_n_el_dofs[pos_state] )         laplace_mat_dadj_u         += (phi_x_gss_fe[pos_adj][i * dim + kdim] * phi_u_x   [j * dim + kdim]);  //equal to the previous
+              if ( i < Sol_n_el_dofs[pos_ctrl] && j < Sol_n_el_dofs[pos_adj] )      laplace_mat_dctrl_adj      += (phi_ctrl_x[i * dim + kdim] * phi_x_gss_fe[pos_adj][j * dim + kdim]);
+              if ( i < Sol_n_el_dofs[pos_adj] && j < Sol_n_el_dofs[pos_ctrl] )      laplace_mat_dadj_ctrl      += (phi_x_gss_fe[pos_adj][i * dim + kdim] * phi_ctrl_x[j * dim + kdim]);  //equal to the previous
+              if ( i < Sol_n_el_dofs[pos_ctrl] && j < Sol_n_el_dofs[pos_ctrl] )     laplace_mat_dctrl_ctrl     += (phi_ctrl_x  [i * dim + kdim] * phi_ctrl_x  [j * dim + kdim]);
 	      }
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
-	      if ( i < nDof_u && j < nDof_u )       
+	      if ( i < Sol_n_el_dofs[pos_state] && j < Sol_n_el_dofs[pos_state] )       
 		Jac[ (0 + i) * nDof_AllVars   +
 		     (0 + j)                            ]  += weight * target_flag * phi_u[j] *  phi_u[i];
               
 	      // BLOCK  delta_state - control
-              if ( i < nDof_u && j < nDof_ctrl )   
+              if ( i < Sol_n_el_dofs[pos_state] && j < Sol_n_el_dofs[pos_ctrl] )   
 		Jac[ (0 + i) * nDof_AllVars   +
-                     (nDof_u + j)                       ]  += weight * target_flag  * phi_ctrl[j] *  phi_u[i];
+                     (Sol_n_el_dofs[pos_state] + j)                       ]  += weight * target_flag  * phi_ctrl[j] *  phi_u[i];
 	      
               // BLOCK  delta_state - adjoint
-              if ( i < nDof_u && j < nDof_adj )  
+              if ( i < Sol_n_el_dofs[pos_state] && j < Sol_n_el_dofs[pos_adj] )  
 		Jac[  (0 + i) * nDof_AllVars  +
-                      (nDof_u + nDof_ctrl + j)          ]  += weight * (-1) * laplace_mat_du_adj;
+                      (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + j)          ]  += weight * (-1) * laplace_mat_du_adj;
               
 	      //=========== delta_control row ===========================     
 	      if ( control_el_flag == 1)  {
 
 	      //BLOCK delta_control - state
-              if ( i < nDof_ctrl   && j < nDof_u   ) 
-		Jac[ (nDof_u + i) * nDof_AllVars  +
+              if ( i < Sol_n_el_dofs[pos_ctrl]   && j < Sol_n_el_dofs[pos_state]   ) 
+		Jac[ (Sol_n_el_dofs[pos_state] + i) * nDof_AllVars  +
 		     (0 + j)                            ]  += ( control_node_flag[i]) * weight * target_flag * phi_u[j] * phi_ctrl[i];
 		
 	      //BLOCK delta_control - control
-              if ( i < nDof_ctrl   && j < nDof_ctrl   )
-		Jac[ (nDof_u + i) * nDof_AllVars +
-		     (nDof_u + j)                       ]  += ( control_node_flag[i]) * weight * ( beta * control_el_flag  * laplace_mat_dctrl_ctrl 
+              if ( i < Sol_n_el_dofs[pos_ctrl]   && j < Sol_n_el_dofs[pos_ctrl]   )
+		Jac[ (Sol_n_el_dofs[pos_state] + i) * nDof_AllVars +
+		     (Sol_n_el_dofs[pos_state] + j)                       ]  += ( control_node_flag[i]) * weight * ( beta * control_el_flag  * laplace_mat_dctrl_ctrl 
 		                                                                                + alpha * control_el_flag * phi_ctrl[i] * phi_ctrl[j] 
 		                                                                                            + target_flag * phi_ctrl[i] * phi_ctrl[j] );
               
 	      //BLOCK delta_control - adjoint
-              if ( i < nDof_ctrl   && j < nDof_adj  ) 
-		Jac[ (nDof_u + i) * nDof_AllVars  + 
-		     (nDof_u + nDof_ctrl + j)           ]  += ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj;
+              if ( i < Sol_n_el_dofs[pos_ctrl]   && j < Sol_n_el_dofs[pos_adj]  ) 
+		Jac[ (Sol_n_el_dofs[pos_state] + i) * nDof_AllVars  + 
+		     (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + j)           ]  += ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj;
 	      	      
 	        }
 	      
 	      else if ( control_el_flag == 0)  {  
 		
               //BLOCK delta_control - control
-              if ( i < nDof_ctrl   && j < nDof_ctrl &&  i==j ) {
-		 Jac[ (nDof_u + i) * nDof_AllVars +
-		      (nDof_u + j)                      ]  += (1-control_node_flag[i]) * penalty_strong;
+              if ( i < Sol_n_el_dofs[pos_ctrl]   && j < Sol_n_el_dofs[pos_ctrl] &&  i==j ) {
+		 Jac[ (Sol_n_el_dofs[pos_state] + i) * nDof_AllVars +
+		      (Sol_n_el_dofs[pos_state] + j)                      ]  += (1-control_node_flag[i]) * penalty_strong;
 		}
 	      
 	      }
 	      
 // 	      //BLOCK delta_control - mu
-//              if ( i < nDof_ctrl   && j < nDof_mu && i==j ) 
-// 		Jac[ (nDof_u + i) * nDof_AllVars  + 
-// 		     (nDof_u + nDof_ctrl + nDof_adj + j)]   =  ineq_flag * control_node_flag[i] *  phi_mu[j] * phi_ctrl[i] ;
+//              if ( i < Sol_n_el_dofs[pos_ctrl]   && j < Sol_n_el_dofs[pos_mu] && i==j ) 
+// 		Jac[ (Sol_n_el_dofs[pos_state] + i) * nDof_AllVars  + 
+// 		     (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + j)]   =  ineq_flag * control_node_flag[i] *  phi_mu[j] * phi_ctrl[i] ;
 		     
 		     
 	      //=========== delta_adjoint row ===========================
               // BLOCK delta_adjoint - state	      
-              if ( i < nDof_adj && j < nDof_u )   
-		Jac[ (nDof_u + nDof_ctrl + i) * nDof_AllVars +
+              if ( i < Sol_n_el_dofs[pos_adj] && j < Sol_n_el_dofs[pos_state] )   
+		Jac[ (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i) * nDof_AllVars +
 		     (0 + j)                            ]  += weight * (-1) * laplace_mat_dadj_u;   
 	      
               // BLOCK delta_adjoint - control   
-              if ( i < nDof_adj && j < nDof_ctrl )  
-		Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
-		     (nDof_u  + j)                      ]  += weight * (-1) * laplace_mat_dadj_ctrl; 
+              if ( i < Sol_n_el_dofs[pos_adj] && j < Sol_n_el_dofs[pos_ctrl] )  
+		Jac[ (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i)  * nDof_AllVars +
+		     (Sol_n_el_dofs[pos_state]  + j)                      ]  += weight * (-1) * laplace_mat_dadj_ctrl; 
 		     
 		     
 // 	      // BLOCK delta_adjoint - adjoint   
-//               if ( i < nDof_adj && j < nDof_adj )  
-// 		Jac[ (nDof_u + nDof_ctrl + i)  * nDof_AllVars +
-// 		     (nDof_u + nDof_ctrl + j)                      ]  += weight * phi_adj[j] *  phi_adj[i]; 
+//               if ( i < Sol_n_el_dofs[pos_adj] && j < Sol_n_el_dofs[pos_adj] )  
+// 		Jac[ (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i)  * nDof_AllVars +
+// 		     (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + j)                      ]  += weight * phi_adj[j] *  phi_adj[i]; 
     
 	      
 	      //============= delta_mu row ===============================
 //	      if (sol_actflag[i] == 0) //inactive
 //	      { // BLOCK delta_mu - mu	      
-// 	        if ( i < nDof_mu && j < nDof_mu && i==j )   
-// 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-// 		       (nDof_u + nDof_ctrl + nDof_adj + j)]  = 1. ;  
+// 	        if ( i < Sol_n_el_dofs[pos_mu] && j < Sol_n_el_dofs[pos_mu] && i==j )   
+// 		  Jac[ (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + i) * nDof_AllVars +
+// 		       (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + j)]  = 1. ;  
 // 	     // }
 // 	      else //active
 // 	      { // BLOCK delta_mu - ctrl	      
-//                 if ( i < nDof_mu && j < nDof_ctrl && i==j )   
-// 		  Jac[ (nDof_u + nDof_ctrl + nDof_adj + i) * nDof_AllVars +
-// 		       (nDof_u + j)                       ]  = c_compl * 1. ; 
+//                 if ( i < Sol_n_el_dofs[pos_mu] && j < Sol_n_el_dofs[pos_ctrl] && i==j )   
+// 		  Jac[ (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + i) * nDof_AllVars +
+// 		       (Sol_n_el_dofs[pos_state] + j)                       ]  = c_compl * 1. ; 
 	     // }
 	      
             } // end phi_j loop
@@ -676,7 +672,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 // // 	         for (unsigned k = 0; k < j_unk; k++) column_block_offset += Sol_n_el_dofs[k];
 // // 	  
 // //          for (unsigned i = 0; i < Sol_n_el_dofs[i_unk]; i++) {
-// // // 	      std::cout << Res[nDof_u + nDof_ctrl + nDof_adj + i ] << " " << std::endl;
+// // // 	      std::cout << Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + i ] << " " << std::endl;
 // // 	   for (unsigned j = 0; j < Sol_n_el_dofs[j_unk]; j++) {
 // // 	      std::cout <<  " " << std::setfill(' ') << std::setw(10) << Jac[ (row_block_offset + i) * nDof_AllVars + ( column_block_offset + j) ] << " ";
 // // 	    }
@@ -688,25 +684,25 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	 
 	 
 // // // 	}
-    //std::vector<double> Res_ctrl (nDof_ctrl); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
+    //std::vector<double> Res_ctrl (Sol_n_el_dofs[pos_ctrl]); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
     for (unsigned i = 0; i < sol_ctrl.size(); i++){
        unsigned n_els_that_node = 1;
      if ( control_el_flag == 1) {
-	Res[nDof_u + i] += - ( + n_els_that_node * ineq_flag * sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
-// 	Res_ctrl[i] =  Res[nDof_u + i];
+// 	Res[Sol_n_el_dofs[pos_state] + i] += - ( + n_els_that_node * ineq_flag * sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
+// 	Res_ctrl[i] =  Res[Sol_n_el_dofs[pos_state] + i];
       }
     }//------------------------------->>>>>>
     
-//     std::vector<double> Res_u (nDof_u); std::fill(Res_u.begin(),Res_u.end(), 0.);
+//     std::vector<double> Res_u (Sol_n_el_dofs[pos_state]); std::fill(Res_u.begin(),Res_u.end(), 0.);
 //     for (unsigned i = 0; i < sol_u.size(); i++){
 // 	Res[0 + i] = - ( sol_u[i] - 8. );
 // 	Res_u[i] = Res[0 + i];
 //     }
     
-//     std::vector<double> Res_adj (nDof_adj); std::fill(Res_adj.begin(),Res_adj.end(), 0.);
+//     std::vector<double> Res_adj (Sol_n_el_dofs[pos_adj]); std::fill(Res_adj.begin(),Res_adj.end(), 0.);
 //     for (unsigned i = 0; i < sol_adj.size(); i++){
-// 	Res[nDof_u + nDof_ctrl + i] = - (sol_adj[i] - 7.);
-// 	Res_adj[i] = Res[nDof_u + nDof_ctrl + i];
+// 	Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i] = - (sol_adj[i] - 7.);
+// 	Res_adj[i] = Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i];
 //     }
     
 
@@ -720,12 +716,12 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //========== dof-based part, without summation
  
  //============= delta_mu row ===============================
-      std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
+      std::vector<double> Res_mu (Sol_n_el_dofs[pos_mu]); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
       
     for (unsigned i = 0; i < sol_actflag.size(); i++) {
       if (sol_actflag[i] == 0){  //inactive
          Res_mu [i] = - ineq_flag * ( 1. * sol_mu[i] - 0. ); 
-// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+// 	 Res_mu [i] = Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + i]; 
       }
       else if (sol_actflag[i] == 1){  //active_a 
 	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
@@ -734,8 +730,8 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
       }
     }
-//          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
-//          Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+//          Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
+//          Res_mu [i] = Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + i] ;
 
     
     RES->insert(Res_mu, JACDof[pos_mu]);
