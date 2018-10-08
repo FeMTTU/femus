@@ -4,6 +4,9 @@ using namespace femus;
 double beta = 0.25;
 double Gamma = 0.5;
 double gravity[3] = {0., -9.81, 0.};
+double scalingFactor1 =1.e-2;
+double scalingFactor2 =1.e-6;
+double NeumannFactor = 0.;
 Line* linea;
 
 double tuninig = 0.;//0.645;
@@ -212,8 +215,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         unsigned idofMat = mymsh->GetSolutionDof(0, iel, solTypeMat);
         double  MPMmaterial = (*mysolution->_Sol[indexSolMat])(idofMat);
         double scalingFactor = 0;// / (1. + 100. * distance);
-        if(MPMmaterial < 5) scalingFactor = 1.e-06;
-        else if(MPMmaterial < 9) scalingFactor = 1.e-10;
+        if(MPMmaterial < 5) scalingFactor = scalingFactor1;
+        else if(MPMmaterial < 9) scalingFactor = scalingFactor2;
 
         double mu = (Xg[1] <= -1.1416 && ( MPMmaterial == 1 || MPMmaterial == 2 ) ) ? mu_MPM : mu_MPM; 
         
@@ -468,8 +471,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
               //SolDd1[k][i0] = (- SolDd[k][i1] + 2. * SolDd[k][i2]);
               //SolDd1[k][i0] = ( SolDd[k][i1] - SolDd[k][i2]);
               
-              //SolDd1[k][i0] = - 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ];
-              SolDd1[k][i0] = SolDd[k][ i2 ];
+              SolDd1[k][i0] = NeumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - NeumannFactor) * SolDd[k][i0];
+              //SolDd1[k][i0] = SolDd[k][ i2 ];
               //std::cout <<  SolDd1[k][i0] <<" "<< SolDd1[k][i1] <<" "<< SolDd1[k][i2] <<std::endl; 
             }
           }
@@ -497,19 +500,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         for(unsigned inode = 0; inode < nDofsD; inode++) {
           SolDp[i] += phi[inode] * SolDd1[i][inode];
           for(int j = 0; j < dim; j++) {
-            double factor = (switchToNeumanncheck && j == 1)? 0.6 : 1;   
-            GradSolDpHat[i][j] +=  factor * gradphi_hat[inode * dim + j] * SolDd1[i][inode];
+            GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * SolDd1[i][inode];
           }
         }
       }
-      
-//       if(switchToNeumanncheck){
-//         for(int i = 0; i < dim; i++) {
-//          std::cout<< GradSolDpHat[i][1] <<" ";
-//         }
-//         std::cout<<std::endl;
-//       }
-      
       //END evaluates SolDp at the particle iMarker
 
       
@@ -803,8 +797,8 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
               //SolDd1[k][i0] = ( SolDd[k][i1] - SolDd[k][i2]);
               //SolDd1[k][i0] = (- SolDd[k][i1] + 2. * SolDd[k][i2]);
               
-//               SolDd1[k][i0] = - 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ];
-              SolDd1[k][i0] = SolDd[k][ i2 ];
+              SolDd1[k][i0] = NeumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - NeumannFactor) * SolDd[k][i0];
+              //SolDd1[k][i0] = SolDd[k][ i2 ];
             }
           }
         }
