@@ -64,61 +64,61 @@ int main(int argc, char** args)
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
-  std::map < std::pair < std::string, unsigned > , double > YC; 
-    
-  YC[std::make_pair ("soft", 3u)] = 0.1;
-  YC[std::make_pair ("soft", 4u)] = 0.075;
-  YC[std::make_pair ("soft", 5u)] = 0.05;
-
-  YC[std::make_pair ("stiff", 3u)] = 0.15;
-  YC[std::make_pair ("stiff", 4u)] = 0.09;
-  YC[std::make_pair ("stiff", 5u)] = 0.05;  
-  
-  std::map < std::pair < std::string, unsigned > , double > NF; 
-  
-  NF[std::make_pair ("soft", 3u)] = 0.;
-  NF[std::make_pair ("soft", 4u)] = 0.;
-  NF[std::make_pair ("soft", 5u)] = 0.3;
-
-  NF[std::make_pair ("stiff", 3u)] = 0.3;
-  NF[std::make_pair ("stiff", 4u)] = 0.3;
-  NF[std::make_pair ("stiff", 5u)] = 0.6;  
-  
-  std::map < std::pair < std::string, unsigned > , double > SF1; 
-  
-  SF1[std::make_pair ("soft", 3u)] = 1.e-2;
-  SF1[std::make_pair ("soft", 4u)] = 1.e-2;
-  SF1[std::make_pair ("soft", 5u)] = 1.e-2;
-
-  SF1[std::make_pair ("stiff", 3u)] = 1.e-6;
-  SF1[std::make_pair ("stiff", 4u)] = 1.e-6;
-  SF1[std::make_pair ("stiff", 5u)] = 1.e-6;  
-  
-  std::map < std::pair < std::string, unsigned > , double > SF2; 
-  
-  SF2[std::make_pair ("soft", 3u)] = 1.e-6;
-  SF2[std::make_pair ("soft", 4u)] = 1.e-6;
-  SF2[std::make_pair ("soft", 5u)] = 1.e-6;
-
-  SF2[std::make_pair ("stiff", 3u)] = 1.e-10;
-  SF2[std::make_pair ("stiff", 4u)] = 1.e-10;
-  SF2[std::make_pair ("stiff", 5u)] = 1.e-10;  
-  
-  std::map < std::pair < std::string, unsigned > , double > YM; 
-  
-  YM[std::make_pair ("soft", 3u)] = 4.2 * 1.e6;
-  YM[std::make_pair ("soft", 4u)] = 4.2 * 1.e6;
-  YM[std::make_pair ("soft", 5u)] = 4.2 * 1.e6;
-
-  YM[std::make_pair ("stiff", 3u)] = 4.2 * 1.e8;
-  YM[std::make_pair ("stiff", 4u)] = 4.2 * 1.e8;
-  YM[std::make_pair ("stiff", 5u)] = 4.2 * 1.e8;  
-  
-  MultiLevelMesh mlMsh;
-   
   std::string soft = "soft";
   std::string  stiff = "stiff";
   
+  std::map < std::pair < std::string, unsigned > , double > YC; 
+    
+  YC[std::make_pair (soft, 3u)] = 0.1;
+  YC[std::make_pair (soft, 4u)] = 0.075;
+  YC[std::make_pair (soft, 5u)] = 0.05;
+
+  YC[std::make_pair (stiff, 3u)] = 0.15;
+  YC[std::make_pair (stiff, 4u)] = 0.09;
+  YC[std::make_pair (stiff, 5u)] = 0.05;  
+  
+  std::map < std::pair < std::string, unsigned > , double > NF; 
+  
+  NF[std::make_pair (soft, 3u)] = 0.;
+  NF[std::make_pair (soft, 4u)] = 0.;
+  NF[std::make_pair (soft, 5u)] = 0.3;
+
+  NF[std::make_pair (stiff, 3u)] = 0.3;
+  NF[std::make_pair (stiff, 4u)] = 0.3;
+  NF[std::make_pair (stiff, 5u)] = 0.6;  
+  
+  std::map < std::pair < std::string, unsigned > , double > SF1; 
+  
+  SF1[std::make_pair (soft, 3u)] = 1.e-2;
+  SF1[std::make_pair (soft, 4u)] = 1.e-2;
+  SF1[std::make_pair (soft, 5u)] = 1.e-2;
+
+  SF1[std::make_pair (stiff, 3u)] = 1.e-6;
+  SF1[std::make_pair (stiff, 4u)] = 1.e-6;
+  SF1[std::make_pair (stiff, 5u)] = 1.e-6;  
+  
+  std::map < std::pair < std::string, unsigned > , double > SF2; 
+  
+  SF2[std::make_pair (soft, 3u)] = 1.e-6;
+  SF2[std::make_pair (soft, 4u)] = 1.e-6;
+  SF2[std::make_pair (soft, 5u)] = 1.e-6;
+
+  SF2[std::make_pair (stiff, 3u)] = 1.e-10;
+  SF2[std::make_pair (stiff, 4u)] = 1.e-10;
+  SF2[std::make_pair (stiff, 5u)] = 1.e-10;  
+  
+  std::map < std::pair < std::string, unsigned > , double > YM; 
+  
+  YM[std::make_pair (soft, 3u)] = 4.2 * 1.e6;
+  YM[std::make_pair (soft, 4u)] = 4.2 * 1.e6;
+  YM[std::make_pair (soft, 5u)] = 4.2 * 1.e6;
+
+  YM[std::make_pair (stiff, 3u)] = 4.2 * 1.e8;
+  YM[std::make_pair (stiff, 4u)] = 4.2 * 1.e8;
+  YM[std::make_pair (stiff, 5u)] = 4.2 * 1.e8;  
+  
+  MultiLevelMesh mlMsh;
+    
   std::pair <std::string, unsigned > simulation;
   
   unsigned n_timesteps = 335;
