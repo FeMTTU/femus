@@ -53,6 +53,7 @@ namespace femus {
 
     std::string dirnamePVTK = "VTKParallelFiles/";
     Files files;
+    files.CheckDir( output_path, "" );
     files.CheckDir( output_path, dirnamePVTK );
 
     int icount;

@@ -360,6 +360,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   //END building "soft" stiffness matrix
 
 
+  bool assembledBC = false;
   //initialization of iel
   unsigned ielOld = UINT_MAX;
   //BEGIN loop on particles (used as Gauss points)
@@ -372,6 +373,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
            
       //update element related quantities only if we are in a different element
       if(iel != ielOld) {
+        assembledBC = false;
         ielt = mymsh->GetElementType(iel);
         nDofsD = mymsh->GetElementDofNumber(iel, solType);
         //initialization of everything is in common fluid and solid
@@ -387,7 +389,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         }
         dofsAll.resize(0);
 
-
+        
         //BEGIN copy of the value of Sol at the dofs idof of the element iel
         for(unsigned i = 0; i < nDofsD; i++) {
           unsigned idof = mymsh->GetSolutionDof(i, iel, solType); //local 2 global solution
@@ -429,6 +431,49 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
       double mass = particles[iMarker]->GetMarkerMass();
       
+      if(assembledBC == false){
+        // *** Face Gauss point loop (boundary Integral) ***
+        for ( unsigned jface = 0; jface < mymsh->GetElementFaceNumber ( iel ); jface++ ) {
+          int faceIndex = myel->GetBoundaryIndex(iel, jface);
+          // look for boundary faces
+          if ( faceIndex == 1 && SolVpOld[1] < 0.) { 
+            std::cout<<"AAAAAAAAAAAAAAAAAAAAAA "<<std::endl;
+            assembledBC = true;
+            const unsigned faceGeom = mymsh->GetElementFaceType ( iel, jface );
+            unsigned faceDofs = mymsh->GetElementFaceDofNumber (iel, jface, solType);
+          
+            vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
+            for ( int k = 0; k < dim; k++ ) {
+              faceCoordinates[k].resize (faceDofs);
+            }
+            for ( unsigned i = 0; i < faceDofs; i++ ) {
+              unsigned inode = mymsh->GetLocalFaceVertexIndex ( iel, jface, i ); // face-to-element local node mapping.
+              for ( unsigned k = 0; k < dim; k++ ) {
+                faceCoordinates[k][i] =  vx_hat[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
+              }
+            }
+            for ( unsigned ig = 0; ig  <  mymsh->_finiteElement[faceGeom][solType]->GetGaussPointNumber(); ig++ ) { 
+            // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh. 
+              vector < double> normal;
+              mymsh->_finiteElement[faceGeom][solType]->JacobianSur ( faceCoordinates, ig, weight_hat, phi_hat, gradphi_hat, normal );
+            
+              adept::adouble solV_gss = 0.;
+                        
+              for ( unsigned i = 0; i < faceDofs; i++ ) {
+                unsigned inode = mymsh->GetLocalFaceVertexIndex ( iel, jface, i ); // face-to-element local node mapping.
+                solV_gss += phi_hat[i] * SolDd[1][inode];
+              }
+              //SetBoundaryCondition( xg, "u", tau, faceIndex, 0. ); // return tau
+              // *** phi_i loop ***
+              double penalty = 1.e30; 
+              for ( unsigned i = 0; i < faceDofs; i++ ) {
+                unsigned inode = mymsh->GetLocalFaceVertexIndex ( iel, jface, i );
+                aRhs[1][inode] +=  penalty * mu_MPM * phi_hat[i] * solV_gss * weight_hat;
+              }        
+            }
+          }
+        }    
+      }
       
       // the local coordinates of the particles are the Gauss points in this context
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, xi, weight_hat, phi_hat, gradphi_hat);
