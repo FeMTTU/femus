@@ -218,7 +218,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         if(MPMmaterial < 5) scalingFactor = scalingFactor1;
         else if(MPMmaterial < 9) scalingFactor = scalingFactor2;
 
-        double mu = (Xg[1] <= -1.1416 && ( MPMmaterial == 1 || MPMmaterial == 2 ) ) ? mu_MPM : mu_MPM; 
+        double mu = mu_MPM; 
         
         for(unsigned i = 0; i < nDofsD; i++) {
           vector < adept::adouble > softStiffness(dim, 0.);
@@ -367,8 +367,10 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   unsigned ielOld = UINT_MAX;
 
   //BEGIN loop on particles (used as Gauss points)
+  std::vector < bool > solidMark;
+  std::vector < double > velMeshOld;
+  
   for(unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
-
     //element of particle iMarker
     unsigned iel = particles[iMarker]->GetMarkerElement();
     if(iel != UINT_MAX) {
@@ -411,6 +413,20 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
             //vx[j][i] = vx_hat[j][i] + SolDd[j][i];
           }
         }
+        
+        if( ml_sol->GetIfFSI() ){
+          solidMark.resize(nDofsD);
+          velMeshOld.resize(nDofsD);
+          for(unsigned i = 0; i < nDofsD; i++) {
+            unsigned idof = mymsh->GetSolutionDof(i, iel, solType);
+            solidMark[i] = mymsh->GetSolidMark(idof);
+            velMeshOld[i] = (*mysolution->_Sol[indexSolV[1]])(idof);
+          }
+        }
+        else {
+          solidMark.assign(nDofsD,false);
+          velMeshOld.assign(nDofsD,0.);
+        }
         //END
 
         // build dof composition
@@ -451,29 +467,20 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       bool switchToNeumanncheck = false;      
       for(unsigned iface = 0; iface < 4; iface++){
         int faceIndex = myel->GetBoundaryIndex(iel, iface);
-        bool switchToNeumann = (faceIndex == 1 && SolVpOld[1] > 0 ) ? true : false;
+        unsigned im = ii[iface][2][0];
+        bool switchToNeumann = ( ( faceIndex == 1 || solidMark[im] ) && 
+                                 (SolVpOld[1] - velMeshOld[im] > 0 ) ) ? true : false;
         if(switchToNeumann){
-          //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAA "<< iel <<std::endl;  
+          
+          std::cout << "AAAAAAAAAAAAAAAA" << SolVpOld[1] << " " << velMeshOld[im] << std::endl;
+          
           switchToNeumanncheck = true;     
           for(unsigned inode = 0;inode < 3; inode++){
             for(int k = 0; k < dim; k++) {
               unsigned i0 = ii[iface][inode][0];
               unsigned i1 = ii[iface][inode][1];
-              unsigned i2 = ii[iface][inode][2];
-//               SolDd1[k][i0] =  - ( gradphi_hat[i1 * dim + 1] * SolDd[k][ i1 ] 
-//                                 + gradphi_hat[i2 * dim + 1] * SolDd[k][ i2 ] )/gradphi_hat[i0 * dim + 1];  
-             // SolDd1[k][i0] = (1. - tuninig) * (- 1./3. * SolDd[k][i1] + 8./3.* pow(1. - xi[1],1.25) * SolDd[k][ i2 ]) + tuninig * SolDd[k][i0];
-              double PIi = 1./acos(-1.);
-              double c = 0.75;
-              double a = 10.;
-              double G1 = 0.5 - PIi * atan( a * (1. - c) );
-              //SolDd1[k][i0] = SolDd[k][i2] *  ( 0.5 - PIi * atan(a * (xi[1] - c)) - G1 ) / (1. - G1);
-              //SolDd1[k][i0] = (- SolDd[k][i1] + 2. * SolDd[k][i2]);
-              //SolDd1[k][i0] = ( SolDd[k][i1] - SolDd[k][i2]);
-              
+              unsigned i2 = ii[iface][inode][2];  
               SolDd1[k][i0] = NeumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - NeumannFactor) * SolDd[k][i0];
-              //SolDd1[k][i0] = SolDd[k][ i2 ];
-              //std::cout <<  SolDd1[k][i0] <<" "<< SolDd1[k][i1] <<" "<< SolDd1[k][i2] <<std::endl; 
             }
           }
         }
@@ -567,18 +574,20 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
       //BEGIN redidual Solid Momentum in moving domain
       for(unsigned i = 0; i < nDofsD; i++) {
-        adept::adouble CauchyDIR[3] = {0., 0., 0.};
+        if( !switchToNeumanncheck || !solidMark[i] ) {
+          adept::adouble CauchyDIR[3] = {0., 0., 0.};
 
-        for(int idim = 0.; idim < dim; idim++) {
-          for(int jdim = 0.; jdim < dim; jdim++) {
-            CauchyDIR[idim] += gradphi[i * dim + jdim] * Cauchy[idim][jdim];
+          for(int idim = 0.; idim < dim; idim++) {
+            for(int jdim = 0.; jdim < dim; jdim++) {
+              CauchyDIR[idim] += gradphi[i * dim + jdim] * Cauchy[idim][jdim];
+            }
           }
-        }
 
-        for(int idim = 0; idim < dim; idim++) {
-          aRhs[idim][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density_MPM 
-                          - phi[i] * (1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
-          ) * mass;
+          for(int idim = 0; idim < dim; idim++) {
+            aRhs[idim][i] += (phi[i] * gravity[idim] - J_hat * CauchyDIR[idim] / density_MPM 
+                            - phi[i] * (1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
+            ) * mass;
+          }
         }
       }
       //END redidual Solid Momentum in moving domain
