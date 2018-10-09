@@ -43,7 +43,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   
-  mlMsh.ReadCoarseMesh("./input/sphere.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/ellipsoid.neu", "seventh", scalingFactor);
   
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -66,7 +66,15 @@ int main(int argc, char** args) {
   mlSol.AddSolution("Y2", LAGRANGE, SECOND, 0);
   mlSol.AddSolution("Y3", LAGRANGE, SECOND, 0);
 
+  
   mlSol.Initialize("All");
+  
+  mlSol.FixSolutionAtOnePoint("Dx1");
+  mlSol.FixSolutionAtOnePoint("Dx2");
+  mlSol.FixSolutionAtOnePoint("Dx3");
+  mlSol.FixSolutionAtOnePoint("Y1");
+  mlSol.FixSolutionAtOnePoint("Y2");
+  mlSol.FixSolutionAtOnePoint("Y3");
   
   
   MultiLevelProblem mlProb(&mlSol);
@@ -250,7 +258,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
       adept::adouble solY_uv[3][2] = {{0.,0.},{0.,0.},{0.,0.}};
       adept::adouble solYg[3]={0.,0.,0.};
       
-      for(unsigned K=1; K < DIM; K++){
+      for(unsigned K=0; K < DIM; K++){
         for (unsigned i = 0; i < nxDofs; i++) {
           solYg[K] += phiY[i] * solY[K][i];
         }
@@ -263,14 +271,14 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
       }
       
       adept::adouble solYnorm2 = 0.;
-      for(unsigned K=1; K < DIM; K++){
+      for(unsigned K = 0; K < DIM; K++){
         solYnorm2 += solYg[K] * solYg[K];
       }
             
       adept::adouble g[dim][dim]={{0.,0.},{0.,0.}};
-      for(unsigned i=0; i < dim; i++){
-        for(unsigned j=0; j < dim; j++){
-          for(unsigned K=0; K < DIM; K++){
+      for(unsigned i = 0; i < dim; i++){
+        for(unsigned j = 0; j < dim; j++){
+          for(unsigned K = 0; K < DIM; K++){
             g[i][j] += solx_uv[K][i] * solx_uv[K][j];
           }
         }
@@ -311,21 +319,24 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
       std::vector < adept::adouble > phix_Xtan[DIM];
       
       for(unsigned J = 0; J < DIM; J++){
-        phiY_Xtan[J].assign(nYDofs,0.);
-        phix_Xtan[J].assign(nYDofs,0.);
-        for(unsigned inode  = 0; inode < nYDofs; inode++){
+        phix_Xtan[J].assign(nxDofs,0.);
+        for(unsigned inode  = 0; inode < nxDofs; inode++){
           for(unsigned k = 0; k < dim; k++){
-            phiY_Xtan[J][inode] += phiY_uv[k][inode] * Jir[k][J];
             phix_Xtan[J][inode] += phix_uv[k][inode] * Jir[k][J];
           }
         }
+                
+        phiY_Xtan[J].assign(nYDofs,0.);
+        for(unsigned inode  = 0; inode < nYDofs; inode++){
+          for(unsigned k = 0; k < dim; k++){
+            phiY_Xtan[J][inode] += phiY_uv[k][inode] * Jir[k][J];
+          }
+        }
       }
-      
-      
-      
+            
       for(unsigned K = 0; K < DIM; K++){
         for(unsigned i = 0; i < nxDofs; i++){
-          aResx[K][i] += (solYg[K] * phix[i] + phix_Xtan[K][i]) * Area; 
+          aResx[K][i] += (solYg[K] * phix[i] + phix_Xtan[K][i]+ 1000. * phix[i] ) * Area; 
         }
         for(unsigned i = 0; i < nYDofs; i++){
           adept::adouble term1 = (1. - 2. * P) * solYnorm2;
@@ -333,14 +344,14 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
           adept::adouble term3 = 0.;
           for(unsigned J = 0; J < DIM; J++){
             term1 -= P * solY_Xtan[J][J];
-            term2 +=  solY_Xtan[K][J] * phiY_Xtan[J][i]; 
+            term2 +=  P * solY_Xtan[K][J] * phiY_Xtan[J][i]; 
             adept::adouble term4 = 0.;
             for(unsigned L = 0; L < DIM; L++){
               term4 += solx_Xtan[J][L] * solY_Xtan[K][L] + solx_Xtan[K][L] * solY_Xtan[J][L];
             }
-            term3 += phiY_Xtan[J][i] * term4;
+            term3 += P * phiY_Xtan[J][i] * term4;
           }
-          aResY[K][i] += (term1 * phiY_Xtan[K][i] - P * term2 + P * term3 ) * Area; 
+          aResY[K][i] += (term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
         }
       }
     } // end gauss point loop
@@ -353,11 +364,16 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
     for (int K = 0; K < DIM; K++) {
       for (int i = 0; i < nxDofs; i++) {
         Res[ K * nxDofs + i] = -aResx[K][i].value();
+        //std::cout << SYSDOF[K * nxDofs + i]<<"( " << Res[ K * nxDofs + i] <<" ) ";
       }
       for (int i = 0; i < nYDofs; i++) {
         Res[DIM * nxDofs + K * nYDofs + i] = -aResY[K][i].value();
+        //std::cout << SYSDOF[DIM * nxDofs + K * nYDofs + i]<<"( " << Res[ DIM * nxDofs + K * nYDofs + i] <<" ) ";
       }
+      //std::cout << "\n ";
     }
+    
+    
     
     RES->add_vector_blocked(Res, SYSDOF);
     
@@ -391,8 +407,12 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   } //end element loop for each process
   
   RES->close();
-  
   KK->close();
+  
+//  VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
+  
+  
+ // MatView((static_cast<PetscMatrix*>(KK))->mat(), PETSC_VIEWER_STDOUT_SELF );
   
 //     PetscViewer    viewer;
 //     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
