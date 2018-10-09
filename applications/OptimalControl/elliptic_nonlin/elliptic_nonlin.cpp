@@ -4,7 +4,7 @@
 #include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
-#include "./quench_param.hpp"
+#include "./elliptic_nonlin_param.hpp"
 
 using namespace femus;
 
