@@ -472,7 +472,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
                                  (SolVpOld[1] - velMeshOld[im] > 0 ) ) ? true : false;
         if(switchToNeumann){
           
-          std::cout << "AAAAAAAAAAAAAAAA" << SolVpOld[1] << " " << velMeshOld[im] << std::endl;
+          std::cout << "AAAAAAAAAAAAAAAA" << iel << " " << SolVpOld[1] << " " << velMeshOld[im] << std::endl;
           
           switchToNeumanncheck = true;     
           for(unsigned inode = 0;inode < 3; inode++){
