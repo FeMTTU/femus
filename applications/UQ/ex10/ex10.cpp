@@ -168,6 +168,32 @@ int main(int argc, char** argv) {
   systemSG.SetTolerances(1.e-20, 1.e-20, 1.e+50, 100);
   //END
 
+  //BEGIN Define the instances of the problem for histogram and KDE
+  MultiLevelMesh mlMshHisto;
+
+  mlMshHisto.GenerateCoarseBoxMesh(8, 0, 0, -0.5, 0.5, 0., 0., 0., 0., EDGE3, "seventh");
+
+  mlMshHisto.PrintInfo();
+
+  MultiLevelSolution mlSolHisto(&mlMshHisto);
+
+  mlSolHisto.AddSolution("histo", DISCONTINOUS_POLYNOMIAL, ZERO);
+  mlSolHisto.AddSolution("kde", LAGRANGE, SECOND, 2);
+
+  mlSolHisto.Initialize("All");
+
+  MultiLevelProblem ml_probHisto(&mlSolHisto);
+
+  LinearImplicitSystem& systemHisto = ml_probHisto.add_system < LinearImplicitSystem > ("Histo");
+
+  systemHisto.init();
+
+  mlSolHisto.SetWriter(VTK);
+  std::vector<std::string> print_vars_2;
+  print_vars_2.push_back("All");
+  //mlSol.GetWriter()->SetDebugOutput(true);
+  mlSolHisto.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars_2, 0);
+  //END
 
 //BEGIN solve eigenproblem to get the KL functions
   GetEigenPair(ml_prob, numberOfEigPairs, eigenvalues);  //solve the generalized eigenvalue problem and compute the eigenpairs
@@ -193,7 +219,7 @@ int main(int argc, char** argv) {
   // QoI samples. NOTE when we do 2D and 3D, sgmQoIStandardized must be an std vector of std vector
 
   //TODO here call GetHistogramAndKDE;
-  
+
   //PlotGCandEDExpansion();
 
   // ******* Print solution *******
@@ -202,9 +228,9 @@ int main(int argc, char** argv) {
   print_vars.push_back("All");
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", print_vars, 0);
-  
+
   //TODO add a print for the 1D problem
-  
+
   //END
 
   return 0;
