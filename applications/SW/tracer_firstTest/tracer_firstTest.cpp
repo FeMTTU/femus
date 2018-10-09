@@ -27,7 +27,7 @@ using namespace femus;
 
 double dt = 1.; 
 
-double k_v = 0.0001;
+double k_v = 0.01;
 
 double pi = acos ( -1. );
 double k_h = 1 / ( 10 * pi );
@@ -37,7 +37,7 @@ const unsigned NumberOfLayers = 20;
 clock_t start_time = clock();
 
 bool wave = false;
-bool twostage = true;
+bool twostage = false;
 bool assembly = true; //assembly must be left always true
 
 const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
@@ -45,148 +45,6 @@ const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
 double InitalValueV ( const std::vector < double >& x ) {
   return 1. / 10.;
 }
-
-// double InitalValueV0 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 +hRest[0]*(NumberOfLayers-1);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV1 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-2);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV2 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-3);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV3 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-4);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV4 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-5);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV5 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-6);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV6 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);;
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-7);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV7 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-8);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV8 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-9);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV9 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-10);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV10 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-11);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV11 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-12);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV12 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-13);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV13 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-14);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV14 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-15);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV15 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-16);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV16 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-17);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV17 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-18);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV18 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-19);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV19 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-20);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-
 
 double InitalValueH ( const std::vector < double >& x ) {
   return hRest[0];
@@ -274,27 +132,6 @@ int main ( int argc, char** args ) {
 
   mlSol.Initialize ( "All" );
 
-//   mlSol.Initialize("v0",InitalValueV0);
-//   mlSol.Initialize("v1",InitalValueV1);
-//   mlSol.Initialize("v2",InitalValueV2);
-//   mlSol.Initialize("v3",InitalValueV3);
-//   mlSol.Initialize("v4",InitalValueV4);
-//   mlSol.Initialize("v5",InitalValueV5);
-//   mlSol.Initialize("v6",InitalValueV6);
-//   mlSol.Initialize("v7",InitalValueV7);
-//   mlSol.Initialize("v8",InitalValueV8);
-//   mlSol.Initialize("v9",InitalValueV9);
-//   mlSol.Initialize("v10",InitalValueV10);
-//   mlSol.Initialize("v11",InitalValueV11);
-//   mlSol.Initialize("v12",InitalValueV12);
-//   mlSol.Initialize("v13",InitalValueV13);
-//   mlSol.Initialize("v14",InitalValueV14);
-//   mlSol.Initialize("v15",InitalValueV15);
-//   mlSol.Initialize("v16",InitalValueV16);
-//   mlSol.Initialize("v17",InitalValueV17);
-//   mlSol.Initialize("v18",InitalValueV18);
-//   mlSol.Initialize("v19",InitalValueV19);
-
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "h%d", i );
@@ -335,7 +172,7 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 1000; //17h=1020 with dt=60, 17h=10200 with dt=6
+  unsigned numberOfTimeSteps = 3209; //17h=1020 with dt=60, 17h=10200 with dt=6
   dt = 1./10.;
   bool implicitEuler = true;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
@@ -562,7 +399,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
       //BEGIN FIRST ORDER
       if ( i > start ) {
-        //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
         if ( solvm[k] > 0 ) {
           aResHT[k] += solHTm[k] * solvm[k] / dx;
         }
@@ -571,7 +407,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
         }
       }
       if ( i < end - 1 ) {
-        //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
         if ( solvp[k] > 0 ) {
           aResHT[k] -= solHT[k] * solvp[k] / dx; //first order upwind
         }
@@ -579,9 +414,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
           aResHT[k] -= solHTp[k] * solvp[k] / dx; //first order upwind
         }
       }
-//       else{
-//         aResHT[k] -= solHT[k] /*.value()*/  / dx; //first order upwind
-//       }
       //END
 
       //BEGIN THIRD ORDER
@@ -734,7 +566,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
   MFNSolve ( mfn, v, y );
   MFNDestroy ( &mfn );
 
-  VecView(y,PETSC_VIEWER_STDOUT_WORLD);
+  //VecView(y,PETSC_VIEWER_STDOUT_WORLD);
   
   //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
   
@@ -999,7 +831,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     MFNSolve ( mfn, v2, y2 );
     MFNDestroy ( &mfn );
 
-    VecView(y2,PETSC_VIEWER_STDOUT_WORLD);
+    //VecView(y2,PETSC_VIEWER_STDOUT_WORLD);
     
     sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
 
@@ -1020,7 +852,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
 
       double valueT = valueHT / valueH;
-      if ( i == 10 ) std::cout << "temperature " << valueT << std::endl;
+      //if ( i == 10 ) std::cout << "temperature " << valueT << std::endl;
       //if (i == 0) valueT = 0.;
       //if (i == msh->_dofOffset[solTypeHT][iproc + 1] - 1 ) valueT = 0.;
 
