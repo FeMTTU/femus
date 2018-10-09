@@ -73,8 +73,8 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 }
 
 
-void ETD ( MultiLevelProblem& ml_prob );
-void ETD2 ( MultiLevelProblem& ml_prob );
+void ETDvh ( MultiLevelProblem& ml_prob );
+void ETDt ( MultiLevelProblem& ml_prob );
 
 
 int main ( int argc, char** args ) {
@@ -84,7 +84,7 @@ int main ( int argc, char** args ) {
   // init Petsc-MPI communicator
   FemusInit mpinit ( argc, args, MPI_COMM_WORLD );
 
-  // define multilevel mesh
+  // define multilevel mesh2
   MultiLevelMesh mlMsh;
   double scalingFactor = 1.;
 
@@ -171,16 +171,16 @@ int main ( int argc, char** args ) {
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     system.CopySolutionToOldSolution();
     dt = 60.;
-    ETD ( ml_prob );
+    ETDvh ( ml_prob );
     dt = 60.;
-    ETD2 ( ml_prob );
+    ETDt ( ml_prob );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
   return 0;
 }
 
 
-void ETD ( MultiLevelProblem& ml_prob ) {
+void ETDvh ( MultiLevelProblem& ml_prob ) {
 
   const unsigned& NLayers = NumberOfLayers;
 
@@ -798,7 +798,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
 
 
-void ETD2 ( MultiLevelProblem& ml_prob ) {
+void ETDt ( MultiLevelProblem& ml_prob ) {
 
   const unsigned& NLayers = NumberOfLayers;
 

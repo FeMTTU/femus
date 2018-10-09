@@ -446,14 +446,14 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 10000; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 1./10.;
+  unsigned numberOfTimeSteps = 1000; //17h=1020 with dt=60, 17h=10200 with dt=6
+  dt = 1.;
   bool implicitEuler = true;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
-    //ETD ( ml_prob );
-    RK4 ( ml_prob, implicitEuler );
+    ETD ( ml_prob );
+    //RK4 ( ml_prob, implicitEuler );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
   std::cout << " TOTAL TIME:\t" << \
@@ -1361,10 +1361,12 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
         if ( k < NLayers - 1 ) {
           LHS += w[k + 1] * 0.5 * ( (solHT[k] + addition) / solh[k] + (solHT[k + 1] + addition) / solh[k + 1] );
           //LHS += w[k + 1] * ( ( solHT[k + 1] + addition ) / solh[k + 1] ); //TODO upwind
+	  //LHS += w[k + 1] * ( ( solHT[k] + addition ) / solh[k] );
         }
         if ( k > 0 ) {
           LHS -= w[k] * 0.5 * ( (solHT[k - 1] + addition) / solh[k - 1] + (solHT[k] + addition) / solh[k] );
           //LHS -= w[k] * ( ( solHT[k] + addition ) / solh[k] );
+	  //LHS -= w[k] * ( ( solHT[k-1] + addition ) / solh[k-1] );
         }
 
         if ( RK_step == 0 ) {
