@@ -189,8 +189,8 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
   
   system_opt.SetDebugNonlinear(true);
-//   system_opt.SetMaxNumberOfNonLinearIterations(5);
-  system_opt.SetNonLinearConvergenceTolerance(1.e-15);
+//   system_opt.SetMaxNumberOfNonLinearIterations(2);
+//   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
   system_opt.SetDebugLinear(true);
   system_opt.SetMaxNumberOfLinearIterations(6);
   system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
@@ -618,7 +618,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 //============ Res _ Boundary Integral Constraint ============================================================================================
 	  for (unsigned  kdim = 0; kdim < dim; kdim++) {
 // 		for(unsigned i=0; i < nDofsThetactrl; i ++) { avoid because it is an element dof
-/*delta_theta row */ 	/* Res[delta_theta_theta_index][i]*/ Res_outer[0] += - /*fake_theta_flag[i] **/ weight_bd * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
+/*delta_theta row */ 	/* Res[delta_theta_theta_index][i]*/ Res_outer[0] +=  /*fake_theta_flag[i] **/ weight_bd * SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * normal[kdim] ;
 // 		}  
 	  }
 		  
@@ -662,7 +662,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 											 beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
 											+ gamma_val* lap_res_dctrl_ctrl_bd
 								    			- IRe * grad_dot_n_adj_res[kdim] *  phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
-											+ SolVAR_bd_qp[SolPdeIndex[delta_theta_theta_index]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry] * normal[kdim]       
+											- SolVAR_bd_qp[SolPdeIndex[delta_theta_theta_index]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry] * normal[kdim]       
 											  );	    
 		      }//kdim  
 
@@ -675,9 +675,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 			    if(i_vol < nDofsGctrl) {
 				double temp = weight_bd * ( phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);
 //ROW_BLOCK delta_theta - control -- loop over i in the VOLUME (while j(/i_vol) is in the boundary) -------------------------------------------------------------------------------------------------------------
-			      Jac[delta_theta_theta_index][ctrl_pos_begin + kdim][i*nDofsGctrl + i_vol]     += temp; /*weight_bd * ( phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim])*/
+			      Jac[delta_theta_theta_index][ctrl_pos_begin + kdim][i*nDofsGctrl + i_vol]     += - temp; /*weight_bd * ( phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim])*/
 //COLUMN_BLOCK delta_control - theta ---- loop over j in the VOLUME (while i(/i_vol) is in the boundary) ---------------------------------------------------------------------------------------------------
-			      Jac[ctrl_pos_begin + kdim][delta_theta_theta_index][i_vol*nDofsThetactrl + i] += control_node_flag[kdim][i_vol] * phi_bd_gss_fe[SolFEType[delta_theta_theta_index]][i]*temp; /*weight_bd * ( phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);*/
+			      Jac[ctrl_pos_begin + kdim][delta_theta_theta_index][i_vol*nDofsThetactrl + i] += - control_node_flag[kdim][i_vol] * phi_bd_gss_fe[SolFEType[delta_theta_theta_index]][i]*temp; /*weight_bd * ( phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin]][i_bdry] * normal[kdim]);*/
 			    }//endif
 			  }// i 
 		    }//kdim
@@ -1020,13 +1020,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   JAC->close();
   RES->close();
 //   if(mlPdeSys._nonliniteration == 0 || mlPdeSys._nonliniteration == 1){
-//     std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
-//   JAC->print_matlab(mat_out.str(),"ascii");
-//     std::ostringstream res_out; res_out << "res_non_ad_" << mlPdeSys._nonliniteration  << ".txt";
-//     std::filebuf res_fb;
-//    res_fb.open (res_out.str().c_str(),std::ios::out);
-//     std::ostream  res_file_stream(&res_fb);
-//   RES->print(res_file_stream);
+    std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
+  JAC->print_matlab(mat_out.str(),"ascii");
+    std::ostringstream res_out; res_out << "res_non_ad_" << mlPdeSys._nonliniteration  << ".txt";
+    std::filebuf res_fb;
+   res_fb.open (res_out.str().c_str(),std::ios::out);
+    std::ostream  res_file_stream(&res_fb);
+  RES->print(res_file_stream);
 //  }
  
 //   JAC->print();
@@ -1394,7 +1394,7 @@ double integral_g_dot_n = 0.;
     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<beta_val << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<gamma_val<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
-    std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha /**(alpha_val/2)*/ + integral_beta /**(beta_val/2)*/ + integral_gamma /**(gamma_val/2)*/<< std::endl; 
+    std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * alpha_val*0.5  + integral_beta *beta_val*0.5 + integral_gamma *gamma_val*0.5 << std::endl; 
     
     
     return integral_target_alpha * alpha_val*0.5+ integral_beta *beta_val*0.5+ integral_gamma *gamma_val*0.5; 
