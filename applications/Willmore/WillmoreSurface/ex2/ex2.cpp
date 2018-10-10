@@ -28,6 +28,11 @@ using namespace femus;
 void AssemblePWillmore(MultiLevelProblem& );
 
 
+bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
+  bool dirichlet = false; 
+  return dirichlet;
+}
+
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -43,7 +48,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   
-  mlMsh.ReadCoarseMesh("./input/ellipsoid.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/sphere.neu", "seventh", scalingFactor);
   
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -69,14 +74,18 @@ int main(int argc, char** args) {
   
   mlSol.Initialize("All");
   
+ 
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  mlSol.GenerateBdc("All");
+  
 //   mlSol.FixSolutionAtOnePoint("Dx1");
 //   mlSol.FixSolutionAtOnePoint("Dx2");
 //   mlSol.FixSolutionAtOnePoint("Dx3");
 //   mlSol.FixSolutionAtOnePoint("Y1");
 //   mlSol.FixSolutionAtOnePoint("Y2");
 //   mlSol.FixSolutionAtOnePoint("Y3");
-  
-  
+   
+
   MultiLevelProblem mlProb(&mlSol);
   
   // add system Wilmore in mlProb as a Linear Implicit System
@@ -90,7 +99,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Y2");
   system.AddSolutionToSystemPDE("Y3");
   
-  system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetMaxNumberOfNonLinearIterations(1);
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssemblePWillmore);
@@ -336,7 +345,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             
       for(unsigned K = 0; K < DIM; K++){
         for(unsigned i = 0; i < nxDofs; i++){
-          aResx[K][i] += (solYg[K] * phix[i] + phix_Xtan[K][i]+ 1000. * phix[i] ) * Area; 
+          aResx[K][i] += (solYg[K] * phix[i] + phix_Xtan[K][i]) * Area; 
         }
         for(unsigned i = 0; i < nYDofs; i++){
           adept::adouble term1 = (1. - 2. * P) * solYnorm2;
@@ -351,7 +360,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             }
             term3 += P * phiY_Xtan[J][i] * term4;
           }
-          aResY[K][i] += (term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
+          aResY[K][i] += (term1 * phiY_Xtan[K][i] - term2 + term3 - 0.*phiY[i] ) * Area; 
         }
       }
     } // end gauss point loop
