@@ -7,7 +7,7 @@
 #define NSUB_X  32
 #define NSUB_Y  32
 
-#define FLUID_DENSITY  1
+#define FLUID_DENSITY  100
 //******************************************* Desired Target  and RHS function*******************************************************
 
  double force[3] = {0.,0.,0.};
