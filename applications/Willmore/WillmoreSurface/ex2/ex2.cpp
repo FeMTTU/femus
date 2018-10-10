@@ -69,12 +69,12 @@ int main(int argc, char** args) {
   
   mlSol.Initialize("All");
   
-  mlSol.FixSolutionAtOnePoint("Dx1");
-  mlSol.FixSolutionAtOnePoint("Dx2");
-  mlSol.FixSolutionAtOnePoint("Dx3");
-  mlSol.FixSolutionAtOnePoint("Y1");
-  mlSol.FixSolutionAtOnePoint("Y2");
-  mlSol.FixSolutionAtOnePoint("Y3");
+//   mlSol.FixSolutionAtOnePoint("Dx1");
+//   mlSol.FixSolutionAtOnePoint("Dx2");
+//   mlSol.FixSolutionAtOnePoint("Dx3");
+//   mlSol.FixSolutionAtOnePoint("Y1");
+//   mlSol.FixSolutionAtOnePoint("Y2");
+//   mlSol.FixSolutionAtOnePoint("Y3");
   
   
   MultiLevelProblem mlProb(&mlSol);
