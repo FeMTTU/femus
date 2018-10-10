@@ -25,25 +25,33 @@ using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; //dirichlet
-
+  value = 0.;
+  
   if (!strcmp(SolName, "U")) { // strcmp compares two string in lexiographic sense. why !strcmp??? not false ==true?
-    value = 0.;
-    if (facename == 1) {
-      if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
+    if (facename == 2) {
+      value = -(x[1]-0.5) * (x[1]+0.5);
+    }
+    else if (facename == 3) {
+      dirichlet = false;  
     }
   } 
   else if (!strcmp(SolName, "V")) {
-    value = 0.;
-    //if (facename == 1) {
-     // if (x[1] < 0.5 && x[1] > -0.5 && x[2] < 0.5 && x[2] > -0.5) value = 1.;
-    //}
+     if (facename == 2) {
+      value = 0.;
+    }
+    else if (facename == 3) {
+      dirichlet = false;  
+    }
   }
   else if (!strcmp(SolName, "W")) {
     value = 0.;
   } 
   else if (!strcmp(SolName, "P")) {
-    value = 0.;
     dirichlet = false;
+    value = 0.;
+    if(facename == 3){
+      value = 10.;
+    }
   }
 
   return dirichlet;
@@ -65,7 +73,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   //mlMsh.ReadCoarseMesh("./input/cube_hex.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh ( "./input/square_quad.neu", "seventh", scalingFactor );
+  mlMsh.ReadCoarseMesh ( "./input/rectangle.neu", "seventh", scalingFactor );
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
@@ -99,7 +107,7 @@ int main(int argc, char** args) {
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.FixSolutionAtOnePoint("P");
+  //mlSol.FixSolutionAtOnePoint("P");
   
   mlSol.GenerateBdc("All");
 
@@ -129,6 +137,7 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("All");
 
   VTKWriter vtkIO(&mlSol);
+  vtkIO.SetDebugOutput(true);
   vtkIO.Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
   return 0;
@@ -277,6 +286,48 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
 
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
+    
+    // *** Face Gauss point loop (boundary Integral) ***
+    for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
+      int faceIndex = el->GetBoundaryIndex(iel, jface);
+      // look for boundary faces
+      if ( faceIndex == 3 ) {  
+        const unsigned faceGeom = msh->GetElementFaceType ( iel, jface );
+        unsigned faceDofs = msh->GetElementFaceDofNumber (iel, jface, solVType);
+                    
+        vector  < vector  <  double> > faceCoordinates ( dim ); // A matrix holding the face coordinates rowwise.
+        for ( int k = 0; k < dim; k++ ) {
+          faceCoordinates[k].resize (faceDofs);
+        }
+        for ( unsigned i = 0; i < faceDofs; i++ ) {
+          unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i ); // face-to-element local node mapping.
+          for ( unsigned k = 0; k < dim; k++ ) {
+            faceCoordinates[k][i] =  coordX[k][inode]; // We extract the local coordinates on the face from local coordinates on the element.
+          }
+        }
+        for ( unsigned ig = 0; ig  <  msh->_finiteElement[faceGeom][solVType]->GetGaussPointNumber(); ig++ ) { 
+            // We call the method GetGaussPointNumber from the object finiteElement in the mesh object msh. 
+          vector < double> normal;
+          msh->_finiteElement[faceGeom][solVType]->JacobianSur ( faceCoordinates, ig, weight, phiV, phiV_x, normal );
+            
+          vector< double > xg(dim,0.);
+          for ( unsigned i = 0; i < faceDofs; i++ ) {
+            for( unsigned k=0; k<dim; k++){
+              xg[k] += phiV[i] * faceCoordinates[k][i]; // xg(ig)= \sum_{i=0}^faceDofs phi[i](xig) facecoordinates[i]     
+            }
+          }
+          double tau; // a(u)*grad_u\cdot normal
+          SetBoundaryCondition( xg, "P", tau, faceIndex, 0. ); // return tau
+          // *** phi_i loop ***
+          for ( unsigned i = 0; i < faceDofs; i++ ) {
+            unsigned inode = msh->GetLocalFaceVertexIndex ( iel, jface, i );
+            for(unsigned k=0;k<dim;k++){
+              aResV[k][inode] +=  -phiV[i] * tau * normal[k] * weight;
+            }
+          }        
+        }
+      }
+    }   
 
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solVType]->GetGaussPointNumber(); ig++) {
