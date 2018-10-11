@@ -29,8 +29,33 @@ void AssemblePWillmore(MultiLevelProblem& );
 
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
-  bool dirichlet = false; 
+  bool dirichlet = true; 
+  
+  if (!strcmp("Dx1", SolName) || !strcmp("Dx2", SolName) || !strcmp("Dx3", SolName)) {
+    value = 0.;
+  } 
+  else if (!strcmp("Y1", SolName)) {
+    value = -2. * x[0];
+  }
+  else if (!strcmp("Y2", SolName)) {
+    value = -2. * x[1];
+  }
+  else if (!strcmp("Y3", SolName)) {
+    value = 0.;
+  }
   return dirichlet;
+}
+
+double InitalValueY1(const std::vector < double >& x) {
+  return -2. * x[0];
+}
+
+double InitalValueY2(const std::vector < double >& x) {
+  return -2. * x[1];
+}
+
+double InitalValueY3(const std::vector < double >& x) {
+  return -2. * x[2];
 }
 
 int main(int argc, char** args) {
@@ -48,14 +73,14 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   
-  mlMsh.ReadCoarseMesh("./input/sphere.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/halfSphere.neu", "seventh", scalingFactor);
   
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
   // erase all the coarse mesh levels
-  // mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
+  mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
 
   // print mesh info
   mlMsh.PrintInfo();
@@ -67,12 +92,24 @@ int main(int argc, char** args) {
   mlSol.AddSolution("Dx1", LAGRANGE, SECOND, 0);
   mlSol.AddSolution("Dx2", LAGRANGE, SECOND, 0);
   mlSol.AddSolution("Dx3", LAGRANGE, SECOND, 0);
+  
+//   mlSol.AddSolution("Dx1", LAGRANGE, FIRST, 0);
+//   mlSol.AddSolution("Dx2", LAGRANGE, FIRST, 0);
+//   mlSol.AddSolution("Dx3", LAGRANGE, FIRST, 0);
+//   
   mlSol.AddSolution("Y1", LAGRANGE, SECOND, 0);
   mlSol.AddSolution("Y2", LAGRANGE, SECOND, 0);
   mlSol.AddSolution("Y3", LAGRANGE, SECOND, 0);
+  
+//   mlSol.AddSolution("Y1", LAGRANGE, FIRST, 0);
+//   mlSol.AddSolution("Y2", LAGRANGE, FIRST, 0);
+//   mlSol.AddSolution("Y3", LAGRANGE, FIRST, 0);
 
   
   mlSol.Initialize("All");
+  mlSol.Initialize("Y1", InitalValueY1);
+  mlSol.Initialize("Y2", InitalValueY2);
+  mlSol.Initialize("Y3", InitalValueY3);
   
  
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -268,21 +305,27 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
       adept::adouble solYg[3]={0.,0.,0.};
       
       for(unsigned K=0; K < DIM; K++){
-        for (unsigned i = 0; i < nxDofs; i++) {
+        for (unsigned i = 0; i < nYDofs; i++) {
           solYg[K] += phiY[i] * solY[K][i];
         }
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
             solx_uv[K][j] += phix_uv[j][i] * solx[K][i];
+          }
+        }
+        for (int j = 0; j < dim; j++) {
+          for (unsigned i = 0; i < nYDofs; i++) {
             solY_uv[K][j] += phiY_uv[j][i] * solY[K][i];
           }
         }
+        
       }
       
       adept::adouble solYnorm2 = 0.;
       for(unsigned K = 0; K < DIM; K++){
         solYnorm2 += solYg[K] * solYg[K];
       }
+//       std::cout << solYnorm2 << " ";
             
       adept::adouble g[dim][dim]={{0.,0.},{0.,0.}};
       for(unsigned i = 0; i < dim; i++){
@@ -348,7 +391,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
           aResx[K][i] += (solYg[K] * phix[i] + phix_Xtan[K][i]) * Area; 
         }
         for(unsigned i = 0; i < nYDofs; i++){
-          adept::adouble term1 = (1. - 2. * P) * solYnorm2;
+          adept::adouble term1 = - solYnorm2;
           adept::adouble term2 = 0.;
           adept::adouble term3 = 0.;
           for(unsigned J = 0; J < DIM; J++){
@@ -360,7 +403,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             }
             term3 += P * phiY_Xtan[J][i] * term4;
           }
-          aResY[K][i] += (term1 * phiY_Xtan[K][i] - term2 + term3 - 0.*phiY[i] ) * Area; 
+          aResY[K][i] += (term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
         }
       }
     } // end gauss point loop
@@ -418,7 +461,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   RES->close();
   KK->close();
   
-//  VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
+  VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
   
   
  // MatView((static_cast<PetscMatrix*>(KK))->mat(), PETSC_VIEWER_STDOUT_SELF );
