@@ -632,7 +632,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     double b = 10.; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
 
     std::vector < double > w ( NLayers + 1, 0. );
-    w[0] = 1.;
+    //w[0] = 1.;
 
     std::vector < double > zMid ( NLayers );
     for ( unsigned k = 0; k < NLayers; k++ ) {
@@ -917,7 +917,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       double b = 10.; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
 
       std::vector < double > w ( NLayers + 1, 0. );
-      w[0] = 1.;
+      //w[0] = 1.;
 
       std::vector < double > zMid ( NLayers );
       for ( unsigned k = 0; k < NLayers; k++ ) {
@@ -996,12 +996,12 @@ void ETD ( MultiLevelProblem& ml_prob ) {
         //END
 
         if ( k < NLayers - 1 ) {
-          //aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k] + solHT[k + 1]/ solh[k + 1] );
-          aResHT[k] += w[k + 1] * ( solHT[k + 1] / solh[k + 1] ); //TODO upwind
+          aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k] + solHT[k + 1]/ solh[k + 1] );
+          //aResHT[k] += w[k + 1] * ( solHT[k + 1] / solh[k + 1] ); //TODO upwind
         }
-        if ( k >= 0 ) {
-          //aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1]/ solh[k - 1] + solHT[k] / solh[k] );
-          aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
+        if ( k > 0 ) {
+          aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1]/ solh[k - 1] + solHT[k] / solh[k] );
+          //aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
         }
 
         double deltaZt = 0.;
@@ -1027,7 +1027,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
         //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAA"<<deltaZt - deltaZb<<std::endl;
 
-        aResHT[k] += solhm[k] * k_v * (deltaZt - deltaZb) / ( (ht + hb) / 2. ); // vertical diffusion
+        aResHT[k] += solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
 //
 //       //aResHT[k] += ((solhp[k] - solhm[k]) * k_v * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
 //       aResHT[k] += k_h * solh[k] * (solHTm[k] - solHT[k])/(dx*dx); // horizontal diffusion
@@ -1101,8 +1101,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       //if ( i == 10 ) std::cout << "temperature " << valueT << std::endl;
       //if (i == 0) valueT = 0.;
       //if (i == msh->_dofOffset[solTypeHT][iproc + 1] - 1 ) valueT = 0.;
-
-
       sol->_Sol[solIndexT[k]]->set ( i, valueT );
     }
 
@@ -1267,7 +1265,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
     double b = 10.; //( H_shelf + H_0 / 2 * (1 + tanh(hh / phi)) );
 
     std::vector < double > w ( NLayers + 1, 0. );
-    w[0] = 1.;
+    //w[0] = 1.;
 
     std::vector < double > zMid ( NLayers );
     for ( unsigned k = 0; k < NLayers; k++ ) {
