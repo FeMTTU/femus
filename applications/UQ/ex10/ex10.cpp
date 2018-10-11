@@ -33,7 +33,7 @@ void GetMomentsAndCumulants(std::vector <double>& alphas);
 //
 void GetQoIStandardizedSamples(std::vector <double>& alphas, std::vector <double>& sgmQoIStandardized);
 //
-void GetHistogramAndKDE(std::vector <double>& sgmQoIStandardized);
+void GetHistogramAndKDE(std::vector< double >& sgmQoIStandardized, MultiLevelProblem& ml_prob);
 //
 void PlotGCandEDExpansion();
 
@@ -48,6 +48,10 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
+unsigned numberOfSamples = 100000; //for MC sampling of the QoI
+unsigned nxCoarseBox;
+double xMinCoarseBox = - 2.5;
+double xMaxCoarseBox = 5.;
 //END
 
 unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
@@ -209,7 +213,9 @@ int main(int argc, char** argv) {
   //BEGIN Define the instances of the problem for HISTOGRAM and KDE
   MultiLevelMesh mlMshHisto;
 
-  mlMshHisto.GenerateCoarseBoxMesh(8, 0, 0, -0.5, 0.5, 0., 0., 0., 0., EDGE3, "seventh");
+  nxCoarseBox = static_cast<unsigned>(floor(1. + 3.3 * log(numberOfSamples)));
+
+  mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh");
 //     mlMshHisto.GenerateCoarseBoxMesh(8, 8, 0, -1.5, 1.5, -0.5, 0.5, 0., 0., QUAD9, "seventh");
 //   mlMshHisto.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", scalingFactor);
   mlMshHisto.PrintInfo();
@@ -225,7 +231,7 @@ int main(int argc, char** argv) {
 
   LinearImplicitSystem& systemHisto = ml_probHisto.add_system < LinearImplicitSystem > ("Histo");
 
-  //TODO here call GetHistogramAndKDE;
+  GetHistogramAndKDE(sgmQoIStandardized, ml_probHisto);
 
   mlSolHisto.SetWriter(VTK);
   std::vector<std::string> print_vars_2;
@@ -660,6 +666,8 @@ void GetEigenPair(MultiLevelProblem& ml_prob, const int& numberOfEigPairs, std::
       }
 
     }
+
+    sol->_Sol[eigfIndex[iGS]]->close();
 
     double local_norm2 = 0.;
     for(int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
@@ -1270,8 +1278,7 @@ void GetQoIStandardizedSamples(std::vector< double >& alphas, std::vector <doubl
   const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet(pIndex, numberOfEigPairs);
 
   //BEGIN sampling to find the mesh domain
-  unsigned numberOfSamples = 100000;
-  int pdfHistogramSize = static_cast <int>(1. + 3.3 * log10(numberOfSamples));
+  int pdfHistogramSize = static_cast <int>(1. + 3.3 * log(numberOfSamples));
   std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
   double startPoint = - 6.5;  //- 9.5;
   double endPoint = 6.5;  //9.5;
@@ -1382,14 +1389,84 @@ void GetQoIStandardizedSamples(std::vector< double >& alphas, std::vector <doubl
 
 }
 
-void GetHistogramAndKDE(std::vector< double >& sgmQoIStandardized) {
+void GetHistogramAndKDE(std::vector< double >& samples, MultiLevelProblem& ml_prob) {
 
+  unsigned level = 0.;
 
+  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
+  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
+
+  char name[10];
+  sprintf(name, "HISTO");
+  double solIndexHISTO = mlSol->GetIndex(name); // get the position of "Ti" in the sol object
+  sprintf(name, "KDE");
+  double solIndexKDE = mlSol->GetIndex(name); // get the position of "Ti" in the sol object
+
+  unsigned solTypeHISTO = mlSol->GetSolutionType(solIndexHISTO);
+  unsigned solTypeKDE = mlSol->GetSolutionType(solIndexKDE);
+
+  double h = (xMaxCoarseBox - xMinCoarseBox) / nxCoarseBox; //mesh size
+
+  for(unsigned m = 0; m < numberOfSamples; m++) {
+
+    for(int iel = sol->GetMesh()->_elementOffset[iproc]; iel < sol->GetMesh()->_elementOffset[iproc + 1]; iel ++) {
+
+      unsigned  xLeftDof = sol->GetMesh()->GetSolutionDof(0, iel, 2);
+      unsigned  xRightDof = sol->GetMesh()->GetSolutionDof(1, iel, 2);
+
+      double xLeft = (*sol->GetMesh()->_topology->_Sol[0])(xLeftDof);
+      double xRight = (*sol->GetMesh()->_topology->_Sol[0])(xRightDof);
+      
+      if(samples[m] > xLeft && samples[m] <= xRight) {
+        sol->_Sol[solIndexHISTO]->add(iel, 1.);
+
+        //BEGIN write KDE solution 
+        short unsigned ielType = msh->GetElementType(iel);
+        unsigned ielDofs = msh->GetElementDofNumber(iel, solTypeKDE);
+        basis *base = msh->_finiteElement[ielType][solTypeKDE]->GetBasis();
+        for(unsigned idof = 0; idof < ielDofs; idof++) {                           //TODO there is something wrong here
+          double xidof = (*sol->GetMesh()->_topology->_Sol[0])(idof);
+          double x = xidof - samples[m];
+          double phi_idof = base->eval_phi(base->GetIND(idof), &xidof);
+          std::cout << "iel =" << iel << " " << "xidof = " << xidof << " " << " phi_idof " << phi_idof << std::endl;
+	  phi_idof /= (numberOfSamples * sqrt(h));
+//           std::cout << " pih_idof " << phi_idof << std::endl;
+          sol->_Sol[solIndexKDE]->add(idof, phi_idof);
+        }
+        //END
+        
+        break;
+      }
+    }
+    sol->_Sol[solIndexHISTO]->close();
+    sol->_Sol[solIndexKDE]->close();
+  }
+
+  double integralLocal = 0;
+  double integral;
+  double dx = (xMaxCoarseBox - xMinCoarseBox) / nxCoarseBox;
+  for(unsigned i =  msh->_dofOffset[solTypeHISTO][iproc]; i <  msh->_dofOffset[solTypeHISTO][iproc + 1]; i++) {
+    integralLocal += (*sol->_Sol[solIndexHISTO])(i) * dx;
+  }
+
+  MPI_Allreduce(&integralLocal, &integral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+  std::cout << "--------------------------------------------- area = " << integral << " --------------------------------------------- " << std::endl;
+
+  for(unsigned i =  msh->_dofOffset[solTypeHISTO][iproc]; i <  msh->_dofOffset[solTypeHISTO][iproc + 1]; i++) {
+    double valueHISTO = (*sol->_Sol[solIndexHISTO])(i);
+    sol->_Sol[solIndexHISTO]->set(i, valueHISTO / integral);
+  }
+  sol->_Sol[solIndexHISTO]->close();
 
 }
 
 
 //
+
 
 
 
