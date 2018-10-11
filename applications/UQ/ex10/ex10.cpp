@@ -1427,11 +1427,11 @@ void GetHistogramAndKDE(std::vector< double >& samples, MultiLevelProblem& ml_pr
         short unsigned ielType = msh->GetElementType(iel);
         unsigned ielDofs = msh->GetElementDofNumber(iel, solTypeKDE);
         basis *base = msh->_finiteElement[ielType][solTypeKDE]->GetBasis();
-        for(unsigned idof = 0; idof < ielDofs; idof++) {                           //TODO there is something wrong here
+        for(unsigned idof = 0; idof < ielDofs; idof++) {                           //TODO there is something wrong here, needs fixing
           double xidof = (*sol->GetMesh()->_topology->_Sol[0])(idof);
-          double x = xidof - samples[m];
-          double phi_idof = base->eval_phi(base->GetIND(idof), &xidof);
-          std::cout << "iel =" << iel << " " << "xidof = " << xidof << " " << " phi_idof " << phi_idof << std::endl;
+	  double xidofLocal = - 1. + 2. * (xidof - samples[m] - xLeft)/(xRight - xLeft); 
+          double phi_idof = base->eval_phi(base->GetIND(idof), &xidofLocal);
+          std::cout << "iel =" << iel << " " << "xidofLocal = " << xidofLocal << " " << " phi_idof " << phi_idof << std::endl;
           phi_idof /= (numberOfSamples * sqrt(h));
 //           std::cout << " pih_idof " << phi_idof << std::endl;
           sol->_Sol[solIndexKDE]->add(idof, phi_idof);
