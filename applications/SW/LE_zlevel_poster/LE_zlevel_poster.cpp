@@ -38,7 +38,7 @@ double k_v = 0.0001;
 clock_t start_time = clock();
 
 bool wave = false;
-bool twostage = false;
+bool twostage = true;
 bool assembly = true; //assembly must be left always true
 
 const unsigned NumberOfLayers = 20;
@@ -173,9 +173,11 @@ int main ( int argc, char** args ) {
   bool implicitEuler = true;
   dt = 60.;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
-    if ( wave == true ) assembly = ( i == 0 ) ? true : false;
+    if ( wave == true ) assembly = ( i == 0  ) ? true : false;
     system.CopySolutionToOldSolution();
+         
     ETDvh ( ml_prob );
+            
     ETDt ( ml_prob );
     //RK4t ( ml_prob, implicitEuler );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
@@ -192,6 +194,8 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
 
   adept::Stack& s = FemusInit::_adeptStack;
 
+  s.continue_recording();
+  
   TransientLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<TransientLinearImplicitSystem> ( "SWhv" ); // pointer to the linear implicit system named "Poisson"
 
   unsigned level = ml_prob._ml_msh->GetNumberOfLevels() - 1u;
