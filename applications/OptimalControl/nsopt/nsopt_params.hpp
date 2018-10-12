@@ -16,13 +16,13 @@
 //*********************** Sets the regularization parameters *******************************************************
 
  double alpha_val = 1.;
- double beta_val = 1.;
- double gamma_val = 1.;
+ double beta_val = 1.e-3;
+ double gamma_val = 1.e-3;
  
  
 //******************************** switch between stokes and navier stokes *********************************************
  
- int advection_flag = 0;
+ int advection_flag = 1;
  int advection_Picard = 0;
  
 //  Newton: advection_flag = 1; advection_Picard = 0;
