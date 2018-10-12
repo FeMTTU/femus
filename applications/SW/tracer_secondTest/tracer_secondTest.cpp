@@ -45,7 +45,7 @@ const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 
 
 double InitalValueV0 ( const std::vector < double >& x ) {
   //double psi1 = (10.-x[0])*x[0]/(5*5);
-  double psi1 = 1. - (x[0] - 5)*(x[0] - 5)*(x[0] - 5)*(x[0] - 5)/(5*5*5*5);
+  double psi1 = 1. - (x[0] - 5.)*(x[0] - 5.)*(x[0] - 5.)*(x[0] - 5.)/(5.*5.*5.*5.);
   double z = -10 + hRest[0]/2 +hRest[0]*(NumberOfLayers-1);
   double d_psi2 = (-(2*z+10))/(5*5);
   return (-psi1*d_psi2);
@@ -651,7 +651,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
     double xmid = 0.5*(x[1] + x[0]);
     for ( unsigned k = NLayers; k > 1; k-- ) {
-      w[k-1] = (-4/625*(x[0] - 5)*(x[0] - 5)*(x[0] - 5))*psi2[k-1];
+      w[k-1] = (-4./625.*(x[0] - 5)*(x[0] - 5)*(x[0] - 5))*psi2[k-1];
       if ( maxW[k - 1] < w[k - 1] ) {
         maxW[k - 1] = w[k - 1];
       }
@@ -708,11 +708,11 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 //       }
       //END
 
-      if ( k < NLayers - 1 ) {
+      if ( k < NLayers - 1 ) {//bottom
         aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k] + solHT[k + 1]/ solh[k + 1] );
         //aResHT[k] += w[k + 1] * ( solHT[k + 1] / solh[k + 1] ); //TODO upwind
       }
-      if ( k > 0 ) {
+      if ( k > 0 ) {//top
         aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1]/ solh[k - 1] + solHT[k] / solh[k] );
         //aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
       }
@@ -932,12 +932,12 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
       std::vector < double > psi2 ( NLayers );
       for ( unsigned k = 0; k < NLayers; k++ ) {
-        psi2[k] = 1. - (zMid[k] + 5)*(zMid[k] + 5)/(25);
+        psi2[k] = 1. - (zMid[k] + 5.)*(zMid[k] + 5.)/(25.);
       }
 
       double xmid = 0.5*(x[1] + x[0]);
       for ( unsigned k = NLayers; k > 1; k-- ) {
-        w[k-1] = (-4/625*(xmid - 5)*(xmid - 5)*(xmid - 5))*psi2[k-1];
+        w[k-1] = (-4./625.*(xmid - 5.)*(xmid - 5.)*(xmid - 5.))*psi2[k-1];
         if ( maxW[k - 1] < w[k - 1] ) {
           maxW[k - 1] = w[k - 1];
         }
@@ -1286,7 +1286,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 
     double xmid = 0.5*(x[1] + x[0]);
     for ( unsigned k = NLayers; k > 1; k-- ) {
-      w[k-1] = (-4/625*(xmid - 5)*(xmid - 5)*(xmid - 5))*psi2[k-1];
+      w[k-1] = (-4./625.*(xmid - 5)*(xmid - 5)*(xmid - 5))*psi2[k-1];
       if ( maxW[k - 1] < w[k - 1] ) {
         maxW[k - 1] = w[k - 1];
       }
