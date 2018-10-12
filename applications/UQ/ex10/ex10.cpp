@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
   MultiLevelSolution mlSolHisto(&mlMshHisto);
 
   mlSolHisto.AddSolution("HISTO", DISCONTINOUS_POLYNOMIAL, ZERO);
-  mlSolHisto.AddSolution("KDE", LAGRANGE, SECOND);
+  mlSolHisto.AddSolution("KDE", LAGRANGE, FIRST);
 
   mlSolHisto.Initialize("All");
 
@@ -1408,6 +1408,10 @@ void GetHistogramAndKDE(std::vector< double >& samples, MultiLevelProblem& ml_pr
   unsigned solTypeHISTO = mlSol->GetSolutionType(solIndexHISTO);
   unsigned solTypeKDE = mlSol->GetSolutionType(solIndexKDE);
 
+  vector < double > phi;
+  vector < double> gradphi;
+  double weight;
+
   double h = (xMaxCoarseBox - xMinCoarseBox) / nxCoarseBox; //mesh size
 
   for(unsigned m = 0; m < numberOfSamples; m++) {
@@ -1425,17 +1429,24 @@ void GetHistogramAndKDE(std::vector< double >& samples, MultiLevelProblem& ml_pr
 
         //BEGIN write KDE solution
         short unsigned ielType = msh->GetElementType(iel);
-        unsigned ielDofs = msh->GetElementDofNumber(iel, solTypeKDE);
-        basis *base = msh->_finiteElement[ielType][solTypeKDE]->GetBasis();
-        for(unsigned idof = 0; idof < ielDofs; idof++) {                           //TODO there is something wrong here, needs fixing
-          double xidof = (*sol->GetMesh()->_topology->_Sol[0])(idof);
-	  double xidofLocal = - 1. + 2. * (xidof - samples[m] - xLeft)/(xRight - xLeft); 
-          double phi_idof = base->eval_phi(base->GetIND(idof), &xidofLocal);
-          std::cout << "iel =" << iel << " " << "xidofLocal = " << xidofLocal << " " << " phi_idof " << phi_idof << std::endl;
-          phi_idof /= (numberOfSamples * sqrt(h));
-//           std::cout << " pih_idof " << phi_idof << std::endl;
-          sol->_Sol[solIndexKDE]->add(idof, phi_idof);
-        }
+        unsigned nDofsKDE = msh->GetElementDofNumber(iel, solTypeKDE);
+        
+	std::vector < std::vector < double> > vx(1);
+        vx[0].resize(nDofsKDE);
+        vx[0][0] = xLeft;
+        vx[0][1] = xRight;
+	
+	std::vector < double> sampleLocal(1, 0.);
+	sampleLocal[0] = - 1. + 2. * (samples[m] - xRight) / (xLeft - xRight); 
+
+	msh->_finiteElement[ielType][solTypeKDE]->Jacobian(vx, sampleLocal, weight, phi, gradphi);
+	
+	for(unsigned inode = 0; inode < nDofsKDE; inode++) {
+	  unsigned globalDof = msh->GetSolutionDof (inode, iel, solTypeKDE);
+	  double KDEvalue = phi[inode] / (numberOfSamples * h);
+	  sol->_Sol[solIndexKDE]->add(globalDof, KDEvalue);
+	}
+	
         //END
 
         break;
@@ -1461,6 +1472,11 @@ void GetHistogramAndKDE(std::vector< double >& samples, MultiLevelProblem& ml_pr
     sol->_Sol[solIndexHISTO]->set(i, valueHISTO / integral);
   }
   sol->_Sol[solIndexHISTO]->close();
+
+  for(unsigned i =  msh->_dofOffset[solTypeKDE][iproc]; i <  msh->_dofOffset[solTypeKDE][iproc + 1]; i++) {
+    double valueKDE = (*sol->_Sol[solIndexKDE])(i);
+    std::cout << "dof = " << i << " , " << "KDE = " << valueKDE << std::endl;
+  }
 
 }
 
