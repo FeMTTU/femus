@@ -5,7 +5,7 @@
 #include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "LinearImplicitSystem.hpp"
-
+#include "Marker.hpp"
 #include "NumericVector.hpp"
 #include "adept.h"
 
@@ -52,6 +52,9 @@ unsigned numberOfSamples = 1000000; //for MC sampling of the QoI
 unsigned nxCoarseBox;
 double xMinCoarseBox = - 2.5;
 double xMaxCoarseBox = 5.;
+unsigned nyCoarseBox;
+double yMinCoarseBox = - 2.5;
+double yMaxCoarseBox = 5.;
 //END
 
 unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
@@ -215,10 +218,11 @@ int main(int argc, char** argv) {
   MultiLevelMesh mlMshHisto;
 
   nxCoarseBox = static_cast<unsigned>(floor(1. + 3.3 * log(numberOfSamples)));
+  nyCoarseBox = static_cast<unsigned>(floor(1. + 3.3 * log(numberOfSamples)));
 
-  mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh");
-//     mlMshHisto.GenerateCoarseBoxMesh(8, 8, 0, -1.5, 1.5, -0.5, 0.5, 0., 0., QUAD9, "seventh");
-//   mlMshHisto.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", scalingFactor);
+//   mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh"); //for 1D
+  mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh"); //for 2D
+
   mlMshHisto.PrintInfo();
 
   MultiLevelSolution mlSolHisto(&mlMshHisto);
@@ -234,13 +238,13 @@ int main(int argc, char** argv) {
 
   unsigned dimCoarseBox = mlMshHisto.GetDimension();
 
-  std::vector < std::vector < double > > samples(3);
+  std::vector < std::vector < double > > samples(numberOfSamples);
 
   //TODO this is considering that the QoI is a vector with the same components, in the future we have to do something more meaningful
-  for(unsigned i = 0; i < dimCoarseBox; i++) {
-    samples[i].resize(numberOfSamples);
-    for(unsigned m = 0; m < numberOfSamples; m++) {
-      samples[i][m] = sgmQoIStandardized[m];
+  for(unsigned m = 0; m < numberOfSamples; m++) {
+    samples[m].resize(dimCoarseBox);
+    for(unsigned i = 0; i < dimCoarseBox; i++) {
+      samples[m][i] = sgmQoIStandardized[m];
     }
   }
 
@@ -251,7 +255,7 @@ int main(int argc, char** argv) {
   std::vector<std::string> print_vars_2;
   print_vars_2.push_back("All");
   //mlSolHisto.GetWriter()->SetDebugOutput(true);
-  mlSolHisto.GetWriter()->Write(DEFAULT_OUTPUTDIR, "linear", print_vars_2, 0);
+  mlSolHisto.GetWriter()->Write(DEFAULT_OUTPUTDIR, "histo_kde", print_vars_2, 0);
   //END
 
   return 0;
@@ -1426,54 +1430,98 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & samples, MultiLev
   vector < double> gradphi;
   double weight;
 
-  double h = (xMaxCoarseBox - xMinCoarseBox) / nxCoarseBox; //mesh size
+  double dx = (xMaxCoarseBox - xMinCoarseBox) / nxCoarseBox; //mesh size assuming a coarse box is used
+  double dy = (dim == 2) ? (yMaxCoarseBox - yMinCoarseBox) / nyCoarseBox : 1. ;
 
   for(unsigned m = 0; m < numberOfSamples; m++) {
 
-    for(int iel = sol->GetMesh()->_elementOffset[iproc]; iel < sol->GetMesh()->_elementOffset[iproc + 1]; iel ++) {
+    if(dim == 1) {
+      for(int iel = sol->GetMesh()->_elementOffset[iproc]; iel < sol->GetMesh()->_elementOffset[iproc + 1]; iel ++) {
 
-      unsigned  xLeftDof = sol->GetMesh()->GetSolutionDof(0, iel, 2);
-      unsigned  xRightDof = sol->GetMesh()->GetSolutionDof(1, iel, 2);
+        unsigned  xLeftDof = sol->GetMesh()->GetSolutionDof(0, iel, 2);
+        unsigned  xRightDof = sol->GetMesh()->GetSolutionDof(1, iel, 2);
 
-      double xLeft = (*sol->GetMesh()->_topology->_Sol[0])(xLeftDof);
-      double xRight = (*sol->GetMesh()->_topology->_Sol[0])(xRightDof);
+        double xLeft = (*sol->GetMesh()->_topology->_Sol[0])(xLeftDof);
+        double xRight = (*sol->GetMesh()->_topology->_Sol[0])(xRightDof);
 
-      if(samples[0][m] > xLeft && samples[0][m] <= xRight) {
-        sol->_Sol[solIndexHISTO]->add(iel, 1.);
+        if(samples[m][0] > xLeft && samples[m][0] <= xRight) {
+          sol->_Sol[solIndexHISTO]->add(iel, 1.);
 
-        //BEGIN write KDE solution
-        short unsigned ielType = msh->GetElementType(iel);
-        unsigned nDofsKDE = msh->GetElementDofNumber(iel, solTypeKDE);
+          //BEGIN write KDE solution
+          short unsigned ielType = msh->GetElementType(iel);
+          unsigned nDofsKDE = msh->GetElementDofNumber(iel, solTypeKDE);
 
-        std::vector < std::vector < double> > vx(1);
-        vx[0].resize(nDofsKDE);
-        vx[0][0] = xLeft;
-        vx[0][1] = xRight;
+          std::vector < std::vector < double> > vx(1);
+          vx[0].resize(nDofsKDE);
+          vx[0][0] = xLeft;
+          vx[0][1] = xRight;
 
-        std::vector < double> sampleLocal(1, 0.);
-        sampleLocal[0] = - 1. + 2. * (samples[0][m] - xRight) / (xLeft - xRight);
+          std::vector < double> sampleLocal(1, 0.);
+          sampleLocal[0] = - 1. + 2. * (samples[m][0] - xRight) / (xLeft - xRight);
 
-        msh->_finiteElement[ielType][solTypeKDE]->Jacobian(vx, sampleLocal, weight, phi, gradphi);
+          msh->_finiteElement[ielType][solTypeKDE]->Jacobian(vx, sampleLocal, weight, phi, gradphi);
 
-        for(unsigned inode = 0; inode < nDofsKDE; inode++) {
-          unsigned globalDof = msh->GetSolutionDof(inode, iel, solTypeKDE);
-          double KDEvalue = phi[inode] / (numberOfSamples * h); //note: numberOfSamples * h is an approximation of the area under the histogram, aka the integral
-          sol->_Sol[solIndexKDE]->add(globalDof, KDEvalue);
+          for(unsigned inode = 0; inode < nDofsKDE; inode++) {
+            unsigned globalDof = msh->GetSolutionDof(inode, iel, solTypeKDE);
+            double KDEvalue = phi[inode] / (numberOfSamples * dx); //note: numberOfSamples * h is an approximation of the area under the histogram, aka the integral
+            sol->_Sol[solIndexKDE]->add(globalDof, KDEvalue);
+          }
+          //END
+
+          break;
         }
-        //END
-
-        break;
       }
     }
+
+    if(dim == 2) {
+
+      Marker marker(samples[m], 0., VOLUME, mlSol->GetLevel(level), 2, true);
+      unsigned sampleElement = marker.GetMarkerElement();
+      std::vector<double> sampleLocal;
+      marker.GetMarkerLocalCoordinates(sampleLocal);
+
+      for(int iel = sol->GetMesh()->_elementOffset[iproc]; iel < sol->GetMesh()->_elementOffset[iproc + 1]; iel ++) {
+
+        if(sampleElement == iel) {
+          sol->_Sol[solIndexHISTO]->add(iel, 1.);
+
+          //BEGIN write KDE solution
+          short unsigned ielType = msh->GetElementType(iel);
+          unsigned nDofsKDE = msh->GetElementDofNumber(iel, solTypeKDE);
+
+          std::vector < std::vector < double> > vx(dim);
+          for(int idim = 0; idim < dim; idim++) {
+            vx[idim].resize(nDofsKDE);
+          }
+          for(unsigned inode = 0; inode < nDofsKDE; inode++) {
+            unsigned idofVx = msh->GetSolutionDof(inode, iel, 2);
+            for(int jdim = 0; jdim < dim; jdim++) {
+              vx[jdim][inode] = (*msh->_topology->_Sol[jdim])(idofVx);
+            }
+          }
+
+          msh->_finiteElement[ielType][solTypeKDE]->Jacobian(vx, sampleLocal, weight, phi, gradphi);
+
+          for(unsigned inode = 0; inode < nDofsKDE; inode++) {
+            unsigned globalDof = msh->GetSolutionDof(inode, iel, solTypeKDE);
+            double KDEvalue = phi[inode] / (numberOfSamples * dx * dy);
+            sol->_Sol[solIndexKDE]->add(globalDof, KDEvalue);
+          }
+          //END
+        }
+
+      }
+
+    }
+
     sol->_Sol[solIndexHISTO]->close();
     sol->_Sol[solIndexKDE]->close();
   }
 
   double integralLocal = 0;
   double integral;
-  double dx = (xMaxCoarseBox - xMinCoarseBox) / nxCoarseBox;
   for(unsigned i =  msh->_dofOffset[solTypeHISTO][iproc]; i <  msh->_dofOffset[solTypeHISTO][iproc + 1]; i++) {
-    integralLocal += (*sol->_Sol[solIndexHISTO])(i) * dx;
+    integralLocal += (*sol->_Sol[solIndexHISTO])(i) * dx * dy; // this is assuming the mesh is a coarse box
   }
 
   MPI_Allreduce(&integralLocal, &integral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
