@@ -1504,7 +1504,7 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & samples, MultiLev
 
           for(unsigned inode = 0; inode < nDofsKDE; inode++) {
             unsigned globalDof = msh->GetSolutionDof(inode, iel, solTypeKDE);
-            double KDEvalue = phi[inode] / (numberOfSamples * dx * dy);
+            double KDEvalue = 0.5 * phi[inode] / (numberOfSamples * dx * dy); //TODO not working very great
             sol->_Sol[solIndexKDE]->add(globalDof, KDEvalue);
           }
           //END
