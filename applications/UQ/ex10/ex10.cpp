@@ -33,7 +33,7 @@ void GetMomentsAndCumulants(std::vector <double>& alphas);
 //
 void GetQoIStandardizedSamples(std::vector <double>& alphas, std::vector <double>& sgmQoIStandardized);
 //
-void GetHistogramAndKDE(std::vector< double >& sgmQoIStandardized, MultiLevelProblem& ml_prob);
+void GetHistogramAndKDE(std::vector< std::vector < double > > & samples, MultiLevelProblem& ml_prob);
 //
 void PlotGCandEDExpansion();
 
@@ -48,7 +48,7 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
-unsigned numberOfSamples = 100000; //for MC sampling of the QoI
+unsigned numberOfSamples = 1000000; //for MC sampling of the QoI
 unsigned nxCoarseBox;
 double xMinCoarseBox = - 2.5;
 double xMaxCoarseBox = 5.;
@@ -196,8 +196,9 @@ int main(int argc, char** argv) {
   GetMomentsAndCumulants(alphas); //computes moments and cumulants
 
   std::vector <double> sgmQoIStandardized;
+  //TODO when we do 2D and 3D, sgmQoIStandardized must be an std vector of std vector
   GetQoIStandardizedSamples(alphas, sgmQoIStandardized); // after entering here, sgmQoIStandardized is the vector of the standardized
-  // QoI samples. NOTE when we do 2D and 3D, sgmQoIStandardized must be an std vector of std vector
+  // QoI samples.
 
   //PlotGCandEDExpansion();
 
@@ -231,7 +232,20 @@ int main(int argc, char** argv) {
 
   LinearImplicitSystem& systemHisto = ml_probHisto.add_system < LinearImplicitSystem > ("Histo");
 
-  GetHistogramAndKDE(sgmQoIStandardized, ml_probHisto);
+  unsigned dimCoarseBox = mlMshHisto.GetDimension();
+
+  std::vector < std::vector < double > > samples(3);
+
+  //TODO this is considering that the QoI is a vector with the same components, in the future we have to do something more meaningful
+  for(unsigned i = 0; i < dimCoarseBox; i++) {
+    samples[i].resize(numberOfSamples);
+    for(unsigned m = 0; m < numberOfSamples; m++) {
+      samples[i][m] = sgmQoIStandardized[m];
+    }
+  }
+
+
+  GetHistogramAndKDE(samples, ml_probHisto);
 
   mlSolHisto.SetWriter(VTK);
   std::vector<std::string> print_vars_2;
@@ -1389,7 +1403,7 @@ void GetQoIStandardizedSamples(std::vector< double >& alphas, std::vector <doubl
 
 }
 
-void GetHistogramAndKDE(std::vector< double >& samples, MultiLevelProblem& ml_prob) {
+void GetHistogramAndKDE(std::vector< std::vector <double > > & samples, MultiLevelProblem& ml_prob) {
 
   unsigned level = 0.;
 
@@ -1424,29 +1438,28 @@ void GetHistogramAndKDE(std::vector< double >& samples, MultiLevelProblem& ml_pr
       double xLeft = (*sol->GetMesh()->_topology->_Sol[0])(xLeftDof);
       double xRight = (*sol->GetMesh()->_topology->_Sol[0])(xRightDof);
 
-      if(samples[m] > xLeft && samples[m] <= xRight) {
+      if(samples[0][m] > xLeft && samples[0][m] <= xRight) {
         sol->_Sol[solIndexHISTO]->add(iel, 1.);
 
         //BEGIN write KDE solution
         short unsigned ielType = msh->GetElementType(iel);
         unsigned nDofsKDE = msh->GetElementDofNumber(iel, solTypeKDE);
-        
-	std::vector < std::vector < double> > vx(1);
+
+        std::vector < std::vector < double> > vx(1);
         vx[0].resize(nDofsKDE);
         vx[0][0] = xLeft;
         vx[0][1] = xRight;
-	
-	std::vector < double> sampleLocal(1, 0.);
-	sampleLocal[0] = - 1. + 2. * (samples[m] - xRight) / (xLeft - xRight); 
 
-	msh->_finiteElement[ielType][solTypeKDE]->Jacobian(vx, sampleLocal, weight, phi, gradphi);
-	
-	for(unsigned inode = 0; inode < nDofsKDE; inode++) {
-	  unsigned globalDof = msh->GetSolutionDof (inode, iel, solTypeKDE);
-	  double KDEvalue = phi[inode] / (numberOfSamples * h);
-	  sol->_Sol[solIndexKDE]->add(globalDof, KDEvalue);
-	}
-	
+        std::vector < double> sampleLocal(1, 0.);
+        sampleLocal[0] = - 1. + 2. * (samples[0][m] - xRight) / (xLeft - xRight);
+
+        msh->_finiteElement[ielType][solTypeKDE]->Jacobian(vx, sampleLocal, weight, phi, gradphi);
+
+        for(unsigned inode = 0; inode < nDofsKDE; inode++) {
+          unsigned globalDof = msh->GetSolutionDof(inode, iel, solTypeKDE);
+          double KDEvalue = phi[inode] / (numberOfSamples * h); //note: numberOfSamples * h is an approximation of the area under the histogram, aka the integral
+          sol->_Sol[solIndexKDE]->add(globalDof, KDEvalue);
+        }
         //END
 
         break;
@@ -1473,10 +1486,10 @@ void GetHistogramAndKDE(std::vector< double >& samples, MultiLevelProblem& ml_pr
   }
   sol->_Sol[solIndexHISTO]->close();
 
-  for(unsigned i =  msh->_dofOffset[solTypeKDE][iproc]; i <  msh->_dofOffset[solTypeKDE][iproc + 1]; i++) {
-    double valueKDE = (*sol->_Sol[solIndexKDE])(i);
-    std::cout << "dof = " << i << " , " << "KDE = " << valueKDE << std::endl;
-  }
+//   for(unsigned i =  msh->_dofOffset[solTypeKDE][iproc]; i <  msh->_dofOffset[solTypeKDE][iproc + 1]; i++) {
+//     double valueKDE = (*sol->_Sol[solIndexKDE])(i);
+//     std::cout << "dof = " << i << " , " << "KDE = " << valueKDE << std::endl;
+//   }
 
 }
 
