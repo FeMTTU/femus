@@ -33,11 +33,11 @@ double ni_h = 100.; // 0.1, 1, 10, 100, 200
 double ni_v = 0.0001;
 
 //double k_h = 0.0001;
-double k_v = 0.0001;
+double k_v = 0.00001;
 
 clock_t start_time = clock();
 
-bool wave = false;
+bool wave = true;
 bool twostage = true;
 bool assembly = true; //assembly must be left always true
 
@@ -1309,7 +1309,7 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
 
     Vec v2 = ( static_cast< PetscVector* > ( RES2 ) )->vec();
 
-    VecView(v2,PETSC_VIEWER_STDOUT_WORLD);
+    //VecView(v2,PETSC_VIEWER_STDOUT_WORLD); //s731
 
     Vec y2 = ( static_cast< PetscVector* > ( EPS ) )->vec();
 
