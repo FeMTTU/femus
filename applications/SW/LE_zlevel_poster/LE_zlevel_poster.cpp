@@ -33,7 +33,7 @@ double ni_h = 100.; // 0.1, 1, 10, 100, 200
 double ni_v = 0.0001;
 
 //double k_h = 0.0001;
-double k_v = 0.00001;
+double k_v = 0.0001;
 
 clock_t start_time = clock();
 
@@ -906,53 +906,53 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
     for ( unsigned k = 0; k < NLayers; k++ ) {
 
       //BEGIN FIRST ORDER
-      if ( i > start ) {
-        //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
-        if ( solvm[k] > 0 ) {
-          aResHT[k] += solHTm[k] * solvm[k]/*.value()*/  / dx;
-        }
-        else {
-          aResHT[k] += solHT[k] * solvm[k]/*.value()*/  / dx;
-        }
-      }
-      if ( i < end - 1 ) {
-        //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
-        if ( solvp[k] > 0 ) {
-          aResHT[k] -= solHT[k] * solvp[k]/*.value()*/  / dx; //first order upwind
-        }
-        else {
-          aResHT[k] -= solHTp[k] * solvp[k]/*.value()*/  / dx; //first order upwind
-        }
-      }
-      //END
-
-      //BEGIN THIRD ORDER
 //       if ( i > start ) {
-//         aResHT[k] += 0.5 * ( solHTm[k].value() + solHT[k].value() ) * solvm[k] / dx;
+//         //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
 //         if ( solvm[k] > 0 ) {
-//           if ( i > start + 1 ) {
-//             aResHT[k] += - 1. / 6. * ( solHT[k].value() - 2.*solHTm[k].value() + solHTmm[k].value() ) * solvm[k]  / dx;
-//           }
+//           aResHT[k] += solHTm[k] * solvm[k]/*.value()*/  / dx;
 //         }
 //         else {
-//           if ( i < end - 1 ) {
-//             aResHT[k] += - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvm[k]  / dx;
-//           }
+//           aResHT[k] += solHT[k] * solvm[k]/*.value()*/  / dx;
 //         }
 //       }
 //       if ( i < end - 1 ) {
-//         aResHT[k] -= 0.5 * ( solHTp[k].value() + solHT[k].value() ) * solvp[k] / dx;
+//         //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
 //         if ( solvp[k] > 0 ) {
-//           if (i > start) {
-//             aResHT[k] -= - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvp[k]  / dx;
-//           }
+//           aResHT[k] -= solHT[k] * solvp[k]/*.value()*/  / dx; //first order upwind
 //         }
 //         else {
-//           if ( i < end - 2 ) {
-//             aResHT[k] -= - 1. / 6. * ( solHTpp[k].value() - 2.*solHTp[k].value() + solHT[k].value() ) * solvp[k]  / dx;
-//           }
+//           aResHT[k] -= solHTp[k] * solvp[k]/*.value()*/  / dx; //first order upwind
 //         }
 //       }
+      //END
+
+      //BEGIN THIRD ORDER
+      if ( i > start ) {
+        aResHT[k] += 0.5 * ( solHTm[k].value() + solHT[k].value() ) * solvm[k] / dx;
+        if ( solvm[k] > 0 ) {
+          if ( i > start + 1 ) {
+            aResHT[k] += - 1. / 6. * ( solHT[k].value() - 2.*solHTm[k].value() + solHTmm[k].value() ) * solvm[k]  / dx;
+          }
+        }
+        else {
+          if ( i < end - 1 ) {
+            aResHT[k] += - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvm[k]  / dx;
+          }
+        }
+      }
+      if ( i < end - 1 ) {
+        aResHT[k] -= 0.5 * ( solHTp[k].value() + solHT[k].value() ) * solvp[k] / dx;
+        if ( solvp[k] > 0 ) {
+          if (i > start) {
+            aResHT[k] -= - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvp[k]  / dx;
+          }
+        }
+        else {
+          if ( i < end - 2 ) {
+            aResHT[k] -= - 1. / 6. * ( solHTpp[k].value() - 2.*solHTp[k].value() + solHT[k].value() ) * solvp[k]  / dx;
+          }
+        }
+      }
       //END
 
       if ( k < NLayers - 1 ) {
@@ -985,7 +985,7 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
 
       //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAA"<<deltaZt - deltaZb<<std::endl;
 
-      aResHT[k] += solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
+      //aResHT[k] += solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
 
 //       aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
 //       aResHT[k] += k_h * solh[k] * (solHTm[k] - solHT[k])/(dx*dx); // horizontal diffusion
@@ -1278,9 +1278,9 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
 
         //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAA"<<deltaZt - deltaZb<<std::endl;
 
-        aResHT[k] += solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
+        //aResHT[k] += solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
 //
-//       //aResHT[k] += ((solhp[k] - solhm[k]) * k_v * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
+//       //aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
 //       aResHT[k] += k_h * solh[k] * (solHTm[k] - solHT[k])/(dx*dx); // horizontal diffusion
 //       aResHT[k] += k_h * solh[k] * (solHTp[k] - solHT[k])/(dx*dx); // horizontal diffusion
 
