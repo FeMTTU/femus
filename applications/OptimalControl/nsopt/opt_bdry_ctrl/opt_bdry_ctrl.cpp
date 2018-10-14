@@ -157,7 +157,6 @@ int main(int argc, char** args) {
  
   // add system OptBdryCtrl in mlProb as a NonLinear Implicit System
   NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOpt");
-//   LinearImplicitSystem& system_opt    = mlProb.add_system < LinearImplicitSystem > ("NSOpt");
 
   // ST ===================
   system_opt.AddSolutionToSystemPDE("U");
@@ -287,7 +286,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   Solname              [ctrl_pos_begin + 0] =                  ctrl_name[0];
   Solname              [ctrl_pos_begin + 1] =                  ctrl_name[1];
   if (dim == 3) Solname[ctrl_pos_begin + 2] =                  ctrl_name[2];
-  Solname              [theta_index /*ctrl_pos_begin + press_type_pos*/] = "THETA";
+  Solname              [theta_index ]       =               "THETA";
   
   vector < unsigned > SolPdeIndex(n_unknowns);
   vector < unsigned > SolIndex(n_unknowns);  
@@ -322,7 +321,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
   //bdry vol adj  evaluated at bdry points
    vector < vector < double > > phi_vol_at_bdry_fe(NFE_FAMS);
-    vector < vector < double > > phi_x_vol_at_bdry_fe(NFE_FAMS);
+   vector < vector < double > > phi_x_vol_at_bdry_fe(NFE_FAMS);
 
     for(int fe=0; fe < NFE_FAMS; fe++) {  
         phi_bd_gss_fe[fe].reserve(maxSize);
@@ -387,7 +386,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   }
 
   //------------ at quadrature points ---------------------
-  vector < double > SolVAR_qp(n_unknowns);   //sol_V,P_gss_of_st,adj,ctrl_ie@quadraturepoints
+    vector < double > SolVAR_qp(n_unknowns);   //sol_V,P_gss_of_st,adj,ctrl_ie@quadraturepoints
     vector < vector < double > > gradSolVAR_qp(n_unknowns);
     for(int k=0; k<n_unknowns; k++) {  gradSolVAR_qp[k].resize(dim);  }
       
@@ -395,7 +394,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   double IRe = ml_prob.parameters.get<Fluid>("Fluid").get_IReynolds_number();
 
   // Set to zero all the global structures
-   RES->zero();
+    RES->zero();
     if(assembleMatrix) JAC->zero();
   
   // ****************** element loop *******************
@@ -579,7 +578,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	  
 			  for(int i_bd = 0; i_bd < nve_bd; i_bd++) {
 		                  unsigned int i_vol = msh->GetLocalFaceVertexIndex(iel, jface, i_bd);
-									                 SolVAR_bd_qp[SolPdeIndex[ctrl_index]]              += phi_bd_gss_fe  [ SolFEType[ctrl_index] ][i_bd]                  * SolVAR_eldofs[ SolPdeIndex[ ctrl_index ] ][i_vol];
+                                                                    SolVAR_bd_qp[SolPdeIndex[ctrl_index]]           += phi_bd_gss_fe  [ SolFEType[ctrl_index] ][i_bd]                  * SolVAR_eldofs[ SolPdeIndex[ ctrl_index ] ][i_vol];
 			      for(unsigned ivar2=0; ivar2<dim; ivar2++) {  gradSolVAR_bd_qp[SolPdeIndex[ctrl_index]][ivar2] 	+= phi_x_bd_gss_fe[ SolFEType[ctrl_index] ][i_bd + ivar2 * nve_bd] * SolVAR_eldofs[ SolPdeIndex[ ctrl_index ] ][i_vol];      }
 			  }
 		    }//kdim
@@ -653,11 +652,11 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 /*delta_state row */	    if(i_vol<nDofsV)     Res[kdim]                 [i_vol]  += - control_node_flag[kdim][i_vol] * penalty_ctrl * (SolVAR_eldofs[SolPdeIndex[kdim + state_pos_begin]][i_vol] - SolVAR_eldofs[SolPdeIndex[kdim + ctrl_pos_begin]][i_vol]);	    //u-g
 /*delta_adjoint row */     if(i_vol<nDofsVadj)   Res[kdim + adj_pos_begin] [i_vol]  += 0.;	   
 /*delta_control row */     if(i_vol<nDofsGctrl)  Res[kdim + ctrl_pos_begin][i_vol]  += - control_node_flag[kdim][i_vol] * weight_bd * (
-											   beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
-											+ gamma_val* lap_res_dctrl_ctrl_bd
-								    			   - IRe * grad_dot_n_adj_res[kdim]  * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
-											- (*sol->_Sol[SolIndex[theta_index]])(0) * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry] * normal[kdim]       
-											  );	    
+                                                                                          beta_val* SolVAR_bd_qp[SolPdeIndex[kdim + ctrl_pos_begin]] * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
+                                                                                        + gamma_val* lap_res_dctrl_ctrl_bd
+                                                                                        - IRe * grad_dot_n_adj_res[kdim]  * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry]
+                                                                                        - (*sol->_Sol[SolIndex[theta_index]])(0) * phi_bd_gss_fe[SolFEType[kdim +  ctrl_pos_begin]][i_bdry] * normal[kdim]      //*sol->_Sol[SolIndex[theta_index]])(0) finds the global value from KKDof pos(72, 169,etc), SolVAReldof_theta gets the value in the boundary point which will be zero. Theta is just a const
+                                                                                        );	    
 		      }//kdim  
 
 //============ Boundary Residuals  ==================================================================================================
@@ -686,7 +685,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 			  for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
-			    if(i_vol < nDofsV && j_vol < nDofsV && i_vol == j_vol)       		Jac[kdim][kdim][i_vol*nDofsV + j_vol]	    += penalty_ctrl * control_node_flag[kdim][i_vol];  //u
+			    if(i_vol < nDofsV && j_vol < nDofsV && i_vol == j_vol)       		          Jac[kdim][kdim][i_vol*nDofsV + j_vol]	    += penalty_ctrl * control_node_flag[kdim][i_vol];  //u
 			 
 //BLOCK delta_state - control------------------------------------------------------------------------------------
 			    if(i_vol < nDofsV && j_vol < nDofsGctrl && i_vol == j_vol) 	Jac[kdim][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol]  += (-1.) * penalty_ctrl *control_node_flag[kdim][i_vol];  //-g
@@ -701,9 +700,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 			      for (unsigned kdim = 0; kdim < dim; kdim++) {
 				      Jac[kdim + ctrl_pos_begin][kdim + ctrl_pos_begin][i_vol*nDofsGctrl + j_vol] +=   control_node_flag[kdim][i_vol] * weight_bd *(
-														       beta_val * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][i_bdry] * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][j_bdry]
-														     + gamma_val * lap_jac_dctrl_ctrl_bd
-															);
+                                                                                                       beta_val * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][i_bdry] * phi_bd_gss_fe[SolFEType[kdim + ctrl_pos_begin] ][j_bdry]
+                                                                                                    + gamma_val * lap_jac_dctrl_ctrl_bd
+                                                                                                    );
 			      }//kdim
 			  }//endif
                    
@@ -745,7 +744,7 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
     
         //============ delta_theta - theta row ==================================================================================================
   for (unsigned i = 0; i < nDofsThetactrl; i++) {
-             /* if ( fake_theta_flag[i] != 1 ) */                             Res[ theta_index ][i]                       = - (1 - fake_theta_flag[i]) * ( theta_value_outside_fake_element - SolVAR_eldofs[SolPdeIndex[theta_index]][i]);  // Res_outer for the exact row (i.e. when fakeflag=1 , res =0(use Res_outer) and if not 1 this loop) and this is to take care of fake placement for the rest of dofs of theta values as 8
+             /* if ( fake_theta_flag[i] != 1 ) */             Res[ theta_index ][i]    = - (1 - fake_theta_flag[i]) * ( theta_value_outside_fake_element - SolVAR_eldofs[SolPdeIndex[theta_index]][i]);  // Res_outer for the exact row (i.e. when fakeflag=1 , res =0(use Res_outer) and if not 1 this loop) and this is to take care of fake placement for the rest of dofs of theta values as 8
      for (unsigned j = 0; j < nDofsThetactrl; j++) {
 			         if(i==j)  Jac[ theta_index ][ theta_index ][i*nDofsThetactrl + j] = (1 - fake_theta_flag[i]) * 1.; //likewise Jac_outer (actually Jac itself works in the correct placement) for bdry integral and this is for rest of dofs
              }//j_theta loop
@@ -777,9 +776,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	    }
 	  
 	    for(unsigned i = 0; i < Sol_n_el_dofs[unk]; i++) {
-		SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i] * SolVAR_eldofs[SolPdeIndex[unk]][i];
-		for(unsigned ivar2=0; ivar2<dim; ivar2++) {
-		    gradSolVAR_qp[unk][ivar2] += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_eldofs[SolPdeIndex[unk]][i]; 
+                        SolVAR_qp[unk] += phi_gss_fe[ SolFEType[unk] ][i]             * SolVAR_eldofs[SolPdeIndex[unk]][i];
+		for(unsigned ivar2=0; ivar2<dim; ivar2++) {       
+		    gradSolVAR_qp[unk][ivar2]  += phi_x_gss_fe[ SolFEType[unk] ][i*dim+ivar2] * SolVAR_eldofs[SolPdeIndex[unk]][i]; 
 		}
 	    }//ndofsunk
 	  
@@ -792,16 +791,16 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   for (unsigned i = 0; i < nDofsV; i++) {
 // FIRST ROW
 	for (unsigned  kdim = 0; kdim < dim; kdim++) { // velocity block row 
-	              double lap_res_du_u		= 0.; 
-		      double adv_res_uold_nablauold 	= 0.;
+                double lap_res_du_u		= 0.; 
+                double adv_res_uold_nablauold 	= 0.;
 	      for (unsigned jdim = 0; jdim < dim; jdim++) {
-		    lap_res_du_u 	   += gradSolVAR_qp[SolPdeIndex[kdim]][jdim] * phi_x_gss_fe[SolFEType[kdim]][i * dim + jdim];
+		    lap_res_du_u 	       += gradSolVAR_qp[SolPdeIndex[kdim]][jdim] * phi_x_gss_fe[SolFEType[kdim]][i * dim + jdim];
 		   adv_res_uold_nablauold  += SolVAR_qp[SolPdeIndex[jdim]]  * gradSolVAR_qp[SolPdeIndex[kdim]][jdim] * phi_gss_fe[ SolFEType[kdim] ][i];
 	      }      
-	      Res[kdim][i]   +=  (         + force[kdim] * phi_gss_fe[SolFEType[kdim]][i]
-                                           - IRe*lap_res_du_u 
-                                           - advection_flag * adv_res_uold_nablauold 
-					   + SolVAR_qp[SolPdeIndex[press_type_pos]] * phi_x_gss_fe[SolFEType[kdim]][i * dim + kdim]) * weight; 
+	      Res[kdim][i]   +=  (           force[kdim] * phi_gss_fe[SolFEType[kdim]][i]
+                                       - IRe*lap_res_du_u 
+                                       - advection_flag * adv_res_uold_nablauold 
+                                       + SolVAR_qp[SolPdeIndex[press_type_pos]] * phi_x_gss_fe[SolFEType[kdim]][i * dim + kdim]) * weight; 
 	}	    
 //DIAG BLOCK delta_state - state--------------------------------------------------------------------------------
 	for (unsigned j = 0; j < nDofsV; j++) {
@@ -815,12 +814,12 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	      }
 	      for (unsigned  kdim = 0; kdim < dim; kdim++) { 
 		Jac[kdim][kdim][i*nDofsV + j] += (   IRe * lap_jac_du_u 
-						    + advection_flag * adv_uold_nablaunew[kdim] 		// c(u_old, u_new, delta_lambda)
-						    + advection_flag * phi_gss_fe[ SolFEType[kdim] ][j] * gradSolVAR_qp[SolPdeIndex[kdim]][kdim] * phi_gss_fe[ SolFEType[kdim] ][i]	 // c(u_new,u_old,delta_lambda) diagonal blocks  ..... unew_nablauold
-						    ) * weight; 
+                                            + advection_flag * adv_uold_nablaunew[kdim] 		// c(u_old, u_new, delta_lambda)
+                                            + advection_flag * phi_gss_fe[ SolFEType[kdim] ][j] * gradSolVAR_qp[SolPdeIndex[kdim]][kdim] * phi_gss_fe[ SolFEType[kdim] ][i]	 // c(u_new,u_old,delta_lambda) diagonal blocks  ..... unew_nablauold
+                                         ) * weight; 
               unsigned int off_kdim = (kdim+1)%dim; //off-diagonal blocks
 		Jac[kdim][off_kdim][i*nDofsV + j] += (	advection_flag * phi_gss_fe[ SolFEType[off_kdim] ][j] * gradSolVAR_qp[SolPdeIndex[kdim]][off_kdim] * phi_gss_fe[ SolFEType[kdim] ][i]	// c(u_new,u_old,delta_lambda) off-diagonal blocks  ..... unew_nablauold
-						      ) * weight;
+                                             ) * weight;
 	      }
 	} //j_du_u loop
      
@@ -858,31 +857,31 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 		    double adv_res_phiadj_nablauold_uadjold 	= 0.;
 		    double adv_res_uold_nablaphiadj_uadjold 	= 0.;
 	   for (unsigned jdim = 0; jdim < dim; jdim++) {
-		lap_res_dadj_adj 		     += gradSolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]][jdim]*phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + jdim];
+		lap_res_dadj_adj 		             += gradSolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]][jdim]*phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + jdim];
 		adv_res_phiadj_nablauold_uadjold     += phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] * gradSolVAR_qp[SolPdeIndex[jdim]][kdim] 			* SolVAR_qp[SolPdeIndex[jdim + adj_pos_begin]];
 		adv_res_uold_nablaphiadj_uadjold     += SolVAR_qp[SolPdeIndex[jdim]]		       * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + jdim]  * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]];
 	   }
 	  Res[kdim + adj_pos_begin][i] += ( - alpha_val * target_flag *  Vel_desired[kdim] 	     * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
-					    + alpha_val * target_flag * SolVAR_qp[SolPdeIndex[kdim]] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
-					    - IRe*lap_res_dadj_adj
-					    - advection_flag * adv_res_phiadj_nablauold_uadjold
-					    - advection_flag * adv_res_uold_nablaphiadj_uadjold
-					    + SolVAR_qp[SolPdeIndex[press_type_pos + adj_pos_begin]] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + kdim]
-					    ) * weight;
+                                        + alpha_val * target_flag * SolVAR_qp[SolPdeIndex[kdim]] * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i]
+                                        - IRe*lap_res_dadj_adj
+                                        - advection_flag * adv_res_phiadj_nablauold_uadjold
+                                        - advection_flag * adv_res_uold_nablaphiadj_uadjold
+                                        + SolVAR_qp[SolPdeIndex[press_type_pos + adj_pos_begin]] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][i * dim + kdim]
+                                        ) * weight;
       }
       
 //BLOCK delta_adjoint - state------------------------------------------------------------------------------------------
      for (unsigned j = 0; j < nDofsV; j++) {
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
 	      Jac[kdim + adj_pos_begin][kdim][i*nDofsV + j] += ( - alpha_val * target_flag * phi_gss_fe[SolFEType[kdim + adj_pos_begin]][i] * phi_gss_fe[SolFEType[kdim]][j] 
-								 + advection_flag * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i]    * phi_x_gss_fe[ SolFEType[kdim] ][j*dim + kdim] 		* SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]   //c(delta_u, u_new, lambda_old)  diagonal blocks  ......phiadj_nablaunew_uadjold 
-								 + advection_flag * phi_gss_fe[ SolFEType[kdim] ][j] 			* phi_x_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i*dim + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_new, delta_u, lambda_old) diagonal blocks  ......unew_nablaphiadj_uadjold
-								) * weight;
+                                                             + advection_flag * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i]    * phi_x_gss_fe[ SolFEType[kdim] ][j*dim + kdim] 		* SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]   //c(delta_u, u_new, lambda_old)  diagonal blocks  ......phiadj_nablaunew_uadjold 
+                                                             + advection_flag * phi_gss_fe[ SolFEType[kdim] ][j] 			* phi_x_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i*dim + kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	 //c(u_new, delta_u, lambda_old) diagonal blocks  ......unew_nablaphiadj_uadjold
+                                                            ) * weight;
               unsigned int off_kdim = (kdim+1)%dim; //off-diagonal blocks
-		Jac[kdim + adj_pos_begin][off_kdim][i*nDofsV + j] += (+ advection_flag * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i] * phi_x_gss_fe[ SolFEType[off_kdim] ][j*dim + kdim]		      * SolVAR_qp[SolPdeIndex[off_kdim + adj_pos_begin]]   //c(delta_u, u_new, lambda_old)  off-diagonal blocks  ......phiadj_nablaunew_uadjold 
-								      + advection_flag * phi_gss_fe[ SolFEType[off_kdim] ][j] 		  * phi_x_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i*dim + off_kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	   //c(u_new, delta_u, lambda_old) off-diagonal blocks  ......unew_nablaphiadj_uadjold
-								      ) * weight;
-	  }
+		Jac[kdim + adj_pos_begin][off_kdim][i*nDofsV + j] += (  advection_flag * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i] * phi_x_gss_fe[ SolFEType[off_kdim] ][j*dim + kdim]		      * SolVAR_qp[SolPdeIndex[off_kdim + adj_pos_begin]]   //c(delta_u, u_new, lambda_old)  off-diagonal blocks  ......phiadj_nablaunew_uadjold 
+                                                              + advection_flag * phi_gss_fe[ SolFEType[off_kdim] ][j] 		  * phi_x_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i*dim + off_kdim] * SolVAR_qp[SolPdeIndex[kdim + adj_pos_begin]]	   //c(u_new, delta_u, lambda_old) off-diagonal blocks  ......unew_nablaphiadj_uadjold
+                                                             ) * weight;
+	  }            
      }//j_dadj_u loop
 
 
@@ -897,15 +896,15 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 	   }
 	  }
 	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	      Jac[kdim + adj_pos_begin][kdim + adj_pos_begin][i*nDofsVadj + j] += ( IRe*lap_jac_dadj_adj 
-										    + advection_flag * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i] * gradSolVAR_qp[SolPdeIndex[kdim]][kdim] * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][j]   //c(delta_u, u_old, lambda_new)  diagonal blocks  ......phiadj_nablauold_uadjnew  
-										    + advection_flag * adv_uold_nablaphiadj_uadjnew[kdim] 	//c(u_old, delta_u, lambda_new)
-										  ) * weight;
+	      Jac[kdim + adj_pos_begin][kdim + adj_pos_begin][i*nDofsVadj + j] += (   IRe*lap_jac_dadj_adj 
+                                                                                + advection_flag * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i] * gradSolVAR_qp[SolPdeIndex[kdim]][kdim] * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][j]   //c(delta_u, u_old, lambda_new)  diagonal blocks  ......phiadj_nablauold_uadjnew  
+                                                                                + advection_flag * adv_uold_nablaphiadj_uadjnew[kdim] 	//c(u_old, delta_u, lambda_new)
+                                                                               ) * weight;
                unsigned int off_kdim = (kdim+1)%dim; //off-diagonal blocks
 		  Jac[kdim + adj_pos_begin][off_kdim + adj_pos_begin][i*nDofsVadj + j] += ( advection_flag * phi_gss_fe[ SolFEType[kdim + adj_pos_begin] ][i] * gradSolVAR_qp[SolPdeIndex[off_kdim]][kdim] * phi_gss_fe[ SolFEType[off_kdim + adj_pos_begin] ][j]   //c(delta_u, u_old, lambda_new)  off-diagonal blocks  ......phiadj_nablauold_uadjnew   
-											  ) * weight;
+                                                                                  ) * weight;
 	  }
-      } //j_dadj_adj loop
+    } //j_dadj_adj loop
       
 //BLOCK Pressure_adj
     for (unsigned j = 0; j < nDofsPadj; j++) {
@@ -923,9 +922,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
       }
       Res[press_type_pos + adj_pos_begin][i] += ( (div_adj_dadj_qp) * phi_gss_fe[SolFEType[press_type_pos + adj_pos_begin]][i] ) * weight;
       for (unsigned j = 0; j < nDofsVadj; j++) {
-	  for (unsigned kdim = 0; kdim < dim; kdim++) {
-	    Jac[press_type_pos + adj_pos_begin][kdim + adj_pos_begin][i*nDofsVadj + j] += - ( phi_gss_fe[SolFEType[press_type_pos + adj_pos_begin]][i] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][j * dim + kdim] ) * weight;
-	  }
+        for (unsigned kdim = 0; kdim < dim; kdim++) {
+            Jac[press_type_pos + adj_pos_begin][kdim + adj_pos_begin][i*nDofsVadj + j] += - ( phi_gss_fe[SolFEType[press_type_pos + adj_pos_begin]][i] * phi_x_gss_fe[SolFEType[kdim + adj_pos_begin]][j * dim + kdim] ) * weight;
+        }
       }//j loop
   }//i_div_adj
 
@@ -1014,13 +1013,13 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   JAC->close();
   RES->close();
   
-    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
-  JAC->print_matlab(mat_out.str(),"ascii");
-    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/res_non_ad_" << mlPdeSys._nonliniteration  << ".txt";
-    std::filebuf res_fb;
-   res_fb.open (res_out.str().c_str(),std::ios::out);
-    std::ostream  res_file_stream(&res_fb);
-  RES->print(res_file_stream);
+//     std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
+//   JAC->print_matlab(mat_out.str(),"ascii");
+//     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/res_non_ad_" << mlPdeSys._nonliniteration  << ".txt";
+//     std::filebuf res_fb;
+//    res_fb.open (res_out.str().c_str(),std::ios::out);
+//     std::ostream  res_file_stream(&res_fb);
+//   RES->print(res_file_stream);
  
 //   JAC->print();
 //   RES->print();
@@ -1031,9 +1030,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 double ComputeIntegral(MultiLevelProblem& ml_prob) {
 
-//    NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the linear implicit system named "Poisson"
+//    NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   
 
-   LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("NSOpt");   // pointer to the linear implicit system named "Poisson"
+   LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("NSOpt");   
    const unsigned level = mlPdeSys->GetLevelToAssemble();
  
 
@@ -1061,8 +1060,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob) {
   vector< vector < double> > coordX_bd(dim);
 
   for (unsigned  k = 0; k < dim; k++) { 
-    coordX[k].reserve(maxSize);
-       coordX_bd[k].reserve(maxSize); 
+        coordX[k].reserve(maxSize);
+        coordX_bd[k].reserve(maxSize); 
   }
   
   double weight = 0.;
@@ -1128,10 +1127,16 @@ double ComputeIntegral(MultiLevelProblem& ml_prob) {
   phiVctrl_x_gss_bd.reserve(maxSize * dim);
   phiVctrl_xx_gss_bd.reserve(maxSize * dim2);
   
-  
-   
-
 //CONTROL_@bdry######################################################################
+  
+//Theta value ######################################################################
+   unsigned solThetaIndex;
+   solThetaIndex = mlSol->GetIndex("THETA");
+   unsigned solThetaType = mlSol->GetSolutionType(solThetaIndex);
+   double solTheta = (*sol->_Sol[solThetaIndex])(0)/*0.*/;
+// 		     solTheta = (*sol->_Sol[solThetaIndex])(0);
+//Theta value ######################################################################
+
 
 // Vel_desired##################################################################
   vector <double> phiVdes_gss;  // local test function
@@ -1177,7 +1182,9 @@ double integral_g_dot_n = 0.;
 //     unsigned nDofsVdes = msh->GetElementDofNumber(iel, solVType);    // number of solution element dofs
     unsigned nDofsVctrl = msh->GetElementDofNumber(iel, solVctrlType);    // number of solution element dofs
     
-    for (unsigned  k = 0; k < dim; k++) {       coordX[k].resize(nDofsX);    }
+    unsigned nDofsThetactrl = msh->GetElementDofNumber(iel,solThetaType);
+    
+   for (unsigned  k = 0; k < dim; k++) {       coordX[k].resize(nDofsX);    }
      
     for (unsigned  k = 0; k < dim; k++)  {
       solV[k].resize(nDofsV);
@@ -1336,7 +1343,6 @@ double integral_g_dot_n = 0.;
 	}
     }
  //end unknowns eval at gauss points ********************************
-		      
 		  
 //========== compute gauss quantities on the boundary ================================================
       for (unsigned  k = 0; k < dim; k++) {
@@ -1363,27 +1369,28 @@ double integral_g_dot_n = 0.;
         // *** get gauss point weight, test function and test function partial derivatives ***
         msh->_finiteElement[ielGeom][solVType]->Jacobian(coordX, ig, weight, phiV_gss, phiV_x_gss, phiV_xx_gss);
 	
-	msh->_finiteElement[ielGeom][solVType  /*solVdes*/]->Jacobian(coordX, ig, weight, phiVdes_gss, phiVdes_x_gss, phiVdes_xx_gss);
+	    msh->_finiteElement[ielGeom][solVType  /*solVdes*/]->Jacobian(coordX, ig, weight, phiVdes_gss, phiVdes_x_gss, phiVdes_xx_gss);
 
     
       for (unsigned  k = 0; k < dim; k++) {
-	V_gss[k] = 0.;
-	Vdes_gss[k] = 0.;
+	           V_gss[k] = 0.;
+	           Vdes_gss[k] = 0.;
 	    for (unsigned i = 0; i < nDofsV; i++) {
-	   	V_gss[k] += solV[k][i] * phiV_gss[i];
-		Vdes_gss[k] += solVdes[k]/*[i]*/ * phiVdes_gss[i];
+	   	   V_gss[k] += solV[k][i] * phiV_gss[i];
+		   Vdes_gss[k] += solVdes[k]/*[i]*/ * phiVdes_gss[i];
 	    }
-	}
+	  }
 	
 
       for (unsigned  k = 0; k < dim; k++) {
-	  integral_target_alpha+=(( target_flag ) *((V_gss[k]  - Vdes_gss[k]) * (V_gss[k]  - Vdes_gss[k]))*weight);
+	      integral_target_alpha+=(( target_flag ) *((V_gss[k]  - Vdes_gss[k]) * (V_gss[k]  - Vdes_gss[k]))*weight);
       }
       
       }// end gauss point loop
     } //end element loop  
 
     std::cout << "The value of the integral of g.n "<<   std::setw(11) << std::setprecision(10) << std::fixed<< integral_g_dot_n << std::endl;
+    std::cout << "The value of the theta is  "<<   std::setw(11) << std::setprecision(10) << std::fixed<< solTheta << std::endl;
     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<beta_val << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<gamma_val<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
