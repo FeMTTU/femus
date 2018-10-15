@@ -31,7 +31,7 @@ double k_v = 0.0001;
 
 double pi = acos ( -1. );
 //double k_h = 1 / ( 10 * pi );
-double k_h = (2.5)*(0.00001);
+double k_h = (2.5)*(0.1);
 
 const unsigned NumberOfLayers = 40;
 
@@ -449,14 +449,14 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 8000; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 1./2.;
+  unsigned numberOfTimeSteps = 1000; //17h=1020 with dt=60, 17h=10200 with dt=6
+  dt = 4.;
   bool implicitEuler = true;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
-    //ETD ( ml_prob );
-    RK4 ( ml_prob, implicitEuler );
+    ETD ( ml_prob );
+    //RK4 ( ml_prob, implicitEuler );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
   std::cout << " TOTAL TIME:\t" << \
