@@ -1,32 +1,28 @@
 
-#include<iostream>
+// example: class constructor
+#include <iostream>
+using namespace std;
 
-int main(int argc, char** args) {
-
-
-  std::cout<<"Hello Erdi"<<std::endl;
-
-  return 0;
+class Rectangle {
+    int width, height;
+  public:
+    Rectangle();         // This is default constructor which is called when an object is declared but is not initialized with any arguments.
+    Rectangle (int,int); // This is a constructor which initialize the class.
+    int area () {return (width*height);}
+};
+Rectangle::Rectangle () {
+  width = 5;
+  height = 5;
+}
+Rectangle::Rectangle (int a, int b) { // This is how we define a constructor, no return type!
+  width = a;
+  height = b;
 }
 
-// Ask the Big Boss!
-// 1. const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim))); conservative: based on line3, quad9, hex27
-// Guess: always lagrange so in 1d 3nodes, in  2d 9nodes, in 3d 27 nodes... If so I am a genius!!!
-//Answ: 
-// 2.   unsigned nDofu  = msh->GetElementDofNumber(iel, soluType);    // number of solution element dofs
-//      unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
-// Guess: These are same? 
-// 3. x[k].resize(nDofx); 
-// we already resize x above why again?
-// 4. How to create new examples?
-// Answer:
-// 5.Ex6 117--unsigned solVType = mlSol->GetSolutionType(solVIndex[0]); 
-// Should we also get for solVIndex[1] which is "v"?
-// Answer:
-// 6. Ex6 220   sysDof.reserve((dim + 1) * maxSize); that 1 comes from pressure??
-// ans:
-
-
-
-// Dont be lazy look at:
-// You are not good at finite element types, you dont understand. 
+int main () {
+  Rectangle rect; // Notice that this object has no argument.
+  Rectangle rectb (5,6);
+  cout << "rect area: " << rect.area() << endl;
+  cout << "rectb area: " << rectb.area() << endl;
+  return 0;
+}
