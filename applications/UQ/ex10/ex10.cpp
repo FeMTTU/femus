@@ -1421,7 +1421,7 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & sgmQoIStandardize
 
           for(unsigned inode = 0; inode < nDofsKDE; inode++) {
             unsigned globalDof = msh->GetSolutionDof(inode, iel, solTypeKDE);
-            double KDEvalue = 0.5 * phi[inode] / (numberOfSamples * dx * dy); //TODO not working very great
+            double KDEvalue = 0.5 * phi[inode] / (numberOfSamples * 0.5 * dx * dy); //TODO understand why we need that 0.5
             sol->_Sol[solIndexKDE]->add(globalDof, KDEvalue);
           }
           //END
