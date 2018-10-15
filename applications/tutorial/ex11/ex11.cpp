@@ -16,7 +16,7 @@ int main(int argc, char** args)
     // init Petsc-MPI communicator
     FemusInit mpinit(argc, args, MPI_COMM_WORLD);
     adept::Stack& s = FemusInit::_adeptStack;
-    adouble x[2]={1.0,2.0};
+    adouble x[2]={2.0,3.0};
     s.new_recording();
     adouble y=f(x);
     y.set_gradient(1.0);
