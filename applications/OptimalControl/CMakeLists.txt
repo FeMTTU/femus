@@ -26,7 +26,6 @@ set(OPTCONTROL_FOLDER OptimalControl/)
   FILE(COPY ${OPT_APPLICATION}/input/ DESTINATION ${PROJECT_BINARY_DIR}/applications/${OPTCONTROL_FOLDER}/${OPT_APPLICATION}/input/)
 
   
-  ADD_SUBDIRECTORY(./elliptic_lift_restr/)
   ADD_SUBDIRECTORY(./elliptic_lift_restr_neum/)
   ADD_SUBDIRECTORY(./elliptic_bdry_dir/)
   ADD_SUBDIRECTORY(./elliptic_bdry_neum/)
