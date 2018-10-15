@@ -31,9 +31,9 @@ void GetCoefficientsForQuantityOfInterest(MultiLevelProblem& ml_prob, std::vecto
 //
 void GetMomentsAndCumulants(std::vector <double>& alphas);
 //
-void GetQoIStandardizedSamples(std::vector <double>& alphas, std::vector <double>& sgmQoIStandardized);
+void GetQoIStandardizedSamples(std::vector< double >& alphas, std::vector< std::vector <double > > & sgmQoIStandardized, const unsigned & dimCoarseBox);
 //
-void GetHistogramAndKDE(std::vector< std::vector < double > > & samples, MultiLevelProblem& ml_prob);
+void GetHistogramAndKDE(std::vector< std::vector < double > > & sgmQoIStandardized, MultiLevelProblem& ml_prob);
 //
 void PlotGCandEDExpansion();
 
@@ -198,11 +198,6 @@ int main(int argc, char** argv) {
 
   GetMomentsAndCumulants(alphas); //computes moments and cumulants
 
-  std::vector <double> sgmQoIStandardized;
-  //TODO when we do 2D and 3D, sgmQoIStandardized must be an std vector of std vector
-  GetQoIStandardizedSamples(alphas, sgmQoIStandardized); // after entering here, sgmQoIStandardized is the vector of the standardized
-  // QoI samples.
-
   //PlotGCandEDExpansion();
 
   // ******* Print solution *******
@@ -220,10 +215,15 @@ int main(int argc, char** argv) {
   nxCoarseBox = static_cast<unsigned>(floor(1. + 3.3 * log(numberOfSamples)));
   nyCoarseBox = static_cast<unsigned>(floor(1. + 3.3 * log(numberOfSamples)));
 
-  mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh"); //for 1D
-//   mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh"); //for 2D
+//   mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh"); //for 1D
+  mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh"); //for 2D
 
   mlMshHisto.PrintInfo();
+
+  unsigned dimCoarseBox = mlMshHisto.GetDimension();
+
+  std::vector< std::vector <double > > sgmQoIStandardized;
+  GetQoIStandardizedSamples(alphas, sgmQoIStandardized, dimCoarseBox);
 
   MultiLevelSolution mlSolHisto(&mlMshHisto);
 
@@ -236,40 +236,7 @@ int main(int argc, char** argv) {
 
   LinearImplicitSystem& systemHisto = ml_probHisto.add_system < LinearImplicitSystem > ("Histo");
 
-  unsigned dimCoarseBox = mlMshHisto.GetDimension();
-
-  std::vector < std::vector < double > > samples;
-
-  //TODO this is considering that the QoI is a vector with the same components, in the future we have to do something more meaningful
-  if(dimCoarseBox == 1) {
-    samples.resize(numberOfSamples);
-    for(unsigned m1 = 0; m1 < numberOfSamples; m1++) {
-      samples[m1].resize(dimCoarseBox);
-      for(unsigned i = 0; i < dimCoarseBox; i++) {
-        samples[m1][i] = sgmQoIStandardized[m1];
-      }
-    }
-  }
-
-  if(dimCoarseBox == 2) {//TODO this still needs checking
-    samples.resize(numberOfSamples * numberOfSamples);
-    for(unsigned m = 0; m < samples.size(); m++) {
-      samples[m].resize(dimCoarseBox);
-    }
-    unsigned counter1 = 0;
-    for(unsigned m1 = 0; m1 < numberOfSamples; m1++) {
-      unsigned counter2 = 0;
-      while((counter1 + 1) < (m1 + 1) * numberOfSamples) {
-        samples[counter1][0] = sgmQoIStandardized[m1];
-        samples[counter1][1] = sgmQoIStandardized[counter2];
-	counter1++;
-	counter2++;
-      }
-    }
-  }
-
-
-  GetHistogramAndKDE(samples, ml_probHisto);
+  GetHistogramAndKDE(sgmQoIStandardized, ml_probHisto);
 
   mlSolHisto.SetWriter(VTK);
   std::vector<std::string> print_vars_2;
@@ -1310,122 +1277,54 @@ void PlotGCandEDExpansion() {
 }
 
 
-void GetQoIStandardizedSamples(std::vector< double >& alphas, std::vector <double>& sgmQoIStandardized) {
+void GetQoIStandardizedSamples(std::vector< double >& alphas, std::vector < std::vector <double> > & sgmQoIStandardized, const unsigned & dimCoarseBox) {
 
   uq &myuq = FemusInit::_uq;
   const std::vector < std::vector <unsigned> > &Jp = myuq.GetIndexSet(pIndex, numberOfEigPairs);
 
-  //BEGIN sampling to find the mesh domain
-  int pdfHistogramSize = static_cast <int>(1. + 3.3 * log(numberOfSamples));
-  std::vector <double> pdfHistogram(pdfHistogramSize, 0.);
-  double lengthOfTheInterval = fabs(xMaxCoarseBox - xMinCoarseBox);
-  double deltat = lengthOfTheInterval / (pdfHistogramSize - 1);
   boost::mt19937 rng;
   boost::normal_distribution<> nd(0., 1.);
   boost::variate_generator < boost::mt19937&,
-  boost::normal_distribution<> > var_nor(rng, nd);
+        boost::normal_distribution<> > var_nor(rng, nd);
 
-  std::vector <double> sgmQoI(numberOfSamples, 0.);
-  sgmQoIStandardized.assign(numberOfSamples, 0.);
 
-  for(unsigned m = 0; m < numberOfSamples; m++) {
+  sgmQoIStandardized.resize(numberOfSamples);
 
-    std::vector<double> samplePoints(numberOfEigPairs, 0.);
-    for(unsigned k = 0; k < numberOfEigPairs; k++) {
-      samplePoints[k] = var_nor();
-    }
-    const std::vector < std::vector <double> > &HermitePolyHistogram =
-      myuq.GetHermitePolyHistogram(pIndex, samplePoints, numberOfEigPairs);
+  for(unsigned m = 0; m < sgmQoIStandardized.size(); m++) {
+    
+    sgmQoIStandardized[m].resize(numberOfEigPairs);
 
-    std::vector<double> MultivariateHermitePolyHistogram(Jp.size(), 1.);
-    for(unsigned i = 0; i < Jp.size(); i++) {
+    for(unsigned idim = 0; idim < dimCoarseBox; idim++) {
+      
+      double sgmQoI = 0;
+
+      std::vector<double> samplePoints(numberOfEigPairs, 0.);
       for(unsigned k = 0; k < numberOfEigPairs; k++) {
-        MultivariateHermitePolyHistogram[i] *= HermitePolyHistogram[Jp[i][k]][k];
+        samplePoints[k] = var_nor();
       }
-      sgmQoI[m] += alphas[i] * MultivariateHermitePolyHistogram[i];
-    }
+      const std::vector < std::vector <double> > &HermitePolyHistogram =
+        myuq.GetHermitePolyHistogram(pIndex, samplePoints, numberOfEigPairs);
 
-    sgmQoIStandardized[m] = (sgmQoI[m] - meanQoI) / stdDeviationQoI;
-
-    bool sampleCaptured = false;
-    for(unsigned i = 0; i < pdfHistogramSize; i++) {
-      double leftBound = xMinCoarseBox + i * deltat - deltat * 0.5;
-      double rightBound = xMinCoarseBox + i * deltat + deltat * 0.5;
-      if(leftBound <=  sgmQoIStandardized[m] && sgmQoIStandardized[m] < rightBound) {
-        pdfHistogram[i]++;
-//           std::cout << "sgmQoIStandardized[" << m << "] = " << sgmQoIStandardized[m] << std::endl;
-        sampleCaptured = true;
-        break;
+      std::vector<double> MultivariateHermitePolyHistogram(Jp.size(), 1.);
+      for(unsigned i = 0; i < Jp.size(); i++) {
+        for(unsigned k = 0; k < numberOfEigPairs; k++) {
+          MultivariateHermitePolyHistogram[i] *= HermitePolyHistogram[Jp[i][k]][k];
+        }
+        sgmQoI += alphas[i] * MultivariateHermitePolyHistogram[i]; //TODO with QoIs that are different from each other, alphas[i] will be alphas[idim][i]
       }
-    }
-    if(sampleCaptured == false) {
-      std::cout << "WARNING: sample " << sgmQoIStandardized[m] << "is not in any interval" << std::endl;
-    }
 
+      sgmQoIStandardized[m][idim] = (sgmQoI - meanQoI) / stdDeviationQoI; //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
+
+    }
   }
   //END
 
   myuq.ClearHermitePolynomialHistogram();
 
-  //BEGIN computation of the moments via Monte Carlo integration
-  std::vector <double> momentsMonteCarlo(numberOfSamples);
-  std::vector <double> momentsStandardizedMonteCarlo(numberOfSamples);
-  for(unsigned p = 0; p < totMoments; p++) {
-    momentsMonteCarlo[p] = 0.;
-    momentsStandardizedMonteCarlo[p] = 0.;
-    unsigned momentsCounter = 0;
-    for(unsigned m = 0; m < numberOfSamples; m++) {
-      if(fabs(sgmQoI[m]) <= 5.5) {
-        momentsMonteCarlo[p] += pow(sgmQoI[m], p + 1);
-        momentsStandardizedMonteCarlo[p] += pow(sgmQoIStandardized[m], p + 1);
-        momentsCounter++;
-      }
-    }
-    momentsMonteCarlo[p] /= momentsCounter;
-    momentsStandardizedMonteCarlo[p] /= momentsCounter;
-
-  }
-
-
-  std::cout.precision(14);
-  std::cout << "Standardized Monte Carlo Moments" << std::endl;
-  for(unsigned p = 0; p < totMoments; p++) {
-    std::cout << " & " << momentsStandardizedMonteCarlo[p] << "  ";
-  }
-  std::cout << std::endl;
-
-  std::cout << "Monte Carlo Moments" << std::endl;
-  for(unsigned p = 0; p < totMoments; p++) {
-    std::cout << " & " << momentsMonteCarlo[p] << "  ";
-  }
-  std::cout << std::endl;
-  std::cout << " --------------------------------------------------------------------------------------------- " << std::endl;
-
-  //END
-
-
-  double pdfIntegral = 0;
-  for(unsigned i = 0; i < pdfHistogramSize; i++) {
-    pdfIntegral += pdfHistogram[i] * deltat;
-  }
-
-
-  //BEGIN histogram check
-  double checkHistogram = 0;
-  for(unsigned i = 0; i < pdfHistogramSize; i++) {
-    double point = xMinCoarseBox + i * deltat;
-    double pdfCheck = pdfHistogram[i] / numberOfSamples;
-    pdfHistogram[i] /= pdfIntegral;
-    std::cout << point << "  " << pdfHistogram[i]  << std::endl;
-//             std::cout << "{" << point << "," << pdfHistogram[i]  << "}," << std::endl;
-    checkHistogram += pdfCheck;
-  }
-  std::cout << "checkHistogram = " << checkHistogram << std::endl;
-  //END
 
 }
 
-void GetHistogramAndKDE(std::vector< std::vector <double > > & samples, MultiLevelProblem& ml_prob) {
+void GetHistogramAndKDE(std::vector< std::vector <double > > & sgmQoIStandardized, MultiLevelProblem& ml_prob) {
 
   unsigned level = 0.;
 
@@ -1451,7 +1350,7 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & samples, MultiLev
   double dx = (xMaxCoarseBox - xMinCoarseBox) / nxCoarseBox; //mesh size assuming a coarse box is used
   double dy = (dim == 2) ? (yMaxCoarseBox - yMinCoarseBox) / nyCoarseBox : 1. ;
 
-  for(unsigned m = 0; m < numberOfSamples * dim; m++) {
+  for(unsigned m = 0; m < numberOfSamples; m++) {
 
     if(dim == 1) {
       for(int iel = sol->GetMesh()->_elementOffset[iproc]; iel < sol->GetMesh()->_elementOffset[iproc + 1]; iel ++) {
@@ -1462,7 +1361,7 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & samples, MultiLev
         double xLeft = (*sol->GetMesh()->_topology->_Sol[0])(xLeftDof);
         double xRight = (*sol->GetMesh()->_topology->_Sol[0])(xRightDof);
 
-        if(samples[m][0] > xLeft && samples[m][0] <= xRight) {
+        if(sgmQoIStandardized[m][0] > xLeft && sgmQoIStandardized[m][0] <= xRight) {
           sol->_Sol[solIndexHISTO]->add(iel, 1.);
 
           //BEGIN write KDE solution
@@ -1475,7 +1374,7 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & samples, MultiLev
           vx[0][1] = xRight;
 
           std::vector < double> sampleLocal(1, 0.);
-          sampleLocal[0] = - 1. + 2. * (samples[m][0] - xRight) / (xLeft - xRight);
+          sampleLocal[0] = - 1. + 2. * (sgmQoIStandardized[m][0] - xRight) / (xLeft - xRight);
 
           msh->_finiteElement[ielType][solTypeKDE]->Jacobian(vx, sampleLocal, weight, phi, gradphi);
 
@@ -1493,7 +1392,7 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & samples, MultiLev
 
     if(dim == 2) {
 
-      Marker marker(samples[m], 0., VOLUME, mlSol->GetLevel(level), 2, true);
+      Marker marker(sgmQoIStandardized[m], 0., VOLUME, mlSol->GetLevel(level), 2, true);
       unsigned sampleElement = marker.GetMarkerElement();
       std::vector<double> sampleLocal;
       marker.GetMarkerLocalCoordinates(sampleLocal);
@@ -1522,7 +1421,7 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & samples, MultiLev
 
           for(unsigned inode = 0; inode < nDofsKDE; inode++) {
             unsigned globalDof = msh->GetSolutionDof(inode, iel, solTypeKDE);
-            double KDEvalue = 0.5 * phi[inode] / (numberOfSamples * 0.5 * dx * dy); //TODO not working very great
+            double KDEvalue = 0.5 * phi[inode] / (numberOfSamples * dx * dy); //TODO not working very great
             sol->_Sol[solIndexKDE]->add(globalDof, KDEvalue);
           }
           //END
