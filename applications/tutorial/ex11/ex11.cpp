@@ -31,3 +31,11 @@ adouble f(const adouble x[2]){
     return y;
 }
 
+/** Questions
+ * 1. What is the type of "weight" in Gauss loop? 
+ * 2. What is the type of phi ???
+ * 3. Do I need to know where those 
+ * system.CopySolutionToOldSolution();
+ * system.MGsolve();
+ * are living?
+ */
