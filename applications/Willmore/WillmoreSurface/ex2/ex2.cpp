@@ -27,6 +27,9 @@ using namespace femus;
 
 void AssemblePWillmore(MultiLevelProblem& );
 
+double GetTimeStep (const double time){
+  return .01;
+}
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
   bool dirichlet = true; 
@@ -89,9 +92,9 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
     // add variables to mlSol
-  mlSol.AddSolution("Dx1", LAGRANGE, SECOND, 0);
-  mlSol.AddSolution("Dx2", LAGRANGE, SECOND, 0);
-  mlSol.AddSolution("Dx3", LAGRANGE, SECOND, 0);
+  mlSol.AddSolution("Dx1", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution("Dx2", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution("Dx3", LAGRANGE, SECOND, 2);
   
 //   mlSol.AddSolution("Dx1", LAGRANGE, FIRST, 0);
 //   mlSol.AddSolution("Dx2", LAGRANGE, FIRST, 0);
@@ -126,7 +129,7 @@ int main(int argc, char** args) {
   MultiLevelProblem mlProb(&mlSol);
   
   // add system Wilmore in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("PWillmore");
+  TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("PWillmore");
   
   // add solution "X", "Y", "Z" and "H" to the system
   system.AddSolutionToSystemPDE("Dx1");
@@ -136,15 +139,17 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Y2");
   system.AddSolutionToSystemPDE("Y3");
   
-  system.SetMaxNumberOfNonLinearIterations(1);
+  system.SetMaxNumberOfNonLinearIterations(10);
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssemblePWillmore);
   
+  system.AttachGetTimeIntervalFunction(GetTimeStep);
+  
   // initilaize and solve the system
   system.init();
   
-  system.MGsolve();
+ 
     
   mlSol.SetWriter(VTK);
   std::vector<std::string> mov_vars;
@@ -158,6 +163,15 @@ int main(int argc, char** args) {
 
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
+  
+  unsigned numberOfTimeSteps = 1000;
+  for(unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++){
+    
+    system.CopySolutionToOldSolution();
+    system.MGsolve();
+    
+    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+  }
     
   return 0;
 }
@@ -172,7 +186,9 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   adept::Stack& s = FemusInit::_adeptStack;
   
   //  extract pointers to the several objects that we are going to use
-  NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("PWillmore");   // pointer to the linear implicit system named "Poisson"
+  TransientNonlinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<TransientNonlinearImplicitSystem> ("PWillmore");   // pointer to the linear implicit system named "Poisson"
+  
+  double dt = GetTimeStep(0);
   
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   
@@ -205,6 +221,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   solDxPdeIndex[2] = mlPdeSys->GetSolPdeIndex("Dx3");    // get the position of "DZ" in the pdeSys object
   
   std::vector < adept::adouble > solx[DIM];  // surface coordinates
+  std::vector < double > solxOld[DIM];  // surface coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
    
   unsigned solYIndex[DIM];
@@ -241,6 +258,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
        
     for (unsigned K = 0; K < DIM; K++) {
       solx[K].resize(nxDofs);
+      solxOld[K].resize(nxDofs);
       solY[K].resize(nYDofs);
     }
     
@@ -260,6 +278,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
       unsigned iXDof  = msh->GetSolutionDof(i, iel, xType);
       
       for (unsigned K = 0; K < DIM; K++) {
+        solxOld[K][i] = (*msh->_topology->_Sol[K])(iXDof) + (*sol->_SolOld[solDxIndex[K]])(iDDof);
         solx[K][i] = (*msh->_topology->_Sol[K])(iXDof) + (*sol->_Sol[solDxIndex[K]])(iDDof);
         SYSDOF[K * nxDofs + i] = pdeSys->GetSystemDof(solDxIndex[K], solDxPdeIndex[K], i, iel);  // global to global mapping between solution node and pdeSys dof
       }
@@ -303,10 +322,12 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
       adept::adouble solY_uv[3][2] = {{0.,0.},{0.,0.},{0.,0.}};
       adept::adouble solYg[3]={0.,0.,0.};
       adept::adouble solxg[3]={0.,0.,0.};
+      double solxOldg[3]={0.,0.,0.};
       
       for(unsigned K = 0; K < DIM; K++){
         for (unsigned i = 0; i < nxDofs; i++) {
           solxg[K] += phix[i] * solx[K][i];
+          solxOldg[K] += phix[i] * solxOld[K][i];
         }  
         for (unsigned i = 0; i < nYDofs; i++) {
           solYg[K] += phiY[i] * solY[K][i];
@@ -391,7 +412,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             
       for(unsigned K = 0; K < DIM; K++){
         for(unsigned i = 0; i < nxDofs; i++){
-          aResx[K][i] -= (solxg[K] * phix[i] / 0.01 + solYg[K] * phix[i] + phix_Xtan[K][i]) * Area; 
+          aResx[K][i] -= ( solYg[K] * phix[i] + phix_Xtan[K][i]) * Area; 
         }
         for(unsigned i = 0; i < nYDofs; i++){
           adept::adouble term1 = - solYnorm2;
@@ -406,7 +427,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             }
             term3 += P * phiY_Xtan[J][i] * term4;
           }
-          aResY[K][i] -= (solxg[K] * phix[i] * 0. + term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
+          aResY[K][i] -= ( -(solxg[K] - solxOldg[K]) / dt * phiY[i]  + term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
         }
       }
     } // end gauss point loop
