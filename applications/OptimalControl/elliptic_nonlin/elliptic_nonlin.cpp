@@ -715,23 +715,20 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
 double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
-  
   NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("OptSys");
-  const unsigned level = mlPdeSys->GetLevelToAssemble();
+  const unsigned          level      = mlPdeSys->GetLevelToAssemble();
 
-  Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  Mesh*                          msh = ml_prob._ml_msh->GetLevel(level);
 
-  MultiLevelSolution*    mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
-  Solution*                sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  MultiLevelSolution*          mlSol = ml_prob._ml_sol;
+  Solution*                      sol = ml_prob._ml_sol->GetSolutionLevel(level);
 
-  LinearEquationSolver* pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-
-  const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
-  unsigned dim2 = (3 * (dim - 1) + !(dim - 1));        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
+  const unsigned     dim = msh->GetDimension();                                 // get the domain dimension of the problem
+  const unsigned    dim2 = (3 * (dim - 1) + !(dim - 1));                        // dim2 is the number of second order partial derivatives (1,3,6 depending on the dimension)
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
-  unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
-
+  const unsigned   iproc = msh->processor_id(); 
+  
  //*************************************************** 
   vector < vector < double > > x(dim);    // local coordinates
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
