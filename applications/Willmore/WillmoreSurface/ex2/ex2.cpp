@@ -73,7 +73,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   
-  mlMsh.ReadCoarseMesh("./input/halfSphere.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/sphere.neu", "seventh", scalingFactor);
   
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -145,8 +145,7 @@ int main(int argc, char** args) {
   system.init();
   
   system.MGsolve();
-  
-  
+    
   mlSol.SetWriter(VTK);
   std::vector<std::string> mov_vars;
   mov_vars.push_back("Dx1");
@@ -303,8 +302,12 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
       adept::adouble solx_uv[3][2] = {{0.,0.},{0.,0.},{0.,0.}};
       adept::adouble solY_uv[3][2] = {{0.,0.},{0.,0.},{0.,0.}};
       adept::adouble solYg[3]={0.,0.,0.};
+      adept::adouble solxg[3]={0.,0.,0.};
       
-      for(unsigned K=0; K < DIM; K++){
+      for(unsigned K = 0; K < DIM; K++){
+        for (unsigned i = 0; i < nxDofs; i++) {
+          solxg[K] += phix[i] * solx[K][i];
+        }  
         for (unsigned i = 0; i < nYDofs; i++) {
           solYg[K] += phiY[i] * solY[K][i];
         }
@@ -388,7 +391,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             
       for(unsigned K = 0; K < DIM; K++){
         for(unsigned i = 0; i < nxDofs; i++){
-          aResx[K][i] += (solYg[K] * phix[i] + phix_Xtan[K][i]) * Area; 
+          aResx[K][i] -= (solxg[K] * phix[i] / 0.01 + solYg[K] * phix[i] + phix_Xtan[K][i]) * Area; 
         }
         for(unsigned i = 0; i < nYDofs; i++){
           adept::adouble term1 = - solYnorm2;
@@ -403,7 +406,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             }
             term3 += P * phiY_Xtan[J][i] * term4;
           }
-          aResY[K][i] += (term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
+          aResY[K][i] -= (solxg[K] * phix[i] * 0. + term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
         }
       }
     } // end gauss point loop
@@ -461,7 +464,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   RES->close();
   KK->close();
   
-  VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
+ // VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
   
   
  // MatView((static_cast<PetscMatrix*>(KK))->mat(), PETSC_VIEWER_STDOUT_SELF );
