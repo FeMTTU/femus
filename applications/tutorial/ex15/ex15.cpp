@@ -16,14 +16,28 @@
 //#include "TransientSystem.hpp"
 #include "NonLinearImplicitSystem.hpp"
 #include "adept.h"
-// #include "PetscMatrix.hpp"
-// #include "PetscVector.hpp"
+ #include "PetscMatrix.hpp"
+ #include "PetscVector.hpp"
 
 using namespace femus;
+double b[5][5]={
+    {},
+    {0.5,0.5}
+};
+double a[5][5][5]={
+    {},
+    {
+        {0.25, 0.25 - sqrt(3.)/6.},
+        {0.25 + sqrt(3.)/6., 0.25 }
+    }
+};
 
+const unsigned RK = 2;
+
+std::ostringstream ki[RK];
 
 double GetTimeStep(const double time) {
-  double dt = .1;
+  double dt = 1.;
   return dt;
 }
 
@@ -49,6 +63,10 @@ int main(int argc, char** args) {
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
 
+  for(unsigned i = 0; i < RK; i++){
+    ki[i] << "k" << i+1;
+  }
+    
   // define MultiLevel object "mlMsh". 
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
@@ -77,16 +95,20 @@ int main(int argc, char** args) {
   // add variables to mlSol
   mlSol.AddSolution("u", LAGRANGE, SECOND); // We may have more than one, add each of them as u,v,w with their apprx type.
   
-  mlSol.AddSolution("k1", LAGRANGE, SECOND); // We may have more than one, add each of them as u,v,w with their apprx type.
-  mlSol.AddSolution("k2", LAGRANGE, SECOND); // We may have more than one, add each of them as u,v,w with their apprx type.
+  
+  for(unsigned i = 0; i < RK; i++){
+    mlSol.AddSolution(ki[i].str().c_str(), LAGRANGE, SECOND); // We may have more than one, add each of them as u,v,w with their apprx type.
+  }
   
   mlSol.Initialize("All"); // Since this is time depend problem.
   mlSol.Initialize("u", InitalValue); // Since this is time depend problem.
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  mlSol.GenerateBdc("k1");
-  mlSol.GenerateBdc("k2");
+  for(unsigned i = 0; i < RK; i++){
+    mlSol.GenerateBdc(ki[i].str().c_str());
+  }
+  
   
 //   mlSol.FixSolutionAtOnePoint("k1");
 //   mlSol.FixSolutionAtOnePoint("k2");
@@ -97,16 +119,19 @@ int main(int argc, char** args) {
   // add system Poisson in mlProb as a Non Linear Implicit System
   NonLinearImplicitSystem & system = mlProb.add_system < NonLinearImplicitSystem > ("AllanChan");
 
+ // mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+  
   // add solution "u" to system
-  system.AddSolutionToSystemPDE("k1");
-  system.AddSolutionToSystemPDE("k2");
-
+  for(unsigned i = 0; i < RK; i++){
+    system.AddSolutionToSystemPDE(ki[i].str().c_str());
+  }
+  
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleAllanChanProblem_AD);
 
   // time loop parameter
   
-  const unsigned int n_timesteps = 125;
+  const unsigned int n_timesteps = 25;
 
   
   system.init();
@@ -121,29 +146,27 @@ int main(int argc, char** args) {
   
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, 0);
 
-  double b1 = 0.5 * (1. + sqrt(3) );
-  double b2 = 0.5 * (1. - sqrt(3) );
-  double dt = 0.2;
+  double dt = GetTimeStep(0.);
   
 
   for (unsigned time_step = 0; time_step < n_timesteps; time_step++) {
-
     
     Solution * sol = mlSol.GetSolutionLevel(0);    // pointer to the solution (level) object
     
     unsigned soluIndex = mlSol.GetIndex("u");  
-    unsigned solk1Index = mlSol.GetIndex("k1");  
-    unsigned solk2Index = mlSol.GetIndex("k2");  
       
-    sol->_Sol[solk1Index]->zero();
-    sol->_Sol[solk2Index]->zero();
-    
+    for( unsigned i = 0; i < RK; i++ ){
+      unsigned solkiIndex = mlSol.GetIndex( ki[i].str().c_str() );
+      sol->_Sol[solkiIndex]->zero();
+    }
+        
     system.MGsolve();
     
-    sol->_Sol[soluIndex]-> add (b1 * dt, *sol->_Sol[solk1Index]);
-    sol->_Sol[soluIndex]-> add (b2 * dt, *sol->_Sol[solk2Index]);
-       
-
+    for( unsigned i = 0; i < RK; i++ ){
+      unsigned solkiIndex = mlSol.GetIndex( ki[i].str().c_str() );    
+      sol->_Sol[soluIndex]-> add ( b[RK - 1][i] * dt, *sol->_Sol[solkiIndex]);
+    }
+ 
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
   
@@ -173,6 +196,7 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
 
   // call the adept stack object
 
+  double dt = GetTimeStep(0);
 
   adept::Stack& s = FemusInit::_adeptStack;
 
@@ -200,26 +224,25 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
   //solution variable
   unsigned soluIndex;
   soluIndex = mlSol->GetIndex("u");    // get the position of "u" in the ml_sol object
-  unsigned solk1Index = mlSol->GetIndex("k1");  
-  unsigned solk2Index = mlSol->GetIndex("k2");  
-  
+  unsigned solkIndex[RK];
+  for( unsigned i = 0; i < RK; i++ ){
+    solkIndex[i] = mlSol->GetIndex( ki[i].str().c_str() );
+  }
   unsigned soluType = mlSol->GetSolutionType(soluIndex);    // get the finite element type for "u"
   
-  unsigned solk1PdeIndex = mlPdeSys->GetSolPdeIndex("k1");    // get the position of "u" in the pdeSys object
-  unsigned solk2PdeIndex = mlPdeSys->GetSolPdeIndex("k2");    // get the position of "u" in the pdeSys object
- 
+  unsigned solkPdeIndex[RK];
+  for( unsigned i = 0; i < RK; i++ ){
+    solkPdeIndex[i] = mlPdeSys->GetSolPdeIndex( ki[i].str().c_str() );
+  }
+   
+  vector < adept::adouble >  solk[RK]; // local solution
+  vector < adept::adouble >  solu[RK]; // local solution
   
-  vector < adept::adouble >  solk1; // local solution
-  vector < adept::adouble >  solk2; // local solution
- 
-  vector < adept::adouble >  solu1; // local solution
-  vector < adept::adouble >  solu2; // local solution
+  for( unsigned i = 0; i < RK; i++ ){
+    solk[i].reserve(maxSize);  
+    solu[i].reserve(maxSize);
+  }
   
-  solk1.reserve(maxSize);
-  solk2.reserve(maxSize);
-  
-  solu1.reserve(maxSize);
-  solu2.reserve(maxSize);
 
   vector < vector < double > > x(dim);    // local coordinates. x is now dim x m matrix.
   unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
@@ -235,17 +258,17 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim); // This is probably gradient but he is doing the life difficult for me!
   
-  vector< adept::adouble > aResk1; // local redidual vector
-  vector< adept::adouble > aResk2; // local redidual vector
-  aResk1.reserve(maxSize);
-  aResk2.reserve(maxSize);
-
+  vector< adept::adouble > aResk[RK]; // local redidual vector
+  for( unsigned i = 0; i < RK; i++ ){
+    aResk[i].reserve(maxSize);
+  }
+ 
   vector< int > l2GMap; // local to global mapping
-  l2GMap.reserve(2 * maxSize);
+  l2GMap.reserve(RK * maxSize);
   vector< double > Res; // local redidual vector
-  Res.reserve(2. * maxSize);
+  Res.reserve(RK * maxSize);
   vector < double > Jac;
-  Jac.reserve(2. * maxSize * 2. * maxSize);
+  Jac.reserve(RK * maxSize * RK * maxSize);
 
   KK->zero(); // Set to zero all the entries of the Global Matrix
   RES->zero(); // Set to zero all the entries of the Global Residual
@@ -260,49 +283,41 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
     unsigned nDofx = msh->GetElementDofNumber(iel, xType);    // number of coordinate element dofs
 
     // resize local arrays
-    l2GMap.resize(2. * nDofu);
-    solk1.resize(nDofu);
-    solk2.resize(nDofu);
-    solu1.resize(nDofu);
-    solu2.resize(nDofu);
     
+    for( unsigned i = 0; i < RK; i++ ){
+      solk[i].resize(nDofu);  
+      solu[i].resize(nDofu);  
+      aResk[i].assign(nDofu, 0.);    
+    }
+        
     for (int k = 0; k < dim; k++) {
       x[k].resize(nDofx); // Now we 
     }
-
-    aResk1.resize(nDofu);    //resize
-    aResk2.resize(nDofu);    //resize
-    std::fill(aResk1.begin(), aResk1.end(), 0);    //set aRes to zero
-    std::fill(aResk2.begin(), aResk2.end(), 0);    //set aRes to zero
     
-    
+    l2GMap.resize(RK * nDofu);
             
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-      solk1[i] = (*sol->_Sol[solk1Index])(solDof);                  // global extraction and local storage for the solution
-      solk2[i] = (*sol->_Sol[solk2Index])(solDof);                  // global extraction and local storage for the solution
-         
-      l2GMap[i] = pdeSys->GetSystemDof(solk1Index, solk1PdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
-      l2GMap[nDofu + i] = pdeSys->GetSystemDof(solk2Index, solk2PdeIndex, i, iel);    // global to global mapping between solution node and pdeSys dof
+      for( unsigned j = 0; j < RK; j++ ){
+        solk[j][i] = (*sol->_Sol[solkIndex[j]])(solDof);          // global extraction and local storage for the solution
+        l2GMap[j * nDofu + i] = pdeSys->GetSystemDof(solkIndex[j], solkPdeIndex[j], i, iel);    // global to global mapping between solution node and pdeSys dof
+      }
     }
     
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
-    
-    double a11 = 0.25;
-    double a12 = 0.25 - sqrt(3.)/6.;
-    double a21 = 0.25 + sqrt(3.)/6.;
-    double a22 = 0.25 ;
-       
+            
     // local storage of global mapping and solution
     for (unsigned i = 0; i < nDofu; i++) {
       unsigned solDof = msh->GetSolutionDof(i, iel, soluType);    // global to global mapping between solution node and solution dof
-      
-      adept::adouble solu = (*sol->_Sol[soluIndex])(solDof);
-      solu1[i] = solu + a11  * solk1[i] + a12  * solk2[i] ; // global extraction and local storage for the solution
-      solu2[i] = solu + a21  * solk1[i] + a22  * solk2[i] ; // global extraction and local storage for the solution
-      
+      double soluOld = (*sol->_Sol[soluIndex])(solDof);
+      for( unsigned j = 0; j < RK; j++ ){
+        solu[j][i] = soluOld;
+        for( unsigned k = 0; k < RK; k++ ){
+          solu[j][i] += dt * a[RK-1][j][k]  * solk[k][i]; // global extraction and local storage for the solution
+        }
+      }
     }
 
     // local storage of coordinates
@@ -365,44 +380,34 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
       // *** get gauss point weight, test function and test function partial derivatives ***
       msh->_finiteElement[ielGeom][soluType]->Jacobian(x, ig, weight, phi, phi_x);
 
-      // evaluate the solution, the solution derivatives and the coordinates in the gauss point
-      adept::adouble solk1_gss = 0;
-      adept::adouble solk2_gss = 0;
-      adept::adouble solu1_gss = 0;
-      adept::adouble solu2_gss = 0;
-      vector < adept::adouble > gradSolu1_gss(dim, 0.);
-      vector < adept::adouble > gradSolu2_gss(dim, 0.);
+      for(unsigned j = 0; j < RK; j++){  
       
-           
-
-      for (unsigned i = 0; i < nDofu; i++) {
-        solk1_gss += phi[i] * solk1[i];
-        solk2_gss += phi[i] * solk2[i];
-        solu1_gss += phi[i] * solu1[i];
-        solu2_gss += phi[i] * solu2[i];
-
-        for (unsigned k = 0; k < dim; k++) {
-          gradSolu1_gss[k] += phi_x[i * dim + k] * solu1[i];
-          gradSolu2_gss[k] += phi_x[i * dim + k] * solu2[i];
+        // evaluate the solution, the solution derivatives and the coordinates in the gauss point
+        adept::adouble solk_gss = 0.; ;
+        adept::adouble solu_gss = 0.;
+        vector < adept::adouble > gradSolu_gss(dim,0.);
+                
+        for (unsigned i = 0; i < nDofu; i++) {
+          solk_gss += phi[i] * solk[j][i];
+          solu_gss += phi[i] * solu[j][i];
+          for (unsigned k = 0; k < dim; k++) {
+            gradSolu_gss[k] += phi_x[i * dim + k] * solu[j][i];
+          }
         }
-      }
 
-      // *** phi_i loop ***
-      for (unsigned i = 0; i < nDofu; i++) {
-
-        adept::adouble gradu1Gradphi = 0.;
-        adept::adouble gradu2Gradphi = 0.;
-       
-        double eps=0.01;
-
-        for (unsigned k = 0; k < dim; k++) {
-          gradu1Gradphi   +=   phi_x[i * dim + k] * gradSolu1_gss[k];
-          gradu2Gradphi   +=   phi_x[i * dim + k] * gradSolu2_gss[k];
-
+        // *** phi_i loop ***
+        for (unsigned i = 0; i < nDofu; i++) {
+     
+          double eps=0.01;
+        
+          adept::adouble graduGradphi = 0.;;
+          for (unsigned k = 0; k < dim; k++) {
+            graduGradphi   +=   phi_x[i * dim + k] * gradSolu_gss[k];
+          }
+      
+          aResk[j][i] -= ( ( solk_gss  -  solu_gss + solu_gss * solu_gss * solu_gss) * phi[i] +  eps * graduGradphi ) * weight;
         }
-             
-        aResk1[i] -= ( ( solk1_gss  -  solu1_gss + solu1_gss * solu1_gss * solu1_gss) * phi[i] +  eps * gradu1Gradphi ) * weight;
-        aResk2[i] -= ( ( solk2_gss  -  solu2_gss + solu2_gss * solu2_gss * solu2_gss) * phi[i] +  eps * gradu2Gradphi ) * weight;
+        
 
       } // end phi_i loop
     } // end gauss point loop
@@ -411,27 +416,24 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
     // Add the local Matrix/Vector into the global Matrix/Vector
 
     //copy the value of the adept::adoube aRes in double Res and store
-    Res.resize( 2 * nDofu );    //resize
+    Res.resize( RK * nDofu );    //resize
 
-    for (int i = 0; i < nDofu; i++) {
-      Res[i] = - aResk1[i].value();
+    for(unsigned j = 0; j < RK; j++){  
+      for (int i = 0; i < nDofu; i++) {
+        Res[j * nDofu + i] = - aResk[j][i].value();
+      }
     }
-    for (int i = 0; i < nDofu; i++) {
-      Res[nDofu + i] = - aResk2[i].value();
-    }
-
+    
     RES->add_vector_blocked(Res, l2GMap);
 
-    // define the dependent variables
-    s.dependent(&aResk1[0], nDofu);
-    s.dependent(&aResk2[0], nDofu);
-
-    // define the independent variables
-    s.independent(&solk1[0], nDofu);
-    s.independent(&solk2[0], nDofu);
-
-    // get the jacobian matrix (ordered by row major )
-    Jac.resize(4. * nDofu * nDofu);    //resize
+    for(unsigned j = 0; j < RK; j++){  
+      // define the dependent variables
+      s.dependent(&aResk[j][0], nDofu);
+      // define the independent variables
+      s.independent(&solk[j][0], nDofu);
+    }
+      // get the jacobian matrix (ordered by row major )
+    Jac.resize( RK * nDofu* RK * nDofu );    //resize
     s.jacobian(&Jac[0], true);
 
     //store K in the global matrix KK
@@ -446,10 +448,10 @@ void AssembleAllanChanProblem_AD(MultiLevelProblem& ml_prob) {
 
   KK->close();
   
-//   VecView((static_cast<PetscVector*>(RES))->vec(),       PETSC_VIEWER_STDOUT_SELF );
+  //VecView((static_cast<PetscVector*>(RES))->vec(),       PETSC_VIEWER_STDOUT_SELF );
 //  
 //  
-//   MatView((static_cast<PetscMatrix*>(KK))->mat(), PETSC_VIEWER_STDOUT_SELF );
+  //MatView((static_cast<PetscMatrix*>(KK))->mat(), PETSC_VIEWER_STDOUT_SELF );
 
   // ***************** END ASSEMBLY *******************
 }

@@ -22,7 +22,7 @@ using namespace femus;
 
 
 double GetTimeStep(const double time) {
-  double dt = .2;
+  double dt = .1;
   return dt;
 }
 
@@ -95,7 +95,7 @@ int main(int argc, char** args) {
 
   // time loop parameter
   system.AttachGetTimeIntervalFunction(GetTimeStep);
-  const unsigned int n_timesteps = 125;
+  const unsigned int n_timesteps = 250;
 
   
   system.init();
