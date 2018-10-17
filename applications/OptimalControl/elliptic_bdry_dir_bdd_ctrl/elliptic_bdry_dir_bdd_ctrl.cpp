@@ -480,6 +480,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 		
 // 	      if( !ml_sol->_SetBoundaryConditionFunction(xx,"U",tau,face,0.) && tau!=0.){
 	      if(  face == 3) { //control face
+              
+         //************** update active set flag for current nonlinear iteration **************************** 
+         // 0: inactive; 1: active_a; 2: active_b
+            assert(nDof_mu == nDof_ctrl);
+            sol_actflag.resize(nDof_mu);
+            std::fill(sol_actflag.begin(), sol_actflag.end(), 0);
+   
+            for (unsigned i = 0; i < sol_actflag.size(); i++) {
+                if      ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_lower )) < 0 )  sol_actflag[i] = 1;
+                else if ( (sol_mu[i] + c_compl * (sol_ctrl[i] - ctrl_upper )) > 0 )  sol_actflag[i] = 2;
+            }
 
  //=================================================== 
 		//we use the dirichlet flag to say: if dirichlet = true, we set 1 on the diagonal. if dirichlet = false, we put the boundary equation
@@ -908,7 +919,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
       
     for (unsigned i = 0; i < sol_actflag.size(); i++) {
-      if (sol_actflag[i] == 0 || control_node_flag[i] == 0){  //inactive
+      if (sol_actflag[i] == 0){  //inactive
          Res_mu [i] = - ineq_flag * ( 1. * sol_mu[i] - 0. ); 
 // 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
