@@ -19,8 +19,8 @@
 
 //*********************** Control box constraints *******************************************************
 #define  INEQ_FLAG 1
-#define  CTRL_BOX_LOWER   -1000
-#define  CTRL_BOX_UPPER   0.45
+#define  CTRL_BOX_LOWER   -0.45
+#define  CTRL_BOX_UPPER  0.2
 #define  C_COMPL 1.
 
 
@@ -48,7 +48,7 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 
 double DesiredTarget()
 {
-   return 1.;
+   return -1.;
 }
 
 
