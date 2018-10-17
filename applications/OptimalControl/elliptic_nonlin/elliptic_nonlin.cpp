@@ -14,16 +14,31 @@
 using namespace femus;
 
 
-  unsigned int res_row_index(const std::vector<unsigned int>& _Sol_n_el_dofs, int my_pos, int i) {
+  unsigned int res_row_index(const std::vector<unsigned int>& _Sol_n_el_dofs, int my_row_pos, int i) {
 
-     assert(i < _Sol_n_el_dofs[my_pos]); 
+    assert(i < _Sol_n_el_dofs[my_row_pos]); 
+    
     unsigned int pos_previous = 0;
-    for (unsigned k = 0; k < my_pos; k++) pos_previous += _Sol_n_el_dofs[k];
+    for (unsigned k = 0; k < my_row_pos; k++) pos_previous += _Sol_n_el_dofs[k];
 
     return pos_previous + i;
   }
   
+  unsigned int jac_row_col_index(const std::vector<unsigned int>& _Sol_n_el_dofs, const int nDof_AllVars, int my_row_pos, int my_col_pos, int i, int j) {
 
+     assert(i < _Sol_n_el_dofs[my_row_pos]); 
+     assert(j < _Sol_n_el_dofs[my_col_pos]); 
+     
+    unsigned int pos_previous_row = 0;
+    unsigned int pos_previous_col = 0;
+    for (unsigned k = 0; k < my_row_pos; k++) pos_previous_row += _Sol_n_el_dofs[k];
+    for (unsigned k = 0; k < my_col_pos; k++) pos_previous_col += _Sol_n_el_dofs[k];
+
+    return (pos_previous_row + i) * nDof_AllVars + (pos_previous_col + j);
+  }
+
+  
+  
 double InitialValueContReg(const std::vector < double >& x) {
   return ControlDomainFlag_internal_restriction(x);
 }
@@ -478,82 +493,44 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
               //============ delta_state row ============================
               //DIAG BLOCK delta_state - state
-	      if ( i < Sol_n_el_dofs[pos_state] && 
-               j < Sol_n_el_dofs[pos_state] )       
-		Jac[ (0 + i) * nDof_AllVars   +
-		     (0 + j)                            ]  += m_b_f[pos_state][pos_state] * weight * target_flag * phi_fe_qp[SolFEType[pos_state]][j] *  phi_fe_qp[SolFEType[pos_state]][i];
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_state, i, j) ]  += 
+                                                      m_b_f[pos_state][pos_state] * weight * target_flag * phi_fe_qp[SolFEType[pos_state]][j] *  phi_fe_qp[SolFEType[pos_state]][i];
               
 	      // BLOCK  delta_state - control
-              if ( i < Sol_n_el_dofs[pos_state] && 
-                   j < Sol_n_el_dofs[pos_ctrl] )   
-		Jac[ (0 + i) * nDof_AllVars   +
-                     (Sol_n_el_dofs[pos_state] + j)                       ]  += m_b_f[pos_state][pos_ctrl] * weight * target_flag * phi_fe_qp[SolFEType[pos_state]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j];
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_ctrl, i, j) ]  +=
+		                                              m_b_f[pos_state][pos_ctrl] * weight * target_flag * phi_fe_qp[SolFEType[pos_state]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j];
 	      
               // BLOCK  delta_state - adjoint
-              if ( i < Sol_n_el_dofs[pos_state] && 
-                   j < Sol_n_el_dofs[pos_adj] )  
-		Jac[  (0 + i) * nDof_AllVars  +
-                      (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + j)   ]  += m_b_f[pos_state][pos_adj] * weight * (-1) * laplace_mat_dstate_adj_i_j;
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_adj, i, j)  ]  +=
+		                                              m_b_f[pos_state][pos_adj] * weight * (-1) * laplace_mat_dstate_adj_i_j;
               
 	      //=========== delta_control row ===========================     
 	      if ( control_el_flag == 1)  {
-
 	      //BLOCK delta_control - state
-              if ( i < Sol_n_el_dofs[pos_ctrl]   && 
-                   j < Sol_n_el_dofs[pos_state]   ) 
-		Jac[ (Sol_n_el_dofs[pos_state] + i) * nDof_AllVars  +
-		     (0 + j)                            ]  += m_b_f[pos_ctrl][pos_state] * ( control_node_flag[i]) * weight * target_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_state]][j];
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_state, i, j) ]  += 
+                                                      m_b_f[pos_ctrl][pos_state] * ( control_node_flag[i]) * weight * target_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_state]][j];
 		
 	      //BLOCK delta_control - control
-              if ( i < Sol_n_el_dofs[pos_ctrl]   &&
-                   j < Sol_n_el_dofs[pos_ctrl]   )
-		Jac[ (Sol_n_el_dofs[pos_state] + i) * nDof_AllVars +
-		     (Sol_n_el_dofs[pos_state] + j)                       ]  += m_b_f[pos_ctrl][pos_ctrl] * ( control_node_flag[i]) * weight * (
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += m_b_f[pos_ctrl][pos_ctrl] * ( control_node_flag[i]) * weight * (
                                                                                            beta * control_el_flag  * laplace_mat_dctrl_ctrl_i_j 
 		                                                                                + alpha * control_el_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] 
 		                                                                                            + target_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] );
               
 	      //BLOCK delta_control - adjoint
-              if ( i < Sol_n_el_dofs[pos_ctrl]  &&
-                   j < Sol_n_el_dofs[pos_adj]  ) 
-		Jac[ (Sol_n_el_dofs[pos_state] + i) * nDof_AllVars  + 
-		     (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + j)           ]  += m_b_f[pos_ctrl][pos_adj] * ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj_i_j;
-	      	      
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_adj, i, j) ]  += m_b_f[pos_ctrl][pos_adj] * ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj_i_j;
 	        }
 	      
-	      else if ( control_el_flag == 0)  {  
-		
-              //BLOCK delta_control - control
-              if ( i < Sol_n_el_dofs[pos_ctrl]  &&
-                   j < Sol_n_el_dofs[pos_ctrl]  &&  
-                   i == j ) {
-		 Jac[ (Sol_n_el_dofs[pos_state] + i) * nDof_AllVars +
-		      (Sol_n_el_dofs[pos_state] + j)                      ]  += m_b_f[pos_ctrl][pos_ctrl] * (1 - control_node_flag[i]) * penalty_strong;
-		    }
-	      
+	      else if ( control_el_flag == 0 && i == j)  {  
+         //BLOCK delta_control - control
+        Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += m_b_f[pos_ctrl][pos_ctrl] * (1 - control_node_flag[i]) * penalty_strong;
 	      }
 	      
-		     
 	      //=========== delta_adjoint row ===========================
-              // BLOCK delta_adjoint - state	      
-              if ( i < Sol_n_el_dofs[pos_adj] && 
-                   j < Sol_n_el_dofs[pos_state] )   
-		Jac[ (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i) * nDof_AllVars +
-		     (0 + j)                            ]  += m_b_f[pos_adj][pos_state] * weight * (-1) * laplace_mat_dadj_state_i_j;   
-	      
+              // BLOCK delta_adjoint - state
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_state, i, j) ]  += m_b_f[pos_adj][pos_state] * weight * (-1) * laplace_mat_dadj_state_i_j;   
               // BLOCK delta_adjoint - control   
-              if ( i < Sol_n_el_dofs[pos_adj] &&
-                   j < Sol_n_el_dofs[pos_ctrl] )  
-		Jac[ (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i)  * nDof_AllVars +
-		     (Sol_n_el_dofs[pos_state]  + j)                      ]  += m_b_f[pos_adj][pos_ctrl] * weight * (-1) * laplace_mat_dadj_ctrl_i_j; 
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_ctrl, i, j)  ]  += m_b_f[pos_adj][pos_ctrl] * weight * (-1) * laplace_mat_dadj_ctrl_i_j; 
 		     
-		     
-// 	      // BLOCK delta_adjoint - adjoint   
-//               if ( i < Sol_n_el_dofs[pos_adj] && j < Sol_n_el_dofs[pos_adj] )  
-// 		Jac[ (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i)  * nDof_AllVars +
-// 		     (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + j)                      ]  += weight * phi_adj[j] *  phi_adj[i]; 
-    
-	      
 	      //============= delta_mu row ===============================
 //	      if (sol_actflag[i] == 0) //inactive
 //	      { // BLOCK delta_mu - mu	      
@@ -628,7 +605,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
  //========== end of integral-based part
 
-    //copy the value of the adept::adoube aRes in double Res and store
                           RES->add_vector_blocked(Res, L2G_dofmap_AllVars);
       if (assembleMatrix)  KK->add_matrix_blocked(Jac, L2G_dofmap_AllVars, L2G_dofmap_AllVars);
     
@@ -650,7 +626,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	     Res_mu [i] = (- ineq_flag) * c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_upper);
       }
     }
-
     
     RES->insert(Res_mu, L2G_dofmap[pos_mu]);
 //     RES->insert(Res_ctrl, l2GMap_ctrl);
