@@ -13,6 +13,17 @@
 
 using namespace femus;
 
+
+  unsigned int res_row_index(const std::vector<unsigned int>& _Sol_n_el_dofs, int my_pos, int i) {
+
+     assert(i < _Sol_n_el_dofs[my_pos]); 
+    unsigned int pos_previous = 0;
+    for (unsigned k = 0; k < my_pos; k++) pos_previous += _Sol_n_el_dofs[k];
+
+    return pos_previous + i;
+  }
+  
+
 double InitialValueContReg(const std::vector < double >& x) {
   return ControlDomainFlag_internal_restriction(x);
 }
@@ -412,15 +423,14 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
               if ( i < Sol_n_el_dofs[pos_adj] )     laplace_rhs_dadj_ctrl_i      +=  (phi_x_fe_qp[SolFEType[pos_adj]]  [i * dim + kdim] * sol_grad_qp[pos_ctrl] [kdim]);
 	      }
 	      
-          // FIRST ROW
-	  if (i < Sol_n_el_dofs[pos_state])                      Res[0      + i] += - weight * (target_flag * phi_fe_qp[SolFEType[pos_state]][i] * (
+          // FIRST ROW===============
+        Res[ res_row_index(Sol_n_el_dofs,pos_state,i) ] += - weight * (target_flag * phi_fe_qp[SolFEType[pos_state]][i] * (
                                                                                               m_b_f[pos_state][pos_state] * sol_qp[pos_state] 
                                                                                             + m_b_f[pos_state][pos_ctrl]  * sol_qp[pos_ctrl] 
                                                                                             - u_des ) 
                                                                                           - m_b_f[pos_state][pos_adj]   * laplace_rhs_dstate_adj_i );
-          // SECOND ROW
-	  if (i < Sol_n_el_dofs[pos_ctrl])  {
-	     if ( control_el_flag == 1)        Res[Sol_n_el_dofs[pos_state] + i] +=  /*(control_node_flag[i]) **/ - weight * (
+          // SECOND ROW==============
+	     if ( control_el_flag == 1)        Res[ res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(control_node_flag[i]) **/ - weight * (
                                                                                  target_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * (
                                                                                       m_b_f[pos_ctrl][pos_state] * sol_qp[pos_state] 
                                                                                     + m_b_f[pos_ctrl][pos_ctrl]  * sol_qp[pos_ctrl] 
@@ -429,12 +439,11 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 		                                                                          + m_b_f[pos_ctrl][pos_ctrl] *  beta * laplace_rhs_dctrl_ctrl_i 
 		                                                                          - m_b_f[pos_ctrl][pos_adj]  * laplace_rhs_dctrl_adj_i 
                                                                                                                          );
-	      else if ( control_el_flag == 0)  Res[Sol_n_el_dofs[pos_state] + i] +=  /*(1 - control_node_flag[i]) **/ m_b_f[pos_ctrl][pos_ctrl] * (- penalty_strong) * (sol_eldofs[pos_ctrl][i]);
-	  }
-          // THIRD ROW
-          if (i < Sol_n_el_dofs[pos_adj])  Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i] += /*-weight * phi_adj[i] * sol_qp[pos_adj] - 6.;*/
-                                                                                                          - weight *  ( - m_b_f[pos_adj][pos_state] * laplace_rhs_dadj_state_i 
-                                                                                                                        - m_b_f[pos_adj][pos_ctrl]  * laplace_rhs_dadj_ctrl_i );
+	      else if ( control_el_flag == 0)  Res[ res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(1 - control_node_flag[i]) **/ m_b_f[pos_ctrl][pos_ctrl] * (- penalty_strong) * (sol_eldofs[pos_ctrl][i]);
+
+          // THIRD ROW=============
+        Res[ res_row_index(Sol_n_el_dofs,pos_adj,i) ] += - weight *  ( - m_b_f[pos_adj][pos_state] * laplace_rhs_dadj_state_i 
+                                                                       - m_b_f[pos_adj][pos_ctrl]  * laplace_rhs_dadj_ctrl_i );
 
 //======================Residuals=======================
 	      
@@ -583,7 +592,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 // // 	         for (unsigned k = 0; k < j_unk; k++) column_block_offset += Sol_n_el_dofs[k];
 // // 	  
 // //          for (unsigned i = 0; i < Sol_n_el_dofs[i_unk]; i++) {
-// // // 	      std::cout << Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + i ] << " " << std::endl;
+// // // 	      std::cout << Res[res_row_index(Sol_n_el_dofs,pos_mu,i) ] << " " << std::endl;
 // // 	   for (unsigned j = 0; j < Sol_n_el_dofs[j_unk]; j++) {
 // // 	      std::cout <<  " " << std::setfill(' ') << std::setw(10) << Jac[ (row_block_offset + i) * nDof_AllVars + ( column_block_offset + j) ] << " ";
 // // 	    }
@@ -632,7 +641,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < sol_actflag.size(); i++) {
       if (sol_actflag[i] == 0) {  //inactive
          Res_mu [i] = (- ineq_flag) * ( 1. * sol_eldofs[pos_mu][i] ); 
-// 	 Res_mu [i] = Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + i]; 
+// 	 Res_mu [i] = Res[res_row_index(Sol_n_el_dofs,pos_mu,i)]; 
       }
       else if (sol_actflag[i] == 1) {  //active_a 
 	     Res_mu [i] = (- ineq_flag) * c_compl * ( sol_eldofs[pos_ctrl][i] - ctrl_lower);
