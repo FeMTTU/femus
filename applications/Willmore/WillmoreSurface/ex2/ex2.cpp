@@ -427,7 +427,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             }
             term3 += P * phiY_Xtan[J][i] * term4;
           }
-          aResY[K][i] -= ( -(solxg[K] - solxOldg[K]) / dt * phiY[i]  + term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
+          aResY[K][i] -= ( (1. - (solxg[K] - solxOldg[K])  / dt ) * phiY[i]  + term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
         }
       }
     } // end gauss point loop
