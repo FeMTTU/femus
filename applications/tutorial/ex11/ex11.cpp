@@ -1,5 +1,4 @@
 
-
 #include <iostream>
 #include "adept.h"
 #include <math.h>
@@ -17,7 +16,7 @@ int main(int argc, char** args)
     // init Petsc-MPI communicator
     FemusInit mpinit(argc, args, MPI_COMM_WORLD);
     adept::Stack& s = FemusInit::_adeptStack;
-    adouble x[2]={1.0,2.0};
+    adouble x[2]={2.0,3.0};
     s.new_recording();
     adouble y=f(x);
     y.set_gradient(1.0);
@@ -40,4 +39,4 @@ adouble f(const adouble x[2]){
  * system.MGsolve();
  * are living?
  */
->>>>>>> d4d9dbd30d2ff22cbdb425df655e70954e509ed1
+
