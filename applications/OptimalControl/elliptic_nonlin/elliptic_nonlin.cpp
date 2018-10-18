@@ -139,7 +139,7 @@ int main(int argc, char** args) {
   // ===============  
   mlSol.Initialize("All");    // initialize all variables to zero
 
-//   mlSol.Initialize("All",   SetInitialCondition, &mlProb);
+//   mlSol.Initialize("All", SetInitialCondition, &mlProb); //unfortunately if I do this it sets all to zero //I would like to do an attach function similar to the BC
   mlSol.Initialize("state", SetInitialCondition, &mlProb);
   mlSol.Initialize("control", SetInitialCondition, &mlProb);
   mlSol.Initialize("adjoint", SetInitialCondition, &mlProb);
@@ -149,10 +149,11 @@ int main(int argc, char** args) {
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+//   mlSol.GenerateBdc("All");  //this would do it also for the non-equation-related variables
   mlSol.GenerateBdc("state");
   mlSol.GenerateBdc("control");
   mlSol.GenerateBdc("adjoint");
-  mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work... but this should be related to the matrix and not to the sol...
+  mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work... but this should be related to the matrix and not to the sol... The same for the initial condition
 
 
  // add system  in mlProb as a Linear Implicit System

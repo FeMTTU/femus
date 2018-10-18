@@ -451,7 +451,7 @@ namespace femus
     unsigned i_start;
     unsigned i_end;
 
-    if(!strcmp(name, "All")) {
+    if(!strcmp(name, "All")  || !strcmp(name, "all") || !strcmp(name, "ALL")) {
       i_start = 0;
       i_end = _solType.size();
 
