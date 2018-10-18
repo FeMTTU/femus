@@ -44,6 +44,8 @@ bool twostage = false;
 bool splitting = false;
 bool assembly = true; //assembly must be left always true
 
+double maxW = 0.;
+
 const unsigned NumberOfLayers = 40;
 
 //const double hRest[20] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
@@ -175,19 +177,20 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 600; //17h=1020 with dt=60, 17h=10200 with dt=6
+  unsigned numberOfTimeSteps = 306; //17h=1020 with dt=60, 17h=10200 with dt=6
   //bool implicitEuler = true;
-  dt = 120.;
+  dt = 200.;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
 
     ETDvh ( ml_prob );
 
-    ETDt ( ml_prob );
-    //RK4t ( ml_prob );
+    //ETDt ( ml_prob );
+    RK4t ( ml_prob );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
+  //std::cout<<"max value of w = "<<maxW<<std::endl;
   std::cout << " TOTAL TIME:\t" << \
             static_cast<double> ( clock() - start_time ) / CLOCKS_PER_SEC << std::endl;
   return 0;
@@ -653,7 +656,7 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
   Mat A = ( static_cast<PetscMatrix*> ( KK ) )->mat();
   FN f, f1, f2, f3 , f4;
 
-  std::cout << "dt = " << dt << std::endl;
+  //std::cout << "dt = " << dt << std::endl;
 
   //dt = 100.;
 
@@ -780,9 +783,6 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
     sol->_Sol[solIndexHT[k]]->close();
   }
 
-  std::vector < double > maxW ( NLayers, -1.e6 );
-  maxW[0] = 0.;
-
   unsigned start = msh->_dofOffset[solTypeHT][iproc];
   unsigned end = msh->_dofOffset[solTypeHT][iproc + 1];
   for ( unsigned i =  start; i <  end; i++ ) {
@@ -901,8 +901,8 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
       else {
         //w[k - 1] +=   solh[k - 1] * 0. /dx;
       }
-      if ( maxW[k - 1] < w[k - 1] ) {
-        maxW[k - 1] = w[k - 1];
+      if ( maxW < w[k - 1] ) {
+        maxW = w[k - 1];
       }
     }
 
@@ -1094,7 +1094,7 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
   Mat A = ( static_cast<PetscMatrix*> ( KKt ) )->mat();
   FN f, f1, f2, f3 , f4;
 
-  std::cout << "dt = " << dt << std::endl;
+  //std::cout << "dt = " << dt << std::endl;
 
   //dt = 100.;
 
@@ -1120,7 +1120,7 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
 
   if ( twostage == true ) {
 
-    std::cout << "second stage " << std::endl;
+    //std::cout << "second stage " << std::endl;
 
     RES2->zero();
 
@@ -1472,9 +1472,6 @@ void RK4t ( MultiLevelProblem& ml_prob ) {
     sol->_Sol[solIndexHT[k]]->close();
   }
 
-  std::vector < double > maxW ( NLayers, -1.e6 );
-  maxW[0] = 0.;
-
   unsigned start = msh->_dofOffset[solTypeHT][iproc];
   unsigned end = msh->_dofOffset[solTypeHT][iproc + 1];
   for ( unsigned i =  start; i <  end; i++ ) {
@@ -1644,7 +1641,7 @@ void RK4t ( MultiLevelProblem& ml_prob ) {
           LHS -= 0.5 * ( solHTp[k] + solHT[k] + addition ) * solvp[k] / dx;
           if ( solvp[k] > 0 ) {
             if ( i > start ) {
-              LHS -= - 1. / 6. * ( solHTp[k] - 2.*solHT[k]+ solHTm[k] + addition ) * solvp[k]  / dx;
+              LHS -= - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] + addition ) * solvp[k]  / dx;
             }
           }
           else {

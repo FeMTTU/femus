@@ -30,15 +30,16 @@ double dt = 1.;
 double k_v = 0.0001;
 
 double pi = acos ( -1. );
-//double k_h = 1 / ( 10 * pi );
-double k_h = (2.5)*(0.00001);
+//double k_h = 1. / ( 10 * pi );
+double k_h = ( 2.5 ) * ( 0.00001 );
 
 const unsigned NumberOfLayers = 40;
 
 clock_t start_time = clock();
 
-bool wave = true;
+bool wave = false;
 bool twostage = true;
+bool splitting = true;
 bool assembly = true; //assembly must be left always true
 
 const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
@@ -46,245 +47,324 @@ const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 
                          };
 
 double InitalValueV0 ( const std::vector < double >& x ) {
-  //double psi1 = (10.-x[0])*x[0]/(5*5);
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5. ) * ( x[0] - 5. ) * ( x[0] - 5. ) * ( x[0] - 5. ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 1 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV1 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 2 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV2 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 3 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV3 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 4 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV4 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 5 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV5 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 6 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV6 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 7 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV7 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 8 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV8 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 9 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV9 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 10 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV10 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 11 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV11 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 12 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV12 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 13 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV13 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 14 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV14 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 15 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV15 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 16 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV16 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 17 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV17 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 18 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV18 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 19 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV19 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 20 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV20 ( const std::vector < double >& x ) {
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 21 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV21 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 22 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV22 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 23 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV23 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5.*5.*5.*5. );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 24 );
   double d_psi2 = ( - ( 2.*z + 10. ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV24 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 25 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV25 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 26 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV26 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 27 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV27 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 28 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV28 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 29 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV29 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 30 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV30 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 31 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV31 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 32 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV32 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 33 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV33 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 34 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV34 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 35 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV35 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 36 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV36 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 37 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV37 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 38 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV38 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 39 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 double InitalValueV39 ( const std::vector < double >& x ) {
   double psi1 = 1. - ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) * ( x[0] - 5 ) / ( 5 * 5 * 5 * 5 );
+  //double psi1 = ( 10. - x[0] ) * x[0] / ( 5.*5. );
   double z = -10 + hRest[0] / 2 + hRest[0] * ( NumberOfLayers - 40 );
   double d_psi2 = ( - ( 2 * z + 10 ) ) / ( 5 * 5 );
   return ( -psi1 * d_psi2 );
+  //return ( psi1 * d_psi2 );
 }
 
 
@@ -449,14 +529,14 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 2000; //17h=1020 with dt=60, 17h=10200 with dt=6
+  unsigned numberOfTimeSteps = 8000; //17h=1020 with dt=60, 17h=10200 with dt=6
   dt = 2.;
   bool implicitEuler = true;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
     ETD ( ml_prob );
-    //RK4 ( ml_prob, implicitEuler );
+//     RK4 ( ml_prob, implicitEuler );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
   std::cout << " TOTAL TIME:\t" << \
@@ -654,6 +734,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     double xmid = 0.5 * ( x[1] + x[0] );
     for ( unsigned k = NLayers; k > 1; k-- ) {
       w[k - 1] = ( -4. / 625.* ( xmid - 5 ) * ( xmid - 5 ) * ( xmid - 5 ) ) * psi2[k - 1];
+      //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];
       if ( maxW[k - 1] < w[k - 1] ) {
         maxW[k - 1] = w[k - 1];
       }
@@ -663,20 +744,40 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     for ( unsigned k = 0; k < NLayers; k++ ) {
 
       //BEGIN FIRST ORDER
-      if ( i > start ) {
-        if ( solvm[k] > 0 ) {
-          aResHT[k] += solHTm[k].value() * solvm[k] / dx;
+      if ( splitting ) {
+        if ( i > start ) {
+          if ( solvm[k] > 0 ) {
+            aResHT[k] += solHTm[k].value() * solvm[k] / dx;
+          }
+          else {
+            aResHT[k] += solHT[k].value() * solvm[k] / dx;
+          }
         }
-        else {
-          aResHT[k] += solHT[k].value() * solvm[k] / dx;
+        if ( i < end - 1 ) {
+          if ( solvp[k] > 0 ) {
+            aResHT[k] -= solHT[k].value() * solvp[k] / dx; //first order upwind
+          }
+          else {
+            aResHT[k] -= solHTp[k].value() * solvp[k] / dx; //first order upwind
+          }
         }
       }
-      if ( i < end - 1 ) {
-        if ( solvp[k] > 0 ) {
-          aResHT[k] -= solHT[k].value() * solvp[k] / dx; //first order upwind
+      else {
+        if ( i > start ) {
+          if ( solvm[k] > 0 ) {
+            aResHT[k] += solHTm[k] * solvm[k] / dx;
+          }
+          else {
+            aResHT[k] += solHT[k] * solvm[k] / dx;
+          }
         }
-        else {
-          aResHT[k] -= solHTp[k].value() * solvp[k] / dx; //first order upwind
+        if ( i < end - 1 ) {
+          if ( solvp[k] > 0 ) {
+            aResHT[k] -= solHT[k] * solvp[k] / dx; //first order upwind
+          }
+          else {
+            aResHT[k] -= solHTp[k] * solvp[k] / dx; //first order upwind
+          }
         }
       }
       //END
@@ -711,7 +812,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       //END
 
       if ( k < NLayers - 1 ) {//bottom
-        //aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k] + solHT[k + 1]/ solh[k + 1] );
+//         aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k] + solHT[k + 1] / solh[k + 1] );
         if ( w[k + 1] > 0 ) {
           aResHT[k] += w[k + 1] * ( solHT[k + 1] / solh[k + 1] );
         }
@@ -720,7 +821,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
         }
       }
       if ( k > 0 ) {//top
-        //aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1]/ solh[k - 1] + solHT[k] / solh[k] );
+//         aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1] / solh[k - 1] + solHT[k] / solh[k] );
         if ( w[k] > 0 ) {
           aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
         }
@@ -728,12 +829,14 @@ void ETD ( MultiLevelProblem& ml_prob ) {
           aResHT[k] -= w[k] * ( solHT[k - 1] / solh[k - 1] );
         }
       }
-//       if ( k == 1 ) {
+      //BEGIN MAGHEGGIONE
+//       if ( k == 0 ) {
 //         aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
 //       }
       if ( k == NLayers - 1 ) {
         aResHT[k] -= w[k] * ( solHT[k - 2] / solh[k - 2] );
       }
+      //END
 
 
       adept::adouble deltaZt = 0.;
@@ -952,11 +1055,13 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       std::vector < double > psi2 ( NLayers );
       for ( unsigned k = 0; k < NLayers; k++ ) {
         psi2[k] = 1. - ( zMid[k] + 5. ) * ( zMid[k] + 5. ) / ( 25. );
+        //psi2[k] = ( - ( zMid[k] + 10 ) * zMid[k] ) / 25;
       }
 
       double xmid = 0.5 * ( x[1] + x[0] );
       for ( unsigned k = NLayers; k > 1; k-- ) {
         w[k - 1] = ( -4. / 625.* ( xmid - 5. ) * ( xmid - 5. ) * ( xmid - 5. ) ) * psi2[k - 1];
+        //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];
         if ( maxW[k - 1] < w[k - 1] ) {
           maxW[k - 1] = w[k - 1];
         }
@@ -1019,7 +1124,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
         //END
 
         if ( k < NLayers - 1 ) {//bottom
-          //aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k] + solHT[k + 1]/ solh[k + 1] );
+//           aResHT[k] += w[k + 1] * 0.5 * ( solHT[k] / solh[k] + solHT[k + 1] / solh[k + 1] );
           if ( w[k + 1] > 0 ) {
             aResHT[k] += w[k + 1] * ( solHT[k + 1] / solh[k + 1] );
           }
@@ -1028,7 +1133,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
           }
         }
         if ( k > 0 ) {//top
-          //aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1]/ solh[k - 1] + solHT[k] / solh[k] );
+//           aResHT[k] -= w[k] * 0.5 * ( solHT[k - 1] / solh[k - 1] + solHT[k] / solh[k] );
           if ( w[k] > 0 ) {
             aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
           }
@@ -1036,12 +1141,14 @@ void ETD ( MultiLevelProblem& ml_prob ) {
             aResHT[k] -= w[k] * ( solHT[k - 1] / solh[k - 1] );
           }
         }
-//         if ( k == 1 ) {
+        //BEGIN MAGHEGGIONE
+//         if ( k == 0 ) {
 //           aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
 //         }
         if ( k == NLayers - 1 ) {
           aResHT[k] -= w[k] * ( solHT[k - 2] / solh[k - 2] );
         }
+        //END
 
         double deltaZt = 0.;
         double deltaZb = 0.;
@@ -1078,7 +1185,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
     }
     RES2->close();
-    
+
 
     //BEGIN ASSEMBLY: R2 = RES2 - RES - KK * EPS = RESnew - RESold - KK * (Vnew - Vold) = (ResNew - KK * Vnew) - (ResOld - KK * Vold) = 0 - 0 ;
     RES2->scale ( -1. );
@@ -1238,16 +1345,16 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
     vector < double > solHT ( NLayers ); // local coordinates
     vector < double > solHTp ( NLayers ); // local coordinates
 
-    vector < adept::adouble > solHTmm ( NLayers ); // local coordinates
-    vector < adept::adouble > solHTpp ( NLayers ); // local coordinates
+    vector < double > solHTmm ( NLayers ); // local coordinates
+    vector < double > solHTpp ( NLayers ); // local coordinates
 
     //vector< adept::adouble > aResHT ( NLayers );
 
     unsigned bc1 = ( i == start ) ? 0 : 1;
     unsigned bc2 = ( i == end - 1 ) ? 0 : 1;
 
-    unsigned bc3 = ( i > start + 1 ) ? 1 : 0;
-    unsigned bc4 = ( i < end - 2 ) ? 1 : 0;
+//     unsigned bc3 = ( i > start + 1 ) ? 1 : 0;
+//     unsigned bc4 = ( i < end - 2 ) ? 1 : 0;
 
     l2GMapRow.resize ( NLayers );
     l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
@@ -1318,11 +1425,13 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
     std::vector < double > psi2 ( NLayers );
     for ( unsigned k = 0; k < NLayers; k++ ) {
       psi2[k] = 1. - ( zMid[k] + 5 ) * ( zMid[k] + 5 ) / ( 25 );
+      //psi2[k] = ( - ( zMid[k] + 10. ) * zMid[k] ) / 25.;
     }
 
     double xmid = 0.5 * ( x[1] + x[0] );
-    for ( unsigned k = NLayers; k > 0; k-- ) {
+    for ( unsigned k = NLayers; k > 1; k-- ) {
       w[k - 1] = ( -4. / 625.* ( xmid - 5 ) * ( xmid - 5 ) * ( xmid - 5 ) ) * psi2[k - 1];
+      //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];
       if ( maxW[k - 1] < w[k - 1] ) {
         maxW[k - 1] = w[k - 1];
       }
@@ -1344,7 +1453,6 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
         else if ( RK_step == 2 ) {
           addition = k2_RK[k] * 0.5;
         }
-
         else if ( RK_step == 3 ) {
           addition = k3_RK[k];
         }
@@ -1398,7 +1506,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
         //END
 
         if ( k < NLayers - 1 ) {
-          //LHS += w[k + 1] * 0.5 * ( (solHT[k] + addition) / solh[k] + (solHT[k + 1] + addition) / solh[k + 1] );
+//           LHS += w[k + 1] * 0.5 * ( ( solHT[k] + addition ) / solh[k] + ( solHT[k + 1] + addition ) / solh[k + 1] );
           if ( w[k + 1] > 0 ) {
             LHS += w[k + 1] * ( ( solHT[k + 1] + addition ) / solh[k + 1] );
           }
@@ -1407,7 +1515,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
           }
         }
         if ( k > 0 ) {
-          //LHS -= w[k] * 0.5 * ( (solHT[k - 1] + addition) / solh[k - 1] + (solHT[k] + addition) / solh[k] );
+//           LHS -= w[k] * 0.5 * ( ( solHT[k - 1] + addition ) / solh[k - 1] + ( solHT[k] + addition ) / solh[k] );
           if ( w[k] > 0 ) {
             LHS -= w[k] * ( ( solHT[k] + addition ) / solh[k] );
           }
@@ -1415,12 +1523,14 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
             LHS -= w[k] * ( ( solHT[k - 1] + addition ) / solh[k - 1] );
           }
         }
-        if ( k == 0 ) {
-          LHS -= w[k] * ( ( solHT[k] + addition ) / solh[k] );
-        }
+        //BEGIN MAGHEGGIONE
+//         if ( k == 0 ) {
+//           LHS -= w[k] * ( ( solHT[k] + addition ) / solh[k] );
+//         }
         if ( k == NLayers - 1 ) {
           LHS -= w[k] * ( ( solHT[k - 2] + addition ) / solh[k - 2] );
         }
+        //END
 
 
         if ( RK_step == 0 ) {
@@ -1489,7 +1599,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
     }
 
     else if ( implicitEuler == true ) {
-
+      
       std::vector <double> Trhs ( NLayers, 0. );
       std::vector < std::vector < double > > sysMatrix ( NLayers );
 
