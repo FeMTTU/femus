@@ -140,6 +140,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Y3");
   
   system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetNonLinearConvergenceTolerance(1.e-9);
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssemblePWillmore);
@@ -360,6 +361,14 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
         }
       }
       adept::adouble detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
+      
+      adept::adouble normal[DIM];
+      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1])/sqrt(detg);
+      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1])/sqrt(detg);;
+      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1])/sqrt(detg);;
+            
+      
+      
       adept::adouble gi[dim][dim];
       gi[0][0] =  g[1][1]/detg;
       gi[0][1] = -g[0][1]/detg;
@@ -412,7 +421,12 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             
       for(unsigned K = 0; K < DIM; K++){
         for(unsigned i = 0; i < nxDofs; i++){
-          aResx[K][i] -= ( solYg[K] * phix[i] + phix_Xtan[K][i]) * Area; 
+          adept::adouble term1 = 0.;
+          for(unsigned J = 0; J < DIM; J++){
+            term1 +=  solx_Xtan[K][J] * phix_Xtan[J][i]; 
+          }
+          aResY[K][i] -= ( solYg[K] * phix[i] + phix_Xtan[K][i]) * Area; 
+          //aResx[K][i] -= ( solYg[K] * phix[i] + term1) * Area; 
         }
         for(unsigned i = 0; i < nYDofs; i++){
           adept::adouble term1 = - solYnorm2;
@@ -427,7 +441,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             }
             term3 += P * phiY_Xtan[J][i] * term4;
           }
-          aResY[K][i] -= ( (1. - (solxg[K] - solxOldg[K])  / dt ) * phiY[i]  + term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
+          aResx[K][i] -= ( 1. * (normal[K] - (solxg[K] - solxOldg[K])  / dt ) * phiY[i]  + term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
         }
       }
     } // end gauss point loop
@@ -485,7 +499,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   RES->close();
   KK->close();
   
- // VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
+  //VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
   
   
  // MatView((static_cast<PetscMatrix*>(KK))->mat(), PETSC_VIEWER_STDOUT_SELF );
