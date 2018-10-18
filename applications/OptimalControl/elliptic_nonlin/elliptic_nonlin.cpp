@@ -14,7 +14,7 @@ using namespace femus;
 
 
 
-  unsigned int res_row_index(const std::vector<unsigned int>& _Sol_n_el_dofs, int my_row_pos, int i) {
+ inline unsigned int res_row_index(const std::vector<unsigned int>& _Sol_n_el_dofs, int my_row_pos, int i) {
 
     assert(i < _Sol_n_el_dofs[my_row_pos]); 
     
@@ -24,7 +24,7 @@ using namespace femus;
     return pos_previous + i;
   }
   
-  unsigned int jac_row_col_index(const std::vector<unsigned int>& _Sol_n_el_dofs, const int nDof_AllVars, int my_row_pos, int my_col_pos, int i, int j) {
+ inline unsigned int jac_row_col_index(const std::vector<unsigned int>& _Sol_n_el_dofs, const int nDof_AllVars, int my_row_pos, int my_col_pos, int i, int j) {
 
      assert(i < _Sol_n_el_dofs[my_row_pos]); 
      assert(j < _Sol_n_el_dofs[my_col_pos]); 
@@ -38,31 +38,37 @@ using namespace femus;
   }
 
   
+double SetInitialCondition (const MultiLevelProblem * ml_prob, const std::vector < double >& x, const char name[]) {
+         
+           double value = 0.;
+
+             if(!strcmp(name,"control")) {
+                 value = 0.;
+             }
+           
+             if(!strcmp(name,"mu")) {
+                 value = 0.;
+             }
+             if(!strcmp(name,"state")) {
+                 value = 0.;
+             }
+           
+             if(!strcmp(name,"adjoint")) {
+                 value = 0.;
+             }
+             if(!strcmp(name,"TargReg")) {
+                 value = ElementTargetFlag(x);
+             }
+           
+             if(!strcmp(name,"ContReg")) {
+                 value = ControlDomainFlag_internal_restriction(x);
+             }
+           
+      return value;   
+}
   
-double InitialValueContReg(const std::vector < double >& x) {
-  return ControlDomainFlag_internal_restriction(x);
-}
 
-double InitialValueTargReg(const std::vector < double >& x) {
-  return ElementTargetFlag(x);
-}
-
-double InitialValueState(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueAdjoint(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueMu(const std::vector < double >& x) {
-  return 0.;
-}
-
-double InitialValueControl(const std::vector < double >& x) {
-  return 0.;
-}
-
+  
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
   bool dirichlet = true; //dirichlet
@@ -124,15 +130,22 @@ int main(int argc, char** args) {
   mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
   mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
-  
-  mlSol.Initialize("All");    // initialize all varaibles to zero
 
-  mlSol.Initialize("state", InitialValueState);
-  mlSol.Initialize("control", InitialValueControl);
-  mlSol.Initialize("adjoint", InitialValueAdjoint);
-  mlSol.Initialize("mu", InitialValueMu);
-  mlSol.Initialize("TargReg", InitialValueTargReg);
-  mlSol.Initialize("ContReg", InitialValueContReg);
+  // define the multilevel problem attach the mlSol object to it
+  MultiLevelProblem mlProb(&mlSol);
+  
+  mlProb.SetFilesHandler(&files);
+  
+  // ===============  
+  mlSol.Initialize("All");    // initialize all variables to zero
+
+//   mlSol.Initialize("All",   SetInitialCondition, &mlProb);
+  mlSol.Initialize("state", SetInitialCondition, &mlProb);
+  mlSol.Initialize("control", SetInitialCondition, &mlProb);
+  mlSol.Initialize("adjoint", SetInitialCondition, &mlProb);
+  mlSol.Initialize("mu",      SetInitialCondition, &mlProb);
+  mlSol.Initialize("TargReg", SetInitialCondition, &mlProb);
+  mlSol.Initialize("ContReg", SetInitialCondition, &mlProb);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -141,10 +154,6 @@ int main(int argc, char** args) {
   mlSol.GenerateBdc("adjoint");
   mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work... but this should be related to the matrix and not to the sol...
 
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
-  
-  mlProb.SetFilesHandler(&files);
 
  // add system  in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("OptSys");
@@ -156,7 +165,7 @@ int main(int argc, char** args) {
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleProblem);
   
-  mlSol.SetWriter(VTK);
+  mlSol.SetWriter(VTK);   //need to move this here for the DebugNonlinear function
   mlSol.GetWriter()->SetDebugOutput(true);
   
   system.SetDebugNonlinear(true);
