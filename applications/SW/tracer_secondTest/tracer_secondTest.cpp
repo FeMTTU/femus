@@ -31,14 +31,14 @@ double k_v = 0.0001;
 
 double pi = acos ( -1. );
 //double k_h = 1 / ( 10 * pi );
-double k_h = (2.5)*(0.1);
+double k_h = (2.5)*(0.00001);
 
 const unsigned NumberOfLayers = 40;
 
 clock_t start_time = clock();
 
-bool wave = false;
-bool twostage = false;
+bool wave = true;
+bool twostage = true;
 bool assembly = true; //assembly must be left always true
 
 const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
@@ -449,8 +449,8 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 1000; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 4.;
+  unsigned numberOfTimeSteps = 2000; //17h=1020 with dt=60, 17h=10200 with dt=6
+  dt = 2.;
   bool implicitEuler = true;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
@@ -652,7 +652,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     }
 
     double xmid = 0.5 * ( x[1] + x[0] );
-    for ( unsigned k = NLayers; k > 0; k-- ) {
+    for ( unsigned k = NLayers; k > 1; k-- ) {
       w[k - 1] = ( -4. / 625.* ( xmid - 5 ) * ( xmid - 5 ) * ( xmid - 5 ) ) * psi2[k - 1];
       if ( maxW[k - 1] < w[k - 1] ) {
         maxW[k - 1] = w[k - 1];
@@ -728,9 +728,9 @@ void ETD ( MultiLevelProblem& ml_prob ) {
           aResHT[k] -= w[k] * ( solHT[k - 1] / solh[k - 1] );
         }
       }
-      if ( k == 0 ) {
-        aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
-      }
+//       if ( k == 1 ) {
+//         aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
+//       }
       if ( k == NLayers - 1 ) {
         aResHT[k] -= w[k] * ( solHT[k - 2] / solh[k - 2] );
       }
@@ -1036,9 +1036,9 @@ void ETD ( MultiLevelProblem& ml_prob ) {
             aResHT[k] -= w[k] * ( solHT[k - 1] / solh[k - 1] );
           }
         }
-        if ( k == 0 ) {
-          aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
-        }
+//         if ( k == 1 ) {
+//           aResHT[k] -= w[k] * ( solHT[k] / solh[k] );
+//         }
         if ( k == NLayers - 1 ) {
           aResHT[k] -= w[k] * ( solHT[k - 2] / solh[k - 2] );
         }
@@ -1078,6 +1078,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
     }
     RES2->close();
+    
 
     //BEGIN ASSEMBLY: R2 = RES2 - RES - KK * EPS = RESnew - RESold - KK * (Vnew - Vold) = (ResNew - KK * Vnew) - (ResOld - KK * Vold) = 0 - 0 ;
     RES2->scale ( -1. );
@@ -1632,6 +1633,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 
 
 }
+
 
 
 

@@ -25,9 +25,11 @@
 
 using namespace femus;
 
-double rho1[20] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
+double rho1[40] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
+                   1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000
+                  };
 
-double dt = 60.;
+double dt = 120.;
 
 double ni_h = 100.; // 0.1, 1, 10, 100, 200
 double ni_v = 0.0001;
@@ -37,13 +39,17 @@ double k_v = 0.0001;
 
 clock_t start_time = clock();
 
-bool wave = true;
-bool twostage = true;
+bool wave = false; //lasciarlo cosi' perche' wave ambiguo con splitting e second stage (RES2 non viene 0 senza splitting e second stage)
+bool twostage = false;
+bool splitting = false;
 bool assembly = true; //assembly must be left always true
 
-const unsigned NumberOfLayers = 20;
+const unsigned NumberOfLayers = 40;
 
-const double hRest[20] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+//const double hRest[20] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+const double hRest[40] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+                          0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5
+                         };
 
 double InitalValueV ( const std::vector < double >& x ) {
   return 0;
@@ -76,7 +82,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 
 void ETDvh ( MultiLevelProblem& ml_prob );
 void ETDt ( MultiLevelProblem& ml_prob );
-void RK4t ( MultiLevelProblem& ml_prob, const bool & implicitEuler );
+void RK4t ( MultiLevelProblem& ml_prob );
 
 
 int main ( int argc, char** args ) {
@@ -93,7 +99,7 @@ int main ( int argc, char** args ) {
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*11*/7 ) + 0.5 ) ); //Grid cell size = 0.5km
+  unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*7*/6 ) + 0.5 ) ); //Grid cell size = 0.5km
 
   double length = 64000; //2 * 1465700.;
 
@@ -169,17 +175,17 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 1200; //17h=1020 with dt=60, 17h=10200 with dt=6
-  bool implicitEuler = true;
-  dt = 60.;
+  unsigned numberOfTimeSteps = 600; //17h=1020 with dt=60, 17h=10200 with dt=6
+  //bool implicitEuler = true;
+  dt = 120.;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
-    if ( wave == true ) assembly = ( i == 0  ) ? true : false;
+    if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
-         
+
     ETDvh ( ml_prob );
-            
+
     ETDt ( ml_prob );
-    //RK4t ( ml_prob, implicitEuler );
+    //RK4t ( ml_prob );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
   std::cout << " TOTAL TIME:\t" << \
@@ -195,7 +201,7 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
   adept::Stack& s = FemusInit::_adeptStack;
 
   s.continue_recording();
-  
+
   TransientLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<TransientLinearImplicitSystem> ( "SWhv" ); // pointer to the linear implicit system named "Poisson"
 
   unsigned level = ml_prob._ml_msh->GetNumberOfLevels() - 1u;
@@ -716,7 +722,7 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
 //   SparseMatrix* KK2;
 //   KK2 = SparseMatrix::build().release();
 //   KK2->init ( *KK );
-  
+
   const unsigned  dim = msh->GetDimension(); // get the domain dimension of the problem
 
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
@@ -774,6 +780,9 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
     sol->_Sol[solIndexHT[k]]->close();
   }
 
+  std::vector < double > maxW ( NLayers, -1.e6 );
+  maxW[0] = 0.;
+
   unsigned start = msh->_dofOffset[solTypeHT][iproc];
   unsigned end = msh->_dofOffset[solTypeHT][iproc + 1];
   for ( unsigned i =  start; i <  end; i++ ) {
@@ -799,8 +808,8 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
     unsigned bc4 = ( i < end - 2 ) ? 1 : 0;
 
     l2GMapRow.resize ( NLayers );
-    l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
-    //l2GMapColumn.resize ( ( 1 + bc1 + bc2 + bc3 + bc4) * NLayers );
+    //l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
+    l2GMapColumn.resize ( ( 1 + bc1 + bc2 + bc3 + bc4 ) * NLayers );
 
     //std::fill ( aResh.begin(), aResh.end(), 0 ); //set aRes to zero
     std::fill ( aResHT.begin(), aResHT.end(), 0 ); //set aRes to zero
@@ -834,15 +843,15 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
         l2GMapColumn[ ( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 1 );
       }
 
-//       if ( bc3 ) {
-//         solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
-//         l2GMapColumn[( 1 + bc1 + bc2 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
-//       }
-//
-//       if ( bc4 ) {
-//         solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
-//         l2GMapColumn[( 1 + bc1 + bc2 + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
-//       }
+      if ( bc3 ) {
+        solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
+        l2GMapColumn[ ( 1 + bc1 + bc2 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+      }
+
+      if ( bc4 ) {
+        solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
+        l2GMapColumn[ ( 1 + bc1 + bc2 + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
+      }
 
     }
 
@@ -892,7 +901,9 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
       else {
         //w[k - 1] +=   solh[k - 1] * 0. /dx;
       }
-      //std::cout<< w[k-1] << " ";
+      if ( maxW[k - 1] < w[k - 1] ) {
+        maxW[k - 1] = w[k - 1];
+      }
     }
 
 
@@ -927,29 +938,60 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
       //END
 
       //BEGIN THIRD ORDER
-      if ( i > start ) {
-        aResHT[k] += 0.5 * ( solHTm[k].value() + solHT[k].value() ) * solvm[k] / dx;
-        if ( solvm[k] > 0 ) {
-          if ( i > start + 1 ) {
-            aResHT[k] += - 1. / 6. * ( solHT[k].value() - 2.*solHTm[k].value() + solHTmm[k].value() ) * solvm[k]  / dx;
+
+      if ( splitting ) {
+        if ( i > start ) {
+          aResHT[k] += 0.5 * ( solHTm[k].value() + solHT[k].value() ) * solvm[k] / dx;
+          if ( solvm[k] > 0 ) {
+            if ( i > start + 1 ) {
+              aResHT[k] += - 1. / 6. * ( solHT[k].value() - 2.*solHTm[k].value() + solHTmm[k].value() ) * solvm[k]  / dx;
+            }
+          }
+          else {
+            if ( i < end - 1 ) {
+              aResHT[k] += - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvm[k]  / dx;
+            }
           }
         }
-        else {
-          if ( i < end - 1 ) {
-            aResHT[k] += - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvm[k]  / dx;
+        if ( i < end - 1 ) {
+          aResHT[k] -= 0.5 * ( solHTp[k].value() + solHT[k].value() ) * solvp[k] / dx;
+          if ( solvp[k] > 0 ) {
+            if ( i > start ) {
+              aResHT[k] -= - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvp[k]  / dx;
+            }
+          }
+          else {
+            if ( i < end - 2 ) {
+              aResHT[k] -= - 1. / 6. * ( solHTpp[k].value() - 2.*solHTp[k].value() + solHT[k].value() ) * solvp[k]  / dx;
+            }
           }
         }
       }
-      if ( i < end - 1 ) {
-        aResHT[k] -= 0.5 * ( solHTp[k].value() + solHT[k].value() ) * solvp[k] / dx;
-        if ( solvp[k] > 0 ) {
-          if (i > start) {
-            aResHT[k] -= - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvp[k]  / dx;
+      else {
+        if ( i > start ) {
+          aResHT[k] += 0.5 * ( solHTm[k]/*.value()*/ + solHT[k]/*.value() */ ) * solvm[k] / dx;
+          if ( solvm[k] > 0 ) {
+            if ( i > start + 1 ) {
+              aResHT[k] += - 1. / 6. * ( solHT[k]/*.value()*/ - 2.*solHTm[k]/*.value()*/ + solHTmm[k]/*.value()*/ ) * solvm[k]  / dx;
+            }
+          }
+          else {
+            if ( i < end - 1 ) {
+              aResHT[k] += - 1. / 6. * ( solHTp[k]/*.value()*/ - 2.*solHT[k]/*.value()*/ + solHTm[k]/*.value()*/ ) * solvm[k]  / dx;
+            }
           }
         }
-        else {
-          if ( i < end - 2 ) {
-            aResHT[k] -= - 1. / 6. * ( solHTpp[k].value() - 2.*solHTp[k].value() + solHT[k].value() ) * solvp[k]  / dx;
+        if ( i < end - 1 ) {
+          aResHT[k] -= 0.5 * ( solHTp[k]/*.value()*/ + solHT[k]/*.value() */ ) * solvp[k] / dx;
+          if ( solvp[k] > 0 ) {
+            if ( i > start ) {
+              aResHT[k] -= - 1. / 6. * ( solHTp[k]/*.value()*/ - 2.*solHT[k]/*.value()*/ + solHTm[k]/*.value()*/ ) * solvp[k]  / dx;
+            }
+          }
+          else {
+            if ( i < end - 2 ) {
+              aResHT[k] -= - 1. / 6. * ( solHTpp[k]/*.value()*/ - 2.*solHTp[k]/*.value()*/ + solHT[k]/*.value()*/ ) * solvp[k]  / dx;
+            }
           }
         }
       }
@@ -1014,16 +1056,16 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
       if ( i < end - 1 ) {
         s.independent ( &solHTp[0], NLayers );
       }
-      /*    if ( i > start + 1) {
-            s.independent ( &solHTmm[0], NLayers );
-          }
-          if ( i < end - 2 ) {
-            s.independent ( &solHTpp[0], NLayers );
-          }*/
+      if ( i > start + 1 ) {
+        s.independent ( &solHTmm[0], NLayers );
+      }
+      if ( i < end - 2 ) {
+        s.independent ( &solHTpp[0], NLayers );
+      }
 
       // get the jacobian matrix (ordered by row major )
-      vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
-      //vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 + bc3 +bc4 ) );
+      //vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
+      vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 + bc3 + bc4 ) );
       s.jacobian ( &Jac[0], true );
 
       //store K in the global matrix KK
@@ -1105,7 +1147,8 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
       unsigned bc4 = ( i < end - 2 ) ? 1 : 0;
 
       l2GMapRow.resize ( NLayers );
-      l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
+      //l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
+      l2GMapColumn.resize ( ( 1 + bc1 + bc2 + bc3 + bc4 ) * NLayers );
 
       //std::fill ( aResHT.begin(), aResHT.end(), 0 ); //set aRes to zero
 
@@ -1121,7 +1164,7 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
         solvp[j] = ( *sol->_Sol[solIndexv[j]] ) ( i + 1 );
 
 
-        if ( i > start ) {
+        if ( bc1 ) {
           solhm[j] = ( *sol->_Sol[solIndexh[j]] ) ( i - 1 );
           solHTm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 1 );
 
@@ -1129,23 +1172,23 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
 
         }
 
-        if ( i < end - 1 ) {
+        if ( bc2 ) {
           solhp[j] = ( *sol->_Sol[solIndexh[j]] ) ( i + 1 );
           solHTp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 1 );
 
           l2GMapColumn[ ( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 1 );
         }
 
-//       if ( i > start + 1 ) {
-//         solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
-//         if (i == end - 1) l2GMapColumn[( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
-//         else l2GMapColumn[( (1 + bc1) + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
-//       }
-//
-//       if ( i < end - 2 ) {
-//         solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
-//         l2GMapColumn[( (1 + bc1) + bc3 + bc4 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
-//       }
+        if ( bc3 ) {
+          solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
+          if ( i == end - 1 ) l2GMapColumn[ ( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+          else l2GMapColumn[ ( ( 1 + bc1 ) + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+        }
+
+        if ( bc4 ) {
+          solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
+          l2GMapColumn[ ( ( 1 + bc1 ) + bc3 + bc4 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
+        }
 
       }
 
@@ -1194,56 +1237,53 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
       for ( unsigned k = 0; k < NLayers; k++ ) {
 
         //BEGIN FIRST ORDER
-        if ( i > start ) {
-          //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
-          if ( solvm[k] > 0 ) {
-            aResHT[k] += solHTm[k] * solvm[k] / dx;
-          }
-          else {
-            aResHT[k] += solHT[k] * solvm[k] / dx;
-          }
-        }
-        if ( i < end - 1 ) {
-          //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
-          if ( solvp[k] > 0 ) {
-            aResHT[k] -= solHT[k] * solvp[k] / dx; //first order upwind
-          }
-          else {
-            aResHT[k] -= solHTp[k] * solvp[k] / dx; //first order upwind
-          }
-        }
-//       else{
-//         aResHT[k] -= solHT[k] /*.value()*/  / dx; //first order upwind
-//       }
+//         if ( i > start ) {
+//           //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
+//           if ( solvm[k] > 0 ) {
+//             aResHT[k] += solHTm[k] * solvm[k] / dx;
+//           }
+//           else {
+//             aResHT[k] += solHT[k] * solvm[k] / dx;
+//           }
+//         }
+//         if ( i < end - 1 ) {
+//           //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
+//           if ( solvp[k] > 0 ) {
+//             aResHT[k] -= solHT[k] * solvp[k] / dx; //first order upwind
+//           }
+//           else {
+//             aResHT[k] -= solHTp[k] * solvp[k] / dx; //first order upwind
+//           }
+//         }
         //END
 
         //BEGIN THIRD ORDER
-//       if ( i > start ) {
-//         aResHT[k] += 0.5 * ( solHTm[k].value() + solHT[k].value() ) * solvm[k] / dx;
-//         if ( solvm[k] > 0 ) {
-//           if ( i > start + 1 ) {
-//             aResHT[k] += - 1. / 6. * ( solHT[k].value() - 2.*solHTm[k].value() + solHTmm[k].value() ) * solvm[k]  / dx;
-//           }
-//         }
-//         else {
-//           if ( i < end - 1 ) {
-//             aResHT[k] += - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvm[k]  / dx;
-//           }
-//         }
-//       }
-//       if ( i < end - 1 ) {
-//         aResHT[k] -= 0.5 * ( solHTp[k].value() + solHT[k].value() ) * solvp[k] / dx;
-//         if ( solvp[k] > 0 ) {
-//           if (i > start) {
-//             aResHT[k] -= - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvp[k]  / dx;
-//           }
-//         }
-//         else {
-//           if ( i < end - 2 ) {
-//             aResHT[k] -= - 1. / 6. * ( solHTpp[k].value() - 2.*solHTp[k].value() + solHT[k].value() ) * solvp[k]  / dx;
-//           }
-//         }
-//       }
+        if ( i > start ) {
+          aResHT[k] += 0.5 * ( solHTm[k] + solHT[k] ) * solvm[k] / dx;
+          if ( solvm[k] > 0 ) {
+            if ( i > start + 1 ) {
+              aResHT[k] += - 1. / 6. * ( solHT[k] - 2.*solHTm[k] + solHTmm[k] ) * solvm[k]  / dx;
+            }
+          }
+          else {
+            if ( i < end - 1 ) {
+              aResHT[k] += - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvm[k]  / dx;
+            }
+          }
+        }
+        if ( i < end - 1 ) {
+          aResHT[k] -= 0.5 * ( solHTp[k] + solHT[k] ) * solvp[k] / dx;
+          if ( solvp[k] > 0 ) {
+            if ( i > start ) {
+              aResHT[k] -= - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] ) * solvp[k]  / dx;
+            }
+          }
+          else {
+            if ( i < end - 2 ) {
+              aResHT[k] -= - 1. / 6. * ( solHTpp[k] - 2.*solHTp[k] + solHT[k] ) * solvp[k]  / dx;
+            }
+          }
+        }
         //END
 
         if ( k < NLayers - 1 ) {
@@ -1309,7 +1349,7 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
 
     Vec v2 = ( static_cast< PetscVector* > ( RES2 ) )->vec();
 
-    //VecView(v2,PETSC_VIEWER_STDOUT_WORLD); //s731
+    //VecView ( v2, PETSC_VIEWER_STDOUT_WORLD );
 
     Vec y2 = ( static_cast< PetscVector* > ( EPS ) )->vec();
 
@@ -1362,7 +1402,7 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
 }
 
 
-void RK4t ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
+void RK4t ( MultiLevelProblem& ml_prob ) {
 
   const unsigned& NLayers = NumberOfLayers;
 
@@ -1448,8 +1488,8 @@ void RK4t ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
     vector < double > solHT ( NLayers ); // local coordinates
     vector < double > solHTp ( NLayers ); // local coordinates
 
-    vector < adept::adouble > solHTmm ( NLayers ); // local coordinates
-    vector < adept::adouble > solHTpp ( NLayers ); // local coordinates
+    vector < double > solHTmm ( NLayers ); // local coordinates
+    vector < double > solHTpp ( NLayers ); // local coordinates
 
     //vector< adept::adouble > aResHT ( NLayers );
 
@@ -1460,7 +1500,8 @@ void RK4t ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
     unsigned bc4 = ( i < end - 2 ) ? 1 : 0;
 
     l2GMapRow.resize ( NLayers );
-    l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
+    //l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
+    l2GMapColumn.resize ( ( 1 + bc1 + bc2 + bc3 + bc4 ) * NLayers );
 
     //std::fill ( aResHT.begin(), aResHT.end(), 0 ); //set aRes to zero
 
@@ -1475,7 +1516,7 @@ void RK4t ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
       solvm[j] = ( *sol->_Sol[solIndexv[j]] ) ( i );
       solvp[j] = ( *sol->_Sol[solIndexv[j]] ) ( i + 1 );
 
-      if ( i > start ) {
+      if ( bc1 ) {
         solhm[j] = ( *sol->_Sol[solIndexh[j]] ) ( i - 1 );
         solHTm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 1 );
 
@@ -1483,23 +1524,23 @@ void RK4t ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 
       }
 
-      if ( i < end - 1 ) {
+      if ( bc2 ) {
         solhp[j] = ( *sol->_Sol[solIndexh[j]] ) ( i + 1 );
         solHTp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 1 );
 
         l2GMapColumn[ ( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 1 );
       }
 
-//       if ( i > start + 1 ) {
-//         solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
-//         if (i == end - 1) l2GMapColumn[( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
-//         else l2GMapColumn[( (1 + bc1) + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
-//       }
-//
-//       if ( i < end - 2 ) {
-//         solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
-//         l2GMapColumn[( (1 + bc1) + bc3 + bc4 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
-//       }
+      if ( bc3 ) {
+        solHTmm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 2 );
+        if ( i == end - 1 ) l2GMapColumn[ ( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+        else l2GMapColumn[ ( ( 1 + bc1 ) + bc3 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 2 );
+      }
+
+      if ( bc4 ) {
+        solHTpp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 2 );
+        l2GMapColumn[ ( ( 1 + bc1 ) + bc3 + bc4 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 2 );
+      }
 
     }
 
@@ -1567,51 +1608,51 @@ void RK4t ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
         }
 
         //BEGIN FIRST ORDER
-        if ( i > start ) {
-          if ( solvm[k] > 0 ) {
-            LHS += ( solHTm[k] + addition ) * solvm[k] / dx;
-          }
-          else {
-            LHS += ( solHT[k] + addition ) * solvm[k] / dx;
-          }
-        }
-        if ( i < end - 1 ) {
-          if ( solvp[k] > 0 ) {
-            LHS -= ( solHT[k] + addition ) * solvp[k] / dx; //first order upwind
-          }
-          else {
-            LHS -= ( solHTp[k] + addition ) * solvp[k] / dx; //first order upwind
-          }
-        }
+//         if ( i > start ) {
+//           if ( solvm[k] > 0 ) {
+//             LHS += ( solHTm[k] + addition ) * solvm[k] / dx;
+//           }
+//           else {
+//             LHS += ( solHT[k] + addition ) * solvm[k] / dx;
+//           }
+//         }
+//         if ( i < end - 1 ) {
+//           if ( solvp[k] > 0 ) {
+//             LHS -= ( solHT[k] + addition ) * solvp[k] / dx; //first order upwind
+//           }
+//           else {
+//             LHS -= ( solHTp[k] + addition ) * solvp[k] / dx; //first order upwind
+//           }
+//         }
         //END
 
         //BEGIN THIRD ORDER
-//       if ( i > start ) {
-//         aResHT[k] += 0.5 * ( solHTm[k].value() + solHT[k].value() ) * solvm[k] / dx;
-//         if ( solvm[k] > 0 ) {
-//           if ( i > start + 1 ) {
-//             aResHT[k] += - 1. / 6. * ( solHT[k].value() - 2.*solHTm[k].value() + solHTmm[k].value() ) * solvm[k]  / dx;
-//           }
-//         }
-//         else {
-//           if ( i < end - 1 ) {
-//             aResHT[k] += - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvm[k]  / dx;
-//           }
-//         }
-//       }
-//       if ( i < end - 1 ) {
-//         aResHT[k] -= 0.5 * ( solHTp[k].value() + solHT[k].value() ) * solvp[k] / dx;
-//         if ( solvp[k] > 0 ) {
-//           if (i > start) {
-//             aResHT[k] -= - 1. / 6. * ( solHTp[k].value() - 2.*solHT[k].value() + solHTm[k].value() ) * solvp[k]  / dx;
-//           }
-//         }
-//         else {
-//           if ( i < end - 2 ) {
-//             aResHT[k] -= - 1. / 6. * ( solHTpp[k].value() - 2.*solHTp[k].value() + solHT[k].value() ) * solvp[k]  / dx;
-//           }
-//         }
-//       }
+        if ( i > start ) {
+          LHS += 0.5 * ( solHTm[k] + solHT[k] + addition ) * solvm[k] / dx;
+          if ( solvm[k] > 0 ) {
+            if ( i > start + 1 ) {
+              LHS += - 1. / 6. * ( solHT[k] - 2.*solHTm[k] + solHTmm[k] + addition ) * solvm[k]  / dx;
+            }
+          }
+          else {
+            if ( i < end - 1 ) {
+              LHS += - 1. / 6. * ( solHTp[k] - 2.*solHT[k] + solHTm[k] + addition ) * solvm[k]  / dx;
+            }
+          }
+        }
+        if ( i < end - 1 ) {
+          LHS -= 0.5 * ( solHTp[k] + solHT[k] + addition ) * solvp[k] / dx;
+          if ( solvp[k] > 0 ) {
+            if ( i > start ) {
+              LHS -= - 1. / 6. * ( solHTp[k] - 2.*solHT[k]+ solHTm[k] + addition ) * solvp[k]  / dx;
+            }
+          }
+          else {
+            if ( i < end - 2 ) {
+              LHS -= - 1. / 6. * ( solHTpp[k] - 2.*solHTp[k] + solHT[k] + addition ) * solvp[k]  / dx;
+            }
+          }
+        }
         //END
 
         if ( k < NLayers - 1 ) {
@@ -1649,170 +1690,170 @@ void RK4t ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
     }
 
 
-    if ( implicitEuler == false ) {
-      //BEGIN forward Euler for vertical diffusion
-      std::vector < double > vert_diff ( NLayers, 0. );
-      for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
-        double deltaZt = 0.;
-        double deltaZb = 0.;
-        double ht = 0.;
-        double hb = 0.;
-        if ( k > 0 ) {
-          ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
-          deltaZt = ( solHT[k - 1] - solHT[k] ) / ht;
-        }
-        else {
-          ht = 0.5 * ( solhm[k] + solhp[k] );
-          deltaZt = 0.* ( 0. - solHT[k] ) / ht;
-        }
-        if ( k < NLayers - 1 ) {
-          hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
-          deltaZb = ( solHT[k] - solHT[k + 1] ) / hb;
-        }
-        else {
-          hb = 0.5 * ( solhm[k] + solhp[k] );
-          deltaZb = 0.* ( solHT[k] - 0. ) / hb;
-        }
-        //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA" << deltaZt - deltaZb << std::endl;
-        vert_diff[k] = solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
-      }
+//     if ( implicitEuler == false ) {
+//       //BEGIN forward Euler for vertical diffusion
+//       std::vector < double > vert_diff ( NLayers, 0. );
+//       for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
+//         double deltaZt = 0.;
+//         double deltaZb = 0.;
+//         double ht = 0.;
+//         double hb = 0.;
+//         if ( k > 0 ) {
+//           ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+//           deltaZt = ( solHT[k - 1] - solHT[k] ) / ht;
+//         }
+//         else {
+//           ht = 0.5 * ( solhm[k] + solhp[k] );
+//           deltaZt = 0.* ( 0. - solHT[k] ) / ht;
+//         }
+//         if ( k < NLayers - 1 ) {
+//           hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+//           deltaZb = ( solHT[k] - solHT[k + 1] ) / hb;
+//         }
+//         else {
+//           hb = 0.5 * ( solhm[k] + solhp[k] );
+//           deltaZb = 0.* ( solHT[k] - 0. ) / hb;
+//         }
+//         //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA" << deltaZt - deltaZb << std::endl;
+//         vert_diff[k] = solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
+//       }
+//
+//       for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
+//         double valueHT = ( *sol->_Sol[solIndexHT[k]] ) ( i );
+//         double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
+//
+//         double valueT = valueHT / valueH;
+//         valueT = valueT + dt * vert_diff[k];
+//
+//         sol->_Sol[solIndexT[k]]->set ( i, valueT );
+//         sol->_Sol[solIndexT[k]]->close();
+//       }
+//       //END
+//     }
 
-      for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
-        double valueHT = ( *sol->_Sol[solIndexHT[k]] ) ( i );
-        double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
-
-        double valueT = valueHT / valueH;
-        valueT = valueT + dt * vert_diff[k];
-
-        sol->_Sol[solIndexT[k]]->set ( i, valueT );
-        sol->_Sol[solIndexT[k]]->close();
-      }
-      //END
-    }
-
-    else if ( implicitEuler == true ) {
-
-      std::vector <double> Trhs ( NLayers, 0. );
-      std::vector < std::vector < double > > sysMatrix ( NLayers );
-
-      for ( unsigned k = 0; k < NLayers; k++ ) {
-        sysMatrix[k].assign ( NLayers, 0. );
-
-        double A = 0.;
-        double C = 0.;
-        double ht = 0.;
-        double hb = 0.;
-
-        if ( k > 0 ) {
-          ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
-          A = solhm[k] * k_v / ht ;
-        }
-        else {
-          ht = 0.5 * ( solhm[k] + solhp[k] );
-        }
-        if ( k < NLayers - 1 ) {
-          hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
-          C = solhm[k] * k_v / hb;
-          C /= ( ht + hb ) * 0.5 ;
-          if ( k > 0 ) {
-            A /= ( ht + hb ) * 0.5 ;
-          }
-        }
-        else {
-          hb = 0.5 * ( solhm[k] + solhp[k] );
-          A /= ( ht + hb ) * 0.5 ;
-        }
-
-        double B = 1. - A - C;
-
-        sysMatrix[k][k] = B;
-        if ( k > 0 ) sysMatrix[k][k - 1] = A;
-        if ( k < NLayers - 1 ) sysMatrix[k][k + 1] = C;
-
-        Trhs[k] = ( *sol->_Sol[solIndexHT[k]] ) ( i ) / ( *sol->_Sol[solIndexh[k]] ) ( i );
-
-      }
-
-      //risolvere il sistema Nlayer X Nlayer
-      KSP                solver;
-      Mat                triDiagA;
-      Vec                b, x;
-      PetscInt           k, j, nlayers;
-      PetscErrorCode     ierr;
-
-      nlayers = static_cast<PetscInt> ( NLayers );
-      ierr = VecCreate ( PETSC_COMM_WORLD, &x );
-      ierr = VecSetSizes ( x, PETSC_DECIDE, nlayers );
-      ierr = VecSetFromOptions ( x );
-      ierr = VecDuplicate ( x, &b );
-      ierr = MatCreate ( PETSC_COMM_WORLD, &triDiagA );
-      ierr = MatSetSizes ( triDiagA, PETSC_DECIDE, PETSC_DECIDE, nlayers, nlayers );
-      ierr = MatSetFromOptions ( triDiagA );
-      ierr = MatSetUp ( triDiagA );
-
-      for ( k = 0; k < nlayers; k++ ) {
-        MatSetValues ( triDiagA, 1, &k, 1, &k, &sysMatrix[k][k], INSERT_VALUES );
-        VecSetValues ( b, 1, &k, &Trhs[k], INSERT_VALUES );
-        if ( k > 0 ) {
-          j = k - 1;
-          MatSetValues ( triDiagA, 1, &k, 1, &j, & sysMatrix[k - 1][k], INSERT_VALUES );
-        }
-        if ( k < nlayers - 1 ) {
-          j = k + 1;
-          MatSetValues ( triDiagA, 1, &k, 1, &j, &sysMatrix[k][k + 1], INSERT_VALUES );
-        }
-      }
-
-      ierr = MatAssemblyBegin ( triDiagA, MAT_FINAL_ASSEMBLY );
-      ierr = MatAssemblyEnd ( triDiagA, MAT_FINAL_ASSEMBLY );
-
-
-//       PetscViewer    viewer;
-//       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
-//       PetscObjectSetName((PetscObject)viewer,"implicit Euler matrix");
-//       PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
-//       MatView(triDiagA,viewer);
-//       double a;
-//       std::cin>>a;
-
-
-      ierr = KSPCreate ( PETSC_COMM_WORLD, &solver );
-      ierr = KSPSetOperators ( solver, triDiagA, triDiagA );
-      ierr = KSPSetType ( solver, KSPRICHARDSON );
-      ierr = KSPSolve ( solver, b, x );
-
-      //1. aggiornare solT con x
-      for ( k = 0; k < nlayers; k++ ) {
-        PetscScalar valueT = 0.;
-        ierr = VecGetValues ( x, 1, &k, &valueT );
-        sol->_Sol[solIndexT[k]]->set ( i, valueT );
-        sol->_Sol[solIndexT[k]]->close();
-
-        //2. aggiornare solHT
-        double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
-        double valueHT = valueH * valueT;
-        sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
-        sol->_Sol[solIndexHT[k]]->close();
-      }
-
-    }
+//     else if ( implicitEuler == true ) {
+//
+//       std::vector <double> Trhs ( NLayers, 0. );
+//       std::vector < std::vector < double > > sysMatrix ( NLayers );
+//
+//       for ( unsigned k = 0; k < NLayers; k++ ) {
+//         sysMatrix[k].assign ( NLayers, 0. );
+//
+//         double A = 0.;
+//         double C = 0.;
+//         double ht = 0.;
+//         double hb = 0.;
+//
+//         if ( k > 0 ) {
+//           ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+//           A = solhm[k] * k_v / ht ;
+//         }
+//         else {
+//           ht = 0.5 * ( solhm[k] + solhp[k] );
+//         }
+//         if ( k < NLayers - 1 ) {
+//           hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+//           C = solhm[k] * k_v / hb;
+//           C /= ( ht + hb ) * 0.5 ;
+//           if ( k > 0 ) {
+//             A /= ( ht + hb ) * 0.5 ;
+//           }
+//         }
+//         else {
+//           hb = 0.5 * ( solhm[k] + solhp[k] );
+//           A /= ( ht + hb ) * 0.5 ;
+//         }
+//
+//         double B = 1. - A - C;
+//
+//         sysMatrix[k][k] = B;
+//         if ( k > 0 ) sysMatrix[k][k - 1] = A;
+//         if ( k < NLayers - 1 ) sysMatrix[k][k + 1] = C;
+//
+//         Trhs[k] = ( *sol->_Sol[solIndexHT[k]] ) ( i ) / ( *sol->_Sol[solIndexh[k]] ) ( i );
+//
+//       }
+//
+//       //risolvere il sistema Nlayer X Nlayer
+//       KSP                solver;
+//       Mat                triDiagA;
+//       Vec                b, x;
+//       PetscInt           k, j, nlayers;
+//       PetscErrorCode     ierr;
+//
+//       nlayers = static_cast<PetscInt> ( NLayers );
+//       ierr = VecCreate ( PETSC_COMM_WORLD, &x );
+//       ierr = VecSetSizes ( x, PETSC_DECIDE, nlayers );
+//       ierr = VecSetFromOptions ( x );
+//       ierr = VecDuplicate ( x, &b );
+//       ierr = MatCreate ( PETSC_COMM_WORLD, &triDiagA );
+//       ierr = MatSetSizes ( triDiagA, PETSC_DECIDE, PETSC_DECIDE, nlayers, nlayers );
+//       ierr = MatSetFromOptions ( triDiagA );
+//       ierr = MatSetUp ( triDiagA );
+//
+//       for ( k = 0; k < nlayers; k++ ) {
+//         MatSetValues ( triDiagA, 1, &k, 1, &k, &sysMatrix[k][k], INSERT_VALUES );
+//         VecSetValues ( b, 1, &k, &Trhs[k], INSERT_VALUES );
+//         if ( k > 0 ) {
+//           j = k - 1;
+//           MatSetValues ( triDiagA, 1, &k, 1, &j, & sysMatrix[k - 1][k], INSERT_VALUES );
+//         }
+//         if ( k < nlayers - 1 ) {
+//           j = k + 1;
+//           MatSetValues ( triDiagA, 1, &k, 1, &j, &sysMatrix[k][k + 1], INSERT_VALUES );
+//         }
+//       }
+//
+//       ierr = MatAssemblyBegin ( triDiagA, MAT_FINAL_ASSEMBLY );
+//       ierr = MatAssemblyEnd ( triDiagA, MAT_FINAL_ASSEMBLY );
+//
+//
+// //       PetscViewer    viewer;
+// //       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+// //       PetscObjectSetName((PetscObject)viewer,"implicit Euler matrix");
+// //       PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+// //       MatView(triDiagA,viewer);
+// //       double a;
+// //       std::cin>>a;
+//
+//
+//       ierr = KSPCreate ( PETSC_COMM_WORLD, &solver );
+//       ierr = KSPSetOperators ( solver, triDiagA, triDiagA );
+//       ierr = KSPSetType ( solver, KSPRICHARDSON );
+//       ierr = KSPSolve ( solver, b, x );
+//
+//       //1. aggiornare solT con x
+//       for ( k = 0; k < nlayers; k++ ) {
+//         PetscScalar valueT = 0.;
+//         ierr = VecGetValues ( x, 1, &k, &valueT );
+//         sol->_Sol[solIndexT[k]]->set ( i, valueT );
+//         sol->_Sol[solIndexT[k]]->close();
+//
+//         //2. aggiornare solHT
+//         double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
+//         double valueHT = valueH * valueT;
+//         sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
+//         sol->_Sol[solIndexHT[k]]->close();
+//       }
+//
+//     }
 
   }
 
   //BEGIN no vertical diffusion
-//   for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
-//     for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++ ) {
-//       double valueHT = ( *sol->_Sol[solIndexHT[k]] ) ( i );
-//       double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
-//
-//       double valueT = valueHT / valueH;
-//
-//       sol->_Sol[solIndexT[k]]->set ( i, valueT );
-//     }
-//
-//     sol->_Sol[solIndexT[k]]->close();
-//
-//   }
+  for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
+    for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++ ) {
+      double valueHT = ( *sol->_Sol[solIndexHT[k]] ) ( i );
+      double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
+
+      double valueT = valueHT / valueH;
+
+      sol->_Sol[solIndexT[k]]->set ( i, valueT );
+    }
+
+    sol->_Sol[solIndexT[k]]->close();
+
+  }
   //END
 
 //   PetscViewer    viewer;
@@ -1834,4 +1875,5 @@ void RK4t ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 //   sol->_Sol[solIndexeta]->add ( -1, *sol->_Sol[solIndexb] );
 
 }
+
 

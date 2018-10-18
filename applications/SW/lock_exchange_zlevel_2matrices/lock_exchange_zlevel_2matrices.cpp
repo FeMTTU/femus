@@ -170,9 +170,9 @@ int main ( int argc, char** args ) {
   unsigned numberOfTimeSteps = 1800; //17h=1020 with dt=60, 17h=10200 with dt=6
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     system.CopySolutionToOldSolution();
-    dt = 60.;
+    //dt = 60.;
     ETDvh ( ml_prob );
-    dt = 60.;
+    //dt = 60.;
     ETDt ( ml_prob );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
