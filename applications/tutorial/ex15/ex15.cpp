@@ -109,18 +109,12 @@ int main(int argc, char** args) {
     mlSol.GenerateBdc(ki[i].str().c_str());
   }
   
-  
-//   mlSol.FixSolutionAtOnePoint("k1");
-//   mlSol.FixSolutionAtOnePoint("k2");
-
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol); //
 
   // add system Poisson in mlProb as a Non Linear Implicit System
   NonLinearImplicitSystem & system = mlProb.add_system < NonLinearImplicitSystem > ("AllanChan");
 
- // mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
-  
   // add solution "u" to system
   for(unsigned i = 0; i < RK; i++){
     system.AddSolutionToSystemPDE(ki[i].str().c_str());
@@ -130,13 +124,11 @@ int main(int argc, char** args) {
   system.SetAssembleFunction(AssembleAllanChanProblem_AD);
 
   // time loop parameter
-  
   const unsigned int n_timesteps = 25;
-
   
   system.init();
   
-   // ******* Print solution *******
+  // ******* Print solution *******
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetGraphVariable ("u");
   mlSol.GetWriter()->SetDebugOutput(false);
