@@ -6,12 +6,12 @@
 
 #include "./elliptic_nonlin_param.hpp"
 
-  const int n_unknowns = 4; //later it should be mlPdeSys->GetSolPdeIndex().size();
- 
-  enum Sol_pos{pos_state=0,pos_ctrl,pos_adj,pos_mu};
-
-
 using namespace femus;
+
+
+ 
+  // ./elliptic_nonlin -mat_view draw -draw_save myfile.ppm
+
 
 
   unsigned int res_row_index(const std::vector<unsigned int>& _Sol_n_el_dofs, int my_row_pos, int i) {
@@ -139,7 +139,7 @@ int main(int argc, char** args) {
   mlSol.GenerateBdc("state");
   mlSol.GenerateBdc("control");
   mlSol.GenerateBdc("adjoint");
-  mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work...
+  mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work... but this should be related to the matrix and not to the sol...
 
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
@@ -149,10 +149,9 @@ int main(int argc, char** args) {
  // add system  in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("OptSys");
 
-  system.AddSolutionToSystemPDE("state");  
-  system.AddSolutionToSystemPDE("control");  
-  system.AddSolutionToSystemPDE("adjoint");  
-  system.AddSolutionToSystemPDE("mu");  
+  //here we decide the order in the matrix!
+  const std::vector < std::string > sol_matrix_pos = {"state","control","adjoint","mu"};
+  for (unsigned k = 0; k < sol_matrix_pos.size(); k++)  system.AddSolutionToSystemPDE(sol_matrix_pos[k].c_str());  
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleProblem);
@@ -185,6 +184,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   //  levelMax is the Maximum level of the MultiLevelProblem
   //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
 
+
   NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("OptSys");
   const unsigned          level      = mlPdeSys->GetLevelToAssemble();
   const bool          assembleMatrix = mlPdeSys->GetAssembleMatrix();
@@ -203,6 +203,22 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   const unsigned maxSize = static_cast< unsigned >(ceil(pow(3, dim)));          // conservative: based on line3, quad9, hex27
 
   const unsigned   iproc = msh->processor_id(); 
+
+ //***************************************************  
+  const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
+  
+  enum Sol_pos{pos_state=0,pos_ctrl,pos_adj,pos_mu};  //these are known at compile-time
+  
+//   const unsigned int pos_state = mlPdeSys->GetSolPdeIndex("state");   //these are known at run-time, so they are slower
+//   const unsigned int pos_ctrl  = mlPdeSys->GetSolPdeIndex("control"); //these are known at run-time, so they are slower
+//   const unsigned int pos_adj   = mlPdeSys->GetSolPdeIndex("adjoint"); //these are known at run-time, so they are slower
+//   const unsigned int pos_mu    = mlPdeSys->GetSolPdeIndex("mu");      //these are known at run-time, so they are slower
+  
+  assert(pos_state == mlPdeSys->GetSolPdeIndex("state"));
+  assert(pos_ctrl  == mlPdeSys->GetSolPdeIndex("control"));
+  assert(pos_adj   == mlPdeSys->GetSolPdeIndex("adjoint"));
+  assert(pos_mu    == mlPdeSys->GetSolPdeIndex("mu"));
+ //***************************************************  
 
  //***************************************************  
   vector < vector < double > > coordX(dim);    // local coordinates
@@ -511,13 +527,15 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
                                                       m_b_f[pos_ctrl][pos_state] * ( control_node_flag[i]) * weight * target_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_state]][j];
 		
 	      //BLOCK delta_control - control
-		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += m_b_f[pos_ctrl][pos_ctrl] * ( control_node_flag[i]) * weight * (
-                                                                                           beta * control_el_flag  * laplace_mat_dctrl_ctrl_i_j 
-		                                                                                + alpha * control_el_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] 
-		                                                                                            + target_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] );
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += 
+		                                              m_b_f[pos_ctrl][pos_ctrl] * ( control_node_flag[i]) * weight * (
+                                                                                  beta * control_el_flag  * laplace_mat_dctrl_ctrl_i_j 
+                                                                               + alpha * control_el_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] 
+		                                                                                   + target_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] );
               
 	      //BLOCK delta_control - adjoint
-		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_adj, i, j) ]  += m_b_f[pos_ctrl][pos_adj] * ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj_i_j;
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_adj, i, j) ]  += 
+		                                              m_b_f[pos_ctrl][pos_adj] * ( control_node_flag[i]) * weight * (-1) * laplace_mat_dctrl_adj_i_j;
 	        }
 	      
 	      else if ( control_el_flag == 0 && i == j)  {  
@@ -641,15 +659,15 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 //  //============= delta_adj-delta_adj row ===============================
 //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
   
- //============= delta_ctrl-delta_mu row ===============================
- KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_ctrl], L2G_dofmap[pos_mu], m_b_f[pos_ctrl][pos_mu] * ineq_flag * 1.);//------------------------------->>>>>>
+ //============= delta_ctrl - mu ===============================
+ KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_ctrl], L2G_dofmap[pos_mu], m_b_f[pos_ctrl][pos_mu] * ineq_flag * 1.);
   
- //============= delta_mu-delta_ctrl row ===============================
+ //============= delta_mu - ctrl row ===============================
  for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = m_b_f[pos_mu][pos_ctrl] * ineq_flag * c_compl;    
   
  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_ctrl], sol_actflag);
 
- //============= delta_mu-delta_mu row ===============================
+ //============= delta_mu - mu row ===============================
   for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =  m_b_f[pos_mu][pos_mu] * ( ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1. ); //can do better to avoid division, maybe use modulo operator 
 
   KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_mu], L2G_dofmap[pos_mu], sol_actflag );
@@ -663,17 +681,15 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 //   KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
   
   // ***************** END ASSEMBLY *******************
-  unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
-  unsigned int   mu_index = mlPdeSys->GetSolPdeIndex("mu");
-
-  unsigned int global_ctrl_size = pdeSys->KKoffset[ctrl_index+1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
+  
+  unsigned int global_ctrl_size = pdeSys->KKoffset[pos_ctrl+1][iproc] - pdeSys->KKoffset[pos_ctrl][iproc];
   
   std::vector<double>  one_times_mu(global_ctrl_size, 0.);
-  std::vector<int>    positions(global_ctrl_size);
+  std::vector<int>        positions(global_ctrl_size);
 //  double position_mu_i;
   for (unsigned i = 0; i < positions.size(); i++) {
-    positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
-//     position_mu_i = pdeSys->KKoffset[mu_index][iproc] + i;
+    positions[i] = pdeSys->KKoffset[pos_ctrl][iproc] + i;
+//     position_mu_i = pdeSys->KKoffset[pos_mu][iproc] + i;
 //     std::cout << position_mu_i << std::endl;
     one_times_mu[i] =  m_b_f[pos_ctrl][pos_mu] * ineq_flag * 1. * (*sol->_Sol[SolIndex[pos_mu]])(i/*position_mu_i*/) ;
   }
