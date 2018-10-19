@@ -132,20 +132,20 @@ int main(int argc, char** args) {
 
 
   // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem mlProb(&mlSol);
+  MultiLevelProblem ml_prob(&mlSol);
   
-  mlProb.SetFilesHandler(&files);
+  ml_prob.SetFilesHandler(&files);
   
   // ===============  
   mlSol.Initialize("All");    // initialize all variables to zero
 
-//   mlSol.Initialize("All", SetInitialCondition, &mlProb); //unfortunately if I do this it sets all to zero //I would like to do an attach function similar to the BC
-  mlSol.Initialize("state", SetInitialCondition, &mlProb);
-  mlSol.Initialize("control", SetInitialCondition, &mlProb);
-  mlSol.Initialize("adjoint", SetInitialCondition, &mlProb);
-  mlSol.Initialize("mu",      SetInitialCondition, &mlProb);
-  mlSol.Initialize("TargReg", SetInitialCondition, &mlProb);
-  mlSol.Initialize("ContReg", SetInitialCondition, &mlProb);
+//   mlSol.Initialize("All", SetInitialCondition, &ml_prob); //unfortunately if I do this it sets all to zero //I would like to do an attach function similar to the BC
+  mlSol.Initialize("state", SetInitialCondition, &ml_prob);
+  mlSol.Initialize("control", SetInitialCondition, &ml_prob);
+  mlSol.Initialize("adjoint", SetInitialCondition, &ml_prob);
+  mlSol.Initialize("mu",      SetInitialCondition, &ml_prob);
+  mlSol.Initialize("TargReg", SetInitialCondition, &ml_prob);
+  mlSol.Initialize("ContReg", SetInitialCondition, &ml_prob);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -156,8 +156,8 @@ int main(int argc, char** args) {
   mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work... but this should be related to the matrix and not to the sol... The same for the initial condition
 
 
- // add system  in mlProb as a Linear Implicit System
-  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("OptSys");
+ // add system  in ml_prob as a Linear Implicit System
+  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("OptSys");
 
   //here we decide the order in the matrix!
   const std::vector < std::string > sol_matrix_pos = {"state","control","adjoint","mu"};
@@ -176,7 +176,7 @@ int main(int argc, char** args) {
   system.init();
   system.MGsolve();
   
-  ComputeIntegral(mlProb);
+  ComputeIntegral(ml_prob);
  
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -217,7 +217,16 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
  //***************************************************  
   const unsigned int n_unknowns = mlPdeSys->GetSolPdeIndex().size();
   
-  enum Sol_pos{pos_state=0,pos_ctrl,pos_adj,pos_mu};  //these are known at compile-time
+  enum Sol_pos{pos_state=0,pos_ctrl,pos_adj,pos_mu};  //these are known at compile-time 
+  //right now this is the same as Sol_pos = SolPdeIndex, but now I want to have flexible rows and columns
+  // the ROW index corresponds to the EQUATION we want to solve
+  // the COLUMN index corresponds to the column variables 
+  
+  // Now, first of all we have to make sure that the Sparsity pattern is correctly built...
+  // This means that we should write the Sparsity pattern with COLUMNS independent of ROWS!
+  // But that implies that the BOUNDARY CONDITIONS will be enforced in OFF-DIAGONAL BLOCKS!
+  // In fact, having the row order be different from the column order implies that the diagonal blocks would be RECTANGULAR.  
+  // Although this is in principle possible, I would avoid doing that for now.
   
 //   const unsigned int pos_state = mlPdeSys->GetSolPdeIndex("state");   //these are known at run-time, so they are slower
 //   const unsigned int pos_ctrl  = mlPdeSys->GetSolPdeIndex("control"); //these are known at run-time, so they are slower
@@ -250,8 +259,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
       phi_x_fe_qp[fe].reserve(maxSize*dim);
      phi_xx_fe_qp[fe].reserve(maxSize*(3*(dim-1)));
    }
-   
-  
 
  //***************************************************  
  //********* WHOLE SET OF VARIABLES ****************** 
@@ -263,23 +270,26 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   Solname[pos_adj]   = "adjoint";
   Solname[pos_mu]    = "mu";
   
- int m_b_f[n_unknowns][n_unknowns];   //m_b_f
-     m_b_f[0][0] = 1;
-     m_b_f[0][1] = 1;
-     m_b_f[0][2] = 1;
-     m_b_f[0][3] = 1;
-     m_b_f[1][0] = 1;
-     m_b_f[1][1] = 1;
-     m_b_f[1][2] = 1;
-     m_b_f[1][3] = 1;
-     m_b_f[2][0] = 1;
-     m_b_f[2][1] = 1;
-     m_b_f[2][2] = 1;
-     m_b_f[2][3] = 1;
-     m_b_f[3][0] = 1;
-     m_b_f[3][1] = 1;
-     m_b_f[3][2] = 1;
-     m_b_f[3][3] = 1;
+ int m_b_f[n_unknowns][n_unknowns];
+     m_b_f[pos_state][pos_state] = 1; //nonzero
+     m_b_f[pos_state][pos_ctrl]  = 1; //THIS IS ZERO IN NON-LIFTING APPROACHES
+     m_b_f[pos_state][pos_adj]   = 1; //nonzero
+     m_b_f[pos_state][pos_mu]    = 0;  //this is zero without state constraints
+     
+     m_b_f[pos_ctrl][pos_state]  = 1;//THIS IS ZERO IN NON-LIFTING APPROACHES
+     m_b_f[pos_ctrl][pos_ctrl]   = 1;//nonzero
+     m_b_f[pos_ctrl][pos_adj]    = 1;//nonzero
+     m_b_f[pos_ctrl][pos_mu]     = 1;//nonzero
+     
+     m_b_f[pos_adj][pos_state]  = 1; //nonzero
+     m_b_f[pos_adj][pos_ctrl]   = 1; //nonzero
+     m_b_f[pos_adj][pos_adj]    = 0; //this must always be zero 
+     m_b_f[pos_adj][pos_mu]     = 0; //this must always be zero 
+     
+     m_b_f[pos_mu][pos_state]  = 0; //this is zero without state constraints
+     m_b_f[pos_mu][pos_ctrl]   = 1; //nonzero
+     m_b_f[pos_mu][pos_adj]    = 0; //this must always be zero 
+     m_b_f[pos_mu][pos_mu]     = 1; //nonzero
  
   //***************************************************  
   vector < vector < int > > L2G_dofmap(n_unknowns);     for(int i = 0; i < n_unknowns; i++) { L2G_dofmap[i].reserve(maxSize); }
@@ -289,9 +299,9 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   //***************************************************  
   
   //***************************************************  
-  vector < unsigned > SolPdeIndex(n_unknowns);
-  vector < unsigned > SolIndex(n_unknowns);  
-  vector < unsigned > SolFEType(n_unknowns);  
+  vector < unsigned > SolPdeIndex(n_unknowns);  //index as in the row/column of the matrix (diagonal blocks are square)
+  vector < unsigned > SolIndex(n_unknowns);     //index as in the MultilevelSolution vector
+  vector < unsigned > SolFEType(n_unknowns);    //FEtype of each MultilevelSolution       
 
   for(unsigned ivar=0; ivar < n_unknowns; ivar++) {
     SolPdeIndex[ivar] = mlPdeSys->GetSolPdeIndex(  Solname[ivar].c_str() );
@@ -687,8 +697,9 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
-//  std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->_nonliniteration  << ".txt";
-//   KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
+//  std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "jacobian" << mlPdeSys->_nonliniteration  << ".txt";
+//   KK->print_matlab(mat_out.str(),"ascii"); 
+//    KK->print();
   
   // ***************** END ASSEMBLY *******************
   
@@ -753,9 +764,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   phi_u_xx.reserve(maxSize * dim2);
   
  
-  unsigned solIndex_u;
-  solIndex_u = mlSol->GetIndex("state");    // get the position of "state" in the ml_sol object
-  unsigned solType_u = mlSol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
+  unsigned solIndex_u = mlSol->GetIndex("state");    // get the position of "state" in the ml_sol object
+  unsigned solType_u  = mlSol->GetSolutionType(solIndex_u);    // get the finite element type for "state"
 
   vector < double >  sol_u; // local solution
   sol_u.reserve(maxSize);
@@ -774,14 +784,11 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   phi_ctrl_x.reserve(maxSize * dim);
   phi_ctrl_xx.reserve(maxSize * dim2);
   
-  unsigned solIndex_ctrl;
-  solIndex_ctrl = mlSol->GetIndex("control");
-  unsigned solType_ctrl = mlSol->GetSolutionType(solIndex_ctrl);
+  unsigned solIndex_ctrl = mlSol->GetIndex("control");
+  unsigned solType_ctrl  = mlSol->GetSolutionType(solIndex_ctrl);
 
   vector < double >  sol_ctrl;
   sol_ctrl.reserve(maxSize);
-//   vector< int > l2GMap_ctrl;
-//   l2GMap_ctrl.reserve(maxSize);
   
   double ctrl_gss = 0.;
   double ctrl_x_gss = 0.;
@@ -799,14 +806,9 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
     phi_udes_x.reserve(maxSize * dim);
     phi_udes_xx.reserve(maxSize * dim2);
  
-//  unsigned solIndex_udes;
-//   solIndex_udes = mlSol->GetIndex("Tdes");    // get the position of "state" in the ml_sol object
-//   unsigned solType_udes = mlSol->GetSolutionType(solIndex_udes);    // get the finite element type for "state"
-
   vector < double >  sol_udes; // local solution
   sol_udes.reserve(maxSize);
-//   vector< int > l2GMap_udes;
-//   l2GMap_udes.reserve(maxSize);
+  
    double udes_gss = 0.;
  //*************************************************** 
  //*************************************************** 
