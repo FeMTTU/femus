@@ -99,18 +99,17 @@ void AssembleProblem(MultiLevelProblem& ml_prob);
 
 int main(int argc, char** args) {
 
+    // ======= Init ========================
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
   
     // ======= Files ========================
   Files files; 
         files.CheckIODirectories();
-	files.RedirectCout();
+        files.RedirectCout();
 
-  // define multilevel mesh
+    // ======= Mesh ========================
   MultiLevelMesh mlMsh;
-  double scalingFactor = 1.;
-
   mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
  /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
@@ -119,45 +118,45 @@ int main(int argc, char** args) {
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
   mlMsh.PrintInfo();
 
-  // define the multilevel solution and attach the mlMsh object to it
-  MultiLevelSolution mlSol(&mlMsh);
+    // ======= Solution ========================
+  MultiLevelSolution mlSol(&mlMsh);  // define the multilevel solution and attach the mlMsh object to it
 
   // add variables to mlSol
-  mlSol.AddSolution("state", LAGRANGE, FIRST);
+  mlSol.AddSolution("state",   LAGRANGE, FIRST);
   mlSol.AddSolution("control", LAGRANGE, FIRST);
   mlSol.AddSolution("adjoint", LAGRANGE, FIRST);
-  mlSol.AddSolution("mu", LAGRANGE, FIRST);  
-  mlSol.AddSolution("TargReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
-  mlSol.AddSolution("ContReg",  DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  mlSol.AddSolution("mu",      LAGRANGE, FIRST);  
+  mlSol.AddSolution("TargReg", DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
+  mlSol.AddSolution("ContReg", DISCONTINOUS_POLYNOMIAL, ZERO); //this variable is not solution of any eqn, it's just a given field
 
 
-  // define the multilevel problem attach the mlSol object to it
-  MultiLevelProblem ml_prob(&mlSol);
-  
+    // ======= Problem ========================
+  MultiLevelProblem ml_prob(&mlSol);  // define the multilevel problem attach the mlSol object to it
+
   ml_prob.SetFilesHandler(&files);
   
-  // ===============  
+    // ======= Initial values ========================
   mlSol.Initialize("All");    // initialize all variables to zero
 
 //   mlSol.Initialize("All", SetInitialCondition, &ml_prob); //unfortunately if I do this it sets all to zero //I would like to do an attach function similar to the BC
-  mlSol.Initialize("state", SetInitialCondition, &ml_prob);
+  mlSol.Initialize("state",   SetInitialCondition, &ml_prob);
   mlSol.Initialize("control", SetInitialCondition, &ml_prob);
   mlSol.Initialize("adjoint", SetInitialCondition, &ml_prob);
   mlSol.Initialize("mu",      SetInitialCondition, &ml_prob);
   mlSol.Initialize("TargReg", SetInitialCondition, &ml_prob);
   mlSol.Initialize("ContReg", SetInitialCondition, &ml_prob);
 
-  // attach the boundary condition function and generate boundary data
-  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
+    // ======= Boundary Conditions ========================
+  mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);  // attach the boundary condition function and generate boundary data
+
 //   mlSol.GenerateBdc("All");  //this would do it also for the non-equation-related variables
   mlSol.GenerateBdc("state");
   mlSol.GenerateBdc("control");
   mlSol.GenerateBdc("adjoint");
-  mlSol.GenerateBdc("mu");  //we need add this to make the matrix iterations work... but this should be related to the matrix and not to the sol... The same for the initial condition
+  mlSol.GenerateBdc("mu");  //we need this for all Pde variables to make the matrix iterations work... but this should be related to the matrix and not to the sol... The same for the initial condition
 
-
- // add system  in ml_prob as a Linear Implicit System
-  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("OptSys");
+    // ======= System ========================
+  NonLinearImplicitSystem& system = ml_prob.add_system < NonLinearImplicitSystem > ("OptSys");    // add system in ml_prob
 
   //here we decide the order in the matrix!
   const std::vector < std::string > sol_matrix_pos = {"state","control","adjoint","mu"};
@@ -172,16 +171,17 @@ int main(int argc, char** args) {
   system.SetDebugNonlinear(true);
 //   system.SetMaxNumberOfNonLinearIterations(2);
 
-  // initialize and solve the system
-  system.init();
+    // ======= Solve ========================
+  system.init();    // initialize and solve the system
   system.MGsolve();
   
   ComputeIntegral(ml_prob);
  
-  // print solutions
+    // ======= Final Print ========================
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
-  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
+  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);    // print solutions
+
 
   return 0;
 }
@@ -479,13 +479,13 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	     if ( control_el_flag == 1)        Res[ res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(control_node_flag[i]) **/ - weight * (
                                                                                   + m_b_f[pos_ctrl][pos_ctrl] * alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_ctrl]
 		                                                                          + m_b_f[pos_ctrl][pos_ctrl] *  beta * laplace_rhs_dctrl_ctrl_i 
-		                                                                          - m_b_f[pos_ctrl][pos_adj]  * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_adj]
+		                                                                          + m_b_f[pos_ctrl][pos_adj]  * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_adj]
                                                                                                                          );
 	      else if ( control_el_flag == 0)  Res[ res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(1 - control_node_flag[i]) **/ m_b_f[pos_ctrl][pos_ctrl] * (- penalty_strong) * (sol_eldofs[pos_ctrl][i]);
 
           // =============
         Res[ res_row_index(Sol_n_el_dofs,pos_adj,i) ] += - weight *  ( - m_b_f[pos_adj][pos_state] * laplace_rhs_dadj_state_i 
-                                                                       - m_b_f[pos_adj][pos_ctrl]  * phi_fe_qp[SolFEType[pos_adj]][i] * sol_qp[pos_ctrl] );
+                                                                       + m_b_f[pos_adj][pos_ctrl]  * phi_fe_qp[SolFEType[pos_adj]][i] * sol_qp[pos_ctrl] );
 
 //======================Residuals=======================
 	      
@@ -511,56 +511,34 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	      }
 
               //============ delta_state row ============================
-              // BLOCK delta_state - state
 		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_state, i, j) ]  += 
                                                       m_b_f[pos_state][pos_state] * weight * target_flag * phi_fe_qp[SolFEType[pos_state]][j] *  phi_fe_qp[SolFEType[pos_state]][i];
               
-              // BLOCK  delta_state - control
-	      
-              // BLOCK  delta_state - adjoint
 		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_adj, i, j)  ]  +=
 		                                              m_b_f[pos_state][pos_adj] * weight * (-1) * laplace_mat_dstate_adj_i_j;
               
 	      //=========== delta_control row ===========================     
 	      if ( control_el_flag == 1)  {
-	      //BLOCK delta_control - state
 		
-	      //BLOCK delta_control - control
 		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += 
 		                                              m_b_f[pos_ctrl][pos_ctrl] * ( control_node_flag[i]) * weight * (
                                                                                   beta * control_el_flag  * laplace_mat_dctrl_ctrl_i_j 
                                                                                + alpha * control_el_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] 
 		                                                                                    );
               
-	      //BLOCK delta_control - adjoint
-		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_adj, i, j) ]  += 
-		                                              m_b_f[pos_ctrl][pos_adj] * ( control_node_flag[i]) * weight * (-1) * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_adj]][j];
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_adj, i, j) ]  += m_b_f[pos_ctrl][pos_adj] * weight * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_adj]][j] 
+		                                                                                  *  control_node_flag[i];
 	        }
 	      
 	      else if ( control_el_flag == 0 && i == j)  {  
-         //BLOCK delta_control - control
         Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += m_b_f[pos_ctrl][pos_ctrl] * (1 - control_node_flag[i]) * penalty_strong;
 	      }
 	      
 	      //=========== delta_adjoint row ===========================
-              // BLOCK delta_adjoint - state
 		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_state, i, j) ]  += m_b_f[pos_adj][pos_state] * weight * (-1) * laplace_mat_dadj_state_i_j;   
-              // BLOCK delta_adjoint - control   
-		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_ctrl, i, j)  ]  += m_b_f[pos_adj][pos_ctrl] * weight * (-1) * phi_fe_qp[SolFEType[pos_adj]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j]; 
+
+        Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_ctrl, i, j)  ]  += m_b_f[pos_adj][pos_ctrl] * weight * phi_fe_qp[SolFEType[pos_adj]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j]; 
 		     
-	      //============= delta_mu row ===============================
-//	      if (sol_actflag[i] == 0) //inactive
-//	      { // BLOCK delta_mu - mu	      
-// 	        if ( i < Sol_n_el_dofs[pos_mu] && j < Sol_n_el_dofs[pos_mu] && i==j )   
-// 		  Jac[ (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + i) * nDof_AllVars +
-// 		       (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + j)]  = 1. ;  
-// 	     // }
-// 	      else //active
-// 	      { // BLOCK delta_mu - ctrl	      
-//                 if ( i < Sol_n_el_dofs[pos_mu] && j < Sol_n_el_dofs[pos_ctrl] && i==j )   
-// 		  Jac[ (Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + Sol_n_el_dofs[pos_adj] + i) * nDof_AllVars +
-// 		       (Sol_n_el_dofs[pos_state] + j)                       ]  = c_compl * 1. ; 
-	     // }
 	      
             } // end phi_j loop
           } // endif assemble_matrix
@@ -571,33 +549,6 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 
       
       
-    //--------------------------------------------------------------------------------------------------------
-    // Add the local Matrix/Vector into the global Matrix/Vector
-   // std::cout << " ************* Element ************** " << iel << " **************************************** " << std::endl;     
-
-// // //     if (control_el_flag == 0) {  //elements that should have zero control
-// //          for (unsigned i_unk = 0; i_unk < n_unknowns; i_unk++) {
-// //     std::cout << " ======= Row === " << i_unk << " =================================================== " << std::endl;     
-// //         unsigned int row_block_offset = 0;
-// // 	         for (unsigned k = 0; k < i_unk; k++) row_block_offset += Sol_n_el_dofs[k];
-// //          for (unsigned j_unk = 0; j_unk < n_unknowns; j_unk++) {
-// //     std::cout << " ======= Column === " << j_unk << " ================== " << std::endl;     
-// //         unsigned int column_block_offset = 0;
-// // 	         for (unsigned k = 0; k < j_unk; k++) column_block_offset += Sol_n_el_dofs[k];
-// // 	  
-// //          for (unsigned i = 0; i < Sol_n_el_dofs[i_unk]; i++) {
-// // // 	      std::cout << Res[res_row_index(Sol_n_el_dofs,pos_mu,i) ] << " " << std::endl;
-// // 	   for (unsigned j = 0; j < Sol_n_el_dofs[j_unk]; j++) {
-// // 	      std::cout <<  " " << std::setfill(' ') << std::setw(10) << Jac[ (row_block_offset + i) * nDof_AllVars + ( column_block_offset + j) ] << " ";
-// // 	    }
-// // 	      std::cout << std::endl;
-// // 	 }
-// // 
-// // 	 } //j_unk
-// // 	} //i_unk
-	 
-	 
-// // // 	}
     //std::vector<double> Res_ctrl (Sol_n_el_dofs[pos_ctrl]); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
     for (unsigned i = 0; i < sol_eldofs[pos_ctrl].size(); i++){
        unsigned n_els_that_node = 1;
@@ -605,19 +556,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 // 	Res[Sol_n_el_dofs[pos_state] + i] += - ( + n_els_that_node * ineq_flag * sol_eldofs[pos_mu][i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
 // 	Res_ctrl[i] =  Res[Sol_n_el_dofs[pos_state] + i];
       }
-    }//------------------------------->>>>>>
-    
-//     std::vector<double> Res_u (Sol_n_el_dofs[pos_state]); std::fill(Res_u.begin(),Res_u.end(), 0.);
-//     for (unsigned i = 0; i < sol_eldofs[pos_state].size(); i++){
-// 	Res[0 + i] = - ( sol_eldofs[pos_state][i] - 8. );
-// 	Res_u[i] = Res[0 + i];
-//     }
-    
-//     std::vector<double> Res_adj (Sol_n_el_dofs[pos_adj]); std::fill(Res_adj.begin(),Res_adj.end(), 0.);
-//     for (unsigned i = 0; i < sol_eldofs[pos_adj].size(); i++){
-// 	Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i] = - (sol_eldofs[pos_adj][i] - 7.);
-// 	Res_adj[i] = Res[Sol_n_el_dofs[pos_state] + Sol_n_el_dofs[pos_ctrl] + i];
-//     }
+    }
     
 
  //========== end of integral-based part
@@ -645,19 +584,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
     }
     
     RES->insert(Res_mu, L2G_dofmap[pos_mu]);
-//     RES->insert(Res_ctrl, l2GMap_ctrl);
-//     RES->insert(Res_u, l2GMap_u);
-//     RES->insert(Res_adj, l2GMap_adj);
     
-//  //============= delta_state-delta_state row ===============================
-//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_u, l2GMap_u, 1.);
-
-//  //============= delta_ctrl-delta_ctrl row ===============================
-//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_ctrl, 1.);
- 
-//  //============= delta_adj-delta_adj row ===============================
-//  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
-  
  //============= delta_ctrl - mu ===============================
  KK->matrix_set_off_diagonal_values_blocked(L2G_dofmap[pos_ctrl], L2G_dofmap[pos_mu], m_b_f[pos_ctrl][pos_mu] * ineq_flag * 1.);
   
