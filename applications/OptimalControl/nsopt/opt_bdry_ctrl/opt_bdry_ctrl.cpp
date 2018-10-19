@@ -1,5 +1,7 @@
 
 #include <stdio.h>
+#include "adept.h"
+
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
@@ -10,7 +12,7 @@
 #include "Parameter.hpp"
 #include "Files.hpp"
 #include "PetscMatrix.hpp"
-#include "adept.h"
+#include "paral.hpp"//to get iproc HAVE_MPI is inside here
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
@@ -1379,6 +1381,14 @@ double integral_g_dot_n = 0.;
       }// end gauss point loop
     } //end element loop  
 
+       std::ostringstream filename_out; filename_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "target_part"  << ".txt";
+
+       std::ofstream intgr_fstream;
+  if (paral::get_rank() == 0 ) {
+      intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
+      intgr_fstream << mlPdeSys.GetNonlinearIt() << " " << integral_g_dot_n << " " << std::endl;
+      intgr_fstream.close();  //you have to close to disassociate the file from the stream
+}  
     std::cout << "The value of the integral of g.n "<<   std::setw(11) << std::setprecision(10) << std::fixed<< integral_g_dot_n << std::endl;
     std::cout << "The value of the theta is  "<<   std::setw(11) << std::setprecision(10) << std::fixed<< solTheta << std::endl;
     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
