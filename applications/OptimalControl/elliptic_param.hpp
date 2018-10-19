@@ -4,8 +4,8 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  2
-#define NSUB_Y  2
+#define NSUB_X  8
+#define NSUB_Y  8
 
 
 //*********************** Sets the regularization parameters *******************************************************
@@ -18,9 +18,9 @@
 
 
 //*********************** Control box constraints *******************************************************
-#define  INEQ_FLAG 0
+#define  INEQ_FLAG 1
 #define  CTRL_BOX_LOWER   -1000
-#define  CTRL_BOX_UPPER   1000
+#define  CTRL_BOX_UPPER   1
 #define  C_COMPL 1.
 
 
@@ -74,7 +74,7 @@ int ControlDomainFlag_internal_restriction(const std::vector<double> & elem_cent
 
  //***** set target domain flag ******
  // flag = 1: we are in the lifting nonzero domain
-  int control_el_flag = 1.;
+  int control_el_flag = 0.;
    if ( elem_center[1] >  0.7) { control_el_flag = 1; }
 
      return control_el_flag;

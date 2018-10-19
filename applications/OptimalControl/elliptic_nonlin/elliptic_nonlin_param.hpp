@@ -4,8 +4,8 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  8
-#define NSUB_Y  8
+#define NSUB_X  16
+#define NSUB_Y  16
 
 
 //*********************** Sets the regularization parameters *******************************************************
@@ -20,7 +20,7 @@
 //*********************** Control box constraints *******************************************************
 #define  INEQ_FLAG 1
 #define  CTRL_BOX_LOWER   -1000
-#define  CTRL_BOX_UPPER   0.5
+#define  CTRL_BOX_UPPER   0.1
 #define  C_COMPL 1.
 
 

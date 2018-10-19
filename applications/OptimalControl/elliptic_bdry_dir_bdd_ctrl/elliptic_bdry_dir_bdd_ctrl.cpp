@@ -1,7 +1,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "LinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
 #include "ElemType.hpp"
@@ -128,7 +128,7 @@ int main(int argc, char** args) {
   MultiLevelProblem mlProb(&mlSol);
   
  // add system  in mlProb as a Linear Implicit System
-  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("LiftRestr");
+  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
  
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
@@ -169,7 +169,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -291,10 +291,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   vector < int > l2GMap_mu;   l2GMap_mu.reserve(maxSize);
 
   //********* variables for ineq constraints *****************
+  const int ineq_flag = INEQ_FLAG;
   double ctrl_lower =  CTRL_BOX_LOWER;
   double ctrl_upper =  CTRL_BOX_UPPER;
   assert(ctrl_lower < ctrl_upper);
-  double c_compl = 1.;
+  const double c_compl = C_COMPL;
   vector < double/*int*/ >  sol_actflag;   sol_actflag.reserve(maxSize); //flag for active set
   //***************************************************  
 
@@ -880,14 +881,14 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	   
 	}
     
-    std::vector<double> Res_ctrl (nDof_ctrl); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
-    for (unsigned i = 0; i < sol_ctrl.size(); i++){
-     if ( control_el_flag == 1){
-	Res[nDof_u + i] = - ( - Res[nDof_u + i] + sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
-	Res_ctrl[i] = Res[nDof_u + i];
-      }
-    }
-    
+//     std::vector<double> Res_ctrl (nDof_ctrl); std::fill(Res_ctrl.begin(),Res_ctrl.end(), 0.);
+//     for (unsigned i = 0; i < sol_ctrl.size(); i++){
+//      if ( control_el_flag == 1){
+// 	Res[nDof_u + i] = - ( - Res[nDof_u + i] + sol_mu[i] /*- ( 0.4 + sin(M_PI * x[0][i]) * sin(M_PI * x[1][i]) )*/ );
+// 	Res_ctrl[i] = Res[nDof_u + i];
+//       }
+//     }
+//     
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
@@ -902,18 +903,17 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  
  //============= delta_mu row ===============================
       std::vector<double> Res_mu (nDof_mu); std::fill(Res_mu.begin(),Res_mu.end(), 0.);
-    for (unsigned i = 0; i < sol_actflag.size(); i++){
+      
+    for (unsigned i = 0; i < sol_actflag.size(); i++) {
       if (sol_actflag[i] == 0){  //inactive
-         Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( 1. * sol_mu[i] - 0. ); 
-	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
+         Res_mu [i] = - ineq_flag * ( 1. * sol_mu[i] - 0. ); 
+// 	 Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i]; 
       }
       else if (sol_actflag[i] == 1){  //active_a 
-	 Res[nDof_u + nDof_ctrl + nDof_adj + i]  = - ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
-         Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+	 Res_mu [i] = - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_lower);
       }
       else if (sol_actflag[i] == 2){  //active_b 
-	Res[nDof_u + nDof_ctrl + nDof_adj + i]  =  - ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
-	Res_mu [i] = Res[nDof_u + nDof_ctrl + nDof_adj + i] ;
+	Res_mu [i]  =  - ineq_flag * ( c_compl *  sol_ctrl[i] - c_compl * ctrl_upper);
       }
     }
  //          Res[nDof_u + nDof_ctrl + nDof_adj + i]  = c_compl * (  (2 - sol_actflag[i]) * (ctrl_lower - sol_ctrl[i]) + ( sol_actflag[i] - 1 ) * (ctrl_upper - sol_ctrl[i])  ) ;
@@ -921,7 +921,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
     
     RES->insert(Res_mu, l2GMap_mu);
-    RES->insert(Res_ctrl, l2GMap_ctrl);
+ //     RES->insert(Res_ctrl, l2GMap_ctrl);
  //     RES->insert(Res_u, l2GMap_u);
  //     RES->insert(Res_adj, l2GMap_adj);
     
@@ -935,25 +935,44 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
  //  KK->matrix_set_off_diagonal_values_blocked(l2GMap_adj, l2GMap_adj, 1.);
   
  //============= delta_ctrl-delta_mu row ===============================
- KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, 1.);
+ KK->matrix_set_off_diagonal_values_blocked(l2GMap_ctrl, l2GMap_mu, ineq_flag * 1.);//------------------------------->>>>>>
   
  //============= delta_mu-delta_ctrl row ===============================
- for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = c_compl;    
+ for (unsigned i = 0; i < sol_actflag.size(); i++) if (sol_actflag[i] != 0 ) sol_actflag[i] = ineq_flag * c_compl;    
   
  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_ctrl, sol_actflag);
 
  //============= delta_mu-delta_mu row ===============================
-  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] = 1 - sol_actflag[i]/c_compl;  //can do better to avoid division, maybe use modulo operator 
+  for (unsigned i = 0; i < sol_actflag.size(); i++) sol_actflag[i] =  ineq_flag * (1 - sol_actflag[i]/c_compl)  + (1-ineq_flag) * 1.;  //can do better to avoid division, maybe use modulo operator 
 
-  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag);
+  KK->matrix_set_off_diagonal_values_blocked(l2GMap_mu, l2GMap_mu, sol_actflag );
   
   } //end element loop for each process
   
   RES->close();
 
   if (assembleMatrix) KK->close();
-
+ std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->_nonliniteration  << ".txt";
+  KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
+  
   // ***************** END ASSEMBLY *******************
+  unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
+  unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
+
+  unsigned int global_ctrl_size = pdeSys->KKoffset[ctrl_index+1][iproc] - pdeSys->KKoffset[ctrl_index][iproc];
+  
+  std::vector<double>  one_times_mu(global_ctrl_size, 0.);
+  std::vector<int>    positions(global_ctrl_size);
+//  double position_mu_i;
+  for (unsigned i = 0; i < positions.size(); i++) {
+    positions[i] = pdeSys->KKoffset[ctrl_index][iproc] + i;
+//     position_mu_i = pdeSys->KKoffset[mu_index][iproc] + i;
+//     std::cout << position_mu_i << std::endl;
+    one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[solIndex_mu])(i/*position_mu_i*/) ;
+  }
+    RES->add_vector_blocked(one_times_mu, positions);
+    RES->print();
+    
 
   return;
 }
@@ -964,7 +983,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
   
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
