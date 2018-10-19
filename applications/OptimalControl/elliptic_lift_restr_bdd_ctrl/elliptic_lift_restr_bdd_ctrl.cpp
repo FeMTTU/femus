@@ -54,7 +54,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 }
 
 
-double ComputeIntegral(MultiLevelProblem& ml_prob);
+void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob);
 
@@ -129,15 +129,14 @@ int main(int argc, char** args) {
   mlSol.SetWriter(VTK);
   mlSol.GetWriter()->SetDebugOutput(true);
   
-  system.SetDebugNonlinear(true);//   system.SetDebuglinear(true);
+  system.SetDebugNonlinear(true);
+  system.SetDebugFunction(ComputeIntegral);
 //   system.SetMaxNumberOfNonLinearIterations(2);
 
   // initialize and solve the system
   system.init();
   system.MGsolve();
   
-  ComputeIntegral(mlProb);
- 
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("all");
@@ -818,10 +817,10 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 
 
 
-double ComputeIntegral(MultiLevelProblem& ml_prob)    {
+void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("OptSys");
+  const NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("OptSys");
   const unsigned          level      = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                          msh = ml_prob._ml_msh->GetLevel(level);
@@ -1035,8 +1034,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
         }
 
                integral_target += target_flag * weight * (u_gss +  ctrl_gss - udes_gss) * (u_gss +  ctrl_gss - udes_gss);
-               integral_alpha  += target_flag * alpha * weight * ctrl_gss * ctrl_gss;
-               integral_beta   += target_flag * beta * weight * ctrl_x_gss * ctrl_x_gss;
+               integral_alpha  +=       alpha * weight * ctrl_gss * ctrl_gss;
+               integral_beta   +=        beta * weight * ctrl_x_gss * ctrl_x_gss;
 	  
       } // end gauss point loop
   } //end element loop
@@ -1044,9 +1043,9 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
   std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << integral_target + integral_alpha + integral_beta << std::endl;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta << std::endl;
   
-return integral_target + integral_alpha + integral_beta;
+return;
   
 }
   
