@@ -248,17 +248,24 @@ restart:
         std::cout << "     ********* Linear Cycle + Residual Update-Cycle TIME:\t" << std::setw(11) << std::setprecision(6) << std::fixed
                   << static_cast<double>((clock() - startUpdateResidualTime)) / CLOCKS_PER_SEC << std::endl;
 
+                  
        if (_debug_nonlinear)  {
           std::vector < std::string > variablesToBePrinted;
           variablesToBePrinted.push_back("All");
           std::ostringstream output_file_name_stream; output_file_name_stream << "biquadratic" << "." << std::setfill('0') << std::setw(2)   << nonLinearIterator; // the "." after biquadratic is needed to see the sequence of files in Paraview as "time steps"
-           if (this->GetMLProb().GetFilesHandler() != NULL) {
-              this->GetMLProb()._ml_sol->GetWriter()->Write(this->GetMLProb().GetFilesHandler()->GetOutputPath(),output_file_name_stream.str().c_str(),variablesToBePrinted);
-	       }
-           else {
-             this->GetMLProb()._ml_sol->GetWriter()->Write(DEFAULT_OUTPUTDIR,output_file_name_stream.str().c_str(),variablesToBePrinted);
-	       }
+
+          std::string out_path;
+           if (this->GetMLProb().GetFilesHandler() != NULL)  out_path = this->GetMLProb().GetFilesHandler()->GetOutputPath();
+	       else                                              out_path = DEFAULT_OUTPUTDIR;
+	       
+           //print all variables to file
+           this->GetMLProb()._ml_sol->GetWriter()->Write(out_path,output_file_name_stream.str().c_str(),variablesToBePrinted);
+	       
+           //do desired additional computations at the end of each nonlinear iteration
+	      _debug_function(this->GetMLProb());
+          
         }
+        
     
         if(nonLinearIsConverged || _bitFlipOccurred) break;
 

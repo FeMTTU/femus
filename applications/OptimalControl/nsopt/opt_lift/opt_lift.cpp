@@ -1764,7 +1764,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
 //   JAC->print_matlab(mat_out.str(),"ascii");
 //   }
   RES->close();
-  RES->print();
+//   RES->print();
   // ***************** END ASSEMBLY *******************
 }
  

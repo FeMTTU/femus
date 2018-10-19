@@ -1,19 +1,16 @@
 
+#include <stdio.h>
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "NumericVector.hpp"
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
-#include "LinearImplicitSystem.hpp"
-
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "Files.hpp"
-#include <stdio.h>
-
 #include "PetscMatrix.hpp"
+#include "adept.h"
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
@@ -70,7 +67,7 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
 
 void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob);    
 
-double ComputeIntegral(MultiLevelProblem& ml_prob);
+void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 
 int main(int argc, char** args) {
@@ -179,7 +176,7 @@ int main(int argc, char** args) {
    system_opt.SetAssembleFunction(AssembleNavierStokesOpt);
 
    
-  // initilaize and solve the system
+  // initialize and solve the system
   system_opt.init();
   system_opt.ClearVariablesToBeSolved();
   system_opt.AddVariableToBeSolved("All");
@@ -188,15 +185,13 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
   
   system_opt.SetDebugNonlinear(true);
+  system_opt.SetDebugFunction(ComputeIntegral);
 //   system_opt.SetMaxNumberOfNonLinearIterations(2);
 //   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
-  system_opt.SetDebugLinear(true);
   system_opt.SetMaxNumberOfLinearIterations(6);
   system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
   system_opt.MLsolve();
 
-    ComputeIntegral(mlProb);
-  
   // print solutions
   std::vector < std::string > variablesToBePrinted;
   variablesToBePrinted.push_back("All");
@@ -1028,22 +1023,17 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
 
 
 
-double ComputeIntegral(MultiLevelProblem& ml_prob) {
+void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
-//    NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   
-
-   LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("NSOpt");   
-   const unsigned level = mlPdeSys->GetLevelToAssemble();
+   const NonLinearImplicitSystem & mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   
+   const unsigned level = mlPdeSys.GetLevelToAssemble();
  
 
-  Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  const Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
   elem*          el         	= msh->el;  // pointer to the elem object in msh (level)
 
   MultiLevelSolution*  mlSol    = ml_prob._ml_sol;  // pointer to the multilevel solution object
   Solution*    sol        	= ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
-
-
-  LinearEquationSolver* pdeSys  = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
   
   unsigned    iproc = msh->processor_id(); // get the process_id (for parallel computation)
   
@@ -1397,7 +1387,7 @@ double integral_g_dot_n = 0.;
     std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * alpha_val*0.5  + integral_beta *beta_val*0.5 + integral_gamma *gamma_val*0.5 << std::endl; 
     
     
-    return integral_target_alpha * alpha_val*0.5+ integral_beta *beta_val*0.5+ integral_gamma *gamma_val*0.5; 
+    return; 
 	  
   
 }

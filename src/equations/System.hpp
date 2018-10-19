@@ -118,7 +118,7 @@ public:
     /** Get Number of Levels */
     inline const unsigned GetGridn() const { return _gridn; }
 
-    inline unsigned GetLevelToAssemble(){ return _levelToAssemble; }
+    inline unsigned GetLevelToAssemble() const { return _levelToAssemble; }
 
     inline unsigned SetLevelToAssemble(const unsigned &level){ _levelToAssemble = level; }
 
