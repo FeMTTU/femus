@@ -952,7 +952,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
- std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->_nonliniteration  << ".txt";
+ std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->GetNonlinearIt()  << ".txt";
   KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
   
   // ***************** END ASSEMBLY *******************

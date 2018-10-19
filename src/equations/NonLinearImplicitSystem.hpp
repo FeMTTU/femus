@@ -68,6 +68,9 @@ public:
         return _final_nonlinear_residual;
     }
 
+    /** Returns the final residual for the nonlinear system solve. */
+    const unsigned GetNonlinearIt() const { return _nonliniteration; }
+    
     /** Set the max number of non-linear iterations for the nonlinear system solve. */
     void SetDebugFunction(DebugFunc debug_func_in) { _debug_function = debug_func_in; }
     
@@ -98,10 +101,11 @@ public:
       _linearAbsoluteConvergenceTolerance = tolerance;
     }
     
-    unsigned _nonliniteration;
-
 protected:
 
+    /** Current nonlinear iteration index */
+    unsigned _nonliniteration;
+    
     /** Flag for printing fields at each nonlinear iteration */
     bool _debug_nonlinear;
     

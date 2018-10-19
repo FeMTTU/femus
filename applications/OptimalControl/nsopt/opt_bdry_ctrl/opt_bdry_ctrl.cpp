@@ -1008,9 +1008,9 @@ void AssembleNavierStokesOpt(MultiLevelProblem& ml_prob){
   JAC->close();
   RES->close();
   
-//     std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
+//     std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/matrix_non_ad" << mlPdeSys.GetNonlinearIt()  << ".txt";
 //   JAC->print_matlab(mat_out.str(),"ascii");
-//     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/res_non_ad_" << mlPdeSys._nonliniteration  << ".txt";
+//     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/res_non_ad_" << mlPdeSys.GetNonlinearIt()  << ".txt";
 //     std::filebuf res_fb;
 //    res_fb.open (res_out.str().c_str(),std::ios::out);
 //     std::ostream  res_file_stream(&res_fb);

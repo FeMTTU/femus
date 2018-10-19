@@ -846,10 +846,6 @@ std::cout << " ********************************  AD SYSTEM *********************
 //   RES->print();
 
   JAC->close();
-//   if(mlPdeSys._nonliniteration == 0 || mlPdeSys._nonliniteration == 1){
-//     std::ostringstream mat_out; mat_out << "matrix_ad" << mlPdeSys._nonliniteration  << ".txt";
-//   JAC->print_matlab(mat_out.str(),"ascii");
-//   }
 
   // ***************** END ASSEMBLY *******************
 }
@@ -1759,12 +1755,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
   
   
   JAC->close();
-//   if(mlPdeSys._nonliniteration == 0 || mlPdeSys._nonliniteration == 1){
-//     std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
-//   JAC->print_matlab(mat_out.str(),"ascii");
-//   }
   RES->close();
-//   RES->print();
   // ***************** END ASSEMBLY *******************
 }
  
