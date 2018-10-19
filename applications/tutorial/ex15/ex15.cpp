@@ -21,23 +21,35 @@
 
 using namespace femus;
 double b[5][5]={
-    {},
-    {0.5,0.5}
+    {1.},
+    {0.5,0.5},
+    {5./18., 4./9., 5./18.}
 };
+
+// double b[5][5]={
+//     {},
+//     {0.5 * (1.+sqrt(3.)), 0.5 *(1.-sqrt(3.)) }
+// };
+
 double a[5][5][5]={
-    {},
+    {   {0.5}},
     {
         {0.25, 0.25 - sqrt(3.)/6.},
         {0.25 + sqrt(3.)/6., 0.25 }
+    },
+    {
+        { 5./36.,                   2./9. - sqrt(15.)/15.,   5./36. - sqrt(15.)/30.},
+        { 5./36. + sqrt(15.)/24.,   2./9.,                   5./36. - sqrt(15.)/24.},
+        { 5./36. + sqrt(15.)/30.,   2./9. + sqrt(15.)/15.,   5./36.}
     }
 };
 
-const unsigned RK = 2;
+const unsigned RK = 3;
 
 std::ostringstream ki[RK];
 
 double GetTimeStep(const double time) {
-  double dt = 1.;
+  double dt = 2.;
   return dt;
 }
 
