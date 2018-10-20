@@ -76,8 +76,8 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
   
   if(!strcmp(name,"control")) {
       value = 0.;
-  if (faceName == 3)
-    dirichlet = false;
+//   if (faceName == 3)
+//     dirichlet = false;
   
   }
   
@@ -475,7 +475,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
         Res[ res_row_index(Sol_n_el_dofs,pos_state,i) ] += - weight * (target_flag * phi_fe_qp[SolFEType[pos_state]][i] * (
                                                                                               m_b_f[pos_state][pos_state] * sol_qp[pos_state] 
                                                                                             - u_des ) 
-                                                                                          - m_b_f[pos_state][pos_adj]   * laplace_rhs_dstate_adj_i );
+                                                                                          + m_b_f[pos_state][pos_adj]   * laplace_rhs_dstate_adj_i );
           // ==============
 	     if ( control_el_flag == 1)        Res[ res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(control_node_flag[i]) **/ - weight * (
                                                                                   + m_b_f[pos_ctrl][pos_ctrl] * alpha * phi_fe_qp[SolFEType[pos_ctrl]][i] * sol_qp[pos_ctrl]
@@ -485,7 +485,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	      else if ( control_el_flag == 0)  Res[ res_row_index(Sol_n_el_dofs,pos_ctrl,i) ] +=  /*(1 - control_node_flag[i]) **/ m_b_f[pos_ctrl][pos_ctrl] * (- penalty_strong) * (sol_eldofs[pos_ctrl][i]);
 
           // =============
-        Res[ res_row_index(Sol_n_el_dofs,pos_adj,i) ] += - weight *  ( - m_b_f[pos_adj][pos_state] * laplace_rhs_dadj_state_i 
+        Res[ res_row_index(Sol_n_el_dofs,pos_adj,i) ] += - weight *  ( + m_b_f[pos_adj][pos_state] * laplace_rhs_dadj_state_i 
                                                                        + m_b_f[pos_adj][pos_ctrl]  * phi_fe_qp[SolFEType[pos_adj]][i] * sol_qp[pos_ctrl] );
 
 //======================Residuals=======================
@@ -516,7 +516,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
                                                       m_b_f[pos_state][pos_state] * weight * target_flag * phi_fe_qp[SolFEType[pos_state]][j] *  phi_fe_qp[SolFEType[pos_state]][i];
               
 		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_state, pos_adj, i, j)  ]  +=
-		                                              m_b_f[pos_state][pos_adj] * weight * (-1) * laplace_mat_dstate_adj_i_j;
+		                                              m_b_f[pos_state][pos_adj] * weight * laplace_mat_dstate_adj_i_j;
               
 	      //=========== delta_control row ===========================     
 	      if ( control_el_flag == 1)  {
@@ -524,7 +524,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_ctrl, i, j) ]  += 
 		                                              m_b_f[pos_ctrl][pos_ctrl] * ( control_node_flag[i]) * weight * (
                                                                                   beta * control_el_flag  * laplace_mat_dctrl_ctrl_i_j 
-                                                                               + alpha * control_el_flag * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] 
+                                                                               + alpha * control_el_flag  * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j] 
 		                                                                                    );
               
 		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_ctrl, pos_adj, i, j) ]  += m_b_f[pos_ctrl][pos_adj] * weight * phi_fe_qp[SolFEType[pos_ctrl]][i] * phi_fe_qp[SolFEType[pos_adj]][j] 
@@ -536,7 +536,7 @@ void AssembleProblem(MultiLevelProblem& ml_prob) {
 	      }
 	      
 	      //=========== delta_adjoint row ===========================
-		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_state, i, j) ]  += m_b_f[pos_adj][pos_state] * weight * (-1) * laplace_mat_dadj_state_i_j;   
+		Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_state, i, j) ]  += m_b_f[pos_adj][pos_state] * weight * laplace_mat_dadj_state_i_j;   
 
         Jac[ jac_row_col_index(Sol_n_el_dofs, nDof_AllVars, pos_adj, pos_ctrl, i, j)  ]  += m_b_f[pos_adj][pos_ctrl] * weight * phi_fe_qp[SolFEType[pos_adj]][i] * phi_fe_qp[SolFEType[pos_ctrl]][j]; 
 		     
