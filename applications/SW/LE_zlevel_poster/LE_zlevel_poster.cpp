@@ -25,9 +25,11 @@
 
 using namespace femus;
 
-double rho1[40] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-                   1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000
-                  };
+// double rho1[40] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
+//                    1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000
+//                   };
+
+double rho1[20] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
 
 double dt = 120.;
 
@@ -40,18 +42,19 @@ double k_v = 0.0001;
 clock_t start_time = clock();
 
 bool wave = false; //lasciarlo cosi' perche' wave ambiguo con splitting e second stage (RES2 non viene 0 senza splitting e second stage)
-bool twostage = false;
-bool splitting = false;
+bool twostage = true;
+bool splitting = true;
 bool assembly = true; //assembly must be left always true
 
 double maxW = 0.;
+double counter = 0.;
 
-const unsigned NumberOfLayers = 40;
+const unsigned NumberOfLayers = 20;
 
-//const double hRest[20] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-const double hRest[40] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
-                          0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5
-                         };
+const double hRest[20] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+// const double hRest[40] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+//                           0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5
+//                          };
 
 double InitalValueV ( const std::vector < double >& x ) {
   return 0;
@@ -83,7 +86,7 @@ bool SetBoundaryCondition ( const std::vector < double >& x, const char SolName[
 
 
 void ETDvh ( MultiLevelProblem& ml_prob );
-void ETDt ( MultiLevelProblem& ml_prob );
+void ETDt ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps );
 void RK4t ( MultiLevelProblem& ml_prob );
 
 
@@ -101,7 +104,7 @@ int main ( int argc, char** args ) {
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
 
-  unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*7*/6 ) + 0.5 ) ); //Grid cell size = 0.5km
+  unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*6*/7 ) + 0.5 ) ); //Grid cell size = 0.5km
 
   double length = 64000; //2 * 1465700.;
 
@@ -177,18 +180,17 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 306; //17h=1020 with dt=60, 17h=10200 with dt=6
+  unsigned numberOfTimeSteps = 2041; //17h=1020 with dt=60, 17h=10200 with dt=6
   //bool implicitEuler = true;
-  dt = 200.;
+  dt = 30.;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
-
     ETDvh ( ml_prob );
-
-    //ETDt ( ml_prob );
-    RK4t ( ml_prob );
+    ETDt ( ml_prob, numberOfTimeSteps );
+    //RK4t ( ml_prob );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
+    counter = i;
   }
   //std::cout<<"max value of w = "<<maxW<<std::endl;
   std::cout << " TOTAL TIME:\t" << \
@@ -693,7 +695,7 @@ void ETDvh ( MultiLevelProblem& ml_prob ) {
 
 
 
-void ETDt ( MultiLevelProblem& ml_prob ) {
+void ETDt ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
 
   const unsigned& NLayers = NumberOfLayers;
 
@@ -1384,15 +1386,18 @@ void ETDt ( MultiLevelProblem& ml_prob ) {
   sol->_Sol[solIndexeta]->add ( -1, *sol->_Sol[solIndexb] );
 
   for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
+    
+    if(counter == numberOfTimeSteps-2) std::cout << "T" << k << "  ----------------------------------------------------" << std::endl;
     for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++ ) {
       double valueHT = ( *sol->_Sol[solIndexHT[k]] ) ( i );
       double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
 
       double valueT = valueHT / valueH;
+      if(counter==numberOfTimeSteps-2) std::cout << valueT << std::endl;
 
       sol->_Sol[solIndexT[k]]->set ( i, valueT );
     }
-
+    
     sol->_Sol[solIndexT[k]]->close();
 
   }
