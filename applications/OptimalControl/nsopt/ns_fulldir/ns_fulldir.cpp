@@ -500,9 +500,6 @@ void AssembleNS_AD(MultiLevelProblem& ml_prob) {
 
  if (assembleMatrix){   //Extarct and store the Jacobian
   KK->close();
-//   if(mlPdeSys._nonliniteration == 0){
-//     std::ostringstream mat_out; mat_out << "matrix_ad" << mlPdeSys._nonliniteration  << ".txt";
-//   KK->print_matlab(mat_out.str(),"ascii");}
   }
  
   RES->close();
@@ -913,8 +910,8 @@ void AssembleNS_nonAD(MultiLevelProblem& ml_prob){
   
   
   JAC->close();
-//    if(mlPdeSys._nonliniteration == 0){
-//      std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
+//    if(mlPdeSys.GetNonlinearIt() == 0){
+//      std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys.GetNonlinearIt()  << ".txt";
 //   JAC->print_matlab(mat_out.str(),"ascii");}
   RES->close();
 //   RES->print();

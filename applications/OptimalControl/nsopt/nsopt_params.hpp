@@ -7,7 +7,7 @@
 #define NSUB_X  32
 #define NSUB_Y  32
 
-#define FLUID_DENSITY  1
+#define FLUID_DENSITY  100
 //******************************************* Desired Target  and RHS function*******************************************************
 
  double force[3] = {0.,0.,0.};
@@ -15,9 +15,9 @@
 
 //*********************** Sets the regularization parameters *******************************************************
 
- double alpha_val = 1.;
- double beta_val = 1.e-3;
- double gamma_val = 1.e-3;
+ double alpha_val = 1.e+0;
+ double beta_val  = 1.e-3;
+ double gamma_val = 1.e-2;
  
  
 //******************************** switch between stokes and navier stokes *********************************************

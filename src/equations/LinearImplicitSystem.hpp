@@ -94,7 +94,9 @@ namespace femus {
 
       /** Flag to print fields to file after each linear iteration */
       void SetDebugLinear(const bool my_value) {
-         _debug_linear = my_value;
+        if ( this->GetMLProb()._ml_sol->GetWriter() != NULL)        _debug_linear = my_value;
+        else {std::cout << "SetWriter first" << std::endl; abort(); }
+
       };
 
       /** Get the absolute convergence tolerance for the linear problem Ax=b*/

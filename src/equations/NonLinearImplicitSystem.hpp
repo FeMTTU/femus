@@ -34,6 +34,10 @@ namespace femus {
 
 class NonLinearImplicitSystem : public LinearImplicitSystem {
 
+protected:
+    /** Debug function typedef */
+    typedef void (*DebugFunc) (const MultiLevelProblem& ml_prob);
+    
 public:
 
     /** Constructor.  Optionally initializes required data structures. */
@@ -64,9 +68,18 @@ public:
         return _final_nonlinear_residual;
     }
 
+    /** Returns the final residual for the nonlinear system solve. */
+    const unsigned GetNonlinearIt() const { return _nonliniteration; }
+    
+    /** Set the max number of non-linear iterations for the nonlinear system solve. */
+    void SetDebugFunction(DebugFunc debug_func_in) { _debug_function = debug_func_in; 
+                                                     _debug_function_is_initialized = true; 
+    }
+    
     /** Flag to print fields to file after each nonlinear iteration */
     void SetDebugNonlinear(const bool my_value) {
-        _debug_nonlinear = my_value;
+        if ( this->GetMLProb()._ml_sol->GetWriter() != NULL)        _debug_nonlinear = my_value;
+        else {std::cout << "SetWriter first" << std::endl; abort(); }
     };
     
     /** Set the max number of non-linear iterations for the nonlinear system solve. */
@@ -90,13 +103,20 @@ public:
       _linearAbsoluteConvergenceTolerance = tolerance;
     }
     
-    unsigned _nonliniteration;
-
 protected:
 
+    /** Current nonlinear iteration index */
+    unsigned _nonliniteration;
+    
     /** Flag for printing fields at each nonlinear iteration */
     bool _debug_nonlinear;
-
+    
+    /** Debug function typedef */
+    DebugFunc _debug_function;
+    
+    /** Flag for printing fields at each nonlinear iteration */
+    bool _debug_function_is_initialized;
+    
     /** The final residual for the nonlinear system R(x) */
     double _final_nonlinear_residual;
 

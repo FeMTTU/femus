@@ -220,7 +220,7 @@ int main(int argc, char** args) {
  
   system_opt.SetDebugNonlinear(true);
 //   system_opt.SetMaxNumberOfNonLinearIterations(5);
-  system_opt.SetNonLinearConvergenceTolerance(1.e-10);
+//   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
   system_opt.SetDebugLinear(true);
   system_opt.SetMaxNumberOfLinearIterations(6);
   system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
@@ -846,10 +846,6 @@ std::cout << " ********************************  AD SYSTEM *********************
 //   RES->print();
 
   JAC->close();
-//   if(mlPdeSys._nonliniteration == 0 || mlPdeSys._nonliniteration == 1){
-//     std::ostringstream mat_out; mat_out << "matrix_ad" << mlPdeSys._nonliniteration  << ".txt";
-//   JAC->print_matlab(mat_out.str(),"ascii");
-//   }
 
   // ***************** END ASSEMBLY *******************
 }
@@ -963,10 +959,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob) {
 
 
 
-double square_norm_u_ud = 0.;
-double integral_target = 0.;
 double  integral_target_alpha = 0.;
-
 double	integral_beta   = 0.;
 double	integral_gamma  = 0.;
   
@@ -1099,7 +1092,6 @@ double	integral_gamma  = 0.;
           
 	
       for (unsigned  k = 0; k < dim; k++) {
-	  square_norm_u_ud += (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) ;
 	 integral_target_alpha +=target_flag* (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k])*weight;
 	 integral_beta	+= ((Vctrl_gss[k])*(Vctrl_gss[k])*weight);
       }
@@ -1108,27 +1100,15 @@ double	integral_gamma  = 0.;
 		integral_gamma	  += ((gradVctrl_gss[k][j])*(gradVctrl_gss[k][j])*weight);
 	}
       }
-      integral_target += target_flag * square_norm_u_ud * weight ; 
-      
+   
   
-	      
-
-      
-      
-//       integralval= sqrt(((integral[0]*integral[0]) +(integral[1]*integral[1]))/**weight*/);
-// // 
-
       }// end gauss point loop
     } //end element loop  
 
-//     std::cout << "The value of the integral of target is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
-//     std::cout << "The value of the integral of beta is " << std::setw(11) << std::setprecision(10) <<  integral_beta << std::endl;
-//     std::cout << "The value of the integral of gamma is " << std::setw(11) << std::setprecision(10) <<  integral_gamma << std::endl; 
-      std::cout << "The value of the integral target is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target << std::endl;
     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<beta_val << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<gamma_val<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
-    std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha + integral_beta  + integral_gamma << std::endl; 
+    std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha *(alpha_val*0.5)+ integral_beta *(beta_val*0.5) + integral_gamma*(gamma_val*0.5) << std::endl; 
    
     
     return  integral_target_alpha *(alpha_val*0.5)+ integral_beta*(beta_val*0.5) + integral_gamma*(gamma_val*0.5) ; 
@@ -1238,7 +1218,6 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
   
   // quadratures ********************************
   double weight;
-  
   
   // equation ***********************************
   vector < vector < int > > JACDof(n_unknowns); 
@@ -1776,12 +1755,7 @@ void AssembleNavierStokesOpt_nonAD(MultiLevelProblem& ml_prob){
   
   
   JAC->close();
-//   if(mlPdeSys._nonliniteration == 0 || mlPdeSys._nonliniteration == 1){
-//     std::ostringstream mat_out; mat_out << "matrix_non_ad" << mlPdeSys._nonliniteration  << ".txt";
-//   JAC->print_matlab(mat_out.str(),"ascii");
-//   }
   RES->close();
-//   RES->print();
   // ***************** END ASSEMBLY *******************
 }
  

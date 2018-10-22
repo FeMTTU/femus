@@ -62,7 +62,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 }
 
 
-double ComputeIntegral(MultiLevelProblem& ml_prob);
+void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 void AssembleOptSys(MultiLevelProblem& ml_prob);
 
@@ -134,21 +134,14 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
 
   system.SetDebugNonlinear(true);
+  system.SetDebugFunction(ComputeIntegral);
   // initialize and solve the system
   system.init();
   system.MGsolve();
-  
-  ComputeIntegral(mlProb);
- 
+   
   // print solutions
   std::vector < std::string > variablesToBePrinted;
-  variablesToBePrinted.push_back("state");
-  variablesToBePrinted.push_back("control");
-  variablesToBePrinted.push_back("adjoint");
-  variablesToBePrinted.push_back("TargReg");
-  variablesToBePrinted.push_back("ContReg");
-
-
+    variablesToBePrinted.push_back("all");
   mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
   return 0;
 }
@@ -836,7 +829,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
-   std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->_nonliniteration  << ".txt";
+   std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->GetNonlinearIt()  << ".txt";
   KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
 
   // ***************** END ASSEMBLY *******************
@@ -845,10 +838,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 }
 
 
-double ComputeIntegral(MultiLevelProblem& ml_prob)    {
+void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  const NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -1153,7 +1146,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
   std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
  
-return total_integral;
+return;
   
 }
   
