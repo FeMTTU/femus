@@ -1,7 +1,7 @@
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
 #include "VTKWriter.hpp"
-#include "LinearImplicitSystem.hpp"
+#include "NonLinearImplicitSystem.hpp"
 #include "NumericVector.hpp"
 
 #include "ElemType.hpp"
@@ -71,6 +71,10 @@ int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
+  
+  Files files; 
+  files.CheckIODirectories();
+  files.RedirectCout();
 
   // define multilevel mesh
   MultiLevelMesh mlMsh;
@@ -114,8 +118,10 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
   
+  mlProb.SetFilesHandler(&files);
+  
  // add system  in mlProb as a Linear Implicit System
-  LinearImplicitSystem& system = mlProb.add_system < LinearImplicitSystem > ("LiftRestr");
+  NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
  
   system.AddSolutionToSystemPDE("state");  
   system.AddSolutionToSystemPDE("control");  
@@ -123,7 +129,11 @@ int main(int argc, char** args) {
   
   // attach the assembling function to system
   system.SetAssembleFunction(AssembleOptSys);
+  
+  mlSol.SetWriter(VTK);
+  mlSol.GetWriter()->SetDebugOutput(true);
 
+  system.SetDebugNonlinear(true);
   // initialize and solve the system
   system.init();
   system.MGsolve();
@@ -138,10 +148,8 @@ int main(int argc, char** args) {
   variablesToBePrinted.push_back("TargReg");
   variablesToBePrinted.push_back("ContReg");
 
-  mlSol.SetWriter(VTK);
-  mlSol.GetWriter()->SetDebugOutput(true);
-  mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted);
 
+  mlSol.GetWriter()->Write(files.GetOutputPath()/*DEFAULT_OUTPUTDIR*/, "biquadratic", variablesToBePrinted);
   return 0;
 }
 
@@ -155,7 +163,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
   //  extract pointers to the several objects that we are going to use
 
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
   const bool assembleMatrix = mlPdeSys->GetAssembleMatrix();
 
@@ -637,7 +645,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	}
 //=============== grad dot n  =========================================    
 
-  std::cout << " gradadjdotn " << grad_adj_dot_n_mat << std::endl;
+//  std::cout << " gradadjdotn " << grad_adj_dot_n_mat << std::endl;
   
 		      
 //==========block delta_control/adjoint ========
@@ -728,10 +736,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      
 //============ Volume residuals ==================	    
           if (i < nDof_u)      Res[0                  + i] += - weight * ( target_flag * phi_u[i] * ( sol_u_gss - u_des)
-	                                                                  - laplace_rhs_du_adj_i); 
+	                                                                  -1. * laplace_rhs_du_adj_i); 
           if (i < nDof_ctrl)  Res[nDof_u              + i] += - penalty_outside_control_boundary * ( (1 - control_node_flag[i]) * (  sol_ctrl[i] - 0.)  );
 	      
-	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += - weight * (-1) * (laplace_rhs_dadj_u_i);
+	  if (i < nDof_adj)    Res[nDof_u + nDof_ctrl + i] += - weight * (-1.) * (laplace_rhs_dadj_u_i);
 //============  Volume Residuals ==================	    
 	      
 	      
@@ -756,7 +764,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //               //BLOCK delta_state / adjoint
               if ( i < nDof_u && j < nDof_adj )   
 		Jac[ i * nDof_AllVars +
-		(nDof_u + nDof_ctrl + j)               ]  += weight * (-1) * laplace_mat_du_adj;
+		(nDof_u + nDof_ctrl + j)               ]  += weight * (-1.) * laplace_mat_du_adj;
 	      
 	      
               //=========== delta_control row ===========================
@@ -772,7 +780,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 	      if ( i < nDof_adj && j < nDof_u ) {
 		Jac[    
 		(nDof_u + nDof_ctrl + i) * nDof_AllVars  +
-		(0 + j)                                ]  += weight * (-1) * laplace_mat_dadj_u;
+		(0 + j)                                ]  += weight * (-1.) * laplace_mat_dadj_u;
 
 	      }
 	      
@@ -792,26 +800,26 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
       } // end gauss point loop
 
       
-	if (control_el_flag == 1) {
-	  
-    std::cout << " ========== " << iel << " deltaq/q ================== " << std::endl;      
-         for (unsigned i = 0; i < nDof_max; i++) {
-            for (unsigned j = 0; j < nDof_max; j++) {
-	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + j) ];
-	     }
-	      std::cout << std::endl;
-	   }
-
-    std::cout << " ========== " << iel << " deltaq/lambda ================== " << std::endl;      
-         for (unsigned i = 0; i < nDof_max; i++) {
-            for (unsigned j = 0; j < nDof_max; j++) {
-	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + nDof_ctrl + j) ];
-	     }
-	      std::cout << std::endl;
-	   }
-	   
-	   
-	}
+// 	if (control_el_flag == 1) {
+// 	  
+//     std::cout << " ========== " << iel << " deltaq/q ================== " << std::endl;      
+//          for (unsigned i = 0; i < nDof_max; i++) {
+//             for (unsigned j = 0; j < nDof_max; j++) {
+// 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + j) ];
+// 	     }
+// 	      std::cout << std::endl;
+// 	   }
+// 
+//     std::cout << " ========== " << iel << " deltaq/lambda ================== " << std::endl;      
+//          for (unsigned i = 0; i < nDof_max; i++) {
+//             for (unsigned j = 0; j < nDof_max; j++) {
+// 	      std::cout << " " << std::setfill(' ') << std::setw(10) << Jac[ (nDof_u + i) * nDof_AllVars + (nDof_u + nDof_ctrl + j) ];
+// 	     }
+// 	      std::cout << std::endl;
+// 	   }
+// 	   
+// 	   
+// 	}
     
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
@@ -828,6 +836,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   RES->close();
 
   if (assembleMatrix) KK->close();
+   std::ostringstream mat_out; mat_out << "matrix" << mlPdeSys->_nonliniteration  << ".txt";
+  KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
 
   // ***************** END ASSEMBLY *******************
 
@@ -838,7 +848,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   
   
-  LinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<LinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -1101,8 +1111,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 		      }  
 
                  //========= compute gauss quantities on the boundary ================================================
-                  integral_alpha += /*alpha **/ weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
-                  integral_beta  += /*beta **/ weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
+                  integral_alpha += weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
+                  integral_beta  += weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
                  
 		}
 	      } //end face == 3
@@ -1136,12 +1146,12 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
       
   } //end element loop
 
-  double total_integral = integral_target + alpha * integral_alpha + beta * integral_beta;
+  double total_integral = 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta;
   
-  std::cout << "The value of the integral_target is                 " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
-  std::cout << "The value of the integral_alpha (without alpha)  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
-  std::cout << "The value of the integral_beta (without beta)    is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-  std::cout << "The value of the total integral                  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
+  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
+  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
+  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
  
 return total_integral;
   

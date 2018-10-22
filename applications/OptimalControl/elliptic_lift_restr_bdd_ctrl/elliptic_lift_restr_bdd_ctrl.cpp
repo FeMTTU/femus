@@ -983,6 +983,10 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
    target_flag = ElementTargetFlag(elem_center);
  //*************************************************** 
 
+ //***** set control flag ****************************
+  int control_el_flag = 0;
+  control_el_flag = ControlDomainFlag_internal_restriction(elem_center);
+ //*************************************************** 
    
  //**************** state **************************** 
     unsigned nDof_u     = msh->GetElementDofNumber(iel, solType_u);    // number of solution element dofs
@@ -1049,8 +1053,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
         }
 
                integral_target += target_flag * weight * (u_gss +  ctrl_gss - udes_gss) * (u_gss +  ctrl_gss - udes_gss);
-               integral_alpha  += target_flag * alpha * weight * ctrl_gss * ctrl_gss;
-               integral_beta   += target_flag * beta * weight * ctrl_x_gss * ctrl_x_gss;
+               integral_alpha  += control_el_flag * weight * ctrl_gss * ctrl_gss;
+               integral_beta   += control_el_flag * weight * ctrl_x_gss * ctrl_x_gss;
 	  
       } // end gauss point loop
   } //end element loop
@@ -1058,7 +1062,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
   std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << integral_target + integral_alpha + integral_beta << std::endl;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta << std::endl;
   
 return integral_target + integral_alpha + integral_beta;
   

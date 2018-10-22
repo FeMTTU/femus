@@ -1258,8 +1258,8 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 		      }  
 
                  //========= compute gauss quantities on the boundary ================================================
-                  integral_alpha += /*alpha **/ weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
-                  integral_beta  += /*beta **/ weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
+                  integral_alpha +=  weight * sol_ctrl_bdry_gss * sol_ctrl_bdry_gss; 
+                  integral_beta  +=  weight * (sol_ctrl_x_bdry_gss[0] * sol_ctrl_x_bdry_gss[0] /*+ sol_ctrl_x_bdry_gss[1] * sol_ctrl_x_bdry_gss[1]*/);
                  
 		}
 	      } //end face == 3
@@ -1293,12 +1293,12 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
       
   } //end element loop
 
-  double total_integral = integral_target + alpha * integral_alpha + beta * integral_beta;
+  double total_integral = 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta;
   
-  std::cout << "The value of the integral_target is                 " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
-  std::cout << "The value of the integral_alpha (without alpha)  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
-  std::cout << "The value of the integral_beta (without beta)    is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
-  std::cout << "The value of the total integral                  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
+  std::cout << "The value of the integral_target is " << std::setw(11) << std::setprecision(10) << integral_target << std::endl;
+  std::cout << "The value of the integral_alpha  is " << std::setw(11) << std::setprecision(10) << integral_alpha << std::endl;
+  std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
+  std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
  
 return total_integral;
   
