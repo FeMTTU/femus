@@ -105,17 +105,6 @@ public:
     
 protected:
 
-    /** Current nonlinear iteration index */
-    unsigned _nonliniteration;
-    
-    /** Flag for printing fields at each nonlinear iteration */
-    bool _debug_nonlinear;
-    
-    /** Debug function typedef */
-    DebugFunc _debug_function;
-    
-    /** Flag for printing fields at each nonlinear iteration */
-    bool _debug_function_is_initialized;
     
     /** The final residual for the nonlinear system R(x) */
     double _final_nonlinear_residual;
@@ -128,7 +117,18 @@ protected:
 
     unsigned _maxNumberOfResidualUpdateIterations;
     
+    /** Flag for printing fields at each nonlinear iteration */
+    bool _debug_nonlinear;
+    
+    /** Debug function pointer */
+    DebugFunc _debug_function;
+    
+    /**  */
+    bool _debug_function_is_initialized;
 
+    /** Current nonlinear iteration index */
+    unsigned _nonliniteration;
+    
     /** Solves the system. */
     virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 

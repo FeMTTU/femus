@@ -820,7 +820,7 @@ void AssembleLiftRestrProblem(MultiLevelProblem& ml_prob) {
 void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   
-  const NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("OptSys");
+  const NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");
   const unsigned          level      = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                          msh = ml_prob._ml_msh->GetLevel(level);

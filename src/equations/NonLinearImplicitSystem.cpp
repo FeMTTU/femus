@@ -28,12 +28,13 @@ namespace femus {
       const std::string& name_in,
       const unsigned int number_in, const MgSmoother& smoother_type) :
     LinearImplicitSystem(ml_probl, name_in, number_in, smoother_type),
-    _debug_nonlinear(false),
-    _debug_function_is_initialized(false),
-    _n_max_nonlinear_iterations(15),
     _final_nonlinear_residual(1.e20),
+    _n_max_nonlinear_iterations(15),
     _max_nonlinear_convergence_tolerance(1.e-6),
-    _maxNumberOfResidualUpdateIterations(1)
+    _maxNumberOfResidualUpdateIterations(1),
+    _debug_nonlinear(false),
+    _debug_function(NULL),
+    _debug_function_is_initialized(false)
   {
 
   }
@@ -55,7 +56,9 @@ namespace femus {
 
   bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn, double &nonLinearEps) {
     bool conv = true;
-    double L2normEps, L2normSol, L2normEpsDividedSol;
+    double L2normEps;
+    double L2normSol;
+    double L2normEpsDividedSol;
     double L2normRes;
 
     nonLinearEps = 0.;
