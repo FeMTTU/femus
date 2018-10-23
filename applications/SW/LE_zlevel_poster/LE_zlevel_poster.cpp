@@ -42,8 +42,8 @@ double k_v = 0.0001;
 clock_t start_time = clock();
 
 bool wave = false; //lasciarlo cosi' perche' wave ambiguo con splitting e second stage (RES2 non viene 0 senza splitting e second stage)
-bool twostage = true;
-bool splitting = true;
+bool twostage = false;
+bool splitting = false;
 bool assembly = true; //assembly must be left always true
 
 double maxW = 0.;
@@ -180,9 +180,9 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 2041; //17h=1020 with dt=60, 17h=10200 with dt=6
+  unsigned numberOfTimeSteps = 1020; //16321; //17h=1020 with dt=60, 17h=10200 with dt=6
   //bool implicitEuler = true;
-  dt = 30.;
+  dt = 60.;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
