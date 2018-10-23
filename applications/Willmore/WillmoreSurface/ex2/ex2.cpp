@@ -165,7 +165,7 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
   
-  unsigned numberOfTimeSteps = 1000;
+  unsigned numberOfTimeSteps = 100;
   for(unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++){
     
     system.CopySolutionToOldSolution();
@@ -430,18 +430,24 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
         }
         for(unsigned i = 0; i < nYDofs; i++){
           adept::adouble term1 = - solYnorm2;
-          adept::adouble term2 = 0.;
+          //adept::adouble term2 = 0.;
           adept::adouble term3 = 0.;
           for(unsigned J = 0; J < DIM; J++){
             term1 -= P * solY_Xtan[J][J];
-            term2 +=  P * solY_Xtan[K][J] * phiY_Xtan[J][i]; 
+            //term2 +=  P * solY_Xtan[K][J] * phiY_Xtan[J][i]; 
             adept::adouble term4 = 0.;
             for(unsigned L = 0; L < DIM; L++){
               term4 += solx_Xtan[J][L] * solY_Xtan[K][L] + solx_Xtan[K][L] * solY_Xtan[J][L];
             }
             term3 += P * phiY_Xtan[J][i] * term4;
           }
-          aResx[K][i] -= ( 1. * (normal[K] - (solxg[K] - solxOldg[K])  / dt ) * phiY[i]  + term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
+          adept::adouble term2 = 0.;
+          for(unsigned j1 = 0; j1 < dim; j1++){ 
+            for(unsigned j2 = 0; j2 < dim; j2++){ 
+              term2 += P * solY_uv[K][j1] * gi[j1][j2] * phiY_uv[j2][i]; 
+            }
+          }
+          aResx[K][i] -= ( 1. * (normal[K] - (solxg[K] - solxOldg[K])  / dt ) * phiY[i]   + term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
         }
       }
     } // end gauss point loop
