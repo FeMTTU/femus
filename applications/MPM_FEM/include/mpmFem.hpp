@@ -475,8 +475,8 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
                                  
         bool switchToNeumannFSI = ( solidMark[im] && (SolVpOld[1] - velMeshOld[im] > 0 ) ) ? true : false;                         
                    
-        switchToNeumannBC = false;
-        switchToNeumannFSI = false;
+//         switchToNeumannBC = false;
+//         switchToNeumannFSI = false;
         
         if(switchToNeumannBC || switchToNeumannFSI){
           
@@ -581,7 +581,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
       //BEGIN redidual Solid Momentum in moving domain
       for(unsigned i = 0; i < nDofsD; i++) {
-        if( !switchToNeumannFSIcheck || !solidMark[i] ) {
+        //if( !switchToNeumannFSIcheck || !solidMark[i] ) {
           adept::adouble CauchyDIR[3] = {0., 0., 0.};
 
           for(int idim = 0.; idim < dim; idim++) {
@@ -595,7 +595,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
                             - phi[i] * (1. / (beta * dt * dt) * SolDp[idim] - 1. / (beta * dt) * SolVpOld[idim] - (1. - 2.* beta) / (2. * beta) * SolApOld[idim])
             ) * mass;
           }
-        }
+        //}
       }
       //END redidual Solid Momentum in moving domain
 
