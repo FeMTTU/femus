@@ -81,7 +81,7 @@ Configure MyFEMuS using cmake-gui.
     
     Where to build the binaries: $INSTALLATION_DIR/feumsbin
     
-    CMAKE_BUILD_TYPE chose between release (default) or debug
+    CMAKE_BUILD_TYPE choose between release (default) or debug
     
     Press Configure button
     
