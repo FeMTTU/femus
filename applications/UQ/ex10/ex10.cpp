@@ -54,13 +54,13 @@ double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
 unsigned numberOfSamples = 1000000; //for MC sampling of the QoI
 unsigned nxCoarseBox;
-double xMinCoarseBox = - 2.5/*- 5.5*/;
+double xMinCoarseBox = - 5.5/*- 2.5*/;
 double xMaxCoarseBox = 5.5;
 unsigned nyCoarseBox;
-double yMinCoarseBox = - 2.5  /*- 5.5*/;
+double yMinCoarseBox = - 5.5  /*- 2.5*/;
 double yMaxCoarseBox = 5.5;
 unsigned nzCoarseBox;
-double zMinCoarseBox = - 2.5  /*- 5.5*/;
+double zMinCoarseBox = - 5.5  /*- 2.5*/;
 double zMaxCoarseBox = 5.5;
 //END
 
@@ -224,13 +224,13 @@ int main(int argc, char** argv) {
   nzCoarseBox = nxCoarseBox;
 
 //   mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh"); //for 1D
-  mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh"); //for 2D
-//    mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, nyCoarseBox, nzCoarseBox, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh"); //for 3D
+//   mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh"); //for 2D
+   mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, nyCoarseBox, nzCoarseBox, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh"); //for 3D
 
   mlMshHisto.PrintInfo();
 
   unsigned dimCoarseBox = mlMshHisto.GetDimension();
-
+  
   std::vector< std::vector <double > > sgmQoIStandardized;
   GetQoIStandardizedSamples(alphas, sgmQoIStandardized, dimCoarseBox);
 
@@ -1305,7 +1305,7 @@ void GetQoIStandardizedSamples(std::vector< double >& alphas, std::vector < std:
 
   for(unsigned m = 0; m < sgmQoIStandardized.size(); m++) {
 
-    sgmQoIStandardized[m].resize(numberOfEigPairs);
+    sgmQoIStandardized[m].resize(dimCoarseBox);
 
     for(unsigned idim = 0; idim < dimCoarseBox; idim++) {
 
@@ -1326,9 +1326,9 @@ void GetQoIStandardizedSamples(std::vector< double >& alphas, std::vector < std:
         sgmQoI += alphas[i] * MultivariateHermitePolyHistogram[i]; //TODO with QoIs that are different from each other, alphas[i] will be alphas[idim][i]
       }
 
-      sgmQoIStandardized[m][idim] = (sgmQoI - meanQoI) / stdDeviationQoI; //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
-//       double normalSample = var_nor();
-//       sgmQoIStandardized[m][idim] = normalSample;
+//       sgmQoIStandardized[m][idim] = (sgmQoI - meanQoI) / stdDeviationQoI; //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
+      double normalSample = var_nor();
+      sgmQoIStandardized[m][idim] = normalSample;
 
     }
   }
@@ -1367,6 +1367,8 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & sgmQoIStandardize
   double dz = (dim == 3) ? (zMaxCoarseBox - zMinCoarseBox) / nzCoarseBox : 1. ;
 
   for(unsigned m = 0; m < numberOfSamples; m++) {
+    
+    std::cout << " ------------------------------------------ " << " m = " << m << " ------------------------------------------ " << std::endl;
 
     if(dim == 1) {
       for(int iel = sol->GetMesh()->_elementOffset[iproc]; iel < sol->GetMesh()->_elementOffset[iproc + 1]; iel ++) {
