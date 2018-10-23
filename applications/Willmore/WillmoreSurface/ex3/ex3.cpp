@@ -28,7 +28,7 @@ using namespace femus;
 void AssemblePWillmore(MultiLevelProblem& );
 
 double GetTimeStep (const double time){
-  return .01;
+  return 0.001;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -59,6 +59,19 @@ double InitalValueY2(const std::vector < double >& x) {
 
 double InitalValueY3(const std::vector < double >& x) {
   return -2. * x[2];
+}
+
+
+double InitalValueX1(const std::vector < double >& x) {
+  return x[0];
+}
+
+double InitalValueX2(const std::vector < double >& x) {
+  return x[1];
+}
+
+double InitalValueX3(const std::vector < double >& x) {
+  return x[2];
 }
 
 int main(int argc, char** args) {
@@ -100,9 +113,9 @@ int main(int argc, char** args) {
 //   mlSol.AddSolution("Dx2", LAGRANGE, FIRST, 0);
 //   mlSol.AddSolution("Dx3", LAGRANGE, FIRST, 0);
 //   
-  mlSol.AddSolution("Y1", LAGRANGE, SECOND, 0);
-  mlSol.AddSolution("Y2", LAGRANGE, SECOND, 0);
-  mlSol.AddSolution("Y3", LAGRANGE, SECOND, 0);
+  mlSol.AddSolution("Y1", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution("Y2", LAGRANGE, SECOND, 2);
+  mlSol.AddSolution("Y3", LAGRANGE, SECOND, 2);
   
 //   mlSol.AddSolution("Y1", LAGRANGE, FIRST, 0);
 //   mlSol.AddSolution("Y2", LAGRANGE, FIRST, 0);
@@ -113,6 +126,10 @@ int main(int argc, char** args) {
   mlSol.Initialize("Y1", InitalValueY1);
   mlSol.Initialize("Y2", InitalValueY2);
   mlSol.Initialize("Y3", InitalValueY3);
+  
+//   mlSol.Initialize("Dx1", InitalValueX1);
+//   mlSol.Initialize("Dx2", InitalValueX2);
+//   mlSol.Initialize("Dx3", InitalValueX3);
   
  
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -165,7 +182,7 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
   
-  unsigned numberOfTimeSteps = 1000;
+  unsigned numberOfTimeSteps = 10;
   for(unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++){
     
     system.CopySolutionToOldSolution();
@@ -239,6 +256,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   solYPdeIndex[2] = mlPdeSys->GetSolPdeIndex("Y3");    // get the position of "Y3" in the pdeSys object
   
   std::vector < adept::adouble > solY[DIM]; // local Y solution
+  std::vector < double > solYOld[DIM];  // surface coordinates
   std::vector< int > SYSDOF; // local to global pdeSys dofs
  
   vector< double > Res; // local redidual vector
@@ -261,6 +279,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
       solx[K].resize(nxDofs);
       solxOld[K].resize(nxDofs);
       solY[K].resize(nYDofs);
+      solYOld[K].resize(nYDofs);
     }
     
     // resize local arrays
@@ -289,6 +308,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nYDofs; i++) {
       unsigned iYDof = msh->GetSolutionDof(i, iel, solYType); // global to local mapping between solution node and solution dof
       for (unsigned K = 0; K < DIM; K++) {
+        solYOld[K][i] = (*sol->_SolOld[solYIndex[K]])(iYDof);  // global to local solution
         solY[K][i] = (*sol->_Sol[solYIndex[K]])(iYDof);  // global to local solution
         SYSDOF[DIM * nxDofs + K * nYDofs + i] = pdeSys->GetSystemDof(solYIndex[K], solYPdeIndex[K], i, iel);  // global to global mapping between solution node and pdeSys dof
       }
@@ -323,6 +343,9 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
       adept::adouble solY_uv[3][2] = {{0.,0.},{0.,0.},{0.,0.}};
       adept::adouble solYg[3]={0.,0.,0.};
       adept::adouble solxg[3]={0.,0.,0.};
+      
+      double solxOld_uv[3][2] = {{0.,0.},{0.,0.},{0.,0.}};
+      double solYOldg[3]={0.,0.,0.};
       double solxOldg[3]={0.,0.,0.};
       
       for(unsigned K = 0; K < DIM; K++){
@@ -332,61 +355,72 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
         }  
         for (unsigned i = 0; i < nYDofs; i++) {
           solYg[K] += phiY[i] * solY[K][i];
+          solYOldg[K] += phiY[i] * solYOld[K][i];
         }
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nxDofs; i++) {
-            solx_uv[K][j] += phix_uv[j][i] * solx[K][i];
+            solx_uv[K][j]    += phix_uv[j][i] * solx[K][i];
+            solxOld_uv[K][j] += phix_uv[j][i] * solxOld[K][i];
           }
         }
         for (int j = 0; j < dim; j++) {
           for (unsigned i = 0; i < nYDofs; i++) {
             solY_uv[K][j] += phiY_uv[j][i] * solY[K][i];
           }
-        }
-        
+        }        
       }
       
-      adept::adouble solYnorm2 = 0.;
+      double solYOldnorm2 = 0.;
       for(unsigned K = 0; K < DIM; K++){
-        solYnorm2 += solYg[K] * solYg[K];
+        solYOldnorm2 += solYOldg[K] * solYOldg[K];
       }
 //       std::cout << solYnorm2 << " ";
             
-      adept::adouble g[dim][dim]={{0.,0.},{0.,0.}};
+      double g[dim][dim]={{0.,0.},{0.,0.}};
       for(unsigned i = 0; i < dim; i++){
         for(unsigned j = 0; j < dim; j++){
           for(unsigned K = 0; K < DIM; K++){
-            g[i][j] += solx_uv[K][i] * solx_uv[K][j];
+            g[i][j] += solxOld_uv[K][i] * solxOld_uv[K][j];
           }
         }
       }
-      adept::adouble detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
+      double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
       
-      adept::adouble normal[DIM];
-      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1])/sqrt(detg);
-      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1])/sqrt(detg);;
-      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1])/sqrt(detg);;
+      double normal[DIM];
+      normal[0] = (solxOld_uv[1][0] * solxOld_uv[2][1] - solxOld_uv[2][0] * solxOld_uv[1][1])/sqrt(detg);
+      normal[1] = (solxOld_uv[2][0] * solxOld_uv[0][1] - solxOld_uv[0][0] * solxOld_uv[2][1])/sqrt(detg);;
+      normal[2] = (solxOld_uv[0][0] * solxOld_uv[1][1] - solxOld_uv[1][0] * solxOld_uv[0][1])/sqrt(detg);;
             
-      
-      
-      adept::adouble gi[dim][dim];
+      double gi[dim][dim];
       gi[0][0] =  g[1][1]/detg;
       gi[0][1] = -g[0][1]/detg;
       gi[1][0] = -g[1][0]/detg;
       gi[1][1] =  g[0][0]/detg;
       
-      adept::adouble Area = weight * sqrt(detg);
+      for(unsigned i = 0; i < dim; i++){
+        for(unsigned j = 0; j < dim; j++){
+          double id = 0.;
+          for(unsigned j2 = 0; j2 < dim; j2++){
+            id +=  g[i][j2] * gi[j2][j];
+          }
+          if(i == j && fabs(id-1.) > 1.0e-10) std::cout<<id << " erro r";
+          else if (i != j && fabs(id) > 1.0e-10) std::cout<< id <<" error ";
+        }
+      }
       
-      adept::adouble Jir[2][3]={{0.,0.,0.},{0.,0.,0.}};
+      double Area = weight * sqrt(detg);
+      
+      double Jir[2][3]={{0.,0.,0.},{0.,0.,0.}};
       for(unsigned i = 0; i < dim; i++){
         for(unsigned J = 0; J < DIM; J++){
           for(unsigned k = 0; k < dim; k++){
-            Jir[i][J] += gi[i][k] * solx_uv[J][k];
+            Jir[i][J] += gi[i][k] * solxOld_uv[J][k];
           }
         }
       }
       
       adept::adouble solx_Xtan[DIM][DIM]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
+      double solxOld_Xtan[DIM][DIM]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
       adept::adouble solY_Xtan[DIM][DIM]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
       
       
@@ -394,14 +428,15 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
         for(unsigned J = 0; J < DIM; J++){
           for(unsigned k = 0; k < dim; k++){
             solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
+            solxOld_Xtan[I][J] += solxOld_uv[I][k] * Jir[k][J];
             solY_Xtan[I][J] += solY_uv[I][k] * Jir[k][J];
           }
         }
       }
       
       
-      std::vector < adept::adouble > phiY_Xtan[DIM];
-      std::vector < adept::adouble > phix_Xtan[DIM];
+      std::vector < double > phiY_Xtan[DIM];
+      std::vector < double > phix_Xtan[DIM];
       
       for(unsigned J = 0; J < DIM; J++){
         phix_Xtan[J].assign(nxDofs,0.);
@@ -425,23 +460,26 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
           for(unsigned J = 0; J < DIM; J++){
             term1 +=  solx_Xtan[K][J] * phix_Xtan[J][i]; 
           }
-          aResY[K][i] -= ( solYg[K] * phix[i] + phix_Xtan[K][i]) * Area; 
-          //aResx[K][i] -= ( solYg[K] * phix[i] + term1) * Area; 
+          aResx[K][i] += ( solYg[K] * phix[i] + term1) * Area; 
         }
         for(unsigned i = 0; i < nYDofs; i++){
-          adept::adouble term1 = - solYnorm2;
+          adept::adouble term0 = 0.;
+          adept::adouble term1 = 0.; 
           adept::adouble term2 = 0.;
           adept::adouble term3 = 0.;
+          
           for(unsigned J = 0; J < DIM; J++){
-            term1 -= P * solY_Xtan[J][J];
-            term2 +=  P * solY_Xtan[K][J] * phiY_Xtan[J][i]; 
+            term0 -=  solx_Xtan[K][J] * phiY_Xtan[J][i]; 
+            term1 -=  P * solY_Xtan[J][J];
+            term2 -=  P * solY_Xtan[K][J] * phiY_Xtan[J][i]; 
             adept::adouble term4 = 0.;
             for(unsigned L = 0; L < DIM; L++){
-              term4 += solx_Xtan[J][L] * solY_Xtan[K][L] + solx_Xtan[K][L] * solY_Xtan[J][L];
+              term4 += solxOld_Xtan[J][L] * solY_Xtan[K][L] + solxOld_Xtan[K][L] * solY_Xtan[J][L];
             }
             term3 += P * phiY_Xtan[J][i] * term4;
           }
-          aResx[K][i] -= ( 1. * (normal[K] - (solxg[K] - solxOldg[K])  / dt ) * phiY[i]  + term1 * phiY_Xtan[K][i] - term2 + term3 ) * Area; 
+          aResY[K][i] += ( P * (- 0 * normal[K] + (solxg[K] - solxOldg[K])  / dt ) * phiY[i] +
+          solYOldnorm2 * term0 + term1 * phiY_Xtan[K][i] + term2 + term3 ) * Area; 
         }
       }
     } // end gauss point loop
@@ -499,9 +537,9 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   RES->close();
   KK->close();
   
-  VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
+  //VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
   
-  abort();
+  //abort();
  // MatView((static_cast<PetscMatrix*>(KK))->mat(), PETSC_VIEWER_STDOUT_SELF );
   
 //     PetscViewer    viewer;
