@@ -134,11 +134,10 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
 
   system.SetDebugNonlinear(true);
-  system.SetDebugFunction(ComputeIntegral);  //weird error if I comment this line, with MGSolve (fine with MLsolve)
+  system.SetDebugFunction(ComputeIntegral);  //weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
   // initialize and solve the system
   system.init();
-  system.MLsolve();
-//   system.MGsolve();
+  system.MGsolve(); //   system.MGsolve();
 
    
   // print solutions
@@ -829,11 +828,11 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   } //end element loop for each process
 
   RES->close(); //  RES->print();
-//     std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
-//     std::filebuf res_fb;
-//     res_fb.open (res_out.str().c_str(),std::ios::out);
-//     std::ostream  res_file_stream(&res_fb);
-//     RES->print(res_file_stream);
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    std::filebuf res_fb;
+    res_fb.open (res_out.str().c_str(),std::ios::out);
+    std::ostream  res_file_stream(&res_fb);
+    RES->print(res_file_stream);
 
   if (assembleMatrix) KK->close();  //  KK->print();
 //     std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix" << mlPdeSys->GetNonlinearIt()  << ".txt";
