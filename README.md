@@ -35,11 +35,11 @@ Install SLEPC
 
 From the directory $INSTALLATION_DIR clone slepc
 
-Configure, compile, test SLEPC with the following options
-
     git clone -b maint https://bitbucket.org/slepc/slepc slepc
 
     cd slepc
+    
+Configure, compile, test SLEPC with the following options
     
     export PETSC_DIR=$INSTALLATION_DIR/petsc 
     
@@ -86,10 +86,14 @@ Configure MyFEMuS using cmake-gui.
     Press Configure button
     
     Press Generate button
+
+Compile
     
     cd $INSTALLATION_DIR/femusbin
     
     make
+    
+Run. All applications are built in the folder $INSTALLATION_DIR/femusbin/applications/..
     
 ======
     
