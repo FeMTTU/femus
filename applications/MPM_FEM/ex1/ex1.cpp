@@ -67,15 +67,21 @@ int main(int argc, char** args)
   std::string soft = "soft";
   std::string  stiff = "stiff";
   
+  std::string  material[2] ={soft, stiff};
+  
   std::map < std::pair < std::string, unsigned > , double > YC; 
     
   YC[std::make_pair (soft, 3u)] = 0.1;
   YC[std::make_pair (soft, 4u)] = 0.075;
   YC[std::make_pair (soft, 5u)] = 0.05;
+  
+  YC[std::make_pair (stiff, 3u)] = 0.1;
+  YC[std::make_pair (stiff, 4u)] = 0.075;
+  YC[std::make_pair (stiff, 5u)] = 0.05;
 
-  YC[std::make_pair (stiff, 3u)] = 0.15;
-  YC[std::make_pair (stiff, 4u)] = 0.09;
-  YC[std::make_pair (stiff, 5u)] = 0.05;  
+//   YC[std::make_pair (stiff, 3u)] = 0.15;
+//   YC[std::make_pair (stiff, 4u)] = 0.09;
+//   YC[std::make_pair (stiff, 5u)] = 0.05;  
   
   std::map < std::pair < std::string, unsigned > , double > NF; 
   
@@ -117,8 +123,6 @@ int main(int argc, char** args)
   YM[std::make_pair (stiff, 4u)] = 4.2 * 1.e8;
   YM[std::make_pair (stiff, 5u)] = 4.2 * 1.e8;  
   
-  MultiLevelMesh mlMsh;
-    
   std::pair <std::string, unsigned > simulation;
   
   unsigned n_timesteps = 335;
@@ -127,9 +131,10 @@ int main(int argc, char** args)
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
     
   for(unsigned mat = 0; mat< 2; mat++){
-    for(unsigned nl = 0; nl < 3; nl++) {
-      simulation = (mat < 1)? std::make_pair (soft,3 + nl) :  std::make_pair (stiff,3 + nl);
-       
+    for(unsigned nl = 3; nl < 6; nl++) {
+      
+      simulation = std::make_pair (material[mat], nl);
+             
       unsigned numberOfUniformLevels = simulation.second; 
       unsigned numberOfSelectiveLevels = 0;
 
@@ -147,8 +152,14 @@ int main(int argc, char** args)
       // Generate Solid Object
       Solid solid;
       solid = Solid(par, E, nu, rhos, "Neo-Hookean");
-
-      mlMsh.ReadCoarseMesh("../input/inclined_plane_2D_bl.neu", "fifth", 1.);
+            
+      MultiLevelMesh mlMsh;
+      if(material[mat] == soft){
+        mlMsh.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", 1.);
+      }
+      else{
+        mlMsh.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", 1.);
+      }
       mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
       mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -288,33 +299,37 @@ int main(int argc, char** args)
       
       unsigned solType = 2;
       linea = new Line(x, mass, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
-            
+      
+      
+      //END init particles 
+      
+      //BEGIN Print solution 0 *******
+      
       std::ostringstream outputFolder;
       outputFolder << "outputE" << simulation.first  << "Level"<<simulation.second;
-     
-      //END init particles 
-  
-      // ******* Print solution *******
+      
       mlSol.SetWriter(VTK);
-
+      
       std::vector<std::string> mov_vars;
       mov_vars.push_back("DX");
       mov_vars.push_back("DY");
       mov_vars.push_back("DZ");
       mlSol.GetWriter()->SetMovingMesh(mov_vars);
-
+      
       std::vector<std::string> print_vars;
       print_vars.push_back("All");
-
-
+      
+      
       mlSol.GetWriter()->SetDebugOutput(true);
       mlSol.GetWriter()->Write(outputFolder.str(), "biquadratic", print_vars, 0);
-
+      
       std::vector < std::vector < std::vector < double > > > line(1);
       
       linea->GetLine(line[0]);
       PrintLine(outputFolder.str(), line, false, 0);
-            
+      
+      //END Print solution 0 *******
+      
       linea->GetParticlesToGridMaterial();
             
       system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
@@ -361,8 +376,8 @@ int main(int argc, char** args)
   fout.open( filename.str().c_str() );
   fout << "iteration, time, analytic, ";
   for(unsigned mat = 0; mat< 2; mat++){
-    for(unsigned nl = 0; nl < 3; nl++) {
-      simulation = (mat < 1)? std::make_pair (soft,3 + nl) :  std::make_pair (stiff,3 + nl);
+    for(unsigned nl = 3; nl < 6; nl++) {
+      simulation = std::make_pair (material[mat], nl);
       fout << "E" << simulation.first  << "Level"<<simulation.second<<", "; 
     }
   }
@@ -371,8 +386,8 @@ int main(int argc, char** args)
     double time = it * DT;
     fout << it <<", "<< time <<", "<<1./3.*9.81*time*time*sqrt(2.)/2. << ", ";
     for(unsigned mat = 0; mat< 2; mat++){
-      for(unsigned nl = 0; nl < 3; nl++) {
-        simulation = (mat < 1)? std::make_pair (soft,3 + nl) :  std::make_pair (stiff,3 + nl);
+      for(unsigned nl = 3; nl < 6; nl++) {
+        simulation = std::make_pair (material[mat], nl);
         fout << CM[it][simulation] <<", ";
       }
     }

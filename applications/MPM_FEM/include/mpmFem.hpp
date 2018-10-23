@@ -464,17 +464,24 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           SolDd1[k][inode] = SolDd[k][inode];
         }
       }
-      bool switchToNeumanncheck = false;      
+            
+      bool switchToNeumannBCcheck = false;  
+      bool switchToNeumannFSIcheck = false;  
+      
       for(unsigned iface = 0; iface < 4; iface++){
         int faceIndex = myel->GetBoundaryIndex(iel, iface);
         unsigned im = ii[iface][2][0];
-        bool switchToNeumann = ( ( faceIndex == 1 || solidMark[im] ) && 
-                                 (SolVpOld[1] - velMeshOld[im] > 0 ) ) ? true : false;
-        if(switchToNeumann){
+        bool switchToNeumannBC = ( faceIndex == 1  &&  SolVpOld[1] > 0 ) ? true : false;
+                                 
+        bool switchToNeumannFSI = ( solidMark[im] && (SolVpOld[1] - velMeshOld[im] > 0 ) ) ? true : false;                         
+                   
+        switchToNeumannBC = false;
+        switchToNeumannFSI = false;
+        
+        if(switchToNeumannBC || switchToNeumannFSI){
           
-          std::cout << "AAAAAAAAAAAAAAAA" << iel << " " << SolVpOld[1] << " " << velMeshOld[im] << std::endl;
-          
-          switchToNeumanncheck = true;     
+          if(switchToNeumannBC)  switchToNeumannBCcheck = true;     
+          if(switchToNeumannFSI) switchToNeumannFSIcheck = true;     
           for(unsigned inode = 0;inode < 3; inode++){
             for(int k = 0; k < dim; k++) {
               unsigned i0 = ii[iface][inode][0];
@@ -574,7 +581,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
 
       //BEGIN redidual Solid Momentum in moving domain
       for(unsigned i = 0; i < nDofsD; i++) {
-        if( !switchToNeumanncheck || !solidMark[i] ) {
+        if( !switchToNeumannFSIcheck || !solidMark[i] ) {
           adept::adouble CauchyDIR[3] = {0., 0., 0.};
 
           for(int idim = 0.; idim < dim; idim++) {
