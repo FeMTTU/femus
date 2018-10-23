@@ -10,7 +10,7 @@ For the FEMuS project automatic installation see below.
 <!-- ![alt tag](https://github.com/FeMTTU/femus/blob/master/doc/images/logo.jpg?raw=true) -->
 <!-- ![alt tag](https://github.com/FeMTTU/femus/blob/master/doc/images/FSI.jpg?raw=true) -->
 
-step by step MyFEMuS manual setup  (largely tested on OpenSuse)
+Step by step MyFEMuS manual setup  (largely tested on OpenSuse)
 ======
 
 Install PETSC
@@ -87,7 +87,7 @@ Configure MyFEMuS using cmake-gui.
     
     Press Generate button
     
-    cd ../femusbin
+    cd $INSTALLATION_DIR/femusbin
     
     make
     
