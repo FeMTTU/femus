@@ -42,8 +42,8 @@ double k_v = 0.0001;
 clock_t start_time = clock();
 
 bool wave = false; //lasciarlo cosi' perche' wave ambiguo con splitting e second stage (RES2 non viene 0 senza splitting e second stage)
-bool twostage = false;
-bool splitting = false;
+bool twostage = true;
+bool splitting = true;
 bool assembly = true; //assembly must be left always true
 
 double maxW = 0.;
@@ -180,9 +180,9 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 1020; //16321; //17h=1020 with dt=60, 17h=10200 with dt=6
+  unsigned numberOfTimeSteps = 4081; //16321; //17h=1020 with dt=60, 17h=10200 with dt=6
   //bool implicitEuler = true;
-  dt = 60.;
+  dt = 15.;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
@@ -1360,11 +1360,11 @@ void ETDt ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
     MFNSetOperator ( mfn, A2 );
     MFNGetFN ( mfn, &f2 );
 
-    FNPhiSetIndex ( f2, 2 );
+    FNPhiSetIndex ( f2, 1 );
     FNSetType ( f2, FNPHI );
     //FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
-    FNSetScale ( f2, dt, dt );
+    FNSetScale ( f2, dt, 0.5*dt );
     MFNSetFromOptions ( mfn );
 
     MFNSolve ( mfn, v2, y2 );
