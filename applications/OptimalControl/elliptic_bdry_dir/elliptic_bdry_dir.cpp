@@ -240,8 +240,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   vector <double> phi_adj_x_vol_at_bdry; // local test function first order partial derivatives
   phi_adj_vol_at_bdry.reserve(maxSize);
   phi_adj_x_vol_at_bdry.reserve(maxSize * dim);
-  vector <double> sol_adj_x_vol_at_bdry_gss;
-  sol_adj_x_vol_at_bdry_gss.reserve(dim);
+  vector <double> sol_adj_x_vol_at_bdry_gss(dim);
  //*************************************************** 
  //*************************************************** 
 
@@ -1077,7 +1076,7 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 		
 		//============ initialize gauss quantities on the boundary ==========================================
                 double sol_ctrl_bdry_gss = 0.;
-                std::vector<double> sol_ctrl_x_bdry_gss;  sol_ctrl_x_bdry_gss.reserve(dim);
+                std::vector<double> sol_ctrl_x_bdry_gss(dim);
 		//============ initialize gauss quantities on the boundary ==========================================
 		
 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {

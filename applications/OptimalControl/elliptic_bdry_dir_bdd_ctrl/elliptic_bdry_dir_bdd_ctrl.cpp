@@ -72,7 +72,7 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char name[], do
 }
 
 
-double ComputeIntegral(MultiLevelProblem& ml_prob);
+void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 void AssembleOptSys(MultiLevelProblem& ml_prob);
 
@@ -132,6 +132,8 @@ int main(int argc, char** args) {
   // define the multilevel problem attach the mlSol object to it
   MultiLevelProblem mlProb(&mlSol);
   
+  mlProb.SetFilesHandler(&files);
+
  // add system  in mlProb as a Linear Implicit System
   NonLinearImplicitSystem& system = mlProb.add_system < NonLinearImplicitSystem > ("LiftRestr");
  
@@ -147,12 +149,12 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
 
   system.SetDebugNonlinear(true);
-    
+  system.SetDebugFunction(ComputeIntegral);  //weird error if I comment this line, I expect nothing to happen but something in the assembly gets screwed up in memory I guess
+   
   // initialize and solve the system
   system.init();
   system.MGsolve();
   
-  ComputeIntegral(mlProb);
  
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -255,8 +257,7 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   vector <double> phi_adj_x_vol_at_bdry; // local test function first order partial derivatives
   phi_adj_vol_at_bdry.reserve(maxSize);
   phi_adj_x_vol_at_bdry.reserve(maxSize * dim);
-  vector <double> sol_adj_x_vol_at_bdry_gss;
-  sol_adj_x_vol_at_bdry_gss.reserve(dim);
+  vector <double> sol_adj_x_vol_at_bdry_gss(dim);
  //*************************************************** 
  //*************************************************** 
 
@@ -515,7 +516,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 //========= initialize gauss quantities on the boundary ============================================
                 double sol_ctrl_bdry_gss = 0.;
                 double sol_adj_bdry_gss = 0.;
-                std::vector<double> sol_ctrl_x_bdry_gss;  sol_ctrl_x_bdry_gss.reserve(dim);
+                std::vector<double> sol_ctrl_x_bdry_gss(dim);   std::fill(sol_ctrl_x_bdry_gss.begin(), sol_ctrl_x_bdry_gss.end(), 0.);
+
 //========= initialize gauss quantities on the boundary ============================================
 		
 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
@@ -593,12 +595,6 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
               }
 //=============== construct control node flag field on the go  =========================================    
 
-//    std::cout << " graddotn_res " << grad_dot_n_adj_res << std::endl;
-//    std::cout << " normal " << sol_adj[0] << std::endl;
-//    std::cout << " normal " << sol_adj[1] << std::endl;
-//    std::cout << " normal " << sol_adj[2] << std::endl;
-//    std::cout << " normal " << sol_adj[3] << std::endl;
-  
 		 
 //============ Bdry Residuals ==================	
                 if (i_vol < nDof_u)     Res[ (0 + i_vol) ]                    +=  - control_node_flag[i_vol] * penalty_ctrl * (   sol_u[i_vol] - sol_ctrl[i_vol] );   // u = q
@@ -992,10 +988,10 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
 
  
   
-double ComputeIntegral(MultiLevelProblem& ml_prob)    {
+void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   
   
-  NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
+  const NonLinearImplicitSystem* mlPdeSys  = &ml_prob.get_system<NonLinearImplicitSystem> ("LiftRestr");   // pointer to the linear implicit system named "LiftRestr"
   const unsigned level = mlPdeSys->GetLevelToAssemble();
 
   Mesh*                    msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -1224,7 +1220,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
 		
 		//============ initialize gauss quantities on the boundary ==========================================
                 double sol_ctrl_bdry_gss = 0.;
-                std::vector<double> sol_ctrl_x_bdry_gss;  sol_ctrl_x_bdry_gss.reserve(dim);
+                std::vector<double> sol_ctrl_x_bdry_gss(dim);
 		//============ initialize gauss quantities on the boundary ==========================================
 		
 		for(unsigned ig_bdry=0; ig_bdry < msh->_finiteElement[felt_bdry][solType_ctrl]->GetGaussPointNumber(); ig_bdry++) {
@@ -1300,7 +1296,7 @@ double ComputeIntegral(MultiLevelProblem& ml_prob)    {
   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
   std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << total_integral << std::endl;
  
-return total_integral;
+return;
   
 }
   
