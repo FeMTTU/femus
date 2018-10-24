@@ -959,13 +959,8 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
   
   } //end element loop for each process
   
-  RES->close();
 
-  if (assembleMatrix) KK->close();
- std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix" << mlPdeSys->GetNonlinearIt()  << ".txt";
-  KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
   
-  // ***************** END ASSEMBLY *******************
   unsigned int ctrl_index = mlPdeSys->GetSolPdeIndex("control");
   unsigned int mu_index = mlPdeSys->GetSolPdeIndex("mu");
 
@@ -979,8 +974,20 @@ void AssembleOptSys(MultiLevelProblem& ml_prob) {
     one_times_mu[i] = ineq_flag * 1. * (*sol->_Sol[solIndex_mu])(i/*position_mu_i*/) ;
   }
     RES->add_vector_blocked(one_times_mu, positions);
-    RES->print();
     
+  // ***************** END ASSEMBLY *******************
+
+    if (assembleMatrix) KK->close();
+    std::ostringstream mat_out; mat_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "matrix_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    KK->print_matlab(mat_out.str(),"ascii"); //  KK->print();
+
+    RES->close();
+    std::ostringstream res_out; res_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "res_" << mlPdeSys->GetNonlinearIt()  << ".txt";
+    std::filebuf res_fb;
+    res_fb.open (res_out.str().c_str(),std::ios::out);
+    std::ostream  res_file_stream(&res_fb);
+    RES->print(res_file_stream);
+
 
   return;
 }
