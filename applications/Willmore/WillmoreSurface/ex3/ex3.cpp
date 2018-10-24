@@ -156,7 +156,7 @@ int main(int argc, char** args) {
   system.AddSolutionToSystemPDE("Y2");
   system.AddSolutionToSystemPDE("Y3");
   
-  system.SetMaxNumberOfNonLinearIterations(10);
+  system.SetMaxNumberOfNonLinearIterations(1);
   system.SetNonLinearConvergenceTolerance(1.e-9);
   
   // attach the assembling function to system
@@ -217,7 +217,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   Solution *sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
   
   LinearEquationSolver *pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
-  SparseMatrix *KK = pdeSys->_KK;  // pointer to the global stifness matrix object in pdeSys (level)
+  SparseMatrix *KK = pdeSys->_KK;  // pointer to the global stiffness matrix object in pdeSys (level)
   NumericVector *RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
   
   const unsigned  dim = 2; 
@@ -320,11 +320,11 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solxType]->GetGaussPointNumber(); ig++) {
       
-      double *phix;  // local test function
-      double *phix_uv[dim]; // local test function first order partial derivatives
+      const double *phix;  // local test function
+      const double *phix_uv[dim]; // local test function first order partial derivatives
             
-      double *phiY;  // local test function
-      double *phiY_uv[dim]; // local test function first order partial derivatives
+      const double *phiY;  // local test function
+      const double *phiY_uv[dim]; // local test function first order partial derivatives
       
       double weight; // gauss point weight
             
@@ -339,6 +339,19 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             
       weight = msh->_finiteElement[ielGeom][solxType]->GetGaussWeight(ig);
       
+      double sumPhi = 0.;
+      double sumPhi_u = 0.;
+      double sumPhi_v = 0.;
+      for(unsigned i=0;i<nxDofs;i++){
+        //std::cout << phix[i] << " " << phix_uv[0][i] << " " << phix_uv[1][i] <<std::endl;
+        sumPhi += phix[i];
+        sumPhi_u += phix_uv[0][i];
+        sumPhi_v += phix_uv[1][i];
+      }
+      if( fabs(sumPhi-1.)>1.0e-12 || fabs(sumPhi_u)>1.0e-12 || fabs(sumPhi_v)>1.0e-12  ){
+        std::cout << sumPhi << " " << sumPhi_u << " " << sumPhi_v <<std::endl;
+      }
+            
       adept::adouble solx_uv[3][2] = {{0.,0.},{0.,0.},{0.,0.}};
       adept::adouble solY_uv[3][2] = {{0.,0.},{0.,0.},{0.,0.}};
       adept::adouble solYg[3]={0.,0.,0.};
@@ -460,6 +473,11 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
           for(unsigned J = 0; J < DIM; J++){
             term1 +=  solx_Xtan[K][J] * phix_Xtan[J][i]; 
           }
+          if(fabs(term1-phix_Xtan[K][i])>1.0e-10) {
+              std::cout<<" error "<< term1 << " "<<phix_Xtan[K][i];
+              abort();
+          }
+          
           aResx[K][i] += ( solYg[K] * phix[i] + term1) * Area; 
         }
         for(unsigned i = 0; i < nYDofs; i++){
@@ -492,20 +510,16 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
     for (int K = 0; K < DIM; K++) {
       for (int i = 0; i < nxDofs; i++) {
         Res[ K * nxDofs + i] = -aResx[K][i].value();
-        //std::cout << SYSDOF[K * nxDofs + i]<<"( " << Res[ K * nxDofs + i] <<" ) ";
       }
+    }
+    for (int K = 0; K < DIM; K++) {
       for (int i = 0; i < nYDofs; i++) {
         Res[DIM * nxDofs + K * nYDofs + i] = -aResY[K][i].value();
-        //std::cout << SYSDOF[DIM * nxDofs + K * nYDofs + i]<<"( " << Res[ DIM * nxDofs + K * nYDofs + i] <<" ) ";
       }
-      //std::cout << "\n ";
     }
-    
-    
-    
+       
     RES->add_vector_blocked(Res, SYSDOF);
-    
-    
+        
     Jac.resize(DIM * (nxDofs + nYDofs) * DIM * (nxDofs + nYDofs) );
     
     // define the dependent variables
