@@ -802,15 +802,15 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
               unsigned i2 = ii[iface][inode][2];
               
               
-                //               SolDd1[k][i0] =  - ( gradphi_hat[i1 * dim + 1] * SolDd[k][ i1 ] 
-                //                                 + gradphi_hat[i2 * dim + 1] * SolDd[k][ i2 ] )/gradphi_hat[i0 * dim + 1];  
-//               SolDd1[k][i0] = (1. - tuninig) * (- 1./3. * SolDd[k][i1] + 4./3.* pow(1. - xi[1],1.25) * SolDd[k][ i2 ]) + tuninig * SolDd[k][i0];
-              double PIi = 1./acos(-1.);
-              double c = 0.75;
-              double a = 10.;
-              double G1 = 0.5 - PIi * atan( a * (1. - c) );
-              //SolDd1[k][i0] = SolDd[k][i2] *  ( 0.5 - PIi * atan(a * (xi[1] - c)) - G1 ) / (1. - G1);
-              //SolDd1[k][i0] = ( SolDd[k][i1] - SolDd[k][i2]);
+//                 //               SolDd1[k][i0] =  - ( gradphi_hat[i1 * dim + 1] * SolDd[k][ i1 ] 
+//                 //                                 + gradphi_hat[i2 * dim + 1] * SolDd[k][ i2 ] )/gradphi_hat[i0 * dim + 1];  
+// //               SolDd1[k][i0] = (1. - tuninig) * (- 1./3. * SolDd[k][i1] + 4./3.* pow(1. - xi[1],1.25) * SolDd[k][ i2 ]) + tuninig * SolDd[k][i0];
+//               double PIi = 1./acos(-1.);
+//               double c = 0.75;
+//               double a = 10.;
+//               double G1 = 0.5 - PIi * atan( a * (1. - c) );
+//               //SolDd1[k][i0] = SolDd[k][i2] *  ( 0.5 - PIi * atan(a * (xi[1] - c)) - G1 ) / (1. - G1);
+//               //SolDd1[k][i0] = ( SolDd[k][i1] - SolDd[k][i2]);
               //SolDd1[k][i0] = (- SolDd[k][i1] + 2. * SolDd[k][i2]);
               
               SolDd1[k][i0] = NeumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - NeumannFactor) * SolDd[k][i0];

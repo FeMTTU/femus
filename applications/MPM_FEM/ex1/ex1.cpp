@@ -74,14 +74,10 @@ int main(int argc, char** args)
   YC[std::make_pair (soft, 3u)] = 0.1;
   YC[std::make_pair (soft, 4u)] = 0.075;
   YC[std::make_pair (soft, 5u)] = 0.05;
-  
-  YC[std::make_pair (stiff, 3u)] = 0.1;
-  YC[std::make_pair (stiff, 4u)] = 0.075;
-  YC[std::make_pair (stiff, 5u)] = 0.05;
 
-//   YC[std::make_pair (stiff, 3u)] = 0.15;
-//   YC[std::make_pair (stiff, 4u)] = 0.09;
-//   YC[std::make_pair (stiff, 5u)] = 0.05;  
+  YC[std::make_pair (stiff, 3u)] = 0.15;
+  YC[std::make_pair (stiff, 4u)] = 0.09;
+  YC[std::make_pair (stiff, 5u)] = 0.05;  
   
   std::map < std::pair < std::string, unsigned > , double > NF; 
   
@@ -125,9 +121,9 @@ int main(int argc, char** args)
   
   std::pair <std::string, unsigned > simulation;
   
-  unsigned n_timesteps = 335;
   unsigned timestep0 = 50;
-  
+  unsigned n_timesteps = 250 + timestep0;
+    
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
     
   for(unsigned mat = 0; mat< 2; mat++){
@@ -158,7 +154,7 @@ int main(int argc, char** args)
         mlMsh.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", 1.);
       }
       else{
-        mlMsh.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", 1.);
+        mlMsh.ReadCoarseMesh("../input/inclined_plane_2D_bl.neu", "fifth", 1.);
       }
       mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
 
@@ -334,6 +330,15 @@ int main(int argc, char** args)
             
       system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
      
+      
+      std::ostringstream filename;
+      filename <<outputFolder.str()<< "/centerOfMass.txt";
+      std::ofstream fout;
+      fout.open( filename.str().c_str() );
+      fout << "iteration, time, analytic, ";
+      fout << "E" << simulation.first  << "Level"<<simulation.second << std::endl;
+      fout << "0, 0., 0., 0." << std::endl;
+      
       for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
         double theta = PI / 4;
@@ -361,12 +366,15 @@ int main(int argc, char** args)
 
         if(time_step >= timestep0){
           CM[time_step - timestep0][simulation] = line[0][0][0];  
-        }
-        
-      }
-     
-      delete linea;
-  
+          
+          unsigned it = time_step - timestep0;
+          double time = it * DT;
+          fout << it <<", "<< time <<", "<<1./3.*9.81*time*time*sqrt(2.)/2. << ", ";
+          fout << CM[it][simulation] <<std::endl;
+       }
+    }  
+    fout.close();
+    delete linea;
     }
   }
   
