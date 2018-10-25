@@ -38,7 +38,7 @@ double InitialValueControl(const std::vector < double >& x) {
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
 
   bool dirichlet = true; //dirichlet
-  value = 0;
+  value = 0.;
 
   if(!strcmp(name,"control")) {
   if (faceName == 3)
