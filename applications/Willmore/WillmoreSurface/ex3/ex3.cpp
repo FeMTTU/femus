@@ -27,8 +27,10 @@ using namespace femus;
 
 void AssemblePWillmore(MultiLevelProblem& );
 
+void AssembleInit(MultiLevelProblem& );
+
 double GetTimeStep (const double time){
-  return 0.001;
+  return 0.000001;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -89,7 +91,7 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   
-  mlMsh.ReadCoarseMesh("./input/sphere.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/ellipsoid.neu", "seventh", scalingFactor);
   
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -145,6 +147,30 @@ int main(int argc, char** args) {
 
   MultiLevelProblem mlProb(&mlSol);
   
+  NonLinearImplicitSystem& system0 = mlProb.add_system < NonLinearImplicitSystem > ("Init");
+  
+  // add solution "X", "Y", "Z" and "H" to the system
+  system0.AddSolutionToSystemPDE("Y1");
+  system0.AddSolutionToSystemPDE("Y2");
+  system0.AddSolutionToSystemPDE("Y3");
+  
+  system0.SetMaxNumberOfNonLinearIterations(10);
+  system0.SetNonLinearConvergenceTolerance(1.e-9);
+  
+  // attach the assembling function to system
+  system0.SetAssembleFunction(AssembleInit);
+  
+  // initilaize and solve the system
+  system0.init();
+  
+  system0.MGsolve();
+  
+  
+  
+  
+  
+  
+  
   // add system Wilmore in mlProb as a Linear Implicit System
   TransientNonlinearImplicitSystem& system = mlProb.add_system < TransientNonlinearImplicitSystem > ("PWillmore");
   
@@ -182,13 +208,13 @@ int main(int argc, char** args) {
   mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, 0);
   
-  unsigned numberOfTimeSteps = 10;
+  unsigned numberOfTimeSteps = 100000;
   for(unsigned time_step = 0; time_step < numberOfTimeSteps; time_step++){
     
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    
-    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, time_step + 1);
+    if( (time_step + 1)%10 == 0)
+    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, (time_step + 1)/10);
   }
     
   return 0;
@@ -416,7 +442,7 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
           for(unsigned j2 = 0; j2 < dim; j2++){
             id +=  g[i][j2] * gi[j2][j];
           }
-          if(i == j && fabs(id-1.) > 1.0e-10) std::cout<<id << " erro r";
+          if(i == j && fabs(id-1.) > 1.0e-10) std::cout<<id << " error ";
           else if (i != j && fabs(id) > 1.0e-10) std::cout<< id <<" error ";
         }
       }
@@ -486,18 +512,36 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
           adept::adouble term2 = 0.;
           adept::adouble term3 = 0.;
           
+          adept::adouble term5 = 0.;
+          adept::adouble term6 = 0.;
+          
+          
           for(unsigned J = 0; J < DIM; J++){
             term0 -=  solx_Xtan[K][J] * phiY_Xtan[J][i]; 
             term1 -=  P * solY_Xtan[J][J];
+            
             term2 -=  P * solY_Xtan[K][J] * phiY_Xtan[J][i]; 
             adept::adouble term4 = 0.;
+            
+            term5 += P * phiY_Xtan[J][i] * solY_Xtan[J][K];
+            adept::adouble term7 = 0.;
+            
             for(unsigned L = 0; L < DIM; L++){
               term4 += solxOld_Xtan[J][L] * solY_Xtan[K][L] + solxOld_Xtan[K][L] * solY_Xtan[J][L];
+              term7 += solY_Xtan[J][L] * phiY_Xtan[L][i]; 
             }
+            
             term3 += P * phiY_Xtan[J][i] * term4;
+            
+            term6 -= P * normal[J] * normal[K] * term7;
           }
-          aResY[K][i] += ( P * (- 0 * normal[K] + (solxg[K] - solxOldg[K])  / dt ) * phiY[i] +
-          solYOldnorm2 * term0 + term1 * phiY_Xtan[K][i] + term2 + term3 ) * Area; 
+          aResY[K][i] += ( P * (- 0. * normal[K] + (solxg[K] - solxOldg[K])  / dt ) * phiY[i] +
+                          solYOldnorm2 * term0 + term1 * phiY_Xtan[K][i] + term2 + term3 ) * Area; 
+                          //solYOldnorm2 * term0 + term1 * phiY_Xtan[K][i] + term5 + term6) * Area; 
+          
+          if( fabs(term5 + term6 - (term2 + term3) ) > 1.0e-10 ){
+            //std::cout<<" error "<< term5 + term6 << " " << term2 + term3 << std::endl;
+          }
         }
       }
     } // end gauss point loop
@@ -567,4 +611,326 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
   
   // ***************** END ASSEMBLY *******************
 }
+
+
+
+void AssembleInit(MultiLevelProblem& ml_prob) {
+  //  ml_prob is the global object from/to where get/set all the data
+  //  level is the level of the PDE system to be assembled
+  //  levelMax is the Maximum level of the MultiLevelProblem
+  //  assembleMatrix is a flag that tells if only the residual or also the matrix should be assembled
+  
+  // call the adept stack object
+  adept::Stack& s = FemusInit::_adeptStack;
+  
+  //  extract pointers to the several objects that we are going to use
+  NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system< NonLinearImplicitSystem> ("Init");   // pointer to the linear implicit system named "Poisson"
+  
+  const unsigned level = mlPdeSys->GetLevelToAssemble();
+  
+  Mesh *msh = ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
+  elem *el = msh->el;  // pointer to the elem object in msh (level)
+  
+  MultiLevelSolution *mlSol = ml_prob._ml_sol;  // pointer to the multilevel solution object
+  Solution *sol = ml_prob._ml_sol->GetSolutionLevel(level);    // pointer to the solution (level) object
+  
+  LinearEquationSolver *pdeSys = mlPdeSys->_LinSolver[level]; // pointer to the equation (level) object
+  SparseMatrix *KK = pdeSys->_KK;  // pointer to the global stiffness matrix object in pdeSys (level)
+  NumericVector *RES = pdeSys->_RES; // pointer to the global residual vector object in pdeSys (level)
+  
+  const unsigned  dim = 2; 
+  const unsigned  DIM = 3; 
+  unsigned iproc = msh->processor_id(); // get the process_id (for parallel computation)
+  
+  //solution variable
+  unsigned solDxIndex[DIM];
+  solDxIndex[0] = mlSol->GetIndex("Dx1");  // get the position of "DX" in the ml_sol object
+  solDxIndex[1] = mlSol->GetIndex("Dx2");  // get the position of "DY" in the ml_sol object
+  solDxIndex[2] = mlSol->GetIndex("Dx3");  // get the position of "DZ" in the ml_sol object
+  
+  unsigned solxType;
+  solxType = mlSol->GetSolutionType(solDxIndex[0]);   // get the finite element type for "U"
+  
+  std::vector < double > solx[DIM];  // surface coordinates
+  
+  unsigned xType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
+  
+  unsigned solYIndex[DIM];
+  solYIndex[0] = mlSol->GetIndex("Y1");    // get the position of "Y1" in the ml_sol object
+  solYIndex[1] = mlSol->GetIndex("Y2");    // get the position of "Y2" in the ml_sol object
+  solYIndex[2] = mlSol->GetIndex("Y3");    // get the position of "Y3" in the ml_sol object
+  
+  unsigned solYType;
+  solYType = mlSol->GetSolutionType(solYIndex[0]);   // get the finite element type for "Y"
+  
+  unsigned solYPdeIndex[DIM];
+  solYPdeIndex[0] = mlPdeSys->GetSolPdeIndex("Y1");    // get the position of "Y1" in the pdeSys object
+  solYPdeIndex[1] = mlPdeSys->GetSolPdeIndex("Y2");    // get the position of "Y2" in the pdeSys object
+  solYPdeIndex[2] = mlPdeSys->GetSolPdeIndex("Y3");    // get the position of "Y3" in the pdeSys object
+  
+  std::vector < adept::adouble > solY[DIM]; // local Y solution
+  
+  std::vector< int > SYSDOF; // local to global pdeSys dofs
+  
+  vector< double > Res; // local redidual vector
+  std::vector< adept::adouble > aResY[3]; // local redidual vector
+  
+  vector < double > Jac; // local Jacobian matrix (ordered by column, adept)
+  
+  KK->zero();  // Set to zero all the entries of the Global Matrix
+  RES->zero(); // Set to zero all the entries of the Global Residual
+  
+  // element loop: each process loops only on the elements that owns
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    
+    short unsigned ielGeom = msh->GetElementType(iel);
+    unsigned nxDofs  = msh->GetElementDofNumber(iel, solxType);    // number of solution element dofs
+    unsigned nYDofs  = msh->GetElementDofNumber(iel, solYType);    // number of solution element dofs
+    
+    for (unsigned K = 0; K < DIM; K++) {
+      solx[K].resize(nxDofs);
+      solY[K].resize(nYDofs);
+    }
+    
+    // resize local arrays
+    SYSDOF.resize( DIM * nYDofs );
+    
+    Res.resize( DIM * nYDofs );    //resize
+    
+    for (unsigned K = 0; K < DIM; K++) {
+      aResY[K].assign(nYDofs,0.);    //resize and zet to zero
+    }
+    
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nxDofs; i++) {
+      unsigned iDDof = msh->GetSolutionDof(i, iel, solxType); // global to local mapping between solution node and solution dof
+      unsigned iXDof  = msh->GetSolutionDof(i, iel, xType);
+      
+      for (unsigned K = 0; K < DIM; K++) {
+        solx[K][i] = (*msh->_topology->_Sol[K])(iXDof) + (*sol->_Sol[solDxIndex[K]])(iDDof);
+      }
+    }
+    
+    // local storage of global mapping and solution
+    for (unsigned i = 0; i < nYDofs; i++) {
+      unsigned iYDof = msh->GetSolutionDof(i, iel, solYType); // global to local mapping between solution node and solution dof
+      for (unsigned K = 0; K < DIM; K++) {
+        solY[K][i] = (*sol->_Sol[solYIndex[K]])(iYDof);  // global to local solution
+        SYSDOF[ K * nYDofs + i] = pdeSys->GetSystemDof(solYIndex[K], solYPdeIndex[K], i, iel);  // global to global mapping between solution node and pdeSys dof
+      }
+    }
+    
+    // start a new recording of all the operations involving adept::adouble variables
+    s.new_recording();
+    
+    // *** Gauss point loop ***
+    for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solxType]->GetGaussPointNumber(); ig++) {
+      
+      const double *phix;  // local test function
+      const double *phix_uv[dim]; // local test function first order partial derivatives
+      
+      const double *phiY;  // local test function
+      const double *phiY_uv[dim]; // local test function first order partial derivatives
+      
+      double weight; // gauss point weight
+      
+      // *** get gauss point weight, test function and test function partial derivatives ***
+      phix = msh->_finiteElement[ielGeom][solxType]->GetPhi(ig);
+      phix_uv[0] = msh->_finiteElement[ielGeom][solxType]->GetDPhiDXi(ig); //derivative in u
+      phix_uv[1] = msh->_finiteElement[ielGeom][solxType]->GetDPhiDEta(ig); //derivative in v
+      
+      phiY = msh->_finiteElement[ielGeom][solYType]->GetPhi(ig);
+      phiY_uv[0] = msh->_finiteElement[ielGeom][solYType]->GetDPhiDXi(ig);
+      phiY_uv[1] = msh->_finiteElement[ielGeom][solYType]->GetDPhiDEta(ig);
+      
+      weight = msh->_finiteElement[ielGeom][solxType]->GetGaussWeight(ig);
+      
+      double sumPhi = 0.;
+      double sumPhi_u = 0.;
+      double sumPhi_v = 0.;
+      for(unsigned i=0;i<nxDofs;i++){
+        //std::cout << phix[i] << " " << phix_uv[0][i] << " " << phix_uv[1][i] <<std::endl;
+        sumPhi += phix[i];
+        sumPhi_u += phix_uv[0][i];
+        sumPhi_v += phix_uv[1][i];
+      }
+      if( fabs(sumPhi-1.)>1.0e-12 || fabs(sumPhi_u)>1.0e-12 || fabs(sumPhi_v)>1.0e-12  ){
+        std::cout << sumPhi << " " << sumPhi_u << " " << sumPhi_v <<std::endl;
+      }
+      
+      double solx_uv[3][2] = {{0.,0.},{0.,0.},{0.,0.}};
+      adept::adouble solY_uv[3][2] = {{0.,0.},{0.,0.},{0.,0.}};
+      double solxg[3]={0.,0.,0.};
+      adept::adouble solYg[3]={0.,0.,0.};
+     
+            
+      for(unsigned K = 0; K < DIM; K++){
+        for (unsigned i = 0; i < nxDofs; i++) {
+          solxg[K] += phix[i] * solx[K][i];
+        }  
+        for (unsigned i = 0; i < nYDofs; i++) {
+          solYg[K] += phiY[i] * solY[K][i];
+        }
+        for (int j = 0; j < dim; j++) {
+          for (unsigned i = 0; i < nxDofs; i++) {
+            solx_uv[K][j]    += phix_uv[j][i] * solx[K][i];
+          }
+        }
+        for (int j = 0; j < dim; j++) {
+          for (unsigned i = 0; i < nYDofs; i++) {
+            solY_uv[K][j] += phiY_uv[j][i] * solY[K][i];
+          }
+        }        
+      }
+          
+      double g[dim][dim]={{0.,0.},{0.,0.}};
+      for(unsigned i = 0; i < dim; i++){
+        for(unsigned j = 0; j < dim; j++){
+          for(unsigned K = 0; K < DIM; K++){
+            g[i][j] += solx_uv[K][i] * solx_uv[K][j];
+          }
+        }
+      }
+      double detg = g[0][0] * g[1][1] - g[0][1] * g[1][0];
+      
+      double normal[DIM];
+      normal[0] = (solx_uv[1][0] * solx_uv[2][1] - solx_uv[2][0] * solx_uv[1][1])/sqrt(detg);
+      normal[1] = (solx_uv[2][0] * solx_uv[0][1] - solx_uv[0][0] * solx_uv[2][1])/sqrt(detg);;
+      normal[2] = (solx_uv[0][0] * solx_uv[1][1] - solx_uv[1][0] * solx_uv[0][1])/sqrt(detg);;
+      
+      double gi[dim][dim];
+      gi[0][0] =  g[1][1]/detg;
+      gi[0][1] = -g[0][1]/detg;
+      gi[1][0] = -g[1][0]/detg;
+      gi[1][1] =  g[0][0]/detg;
+      
+      for(unsigned i = 0; i < dim; i++){
+        for(unsigned j = 0; j < dim; j++){
+          double id = 0.;
+          for(unsigned j2 = 0; j2 < dim; j2++){
+            id +=  g[i][j2] * gi[j2][j];
+          }
+          if(i == j && fabs(id-1.) > 1.0e-10) std::cout<<id << " error ";
+          else if (i != j && fabs(id) > 1.0e-10) std::cout<< id <<" error ";
+        }
+      }
+      
+      double Area = weight * sqrt(detg);
+      
+      double Jir[2][3]={{0.,0.,0.},{0.,0.,0.}};
+      for(unsigned i = 0; i < dim; i++){
+        for(unsigned J = 0; J < DIM; J++){
+          for(unsigned k = 0; k < dim; k++){
+            Jir[i][J] += gi[i][k] * solx_uv[J][k];
+          }
+        }
+      }
+      
+      adept::adouble solx_Xtan[DIM][DIM]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
+      adept::adouble solY_Xtan[DIM][DIM]={{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
+      
+      
+      for(unsigned I = 0; I < DIM; I++){
+        for(unsigned J = 0; J < DIM; J++){
+          for(unsigned k = 0; k < dim; k++){
+            solx_Xtan[I][J] += solx_uv[I][k] * Jir[k][J];
+            solY_Xtan[I][J] += solY_uv[I][k] * Jir[k][J];
+          }
+        }
+      }
+      
+      
+      std::vector < double > phiY_Xtan[DIM];
+      std::vector < double > phix_Xtan[DIM];
+      
+      for(unsigned J = 0; J < DIM; J++){
+        phix_Xtan[J].assign(nxDofs,0.);
+        for(unsigned inode  = 0; inode < nxDofs; inode++){
+          for(unsigned k = 0; k < dim; k++){
+            phix_Xtan[J][inode] += phix_uv[k][inode] * Jir[k][J];
+          }
+        }
+        
+        phiY_Xtan[J].assign(nYDofs,0.);
+        for(unsigned inode  = 0; inode < nYDofs; inode++){
+          for(unsigned k = 0; k < dim; k++){
+            phiY_Xtan[J][inode] += phiY_uv[k][inode] * Jir[k][J];
+          }
+        }
+      }
+      
+      for(unsigned K = 0; K < DIM; K++){
+        for(unsigned i = 0; i < nxDofs; i++){
+          adept::adouble term1 = 0.;
+          for(unsigned J = 0; J < DIM; J++){
+            term1 +=  solx_Xtan[K][J] * phiY_Xtan[J][i]; 
+          }
+          if(fabs(term1-phix_Xtan[K][i])>1.0e-10) {
+            std::cout<<" error "<< term1 << " "<<phiY_Xtan[K][i];
+            abort();
+          }
+          
+          aResY[K][i] += ( solYg[K] * phiY[i] + term1) * Area; 
+        }
+      }
+    } // end gauss point loop
+    
+    //--------------------------------------------------------------------------------------------------------
+    // Add the local Matrix/Vector into the global Matrix/Vector
+    
+    //copy the value of the adept::adoube aRes in double Res and store
+    
+    
+    for (int K = 0; K < DIM; K++) {
+      for (int i = 0; i < nYDofs; i++) {
+        Res[ K * nYDofs + i] = -aResY[K][i].value();
+      }
+    }
+    
+    RES->add_vector_blocked(Res, SYSDOF);
+    
+    Jac.resize(DIM * nYDofs * DIM * nYDofs );
+    
+    // define the dependent variables
+    
+    for (int K = 0; K < DIM; K++) {
+      s.dependent(&aResY[K][0], nYDofs);
+    }
+    
+    // define the dependent variables
+    
+    for (int K = 0; K < DIM; K++) {
+      s.independent(&solY[K][0], nYDofs);
+    } 
+    
+    // get the jacobian matrix (ordered by row)
+    s.jacobian(&Jac[0], true);
+    
+    KK->add_matrix_blocked(Jac, SYSDOF, SYSDOF);
+    
+    s.clear_independents();
+    s.clear_dependents();
+    
+  } //end element loop for each process
+  
+  RES->close();
+  KK->close();
+  
+  //VecView((static_cast<PetscVector*>(RES))->vec(),	PETSC_VIEWER_STDOUT_SELF );
+  
+  //abort();
+  // MatView((static_cast<PetscMatrix*>(KK))->mat(), PETSC_VIEWER_STDOUT_SELF );
+  
+  //     PetscViewer    viewer;
+  //     PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+  //     PetscObjectSetName((PetscObject)viewer,"FSI matrix");
+  //     PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+  //     MatView((static_cast<PetscMatrix*>(KK))->mat(),viewer);
+  //     double a;
+  //     std::cin>>a;
+  
+  
+  // ***************** END ASSEMBLY *******************
+}
+
 
