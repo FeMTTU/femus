@@ -29,7 +29,7 @@ double InitialValueMu(const std::vector < double >& x) {
 }
 
 double InitialValueControl(const std::vector < double >& x) {
-  return .0;
+  return 0.;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int faceName, const double time) {
@@ -887,8 +887,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   vector < double >  sol_ctrl; // local solution
   sol_ctrl.reserve(maxSize);
-//   vector< int > l2GMap_ctrl;
-//   l2GMap_ctrl.reserve(maxSize);
   
   double ctrl_gss = 0.;
   double ctrl_x_gss = 0.;
@@ -902,9 +900,9 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   vector <double> phi_udes_x;
   vector <double> phi_udes_xx;
 
-    phi_udes.reserve(maxSize);
-    phi_udes_x.reserve(maxSize * dim);
-    phi_udes_xx.reserve(maxSize * dim2);
+  phi_udes.reserve(maxSize);
+  phi_udes_x.reserve(maxSize * dim);
+  phi_udes_xx.reserve(maxSize * dim2);
  
   
 //  unsigned solIndex_udes;
@@ -913,9 +911,8 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
 
   vector < double >  sol_udes; // local solution
   sol_udes.reserve(maxSize);
-//   vector< int > l2GMap_udes;
-//   l2GMap_udes.reserve(maxSize);
-   double udes_gss = 0.;
+
+  double udes_gss = 0.;
  //*************************************************** 
  //*************************************************** 
 
@@ -923,8 +920,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
  //*************************************************** 
  //********* WHOLE SET OF VARIABLES ****************** 
   const int solType_max = 2;  //biquadratic
-
-  const int n_unknowns = 4;
  //*************************************************** 
 
   
@@ -1049,7 +1044,6 @@ void ComputeIntegral(const MultiLevelProblem& ml_prob)    {
   std::cout << "The value of the integral_beta   is " << std::setw(11) << std::setprecision(10) << integral_beta << std::endl;
   std::cout << "The value of the total integral  is " << std::setw(11) << std::setprecision(10) << 0.5 * integral_target + 0.5 * alpha * integral_alpha + 0.5 * beta * integral_beta << std::endl;
 
-  
 return;
   
 }
