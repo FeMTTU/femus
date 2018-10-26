@@ -4,50 +4,86 @@
 
 using namespace std;
 
+Sphere::Sphere():
+_xCenter(0.),
+_yCenter(0.),
+_zCenter(0.),
+_radius(1.){ 
+};
 
-sphere::sphere() // Constructor goes here.
-{
-    
-}
-void sphere::assign_centre(double x, double y, double z){
-    x_centre=x;
-    y_centre=y;
-    z_centre=z;
-}
-double sphere::get_x_coordinate(void){
-    return x_centre;
-}
-double sphere::get_y_coordinate(void){
-    return y_centre;
-}
-double sphere::get_z_coordinate(void){
-    return z_centre;
+Sphere::Sphere(const double & x, const double & y, const double & z, const double & radius): // Constructor goes here.
+_xCenter(x),
+_yCenter(y),
+_zCenter(z),
+_radius(radius){
 }
 
- void sphere::assign_radius(double r){
-    radius=r;
-}
- double sphere::get_radius(){
-    return radius;
-}
-
-double sphere::volume(void){
-    return 4*M_PI*pow(radius,3)/3.0;
+void Sphere::SetCenter(const double & x, const double & y, const double & z){
+    _xCenter=x;
+    _yCenter=y;
+    _zCenter=z;
 }
 
-void sphere::translated_sphere(sphere *pt, double d_x, double d_y, double d_z){
-    pt->x_centre=x_centre+d_x; //(*pt).x_centre=x_centre+d_x
-    pt->y_centre=y_centre+d_y;
-    pt->z_centre=z_centre+d_z;
-    pt->radius=radius;
+double Sphere::GetXCoordinate(void) const {
+  return _xCenter;
+}
+
+double Sphere::GetYCoordinate(void) const {
+  return _yCenter;
+}
+
+double Sphere::GetZCoordinate(void) const {
+  return _zCenter;
+}
+
+void Sphere::SetRadius(const double & r){
+  _radius=r;
+}
+
+double Sphere::GetRadius() const {
+  return _radius;
+}
+
+
+double Sphere::GetVolume(void) const {
+  return 4 * M_PI * pow(_radius,3)/3.0;
+}
+
+void Sphere::TranslatedSphere(Sphere *pt, const double & d_x, const double & d_y, const double & d_z) const {
+  pt->_xCenter =_xCenter + d_x; //(*pt).x_centre=x_centre+d_x
+  pt->_yCenter =_yCenter + d_y;
+  pt->_zCenter =_zCenter + d_z;
+  pt->_radius =_radius;
+}
+
+void Sphere::TranslatedSphere(Sphere &pt, const double & d_x, const double & d_y, const double & d_z) const {
+  pt._xCenter =_xCenter + d_x; //(*pt).x_centre=x_centre+d_x
+  pt._yCenter =_yCenter + d_y;
+  pt._zCenter =_zCenter + d_z;
+  pt._radius =_radius;
+}
+
+
+std::ostream& operator<<(std::ostream& os, Sphere& s) {
+  std::cout << "h = "<< s.GetXCoordinate() << ", k = " << s.GetYCoordinate()<<", l = " << s.GetZCoordinate() << ", r = " << s.GetRadius();
 }
 
 int main(){
     
-    sphere s1;
-    s1.assign_centre(1,2,4);
-    s1.assign_radius(3);
-    cout << s1.volume() << "\n" ;
+    Sphere s1;
+    
+    Sphere s2(1.,2.,3.,4.);
+    s1.SetCenter(1,2,4);
+    s1.SetRadius(3);
+    cout << s1.GetVolume() << "\n" ;
+    
+    std::cout << s2 << std::endl;
+    
+    s2.TranslatedSphere(s1,1.,1.,1.);
+      
+    std::cout << s1 << std::endl;
+    
+    
 }
 
 
