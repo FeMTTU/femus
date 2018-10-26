@@ -188,7 +188,7 @@ int main(int argc, char** args) {
   
   system_opt.SetDebugNonlinear(true);
   system_opt.SetDebugFunction(ComputeIntegral);
-//   system_opt.SetMaxNumberOfNonLinearIterations(2);
+  system_opt.SetMaxNumberOfNonLinearIterations(30);
 //   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
   system_opt.SetMaxNumberOfLinearIterations(6);
   system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
@@ -1381,22 +1381,22 @@ double integral_g_dot_n = 0.;
       }// end gauss point loop
     } //end element loop  
 
-       std::ostringstream filename_out; filename_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "target_part"  << ".txt";
+       std::ostringstream filename_out; filename_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "Integral_computation"  << ".txt";
 
        std::ofstream intgr_fstream;
   if (paral::get_rank() == 0 ) {
       intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
-      intgr_fstream << mlPdeSys.GetNonlinearIt() << " " << integral_g_dot_n << " " << std::endl;
+      intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys.GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
+      intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << alpha_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
+      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << beta_val  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
+      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << gamma_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
+      intgr_fstream << "The value of the integral of g.n "<<    integral_g_dot_n << std::endl;
+      intgr_fstream << "The value of the theta is                             " <<    std::setw(11) << std::setprecision(10) <<  solTheta << std::endl;
+      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * alpha_val*0.5  + integral_beta *beta_val*0.5 + integral_gamma *gamma_val*0.5 << std::endl;
+      intgr_fstream <<  std::endl;
       intgr_fstream.close();  //you have to close to disassociate the file from the stream
 }  
-    std::cout << "The value of the integral of g.n "<<   std::setw(11) << std::setprecision(10) << std::fixed<< integral_g_dot_n << std::endl;
-    std::cout << "The value of the theta is  "<<   std::setw(11) << std::setprecision(10) << std::fixed<< solTheta << std::endl;
-    std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
-    std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<beta_val << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
-    std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<gamma_val<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
-    std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * alpha_val*0.5  + integral_beta *beta_val*0.5 + integral_gamma *gamma_val*0.5 << std::endl; 
-    
-    
+     
     return; 
 	  
   

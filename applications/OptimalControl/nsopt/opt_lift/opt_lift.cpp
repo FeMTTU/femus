@@ -3,6 +3,8 @@
 // therefore, U=V=0 on left and right, U=0 on top and bottom, V is free 
 
 
+#include <stdio.h>
+#include "adept.h"
 
 #include "FemusInit.hpp"
 #include "MultiLevelProblem.hpp"
@@ -10,16 +12,13 @@
 #include "VTKWriter.hpp"
 #include "GMVWriter.hpp"
 #include "NonLinearImplicitSystem.hpp"
-#include "adept.h"
-
 // #include "MultiLevelMesh.hpp"
 #include "LinearImplicitSystem.hpp"
 // #include "WriterEnum.hpp"
-
 #include "Fluid.hpp"
 #include "Parameter.hpp"
 #include "Files.hpp"
-#include <stdio.h>
+#include "paral.hpp"//to get iproc HAVE_MPI is inside here
 
 #include   "../nsopt_params.hpp"
 
@@ -91,7 +90,7 @@ bool SetBoundaryConditionOpt(const std::vector < double >& x, const char SolName
 void AssembleNavierStokesOpt_nonAD(MultiLevelProblem &ml_prob);
 void AssembleNavierStokesOpt_AD   (MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
-double ComputeIntegral(MultiLevelProblem& ml_prob);
+void ComputeIntegral(const MultiLevelProblem& ml_prob);
 
 
 
@@ -184,7 +183,6 @@ int main(int argc, char** args) {
 
   // add system NSOptLifting in mlProb as a NonLinear Implicit System
   NonLinearImplicitSystem& system_opt    = mlProb.add_system < NonLinearImplicitSystem > ("NSOpt");
-//   LinearImplicitSystem& system_opt    = mlProb.add_system < LinearImplicitSystem > ("NSOpt");
 
   // NS ===================
   system_opt.AddSolutionToSystemPDE("U");
@@ -219,15 +217,15 @@ int main(int argc, char** args) {
   
  
   system_opt.SetDebugNonlinear(true);
+  system_opt.SetDebugFunction(ComputeIntegral);
 //   system_opt.SetMaxNumberOfNonLinearIterations(5);
 //   system_opt.SetNonLinearConvergenceTolerance(1.e-15);
-  system_opt.SetDebugLinear(true);
+//   system_opt.SetDebugLinear(true);
   system_opt.SetMaxNumberOfLinearIterations(6);
   system_opt.SetAbsoluteLinearConvergenceTolerance(1.e-14);
 
   system_opt.MLsolve();
 
-  ComputeIntegral(mlProb);
   
   // print solutions
   std::vector < std::string > variablesToBePrinted;
@@ -851,12 +849,11 @@ std::cout << " ********************************  AD SYSTEM *********************
 }
 
 
-double ComputeIntegral(MultiLevelProblem& ml_prob) {
+void ComputeIntegral(const MultiLevelProblem& ml_prob) {
 
-//    NonLinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the nonlinear implicit system named "NSOpt"
+   const NonLinearImplicitSystem&  mlPdeSys   = ml_prob.get_system<NonLinearImplicitSystem> ("NSOpt");   // pointer to the nonlinear implicit system named "NSOpt"
  
-   LinearImplicitSystem* mlPdeSys   = &ml_prob.get_system<LinearImplicitSystem> ("NSOpt");   // pointer to the linear implicit system named "NSOpt"
-  const unsigned level = mlPdeSys->GetLevelToAssemble();
+  const unsigned level = mlPdeSys.GetLevelToAssemble();
  
 
   Mesh*          msh          	= ml_prob._ml_msh->GetLevel(level);    // pointer to the mesh (level) object
@@ -1105,13 +1102,28 @@ double	integral_gamma  = 0.;
       }// end gauss point loop
     } //end element loop  
 
-    std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
-    std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<beta_val << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
-    std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<gamma_val<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
-    std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha *(alpha_val*0.5)+ integral_beta *(beta_val*0.5) + integral_gamma*(gamma_val*0.5) << std::endl; 
+       std::ostringstream filename_out; filename_out << ml_prob.GetFilesHandler()->GetOutputPath() << "/" << "Integral_computation"  << ".txt";
+
+       std::ofstream intgr_fstream;
+  if (paral::get_rank() == 0 ) {
+      intgr_fstream.open(filename_out.str().c_str(),std::ios_base::app);
+      intgr_fstream << " ***************************** Non Linear Iteration "<< mlPdeSys.GetNonlinearIt() << " *********************************** " <<  std::endl << std::endl;
+      intgr_fstream << "The value of the target functional for " << "alpha " <<   std::setprecision(0) << std::scientific << alpha_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_target_alpha << std::endl;
+      intgr_fstream << "The value of the L2 control for        " << "beta  " <<   std::setprecision(0) << std::scientific << beta_val  << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_beta         << std::endl;
+      intgr_fstream << "The value of the H1 control for        " << "gamma " <<   std::setprecision(0) << std::scientific << gamma_val << " is " <<  std::setw(11) << std::setprecision(10) <<  integral_gamma        << std::endl;
+      intgr_fstream << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha * alpha_val*0.5  + integral_beta *beta_val*0.5 + integral_gamma *gamma_val*0.5 << std::endl;
+      intgr_fstream <<  std::endl;
+      intgr_fstream.close();  //you have to close to disassociate the file from the stream
+}  
+
+    
+//     std::cout << "The value of the integral of target for alpha "<< std::setprecision(0)<< std::scientific<<  alpha_val<< " is " << std::setw(11) << std::setprecision(10) << std::fixed<< integral_target_alpha << std::endl;
+//     std::cout << "The value of the integral of beta for beta "<<  std::setprecision(0)<<std::scientific<<beta_val << " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_beta << std::endl;
+//     std::cout << "The value of the integral of gamma for gamma "<< std::setprecision(0)<<std::scientific<<gamma_val<< " is " << std::setw(11) << std::setprecision(10) <<  std::fixed<< integral_gamma << std::endl; 
+//     std::cout << "The value of the total integral is " << std::setw(11) << std::setprecision(10) <<  integral_target_alpha *(alpha_val*0.5)+ integral_beta *(beta_val*0.5) + integral_gamma*(gamma_val*0.5) << std::endl; 
    
     
-    return  integral_target_alpha *(alpha_val*0.5)+ integral_beta*(beta_val*0.5) + integral_gamma*(gamma_val*0.5) ; 
+    return; 
 	  
   
 }
