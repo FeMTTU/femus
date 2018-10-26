@@ -500,8 +500,8 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
             term1 +=  solx_Xtan[K][J] * phix_Xtan[J][i]; 
           }
           if(fabs(term1-phix_Xtan[K][i])>1.0e-10) {
-              std::cout<<" error "<< term1 << " "<<phix_Xtan[K][i];
-              abort();
+            std::cout<<" error "<< term1 << " "<<phix_Xtan[K][i];
+            //abort();
           }
           
           aResx[K][i] += ( solYg[K] * phix[i] + term1) * Area; 
@@ -867,7 +867,7 @@ void AssembleInit(MultiLevelProblem& ml_prob) {
           }
           if(fabs(term1-phix_Xtan[K][i])>1.0e-10) {
             std::cout<<" error "<< term1 << " "<<phiY_Xtan[K][i];
-            abort();
+            //abort();
           }
           
           aResY[K][i] += ( solYg[K] * phiY[i] + term1) * Area; 
