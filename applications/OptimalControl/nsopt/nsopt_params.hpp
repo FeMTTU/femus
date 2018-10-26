@@ -11,13 +11,13 @@
 //******************************************* Desired Target  and RHS function*******************************************************
 
  double force[3] = {0.,0.,0.};
- double Vel_desired[3] = {1.,1.,0.};
+ double Vel_desired[3] = {1.,0.,0.};
 
 //*********************** Sets the regularization parameters *******************************************************
 
- double alpha_val = 1.e+0;
- double beta_val  = 1.e-3;
- double gamma_val = 1.e-2;
+ double alpha_val = 1.;
+ double beta_val  = 1.e-1;
+ double gamma_val = 1.e-1;
  
  
 //******************************** switch between stokes and navier stokes *********************************************
@@ -40,9 +40,9 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 //         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
 //   ) //target on left 
    
-    if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
-	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5
-  ) //target on top
+//     if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
+// 	  elem_center[1] > 0.75  - 1.e-5  &&  elem_center[1] < 1.0   + 1.e-5
+//   ) //target on top
 
 //    if ( elem_center[0] > 0.75  - 1.e-5  &&  elem_center[0] < 1.0   + 1.e-5  && 
 //         elem_center[1] > 0.25 - 1.e-5  &&  elem_center[1] < 0.75  + 1.e-5
@@ -51,7 +51,17 @@ int ElementTargetFlag(const std::vector<double> & elem_center) {
 //     if (  elem_center[0] > 0.25 - 1.e-5  &&  elem_center[0] < 0.75  + 1.e-5  && 
 // 	  elem_center[1] > 0.   - 1.e-5  &&  elem_center[1] < 0.25  + 1.e-5
 //   ) //target on bottom
-    {
+  
+//     if (  elem_center[0] > 0. - 1.e-5  &&  elem_center[0] < 0.25  + 1.e-5  && 
+// 	  elem_center[1] > 0.75   - 1.e-5  &&  elem_center[1] < 1.0  + 1.e-5
+//   ) //target box  on NW
+
+    if (  elem_center[0] > 0.75 - 1.e-5  &&  elem_center[0] < 1.0  + 1.e-5  && 
+	  elem_center[1] > 0.   - 1.e-5  &&  elem_center[1] < 0.25  + 1.e-5
+  ) //target box  on SE
+
+
+  {
      
      target_flag = 1;
      
