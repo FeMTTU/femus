@@ -245,7 +245,13 @@ int main(int argc, char** argv) {
 
     LinearImplicitSystem& systemHisto = ml_probHisto.add_system < LinearImplicitSystem > ("Histo");
 
+    clock_t start_time = clock();
+    
     GetHistogramAndKDE(sgmQoIStandardized, ml_probHisto);
+    
+    std::cout << std::endl << " RANNA in: " << std::setw(11) << std::setprecision(6) << std::fixed
+    << static_cast<double>((clock() - start_time)) / CLOCKS_PER_SEC << " s" << std::endl;
+
 
 //   GetKDEIntegral(ml_probHisto);
 
@@ -1338,12 +1344,9 @@ void GetQoIStandardizedSamples(std::vector< double >& alphas, std::vector < std:
 //       sgmQoIStandardized[m][idim] = normalSample;
 
             double uniformSample = var_unif();
-            
-            std::cout << uniformSample <<" ";
             sgmQoIStandardized[m][idim] = uniformSample;
 
         }
-        std::cout << std::endl;
     }
     //END
 
@@ -1378,12 +1381,12 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & sgmQoIStandardize
     double dx = (xMaxCoarseBox - xMinCoarseBox) / nxCoarseBox; //mesh size assuming a coarse box is used
     double dy = (dim > 1) ? (yMaxCoarseBox - yMinCoarseBox) / nyCoarseBox : 1. ;
     double dz = (dim > 2) ? (zMaxCoarseBox - zMinCoarseBox) / nzCoarseBox : 1. ;
-    
+
     double measure = numberOfSamples * dx *dy *dz;
-    
+
     for(unsigned m = 0; m < numberOfSamples; m++) {
 
-        
+
         if(dim == 1) {
             for(int iel = sol->GetMesh()->_elementOffset[iproc]; iel < sol->GetMesh()->_elementOffset[iproc + 1]; iel ++) {
 
@@ -1429,56 +1432,56 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & sgmQoIStandardize
             unsigned iel = marker.GetMarkerElement();
             std::vector<double> sampleLocal;
             marker.GetMarkerLocalCoordinates(sampleLocal);
-            
+
             if( iel >= sol->GetMesh()->_elementOffset[iproc]  &&  iel < sol->GetMesh()->_elementOffset[iproc+1]) {
                 double histoValue = 1. / measure;
-              sol->_Sol[solIndexHISTO]->add(iel, histoValue);
-              //BEGIN write KDE solution
-              short unsigned ielType = msh->GetElementType(iel);
-              unsigned nDofsKDE = msh->GetElementDofNumber(iel, solTypeKDE);
+                sol->_Sol[solIndexHISTO]->add(iel, histoValue);
+                //BEGIN write KDE solution
+                short unsigned ielType = msh->GetElementType(iel);
+                unsigned nDofsKDE = msh->GetElementDofNumber(iel, solTypeKDE);
 
-              std::vector < std::vector < double> > vx(dim);
-              for(int idim = 0; idim < dim; idim++) {
-                vx[idim].resize(nDofsKDE);
-              }
-              for(unsigned inode = 0; inode < nDofsKDE; inode++) {
-                 unsigned idofVx = msh->GetSolutionDof(inode, iel, 2);
-                 for(int jdim = 0; jdim < dim; jdim++) {
-                     vx[jdim][inode] = (*msh->_topology->_Sol[jdim])(idofVx);
-                 }
-              }
+                std::vector < std::vector < double> > vx(dim);
+                for(int idim = 0; idim < dim; idim++) {
+                    vx[idim].resize(nDofsKDE);
+                }
+                for(unsigned inode = 0; inode < nDofsKDE; inode++) {
+                    unsigned idofVx = msh->GetSolutionDof(inode, iel, 2);
+                    for(int jdim = 0; jdim < dim; jdim++) {
+                        vx[jdim][inode] = (*msh->_topology->_Sol[jdim])(idofVx);
+                    }
+                }
 
-               msh->_finiteElement[ielType][solTypeKDE]->Jacobian(vx, sampleLocal, weight, phi, gradphi);
+                msh->_finiteElement[ielType][solTypeKDE]->Jacobian(vx, sampleLocal, weight, phi, gradphi);
 
-               for(unsigned inode = 0; inode < nDofsKDE; inode++) {
-                 unsigned globalDof = msh->GetSolutionDof(inode, iel, solTypeKDE);
-                 double KDEvalue = phi[inode] / (numberOfSamples * dx * dy * dz);
-                 sol->_Sol[solIndexKDE]->add(globalDof, KDEvalue);
-               }
-               //END
-
-              }
+                for(unsigned inode = 0; inode < nDofsKDE; inode++) {
+                    unsigned globalDof = msh->GetSolutionDof(inode, iel, solTypeKDE);
+                    double KDEvalue = phi[inode] / (numberOfSamples * dx * dy * dz);
+                    sol->_Sol[solIndexKDE]->add(globalDof, KDEvalue);
+                }
+                //END
 
             }
 
-        
+        }
+
+
 
         sol->_Sol[solIndexHISTO]->close();
         sol->_Sol[solIndexKDE]->close();
     }
 
-   
-    
+
+
 //     double integralLocal = 0;
 //     double integral;
 //     for(unsigned i =  msh->_dofOffset[solTypeHISTO][iproc]; i <  msh->_dofOffset[solTypeHISTO][iproc + 1]; i++) {
 //         integralLocal += (*sol->_Sol[solIndexHISTO])(i) * dx * dy * dz; // this is assuming the mesh is a coarse box
 //     }
-// 
+//
 //     MPI_Allreduce(&integralLocal, &integral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-//     
+//
 //     std::cout << "integral 1 = " << integral << " integral 2 = " << numberOfSamples * dx *dy *dz << std::endl;
-// 
+//
 //     for(unsigned i =  msh->_dofOffset[solTypeHISTO][iproc]; i <  msh->_dofOffset[solTypeHISTO][iproc + 1]; i++) {
 //         double valueHISTO = (*sol->_Sol[solIndexHISTO])(i);
 //         sol->_Sol[solIndexHISTO]->set(i, valueHISTO / integral);
@@ -1631,7 +1634,7 @@ void GetAverageL2Error(std::vector< std::vector <double > > & sgmQoIStandardized
                     //END
 
 //           double stdGaussian = exp(- sgmQoIStandardized[m][0] * sgmQoIStandardized[m][0] * 0.5) / sqrt(2 * PI);
-// 
+//
 //           aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
 
 
@@ -1689,16 +1692,16 @@ void GetAverageL2Error(std::vector< std::vector <double > > & sgmQoIStandardized
                     }
 
 //                     double stdGaussian = exp(- dotProduct * 0.5) / (2 * PI);
-// 
+//
 //                     if(dim == 3) stdGaussian /= sqrt(2 * PI);
-// 
+//
 //                     aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
 
 
                     double uniform = (dim == 2) ? 0.25 : 0.125;
 
                     for(unsigned kdim = 0; kdim < dim; kdim++) {
-                        if(fabs(sgmQoIStandardized[m][kdim]) > 1. || fabs(sgmQoIStandardized[m][kdim]) < - 1.) uniform = 0.; 
+                        if(fabs(sgmQoIStandardized[m][kdim]) > 1. || fabs(sgmQoIStandardized[m][kdim]) < - 1.) uniform = 0.;
                     }
 
                     aL2ELocal += (solKDESample - uniform) * (solKDESample - uniform);
@@ -1720,7 +1723,7 @@ void GetAverageL2Error(std::vector< std::vector <double > > & sgmQoIStandardized
 
     aL2E = sqrt(aL2E) / numberOfSamples;
 
-    std::cout << "Average L2 Error = " << aL2E << std::endl;
+    std::cout << "Average L2 Error = " << std::setprecision(11)<< aL2E << std::endl;
 
 }
 
