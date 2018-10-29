@@ -11,20 +11,20 @@ using namespace femus;
 
 int main(int argc,char **args) {
 
-//   FemusInit init(argc,args,MPI_COMM_WORLD);
-// 
-//   std::string med_file = "GroupsANDMeshes.med";
-//   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << med_file;
-//   const std::string infile = mystream.str();
-// 
-//   //Adimensional
-//   double Lref = 1.;
-// 
-//   MultiLevelMesh ml_msh;
-//   ml_msh.ReadCoarseMesh(infile.c_str(),"fifth",Lref);
-//   
-//   ml_msh.PrintInfo();
-//   
+  FemusInit init(argc,args,MPI_COMM_WORLD);
+
+  std::string med_file = "FourQuad9.med";
+  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << med_file;
+  const std::string infile = mystream.str();
+
+  //Adimensional
+  double Lref = 1.;
+
+  MultiLevelMesh ml_msh;
+  ml_msh.ReadCoarseMesh(infile.c_str(),"fifth",Lref);
+  
+  ml_msh.PrintInfo();
+  
 //   ml_msh.SetWriter(XDMF);
 //   ml_msh.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic");
 //   ml_msh.SetWriter(GMV);
