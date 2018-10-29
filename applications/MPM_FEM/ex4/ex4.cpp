@@ -96,7 +96,7 @@ int main(int argc, char** args)
   NF[std::make_pair (soft, 2u)] = 0.;
   NF[std::make_pair (soft, 3u)] = 0.;
       
-  unsigned n_timesteps = 5000;
+  unsigned n_timesteps = 3500;
   
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps + 1); 
       
@@ -385,7 +385,7 @@ int main(int argc, char** args)
   filename << "./centerOfMass"<< material <<".txt";
   std::ofstream fout;
   fout.open( filename.str().c_str() );
-  fout << "iteration, time ";
+  fout << "iteration, time, ";
   for(unsigned nl = 1; nl < 4; nl++) {
     std::pair <std::string, unsigned > simulation = std::make_pair (material, nl);
      fout << "E" << simulation.first  << "Level"<<simulation.second<<", "; 
