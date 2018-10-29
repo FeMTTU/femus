@@ -1379,8 +1379,6 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & sgmQoIStandardize
     double dy = (dim > 1) ? (yMaxCoarseBox - yMinCoarseBox) / nyCoarseBox : 1. ;
     double dz = (dim > 2) ? (zMaxCoarseBox - zMinCoarseBox) / nzCoarseBox : 1. ;
     
-    double integral = numberOfSamples * dx * dy * dz;
-
     unsigned counter = 0;
     
     for(unsigned m = 0; m < numberOfSamples; m++) {
@@ -1397,7 +1395,7 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & sgmQoIStandardize
                 double xRight = (*sol->GetMesh()->_topology->_Sol[0])(xRightDof);
 
                 if(sgmQoIStandardized[m][0] > xLeft && sgmQoIStandardized[m][0] <= xRight) {
-                    sol->_Sol[solIndexHISTO]->add(iel, 1. / integral);
+                    sol->_Sol[solIndexHISTO]->add(iel, 1.);
 
                     //BEGIN write KDE solution
                     short unsigned ielType = msh->GetElementType(iel);
@@ -1473,19 +1471,19 @@ void GetHistogramAndKDE(std::vector< std::vector <double > > & sgmQoIStandardize
 
    
     
-//     double integralLocal = 0;
-//     double integral;
-//     for(unsigned i =  msh->_dofOffset[solTypeHISTO][iproc]; i <  msh->_dofOffset[solTypeHISTO][iproc + 1]; i++) {
-//         integralLocal += (*sol->_Sol[solIndexHISTO])(i) * dx * dy * dz; // this is assuming the mesh is a coarse box
-//     }
-// 
-//     MPI_Allreduce(&integralLocal, &integral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-// 
-//     for(unsigned i =  msh->_dofOffset[solTypeHISTO][iproc]; i <  msh->_dofOffset[solTypeHISTO][iproc + 1]; i++) {
-//         double valueHISTO = (*sol->_Sol[solIndexHISTO])(i);
-//         sol->_Sol[solIndexHISTO]->set(i, valueHISTO / integral);
-//     }
-//     sol->_Sol[solIndexHISTO]->close();
+    double integralLocal = 0;
+    double integral;
+    for(unsigned i =  msh->_dofOffset[solTypeHISTO][iproc]; i <  msh->_dofOffset[solTypeHISTO][iproc + 1]; i++) {
+        integralLocal += (*sol->_Sol[solIndexHISTO])(i) * dx * dy * dz; // this is assuming the mesh is a coarse box
+    }
+
+    MPI_Allreduce(&integralLocal, &integral, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+    for(unsigned i =  msh->_dofOffset[solTypeHISTO][iproc]; i <  msh->_dofOffset[solTypeHISTO][iproc + 1]; i++) {
+        double valueHISTO = (*sol->_Sol[solIndexHISTO])(i);
+        sol->_Sol[solIndexHISTO]->set(i, valueHISTO / integral);
+    }
+    sol->_Sol[solIndexHISTO]->close();
 
 
 }
