@@ -480,8 +480,6 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         
         if(switchToNeumannBC || switchToNeumannFSI){
           
-          std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAA";
-          
           if(switchToNeumannBC)  switchToNeumannBCcheck = true;     
           if(switchToNeumannFSI) switchToNeumannFSIcheck = true;     
           for(unsigned inode = 0;inode < 3; inode++){

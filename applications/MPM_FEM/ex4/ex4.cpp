@@ -98,10 +98,10 @@ int main(int argc, char** args)
       
   unsigned n_timesteps = 5000;
   
-  std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps); 
+  std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps + 1); 
       
   for(unsigned nl = 1; nl < 4; nl++){
-  
+      
     std::pair <std::string, unsigned > simulation = std::make_pair (material, nl);
     
     scalingFactor1 = SF1[simulation];
@@ -325,11 +325,7 @@ int main(int argc, char** args)
     linea->GetLine(line[0]);
     PrintLine(outputFolder.str(), line, false, 0);
     
-    double theta = 0;
-    gravity[0] = 9.81 * sin(theta);
-    gravity[1] = -9.81 * cos(theta);
-
-    system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
+   
     
     
     std::ostringstream filename;
@@ -338,7 +334,16 @@ int main(int argc, char** args)
     fout.open( filename.str().c_str() );
     fout << "iteration, time ";
     fout << "E" << simulation.first  << "Level"<<simulation.second << std::endl;
-    fout << "0, 0., 0." << std::endl;
+    
+    CM[0][simulation] = line[0][0][1];  
+    fout << "0, 0., "<< CM[0][simulation] << std::endl;
+    
+    
+    double theta = 0;
+    gravity[0] = 9.81 * sin(theta);
+    gravity[1] = -9.81 * cos(theta);
+
+    system.AttachGetTimeIntervalFunction(SetVariableTimeStep);
     
     for(unsigned time_step = 1; time_step <= n_timesteps; time_step++) {
 
@@ -369,8 +374,10 @@ int main(int argc, char** args)
       fout << CM[it][simulation] <<std::endl;
       
     }
-
+    
+    fout.close();
     delete linea;
+     
   }
   
   

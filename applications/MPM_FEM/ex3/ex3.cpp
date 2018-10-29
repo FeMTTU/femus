@@ -384,6 +384,7 @@ int main(int argc, char** args) {
     
       }
   
+      fout.close();
       delete linea;
   
     }
