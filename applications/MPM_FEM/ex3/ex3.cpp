@@ -111,17 +111,38 @@ int main(int argc, char** args) {
   YM2[std::make_pair (stiff, 4u)] = 4.2 * 1.e7;
   YM2[std::make_pair (stiff, 5u)] = 4.2 * 1.e7;   
   
+  std::map < std::pair < std::string, unsigned > , double > NF; 
+  
+  NF[std::make_pair (soft, 2u)] = 0.;
+  NF[std::make_pair (soft, 3u)] = 0.;
+  NF[std::make_pair (soft, 4u)] = 0.;
+  NF[std::make_pair (soft, 5u)] = 0.1;
+  
+  NF[std::make_pair (medium, 2u)] = 0.;
+  NF[std::make_pair (medium, 3u)] = 0.;
+  NF[std::make_pair (medium, 4u)] = 0.;
+  NF[std::make_pair (medium, 5u)] = 0.1;
+
+  NF[std::make_pair (stiff, 2u)] = 0.;
+  NF[std::make_pair (stiff, 3u)] = 0.;
+  NF[std::make_pair (stiff, 4u)] = 0.;
+  NF[std::make_pair (stiff, 5u)] = 0.1;
   
   std::pair <std::string, unsigned > simulation;
+  
+  
+  
   
   unsigned timestep0 = 50;
   unsigned n_timesteps = 250 + timestep0;
     
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
   
+  unsigned mat0 = 0, matN = 3;
+  unsigned nl0 = 5, nlN = 6;  
   
-  for(unsigned mat = 0; mat< 3; mat++){
-    for(unsigned nl = 2; nl < 6; nl++) {
+  for(unsigned mat = mat0; mat< matN; mat++){
+    for(unsigned nl = nl0; nl < nlN; nl++) {
       
       simulation = std::make_pair (material[mat], nl);
     
@@ -356,8 +377,11 @@ int main(int argc, char** args) {
         gravity[0] = 9.81 * sin(theta);
         gravity[1] = -9.81 * cos(theta);
         
+        NeumannFactor = NF[simulation];
+            
         if ( time_step <= timestep0 ){
-          gravity[0] = 0.;
+           gravity[0] = 0.;  gravity[0] = 0.;
+           NeumannFactor = 0.;
         }
         
         system.CopySolutionToOldSolution();
@@ -395,8 +419,8 @@ int main(int argc, char** args) {
   std::ofstream fout;
   fout.open( filename.str().c_str() );
   fout << "iteration, time, analytic, ";
-  for(unsigned mat = 0; mat< 3; mat++){
-    for(unsigned nl = 2; nl < 6; nl++) {
+  for(unsigned mat = mat0; mat< matN; mat++){
+    for(unsigned nl = nl0; nl < nlN; nl++) {
       simulation = std::make_pair (material[mat], nl);
       fout << "E" << simulation.first  << "Level"<<simulation.second<<", "; 
     }
@@ -405,8 +429,8 @@ int main(int argc, char** args) {
   for(unsigned it = 0;it < CM.size();it++){
     double time = it * DT;
     fout << it <<", "<< time <<", "<<1./3.*9.81*time*time*sqrt(2.)/2. << ", ";
-    for(unsigned mat = 0; mat< 3; mat++){
-      for(unsigned nl = 2; nl < 6; nl++) {
+   for(unsigned mat = mat0; mat< matN; mat++){
+    for(unsigned nl = nl0; nl < nlN; nl++) {
         simulation = std::make_pair (material[mat], nl);
         fout << CM[it][simulation] <<", ";
       }
