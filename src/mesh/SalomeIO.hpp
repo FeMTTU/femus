@@ -77,6 +77,7 @@ class SalomeIO : public MeshInput<Mesh>
    static const std::string mesh_ensemble;    // ENS_MAA
    static const std::string aux_zeroone;      // -0000000000000000001-0000000000000000001
    static const std::string elem_list;        //MAI
+   static const std::string group_fam;        //FAM
    static const std::string connectivity;     //NOD
    static const std::string node_list;        //NOE
    static const std::string coord_list;       //COO

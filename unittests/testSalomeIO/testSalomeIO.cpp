@@ -20,9 +20,11 @@ int main(int argc,char **args) {
 
   //Adimensional
   double Lref = 1.;
+  
+  std::string fe_quad_rule("fifth");
 
   MultiLevelMesh ml_msh;
-  ml_msh.ReadCoarseMesh(infile.c_str(),"fifth",Lref);
+  ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
   ml_msh.PrintInfo();
   
   // define the multilevel solution and attach the mlMsh object to it
