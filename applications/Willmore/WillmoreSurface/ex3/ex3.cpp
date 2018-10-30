@@ -30,7 +30,7 @@ void AssemblePWillmore(MultiLevelProblem& );
 void AssembleInit(MultiLevelProblem& );
 
 double GetTimeStep (const double time){
-  return 0.000001;
+  return 0.01;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -91,7 +91,10 @@ int main(int argc, char** args) {
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
   
-  mlMsh.ReadCoarseMesh("./input/ellipsoid.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/sphere.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/ellipsoidRef2.neu", "seventh", scalingFactor);
+  
   
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
@@ -111,17 +114,17 @@ int main(int argc, char** args) {
   mlSol.AddSolution("Dx2", LAGRANGE, SECOND, 2);
   mlSol.AddSolution("Dx3", LAGRANGE, SECOND, 2);
   
-//   mlSol.AddSolution("Dx1", LAGRANGE, FIRST, 0);
-//   mlSol.AddSolution("Dx2", LAGRANGE, FIRST, 0);
-//   mlSol.AddSolution("Dx3", LAGRANGE, FIRST, 0);
+//   mlSol.AddSolution("Dx1", LAGRANGE, FIRST, 2);
+//   mlSol.AddSolution("Dx2", LAGRANGE, FIRST, 2);
+//   mlSol.AddSolution("Dx3", LAGRANGE, FIRST, 2);
 //   
   mlSol.AddSolution("Y1", LAGRANGE, SECOND, 2);
   mlSol.AddSolution("Y2", LAGRANGE, SECOND, 2);
   mlSol.AddSolution("Y3", LAGRANGE, SECOND, 2);
   
-//   mlSol.AddSolution("Y1", LAGRANGE, FIRST, 0);
-//   mlSol.AddSolution("Y2", LAGRANGE, FIRST, 0);
-//   mlSol.AddSolution("Y3", LAGRANGE, FIRST, 0);
+//   mlSol.AddSolution("Y1", LAGRANGE, FIRST, 2);
+//   mlSol.AddSolution("Y2", LAGRANGE, FIRST, 2);
+//   mlSol.AddSolution("Y3", LAGRANGE, FIRST, 2);
 
   
   mlSol.Initialize("All");
@@ -213,8 +216,8 @@ int main(int argc, char** args) {
     
     system.CopySolutionToOldSolution();
     system.MGsolve();
-    if( (time_step + 1)%10 == 0)
-    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, (time_step + 1)/10);
+    if( (time_step + 1)%1 == 0)
+    mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR, "biquadratic", variablesToBePrinted, (time_step + 1)/1);
   }
     
   return 0;
@@ -442,8 +445,8 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
           for(unsigned j2 = 0; j2 < dim; j2++){
             id +=  g[i][j2] * gi[j2][j];
           }
-          if(i == j && fabs(id-1.) > 1.0e-10) std::cout<<id << " error ";
-          else if (i != j && fabs(id) > 1.0e-10) std::cout<< id <<" error ";
+//           if(i == j && fabs(id-1.) > 1.0e-10) std::cout<<id << " error0 ";
+//           else if (i != j && fabs(id) > 1.0e-10) std::cout<< id <<" error0 ";
         }
       }
       
@@ -499,12 +502,12 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
           for(unsigned J = 0; J < DIM; J++){
             term1 +=  solx_Xtan[K][J] * phix_Xtan[J][i]; 
           }
-          if(fabs(term1-phix_Xtan[K][i])>1.0e-10) {
-            std::cout<<" error "<< term1 << " "<<phix_Xtan[K][i];
-            //abort();
-          }
+//           if(fabs(term1-phix_Xtan[K][i])>1.0e-10) {
+//             std::cout<<" error1 "<< term1 << " "<<phix_Xtan[K][i];
+//             //abort();
+//           }
           
-          aResx[K][i] += ( solYg[K] * phix[i] + term1) * Area; 
+          aResY[K][i] += ( solYg[K] * phix[i] + term1) * Area; 
         }
         for(unsigned i = 0; i < nYDofs; i++){
           adept::adouble term0 = 0.;
@@ -517,31 +520,27 @@ void AssemblePWillmore(MultiLevelProblem& ml_prob) {
           
           
           for(unsigned J = 0; J < DIM; J++){
-            term0 -=  solx_Xtan[K][J] * phiY_Xtan[J][i]; 
-            term1 -=  P * solY_Xtan[J][J];
             
-            term2 -=  P * solY_Xtan[K][J] * phiY_Xtan[J][i]; 
+            term0 -=  P * solY_Xtan[K][J] * phiY_Xtan[J][i]; 
+            
+            term1 -= (P - 1.) * solx_Xtan[K][J] * phiY_Xtan[J][i]; 
+                       
+            term2 -=  P * solY_Xtan[J][J];
+            
             adept::adouble term4 = 0.;
-            
-            term5 += P * phiY_Xtan[J][i] * solY_Xtan[J][K];
-            adept::adouble term7 = 0.;
-            
+                        
             for(unsigned L = 0; L < DIM; L++){
               term4 += solxOld_Xtan[J][L] * solY_Xtan[K][L] + solxOld_Xtan[K][L] * solY_Xtan[J][L];
-              term7 += solY_Xtan[J][L] * phiY_Xtan[L][i]; 
             }
             
             term3 += P * phiY_Xtan[J][i] * term4;
             
-            term6 -= P * normal[J] * normal[K] * term7;
           }
-          aResY[K][i] += ( P * (- 0. * normal[K] + (solxg[K] - solxOldg[K])  / dt ) * phiY[i] +
-                          solYOldnorm2 * term0 + term1 * phiY_Xtan[K][i] + term2 + term3 ) * Area; 
-                          //solYOldnorm2 * term0 + term1 * phiY_Xtan[K][i] + term5 + term6) * Area; 
-          
-          if( fabs(term5 + term6 - (term2 + term3) ) > 1.0e-10 ){
-            //std::cout<<" error "<< term5 + term6 << " " << term2 + term3 << std::endl;
-          }
+          aResx[K][i] += ( P * (0. * normal[K] + (solxg[K] - solxOldg[K])  / dt ) * phiY[i] 
+                           + term0 
+                           + solYOldnorm2 * term1.value() 
+                           + term2.value() * phiY_Xtan[K][i] 
+                           + term3.value() ) * Area;             
         }
       }
     } // end gauss point loop
