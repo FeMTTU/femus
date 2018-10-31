@@ -21,6 +21,7 @@
 #include <cassert>
 #include <cstdio>
 #include <fstream>
+#include <tuple>
 
 namespace femus
 {
@@ -152,8 +153,86 @@ namespace femus
 
     // meshes ========================
     for(unsigned j = 0; j < n_meshes_ens; j++) {
-
+        
       std::string tempj = mesh_menus[j];
+        
+    // ************** Groups of each Mesh *********************************
+      std::string group_list = group_name_begin +  "/" + mesh_menus[j] + "/" + group_name_end;
+     hsize_t n_groups = 0;
+     hid_t  gid_groups   = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
+     hid_t status_groups = H5Gget_num_objs(gid_groups, &n_groups);
+    if(status_groups != 0) {
+      std::cout << "Number of groups not found: You need groups at least for the boundary faces";
+      abort();
+    }
+    
+    std::vector<std::string>                  group_names(n_groups);
+    std::vector< std::tuple<int,int,int> >    group_flags(n_groups);
+    
+     for(unsigned j = 0; j < n_groups; j++) {
+        char*   group_names_char = new char[max_length];
+        H5Gget_objname_by_idx(gid_groups, j, group_names_char, max_length); ///@deprecated see the HDF doc to replace this
+              group_names[j] = group_names_char;
+      std::cout << group_names[j] << std::endl;
+        delete[] group_names_char;
+    
+
+    // read GROUP **************** E
+    //we assume that these are VOLUME groups
+    //in general, I'd say that a group can only have ONE element type (should study the possibility of hybrid mesh)
+   
+    std::vector < unsigned > materialElementCounter(3,0);
+
+      const uint n_fe_types_for_groups = 1; // so far we have this assumption
+
+      std::string my_mesh_name_dir = mesh_ensemble +  "/" + group_names[j] + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+
+      /// @todo check the underscores according to our naming standard
+
+      // strip the first number to get the group 
+      // strip the second number to get the group material
+      int gr_family_in_salome = atoi(group_names[j].substr(4, 2).c_str());
+      int gr_name             = atoi(group_names[j].substr(13, 1).c_str());  //at most 10 groups with this
+      int gr_property         = atoi(group_names[j].substr(15, 1).c_str());
+      
+      group_flags[j] = std::make_tuple(gr_family_in_salome, gr_name, gr_property);
+
+// 
+//       std::vector<std::string> el_fe_type(mesh.GetDimension());
+// 
+//       ReadFE(file_id, el_fe_type, n_fe_types_for_groups, my_mesh_name_dir);
+// 
+//       std::string group_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + elem_list + "/" + el_fe_type[mesh.GetDimension() - 1] + "/" + dofobj_indices; ///@todo here we have to loop
+// 
+//       hid_t dtset = H5Dopen(file_id, group_dataset.c_str(), H5P_DEFAULT);
+//       hid_t filespace = H5Dget_space(dtset);
+//       hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
+//       int* elem_indices = new int[dims[0]];
+//       status = H5Dread(dtset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, elem_indices);
+// 
+//       for(unsigned i = 0; i < dims[0]; i++) {
+//         mesh.el->SetElementGroup(elem_indices[i] - 1 - n_elements_b_bb, gr_name);
+//         mesh.el->SetElementMaterial(elem_indices[i] - 1 - n_elements_b_bb , gr_property);
+// 	
+// 	    if( gr_property == 2) materialElementCounter[0] += 1;
+// 	else if(gr_property == 3 ) materialElementCounter[1] += 1;
+// 	else materialElementCounter[2] += 1;
+// 	
+//       }
+// 
+//       H5Dclose(dtset);
+//       delete [] elem_indices;
+// 
+//     mesh.el->SetElementGroupNumber(n_gr);
+//     mesh.el->SetMaterialElementCounter(materialElementCounter);
+    //   // end read GROUP **************** E      
+    }
+      
+      // ************** Groups of each Mesh *********************************
+
+        
+
+      // ************** Mesh *********************************
 
 // dimension ===============
       /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
@@ -330,6 +409,16 @@ namespace femus
         filespace = H5Dget_space(dtset_fam);
         hid_t status_fam  = H5Sget_simple_extent_dims(filespace, dims_i, NULL);
         if(status_fam == 0) {     std::cerr << "SalomeIO::read dims not found";  abort();  }
+        
+        int* fam_map = new  int[dims_i[0]];
+        hid_t status_conn = H5Dread(dtset_conn, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map);
+
+        for(unsigned i = 0; i < dims_i[0]; i++) {
+          for(unsigned j = 0; j < n_groups; j++) {
+          if ( fam_map[i] == std::get<0>(group_flags[j]) ) {  std::cout << "Current flag " << fam_map[i] << " matches " << std::get<1>(group_flags[j]) << std::endl; }
+          }  
+        }
+        delete [] fam_map;
         H5Dclose(dtset_fam);
         
       }
@@ -338,75 +427,6 @@ namespace femus
        //   // end read  ELEMENT/CELL **************** B
       
       
-      // ************** Groups of each Mesh *********************************
-      std::string group_list = group_name_begin +  "/" + tempj + "/" + group_name_end;
-     hsize_t n_groups = 0;
-     hid_t  gid_groups   = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
-     hid_t status_groups = H5Gget_num_objs(gid_groups, &n_groups);
-    if(status_groups != 0) {
-      std::cout << "Number of groups not found: You need groups at least for the boundary faces";
-      abort();
-    }
-    
-    std::vector<std::string>  group_names;
-     for(unsigned j = 0; j < n_groups; j++) {
-        char*   group_names_char = new char[max_length];
-        H5Gget_objname_by_idx(gid_groups, j, group_names_char, max_length); ///@deprecated see the HDF doc to replace this
-              group_names.push_back(group_names_char);
-      std::cout << group_names[j] << std::endl;
-        delete[] group_names_char;
-    
-
-    // read GROUP **************** E
-    //we assume that these are VOLUME groups
-    //in general, I'd say that a group can only have ONE element type (should study the possibility of hybrid mesh)
-   
-    std::vector < unsigned > materialElementCounter(3,0);
-
-      const uint n_fe_types_for_groups = 1; // so far we have this assumption
-
-      std::string my_mesh_name_dir = mesh_ensemble +  "/" + group_names[j] + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
-
-      /// @todo check the underscores according to our naming standard
-
-      // strip the first number to get the group 
-      // strip the second number to get the group material
-      int gr_family_in_salome = atoi(group_names[j].substr(4, 2).c_str());
-      int gr_name             = atoi(group_names[j].substr(13, 1).c_str());  //at most 10 groups with this
-      int gr_property         = atoi(group_names[j].substr(15, 1).c_str());
-      
-// 
-//       std::vector<std::string> el_fe_type(mesh.GetDimension());
-// 
-//       ReadFE(file_id, el_fe_type, n_fe_types_for_groups, my_mesh_name_dir);
-// 
-//       std::string group_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + elem_list + "/" + el_fe_type[mesh.GetDimension() - 1] + "/" + dofobj_indices; ///@todo here we have to loop
-// 
-//       hid_t dtset = H5Dopen(file_id, group_dataset.c_str(), H5P_DEFAULT);
-//       hid_t filespace = H5Dget_space(dtset);
-//       hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
-//       int* elem_indices = new int[dims[0]];
-//       status = H5Dread(dtset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, elem_indices);
-// 
-//       for(unsigned i = 0; i < dims[0]; i++) {
-//         mesh.el->SetElementGroup(elem_indices[i] - 1 - n_elements_b_bb, gr_name);
-//         mesh.el->SetElementMaterial(elem_indices[i] - 1 - n_elements_b_bb , gr_property);
-// 	
-// 	    if( gr_property == 2) materialElementCounter[0] += 1;
-// 	else if(gr_property == 3 ) materialElementCounter[1] += 1;
-// 	else materialElementCounter[2] += 1;
-// 	
-//       }
-// 
-//       H5Dclose(dtset);
-//       delete [] elem_indices;
-// 
-//     mesh.el->SetElementGroupNumber(n_gr);
-//     mesh.el->SetMaterialElementCounter(materialElementCounter);
-    //   // end read GROUP **************** E      
-    }
-      
-      // ************** Groups of each Mesh *********************************
       
     }   //end meshes
     
