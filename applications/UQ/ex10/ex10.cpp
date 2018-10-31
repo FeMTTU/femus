@@ -54,14 +54,14 @@ double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
 unsigned numberOfSamples = 1000000; //for MC sampling of the QoI
 unsigned nxCoarseBox;
-double xMinCoarseBox = - 1.5; //-5.5 for Gaussian, -2.5 for SGM, -1.5 for uniform
-double xMaxCoarseBox = 1.5;  //5.5 for Gaussian, 5.5 for SGM, 1.5 for uniform
+double xMinCoarseBox = - 5.5; //-5.5 for Gaussian, -2.5 for SGM, -1.5 for uniform
+double xMaxCoarseBox = 5.5;  //5.5 for Gaussian, 5.5 for SGM, 1.5 for uniform
 unsigned nyCoarseBox;
-double yMinCoarseBox = - 1.5;
-double yMaxCoarseBox = 1.5;
+double yMinCoarseBox = - 5.5;
+double yMaxCoarseBox = 5.5;
 unsigned nzCoarseBox;
-double zMinCoarseBox = - 1.5;
-double zMaxCoarseBox = 1.5;
+double zMinCoarseBox = - 5.5;
+double zMaxCoarseBox = 5.5;
 //END
 
 unsigned numberOfUniformLevels = 4; //refinement for the PDE mesh
@@ -1340,11 +1340,11 @@ void GetQoIStandardizedSamples(std::vector< double >& alphas, std::vector < std:
 
 //       sgmQoIStandardized[m][idim] = (sgmQoI - meanQoI) / stdDeviationQoI; //TODO with QoIs that are different from each other, meanQoI and stdDeviationQoI will depend on idim
 
-//       double normalSample = var_nor();
-//       sgmQoIStandardized[m][idim] = normalSample;
+      double normalSample = var_nor();
+      sgmQoIStandardized[m][idim] = normalSample;
 
-            double uniformSample = var_unif();
-            sgmQoIStandardized[m][idim] = uniformSample;
+//             double uniformSample = var_unif();
+//             sgmQoIStandardized[m][idim] = uniformSample;
 
         }
     }
@@ -1633,14 +1633,14 @@ void GetAverageL2Error(std::vector< std::vector <double > > & sgmQoIStandardized
 
                     //END
 
-//           double stdGaussian = exp(- sgmQoIStandardized[m][0] * sgmQoIStandardized[m][0] * 0.5) / sqrt(2 * PI);
-//
-//           aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
+          double stdGaussian = exp(- sgmQoIStandardized[m][0] * sgmQoIStandardized[m][0] * 0.5) / sqrt(2 * PI);
+
+          aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
 
 
-                    double uniform =  (fabs(sgmQoIStandardized[m][0]) <= 1.) ? 0.5 : 0. ;
-
-                    aL2ELocal += (solKDESample - uniform) * (solKDESample - uniform);
+//                     double uniform =  (fabs(sgmQoIStandardized[m][0]) <= 1.) ? 0.5 : 0. ;
+// 
+//                     aL2ELocal += (solKDESample - uniform) * (solKDESample - uniform);
 
                     break;
                 }
@@ -1691,20 +1691,20 @@ void GetAverageL2Error(std::vector< std::vector <double > > & sgmQoIStandardized
                         dotProduct += sgmQoIStandardized[m][jdim] * sgmQoIStandardized[m][jdim];
                     }
 
-//                     double stdGaussian = exp(- dotProduct * 0.5) / (2 * PI);
-//
-//                     if(dim == 3) stdGaussian /= sqrt(2 * PI);
-//
-//                     aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
+                    double stdGaussian = exp(- dotProduct * 0.5) / (2 * PI);
+
+                    if(dim == 3) stdGaussian /= sqrt(2 * PI);
+
+                    aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
 
 
-                    double uniform = (dim == 2) ? 0.25 : 0.125;
-
-                    for(unsigned kdim = 0; kdim < dim; kdim++) {
-                        if(fabs(sgmQoIStandardized[m][kdim]) > 1. || fabs(sgmQoIStandardized[m][kdim]) < - 1.) uniform = 0.;
-                    }
-
-                    aL2ELocal += (solKDESample - uniform) * (solKDESample - uniform);
+//                     double uniform = (dim == 2) ? 0.25 : 0.125;
+// 
+//                     for(unsigned kdim = 0; kdim < dim; kdim++) {
+//                         if(fabs(sgmQoIStandardized[m][kdim]) > 1. || fabs(sgmQoIStandardized[m][kdim]) < - 1.) uniform = 0.;
+//                     }
+// 
+//                     aL2ELocal += (solKDESample - uniform) * (solKDESample - uniform);
 
 
                     //END
