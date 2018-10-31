@@ -166,8 +166,8 @@ namespace femus
       abort();
     }
     
-    std::vector<std::string>                  group_names(n_groups);
-    std::vector< std::tuple<int,int,int> >    group_flags(n_groups);
+    std::vector<std::string>                     group_names(n_groups);
+    std::vector< std::tuple<int,int,int,int> >   group_flags(n_groups);  //salome family; our name; our property; group size
     
      for(unsigned j = 0; j < n_groups; j++) {
         char*   group_names_char = new char[max_length];
@@ -194,8 +194,8 @@ namespace femus
       int gr_family_in_salome = atoi(group_names[j].substr(4, 2).c_str());
       int gr_name             = atoi(group_names[j].substr(13, 1).c_str());  //at most 10 groups with this
       int gr_property         = atoi(group_names[j].substr(15, 1).c_str());
-      
-      group_flags[j] = std::make_tuple(gr_family_in_salome, gr_name, gr_property);
+      int gr_size             = 0;      
+      group_flags[j] = std::make_tuple(gr_family_in_salome, gr_name, gr_property,gr_size);
 
 // 
 //       std::vector<std::string> el_fe_type(mesh.GetDimension());
@@ -241,25 +241,20 @@ namespace femus
       hsize_t     n_fem_type;
       hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
       hid_t status = H5Gget_num_objs(gid, &n_fem_type);
-      if(status != 0) {
-        std::cout << "SalomeIO::read_fem_type:   H5Gget_num_objs not found";
-        abort();
-      }
+      if(status != 0) {   std::cout << "SalomeIO::read_fem_type:   H5Gget_num_objs not found";  abort();   }
+      
       FindDimension(gid, tempj, n_fem_type);
       const unsigned volume_pos = mesh.GetDimension() - 1;
       H5Gclose(gid);
 
-      if(mesh.GetDimension() != n_fem_type) {
-        std::cout << "Mismatch between dimension and number of element types" << std::endl;
-        abort();
-      }
+      if(mesh.GetDimension() != n_fem_type) { std::cout << "Mismatch between dimension and number of element types" << std::endl;   abort();  }
 
 // fem type ===============
       std::vector<std::string> el_fe_type(mesh.GetDimension());
 
       ReadFE(file_id, el_fe_type, n_fem_type, my_mesh_name_dir);
 
-      //   // read NODAL COORDINATES **************** C
+//   // read NODAL COORDINATES **************** C
       std::string coord_dataset = mesh_ensemble +  "/" + tempj + "/" +  aux_zeroone + "/" + node_list + "/" + coord_list + "/";  ///@todo here we have to loop
 
       hid_t dtset = H5Dopen(file_id, coord_dataset.c_str(), H5P_DEFAULT);
@@ -415,59 +410,48 @@ namespace femus
 
         for(unsigned i = 0; i < dims_i[0]; i++) {
           for(unsigned j = 0; j < n_groups; j++) {
-          if ( fam_map[i] == std::get<0>(group_flags[j]) ) {  std::cout << "Current flag " << fam_map[i] << " matches " << std::get<1>(group_flags[j]) << std::endl; }
+          if ( fam_map[i] == std::get<0>(group_flags[j]) ) {
+//               std::cout << "Current flag " << fam_map[i] << " matches " << std::get<1>(group_flags[j]) << std::endl; 
+              std::get<3>(group_flags[j]) ++;
+              std::cout << "Group number for group " << j << " " << std::get<3>(group_flags[j]) << std::endl; 
+              
+        }
           }  
         }
+        
+        
+        if ( i == (volume_pos - 1) ) {
+                    
+    //loop over volume elements
+    //extract faces
+
+//   // read boundary **************** D
+  for (unsigned k=0; k<n_groups/*nbcd*/; k++) { //@todo these should be the groups that are "boundary groups"
+           int value = std::get<1>(group_flags[k]);       //flag of the boundary portion
+      unsigned nface = std::get<3>(group_flags[k]);  //number of elements in a portion of boundary
+               value = - (value + 1);  //@todo so value in salome must be positive
+    for (unsigned i = 0; i < nface; i++) {
+//       unsigned iel =,   //volume element to which the face belongs
+//       iel--;
+//       unsigned iface; //index of the face in that volume element
+//       iface = SalomeIO::SalomeToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
+//       mesh.el->SetFaceElementIndex(iel,iface,value);  //value is (-1) for element faces that are not boundary faces
+    }
+  }
+//   // end read boundary **************** D
+                    
+        } //end (volume pos - 1)
+
         delete [] fam_map;
         H5Dclose(dtset_fam);
         
       }
 
-
        //   // end read  ELEMENT/CELL **************** B
       
-      
-      
     }   //end meshes
-    
 
     H5Fclose(file_id);
-
-    //loop over volume elements
-    //extract faces
-
-
-    //
-//   unsigned nbcd;
-
-//   // read boundary **************** D
-//   inf.open(name.c_str());
-//   if (!inf) {
-//     std::cout<<"Generic-mesh file "<< name << " cannot read boudary\n";
-//     exit(0);
-//   }
-//   for (unsigned k=0; k<nbcd; k++) {
-//     while (str2.compare("CONDITIONS") != 0) inf >> str2;
-//     inf >> str2;
-//     int value;
-//     unsigned nface;
-//     inf >>value>>str2>>nface>>str2>>str2;
-//     value=-value-1;
-//     for (unsigned i=0; i<nface; i++) {
-//       unsigned iel,iface;
-//       inf>>iel>>str2>>iface;
-//       iel--;
-//       iface=SalomeIO::SalomeToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
-//       mesh.el->SetFaceElementIndex(iel,iface,value);
-//     }
-//     inf >> str2;
-//     if (str2.compare("ENDOFSECTION") != 0) {
-//       std::cout<<"error boundary data mesh"<<std::endl;
-//       exit(0);
-//     }
-//   }
-//   inf.close();
-//   // end read boundary **************** D
 
   }
 
