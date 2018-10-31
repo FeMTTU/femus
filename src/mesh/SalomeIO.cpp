@@ -110,24 +110,40 @@ namespace femus
   
   std::pair<int,int>  SalomeIO::isolate_number_in_string(const std::string  string_in, const int begin_pos_to_investigate) {
       
+    try {
+        
       int str_pos = begin_pos_to_investigate;
       std::cout << " " <<        string_in.at(str_pos) << " ";
-      std::string temp_buffer( &(string_in.at(str_pos)) );
-      while ( temp_buffer.compare( "_" ) != 0 ) {   str_pos ++;   try { temp_buffer = string_in.at(str_pos); }  catch(const std::out_of_range& e) { std::cerr <<  "agg sbagliat "; abort(); }   }
-      
-      int str_pos_begin = str_pos;
-      
-      str_pos = str_pos_begin + 1;
-      temp_buffer = string_in.at(str_pos);
-      while ( temp_buffer.compare( "_" ) != 0 ) {   str_pos ++;   temp_buffer = string_in.at(str_pos);    }
 
-      int str_pos_end = str_pos;
-      
-      std::cout <<  str_pos_begin << " " << " " << str_pos_end;    
+      std::vector<int> output_pair(2,0);
 
-      std::pair<int,int> output_pair(str_pos_begin,str_pos_end);
+    //search for the _
+      std::string temp_buffer; 
+
+      assert(str_pos < string_in.size());   temp_buffer = string_in.at(str_pos);
       
-      return output_pair;
+      for(unsigned j = 0; j < 2; j++) {
+      
+      while ( temp_buffer.compare( "_" ) != 0  &&  ( str_pos < (string_in.size() - 1) )  ) {  str_pos++; temp_buffer = string_in.at(str_pos); }
+      
+      output_pair[j] = str_pos;
+      
+      if ( str_pos < (string_in.size() - 1) ) { str_pos++; temp_buffer = string_in.at(str_pos); }
+          
+      }
+    
+      std::cout <<  output_pair[0] << " " << " " << output_pair[1] << " " ;    
+
+      std::pair<int,int>  my_output(output_pair[0],output_pair[1]);
+      
+      return my_output;
+      
+    }
+
+    catch(const std::out_of_range& e) {
+          std::cerr <<  "Reading out of range" << std::endl; abort(); 
+    }
+
       
   }
   
@@ -197,6 +213,7 @@ namespace femus
     std::vector< std::tuple<int,int,int,int> >   group_flags(n_groups);  //salome family; our name; our property; group size
     
      for(unsigned j = 0; j < n_groups; j++) {
+         
         char*   group_names_char = new char[max_length];
         H5Gget_objname_by_idx(gid_groups, j, group_names_char, max_length); ///@deprecated see the HDF doc to replace this
               group_names[j] = group_names_char;
@@ -219,9 +236,9 @@ namespace femus
       int str_pos = 0;
       std::pair<int,int> mypair = isolate_number_in_string(group_names[j],str_pos);
       int gr_family_in_salome = atoi(group_names[j].substr(mypair.first, mypair.second - mypair.first).c_str());
-      mypair = isolate_number_in_string(group_names[j],mypair.second+1);
+                       mypair = isolate_number_in_string(group_names[j],mypair.second+1);
       int gr_name             = atoi(group_names[j].substr(mypair.first, mypair.second - mypair.first).c_str());  //at most 10 groups with this
-//       mypair = isolate_number_in_string(group_names[j],mypair.second+1);
+                       mypair = isolate_number_in_string(group_names[j],mypair.second+1);
       int gr_property         = atoi(group_names[j].substr(mypair.first, mypair.second - mypair.first).c_str());
       int gr_size             = 0;      
       group_flags[j] = std::make_tuple(gr_family_in_salome, gr_name, gr_property,gr_size);
