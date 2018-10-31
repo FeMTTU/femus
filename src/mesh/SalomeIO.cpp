@@ -105,6 +105,33 @@ namespace femus
     {0, 1, 2},
     {0, 1}
   };
+ 
+  
+  
+  std::pair<int,int>  SalomeIO::isolate_number_in_string(const std::string  string_in, const int begin_pos_to_investigate) {
+      
+      int str_pos = begin_pos_to_investigate;
+      std::cout << " " <<        string_in.at(str_pos) << " ";
+      std::string temp_buffer( &(string_in.at(str_pos)) );
+      while ( temp_buffer.compare( "_" ) != 0 ) {   str_pos ++;   try { temp_buffer = string_in.at(str_pos); }  catch(const std::out_of_range& e) { std::cerr <<  "agg sbagliat "; abort(); }   }
+      
+      int str_pos_begin = str_pos;
+      
+      str_pos = str_pos_begin + 1;
+      temp_buffer = string_in.at(str_pos);
+      while ( temp_buffer.compare( "_" ) != 0 ) {   str_pos ++;   temp_buffer = string_in.at(str_pos);    }
+
+      int str_pos_end = str_pos;
+      
+      std::cout <<  str_pos_begin << " " << " " << str_pos_end;    
+
+      std::pair<int,int> output_pair(str_pos_begin,str_pos_end);
+      
+      return output_pair;
+      
+  }
+  
+  
 
   /// @todo extend to Wegdes (aka Prisms)
   void SalomeIO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag) {
@@ -189,11 +216,13 @@ namespace femus
 
       /// @todo check the underscores according to our naming standard
 
-      // strip the first number to get the group 
-      // strip the second number to get the group material
-      int gr_family_in_salome = atoi(group_names[j].substr(4, 2).c_str());
-      int gr_name             = atoi(group_names[j].substr(13, 1).c_str());  //at most 10 groups with this
-      int gr_property         = atoi(group_names[j].substr(15, 1).c_str());
+      int str_pos = 0;
+      std::pair<int,int> mypair = isolate_number_in_string(group_names[j],str_pos);
+      int gr_family_in_salome = atoi(group_names[j].substr(mypair.first, mypair.second - mypair.first).c_str());
+      mypair = isolate_number_in_string(group_names[j],mypair.second+1);
+      int gr_name             = atoi(group_names[j].substr(mypair.first, mypair.second - mypair.first).c_str());  //at most 10 groups with this
+//       mypair = isolate_number_in_string(group_names[j],mypair.second+1);
+      int gr_property         = atoi(group_names[j].substr(mypair.first, mypair.second - mypair.first).c_str());
       int gr_size             = 0;      
       group_flags[j] = std::make_tuple(gr_family_in_salome, gr_name, gr_property,gr_size);
 
