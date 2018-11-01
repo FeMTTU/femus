@@ -116,17 +116,17 @@ int main(int argc, char** args) {
   NF[std::make_pair (soft, 2u)] = 0.;
   NF[std::make_pair (soft, 3u)] = 0.;
   NF[std::make_pair (soft, 4u)] = 0.;
-  NF[std::make_pair (soft, 5u)] = 0.1;
+  NF[std::make_pair (soft, 5u)] = 0.3;
   
   NF[std::make_pair (medium, 2u)] = 0.;
   NF[std::make_pair (medium, 3u)] = 0.;
   NF[std::make_pair (medium, 4u)] = 0.;
-  NF[std::make_pair (medium, 5u)] = 0.1;
+  NF[std::make_pair (medium, 5u)] = 0.3;
 
   NF[std::make_pair (stiff, 2u)] = 0.;
   NF[std::make_pair (stiff, 3u)] = 0.;
   NF[std::make_pair (stiff, 4u)] = 0.;
-  NF[std::make_pair (stiff, 5u)] = 0.1;
+  NF[std::make_pair (stiff, 5u)] = 0.3;
   
   std::pair <std::string, unsigned > simulation;
   
