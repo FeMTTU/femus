@@ -659,8 +659,8 @@ int main ( int argc, char** args ) {
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
-    ETD ( ml_prob, numberOfTimeSteps );
-//     RK4 ( ml_prob, implicitEuler );
+    //ETD ( ml_prob, numberOfTimeSteps );
+    RK4 ( ml_prob, implicitEuler );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
     counter = i;
   }
@@ -1003,7 +1003,7 @@ void ETD ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
 
       aResHT[k] += solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
 
-//       //aResHT[k] += ((solhp[k] - solhm[k]) * k_v * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
+//       //aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
       if(i > start){
         aResHT[k] += k_h * solh[k] * (solHTm[k] - solHT[k])/(dx*dx); // horizontal diffusion
       }
@@ -1187,18 +1187,16 @@ void ETD ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
       std::vector < double > w ( NLayers + 1, 0. );
       //w[0] = 1.;
 
-      std::vector < double > zMid ( NLayers );
-      for ( unsigned k = 0; k < NLayers; k++ ) {
-        zMid[k] = -b + solh[k] / 2.;
-        for ( unsigned i = k + 1; i < NLayers; i++ ) {
-          zMid[k] += solh[i];
-        }
+      std::vector < double > zTop ( NLayers );
+      zTop[0] = 0;
+      for ( unsigned k = 1; k < NLayers; k++ ) {
+         zTop[k] = zTop[k-1] - solh[k];
       }
-
+    
       std::vector < double > psi2 ( NLayers );
       for ( unsigned k = 0; k < NLayers; k++ ) {
-        psi2[k] = 1. - ( zMid[k] + 5. ) * ( zMid[k] + 5. ) / ( 25. );
         //psi2[k] = ( - ( zMid[k] + 10 ) * zMid[k] ) / 25;
+        psi2[k] = 1. - ( zTop[k] + 5. ) * ( zTop[k] + 5. ) / ( 25. );
       }
 
       double xmid = 0.5 * ( x[1] + x[0] );
@@ -1298,29 +1296,37 @@ void ETD ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
         double ht = 0.;
         double hb = 0.;
         if ( k > 0 ) {
-          ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+//        ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+          ht = ( solh[k - 1] + solh[k] ) / 2.;
           deltaZt = ( solHT[k - 1] - solHT[k] ) / ht;
         }
         else {
-          ht = 0.5 * ( solhm[k] + solhp[k] );
+//        ht = 0.5 * ( solhm[k] + solhp[k] );
+          ht = solh[k];
           deltaZt = 0.* ( 0. - solHT[k] ) / ht;
         }
         if ( k < NLayers - 1 ) {
-          hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+//        hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+          hb = ( solh[k] + solh[k + 1] ) / 2.; 
           deltaZb = ( solHT[k] - solHT[k + 1] ) / hb;
         }
         else {
-          hb = 0.5 * ( solhm[k] + solhp[k] );
+//        hb = 0.5 * ( solhm[k] + solhp[k] );
+          hb = solh[k];
           deltaZb = 0.* ( solHT[k] - 0. ) / hb;
         }
 
         //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAA"<<deltaZt - deltaZb<<std::endl;
 
         aResHT[k] += solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
-//
-//       //aResHT[k] += ((solhp[k] - solhm[k]) * k_v * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
-//       aResHT[k] += k_h * solh[k] * (solHTm[k] - solHT[k])/(dx*dx); // horizontal diffusion
-//       aResHT[k] += k_h * solh[k] * (solHTp[k] - solHT[k])/(dx*dx); // horizontal diffusion
+        
+//       //aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
+        if(i > start){
+          aResHT[k] += k_h * solh[k] * (solHTm[k] - solHT[k])/(dx*dx); // horizontal diffusion
+        }
+        if(i < end-1){
+          aResHT[k] += k_h * solh[k] * (solHTp[k] - solHT[k])/(dx*dx); // horizontal diffusion
+        }
 
       }
 
@@ -1560,23 +1566,29 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
     std::vector < double > w ( NLayers + 1, 0. );
     //w[0] = 1.;
 
-    std::vector < double > zMid ( NLayers );
-    for ( unsigned k = 0; k < NLayers; k++ ) {
-      zMid[k] = -b + solh[k] / 2.;
-      for ( unsigned i = k + 1; i < NLayers; i++ ) {
-        zMid[k] += solh[i];
-      }
+//     std::vector < double > zMid ( NLayers );
+//     for ( unsigned k = 0; k < NLayers; k++ ) {
+//       zMid[k] = -b + solh[k] / 2.;
+//       for ( unsigned i = k + 1; i < NLayers; i++ ) {
+//         zMid[k] += solh[i];
+//       }
+//     }
+    
+    std::vector < double > zTop ( NLayers );
+    zTop[0] = 0;
+    for ( unsigned k = 1; k < NLayers; k++ ) {
+       zTop[k] = zTop[k-1] - solh[k];
     }
-
+    
     std::vector < double > psi2 ( NLayers );
     for ( unsigned k = 0; k < NLayers; k++ ) {
-      psi2[k] = 1. - ( zMid[k] + 5 ) * ( zMid[k] + 5 ) / ( 25 );
-      //psi2[k] = ( - ( zMid[k] + 10. ) * zMid[k] ) / 25.;
+      //psi2[k] = ( - ( zMid[k] + 10 ) * zMid[k] ) / 25;
+      psi2[k] = 1. - ( zTop[k] + 5. ) * ( zTop[k] + 5. ) / ( 25. );
     }
 
     double xmid = 0.5 * ( x[1] + x[0] );
     for ( unsigned k = NLayers; k > 1; k-- ) {
-      w[k - 1] = ( -4. / 625.* ( xmid - 5 ) * ( xmid - 5 ) * ( xmid - 5 ) ) * psi2[k - 1];
+      w[k - 1] = - ( -4. / 625.* ( xmid - 5 ) * ( xmid - 5 ) * ( xmid - 5 ) ) * psi2[k - 1];
       //w[k - 1] = ( ( 10. - 2. * xmid ) / 25. ) * psi2[k - 1];
       if ( maxW[k - 1] < w[k - 1] ) {
         maxW[k - 1] = w[k - 1];
@@ -1677,6 +1689,13 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 //           LHS -= w[k] * ( ( solHT[k - 2] + addition ) / solh[k - 2] );
 //         }
         //END
+        
+        if(i > start){
+          LHS += k_h * solh[k] * (solHTm[k] - solHT[k] + addition)/(dx*dx); // horizontal diffusion
+        }
+        if(i < end-1){
+          LHS += k_h * solh[k] * (solHTp[k] - solHT[k] + addition)/(dx*dx); // horizontal diffusion
+        }
 
 
         if ( RK_step == 0 ) {
@@ -1712,19 +1731,23 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
         double ht = 0.;
         double hb = 0.;
         if ( k > 0 ) {
-          ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+//        ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+          ht = ( solh[k - 1] + solh[k] ) / 2.;
           deltaZt = ( solHT[k - 1] - solHT[k] ) / ht;
         }
         else {
-          ht = 0.5 * ( solhm[k] + solhp[k] );
+//        ht = 0.5 * ( solhm[k] + solhp[k] );
+          ht = solh[k];
           deltaZt = 0.* ( 0. - solHT[k] ) / ht;
         }
         if ( k < NLayers - 1 ) {
-          hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+//        hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+          hb = ( solh[k] + solh[k + 1] ) / 2.; 
           deltaZb = ( solHT[k] - solHT[k + 1] ) / hb;
         }
         else {
-          hb = 0.5 * ( solhm[k] + solhp[k] );
+//        hb = 0.5 * ( solhm[k] + solhp[k] );
+          hb = solh[k];
           deltaZb = 0.* ( solHT[k] - 0. ) / hb;
         }
         //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA" << deltaZt - deltaZb << std::endl;
@@ -1758,14 +1781,17 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
         double hb = 0.;
 
         if ( k > 0 ) {
-          ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+          //ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
+          ht = ( solh[k - 1] + solh[k] ) / 2.;
           A = solhm[k] * k_v / ht ;
         }
         else {
-          ht = 0.5 * ( solhm[k] + solhp[k] );
+          //ht = 0.5 * ( solhm[k] + solhp[k] );
+          ht = solh[k];
         }
         if ( k < NLayers - 1 ) {
-          hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+          //hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
+          hb = ( solh[k] + solh[k + 1] ) / 2.;
           C = solhm[k] * k_v / hb;
           C /= ( ht + hb ) * 0.5 ;
           if ( k > 0 ) {
@@ -1773,7 +1799,8 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
           }
         }
         else {
-          hb = 0.5 * ( solhm[k] + solhp[k] );
+          //hb = 0.5 * ( solhm[k] + solhp[k] );
+          hb = solh[k];
           A /= ( ht + hb ) * 0.5 ;
         }
 
