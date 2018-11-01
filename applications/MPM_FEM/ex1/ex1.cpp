@@ -14,7 +14,7 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
-#include "../include/mpmFem.hpp"
+#include "../include/mpmFem1.hpp"
 
 
 #include <iostream>
@@ -121,7 +121,7 @@ int main(int argc, char** args)
   
   std::pair <std::string, unsigned > simulation;
   
-  unsigned timestep0 = 50;
+  unsigned timestep0 = 0;
   unsigned n_timesteps = 250 + timestep0;
     
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
@@ -172,6 +172,8 @@ int main(int argc, char** args)
 
       mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
       mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+      
+      mlSol.AddSolution("NF", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
       mlSol.Initialize("All");
 
@@ -316,7 +318,7 @@ int main(int argc, char** args)
       print_vars.push_back("All");
       
       
-      mlSol.GetWriter()->SetDebugOutput(true);
+      //mlSol.GetWriter()->SetDebugOutput(true);
       mlSol.GetWriter()->Write(outputFolder.str(), "biquadratic", print_vars, 0);
       
       std::vector < std::vector < std::vector < double > > > line(1);
@@ -353,7 +355,9 @@ int main(int argc, char** args)
           gravity[0] = 0.;
           NeumannFactor = 0.;
         }
-                
+        
+        SetNeumannFactor(&mlSol);
+        
         system.MGsolve();
 
         // ******* Print solution *******
