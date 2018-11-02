@@ -35,7 +35,7 @@ namespace femus
   const std::string SalomeIO::connectivity = "NOD";
   const std::string SalomeIO::node_list = "NOE";
   const std::string SalomeIO::coord_list = "COO";
-  const std::string SalomeIO::dofobj_indices = "NUM";
+  const std::string SalomeIO::dofobj_indices = "NUM";  //this is used both for nodes and for elements of all dimensions
   const uint SalomeIO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
 
 
@@ -106,6 +106,67 @@ namespace femus
     {0, 1}
   };
  
+  
+  //   // read NODAL COORDINATES **************** C
+  
+   void SalomeIO::set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> > & coords, const double Lref) {
+       
+       Mesh& mesh = GetMesh();
+       hsize_t dims[2];
+       
+      std::string coord_dataset = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + node_list + "/" + coord_list + "/";  ///@todo here we have to loop
+
+      hid_t dtset = H5Dopen(file_id, coord_dataset.c_str(), H5P_DEFAULT);
+
+      // SET NUMBER OF NODES
+      hid_t filespace = H5Dget_space(dtset);    /* Get filespace handle first. */
+      hid_t status_dims  = H5Sget_simple_extent_dims(filespace, dims, NULL);
+      if(status_dims == 0) std::cerr << "SalomeIO::read dims not found";
+      // reading xyz_med
+      unsigned int n_nodes = dims[0] / 3; //mesh.GetDimension();
+      double*   xyz_med = new double[dims[0]];
+      std::cout << " Number of nodes in med file " <<  n_nodes << " " <<  std::endl;
+
+      mesh.SetNumberOfNodes(n_nodes);
+
+      // SET NODE COORDINATES
+      coords[0].resize(n_nodes);
+      coords[1].resize(n_nodes);
+      coords[2].resize(n_nodes);
+
+      H5Dread(dtset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, xyz_med);
+      H5Dclose(dtset);
+
+      if(mesh.GetDimension() == 3) {
+        for(unsigned j = 0; j < n_nodes; j++) {
+          coords[0][j] = xyz_med[j] / Lref;
+          coords[1][j] = xyz_med[j + n_nodes] / Lref;
+          coords[2][j] = xyz_med[j + 2 * n_nodes] / Lref;
+        }
+      }
+
+      else if(mesh.GetDimension() == 2) {
+        for(unsigned j = 0; j < n_nodes; j++) {
+          coords[0][j] = xyz_med[j] / Lref;
+          coords[1][j] = xyz_med[j + n_nodes] / Lref;
+          coords[2][j] = 0.;
+        }
+      }
+
+      else if(mesh.GetDimension() == 1) {
+        for(unsigned j = 0; j < n_nodes; j++) {
+          coords[0][j] = xyz_med[j] / Lref;
+          coords[1][j] = 0.;
+          coords[2][j] = 0.;
+        }
+      }
+
+      delete[] xyz_med;
+
+      //   // end read NODAL COORDINATES ************* C
+   }
+  
+  
   
   
   const std::vector< std::tuple<int,int,int,int> >  SalomeIO::compute_group_flags_per_mesh(const std::vector<std::string> & group_names) const {
@@ -271,19 +332,17 @@ namespace femus
 
     const std::vector<std::string> mesh_menus = compute_number_of_meshes(file_id);
 
-// dimension ===============
+    if (mesh_menus.size() > 1) { std::cout << "Review the code because there is only one MultilevelMesh object and most likely things don't work" << std::endl; abort(); }
+        
+// dimension and fem types ===============
       std::vector<std::string> el_fe_types_per_mesh(mesh_menus.size()); //for every mesh, see how many Elem Types you have
       std::vector<std::string> el_fe_type_per_dimension(mesh.GetDimension());
       
       set_mesh_dimension_by_looping_over_element_types(file_id,mesh_menus,el_fe_type_per_dimension);
  
-// fem type ===============
-
-
-     
        const unsigned volume_pos = mesh.GetDimension() - 1;
      
-         // meshes ========================
+// meshes ========================
      for(unsigned j = 0; j < mesh_menus.size(); j++) {
 
 // Groups of the mesh ===============
@@ -291,88 +350,7 @@ namespace femus
     
     const std::vector< std::tuple<int,int,int,int> >   group_flags = compute_group_flags_per_mesh(group_names);  //salome family; our name; our property; group size
     
-      
-// read GROUP **************** E
-//in general, I'd say that a group can only have ONE element type (should study the possibility of hybrid mesh)
-
-
-//     std::vector < unsigned > materialElementCounter(3,0);
-//       hid_t dtset = H5Dopen(file_id, group_dataset.c_str(), H5P_DEFAULT);
-//       hid_t filespace = H5Dget_space(dtset);
-//       hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
-//       int* elem_indices = new int[dims[0]];
-//       status = H5Dread(dtset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, elem_indices);
-// 
-//       for(unsigned i = 0; i < dims[0]; i++) {
-//         mesh.el->SetElementGroup(elem_indices[i] - 1 - n_elements_b_bb, gr_name);
-//         mesh.el->SetElementMaterial(elem_indices[i] - 1 - n_elements_b_bb , gr_property);
-// 	
-// 	    if( gr_property == 2) materialElementCounter[0] += 1;
-// 	else if(gr_property == 3 ) materialElementCounter[1] += 1;
-// 	else materialElementCounter[2] += 1;
-// 	
-//       }
-// 
-//       H5Dclose(dtset);
-//       delete [] elem_indices;
-// 
-//     mesh.el->SetElementGroupNumber(n_gr);
-//     mesh.el->SetMaterialElementCounter(materialElementCounter);
-    //   // end read GROUP **************** E   
- 
-   
-
-//   // read NODAL COORDINATES **************** C
-      std::string coord_dataset = mesh_ensemble +  "/" + mesh_menus[j] + "/" +  aux_zeroone + "/" + node_list + "/" + coord_list + "/";  ///@todo here we have to loop
-
-      hid_t dtset = H5Dopen(file_id, coord_dataset.c_str(), H5P_DEFAULT);
-
-      // SET NUMBER OF NODES
-      hid_t filespace = H5Dget_space(dtset);    /* Get filespace handle first. */
-      hid_t status_dims  = H5Sget_simple_extent_dims(filespace, dims, NULL);
-      if(status_dims == 0) std::cerr << "SalomeIO::read dims not found";
-      // reading xyz_med
-      unsigned int n_nodes = dims[0] / 3; //mesh.GetDimension();
-      double*   xyz_med = new double[dims[0]];
-      std::cout << " Number of nodes in med file " <<  n_nodes << " " <<  std::endl;
-
-      mesh.SetNumberOfNodes(n_nodes);
-
-      // SET NODE COORDINATES
-      coords[0].resize(n_nodes);
-      coords[1].resize(n_nodes);
-      coords[2].resize(n_nodes);
-
-      H5Dread(dtset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, xyz_med);
-      H5Dclose(dtset);
-
-      if(mesh.GetDimension() == 3) {
-        for(unsigned j = 0; j < n_nodes; j++) {
-          coords[0][j] = xyz_med[j] / Lref;
-          coords[1][j] = xyz_med[j + n_nodes] / Lref;
-          coords[2][j] = xyz_med[j + 2 * n_nodes] / Lref;
-        }
-      }
-
-      else if(mesh.GetDimension() == 2) {
-        for(unsigned j = 0; j < n_nodes; j++) {
-          coords[0][j] = xyz_med[j] / Lref;
-          coords[1][j] = xyz_med[j + n_nodes] / Lref;
-          coords[2][j] = 0.;
-        }
-      }
-
-      else if(mesh.GetDimension() == 1) {
-        for(unsigned j = 0; j < n_nodes; j++) {
-          coords[0][j] = xyz_med[j] / Lref;
-          coords[1][j] = 0.;
-          coords[2][j] = 0.;
-        }
-      }
-
-      delete[] xyz_med;
-
-      //   // end read NODAL COORDINATES ************* C
+    set_node_coordinates(file_id,mesh_menus[j],coords,Lref);
 
 
       /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
@@ -386,7 +364,7 @@ namespace femus
         // NOD ***************************
         std::string conn_name_dir_i = my_mesh_name_dir +  el_fe_type_per_dimension[i] + "/" + connectivity;
         hid_t dtset_conn = H5Dopen(file_id, conn_name_dir_i.c_str(), H5P_DEFAULT);
-        filespace = H5Dget_space(dtset_conn);
+        hid_t filespace = H5Dget_space(dtset_conn);
         hid_t status_els_i  = H5Sget_simple_extent_dims(filespace, dims_i, NULL);
         if(status_els_i == 0) { std::cerr << "SalomeIO::read dims not found";   abort();   }
         
@@ -459,7 +437,35 @@ namespace femus
         
       H5Dclose(dtset_conn);
 
-        
+        // read GROUP **************** E
+//in general, I'd say that a group can only have ONE element type (should study the possibility of hybrid mesh)
+
+
+//     std::vector < unsigned > materialElementCounter(3,0);
+//       hid_t dtset = H5Dopen(file_id, group_dataset.c_str(), H5P_DEFAULT);
+//       hid_t filespace = H5Dget_space(dtset);
+//       hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
+//       int* elem_indices = new int[dims[0]];
+//       status = H5Dread(dtset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, elem_indices);
+// 
+//       for(unsigned i = 0; i < dims[0]; i++) {
+//         mesh.el->SetElementGroup(elem_indices[i] - 1 - n_elements_b_bb, gr_name);
+//         mesh.el->SetElementMaterial(elem_indices[i] - 1 - n_elements_b_bb , gr_property);
+// 	
+// 	    if( gr_property == 2) materialElementCounter[0] += 1;
+// 	else if(gr_property == 3 ) materialElementCounter[1] += 1;
+// 	else materialElementCounter[2] += 1;
+// 	
+//       }
+// 
+//       H5Dclose(dtset);
+//       delete [] elem_indices;
+// 
+//     mesh.el->SetElementGroupNumber(n_gr);
+//     mesh.el->SetMaterialElementCounter(materialElementCounter);
+    //   // end read GROUP **************** E   
+
+      
         //NUM ***************************
         std::string node_name_dir_i = my_mesh_name_dir + el_fe_type_per_dimension[i] + "/" + dofobj_indices;
         hid_t dtset_num = H5Dopen(file_id, node_name_dir_i.c_str(), H5P_DEFAULT);
