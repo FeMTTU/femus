@@ -1,137 +1,89 @@
-
+#include "sphere.hpp"
 #include <iostream>
-#include "adept.h"
 #include <math.h>
-#include "FemusInit.hpp"
-
 
 using namespace std;
-using namespace adept;
-using namespace femus;
 
-adouble f(const adouble x[2]);
-
-
-double * AllocateMemory (const unsigned &n){
-    
- double *p = new double [n];
- 
- return p;
-    
-}
-
- void swp(unsigned &i, unsigned &j){
-   unsigned temp = i;
-   i = j;
-   j = temp;
-   
-   std::cout << i << " " << j <<std::endl;
+Sphere::Sphere():
+_xCenter(0.),
+_yCenter(0.),
+_zCenter(0.),
+_radius(1.){ 
 };
 
+Sphere::Sphere(const double & x, const double & y, const double & z, const double & radius): // Constructor goes here.
+_xCenter(x),
+_yCenter(y),
+_zCenter(z),
+_radius(radius){
+}
 
- void swpp(unsigned *i, unsigned *j){
-   unsigned temp = *i;
-   *i = *j;
-   *j = temp;
-   
-   std::cout << *i << " " << *j <<std::endl;
-};
+void Sphere::SetCenter(const double & x, const double & y, const double & z){
+    _xCenter=x;
+    _yCenter=y;
+    _zCenter=z;
+}
 
-int main(int argc, char** args)
-{
-    // init Petsc-MPI communicator
- //   FemusInit mpinit(argc, args, MPI_COMM_WORLD);
-//     adept::Stack& s = FemusInit::_adeptStack;
-//     adouble x[2]={1.0,2.0};
-//     s.new_recording();
-//     adouble y=f(x);
-//     y.set_gradient(1.0);
-//     s.compute_adjoint();
-//     cout << y.value() << endl;
-//     return 0;
+double Sphere::GetXCoordinate(void) const {
+  return _xCenter;
+}
+
+double Sphere::GetYCoordinate(void) const {
+  return _yCenter;
+}
+
+double Sphere::GetZCoordinate(void) const {
+  return _zCenter;
+}
+
+void Sphere::SetRadius(const double & r){
+  _radius=r;
+}
+
+double Sphere::GetRadius() const {
+  return _radius;
+}
+
+
+double Sphere::GetVolume(void) const {
+  return 4 * M_PI * pow(_radius,3)/3.0;
+}
+
+void Sphere::TranslatedSphere(Sphere *pt, const double & d_x, const double & d_y, const double & d_z) const {
+  pt->_xCenter =_xCenter + d_x; //(*pt).x_centre=x_centre+d_x
+  pt->_yCenter =_yCenter + d_y;
+  pt->_zCenter =_zCenter + d_z;
+  pt->_radius =_radius;
+}
+
+void Sphere::TranslatedSphere(Sphere &pt, const double & d_x, const double & d_y, const double & d_z) const {
+  pt._xCenter =_xCenter + d_x; //(*pt).x_centre=x_centre+d_x
+  pt._yCenter =_yCenter + d_y;
+  pt._zCenter =_zCenter + d_z;
+  pt._radius =_radius;
+}
+
+
+std::ostream& operator<<(std::ostream& os, Sphere& s) {
+  std::cout << "h = "<< s.GetXCoordinate() << ", k = " << s.GetYCoordinate()<<", l = " << s.GetZCoordinate() << ", r = " << s.GetRadius();
+}
+
+int main(){
     
-    unsigned n1;
-    unsigned n2;
+    Sphere s1;
     
-    std::cout << " enter n1 "<<std::endl;
-    std::cin >> n1;
+    Sphere s2(1.,2.,3.,4.);
+    s1.SetCenter(1,2,4);
+    s1.SetRadius(3);
+    cout << s1.GetVolume() << "\n" ;
     
-    if(n1<1) abort();
+    std::cout << s2 << std::endl;
     
-    std::cout << " enter n2 "<<std::endl;
-    std::cin >> n2;
-    
-    if(n2<1) abort();
-    
-    
-    
-    double **A;
-    double *Amemory;
-    
-    Amemory = AllocateMemory(n1*n2);
-    
-    
-    
-    A = new double * [n1];
-    
-    for(unsigned i = 0; i < n1; i++){
-      A[i] = &Amemory[0] + i * n2;  
-    }
-    
-    for(unsigned i = 0; i<n1; i++){
-      for(unsigned j = 0; j<n2; j++){
-        A[i][j] = i * n2 + j;    
-      }     
-    }
-    
-    double *p = Amemory;
-    for(unsigned i = 0; i<n1; i++){
-      for(unsigned j = 0; j<n2; j++){
-        std::cout << *(p + i * n2 +j ) << " ";
-      }
-      std::cout << std::endl;
-    }
-    
-    
-    p = Amemory;
-    for(unsigned i = 0; i<n1; i++){
-      for(unsigned j = 0; j<n2; j++){
-        std::cout << *(p++) << " ";
-      }
-      std::cout << std::endl;
-    }
-    
-    
-    
-    
-    
-    delete [] A;
-    delete [] Amemory;
-    
-    
-    unsigned i = 5, j=6;
-    swp(i,j);
-    
-    std::cout << i << " " << j <<std::endl;
-    
-    swpp(&i,&j);
-    
-    std::cout << i << " " << j <<std::endl;
+    s2.TranslatedSphere(s1,1.,1.,1.);
+      
+    std::cout << s1 << std::endl;
     
     
 }
 
-adouble f(const adouble x[2]){
-    
-    adouble y=x[0]*x[0]+x[1]*x[1];
-    return y;
-}
 
-/** Questions
- * 1. What is the type of "weight" in Gauss loop? 
- * 2. What is the type of phi ???
- * 3. Do I need to know where those 
- * system.CopySolutionToOldSolution();
- * system.MGsolve();
- * are living?
- */
