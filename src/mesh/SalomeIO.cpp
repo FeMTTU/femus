@@ -108,7 +108,36 @@ namespace femus
  
   
   //   // read NODAL COORDINATES **************** C
+  //@todo can an element belong to MORE THAN ONE GROUP?
+   void SalomeIO::get_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const  {
+       
+       //FAM ***************************
+        hsize_t dims_fam[2];
+       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+       std::string fam_name_dir_i = my_mesh_name_dir + el_fe_type_per_dimension + "/" + group_fam;
+        hid_t dtset_fam = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
+        hid_t filespace_fam = H5Dget_space(dtset_fam);
+        hid_t status_fam  = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
+        if(status_fam == 0) {     std::cerr << "SalomeIO::read dims not found";  abort();  }
+        
+        int* fam_map = new  int[dims_fam[0]];
+        hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map);
 
+//         for(unsigned i = 0; i < dims_fam[0]; i++) {
+//           for(unsigned j = 0; j < group_names.size(); j++) {
+//           if ( fam_map[i] == std::get<0>(group_flags[j]) )   {
+// //               std::cout << "Current flag " << fam_map[i] << " matches " << std::get<1>(group_flags[j]) << std::endl; 
+//               
+//             }
+//           }  
+//         }
+        
+        delete [] fam_map;
+        H5Dclose(dtset_fam);
+
+   } 
+
+   
    void SalomeIO::set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::string el_fe_type_per_dimension, const unsigned el_nodes_per_dimension, std::vector<bool>& type_elem_flag) {
 
        Mesh& mesh = GetMesh();
@@ -423,9 +452,7 @@ namespace femus
       std::vector<std::string> el_fe_type_per_dimension(mesh.GetDimension());
       
       set_mesh_dimension_by_looping_over_element_types(file_id,mesh_menus,el_fe_type_per_dimension);
- 
-       const unsigned volume_pos = mesh.GetDimension() - 1;
-     
+  
 // meshes ========================
      for(unsigned j = 0; j < mesh_menus.size(); j++) {
 
@@ -447,13 +474,16 @@ namespace femus
           // DETERMINE NUMBER OF NODES PER ELEMENT
           el_nodes_per_dimension[i] = FindNumberOfElemNodes(el_fe_type_per_dimension[i]);
 
-         set_elem_connectivity(file_id, mesh_menus[j],i, el_fe_type_per_dimension[i],el_nodes_per_dimension[i],type_elem_flag);
+         set_elem_connectivity(file_id, mesh_menus[j], i, el_fe_type_per_dimension[i],el_nodes_per_dimension[i],type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
 
+         get_elem_group_ownership(file_id, mesh_menus[j], el_fe_type_per_dimension[i]);
+         
         // read GROUP **************** E
 //in general, I'd say that a group can only have ONE element type (should study the possibility of hybrid mesh)
 
 
 //     std::vector < unsigned > materialElementCounter(3,0);
+//          
 //       hid_t dtset = H5Dopen(file_id, group_dataset.c_str(), H5P_DEFAULT);
 //       hid_t filespace = H5Dget_space(dtset);
 //       hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
@@ -478,6 +508,9 @@ namespace femus
     //   // end read GROUP **************** E   
 
       
+        
+
+
         //NUM ***************************
        hsize_t dims_num[2];
        std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menus[j] + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
@@ -487,29 +520,10 @@ namespace femus
         hid_t status_bdry  = H5Sget_simple_extent_dims(filespace_num, dims_num, NULL);
         if(status_bdry == 0) {    std::cerr << "SalomeIO::read dims not found";  abort();  }
         H5Dclose(dtset_num);
+       
+       
         
-        //FAM ***************************
-        hsize_t dims_fam[2];
-       std::string fam_name_dir_i = my_mesh_name_dir + el_fe_type_per_dimension[i] + "/" + group_fam;
-        hid_t dtset_fam = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
-        hid_t filespace_fam = H5Dget_space(dtset_fam);
-        hid_t status_fam  = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
-        if(status_fam == 0) {     std::cerr << "SalomeIO::read dims not found";  abort();  }
-        
-        int* fam_map = new  int[dims_fam[0]];
-        hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map);
-
-        for(unsigned i = 0; i < dims_fam[0]; i++) {
-          for(unsigned j = 0; j < group_names.size(); j++) {
-          if ( fam_map[i] == std::get<0>(group_flags[j]) ) {
-//               std::cout << "Current flag " << fam_map[i] << " matches " << std::get<1>(group_flags[j]) << std::endl; 
-              
-        }
-          }  
-        }
-        
-        
-        if ( i == (volume_pos - 1) ) {
+        if ( i == (mesh.GetDimension() - 1 - 1) ) { //boundary
                     
     //loop over volume elements
     //extract faces
@@ -531,8 +545,6 @@ namespace femus
                     
         } //end (volume pos - 1)
 
-        delete [] fam_map;
-        H5Dclose(dtset_fam);
         
       }
 

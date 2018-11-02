@@ -41,12 +41,14 @@ int main(int argc,char **args) {
   ml_sol.SetWriter(VTK);
   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",variablesToBePrinted);
-  ml_sol.SetWriter(GMV);
-  ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
-  ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",variablesToBePrinted);
   ml_sol.SetWriter(XDMF); 
   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",variablesToBePrinted);
+
+// recent versions of Paraview do not read this file
+//   ml_sol.SetWriter(GMV);  
+//   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
+//   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",variablesToBePrinted);
 
   
   return 0;
