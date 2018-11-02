@@ -91,23 +91,23 @@ int main(int argc, char** args)
   
   std::map < std::pair < std::string, unsigned > , double > SF1; 
   
+  std::map < std::pair < std::string, unsigned > , double > SF2; 
+  
   SF1[std::make_pair (soft, 3u)] = 1.e-2;
   SF1[std::make_pair (soft, 4u)] = 1.e-2;
   SF1[std::make_pair (soft, 5u)] = 1.e-2;
-
-  SF1[std::make_pair (stiff, 3u)] = 1.e-6;
-  SF1[std::make_pair (stiff, 4u)] = 1.e-6;
-  SF1[std::make_pair (stiff, 5u)] = 1.e-6;  
-  
-  std::map < std::pair < std::string, unsigned > , double > SF2; 
-  
+    
   SF2[std::make_pair (soft, 3u)] = 1.e-6;
   SF2[std::make_pair (soft, 4u)] = 1.e-6;
   SF2[std::make_pair (soft, 5u)] = 1.e-6;
+  
+  SF1[std::make_pair (stiff, 3u)] = 1.e-4;
+  SF1[std::make_pair (stiff, 4u)] = 1.e-4;
+  SF1[std::make_pair (stiff, 5u)] = 1.e-4;  
 
-  SF2[std::make_pair (stiff, 3u)] = 1.e-10;
-  SF2[std::make_pair (stiff, 4u)] = 1.e-10;
-  SF2[std::make_pair (stiff, 5u)] = 1.e-10;  
+  SF2[std::make_pair (stiff, 3u)] = 1.e-8;
+  SF2[std::make_pair (stiff, 4u)] = 1.e-8;
+  SF2[std::make_pair (stiff, 5u)] = 1.e-8;  
   
   std::map < std::pair < std::string, unsigned > , double > YM; 
   
@@ -126,7 +126,10 @@ int main(int argc, char** args)
     
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
     
-  for(unsigned mat = 0; mat< 2; mat++){
+  unsigned mat0 = 0;
+  unsigned matn = 1;
+  
+  for(unsigned mat = mat0; mat< matn; mat++){
     for(unsigned nl = 3; nl < 6; nl++) {
       
       simulation = std::make_pair (material[mat], nl);
@@ -151,7 +154,7 @@ int main(int argc, char** args)
             
       MultiLevelMesh mlMsh;
       if(material[mat] == soft){
-        mlMsh.ReadCoarseMesh("../input/inclined_plane_2D.neu", "fifth", 1.);
+        mlMsh.ReadCoarseMesh("../input/inclined_plane_2D_bl.neu", "fifth", 1.);
       }
       else{
         mlMsh.ReadCoarseMesh("../input/inclined_plane_2D_bl.neu", "fifth", 1.);
@@ -387,7 +390,7 @@ int main(int argc, char** args)
   std::ofstream fout;
   fout.open( filename.str().c_str() );
   fout << "iteration, time, analytic, ";
-  for(unsigned mat = 0; mat< 2; mat++){
+  for(unsigned mat = mat0; mat < matn; mat++){
     for(unsigned nl = 3; nl < 6; nl++) {
       simulation = std::make_pair (material[mat], nl);
       fout << "E" << simulation.first  << "Level"<<simulation.second<<", "; 
@@ -397,7 +400,7 @@ int main(int argc, char** args)
   for(unsigned it = 0;it < CM.size();it++){
     double time = it * DT;
     fout << it <<", "<< time <<", "<<1./3.*9.81*time*time*sqrt(2.)/2. << ", ";
-    for(unsigned mat = 0; mat< 2; mat++){
+    for(unsigned mat = mat0; mat< matn; mat++){
       for(unsigned nl = 3; nl < 6; nl++) {
         simulation = std::make_pair (material[mat], nl);
         fout << CM[it][simulation] <<", ";
