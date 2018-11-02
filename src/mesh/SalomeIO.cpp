@@ -106,17 +106,56 @@ namespace femus
     {0, 1}
   };
  
+
+  // compute number of Mesh fields in Salome file ==============
+  const std::vector<std::string> SalomeIO::compute_number_of_meshes(hid_t  file_id) const {
+      
+    hid_t  gid = H5Gopen(file_id, mesh_ensemble.c_str(), H5P_DEFAULT);
+    
+    hsize_t     n_meshes_ens;
+    hid_t status = H5Gget_num_objs(gid, &n_meshes_ens); // number of meshes
+    if(status != 0) {
+      std::cout << "Number of mesh menus not found";
+      abort();
+    }
   
+    std::vector<std::string>  mesh_menus;
+
+    unsigned n_meshes = 0;
+
+    for(unsigned j = 0; j < n_meshes_ens; j++) {
+
+      char*   menu_names_j = new char[max_length];
+      H5Gget_objname_by_idx(gid, j, menu_names_j, max_length); ///@deprecated see the HDF doc to replace this
+      std::string tempj(menu_names_j);
+
+
+      if(tempj.substr(0, 4).compare("Mesh") == 0) {
+        n_meshes++;
+        mesh_menus.push_back(tempj);
+      }
+      else { std::cout << "Mesh MED fields must start with the word Mesh" << std::endl; abort();
+      }
+
+    }
+      if (n_meshes != n_meshes_ens) { std::cout << "Meshes are called with Mesh"; abort(); }
+
+      H5Gclose(gid);
+      
+    return mesh_menus;
+}
+    
+    
   // This function starts from a given point in a string,
   // finds the first two occurrences of underscores,
   // and gets the string in between them
   // If it finds only one underscore and it gets to end-of-file, I want to get that string there
-  std::pair<int,int>  SalomeIO::isolate_number_in_string(const std::string &  string_in, const int begin_pos_to_investigate) {
+  std::pair<int,int>  SalomeIO::isolate_number_in_string(const std::string &  string_in, const int begin_pos_to_investigate) const {
       
     try {
         
       int str_pos = begin_pos_to_investigate;
-      std::cout << "Starting from " <<        string_in.at(str_pos) << " " <<  std::endl;
+      std::cout << "Start searching in string " << string_in << " from the character " << string_in.at(str_pos) << " in position " << str_pos <<  std::endl;
 
       std::vector<int> two_adj_underscores_pos(2,0);
 
@@ -126,34 +165,30 @@ namespace femus
       
       if ( temp_buffer.compare( "_" ) == 0 )  {  std::cout <<  "I don't want to start with an underscore" << std::endl; abort();  }
       
-      //search for the 2 underscores -------
+      //begin search for the 1st underscore -------------------------------
       while ( temp_buffer.compare( "_" ) != 0  &&  ( str_pos < (string_in.size() - 1) )  ) {  str_pos++; temp_buffer = string_in.at(str_pos); }
       
                     two_adj_underscores_pos[0] = str_pos;
-      std::cout <<  two_adj_underscores_pos[0] << " " << std::endl;    
       
+      //begin search for the 2nd underscore -------------------------------
       if ( str_pos < (string_in.size() - 1) ) {
           str_pos++; temp_buffer = string_in.at(str_pos);
       while ( temp_buffer.compare( "_" ) != 0  &&  ( str_pos < (string_in.size() - 1) )  ) {  str_pos++; temp_buffer = string_in.at(str_pos); }
                     two_adj_underscores_pos[1] = str_pos;
-      std::cout <<  two_adj_underscores_pos[1] << " " << std::endl;    
   
       }
       else if ( str_pos == (string_in.size() - 1) ) {  //if it reaches the end, it does so after the 1st iteration, because there is an EVEN number of underscores
-                    two_adj_underscores_pos[0] = begin_pos_to_investigate - 1;
+                    two_adj_underscores_pos[0] = begin_pos_to_investigate - 1; //this allows for numbers with more than 1 digit
                     two_adj_underscores_pos[1] = str_pos+1;
       }
-      
-      //search for the 2 underscores --------
+      //end search for the 2 underscores -------------------------------
     
-      std::cout <<  std::endl;    
+      std::pair<int,int>  delimiting_positions(two_adj_underscores_pos[0],two_adj_underscores_pos[1]);
 
-      std::pair<int,int>  my_pair(two_adj_underscores_pos[0],two_adj_underscores_pos[1]);
-
-            int string_to_extract_pos    = my_pair.first + 1;
-            int string_to_extract_length = my_pair.second - my_pair.first - 1;
+            int string_to_extract_pos    = delimiting_positions.first + 1;
+            int string_to_extract_length = delimiting_positions.second - delimiting_positions.first - 1;
       
-      std::cout <<  string_in.substr(string_to_extract_pos,string_to_extract_length).c_str() << " " << std::endl;    
+      std::cout <<  string_to_extract_pos << " " << string_to_extract_length << " " << string_in.substr(string_to_extract_pos,string_to_extract_length).c_str() << " " << std::endl;    
 
       const int flag = atoi( string_in.substr(string_to_extract_pos,string_to_extract_length).c_str() );
       
@@ -180,45 +215,12 @@ namespace femus
 
     hsize_t dims[2];
 
-    // compute number of menus ===============
-    hid_t  file_id = H5Fopen(name.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    hid_t  file_id = H5Fopen(name.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-    hid_t  gid = H5Gopen(file_id, mesh_ensemble.c_str(), H5P_DEFAULT);
-
-    hsize_t     n_meshes_ens;
-    hid_t status = H5Gget_num_objs(gid, &n_meshes_ens); // number of meshes
-    if(status != 0) {
-      std::cout << "Number of mesh menus not found";
-      abort();
-    }
-
-
-    // compute number of meshes ===============
-    std::vector<std::string>  mesh_menus;
-
-    unsigned n_meshes = 0;
-
-    for(unsigned j = 0; j < n_meshes_ens; j++) {
-
-      char*   menu_names_j = new char[max_length];
-      H5Gget_objname_by_idx(gid, j, menu_names_j, max_length); ///@deprecated see the HDF doc to replace this
-      std::string tempj(menu_names_j);
-
-
-      if(tempj.substr(0, 4).compare("Mesh") == 0) {
-        n_meshes++;
-        mesh_menus.push_back(tempj);
-      }
-      else { std::cout << "Mesh MED fields must start with the word Mesh" << std::endl; abort();
-      }
-
-    }
-      if (n_meshes != n_meshes_ens) { std::cout << "Meshes are called with Mesh"; abort(); }
-    // compute number of meshes ===============
-
+    const std::vector<std::string> mesh_menus = compute_number_of_meshes(file_id);
 
     // meshes ========================
-    for(unsigned j = 0; j < n_meshes_ens; j++) {
+    for(unsigned j = 0; j < mesh_menus.size(); j++) {
         
       std::string tempj = mesh_menus[j];
         
@@ -240,8 +242,7 @@ namespace femus
         char*   group_names_char = new char[max_length];
         H5Gget_objname_by_idx(gid_groups, j, group_names_char, max_length); ///@deprecated see the HDF doc to replace this
               group_names[j] = group_names_char;
-      std::cout << group_names[j] << std::endl;
-        delete[] group_names_char;
+              delete[] group_names_char;
     
 
     // read GROUP **************** E
@@ -388,7 +389,7 @@ namespace femus
         
             
       // DETERMINE NUMBER OF NODES PER ELEMENT
-      Node_el[i] = FindElemNodes(el_fe_type[i]);
+      Node_el[i] = FindNumberOfElemNodes(el_fe_type[i]);
 
       const int dim_conn = dims_i[0];
       n_elems[i] = dim_conn / Node_el[i];
@@ -529,10 +530,10 @@ namespace femus
     std::vector<std::string>& fe_type_vec,
     hsize_t n_fem_types,
     const std::string  my_mesh_name_dir
-  )
+  ) 
   {
 
-    Mesh& mesh = GetMesh();
+    const Mesh& mesh = GetMesh();
 
     // Get the element name
     char** el_fem_type = new char*[n_fem_types];
@@ -648,7 +649,7 @@ namespace femus
     return;
   }
 
-  unsigned  SalomeIO::FindElemNodes(const  std::string el_type) const
+  unsigned  SalomeIO::FindNumberOfElemNodes(const  std::string el_type) const
   {
 
     unsigned Node_el;

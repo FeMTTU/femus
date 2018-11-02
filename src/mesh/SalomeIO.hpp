@@ -57,7 +57,9 @@ class SalomeIO : public MeshInput<Mesh>
 
  private:
    
-   std::pair<int,int>  isolate_number_in_string(const std::string & string_in, const int begin_pos_to_investigate);
+   const std::vector<std::string>  compute_number_of_meshes(hid_t  file_id) const;
+     
+   std::pair<int,int>  isolate_number_in_string(const std::string & string_in, const int begin_pos_to_investigate) const;
       
    /** Map from Salome vertex index to Femus vertex index */
    static const unsigned SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 
@@ -66,12 +68,12 @@ class SalomeIO : public MeshInput<Mesh>
    static const unsigned SalomeToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES];
 
    /** Determine mesh dimension from mesh file */
-   void  FindDimension(hid_t gid, const  std::string menu_name,hsize_t n_fem_type);
+   void  FindDimension(hid_t gid, const  std::string menu_name,hsize_t n_fem_type);    //@todo this should be const
 
-   unsigned  FindElemNodes(const  std::string el_type) const;
+   unsigned  FindNumberOfElemNodes(const  std::string el_type) const;
 
    /** Read FE type */
-   void  ReadFE(hid_t file_id, std::vector<std::string> & fe_type_vec, hsize_t n_fem_types, const std::string my_mesh_name_dir);   
+   void  ReadFE(hid_t file_id, std::vector<std::string> & fe_type_vec, hsize_t n_fem_types, const std::string my_mesh_name_dir);   //@todo this should be const
    
 //    std::vector<char*> menu_names;
    static const std::string group_name_begin; //FAS
