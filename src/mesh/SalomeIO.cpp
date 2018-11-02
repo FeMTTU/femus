@@ -108,7 +108,91 @@ namespace femus
  
   
   //   // read NODAL COORDINATES **************** C
-  
+
+   void SalomeIO::set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::string el_fe_type_per_dimension, const unsigned el_nodes_per_dimension, std::vector<bool>& type_elem_flag) {
+
+       Mesh& mesh = GetMesh();
+
+       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+       hsize_t dims_i[2];
+        // NOD ***************************
+        std::string conn_name_dir_i = my_mesh_name_dir +  el_fe_type_per_dimension + "/" + connectivity;
+        hid_t dtset_conn = H5Dopen(file_id, conn_name_dir_i.c_str(), H5P_DEFAULT);
+        hid_t filespace = H5Dget_space(dtset_conn);
+        hid_t status_els_i  = H5Sget_simple_extent_dims(filespace, dims_i, NULL);
+        if(status_els_i == 0) { std::cerr << "SalomeIO::read dims not found";   abort();   }
+        
+            
+      const int dim_conn = dims_i[0];
+      const unsigned n_elems_per_dimension = dim_conn / el_nodes_per_dimension;
+      std::cout << " Number of elements of dimension " << (i+1) << " in med file: " <<  n_elems_per_dimension <<  std::endl;
+
+      // SET NUMBER OF VOLUME ELEMENTS
+        if ( i == mesh.GetDimension() - 1 ) { 
+      mesh.SetNumberOfElements(n_elems_per_dimension);
+      mesh.el = new elem(n_elems_per_dimension);    ///@todo check where this is going to be deleted
+
+      // READ CONNECTIVITY MAP
+      int* conn_map = new  int[dim_conn];
+      hid_t status_conn = H5Dread(dtset_conn, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, conn_map);
+      if(status_conn != 0) {     std::cout << "SalomeIO::read: connectivity not found";   abort();   }
+      
+      
+            for(unsigned iel = 0; iel < n_elems_per_dimension; iel++) {
+        mesh.el->SetElementGroup(iel, 1);
+        unsigned nve = el_nodes_per_dimension;  /// @todo this is only one element type
+        if(nve == 27) {
+          type_elem_flag[0] = type_elem_flag[3] = true;
+          mesh.el->AddToElementNumber(1, "Hex");
+          mesh.el->SetElementType(iel, HEX);
+        }
+        else if(nve == 10) {
+          type_elem_flag[1] = type_elem_flag[4] = true;
+          mesh.el->AddToElementNumber(1, "Tet");
+          mesh.el->SetElementType(iel, TET);
+        }
+        else if(nve == 18) {
+          type_elem_flag[2] = type_elem_flag[3] = type_elem_flag[4] = true;
+          mesh.el->AddToElementNumber(1, "Wedge");
+          mesh.el->SetElementType(iel, WEDGE);
+        }
+        else if(nve == 9) {
+          type_elem_flag[3] = true;
+          mesh.el->AddToElementNumber(1, "Quad");
+          mesh.el->SetElementType(iel, QUAD);
+        }
+        else if(nve == 6 && mesh.GetDimension() == 2) {
+          type_elem_flag[4] = true;
+          mesh.el->AddToElementNumber(1, "Triangle");
+          mesh.el->SetElementType(iel, TRI);
+        }
+        else if(nve == 3 && mesh.GetDimension() == 1) {
+          mesh.el->AddToElementNumber(1, "Line");
+          mesh.el->SetElementType(iel, LINE);
+        }
+        else {
+          std::cout << "Error! Invalid element type in reading  File!" << std::endl;
+          std::cout << "Error! Use a second order discretization" << std::endl;
+          abort();
+        }
+        for(unsigned i = 0; i < nve; i++) {
+          unsigned inode = SalomeToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
+          mesh.el->SetElementDofIndex(iel, inode, conn_map[iel + i * n_elems_per_dimension ] - 1u);
+         }
+       }
+      
+           // clean
+      delete [] conn_map;
+
+     }
+        
+      H5Dclose(dtset_conn);
+
+}
+      
+      
+      
+      
    void SalomeIO::set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> > & coords, const double Lref) {
        
        Mesh& mesh = GetMesh();
@@ -354,88 +438,16 @@ namespace femus
 
 
       /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
-      std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menus[j] + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
       //   // read ELEMENT/cell ******************** B
-       std::vector< unsigned int > n_elems(mesh.GetDimension(),0);
-       std::vector< unsigned int > Node_el(mesh.GetDimension(),0);
+       std::vector< unsigned int > n_elems_per_dimension(mesh.GetDimension(),0);
+       std::vector< unsigned int > el_nodes_per_dimension(mesh.GetDimension(),0);
        
       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
-        hsize_t dims_i[2];
-        // NOD ***************************
-        std::string conn_name_dir_i = my_mesh_name_dir +  el_fe_type_per_dimension[i] + "/" + connectivity;
-        hid_t dtset_conn = H5Dopen(file_id, conn_name_dir_i.c_str(), H5P_DEFAULT);
-        hid_t filespace = H5Dget_space(dtset_conn);
-        hid_t status_els_i  = H5Sget_simple_extent_dims(filespace, dims_i, NULL);
-        if(status_els_i == 0) { std::cerr << "SalomeIO::read dims not found";   abort();   }
-        
-            
-      // DETERMINE NUMBER OF NODES PER ELEMENT
-      Node_el[i] = FindNumberOfElemNodes(el_fe_type_per_dimension[i]);
 
-      const int dim_conn = dims_i[0];
-      n_elems[i] = dim_conn / Node_el[i];
-      std::cout << " Number of elements of dimension " << (i+1) << " in med file: " <<  n_elems[i] <<  std::endl;
+          // DETERMINE NUMBER OF NODES PER ELEMENT
+          el_nodes_per_dimension[i] = FindNumberOfElemNodes(el_fe_type_per_dimension[i]);
 
-      // SET NUMBER OF VOLUME ELEMENTS
-        if ( i == volume_pos ) { 
-      mesh.SetNumberOfElements(n_elems[i]);
-      mesh.el = new elem(n_elems[i]);    ///@todo check where this is going to be deleted
-
-      // READ CONNECTIVITY MAP
-      int* conn_map = new  int[dim_conn];
-      hid_t status_conn = H5Dread(dtset_conn, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, conn_map);
-      if(status_conn != 0) {     std::cout << "SalomeIO::read: connectivity not found";   abort();   }
-      
-      
-            for(unsigned iel = 0; iel < n_elems[volume_pos]; iel++) {
-        mesh.el->SetElementGroup(iel, 1);
-        unsigned nve = Node_el[volume_pos];  /// @todo this is only one element type
-        if(nve == 27) {
-          type_elem_flag[0] = type_elem_flag[3] = true;
-          mesh.el->AddToElementNumber(1, "Hex");
-          mesh.el->SetElementType(iel, HEX);
-        }
-        else if(nve == 10) {
-          type_elem_flag[1] = type_elem_flag[4] = true;
-          mesh.el->AddToElementNumber(1, "Tet");
-          mesh.el->SetElementType(iel, TET);
-        }
-        else if(nve == 18) {
-          type_elem_flag[2] = type_elem_flag[3] = type_elem_flag[4] = true;
-          mesh.el->AddToElementNumber(1, "Wedge");
-          mesh.el->SetElementType(iel, WEDGE);
-        }
-        else if(nve == 9) {
-          type_elem_flag[3] = true;
-          mesh.el->AddToElementNumber(1, "Quad");
-          mesh.el->SetElementType(iel, QUAD);
-        }
-        else if(nve == 6 && mesh.GetDimension() == 2) {
-          type_elem_flag[4] = true;
-          mesh.el->AddToElementNumber(1, "Triangle");
-          mesh.el->SetElementType(iel, TRI);
-        }
-        else if(nve == 3 && mesh.GetDimension() == 1) {
-          mesh.el->AddToElementNumber(1, "Line");
-          mesh.el->SetElementType(iel, LINE);
-        }
-        else {
-          std::cout << "Error! Invalid element type in reading  File!" << std::endl;
-          std::cout << "Error! Use a second order discretization" << std::endl;
-          exit(0);
-        }
-        for(unsigned i = 0; i < nve; i++) {
-          unsigned inode = SalomeToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
-          mesh.el->SetElementDofIndex(iel, inode, conn_map[iel + i * n_elems[volume_pos]] - 1u);
-         }
-       }
-      
-           // clean
-      delete [] conn_map;
-
-     }
-        
-      H5Dclose(dtset_conn);
+         set_elem_connectivity(file_id, mesh_menus[j],i, el_fe_type_per_dimension[i],el_nodes_per_dimension[i],type_elem_flag);
 
         // read GROUP **************** E
 //in general, I'd say that a group can only have ONE element type (should study the possibility of hybrid mesh)
@@ -467,24 +479,27 @@ namespace femus
 
       
         //NUM ***************************
+       hsize_t dims_num[2];
+       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menus[j] + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
         std::string node_name_dir_i = my_mesh_name_dir + el_fe_type_per_dimension[i] + "/" + dofobj_indices;
         hid_t dtset_num = H5Dopen(file_id, node_name_dir_i.c_str(), H5P_DEFAULT);
-        filespace = H5Dget_space(dtset_num);
-        hid_t status_bdry  = H5Sget_simple_extent_dims(filespace, dims_i, NULL);
+        hid_t filespace_num = H5Dget_space(dtset_num);
+        hid_t status_bdry  = H5Sget_simple_extent_dims(filespace_num, dims_num, NULL);
         if(status_bdry == 0) {    std::cerr << "SalomeIO::read dims not found";  abort();  }
         H5Dclose(dtset_num);
         
         //FAM ***************************
-        std::string fam_name_dir_i = my_mesh_name_dir + el_fe_type_per_dimension[i] + "/" + group_fam;
+        hsize_t dims_fam[2];
+       std::string fam_name_dir_i = my_mesh_name_dir + el_fe_type_per_dimension[i] + "/" + group_fam;
         hid_t dtset_fam = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
-        filespace = H5Dget_space(dtset_fam);
-        hid_t status_fam  = H5Sget_simple_extent_dims(filespace, dims_i, NULL);
+        hid_t filespace_fam = H5Dget_space(dtset_fam);
+        hid_t status_fam  = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
         if(status_fam == 0) {     std::cerr << "SalomeIO::read dims not found";  abort();  }
         
-        int* fam_map = new  int[dims_i[0]];
-        hid_t status_conn = H5Dread(dtset_conn, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map);
+        int* fam_map = new  int[dims_fam[0]];
+        hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map);
 
-        for(unsigned i = 0; i < dims_i[0]; i++) {
+        for(unsigned i = 0; i < dims_fam[0]; i++) {
           for(unsigned j = 0; j < group_names.size(); j++) {
           if ( fam_map[i] == std::get<0>(group_flags[j]) ) {
 //               std::cout << "Current flag " << fam_map[i] << " matches " << std::get<1>(group_flags[j]) << std::endl; 

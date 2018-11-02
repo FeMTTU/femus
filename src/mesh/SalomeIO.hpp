@@ -57,6 +57,8 @@ class SalomeIO : public MeshInput<Mesh>
 
  private:
    
+   void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::string el_fe_type_per_dimension, const unsigned el_nodes_per_dimension, std::vector<bool>& type_elem_flag);
+   
    void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
 
    const std::vector< std::tuple<int,int,int,int> >  compute_group_flags_per_mesh(const std::vector<std::string> & group_names) const;
