@@ -834,9 +834,8 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
       for(int i = 0; i < dim; i++) {
         for(int j = 0; j < dim; j++) {
           GradSolDpHat[i][j] = 0.;
-          double factor = (switchToNeumanncheck && j == 1)? .6 : 1.; 
           for(unsigned inode = 0; inode < nve; inode++) {
-            GradSolDpHat[i][j] +=  factor * gradphi_hat[inode * dim + j] * SolDd1[i][inode];
+            GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * SolDd1[i][inode];
           }
         }
       }
