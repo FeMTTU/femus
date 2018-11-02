@@ -107,36 +107,59 @@ namespace femus
   };
  
   
-  
-  std::pair<int,int>  SalomeIO::isolate_number_in_string(const std::string  string_in, const int begin_pos_to_investigate) {
+  // This function starts from a given point in a string,
+  // finds the first two occurrences of underscores,
+  // and gets the string in between them
+  // If it finds only one underscore and it gets to end-of-file, I want to get that string there
+  std::pair<int,int>  SalomeIO::isolate_number_in_string(const std::string &  string_in, const int begin_pos_to_investigate) {
       
     try {
         
       int str_pos = begin_pos_to_investigate;
-      std::cout << " " <<        string_in.at(str_pos) << " ";
+      std::cout << "Starting from " <<        string_in.at(str_pos) << " " <<  std::endl;
 
-      std::vector<int> output_pair(2,0);
+      std::vector<int> two_adj_underscores_pos(2,0);
 
-    //search for the _
       std::string temp_buffer; 
 
       assert(str_pos < string_in.size());   temp_buffer = string_in.at(str_pos);
       
-      for(unsigned j = 0; j < 2; j++) {
+      if ( temp_buffer.compare( "_" ) == 0 )  {  std::cout <<  "I don't want to start with an underscore" << std::endl; abort();  }
       
+      //search for the 2 underscores -------
       while ( temp_buffer.compare( "_" ) != 0  &&  ( str_pos < (string_in.size() - 1) )  ) {  str_pos++; temp_buffer = string_in.at(str_pos); }
       
-      output_pair[j] = str_pos;
+                    two_adj_underscores_pos[0] = str_pos;
+      std::cout <<  two_adj_underscores_pos[0] << " " << std::endl;    
       
-      if ( str_pos < (string_in.size() - 1) ) { str_pos++; temp_buffer = string_in.at(str_pos); }
-          
+      if ( str_pos < (string_in.size() - 1) ) {
+          str_pos++; temp_buffer = string_in.at(str_pos);
+      while ( temp_buffer.compare( "_" ) != 0  &&  ( str_pos < (string_in.size() - 1) )  ) {  str_pos++; temp_buffer = string_in.at(str_pos); }
+                    two_adj_underscores_pos[1] = str_pos;
+      std::cout <<  two_adj_underscores_pos[1] << " " << std::endl;    
+  
       }
-    
-      std::cout <<  output_pair[0] << " " << " " << output_pair[1] << " " ;    
-
-      std::pair<int,int>  my_output(output_pair[0],output_pair[1]);
+      else if ( str_pos == (string_in.size() - 1) ) {  //if it reaches the end, it does so after the 1st iteration, because there is an EVEN number of underscores
+                    two_adj_underscores_pos[0] = begin_pos_to_investigate - 1;
+                    two_adj_underscores_pos[1] = str_pos+1;
+      }
       
-      return my_output;
+      //search for the 2 underscores --------
+    
+      std::cout <<  std::endl;    
+
+      std::pair<int,int>  my_pair(two_adj_underscores_pos[0],two_adj_underscores_pos[1]);
+
+            int string_to_extract_pos    = my_pair.first + 1;
+            int string_to_extract_length = my_pair.second - my_pair.first - 1;
+      
+      std::cout <<  string_in.substr(string_to_extract_pos,string_to_extract_length).c_str() << " " << std::endl;    
+
+      const int flag = atoi( string_in.substr(string_to_extract_pos,string_to_extract_length).c_str() );
+      
+      std::pair<int,int>  flag_and_flag_pos_in_string(flag,two_adj_underscores_pos[1]);
+      
+      return flag_and_flag_pos_in_string;
       
     }
 
@@ -234,14 +257,11 @@ namespace femus
       /// @todo check the underscores according to our naming standard
 
       int str_pos = 0;
-      std::pair<int,int> mypair = isolate_number_in_string(group_names[j],str_pos);
-      int gr_family_in_salome = atoi(group_names[j].substr(mypair.first, mypair.second - mypair.first).c_str());
-                       mypair = isolate_number_in_string(group_names[j],mypair.second+1);
-      int gr_name             = atoi(group_names[j].substr(mypair.first, mypair.second - mypair.first).c_str());  //at most 10 groups with this
-                       mypair = isolate_number_in_string(group_names[j],mypair.second+1);
-      int gr_property         = atoi(group_names[j].substr(mypair.first, mypair.second - mypair.first).c_str());
+      std::pair<int,int> gr_family_in_salome_pair = isolate_number_in_string( group_names[j], str_pos );
+      std::pair<int,int> gr_name_pair             = isolate_number_in_string( group_names[j], gr_family_in_salome_pair.second + 1 );
+      std::pair<int,int> gr_property_pair         = isolate_number_in_string( group_names[j], gr_name_pair.second + 1 );
       int gr_size             = 0;      
-      group_flags[j] = std::make_tuple(gr_family_in_salome, gr_name, gr_property,gr_size);
+      group_flags[j] = std::make_tuple(gr_family_in_salome_pair.first, gr_name_pair.first, gr_property_pair.first, gr_size);
 
 // 
 //       std::vector<std::string> el_fe_type(mesh.GetDimension());

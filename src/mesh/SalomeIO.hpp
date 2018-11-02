@@ -57,7 +57,7 @@ class SalomeIO : public MeshInput<Mesh>
 
  private:
    
-   std::pair<int,int>  isolate_number_in_string(const std::string  string_in, const int begin_pos_to_investigate);
+   std::pair<int,int>  isolate_number_in_string(const std::string & string_in, const int begin_pos_to_investigate);
       
    /** Map from Salome vertex index to Femus vertex index */
    static const unsigned SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 
