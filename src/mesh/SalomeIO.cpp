@@ -108,7 +108,7 @@ namespace femus
  
   
   
-    void SalomeIO::set_boundary_face_indices(const hid_t&  file_id, const int i, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags)  {
+    void SalomeIO::set_boundary_face_ownership(const hid_t&  file_id, const int i, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags)  {
 
        Mesh& mesh = GetMesh();
        
@@ -353,8 +353,8 @@ namespace femus
   
   
   
-  
-  const std::vector< std::tuple<int,int,int,int> >  SalomeIO::compute_group_flags_per_mesh(const std::vector<std::string> & group_names) const {
+  //salome family; our name; our property; group size
+  const std::vector< std::tuple<int,int,int,int> >  SalomeIO::get_group_flags_per_mesh(const std::vector<std::string> & group_names) const {
   
      const uint n_fe_types_for_groups = 1; // so far we have this assumption
       
@@ -378,7 +378,7 @@ namespace femus
 
 
      // ************** Groups of each Mesh *********************************
- const std::vector<std::string> SalomeIO::compute_number_of_groups_per_mesh(const hid_t&  file_id, const std::string & mesh_menu) const {
+ const std::vector<std::string> SalomeIO::get_group_names_per_mesh(const hid_t&  file_id, const std::string & mesh_menu) const {
      
       std::string group_list = group_name_begin +  "/" + mesh_menu + "/" + group_name_end;
      hsize_t n_groups = 0;
@@ -406,7 +406,7 @@ namespace femus
     
     
   // compute number of Mesh fields in Salome file ==============
-  const std::vector<std::string> SalomeIO::compute_number_of_meshes(const hid_t&  file_id) const {
+  const std::vector<std::string> SalomeIO::get_mesh_names(const hid_t&  file_id) const {
       
     hid_t  gid = H5Gopen(file_id, mesh_ensemble.c_str(), H5P_DEFAULT);
     
@@ -513,7 +513,7 @@ namespace femus
 
     hid_t  file_id = H5Fopen(name.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
-    const std::vector<std::string> mesh_menus = compute_number_of_meshes(file_id);
+    const std::vector<std::string> mesh_menus = get_mesh_names(file_id);
 
     if (mesh_menus.size() > 1) { std::cout << "Review the code because there is only one MultilevelMesh object and most likely things don't work" << std::endl; abort(); }
         
@@ -524,8 +524,9 @@ namespace femus
       set_mesh_dimension_by_looping_over_element_types(file_id, mesh_menus, el_fe_type_per_dimension);
       
       std::vector< unsigned int > el_nodes_per_dimension(mesh.GetDimension(),0);
+      
       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
-          el_nodes_per_dimension[i] = FindNumberOfElemNodes(el_fe_type_per_dimension[i]);
+          el_nodes_per_dimension[i] = get_elem_number_of_nodes(el_fe_type_per_dimension[i]);
       }
       
 // meshes ========================
@@ -535,8 +536,8 @@ namespace femus
     set_node_coordinates(file_id,mesh_menus[j],coords,Lref);
     
 // Groups of the mesh ===============
-    const std::vector<std::string>                     group_names = compute_number_of_groups_per_mesh(file_id,mesh_menus[j]);
-    const std::vector< std::tuple<int,int,int,int> >   group_flags = compute_group_flags_per_mesh(group_names);  //salome family; our name; our property; group size
+    const std::vector<std::string>                     group_names = get_group_names_per_mesh(file_id,mesh_menus[j]);
+    const std::vector< std::tuple<int,int,int,int> >   group_flags = get_group_flags_per_mesh(group_names);
     
 // dimension loop over Element types
       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
@@ -545,14 +546,13 @@ namespace femus
 
          set_elem_group_ownership(file_id,    mesh_menus[j], el_fe_type_per_dimension[i],group_flags);
       
-        set_boundary_face_indices(file_id, i, mesh_menus[j], el_fe_type_per_dimension[i],group_flags);
+      set_boundary_face_ownership(file_id, i, mesh_menus[j], el_fe_type_per_dimension[i],group_flags);
        
         get_global_elem_numbering(file_id, mesh_menus[j], el_fe_type_per_dimension[i]);
         
       }
-
              
-    }   //end meshes
+    }
 
     H5Fclose(file_id);
 
@@ -561,14 +561,13 @@ namespace femus
 
 
 
-  void  SalomeIO::ReadFE(
+ const std::vector<std::string> SalomeIO::get_elem_FE_type_per_dimension(
     const hid_t & file_id,
-    std::vector<std::string>& fe_type_per_dimension,
     const std::string  my_mesh_name_dir
   ) 
-  {
+    {
 
-    const Mesh& mesh = GetMesh();
+    Mesh& mesh = GetMesh();
 
     const int n_fem_types = mesh.GetDimension();
     
@@ -581,6 +580,8 @@ namespace femus
 
     const uint fe_name_nchars = 4;
 
+     std::vector<std::string> fe_type_per_dimension(mesh.GetDimension());
+    
     for(int i = 0; i < (int)n_fem_types; i++) {
 
       el_fem_type[i] = new char[fe_name_nchars];
@@ -645,7 +646,7 @@ namespace femus
     for(int i = 0; i < (int)n_fem_types; i++) delete[] el_fem_type[i];
     delete[] el_fem_type;
 
-    return;
+    return fe_type_per_dimension;
   }
 
 // figures out the Mesh dimension by looking at all the geometric elements in all Mesh fields
@@ -696,7 +697,7 @@ namespace femus
     }  //end for
 
     
-      ReadFE(file_id, el_fe_type_per_dimension, my_mesh_name_dir);
+      el_fe_type_per_dimension = get_elem_FE_type_per_dimension(file_id, my_mesh_name_dir);
 
       H5Gclose(gid);
       
@@ -711,8 +712,7 @@ namespace femus
   
   
 
-  unsigned  SalomeIO::FindNumberOfElemNodes(const  std::string el_type) const
-  {
+  unsigned  SalomeIO::get_elem_number_of_nodes(const  std::string el_type) const {
 
     unsigned Node_el;
 

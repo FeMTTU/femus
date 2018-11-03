@@ -59,19 +59,19 @@ class SalomeIO : public MeshInput<Mesh>
      
   void get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const;
     
-  void set_boundary_face_indices(const hid_t&  file_id, const int i, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags);
+  void set_boundary_face_ownership(const hid_t&  file_id, const int i, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags);
 
-   void set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags);
+  void    set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags);
    
    void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::string el_fe_type_per_dimension, const unsigned el_nodes_per_dimension, std::vector<bool>& type_elem_flag);
    
    void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
 
-   const std::vector< std::tuple<int,int,int,int> >  compute_group_flags_per_mesh(const std::vector<std::string> & group_names) const;
+   const std::vector< std::tuple<int,int,int,int> >  get_group_flags_per_mesh(const std::vector<std::string> & group_names) const;
    
-   const std::vector<std::string> compute_number_of_groups_per_mesh(const hid_t &  file_id, const std::string & mesh_menu) const;
+   const std::vector<std::string> get_group_names_per_mesh(const hid_t &  file_id, const std::string & mesh_menu) const;
    
-   const std::vector<std::string>  compute_number_of_meshes(const hid_t & file_id) const;
+   const std::vector<std::string>  get_mesh_names(const hid_t & file_id) const;
      
    std::pair<int,int>  isolate_number_in_string(const std::string & string_in, const int begin_pos_to_investigate) const;
       
@@ -84,10 +84,10 @@ class SalomeIO : public MeshInput<Mesh>
    /** Determine mesh dimension from mesh file */
    void  set_mesh_dimension_by_looping_over_element_types(const hid_t &  file_id, const std::vector<std::string> & menu_name, std::vector<std::string> & el_fe_type_per_dimension);    //this cannot be const because it sets the dimension in the mesh
 
-   unsigned  FindNumberOfElemNodes(const  std::string el_type) const;
+   unsigned  get_elem_number_of_nodes(const  std::string el_type) const;
 
    /** Read FE type */
-   void  ReadFE(const hid_t & file_id, std::vector<std::string> & fe_type_vec, const std::string my_mesh_name_dir) ;   //@todo this should be const
+   const std::vector<std::string>  get_elem_FE_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir);   //@todo this should be const
    
 //    std::vector<char*> menu_names;
    static const std::string group_name_begin; //FAS
