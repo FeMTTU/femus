@@ -14,7 +14,8 @@ int main(int argc,char **args) {
 
   FemusInit init(argc,args,MPI_COMM_WORLD);
 
-  std::string med_file = "FourQuad9_boundaries_groups.med";
+//   std::string med_file = "FourQuad9_boundaries_groups.med";
+  std::string med_file = "NineQuad9_without_groups.med";
   std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << med_file;
   const std::string infile = mystream.str();
 
@@ -45,7 +46,7 @@ int main(int argc,char **args) {
   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",variablesToBePrinted);
 
-// recent versions of Paraview do not read this file
+// recent versions of Paraview do not read the GMV format
 //   ml_sol.SetWriter(GMV);  
 //   ml_sol.GetWriter()->SetDebugOutput(true);  //false: only Sol; true: adds EpsSol, ResSol, BdcSol
 //   ml_sol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",variablesToBePrinted);

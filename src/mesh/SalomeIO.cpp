@@ -26,16 +26,17 @@
 namespace femus
 {
 
-  const std::string SalomeIO::group_name_begin = "FAS";
-  const std::string SalomeIO::group_name_end   = "ELEME";
-  const std::string SalomeIO::mesh_ensemble = "ENS_MAA";
-  const std::string SalomeIO::aux_zeroone = "-0000000000000000001-0000000000000000001";
-  const std::string SalomeIO::elem_list = "MAI";
-  const std::string SalomeIO::group_fam = "FAM";
-  const std::string SalomeIO::connectivity = "NOD";
-  const std::string SalomeIO::node_list = "NOE";
-  const std::string SalomeIO::coord_list = "COO";
-  const std::string SalomeIO::dofobj_indices = "NUM";  //this is used both for nodes and for elements of all dimensions
+  const std::string SalomeIO::mesh_ensemble  = "ENS_MAA";
+  const std::string SalomeIO::aux_zeroone    = "-0000000000000000001-0000000000000000001";
+  const std::string SalomeIO::elem_list      = "MAI";
+  const std::string SalomeIO::group_fam      = "FAM";
+  const std::string SalomeIO::connectivity   = "NOD";
+  const std::string SalomeIO::dofobj_indices = "NUM";
+  const std::string SalomeIO::node_list      = "NOE";
+  const std::string SalomeIO::coord_list     = "COO";
+  const std::string SalomeIO::group_ensemble = "FAS";
+  const std::string SalomeIO::group_elements   = "ELEME";
+  const std::string SalomeIO::group_nodes      = "NOEUD";
   const uint SalomeIO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
 
 
@@ -353,43 +354,39 @@ namespace femus
   
   
   
-  //salome family; our name; our property; group size
-  const std::vector< std::tuple<int,int,int,int> >  SalomeIO::get_group_flags_per_mesh(const std::vector<std::string> & group_names) const {
+  //salome family; our name; our property; group size 
+  /// @todo check the underscores according to our naming standard
+  const std::tuple<int,int,int,int>  SalomeIO::get_group_flags_per_mesh(const std::string & group_name) const {
   
-     const uint n_fe_types_for_groups = 1; // so far we have this assumption
-      
-     std::vector< std::tuple<int,int,int,int> >  group_flags(group_names.size());
-  
-    for(unsigned j = 0; j < group_names.size(); j++) {
-  
-      /// @todo check the underscores according to our naming standard
+     std::tuple<int,int,int,int>  group_flags;
 
-      int str_pos = 0;
-      std::pair<int,int> gr_family_in_salome_pair = isolate_number_in_string( group_names[j], str_pos );
-      std::pair<int,int> gr_name_pair             = isolate_number_in_string( group_names[j], gr_family_in_salome_pair.second + 1 );
-      std::pair<int,int> gr_property_pair         = isolate_number_in_string( group_names[j], gr_name_pair.second + 1 );
-      int gr_size             = 0;      
-      group_flags[j] = std::make_tuple(gr_family_in_salome_pair.first, gr_name_pair.first, gr_property_pair.first, gr_size);
+      const int str_pos = 0;
+      std::pair<int,int> gr_family_in_salome_pair = isolate_number_in_string( group_name, str_pos );
+      std::pair<int,int> gr_name_pair             = isolate_number_in_string( group_name, gr_family_in_salome_pair.second + 1 );
+      std::pair<int,int> gr_property_pair         = isolate_number_in_string( group_name, gr_name_pair.second + 1 );
+      int gr_size                                 = 0;  //this will come from reading the group datasets      
+      group_flags = std::make_tuple(gr_family_in_salome_pair.first, gr_name_pair.first, gr_property_pair.first, gr_size);
       
-    }
-
+    
     return  group_flags;
  }
 
 
      // ************** Groups of each Mesh *********************************
- const std::vector<std::string> SalomeIO::get_group_names_per_mesh(const hid_t&  file_id, const std::string & mesh_menu) const {
+ const std::vector< std::tuple<int,int,int,int> > SalomeIO::get_group_vector_flags_per_mesh(const hid_t&  file_id, const std::string & mesh_menu) const {
      
-      std::string group_list = group_name_begin +  "/" + mesh_menu + "/" + group_name_end;
-     hsize_t n_groups = 0;
-     hid_t  gid_groups   = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
-     hid_t status_groups = H5Gget_num_objs(gid_groups, &n_groups);
-    if(status_groups != 0) {
-      std::cout << "Number of groups not found: You need groups at least for the boundary faces";
-      abort();
+     std::string group_list = group_ensemble +  "/" + mesh_menu + "/" + group_elements;
+     hid_t  gid_groups      = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
+    if(gid_groups != 0) {
+      std::cout << "Groups of Elements not found" << std::endl;
+//       abort();
     }
+     
+     hsize_t n_groups = 0;
+     hid_t status_groups = H5Gget_num_objs(gid_groups, &n_groups);
     
-     std::vector<std::string> group_names(n_groups);
+     std::vector< std::string >                 group_names(n_groups);
+     std::vector< std::tuple<int,int,int,int> > group_flags(n_groups);
         
     for(unsigned j = 0; j < n_groups; j++) {
          
@@ -397,10 +394,12 @@ namespace femus
         H5Gget_objname_by_idx(gid_groups, j, group_names_char, max_length); ///@deprecated see the HDF doc to replace this
               group_names[j] = group_names_char;
               delete[] group_names_char;
+        
+        group_flags[j] = get_group_flags_per_mesh(group_names[j]);
+              
     }
-    
-    
-    return group_names;
+   
+    return group_flags;
     
   }
     
@@ -518,8 +517,7 @@ namespace femus
     if (mesh_menus.size() > 1) { std::cout << "Review the code because there is only one MultilevelMesh object and most likely things don't work" << std::endl; abort(); }
         
 // dimension and fem types ===============
-      std::vector<std::string> el_fe_types_per_mesh(mesh_menus.size()); //for every mesh, see how many Elem Types you have
-      std::vector<std::string> el_fe_type_per_dimension(mesh.GetDimension());
+      std::vector<std::string> el_fe_type_per_dimension(mesh.GetDimension());  //for every dimension, see how many Elem Types you have
       
       set_mesh_dimension_by_looping_over_element_types(file_id, mesh_menus, el_fe_type_per_dimension);
       
@@ -536,8 +534,8 @@ namespace femus
     set_node_coordinates(file_id,mesh_menus[j],coords,Lref);
     
 // Groups of the mesh ===============
-    const std::vector<std::string>                     group_names = get_group_names_per_mesh(file_id,mesh_menus[j]);
-    const std::vector< std::tuple<int,int,int,int> >   group_flags = get_group_flags_per_mesh(group_names);
+    const std::vector< std::tuple<int,int,int,int> >                     group_flags = get_group_vector_flags_per_mesh(file_id,mesh_menus[j]);
+    
     
 // dimension loop over Element types
       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
@@ -571,7 +569,7 @@ namespace femus
 
     const int n_fem_types = mesh.GetDimension();
     
-    std::cout << "No hybrid mesh here" << std::endl;
+    std::cout << "No hybrid mesh for now: only 1 FE type per dimension" << std::endl;
     
     // Get the element name
     char** el_fem_type = new char*[n_fem_types];

@@ -67,20 +67,14 @@ class SalomeIO : public MeshInput<Mesh>
    
    void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
 
-   const std::vector< std::tuple<int,int,int,int> >  get_group_flags_per_mesh(const std::vector<std::string> & group_names) const;
+   const                    std::tuple<int,int,int,int>  get_group_flags_per_mesh(const std::string & group_names) const;
    
-   const std::vector<std::string> get_group_names_per_mesh(const hid_t &  file_id, const std::string & mesh_menu) const;
+   const std::vector< std::tuple<int,int,int,int> > get_group_vector_flags_per_mesh(const hid_t &  file_id, const std::string & mesh_menu) const;
    
    const std::vector<std::string>  get_mesh_names(const hid_t & file_id) const;
      
    std::pair<int,int>  isolate_number_in_string(const std::string & string_in, const int begin_pos_to_investigate) const;
       
-   /** Map from Salome vertex index to Femus vertex index */
-   static const unsigned SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 
- 
-   /** Map from Salome face index to Femus face index */
-   static const unsigned SalomeToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES];
-
    /** Determine mesh dimension from mesh file */
    void  set_mesh_dimension_by_looping_over_element_types(const hid_t &  file_id, const std::vector<std::string> & menu_name, std::vector<std::string> & el_fe_type_per_dimension);    //this cannot be const because it sets the dimension in the mesh
 
@@ -89,27 +83,46 @@ class SalomeIO : public MeshInput<Mesh>
    /** Read FE type */
    const std::vector<std::string>  get_elem_FE_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir);   //@todo this should be const
    
+   /** Map from Salome vertex index to Femus vertex index */
+   static const unsigned SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 
+ 
+   /** Map from Salome face index to Femus face index */
+   static const unsigned SalomeToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES];
+
 //    std::vector<char*> menu_names;
-   static const std::string group_name_begin; //FAS
-   static const std::string group_name_end;   //ELEME
-   static const std::string mesh_ensemble;    // ENS_MAA
+   static const std::string mesh_ensemble;    //ENS_MAA
    static const std::string aux_zeroone;      // -0000000000000000001-0000000000000000001
    static const std::string elem_list;        //MAI
    static const std::string group_fam;        //FAM
-   static const std::string connectivity;     //NOD
+   static const std::string connectivity;     //NOD    //These are written based on the NOE/NUM numbering !
+   static const std::string dofobj_indices;   //NUM    //this is the Salome global numbering (as you see in Salome) both for nodes (in NOE) and for elements of all dimensions (in MAI). 
+                                                       //Salome global Numbering of both Nodes and Elements starts at 1.
+                                                       //For Elements, lower dimensional elements are numbered first
    static const std::string node_list;        //NOE
    static const std::string coord_list;       //COO
-   static const std::string dofobj_indices;   //NUM
+   static const std::string group_ensemble;   //FAS
+   static const std::string group_elements;   //ELEME
+   static const std::string group_nodes;      //NOEUD  //if you ever use group of nodes, not used now
    static const uint max_length;
 
 };
-
 
 inline
 SalomeIO::SalomeIO (Mesh& mesh) :
    MeshInput<Mesh>  (mesh)
 {
 }
+
+
+// @todo hybrid meshes (MED can export them)
+// @todo groups with more than one type of element
+// @todo mesh with overlapping groups  (MED can export them, defining the intersection independently; now the name parsing wouldn't work with them; Salome splits into non-intersecting family, so one needs to read the GRO/NOM dataset )
+// @todo how would I use a 0d element? or a ball?
+// @todo triggering of the copy of new input files happens right after "Configure" of cmake
+// @todo Redirect CERR together with COUT
+// @todo Update Xdmf to Xdmf3
+// @todo not running in parallel
+
 
 
 } // namespace femus
