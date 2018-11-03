@@ -106,6 +106,20 @@ namespace femus
     {0, 1}
   };
  
+
+/// @todo do we need these numbers for us?
+   void SalomeIO::get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const  {
+         //NUM ***************************
+       hsize_t dims_num[2];
+       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+        std::string node_name_dir_i = my_mesh_name_dir + el_fe_type_per_dimension + "/" + dofobj_indices;
+        hid_t dtset_num = H5Dopen(file_id, node_name_dir_i.c_str(), H5P_DEFAULT);
+        hid_t filespace_num = H5Dget_space(dtset_num);
+        hid_t status_bdry  = H5Sget_simple_extent_dims(filespace_num, dims_num, NULL);
+        if(status_bdry == 0) {    std::cerr << "SalomeIO::read dims not found";  abort();  }
+        H5Dclose(dtset_num); 
+        
+   }
   
   //   // read NODAL COORDINATES **************** C
   //@todo can an element belong to MORE THAN ONE GROUP?
@@ -131,6 +145,35 @@ namespace femus
 //             }
 //           }  
 //         }
+        
+        // read GROUP **************** E
+//in general, I'd say that a group can only have ONE element type (should study the possibility of hybrid mesh)
+
+
+//     std::vector < unsigned > materialElementCounter(3,0);
+//          
+//       hid_t dtset = H5Dopen(file_id, group_dataset.c_str(), H5P_DEFAULT);
+//       hid_t filespace = H5Dget_space(dtset);
+//       hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
+//       int* elem_indices = new int[dims[0]];
+//       status = H5Dread(dtset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, elem_indices);
+// 
+//       for(unsigned i = 0; i < dims[0]; i++) {
+//         mesh.el->SetElementGroup(elem_indices[i] - 1 - n_elements_b_bb, gr_name);
+//         mesh.el->SetElementMaterial(elem_indices[i] - 1 - n_elements_b_bb , gr_property);
+// 	
+// 	    if( gr_property == 2) materialElementCounter[0] += 1;
+// 	else if(gr_property == 3 ) materialElementCounter[1] += 1;
+// 	else materialElementCounter[2] += 1;
+// 	
+//       }
+// 
+//       H5Dclose(dtset);
+//       delete [] elem_indices;
+// 
+//     mesh.el->SetElementGroupNumber(n_gr);
+//     mesh.el->SetMaterialElementCounter(materialElementCounter);
+    //   // end read GROUP **************** E   
         
         delete [] fam_map;
         H5Dclose(dtset_fam);
@@ -439,8 +482,6 @@ namespace femus
     Mesh& mesh = GetMesh();
     mesh.SetLevel(0);
 
-    hsize_t dims[2];
-
     hid_t  file_id = H5Fopen(name.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
     const std::vector<std::string> mesh_menus = compute_number_of_meshes(file_id);
@@ -458,13 +499,10 @@ namespace femus
 
 // Groups of the mesh ===============
     const std::vector<std::string>                     group_names = compute_number_of_groups_per_mesh(file_id,mesh_menus[j]);
-    
     const std::vector< std::tuple<int,int,int,int> >   group_flags = compute_group_flags_per_mesh(group_names);  //salome family; our name; our property; group size
     
     set_node_coordinates(file_id,mesh_menus[j],coords,Lref);
 
-
-      /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
       //   // read ELEMENT/cell ******************** B
        std::vector< unsigned int > n_elems_per_dimension(mesh.GetDimension(),0);
        std::vector< unsigned int > el_nodes_per_dimension(mesh.GetDimension(),0);
@@ -478,49 +516,10 @@ namespace femus
 
          get_elem_group_ownership(file_id, mesh_menus[j], el_fe_type_per_dimension[i]);
          
-        // read GROUP **************** E
-//in general, I'd say that a group can only have ONE element type (should study the possibility of hybrid mesh)
-
-
-//     std::vector < unsigned > materialElementCounter(3,0);
-//          
-//       hid_t dtset = H5Dopen(file_id, group_dataset.c_str(), H5P_DEFAULT);
-//       hid_t filespace = H5Dget_space(dtset);
-//       hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
-//       int* elem_indices = new int[dims[0]];
-//       status = H5Dread(dtset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, elem_indices);
-// 
-//       for(unsigned i = 0; i < dims[0]; i++) {
-//         mesh.el->SetElementGroup(elem_indices[i] - 1 - n_elements_b_bb, gr_name);
-//         mesh.el->SetElementMaterial(elem_indices[i] - 1 - n_elements_b_bb , gr_property);
-// 	
-// 	    if( gr_property == 2) materialElementCounter[0] += 1;
-// 	else if(gr_property == 3 ) materialElementCounter[1] += 1;
-// 	else materialElementCounter[2] += 1;
-// 	
-//       }
-// 
-//       H5Dclose(dtset);
-//       delete [] elem_indices;
-// 
-//     mesh.el->SetElementGroupNumber(n_gr);
-//     mesh.el->SetMaterialElementCounter(materialElementCounter);
-    //   // end read GROUP **************** E   
-
+//          set_elem_group_flags(); ///@todo
       
-        
-
-
-        //NUM ***************************
-       hsize_t dims_num[2];
-       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menus[j] + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
-        std::string node_name_dir_i = my_mesh_name_dir + el_fe_type_per_dimension[i] + "/" + dofobj_indices;
-        hid_t dtset_num = H5Dopen(file_id, node_name_dir_i.c_str(), H5P_DEFAULT);
-        hid_t filespace_num = H5Dget_space(dtset_num);
-        hid_t status_bdry  = H5Sget_simple_extent_dims(filespace_num, dims_num, NULL);
-        if(status_bdry == 0) {    std::cerr << "SalomeIO::read dims not found";  abort();  }
-        H5Dclose(dtset_num);
-       
+        get_global_elem_numbering(file_id, mesh_menus[j], el_fe_type_per_dimension[i]);      
+      
        
         
         if ( i == (mesh.GetDimension() - 1 - 1) ) { //boundary
@@ -647,6 +646,8 @@ namespace femus
   }
 
 // figures out the Mesh dimension by looking at all the geometric elements in all Mesh fields
+/// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D, I think
+
   void  SalomeIO::set_mesh_dimension_by_looping_over_element_types(const hid_t &  file_id, const  std::vector<std::string> & mesh_menus, std::vector<std::string> & el_fe_type_per_dimension)  {
       
       
