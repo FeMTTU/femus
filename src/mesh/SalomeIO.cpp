@@ -106,6 +106,35 @@ namespace femus
     {0, 1}
   };
  
+  
+  
+    void SalomeIO::set_boundary_face_indices(const hid_t&  file_id, const int i, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags)  {
+
+       Mesh& mesh = GetMesh();
+       
+       if ( i == (mesh.GetDimension() - 1 - 1) ) { //boundary
+                    
+    //loop over volume elements
+    //extract faces
+
+//   // read boundary **************** D
+  for (unsigned k=0; k<group_flags.size()/*nbcd*/; k++) { //@todo these should be the groups that are "boundary groups"
+           int value = std::get<1>(group_flags[k]);       //flag of the boundary portion
+      unsigned nface = std::get<3>(group_flags[k]);  //number of elements in a portion of boundary
+               value = - (value + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the value in salome must be POSITIVE
+    for (unsigned i = 0; i < nface; i++) {
+//       unsigned iel =,   //volume element to which the face belongs
+//       iel--;
+//       unsigned iface; //index of the face in that volume element
+//       iface = SalomeIO::SalomeToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
+//       mesh.el->SetFaceElementIndex(iel,iface,value);  //value is (-1) for element faces that are not boundary faces
+    }
+  }
+//   // end read boundary **************** D
+                    
+        } //end (volume pos - 1)
+        
+    }
 
 /// @todo do we need these numbers for us?
    void SalomeIO::get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const  {
@@ -123,7 +152,7 @@ namespace femus
   
   //   // read NODAL COORDINATES **************** C
   //@todo can an element belong to MORE THAN ONE GROUP?
-   void SalomeIO::get_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const  {
+   void SalomeIO::set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags)  {
        
        //FAM ***************************
         hsize_t dims_fam[2];
@@ -492,63 +521,37 @@ namespace femus
       std::vector<std::string> el_fe_types_per_mesh(mesh_menus.size()); //for every mesh, see how many Elem Types you have
       std::vector<std::string> el_fe_type_per_dimension(mesh.GetDimension());
       
-      set_mesh_dimension_by_looping_over_element_types(file_id,mesh_menus,el_fe_type_per_dimension);
-  
+      set_mesh_dimension_by_looping_over_element_types(file_id, mesh_menus, el_fe_type_per_dimension);
+      
+      std::vector< unsigned int > el_nodes_per_dimension(mesh.GetDimension(),0);
+      for(unsigned i = 0; i < mesh.GetDimension(); i++) {
+          el_nodes_per_dimension[i] = FindNumberOfElemNodes(el_fe_type_per_dimension[i]);
+      }
+      
 // meshes ========================
      for(unsigned j = 0; j < mesh_menus.size(); j++) {
 
+// node coordinates
+    set_node_coordinates(file_id,mesh_menus[j],coords,Lref);
+    
 // Groups of the mesh ===============
     const std::vector<std::string>                     group_names = compute_number_of_groups_per_mesh(file_id,mesh_menus[j]);
     const std::vector< std::tuple<int,int,int,int> >   group_flags = compute_group_flags_per_mesh(group_names);  //salome family; our name; our property; group size
     
-    set_node_coordinates(file_id,mesh_menus[j],coords,Lref);
-
-      //   // read ELEMENT/cell ******************** B
-       std::vector< unsigned int > n_elems_per_dimension(mesh.GetDimension(),0);
-       std::vector< unsigned int > el_nodes_per_dimension(mesh.GetDimension(),0);
-       
+// dimension loop over Element types
       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
-
-          // DETERMINE NUMBER OF NODES PER ELEMENT
-          el_nodes_per_dimension[i] = FindNumberOfElemNodes(el_fe_type_per_dimension[i]);
 
          set_elem_connectivity(file_id, mesh_menus[j], i, el_fe_type_per_dimension[i],el_nodes_per_dimension[i],type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
 
-         get_elem_group_ownership(file_id, mesh_menus[j], el_fe_type_per_dimension[i]);
-         
-//          set_elem_group_flags(); ///@todo
+         set_elem_group_ownership(file_id,    mesh_menus[j], el_fe_type_per_dimension[i],group_flags);
       
-        get_global_elem_numbering(file_id, mesh_menus[j], el_fe_type_per_dimension[i]);      
-      
+        set_boundary_face_indices(file_id, i, mesh_menus[j], el_fe_type_per_dimension[i],group_flags);
        
-        
-        if ( i == (mesh.GetDimension() - 1 - 1) ) { //boundary
-                    
-    //loop over volume elements
-    //extract faces
-
-//   // read boundary **************** D
-  for (unsigned k=0; k<group_names.size()/*nbcd*/; k++) { //@todo these should be the groups that are "boundary groups"
-           int value = std::get<1>(group_flags[k]);       //flag of the boundary portion
-      unsigned nface = std::get<3>(group_flags[k]);  //number of elements in a portion of boundary
-               value = - (value + 1);  //@todo so value in salome must be positive
-    for (unsigned i = 0; i < nface; i++) {
-//       unsigned iel =,   //volume element to which the face belongs
-//       iel--;
-//       unsigned iface; //index of the face in that volume element
-//       iface = SalomeIO::SalomeToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
-//       mesh.el->SetFaceElementIndex(iel,iface,value);  //value is (-1) for element faces that are not boundary faces
-    }
-  }
-//   // end read boundary **************** D
-                    
-        } //end (volume pos - 1)
-
+        get_global_elem_numbering(file_id, mesh_menus[j], el_fe_type_per_dimension[i]);
         
       }
 
-       //   // end read  ELEMENT/CELL **************** B
-      
+             
     }   //end meshes
 
     H5Fclose(file_id);
