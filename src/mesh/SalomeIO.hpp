@@ -76,7 +76,7 @@ class SalomeIO : public MeshInput<Mesh>
    std::pair<int,int>  isolate_number_in_string(const std::string & string_in, const int begin_pos_to_investigate) const;
       
    /** Determine mesh dimension from mesh file */
-   void  set_mesh_dimension_by_looping_over_element_types(const hid_t &  file_id, const std::vector<std::string> & menu_name, std::vector<std::string> & el_fe_type_per_dimension);    //this cannot be const because it sets the dimension in the mesh
+  std::vector< std::tuple<std::string,unsigned int> >  set_mesh_dimension_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name); //this cannot be const because it sets the dimension in the mesh
 
    unsigned  get_elem_number_of_nodes(const  std::string el_type) const;
 

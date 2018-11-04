@@ -25,6 +25,8 @@ int main(int argc,char **args) {
   std::string fe_quad_rule("fifth");
 
   MultiLevelMesh ml_msh;
+//   const int n_sub = 4;
+//   ml_msh.GenerateCoarseBoxMesh(n_sub,n_sub,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
   ml_msh.ReadCoarseMesh(infile.c_str(),fe_quad_rule.c_str(),Lref);
   ml_msh.PrintInfo();
   

@@ -131,11 +131,14 @@ int main(int argc, char** args) {
         files.CheckIODirectories();
         files.RedirectCout();
 
+    // ======= Quad Rule ========================
+  std::string fe_quad_rule("seventh");
+ /* "seventh" is the order of accuracy that is used in the gauss integration scheme
+    In the future it is not going to be an argument of the mesh function   */
+  
     // ======= Mesh ========================
   MultiLevelMesh mlMsh;
-  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,"seventh");
- /* "seventh" is the order of accuracy that is used in the gauss integration scheme
-      probably in the furure it is not going to be an argument of this function   */
+  mlMsh.GenerateCoarseBoxMesh(NSUB_X,NSUB_Y,0,0.,1.,0.,1.,0.,0.,QUAD9,fe_quad_rule.c_str());
   unsigned numberOfUniformLevels = 1;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
