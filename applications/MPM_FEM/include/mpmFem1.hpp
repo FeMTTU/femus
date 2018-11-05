@@ -450,7 +450,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
                   unsigned i0 = ii[iface][inode][0];
                   unsigned i1 = ii[iface][inode][1];
                   unsigned i2 = ii[iface][inode][2];  
-                  SolDd1[k][i0] = neumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - NeumannFactor) * SolDd[k][i0];
+                  SolDd1[k][i0] = neumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - neumannFactor) * SolDd[k][i0];
                 }
               }
               break;
@@ -888,7 +888,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
                     unsigned i0 = ii[iface][inode][0];
                     unsigned i1 = ii[iface][inode][1];
                     unsigned i2 = ii[iface][inode][2];  
-                    SolDd1[k][i0] = neumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - NeumannFactor) * SolDd[k][i0];
+                    SolDd1[k][i0] = neumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - neumannFactor) * SolDd[k][i0];
                   }
                 }
                 break;
