@@ -59,11 +59,11 @@ class SalomeIO : public MeshInput<Mesh>
      
   void get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const;
     
-  void set_boundary_face_ownership(const hid_t&  file_id, const int i, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags);
+  void set_boundary_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags);
 
   void    set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags);
    
-   void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::string el_fe_type_per_dimension, const unsigned el_nodes_per_dimension, std::vector<bool>& type_elem_flag);
+   void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::tuple<std::string,unsigned int> & el_fe_type_per_dimension, std::vector<bool>& type_elem_flag);
    
    void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
 
@@ -76,7 +76,7 @@ class SalomeIO : public MeshInput<Mesh>
    std::pair<int,int>  isolate_number_in_string(const std::string & string_in, const int begin_pos_to_investigate) const;
       
    /** Determine mesh dimension from mesh file */
-  std::vector< std::tuple<std::string,unsigned int> >  set_mesh_dimension_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name); //this cannot be const because it sets the dimension in the mesh
+  std::vector< std::tuple<std::string,unsigned int> >  set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name); //this cannot be const because it sets the dimension in the mesh
 
    unsigned  get_elem_number_of_nodes(const  std::string el_type) const;
 
@@ -122,6 +122,7 @@ SalomeIO::SalomeIO (Mesh& mesh) :
 // @todo Redirect CERR together with COUT
 // @todo Update Xdmf to Xdmf3
 // @todo not running in parallel
+// @todo I know I can make only groups of edges/faces/volumes, but can I do hybrid faces, say quad and tri together?
 
 
 

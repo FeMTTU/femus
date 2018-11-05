@@ -14,12 +14,13 @@ int main(int argc,char **args) {
 
   FemusInit init(argc,args,MPI_COMM_WORLD);
 
-//   std::string med_file = "FourQuad9_boundaries_groups.med";
-  std::string med_file = "NineQuad9_without_groups.med";
-  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << med_file;
+//   std::string input_file = "turek_FSI1.neu";
+  std::string input_file = "FourQuad9_boundaries_groups.med";
+//   std::string input_file = "NineQuad9_without_groups.med";
+  std::ostringstream mystream; mystream << "./" << DEFAULT_INPUTDIR << "/" << input_file;
   const std::string infile = mystream.str();
 
-  //Adimensional
+  //Nondimensional
   double Lref = 1.;
   
   std::string fe_quad_rule("fifth");

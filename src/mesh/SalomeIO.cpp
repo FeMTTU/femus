@@ -111,6 +111,7 @@ namespace femus
   
 
   /// @todo extend to Wegdes (aka Prisms)
+  /// @todo why pass coords other than get it through the Mesh class pointer?
   void SalomeIO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag) {
 
     Mesh& mesh = GetMesh();
@@ -122,30 +123,35 @@ namespace femus
 
     if (mesh_menus.size() > 1) { std::cout << "Review the code because there is only one MultilevelMesh object and most likely things don't work" << std::endl; abort(); }
         
-// dimension and fem types ===============
+// dimension and geom_el types ===============
 
-      std::vector< std::tuple<std::string,unsigned int> > el_fe_type_per_dimension = set_mesh_dimension_by_looping_over_element_types(file_id, mesh_menus[0]);
+      const std::vector< std::tuple<std::string,unsigned int> > el_fe_type_per_dimension = set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(file_id, mesh_menus[0]);
       
 // meshes ========================
      for(unsigned j = 0; j < mesh_menus.size(); j++) {
 
 // node coordinates
-    set_node_coordinates(file_id,mesh_menus[j],coords,Lref);
+            set_node_coordinates(file_id, mesh_menus[j], coords, Lref);
     
 // Groups of the mesh ===============
-    const std::vector< std::tuple<int,int,int,int> >                     group_flags = get_group_vector_flags_per_mesh(file_id,mesh_menus[j]);
+    const std::vector< std::tuple<int,int,int,int> >     group_flags = get_group_vector_flags_per_mesh(file_id,mesh_menus[j]);
+    
+    //separate groups by dimension
+    //loop over all FAM fields for all element types
+    //read each of them
+    //as soon as an entry is equal to the group_salome_flag, that means the dimension is that of the current element dataset
     
     
-// dimension loop over Element types
+// dimension loop
       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
 
-         set_elem_connectivity(file_id, mesh_menus[j], i, std::get<0>(el_fe_type_per_dimension[i]),std::get<1>(el_fe_type_per_dimension[i]),type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
+            set_elem_connectivity(file_id, mesh_menus[j], i,             el_fe_type_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
 
-         set_elem_group_ownership(file_id,    mesh_menus[j], std::get<0>(el_fe_type_per_dimension[i]),group_flags);
+         set_elem_group_ownership(file_id, mesh_menus[j],    std::get<0>(el_fe_type_per_dimension[i]), group_flags);
       
-      set_boundary_face_ownership(file_id, i, mesh_menus[j], std::get<0>(el_fe_type_per_dimension[i]),group_flags);
+     set_boundary_group_ownership(file_id, mesh_menus[j], i, std::get<0>(el_fe_type_per_dimension[i]), group_flags);
        
-        get_global_elem_numbering(file_id, mesh_menus[j], std::get<0>(el_fe_type_per_dimension[i]));
+        get_global_elem_numbering(file_id, mesh_menus[j],    std::get<0>(el_fe_type_per_dimension[i]));
         
       }
              
@@ -157,7 +163,7 @@ namespace femus
 
   
   
-    void SalomeIO::set_boundary_face_ownership(const hid_t&  file_id, const int i, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags)  {
+    void SalomeIO::set_boundary_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags)  {
 
        Mesh& mesh = GetMesh();
        
@@ -199,8 +205,7 @@ namespace femus
         
    }
   
-  //   // read NODAL COORDINATES **************** C
-  //@todo can an element belong to MORE THAN ONE GROUP?
+  //  we loop over all elements and see which ones are of that group
    void SalomeIO::set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags)  {
        
        Mesh& mesh = GetMesh();
@@ -214,59 +219,54 @@ namespace femus
         hid_t status_fam  = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
         if(status_fam == 0) {     std::cerr << "SalomeIO::read dims not found";  abort();  }
         
-        int* fam_map = new  int[dims_fam[0]];
+        const unsigned n_elements = dims_fam[0];
+        int* fam_map = new  int[n_elements];
         hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map);
 
-//         for(unsigned i = 0; i < dims_fam[0]; i++) {
+    std::vector < unsigned > materialElementCounter(3,0);  //I think this counts who is fluid, who is solid, who whatever else, need to double check with the Gambit input files
+    const unsigned group_property_fluid_probably          = 2;
+    const unsigned group_property_something_else_probably = 3;
+    const unsigned group_property_solid_probably          = 4;
+
+    //I have to split the groups with the dimensions
+    //I have to compute the number of elements of each group
+    
 //           for(unsigned j = 0; j < group_names.size(); j++) {
 //           if ( fam_map[i] == std::get<0>(group_flags[j]) )   {
 // //               std::cout << "Current flag " << fam_map[i] << " matches " << std::get<1>(group_flags[j]) << std::endl; 
-//               
 //             }
 //           }  
+
+//         for(unsigned i = 0; i < number_of_group_elements; i++) {
+//         mesh.el->SetElementGroup(   elem_indices[i] - 1 - n_elements_b_bb, gr_integer_name);
+//         mesh.el->SetElementMaterial(elem_indices[i] - 1 - n_elements_b_bb , gr_material);
+// 	
+//       if(gr_material == group_property_fluid_probably          ) materialElementCounter[0] += 1;
+// 	else if(gr_material == group_property_something_else_probably ) materialElementCounter[1] += 1;
+// 	else                                                            materialElementCounter[2] += 1;
+
 //         }
         
-        // read GROUP **************** E
-
-//     std::vector < unsigned > materialElementCounter(3,0);
-//          
-//       hid_t dtset = H5Dopen(file_id, group_dataset.c_str(), H5P_DEFAULT);
-//       hid_t filespace = H5Dget_space(dtset);
-//       hid_t status  = H5Sget_simple_extent_dims(filespace, dims, NULL);
-//       int* elem_indices = new int[dims[0]];
-//       status = H5Dread(dtset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, elem_indices);
-// 
-//       for(unsigned i = 0; i < dims[0]; i++) {
-//         mesh.el->SetElementGroup(elem_indices[i] - 1 - n_elements_b_bb, gr_name);
-//         mesh.el->SetElementMaterial(elem_indices[i] - 1 - n_elements_b_bb , gr_property);
-// 	
-// 	    if( gr_property == 2) materialElementCounter[0] += 1;
-// 	else if(gr_property == 3 ) materialElementCounter[1] += 1;
-// 	else materialElementCounter[2] += 1;
-// 	
-//       }
-// 
-//       H5Dclose(dtset);
-//       delete [] elem_indices;
-// 
-//     mesh.el->SetElementGroupNumber(n_gr);
+//     mesh.el->SetElementGroupNumber(/*n_groups_of_that_space_dimension*/);
 //     mesh.el->SetMaterialElementCounter(materialElementCounter);
-    //   // end read GROUP **************** E   
         
         delete [] fam_map;
         H5Dclose(dtset_fam);
 
    } 
 
-   
-   void SalomeIO::set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::string el_fe_type_per_dimension, const unsigned el_nodes_per_dimension, std::vector<bool>& type_elem_flag) {
+   // Connectivities in MED files are stored on a per-node basis: first all 1st nodes, then all 2nd nodes, and so on.
+   // Instead, in Gambit they are stored on a per-element basis
+   void SalomeIO::set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::tuple<std::string,unsigned int>  & el_fe_type_per_dimension, std::vector<bool>& type_elem_flag) {
 
        Mesh& mesh = GetMesh();
+       
+       const unsigned el_nodes_per_dimension = std::get<1>(el_fe_type_per_dimension);
 
        std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
        hsize_t dims_i[2];
         // NOD ***************************
-        std::string conn_name_dir_i = my_mesh_name_dir +  el_fe_type_per_dimension + "/" + connectivity;
+        std::string conn_name_dir_i = my_mesh_name_dir +  std::get<0>(el_fe_type_per_dimension) + "/" + connectivity;
         hid_t dtset_conn = H5Dopen(file_id, conn_name_dir_i.c_str(), H5P_DEFAULT);
         hid_t filespace = H5Dget_space(dtset_conn);
         hid_t status_els_i  = H5Sget_simple_extent_dims(filespace, dims_i, NULL);
@@ -641,13 +641,12 @@ namespace femus
     return fe_type_per_dimension;
   }
 
-// figures out the Mesh dimension by looking at all the geometric elements in all Mesh fields
-/// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D, I think
+// figures out the Mesh dimension by looping over element types
+/// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
 
-  std::vector< std::tuple<std::string,unsigned int> >  SalomeIO::set_mesh_dimension_by_looping_over_element_types(const hid_t &  file_id, const std::string & mesh_menus)  {
+  std::vector< std::tuple<std::string,unsigned int> >  SalomeIO::set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & mesh_menus)  {
       
       
-      /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menus + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
 
       hsize_t     n_fem_type;
@@ -689,8 +688,8 @@ namespace femus
 
       H5Gclose(gid);
 
-      std::vector<std::string> el_fe_type_per_dimension = get_elem_FE_type_per_dimension(file_id, my_mesh_name_dir);
-      std::vector< unsigned int > el_nodes_per_dimension(mesh.GetDimension(),0);
+      std::vector< std::string >  el_fe_type_per_dimension = get_elem_FE_type_per_dimension(file_id, my_mesh_name_dir);
+      std::vector< unsigned int >   el_nodes_per_dimension(mesh.GetDimension(),0);
       std::vector< std::tuple<std::string,unsigned int> >  elem_tuple(mesh.GetDimension());
       
       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
