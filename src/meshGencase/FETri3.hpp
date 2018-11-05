@@ -4,14 +4,14 @@
 //Class for
 
 
-#include "FEElemBase.hpp"
+#include "GeomElemBase.hpp"
 
 
 namespace femus {
 
 
 
-class FETri3 : public FEElemBase  {
+class FETri3 : public GeomElemBase  {
 
 public:
   

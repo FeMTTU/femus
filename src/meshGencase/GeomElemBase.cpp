@@ -1,4 +1,4 @@
-#include "FEElemBase.hpp"
+#include "GeomElemBase.hpp"
 
 #include <iostream>
 #include <cstdlib>
@@ -30,9 +30,9 @@ namespace femus {
 
 
 
-FEElemBase::FEElemBase() { }
+GeomElemBase::GeomElemBase() { }
 
-FEElemBase::~FEElemBase() { }
+GeomElemBase::~GeomElemBase() { }
 
 
 //this build class allows me to return a pointer to a child of this class
@@ -41,7 +41,7 @@ FEElemBase::~FEElemBase() { }
 //These instantiations are never destroyed until you explicitly delete them
 //the build() function returns a POINTER
 
-FEElemBase* FEElemBase::build(const std::string geomel_id_in, const uint fe_family_in) {
+GeomElemBase* GeomElemBase::build(const std::string geomel_id_in, const uint fe_family_in) {
 
   if ( fe_family_in != QQ && fe_family_in != LL && fe_family_in != KK ) {
     std::cout << "FE::FE: FE family " << fe_family_in << " not supported" << std::endl;

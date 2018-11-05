@@ -4,14 +4,14 @@
 #include <cstdlib>
 #include <iostream>
 
-#include"FEElemBase.hpp"
+#include"GeomElemBase.hpp"
 
 
 namespace femus {
 
 
 
-class FETet1 : public FEElemBase  {
+class FETet1 : public GeomElemBase  {
 
 public:
   

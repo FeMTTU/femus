@@ -7,7 +7,7 @@ namespace femus {
 
 
 // =======================
-FEQuad9::FEQuad9() : FEElemBase() {   }
+FEQuad9::FEQuad9() : GeomElemBase() {   }
 	  
 // =======================
           FEQuad9::~FEQuad9() {    }

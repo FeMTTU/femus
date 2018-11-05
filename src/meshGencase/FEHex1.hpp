@@ -6,14 +6,14 @@
 #include <iostream>
 
 
-#include "FEElemBase.hpp"
+#include "GeomElemBase.hpp"
 
 
 namespace femus {
 
 
 
-class FEHex1 : public FEElemBase  {
+class FEHex1 : public GeomElemBase  {
 
 public:
   

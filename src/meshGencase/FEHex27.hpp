@@ -6,14 +6,14 @@
 //Class for the 3D Hex27
 
 
-#include "FEElemBase.hpp"
+#include "GeomElemBase.hpp"
 #include "ElemType.hpp"
 
 namespace femus {
 
 
 
-class FEHex27 : public FEElemBase {
+class FEHex27 : public GeomElemBase {
 
 public:
   

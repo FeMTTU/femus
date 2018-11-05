@@ -80,7 +80,7 @@ class MED_IO : public MeshInput<Mesh>
    unsigned  get_elem_number_of_nodes(const  std::string el_type) const;
 
    /** Read FE type */
-   const std::vector<std::string>  get_elem_FE_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir);   //@todo this should be const
+   const std::vector<std::string>  get_geom_elem_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir);   //@todo this should be const
    
    /** Map from Salome vertex index to Femus vertex index */
    static const unsigned SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES]; 

@@ -1,5 +1,5 @@
-#ifndef __femus_meshGencase_FEElemBase_hpp__
-#define __femus_meshGencase_FEElemBase_hpp__
+#ifndef __femus_meshGencase_GeomElemBase_hpp__
+#define __femus_meshGencase_GeomElemBase_hpp__
 
 #include <string>
 #include <vector>
@@ -13,14 +13,14 @@ namespace femus {
 
 
 
-class FEElemBase  {
+class GeomElemBase  {
 
 public:
 
-    FEElemBase();
-    virtual ~FEElemBase();
+    GeomElemBase();
+    virtual ~GeomElemBase();
 
-    static  FEElemBase* build(const std::string geomel_id_in, const uint fe_family);
+    static  GeomElemBase* build(const std::string geomel_id_in, const uint fe_family);
 
     virtual unsigned int get_dimension() const { std::cout << "Not implemented FE" << std::endl; abort(); };
     virtual unsigned int n_nodes()       const { std::cout << "Not implemented FE" << std::endl; abort(); };

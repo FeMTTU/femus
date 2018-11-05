@@ -26,7 +26,7 @@
 namespace femus {
 
 // Forwarding classes
-class FEElemBase;
+class GeomElemBase;
 
 
 class GenCase : public MultiLevelMeshTwo {
@@ -63,7 +63,7 @@ public:
     void GrabMeshinfoFromLibmesh();
 
     // Element ===========
-    std::vector<FEElemBase*> _feelems; //these are basically used only for the embedding matrix
+    std::vector<GeomElemBase*> _feelems; //these are basically used only for the embedding matrix
 
 private:
 

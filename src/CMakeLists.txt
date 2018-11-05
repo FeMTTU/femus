@@ -59,7 +59,7 @@ meshGencase/Domain.cpp
 meshGencase/ElemSto.cpp
 meshGencase/MultiLevelMeshTwo.cpp
 meshGencase/GenCase.cpp
-meshGencase/FEElemBase.cpp
+meshGencase/GeomElemBase.cpp
 meshGencase/FEHex1.cpp
 meshGencase/FEHex27.cpp
 meshGencase/FEHex8.cpp

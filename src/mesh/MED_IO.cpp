@@ -553,7 +553,7 @@ namespace femus
   
 
 
- const std::vector<std::string> MED_IO::get_elem_FE_type_per_dimension(
+ const std::vector<std::string> MED_IO::get_geom_elem_type_per_dimension(
     const hid_t & file_id,
     const std::string  my_mesh_name_dir
   ) 
@@ -568,13 +568,13 @@ namespace femus
     // Get the element name
     char** el_fem_type = new char*[n_fem_types];
 
-    std::vector<int> index(n_fem_types);
+    std::vector<int> index(n_fem_types);  //is this used?
 
     const uint fe_name_nchars = 4;
 
      std::vector<std::string> fe_type_per_dimension(mesh.GetDimension());
     
-    for(int i = 0; i < (int)n_fem_types; i++) {
+    for(int i = 0; i < (int) n_fem_types; i++) {
 
       el_fem_type[i] = new char[fe_name_nchars];
       H5Lget_name_by_idx(file_id, my_mesh_name_dir.c_str(), H5_INDEX_NAME, H5_ITER_INC, i, el_fem_type[i], fe_name_nchars, H5P_DEFAULT);
@@ -662,6 +662,7 @@ namespace femus
     std::vector<char*> elem_types;
     elem_types.resize(n_fem_type);
     
+    
     for(unsigned j = 0; j < elem_types.size(); j++) {
       elem_types[j] = new char[max_length];
       H5Gget_objname_by_idx(gid, j, elem_types[j], max_length); ///@deprecated see the HDF doc to replace this
@@ -687,8 +688,9 @@ namespace femus
     }  //end for
 
       H5Gclose(gid);
+      
 
-      std::vector< std::string >  el_fe_type_per_dimension = get_elem_FE_type_per_dimension(file_id, my_mesh_name_dir);
+      std::vector< std::string >  el_fe_type_per_dimension = get_geom_elem_type_per_dimension(file_id, my_mesh_name_dir);
       std::vector< unsigned int >   el_nodes_per_dimension(mesh.GetDimension(),0);
       std::vector< std::tuple<std::string,unsigned int> >  elem_tuple(mesh.GetDimension());
       

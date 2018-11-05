@@ -3,7 +3,7 @@
 
 namespace femus {
 
-FEEdge2::FEEdge2() : FEElemBase() {  }
+FEEdge2::FEEdge2() : GeomElemBase() {  }
 	  
     FEEdge2::~FEEdge2() { }
 
