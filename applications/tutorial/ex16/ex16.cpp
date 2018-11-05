@@ -262,7 +262,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   vector< vector < adept::adouble > > aResD(dim);    // local redidual vector
   vector< adept::adouble > aResP; // local redidual vector
 
-  vector < vector < double > > coordX(dim);    // local coordinates
+  vector < vector < adept::adouble > > x(dim);    // local coordinates
+  vector < vector < double > > xHat(dim);    // local coordinates
   unsigned coordXType = 2; // get the finite element type for "x", it is always 2 (LAGRANGE QUADRATIC)
 
   for (unsigned  k = 0; k < dim; k++) {
@@ -272,21 +273,29 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     solDOld[k].reserve(maxSize);
     aResV[k].reserve(maxSize);
     aResD[k].reserve(maxSize);
-    coordX[k].reserve(maxSize);
+    xHat[k].reserve(maxSize);
+    x[k].reserve(maxSize);
   }
 
   solP.reserve(maxSize);
   aResP.reserve(maxSize);
 
+  
+  vector <double> phiHat;  // local test function for velocity
+  vector <double> phiHat_x; // local test function first order partial derivatives
 
   vector <double> phi;  // local test function for velocity
-  vector <double> phi_x; // local test function first order partial derivatives
+  vector <adept::adouble> phi_x; // local test function first order partial derivatives
 
+  phiHat.reserve(maxSize);
+  phiHat_x.reserve(maxSize * dim);
+  
   phi.reserve(maxSize);
   phi_x.reserve(maxSize * dim);
   
   double* phiP; // local test function for the pressure
-  double weight; // gauss point weight
+  adept::adouble weight; // gauss point weight
+  double weightHat; // gauss point weight
 
   vector< int > sysDof; // local to global pdeSys dofs
   sysDof.reserve((2 * dim + 1) * maxSize);
@@ -317,7 +326,8 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
       solVOld[k].resize(nDofs);
       solD[k].resize(nDofs);
       solDOld[k].resize(nDofs);
-      coordX[k].resize(nDofs);
+      xHat[k].resize(nDofs);
+      x[k].resize(nDofs);
     }
     solP.resize(nDofsP);
 
@@ -353,12 +363,22 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     for (unsigned i = 0; i < nDofs; i++) {
       unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // local to global mapping between coordinates node and coordinate dof
       for (unsigned k = 0; k < dim; k++) {
-        coordX[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
+        xHat[k][i] = (*msh->_topology->_Sol[k])(coordXDof);      // global extraction and local storage for the element coordinates
       }
     }
 
     // start a new recording of all the operations involving adept::adouble variables
     s.new_recording();
+    
+    
+     // local storage of coordinates
+    for (unsigned i = 0; i < nDofs; i++) {
+      unsigned coordXDof  = msh->GetSolutionDof(i, iel, coordXType);    // local to global mapping between coordinates node and coordinate dof
+      for (unsigned k = 0; k < dim; k++) {
+        x[k][i] = xHat[k][i] + 0.5 * (solDOld[k][i] + solD[k][i]) ;      // global extraction and local storage for the element coordinates
+      }
+    }
+    
     
 //     // *** Face Gauss point loop (boundary Integral) ***
 //     for ( unsigned jface = 0; jface < msh->GetElementFaceNumber ( iel ); jface++ ) {
@@ -405,25 +425,26 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
     // *** Gauss point loop ***
     for (unsigned ig = 0; ig < msh->_finiteElement[ielGeom][solType]->GetGaussPointNumber(); ig++) {
       // *** get gauss point weight, test function and test function partial derivatives ***
-      msh->_finiteElement[ielGeom][solType]->Jacobian(coordX, ig, weight, phi, phi_x);
+      msh->_finiteElement[ielGeom][solType]->Jacobian(x, ig, weight, phi, phi_x);
+      msh->_finiteElement[ielGeom][solType]->Jacobian(xHat, ig, weightHat, phiHat, phiHat_x);
+      
       phiP = msh->_finiteElement[ielGeom][solPType]->GetPhi(ig);
 
       vector < adept::adouble > solV_gss(dim, 0);
       vector < double > solVOld_gss(dim, 0);
       vector < vector < adept::adouble > > gradSolV_gss(dim);
-      vector < vector < double > > gradSolVOld_gss(dim);
+      vector < vector < adept::adouble > > gradSolVOld_gss(dim);
       
       vector < adept::adouble > solD_gss(dim, 0);
       vector < double > solDOld_gss(dim, 0);
-      vector < vector < adept::adouble > > gradSolD_gss(dim);
-      vector < vector < double > > gradSolDOld_gss(dim);
+      vector < vector < adept::adouble > > gradSolDHat_gss(dim);
+
       
 
       for (unsigned  k = 0; k < dim; k++) {
         gradSolV_gss[k].assign(dim,0.);
         gradSolVOld_gss[k].assign(dim,0.);
-        gradSolD_gss[k].assign(dim,0.);
-        gradSolDOld_gss[k].assign(dim,0.);
+        gradSolDHat_gss[k].assign(dim,0.);
       }
 
       for (unsigned i = 0; i < nDofs; i++) {
@@ -437,8 +458,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           for (unsigned  k = 0; k < dim; k++) {
             gradSolV_gss[k][j] += solV[k][i] * phi_x[i * dim + j];
             gradSolVOld_gss[k][j] += solVOld[k][i] * phi_x[i * dim + j];
-            gradSolD_gss[k][j] += solD[k][i] * phi_x[i * dim + j];
-            gradSolDOld_gss[k][j] += solDOld[k][i] * phi_x[i * dim + j];
+            gradSolDHat_gss[k][j] += solD[k][i] * phiHat_x[i * dim + j];
           }
         }
       }
@@ -458,14 +478,14 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
         for (unsigned  k = 0; k < dim; k++) { //momentum equation in k 
           for (unsigned j = 0; j < dim; j++) { // second index j in each equation
             NSV[k]   +=  nu * phi_x[i * dim + j] * 0.5 * ( (gradSolV_gss[k][j] + gradSolV_gss[j][k]) + (gradSolVOld_gss[k][j] + gradSolVOld_gss[j][k]) ); // laplace
-            NSV[k]   +=  phi[i] * (0.5 * (solV_gss[j] + solVOld_gss[j])  * 0.5 * ( gradSolV_gss[k][j] + gradSolVOld_gss[k][j]) ); // non-linear term
-            DISP[k]   +=  phi_x[i * dim + j] * (gradSolD_gss[k][j] + gradSolD_gss[j][k]); // laplace
+            NSV[k]   +=  phi[i] * ( 0.5 * (solV_gss[j] + solVOld_gss[j]) - (solD_gss[j] - solDOld_gss[j]) / dt ) * 0.5 * ( gradSolV_gss[k][j] + gradSolVOld_gss[k][j]); // non-linear term
+            DISP[k]   +=  phiHat_x[i * dim + j] * (gradSolDHat_gss[k][j] + gradSolDHat_gss[j][k]); // laplace
           }
           NSV[k] += -solP_gss * phi_x[i * dim + k]; // pressure gradient
         }
         for (unsigned  k = 0; k < dim; k++) {
           aResV[k][i] += ( - phi[i] * (solV_gss[k] + solVOld_gss[k]) / dt - NSV[k] ) * weight;
-          aResD[k][i] += ( - DISP[k] ) * weight;
+          aResD[k][i] += ( - DISP[k] ) * weightHat;
         }
       } // end phiV_i loop
 
