@@ -4,14 +4,14 @@
 
 
 
-#include "FEElemBase.hpp"
+#include "GeomElemBase.hpp"
 
 
 namespace femus {
 
 
 
-class  FEHex8 : public FEElemBase  {
+class  FEHex8 : public GeomElemBase  {
 
 public:
   
@@ -19,6 +19,11 @@ public:
      
     ~FEHex8();
   
+    unsigned int  get_dimension() const { return 3; };
+    unsigned int n_nodes()        const { return 8; };
+    std::string   get_name_med()  const { return "HE8"; };
+    std::string   get_name_xdmf() const { return "Hexahedron"; };
+    
       float get_embedding_matrix(const uint,const uint,const uint);
       static const float _embedding_matrix[8/*NCHILDS*/][8/*NNDS*/][8/*NNDS*/];   // (volume)
 

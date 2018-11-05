@@ -5,14 +5,14 @@
 #include <iostream>
 
 
-#include "FEElemBase.hpp"
+#include "GeomElemBase.hpp"
 
 
 namespace femus {
 
 
 
-class FETri1 : public FEElemBase  {
+class FETri1 : public GeomElemBase  {
 
 public:
   
@@ -20,6 +20,9 @@ public:
      
     ~FETri1();
   
+    unsigned int  get_dimension() const { return 2; };
+    unsigned int n_nodes()        const { return 1; };
+    
       float get_embedding_matrix(const uint,const uint,const uint);
       static const float _embedding_matrix[4][1][1];   // (volume)
 

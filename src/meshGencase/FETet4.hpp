@@ -4,14 +4,14 @@
 //Class for
 
 
-#include "FEElemBase.hpp"
+#include "GeomElemBase.hpp"
 
 
 namespace femus {
 
 
 
-class FETet4 : public FEElemBase  {
+class FETet4 : public GeomElemBase  {
 
 public:
   
@@ -19,7 +19,12 @@ public:
      
     ~FETet4();
   
-      float get_embedding_matrix(const uint,const uint,const uint);
+    unsigned int  get_dimension() const { return 3; };
+    unsigned int n_nodes()        const { return 4; };
+    std::string   get_name_med()  const { return "TE4"; };
+    std::string   get_name_xdmf() const { return "Tetrahedron"; };
+
+    float get_embedding_matrix(const uint,const uint,const uint);
 
       static const float _embedding_matrix[8][4][4];   // (volume)
 

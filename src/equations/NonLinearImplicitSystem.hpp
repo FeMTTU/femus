@@ -72,7 +72,9 @@ public:
     const unsigned GetNonlinearIt() const { return _nonliniteration; }
     
     /** Set the max number of non-linear iterations for the nonlinear system solve. */
-    void SetDebugFunction(DebugFunc debug_func_in) { _debug_function = debug_func_in; }
+    void SetDebugFunction(DebugFunc debug_func_in) { _debug_function = debug_func_in; 
+                                                     _debug_function_is_initialized = true; 
+    }
     
     /** Flag to print fields to file after each nonlinear iteration */
     void SetDebugNonlinear(const bool my_value) {
@@ -103,14 +105,6 @@ public:
     
 protected:
 
-    /** Current nonlinear iteration index */
-    unsigned _nonliniteration;
-    
-    /** Flag for printing fields at each nonlinear iteration */
-    bool _debug_nonlinear;
-    
-    /** Debug function typedef */
-    DebugFunc _debug_function;
     
     /** The final residual for the nonlinear system R(x) */
     double _final_nonlinear_residual;
@@ -123,7 +117,18 @@ protected:
 
     unsigned _maxNumberOfResidualUpdateIterations;
     
+    /** Flag for printing fields at each nonlinear iteration */
+    bool _debug_nonlinear;
+    
+    /** Debug function pointer */
+    DebugFunc _debug_function;
+    
+    /**  */
+    bool _debug_function_is_initialized;
 
+    /** Current nonlinear iteration index */
+    unsigned _nonliniteration;
+    
     /** Solves the system. */
     virtual void solve (const MgSmootherType& mgSmootherType = MULTIPLICATIVE);
 

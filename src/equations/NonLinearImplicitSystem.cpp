@@ -28,11 +28,13 @@ namespace femus {
       const std::string& name_in,
       const unsigned int number_in, const MgSmoother& smoother_type) :
     LinearImplicitSystem(ml_probl, name_in, number_in, smoother_type),
-    _debug_nonlinear(false),
-    _n_max_nonlinear_iterations(15),
     _final_nonlinear_residual(1.e20),
+    _n_max_nonlinear_iterations(15),
     _max_nonlinear_convergence_tolerance(1.e-6),
-    _maxNumberOfResidualUpdateIterations(1)
+    _maxNumberOfResidualUpdateIterations(1),
+    _debug_nonlinear(false),
+    _debug_function(NULL),
+    _debug_function_is_initialized(false)
   {
 
   }
@@ -54,7 +56,9 @@ namespace femus {
 
   bool NonLinearImplicitSystem::IsNonLinearConverged(const unsigned igridn, double &nonLinearEps) {
     bool conv = true;
-    double L2normEps, L2normSol, L2normEpsDividedSol;
+    double L2normEps;
+    double L2normSol;
+    double L2normEpsDividedSol;
     double L2normRes;
 
     nonLinearEps = 0.;
@@ -262,7 +266,7 @@ restart:
            this->GetMLProb()._ml_sol->GetWriter()->Write(out_path,output_file_name_stream.str().c_str(),variablesToBePrinted);
 	       
            //do desired additional computations at the end of each nonlinear iteration
-	      _debug_function(this->GetMLProb());
+	      if (_debug_function_is_initialized) _debug_function(this->GetMLProb());
           
         }
         

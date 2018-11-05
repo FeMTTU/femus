@@ -7,7 +7,7 @@ namespace femus {
 
 
 // =======================
-FETet10::FETet10() : FEElemBase() {  }
+FETet10::FETet10() : GeomElemBase() {  }
 	  
 // =======================
           FETet10::~FETet10() {    }

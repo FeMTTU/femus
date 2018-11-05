@@ -4,13 +4,13 @@
 
 //*********************** Sets Number of subdivisions in X and Y direction *****************************************
 
-#define NSUB_X  8
-#define NSUB_Y  8
+#define NSUB_X  2
+#define NSUB_Y  2
 
 
 //*********************** Sets the regularization parameters *******************************************************
-#define ALPHA_CTRL_BDRY 1.e-4
-#define BETA_CTRL_BDRY 1.e-4
+#define ALPHA_CTRL_BDRY 1.
+#define BETA_CTRL_BDRY 1.
 
 
 #define ALPHA_CTRL_VOL 1.e-3
@@ -18,9 +18,9 @@
 
 
 //*********************** Control box constraints *******************************************************
-#define  INEQ_FLAG 1
+#define  INEQ_FLAG 0
 #define  CTRL_BOX_LOWER   -1000
-#define  CTRL_BOX_UPPER   1
+#define  CTRL_BOX_UPPER   1000
 #define  C_COMPL 1.
 
 

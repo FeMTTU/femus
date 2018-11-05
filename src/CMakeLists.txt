@@ -59,7 +59,7 @@ meshGencase/Domain.cpp
 meshGencase/ElemSto.cpp
 meshGencase/MultiLevelMeshTwo.cpp
 meshGencase/GenCase.cpp
-meshGencase/FEElemBase.cpp
+meshGencase/GeomElemBase.cpp
 meshGencase/FEHex1.cpp
 meshGencase/FEHex27.cpp
 meshGencase/FEHex8.cpp
@@ -80,7 +80,7 @@ mesh/Mesh.cpp
 mesh/MultiLevelMesh.cpp
 mesh/MeshGeneration.cpp
 mesh/GambitIO.cpp
-mesh/SalomeIO.cpp
+mesh/MED_IO.cpp
 mesh/MeshRefinement.cpp
 mesh/MeshMetisPartitioning.cpp
 mesh/MeshPartitioning.cpp

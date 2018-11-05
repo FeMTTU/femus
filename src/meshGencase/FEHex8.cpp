@@ -7,13 +7,12 @@ namespace femus {
 
 
 // =======================
-FEHex8::FEHex8() : FEElemBase() {  }
+FEHex8::FEHex8() : GeomElemBase() {  }
 	    
 	  
 // =======================
           FEHex8::~FEHex8() {    }
 
-          
 // =======================
 //this function is the same for all FE, but we had to do it identical for each one because of the fixed allocation
       float FEHex8::get_embedding_matrix(const uint a ,const uint b,const uint c )  {  return _embedding_matrix[a][b][c];  }

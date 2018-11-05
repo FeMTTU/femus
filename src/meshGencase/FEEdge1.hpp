@@ -5,14 +5,14 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "FEElemBase.hpp"
+#include "GeomElemBase.hpp"
 
 
 namespace femus {
 
 
 
-class FEEdge1 : public FEElemBase  {
+class FEEdge1 : public GeomElemBase  {
 
 public:
   
@@ -20,6 +20,9 @@ public:
      
     ~FEEdge1();
   
+    unsigned int  get_dimension() const { return 1; };
+    unsigned int n_nodes()        const { return 1; };
+    
      float get_embedding_matrix(const uint,const uint,const uint){std::cout << "Edge1: embedding matrix not implemented\n"; abort();};
 //       static const float _embedding_matrix[][][];   // (volume)
 

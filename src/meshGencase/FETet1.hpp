@@ -4,14 +4,14 @@
 #include <cstdlib>
 #include <iostream>
 
-#include"FEElemBase.hpp"
+#include"GeomElemBase.hpp"
 
 
 namespace femus {
 
 
 
-class FETet1 : public FEElemBase  {
+class FETet1 : public GeomElemBase  {
 
 public:
   
@@ -19,8 +19,11 @@ public:
      
     ~FETet1();
   
+    unsigned int  get_dimension() const { return 3; };
+    unsigned int n_nodes()        const { return 1; };
+    
       float get_embedding_matrix(const uint,const uint,const uint);
-
+    
       static const float _embedding_matrix[8][1][1];   // (volume)
 
                  double get_prol(const uint /*j*/) {/*return _Prol[j];*/std::cout << "FETet1: no prolongation needed\n"; abort();};
