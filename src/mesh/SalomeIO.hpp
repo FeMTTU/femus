@@ -123,8 +123,8 @@ SalomeIO::SalomeIO (Mesh& mesh) :
 // @todo Update Xdmf to Xdmf3
 // @todo not running in parallel
 // @todo I know I can make only groups of edges/faces/volumes, but can I do hybrid faces, say quad and tri together?
-
-
+// @todo Generate MED format from other software such as Gmsh
+// @todo FEHex20, FEQuad8, FETri7 missing
 
 } // namespace femus
 

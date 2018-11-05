@@ -19,6 +19,11 @@ public:
      
     ~FETri3();
   
+    unsigned int  get_dimension() const { return 2; };
+    unsigned int n_nodes()        const { return 3; };
+    std::string   get_name_med()  const { return "TR3"; };
+    std::string   get_name_xdmf() const { return "Triangle"; };
+    
       float get_embedding_matrix(const uint,const uint,const uint);
       static const float _embedding_matrix[4][3][3];   // (volume)
 

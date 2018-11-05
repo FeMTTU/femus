@@ -20,7 +20,12 @@ public:
     ~FEQuad4();
   
     
-      float get_embedding_matrix(const uint,const uint,const uint);
+    unsigned int  get_dimension() const { return 2; };
+    unsigned int n_nodes()        const { return 4; };
+    std::string   get_name_med()  const { return "QU4"; };
+    std::string   get_name_xdmf() const { return "Quadrilateral"; };
+
+    float get_embedding_matrix(const uint,const uint,const uint);
       static const float _embedding_matrix[4][4][4];   // (volume)
 
                double get_prol(const uint j) {return _Prol[j];};

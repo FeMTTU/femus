@@ -21,7 +21,12 @@ public:
      
     ~FEHex27();
   
-      float get_embedding_matrix(const uint,const uint,const uint);
+    unsigned int  get_dimension() const { return 3; };
+    unsigned int n_nodes()        const { return 27; };
+    std::string   get_name_med()  const { return "H27"; };
+    std::string   get_name_xdmf() const { return "Hexahedron_27"; };
+
+    float get_embedding_matrix(const uint,const uint,const uint);
 
       static const float _embedding_matrix[8/*NCHILDS*/][27/*NNDS*/][27/*NNDS*/];   // (volume)
 

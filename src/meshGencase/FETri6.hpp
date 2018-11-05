@@ -20,6 +20,11 @@ public:
      
     ~FETri6();
   
+    unsigned int  get_dimension() const { return 2; };
+    unsigned int n_nodes()        const { return 6; };
+    std::string   get_name_med()  const { return "TR6"; };
+    std::string   get_name_xdmf() const { return "Triangle_6"; };
+    
       float get_embedding_matrix(const uint,const uint,const uint);
 
       static const float _embedding_matrix[4][6][6];   // (volume)
