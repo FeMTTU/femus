@@ -16,7 +16,7 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
-#include "../include/mpmFem.hpp"
+#include "../include/mpmFem2.hpp"
 
 using namespace femus;
 
@@ -62,19 +62,19 @@ int main(int argc, char** args) {
   std::map < std::pair < std::string, unsigned > , double > YC; 
   
   YC[std::make_pair (soft, 2u)] = 0.15;
-  YC[std::make_pair (soft, 3u)] = 0.1;
-  YC[std::make_pair (soft, 4u)] = 0.05;
-  YC[std::make_pair (soft, 5u)] = 0.025;  
+  YC[std::make_pair (soft, 3u)] = 0.15/2.;
+  YC[std::make_pair (soft, 4u)] = 0.15/4.;
+  YC[std::make_pair (soft, 5u)] = 0.15/8.;  
   
-  YC[std::make_pair (medium, 2u)] = 0.15;
-  YC[std::make_pair (medium, 3u)] = 0.1;
-  YC[std::make_pair (medium, 4u)] = 0.05;
-  YC[std::make_pair (medium, 5u)] = 0.025;  
+  YC[std::make_pair (medium, 2u)] = 0.2;
+  YC[std::make_pair (medium, 3u)] = 0.2/2.;
+  YC[std::make_pair (medium, 4u)] = 0.2/4.;
+  YC[std::make_pair (medium, 5u)] = 0.2/8.;  
   
-  YC[std::make_pair (stiff, 2u)] = 0.15;
-  YC[std::make_pair (stiff, 3u)] = 0.1;
-  YC[std::make_pair (stiff, 4u)] = 0.05;
-  YC[std::make_pair (stiff, 5u)] = 0.025;  
+  YC[std::make_pair (stiff, 2u)] = 0.25;
+  YC[std::make_pair (stiff, 3u)] = 0.25/2.;
+  YC[std::make_pair (stiff, 4u)] = 0.25/4.;
+  YC[std::make_pair (stiff, 5u)] = 0.25/8.;  
   
   std::map < std::pair < std::string, unsigned > , double > YM1; 
   
@@ -83,63 +83,77 @@ int main(int argc, char** args) {
   YM1[std::make_pair (soft, 4u)] = 4.2 * 1.e5;
   YM1[std::make_pair (soft, 5u)] = 4.2 * 1.e5;
   
-  YM1[std::make_pair (medium, 2u)] = 4.2 * 1.e5;
-  YM1[std::make_pair (medium, 3u)] = 4.2 * 1.e5;
-  YM1[std::make_pair (medium, 4u)] = 4.2 * 1.e5;
-  YM1[std::make_pair (medium, 5u)] = 4.2 * 1.e5;
+  YM1[std::make_pair (medium, 2u)] = 4.2 * 1.e6;
+  YM1[std::make_pair (medium, 3u)] = 4.2 * 1.e6;
+  YM1[std::make_pair (medium, 4u)] = 4.2 * 1.e6;
+  YM1[std::make_pair (medium, 5u)] = 4.2 * 1.e6;
   
-  YM1[std::make_pair (stiff, 2u)] = 4.2 * 1.e6;
-  YM1[std::make_pair (stiff, 3u)] = 4.2 * 1.e6;
-  YM1[std::make_pair (stiff, 4u)] = 4.2 * 1.e6;
-  YM1[std::make_pair (stiff, 5u)] = 4.2 * 1.e6;  
+  YM1[std::make_pair (stiff, 2u)] = 4.2 * 1.e7;
+  YM1[std::make_pair (stiff, 3u)] = 4.2 * 1.e7;
+  YM1[std::make_pair (stiff, 4u)] = 4.2 * 1.e7;
+  YM1[std::make_pair (stiff, 5u)] = 4.2 * 1.e7;  
   
   
   std::map < std::pair < std::string, unsigned > , double > YM2; 
   
-  YM2[std::make_pair (soft, 2u)] = 4.2 * 1.e5;
-  YM2[std::make_pair (soft, 3u)] = 4.2 * 1.e5;
-  YM2[std::make_pair (soft, 4u)] = 4.2 * 1.e5;
-  YM2[std::make_pair (soft, 5u)] = 4.2 * 1.e5;
+  YM2[std::make_pair (soft, 2u)] = 4.2 * 1.e6;
+  YM2[std::make_pair (soft, 3u)] = 4.2 * 1.e6;
+  YM2[std::make_pair (soft, 4u)] = 4.2 * 1.e6;
+  YM2[std::make_pair (soft, 5u)] = 4.2 * 1.e6;
   
-  YM2[std::make_pair (medium, 2u)] = 4.2 * 1.e6;
-  YM2[std::make_pair (medium, 3u)] = 4.2 * 1.e6;
-  YM2[std::make_pair (medium, 4u)] = 4.2 * 1.e6;
-  YM2[std::make_pair (medium, 5u)] = 4.2 * 1.e6;
+  YM2[std::make_pair (medium, 2u)] = 4.2 * 1.e7;
+  YM2[std::make_pair (medium, 3u)] = 4.2 * 1.e7;
+  YM2[std::make_pair (medium, 4u)] = 4.2 * 1.e7;
+  YM2[std::make_pair (medium, 5u)] = 4.2 * 1.e7;
   
-  YM2[std::make_pair (stiff, 2u)] = 4.2 * 1.e7;
-  YM2[std::make_pair (stiff, 3u)] = 4.2 * 1.e7;
-  YM2[std::make_pair (stiff, 4u)] = 4.2 * 1.e7;
-  YM2[std::make_pair (stiff, 5u)] = 4.2 * 1.e7;   
+  YM2[std::make_pair (stiff, 2u)] = 4.2 * 1.e8;
+  YM2[std::make_pair (stiff, 3u)] = 4.2 * 1.e8;
+  YM2[std::make_pair (stiff, 4u)] = 4.2 * 1.e8;
+  YM2[std::make_pair (stiff, 5u)] = 4.2 * 1.e8;   
   
-  std::map < std::pair < std::string, unsigned > , double > NF; 
+  std::map < std::pair < std::string, unsigned > , double > SF1; 
   
-  NF[std::make_pair (soft, 2u)] = 0.;
-  NF[std::make_pair (soft, 3u)] = 0.;
-  NF[std::make_pair (soft, 4u)] = 0.;
-  NF[std::make_pair (soft, 5u)] = 0.3;
+  std::map < std::pair < std::string, unsigned > , double > SF2; 
   
-  NF[std::make_pair (medium, 2u)] = 0.;
-  NF[std::make_pair (medium, 3u)] = 0.;
-  NF[std::make_pair (medium, 4u)] = 0.;
-  NF[std::make_pair (medium, 5u)] = 0.3;
-
-  NF[std::make_pair (stiff, 2u)] = 0.;
-  NF[std::make_pair (stiff, 3u)] = 0.;
-  NF[std::make_pair (stiff, 4u)] = 0.;
-  NF[std::make_pair (stiff, 5u)] = 0.3;
+  SF1[std::make_pair (soft, 2u)] = 1.e-2;
+  SF1[std::make_pair (soft, 3u)] = 1.e-2;
+  SF1[std::make_pair (soft, 4u)] = 1.e-2;
+  SF1[std::make_pair (soft, 5u)] = 1.e-2;
+  
+  SF2[std::make_pair (soft, 2u)] = 1.e-6;
+  SF2[std::make_pair (soft, 3u)] = 1.e-6;
+  SF2[std::make_pair (soft, 4u)] = 1.e-6;
+  SF2[std::make_pair (soft, 5u)] = 1.e-6;
+  
+  SF1[std::make_pair (medium, 2u)] = 1.e-3;
+  SF1[std::make_pair (medium, 3u)] = 1.e-3;
+  SF1[std::make_pair (medium, 4u)] = 1.e-3;
+  SF1[std::make_pair (medium, 5u)] = 1.e-3;
+  
+  SF2[std::make_pair (medium, 2u)] = 1.e-7;
+  SF2[std::make_pair (medium, 3u)] = 1.e-7;
+  SF2[std::make_pair (medium, 4u)] = 1.e-7;
+  SF2[std::make_pair (medium, 5u)] = 1.e-7;
+  
+  SF1[std::make_pair (stiff, 2u)] = 1.e-4;
+  SF1[std::make_pair (stiff, 3u)] = 1.e-4;
+  SF1[std::make_pair (stiff, 4u)] = 1.e-4;
+  SF1[std::make_pair (stiff, 5u)] = 1.e-4;  
+  
+  SF2[std::make_pair (stiff, 2u)] = 1.e-8;
+  SF2[std::make_pair (stiff, 3u)] = 1.e-8;
+  SF2[std::make_pair (stiff, 4u)] = 1.e-8;
+  SF2[std::make_pair (stiff, 5u)] = 1.e-8;  
   
   std::pair <std::string, unsigned > simulation;
   
-  
-  
-  
-  unsigned timestep0 = 50;
+  unsigned timestep0 = 0;
   unsigned n_timesteps = 250 + timestep0;
     
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
   
   unsigned mat0 = 0, matN = 3;
-  unsigned nl0 = 5, nlN = 6;  
+  unsigned nl0 = 2, nlN = 6;  
   
   for(unsigned mat = mat0; mat< matN; mat++){
     for(unsigned nl = nl0; nl < nlN; nl++) {
@@ -177,7 +191,7 @@ int main(int argc, char** args) {
       solidMPM = Solid(par, E_MPM, nu_MPM, rho_MPM, "Neo-Hookean");
       solidFEM = Solid(par, E_FEM, nu_FEM, rho_FEM, "Neo-Hookean");
   
-      mlMsh.ReadCoarseMesh("../input/inclined_plane_coupled_2D.neu", "fifth", scalingFactor);
+      mlMsh.ReadCoarseMesh("../input/inclined_plane_coupled_2D_bl.neu", "fifth", scalingFactor);
       mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
   
       mlMsh.EraseCoarseLevels(numberOfUniformLevels - 1);
@@ -202,6 +216,8 @@ int main(int argc, char** args) {
       mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
       mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
   
+      mlSol.AddSolution("NF", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+      
       mlSol.Initialize("All");
   
       mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -332,10 +348,7 @@ int main(int argc, char** args) {
       linea = new Line(x, mass, markerType, mlSol.GetLevel(numberOfUniformLevels - 1), solType);
       
       linea->GetParticlesToGridMaterial();
-  
-     
-     
-  
+    
       //END init particles 
       
       std::ostringstream outputFolder;
@@ -377,15 +390,17 @@ int main(int argc, char** args) {
         gravity[0] = 9.81 * sin(theta);
         gravity[1] = -9.81 * cos(theta);
         
-        NeumannFactor = NF[simulation];
-            
+        scalingFactor1 = SF1[simulation];
+        scalingFactor2 = SF2[simulation];
+                   
         if ( time_step <= timestep0 ){
            gravity[0] = 0.;  gravity[0] = 0.;
-           NeumannFactor = 0.;
         }
         
         system.CopySolutionToOldSolution();
     
+        SetNeumannFactor(&mlSol);
+        
         system.MGsolve();
     
         // ******* Print solution *******
