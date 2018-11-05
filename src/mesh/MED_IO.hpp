@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: SalomeIO
+ Module: MED_IO
  Authors: Sureka Pathmanathan, Giorgio Bornia
  
  Copyright (c) FEMTTU
@@ -13,8 +13,8 @@
 
 =========================================================================*/
 
-#ifndef __femus_mesh_SalomeIO_hpp__
-#define __femus_mesh_SalomeIO_hpp__
+#ifndef __femus_mesh_MED_IO_hpp__
+#define __femus_mesh_MED_IO_hpp__
 
 
 // Local includes
@@ -32,12 +32,11 @@ namespace femus
 class Mesh;
 
 /**
- * This class implements writing meshes in the Gmsh format.
+ * This class implements reading meshes in the MED format.
  */
 
 // ------------------------------------------------------------
-// GMVIO class definition
-class SalomeIO : public MeshInput<Mesh>
+class MED_IO : public MeshInput<Mesh>
 {
  public:
 
@@ -46,7 +45,7 @@ class SalomeIO : public MeshInput<Mesh>
    * will fill up with elements via the read() command.
    */
   explicit
-  SalomeIO (Mesh& mesh);
+  MED_IO (Mesh& mesh);
 
   /**
    * Reads in a mesh in the neutral gambit *.neu format
@@ -108,7 +107,7 @@ class SalomeIO : public MeshInput<Mesh>
 };
 
 inline
-SalomeIO::SalomeIO (Mesh& mesh) :
+MED_IO::MED_IO (Mesh& mesh) :
    MeshInput<Mesh>  (mesh)
 {
 }

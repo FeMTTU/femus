@@ -1,7 +1,7 @@
 /*=========================================================================
 
  Program: FEMUS
- Module: SalomeIO
+ Module: MED_IO
  Authors: Sureka Pathmanathan, Giorgio Bornia
 
  Copyright (c) FEMTTU
@@ -14,7 +14,7 @@
 =========================================================================*/
 
 //local include
-#include "SalomeIO.hpp"
+#include "MED_IO.hpp"
 #include "Mesh.hpp"
 
 //C++ include
@@ -26,18 +26,18 @@
 namespace femus
 {
 
-  const std::string SalomeIO::mesh_ensemble  = "ENS_MAA";
-  const std::string SalomeIO::aux_zeroone    = "-0000000000000000001-0000000000000000001";
-  const std::string SalomeIO::elem_list      = "MAI";
-  const std::string SalomeIO::group_fam      = "FAM";
-  const std::string SalomeIO::connectivity   = "NOD";
-  const std::string SalomeIO::dofobj_indices = "NUM";
-  const std::string SalomeIO::node_list      = "NOE";
-  const std::string SalomeIO::coord_list     = "COO";
-  const std::string SalomeIO::group_ensemble = "FAS";
-  const std::string SalomeIO::group_elements = "ELEME";
-  const std::string SalomeIO::group_nodes    = "NOEUD";
-  const uint SalomeIO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
+  const std::string MED_IO::mesh_ensemble  = "ENS_MAA";
+  const std::string MED_IO::aux_zeroone    = "-0000000000000000001-0000000000000000001";
+  const std::string MED_IO::elem_list      = "MAI";
+  const std::string MED_IO::group_fam      = "FAM";
+  const std::string MED_IO::connectivity   = "NOD";
+  const std::string MED_IO::dofobj_indices = "NUM";
+  const std::string MED_IO::node_list      = "NOE";
+  const std::string MED_IO::coord_list     = "COO";
+  const std::string MED_IO::group_ensemble = "FAS";
+  const std::string MED_IO::group_elements = "ELEME";
+  const std::string MED_IO::group_nodes    = "NOEUD";
+  const uint MED_IO::max_length = 100;  ///@todo this length of the menu string is conservative enough...
 
 
   //How to determine a general connectivity:
@@ -81,7 +81,7 @@ namespace femus
 //   X-------X-------X              -------> xi
 
 
-  const unsigned SalomeIO::SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES] = {
+  const unsigned MED_IO::SalomeToFemusVertexIndex[N_GEOM_ELS][MAX_EL_N_NODES] = {
 
     {4, 7, 3, 0, 5, 6, 2, 1, 15, 19, 11, 16, 13, 18, 9, 17, 12, 14, 10, 8, 23, 25, 22, 24, 20, 21, 26}, //HEX27
     {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, //TET10
@@ -98,7 +98,7 @@ namespace femus
   };
 
 
-  const unsigned SalomeIO::SalomeToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES] = {
+  const unsigned MED_IO::SalomeToFemusFaceIndex[N_GEOM_ELS][MAX_EL_N_FACES] = {
     {0, 4, 2, 5, 3, 1},
     {0, 1, 2, 3},
     {2, 1, 0, 4, 3},
@@ -112,7 +112,7 @@ namespace femus
 
   /// @todo extend to Wegdes (aka Prisms)
   /// @todo why pass coords other than get it through the Mesh class pointer?
-  void SalomeIO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag) {
+  void MED_IO::read(const std::string& name, vector < vector < double> >& coords, const double Lref, std::vector<bool>& type_elem_flag) {
 
     Mesh& mesh = GetMesh();
     mesh.SetLevel(0);
@@ -163,7 +163,7 @@ namespace femus
 
   
   
-    void SalomeIO::set_boundary_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags)  {
+    void MED_IO::set_boundary_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags)  {
 
        Mesh& mesh = GetMesh();
        
@@ -181,7 +181,7 @@ namespace femus
 //       unsigned iel =,   //volume element to which the face belongs
 //       iel--;
 //       unsigned iface; //index of the face in that volume element
-//       iface = SalomeIO::SalomeToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
+//       iface = MED_IO::SalomeToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
 //       mesh.el->SetFaceElementIndex(iel,iface,value);  //value is (-1) for element faces that are not boundary faces
     }
   }
@@ -192,7 +192,7 @@ namespace femus
     }
 
 /// @todo do we need these numbers for us?
-   void SalomeIO::get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const  {
+   void MED_IO::get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const  {
          //NUM ***************************
        hsize_t dims_num[2];
        std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
@@ -200,13 +200,13 @@ namespace femus
         hid_t dtset_num = H5Dopen(file_id, node_name_dir_i.c_str(), H5P_DEFAULT);
         hid_t filespace_num = H5Dget_space(dtset_num);
         hid_t status_bdry  = H5Sget_simple_extent_dims(filespace_num, dims_num, NULL);
-        if(status_bdry == 0) {    std::cerr << "SalomeIO::read dims not found";  abort();  }
+        if(status_bdry == 0) {    std::cerr << "MED_IO::read dims not found";  abort();  }
         H5Dclose(dtset_num); 
         
    }
   
   //  we loop over all elements and see which ones are of that group
-   void SalomeIO::set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags)  {
+   void MED_IO::set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int,int> > & group_flags)  {
        
        Mesh& mesh = GetMesh();
        
@@ -217,7 +217,7 @@ namespace femus
         hid_t dtset_fam = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
         hid_t filespace_fam = H5Dget_space(dtset_fam);
         hid_t status_fam  = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
-        if(status_fam == 0) {     std::cerr << "SalomeIO::read dims not found";  abort();  }
+        if(status_fam == 0) {     std::cerr << "MED_IO::read dims not found";  abort();  }
         
         const unsigned n_elements = dims_fam[0];
         int* fam_map = new  int[n_elements];
@@ -257,7 +257,7 @@ namespace femus
 
    // Connectivities in MED files are stored on a per-node basis: first all 1st nodes, then all 2nd nodes, and so on.
    // Instead, in Gambit they are stored on a per-element basis
-   void SalomeIO::set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::tuple<std::string,unsigned int>  & el_fe_type_per_dimension, std::vector<bool>& type_elem_flag) {
+   void MED_IO::set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::tuple<std::string,unsigned int>  & el_fe_type_per_dimension, std::vector<bool>& type_elem_flag) {
 
        Mesh& mesh = GetMesh();
        
@@ -270,7 +270,7 @@ namespace femus
         hid_t dtset_conn = H5Dopen(file_id, conn_name_dir_i.c_str(), H5P_DEFAULT);
         hid_t filespace = H5Dget_space(dtset_conn);
         hid_t status_els_i  = H5Sget_simple_extent_dims(filespace, dims_i, NULL);
-        if(status_els_i == 0) { std::cerr << "SalomeIO::read dims not found";   abort();   }
+        if(status_els_i == 0) { std::cerr << "MED_IO::read dims not found";   abort();   }
         
             
       const int dim_conn = dims_i[0];
@@ -285,7 +285,7 @@ namespace femus
       // READ CONNECTIVITY MAP
       int* conn_map = new  int[dim_conn];
       hid_t status_conn = H5Dread(dtset_conn, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, conn_map);
-      if(status_conn != 0) {     std::cout << "SalomeIO::read: connectivity not found";   abort();   }
+      if(status_conn != 0) {     std::cout << "MED_IO::read: connectivity not found";   abort();   }
       
       
             for(unsigned iel = 0; iel < n_elems_per_dimension; iel++) {
@@ -343,7 +343,7 @@ namespace femus
       
       
       
-   void SalomeIO::set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> > & coords, const double Lref) {
+   void MED_IO::set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> > & coords, const double Lref) {
        
        Mesh& mesh = GetMesh();
        hsize_t dims[2];
@@ -355,7 +355,7 @@ namespace femus
       // SET NUMBER OF NODES
       hid_t filespace = H5Dget_space(dtset);    /* Get filespace handle first. */
       hid_t status_dims  = H5Sget_simple_extent_dims(filespace, dims, NULL);
-      if(status_dims == 0) std::cerr << "SalomeIO::read dims not found";
+      if(status_dims == 0) std::cerr << "MED_IO::read dims not found";
       // reading xyz_med
       unsigned int n_nodes = dims[0] / 3; //mesh.GetDimension();
       double*   xyz_med = new double[dims[0]];
@@ -404,7 +404,7 @@ namespace femus
   
   //salome family; our name; our property; group size 
   /// @todo check the underscores according to our naming standard
-  const std::tuple<int,int,int,int>  SalomeIO::get_group_flags_per_mesh(const std::string & group_name) const {
+  const std::tuple<int,int,int,int>  MED_IO::get_group_flags_per_mesh(const std::string & group_name) const {
   
      std::tuple<int,int,int,int>  group_flags;
 
@@ -421,7 +421,7 @@ namespace femus
 
 
      // ************** Groups of each Mesh *********************************
- const std::vector< std::tuple<int,int,int,int> > SalomeIO::get_group_vector_flags_per_mesh(const hid_t&  file_id, const std::string & mesh_menu) const {
+ const std::vector< std::tuple<int,int,int,int> > MED_IO::get_group_vector_flags_per_mesh(const hid_t&  file_id, const std::string & mesh_menu) const {
      
      std::string group_list = group_ensemble +  "/" + mesh_menu + "/" + group_elements;
      hid_t  gid_groups      = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
@@ -453,7 +453,7 @@ namespace femus
     
     
   // compute number of Mesh fields in Salome file ==============
-  const std::vector<std::string> SalomeIO::get_mesh_names(const hid_t&  file_id) const {
+  const std::vector<std::string> MED_IO::get_mesh_names(const hid_t&  file_id) const {
       
     hid_t  gid = H5Gopen(file_id, mesh_ensemble.c_str(), H5P_DEFAULT);
     
@@ -495,7 +495,7 @@ namespace femus
   // finds the first two occurrences of underscores,
   // and gets the string in between them
   // If it finds only one underscore and it gets to end-of-file, I want to get that string there
-  std::pair<int,int>  SalomeIO::isolate_number_in_string(const std::string &  string_in, const int begin_pos_to_investigate) const {
+  std::pair<int,int>  MED_IO::isolate_number_in_string(const std::string &  string_in, const int begin_pos_to_investigate) const {
       
     try {
         
@@ -553,7 +553,7 @@ namespace femus
   
 
 
- const std::vector<std::string> SalomeIO::get_elem_FE_type_per_dimension(
+ const std::vector<std::string> MED_IO::get_elem_FE_type_per_dimension(
     const hid_t & file_id,
     const std::string  my_mesh_name_dir
   ) 
@@ -644,7 +644,7 @@ namespace femus
 // figures out the Mesh dimension by looping over element types
 /// @todo this determination of the dimension from the mesh file would not work with a 2D mesh embedded in 3D
 
-  std::vector< std::tuple<std::string,unsigned int> >  SalomeIO::set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & mesh_menus)  {
+  std::vector< std::tuple<std::string,unsigned int> >  MED_IO::set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & mesh_menus)  {
       
       
       std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menus + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
@@ -652,7 +652,7 @@ namespace femus
       hsize_t     n_fem_type;
       hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
       hid_t status = H5Gget_num_objs(gid, &n_fem_type);
-      if(status != 0) {   std::cout << "SalomeIO::read_fem_type:   H5Gget_num_objs not found";  abort();   }
+      if(status != 0) {   std::cout << "MED_IO::read_fem_type:   H5Gget_num_objs not found";  abort();   }
 
     Mesh& mesh = GetMesh();
     uint mydim = 1;  //this is the initial value, then it will be updated below
@@ -704,7 +704,7 @@ namespace femus
   
   
 
-  unsigned  SalomeIO::get_elem_number_of_nodes(const  std::string el_type) const {
+  unsigned  MED_IO::get_elem_number_of_nodes(const  std::string el_type) const {
 
     unsigned Node_el;
 
@@ -725,7 +725,7 @@ namespace femus
     else if(el_type.compare("SE3") == 0) Node_el = 3;
     else if(el_type.compare("SE2") == 0) Node_el = 2;
     else {
-      std::cout << "SalomeIO::read: element not supported";
+      std::cout << "MED_IO::read: element not supported";
       abort();
     }
 
