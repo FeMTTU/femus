@@ -95,10 +95,10 @@ int main(int argc, char** args)
 //   YC[std::make_pair (stiff, 4u)] = 0.09;
 //   YC[std::make_pair (stiff, 5u)] = 0.05;
 
-  YC[std::make_pair (soft, 2u)] = 0.17;  
-  YC[std::make_pair (soft, 3u)] = 0.17 / 2. ;
-  YC[std::make_pair (soft, 4u)] = 0.17 / 4.;
-  YC[std::make_pair (soft, 5u)] = 0.17 / 8.;
+  YC[std::make_pair (soft, 2u)] = 0.2;  
+  YC[std::make_pair (soft, 3u)] = 0.2 / 2. ;
+  YC[std::make_pair (soft, 4u)] = 0.2 / 4.;
+  YC[std::make_pair (soft, 5u)] = 0.2 / 8.;
 
   YC[std::make_pair (stiff, 2u)] = 0.34;  
   YC[std::make_pair (stiff, 3u)] = 0.34 / 2.;

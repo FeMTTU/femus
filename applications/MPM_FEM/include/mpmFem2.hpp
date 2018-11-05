@@ -400,8 +400,12 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           
           for(unsigned iface = 0; iface < 4; iface++ ){
             int faceIndex = myel->GetBoundaryIndex(iel, iface);
-            if( faceIndex == 1 ){
-              
+            bool solidMark = false;
+            if( ml_sol->GetIfFSI() ){
+              unsigned idof = mymsh->GetSolutionDof(ii[iface][2][0], iel, solType);
+              solidMark = mymsh->GetSolidMark(idof);
+            }
+            if( faceIndex == 1 || solidMark){
               for(unsigned i = 0;i < 3; i++){
                 for(int k = 0; k < dim; k++) {
                   unsigned i0 = ii[iface][i][0];
@@ -646,8 +650,7 @@ void SetNeumannFactor(MultiLevelSolution* ml_sol) {
         
         ielt = msh->GetElementType(iel);
         nDofsV = msh->GetElementDofNumber(iel, solType);
-        
-                
+                        
         if( ml_sol->GetIfFSI() ){
           solidMark.resize(nDofsV);
           velMeshOld.resize(nDofsV);
@@ -683,8 +686,6 @@ void SetNeumannFactor(MultiLevelSolution* ml_sol) {
         if( ( faceIndex == 1  &&  SolVpOld[1] > 0 ) 
            || ( solidMark[im] && (SolVpOld[1] - velMeshOld[im] > 0 ) ) ){
           massNF += massParticle;
-          
-          //std::cout << iel << " " << iMarker << " " << SolVpOld[1] <<" "<< massElement << " " << massNF<< std::endl;
           break;
         }
       }
@@ -730,21 +731,17 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
   unsigned iproc  = mymsh->processor_id();
   
   // local objects
-  vector< vector < double > > SolDd(dim);
-  vector< vector < double > > SolDdOld(dim);
-  vector< vector < double > > GradSolDpHat(dim);
+  vector< vector < double > > solD(dim);
+  vector< vector < double > > solDOld(dim);
   
-  for(int i = 0; i < dim; i++) {
-    GradSolDpHat[i].resize(dim);
-  }
   
-  vector < double > phi_hat;
-  vector < double > gradphi_hat;
-  vector < double > nablaphi_hat;
+  vector < double > phiHat;
+  vector < double > gradphiHat;
+  vector < double > nablaphiHat;
   
-  vector <vector < double> > vx_hat(dim); //vx is coordX in assembly of ex30
+  vector <vector < double> > vxHat(dim); //vx is coordX in assembly of ex30
   
-  double weight;
+  double weightHat;
   
   //variable-name handling
   const char varname[9][3] = {"DX", "DY", "DZ", "VX", "VY", "VW", "AX", "AY", "AW"};
@@ -765,50 +762,45 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
   
   //line instances
   std::vector<unsigned> markerOffset = linea.GetMarkerOffset();
-  unsigned markerOffset1 = markerOffset[iproc];
-  unsigned markerOffset2 = markerOffset[iproc + 1];
   std::vector<Marker*> particles = linea.GetParticles();
-  //std::map<unsigned, std::vector < std::vector < std::vector < std::vector < double > > > > > aX;
-  
-  //initialization of iel
+    
+  std::vector < std::vector < double > > solD1(dim);
   unsigned ielOld = UINT_MAX;
-  //declaration of element instances
-  std::vector < std::vector < double > > SolDd1(dim);
+  
   //BEGIN loop on particles
-  for(unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
+  for(unsigned iMarker = markerOffset[iproc]; iMarker < markerOffset[iproc + 1]; iMarker++) {
     
     //element of particle iMarker
     unsigned iel = particles[iMarker]->GetMarkerElement();
-    
-    
+        
     if(iel != UINT_MAX) {
       
       short unsigned ielt;
-      unsigned nve;
+      unsigned nDofs;
       
       //update element related quantities only if we are in a different element
       if(iel != ielOld) {
         
         ielt = mymsh->GetElementType(iel);
-        nve = mymsh->GetElementDofNumber(iel, solType);
+        nDofs = mymsh->GetElementDofNumber(iel, solType);
         
         for(int i = 0; i < dim; i++) {
-          SolDd[i].resize(nve);
-          SolDdOld[i].resize(nve);
-          vx_hat[i].resize(nve);
+          solD[i].resize(nDofs);
+          solDOld[i].resize(nDofs);
+          vxHat[i].resize(nDofs);
         }
         
         //BEGIN copy of the value of Sol at the dofs idof of the element iel
-        for(unsigned inode = 0; inode < nve; inode++) {
+        for(unsigned inode = 0; inode < nDofs; inode++) {
           unsigned idof = mymsh->GetSolutionDof(inode, iel, solType); //local 2 global solution
           unsigned idofX = mymsh->GetSolutionDof(inode, iel, 2); //local 2 global solution
           
           for(int i = 0; i < dim; i++) {
-            SolDdOld[i][inode] = (*mysolution->_SolOld[indexSolD[i]])(idof);
-            SolDd[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof) - SolDdOld[i][inode];
+            solDOld[i][inode] = (*mysolution->_SolOld[indexSolD[i]])(idof);
+            solD[i][inode] = (*mysolution->_Sol[indexSolD[i]])(idof) - solDOld[i][inode];
             
             //moving domain
-            vx_hat[i][inode] = (*mymsh->_topology->_Sol[i])(idofX) + SolDdOld[i][inode];
+            vxHat[i][inode] = (*mymsh->_topology->_Sol[i])(idofX) + solDOld[i][inode];
           }
         }
         //END
@@ -816,9 +808,9 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
         
         
         for(int k = 0; k < dim; k++) {
-          SolDd1[k].resize(nve);
-          for(unsigned inode = 0; inode < nve; inode++){
-            SolDd1[k][inode] = SolDd[k][inode];
+          solD1[k].resize(nDofs);
+          for(unsigned inode = 0; inode < nDofs; inode++){
+            solD1[k][inode] = solD[k][inode];
           }
         }
         
@@ -830,95 +822,74 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
           
           double neumannFactor =  0.5 * (*mysolution->_Sol[indexSolNF])(iel);        
           if( neumannFactor > 1.0e-10 ){
-            
+                      
             for(unsigned iface = 0; iface < 4; iface++ ){
               int faceIndex = myel->GetBoundaryIndex(iel, iface);
-              if( faceIndex == 1 ){
-                
+              bool solidMark = false;
+              if( ml_sol->GetIfFSI() ){
+                unsigned idof = mymsh->GetSolutionDof(ii[iface][2][0], iel, solType);
+                solidMark = mymsh->GetSolidMark(idof);
+              }
+              if( faceIndex == 1 || solidMark){
                 for(unsigned inode = 0;inode < 3; inode++){
                   for(int k = 0; k < dim; k++) {
                     unsigned i0 = ii[iface][inode][0];
                     unsigned i1 = ii[iface][inode][1];
                     unsigned i2 = ii[iface][inode][2];  
-                    SolDd1[k][i0] = neumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - neumannFactor) * SolDd[k][i0];
+                    solD1[k][i0] = neumannFactor * (- 1./3. * solD[k][i1] + 4./3 * solD[k][ i2 ] ) + (1. - neumannFactor) * solD[k][i0];
                   }
                 }
                 break;
               }
             }
-            
           }
-      }
-      std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
+        }
+        std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
       
-      mymsh->_finiteElement[ielt][solType]->Jacobian(vx_hat, xi, weight, phi_hat, gradphi_hat, nablaphi_hat); //function to evaluate at the particles
+        mymsh->_finiteElement[ielt][solType]->Jacobian(vxHat, xi, weightHat, phiHat, gradphiHat, nablaphiHat); //function to evaluate at the particles
       
-      std::vector <double> particleVelOld(dim);
-      particles[iMarker]->GetMarkerVelocity(particleVelOld);
+        std::vector <double> solVpOld(dim);
+        particles[iMarker]->GetMarkerVelocity(solVpOld);
       
-      std::vector <double> particleAccOld(dim);
-      particles[iMarker]->GetMarkerAcceleration(particleAccOld);
+        std::vector <double> solApOld(dim);
+        particles[iMarker]->GetMarkerAcceleration(solApOld);
       
-//       unsigned ii[9][3][3] = { 
-//         { {0,3,7}, {1,2,5}, {4,6,8}},
-//         { {1,0,4}, {2,3,6}, {5,7,8}},
-//         { {2,1,5}, {3,0,7}, {6,4,8}},
-//         { {3,2,6}, {0,1,4}, {7,5,8}} };
-//         
-//         std::vector < std::vector < double > > SolDd1(dim);
-//         for(int k = 0; k < dim; k++) {
-//           SolDd1[k].resize(nve);
-//           for(unsigned inode = 0; inode < nve; inode++){
-//             SolDd1[k][inode] = SolDd[k][inode];
-//           }
-//         }
-//         bool switchToNeumanncheck = false;        
-//         for(unsigned iface = 0; iface < 4; iface++){neuman
-//           int faceIndex = myel->GetBoundaryIndex(iel, iface);
-//           bool switchToNeumann = (faceIndex == 1 && particleVelOld[1] > 0 ) ? true : false;
-//           if(switchToNeumann){
-//             switchToNeumanncheck = true;
-//             for(unsigned inode = 0;inode < 3; inode++){
-//               for(int k = 0; k < dim; k++) {
-//                 unsigned i0 = ii[iface][inode][0];
-//                 unsigned i1 = ii[iface][inode][1];
-//                 unsigned i2 = ii[iface][inode][2];
-//                 
-//                 SolDd1[k][i0] = NeumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - NeumannFactor) * SolDd[k][i0];
-//                 
-//               }
-//             }
-//           }
-//         }
+
         
-        std::vector <double> particleDisp(dim, 0.);
+        std::vector <double> solDp(dim, 0.);
         //update displacement and acceleration
         for(int i = 0; i < dim; i++) {
-          for(unsigned inode = 0; inode < nve; inode++) {
-            particleDisp[i] += phi_hat[inode] * SolDd1[i][inode];
+          for(unsigned inode = 0; inode < nDofs; inode++) {
+            solDp[i] += phiHat[inode] * solD1[i][inode];
           }
         }
         
-        particles[iMarker]->SetMarkerDisplacement(particleDisp);
+        particles[iMarker]->SetMarkerDisplacement(solDp);
         particles[iMarker]->UpdateParticleCoordinates();
         
-        std::vector <double> particleAcc(dim);
-        std::vector <double> particleVel(dim);
+        std::vector <double> solAp(dim);
+        std::vector <double> solVp(dim);
         for(unsigned i = 0; i < dim; i++) {
-          particleAcc[i] = 1. / (beta * dt * dt) * particleDisp[i] - 1. / (beta * dt) * particleVelOld[i] - (1. - 2.* beta) / (2. * beta) * particleAccOld[i];
-          particleVel[i] = particleVelOld[i] + dt * ((1. - Gamma) * particleAccOld[i] + Gamma * particleAcc[i]);
+          solAp[i] = 1. / (beta * dt * dt) * solDp[i] - 1. / (beta * dt) * solVpOld[i] - (1. - 2.* beta) / (2. * beta) * solApOld[i];
+          solVp[i] = solVpOld[i] + dt * ((1. - Gamma) * solApOld[i] + Gamma * solAp[i]);
         }
         
-        particles[iMarker]->SetMarkerVelocity(particleVel);
-        particles[iMarker]->SetMarkerAcceleration(particleAcc);
+        particles[iMarker]->SetMarkerVelocity(solVp);
+        particles[iMarker]->SetMarkerAcceleration(solAp);
         
         //   update the deformation gradient
+        
+        vector< vector < double > > GradSolDpHat(dim);
+  
+        for(int i = 0; i < dim; i++) {
+          GradSolDpHat[i].resize(dim);
+        }
         
         for(int i = 0; i < dim; i++) {
           for(int j = 0; j < dim; j++) {
             GradSolDpHat[i][j] = 0.;
-            for(unsigned inode = 0; inode < nve; inode++) {
-              GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * SolDd1[i][inode];
+            for(unsigned inode = 0; inode < nDofs; inode++) {
+              GradSolDpHat[i][j] +=  gradphiHat[inode * dim + j] * solD1[i][inode];
             }
           }
         }
