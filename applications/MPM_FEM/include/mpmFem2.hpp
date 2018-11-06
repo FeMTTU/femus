@@ -684,7 +684,7 @@ void SetNeumannFactor(MultiLevelSolution* ml_sol) {
         int faceIndex = el->GetBoundaryIndex(iel, iface);
         unsigned im = ii[iface][2][0];
         if( ( faceIndex == 1  &&  SolVpOld[1] > 0 ) 
-           || ( solidMark[im] && (SolVpOld[1] - velMeshOld[im] > 0 ) ) ){
+           || ( solidMark[im] && (SolVpOld[1] - 0. * velMeshOld[im] > 0 ) ) ){
           massNF += massParticle;
           break;
         }
