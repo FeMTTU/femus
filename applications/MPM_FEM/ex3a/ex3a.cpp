@@ -61,10 +61,10 @@ int main(int argc, char** args) {
   
   std::map < std::pair < std::string, unsigned > , double > YC; 
   
-  YC[std::make_pair (soft, 2u)] = 0.2;
-  YC[std::make_pair (soft, 3u)] = 0.2/2.;
-  YC[std::make_pair (soft, 4u)] = 0.2/4.;
-  YC[std::make_pair (soft, 5u)] = 0.2/8.;  
+  YC[std::make_pair (soft, 2u)] = 0.15;
+  YC[std::make_pair (soft, 3u)] = 0.15/2.;
+  YC[std::make_pair (soft, 4u)] = 0.15/4.;
+  YC[std::make_pair (soft, 5u)] = 0.15/8.;  
   
   YC[std::make_pair (medium, 2u)] = 0.2;
   YC[std::make_pair (medium, 3u)] = 0.2/2.;
@@ -153,7 +153,7 @@ int main(int argc, char** args) {
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
   
   unsigned mat0 = 0, matN = 1;
-  unsigned nl0 = 2, nlN = 6;  
+  unsigned nl0 = 4, nlN = 6;  
   
   for(unsigned mat = mat0; mat< matN; mat++){
     for(unsigned nl = nl0; nl < nlN; nl++) {

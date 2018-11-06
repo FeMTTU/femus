@@ -395,7 +395,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           { {2,1,5}, {3,0,7}, {6,4,8}},
           { {3,2,6}, {0,1,4}, {7,5,8}} };
                 
-        double neumannFactor =  0.5 * (*mysolution->_Sol[indexSolNF])(iel);        
+        double neumannFactor =  0. * (*mysolution->_Sol[indexSolNF])(iel);        
         if( neumannFactor > 1.0e-10 ){
           
           for(unsigned iface = 0; iface < 4; iface++ ){
