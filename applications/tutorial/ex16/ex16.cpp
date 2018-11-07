@@ -23,6 +23,8 @@
 
 using namespace femus;
 
+double GetSolutionFluxes(MultiLevelSolution& mlSol);
+
 double GetTimeStep(const double time) {
   double dt = .02;
   return dt;
@@ -178,6 +180,8 @@ int main(int argc, char** args) {
     system.CopySolutionToOldSolution();
 
     system.MGsolve();
+    
+    std::cout <<"VVVVVVVVVVVVVVVVVVVVVv = "<< GetSolutionFluxes(mlSol) << "    " << sin( M_PI * system.GetTime() ) << std::endl;
 
     mlSol.GetWriter()->Write(DEFAULT_OUTPUTDIR,"biquadratic",print_vars, time_step+1);
   }
@@ -479,7 +483,7 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
           for (unsigned j = 0; j < dim; j++) { // second index j in each equation
             NSV[k]   +=  nu * phi_x[i * dim + j] * 0.5 * ( (gradSolV_gss[k][j] + gradSolV_gss[j][k]) + (gradSolVOld_gss[k][j] + gradSolVOld_gss[j][k]) ); // laplace
             NSV[k]   +=  phi[i] * ( 0.5 * (solV_gss[j] + solVOld_gss[j]) - (solD_gss[j] - solDOld_gss[j]) / dt ) * 0.5 * ( gradSolV_gss[k][j] + gradSolVOld_gss[k][j]); // non-linear term
-            DISP[k]   +=  phiHat_x[i * dim + j] * (gradSolDHat_gss[k][j] + gradSolDHat_gss[j][k]); // laplace
+            DISP[k]  +=  phiHat_x[i * dim + j] * (gradSolDHat_gss[k][j] + gradSolDHat_gss[j][k]); // laplace
           }
           NSV[k] += -solP_gss * phi_x[i * dim + k]; // pressure gradient
         }
@@ -554,6 +558,100 @@ void AssembleBoussinesqAppoximation_AD(MultiLevelProblem& ml_prob) {
   // ***************** END ASSEMBLY *******************
 }
 
+
+
+
+
+double GetSolutionFluxes(MultiLevelSolution& mlSol){
+
+  int  iproc, nprocs;
+  MPI_Comm_rank(MPI_COMM_WORLD, &iproc);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  
+  MyVector<double> pFlux(1,0);
+  pFlux.stack();
+  
+  unsigned level = mlSol._mlMesh->GetNumberOfLevels() - 1;
+
+  Solution* solution  = mlSol.GetSolutionLevel(level);
+  Mesh* msh = mlSol._mlMesh->GetLevel(level);
+  elem* myel =  msh->el;
+  
+  const unsigned dim = msh->GetDimension();
+  const unsigned max_size = static_cast< unsigned >(ceil(pow(3, dim)));
+
+  vector< vector < double> >  sol(dim);
+  vector< vector < double> > x(dim);
+ 
+  const char varname[6][3] = {"U", "V", "W","DX", "DY", "DZ"};
+  vector <unsigned> indVar(2 * dim);
+  unsigned solType;
+
+  for (unsigned ivar = 0; ivar < dim; ivar++) {
+    for (unsigned k = 0; k < 2; k++) {
+      indVar[ivar + k * dim] = mlSol.GetIndex(&varname[ivar + k * 3][0]);
+    }
+  }
+  solType = mlSol.GetSolutionType(&varname[0][0]);
+    
+  
+   std::vector < double > phi;
+   std::vector < double > gradphi;
+   //std::vector< double > xx(dim, 0.);
+   double weight;
+  
+  for (int iel = msh->_elementOffset[iproc]; iel < msh->_elementOffset[iproc + 1]; iel++) {
+    // loop on faces
+    for (unsigned jface = 0; jface < msh->GetElementFaceNumber(iel); jface++) {
+      int faceNumber = myel->GetBoundaryIndex(iel, jface);
+      // look for boundary faces
+      if ( faceNumber == 3 ) {
+          
+        vector < double> normal(dim, 0);  
+       
+        unsigned nve = msh->GetElementFaceDofNumber(iel, jface, solType);
+        const unsigned felt = msh->GetElementFaceType(iel, jface);
+	
+        for (unsigned d = 0; d < dim; d++) {
+          x[d].resize(nve);
+	      sol[d].resize(nve);
+	    }
+	
+        for (unsigned i = 0; i < nve; i++) {
+          unsigned int ilocal = msh->GetLocalFaceVertexIndex(iel, jface, i);
+          unsigned idof = msh->GetSolutionDof(ilocal, iel, 2);
+          for (unsigned d = 0; d < dim; d++) {
+            x[d][i] = (*msh->_topology->_Sol[d])(idof) + (*solution->_Sol[indVar[d+dim]])(idof);;
+	        sol[d][i] = (*solution->_Sol[indVar[d]])(idof);;
+          }
+        }
+
+        for (unsigned igs = 0; igs < msh->_finiteElement[felt][solType]->GetGaussPointNumber(); igs++) {
+          msh->_finiteElement[felt][solType]->JacobianSur(x, igs, weight, phi, gradphi, normal);
+          double value;
+          for (unsigned i = 0; i < nve; i++) {
+	        value = 0.;
+	        for (unsigned d = 0; d < dim; d++) {
+	          value += normal[d] * sol[d][i];
+	        }
+	        value *= phi[i];
+	        pFlux[iproc] += value * weight;
+	      }
+        }
+      }
+    }
+  }
+  
+  double flux = 0.; 
+  
+  for(int j = 0; j < nprocs; j++) {
+    pFlux.broadcast(j);
+    flux += pFlux[j]; 
+    pFlux.clearBroadcast();
+  } 
+  
+  return flux;
+}
 
 
 
