@@ -96,7 +96,7 @@ int main(int argc, char** args)
 //   YC[std::make_pair (stiff, 5u)] = 0.05;
 
   YC[std::make_pair (soft, 2u)] = 0.2;  
-  YC[std::make_pair (soft, 3u)] = 0.2 / 2. ;
+  YC[std::make_pair (soft, 3u)] = 0.2 / 2.;
   YC[std::make_pair (soft, 4u)] = 0.2 / 4.;
   YC[std::make_pair (soft, 5u)] = 0.2 / 8.;
 
@@ -121,25 +121,25 @@ int main(int argc, char** args)
   
   std::map < std::pair < std::string, unsigned > , double > SF2; 
   
-  SF1[std::make_pair (soft, 2u)] = 1.e-2;
-  SF1[std::make_pair (soft, 3u)] = 1.e-2;
-  SF1[std::make_pair (soft, 4u)] = 1.e-2;
-  SF1[std::make_pair (soft, 5u)] = 1.e-2;
+  SF1[std::make_pair (soft, 2u)] = 1.e-3;
+  SF1[std::make_pair (soft, 3u)] = 1.e-3;
+  SF1[std::make_pair (soft, 4u)] = 1.e-3;
+  SF1[std::make_pair (soft, 5u)] = 1.e-3;
     
-  SF2[std::make_pair (soft, 2u)] = 1.e-6;
-  SF2[std::make_pair (soft, 3u)] = 1.e-6;
-  SF2[std::make_pair (soft, 4u)] = 1.e-6;
-  SF2[std::make_pair (soft, 5u)] = 1.e-6;
+  SF2[std::make_pair (soft, 2u)] = 1.e-7;
+  SF2[std::make_pair (soft, 3u)] = 1.e-7;
+  SF2[std::make_pair (soft, 4u)] = 1.e-7;
+  SF2[std::make_pair (soft, 5u)] = 1.e-7;
   
-  SF1[std::make_pair (stiff, 2u)] = 1.e-4;
-  SF1[std::make_pair (stiff, 3u)] = 1.e-4;
-  SF1[std::make_pair (stiff, 4u)] = 1.e-4;
-  SF1[std::make_pair (stiff, 5u)] = 1.e-4;  
+  SF1[std::make_pair (stiff, 2u)] = 1.e-5;
+  SF1[std::make_pair (stiff, 3u)] = 1.e-5;
+  SF1[std::make_pair (stiff, 4u)] = 1.e-5;
+  SF1[std::make_pair (stiff, 5u)] = 1.e-5;  
 
-  SF2[std::make_pair (stiff, 2u)] = 1.e-8;
-  SF2[std::make_pair (stiff, 3u)] = 1.e-8;
-  SF2[std::make_pair (stiff, 4u)] = 1.e-8;
-  SF2[std::make_pair (stiff, 5u)] = 1.e-8;  
+  SF2[std::make_pair (stiff, 2u)] = 1.e-9;
+  SF2[std::make_pair (stiff, 3u)] = 1.e-9;
+  SF2[std::make_pair (stiff, 4u)] = 1.e-9;
+  SF2[std::make_pair (stiff, 5u)] = 1.e-9;  
   
   std::map < std::pair < std::string, unsigned > , double > YM; 
   
