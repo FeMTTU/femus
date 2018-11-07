@@ -30,7 +30,7 @@ void AssemblePWillmore(MultiLevelProblem& );
 void AssembleInit(MultiLevelProblem& );
 
 double GetTimeStep (const double time){
-  return 0.001;
+  return 0.0001;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int facename, const double time) {
@@ -52,15 +52,15 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
 }
 
 double InitalValueY1(const std::vector < double >& x) {
-  return -2. * x[0];
+  return -2. * pow(2., P-2) * x[0];
 }
 
 double InitalValueY2(const std::vector < double >& x) {
-  return -2. * x[1];
+  return -2. * pow(2., P-2)* x[1];
 }
 
 double InitalValueY3(const std::vector < double >& x) {
-  return -2. * x[2];
+  return -2. * pow(2., P-2) * x[2];
 }
 
 
@@ -93,10 +93,10 @@ int main(int argc, char** args) {
   
   //mlMsh.ReadCoarseMesh("./input/torus.neu", "seventh", scalingFactor);
   //mlMsh.ReadCoarseMesh("./input/sphere.neu", "seventh", scalingFactor);
-  mlMsh.ReadCoarseMesh("./input/ellipsoidRef2.neu", "seventh", scalingFactor);
+  //mlMsh.ReadCoarseMesh("./input/ellipsoidRef2.neu", "seventh", scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/CliffordTorus.neu", "seventh", scalingFactor);
   
-  
-  unsigned numberOfUniformLevels = 3;
+  unsigned numberOfUniformLevels = 2;
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
@@ -157,7 +157,7 @@ int main(int argc, char** args) {
   system0.AddSolutionToSystemPDE("Y2");
   system0.AddSolutionToSystemPDE("Y3");
   
-  system0.SetMaxNumberOfNonLinearIterations(10);
+  system0.SetMaxNumberOfNonLinearIterations(100);
   system0.SetNonLinearConvergenceTolerance(1.e-9);
   
   // attach the assembling function to system
@@ -779,12 +779,12 @@ void AssembleInit(MultiLevelProblem& ml_prob) {
         }        
       }
       
-      double solYnorm2 = 0.;
+      adept::adouble solYnorm2 = 0.;
       for(unsigned K = 0; K < DIM; K++){
-        solYnorm2 += solYg[K].value() * solYg[K].value();
+        solYnorm2 += solYg[K] * solYg[K];
       }
       
-      double A = pow( solYnorm2 , 1./( (2.* P - 2) ) );
+      adept::adouble A = pow( solYnorm2 , 1 / ( (2.* P - 2) ) );
       
       
       double g[dim][dim]={{0.,0.},{0.,0.}};
@@ -873,8 +873,8 @@ void AssembleInit(MultiLevelProblem& ml_prob) {
             std::cout<<" error "<< term1 << " "<<phiY_Xtan[K][i];
             //abort();
           }
-          
-          aResY[K][i] += ( solYg[K] * phiY[i] + term1 ) * Area; 
+//           std::cout << A <<" ";
+          aResY[K][i] += ( solYg[K] * pow( A.value(), 2. - P )  * phiY[i] + term1 ) * Area; 
         }
       }
     } // end gauss point loop
