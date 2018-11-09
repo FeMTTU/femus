@@ -492,7 +492,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         
       for(int i = 0; i < dim; i++) {
         for(unsigned inode = 0; inode < nDofsD; inode++) {
-          SolDp[i] += phi[inode] * SolDd1[i][inode];
+          SolDp[i] += phi[inode] * SolDd[i][inode];
           for(int j = 0; j < dim; j++) {
             GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * SolDd1[i][inode];
           }
@@ -943,7 +943,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
         //update displacement and acceleration
         for(int i = 0; i < dim; i++) {
           for(unsigned inode = 0; inode < nve; inode++) {
-            particleDisp[i] += phi_hat[inode] * SolDd1[i][inode];
+            particleDisp[i] += phi_hat[inode] * SolDd[i][inode];
           }
         }
         
