@@ -653,14 +653,14 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 5001; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 0.1;
+  unsigned numberOfTimeSteps = 1001; //17h=1020 with dt=60, 17h=10200 with dt=6
+  dt = 2.;
   bool implicitEuler = true;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
-    //ETD ( ml_prob, numberOfTimeSteps );
-    RK4 ( ml_prob, implicitEuler );
+    ETD ( ml_prob, numberOfTimeSteps );
+    //RK4 ( ml_prob, implicitEuler );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
     counter = i;
   }
@@ -981,7 +981,7 @@ void ETD ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
       if ( k > 0 ) {
 //         ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
         ht = ( solh[k - 1] + solh[k] ) / 2.;
-        deltaZt = ( solHT[k - 1] - solHT[k] ) / ht;
+        deltaZt = ( solHT[k - 1] / solh[k - 1] - solHT[k] / solh[k] ) / ht;
       }
       else {
 //         ht = 0.5 * ( solhm[k] + solhp[k] );
@@ -991,7 +991,7 @@ void ETD ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
       if ( k < NLayers - 1 ) {
 //         hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
         hb = ( solh[k] + solh[k + 1] ) / 2.; 
-        deltaZb = ( solHT[k] - solHT[k + 1] ) / hb;
+        deltaZb = ( solHT[k] / solh[k] - solHT[k + 1] / solh[k + 1] ) / hb;
       }
       else {
 //         hb = 0.5 * ( solhm[k] + solhp[k] );
@@ -1001,14 +1001,14 @@ void ETD ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
 
       //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAA"<<deltaZt - deltaZb<<std::endl;
 
-      aResHT[k] += solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
+      aResHT[k] += solh[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
 
 //       //aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
       if(i > start){
-        aResHT[k] += k_h * solh[k] * (solHTm[k] - solHT[k])/(dx*dx); // horizontal diffusion
+        aResHT[k] += k_h * solh[k] * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
       }
       if(i < end-1){
-        aResHT[k] += k_h * solh[k] * (solHTp[k] - solHT[k])/(dx*dx); // horizontal diffusion
+        aResHT[k] += k_h * solh[k] * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
       }
 
     }
@@ -1298,7 +1298,7 @@ void ETD ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
         if ( k > 0 ) {
 //        ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
           ht = ( solh[k - 1] + solh[k] ) / 2.;
-          deltaZt = ( solHT[k - 1] - solHT[k] ) / ht;
+          deltaZt = ( solHT[k - 1] / solh[k - 1] - solHT[k] / solh[k] ) / ht;
         }
         else {
 //        ht = 0.5 * ( solhm[k] + solhp[k] );
@@ -1308,7 +1308,7 @@ void ETD ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
         if ( k < NLayers - 1 ) {
 //        hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
           hb = ( solh[k] + solh[k + 1] ) / 2.; 
-          deltaZb = ( solHT[k] - solHT[k + 1] ) / hb;
+          deltaZb = ( solHT[k] / solh[k] - solHT[k + 1] / solh[k +1]) / hb;
         }
         else {
 //        hb = 0.5 * ( solhm[k] + solhp[k] );
@@ -1318,14 +1318,14 @@ void ETD ( MultiLevelProblem& ml_prob, const double & numberOfTimeSteps ) {
 
         //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAA"<<deltaZt - deltaZb<<std::endl;
 
-        aResHT[k] += solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
+        aResHT[k] += solh[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
         
 //       //aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
         if(i > start){
-          aResHT[k] += k_h * solh[k] * (solHTm[k] - solHT[k])/(dx*dx); // horizontal diffusion
+          aResHT[k] += k_h * solh[k] * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
         }
         if(i < end-1){
-          aResHT[k] += k_h * solh[k] * (solHTp[k] - solHT[k])/(dx*dx); // horizontal diffusion
+          aResHT[k] += k_h * solh[k] * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
         }
 
       }
@@ -1691,10 +1691,10 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
         //END
         
         if(i > start){
-          LHS += k_h * solh[k] * (solHTm[k] - solHT[k] + addition)/(dx*dx); // horizontal diffusion
+          LHS += k_h * solh[k] * (solHTm[k] / solhm[k] - solHT[k] / solh[k] + addition)/(dx*dx); // horizontal diffusion
         }
         if(i < end-1){
-          LHS += k_h * solh[k] * (solHTp[k] - solHT[k] + addition)/(dx*dx); // horizontal diffusion
+          LHS += k_h * solh[k] * (solHTp[k] / solhp[k] - solHT[k] / solh[k] + addition)/(dx*dx); // horizontal diffusion
         }
 
 
@@ -1733,7 +1733,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
         if ( k > 0 ) {
 //        ht = ( solhm[k - 1] + solhm[k] + solhp[k - 1] + solhp[k] ) / 4.;
           ht = ( solh[k - 1] + solh[k] ) / 2.;
-          deltaZt = ( solHT[k - 1] - solHT[k] ) / ht;
+          deltaZt = ( solHT[k - 1] / solh[k - 1] - solHT[k] / solh[k] ) / ht;
         }
         else {
 //        ht = 0.5 * ( solhm[k] + solhp[k] );
@@ -1743,7 +1743,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
         if ( k < NLayers - 1 ) {
 //        hb = ( solhm[k] + solhm[k + 1] + solhp[k] + solhp[k + 1] ) / 4.;
           hb = ( solh[k] + solh[k + 1] ) / 2.; 
-          deltaZb = ( solHT[k] - solHT[k + 1] ) / hb;
+          deltaZb = ( solHT[k] / solh[k] - solHT[k + 1] / solh[k + 1] ) / hb;
         }
         else {
 //        hb = 0.5 * ( solhm[k] + solhp[k] );
@@ -1751,7 +1751,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
           deltaZb = 0.* ( solHT[k] - 0. ) / hb;
         }
         //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAA" << deltaZt - deltaZb << std::endl;
-        vert_diff[k] = solhm[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
+        vert_diff[k] = solh[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
       }
 
       for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
