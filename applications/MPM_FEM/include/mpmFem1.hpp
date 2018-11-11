@@ -438,7 +438,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           { {2,1,5}, {3,0,7}, {6,4,8}},
           { {3,2,6}, {0,1,4}, {7,5,8}} };
                 
-        double neumannFactor =  .75 * (*mysolution->_Sol[indexSolNF])(iel);        
+        double neumannFactor =  .5 * (*mysolution->_Sol[indexSolNF])(iel);        
         if( neumannFactor > 1.0e-10 ){
           
           for(unsigned iface = 0; iface < 4; iface++ ){
@@ -728,8 +728,8 @@ void SetNeumannFactor(MultiLevelSolution* ml_sol) {
       for(unsigned iface = 0; iface < 4; iface++){
         int faceIndex = el->GetBoundaryIndex(iel, iface);
         unsigned im = ii[iface][2][0];
-        if( ( faceIndex == 1  &&  SolVpOld[1] > 0 ) ) {
-          //||( solidMark[im] && (SolVpOld[1] - velMeshOld[im] > 0 ) ) ){
+        if( ( faceIndex == 1  &&  SolVpOld[1] > 0 )  
+          ||( solidMark[im] && (SolVpOld[1] - 0 * velMeshOld[im] > 0 ) ) ){
           massNF += massParticle;
           
           //std::cout << iel << " " << iMarker << " " << SolVpOld[1] <<" "<< massElement << " " << massNF<< std::endl;
@@ -876,7 +876,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
           { {2,1,5}, {3,0,7}, {6,4,8}},
           { {3,2,6}, {0,1,4}, {7,5,8}} };
           
-          double neumannFactor =  .75 * (*mysolution->_Sol[indexSolNF])(iel);        
+          double neumannFactor =  .5 * (*mysolution->_Sol[indexSolNF])(iel);        
           if( neumannFactor > 1.0e-10 ){
             
             for(unsigned iface = 0; iface < 4; iface++ ){
