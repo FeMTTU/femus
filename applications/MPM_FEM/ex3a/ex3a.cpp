@@ -397,8 +397,8 @@ int main(int argc, char** args) {
            gravity[0] = 0.;  gravity[0] = 0.;
         }
         
-        if ( time_step <= 30 ){
-           gravity[1] = 0.;
+        if ( time_step <= 50 ){
+           gravity[1] =  gravity[1] / 50. * time_step;
         }
         
         system.CopySolutionToOldSolution();
