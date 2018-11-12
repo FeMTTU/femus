@@ -14,14 +14,14 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
-#include "../include/mpmFem2.hpp"
+#include "../include/mpmFem1.hpp"
 
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cstring>
-double NeumannFactor = 0.;
+//double NeumannFactor = 0.;
 
 using namespace femus;
 

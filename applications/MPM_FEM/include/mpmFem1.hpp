@@ -438,7 +438,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           { {2,1,5}, {3,0,7}, {6,4,8}},
           { {3,2,6}, {0,1,4}, {7,5,8}} };
                 
-        double neumannFactor =  0.5 * (*mysolution->_Sol[indexSolNF])(iel);        
+        double neumannFactor =  .5 * (*mysolution->_Sol[indexSolNF])(iel);        
         if( neumannFactor > 1.0e-10 ){
           
           for(unsigned iface = 0; iface < 4; iface++ ){
@@ -492,7 +492,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
         
       for(int i = 0; i < dim; i++) {
         for(unsigned inode = 0; inode < nDofsD; inode++) {
-          SolDp[i] += phi[inode] * SolDd1[i][inode];
+          SolDp[i] += phi[inode] * SolDd[i][inode];
           for(int j = 0; j < dim; j++) {
             GradSolDpHat[i][j] +=  gradphi_hat[inode * dim + j] * SolDd1[i][inode];
           }
@@ -728,8 +728,8 @@ void SetNeumannFactor(MultiLevelSolution* ml_sol) {
       for(unsigned iface = 0; iface < 4; iface++){
         int faceIndex = el->GetBoundaryIndex(iel, iface);
         unsigned im = ii[iface][2][0];
-        if( ( faceIndex == 1  &&  SolVpOld[1] > 0 ) ) {
-          //||( solidMark[im] && (SolVpOld[1] - velMeshOld[im] > 0 ) ) ){
+        if( ( faceIndex == 1  &&  SolVpOld[1] > 0 )  
+          ||( solidMark[im] && (SolVpOld[1] - 0 * velMeshOld[im] > 0 ) ) ){
           massNF += massParticle;
           
           //std::cout << iel << " " << iMarker << " " << SolVpOld[1] <<" "<< massElement << " " << massNF<< std::endl;
@@ -876,7 +876,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
           { {2,1,5}, {3,0,7}, {6,4,8}},
           { {3,2,6}, {0,1,4}, {7,5,8}} };
           
-          double neumannFactor =  0.5 * (*mysolution->_Sol[indexSolNF])(iel);        
+          double neumannFactor =  .5 * (*mysolution->_Sol[indexSolNF])(iel);        
           if( neumannFactor > 1.0e-10 ){
             
             for(unsigned iface = 0; iface < 4; iface++ ){
@@ -943,7 +943,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
         //update displacement and acceleration
         for(int i = 0; i < dim; i++) {
           for(unsigned inode = 0; inode < nve; inode++) {
-            particleDisp[i] += phi_hat[inode] * SolDd1[i][inode];
+            particleDisp[i] += phi_hat[inode] * SolDd[i][inode];
           }
         }
         
