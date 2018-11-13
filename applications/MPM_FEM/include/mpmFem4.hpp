@@ -6,7 +6,7 @@ double Gamma = 0.5;
 double gravity[3] = {0., -9.81, 0.};
 double scalingFactor1 =1.e-2;
 double scalingFactor2 =1.e-6;
-double NeumannFactor = 0.;
+double NeumannFactor = 0.5;
 Line* linea;
 
 double tuninig = 0.;//0.645;
@@ -371,7 +371,9 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
   //BEGIN loop on particles (used as Gauss points)
    
   std::vector < std::vector < adept::adouble > > SolDd1(dim);
-    
+  std::vector < bool > solidMark;
+  std::vector < double > velMeshOld;
+      
   for(unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
     //element of particle iMarker
     unsigned iel = particles[iMarker]->GetMarkerElement();
@@ -420,50 +422,62 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           dofsAll.insert(dofsAll.end(), dofsVAR[idim].begin(), dofsVAR[idim].end());
         }
                 
-       
+        if( ml_sol->GetIfFSI() ){
+          solidMark.resize(nDofsD);
+          velMeshOld.resize(nDofsD);
+          for(unsigned i = 0; i < nDofsD; i++) {
+            unsigned idof = mymsh->GetSolutionDof(i, iel, solType);
+            solidMark[i] = mymsh->GetSolidMark(idof);
+            velMeshOld[i] = (*mysolution->_Sol[indexSolV[1]])(idof);
+          }
+        }
+        else {
+          solidMark.assign(nDofsD,false);
+          velMeshOld.assign(nDofsD,0.);
+        }
         
         // start a new recording of all the operations involving adept::adouble variables
         if(assembleMatrix) s.new_recording();
         
-        for(int k = 0; k < dim; k++) {
-          SolDd1[k].resize(nDofsD);
-          for(unsigned inode = 0; inode < nDofsD; inode++){
-            SolDd1[k][inode] = SolDd[k][inode];
-          }
-        }
-        
-        unsigned ii[9][3][3] = { 
-          { {0,3,7}, {1,2,5}, {4,6,8}},
-          { {1,0,4}, {2,3,6}, {5,7,8}},
-          { {2,1,5}, {3,0,7}, {6,4,8}},
-          { {3,2,6}, {0,1,4}, {7,5,8}} };
-                
-        double neumannFactor =  .5 * (*mysolution->_Sol[indexSolNF])(iel);        
-        if( neumannFactor > 1.0e-10 ){
-          
-          for(unsigned iface = 0; iface < 4; iface++ ){
-            int faceIndex = myel->GetBoundaryIndex(iel, iface);
-            if( faceIndex == 1 ){
-              
-              for(unsigned inode = 0;inode < 3; inode++){
-                for(int k = 0; k < dim; k++) {
-                  unsigned i0 = ii[iface][inode][0];
-                  unsigned i1 = ii[iface][inode][1];
-                  unsigned i2 = ii[iface][inode][2];  
-                  SolDd1[k][i0] = neumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - neumannFactor) * SolDd[k][i0];
-                }
-              }
-              break;
-            }
-          }
-          
-        }
-       
-        for(int j = 0; j < dim; j++) {
-          for(unsigned inode = 0; inode < nDofsD; inode++){
-            vx[j][inode] = vx_hat[j][inode] + SolDd1[j][inode];
-          }
-        }
+//         for(int k = 0; k < dim; k++) {
+//           SolDd1[k].resize(nDofsD);
+//           for(unsigned inode = 0; inode < nDofsD; inode++){
+//             SolDd1[k][inode] = SolDd[k][inode];
+//           }
+//         }
+//         
+//         unsigned ii[9][3][3] = { 
+//           { {0,3,7}, {1,2,5}, {4,6,8}},
+//           { {1,0,4}, {2,3,6}, {5,7,8}},
+//           { {2,1,5}, {3,0,7}, {6,4,8}},
+//           { {3,2,6}, {0,1,4}, {7,5,8}} };
+//                 
+//         double neumannFactor =  .5 * (*mysolution->_Sol[indexSolNF])(iel);        
+//         if( neumannFactor > 1.0e-10 ){
+//           
+//           for(unsigned iface = 0; iface < 4; iface++ ){
+//             int faceIndex = myel->GetBoundaryIndex(iel, iface);
+//             if( faceIndex == 1 ){
+//               
+//               for(unsigned inode = 0;inode < 3; inode++){
+//                 for(int k = 0; k < dim; k++) {
+//                   unsigned i0 = ii[iface][inode][0];
+//                   unsigned i1 = ii[iface][inode][1];
+//                   unsigned i2 = ii[iface][inode][2];  
+//                   SolDd1[k][i0] = neumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - neumannFactor) * SolDd[k][i0];
+//                 }
+//               }
+//               break;
+//             }
+//           }
+//           
+//         }
+//        
+//         for(int j = 0; j < dim; j++) {
+//           for(unsigned inode = 0; inode < nDofsD; inode++){
+//             vx[j][inode] = vx_hat[j][inode] + SolDd1[j][inode];
+//           }
+//         }
       
       }
       
@@ -479,6 +493,47 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
       
       double mass = particles[iMarker]->GetMarkerMass();
       
+      
+      unsigned ii[9][3][3] = { 
+        { {0,3,7}, {1,2,5}, {4,6,8}},
+        { {1,0,4}, {2,3,6}, {5,7,8}},
+        { {2,1,5}, {3,0,7}, {6,4,8}},
+        { {3,2,6}, {0,1,4}, {7,5,8}} };
+        
+        
+      for(int k = 0; k < dim; k++) {
+        SolDd1[k].resize(nDofsD);
+        for(unsigned inode = 0; inode < nDofsD; inode++){
+          SolDd1[k][inode] = SolDd[k][inode];
+        }
+      }
+             
+      for(unsigned iface = 0; iface < 4; iface++){
+        int faceIndex = myel->GetBoundaryIndex(iel, iface);
+        unsigned im = ii[iface][2][0];
+        bool switchToNeumannBC = ( faceIndex == 1  &&  SolVpOld[1] > 0 ) ? true : false;
+          
+        bool switchToNeumannFSI = ( solidMark[im] && (SolVpOld[1] - velMeshOld[im] > 0 ) ) ? true : false;                         
+                  
+        if(switchToNeumannBC || switchToNeumannFSI){
+            
+          for(unsigned inode = 0;inode < 3; inode++){
+            for(int k = 0; k < dim; k++) {
+              unsigned i0 = ii[iface][inode][0];
+              unsigned i1 = ii[iface][inode][1];
+              unsigned i2 = ii[iface][inode][2];  
+              SolDd1[k][i0] = NeumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - NeumannFactor) * SolDd[k][i0];
+            }
+          }
+        }
+      }
+        
+      for(int j = 0; j < dim; j++) {
+        for(unsigned inode = 0; inode < nDofsD; inode++){
+          vx[j][inode] = vx_hat[j][inode] + SolDd1[j][inode];
+        }
+      }
+           
       mymsh->_finiteElement[ielt][solType]->Jacobian(vx, xi, weight, phi, gradphi); //function to evaluate at the particles
         
         
@@ -822,6 +877,8 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
   unsigned ielOld = UINT_MAX;
   //declaration of element instances
   std::vector < std::vector < double > > SolDd1(dim);
+  std::vector < bool > solidMark;
+  std::vector < double > velMeshOld;
   //BEGIN loop on particles
   for(unsigned iMarker = markerOffset1; iMarker < markerOffset2; iMarker++) {
     
@@ -861,41 +918,53 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
         }
         //END
         
-        
-        
-        for(int k = 0; k < dim; k++) {
-          SolDd1[k].resize(nve);
-          for(unsigned inode = 0; inode < nve; inode++){
-            SolDd1[k][inode] = SolDd[k][inode];
+        if( ml_sol->GetIfFSI() ){
+          solidMark.resize(nve);
+          velMeshOld.resize(nve);
+          for(unsigned i = 0; i < nve; i++) {
+            unsigned idof = mymsh->GetSolutionDof(i, iel, solType);
+            solidMark[i] = mymsh->GetSolidMark(idof);
+            velMeshOld[i] = (*mysolution->_Sol[indexSolV[1]])(idof);
           }
         }
+        else {
+          solidMark.assign(nve,false);
+          velMeshOld.assign(nve,0.);
+        }
         
-        unsigned ii[9][3][3] = { 
-          { {0,3,7}, {1,2,5}, {4,6,8}},
-          { {1,0,4}, {2,3,6}, {5,7,8}},
-          { {2,1,5}, {3,0,7}, {6,4,8}},
-          { {3,2,6}, {0,1,4}, {7,5,8}} };
-          
-          double neumannFactor =  .5 * (*mysolution->_Sol[indexSolNF])(iel);        
-          if( neumannFactor > 1.0e-10 ){
-            
-            for(unsigned iface = 0; iface < 4; iface++ ){
-              int faceIndex = myel->GetBoundaryIndex(iel, iface);
-              if( faceIndex == 1 ){
-                
-                for(unsigned inode = 0;inode < 3; inode++){
-                  for(int k = 0; k < dim; k++) {
-                    unsigned i0 = ii[iface][inode][0];
-                    unsigned i1 = ii[iface][inode][1];
-                    unsigned i2 = ii[iface][inode][2];  
-                    SolDd1[k][i0] = neumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - neumannFactor) * SolDd[k][i0];
-                  }
-                }
-                break;
-              }
-            }
-            
-          }
+//         for(int k = 0; k < dim; k++) {
+//           SolDd1[k].resize(nve);
+//           for(unsigned inode = 0; inode < nve; inode++){
+//             SolDd1[k][inode] = SolDd[k][inode];
+//           }
+//         }
+//         
+//         unsigned ii[9][3][3] = { 
+//           { {0,3,7}, {1,2,5}, {4,6,8}},
+//           { {1,0,4}, {2,3,6}, {5,7,8}},
+//           { {2,1,5}, {3,0,7}, {6,4,8}},
+//           { {3,2,6}, {0,1,4}, {7,5,8}} };
+//           
+//           double neumannFactor =  .5 * (*mysolution->_Sol[indexSolNF])(iel);        
+//           if( neumannFactor > 1.0e-10 ){
+//             
+//             for(unsigned iface = 0; iface < 4; iface++ ){
+//               int faceIndex = myel->GetBoundaryIndex(iel, iface);
+//               if( faceIndex == 1 ){
+//                 
+//                 for(unsigned inode = 0;inode < 3; inode++){
+//                   for(int k = 0; k < dim; k++) {
+//                     unsigned i0 = ii[iface][inode][0];
+//                     unsigned i1 = ii[iface][inode][1];
+//                     unsigned i2 = ii[iface][inode][2];  
+//                     SolDd1[k][i0] = neumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - neumannFactor) * SolDd[k][i0];
+//                   }
+//                 }
+//                 break;
+//               }
+//             }
+//             
+//           }
       }
       std::vector <double> xi = particles[iMarker]->GetMarkerLocalCoordinates();
       
@@ -907,37 +976,40 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
       std::vector <double> particleAccOld(dim);
       particles[iMarker]->GetMarkerAcceleration(particleAccOld);
       
-//       unsigned ii[9][3][3] = { 
-//         { {0,3,7}, {1,2,5}, {4,6,8}},
-//         { {1,0,4}, {2,3,6}, {5,7,8}},
-//         { {2,1,5}, {3,0,7}, {6,4,8}},
-//         { {3,2,6}, {0,1,4}, {7,5,8}} };
-//         
-//         std::vector < std::vector < double > > SolDd1(dim);
-//         for(int k = 0; k < dim; k++) {
-//           SolDd1[k].resize(nve);
-//           for(unsigned inode = 0; inode < nve; inode++){
-//             SolDd1[k][inode] = SolDd[k][inode];
-//           }
-//         }
-//         bool switchToNeumanncheck = false;        
-//         for(unsigned iface = 0; iface < 4; iface++){neuman
-//           int faceIndex = myel->GetBoundaryIndex(iel, iface);
-//           bool switchToNeumann = (faceIndex == 1 && particleVelOld[1] > 0 ) ? true : false;
-//           if(switchToNeumann){
-//             switchToNeumanncheck = true;
-//             for(unsigned inode = 0;inode < 3; inode++){
-//               for(int k = 0; k < dim; k++) {
-//                 unsigned i0 = ii[iface][inode][0];
-//                 unsigned i1 = ii[iface][inode][1];
-//                 unsigned i2 = ii[iface][inode][2];
-//                 
-//                 SolDd1[k][i0] = NeumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - NeumannFactor) * SolDd[k][i0];
-//                 
-//               }
-//             }
-//           }
-//         }
+      unsigned ii[9][3][3] = { 
+        { {0,3,7}, {1,2,5}, {4,6,8}},
+        { {1,0,4}, {2,3,6}, {5,7,8}},
+        { {2,1,5}, {3,0,7}, {6,4,8}},
+        { {3,2,6}, {0,1,4}, {7,5,8}} };
+        
+        
+        for(int k = 0; k < dim; k++) {
+          SolDd1[k].resize(nve);
+          for(unsigned inode = 0; inode < nve; inode++){
+            SolDd1[k][inode] = SolDd[k][inode];
+          }
+        }
+        
+        for(unsigned iface = 0; iface < 4; iface++){
+          int faceIndex = myel->GetBoundaryIndex(iel, iface);
+          unsigned im = ii[iface][2][0];
+          bool switchToNeumannBC = ( faceIndex == 1  &&  particleVelOld[1] > 0 ) ? true : false;
+          
+          bool switchToNeumannFSI = ( solidMark[im] && (particleVelOld[1] - velMeshOld[im] > 0 ) ) ? true : false;                         
+          
+          if(switchToNeumannBC || switchToNeumannFSI){
+            
+            for(unsigned inode = 0;inode < 3; inode++){
+              for(int k = 0; k < dim; k++) {
+                unsigned i0 = ii[iface][inode][0];
+                unsigned i1 = ii[iface][inode][1];
+                unsigned i2 = ii[iface][inode][2];  
+                SolDd1[k][i0] = NeumannFactor * (- 1./3. * SolDd[k][i1] + 4./3 * SolDd[k][ i2 ] ) + (1. - NeumannFactor) * SolDd[k][i0];
+              }
+            }
+          }
+        }
+      
         
         std::vector <double> particleDisp(dim, 0.);
         //update displacement and acceleration

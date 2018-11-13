@@ -16,7 +16,7 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
-#include "../include/mpmFem1.hpp"
+#include "../include/mpmFem4.hpp"
 
 using namespace femus;
 
@@ -152,8 +152,8 @@ int main(int argc, char** args) {
     
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
   
-  unsigned mat0 = 0, matN = 1;
-  unsigned nl0 = 5, nlN = 6;  
+  unsigned mat0 = 0, matN = 3;
+  unsigned nl0 = 2, nlN = 6;  
   
   for(unsigned mat = mat0; mat< matN; mat++){
     for(unsigned nl = nl0; nl < nlN; nl++) {
@@ -397,13 +397,13 @@ int main(int argc, char** args) {
            gravity[0] = 0.;  gravity[0] = 0.;
         }
         
-        if ( time_step <= 50 ){
-           gravity[1] =  gravity[1] / 50. * time_step;
-        }
+//         if ( mat==1 && time_step <= 50 ){
+//            gravity[1] =  gravity[1] / 50. * time_step;
+//         }
         
         system.CopySolutionToOldSolution();
     
-        SetNeumannFactor(&mlSol);
+        //SetNeumannFactor(&mlSol);
         
         system.MGsolve();
     
