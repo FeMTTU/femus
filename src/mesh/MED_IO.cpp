@@ -172,8 +172,6 @@ namespace femus
 
          set_elem_group_ownership(file_id, mesh_menus[j], i, std::get<0>(el_fe_type_per_dimension[i]), group_flags);
       
-     set_boundary_group_ownership(file_id, mesh_menus[j], i, std::get<0>(el_fe_type_per_dimension[i]), group_flags);
-       
         get_global_elem_numbering(file_id, mesh_menus[j],    std::get<0>(el_fe_type_per_dimension[i]));
         
       }
@@ -184,35 +182,8 @@ namespace femus
 
   }
 
-  
-  
-    void MED_IO::set_boundary_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int> > & group_flags)  {
 
-       Mesh& mesh = GetMesh();
-       
-       if ( i == (mesh.GetDimension() - 1 - 1) ) { //boundary
-                    
-    //loop over volume elements
-    //extract faces
 
-//   // read boundary **************** D
-  for (unsigned k=0; k<group_flags.size()/*nbcd*/; k++) { //@todo these should be the groups that are "boundary groups"
-           int value = std::get<1>(group_flags[k]);       //flag of the boundary portion
-      unsigned nface = /*group_size*/1;  //number of elements in a portion of boundary
-               value = - (value + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the value in salome must be POSITIVE
-    for (unsigned i = 0; i < nface; i++) {
-//       unsigned iel =,   //volume element to which the face belongs
-//       iel--;
-//       unsigned iface; //index of the face in that volume element
-//       iface = MED_IO::SalomeToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
-//       mesh.el->SetFaceElementIndex(iel,iface,value);  //value is (-1) for element faces that are not boundary faces
-    }
-  }
-//   // end read boundary **************** D
-                    
-        } //end (volume pos - 1)
-        
-    }
 
 /// @todo do we need these numbers for us?
    void MED_IO::get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const  {
@@ -246,6 +217,7 @@ namespace femus
         int* fam_map = new  int[n_elements];
         hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map);
 
+// ****************** Volume *******************************************    
     std::vector < unsigned > materialElementCounter(3,0);  //I think this counts who is fluid, who is solid, who whatever else, need to double check with the Gambit input files
     const unsigned group_property_fluid_probably          = 2;
     const unsigned group_property_something_else_probably = 3;
@@ -272,7 +244,36 @@ namespace femus
         
 //     mesh.el->SetElementGroupNumber(/*n_groups_of_that_space_dimension*/);
 //     mesh.el->SetMaterialElementCounter(materialElementCounter);
+// ****************** Volume, end *******************************************    
         
+    
+    
+    
+// ****************** Boundary *******************************************    
+           if ( i == (mesh.GetDimension() - 1 - 1) ) { //boundary
+                    
+    //loop over volume elements
+    //extract faces
+
+//   // read boundary **************** D
+  for (unsigned k=0; k<group_flags.size()/*nbcd*/; k++) { //@todo these should be the groups that are "boundary groups"
+           int value = std::get<1>(group_flags[k]);       //flag of the boundary portion
+      unsigned nface = /*group_size*/1;  //number of elements in a portion of boundary
+               value = - (value + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the value in salome must be POSITIVE
+    for (unsigned i = 0; i < nface; i++) {
+//       unsigned iel =,   //volume element to which the face belongs
+//       iel--;
+//       unsigned iface; //index of the face in that volume element
+//       iface = MED_IO::SalomeToFemusFaceIndex[mesh.el->GetElementType(iel)][iface-1u];
+//       mesh.el->SetFaceElementIndex(iel,iface,value);  //value is (-1) for element faces that are not boundary faces
+    }
+  }
+//   // end read boundary **************** D
+                    
+        } //end (volume pos - 1)
+// ****************** Boundary end *******************************************    
+    
+    
         delete [] fam_map;
         H5Dclose(dtset_fam);
 
