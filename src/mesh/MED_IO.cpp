@@ -16,7 +16,6 @@
 //local include
 #include "MED_IO.hpp"
 #include "Mesh.hpp"
-#include "GeomElemBase.hpp"
 
 //C++ include
 #include <cassert>
@@ -27,14 +26,6 @@
 namespace femus
 {
     
-    
-  struct GroupInfo {
-      int _salome_flag;
-      int _user_defined_flag;
-      int _user_defined_property;
-      GeomElemBase* _geom_el;
-      int _size;
-  };
 
   const std::string MED_IO::mesh_ensemble  = "ENS_MAA";
   const std::string MED_IO::aux_zeroone    = "-0000000000000000001-0000000000000000001";
@@ -144,14 +135,9 @@ namespace femus
             set_node_coordinates(file_id, mesh_menus[j], coords, Lref);
     
 // Groups of the mesh ===============
-    const std::vector< std::tuple<int,int,int> >     group_flags = get_group_vector_flags_per_mesh(file_id,mesh_menus[j]);
-    
-    std::vector<GroupInfo>  group_info(group_flags.size());
+     std::vector< GroupInfo >     group_info = get_group_vector_flags_per_mesh(file_id,mesh_menus[j]);
     
           for(unsigned i = 0; i < group_info.size(); i++) {
-              group_info[i]._salome_flag           = std::get<0>(group_flags[i]);
-              group_info[i]._user_defined_flag     = std::get<1>(group_flags[i]);
-              group_info[i]._user_defined_property = std::get<2>(group_flags[i]);
               group_info[i]._geom_el = NULL;
               group_info[i]._size = 0;
           }
@@ -170,7 +156,7 @@ namespace femus
 
             set_elem_connectivity(file_id, mesh_menus[j], i,             el_fe_type_per_dimension[i], type_elem_flag);  //type_elem_flag is to say "There exists at least one element of that type in the mesh"
 
-         set_elem_group_ownership(file_id, mesh_menus[j], i, std::get<0>(el_fe_type_per_dimension[i]), group_flags);
+         set_elem_group_ownership(file_id, mesh_menus[j], i, std::get<0>(el_fe_type_per_dimension[i]), group_info);
       
         get_global_elem_numbering(file_id, mesh_menus[j],    std::get<0>(el_fe_type_per_dimension[i]));
         
@@ -200,7 +186,7 @@ namespace femus
    }
   
   //  we loop over all elements and see which ones are of that group
-   void MED_IO::set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu,  const int i, const std::string el_fe_type_per_dimension, const std::vector< std::tuple<int,int,int> > & group_flags)  {
+   void MED_IO::set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu,  const int i, const std::string el_fe_type_per_dimension, const std::vector<GroupInfo> & group_info)  {
        
        Mesh& mesh = GetMesh();
        
@@ -256,9 +242,9 @@ namespace femus
     //extract faces
 
 //   // read boundary **************** D
-  for (unsigned k=0; k<group_flags.size()/*nbcd*/; k++) { //@todo these should be the groups that are "boundary groups"
-           int value = std::get<1>(group_flags[k]);       //flag of the boundary portion
-      unsigned nface = /*group_size*/1;  //number of elements in a portion of boundary
+  for (unsigned k=0; k < group_info.size()/*nbcd*//*@todo these should be the groups that are "boundary groups"*/; k++) { //
+           int value = group_info[k]._user_defined_flag;       //flag of the boundary portion
+      unsigned nface = group_info[k]._size;  //number of elements in a portion of boundary
                value = - (value + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the value in salome must be POSITIVE
     for (unsigned i = 0; i < nface; i++) {
 //       unsigned iel =,   //volume element to which the face belongs
@@ -428,23 +414,24 @@ namespace femus
   
   //salome family; our name; our property; group size 
   /// @todo check the underscores according to our naming standard
-  const std::tuple<int,int,int>  MED_IO::get_group_flags_per_mesh(const std::string & group_name) const {
+  const GroupInfo  MED_IO::get_group_flags_per_mesh(const std::string & group_name) const {
   
-     std::tuple<int,int,int>  group_flags;
+      GroupInfo  group_info;
 
       const int str_pos = 0;
       std::pair<int,int> gr_family_in_salome_pair = isolate_number_in_string( group_name, str_pos );
       std::pair<int,int> gr_name_pair             = isolate_number_in_string( group_name, gr_family_in_salome_pair.second + 1 );
       std::pair<int,int> gr_property_pair         = isolate_number_in_string( group_name, gr_name_pair.second + 1 );
-      group_flags = std::make_tuple(gr_family_in_salome_pair.first, gr_name_pair.first, gr_property_pair.first);
-      
+      group_info._salome_flag           = gr_family_in_salome_pair.first;
+      group_info._user_defined_flag     = gr_name_pair.first;
+      group_info._user_defined_property = gr_property_pair.first;      
     
-    return  group_flags;
+    return  group_info;
  }
 
 
      // ************** Groups of each Mesh *********************************
- const std::vector< std::tuple<int,int,int> > MED_IO::get_group_vector_flags_per_mesh(const hid_t&  file_id, const std::string & mesh_menu) const {
+ const std::vector< GroupInfo > MED_IO::get_group_vector_flags_per_mesh(const hid_t&  file_id, const std::string & mesh_menu) const {
      
      std::string group_list = group_ensemble +  "/" + mesh_menu + "/" + group_elements;
      hid_t  gid_groups      = H5Gopen(file_id, group_list.c_str(), H5P_DEFAULT);
@@ -457,7 +444,7 @@ namespace femus
      hid_t status_groups = H5Gget_num_objs(gid_groups, &n_groups);
     
      std::vector< std::string >             group_names(n_groups);
-     std::vector< std::tuple<int,int,int> > group_flags(n_groups);
+     std::vector< GroupInfo >                group_info(n_groups);
         
     for(unsigned j = 0; j < n_groups; j++) {
          
@@ -466,11 +453,11 @@ namespace femus
               group_names[j] = group_names_char;
               delete[] group_names_char;
         
-        group_flags[j] = get_group_flags_per_mesh(group_names[j]);
+        group_info[j] = get_group_flags_per_mesh(group_names[j]);
               
     }
    
-    return group_flags;
+    return group_info;
     
   }
     
