@@ -180,15 +180,15 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 4081; //16321; //17h=1020 with dt=60, 17h=10200 with dt=6
+  unsigned numberOfTimeSteps = 1020; //16321; //17h=1020 with dt=60, 17h=10200 with dt=6
   //bool implicitEuler = true;
-  dt = 15.;
+  dt = 60.;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
     ETDvh ( ml_prob );
-    ETDt ( ml_prob, numberOfTimeSteps );
-    //RK4t ( ml_prob );
+    //ETDt ( ml_prob, numberOfTimeSteps );
+    RK4t ( ml_prob );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
     counter = i;
   }
