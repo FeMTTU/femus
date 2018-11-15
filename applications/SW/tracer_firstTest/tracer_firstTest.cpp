@@ -25,9 +25,9 @@
 
 using namespace femus;
 
-double dt = 1.; //= dx / maxWaveSpeed * 0.85;
+double dt = 1.; 
 
-double k_v = 0.0001;
+double k_v = 0.01;
 
 double pi = acos ( -1. );
 double k_h = 1 / ( 10 * pi );
@@ -37,159 +37,14 @@ const unsigned NumberOfLayers = 20;
 clock_t start_time = clock();
 
 bool wave = false;
-bool twostage = true;
+bool twostage = false;
 bool assembly = true; //assembly must be left always true
 
-//const double hRest[10]={1,1,1,1,1,1,1,1,1,1};
-//const double hRest[10]={2,2,2,2,2,2,2,2,2,2};
-//const double hRest[20] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 const double hRest[20] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
 
 double InitalValueV ( const std::vector < double >& x ) {
   return 1. / 10.;
 }
-
-// double InitalValueV0 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 +hRest[0]*(NumberOfLayers-1);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV1 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-2);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV2 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-3);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV3 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-4);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV4 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-5);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV5 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-6);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV6 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);;
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-7);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV7 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-8);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV8 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-9);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV9 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-10);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV10 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-11);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV11 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-12);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV12 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-13);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV13 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-14);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV14 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-15);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV15 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-16);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV16 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-17);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV17 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-18);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV18 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-19);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-// double InitalValueV19 ( const std::vector < double >& x ) {
-//   double psi1 = (10.-x[0])*x[0]/(5*5);
-//   double z = -10 + hRest[0]/2 + hRest[0]*(NumberOfLayers-20);
-//   double d_psi2 = (2*z*(z+10)*(2*z+10))/(5*5*5*5);
-//   //double d_psi2 = (10 - 2*x[0])/(5*5);
-//   return psi1*d_psi2;
-// }
-
 
 double InitalValueH ( const std::vector < double >& x ) {
   return hRest[0];
@@ -197,7 +52,6 @@ double InitalValueH ( const std::vector < double >& x ) {
 
 double InitalValueT ( const std::vector < double >& x ) {
   double pi = acos ( -1. );
-//   return 17.5 + 25/pi * atan(x[0]/100.);
   if ( x[0] < 5 ) return 5;
   else return 30;
 //  return (- sin(pi*x[0]));
@@ -278,27 +132,6 @@ int main ( int argc, char** args ) {
 
   mlSol.Initialize ( "All" );
 
-//   mlSol.Initialize("v0",InitalValueV0);
-//   mlSol.Initialize("v1",InitalValueV1);
-//   mlSol.Initialize("v2",InitalValueV2);
-//   mlSol.Initialize("v3",InitalValueV3);
-//   mlSol.Initialize("v4",InitalValueV4);
-//   mlSol.Initialize("v5",InitalValueV5);
-//   mlSol.Initialize("v6",InitalValueV6);
-//   mlSol.Initialize("v7",InitalValueV7);
-//   mlSol.Initialize("v8",InitalValueV8);
-//   mlSol.Initialize("v9",InitalValueV9);
-//   mlSol.Initialize("v10",InitalValueV10);
-//   mlSol.Initialize("v11",InitalValueV11);
-//   mlSol.Initialize("v12",InitalValueV12);
-//   mlSol.Initialize("v13",InitalValueV13);
-//   mlSol.Initialize("v14",InitalValueV14);
-//   mlSol.Initialize("v15",InitalValueV15);
-//   mlSol.Initialize("v16",InitalValueV16);
-//   mlSol.Initialize("v17",InitalValueV17);
-//   mlSol.Initialize("v18",InitalValueV18);
-//   mlSol.Initialize("v19",InitalValueV19);
-
   for ( unsigned i = 0; i < NumberOfLayers; i++ ) {
     char name[10];
     sprintf ( name, "h%d", i );
@@ -339,18 +172,16 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 100; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 1.;
-  bool implicitEuler = false;
-  //system.ResetComputationalTime();
+  unsigned numberOfTimeSteps = 3209; //17h=1020 with dt=60, 17h=10200 with dt=6
+  dt = 1./10.;
+  bool implicitEuler = true;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
-    ETD ( ml_prob );
-    //RK4 ( ml_prob, implicitEuler );
+    //ETD ( ml_prob );
+    RK4 ( ml_prob, implicitEuler );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
   }
-  //system.PrintComputationalTime();
   std::cout << " TOTAL TIME:\t" << \
             static_cast<double> ( clock() - start_time ) / CLOCKS_PER_SEC << std::endl;
   return 0;
@@ -395,10 +226,8 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
   //solution variable
   std::vector < unsigned > solIndexh ( NLayers );
-  //std::vector < unsigned > solPdeIndexh ( NLayers );
 
   std::vector < unsigned > solIndexv ( NLayers );
-  //std::vector < unsigned > solPdeIndexv ( NLayers );
 
   std::vector < unsigned > solIndexHT ( NLayers );
   std::vector < unsigned > solPdeIndexHT ( NLayers );
@@ -412,11 +241,9 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     char name[10];
     sprintf ( name, "h%d", i );
     solIndexh[i] = mlSol->GetIndex ( name ); // get the position of "hi" in the sol object
-    //solPdeIndexh[i] = mlPdeSys->GetSolPdeIndex ( name ); // get the position of "hi" in the pdeSys object
 
     sprintf ( name, "v%d", i );
     solIndexv[i] = mlSol->GetIndex ( name ); // get the position of "vi" in the sol object
-    //solPdeIndexv[i] = mlPdeSys->GetSolPdeIndex ( name ); // get the position of "vi" in the pdeSys object
 
     sprintf ( name, "HT%d", i );
     solIndexHT[i] = mlSol->GetIndex ( name ); // get the position of "Ti" in the sol object
@@ -545,33 +372,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     std::vector < double > w ( NLayers + 1, 0. );
     w[0] = 1.;
 
-//     NEW w
-//     for ( unsigned k = NLayers; k > 1; k-- ) {
-//       w[k - 1] = w[k] - ( hALE[k - 1] - solh[k - 1]) / dt;
-//       if(bc2){
-//         w[k - 1] -=   0.5 * ( solh[k - 1] + solhp[k - 1] ) * solvp[k - 1] /dx;
-//       }
-//       else{
-//         w[k - 1] -=   solh[k - 1] * 1 /dx;
-//       }
-//       if(bc1){
-//         w[k - 1] +=   0.5 * ( solh[k - 1] + solhm[k - 1] ) * solvm[k - 1] /dx;
-//       }
-//       else{
-//         w[k - 1] +=   solh[k - 1] * 1 /dx;
-//       }
-//       //std::cout<< w[k-1] << " ";
-//     }
-//     //std::cout<<std::endl;
-
-//     OLD w
-//     for(unsigned k = 1; k < NLayers; k++){
-//       w[k] = w[k-1] + (  0.5 * ( solh[k-1].value() + solhp[k-1].value() ) * solvp[k-1].value()
-// 		       - 0.5 * ( solh[k-1].value() + solhm[k-1].value() ) * solvm[k-1].value() )/dx
-// 		    + ( hALE[k-1] - solh[k-1].value()) / dt;//TODO
-// 		    //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<w[k-1]<<std::endl;
-//     }
-
     std::vector < double > zMid ( NLayers );
     for ( unsigned k = 0; k < NLayers; k++ ) {
       zMid[k] = -b + solh[k] / 2.;
@@ -599,7 +399,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
       //BEGIN FIRST ORDER
       if ( i > start ) {
-        //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
         if ( solvm[k] > 0 ) {
           aResHT[k] += solHTm[k] * solvm[k] / dx;
         }
@@ -608,7 +407,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
         }
       }
       if ( i < end - 1 ) {
-        //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
         if ( solvp[k] > 0 ) {
           aResHT[k] -= solHT[k] * solvp[k] / dx; //first order upwind
         }
@@ -616,9 +414,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
           aResHT[k] -= solHTp[k] * solvp[k] / dx; //first order upwind
         }
       }
-//       else{
-//         aResHT[k] -= solHT[k] /*.value()*/  / dx; //first order upwind
-//       }
       //END
 
       //BEGIN THIRD ORDER
@@ -695,8 +490,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     for ( unsigned k = 0; k < NLayers; k++ ) {
       Res[k] =  aResHT[k].value();
       solht[k] = solHT[k].value();
-      //std::cout<< "Res["<<k<<"] = " << Res[k] <<std::endl;
-      //std::cout<< "Res["<<NLayers+k<<"] = " << Res[NLayers+k] <<std::endl;
     }
 
     RES->add_vector_blocked ( Res, l2GMapRow );
@@ -722,12 +515,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       // get the jacobian matrix (ordered by row major )
       vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
       s.jacobian ( &Jac[0], true );
-
-//       std::cout<<"element"<<i<<std::endl;
-//       for(unsigned j=0; j<NLayers * NLayers * ( 1 + bc1 + bc2 ); j++){
-// 	std::cout<<Jac[j];
-//       }
-//       std::cout<<std::endl;
 
       //store K in the global matrix KK
       KK->add_matrix_blocked ( Jac, l2GMapRow, l2GMapColumn );
@@ -779,9 +566,9 @@ void ETD ( MultiLevelProblem& ml_prob ) {
   MFNSolve ( mfn, v, y );
   MFNDestroy ( &mfn );
 
-  VecView(y,PETSC_VIEWER_STDOUT_WORLD);
+  //VecView(y,PETSC_VIEWER_STDOUT_WORLD);
   
-  std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+  //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
   
   sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
 
@@ -883,33 +670,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
       std::vector < double > w ( NLayers + 1, 0. );
       w[0] = 1.;
-
-//     NEW w
-//     for ( unsigned k = NLayers; k > 1; k-- ) {
-//       w[k - 1] = w[k] - ( hALE[k - 1] - solh[k - 1]) / dt;
-//       if(bc2){
-//         w[k - 1] -=   0.5 * ( solh[k - 1] + solhp[k - 1] ) * solvp[k - 1] /dx;
-//       }
-//       else{
-//         w[k - 1] -=   solh[k - 1] * 1 /dx;
-//       }
-//       if(bc1){
-//         w[k - 1] +=   0.5 * ( solh[k - 1] + solhm[k - 1] ) * solvm[k - 1] /dx;
-//       }
-//       else{
-//         w[k - 1] +=   solh[k - 1] * 1 /dx;
-//       }
-//       //std::cout<< w[k-1] << " ";
-//     }
-//     //std::cout<<std::endl;
-
-//     OLD w
-//     for(unsigned k = 1; k < NLayers; k++){
-//       w[k] = w[k-1] + (  0.5 * ( solh[k-1].value() + solhp[k-1].value() ) * solvp[k-1].value()
-// 		       - 0.5 * ( solh[k-1].value() + solhm[k-1].value() ) * solvm[k-1].value() )/dx
-// 		    + ( hALE[k-1] - solh[k-1].value()) / dt;//TODO
-// 		    //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<w[k-1]<<std::endl;
-//     }
 
       std::vector < double > zMid ( NLayers );
       for ( unsigned k = 0; k < NLayers; k++ ) {
@@ -1029,13 +789,6 @@ void ETD ( MultiLevelProblem& ml_prob ) {
 
       }
 
-//       vector< double > Res ( NLayers ); // local redidual vector
-//       for ( unsigned k = 0; k < NLayers; k++ ) {
-//         Res[k] =  aResHT[k];
-//         //std::cout<< "Res["<<k<<"] = " << Res[k] <<std::endl;
-//         //std::cout<< "Res["<<NLayers+k<<"] = " << Res[NLayers+k] <<std::endl;
-//       }
-
       RES2->add_vector_blocked ( aResHT, l2GMapRow );
 
     }
@@ -1045,10 +798,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     RES2->scale ( -1. );
     RES2->add ( *RES );
     RES2->add_vector ( *EPS, *KK );
-    RES2->scale ( -1. );
-    
-    
-    
+    RES2->scale ( -1. );    
     //END ASSEMBLY R2
 
     EPS->zero();
@@ -1081,7 +831,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
     MFNSolve ( mfn, v2, y2 );
     MFNDestroy ( &mfn );
 
-    VecView(y2,PETSC_VIEWER_STDOUT_WORLD);
+    //VecView(y2,PETSC_VIEWER_STDOUT_WORLD);
     
     sol->UpdateSol ( mlPdeSys->GetSolPdeIndex(), EPS, pdeSys->KKoffset );
 
@@ -1102,7 +852,7 @@ void ETD ( MultiLevelProblem& ml_prob ) {
       double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
 
       double valueT = valueHT / valueH;
-      if ( i == 10 ) std::cout << "temperature " << valueT << std::endl;
+      //if ( i == 10 ) std::cout << "temperature " << valueT << std::endl;
       //if (i == 0) valueT = 0.;
       //if (i == msh->_dofOffset[solTypeHT][iproc + 1] - 1 ) valueT = 0.;
 
@@ -1217,32 +967,24 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 
     l2GMapRow.resize ( NLayers );
     l2GMapColumn.resize ( ( 1 + bc1 + bc2 ) * NLayers );
-    //l2GMapColumn.resize ( ( 1 + bc1 + bc2 + bc3 + bc4) * NLayers );
 
-    //std::fill ( aResh.begin(), aResh.end(), 0 ); //set aRes to zero
     std::fill ( aResHT.begin(), aResHT.end(), 0 ); //set aRes to zero
 
     for ( unsigned j = 0; j < NLayers; j++ ) {
 
       solh[j] = ( *sol->_Sol[solIndexh[j]] ) ( i );
       solHT[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i );
-      //l2GMapRow[j] = pdeSys->GetSystemDof ( solIndexh[j], solPdeIndexh[j], 0, i );
       l2GMapRow[/*NLayers +*/ j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i );
 
-      //l2GMapColumn[j] = pdeSys->GetSystemDof ( solIndexh[j], solPdeIndexh[j], 0, i );
       l2GMapColumn[/*NLayers +*/ j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i );
 
       solvm[j] = ( *sol->_Sol[solIndexv[j]] ) ( i );
       solvp[j] = ( *sol->_Sol[solIndexv[j]] ) ( i + 1 );
 
-      //l2GMapColumn[2 * NLayers + j] = pdeSys->GetSystemDof ( solIndexv[j], solPdeIndexv[j], 0, i );
-      //l2GMapColumn[3 * NLayers + j] = pdeSys->GetSystemDof ( solIndexv[j], solPdeIndexv[j], 1, i );
-
       if ( i > start ) {
         solhm[j] = ( *sol->_Sol[solIndexh[j]] ) ( i - 1 );
         solHTm[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i - 1 );
 
-        //l2GMapColumn[4 * NLayers + j] = pdeSys->GetSystemDof ( solIndexh[j], solPdeIndexh[j], 0, i - 1 );
         l2GMapColumn[NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i - 1 );
 
       }
@@ -1251,7 +993,6 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
         solhp[j] = ( *sol->_Sol[solIndexh[j]] ) ( i + 1 );
         solHTp[j] = ( *sol->_Sol[solIndexHT[j]] ) ( i + 1 );
 
-        //l2GMapColumn[ ( 4 + 2 * bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexh[j], solPdeIndexh[j], 0, i + 1 );
         l2GMapColumn[ ( 1 + bc1 ) * NLayers + j] = pdeSys->GetSystemDof ( solIndexHT[j], solPdeIndexHT[j], 0, i + 1 );
       }
 
@@ -1293,33 +1034,6 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 
     std::vector < double > w ( NLayers + 1, 0. );
     w[0] = 1.;
-
-//     NEW w
-//     for ( unsigned k = NLayers; k > 1; k-- ) {
-//       w[k - 1] = w[k] - ( hALE[k - 1] - solh[k - 1]) / dt;
-//       if(bc2){
-//         w[k - 1] -=   0.5 * ( solh[k - 1] + solhp[k - 1] ) * solvp[k - 1] /dx;
-//       }
-//       else{
-//         w[k - 1] -=   solh[k - 1] * 1 /dx;
-//       }
-//       if(bc1){
-//         w[k - 1] +=   0.5 * ( solh[k - 1] + solhm[k - 1] ) * solvm[k - 1] /dx;
-//       }
-//       else{
-//         w[k - 1] +=   solh[k - 1] * 1 /dx;
-//       }
-//       //std::cout<< w[k-1] << " ";
-//     }
-//     //std::cout<<std::endl;
-
-//     OLD w
-//     for(unsigned k = 1; k < NLayers; k++){
-//       w[k] = w[k-1] + (  0.5 * ( solh[k-1].value() + solhp[k-1].value() ) * solvp[k-1].value()
-// 		       - 0.5 * ( solh[k-1].value() + solhm[k-1].value() ) * solvm[k-1].value() )/dx
-// 		    + ( hALE[k-1] - solh[k-1].value()) / dt;//TODO
-// 		    //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"<<w[k-1]<<std::endl;
-//     }
 
     std::vector < double > zMid ( NLayers );
     for ( unsigned k = 0; k < NLayers; k++ ) {
@@ -1366,7 +1080,6 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 
         //BEGIN FIRST ORDER
         if ( i > start ) {
-          //aResHT[k] += 0.5 * (solHTm[k] + solHT[k]) * solvm[k]  / dx; //second order
           if ( solvm[k] > 0 ) {
             LHS += ( solHTm[k] + addition ) * solvm[k] / dx;
           }
@@ -1375,7 +1088,6 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
           }
         }
         if ( i < end - 1 ) {
-          //aResHT[k] -= 0.5 * (solHT[k] + solHTp[k]) * solvp[k]  / dx; //second order
           if ( solvp[k] > 0 ) {
             LHS -= ( solHT[k] + addition ) * solvp[k] / dx; //first order upwind
           }
@@ -1383,9 +1095,6 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
             LHS -= ( solHTp[k] + addition ) * solvp[k] / dx; //first order upwind
           }
         }
-//       else{
-//         aResHT[k] -= solHT[k] /*.value()*/  / dx; //first order upwind
-//       }
         //END
 
         //BEGIN THIRD ORDER
@@ -1493,11 +1202,11 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 
     else if ( implicitEuler == true ) {
 
-      double Tk = 0.;
-      vector < vector < double > > sysMatrix ( NLayers );
+      std::vector <double> Trhs (NLayers, 0.);
+      std::vector < std::vector < double > > sysMatrix ( NLayers );
       
-      for ( unsigned k = 0; k << NLayers; k++ ) {
-        sysMatrix[k].assign ( NLayers, 0. );
+      for ( unsigned k = 0; k < NLayers; k++ ) {
+        sysMatrix[k].assign( NLayers, 0. );
 
         double A = 0.;
 	double C = 0.;
@@ -1530,49 +1239,72 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler ) {
 	if(k > 0) sysMatrix[k][k-1] = A;
 	if(k < NLayers - 1) sysMatrix[k][k+1] = C;
 	
-	Tk = ( *sol->_Sol[solIndexHT[k]] ) ( i )/( *sol->_Sol[solIndexh[k]] ) ( i );
+	Trhs[k] = ( *sol->_Sol[solIndexHT[k]] ) ( i )/( *sol->_Sol[solIndexh[k]] ) ( i );
 	
       }
-      
+           
       //risolvere il sistema Nlayer X Nlayer
       KSP                solver;
-      Mat                A;
+      Mat                triDiagA;
       Vec                b,x;
-      PetscScalar        v;
-      PetscInt           i,j,nlayers;
+      PetscInt           k,j,nlayers;
       PetscErrorCode     ierr;
       
       nlayers = static_cast<PetscInt> (NLayers);
-      ierr = VecSetSizes(b,nlayers,nlayers);
-      ierr = VecSet(b,Tk);
-      ierr = MatCreate(PETSC_COMM_WORLD,&A);
-      ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE, nlayers, nlayers);
+      ierr = VecCreate(PETSC_COMM_WORLD, &x);
+      ierr = VecSetSizes(x, PETSC_DECIDE, nlayers);
+      ierr = VecSetFromOptions(x);
+      ierr = VecDuplicate(x,&b);
+      ierr = MatCreate(PETSC_COMM_WORLD,&triDiagA);
+      ierr = MatSetSizes(triDiagA,PETSC_DECIDE,PETSC_DECIDE, nlayers, nlayers);
+      ierr = MatSetFromOptions(triDiagA);
+      ierr = MatSetUp(triDiagA);
       
-      for (i=0; i<nlayers; i++) {
-	v = static_cast<PetscScalar> ( sysMatrix[i][i] );
-        MatSetValues(A,1,&i,1,&i,&v,INSERT_VALUES);
-	if(i>0){
-	  v = static_cast<PetscScalar> ( sysMatrix[i-1][i] );
-	  j=i-1;
-	  MatSetValues(A,1,&i,1,&j,&v,INSERT_VALUES);
+      for (k=0; k<nlayers; k++) {
+        MatSetValues(triDiagA,1,&k,1,&k,&sysMatrix[k][k],INSERT_VALUES);
+	VecSetValues(b, 1, &k, &Trhs[k], INSERT_VALUES );
+	if(k>0){
+	  j=k-1;
+	  MatSetValues(triDiagA,1,&k,1,&j,& sysMatrix[k-1][k],INSERT_VALUES);
 	}
-	if(i<nlayers-1){
-	  v = static_cast<PetscScalar> ( sysMatrix[i][i+1] );
-	  j=i+1;
-	  MatSetValues(A,1,&i,1,&j,&v,INSERT_VALUES);
+	if(k<nlayers-1){
+	  j=k+1;
+	  MatSetValues(triDiagA,1,&k,1,&j,&sysMatrix[k][k+1],INSERT_VALUES);
 	}
       }
       
-      ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
-      ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+      ierr = MatAssemblyBegin(triDiagA,MAT_FINAL_ASSEMBLY);
+      ierr = MatAssemblyEnd(triDiagA,MAT_FINAL_ASSEMBLY);
+      
+      
+//       PetscViewer    viewer;
+//       PetscViewerDrawOpen(PETSC_COMM_WORLD,NULL,NULL,0,0,900,900,&viewer);
+//       PetscObjectSetName((PetscObject)viewer,"implicit Euler matrix");
+//       PetscViewerPushFormat(viewer,PETSC_VIEWER_DRAW_LG);
+//       MatView(triDiagA,viewer);
+//       double a;
+//       std::cin>>a;
+      
       
       ierr = KSPCreate(PETSC_COMM_WORLD, &solver);
-      ierr = KSPSetOperators(solver,A,A);
+      ierr = KSPSetOperators(solver,triDiagA,triDiagA);
+      ierr = KSPSetType(solver, KSPRICHARDSON);
       ierr = KSPSolve(solver, b, x);
       
       //1. aggiornare solT con x 
-      //2. aggiornare solHT
-      //3. checkare che runni
+      for (k = 0; k < nlayers; k++ ) {
+	PetscScalar valueT = 0.;
+	ierr = VecGetValues(x, 1, &k, &valueT);
+        sol->_Sol[solIndexT[k]]->set ( i, valueT );
+        sol->_Sol[solIndexT[k]]->close();
+	
+        //2. aggiornare solHT
+        double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
+        double valueHT = valueH * valueT;
+        sol->_Sol[solIndexHT[k]]->set ( i, valueHT );
+        sol->_Sol[solIndexHT[k]]->close();
+      }
+      //3. checkare che runni, fare pulizia e scegliere LU solver
     }
 
   }
