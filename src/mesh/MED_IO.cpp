@@ -13,15 +13,33 @@
 
 =========================================================================*/
 
-//local include
-#include "MED_IO.hpp"
-#include "Mesh.hpp"
-
 //C++ include
 #include <cassert>
 #include <cstdio>
 #include <fstream>
 #include <tuple>
+
+
+//local include
+#include "MED_IO.hpp"
+#include "Mesh.hpp"
+#include "FEQuad1.hpp"
+#include "FEQuad4.hpp"
+#include "FEQuad9.hpp"
+#include "FEHex1.hpp"
+#include "FEHex8.hpp"
+#include "FEHex27.hpp"
+#include "FETri1.hpp"
+#include "FETri3.hpp"
+#include "FETri6.hpp"
+#include "FETet1.hpp"
+#include "FETet4.hpp"
+#include "FETet10.hpp"
+#include "FEEdge1.hpp"
+#include "FEEdge2.hpp"
+#include "FEEdge3.hpp"
+
+
 
 namespace femus
 {
@@ -138,17 +156,9 @@ namespace femus
      std::vector< GroupInfo >     group_info = get_group_vector_flags_per_mesh(file_id,mesh_menus[j]);
     
           for(unsigned i = 0; i < group_info.size(); i++) {
-              group_info[i]._geom_el = NULL;
-              group_info[i]._size = 0;
+              compute_group_geom_elem_and_size(file_id, mesh_menus[j],group_info[i]);
           }
           
-          //here I need a routine to compute the group GeomElem and the group size
-
-    
-    //separate groups by dimension
-    //loop over all FAM fields for all element types
-    //read each of them
-    //as soon as an entry is equal to the group_salome_flag, that means the dimension is that of the current element dataset
     
     
 // dimension loop
@@ -173,6 +183,7 @@ namespace femus
 
 /// @todo do we need these numbers for us?
    void MED_IO::get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const  {
+       
          //NUM ***************************
        hsize_t dims_num[2];
        std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
@@ -184,6 +195,69 @@ namespace femus
         H5Dclose(dtset_num); 
         
    }
+   
+   
+     //here I need a routine to compute the group GeomElem and the group size
+
+    //separate groups by dimension
+    //as soon as an entry is equal to the group_salome_flag, that means the dimension is that of the current element dataset
+   void MED_IO::compute_group_geom_elem_and_size(const hid_t&  file_id, const std::string mesh_menu, GroupInfo & group_info) const {
+       
+      std::string my_mesh_name_dir = mesh_ensemble +  "/" + mesh_menu + "/" +  aux_zeroone + "/" + elem_list + "/";  ///@todo here we have to loop
+
+      hsize_t     n_geom_el_types;
+      hid_t       gid = H5Gopen(file_id, my_mesh_name_dir.c_str(), H5P_DEFAULT);
+      hid_t status = H5Gget_num_objs(gid, &n_geom_el_types);
+        
+    std::vector<char*> elem_types(n_geom_el_types);
+
+    bool group_found = false;
+    
+    //loop over all FAM fields until the group is found
+    for(unsigned j = 0; j < elem_types.size(); j++) {
+        
+        if (group_found == false) {
+      hsize_t dims_fam[2];
+      elem_types[j] = new char[max_length];
+      H5Gget_objname_by_idx(gid, j, elem_types[j], max_length); ///@deprecated see the HDF doc to replace this
+      std::string elem_types_str(elem_types[j]);
+      
+       std::string fam_name_dir_i = my_mesh_name_dir + elem_types_str + "/" + group_fam;
+       hid_t dtset_fam = H5Dopen(file_id, fam_name_dir_i.c_str(), H5P_DEFAULT);
+       hid_t filespace_fam = H5Dget_space(dtset_fam);
+       hid_t status_fam  = H5Sget_simple_extent_dims(filespace_fam, dims_fam, NULL);
+       if(status_fam == 0) {     std::cerr << "MED_IO::read dims not found";  abort();  }
+      
+        const unsigned n_elements = dims_fam[0];
+        std::vector<int> fam_map(n_elements);
+        hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data() );
+
+        int group_size = 0;
+        for(unsigned k = 0; k < fam_map.size(); k++) {
+
+            if ( fam_map[k] == group_info._salome_flag )   {
+                group_found = true;
+                group_size++;
+                std::cout << "Current flag " << fam_map[k] << " matches " << group_info._salome_flag << " " << elem_types[j] << std::endl; 
+                group_info._geom_el = get_geom_elem_from_med_name(elem_types_str);
+            }
+        
+       }
+       group_info._size = group_size;
+    
+        H5Dclose(dtset_fam);
+        
+     }
+     
+   }
+          
+       H5Gclose(gid);
+       
+        return;
+        
+    }
+   
+   
   
   //  we loop over all elements and see which ones are of that group
    void MED_IO::set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu,  const int i, const std::string el_fe_type_per_dimension, const std::vector<GroupInfo> & group_info)  {
@@ -337,7 +411,7 @@ namespace femus
         }
         for(unsigned i = 0; i < nve; i++) {
           unsigned inode = SalomeToFemusVertexIndex[mesh.el->GetElementType(iel)][i];
-          mesh.el->SetElementDofIndex(iel, inode, conn_map[iel + i * n_elems_per_dimension ] - 1u);
+          mesh.el->SetElementDofIndex(iel, inode, conn_map[iel + i * n_elems_per_dimension ] - 1u);  //MED connectivity is stored on a per-node basis, not a per-element basis
          }
        }
       
@@ -669,27 +743,26 @@ namespace femus
     mesh.SetDimension(mydim);
 
 
-    std::vector<char*> elem_types;
-    elem_types.resize(n_fem_type);
+    std::vector<char*> elem_types(n_fem_type);
     
     
     for(unsigned j = 0; j < elem_types.size(); j++) {
       elem_types[j] = new char[max_length];
       H5Gget_objname_by_idx(gid, j, elem_types[j], max_length); ///@deprecated see the HDF doc to replace this
-      std::string tempj(elem_types[j]);
+      std::string elem_types_str(elem_types[j]);
 
-      if( tempj.compare("HE8") == 0 ||
-          tempj.compare("H20") == 0 ||
-          tempj.compare("H27") == 0 ||
-          tempj.compare("TE4") == 0 ||
-          tempj.compare("T10") == 0)      {
+      if( elem_types_str.compare("HE8") == 0 ||
+          elem_types_str.compare("H20") == 0 ||
+          elem_types_str.compare("H27") == 0 ||
+          elem_types_str.compare("TE4") == 0 ||
+          elem_types_str.compare("T10") == 0)      {
         mydim = 3;
       }
-      else if(tempj.compare("QU4") == 0 ||
-              tempj.compare("QU8") == 0 ||
-              tempj.compare("QU9") == 0 ||
-              tempj.compare("TR3") == 0 ||
-              tempj.compare("TR6") == 0) {
+      else if(elem_types_str.compare("QU4") == 0 ||
+              elem_types_str.compare("QU8") == 0 ||
+              elem_types_str.compare("QU9") == 0 ||
+              elem_types_str.compare("TR3") == 0 ||
+              elem_types_str.compare("TR6") == 0) {
         mydim = 2;
       }
 
@@ -743,6 +816,35 @@ namespace femus
 
     return Node_el;
   }
+  
+  
+  GeomElemBase * MED_IO::get_geom_elem_from_med_name(const  std::string el_type) const {
+      
+         if(el_type.compare("HE8") == 0) return new FEHex8();
+    else if(el_type.compare("H20") == 0) abort(); ///@todo //return new FEHex20();
+    else if(el_type.compare("H27") == 0) return new FEHex27();
+
+    else if(el_type.compare("TE4") == 0) return new FETet4();
+    else if(el_type.compare("T10") == 0) return new FETet10();
+
+    else if(el_type.compare("QU4") == 0) return new FEQuad4();
+    else if(el_type.compare("QU8") == 0) abort();  
+    else if(el_type.compare("QU9") == 0) return new FEQuad9();
+
+    else if(el_type.compare("TR3") == 0) return new FETri3();
+    else if(el_type.compare("TR6") == 0) return new FETri6();
+    else if(el_type.compare("TR7") == 0) abort(); 
+
+    else if(el_type.compare("SE2") == 0) return new FEEdge2();
+    else if(el_type.compare("SE3") == 0) return new FEEdge3();
+    else {
+      std::cout << "MED_IO::read: element not supported";
+      abort();
+    }
+  
+      
+  }
+  
 
 } //end namespace femus
 

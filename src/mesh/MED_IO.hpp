@@ -68,10 +68,12 @@ class MED_IO : public MeshInput<Mesh>
 
  private:
      
-  void get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const;
+   void get_global_elem_numbering(const hid_t&  file_id, const std::string mesh_menu, const std::string el_fe_type_per_dimension) const;
     
-  void  set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i, const std::string el_fe_type_per_dimension, const std::vector<GroupInfo> & group_info);
+   void set_elem_group_ownership(const hid_t&  file_id, const std::string mesh_menu, const int i, const std::string el_fe_type_per_dimension, const std::vector<GroupInfo> & group_info);
    
+   void compute_group_geom_elem_and_size(const hid_t&  file_id, const std::string mesh_menu, GroupInfo & group_info)  const;
+
    void set_elem_connectivity(const hid_t&  file_id, const std::string mesh_menu, const unsigned i, const std::tuple<std::string,unsigned int> & el_fe_type_per_dimension, std::vector<bool>& type_elem_flag);
    
    void set_node_coordinates(const hid_t&  file_id, const std::string mesh_menu, vector < vector < double> >& coords, const double Lref);
@@ -88,6 +90,8 @@ class MED_IO : public MeshInput<Mesh>
   std::vector< std::tuple<std::string,unsigned int> >  set_mesh_dimension_and_get_geom_elems_by_looping_over_element_types(const hid_t &  file_id, const std::string & menu_name); //this cannot be const because it sets the dimension in the mesh
 
    unsigned  get_elem_number_of_nodes(const  std::string el_type) const;
+   
+   GeomElemBase * get_geom_elem_from_med_name(const  std::string el_type) const;
 
    /** Read FE type */
    const std::vector<std::string>  get_geom_elem_type_per_dimension(const hid_t & file_id, const std::string my_mesh_name_dir);   //@todo this should be const
@@ -124,7 +128,7 @@ MED_IO::MED_IO (Mesh& mesh) :
 
 
 // @todo hybrid meshes (MED can export them)
-// @todo groups with more than one type of element
+// @todo groups with more than one type of element (in the sense hybrid, but at the same dimension)
 // @todo mesh with overlapping groups  (MED can export them, defining the intersection independently; now the name parsing wouldn't work with them; Salome splits into non-intersecting family, so one needs to read the GRO/NOM dataset )
 // @todo how would I use a 0d element? or a ball?
 // @todo triggering of the copy of new input files happens right after "Configure" of cmake
