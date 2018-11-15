@@ -160,7 +160,6 @@ namespace femus
           }
           
     
-    
 // dimension loop
       for(unsigned i = 0; i < mesh.GetDimension(); i++) {
 
@@ -214,9 +213,9 @@ namespace femus
     bool group_found = false;
     
     //loop over all FAM fields until the group is found
-    for(unsigned j = 0; j < elem_types.size(); j++) {
+    unsigned j = 0;
+    while (j < elem_types.size() && group_found == false) {
         
-        if (group_found == false) {
       hsize_t dims_fam[2];
       elem_types[j] = new char[max_length];
       H5Gget_objname_by_idx(gid, j, elem_types[j], max_length); ///@deprecated see the HDF doc to replace this
@@ -247,9 +246,8 @@ namespace femus
     
         H5Dclose(dtset_fam);
         
+        j++;
      }
-     
-   }
           
        H5Gclose(gid);
        
@@ -274,10 +272,12 @@ namespace femus
         if(status_fam == 0) {     std::cerr << "MED_IO::read dims not found";  abort();  }
         
         const unsigned n_elements = dims_fam[0];
-        int* fam_map = new  int[n_elements];
-        hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map);
+        std::vector<int> fam_map(n_elements);
+        hid_t status_conn = H5Dread(dtset_fam, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fam_map.data());
 
+        
 // ****************** Volume *******************************************    
+           if ( i == (mesh.GetDimension() - 1 ) ) { //volume
     std::vector < unsigned > materialElementCounter(3,0);  //I think this counts who is fluid, who is solid, who whatever else, need to double check with the Gambit input files
     const unsigned group_property_fluid_probably          = 2;
     const unsigned group_property_something_else_probably = 3;
@@ -286,31 +286,28 @@ namespace femus
     //I have to split the groups with the dimensions
     //I have to compute the number of elements of each group
     
-//           for(unsigned j = 0; j < group_names.size(); j++) {
-//           if ( fam_map[i] == std::get<0>(group_flags[j]) )   {
-// //               std::cout << "Current flag " << fam_map[i] << " matches " << std::get<1>(group_flags[j]) << std::endl; 
-//             }
-//           }  
-
-//         for(unsigned i = 0; i < number_of_group_elements; i++) {
-//         mesh.el->SetElementGroup(   elem_indices[i] - 1 - n_elements_b_bb, gr_integer_name);
-//         mesh.el->SetElementMaterial(elem_indices[i] - 1 - n_elements_b_bb , gr_material);
+        for(unsigned gv = 0; gv < group_info.size(); gv++) {
+            if ( i == group_info[gv]._geom_el->get_dimension() - 1 ) {
+        for(unsigned g = 0; g < fam_map.size()/*group_info[gv]._size*//*number_of_group_elements*/; g++) {
+            if (fam_map[g] == group_info[gv]._salome_flag)   mesh.el->SetElementGroup(g, /*fam_map[g]*/ group_info[gv]._user_defined_flag /*gr_integer_name*/);  //I think that 1 is set later as the default  group number
+//         mesh.el->SetElementMaterial(elem_indices[g] - 1 - n_elements_b_bb, group_info[gv]._user_defined_property /*gr_material*/);
 // 	
-//       if(gr_material == group_property_fluid_probably          ) materialElementCounter[0] += 1;
-// 	else if(gr_material == group_property_something_else_probably ) materialElementCounter[1] += 1;
-// 	else                                                            materialElementCounter[2] += 1;
+         if(group_info[gv]._user_defined_property/*gr_material*/ == group_property_fluid_probably          ) materialElementCounter[0] += 1;
+	else if(group_info[gv]._user_defined_property/*gr_material*/ == group_property_something_else_probably ) materialElementCounter[1] += 1;
+	else                                                            materialElementCounter[2] += 1;
 
-//         }
-        
-//     mesh.el->SetElementGroupNumber(/*n_groups_of_that_space_dimension*/);
-//     mesh.el->SetMaterialElementCounter(materialElementCounter);
+                }
+            }  //groups of the current dimension
+        }  //loop over all groups
+           
+    mesh.el->SetElementGroupNumber(1/*n_groups_of_that_space_dimension*/);
+    mesh.el->SetMaterialElementCounter(materialElementCounter);
+           }
 // ****************** Volume, end *******************************************    
         
-    
-    
-    
+
 // ****************** Boundary *******************************************    
-           if ( i == (mesh.GetDimension() - 1 - 1) ) { //boundary
+        else   if ( i == (mesh.GetDimension() - 1 - 1) ) { //boundary
                     
     //loop over volume elements
     //extract faces
@@ -320,7 +317,7 @@ namespace femus
            int value = group_info[k]._user_defined_flag;       //flag of the boundary portion
       unsigned nface = group_info[k]._size;  //number of elements in a portion of boundary
                value = - (value + 1);  ///@todo these boundary indices need to be NEGATIVE,  so the value in salome must be POSITIVE
-    for (unsigned i = 0; i < nface; i++) {
+    for (unsigned f = 0; f < nface; f++) {
 //       unsigned iel =,   //volume element to which the face belongs
 //       iel--;
 //       unsigned iface; //index of the face in that volume element
@@ -333,8 +330,6 @@ namespace femus
         } //end (volume pos - 1)
 // ****************** Boundary end *******************************************    
     
-    
-        delete [] fam_map;
         H5Dclose(dtset_fam);
 
    } 
