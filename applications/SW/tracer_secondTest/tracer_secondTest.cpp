@@ -1037,25 +1037,36 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps ) {
 
       // define the independent variables
       s.independent ( &solHT[0], NLayers );
-      if ( i > start ) {
-        s.independent ( &solHTm[0], NLayers );
-      }
-      if ( i < end - 1 ) {
-        s.independent ( &solHTp[0], NLayers );
-      }
-      /*    if ( i > start + 1) {
+      
+      if(!splitting){
+        if ( i > start ) {
+          s.independent ( &solHTm[0], NLayers );
+        }
+        if ( i < end - 1 ) {
+          s.independent ( &solHTp[0], NLayers );
+        }
+        /*    if ( i > start + 1) {
         s.independent ( &solHTmm[0], NLayers );
         }
         if ( i < end - 2 ) {
           s.independent ( &solHTpp[0], NLayers );
         } */
+        // get the jacobian matrix (ordered by row major )
+        vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
+        s.jacobian ( &Jac[0], true );
 
-      // get the jacobian matrix (ordered by row major )
-      vector < double > Jac ( NLayers * NLayers * ( 1 + bc1 + bc2 ) );
-      s.jacobian ( &Jac[0], true );
+        //store K in the global matrix KK
+        KK->add_matrix_blocked ( Jac, l2GMapRow, l2GMapColumn );
+      }
+      else{
+        vector < double > Jac ( NLayers * NLayers);
+        s.jacobian ( &Jac[0], true );
 
-      //store K in the global matrix KK
-      KK->add_matrix_blocked ( Jac, l2GMapRow, l2GMapColumn );
+        //store K in the global matrix KK
+        KK->add_matrix_blocked ( Jac, l2GMapRow, l2GMapRow );  
+      }
+      
+      
 
       s.clear_independents();
       s.clear_dependents();
