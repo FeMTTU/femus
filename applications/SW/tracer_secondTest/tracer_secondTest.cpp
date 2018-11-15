@@ -40,8 +40,8 @@ unsigned counter = 0.;
 clock_t start_time = clock();
 
 bool wave = false;
-bool twostage = false;
-bool splitting = false;
+bool twostage = true;
+bool splitting = true;
 bool assembly = true; //assembly must be left always true
 
 const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
@@ -653,14 +653,14 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 8001; //17h=1020 with dt=60, 17h=10200 with dt=6
+  unsigned numberOfTimeSteps = 3001; //17h=1020 with dt=60, 17h=10200 with dt=6
   dt = 0.5;
   bool implicitEuler = true;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
     system.CopySolutionToOldSolution();
-    //ETD ( ml_prob, numberOfTimeSteps );
-    RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
+    ETD ( ml_prob, numberOfTimeSteps );
+    //RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
     counter = i;
   }
@@ -1003,23 +1003,23 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps ) {
 
       aResHT[k] += solh[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
 
-//       //aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
-      if (splitting){
-        if(i > start){
-          aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k].value() / solhm[k] - solHT[k].value() / solh[k])/(dx*dx); // horizontal diffusion
-        }
-        if(i < end-1){
-          aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k].value() / solhp[k] - solHT[k].value() / solh[k])/(dx*dx); // horizontal diffusion
-        }    
-      }
-      else{
-        if(i > start){
-          aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
-        }
-        if(i < end-1){
-          aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
-        }
-      }
+      //aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
+//       if (splitting){
+//         if(i > start){
+//           aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k].value() / solhm[k] - solHT[k].value() / solh[k])/(dx*dx); // horizontal diffusion
+//         }
+//         if(i < end-1){
+//           aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k].value() / solhp[k] - solHT[k].value() / solh[k])/(dx*dx); // horizontal diffusion
+//         }    
+//       }
+//       else{
+//         if(i > start){
+//           aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+//         }
+//         if(i < end-1){
+//           aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+//         }
+//       }
 
     }
 
@@ -1102,6 +1102,8 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps ) {
 // FNView(f,PETSC_VIEWER_STDOUT_WORLD);
 
   FNSetScale ( f, dt, dt );
+  tol = 1e-12;
+  MFNSetTolerances(mfn,tol,150);
   MFNSetFromOptions ( mfn );
 
   MFNSolve ( mfn, v, y );
@@ -1344,12 +1346,12 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps ) {
         aResHT[k] += solh[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
         
 //       //aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
-        if(i > start){
-          aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
-        }
-        if(i < end-1){
-          aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
-        }
+//         if(i > start){
+//           aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+//         }
+//         if(i < end-1){
+//           aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+//         }
 
       }
 
@@ -1713,12 +1715,12 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigne
 //         }
         //END
         
-        if(i > start){
-          LHS += k_h * (0.5 * (solhm[k] + solh[k])) * ((solHTm[k] / solhm[k] + addition)  - (solHT[k] / solh[k] + addition))/(dx*dx); // horizontal diffusion
-        }
-        if(i < end-1){
-          LHS += k_h * (0.5 * (solhp[k] + solh[k])) * ((solHTp[k] / solhp[k] + addition)  - (solHT[k] / solh[k] + addition))/(dx*dx); // horizontal diffusion
-        }
+//         if(i > start){
+//           LHS += k_h * (0.5 * (solhm[k] + solh[k])) * ((solHTm[k] / solhm[k] + addition)  - (solHT[k] / solh[k] + addition))/(dx*dx); // horizontal diffusion
+//         }
+//         if(i < end-1){
+//           LHS += k_h * (0.5 * (solhp[k] + solh[k])) * ((solHTp[k] / solhp[k] + addition)  - (solHT[k] / solh[k] + addition))/(dx*dx); // horizontal diffusion
+//         }
 
 
         if ( RK_step == 0 ) {
