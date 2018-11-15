@@ -96,20 +96,36 @@ int main(int argc, char** args) {
   
   std::map < std::pair < std::string, unsigned > , double > YM2; 
   
-  YM2[std::make_pair (soft, 2u)] = 4.2 * 1.e6;
-  YM2[std::make_pair (soft, 3u)] = 4.2 * 1.e6;
-  YM2[std::make_pair (soft, 4u)] = 4.2 * 1.e6;
-  YM2[std::make_pair (soft, 5u)] = 4.2 * 1.e6;
+//   YM2[std::make_pair (soft, 2u)] = 4.2 * 1.e6;
+//   YM2[std::make_pair (soft, 3u)] = 4.2 * 1.e6;
+//   YM2[std::make_pair (soft, 4u)] = 4.2 * 1.e6;
+//   YM2[std::make_pair (soft, 5u)] = 4.2 * 1.e6;
+//   
+//   YM2[std::make_pair (medium, 2u)] = 4.2 * 1.e7;
+//   YM2[std::make_pair (medium, 3u)] = 4.2 * 1.e7;
+//   YM2[std::make_pair (medium, 4u)] = 4.2 * 1.e7;
+//   YM2[std::make_pair (medium, 5u)] = 4.2 * 1.e7;
+//   
+//   YM2[std::make_pair (stiff, 2u)] = 4.2 * 1.e8;
+//   YM2[std::make_pair (stiff, 3u)] = 4.2 * 1.e8;
+//   YM2[std::make_pair (stiff, 4u)] = 4.2 * 1.e8;
+//   YM2[std::make_pair (stiff, 5u)] = 4.2 * 1.e8;
   
-  YM2[std::make_pair (medium, 2u)] = 4.2 * 1.e7;
-  YM2[std::make_pair (medium, 3u)] = 4.2 * 1.e7;
-  YM2[std::make_pair (medium, 4u)] = 4.2 * 1.e7;
-  YM2[std::make_pair (medium, 5u)] = 4.2 * 1.e7;
+  YM2[std::make_pair (soft, 2u)] = 4.2 * 1.e5;
+  YM2[std::make_pair (soft, 3u)] = 4.2 * 1.e5;
+  YM2[std::make_pair (soft, 4u)] = 4.2 * 1.e5;
+  YM2[std::make_pair (soft, 5u)] = 4.2 * 1.e5;
   
-  YM2[std::make_pair (stiff, 2u)] = 4.2 * 1.e8;
-  YM2[std::make_pair (stiff, 3u)] = 4.2 * 1.e8;
-  YM2[std::make_pair (stiff, 4u)] = 4.2 * 1.e8;
-  YM2[std::make_pair (stiff, 5u)] = 4.2 * 1.e8;   
+  YM2[std::make_pair (medium, 2u)] = 4.2 * 1.e6;
+  YM2[std::make_pair (medium, 3u)] = 4.2 * 1.e6;
+  YM2[std::make_pair (medium, 4u)] = 4.2 * 1.e6;
+  YM2[std::make_pair (medium, 5u)] = 4.2 * 1.e6;
+  
+  YM2[std::make_pair (stiff, 2u)] = 4.2 * 1.e7;
+  YM2[std::make_pair (stiff, 3u)] = 4.2 * 1.e7;
+  YM2[std::make_pair (stiff, 4u)] = 4.2 * 1.e7;
+  YM2[std::make_pair (stiff, 5u)] = 4.2 * 1.e7;   
+  
   
   std::map < std::pair < std::string, unsigned > , double > SF1; 
   
@@ -152,7 +168,7 @@ int main(int argc, char** args) {
     
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
   
-  unsigned mat0 = 2, matN = 3;
+  unsigned mat0 = 0, matN = 3;
   unsigned nl0 = 2, nlN = 6;  
   
   for(unsigned mat = mat0; mat< matN; mat++){
@@ -267,6 +283,47 @@ int main(int argc, char** args) {
       system.SetPreconditionerFineGrids(ILU_PRECOND);
   
       system.SetTolerances(1.e-10, 1.e-15, 1.e+50, 40, 40);
+      
+      
+      ///////////////////////////////////////
+      
+      
+      // ******* Add MPM system to the MultiLevel problem *******
+      NonLinearImplicitSystem& system2 = ml_prob.add_system < NonLinearImplicitSystem > ("DISP");
+      system2.AddSolutionToSystemPDE("DX");
+      if(dim > 1)system2.AddSolutionToSystemPDE("DY");
+      if(dim > 2) system2.AddSolutionToSystemPDE("DZ");
+      
+      // ******* System MPM Assembly *******
+      system2.SetAssembleFunction(AssembleSolidDisp);
+      //system2.SetAssembleFunction(AssembleFEM);
+      // ******* set MG-Solver *******
+      system2.SetMgType(V_CYCLE);
+      
+      
+      system2.SetAbsoluteLinearConvergenceTolerance(1.0e-10);
+      system2.SetMaxNumberOfLinearIterations(1);
+      system2.SetNonLinearConvergenceTolerance(1.e-9);
+      system2.SetMaxNumberOfNonLinearIterations(20);
+      
+      system2.SetNumberPreSmoothingStep(1);
+      system2.SetNumberPostSmoothingStep(1);
+      
+      // ******* Set Preconditioner *******
+      system2.SetMgSmoother(GMRES_SMOOTHER);
+      
+      system2.init();
+      
+      // ******* Set Smoother *******
+      system2.SetSolverFineGrids(GMRES);
+      
+      system2.SetPreconditionerFineGrids(ILU_PRECOND);
+      
+      system2.SetTolerances(1.e-10, 1.e-15, 1.e+50, 40, 40);
+      
+      
+      
+      
   
   
       //BEGIN init particles
@@ -406,12 +463,13 @@ int main(int argc, char** args) {
         //SetNeumannFactor(&mlSol);
         
         system.MGsolve();
-    
+           
         // ******* Print solution *******
-        mlSol.GetWriter()->Write(outputFolder.str(), "biquadratic", print_vars, time_step);
-    
         GridToParticlesProjection(ml_prob, *linea);
        
+        system2.MGsolve();
+        
+        mlSol.GetWriter()->Write(outputFolder.str(), "biquadratic", print_vars, time_step);
     
         linea->GetLine(line[0]);
         PrintLine(outputFolder.str(), line, false, time_step);
