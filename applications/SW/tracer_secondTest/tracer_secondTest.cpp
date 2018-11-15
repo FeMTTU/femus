@@ -653,8 +653,8 @@ int main ( int argc, char** args ) {
   //mlSol.GetWriter()->SetDebugOutput(true);
   mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-  unsigned numberOfTimeSteps = 32001; //17h=1020 with dt=60, 17h=10200 with dt=6
-  dt = 0.125;
+  unsigned numberOfTimeSteps = 8001; //17h=1020 with dt=60, 17h=10200 with dt=6
+  dt = 0.5;
   bool implicitEuler = true;
   for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
     if ( wave == true ) assembly = ( i == 0 ) ? true : false;
@@ -1004,11 +1004,21 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps ) {
       aResHT[k] += solh[k] * k_v * ( deltaZt - deltaZb ) / ( ( ht + hb ) / 2. ); // vertical diffusion
 
 //       //aResHT[k] += ((solhp[k] - solhm[k]) * k_h * (solHTp[k] - solHTm[k])) / (dx*dx); // horizontal diffusion
-      if(i > start){
-        aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+      if (splitting){
+        if(i > start){
+          aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k].value() / solhm[k] - solHT[k].value() / solh[k])/(dx*dx); // horizontal diffusion
+        }
+        if(i < end-1){
+          aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k].value() / solhp[k] - solHT[k].value() / solh[k])/(dx*dx); // horizontal diffusion
+        }    
       }
-      if(i < end-1){
-        aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+      else{
+        if(i > start){
+          aResHT[k] += k_h * (0.5 * (solhm[k] + solh[k])) * (solHTm[k] / solhm[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+        }
+        if(i < end-1){
+          aResHT[k] += k_h * (0.5 * (solhp[k] + solh[k])) * (solHTp[k] / solhp[k] - solHT[k] / solh[k])/(dx*dx); // horizontal diffusion
+        }
       }
 
     }
@@ -1078,6 +1088,9 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps ) {
 
   Vec v = ( static_cast< PetscVector* > ( RES ) )->vec();
   Vec y = ( static_cast< PetscVector* > ( EPS ) )->vec();
+  
+  PetscReal tol;
+  PetscInt ncv,maxit,its;
 
   MFNCreate ( PETSC_COMM_WORLD, &mfn );
 
@@ -1092,6 +1105,16 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps ) {
   MFNSetFromOptions ( mfn );
 
   MFNSolve ( mfn, v, y );
+  
+  //BEGIN Get some information from the solver and display it
+//   MFNGetIterationNumber(mfn,&its);
+//   PetscPrintf(PETSC_COMM_WORLD," Number of iterations of the method: %D\n",its);
+//   MFNGetDimensions(mfn,&ncv);
+//   PetscPrintf(PETSC_COMM_WORLD," Subspace dimension: %D\n",ncv);
+//   MFNGetTolerances(mfn,&tol,&maxit);
+//   PetscPrintf(PETSC_COMM_WORLD," Stopping condition: tol=%.4g, maxit=%D\n",(double)tol,maxit);
+  //END
+  
   MFNDestroy ( &mfn );
 
   //VecView(y,PETSC_VIEWER_STDOUT_WORLD);
@@ -1390,7 +1413,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps ) {
 
   for ( unsigned k = 0; k < NumberOfLayers; k++ ) {
       
-    if(counter == numberOfTimeSteps-2) std::cout << "T" << k << "  ----------------------------------------------------" << std::endl;  
+    //if(counter == numberOfTimeSteps-2) std::cout << "T" << k << "  ----------------------------------------------------" << std::endl;  
     for ( unsigned i =  msh->_dofOffset[solTypeHT][iproc]; i <  msh->_dofOffset[solTypeHT][iproc + 1]; i++ ) {
       double valueHT = ( *sol->_Sol[solIndexHT[k]] ) ( i );
       double valueH = ( *sol->_Sol[solIndexh[k]] ) ( i );
@@ -1869,6 +1892,7 @@ void RK4 ( MultiLevelProblem& ml_prob, const bool & implicitEuler, const unsigne
       for ( k = 0; k < nlayers; k++ ) {
         PetscScalar valueT = 0.;
         ierr = VecGetValues ( x, 1, &k, &valueT );
+        if(counter==numberOfTimeSteps-2) std::cout << valueT << std::endl;
         sol->_Sol[solIndexT[k]]->set ( i, valueT );
         sol->_Sol[solIndexT[k]]->close();
 
