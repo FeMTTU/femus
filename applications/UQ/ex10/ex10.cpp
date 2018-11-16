@@ -53,9 +53,9 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
-unsigned numberOfSamples = 1000000; //for MC sampling of the QoI
+unsigned numberOfSamples = 1000; //for MC sampling of the QoI
 unsigned nxCoarseBox;
-double xMinCoarseBox = - 2.5; //-5.5 for Gaussian, -2.5 for SGM, -1.5 for uniform
+double xMinCoarseBox = - 2.5; //-5.5 for Gaussian, -2.5 for SGM,  -1.5 for uniform
 double xMaxCoarseBox = 5.5;  //5.5 for Gaussian, 5.5 for SGM, 1.5 for uniform
 unsigned nyCoarseBox;
 double yMinCoarseBox = - 2.5;
@@ -64,8 +64,9 @@ unsigned nzCoarseBox;
 double zMinCoarseBox = - 2.5;
 double zMaxCoarseBox = 5.5;
 
-// unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( 1000000 ) ) );
-unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + log2 ( 1000000 ) ) );
+unsigned numberOfSamplesFinest = 10000000; //for MC sampling of the QoI
+// unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamplesFinest ) ) );
+unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log2 ( numberOfSamplesFinest ) ) );
 unsigned nyCoarseBoxFinest = nxCoarseBoxFinest;
 unsigned nzCoarseBoxFinest = nxCoarseBoxFinest;
 
@@ -211,7 +212,7 @@ int main ( int argc, char** argv )
     //BEGIN post processing
     std::vector <double> alphas;
     GetCoefficientsForQuantityOfInterest ( ml_probSG, alphas, domainMeasure ); //gets alpha for the QoI
-
+    
     GetMomentsAndCumulants ( alphas ); //computes moments and cumulants
 
     //PlotGCandEDExpansion();
@@ -230,17 +231,17 @@ int main ( int argc, char** argv )
     MultiLevelMesh mlMshHistoFinest;
 
 //     nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamples ) ) );
-    nxCoarseBox = static_cast<unsigned> ( floor ( 1. + log2 ( numberOfSamples ) ) );
+    nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 3.3 * log2 ( numberOfSamples ) ) );
     nyCoarseBox = nxCoarseBox;
     nzCoarseBox = nxCoarseBox;
 
 //     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
-//     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
-   mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, nyCoarseBox, nzCoarseBox, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh"); //for 3D
+    mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
+//    mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, nyCoarseBox, nzCoarseBox, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh"); //for 3D
 
 //     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
-//     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
-   mlMshHistoFinest.GenerateCoarseBoxMesh(nxCoarseBoxFinest, nyCoarseBoxFinest, nzCoarseBoxFinest, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh"); //for 3D
+    mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
+//    mlMshHistoFinest.GenerateCoarseBoxMesh(nxCoarseBoxFinest, nyCoarseBoxFinest, nzCoarseBoxFinest, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh"); //for 3D
 
     mlMshHisto.PrintInfo();
 
@@ -249,7 +250,7 @@ int main ( int argc, char** argv )
     std::vector< std::vector <double > > sgmQoIStandardized;
     std::vector< std::vector <double > > sgmQoIStandardizedFinest;
     GetQoIStandardizedSamples ( alphas, sgmQoIStandardized, sgmQoIStandardizedFinest, dimCoarseBox );
-    ;
+    
 
     MultiLevelSolution mlSolHisto ( &mlMshHisto );
     MultiLevelSolution mlSolHistoFinest ( &mlMshHistoFinest );
@@ -931,8 +932,8 @@ void GetCoefficientsForQuantityOfInterest ( MultiLevelProblem& ml_prob, std::vec
                 for ( unsigned i = 0; i < nDofu; i++ ) {
                     solu_gss += phi[i] * solu[j][i];
                 }
-//          alphasTemp[j] += solu_gss * solu_gss * weight ; // this is the integral of the square.
-                alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
+         alphasTemp[j] += solu_gss * solu_gss * weight ; // this is the integral of the square.
+//                 alphasTemp[j] +=  solu_gss *  weight / domainMeasure; // this is the spatial average over the domain.
             }
         } // end gauss point loop
 
@@ -1352,7 +1353,7 @@ void GetQoIStandardizedSamples ( std::vector< double >& alphas, std::vector< std
 
     sgmQoIStandardized.resize ( numberOfSamples );
     if ( histoFinest ) {
-        sgmQoIStandardizedFinest.resize ( 1000000 );
+        sgmQoIStandardizedFinest.resize ( numberOfSamplesFinest );
     }
 
     for ( unsigned m = 0; m < sgmQoIStandardized.size(); m++ ) {
@@ -1794,7 +1795,7 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
                     //END
 
 //           double stdGaussian = exp(- sgmQoIStandardized[m][0] * sgmQoIStandardized[m][0] * 0.5) / sqrt(2 * PI);
-//
+// 
 //           aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
 
 
@@ -1871,9 +1872,9 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
                 }
 
 //                     double stdGaussian = exp(- dotProduct * 0.5) / (2 * PI);
-//
+// 
 //                     if(dim == 3) stdGaussian /= sqrt(2 * PI);
-//
+// 
 //                     aL2ELocal += (solKDESample - stdGaussian) * (solKDESample - stdGaussian);
 
 
