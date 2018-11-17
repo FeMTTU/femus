@@ -11,13 +11,13 @@
 //******************************************* Desired Target  and RHS function*******************************************************
 
  double force[3] = {0.,0.,0.};
- double Vel_desired[3] = {1.,1.,0.};
+ double Vel_desired[3] = {1.,0.,0.};
 
 //*********************** Sets the regularization parameters *******************************************************
 
  double alpha_val = 1.;
- double beta_val  = 1.e-3;
- double gamma_val = 1.e-3;
+ double beta_val  = 1.e-2;
+ double gamma_val = 1.e-2;
  
  
 //******************************** switch between stokes and navier stokes *********************************************

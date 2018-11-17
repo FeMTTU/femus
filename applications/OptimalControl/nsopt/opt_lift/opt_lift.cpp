@@ -1062,22 +1062,22 @@ double	integral_gamma  = 0.;
           std::fill(gradVctrl_gss[k].begin(), gradVctrl_gss[k].end(), 0);
         }
 	
-//     for (unsigned  k = 0; k < dim; k++) {
-//       V_gss[k]       = 0.;
-//       Vdes_gss[k]    = 0.;
-//        Vctrl_gss[k]  = 0.;
-//     }
+    for (unsigned  k = 0; k < dim; k++) {
+      V_gss[k]       = 0.;
+      Vdes_gss[k]    = 0.;
+       Vctrl_gss[k]  = 0.;
+    }
     
       for (unsigned i = 0; i < nDofsV; i++) {
-	 for (unsigned  k = 0; k < dim; k++) {
-	   	V_gss[k] += solV[k][i] * phiV_gss[i];
-		Vdes_gss[k] += solVdes[k]/*[i]*/ * phiVdes_gss[i];
+        for (unsigned  k = 0; k < dim; k++) {
+            V_gss[k] += solV[k][i] * phiV_gss[i];
+            Vdes_gss[k] += solVdes[k]/*[i]*/ * phiVdes_gss[i];
 		}
       }
 	
       for (unsigned i = 0; i < nDofsVctrl; i++) {
-	 for (unsigned  k = 0; k < dim; k++) {
-	   Vctrl_gss[k] += solVctrl[k][i] * phiVctrl_gss[i];
+        for (unsigned  k = 0; k < dim; k++) {
+            Vctrl_gss[k] += solVctrl[k][i] * phiVctrl_gss[i];
 	 }
      for (unsigned j = 0; j < dim; j++) {
             for (unsigned  k = 0; k < dim; k++) {
@@ -1089,7 +1089,7 @@ double	integral_gamma  = 0.;
           
 	
       for (unsigned  k = 0; k < dim; k++) {
-	 integral_target_alpha +=target_flag* (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k])*weight;
+	 integral_target_alpha +=target_flag* (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k]) * (V_gss[k] + Vctrl_gss[k] - Vdes_gss[k])*weight; 
 	 integral_beta	+= ((Vctrl_gss[k])*(Vctrl_gss[k])*weight);
       }
       for (unsigned  k = 0; k < dim; k++) {
