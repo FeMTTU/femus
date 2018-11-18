@@ -53,7 +53,7 @@ double meanQoI = 0.; //initialization
 double varianceQoI = 0.; //initialization
 double stdDeviationQoI = 0.; //initialization
 double L = 0.1 ; // correlation length of the covariance function
-unsigned numberOfSamples = 1000; //for MC sampling of the QoI
+unsigned numberOfSamples = 10000; //for MC sampling of the QoI
 unsigned nxCoarseBox;
 double xMinCoarseBox = - 2.5; //-5.5 for Gaussian, -2.5 for SGM,  -1.5 for uniform
 double xMaxCoarseBox = 5.5;  //5.5 for Gaussian, 5.5 for SGM, 1.5 for uniform
@@ -66,7 +66,7 @@ double zMaxCoarseBox = 5.5;
 
 unsigned numberOfSamplesFinest = 10000000; //for MC sampling of the QoI
 // unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamplesFinest ) ) );
-unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 3.3 * log2 ( numberOfSamplesFinest ) ) );
+unsigned nxCoarseBoxFinest = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamplesFinest ) ) );
 unsigned nyCoarseBoxFinest = nxCoarseBoxFinest;
 unsigned nzCoarseBoxFinest = nxCoarseBoxFinest;
 
@@ -231,17 +231,17 @@ int main ( int argc, char** argv )
     MultiLevelMesh mlMshHistoFinest;
 
 //     nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 3.3 * log ( numberOfSamples ) ) );
-    nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 3.3 * log2 ( numberOfSamples ) ) );
+    nxCoarseBox = static_cast<unsigned> ( floor ( 1. + 2. * log2 ( numberOfSamples ) ) );
     nyCoarseBox = nxCoarseBox;
     nzCoarseBox = nxCoarseBox;
 
 //     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
-    mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
-//    mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, nyCoarseBox, nzCoarseBox, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh"); //for 3D
+//     mlMshHisto.GenerateCoarseBoxMesh ( nxCoarseBox, nyCoarseBox, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
+   mlMshHisto.GenerateCoarseBoxMesh(nxCoarseBox, nyCoarseBox, nzCoarseBox, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh"); //for 3D
 
 //     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, 0, 0, xMinCoarseBox, xMaxCoarseBox, 0., 0., 0., 0., EDGE3, "seventh" ); //for 1D
-    mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
-//    mlMshHistoFinest.GenerateCoarseBoxMesh(nxCoarseBoxFinest, nyCoarseBoxFinest, nzCoarseBoxFinest, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh"); //for 3D
+//     mlMshHistoFinest.GenerateCoarseBoxMesh ( nxCoarseBoxFinest, nyCoarseBoxFinest, 0, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, 0., 0., QUAD9, "seventh" ); //for 2D
+   mlMshHistoFinest.GenerateCoarseBoxMesh(nxCoarseBoxFinest, nyCoarseBoxFinest, nzCoarseBoxFinest, xMinCoarseBox, xMaxCoarseBox, yMinCoarseBox, yMaxCoarseBox, zMinCoarseBox, zMaxCoarseBox, HEX27, "seventh"); //for 3D
 
     mlMshHisto.PrintInfo();
 
@@ -1463,7 +1463,7 @@ void GetHistogramAndKDE ( std::vector< std::vector <double > > & sgmQoIStandardi
     double measure = numberOfSamples * dx *dy *dz;
 
     for ( unsigned m = 0; m < numberOfSamples; m++ ) {
-
+        
         if ( dim == 1 ) {
 
             for ( int iel = sol->GetMesh()->_elementOffset[iproc]; iel < sol->GetMesh()->_elementOffset[iproc + 1]; iel ++ ) {
@@ -1753,7 +1753,7 @@ void GetAverageL2Error ( std::vector< std::vector <double > > & sgmQoIStandardiz
     double aL2ELocal = 0;
 
     for ( unsigned m = 0; m < numberOfSamples; m++ ) {
-
+        
         double solKDESample = 0.;
         double solHISTOFSample = 0.;
 
