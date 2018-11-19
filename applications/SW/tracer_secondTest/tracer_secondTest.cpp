@@ -527,8 +527,8 @@ int main ( int argc, char** args )
             assembly = ( i == 0 ) ? true : false;
         }
         system.CopySolutionToOldSolution();
-        ETD ( ml_prob, numberOfTimeSteps );
-//         RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
+//         ETD ( ml_prob, numberOfTimeSteps );
+        RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
         mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
         counter = i;
         counter2++;
