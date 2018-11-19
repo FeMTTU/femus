@@ -71,7 +71,7 @@ unsigned nyCoarseBoxFinest = nxCoarseBoxFinest;
 unsigned nzCoarseBoxFinest = nxCoarseBoxFinest;
 
 bool histoFinest = false;
-double bLaplace = 1.;
+double bLaplace = 1.5;
 double muLaplace = 0.;
 //END
 
