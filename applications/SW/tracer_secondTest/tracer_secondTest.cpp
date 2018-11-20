@@ -41,8 +41,8 @@ unsigned counter2 = 0;
 clock_t start_time = clock();
 
 bool wave = false;
-bool twostage = true;
-bool splitting = true;
+bool twostage = false;
+bool splitting = false;
 bool assembly = true; //assembly must be left always true
 
 const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
@@ -519,16 +519,16 @@ int main ( int argc, char** args )
     //mlSol.GetWriter()->SetDebugOutput(true);
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-    unsigned numberOfTimeSteps = 12001; //17h=1020 with dt=60, 17h=10200 with dt=6
-    dt = 0.25;
+    unsigned numberOfTimeSteps = 376; //17h=1020 with dt=60, 17h=10200 with dt=6
+    dt = 8.;
     bool implicitEuler = true;
     for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
         if ( wave == true ) {
             assembly = ( i == 0 ) ? true : false;
         }
         system.CopySolutionToOldSolution();
-//         ETD ( ml_prob, numberOfTimeSteps );
-        RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
+        ETD ( ml_prob, numberOfTimeSteps );
+        //RK4 ( ml_prob, implicitEuler, numberOfTimeSteps );
         mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, ( i + 1 ) / 1 );
         counter = i;
         counter2++;
@@ -1304,6 +1304,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
         MFNSetFromOptions ( mfn );
 
         MFNSolve ( mfn, v2, y2 );
+        
         MFNDestroy ( &mfn );
 
         //VecView(y2,PETSC_VIEWER_STDOUT_WORLD);
