@@ -289,7 +289,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
     indexPdeD[ivar] = my_nnlin_impl_sys.GetSolPdeIndex(&varname[ivar][0]);
   }
   
-  unsigned indexSolNF =  ml_sol->GetIndex("NF");
+  //unsigned indexSolNF =  ml_sol->GetIndex("NF");
   
   unsigned indexSolMat = ml_sol->GetIndex(&varname[9][0]);
   unsigned solTypeMat = ml_sol->GetSolutionType(&varname[9][0]);
@@ -1033,7 +1033,7 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
     }
   }
   
-  unsigned indexSolNF =  ml_sol->GetIndex("NF");
+  //unsigned indexSolNF =  ml_sol->GetIndex("NF");
   
   //line instances
   std::vector<unsigned> markerOffset = linea.GetMarkerOffset();

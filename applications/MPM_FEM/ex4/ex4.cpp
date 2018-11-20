@@ -14,32 +14,42 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
-#include "../include/mpmFem.hpp"
+#include "../include/mpmFem4.hpp"
 
-double yMin;
+//double yMin;
 
 using namespace femus;
 
 double DT = 0.001;
 
+double GetTimeStep(const double &y){
+  
+  double dt;
+  const double y0 = -1.336;
+  const double DT0 = 0.001;
+  if(y>y0){
+    const double y1 = -0.16;
+    const double y2 = 0.5 * (y0 + y1);
+    
+    const double DT1 = 0.01;
+    const double DT2 = 0.01;
+  
+    double f0 = (y - y1) / (y0 - y1) * (y - y2) / (y0 - y2);
+    double f1 = (y - y0) / (y1 - y0) * (y - y2) / (y1 - y2);
+    double f2 = (y - y0) / (y2 - y0) * (y - y1) / (y2 - y1);
+   
+    dt = f0 * DT0 + f1 * DT1 + f2 * DT2;
+  }
+  else {
+    dt = DT0;
+  }
+  return dt;
+  
+}
+
 double SetVariableTimeStep(const double time)
 {
-  double dt = DT;
-//   if(time >= 0.5311 - 0.012 && time <= 0.5311 + 0.012) {
-//     dt =  0.0001;
-//   }
-//   else if(time >= 3 * 0.5311 - 0.012 && time <= 3 * 0.5311 + 0.012) {
-//     dt =  0.0001;
-//   }
-//   else if(time >= 5 * 0.5311 - 0.012 && time <= 5 * 0.5311 + 0.012) {
-//     dt =  0.0001;
-//   }
-//   
-  if( yMin <= -1.27) {
-       dt =  0.001;
-  }
-  
-  return dt;
+  return DT;
 }
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char name[], double& value, const int facename, const double time)
@@ -92,13 +102,14 @@ int main(int argc, char** args)
   SF2[std::make_pair (soft, 2u)] = 1.e-10;
   SF2[std::make_pair (soft, 3u)] = 1.e-10;  
     
-  NF[std::make_pair (soft, 1u)] = 0.;
-  NF[std::make_pair (soft, 2u)] = 0.;
-  NF[std::make_pair (soft, 3u)] = 0.;
+  NF[std::make_pair (soft, 1u)] = 0.5;
+  NF[std::make_pair (soft, 2u)] = 0.5;
+  NF[std::make_pair (soft, 3u)] = 0.5;
       
   unsigned n_timesteps = 3500;
   
-  std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps + 1); 
+  std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps + 1);
+  std::vector < std::map < std::pair < std::string, unsigned > , double > > time(n_timesteps + 1); 
       
   for(unsigned nl = 1; nl < 4; nl++){
       
@@ -336,6 +347,7 @@ int main(int argc, char** args)
     fout << "E" << simulation.first  << "Level"<<simulation.second << std::endl;
     
     CM[0][simulation] = line[0][0][1];  
+    time[0][simulation] = 0.;  
     fout << "0, 0., "<< CM[0][simulation] << std::endl;
     
     
@@ -352,7 +364,9 @@ int main(int argc, char** args)
 
       linea->GetExtrema(xMin, xMax);
 
-      yMin = xMin[1];
+      DT = GetTimeStep(xMin[1]);
+      
+      //std::cout << "ymin = " << xMin[1] << " DT = " << DT << std::endl;
     
       system.CopySolutionToOldSolution();
 
@@ -368,11 +382,14 @@ int main(int argc, char** args)
 
       CM[time_step][simulation] = line[0][0][1];  
         
-      unsigned it = time_step;
-      double time = it * DT;
-      fout << it <<", "<< time <<", ";
-      fout << CM[it][simulation] <<std::endl;
+      time[time_step][simulation] = system.GetTime();
       
+      std::cout << "it = " << time_step <<" time = "<< time[time_step][simulation] <<" DT = " << DT << " ymin = " << xMin[1] << std::endl;
+      
+      fout << time_step <<", "<< time[time_step][simulation] <<", ";
+      fout << CM[time_step][simulation] <<std::endl;
+      
+      if( time[time_step][simulation] > 3.5) break;
     }
     
     fout.close();
@@ -381,28 +398,28 @@ int main(int argc, char** args)
   }
   
   
-  std::ostringstream filename;
-  filename << "./centerOfMass"<< material <<".txt";
-  std::ofstream fout;
-  fout.open( filename.str().c_str() );
-  fout << "iteration, time, ";
-  for(unsigned nl = 1; nl < 4; nl++) {
-    std::pair <std::string, unsigned > simulation = std::make_pair (material, nl);
-     fout << "E" << simulation.first  << "Level"<<simulation.second<<", "; 
-  }
-  
-  fout << std::endl;
-  for(unsigned it = 0;it < CM.size();it++){
-    double time = it * DT;
-    fout << it <<", "<< time << ", ";
-    for(unsigned nl = 1; nl < 4; nl++) {
-      std::pair <std::string, unsigned > simulation = std::make_pair (material, nl);
-      fout << CM[it][simulation] <<", ";
-    }
-    fout << std::endl;
-  }
-  
-  fout.close();
+//   std::ostringstream filename;
+//   filename << "./centerOfMass"<< material <<".txt";
+//   std::ofstream fout;
+//   fout.open( filename.str().c_str() );
+//   fout << "iteration, time, ";
+//   for(unsigned nl = 1; nl < 4; nl++) {
+//     std::pair <std::string, unsigned > simulation = std::make_pair (material, nl);
+//      fout << "E" << simulation.first  << "Level"<<simulation.second<<", "; 
+//   }
+//   
+//   fout << std::endl;
+//   for(unsigned it = 0;it < CM.size();it++){
+//     
+//     fout << it <<", "<< time[it][simulation] << ", ";
+//     for(unsigned nl = 1; nl < 4; nl++) {
+//       std::pair <std::string, unsigned > simulation = std::make_pair (material, nl);
+//       fout << CM[it][simulation] <<", ";
+//     }
+//     fout << std::endl;
+//   }
+//   
+//   fout.close();
   
   
   

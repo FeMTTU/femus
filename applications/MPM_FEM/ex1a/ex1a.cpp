@@ -14,7 +14,7 @@
 #include "NumericVector.hpp"
 #include "adept.h"
 
-#include "../include/mpmFem1.hpp"
+#include "../include/mpmFem4.hpp"
 
 
 #include <iostream>
@@ -100,22 +100,22 @@ int main(int argc, char** args)
   YC[std::make_pair (soft, 4u)] = 0.2 / 4.;
   YC[std::make_pair (soft, 5u)] = 0.2 / 8.;
 
-  YC[std::make_pair (stiff, 2u)] = 0.34;  
-  YC[std::make_pair (stiff, 3u)] = 0.34 / 2.;
-  YC[std::make_pair (stiff, 4u)] = 0.34 / 4.;
-  YC[std::make_pair (stiff, 5u)] = 0.34 / 8.;    
+  YC[std::make_pair (stiff, 2u)] = 0.3;  
+  YC[std::make_pair (stiff, 3u)] = 0.3 / 2.;
+  YC[std::make_pair (stiff, 4u)] = 0.3 / 4.;
+  YC[std::make_pair (stiff, 5u)] = 0.3 / 8.;    
   
-  std::map < std::pair < std::string, unsigned > , double > NF; 
-  
-  NF[std::make_pair (soft, 2u)] = 0.;
-  NF[std::make_pair (soft, 3u)] = 0.;
-  NF[std::make_pair (soft, 4u)] = 0.;
-  NF[std::make_pair (soft, 5u)] = 0.3;
-
-  NF[std::make_pair (stiff, 2u)] = 0.3;
-  NF[std::make_pair (stiff, 3u)] = 0.3;
-  NF[std::make_pair (stiff, 4u)] = 0.3;
-  NF[std::make_pair (stiff, 5u)] = 0.6;  
+//   std::map < std::pair < std::string, unsigned > , double > NF; 
+//   
+//   NF[std::make_pair (soft, 2u)] = 0.;
+//   NF[std::make_pair (soft, 3u)] = 0.;
+//   NF[std::make_pair (soft, 4u)] = 0.;
+//   NF[std::make_pair (soft, 5u)] = 0.3;
+// 
+//   NF[std::make_pair (stiff, 2u)] = 0.3;
+//   NF[std::make_pair (stiff, 3u)] = 0.3;
+//   NF[std::make_pair (stiff, 4u)] = 0.3;
+//   NF[std::make_pair (stiff, 5u)] = 0.6;  
   
   std::map < std::pair < std::string, unsigned > , double > SF1; 
   
@@ -160,7 +160,7 @@ int main(int argc, char** args)
     
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
     
-  unsigned mat0 = 0;
+  unsigned mat0 = 1;
   unsigned matn = 2;
   
   unsigned nl0 = 2;
@@ -217,7 +217,7 @@ int main(int argc, char** args)
       mlSol.AddSolution("M", LAGRANGE, SECOND, 2);
       mlSol.AddSolution("Mat", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
       
-      mlSol.AddSolution("NF", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
+      //mlSol.AddSolution("NF", DISCONTINOUS_POLYNOMIAL, ZERO, 0, false);
 
       mlSol.Initialize("All");
 
@@ -402,14 +402,14 @@ int main(int argc, char** args)
         scalingFactor1 = SF1[simulation];
         scalingFactor2 = SF2[simulation];
     
-        NeumannFactor = NF[simulation];
-    
-        if ( time_step <= timestep0 ){
-          gravity[0] = 0.;
-          NeumannFactor = 0.;
-        }
-        
-        SetNeumannFactor(&mlSol);
+//         //NeumannFactor = NF[simulation];
+//     
+//         if ( time_step <= timestep0 ){
+//           gravity[0] = 0.;
+//           NeumannFactor = 0.;
+//         }
+//         
+//         //SetNeumannFactor(&mlSol);
         
         
         system.MGsolve();
