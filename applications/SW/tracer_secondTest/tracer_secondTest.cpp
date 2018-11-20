@@ -42,7 +42,7 @@ clock_t start_time = clock();
 
 bool wave = false;
 bool twostage = false;
-bool splitting = false;
+bool splitting = true;
 bool assembly = true; //assembly must be left always true
 
 const double hRest[40] = {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
@@ -412,7 +412,7 @@ int main ( int argc, char** args )
     unsigned numberOfUniformLevels = 1;
     unsigned numberOfSelectiveLevels = 0;
 
-    unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*11*/5 ) + 0.5 ) ); //Grid cell size = 3.90625 m
+    unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*11*/14 ) + 0.5 ) ); //Grid cell size = 3.90625 m
     //nx += 1;
 
     double length = 10.; //2 * 1465700.;
@@ -519,8 +519,8 @@ int main ( int argc, char** args )
     //mlSol.GetWriter()->SetDebugOutput(true);
     mlSol.GetWriter()->Write ( DEFAULT_OUTPUTDIR, "linear", print_vars, 0 );
 
-    unsigned numberOfTimeSteps = 376; //17h=1020 with dt=60, 17h=10200 with dt=6
-    dt = 8.;
+    unsigned numberOfTimeSteps = 2001; //17h=1020 with dt=60, 17h=10200 with dt=6
+    dt = 0.25;
     bool implicitEuler = true;
     for ( unsigned i = 0; i < numberOfTimeSteps; i++ ) {
         if ( wave == true ) {
@@ -994,9 +994,9 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
     MFNSetTolerances ( mfn,tol,150 );
     MFNSetFromOptions ( mfn );
 
-//     clock_t etd_time;
-//     if ( counter2 == 0 ) {
-//         etd_time = clock();
+    clock_t etd_time;
+    if ( counter2 == 0 ) {
+        etd_time = clock();
 //         PetscInt vSize;
 //         VecGetSize(v, &vSize);
 //         std::cout<< "--------------------- v --------------------- " <<std::endl;
@@ -1005,12 +1005,12 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 //             VecGetValues ( v, 1, &kk, &valueHT );
 //             std::cout<< valueHT << std::endl;
 //         }
-//     }
+    }
 
     MFNSolve ( mfn, v, y );
 
-//     if ( counter2 == 0 ) {
-// //         std::cout << " ETD TIME :\t" << static_cast<double> ( clock() - etd_time ) / CLOCKS_PER_SEC << std::endl;
+    if ( counter2 == 0 ) {
+         std::cout << " ETD TIME :\t" << static_cast<double> ( clock() - etd_time ) / CLOCKS_PER_SEC << std::endl;
 //         PetscInt ySize;
 //         VecGetSize(y, &ySize);
 //         std::cout<< "--------------------- y --------------------- " <<std::endl;
@@ -1020,7 +1020,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 //             std::cout<< valueHT << std::endl;
 //         }
 //         std::cout<< "--------------------- END --------------------- " <<std::endl;
-//     }
+    }
 
     //BEGIN Get some information from the solver and display it
 //   MFNGetIterationNumber(mfn,&its);

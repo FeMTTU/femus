@@ -289,7 +289,7 @@ int main ( int argc, char** args )
     unsigned numberOfUniformLevels = 1;
     unsigned numberOfSelectiveLevels = 0;
 
-    unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*11*/5 ) + 0.5 ) ); //Grid cell size = 3.90625 m
+    unsigned nx = static_cast<unsigned> ( floor ( pow ( 2.,/*11*/14 ) + 0.5 ) ); //Grid cell size = 3.90625 m
     //nx += 1;
 
     double length = 10.; //2 * 1465700.;
@@ -792,21 +792,21 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
             MFNSetTolerances ( mfn,tol,150 );
             MFNSetFromOptions ( mfn );
 
-//             clock_t etd_time;
-//             if ( counter2 == 0 ) {
-//                 etd_time = clock();
+            clock_t etd_time;
+            if ( counter2 == 0 ) {
+                 etd_time = clock();
 //                 std::cout<< "--------------------- v "<< i << " --------------------- " <<std::endl;
 //                 for ( PetscInt kk=0; kk<NLayers; kk++ ) {
 //                     PetscScalar valueHT = 0.;
 //                     VecGetValues ( v, 1, &kk, &valueHT );
 //                     std::cout<< valueHT << std::endl;
 //                 }
-//             }
+            }
 
             MFNSolve ( mfn, v, y );
 
-//             if ( counter2 == 0 ) {
-//                 //std::cout << " ETD TIME :\t" << static_cast<double> ( clock() - etd_time ) / CLOCKS_PER_SEC << std::endl;
+             if ( counter2 == 0 ) {
+                 std::cout << " ETD TIME :\t" << static_cast<double> ( clock() - etd_time ) / CLOCKS_PER_SEC << std::endl;
 //                // std::cout<< "--------------------- y --------------------- " <<std::endl;
 //                 for ( PetscInt kk=0; kk<NLayers; kk++ ) {
 //                     PetscScalar valueHT = 0.;
@@ -814,7 +814,7 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
 //                    std::cout<< valueHT << std::endl;
 //                 }
 //                 //std::cout<< "--------------------- END --------------------- " <<std::endl;
-//             }
+             }
 
             std::vector<double> EPS_local ( NLayers );
             for ( k = 0; k < NLayers; k++ ) {
@@ -826,12 +826,12 @@ void ETD ( MultiLevelProblem& ml_prob, const unsigned & numberOfTimeSteps )
             EPS->add_vector_blocked ( EPS_local, l2GMapRow );
 
             //BEGIN Get some information from the solver and display it
-            //   MFNGetIterationNumber(mfn,&its);
-            //   PetscPrintf(PETSC_COMM_WORLD," Number of iterations of the method: %D\n",its);
-            //   MFNGetDimensions(mfn,&ncv);
-            //   PetscPrintf(PETSC_COMM_WORLD," Subspace dimension: %D\n",ncv);
-            //   MFNGetTolerances(mfn,&tol,&maxit);
-            //   PetscPrintf(PETSC_COMM_WORLD," Stopping condition: tol=%.4g, maxit=%D\n",(double)tol,maxit);
+//               MFNGetIterationNumber(mfn,&its);
+//               PetscPrintf(PETSC_COMM_WORLD," Number of iterations of the method: %D\n",its);
+//               MFNGetDimensions(mfn,&ncv);
+//               PetscPrintf(PETSC_COMM_WORLD," Subspace dimension: %D\n",ncv);
+//               MFNGetTolerances(mfn,&tol,&maxit);
+//               PetscPrintf(PETSC_COMM_WORLD," Stopping condition: tol=%.4g, maxit=%D\n",(double)tol,maxit);
             //END
 
             MFNDestroy ( &mfn );
