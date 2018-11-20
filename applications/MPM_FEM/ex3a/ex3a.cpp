@@ -76,6 +76,23 @@ int main(int argc, char** args) {
   YC[std::make_pair (stiff, 4u)] = 0.25/4.;
   YC[std::make_pair (stiff, 5u)] = 0.25/8.;  
   
+  std::map < std::pair < std::string, unsigned > , double > XC; 
+  
+  XC[std::make_pair (soft, 2u)] = 0.;
+  XC[std::make_pair (soft, 3u)] = 0.;
+  XC[std::make_pair (soft, 4u)] = 0.;
+  XC[std::make_pair (soft, 5u)] = 0.;  
+  
+  XC[std::make_pair (medium, 2u)] = 0.;
+  XC[std::make_pair (medium, 3u)] = 0.;
+  XC[std::make_pair (medium, 4u)] = 0.;
+  XC[std::make_pair (medium, 5u)] = 0.;  
+  
+  XC[std::make_pair (stiff, 2u)] = 0.1;
+  XC[std::make_pair (stiff, 3u)] = 0.;
+  XC[std::make_pair (stiff, 4u)] = 0.;
+  XC[std::make_pair (stiff, 5u)] = 0.;  
+  
   std::map < std::pair < std::string, unsigned > , double > YM1; 
   
   YM1[std::make_pair (soft, 2u)] = 4.2 * 1.e5;
@@ -111,20 +128,20 @@ int main(int argc, char** args) {
 //   YM2[std::make_pair (stiff, 4u)] = 4.2 * 1.e8;
 //   YM2[std::make_pair (stiff, 5u)] = 4.2 * 1.e8;
   
-  YM2[std::make_pair (soft, 2u)] = 4.2 * 1.e5;
-  YM2[std::make_pair (soft, 3u)] = 4.2 * 1.e5;
-  YM2[std::make_pair (soft, 4u)] = 4.2 * 1.e5;
-  YM2[std::make_pair (soft, 5u)] = 4.2 * 1.e5;
+  YM2[std::make_pair (soft, 2u)] = 4.2 * 1.e5 * 2.;
+  YM2[std::make_pair (soft, 3u)] = 4.2 * 1.e5 * 2.;
+  YM2[std::make_pair (soft, 4u)] = 4.2 * 1.e5 * 2.;
+  YM2[std::make_pair (soft, 5u)] = 4.2 * 1.e5 * 2.;
   
-  YM2[std::make_pair (medium, 2u)] = 4.2 * 1.e6;
-  YM2[std::make_pair (medium, 3u)] = 4.2 * 1.e6;
-  YM2[std::make_pair (medium, 4u)] = 4.2 * 1.e6;
-  YM2[std::make_pair (medium, 5u)] = 4.2 * 1.e6;
+  YM2[std::make_pair (medium, 2u)] = 4.2 * 1.e6 * 2.;
+  YM2[std::make_pair (medium, 3u)] = 4.2 * 1.e6 * 2.;
+  YM2[std::make_pair (medium, 4u)] = 4.2 * 1.e6 * 2.;
+  YM2[std::make_pair (medium, 5u)] = 4.2 * 1.e6 * 2.;
   
-  YM2[std::make_pair (stiff, 2u)] = 4.2 * 1.e7;
-  YM2[std::make_pair (stiff, 3u)] = 4.2 * 1.e7;
-  YM2[std::make_pair (stiff, 4u)] = 4.2 * 1.e7;
-  YM2[std::make_pair (stiff, 5u)] = 4.2 * 1.e7;   
+  YM2[std::make_pair (stiff, 2u)] = 4.2 * 1.e7 * 2.;
+  YM2[std::make_pair (stiff, 3u)] = 4.2 * 1.e7 * 2.;
+  YM2[std::make_pair (stiff, 4u)] = 4.2 * 1.e7 * 2.;
+  YM2[std::make_pair (stiff, 5u)] = 4.2 * 1.e7 * 2.;    
   
   
   std::map < std::pair < std::string, unsigned > , double > SF1; 
@@ -168,8 +185,8 @@ int main(int argc, char** args) {
     
   std::vector < std::map < std::pair < std::string, unsigned > , double > > CM(n_timesteps +1 - timestep0); 
   
-  unsigned mat0 = 0, matN = 3;
-  unsigned nl0 = 2, nlN = 6;  
+  unsigned mat0 = 2, matN = 3;
+  unsigned nl0 = 2, nlN = 3;  
   
   for(unsigned mat = mat0; mat< matN; mat++){
     for(unsigned nl = nl0; nl < nlN; nl++) {
@@ -330,9 +347,11 @@ int main(int argc, char** args) {
       unsigned size = 1;
       std::vector < std::vector < double > > x; // marker
       double yc = YC[simulation];//0.1; //0.025	for 5 ref;  //0.05 for 4 ref, 0.1 for 3 ref, 0.15 for 2 ref
+      double xc = XC[simulation];
   
       x.resize(size);
       x[0].resize(dim, 0.);
+      x[0][0] = xc;
       x[0][1] = yc;
   
       double R = 1.6;
@@ -353,7 +372,7 @@ int main(int argc, char** args) {
           x[s].resize(dim);
         }
         for(unsigned j = 0; j < Nr; j++) {
-          x[sizeOld + j][0] = r * cos(j * dtheta);
+          x[sizeOld + j][0] = xc + r * cos(j * dtheta);
           x[sizeOld + j][1] = yc + r * sin(j * dtheta);
         }
       }
@@ -379,7 +398,7 @@ int main(int argc, char** args) {
             x[s].resize(dim);
           }
           for(unsigned j = 0; j < NR; j++) {
-            x[sizeOld + j][0] = r * cos(j * dtheta);
+            x[sizeOld + j][0] = xc + r * cos(j * dtheta);
             x[sizeOld + j][1] = yc + r * sin(j * dtheta);
           }
           mass.resize(x.size(), rho_MPM * r * dtheta * DL);
@@ -475,7 +494,7 @@ int main(int argc, char** args) {
         PrintLine(outputFolder.str(), line, false, time_step);
         
         if(time_step >= timestep0){
-          CM[time_step - timestep0][simulation] = line[0][0][0];  
+          CM[time_step - timestep0][simulation] = line[0][0][0] - xc;  
           
           unsigned it = time_step - timestep0;
           double time = it * DT;

@@ -6,11 +6,8 @@ double Gamma = 0.5;
 double gravity[3] = {0., -9.81, 0.};
 double scalingFactor1 =1.e-2;
 double scalingFactor2 =1.e-6;
-double NeumannFactor = 0.5;
+double NeumannFactor = .5;
 Line* linea;
-
-double tuninig = 0.;//0.645;
-
 
 void AssembleSolidDisp(MultiLevelProblem& ml_prob) {
     
@@ -679,7 +676,7 @@ void AssembleMPMSys(MultiLevelProblem& ml_prob) {
           SolDd1[k][inode] = SolDd[k][inode];
         }
       }
-             
+                
       for(unsigned iface = 0; iface < 4; iface++){
         int faceIndex = myel->GetBoundaryIndex(iel, iface);
         unsigned im = ii[iface][2][0];
@@ -1161,6 +1158,8 @@ void GridToParticlesProjection(MultiLevelProblem & ml_prob, Line & linea) {
             SolDd1[k][inode] = SolDd[k][inode];
           }
         }
+        
+       
         
         for(unsigned iface = 0; iface < 4; iface++){
           int faceIndex = myel->GetBoundaryIndex(iel, iface);
