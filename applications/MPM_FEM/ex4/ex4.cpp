@@ -72,7 +72,8 @@ int main(int argc, char** args)
   std::string stiff = "stiff";
   std::string soft = "soft";
   
-  std::string material = stiff;
+  //std::string material = stiff;
+  std::string material = soft;
   
   std::map < std::pair < std::string, unsigned > , double > SF1; 
   std::map < std::pair < std::string, unsigned > , double > SF2; 
